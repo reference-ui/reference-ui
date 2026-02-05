@@ -1,6 +1,7 @@
 import { defineConfig } from '@pandacss/dev'
 import { defaultTheme, defaultStaticCss } from './src/styled/index.js'
 import { rhythmUtilities } from './src/styled/rhythm.js'
+import { responsivePatterns, responsiveGlobalCss } from './src/styled/responsive.js'
 
 /**
  * Panda config for reference-core.
@@ -9,13 +10,13 @@ import { rhythmUtilities } from './src/styled/rhythm.js'
  * Run: panda codegen (or --watch) and panda cssgen (or --watch).
  */
 export default defineConfig({
+  jsxFramework: 'react',
   preflight: true,
-  include: ['src/**/*.ts'],
+  include: ['src/**/*.ts', 'src/**/*.tsx'],
   exclude: [],
   outdir: 'src/system',
   outExtension: 'js',
   hash: false,
-  jsxFramework: 'react',
   staticCss: defaultStaticCss as unknown as Parameters<typeof defineConfig>[0]['staticCss'],
   utilities: {
     extend: rhythmUtilities,
@@ -23,4 +24,8 @@ export default defineConfig({
   theme: {
     extend: defaultTheme.extend,
   },
+  patterns: {
+    extend: responsivePatterns,
+  },
+  globalCss: responsiveGlobalCss,
 } as Parameters<typeof defineConfig>[0])

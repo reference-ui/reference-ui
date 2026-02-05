@@ -18,10 +18,13 @@
     "./styles.css": "./src/system/styles.css"
   },
   "dependencies": {
-    "lit": "^3.2.0",
     "@pandacss/dev": "^1.8.1",
     "tsdown": "^0.20.1",
     "@types/node": "^25.1.0"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
   },
   "scripts": {
     "build": "tsdown",
@@ -30,9 +33,11 @@
     "gen": "panda codegen && panda",
     "codegen": "panda codegen",
     "cssgen": "panda",
-    "postinstall": "npm run build && node ./dist/cli/index.mjs link-system"
+    "postinstall": "panda codegen && npm run build && node ./dist/cli/index.mjs link-system"
   },
   "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
     "concurrently": "^9.1.0",
     "typescript": "~5.9.3"
   }

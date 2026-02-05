@@ -9,13 +9,14 @@
     "useDefineForClassFields": false,
     "moduleResolution": "node",
     "module": "esnext",
-    "target": "es2015",
+    "target": "es2020",
+    "jsx": "react-jsx",
     "lib": ["es2020", "dom"],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "sourceMap": true,
     "importHelpers": false
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules", "dist"]
 }

@@ -1,13 +1,14 @@
-import React from 'react';
+import { Box, Container, ResponsiveExample, Button } from '@reference-ui/core';
+import '@reference-ui/core/styles.css';
 
-function App() {
+export default function App() {
   return (
-    <div style={{ padding: '2rem' }}>
-      <h1>Reference UI App</h1>
-      <p>Testing ref-sync workflow</p>
-      <ref-button label="Design system button" />
-    </div>
+    <Container style={{ padding: '2rem' }}>
+      <h1>Reference UI - React First</h1>
+      <ResponsiveExample />
+      <div style={{ marginTop: '2rem' }}>
+        <Button>Design system button</Button>
+      </div>
+    </Container>
   );
 }
-
-export default App;
