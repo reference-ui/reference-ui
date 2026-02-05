@@ -1,0 +1,69 @@
+/**
+ * Container Query Responsive System
+ * 
+ * Patterns for container-based responsive design:
+ * - box: extends Panda's built-in box pattern with `r` and `container` props
+ * - container: establishes container query contexts
+ */
+
+export const responsivePatterns = {
+  box: {
+    properties: {
+      r: { type: 'object' },
+      container: { type: 'string' },
+    },
+    blocklist: ['r', 'container'],
+    transform(props: Record<string, any>) {
+      const { r, container, ...rest } = props
+
+      if (!r) return rest
+
+      // Build @container queries
+      const prefix = container
+        ? `@container ${container} (min-width:`
+        : `@container (min-width:`
+
+      for (const [bp, styles] of Object.entries(r)) {
+        rest[`${prefix} ${bp}px)`] = styles
+      }
+
+      return rest
+    },
+  },
+  container: {
+    properties: {
+      name: { type: 'string' },
+      type: { type: 'enum', value: ['inline-size', 'size', 'normal'] },
+      density: { type: 'enum', value: ['compact', 'comfortable', 'spacious'] },
+    },
+    defaultValues: {
+      type: 'inline-size',
+    },
+    transform(props: Record<string, any>) {
+      const { name, type, density, ...rest } = props
+      return {
+        containerType: type,
+        ...(name && { containerName: name }),
+        ...(density && { 'data-density': density }),
+        ...rest,
+      }
+    },
+  },
+}
+
+export const responsiveGlobalCss = {
+  ':root': {
+    '--r-base': '16px',
+    '--r-density': '1',
+    '--spacing-r': 'calc(var(--r-base) * var(--r-density))',
+  },
+  '[data-density="compact"]': {
+    '--r-density': '0.75',
+  },
+  '[data-density="comfortable"]': {
+    '--r-density': '1',
+  },
+  '[data-density="spacious"]': {
+    '--r-density': '1.25',
+  },
+}
