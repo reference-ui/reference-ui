@@ -5,7 +5,7 @@
   "description": "Reference UI - Knowledge-First Components",
   "scripts": {
     "build": "pnpm -r run build",
-    "dev": "nx run-many --target=dev --projects=reference-core,reference-app --parallel"
+    "dev": "nx run-many --target=dev --projects=reference-core,reference-app,reference-docs --parallel"
   },
   "devDependencies": {
     "@types/node": "^25.1.0",
