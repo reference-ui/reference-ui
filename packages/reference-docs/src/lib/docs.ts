@@ -4,7 +4,7 @@ import React from 'react';
 const docModules = import.meta.glob<{
   default: React.ComponentType;
   frontmatter: { title: string; section: string; order: number; slug: string };
-}>('./docs/**/*.mdx', { eager: true });
+}>('../docs/**/*.mdx', { eager: true });
 
 export type DocMeta = {
   title: string;
