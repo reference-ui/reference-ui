@@ -3,8 +3,8 @@
  * Generates src/primitives/index.tsx with explicit primitive components.
  * Run: node scripts/generate-primitives.cjs
  *
- * Reads tags from src/primitives/tags.ts (hardcoded - math, rb, rtc excluded).
- * Panda's styled doesn't support math, rb, rtc.
+ * Each primitive = styled[tag] composed with box pattern (r, container).
+ * Simple composition, no createElement.
  */
 
 const fs = require('fs')
@@ -26,7 +26,7 @@ function toPascalCase(tag) {
 
 function escapeTag(tag) {
   if (tag === 'object') return 'Obj'
-  if (tag === 'var') return 'Var' // 'var' is reserved in JS
+  if (tag === 'var') return 'Var'
   return toPascalCase(tag)
 }
 
@@ -37,24 +37,37 @@ const header = `/**
  * Reference UI Primitives (generated - do not edit)
  * Run: node scripts/generate-primitives.cjs
  *
- * Box-based primitives with fixed element. Uses styled[tag] for correct ref types.
- * Public API omits 'as' so consumers get type-safe, non-polymorphic components.
- * Full Box flexibility: r, container, all style props.
- */`
+ * styled[tag] + box pattern (r, container). Simple composition.
+ */
 
-const lines = [
-  header,
-  '',
-  "import { createBoxPrimitive } from './create-box-primitive.js'",
-  '',
-  "export { TAGS as HTML_TAGS, type Tag as HtmlTag } from './tags.js'",
-  'export type { PrimitiveElement, PrimitiveProps } from \'./types.js\'',
-  '',
-]
+import * as React from 'react'
+import { forwardRef } from 'react'
+import { splitProps } from '../system/helpers.js'
+import { box } from '../system/patterns/box.js'
+import { styled } from '../system/jsx/index.js'
+import type { PrimitiveElement, PrimitiveProps } from './types.js'
 
+export { TAGS as HTML_TAGS, type Tag as HtmlTag } from './tags.js'
+export type { PrimitiveElement, PrimitiveProps } from './types.js'
+
+`
+
+function genPrimitive(tag, exportName) {
+  const styledVar = `Styled${exportName}`
+  return [
+    `const ${styledVar} = styled['${tag}']`,
+    `export const ${exportName} = forwardRef((props, ref) => {`,
+    `  const [p, r] = splitProps(props, ['r', 'container'])`,
+    `  return <${styledVar} ref={ref} {...(box.raw(p as Parameters<typeof box.raw>[0]) as object)} {...(r as object)} />`,
+    `}) as React.ForwardRefExoticComponent<PrimitiveProps<'${tag}'> & React.RefAttributes<PrimitiveElement<'${tag}'>>>`,
+    '',
+  ].join('\n')
+}
+
+const lines = [header]
 for (const tag of HTML_TAGS) {
   const exportName = escapeTag(tag)
-  lines.push(`export const ${exportName} = createBoxPrimitive('${tag}')`)
+  lines.push(genPrimitive(tag, exportName))
 }
 
 fs.writeFileSync(outPath, lines.join('\n'), 'utf8')
