@@ -50,10 +50,7 @@ function getWebPackageJson(): string {
   )
 }
 
-/**
- * Copy reference-core outputs to node_modules/@reference-ui with proper namespaces.
- * Creates @reference-ui/system and @reference-ui/web.
- */
+/** Copy core outputs to node_modules/@reference-ui/{system,web} */
 export function copyToNodeModules(packageRoot: string, coreDir: string): void {
   const distDir = resolve(coreDir, 'dist/entry')
   const systemSourceDir = resolve(coreDir, 'src/system')
@@ -65,28 +62,18 @@ export function copyToNodeModules(packageRoot: string, coreDir: string): void {
     )
   }
 
-  // Ensure @reference-ui namespace exists
   mkdirSync(resolve(packageRoot, 'node_modules/@reference-ui'), { recursive: true })
-
-  // Copy system source to @reference-ui/system
   const systemTarget = resolve(packageRoot, 'node_modules/@reference-ui/system')
   cpSync(systemSourceDir, systemTarget, { recursive: true })
   writeFileSync(resolve(systemTarget, 'package.json'), getSystemPackageJson(), 'utf-8')
-  
-  // Copy styles.css if it exists
   if (existsSync(stylesSourcePath)) {
     cpSync(stylesSourcePath, resolve(systemTarget, 'styles.css'))
   }
 
-  // Create @reference-ui/web as alias
   const webTarget = resolve(packageRoot, 'node_modules/@reference-ui/web')
   cpSync(distDir, webTarget, { recursive: true })
   writeFileSync(resolve(webTarget, 'package.json'), getWebPackageJson(), 'utf-8')
-  
-  // Copy styles.css to web package too
   if (existsSync(stylesSourcePath)) {
     cpSync(stylesSourcePath, resolve(webTarget, 'styles.css'))
   }
-
-  
 }

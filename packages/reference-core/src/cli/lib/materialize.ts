@@ -4,10 +4,7 @@ import type { BuildResult } from '../compiler/index.js'
 
 const SYSTEM_DIR = '.reference/system'
 
-/**
- * Write BuildResult.files to packageRoot/.reference/system/.
- * Creates parent directories as needed. No package manager involvement.
- */
+/** Write BuildResult.files to packageRoot/.reference/system/ */
 export function materializeBuildResult(packageRoot: string, result: BuildResult): void {
   const systemDir = resolve(packageRoot, SYSTEM_DIR)
 

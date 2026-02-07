@@ -23,10 +23,7 @@ const TSDOWN_CONFIG_TS = `export default {
 }
 `
 
-/**
- * Write .reference/tsconfig.json and .reference/tsdown.config.ts
- * so tsdown can bundle the system output.
- */
+/** Write .reference/tsconfig.json and tsdown.config.ts */
 export function generateDotReferenceConfigs(cwd: string): void {
   const dotRefDir = resolve(cwd, DOT_REFERENCE)
   mkdirSync(dotRefDir, { recursive: true })

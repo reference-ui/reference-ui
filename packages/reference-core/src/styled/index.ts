@@ -1,13 +1,7 @@
 import { defineTokens } from '@pandacss/dev'
 import { colors } from './colors'
 
-/**
- * Reference UI Default Design Tokens
- *
- * Users can customize these tokens by:
- * 1. Using extendSystem() to merge with these defaults
- * 2. Using createSystem() to define completely custom tokens
- */
+/** Default design tokens */
 export const tokens = defineTokens({
   colors,
   spacing: {

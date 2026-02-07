@@ -16,8 +16,7 @@ function debugCompileStep(step: string, data: unknown): void {
 }
 
 function rewriteCoreImportsForConsumer(sourcePath: string, content: string): string {
-  // Core components reference core's internal panda output.
-  // In the consumer, we expose css via system/css.ts.
+  // Rewrite core css imports for consumer.
   if (sourcePath.startsWith('components/')) {
     return content.replace(
       /from\s+['"]@reference-ui\/core\/styled-system\/css['"]/g,
@@ -28,11 +27,7 @@ function rewriteCoreImportsForConsumer(sourcePath: string, content: string): str
   return content
 }
 
-/**
- * Core compilation logic. Pure - no filesystem access.
- * Returns in-memory BuildResult; CLI writes to disk.
- * When sourceFiles is provided, outputs full design system source; otherwise stub metadata only.
- */
+/** Pure compilation. Returns BuildResult; CLI materializes to disk. */
 export function compile(config: GenerateDesignSystemConfig): BuildResult {
   debugCompileStep('Received Config', config)
 
@@ -47,8 +42,7 @@ export function compile(config: GenerateDesignSystemConfig): BuildResult {
 
   const sourceFiles = config.sourceFiles ?? {}
 
-  // Copy-through: materialize the provided source files into the consumer system.
-  // We intentionally do NOT forward core's css.ts stub or core's index.ts.
+  // Copy source files; skip css.ts and index.ts (we generate those).
   for (const [sourcePath, content] of Object.entries(sourceFiles)) {
     debugCompileStep(`Processing File: ${sourcePath}`, sourcePath)
 
@@ -62,8 +56,7 @@ export function compile(config: GenerateDesignSystemConfig): BuildResult {
     result.files.set(normalizedPath, rewritten)
   }
 
-  // Provide a real css() by re-exporting Panda's generated runtime.
-  // src/system is expected to be present (copied from core).
+  // Re-export Panda css from system.
   result.files.set(
     'css.ts',
     [
@@ -72,13 +65,10 @@ export function compile(config: GenerateDesignSystemConfig): BuildResult {
     ].join('\n')
   )
 
-  // Entry file for bundling.
   result.files.set(
     'index.ts',
     [
-      '/**',
-      ' * Reference design system - generated entry. Do not edit by hand.',
-      ' */',
+      '/** Generated entry. Do not edit. */',
       "export { RefButton } from './components/Button.js'",
       "export type { ButtonVariant, ButtonSize, RefButtonProps } from './components/Button.js'",
       "export { tokens } from './tokens.js'",

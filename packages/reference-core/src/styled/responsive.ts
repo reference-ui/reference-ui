@@ -1,19 +1,4 @@
-/**
- * Container Query Responsive System
- *
- * Patterns for container-based responsive design:
- * - box: extends Panda's built-in box pattern with `r` and `container` props
- * - container: establishes container query contexts
- *
- * The box pattern's `jsx` hint tells Panda to track our primitives (Div, H2, etc.)
- * so that `r` and `container` props are picked up during codegen.
- *
- * ## Type extension note
- * The `r` property uses type: 'object' (a map of breakpoint → styles). Panda's
- * PatternProperty types only declare string|number|boolean, but runtime accepts
- * object. panda.config uses @ts-expect-error when passing these patterns.
- */
-
+/** Box/container pattern. jsx hint for Panda. */
 import type { SystemStyleObject } from '../system/types/index.js'
 import { PRIMITIVE_JSX_NAMES } from '../primitives/tags.js'
 
@@ -26,14 +11,12 @@ export const responsivePatterns = {
     jsx: ['Box', ...PRIMITIVE_JSX_NAMES],
     properties: {
       r: { type: 'object' as const },
-      // container: true = anonymous container; container="name" = named container
       container: { type: 'string' as const },
     },
     blocklist: ['r', 'container'],
     transform(props: Record<string, any>) {
       const { r, container, ...rest } = props
 
-      // container + r = child querying named container
       if (r) {
         const prefix = container
           ? `@container ${container} (min-width:`
@@ -44,7 +27,6 @@ export const responsivePatterns = {
         return rest
       }
 
-      // container alone = this box is a container (inline-size)
       if (container !== undefined) {
         rest.containerType = 'inline-size'
         if (typeof container === 'string' && container) {

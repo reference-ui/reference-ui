@@ -26,7 +26,6 @@ const rhythmTransform = <P extends keyof SystemProperties>(property: P): Utility
 })
 
 export const rhythmUtilities = {
-  // Padding
   padding: rhythmTransform('padding'),
   paddingTop: rhythmTransform('paddingTop'),
   paddingBottom: rhythmTransform('paddingBottom'),
@@ -39,7 +38,6 @@ export const rhythmUtilities = {
   paddingBlockStart: rhythmTransform('paddingBlockStart'),
   paddingBlockEnd: rhythmTransform('paddingBlockEnd'),
 
-  // Margin
   margin: rhythmTransform('margin'),
   marginTop: rhythmTransform('marginTop'),
   marginBottom: rhythmTransform('marginBottom'),
@@ -52,7 +50,6 @@ export const rhythmUtilities = {
   marginBlockStart: rhythmTransform('marginBlockStart'),
   marginBlockEnd: rhythmTransform('marginBlockEnd'),
 
-  // Gap
   gap: rhythmTransform('gap'),
   rowGap: rhythmTransform('rowGap'),
   columnGap: rhythmTransform('columnGap'),
@@ -60,7 +57,6 @@ export const rhythmUtilities = {
   gridRowGap: rhythmTransform('gridRowGap'),
   gridColumnGap: rhythmTransform('gridColumnGap'),
 
-  // Inset (positioning)
   inset: rhythmTransform('inset'),
   insetBlock: rhythmTransform('insetBlock'),
   insetBlockStart: rhythmTransform('insetBlockStart'),
@@ -73,7 +69,6 @@ export const rhythmUtilities = {
   bottom: rhythmTransform('bottom'),
   left: rhythmTransform('left'),
 
-  // Scroll margin
   scrollMargin: rhythmTransform('scrollMargin'),
   scrollMarginTop: rhythmTransform('scrollMarginTop'),
   scrollMarginRight: rhythmTransform('scrollMarginRight'),
@@ -86,7 +81,6 @@ export const rhythmUtilities = {
   scrollMarginInlineStart: rhythmTransform('scrollMarginInlineStart'),
   scrollMarginInlineEnd: rhythmTransform('scrollMarginInlineEnd'),
 
-  // Scroll padding
   scrollPadding: rhythmTransform('scrollPadding'),
   scrollPaddingTop: rhythmTransform('scrollPaddingTop'),
   scrollPaddingRight: rhythmTransform('scrollPaddingRight'),
@@ -99,9 +93,6 @@ export const rhythmUtilities = {
   scrollPaddingInlineStart: rhythmTransform('scrollPaddingInlineStart'),
   scrollPaddingInlineEnd: rhythmTransform('scrollPaddingInlineEnd'),
 
-  // Outline offset
   outlineOffset: rhythmTransform('outlineOffset'),
-
-  // Border spacing
   borderSpacing: rhythmTransform('borderSpacing'),
 } satisfies { [K in keyof SystemProperties]?: UtilityTransform<K> }

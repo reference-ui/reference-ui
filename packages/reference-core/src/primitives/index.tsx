@@ -1,10 +1,4 @@
-/**
- * Reference UI Primitives (generated - do not edit)
- * Run: node scripts/generate-primitives.cjs
- *
- * Each primitive = styled[tag] with box pattern (r, container) applied.
- * applyBoxPattern extracts r/container and transforms to CSS before passing to styled.
- */
+/** Generated. Run: node scripts/generate-primitives.cjs */
 
 import * as React from 'react'
 import { forwardRef } from 'react'
@@ -16,7 +10,6 @@ import type { PrimitiveElement, PrimitiveProps } from './types.js'
 export { TAGS as HTML_TAGS, type Tag as HtmlTag } from './tags.js'
 export type { PrimitiveElement, PrimitiveProps } from './types.js'
 
-/** Extracts r and container from props, transforms them to CSS via box.raw, returns merged props for a styled element. */
 function applyBoxPattern(props: object): object {
   const [boxProps, rest] = splitProps(props, ['r', 'container'])
   const styles = box.raw(boxProps as Parameters<typeof box.raw>[0]) as object

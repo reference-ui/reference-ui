@@ -33,5 +33,5 @@ awesome bit of kit
 
 //shows your DS colours.
 <Reference.Colors>
-</Reference.Colors
+</Reference.Colors>
 

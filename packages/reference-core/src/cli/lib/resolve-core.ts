@@ -4,10 +4,6 @@ import { createRequire } from 'node:module'
 
 const CONFIG_FILES = ['reference.config.ts', 'reference.config.js', 'reference.config.mjs']
 
-/**
- * Resolve the package root (the package where reference-ui is installed).
- * Scope is this package only—not Nx workspace.
- */
 export function resolvePackageRoot(startCwd: string = process.cwd()): string {
   let dir = resolve(startCwd)
   const root = dirname(dir)
@@ -31,17 +27,10 @@ export function resolvePackageRoot(startCwd: string = process.cwd()): string {
   return startCwd
 }
 
-/**
- * Reads all source files from the core directory.
- * @param coreDir - The directory containing core source files.
- * @returns An object mapping file paths to their contents.
- */
 export function readCoreSourceFiles(coreDir: string): Record<string, string> {
   const sourceFiles: Record<string, string> = {}
 
-  // We materialize a consumer system from:
-  // - coreDir/src/** (TypeScript source)
-  // - coreDir/src/system/** (Panda output: JS, DTS, CSS)
+  // Core src + src/system for consumer materialization.
   const roots: Array<{ dir: string; base: string; exts?: string[] }> = [
     { dir: resolve(coreDir, 'src'), base: '', exts: ['.ts'] },
     { dir: resolve(coreDir, 'src/system'), base: 'system' },
@@ -57,7 +46,6 @@ export function readCoreSourceFiles(coreDir: string): Record<string, string> {
       const stats = statSync(fullPath)
 
       if (stats.isDirectory()) {
-        // Avoid pulling in dependencies if someone runs sync inside core.
         if (entry === 'node_modules' || entry === 'dist' || entry === 'cli') continue
         readDirRecursive(fullPath, rootDir, basePrefix, exts)
         continue
@@ -81,19 +69,14 @@ export function readCoreSourceFiles(coreDir: string): Record<string, string> {
   return sourceFiles
 }
 
-/**
- * Resolves the directory containing the core package.
- * @returns The path to the core package directory.
- */
 export function resolveCorePackageDir(): string {
   const fromCwd = process.cwd()
 
-  // Preferred: resolve through Node's module resolution (works for monorepos).
+  // Prefer Node module resolution (monorepos).
   try {
     const req = createRequire(import.meta.url)
     const entry = req.resolve('@reference-ui/core')
 
-    // Walk up from the resolved entry until we find the package root.
     let dir = dirname(entry)
     const fsRoot = parse(dir).root
     while (dir !== fsRoot) {
@@ -108,7 +91,7 @@ export function resolveCorePackageDir(): string {
     // fall through
   }
 
-  // Fallback: walk up to find a workspace root, then try common monorepo locations.
+  // Fallback: workspace root + monorepo paths.
   let dir = fromCwd
   const root = dirname(dir)
 

@@ -19,7 +19,6 @@ const responsiveStyles = {
 export function ResponsiveExample() {
   return (
     <Div display="flex" flexDirection="column" gap="4r">
-      {/* Anonymous container: child queries nearest ancestor */}
       <Div container css={containerStyles}>
         <H2 marginBottom="1r">1. Anonymous container</H2>
         <Div
@@ -33,7 +32,6 @@ export function ResponsiveExample() {
         </Div>
       </Div>
 
-      {/* Multi-container: two named containers, each child queries its own */}
       <H2 marginTop="2r">2. Multi-container (sidebar + card)</H2>
       <Div
         css={{

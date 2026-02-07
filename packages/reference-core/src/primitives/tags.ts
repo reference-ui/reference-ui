@@ -1,8 +1,3 @@
-/**
- * HTML tags supported by Panda's styled API.
- * math, rb, rtc are not in styled, so we exclude them.
- */
-
 export const TAGS = [
   'a',
   'abbr',
@@ -123,7 +118,6 @@ export const TAGS = [
 
 export type Tag = (typeof TAGS)[number]
 
-/** PascalCase export names for primitives (Obj for object, Var for var). Used by Panda jsx tracking. */
 function toJsxName(tag: string): string {
   if (tag === 'object') return 'Obj'
   if (tag === 'var') return 'Var'

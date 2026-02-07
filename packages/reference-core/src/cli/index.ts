@@ -1,10 +1,4 @@
 #!/usr/bin/env node
-/**
- * Reference Core CLI - thin build + materialize wrapper.
- * Builds reference-core source and materializes outputs to node_modules.
- * Run during postinstall and via ref-sync command.
- */
-
 import { syncCommand } from './commands/sync.js'
 import { linkSystemCommand } from './commands/link-system.js'
 

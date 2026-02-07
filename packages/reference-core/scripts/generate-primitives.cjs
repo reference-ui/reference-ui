@@ -1,12 +1,4 @@
 #!/usr/bin/env node
-/**
- * Generates src/primitives/index.tsx with explicit primitive components.
- * Run: node scripts/generate-primitives.cjs
- *
- * Each primitive = styled[tag] passed directly. applyBoxPattern utility
- * extracts r/container and transforms them to CSS before passing to styled.
- */
-
 const fs = require('fs')
 const path = require('path')
 const tagsPath = path.join(__dirname, '../src/primitives/tags.ts')
@@ -33,13 +25,7 @@ function escapeTag(tag) {
 const outDir = path.join(__dirname, '../src/primitives')
 const outPath = path.join(outDir, 'index.tsx')
 
-const header = `/**
- * Reference UI Primitives (generated - do not edit)
- * Run: node scripts/generate-primitives.cjs
- *
- * Each primitive = styled[tag] with box pattern (r, container) applied.
- * applyBoxPattern extracts r/container and transforms to CSS before passing to styled.
- */
+const header = `/** Generated. Run: node scripts/generate-primitives.cjs */
 
 import * as React from 'react'
 import { forwardRef } from 'react'
@@ -51,7 +37,6 @@ import type { PrimitiveElement, PrimitiveProps } from './types.js'
 export { TAGS as HTML_TAGS, type Tag as HtmlTag } from './tags.js'
 export type { PrimitiveElement, PrimitiveProps } from './types.js'
 
-/** Extracts r and container from props, transforms them to CSS via box.raw, returns merged props for a styled element. */
 function applyBoxPattern(props: object): object {
   const [boxProps, rest] = splitProps(props, ['r', 'container'])
   const styles = box.raw(boxProps as Parameters<typeof box.raw>[0]) as object
