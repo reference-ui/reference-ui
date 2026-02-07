@@ -13,6 +13,17 @@ export const tokens = defineTokens({
   spacing: {
     px: { value: '1px' },
     r: { value: '0.25rem' },
+    '0.5r': { value: 'calc(0.5 * var(--spacing-r))' },
+    '1r': { value: 'var(--spacing-r)' },
+    '1.5r': { value: 'calc(1.5 * var(--spacing-r))' },
+    '2r': { value: 'calc(2 * var(--spacing-r))' },
+    '3r': { value: 'calc(3 * var(--spacing-r))' },
+    '4r': { value: 'calc(4 * var(--spacing-r))' },
+    '5r': { value: 'calc(5 * var(--spacing-r))' },
+    '6r': { value: 'calc(6 * var(--spacing-r))' },
+    '8r': { value: 'calc(8 * var(--spacing-r))' },
+    '10r': { value: 'calc(10 * var(--spacing-r))' },
+    '12r': { value: 'calc(12 * var(--spacing-r))' },
   },
   fontSizes: {
     xs: { value: '0.75rem' },

@@ -1,5 +1,8 @@
 /**
  * Type definitions for responsive container query patterns
+ *
+ * Box r and container props are defined in the Panda pattern config;
+ * this file exports the ResponsiveBreakpoints type for explicit typing.
  */
 
 import type { SystemStyleObject } from '../system/types/index.js'
@@ -8,7 +11,7 @@ import type { SystemStyleObject } from '../system/types/index.js'
  * Responsive breakpoint map for container queries
  * Keys are min-width breakpoints in pixels
  * Values are style objects to apply at that breakpoint
- * 
+ *
  * @example
  * r: {
  *   300: { padding: '4r' },
@@ -27,7 +30,7 @@ declare module '../system/patterns/box' {
     /**
      * Container query responsive styles.
      * Keys are min-width breakpoints in pixels.
-     * 
+     *
      * @example
      * r: {
      *   300: { padding: '4r' },
@@ -35,14 +38,16 @@ declare module '../system/patterns/box' {
      * }
      */
     r?: ResponsiveBreakpoints
-    
+
     /**
-     * Named container to query (optional).
-     * If omitted, queries the nearest ancestor container.
-     * 
+     * Make this box a container (inline-size) for container queries.
+     * - `container` or `container={true}` → anonymous container
+     * - `container="sidebar"` → named container
+     *
      * @example
-     * container: 'sidebar'
+     * container
+     * container="sidebar"
      */
-    container?: string
+    container?: string | boolean
   }
 }

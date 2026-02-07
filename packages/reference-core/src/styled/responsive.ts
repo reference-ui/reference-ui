@@ -6,25 +6,41 @@
  * - container: establishes container query contexts
  */
 
+import type { SystemStyleObject } from '../system/types/index.js'
+
+export type ResponsiveBreakpoints = {
+  [breakpoint: number]: SystemStyleObject
+}
+
 export const responsivePatterns = {
   box: {
     properties: {
       r: { type: 'object' },
-      container: { type: 'string' },
+      // container: true = anonymous container; container="name" = named container
+      container: { type: ['string', 'boolean'] as const },
     },
     blocklist: ['r', 'container'],
     transform(props: Record<string, any>) {
       const { r, container, ...rest } = props
 
-      if (!r) return rest
+      // container + r = child querying named container
+      if (r) {
+        const prefix = container
+          ? `@container ${container} (min-width:`
+          : `@container (min-width:`
+        for (const [bp, styles] of Object.entries(r)) {
+          rest[`${prefix} ${bp}px)`] = styles
+        }
+        return rest
+      }
 
-      // Build @container queries
-      const prefix = container
-        ? `@container ${container} (min-width:`
-        : `@container (min-width:`
-
-      for (const [bp, styles] of Object.entries(r)) {
-        rest[`${prefix} ${bp}px)`] = styles
+      // container alone = this box is a container (inline-size)
+      if (container !== undefined) {
+        rest.containerType = 'inline-size'
+        if (typeof container === 'string' && container) {
+          rest.containerName = container
+        }
+        return rest
       }
 
       return rest

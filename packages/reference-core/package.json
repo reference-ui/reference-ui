@@ -27,18 +27,21 @@
     "react-dom": "^18.0.0"
   },
   "scripts": {
-    "build": "tsdown",
+    "build": "node scripts/generate-primitives.cjs && tsdown",
     "dev": "tsdown --watch",
     "dev:core": "concurrently \"panda codegen --watch\" \"panda --watch\"",
-    "gen": "panda codegen && panda",
+    "gen": "panda codegen && panda && node scripts/generate-primitives.cjs",
+    "gen:primitives": "node scripts/generate-primitives.cjs",
     "codegen": "panda codegen",
     "cssgen": "panda",
-    "postinstall": "panda codegen && npm run build && node ./dist/cli/index.mjs link-system"
+    "postinstall": "panda codegen && node scripts/generate-primitives.cjs && npm run build && node ./dist/cli/index.mjs link-system"
   },
   "devDependencies": {
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "concurrently": "^9.1.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "typescript": "~5.9.3"
   }
 }

@@ -3,6 +3,9 @@
  * React-first design system with Panda CSS.
  */
 
+// Reference UI primitives (Div, Span, etc. - no polymorphic 'as')
+export * from '../primitives/index.js'
+
 // Panda-generated JSX primitives
 export { Box } from '../system/jsx/box.js'
 export { Container } from '../system/jsx/container.js'

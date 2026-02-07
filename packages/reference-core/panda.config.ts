@@ -10,6 +10,7 @@ import { responsivePatterns, responsiveGlobalCss } from './src/styled/responsive
  * Run: panda codegen (or --watch) and panda cssgen (or --watch).
  */
 export default defineConfig({
+  presets: [],
   jsxFramework: 'react',
   preflight: true,
   include: ['src/**/*.ts', 'src/**/*.tsx'],
@@ -22,7 +23,7 @@ export default defineConfig({
     extend: rhythmUtilities,
   },
   theme: {
-    extend: defaultTheme.extend,
+    tokens: defaultTheme.extend.tokens,
   },
   patterns: {
     extend: responsivePatterns,
