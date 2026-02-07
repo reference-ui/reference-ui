@@ -3,8 +3,8 @@
  * Generates src/primitives/index.tsx with explicit primitive components.
  * Run: node scripts/generate-primitives.cjs
  *
- * Each primitive = styled[tag] composed with box pattern (r, container).
- * Simple composition, no createElement.
+ * Each primitive = styled[tag] passed directly. applyBoxPattern utility
+ * extracts r/container and transforms them to CSS before passing to styled.
  */
 
 const fs = require('fs')
@@ -37,7 +37,8 @@ const header = `/**
  * Reference UI Primitives (generated - do not edit)
  * Run: node scripts/generate-primitives.cjs
  *
- * styled[tag] + box pattern (r, container). Simple composition.
+ * Each primitive = styled[tag] with box pattern (r, container) applied.
+ * applyBoxPattern extracts r/container and transforms to CSS before passing to styled.
  */
 
 import * as React from 'react'
@@ -50,18 +51,17 @@ import type { PrimitiveElement, PrimitiveProps } from './types.js'
 export { TAGS as HTML_TAGS, type Tag as HtmlTag } from './tags.js'
 export type { PrimitiveElement, PrimitiveProps } from './types.js'
 
+/** Extracts r and container from props, transforms them to CSS via box.raw, returns merged props for a styled element. */
+function applyBoxPattern(props: object): object {
+  const [boxProps, rest] = splitProps(props, ['r', 'container'])
+  const styles = box.raw(boxProps as Parameters<typeof box.raw>[0]) as object
+  return { ...styles, ...(rest as object) }
+}
+
 `
 
 function genPrimitive(tag, exportName) {
-  const styledVar = `Styled${exportName}`
-  return [
-    `const ${styledVar} = styled['${tag}']`,
-    `export const ${exportName} = forwardRef((props, ref) => {`,
-    `  const [p, r] = splitProps(props, ['r', 'container'])`,
-    `  return <${styledVar} ref={ref} {...(box.raw(p as Parameters<typeof box.raw>[0]) as object)} {...(r as object)} />`,
-    `}) as React.ForwardRefExoticComponent<PrimitiveProps<'${tag}'> & React.RefAttributes<PrimitiveElement<'${tag}'>>>`,
-    '',
-  ].join('\n')
+  return `export const ${exportName} = forwardRef((props, ref) => <styled.${tag} ref={ref} {...applyBoxPattern(props)} />) as React.ForwardRefExoticComponent<PrimitiveProps<'${tag}'> & React.RefAttributes<PrimitiveElement<'${tag}'>>>`
 }
 
 const lines = [header]
