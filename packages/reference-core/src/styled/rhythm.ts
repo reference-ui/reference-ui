@@ -3,17 +3,17 @@ import type { SystemProperties } from '../system/types/style-props'
 type UtilityTransform<P extends keyof SystemProperties = keyof SystemProperties> = {
   readonly property: P
   readonly values: 'spacing'
-  readonly transform: (value: unknown) => Record<P, unknown>
+  readonly transform: (value: unknown) => Record<P, string | number>
 }
 
-function resolveRhythm(value: unknown): unknown {
+function resolveRhythm(value: unknown): string | number {
   if (typeof value === 'string' && value.endsWith('r')) {
     const n = Number(value.slice(0, -1))
     if (!Number.isNaN(n)) {
       return `calc(${n} * var(--spacing-r))`
     }
   }
-  return value
+  return value as string | number
 }
 
 
@@ -22,7 +22,7 @@ const rhythmTransform = <P extends keyof SystemProperties>(property: P): Utility
   values: 'spacing' as const,
   transform: (value: unknown) => ({
     [property]: resolveRhythm(value),
-  }) as Record<P, unknown>,
+  }) as Record<P, string | number>,
 })
 
 export const rhythmUtilities = {

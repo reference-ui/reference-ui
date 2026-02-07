@@ -7,6 +7,11 @@
  *
  * The box pattern's `jsx` hint tells Panda to track our primitives (Div, H2, etc.)
  * so that `r` and `container` props are picked up during codegen.
+ *
+ * ## Type extension note
+ * The `r` property uses type: 'object' (a map of breakpoint → styles). Panda's
+ * PatternProperty types only declare string|number|boolean, but runtime accepts
+ * object. panda.config uses @ts-expect-error when passing these patterns.
  */
 
 import type { SystemStyleObject } from '../system/types/index.js'
@@ -20,9 +25,9 @@ export const responsivePatterns = {
   box: {
     jsx: ['Box', ...PRIMITIVE_JSX_NAMES],
     properties: {
-      r: { type: 'object' },
+      r: { type: 'object' as const },
       // container: true = anonymous container; container="name" = named container
-      container: { type: ['string', 'boolean'] as const },
+      container: { type: 'string' as const },
     },
     blocklist: ['r', 'container'],
     transform(props: Record<string, any>) {

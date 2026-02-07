@@ -3,6 +3,18 @@ import { defaultTheme, defaultStaticCss } from './src/styled/index.js'
 import { rhythmUtilities } from './src/styled/rhythm.js'
 import { responsivePatterns, responsiveGlobalCss } from './src/styled/responsive.js'
 
+/** Extracted type for patterns.extend so we can assert our custom patterns. */
+type ExtendablePatterns = Parameters<typeof defineConfig>[0]['patterns'] extends { extend?: infer E } ? E : never
+
+/**
+ * Asserts our custom patterns are valid for patterns.extend.
+ * Our box pattern uses type: 'object' for the `r` prop (breakpoint map).
+ * Panda's TypeScript types only allow string|number|boolean; runtime accepts it.
+ */
+function asExtendablePatterns<T>(patterns: T): ExtendablePatterns {
+  return patterns as ExtendablePatterns
+}
+
 /**
  * Panda config for reference-core.
  * - codegen: emits src/system/ (css, recipes, tokens, types)
@@ -26,7 +38,7 @@ export default defineConfig({
     tokens: defaultTheme.extend.tokens,
   },
   patterns: {
-    extend: responsivePatterns,
+    extend: asExtendablePatterns(responsivePatterns),
   },
   globalCss: responsiveGlobalCss,
-} as Parameters<typeof defineConfig>[0])
+})
