@@ -1,12 +1,16 @@
 /**
  * Container Query Responsive System
- * 
+ *
  * Patterns for container-based responsive design:
  * - box: extends Panda's built-in box pattern with `r` and `container` props
  * - container: establishes container query contexts
+ *
+ * The box pattern's `jsx` hint tells Panda to track our primitives (Div, H2, etc.)
+ * so that `r` and `container` props are picked up during codegen.
  */
 
 import type { SystemStyleObject } from '../system/types/index.js'
+import { PRIMITIVE_JSX_NAMES } from '../primitives/tags.js'
 
 export type ResponsiveBreakpoints = {
   [breakpoint: number]: SystemStyleObject
@@ -14,6 +18,7 @@ export type ResponsiveBreakpoints = {
 
 export const responsivePatterns = {
   box: {
+    jsx: ['Box', ...PRIMITIVE_JSX_NAMES],
     properties: {
       r: { type: 'object' },
       // container: true = anonymous container; container="name" = named container

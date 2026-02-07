@@ -122,3 +122,13 @@ export const TAGS = [
 ] as const
 
 export type Tag = (typeof TAGS)[number]
+
+/** PascalCase export names for primitives (Obj for object, Var for var). Used by Panda jsx tracking. */
+function toJsxName(tag: string): string {
+  if (tag === 'object') return 'Obj'
+  if (tag === 'var') return 'Var'
+  if (tag.length <= 1) return tag.toUpperCase()
+  return tag.charAt(0).toUpperCase() + tag.slice(1)
+}
+
+export const PRIMITIVE_JSX_NAMES = TAGS.map(toJsxName)
