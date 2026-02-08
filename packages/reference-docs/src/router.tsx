@@ -1,5 +1,4 @@
 import { createRouter } from '@tanstack/react-router';
-import '@reference-ui/core/styles.css';
 
 import { routeTree } from './routes';
 

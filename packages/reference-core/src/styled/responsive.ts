@@ -1,7 +1,6 @@
 /** Box/container pattern. jsx hint for Panda. */
 import type { SystemStyleObject } from '../system/types/index.js'
 import { PRIMITIVE_JSX_NAMES } from '../primitives/tags.js'
-
 export type ResponsiveBreakpoints = {
   [breakpoint: number]: SystemStyleObject
 }
@@ -64,6 +63,10 @@ export const responsiveGlobalCss = {
     '--r-base': '16px',
     '--r-density': '1',
     '--spacing-r': 'calc(var(--r-base) * var(--r-density))',
+  },
+  body: {
+    fontFamily: 'mono',
+    fontSize: 'body',
   },
   '[data-density="compact"]': {
     '--r-density': '0.75',

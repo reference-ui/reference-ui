@@ -9,17 +9,48 @@ import { Button, ResponsiveExample } from '@reference-ui/core';
 
 # Button
 
-The `Button` component is a primitive that extends the native `<button>` element with design system styling.
+The `Button` component uses a compositional CSS pattern with the Button primitive, providing flexible styling through `visual` and `size` props.
 
 ## Basic usage
 
 <Button>Default button</Button>
 
-## Multiple variants
+## Visual variants
+
+The `visual` prop controls the button's appearance:
 
 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-  <Button>Primary</Button>
-  <Button>Secondary</Button>
+  <Button visual="solid">Solid</Button>
+  <Button visual="ghost">Ghost</Button>
+  <Button visual="outline">Outline</Button>
+</div>
+
+## Sizes
+
+The `size` prop controls the button's dimensions:
+
+<div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+  <Button size="sm">Small</Button>
+  <Button size="md">Medium</Button>
+  <Button size="lg">Large</Button>
+</div>
+
+## Combinations
+
+Mix and match visuals and sizes:
+
+<div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+  <Button visual="solid" size="sm">Solid Small</Button>
+  <Button visual="ghost" size="md">Ghost Medium</Button>
+  <Button visual="outline" size="lg">Outline Large</Button>
+</div>
+
+## Disabled state
+
+<div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+  <Button disabled>Disabled Solid</Button>
+  <Button visual="ghost" disabled>Disabled Ghost</Button>
+  <Button visual="outline" disabled>Disabled Outline</Button>
 </div>
 
 ## Responsive example

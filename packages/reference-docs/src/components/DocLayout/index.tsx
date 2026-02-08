@@ -6,8 +6,8 @@ export function DocLayout() {
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
       <DocSidebar />
-      <main style={{ flex: 1, overflow: 'auto' }}>
-        <div style={{ padding: '2rem 3rem', maxWidth: 720 }}>
+      <main style={{ flex: 1, minWidth: 0, overflow: 'auto' }}>
+        <div style={{ padding: '2rem 3rem', maxWidth: 1400, minWidth: 0 }}>
           <MDXProvider>
             <Outlet />
           </MDXProvider>

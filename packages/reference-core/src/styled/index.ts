@@ -1,9 +1,11 @@
 import { defineTokens } from '@pandacss/dev'
 import { colors } from './colors'
+import { fontStaticCssProperties, fontTokens } from './font.js'
 
 /** Default design tokens */
 export const tokens = defineTokens({
   colors,
+  ...fontTokens,
   spacing: {
     px: { value: '1px' },
     r: { value: '0.25rem' },
@@ -18,21 +20,6 @@ export const tokens = defineTokens({
     '8r': { value: 'calc(8 * var(--spacing-r))' },
     '10r': { value: 'calc(10 * var(--spacing-r))' },
     '12r': { value: 'calc(12 * var(--spacing-r))' },
-  },
-  fontSizes: {
-    xs: { value: '0.75rem' },
-    sm: { value: '0.875rem' },
-    md: { value: '1rem' },
-    lg: { value: '1.125rem' },
-    xl: { value: '1.25rem' },
-    '2xl': { value: '1.5rem' },
-    '3xl': { value: '1.875rem' },
-    '4xl': { value: '2.25rem' },
-    '5xl': { value: '3rem' },
-    '6xl': { value: '3.75rem' },
-    '7xl': { value: '4.5rem' },
-    '8xl': { value: '6rem' },
-    '9xl': { value: '8rem' },
   },
   radii: {
     none: { value: '0' },
@@ -67,8 +54,7 @@ export const defaultStaticCss = {
         paddingBottom: ['*'],
         margin: ['*'],
         gap: ['*'],
-        fontSize: ['*'],
-        fontWeight: ['*'],
+        ...fontStaticCssProperties,
         borderRadius: ['*'],
         borderWidth: ['*'],
       },
