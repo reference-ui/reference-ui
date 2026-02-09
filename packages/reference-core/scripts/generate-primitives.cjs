@@ -32,10 +32,10 @@ import { forwardRef } from 'react'
 import { splitProps } from '../system/helpers.js'
 import { box } from '../system/patterns/box.js'
 import { styled } from '../system/jsx/index.js'
-import type { PrimitiveElement, PrimitiveProps } from './types.js'
+import type { PrimitiveElement, PrimitiveProps } from './types'
 
-export { TAGS as HTML_TAGS, type Tag as HtmlTag } from './tags.js'
-export type { PrimitiveElement, PrimitiveProps } from './types.js'
+export { TAGS as HTML_TAGS, type Tag as HtmlTag } from './tags'
+export type { PrimitiveElement, PrimitiveProps } from './types'
 
 function applyBoxPattern(props: object): object {
   const [boxProps, rest] = splitProps(props, ['r', 'container'])
@@ -49,7 +49,21 @@ function genPrimitive(tag, exportName) {
   return `export const ${exportName} = forwardRef((props, ref) => <styled.${tag} ref={ref} {...applyBoxPattern(props)} />) as React.ForwardRefExoticComponent<PrimitiveProps<'${tag}'> & React.RefAttributes<PrimitiveElement<'${tag}'>>>`
 }
 
+function genTypeExport(tag, exportName) {
+  return `export type ${exportName}Props = PrimitiveProps<'${tag}'>`
+}
+
 const lines = [header]
+
+// Generate type exports
+for (const tag of HTML_TAGS) {
+  const exportName = escapeTag(tag)
+  lines.push(genTypeExport(tag, exportName))
+}
+
+lines.push('') // Add a blank line between types and components
+
+// Generate component exports
 for (const tag of HTML_TAGS) {
   const exportName = escapeTag(tag)
   lines.push(genPrimitive(tag, exportName))

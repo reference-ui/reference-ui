@@ -1,0 +1,51 @@
+---
+title: Colors
+section: Components
+order: 2
+slug: colors
+---
+
+import { Colors } from '../../components/Colors';
+import { Color } from '../../components/Color';
+
+# Colors
+
+The Reference UI design system uses a comprehensive color palette based on OKLCH color space for perceptually uniform colors across all shades.
+
+## All Colors
+
+<Colors />
+
+## Usage
+
+You can also display specific color palettes or individual colors:
+
+### Specific Palette
+
+```jsx
+<Colors palette="blue" />
+```
+
+<Colors palette="blue" />
+
+### Individual Color
+
+```jsx
+<Color name="blue-500" value="oklch(62.3% 0.214 259.815)" />
+```
+
+<Color name="blue-500" value="oklch(62.3% 0.214 259.815)" />
+
+## Available Palettes
+
+The following color palettes are available:
+
+- **Neutrals**: slate, gray, zinc, neutral, stone
+- **Reds**: red, rose
+- **Oranges**: orange, amber
+- **Yellows**: yellow, lime
+- **Greens**: green, emerald, teal
+- **Blues**: cyan, sky, blue, indigo
+- **Purples**: violet, purple, fuchsia, pink
+
+Each palette includes shades from 50 (lightest) to 950 (darkest).

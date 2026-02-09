@@ -4,9 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "ref-sync && vite",
-    "build": "ref-sync && vite build",
-    "preview": "vite preview"
+    "dev": "node scripts/generate-primitives-docs.cjs && ref-sync && vite",
+    "build": "node scripts/generate-primitives-docs.cjs && ref-sync && vite build",
+    "preview": "vite preview",
+    "generate:primitives": "node scripts/generate-primitives-docs.cjs"
   },
   "dependencies": {
     "@tanstack/react-router": "^1.158.4",

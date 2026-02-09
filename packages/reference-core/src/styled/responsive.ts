@@ -65,7 +65,7 @@ export const responsiveGlobalCss = {
     '--spacing-r': 'calc(var(--r-base) * var(--r-density))',
   },
   body: {
-    fontFamily: 'mono',
+    fontFamily: 'sans',
     fontSize: 'body',
   },
   '[data-density="compact"]': {

@@ -13,6 +13,7 @@
     ".": "./src/entry/index.ts",
     "./tokens": "./src/tokens/index.ts",
     "./panda-config": "./src/tokens/index.ts",
+    "./styled/colors": "./src/styled/colors.ts",
     "./styled-system/css": "./src/system/css/index.js",
     "./styled-system/styles.css": "./src/system/styles.css",
     "./styles.css": "./src/system/styles.css"
