@@ -3,5 +3,6 @@ export default {
   outDir: 'dist',
   format: ['esm', 'cjs'],
   dts: true,
-  clean: true,
+  // Don't clean during builds to avoid deleting the running CLI during sync
+  clean: false,
 }

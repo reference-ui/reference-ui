@@ -15,7 +15,12 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "sourceMap": true,
-    "importHelpers": false
+    "importHelpers": false,
+    "baseUrl": ".",
+    "paths": {
+      "@reference-ui/core": ["./src/entry/index.ts"],
+      "@reference-ui/core/*": ["./src/*"]
+    }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules", "dist"]

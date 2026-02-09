@@ -14,7 +14,7 @@ export function Color({ name, value }: ColorProps) {
       gap="4"
       padding="3"
       border="1px solid"
-      borderColor="gray.200"
+      borderColor="green.200"
       borderRadius="md"
       backgroundColor="white"
     >
@@ -22,10 +22,10 @@ export function Color({ name, value }: ColorProps) {
         width="16"
         height="16"
         borderRadius="lg"
-        backgroundColor={value}
         flexShrink="0"
         border="1px solid"
         borderColor="blackAlpha.100"
+        style={{ backgroundColor: value }}
       />
       <Div flex="1" minWidth="0">
         <Div

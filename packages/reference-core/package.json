@@ -16,6 +16,7 @@
     "./styled/colors": "./src/styled/colors.ts",
     "./styled-system/css": "./src/system/css/index.js",
     "./styled-system/styles.css": "./src/system/styles.css",
+    "./system/styles.css": "./src/system/styles.css",
     "./styles.css": "./src/system/styles.css"
   },
   "dependencies": {
@@ -28,14 +29,14 @@
     "react-dom": "^18.0.0"
   },
   "scripts": {
-    "build": "node scripts/generate-primitives.cjs && tsdown",
+    "build": "npm run gen && tsdown",
     "dev": "tsdown --watch",
     "dev:core": "concurrently \"panda codegen --watch\" \"panda --watch\"",
     "gen": "panda codegen && panda && node scripts/generate-primitives.cjs",
     "gen:primitives": "node scripts/generate-primitives.cjs",
     "codegen": "panda codegen",
     "cssgen": "panda",
-    "postinstall": "panda codegen && node scripts/generate-primitives.cjs && npm run build && node ./dist/cli/index.mjs link-system"
+    "postinstall": "npm run gen && npm run build && node ./dist/cli/index.mjs link-system"
   },
   "devDependencies": {
     "@types/react": "^18.2.0",

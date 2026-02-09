@@ -1,2 +1,5 @@
-src/system/
+# Build outputs
 dist/
+
+# Old codegen approach (deprecated)
+codegen/

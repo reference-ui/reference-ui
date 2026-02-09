@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node scripts/generate-primitives-docs.cjs && ref-sync && vite",
-    "build": "node scripts/generate-primitives-docs.cjs && ref-sync && vite build",
+    "dev": "node scripts/generate-primitives-docs.cjs && concurrently \"ref-sync sync --watch\" \"vite\"",
+    "build": "node scripts/generate-primitives-docs.cjs && ref-sync sync && vite build",
     "preview": "vite preview",
     "generate:primitives": "node scripts/generate-primitives-docs.cjs"
   },
@@ -22,6 +22,7 @@
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "@vitejs/plugin-react": "^4.2.0",
+    "concurrently": "^9.1.0",
     "remark-frontmatter": "^5.0.0",
     "remark-mdx-frontmatter": "^5.2.0",
     "typescript": "~5.9.3",

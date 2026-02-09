@@ -17,19 +17,40 @@ function asExtendablePatterns<T>(patterns: T): ExtendablePatterns {
 
 /**
  * Panda config for reference-core.
- * - codegen: emits src/system/ (css, recipes, tokens, types)
- * - cssgen: emits src/system/styles.css (preflight + tokens + static CSS)
- * Run: panda codegen (or --watch) and panda cssgen (or --watch).
+ * 
+ * Elegant Integration Principles:
+ * - Core owns Panda compilation
+ * - Scans real consumer source (no copying)
+ * - TypeScript path resolution aligns Panda + TS
+ * - .panda/ is internal IR, not published
+ * 
+ * Run: panda codegen && panda css
  */
 export default defineConfig({
   presets: [],
   jsxFramework: 'react',
   preflight: true,
-  include: ['src/**/*.ts', 'src/**/*.tsx'],
-  exclude: [],
+  
+  // Scan core + consumer source directly (no copying)
+  include: [
+    'src/**/*.{ts,tsx}',
+    '../../packages/reference-docs/src/**/*.{ts,tsx}',
+    '../../packages/reference-docs/app/**/*.{ts,tsx}',
+  ],
+  
+  exclude: [
+    '**/node_modules/**',
+    '**/*.test.*',
+    '**/*.spec.*',
+    'src/system/**',  // Don't watch Panda's own output
+  ],
+  
+  // Output directly to src/system/ (committed, imported by entry)
   outdir: 'src/system',
   outExtension: 'js',
   hash: false,
+  
+  // Emit static CSS for all common token values to support runtime usage
   staticCss: defaultStaticCss as unknown as Parameters<typeof defineConfig>[0]['staticCss'],
   utilities: {
     extend: rhythmUtilities,
@@ -41,4 +62,7 @@ export default defineConfig({
     extend: asExtendablePatterns(responsivePatterns),
   },
   globalCss: responsiveGlobalCss,
+  
+  // Critical: Use tsconfig to resolve @reference-ui/core imports to source
+  tsconfig: './tsconfig.json',
 })

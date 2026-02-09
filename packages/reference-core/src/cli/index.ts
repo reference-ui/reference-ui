@@ -6,12 +6,17 @@ const cwd = process.cwd()
 
 async function main(): Promise<void> {
   try {
-    const [command] = process.argv.slice(2)
+    const args = process.argv.slice(2)
+    const command = args[0]
+    const flags = args.slice(1)
+    
     if (command === 'link-system') {
       await linkSystemCommand(cwd)
       return
     }
-    await syncCommand(cwd)
+    
+    const watch = flags.includes('--watch') || flags.includes('-w')
+    await syncCommand(cwd, { watch })
   } catch (err) {
     console.error(err)
     process.exit(1)
