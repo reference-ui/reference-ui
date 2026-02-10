@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "ref-sync && vite",
+    "dev": "ref-sync --watch & vite",
     "build": "ref-sync && vite build",
     "preview": "vite preview"
   },

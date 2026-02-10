@@ -15,27 +15,32 @@ interface ColorsProps {
 export function Colors({ palette, shade }: ColorsProps = {}) {
   // If specific palette and shade are provided, show just that color
   if (palette && shade) {
-    const colorScale = coreColors[palette as keyof typeof coreColors] as ColorScale;
+    const colorScale = coreColors[
+      palette as keyof typeof coreColors
+    ] as ColorScale;
     if (colorScale && colorScale[shade]) {
       return (
-        <Color
-          name={`${palette}-${shade}`}
-          value={colorScale[shade].value}
-        />
+        <Color name={`${palette}-${shade}`} value={colorScale[shade].value} />
       );
     }
-    return <Div>Color not found: {palette}-{shade}</Div>;
+    return (
+      <Div>
+        Color not found: {palette}-{shade}
+      </Div>
+    );
   }
 
   // If just palette is provided, show all shades in that palette
   if (palette) {
-    const colorScale = coreColors[palette as keyof typeof coreColors] as ColorScale;
+    const colorScale = coreColors[
+      palette as keyof typeof coreColors
+    ] as ColorScale;
     if (!colorScale) {
       return <Div>Palette not found: {palette}</Div>;
     }
-    
+
     return (
-      <Div display="grid" gridTemplateColumns="repeat(5, 1fr)" gap="3">
+      <Div display="grid" gridTemplateColumns="repeat(3, 1fr)" gap="3">
         {Object.entries(colorScale).map(([shade, { value }]) => (
           <Color
             key={`${palette}-${shade}`}
@@ -61,14 +66,16 @@ export function Colors({ palette, shade }: ColorsProps = {}) {
           >
             {paletteName}
           </H3>
-          <Div display="grid" gridTemplateColumns="repeat(5, 1fr)" gap="3">
-            {Object.entries(colorScale as ColorScale).map(([shade, { value }]) => (
-              <Color
-                key={`${paletteName}-${shade}`}
-                name={`${paletteName}-${shade}`}
-                value={value}
-              />
-            ))}
+          <Div display="grid" gridTemplateColumns="repeat(3, 1fr)" gap="3">
+            {Object.entries(colorScale as ColorScale).map(
+              ([shade, { value }]) => (
+                <Color
+                  key={`${paletteName}-${shade}`}
+                  name={`${paletteName}-${shade}`}
+                  value={value}
+                />
+              ),
+            )}
           </Div>
         </Div>
       ))}

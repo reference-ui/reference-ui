@@ -18,10 +18,10 @@ function asExtendablePatterns<T>(patterns: T): ExtendablePatterns {
 /**
  * Panda config for reference-core.
  * 
- * Elegant Integration Principles:
+ * Isolated Panda Integration:
  * - Core owns Panda compilation
- * - Scans real consumer source (no copying)
- * - TypeScript path resolution aligns Panda + TS
+ * - Scans core source + codegen folder (user files copied by sync command)
+ * - This isolates Panda CSS from user's source
  * - .panda/ is internal IR, not published
  * 
  * Run: panda codegen && panda css
@@ -31,11 +31,11 @@ export default defineConfig({
   jsxFramework: 'react',
   preflight: true,
   
-  // Scan core + consumer source directly (no copying)
+  // Scan core source + codegen folder (user files copied there by CLI)
   include: [
     'src/**/*.{ts,tsx}',
-    '../../packages/reference-docs/src/**/*.{ts,tsx}',
-    '../../packages/reference-docs/app/**/*.{ts,tsx}',
+    // Consumer files are copied to codegen/ by the sync command
+    'codegen/**/*.{ts,tsx}',
   ],
   
   exclude: [
@@ -43,7 +43,12 @@ export default defineConfig({
     '**/*.test.*',
     '**/*.spec.*',
     'src/system/**',  // Don't watch Panda's own output
+    'src/cli/**',     // Don't watch CLI code
+    'src/config/**',  // Don't watch config code
   ],
+  
+  // No dependencies - we scan codegen folder which is managed by CLI
+  dependencies: [],
   
   // Output directly to src/system/ (committed, imported by entry)
   outdir: 'src/system',

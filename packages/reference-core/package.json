@@ -22,7 +22,9 @@
   "dependencies": {
     "@pandacss/dev": "^1.8.1",
     "tsdown": "^0.20.1",
-    "@types/node": "^25.1.0"
+    "@types/node": "^25.1.0",
+    "fast-glob": "^3.3.2",
+    "bundle-n-require": "^1.1.2"
   },
   "peerDependencies": {
     "react": "^18.0.0",

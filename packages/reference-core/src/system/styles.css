@@ -727,18 +727,6 @@
     margin: calc(var(--spacing-12r) * -1);
 }
 
-  .p_3 {
-    padding: 3px;
-}
-
-  .bd_4px_solid {
-    border: 4px solid;
-}
-
-  .bd_1px_solid {
-    border: 1px solid;
-}
-
   .bd_none {
     border: none;
 }
@@ -751,8 +739,16 @@
     background: transparent;
 }
 
+  .bd_1px_solid {
+    border: 1px solid;
+}
+
   .p_2 {
     padding: 2px;
+}
+
+  .p_3 {
+    padding: 3px;
 }
 
   .p_4 {
@@ -765,6 +761,14 @@
 
   .m_0 {
     margin: 0;
+}
+
+  .p_40r {
+    padding: calc(40 * var(--spacing-r));
+}
+
+  .bg_green\.500 {
+    background: var(--colors-green-500);
 }
 
   .bd-c_slate\.50 {
@@ -1919,26 +1923,6 @@
     border-radius: var(--radii-full);
 }
 
-  .gap_4 {
-    gap: 4px;
-}
-
-  .bd-c_blackAlpha\.100 {
-    border-color: blackAlpha.100;
-}
-
-  .flex_1 {
-    flex: 1 1 0%;
-}
-
-  .gap_3 {
-    gap: 3px;
-}
-
-  .gap_12 {
-    gap: 12px;
-}
-
   .trs_all {
     transition-property: var(--transition-prop, all);
     transition-timing-function: var(--transition-easing, cubic-bezier(0.4, 0, 0.2, 1));
@@ -1947,6 +1931,10 @@
 
   .ov_auto {
     overflow: auto;
+}
+
+  .flex_1 {
+    flex: 1 1 0%;
 }
 
   .bg-c_slate\.50 {
@@ -4021,60 +4009,12 @@
     font-family: var(--fonts-mono);
 }
 
-  .d_flex {
-    display: flex;
+  .d_inline-flex {
+    display: inline-flex;
 }
 
   .ai_center {
     align-items: center;
-}
-
-  .bg-c_white {
-    background-color: white;
-}
-
-  .flex-sh_0 {
-    flex-shrink: 0;
-}
-
-  .fw_semibold {
-    font-weight: semibold;
-}
-
-  .fs_sm {
-    font-size: sm;
-}
-
-  .wb_break-all {
-    word-break: break-all;
-}
-
-  .d_grid {
-    display: grid;
-}
-
-  .grid-tc_repeat\(5\,_1fr\) {
-    grid-template-columns: repeat(5, 1fr);
-}
-
-  .flex-d_column {
-    flex-direction: column;
-}
-
-  .fs_xl {
-    font-size: xl;
-}
-
-  .fw_bold {
-    font-weight: bold;
-}
-
-  .tt_capitalize {
-    text-transform: capitalize;
-}
-
-  .d_inline-flex {
-    display: inline-flex;
 }
 
   .jc_center {
@@ -4093,12 +4033,24 @@
     color: white;
 }
 
+  .fs_sm {
+    font-size: sm;
+}
+
   .fs_md {
     font-size: md;
 }
 
   .fs_lg {
     font-size: lg;
+}
+
+  .d_flex {
+    display: flex;
+}
+
+  .flex-d_column {
+    flex-direction: column;
 }
 
   .resize_horizontal {
@@ -4535,26 +4487,6 @@
 
   .pb_-12r {
     padding-bottom: calc(var(--spacing-12r) * -1);
-}
-
-  .w_16 {
-    width: 16px;
-}
-
-  .h_16 {
-    height: 16px;
-}
-
-  .min-w_0 {
-    min-width: 0;
-}
-
-  .mb_1 {
-    margin-bottom: 1px;
-}
-
-  .mb_4 {
-    margin-bottom: 4px;
 }
 
   .mt_2r {

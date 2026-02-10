@@ -13,8 +13,8 @@ export function Color({ name, value }: ColorProps) {
       alignItems="center"
       gap="4"
       padding="3"
-      border="1px solid"
-      borderColor="green.200"
+      border="4px solid"
+      borderColor="red.200"
       borderRadius="md"
       backgroundColor="white"
     >

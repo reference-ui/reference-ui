@@ -33,20 +33,22 @@ export function runPandaCodegen(cwd: string, options: PandaOptions = {}): void {
   const pandaBin = resolvePandaBin()
   
   if (options.watch) {
-    // Run both codegen --watch and css --watch concurrently using spawn
-    const codegenProcess = spawn(pandaBin, ['codegen', '--watch'], {
+    // Spawn Panda watchers as child processes
+    // stdio: 'inherit' forwards all output to parent terminal
+    // These processes keep the event loop alive - parent never exits
+    const codegenProcess = spawn(pandaBin, ['codegen', '--watch', '--poll'], {
       cwd,
       stdio: 'inherit',
       shell: true,
     })
     
-    const cssProcess = spawn(pandaBin, ['--watch'], {
+    const cssProcess = spawn(pandaBin, ['--watch', '--poll'], {
       cwd,
       stdio: 'inherit',
       shell: true,
     })
     
-    // Handle termination
+    // Forward SIGINT/SIGTERM to children, then exit cleanly
     process.on('SIGINT', () => {
       codegenProcess.kill()
       cssProcess.kill()
@@ -59,6 +61,8 @@ export function runPandaCodegen(cwd: string, options: PandaOptions = {}): void {
       process.exit(0)
     })
     
+    // Function returns but process stays alive (event loop has active children)
+    // This blocks the shell - exactly what we want
     return
   }
   
