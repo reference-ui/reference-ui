@@ -1,4 +1,5 @@
 import React from 'react';
+import { Div, H2, P, Pre } from '@reference-ui/core';
 
 type Props = { children: React.ReactNode };
 type State = { error: Error | null };
@@ -13,11 +14,11 @@ export class ErrorBoundary extends React.Component<Props, State> {
   render() {
     if (this.state.error) {
       return (
-        <div style={{ padding: '2rem', fontFamily: 'monospace', whiteSpace: 'pre-wrap' }}>
-          <h2>Error</h2>
-          <p>{this.state.error.message}</p>
-          <pre>{this.state.error.stack}</pre>
-        </div>
+        <Div padding="2rem" fontFamily="mono" whiteSpace="pre-wrap">
+          <H2>Error</H2>
+          <P>{this.state.error.message}</P>
+          <Pre>{this.state.error.stack}</Pre>
+        </Div>
       );
     }
     return this.props.children;

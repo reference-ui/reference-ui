@@ -32,21 +32,6 @@ export async function syncCommand(cwd: string, options: SyncOptions = {}): Promi
   console.log('📖 Loading ui.config.ts...')
   const userConfig = await loadUserConfig(cwd)
 
-  if (options.watch) {
-    // Watch mode: set up file watcher and run Panda in watch mode
-    console.log('🔄 Starting watch mode...')
-    console.log('   Press Ctrl+C to stop')
-    console.log('')
-    
-    // Watch user files and copy to codegen on change
-    watchAndCopyToCodegen(cwd, coreDir, userConfig.include)
-    
-    // Run Panda in watch mode (both codegen and css)
-    runPandaCodegen(coreDir, { watch: true })
-    
-    // Watch mode never returns (runs until Ctrl+C)
-    return
-  }
 
   // Step 2: Copy user files to reference-core/codegen folder (one-time sync)
   console.log('📦 Copying user files to codegen...')
@@ -71,4 +56,22 @@ export async function syncCommand(cwd: string, options: SyncOptions = {}): Promi
   console.log('')
   console.log('✅ Sync complete! Design system is ready.')
   console.log(`   ${userConfig.include.length} pattern(s) processed`)
+
+
+  if (options.watch) {
+    // Watch mode: set up file watcher and run Panda in watch mode
+    console.log('🔄 Starting watch mode...')
+    console.log('   Press Ctrl+C to stop')
+    console.log('')
+    
+    // Watch user files and copy to codegen on change
+    watchAndCopyToCodegen(cwd, coreDir, userConfig.include)
+    
+    // Run Panda in watch mode (both codegen and css)
+    runPandaCodegen(coreDir, { watch: true })
+    
+    // Watch mode never returns (runs until Ctrl+C)
+    return
+  }
+
 }

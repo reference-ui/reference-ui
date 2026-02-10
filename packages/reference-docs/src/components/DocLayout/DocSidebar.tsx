@@ -1,35 +1,40 @@
 import { Link } from '@tanstack/react-router';
+import { Aside, H2, Nav, Div } from '@reference-ui/core';
 import { docsBySection } from '../../lib/docs';
 
 export function DocSidebar() {
   return (
-    <aside
-      style={{
-        width: 220,
-        padding: '1.5rem 1rem',
-        borderRight: '1px solid #e5e7eb',
-        background: '#f9fafb',
+    <Aside
+      width="240px"
+      flexShrink="0"
+      padding="4r"
+      borderRightColor="gray.200"
+      borderRight="1px solid"
+      css={{
+        position: 'fixed',
+        top: 0,
+        left: 'calc((100vw - 90ex) / 2 - 240px)',
+        maxHeight: '100vh',
+        overflowY: 'auto',
       }}
     >
-      <h2 style={{ margin: '0 0 1rem', fontSize: '0.875rem', fontWeight: 600 }}>
+      <H2 margin="0 0 1rem" fontSize="0.875rem" fontWeight="600">
         Reference UI
-      </h2>
-      <nav>
+      </H2>
+      <Nav>
         {Object.entries(docsBySection).map(([section, items]) => (
-          <div key={section}>
-            <div
-              style={{
-                fontSize: '0.6875rem',
-                fontWeight: 600,
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-                color: '#6b7280',
-                marginTop: '1rem',
-                marginBottom: '0.5rem',
-              }}
+          <Div key={section}>
+            <Div
+              fontSize="0.6875rem"
+              fontWeight="600"
+              textTransform="uppercase"
+              letterSpacing="0.05em"
+              color="gray.500"
+              marginTop="1rem"
+              marginBottom="0.5rem"
             >
               {section}
-            </div>
+            </Div>
             {items.map(({ slug, title }) => (
               <Link
                 key={slug}
@@ -47,9 +52,9 @@ export function DocSidebar() {
                 {title}
               </Link>
             ))}
-          </div>
+          </Div>
         ))}
-      </nav>
-    </aside>
+      </Nav>
+    </Aside>
   );
 }

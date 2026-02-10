@@ -66,7 +66,7 @@ export function Colors({ palette, shade }: ColorsProps = {}) {
           >
             {paletteName}
           </H3>
-          <Div display="grid" gridTemplateColumns="repeat(3, 1fr)" gap="3">
+          <Div display="grid" gridTemplateColumns="repeat(3, 1fr)" gap="2r">
             {Object.entries(colorScale as ColorScale).map(
               ([shade, { value }]) => (
                 <Color

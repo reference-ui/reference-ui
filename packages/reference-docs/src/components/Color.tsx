@@ -11,20 +11,18 @@ export function Color({ name, value }: ColorProps) {
     <Div
       display="flex"
       alignItems="center"
-      gap="4"
-      padding="4r"
-      border="2px solid"
+      gap="4r"
+      padding="2r"
+      border="1px solid"
       borderColor="gray.200"
-      borderRadius="md"
+      borderRadius="base"
       backgroundColor="white"
     >
       <Div
-        width="16"
-        height="16"
-        borderRadius="lg"
+        width="12r"
+        height="16r"
+        borderRadius="base"
         flexShrink="0"
-        border="1px solid"
-        borderColor="blackAlpha.100"
         style={{ backgroundColor: value }}
       />
       <Div flex="1" minWidth="0">
@@ -35,14 +33,6 @@ export function Color({ name, value }: ColorProps) {
           marginBottom="1"
         >
           {name}
-        </Div>
-        <Div
-          fontFamily="mono"
-          fontSize="xs"
-          color="gray.600"
-          wordBreak="break-all"
-        >
-          {value}
         </Div>
       </Div>
     </Div>

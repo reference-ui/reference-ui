@@ -26,6 +26,10 @@ const rhythmTransform = <P extends keyof SystemProperties>(property: P): Utility
 })
 
 export const rhythmUtilities = {
+
+  width: rhythmTransform('width'),
+  height: rhythmTransform('height'),
+
   padding: rhythmTransform('padding'),
   paddingTop: rhythmTransform('paddingTop'),
   paddingBottom: rhythmTransform('paddingBottom'),

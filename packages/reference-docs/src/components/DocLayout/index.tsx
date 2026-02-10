@@ -1,18 +1,31 @@
 import { Outlet } from '@tanstack/react-router';
 import { MDXProvider } from '@mdx-js/react';
+import { Div, Main } from '@reference-ui/core';
 import { DocSidebar } from './DocSidebar';
 
 export function DocLayout() {
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <DocSidebar />
-      <main style={{ flex: 1, minWidth: 0, overflow: 'auto' }}>
-        <div style={{ padding: '2rem 3rem', maxWidth: 1400, minWidth: 0 }}>
+    <Div
+      w="100vw"
+      minHeight="100vh"
+      display="grid"
+      gridTemplateColumns="1fr minmax(0, 90ex) 1fr"
+    >
+      <Div
+        minHeight="100vh"
+        display="flex"
+        justifyContent="flex-end"
+      >
+        <DocSidebar />
+      </Div>
+      <Main minHeight="100vh" minWidth="0" overflow="auto">
+        <Div padding="10r" minWidth="0" w="100%">
           <MDXProvider>
             <Outlet />
           </MDXProvider>
-        </div>
-      </main>
-    </div>
+        </Div>
+      </Main>
+      <Div minHeight="100vh" />
+    </Div>
   );
 }
