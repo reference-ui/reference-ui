@@ -14,7 +14,7 @@ export function Color({ name, value }: ColorProps) {
       gap="4"
       padding="4r"
       border="2px solid"
-      borderColor="slate.200"
+      borderColor="gray.200"
       borderRadius="md"
       backgroundColor="white"
     >

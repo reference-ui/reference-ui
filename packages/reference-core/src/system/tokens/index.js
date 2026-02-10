@@ -1,48 +1,4 @@
 const tokens = {
-  "colors.slate.50": {
-    "value": "oklch(98.4% 0.003 247.858)",
-    "variable": "var(--colors-slate-50)"
-  },
-  "colors.slate.100": {
-    "value": "oklch(96.8% 0.007 247.896)",
-    "variable": "var(--colors-slate-100)"
-  },
-  "colors.slate.200": {
-    "value": "oklch(92.9% 0.013 255.508)",
-    "variable": "var(--colors-slate-200)"
-  },
-  "colors.slate.300": {
-    "value": "oklch(86.9% 0.022 252.894)",
-    "variable": "var(--colors-slate-300)"
-  },
-  "colors.slate.400": {
-    "value": "oklch(70.4% 0.04 256.788)",
-    "variable": "var(--colors-slate-400)"
-  },
-  "colors.slate.500": {
-    "value": "oklch(55.4% 0.046 257.417)",
-    "variable": "var(--colors-slate-500)"
-  },
-  "colors.slate.600": {
-    "value": "oklch(44.6% 0.043 257.281)",
-    "variable": "var(--colors-slate-600)"
-  },
-  "colors.slate.700": {
-    "value": "oklch(37.2% 0.044 257.287)",
-    "variable": "var(--colors-slate-700)"
-  },
-  "colors.slate.800": {
-    "value": "oklch(27.9% 0.041 260.031)",
-    "variable": "var(--colors-slate-800)"
-  },
-  "colors.slate.900": {
-    "value": "oklch(20.8% 0.042 265.755)",
-    "variable": "var(--colors-slate-900)"
-  },
-  "colors.slate.950": {
-    "value": "oklch(12.9% 0.042 264.695)",
-    "variable": "var(--colors-slate-950)"
-  },
   "colors.gray.50": {
     "value": "oklch(98.5% 0.002 247.839)",
     "variable": "var(--colors-gray-50)"
@@ -86,138 +42,6 @@ const tokens = {
   "colors.gray.950": {
     "value": "oklch(13% 0.028 261.692)",
     "variable": "var(--colors-gray-950)"
-  },
-  "colors.zinc.50": {
-    "value": "oklch(98.5% 0 0)",
-    "variable": "var(--colors-zinc-50)"
-  },
-  "colors.zinc.100": {
-    "value": "oklch(96.7% 0.001 286.375)",
-    "variable": "var(--colors-zinc-100)"
-  },
-  "colors.zinc.200": {
-    "value": "oklch(92% 0.004 286.32)",
-    "variable": "var(--colors-zinc-200)"
-  },
-  "colors.zinc.300": {
-    "value": "oklch(87.1% 0.006 286.286)",
-    "variable": "var(--colors-zinc-300)"
-  },
-  "colors.zinc.400": {
-    "value": "oklch(70.5% 0.015 286.067)",
-    "variable": "var(--colors-zinc-400)"
-  },
-  "colors.zinc.500": {
-    "value": "oklch(55.2% 0.016 285.938)",
-    "variable": "var(--colors-zinc-500)"
-  },
-  "colors.zinc.600": {
-    "value": "oklch(44.2% 0.017 285.786)",
-    "variable": "var(--colors-zinc-600)"
-  },
-  "colors.zinc.700": {
-    "value": "oklch(37% 0.013 285.805)",
-    "variable": "var(--colors-zinc-700)"
-  },
-  "colors.zinc.800": {
-    "value": "oklch(27.4% 0.006 286.033)",
-    "variable": "var(--colors-zinc-800)"
-  },
-  "colors.zinc.900": {
-    "value": "oklch(21% 0.006 285.885)",
-    "variable": "var(--colors-zinc-900)"
-  },
-  "colors.zinc.950": {
-    "value": "oklch(14.1% 0.005 285.823)",
-    "variable": "var(--colors-zinc-950)"
-  },
-  "colors.neutral.50": {
-    "value": "oklch(98.5% 0 0)",
-    "variable": "var(--colors-neutral-50)"
-  },
-  "colors.neutral.100": {
-    "value": "oklch(97% 0 0)",
-    "variable": "var(--colors-neutral-100)"
-  },
-  "colors.neutral.200": {
-    "value": "oklch(92.2% 0 0)",
-    "variable": "var(--colors-neutral-200)"
-  },
-  "colors.neutral.300": {
-    "value": "oklch(87% 0 0)",
-    "variable": "var(--colors-neutral-300)"
-  },
-  "colors.neutral.400": {
-    "value": "oklch(70.8% 0 0)",
-    "variable": "var(--colors-neutral-400)"
-  },
-  "colors.neutral.500": {
-    "value": "oklch(55.6% 0 0)",
-    "variable": "var(--colors-neutral-500)"
-  },
-  "colors.neutral.600": {
-    "value": "oklch(43.9% 0 0)",
-    "variable": "var(--colors-neutral-600)"
-  },
-  "colors.neutral.700": {
-    "value": "oklch(37.1% 0 0)",
-    "variable": "var(--colors-neutral-700)"
-  },
-  "colors.neutral.800": {
-    "value": "oklch(26.9% 0 0)",
-    "variable": "var(--colors-neutral-800)"
-  },
-  "colors.neutral.900": {
-    "value": "oklch(20.5% 0 0)",
-    "variable": "var(--colors-neutral-900)"
-  },
-  "colors.neutral.950": {
-    "value": "oklch(14.5% 0 0)",
-    "variable": "var(--colors-neutral-950)"
-  },
-  "colors.stone.50": {
-    "value": "oklch(98.5% 0.001 106.423)",
-    "variable": "var(--colors-stone-50)"
-  },
-  "colors.stone.100": {
-    "value": "oklch(97% 0.001 106.424)",
-    "variable": "var(--colors-stone-100)"
-  },
-  "colors.stone.200": {
-    "value": "oklch(92.3% 0.003 48.717)",
-    "variable": "var(--colors-stone-200)"
-  },
-  "colors.stone.300": {
-    "value": "oklch(86.9% 0.005 56.366)",
-    "variable": "var(--colors-stone-300)"
-  },
-  "colors.stone.400": {
-    "value": "oklch(70.9% 0.01 56.259)",
-    "variable": "var(--colors-stone-400)"
-  },
-  "colors.stone.500": {
-    "value": "oklch(55.3% 0.013 58.071)",
-    "variable": "var(--colors-stone-500)"
-  },
-  "colors.stone.600": {
-    "value": "oklch(44.4% 0.011 73.639)",
-    "variable": "var(--colors-stone-600)"
-  },
-  "colors.stone.700": {
-    "value": "oklch(37.4% 0.01 67.558)",
-    "variable": "var(--colors-stone-700)"
-  },
-  "colors.stone.800": {
-    "value": "oklch(26.8% 0.007 34.298)",
-    "variable": "var(--colors-stone-800)"
-  },
-  "colors.stone.900": {
-    "value": "oklch(21.6% 0.006 56.043)",
-    "variable": "var(--colors-stone-900)"
-  },
-  "colors.stone.950": {
-    "value": "oklch(14.7% 0.004 49.25)",
-    "variable": "var(--colors-stone-950)"
   },
   "colors.red.50": {
     "value": "oklch(97.1% 0.013 17.38)",
@@ -835,49 +659,49 @@ const tokens = {
     "value": "oklch(29.1% 0.149 302.717)",
     "variable": "var(--colors-purple-950)"
   },
-  "colors.fuchsia.50": {
+  "colors.magenta.50": {
     "value": "oklch(97.7% 0.017 320.058)",
-    "variable": "var(--colors-fuchsia-50)"
+    "variable": "var(--colors-magenta-50)"
   },
-  "colors.fuchsia.100": {
+  "colors.magenta.100": {
     "value": "oklch(95.2% 0.037 318.852)",
-    "variable": "var(--colors-fuchsia-100)"
+    "variable": "var(--colors-magenta-100)"
   },
-  "colors.fuchsia.200": {
+  "colors.magenta.200": {
     "value": "oklch(90.3% 0.076 319.62)",
-    "variable": "var(--colors-fuchsia-200)"
+    "variable": "var(--colors-magenta-200)"
   },
-  "colors.fuchsia.300": {
+  "colors.magenta.300": {
     "value": "oklch(83.3% 0.145 321.434)",
-    "variable": "var(--colors-fuchsia-300)"
+    "variable": "var(--colors-magenta-300)"
   },
-  "colors.fuchsia.400": {
+  "colors.magenta.400": {
     "value": "oklch(74% 0.238 322.16)",
-    "variable": "var(--colors-fuchsia-400)"
+    "variable": "var(--colors-magenta-400)"
   },
-  "colors.fuchsia.500": {
+  "colors.magenta.500": {
     "value": "oklch(66.7% 0.295 322.15)",
-    "variable": "var(--colors-fuchsia-500)"
+    "variable": "var(--colors-magenta-500)"
   },
-  "colors.fuchsia.600": {
+  "colors.magenta.600": {
     "value": "oklch(59.1% 0.293 322.896)",
-    "variable": "var(--colors-fuchsia-600)"
+    "variable": "var(--colors-magenta-600)"
   },
-  "colors.fuchsia.700": {
+  "colors.magenta.700": {
     "value": "oklch(51.8% 0.253 323.949)",
-    "variable": "var(--colors-fuchsia-700)"
+    "variable": "var(--colors-magenta-700)"
   },
-  "colors.fuchsia.800": {
+  "colors.magenta.800": {
     "value": "oklch(45.2% 0.211 324.591)",
-    "variable": "var(--colors-fuchsia-800)"
+    "variable": "var(--colors-magenta-800)"
   },
-  "colors.fuchsia.900": {
+  "colors.magenta.900": {
     "value": "oklch(40.1% 0.17 325.612)",
-    "variable": "var(--colors-fuchsia-900)"
+    "variable": "var(--colors-magenta-900)"
   },
-  "colors.fuchsia.950": {
+  "colors.magenta.950": {
     "value": "oklch(29.3% 0.136 325.661)",
-    "variable": "var(--colors-fuchsia-950)"
+    "variable": "var(--colors-magenta-950)"
   },
   "colors.pink.50": {
     "value": "oklch(97.1% 0.014 343.198)",
