@@ -24,7 +24,8 @@
     "tsdown": "^0.20.1",
     "@types/node": "^25.1.0",
     "fast-glob": "^3.3.2",
-    "bundle-n-require": "^1.1.2"
+    "bundle-n-require": "^1.1.2",
+    "chokidar": "^4.0.3"
   },
   "peerDependencies": {
     "react": "^18.0.0",

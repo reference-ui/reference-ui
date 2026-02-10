@@ -763,12 +763,24 @@
     margin: 0;
 }
 
-  .p_40r {
-    padding: calc(40 * var(--spacing-r));
-}
-
   .bg_green\.500 {
     background: var(--colors-green-500);
+}
+
+  .bd_2px_solid {
+    border: 2px solid;
+}
+
+  .bd_3px_solid {
+    border: 3px solid;
+}
+
+  .bd_4px_solid {
+    border: 4px solid;
+}
+
+  .bd_6px_solid {
+    border: 6px solid;
 }
 
   .bd-c_slate\.50 {
@@ -1935,6 +1947,22 @@
 
   .flex_1 {
     flex: 1 1 0%;
+}
+
+  .gap_4 {
+    gap: 4px;
+}
+
+  .bd-c_blackAlpha\.100 {
+    border-color: blackAlpha.100;
+}
+
+  .gap_3 {
+    gap: 3px;
+}
+
+  .gap_12 {
+    gap: 12px;
 }
 
   .bg-c_slate\.50 {
@@ -4073,6 +4101,42 @@
     container-name: card;
 }
 
+  .bg-c_white {
+    background-color: white;
+}
+
+  .flex-sh_0 {
+    flex-shrink: 0;
+}
+
+  .fw_semibold {
+    font-weight: semibold;
+}
+
+  .wb_break-all {
+    word-break: break-all;
+}
+
+  .d_grid {
+    display: grid;
+}
+
+  .grid-tc_repeat\(3\,_1fr\) {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+  .fs_xl {
+    font-size: xl;
+}
+
+  .fw_bold {
+    font-weight: bold;
+}
+
+  .tt_capitalize {
+    text-transform: capitalize;
+}
+
   .pl_px {
     padding-left: var(--spacing-px);
 }
@@ -4507,6 +4571,26 @@
 
   .mb_0\.5r {
     margin-bottom: var(--spacing-0\.5r);
+}
+
+  .w_16 {
+    width: 16px;
+}
+
+  .h_16 {
+    height: 16px;
+}
+
+  .min-w_0 {
+    min-width: 0;
+}
+
+  .mb_1 {
+    margin-bottom: 1px;
+}
+
+  .mb_4 {
+    margin-bottom: 4px;
 }
 
   .disabled\:op_0\.5:is(:disabled, [disabled], [data-disabled], [aria-disabled=true]) {

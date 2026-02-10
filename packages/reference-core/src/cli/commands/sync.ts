@@ -3,7 +3,7 @@ import { resolveCorePackageDir } from '../lib/resolve-core.js'
 import { runGeneratePrimitives } from '../lib/run-generate-primitives.js'
 import { runPandaCodegen, runPandaCss } from '../lib/run-panda-codegen.js'
 import { loadUserConfig } from '../lib/load-config.js'
-import { copyToCodegen } from '../lib/copy-to-codegen.js'
+import { copyToCodegen, watchAndCopyToCodegen } from '../lib/copy-to-codegen.js'
 
 export interface SyncOptions {
   watch?: boolean
@@ -32,15 +32,14 @@ export async function syncCommand(cwd: string, options: SyncOptions = {}): Promi
   console.log('📖 Loading ui.config.ts...')
   const userConfig = await loadUserConfig(cwd)
 
-  // Step 2: Copy user files to reference-core/codegen folder
-  console.log('📦 Copying user files to codegen...')
-  copyToCodegen(cwd, coreDir, userConfig.include)
-
   if (options.watch) {
+    // Watch mode: set up file watcher and run Panda in watch mode
     console.log('🔄 Starting watch mode...')
-    console.log('   Panda will watch for changes in core + codegen')
     console.log('   Press Ctrl+C to stop')
     console.log('')
+    
+    // Watch user files and copy to codegen on change
+    watchAndCopyToCodegen(cwd, coreDir, userConfig.include)
     
     // Run Panda in watch mode (both codegen and css)
     runPandaCodegen(coreDir, { watch: true })
@@ -48,6 +47,10 @@ export async function syncCommand(cwd: string, options: SyncOptions = {}): Promi
     // Watch mode never returns (runs until Ctrl+C)
     return
   }
+
+  // Step 2: Copy user files to reference-core/codegen folder (one-time sync)
+  console.log('📦 Copying user files to codegen...')
+  copyToCodegen(cwd, coreDir, userConfig.include)
 
   // Step 3: Run Panda codegen (scans core + codegen folder)
   console.log('🎨 Running panda codegen...')

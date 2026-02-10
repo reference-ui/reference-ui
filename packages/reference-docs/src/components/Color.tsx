@@ -12,9 +12,9 @@ export function Color({ name, value }: ColorProps) {
       display="flex"
       alignItems="center"
       gap="4"
-      padding="3"
-      border="4px solid"
-      borderColor="red.200"
+      padding="4r"
+      border="2px solid"
+      borderColor="slate.200"
       borderRadius="md"
       backgroundColor="white"
     >
