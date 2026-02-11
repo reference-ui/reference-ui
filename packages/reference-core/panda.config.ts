@@ -1,5 +1,6 @@
 import { defineConfig } from '@pandacss/dev'
 import { defaultTheme, defaultStaticCss } from './src/styled/index.js'
+import { primitiveCSS } from './src/primitives/recipes.js'
 import { rhythmUtilities } from './src/styled/rhythm.js'
 import { responsivePatterns, responsiveGlobalCss } from './src/styled/responsive.js'
 
@@ -62,6 +63,9 @@ export default defineConfig({
   },
   theme: {
     tokens: defaultTheme.extend.tokens,
+    extend: {
+      recipes: primitiveCSS,
+    },
   },
   patterns: {
     extend: asExtendablePatterns(responsivePatterns),

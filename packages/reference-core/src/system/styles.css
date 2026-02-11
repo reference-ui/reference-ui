@@ -478,6 +478,17 @@
 }
 }
 
+@layer recipes{
+  @layer _base{
+
+    .r_h1 {
+      font-size: h1;
+      font-weight: bold;
+      color: var(--colors-red-500);
+}
+}
+}
+
 @layer utilities{
 
   .p_px {
@@ -802,18 +813,6 @@
 
   .m_0 {
     margin: 0;
-}
-
-  .bg_green\.500 {
-    background: var(--colors-green-500);
-}
-
-  .m_0_0_1rem {
-    margin: 0 0 1rem;
-}
-
-  .p_2rem {
-    padding: 2rem;
 }
 
   .bd-c_gray\.50 {
@@ -1844,18 +1843,6 @@
 
   .flex_1 {
     flex: 1 1 0%;
-}
-
-  .gap_3 {
-    gap: 3px;
-}
-
-  .gap_12 {
-    gap: 12px;
-}
-
-  .bd-r_1px_solid {
-    border-right: 1px solid;
 }
 
   .bg-c_gray\.50 {
@@ -3750,70 +3737,6 @@
     container-name: card;
 }
 
-  .bg-c_white {
-    background-color: white;
-}
-
-  .flex-sh_0 {
-    flex-shrink: 0;
-}
-
-  .fw_semibold {
-    font-weight: semibold;
-}
-
-  .d_grid {
-    display: grid;
-}
-
-  .grid-tc_repeat\(3\,_1fr\) {
-    grid-template-columns: repeat(3, 1fr);
-}
-
-  .fs_xl {
-    font-size: xl;
-}
-
-  .fw_bold {
-    font-weight: bold;
-}
-
-  .tt_capitalize {
-    text-transform: capitalize;
-}
-
-  .pos_fixed {
-    position: fixed;
-}
-
-  .fw_600 {
-    font-weight: 600;
-}
-
-  .fs_0\.6875rem {
-    font-size: 0.6875rem;
-}
-
-  .tt_uppercase {
-    text-transform: uppercase;
-}
-
-  .ls_0\.05em {
-    letter-spacing: 0.05em;
-}
-
-  .grid-tc_1fr_minmax\(0\,_90ex\)_1fr {
-    grid-template-columns: 1fr minmax(0, 90ex) 1fr;
-}
-
-  .jc_flex-end {
-    justify-content: flex-end;
-}
-
-  .white-space_pre-wrap {
-    white-space: pre-wrap;
-}
-
   .pl_px {
     padding-left: var(--spacing-px);
 }
@@ -4408,70 +4331,6 @@
 
   .mb_0\.5r {
     margin-bottom: var(--spacing-0\.5r);
-}
-
-  .w_12r {
-    width: var(--spacing-12r);
-}
-
-  .h_16r {
-    height: calc(16 * var(--spacing-r));
-}
-
-  .min-w_0 {
-    min-width: 0;
-}
-
-  .mb_1 {
-    margin-bottom: 1px;
-}
-
-  .mb_4 {
-    margin-bottom: 4px;
-}
-
-  .top_0 {
-    top: 0;
-}
-
-  .left_calc\(\(100vw_-_90ex\)_\/_2_-_240px\) {
-    left: calc((100vw - 90ex) / 2 - 240px);
-}
-
-  .max-h_100vh {
-    max-height: 100vh;
-}
-
-  .ov-y_auto {
-    overflow-y: auto;
-}
-
-  .w_240px {
-    width: 240px;
-}
-
-  .bd-r-c_gray\.200 {
-    border-right-color: var(--colors-gray-200);
-}
-
-  .mt_1rem {
-    margin-top: 1rem;
-}
-
-  .mb_0\.5rem {
-    margin-bottom: 0.5rem;
-}
-
-  .w_100vw {
-    width: 100vw;
-}
-
-  .min-h_100vh {
-    min-height: 100vh;
-}
-
-  .w_100\% {
-    width: 100%;
 }
 
   .disabled\:op_0\.5:is(:disabled, [disabled], [data-disabled], [aria-disabled=true]) {
