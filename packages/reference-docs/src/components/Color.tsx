@@ -11,7 +11,7 @@ export function Color({ name, value }: ColorProps) {
     <Div
       display="flex"
       alignItems="center"
-      gap="4r"
+      gap="3r"
       padding="2r"
       border="1px solid"
       borderColor="gray.200"

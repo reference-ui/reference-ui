@@ -41,13 +41,13 @@ export async function syncCommand(cwd: string, options: SyncOptions = {}): Promi
   console.log('🎨 Running panda codegen...')
   runPandaCodegen(coreDir)
 
-  // Step 4: Emit styles.css (preflight + tokens + static CSS + consumer styles)
-  console.log('💅 Generating styles.css...')
-  runPandaCss(coreDir)
-
-  // Step 5: Generate primitives (depends on src/system/)
+  // Step 4: Generate primitives (depends on src/system/recipes from codegen)
   console.log('🔧 Generating design system primitives...')
   runGeneratePrimitives(coreDir)
+
+  // Step 5: Emit styles.css (must run after primitives so recipe usage is scanned)
+  console.log('💅 Generating styles.css...')
+  runPandaCss(coreDir)
 
   // Step 6: Copy final artifacts to node_modules
   console.log('📂 Copying to node_modules...')

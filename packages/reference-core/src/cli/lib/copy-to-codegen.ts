@@ -1,4 +1,6 @@
-import * as fg from 'fast-glob'
+import { createRequire } from 'node:module'
+const require = createRequire(import.meta.url)
+const fg = require('fast-glob')
 import { existsSync, mkdirSync, copyFileSync, rmSync } from 'node:fs'
 import { resolve, dirname, relative } from 'node:path'
 import * as chokidar from 'chokidar'

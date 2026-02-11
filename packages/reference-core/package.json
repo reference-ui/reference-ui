@@ -35,7 +35,7 @@
     "build": "npm run gen && tsdown",
     "dev": "tsdown --watch",
     "dev:core": "concurrently \"panda codegen --watch\" \"panda --watch\"",
-    "gen": "panda codegen && panda && node scripts/generate-primitives.cjs",
+    "gen": "panda codegen && node scripts/generate-primitives.cjs && panda",
     "gen:primitives": "node scripts/generate-primitives.cjs",
     "codegen": "panda codegen",
     "cssgen": "panda",
