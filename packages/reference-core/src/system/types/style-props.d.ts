@@ -3264,7 +3264,7 @@ left?: ConditionalValue<UtilityValues["left"] | CssVars | CssProperties["left"] 
    *
    * @see https://developer.mozilla.org/docs/Web/CSS/letter-spacing
    */
-letterSpacing?: ConditionalValue<CssProperties["letterSpacing"] | AnyString>
+letterSpacing?: ConditionalValue<UtilityValues["letterSpacing"] | CssVars | CssProperties["letterSpacing"] | AnyString>
  lightingColor?: ConditionalValue<CssProperties["lightingColor"] | AnyString>
  /**
    * The **`line-break`** CSS property sets how to break lines of Chinese, Japanese, or Korean (CJK) text when working with punctuation and symbols.
@@ -3300,7 +3300,7 @@ lineClamp?: ConditionalValue<CssProperties["lineClamp"] | AnyString>
    *
    * @see https://developer.mozilla.org/docs/Web/CSS/line-height
    */
-lineHeight?: ConditionalValue<CssProperties["lineHeight"] | AnyString>
+lineHeight?: ConditionalValue<UtilityValues["lineHeight"] | CssVars | CssProperties["lineHeight"] | AnyString>
  /**
    * The **`line-height-step`** CSS property sets the step unit for line box heights. When the property is set, line box heights are rounded up to the closest multiple of the unit.
    *

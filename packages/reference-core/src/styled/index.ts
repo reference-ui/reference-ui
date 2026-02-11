@@ -1,6 +1,9 @@
 import { defineTokens } from '@pandacss/dev'
 import { colors } from './colors'
 import { fontStaticCssProperties, fontTokens } from './font.js'
+import { getRhythm } from './rhythm'
+
+export { getRhythm }
 
 /** Default design tokens */
 export const tokens = defineTokens({
@@ -9,17 +12,22 @@ export const tokens = defineTokens({
   spacing: {
     px: { value: '1px' },
     r: { value: '0.25rem' },
-    '0.5r': { value: 'calc(0.5 * var(--spacing-r))' },
-    '1r': { value: 'var(--spacing-r)' },
-    '1.5r': { value: 'calc(1.5 * var(--spacing-r))' },
-    '2r': { value: 'calc(2 * var(--spacing-r))' },
-    '3r': { value: 'calc(3 * var(--spacing-r))' },
-    '4r': { value: 'calc(4 * var(--spacing-r))' },
-    '5r': { value: 'calc(5 * var(--spacing-r))' },
-    '6r': { value: 'calc(6 * var(--spacing-r))' },
-    '8r': { value: 'calc(8 * var(--spacing-r))' },
-    '10r': { value: 'calc(10 * var(--spacing-r))' },
-    '12r': { value: 'calc(12 * var(--spacing-r))' },
+    '0.5r': { value: getRhythm(0.5) },
+    '1/2r': { value: getRhythm(1, 2) },
+    '1/3r': { value: getRhythm(1, 3) },
+    '1/4r': { value: getRhythm(1, 4) },
+    '1/5r': { value: getRhythm(1, 5) },
+    '1/6r': { value: getRhythm(1, 6) },
+    '1r': { value: getRhythm(1) },
+    '1.5r': { value: getRhythm(1.5) },
+    '2r': { value: getRhythm(2) },
+    '3r': { value: getRhythm(3) },
+    '4r': { value: getRhythm(4) },
+    '5r': { value: getRhythm(5) },
+    '6r': { value: getRhythm(6) },
+    '8r': { value: getRhythm(8) },
+    '10r': { value: getRhythm(10) },
+    '12r': { value: getRhythm(12) },
   },
   radii: {
     none: { value: '0' },

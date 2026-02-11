@@ -18,7 +18,7 @@ export function DocSidebar() {
         overflowY: 'auto',
       }}
     >
-      <H2 margin="0 0 1rem" fontSize="0.875rem" fontWeight="600">
+      <H2 margin="0 0 1rem" fontSize="6r" fontWeight="600">
         Reference UI
       </H2>
       <Nav>

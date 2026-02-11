@@ -11,7 +11,7 @@ export type { BoxProps } from '../system/jsx/box.js'
 export type { ContainerProps } from '../system/jsx/container.js'
 export type { SystemStyleObject } from '../system/types/index.js'
 export type { ResponsiveBreakpoints } from '../styled/responsive.d.js'
-export { tokens, defaultTheme, defaultStaticCss } from '../styled/index.js'
+export { tokens, defaultTheme, defaultStaticCss, getRhythm } from '../styled/index.js'
 
 // Configuration API (for ui.config.ts files)
 export { defineConfig } from '../cli/config.js'

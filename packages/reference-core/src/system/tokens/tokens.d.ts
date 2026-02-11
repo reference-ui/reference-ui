@@ -9,7 +9,7 @@ export type FontToken = "sans" | "serif" | "mono"
 
 export type FontSizeToken = "body" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "small" | "xs"
 
-export type SpacingToken = "px" | "r" | "0.5r" | "1r" | "1.5r" | "2r" | "3r" | "4r" | "5r" | "6r" | "8r" | "10r" | "12r" | "-px" | "-r" | "-0.5r" | "-1r" | "-1.5r" | "-2r" | "-3r" | "-4r" | "-5r" | "-6r" | "-8r" | "-10r" | "-12r"
+export type SpacingToken = "px" | "r" | "0.5r" | "1/2r" | "1/3r" | "1/4r" | "1/5r" | "1/6r" | "1r" | "1.5r" | "2r" | "3r" | "4r" | "5r" | "6r" | "8r" | "10r" | "12r" | "-px" | "-r" | "-0.5r" | "-1/2r" | "-1/3r" | "-1/4r" | "-1/5r" | "-1/6r" | "-1r" | "-1.5r" | "-2r" | "-3r" | "-4r" | "-5r" | "-6r" | "-8r" | "-10r" | "-12r"
 
 export type RadiusToken = "none" | "sm" | "base" | "md" | "lg" | "xl" | "2xl" | "3xl" | "full"
 

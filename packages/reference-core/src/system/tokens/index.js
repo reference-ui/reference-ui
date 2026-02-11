@@ -851,6 +851,26 @@ const tokens = {
     "value": "calc(0.5 * var(--spacing-r))",
     "variable": "var(--spacing-0\\.5r)"
   },
+  "spacing.1/2r": {
+    "value": "calc(var(--spacing-r) / 2)",
+    "variable": "var(--spacing-1\\/2r)"
+  },
+  "spacing.1/3r": {
+    "value": "calc(var(--spacing-r) / 3)",
+    "variable": "var(--spacing-1\\/3r)"
+  },
+  "spacing.1/4r": {
+    "value": "calc(var(--spacing-r) / 4)",
+    "variable": "var(--spacing-1\\/4r)"
+  },
+  "spacing.1/5r": {
+    "value": "calc(var(--spacing-r) / 5)",
+    "variable": "var(--spacing-1\\/5r)"
+  },
+  "spacing.1/6r": {
+    "value": "calc(var(--spacing-r) / 6)",
+    "variable": "var(--spacing-1\\/6r)"
+  },
   "spacing.1r": {
     "value": "var(--spacing-r)",
     "variable": "var(--spacing-1r)"
@@ -938,6 +958,26 @@ const tokens = {
   "spacing.-0.5r": {
     "value": "calc(var(--spacing-0\\.5r) * -1)",
     "variable": "var(--spacing-0\\.5r)"
+  },
+  "spacing.-1/2r": {
+    "value": "calc(var(--spacing-1\\/2r) * -1)",
+    "variable": "var(--spacing-1\\/2r)"
+  },
+  "spacing.-1/3r": {
+    "value": "calc(var(--spacing-1\\/3r) * -1)",
+    "variable": "var(--spacing-1\\/3r)"
+  },
+  "spacing.-1/4r": {
+    "value": "calc(var(--spacing-1\\/4r) * -1)",
+    "variable": "var(--spacing-1\\/4r)"
+  },
+  "spacing.-1/5r": {
+    "value": "calc(var(--spacing-1\\/5r) * -1)",
+    "variable": "var(--spacing-1\\/5r)"
+  },
+  "spacing.-1/6r": {
+    "value": "calc(var(--spacing-1\\/6r) * -1)",
+    "variable": "var(--spacing-1\\/6r)"
   },
   "spacing.-1r": {
     "value": "calc(var(--spacing-1r) * -1)",
