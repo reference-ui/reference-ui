@@ -1,4 +1,4 @@
-import fg from 'fast-glob'
+import * as fg from 'fast-glob'
 import { existsSync, mkdirSync, copyFileSync, rmSync } from 'node:fs'
 import { resolve, dirname, relative } from 'node:path'
 import * as chokidar from 'chokidar'

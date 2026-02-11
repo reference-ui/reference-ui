@@ -29,7 +29,7 @@ const header = `/** Generated. Run: node scripts/generate-primitives.cjs */
 
 import * as React from 'react'
 import { forwardRef } from 'react'
-import { splitProps } from '../system/helpers.js'
+import { splitProps } from '@reference-ui/core/system/helpers.js'
 import { box } from '../system/patterns/box.js'
 import { styled } from '../system/jsx/index.js'
 import type { PrimitiveElement, PrimitiveProps } from './types'
@@ -46,7 +46,7 @@ function applyBoxPattern(props: object): object {
 `
 
 function genPrimitive(tag, exportName) {
-  return `export const ${exportName} = forwardRef((props, ref) => <styled.${tag} ref={ref} {...applyBoxPattern(props)} />) as React.ForwardRefExoticComponent<PrimitiveProps<'${tag}'> & React.RefAttributes<PrimitiveElement<'${tag}'>>>`
+  return `export const ${exportName} = forwardRef<PrimitiveElement<'${tag}'>, PrimitiveProps<'${tag}'>>((props, ref) => <styled.${tag} ref={ref} {...applyBoxPattern(props)} />) as React.ForwardRefExoticComponent<PrimitiveProps<'${tag}'> & React.RefAttributes<PrimitiveElement<'${tag}'>>>`
 }
 
 function genTypeExport(tag, exportName) {
