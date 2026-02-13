@@ -3,10 +3,10 @@ import { defineRecipe } from '@pandacss/dev'
 export const h5Style = defineRecipe({
   className: 'r_h5',
   base: {
-    fontSize: 'h5',
-    fontWeight: 'semibold',
-    lineHeight: '1.4',
+    fontSize: '4.5r',
+    fontWeight: '500',
+    lineHeight: '8r',
     marginTop: '0',
-    marginBottom: '0.5em',
+    marginBottom: '3r',
   },
 })

@@ -546,32 +546,31 @@
 }
 
     .r_h3 {
-      font-size: calc(4.5 * var(--spacing-r));
+      font-size: var(--spacing-5r);
 }
 
     .r_h4 {
-      font-size: h4;
-      font-weight: semibold;
-      line-height: 1.3;
+      font-weight: bold;
+}
+
+    .r_h4,.r_h5 {
+      font-size: calc(4.5 * var(--spacing-r));
+      line-height: var(--spacing-8r);
       margin-top: 0;
-      margin-bottom: 0.5em;
+      margin-bottom: var(--spacing-3r);
 }
 
     .r_h5 {
-      font-size: h5;
-}
-
-    .r_h5,.r_h6 {
-      font-weight: semibold;
-      line-height: 1.4;
-      margin-top: 0;
-      margin-bottom: 0.5em;
+      font-weight: 500;
 }
 
     .r_h6 {
-      font-size: h6;
+      font-size: calc(3.5 * var(--spacing-r));
+      font-weight: 600;
+      line-height: var(--spacing-8r);
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      margin-top: 0;
+      margin-bottom: var(--spacing-3r);
 }
 
     .r_i {

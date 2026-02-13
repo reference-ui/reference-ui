@@ -3,10 +3,10 @@ import { defineRecipe } from '@pandacss/dev'
 export const h4Style = defineRecipe({
   className: 'r_h4',
   base: {
-    fontSize: 'h4',
-    fontWeight: 'semibold',
-    lineHeight: '1.3',
+    fontSize: '4.5r',
+    fontWeight: 'bold',
+    lineHeight: '8r',
     marginTop: '0',
-    marginBottom: '0.5em',
+    marginBottom: '3r',
   },
 })
