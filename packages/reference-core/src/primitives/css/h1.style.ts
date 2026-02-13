@@ -1,10 +1,12 @@
 import { defineRecipe } from '@pandacss/dev'
 
-export const h1 = defineRecipe({
+export const h1Style = defineRecipe({
   className: 'r_h1',
   base: {
-    fontSize: 'h1',
+    fontSize: '9r',
     fontWeight: 'bold',
-    color: 'red.500',
+    lineHeight: '15r',
+    marginTop: '0',
+    marginBottom: '3r',
   },
 })

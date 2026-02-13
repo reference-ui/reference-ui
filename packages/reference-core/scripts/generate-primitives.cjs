@@ -10,14 +10,25 @@ const HTML_TAGS = match[1]
   .map((s) => s.replace(/['"]/g, '').trim())
   .filter(Boolean)
 
-// Scan primitives/css/*.style.ts and map tag -> recipe (from system/recipes after panda codegen)
+// Scan primitives/css/*.style.ts and map tag -> recipe name (with Style suffix)
 const cssDir = path.join(__dirname, '../src/primitives/css')
 const PRIMITIVE_RECIPES = {}
 if (fs.existsSync(cssDir)) {
   for (const name of fs.readdirSync(cssDir)) {
     const m = name.match(/^(\w+)\.style\.ts$/)
-    if (m) PRIMITIVE_RECIPES[m[1]] = m[1]
+    // Recipe names use Style suffix (e.g., h1Style, pStyle, varStyle)
+    if (m) PRIMITIVE_RECIPES[m[1]] = `${m[1]}Style`
   }
+}
+
+// Get the recipe import name (always uses Style suffix now)
+function getRecipeImportName(tag) {
+  return PRIMITIVE_RECIPES[tag]
+}
+
+// Get the recipe reference to use in code
+function getRecipeRef(tag) {
+  return `${PRIMITIVE_RECIPES[tag]}()`
 }
 
 function toPascalCase(tag) {
@@ -37,7 +48,7 @@ const outPath = path.join(outDir, 'index.tsx')
 
 // Import recipes from system (Panda-generated) - only those we have style files for
 const recipeImports = Object.keys(PRIMITIVE_RECIPES).length
-  ? `import { ${Object.keys(PRIMITIVE_RECIPES).join(', ')} } from '../system/recipes'`
+  ? `import { ${Object.keys(PRIMITIVE_RECIPES).map(getRecipeImportName).join(', ')} } from '../system/recipes'`
   : ''
 
 const header = `/** Generated. Run: node scripts/generate-primitives.cjs */
@@ -67,7 +78,7 @@ function applyBoxPattern(props: object, recipeClassName?: string): object {
 `
 
 function genPrimitive(tag, exportName) {
-  const recipeRef = PRIMITIVE_RECIPES[tag] ? `${tag}()` : 'undefined'
+  const recipeRef = PRIMITIVE_RECIPES[tag] ? getRecipeRef(tag) : 'undefined'
   return `export const ${exportName} = forwardRef<PrimitiveElement<'${tag}'>, PrimitiveProps<'${tag}'>>((props, ref) => <styled.${tag} ref={ref} {...applyBoxPattern(props, ${recipeRef})} />) as React.ForwardRefExoticComponent<PrimitiveProps<'${tag}'> & React.RefAttributes<PrimitiveElement<'${tag}'>>>`
 }
 
