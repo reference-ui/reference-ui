@@ -535,6 +535,7 @@
     .r_abbr,.r_b {
       font-family: var(--fonts-sans);
       letter-spacing: -0.01em;
+      color: var(--colors-gray-900);
 }
 
     .r_b {
@@ -542,9 +543,9 @@
 }
 
     .r_blockquote {
+      color: var(--colors-gray-600);
       font-size: h5;
       line-height: 1.6;
-      color: var(--colors-gray-600);
       border-left-width: 4px;
       border-left-style: solid;
       border-left-color: var(--colors-gray-300);
@@ -571,9 +572,9 @@
       border-radius: var(--radii-sm);
       font-family: var(--fonts-mono);
       letter-spacing: -0.01em;
+      color: var(--colors-pink-600);
       font-size: 0.9em;
       background-color: var(--colors-gray-100);
-      color: var(--colors-pink-600);
 }
 
     .r_em {
@@ -583,6 +584,7 @@
     .r_em,.r_h1 {
       font-family: var(--fonts-sans);
       letter-spacing: -0.01em;
+      color: var(--colors-gray-900);
 }
 
     .r_h1 {
@@ -600,6 +602,7 @@
     .r_h2,.r_h3 {
       font-family: var(--fonts-sans);
       letter-spacing: -0.01em;
+      color: var(--colors-gray-900);
       font-weight: bold;
       line-height: var(--spacing-10r);
       margin-top: 0;
@@ -617,6 +620,7 @@
     .r_h4,.r_h5 {
       font-family: var(--fonts-sans);
       letter-spacing: -0.01em;
+      color: var(--colors-gray-900);
       font-size: calc(4.5 * var(--spacing-r));
       line-height: var(--spacing-8r);
       margin-top: 0;
@@ -639,6 +643,7 @@
     .r_h6,.r_i {
       font-family: var(--fonts-sans);
       letter-spacing: -0.01em;
+      color: var(--colors-gray-900);
 }
 
     .r_i {
@@ -654,9 +659,9 @@
       border-color: var(--colors-gray-300);
       font-family: var(--fonts-mono);
       letter-spacing: -0.02em;
+      color: var(--colors-gray-800);
       font-size: 0.85em;
       background-color: var(--colors-gray-100);
-      color: var(--colors-gray-800);
       box-shadow: 0 1px 1px rgba(0,0,0,0.1);
       border-bottom-width: 2px;
 }
@@ -665,12 +670,12 @@
       padding-inline: 0.25em;
       border-radius: var(--radii-sm);
       background-color: var(--colors-yellow-200);
-      color: var(--colors-gray-900);
 }
 
     .r_mark,.r_p {
       font-family: var(--fonts-sans);
       letter-spacing: -0.01em;
+      color: var(--colors-gray-900);
 }
 
     .r_p {
@@ -688,9 +693,9 @@
       border-radius: var(--radii-md);
       font-family: var(--fonts-mono);
       letter-spacing: -0.02em;
+      color: var(--colors-gray-100);
       font-size: small;
       background-color: var(--colors-gray-900);
-      color: var(--colors-gray-100);
       white-space: pre;
       overflow-x: auto;
 }
@@ -698,6 +703,7 @@
     .r_q {
       font-family: var(--fonts-sans);
       letter-spacing: -0.01em;
+      color: var(--colors-gray-900);
       font-style: italic;
 }
 
@@ -713,6 +719,7 @@
       text-decoration: line-through;
       font-family: var(--fonts-sans);
       letter-spacing: -0.01em;
+      color: var(--colors-gray-900);
       opacity: 0.7;
 }
 
@@ -722,9 +729,9 @@
       border-radius: var(--radii-sm);
       font-family: var(--fonts-mono);
       letter-spacing: -0.02em;
+      color: var(--colors-gray-700);
       font-size: 0.9em;
       background-color: var(--colors-gray-50);
-      color: var(--colors-gray-700);
 }
 
     .r_small {
@@ -735,6 +742,7 @@
     .r_small,.r_strong {
       font-family: var(--fonts-sans);
       letter-spacing: -0.01em;
+      color: var(--colors-gray-900);
 }
 
     .r_strong {
@@ -748,6 +756,7 @@
     .r_sub,.r_sup {
       font-family: var(--fonts-sans);
       letter-spacing: -0.01em;
+      color: var(--colors-gray-900);
       font-size: xs;
       line-height: 0;
 }
@@ -760,6 +769,7 @@
       text-decoration: underline;
       font-family: var(--fonts-sans);
       letter-spacing: -0.01em;
+      color: var(--colors-gray-900);
       text-underline-offset: 0.15em;
       text-decoration-thickness: 0.08em;
 }
@@ -767,24 +777,27 @@
     .r_var {
       font-family: var(--fonts-serif);
       letter-spacing: normal;
-      font-style: italic;
       color: var(--colors-blue-600);
+      font-style: italic;
 }
 }
 
   .r_font--font_sans {
     font-family: var(--fonts-sans);
     letter-spacing: -0.01em;
+    font-weight: 400;
 }
 
   .r_font--font_serif {
     font-family: var(--fonts-serif);
     letter-spacing: normal;
+    font-weight: 373;
 }
 
   .r_font--font_mono {
     font-family: var(--fonts-mono);
     letter-spacing: -0.04em;
+    font-weight: 379;
 }
 }
 
@@ -4150,10 +4163,6 @@
 
   .white-space_nowrap {
     white-space: nowrap;
-}
-
-  .d_none {
-    display: none;
 }
 
   .op_0\.6 {

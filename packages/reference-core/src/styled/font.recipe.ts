@@ -11,14 +11,17 @@ export const fontStyle = defineRecipe({
       sans: {
         fontFamily: 'sans',
         letterSpacing: '-0.01em',
+        fontWeight: '400',
       },
       serif: {
         fontFamily: 'serif',
         letterSpacing: 'normal',
+        fontWeight: '373',
       },
       mono: {
         fontFamily: 'mono',
         letterSpacing: '-0.04em',
+        fontWeight: '379',
       },
     },
   },

@@ -45,7 +45,7 @@ export const defaultGlobalFontface = {
     fontStyle: 'normal',
     fontDisplay: 'swap',
     sizeAdjust: '104%',
-    descentOverride: '47%'
+    descentOverride: '47%',
 
   },
   // JetBrains Mono - monospace variable font (latin subset)

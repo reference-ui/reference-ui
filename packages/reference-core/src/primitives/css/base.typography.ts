@@ -10,4 +10,5 @@ import type { SystemStyleObject } from '@pandacss/dev'
 export const baseTypography: SystemStyleObject = {
   fontFamily: 'sans',
   letterSpacing: '-0.01em',
+  color: 'gray.900',
 }
