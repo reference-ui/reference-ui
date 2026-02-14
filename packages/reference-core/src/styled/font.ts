@@ -10,7 +10,7 @@ export const fontTokens = defineTokens({
       value: '"Literata", ui-sans-serif, sans-serif',
     },
     mono: {
-      value: '"IBM Plex Mono", ui-monospace, monospace',
+      value: '"JetBrains Mono", ui-monospace, monospace',
     },
   },
   fontSizes: {
@@ -44,37 +44,18 @@ export const defaultGlobalFontface = {
     fontWeight: '200 900',
     fontStyle: 'normal',
     fontDisplay: 'swap',
-    sizeAdjust: '107%',
+    sizeAdjust: '104%',
     descentOverride: '47%'
 
   },
-  // IBM Plex Mono - static font (latin subset, 400/500/600/700)
-  '"IBM Plex Mono"': [
-    {
-      src: 'url(https://fonts.gstatic.com/s/ibmplexmono/v20/-F63fjptAgt5VM-kVkqdyU8n3twJwA.woff2) format("woff2")',
-      fontWeight: 400,
-      fontStyle: 'normal',
-      fontDisplay: 'swap',
-    },
-    {
-      src: 'url(https://fonts.gstatic.com/s/ibmplexmono/v20/-F6qfjptAgt5VM-kVkqdyU8n3twJwlBFgsAXHNk.woff2) format("woff2")',
-      fontWeight: 500,
-      fontStyle: 'normal',
-      fontDisplay: 'swap',
-    },
-    {
-      src: 'url(https://fonts.gstatic.com/s/ibmplexmono/v20/-F6qfjptAgt5VM-kVkqdyU8n3vAOwlBFgsAXHNk.woff2) format("woff2")',
-      fontWeight: 600,
-      fontStyle: 'normal',
-      fontDisplay: 'swap',
-    },
-    {
-      src: 'url(https://fonts.gstatic.com/s/ibmplexmono/v20/-F6qfjptAgt5VM-kVkqdyU8n3pQPwlBFgsAXHNk.woff2) format("woff2")',
-      fontWeight: 700,
-      fontStyle: 'normal',
-      fontDisplay: 'swap',
-    },
-  ],
+  // JetBrains Mono - monospace variable font (latin subset)
+  '"JetBrains Mono"': {
+    src: 'url(https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbV2o-flEEny0FZhsfKu5WU4xD7OwGtT0rU.woff2) format("woff2")',
+    fontWeight: '100 800',
+    fontStyle: 'normal',
+    fontDisplay: 'swap',
+    sizeAdjust: '101%',
+  },
 
 }
 

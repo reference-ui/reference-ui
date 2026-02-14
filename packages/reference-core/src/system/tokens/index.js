@@ -800,7 +800,7 @@ const tokens = {
     "variable": "var(--fonts-serif)"
   },
   "fonts.mono": {
-    "value": "\"IBM Plex Mono\", ui-monospace, monospace",
+    "value": "\"JetBrains Mono\", ui-monospace, monospace",
     "variable": "var(--fonts-mono)"
   },
   "fontSizes.body": {
