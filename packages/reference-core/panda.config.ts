@@ -1,4 +1,4 @@
-import { defineConfig, type Config } from '@pandacss/dev'
+import { defineConfig, type Config, } from '@pandacss/dev'
 import { defaultTheme, defaultStaticCss, defaultGlobalFontface } from './src/styled/index.js'
 import { primitiveCSS } from './src/primitives/recipes.js'
 import { rhythmUtilities } from './src/styled/rhythm.js'
