@@ -820,7 +820,6 @@
   .r_font--font_mono {
     font-family: var(--fonts-mono);
     letter-spacing: -0.08em;
-    vertical-align: -10em;
 }
 }
 
@@ -1148,10 +1147,6 @@
 
   .m_0 {
     margin: 0;
-}
-
-  .bg_green\.500 {
-    background: var(--colors-green-500);
 }
 
   .m_0_0_1rem {
@@ -2202,6 +2197,14 @@
 
   .bd-r_1px_solid {
     border-right: 1px solid;
+}
+
+  .ov_hidden {
+    overflow: hidden;
+}
+
+  .bd-w_1px {
+    border-width: 1px;
 }
 
   .bg-c_gray\.50 {
@@ -4160,6 +4163,42 @@
     white-space: pre-wrap;
 }
 
+  .pos_relative {
+    position: relative;
+}
+
+  .pos_absolute {
+    position: absolute;
+}
+
+  .fs_48px {
+    font-size: 48px;
+}
+
+  .lh_60px {
+    line-height: 60px;
+}
+
+  .op_0\.9 {
+    opacity: 0.9;
+}
+
+  .white-space_nowrap {
+    white-space: nowrap;
+}
+
+  .op_0\.6 {
+    opacity: 0.6;
+}
+
+  .c_blue {
+    color: blue;
+}
+
+  .c_red {
+    color: red;
+}
+
   .pl_px {
     padding-left: var(--spacing-px);
 }
@@ -4818,6 +4857,22 @@
 
   .w_100\% {
     width: 100%;
+}
+
+  .max-w_600px {
+    max-width: 600px;
+}
+
+  .h_60px {
+    height: 60px;
+}
+
+  .mb_3rem {
+    margin-bottom: 3rem;
+}
+
+  .left_0 {
+    left: 0;
 }
 
   .disabled\:op_0\.5:is(:disabled, [disabled], [data-disabled], [aria-disabled=true]) {

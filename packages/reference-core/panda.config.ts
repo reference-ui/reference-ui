@@ -37,7 +37,8 @@ const config: Config = {
   include: [
     'src/**/*.{ts,tsx}',
     // Consumer files are copied to codegen/ by the sync command
-    'codegen/**/*.{ts,tsx}',
+    // MDX files are converted to .jsx for Panda scanning
+    'codegen/**/*.{ts,tsx,jsx}',
   ],
   
   exclude: [

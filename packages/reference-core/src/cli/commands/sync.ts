@@ -35,7 +35,7 @@ export async function syncCommand(cwd: string, options: SyncOptions = {}): Promi
 
   // Step 2: Copy user files to reference-core/codegen folder (one-time sync)
   console.log('📦 Copying user files to codegen...')
-  copyToCodegen(cwd, coreDir, userConfig.include)
+  await copyToCodegen(cwd, coreDir, userConfig.include)
 
   // Step 3: Run Panda codegen (scans core + codegen folder)
   console.log('🎨 Running panda codegen...')

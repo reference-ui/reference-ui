@@ -1,9 +1,10 @@
 import { createRequire } from 'node:module'
 const require = createRequire(import.meta.url)
 const fg = require('fast-glob')
-import { existsSync, mkdirSync, copyFileSync, rmSync } from 'node:fs'
+import { existsSync, mkdirSync, copyFileSync, rmSync, writeFileSync, readFileSync } from 'node:fs'
 import { resolve, dirname, relative } from 'node:path'
 import * as chokidar from 'chokidar'
+import { mdxToJSX } from './mdx-to-jsx.js'
 
 /**
  * Copy user files matching include patterns to codegen folder in @reference-ui/core.
@@ -13,9 +14,10 @@ import * as chokidar from 'chokidar'
  * 1. Resolve all files matching the include patterns from consumer cwd
  * 2. Clean the codegen folder in node_modules/@reference-ui/core
  * 3. Copy files to node_modules/@reference-ui/core/codegen/ maintaining relative paths
- * 4. Panda scans the codegen/ folder (reference-core ships source, runs from node_modules)
+ * 4. MDX files are converted to JSX for Panda scanning
+ * 5. Panda scans the codegen/ folder (reference-core ships source, runs from node_modules)
  */
-export function copyToCodegen(consumerCwd: string, coreDir: string, includePatterns: string[]): void {
+export async function copyToCodegen(consumerCwd: string, coreDir: string, includePatterns: string[]): Promise<void> {
   const codegenDir = resolve(coreDir, 'codegen')
   
   // Step 1: Clean codegen folder
@@ -53,8 +55,15 @@ export function copyToCodegen(consumerCwd: string, coreDir: string, includePatte
     // Create parent directories
     mkdirSync(dirname(destPath), { recursive: true })
     
-    // Copy file
-    copyFileSync(file, destPath)
+    // Convert MDX to JSX, otherwise copy as-is
+    if (file.endsWith('.mdx')) {
+      const mdxContent = readFileSync(file, 'utf-8')
+      const jsxContent = await mdxToJSX(mdxContent, relativePath)
+      const jsxDestPath = destPath.replace(/\.mdx$/, '.jsx')
+      writeFileSync(jsxDestPath, jsxContent, 'utf-8')
+    } else {
+      copyFileSync(file, destPath)
+    }
     copiedCount++
   }
 
@@ -128,12 +137,21 @@ export function watchAndCopyToCodegen(
   let initialCount = 0
 
   watcher
-    .on('add', (file) => {
+    .on('add', async (file) => {
       const relativePath = relative(consumerCwd, file)
       const destPath = resolve(codegenDir, relativePath)
 
       mkdirSync(dirname(destPath), { recursive: true })
-      copyFileSync(file, destPath)
+      
+      // Convert MDX to JSX, otherwise copy as-is
+      if (file.endsWith('.mdx')) {
+        const mdxContent = readFileSync(file, 'utf-8')
+        const jsxContent = await mdxToJSX(mdxContent, relativePath)
+        const jsxDestPath = destPath.replace(/\.mdx$/, '.jsx')
+        writeFileSync(jsxDestPath, jsxContent, 'utf-8')
+      } else {
+        copyFileSync(file, destPath)
+      }
 
       if (isReady) {
         logSync(relativePath)
@@ -141,12 +159,21 @@ export function watchAndCopyToCodegen(
         initialCount++
       }
     })
-    .on('change', (file) => {
+    .on('change', async (file) => {
       const relativePath = relative(consumerCwd, file)
       const destPath = resolve(codegenDir, relativePath)
 
       mkdirSync(dirname(destPath), { recursive: true })
-      copyFileSync(file, destPath)
+      
+      // Convert MDX to JSX, otherwise copy as-is
+      if (file.endsWith('.mdx')) {
+        const mdxContent = readFileSync(file, 'utf-8')
+        const jsxContent = await mdxToJSX(mdxContent, relativePath)
+        const jsxDestPath = destPath.replace(/\.mdx$/, '.jsx')
+        writeFileSync(jsxDestPath, jsxContent, 'utf-8')
+      } else {
+        copyFileSync(file, destPath)
+      }
 
       logSync(relativePath)
     })

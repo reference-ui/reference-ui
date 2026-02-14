@@ -17,6 +17,7 @@ export function Color({ name, value }: ColorProps) {
       borderColor="gray.200"
       borderRadius="base"
       backgroundColor="white"
+      // position="relative"
     >
       <Div
         width="12r"

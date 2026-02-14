@@ -47,30 +47,10 @@ Text primitives for building consistent, styled typography.
 
 ## Font Overlay
 
-<Div css={{ marginBottom: '3rem', overflow: 'hidden' }}>
-  <Div css={{ position: 'relative', height: '60px', marginBottom: '2rem' }}>
-    <Div css={{ position: 'absolute', top: 0, left: 0, fontSize: '48px', lineHeight: '1', opacity: 0.9 }}>
-      <Span font="sans">Typography</Span>
-    </Div>
-    <Div css={{ position: 'absolute', top: 0, left: 0, fontSize: '48px', lineHeight: '1', opacity: 0.6, color: 'blue' }}>
-      <Span font="serif">Typography</Span>
-    </Div>
-    <Div css={{ position: 'absolute', top: 0, left: 0, fontSize: '48px', lineHeight: '1', opacity: 0.6, color: 'red' }}>
-      <Span font="mono">Typography</Span>
-    </Div>
-  </Div>
-
-  <Div css={{ position: 'relative', height: '60px' }}>
-    <Div css={{ position: 'absolute', top: 0, left: 0, fontSize: '48px', lineHeight: '1', opacity: 0.9 }}>
-      <Span font="sans">Alignment</Span>
-    </Div>
-    <Div css={{ position: 'absolute', top: 0, left: 0, fontSize: '48px', lineHeight: '1', opacity: 0.6, color: 'blue' }}>
-      <Span font="serif">Alignment</Span>
-    </Div>
-    <Div css={{ position: 'absolute', top: 0, left: 0, fontSize: '48px', lineHeight: '1', opacity: 0.6, color: 'red' }}>
-      <Span font="mono">Alignment</Span>
-    </Div>
-  </Div>
+<Div position="relative" width="100%" maxWidth="600px" height="60px" marginBottom="3rem" overflow="hidden" borderWidth="1px" borderColor="gray.300">
+  <Div font="sans" position="absolute" top="0" left="0" fontSize="48px" lineHeight="60px" opacity={0.9} whiteSpace="nowrap">Typography</Div>
+  <Div font="serif" position="absolute" top="0" left="0" fontSize="48px" lineHeight="60px" opacity={0.6} color="blue" whiteSpace="nowrap">Typography</Div>
+  <Div font="mono" position="absolute" top="0" left="0" fontSize="48px" lineHeight="60px" opacity={0.6} color="red" whiteSpace="nowrap">Typography</Div>
 </Div>
 
 ---
