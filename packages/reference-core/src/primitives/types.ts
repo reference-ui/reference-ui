@@ -1,7 +1,7 @@
 import type * as React from 'react'
 import type { HTMLStyledProps } from '../system/types/jsx.js'
 import type { DistributiveOmit } from '../system/types/system-types.js'
-import type { ResponsiveBreakpoints } from '../styled/responsive'
+import type { ResponsiveBreakpoints } from '../styled/patterns'
 
 /** Primitive props: HTML + Panda + r, container. No 'as'. */
 export type PrimitiveProps<T extends keyof React.JSX.IntrinsicElements> =

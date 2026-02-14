@@ -792,15 +792,15 @@ const tokens = {
     "variable": "var(--colors-rose-950)"
   },
   "fonts.sans": {
-    "value": "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\"",
+    "value": "\"Inter\", ui-serif, serif",
     "variable": "var(--fonts-sans)"
   },
   "fonts.serif": {
-    "value": "ui-serif, Georgia, Cambria, \"Times New Roman\", Times, serif",
+    "value": "\"Literata\", ui-sans-serif, sans-serif",
     "variable": "var(--fonts-serif)"
   },
   "fonts.mono": {
-    "value": "ui-monospace, \"Cascadia Code\", \"Source Code Pro\", Menlo, Consolas, \"Courier New\", monospace",
+    "value": "\"IBM Plex Mono\", ui-monospace, monospace",
     "variable": "var(--fonts-mono)"
   },
   "fontSizes.body": {

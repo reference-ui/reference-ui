@@ -8,9 +8,10 @@ import type { Tokens } from '../tokens/index';
 export interface BoxProperties {
    r?: ConditionalValue<object>
 	container?: ConditionalValue<string>
+	font?: ConditionalValue<string>
 }
 
-interface BoxStyles extends BoxProperties, DistributiveOmit<SystemStyleObject, keyof BoxProperties | 'r' | 'container'> {}
+interface BoxStyles extends BoxProperties, DistributiveOmit<SystemStyleObject, keyof BoxProperties | 'r' | 'container' | 'font'> {}
 
 interface BoxPatternFn {
   (styles?: BoxStyles): string

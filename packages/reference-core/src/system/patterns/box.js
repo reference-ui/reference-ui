@@ -3,20 +3,31 @@ import { css } from '../css/index.js';
 
 const boxConfig = {
 transform(props) {
-  const { r, container, ...rest } = props;
+  const { r, container, font, ...rest } = props;
   if (r) {
     const prefix = container ? `@container ${container} (min-width:` : `@container (min-width:`;
-    for (const [bp, styles] of Object.entries(r)) {
-      rest[`${prefix} ${bp}px)`] = styles;
-    }
-    return rest;
+    return {
+      ...rest,
+      ...Object.fromEntries(
+        Object.entries(r).map(([bp, styles]) => [`${prefix} ${bp}px)`, styles])
+      )
+    };
   }
   if (container !== void 0) {
-    rest.containerType = "inline-size";
-    if (typeof container === "string" && container) {
-      rest.containerName = container;
-    }
-    return rest;
+    return {
+      ...rest,
+      containerType: "inline-size",
+      ...typeof container === "string" && container && { containerName: container }
+    };
+  }
+  if (font != null && typeof font === "string") {
+    const fontPresets = {
+      sans: { fontFamily: "sans", letterSpacing: "-0.01em" },
+      serif: { fontFamily: "serif", letterSpacing: "normal" },
+      mono: { fontFamily: "mono", letterSpacing: "-0.08em" }
+    };
+    const styles = fontPresets[font];
+    if (styles) return { ...rest, ...styles };
   }
   return rest;
 }}

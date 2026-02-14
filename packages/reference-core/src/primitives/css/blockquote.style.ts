@@ -1,8 +1,10 @@
 import { defineRecipe } from '@pandacss/dev'
+import { baseTypography } from './base.typography'
 
 export const blockquoteStyle = defineRecipe({
   className: 'r_blockquote',
   base: {
+    ...baseTypography,
     fontSize: 'h5',
     fontStyle: 'italic',
     lineHeight: '1.6',

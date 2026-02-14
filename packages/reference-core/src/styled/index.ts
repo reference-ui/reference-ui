@@ -1,9 +1,10 @@
 import { defineTokens } from '@pandacss/dev'
 import { colors } from './colors'
-import { fontStaticCssProperties, fontTokens } from './font.js'
+import { fontStaticCssProperties, fontTokens, defaultGlobalFontface } from './font.js'
 import { getRhythm } from './rhythm'
 
-export { getRhythm }
+
+export { getRhythm, defaultGlobalFontface }
 
 /** Default design tokens */
 export const tokens = defineTokens({
@@ -65,6 +66,7 @@ export const defaultStaticCss = {
         ...fontStaticCssProperties,
         borderRadius: ['*'],
         borderWidth: ['*'],
+        font: ['*'],
       },
     },
   ],

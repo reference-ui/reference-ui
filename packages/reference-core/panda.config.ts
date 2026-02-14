@@ -1,8 +1,8 @@
-import { defineConfig } from '@pandacss/dev'
-import { defaultTheme, defaultStaticCss } from './src/styled/index.js'
+import { defineConfig, type Config } from '@pandacss/dev'
+import { defaultTheme, defaultStaticCss, defaultGlobalFontface, fontUtility } from './src/styled/index.js'
 import { primitiveCSS } from './src/primitives/recipes.js'
 import { rhythmUtilities } from './src/styled/rhythm.js'
-import { responsivePatterns, responsiveGlobalCss } from './src/styled/responsive.js'
+import { patterns, patternsGlobalCss } from './src/styled/patterns.js'
 
 /** Extracted type for patterns.extend so we can assert our custom patterns. */
 type ExtendablePatterns = Parameters<typeof defineConfig>[0]['patterns'] extends { extend?: infer E } ? E : never
@@ -27,7 +27,7 @@ function asExtendablePatterns<T>(patterns: T): ExtendablePatterns {
  * 
  * Run: panda codegen && panda css
  */
-export default defineConfig({
+const config: Config = {
   presets: [],
   jsxFramework: 'react',
   preflight: true,
@@ -59,7 +59,9 @@ export default defineConfig({
   // Emit static CSS for all common token values to support runtime usage
   staticCss: defaultStaticCss as unknown as Parameters<typeof defineConfig>[0]['staticCss'],
   utilities: {
-    extend: rhythmUtilities,
+    extend: {
+      ...rhythmUtilities,
+    },
   },
   theme: {
     tokens: defaultTheme.extend.tokens,
@@ -68,10 +70,10 @@ export default defineConfig({
     },
   },
   patterns: {
-    extend: asExtendablePatterns(responsivePatterns),
+    extend: asExtendablePatterns(patterns),
   },
-  globalCss: responsiveGlobalCss,
-  
-  // Critical: Use tsconfig to resolve @reference-ui/core imports to source
-  tsconfig: './tsconfig.json',
-})
+  globalCss: patternsGlobalCss,
+  globalFontface: defaultGlobalFontface as unknown as Parameters<typeof defineConfig>[0]['globalFontface'],
+}
+
+export default defineConfig(config)

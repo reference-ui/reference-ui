@@ -1,8 +1,10 @@
 import { defineRecipe } from '@pandacss/dev'
+import { baseTypography } from './base.typography'
 
 export const h4Style = defineRecipe({
   className: 'r_h4',
   base: {
+    ...baseTypography,
     fontSize: '4.5r',
     fontWeight: 'bold',
     lineHeight: '8r',

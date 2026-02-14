@@ -184,6 +184,7 @@
 
   body {
     font-family: var(--fonts-sans);
+    letter-spacing: -0.01em;
     font-size: body;
 }
 
@@ -233,6 +234,84 @@
     --skew-y: 0;
     --scale-x: 1;
     --scale-y: 1;
+}
+
+  @font-face {
+    font-family: Inter;
+
+    src: url(https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7W0Q5nw.woff2) format("woff2");
+
+    font-weight: 100 900;
+
+    font-style: normal;
+
+    font-display: swap;
+
+}
+
+  @font-face {
+    font-family: Literata;
+
+    src: url(https://fonts.gstatic.com/s/literata/v40/or38Q6P12-iJxAIgLa78DkrbXsDgk0oVDaDlbJ5W7i5aOg.woff2) format("woff2");
+
+    font-weight: 200 900;
+
+    font-style: normal;
+
+    font-display: swap;
+
+}
+
+  @font-face {
+    font-family: "IBM Plex Mono";
+
+    src: url(https://fonts.gstatic.com/s/ibmplexmono/v20/-F63fjptAgt5VM-kVkqdyU8n3twJwA.woff2) format("woff2");
+
+    font-weight: 400;
+
+    font-style: normal;
+
+    font-display: swap;
+
+}
+
+  @font-face {
+    font-family: "IBM Plex Mono";
+
+    src: url(https://fonts.gstatic.com/s/ibmplexmono/v20/-F6qfjptAgt5VM-kVkqdyU8n3twJwlBFgsAXHNk.woff2) format("woff2");
+
+    font-weight: 500;
+
+    font-style: normal;
+
+    font-display: swap;
+
+}
+
+  @font-face {
+    font-family: "IBM Plex Mono";
+
+    src: url(https://fonts.gstatic.com/s/ibmplexmono/v20/-F6qfjptAgt5VM-kVkqdyU8n3vAOwlBFgsAXHNk.woff2) format("woff2");
+
+    font-weight: 600;
+
+    font-style: normal;
+
+    font-display: swap;
+
+}
+
+  @font-face {
+    font-family: "IBM Plex Mono";
+
+    src: url(https://fonts.gstatic.com/s/ibmplexmono/v20/-F6qfjptAgt5VM-kVkqdyU8n3pQPwlBFgsAXHNk.woff2) format("woff2");
+
+    font-weight: 700;
+
+    font-style: normal;
+
+    font-display: swap;
+
 }
 }
 
@@ -436,9 +515,9 @@
     --colors-rose-800: oklch(45.5% 0.188 13.697);
     --colors-rose-900: oklch(41% 0.159 10.272);
     --colors-rose-950: oklch(27.1% 0.105 12.094);
-    --fonts-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
-    --fonts-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
-    --fonts-mono: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, "Courier New", monospace;
+    --fonts-sans: "Inter", ui-serif, serif;
+    --fonts-serif: "Literata", ui-sans-serif, sans-serif;
+    --fonts-mono: "IBM Plex Mono", ui-monospace, monospace;
     --font-sizes-body: 1rem;
     --font-sizes-h1: 2.5rem;
     --font-sizes-h2: 2rem;
@@ -486,6 +565,11 @@
       cursor: help;
 }
 
+    .r_abbr,.r_b {
+      font-family: var(--fonts-sans);
+      letter-spacing: -0.01em;
+}
+
     .r_b {
       font-weight: bold;
 }
@@ -505,6 +589,8 @@
 }
 
     .r_blockquote,.r_cite {
+      font-family: var(--fonts-sans);
+      letter-spacing: -0.01em;
       font-style: italic;
 }
 
@@ -517,6 +603,7 @@
       padding-block: 0.15em;
       border-radius: var(--radii-sm);
       font-family: var(--fonts-mono);
+      letter-spacing: -0.01em;
       font-size: 0.9em;
       background-color: var(--colors-gray-100);
       color: var(--colors-pink-600);
@@ -524,6 +611,11 @@
 
     .r_em {
       font-style: italic;
+}
+
+    .r_em,.r_h1 {
+      font-family: var(--fonts-sans);
+      letter-spacing: -0.01em;
 }
 
     .r_h1 {
@@ -539,6 +631,8 @@
 }
 
     .r_h2,.r_h3 {
+      font-family: var(--fonts-sans);
+      letter-spacing: -0.01em;
       font-weight: bold;
       line-height: var(--spacing-10r);
       margin-top: 0;
@@ -554,6 +648,8 @@
 }
 
     .r_h4,.r_h5 {
+      font-family: var(--fonts-sans);
+      letter-spacing: -0.01em;
       font-size: calc(4.5 * var(--spacing-r));
       line-height: var(--spacing-8r);
       margin-top: 0;
@@ -573,6 +669,11 @@
       margin-bottom: var(--spacing-3r);
 }
 
+    .r_h6,.r_i {
+      font-family: var(--fonts-sans);
+      letter-spacing: -0.01em;
+}
+
     .r_i {
       font-style: italic;
 }
@@ -585,6 +686,7 @@
       border-style: solid;
       border-color: var(--colors-gray-300);
       font-family: var(--fonts-mono);
+      letter-spacing: -0.02em;
       font-size: 0.85em;
       background-color: var(--colors-gray-100);
       color: var(--colors-gray-800);
@@ -599,8 +701,13 @@
       color: var(--colors-gray-900);
 }
 
+    .r_mark,.r_p {
+      font-family: var(--fonts-sans);
+      letter-spacing: -0.01em;
+}
+
     .r_p {
-      font-size: body;
+      font-size: var(--spacing-4r);
 }
 
     .r_p,.r_pre {
@@ -613,6 +720,7 @@
       padding: 1em;
       border-radius: var(--radii-md);
       font-family: var(--fonts-mono);
+      letter-spacing: -0.02em;
       font-size: small;
       background-color: var(--colors-gray-900);
       color: var(--colors-gray-100);
@@ -621,6 +729,8 @@
 }
 
     .r_q {
+      font-family: var(--fonts-sans);
+      letter-spacing: -0.01em;
       font-style: italic;
 }
 
@@ -634,6 +744,8 @@
 
     .r_s {
       text-decoration: line-through;
+      font-family: var(--fonts-sans);
+      letter-spacing: -0.01em;
       opacity: 0.7;
 }
 
@@ -642,6 +754,7 @@
       padding-block: 0.1em;
       border-radius: var(--radii-sm);
       font-family: var(--fonts-mono);
+      letter-spacing: -0.02em;
       font-size: 0.9em;
       background-color: var(--colors-gray-50);
       color: var(--colors-gray-700);
@@ -650,6 +763,11 @@
     .r_small {
       font-size: small;
       line-height: 1.4;
+}
+
+    .r_small,.r_strong {
+      font-family: var(--fonts-sans);
+      letter-spacing: -0.01em;
 }
 
     .r_strong {
@@ -661,6 +779,8 @@
 }
 
     .r_sub,.r_sup {
+      font-family: var(--fonts-sans);
+      letter-spacing: -0.01em;
       font-size: xs;
       line-height: 0;
 }
@@ -671,12 +791,15 @@
 
     .r_u {
       text-decoration: underline;
+      font-family: var(--fonts-sans);
+      letter-spacing: -0.01em;
       text-underline-offset: 0.15em;
       text-decoration-thickness: 0.08em;
 }
 
     .r_var {
       font-family: var(--fonts-serif);
+      letter-spacing: normal;
       font-style: italic;
       color: var(--colors-blue-600);
 }

@@ -5,7 +5,7 @@ import { getBoxStyle } from '../patterns/box.js';
 import { styled } from './factory.js';
 
 export const Box = /* @__PURE__ */ forwardRef(function Box(props, ref) {
-  const [patternProps, restProps] = splitProps(props, ["r","container"])
+  const [patternProps, restProps] = splitProps(props, ["r","container","font"])
 
 const styleProps = getBoxStyle(patternProps)
 const mergedProps = { ref, ...styleProps, ...restProps }
