@@ -55,31 +55,18 @@ const header = `/** Generated. Run: node scripts/generate-primitives.cjs */
 
 import * as React from 'react'
 import { forwardRef } from 'react'
-import { splitProps } from '../system/helpers.js'
-import { cx } from '../system/css/index.js'
-import { box } from '../system/patterns/box.js'
 import { styled } from '../system/jsx/index.js'
+import { applyCustomProps } from './applyCustomProps.js'
 import type { PrimitiveElement, PrimitiveProps } from './types'
 ${recipeImports ? '\n' + recipeImports + '\n' : ''}
 export { TAGS as HTML_TAGS, type Tag as HtmlTag } from './tags'
 export type { PrimitiveElement, PrimitiveProps } from './types'
 
-/** Apply box pattern. When tag has a matching recipe, applies that recipe's static className (user css prop still overrides). */
-function applyBoxPattern(props: object, recipeClassName?: string): object {
-  const [boxProps, rest] = splitProps(props, ['r', 'container'])
-  const { className, ...restProps } = rest as Record<string, unknown>
-  return {
-    ...(box.raw(boxProps as Parameters<typeof box.raw>[0]) as object),
-    ...restProps,
-    className: cx(recipeClassName, className as string | undefined),
-  }
-}
-
 `
 
 function genPrimitive(tag, exportName) {
   const recipeRef = PRIMITIVE_RECIPES[tag] ? getRecipeRef(tag) : 'undefined'
-  return `export const ${exportName} = forwardRef<PrimitiveElement<'${tag}'>, PrimitiveProps<'${tag}'>>((props, ref) => <styled.${tag} ref={ref} {...applyBoxPattern(props, ${recipeRef})} />) as React.ForwardRefExoticComponent<PrimitiveProps<'${tag}'> & React.RefAttributes<PrimitiveElement<'${tag}'>>>`
+  return `export const ${exportName} = forwardRef<PrimitiveElement<'${tag}'>, PrimitiveProps<'${tag}'>>((props, ref) => <styled.${tag} ref={ref} {...applyCustomProps(props, ${recipeRef})} />) as React.ForwardRefExoticComponent<PrimitiveProps<'${tag}'> & React.RefAttributes<PrimitiveElement<'${tag}'>>>`
 }
 
 function genTypeExport(tag, exportName) {
