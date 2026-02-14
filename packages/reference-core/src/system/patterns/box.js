@@ -20,15 +20,6 @@ transform(props) {
       ...typeof container === "string" && container && { containerName: container }
     };
   }
-  if (font != null && typeof font === "string") {
-    const fontPresets = {
-      sans: { fontFamily: "sans", letterSpacing: "-0.01em" },
-      serif: { fontFamily: "serif", letterSpacing: "normal" },
-      mono: { fontFamily: "mono", letterSpacing: "-0.08em" }
-    };
-    const styles = fontPresets[font];
-    if (styles) return { ...rest, ...styles };
-  }
   return rest;
 }}
 

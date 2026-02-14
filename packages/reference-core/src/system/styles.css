@@ -260,6 +260,8 @@
 
     font-display: swap;
 
+    size-adjust: 200%;
+
 }
 
   @font-face {
@@ -803,6 +805,22 @@
       font-style: italic;
       color: var(--colors-blue-600);
 }
+}
+
+  .r_font--font_sans {
+    font-family: var(--fonts-sans);
+    letter-spacing: -0.01em;
+}
+
+  .r_font--font_serif {
+    font-family: var(--fonts-serif);
+    letter-spacing: normal;
+}
+
+  .r_font--font_mono {
+    font-family: var(--fonts-mono);
+    letter-spacing: -0.08em;
+    vertical-align: -10em;
 }
 }
 

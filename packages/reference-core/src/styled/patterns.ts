@@ -10,7 +10,7 @@ export type ResponsiveBreakpoints = {
 
 // --- Box pattern --------------------------------------------------------------
 // Modes: (1) r = expand breakpoint map to @container queries. (2) container = set
-// containment context. (3) font = apply font preset (sans|serif|mono).
+// containment context. (3) font = apply font preset (sans|serif|mono) via recipe.
 
 const boxPattern = {
   jsx: ['Box', ...PRIMITIVE_JSX_NAMES],
@@ -43,16 +43,7 @@ const boxPattern = {
       }
     }
 
-    if (font != null && typeof font === 'string') {
-      const fontPresets: Record<string, SystemStyleObject> = {
-        sans: { fontFamily: 'sans', letterSpacing: '-0.01em' },
-        serif: { fontFamily: 'serif', letterSpacing: 'normal' },
-        mono: { fontFamily: 'mono', letterSpacing: '-0.08em' },
-      }
-      const styles = fontPresets[font]
-      if (styles) return { ...rest, ...styles }
-    }
-
+    // font prop is handled by applyCustomProps via fontStyle recipe
     return rest
   },
 }

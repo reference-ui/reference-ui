@@ -19,6 +19,7 @@ export const fontStyle = defineRecipe({
       mono: {
         fontFamily: 'mono',
         letterSpacing: '-0.08em',
+        verticalAlign: '-10em'
       },
     },
   },

@@ -1,6 +1,7 @@
 import { splitProps } from '../system/helpers.js'
 import { cx } from '../system/css/index.js'
 import { box } from '../system/patterns/box.js'
+import { fontStyle } from '../system/recipes/font-style.js'
 
 /** Custom props extracted and transformed before passing to styled primitives. */
 const CUSTOM_PROPS = ['r', 'container', 'font'] as const
@@ -16,9 +17,16 @@ export function applyCustomProps(
 ): object {
   const [boxProps, rest] = splitProps(props, [...CUSTOM_PROPS])
   const { className, ...restProps } = rest as Record<string, unknown>
+  const { font, ...boxPropsWithoutFont } = boxProps as Record<string, unknown>
+  
+  // Apply font recipe if font prop exists
+  const fontClassName = font && typeof font === 'string' 
+    ? fontStyle({ font: font as 'sans' | 'serif' | 'mono' })
+    : undefined
+  
   return {
-    ...(box.raw(boxProps as Parameters<typeof box.raw>[0]) as object),
+    ...(box.raw(boxPropsWithoutFont as Parameters<typeof box.raw>[0]) as object),
     ...restProps,
-    className: cx(recipeClassName, className as string | undefined),
+    className: cx(recipeClassName, fontClassName, className as string | undefined),
   }
 }

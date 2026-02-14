@@ -5,7 +5,7 @@ order: 2
 slug: typography
 ---
 
-import { H1, H2, H3, H4, H5, H6, P, Span, Strong, Em, B, I, U, S, Small, Mark, Sub, Sup, Abbr, Code, Pre, Kbd, Samp, Var, Blockquote, Q, Cite } from '@reference-ui/core';
+import { H1, H2, H3, H4, H5, H6, P, Span, Strong, Em, B, I, U, S, Small, Mark, Sub, Sup, Abbr, Code, Pre, Kbd, Samp, Var, Blockquote, Q, Cite, Div } from '@reference-ui/core';
 
 # Typography
 
@@ -42,6 +42,36 @@ Text primitives for building consistent, styled typography.
   <P font="mono">The quick brown fox jumps over the lazy dog.</P>
   <P font="serif">The quick brown fox jumps over the lazy dog.</P>
 </div>
+
+---
+
+## Font Overlay
+
+<Div css={{ marginBottom: '3rem', overflow: 'hidden' }}>
+  <Div css={{ position: 'relative', height: '60px', marginBottom: '2rem' }}>
+    <Div css={{ position: 'absolute', top: 0, left: 0, fontSize: '48px', lineHeight: '1', opacity: 0.9 }}>
+      <Span font="sans">Typography</Span>
+    </Div>
+    <Div css={{ position: 'absolute', top: 0, left: 0, fontSize: '48px', lineHeight: '1', opacity: 0.6, color: 'blue' }}>
+      <Span font="serif">Typography</Span>
+    </Div>
+    <Div css={{ position: 'absolute', top: 0, left: 0, fontSize: '48px', lineHeight: '1', opacity: 0.6, color: 'red' }}>
+      <Span font="mono">Typography</Span>
+    </Div>
+  </Div>
+
+  <Div css={{ position: 'relative', height: '60px' }}>
+    <Div css={{ position: 'absolute', top: 0, left: 0, fontSize: '48px', lineHeight: '1', opacity: 0.9 }}>
+      <Span font="sans">Alignment</Span>
+    </Div>
+    <Div css={{ position: 'absolute', top: 0, left: 0, fontSize: '48px', lineHeight: '1', opacity: 0.6, color: 'blue' }}>
+      <Span font="serif">Alignment</Span>
+    </Div>
+    <Div css={{ position: 'absolute', top: 0, left: 0, fontSize: '48px', lineHeight: '1', opacity: 0.6, color: 'red' }}>
+      <Span font="mono">Alignment</Span>
+    </Div>
+  </Div>
+</Div>
 
 ---
 

@@ -24,7 +24,7 @@ import { defineConfig } from '@reference-ui/core'
 export default defineConfig({
   // Glob patterns for files to scan for Panda CSS extraction
   include: [
-    'src/**/*.{ts,tsx}',
+    'src/**/*.{ts,tsx,mdx}',
   ],
 
   // Optional: Enable normalize CSS reset (default: true)

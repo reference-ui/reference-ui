@@ -70,6 +70,9 @@ export const defaultStaticCss = {
       },
     },
   ],
+  recipes: {
+    fontStyle: ['*'],
+  },
 }
 
 
