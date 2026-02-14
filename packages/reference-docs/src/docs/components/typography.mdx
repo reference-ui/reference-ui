@@ -47,10 +47,20 @@ Text primitives for building consistent, styled typography.
 
 ## Font Overlay
 
-<Div position="relative" width="100%" maxWidth="600px" height="60px" marginBottom="3rem" overflow="hidden" borderWidth="1px" borderColor="gray.300">
-  <Div font="sans" position="absolute" top="0" left="0" fontSize="48px" lineHeight="60px" opacity={0.9} whiteSpace="nowrap">Typography</Div>
-  <Div font="serif" position="absolute" top="0" left="0" fontSize="48px" lineHeight="60px" opacity={0.6} color="blue" whiteSpace="nowrap">Typography</Div>
-  <Div font="mono" position="absolute" top="0" left="0" fontSize="48px" lineHeight="60px" opacity={0.6} color="red" whiteSpace="nowrap">Typography</Div>
+<Div position="relative" width="100%" maxWidth="600px" height="100px" marginBottom="3rem" overflow="hidden" borderWidth="1px" borderColor="gray.300">
+  <Div font="sans" position="absolute" top="0" left="0" fontSize="60px" lineHeight="70px" opacity={0.9} whiteSpace="nowrap">Typography</Div>
+  <Div  display="none"  font="serif" position="absolute" top="0" left="0" fontSize="60px" lineHeight="70px" opacity={0.6} color="blue" whiteSpace="nowrap">Typography</Div>
+  <Div font="mono" position="absolute" top="0" left="0" fontSize="60px" lineHeight="70px" opacity={0.6} color="red" whiteSpace="nowrap">Typography</Div>
+</Div>
+
+---
+
+## Sentence Overlay
+
+<Div position="relative" width="100%" maxWidth="600px" height="200px" marginBottom="3rem" overflow="hidden" borderWidth="1px" borderColor="gray.300">
+  <Div font="sans" position="absolute" top="0" left="0" fontSize="32px" lineHeight="40px" opacity={0.9}>The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs. How vexingly quick daft zebras jump!</Div>
+  <Div font="serif" position="absolute" top="0" left="0" fontSize="32px" lineHeight="40px" opacity={0.6} color="blue">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs. How vexingly quick daft zebras jump!</Div>
+  <Div font="mono" position="absolute" top="0" left="0" fontSize="32px" lineHeight="40px" opacity={0.6} color="red">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs. How vexingly quick daft zebras jump!</Div>
 </Div>
 
 ---

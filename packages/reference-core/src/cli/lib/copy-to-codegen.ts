@@ -170,6 +170,8 @@ export function watchAndCopyToCodegen(
         const mdxContent = readFileSync(file, 'utf-8')
         const jsxContent = await mdxToJSX(mdxContent, relativePath)
         const jsxDestPath = destPath.replace(/\.mdx$/, '.jsx')
+        
+        // Write JSX file - writeFileSync ensures data is flushed to disk
         writeFileSync(jsxDestPath, jsxContent, 'utf-8')
       } else {
         copyFileSync(file, destPath)

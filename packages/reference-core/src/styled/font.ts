@@ -44,7 +44,9 @@ export const defaultGlobalFontface = {
     fontWeight: '200 900',
     fontStyle: 'normal',
     fontDisplay: 'swap',
-    sizeAdjust: '200%',
+    sizeAdjust: '107%',
+    descentOverride: '47%'
+
   },
   // IBM Plex Mono - static font (latin subset, 400/500/600/700)
   '"IBM Plex Mono"': [

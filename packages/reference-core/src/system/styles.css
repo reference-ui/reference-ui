@@ -260,7 +260,9 @@
 
     font-display: swap;
 
-    size-adjust: 200%;
+    size-adjust: 107%;
+
+    descent-override: 47%;
 
 }
 
@@ -561,6 +563,7 @@
 
 @layer recipes{
   @layer _base{
+
     .r_abbr {
       text-decoration: underline dotted;
       text-underline-offset: 0.15em;
@@ -819,7 +822,7 @@
 
   .r_font--font_mono {
     font-family: var(--fonts-mono);
-    letter-spacing: -0.08em;
+    letter-spacing: -0.05em;
 }
 }
 
@@ -4171,12 +4174,12 @@
     position: absolute;
 }
 
-  .fs_48px {
-    font-size: 48px;
+  .fs_60px {
+    font-size: 60px;
 }
 
-  .lh_60px {
-    line-height: 60px;
+  .lh_70px {
+    line-height: 70px;
 }
 
   .op_0\.9 {
@@ -4185,6 +4188,10 @@
 
   .white-space_nowrap {
     white-space: nowrap;
+}
+
+  .d_none {
+    display: none;
 }
 
   .op_0\.6 {
@@ -4197,6 +4204,22 @@
 
   .c_red {
     color: red;
+}
+
+  .fs_48px {
+    font-size: 48px;
+}
+
+  .lh_60px {
+    line-height: 60px;
+}
+
+  .fs_32px {
+    font-size: 32px;
+}
+
+  .lh_40px {
+    line-height: 40px;
 }
 
   .pl_px {
@@ -4863,8 +4886,8 @@
     max-width: 600px;
 }
 
-  .h_60px {
-    height: 60px;
+  .h_100px {
+    height: 100px;
 }
 
   .mb_3rem {
@@ -4873,6 +4896,30 @@
 
   .left_0 {
     left: 0;
+}
+
+  .max-w_800px {
+    max-width: 800px;
+}
+
+  .h_120px {
+    height: 120px;
+}
+
+  .max-w_500px {
+    max-width: 500px;
+}
+
+  .h_160px {
+    height: 160px;
+}
+
+  .h_180px {
+    height: 180px;
+}
+
+  .h_200px {
+    height: 200px;
 }
 
   .disabled\:op_0\.5:is(:disabled, [disabled], [data-disabled], [aria-disabled=true]) {
