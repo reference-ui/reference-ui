@@ -24,3 +24,4 @@ export * from './var-style.js';
 export * from './blockquote-style.js';
 export * from './q-style.js';
 export * from './cite-style.js';
+export * from './font-style.js';

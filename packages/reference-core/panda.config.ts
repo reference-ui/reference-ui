@@ -1,8 +1,9 @@
 import { defineConfig, type Config } from '@pandacss/dev'
-import { defaultTheme, defaultStaticCss, defaultGlobalFontface, fontUtility } from './src/styled/index.js'
+import { defaultTheme, defaultStaticCss, defaultGlobalFontface } from './src/styled/index.js'
 import { primitiveCSS } from './src/primitives/recipes.js'
 import { rhythmUtilities } from './src/styled/rhythm.js'
 import { patterns, patternsGlobalCss } from './src/styled/patterns.js'
+import { fontStyle } from './src/styled/font.recipe.js'
 
 /** Extracted type for patterns.extend so we can assert our custom patterns. */
 type ExtendablePatterns = Parameters<typeof defineConfig>[0]['patterns'] extends { extend?: infer E } ? E : never
@@ -66,7 +67,10 @@ const config: Config = {
   theme: {
     tokens: defaultTheme.extend.tokens,
     extend: {
-      recipes: primitiveCSS,
+      recipes: {
+        ...primitiveCSS,
+        fontStyle,
+      },
     },
   },
   patterns: {
