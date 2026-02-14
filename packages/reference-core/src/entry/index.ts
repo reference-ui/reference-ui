@@ -14,5 +14,5 @@ export type { ResponsiveBreakpoints } from '../styled/patterns.d.js'
 export { tokens, defaultTheme, defaultStaticCss, getRhythm } from '../styled/index.js'
 
 // Configuration API (for ui.config.ts files)
-export { defineConfig } from '../cli/config.js'
-export type { ReferenceUIConfig } from '../cli/config.js'
+export { defineConfig } from '../cli/config/index.js'
+export type { ReferenceUIConfig } from '../cli/config/index.js'

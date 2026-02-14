@@ -4,7 +4,7 @@ const fg = require('fast-glob')
 import { existsSync, mkdirSync, copyFileSync, rmSync, writeFileSync, readFileSync } from 'node:fs'
 import { resolve, dirname, relative } from 'node:path'
 import * as chokidar from 'chokidar'
-import { mdxToJSX } from './mdx-to-jsx.js'
+import { mdxToJSX } from './mdx-to-jsx'
 
 /**
  * Copy user files matching include patterns to codegen folder in @reference-ui/core.

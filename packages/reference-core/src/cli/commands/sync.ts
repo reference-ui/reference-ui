@@ -1,9 +1,9 @@
-import { copyToNodeModules } from '../lib/copy-to-node-modules.js'
-import { resolveCorePackageDir } from '../lib/resolve-core.js'
-import { runGeneratePrimitives } from '../lib/run-generate-primitives.js'
-import { runPandaCodegen, runPandaCss } from '../lib/run-panda-codegen.js'
-import { loadUserConfig } from '../lib/load-config.js'
-import { copyToCodegen, watchAndCopyToCodegen } from '../lib/copy-to-codegen.js'
+import { copyToNodeModules } from '../workspace/copy-to-node-modules'
+import { resolveCorePackageDir } from '../workspace/resolve-core'
+import { runGeneratePrimitives } from '../lib/run-generate-primitives'
+import { runPandaCodegen, runPandaCss } from '../panda/gen/runner'
+import { loadUserConfig } from '../config/load-config'
+import { copyToCodegen, watchAndCopyToCodegen } from '../panda/gen/copy-to-codegen'
 
 export interface SyncOptions {
   watch?: boolean

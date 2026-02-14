@@ -6,8 +6,8 @@ import { fileURLToPath } from 'node:url'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
 function resolvePandaBin(): string {
-  // When bundled, __dirname is dist/; CLI root is one level up.
-  const cliRoot = resolve(__dirname, '..')
+  // When bundled, __dirname is dist/; CLI root is two levels up from panda/gen/
+  const cliRoot = resolve(__dirname, '../..')
   const candidates = [
     resolve(cliRoot, 'node_modules/.bin/panda'),
     resolve(cliRoot, '../node_modules/.bin/panda'),

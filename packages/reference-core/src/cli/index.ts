@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import { syncCommand } from './commands/sync.js'
-import { linkSystemCommand } from './commands/link-system.js'
+import { syncCommand } from './commands/sync'
+import { linkSystemCommand } from './commands/link-system'
 
 const cwd = process.cwd()
 

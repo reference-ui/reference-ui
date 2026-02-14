@@ -1,7 +1,7 @@
 import { bundleNRequire } from 'bundle-n-require'
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
-import type { ReferenceUIConfig } from '../config.js'
+import type { ReferenceUIConfig } from './index'
 
 /**
  * Load and evaluate the user's ui.config.ts/js file.
