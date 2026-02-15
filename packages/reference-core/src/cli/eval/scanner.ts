@@ -1,9 +1,6 @@
-import { createRequire } from 'node:module'
 import { existsSync, readFileSync } from 'node:fs'
+import fg from 'fast-glob'
 import { REGISTERED_FUNCTIONS } from './registry'
-
-const require = createRequire(import.meta.url)
-const fg = require('fast-glob')
 
 /**
  * Find files that contain calls to any registered function.

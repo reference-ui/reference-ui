@@ -4,7 +4,7 @@ import { runGeneratePrimitives } from '../lib/run-generate-primitives'
 import { runPandaCodegen, runPandaCss } from '../panda/gen/runner'
 import { loadUserConfig } from '../config/load-config'
 import { copyToCodegen, watchAndCopyToCodegen } from '../panda/gen/copy-to-codegen'
-import { runEval } from '../eval'
+import { createPandaConfig } from '../panda/config/createPandaConfig'
 
 export interface SyncOptions {
   watch?: boolean
@@ -38,9 +38,9 @@ export async function syncCommand(cwd: string, options: SyncOptions = {}): Promi
   console.log('📦 Copying user files to codegen...')
   await copyToCodegen(cwd, coreDir, userConfig.include)
 
-  // Step 3: Eval (scan styled/ for extendPandaConfig, collect fragments)
-  console.log('🔍 Evaluating styled config...')
-  const evalFragments = await runEval(coreDir, ['src/styled'])
+  // Step 3: Bundle extendPandaConfig calls into panda.config.mjs
+  console.log('🔍 Bundling panda config...')
+  await createPandaConfig(coreDir)
 
   // Step 4: Run Panda codegen (scans core + codegen folder)
   console.log('🎨 Running panda codegen...')
@@ -61,9 +61,6 @@ export async function syncCommand(cwd: string, options: SyncOptions = {}): Promi
   console.log('')
   console.log('✅ Sync complete! Design system is ready.')
   console.log(`   ${userConfig.include.length} pattern(s) processed`)
-  if (evalFragments.length > 0) {
-    console.log(`   ${evalFragments.length} config extension(s) from eval`)
-  }
 
 
   if (options.watch) {
