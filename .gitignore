@@ -30,6 +30,7 @@ pnpm-debug.log*
 
 # Reference UI generated
 .reference
+.ref
 packages/reference-core/styled-system
 packages/reference-core/codegen
 
