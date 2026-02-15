@@ -1118,10 +1118,6 @@
     margin: 0;
 }
 
-  .bg_green\.500 {
-    background: var(--colors-green-500);
-}
-
   .m_0_0_1rem {
     margin: 0 0 1rem;
 }
@@ -4134,6 +4130,30 @@
 
   .white-space_pre-wrap {
     white-space: pre-wrap;
+}
+
+  .ls_-0\.01em {
+    letter-spacing: -0.01em;
+}
+
+  .fw_400 {
+    font-weight: 400;
+}
+
+  .ls_-0\.04em {
+    letter-spacing: -0.04em;
+}
+
+  .fw_393 {
+    font-weight: 393;
+}
+
+  .ls_normal {
+    letter-spacing: normal;
+}
+
+  .fw_373 {
+    font-weight: 373;
 }
 
   .pos_relative {

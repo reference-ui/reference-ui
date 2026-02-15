@@ -53,11 +53,8 @@ const recipeImports = Object.keys(PRIMITIVE_RECIPES).length
 
 const header = `/** Generated. Run: node scripts/generate-primitives.cjs */
 
-import * as React from 'react'
-import { forwardRef } from 'react'
-import { styled } from '../system/jsx/index.js'
-import { applyCustomProps } from './applyCustomProps.js'
-import type { PrimitiveElement, PrimitiveProps } from './types'
+import { createPrimitive } from './createPrimitive'
+import type { PrimitiveProps, PrimitiveElement } from './types.js'
 ${recipeImports ? '\n' + recipeImports + '\n' : ''}
 export { TAGS as HTML_TAGS, type Tag as HtmlTag } from './tags'
 export type { PrimitiveElement, PrimitiveProps } from './types'
@@ -66,7 +63,7 @@ export type { PrimitiveElement, PrimitiveProps } from './types'
 
 function genPrimitive(tag, exportName) {
   const recipeRef = PRIMITIVE_RECIPES[tag] ? getRecipeRef(tag) : 'undefined'
-  return `export const ${exportName} = forwardRef<PrimitiveElement<'${tag}'>, PrimitiveProps<'${tag}'>>((props, ref) => <styled.${tag} ref={ref} {...applyCustomProps(props, ${recipeRef})} />) as React.ForwardRefExoticComponent<PrimitiveProps<'${tag}'> & React.RefAttributes<PrimitiveElement<'${tag}'>>>`
+  return `export const ${exportName} = createPrimitive('${tag}', ${recipeRef})`
 }
 
 function genTypeExport(tag, exportName) {

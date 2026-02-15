@@ -10,8 +10,7 @@ export type ResponsiveBreakpoints = {
 }
 
 // --- Box pattern --------------------------------------------------------------
-// Modes: (1) r = expand breakpoint map to @container queries. (2) container = set
-// containment context. (3) font = apply font preset (sans|serif|mono) via recipe.
+// Base primitive props: container queries (r, container) + font presets (font).
 
 patterns({
   box: {
@@ -25,11 +24,22 @@ patterns({
     transform(props: Record<string, any>) {
       const { r, container, font, ...rest } = props
 
+      // Apply font preset styles (inlined for bundling)
+      let fontStyles = {}
+      if (font === 'sans') {
+        fontStyles = { fontFamily: 'sans', letterSpacing: '-0.01em', fontWeight: '400' }
+      } else if (font === 'serif') {
+        fontStyles = { fontFamily: 'serif', letterSpacing: 'normal', fontWeight: '373' }
+      } else if (font === 'mono') {
+        fontStyles = { fontFamily: 'mono', letterSpacing: '-0.04em', fontWeight: '393' }
+      }
+
       if (r) {
         const prefix = container
           ? `@container ${container} (min-width:`
           : `@container (min-width:`
         return {
+          ...fontStyles,
           ...rest,
           ...Object.fromEntries(
             Object.entries(r).map(([bp, styles]) => [`${prefix} ${bp}px)`, styles])
@@ -39,14 +49,18 @@ patterns({
 
       if (container !== undefined) {
         return {
+          ...fontStyles,
           ...rest,
           containerType: 'inline-size',
           ...(typeof container === 'string' && container && { containerName: container }),
         }
       }
 
-      // font prop is handled by applyCustomProps via fontStyle recipe
-      return rest
+      // Just font or pass-through
+      return {
+        ...fontStyles,
+        ...rest,
+      }
     },
   },
 })
