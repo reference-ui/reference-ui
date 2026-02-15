@@ -25,6 +25,7 @@
     "@types/node": "^25.1.0",
     "bundle-n-require": "^1.1.2",
     "chokidar": "^4.0.3",
+    "esbuild": "^0.27.3",
     "fast-glob": "^3.3.2",
     "tsdown": "^0.20.1"
   },
