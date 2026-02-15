@@ -13,17 +13,6 @@ export const fontTokens = defineTokens({
       value: '"JetBrains Mono", ui-monospace, monospace',
     },
   },
-  fontSizes: {
-    body: { value: '1rem' },
-    h1: { value: '2.5rem' },
-    h2: { value: '2rem' },
-    h3: { value: '1.75rem' },
-    h4: { value: '1.5rem' },
-    h5: { value: '1.25rem' },
-    h6: { value: '1rem' },
-    small: { value: '0.875rem' },
-    xs: { value: '0.75rem' },
-  },
 })
 
 /**
