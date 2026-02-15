@@ -1,3 +1,5 @@
+import { tokens } from './api/tokens'
+
 export const colors = {
   gray: {
     50: { value: 'oklch(98.5% 0.002 247.839)' },
@@ -234,3 +236,8 @@ export const colors = {
     950: { value: 'oklch(27.1% 0.105 12.094)' },
   },
 }
+
+
+tokens({
+  colors
+})

@@ -4,11 +4,11 @@ import { fontStaticCssProperties, fontTokens, defaultGlobalFontface } from './fo
 import { getRhythm } from './rhythm'
 
 
-export { getRhythm, defaultGlobalFontface }
+
+export { getRhythm, defaultGlobalFontface, colors }
 
 /** Default design tokens */
 export const tokens = defineTokens({
-  colors,
   ...fontTokens,
   spacing: {
     px: { value: '1px' },
