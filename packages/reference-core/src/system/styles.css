@@ -284,6 +284,36 @@
 
 @layer tokens{
   :where(:root, :host) {
+    --fonts-sans: "Inter", ui-serif, serif;
+    --fonts-serif: "Literata", ui-sans-serif, sans-serif;
+    --fonts-mono: "JetBrains Mono", ui-monospace, monospace;
+    --spacing-px: 1px;
+    --spacing-r: 0.25rem;
+    --spacing-0\.5r: calc(0.5 * var(--spacing-r));
+    --spacing-1\/2r: calc(var(--spacing-r) / 2);
+    --spacing-1\/3r: calc(var(--spacing-r) / 3);
+    --spacing-1\/4r: calc(var(--spacing-r) / 4);
+    --spacing-1\/5r: calc(var(--spacing-r) / 5);
+    --spacing-1\/6r: calc(var(--spacing-r) / 6);
+    --spacing-1r: var(--spacing-r);
+    --spacing-1\.5r: calc(1.5 * var(--spacing-r));
+    --spacing-2r: calc(2 * var(--spacing-r));
+    --spacing-3r: calc(3 * var(--spacing-r));
+    --spacing-4r: calc(4 * var(--spacing-r));
+    --spacing-5r: calc(5 * var(--spacing-r));
+    --spacing-6r: calc(6 * var(--spacing-r));
+    --spacing-8r: calc(8 * var(--spacing-r));
+    --spacing-10r: calc(10 * var(--spacing-r));
+    --spacing-12r: calc(12 * var(--spacing-r));
+    --radii-none: 0;
+    --radii-sm: 0.125rem;
+    --radii-base: 0.25rem;
+    --radii-md: 0.375rem;
+    --radii-lg: 0.5rem;
+    --radii-xl: 0.75rem;
+    --radii-2xl: 1rem;
+    --radii-3xl: 1.5rem;
+    --radii-full: 9999px;
     --colors-gray-50: oklch(98.5% 0.002 247.839);
     --colors-gray-100: oklch(96.7% 0.003 264.542);
     --colors-gray-200: oklch(92.8% 0.006 264.531);
@@ -482,51 +512,11 @@
     --colors-rose-800: oklch(45.5% 0.188 13.697);
     --colors-rose-900: oklch(41% 0.159 10.272);
     --colors-rose-950: oklch(27.1% 0.105 12.094);
-    --fonts-sans: "Inter", ui-serif, serif;
-    --fonts-serif: "Literata", ui-sans-serif, sans-serif;
-    --fonts-mono: "JetBrains Mono", ui-monospace, monospace;
-    --font-sizes-body: 1rem;
-    --font-sizes-h1: 2.5rem;
-    --font-sizes-h2: 2rem;
-    --font-sizes-h3: 1.75rem;
-    --font-sizes-h4: 1.5rem;
-    --font-sizes-h5: 1.25rem;
-    --font-sizes-h6: 1rem;
-    --font-sizes-small: 0.875rem;
-    --font-sizes-xs: 0.75rem;
-    --spacing-px: 1px;
-    --spacing-r: 0.25rem;
-    --spacing-0\.5r: calc(0.5 * var(--spacing-r));
-    --spacing-1\/2r: calc(var(--spacing-r) / 2);
-    --spacing-1\/3r: calc(var(--spacing-r) / 3);
-    --spacing-1\/4r: calc(var(--spacing-r) / 4);
-    --spacing-1\/5r: calc(var(--spacing-r) / 5);
-    --spacing-1\/6r: calc(var(--spacing-r) / 6);
-    --spacing-1r: var(--spacing-r);
-    --spacing-1\.5r: calc(1.5 * var(--spacing-r));
-    --spacing-2r: calc(2 * var(--spacing-r));
-    --spacing-3r: calc(3 * var(--spacing-r));
-    --spacing-4r: calc(4 * var(--spacing-r));
-    --spacing-5r: calc(5 * var(--spacing-r));
-    --spacing-6r: calc(6 * var(--spacing-r));
-    --spacing-8r: calc(8 * var(--spacing-r));
-    --spacing-10r: calc(10 * var(--spacing-r));
-    --spacing-12r: calc(12 * var(--spacing-r));
-    --radii-none: 0;
-    --radii-sm: 0.125rem;
-    --radii-base: 0.25rem;
-    --radii-md: 0.375rem;
-    --radii-lg: 0.5rem;
-    --radii-xl: 0.75rem;
-    --radii-2xl: 1rem;
-    --radii-3xl: 1.5rem;
-    --radii-full: 9999px;
 }
 }
 
 @layer recipes{
   @layer _base{
-
     .r_abbr {
       text-decoration: underline dotted;
       text-underline-offset: 0.15em;
@@ -1126,6 +1116,10 @@
 
   .m_0 {
     margin: 0;
+}
+
+  .bg_green\.500 {
+    background: var(--colors-green-500);
 }
 
   .m_0_0_1rem {

@@ -1,4 +1,124 @@
 const tokens = {
+  "fonts.sans": {
+    "value": "\"Inter\", ui-serif, serif",
+    "variable": "var(--fonts-sans)"
+  },
+  "fonts.serif": {
+    "value": "\"Literata\", ui-sans-serif, sans-serif",
+    "variable": "var(--fonts-serif)"
+  },
+  "fonts.mono": {
+    "value": "\"JetBrains Mono\", ui-monospace, monospace",
+    "variable": "var(--fonts-mono)"
+  },
+  "spacing.px": {
+    "value": "1px",
+    "variable": "var(--spacing-px)"
+  },
+  "spacing.r": {
+    "value": "0.25rem",
+    "variable": "var(--spacing-r)"
+  },
+  "spacing.0.5r": {
+    "value": "calc(0.5 * var(--spacing-r))",
+    "variable": "var(--spacing-0\\.5r)"
+  },
+  "spacing.1/2r": {
+    "value": "calc(var(--spacing-r) / 2)",
+    "variable": "var(--spacing-1\\/2r)"
+  },
+  "spacing.1/3r": {
+    "value": "calc(var(--spacing-r) / 3)",
+    "variable": "var(--spacing-1\\/3r)"
+  },
+  "spacing.1/4r": {
+    "value": "calc(var(--spacing-r) / 4)",
+    "variable": "var(--spacing-1\\/4r)"
+  },
+  "spacing.1/5r": {
+    "value": "calc(var(--spacing-r) / 5)",
+    "variable": "var(--spacing-1\\/5r)"
+  },
+  "spacing.1/6r": {
+    "value": "calc(var(--spacing-r) / 6)",
+    "variable": "var(--spacing-1\\/6r)"
+  },
+  "spacing.1r": {
+    "value": "var(--spacing-r)",
+    "variable": "var(--spacing-1r)"
+  },
+  "spacing.1.5r": {
+    "value": "calc(1.5 * var(--spacing-r))",
+    "variable": "var(--spacing-1\\.5r)"
+  },
+  "spacing.2r": {
+    "value": "calc(2 * var(--spacing-r))",
+    "variable": "var(--spacing-2r)"
+  },
+  "spacing.3r": {
+    "value": "calc(3 * var(--spacing-r))",
+    "variable": "var(--spacing-3r)"
+  },
+  "spacing.4r": {
+    "value": "calc(4 * var(--spacing-r))",
+    "variable": "var(--spacing-4r)"
+  },
+  "spacing.5r": {
+    "value": "calc(5 * var(--spacing-r))",
+    "variable": "var(--spacing-5r)"
+  },
+  "spacing.6r": {
+    "value": "calc(6 * var(--spacing-r))",
+    "variable": "var(--spacing-6r)"
+  },
+  "spacing.8r": {
+    "value": "calc(8 * var(--spacing-r))",
+    "variable": "var(--spacing-8r)"
+  },
+  "spacing.10r": {
+    "value": "calc(10 * var(--spacing-r))",
+    "variable": "var(--spacing-10r)"
+  },
+  "spacing.12r": {
+    "value": "calc(12 * var(--spacing-r))",
+    "variable": "var(--spacing-12r)"
+  },
+  "radii.none": {
+    "value": "0",
+    "variable": "var(--radii-none)"
+  },
+  "radii.sm": {
+    "value": "0.125rem",
+    "variable": "var(--radii-sm)"
+  },
+  "radii.base": {
+    "value": "0.25rem",
+    "variable": "var(--radii-base)"
+  },
+  "radii.md": {
+    "value": "0.375rem",
+    "variable": "var(--radii-md)"
+  },
+  "radii.lg": {
+    "value": "0.5rem",
+    "variable": "var(--radii-lg)"
+  },
+  "radii.xl": {
+    "value": "0.75rem",
+    "variable": "var(--radii-xl)"
+  },
+  "radii.2xl": {
+    "value": "1rem",
+    "variable": "var(--radii-2xl)"
+  },
+  "radii.3xl": {
+    "value": "1.5rem",
+    "variable": "var(--radii-3xl)"
+  },
+  "radii.full": {
+    "value": "9999px",
+    "variable": "var(--radii-full)"
+  },
   "colors.gray.50": {
     "value": "oklch(98.5% 0.002 247.839)",
     "variable": "var(--colors-gray-50)"
@@ -790,162 +910,6 @@ const tokens = {
   "colors.rose.950": {
     "value": "oklch(27.1% 0.105 12.094)",
     "variable": "var(--colors-rose-950)"
-  },
-  "fonts.sans": {
-    "value": "\"Inter\", ui-serif, serif",
-    "variable": "var(--fonts-sans)"
-  },
-  "fonts.serif": {
-    "value": "\"Literata\", ui-sans-serif, sans-serif",
-    "variable": "var(--fonts-serif)"
-  },
-  "fonts.mono": {
-    "value": "\"JetBrains Mono\", ui-monospace, monospace",
-    "variable": "var(--fonts-mono)"
-  },
-  "fontSizes.body": {
-    "value": "1rem",
-    "variable": "var(--font-sizes-body)"
-  },
-  "fontSizes.h1": {
-    "value": "2.5rem",
-    "variable": "var(--font-sizes-h1)"
-  },
-  "fontSizes.h2": {
-    "value": "2rem",
-    "variable": "var(--font-sizes-h2)"
-  },
-  "fontSizes.h3": {
-    "value": "1.75rem",
-    "variable": "var(--font-sizes-h3)"
-  },
-  "fontSizes.h4": {
-    "value": "1.5rem",
-    "variable": "var(--font-sizes-h4)"
-  },
-  "fontSizes.h5": {
-    "value": "1.25rem",
-    "variable": "var(--font-sizes-h5)"
-  },
-  "fontSizes.h6": {
-    "value": "1rem",
-    "variable": "var(--font-sizes-h6)"
-  },
-  "fontSizes.small": {
-    "value": "0.875rem",
-    "variable": "var(--font-sizes-small)"
-  },
-  "fontSizes.xs": {
-    "value": "0.75rem",
-    "variable": "var(--font-sizes-xs)"
-  },
-  "spacing.px": {
-    "value": "1px",
-    "variable": "var(--spacing-px)"
-  },
-  "spacing.r": {
-    "value": "0.25rem",
-    "variable": "var(--spacing-r)"
-  },
-  "spacing.0.5r": {
-    "value": "calc(0.5 * var(--spacing-r))",
-    "variable": "var(--spacing-0\\.5r)"
-  },
-  "spacing.1/2r": {
-    "value": "calc(var(--spacing-r) / 2)",
-    "variable": "var(--spacing-1\\/2r)"
-  },
-  "spacing.1/3r": {
-    "value": "calc(var(--spacing-r) / 3)",
-    "variable": "var(--spacing-1\\/3r)"
-  },
-  "spacing.1/4r": {
-    "value": "calc(var(--spacing-r) / 4)",
-    "variable": "var(--spacing-1\\/4r)"
-  },
-  "spacing.1/5r": {
-    "value": "calc(var(--spacing-r) / 5)",
-    "variable": "var(--spacing-1\\/5r)"
-  },
-  "spacing.1/6r": {
-    "value": "calc(var(--spacing-r) / 6)",
-    "variable": "var(--spacing-1\\/6r)"
-  },
-  "spacing.1r": {
-    "value": "var(--spacing-r)",
-    "variable": "var(--spacing-1r)"
-  },
-  "spacing.1.5r": {
-    "value": "calc(1.5 * var(--spacing-r))",
-    "variable": "var(--spacing-1\\.5r)"
-  },
-  "spacing.2r": {
-    "value": "calc(2 * var(--spacing-r))",
-    "variable": "var(--spacing-2r)"
-  },
-  "spacing.3r": {
-    "value": "calc(3 * var(--spacing-r))",
-    "variable": "var(--spacing-3r)"
-  },
-  "spacing.4r": {
-    "value": "calc(4 * var(--spacing-r))",
-    "variable": "var(--spacing-4r)"
-  },
-  "spacing.5r": {
-    "value": "calc(5 * var(--spacing-r))",
-    "variable": "var(--spacing-5r)"
-  },
-  "spacing.6r": {
-    "value": "calc(6 * var(--spacing-r))",
-    "variable": "var(--spacing-6r)"
-  },
-  "spacing.8r": {
-    "value": "calc(8 * var(--spacing-r))",
-    "variable": "var(--spacing-8r)"
-  },
-  "spacing.10r": {
-    "value": "calc(10 * var(--spacing-r))",
-    "variable": "var(--spacing-10r)"
-  },
-  "spacing.12r": {
-    "value": "calc(12 * var(--spacing-r))",
-    "variable": "var(--spacing-12r)"
-  },
-  "radii.none": {
-    "value": "0",
-    "variable": "var(--radii-none)"
-  },
-  "radii.sm": {
-    "value": "0.125rem",
-    "variable": "var(--radii-sm)"
-  },
-  "radii.base": {
-    "value": "0.25rem",
-    "variable": "var(--radii-base)"
-  },
-  "radii.md": {
-    "value": "0.375rem",
-    "variable": "var(--radii-md)"
-  },
-  "radii.lg": {
-    "value": "0.5rem",
-    "variable": "var(--radii-lg)"
-  },
-  "radii.xl": {
-    "value": "0.75rem",
-    "variable": "var(--radii-xl)"
-  },
-  "radii.2xl": {
-    "value": "1rem",
-    "variable": "var(--radii-2xl)"
-  },
-  "radii.3xl": {
-    "value": "1.5rem",
-    "variable": "var(--radii-3xl)"
-  },
-  "radii.full": {
-    "value": "9999px",
-    "variable": "var(--radii-full)"
   },
   "spacing.-px": {
     "value": "calc(var(--spacing-px) * -1)",

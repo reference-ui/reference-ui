@@ -31,14 +31,18 @@ export async function createPandaConfig(coreDir: string): Promise<void> {
 
     // Step 2: Create entry file that imports all config files and merges them
     const entryPath = join(refDir, 'panda-entry.ts')
+    const initCollectorRel = relative(refDir, resolve(coreDir, 'src/cli/panda/config/initCollector.ts')).replace(/\.tsx?$/, '').replace(/\\/g, '/')
+    const extendPandaRel = relative(refDir, resolve(coreDir, 'src/cli/panda/config/extendPandaConfig.ts')).replace(/\.tsx?$/, '').replace(/\\/g, '/')
     const relativeImports = configFiles
       .map((p, idx) => {
         const rel = relative(refDir, p).replace(/\.tsx?$/, '').replace(/\\/g, '/')
-        return `import cfg${idx} from '${rel.startsWith('.') ? rel : './' + rel}'`
+        return `import * as cfg${idx} from '${rel.startsWith('.') ? rel : './' + rel}'`
       })
     
     const entryContent = `// Generated entry - imports and merges all config fragments
+import '${initCollectorRel.startsWith('.') ? initCollectorRel : './' + initCollectorRel}'
 import { defineConfig } from '@pandacss/dev'
+import { COLLECTOR_KEY } from '${extendPandaRel.startsWith('.') ? extendPandaRel : './' + extendPandaRel}'
 ${relativeImports.join('\n')}
 
 // Deep merge utility
@@ -70,10 +74,12 @@ function deepMerge(target: any, ...sources: any[]): any {
   return result
 }
 
-// Merge all fragments - handle both default exports and config objects
-const fragments = [${configFiles.map((_, idx) => `cfg${idx}`).join(', ')}]
+// Fragments from default exports (e.g. panda.base) + collected from extendPandaConfig/tokens() calls
+const defaultFragments = [${configFiles.map((_, idx) => `cfg${idx}`).join(', ')}]
+  .map(m => (m && typeof m === 'object' && m.default !== undefined) ? m.default : null)
   .filter(Boolean)
-  .map(f => (f && typeof f === 'object' && 'default' in f) ? f.default : f)
+const collected = (globalThis[COLLECTOR_KEY] || [])
+const fragments = [...defaultFragments, ...collected]
 const config = fragments.reduce((acc, frag) => deepMerge(acc, frag), {})
 
 export default defineConfig(config)

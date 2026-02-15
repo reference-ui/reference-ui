@@ -21,3 +21,4 @@ export * from './float.js';
 export * from './bleed.js';
 export * from './visually-hidden.js';
 export * from './cq.js';
+export * from './jsx.js';
