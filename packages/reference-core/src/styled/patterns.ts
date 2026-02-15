@@ -24,15 +24,13 @@ patterns({
     transform(props: Record<string, any>) {
       const { r, container, font, ...rest } = props
 
-      // Apply font preset styles (inlined for bundling)
-      let fontStyles = {}
-      if (font === 'sans') {
-        fontStyles = { fontFamily: 'sans', letterSpacing: '-0.01em', fontWeight: '400' }
-      } else if (font === 'serif') {
-        fontStyles = { fontFamily: 'serif', letterSpacing: 'normal', fontWeight: '373' }
-      } else if (font === 'mono') {
-        fontStyles = { fontFamily: 'mono', letterSpacing: '-0.04em', fontWeight: '393' }
+      // Font presets (defined in closure so Panda includes them in generated code)
+      const FONT_PRESETS = {
+        sans: { fontFamily: 'sans', letterSpacing: '-0.01em', fontWeight: '400' },
+        serif: { fontFamily: 'serif', letterSpacing: 'normal', fontWeight: '373' },
+        mono: { fontFamily: 'mono', letterSpacing: '-0.04em', fontWeight: '393' },
       }
+      const fontStyles = font ? FONT_PRESETS[font as keyof typeof FONT_PRESETS] || {} : {}
 
       if (r) {
         const prefix = container

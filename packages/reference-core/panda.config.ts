@@ -1071,14 +1071,12 @@ patterns({
     blocklist: ["r", "container", "font"],
     transform(props) {
       const { r, container, font, ...rest } = props;
-      let fontStyles = {};
-      if (font === "sans") {
-        fontStyles = { fontFamily: "sans", letterSpacing: "-0.01em", fontWeight: "400" };
-      } else if (font === "serif") {
-        fontStyles = { fontFamily: "serif", letterSpacing: "normal", fontWeight: "373" };
-      } else if (font === "mono") {
-        fontStyles = { fontFamily: "mono", letterSpacing: "-0.04em", fontWeight: "393" };
-      }
+      const FONT_PRESETS = {
+        sans: { fontFamily: "sans", letterSpacing: "-0.01em", fontWeight: "400" },
+        serif: { fontFamily: "serif", letterSpacing: "normal", fontWeight: "373" },
+        mono: { fontFamily: "mono", letterSpacing: "-0.04em", fontWeight: "393" }
+      };
+      const fontStyles = font ? FONT_PRESETS[font] || {} : {};
       if (r) {
         const prefix = container ? `@container ${container} (min-width:` : `@container (min-width:`;
         return {
