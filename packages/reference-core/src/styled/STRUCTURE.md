@@ -77,9 +77,9 @@ styled/
 │   └── opacity.ts          # Opacity scale
 │
 ├── rhythm/                 # Spacing & Rhythm domain
-│   ├── index.ts            # Register spacing tokens
-│   ├── rhythm.ts           # getRhythm() utilities
-│   └── utilities.ts        # Rhythm utilities/transforms
+│   ├── index.ts            # Exports + register utilities
+│   ├── helpers.ts          # getRhythm(), resolveRhythm()
+│   └── utilities.ts        # Panda rhythm transforms
 │
 ├── font/                    # Font domain
 │   ├── index.ts            # Register fonts + font-face
