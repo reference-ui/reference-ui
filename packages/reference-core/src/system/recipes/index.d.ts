@@ -1,4 +1,5 @@
 /* eslint-disable */
+export * from './font-style';
 export * from './h1style';
 export * from './h2style';
 export * from './h3style';

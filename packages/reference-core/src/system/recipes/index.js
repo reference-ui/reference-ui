@@ -1,3 +1,4 @@
+export * from './font-style.js';
 export * from './h1style.js';
 export * from './h2style.js';
 export * from './h3style.js';

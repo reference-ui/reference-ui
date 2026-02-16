@@ -37,13 +37,14 @@
     "build": "npm run gen && tsdown",
     "dev": "tsdown --watch",
     "dev:core": "concurrently \"panda codegen --watch\" \"panda --watch\"",
-    "gen": "panda codegen && node scripts/generate-primitives.cjs && panda",
+    "gen": "pnpm exec tsx scripts/gen-config.ts && panda codegen && node scripts/generate-primitives.cjs && panda",
     "gen:primitives": "node scripts/generate-primitives.cjs",
     "codegen": "panda codegen",
     "cssgen": "panda",
     "postinstall": "npm run gen && npm run build && node ./dist/cli/index.mjs link-system"
   },
   "devDependencies": {
+    "tsx": "^4.19.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "concurrently": "^9.1.0",

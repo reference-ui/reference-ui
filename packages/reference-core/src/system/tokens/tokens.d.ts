@@ -1,5 +1,5 @@
 /* eslint-disable */
-export type Token = `colors.${ColorToken}` | `spacing.${SpacingToken}` | `radii.${RadiusToken}` | `fonts.${FontToken}`
+export type Token = `colors.${ColorToken}` | `spacing.${SpacingToken}` | `radii.${RadiusToken}` | `fonts.${FontToken}` | `fontWeights.${FontWeightToken}`
 
 export type ColorPalette = "gray" | "red" | "orange" | "amber" | "yellow" | "lime" | "green" | "emerald" | "teal" | "cyan" | "sky" | "blue" | "indigo" | "violet" | "purple" | "magenta" | "pink" | "rose"
 
@@ -11,11 +11,14 @@ export type RadiusToken = "none" | "sm" | "base" | "md" | "lg" | "xl" | "2xl" | 
 
 export type FontToken = "sans" | "serif" | "mono"
 
+export type FontWeightToken = "sans.thin" | "sans.light" | "sans.normal" | "sans.semibold" | "sans.bold" | "sans.black" | "serif.thin" | "serif.light" | "serif.normal" | "serif.semibold" | "serif.bold" | "serif.black" | "mono.thin" | "mono.light" | "mono.normal" | "mono.semibold" | "mono.bold"
+
 export type Tokens = {
 		colors: ColorToken
 		spacing: SpacingToken
 		radii: RadiusToken
 		fonts: FontToken
+		fontWeights: FontWeightToken
 } & { [token: string]: never }
 
 export type TokenCategory = "aspectRatios" | "zIndex" | "opacity" | "colors" | "fonts" | "fontSizes" | "fontWeights" | "lineHeights" | "letterSpacings" | "sizes" | "cursor" | "shadows" | "spacing" | "radii" | "borders" | "borderWidths" | "durations" | "easings" | "animations" | "blurs" | "gradients" | "breakpoints" | "assets"

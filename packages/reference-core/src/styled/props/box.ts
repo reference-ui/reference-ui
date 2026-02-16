@@ -7,35 +7,61 @@ extendPandaConfig({
   patterns: { extend: { box: {
     jsx: [...PRIMITIVE_JSX_NAMES],
     properties: {
-      container: {"type":"string"} as const,
       font: {"type":"string"} as const,
+      weight: {"type":"string"} as const,
+      container: {"type":"string"} as const,
       r: {"type":"object"} as const
     },
-    blocklist: ["container","font","r"],
+    blocklist: ["font","weight","container","r"],
     transform(props: Record<string, any>) {
-      const blocklist = ["container","font","r"]
+      const blocklist = ["font","weight","container","r"]
       const extensionKeys = new Set(blocklist)
       const rest = Object.fromEntries(
         Object.entries(props).filter(([k]) => !extensionKeys.has(k))
       )
 
       const _r0 = (function(props: Record<string, any>) {
+          const { font, weight } = props;
+        const FONT_PRESETS = {
+          sans: { fontFamily: "sans", fontWeight: "normal", letterSpacing: "-0.01em" },
+          serif: { fontFamily: "serif", fontWeight: "normal", letterSpacing: "normal" },
+          mono: { fontFamily: "mono", fontWeight: "normal", letterSpacing: "-0.04em" }
+        };
+        const WEIGHT_TOKENS = {
+          "sans.thin": "200",
+          "sans.light": "300",
+          "sans.normal": "400",
+          "sans.semibold": "600",
+          "sans.bold": "700",
+          "sans.black": "900",
+          "serif.thin": "100",
+          "serif.light": "300",
+          "serif.normal": "373",
+          "serif.semibold": "600",
+          "serif.bold": "700",
+          "serif.black": "900",
+          "mono.thin": "100",
+          "mono.light": "300",
+          "mono.normal": "393",
+          "mono.semibold": "600",
+          "mono.bold": "700"
+        };
+        const result = {};
+        if (font && FONT_PRESETS[font]) {
+          Object.assign(result, FONT_PRESETS[font]);
+        }
+        if (weight && WEIGHT_TOKENS[weight]) {
+          result.fontWeight = WEIGHT_TOKENS[weight];
+        }
+        return result;
+      })(props)
+      const _r1 = (function(props: Record<string, any>) {
           const { container } = props;
         if (container === void 0) return {};
         return {
           containerType: "inline-size",
           ...typeof container === "string" && container && { containerName: container }
         };
-      })(props)
-      const _r1 = (function(props: Record<string, any>) {
-          const { font } = props;
-        if (!font) return {};
-        const FONT_PRESETS = {
-          sans: { fontFamily: "sans", letterSpacing: "-0.01em", fontWeight: "400" },
-          serif: { fontFamily: "serif", letterSpacing: "normal", fontWeight: "373" },
-          mono: { fontFamily: "mono", letterSpacing: "-0.04em", fontWeight: "393" }
-        };
-        return FONT_PRESETS[font] || {};
       })(props)
       const _r2 = (function(props: Record<string, any>) {
           const { r, container } = props;
