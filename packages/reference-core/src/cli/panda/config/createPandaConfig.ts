@@ -1,19 +1,8 @@
 import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
-import { bundleWithEsbuild } from '../../lib/bundleWithEsbuild'
+import { microBundlePanda } from '../../lib/microBundle'
 import { scanDirectories } from '../../eval/scanner'
 import { buildPandaEntryContent } from './entryTemplate'
-
-const PANDA_BUNDLE_EXTERNALS = [
-  '@pandacss/dev',
-  'esbuild',
-  'fast-glob',
-  'tsdown',
-  'rolldown',
-  'unconfig',
-  'unrun',
-  'birpc'
-]
 
 /**
  * Mini-compiler: Bundle files that call extendPandaConfig into panda.config.ts.
@@ -56,9 +45,7 @@ export async function createPandaConfig(coreDir: string): Promise<void> {
 
     // Step 3: Bundle with esbuild (reusable helper, in-memory output)
     console.log('[createPandaConfig] Bundling with esbuild...')
-    const bundled = await bundleWithEsbuild(entryPath, {
-      external: PANDA_BUNDLE_EXTERNALS
-    })
+    const bundled = await microBundlePanda(entryPath)
     console.log('[createPandaConfig] Bundle complete')
 
     // Step 4: Write final panda.config.ts
