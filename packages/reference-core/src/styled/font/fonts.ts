@@ -1,4 +1,4 @@
-import { staticCss, tokens, globalFontface } from '../api'
+import { tokens, globalFontface } from '../api'
 
 tokens({
   fonts: {
@@ -30,8 +30,4 @@ globalFontface({
     fontDisplay: 'swap',
     sizeAdjust: '101%',
   },
-})
-
-staticCss({
-  css: [{ properties: { fontSize: ['*'], fontWeight: ['*'], fontFamily: ['*'] } }],
 })
