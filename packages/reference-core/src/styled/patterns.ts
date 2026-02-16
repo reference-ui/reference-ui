@@ -1,5 +1,7 @@
 /** Global CSS for patterns. */
 
+import { globalCss } from './api'
+
 // --- Global CSS: rhythm tokens -----------------------------------------------
 
 const rhythmTokens = {
@@ -35,3 +37,5 @@ export const patternsGlobalCss = {
   ...bodyDefaults,
   ...densityVariants,
 }
+
+globalCss(patternsGlobalCss)

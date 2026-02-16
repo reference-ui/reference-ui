@@ -1,13 +1,12 @@
-import { defineTokens } from '@pandacss/dev'
 import { colors } from './colors'
-import { fontStaticCssProperties, fontTokens, defaultGlobalFontface } from './font.js'
+import './font.js'
 import { getRhythm } from './rhythm'
+import { tokens, staticCss } from './api'
+import '../primitives/recipes'
 
-export { getRhythm, defaultGlobalFontface, colors }
+export { getRhythm, colors }
 
-/** Default design tokens */
-export const tokens = defineTokens({
-  ...fontTokens,
+tokens({
   spacing: {
     px: { value: '1px' },
     r: { value: '0.25rem' },
@@ -23,7 +22,7 @@ export const tokens = defineTokens({
     '3r': { value: getRhythm(3) },
     '4r': { value: getRhythm(4) },
     '5r': { value: getRhythm(5) },
-    '6r': { value: getRhythm(6) }, 
+    '6r': { value: getRhythm(6) },
     '8r': { value: getRhythm(8) },
     '10r': { value: getRhythm(10) },
     '12r': { value: getRhythm(12) },
@@ -41,13 +40,7 @@ export const tokens = defineTokens({
   },
 })
 
-export const defaultTheme = {
-  extend: {
-    tokens,
-  },
-}
-
-export const defaultStaticCss = {
+staticCss({
   css: [
     {
       properties: {
@@ -61,7 +54,6 @@ export const defaultStaticCss = {
         paddingBottom: ['*'],
         margin: ['*'],
         gap: ['*'],
-        ...fontStaticCssProperties,
         borderRadius: ['*'],
         borderWidth: ['*'],
         font: ['*'],
@@ -71,6 +63,4 @@ export const defaultStaticCss = {
   recipes: {
     fontStyle: ['*'],
   },
-}
-
-
+})

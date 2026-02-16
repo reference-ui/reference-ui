@@ -64,13 +64,8 @@ import fg from "fast-glob";
 var styled_exports = {};
 __export(styled_exports, {
   colors: () => colors,
-  defaultGlobalFontface: () => defaultGlobalFontface,
-  defaultStaticCss: () => defaultStaticCss,
-  defaultTheme: () => defaultTheme,
-  getRhythm: () => getRhythm,
-  tokens: () => tokens2
+  getRhythm: () => getRhythm
 });
-import { defineTokens as defineTokens2 } from "@pandacss/dev";
 
 // ../reference-core/src/styled/colors.ts
 var colors_exports = {};
@@ -335,34 +330,111 @@ tokens({
 
 // ../reference-core/src/styled/font.ts
 var font_exports = {};
-__export(font_exports, {
-  defaultGlobalFontface: () => defaultGlobalFontface,
-  fontStaticCssProperties: () => fontStaticCssProperties,
-  fontTokens: () => fontTokens
+
+// ../reference-core/src/styled/api/index.ts
+var api_exports = {};
+__export(api_exports, {
+  globalCss: () => globalCss,
+  globalFontface: () => globalFontface,
+  recipe: () => recipe,
+  slotRecipe: () => slotRecipe,
+  staticCss: () => staticCss,
+  tokens: () => tokens,
+  utilities: () => utilities
 });
-import { defineTokens } from "@pandacss/dev";
-var fontTokens = defineTokens({
-  fonts: {
-    sans: {
-      value: '"Inter", ui-serif, serif'
-    },
-    serif: {
-      value: '"Literata", ui-sans-serif, sans-serif'
-    },
-    mono: {
-      value: '"JetBrains Mono", ui-monospace, monospace'
+
+// ../reference-core/src/styled/api/recipe.ts
+var recipe_exports = {};
+__export(recipe_exports, {
+  recipe: () => recipe,
+  slotRecipe: () => slotRecipe
+});
+function recipe(recipeConfig) {
+  extendPandaConfig({
+    theme: {
+      extend: {
+        recipes: recipeConfig
+      }
     }
+  });
+}
+__name(recipe, "recipe");
+function slotRecipe(slotRecipeConfig) {
+  extendPandaConfig({
+    theme: {
+      extend: {
+        slotRecipes: slotRecipeConfig
+      }
+    }
+  });
+}
+__name(slotRecipe, "slotRecipe");
+
+// ../reference-core/src/styled/api/utilities.ts
+var utilities_exports = {};
+__export(utilities_exports, {
+  utilities: () => utilities
+});
+function utilities(extend) {
+  extendPandaConfig({
+    utilities: {
+      extend
+    }
+  });
+}
+__name(utilities, "utilities");
+
+// ../reference-core/src/styled/api/globalCss.ts
+var globalCss_exports = {};
+__export(globalCss_exports, {
+  globalCss: () => globalCss
+});
+function globalCss(css) {
+  extendPandaConfig({
+    globalCss: css
+  });
+}
+__name(globalCss, "globalCss");
+
+// ../reference-core/src/styled/api/staticCss.ts
+var staticCss_exports = {};
+__export(staticCss_exports, {
+  staticCss: () => staticCss
+});
+function staticCss(config2) {
+  extendPandaConfig({
+    staticCss: config2
+  });
+}
+__name(staticCss, "staticCss");
+
+// ../reference-core/src/styled/api/globalFontface.ts
+var globalFontface_exports = {};
+__export(globalFontface_exports, {
+  globalFontface: () => globalFontface
+});
+function globalFontface(fontface) {
+  extendPandaConfig({
+    globalFontface: fontface
+  });
+}
+__name(globalFontface, "globalFontface");
+
+// ../reference-core/src/styled/font.ts
+tokens({
+  fonts: {
+    sans: { value: '"Inter", ui-serif, serif' },
+    serif: { value: '"Literata", ui-sans-serif, sans-serif' },
+    mono: { value: '"JetBrains Mono", ui-monospace, monospace' }
   }
 });
-var defaultGlobalFontface = {
-  // Inter - sans-serif variable font (latin subset)
+globalFontface({
   Inter: {
     src: 'url(https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7W0Q5nw.woff2) format("woff2")',
     fontWeight: "100 900",
     fontStyle: "normal",
     fontDisplay: "swap"
   },
-  // Literata - serif variable font (latin subset)
   Literata: {
     src: 'url(https://fonts.gstatic.com/s/literata/v40/or38Q6P12-iJxAIgLa78DkrbXsDgk0oVDaDlbJ5W7i5aOg.woff2) format("woff2")',
     fontWeight: "200 900",
@@ -371,7 +443,6 @@ var defaultGlobalFontface = {
     sizeAdjust: "104%",
     descentOverride: "47%"
   },
-  // JetBrains Mono - monospace variable font (latin subset)
   '"JetBrains Mono"': {
     src: 'url(https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbV2o-flEEny0FZhsfKu5WU4xD7OwGtT0rU.woff2) format("woff2")',
     fontWeight: "100 800",
@@ -379,14 +450,17 @@ var defaultGlobalFontface = {
     fontDisplay: "swap",
     sizeAdjust: "101%"
   }
-};
-var fontStaticCssProperties = {
-  fontSize: ["*"],
-  fontWeight: ["*"],
-  fontFamily: ["*"]
-};
+});
+staticCss({
+  css: [{ properties: { fontSize: ["*"], fontWeight: ["*"], fontFamily: ["*"] } }]
+});
 
 // ../reference-core/src/styled/rhythm.ts
+var rhythm_exports = {};
+__export(rhythm_exports, {
+  getRhythm: () => getRhythm,
+  rhythmUtilities: () => rhythmUtilities
+});
 function getRhythm(num, denom) {
   if (denom !== void 0) {
     return num === 1 ? `calc(var(--spacing-r) / ${denom})` : `calc(${num} * var(--spacing-r) / ${denom})`;
@@ -482,72 +556,7 @@ var rhythmUtilities = {
   outlineOffset: rhythmTransform("outlineOffset"),
   borderSpacing: rhythmTransform("borderSpacing")
 };
-
-// ../reference-core/src/styled/index.ts
-var tokens2 = defineTokens2({
-  ...fontTokens,
-  spacing: {
-    px: { value: "1px" },
-    r: { value: "0.25rem" },
-    "0.5r": { value: getRhythm(0.5) },
-    "1/2r": { value: getRhythm(1, 2) },
-    "1/3r": { value: getRhythm(1, 3) },
-    "1/4r": { value: getRhythm(1, 4) },
-    "1/5r": { value: getRhythm(1, 5) },
-    "1/6r": { value: getRhythm(1, 6) },
-    "1r": { value: getRhythm(1) },
-    "1.5r": { value: getRhythm(1.5) },
-    "2r": { value: getRhythm(2) },
-    "3r": { value: getRhythm(3) },
-    "4r": { value: getRhythm(4) },
-    "5r": { value: getRhythm(5) },
-    "6r": { value: getRhythm(6) },
-    "8r": { value: getRhythm(8) },
-    "10r": { value: getRhythm(10) },
-    "12r": { value: getRhythm(12) }
-  },
-  radii: {
-    none: { value: "0" },
-    sm: { value: "0.125rem" },
-    base: { value: "0.25rem" },
-    md: { value: "0.375rem" },
-    lg: { value: "0.5rem" },
-    xl: { value: "0.75rem" },
-    "2xl": { value: "1rem" },
-    "3xl": { value: "1.5rem" },
-    full: { value: "9999px" }
-  }
-});
-var defaultTheme = {
-  extend: {
-    tokens: tokens2
-  }
-};
-var defaultStaticCss = {
-  css: [
-    {
-      properties: {
-        backgroundColor: ["*"],
-        color: ["*"],
-        borderColor: ["*"],
-        padding: ["*"],
-        paddingLeft: ["*"],
-        paddingRight: ["*"],
-        paddingTop: ["*"],
-        paddingBottom: ["*"],
-        margin: ["*"],
-        gap: ["*"],
-        ...fontStaticCssProperties,
-        borderRadius: ["*"],
-        borderWidth: ["*"],
-        font: ["*"]
-      }
-    }
-  ],
-  recipes: {
-    fontStyle: ["*"]
-  }
-};
+utilities(rhythmUtilities);
 
 // ../reference-core/src/primitives/css/h1.style.ts
 import { defineRecipe } from "@pandacss/dev";
@@ -945,6 +954,66 @@ var primitiveCSS = {
   qStyle,
   citeStyle
 };
+recipe(primitiveCSS);
+
+// ../reference-core/src/styled/index.ts
+tokens({
+  spacing: {
+    px: { value: "1px" },
+    r: { value: "0.25rem" },
+    "0.5r": { value: getRhythm(0.5) },
+    "1/2r": { value: getRhythm(1, 2) },
+    "1/3r": { value: getRhythm(1, 3) },
+    "1/4r": { value: getRhythm(1, 4) },
+    "1/5r": { value: getRhythm(1, 5) },
+    "1/6r": { value: getRhythm(1, 6) },
+    "1r": { value: getRhythm(1) },
+    "1.5r": { value: getRhythm(1.5) },
+    "2r": { value: getRhythm(2) },
+    "3r": { value: getRhythm(3) },
+    "4r": { value: getRhythm(4) },
+    "5r": { value: getRhythm(5) },
+    "6r": { value: getRhythm(6) },
+    "8r": { value: getRhythm(8) },
+    "10r": { value: getRhythm(10) },
+    "12r": { value: getRhythm(12) }
+  },
+  radii: {
+    none: { value: "0" },
+    sm: { value: "0.125rem" },
+    base: { value: "0.25rem" },
+    md: { value: "0.375rem" },
+    lg: { value: "0.5rem" },
+    xl: { value: "0.75rem" },
+    "2xl": { value: "1rem" },
+    "3xl": { value: "1.5rem" },
+    full: { value: "9999px" }
+  }
+});
+staticCss({
+  css: [
+    {
+      properties: {
+        backgroundColor: ["*"],
+        color: ["*"],
+        borderColor: ["*"],
+        padding: ["*"],
+        paddingLeft: ["*"],
+        paddingRight: ["*"],
+        paddingTop: ["*"],
+        paddingBottom: ["*"],
+        margin: ["*"],
+        gap: ["*"],
+        borderRadius: ["*"],
+        borderWidth: ["*"],
+        font: ["*"]
+      }
+    }
+  ],
+  recipes: {
+    fontStyle: ["*"]
+  }
+});
 
 // ../reference-core/src/styled/patterns.ts
 var patterns_exports = {};
@@ -975,6 +1044,7 @@ var patternsGlobalCss = {
   ...bodyDefaults,
   ...densityVariants
 };
+globalCss(patternsGlobalCss);
 
 // ../reference-core/panda.base.ts
 var baseConfig = {
@@ -996,80 +1066,10 @@ var baseConfig = {
   dependencies: [],
   outdir: "src/system",
   outExtension: "js",
-  hash: false,
-  staticCss: defaultStaticCss,
-  utilities: {
-    extend: {
-      ...rhythmUtilities
-    }
-  },
-  theme: {
-    tokens: defaultTheme.extend.tokens,
-    extend: {
-      recipes: {
-        ...primitiveCSS
-      }
-    }
-  },
-  globalCss: patternsGlobalCss,
-  globalFontface: defaultGlobalFontface
+  hash: false
 };
 extendPandaConfig(baseConfig);
 var panda_base_default = defineConfig(baseConfig);
-
-// ../reference-core/src/styled/api/index.ts
-var api_exports = {};
-__export(api_exports, {
-  patterns: () => patterns,
-  recipe: () => recipe,
-  slotRecipe: () => slotRecipe,
-  tokens: () => tokens
-});
-
-// ../reference-core/src/styled/api/patterns.ts
-var patterns_exports2 = {};
-__export(patterns_exports2, {
-  patterns: () => patterns
-});
-function asExtendablePatterns(p) {
-  return p;
-}
-__name(asExtendablePatterns, "asExtendablePatterns");
-function patterns(patternConfig) {
-  extendPandaConfig({
-    patterns: {
-      extend: asExtendablePatterns(patternConfig)
-    }
-  });
-}
-__name(patterns, "patterns");
-
-// ../reference-core/src/styled/api/recipe.ts
-var recipe_exports = {};
-__export(recipe_exports, {
-  recipe: () => recipe,
-  slotRecipe: () => slotRecipe
-});
-function recipe(recipeConfig) {
-  extendPandaConfig({
-    theme: {
-      extend: {
-        recipes: recipeConfig
-      }
-    }
-  });
-}
-__name(recipe, "recipe");
-function slotRecipe(slotRecipeConfig) {
-  extendPandaConfig({
-    theme: {
-      extend: {
-        slotRecipes: slotRecipeConfig
-      }
-    }
-  });
-}
-__name(slotRecipe, "slotRecipe");
 
 // ../reference-core/src/styled/props/box.ts
 var box_exports = {};
@@ -1235,7 +1235,7 @@ extendPandaConfig({
 });
 
 // ../reference-core/.ref/panda-entry.ts
-var defaultFragments = [panda_base_exports, colors_exports, font_exports, styled_exports, patterns_exports, api_exports, patterns_exports2, recipe_exports, tokens_exports, box_exports].map((m) => m?.default !== void 0 ? m.default : null).filter(Boolean);
+var defaultFragments = [panda_base_exports, colors_exports, font_exports, styled_exports, patterns_exports, rhythm_exports, globalCss_exports, globalFontface_exports, api_exports, recipe_exports, staticCss_exports, tokens_exports, utilities_exports, box_exports].map((m) => m?.default !== void 0 ? m.default : null).filter(Boolean);
 var collected = globalThis[COLLECTOR_KEY] || [];
 var fragments = [...defaultFragments, ...collected];
 var config = fragments.reduce((acc, frag) => deepMerge(acc, frag), {});
