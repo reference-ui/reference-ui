@@ -1,6 +1,6 @@
 /** Global CSS for patterns. */
 
-import { globalCss } from './api'
+import { globalCss } from '../api'
 
 // --- Global CSS: rhythm tokens -----------------------------------------------
 
@@ -22,12 +22,20 @@ const bodyDefaults = {
   },
 }
 
+// --- Global CSS: density variants ---------------------------------------------
+
+const densityVariants = {
+  '[data-density="compact"]': { '--r-density': '0.75' },
+  '[data-density="comfortable"]': { '--r-density': '1' },
+  '[data-density="spacious"]': { '--r-density': '1.25' },
+}
 
 // --- Global CSS export -------------------------------------------------------
 
 export const patternsGlobalCss = {
   ...rhythmTokens,
-  ...bodyDefaults
+  ...bodyDefaults,
+  ...densityVariants,
 }
 
 globalCss(patternsGlobalCss)

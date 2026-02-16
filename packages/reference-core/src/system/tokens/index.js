@@ -791,18 +791,6 @@ const tokens = {
     "value": "oklch(27.1% 0.105 12.094)",
     "variable": "var(--colors-rose-950)"
   },
-  "fonts.sans": {
-    "value": "\"Inter\", ui-serif, serif",
-    "variable": "var(--fonts-sans)"
-  },
-  "fonts.serif": {
-    "value": "\"Literata\", ui-sans-serif, sans-serif",
-    "variable": "var(--fonts-serif)"
-  },
-  "fonts.mono": {
-    "value": "\"JetBrains Mono\", ui-monospace, monospace",
-    "variable": "var(--fonts-mono)"
-  },
   "spacing.px": {
     "value": "1px",
     "variable": "var(--spacing-px)"
@@ -910,6 +898,18 @@ const tokens = {
   "radii.full": {
     "value": "9999px",
     "variable": "var(--radii-full)"
+  },
+  "fonts.sans": {
+    "value": "\"Inter\", ui-serif, serif",
+    "variable": "var(--fonts-sans)"
+  },
+  "fonts.serif": {
+    "value": "\"Literata\", ui-sans-serif, sans-serif",
+    "variable": "var(--fonts-serif)"
+  },
+  "fonts.mono": {
+    "value": "\"JetBrains Mono\", ui-monospace, monospace",
+    "variable": "var(--fonts-mono)"
   },
   "spacing.-px": {
     "value": "calc(var(--spacing-px) * -1)",
