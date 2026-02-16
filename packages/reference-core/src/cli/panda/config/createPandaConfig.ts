@@ -1,11 +1,23 @@
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
-import { join, relative, resolve } from 'node:path'
-import * as esbuild from 'esbuild'
+import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
+import { join, resolve } from 'node:path'
+import { bundleWithEsbuild } from '../../lib/bundleWithEsbuild'
 import { scanDirectories } from '../../eval/scanner'
+import { buildPandaEntryContent } from './entryTemplate'
+
+const PANDA_BUNDLE_EXTERNALS = [
+  '@pandacss/dev',
+  'esbuild',
+  'fast-glob',
+  'tsdown',
+  'rolldown',
+  'unconfig',
+  'unrun',
+  'birpc'
+]
 
 /**
  * Mini-compiler: Bundle files that call extendPandaConfig into panda.config.ts.
- * 
+ *
  * Uses esbuild to bundle all config files, properly inlining functions and their closures.
  * This handles TypeScript properly and inlines all dependencies.
  *
@@ -23,110 +35,41 @@ export async function createPandaConfig(coreDir: string): Promise<void> {
     const basePath = resolve(coreDir, 'panda.base.ts')
     const styledDir = resolve(coreDir, 'src/styled')
     const scannedPaths = scanDirectories([styledDir])
-    const configFiles = [
-      basePath,
-      ...scannedPaths
-    ].filter(p => existsSync(p))
+    const configFiles = [basePath, ...scannedPaths].filter(p => existsSync(p))
     console.log(`[createPandaConfig] Found ${configFiles.length} config files`)
 
-    // Step 2: Create entry file that imports all config files and merges them
+    // Step 2: Create entry file from template
     const entryPath = join(refDir, 'panda-entry.ts')
-    const initCollectorRel = relative(refDir, resolve(coreDir, 'src/cli/panda/config/initCollector.ts')).replace(/\.tsx?$/, '').replace(/\\/g, '/')
-    const extendPandaRel = relative(refDir, resolve(coreDir, 'src/cli/panda/config/extendPandaConfig.ts')).replace(/\.tsx?$/, '').replace(/\\/g, '/')
-    const relativeImports = configFiles
-      .map((p, idx) => {
-        const rel = relative(refDir, p).replace(/\.tsx?$/, '').replace(/\\/g, '/')
-        return `import * as cfg${idx} from '${rel.startsWith('.') ? rel : './' + rel}'`
-      })
-    
-    const entryContent = `// Generated entry - imports and merges all config fragments
-import '${initCollectorRel.startsWith('.') ? initCollectorRel : './' + initCollectorRel}'
-import { defineConfig } from '@pandacss/dev'
-import { COLLECTOR_KEY } from '${extendPandaRel.startsWith('.') ? extendPandaRel : './' + extendPandaRel}'
-${relativeImports.join('\n')}
+    const initCollectorPath = resolve(coreDir, 'src/cli/panda/config/initCollector.ts')
+    const extendPandaPath = resolve(coreDir, 'src/cli/panda/config/extendPandaConfig.ts')
+    const deepMergePath = resolve(coreDir, 'src/cli/panda/config/deepMerge.ts')
 
-// Deep merge utility
-function deepMerge(target: any, ...sources: any[]): any {
-  const result = { ...target }
-  for (const source of sources) {
-    if (!source || typeof source !== 'object') continue
-    for (const key of Object.keys(source)) {
-      const targetVal = result[key]
-      const sourceVal = source[key]
-      if (sourceVal === undefined) continue
-      if (Array.isArray(sourceVal) || typeof sourceVal === 'function') {
-        result[key] = sourceVal
-        continue
-      }
-      if (
-        sourceVal !== null &&
-        typeof sourceVal === 'object' &&
-        targetVal !== null &&
-        typeof targetVal === 'object' &&
-        !Array.isArray(targetVal)
-      ) {
-        result[key] = deepMerge({ ...targetVal }, sourceVal)
-      } else {
-        result[key] = sourceVal
-      }
-    }
-  }
-  return result
-}
-
-// Fragments from default exports (e.g. panda.base) + collected from extendPandaConfig/tokens() calls
-const defaultFragments = [${configFiles.map((_, idx) => `cfg${idx}`).join(', ')}]
-  .map(m => (m && typeof m === 'object' && m.default !== undefined) ? m.default : null)
-  .filter(Boolean)
-const collected = (globalThis[COLLECTOR_KEY] || [])
-const fragments = [...defaultFragments, ...collected]
-const config = fragments.reduce((acc, frag) => deepMerge(acc, frag), {})
-
-export default defineConfig(config)
-`
+    const entryContent = buildPandaEntryContent({
+      refDir,
+      initCollectorPath,
+      extendPandaConfigPath: extendPandaPath,
+      deepMergePath,
+      configFilePaths: configFiles
+    })
     writeFileSync(entryPath, entryContent)
     console.log('[createPandaConfig] Created entry file')
 
-    // Step 3: Bundle with esbuild into a single file (no code splitting)
+    // Step 3: Bundle with esbuild (reusable helper, in-memory output)
     console.log('[createPandaConfig] Bundling with esbuild...')
-    const outfile = join(refDir, 'panda-bundled.mjs')
-    await esbuild.build({
-      entryPoints: [entryPath],
-      bundle: true,
-      format: 'esm',
-      platform: 'node',
-      target: 'node18',
-      outfile,
-      external: [
-        '@pandacss/dev',
-        'esbuild',
-        'fast-glob',
-        'tsdown',
-        'rolldown',
-        'unconfig',
-        'unrun',
-        'birpc'
-      ],
-      write: true,
-      minify: false,
-      keepNames: true,
-      treeShaking: true,
-      splitting: false, // CRITICAL: No code splitting
-      mainFields: ['module', 'main'],
-      conditions: ['import', 'node']
+    const bundled = await bundleWithEsbuild(entryPath, {
+      external: PANDA_BUNDLE_EXTERNALS
     })
     console.log('[createPandaConfig] Bundle complete')
 
-    // Step 4: Read bundled output and write as panda.config.ts
-    const bundled = readFileSync(outfile, 'utf-8')
+    // Step 4: Write final panda.config.ts
     const configPath = resolve(coreDir, 'panda.config.ts')
     const finalConfig = `/** Generated by createPandaConfig - do not edit manually */
-${bundled}
+              ${bundled}
 `
     writeFileSync(configPath, finalConfig)
     console.log(`[createPandaConfig] Wrote final config to ${configPath}`)
 
-    // Clean up ALL temp files in .ref
+    // Clean up temp files in .ref
     const refFiles = readdirSync(refDir)
     for (const file of refFiles) {
       rmSync(join(refDir, file), { force: true, recursive: true })

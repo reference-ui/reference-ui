@@ -1,0 +1,19 @@
+{
+  "name": "@reference-ui/system",
+  "version": "0.0.0-local",
+  "private": true,
+  "type": "module",
+  "main": "./css/index.js",
+  "types": "./css/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./css/index.d.ts",
+      "default": "./css/index.js"
+    },
+    "./css": {
+      "types": "./css/index.d.ts",
+      "default": "./css/index.js"
+    },
+    "./styles.css": "./styles.css"
+  }
+}
