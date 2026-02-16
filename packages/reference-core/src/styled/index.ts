@@ -4,7 +4,7 @@ import './theme/spacing'
 import './theme/radii'
 import './rhythm'
 import './font'
-import './props/patterns'
+
 
 // Import primitives
 import '../primitives/recipes'
