@@ -6,9 +6,7 @@ import type { DistributiveOmit } from '../types/system-types';
 import type { Tokens } from '../tokens/index';
 
 export interface ContainerProperties {
-   name?: ConditionalValue<string>
-	type?: "inline-size" | "size" | "normal"
-	density?: "compact" | "comfortable" | "spacious"
+   
 }
 
 interface ContainerStyles extends ContainerProperties, DistributiveOmit<SystemStyleObject, keyof ContainerProperties > {}

@@ -947,10 +947,135 @@ var primitiveCSS = {
 };
 
 // ../reference-core/src/styled/patterns.ts
-var patterns_exports2 = {};
-__export(patterns_exports2, {
+var patterns_exports = {};
+__export(patterns_exports, {
   patternsGlobalCss: () => patternsGlobalCss
 });
+var rhythmTokens = {
+  ":root": {
+    "--r-base": "16px",
+    "--r-density": "1",
+    "--spacing-r": "calc(var(--r-base) * var(--r-density))"
+  }
+};
+var bodyDefaults = {
+  body: {
+    fontFamily: "sans",
+    letterSpacing: "-0.01em",
+    fontSize: "body"
+  }
+};
+var densityVariants = {
+  '[data-density="compact"]': { "--r-density": "0.75" },
+  '[data-density="comfortable"]': { "--r-density": "1" },
+  '[data-density="spacious"]': { "--r-density": "1.25" }
+};
+var patternsGlobalCss = {
+  ...rhythmTokens,
+  ...bodyDefaults,
+  ...densityVariants
+};
+
+// ../reference-core/src/styled/props/index.ts
+var props_exports = {};
+
+// ../reference-core/panda.base.ts
+var baseConfig = {
+  presets: [],
+  jsxFramework: "react",
+  preflight: true,
+  include: [
+    "src/**/*.{ts,tsx}",
+    "codegen/**/*.{ts,tsx,jsx}"
+  ],
+  exclude: [
+    "**/node_modules/**",
+    "**/*.test.*",
+    "**/*.spec.*",
+    "src/system/**",
+    "src/cli/**",
+    "src/config/**"
+  ],
+  dependencies: [],
+  outdir: "src/system",
+  outExtension: "js",
+  hash: false,
+  staticCss: defaultStaticCss,
+  utilities: {
+    extend: {
+      ...rhythmUtilities
+    }
+  },
+  theme: {
+    tokens: defaultTheme.extend.tokens,
+    extend: {
+      recipes: {
+        ...primitiveCSS
+      }
+    }
+  },
+  globalCss: patternsGlobalCss,
+  globalFontface: defaultGlobalFontface
+};
+extendPandaConfig(baseConfig);
+var panda_base_default = defineConfig(baseConfig);
+
+// ../reference-core/src/styled/api/index.ts
+var api_exports = {};
+__export(api_exports, {
+  patterns: () => patterns,
+  recipe: () => recipe,
+  slotRecipe: () => slotRecipe,
+  tokens: () => tokens
+});
+
+// ../reference-core/src/styled/api/patterns.ts
+var patterns_exports2 = {};
+__export(patterns_exports2, {
+  patterns: () => patterns
+});
+function asExtendablePatterns(p) {
+  return p;
+}
+__name(asExtendablePatterns, "asExtendablePatterns");
+function patterns(patternConfig) {
+  extendPandaConfig({
+    patterns: {
+      extend: asExtendablePatterns(patternConfig)
+    }
+  });
+}
+__name(patterns, "patterns");
+
+// ../reference-core/src/styled/api/recipe.ts
+var recipe_exports = {};
+__export(recipe_exports, {
+  recipe: () => recipe,
+  slotRecipe: () => slotRecipe
+});
+function recipe(recipeConfig) {
+  extendPandaConfig({
+    theme: {
+      extend: {
+        recipes: recipeConfig
+      }
+    }
+  });
+}
+__name(recipe, "recipe");
+function slotRecipe(slotRecipeConfig) {
+  extendPandaConfig({
+    theme: {
+      extend: {
+        slotRecipes: slotRecipeConfig
+      }
+    }
+  });
+}
+__name(slotRecipe, "slotRecipe");
+
+// ../reference-core/src/styled/props/container.ts
+var container_exports = {};
 
 // ../reference-core/src/primitives/tags.ts
 var TAGS = [
@@ -1065,190 +1190,7 @@ function toJsxName(tag) {
 __name(toJsxName, "toJsxName");
 var PRIMITIVE_JSX_NAMES = TAGS.map(toJsxName);
 
-// ../reference-core/src/styled/api/patterns.ts
-var patterns_exports = {};
-__export(patterns_exports, {
-  patterns: () => patterns
-});
-function asExtendablePatterns(p) {
-  return p;
-}
-__name(asExtendablePatterns, "asExtendablePatterns");
-function patterns(patternConfig) {
-  extendPandaConfig({
-    patterns: {
-      extend: asExtendablePatterns(patternConfig)
-    }
-  });
-}
-__name(patterns, "patterns");
-
-// ../reference-core/src/styled/patterns.ts
-patterns({
-  box: {
-    jsx: [...PRIMITIVE_JSX_NAMES],
-    properties: {
-      r: { type: "object" },
-      container: { type: "string" },
-      font: { type: "string" }
-    },
-    blocklist: ["r", "container", "font"],
-    transform(props) {
-      const { r, container, font, ...rest } = props;
-      const FONT_PRESETS = {
-        sans: { fontFamily: "sans", letterSpacing: "-0.01em", fontWeight: "400" },
-        serif: { fontFamily: "serif", letterSpacing: "normal", fontWeight: "373" },
-        mono: { fontFamily: "mono", letterSpacing: "-0.04em", fontWeight: "393" }
-      };
-      const fontStyles = font ? FONT_PRESETS[font] || {} : {};
-      if (r) {
-        const prefix = container ? `@container ${container} (min-width:` : `@container (min-width:`;
-        return {
-          ...fontStyles,
-          ...rest,
-          ...Object.fromEntries(
-            Object.entries(r).map(([bp, styles]) => [`${prefix} ${bp}px)`, styles])
-          )
-        };
-      }
-      if (container !== void 0) {
-        return {
-          ...fontStyles,
-          ...rest,
-          containerType: "inline-size",
-          ...typeof container === "string" && container && { containerName: container }
-        };
-      }
-      return {
-        ...fontStyles,
-        ...rest
-      };
-    }
-  }
-});
-patterns({
-  jsx: [...PRIMITIVE_JSX_NAMES],
-  container: {
-    properties: {
-      name: { type: "string" },
-      type: { type: "enum", value: ["inline-size", "size", "normal"] },
-      density: { type: "enum", value: ["compact", "comfortable", "spacious"] }
-    },
-    defaultValues: {
-      type: "inline-size"
-    },
-    transform(props) {
-      const { name, type, density, ...rest } = props;
-      return {
-        containerType: type,
-        ...name && { containerName: name },
-        ...density && { "data-density": density },
-        ...rest
-      };
-    }
-  }
-});
-var rhythmTokens = {
-  ":root": {
-    "--r-base": "16px",
-    "--r-density": "1",
-    "--spacing-r": "calc(var(--r-base) * var(--r-density))"
-  }
-};
-var bodyDefaults = {
-  body: {
-    fontFamily: "sans",
-    letterSpacing: "-0.01em",
-    fontSize: "body"
-  }
-};
-var densityVariants = {
-  '[data-density="compact"]': { "--r-density": "0.75" },
-  '[data-density="comfortable"]': { "--r-density": "1" },
-  '[data-density="spacious"]': { "--r-density": "1.25" }
-};
-var patternsGlobalCss = {
-  ...rhythmTokens,
-  ...bodyDefaults,
-  ...densityVariants
-};
-
-// ../reference-core/src/styled/font.recipe.ts
-import { defineRecipe as defineRecipe27 } from "@pandacss/dev";
-var fontStyle = defineRecipe27({
-  className: "r_font",
-  variants: {
-    font: {
-      sans: {
-        fontFamily: "sans",
-        letterSpacing: "-0.01em",
-        fontWeight: "400"
-      },
-      serif: {
-        fontFamily: "serif",
-        letterSpacing: "normal",
-        fontWeight: "373"
-      },
-      mono: {
-        fontFamily: "mono",
-        letterSpacing: "-0.04em",
-        fontWeight: "393"
-      }
-    }
-  }
-});
-
-// ../reference-core/panda.base.ts
-var baseConfig = {
-  presets: [],
-  jsxFramework: "react",
-  preflight: true,
-  include: [
-    "src/**/*.{ts,tsx}",
-    "codegen/**/*.{ts,tsx,jsx}"
-  ],
-  exclude: [
-    "**/node_modules/**",
-    "**/*.test.*",
-    "**/*.spec.*",
-    "src/system/**",
-    "src/cli/**",
-    "src/config/**"
-  ],
-  dependencies: [],
-  outdir: "src/system",
-  outExtension: "js",
-  hash: false,
-  staticCss: defaultStaticCss,
-  utilities: {
-    extend: {
-      ...rhythmUtilities
-    }
-  },
-  theme: {
-    tokens: defaultTheme.extend.tokens,
-    extend: {
-      recipes: {
-        ...primitiveCSS,
-        fontStyle
-      }
-    }
-  },
-  globalCss: patternsGlobalCss,
-  globalFontface: defaultGlobalFontface
-};
-extendPandaConfig(baseConfig);
-var panda_base_default = defineConfig(baseConfig);
-
-// ../reference-core/src/styled/api/index.ts
-var api_exports = {};
-__export(api_exports, {
-  patterns: () => patterns,
-  tokens: () => tokens
-});
-
 // ../reference-core/src/styled/props/container.ts
-var container_exports = {};
 patterns({
   containerSetup: {
     jsx: [...PRIMITIVE_JSX_NAMES],
@@ -1270,6 +1212,30 @@ patterns({
 
 // ../reference-core/src/styled/props/font.ts
 var font_exports2 = {};
+recipe({
+  fontStyle: {
+    className: "r_font",
+    variants: {
+      font: {
+        sans: {
+          fontFamily: "sans",
+          letterSpacing: "-0.01em",
+          fontWeight: "400"
+        },
+        serif: {
+          fontFamily: "serif",
+          letterSpacing: "normal",
+          fontWeight: "373"
+        },
+        mono: {
+          fontFamily: "mono",
+          letterSpacing: "-0.04em",
+          fontWeight: "393"
+        }
+      }
+    }
+  }
+});
 patterns({
   fontPreset: {
     jsx: [...PRIMITIVE_JSX_NAMES],
@@ -1292,9 +1258,6 @@ patterns({
     }
   }
 });
-
-// ../reference-core/src/styled/props/index.ts
-var props_exports = {};
 
 // ../reference-core/src/styled/props/r.ts
 var r_exports = {};
@@ -1321,7 +1284,7 @@ patterns({
 });
 
 // ../reference-core/.ref/panda-entry.ts
-var defaultFragments = [panda_base_exports, colors_exports, font_exports, styled_exports, patterns_exports2, api_exports, patterns_exports, tokens_exports, container_exports, font_exports2, props_exports, r_exports].map((m) => m?.default !== void 0 ? m.default : null).filter(Boolean);
+var defaultFragments = [panda_base_exports, colors_exports, font_exports, styled_exports, patterns_exports, api_exports, patterns_exports2, recipe_exports, tokens_exports, container_exports, font_exports2, props_exports, r_exports].map((m) => m?.default !== void 0 ? m.default : null).filter(Boolean);
 var collected = globalThis[COLLECTOR_KEY] || [];
 var fragments = [...defaultFragments, ...collected];
 var config = fragments.reduce((acc, frag) => deepMerge(acc, frag), {});

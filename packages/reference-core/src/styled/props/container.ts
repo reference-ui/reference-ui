@@ -2,8 +2,8 @@
  * Container query prop: Set up container context
  */
 
-import { patterns } from '../api/patterns.js'
-import { PRIMITIVE_JSX_NAMES } from '../../primitives/tags.js'
+import { patterns } from '../api/patterns'
+import { PRIMITIVE_JSX_NAMES } from '../../primitives/tags'
 
 // --- Type ---
 
@@ -17,6 +17,10 @@ import { PRIMITIVE_JSX_NAMES } from '../../primitives/tags.js'
  * ```
  */
 export type ContainerProp = string | boolean
+
+export interface ContainerPropDefinition {
+  container?: ContainerProp
+}
 
 // --- Pattern ---
 

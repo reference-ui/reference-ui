@@ -3,15 +3,14 @@ import { css } from '../css/index.js';
 
 const containerConfig = {
 transform(props) {
-  const { name, type, density, ...rest } = props;
   return {
-    containerType: type,
-    ...name && { containerName: name },
-    ...density && { "data-density": density },
-    ...rest
+    position: "relative",
+    maxWidth: "8xl",
+    mx: "auto",
+    px: { base: "4", md: "6", lg: "8" },
+    ...props
   };
-},
-defaultValues:{type:'inline-size'}}
+}}
 
 export const getContainerStyle = (styles = {}) => {
   const _styles = getPatternStyles(containerConfig, styles)

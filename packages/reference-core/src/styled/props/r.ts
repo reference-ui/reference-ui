@@ -2,9 +2,9 @@
  * Responsive container query prop (r)
  */
 
-import type { SystemStyleObject } from '../../system/types/index.js'
-import { patterns } from '../api/patterns.js'
-import { PRIMITIVE_JSX_NAMES } from '../../primitives/tags.js'
+import type { SystemStyleObject } from '../../system/types/index'
+import { patterns } from '../api/patterns'
+import { PRIMITIVE_JSX_NAMES } from '../../primitives/tags'
 
 // --- Type ---
 
@@ -19,6 +19,10 @@ import { PRIMITIVE_JSX_NAMES } from '../../primitives/tags.js'
  */
 export type ResponsiveBreakpoints = {
   [breakpoint: number]: SystemStyleObject
+}
+
+export interface ResponsivePropDefinition {
+  r?: ResponsiveBreakpoints
 }
 
 // --- Pattern ---
