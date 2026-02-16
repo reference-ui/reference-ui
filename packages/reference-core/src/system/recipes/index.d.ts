@@ -25,4 +25,3 @@ export * from './var-style';
 export * from './blockquote-style';
 export * from './q-style';
 export * from './cite-style';
-export * from './font-style';

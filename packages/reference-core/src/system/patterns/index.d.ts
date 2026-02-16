@@ -19,6 +19,3 @@ export * from './float';
 export * from './bleed';
 export * from './visually-hidden';
 export * from './cq';
-export * from './container-setup';
-export * from './font-preset';
-export * from './responsive-container';

@@ -976,9 +976,6 @@ var patternsGlobalCss = {
   ...densityVariants
 };
 
-// ../reference-core/src/styled/props/index.ts
-var props_exports = {};
-
 // ../reference-core/panda.base.ts
 var baseConfig = {
   presets: [],
@@ -1074,8 +1071,8 @@ function slotRecipe(slotRecipeConfig) {
 }
 __name(slotRecipe, "slotRecipe");
 
-// ../reference-core/src/styled/props/container.ts
-var container_exports = {};
+// ../reference-core/src/styled/props/box.ts
+var box_exports = {};
 
 // ../reference-core/src/primitives/tags.ts
 var TAGS = [
@@ -1190,101 +1187,55 @@ function toJsxName(tag) {
 __name(toJsxName, "toJsxName");
 var PRIMITIVE_JSX_NAMES = TAGS.map(toJsxName);
 
-// ../reference-core/src/styled/props/container.ts
-patterns({
-  containerSetup: {
+// ../reference-core/src/styled/props/box.ts
+extendPandaConfig({
+  patterns: { extend: { box: {
     jsx: [...PRIMITIVE_JSX_NAMES],
     properties: {
-      container: { type: "string" }
+      container: { "type": "string" },
+      font: { "type": "string" },
+      r: { "type": "object" }
     },
-    blocklist: ["container"],
+    blocklist: ["container", "font", "r"],
     transform(props) {
-      const { container, ...rest } = props;
-      if (container === void 0) return rest;
-      return {
-        ...rest,
-        containerType: "inline-size",
-        ...typeof container === "string" && container && { containerName: container }
-      };
-    }
-  }
-});
-
-// ../reference-core/src/styled/props/font.ts
-var font_exports2 = {};
-recipe({
-  fontStyle: {
-    className: "r_font",
-    variants: {
-      font: {
-        sans: {
-          fontFamily: "sans",
-          letterSpacing: "-0.01em",
-          fontWeight: "400"
-        },
-        serif: {
-          fontFamily: "serif",
-          letterSpacing: "normal",
-          fontWeight: "373"
-        },
-        mono: {
-          fontFamily: "mono",
-          letterSpacing: "-0.04em",
-          fontWeight: "393"
-        }
-      }
-    }
-  }
-});
-patterns({
-  fontPreset: {
-    jsx: [...PRIMITIVE_JSX_NAMES],
-    properties: {
-      font: { type: "string" }
-    },
-    blocklist: ["font"],
-    transform(props) {
-      const { font, ...rest } = props;
-      const FONT_PRESETS = {
-        sans: { fontFamily: "sans", letterSpacing: "-0.01em", fontWeight: "400" },
-        serif: { fontFamily: "serif", letterSpacing: "normal", fontWeight: "373" },
-        mono: { fontFamily: "mono", letterSpacing: "-0.04em", fontWeight: "393" }
-      };
-      const fontStyles = font ? FONT_PRESETS[font] || {} : {};
-      return {
-        ...fontStyles,
-        ...rest
-      };
-    }
-  }
-});
-
-// ../reference-core/src/styled/props/r.ts
-var r_exports = {};
-patterns({
-  responsiveContainer: {
-    jsx: [...PRIMITIVE_JSX_NAMES],
-    properties: {
-      r: { type: "object" },
-      container: { type: "string" }
-    },
-    blocklist: ["r"],
-    transform(props) {
-      const { r, container, ...rest } = props;
-      if (!r) return rest;
-      const prefix = container ? `@container ${container} (min-width:` : `@container (min-width:`;
-      return {
-        ...rest,
-        ...Object.fromEntries(
+      const blocklist = ["container", "font", "r"];
+      const extensionKeys = new Set(blocklist);
+      const rest = Object.fromEntries(
+        Object.entries(props).filter(([k]) => !extensionKeys.has(k))
+      );
+      const _r0 = (function(props2) {
+        const { container } = props2;
+        if (container === void 0) return {};
+        return {
+          containerType: "inline-size",
+          ...typeof container === "string" && container && { containerName: container }
+        };
+      })(props);
+      const _r1 = (function(props2) {
+        const { font } = props2;
+        if (!font) return {};
+        const FONT_PRESETS = {
+          sans: { fontFamily: "sans", letterSpacing: "-0.01em", fontWeight: "400" },
+          serif: { fontFamily: "serif", letterSpacing: "normal", fontWeight: "373" },
+          mono: { fontFamily: "mono", letterSpacing: "-0.04em", fontWeight: "393" }
+        };
+        return FONT_PRESETS[font] || {};
+      })(props);
+      const _r2 = (function(props2) {
+        const { r, container } = props2;
+        if (!r) return {};
+        const prefix = container ? `@container ${container} (min-width:` : `@container (min-width:`;
+        return Object.fromEntries(
           Object.entries(r).map(([bp, styles]) => [`${prefix} ${bp}px)`, styles])
-        )
-      };
+        );
+      })(props);
+      return Object.assign({}, _r0, _r1, _r2, rest);
     }
-  }
+  } } }
 });
 
 // ../reference-core/.ref/panda-entry.ts
-var defaultFragments = [panda_base_exports, colors_exports, font_exports, styled_exports, patterns_exports, api_exports, patterns_exports2, recipe_exports, tokens_exports, container_exports, font_exports2, props_exports, r_exports].map((m) => m?.default !== void 0 ? m.default : null).filter(Boolean);
+var defaultFragments = [panda_base_exports, colors_exports, font_exports, styled_exports, patterns_exports, api_exports, patterns_exports2, recipe_exports, tokens_exports, box_exports].map((m) => m?.default !== void 0 ? m.default : null).filter(Boolean);
 var collected = globalThis[COLLECTOR_KEY] || [];
 var fragments = [...defaultFragments, ...collected];
 var config = fragments.reduce((acc, frag) => deepMerge(acc, frag), {});

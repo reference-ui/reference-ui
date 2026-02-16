@@ -1,14 +1,15 @@
 import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { microBundlePanda } from '../../lib/microBundle'
-import { scanDirectories } from '../../eval/scanner'
+import { scanDirectories, scanForBoxExtensions } from '../../eval/scanner'
+import { createBoxPattern } from '../boxPattern'
 import { buildPandaEntryContent } from './entryTemplate'
 
 /**
  * Mini-compiler: Bundle files that call extendPandaConfig into panda.config.ts.
  *
  * Uses esbuild to bundle all config files, properly inlining functions and their closures.
- * This handles TypeScript properly and inlines all dependencies.
+ * Runs createBoxPattern first to generate the combined box pattern from extendBoxPattern files.
  *
  * @param coreDir - Package root (reference-core)
  */
@@ -19,12 +20,19 @@ export async function createPandaConfig(coreDir: string): Promise<void> {
       mkdirSync(refDir, { recursive: true })
     }
 
-    // Step 1: Find all files that need to be bundled
+    // Step 1: Generate box pattern (extendBoxPattern -> inlined box.ts)
+    console.log('[createPandaConfig] Generating box pattern...')
+    await createBoxPattern(coreDir)
+
+    // Step 2: Find config files (exclude box extension files; they're in box.ts)
     console.log('[createPandaConfig] Scanning for config files...')
     const basePath = resolve(coreDir, 'panda.base.ts')
     const styledDir = resolve(coreDir, 'src/styled')
     const scannedPaths = scanDirectories([styledDir])
-    const configFiles = [basePath, ...scannedPaths].filter(p => existsSync(p))
+    const boxExtensionPaths = new Set(scanForBoxExtensions([styledDir]))
+    const configFiles = [basePath, ...scannedPaths]
+      .filter((p) => existsSync(p))
+      .filter((p) => !boxExtensionPaths.has(p))
     console.log(`[createPandaConfig] Found ${configFiles.length} config files`)
 
     // Step 2: Create entry file from template
