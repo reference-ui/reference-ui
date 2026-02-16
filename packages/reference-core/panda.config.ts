@@ -1247,8 +1247,81 @@ __export(api_exports, {
   tokens: () => tokens
 });
 
+// ../reference-core/src/styled/props/container.ts
+var container_exports = {};
+patterns({
+  containerSetup: {
+    jsx: [...PRIMITIVE_JSX_NAMES],
+    properties: {
+      container: { type: "string" }
+    },
+    blocklist: ["container"],
+    transform(props) {
+      const { container, ...rest } = props;
+      if (container === void 0) return rest;
+      return {
+        ...rest,
+        containerType: "inline-size",
+        ...typeof container === "string" && container && { containerName: container }
+      };
+    }
+  }
+});
+
+// ../reference-core/src/styled/props/font.ts
+var font_exports2 = {};
+patterns({
+  fontPreset: {
+    jsx: [...PRIMITIVE_JSX_NAMES],
+    properties: {
+      font: { type: "string" }
+    },
+    blocklist: ["font"],
+    transform(props) {
+      const { font, ...rest } = props;
+      const FONT_PRESETS = {
+        sans: { fontFamily: "sans", letterSpacing: "-0.01em", fontWeight: "400" },
+        serif: { fontFamily: "serif", letterSpacing: "normal", fontWeight: "373" },
+        mono: { fontFamily: "mono", letterSpacing: "-0.04em", fontWeight: "393" }
+      };
+      const fontStyles = font ? FONT_PRESETS[font] || {} : {};
+      return {
+        ...fontStyles,
+        ...rest
+      };
+    }
+  }
+});
+
+// ../reference-core/src/styled/props/index.ts
+var props_exports = {};
+
+// ../reference-core/src/styled/props/r.ts
+var r_exports = {};
+patterns({
+  responsiveContainer: {
+    jsx: [...PRIMITIVE_JSX_NAMES],
+    properties: {
+      r: { type: "object" },
+      container: { type: "string" }
+    },
+    blocklist: ["r"],
+    transform(props) {
+      const { r, container, ...rest } = props;
+      if (!r) return rest;
+      const prefix = container ? `@container ${container} (min-width:` : `@container (min-width:`;
+      return {
+        ...rest,
+        ...Object.fromEntries(
+          Object.entries(r).map(([bp, styles]) => [`${prefix} ${bp}px)`, styles])
+        )
+      };
+    }
+  }
+});
+
 // ../reference-core/.ref/panda-entry.ts
-var defaultFragments = [panda_base_exports, colors_exports, font_exports, styled_exports, patterns_exports2, api_exports, patterns_exports, tokens_exports].map((m) => m?.default !== void 0 ? m.default : null).filter(Boolean);
+var defaultFragments = [panda_base_exports, colors_exports, font_exports, styled_exports, patterns_exports2, api_exports, patterns_exports, tokens_exports, container_exports, font_exports2, props_exports, r_exports].map((m) => m?.default !== void 0 ? m.default : null).filter(Boolean);
 var collected = globalThis[COLLECTOR_KEY] || [];
 var fragments = [...defaultFragments, ...collected];
 var config = fragments.reduce((acc, frag) => deepMerge(acc, frag), {});
