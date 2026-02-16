@@ -335,16 +335,15 @@ __export(spacing_exports, {
 });
 
 // ../reference-core/src/styled/rhythm/index.ts
-var rhythm_exports2 = {};
-__export(rhythm_exports2, {
+var rhythm_exports = {};
+__export(rhythm_exports, {
   getRhythm: () => getRhythm,
   rhythmUtilities: () => rhythmUtilities
 });
 
-// ../reference-core/src/styled/rhythm/rhythm.ts
-var rhythm_exports = {};
-__export(rhythm_exports, {
-  getRhythm: () => getRhythm,
+// ../reference-core/src/styled/rhythm/utilities.ts
+var utilities_exports2 = {};
+__export(utilities_exports2, {
   rhythmUtilities: () => rhythmUtilities
 });
 
@@ -437,7 +436,7 @@ function globalFontface(fontface) {
 }
 __name(globalFontface, "globalFontface");
 
-// ../reference-core/src/styled/rhythm/rhythm.ts
+// ../reference-core/src/styled/rhythm/helpers.ts
 function getRhythm(num, denom) {
   if (denom !== void 0) {
     return num === 1 ? `calc(var(--spacing-r) / ${denom})` : `calc(${num} * var(--spacing-r) / ${denom})`;
@@ -450,12 +449,14 @@ function resolveRhythm(value) {
   if (typeof value === "string" && value.endsWith("r")) {
     const n = Number(value.slice(0, -1));
     if (!Number.isNaN(n)) {
-      return `calc(${n} * var(--spacing-r))`;
+      return getRhythm(n);
     }
   }
   return value;
 }
 __name(resolveRhythm, "resolveRhythm");
+
+// ../reference-core/src/styled/rhythm/utilities.ts
 var rhythmTransform = /* @__PURE__ */ __name((property) => ({
   property,
   values: "spacing",
@@ -1574,7 +1575,7 @@ __export(theme_exports, {
 });
 
 // ../reference-core/.ref/panda-entry.ts
-var defaultFragments = [panda_base_exports, colors_exports2, font_exports, styled_exports, patterns_exports2, globalCss_exports, globalFontface_exports, api_exports, recipe_exports, staticCss_exports, tokens_exports, utilities_exports, fonts_exports, box_exports, patterns_exports, rhythm_exports2, rhythm_exports, colors_exports, theme_exports, radii_exports, spacing_exports].map((m) => m?.default !== void 0 ? m.default : null).filter(Boolean);
+var defaultFragments = [panda_base_exports, colors_exports2, font_exports, styled_exports, patterns_exports2, globalCss_exports, globalFontface_exports, api_exports, recipe_exports, staticCss_exports, tokens_exports, utilities_exports, fonts_exports, box_exports, patterns_exports, rhythm_exports, utilities_exports2, colors_exports, theme_exports, radii_exports, spacing_exports].map((m) => m?.default !== void 0 ? m.default : null).filter(Boolean);
 var collected = globalThis[COLLECTOR_KEY] || [];
 var fragments = [...defaultFragments, ...collected];
 var config = fragments.reduce((acc, frag) => deepMerge(acc, frag), {});

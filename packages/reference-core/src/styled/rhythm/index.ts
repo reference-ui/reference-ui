@@ -1,2 +1,4 @@
 /** Rhythm domain - spacing utilities */
-export { getRhythm, rhythmUtilities } from './rhythm'
+import './utilities'
+export { getRhythm } from './helpers'
+export { rhythmUtilities } from './utilities'
