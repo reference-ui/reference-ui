@@ -2,12 +2,48 @@
  * Font prop: Apply font presets (sans, serif, mono)
  */
 
-import { patterns } from '../api/patterns.js'
-import { PRIMITIVE_JSX_NAMES } from '../../primitives/tags.js'
+import { patterns } from '../api/patterns'
+import { recipe } from '../api/recipe'
+import { PRIMITIVE_JSX_NAMES } from '../../primitives/tags'
 
 // --- Type ---
 
 export type FontProp = 'sans' | 'serif' | 'mono'
+
+export interface FontPropDefinition {
+  font?: FontProp
+}
+
+// --- Recipe ---
+
+/**
+ * Font preset recipe. Applied via font prop; use cx() at runtime.
+ * Full static CSS emission—color, etc. work because recipes are precompiled.
+ */
+recipe({
+  fontStyle: {
+    className: 'r_font',
+    variants: {
+      font: {
+        sans: {
+          fontFamily: 'sans',
+          letterSpacing: '-0.01em',
+          fontWeight: '400',
+        },
+        serif: {
+          fontFamily: 'serif',
+          letterSpacing: 'normal',
+          fontWeight: '373',
+        },
+        mono: {
+          fontFamily: 'mono',
+          letterSpacing: '-0.04em',
+          fontWeight: '393',
+        },
+      },
+    },
+  },
+})
 
 // --- Pattern ---
 

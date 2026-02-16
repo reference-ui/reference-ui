@@ -1,13 +1,13 @@
 import { defineConfig, type Config } from '@pandacss/dev'
 import { extendPandaConfig } from '@reference-ui/core/panda-config'
-import { defaultTheme, defaultStaticCss, defaultGlobalFontface } from './src/styled/index.js'
-import { primitiveCSS } from './src/primitives/recipes.js'
-import { rhythmUtilities } from './src/styled/rhythm.js'
-import { patternsGlobalCss } from './src/styled/patterns.js'
-import { fontStyle } from './src/styled/font.recipe.js'
+import { defaultTheme, defaultStaticCss, defaultGlobalFontface } from './src/styled/index'
+import { primitiveCSS } from './src/primitives/recipes'
+import { rhythmUtilities } from './src/styled/rhythm'
+import { patternsGlobalCss } from './src/styled/patterns'
 
-// Import patterns module for side effects (pattern registration)
-import './src/styled/patterns.js'
+// Import patterns and props modules for side effects (pattern/recipe registration)
+import './src/styled/patterns'
+import './src/styled/props/index'
 
 /** Base config - used by both extendPandaConfig (eval) and generated panda.config (import) */
 const baseConfig = {
@@ -45,7 +45,6 @@ const baseConfig = {
     extend: {
       recipes: {
         ...primitiveCSS,
-        fontStyle,
       },
     },
   },
