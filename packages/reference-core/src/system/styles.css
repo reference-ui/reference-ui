@@ -772,24 +772,6 @@
       font-style: italic;
 }
 }
-
-  .r_font--font_sans {
-    font-family: var(--fonts-sans);
-    letter-spacing: -0.01em;
-    font-weight: 400;
-}
-
-  .r_font--font_serif {
-    font-family: var(--fonts-serif);
-    letter-spacing: normal;
-    font-weight: 373;
-}
-
-  .r_font--font_mono {
-    font-family: var(--fonts-mono);
-    letter-spacing: -0.04em;
-    font-weight: 393;
-}
 }
 
 @layer utilities{
@@ -1128,18 +1110,6 @@
 
   .p_2rem {
     padding: 2rem;
-}
-
-  .font_sans {
-    font: sans;
-}
-
-  .font_mono {
-    font: mono;
-}
-
-  .font_serif {
-    font: serif;
 }
 
   .bd-c_gray\.50 {
@@ -4168,6 +4138,30 @@
     white-space: pre-wrap;
 }
 
+  .ls_-0\.01em {
+    letter-spacing: -0.01em;
+}
+
+  .fw_400 {
+    font-weight: 400;
+}
+
+  .ls_-0\.04em {
+    letter-spacing: -0.04em;
+}
+
+  .fw_393 {
+    font-weight: 393;
+}
+
+  .ls_normal {
+    letter-spacing: normal;
+}
+
+  .fw_373 {
+    font-weight: 373;
+}
+
   .pos_absolute {
     position: absolute;
 }
@@ -4906,5 +4900,86 @@
 
   .hover\:bg_blue\.50:is(:hover, [data-hover]) {
     background: var(--colors-blue-50);
+}
+
+  @container (min-width: 300px) {
+    .\[\@container_\(min-width\:_300px\)\]\:p_4r {
+      padding: var(--spacing-4r);
+}
+    .\[\@container_\(min-width\:_300px\)\]\:bg-c_green\.500 {
+      background-color: var(--colors-green-500);
+}
+}
+
+  @container card (min-width: 300px) {
+    .\[\@container_card_\(min-width\:_300px\)\]\:p_4r {
+      padding: var(--spacing-4r);
+}
+    .\[\@container_card_\(min-width\:_300px\)\]\:bg-c_green\.500 {
+      background-color: var(--colors-green-500);
+}
+}
+
+  @container sidebar (min-width: 300px) {
+    .\[\@container_sidebar_\(min-width\:_300px\)\]\:p_4r {
+      padding: var(--spacing-4r);
+}
+    .\[\@container_sidebar_\(min-width\:_300px\)\]\:bg-c_green\.500 {
+      background-color: var(--colors-green-500);
+}
+}
+
+  @container (min-width: 500px) {
+    .\[\@container_\(min-width\:_500px\)\]\:p_6r {
+      padding: var(--spacing-6r);
+}
+    .\[\@container_\(min-width\:_500px\)\]\:bg-c_blue\.500 {
+      background-color: var(--colors-blue-500);
+}
+}
+
+  @container card (min-width: 500px) {
+    .\[\@container_card_\(min-width\:_500px\)\]\:p_6r {
+      padding: var(--spacing-6r);
+}
+    .\[\@container_card_\(min-width\:_500px\)\]\:bg-c_blue\.500 {
+      background-color: var(--colors-blue-500);
+}
+}
+
+  @container sidebar (min-width: 500px) {
+    .\[\@container_sidebar_\(min-width\:_500px\)\]\:p_6r {
+      padding: var(--spacing-6r);
+}
+    .\[\@container_sidebar_\(min-width\:_500px\)\]\:bg-c_blue\.500 {
+      background-color: var(--colors-blue-500);
+}
+}
+
+  @container (min-width: 700px) {
+    .\[\@container_\(min-width\:_700px\)\]\:p_8r {
+      padding: var(--spacing-8r);
+}
+    .\[\@container_\(min-width\:_700px\)\]\:bg-c_purple\.500 {
+      background-color: var(--colors-purple-500);
+}
+}
+
+  @container card (min-width: 700px) {
+    .\[\@container_card_\(min-width\:_700px\)\]\:p_8r {
+      padding: var(--spacing-8r);
+}
+    .\[\@container_card_\(min-width\:_700px\)\]\:bg-c_purple\.500 {
+      background-color: var(--colors-purple-500);
+}
+}
+
+  @container sidebar (min-width: 700px) {
+    .\[\@container_sidebar_\(min-width\:_700px\)\]\:p_8r {
+      padding: var(--spacing-8r);
+}
+    .\[\@container_sidebar_\(min-width\:_700px\)\]\:bg-c_purple\.500 {
+      background-color: var(--colors-purple-500);
+}
 }
 }

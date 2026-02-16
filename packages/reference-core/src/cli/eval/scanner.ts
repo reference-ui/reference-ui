@@ -43,3 +43,30 @@ export function scanDirectories(dirs: string[]): string[] {
   }
   return result
 }
+
+/**
+ * Scan for files that call pattern() (box pattern extensions).
+ * Matches \bpattern\s*\( to avoid matching patterns()
+ */
+export function scanForBoxExtensions(dirs: string[]): string[] {
+  const seen = new Set<string>()
+  const result: string[] = []
+  const patternCallRe = /\bpattern\s*\(/
+  for (const dir of dirs) {
+    if (!existsSync(dir)) continue
+    const files = fg.sync('**/*.{ts,tsx}', {
+      cwd: dir,
+      absolute: true,
+      ignore: ['**/node_modules/**', '**/*.d.ts'],
+    })
+    for (const file of files) {
+      if (seen.has(file)) continue
+      const content = readFileSync(file, 'utf-8')
+      if (patternCallRe.test(content)) {
+        seen.add(file)
+        result.push(file)
+      }
+    }
+  }
+  return result
+}

@@ -18,6 +18,3 @@ export * from './float.js';
 export * from './bleed.js';
 export * from './visually-hidden.js';
 export * from './cq.js';
-export * from './container-setup.js';
-export * from './font-preset.js';
-export * from './responsive-container.js';

@@ -4,7 +4,7 @@ import type { BoxProperties } from '../patterns/box';
 import type { HTMLStyledProps } from '../types/jsx';
 import type { DistributiveOmit } from '../types/system-types';
 
-export interface BoxProps extends BoxProperties, DistributiveOmit<HTMLStyledProps<'div'>, keyof BoxProperties > {}
+export interface BoxProps extends BoxProperties, DistributiveOmit<HTMLStyledProps<'div'>, keyof BoxProperties | 'container' | 'font' | 'r'> {}
 
 
 export declare const Box: FunctionComponent<BoxProps>
