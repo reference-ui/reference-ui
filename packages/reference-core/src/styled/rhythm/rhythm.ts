@@ -1,5 +1,5 @@
-import type { SystemProperties } from '../system/types/style-props'
-import { utilities } from './api'
+import type { SystemProperties } from '../../system/types/style-props'
+import { utilities } from '../api'
 
 /**
  * Returns a CSS calc value for the given rhythm units.

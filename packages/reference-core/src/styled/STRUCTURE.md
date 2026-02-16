@@ -7,7 +7,6 @@ styled/
 ├── index.ts                 # Mixed: exports + token registration
 ├── colors.ts               # Color tokens
 ├── font.ts                 # Font tokens + font-face + registration
-├── rhythm.ts               # Rhythm utilities + transforms
 ├── patterns.ts             # Pattern global CSS
 ├── patterns.d.ts           # Pattern types
 ├── fontface.md            # Font-face docs
