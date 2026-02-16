@@ -76,6 +76,7 @@ export interface UtilityValues {
 	color: Tokens["colors"];
 	fontFamily: Tokens["fonts"] | "Inter" | "Literata" | "\"JetBrains Mono\"";
 	fontSize: Tokens["spacing"] | CssProperties["fontSize"];
+	fontWeight: Tokens["fontWeights"];
 	fontSmoothing: "antialiased" | "subpixel-antialiased";
 	letterSpacing: Tokens["spacing"] | CssProperties["letterSpacing"];
 	lineHeight: Tokens["spacing"] | CssProperties["lineHeight"];

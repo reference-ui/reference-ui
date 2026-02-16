@@ -900,16 +900,84 @@ const tokens = {
     "variable": "var(--radii-full)"
   },
   "fonts.sans": {
-    "value": "\"Inter\", ui-serif, serif",
+    "value": "\"Inter\", ui-sans-serif, sans-serif",
     "variable": "var(--fonts-sans)"
   },
   "fonts.serif": {
-    "value": "\"Literata\", ui-sans-serif, sans-serif",
+    "value": "\"Literata\", ui-serif, serif",
     "variable": "var(--fonts-serif)"
   },
   "fonts.mono": {
     "value": "\"JetBrains Mono\", ui-monospace, monospace",
     "variable": "var(--fonts-mono)"
+  },
+  "fontWeights.sans.thin": {
+    "value": "200",
+    "variable": "var(--font-weights-sans\\.thin)"
+  },
+  "fontWeights.sans.light": {
+    "value": "300",
+    "variable": "var(--font-weights-sans\\.light)"
+  },
+  "fontWeights.sans.normal": {
+    "value": "400",
+    "variable": "var(--font-weights-sans\\.normal)"
+  },
+  "fontWeights.sans.semibold": {
+    "value": "600",
+    "variable": "var(--font-weights-sans\\.semibold)"
+  },
+  "fontWeights.sans.bold": {
+    "value": "700",
+    "variable": "var(--font-weights-sans\\.bold)"
+  },
+  "fontWeights.sans.black": {
+    "value": "900",
+    "variable": "var(--font-weights-sans\\.black)"
+  },
+  "fontWeights.serif.thin": {
+    "value": "100",
+    "variable": "var(--font-weights-serif\\.thin)"
+  },
+  "fontWeights.serif.light": {
+    "value": "300",
+    "variable": "var(--font-weights-serif\\.light)"
+  },
+  "fontWeights.serif.normal": {
+    "value": "373",
+    "variable": "var(--font-weights-serif\\.normal)"
+  },
+  "fontWeights.serif.semibold": {
+    "value": "600",
+    "variable": "var(--font-weights-serif\\.semibold)"
+  },
+  "fontWeights.serif.bold": {
+    "value": "700",
+    "variable": "var(--font-weights-serif\\.bold)"
+  },
+  "fontWeights.serif.black": {
+    "value": "900",
+    "variable": "var(--font-weights-serif\\.black)"
+  },
+  "fontWeights.mono.thin": {
+    "value": "100",
+    "variable": "var(--font-weights-mono\\.thin)"
+  },
+  "fontWeights.mono.light": {
+    "value": "300",
+    "variable": "var(--font-weights-mono\\.light)"
+  },
+  "fontWeights.mono.normal": {
+    "value": "393",
+    "variable": "var(--font-weights-mono\\.normal)"
+  },
+  "fontWeights.mono.semibold": {
+    "value": "600",
+    "variable": "var(--font-weights-mono\\.semibold)"
+  },
+  "fontWeights.mono.bold": {
+    "value": "700",
+    "variable": "var(--font-weights-mono\\.bold)"
   },
   "spacing.-px": {
     "value": "calc(var(--spacing-px) * -1)",

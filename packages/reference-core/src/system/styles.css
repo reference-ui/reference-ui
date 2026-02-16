@@ -177,21 +177,6 @@
 @layer base{
   :root {
     --made-with-panda: '🐼';
-}
-
-  [data-density="compact"] {
-    --r-density: 0.75;
-}
-
-  [data-density="comfortable"] {
-    --r-density: 1;
-}
-
-  [data-density="spacious"] {
-    --r-density: 1.25;
-}
-
-  :root {
     --r-base: 16px;
     --r-density: 1;
     --spacing-r: calc(var(--r-base) * var(--r-density));
@@ -244,11 +229,11 @@
 
     src: url(https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7W0Q5nw.woff2) format("woff2");
 
+    font-display: swap;
+
     font-weight: 100 900;
 
     font-style: normal;
-
-    font-display: swap;
 
 }
 
@@ -257,11 +242,11 @@
 
     src: url(https://fonts.gstatic.com/s/literata/v40/or38Q6P12-iJxAIgLa78DkrbXsDgk0oVDaDlbJ5W7i5aOg.woff2) format("woff2");
 
+    font-display: swap;
+
     font-weight: 200 900;
 
     font-style: normal;
-
-    font-display: swap;
 
     size-adjust: 104%;
 
@@ -274,11 +259,11 @@
 
     src: url(https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbV2o-flEEny0FZhsfKu5WU4xD7OwGtT0rU.woff2) format("woff2");
 
+    font-display: swap;
+
     font-weight: 100 800;
 
     font-style: normal;
-
-    font-display: swap;
 
     size-adjust: 101%;
 
@@ -512,15 +497,31 @@
     --radii-2xl: 1rem;
     --radii-3xl: 1.5rem;
     --radii-full: 9999px;
-    --fonts-sans: "Inter", ui-serif, serif;
-    --fonts-serif: "Literata", ui-sans-serif, sans-serif;
+    --fonts-sans: "Inter", ui-sans-serif, sans-serif;
+    --fonts-serif: "Literata", ui-serif, serif;
     --fonts-mono: "JetBrains Mono", ui-monospace, monospace;
+    --font-weights-sans\.thin: 200;
+    --font-weights-sans\.light: 300;
+    --font-weights-sans\.normal: 400;
+    --font-weights-sans\.semibold: 600;
+    --font-weights-sans\.bold: 700;
+    --font-weights-sans\.black: 900;
+    --font-weights-serif\.thin: 100;
+    --font-weights-serif\.light: 300;
+    --font-weights-serif\.normal: 373;
+    --font-weights-serif\.semibold: 600;
+    --font-weights-serif\.bold: 700;
+    --font-weights-serif\.black: 900;
+    --font-weights-mono\.thin: 100;
+    --font-weights-mono\.light: 300;
+    --font-weights-mono\.normal: 393;
+    --font-weights-mono\.semibold: 600;
+    --font-weights-mono\.bold: 700;
 }
 }
 
 @layer recipes{
   @layer _base{
-
     .r_abbr {
       text-decoration: underline dotted;
       text-underline-offset: 0.15em;
@@ -775,6 +776,24 @@
       color: var(--colors-blue-600);
       font-style: italic;
 }
+}
+
+  .r_font--font_sans {
+    font-family: var(--fonts-sans);
+    letter-spacing: -0.01em;
+    font-weight: normal;
+}
+
+  .r_font--font_serif {
+    font-family: var(--fonts-serif);
+    letter-spacing: normal;
+    font-weight: normal;
+}
+
+  .r_font--font_mono {
+    font-family: var(--fonts-mono);
+    letter-spacing: -0.04em;
+    font-weight: normal;
 }
 }
 
@@ -3990,6 +4009,74 @@
     font-size: calc(var(--spacing-12r) * -1);
 }
 
+  .fw_sans\.thin {
+    font-weight: var(--font-weights-sans\.thin);
+}
+
+  .fw_sans\.light {
+    font-weight: var(--font-weights-sans\.light);
+}
+
+  .fw_sans\.normal {
+    font-weight: var(--font-weights-sans\.normal);
+}
+
+  .fw_sans\.semibold {
+    font-weight: var(--font-weights-sans\.semibold);
+}
+
+  .fw_sans\.bold {
+    font-weight: var(--font-weights-sans\.bold);
+}
+
+  .fw_sans\.black {
+    font-weight: var(--font-weights-sans\.black);
+}
+
+  .fw_serif\.thin {
+    font-weight: var(--font-weights-serif\.thin);
+}
+
+  .fw_serif\.light {
+    font-weight: var(--font-weights-serif\.light);
+}
+
+  .fw_serif\.normal {
+    font-weight: var(--font-weights-serif\.normal);
+}
+
+  .fw_serif\.semibold {
+    font-weight: var(--font-weights-serif\.semibold);
+}
+
+  .fw_serif\.bold {
+    font-weight: var(--font-weights-serif\.bold);
+}
+
+  .fw_serif\.black {
+    font-weight: var(--font-weights-serif\.black);
+}
+
+  .fw_mono\.thin {
+    font-weight: var(--font-weights-mono\.thin);
+}
+
+  .fw_mono\.light {
+    font-weight: var(--font-weights-mono\.light);
+}
+
+  .fw_mono\.normal {
+    font-weight: var(--font-weights-mono\.normal);
+}
+
+  .fw_mono\.semibold {
+    font-weight: var(--font-weights-mono\.semibold);
+}
+
+  .fw_mono\.bold {
+    font-weight: var(--font-weights-mono\.bold);
+}
+
   .ff_sans {
     font-family: var(--fonts-sans);
 }
@@ -4142,28 +4229,20 @@
     white-space: pre-wrap;
 }
 
-  .ls_-0\.01em {
-    letter-spacing: -0.01em;
+  .fw_normal {
+    font-weight: normal;
 }
 
-  .fw_400 {
-    font-weight: 400;
+  .ls_-0\.01em {
+    letter-spacing: -0.01em;
 }
 
   .ls_-0\.04em {
     letter-spacing: -0.04em;
 }
 
-  .fw_393 {
-    font-weight: 393;
-}
-
   .ls_normal {
     letter-spacing: normal;
-}
-
-  .fw_373 {
-    font-weight: 373;
 }
 
   .pos_absolute {

@@ -350,6 +350,7 @@ __export(utilities_exports2, {
 // ../reference-core/src/styled/api/index.ts
 var api_exports = {};
 __export(api_exports, {
+  font: () => font,
   globalCss: () => globalCss,
   globalFontface: () => globalFontface,
   recipe: () => recipe,
@@ -435,6 +436,30 @@ function globalFontface(fontface) {
   });
 }
 __name(globalFontface, "globalFontface");
+
+// ../reference-core/src/styled/api/font.ts
+var font_exports = {};
+__export(font_exports, {
+  font: () => font
+});
+
+// ../reference-core/src/cli/panda/fontFace/extendFontFace.ts
+var FONT_COLLECTOR_KEY = "__fontCollector";
+if (!globalThis[FONT_COLLECTOR_KEY]) {
+  ;
+  globalThis[FONT_COLLECTOR_KEY] = [];
+}
+function extendFontCollector(def) {
+  const collector = globalThis[FONT_COLLECTOR_KEY];
+  collector.push(def);
+}
+__name(extendFontCollector, "extendFontCollector");
+
+// ../reference-core/src/styled/api/font.ts
+function font(name, options) {
+  extendFontCollector({ name, ...options });
+}
+__name(font, "font");
 
 // ../reference-core/src/styled/rhythm/helpers.ts
 function getRhythm(num, denom) {
@@ -581,45 +606,132 @@ tokens({
   radii
 });
 
-// ../reference-core/src/styled/font/fonts.ts
-var fonts_exports = {};
+// ../reference-core/src/cli/panda/boxPattern/extendBoxPattern.ts
+var BOX_PATTERN_COLLECTOR_KEY = "__boxPatternCollector";
+if (!globalThis[BOX_PATTERN_COLLECTOR_KEY]) {
+  ;
+  globalThis[BOX_PATTERN_COLLECTOR_KEY] = [];
+}
+function extendBoxPattern(extension) {
+  const collector = globalThis[BOX_PATTERN_COLLECTOR_KEY];
+  collector.push(extension);
+}
+__name(extendBoxPattern, "extendBoxPattern");
+
+// ../reference-core/src/styled/font/font.ts
 tokens({
   fonts: {
-    sans: { value: '"Inter", ui-serif, serif' },
-    serif: { value: '"Literata", ui-sans-serif, sans-serif' },
+    sans: { value: '"Inter", ui-sans-serif, sans-serif' },
+    serif: { value: '"Literata", ui-serif, serif' },
     mono: { value: '"JetBrains Mono", ui-monospace, monospace' }
+  },
+  fontWeights: {
+    "sans.thin": { value: "200" },
+    "sans.light": { value: "300" },
+    "sans.normal": { value: "400" },
+    "sans.semibold": { value: "600" },
+    "sans.bold": { value: "700" },
+    "sans.black": { value: "900" },
+    "serif.thin": { value: "100" },
+    "serif.light": { value: "300" },
+    "serif.normal": { value: "373" },
+    "serif.semibold": { value: "600" },
+    "serif.bold": { value: "700" },
+    "serif.black": { value: "900" },
+    "mono.thin": { value: "100" },
+    "mono.light": { value: "300" },
+    "mono.normal": { value: "393" },
+    "mono.semibold": { value: "600" },
+    "mono.bold": { value: "700" }
   }
 });
 globalFontface({
   Inter: {
     src: 'url(https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7W0Q5nw.woff2) format("woff2")',
+    fontDisplay: "swap",
     fontWeight: "100 900",
-    fontStyle: "normal",
-    fontDisplay: "swap"
+    fontStyle: "normal"
   },
   Literata: {
     src: 'url(https://fonts.gstatic.com/s/literata/v40/or38Q6P12-iJxAIgLa78DkrbXsDgk0oVDaDlbJ5W7i5aOg.woff2) format("woff2")',
+    fontDisplay: "swap",
     fontWeight: "200 900",
     fontStyle: "normal",
-    fontDisplay: "swap",
     sizeAdjust: "104%",
     descentOverride: "47%"
   },
   '"JetBrains Mono"': {
     src: 'url(https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbV2o-flEEny0FZhsfKu5WU4xD7OwGtT0rU.woff2) format("woff2")',
+    fontDisplay: "swap",
     fontWeight: "100 800",
     fontStyle: "normal",
-    fontDisplay: "swap",
     sizeAdjust: "101%"
   }
 });
-
-// ../reference-core/src/styled/props/patterns.ts
-var patterns_exports = {};
-globalCss({
-  '[data-density="compact"]': { "--r-density": "0.75" },
-  '[data-density="comfortable"]': { "--r-density": "1" },
-  '[data-density="spacious"]': { "--r-density": "1.25" }
+recipe({
+  fontStyle: {
+    className: "r_font",
+    variants: {
+      font: {
+        sans: {
+          fontFamily: "sans",
+          letterSpacing: "-0.01em",
+          fontWeight: "normal"
+        },
+        serif: {
+          fontFamily: "serif",
+          letterSpacing: "normal",
+          fontWeight: "normal"
+        },
+        mono: {
+          fontFamily: "mono",
+          letterSpacing: "-0.04em",
+          fontWeight: "normal"
+        }
+      }
+    }
+  }
+});
+extendBoxPattern({
+  properties: {
+    font: { type: "string" },
+    weight: { type: "string" }
+  },
+  transform(props) {
+    const { font: font2, weight } = props;
+    const FONT_PRESETS = {
+      sans: { fontFamily: "sans", fontWeight: "normal", letterSpacing: "-0.01em" },
+      serif: { fontFamily: "serif", fontWeight: "normal", letterSpacing: "normal" },
+      mono: { fontFamily: "mono", fontWeight: "normal", letterSpacing: "-0.04em" }
+    };
+    const WEIGHT_TOKENS = {
+      "sans.thin": "200",
+      "sans.light": "300",
+      "sans.normal": "400",
+      "sans.semibold": "600",
+      "sans.bold": "700",
+      "sans.black": "900",
+      "serif.thin": "100",
+      "serif.light": "300",
+      "serif.normal": "373",
+      "serif.semibold": "600",
+      "serif.bold": "700",
+      "serif.black": "900",
+      "mono.thin": "100",
+      "mono.light": "300",
+      "mono.normal": "393",
+      "mono.semibold": "600",
+      "mono.bold": "700"
+    };
+    const result = {};
+    if (font2 && FONT_PRESETS[font2]) {
+      Object.assign(result, FONT_PRESETS[font2]);
+    }
+    if (weight && WEIGHT_TOKENS[weight]) {
+      result.fontWeight = WEIGHT_TOKENS[weight];
+    }
+    return result;
+  }
 });
 
 // ../reference-core/src/primitives/css/h1.style.ts
@@ -1211,34 +1323,60 @@ extendPandaConfig({
   patterns: { extend: { box: {
     jsx: [...PRIMITIVE_JSX_NAMES],
     properties: {
-      container: { "type": "string" },
       font: { "type": "string" },
+      weight: { "type": "string" },
+      container: { "type": "string" },
       r: { "type": "object" }
     },
-    blocklist: ["container", "font", "r"],
+    blocklist: ["font", "weight", "container", "r"],
     transform(props) {
-      const blocklist = ["container", "font", "r"];
+      const blocklist = ["font", "weight", "container", "r"];
       const extensionKeys = new Set(blocklist);
       const rest = Object.fromEntries(
         Object.entries(props).filter(([k]) => !extensionKeys.has(k))
       );
       const _r0 = (function(props2) {
+        const { font: font2, weight } = props2;
+        const FONT_PRESETS = {
+          sans: { fontFamily: "sans", fontWeight: "normal", letterSpacing: "-0.01em" },
+          serif: { fontFamily: "serif", fontWeight: "normal", letterSpacing: "normal" },
+          mono: { fontFamily: "mono", fontWeight: "normal", letterSpacing: "-0.04em" }
+        };
+        const WEIGHT_TOKENS = {
+          "sans.thin": "200",
+          "sans.light": "300",
+          "sans.normal": "400",
+          "sans.semibold": "600",
+          "sans.bold": "700",
+          "sans.black": "900",
+          "serif.thin": "100",
+          "serif.light": "300",
+          "serif.normal": "373",
+          "serif.semibold": "600",
+          "serif.bold": "700",
+          "serif.black": "900",
+          "mono.thin": "100",
+          "mono.light": "300",
+          "mono.normal": "393",
+          "mono.semibold": "600",
+          "mono.bold": "700"
+        };
+        const result = {};
+        if (font2 && FONT_PRESETS[font2]) {
+          Object.assign(result, FONT_PRESETS[font2]);
+        }
+        if (weight && WEIGHT_TOKENS[weight]) {
+          result.fontWeight = WEIGHT_TOKENS[weight];
+        }
+        return result;
+      })(props);
+      const _r1 = (function(props2) {
         const { container } = props2;
         if (container === void 0) return {};
         return {
           containerType: "inline-size",
           ...typeof container === "string" && container && { containerName: container }
         };
-      })(props);
-      const _r1 = (function(props2) {
-        const { font } = props2;
-        if (!font) return {};
-        const FONT_PRESETS = {
-          sans: { fontFamily: "sans", letterSpacing: "-0.01em", fontWeight: "400" },
-          serif: { fontFamily: "serif", letterSpacing: "normal", fontWeight: "373" },
-          mono: { fontFamily: "mono", letterSpacing: "-0.04em", fontWeight: "393" }
-        };
-        return FONT_PRESETS[font] || {};
       })(props);
       const _r2 = (function(props2) {
         const { r, container } = props2;
@@ -1262,7 +1400,7 @@ __export(theme_exports, {
 });
 
 // ../reference-core/.ref/panda-entry.ts
-var defaultFragments = [panda_base_exports, css_global_exports, css_static_exports, styled_exports, globalCss_exports, globalFontface_exports, api_exports, recipe_exports, staticCss_exports, tokens_exports, utilities_exports, fonts_exports, box_exports, patterns_exports, rhythm_exports, utilities_exports2, colors_exports, theme_exports, radii_exports, spacing_exports].map((m) => m?.default !== void 0 ? m.default : null).filter(Boolean);
+var defaultFragments = [panda_base_exports, css_global_exports, css_static_exports, styled_exports, font_exports, globalCss_exports, globalFontface_exports, api_exports, recipe_exports, staticCss_exports, tokens_exports, utilities_exports, box_exports, rhythm_exports, utilities_exports2, colors_exports, theme_exports, radii_exports, spacing_exports].map((m) => m?.default !== void 0 ? m.default : null).filter(Boolean);
 var collected = globalThis[COLLECTOR_KEY] || [];
 var fragments = [...defaultFragments, ...collected];
 var config = fragments.reduce((acc, frag) => deepMerge(acc, frag), {});
