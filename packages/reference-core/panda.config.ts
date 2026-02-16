@@ -54,7 +54,7 @@ __export(panda_base_exports, {
 });
 import { defineConfig } from "@pandacss/dev";
 
-// ../reference-core/src/cli/lib/bundleWithEsbuild.ts
+// ../reference-core/src/cli/lib/microBundle.ts
 import * as esbuild from "esbuild";
 
 // ../reference-core/src/cli/eval/scanner.ts
