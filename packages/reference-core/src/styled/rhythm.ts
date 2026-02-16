@@ -1,4 +1,5 @@
 import type { SystemProperties } from '../system/types/style-props'
+import { utilities } from './api'
 
 /**
  * Returns a CSS calc value for the given rhythm units.
@@ -129,3 +130,5 @@ export const rhythmUtilities = {
   outlineOffset: rhythmTransform('outlineOffset'),
   borderSpacing: rhythmTransform('borderSpacing'),
 } satisfies { [K in keyof SystemProperties]?: UtilityTransform<K> }
+
+utilities(rhythmUtilities)

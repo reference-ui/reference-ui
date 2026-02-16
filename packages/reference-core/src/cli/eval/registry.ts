@@ -3,7 +3,16 @@
  * Eval does not know what these functions do; it only finds files that call them
  * and runs those files to collect the results.
  */
-export const REGISTERED_FUNCTIONS = ['extendPandaConfig', 'tokens'] as const
+export const REGISTERED_FUNCTIONS = [
+  'extendPandaConfig',
+  'tokens',
+  'recipe',
+  'slotRecipe',
+  'utilities',
+  'globalCss',
+  'staticCss',
+  'globalFontface',
+] as const
 
 export type RegisteredFunction = (typeof REGISTERED_FUNCTIONS)[number]
 
