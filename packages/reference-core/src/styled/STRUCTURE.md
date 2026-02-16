@@ -1,53 +1,4 @@
-# Styled Directory Structure
 
-## Current State
-
-```
-styled/
-├── index.ts                 # Mixed: exports + token registration
-├── colors.ts               # Color tokens
-├── font.ts                 # Font tokens + font-face + registration
-├── patterns.ts             # Pattern global CSS
-├── patterns.d.ts           # Pattern types
-├── fontface.md            # Font-face docs
-├── TODO.md
-│
-├── api/                    # Panda CSS APIs
-│   ├── index.ts
-│   ├── tokens.ts
-│   ├── recipe.ts
-│   ├── utilities.ts
-│   ├── pattern.ts
-│   ├── globalCss.ts
-│   ├── staticCss.ts
-│   ├── globalFontface.ts
-│   └── patterns.md
-│
-└── props/                  # Pattern Extensions domain
-    ├── index.ts
-    ├── box.ts
-    ├── container.ts
-    ├── font.ts
-    ├── r.ts
-    ├── patterns.ts         # Pattern global CSS
-    ├── patterns.d.ts       # Pattern types
-    └── patterns.md         # Pattern docs
-```
-
-## Current Issues
-
-The current organization mixes several concerns:
-
-1. **Token definitions** (colors, fonts, spacing) are scattered
-2. **Configuration APIs** (tokens(), recipe(), utilities()) are in `api/`
-3. **Runtime utilities** (getRhythm, resolveRhythm) mixed with config
-4. **Pattern extensions** (props/) separate from pattern globals
-5. **Global CSS/font-face** definitions in multiple places
-6. **Root-level files** handling different concerns (index.ts does too much)
-
-## Proposed Structure Options
-
-### Option A: By Domain (Recommended)
 
 ```
 styled/
@@ -94,7 +45,7 @@ styled/
     ├── container.ts        # Container query extension
     ├── font.ts             # Font shorthand extension
     ├── r.ts                # Responsive prop extension
-    ├── patterns.ts         # Pattern global CSS (rhythm vars, density)
+    ├── patterns.ts         # Pattern global CSS (density variants)
     ├── patterns.d.ts       # Pattern type definitions
     └── patterns.md         # Pattern documentation
 ```

@@ -3,7 +3,6 @@ import { extendPandaConfig } from '@reference-ui/core/panda-config'
 
 // Side effects: register theme, utilities, globalCss, etc. via styled/api
 import './src/styled/index'
-import './src/styled/patterns'
 import './src/styled/props/index'
 
 /** Structural base config. Theme, utilities, globalCss, etc. are extended via styled/api. */
