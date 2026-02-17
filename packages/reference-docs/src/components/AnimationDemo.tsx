@@ -9,23 +9,21 @@ export function AnimationDemo() {
 
   return (
     <Div
-      p="5"
+      p="5r"
       display="flex"
       flexDirection="column"
       alignItems="center"
-      gap="3"
+      gap="3r"
     >
       <Div
         key={key}
-        w="100px"
-        h="100px"
-        bg="blue.500"
+        w="10r"
+        h="10r"
+        bg="gray.500"
         borderRadius="md"
         animation="spin.slow"
       />
-      <Button onClick={() => setKey((k) => k + 1)} size="sm" visual="ghost">
-        Reset
-      </Button>
+      <Button onClick={() => setKey((k) => k + 1)}>Reset</Button>
     </Div>
   );
 }

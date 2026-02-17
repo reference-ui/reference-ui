@@ -1449,7 +1449,8 @@ globalCss({
   body: {
     fontFamily: "sans",
     letterSpacing: "-0.01em",
-    fontSize: "body"
+    fontSize: "body",
+    containerType: "inline-size"
   }
 });
 
