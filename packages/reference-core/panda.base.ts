@@ -11,10 +11,7 @@ const baseConfig = {
   jsxFramework: 'react' as const,
   preflight: true,
 
-  include: [
-    'src/**/*.{ts,tsx}',
-    'codegen/**/*.{ts,tsx,jsx}',
-  ],
+  include: ['src/**/*.{ts,tsx}'],
 
   exclude: [
     '**/node_modules/**',

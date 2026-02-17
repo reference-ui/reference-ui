@@ -52,16 +52,15 @@ export async function copyToCodegen(consumerCwd: string, coreDir: string, includ
     const relativePath = relative(consumerCwd, file)
     const destPath = resolve(codegenDir, relativePath)
     
-    // Create parent directories
-    mkdirSync(dirname(destPath), { recursive: true })
-    
     // Convert MDX to JSX, otherwise copy as-is
     if (file.endsWith('.mdx')) {
       const mdxContent = readFileSync(file, 'utf-8')
       const jsxContent = await mdxToJSX(mdxContent, relativePath)
       const jsxDestPath = destPath.replace(/\.mdx$/, '.jsx')
+      mkdirSync(dirname(jsxDestPath), { recursive: true })
       writeFileSync(jsxDestPath, jsxContent, 'utf-8')
     } else {
+      mkdirSync(dirname(destPath), { recursive: true })
       copyFileSync(file, destPath)
     }
     copiedCount++
@@ -141,15 +140,14 @@ export function watchAndCopyToCodegen(
       const relativePath = relative(consumerCwd, file)
       const destPath = resolve(codegenDir, relativePath)
 
-      mkdirSync(dirname(destPath), { recursive: true })
-      
-      // Convert MDX to JSX, otherwise copy as-is
       if (file.endsWith('.mdx')) {
         const mdxContent = readFileSync(file, 'utf-8')
         const jsxContent = await mdxToJSX(mdxContent, relativePath)
         const jsxDestPath = destPath.replace(/\.mdx$/, '.jsx')
+        mkdirSync(dirname(jsxDestPath), { recursive: true })
         writeFileSync(jsxDestPath, jsxContent, 'utf-8')
       } else {
+        mkdirSync(dirname(destPath), { recursive: true })
         copyFileSync(file, destPath)
       }
 
@@ -163,17 +161,14 @@ export function watchAndCopyToCodegen(
       const relativePath = relative(consumerCwd, file)
       const destPath = resolve(codegenDir, relativePath)
 
-      mkdirSync(dirname(destPath), { recursive: true })
-      
-      // Convert MDX to JSX, otherwise copy as-is
       if (file.endsWith('.mdx')) {
         const mdxContent = readFileSync(file, 'utf-8')
         const jsxContent = await mdxToJSX(mdxContent, relativePath)
         const jsxDestPath = destPath.replace(/\.mdx$/, '.jsx')
-        
-        // Write JSX file - writeFileSync ensures data is flushed to disk
+        mkdirSync(dirname(jsxDestPath), { recursive: true })
         writeFileSync(jsxDestPath, jsxContent, 'utf-8')
       } else {
+        mkdirSync(dirname(destPath), { recursive: true })
         copyFileSync(file, destPath)
       }
 
