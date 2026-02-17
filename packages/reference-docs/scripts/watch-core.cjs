@@ -27,13 +27,14 @@ function runSync() {
   })
 }
 
-console.log(`👀 Watching ${coreDir} for changes (excluding system/)...`)
+console.log(`👀 Watching ${coreDir} for changes (excluding system/, primitives/)...`)
 
 watch(coreDir, { recursive: true }, (event, filename) => {
   if (!filename || filename.endsWith('.css')) return
-  // Exclude src/system to avoid infinite loop (ref sync updates it)
+  // Exclude paths that ref sync writes to (avoid loop: sync → these change → sync again)
   if (filename.startsWith('system') || filename.startsWith('system/')) return
-  
+  if (filename.startsWith('primitives')) return
+
   clearTimeout(debounceTimer)
   debounceTimer = setTimeout(runSync, 300)
 })

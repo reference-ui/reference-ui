@@ -895,7 +895,7 @@ keyframes({
     from: { transform: "rotate(0deg)" },
     to: { transform: "rotate(180deg)" }
   },
-  wiggle: {
+  wigglewiggle: {
     "0%, 100%": { transform: "rotate(-3deg)" },
     "50%": { transform: "rotate(3deg)" }
   }
@@ -1438,10 +1438,7 @@ var baseConfig = {
   presets: [],
   jsxFramework: "react",
   preflight: true,
-  include: [
-    "src/**/*.{ts,tsx}",
-    "codegen/**/*.{ts,tsx,jsx}"
-  ],
+  include: ["src/**/*.{ts,tsx}", "codegen/**/*.{ts,tsx,jsx}"],
   exclude: [
     "**/node_modules/**",
     "**/*.test.*",

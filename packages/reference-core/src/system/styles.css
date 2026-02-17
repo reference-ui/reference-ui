@@ -763,7 +763,7 @@
 }
 }
 
-  @keyframes wiggle {
+  @keyframes wigglewiggle {
     0%,100% {
       transform: rotate(-3deg);
 }
@@ -886,6 +886,7 @@
 
 @layer recipes{
   @layer _base{
+
     .r_abbr {
       text-decoration: underline dotted;
       text-underline-offset: 0.15em;
@@ -1491,8 +1492,8 @@
     padding: 5px;
 }
 
-  .anim_spin_2s_linear_infinite {
-    animation: spin 2s linear infinite;
+  .anim_wigglewiggle_0\.2s_linear_infinite {
+    animation: wigglewiggle 0.2s linear infinite;
 }
 
   .m_0_0_1rem {
@@ -1501,6 +1502,26 @@
 
   .p_2rem {
     padding: 2rem;
+}
+
+  .bg_green\.500 {
+    background: var(--colors-green-500);
+}
+
+  .anim_spin_0\.2s_linear_infinite {
+    animation: spin 0.2s linear infinite;
+}
+
+  .anim_spin_\`2s_linear_infinite {
+    animation: spin `2s linear infinite;
+}
+
+  .anim_spin_2s_linear_infinite {
+    animation: spin 2s linear infinite;
+}
+
+  .anim_spin_4s_linear_infinite {
+    animation: spin 4s linear infinite;
 }
 
   .bd-c_gray\.50 {
@@ -4545,8 +4566,8 @@
     animation-name: rotate180;
 }
 
-  .anim-n_wiggle {
-    animation-name: wiggle;
+  .anim-n_wigglewiggle {
+    animation-name: wigglewiggle;
 }
 
   .anim-n_bounce {

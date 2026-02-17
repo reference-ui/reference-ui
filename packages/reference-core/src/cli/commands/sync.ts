@@ -38,9 +38,9 @@ export async function syncCommand(cwd: string, options: SyncOptions = {}): Promi
   console.log('📦 Copying user files to codegen...')
   await copyToCodegen(cwd, coreDir, userConfig.include)
 
-  // Step 3: Bundle extendPandaConfig calls into panda.config.mjs
+  // Step 3: Bundle panda config with codegen in include (so Panda scans copied files)
   console.log('🔍 Bundling panda config...')
-  await createPandaConfig(coreDir)
+  await createPandaConfig(coreDir, { includeCodegen: true })
 
   // Step 4: Run Panda codegen (scans core + codegen folder)
   console.log('🎨 Running panda codegen...')

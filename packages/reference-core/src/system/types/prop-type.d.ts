@@ -129,7 +129,7 @@ export interface UtilityValues {
 	borderSpacingY: Tokens["spacing"];
 	transitionProperty: "common" | "colors" | "size" | "position" | "background";
 	transition: "all" | "common" | "size" | "position" | "background" | "colors" | "opacity" | "shadow" | "transform";
-	animationName: "fadeIn" | "fadeOut" | "fadeInUp" | "fadeInDown" | "fadeInLeft" | "fadeInRight" | "slideUp" | "slideDown" | "slideLeft" | "slideRight" | "slideUpOut" | "slideDownOut" | "scaleIn" | "scaleOut" | "scaleUp" | "scaleDown" | "pulse" | "heartbeat" | "spin" | "spinReverse" | "rotate90" | "rotate180" | "wiggle" | "bounce" | "bounceIn" | "bounceOut" | "shake" | "ping" | "flash" | "glow" | "shimmer";
+	animationName: "fadeIn" | "fadeOut" | "fadeInUp" | "fadeInDown" | "fadeInLeft" | "fadeInRight" | "slideUp" | "slideDown" | "slideLeft" | "slideRight" | "slideUpOut" | "slideDownOut" | "scaleIn" | "scaleOut" | "scaleUp" | "scaleDown" | "pulse" | "heartbeat" | "spin" | "spinReverse" | "rotate90" | "rotate180" | "wigglewiggle" | "bounce" | "bounceIn" | "bounceOut" | "shake" | "ping" | "flash" | "glow" | "shimmer";
 	rotate: "auto" | "auto-3d" | CssProperties["rotate"];
 	rotateX: CssProperties["rotate"];
 	rotateY: CssProperties["rotate"];

@@ -21,7 +21,7 @@ export function AnimationDemo() {
         h="100px"
         bg="blue.500"
         borderRadius="md"
-        animation="spin 2s linear infinite"
+        animation="spin 4s linear infinite"
       />
       <Button onClick={() => setKey((k) => k + 1)} size="sm" visual="ghost">
         Reset
