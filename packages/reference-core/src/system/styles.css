@@ -908,7 +908,6 @@
 
 @layer recipes{
   @layer _base{
-
     .r_abbr {
       text-decoration: underline dotted;
       text-underline-offset: 0.15em;
@@ -1594,8 +1593,8 @@
     margin: 0;
 }
 
-  .bg_gray\.500 {
-    background: var(--colors-gray-500);
+  .bg_red\.300 {
+    background: var(--colors-red-300);
 }
 
   .m_0_0_1rem {
@@ -1604,10 +1603,6 @@
 
   .p_2rem {
     padding: 2rem;
-}
-
-  .bg_gray\.100 {
-    background: var(--colors-gray-100);
 }
 
   .bd-c_gray\.50 {
