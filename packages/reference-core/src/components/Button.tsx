@@ -10,14 +10,14 @@ const button = cva({
     borderRadius: 'md',
     cursor: 'pointer',
     border: 'none',
-    fontWeight: 'medium',
+    fontWeight: 'semibold',
     transition: 'all',
     _disabled: { opacity: 0.5, cursor: 'not-allowed' },
   },
   variants: {
     visual: {
       solid: {
-        bg: 'blue.500',
+        bg: 'red.500',
         color: 'white',
         _hover: { bg: 'blue.600' },
       },

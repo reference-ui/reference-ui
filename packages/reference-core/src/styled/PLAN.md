@@ -147,6 +147,35 @@ tokens({
 
 ## Planned APIs 📋
 
+### breakpoints()
+
+**Goal:** Register custom viewport breakpoints so responsive utilities and responsive props use consistent, design-system values.
+
+**Panda behavior (from [Panda Theme docs](https://panda-css.com/docs/customization/theme#breakpoints)):**
+- Breakpoints are defined under `theme.extend.breakpoints` in the Panda config.
+- Each entry is a name → min-width string (e.g. `'3xl': '1800px'`).
+- Panda generates `@media screen (min-width: <value>)` for each.
+- **Default breakpoints (Panda ships with):**  
+  `sm` 640px · `md` 768px · `lg` 1024px · `xl` 1280px · `2xl` 1536px
+
+**API shape (same pattern as `keyframes()`):**
+```typescript
+breakpoints({
+  '3xl': '1800px',
+  '4xl': '2100px'
+})
+```
+
+**Implementation:**
+- Add `styled/api/breakpoints.ts`: `breakpoints(config)` → `extendPandaConfig({ theme: { extend: { breakpoints: config } } })`.
+- Type: `Config['theme']['breakpoints']` (or `Record<string, string>` for extend).
+- Export from `api/index.ts`; no microbundle needed (config-only).
+- Optional: `styled/theme/breakpoints.ts` if we want to register system defaults beyond Panda’s (e.g. a shared `3xl`); otherwise apps can call `breakpoints()` when they need custom widths.
+
+**Status:** Not started.
+
+---
+
 ### Runtime CSS Re-export
 
 **Goal:** Re-export Panda's `css()` function with full prop support
@@ -337,27 +366,19 @@ packages/reference-core/src/
 - [ ] Add test cases for prop combinations
 - [ ] Document usage examples
 
-### Phase 3: Documentation & Polish
+### Phase 3: Breakpoints API 📋
+
+- [ ] Create `styled/api/breakpoints.ts` (config wrapper: `extendPandaConfig({ theme: { extend: { breakpoints } } })`)
+- [ ] Type param as `Config['theme']['breakpoints']` or Panda’s extend shape
+- [ ] Export from `api/index.ts`
+- [ ] Optional: add `styled/theme/breakpoints.ts` for system defaults (e.g. `3xl`) if desired
+- [ ] Document in plan/README; note Panda defaults (sm–2xl)
+
+### Phase 4: Documentation & Polish
 
 - [ ] Convert remaining TODOs to issues/tasks
-- [ ] Document microbundle patte✅ keyframes()
-│   │   ├── pattern.ts        # pattern()
-│   │   └── pattern.md        # Pattern closure limitation docs
-│   │
-│   ├── theme/                # Theme domain
-│   │   ├── colors.ts
-│   │   ├── spacing.ts
-│   │   └── radii.ts
-│   │
-│   ├── animations/           # ✅ Animation keyframes
-│   │   ├── index.ts          # Export all animations
-│   │   ├── fade.ts           # Fade animations
-│   │   ├── slide.ts          # Slide animations
-│   │   ├── scale.ts          # Scale animations
-│   │   ├── spin.ts           # Rotation animations
-│   │   ├── bounce.ts         # Bounce/elastic animations
-│   │   ├── attention.ts      # Attention-seeking animations
-│   │   └── README.md         # Animation system docs
+- [ ] Document microbundle pattern
+
 **✅ We've achieved:**
 - 8/8 core Panda config APIs implemented
 - Font system with CLI microbundle working
@@ -395,9 +416,7 @@ Users extend the system through existing APIs (`tokens()`, `recipe()`, `pattern(
 
 ### Potential APIs
 
-- **`breakpoints()`** - Custom viewport breakpoint registration (e.g., mobile-first or custom device widths)
-  - Note: Panda already has good defaults (`sm`, `md`, `lg`, `xl`, `2xl`)
-  - Only add if users need custom viewport sizes
+- **`breakpoints()`** - Planned. Custom viewport breakpoint registration (see [breakpoints()](#breakpoints) in Planned APIs). Panda defaults: `sm` 640px, `md` 768px, `lg` 1024px, `xl` 1280px, `2xl` 1536px.
 
 ### Existing Panda Features (No API Needed)
 
