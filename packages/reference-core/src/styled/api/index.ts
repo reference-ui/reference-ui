@@ -1,4 +1,5 @@
 /** API exports for extending Panda CSS configuration */
+export { css } from './css'
 export { tokens } from './tokens'
 export { recipe, slotRecipe } from './recipe'
 export { utilities } from './utilities'
