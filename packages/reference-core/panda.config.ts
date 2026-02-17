@@ -623,6 +623,58 @@ tokens({
   radii
 });
 
+// ../reference-core/src/styled/theme/animations.ts
+var animations_exports = {};
+tokens({
+  animations: {
+    // Spin animations
+    spin: {
+      slow: { value: "spin 4s linear infinite" },
+      normal: { value: "spin 2s linear infinite" },
+      fast: { value: "spin 1s linear infinite" }
+    },
+    // Fade animations
+    fadeIn: {
+      quick: { value: "fadeIn 0.2s ease-out" },
+      normal: { value: "fadeIn 0.5s ease-out" },
+      slow: { value: "fadeIn 1s ease-out" }
+    },
+    fadeOut: {
+      quick: { value: "fadeOut 0.2s ease-out" },
+      normal: { value: "fadeOut 0.5s ease-out" }
+    },
+    // Slide animations
+    slideUp: {
+      quick: { value: "slideUp 0.3s ease-out" },
+      normal: { value: "slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1)" }
+    },
+    slideDown: {
+      quick: { value: "slideDown 0.3s ease-out" },
+      normal: { value: "slideDown 0.5s cubic-bezier(0.4, 0, 0.2, 1)" }
+    },
+    // Scale animations
+    scaleIn: {
+      quick: { value: "scaleIn 0.2s ease-out" },
+      normal: { value: "scaleIn 0.3s ease-out" }
+    },
+    pulse: {
+      slow: { value: "pulse 2s ease-in-out infinite" },
+      normal: { value: "pulse 1s ease-in-out infinite" },
+      fast: { value: "pulse 0.5s ease-in-out infinite" }
+    },
+    // Bounce animations
+    bounce: {
+      normal: { value: "bounce 1s ease-in-out infinite" },
+      fast: { value: "bounce 0.5s ease-in-out infinite" }
+    },
+    // Attention
+    ping: {
+      normal: { value: "ping 1s cubic-bezier(0, 0, 0.2, 1) infinite" },
+      fast: { value: "ping 0.5s cubic-bezier(0, 0, 0.2, 1) infinite" }
+    }
+  }
+});
+
 // ../reference-core/src/styled/font/font.ts
 var font_exports2 = {};
 
@@ -1653,7 +1705,7 @@ __export(theme_exports, {
 });
 
 // ../reference-core/.ref/panda-entry.ts
-var defaultFragments = [panda_base_exports, css_global_exports, css_static_exports, styled_exports, font_exports, globalCss_exports, globalFontface_exports, api_exports, keyframes_exports, recipe_exports, staticCss_exports, tokens_exports, utilities_exports, font_exports2, box_exports, rhythm_exports, utilities_exports2, colors_exports, theme_exports, radii_exports, spacing_exports].map((m) => m?.default !== void 0 ? m.default : null).filter(Boolean);
+var defaultFragments = [panda_base_exports, css_global_exports, css_static_exports, styled_exports, font_exports, globalCss_exports, globalFontface_exports, api_exports, keyframes_exports, recipe_exports, staticCss_exports, tokens_exports, utilities_exports, font_exports2, box_exports, rhythm_exports, utilities_exports2, animations_exports, colors_exports, theme_exports, radii_exports, spacing_exports].map((m) => m?.default !== void 0 ? m.default : null).filter(Boolean);
 var collected = globalThis[COLLECTOR_KEY] || [];
 var fragments = [...defaultFragments, ...collected];
 var config = fragments.reduce((acc, frag) => deepMerge(acc, frag), {});

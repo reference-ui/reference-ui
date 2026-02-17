@@ -2,6 +2,7 @@
 import './theme/colors'
 import './theme/spacing'
 import './theme/radii'
+import './theme/animations'
 import './rhythm'
 import './font'
 import './animations'

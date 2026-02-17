@@ -334,7 +334,7 @@ all?: ConditionalValue<CssVars | CssProperties["all"] | AnyString>
    *
    * @see https://developer.mozilla.org/docs/Web/CSS/animation
    */
-animation?: ConditionalValue<CssProperties["animation"] | AnyString>
+animation?: ConditionalValue<UtilityValues["animation"] | CssVars | CssProperties["animation"] | AnyString>
  /**
    * The **`animation-composition`** CSS property specifies the composite operation to use when multiple animations affect the same property simultaneously.
    *
