@@ -353,6 +353,7 @@ __export(api_exports, {
   font: () => font,
   globalCss: () => globalCss,
   globalFontface: () => globalFontface,
+  keyframes: () => keyframes,
   recipe: () => recipe,
   slotRecipe: () => slotRecipe,
   staticCss: () => staticCss,
@@ -460,6 +461,22 @@ function font(name, options) {
   extendFontCollector({ name, ...options });
 }
 __name(font, "font");
+
+// ../reference-core/src/styled/api/keyframes.ts
+var keyframes_exports = {};
+__export(keyframes_exports, {
+  keyframes: () => keyframes
+});
+function keyframes(config2) {
+  extendPandaConfig({
+    theme: {
+      extend: {
+        keyframes: config2
+      }
+    }
+  });
+}
+__name(keyframes, "keyframes");
 
 // ../reference-core/src/styled/rhythm/helpers.ts
 function getRhythm(num, denom) {
@@ -606,6 +623,9 @@ tokens({
   radii
 });
 
+// ../reference-core/src/styled/font/font.ts
+var font_exports2 = {};
+
 // ../reference-core/src/cli/panda/boxPattern/extendBoxPattern.ts
 var BOX_PATTERN_COLLECTOR_KEY = "__boxPatternCollector";
 if (!globalThis[BOX_PATTERN_COLLECTOR_KEY]) {
@@ -731,6 +751,240 @@ extendBoxPattern({
       result.fontWeight = WEIGHT_TOKENS[weight];
     }
     return result;
+  }
+});
+
+// ../reference-core/src/styled/animations/fade.ts
+keyframes({
+  fadeIn: {
+    from: { opacity: "0" },
+    to: { opacity: "1" }
+  },
+  fadeOut: {
+    from: { opacity: "1" },
+    to: { opacity: "0" }
+  },
+  fadeInUp: {
+    from: {
+      opacity: "0",
+      transform: "translateY(20px)"
+    },
+    to: {
+      opacity: "1",
+      transform: "translateY(0)"
+    }
+  },
+  fadeInDown: {
+    from: {
+      opacity: "0",
+      transform: "translateY(-20px)"
+    },
+    to: {
+      opacity: "1",
+      transform: "translateY(0)"
+    }
+  },
+  fadeInLeft: {
+    from: {
+      opacity: "0",
+      transform: "translateX(-20px)"
+    },
+    to: {
+      opacity: "1",
+      transform: "translateX(0)"
+    }
+  },
+  fadeInRight: {
+    from: {
+      opacity: "0",
+      transform: "translateX(20px)"
+    },
+    to: {
+      opacity: "1",
+      transform: "translateX(0)"
+    }
+  }
+});
+
+// ../reference-core/src/styled/animations/slide.ts
+keyframes({
+  slideUp: {
+    from: { transform: "translateY(100%)" },
+    to: { transform: "translateY(0)" }
+  },
+  slideDown: {
+    from: { transform: "translateY(-100%)" },
+    to: { transform: "translateY(0)" }
+  },
+  slideLeft: {
+    from: { transform: "translateX(100%)" },
+    to: { transform: "translateX(0)" }
+  },
+  slideRight: {
+    from: { transform: "translateX(-100%)" },
+    to: { transform: "translateX(0)" }
+  },
+  slideUpOut: {
+    from: { transform: "translateY(0)" },
+    to: { transform: "translateY(-100%)" }
+  },
+  slideDownOut: {
+    from: { transform: "translateY(0)" },
+    to: { transform: "translateY(100%)" }
+  }
+});
+
+// ../reference-core/src/styled/animations/scale.ts
+keyframes({
+  scaleIn: {
+    from: {
+      opacity: "0",
+      transform: "scale(0.9)"
+    },
+    to: {
+      opacity: "1",
+      transform: "scale(1)"
+    }
+  },
+  scaleOut: {
+    from: {
+      opacity: "1",
+      transform: "scale(1)"
+    },
+    to: {
+      opacity: "0",
+      transform: "scale(0.9)"
+    }
+  },
+  scaleUp: {
+    from: { transform: "scale(0.95)" },
+    to: { transform: "scale(1)" }
+  },
+  scaleDown: {
+    from: { transform: "scale(1.05)" },
+    to: { transform: "scale(1)" }
+  },
+  pulse: {
+    "0%, 100%": { transform: "scale(1)" },
+    "50%": { transform: "scale(1.05)" }
+  },
+  heartbeat: {
+    "0%, 100%": { transform: "scale(1)" },
+    "14%": { transform: "scale(1.3)" },
+    "28%": { transform: "scale(1)" },
+    "42%": { transform: "scale(1.3)" },
+    "70%": { transform: "scale(1)" }
+  }
+});
+
+// ../reference-core/src/styled/animations/spin.ts
+keyframes({
+  spin: {
+    from: { transform: "rotate(0deg)" },
+    to: { transform: "rotate(360deg)" }
+  },
+  spinReverse: {
+    from: { transform: "rotate(360deg)" },
+    to: { transform: "rotate(0deg)" }
+  },
+  rotate90: {
+    from: { transform: "rotate(0deg)" },
+    to: { transform: "rotate(90deg)" }
+  },
+  rotate180: {
+    from: { transform: "rotate(0deg)" },
+    to: { transform: "rotate(180deg)" }
+  },
+  wiggle: {
+    "0%, 100%": { transform: "rotate(-3deg)" },
+    "50%": { transform: "rotate(3deg)" }
+  }
+});
+
+// ../reference-core/src/styled/animations/bounce.ts
+keyframes({
+  bounce: {
+    "0%, 100%": {
+      transform: "translateY(0)",
+      animationTimingFunction: "cubic-bezier(0.8, 0, 1, 1)"
+    },
+    "50%": {
+      transform: "translateY(-25%)",
+      animationTimingFunction: "cubic-bezier(0, 0, 0.2, 1)"
+    }
+  },
+  bounceIn: {
+    "0%": {
+      opacity: "0",
+      transform: "scale(0.3)"
+    },
+    "50%": {
+      opacity: "1",
+      transform: "scale(1.05)"
+    },
+    "70%": {
+      transform: "scale(0.9)"
+    },
+    "100%": {
+      transform: "scale(1)"
+    }
+  },
+  bounceOut: {
+    "0%": {
+      transform: "scale(1)"
+    },
+    "25%": {
+      transform: "scale(0.95)"
+    },
+    "50%": {
+      opacity: "1",
+      transform: "scale(1.1)"
+    },
+    "100%": {
+      opacity: "0",
+      transform: "scale(0.3)"
+    }
+  },
+  shake: {
+    "0%, 100%": { transform: "translateX(0)" },
+    "10%, 30%, 50%, 70%, 90%": { transform: "translateX(-10px)" },
+    "20%, 40%, 60%, 80%": { transform: "translateX(10px)" }
+  }
+});
+
+// ../reference-core/src/styled/animations/attention.ts
+keyframes({
+  ping: {
+    "0%": {
+      transform: "scale(1)",
+      opacity: "1"
+    },
+    "75%, 100%": {
+      transform: "scale(2)",
+      opacity: "0"
+    }
+  },
+  flash: {
+    "0%, 50%, 100%": { opacity: "1" },
+    "25%, 75%": { opacity: "0" }
+  },
+  glow: {
+    "0%, 100%": {
+      opacity: "1",
+      filter: "brightness(1)"
+    },
+    "50%": {
+      opacity: "1",
+      filter: "brightness(1.5)"
+    }
+  },
+  shimmer: {
+    "0%": {
+      backgroundPosition: "-200% 0"
+    },
+    "100%": {
+      backgroundPosition: "200% 0"
+    }
   }
 });
 
@@ -1168,7 +1422,9 @@ staticCss({
         borderWidth: ["*"],
         fontSize: ["*"],
         fontWeight: ["*"],
-        fontFamily: ["*"]
+        fontFamily: ["*"],
+        animation: ["*"],
+        animationName: ["*"]
       }
     }
   ],
@@ -1400,7 +1656,7 @@ __export(theme_exports, {
 });
 
 // ../reference-core/.ref/panda-entry.ts
-var defaultFragments = [panda_base_exports, css_global_exports, css_static_exports, styled_exports, font_exports, globalCss_exports, globalFontface_exports, api_exports, recipe_exports, staticCss_exports, tokens_exports, utilities_exports, box_exports, rhythm_exports, utilities_exports2, colors_exports, theme_exports, radii_exports, spacing_exports].map((m) => m?.default !== void 0 ? m.default : null).filter(Boolean);
+var defaultFragments = [panda_base_exports, css_global_exports, css_static_exports, styled_exports, font_exports, globalCss_exports, globalFontface_exports, api_exports, keyframes_exports, recipe_exports, staticCss_exports, tokens_exports, utilities_exports, font_exports2, box_exports, rhythm_exports, utilities_exports2, colors_exports, theme_exports, radii_exports, spacing_exports].map((m) => m?.default !== void 0 ? m.default : null).filter(Boolean);
 var collected = globalThis[COLLECTOR_KEY] || [];
 var fragments = [...defaultFragments, ...collected];
 var config = fragments.reduce((acc, frag) => deepMerge(acc, frag), {});
