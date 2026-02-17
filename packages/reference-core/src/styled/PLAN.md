@@ -406,17 +406,49 @@ packages/reference-core/src/
 
 ## Future Considerations
 
+### Why No `layer()` API?
+
+**Decision:** Not exposing cascade layer control to users.
+
+**Rationale:**
+- Users have **natural scoping** when building on reference-ui
+- Their components/tokens are separate modules from reference-ui internals
+- No cascade conflicts—they compose with `<Box>`, recipes, patterns
+- Panda already manages layer order intelligently (utilities > recipes > base)
+- Adding `layer()` would add complexity without clear user benefit
+
+Users extend the system through existing APIs (`tokens()`, `recipe()`, `pattern()`) rather than fighting cascade precedence.
+
 ### Potential APIs
 
-- **`layer()`** - Layer styles (semantic style bundles)
-- **`breakpoints()`** - Custom responsive breakpoint registration
-- **`themes()`** - Multi-theme support (light/dark modes)
-- **`semanticTokens()`** - Tokens that reference other tokens
+- **`breakpoints()`** - Custom viewport breakpoint registration (e.g., mobile-first or custom device widths)
+  - Note: Panda already has good defaults (`sm`, `md`, `lg`, `xl`, `2xl`)
+  - Only add if users need custom viewport sizes
+
+### Existing Panda Features (No API Needed)
+
+- **Semantic tokens** - Already supported in Panda's `tokens()` via token references
+  ```typescript
+  tokens({
+    colors: {
+      primary: { value: '{colors.blue.500}' }  // ✅ Already works
+    }
+  })
+  ```
+- **Themes (light/dark)** - Already supported via Panda's conditions system
+  ```typescript
+  tokens({
+    colors: {
+      bg: {
+        value: { base: 'white', _dark: 'gray.900' }  // ✅ Already works
+      }
+    }
+  })
+  ```
 
 ### Potential Microbundles
 
-- **`responsive/`** - If responsive prop system needs generation
-- **`themes/`** - If theme switching needs complex generation
+- **`responsive/`** - If responsive prop system needs generation beyond current pattern support
 
 ### Performance Optimizations
 
