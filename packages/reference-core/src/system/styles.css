@@ -497,6 +497,27 @@
     --radii-2xl: 1rem;
     --radii-3xl: 1.5rem;
     --radii-full: 9999px;
+    --animations-spin-slow: spin 4s linear infinite;
+    --animations-spin-normal: spin 2s linear infinite;
+    --animations-spin-fast: spin 1s linear infinite;
+    --animations-fade-in-quick: fadeIn 0.2s ease-out;
+    --animations-fade-in-normal: fadeIn 0.5s ease-out;
+    --animations-fade-in-slow: fadeIn 1s ease-out;
+    --animations-fade-out-quick: fadeOut 0.2s ease-out;
+    --animations-fade-out-normal: fadeOut 0.5s ease-out;
+    --animations-slide-up-quick: slideUp 0.3s ease-out;
+    --animations-slide-up-normal: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    --animations-slide-down-quick: slideDown 0.3s ease-out;
+    --animations-slide-down-normal: slideDown 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    --animations-scale-in-quick: scaleIn 0.2s ease-out;
+    --animations-scale-in-normal: scaleIn 0.3s ease-out;
+    --animations-pulse-slow: pulse 2s ease-in-out infinite;
+    --animations-pulse-normal: pulse 1s ease-in-out infinite;
+    --animations-pulse-fast: pulse 0.5s ease-in-out infinite;
+    --animations-bounce-normal: bounce 1s ease-in-out infinite;
+    --animations-bounce-fast: bounce 0.5s ease-in-out infinite;
+    --animations-ping-normal: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+    --animations-ping-fast: ping 0.5s cubic-bezier(0, 0, 0.2, 1) infinite;
     --fonts-sans: "Inter", ui-sans-serif, sans-serif;
     --fonts-serif: "Literata", ui-serif, serif;
     --fonts-mono: "JetBrains Mono", ui-monospace, monospace;
@@ -1452,6 +1473,90 @@
     margin: calc(var(--spacing-12r) * -1);
 }
 
+  .anim_spin\.slow {
+    animation: var(--animations-spin-slow);
+}
+
+  .anim_spin\.normal {
+    animation: var(--animations-spin-normal);
+}
+
+  .anim_spin\.fast {
+    animation: var(--animations-spin-fast);
+}
+
+  .anim_fadeIn\.quick {
+    animation: var(--animations-fade-in-quick);
+}
+
+  .anim_fadeIn\.normal {
+    animation: var(--animations-fade-in-normal);
+}
+
+  .anim_fadeIn\.slow {
+    animation: var(--animations-fade-in-slow);
+}
+
+  .anim_fadeOut\.quick {
+    animation: var(--animations-fade-out-quick);
+}
+
+  .anim_fadeOut\.normal {
+    animation: var(--animations-fade-out-normal);
+}
+
+  .anim_slideUp\.quick {
+    animation: var(--animations-slide-up-quick);
+}
+
+  .anim_slideUp\.normal {
+    animation: var(--animations-slide-up-normal);
+}
+
+  .anim_slideDown\.quick {
+    animation: var(--animations-slide-down-quick);
+}
+
+  .anim_slideDown\.normal {
+    animation: var(--animations-slide-down-normal);
+}
+
+  .anim_scaleIn\.quick {
+    animation: var(--animations-scale-in-quick);
+}
+
+  .anim_scaleIn\.normal {
+    animation: var(--animations-scale-in-normal);
+}
+
+  .anim_pulse\.slow {
+    animation: var(--animations-pulse-slow);
+}
+
+  .anim_pulse\.normal {
+    animation: var(--animations-pulse-normal);
+}
+
+  .anim_pulse\.fast {
+    animation: var(--animations-pulse-fast);
+}
+
+  .anim_bounce\.normal {
+    animation: var(--animations-bounce-normal);
+}
+
+  .anim_bounce\.fast {
+    animation: var(--animations-bounce-fast);
+}
+
+  .anim_ping\.normal {
+    animation: var(--animations-ping-normal);
+}
+
+  .anim_ping\.fast {
+    animation: var(--animations-ping-fast);
+}
+
   .bd_none {
     border: none;
 }
@@ -1492,36 +1597,12 @@
     padding: 5px;
 }
 
-  .anim_wigglewiggle_0\.2s_linear_infinite {
-    animation: wigglewiggle 0.2s linear infinite;
-}
-
   .m_0_0_1rem {
     margin: 0 0 1rem;
 }
 
   .p_2rem {
     padding: 2rem;
-}
-
-  .bg_green\.500 {
-    background: var(--colors-green-500);
-}
-
-  .anim_spin_0\.2s_linear_infinite {
-    animation: spin 0.2s linear infinite;
-}
-
-  .anim_spin_\`2s_linear_infinite {
-    animation: spin `2s linear infinite;
-}
-
-  .anim_spin_2s_linear_infinite {
-    animation: spin 2s linear infinite;
-}
-
-  .anim_spin_4s_linear_infinite {
-    animation: spin 4s linear infinite;
 }
 
   .bd-c_gray\.50 {

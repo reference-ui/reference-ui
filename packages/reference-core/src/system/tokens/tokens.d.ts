@@ -1,5 +1,5 @@
 /* eslint-disable */
-export type Token = `colors.${ColorToken}` | `spacing.${SpacingToken}` | `radii.${RadiusToken}` | `fonts.${FontToken}` | `fontWeights.${FontWeightToken}`
+export type Token = `colors.${ColorToken}` | `spacing.${SpacingToken}` | `radii.${RadiusToken}` | `animations.${AnimationToken}` | `fonts.${FontToken}` | `fontWeights.${FontWeightToken}`
 
 export type ColorPalette = "gray" | "red" | "orange" | "amber" | "yellow" | "lime" | "green" | "emerald" | "teal" | "cyan" | "sky" | "blue" | "indigo" | "violet" | "purple" | "magenta" | "pink" | "rose"
 
@@ -9,6 +9,8 @@ export type SpacingToken = "px" | "r" | "0.5r" | "1/2r" | "1/3r" | "1/4r" | "1/5
 
 export type RadiusToken = "none" | "sm" | "base" | "md" | "lg" | "xl" | "2xl" | "3xl" | "full"
 
+export type AnimationToken = "spin.slow" | "spin.normal" | "spin.fast" | "fadeIn.quick" | "fadeIn.normal" | "fadeIn.slow" | "fadeOut.quick" | "fadeOut.normal" | "slideUp.quick" | "slideUp.normal" | "slideDown.quick" | "slideDown.normal" | "scaleIn.quick" | "scaleIn.normal" | "pulse.slow" | "pulse.normal" | "pulse.fast" | "bounce.normal" | "bounce.fast" | "ping.normal" | "ping.fast"
+
 export type FontToken = "sans" | "serif" | "mono"
 
 export type FontWeightToken = "sans.thin" | "sans.light" | "sans.normal" | "sans.semibold" | "sans.bold" | "sans.black" | "serif.thin" | "serif.light" | "serif.normal" | "serif.semibold" | "serif.bold" | "serif.black" | "mono.thin" | "mono.light" | "mono.normal" | "mono.semibold" | "mono.bold"
@@ -17,6 +19,7 @@ export type Tokens = {
 		colors: ColorToken
 		spacing: SpacingToken
 		radii: RadiusToken
+		animations: AnimationToken
 		fonts: FontToken
 		fontWeights: FontWeightToken
 } & { [token: string]: never }
