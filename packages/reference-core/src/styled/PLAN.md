@@ -65,6 +65,7 @@ Each complex features uses a **microbundle** (inspired by `boxPattern/` and `con
 | `staticCss()` | `api/staticCss.ts` | Force utilities/recipes to always generate | ✅ Complete |
 | `globalFontface()` | `api/globalFontface.ts` | `@font-face` rules for web fonts | ✅ Complete |
 | `pattern()` | `api/pattern.ts` | Extend box pattern with custom props | ✅ Complete |
+| `keyframes()` | `api/keyframes.ts` | Register animation keyframes | ✅ Complete |
 
 ### Font System ✅
 
@@ -93,62 +94,21 @@ Automatically generates:
 
 See [fontface.md](font/fontface.md) for details.
 
-### Box Pattern System ✅
+### Keyframes (Animations) ✅
 
 | Component | File | Description | Status |
 |-----------|------|-------------|--------|
-| Pattern Extensions | `props/*.ts` | Individual prop files (container, font, r) | ✅ Complete |
-| Box Collector | `cli/panda/boxPattern/` | Collects pattern extensions into single box | ✅ Complete |
-| Generated Box | `props/box.ts` | Generated combined box pattern | ✅ Complete |
+| `keyframes()` API | `api/keyframes.ts` | Simple config wrapper for animation keyframes | ✅ Complete |
+| Animation Library | `animations/*.ts` | Pre-built animation keyframes (fade, slide, scale, etc.) | ✅ Complete |
+| Documentation | `docs/foundations/animations.mdx` | Interactive animation examples | ✅ Complete |
 
-**How it works:**
-- Each `props/*.ts` file calls `pattern()` with properties + transform
-- CLI collects all extensions at build time
-- Generates `box.ts` with self-contained inline transforms (no closures!)
-- Panda codegen creates runtime patterns
-
----
-
-## In Progress 🚧
-
-### Keyframes API 🚧
-
-**Status:** Planned architecture, not implemented yet
-
-**Goal:** Composable animation keyframes registration
-
+**What it does:**
 ```typescript
-// User API (styled/api/keyframes.ts)
-keyframes('fadeIn', {
-  from: { opacity: 0 },
-  to: { opacity: 1 }
-})
-
-keyframes('slideUp', {
-  from: { transform: 'translateY(100%)' },
-  to: { transform: 'translateY(0)' }
-})
-
-// Use in components
-css({ animation: 'fadeIn 0.3s ease-out' })
-```
-
-**Implementation approach:**
-
-**Option A: Simple wrapper (no microbundle needed)**
-```typescript
-// styled/api/keyframes.ts
-export function keyframes(config: Record<string, any>): void {
-  extendPandaConfig({
-    theme: {
-      extend: {
-        keyframes: config
-      }
-    }
-  })
-}
-```
-
+keyframes({
+  fadeIn: {
+    from: { opacity: '0' },
+    to: { opacity: '1' }
+  }
 This works because keyframes don't need code generation—they're just config objects.
 
 **Option B: With tokens (if we want named animation tokens)**
@@ -380,15 +340,24 @@ packages/reference-core/src/
 ### Phase 3: Documentation & Polish
 
 - [ ] Convert remaining TODOs to issues/tasks
-- [ ] Document microbundle pattern for future features
-- [ ] Create examples for each API
-- [ ] Add migration guide for existing code
-- [ ] Update Architecture.md in root
-
----
-
-## Success Metrics
-
+- [ ] Document microbundle patte✅ keyframes()
+│   │   ├── pattern.ts        # pattern()
+│   │   └── pattern.md        # Pattern closure limitation docs
+│   │
+│   ├── theme/                # Theme domain
+│   │   ├── colors.ts
+│   │   ├── spacing.ts
+│   │   └── radii.ts
+│   │
+│   ├── animations/           # ✅ Animation keyframes
+│   │   ├── index.ts          # Export all animations
+│   │   ├── fade.ts           # Fade animations
+│   │   ├── slide.ts          # Slide animations
+│   │   ├── scale.ts          # Scale animations
+│   │   ├── spin.ts           # Rotation animations
+│   │   ├── bounce.ts         # Bounce/elastic animations
+│   │   ├── attention.ts      # Attention-seeking animations
+│   │   └── README.md         # Animation system docs
 **✅ We've achieved:**
 - 8/8 core Panda config APIs implemented
 - Font system with CLI microbundle working
@@ -400,15 +369,20 @@ packages/reference-core/src/
 - Keyframes API (simple wrapper, quick win)
 - Verify all APIs work together seamlessly
 - Complete documentation
-- Real-world testing in reference-app
+- Real-world testing in ref✅ COMPLETE
 
----
-
-## Future Considerations
-
-### Why No `layer()` API?
-
-**Decision:** Not exposing cascade layer control to users.
+- [x] Create `styled/api/keyframes.ts` - Simple config wrapper
+- [x] Create animation library in `styled/animations/`
+  - [x] fade.ts - Opacity transitions
+  - [x] slide.ts - Positional animations
+  - [x] scale.ts - Size transformations
+  - [x] spin.ts - Rotation animations
+  - [x] bounce.ts - Elastic effects
+  - [x] attention.ts - Attention-seeking animations
+- [x] Export from `api/index.ts`
+- [x] Import in `styled/index.ts` for auto-registration
+- [x] Create interactive documentation with Button demos
+- [x] Verify animations work in Panda configng cascade layer control to users.
 
 **Rationale:**
 - Users have **natural scoping** when building on reference-ui
@@ -448,30 +422,28 @@ Users extend the system through existing APIs (`tokens()`, `recipe()`, `pattern(
 
 ### Potential Microbundles
 
-- **`responsive/`** - If responsive prop system needs generation beyond current pattern support
-
-### Performance Optimizations
-
-- Cache microbundle outputs (only regenerate on source changes)
-- Parallel microbundle execution
-- Incremental pattern generation
+- **`remental pattern generation
 
 ---
 
 ## Questions & Decisions
 
 ### Open Questions
-
-1. **Keyframes location:** `api/keyframes.ts` or `theme/keyframes.ts`?
-   - **Recommendation:** `api/keyframes.ts` (infrastructure) + user defines in `theme/keyframes.ts`
-
-2. **Animation tokens:** Include preset animation values?
-   - **Recommendation:** Start simple (just keyframes), add tokens if needed
-
-3. **CSS export location:** Keep in `entry/index.ts` or move to `styled/api/css.ts`?
-   - **Recommendation:** Keep in `entry/` (it's a runtime export, not config)
-
-### Resolved Decisions
+9/9 core Panda config APIs implemented ✨
+- Font system with CLI microbundle working
+- Box pattern extension system functional
+- Keyframes/animation system with 30+ pre-built animations
+- Self-contained pattern transforms (no closure bugs)
+- Type-safe token/recipe/pattern system
+- Interactive documentation with live animation demos
+, animations)  
+✅ **Keyframes API:** Simple config wrapper (no microbundle needed, no animation tokens)  
+✅ **Animation library:** Pre-built animations in separate files for tree-shaking
+**🎯 Next milestones:**
+- Verify all APIs work together seamlessly
+- Complete documentation coverage
+- Real-world testing in reference-app
+- Performance optimization and tree-shaking
 
 ✅ **Pattern closures:** Use self-contained transforms (inlined constants)  
 ✅ **Font system:** Dedicated microbundle (too complex for simple wrapper)  

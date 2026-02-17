@@ -16,3 +16,13 @@ export { getRhythm } from '../styled/index.js'
 // Configuration API (for ui.config.ts files)
 export { defineConfig } from '../cli/config/index.js'
 export type { ReferenceUIConfig } from '../cli/config/index.js'
+
+// Styled API (build-time configuration)
+export { tokens } from '../styled/api/tokens.js'
+export { recipe, slotRecipe } from '../styled/api/recipe.js'
+export { utilities } from '../styled/api/utilities.js'
+export { globalCss } from '../styled/api/globalCss.js'
+export { staticCss } from '../styled/api/staticCss.js'
+export { globalFontface } from '../styled/api/globalFontface.js'
+export { font } from '../styled/api/font.js'
+export { keyframes } from '../styled/api/keyframes.js'

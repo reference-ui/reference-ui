@@ -20,6 +20,8 @@ staticCss({
         fontSize: ['*'],
         fontWeight: ['*'],
         fontFamily: ['*'],
+        animation: ['*'],
+        animationName: ['*'],
       },
     },
   ],
