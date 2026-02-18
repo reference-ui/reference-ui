@@ -19,7 +19,7 @@ export function AnimationDemo() {
         key={key}
         w="10r"
         h="10r"
-        bg="red.300"
+        bg="green.300"
         borderRadius="md"
         animation="spin.slow"
       />
