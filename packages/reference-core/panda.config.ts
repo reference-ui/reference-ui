@@ -346,7 +346,8 @@ __export(api_exports, {
   extendSlotRecipe: () => extendSlotRecipe,
   extendStaticCss: () => extendStaticCss,
   extendTokens: () => extendTokens,
-  extendUtilities: () => extendUtilities
+  extendUtilities: () => extendUtilities,
+  recipe: () => recipe
 });
 
 // ../reference-core/src/system/helpers.js
@@ -553,6 +554,33 @@ var fnRegExp = new RegExp(`^(${fns.join("|")})\\(.*\\)`);
 var lengthUnits = "cm,mm,Q,in,pc,pt,px,em,ex,ch,rem,lh,rlh,vw,vh,vmin,vmax,vb,vi,svw,svh,lvw,lvh,dvw,dvh,cqw,cqh,cqi,cqb,cqmin,cqmax,%";
 var lengthUnitsPattern = `(?:${lengthUnits.split(",").join("|")})`;
 var lengthRegExp = new RegExp(`^[+-]?[0-9]*.?[0-9]+(?:[eE][+-]?[0-9]+)?${lengthUnitsPattern}$`);
+function splitProps(props, ...keys) {
+  const descriptors = Object.getOwnPropertyDescriptors(props);
+  const dKeys = Object.keys(descriptors);
+  const split = /* @__PURE__ */ __name((k) => {
+    const clone = {};
+    for (let i = 0; i < k.length; i++) {
+      const key = k[i];
+      if (descriptors[key]) {
+        Object.defineProperty(clone, key, descriptors[key]);
+        delete descriptors[key];
+      }
+    }
+    return clone;
+  }, "split");
+  const fn = /* @__PURE__ */ __name((key) => split(Array.isArray(key) ? key : dKeys.filter(key)), "fn");
+  return keys.map(fn).concat(split(dKeys));
+}
+__name(splitProps, "splitProps");
+var uniq = /* @__PURE__ */ __name((...items) => {
+  const set = items.reduce((acc, currItems) => {
+    if (currItems) {
+      currItems.forEach((item) => acc.add(item));
+    }
+    return acc;
+  }, /* @__PURE__ */ new Set([]));
+  return Array.from(set);
+}, "uniq");
 var htmlProps = ["htmlSize", "htmlTranslate", "htmlWidth", "htmlHeight"];
 function convert(key) {
   return htmlProps.includes(key) ? key.replace("html", "").toLowerCase() : key;
@@ -634,12 +662,92 @@ var css = /* @__PURE__ */ __name((...styles) => cssFn(mergeCss(...styles)), "css
 css.raw = (...styles) => mergeCss(...styles);
 var { mergeCss, assignCss } = createMergeCss(context);
 
-// ../reference-core/src/styled/api/css.ts
+// ../reference-core/src/system/css/cva.js
+var defaults = /* @__PURE__ */ __name((conf) => ({
+  base: {},
+  variants: {},
+  defaultVariants: {},
+  compoundVariants: [],
+  ...conf
+}), "defaults");
+function cva(config2) {
+  const { base, variants, defaultVariants, compoundVariants } = defaults(config2);
+  const getVariantProps = /* @__PURE__ */ __name((variants2) => ({ ...defaultVariants, ...compact(variants2) }), "getVariantProps");
+  function resolve(props = {}) {
+    const computedVariants = getVariantProps(props);
+    let variantCss = { ...base };
+    for (const [key, value] of Object.entries(computedVariants)) {
+      if (variants[key]?.[value]) {
+        variantCss = mergeCss(variantCss, variants[key][value]);
+      }
+    }
+    const compoundVariantCss = getCompoundVariantCss(compoundVariants, computedVariants);
+    return mergeCss(variantCss, compoundVariantCss);
+  }
+  __name(resolve, "resolve");
+  function merge(__cva) {
+    const override = defaults(__cva.config);
+    const variantKeys2 = uniq(__cva.variantKeys, Object.keys(variants));
+    return cva({
+      base: mergeCss(base, override.base),
+      variants: Object.fromEntries(
+        variantKeys2.map((key) => [key, mergeCss(variants[key], override.variants[key])])
+      ),
+      defaultVariants: mergeProps(defaultVariants, override.defaultVariants),
+      compoundVariants: [...compoundVariants, ...override.compoundVariants]
+    });
+  }
+  __name(merge, "merge");
+  function cvaFn(props) {
+    return css(resolve(props));
+  }
+  __name(cvaFn, "cvaFn");
+  const variantKeys = Object.keys(variants);
+  function splitVariantProps(props) {
+    return splitProps(props, variantKeys);
+  }
+  __name(splitVariantProps, "splitVariantProps");
+  const variantMap = Object.fromEntries(Object.entries(variants).map(([key, value]) => [key, Object.keys(value)]));
+  return Object.assign(memo(cvaFn), {
+    __cva__: true,
+    variantMap,
+    variantKeys,
+    raw: resolve,
+    config: config2,
+    merge,
+    splitVariantProps,
+    getVariantProps
+  });
+}
+__name(cva, "cva");
+function getCompoundVariantCss(compoundVariants, variantMap) {
+  let result = {};
+  compoundVariants.forEach((compoundVariant) => {
+    const isMatching = Object.entries(compoundVariant).every(([key, value]) => {
+      if (key === "css") return true;
+      const values = Array.isArray(value) ? value : [value];
+      return values.some((value2) => variantMap[key] === value2);
+    });
+    if (isMatching) {
+      result = mergeCss(result, compoundVariant.css);
+    }
+  });
+  return result;
+}
+__name(getCompoundVariantCss, "getCompoundVariantCss");
+
+// ../reference-core/src/styled/api/runtime/css.ts
 function css2(...styles) {
   return css(...styles);
 }
 __name(css2, "css");
 css2.raw = css.raw;
+
+// ../reference-core/src/styled/api/runtime/recipe.ts
+function recipe(config2) {
+  return cva(config2);
+}
+__name(recipe, "recipe");
 
 // ../reference-core/src/styled/api/internal/extendRecipe.ts
 var extendRecipe_exports = {};
@@ -1721,7 +1829,9 @@ extendGlobalCss({
   body: {
     fontFamily: "sans",
     letterSpacing: "-0.01em",
-    fontSize: "body",
+    fontSize: "body"
+  },
+  html: {
     containerType: "inline-size"
   }
 });

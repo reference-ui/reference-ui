@@ -1,13 +1,9 @@
-/** 
- * Public API exports
- * - css: Runtime style function
- * - extend*: Internal config extension functions (for build-time only)
- */
+/** Public API for styled system extensions */
 
-// Runtime API
-export { css } from './css'
+// Runtime APIs (browser-safe)
+export * from './runtime'
 
-// Internal config extension API
+// Build-time config extension APIs
 export { extendTokens } from './internal/extendTokens'
 export { extendRecipe, extendSlotRecipe } from './internal/extendRecipe'
 export { extendUtilities } from './internal/extendUtilities'

@@ -3,9 +3,9 @@
  * (e.g. "Background", "ButtonFace") from type suggestions / acceptance.
  */
 
-import { css as pandaCss } from '../../system/css/index.js'
-import type { SystemStyleObject } from '../../system/types/index.js'
-import type { StrictColorProps } from '../types'
+import { css as pandaCss } from '../../../system/css/index.js'
+import type { SystemStyleObject } from '../../../system/types/index.js'
+import type { StrictColorProps } from '../../types/index.js'
 
 type Styles = StrictColorProps<SystemStyleObject> | undefined | null | false
 
