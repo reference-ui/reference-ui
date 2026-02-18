@@ -1,4 +1,4 @@
-import { extendTokens } from '../api/extendTokens'
+import { extendTokens } from '../api/internal/extendTokens'
 
 /**
  * Animation tokens - semantic animation values

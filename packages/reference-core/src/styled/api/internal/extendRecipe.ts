@@ -1,5 +1,5 @@
 import type { RecipeConfig, SlotRecipeConfig } from '@pandacss/dev'
-import { extendPandaConfig } from '../../cli/panda/config/extendPandaConfig'
+import { extendPandaConfig } from '../../../cli/panda/config/extendPandaConfig'
 
 /**
  * Register custom recipes with Panda CSS.

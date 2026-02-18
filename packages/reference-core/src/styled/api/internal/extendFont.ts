@@ -20,8 +20,8 @@
  * ```
  */
 
-import type { FontFaceRule, FontWeightName } from '../../cli/panda/fontFace/extendFontFace'
-import { extendFontCollector } from '../../cli/panda/fontFace/extendFontFace'
+import type { FontFaceRule, FontWeightName } from '../../../cli/panda/fontFace/extendFontFace'
+import { extendFontCollector } from '../../../cli/panda/fontFace/extendFontFace'
 
 export type { FontFaceRule, FontWeightName }
 
