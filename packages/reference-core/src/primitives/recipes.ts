@@ -1,5 +1,5 @@
 /** Primitive recipes - import from css/*.style.ts and re-export for panda.config */
-import { recipe } from '../styled/api'
+import { extendRecipe } from '../styled/api'
 import { h1Style } from './css/h1.style'
 import { h2Style } from './css/h2.style'
 import { h3Style } from './css/h3.style'
@@ -43,4 +43,4 @@ export const primitiveCSS = {
   blockquoteStyle, qStyle, citeStyle,
 }
 
-recipe(primitiveCSS)
+extendRecipe(primitiveCSS)

@@ -1,6 +1,6 @@
-import { font } from '../api'
+import { extendFont } from '../api'
 
-font('sans', {
+extendFont('sans', {
   value: '"Inter", ui-sans-serif, sans-serif',
   fontFace: {
     src: 'url(https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7W0Q5nw.woff2) format("woff2")',
@@ -22,7 +22,7 @@ font('sans', {
   },
 })
 
-font('serif', {
+extendFont('serif', {
   value: '"Literata", ui-serif, serif',
   fontFace: {
     src: 'url(https://fonts.gstatic.com/s/literata/v40/or38Q6P12-iJxAIgLa78DkrbXsDgk0oVDaDlbJ5W7i5aOg.woff2) format("woff2")',
@@ -46,7 +46,7 @@ font('serif', {
   },
 })
 
-font('mono', {
+extendFont('mono', {
   value: '"JetBrains Mono", ui-monospace, monospace',
   fontFace: {
     src: 'url(https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbV2o-flEEny0FZhsfKu5WU4xD7OwGtT0rU.woff2) format("woff2")',

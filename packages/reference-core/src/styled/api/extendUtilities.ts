@@ -11,7 +11,7 @@ type UtilityExtend = NonNullable<NonNullable<Config['utilities']>['extend']>
  *
  * @example
  * ```ts
- * utilities({
+ * extendUtilities({
  *   myUtil: {
  *     values: 'spacing',
  *     transform(value) {
@@ -21,7 +21,7 @@ type UtilityExtend = NonNullable<NonNullable<Config['utilities']>['extend']>
  * })
  * ```
  */
-export function utilities(extend: UtilityExtend): void {
+export function extendUtilities(extend: UtilityExtend): void {
   extendPandaConfig({
     utilities: {
       extend,

@@ -1,9 +1,9 @@
-import { keyframes } from '../api/keyframes'
+import { extendKeyframes } from '../api/extendKeyframes'
 
 /**
  * Bounce and elastic animations
  */
-keyframes({
+extendKeyframes({
   bounce: {
     '0%, 100%': { 
       transform: 'translateY(0)',

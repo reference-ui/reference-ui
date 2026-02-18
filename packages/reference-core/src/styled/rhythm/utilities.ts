@@ -1,5 +1,5 @@
 import type { SystemProperties } from '../../system/types/style-props'
-import { utilities } from '../api'
+import { extendUtilities } from '../api'
 import { resolveRhythm } from './helpers'
 
 type UtilityTransform<P extends keyof SystemProperties = keyof SystemProperties> = {
@@ -95,4 +95,4 @@ export const rhythmUtilities = {
   borderSpacing: rhythmTransform('borderSpacing'),
 } satisfies { [K in keyof SystemProperties]?: UtilityTransform<K> }
 
-utilities(rhythmUtilities)
+extendUtilities(rhythmUtilities)

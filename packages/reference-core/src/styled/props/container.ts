@@ -2,7 +2,7 @@
  * Container query prop: Set up container context
  */
 
-import { pattern } from '../api/pattern'
+import { extendPattern } from '../api/extendPattern'
 
 // --- Type ---
 
@@ -14,7 +14,7 @@ export interface ContainerPropDefinition {
 
 // --- Box Pattern Extension ---
 
-pattern({
+extendPattern({
   properties: {
     container: { type: 'string' as const },
   },

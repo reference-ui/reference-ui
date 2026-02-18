@@ -40,6 +40,6 @@ export interface FontOptions {
  * Register a font with tokens, @font-face, recipe variant, and pattern support.
  * Collected at build time by createFontSystem.
  */
-export function font(name: string, options: FontOptions): void {
+export function extendFont(name: string, options: FontOptions): void {
   extendFontCollector({ name, ...options })
 }

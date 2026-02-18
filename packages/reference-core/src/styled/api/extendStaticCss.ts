@@ -9,13 +9,13 @@ import { extendPandaConfig } from '../../cli/panda/config/extendPandaConfig'
  *
  * @example
  * ```ts
- * staticCss({
+ * extendStaticCss({
  *   css: [{ properties: { color: ['*'] } }],
  *   recipes: { button: ['*'] },
  * })
  * ```
  */
-export function staticCss(config: NonNullable<Config['staticCss']>): void {
+export function extendStaticCss(config: NonNullable<Config['staticCss']>): void {
   extendPandaConfig({
     staticCss: config,
   })

@@ -1,6 +1,6 @@
-import { staticCss } from './api'
+import { extendStaticCss } from './api'
 
-staticCss({
+extendStaticCss({
   css: [
     {
       properties: {

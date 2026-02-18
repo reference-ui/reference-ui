@@ -9,7 +9,7 @@ import { extendPandaConfig } from '../../cli/panda/config/extendPandaConfig'
  * 
  * @example
  * ```ts
- * tokens({
+ * extendTokens({
  *   colors: {
  *     brand: {
  *       primary: { value: '#0066cc' },
@@ -23,7 +23,7 @@ import { extendPandaConfig } from '../../cli/panda/config/extendPandaConfig'
  * })
  * ```
  */
-export function tokens(tokenConfig: NonNullable<Config['theme']>['tokens']): void {
+export function extendTokens(tokenConfig: NonNullable<Config['theme']>['tokens']): void {
   extendPandaConfig({
     theme: {
       tokens: tokenConfig

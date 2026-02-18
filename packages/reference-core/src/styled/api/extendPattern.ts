@@ -17,4 +17,4 @@
  * })
  * ```
  */
-export { extendBoxPattern as pattern } from '../../cli/panda/boxPattern/extendBoxPattern'
+export { extendBoxPattern as extendPattern } from '../../cli/panda/boxPattern/extendBoxPattern'

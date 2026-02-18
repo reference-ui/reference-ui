@@ -1,9 +1,9 @@
-import { keyframes } from '../api/keyframes'
+import { extendKeyframes } from '../api/extendKeyframes'
 
 /**
  * Slide animations - smooth positional transitions
  */
-keyframes({
+extendKeyframes({
   slideUp: {
     from: { transform: 'translateY(100%)' },
     to: { transform: 'translateY(0)' }

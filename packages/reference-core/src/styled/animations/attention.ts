@@ -1,9 +1,9 @@
-import { keyframes } from '../api/keyframes'
+import { extendKeyframes } from '../api/extendKeyframes'
 
 /**
  * Attention-seeking animations
  */
-keyframes({
+extendKeyframes({
   ping: {
     '0%': {
       transform: 'scale(1)',

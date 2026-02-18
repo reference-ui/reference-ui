@@ -30,7 +30,7 @@ import { extendPandaConfig } from '../../cli/panda/config/extendPandaConfig'
  * css({ animation: 'slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1)' })
  * ```
  */
-export function keyframes(config: NonNullable<Config['theme']>['keyframes']): void {
+export function extendKeyframes(config: NonNullable<Config['theme']>['keyframes']): void {
   extendPandaConfig({
     theme: {
       extend: {

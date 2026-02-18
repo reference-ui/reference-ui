@@ -1,4 +1,4 @@
-import { tokens } from '../api/tokens'
+import { extendTokens } from '../api/extendTokens'
 
 export const colors = {
   gray: {
@@ -238,6 +238,6 @@ export const colors = {
 }
 
 
-tokens({
+extendTokens({
   colors
 })

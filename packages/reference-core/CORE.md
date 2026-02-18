@@ -173,7 +173,7 @@ This enables **pixel-perfect component composition** where each component can de
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │  User Code Layer (Your App)                                  │
-│  • Call tokens(), recipe(), pattern(), font() anywhere       │
+│  • Call extendTokens(), extendRecipe(), extendPattern(), extendFont() anywhere       │
 │  • Import primitives: Button, Link, Box, etc.                │
 │  • Use r={{}} prop for container-based responsive            │
 └──────────────────────────────────────────────────────────────┘
@@ -224,20 +224,20 @@ Every complex feature follows the **microbundle workflow**:
 
 ```typescript
 // User code (anywhere in src/):
-font('sans', {
+extendFont('sans', {
   value: '"Inter", sans-serif',
   weights: { normal: 400, bold: 700 },
   css: { letterSpacing: '-0.01em' }
 })
 
 // CLI discovers this, bundles it, runs it, generates:
-// - tokens({ fonts: { sans: ... }, fontWeights: { 'sans.bold': ... } })
-// - globalFontface([{ family: 'Inter', ... }])
-// - recipe({ variants: { font: { sans: { ... } } } })
-// - pattern({ font: { transform: ... } })
+// - extendTokens({ fonts: { sans: ... }, fontWeights: { 'sans.bold': ... } })
+// - extendGlobalFontface([{ family: 'Inter', ... }])
+// - extendRecipe({ variants: { font: { sans: { ... } } } })
+// - extendPattern({ font: { transform: ... } })
 ```
 
-All from one `font()` call!
+All from one `extendFont()` call!
 
 ---
 
@@ -302,16 +302,16 @@ The primitive wraps Panda's `Box` but **strips the polymorphic API surface**, gi
 
 | API | Status | Generated Output |
 |-----|--------|------------------|
-| `tokens()` | ✅ Complete | Design tokens in Panda config |
-| `recipe()` | ✅ Complete | Single-part component variants |
-| `slotRecipe()` | ✅ Complete | Multi-part component variants |
-| `utilities()` | ✅ Complete | Custom utility generators |
-| `globalCss()` | ✅ Complete | Global CSS rules |
-| `staticCss()` | ✅ Complete | Force-generate utilities/recipes |
-| `globalFontface()` | ✅ Complete | @font-face declarations |
-| `keyframes()` | ✅ Complete | CSS animation keyframes |
-| `pattern()` | ✅ Complete | Box pattern extensions |
-| `font()` | ✅ Complete | All-in-one font system |
+| `extendTokens()` | ✅ Complete | Design tokens in Panda config |
+| `extendRecipe()` | ✅ Complete | Single-part component variants |
+| `extendSlotRecipe()` | ✅ Complete | Multi-part component variants |
+| `extendUtilities()` | ✅ Complete | Custom utility generators |
+| `extendGlobalCss()` | ✅ Complete | Global CSS rules |
+| `extendStaticCss()` | ✅ Complete | Force-generate utilities/recipes |
+| `extendGlobalFontface()` | ✅ Complete | @font-face declarations |
+| `extendKeyframes()` | ✅ Complete | CSS animation keyframes |
+| `extendPattern()` | ✅ Complete | Box pattern extensions |
+| `extendFont()` | ✅ Complete | All-in-one font system |
 
 ### Every API is discoverable via Eval()
 
@@ -349,7 +349,7 @@ Here's how all these pieces work together:
 
 ```tsx
 // styled/theme/colors.ts
-tokens({
+extendTokens({
   colors: {
     brand: { value: '#0066FF' },
     danger: { value: '#FF3333' }
@@ -357,7 +357,7 @@ tokens({
 })
 
 // styled/font/fonts.ts
-font('brand', {
+extendFont('brand', {
   value: '"Inter", sans-serif',
   weights: { normal: 400, bold: 700 },
   css: { letterSpacing: '-0.02em' }
@@ -393,7 +393,7 @@ export function Hero() {
 ```
 
 **What happens:**
-1. Eval() discovers `tokens()` and `font()` calls
+1. Eval() discovers `extendTokens()` and `extendFont()` calls
 2. Microbundles generate Panda config and font system
 3. Panda generates zero-runtime CSS
 4. Primitives get perfect TypeScript autocomplete

@@ -3,7 +3,7 @@
  */
 
 import type { SystemStyleObject } from '../../system/types/index'
-import { pattern } from '../api/pattern'
+import { extendPattern } from '../api/extendPattern'
 
 // --- Type ---
 
@@ -17,7 +17,7 @@ export interface ResponsivePropDefinition {
 
 // --- Box Pattern Extension ---
 
-pattern({
+extendPattern({
   properties: {
     r: { type: 'object' as const },
   },

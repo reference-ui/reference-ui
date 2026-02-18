@@ -1,9 +1,9 @@
-import { keyframes } from '../api/keyframes'
+import { extendKeyframes } from '../api/extendKeyframes'
 
 /**
  * Fade animations - opacity transitions
  */
-keyframes({
+extendKeyframes({
   fadeIn: {
     from: { opacity: '0' },
     to: { opacity: '1' }
