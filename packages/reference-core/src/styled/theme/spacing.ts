@@ -1,4 +1,4 @@
-import { extendTokens } from '../api/extendTokens'
+import { extendTokens } from '../api/internal/extendTokens'
 import { getRhythm } from '../rhythm'
 
 export const spacing = {

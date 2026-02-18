@@ -3,7 +3,7 @@
  */
 
 import type { SystemStyleObject } from '../../system/types/index'
-import { extendPattern } from '../api/extendPattern'
+import { extendPattern } from '../api'
 
 // --- Type ---
 

@@ -1,4 +1,4 @@
-import { extendKeyframes } from '../api/extendKeyframes'
+import { extendKeyframes } from '../api/internal/extendKeyframes'
 
 /**
  * Bounce and elastic animations

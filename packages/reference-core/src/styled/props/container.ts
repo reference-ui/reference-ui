@@ -2,7 +2,7 @@
  * Container query prop: Set up container context
  */
 
-import { extendPattern } from '../api/extendPattern'
+import { extendPattern } from '../api'
 
 // --- Type ---
 

@@ -66,7 +66,7 @@ __export(colors_exports, {
   colors: () => colors
 });
 
-// ../reference-core/src/styled/api/extendTokens.ts
+// ../reference-core/src/styled/api/internal/extendTokens.ts
 var extendTokens_exports = {};
 __export(extendTokens_exports, {
   extendTokens: () => extendTokens
@@ -641,7 +641,7 @@ function css2(...styles) {
 __name(css2, "css");
 css2.raw = css.raw;
 
-// ../reference-core/src/styled/api/extendRecipe.ts
+// ../reference-core/src/styled/api/internal/extendRecipe.ts
 var extendRecipe_exports = {};
 __export(extendRecipe_exports, {
   extendRecipe: () => extendRecipe,
@@ -668,7 +668,7 @@ function extendSlotRecipe(slotRecipeConfig) {
 }
 __name(extendSlotRecipe, "extendSlotRecipe");
 
-// ../reference-core/src/styled/api/extendUtilities.ts
+// ../reference-core/src/styled/api/internal/extendUtilities.ts
 var extendUtilities_exports = {};
 __export(extendUtilities_exports, {
   extendUtilities: () => extendUtilities
@@ -682,7 +682,7 @@ function extendUtilities(extend) {
 }
 __name(extendUtilities, "extendUtilities");
 
-// ../reference-core/src/styled/api/extendGlobalCss.ts
+// ../reference-core/src/styled/api/internal/extendGlobalCss.ts
 var extendGlobalCss_exports = {};
 __export(extendGlobalCss_exports, {
   extendGlobalCss: () => extendGlobalCss
@@ -694,7 +694,7 @@ function extendGlobalCss(css3) {
 }
 __name(extendGlobalCss, "extendGlobalCss");
 
-// ../reference-core/src/styled/api/extendStaticCss.ts
+// ../reference-core/src/styled/api/internal/extendStaticCss.ts
 var extendStaticCss_exports = {};
 __export(extendStaticCss_exports, {
   extendStaticCss: () => extendStaticCss
@@ -706,7 +706,7 @@ function extendStaticCss(config2) {
 }
 __name(extendStaticCss, "extendStaticCss");
 
-// ../reference-core/src/styled/api/extendGlobalFontface.ts
+// ../reference-core/src/styled/api/internal/extendGlobalFontface.ts
 var extendGlobalFontface_exports = {};
 __export(extendGlobalFontface_exports, {
   extendGlobalFontface: () => extendGlobalFontface
@@ -730,13 +730,13 @@ function extendFontCollector(def) {
 }
 __name(extendFontCollector, "extendFontCollector");
 
-// ../reference-core/src/styled/api/extendFont.ts
+// ../reference-core/src/styled/api/internal/extendFont.ts
 function extendFont(name, options) {
   extendFontCollector({ name, ...options });
 }
 __name(extendFont, "extendFont");
 
-// ../reference-core/src/styled/api/extendKeyframes.ts
+// ../reference-core/src/styled/api/internal/extendKeyframes.ts
 var extendKeyframes_exports = {};
 __export(extendKeyframes_exports, {
   extendKeyframes: () => extendKeyframes
@@ -1969,8 +1969,23 @@ extendPandaConfig({
   } } }
 });
 
+// ../reference-core/src/styled/api/internal/index.ts
+var internal_exports = {};
+__export(internal_exports, {
+  extendFont: () => extendFont,
+  extendGlobalCss: () => extendGlobalCss,
+  extendGlobalFontface: () => extendGlobalFontface,
+  extendKeyframes: () => extendKeyframes,
+  extendPattern: () => extendBoxPattern,
+  extendRecipe: () => extendRecipe,
+  extendSlotRecipe: () => extendSlotRecipe,
+  extendStaticCss: () => extendStaticCss,
+  extendTokens: () => extendTokens,
+  extendUtilities: () => extendUtilities
+});
+
 // ../reference-core/.ref/panda-entry.ts
-var defaultFragments = [panda_base_exports, css_global_exports, css_static_exports, extendGlobalCss_exports, extendGlobalFontface_exports, extendKeyframes_exports, extendRecipe_exports, extendStaticCss_exports, extendTokens_exports, extendUtilities_exports, api_exports, font_exports, box_exports, utilities_exports, animations_exports, colors_exports, radii_exports, spacing_exports].map((m) => m?.default !== void 0 ? m.default : null).filter(Boolean);
+var defaultFragments = [panda_base_exports, css_global_exports, css_static_exports, api_exports, font_exports, box_exports, utilities_exports, animations_exports, colors_exports, radii_exports, spacing_exports, extendGlobalCss_exports, extendGlobalFontface_exports, extendKeyframes_exports, extendRecipe_exports, extendStaticCss_exports, extendTokens_exports, extendUtilities_exports, internal_exports].map((m) => m?.default !== void 0 ? m.default : null).filter(Boolean);
 var collected = globalThis[COLLECTOR_KEY] || [];
 var fragments = [...defaultFragments, ...collected];
 var config = fragments.reduce((acc, frag) => deepMerge(acc, frag), {});

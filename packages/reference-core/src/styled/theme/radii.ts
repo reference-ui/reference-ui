@@ -1,4 +1,4 @@
-import { extendTokens } from '../api/extendTokens'
+import { extendTokens } from '../api/internal/extendTokens'
 
 export const radii = {
   none: { value: '0' },
