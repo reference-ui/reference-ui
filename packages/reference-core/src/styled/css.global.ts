@@ -1,7 +1,7 @@
-import { globalCss } from './api'
+import { extendGlobalCss } from './api'
 
 // Global CSS: rhythm tokens and body defaults
-globalCss({
+extendGlobalCss({
   ':root': {
     '--r-base': '16px',
     '--r-density': '1',

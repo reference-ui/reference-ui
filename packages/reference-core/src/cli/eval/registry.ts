@@ -5,13 +5,13 @@
  */
 export const REGISTERED_FUNCTIONS = [
   'extendPandaConfig',
-  'tokens',
-  'recipe',
-  'slotRecipe',
-  'utilities',
-  'globalCss',
-  'staticCss',
-  'globalFontface',
+  'extendTokens',
+  'extendRecipe',
+  'extendSlotRecipe',
+  'extendUtilities',
+  'extendGlobalCss',
+  'extendStaticCss',
+  'extendGlobalFontface',
 ] as const
 
 export type RegisteredFunction = (typeof REGISTERED_FUNCTIONS)[number]

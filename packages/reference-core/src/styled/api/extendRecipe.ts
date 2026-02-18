@@ -9,7 +9,7 @@ import { extendPandaConfig } from '../../cli/panda/config/extendPandaConfig'
  * 
  * @example
  * ```ts
- * recipe({
+ * extendRecipe({
  *   button: {
  *     className: 'btn',
  *     variants: {
@@ -22,7 +22,7 @@ import { extendPandaConfig } from '../../cli/panda/config/extendPandaConfig'
  * })
  * ```
  */
-export function recipe<T extends Record<string, RecipeConfig>>(recipeConfig: T): void {
+export function extendRecipe<T extends Record<string, RecipeConfig>>(recipeConfig: T): void {
   extendPandaConfig({
     theme: {
       extend: {
@@ -40,7 +40,7 @@ export function recipe<T extends Record<string, RecipeConfig>>(recipeConfig: T):
  * 
  * @example
  * ```ts
- * slotRecipe({
+ * extendSlotRecipe({
  *   card: {
  *     className: 'card',
  *     slots: ['root', 'header', 'body', 'footer'],
@@ -52,7 +52,7 @@ export function recipe<T extends Record<string, RecipeConfig>>(recipeConfig: T):
  * })
  * ```
  */
-export function slotRecipe<T extends Record<string, SlotRecipeConfig>>(slotRecipeConfig: T): void {
+export function extendSlotRecipe<T extends Record<string, SlotRecipeConfig>>(slotRecipeConfig: T): void {
   extendPandaConfig({
     theme: {
       extend: {

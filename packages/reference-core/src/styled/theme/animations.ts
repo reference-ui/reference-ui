@@ -1,10 +1,10 @@
-import { tokens } from '../api/tokens'
+import { extendTokens } from '../api/extendTokens'
 
 /**
  * Animation tokens - semantic animation values
  * Reference the keyframes and add timing/easing/iteration
  */
-tokens({
+extendTokens({
   animations: {
     // Spin animations
     spin: {

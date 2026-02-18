@@ -11,11 +11,11 @@
  * 
  * Build-time API:
  * - config()    - Configuration
- * - tokens()    - Design system tokens
+ * - extendTokens()    - Design system tokens
  * - keyframes() - Animation definitions
  */
 
-import { config, tokens, keyframes, cssGlobal } from '@reference-ui/core'
+import { config, extendTokens, extendKeyframes, cssGlobal } from '@reference-ui/core'
 
 // ============================================================================
 // Configuration
@@ -41,7 +41,7 @@ config({
 })
 
 
-tokens({
+extendTokens({
   colors: {
     brand: {
       500: '#3b82f6',
@@ -72,14 +72,14 @@ tokens({
   },
 })
 
-keyframes({
+extendKeyframes({
   fadeIn: {
     '0%': { opacity: '0' },
     '100%': { opacity: '1' },
   },
 })
 
-keyframes({
+extendKeyframes({
   spin: {
     '0%': { transform: 'rotate(0deg)' },
     '100%': { transform: 'rotate(360deg)' },

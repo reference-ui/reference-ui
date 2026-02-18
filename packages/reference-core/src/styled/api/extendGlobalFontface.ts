@@ -9,7 +9,7 @@ import { extendPandaConfig } from '../../cli/panda/config/extendPandaConfig'
  *
  * @example
  * ```ts
- * globalFontface({
+ * extendGlobalFontface({
  *   Inter: {
  *     src: 'url(...) format("woff2")',
  *     fontWeight: '100 900',
@@ -18,7 +18,7 @@ import { extendPandaConfig } from '../../cli/panda/config/extendPandaConfig'
  * })
  * ```
  */
-export function globalFontface(fontface: NonNullable<Config['globalFontface']>): void {
+export function extendGlobalFontface(fontface: NonNullable<Config['globalFontface']>): void {
   extendPandaConfig({
     globalFontface: fontface,
   })

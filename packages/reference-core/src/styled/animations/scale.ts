@@ -1,9 +1,9 @@
-import { keyframes } from '../api/keyframes'
+import { extendKeyframes } from '../api/extendKeyframes'
 
 /**
  * Scale animations - size transformations
  */
-keyframes({
+extendKeyframes({
   scaleIn: {
     from: { 
       opacity: '0',

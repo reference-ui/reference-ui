@@ -9,7 +9,7 @@ import { extendPandaConfig } from '../../cli/panda/config/extendPandaConfig'
  *
  * @example
  * ```ts
- * globalCss({
+ * extendGlobalCss({
  *   ':root': {
  *     '--r-base': '16px',
  *     '--spacing-r': 'calc(var(--r-base) * var(--r-density))',
@@ -21,7 +21,7 @@ import { extendPandaConfig } from '../../cli/panda/config/extendPandaConfig'
  * })
  * ```
  */
-export function globalCss(css: NonNullable<Config['globalCss']>): void {
+export function extendGlobalCss(css: NonNullable<Config['globalCss']>): void {
   extendPandaConfig({
     globalCss: css,
   })

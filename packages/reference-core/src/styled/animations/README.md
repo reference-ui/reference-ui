@@ -49,7 +49,7 @@ To add new animations:
 Example:
 
 ```ts
-import { keyframes } from '../api/keyframes'
+import { extendKeyframes } from '../api/extendKeyframes'
 
 keyframes({
   myAnimation: {

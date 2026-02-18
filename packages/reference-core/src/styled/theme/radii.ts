@@ -1,4 +1,4 @@
-import { tokens } from '../api/tokens'
+import { extendTokens } from '../api/extendTokens'
 
 export const radii = {
   none: { value: '0' },
@@ -12,6 +12,6 @@ export const radii = {
   full: { value: '9999px' },
 }
 
-tokens({
+extendTokens({
   radii
 })

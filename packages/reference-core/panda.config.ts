@@ -60,32 +60,25 @@ import * as esbuild from "esbuild";
 // ../reference-core/src/cli/eval/scanner.ts
 import fg from "fast-glob";
 
-// ../reference-core/src/styled/index.ts
-var styled_exports = {};
-__export(styled_exports, {
-  colors: () => colors,
-  getRhythm: () => getRhythm
-});
-
 // ../reference-core/src/styled/theme/colors.ts
 var colors_exports = {};
 __export(colors_exports, {
   colors: () => colors
 });
 
-// ../reference-core/src/styled/api/tokens.ts
-var tokens_exports = {};
-__export(tokens_exports, {
-  tokens: () => tokens
+// ../reference-core/src/styled/api/extendTokens.ts
+var extendTokens_exports = {};
+__export(extendTokens_exports, {
+  extendTokens: () => extendTokens
 });
-function tokens(tokenConfig) {
+function extendTokens(tokenConfig) {
   extendPandaConfig({
     theme: {
       tokens: tokenConfig
     }
   });
 }
-__name(tokens, "tokens");
+__name(extendTokens, "extendTokens");
 
 // ../reference-core/src/styled/theme/colors.ts
 var colors = {
@@ -324,7 +317,7 @@ var colors = {
     950: { value: "oklch(27.1% 0.105 12.094)" }
   }
 };
-tokens({
+extendTokens({
   colors
 });
 
@@ -334,16 +327,9 @@ __export(spacing_exports, {
   spacing: () => spacing
 });
 
-// ../reference-core/src/styled/rhythm/index.ts
-var rhythm_exports = {};
-__export(rhythm_exports, {
-  getRhythm: () => getRhythm,
-  rhythmUtilities: () => rhythmUtilities
-});
-
 // ../reference-core/src/styled/rhythm/utilities.ts
-var utilities_exports2 = {};
-__export(utilities_exports2, {
+var utilities_exports = {};
+__export(utilities_exports, {
   rhythmUtilities: () => rhythmUtilities
 });
 
@@ -351,15 +337,16 @@ __export(utilities_exports2, {
 var api_exports = {};
 __export(api_exports, {
   css: () => css2,
-  font: () => font,
-  globalCss: () => globalCss,
-  globalFontface: () => globalFontface,
-  keyframes: () => keyframes,
-  recipe: () => recipe,
-  slotRecipe: () => slotRecipe,
-  staticCss: () => staticCss,
-  tokens: () => tokens,
-  utilities: () => utilities2
+  extendFont: () => extendFont,
+  extendGlobalCss: () => extendGlobalCss,
+  extendGlobalFontface: () => extendGlobalFontface,
+  extendKeyframes: () => extendKeyframes,
+  extendPattern: () => extendBoxPattern,
+  extendRecipe: () => extendRecipe,
+  extendSlotRecipe: () => extendSlotRecipe,
+  extendStaticCss: () => extendStaticCss,
+  extendTokens: () => extendTokens,
+  extendUtilities: () => extendUtilities
 });
 
 // ../reference-core/src/system/helpers.js
@@ -654,13 +641,13 @@ function css2(...styles) {
 __name(css2, "css");
 css2.raw = css.raw;
 
-// ../reference-core/src/styled/api/recipe.ts
-var recipe_exports = {};
-__export(recipe_exports, {
-  recipe: () => recipe,
-  slotRecipe: () => slotRecipe
+// ../reference-core/src/styled/api/extendRecipe.ts
+var extendRecipe_exports = {};
+__export(extendRecipe_exports, {
+  extendRecipe: () => extendRecipe,
+  extendSlotRecipe: () => extendSlotRecipe
 });
-function recipe(recipeConfig) {
+function extendRecipe(recipeConfig) {
   extendPandaConfig({
     theme: {
       extend: {
@@ -669,8 +656,8 @@ function recipe(recipeConfig) {
     }
   });
 }
-__name(recipe, "recipe");
-function slotRecipe(slotRecipeConfig) {
+__name(extendRecipe, "extendRecipe");
+function extendSlotRecipe(slotRecipeConfig) {
   extendPandaConfig({
     theme: {
       extend: {
@@ -679,63 +666,57 @@ function slotRecipe(slotRecipeConfig) {
     }
   });
 }
-__name(slotRecipe, "slotRecipe");
+__name(extendSlotRecipe, "extendSlotRecipe");
 
-// ../reference-core/src/styled/api/utilities.ts
-var utilities_exports = {};
-__export(utilities_exports, {
-  utilities: () => utilities2
+// ../reference-core/src/styled/api/extendUtilities.ts
+var extendUtilities_exports = {};
+__export(extendUtilities_exports, {
+  extendUtilities: () => extendUtilities
 });
-function utilities2(extend) {
+function extendUtilities(extend) {
   extendPandaConfig({
     utilities: {
       extend
     }
   });
 }
-__name(utilities2, "utilities");
+__name(extendUtilities, "extendUtilities");
 
-// ../reference-core/src/styled/api/globalCss.ts
-var globalCss_exports = {};
-__export(globalCss_exports, {
-  globalCss: () => globalCss
+// ../reference-core/src/styled/api/extendGlobalCss.ts
+var extendGlobalCss_exports = {};
+__export(extendGlobalCss_exports, {
+  extendGlobalCss: () => extendGlobalCss
 });
-function globalCss(css3) {
+function extendGlobalCss(css3) {
   extendPandaConfig({
     globalCss: css3
   });
 }
-__name(globalCss, "globalCss");
+__name(extendGlobalCss, "extendGlobalCss");
 
-// ../reference-core/src/styled/api/staticCss.ts
-var staticCss_exports = {};
-__export(staticCss_exports, {
-  staticCss: () => staticCss
+// ../reference-core/src/styled/api/extendStaticCss.ts
+var extendStaticCss_exports = {};
+__export(extendStaticCss_exports, {
+  extendStaticCss: () => extendStaticCss
 });
-function staticCss(config2) {
+function extendStaticCss(config2) {
   extendPandaConfig({
     staticCss: config2
   });
 }
-__name(staticCss, "staticCss");
+__name(extendStaticCss, "extendStaticCss");
 
-// ../reference-core/src/styled/api/globalFontface.ts
-var globalFontface_exports = {};
-__export(globalFontface_exports, {
-  globalFontface: () => globalFontface
+// ../reference-core/src/styled/api/extendGlobalFontface.ts
+var extendGlobalFontface_exports = {};
+__export(extendGlobalFontface_exports, {
+  extendGlobalFontface: () => extendGlobalFontface
 });
-function globalFontface(fontface) {
+function extendGlobalFontface(fontface) {
   extendPandaConfig({
     globalFontface: fontface
   });
 }
-__name(globalFontface, "globalFontface");
-
-// ../reference-core/src/styled/api/font.ts
-var font_exports = {};
-__export(font_exports, {
-  font: () => font
-});
+__name(extendGlobalFontface, "extendGlobalFontface");
 
 // ../reference-core/src/cli/panda/fontFace/extendFontFace.ts
 var FONT_COLLECTOR_KEY = "__fontCollector";
@@ -749,18 +730,18 @@ function extendFontCollector(def) {
 }
 __name(extendFontCollector, "extendFontCollector");
 
-// ../reference-core/src/styled/api/font.ts
-function font(name, options) {
+// ../reference-core/src/styled/api/extendFont.ts
+function extendFont(name, options) {
   extendFontCollector({ name, ...options });
 }
-__name(font, "font");
+__name(extendFont, "extendFont");
 
-// ../reference-core/src/styled/api/keyframes.ts
-var keyframes_exports = {};
-__export(keyframes_exports, {
-  keyframes: () => keyframes
+// ../reference-core/src/styled/api/extendKeyframes.ts
+var extendKeyframes_exports = {};
+__export(extendKeyframes_exports, {
+  extendKeyframes: () => extendKeyframes
 });
-function keyframes(config2) {
+function extendKeyframes(config2) {
   extendPandaConfig({
     theme: {
       extend: {
@@ -769,7 +750,19 @@ function keyframes(config2) {
     }
   });
 }
-__name(keyframes, "keyframes");
+__name(extendKeyframes, "extendKeyframes");
+
+// ../reference-core/src/cli/panda/boxPattern/extendBoxPattern.ts
+var BOX_PATTERN_COLLECTOR_KEY = "__boxPatternCollector";
+if (!globalThis[BOX_PATTERN_COLLECTOR_KEY]) {
+  ;
+  globalThis[BOX_PATTERN_COLLECTOR_KEY] = [];
+}
+function extendBoxPattern(extension) {
+  const collector = globalThis[BOX_PATTERN_COLLECTOR_KEY];
+  collector.push(extension);
+}
+__name(extendBoxPattern, "extendBoxPattern");
 
 // ../reference-core/src/styled/rhythm/helpers.ts
 function getRhythm(num, denom) {
@@ -869,7 +862,7 @@ var rhythmUtilities = {
   outlineOffset: rhythmTransform("outlineOffset"),
   borderSpacing: rhythmTransform("borderSpacing")
 };
-utilities2(rhythmUtilities);
+extendUtilities(rhythmUtilities);
 
 // ../reference-core/src/styled/theme/spacing.ts
 var spacing = {
@@ -892,7 +885,7 @@ var spacing = {
   "10r": { value: getRhythm(10) },
   "12r": { value: getRhythm(12) }
 };
-tokens({
+extendTokens({
   spacing
 });
 
@@ -912,13 +905,13 @@ var radii = {
   "3xl": { value: "1.5rem" },
   full: { value: "9999px" }
 };
-tokens({
+extendTokens({
   radii
 });
 
 // ../reference-core/src/styled/theme/animations.ts
 var animations_exports = {};
-tokens({
+extendTokens({
   animations: {
     // Spin animations
     spin: {
@@ -969,22 +962,8 @@ tokens({
 });
 
 // ../reference-core/src/styled/font/font.ts
-var font_exports2 = {};
-
-// ../reference-core/src/cli/panda/boxPattern/extendBoxPattern.ts
-var BOX_PATTERN_COLLECTOR_KEY = "__boxPatternCollector";
-if (!globalThis[BOX_PATTERN_COLLECTOR_KEY]) {
-  ;
-  globalThis[BOX_PATTERN_COLLECTOR_KEY] = [];
-}
-function extendBoxPattern(extension) {
-  const collector = globalThis[BOX_PATTERN_COLLECTOR_KEY];
-  collector.push(extension);
-}
-__name(extendBoxPattern, "extendBoxPattern");
-
-// ../reference-core/src/styled/font/font.ts
-tokens({
+var font_exports = {};
+extendTokens({
   fonts: {
     sans: { value: '"Inter", ui-sans-serif, sans-serif' },
     serif: { value: '"Literata", ui-serif, serif' },
@@ -1010,7 +989,7 @@ tokens({
     "mono.bold": { value: "700" }
   }
 });
-globalFontface({
+extendGlobalFontface({
   Inter: {
     src: 'url(https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7W0Q5nw.woff2) format("woff2")',
     fontDisplay: "swap",
@@ -1033,7 +1012,7 @@ globalFontface({
     sizeAdjust: "101%"
   }
 });
-recipe({
+extendRecipe({
   fontStyle: {
     className: "r_font",
     variants: {
@@ -1063,7 +1042,7 @@ extendBoxPattern({
     weight: { type: "string" }
   },
   transform(props) {
-    const { font: font2, weight } = props;
+    const { font, weight } = props;
     const FONT_PRESETS = {
       sans: { fontFamily: "sans", fontWeight: "normal", letterSpacing: "-0.01em" },
       serif: { fontFamily: "serif", fontWeight: "normal", letterSpacing: "normal" },
@@ -1089,8 +1068,8 @@ extendBoxPattern({
       "mono.bold": "700"
     };
     const result = {};
-    if (font2 && FONT_PRESETS[font2]) {
-      Object.assign(result, FONT_PRESETS[font2]);
+    if (font && FONT_PRESETS[font]) {
+      Object.assign(result, FONT_PRESETS[font]);
     }
     if (weight && WEIGHT_TOKENS[weight]) {
       result.fontWeight = WEIGHT_TOKENS[weight];
@@ -1100,7 +1079,7 @@ extendBoxPattern({
 });
 
 // ../reference-core/src/styled/animations/fade.ts
-keyframes({
+extendKeyframes({
   fadeIn: {
     from: { opacity: "0" },
     to: { opacity: "1" }
@@ -1152,7 +1131,7 @@ keyframes({
 });
 
 // ../reference-core/src/styled/animations/slide.ts
-keyframes({
+extendKeyframes({
   slideUp: {
     from: { transform: "translateY(100%)" },
     to: { transform: "translateY(0)" }
@@ -1180,7 +1159,7 @@ keyframes({
 });
 
 // ../reference-core/src/styled/animations/scale.ts
-keyframes({
+extendKeyframes({
   scaleIn: {
     from: {
       opacity: "0",
@@ -1223,7 +1202,7 @@ keyframes({
 });
 
 // ../reference-core/src/styled/animations/spin.ts
-keyframes({
+extendKeyframes({
   spin: {
     from: { transform: "rotate(0deg)" },
     to: { transform: "rotate(360deg)" }
@@ -1247,7 +1226,7 @@ keyframes({
 });
 
 // ../reference-core/src/styled/animations/bounce.ts
-keyframes({
+extendKeyframes({
   bounce: {
     "0%, 100%": {
       transform: "translateY(0)",
@@ -1298,7 +1277,7 @@ keyframes({
 });
 
 // ../reference-core/src/styled/animations/attention.ts
-keyframes({
+extendKeyframes({
   ping: {
     "0%": {
       transform: "scale(1)",
@@ -1729,11 +1708,11 @@ var primitiveCSS = {
   qStyle,
   citeStyle
 };
-recipe(primitiveCSS);
+extendRecipe(primitiveCSS);
 
 // ../reference-core/src/styled/css.global.ts
 var css_global_exports = {};
-globalCss({
+extendGlobalCss({
   ":root": {
     "--r-base": "16px",
     "--r-density": "1",
@@ -1749,7 +1728,7 @@ globalCss({
 
 // ../reference-core/src/styled/css.static.ts
 var css_static_exports = {};
-staticCss({
+extendStaticCss({
   css: [
     {
       properties: {
@@ -1935,7 +1914,7 @@ extendPandaConfig({
         Object.entries(props).filter(([k]) => !extensionKeys.has(k))
       );
       const _r0 = (function(props2) {
-        const { font: font2, weight } = props2;
+        const { font, weight } = props2;
         const FONT_PRESETS = {
           sans: { fontFamily: "sans", fontWeight: "normal", letterSpacing: "-0.01em" },
           serif: { fontFamily: "serif", fontWeight: "normal", letterSpacing: "normal" },
@@ -1961,8 +1940,8 @@ extendPandaConfig({
           "mono.bold": "700"
         };
         const result = {};
-        if (font2 && FONT_PRESETS[font2]) {
-          Object.assign(result, FONT_PRESETS[font2]);
+        if (font && FONT_PRESETS[font]) {
+          Object.assign(result, FONT_PRESETS[font]);
         }
         if (weight && WEIGHT_TOKENS[weight]) {
           result.fontWeight = WEIGHT_TOKENS[weight];
@@ -1990,65 +1969,8 @@ extendPandaConfig({
   } } }
 });
 
-// ../reference-core/src/styled/theme/index.ts
-var theme_exports = {};
-__export(theme_exports, {
-  colors: () => colors,
-  radii: () => radii,
-  spacing: () => spacing
-});
-
-// ../reference-core/src/styled/types/colors.ts
-var colors_exports2 = {};
-__export(colors_exports2, {
-  COLOR_PROP_KEYS: () => COLOR_PROP_KEYS
-});
-var COLOR_PROP_KEYS = [
-  "accentColor",
-  "backgroundColor",
-  "bg",
-  "bgColor",
-  "borderBlockColor",
-  "borderBlockEndColor",
-  "borderBlockStartColor",
-  "borderBottomColor",
-  "borderColor",
-  "borderEndColor",
-  "borderInlineColor",
-  "borderInlineEndColor",
-  "borderInlineStartColor",
-  "borderLeftColor",
-  "borderRightColor",
-  "borderStartColor",
-  "borderTopColor",
-  "borderXColor",
-  "borderYColor",
-  "boxShadowColor",
-  "caretColor",
-  "color",
-  "columnRuleColor",
-  "divideColor",
-  "fill",
-  "floodColor",
-  "focusRingColor",
-  "lightingColor",
-  "outlineColor",
-  "ringColor",
-  "scrollbarColor",
-  "shadowColor",
-  "stopColor",
-  "stroke",
-  "textDecorationColor",
-  "textEmphasisColor",
-  "textShadowColor",
-  "WebkitBorderBeforeColor",
-  "WebkitTapHighlightColor",
-  "WebkitTextFillColor",
-  "WebkitTextStrokeColor"
-];
-
 // ../reference-core/.ref/panda-entry.ts
-var defaultFragments = [panda_base_exports, css_global_exports, css_static_exports, styled_exports, font_exports, globalCss_exports, globalFontface_exports, api_exports, keyframes_exports, recipe_exports, staticCss_exports, tokens_exports, utilities_exports, font_exports2, box_exports, rhythm_exports, utilities_exports2, animations_exports, colors_exports, theme_exports, radii_exports, spacing_exports, colors_exports2].map((m) => m?.default !== void 0 ? m.default : null).filter(Boolean);
+var defaultFragments = [panda_base_exports, css_global_exports, css_static_exports, extendGlobalCss_exports, extendGlobalFontface_exports, extendKeyframes_exports, extendRecipe_exports, extendStaticCss_exports, extendTokens_exports, extendUtilities_exports, api_exports, font_exports, box_exports, utilities_exports, animations_exports, colors_exports, radii_exports, spacing_exports].map((m) => m?.default !== void 0 ? m.default : null).filter(Boolean);
 var collected = globalThis[COLLECTOR_KEY] || [];
 var fragments = [...defaultFragments, ...collected];
 var config = fragments.reduce((acc, frag) => deepMerge(acc, frag), {});
