@@ -1,6 +1,9 @@
 import { forwardRef } from 'react';
 import { cva, cx, type RecipeVariantProps } from '../system/css/index.js';
-import { Button as ButtonPrimitive } from '../primitives/index.js';
+import {
+  Button as ButtonPrimitive,
+  type ButtonProps as PrimitiveButtonProps,
+} from '../primitives/index.js';
 
 const button = cva({
   base: {
@@ -46,7 +49,7 @@ const button = cva({
   },
 });
 
-export type ButtonProps = React.ComponentPropsWithoutRef<'button'> &
+export type ButtonProps = PrimitiveButtonProps &
   RecipeVariantProps<typeof button>;
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
