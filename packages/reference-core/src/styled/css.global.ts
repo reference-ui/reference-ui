@@ -11,6 +11,9 @@ extendGlobalCss({
     fontFamily: 'sans',
     letterSpacing: '-0.01em',
     fontSize: 'body',
-    containerType: 'inline-size',
+ 
   },
+  html: {
+   containerType: 'inline-size',
+  }
 })

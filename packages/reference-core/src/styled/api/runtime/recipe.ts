@@ -6,15 +6,15 @@
 import {
   cva as pandaCva,
   type RecipeVariantProps as PandaRecipeVariantProps,
-} from '../../system/css/index.js'
+} from '../../../system/css/index.js'
 import type {
   RecipeVariantRecord,
   RecipeSelection,
   RecipeRuntimeFn,
   RecipeCompoundSelection,
-} from '../../system/types/recipe.js'
-import type { SystemStyleObject } from '../../system/types/index.js'
-import type { StrictColorProps } from '../types/index.js'
+} from '../../../system/types/recipe.js'
+import type { SystemStyleObject } from '../../../system/types/index.js'
+import type { StrictColorProps } from '../../types/index.js'
 
 type StrictStyleObject = StrictColorProps<SystemStyleObject>
 
@@ -58,4 +58,4 @@ export type RecipeVariantProps<
 > = PandaRecipeVariantProps<T>
 
 // Re-export other useful recipe types
-export type { RecipeSelection, RecipeRuntimeFn } from '../../system/types/recipe.js'
+export type { RecipeSelection, RecipeRuntimeFn } from '../../../system/types/recipe.js'
