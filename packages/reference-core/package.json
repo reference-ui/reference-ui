@@ -37,7 +37,6 @@
   },
   "scripts": {
     "build": "npm run gen && tsdown",
-    "dev": "node scripts/link-system.cjs && tsdown --watch",
     "dev:core": "concurrently \"panda codegen --watch\" \"panda --watch\"",
     "gen": "panda codegen && node scripts/generate-primitives.cjs && panda",
     "postinstall": "npm run gen && npm run build"

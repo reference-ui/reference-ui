@@ -2711,14 +2711,6 @@
     flex: 1 1 0%;
 }
 
-  .mx_auto {
-    margin-inline: auto;
-}
-
-  .px_4 {
-    padding-inline: 4px;
-}
-
   .gap_3 {
     gap: 3px;
 }
@@ -2786,6 +2778,14 @@
 
   .bd-w_1px {
     border-width: 1px;
+}
+
+  .mx_auto {
+    margin-inline: auto;
+}
+
+  .px_4 {
+    padding-inline: 4px;
 }
 
   .bg-c_gray\.50 {
@@ -4884,18 +4884,6 @@
     container-name: card;
 }
 
-  .pos_relative {
-    position: relative;
-}
-
-  .md_6 {
-    md: 6px;
-}
-
-  .lg_8 {
-    lg: 8px;
-}
-
   .bg-c_white {
     background-color: white;
 }
@@ -4950,6 +4938,10 @@
 
   .fs_4xl {
     font-size: 4xl;
+}
+
+  .pos_relative {
+    position: relative;
 }
 
   .bx-sh_0_1px_3px_rgba\(0\,_0\,_0\,_0\.1\)\,_0_1px_2px_rgba\(0\,_0\,_0\,_0\.06\) {
@@ -5058,6 +5050,14 @@
 
   .lh_40px {
     line-height: 40px;
+}
+
+  .md_6 {
+    md: 6px;
+}
+
+  .lg_8 {
+    lg: 8px;
 }
 
   .pl_px {
@@ -5664,10 +5664,6 @@
     margin-bottom: var(--spacing-0\.5r);
 }
 
-  .max-w_8xl {
-    max-width: 8xl;
-}
-
   .w_10r {
     width: var(--spacing-10r);
 }
@@ -5766,6 +5762,10 @@
 
   .h_200px {
     height: 200px;
+}
+
+  .max-w_8xl {
+    max-width: 8xl;
 }
 
   .before\:inset_0::before {
