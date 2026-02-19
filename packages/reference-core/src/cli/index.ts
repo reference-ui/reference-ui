@@ -2,7 +2,6 @@
 import { Command } from 'commander'
 import pc from 'picocolors'
 import { syncCommand } from './commands/sync'
-import { linkSystemCommand } from './commands/link-system'
 
 const { cyan, green, red } = pc
 const cwd = process.cwd()
@@ -26,21 +25,6 @@ async function main(): Promise<void> {
         console.log(`\n${green('✓')} Design system synced successfully`)
       } catch (err) {
         console.error(`\n${red('✗')} Sync failed:`)
-        console.error(err)
-        process.exit(1)
-      }
-    })
-
-  program
-    .command('link-system')
-    .description('Link generated system to source')
-    .action(async () => {
-      try {
-        console.log(cyan('🔗 Linking system...\n'))
-        await linkSystemCommand(cwd)
-        console.log(`\n${green('✓')} System linked successfully`)
-      } catch (err) {
-        console.error(`\n${red('✗')} Link failed:`)
         console.error(err)
         process.exit(1)
       }
