@@ -1829,9 +1829,7 @@ extendGlobalCss({
   body: {
     fontFamily: "sans",
     letterSpacing: "-0.01em",
-    fontSize: "body"
-  },
-  html: {
+    fontSize: "body",
     containerType: "inline-size"
   }
 });
