@@ -4,26 +4,34 @@ export { Container } from '../system/jsx/container.js'
 export { Flex, Stack, HStack, VStack } from '../system/jsx/index.js'
 export { Button } from '../components/Button.js'
 export { ResponsiveExample } from '../components/ResponsiveExample.js'
+export { RecipeCoreDemo } from '../components/RecipeCoreDemo.js'
 export type { ButtonProps } from '../components/Button.js'
 export { box, container } from '../system/patterns/index.js'
-export { css } from '../styled/api/css.js'
+export { css } from '../styled/api/index.js'
+export { recipe } from '../styled/api/runtime/recipe.js'
+export { cva } from '../system/css/index.js'
+export type { RecipeVariantProps } from '../styled/api/runtime/recipe.js'
 export type { BoxProps } from '../system/jsx/box.js'
 export type { ContainerProps } from '../system/jsx/container.js'
 export type { SystemStyleObject } from '../system/types/index.js'
 export type { ResponsiveBreakpoints } from '../styled/patterns.d.js'
 export { getRhythm } from '../styled/index.js'
+export { colors } from '../styled/theme/colors.js'
 
 // Configuration API (for ui.config.ts files)
 export { defineConfig } from '../cli/config/index.js'
 export type { ReferenceUIConfig } from '../cli/config/index.js'
 
-// Styled API (build-time configuration - internal)
-export { extendTokens } from '../styled/api/internal/extendTokens.js'
-export { extendRecipe, extendSlotRecipe } from '../styled/api/internal/extendRecipe.js'
-export { extendUtilities } from '../styled/api/internal/extendUtilities.js'
-export { extendGlobalCss } from '../styled/api/internal/extendGlobalCss.js'
-export { extendStaticCss } from '../styled/api/internal/extendStaticCss.js'
-export { extendGlobalFontface } from '../styled/api/internal/extendGlobalFontface.js'
-export { extendFont } from '../styled/api/internal/extendFont.js'
-export { extendKeyframes } from '../styled/api/internal/extendKeyframes.js'
-export { extendPattern } from '../styled/api/internal/extendPattern.js'
+// Styled API (build-time configuration and runtime - exported from main index)
+export {
+  extendTokens,
+  extendRecipe,
+  extendSlotRecipe,
+  extendUtilities,
+  extendGlobalCss,
+  extendStaticCss,
+  extendGlobalFontface,
+  extendFont,
+  extendKeyframes,
+  extendPattern,
+} from '../styled/api/index.js'

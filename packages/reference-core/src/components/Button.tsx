@@ -1,5 +1,7 @@
 import { forwardRef } from 'react';
-import { cva, cx, type RecipeVariantProps } from '../system/css/index.js';
+import { cx } from '../system/css/index.js';
+import { type RecipeVariantProps } from '../styled/api';
+import { cva } from '../system/css/index.js';
 import {
   Button as ButtonPrimitive,
   type ButtonProps as PrimitiveButtonProps,
@@ -20,7 +22,7 @@ const button = cva({
   variants: {
     visual: {
       solid: {
-        bg: 'red.500',
+        bg: 'green.500',
         color: 'white',
         _hover: { bg: 'blue.600' },
       },

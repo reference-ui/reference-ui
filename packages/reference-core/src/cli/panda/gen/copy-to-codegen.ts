@@ -5,6 +5,7 @@ import { existsSync, mkdirSync, copyFileSync, rmSync, writeFileSync, readFileSyn
 import { resolve, dirname, relative } from 'node:path'
 import * as chokidar from 'chokidar'
 import { mdxToJSX } from './mdx-to-jsx'
+import { rewriteCvaImports } from './rewrite-cva-imports'
 
 /**
  * Copy user files matching include patterns to codegen folder in @reference-ui/core.
@@ -15,7 +16,8 @@ import { mdxToJSX } from './mdx-to-jsx'
  * 2. Clean the codegen folder in node_modules/@reference-ui/core
  * 3. Copy files to node_modules/@reference-ui/core/codegen/ maintaining relative paths
  * 4. MDX files are converted to JSX for Panda scanning
- * 5. Panda scans the codegen/ folder (reference-core ships source, runs from node_modules)
+ * 5. TS/TSX/JSX: AST transform rewrites `cva` from @reference-ui/core to a separate import from styled-system/css so Panda resolves it from outdir
+ * 6. Panda scans the codegen/ folder (reference-core ships source, runs from node_modules)
  */
 export async function copyToCodegen(consumerCwd: string, coreDir: string, includePatterns: string[]): Promise<void> {
   const codegenDir = resolve(coreDir, 'codegen')
@@ -52,7 +54,7 @@ export async function copyToCodegen(consumerCwd: string, coreDir: string, includ
     const relativePath = relative(consumerCwd, file)
     const destPath = resolve(codegenDir, relativePath)
     
-    // Convert MDX to JSX, otherwise copy as-is
+    // Convert MDX to JSX, otherwise copy as-is (with cva import rewrite for TS/TSX/JSX)
     if (file.endsWith('.mdx')) {
       const mdxContent = readFileSync(file, 'utf-8')
       const jsxContent = await mdxToJSX(mdxContent, relativePath)
@@ -61,7 +63,14 @@ export async function copyToCodegen(consumerCwd: string, coreDir: string, includ
       writeFileSync(jsxDestPath, jsxContent, 'utf-8')
     } else {
       mkdirSync(dirname(destPath), { recursive: true })
-      copyFileSync(file, destPath)
+      const ext = file.slice(file.lastIndexOf('.'))
+      if (ext === '.ts' || ext === '.tsx' || ext === '.jsx') {
+        const content = readFileSync(file, 'utf-8')
+        const rewritten = rewriteCvaImports(content, relativePath)
+        writeFileSync(destPath, rewritten, 'utf-8')
+      } else {
+        copyFileSync(file, destPath)
+      }
     }
     copiedCount++
   }
@@ -148,7 +157,14 @@ export function watchAndCopyToCodegen(
         writeFileSync(jsxDestPath, jsxContent, 'utf-8')
       } else {
         mkdirSync(dirname(destPath), { recursive: true })
-        copyFileSync(file, destPath)
+        const ext = file.slice(file.lastIndexOf('.'))
+        if (ext === '.ts' || ext === '.tsx' || ext === '.jsx') {
+          const content = readFileSync(file, 'utf-8')
+          const rewritten = rewriteCvaImports(content, relativePath)
+          writeFileSync(destPath, rewritten, 'utf-8')
+        } else {
+          copyFileSync(file, destPath)
+        }
       }
 
       if (isReady) {
@@ -169,7 +185,14 @@ export function watchAndCopyToCodegen(
         writeFileSync(jsxDestPath, jsxContent, 'utf-8')
       } else {
         mkdirSync(dirname(destPath), { recursive: true })
-        copyFileSync(file, destPath)
+        const ext = file.slice(file.lastIndexOf('.'))
+        if (ext === '.ts' || ext === '.tsx' || ext === '.jsx') {
+          const content = readFileSync(file, 'utf-8')
+          const rewritten = rewriteCvaImports(content, relativePath)
+          writeFileSync(destPath, rewritten, 'utf-8')
+        } else {
+          copyFileSync(file, destPath)
+        }
       }
 
       logSync(relativePath)
