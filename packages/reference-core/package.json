@@ -36,7 +36,7 @@
   },
   "scripts": {
     "build": "npm run gen && tsdown",
-    "dev:core": "node scripts/link-system.cjs",
+    "dev": "node scripts/link-system.cjs",
     "gen": "panda codegen && node scripts/generate-primitives.cjs && panda",
     "postinstall": "npm run gen && npm run build"
   },
