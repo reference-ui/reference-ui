@@ -1,26 +1,53 @@
 #!/usr/bin/env node
+import { Command } from 'commander'
+import pc from 'picocolors'
 import { syncCommand } from './commands/sync'
 import { linkSystemCommand } from './commands/link-system'
 
+const { cyan, green, red } = pc
 const cwd = process.cwd()
 
 async function main(): Promise<void> {
-  try {
-    const args = process.argv.slice(2)
-    const command = args[0]
-    const flags = args.slice(1)
-    
-    if (command === 'link-system') {
-      await linkSystemCommand(cwd)
-      return
-    }
-    
-    const watch = flags.includes('--watch') || flags.includes('-w')
-    await syncCommand(cwd, { watch })
-  } catch (err) {
-    console.error(err)
-    process.exit(1)
-  }
+  const program = new Command()
+
+  program
+    .name('ref')
+    .description('Reference UI Design System CLI')
+    .version('0.0.1', '-v, --version')
+
+  program
+    .command('sync', { isDefault: true })
+    .description('Build and sync the design system')
+    .option('-w, --watch', 'Watch for changes and rebuild')
+    .action(async (options) => {
+      try {
+        console.log(cyan('🎨 Syncing design system...\n'))
+        await syncCommand(cwd, { watch: options.watch })
+        console.log(`\n${green('✓')} Design system synced successfully`)
+      } catch (err) {
+        console.error(`\n${red('✗')} Sync failed:`)
+        console.error(err)
+        process.exit(1)
+      }
+    })
+
+  program
+    .command('link-system')
+    .description('Link generated system to source')
+    .action(async () => {
+      try {
+        console.log(cyan('🔗 Linking system...\n'))
+        await linkSystemCommand(cwd)
+        console.log(`\n${green('✓')} System linked successfully`)
+      } catch (err) {
+        console.error(`\n${red('✗')} Link failed:`)
+        console.error(err)
+        process.exit(1)
+      }
+    })
+
+  program.parse()
 }
 
 main()
+

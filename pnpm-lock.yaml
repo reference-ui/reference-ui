@@ -66,12 +66,18 @@ importers:
       chokidar:
         specifier: ^4.0.3
         version: 4.0.3
+      commander:
+        specifier: ^12.1.0
+        version: 12.1.0
       esbuild:
         specifier: ^0.27.3
         version: 0.27.3
       fast-glob:
         specifier: ^3.3.2
         version: 3.3.3
+      picocolors:
+        specifier: ^1.1.0
+        version: 1.1.1
       tsdown:
         specifier: ^0.20.1
         version: 0.20.1(typescript@5.9.3)
@@ -1455,6 +1461,10 @@ packages:
 
   comma-separated-tokens@2.0.3:
     resolution: {integrity: sha512-Fu4hJdvzeylCfQPp9SGWidpzrMs7tTrlu6Vb8XGaRGck8QSNZJJp538Wrb60Lax4fPwR64ViY468OIUTbRlGZg==}
+
+  commander@12.1.0:
+    resolution: {integrity: sha512-Vw8qHK3bZM9y/P10u3Vib8o/DdkvA2OtPtZvD871QKjy74Wj1WSKFILMPRPSdUSx5RFK1arlJzEtA4PkFgnbuA==}
+    engines: {node: '>=18'}
 
   concurrently@9.2.1:
     resolution: {integrity: sha512-fsfrO0MxV64Znoy8/l1vVIjjHa29SZyyqPgQBwhiDcaW8wJc2W3XWVOGx4M3oJBnv/zdUZIIp1gDeS98GzP8Ng==}
@@ -4368,6 +4378,8 @@ snapshots:
       delayed-stream: 1.0.0
 
   comma-separated-tokens@2.0.3: {}
+
+  commander@12.1.0: {}
 
   concurrently@9.2.1:
     dependencies:

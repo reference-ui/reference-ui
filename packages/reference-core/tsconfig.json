@@ -16,6 +16,8 @@
     "emitDecoratorMetadata": true,
     "sourceMap": true,
     "importHelpers": false,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
     "baseUrl": ".",
     "paths": {
       "@reference-ui/core": ["./src/entry/index.ts"],
