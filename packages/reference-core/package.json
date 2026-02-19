@@ -6,8 +6,7 @@
   "main": "./src/entry/index.ts",
   "types": "./src/entry/index.ts",
   "bin": {
-    "ref": "./dist/cli/index.mjs",
-    "ref-sync": "./dist/cli/index.mjs"
+    "ref": "./dist/cli/index.mjs"
   },
   "exports": {
     ".": "./src/entry/index.ts",
@@ -20,9 +19,9 @@
     "./styles.css": "./src/system/styles.css"
   },
   "dependencies": {
-    "@mdx-js/mdx": "^3.1.1",
     "@pandacss/dev": "^1.8.1",
-    "@types/node": "^25.1.0",
+    "@mdx-js/mdx": "^3.1.1",
+
     "bundle-n-require": "^1.1.2",
     "chokidar": "^4.0.3",
     "commander": "^12.1.0",
@@ -37,14 +36,14 @@
   },
   "scripts": {
     "build": "npm run gen && tsdown",
-    "dev:core": "concurrently \"panda codegen --watch\" \"panda --watch\"",
+    "dev:core": "node scripts/link-system.cjs",
     "gen": "panda codegen && node scripts/generate-primitives.cjs && panda",
     "postinstall": "npm run gen && npm run build"
   },
   "devDependencies": {
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
-    "concurrently": "^9.1.0",
+    "@types/node": "^25.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "typescript": "~5.9.3"
