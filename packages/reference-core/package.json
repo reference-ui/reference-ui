@@ -40,10 +40,6 @@
     "dev": "node scripts/link-system.cjs && tsdown --watch",
     "dev:core": "concurrently \"panda codegen --watch\" \"panda --watch\"",
     "gen": "panda codegen && node scripts/generate-primitives.cjs && panda",
-    "gen:primitives": "node scripts/generate-primitives.cjs",
-    "codegen": "panda codegen",
-    "cssgen": "panda",
-    "link-system": "node scripts/link-system.cjs",
     "postinstall": "npm run gen && npm run build"
   },
   "devDependencies": {
