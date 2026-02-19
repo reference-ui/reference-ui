@@ -15,7 +15,10 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "pnpm run dev:core",
-        "cwd": "packages/reference-core"
+        "cwd": "packages/reference-core",
+        "env": {
+          "REFERENCE_DEBUG": "1"
+        }
       }
     }
   }
