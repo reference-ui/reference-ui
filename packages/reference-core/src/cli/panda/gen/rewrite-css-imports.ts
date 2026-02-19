@@ -2,7 +2,7 @@ import * as ts from 'typescript'
 import { dirname } from 'node:path'
 
 const CORE_PACKAGE = '@reference-ui/core'
-const CVA_BINDINGS = ['cva', 'recipe'] as const
+const CSS_BINDING = 'css'
 
 /**
  * Compute relative path from a file in codegen to the styled-system css entry.
@@ -17,12 +17,12 @@ function getStyledSystemCssRelativePath(relativePath: string): string {
 
 /**
  * Rewrite imports only via string replacement so we never re-print the rest of the file.
- * When we see `cva` or `recipe` imported from @reference-ui/core, replace that import
- * with: (1) import { cva } from '<styled-system/css>', (2) optional second line with
- * the rest from @reference-ui/core. Also replace all usages of `recipe(` with `cva(` in the code.
+ * When we see `css` imported from @reference-ui/core, replace that import
+ * with: (1) import { css } from '<styled-system/css>', (2) optional second line with
+ * the rest from @reference-ui/core.
  * The rest of the source is left byte-for-byte unchanged.
  */
-export function rewriteCvaImports(sourceCode: string, relativePath: string): string {
+export function rewriteCssImports(sourceCode: string, relativePath: string): string {
   const isTsx = /\.(tsx|jsx)$/.test(relativePath)
   const sourceFile = ts.createSourceFile(
     'temp-file',
@@ -34,7 +34,6 @@ export function rewriteCvaImports(sourceCode: string, relativePath: string): str
 
   const styledSystemPath = getStyledSystemCssRelativePath(relativePath)
   let replacement: { start: number; end: number; text: string } | null = null
-  let localCvaName: string | null = null // Track the local name used for cva/recipe
 
   function visit(node: ts.Node) {
     if (!ts.isImportDeclaration(node)) {
@@ -58,13 +57,12 @@ export function rewriteCvaImports(sourceCode: string, relativePath: string): str
     }
     const elements = clause.namedBindings.elements
     const restNames: string[] = []
-    let hasCvaOrRecipe = false
+    let hasCss = false
     for (const el of elements) {
       const importedName = (el.propertyName ?? el.name).getText(sourceFile)
-      if (CVA_BINDINGS.includes(importedName as any)) {
-        hasCvaOrRecipe = true
-        // Track the local name (might be aliased)
-        localCvaName = el.name.getText(sourceFile)
+      if (importedName === CSS_BINDING) {
+        hasCss = true
+        // Note: We don't track local name since css doesn't get renamed
       } else {
         const part = el.propertyName
           ? `${el.propertyName.getText(sourceFile)} as ${el.name.getText(sourceFile)}`
@@ -72,14 +70,14 @@ export function rewriteCvaImports(sourceCode: string, relativePath: string): str
         restNames.push(part)
       }
     }
-    if (!hasCvaOrRecipe) {
+    if (!hasCss) {
       ts.forEachChild(node, visit)
       return
     }
     const start = node.getStart(sourceFile)
     const end = node.getEnd()
     const defaultName = clause.name ? clause.name.getText(sourceFile) : null
-    const cvaLine = `import { cva } from '${styledSystemPath}';\n`
+    const cssLine = `import { css } from '${styledSystemPath}';\n`
     let coreLine = ''
     if (restNames.length > 0 || defaultName) {
       if (restNames.length === 0) {
@@ -90,24 +88,14 @@ export function rewriteCvaImports(sourceCode: string, relativePath: string): str
         coreLine = `import { ${restNames.join(', ')} } from '${CORE_PACKAGE}';\n`
       }
     }
-    replacement = { start, end, text: cvaLine + coreLine }
+    replacement = { start, end, text: cssLine + coreLine }
     ts.forEachChild(node, visit)
   }
 
   visit(sourceFile)
   if (!replacement) return sourceCode
   
-  // First, replace the import
+  // Replace the import (no function name replacement needed for css)
   const { start, end, text } = replacement
-  let result = sourceCode.slice(0, start) + text + sourceCode.slice(end)
-  
-  // Then, if the local name was 'recipe', replace all usages with 'cva'
-  if (localCvaName && localCvaName !== 'cva') {
-    // Use regex to replace recipe( with cva( while preserving the rest
-    // We need to be careful to only replace the identifier, not parts of other words
-    const regex = new RegExp(`\\b${localCvaName}\\(`, 'g')
-    result = result.replace(regex, 'cva(')
-  }
-  
-  return result
+  return sourceCode.slice(0, start) + text + sourceCode.slice(end)
 }

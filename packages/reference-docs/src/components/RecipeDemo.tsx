@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Div, cva } from '@reference-ui/core';
+import { Div, recipe } from '@reference-ui/core';
 
 /**
  * Demo component showcasing the recipe() API.
@@ -7,7 +7,7 @@ import { Div, cva } from '@reference-ui/core';
  */
 
 // Define a polished button recipe with variants
-const buttonRecipe = cva({
+const buttonRecipe = recipe({
   base: {
     px: '5r',
     py: '2.5r',
@@ -196,10 +196,10 @@ export function RecipeDemo() {
 
   return (
     <Div display="flex" flexDirection="column" gap="10r">
-      {/* Demo using cva() directly */}
+      {/* Demo using recipe() directly */}
       <Div>
         <Div fontSize="xl" fontWeight="700" mb="4r" color="gray.800">
-          Recipe Demo (docs - using cva)
+          Recipe Demo (docs - using recipe)
         </Div>
         <Div
           display="flex"
