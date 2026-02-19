@@ -6,6 +6,19 @@ import { resolve, dirname, relative } from 'node:path'
 import * as chokidar from 'chokidar'
 import { mdxToJSX } from './mdx-to-jsx'
 import { rewriteCvaImports } from './rewrite-cva-imports'
+import { rewriteCssImports } from './rewrite-css-imports'
+
+/**
+ * Apply all import rewrites to source code.
+ * This ensures cva/recipe and css imports from @reference-ui/core are rewritten
+ * to use the local styled-system/css exports.
+ */
+function rewriteImports(sourceCode: string, relativePath: string): string {
+  let result = sourceCode
+  result = rewriteCvaImports(result, relativePath)
+  result = rewriteCssImports(result, relativePath)
+  return result
+}
 
 /**
  * Copy user files matching include patterns to codegen folder in @reference-ui/core.
@@ -16,7 +29,7 @@ import { rewriteCvaImports } from './rewrite-cva-imports'
  * 2. Clean the codegen folder in node_modules/@reference-ui/core
  * 3. Copy files to node_modules/@reference-ui/core/codegen/ maintaining relative paths
  * 4. MDX files are converted to JSX for Panda scanning
- * 5. TS/TSX/JSX: AST transform rewrites `cva` from @reference-ui/core to a separate import from styled-system/css so Panda resolves it from outdir
+ * 5. TS/TSX/JSX: AST transform rewrites `cva`/`recipe`/`css` from @reference-ui/core to separate imports from styled-system/css so Panda resolves them from outdir
  * 6. Panda scans the codegen/ folder (reference-core ships source, runs from node_modules)
  */
 export async function copyToCodegen(consumerCwd: string, coreDir: string, includePatterns: string[]): Promise<void> {
@@ -66,7 +79,7 @@ export async function copyToCodegen(consumerCwd: string, coreDir: string, includ
       const ext = file.slice(file.lastIndexOf('.'))
       if (ext === '.ts' || ext === '.tsx' || ext === '.jsx') {
         const content = readFileSync(file, 'utf-8')
-        const rewritten = rewriteCvaImports(content, relativePath)
+        const rewritten = rewriteImports(content, relativePath)
         writeFileSync(destPath, rewritten, 'utf-8')
       } else {
         copyFileSync(file, destPath)
@@ -160,7 +173,7 @@ export function watchAndCopyToCodegen(
         const ext = file.slice(file.lastIndexOf('.'))
         if (ext === '.ts' || ext === '.tsx' || ext === '.jsx') {
           const content = readFileSync(file, 'utf-8')
-          const rewritten = rewriteCvaImports(content, relativePath)
+          const rewritten = rewriteImports(content, relativePath)
           writeFileSync(destPath, rewritten, 'utf-8')
         } else {
           copyFileSync(file, destPath)
@@ -188,7 +201,7 @@ export function watchAndCopyToCodegen(
         const ext = file.slice(file.lastIndexOf('.'))
         if (ext === '.ts' || ext === '.tsx' || ext === '.jsx') {
           const content = readFileSync(file, 'utf-8')
-          const rewritten = rewriteCvaImports(content, relativePath)
+          const rewritten = rewriteImports(content, relativePath)
           writeFileSync(destPath, rewritten, 'utf-8')
         } else {
           copyFileSync(file, destPath)
