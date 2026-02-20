@@ -1,30 +1,20 @@
 {
   "name": "@reference-ui/core",
-  "version": "0.0.1",
-  "description": "Reference design system - ships as source, builds on user install via ref-sync",
+  "version": "0.1.0",
+  "description": "Reference UI",
   "type": "module",
   "main": "./src/entry/index.ts",
   "types": "./src/entry/index.ts",
   "bin": {
     "ref": "./dist/cli/index.mjs"
   },
-  "exports": {
-    ".": "./src/entry/index.ts",
-    "./tokens": "./src/tokens/index.ts",
-    "./panda-config": "./src/cli/panda/config/index.ts",
-    "./styled/colors": "./src/styled/theme/colors.ts",
-    "./styled-system/css": "./src/system/css/index.js",
-    "./styled-system/styles.css": "./src/system/styles.css",
-    "./system/styles.css": "./src/system/styles.css",
-    "./styles.css": "./src/system/styles.css"
-  },
   "dependencies": {
     "@pandacss/dev": "^1.8.1",
     "@mdx-js/mdx": "^3.1.1",
 
     "bundle-n-require": "^1.1.2",
-    "chokidar": "^4.0.3",
-    "commander": "^12.1.0",
+    "chokidar": "^5.0.0",
+    "commander": "^14.0.3",
     "esbuild": "^0.27.3",
     "fast-glob": "^3.3.2",
     "picocolors": "^1.1.0",
@@ -35,10 +25,8 @@
     "react-dom": "^18.0.0"
   },
   "scripts": {
-    "build": "npm run gen && tsdown",
-    "dev": "node scripts/link-system.cjs",
-    "gen": "panda codegen && node scripts/generate-primitives.cjs && panda",
-    "postinstall": "npm run gen && npm run build"
+    "build": "tsdown",
+    "dev": "node scripts/link-system.cjs"
   },
   "devDependencies": {
     "@types/react": "^18.2.0",
