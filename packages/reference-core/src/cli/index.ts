@@ -1,9 +1,7 @@
 #!/usr/bin/env node
 import { Command } from 'commander'
-import pc from 'picocolors'
 import { syncCommand } from './commands/sync'
-
-const { cyan, green, red } = pc
+import { runCommand } from './utils'
 const cwd = process.cwd()
 
 async function main(): Promise<void> {
@@ -18,17 +16,7 @@ async function main(): Promise<void> {
     .command('sync', { isDefault: true })
     .description('Build and sync the design system')
     .option('-w, --watch', 'Watch for changes and rebuild')
-    .action(async (options) => {
-      try {
-        console.log(cyan('🎨 Syncing design system...\n'))
-        await syncCommand(cwd, { watch: options.watch })
-        console.log(`\n${green('✓')} Design system synced successfully`)
-      } catch (err) {
-        console.error(`\n${red('✗')} Sync failed:`)
-        console.error(err)
-        process.exit(1)
-      }
-    })
+    .action(runCommand((options) => syncCommand(cwd, { watch: options.watch })))
 
   program.parse()
 }
