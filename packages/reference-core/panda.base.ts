@@ -1,5 +1,5 @@
 import { defineConfig, type Config } from '@pandacss/dev'
-import { extendPandaConfig } from '@reference-ui/core/panda-config'
+import { extendPandaConfig } from './src/cli/panda/config/extendPandaConfig'
 
 // Side effects: register theme, utilities, globalCss, etc. via styled/api
 import './src/styled/index'

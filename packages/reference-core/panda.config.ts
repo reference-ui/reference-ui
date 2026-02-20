@@ -54,12 +54,6 @@ __export(panda_base_exports, {
 });
 import { defineConfig } from "@pandacss/dev";
 
-// ../reference-core/src/cli/lib/microBundle.ts
-import * as esbuild from "esbuild";
-
-// ../reference-core/src/cli/eval/scanner.ts
-import fg from "fast-glob";
-
 // ../reference-core/src/styled/theme/colors.ts
 var colors_exports = {};
 __export(colors_exports, {
