@@ -26,4 +26,4 @@ log.debug = (...args: unknown[]) => {
   console.log(pc.dim("debug"), ...args);
 };
 
-export { log, isDebug };
+export { log };
