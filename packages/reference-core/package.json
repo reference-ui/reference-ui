@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "description": "Reference UI",
   "type": "module",
-  "main": "./src/entry/index.ts",
-  "types": "./src/entry/index.ts",
+  "main": "./src/entry/core.ts",
+  "types": "./src/entry/core.ts",
   "bin": {
     "ref": "./dist/cli/index.mjs"
   },

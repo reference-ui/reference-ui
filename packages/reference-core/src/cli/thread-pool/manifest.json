@@ -1,4 +1,5 @@
 {
   "virtual": "src/cli/virtual/worker.ts",
-  "system": "src/cli/system/worker.ts"
+  "system": "src/cli/system/worker.ts",
+  "packager": "src/cli/packager/worker.ts"
 }
