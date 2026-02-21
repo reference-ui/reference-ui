@@ -1,5 +1,5 @@
 import { compile } from '@mdx-js/mdx'
-import { log } from '../../utils/log'
+import { log } from '../../lib/log'
 
 /**
  * Convert MDX to JSX using the official MDX compiler.

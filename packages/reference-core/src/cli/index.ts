@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { Command } from 'commander'
 import { syncCommand } from './sync'
-import { runCommand } from './utils'
+import { runCommand } from './lib'
 const cwd = process.cwd()
 
 async function main(): Promise<void> {

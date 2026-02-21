@@ -1,5 +1,5 @@
 import { extname } from 'node:path'
-import { log } from '../../utils/log'
+import { log } from '../../lib/log'
 import { mdxToJsx } from './mdx-to-jsx'
 import { rewriteCvaImports } from './rewrite-cva-imports'
 import { rewriteCssImports } from './rewrite-css-imports'

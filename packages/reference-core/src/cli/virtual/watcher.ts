@@ -1,5 +1,5 @@
 import chokidar from 'chokidar'
-import { log } from '../utils/log'
+import { log } from '../lib/log'
 import { WATCHER_CONFIG } from './config.internal'
 import type { FileChangeHandler, VirtualOptions } from './types'
 
