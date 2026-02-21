@@ -1,5 +1,5 @@
 export default {
-  entry: ['src/cli/index.ts'],
+  entry: ['src/cli/index.ts', 'src/cli/virtual/worker.js', 'src/cli/virtual/init.ts'],
   outDir: 'dist/cli',
   format: ['esm', 'cjs'],
   dts: true,
@@ -13,6 +13,7 @@ export default {
     'typescript',
     'commander',
     'picocolors',
+    'piscina',
     'bundle-n-require',
   ],
   inlineOnly: false,
