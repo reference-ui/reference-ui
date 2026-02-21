@@ -17,7 +17,6 @@ const external = [
   'commander',
   'picocolors',
   'piscina',
-  'bundle-n-require',
 ]
 
 async function build() {
