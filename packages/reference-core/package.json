@@ -16,7 +16,7 @@
     "esbuild": "^0.27.3",
     "fast-glob": "^3.3.2",
     "picocolors": "^1.1.0",
-    "piscina": "^4.7.0",
+    "piscina": "^5.1.4",
     "tsdown": "^0.20.1"
   },
   "peerDependencies": {
