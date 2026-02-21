@@ -1,6 +1,6 @@
 /* eslint-disable */
-import type {  RecipeRule  } from './static-css';
-import type {  SystemStyleObject, DistributiveOmit, Pretty  } from './system-types';
+import type { RecipeRule } from './static-css'
+import type { SystemStyleObject, DistributiveOmit, Pretty } from './system-types'
 
 type StringToBoolean<T> = T extends 'true' | 'false' ? boolean : T
 
@@ -12,21 +12,27 @@ export type RecipeSelection<T extends RecipeVariantRecord> = keyof any extends k
       [K in keyof T]?: StringToBoolean<keyof T[K]> | undefined
     }
 
-export type RecipeVariantFn<T extends RecipeVariantRecord> = (props?: RecipeSelection<T>) => string
+export type RecipeVariantFn<T extends RecipeVariantRecord> = (
+  props?: RecipeSelection<T>
+) => string
 
 /**
  * Extract the variant as optional props from a `cva` function.
  * Intended to be used with a JSX component, prefer `RecipeVariant` for a more strict type.
  */
 export type RecipeVariantProps<
-  T extends RecipeVariantFn<RecipeVariantRecord> | SlotRecipeVariantFn<string, SlotRecipeVariantRecord<string>>,
+  T extends
+    | RecipeVariantFn<RecipeVariantRecord>
+    | SlotRecipeVariantFn<string, SlotRecipeVariantRecord<string>>,
 > = Pretty<Parameters<T>[0]>
 
 /**
  * Extract the variants from a `cva` function.
  */
 export type RecipeVariant<
-  T extends RecipeVariantFn<RecipeVariantRecord> | SlotRecipeVariantFn<string, SlotRecipeVariantRecord<string>>,
+  T extends
+    | RecipeVariantFn<RecipeVariantRecord>
+    | SlotRecipeVariantFn<string, SlotRecipeVariantRecord<string>>,
 > = Exclude<Pretty<Required<RecipeVariantProps<T>>>, undefined>
 
 type RecipeVariantMap<T extends RecipeVariantRecord> = {
@@ -37,14 +43,16 @@ type RecipeVariantMap<T extends RecipeVariantRecord> = {
  * Recipe / Standard
  * -----------------------------------------------------------------------------*/
 
-export interface RecipeRuntimeFn<T extends RecipeVariantRecord> extends RecipeVariantFn<T> {
+export interface RecipeRuntimeFn<
+  T extends RecipeVariantRecord,
+> extends RecipeVariantFn<T> {
   __type: RecipeSelection<T>
   variantKeys: (keyof T)[]
   variantMap: RecipeVariantMap<T>
   raw: (props?: RecipeSelection<T>) => SystemStyleObject
   config: RecipeConfig<T>
   splitVariantProps<Props extends RecipeSelection<T>>(
-    props: Props,
+    props: Props
   ): [RecipeSelection<T>, Pretty<DistributiveOmit<Props, keyof T>>]
   getVariantProps: (props?: RecipeSelection<T>) => RecipeSelection<T>
 }
@@ -82,7 +90,9 @@ export interface RecipeDefinition<T extends RecipeVariantRecord = RecipeVariantR
   compoundVariants?: Pretty<RecipeCompoundVariant<RecipeCompoundSelection<T>>>[]
 }
 
-export type RecipeCreatorFn = <T extends RecipeVariantRecord>(config: RecipeDefinition<T>) => RecipeRuntimeFn<T>
+export type RecipeCreatorFn = <T extends RecipeVariantRecord>(
+  config: RecipeDefinition<T>
+) => RecipeRuntimeFn<T>
 
 interface RecipeConfigMeta {
   /**
@@ -107,8 +117,7 @@ interface RecipeConfigMeta {
 }
 
 export interface RecipeConfig<T extends RecipeVariantRecord = RecipeVariantRecord>
-  extends RecipeDefinition<T>,
-    RecipeConfigMeta {}
+  extends RecipeDefinition<T>, RecipeConfigMeta {}
 
 /* -----------------------------------------------------------------------------
  * Recipe / Slot
@@ -116,19 +125,24 @@ export interface RecipeConfig<T extends RecipeVariantRecord = RecipeVariantRecor
 
 type SlotRecord<S extends string, T> = Partial<Record<S, T>>
 
-export type SlotRecipeVariantRecord<S extends string> = Record<any, Record<any, SlotRecord<S, SystemStyleObject>>>
+export type SlotRecipeVariantRecord<S extends string> = Record<
+  any,
+  Record<any, SlotRecord<S, SystemStyleObject>>
+>
 
 export type SlotRecipeVariantFn<S extends string, T extends RecipeVariantRecord> = (
-  props?: RecipeSelection<T>,
+  props?: RecipeSelection<T>
 ) => SlotRecord<S, string>
 
-export interface SlotRecipeRuntimeFn<S extends string, T extends SlotRecipeVariantRecord<S>>
-  extends SlotRecipeVariantFn<S, T> {
+export interface SlotRecipeRuntimeFn<
+  S extends string,
+  T extends SlotRecipeVariantRecord<S>,
+> extends SlotRecipeVariantFn<S, T> {
   raw: (props?: RecipeSelection<T>) => Record<S, SystemStyleObject>
   variantKeys: (keyof T)[]
   variantMap: RecipeVariantMap<T>
   splitVariantProps<Props extends RecipeSelection<T>>(
-    props: Props,
+    props: Props
   ): [RecipeSelection<T>, Pretty<DistributiveOmit<Props, keyof T>>]
   getVariantProps: (props?: RecipeSelection<T>) => RecipeSelection<T>
 }
@@ -171,8 +185,11 @@ export interface SlotRecipeDefinition<
   compoundVariants?: Pretty<SlotRecipeCompoundVariant<S, RecipeCompoundSelection<T>>>[]
 }
 
-export type SlotRecipeCreatorFn = <S extends string, T extends SlotRecipeVariantRecord<S>>(
-  config: SlotRecipeDefinition<S, T>,
+export type SlotRecipeCreatorFn = <
+  S extends string,
+  T extends SlotRecipeVariantRecord<S>,
+>(
+  config: SlotRecipeDefinition<S, T>
 ) => SlotRecipeRuntimeFn<S, T>
 
 export type SlotRecipeConfig<

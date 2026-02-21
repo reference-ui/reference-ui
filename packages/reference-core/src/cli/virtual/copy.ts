@@ -19,7 +19,7 @@ export async function copyToVirtual(
 
   // Calculate relative path from source directory
   const relativePath = relative(sourceDir, sourcePath)
-  
+
   // Build destination path in virtual directory
   let destPath = join(virtualDir, relativePath)
 
@@ -40,7 +40,7 @@ export async function copyToVirtual(
     sourcePath,
     destPath,
     content,
-    debug
+    debug,
   })
 
   // Update destination path if extension changed
@@ -68,7 +68,7 @@ export async function removeFromVirtual(
 ): Promise<void> {
   const { debug } = options
   const fs = await import('node:fs/promises')
-  
+
   // Calculate relative path
   const relativePath = relative(sourceDir, sourcePath)
   const destPath = join(virtualDir, relativePath)

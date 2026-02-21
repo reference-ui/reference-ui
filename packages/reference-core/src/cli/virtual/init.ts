@@ -11,7 +11,7 @@ import type { ReferenceUIConfig } from '../config'
 /**
  * Initialize the virtual filesystem.
  * Sets up the virtual directory and optionally starts watching for changes.
- * 
+ *
  * @param sourceDir - Source directory (typically the user's project root)
  * @param config - User's Reference UI configuration
  * @param options - Additional options (watch mode, virtual directory path)
@@ -22,10 +22,7 @@ export async function initVirtual(
   config: ReferenceUIConfig,
   options: InitVirtualOptions = {}
 ): Promise<() => void> {
-  const {
-    watch = false,
-    virtualDir = DEFAULT_VIRTUAL_DIR
-  } = options
+  const { watch = false, virtualDir = DEFAULT_VIRTUAL_DIR } = options
 
   const { include, debug = false } = config
 

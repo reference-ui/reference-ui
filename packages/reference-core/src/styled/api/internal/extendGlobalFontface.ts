@@ -18,7 +18,9 @@ import { extendPandaConfig } from '../../../cli/panda/config/extendPandaConfig'
  * })
  * ```
  */
-export function extendGlobalFontface(fontface: NonNullable<Config['globalFontface']>): void {
+export function extendGlobalFontface(
+  fontface: NonNullable<Config['globalFontface']>
+): void {
   extendPandaConfig({
     globalFontface: fontface,
   })

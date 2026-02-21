@@ -9,12 +9,12 @@ async function main(): Promise<void> {
     const args = process.argv.slice(2)
     const command = args[0]
     const flags = args.slice(1)
-    
+
     if (command === 'link-system') {
       await linkSystemCommand(cwd)
       return
     }
-    
+
     const watch = flags.includes('--watch') || flags.includes('-w')
     await syncCommand(cwd, { watch })
   } catch (err) {

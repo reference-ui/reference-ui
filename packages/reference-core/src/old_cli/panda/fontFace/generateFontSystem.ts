@@ -24,7 +24,7 @@ function buildGlobalFontface(
   for (const def of defs) {
     const familyKey = extractFontFamilyKey(def.value)
     const rules = Array.isArray(def.fontFace) ? def.fontFace : [def.fontFace]
-    const faces = rules.map((rule) => {
+    const faces = rules.map(rule => {
       const face: Record<string, string> = {
         src: rule.src,
         fontDisplay: rule.fontDisplay ?? 'swap',
@@ -42,7 +42,7 @@ function buildGlobalFontface(
 
 /** Build transform body lines: FONT_PRESETS and WEIGHT_TOKENS objects, inlined for Panda codegen */
 function buildTransformLines(defs: FontDefinition[]): string[] {
-  const fontPresetLines = defs.map((d) => {
+  const fontPresetLines = defs.map(d => {
     const css = d.css ?? {}
     const normalWeight = d.weights.normal ?? '400'
     const fontWeight = css.fontWeight ?? normalWeight
@@ -50,7 +50,7 @@ function buildTransformLines(defs: FontDefinition[]): string[] {
     if (css.letterSpacing) parts.push(`letterSpacing: '${css.letterSpacing}'`)
     return `      ${d.name}: { ${parts.join(', ')} },`
   })
-  const weightTokenLines = defs.flatMap((d) =>
+  const weightTokenLines = defs.flatMap(d =>
     Object.entries(d.weights)
       .filter(([, v]) => v)
       .map(([name, value]) => `      '${d.name}.${name}': '${value}',`)
@@ -95,38 +95,38 @@ export function generateFontSystemContent(defs: FontDefinition[]): string {
     }
   }
 
-  const fontEntries = Object.entries(fonts).map(([k, v]) => `    ${k}: { value: ${JSON.stringify(v.value)} },`)
+  const fontEntries = Object.entries(fonts).map(
+    ([k, v]) => `    ${k}: { value: ${JSON.stringify(v.value)} },`
+  )
   const fontWeightEntries = Object.entries(fontWeights).map(
     ([k, v]) => `    '${k}': { value: '${v.value}' },`
   )
   const globalFontfaceObj = buildGlobalFontface(defs)
-  const globalFontfaceEntries = Object.entries(globalFontfaceObj).flatMap(([key, val]) => {
-    const formattedKey = key.includes(' ') ? `'${key}'` : key
-    if (Array.isArray(val)) {
-      const faceLines = val.flatMap((face) => [
-        '    {',
-        ...Object.entries(face).map(([k, v]) => `      ${k}: '${v}',`),
-        '    },',
-      ])
-      return [`  ${formattedKey}: [`, ...faceLines, '  ],']
+  const globalFontfaceEntries = Object.entries(globalFontfaceObj).flatMap(
+    ([key, val]) => {
+      const formattedKey = key.includes(' ') ? `'${key}'` : key
+      if (Array.isArray(val)) {
+        const faceLines = val.flatMap(face => [
+          '    {',
+          ...Object.entries(face).map(([k, v]) => `      ${k}: '${v}',`),
+          '    },',
+        ])
+        return [`  ${formattedKey}: [`, ...faceLines, '  ],']
+      }
+      return [
+        `  ${formattedKey}: {`,
+        ...Object.entries(val).map(([k, v]) => `    ${k}: '${v}',`),
+        '  },',
+      ]
     }
-    return [
-      `  ${formattedKey}: {`,
-      ...Object.entries(val).map(([k, v]) => `    ${k}: '${v}',`),
-      '  },',
-    ]
-  })
-  const recipeVariantLines = defs.flatMap((d) => {
+  )
+  const recipeVariantLines = defs.flatMap(d => {
     const css = d.css ?? {}
     const normalWeight = d.weights.normal ?? '400'
     const parts = [`fontFamily: '${d.name}'`]
     if (css.letterSpacing) parts.push(`letterSpacing: '${css.letterSpacing}'`)
     parts.push(`fontWeight: '${css.fontWeight ?? normalWeight}'`)
-    return [
-      `        ${d.name}: {`,
-      ...parts.map((p) => `          ${p},`),
-      '        },',
-    ]
+    return [`        ${d.name}: {`, ...parts.map(p => `          ${p},`), '        },']
   })
 
   const lines = [

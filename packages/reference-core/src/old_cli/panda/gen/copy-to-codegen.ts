@@ -1,7 +1,14 @@
 import { createRequire } from 'node:module'
 const require = createRequire(import.meta.url)
 const fg = require('fast-glob')
-import { existsSync, mkdirSync, copyFileSync, rmSync, writeFileSync, readFileSync } from 'node:fs'
+import {
+  existsSync,
+  mkdirSync,
+  copyFileSync,
+  rmSync,
+  writeFileSync,
+  readFileSync,
+} from 'node:fs'
 import { resolve, dirname, relative } from 'node:path'
 import * as chokidar from 'chokidar'
 import { mdxToJSX } from './mdx-to-jsx'
@@ -23,7 +30,7 @@ function rewriteImports(sourceCode: string, relativePath: string): string {
 /**
  * Copy user files matching include patterns to codegen folder in @reference-ui/core.
  * This isolates Panda CSS processing from the user's source files.
- * 
+ *
  * Strategy:
  * 1. Resolve all files matching the include patterns from consumer cwd
  * 2. Clean the codegen folder in node_modules/@reference-ui/core
@@ -32,9 +39,13 @@ function rewriteImports(sourceCode: string, relativePath: string): string {
  * 5. TS/TSX/JSX: AST transform rewrites `cva`/`recipe`/`css` from @reference-ui/core to separate imports from styled-system/css so Panda resolves them from outdir
  * 6. Panda scans the codegen/ folder (reference-core ships source, runs from node_modules)
  */
-export async function copyToCodegen(consumerCwd: string, coreDir: string, includePatterns: string[]): Promise<void> {
+export async function copyToCodegen(
+  consumerCwd: string,
+  coreDir: string,
+  includePatterns: string[]
+): Promise<void> {
   const codegenDir = resolve(coreDir, 'codegen')
-  
+
   // Step 1: Clean codegen folder
   if (existsSync(codegenDir)) {
     rmSync(codegenDir, { recursive: true, force: true })
@@ -45,18 +56,13 @@ export async function copyToCodegen(consumerCwd: string, coreDir: string, includ
   const files = fg.sync(includePatterns, {
     cwd: consumerCwd,
     absolute: true,
-    ignore: [
-      '**/node_modules/**',
-      '**/.git/**',
-      '**/dist/**',
-      '**/build/**',
-    ],
+    ignore: ['**/node_modules/**', '**/.git/**', '**/dist/**', '**/build/**'],
   })
 
   if (files.length === 0) {
     console.warn(
       `⚠️  No files matched your include patterns:\n` +
-      includePatterns.map(p => `   - ${p}`).join('\n')
+        includePatterns.map(p => `   - ${p}`).join('\n')
     )
     return
   }
@@ -66,7 +72,7 @@ export async function copyToCodegen(consumerCwd: string, coreDir: string, includ
   for (const file of files) {
     const relativePath = relative(consumerCwd, file)
     const destPath = resolve(codegenDir, relativePath)
-    
+
     // Convert MDX to JSX, otherwise copy as-is (with cva import rewrite for TS/TSX/JSX)
     if (file.endsWith('.mdx')) {
       const mdxContent = readFileSync(file, 'utf-8')
@@ -127,18 +133,13 @@ export function watchAndCopyToCodegen(
   const files = fg.sync(includePatterns, {
     cwd: consumerCwd,
     absolute: true,
-    ignore: [
-      '**/node_modules/**',
-      '**/.git/**',
-      '**/dist/**',
-      '**/build/**',
-    ],
+    ignore: ['**/node_modules/**', '**/.git/**', '**/dist/**', '**/build/**'],
   })
 
   if (files.length === 0) {
     console.warn(
       `⚠️  No files matched your include patterns:\n` +
-      includePatterns.map(p => `   - ${p}`).join('\n')
+        includePatterns.map(p => `   - ${p}`).join('\n')
     )
     return
   }
@@ -158,7 +159,7 @@ export function watchAndCopyToCodegen(
   let initialCount = 0
 
   watcher
-    .on('add', async (file) => {
+    .on('add', async file => {
       const relativePath = relative(consumerCwd, file)
       const destPath = resolve(codegenDir, relativePath)
 
@@ -186,7 +187,7 @@ export function watchAndCopyToCodegen(
         initialCount++
       }
     })
-    .on('change', async (file) => {
+    .on('change', async file => {
       const relativePath = relative(consumerCwd, file)
       const destPath = resolve(codegenDir, relativePath)
 
@@ -214,7 +215,7 @@ export function watchAndCopyToCodegen(
       isReady = true
       console.log(`📦 Watching ${initialCount} file(s) for changes...`)
     })
-    .on('error', (error) => {
+    .on('error', error => {
       console.error(`⚠️  Watcher error: ${error}`)
     })
 }

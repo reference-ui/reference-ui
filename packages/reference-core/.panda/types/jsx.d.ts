@@ -1,7 +1,20 @@
 /* eslint-disable */
-import type { ElementType, JSX, ComponentPropsWithRef, ComponentType, Component } from 'react'
-import type { RecipeDefinition, RecipeSelection, RecipeVariantRecord } from './recipe';
-import type { Assign, DistributiveOmit, DistributiveUnion, JsxHTMLProps, JsxStyleProps, Pretty } from './system-types';
+import type {
+  ElementType,
+  JSX,
+  ComponentPropsWithRef,
+  ComponentType,
+  Component,
+} from 'react'
+import type { RecipeDefinition, RecipeSelection, RecipeVariantRecord } from './recipe'
+import type {
+  Assign,
+  DistributiveOmit,
+  DistributiveUnion,
+  JsxHTMLProps,
+  JsxStyleProps,
+  Pretty,
+} from './system-types'
 
 interface Dict {
   [k: string]: unknown
@@ -23,12 +36,19 @@ export interface AsProps {
   as?: ElementType | undefined
 }
 
-export type ComponentProps<T extends ElementType> = T extends ComponentType<infer P> | Component<infer P>
+export type ComponentProps<T extends ElementType> = T extends
+  | ComponentType<infer P>
+  | Component<infer P>
   ? JSX.LibraryManagedAttributes<T, P>
   : ComponentPropsWithRef<T>
 
 export interface StyledComponent<T extends ElementType, P extends Dict = {}> {
-  (props: JsxHTMLProps<ComponentProps<T> & UnstyledProps & AsProps, Assign<JsxStyleProps, P>>): JSX.Element
+  (
+    props: JsxHTMLProps<
+      ComponentProps<T> & UnstyledProps & AsProps,
+      Assign<JsxStyleProps, P>
+    >
+  ): JSX.Element
   displayName?: string | undefined
 }
 
@@ -43,19 +63,28 @@ export interface JsxFactoryOptions<TProps extends Dict> {
   forwardProps?: string[]
 }
 
-export type JsxRecipeProps<T extends ElementType, P extends Dict> = JsxHTMLProps<ComponentProps<T> & UnstyledProps & AsProps, P>;
+export type JsxRecipeProps<T extends ElementType, P extends Dict> = JsxHTMLProps<
+  ComponentProps<T> & UnstyledProps & AsProps,
+  P
+>
 
-export type JsxElement<T extends ElementType, P extends Dict> = T extends StyledComponent<infer A, infer B>
-  ? StyledComponent<A, Pretty<DistributiveUnion<P, B>>>
-  : StyledComponent<T, P>
+export type JsxElement<T extends ElementType, P extends Dict> =
+  T extends StyledComponent<infer A, infer B>
+    ? StyledComponent<A, Pretty<DistributiveUnion<P, B>>>
+    : StyledComponent<T, P>
 
 export interface JsxFactory {
   <T extends ElementType>(component: T): StyledComponent<T, {}>
-  <T extends ElementType, P extends RecipeVariantRecord>(component: T, recipe: RecipeDefinition<P>, options?: JsxFactoryOptions<JsxRecipeProps<T, RecipeSelection<P>>>): JsxElement<
-    T,
-    RecipeSelection<P>
-  >
-  <T extends ElementType, P extends RecipeFn>(component: T, recipeFn: P, options?: JsxFactoryOptions<JsxRecipeProps<T, P['__type']>>): JsxElement<T, P['__type']>
+  <T extends ElementType, P extends RecipeVariantRecord>(
+    component: T,
+    recipe: RecipeDefinition<P>,
+    options?: JsxFactoryOptions<JsxRecipeProps<T, RecipeSelection<P>>>
+  ): JsxElement<T, RecipeSelection<P>>
+  <T extends ElementType, P extends RecipeFn>(
+    component: T,
+    recipeFn: P,
+    options?: JsxFactoryOptions<JsxRecipeProps<T, P['__type']>>
+  ): JsxElement<T, P['__type']>
 }
 
 export type JsxElements = {
@@ -64,6 +93,10 @@ export type JsxElements = {
 
 export type Styled = JsxFactory & JsxElements
 
-export type HTMLStyledProps<T extends ElementType> = JsxHTMLProps<ComponentProps<T> & UnstyledProps & AsProps, JsxStyleProps>
+export type HTMLStyledProps<T extends ElementType> = JsxHTMLProps<
+  ComponentProps<T> & UnstyledProps & AsProps,
+  JsxStyleProps
+>
 
-export type StyledVariantProps<T extends StyledComponent<any, any>> = T extends StyledComponent<any, infer Props> ? Props : never
+export type StyledVariantProps<T extends StyledComponent<any, any>> =
+  T extends StyledComponent<any, infer Props> ? Props : never

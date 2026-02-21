@@ -31,10 +31,15 @@ if (!(globalThis as Record<string, unknown>)[FONT_COLLECTOR_KEY]) {
 }
 
 export function extendFontCollector(def: FontDefinition): void {
-  const collector = (globalThis as Record<string, unknown>)[FONT_COLLECTOR_KEY] as FontDefinition[]
+  const collector = (globalThis as Record<string, unknown>)[
+    FONT_COLLECTOR_KEY
+  ] as FontDefinition[]
   collector.push(def)
 }
 
 export function getFontDefinitions(): FontDefinition[] {
-  return ((globalThis as Record<string, unknown>)[FONT_COLLECTOR_KEY] as FontDefinition[]) || []
+  return (
+    ((globalThis as Record<string, unknown>)[FONT_COLLECTOR_KEY] as FontDefinition[]) ||
+    []
+  )
 }

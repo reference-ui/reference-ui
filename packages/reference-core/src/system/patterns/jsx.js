@@ -1,5 +1,5 @@
-import { getPatternStyles, patternFns } from '../helpers.js';
-import { css } from '../css/index.js';
+import { getPatternStyles, patternFns } from '../helpers.js'
+import { css } from '../css/index.js'
 
 const jsxConfig = {}
 
@@ -8,5 +8,5 @@ export const getJsxStyle = (styles = {}) => {
   return jsxConfig.transform(_styles, patternFns)
 }
 
-export const jsx = (styles) => css(getJsxStyle(styles))
+export const jsx = styles => css(getJsxStyle(styles))
 jsx.raw = getJsxStyle

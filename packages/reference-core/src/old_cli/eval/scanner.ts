@@ -18,7 +18,7 @@ function scanDirectory(dir: string): string[] {
   const matches: string[] = []
   for (const file of files) {
     const content = readFileSync(file, 'utf-8')
-    const hasAny = REGISTERED_FUNCTIONS.some((name) => content.includes(name))
+    const hasAny = REGISTERED_FUNCTIONS.some(name => content.includes(name))
     if (hasAny) {
       matches.push(file)
     }

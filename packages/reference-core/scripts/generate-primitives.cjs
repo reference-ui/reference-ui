@@ -7,7 +7,7 @@ const match = tagsContent.match(/\[([\s\S]*?)\]\s+as const/)
 if (!match) throw new Error('Could not parse TAGS from tags.ts')
 const HTML_TAGS = match[1]
   .split(',')
-  .map((s) => s.replace(/['"]/g, '').trim())
+  .map(s => s.replace(/['"]/g, '').trim())
   .filter(Boolean)
 
 // Scan primitives/css/*.style.ts and map tag -> recipe name (with Style suffix)

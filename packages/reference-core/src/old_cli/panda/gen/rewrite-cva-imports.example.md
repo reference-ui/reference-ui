@@ -5,65 +5,71 @@ The `rewriteCvaImports` function transforms imports and usages of `recipe` from 
 ## Example 1: Basic recipe import
 
 ### Before (User Code):
+
 ```tsx
-import { Div, recipe } from '@reference-ui/core';
+import { Div, recipe } from '@reference-ui/core'
 
 const buttonRecipe = recipe({
   base: { px: '4', py: '2' },
   variants: {
-    variant: { primary: { bg: 'blue.500' } }
-  }
-});
+    variant: { primary: { bg: 'blue.500' } },
+  },
+})
 ```
 
 ### After (Transformed):
+
 ```tsx
-import { cva } from '../src/system/css';
-import { Div } from '@reference-ui/core';
+import { cva } from '../src/system/css'
+import { Div } from '@reference-ui/core'
 
 const buttonRecipe = cva({
   base: { px: '4', py: '2' },
   variants: {
-    variant: { primary: { bg: 'blue.500' } }
-  }
-});
+    variant: { primary: { bg: 'blue.500' } },
+  },
+})
 ```
 
 ## Example 2: Using cva directly (still works)
 
 ### Before (User Code):
+
 ```tsx
-import { Div, cva } from '@reference-ui/core';
+import { Div, cva } from '@reference-ui/core'
 
 const buttonRecipe = cva({
-  base: { px: '4', py: '2' }
-});
+  base: { px: '4', py: '2' },
+})
 ```
 
 ### After (Transformed):
+
 ```tsx
-import { cva } from '../src/system/css';
-import { Div } from '@reference-ui/core';
+import { cva } from '../src/system/css'
+import { Div } from '@reference-ui/core'
 
 const buttonRecipe = cva({
-  base: { px: '4', py: '2' }
-});
+  base: { px: '4', py: '2' },
+})
 ```
 
 ## Example 3: Aliased import
 
 ### Before (User Code):
-```tsx
-import { recipe as myRecipe } from '@reference-ui/core';
 
-const button = myRecipe({ base: { px: '4' } });
+```tsx
+import { recipe as myRecipe } from '@reference-ui/core'
+
+const button = myRecipe({ base: { px: '4' } })
 ```
 
 ### After (Transformed):
-```tsx
-import { cva } from '../src/system/css';
 
-const button = cva({ base: { px: '4' } });
+```tsx
+import { cva } from '../src/system/css'
+
+const button = cva({ base: { px: '4' } })
 ```
 
 ## Key Features

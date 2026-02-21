@@ -29,7 +29,10 @@ export function generateBoxPatternContent(extensions: CollectedExtension[]): str
   const resultVars = extensions.map((_, i) => `_r${i}`)
   const indent = (s: string) => (s ? '      ' + s : '')
   const iifeBlocks = extensions.flatMap((ext, i) => {
-    const body = ext.transformSource.split('\n').map((line) => '    ' + line).join('\n')
+    const body = ext.transformSource
+      .split('\n')
+      .map(line => '    ' + line)
+      .join('\n')
     return [
       `const ${resultVars[i]} = (function(props: Record<string, any>) {`,
       body,

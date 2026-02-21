@@ -94,7 +94,7 @@ export function rewriteCssImports(sourceCode: string, relativePath: string): str
 
   visit(sourceFile)
   if (!replacement) return sourceCode
-  
+
   // Replace the import (no function name replacement needed for css)
   const { start, end, text } = replacement
   return sourceCode.slice(0, start) + text + sourceCode.slice(end)

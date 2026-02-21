@@ -1,5 +1,5 @@
-import { Div, Container, ResponsiveExample, Button } from '@reference-ui/core';
-import '@reference-ui/core/styles.css';
+import { Div, Container, ResponsiveExample, Button } from '@reference-ui/core'
+import '@reference-ui/core/styles.css'
 
 export default function App() {
   return (
@@ -14,5 +14,5 @@ export default function App() {
         </Div>
       </div>
     </Container>
-  );
+  )
 }

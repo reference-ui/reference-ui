@@ -6,7 +6,7 @@ import { loadUserConfig } from '../config'
 export const syncCommand = async (cwd: string, options: { watch?: boolean }) => {
   const config = await loadUserConfig(cwd)
   initLog(config)
-  
+
   log.debug('Loaded config:', config)
   log('hi from sync command! (stub implementation)')
 }

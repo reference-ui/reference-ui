@@ -1,4 +1,4 @@
-import { Div, H2, H3, P } from '../primitives/index.js';
+import { Div, H2, H3, P } from '../primitives/index.js'
 
 const resizable = {
   border: '[2px solid #666]',
@@ -8,7 +8,7 @@ const resizable = {
   overflow: 'auto',
   maxWidth: '[100%]',
   minWidth: '[200px]',
-};
+}
 
 export function ResponsiveExample() {
   return (
@@ -90,5 +90,5 @@ export function ResponsiveExample() {
         </Div>
       </Div>
     </Div>
-  );
+  )
 }

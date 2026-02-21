@@ -96,11 +96,11 @@ export function rewriteCvaImports(sourceCode: string, relativePath: string): str
 
   visit(sourceFile)
   if (!replacement) return sourceCode
-  
+
   // First, replace the import
   const { start, end, text } = replacement
   let result = sourceCode.slice(0, start) + text + sourceCode.slice(end)
-  
+
   // Then, if the local name was 'recipe', replace all usages with 'cva'
   if (localCvaName && localCvaName !== 'cva') {
     // Use regex to replace recipe( with cva( while preserving the rest
@@ -108,6 +108,6 @@ export function rewriteCvaImports(sourceCode: string, relativePath: string): str
     const regex = new RegExp(`\\b${localCvaName}\\(`, 'g')
     result = result.replace(regex, 'cva(')
   }
-  
+
   return result
 }

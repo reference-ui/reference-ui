@@ -36,11 +36,11 @@ import { Container, Box } from 'reference-ui'
 
 ### Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `name` | `string` | — | Container name for targeted queries |
-| `type` | `'inline-size' \| 'size' \| 'normal'` | `'inline-size'` | Container type |
-| `density` | `'compact' \| 'comfortable' \| 'spacious'` | — | Scales `r` units in subtree |
+| Prop      | Type                                       | Default         | Description                         |
+| --------- | ------------------------------------------ | --------------- | ----------------------------------- |
+| `name`    | `string`                                   | —               | Container name for targeted queries |
+| `type`    | `'inline-size' \| 'size' \| 'normal'`      | `'inline-size'` | Container type                      |
+| `density` | `'compact' \| 'comfortable' \| 'spacious'` | —               | Scales `r` units in subtree         |
 
 ---
 
@@ -83,18 +83,20 @@ The cleaner API we're aiming for:
 
 ```tsx
 <Container>
-  <Box sm={{padding: '2r'}} md={{padding: '3r'}} lg={{padding: '5r'}} />
+  <Box sm={{ padding: '2r' }} md={{ padding: '3r' }} lg={{ padding: '5r' }} />
 </Container>
 ```
 
 Where `sm`, `md`, `lg` are **container query conditions** (not viewport).
 
 This requires:
+
 1. User defines container breakpoints in their config
 2. Those become available as props on all styled components
 3. The `<Container>` establishes the query context
 
 **User's config:**
+
 ```ts
 // panda.config.ts
 export default defineConfig({
@@ -104,15 +106,16 @@ export default defineConfig({
       sm: '@container (min-width: 300px)',
       md: '@container (min-width: 500px)',
       lg: '@container (min-width: 700px)',
-    }
-  }
+    },
+  },
 })
 ```
 
 **Usage:**
+
 ```tsx
 <Container>
-  <Box 
+  <Box
     padding="2r"
     sm={{ padding: '3r' }}
     md={{ padding: '4r' }}
@@ -141,8 +144,8 @@ Generates `clamp()` for smooth scaling based on container size.
 ```tsx
 import { fluid } from 'reference-ui'
 
-<Box
-  gap={fluid('1r', '3r')}         // Scales from 1r to 3r
+;<Box
+  gap={fluid('1r', '3r')} // Scales from 1r to 3r
   fontSize={fluid('14px', '18px')}
 />
 ```
@@ -188,8 +191,8 @@ export default defineConfig({
       '@card/sm': '@container card (min-width: 300px)',
       '@card/md': '@container card (min-width: 500px)',
       '@card/lg': '@container card (min-width: 700px)',
-    }
-  }
+    },
+  },
 })
 ```
 
@@ -211,7 +214,7 @@ import { Container, Box, cq } from 'reference-ui'
 function Card() {
   return (
     <Container name="card">
-      <Box 
+      <Box
         p="2r"
         css={cq('card', {
           400: { padding: '3r' },
@@ -230,18 +233,22 @@ function Card() {
 ```tsx
 <Container name="page">
   <Header />
-  
+
   <Container name="sidebar" density="compact">
-    <Nav css={cq('sidebar', {
-      200: { flexDirection: 'row' }
-    })} />
+    <Nav
+      css={cq('sidebar', {
+        200: { flexDirection: 'row' },
+      })}
+    />
   </Container>
-  
+
   <Container name="content">
-    <Grid css={cq('content', {
-      600: { gridTemplateColumns: 'repeat(2, 1fr)' },
-      900: { gridTemplateColumns: 'repeat(3, 1fr)' },
-    })} />
+    <Grid
+      css={cq('content', {
+        600: { gridTemplateColumns: 'repeat(2, 1fr)' },
+        900: { gridTemplateColumns: 'repeat(3, 1fr)' },
+      })}
+    />
   </Container>
 </Container>
 ```
@@ -250,13 +257,15 @@ function Card() {
 
 ```tsx
 <Container name="card">
-  <Box css={{
-    '@container card (min-width: 400px)': { padding: '3r' },
-    '@container card (min-width: 600px) and (max-width: 800px)': { 
-      padding: '4r',
-      gap: '2r',
-    },
-  }} />
+  <Box
+    css={{
+      '@container card (min-width: 400px)': { padding: '3r' },
+      '@container card (min-width: 600px) and (max-width: 800px)': {
+        padding: '4r',
+        gap: '2r',
+      },
+    }}
+  />
 </Container>
 ```
 
@@ -304,14 +313,14 @@ export function cq(
   styles: ContainerStyles
 ): Record<string, Record<string, unknown>> {
   const result: Record<string, Record<string, unknown>> = {}
-  
+
   for (const [breakpoint, styleObj] of Object.entries(styles)) {
     const query = name
       ? `@container ${name} (min-width: ${breakpoint}px)`
       : `@container (min-width: ${breakpoint}px)`
     result[query] = styleObj
   }
-  
+
   return result
 }
 ```
@@ -432,13 +441,13 @@ export const referencePreset = definePreset({
 
 # Summary
 
-| What We Ship | What Users Do |
-|--------------|---------------|
-| `<Container>` primitive | Establish container contexts |
-| `cq()` helper | Generate `@container` CSS easily |
-| `fluid()` helper | Continuous scaling with `clamp()` |
-| `r` unit tokens | Spacing that respects density |
-| Density modifiers | Scale entire subtrees |
-| **Nothing predefined** | Define their own breakpoints |
+| What We Ship            | What Users Do                     |
+| ----------------------- | --------------------------------- |
+| `<Container>` primitive | Establish container contexts      |
+| `cq()` helper           | Generate `@container` CSS easily  |
+| `fluid()` helper        | Continuous scaling with `clamp()` |
+| `r` unit tokens         | Spacing that respects density     |
+| Density modifiers       | Scale entire subtrees             |
+| **Nothing predefined**  | Define their own breakpoints      |
 
 **No `sm`, `md`, `lg`. No opinionated tokens. Just primitives.**

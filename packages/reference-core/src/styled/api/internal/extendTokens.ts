@@ -3,10 +3,10 @@ import { extendPandaConfig } from '../../../cli/panda/config/extendPandaConfig'
 
 /**
  * Register design tokens with Panda CSS.
- * 
+ *
  * This is a convenience wrapper around extendPandaConfig that focuses on tokens.
  * Use this to define colors, spacing, fonts, and other design tokens.
- * 
+ *
  * @example
  * ```ts
  * extendTokens({
@@ -26,7 +26,7 @@ import { extendPandaConfig } from '../../../cli/panda/config/extendPandaConfig'
 export function extendTokens(tokenConfig: NonNullable<Config['theme']>['tokens']): void {
   extendPandaConfig({
     theme: {
-      tokens: tokenConfig
-    }
+      tokens: tokenConfig,
+    },
   })
 }

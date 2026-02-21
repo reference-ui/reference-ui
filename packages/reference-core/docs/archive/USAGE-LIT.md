@@ -7,16 +7,18 @@ Panda CSS ships with built-in patterns like `box`, `flex`, `stack`, etc. These a
 **`patterns.extend.box`** means we're **extending/modifying** Panda's existing `box` pattern to add our responsive functionality (`r` and `container` props).
 
 Without extending, the built-in `box()` only accepts standard CSS props:
+
 ```typescript
 box({ padding: '2r', backgroundColor: 'blue.100' })
 ```
 
 With our extension, it also accepts:
+
 ```typescript
-box({ 
+box({
   padding: '2r',
-  r: { 300: { padding: '4r' } },      // NEW: responsive breakpoints
-  container: 'sidebar'                 // NEW: named container query
+  r: { 300: { padding: '4r' } }, // NEW: responsive breakpoints
+  container: 'sidebar', // NEW: named container query
 })
 ```
 
@@ -42,7 +44,7 @@ class MyComponent extends LitElement {
         500: { padding: '6r' },
       },
     })
-    
+
     return html`<div class="${className}">Content</div>`
   }
 }
@@ -84,7 +86,7 @@ class RefButton extends LitElement {
       },
     })
   }
-  
+
   render() {
     return html`<button class="${this.getButtonStyles()}">${this.label}</button>`
   }
@@ -100,11 +102,13 @@ class RefButton extends LitElement {
 Generates CSS class with optional container query responsiveness.
 
 **Props:**
+
 - Any CSS properties (padding, margin, backgroundColor, etc.)
 - `r`: object with breakpoint keys (`{ 300: {...}, 500: {...} }`)
 - `container`: string naming which container to query (optional)
 
 **Example:**
+
 ```typescript
 box({
   padding: '2r',
@@ -121,11 +125,13 @@ box({
 Establishes a container query context.
 
 **Props:**
+
 - `name`: string (optional) - name for nested components to query
 - `type`: `'inline-size'` | `'size'` | `'normal'` (default: `'inline-size'`)
 - `density`: `'compact'` | `'comfortable'` | `'spacious'` - scales `r` units
 
 **Example:**
+
 ```typescript
 container({ name: 'card', density: 'compact' })
 ```

@@ -220,33 +220,33 @@ src/
 
 ### Configuration Files
 
-| File | Purpose |
-|------|---------|
-| `package.json` | NPM package metadata, dependencies, build scripts |
-| `tsconfig.json` | TypeScript compilation settings for entire project |
-| `tsdown.config.ts` | TSDown bundler configuration for package exports |
-| `project.json` | Nx project configuration for monorepo integration |
-| `panda.base.ts` | Base Panda CSS configuration (merged by CLI) |
-| `panda.config.ts` | **Generated** - Final Panda config with all extensions |
+| File               | Purpose                                                |
+| ------------------ | ------------------------------------------------------ |
+| `package.json`     | NPM package metadata, dependencies, build scripts      |
+| `tsconfig.json`    | TypeScript compilation settings for entire project     |
+| `tsdown.config.ts` | TSDown bundler configuration for package exports       |
+| `project.json`     | Nx project configuration for monorepo integration      |
+| `panda.base.ts`    | Base Panda CSS configuration (merged by CLI)           |
+| `panda.config.ts`  | **Generated** - Final Panda config with all extensions |
 
 ### Documentation
 
-| File | Purpose |
-|------|---------|
-| `README.md` | Project overview and quick start guide |
-| `CORE.md` | **Vision document** - Architectural philosophy and innovations |
-| `STRUCTURE.md` | **Architecture guide** - Build system and three-layer design |
-| `PUBLIC API.md` | Public API surface documentation |
+| File            | Purpose                                                        |
+| --------------- | -------------------------------------------------------------- |
+| `README.md`     | Project overview and quick start guide                         |
+| `CORE.md`       | **Vision document** - Architectural philosophy and innovations |
+| `STRUCTURE.md`  | **Architecture guide** - Build system and three-layer design   |
+| `PUBLIC API.md` | Public API surface documentation                               |
 
 ### Build Artifacts
 
-| Directory | Purpose |
-|-----------|---------|
-| `dist/` | **Generated** - Compiled TypeScript output for npm distribution |
+| Directory        | Purpose                                                         |
+| ---------------- | --------------------------------------------------------------- |
+| `dist/`          | **Generated** - Compiled TypeScript output for npm distribution |
 | `styled-system/` | **Generated** - Panda CSS runtime (CSS-in-JS, patterns, tokens) |
-| `.panda/` | Panda CSS internal cache |
-| `.ref/` | Reference-core CLI cache |
-| `node_modules/` | Dependencies |
+| `.panda/`        | Panda CSS internal cache                                        |
+| `.ref/`          | Reference-core CLI cache                                        |
+| `node_modules/`  | Dependencies                                                    |
 
 ---
 
@@ -272,8 +272,8 @@ src/
 
 ### Entry Point
 
-| File | Purpose |
-|------|---------|
+| File           | Purpose                                            |
+| -------------- | -------------------------------------------------- |
 | `cli/index.ts` | Main CLI exports, orchestrates eval + microbundles |
 
 ---
@@ -282,10 +282,10 @@ src/
 
 > **User-facing CLI commands**
 
-| File | Purpose |
-|------|---------|
-| `sync.ts` | Main `ref sync` command - runs eval system + Panda codegen + microbundles |
-| `link-system.ts` | Links generated `styled-system/` to `src/system/` for imports |
+| File             | Purpose                                                                   |
+| ---------------- | ------------------------------------------------------------------------- |
+| `sync.ts`        | Main `ref sync` command - runs eval system + Panda codegen + microbundles |
+| `link-system.ts` | Links generated `styled-system/` to `src/system/` for imports             |
 
 ---
 
@@ -293,15 +293,16 @@ src/
 
 > **Discovers and executes user styling configuration at build time**
 
-| File | Purpose |
-|------|---------|
-| `index.ts` | Exports eval runner and registry |
+| File          | Purpose                                                                 |
+| ------------- | ----------------------------------------------------------------------- |
+| `index.ts`    | Exports eval runner and registry                                        |
 | `registry.ts` | **Registry of discoverable function names** (`extendPandaConfig`, etc.) |
-| `scanner.ts` | File system scanner to find files calling registered functions |
-| `runner.ts` | **Bundles and executes** discovered files, collects results |
-| `readme.md` | Documentation for eval system architecture |
+| `scanner.ts`  | File system scanner to find files calling registered functions          |
+| `runner.ts`   | **Bundles and executes** discovered files, collects results             |
+| `readme.md`   | Documentation for eval system architecture                              |
 
 **How it works:**
+
 1. `scanner.ts` finds all files calling `extendPandaConfig()` or similar
 2. `runner.ts` bundles those files with esbuild
 3. Executes bundle, captures registrations via `globalThis` collectors
@@ -319,17 +320,17 @@ Each microbundle follows the pattern: **collect → bundle → execute → gener
 
 **Collects and merges all Panda config extensions**
 
-| File | Purpose |
-|------|---------|
-| `index.ts` | Exports config microbundle public API |
-| `extendPandaConfig.ts` | **User API** - Register config fragment in `globalThis` |
-| `initCollector.ts` | Initialize `globalThis.__pandaConfigCollector__` |
-| `entryTemplate.ts` | Generates temp entry file importing all user configs |
+| File                   | Purpose                                                    |
+| ---------------------- | ---------------------------------------------------------- |
+| `index.ts`             | Exports config microbundle public API                      |
+| `extendPandaConfig.ts` | **User API** - Register config fragment in `globalThis`    |
+| `initCollector.ts`     | Initialize `globalThis.__pandaConfigCollector__`           |
+| `entryTemplate.ts`     | Generates temp entry file importing all user configs       |
 | `createPandaConfig.ts` | **Orchestrator** - Runs collection → bundling → generation |
-| `deepMerge.ts` | Deep merge utility for combining config fragments |
-| `readme.md` | Config system documentation |
-| `COMPILER.md` | Compiler architecture details |
-| `SUMMARY.md` | Quick reference summary |
+| `deepMerge.ts`         | Deep merge utility for combining config fragments          |
+| `readme.md`            | Config system documentation                                |
+| `COMPILER.md`          | Compiler architecture details                              |
+| `SUMMARY.md`           | Quick reference summary                                    |
 
 **Output:** `panda.config.ts` (merged from all `extendPandaConfig()` calls)
 
@@ -339,14 +340,14 @@ Each microbundle follows the pattern: **collect → bundle → execute → gener
 
 **Generates unified box pattern from all pattern extensions**
 
-| File | Purpose |
-|------|---------|
-| `index.ts` | Exports box pattern public API |
-| `extendBoxPattern.ts` | **User API** - Register pattern extension |
-| `initBoxCollector.ts` | Initialize `globalThis.__boxPatternCollector__` |
-| `collectEntryTemplate.ts` | Template for temp entry file |
-| `createBoxPattern.ts` | **Orchestrator** - Collection → bundling → generation |
-| `generateBoxPattern.ts` | **Code generator** - Outputs TypeScript with inlined transforms |
+| File                      | Purpose                                                         |
+| ------------------------- | --------------------------------------------------------------- |
+| `index.ts`                | Exports box pattern public API                                  |
+| `extendBoxPattern.ts`     | **User API** - Register pattern extension                       |
+| `initBoxCollector.ts`     | Initialize `globalThis.__boxPatternCollector__`                 |
+| `collectEntryTemplate.ts` | Template for temp entry file                                    |
+| `createBoxPattern.ts`     | **Orchestrator** - Collection → bundling → generation           |
+| `generateBoxPattern.ts`   | **Code generator** - Outputs TypeScript with inlined transforms |
 
 **Why needed:** Panda doesn't capture closure variables in pattern transforms.  
 **Output:** `styled/props/box.ts` (merged pattern with inline transforms)
@@ -357,14 +358,14 @@ Each microbundle follows the pattern: **collect → bundle → execute → gener
 
 **Generates complete font system from `extendFont()` calls**
 
-| File | Purpose |
-|------|---------|
-| `index.ts` | Exports font system public API |
-| `extendFontFace.ts` | **User API** - Register font family with variants |
-| `initFontCollector.ts` | Initialize `globalThis.__fontCollector__` |
-| `collectEntryTemplate.ts` | Template for temp entry file |
-| `createFontSystem.ts` | **Orchestrator** - Collection → bundling → generation |
-| `generateFontSystem.ts` | **Code generator** - Outputs tokens, recipes, patterns, @font-face |
+| File                      | Purpose                                                            |
+| ------------------------- | ------------------------------------------------------------------ |
+| `index.ts`                | Exports font system public API                                     |
+| `extendFontFace.ts`       | **User API** - Register font family with variants                  |
+| `initFontCollector.ts`    | Initialize `globalThis.__fontCollector__`                          |
+| `collectEntryTemplate.ts` | Template for temp entry file                                       |
+| `createFontSystem.ts`     | **Orchestrator** - Collection → bundling → generation              |
+| `generateFontSystem.ts`   | **Code generator** - Outputs tokens, recipes, patterns, @font-face |
 
 **Output:** `styled/font/font.ts` (complete font system)
 
@@ -374,14 +375,14 @@ Each microbundle follows the pattern: **collect → bundle → execute → gener
 
 **Wraps Panda CSS codegen with custom transforms**
 
-| File | Purpose |
-|------|---------|
-| `runner.ts` | Runs Panda codegen (`panda codegen`) |
-| `copy-to-codegen.ts` | Copies generated `styled-system/` to `codegen/src/` |
-| `rewrite-css-imports.ts` | Rewrites CSS import paths for bundler compatibility |
-| `rewrite-cva-imports.ts` | Rewrites CVA (class variance authority) imports |
-| `rewrite-cva-imports.example.md` | Examples of CVA import transformations |
-| `mdx-to-jsx.ts` | Converts MDX JSX components to standard React components |
+| File                             | Purpose                                                  |
+| -------------------------------- | -------------------------------------------------------- |
+| `runner.ts`                      | Runs Panda codegen (`panda codegen`)                     |
+| `copy-to-codegen.ts`             | Copies generated `styled-system/` to `codegen/src/`      |
+| `rewrite-css-imports.ts`         | Rewrites CSS import paths for bundler compatibility      |
+| `rewrite-cva-imports.ts`         | Rewrites CVA (class variance authority) imports          |
+| `rewrite-cva-imports.example.md` | Examples of CVA import transformations                   |
+| `mdx-to-jsx.ts`                  | Converts MDX JSX components to standard React components |
 
 ---
 
@@ -389,10 +390,10 @@ Each microbundle follows the pattern: **collect → bundle → execute → gener
 
 **Shared utilities for CLI operations**
 
-| File | Purpose |
-|------|---------|
-| `microBundle.ts` | **esbuild wrapper** - Bundles code with strategic externals |
-| `run-generate-primitives.ts` | Runs primitive generation script |
+| File                         | Purpose                                                     |
+| ---------------------------- | ----------------------------------------------------------- |
+| `microBundle.ts`             | **esbuild wrapper** - Bundles code with strategic externals |
+| `run-generate-primitives.ts` | Runs primitive generation script                            |
 
 ---
 
@@ -400,9 +401,9 @@ Each microbundle follows the pattern: **collect → bundle → execute → gener
 
 **CLI configuration loading**
 
-| File | Purpose |
-|------|---------|
-| `index.ts` | Exports config loader |
+| File             | Purpose                               |
+| ---------------- | ------------------------------------- |
+| `index.ts`       | Exports config loader                 |
 | `load-config.ts` | Loads user config from `ui.config.ts` |
 
 ---
@@ -411,10 +412,10 @@ Each microbundle follows the pattern: **collect → bundle → execute → gener
 
 **Workspace resolution utilities**
 
-| File | Purpose |
-|------|---------|
-| `resolve-core.ts` | Resolves `@reference-ui/core` package location |
-| `copy-to-node-modules.ts` | Copies generated system to `node_modules/` |
+| File                      | Purpose                                        |
+| ------------------------- | ---------------------------------------------- |
+| `resolve-core.ts`         | Resolves `@reference-ui/core` package location |
+| `copy-to-node-modules.ts` | Copies generated system to `node_modules/`     |
 
 ---
 
@@ -422,8 +423,8 @@ Each microbundle follows the pattern: **collect → bundle → execute → gener
 
 **Internal CLI utilities**
 
-| File | Purpose |
-|------|---------|
+| File                   | Purpose                                |
+| ---------------------- | -------------------------------------- |
 | `link-local-system.ts` | Creates symlinks for local development |
 
 ---
@@ -434,24 +435,24 @@ Each microbundle follows the pattern: **collect → bundle → execute → gener
 
 ### Entry Point
 
-| File | Purpose |
-|------|---------|
+| File              | Purpose                                         |
+| ----------------- | ----------------------------------------------- |
 | `styled/index.ts` | Main styled system exports (all APIs + domains) |
 
 ### Documentation
 
-| File | Purpose |
-|------|---------|
-| `PLAN.md` | Detailed styled system planning document |
-| `STRUCTURE.md` | Styled system architecture guide |
-| `TODO.md` | Outstanding tasks and improvements |
-| `fontface.md` | Font system implementation details |
+| File            | Purpose                                   |
+| --------------- | ----------------------------------------- |
+| `PLAN.md`       | Detailed styled system planning document  |
+| `STRUCTURE.md`  | Styled system architecture guide          |
+| `TODO.md`       | Outstanding tasks and improvements        |
+| `fontface.md`   | Font system implementation details        |
 | `patterns.d.ts` | TypeScript declarations for pattern types |
 
 ### Global Styles
 
-| File | Purpose |
-|------|---------|
+| File            | Purpose                                                         |
+| --------------- | --------------------------------------------------------------- |
 | `css.global.ts` | **Global CSS** - `:root` vars, `body` defaults, container setup |
 | `css.static.ts` | **Static CSS** - Force generation of specific utilities/recipes |
 
@@ -461,37 +462,37 @@ Each microbundle follows the pattern: **collect → bundle → execute → gener
 
 > **Public configuration functions for design tokens, recipes, patterns**
 
-| File | Purpose |
-|------|---------|
+| File       | Purpose                        |
+| ---------- | ------------------------------ |
 | `index.ts` | Exports all configuration APIs |
 
 #### Internal Functions (`styled/api/internal/`)
 
 **Low-level config extension functions (called by public APIs)**
 
-| File | Purpose |
-|------|---------|
-| `index.ts` | Exports all internal extension functions |
-| `extendTokens.ts` | Extends Panda design tokens (colors, spacing, fonts, etc.) |
-| `extendRecipe.ts` | Extends single-part recipes (Button, Badge variants) |
-| `extendPattern.ts` | Extends box pattern with custom props |
-| `extendUtilities.ts` | Extends utility generators (custom CSS properties) |
-| `extendGlobalCss.ts` | Extends global CSS rules |
-| `extendStaticCss.ts` | Forces generation of specific utilities/recipes |
-| `extendGlobalFontface.ts` | Extends @font-face declarations |
-| `extendKeyframes.ts` | Extends animation keyframes |
-| `extendFont.ts` | All-in-one font system extension |
+| File                      | Purpose                                                    |
+| ------------------------- | ---------------------------------------------------------- |
+| `index.ts`                | Exports all internal extension functions                   |
+| `extendTokens.ts`         | Extends Panda design tokens (colors, spacing, fonts, etc.) |
+| `extendRecipe.ts`         | Extends single-part recipes (Button, Badge variants)       |
+| `extendPattern.ts`        | Extends box pattern with custom props                      |
+| `extendUtilities.ts`      | Extends utility generators (custom CSS properties)         |
+| `extendGlobalCss.ts`      | Extends global CSS rules                                   |
+| `extendStaticCss.ts`      | Forces generation of specific utilities/recipes            |
+| `extendGlobalFontface.ts` | Extends @font-face declarations                            |
+| `extendKeyframes.ts`      | Extends animation keyframes                                |
+| `extendFont.ts`           | All-in-one font system extension                           |
 
 #### Runtime Functions (`styled/api/runtime/`)
 
 **Runtime styling helpers (used in components)**
 
-| File | Purpose |
-|------|---------|
-| `index.ts` | Exports runtime utilities |
-| `css.ts` | Re-exports Panda `css()` function |
-| `recipe.ts` | Recipe runtime helpers |
-| `recipe.md` | Recipe system documentation |
+| File        | Purpose                           |
+| ----------- | --------------------------------- |
+| `index.ts`  | Exports runtime utilities         |
+| `css.ts`    | Re-exports Panda `css()` function |
+| `recipe.ts` | Recipe runtime helpers            |
+| `recipe.md` | Recipe system documentation       |
 
 ---
 
@@ -499,13 +500,13 @@ Each microbundle follows the pattern: **collect → bundle → execute → gener
 
 > **Core design tokens (colors, spacing, radii, shadows)**
 
-| File | Purpose |
-|------|---------|
-| `index.ts` | Exports all theme tokens |
-| `colors.ts` | Color tokens (brand, semantic, neutrals) |
-| `spacing.ts` | Spacing scale tokens (0.5rem → 20rem) |
-| `radii.ts` | Border radius tokens (rounded corners) |
-| `animations.ts` | Animation duration/timing tokens |
+| File            | Purpose                                  |
+| --------------- | ---------------------------------------- |
+| `index.ts`      | Exports all theme tokens                 |
+| `colors.ts`     | Color tokens (brand, semantic, neutrals) |
+| `spacing.ts`    | Spacing scale tokens (0.5rem → 20rem)    |
+| `radii.ts`      | Border radius tokens (rounded corners)   |
+| `animations.ts` | Animation duration/timing tokens         |
 
 ---
 
@@ -513,12 +514,12 @@ Each microbundle follows the pattern: **collect → bundle → execute → gener
 
 > **Typography system (fonts, weights, @font-face)**
 
-| File | Purpose |
-|------|---------|
-| `index.ts` | Exports font system |
-| `fonts.ts` | Font family definitions using `extendFont()` |
-| `font.ts` | **Generated** - Complete font system (tokens, recipes, patterns) |
-| `fontface.md` | Font system documentation |
+| File          | Purpose                                                          |
+| ------------- | ---------------------------------------------------------------- |
+| `index.ts`    | Exports font system                                              |
+| `fonts.ts`    | Font family definitions using `extendFont()`                     |
+| `font.ts`     | **Generated** - Complete font system (tokens, recipes, patterns) |
+| `fontface.md` | Font system documentation                                        |
 
 ---
 
@@ -526,11 +527,11 @@ Each microbundle follows the pattern: **collect → bundle → execute → gener
 
 > **Vertical rhythm and spacing utilities**
 
-| File | Purpose |
-|------|---------|
-| `index.ts` | Exports rhythm utilities |
+| File           | Purpose                                          |
+| -------------- | ------------------------------------------------ |
+| `index.ts`     | Exports rhythm utilities                         |
 | `utilities.ts` | Rhythm utility generators (`r` prop for spacing) |
-| `helpers.ts` | Rhythm calculation helpers |
+| `helpers.ts`   | Rhythm calculation helpers                       |
 
 ---
 
@@ -538,13 +539,13 @@ Each microbundle follows the pattern: **collect → bundle → execute → gener
 
 > **Pattern extensions for Box component (r, container, font props)**
 
-| File | Purpose |
-|------|---------|
-| `index.ts` | Exports all pattern extensions |
-| `box.ts` | **Generated** - Unified box pattern with all extensions |
-| `r.ts` | **Responsive container query prop** - `r={{ 320: {...} }}` |
-| `container.ts` | **Container name prop** - `container="sidebar"` |
-| `font.ts` | **Font preset prop** - `font="sans"` |
+| File           | Purpose                                                    |
+| -------------- | ---------------------------------------------------------- |
+| `index.ts`     | Exports all pattern extensions                             |
+| `box.ts`       | **Generated** - Unified box pattern with all extensions    |
+| `r.ts`         | **Responsive container query prop** - `r={{ 320: {...} }}` |
+| `container.ts` | **Container name prop** - `container="sidebar"`            |
+| `font.ts`      | **Font preset prop** - `font="sans"`                       |
 
 ---
 
@@ -552,15 +553,15 @@ Each microbundle follows the pattern: **collect → bundle → execute → gener
 
 > **CSS animation keyframes**
 
-| File | Purpose |
-|------|---------|
-| `README.md` | Animation system documentation |
-| `index.ts` | Exports all keyframes |
-| `fade.ts` | Fade in/out animations |
-| `slide.ts` | Slide animations (up, down, left, right) |
-| `scale.ts` | Scale animations (zoom in/out) |
-| `spin.ts` | Rotation animations |
-| `bounce.ts` | Bounce animations |
+| File           | Purpose                                      |
+| -------------- | -------------------------------------------- |
+| `README.md`    | Animation system documentation               |
+| `index.ts`     | Exports all keyframes                        |
+| `fade.ts`      | Fade in/out animations                       |
+| `slide.ts`     | Slide animations (up, down, left, right)     |
+| `scale.ts`     | Scale animations (zoom in/out)               |
+| `spin.ts`      | Rotation animations                          |
+| `bounce.ts`    | Bounce animations                            |
 | `attention.ts` | Attention-grabbing animations (shake, pulse) |
 
 ---
@@ -571,25 +572,25 @@ Each microbundle follows the pattern: **collect → bundle → execute → gener
 
 > **Type-safe HTML element primitives (Button, Link, Article, etc.)**
 
-| File | Purpose |
-|------|---------|
-| `index.tsx` | **Exports 50+ semantic HTML primitives** |
+| File                  | Purpose                                                          |
+| --------------------- | ---------------------------------------------------------------- |
+| `index.tsx`           | **Exports 50+ semantic HTML primitives**                         |
 | `createPrimitive.tsx` | **Factory function** - Creates type-safe primitive from HTML tag |
-| `tags.ts` | List of all supported HTML tags |
-| `types.ts` | TypeScript types for primitive props |
-| `recipes.ts` | Recipe definitions for primitives |
+| `tags.ts`             | List of all supported HTML tags                                  |
+| `types.ts`            | TypeScript types for primitive props                             |
+| `recipes.ts`          | Recipe definitions for primitives                                |
 
 #### Primitive CSS Styles (`primitives/css/`)
 
 **Element-specific default styles**
 
-| File | Purpose |
-|------|---------|
-| `base.typography.ts` | Base typography styles |
-| Typography elements | `h1.style.ts` through `h6.style.ts`, `p.style.ts`, etc. |
-| Code elements | `code.style.ts`, `pre.style.ts`, `kbd.style.ts`, etc. |
-| Semantic elements | `strong.style.ts`, `em.style.ts`, `mark.style.ts`, etc. |
-| Quote elements | `blockquote.style.ts`, `q.style.ts`, `cite.style.ts` |
+| File                 | Purpose                                                 |
+| -------------------- | ------------------------------------------------------- |
+| `base.typography.ts` | Base typography styles                                  |
+| Typography elements  | `h1.style.ts` through `h6.style.ts`, `p.style.ts`, etc. |
+| Code elements        | `code.style.ts`, `pre.style.ts`, `kbd.style.ts`, etc.   |
+| Semantic elements    | `strong.style.ts`, `em.style.ts`, `mark.style.ts`, etc. |
+| Quote elements       | `blockquote.style.ts`, `q.style.ts`, `cite.style.ts`    |
 
 ---
 
@@ -597,11 +598,11 @@ Each microbundle follows the pattern: **collect → bundle → execute → gener
 
 **Demo components showing API usage**
 
-| File | Purpose |
-|------|---------|
-| `Button.tsx` | Example button component with variants |
-| `RecipeCoreDemo.tsx` | Recipe system demonstration |
-| `ResponsiveExample.tsx` | Container query responsive example |
+| File                    | Purpose                                |
+| ----------------------- | -------------------------------------- |
+| `Button.tsx`            | Example button component with variants |
+| `RecipeCoreDemo.tsx`    | Recipe system demonstration            |
+| `ResponsiveExample.tsx` | Container query responsive example     |
 
 ---
 
@@ -613,17 +614,17 @@ Each microbundle follows the pattern: **collect → bundle → execute → gener
 
 **Note:** `src/system/` is symlinked to `styled-system/` for clean imports.
 
-| Directory | Purpose |
-|-----------|---------|
-| `css/` | CSS-in-JS runtime (`css()`, `cx()`, atomic classes) |
-| `jsx/` | JSX factory, `Box` component, styled elements |
-| `patterns/` | Pattern functions (stack, flex, grid, container queries) |
-| `recipes/` | Recipe functions (component variants) |
-| `tokens/` | Design token runtime values |
-| `types/` | TypeScript type definitions |
-| `styles.css` | **Static CSS output** (all generated styles) |
-| `helpers.js` | Runtime helper utilities |
-| `package.json` | Package metadata for `@reference-ui/system` |
+| Directory      | Purpose                                                  |
+| -------------- | -------------------------------------------------------- |
+| `css/`         | CSS-in-JS runtime (`css()`, `cx()`, atomic classes)      |
+| `jsx/`         | JSX factory, `Box` component, styled elements            |
+| `patterns/`    | Pattern functions (stack, flex, grid, container queries) |
+| `recipes/`     | Recipe functions (component variants)                    |
+| `tokens/`      | Design token runtime values                              |
+| `types/`       | TypeScript type definitions                              |
+| `styles.css`   | **Static CSS output** (all generated styles)             |
+| `helpers.js`   | Runtime helper utilities                                 |
+| `package.json` | Package metadata for `@reference-ui/system`              |
 
 ---
 
@@ -633,9 +634,9 @@ Each microbundle follows the pattern: **collect → bundle → execute → gener
 
 **Build automation scripts**
 
-| File | Purpose |
-|------|---------|
-| `gen-config.ts` | Generates Panda config from discovered calls |
+| File                      | Purpose                                      |
+| ------------------------- | -------------------------------------------- |
+| `gen-config.ts`           | Generates Panda config from discovered calls |
 | `generate-primitives.cjs` | Generates primitive components from tag list |
 
 ---
@@ -659,12 +660,12 @@ codegen/src/
 
 ### Documentation (`docs/`)
 
-| File | Purpose |
-|------|---------|
+| File                    | Purpose                                 |
+| ----------------------- | --------------------------------------- |
 | `MIGRATION-TO-REACT.md` | Guide for migrating to React primitives |
-| `response.md` | Responsive design patterns |
-| `responsive.md` | Container query documentation |
-| `archive/` | Archived documentation |
+| `response.md`           | Responsive design patterns              |
+| `responsive.md`         | Container query documentation           |
+| `archive/`              | Archived documentation                  |
 
 ---
 
@@ -725,31 +726,37 @@ codegen/src/
 ## Key Innovations Summary
 
 ### 1. **Eval System** (`cli/eval/`)
+
 - Automatically discovers config calls in codebase
 - No manual imports or registration required
 - Executes code at build time to collect design tokens
 
 ### 2. **Microbundle Architecture** (`cli/panda/`)
+
 - Each feature is self-contained (config, boxPattern, fontFace)
 - Generates committed TypeScript that Panda consumes
 - Solves closure capture issues with inline transforms
 
 ### 3. **Container-First Responsive** (`styled/props/r.ts`)
+
 - `r={{ 320: {...}, 768: {...} }}` API
 - Container queries by default, not media queries
 - Components respond to container size, not viewport
 
 ### 4. **Type-Safe Primitives** (`primitives/`)
+
 - 50+ HTML elements with perfect TypeScript types
 - No polymorphic `as` prop (avoids type hell)
 - Each primitive strongly typed to its element
 
 ### 5. **Domain Organization** (`styled/`)
+
 - Organized by design concern (theme, font, rhythm)
 - Each domain self-contained with tokens + utilities
 - Scales to hundreds of files without confusion
 
 ### 6. **Zero-Runtime Everything**
+
 - All CSS generated at build time by Panda
 - No runtime style calculation overhead
 - Static CSS + React components only
@@ -758,14 +765,14 @@ codegen/src/
 
 ## File Count Summary
 
-| Category | Count | Purpose |
-|----------|-------|---------|
-| **CLI System** | ~40 files | Build-time discovery and code generation |
-| **Styled System** | ~35 files | Design tokens, recipes, patterns, fonts |
-| **Primitives** | ~30 files | Type-safe HTML element components |
-| **Generated Output** | Variable | Panda CSS runtime (css/, patterns/, tokens/) |
-| **Documentation** | ~10 files | Architecture, guides, planning |
-| **Config** | ~6 files | Package, TypeScript, build configuration |
+| Category             | Count     | Purpose                                      |
+| -------------------- | --------- | -------------------------------------------- |
+| **CLI System**       | ~40 files | Build-time discovery and code generation     |
+| **Styled System**    | ~35 files | Design tokens, recipes, patterns, fonts      |
+| **Primitives**       | ~30 files | Type-safe HTML element components            |
+| **Generated Output** | Variable  | Panda CSS runtime (css/, patterns/, tokens/) |
+| **Documentation**    | ~10 files | Architecture, guides, planning               |
+| **Config**           | ~6 files  | Package, TypeScript, build configuration     |
 
 **Total Source Files:** ~120+  
 **Generated Files:** ~100+ (in `styled-system/`)
@@ -774,48 +781,52 @@ codegen/src/
 
 ## Quick Reference: Find Things Fast
 
-| I want to... | Go to... |
-|--------------|----------|
-| Add design tokens | `styled/theme/` or `styled/api/internal/extendTokens.ts` |
-| Create component variants | `styled/api/internal/extendRecipe.ts` |
-| Add custom box props | `styled/props/` + `styled/api/internal/extendPattern.ts` |
-| Add font family | `styled/font/fonts.ts` using `extendFont()` |
-| Create animations | `styled/animations/` |
-| Modify CLI build | `cli/commands/sync.ts` |
-| Understand eval system | `cli/eval/readme.md` |
-| Add microbundle | `cli/panda/` + follow existing pattern |
-| Create primitive | `primitives/index.tsx` + `createPrimitive()` |
-| Configure Panda | `panda.base.ts` + `styled/api/internal/extendPandaConfig.ts` |
-| See generated output | `styled-system/` or `src/system/` |
+| I want to...              | Go to...                                                     |
+| ------------------------- | ------------------------------------------------------------ |
+| Add design tokens         | `styled/theme/` or `styled/api/internal/extendTokens.ts`     |
+| Create component variants | `styled/api/internal/extendRecipe.ts`                        |
+| Add custom box props      | `styled/props/` + `styled/api/internal/extendPattern.ts`     |
+| Add font family           | `styled/font/fonts.ts` using `extendFont()`                  |
+| Create animations         | `styled/animations/`                                         |
+| Modify CLI build          | `cli/commands/sync.ts`                                       |
+| Understand eval system    | `cli/eval/readme.md`                                         |
+| Add microbundle           | `cli/panda/` + follow existing pattern                       |
+| Create primitive          | `primitives/index.tsx` + `createPrimitive()`                 |
+| Configure Panda           | `panda.base.ts` + `styled/api/internal/extendPandaConfig.ts` |
+| See generated output      | `styled-system/` or `src/system/`                            |
 
 ---
 
 ## Development Workflow
 
 ### 1. **User makes changes:**
+
 ```bash
 # Add tokens in styled/theme/colors.ts
 extendTokens({ colors: { brand: { value: '#0066FF' } } })
 ```
 
 ### 2. **Run build:**
+
 ```bash
 ref sync         # Full build
 ref sync --watch # Watch mode
 ```
 
 ### 3. **CLI executes:**
+
 1. **Eval system** discovers `extendTokens()` call
 2. **Config microbundle** collects + merges into `panda.config.ts`
 3. **Panda codegen** generates `styled-system/`
 4. **Link system** symlinks to `src/system/`
 
 ### 4. **Use in components:**
+
 ```tsx
 import { css } from '@reference-ui/system/css'
 import { Button } from '@reference-ui/react'
 
-<Button css={{ bg: 'brand' }}>Click me</Button>
+;<Button css={{ bg: 'brand' }}>Click me</Button>
 ```
 
 ---
@@ -823,11 +834,13 @@ import { Button } from '@reference-ui/react'
 ## Future Expansion Points
 
 ### Planned Microbundles
+
 - [ ] **Animation microbundle** - Declarative spring/timeline animations
 - [ ] **Theme microbundle** - Zero-runtime theme switching
 - [ ] **Export microbundle** - Design tokens → Figma/Sketch
 
 ### Planned Features
+
 - [ ] Static component analysis (bundle size, style usage)
 - [ ] Visual regression testing integration
 - [ ] Component documentation generation
@@ -845,6 +858,7 @@ import { Button } from '@reference-ui/react'
 3. **Zero-runtime styling** - All CSS generated at build time
 
 The architecture is **designed to scale**:
+
 - To hundreds of design tokens
 - To dozens of component libraries
 - To teams of any size
@@ -854,4 +868,4 @@ Every file has a **clear purpose**, every domain is **self-contained**, and ever
 
 ---
 
-*Last updated: February 19, 2026*
+_Last updated: February 19, 2026_

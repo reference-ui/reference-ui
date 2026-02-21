@@ -20,12 +20,20 @@ function toRelativeImport(refDir: string, absolutePath: string): string {
  * and writes to JSON for generateBoxPattern to read.
  */
 export function buildCollectEntryContent(options: BuildCollectEntryOptions): string {
-  const { refDir, outputPath, initBoxCollectorPath, extendBoxPatternPath, extensionFilePaths } = options
+  const {
+    refDir,
+    outputPath,
+    initBoxCollectorPath,
+    extendBoxPatternPath,
+    extensionFilePaths,
+  } = options
 
   const initRel = toRelativeImport(refDir, initBoxCollectorPath)
   const extendRel = toRelativeImport(refDir, extendBoxPatternPath)
 
-  const extensionImports = extensionFilePaths.map((path) => `import '${toRelativeImport(refDir, path)}'`)
+  const extensionImports = extensionFilePaths.map(
+    path => `import '${toRelativeImport(refDir, path)}'`
+  )
 
   const lines = [
     `import '${initRel}'`,

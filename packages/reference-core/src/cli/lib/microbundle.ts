@@ -24,7 +24,7 @@ const PANDA_BUNDLE_EXTERNALS: string[] = [
   'rolldown',
   'unconfig',
   'unrun',
-  'birpc'
+  'birpc',
 ]
 
 /**
@@ -55,7 +55,7 @@ export async function microBundle(
     keepNames = true,
     treeShaking = true,
     mainFields = ['module', 'main'],
-    conditions = ['import', 'node']
+    conditions = ['import', 'node'],
   } = options
 
   const result = await esbuild.build({
@@ -71,7 +71,7 @@ export async function microBundle(
     treeShaking,
     splitting: false,
     mainFields,
-    conditions
+    conditions,
   })
 
   const output = result.outputFiles?.[0]

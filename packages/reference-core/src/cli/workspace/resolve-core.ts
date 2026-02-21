@@ -2,13 +2,17 @@ import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { resolve, dirname, join, relative, parse } from 'node:path'
 import { createRequire } from 'node:module'
 
-const CONFIG_FILES = ['reference.config.ts', 'reference.config.js', 'reference.config.mjs']
+const CONFIG_FILES = [
+  'reference.config.ts',
+  'reference.config.js',
+  'reference.config.mjs',
+]
 
 export function resolvePackageRoot(startCwd: string = process.cwd()): string {
   let dir = resolve(startCwd)
   const root = dirname(dir)
   while (dir !== root) {
-    if (CONFIG_FILES.some((f) => existsSync(resolve(dir, f)))) {
+    if (CONFIG_FILES.some(f => existsSync(resolve(dir, f)))) {
       return dir
     }
     try {
@@ -37,7 +41,12 @@ export function readCoreSourceFiles(coreDir: string): Record<string, string> {
     { dir: resolve(coreDir), base: '', exts: ['.ts'] },
   ]
 
-  function readDirRecursive(dir: string, rootDir: string, basePrefix: string, exts?: string[]): void {
+  function readDirRecursive(
+    dir: string,
+    rootDir: string,
+    basePrefix: string,
+    exts?: string[]
+  ): void {
     if (!existsSync(dir)) return
     const entries = readdirSync(dir)
 
@@ -56,7 +65,7 @@ export function readCoreSourceFiles(coreDir: string): Record<string, string> {
       const rel = relative(rootDir, fullPath).replace(/\\/g, '/')
       const logicalPath = basePrefix ? `${basePrefix}/${rel}` : rel
 
-      if (exts && !exts.some((ext) => fullPath.endsWith(ext))) continue
+      if (exts && !exts.some(ext => fullPath.endsWith(ext))) continue
 
       sourceFiles[logicalPath] = readFileSync(fullPath, 'utf-8')
     }
@@ -96,7 +105,10 @@ export function resolveCorePackageDir(): string {
   const root = dirname(dir)
 
   while (dir !== root) {
-    if (existsSync(resolve(dir, 'pnpm-workspace.yaml')) || existsSync(resolve(dir, 'nx.json'))) {
+    if (
+      existsSync(resolve(dir, 'pnpm-workspace.yaml')) ||
+      existsSync(resolve(dir, 'nx.json'))
+    ) {
       const candidate = resolve(dir, 'packages/reference-core')
       if (existsSync(resolve(candidate, 'package.json'))) return candidate
       const alt = resolve(dir, 'packages/old/reference-core')

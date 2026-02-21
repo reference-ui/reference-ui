@@ -20,7 +20,13 @@ function toRelativeImport(refDir: string, absolutePath: string): string {
  * into a single Panda config export.
  */
 export function buildPandaEntryContent(options: BuildPandaEntryOptions): string {
-  const { refDir, initCollectorPath, extendPandaConfigPath, deepMergePath, configFilePaths } = options
+  const {
+    refDir,
+    initCollectorPath,
+    extendPandaConfigPath,
+    deepMergePath,
+    configFilePaths,
+  } = options
 
   const initCollectorRel = toRelativeImport(refDir, initCollectorPath)
   const extendPandaRel = toRelativeImport(refDir, extendPandaConfigPath)

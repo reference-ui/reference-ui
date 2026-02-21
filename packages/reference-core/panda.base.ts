@@ -10,7 +10,7 @@ const baseConfig = {
   presets: [],
   jsxFramework: 'react' as const,
   preflight: true,
-  
+
   include: ['src/**/*.{ts,tsx}'],
 
   exclude: [

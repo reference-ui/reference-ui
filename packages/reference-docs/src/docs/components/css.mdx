@@ -5,7 +5,7 @@ order: 4
 slug: css
 ---
 
-import { CssDemo } from '../../components/CssDemo';
+import { CssDemo } from '../../components/CssDemo'
 
 # CSS
 
@@ -42,9 +42,9 @@ Reference UI provides a comprehensive set of design tokens that work seamlessly 
 
 ```tsx
 css({
-  bg: 'blue.500',      // Background color
-  color: 'white',      // Text color
-  borderColor: 'gray.300',  // Border color
+  bg: 'blue.500', // Background color
+  color: 'white', // Text color
+  borderColor: 'gray.300', // Border color
 })
 ```
 
@@ -58,9 +58,9 @@ Use the rhythm-based spacing system with the `r` suffix:
 
 ```tsx
 css({
-  padding: '4r',       // 4 * rhythm units
-  margin: '2r',        // 2 * rhythm units
-  gap: '3r',           // 3 * rhythm units
+  padding: '4r', // 4 * rhythm units
+  margin: '2r', // 2 * rhythm units
+  gap: '3r', // 3 * rhythm units
 })
 ```
 
@@ -68,8 +68,8 @@ Or use Panda's numeric spacing:
 
 ```tsx
 css({
-  padding: '4',        // 1rem (16px)
-  margin: '2',         // 0.5rem (8px)
+  padding: '4', // 1rem (16px)
+  margin: '2', // 0.5rem (8px)
 })
 ```
 
@@ -77,10 +77,10 @@ css({
 
 ```tsx
 css({
-  fontSize: 'xl',      // Font size tokens: xs, sm, md, lg, xl, 2xl, 3xl, 4xl...
-  fontWeight: '600',   // Font weights: 100-900
-  lineHeight: '1.5',   // Line height
-  letterSpacing: '-0.02em',  // Letter spacing
+  fontSize: 'xl', // Font size tokens: xs, sm, md, lg, xl, 2xl, 3xl, 4xl...
+  fontWeight: '600', // Font weights: 100-900
+  lineHeight: '1.5', // Line height
+  letterSpacing: '-0.02em', // Letter spacing
 })
 ```
 
@@ -97,6 +97,7 @@ css({
 ```
 
 Default breakpoints:
+
 - `base`: 0px (mobile-first)
 - `sm`: 640px
 - `md`: 768px
@@ -129,6 +130,7 @@ css({
 ```
 
 Available pseudo states:
+
 - `_hover`, `_focus`, `_active`, `_disabled`
 - `_focusVisible`, `_focusWithin`
 - `_before`, `_after`

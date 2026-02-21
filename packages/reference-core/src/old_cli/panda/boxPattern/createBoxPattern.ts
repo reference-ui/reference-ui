@@ -32,8 +32,14 @@ export async function createBoxPattern(coreDir: string): Promise<string> {
   const collectEntryContent = buildCollectEntryContent({
     refDir,
     outputPath: extensionsPath,
-    initBoxCollectorPath: resolve(coreDir, 'src/cli/panda/boxPattern/initBoxCollector.ts'),
-    extendBoxPatternPath: resolve(coreDir, 'src/cli/panda/boxPattern/extendBoxPattern.ts'),
+    initBoxCollectorPath: resolve(
+      coreDir,
+      'src/cli/panda/boxPattern/initBoxCollector.ts'
+    ),
+    extendBoxPatternPath: resolve(
+      coreDir,
+      'src/cli/panda/boxPattern/extendBoxPattern.ts'
+    ),
     extensionFilePaths: extensionPaths,
   })
   writeFileSync(collectEntryPath, collectEntryContent)
@@ -47,12 +53,15 @@ export async function createBoxPattern(coreDir: string): Promise<string> {
     encoding: 'utf-8',
   })
   if (result.status !== 0) {
-    throw new Error(`[createBoxPattern] Collect script failed:\n${result.stderr || result.stdout}`)
+    throw new Error(
+      `[createBoxPattern] Collect script failed:\n${result.stderr || result.stdout}`
+    )
   }
 
-  const extensions: Array<{ properties: Record<string, unknown>; transformSource: string }> = JSON.parse(
-    readFileSync(extensionsPath, 'utf-8')
-  )
+  const extensions: Array<{
+    properties: Record<string, unknown>
+    transformSource: string
+  }> = JSON.parse(readFileSync(extensionsPath, 'utf-8'))
 
   rmSync(collectEntryPath, { force: true })
   rmSync(collectScriptPath, { force: true })

@@ -1,5 +1,5 @@
-import { memo, splitProps } from '../helpers.js';
-import { createRecipe, mergeRecipes } from './create-recipe.js';
+import { memo, splitProps } from '../helpers.js'
+import { createRecipe, mergeRecipes } from './create-recipe.js'
 
 const emStyleFn = /* @__PURE__ */ createRecipe('r_em', {}, [])
 
@@ -11,7 +11,7 @@ export const emStyle = /* @__PURE__ */ Object.assign(memo(emStyleFn.recipeFn), {
   __recipe__: true,
   __name__: 'emStyle',
   __getCompoundVariantCss__: emStyleFn.__getCompoundVariantCss__,
-  raw: (props) => props,
+  raw: props => props,
   variantKeys: emStyleVariantKeys,
   variantMap: emStyleVariantMap,
   merge(recipe) {

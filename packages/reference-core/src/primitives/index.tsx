@@ -3,11 +3,37 @@
 import { createPrimitive } from './createPrimitive'
 import type { PrimitiveProps, PrimitiveElement } from './types.js'
 
-import { abbrStyle, bStyle, blockquoteStyle, citeStyle, codeStyle, emStyle, h1Style, h2Style, h3Style, h4Style, h5Style, h6Style, iStyle, kbdStyle, markStyle, pStyle, preStyle, qStyle, sStyle, sampStyle, smallStyle, strongStyle, subStyle, supStyle, uStyle, varStyle } from '../system/recipes'
+import {
+  abbrStyle,
+  bStyle,
+  blockquoteStyle,
+  citeStyle,
+  codeStyle,
+  emStyle,
+  h1Style,
+  h2Style,
+  h3Style,
+  h4Style,
+  h5Style,
+  h6Style,
+  iStyle,
+  kbdStyle,
+  markStyle,
+  pStyle,
+  preStyle,
+  qStyle,
+  sStyle,
+  sampStyle,
+  smallStyle,
+  strongStyle,
+  subStyle,
+  supStyle,
+  uStyle,
+  varStyle,
+} from '../system/recipes'
 
 export { TAGS as HTML_TAGS, type Tag as HtmlTag } from './tags'
 export type { PrimitiveElement, PrimitiveProps } from './types'
-
 
 export type AProps = PrimitiveProps<'a'>
 export type AbbrProps = PrimitiveProps<'abbr'>

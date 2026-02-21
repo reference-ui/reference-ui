@@ -1,14 +1,14 @@
 /**
  * Reference UI Configuration
- * 
+ *
  * This file shows the complete API surface for configuring Reference UI.
  * Reference UI is compile-time first with a minimal, un-opinionated API.
- * 
+ *
  * Runtime API:
  * - css()       - Style primitive
  * - recipe()    - Multi-variant component styles
  * - cssGlobal() - Global styles
- * 
+ *
  * Build-time API:
  * - config()    - Configuration
  * - extendTokens()    - Design system tokens
@@ -28,18 +28,13 @@ config({
    */
   normalizeCss: true,
 
-
   // use reference-ui components and tokens
   // recommended for most projects
   useDesignSystem: true,
 
-
   // scan folders for API and MCP extraction
-  scanFolders: [
-    'src/**/*.{ts,tsx}',
-  ]
+  scanFolders: ['src/**/*.{ts,tsx}'],
 })
-
 
 extendTokens({
   colors: {
@@ -85,7 +80,6 @@ extendKeyframes({
     '100%': { transform: 'rotate(360deg)' },
   },
 })
-
 
 cssGlobal({
   'html, body': {
