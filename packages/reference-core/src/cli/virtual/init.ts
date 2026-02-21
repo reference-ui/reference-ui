@@ -4,7 +4,8 @@ import { existsSync } from 'node:fs'
 import { setupWatcher } from './watcher'
 import { copyToVirtual, removeFromVirtual } from './copy'
 import { log } from '../utils/log'
-import { DEFAULT_VIRTUAL_DIR } from './config.internal'
+import { resolveCorePackageDir } from '../utils/resolve-core'
+import { DEFAULT_VIRTUAL_DIR, GLOB_CONFIG } from './config.internal'
 import type { FileChangeEvent, InitVirtualOptions } from './types'
 import type { ReferenceUIConfig } from '../config'
 
@@ -28,7 +29,8 @@ export async function initVirtual(
 
   // Resolve absolute paths
   const absSourceDir = resolve(sourceDir)
-  const absVirtualDir = resolve(sourceDir, virtualDir)
+  const coreDir = resolveCorePackageDir(sourceDir)
+  const absVirtualDir = resolve(coreDir, virtualDir)
 
   log.debug('[virtual] Initializing virtual filesystem')
   log.debug('[virtual] Source:', absSourceDir)
@@ -43,7 +45,21 @@ export async function initVirtual(
   // If not watching, just do a one-time copy
   if (!watch) {
     log.debug('[virtual] One-time copy (no watching)')
-    // TODO: Implement glob-based file discovery and copy
+
+    const fg = await import('fast-glob')
+
+    for (const pattern of include) {
+      const files = await fg.default(pattern, {
+        cwd: absSourceDir,
+        ...GLOB_CONFIG,
+      })
+
+      for (const file of files) {
+        await copyToVirtual(file, absSourceDir, absVirtualDir, { debug })
+      }
+    }
+
+    log.debug('[virtual] One-time copy complete')
     return () => {} // No-op cleanup
   }
 
@@ -55,7 +71,22 @@ export async function initVirtual(
     }
   )
 
-  return stopWatcher
+  // Handle graceful shutdown in watch mode
+  const cleanup = () => {
+    stopWatcher()
+  }
+
+  process.on('SIGINT', () => {
+    cleanup()
+    process.exit(0)
+  })
+
+  process.on('SIGTERM', () => {
+    cleanup()
+    process.exit(0)
+  })
+
+  return cleanup
 }
 
 /**

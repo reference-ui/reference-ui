@@ -40,6 +40,7 @@ export async function copyToVirtual(
     sourcePath,
     destPath,
     content,
+    sourceDir,
     debug,
   })
 

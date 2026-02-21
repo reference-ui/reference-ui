@@ -85,25 +85,44 @@ const result = await transformFile({
 ### MDX → JSX
 
 - **Why**: Panda CSS needs to extract styled() calls from MDX
-- **How**: Simple extension change (`.mdx` → `.jsx`)
-- **Future**: Full MDX parsing if needed
+- **How**: Full MDX compilation using @mdx-js/mdx
+- **When**: Applied first in the transform pipeline
 
-### Future Transforms
+### Panda CSS Import Rewrites
 
-- AST transforms for Panda-specific patterns
-- Import rewriting for styled() calls
-- Custom helpers injection
+After MDX compilation, we apply Panda-specific transforms:
+
+1. **CVA/Recipe Imports**: Rewrite `cva` and `recipe` imports from `@reference-ui/core` to `styled-system/css`
+2. **CSS Imports**: Rewrite `css` imports from `@reference-ui/core` to `styled-system/css`
+
+These rewrites ensure Panda CSS can properly resolve its generated functions.
+
+### Transform Pipeline
+
+All transforms are orchestrated by the `transforms/` controller:
+
+1. **MDX → JSX** (if .mdx file)
+2. **Rewrite cva/recipe imports** (for .js/.jsx/.ts/.tsx files)
+3. **Rewrite css imports** (for .js/.jsx/.ts/.tsx files)
 
 ## File Structure
 
 ```
 virtual/
-├── index.ts       # Main exports, initVirtual()
-├── types.ts       # TypeScript types
-├── watcher.ts     # File watching with chokidar
-├── copy.ts        # Copy + transform logic
-├── transform.ts   # Transform implementations
-└── README.md      # This file
+├── index.ts           # Main exports, initVirtual()
+├── types.ts           # TypeScript types
+├── watcher.ts         # File watching with chokidar
+├── copy.ts            # Copy + transform logic
+├── transform.ts       # Transform coordinator
+├── config.internal.ts # Internal configuration
+├── init.ts            # Initialize virtual filesystem
+├── sync.ts            # One-time sync
+├── transforms/        # Transform implementations
+│   ├── index.ts           # Transform controller/pipeline
+│   ├── mdx-to-jsx.ts      # MDX compilation
+│   ├── rewrite-cva-imports.ts  # CVA/recipe import rewriting
+│   └── rewrite-css-imports.ts  # CSS import rewriting
+└── README.md          # This file
 ```
 
 ## Integration with CLI

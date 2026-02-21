@@ -16,6 +16,12 @@ export interface ReferenceUIConfig {
   include: string[]
 
   /**
+   * Virtual directory where transformed files are written.
+   * @default '.virtual'
+   */
+  virtualDir?: string
+
+  /**
    * Enable normalize CSS reset.
    * @default true
    */

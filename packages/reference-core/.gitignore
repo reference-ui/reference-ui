@@ -3,3 +3,6 @@ dist/
 
 # Old codegen approach (deprecated)
 codegen/
+
+
+.virtual/

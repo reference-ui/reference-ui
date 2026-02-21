@@ -74,6 +74,11 @@ export interface TransformOptions {
   content: string
 
   /**
+   * Source directory (for calculating relative paths)
+   */
+  sourceDir?: string
+
+  /**
    * Enable debug logging
    */
   debug?: boolean
