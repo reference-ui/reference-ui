@@ -143,7 +143,6 @@ Generates `clamp()` for smooth scaling based on container size.
 
 ```tsx
 import { fluid } from 'reference-ui'
-
 ;<Box
   gap={fluid('1r', '3r')} // Scales from 1r to 3r
   fontSize={fluid('14px', '18px')}
