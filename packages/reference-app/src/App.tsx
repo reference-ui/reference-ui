@@ -1,5 +1,4 @@
-import { Div, Container, ResponsiveExample, Button } from '@reference-ui/core'
-import '@reference-ui/core/styles.css'
+import { Div, Container, ResponsiveExample, Button } from '@reference-ui/react'
 
 export default function App() {
   return (

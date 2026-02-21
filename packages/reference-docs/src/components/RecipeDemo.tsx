@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Div, recipe } from '@reference-ui/core'
+import { Div, recipe } from '@reference-ui/react'
 
 /**
  * Demo component showcasing the recipe() API.

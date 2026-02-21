@@ -85,3 +85,8 @@ export const REACT_PACKAGE: PackageDefinition = {
     { src: 'src/system/styles.css', dest: 'styles.css' },
   ],
 }
+
+/**
+ * All packages to be bundled/copied
+ */
+export const PACKAGES: PackageDefinition[] = [SYSTEM_PACKAGE, REACT_PACKAGE]

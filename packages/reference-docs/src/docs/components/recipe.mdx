@@ -18,7 +18,7 @@ Build multi-variant styles with `cva()` (or `recipe()`). Define base styles, var
 ## Basic usage
 
 ```tsx
-import { cva } from '@reference-ui/core'
+import { cva } from '@reference-ui/react'
 
 const buttonRecipe = cva({
   base: {
@@ -52,7 +52,7 @@ const buttonRecipe = cva({
 
 ## recipe() vs cva()
 
-You can use Panda’s `cva` directly from `@reference-ui/core` (or `@reference-ui/core/css`). The `recipe()` export is a thin wrapper that keeps the same API and can be used when you want a single entrypoint; both work with the design tokens and extraction pipeline.
+You can use Panda's `cva` directly from `@reference-ui/react` (or `@reference-ui/react/css`). The `recipe()` export is a thin wrapper that keeps the same API and can be used when you want a single entrypoint; both work with the design tokens and extraction pipeline.
 
 ## Compound variants
 

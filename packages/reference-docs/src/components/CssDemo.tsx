@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Div, css } from '@reference-ui/core'
+import { Div, css } from '@reference-ui/react'
 
 /**
  * Demo component showcasing the css() API.

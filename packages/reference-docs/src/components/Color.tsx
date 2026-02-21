@@ -1,5 +1,5 @@
 import React from 'react'
-import { Div } from '@reference-ui/core'
+import { Div } from '@reference-ui/react'
 
 interface ColorProps {
   name: string
