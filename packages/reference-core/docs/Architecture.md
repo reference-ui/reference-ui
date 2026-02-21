@@ -825,7 +825,6 @@ ref sync --watch # Watch mode
 ```tsx
 import { css } from '@reference-ui/system/css'
 import { Button } from '@reference-ui/react'
-
 ;<Button css={{ bg: 'brand' }}>Click me</Button>
 ```
 

@@ -32,7 +32,6 @@ Use them in your components with the `css()` function:
 
 ```tsx
 import { css } from '@reference-ui/core/styled-system/css'
-
 ;<div className={css({ animation: 'fadeIn 0.3s ease-out' })}>Content</div>
 ```
 

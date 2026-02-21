@@ -265,7 +265,10 @@ var getSlotRecipes = (recipe = {}) => {
 var getSlotCompoundVariant = (compoundVariants, slotName) =>
   compoundVariants
     .filter(compoundVariant => compoundVariant.css[slotName])
-    .map(compoundVariant => ({ ...compoundVariant, css: compoundVariant.css[slotName] }))
+    .map(compoundVariant => ({
+      ...compoundVariant,
+      css: compoundVariant.css[slotName],
+    }))
 
 // src/split-props.ts
 function splitProps(props, ...keys) {
