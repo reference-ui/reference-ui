@@ -10,7 +10,7 @@ export const syncCommand = async (cwd: string, options: { watch?: boolean }) => 
 
   log.debug('Loaded config:', config)
 
-  await initVirtual(cwd, config, {
+  initVirtual(cwd, config, {
     watch: options.watch,
     virtualDir: config.virtualDir,
   })
