@@ -30,6 +30,21 @@ This is intentional:
 - Keeps one canonical runtime contract.
 - Matches how the CLI binary is executed in practice.
 
+## Why `worker.mjs` is more reliable here
+
+In this codebase, using `src/cli/<module>/worker.mjs` as the worker entry source has been more stable than `worker.ts`.
+
+Why:
+
+- **Piscina needs a concrete runtime module** as `filename`.
+- **This project runs the CLI from built output** (`dist/cli/...`), so the worker target must line up with emitted runtime files.
+- **`.mjs` source keeps the entry contract explicit** (ESM worker module with a default export), avoiding edge cases where TS entry handling or mixed runtime modes can hide/redirect worker logs.
+
+Practical rule:
+
+- Keep worker entry files as `worker.mjs` with a default export.
+- Keep registry paths targeting `dist/cli/<module>/worker.mjs`.
+
 ## Invariant for new workers
 
 For each worker module:

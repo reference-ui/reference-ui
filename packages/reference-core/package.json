@@ -24,7 +24,8 @@
     "react-dom": "^18.0.0"
   },
   "scripts": {
-    "build": "rm -rf dist/cli && tsdown",
+    "build": "tsdown",
+    "build:fresh": "rm -rf dist/cli && tsdown",
     "dev": "pnpm build && node scripts/link-system.cjs",
     "test": "vitest run",
     "test:watch": "vitest"

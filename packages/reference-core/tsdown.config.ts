@@ -1,5 +1,5 @@
 export default {
-  entry: ['src/cli/index.ts', 'src/cli/virtual/worker.mjs', 'src/cli/virtual/init.ts'],
+  entry: ['src/cli/index.ts', 'src/cli/virtual/worker.mjs'],
   outDir: 'dist/cli',
   format: ['esm', 'cjs'],
   dts: true,
