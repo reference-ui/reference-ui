@@ -41,14 +41,10 @@ import { loadUserConfig } from '../config'
 
 const config = await loadUserConfig(process.cwd())
 
-const cleanup = await initVirtual(
-  process.cwd(),
-  config,
-  {
-    virtualDir: '.virtual',
-    watch: true
-  }
-)
+const cleanup = await initVirtual(process.cwd(), config, {
+  virtualDir: '.virtual',
+  watch: true,
+})
 
 // Later: stop watching
 cleanup()
@@ -64,13 +60,9 @@ import { loadUserConfig } from '../config'
 
 const config = await loadUserConfig(process.cwd())
 
-await syncVirtual(
-  process.cwd(),
-  config,
-  {
-    virtualDir: '.virtual'
-  }
-)
+await syncVirtual(process.cwd(), config, {
+  virtualDir: '.virtual',
+})
 ```
 
 ### `transformFile(options)`
@@ -84,18 +76,20 @@ const result = await transformFile({
   sourcePath: '/path/to/file.mdx',
   destPath: '/path/to/.virtual/file.jsx',
   content: '# Hello',
-  debug: true
+  debug: true,
 })
 ```
 
 ## Current Transforms
 
 ### MDX → JSX
+
 - **Why**: Panda CSS needs to extract styled() calls from MDX
 - **How**: Simple extension change (`.mdx` → `.jsx`)
 - **Future**: Full MDX parsing if needed
 
 ### Future Transforms
+
 - AST transforms for Panda-specific patterns
 - Import rewriting for styled() calls
 - Custom helpers injection
@@ -123,15 +117,15 @@ import { loadUserConfig } from '../config'
 
 export const syncCommand = async (cwd: string, options) => {
   const config = await loadUserConfig(cwd)
-  
+
   // Setup virtual filesystem
   const cleanup = await initVirtual(cwd, config, {
-    watch: options.watch
+    watch: options.watch,
   })
-  
+
   // Panda CSS reads from .virtual/
   await runPandaCodegen()
-  
+
   // Cleanup on exit
   process.on('SIGINT', cleanup)
 }

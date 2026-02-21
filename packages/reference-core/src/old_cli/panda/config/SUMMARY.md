@@ -7,12 +7,14 @@ A **mini-compiler** that transforms JavaScript config objects from multiple file
 ## Key Files
 
 ### Core Implementation
+
 - **`bundleConfig.ts`** - Serialization using `serialize-javascript` + deep merge utility
 - **`createPandaConfig.ts`** - Main orchestrator that runs the pipeline
 - **`extendPandaConfig.ts`** - API for registering config fragments
 - **`eval/runner.ts`** - Executes TypeScript files and collects fragments
 
 ### Documentation
+
 - **`COMPILER.md`** - Comprehensive architecture and design docs
 - **`readme.md`** - Original design notes (preserved)
 
@@ -35,13 +37,15 @@ Source Files → Eval → Collect → Serialize → Bundle → Output
 ## Key Innovation: Preserving Functions
 
 ❌ **JSON.stringify() BREAKS:**
+
 ```typescript
 {
-  transform: (value) => value * 2  // Lost!
+  transform: value => value * 2 // Lost!
 }
 ```
 
 ✅ **serialize-javascript PRESERVES:**
+
 ```typescript
 {
   transform: function (value) {
@@ -59,6 +63,7 @@ Source Files → Eval → Collect → Serialize → Bundle → Output
 ## Usage
 
 ### In Code
+
 ```typescript
 // Any file in panda.base.ts or src/styled/**
 import { extendPandaConfig } from '@reference-ui/core/panda-config'
@@ -67,19 +72,20 @@ extendPandaConfig({
   theme: {
     tokens: {
       colors: {
-        brand: { value: '#ff0000' }
-      }
-    }
+        brand: { value: '#ff0000' },
+      },
+    },
   },
   utilities: {
     extend: {
-      customUtil: (value) => ({ transform: `scale(${value})` })
-    }
-  }
+      customUtil: value => ({ transform: `scale(${value})` }),
+    },
+  },
 })
 ```
 
 ### Running the Compiler
+
 ```typescript
 import { createPandaConfig } from './createPandaConfig'
 
@@ -88,6 +94,7 @@ await createPandaConfig('/path/to/reference-core')
 ```
 
 ### Output
+
 ```typescript
 // Generated panda.config.ts
 import { defineConfig } from '@pandacss/dev'
@@ -97,30 +104,29 @@ const fragment0 = {
     tokens: {
       colors: {
         brand: {
-          value: "#ff0000"
-        }
-      }
-    }
+          value: '#ff0000',
+        },
+      },
+    },
   },
   utilities: {
     extend: {
       customUtil: function (value) {
         return {
-          transform: "scale(" + value + ")"
-        };
-      }
-    }
-  }
+          transform: 'scale(' + value + ')',
+        }
+      },
+    },
+  },
 }
 
 const fragments = [fragment0]
 
-function deepMerge(target, ...sources) { /* ... */ }
+function deepMerge(target, ...sources) {
+  /* ... */
+}
 
-const config = fragments.reduce(
-  (acc, fragment) => deepMerge(acc, fragment),
-  {}
-)
+const config = fragments.reduce((acc, fragment) => deepMerge(acc, fragment), {})
 
 export default defineConfig(config)
 ```
@@ -169,22 +175,26 @@ cat packages/reference-core/.ref/config-fragments.ts
 ## Technical Notes
 
 ### Why eval?
+
 - Need to execute TypeScript to capture runtime objects
 - `bundleNRequire` handles compilation automatically
 - Allows dynamic config generation
 
 ### Why not just import?
+
 - Need to collect from multiple files
 - Need to merge fragments dynamically
 - Want to support future registered functions
 
 ### Why serialize-javascript?
+
 - Handles all JS types (functions, RegExp, Dates, etc.)
 - Battle-tested by major projects
 - XSS-safe and handles edge cases
 - Better than custom serializer
 
 ### Performance
+
 - Eval runs once per sync (not on every Panda run)
 - Serialization is fast (< 100ms for typical configs)
 - Generated config is static (no runtime overhead)
@@ -197,7 +207,7 @@ cat packages/reference-core/.ref/config-fragments.ts
 ✅ Type-safe throughout  
 ✅ Integrated into sync command  
 ✅ Documentation complete  
-✅ Using production-proven library  
+✅ Using production-proven library
 
 ---
 

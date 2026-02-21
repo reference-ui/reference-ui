@@ -16,8 +16,8 @@ export async function runEval(
   directories: string[],
   baseFiles: string[] = []
 ): Promise<Partial<Config>[]> {
-  const basePaths = baseFiles.map((f) => resolve(coreDir, f))
-  const resolvedDirs = directories.map((d) => resolve(coreDir, d))
+  const basePaths = baseFiles.map(f => resolve(coreDir, f))
+  const resolvedDirs = directories.map(d => resolve(coreDir, d))
   const scannedFiles = scanDirectories(resolvedDirs)
   const files = [...basePaths, ...scannedFiles]
   return runFiles(files, coreDir)

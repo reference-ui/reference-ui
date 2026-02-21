@@ -9,7 +9,6 @@
  */
 export const DEFAULT_VIRTUAL_DIR = '.virtual'
 
-
 /**
  * Transform mappings for file extensions.
  * Maps source extensions to their transformed output extensions.
@@ -20,18 +19,18 @@ const TRANSFORM_EXTENSIONS_ENTRIES = [
   ['.js', '.js'],
   ['.jsx', '.jsx'],
   ['.ts', '.ts'],
-  ['.tsx', '.tsx']
+  ['.tsx', '.tsx'],
 ] as const
 
 /**
  * Supported input file extension types (what users write)
  */
-export type SupportedInputExtension = typeof TRANSFORM_EXTENSIONS_ENTRIES[number][0]
+export type SupportedInputExtension = (typeof TRANSFORM_EXTENSIONS_ENTRIES)[number][0]
 
 /**
  * Supported virtual file extension types (what appears in .virtual/)
  */
-export type SupportedVirtualExtension = typeof TRANSFORM_EXTENSIONS_ENTRIES[number][1]
+export type SupportedVirtualExtension = (typeof TRANSFORM_EXTENSIONS_ENTRIES)[number][1]
 
 /**
  * Transform mappings map
@@ -43,9 +42,7 @@ export const TRANSFORM_EXTENSIONS = new Map(TRANSFORM_EXTENSIONS_ENTRIES)
  * Derived from the output values of TRANSFORM_EXTENSIONS.
  * Used when cleaning up to check for all possible transformed file extensions.
  */
-export const TRANSFORMED_EXTENSIONS = [
-  ...new Set(TRANSFORM_EXTENSIONS.values())
-] as const
+export const TRANSFORMED_EXTENSIONS = [...new Set(TRANSFORM_EXTENSIONS.values())] as const
 
 /**
  * Chokidar file watcher configuration.
@@ -56,12 +53,12 @@ export const WATCHER_CONFIG = {
    * Don't ignore initial add events - we want to process existing files
    */
   ignoreInitial: false,
-  
+
   /**
    * Keep the watcher running persistently
    */
   persistent: true,
-  
+
   /**
    * Wait for file writes to finish before processing.
    * This prevents reading partial file contents during writes.
@@ -72,12 +69,12 @@ export const WATCHER_CONFIG = {
      * before emitting its event.
      */
     stabilityThreshold: 100,
-    
+
     /**
      * File size polling interval in ms.
      */
-    pollInterval: 100
-  }
+    pollInterval: 100,
+  },
 } as const
 
 /**
@@ -88,11 +85,9 @@ export const GLOB_CONFIG = {
    * Only match files, not directories
    */
   onlyFiles: true,
-  
+
   /**
    * Return absolute paths
    */
-  absolute: true
+  absolute: true,
 } as const
-
-

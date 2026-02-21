@@ -8,6 +8,5 @@ import type { SystemProps } from '../styled/props/index'
 export type PrimitiveProps<T extends keyof React.JSX.IntrinsicElements> =
   DistributiveOmit<StrictColorProps<HTMLStyledProps<T>>, 'as'> & SystemProps
 
-export type PrimitiveElement<
-  T extends keyof React.JSX.IntrinsicElements
-> = React.ComponentRef<T>
+export type PrimitiveElement<T extends keyof React.JSX.IntrinsicElements> =
+  React.ComponentRef<T>

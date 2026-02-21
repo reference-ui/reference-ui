@@ -13,5 +13,5 @@ export const radii = {
 }
 
 extendTokens({
-  radii
+  radii,
 })

@@ -17,7 +17,7 @@ Streamlined for the 98%. Mobile-first. One container per element.
 
 ```tsx
 <Container>
-  <Box 
+  <Box
     padding="2r"
     r={{
       300: { padding: '3r' },
@@ -37,10 +37,7 @@ When you have nested containers and need to query a specific ancestor:
 
 ```tsx
 <Container name="sidebar">
-    <Box 
-      container="sidebar"
-      r={{ 400: { padding: '4r' }, 600: { gap: '2r' } }}
-    />
+  <Box container="sidebar" r={{ 400: { padding: '4r' }, 600: { gap: '2r' } }} />
 </Container>
 ```
 
@@ -49,7 +46,7 @@ When you have nested containers and need to query a specific ancestor:
 The above expands to:
 
 ```tsx
-<Box 
+<Box
   padding="2r"
   css={{
     '@container (min-width: 300px)': { padding: '3r' },
@@ -69,13 +66,14 @@ Panda's condition parser (`parseCondition`) accepts **any string starting with `
 ```typescript
 // packages/core/src/parse-condition.ts
 if (condition.startsWith('@')) {
-  return parseAtRule(condition)  // Parses as at-rule condition
+  return parseAtRule(condition) // Parses as at-rule condition
 }
 ```
 
 This means:
+
 - `@container (min-width: 300px)` → ✅ valid condition
-- `@container card (min-width: 400px)` → ✅ valid condition  
+- `@container card (min-width: 400px)` → ✅ valid condition
 - `@container (min-width: 500px) and (max-width: 800px)` → ✅ valid condition
 
 ### Confirmed: Pattern Transforms Can Return Nested Conditions
@@ -90,6 +88,7 @@ Pattern transforms pass through `processStyleProps` → `processAtomic` → `has
 ```
 
 And Panda will:
+
 1. Extract the atomic class for `padding: 2r`
 2. Extract the `@container` rule with nested styles
 3. Generate the correct CSS output
@@ -127,21 +126,21 @@ import { definePattern } from '@pandacss/dev'
 export const box = definePattern({
   properties: {
     r: { type: 'object' },
-    container: { type: 'string' },  // Named container to query; absent = anonymous
+    container: { type: 'string' }, // Named container to query; absent = anonymous
   },
   transform(props) {
     const { r, container, ...rest } = props
-    
+
     if (!r) return rest
-    
+
     const prefix = container
       ? `@container ${container} (min-width:`
       : `@container (min-width:`
-    
+
     for (const [bp, styles] of Object.entries(r)) {
       rest[`${prefix} ${bp}px)`] = styles
     }
-    
+
     return rest
   },
 })
@@ -190,13 +189,15 @@ export const container = definePattern({
 The `css` prop supports full container query syntax. Use it for the 2%: multi-container, max-width, aspect-ratio, style queries, etc.
 
 ```tsx
-<Box css={{
-  padding: '2r',
-  '@container (min-width: 400px)': { padding: '3r' },
-  '@container sidebar (min-width: 600px)': { padding: '4r' },
-  '@container card (max-width: 300px)': { flexDirection: 'column' },
-  '@container (min-width: 400px) and (max-width: 800px)': { gap: '2r' },
-}} />
+<Box
+  css={{
+    padding: '2r',
+    '@container (min-width: 400px)': { padding: '3r' },
+    '@container sidebar (min-width: 600px)': { padding: '4r' },
+    '@container card (max-width: 300px)': { flexDirection: 'column' },
+    '@container (min-width: 400px) and (max-width: 800px)': { gap: '2r' },
+  }}
+/>
 ```
 
 ---
@@ -253,6 +254,7 @@ isCondition = (key: string) => {
 ### 2. Pattern Transforms Output → Atomic Processing
 
 The flow is:
+
 1. Pattern `transform()` returns style object
 2. Goes through `processStyleProps()` → `processAtomic()` → `hashStyleObject()`
 3. `hashStyleObject` traverses the object, detecting conditions with `isCondition()`
@@ -262,10 +264,12 @@ The flow is:
 
 ```css
 /* ❌ Does NOT work - CSS variables not allowed in container query values */
-@container (min-width: var(--bp-sm)) { }
+@container (min-width: var(--bp-sm)) {
+}
 
 /* ✅ Works - literal values only */
-@container (min-width: 300px) { }
+@container (min-width: 300px) {
+}
 ```
 
 This is why the `r` prop uses literal numbers, not token references.
@@ -273,6 +277,7 @@ This is why the `r` prop uses literal numbers, not token references.
 ### 4. Static Extraction Works
 
 Since Panda extracts styles at build time:
+
 - `r={{ 300: { padding: '3r' } }}` → extracted statically
 - The literal `300` becomes `@container (min-width: 300px)` in CSS
 - No runtime overhead
@@ -281,13 +286,13 @@ Since Panda extracts styles at build time:
 
 ## Summary
 
-| What We Ship | What Users Do |
-|--------------|---------------|
-| `<Container>` primitive | Establish container contexts (anonymous or named) |
-| `r` prop on Box | Mobile-first min-width breakpoints (`{ 300: {...}, 500: {...} }`) |
-| `container` prop | Query named container when nested (one container per element) |
-| `css` prop | Full container query syntax for multi-container, max-width, etc. |
-| `r` unit tokens | Spacing that respects density |
-| **Nothing predefined** | Define their own breakpoints inline |
+| What We Ship            | What Users Do                                                     |
+| ----------------------- | ----------------------------------------------------------------- |
+| `<Container>` primitive | Establish container contexts (anonymous or named)                 |
+| `r` prop on Box         | Mobile-first min-width breakpoints (`{ 300: {...}, 500: {...} }`) |
+| `container` prop        | Query named container when nested (one container per element)     |
+| `css` prop              | Full container query syntax for multi-container, max-width, etc.  |
+| `r` unit tokens         | Spacing that respects density                                     |
+| **Nothing predefined**  | Define their own breakpoints inline                               |
 
 **r is a generalisation.** Streamlined for the 98%. Trade-offs accepted. Raw `css` for the rest.

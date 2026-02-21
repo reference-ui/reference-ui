@@ -20,8 +20,11 @@ function toRelativeImport(refDir: string, absolutePath: string): string {
  * collected definitions to JSON for generateFontSystem to read.
  * Mirrors boxPattern/collectEntryTemplate.ts structure.
  */
-export function buildFontCollectEntryContent(options: BuildFontCollectEntryOptions): string {
-  const { refDir, outputPath, initFontCollectorPath, extendFontFacePath, fontsFilePath } = options
+export function buildFontCollectEntryContent(
+  options: BuildFontCollectEntryOptions
+): string {
+  const { refDir, outputPath, initFontCollectorPath, extendFontFacePath, fontsFilePath } =
+    options
 
   const initRel = toRelativeImport(refDir, initFontCollectorPath)
   const fontsRel = toRelativeImport(refDir, fontsFilePath)

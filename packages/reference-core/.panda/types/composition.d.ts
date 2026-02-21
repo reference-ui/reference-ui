@@ -1,5 +1,5 @@
 /* eslint-disable */
-import type {  CompositionStyleObject  } from './system-types';
+import type { CompositionStyleObject } from './system-types'
 
 interface Token<T> {
   value: T
@@ -96,7 +96,13 @@ export type TextStyles = Recursive<Token<TextStyle>>
  * Layer styles
  * -----------------------------------------------------------------------------*/
 
-type LogicalPlacement = 'Inline' | 'Block' | 'InlineStart' | 'InlineEnd' | 'BlockStart' | 'BlockEnd'
+type LogicalPlacement =
+  | 'Inline'
+  | 'Block'
+  | 'InlineStart'
+  | 'InlineEnd'
+  | 'BlockStart'
+  | 'BlockEnd'
 
 type PhysicalPlacement = 'Top' | 'Right' | 'Bottom' | 'Left'
 

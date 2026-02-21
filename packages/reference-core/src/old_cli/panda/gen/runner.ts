@@ -31,7 +31,7 @@ export interface PandaOptions {
 
 export function runPandaCodegen(cwd: string, options: PandaOptions = {}): void {
   const pandaBin = resolvePandaBin()
-  
+
   if (options.watch) {
     // Spawn Panda watchers as child processes
     // stdio: 'inherit' forwards all output to parent terminal
@@ -41,31 +41,31 @@ export function runPandaCodegen(cwd: string, options: PandaOptions = {}): void {
       stdio: 'inherit',
       shell: true,
     })
-    
+
     const cssProcess = spawn(pandaBin, ['--watch', '--poll'], {
       cwd,
       stdio: 'inherit',
       shell: true,
     })
-    
+
     // Forward SIGINT/SIGTERM to children, then exit cleanly
     process.on('SIGINT', () => {
       codegenProcess.kill()
       cssProcess.kill()
       process.exit(0)
     })
-    
+
     process.on('SIGTERM', () => {
       codegenProcess.kill()
       cssProcess.kill()
       process.exit(0)
     })
-    
+
     // Function returns but process stays alive (event loop has active children)
     // This blocks the shell - exactly what we want
     return
   }
-  
+
   execSync(`"${pandaBin}" codegen`, {
     cwd,
     stdio: 'inherit',

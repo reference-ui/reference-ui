@@ -1,39 +1,39 @@
-import pc from "picocolors";
+import pc from 'picocolors'
 
-type LogFn = (...args: unknown[]) => void;
+type LogFn = (...args: unknown[]) => void
 
 type Log = LogFn & {
-  error: LogFn;
-  debug: LogFn;
-  setDebug: (enabled: boolean) => void;
-};
+  error: LogFn
+  debug: LogFn
+  setDebug: (enabled: boolean) => void
+}
 
-let isDebug = false;
+let isDebug = false
 
 const log = ((...args: unknown[]) => {
-  console.log(...args);
-}) as Log;
+  console.log(...args)
+}) as Log
 
 log.error = (...args: unknown[]) => {
-  console.error(pc.red("error"), ...args);
-};
+  console.error(pc.red('error'), ...args)
+}
 
 log.debug = (...args: unknown[]) => {
   if (!isDebug) {
-    return;
+    return
   }
 
-  console.log(pc.dim("debug"), ...args);
-};
+  console.log(pc.dim('debug'), ...args)
+}
 
 log.setDebug = (enabled: boolean) => {
-  isDebug = enabled;
-};
+  isDebug = enabled
+}
 
 export function initLog(config: { debug?: boolean }) {
   if (config.debug) {
-    log.setDebug(true);
+    log.setDebug(true)
   }
 }
 
-export { log };
+export { log }

@@ -16,10 +16,9 @@ async function main(): Promise<void> {
     .command('sync', { isDefault: true })
     .description('Build and sync the design system')
     .option('-w, --watch', 'Watch for changes and rebuild')
-    .action(runCommand((options) => syncCommand(cwd, { watch: options.watch })))
+    .action(runCommand(options => syncCommand(cwd, { watch: options.watch })))
 
   program.parse()
 }
 
 main()
-

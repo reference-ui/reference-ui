@@ -13,8 +13,8 @@ export default defineConfig({
         'dist/',
         'styled-system/',
         '**/*.test.ts',
-        '**/*.config.ts'
-      ]
-    }
-  }
+        '**/*.config.ts',
+      ],
+    },
+  },
 })

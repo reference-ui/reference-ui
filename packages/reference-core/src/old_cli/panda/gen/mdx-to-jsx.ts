@@ -4,7 +4,7 @@ import { compile } from '@mdx-js/mdx'
 /**
  * Convert MDX to JSX using the official MDX compiler.
  * Generates JSX that Panda can scan for style extraction.
- * 
+ *
  * Strategy:
  * - Use @mdx-js/mdx to compile MDX to JSX
  * - Return the compiled JSX output
@@ -18,10 +18,13 @@ export async function mdxToJSX(mdxContent: string, sourceFile: string): Promise<
       format: 'mdx',
       development: false,
     })
-    
+
     return String(result.value)
   } catch (error) {
-    console.warn(`⚠️  Failed to compile MDX file ${sourceFile}:`, error instanceof Error ? error.message : error)
+    console.warn(
+      `⚠️  Failed to compile MDX file ${sourceFile}:`,
+      error instanceof Error ? error.message : error
+    )
     return `// Failed to compile ${sourceFile}\nexport {}\n`
   }
 }

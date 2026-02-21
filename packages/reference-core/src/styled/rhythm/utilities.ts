@@ -8,12 +8,15 @@ type UtilityTransform<P extends keyof SystemProperties = keyof SystemProperties>
   readonly transform: (value: unknown) => Record<P, string | number>
 }
 
-const rhythmTransform = <P extends keyof SystemProperties>(property: P): UtilityTransform<P> => ({
+const rhythmTransform = <P extends keyof SystemProperties>(
+  property: P
+): UtilityTransform<P> => ({
   property,
   values: 'spacing' as const,
-  transform: (value: unknown) => ({
-    [property]: resolveRhythm(value),
-  }) as Record<P, string | number>,
+  transform: (value: unknown) =>
+    ({
+      [property]: resolveRhythm(value),
+    }) as Record<P, string | number>,
 })
 
 export const rhythmUtilities = {

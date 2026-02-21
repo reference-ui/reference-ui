@@ -6,50 +6,50 @@ import { extendKeyframes } from '../api/internal/extendKeyframes'
 extendKeyframes({
   fadeIn: {
     from: { opacity: '0' },
-    to: { opacity: '1' }
+    to: { opacity: '1' },
   },
   fadeOut: {
     from: { opacity: '1' },
-    to: { opacity: '0' }
+    to: { opacity: '0' },
   },
   fadeInUp: {
-    from: { 
+    from: {
       opacity: '0',
-      transform: 'translateY(20px)'
+      transform: 'translateY(20px)',
     },
-    to: { 
+    to: {
       opacity: '1',
-      transform: 'translateY(0)'
-    }
+      transform: 'translateY(0)',
+    },
   },
   fadeInDown: {
-    from: { 
+    from: {
       opacity: '0',
-      transform: 'translateY(-20px)'
+      transform: 'translateY(-20px)',
     },
-    to: { 
+    to: {
       opacity: '1',
-      transform: 'translateY(0)'
-    }
+      transform: 'translateY(0)',
+    },
   },
   fadeInLeft: {
-    from: { 
+    from: {
       opacity: '0',
-      transform: 'translateX(-20px)'
+      transform: 'translateX(-20px)',
     },
-    to: { 
+    to: {
       opacity: '1',
-      transform: 'translateX(0)'
-    }
+      transform: 'translateX(0)',
+    },
   },
   fadeInRight: {
-    from: { 
+    from: {
       opacity: '0',
-      transform: 'translateX(20px)'
+      transform: 'translateX(20px)',
     },
-    to: { 
+    to: {
       opacity: '1',
-      transform: 'translateX(0)'
-    }
-  }
+      transform: 'translateX(0)',
+    },
+  },
 })

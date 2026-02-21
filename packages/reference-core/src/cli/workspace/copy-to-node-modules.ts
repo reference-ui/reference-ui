@@ -19,7 +19,7 @@ function getSystemPackageJson(): string {
           types: './css/index.d.ts',
           default: './css/index.js',
         },
-        './styles.css': './styles.css'
+        './styles.css': './styles.css',
       },
     },
     null,

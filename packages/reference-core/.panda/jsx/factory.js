@@ -1,64 +1,92 @@
 import { createElement, forwardRef, useMemo } from 'react'
-import { css, cx, cva } from '../css/index.js';
-import { defaultShouldForwardProp, composeShouldForwardProps, composeCvaFn, getDisplayName } from './factory-helper.js';
-import { splitProps, normalizeHTMLProps } from '../helpers.js';
-import { isCssProperty } from './is-valid-prop.js';
+import { css, cx, cva } from '../css/index.js'
+import {
+  defaultShouldForwardProp,
+  composeShouldForwardProps,
+  composeCvaFn,
+  getDisplayName,
+} from './factory-helper.js'
+import { splitProps, normalizeHTMLProps } from '../helpers.js'
+import { isCssProperty } from './is-valid-prop.js'
 
 function styledFn(Dynamic, configOrCva = {}, options = {}) {
-  const cvaFn = configOrCva.__cva__ || configOrCva.__recipe__ ? configOrCva : cva(configOrCva)
+  const cvaFn =
+    configOrCva.__cva__ || configOrCva.__recipe__ ? configOrCva : cva(configOrCva)
 
   const forwardFn = options.shouldForwardProp || defaultShouldForwardProp
-  const shouldForwardProp = (prop) => {
+  const shouldForwardProp = prop => {
     if (options.forwardProps?.includes(prop)) return true
     return forwardFn(prop, cvaFn.variantKeys)
   }
-  
+
   const defaultProps = Object.assign(
-    options.dataAttr && configOrCva.__name__ ? { 'data-recipe': configOrCva.__name__ } : {},
-    options.defaultProps,
+    options.dataAttr && configOrCva.__name__
+      ? { 'data-recipe': configOrCva.__name__ }
+      : {},
+    options.defaultProps
   )
 
   const __cvaFn__ = composeCvaFn(Dynamic.__cva__, cvaFn)
   const __shouldForwardProps__ = composeShouldForwardProps(Dynamic, shouldForwardProp)
   const __base__ = Dynamic.__base__ || Dynamic
 
-  const StyledComponent = /* @__PURE__ */ forwardRef(function StyledComponent(props, ref) {
-    const { as: Element = __base__, unstyled, children, ...restProps } = props
+  const StyledComponent = /* @__PURE__ */ forwardRef(
+    function StyledComponent(props, ref) {
+      const { as: Element = __base__, unstyled, children, ...restProps } = props
 
-    const combinedProps = useMemo(() => Object.assign({}, defaultProps, restProps), [restProps])
+      const combinedProps = useMemo(
+        () => Object.assign({}, defaultProps, restProps),
+        [restProps]
+      )
 
-    const [htmlProps, forwardedProps, variantProps, styleProps, elementProps] = useMemo(() => {
-      return splitProps(combinedProps, normalizeHTMLProps.keys, __shouldForwardProps__, __cvaFn__.variantKeys, isCssProperty)
-    }, [combinedProps])
+      const [htmlProps, forwardedProps, variantProps, styleProps, elementProps] =
+        useMemo(() => {
+          return splitProps(
+            combinedProps,
+            normalizeHTMLProps.keys,
+            __shouldForwardProps__,
+            __cvaFn__.variantKeys,
+            isCssProperty
+          )
+        }, [combinedProps])
 
-    function recipeClass() {
-      const { css: cssStyles, ...propStyles } = styleProps
-      const compoundVariantStyles = __cvaFn__.__getCompoundVariantCss__?.(variantProps)
-      return cx(__cvaFn__(variantProps, false), css(compoundVariantStyles, propStyles, cssStyles), combinedProps.className)
-    }
-
-    function cvaClass() {
-      const { css: cssStyles, ...propStyles } = styleProps
-      const cvaStyles = __cvaFn__.raw(variantProps)
-      return cx(css(cvaStyles, propStyles, cssStyles), combinedProps.className)
-    }
-
-    const classes = () => {
-      if (unstyled) {
+      function recipeClass() {
         const { css: cssStyles, ...propStyles } = styleProps
-        return cx(css(propStyles, cssStyles), combinedProps.className)
+        const compoundVariantStyles = __cvaFn__.__getCompoundVariantCss__?.(variantProps)
+        return cx(
+          __cvaFn__(variantProps, false),
+          css(compoundVariantStyles, propStyles, cssStyles),
+          combinedProps.className
+        )
       }
-      return configOrCva.__recipe__ ? recipeClass() : cvaClass()
-    }
 
-    return createElement(Element, {
-      ref,
-      ...forwardedProps,
-      ...elementProps,
-      ...normalizeHTMLProps(htmlProps),
-      className: classes(),
-    }, children ?? combinedProps.children)
-  })
+      function cvaClass() {
+        const { css: cssStyles, ...propStyles } = styleProps
+        const cvaStyles = __cvaFn__.raw(variantProps)
+        return cx(css(cvaStyles, propStyles, cssStyles), combinedProps.className)
+      }
+
+      const classes = () => {
+        if (unstyled) {
+          const { css: cssStyles, ...propStyles } = styleProps
+          return cx(css(propStyles, cssStyles), combinedProps.className)
+        }
+        return configOrCva.__recipe__ ? recipeClass() : cvaClass()
+      }
+
+      return createElement(
+        Element,
+        {
+          ref,
+          ...forwardedProps,
+          ...elementProps,
+          ...normalizeHTMLProps(htmlProps),
+          className: classes(),
+        },
+        children ?? combinedProps.children
+      )
+    }
+  )
 
   const name = getDisplayName(__base__)
 

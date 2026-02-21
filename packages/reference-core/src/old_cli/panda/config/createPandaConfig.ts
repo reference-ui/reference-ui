@@ -47,7 +47,7 @@ export async function createPandaConfig(
       initCollectorPath,
       extendPandaConfigPath: extendPandaPath,
       deepMergePath,
-      configFilePaths: configFiles
+      configFilePaths: configFiles,
     })
     writeFileSync(entryPath, entryContent)
     console.log('[createPandaConfig] Created entry file')

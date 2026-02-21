@@ -33,9 +33,7 @@ Use them in your components with the `css()` function:
 ```tsx
 import { css } from '@reference-ui/core/styled-system/css'
 
-<div className={css({ animation: 'fadeIn 0.3s ease-out' })}>
-  Content
-</div>
+;<div className={css({ animation: 'fadeIn 0.3s ease-out' })}>Content</div>
 ```
 
 ## Adding New Animations
@@ -54,8 +52,8 @@ import { extendKeyframes } from '../api/extendKeyframes'
 keyframes({
   myAnimation: {
     from: { opacity: '0' },
-    to: { opacity: '1' }
-  }
+    to: { opacity: '1' },
+  },
 })
 ```
 

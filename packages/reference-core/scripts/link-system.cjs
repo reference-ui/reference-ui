@@ -1,7 +1,14 @@
 // Dev-only: monorepo convenience symlink for @reference-ui/system.
 // Users running `ref sync` against an installed @reference-ui/core do NOT need this.
 // It only helps local repo packages resolve @reference-ui/system to live source.
-const { existsSync, lstatSync, mkdirSync, rmSync, symlinkSync, writeFileSync } = require('node:fs')
+const {
+  existsSync,
+  lstatSync,
+  mkdirSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} = require('node:fs')
 const { dirname, resolve } = require('node:path')
 
 const SYSTEM_PACKAGE_JSON = `{

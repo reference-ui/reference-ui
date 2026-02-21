@@ -1,6 +1,6 @@
 /**
  * Virtual filesystem types for the CLI
- * 
+ *
  * The virtual filesystem copies user files and applies transforms
  * to prepare them for consumption by Panda CSS and other tools.
  */

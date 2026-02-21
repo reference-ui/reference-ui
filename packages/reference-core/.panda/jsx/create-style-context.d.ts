@@ -1,7 +1,7 @@
 /* eslint-disable */
-import type { SlotRecipeRuntimeFn, RecipeVariantProps } from '../types/recipe';
-import type { JsxHTMLProps, JsxStyleProps, Assign } from '../types/system-types';
-import type { JsxFactoryOptions, ComponentProps, DataAttrs, AsProps } from '../types/jsx';
+import type { SlotRecipeRuntimeFn, RecipeVariantProps } from '../types/recipe'
+import type { JsxHTMLProps, JsxStyleProps, Assign } from '../types/system-types'
+import type { JsxFactoryOptions, ComponentProps, DataAttrs, AsProps } from '../types/jsx'
 import type { ComponentType, ElementType } from 'react'
 
 interface UnstyledProps {
@@ -11,24 +11,32 @@ interface UnstyledProps {
 type SvaFn<S extends string = any> = SlotRecipeRuntimeFn<S, any>
 interface SlotRecipeFn {
   __type: any
-  __slot: string
+  __slot: string;
   (props?: any): any
 }
 type SlotRecipe = SvaFn | SlotRecipeFn
 
-type InferSlot<R extends SlotRecipe> = R extends SlotRecipeFn ? R['__slot'] : R extends SvaFn<infer S> ? S : never
+type InferSlot<R extends SlotRecipe> = R extends SlotRecipeFn
+  ? R['__slot']
+  : R extends SvaFn<infer S>
+    ? S
+    : never
 
 interface WithProviderOptions<P = {}> {
   defaultProps?: (Partial<P> & DataAttrs) | undefined
 }
 
 type StyleContextProvider<T extends ElementType, R extends SlotRecipe> = ComponentType<
-  JsxHTMLProps<ComponentProps<T> & UnstyledProps & AsProps, Assign<RecipeVariantProps<R>, JsxStyleProps>>
+  JsxHTMLProps<
+    ComponentProps<T> & UnstyledProps & AsProps,
+    Assign<RecipeVariantProps<R>, JsxStyleProps>
+  >
 >
 
-type StyleContextRootProvider<T extends ElementType, R extends SlotRecipe> = ComponentType<
-  ComponentProps<T> & UnstyledProps & RecipeVariantProps<R>
->
+type StyleContextRootProvider<
+  T extends ElementType,
+  R extends SlotRecipe,
+> = ComponentType<ComponentProps<T> & UnstyledProps & RecipeVariantProps<R>>
 
 type StyleContextConsumer<T extends ElementType> = ComponentType<
   JsxHTMLProps<ComponentProps<T> & UnstyledProps & AsProps, JsxStyleProps>
@@ -51,4 +59,6 @@ export interface StyleContext<R extends SlotRecipe> {
   ) => StyleContextConsumer<T>
 }
 
-export declare function createStyleContext<R extends SlotRecipe>(recipe: R): StyleContext<R>
+export declare function createStyleContext<R extends SlotRecipe>(
+  recipe: R
+): StyleContext<R>

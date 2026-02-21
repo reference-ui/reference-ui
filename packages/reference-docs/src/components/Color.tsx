@@ -1,9 +1,9 @@
-import React from 'react';
-import { Div } from '@reference-ui/core';
+import React from 'react'
+import { Div } from '@reference-ui/core'
 
 interface ColorProps {
-  name: string;
-  value: string;
+  name: string
+  value: string
 }
 
 export function Color({ name, value }: ColorProps) {
@@ -27,15 +27,10 @@ export function Color({ name, value }: ColorProps) {
         style={{ backgroundColor: value }}
       />
       <Div flex="1" minWidth="0">
-        <Div
-          fontWeight="semibold"
-          fontSize="sm"
-          color="gray.900"
-          marginBottom="1"
-        >
+        <Div fontWeight="semibold" fontSize="sm" color="gray.900" marginBottom="1">
           {name}
         </Div>
       </Div>
     </Div>
-  );
+  )
 }

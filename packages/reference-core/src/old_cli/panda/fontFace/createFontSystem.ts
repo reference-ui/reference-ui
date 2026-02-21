@@ -30,7 +30,10 @@ export async function createFontSystem(coreDir: string): Promise<string> {
   const collectEntryContent = buildFontCollectEntryContent({
     refDir,
     outputPath: definitionsPath,
-    initFontCollectorPath: resolve(coreDir, 'src/cli/panda/fontFace/initFontCollector.ts'),
+    initFontCollectorPath: resolve(
+      coreDir,
+      'src/cli/panda/fontFace/initFontCollector.ts'
+    ),
     extendFontFacePath: resolve(coreDir, 'src/cli/panda/fontFace/extendFontFace.ts'),
     fontsFilePath: fontsPath,
   })
@@ -45,7 +48,9 @@ export async function createFontSystem(coreDir: string): Promise<string> {
     encoding: 'utf-8',
   })
   if (result.status !== 0) {
-    throw new Error(`[createFontSystem] Collect script failed:\n${result.stderr || result.stdout}`)
+    throw new Error(
+      `[createFontSystem] Collect script failed:\n${result.stderr || result.stdout}`
+    )
   }
 
   let definitions: FontDefinition[] = []

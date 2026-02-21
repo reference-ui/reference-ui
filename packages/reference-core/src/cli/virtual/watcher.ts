@@ -6,7 +6,7 @@ import type { FileChangeHandler, VirtualOptions } from './types'
 /**
  * Setup a file watcher for the virtual filesystem.
  * Watches files matching the include patterns and emits events via the handler.
- * 
+ *
  * @returns A function to stop the watcher
  */
 export async function setupWatcher(
@@ -20,7 +20,7 @@ export async function setupWatcher(
 
   const watcher = chokidar.watch(include, {
     cwd: sourceDir,
-    ...WATCHER_CONFIG
+    ...WATCHER_CONFIG,
   })
 
   // Handle file events
@@ -30,7 +30,7 @@ export async function setupWatcher(
       await handler({
         event: 'add',
         path,
-        stats
+        stats,
       })
     })
     .on('change', async (path, stats) => {
@@ -38,17 +38,17 @@ export async function setupWatcher(
       await handler({
         event: 'change',
         path,
-        stats
+        stats,
       })
     })
-    .on('unlink', async (path) => {
+    .on('unlink', async path => {
       log.debug('[virtual] File removed:', path)
       await handler({
         event: 'unlink',
-        path
+        path,
       })
     })
-    .on('error', (error) => {
+    .on('error', error => {
       log.error('[virtual] Watcher error:', error)
     })
 

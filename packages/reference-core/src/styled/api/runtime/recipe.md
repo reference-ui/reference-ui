@@ -20,12 +20,12 @@ import { defineConfig } from '@pandacss/dev'
 import { transformRecipeToCva } from './scripts/transform-recipe' // create this file next
 
 export default defineConfig({
-  // ... your existing config
-  hooks: {
-    'parser:before': ({ filePath, content }) => {
-      // Quick filter: only TS/JS(X) files that mention 'recipe' (fast regex pre-check)
-      if (!/\.(tsx?|jsx?)$/.test(filePath)) return content
-      if (!/recipe/.test(content)) return content // skips most files instantly
+// ... your existing config
+hooks: {
+'parser:before': ({ filePath, content }) => {
+// Quick filter: only TS/JS(X) files that mention 'recipe' (fast regex pre-check)
+if (!/\.(tsx?|jsx?)$/.test(filePath)) return content
+if (!/recipe/.test(content)) return content // skips most files instantly
 
       try {
         return transformRecipeToCva(content, filePath)
@@ -34,7 +34,8 @@ export default defineConfig({
         return content // Never break codegen — fallback to original
       }
     }
-  }
+
+}
 })
 
 Create scripts/transform-recipe.ts (robust Babel version)
@@ -45,22 +46,22 @@ TypeScript// scripts/transform-recipe.ts
 import { parse } from '@babel/parser'
 import traverse from '@babel/traverse'
 import generate from '@babel/generator'
-import * as t from '@babel/types'
+import \* as t from '@babel/types'
 
 export function transformRecipeToCva(code: string, filePath: string): string {
-  const ast = parse(code, {
-    sourceType: 'module',
-    plugins: ['typescript', 'jsx'],
-    sourceFilename: filePath,
-    allowImportExportEverywhere: true,
-  })
+const ast = parse(code, {
+sourceType: 'module',
+plugins: ['typescript', 'jsx'],
+sourceFilename: filePath,
+allowImportExportEverywhere: true,
+})
 
-  const recipeLocals = new Set<string>() // Track local names for 'recipe' (handles aliases)
+const recipeLocals = new Set<string>() // Track local names for 'recipe' (handles aliases)
 
-  traverse(ast, {
-    // Step 1: Collect & rename imports of 'recipe' → 'cva'
-    ImportDeclaration(path) {
-      if (path.node.importKind === 'type') return // Skip import type { ... }
+traverse(ast, {
+// Step 1: Collect & rename imports of 'recipe' → 'cva'
+ImportDeclaration(path) {
+if (path.node.importKind === 'type') return // Skip import type { ... }
 
       path.get('specifiers').forEach((specifierPath) => {
         const node = specifierPath.node
@@ -97,16 +98,17 @@ export function transformRecipeToCva(code: string, filePath: string): string {
 
       path.node.callee.name = 'cva'
     },
-  })
 
-  // Generate output with good preservation
-  const output = generate(ast, {
-    retainLines: true,
-    comments: true,
-    concise: false,
-  }).code
+})
 
-  return output
+// Generate output with good preservation
+const output = generate(ast, {
+retainLines: true,
+comments: true,
+concise: false,
+}).code
+
+return output
 }
 Why This Is Steadfast & Reliable
 
@@ -128,7 +130,6 @@ Aliased import + call.
 import type { recipe } (should stay untouched).
 const obj = { recipe() {} }; obj.recipe() (unchanged).
 Plain JS file with recipe call.
-
 
 If any file mis-transforms, share the snippet + error/log — we can tighten the visitor in minutes.
 This is the cleanest path: Panda-native, no hacks, future-proof. Ship it — you've got a solid, automated "ctrl+replace" that's actually safe. Let me know how the first run goes! 🚀

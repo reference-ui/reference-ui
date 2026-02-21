@@ -1,6 +1,6 @@
-import { Link } from '@tanstack/react-router';
-import { Aside, H2, Nav, Div } from '@reference-ui/core';
-import { docsBySection } from '../../lib/docs';
+import { Link } from '@tanstack/react-router'
+import { Aside, H2, Nav, Div } from '@reference-ui/core'
+import { docsBySection } from '../../lib/docs'
 
 export function DocSidebar() {
   return (
@@ -56,5 +56,5 @@ export function DocSidebar() {
         ))}
       </Nav>
     </Aside>
-  );
+  )
 }

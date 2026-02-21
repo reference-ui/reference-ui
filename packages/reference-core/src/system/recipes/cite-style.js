@@ -1,5 +1,5 @@
-import { memo, splitProps } from '../helpers.js';
-import { createRecipe, mergeRecipes } from './create-recipe.js';
+import { memo, splitProps } from '../helpers.js'
+import { createRecipe, mergeRecipes } from './create-recipe.js'
 
 const citeStyleFn = /* @__PURE__ */ createRecipe('r_cite', {}, [])
 
@@ -11,7 +11,7 @@ export const citeStyle = /* @__PURE__ */ Object.assign(memo(citeStyleFn.recipeFn
   __recipe__: true,
   __name__: 'citeStyle',
   __getCompoundVariantCss__: citeStyleFn.__getCompoundVariantCss__,
-  raw: (props) => props,
+  raw: props => props,
   variantKeys: citeStyleVariantKeys,
   variantMap: citeStyleVariantMap,
   merge(recipe) {

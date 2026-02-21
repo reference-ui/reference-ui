@@ -9,6 +9,7 @@ This document maps out the **groundbreaking architecture** of the `reference-cor
 ## Vision
 
 To create a **highly composable, type-safe, zero-runtime design system** that solves real problems other libraries ignore:
+
 - **No TypeScript brittleness** - Built to survive TypeScript version changes
 - **Container queries as default** - Media queries are the fallback, not the standard
 - **Build-time code discovery and execution** - Your design tokens are discovered and evaluated automatically
@@ -31,11 +32,12 @@ Most design systems make you manually import and register every token, recipe, a
 // Anywhere in your codebase:
 pattern({
   properties: { awesome: { type: 'boolean' } },
-  transform: (props) => props.awesome ? { color: 'rainbow' } : {}
+  transform: props => (props.awesome ? { color: 'rainbow' } : {}),
 })
 ```
 
 The CLI automatically:
+
 1. **Scans** directories for registered function names (`pattern`, `tokens`, `recipe`, etc.)
 2. **Bundles** those files with esbuild (with all their dependencies)
 3. **Executes** them in a build-time context
@@ -48,12 +50,14 @@ This is **code discovery through execution**, not static analysis. Your design s
 ### 🏗️ 2. Microbundle Architecture - Infinite Extensibility
 
 Each major feature is implemented as a **microbundle** - a self-contained CLI workflow that:
+
 - Collects user-defined data via `globalThis` collectors
 - Generates temporary entry files
 - Bundles with esbuild (excluding heavy dependencies)
 - Outputs generated TypeScript that gets committed to the repo
 
 **Current microbundles:**
+
 - **`config/`** - Panda config collection and deep merging
 - **`boxPattern/`** - Box pattern extension system (powers `r`, `container`, `font` props)
 - **`fontFace/`** - Font system generator (tokens, recipes, patterns, @font-face rules)
@@ -74,6 +78,7 @@ We made a controversial but correct decision: **Our primitives don't expose the 
 ```
 
 **Why?** The polymorphic `as` prop is a **TypeScript nightmare**:
+
 - Type inference breaks down with complex intersections
 - Different TypeScript versions handle it differently
 - Users get cryptic error messages
@@ -86,12 +91,14 @@ We made a controversial but correct decision: **Our primitives don't expose the 
 ### 🛡️ 4. TypeScript Philosophy - Assume Breaking Changes
 
 We assume **TypeScript will change and break things**. So we only rely on **basic TypeScript features** that have been stable for years:
+
 - Generic types
-- Union types  
+- Union types
 - Conditional types (sparingly)
 - Utility types (`Omit`, `Pick`, etc.)
 
 **What we avoid:**
+
 - Complex mapped types with multiple levels of inference
 - Template literal types for prop combinations
 - Heavy use of `infer` in edge cases
@@ -104,18 +111,21 @@ We assume **TypeScript will change and break things**. So we only rely on **basi
 We **completely flipped responsive design** on its head:
 
 **Traditional approach:**
+
 ```tsx
-<Box fontSize={{ base: 'sm', md: 'lg', lg: 'xl' }} />  // Media queries
+<Box fontSize={{ base: 'sm', md: 'lg', lg: 'xl' }} /> // Media queries
 ```
 
 **Our approach:**
+
 ```tsx
-<Box r={{ 320: { fontSize: 'sm' }, 768: { fontSize: 'xl' } }} />  // Container queries
+<Box r={{ 320: { fontSize: 'sm' }, 768: { fontSize: 'xl' } }} /> // Container queries
 ```
 
 Every component responds to its **container size**, not the viewport. The `<body>` tag gets `containerType: 'inline-size'` by default, and everything cascades from there.
 
 **Why this matters:**
+
 - Components are truly reusable (work in sidebars, modals, anywhere)
 - No more breakpoint guessing
 - Responsive behavior is scoped to component boundaries
@@ -126,19 +136,27 @@ Every component responds to its **container size**, not the viewport. The `<body
 Every primitive supports the `r` prop for responsive container queries:
 
 ```tsx
-<Button r={{
-  320: { size: 'sm', visual: 'outline' },
-  768: { size: 'lg', visual: 'solid' }
-}} />
+<Button
+  r={{
+    320: { size: 'sm', visual: 'outline' },
+    768: { size: 'lg', visual: 'solid' },
+  }}
+/>
 ```
 
 Under the hood, this generates:
+
 ```css
-@container (min-width: 320px) { /* styles */ }
-@container (min-width: 768px) { /* styles */ }
+@container (min-width: 320px) {
+  /* styles */
+}
+@container (min-width: 768px) {
+  /* styles */
+}
 ```
 
 **Features:**
+
 - Works with named containers: `<Box container="sidebar" />`
 - Generates zero-runtime CSS via Panda patterns
 - Fully type-safe with autocomplete for all style props
@@ -157,9 +175,15 @@ The `container` prop creates named container query contexts:
 The `Widget` now responds to the `sidebar` container's width, not the viewport or parent container.
 
 **Generated CSS:**
+
 ```css
-.parent { container-type: inline-size; container-name: sidebar; }
-@container sidebar (min-width: 300px) { /* Widget styles */ }
+.parent {
+  container-type: inline-size;
+  container-name: sidebar;
+}
+@container sidebar (min-width: 300px) {
+  /* Widget styles */
+}
 ```
 
 This enables **pixel-perfect component composition** where each component can define its responsive behavior relative to its specific container context.
@@ -227,7 +251,7 @@ Every complex feature follows the **microbundle workflow**:
 extendFont('sans', {
   value: '"Inter", sans-serif',
   weights: { normal: 400, bold: 700 },
-  css: { letterSpacing: '-0.01em' }
+  css: { letterSpacing: '-0.01em' },
 })
 
 // CLI discovers this, bundles it, runs it, generates:
@@ -246,18 +270,20 @@ All from one `extendFont()` call!
 **Panda CSS is amazing** - zero-runtime, type-safe, powerful. But it has rough edges:
 
 ### What Panda gives us:
+
 ✅ Zero-runtime CSS generation  
 ✅ Type-safe styling props  
 ✅ Atomic CSS architecture  
-✅ Token-based design system  
+✅ Token-based design system
 
 ### What we add:
+
 🔥 **Automatic code discovery** - No manual config imports  
 🔥 **Microbundle extensibility** - Add features without core changes  
 🔥 **Opinionated primitives** - No polymorphic chaos  
 🔥 **Container-first responsive** - Not an afterthought  
 🔥 **Domain-based organization** - Scale to hundreds of tokens  
-🔥 **Long-term TypeScript stability** - Won't break on TS updates  
+🔥 **Long-term TypeScript stability** - Won't break on TS updates
 
 We took Panda's foundation and built a **production-ready design system framework** on top. This is what Panda could have been if it prioritized developer experience and architectural patterns from day one.
 
@@ -278,6 +304,7 @@ export const Article = createPrimitive('article')
 ```
 
 **Key features:**
+
 - ✅ Perfect TypeScript autocomplete for element-specific props
 - ✅ `r` API for container queries on every primitive
 - ✅ `container` prop for creating query contexts
@@ -286,6 +313,7 @@ export const Article = createPrimitive('article')
 - ❌ NO `as` prop - ever
 
 **Implementation magic:**
+
 ```tsx
 // Internally uses Box with 'as', but never exposes it
 <Box as="button" {...props} />  // ← This happens inside
@@ -300,18 +328,18 @@ The primitive wraps Panda's `Box` but **strips the polymorphic API surface**, gi
 
 ### Styling Configuration Functions
 
-| API | Status | Generated Output |
-|-----|--------|------------------|
-| `extendTokens()` | ✅ Complete | Design tokens in Panda config |
-| `extendRecipe()` | ✅ Complete | Single-part component variants |
-| `extendSlotRecipe()` | ✅ Complete | Multi-part component variants |
-| `extendUtilities()` | ✅ Complete | Custom utility generators |
-| `extendGlobalCss()` | ✅ Complete | Global CSS rules |
-| `extendStaticCss()` | ✅ Complete | Force-generate utilities/recipes |
-| `extendGlobalFontface()` | ✅ Complete | @font-face declarations |
-| `extendKeyframes()` | ✅ Complete | CSS animation keyframes |
-| `extendPattern()` | ✅ Complete | Box pattern extensions |
-| `extendFont()` | ✅ Complete | All-in-one font system |
+| API                      | Status      | Generated Output                 |
+| ------------------------ | ----------- | -------------------------------- |
+| `extendTokens()`         | ✅ Complete | Design tokens in Panda config    |
+| `extendRecipe()`         | ✅ Complete | Single-part component variants   |
+| `extendSlotRecipe()`     | ✅ Complete | Multi-part component variants    |
+| `extendUtilities()`      | ✅ Complete | Custom utility generators        |
+| `extendGlobalCss()`      | ✅ Complete | Global CSS rules                 |
+| `extendStaticCss()`      | ✅ Complete | Force-generate utilities/recipes |
+| `extendGlobalFontface()` | ✅ Complete | @font-face declarations          |
+| `extendKeyframes()`      | ✅ Complete | CSS animation keyframes          |
+| `extendPattern()`        | ✅ Complete | Box pattern extensions           |
+| `extendFont()`           | ✅ Complete | All-in-one font system           |
 
 ### Every API is discoverable via Eval()
 
@@ -334,6 +362,7 @@ styled/
 ```
 
 Each domain is **self-contained**:
+
 - Tokens defined in the domain
 - Utilities that use those tokens
 - Global CSS for that domain
@@ -352,15 +381,15 @@ Here's how all these pieces work together:
 extendTokens({
   colors: {
     brand: { value: '#0066FF' },
-    danger: { value: '#FF3333' }
-  }
+    danger: { value: '#FF3333' },
+  },
 })
 
 // styled/font/fonts.ts
 extendFont('brand', {
   value: '"Inter", sans-serif',
   weights: { normal: 400, bold: 700 },
-  css: { letterSpacing: '-0.02em' }
+  css: { letterSpacing: '-0.02em' },
 })
 
 // components/Hero.tsx
@@ -369,20 +398,22 @@ import { Box, Button } from 'reference-core/primitives'
 export function Hero() {
   return (
     <Box container="hero">
-      <Box r={{
-        320: { padding: 4, fontSize: 'xl' },
-        768: { padding: 8, fontSize: '3xl' },
-        1024: { padding: 12, fontSize: '5xl' }
-      }}>
+      <Box
+        r={{
+          320: { padding: 4, fontSize: 'xl' },
+          768: { padding: 8, fontSize: '3xl' },
+          1024: { padding: 12, fontSize: '5xl' },
+        }}
+      >
         <h1>Welcome to the Future</h1>
       </Box>
-      
-      <Button 
+
+      <Button
         font="brand"
         weight="brand.bold"
         r={{
           320: { visual: 'outline', size: 'sm' },
-          768: { visual: 'solid', size: 'lg' }
+          768: { visual: 'solid', size: 'lg' },
         }}
       >
         Get Started
@@ -393,6 +424,7 @@ export function Hero() {
 ```
 
 **What happens:**
+
 1. Eval() discovers `extendTokens()` and `extendFont()` calls
 2. Microbundles generate Panda config and font system
 3. Panda generates zero-runtime CSS
@@ -407,18 +439,21 @@ export function Hero() {
 ## Why This Matters
 
 ### For Individual Developers
+
 - **Less TypeScript fighting** - Primitives just work, types are clear
 - **Faster development** - `r={{}}` API is faster than media queries
 - **Better autocomplete** - No polymorphic confusion
 - **Future-proof** - Won't break on TS updates
 
 ### For Teams
+
 - **Clear organization** - Domain-based structure scales to hundreds of files
 - **Extensible architecture** - Add microbundles without touching core
 - **Composable tokens** - Everyone can define tokens in their domain
 - **Atomic commits** - Change fonts without touching buttons
 
 ### For Design Systems
+
 - **True component reusability** - Container queries mean components work anywhere
 - **Type-safe theming** - Tokens flow through the entire system
 - **Zero runtime cost** - All CSS is static and atomic
@@ -429,27 +464,35 @@ export function Hero() {
 ## What Makes This Groundbreaking
 
 ### 1. Automatic Code Discovery
+
 No other CSS-in-JS library automatically discovers and executes your styling configuration. You call `tokens()` anywhere, and it just works. This is **magic that scales**.
 
 ### 2. Container Queries as Default
+
 We're one of the first design systems to make container queries the **primary responsive mechanism**. This fundamentally changes how components are composed.
 
 ### 3. No Polymorphic Components
+
 We **refused to compromise** on type safety. Every component has one clear type, one clear semantic meaning. This is controversial but correct.
 
 ### 4. Microbundle Architecture
+
 The ability to extend the system through microbundles means **this architecture is infinitely extensible** without modifying core code.
 
 ### 5. TypeScript Longevity
+
 We built this assuming **TypeScript will break our code**. By relying only on stable features, we ensure this library works for years.
 
 ### 6. Zero-Runtime Everything
+
 Not just CSS - **everything generates at build time**. Eval runs once, microbundles generate once, Panda builds once. The runtime is pure static CSS and React components.
 
 ### 7. Panda, But Better
+
 We took the best zero-runtime CSS system and added the missing pieces:
+
 - Developer experience
-- Architectural patterns  
+- Architectural patterns
 - Code organization
 - Extensibility
 - Type safety
@@ -460,16 +503,19 @@ We took the best zero-runtime CSS system and added the missing pieces:
 ## The Stack
 
 **Foundation:**
+
 - React (UI primitives)
 - TypeScript (type safety with conservative feature usage)
 - Panda CSS (zero-runtime CSS generation)
 
 **Build-time:**
+
 - esbuild (microbundle compilation)
 - Node.js (CLI tooling)
 - Custom eval system (code discovery & execution)
 
 **Runtime:**
+
 - Static CSS (generated by Panda)
 - React components (primitives + user components)
 - **Zero styling runtime** (no CSS-in-JS at runtime)
@@ -479,18 +525,21 @@ We took the best zero-runtime CSS system and added the missing pieces:
 ## Success Metrics
 
 ### Technical
+
 - ✅ Sub-100ms eval + microbundle execution time
 - ✅ Zero runtime styling overhead
 - ✅ 100% type coverage for all public APIs
 - ✅ Works with TypeScript 4.5 through 5.x+
 
 ### Developer Experience
+
 - ✅ One-line responsive: `r={{ 320: {...} }}`
 - ✅ Zero-config token registration
 - ✅ Perfect autocomplete on all primitives
 - ✅ Clear error messages (no polymorphic confusion)
 
 ### Architecture
+
 - ✅ Microbundle system supports infinite extension
 - ✅ Domain organization scales to 1000+ files
 - ✅ Eval system discovers code without registration
@@ -501,6 +550,7 @@ We took the best zero-runtime CSS system and added the missing pieces:
 ## Roadmap
 
 ### Now (Completed ✅)
+
 - Core eval system
 - All styling APIs (tokens, recipe, pattern, font, keyframes)
 - Container-based responsive system
@@ -508,6 +558,7 @@ We took the best zero-runtime CSS system and added the missing pieces:
 - Microbundle architecture (config, boxPattern, fontFace)
 
 ### Next
+
 - Performance benchmarks
 - Migration guides from Chakra/MUI/etc
 - Storybook integration
@@ -515,6 +566,7 @@ We took the best zero-runtime CSS system and added the missing pieces:
 - Component documentation generation
 
 ### Future
+
 - Animation microbundle (declarative spring/timeline animations)
 - Theme switching API (with zero runtime cost)
 - Design token export (to Figma, Sketch, etc)
@@ -525,6 +577,7 @@ We took the best zero-runtime CSS system and added the missing pieces:
 ## Conclusion
 
 **This isn't just a component library.** It's a complete rethinking of:
+
 - How design systems should be architected
 - How TypeScript types should be managed for long-term stability
 - How responsive design should work in component-based systems
@@ -532,6 +585,7 @@ We took the best zero-runtime CSS system and added the missing pieces:
 - How to extend a system without modifying its core
 
 We didn't just build on Panda CSS—we **flipped the script entirely**. We took zero-runtime styling and added:
+
 - **Eval-based discovery**
 - **Microbundle extensibility**
 - **Container-first responsive**
@@ -544,4 +598,4 @@ And we're just getting started.
 
 ---
 
-*Built with ❤️ for developers who care about types, performance, and architecture.*
+_Built with ❤️ for developers who care about types, performance, and architecture._

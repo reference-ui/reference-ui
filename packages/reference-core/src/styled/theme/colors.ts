@@ -237,7 +237,6 @@ export const colors = {
   },
 }
 
-
 extendTokens({
-  colors
+  colors,
 })

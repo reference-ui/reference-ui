@@ -17,10 +17,16 @@ if (!(globalThis as Record<string, unknown>)[BOX_PATTERN_COLLECTOR_KEY]) {
 }
 
 export function extendBoxPattern(extension: BoxPatternExtension): void {
-  const collector = (globalThis as Record<string, unknown>)[BOX_PATTERN_COLLECTOR_KEY] as BoxPatternExtension[]
+  const collector = (globalThis as Record<string, unknown>)[
+    BOX_PATTERN_COLLECTOR_KEY
+  ] as BoxPatternExtension[]
   collector.push(extension)
 }
 
 export function getBoxPatternExtensions(): BoxPatternExtension[] {
-  return ((globalThis as Record<string, unknown>)[BOX_PATTERN_COLLECTOR_KEY] as BoxPatternExtension[]) || []
+  return (
+    ((globalThis as Record<string, unknown>)[
+      BOX_PATTERN_COLLECTOR_KEY
+    ] as BoxPatternExtension[]) || []
+  )
 }

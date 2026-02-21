@@ -4,9 +4,9 @@ import { extendTokens, extendGlobalFontface, extendRecipe, extendPattern } from 
 
 extendTokens({
   fonts: {
-    sans: { value: "\"Inter\", ui-sans-serif, sans-serif" },
-    serif: { value: "\"Literata\", ui-serif, serif" },
-    mono: { value: "\"JetBrains Mono\", ui-monospace, monospace" },
+    sans: { value: '"Inter", ui-sans-serif, sans-serif' },
+    serif: { value: '"Literata", ui-serif, serif' },
+    mono: { value: '"JetBrains Mono", ui-monospace, monospace' },
   },
   fontWeights: {
     'sans.thin': { value: '200' },
