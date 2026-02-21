@@ -1,4 +1,5 @@
 import { log, initLog } from '../utils/log'
+import { initEventBus } from '../event-bus'
 import { loadUserConfig } from '../config'
 import { initVirtual } from '../virtual'
 
@@ -6,6 +7,11 @@ import { initVirtual } from '../virtual'
 
 export const syncCommand = async (cwd: string, options: { watch?: boolean }) => {
   const config = await loadUserConfig(cwd)
+
+  // Initialize event bus first (enables debug logging if configured)
+  initEventBus(config)
+
+  // Initialize logging system (sets up log event listeners)
   initLog(config)
 
   log.debug('Loaded config:', config)
