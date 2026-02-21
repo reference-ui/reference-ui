@@ -8,8 +8,7 @@ type Log = LogFn & {
   setDebug: (enabled: boolean) => void;
 };
 
-const debugEnv = (process.env.REFERENCE_DEBUG ?? "").toLowerCase();
-let isDebug = debugEnv === "1" || debugEnv === "true" || debugEnv === "yes";
+let isDebug = false;
 
 const log = ((...args: unknown[]) => {
   console.log(...args);
@@ -30,5 +29,11 @@ log.debug = (...args: unknown[]) => {
 log.setDebug = (enabled: boolean) => {
   isDebug = enabled;
 };
+
+export function initLog(config: { debug?: boolean }) {
+  if (config.debug) {
+    log.setDebug(true);
+  }
+}
 
 export { log };
