@@ -26,6 +26,12 @@ export interface ReferenceUIConfig {
    * @default true
    */
   useDesignSystem?: boolean
+
+  /**
+   * Enable debug logging.
+   * @default false
+   */
+  debug?: boolean
 }
 
 /**
@@ -44,3 +50,5 @@ export interface ReferenceUIConfig {
 export function defineConfig(cfg: ReferenceUIConfig): ReferenceUIConfig {
   return cfg
 }
+
+export { loadUserConfig } from './load-config'

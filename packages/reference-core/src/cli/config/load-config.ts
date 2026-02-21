@@ -7,7 +7,7 @@ import type { ReferenceUIConfig } from './index'
  * Load and evaluate the user's ui.config.ts/js file.
  * Uses bundle-n-require (same as Panda CSS) to handle TypeScript configs.
  */
-export async function loadUserConfig(cwd: string): Promise<ReferenceUIConfig> {
+export async function loadUserConfig(cwd: string = process.cwd()): Promise<ReferenceUIConfig> {
   // Try .ts first (preferred), then .js, then .mjs
   const candidates = ['ui.config.ts', 'ui.config.js', 'ui.config.mjs']
   let configPath: string | null = null
@@ -37,6 +37,9 @@ export async function loadUserConfig(cwd: string): Promise<ReferenceUIConfig> {
     result = await bundleNRequire(configPath, {
       cwd,
       interopDefault: true,
+      esbuildOptions: {
+        external: ['esbuild'],
+      },
     })
   } catch (err) {
     throw new Error(

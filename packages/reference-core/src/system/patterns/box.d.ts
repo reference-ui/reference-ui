@@ -6,13 +6,10 @@ import type { DistributiveOmit } from '../types/system-types';
 import type { Tokens } from '../tokens/index';
 
 export interface BoxProperties {
-   font?: ConditionalValue<string>
-	weight?: ConditionalValue<string>
-	container?: ConditionalValue<string>
-	r?: ConditionalValue<object>
+   
 }
 
-interface BoxStyles extends BoxProperties, DistributiveOmit<SystemStyleObject, keyof BoxProperties | 'font' | 'weight' | 'container' | 'r'> {}
+interface BoxStyles extends BoxProperties, DistributiveOmit<SystemStyleObject, keyof BoxProperties > {}
 
 interface BoxPatternFn {
   (styles?: BoxStyles): string

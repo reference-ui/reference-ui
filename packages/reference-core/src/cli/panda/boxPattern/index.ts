@@ -1,1 +1,0 @@
-export { createBoxPattern } from './createBoxPattern'
