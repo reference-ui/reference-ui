@@ -1,30 +1,29 @@
 # Public API Implementation
 
+## Core Configuration
+
+- [x] `import { defineConfig } from '@reference-ui/core'`
+
 ## Runtime APIs
 
-- [ ] `import { css } from '@reference-ui/react'`
-- [ ] `import { recipe } from '@reference-ui/react'`
+- [x] `import { css } from '@reference-ui/react'`
+- [x] `import { recipe } from '@reference-ui/react'`
 
 ## Design Tokens
 
-- [ ] `import { colors } from '@reference-ui/system'`
-- [ ] `import { spacing } from '@reference-ui/system'`
-- [ ] `import { radii } from '@reference-ui/system'`
-- [ ] ... and the rest of them.
+- [x] `import { colors } from '@reference-ui/system'`
+- [x] `import { spacing } from '@reference-ui/system'`
+- [x] `import { radii } from '@reference-ui/system'`
+- [x] ... and the rest of them.
 
 ## Utilities
 
-- [ ] `import { getRhythm } from '@reference-ui/system'`
+- [x] `import { getRhythm } from '@reference-ui/system'`
 
 ## Extension APIs (build-time)
 
-- [ ] `import { defineConfig } from '@reference-ui/system'`
 - [ ] `import { tokens } from '@reference-ui/system'`
 - [ ] `import { recipe } from '@reference-ui/system'`
 - [ ] `import { keyframes } from '@reference-ui/system'`
 - [ ] `import { font } from '@reference-ui/system'`
 - [ ] `import { globalCss } from '@reference-ui/system'`
-
-## Base Configuration
-
-- [ ] `import { baseConfig } from '@reference-ui/system'`

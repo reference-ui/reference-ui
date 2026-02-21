@@ -1,3 +1,6 @@
+// Runtime React components and APIs (browser-safe)
+// This is what users import in their React app
+
 export * from '../primitives/index.js'
 export { Box } from '../system/jsx/box.js'
 export { Container } from '../system/jsx/container.js'
@@ -17,21 +20,3 @@ export type { SystemStyleObject } from '../system/types/index.js'
 export type { ResponsiveBreakpoints } from '../styled/patterns.d.js'
 export { getRhythm } from '../styled/index.js'
 export { colors } from '../styled/theme/colors.js'
-
-// Configuration API (for ui.config.ts files)
-export { defineConfig } from '../cli/config/index.js'
-export type { ReferenceUIConfig } from '../cli/config/index.js'
-
-// Styled API (build-time configuration and runtime - exported from main index)
-export {
-  extendTokens,
-  extendRecipe,
-  extendSlotRecipe,
-  extendUtilities,
-  extendGlobalCss,
-  extendStaticCss,
-  extendGlobalFontface,
-  extendFont,
-  extendKeyframes,
-  extendPattern,
-} from '../styled/api/index.js'
