@@ -1,0 +1,4 @@
+{
+  "virtual": "src/cli/virtual/worker.ts",
+  "system": "src/cli/system/worker.ts"
+}

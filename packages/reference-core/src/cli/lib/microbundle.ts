@@ -16,7 +16,7 @@ export interface MicroBundleOptions {
 const DEFAULT_EXTERNALS: string[] = []
 
 /** Externals for bundling the Panda config entry (avoids bundling Panda CLI deps). Internal to microBundle. */
-const PANDA_BUNDLE_EXTERNALS: string[] = [
+const BUNDLE_EXTERNALS: string[] = [
   '@pandacss/dev',
   'esbuild',
   'fast-glob',
@@ -31,7 +31,7 @@ const PANDA_BUNDLE_EXTERNALS: string[] = [
  * Micro-bundle the Panda config entry. Uses Panda-specific externals internally.
  */
 export async function microBundlePanda(entryPath: string): Promise<string> {
-  return microBundle(entryPath, { external: PANDA_BUNDLE_EXTERNALS })
+  return microBundle(entryPath, { external: BUNDLE_EXTERNALS })
 }
 
 /**
