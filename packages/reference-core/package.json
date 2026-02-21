@@ -11,8 +11,7 @@
   "dependencies": {
     "@pandacss/dev": "^1.8.1",
     "@mdx-js/mdx": "^3.1.1",
-
-    "bundle-n-require": "^1.1.2",
+    
     "chokidar": "^5.0.0",
     "commander": "^14.0.3",
     "esbuild": "^0.27.3",

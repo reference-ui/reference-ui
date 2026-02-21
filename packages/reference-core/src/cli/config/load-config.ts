@@ -1,4 +1,4 @@
-import { bundleNRequire } from 'bundle-n-require'
+import { loadConfig as loadConfigFile } from '../lib/microbundle'
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import type { ReferenceUIConfig } from './index'
@@ -29,26 +29,22 @@ export async function loadUserConfig(cwd: string = process.cwd()): Promise<Refer
     )
   }
 
-  let result: Awaited<ReturnType<typeof bundleNRequire>>
+  let userConfig: any
   
   try {
-    // Use bundle-n-require to load and bundle the config file (handles TS/ESM)
-    // This is the exact same approach Panda CSS uses for panda.config.ts
-    result = await bundleNRequire(configPath, {
-      cwd,
-      interopDefault: true,
-      esbuildOptions: {
-        external: ['esbuild'],
-      },
+    // Bundle and load the config file with esbuild
+    // Returns the evaluated module.exports
+    userConfig = await loadConfigFile(configPath, {
+      external: ['esbuild'],
     })
   } catch (err) {
     throw new Error(
       `reference-ui: Failed to load ${configPath}:\n${err instanceof Error ? err.message : String(err)}`
     )
   }
-
-  // Extract the config from the module (default export or direct export)
-  const userConfig = (result.mod?.default ?? result.mod) as ReferenceUIConfig
+  
+  // Handle both default and named exports
+  userConfig = (userConfig?.default ?? userConfig) as ReferenceUIConfig
   
   if (!userConfig || typeof userConfig !== 'object') {
     throw new Error(
