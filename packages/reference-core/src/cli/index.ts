@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { Command } from 'commander'
-import { syncCommand } from './commands/sync'
+import { syncCommand } from './sync'
 import { runCommand } from './utils'
 const cwd = process.cwd()
 

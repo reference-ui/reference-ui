@@ -32,4 +32,7 @@ export default defineConfig({
 
   // Optional: Use reference-ui design system (default: true)
   useDesignSystem: true,
+
+  // Optional: Enable debug logging (default: false)
+  debug: true,
 })

@@ -6,43 +6,19 @@ var __export = (target, all) => {
     __defProp(target, name, { get: all[name], enumerable: true });
 };
 
-// ../reference-core/src/cli/panda/config/extendPandaConfig.ts
-var COLLECTOR_KEY = "__refPandaConfigCollector";
-function extendPandaConfig(partial) {
-  const collector = globalThis[COLLECTOR_KEY];
-  if (Array.isArray(collector)) {
-    collector.push(partial);
-  }
-}
-__name(extendPandaConfig, "extendPandaConfig");
-
-// ../reference-core/src/cli/panda/config/initCollector.ts
-globalThis[COLLECTOR_KEY] = [];
-
 // ../reference-core/.ref/panda-entry.ts
 import { defineConfig as defineConfig2 } from "@pandacss/dev";
 
+// ../reference-core/src/cli/panda/config/extendPandaConfig.ts
+var COLLECTOR_KEY = /* @__PURE__ */ Symbol("collector");
+function extendPandaConfig(config2) {
+  return config2;
+}
+__name(extendPandaConfig, "extendPandaConfig");
+
 // ../reference-core/src/cli/panda/config/deepMerge.ts
-function deepMerge(target, ...sources) {
-  const result = { ...target };
-  for (const source of sources) {
-    if (!source || typeof source !== "object") continue;
-    for (const key of Object.keys(source)) {
-      const targetVal = result[key];
-      const sourceVal = source[key];
-      if (sourceVal === void 0) continue;
-      if (Array.isArray(sourceVal) || typeof sourceVal === "function") {
-        result[key] = sourceVal;
-        continue;
-      }
-      if (sourceVal !== null && typeof sourceVal === "object" && targetVal !== null && typeof targetVal === "object" && !Array.isArray(targetVal)) {
-        result[key] = deepMerge({ ...targetVal }, sourceVal);
-      } else {
-        result[key] = sourceVal;
-      }
-    }
-  }
-  return result;
+function deepMerge(target, source) {
+  return { ...target, ...source };
 }
 __name(deepMerge, "deepMerge");
 
@@ -821,14 +797,8 @@ function extendGlobalFontface(fontface) {
 __name(extendGlobalFontface, "extendGlobalFontface");
 
 // ../reference-core/src/cli/panda/fontFace/extendFontFace.ts
-var FONT_COLLECTOR_KEY = "__fontCollector";
-if (!globalThis[FONT_COLLECTOR_KEY]) {
-  ;
-  globalThis[FONT_COLLECTOR_KEY] = [];
-}
-function extendFontCollector(def) {
-  const collector = globalThis[FONT_COLLECTOR_KEY];
-  collector.push(def);
+function extendFontCollector(config2) {
+  return config2;
 }
 __name(extendFontCollector, "extendFontCollector");
 
@@ -855,14 +825,8 @@ function extendKeyframes(config2) {
 __name(extendKeyframes, "extendKeyframes");
 
 // ../reference-core/src/cli/panda/boxPattern/extendBoxPattern.ts
-var BOX_PATTERN_COLLECTOR_KEY = "__boxPatternCollector";
-if (!globalThis[BOX_PATTERN_COLLECTOR_KEY]) {
-  ;
-  globalThis[BOX_PATTERN_COLLECTOR_KEY] = [];
-}
-function extendBoxPattern(extension) {
-  const collector = globalThis[BOX_PATTERN_COLLECTOR_KEY];
-  collector.push(extension);
+function extendBoxPattern(config2) {
+  return config2;
 }
 __name(extendBoxPattern, "extendBoxPattern");
 

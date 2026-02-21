@@ -26,7 +26,7 @@
   },
   "scripts": {
     "build": "tsdown",
-    "dev": "node scripts/link-system.cjs"
+    "dev": "pnpm build && node scripts/link-system.cjs"
   },
   "devDependencies": {
     "@types/react": "^18.2.0",
