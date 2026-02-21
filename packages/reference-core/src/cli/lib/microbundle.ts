@@ -1,5 +1,4 @@
 import * as esbuild from 'esbuild'
-import { createRequire } from 'module'
 
 export interface MicroBundleOptions {
   /** Modules to leave as require/import (not bundled). */
@@ -41,7 +40,7 @@ export async function microBundlePanda(entryPath: string): Promise<string> {
  *
  * @param entryPath - Absolute path to the entry file
  * @param options - Optional esbuild overrides (externals, format, etc.)
- * @returns The bundled code as string (ESM by default)
+ * @returns The bundled JavaScript code as a string (ESM format by default)
  */
 export async function microBundle(
   entryPath: string,
@@ -80,30 +79,4 @@ export async function microBundle(
     throw new Error('esbuild produced no output')
   }
   return output.text
-}
-
-/**
- * Load and execute a config file, returning the exported config object.
- * Bundles the config file with esbuild and executes it in a controlled environment.
- *
- * @param configPath - Absolute path to the config file
- * @param options - Optional esbuild overrides
- * @returns The evaluated config object
- */
-export async function loadConfig(
-  configPath: string,
-  options: MicroBundleOptions = {}
-): Promise<any> {
-  const bundled = await microBundle(configPath, {
-    format: 'cjs',
-    ...options
-  })
-
-  const module = { exports: {} }
-  const require = createRequire(import.meta.url)
-
-  const fn = new Function('module', 'exports', 'require', bundled)
-  fn(module, module.exports, require)
-
-  return module.exports
 }
