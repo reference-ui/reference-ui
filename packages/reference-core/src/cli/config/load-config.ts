@@ -1,11 +1,47 @@
-import { loadConfig as loadConfigFile } from '../lib/microbundle'
+import { microBundle } from '../lib/microbundle'
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { createRequire } from 'node:module'
+import { fileURLToPath } from 'node:url'
 import type { ReferenceUIConfig } from './index'
 
 /**
+ * Load and execute a config file by bundling and evaluating it.
+ * Bundles the config file with esbuild and executes it in a controlled environment.
+ *
+ * @param configPath - Absolute path to the config file
+ * @param options - Optional esbuild externals
+ * @returns The evaluated config object
+ */
+async function loadConfigFile(
+  configPath: string,
+  options: { external?: string[] } = {}
+): Promise<any> {
+  const bundled = await microBundle(configPath, {
+    format: 'cjs',
+    ...options
+  })
+
+  const module = { exports: {} }
+  // Use createRequire with a safe fallback for both ESM and CJS contexts
+  let requireFn: NodeRequire
+  try {
+    // Try ESM approach first
+    requireFn = createRequire(import.meta.url)
+  } catch {
+    // Fallback for CJS: use global require
+    requireFn = require
+  }
+
+  const fn = new Function('module', 'exports', 'require', bundled)
+  fn(module, module.exports, requireFn)
+
+  return module.exports
+}
+
+/**
  * Load and evaluate the user's ui.config.ts/js file.
- * Uses bundle-n-require (same as Panda CSS) to handle TypeScript configs.
+ * Uses esbuild bundling to handle TypeScript configs.
  */
 export async function loadUserConfig(cwd: string = process.cwd()): Promise<ReferenceUIConfig> {
   // Try .ts first (preferred), then .js, then .mjs
