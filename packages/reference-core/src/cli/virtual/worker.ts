@@ -1,3 +1,3 @@
 // Pure boilerplate - no logic here
-import { heavyEntry } from './init'
-export default heavyEntry
+import { runVirtual } from './init'
+export default runVirtual

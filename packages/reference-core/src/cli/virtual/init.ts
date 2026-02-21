@@ -27,58 +27,65 @@ export interface VirtualWorkerPayload {
  * @param sourceDir - Source directory (typically the user's project root)
  * @param config - User's Reference UI configuration
  * @param options - Additional options (watch mode, virtual directory path)
- * @returns Cleanup function to stop watching
  */
 export function initVirtual(
   sourceDir: string,
   config: ReferenceUIConfig,
   options: InitVirtualOptions = {}
 ): void {
-  const { watch = false, virtualDir } = options
-  const { include, debug = false } = config
-
-  const absSourceDir = resolve(sourceDir)
-
-  log.debug('[virtual] Initializing virtual filesystem')
-  log.debug('[virtual] Source:', absSourceDir)
+  const { watch = false } = options
 
   // Kick off heavy initialization in worker thread (non-blocking)
   runWorker('virtual', {
     sourceDir,
     config,
-    virtualDir,
+    virtualDir: options.virtualDir,
   })
     .then(() => {
-      log.debug('[virtual] Initial setup complete')
-
-      // If watching, setup watcher after initial copy
-      if (watch) {
-        setupWatcher(
-          { sourceDir: absSourceDir, include, debug },
-          async (event: FileChangeEvent) => {
-            await handleFileChange(event, absSourceDir, config, options)
-          }
-        ).then(stopWatcher => {
-          // Handle graceful shutdown in watch mode
-          const cleanup = () => {
-            stopWatcher()
-          }
-
-          process.on('SIGINT', () => {
-            cleanup()
-            process.exit(0)
-          })
-
-          process.on('SIGTERM', () => {
-            cleanup()
-            process.exit(0)
-          })
-        })
-      }
+      log.debug('[virtual] Initial copy complete')
     })
     .catch(error => {
       log.error('[virtual] Initialization failed:', error)
     })
+
+  // Setup file watcher if in watch mode
+  if (watch) {
+    setupFileWatcher(sourceDir, config, options)
+  }
+}
+
+/**
+ * Setup file watcher for virtual filesystem
+ */
+function setupFileWatcher(
+  sourceDir: string,
+  config: ReferenceUIConfig,
+  options: InitVirtualOptions
+): void {
+  const { include, debug = false } = config
+  const absSourceDir = resolve(sourceDir)
+
+  setupWatcher(
+    { sourceDir: absSourceDir, include, debug },
+    async (event: FileChangeEvent) => {
+      await handleFileChange(event, absSourceDir, config, options)
+    }
+  ).then(stopWatcher => {
+    // Handle graceful shutdown in watch mode
+    const cleanup = () => {
+      stopWatcher()
+    }
+
+    process.on('SIGINT', () => {
+      cleanup()
+      process.exit(0)
+    })
+
+    process.on('SIGTERM', () => {
+      cleanup()
+      process.exit(0)
+    })
+  })
 }
 
 /**
@@ -115,7 +122,7 @@ async function handleFileChange(
  *
  * @param payload - Worker payload containing source dir, config, and options
  */
-export async function heavyEntry(payload: VirtualWorkerPayload): Promise<void> {
+export async function runVirtual(payload: VirtualWorkerPayload): Promise<void> {
   const { sourceDir, config, virtualDir = DEFAULT_VIRTUAL_DIR } = payload
   const { include, debug = false } = config
 
@@ -154,4 +161,4 @@ export async function heavyEntry(payload: VirtualWorkerPayload): Promise<void> {
 }
 
 // Export as default for piscina worker compatibility
-export default heavyEntry
+export default runVirtual
