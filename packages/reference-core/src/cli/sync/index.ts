@@ -1,4 +1,4 @@
-import { log, initLog } from '../utils/log'
+import { log, initLog } from '../lib/log'
 import { initEventBus } from '../event-bus'
 import { loadUserConfig } from '../config'
 import { initVirtual } from '../virtual'

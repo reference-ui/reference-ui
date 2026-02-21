@@ -1,6 +1,6 @@
 import * as ts from 'typescript'
 import { dirname } from 'node:path'
-import { log } from '../../utils/log'
+import { log } from '../../lib/log'
 
 const CORE_PACKAGE = '@reference-ui/core'
 const CVA_BINDINGS = ['cva', 'recipe'] as const

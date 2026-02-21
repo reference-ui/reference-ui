@@ -2,7 +2,7 @@ import { mkdir, copyFile, writeFile } from 'node:fs/promises'
 import { dirname, join, relative, extname } from 'node:path'
 import { existsSync } from 'node:fs'
 import { transformFile } from './transform'
-import { log } from '../utils/log'
+import { log } from '../lib/log'
 import { TRANSFORMED_EXTENSIONS } from './config.internal'
 
 /**

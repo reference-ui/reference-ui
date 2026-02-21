@@ -1,6 +1,6 @@
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { resolveCorePackageDir } from '../utils/resolve-core'
+import { resolveCorePackageDir } from '../lib/resolve-core'
 
 export function resolveWorkerUrl(relativeDistPath: string): string {
   const selfPath = fileURLToPath(import.meta.url)

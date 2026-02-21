@@ -94,6 +94,6 @@ This keeps worker registration declarative while centralizing runtime path logic
 - [utils.ts](utils.ts)
   - `node:path`
   - `node:url`
-  - [../utils/resolve-core.ts](../utils/resolve-core.ts)
+  - [../lib/resolve-core.ts](../lib/resolve-core.ts)
 - Worker module (virtual)
   - `dist/cli/virtual/worker.mjs` (built from `src/cli/virtual/worker.ts`)
