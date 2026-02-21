@@ -1,6 +1,6 @@
 import { Outlet } from '@tanstack/react-router'
 import { MDXProvider } from '@mdx-js/react'
-import { Div, Main } from '@reference-ui/core'
+import { Div, Main } from '@reference-ui/react'
 import { DocSidebar } from './DocSidebar'
 
 export function DocLayout() {

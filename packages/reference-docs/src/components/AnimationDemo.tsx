@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Div, Button } from '@reference-ui/core'
+import { Div, Button } from '@reference-ui/react'
 
 /**
  * Simple animation demo - just a spinning box

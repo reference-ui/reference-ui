@@ -1,5 +1,5 @@
 import { useParams } from '@tanstack/react-router'
-import { Div } from '@reference-ui/core'
+import { Div } from '@reference-ui/react'
 import { slugToModule } from '../../lib/docs'
 
 export function DocPage() {
