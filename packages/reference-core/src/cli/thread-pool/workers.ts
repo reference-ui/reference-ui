@@ -1,10 +1,6 @@
-import { resolve, dirname } from 'node:path'
-import { fileURLToPath } from 'node:url'
-import { resolveCorePackageDir } from '../utils/resolve-core'
+import { resolveWorkerUrl } from './utils'
 
-const selfPath = fileURLToPath(import.meta.url)
-const coreDir = resolveCorePackageDir(dirname(selfPath))
-const virtualWorkerPath = resolve(coreDir, 'dist/cli/virtual/worker.mjs')
+const virtualWorkerPath = resolveWorkerUrl('virtual/worker.mjs')
 
 /**
  * Worker registry - maps worker names to their file paths

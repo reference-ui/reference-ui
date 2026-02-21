@@ -26,7 +26,7 @@ async function build() {
     await esbuild.build({
       entryPoints: {
         index: path.resolve(packageRoot, 'src/cli/index.ts'),
-        'virtual/worker': path.resolve(packageRoot, 'src/cli/virtual/worker.mjs'),
+        'virtual/worker': path.resolve(packageRoot, 'src/cli/virtual/worker.ts'),
       },
       outdir: distDir,
       bundle: true,
