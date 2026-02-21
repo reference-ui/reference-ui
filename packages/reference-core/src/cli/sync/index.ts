@@ -22,5 +22,5 @@ export const syncCommand = async (cwd: string, options: { watch?: boolean }) => 
     virtualDir: config.virtualDir,
   })
 
-  //await runWorker('system', { config })
+  await runWorker('system', { config })
 }

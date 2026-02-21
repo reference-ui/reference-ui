@@ -1,7 +1,7 @@
-import { compact, mergeProps, memo, splitProps, uniq } from '../helpers.js'
-import { css, mergeCss } from './css.js'
+import { compact, mergeProps, memo, splitProps, uniq } from '../helpers.js';
+import { css, mergeCss } from './css.js';
 
-const defaults = conf => ({
+const defaults = (conf) => ({
   base: {},
   variants: {},
   defaultVariants: {},
@@ -11,7 +11,7 @@ const defaults = conf => ({
 
 export function cva(config) {
   const { base, variants, defaultVariants, compoundVariants } = defaults(config)
-  const getVariantProps = variants => ({ ...defaultVariants, ...compact(variants) })
+  const getVariantProps = (variants) => ({ ...defaultVariants, ...compact(variants) })
 
   function resolve(props = {}) {
     const computedVariants = getVariantProps(props)
@@ -31,7 +31,7 @@ export function cva(config) {
     return cva({
       base: mergeCss(base, override.base),
       variants: Object.fromEntries(
-        variantKeys.map(key => [key, mergeCss(variants[key], override.variants[key])])
+        variantKeys.map((key) => [key, mergeCss(variants[key], override.variants[key])]),
       ),
       defaultVariants: mergeProps(defaultVariants, override.defaultVariants),
       compoundVariants: [...compoundVariants, ...override.compoundVariants],
@@ -48,9 +48,7 @@ export function cva(config) {
     return splitProps(props, variantKeys)
   }
 
-  const variantMap = Object.fromEntries(
-    Object.entries(variants).map(([key, value]) => [key, Object.keys(value)])
-  )
+  const variantMap = Object.fromEntries(Object.entries(variants).map(([key, value]) => [key, Object.keys(value)]))
 
   return Object.assign(memo(cvaFn), {
     __cva__: true,
@@ -60,18 +58,18 @@ export function cva(config) {
     config,
     merge,
     splitVariantProps,
-    getVariantProps,
+    getVariantProps
   })
 }
 
 export function getCompoundVariantCss(compoundVariants, variantMap) {
   let result = {}
-  compoundVariants.forEach(compoundVariant => {
+  compoundVariants.forEach((compoundVariant) => {
     const isMatching = Object.entries(compoundVariant).every(([key, value]) => {
       if (key === 'css') return true
 
       const values = Array.isArray(value) ? value : [value]
-      return values.some(value => variantMap[key] === value)
+      return values.some((value) => variantMap[key] === value)
     })
 
     if (isMatching) {
@@ -84,8 +82,6 @@ export function getCompoundVariantCss(compoundVariants, variantMap) {
 
 export function assertCompoundVariant(name, compoundVariants, variants, prop) {
   if (compoundVariants.length > 0 && typeof variants?.[prop] === 'object') {
-    throw new Error(
-      `[recipe:${name}:${prop}] Conditions are not supported when using compound variants.`
-    )
+    throw new Error(`[recipe:${name}:${prop}] Conditions are not supported when using compound variants.`)
   }
 }
