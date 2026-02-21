@@ -11,7 +11,7 @@ const baseConfig = {
   jsxFramework: 'react' as const,
   preflight: true,
 
-  include: ['src/**/*.{ts,tsx}'],
+  include: ['.virtual/**/*.{ts,tsx,js,jsx}'],
 
   exclude: [
     '**/node_modules/**',
