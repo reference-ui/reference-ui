@@ -1,5 +1,5 @@
-import { memo, splitProps } from '../helpers.js'
-import { createRecipe, mergeRecipes } from './create-recipe.js'
+import { memo, splitProps } from '../helpers.js';
+import { createRecipe, mergeRecipes } from './create-recipe.js';
 
 const markStyleFn = /* @__PURE__ */ createRecipe('r_mark', {}, [])
 
@@ -11,7 +11,7 @@ export const markStyle = /* @__PURE__ */ Object.assign(memo(markStyleFn.recipeFn
   __recipe__: true,
   __name__: 'markStyle',
   __getCompoundVariantCss__: markStyleFn.__getCompoundVariantCss__,
-  raw: props => props,
+  raw: (props) => props,
   variantKeys: markStyleVariantKeys,
   variantMap: markStyleVariantMap,
   merge(recipe) {
