@@ -1,3 +1,10 @@
+import type { ReferenceUIConfig } from '../config'
+import { runWorker } from '../thread-pool'
+
+export async function initSystem(config: ReferenceUIConfig): Promise<void> {
+  await runWorker('system', { config })
+}
+
 export {
   runEval,
   scanDirectories,
