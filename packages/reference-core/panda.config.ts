@@ -1865,7 +1865,7 @@ var baseConfig = {
   presets: [],
   jsxFramework: "react",
   preflight: true,
-  include: ["src/**/*.{ts,tsx}"],
+  include: [".virtual/**/*.{ts,tsx,js,jsx}"],
   exclude: [
     "**/node_modules/**",
     "**/*.test.*",
