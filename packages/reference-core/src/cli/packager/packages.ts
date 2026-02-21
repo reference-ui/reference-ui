@@ -18,45 +18,6 @@ export interface PackageDefinition {
 }
 
 /**
- * @reference-ui/system - Design tokens and CSS utilities
- *
- * This package is NOT bundled - we copy the generated system folder directly
- * since it's already in the correct format from Panda.
- */
-export const SYSTEM_PACKAGE: PackageDefinition = {
-  name: '@reference-ui/system',
-  version: '0.0.0-generated',
-  description: 'Reference design system tokens and utilities',
-  bundle: false,
-  copyDirs: [
-    { src: 'src/system' }, // Copy entire system folder
-  ],
-  exports: {
-    '.': {
-      types: './css/index.d.ts',
-      default: './css/index.js',
-    },
-    './css': {
-      types: './css/index.d.ts',
-      default: './css/index.js',
-    },
-    './tokens': {
-      types: './tokens/index.d.ts',
-      default: './tokens/index.js',
-    },
-    './patterns': {
-      types: './patterns/index.d.ts',
-      default: './patterns/index.js',
-    },
-    './recipes': {
-      types: './recipes/index.d.ts',
-      default: './recipes/index.js',
-    },
-    './styles.css': './styles.css',
-  },
-}
-
-/**
  * @reference-ui/react - Runtime React components and APIs
  *
  * This package is NOT bundled - we copy the source files directly.
@@ -89,4 +50,4 @@ export const REACT_PACKAGE: PackageDefinition = {
 /**
  * All packages to be bundled/copied
  */
-export const PACKAGES: PackageDefinition[] = [SYSTEM_PACKAGE, REACT_PACKAGE]
+export const PACKAGES: PackageDefinition[] = [REACT_PACKAGE]
