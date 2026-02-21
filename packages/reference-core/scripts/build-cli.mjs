@@ -8,6 +8,10 @@ import { fileURLToPath } from 'url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const packageRoot = path.resolve(__dirname, '..')
 const distDir = path.resolve(packageRoot, 'dist', 'cli')
+const workerManifestPath = path.resolve(
+  packageRoot,
+  'src/cli/thread-pool/manifest.json'
+)
 
 const external = [
   'esbuild',
@@ -22,10 +26,20 @@ const external = [
 async function build() {
   console.log('Building CLI with esbuild...')
   try {
+    const workerManifest = JSON.parse(fs.readFileSync(workerManifestPath, 'utf-8'))
+    const workerEntries = Object.fromEntries(
+      Object.entries(workerManifest).map(([name, entry]) => [
+        name,
+        path.resolve(packageRoot, entry),
+      ])
+    )
+
     await esbuild.build({
       entryPoints: {
         index: path.resolve(packageRoot, 'src/cli/index.ts'),
-        'virtual/worker': path.resolve(packageRoot, 'src/cli/virtual/worker.ts'),
+        ...Object.fromEntries(
+          Object.entries(workerEntries).map(([name, entry]) => [`${name}/worker`, entry])
+        ),
       },
       outdir: distDir,
       bundle: true,

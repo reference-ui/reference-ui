@@ -1,7 +1,7 @@
 import { copyToNodeModules } from '../workspace/copy-to-node-modules'
 import { resolveCorePackageDir } from '../workspace/resolve-core'
 import { runGeneratePrimitives } from '../lib/run-generate-primitives'
-import { runPandaCodegen, runPandaCss } from '../panda/gen/runner'
+import { runPandaCodegen, runPandaCss } from '../../cli/system/gen/runner'
 import { loadUserConfig } from '../config/load-config'
 import { copyToCodegen, watchAndCopyToCodegen } from '../panda/gen/copy-to-codegen'
 import { createPandaConfig } from '../panda/config/createPandaConfig'
