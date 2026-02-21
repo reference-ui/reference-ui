@@ -1,6 +1,7 @@
 import { resolve } from 'node:path'
 import { copyToVirtual } from './copy'
 import { log } from '../utils/log'
+import { resolveCorePackageDir } from '../utils/resolve-core'
 import { DEFAULT_VIRTUAL_DIR, GLOB_CONFIG } from './config.internal'
 import type { InitVirtualOptions } from './types'
 import type { ReferenceUIConfig } from '../config'
@@ -22,7 +23,8 @@ export async function syncVirtual(
   const { include, debug = false } = config
 
   const absSourceDir = resolve(sourceDir)
-  const absVirtualDir = resolve(sourceDir, virtualDir)
+  const coreDir = resolveCorePackageDir(sourceDir)
+  const absVirtualDir = resolve(coreDir, virtualDir)
 
   log.debug('[virtual] Syncing files to virtual directory')
 
