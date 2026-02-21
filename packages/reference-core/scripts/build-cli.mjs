@@ -8,10 +8,7 @@ import { fileURLToPath } from 'url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const packageRoot = path.resolve(__dirname, '..')
 const distDir = path.resolve(packageRoot, 'dist', 'cli')
-const workerManifestPath = path.resolve(
-  packageRoot,
-  'src/cli/thread-pool/manifest.json'
-)
+const workerManifestPath = path.resolve(packageRoot, 'src/cli/thread-pool/manifest.json')
 
 const external = [
   'esbuild',
