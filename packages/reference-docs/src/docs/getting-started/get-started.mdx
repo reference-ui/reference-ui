@@ -5,7 +5,7 @@ order: 1
 slug: get-started
 ---
 
-import { Button, Container } from '@reference-ui/react'
+import { Button, Div } from '@reference-ui/react'
 
 # Get Started
 
@@ -20,14 +20,14 @@ pnpm add @reference-ui/react
 Import the components and styles you need:
 
 ```tsx
-import { Button, Container } from '@reference-ui/react'
+import { Button, Div } from '@reference-ui/react'
 import '@reference-ui/system/styles.css'
 
 function App() {
   return (
-    <Container>
+    <Div>
       <Button>Click me</Button>
-    </Container>
+    </Div>
   )
 }
 ```
@@ -36,8 +36,6 @@ function App() {
 
 Here's a live example:
 
-<Container
-  style={{ padding: '1rem', background: 'var(--color-surface)', borderRadius: 8 }}
->
+<Div style={{ padding: '1rem', background: 'var(--color-surface)', borderRadius: 8 }}>
   <Button>Design system button</Button>
-</Container>
+</Div>
