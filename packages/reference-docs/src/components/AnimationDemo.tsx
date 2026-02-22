@@ -9,7 +9,7 @@ export function AnimationDemo() {
 
   return (
     <Div
-      px2="wtrf"
+      randomProp="wtrf"
       p="5r"
       display="flex"
       flexDirection="column"
