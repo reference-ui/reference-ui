@@ -1381,6 +1381,22 @@
     background: white;
 }
 
+  .bg_transparent {
+    background: transparent;
+}
+
+  .bg_purple\.600 {
+    background: var(--colors-purple-600);
+}
+
+  .bg_green\.600 {
+    background: var(--colors-green-600);
+}
+
+  .bg_red\.600 {
+    background: var(--colors-red-600);
+}
+
   .m_0_0_1rem {
     margin: 0 0 1rem;
 }
@@ -2444,6 +2460,34 @@
 
   .trs_all_0\.3s {
     transition: all 0.3s;
+}
+
+  .px_5r {
+    padding-inline: var(--spacing-5r);
+}
+
+  .py_2\.5r {
+    padding-block: calc(2.5 * var(--spacing-r));
+}
+
+  .trs_all_0\.15s_ease {
+    transition: all 0.15s ease;
+}
+
+  .px_3\.5r {
+    padding-inline: calc(3.5 * var(--spacing-r));
+}
+
+  .py_1\.75r {
+    padding-block: calc(1.75 * var(--spacing-r));
+}
+
+  .px_7r {
+    padding-inline: calc(7 * var(--spacing-r));
+}
+
+  .py_3\.5r {
+    padding-block: calc(3.5 * var(--spacing-r));
 }
 
   .bd-r_1px_solid {
@@ -4598,6 +4642,22 @@
     justify-content: space-between;
 }
 
+  .bx-sh_0_1px_2px_0_rgba\(0\,_0\,_0\,_0\.05\) {
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+  .c_white {
+    color: white;
+}
+
+  .bx-sh_none {
+    box-shadow: none;
+}
+
+  .fs_xs {
+    font-size: xs;
+}
+
   .ls_-0\.5px {
     letter-spacing: -0.5px;
 }
@@ -5422,12 +5482,68 @@
     border-color: var(--colors-blue-500);
 }
 
+  .focusVisible\:ring_2px_solid:is(:focus-visible, [data-focus-visible]) {
+    outline: 2px solid;
+}
+
   .focus\:bx-sh_0_0_0_3px_rgba\(59\,_130\,_246\,_0\.1\):is(:focus, [data-focus]) {
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
+  .focusVisible\:ring-c_blue\.500:is(:focus-visible, [data-focus-visible]) {
+    outline-color: var(--colors-blue-500);
+}
+
+  .focusVisible\:ring-o_2px:is(:focus-visible, [data-focus-visible]) {
+    outline-offset: 2px;
+}
+
   .hover\:bg_blue\.700:is(:hover, [data-hover]) {
     background: var(--colors-blue-700);
+}
+
+  .hover\:bg_blue\.50:is(:hover, [data-hover]) {
+    background: var(--colors-blue-50);
+}
+
+  .hover\:bg_purple\.700:is(:hover, [data-hover]) {
+    background: var(--colors-purple-700);
+}
+
+  .hover\:bg_green\.700:is(:hover, [data-hover]) {
+    background: var(--colors-green-700);
+}
+
+  .hover\:bg_red\.700:is(:hover, [data-hover]) {
+    background: var(--colors-red-700);
+}
+
+  .hover\:bg_purple\.50:is(:hover, [data-hover]) {
+    background: var(--colors-purple-50);
+}
+
+  .hover\:bg_green\.50:is(:hover, [data-hover]) {
+    background: var(--colors-green-50);
+}
+
+  .hover\:bg_red\.50:is(:hover, [data-hover]) {
+    background: var(--colors-red-50);
+}
+
+  .hover\:bd-c_blue\.400:is(:hover, [data-hover]) {
+    border-color: var(--colors-blue-400);
+}
+
+  .hover\:bd-c_purple\.400:is(:hover, [data-hover]) {
+    border-color: var(--colors-purple-400);
+}
+
+  .hover\:bd-c_green\.400:is(:hover, [data-hover]) {
+    border-color: var(--colors-green-400);
+}
+
+  .hover\:bd-c_red\.400:is(:hover, [data-hover]) {
+    border-color: var(--colors-red-400);
 }
 
   .hover\:trf_translateY\(-2px\):is(:hover, [data-hover]) {
@@ -5438,8 +5554,44 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
+  .hover\:trf_translateY\(-1px\):is(:hover, [data-hover]) {
+    transform: translateY(-1px);
+}
+
+  .hover\:bx-sh_0_4px_6px_-1px_rgba\(0\,_0\,_0\,_0\.1\)\,_0_2px_4px_-1px_rgba\(0\,_0\,_0\,_0\.06\):is(:hover, [data-hover]) {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+  .hover\:bx-sh_none:is(:hover, [data-hover]) {
+    box-shadow: none;
+}
+
+  .active\:bg_blue\.800:is(:active, [data-active]) {
+    background: var(--colors-blue-800);
+}
+
+  .active\:bg_blue\.100:is(:active, [data-active]) {
+    background: var(--colors-blue-100);
+}
+
+  .active\:bg_purple\.800:is(:active, [data-active]) {
+    background: var(--colors-purple-800);
+}
+
+  .active\:bg_green\.800:is(:active, [data-active]) {
+    background: var(--colors-green-800);
+}
+
+  .active\:bg_red\.800:is(:active, [data-active]) {
+    background: var(--colors-red-800);
+}
+
   .active\:trf_translateY\(0\):is(:active, [data-active]) {
     transform: translateY(0);
+}
+
+  .active\:bx-sh_0_1px_2px_0_rgba\(0\,_0\,_0\,_0\.05\):is(:active, [data-active]) {
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
   @media (min-width: 768px) {
