@@ -1,14 +1,14 @@
-import * as ts from 'typescript'
-import { join, dirname, resolve } from 'node:path'
+import { join, resolve } from 'node:path'
 import { writeFileSync, mkdirSync, existsSync, readFileSync } from 'node:fs'
 import { log } from '../lib/log'
 import { resolveCorePackageDir } from '../lib/resolve-core'
+import { runTsc } from './run-tsc'
+import { createTsConfig } from './tsconfig-generator'
 import type { ReferenceUIConfig } from '../config'
 
 /**
- * Generate TypeScript declarations from the TypeScript SOURCE, not from bundled .js.
- * Reading .js with allowJs loses all the rich types (PrimitiveProps<T>, BoxProps, etc.)
- * - we need the actual source typings.
+ * Generate TypeScript declarations using tsc CLI.
+ * More reliable than programmatic API - battle-tested for library packaging.
  */
 export async function runColdBuild(
   cwd: string,
@@ -26,46 +26,30 @@ export async function runColdBuild(
       continue
     }
 
-    log(`[packager-ts] Generating types for ${pkg.name} from source...`)
+    log(`[packager-ts] Generating types for ${pkg.name}...`)
 
     mkdirSync(packageDir, { recursive: true })
 
-    const options: ts.CompilerOptions = {
-      declaration: true,
-      emitDeclarationOnly: true,
-      outDir: packageDir,
+    // Generate tsconfig for this package
+    const tsconfigPath = join(packageDir, 'tsconfig.declarations.json')
+    const tsconfigContent = createTsConfig({
       rootDir: coreDir,
-      moduleResolution: ts.ModuleResolutionKind.NodeNext,
-      module: ts.ModuleKind.ESNext,
-      target: ts.ScriptTarget.ESNext,
-      skipLibCheck: true,
-      declarationMap: false,
-      jsx: ts.JsxEmit.ReactJSX,
-      jsxImportSource: 'react',
-    }
+      outDir: packageDir,
+      entryFiles: [entryPath],
+    })
 
-    const program = ts.createProgram([entryPath], options)
-    const emitResult = program.emit(
-      undefined,
-      (fileName, data) => {
-        mkdirSync(dirname(fileName), { recursive: true })
-        writeFileSync(fileName, data, 'utf-8')
-      },
-      undefined,
-      true
-    )
+    writeFileSync(tsconfigPath, JSON.stringify(tsconfigContent, null, 2), 'utf-8')
 
-    if (emitResult.diagnostics.length > 0) {
-      const formatHost: ts.FormatDiagnosticsHost = {
-        getCanonicalFileName: p => p,
-        getCurrentDirectory: ts.sys.getCurrentDirectory,
-        getNewLine: () => '\n',
-      }
-      log(ts.formatDiagnosticsWithColorAndContext(emitResult.diagnostics, formatHost))
+    // Run tsc to generate declarations
+    try {
+      await runTsc(coreDir, ['-p', tsconfigPath])
+      log(`[packager-ts] ✓ Declarations generated for ${pkg.name}`)
+    } catch (error) {
+      log(`[packager-ts] ✗ Failed to generate declarations for ${pkg.name}:`, error)
+      throw error
     }
 
     // Update package.json types to point at the emitted entry .d.ts
-    // Entry src/entry/react.ts -> packageDir/src/entry/react.d.ts
     const typesPath = `./${pkg.sourceEntry.replace(/\.tsx?$/, '.d.ts')}`
     const pkgJsonPath = join(packageDir, 'package.json')
     if (existsSync(pkgJsonPath)) {
@@ -77,6 +61,6 @@ export async function runColdBuild(
       writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2), 'utf-8')
     }
 
-    log(`[packager-ts] Emitted declarations (types: ${typesPath})`)
+    log(`[packager-ts] Types entry: ${typesPath}`)
   }
 }

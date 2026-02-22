@@ -17,7 +17,7 @@ export function ResponsiveExample() {
         <Div
           padding="2r"
           backgroundColor="red.500"
-          color="white"
+          color="gray.50"
           r={{
             300: { padding: '4r', backgroundColor: 'green.500' },
             500: { padding: '6r', backgroundColor: 'blue.500' },
@@ -50,7 +50,7 @@ export function ResponsiveExample() {
             container="sidebar"
             padding="2r"
             backgroundColor="blue.500"
-            color="white"
+            color="gray.50"
             r={{
               300: { padding: '4r', backgroundColor: 'green.500' },
               500: { padding: '6r', backgroundColor: 'blue.500' },
@@ -75,7 +75,7 @@ export function ResponsiveExample() {
                 container="card"
                 padding="2r"
                 backgroundColor="green.500"
-                color="white"
+                color="gray.50"
                 r={{
                   300: { padding: '4r', backgroundColor: 'green.500' },
                   500: { padding: '6r', backgroundColor: 'blue.500' },
