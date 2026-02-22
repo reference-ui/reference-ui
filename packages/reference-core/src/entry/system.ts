@@ -1,12 +1,14 @@
+/**
+ * Public API entry point for @reference-ui/system
+ *
+ * Build-time extension APIs for design systems
+ */
+
 export {
-  extendTokens,
-  extendRecipe,
-  extendSlotRecipe,
-  extendUtilities,
-  extendGlobalCss,
-  extendStaticCss,
-  extendGlobalFontface,
-  extendFont,
-  extendKeyframes,
-  extendPattern,
-} from '../styled/api/index.js'
+  tokens,
+  recipe,
+  slotRecipe,
+  keyframes,
+  font,
+  globalCss,
+} from '../styled/api/system/index.js'

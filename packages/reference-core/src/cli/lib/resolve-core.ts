@@ -33,7 +33,7 @@ export function resolveCorePackageDir(fromCwd: string = process.cwd()): string {
 
   // Fallback: workspace root + monorepo paths
   let dir = fromCwd
-  const root = dirname(dir)
+  const root = parse(dir).root
 
   while (dir !== root) {
     if (

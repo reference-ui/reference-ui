@@ -9,7 +9,7 @@ transform(props) {
     Object.entries(props).filter(([k]) => !extensionKeys.has(k))
   );
   const _r0 = (function(props2) {
-    const { font, weight } = props2;
+    const { font: font2, weight } = props2;
     const FONT_PRESETS = {
       sans: {
         fontFamily: "sans",
@@ -47,8 +47,8 @@ transform(props) {
       "mono.bold": "700"
     };
     const result = {};
-    if (font && FONT_PRESETS[font]) {
-      Object.assign(result, FONT_PRESETS[font]);
+    if (font2 && FONT_PRESETS[font2]) {
+      Object.assign(result, FONT_PRESETS[font2]);
     }
     if (weight && WEIGHT_TOKENS[weight]) {
       result.fontWeight = WEIGHT_TOKENS[weight];
