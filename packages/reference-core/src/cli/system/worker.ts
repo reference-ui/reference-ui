@@ -20,7 +20,7 @@ export async function runSystem(payload: SystemWorkerPayload): Promise<void> {
 
   // Generate JS/TS codegen files
   runPandaCodegen(coreDir)
-  
+
   // Generate CSS with tokens layer
   runPandaCss(coreDir)
 }
