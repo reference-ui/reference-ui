@@ -1,12 +1,12 @@
 import { log } from '../lib/log'
 import { runWorker } from '../thread-pool'
-import { runColdBuild } from './cold-build'
+import { buildDeclarations } from './build'
 import type { TsPackagerWorkerPayload } from './types'
 import type { ReferenceUIConfig } from '../config'
 import { PACKAGES } from '../packager/packages'
 
 /**
- * Main entry - runs cold build (one-shot) for TypeScript declaration generation.
+ * Main entry - runs declaration build for packages
  */
 export async function runTsPackager(payload: TsPackagerWorkerPayload): Promise<void> {
   const { cwd, config, packages } = payload
@@ -16,7 +16,7 @@ export async function runTsPackager(payload: TsPackagerWorkerPayload): Promise<v
   log('')
 
   try {
-    await runColdBuild(cwd, packages, config)
+    await buildDeclarations(cwd, packages, config)
     log('')
   } catch (error) {
     log('[packager-ts] Error:', error)
@@ -26,8 +26,8 @@ export async function runTsPackager(payload: TsPackagerWorkerPayload): Promise<v
 
 /**
  * Initialize packager-ts from main thread.
- * Runs after packager; generates .d.ts from TypeScript SOURCE (not bundled .js)
- * so we preserve proper types like PrimitiveProps<T>, BoxProps, etc.
+ * Generates .d.ts from TypeScript source (not bundled .js)
+ * to preserve proper types like PrimitiveProps<T>, BoxProps, etc.
  */
 export async function initTsPackager(
   cwd: string,
