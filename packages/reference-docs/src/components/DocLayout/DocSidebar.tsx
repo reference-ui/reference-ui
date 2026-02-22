@@ -10,7 +10,7 @@ export function DocSidebar() {
       padding="4r"
       borderRightColor="gray.200"
       borderRight="1px solid"
-      background="background"
+      background="mySpecialToken"
       css={{
         position: 'fixed',
         top: 0,

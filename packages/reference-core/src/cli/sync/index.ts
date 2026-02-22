@@ -19,7 +19,7 @@ export const syncCommand = async (cwd: string, options: { watch?: boolean }) => 
     virtualDir: config.virtualDir,
   })
 
-  await initSystem(config)
+  await initSystem(cwd, config)
 
   // Package the generated code into node_modules
   await initPackager(cwd, config)
