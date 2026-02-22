@@ -2,7 +2,7 @@ import { resolveCorePackageDir } from '../lib/resolve-core'
 import type { ReferenceUIConfig } from '../config'
 import { runEval } from './eval'
 import { createPandaConfig } from './config'
-import { runPandaCodegen } from './gen/runner'
+import { runPandaCodegen, runPandaCss } from './gen/runner'
 
 export interface SystemWorkerPayload {
   config: ReferenceUIConfig
@@ -18,7 +18,11 @@ export async function runSystem(payload: SystemWorkerPayload): Promise<void> {
     await createPandaConfig(coreDir)
   }
 
+  // Generate JS/TS codegen files
   runPandaCodegen(coreDir)
+  
+  // Generate CSS with tokens layer
+  runPandaCss(coreDir)
 }
 
 export default runSystem
