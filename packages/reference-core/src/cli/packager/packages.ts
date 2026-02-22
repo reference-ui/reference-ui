@@ -45,6 +45,27 @@ export const REACT_PACKAGE: PackageDefinition = {
 }
 
 /**
+ * @reference-ui/system - Build-time design system extension APIs
+ *
+ * Bundled into a single ESM file for optimal loading.
+ */
+export const SYSTEM_PACKAGE: PackageDefinition = {
+  name: '@reference-ui/system',
+  version: '0.0.0-generated',
+  description: 'Reference UI design system extension APIs',
+  bundle: true,
+  entry: 'src/entry/system.ts',
+  main: './system.js',
+  types: './system.d.ts',
+  exports: {
+    '.': {
+      types: './system.d.ts',
+      import: './system.js',
+    },
+  },
+}
+
+/**
  * All packages to be bundled/copied
  */
-export const PACKAGES: PackageDefinition[] = [REACT_PACKAGE]
+export const PACKAGES: PackageDefinition[] = [REACT_PACKAGE, SYSTEM_PACKAGE]

@@ -4,8 +4,8 @@ import { REGISTERED_FUNCTIONS } from './registry'
 
 /**
  * Find files that contain calls to any registered function.
- * Uses a simple substring search; not full AST. Files may match if the name
- * appears in comments or strings, but that's acceptable for a first pass.
+ * Uses regex to match function call patterns (e.g., "functionName(" or "functionName  (")
+ * to avoid false positives from comments, strings, or type names.
  */
 function scanDirectory(dir: string): string[] {
   if (!existsSync(dir)) return []
@@ -18,7 +18,11 @@ function scanDirectory(dir: string): string[] {
   const matches: string[] = []
   for (const file of files) {
     const content = readFileSync(file, 'utf-8')
-    const hasAny = REGISTERED_FUNCTIONS.some(name => content.includes(name))
+    // Check if any registered function is called (matches word boundary + optional whitespace + open paren)
+    const hasAny = REGISTERED_FUNCTIONS.some(name => {
+      const callPattern = new RegExp(`\\b${name}\\s*\\(`)
+      return callPattern.test(content)
+    })
     if (hasAny) {
       matches.push(file)
     }

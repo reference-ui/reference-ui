@@ -76,7 +76,13 @@ export async function microBundle(
 
   const output = result.outputFiles?.[0]
   if (!output?.text) {
-    throw new Error('esbuild produced no output')
+    const errors =
+      result.errors.length > 0 ? JSON.stringify(result.errors, null, 2) : 'none'
+    const warnings =
+      result.warnings.length > 0 ? JSON.stringify(result.warnings, null, 2) : 'none'
+    throw new Error(
+      `esbuild produced no output for ${entryPath}\nErrors: ${errors}\nWarnings: ${warnings}`
+    )
   }
   return output.text
 }
