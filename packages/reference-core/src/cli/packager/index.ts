@@ -19,5 +19,5 @@ export async function initPackager(
 
 // Re-export for use in other modules
 export { bundleAllPackages, bundlePackage } from './bundler'
-export { PACKAGES, SYSTEM_PACKAGE, REACT_PACKAGE } from './packages'
+export { PACKAGES, REACT_PACKAGE } from './packages'
 export type { PackageDefinition } from './packages'
