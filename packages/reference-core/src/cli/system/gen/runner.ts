@@ -2,6 +2,7 @@ import { execSync, spawn } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { log } from '../../lib/log'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -30,6 +31,7 @@ export interface PandaOptions {
 }
 
 export function runPandaCodegen(cwd: string, options: PandaOptions = {}): void {
+  log('[panda] Starting codegen...')
   const pandaBin = resolvePandaBin()
 
   if (options.watch) {
@@ -74,6 +76,7 @@ export function runPandaCodegen(cwd: string, options: PandaOptions = {}): void {
 
 /** Emit styles.css (preflight + tokens + static CSS) */
 export function runPandaCss(cwd: string): void {
+  log('[panda] Generating CSS...')
   const pandaBin = resolvePandaBin()
   execSync(`"${pandaBin}"`, {
     cwd,
