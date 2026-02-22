@@ -11,8 +11,6 @@ function getPool() {
     minThreads: 2,
     maxThreads: Math.max(4, cpus().length - 1),
     idleTimeout: 30000,
-    // Pipe worker stdout/stderr to main process so logs are visible
-    useAtomics: false,
   })
 
   pool.on('error', err => console.error('[pool]', err))
