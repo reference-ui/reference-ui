@@ -1,6 +1,7 @@
 import { COLLECTOR_KEY } from '../config/extendPandaConfig'
 import { microBundle } from '../../lib/microbundle'
 import type { Config } from '@pandacss/dev'
+import { log } from '../../lib/log'
 
 /**
  * Run the given files and collect config fragments from extendPandaConfig.
@@ -11,9 +12,11 @@ export async function runFiles(
   filePaths: string[],
   _cwd: string
 ): Promise<Partial<Config>[]> {
+  log.debug(`[eval/runner] Running ${filePaths.length} files`)
   const allFragments: Partial<Config>[] = []
 
   for (const filePath of filePaths) {
+    log.debug(`[eval/runner] Executing: ${filePath}`)
     const collector: Partial<Config>[] = []
     ;(globalThis as Record<string, unknown>)[COLLECTOR_KEY] = collector
 
@@ -27,6 +30,9 @@ export async function runFiles(
       delete (globalThis as Record<string, unknown>)[COLLECTOR_KEY]
     }
 
+    if (collector.length > 0) {
+      log.debug(`[eval/runner] Collected ${collector.length} fragments from ${filePath}`)
+    }
     allFragments.push(...collector)
   }
 

@@ -1,8 +1,8 @@
 import type { ReferenceUIConfig } from '../config'
 import { runWorker } from '../thread-pool'
 
-export async function initSystem(config: ReferenceUIConfig): Promise<void> {
-  await runWorker('system', { config })
+export async function initSystem(cwd: string, config: ReferenceUIConfig): Promise<void> {
+  await runWorker('system', { cwd, config })
 }
 
 export {

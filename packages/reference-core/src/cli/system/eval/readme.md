@@ -12,7 +12,9 @@ Call `runEval(coreDir, ['src/styled'])` (or any dirs) to scan and run; it return
 
 ## Role
 
-- **Input:** A list of directories to search, and a **registry** of function names we care about (each with a rule for how to merge its return value into the Panda config).
+- **Input:** A list of directories to search, and a **registry** of function names we care about (each with a rule for how to merge its return value into the Panda config). Directories include both:
+  - Core package directories (e.g., `src/styled`) for internal styled components
+  - User project directories (from `ui.config.ts` `include` patterns) for userspace token extensions, recipes, etc.
 - **Output:** A set of config fragments (keyframes, tokens, partial config, etc.) that the rest of the CLI merges into the base Panda config.
 
 ## Pipeline
@@ -34,4 +36,5 @@ So: “scan these dirs for these function names, then evaluate and call.”
 ## Implementation notes
 
 - “Scanner” is deliberately avoided: we’re not only scanning, we’re evaluating. Eval does both discovery and execution.
-- Evaluation strategy (VM, worker, bundler, sandbox) is still an open design choice; see `panda/config/readme.md`.
+- Evaluation strategy (VM, worker, bundler, sandbox) is still an open design choice; see `panda/config/readme.md`.- User directories are derived from `ui.config.ts` `include` patterns. The eval system extracts base directories from glob patterns (e.g., `src/**/*.tsx` → `src`) and scans those directories alongside core's `src/styled`.
+- This allows users to use functions like `tokens()`, `recipe()`, etc. in their own project files, enabling userspace design token extensions.

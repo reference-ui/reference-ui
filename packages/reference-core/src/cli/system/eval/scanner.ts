@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import fg from 'fast-glob'
 import { REGISTERED_FUNCTIONS } from './registry'
+import { log } from '../../lib/log'
 
 /**
  * Find files that contain calls to any registered function.
@@ -8,7 +9,12 @@ import { REGISTERED_FUNCTIONS } from './registry'
  * to avoid false positives from comments, strings, or type names.
  */
 function scanDirectory(dir: string): string[] {
-  if (!existsSync(dir)) return []
+  if (!existsSync(dir)) {
+    log.debug(`[eval/scanner] Directory does not exist: ${dir}`)
+    return []
+  }
+
+  log.debug(`[eval/scanner] Scanning directory: ${dir}`)
   const files = fg.sync('**/*.{ts,tsx}', {
     cwd: dir,
     absolute: true,
@@ -19,14 +25,22 @@ function scanDirectory(dir: string): string[] {
   for (const file of files) {
     const content = readFileSync(file, 'utf-8')
     // Check if any registered function is called (matches word boundary + optional whitespace + open paren)
+    const foundFunctions: string[] = []
     const hasAny = REGISTERED_FUNCTIONS.some(name => {
       const callPattern = new RegExp(`\\b${name}\\s*\\(`)
-      return callPattern.test(content)
+      const found = callPattern.test(content)
+      if (found) foundFunctions.push(name)
+      return found
     })
     if (hasAny) {
+      log.debug(`[eval/scanner] Found ${foundFunctions.join(', ')} in: ${file}`)
       matches.push(file)
     }
   }
+
+  log.debug(
+    `[eval/scanner] Found ${matches.length} files with registered functions in ${dir}`
+  )
 
   return matches
 }

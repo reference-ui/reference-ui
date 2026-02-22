@@ -2,6 +2,7 @@ import type { Config } from '@pandacss/dev'
 import { resolve } from 'node:path'
 import { scanDirectories } from './scanner'
 import { runFiles } from './runner'
+import { log } from '../../lib/log'
 
 /**
  * Run eval: execute base file(s) first, then scan directories for registered
@@ -16,11 +17,19 @@ export async function runEval(
   directories: string[],
   baseFiles: string[] = []
 ): Promise<Partial<Config>[]> {
+  log.debug(`[eval] Starting eval with directories: ${directories.join(', ')}`)
+  log.debug(`[eval] Base files: ${baseFiles.join(', ')}`)
+
   const basePaths = baseFiles.map(f => resolve(coreDir, f))
   const resolvedDirs = directories.map(d => resolve(coreDir, d))
   const scannedFiles = scanDirectories(resolvedDirs)
   const files = [...basePaths, ...scannedFiles]
-  return runFiles(files, coreDir)
+
+  log.debug(`[eval] Total files to execute: ${files.length}`)
+  const result = await runFiles(files, coreDir)
+  log.debug(`[eval] Collected ${result.length} total config fragments`)
+
+  return result
 }
 
 export { REGISTERED_FUNCTIONS, isRegistered } from './registry'

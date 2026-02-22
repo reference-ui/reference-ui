@@ -9,6 +9,8 @@ import { buildPandaEntryContent } from './entryTemplate'
 export interface CreatePandaConfigOptions {
   /** When true, add codegen to include so Panda scans the codegen folder (used by sync only). */
   includeCodegen?: boolean
+  /** Additional directories to scan for config files (e.g., user project directories) */
+  userDirectories?: string[]
 }
 
 /**
@@ -19,6 +21,7 @@ export interface CreatePandaConfigOptions {
  *
  * @param coreDir - Package root (reference-core)
  * @param options - includeCodegen: set when called from sync so generated config scans codegen/
+ *                  userDirectories: additional directories to scan (from config.include)
  */
 export async function createPandaConfig(
   coreDir: string,
@@ -34,7 +37,9 @@ export async function createPandaConfig(
     log('[createPandaConfig] Scanning for config files...')
     const basePath = resolve(coreDir, 'panda.base.ts')
     const styledDir = resolve(coreDir, 'src/styled')
-    const scannedPaths = scanDirectories([styledDir])
+    const dirsToScan = [styledDir, ...(options.userDirectories || [])]
+    log.debug(`[createPandaConfig] Scanning directories: ${dirsToScan.join(', ')}`)
+    const scannedPaths = scanDirectories(dirsToScan)
     const configFiles = [basePath, ...scannedPaths].filter(p => existsSync(p))
     log(`[createPandaConfig] Found ${configFiles.length} config files`)
 
