@@ -9,6 +9,7 @@ import {
   statSync,
   readFileSync,
 } from 'node:fs'
+import { log } from '../lib/log'
 import type { PackageDefinition } from './packages'
 
 export interface BundleOptions {
@@ -129,7 +130,7 @@ async function copyDirectories(
     const destPath = dest ? resolve(targetDir, dest) : targetDir
 
     if (!existsSync(srcPath)) {
-      console.warn(`⚠️  Source directory not found: ${srcPath}`)
+      log.error(`⚠️  Source directory not found: ${srcPath}`)
       continue
     }
 
@@ -234,7 +235,7 @@ export async function bundleAllPackages(
   for (const pkg of packages) {
     const targetDir = resolve(nodeModulesDir, pkg.name)
 
-    console.log(`📦 ${pkg.bundle ? 'Bundling' : 'Copying'} ${pkg.name}...`)
+    log(`📦 ${pkg.bundle ? 'Bundling' : 'Copying'} ${pkg.name}...`)
 
     await bundlePackage({
       coreDir,
@@ -242,6 +243,6 @@ export async function bundleAllPackages(
       pkg,
     })
 
-    console.log(`   ✓ ${pkg.name} → ${targetDir}`)
+    log(`   ✓ ${pkg.name} → ${targetDir}`)
   }
 }

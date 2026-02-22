@@ -11,6 +11,7 @@ import {
 } from 'node:fs'
 import { resolve, dirname, relative } from 'node:path'
 import * as chokidar from 'chokidar'
+import { log } from '../../lib/log'
 import { mdxToJSX } from './mdx-to-jsx'
 import { rewriteCvaImports } from './rewrite-cva-imports'
 import { rewriteCssImports } from './rewrite-css-imports'
@@ -60,7 +61,7 @@ export async function copyToCodegen(
   })
 
   if (files.length === 0) {
-    console.warn(
+    log.error(
       `⚠️  No files matched your include patterns:\n` +
         includePatterns.map(p => `   - ${p}`).join('\n')
     )
@@ -94,7 +95,7 @@ export async function copyToCodegen(
     copiedCount++
   }
 
-  console.log(`📦 Copied ${copiedCount} file(s) to codegen/`)
+  log(`📦 Copied ${copiedCount} file(s) to codegen/`)
 }
 
 /**
@@ -137,7 +138,7 @@ export function watchAndCopyToCodegen(
   })
 
   if (files.length === 0) {
-    console.warn(
+    log.error(
       `⚠️  No files matched your include patterns:\n` +
         includePatterns.map(p => `   - ${p}`).join('\n')
     )
@@ -213,9 +214,9 @@ export function watchAndCopyToCodegen(
     })
     .on('ready', () => {
       isReady = true
-      console.log(`📦 Watching ${initialCount} file(s) for changes...`)
+      log(`📦 Watching ${initialCount} file(s) for changes...`)
     })
     .on('error', error => {
-      console.error(`⚠️  Watcher error: ${error}`)
+      log.error(`⚠️  Watcher error: ${error}`)
     })
 }

@@ -1,5 +1,6 @@
 import { resolveCorePackageDir } from '../lib/resolve-core'
 import type { ReferenceUIConfig } from '../config'
+import { log } from '../lib/log'
 import { bundleAllPackages } from './bundler'
 import { PACKAGES } from './packages'
 
@@ -24,16 +25,16 @@ export async function runPackager(payload: PackagerWorkerPayload): Promise<void>
   const { cwd, config } = payload
   const coreDir = resolveCorePackageDir()
 
-  console.log('')
-  console.log('📦 Packaging Reference UI...')
-  console.log('')
+  log('')
+  log('📦 Packaging Reference UI...')
+  log('')
 
   await bundleAllPackages(coreDir, cwd, PACKAGES)
 
-  console.log('')
-  console.log('✅ Packages ready!')
-  console.log(`   ${PACKAGES.length} package(s) installed to node_modules`)
-  console.log('')
+  log('')
+  log('✅ Packages ready!')
+  log(`   ${PACKAGES.length} package(s) installed to node_modules`)
+  log('')
 }
 
 export default runPackager

@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { compile } from '@mdx-js/mdx'
+import { log } from '../../lib/log'
 
 /**
  * Convert MDX to JSX using the official MDX compiler.
@@ -21,7 +22,7 @@ export async function mdxToJSX(mdxContent: string, sourceFile: string): Promise<
 
     return String(result.value)
   } catch (error) {
-    console.warn(
+    log.error(
       `⚠️  Failed to compile MDX file ${sourceFile}:`,
       error instanceof Error ? error.message : error
     )

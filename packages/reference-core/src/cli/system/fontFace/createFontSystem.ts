@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { spawnSync } from 'node:child_process'
+import { log } from '../../lib/log'
 import { microBundle } from '../../lib/microbundle'
 import { buildFontCollectEntryContent } from './collectEntryTemplate'
 import { generateFontSystemContent } from './generateFontSystem'
@@ -17,7 +18,7 @@ export async function createFontSystem(coreDir: string): Promise<string> {
   const fontsPath = resolve(styledFontDir, 'fonts.ts')
 
   if (!existsSync(fontsPath)) {
-    console.log('[createFontSystem] No fonts.ts found, skipping')
+    log.debug('[createFontSystem] No fonts.ts found, skipping')
     return ''
   }
 
@@ -65,7 +66,7 @@ export async function createFontSystem(coreDir: string): Promise<string> {
   const fontPath = resolve(styledFontDir, 'font.ts')
   const content = generateFontSystemContent(definitions)
   writeFileSync(fontPath, content)
-  console.log('[createFontSystem] Wrote font system to src/styled/font/font.ts')
+  log.debug('[createFontSystem] Wrote font system to src/styled/font/font.ts')
 
   return fontPath
 }
