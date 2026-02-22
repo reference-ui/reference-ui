@@ -15,7 +15,7 @@ const match = tagsContent.match(/\[([\s\S]*?)\]\s+as const/)
 if (!match) throw new Error('Could not parse TAGS from tags.ts')
 const HTML_TAGS = match[1]
   .split(',')
-  .map((s) => s.replace(/['"]/g, '').trim())
+  .map(s => s.replace(/['"]/g, '').trim())
   .filter(Boolean)
 
 function toPascalCase(tag) {
@@ -96,10 +96,10 @@ const splitBoxProps = <T extends Record<string, unknown>>(props: T) => splitProp
 function genPrimitive(tag, exportName) {
   const styledVar = `Styled${exportName}`
   const recipe = TAG_TO_RECIPE[tag]
-  
+
   // All primitives use styled[tag]
   const styledCall = `styled['${tag}']`
-  
+
   // If recipe exists, merge its className into props
   if (recipe) {
     return `const ${styledVar} = ${styledCall}; export const ${exportName} = forwardRef<PrimitiveElement<'${tag}'>, PrimitiveProps<'${tag}'>>(({ className, ...props }, ref) => { const [p, r] = splitBoxProps(props); const recipeClass = ${recipe}(); return <${styledVar} ref={ref} className={recipeClass + (className ? ' ' + className : '')} {...(box.raw(p) as object)} {...(r as object)} /> })`

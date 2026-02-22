@@ -1,10 +1,39 @@
-import { join, resolve } from 'node:path'
-import { writeFileSync, mkdirSync, existsSync, readFileSync } from 'node:fs'
+import { join, resolve, relative, dirname } from 'node:path'
+import { writeFileSync, mkdirSync, existsSync, readFileSync, readdirSync, statSync, copyFileSync } from 'node:fs'
 import { log } from '../lib/log'
 import { resolveCorePackageDir } from '../lib/resolve-core'
 import { runTsc } from './run-tsc'
 import { createTsConfig } from './tsconfig-generator'
 import type { ReferenceUIConfig } from '../config'
+
+/**
+ * Recursively copy all .d.ts files from source to destination
+ * This handles Panda CSS generated declaration files that tsc doesn't process
+ */
+function copyDeclarationFiles(srcDir: string, destDir: string, rootDir: string): void {
+  if (!existsSync(srcDir)) {
+    return
+  }
+
+  const entries = readdirSync(srcDir)
+
+  for (const entry of entries) {
+    const srcPath = join(srcDir, entry)
+    const stat = statSync(srcPath)
+
+    if (stat.isDirectory()) {
+      // Recursively copy subdirectories
+      copyDeclarationFiles(srcPath, destDir, rootDir)
+    } else if (stat.isFile() && entry.endsWith('.d.ts')) {
+      // Copy .d.ts file maintaining directory structure
+      const relativePath = relative(rootDir, srcPath)
+      const destPath = join(destDir, relativePath)
+      
+      mkdirSync(dirname(destPath), { recursive: true })
+      copyFileSync(srcPath, destPath)
+    }
+  }
+}
 
 /**
  * Generate TypeScript declarations using tsc CLI.
@@ -48,6 +77,12 @@ export async function runColdBuild(
       log(`[packager-ts] ✗ Failed to generate declarations for ${pkg.name}:`, error)
       throw error
     }
+
+    // Copy all existing .d.ts files from source (e.g., Panda CSS generated types)
+    log(`[packager-ts] Copying existing .d.ts files...`)
+    const srcDir = join(coreDir, 'src')
+    copyDeclarationFiles(srcDir, packageDir, coreDir)
+    log(`[packager-ts] ✓ Copied .d.ts files`)
 
     // Update package.json types to point at the emitted entry .d.ts
     const typesPath = `./${pkg.sourceEntry.replace(/\.tsx?$/, '.d.ts')}`
