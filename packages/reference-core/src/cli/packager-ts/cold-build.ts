@@ -1,5 +1,13 @@
 import { join, resolve, relative, dirname } from 'node:path'
-import { writeFileSync, mkdirSync, existsSync, readFileSync, readdirSync, statSync, copyFileSync } from 'node:fs'
+import {
+  writeFileSync,
+  mkdirSync,
+  existsSync,
+  readFileSync,
+  readdirSync,
+  statSync,
+  copyFileSync,
+} from 'node:fs'
 import { log } from '../lib/log'
 import { resolveCorePackageDir } from '../lib/resolve-core'
 import { runTsc } from './run-tsc'
@@ -28,7 +36,7 @@ function copyDeclarationFiles(srcDir: string, destDir: string, rootDir: string):
       // Copy .d.ts file maintaining directory structure
       const relativePath = relative(rootDir, srcPath)
       const destPath = join(destDir, relativePath)
-      
+
       mkdirSync(dirname(destPath), { recursive: true })
       copyFileSync(srcPath, destPath)
     }
@@ -36,8 +44,8 @@ function copyDeclarationFiles(srcDir: string, destDir: string, rootDir: string):
 }
 
 /**
- * Generate TypeScript declarations using tsc CLI.
- * More reliable than programmatic API - battle-tested for library packaging.
+ * Generate TypeScript declarations using the programmatic compiler API.
+ * Faster than CLI wrapper - no process spawn overhead.
  */
 export async function runColdBuild(
   cwd: string,
@@ -69,9 +77,9 @@ export async function runColdBuild(
 
     writeFileSync(tsconfigPath, JSON.stringify(tsconfigContent, null, 2), 'utf-8')
 
-    // Run tsc to generate declarations
+    // Run TypeScript compiler programmatically to generate declarations
     try {
-      await runTsc(coreDir, ['-p', tsconfigPath])
+      await runTsc(coreDir, tsconfigPath)
       log(`[packager-ts] ✓ Declarations generated for ${pkg.name}`)
     } catch (error) {
       log(`[packager-ts] ✗ Failed to generate declarations for ${pkg.name}:`, error)
