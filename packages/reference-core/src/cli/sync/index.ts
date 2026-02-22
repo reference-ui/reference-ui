@@ -1,9 +1,10 @@
-import { log, initLog } from '../lib/log'
+import { initLog } from '../lib/log'
 import { initEventBus } from '../event-bus'
 import { loadUserConfig } from '../config'
 import { initSystem } from '../system'
 import { initVirtual } from '../virtual'
 import { initPackager } from '../packager'
+import { initTsPackager } from '../packager-ts'
 
 // reads config from ui.config.ts, copies user files to codegen, runs Panda codegen and css, generates primitives, and copies final artifacts to node_modules
 
@@ -22,4 +23,7 @@ export const syncCommand = async (cwd: string, options: { watch?: boolean }) => 
 
   // Package the generated code into node_modules
   await initPackager(cwd, config)
+
+  // Generate TypeScript declarations from bundled .js
+  await initTsPackager(cwd, config)
 }

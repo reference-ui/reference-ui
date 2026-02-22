@@ -7,4 +7,6 @@ export type Events = {
   'log:debug': { message: string; args?: unknown[] }
   'log:error': { message: string; args?: unknown[] }
   'panda:config:created': { configPath: string }
+  /** Emitted when packager finishes bundling; packager-ts listens to regenerate .d.ts */
+  'packager:complete': Record<string, never>
 }
