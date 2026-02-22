@@ -1653,6 +1653,10 @@
     background: var(--colors-red-600);
 }
 
+  .bg_background {
+    background: background;
+}
+
   .m_0_0_1rem {
     margin: 0 0 1rem;
 }
