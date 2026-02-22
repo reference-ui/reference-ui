@@ -1,75 +1,92 @@
-import { spawn } from 'node:child_process'
-import { existsSync } from 'node:fs'
-import { resolve, join } from 'node:path'
+import * as ts from 'typescript'
 import { log } from '../lib/log'
 
 /**
- * Run TypeScript compiler (tsc) via child process.
- * More reliable than programmatic API for declaration generation.
+ * Run TypeScript compiler using the programmatic API.
+ * Generates declarations directly without spawning a child process.
  */
-export async function runTsc(cwd: string, args: string[]): Promise<void> {
-  return new Promise((resolvePromise, rejectPromise) => {
-    // Find tsc binary
-    const tscPath = findTscBinary(cwd)
+export async function runTsc(cwd: string, configPath: string): Promise<void> {
+  // Read and parse the tsconfig
+  const configFile = ts.readConfigFile(configPath, ts.sys.readFile)
+  if (configFile.error) {
+    throw new Error(formatDiagnostic(configFile.error))
+  }
 
-    if (!tscPath) {
-      rejectPromise(
-        new Error(
-          'TypeScript compiler not found. Install typescript:\n' +
-            '  pnpm add -D typescript\n' +
-            '  npm install --save-dev typescript'
-        )
-      )
-      return
+  const parsedConfig = ts.parseJsonConfigFileContent(
+    configFile.config,
+    ts.sys,
+    cwd,
+    undefined,
+    configPath
+  )
+
+  if (parsedConfig.errors.length > 0) {
+    const errors = parsedConfig.errors.map(formatDiagnostic).join('\n')
+    throw new Error(`TypeScript config errors:\n${errors}`)
+  }
+
+  log(`[packager-ts] Compiling ${parsedConfig.fileNames.length} files...`)
+
+  // Create the program
+  const program = ts.createProgram({
+    rootNames: parsedConfig.fileNames,
+    options: parsedConfig.options,
+  })
+
+  // Emit only declarations
+  const emitResult = program.emit(
+    undefined, // All files
+    undefined, // Default writeFile
+    undefined, // No cancellation token
+    true, // Only emit .d.ts files
+    undefined // No custom transformers
+  )
+
+  // Collect diagnostics
+  const allDiagnostics = ts.getPreEmitDiagnostics(program).concat(emitResult.diagnostics)
+
+  // Filter out errors we want to ignore (e.g., from node_modules)
+  const relevantDiagnostics = allDiagnostics.filter(diagnostic => {
+    if (!diagnostic.file) return false
+    return !diagnostic.file.fileName.includes('node_modules')
+  })
+
+  // Log warnings but don't fail
+  if (relevantDiagnostics.length > 0) {
+    for (const diagnostic of relevantDiagnostics) {
+      if (diagnostic.category === ts.DiagnosticCategory.Error) {
+        log(`[packager-ts] Error: ${formatDiagnostic(diagnostic)}`)
+      } else {
+        log(`[packager-ts] Warning: ${formatDiagnostic(diagnostic)}`)
+      }
     }
 
-    log(`[packager-ts] Running: tsc ${args.join(' ')}`)
-
-    const child = spawn('node', [tscPath, ...args], {
-      cwd,
-      stdio: ['ignore', 'inherit', 'inherit'], // Stream output in real-time
-      env: { ...process.env, FORCE_COLOR: '1' },
-    })
-
-    child.on('close', code => {
-      if (code === 0) {
-        resolvePromise()
-      } else {
-        rejectPromise(new Error(`tsc exited with code ${code}`))
-      }
-    })
-
-    child.on('error', error => {
-      rejectPromise(new Error(`Failed to spawn tsc: ${error.message}`))
-    })
-  })
-}
-
-/**
- * Find the TypeScript compiler binary.
- * Checks multiple locations in order of preference.
- *
- * Note: We skip node_modules/.bin/tsc because it's a shell script wrapper,
- * not a JavaScript file. We need the actual tsc JS file to run with node.
- */
-function findTscBinary(cwd: string): string | null {
-  const candidates = [
-    // Local node_modules (monorepo or project)
-    resolve(cwd, 'node_modules/typescript/bin/tsc'),
-
-    // reference-core's node_modules
-    resolve(cwd, 'node_modules/@reference-ui/core/node_modules/typescript/bin/tsc'),
-
-    // Parent node_modules (monorepo root)
-    resolve(cwd, '../../node_modules/typescript/bin/tsc'),
-    resolve(cwd, '../node_modules/typescript/bin/tsc'),
-  ]
-
-  for (const candidate of candidates) {
-    if (existsSync(candidate)) {
-      return candidate
+    // Only fail on actual errors
+    const errors = relevantDiagnostics.filter(
+      d => d.category === ts.DiagnosticCategory.Error
+    )
+    if (errors.length > 0) {
+      throw new Error(`TypeScript compilation failed with ${errors.length} error(s)`)
     }
   }
 
-  return null
+  if (emitResult.emitSkipped) {
+    throw new Error('TypeScript emit was skipped')
+  }
+
+  log(`[packager-ts] ✓ Emitted declarations`)
+}
+
+/**
+ * Format a TypeScript diagnostic message
+ */
+function formatDiagnostic(diagnostic: ts.Diagnostic): string {
+  if (diagnostic.file && diagnostic.start !== undefined) {
+    const { line, character } = diagnostic.file.getLineAndCharacterOfPosition(
+      diagnostic.start
+    )
+    const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')
+    return `${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`
+  }
+  return ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')
 }
