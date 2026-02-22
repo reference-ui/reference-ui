@@ -1,6 +1,7 @@
 import { resolveCorePackageDir } from '../lib/resolve-core'
 import type { ReferenceUIConfig } from '../config'
 import { log } from '../lib/log'
+import { emit } from '../event-bus'
 import { bundleAllPackages } from './bundler'
 import { PACKAGES } from './packages'
 
@@ -35,6 +36,8 @@ export async function runPackager(payload: PackagerWorkerPayload): Promise<void>
   log('✅ Packages ready!')
   log(`   ${PACKAGES.length} package(s) installed to node_modules`)
   log('')
+
+  emit('packager:complete', {})
 }
 
 export default runPackager

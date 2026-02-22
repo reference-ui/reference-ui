@@ -41,40 +41,34 @@ This happens **at build time**, not runtime.
 ## Architecture Diagram
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                         CLI Entry Point                          │
-│                        (index.ts: `ref`)                         │
-└─────────────────────────┬───────────────────────────────────────┘
-                          │
-                          │ Commands: sync (default)
-                          │ Flags: --watch
-                          │
-                          ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                        Sync Command                              │
-│                     (sync/index.ts)                              │
-│                                                                   │
-│  Load config → init systems → run in parallel                    │
-└───────────────┬────────────┬────────────┬───────────────────────┘
-                │            │            │
-       ┌────────┘            │            └─────────┐
-       │                     │                      │
-       ▼                     ▼                      ▼
-┌──────────────┐    ┌────────────────┐    ┌────────────────┐
-│   Virtual    │    │     System     │    │   Packager     │
-│  Filesystem  │    │  (Panda CSS)   │    │  (esbuild)     │
-│              │    │                │    │                │
-│ Worker Pool  │    │  Worker Pool   │    │  Worker Pool   │
-└──────────────┘    └────────────────┘    └────────────────┘
-       │                     │                      │
-       │                     │                      │
-       └─────────────────────┴──────────────────────┘
-                             │
-                             ▼
-              ┌──────────────────────────┐
-              │   Cross-Thread Events    │
-              │   (BroadcastChannel)     │
-              └──────────────────────────┘
+                         ┌─────────────────────┐
+                         │   CLI (ref sync)     │
+                         └──────────┬──────────┘
+                                    │
+              ┌─────────────────────┼─────────────────────┐
+              ▼                     ▼                     ▼
+       ┌─────────────┐       ┌─────────────┐       ┌─────────────┐
+       │   Virtual   │       │   System    │       │  Packager   │
+       │  (copy to   │  ──▶  │  (Panda     │  ──▶  │  (esbuild   │
+       │  .virtual)  │       │   codegen)  │       │   bundle)   │
+       └─────────────┘       └─────────────┘       └──────┬──────┘
+                                                           │
+                                              packager:complete
+                                                           │
+                                                           ▼
+                                                ┌─────────────────┐
+                                                │  Packager-TS    │
+                                                │  (.d.ts from    │
+                                                │   bundled .js)  │
+                                                └─────────────────┘
+                                                           │
+              ┌────────────────────────────────────────────┴─────┐
+              ▼                                                  ▼
+       ┌─────────────┐                                   node_modules/
+       │   Event Bus │                                   @reference-ui/react
+       │(BroadcastCh)│                                   ├─ react.js
+       └─────────────┘                                   ├─ react.d.ts
+                                                        └─ styles.css
 ```
 
 ---
@@ -144,8 +138,7 @@ on('virtual:change', payload => {
 **Use Cases**:
 
 - Virtual filesystem notifying system of file changes
-- System notifying packager of completion
-- Watch mode triggering rebuilds
+- Packager emitting `packager:complete` when bundling finishes (for future watch-mode coordination with packager-ts)
 
 ---
 
@@ -188,6 +181,7 @@ Main Thread                     Worker Threads
 - `virtual` → `src/cli/virtual/worker.ts`
 - `system` → `src/cli/system/worker.ts`
 - `packager` → `src/cli/packager/worker.ts`
+- `packager-ts` → `src/cli/packager-ts/worker.ts`
 
 **Why Workers?**
 
@@ -508,18 +502,7 @@ export async function runSystem(payload) {
 
 **Packages Created**:
 
-1. **`@reference-ui/system`**
-   - Design tokens (CSS variables, JS objects)
-   - CSS utilities (`css()`, `cva()`, etc.)
-   - Patterns (box, stack, flex, etc.)
-   - Recipes (button, card, etc.)
-   - Generated from `src/system/`
-
-2. **`@reference-ui/react`**
-   - React components (Button, Card, etc.)
-   - Runtime APIs (config, providers)
-   - Entry points from `src/entry/`
-   - Primitives from `src/primitives/`
+- **`@reference-ui/react`** — React components, primitives, runtime APIs; bundled ESM with tree-shaking support
 
 **Bundling Strategy**:
 
@@ -539,20 +522,48 @@ await build({
 ```
 reference-docs/node_modules/
   └─ @reference-ui/
-      ├─ system/
-      │   ├─ package.json
-      │   ├─ index.js
-      │   └─ css/
       └─ react/
           ├─ package.json
-          └─ index.js
+          ├─ react.js      (ESM bundle)
+          ├─ react.d.ts    (generated by packager-ts)
+          └─ styles.css
 ```
+
+The packager emits `packager:complete` when done; the packager-ts worker runs afterward to generate TypeScript declarations.
 
 **Why Not `npm install`?** Direct bundling and copying is faster and more reliable than running npm/pnpm in each consumer project.
 
 ---
 
-### 7. Library Utilities (`lib/`)
+### 7. Packager-TS (`packager-ts/`)
+
+**Purpose**: Generate TypeScript declarations (`.d.ts`) from the bundled `.js` files that the packager writes to `node_modules`
+
+**Key Files**:
+
+- `cold-build.ts` - TypeScript compiler invocation (`allowJs`, `emitDeclarationOnly`)
+- `worker.ts` - Worker entry point
+- `index.ts` - `initTsPackager`, `runTsPackager`
+
+**How It Works**:
+
+1. Runs **after** the packager (sync calls `initTsPackager(cwd, config)` after `initPackager`)
+2. Reads bundled `.js` files from `node_modules/@reference-ui/*`
+3. Uses the TypeScript compiler with `allowJs: true` and `emitDeclarationOnly: true`
+4. Writes `.d.ts` files next to the `.js` files
+
+**No virtual FS involvement** — it operates only on the final bundled outputs in `node_modules`.
+
+**Events**:
+
+- Packager emits `packager:complete` when bundling finishes (for future watch-mode triggers)
+- Minimal event surface — no packager-ts-specific events
+
+**Packages**: Derives the list from `PACKAGES` in `packager/packages.ts` (e.g. `@reference-ui/react` → `react.js` → `react.d.ts`).
+
+---
+
+### 8. Library Utilities (`lib/`)
 
 **Purpose**: Shared utilities used across the CLI
 
@@ -639,9 +650,11 @@ program.command('sync').action(runCommand(options => syncCommand(cwd, options)))
    └─ CSS: Run panda (1-3s)
 
 6. Packager (Worker Thread)
-   ├─ Bundle @reference-ui/system (500ms-2s)
    ├─ Bundle @reference-ui/react (500ms-2s)
    └─ Copy to node_modules (50-200ms)
+
+7. Packager-TS (Worker Thread)
+   └─ Generate .d.ts from bundled .js (200-500ms)
 
 Total: ~5-15 seconds (depending on project size)
 ```
@@ -1113,8 +1126,9 @@ import '@reference-ui/system/styles.css'
 | Panda Config  | 300-800ms | esbuild bundling      |
 | Panda Codegen | 2-5s      | Full generation       |
 | Panda CSS     | 1-3s      | Token layer creation  |
-| Packager      | 1-3s      | Two packages          |
-| **Total**     | **5-15s** | Typical monorepo      |
+| Packager      | 1-3s      | Bundle to node_modules|
+| Packager-TS   | 200-500ms | .d.ts from .js       |
+| **Total**     | **5-15s** | Typical monorepo     |
 
 ### Watch Mode (Incremental)
 
@@ -1127,7 +1141,7 @@ import '@reference-ui/system/styles.css'
 
 ### Optimization Techniques
 
-1. **Worker Threads**: Parallel execution of virtual, system, packager
+1. **Worker Threads**: Parallel execution of virtual, system, packager, packager-ts
 2. **Incremental Builds**: Panda and esbuild cache unchanged files
 3. **Smart Rebuilds**: Only recompile config if styled/ changed
 4. **Fast Glob**: Optimized file scanning with caching
@@ -1512,6 +1526,7 @@ The Reference UI CLI is a sophisticated build orchestrator that:
 3. **Orchestrates multi-step builds** with worker threads
 4. **Generates type-safe utilities** with Panda CSS
 5. **Packages everything** into consumable npm packages
+6. **Generates TypeScript declarations** (`.d.ts`) from bundled JS via packager-ts
 
 **Key Innovations**:
 
@@ -1531,5 +1546,5 @@ The Reference UI CLI is a sophisticated build orchestrator that:
 - [Eval System](system/eval/readme.md)
 - [Virtual Filesystem](virtual/README.md)
 - [Event Bus](event-bus/README.md)
-- [Thread Pool](thread-pool/README.md)
 - [Packager](packager/README.md)
+- [Thread Pool](thread-pool/README.md)
