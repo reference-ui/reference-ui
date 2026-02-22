@@ -12,6 +12,10 @@ export interface PackageDefinition {
   bundle?: boolean
   /** Directories to copy (when bundle: false) */
   copyDirs?: Array<{ src: string; dest?: string }>
+  /** Main entry point for package.json (defaults to './index.js') */
+  main?: string
+  /** Types entry point for package.json (defaults to './index.d.ts') */
+  types?: string
   exports: Record<string, any>
   /** Additional files to copy (e.g., styles.css) */
   additionalFiles?: Array<{ src: string; dest: string }>
@@ -20,31 +24,24 @@ export interface PackageDefinition {
 /**
  * @reference-ui/react - Runtime React components and APIs
  *
- * This package is NOT bundled - we copy the source files directly.
- * The user's bundler (Vite, etc.) will handle bundling.
+ * Bundled into a single ESM file for optimal loading.
  */
 export const REACT_PACKAGE: PackageDefinition = {
   name: '@reference-ui/react',
   version: '0.0.0-generated',
   description: 'Reference UI React components and runtime APIs',
-  bundle: false,
-  copyDirs: [
-    { src: 'src/primitives', dest: 'primitives' },
-    { src: 'src/components', dest: 'components' },
-    { src: 'src/styled', dest: 'styled' },
-    { src: 'src/system', dest: 'system' },
-  ],
+  bundle: true,
+  entry: 'src/entry/react.ts',
+  main: './react.js',
+  types: './react.d.ts',
   exports: {
     '.': {
       types: './react.d.ts',
       import: './react.js',
     },
-    './styles.css': './system/styles.css',
+    './styles.css': './styles.css',
   },
-  additionalFiles: [
-    { src: 'src/entry/react.ts', dest: 'react.js' },
-    { src: 'src/system/styles.css', dest: 'styles.css' },
-  ],
+  additionalFiles: [{ src: 'src/system/styles.css', dest: 'styles.css' }],
 }
 
 /**
