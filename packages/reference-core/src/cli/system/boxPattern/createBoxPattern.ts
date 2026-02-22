@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { spawnSync } from 'node:child_process'
+import { log } from '../../lib/log'
 import { microBundle } from '../../lib/microbundle'
 import { scanForBoxExtensions } from '../eval/scanner'
 import { buildCollectEntryContent } from './collectEntryTemplate'
@@ -17,11 +18,11 @@ export async function createBoxPattern(coreDir: string): Promise<string> {
   const extensionPaths = scanForBoxExtensions([styledDir])
 
   if (extensionPaths.length === 0) {
-    console.log('[createBoxPattern] No pattern() files found')
+    log.debug('[createBoxPattern] No pattern() files found')
     return ''
   }
 
-  console.log(`[createBoxPattern] Found ${extensionPaths.length} extension files`)
+  log.debug(`[createBoxPattern] Found ${extensionPaths.length} extension files`)
 
   const refDir = join(coreDir, '.ref')
   if (!existsSync(refDir)) mkdirSync(refDir, { recursive: true })
@@ -70,7 +71,7 @@ export async function createBoxPattern(coreDir: string): Promise<string> {
   const boxPath = resolve(coreDir, 'src/styled/props/box.ts')
   const content = generateBoxPatternContent(extensions)
   writeFileSync(boxPath, content)
-  console.log('[createBoxPattern] Wrote box pattern to src/styled/props/box.ts')
+  log.debug('[createBoxPattern] Wrote box pattern to src/styled/props/box.ts')
 
   return boxPath
 }

@@ -1,5 +1,6 @@
 import Piscina from 'piscina'
 import { cpus } from 'os'
+import { log } from '../lib/log'
 import { WORKERS, type WorkerName } from './workers'
 
 let pool: Piscina | undefined
@@ -13,7 +14,7 @@ function getPool() {
     idleTimeout: 30000,
   })
 
-  pool.on('error', err => console.error('[pool]', err))
+  pool.on('error', err => log.error('[pool]', err))
   return pool
 }
 
