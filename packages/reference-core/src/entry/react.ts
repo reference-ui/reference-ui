@@ -2,16 +2,15 @@
 // This is what users import in their React app
 
 export * from '../primitives'
-export { Box } from '../system/jsx/box.js'
-export { Container } from '../system/jsx/container.js'
+
 export { Flex, Stack, HStack, VStack } from '../system/jsx/index.js'
 export { Button } from '../components/Button.js'
 export { ResponsiveExample } from '../components/ResponsiveExample.js'
 export { RecipeCoreDemo } from '../components/RecipeCoreDemo.js'
 export type { ButtonProps } from '../components/Button.js'
-export { box, container } from '../system/patterns/index.js'
+
 export { css } from '../styled/api/index.js'
-export { cva } from '../system/css/index.js'
+
 export { cva as recipe } from '../system/css/index.js'
 export type { RecipeVariantProps } from '../system/css/index.js'
 export type { BoxProps } from '../system/jsx/box.js'
