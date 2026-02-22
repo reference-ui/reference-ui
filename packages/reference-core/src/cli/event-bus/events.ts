@@ -6,4 +6,5 @@ export type Events = {
   'log:info': { message: string; args?: unknown[] }
   'log:debug': { message: string; args?: unknown[] }
   'log:error': { message: string; args?: unknown[] }
+  'panda:config:created': { configPath: string }
 }
