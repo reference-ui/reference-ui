@@ -26,15 +26,17 @@ export async function runTsPackager(payload: TsPackagerWorkerPayload): Promise<v
 
 /**
  * Initialize packager-ts from main thread.
- * Runs after packager; generates .d.ts from bundled .js in node_modules.
+ * Runs after packager; generates .d.ts from TypeScript SOURCE (not bundled .js)
+ * so we preserve proper types like PrimitiveProps<T>, BoxProps, etc.
  */
 export async function initTsPackager(
   cwd: string,
   config: ReferenceUIConfig
 ): Promise<void> {
-  const packages = PACKAGES.map(p => ({
+  const packages = PACKAGES.filter(p => p.entry).map(p => ({
     name: p.name,
-    entry: (p.main || './index.js').replace('./', ''),
+    sourceEntry: p.entry!,
+    outFile: (p.main || './index.js').replace('./', ''),
   }))
 
   await runWorker('packager-ts', {
