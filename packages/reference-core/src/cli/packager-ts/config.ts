@@ -1,5 +1,5 @@
 /**
- * Generate tsconfig.json for TypeScript declaration generation
+ * TypeScript configuration for declaration generation
  */
 
 export interface TsConfigOptions {
@@ -9,8 +9,8 @@ export interface TsConfigOptions {
 }
 
 /**
- * Create a tsconfig specifically for declaration generation.
- * This config is optimized for generating .d.ts files from TypeScript source.
+ * Create optimized tsconfig for .d.ts generation.
+ * Configured for speed and reliability.
  */
 export function createTsConfig(options: TsConfigOptions) {
   return {
@@ -33,23 +33,15 @@ export function createTsConfig(options: TsConfigOptions) {
       jsx: 'react-jsx',
       jsxImportSource: 'react',
 
-      // Skip checking node_modules types (faster)
+      // Performance optimizations
       skipLibCheck: true,
-
-      // Don't fail the build on type errors - still generate declarations
       noEmitOnError: false,
 
-      // Strict mode for better type generation
+      // Type quality
       strict: true,
-
-      // Allow synthetic default imports
       esModuleInterop: true,
       allowSyntheticDefaultImports: true,
-
-      // Ensure consistent casing
       forceConsistentCasingInFileNames: true,
-
-      // Resolve JSON modules
       resolveJsonModule: true,
     },
     include: options.entryFiles,

@@ -10,15 +10,19 @@ import {
 } from 'node:fs'
 import { log } from '../lib/log'
 import { resolveCorePackageDir } from '../lib/resolve-core'
-import { runTsc } from './run-tsc'
-import { createTsConfig } from './tsconfig-generator'
+import { compileDeclarations } from './compiler'
+import { createTsConfig } from './config'
 import type { ReferenceUIConfig } from '../config'
 
 /**
- * Recursively copy all .d.ts files from source to destination
- * This handles Panda CSS generated declaration files that tsc doesn't process
+ * Recursively copy pre-existing .d.ts files from source.
+ * Handles Panda CSS generated declarations that TS doesn't process.
  */
-function copyDeclarationFiles(srcDir: string, destDir: string, rootDir: string): void {
+function copyExistingDeclarations(
+  srcDir: string,
+  destDir: string,
+  rootDir: string
+): void {
   if (!existsSync(srcDir)) {
     return
   }
@@ -30,10 +34,8 @@ function copyDeclarationFiles(srcDir: string, destDir: string, rootDir: string):
     const stat = statSync(srcPath)
 
     if (stat.isDirectory()) {
-      // Recursively copy subdirectories
-      copyDeclarationFiles(srcPath, destDir, rootDir)
+      copyExistingDeclarations(srcPath, destDir, rootDir)
     } else if (stat.isFile() && entry.endsWith('.d.ts')) {
-      // Copy .d.ts file maintaining directory structure
       const relativePath = relative(rootDir, srcPath)
       const destPath = join(destDir, relativePath)
 
@@ -44,15 +46,39 @@ function copyDeclarationFiles(srcDir: string, destDir: string, rootDir: string):
 }
 
 /**
- * Generate TypeScript declarations using the programmatic compiler API.
- * Faster than CLI wrapper - no process spawn overhead.
+ * Update package.json to point to generated type declarations
  */
-export async function runColdBuild(
+function updatePackageTypes(
+  packageDir: string,
+  typesPath: string
+): void {
+  const pkgJsonPath = join(packageDir, 'package.json')
+  
+  if (!existsSync(pkgJsonPath)) {
+    return
+  }
+
+  const pkgJson = JSON.parse(readFileSync(pkgJsonPath, 'utf-8'))
+  pkgJson.types = typesPath
+  
+  if (pkgJson.exports && pkgJson.exports['.']) {
+    pkgJson.exports['.'].types = typesPath
+  }
+  
+  writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2), 'utf-8')
+}
+
+/**
+ * Build TypeScript declarations for packages.
+ * Main orchestration function.
+ */
+export async function buildDeclarations(
   cwd: string,
   packages: Array<{ name: string; sourceEntry: string; outFile: string }>,
   _config: ReferenceUIConfig
 ): Promise<void> {
   const coreDir = resolveCorePackageDir(cwd)
+  const srcDir = join(coreDir, 'src')
 
   for (const pkg of packages) {
     const packageDir = join(cwd, 'node_modules', pkg.name)
@@ -63,7 +89,7 @@ export async function runColdBuild(
       continue
     }
 
-    log(`[packager-ts] Generating types for ${pkg.name}...`)
+    log(`[packager-ts] Building types for ${pkg.name}...`)
 
     mkdirSync(packageDir, { recursive: true })
 
@@ -77,33 +103,22 @@ export async function runColdBuild(
 
     writeFileSync(tsconfigPath, JSON.stringify(tsconfigContent, null, 2), 'utf-8')
 
-    // Run TypeScript compiler programmatically to generate declarations
+    // Compile declarations using TypeScript compiler
     try {
-      await runTsc(coreDir, tsconfigPath)
-      log(`[packager-ts] ✓ Declarations generated for ${pkg.name}`)
+      await compileDeclarations(coreDir, tsconfigPath)
+      log(`[packager-ts] ✓ Compiled ${pkg.name}`)
     } catch (error) {
-      log(`[packager-ts] ✗ Failed to generate declarations for ${pkg.name}:`, error)
+      log(`[packager-ts] ✗ Failed to compile ${pkg.name}:`, error)
       throw error
     }
 
-    // Copy all existing .d.ts files from source (e.g., Panda CSS generated types)
-    log(`[packager-ts] Copying existing .d.ts files...`)
-    const srcDir = join(coreDir, 'src')
-    copyDeclarationFiles(srcDir, packageDir, coreDir)
-    log(`[packager-ts] ✓ Copied .d.ts files`)
+    // Copy pre-existing .d.ts files from source
+    copyExistingDeclarations(srcDir, packageDir, coreDir)
 
-    // Update package.json types to point at the emitted entry .d.ts
+    // Update package.json types field
     const typesPath = `./${pkg.sourceEntry.replace(/\.tsx?$/, '.d.ts')}`
-    const pkgJsonPath = join(packageDir, 'package.json')
-    if (existsSync(pkgJsonPath)) {
-      const pkgJson = JSON.parse(readFileSync(pkgJsonPath, 'utf-8'))
-      pkgJson.types = typesPath
-      if (pkgJson.exports && pkgJson.exports['.']) {
-        pkgJson.exports['.'].types = typesPath
-      }
-      writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2), 'utf-8')
-    }
+    updatePackageTypes(packageDir, typesPath)
 
-    log(`[packager-ts] Types entry: ${typesPath}`)
+    log(`[packager-ts] ✓ ${pkg.name} ready`)
   }
 }

@@ -2,10 +2,13 @@ import * as ts from 'typescript'
 import { log } from '../lib/log'
 
 /**
- * Run TypeScript compiler using the programmatic API.
- * Generates declarations directly without spawning a child process.
+ * Run TypeScript compiler programmatically to generate declarations.
+ * Uses the TS API for direct control and better performance than CLI.
  */
-export async function runTsc(cwd: string, configPath: string): Promise<void> {
+export async function compileDeclarations(
+  cwd: string,
+  configPath: string
+): Promise<void> {
   // Read and parse the tsconfig
   const configFile = ts.readConfigFile(configPath, ts.sys.readFile)
   if (configFile.error) {
@@ -25,12 +28,14 @@ export async function runTsc(cwd: string, configPath: string): Promise<void> {
     throw new Error(`TypeScript config errors:\n${errors}`)
   }
 
-  log(`[packager-ts] Compiling ${parsedConfig.fileNames.length} files...`)
+  // Create compiler host (reusable across multiple files)
+  const host = ts.createCompilerHost(parsedConfig.options)
 
   // Create the program
   const program = ts.createProgram({
     rootNames: parsedConfig.fileNames,
     options: parsedConfig.options,
+    host,
   })
 
   // Emit only declarations
@@ -42,30 +47,22 @@ export async function runTsc(cwd: string, configPath: string): Promise<void> {
     undefined // No custom transformers
   )
 
-  // Collect diagnostics
-  const allDiagnostics = ts.getPreEmitDiagnostics(program).concat(emitResult.diagnostics)
-
-  // Filter out errors we want to ignore (e.g., from node_modules)
-  const relevantDiagnostics = allDiagnostics.filter(diagnostic => {
+  // Only check emit diagnostics (skip expensive pre-emit checks)
+  const relevantDiagnostics = emitResult.diagnostics.filter(diagnostic => {
     if (!diagnostic.file) return false
     return !diagnostic.file.fileName.includes('node_modules')
   })
 
-  // Log warnings but don't fail
+  // Log errors only
   if (relevantDiagnostics.length > 0) {
-    for (const diagnostic of relevantDiagnostics) {
-      if (diagnostic.category === ts.DiagnosticCategory.Error) {
-        log(`[packager-ts] Error: ${formatDiagnostic(diagnostic)}`)
-      } else {
-        log(`[packager-ts] Warning: ${formatDiagnostic(diagnostic)}`)
-      }
-    }
-
-    // Only fail on actual errors
     const errors = relevantDiagnostics.filter(
       d => d.category === ts.DiagnosticCategory.Error
     )
+
     if (errors.length > 0) {
+      for (const diagnostic of errors) {
+        log(`[packager-ts] Error: ${formatDiagnostic(diagnostic)}`)
+      }
       throw new Error(`TypeScript compilation failed with ${errors.length} error(s)`)
     }
   }
@@ -73,12 +70,10 @@ export async function runTsc(cwd: string, configPath: string): Promise<void> {
   if (emitResult.emitSkipped) {
     throw new Error('TypeScript emit was skipped')
   }
-
-  log(`[packager-ts] ✓ Emitted declarations`)
 }
 
 /**
- * Format a TypeScript diagnostic message
+ * Format a TypeScript diagnostic message for display
  */
 function formatDiagnostic(diagnostic: ts.Diagnostic): string {
   if (diagnostic.file && diagnostic.start !== undefined) {
