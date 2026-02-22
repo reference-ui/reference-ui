@@ -18,7 +18,6 @@
 
 ## Extension APIs (build-time)
 
-- [ ] `import { defineConfig } from '@reference-ui/system'`
 - [ ] `import { tokens } from '@reference-ui/system'`
 - [ ] `import { recipe } from '@reference-ui/system'`
 - [ ] `import { keyframes } from '@reference-ui/system'`
@@ -28,3 +27,4 @@
 ## Base Configuration
 
 - [ ] `import { baseConfig } from '@reference-ui/system'`
+- [ ] `import { defineConfig } from '@reference-ui/core'`
