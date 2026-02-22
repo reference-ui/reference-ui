@@ -48,23 +48,20 @@ function copyExistingDeclarations(
 /**
  * Update package.json to point to generated type declarations
  */
-function updatePackageTypes(
-  packageDir: string,
-  typesPath: string
-): void {
+function updatePackageTypes(packageDir: string, typesPath: string): void {
   const pkgJsonPath = join(packageDir, 'package.json')
-  
+
   if (!existsSync(pkgJsonPath)) {
     return
   }
 
   const pkgJson = JSON.parse(readFileSync(pkgJsonPath, 'utf-8'))
   pkgJson.types = typesPath
-  
+
   if (pkgJson.exports && pkgJson.exports['.']) {
     pkgJson.exports['.'].types = typesPath
   }
-  
+
   writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2), 'utf-8')
 }
 
