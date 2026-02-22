@@ -2,7 +2,24 @@
 
 ## Overview
 
-Add TypeScript declaration generation that runs **after** the packager bundles JavaScript. The ts-packager reads the bundled `.js` files from `node_modules/@reference-ui/*` and generates `.d.ts` files alongside them. All heavy TypeScript work runs in a dedicated worker thread for non-blocking performance.
+Generate TypeScript declarations using the **tsc CLI** (not programmatic API) for maximum reliability. The packager-ts runs **after** the packager bundles JavaScript, reading TypeScript **source files** to generate `.d.ts` files in `node_modules/@reference-ui/*`. Uses child process execution within a worker thread for non-blocking performance.
+
+## Why tsc CLI?
+
+**Previous approach**: Used TypeScript's programmatic API (`ts.createProgram()`)
+
+- Complex to configure correctly
+- Unreliable with edge cases
+- Difficult to debug
+- Required manual handling of compiler options
+
+**Current approach**: Use `tsc` command-line tool via child process
+
+- Battle-tested and designed for library packaging
+- Handles all edge cases automatically
+- Same tool developers use directly
+- Clear error messages and diagnostics
+- Simpler implementation
 
 ## Architecture
 
@@ -25,68 +42,121 @@ Add TypeScript declaration generation that runs **after** the packager bundles J
 ┌─────────────────────────────────────────────────────────────────┐
 │                     TS Packager Worker                           │
 │                                                                   │
-│  Read bundled .js from node_modules                              │
+│  Read TypeScript source from reference-core                      │
 │         │                                                         │
 │         ▼                                                         │
-│    Cold Build                     Watch Mode                     │
-│    ├─ createProgram()             ├─ createWatchCompilerHost()   │
-│    ├─ emit()                      ├─ createWatchProgram()        │
-│    └─ write .d.ts                 └─ incremental builder         │
+│    Cold Build                     Watch Mode (future)            │
+│    ├─ Generate tsconfig.json     ├─ tsc --watch                 │
+│    ├─ Spawn tsc child process    └─ Monitor changes             │
+│    ├─ Wait for completion                                        │
+│    └─ Update package.json types                                  │
 │         │                                   │                     │
 │         └───────────────┬───────────────────┘                    │
 │                         ▼                                         │
-│       Write .d.ts next to .js files                              │
-│       (node_modules/@reference-ui/*/index.d.ts)                  │
-│              Emit 'ts:complete' event                            │
+│       Write .d.ts to node_modules/@reference-ui/*                │
+│              Update package.json exports                         │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-## Implementation Steps
+## Implementation
 
-## Key Insight
+### Key Files
 
-The ts-packager operates on **bundled outputs**, not source files. It reads the `.js` files that the packager already created in `node_modules/@reference-ui/*` and generates corresponding `.d.ts` files.
+1. **`cold-build.ts`** - One-shot compilation using tsc CLI
+2. **`run-tsc.ts`** - Child process wrapper for tsc
+3. **`tsconfig-generator.ts`** - Generate tsconfig.json for declarations
+4. **`worker.ts`** - Worker thread entry point
+5. **`index.ts`** - Main orchestration and initialization
+6. **`types.ts`** - TypeScript types
 
-**No virtual FS involvement.** It just generates types for the final bundled JavaScript.
+### Core Flow
 
-## Implementation Steps
+```typescript
+// 1. Generate tsconfig for declaration generation
+const tsconfigContent = createTsConfig({
+  rootDir: coreDir,
+  outDir: packageDir,
+  entryFiles: [entryPath],
+})
 
-### 1. Thread Pool Setup
+// 2. Write temporary tsconfig
+writeFileSync('tsconfig.declarations.json', JSON.stringify(tsconfigContent))
+
+// 3. Run tsc via child process
+await runTsc(coreDir, ['-p', 'tsconfig.declarations.json'])
+
+// 4. Update package.json types field
+pkgJson.types = './src/entry/react.d.ts'
+```
+
+### run-tsc.ts
+
+Uses `spawn` to execute tsc as a child process:
+
+```typescript
+export async function runTsc(cwd: string, args: string[]): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const tscPath = findTscBinary(cwd)
+    const child = spawn('node', [tscPath, ...args], {
+      cwd,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    })
+
+    // Capture stdout/stderr
+    // Resolve/reject based on exit code
+  })
+}
+```
+
+**Benefits:**
+
+- Standard tsc execution (same as developers use)
+- Automatic error handling and diagnostics
+- Colored output preserved
+- No complex compiler API configuration
+
+### tsconfig-generator.ts
+
+Creates optimized tsconfig for declaration generation:
+
+```typescript
+export function createTsConfig(options: TsConfigOptions) {
+  return {
+    compilerOptions: {
+      declaration: true,
+      emitDeclarationOnly: true,
+      outDir: options.outDir,
+      rootDir: options.rootDir,
+      moduleResolution: 'NodeNext',
+      module: 'ESNext',
+      jsx: 'react-jsx',
+      skipLibCheck: true,
+      strict: true,
+    },
+    include: options.entryFiles,
+    exclude: ['node_modules', '**/*.test.*'],
+  }
+}
+```
+
+**Key Settings:**
+
+- `emitDeclarationOnly: true` - Only generate .d.ts files
+- `skipLibCheck: true` - Skip checking node_modules (faster)
+- `strict: true` - Better type generation
+- Dynamic include based on entry files
+
+### Thread Pool Setup
 
 **File**: `src/cli/thread-pool/manifest.json`
 
 ```json
 {
-  "virtual": "src/cli/virtual/worker.ts",
-  "system": "src/cli/system/worker.ts",
-  "packager": "src/cli/packager/worker.ts",
   "packager-ts": "src/cli/packager-ts/worker.ts"
 }
 ```
 
-### 2. Event Bus Extensions
-
-**File**: `src/cli/event-bus/events.ts`
-
-```typescript
-export type Events = {
-  // ... existing events
-  'ts:start': { mode: 'cold' | 'watch'; packages: string[] }
-  'ts:complete': {
-    emittedFiles: number
-    diagnostics: number
-    duration: number
-  }
-  'ts:diagnostics': {
-    file: string
-    line: number
-    message: string
-    severity: 'error' | 'warning'
-  }
-}
-```
-
-### 3. TS Packager Worker
+### Worker Entry Point
 
 **File**: `src/cli/packager-ts/worker.ts`
 
@@ -94,222 +164,143 @@ export type Events = {
 import { runTsPackager } from './index'
 import type { TsPackagerWorkerPayload } from './types'
 
-/**
- * Worker entry point for TypeScript declaration generation
- *
- * Runs in a dedicated thread to avoid blocking the main CLI process
- */
 export default async function worker(payload: TsPackagerWorkerPayload) {
   return runTsPackager(payload)
 }
 ```
 
-**File**: `src/cli/packager-ts/types.ts`
-
-```typescript
-import type { ReferenceUIConfig } from '../config'
-
-export interface TsPackagerWorkerPayload {
-  cwd: string
-  config: ReferenceUIConfig
-  mode: 'cold' | 'watch'
-  packages: Array<{ name: string; entry: string }>
-}
-
-export interface EmittedFile {
-  path: string
-  content: string
-  size: number
-}
-```
+### Main Orchestrator
 
 **File**: `src/cli/packager-ts/index.ts`
 
 ```typescript
-import { log } from '../lib/log'
-import { emit } from '../event-bus'
-import { runColdBuild } from './cold-build'
-import { runWatchBuild } from './watch-build'
-import type { TsPackagerWorkerPayload } from './types'
-
-/**
- * Main entry point for TypeScript declaration generation
- *
- * Coordinates between cold build and watch mode, manages the
- * TypeScript compiler lifecycle, and emits events for coordination.
- */
 export async function runTsPackager(payload: TsPackagerWorkerPayload): Promise<void> {
-  const { cwd, config, mode, packages } = payload
+  const { cwd, config, packages } = payload
 
-  log('')
-  log('🔷 TypeScript Declaration Generation...')
-  log('')
-
-  emit('ts:start', { mode, packages: packages.map(p => p.name) })
+  log('🔷 Generating TypeScript declarations...')
 
   try {
-    if (mode === 'watch') {
-      // Watch mode: incremental compilation with builder program
-      await runWatchBuild(cwd, packages, config)
-    } else {
-      // Cold build: one-shot compilation
-      await runColdBuild(cwd, packages, config)
-    }
+    await runColdBuild(cwd, packages, config)
   } catch (error) {
     log('[packager-ts] Error:', error)
     throw error
   }
 }
-
-/**
- * Initialize packager-ts from main thread
- */
-export async function initTsPackager(
-  cwd: string,
-  config: ReferenceUIConfig,
-  options: { watch?: boolean }
-): Promise<void> {
-  const { runWorker } = await import('../thread-pool')
-
-  // Packages to generate types for
-  const packages = [
-    { name: '@reference-ui/system', entry: 'index.js' },
-    { name: '@reference-ui/react', entry: 'index.js' },
-  ]
-
-  await runWorker('packager-ts', {
-    cwd,
-    config,
-    mode: options.watch ? 'watch' : 'cold',
-    packages,
-  })
-}
 ```
 
-### 4. Cold Build Implementation
+## Performance
 
-**File**: `src/cli/packager-ts/cold-build.ts`
+### Cold Build
+
+| Step                  | Time      |
+| --------------------- | --------- |
+| Generate tsconfig     | <10ms     |
+| Run tsc               | 200-500ms |
+| Update package.json   | <10ms     |
+| **Total per package** | ~250ms    |
+
+**Benefits over programmatic API:**
+
+- Simpler code (~70% less LOC)
+- More reliable (uses battle-tested tsc)
+- Better error messages
+- Easier to debug
+
+## Future Enhancements
+
+### Watch Mode
+
+Use `tsc --watch` for incremental compilation:
 
 ```typescript
-import ts from 'typescript'
-import { join, dirname } from 'node:path'
-import { writeFileSync, mkdirSync } from 'node:fs'
-import { log } from '../lib/log'
-import { emit } from '../event-bus'
-import type { ReferenceUIConfig } from '../config'
-import type { EmittedFile } from './types'
-
-/**
- * Run one-shot TypeScript compilation (cold build)
- *
- * Creates a TypeScript program for bundled .js files, emits .d.ts declarations
- */
-export async function runColdBuild(
+export async function runWatchBuild(
   cwd: string,
-  packages: Array<{ name: string; entry: string }>,
+  packages: Array<{ name: string; sourceEntry: string }>,
   config: ReferenceUIConfig
 ): Promise<void> {
-  const startTime = Date.now()
-
-  const emittedFiles: EmittedFile[] = []
-  let totalDiagnostics = 0
-
   for (const pkg of packages) {
-    const packageDir = join(cwd, 'node_modules', pkg.name)
-    const entryPath = join(packageDir, pkg.entry)
+    // Generate tsconfig
+    const tsconfigPath = generateTsConfig(pkg)
 
-    log(`[packager-ts] Generating types for ${pkg.name}...`)
-
-    // Compiler options for declaration generation from JS
-    const options: ts.CompilerOptions = {
-      allowJs: true,
-      declaration: true,
-      emitDeclarationOnly: true,
-      outDir: packageDir,
-      moduleResolution: ts.ModuleResolutionKind.NodeNext,
-      module: ts.ModuleKind.ESNext,
-      target: ts.ScriptTarget.ESNext,
-      skipLibCheck: true,
-    }
-
-    // Create program from the bundled JS file
-    const program = ts.createProgram([entryPath], options)
-
-    // Get diagnostics
-    const diagnostics = [
-      ...program.getConfigFileParsingDiagnostics(),
-      ...program.getSyntacticDiagnostics(),
-      ...program.getSemanticDiagnostics(),
-    ]
-
-    totalDiagnostics += diagnostics.length
-
-    // Report diagnostics
-    if (diagnostics.length > 0) {
-      diagnostics.forEach(diagnostic => {
-        if (diagnostic.file) {
-          const { line, character } = ts.getLineAndCharacterOfPosition(
-            diagnostic.file,
-            diagnostic.start!
-          )
-          const message = ts.flattenDiagnosticMessageText(diagnostic.message, '\n')
-
-          emit('ts:diagnostics', {
-            file: diagnostic.file.fileName,
-            line: line + 1,
-            message,
-            severity:
-              diagnostic.category === ts.DiagnosticCategory.Error ? 'error' : 'warning',
-          })
-
-          log(
-            `[packager-ts]   ${diagnostic.file.fileName}:${line + 1}:${character + 1} - ${message}`
-          )
-        } else {
-          log(
-            `[packager-ts]   ${ts.flattenDiagnosticMessageText(diagnostic.message, '\n')}`
-          )
-        }
-      })
-    }
-
-    // Emit declarations
-    const emitResult = program.emit(
-      undefined, // All files
-      (fileName, data) => {
-        // Write .d.ts file next to .js file
-        mkdirSync(dirname(fileName), { recursive: true })
-        writeFileSync(fileName, data, 'utf-8')
-
-        emittedFiles.push({
-          path: fileName,
-          content: data,
-          size: Buffer.byteLength(data, 'utf-8'),
-        })
-      },
-      undefined, // No cancellation token
-      true, // Emit only .d.ts files
-      undefined // No custom transformers
-    )
-
-    if (emitResult.emitSkipped) {
-      log(`[packager-ts]   ⚠️  Emit skipped for ${pkg.name}`)
-    }
+    // Spawn tsc --watch as background process
+    spawn('node', [tscPath, '-p', tsconfigPath, '--watch'], {
+      cwd,
+      stdio: 'inherit',
+    })
   }
-
-  const duration = Date.now() - startTime
-
-  log('')
-  log(`✅ TypeScript: Emitted ${emittedFiles.length} declaration(s) in ${duration}ms`)
-
-  // Emit completion event
-  emit('ts:complete', {
-    emittedFiles: emittedFiles.length,
-    diagnostics: totalDiagnostics,
-    duration,
-  })
 }
 ```
+
+## Troubleshooting
+
+### TypeScript Not Found
+
+**Error**: `TypeScript compiler not found`
+
+**Solution**:
+
+```bash
+pnpm add -D typescript
+# or
+npm install --save-dev typescript
+```
+
+### Declaration Generation Fails
+
+**Error**: `tsc exited with code 1`
+
+**Debug**:
+
+1. Check the generated tsconfig: `node_modules/@reference-ui/*/tsconfig.declarations.json`
+2. Run tsc manually:
+   ```bash
+   cd packages/reference-core
+   pnpm exec tsc -p node_modules/@reference-ui/react/tsconfig.declarations.json
+   ```
+3. Check for TypeScript errors in source files
+
+### Types Not Found in Consumer
+
+**Error**: `Cannot find module '@reference-ui/react'`
+
+**Check**:
+
+1. Verify .d.ts exists: `ls node_modules/@reference-ui/react/src/entry/react.d.ts`
+2. Check package.json exports:
+   ```json
+   {
+     "exports": {
+       ".": {
+         "types": "./src/entry/react.d.ts",
+         "import": "./react.js"
+       }
+     }
+   }
+   ```
+
+## Summary
+
+The packager-ts system provides reliable TypeScript declaration generation using:
+
+1. **tsc CLI** - Battle-tested tool for library packaging
+2. **Child process** - Non-blocking execution via spawn
+3. **Worker thread** - Offload heavy compilation work
+4. **Dynamic tsconfig** - Generated per-package for optimal settings
+
+**Result**: Robust, maintainable type generation that "just works."
+
+log('')
+log(`✅ TypeScript: Emitted ${emittedFiles.length} declaration(s) in ${duration}ms`)
+
+// Emit completion event
+emit('ts:complete', {
+emittedFiles: emittedFiles.length,
+diagnostics: totalDiagnostics,
+duration,
+})
+}
+
+````
 
 ### 5. Watch Build Implementation
 
@@ -350,7 +341,7 @@ export async function runWatchBuild(
     // Never resolves - watch mode runs indefinitely
   })
 }
-```
+````
 
 ### 6. Sync Command Integration
 

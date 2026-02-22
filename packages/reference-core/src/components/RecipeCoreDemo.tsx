@@ -249,7 +249,7 @@ export function RecipeCoreDemo() {
           gap="3r"
           alignItems="center"
           p="5r"
-          bg="white"
+          bg="gray.50"
           borderRadius="lg"
           border="1px solid"
           borderColor="gray.200"

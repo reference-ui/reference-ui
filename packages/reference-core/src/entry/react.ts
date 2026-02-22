@@ -1,7 +1,7 @@
 // Runtime React components and APIs (browser-safe)
 // This is what users import in their React app
 
-export * from '../primitives/index.js'
+export * from '../primitives'
 export { Box } from '../system/jsx/box.js'
 export { Container } from '../system/jsx/container.js'
 export { Flex, Stack, HStack, VStack } from '../system/jsx/index.js'
