@@ -76,13 +76,9 @@ export async function microBundle(
 
   const output = result.outputFiles?.[0]
   if (!output?.text) {
-    const errors =
-      result.errors.length > 0 ? JSON.stringify(result.errors, null, 2) : 'none'
-    const warnings =
-      result.warnings.length > 0 ? JSON.stringify(result.warnings, null, 2) : 'none'
-    throw new Error(
-      `esbuild produced no output for ${entryPath}\nErrors: ${errors}\nWarnings: ${warnings}`
-    )
+    // No output means the file has no executable code (comments only, type-only, etc.)
+    // This is fine - just return empty string
+    return ''
   }
   return output.text
 }

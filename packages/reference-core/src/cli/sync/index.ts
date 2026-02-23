@@ -6,20 +6,26 @@ import { initVirtual } from '../virtual'
 import { initPackager } from '../packager'
 import { initTsPackager } from '../packager-ts'
 
+import { log } from '../lib/log'
 // reads config from ui.config.ts, copies user files to codegen, runs Panda codegen and css, generates primitives, and copies final artifacts to node_modules
 
 export const syncCommand = async (cwd: string, options: { watch?: boolean }) => {
+  console.log('🔍 Debug - CWD:', cwd)
+  console.log('🔍 Debug - process.cwd():', process.cwd())
+
   const config = await loadUserConfig(cwd)
 
   initEventBus(config)
   initLog(config)
+
+  console.log('🔄 Syncing Reference UI...')
 
   initVirtual(cwd, config, {
     watch: options.watch,
     virtualDir: config.virtualDir,
   })
 
-  await initSystem(cwd, config)
+  initSystem(cwd, config)
 
   // Package the generated code into node_modules
   await initPackager(cwd, config)

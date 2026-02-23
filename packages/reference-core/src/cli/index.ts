@@ -2,7 +2,6 @@
 import { Command } from 'commander'
 import { syncCommand } from './sync'
 import { runCommand } from './lib'
-const cwd = process.cwd()
 
 async function main(): Promise<void> {
   const program = new Command()
@@ -16,7 +15,7 @@ async function main(): Promise<void> {
     .command('sync', { isDefault: true })
     .description('Build and sync the design system')
     .option('-w, --watch', 'Watch for changes and rebuild')
-    .action(runCommand(options => syncCommand(cwd, { watch: options.watch })))
+    .action(runCommand(options => syncCommand(process.cwd(), { watch: options.watch })))
 
   program.parse()
 }
