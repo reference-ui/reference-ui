@@ -174,7 +174,7 @@ order: 1
 slug: primitives
 ---
 
-import { ${allImports.join(', ')} } from '@reference-ui/core';
+import { ${allImports.join(', ')} } from '@reference-ui/react';
 
 # Primitives
 
