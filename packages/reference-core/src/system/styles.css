@@ -1557,6 +1557,10 @@
     animation: var(--animations-ping-fast);
 }
 
+  .bg_green\.500 {
+    background: var(--colors-green-500);
+}
+
   .bg_green\.300 {
     background: var(--colors-green-300);
 }
@@ -1575,10 +1579,6 @@
 
   .bg_purple\.100 {
     background: var(--colors-purple-100);
-}
-
-  .bg_green\.500 {
-    background: var(--colors-green-500);
 }
 
   .bg_pink\.200 {
@@ -4816,8 +4816,8 @@
     align-items: center;
 }
 
-  .d_flex5 {
-    display: flex5;
+  .d_flex1 {
+    display: flex1;
 }
 
   .bg-c_white {
