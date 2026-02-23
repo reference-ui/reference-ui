@@ -15,12 +15,6 @@ export interface InitVirtualOptions {
    * @default '.virtual'
    */
   virtualDir?: string
-
-  /**
-   * Enable file watching
-   * @default false
-   */
-  watch?: boolean
 }
 
 /**
@@ -43,12 +37,6 @@ export interface VirtualOptions {
    * Glob patterns for files to include
    */
   include: string[]
-
-  /**
-   * Enable file watching
-   * @default false
-   */
-  watch?: boolean
 
   /**
    * Enable debug logging
@@ -101,24 +89,3 @@ export interface TransformResult {
    */
   transformed: boolean
 }
-
-export type FileEvent = 'add' | 'change' | 'unlink'
-
-export interface FileChangeEvent {
-  /**
-   * Type of file event
-   */
-  event: FileEvent
-
-  /**
-   * Absolute path to the file
-   */
-  path: string
-
-  /**
-   * Stats of the file (if available)
-   */
-  stats?: any
-}
-
-export type FileChangeHandler = (event: FileChangeEvent) => void | Promise<void>

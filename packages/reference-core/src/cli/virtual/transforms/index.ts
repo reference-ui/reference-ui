@@ -65,10 +65,6 @@ export async function applyTransforms(
 
   // Step 1: MDX → JSX transformation
   if (ext === '.mdx') {
-    if (debug) {
-      log.debug(`[virtual] Transforming MDX to JSX: ${relativePath}`)
-    }
-
     transformedContent = await mdxToJsx(transformedContent, relativePath)
     newExtension = '.jsx'
     wasTransformed = true
@@ -88,9 +84,6 @@ export async function applyTransforms(
 
     if (transformedContent !== originalContent) {
       wasTransformed = true
-      if (debug) {
-        log.debug(`[virtual] Applied Panda import rewrites: ${relativePath}`)
-      }
     }
   }
 

@@ -19,7 +19,6 @@ export async function mdxToJsx(mdxContent: string, sourceFile: string): Promise<
       development: false,
     })
 
-    log.debug(`[virtual] Compiled MDX to JSX: ${sourceFile}`)
     return String(result.value)
   } catch (error) {
     log.error(

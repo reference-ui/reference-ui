@@ -23,8 +23,6 @@ export async function copyToVirtual(
   // Build destination path in virtual directory
   let destPath = join(virtualDir, relativePath)
 
-  log.debug(`[virtual] Copying: ${relativePath}`)
-
   // Ensure destination directory exists
   const destDir = dirname(destPath)
   if (!existsSync(destDir)) {
@@ -53,8 +51,9 @@ export async function copyToVirtual(
   // Write transformed content
   await writeFile(destPath, result.content, 'utf-8')
 
+  // Only log if transformed, otherwise silent
   if (result.transformed) {
-    log.debug(`[virtual] Transformed: ${relativePath}`)
+    log.debug(`[virtual] ✓ ${relativePath}`)
   }
 }
 

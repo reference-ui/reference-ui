@@ -4816,6 +4816,10 @@
     align-items: center;
 }
 
+  .d_flex5 {
+    display: flex5;
+}
+
   .bg-c_white {
     background-color: white;
 }

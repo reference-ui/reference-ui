@@ -17,17 +17,15 @@ export async function runEval(
   directories: string[],
   baseFiles: string[] = []
 ): Promise<Partial<Config>[]> {
-  log.debug(`[eval] Starting eval with directories: ${directories.join(', ')}`)
-  log.debug(`[eval] Base files: ${baseFiles.join(', ')}`)
-
   const basePaths = baseFiles.map(f => resolve(coreDir, f))
   const resolvedDirs = directories.map(d => resolve(coreDir, d))
   const scannedFiles = scanDirectories(resolvedDirs)
   const files = [...basePaths, ...scannedFiles]
 
-  log.debug(`[eval] Total files to execute: ${files.length}`)
   const result = await runFiles(files, coreDir)
-  log.debug(`[eval] Collected ${result.length} total config fragments`)
+  log.debug(
+    `[eval] Collected ${result.length} config fragments from ${files.length} files`
+  )
 
   return result
 }

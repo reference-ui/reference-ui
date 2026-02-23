@@ -110,6 +110,5 @@ export function rewriteCvaImports(sourceCode: string, relativePath: string): str
     result = result.replace(regex, 'cva(')
   }
 
-  log.debug(`[virtual] Rewrote cva/recipe imports: ${relativePath}`)
   return result
 }

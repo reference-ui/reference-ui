@@ -9,4 +9,10 @@ export type Events = {
   'panda:config:created': { configPath: string }
   /** Emitted when packager finishes bundling; packager-ts listens to regenerate .d.ts */
   'packager:complete': Record<string, never>
+  /** Emitted when watch worker is ready and monitoring files */
+  'watch:ready': { sourceDir: string; patterns: string[] }
+  /** Emitted when a file changes - consumed by virtual, system, etc. */
+  'watch:change': { event: 'add' | 'change' | 'unlink'; path: string; stats?: any }
+  /** Emitted when watcher encounters an error */
+  'watch:error': { error: string }
 }
