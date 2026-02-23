@@ -3,6 +3,7 @@ import { initEventBus } from '../event-bus'
 import { loadUserConfig } from '../config'
 import { initSystem } from '../system'
 import { initVirtual } from '../virtual'
+import { initWatch } from '../watch'
 import { initPackager } from '../packager'
 import { initTsPackager } from '../packager-ts'
 
@@ -20,8 +21,13 @@ export const syncCommand = async (cwd: string, options: { watch?: boolean }) => 
 
   console.log('🔄 Syncing Reference UI...')
 
+  // Start file watching in a dedicated worker thread (if watch mode)
+  if (options.watch) {
+    initWatch(cwd, config)
+  }
+
+  // Initialize virtual filesystem (one-time copy)
   initVirtual(cwd, config, {
-    watch: options.watch,
     virtualDir: config.virtualDir,
   })
 

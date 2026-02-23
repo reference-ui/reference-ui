@@ -100,6 +100,5 @@ export function rewriteCssImports(sourceCode: string, relativePath: string): str
   const { start, end, text } = replacement
   const result = sourceCode.slice(0, start) + text + sourceCode.slice(end)
 
-  log.debug(`[virtual] Rewrote css imports: ${relativePath}`)
   return result
 }

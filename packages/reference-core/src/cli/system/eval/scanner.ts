@@ -10,11 +10,9 @@ import { log } from '../../lib/log'
  */
 function scanDirectory(dir: string): string[] {
   if (!existsSync(dir)) {
-    log.debug(`[eval/scanner] Directory does not exist: ${dir}`)
     return []
   }
 
-  log.debug(`[eval/scanner] Scanning directory: ${dir}`)
   const files = fg.sync('**/*.{ts,tsx}', {
     cwd: dir,
     absolute: true,
@@ -33,14 +31,9 @@ function scanDirectory(dir: string): string[] {
       return found
     })
     if (hasAny) {
-      log.debug(`[eval/scanner] Found ${foundFunctions.join(', ')} in: ${file}`)
       matches.push(file)
     }
   }
-
-  log.debug(
-    `[eval/scanner] Found ${matches.length} files with registered functions in ${dir}`
-  )
 
   return matches
 }
