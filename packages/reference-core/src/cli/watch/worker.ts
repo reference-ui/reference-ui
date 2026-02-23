@@ -1,6 +1,6 @@
 /**
  * Watch worker entry point
- * Runs chokidar in a dedicated worker thread
+ * Thin wrapper around chokidar - just watches files and emits events
  */
 
 import chokidar from 'chokidar'
@@ -9,7 +9,7 @@ import { emit } from '../event-bus'
 import type { WatchPayload } from './types'
 
 const WATCHER_CONFIG = {
-  ignoreInitial: false,
+  ignoreInitial: true, // Don't trigger on startup, only on actual changes
   persistent: true,
   awaitWriteFinish: {
     stabilityThreshold: 100,
@@ -19,48 +19,40 @@ const WATCHER_CONFIG = {
 
 /**
  * Run file watcher in worker thread
- * Emits 'watch:change' events when files change
+ * Just watches and emits events - nothing else
  */
 export async function runWatch(payload: WatchPayload): Promise<void> {
-  const { sourceDir, include, debug = false } = payload
+  const { sourceDir, config } = payload
+  const { include } = config
 
-  log.debug('[watch:worker] Starting file watcher')
-  log.debug('[watch:worker] Source directory:', sourceDir)
-  log.debug('[watch:worker] Watching patterns:', include)
+  log.debug('[watch] Starting file watcher')
+  log.debug('[watch] Source:', sourceDir)
+  log.debug('[watch] Patterns:', include)
 
   const watcher = chokidar.watch(include, {
     cwd: sourceDir,
     ...WATCHER_CONFIG,
   })
 
-  let isReady = false
-
   watcher
-    .on('add', async (path, stats) => {
-      if (isReady) {
-        log.debug('[watch:worker] 📄 File added:', path)
-        emit('watch:change', { event: 'add', path, stats })
-      } else {
-        log.debug('[watch:worker] Initial scan - found:', path)
-      }
+    .on('add', (path, stats) => {
+      log.debug('[watch] File added:', path)
+      emit('watch:change', { event: 'add', path, stats })
     })
-    .on('change', async (path, stats) => {
-      log.debug('[watch:worker] 🔄 File changed:', path)
+    .on('change', (path, stats) => {
+      log.debug('[watch] File change:', path)
       emit('watch:change', { event: 'change', path, stats })
     })
-    .on('unlink', async path => {
-      log.debug('[watch:worker] 🗑️  File removed:', path)
+    .on('unlink', path => {
+      log.debug('[watch] File removed:', path)
       emit('watch:change', { event: 'unlink', path })
     })
     .on('ready', () => {
-      isReady = true
-      log.debug('[watch:worker] ✅ Watcher ready and monitoring for changes')
-      log.debug('[watch:worker] 👀 Patterns:', include)
-      log.debug('[watch:worker] 📂 Directory:', sourceDir)
+      log.debug('[watch] Ready - watching for changes')
       emit('watch:ready', { sourceDir, patterns: include })
     })
     .on('error', error => {
-      log.error('[watch:worker] Watcher error:', error)
+      log.error('[watch] Watcher error:', error)
       emit('watch:error', { error: String(error) })
     })
 

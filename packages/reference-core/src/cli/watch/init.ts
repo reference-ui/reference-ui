@@ -1,6 +1,6 @@
 /**
  * Initialize watch system
- * Starts a worker thread that monitors file changes
+ * Starts a worker thread that monitors file changes and triggers rebuilds
  */
 
 import { log } from '../lib/log'
@@ -9,17 +9,14 @@ import type { ReferenceUIConfig } from '../config'
 
 /**
  * Start file watching in a worker thread
- * Emits 'watch:change' events that other modules can listen to
+ * Watches for file changes and automatically rebuilds when needed
  */
 export function initWatch(sourceDir: string, config: ReferenceUIConfig): void {
-  const { include, debug = false } = config
-
   log.debug('[watch] Starting watch worker')
 
   runWorker('watch', {
     sourceDir,
-    include,
-    debug,
+    config,
   }).catch(error => {
     log.error('[watch] Watch worker failed:', error)
   })

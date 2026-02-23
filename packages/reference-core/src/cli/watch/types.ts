@@ -2,6 +2,8 @@
  * Watch module types
  */
 
+import type { ReferenceUIConfig } from '../config'
+
 export interface WatchOptions {
   /**
    * Directory to watch (user's project root)
@@ -9,14 +11,9 @@ export interface WatchOptions {
   sourceDir: string
 
   /**
-   * Glob patterns to watch
+   * Full user configuration
    */
-  include: string[]
-
-  /**
-   * Enable debug logging
-   */
-  debug?: boolean
+  config: ReferenceUIConfig
 }
 
 export interface WatchPayload extends WatchOptions {}

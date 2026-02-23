@@ -1,60 +1,51 @@
 # Watch Module
 
-The watch module provides dedicated file system monitoring in a separate worker thread.
+Thin wrapper around chokidar that watches files and emits events. That's it.
 
 ## Purpose
 
-- **Isolation**: File watching runs in its own thread, never blocking the main thread
-- **Simplicity**: Clean separation from virtual filesystem - watch just monitors, virtual just copies
-- **Reliability**: Chokidar configuration tested and optimized
-- **Events**: Emits standardized events that any module can listen to
+- **Simple**: Just watches files with chokidar
+- **Events**: Emits events when files change
+- **Isolated**: Runs in a worker thread so it doesn't block
 
 ## Architecture
 
 ```
-Watch Worker Thread          Main Thread + Other Workers
+Watch Worker Thread          Other Modules (listen to events)
     │                                │
     │  chokidar.watch()              │
     │  ↓                              │
-    │  File changes detected          │
+    │  File change detected           │
     │  ↓                              │
-    │  emit('watch:change', {...})    │
+    │  emit('watch:change')           │
     ├─────────────────────────────────▶
     │                                 │
     │                            on('watch:change')
     │                                 │
-    │                            Virtual FS updates
-    │                            System rebuilds
+    │                         (handle the change)
 ```
 
-## Events
+## Events Emitted
 
 ### `watch:ready`
 
-Emitted when the watcher has completed initial scan and is ready to monitor changes.
+Watcher is ready and monitoring files.
 
 ```typescript
-{
-  sourceDir: string
-  patterns: string[]
-}
+{ sourceDir: string; patterns: string[] }
 ```
 
 ### `watch:change`
 
-Emitted when a file is added, changed, or removed.
+A file was added, changed, or removed.
 
 ```typescript
-{
-  event: 'add' | 'change' | 'unlink'
-  path: string  // Relative to sourceDir
-  stats?: fs.Stats
-}
+{ event: 'add' | 'change' | 'unlink'; path: string; stats?: any }
 ```
 
 ### `watch:error`
 
-Emitted when chokidar encounters an error.
+Chokidar error occurred.
 
 ```typescript
 {
@@ -64,40 +55,31 @@ Emitted when chokidar encounters an error.
 
 ## Usage
 
-### Starting the Watcher
+### Start Watching
 
 ```typescript
 import { initWatch } from './watch'
 
-// Start watching in a worker thread
 initWatch(sourceDir, config)
 ```
 
-### Listening to Events
+### Listen to Events
 
 ```typescript
 import { on } from '../event-bus'
 
-// Listen for file changes
 on('watch:change', ({ event, path }) => {
-  console.log(`File ${event}:`, path)
-  // Handle the change
-})
-
-// Wait for watcher to be ready
-on('watch:ready', () => {
-  console.log('Watcher is monitoring files')
+  console.log(`File ${event}: ${path}`)
+  // Do something with the change
 })
 ```
 
 ## Configuration
 
-Chokidar is configured with optimized settings:
-
 ```typescript
 {
-  ignoreInitial: false,   // Process existing files on start
-  persistent: true,        // Keep process alive
+  ignoreInitial: true,    // Only watch for changes, not initial files
+  persistent: true,       // Keep process alive
   awaitWriteFinish: {
     stabilityThreshold: 100,  // Wait 100ms for file to stabilize
     pollInterval: 100,        // Check every 100ms
