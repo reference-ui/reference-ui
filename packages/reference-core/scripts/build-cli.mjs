@@ -20,8 +20,19 @@ const external = [
   'piscina',
 ]
 
+const watchMode = process.argv.includes('--watch')
+
+function addShebangAndPermissions() {
+  const indexPath = path.resolve(distDir, 'index.mjs')
+  const content = fs.readFileSync(indexPath, 'utf-8')
+  if (!content.startsWith('#!/usr/bin/env node')) {
+    fs.writeFileSync(indexPath, '#!/usr/bin/env node\n' + content)
+  }
+  fs.chmodSync(indexPath, 0o755)
+}
+
 async function build() {
-  console.log('Building CLI with esbuild...')
+  console.log(`Building CLI with esbuild${watchMode ? ' (watch mode)' : ''}...`)
   try {
     const workerManifest = JSON.parse(fs.readFileSync(workerManifestPath, 'utf-8'))
     const workerEntries = Object.fromEntries(
@@ -31,7 +42,7 @@ async function build() {
       ])
     )
 
-    await esbuild.build({
+    const buildOptions = {
       entryPoints: {
         index: path.resolve(packageRoot, 'src/cli/index.ts'),
         ...Object.fromEntries(
@@ -45,19 +56,28 @@ async function build() {
       target: 'node18',
       external,
       outExtension: { '.js': '.mjs' },
-    })
-
-    // Add shebang to the main CLI entry after bundling
-    const indexPath = path.resolve(distDir, 'index.mjs')
-    const content = fs.readFileSync(indexPath, 'utf-8')
-    if (!content.startsWith('#!/usr/bin/env node')) {
-      fs.writeFileSync(indexPath, '#!/usr/bin/env node\n' + content)
     }
 
-    // Make it executable
-    fs.chmodSync(indexPath, 0o755)
+    if (watchMode) {
+      const ctx = await esbuild.context(buildOptions)
+      await ctx.watch()
 
-    console.log('✓ CLI bundle created at', distDir)
+      // Add shebang and permissions after initial build
+      addShebangAndPermissions()
+
+      console.log('✓ CLI bundle created at', distDir)
+      console.log('👀 Watching for changes...')
+
+      // Keep the process alive
+      await new Promise(() => {})
+    } else {
+      await esbuild.build(buildOptions)
+
+      // Add shebang to the main CLI entry after bundling
+      addShebangAndPermissions()
+
+      console.log('✓ CLI bundle created at', distDir)
+    }
   } catch (error) {
     console.error('Build failed:', error)
     process.exit(1)

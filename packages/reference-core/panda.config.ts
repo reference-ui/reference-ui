@@ -5459,42 +5459,6 @@ var globalCss = extendGlobalCss;
 // src/tokens.ts
 var tokens_exports = {};
 
-// node_modules/@reference-ui/system/system.js
-var COLLECTOR_KEY2 = "__refPandaConfigCollector";
-function extendPandaConfig2(partial) {
-  const collector = globalThis[COLLECTOR_KEY2];
-  if (Array.isArray(collector)) {
-    collector.push(partial);
-  }
-}
-__name(extendPandaConfig2, "extendPandaConfig");
-function extendTokens2(tokenConfig) {
-  extendPandaConfig2({
-    theme: {
-      tokens: tokenConfig
-    }
-  });
-}
-__name(extendTokens2, "extendTokens");
-var FONT_COLLECTOR_KEY2 = "__fontCollector";
-if (!globalThis[FONT_COLLECTOR_KEY2]) {
-  ;
-  globalThis[FONT_COLLECTOR_KEY2] = [];
-}
-var BOX_PATTERN_COLLECTOR_KEY2 = "__boxPatternCollector";
-if (!globalThis[BOX_PATTERN_COLLECTOR_KEY2]) {
-  ;
-  globalThis[BOX_PATTERN_COLLECTOR_KEY2] = [];
-}
-var tokens2 = extendTokens2;
-
-// src/tokens.ts
-tokens2({
-  colors: {
-    mySpecialToken: { value: "red" }
-  }
-});
-
 // src/components/RecipeDemo.tsx
 var RecipeDemo_exports = {};
 __export(RecipeDemo_exports, {
@@ -7957,24 +7921,24 @@ function css22(...styles) {
 }
 __name(css22, "css2");
 css22.raw = css3.raw;
-var COLLECTOR_KEY3 = "__refPandaConfigCollector";
-function extendPandaConfig3(partial) {
-  const collector = globalThis[COLLECTOR_KEY3];
+var COLLECTOR_KEY2 = "__refPandaConfigCollector";
+function extendPandaConfig2(partial) {
+  const collector = globalThis[COLLECTOR_KEY2];
   if (Array.isArray(collector)) {
     collector.push(partial);
   }
 }
-__name(extendPandaConfig3, "extendPandaConfig");
-function extendTokens3(tokenConfig) {
-  extendPandaConfig3({
+__name(extendPandaConfig2, "extendPandaConfig");
+function extendTokens2(tokenConfig) {
+  extendPandaConfig2({
     theme: {
       tokens: tokenConfig
     }
   });
 }
-__name(extendTokens3, "extendTokens");
+__name(extendTokens2, "extendTokens");
 function extendRecipe2(recipeConfig) {
-  extendPandaConfig3({
+  extendPandaConfig2({
     theme: {
       extend: {
         recipes: recipeConfig
@@ -7984,7 +7948,7 @@ function extendRecipe2(recipeConfig) {
 }
 __name(extendRecipe2, "extendRecipe");
 function extendUtilities2(extend) {
-  extendPandaConfig3({
+  extendPandaConfig2({
     utilities: {
       extend
     }
@@ -7992,30 +7956,30 @@ function extendUtilities2(extend) {
 }
 __name(extendUtilities2, "extendUtilities");
 function extendGlobalCss2(css32) {
-  extendPandaConfig3({
+  extendPandaConfig2({
     globalCss: css32
   });
 }
 __name(extendGlobalCss2, "extendGlobalCss");
 function extendStaticCss2(config2) {
-  extendPandaConfig3({
+  extendPandaConfig2({
     staticCss: config2
   });
 }
 __name(extendStaticCss2, "extendStaticCss");
 function extendGlobalFontface2(fontface) {
-  extendPandaConfig3({
+  extendPandaConfig2({
     globalFontface: fontface
   });
 }
 __name(extendGlobalFontface2, "extendGlobalFontface");
-var FONT_COLLECTOR_KEY3 = "__fontCollector";
-if (!globalThis[FONT_COLLECTOR_KEY3]) {
+var FONT_COLLECTOR_KEY2 = "__fontCollector";
+if (!globalThis[FONT_COLLECTOR_KEY2]) {
   ;
-  globalThis[FONT_COLLECTOR_KEY3] = [];
+  globalThis[FONT_COLLECTOR_KEY2] = [];
 }
 function extendKeyframes2(config2) {
-  extendPandaConfig3({
+  extendPandaConfig2({
     theme: {
       extend: {
         keyframes: config2
@@ -8024,13 +7988,13 @@ function extendKeyframes2(config2) {
   });
 }
 __name(extendKeyframes2, "extendKeyframes");
-var BOX_PATTERN_COLLECTOR_KEY3 = "__boxPatternCollector";
-if (!globalThis[BOX_PATTERN_COLLECTOR_KEY3]) {
+var BOX_PATTERN_COLLECTOR_KEY2 = "__boxPatternCollector";
+if (!globalThis[BOX_PATTERN_COLLECTOR_KEY2]) {
   ;
-  globalThis[BOX_PATTERN_COLLECTOR_KEY3] = [];
+  globalThis[BOX_PATTERN_COLLECTOR_KEY2] = [];
 }
 function extendBoxPattern2(extension) {
-  const collector = globalThis[BOX_PATTERN_COLLECTOR_KEY3];
+  const collector = globalThis[BOX_PATTERN_COLLECTOR_KEY2];
   collector.push(extension);
 }
 __name(extendBoxPattern2, "extendBoxPattern");
@@ -8270,7 +8234,7 @@ var colors2 = {
     950: { value: "oklch(27.1% 0.105 12.094)" }
   }
 };
-extendTokens3({
+extendTokens2({
   colors: colors2
 });
 function getRhythm2(num, denom) {
@@ -8389,7 +8353,7 @@ var spacing2 = {
   "10r": { value: getRhythm2(10) },
   "12r": { value: getRhythm2(12) }
 };
-extendTokens3({
+extendTokens2({
   spacing: spacing2
 });
 var radii2 = {
@@ -8403,10 +8367,10 @@ var radii2 = {
   "3xl": { value: "1.5rem" },
   full: { value: "9999px" }
 };
-extendTokens3({
+extendTokens2({
   radii: radii2
 });
-extendTokens3({
+extendTokens2({
   animations: {
     // Spin animations
     spin: {
@@ -8455,7 +8419,7 @@ extendTokens3({
     }
   }
 });
-extendTokens3({
+extendTokens2({
   fonts: {
     sans: { value: '"Inter", ui-sans-serif, sans-serif' },
     serif: { value: '"Literata", ui-serif, serif' },

@@ -103,6 +103,9 @@ importers:
 
   packages/reference-docs:
     dependencies:
+      '@reference-ui/core':
+        specifier: workspace:*
+        version: link:../reference-core
       '@tanstack/react-router':
         specifier: ^1.158.4
         version: 1.158.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -119,9 +122,6 @@ importers:
       '@mdx-js/rollup':
         specifier: ^3.1.0
         version: 3.1.1(rollup@4.57.1)
-      '@reference-ui/core':
-        specifier: workspace:*
-        version: link:../reference-core
       '@types/mdx':
         specifier: ^2.0.13
         version: 2.0.13
