@@ -1,5 +1,8 @@
 import { build } from 'esbuild'
 import { resolve, dirname, extname } from 'node:path'
+
+/** Set to false to skip symlinking .reference-ui/* into node_modules/@reference-ui/* */
+export const ENABLE_REFERENCE_UI_SYMLINKS = false
 import {
   mkdirSync,
   writeFileSync,
@@ -7,8 +10,10 @@ import {
   existsSync,
   readdirSync,
   statSync,
+  lstatSync,
   readFileSync,
   rmSync,
+  unlinkSync,
 } from 'node:fs'
 import symlinkDir from 'symlink-dir'
 import { log } from '../lib/log'
@@ -229,9 +234,9 @@ function getShortName(pkgName: string): string {
 }
 
 /**
- * Bundle all packages into .reference-ui/ and symlink from node_modules.
- * Output goes to .reference-ui/<shortname>/ so Vite (which watches the project root)
- * detects file changes and triggers HMR when user-space props are edited.
+ * Bundle all packages. When ENABLE_REFERENCE_UI_SYMLINKS is true: output to .reference-ui/
+ * and symlink into node_modules (for Vite HMR). When false: output directly to node_modules
+ * (no .reference-ui folder).
  */
 export async function bundleAllPackages(
   coreDir: string,
@@ -242,13 +247,31 @@ export async function bundleAllPackages(
   const nodeModulesDir = resolve(userProjectDir, 'node_modules')
   const refUiScopeDir = resolve(nodeModulesDir, '@reference-ui')
 
-  mkdirSync(refUiDir, { recursive: true })
   mkdirSync(refUiScopeDir, { recursive: true })
 
   for (const pkg of packages) {
     const shortName = getShortName(pkg.name)
-    const targetDir = resolve(refUiDir, shortName)
+    const targetDir = ENABLE_REFERENCE_UI_SYMLINKS
+      ? resolve(refUiDir, shortName)
+      : resolve(refUiScopeDir, shortName)
     const linkPath = resolve(refUiScopeDir, shortName)
+
+    if (ENABLE_REFERENCE_UI_SYMLINKS) {
+      mkdirSync(refUiDir, { recursive: true })
+    } else {
+      // Writing directly to node_modules: remove existing symlink/dir from pnpm file: deps.
+      // existsSync returns false for broken symlinks (it follows the link), so use lstatSync.
+      try {
+        const stat = lstatSync(linkPath)
+        if (stat.isSymbolicLink()) {
+          unlinkSync(linkPath)
+        } else {
+          rmSync(linkPath, { recursive: true, force: true })
+        }
+      } catch (e: unknown) {
+        if ((e as NodeJS.ErrnoException)?.code !== 'ENOENT') throw e
+      }
+    }
 
     log(`📦 ${pkg.bundle ? 'Bundling' : 'Copying'} ${pkg.name}...`)
 
@@ -258,19 +281,20 @@ export async function bundleAllPackages(
       pkg,
     })
 
-    // Remove existing link/dir so we can create a fresh symlink
-    if (existsSync(linkPath)) {
-      rmSync(linkPath, { recursive: true, force: true })
+    if (ENABLE_REFERENCE_UI_SYMLINKS) {
+      // Remove existing link/dir so we can create a fresh symlink
+      if (existsSync(linkPath)) {
+        rmSync(linkPath, { recursive: true, force: true })
+      }
+
+      if (!existsSync(targetDir) || !statSync(targetDir).isDirectory()) {
+        throw new Error(`Packager target ${targetDir} must be a directory (symlink-dir requires it on Windows)`)
+      }
+
+      symlinkDir.sync(targetDir, linkPath)
+      log(`   ✓ ${pkg.name} → ${linkPath}`)
+    } else {
+      log(`   ✓ ${pkg.name} → ${targetDir}`)
     }
-
-    // targetDir is always a directory — bundlePackage creates it and writes contents first.
-    // symlink-dir would create a broken junction on Windows if target were a file.
-    if (!existsSync(targetDir) || !statSync(targetDir).isDirectory()) {
-      throw new Error(`Packager target ${targetDir} must be a directory (symlink-dir requires it on Windows)`)
-    }
-
-    symlinkDir.sync(targetDir, linkPath)
-
-    log(`   ✓ ${pkg.name} → ${linkPath}`)
   }
 }
