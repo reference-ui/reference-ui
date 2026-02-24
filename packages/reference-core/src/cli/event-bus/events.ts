@@ -27,4 +27,9 @@ export type PackagerEvents = {
   'packager:complete': Record<string, never>
 }
 
-export type Events = LogEvents & WatchEvents & SystemEvents & PackagerEvents
+export type VirtualEvents = {
+  /** Emitted when virtual transforms a file; system/pipeline listens for incremental updates */
+  'virtual:fs:change': { event: 'add' | 'change' | 'unlink'; path: string }
+}
+
+export type Events = LogEvents & WatchEvents & SystemEvents & PackagerEvents & VirtualEvents

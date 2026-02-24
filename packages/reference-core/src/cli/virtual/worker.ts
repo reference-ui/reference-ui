@@ -1,3 +1,3 @@
 // Pure boilerplate - no logic here
-import { runVirtual } from './init'
+import { runVirtual } from './run'
 export default runVirtual
