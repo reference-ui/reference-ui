@@ -38,7 +38,7 @@ export async function runWatch(payload: WatchPayload): Promise<void> {
         if (!isMatch(relPath)) continue
         const mapped = EVENT_MAP[ev.type]
         log(`[watch] ${mapped}: ${relPath}`)
-        emit('watch:change', { event: mapped, path: relPath })
+        emit('watch:change', { event: mapped, path: ev.path })
       }
     },
     { ignore: ['**/node_modules/**'] }
