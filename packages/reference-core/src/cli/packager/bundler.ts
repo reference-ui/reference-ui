@@ -8,6 +8,8 @@ import {
   readdirSync,
   statSync,
   readFileSync,
+  rmSync,
+  symlinkSync,
 } from 'node:fs'
 import { log } from '../lib/log'
 import type { PackageDefinition } from './packages'
@@ -219,21 +221,34 @@ export async function bundlePackage(options: BundleOptions): Promise<void> {
 }
 
 /**
- * Bundle all packages and place them in the user's node_modules
+ * Short name for a scoped package (e.g. @reference-ui/react -> react)
+ */
+function getShortName(pkgName: string): string {
+  const scope = pkgName.indexOf('/')
+  return scope >= 0 ? pkgName.slice(scope + 1) : pkgName
+}
+
+/**
+ * Bundle all packages into .reference-ui/ and symlink from node_modules.
+ * Output goes to .reference-ui/<shortname>/ so Vite (which watches the project root)
+ * detects file changes and triggers HMR when user-space props are edited.
  */
 export async function bundleAllPackages(
   coreDir: string,
   userProjectDir: string,
   packages: PackageDefinition[]
 ): Promise<void> {
+  const refUiDir = resolve(userProjectDir, '.reference-ui')
   const nodeModulesDir = resolve(userProjectDir, 'node_modules')
+  const refUiScopeDir = resolve(nodeModulesDir, '@reference-ui')
 
-  // Ensure @reference-ui scope exists
-  mkdirSync(resolve(nodeModulesDir, '@reference-ui'), { recursive: true })
+  mkdirSync(refUiDir, { recursive: true })
+  mkdirSync(refUiScopeDir, { recursive: true })
 
-  // Bundle each package
   for (const pkg of packages) {
-    const targetDir = resolve(nodeModulesDir, pkg.name)
+    const shortName = getShortName(pkg.name)
+    const targetDir = resolve(refUiDir, shortName)
+    const linkPath = resolve(refUiScopeDir, shortName)
 
     log(`📦 ${pkg.bundle ? 'Bundling' : 'Copying'} ${pkg.name}...`)
 
@@ -243,6 +258,13 @@ export async function bundleAllPackages(
       pkg,
     })
 
-    log(`   ✓ ${pkg.name} → ${targetDir}`)
+    // Remove existing link/dir so we can create a fresh symlink
+    if (existsSync(linkPath)) {
+      rmSync(linkPath, { recursive: true, force: true })
+    }
+
+    symlinkSync(targetDir, linkPath, 'dir')
+
+    log(`   ✓ ${pkg.name} → ${linkPath}`)
   }
 }
