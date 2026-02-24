@@ -13,7 +13,7 @@ const workerManifestPath = path.resolve(packageRoot, 'src/cli/thread-pool/manife
 const external = [
   'esbuild',
   'fast-glob',
-  'chokidar',
+  '@parcel/watcher',
   'typescript',
   'commander',
   'picocolors',

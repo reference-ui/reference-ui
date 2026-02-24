@@ -1,10 +1,10 @@
 # Watch Module
 
-Thin wrapper around chokidar that watches files and emits events. That's it.
+Thin wrapper around @parcel/watcher that watches files and emits events. That's it.
 
 ## Purpose
 
-- **Simple**: Just watches files with chokidar
+- **Simple**: Just watches files with @parcel/watcher
 - **Events**: Emits events when files change
 - **Isolated**: Runs in a worker thread so it doesn't block
 
@@ -13,7 +13,7 @@ Thin wrapper around chokidar that watches files and emits events. That's it.
 ```
 Watch Worker Thread          Other Modules (listen to events)
     │                                │
-    │  chokidar.watch()              │
+    │  parcel watcher.subscribe()    │
     │  ↓                              │
     │  File change detected           │
     │  ↓                              │
@@ -125,7 +125,7 @@ Debug logs include:
 The watch worker:
 
 - Runs in a separate thread (no main thread blocking)
-- Uses chokidar's optimized native watchers (fsevents on macOS, inotify on Linux)
+- Uses @parcel/watcher's native backends (FSEvents on macOS, inotify on Linux, Watchman if installed)
 - Debounces rapid changes (100ms stabilization)
 - Emits lightweight events (just path + event type)
 

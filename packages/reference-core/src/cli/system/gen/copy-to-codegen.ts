@@ -10,7 +10,7 @@ import {
   readFileSync,
 } from 'node:fs'
 import { resolve, dirname, relative } from 'node:path'
-import * as chokidar from 'chokidar'
+import { subscribe } from '@parcel/watcher'
 import { log } from '../../lib/log'
 import { mdxToJSX } from './mdx-to-jsx'
 import { rewriteCvaImports } from './rewrite-cva-imports'
@@ -119,18 +119,46 @@ function logSync(relativePath: string): void {
   process.stderr.write(`${formatTime()} [ref sync] synced ${relativePath}\n`)
 }
 
+async function copyFileToCodegen(
+  file: string,
+  consumerCwd: string,
+  codegenDir: string
+): Promise<string> {
+  const relativePath = relative(consumerCwd, file)
+  const destPath = resolve(codegenDir, relativePath)
+
+  if (file.endsWith('.mdx')) {
+    const mdxContent = readFileSync(file, 'utf-8')
+    const jsxContent = await mdxToJSX(mdxContent, relativePath)
+    const jsxDestPath = destPath.replace(/\.mdx$/, '.jsx')
+    mkdirSync(dirname(jsxDestPath), { recursive: true })
+    writeFileSync(jsxDestPath, jsxContent, 'utf-8')
+  } else {
+    mkdirSync(dirname(destPath), { recursive: true })
+    const ext = file.slice(file.lastIndexOf('.'))
+    if (ext === '.ts' || ext === '.tsx' || ext === '.jsx') {
+      const content = readFileSync(file, 'utf-8')
+      const rewritten = rewriteImports(content, relativePath)
+      writeFileSync(destPath, rewritten, 'utf-8')
+    } else {
+      copyFileSync(file, destPath)
+    }
+  }
+  return relativePath
+}
+
 /**
  * Watch user files and copy them to codegen on change.
  * Logs syncs in Vite HMR style.
  */
-export function watchAndCopyToCodegen(
+export async function watchAndCopyToCodegen(
   consumerCwd: string,
   coreDir: string,
   includePatterns: string[]
-): void {
+): Promise<void> {
   const codegenDir = resolve(coreDir, 'codegen')
 
-  // Resolve files matching include patterns
+  // Resolve files matching include patterns (for count / validation)
   const files = fg.sync(includePatterns, {
     cwd: consumerCwd,
     absolute: true,
@@ -145,78 +173,24 @@ export function watchAndCopyToCodegen(
     return
   }
 
-  // Create watcher for all matched files
-  const watcher = chokidar.watch(files, {
-    persistent: true,
-    ignoreInitial: false, // Process existing files on startup
-    awaitWriteFinish: {
-      stabilityThreshold: 50,
-      pollInterval: 10,
+  // Parcel: watch consumerCwd, only emit for include patterns (ignore all, then un-ignore includes)
+  const ignore = ['**', ...includePatterns.map(p => `!${p}`)]
+
+  await subscribe(
+    consumerCwd,
+    async (err, events) => {
+      if (err) {
+        log.error(`⚠️  Watcher error: ${err}`)
+        return
+      }
+      for (const ev of events) {
+        if (ev.type === 'delete') continue
+        const relPath = await copyFileToCodegen(ev.path, consumerCwd, codegenDir)
+        logSync(relPath)
+      }
     },
-  })
+    { ignore }
+  )
 
-  // Track if this is initial scan
-  let isReady = false
-  let initialCount = 0
-
-  watcher
-    .on('add', async file => {
-      const relativePath = relative(consumerCwd, file)
-      const destPath = resolve(codegenDir, relativePath)
-
-      if (file.endsWith('.mdx')) {
-        const mdxContent = readFileSync(file, 'utf-8')
-        const jsxContent = await mdxToJSX(mdxContent, relativePath)
-        const jsxDestPath = destPath.replace(/\.mdx$/, '.jsx')
-        mkdirSync(dirname(jsxDestPath), { recursive: true })
-        writeFileSync(jsxDestPath, jsxContent, 'utf-8')
-      } else {
-        mkdirSync(dirname(destPath), { recursive: true })
-        const ext = file.slice(file.lastIndexOf('.'))
-        if (ext === '.ts' || ext === '.tsx' || ext === '.jsx') {
-          const content = readFileSync(file, 'utf-8')
-          const rewritten = rewriteImports(content, relativePath)
-          writeFileSync(destPath, rewritten, 'utf-8')
-        } else {
-          copyFileSync(file, destPath)
-        }
-      }
-
-      if (isReady) {
-        logSync(relativePath)
-      } else {
-        initialCount++
-      }
-    })
-    .on('change', async file => {
-      const relativePath = relative(consumerCwd, file)
-      const destPath = resolve(codegenDir, relativePath)
-
-      if (file.endsWith('.mdx')) {
-        const mdxContent = readFileSync(file, 'utf-8')
-        const jsxContent = await mdxToJSX(mdxContent, relativePath)
-        const jsxDestPath = destPath.replace(/\.mdx$/, '.jsx')
-        mkdirSync(dirname(jsxDestPath), { recursive: true })
-        writeFileSync(jsxDestPath, jsxContent, 'utf-8')
-      } else {
-        mkdirSync(dirname(destPath), { recursive: true })
-        const ext = file.slice(file.lastIndexOf('.'))
-        if (ext === '.ts' || ext === '.tsx' || ext === '.jsx') {
-          const content = readFileSync(file, 'utf-8')
-          const rewritten = rewriteImports(content, relativePath)
-          writeFileSync(destPath, rewritten, 'utf-8')
-        } else {
-          copyFileSync(file, destPath)
-        }
-      }
-
-      logSync(relativePath)
-    })
-    .on('ready', () => {
-      isReady = true
-      log(`📦 Watching ${initialCount} file(s) for changes...`)
-    })
-    .on('error', error => {
-      log.error(`⚠️  Watcher error: ${error}`)
-    })
+  log(`📦 Watching ${files.length} file(s) for changes...`)
 }
