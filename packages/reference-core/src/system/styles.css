@@ -1654,10 +1654,6 @@
     background: var(--colors-red-600);
 }
 
-  .bg_mySpecialToken {
-    background: var(--colors-my-special-token);
-}
-
   .m_0_0_1rem {
     margin: 0 0 1rem;
 }
@@ -4841,8 +4837,8 @@
     align-items: center;
 }
 
-  .bg-c_white {
-    background-color: white;
+  .bg-c_white2 {
+    background-color: white2;
 }
 
   .flex-sh_0 {

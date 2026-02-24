@@ -15,7 +15,7 @@ export default defineConfig({
   target: 'node18',
   splitting: false,
   sourcemap: true,
-  clean: true,
+  clean: false, // avoid ENOENT when unlinking non-existent files (watch/race with clean)
   outExtension() {
     return { js: '.mjs' }
   },

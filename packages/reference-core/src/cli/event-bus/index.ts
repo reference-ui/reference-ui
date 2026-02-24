@@ -1,5 +1,5 @@
 import { EventEmitter } from 'node:events'
-import { BroadcastChannel } from 'node:worker_threads'
+import { BroadcastChannel, isMainThread } from 'node:worker_threads'
 import type { Events } from './events'
 import { log } from '../lib'
 
@@ -20,13 +20,14 @@ export type { Events }
  * Initialize event bus with debug logging if enabled
  */
 export function initEventBus(config: { debug?: boolean }) {
-  if (config.debug) {
-    // Wrap emit to log all events
-    const originalEmit = bus.emit.bind(bus)
-    bus.emit = (event, ...args) => {
-      log.debug(`[bus] ${String(event)}`, args[0])
-      return originalEmit(event, ...args)
-    }
+  if (config.debug && isMainThread) {
+    // Log all bus events as they arrive (emit() uses BroadcastChannel, not bus.emit)
+    broadcastChannel.addEventListener('message', (msg: Event) => {
+      const data = (msg as any).data
+      if (data?.type === 'bus:event') {
+        log.debug(`[bus] ${data.event}`, data.payload)
+      }
+    })
   }
 }
 

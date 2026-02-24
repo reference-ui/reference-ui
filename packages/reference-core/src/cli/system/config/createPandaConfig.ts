@@ -80,7 +80,7 @@ export async function createPandaConfig(
     log(`[createPandaConfig] Config written successfully`)
 
     // Emit event so other systems know config is ready
-    emit('panda:config:created', { configPath })
+    emit('system:config:created', { configPath })
 
     // Clean up temp files in .ref
     const refFiles = readdirSync(refDir)
