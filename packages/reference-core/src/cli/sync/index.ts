@@ -19,7 +19,7 @@ export const syncCommand = async (cwd: string, options: { watch?: boolean }) => 
   initEventBus(config)
   initLog(config)
 
-  console.log('🔄 Syncing Reference UI...')
+  log('🔄 Syncing Reference UI...')
 
   // Start file watching in a dedicated worker thread (if watch mode)
   if (options.watch) {
