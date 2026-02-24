@@ -1,7 +1,8 @@
-import { resolve, join } from 'node:path'
+import { resolve } from 'node:path'
 import { mkdir } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { copyToVirtual, removeFromVirtual } from './copy'
+import { getVirtualPath } from './utils'
 import { log } from '../lib/log'
 import { on, emit } from '../event-bus'
 import { resolveCorePackageDir } from '../lib/resolve-core'
@@ -73,18 +74,19 @@ function startWatchMode(context: {
 }): Promise<never> {
   const { absSourceDir, absVirtualDir, debug } = context
 
-  on('watch:change', async ({ event, path }) => {
-    const absSourcePath = join(absSourceDir, path)
+  on('watch:change', async ({ event, path: sourcePath }) => {
     try {
+      let virtualPath: string
       if (event === 'unlink') {
-        await removeFromVirtual(absSourcePath, absSourceDir, absVirtualDir, { debug })
+        virtualPath = getVirtualPath(sourcePath, absSourceDir, absVirtualDir)
+        await removeFromVirtual(sourcePath, absSourceDir, absVirtualDir, { debug })
       } else {
-        await copyToVirtual(absSourcePath, absSourceDir, absVirtualDir, { debug })
+        virtualPath = await copyToVirtual(sourcePath, absSourceDir, absVirtualDir, { debug })
       }
-      emit('virtual:fs:change', { event, path })
-      log.debug('[virtual:worker] Processed watch:change → virtual:fs:change', event, path)
+      emit('virtual:fs:change', { event, path: virtualPath })
+      log.debug('[virtual:worker] Processed watch:change → virtual:fs:change', event, virtualPath)
     } catch (err) {
-      log.error('[virtual:worker] Failed to process', event, path, err)
+      log.error('[virtual:worker] Failed to process', event, sourcePath, err)
     }
   })
 

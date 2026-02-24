@@ -8,13 +8,14 @@ import { TRANSFORMED_EXTENSIONS } from './config.internal'
 /**
  * Copy a file to the virtual directory, applying transforms if needed.
  * Creates parent directories as needed.
+ * @returns The absolute path of the file written in the virtual dir (with any extension transform applied)
  */
 export async function copyToVirtual(
   sourcePath: string,
   sourceDir: string,
   virtualDir: string,
   options: { debug?: boolean } = {}
-): Promise<void> {
+): Promise<string> {
   const { debug } = options
 
   // Calculate relative path from source directory
@@ -55,6 +56,8 @@ export async function copyToVirtual(
   if (result.transformed) {
     log.debug(`[virtual] ✓ ${relativePath}`)
   }
+
+  return destPath
 }
 
 /**
