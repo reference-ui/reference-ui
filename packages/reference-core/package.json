@@ -25,13 +25,14 @@
     "react-dom": "^18.0.0"
   },
   "scripts": {
-    "build": "node scripts/build-cli.mjs",
-    "build:fresh": "rm -rf dist/cli && node scripts/build-cli.mjs",
-    "dev": "node scripts/build-cli.mjs --watch",
+    "build": "tsup",
+    "build:fresh": "rm -rf dist/cli && tsup",
+    "dev": "tsup --watch",
     "test": "vitest run",
     "test:watch": "vitest"
   },
   "devDependencies": {
+    "tsup": "^8.4.0",
     "@types/picomatch": "^4.0.2",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
