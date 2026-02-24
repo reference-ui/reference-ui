@@ -6,18 +6,16 @@
 import { log } from '../lib/log'
 import { runWorker } from '../thread-pool'
 import type { ReferenceUIConfig } from '../config'
+import type { SyncOptions } from '../sync/types'
 
 /**
- * Start file watching in a worker thread
- * Watches for file changes and automatically rebuilds when needed
+ * Start file watching in a worker thread when options.watch is true.
  */
-export function initWatch(sourceDir: string, config: ReferenceUIConfig): void {
-  log.debug('[watch] Starting watch worker')
+export function initWatch(sourceDir: string, config: ReferenceUIConfig, options: SyncOptions): void {
+  if (!options.watch) return
 
-  runWorker('watch', {
-    sourceDir,
-    config,
-  }).catch(error => {
+  log.debug('[watch] Starting watch worker')
+  runWorker('watch', { sourceDir, config }).catch(error => {
     log.error('[watch] Watch worker failed:', error)
   })
 }
