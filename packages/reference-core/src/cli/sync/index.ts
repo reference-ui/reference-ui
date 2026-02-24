@@ -14,7 +14,7 @@ export const syncCommand = async (cwd: string, options: SyncOptions) => {
   initEventBus(config)
   initLog(config)
   initWatch(cwd, config, options)
-  initVirtual(cwd, config)
+  initVirtual(cwd, config, options)
   await initPackager(cwd, config)
   initSystem(cwd, config)
   await initTsPackager(cwd, config)
