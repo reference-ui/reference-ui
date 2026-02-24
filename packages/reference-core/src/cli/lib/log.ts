@@ -22,11 +22,17 @@ export function printDebug(...args: unknown[]) {
   if (!isDebug) {
     return
   }
-  console.log(pc.dim('debug'), ...args)
+  const colored = args.map((arg) =>
+    typeof arg === 'string' ? pc.dim(arg) : arg
+  )
+  console.log(pc.dim('debug'), ...colored)
 }
 
 export function printError(...args: unknown[]) {
-  console.error(pc.red('error'), ...args)
+  const colored = args.map((arg) =>
+    typeof arg === 'string' ? pc.red(arg) : arg
+  )
+  console.error(pc.red('error'), ...colored)
 }
 
 /**
