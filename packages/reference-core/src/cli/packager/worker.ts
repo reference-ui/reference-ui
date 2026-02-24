@@ -12,6 +12,17 @@ export interface PackagerWorkerPayload {
   watchMode?: boolean
 }
 
+function debounce<T extends (...args: unknown[]) => void>(fn: T, ms: number): T {
+  let timeout: ReturnType<typeof setTimeout> | null = null
+  return ((...args: Parameters<T>) => {
+    if (timeout) clearTimeout(timeout)
+    timeout = setTimeout(() => {
+      timeout = null
+      fn(...args)
+    }, ms)
+  }) as T
+}
+
 async function runPackagerCore(payload: PackagerWorkerPayload): Promise<void> {
   const { cwd } = payload
   const coreDir = resolveCorePackageDir()
@@ -48,14 +59,16 @@ export async function runPackager(payload: PackagerWorkerPayload): Promise<void>
   await runPackagerCore(payload)
 
   if (watchMode) {
-    on('system:compiled', async () => {
+    const debouncedBundle = debounce(async () => {
       log.debug('[packager:worker] system:compiled → bundling packages')
       try {
         await runPackagerCore(payload)
       } catch (err) {
         log.error('[packager:worker] Bundle failed:', err)
       }
-    })
+    }, 400)
+
+    on('system:compiled', () => debouncedBundle())
 
     // Stay alive
     return new Promise(() => {})
