@@ -6,9 +6,7 @@ import { initVirtual } from '../virtual'
 import { initWatch } from '../watch'
 import { initPackager } from '../packager'
 import { initTsPackager } from '../packager-ts'
-
 import { log } from '../lib/log'
-// reads config from ui.config.ts, copies user files to codegen, runs Panda codegen and css, generates primitives, and copies final artifacts to node_modules
 
 export const syncCommand = async (cwd: string, options: { watch?: boolean }) => {
   const config = await loadUserConfig(cwd)
@@ -16,11 +14,6 @@ export const syncCommand = async (cwd: string, options: { watch?: boolean }) => 
   initEventBus(config)
   initLog(config)
 
-  log.debug('🔍 Debug - CWD:', cwd)
-  log.debug('🔍 Debug - process.cwd():', process.cwd())
-  log('🔄 Syncing Reference UI...')
-
-  // Start file watching in a dedicated worker thread (if watch mode)
   if (options.watch) {
     initWatch(cwd, config)
   }
