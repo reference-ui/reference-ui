@@ -1,5 +1,8 @@
 # CLI TODO
 
+## combine cli and scripts.
+users should build 
+
 ## public build time api
 
 tokens(), keyframes, font() etc need to be added to eval
