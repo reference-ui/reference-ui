@@ -41,34 +41,13 @@ This happens **at build time**, not runtime.
 ## Architecture Diagram
 
 ```
-                         ┌─────────────────────┐
-                         │   CLI (ref sync)     │
-                         └──────────┬──────────┘
-                                    │
-              ┌─────────────────────┼─────────────────────┐
-              ▼                     ▼                     ▼
-       ┌─────────────┐       ┌─────────────┐       ┌─────────────┐
-       │   Virtual   │       │   System    │       │  Packager   │
-       │  (copy to   │  ──▶  │  (Panda     │  ──▶  │  (esbuild   │
-       │  .virtual)  │       │   codegen)  │       │   bundle)   │
-       └─────────────┘       └─────────────┘       └──────┬──────┘
-                                                           │
-                                              packager:complete
-                                                           │
-                                                           ▼
-                                                ┌─────────────────┐
-                                                │  Packager-TS    │
-                                                │  (.d.ts from    │
-                                                │   bundled .js)  │
-                                                └─────────────────┘
-                                                           │
-              ┌────────────────────────────────────────────┴─────┐
-              ▼                                                  ▼
-       ┌─────────────┐                                   node_modules/
-       │   Event Bus │                                   @reference-ui/react
-       │(BroadcastCh)│                                   ├─ react.js
-       └─────────────┘                                   ├─ react.d.ts
-                                                        └─ styles.css
+  Main Thread                    Worker Threads
+  ────────────                   ─────────────
+  CLI (ref sync)                 watch ──────┐
+       │                         virtual     │
+       │ runWorker()             system      ├──▶ Event Bus (BroadcastChannel)
+       └──────────────────────── packager    │    watch:change
+                                packager-ts ┘    packager:complete
 ```
 
 ---
@@ -119,11 +98,11 @@ The loader:
 **Architecture**:
 
 ```typescript
-// Type-safe event emission
-emit('virtual:change', { path: 'src/App.tsx', event: 'change' })
+// Type-safe event emission (e.g. from watch worker)
+emit('watch:change', { path: 'src/App.tsx', event: 'change' })
 
 // Type-safe event listening (works in any thread)
-on('virtual:change', payload => {
+on('watch:change', payload => {
   console.log('File changed:', payload.path)
 })
 ```
@@ -137,7 +116,8 @@ on('virtual:change', payload => {
 
 **Use Cases**:
 
-- Virtual filesystem notifying system of file changes
+- Watch module emitting `watch:change` when files change (consumed by sync for rebuilds)
+- Watch module emitting `watch:ready` when watcher is active
 - Packager emitting `packager:complete` when bundling finishes (for future watch-mode coordination with packager-ts)
 
 ---
@@ -178,6 +158,7 @@ Main Thread                     Worker Threads
 
 **Registered Workers**:
 
+- `watch` → `src/cli/watch/worker.ts`
 - `virtual` → `src/cli/virtual/worker.ts`
 - `system` → `src/cli/system/worker.ts`
 - `packager` → `src/cli/packager/worker.ts`
@@ -191,7 +172,48 @@ Main Thread                     Worker Threads
 
 ---
 
-### 4. Virtual Filesystem (`virtual/`)
+### 4. Watch Module (`watch/`)
+
+**Purpose**: Monitor file changes using @parcel/watcher and emit events for the sync pipeline
+
+**Key Files**:
+
+- `init.ts` - Initialization, starts watch worker
+- `worker.ts` - @parcel/watcher subscription, filters by config.include, emits events
+- `types.ts` - Payload types
+
+**How It Works**:
+
+```typescript
+// In sync (watch mode)
+initWatch(cwd, config)
+
+// Worker: subscribes to sourceDir with @parcel/watcher
+await subscribe(sourceDir, (err, events) => {
+  for (const ev of events) {
+    if (isMatch(relPath, config.include)) {
+      emit('watch:change', { event, path })
+    }
+  }
+}, { ignore: ['**/node_modules/**'] })
+```
+
+**Events Emitted**:
+
+- `watch:ready` - Watcher is active
+- `watch:change` - File added, changed, or removed (matching include patterns)
+- `watch:error` - Watcher error
+
+**Key Features**:
+
+- **@parcel/watcher**: Native backends (FSEvents, inotify, Watchman)
+- **Filtered**: Only emits for paths matching `config.include` (via picomatch)
+- **Worker thread**: Long-running subscription runs off main thread
+- **Loose coupling**: Emits events; sync or other modules listen and react
+
+---
+
+### 5. Virtual Filesystem (`virtual/`)
 
 **Purpose**: Copy and transform user files into a codegen directory for Panda CSS to scan
 
@@ -199,8 +221,7 @@ Main Thread                     Worker Threads
 
 - `init.ts` - Initialization and worker entry point
 - `copy.ts` - File copying with transformation support
-- `transform.ts` - Transform pipeline (MDX, CSS imports, CVA)
-- `watcher.ts` - File watching with chokidar
+- `config.internal.ts` - Glob config
 - `worker.ts` - Worker wrapper
 
 **Why a Virtual Filesystem?**
@@ -209,7 +230,7 @@ Panda CSS needs to scan files to extract styles, but it can't scan files outside
 
 1. Copies user files from `src/` to `reference-core/.virtual/`
 2. Transforms them (MDX → JSX, rewrite imports)
-3. Updates on file changes in watch mode
+3. On `watch:change` events (from watch module), sync triggers a full resync including virtual copy
 4. Gets scanned by Panda CSS during codegen
 
 **Transformation Pipeline**:
@@ -235,16 +256,7 @@ User File (src/App.tsx)
 
 **Watch Mode**:
 
-```typescript
-// Watches user's include patterns
-setupWatcher({ sourceDir, include: ['src/**/*.{ts,tsx}'], debug }, async event => {
-  if (event.event === 'unlink') {
-    await removeFromVirtual(event.path)
-  } else {
-    await copyToVirtual(event.path)
-  }
-})
-```
+The watch module emits `watch:change` when files change. Sync listens and runs the full pipeline (virtual → system → packager → packager-ts) on change. See [Watch Module](#4-watch-module-watch) for details.
 
 **Supported Transformations**:
 
@@ -254,13 +266,13 @@ setupWatcher({ sourceDir, include: ['src/**/*.{ts,tsx}'], debug }, async event =
 
 ---
 
-### 5. System (`system/`)
+### 6. System (`system/`)
 
 **Purpose**: Core Panda CSS integration - config compilation, codegen, CSS generation
 
 This is the **heart** of the CLI. It compiles your design tokens into a Panda CSS config and generates static CSS and TypeScript utilities.
 
-#### 5.1 Config Compilation (`system/config/`)
+#### 6.1 Config Compilation (`system/config/`)
 
 **The Problem**: Panda CSS needs a single `panda.config.ts`, but users define tokens across multiple files using `extendTokens()`, `extendRecipe()`, etc.
 
@@ -341,7 +353,7 @@ export default defineConfig({
 
 **The Magic**: Using esbuild to bundle and execute code in isolation, collecting side effects (the `extendPandaConfig` calls).
 
-#### 5.2 Eval System (`system/eval/`)
+#### 6.2 Eval System (`system/eval/`)
 
 **Purpose**: Execute files in isolation to collect config fragments
 
@@ -374,7 +386,7 @@ const fragments = globalThis.__refPandaConfigCollector
 
 **Why Random Cache Keys?** Node caches imports by URL. Random keys prevent stale imports.
 
-#### 5.3 Code Generation (`system/gen/`)
+#### 6.3 Code Generation (`system/gen/`)
 
 **Purpose**: Run Panda CSS codegen and CSS generation
 
@@ -402,7 +414,7 @@ panda --watch --poll &
 
 **Why `--poll`?** Some filesystems (Docker, network drives) don't support native watching. Polling is more reliable.
 
-#### 5.4 Box Pattern (`system/boxPattern/`)
+#### 6.4 Box Pattern (`system/boxPattern/`)
 
 **Purpose**: Generate Panda's custom `box` pattern for layout primitives
 
@@ -427,7 +439,7 @@ This enables:
 <Box display="flex" p="4" bg="blue.500" />
 ```
 
-#### 5.5 Font System (`system/fontFace/`)
+#### 6.5 Font System (`system/fontFace/`)
 
 **Purpose**: Generate `@font-face` declarations and font tokens
 
@@ -458,7 +470,7 @@ And tokens:
 }
 ```
 
-#### 5.6 System Worker (`system/worker.ts`)
+#### 6.6 System Worker (`system/worker.ts`)
 
 **Purpose**: Orchestrate all system tasks in a worker thread
 
@@ -637,23 +649,26 @@ program.command('sync').action(runCommand(options => syncCommand(cwd, options)))
 3. Init Log
    └─ Configure logging based on debug flag
 
-4. Virtual Filesystem (Worker Thread)
+4. Watch (Worker Thread, if --watch)
+   └─ Subscribe to sourceDir with @parcel/watcher, emit watch:change
+
+5. Virtual Filesystem (Worker Thread)
    ├─ Create .virtual/ directory
    ├─ Scan include patterns
    ├─ Copy files (20-100ms per file)
    └─ Transform (MDX, imports)
 
-5. System (Worker Thread)
+6. System (Worker Thread)
    ├─ Eval: Scan src/styled/ (50-200ms)
    ├─ Compile: Create panda.config.ts (300-800ms)
    ├─ Codegen: Run panda codegen (2-5s)
    └─ CSS: Run panda (1-3s)
 
-6. Packager (Worker Thread)
+7. Packager (Worker Thread)
    ├─ Bundle @reference-ui/react (500ms-2s)
    └─ Copy to node_modules (50-200ms)
 
-7. Packager-TS (Worker Thread)
+8. Packager-TS (Worker Thread)
    └─ Generate .d.ts from bundled .js (200-500ms)
 
 Total: ~5-15 seconds (depending on project size)
@@ -665,13 +680,16 @@ Total: ~5-15 seconds (depending on project size)
 User saves src/App.tsx
          │
          ▼
-   Chokidar detects change
+   @parcel/watcher detects change
+         │
+         ▼
+   Watch worker: emit('watch:change')
+         │
+         ▼
+   Sync (main): on('watch:change') → run pipeline
          │
          ▼
    Virtual: Copy to .virtual/ (~10ms)
-         │
-         ▼
-   Emit 'virtual:change' event
          │
          ▼
    System: Run panda codegen (incremental, ~500ms)
@@ -1002,29 +1020,30 @@ Each file goes through:
 
 #### Watch Mode Implementation
 
-```typescript
-const watcher = chokidar.watch(include, {
-  cwd: sourceDir,
-  ignoreInitial: true,
-  persistent: true,
-  awaitWriteFinish: {
-    stabilityThreshold: 50,
-    pollInterval: 10,
-  },
-})
+The watch module uses @parcel/watcher (see [Watch Module](watch/README.md)):
 
-watcher.on('all', (event, path) => {
-  handler({ event, path })
-})
+```typescript
+// watch/worker.ts
+await subscribe(
+  sourceDir,
+  (err, events) => {
+    for (const ev of events) {
+      if (isMatch(relPath, include)) {
+        emit('watch:change', { event: mapType(ev.type), path: relPath })
+      }
+    }
+  },
+  { ignore: ['**/node_modules/**'] }
+)
 ```
 
-**Events Handled**:
+**Events Emitted** (mapped from parcel):
 
 - `add` - New file created
 - `change` - File modified
 - `unlink` - File deleted
 
-**Debouncing**: `awaitWriteFinish` prevents handling partial writes.
+**Filtering**: Only paths matching `config.include` (e.g. `src/**/*.{ts,tsx,mdx}`) are emitted. Parcel handles throttling/coalescing for bulk changes.
 
 ### Packager Deep Dive
 
@@ -1412,7 +1431,7 @@ grep "@layer tokens" src/system/styles.css
 
 **Causes**:
 
-1. Chokidar not watching correct directory
+1. @parcel/watcher not detecting changes (check include patterns, node_modules is ignored)
 2. Include patterns don't match files
 3. File in node_modules (ignored)
 
@@ -1544,6 +1563,7 @@ The Reference UI CLI is a sophisticated build orchestrator that:
 
 - [Config Compilation](system/config/readme.md)
 - [Eval System](system/eval/readme.md)
+- [Watch Module](watch/README.md)
 - [Virtual Filesystem](virtual/README.md)
 - [Event Bus](event-bus/README.md)
 - [Packager](packager/README.md)
