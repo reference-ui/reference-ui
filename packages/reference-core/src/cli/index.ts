@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { Command } from 'commander'
-import { syncCommand } from './sync'
+import { syncCommand, type SyncOptions } from './sync'
 import { runCommand } from './lib'
 import { log } from './lib/log'
 
@@ -16,7 +16,7 @@ async function main(): Promise<void> {
     .command('sync', { isDefault: true })
     .description('Build and sync the design system')
     .option('-w, --watch', 'Watch for changes and rebuild')
-    .action(runCommand(options => syncCommand(process.cwd(), { watch: options.watch })))
+    .action(runCommand(options => syncCommand(process.cwd(), options as SyncOptions)))
 
   program.parse()
 }

@@ -6,7 +6,6 @@ import { log } from '../lib/log'
 import { runWorker } from '../thread-pool'
 import { resolveCorePackageDir } from '../lib/resolve-core'
 import { DEFAULT_VIRTUAL_DIR, GLOB_CONFIG } from './config.internal'
-import type { InitVirtualOptions } from './types'
 import type { ReferenceUIConfig } from '../config'
 
 /**
@@ -14,7 +13,6 @@ import type { ReferenceUIConfig } from '../config'
  */
 export interface VirtualWorkerPayload {
   sourceDir: string
-
   config: ReferenceUIConfig
   virtualDir?: string
 }
@@ -22,24 +20,15 @@ export interface VirtualWorkerPayload {
 /**
  * Initialize the virtual filesystem.
  * Performs a one-time copy of files to the virtual directory.
- *
- * @param sourceDir - Source directory (typically the user's project root)
- * @param config - User's Reference UI configuration
- * @param options - Additional options (virtual directory path)
+ * Reads virtualDir from config.
  */
-export function initVirtual(
-  sourceDir: string,
-  config: ReferenceUIConfig,
-  options: InitVirtualOptions = {}
-): void {
+export function initVirtual(sourceDir: string, config: ReferenceUIConfig): void {
   log.debug('[virtual] initVirtual called')
-  log.debug('[virtual] options:', JSON.stringify(options))
 
-  // Kick off heavy initialization in worker thread (non-blocking)
   runWorker('virtual', {
     sourceDir,
     config,
-    virtualDir: options.virtualDir,
+    virtualDir: config.virtualDir,
   })
     .then(() => {
       log.debug('[virtual] Initial copy complete')

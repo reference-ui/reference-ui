@@ -1,33 +1,22 @@
 import { initLog } from '../lib/log'
 import { initEventBus } from '../event-bus'
 import { loadUserConfig } from '../config'
+import { initPackager } from '../packager'
 import { initSystem } from '../system'
+import { initTsPackager } from '../packager-ts'
 import { initVirtual } from '../virtual'
 import { initWatch } from '../watch'
-import { initPackager } from '../packager'
-import { initTsPackager } from '../packager-ts'
-import { log } from '../lib/log'
+import type { SyncOptions } from './types'
+export type { SyncOptions } from './types'
 
-export const syncCommand = async (cwd: string, options: { watch?: boolean }) => {
+export const syncCommand = async (cwd: string, options: SyncOptions) => {
   const config = await loadUserConfig(cwd)
 
   initEventBus(config)
   initLog(config)
-
-  if (options.watch) {
-    initWatch(cwd, config)
-  }
-
-  // Initialize virtual filesystem (one-time copy)
-  initVirtual(cwd, config, {
-    virtualDir: config.virtualDir,
-  })
-
+  initWatch(cwd, config, options)
+  initVirtual(cwd, config)
   initSystem(cwd, config)
-
-  // Package the generated code into node_modules
   await initPackager(cwd, config)
-
-  // Generate TypeScript declarations from bundled .js
   await initTsPackager(cwd, config)
 }
