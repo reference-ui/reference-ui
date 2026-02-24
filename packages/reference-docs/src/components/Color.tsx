@@ -9,7 +9,7 @@ interface ColorProps {
 export function Color({ name, value }: ColorProps) {
   return (
     <Div
-      display="flex1"
+      display="flex2"
       alignItems="center"
       gap="3r"
       padding="2r"
