@@ -9,8 +9,8 @@ import {
   statSync,
   readFileSync,
   rmSync,
-  symlinkSync,
 } from 'node:fs'
+import symlinkDir from 'symlink-dir'
 import { log } from '../lib/log'
 import type { PackageDefinition } from './packages'
 
@@ -263,7 +263,13 @@ export async function bundleAllPackages(
       rmSync(linkPath, { recursive: true, force: true })
     }
 
-    symlinkSync(targetDir, linkPath, 'dir')
+    // targetDir is always a directory — bundlePackage creates it and writes contents first.
+    // symlink-dir would create a broken junction on Windows if target were a file.
+    if (!existsSync(targetDir) || !statSync(targetDir).isDirectory()) {
+      throw new Error(`Packager target ${targetDir} must be a directory (symlink-dir requires it on Windows)`)
+    }
+
+    symlinkDir.sync(targetDir, linkPath)
 
     log(`   ✓ ${pkg.name} → ${linkPath}`)
   }

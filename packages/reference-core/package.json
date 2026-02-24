@@ -18,7 +18,8 @@
     "picocolors": "^1.1.0",
     "picomatch": "^4.0.0",
     "piscina": "^5.1.4",
-    "tsdown": "^0.20.1"
+    "tsdown": "^0.20.1",
+    "symlink-dir": "^9.0.0"
   },
   "peerDependencies": {
     "react": "^18.0.0",
