@@ -1,4 +1,5 @@
 import pc from 'picocolors'
+import { isMainThread } from 'node:worker_threads'
 import { on, emit } from '../event-bus'
 
 type LogFn = (...args: unknown[]) => void
@@ -32,15 +33,33 @@ export function printError(...args: unknown[]) {
  * Log object - emits events (works across threads)
  */
 const log = ((...args: unknown[]) => {
-  emit('log:info', { message: String(args[0] ?? ''), args: args.slice(1) })
+  const message = String(args[0] ?? '')
+  const rest = args.slice(1)
+  if (isMainThread) {
+    printInfo(message, ...rest)
+    return
+  }
+  emit('log:info', { message, args: rest })
 }) as Log
 
 log.error = (...args: unknown[]) => {
-  emit('log:error', { message: String(args[0] ?? ''), args: args.slice(1) })
+  const message = String(args[0] ?? '')
+  const rest = args.slice(1)
+  if (isMainThread) {
+    printError(message, ...rest)
+    return
+  }
+  emit('log:error', { message, args: rest })
 }
 
 log.debug = (...args: unknown[]) => {
-  emit('log:debug', { message: String(args[0] ?? ''), args: args.slice(1) })
+  const message = String(args[0] ?? '')
+  const rest = args.slice(1)
+  if (isMainThread) {
+    printDebug(message, ...rest)
+    return
+  }
+  emit('log:debug', { message, args: rest })
 }
 
 /**
