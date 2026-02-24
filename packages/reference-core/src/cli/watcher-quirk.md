@@ -45,12 +45,8 @@ It's one of those "the tool is doing what it says, you just didn't realize what 
 
 **macOS / Linux:** Solid. `symlinkSync(..., 'dir')` works without special permissions.
 
-**Windows:** Fragile out of the box.
+**Windows:** `symlinkSync(..., 'dir')` requires Developer Mode or Administrator; otherwise `EPERM`. Junctions work without elevation.
 
-- `symlinkSync(..., 'dir')` requires either **Developer Mode** (Windows 10+) or running as Administrator. Otherwise you get `EPERM`.
-- **Junction fallback:** Use `'junction'` instead of `'dir'` on Windows — junctions don't require elevation and work for directory links. Limitation: target must be absolute (we already use absolute paths).
-- Not yet implemented: we could add `process.platform === 'win32' ? 'junction' : 'dir'` and/or try symlink first, fall back to junction on EPERM.
+**We use [`symlink-dir`](https://github.com/pnpm/symlink-dir)** — a small, cross-platform utility that automatically falls back to junctions on Windows when symlinks aren't allowed. Handles this for us; no custom logic needed.
 
-**Vite watcher:** Chokidar (used by Vite) follows symlinks by default; junctions appear as regular directories to the watcher. Should work on all platforms once the link exists.
-
-**Recommendation:** Add the junction fallback for Windows if we want this to work for devs without Developer Mode.
+**Vite watcher:** Chokidar follows symlinks by default; junctions appear as directories. Works on all platforms once the link exists.
