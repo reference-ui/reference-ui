@@ -1,7 +1,12 @@
 # CLI TODO
 
 ## combine cli and scripts.
-users should build 
+to expose a public api without breaking the users env, 
+/system and /react ideally need to exist before eval() runs .
+therefore, we need to plan to merge scripts and cli in reference-ui,
+specifically we should not actually prebuild the cli then have users install it,
+we need to make ref-sync more self aware and portable
+
 
 ## public build time api
 
