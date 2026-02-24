@@ -1,14 +1,14 @@
-import React from 'react';
-import { Div, H2, P, Pre } from '@reference-ui/core';
+import React from 'react'
+import { Div, H2, P, Pre } from '@reference-ui/react'
 
-type Props = { children: React.ReactNode };
-type State = { error: Error | null };
+type Props = { children: React.ReactNode }
+type State = { error: Error | null }
 
 export class ErrorBoundary extends React.Component<Props, State> {
-  state: State = { error: null };
+  state: State = { error: null }
 
   static getDerivedStateFromError(error: Error) {
-    return { error };
+    return { error }
   }
 
   render() {
@@ -19,8 +19,8 @@ export class ErrorBoundary extends React.Component<Props, State> {
           <P>{this.state.error.message}</P>
           <Pre>{this.state.error.stack}</Pre>
         </Div>
-      );
+      )
     }
-    return this.props.children;
+    return this.props.children
   }
 }

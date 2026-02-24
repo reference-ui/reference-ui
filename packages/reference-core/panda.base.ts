@@ -1,5 +1,5 @@
 import { defineConfig, type Config } from '@pandacss/dev'
-import { extendPandaConfig } from '@reference-ui/core/panda-config'
+import { extendPandaConfig } from './src/cli/system/config/extendPandaConfig'
 
 // Side effects: register theme, utilities, globalCss, etc. via styled/api
 import './src/styled/index'
@@ -10,8 +10,8 @@ const baseConfig = {
   presets: [],
   jsxFramework: 'react' as const,
   preflight: true,
-  
-  include: ['src/**/*.{ts,tsx}'],
+
+  include: ['.virtual/**/*.{ts,tsx,js,jsx}', 'src/**/*.{ts,tsx,js,jsx}'],
 
   exclude: [
     '**/node_modules/**',

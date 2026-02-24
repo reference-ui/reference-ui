@@ -18,12 +18,18 @@
     "importHelpers": false,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
+    "resolveJsonModule": true,
     "baseUrl": ".",
     "paths": {
       "@reference-ui/core": ["./src/entry/index.ts"],
       "@reference-ui/core/*": ["./src/*"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.d.ts"],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.d.ts",
+    "src/cli/virtual/worker.mjs"
+  ],
   "exclude": ["node_modules", "dist"]
 }

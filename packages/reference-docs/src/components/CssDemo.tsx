@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Div, css } from '@reference-ui/core';
+import { useState } from 'react'
+import { Div, css } from '@reference-ui/react'
 
 /**
  * Demo component showcasing the css() API.
@@ -7,7 +7,7 @@ import { Div, css } from '@reference-ui/core';
  */
 
 export function CssDemo() {
-  const [isHovered, setIsHovered] = useState(false);
+  const [isHovered, setIsHovered] = useState(false)
 
   return (
     <Div display="flex" flexDirection="column" gap="10r">
@@ -306,8 +306,7 @@ export function CssDemo() {
                 padding: '6r',
                 bg: 'gray.50',
                 borderRadius: 'xl',
-                boxShadow:
-                  '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
                 _before: {
                   content: '""',
                   position: 'absolute',
@@ -341,7 +340,7 @@ export function CssDemo() {
                 gap: '4r',
               })}
             >
-              {[1, 2, 3, 4, 5, 6].map((num) => (
+              {[1, 2, 3, 4, 5, 6].map(num => (
                 <div
                   key={num}
                   className={css({
@@ -419,5 +418,5 @@ export function CssDemo() {
         </Div>
       </Div>
     </Div>
-  );
+  )
 }

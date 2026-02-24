@@ -1,4 +1,3 @@
-
 # Font API Design
 
 Clean API that combines font tokens, @font-face rules, and recipe variants.
@@ -12,29 +11,29 @@ import { font } from '@reference-ui/core'
 font('sans', {
   // Font-family value - what the 'sans' token resolves to
   value: '"Inter", ui-sans-serif, sans-serif',
-  
+
   // @font-face rules - can be single or array
-   fontFace: {
+  fontFace: {
     src: 'url(...)',
     fontWeight: '200 900',
     sizeAdjust: '104%',
     descentOverride: '47%',
   },
-  
+
   // Named font weights for this font
   weights: {
     thin: '200',
     light: '300',
-    normal: '400',    // CSS keyword
+    normal: '400', // CSS keyword
     semibold: '600',
-    bold: '700',      // CSS keyword
+    bold: '700', // CSS keyword
     black: '900',
   },
-  
+
   css: {
     letterSpacing: '-0.01em',
     fontWeight: 'normal',
-  }
+  },
 })
 
 font('serif', {
@@ -48,7 +47,7 @@ font('serif', {
   weights: {
     thin: '100',
     light: '300',
-    normal: '373',    // custom for this font
+    normal: '373', // custom for this font
     semibold: '600',
     bold: '700',
     black: '900',
@@ -56,7 +55,7 @@ font('serif', {
   css: {
     letterSpacing: 'normal',
     fontWeight: 'normal',
-  }
+  },
 })
 
 // Multiple @font-face variants (regular + italic)
@@ -72,7 +71,7 @@ font('display', {
       src: 'url(...) format("woff2")',
       fontWeight: '400',
       fontStyle: 'italic',
-    }
+    },
   ],
   weights: {
     normal: '400',
@@ -81,7 +80,7 @@ font('display', {
   css: {
     letterSpacing: '0.02em',
     fontWeight: 'normal',
-  }
+  },
 })
 ```
 
@@ -96,15 +95,15 @@ font('display', {
 
 ```typescript
 // In components
-css({ font: 'sans' })  // Applies fontFamily + default styles
+css({ font: 'sans' }) // Applies fontFamily + default styles
 
 // Or just the token
-css({ fontFamily: 'sans' })  // Just the font-family
+css({ fontFamily: 'sans' }) // Just the font-family
 
 // Use named weights
-css({ 
+css({
   fontFamily: 'sans',
-  fontWeight: 'sans.semibold'  // Uses the registered weight
+  fontWeight: 'sans.semibold', // Uses the registered weight
 })
 ```
 
@@ -154,6 +153,7 @@ The `font()` function must also register a Panda **pattern** to enable JSX props
 ### Complete Registration Flow
 
 When you call `font('sans', {...})`, it:
+
 1. Registers font token: `tokens({ fonts: { sans: { value: '...' } } })`
 2. Registers weight tokens: `tokens({ fontWeights: { 'sans.thin': '100', ... } })`
 3. Adds @font-face rules to globalCss
@@ -169,6 +169,7 @@ The `font()` API follows the same architecture as `boxPattern` and `config`, req
 #### 1. Font Collector (`cli/panda/fontFace/`)
 
 Similar to `boxPattern/`, this microbundle:
+
 - **Collects** `font()` calls from `styled/font/` directory
 - **Generates** `font.ts` with inlined pattern transforms
 - **Bundles** font registration code at build time
@@ -181,13 +182,14 @@ font('sans', {
   value: '"Inter", ui-sans-serif, sans-serif',
   fontFace: { src: '...', fontWeight: '200 900' },
   weights: { thin: '200', normal: '400', bold: '700' },
-  css: { letterSpacing: '-0.01em', fontWeight: 'normal' }
+  css: { letterSpacing: '-0.01em', fontWeight: 'normal' },
 })
 
 // CLI collects this and generates font.ts
 ```
 
 **Build Process:**
+
 1. Scan `styled/font/` for `font()` calls
 2. Execute files via microbundle (like `collectEntryTemplate.ts`)
 3. Extract font definitions and pattern transform sources
@@ -216,7 +218,7 @@ extendTokens({
     'serif.thin': { value: '100' },
     'serif.normal': { value: '373' },
     // ...
-  }
+  },
 })
 
 // @font-face rules
@@ -230,7 +232,7 @@ globalFontface({
     src: 'url(...) format("woff2")',
     fontWeight: '200 900',
     fontDisplay: 'swap',
-  }
+  },
 })
 
 // Recipe variants
@@ -249,9 +251,9 @@ recipe({
           letterSpacing: 'normal',
           fontWeight: '373',
         },
-      }
-    }
-  }
+      },
+    },
+  },
 })
 
 // Pattern with self-contained transform
@@ -262,25 +264,25 @@ pattern({
   },
   transform(props: Record<string, any>) {
     const { font, weight } = props
-    
+
     // MUST be inlined - no closures allowed (Panda limitation)
     const FONT_PRESETS = {
       sans: { fontFamily: 'sans', letterSpacing: '-0.01em', fontWeight: '400' },
       serif: { fontFamily: 'serif', letterSpacing: 'normal', fontWeight: '373' },
     }
-    
+
     const result: Record<string, any> = {}
-    
+
     if (font) {
       Object.assign(result, FONT_PRESETS[font as keyof typeof FONT_PRESETS] || {})
     }
-    
+
     if (weight) {
       result.fontWeight = weight
     }
-    
+
     return result
-  }
+  },
 })
 ```
 
@@ -291,6 +293,7 @@ pattern({
 #### Why No Closures?
 
 When Panda generates runtime pattern files (`styled-system/patterns/box.js`):
+
 1. ✅ Our CLI bundles `panda.config.ts` correctly with all dependencies
 2. ❌ Panda's codegen only serializes the `transform()` function body
 3. ❌ External constants/imports are NOT included in generated runtime files
@@ -308,7 +311,7 @@ transform(props: Record<string, any>) {
     sans: { fontFamily: 'sans', letterSpacing: '-0.01em', fontWeight: '400' },
     serif: { fontFamily: 'serif', letterSpacing: 'normal', fontWeight: '373' },
   }
-  
+
   const WEIGHT_TOKENS = {
     'sans.thin': '200',
     'sans.normal': '400',
@@ -317,18 +320,18 @@ transform(props: Record<string, any>) {
     'serif.normal': '373',
     // ...
   }
-  
+
   const { font, weight } = props
   const result: Record<string, any> = {}
-  
+
   if (font && FONT_PRESETS[font]) {
     Object.assign(result, FONT_PRESETS[font])
   }
-  
+
   if (weight && WEIGHT_TOKENS[weight]) {
     result.fontWeight = WEIGHT_TOKENS[weight]
   }
-  
+
   return result
 }
 ```
@@ -336,6 +339,7 @@ transform(props: Record<string, any>) {
 #### Code Generation Strategy
 
 The CLI generator must:
+
 1. **Collect** all `font()` calls
 2. **Build** the `FONT_PRESETS` and `WEIGHT_TOKENS` objects from collected data
 3. **Inline** these objects directly into the `transform()` function source
@@ -351,12 +355,13 @@ font('sans', { value: '...', fontFace: {...}, weights: {...}, css: {...} })
 
 // Generates calls to:
 tokens({...})           // Font family + weight tokens
-globalFontface({...})   // @font-face rules  
+globalFontface({...})   // @font-face rules
 recipe({...})          // fontStyle recipe variant
 pattern({...})         // Box pattern extension (font + weight props)
 ```
 
 **Implementation:**
+
 - `font()` is defined in `styled/api/font.ts`
 - Internally calls `extendFontCollector()` (similar to `extendBoxPattern`)
 - CLI bundles and generates the orchestrated API calls
@@ -390,28 +395,32 @@ Add to CLI build process (similar to box pattern):
 import { createFontSystem } from './panda/fontFace'
 
 await createBoxPattern(coreDir)
-await createFontSystem(coreDir)  // Add this
+await createFontSystem(coreDir) // Add this
 await createPandaConfig(coreDir)
 ```
 
 ## Design Validation
 
 ### ✅ Follows Existing Patterns
+
 - Uses same collector/generator architecture as `boxPattern` and `config`
 - Respects the "no closures" constraint for pattern transforms
 - Integrates with existing styled/api functions
 
 ### ✅ Type Safety
+
 - Font names and weights are known at build time
 - TypeScript autocomplete works for `font` and `weight` props
 - Generated types match registered fonts
 
 ### ✅ Single Source of Truth
+
 - User defines fonts once with `font()`
 - CLI generates all necessary integrations
 - No manual synchronization between tokens, @font-face, recipes, and patterns
 
 ### ✅ Extensible
+
 - New fonts added by calling `font()` again
 - CLI regenerates on each build
 - No breaking changes to existing patterns
@@ -419,15 +428,21 @@ await createPandaConfig(coreDir)
 ### Potential Issues
 
 #### Issue 1: Pattern Transform Size
+
 If many fonts are registered, inlined `FONT_PRESETS` could be large.
+
 - **Solution:** Generate separate lookup files if needed, but keep transform self-contained
 
 #### Issue 2: Build Time
+
 Additional CLI step for font collection/generation.
+
 - **Mitigation:** Should be fast (similar speed to boxPattern), runs only on build/sync
 
 #### Issue 3: Recipe Merging
+
 Multiple `font()` calls must merge into single `fontStyle` recipe.
+
 - **Solution:** CLI collects all variants and generates one recipe call
 
 ## Open Questions

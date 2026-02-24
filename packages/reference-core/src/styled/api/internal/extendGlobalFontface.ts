@@ -1,5 +1,5 @@
 import type { Config } from '@pandacss/dev'
-import { extendPandaConfig } from '../../../cli/panda/config/extendPandaConfig'
+import { extendPandaConfig } from '../../../cli/system/config/extendPandaConfig'
 
 /**
  * Register global @font-face rules with Panda CSS.
@@ -18,7 +18,9 @@ import { extendPandaConfig } from '../../../cli/panda/config/extendPandaConfig'
  * })
  * ```
  */
-export function extendGlobalFontface(fontface: NonNullable<Config['globalFontface']>): void {
+export function extendGlobalFontface(
+  fontface: NonNullable<Config['globalFontface']>
+): void {
   extendPandaConfig({
     globalFontface: fontface,
   })

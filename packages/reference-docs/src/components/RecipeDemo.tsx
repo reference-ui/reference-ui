@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Div, recipe } from '@reference-ui/core';
+import { useState } from 'react'
+import { Div, recipe } from '@reference-ui/react'
 
 /**
  * Demo component showcasing the recipe() API.
@@ -21,8 +21,7 @@ const buttonRecipe = recipe({
     boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
     _hover: {
       transform: 'translateY(-1px)',
-      boxShadow:
-        '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
     },
     _active: {
       transform: 'translateY(0)',
@@ -168,31 +167,25 @@ const buttonRecipe = recipe({
     size: 'md',
     colorScheme: 'blue',
   },
-});
+})
 
 const DemoSection = ({
   title,
   children,
 }: {
-  title: string;
-  children: React.ReactNode;
+  title: string
+  children: React.ReactNode
 }) => (
   <Div>
-    <Div
-      fontSize="md"
-      fontWeight="600"
-      color="gray.700"
-      mb="3r"
-      letterSpacing="-0.5px"
-    >
+    <Div fontSize="md" fontWeight="600" color="gray.700" mb="3r" letterSpacing="-0.5px">
       {title}
     </Div>
     {children}
   </Div>
-);
+)
 
 export function RecipeDemo() {
-  const [count, setCount] = useState(0);
+  const [count, setCount] = useState(0)
 
   return (
     <Div display="flex" flexDirection="column" gap="10r">
@@ -213,15 +206,9 @@ export function RecipeDemo() {
         >
           <DemoSection title="Visual Variants">
             <Div display="flex" gap="3r" flexWrap="wrap">
-              <button className={buttonRecipe({ visual: 'solid' })}>
-                Solid
-              </button>
-              <button className={buttonRecipe({ visual: 'outline' })}>
-                Outline
-              </button>
-              <button className={buttonRecipe({ visual: 'ghost' })}>
-                Ghost
-              </button>
+              <button className={buttonRecipe({ visual: 'solid' })}>Solid</button>
+              <button className={buttonRecipe({ visual: 'outline' })}>Outline</button>
+              <button className={buttonRecipe({ visual: 'ghost' })}>Ghost</button>
             </Div>
           </DemoSection>
 
@@ -235,18 +222,10 @@ export function RecipeDemo() {
 
           <DemoSection title="Color Schemes">
             <Div display="flex" gap="3r" flexWrap="wrap">
-              <button className={buttonRecipe({ colorScheme: 'blue' })}>
-                Blue
-              </button>
-              <button className={buttonRecipe({ colorScheme: 'purple' })}>
-                Purple
-              </button>
-              <button className={buttonRecipe({ colorScheme: 'green' })}>
-                Green
-              </button>
-              <button className={buttonRecipe({ colorScheme: 'red' })}>
-                Red
-              </button>
+              <button className={buttonRecipe({ colorScheme: 'blue' })}>Blue</button>
+              <button className={buttonRecipe({ colorScheme: 'purple' })}>Purple</button>
+              <button className={buttonRecipe({ colorScheme: 'green' })}>Green</button>
+              <button className={buttonRecipe({ colorScheme: 'red' })}>Red</button>
             </Div>
           </DemoSection>
 
@@ -296,7 +275,7 @@ export function RecipeDemo() {
                   size: 'md',
                   colorScheme: 'blue',
                 })}
-                onClick={() => setCount((c) => c + 1)}
+                onClick={() => setCount(c => c + 1)}
               >
                 Clicked {count} times
               </button>
@@ -325,5 +304,5 @@ export function RecipeDemo() {
         </Div>
       </Div>
     </Div>
-  );
+  )
 }

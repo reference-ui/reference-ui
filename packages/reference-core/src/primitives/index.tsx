@@ -1,13 +1,124 @@
-/** Generated. Run: node scripts/generate-primitives.cjs */
+/** Generated. Run: node scripts/generate-primitives.cjs
+ * styled[tag] + box pattern (r, container, font, weight) + recipes where available.
+ */
 
-import { createPrimitive } from './createPrimitive'
-import type { PrimitiveProps, PrimitiveElement } from './types.js'
-
-import { abbrStyle, bStyle, blockquoteStyle, citeStyle, codeStyle, emStyle, h1Style, h2Style, h3Style, h4Style, h5Style, h6Style, iStyle, kbdStyle, markStyle, pStyle, preStyle, qStyle, sStyle, sampStyle, smallStyle, strongStyle, subStyle, supStyle, uStyle, varStyle } from '../system/recipes'
+import * as React from 'react'
+import { forwardRef } from 'react'
+// @ts-expect-error - Panda codegen helpers.js has no declaration file
+import { splitProps } from '../system/helpers.js'
+import { box } from '../system/patterns/box.js'
+import { styled } from '../system/jsx/index.js'
+import { abbrStyle, bStyle, blockquoteStyle, citeStyle, codeStyle, emStyle, h1Style, h2Style, h3Style, h4Style, h5Style, h6Style, iStyle, kbdStyle, markStyle, pStyle, preStyle, qStyle, sStyle, sampStyle, smallStyle, strongStyle, subStyle, supStyle, uStyle, varStyle } from '../system/recipes/index.js'
+import type { PrimitiveElement, PrimitiveProps } from './types'
 
 export { TAGS as HTML_TAGS, type Tag as HtmlTag } from './tags'
 export type { PrimitiveElement, PrimitiveProps } from './types'
 
+const BOX_KEYS = ['font', 'weight', 'container', 'r'] as const
+const splitBoxProps = <T extends Record<string, unknown>>(props: T) => splitProps(props, BOX_KEYS)
+
+
+const StyledA = styled['a']; export const A = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledA ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'a'> & React.RefAttributes<PrimitiveElement<'a'>>>
+const StyledAbbr = styled['abbr']; export const Abbr = forwardRef<PrimitiveElement<'abbr'>, PrimitiveProps<'abbr'>>(({ className, ...props }, ref) => { const [p, r] = splitBoxProps(props); const recipeClass = abbrStyle(); return <StyledAbbr ref={ref} className={recipeClass + (className ? ' ' + className : '')} {...(box.raw(p) as object)} {...(r as object)} /> })
+const StyledAddress = styled['address']; export const Address = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledAddress ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'address'> & React.RefAttributes<PrimitiveElement<'address'>>>
+const StyledArea = styled['area']; export const Area = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledArea ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'area'> & React.RefAttributes<PrimitiveElement<'area'>>>
+const StyledArticle = styled['article']; export const Article = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledArticle ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'article'> & React.RefAttributes<PrimitiveElement<'article'>>>
+const StyledAside = styled['aside']; export const Aside = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledAside ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'aside'> & React.RefAttributes<PrimitiveElement<'aside'>>>
+const StyledAudio = styled['audio']; export const Audio = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledAudio ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'audio'> & React.RefAttributes<PrimitiveElement<'audio'>>>
+const StyledB = styled['b']; export const B = forwardRef<PrimitiveElement<'b'>, PrimitiveProps<'b'>>(({ className, ...props }, ref) => { const [p, r] = splitBoxProps(props); const recipeClass = bStyle(); return <StyledB ref={ref} className={recipeClass + (className ? ' ' + className : '')} {...(box.raw(p) as object)} {...(r as object)} /> })
+const StyledBdi = styled['bdi']; export const Bdi = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledBdi ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'bdi'> & React.RefAttributes<PrimitiveElement<'bdi'>>>
+const StyledBdo = styled['bdo']; export const Bdo = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledBdo ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'bdo'> & React.RefAttributes<PrimitiveElement<'bdo'>>>
+const StyledBlockquote = styled['blockquote']; export const Blockquote = forwardRef<PrimitiveElement<'blockquote'>, PrimitiveProps<'blockquote'>>(({ className, ...props }, ref) => { const [p, r] = splitBoxProps(props); const recipeClass = blockquoteStyle(); return <StyledBlockquote ref={ref} className={recipeClass + (className ? ' ' + className : '')} {...(box.raw(p) as object)} {...(r as object)} /> })
+const StyledBr = styled['br']; export const Br = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledBr ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'br'> & React.RefAttributes<PrimitiveElement<'br'>>>
+const StyledButton = styled['button']; export const Button = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledButton ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'button'> & React.RefAttributes<PrimitiveElement<'button'>>>
+const StyledCanvas = styled['canvas']; export const Canvas = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledCanvas ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'canvas'> & React.RefAttributes<PrimitiveElement<'canvas'>>>
+const StyledCaption = styled['caption']; export const Caption = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledCaption ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'caption'> & React.RefAttributes<PrimitiveElement<'caption'>>>
+const StyledCite = styled['cite']; export const Cite = forwardRef<PrimitiveElement<'cite'>, PrimitiveProps<'cite'>>(({ className, ...props }, ref) => { const [p, r] = splitBoxProps(props); const recipeClass = citeStyle(); return <StyledCite ref={ref} className={recipeClass + (className ? ' ' + className : '')} {...(box.raw(p) as object)} {...(r as object)} /> })
+const StyledCode = styled['code']; export const Code = forwardRef<PrimitiveElement<'code'>, PrimitiveProps<'code'>>(({ className, ...props }, ref) => { const [p, r] = splitBoxProps(props); const recipeClass = codeStyle(); return <StyledCode ref={ref} className={recipeClass + (className ? ' ' + className : '')} {...(box.raw(p) as object)} {...(r as object)} /> })
+const StyledCol = styled['col']; export const Col = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledCol ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'col'> & React.RefAttributes<PrimitiveElement<'col'>>>
+const StyledColgroup = styled['colgroup']; export const Colgroup = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledColgroup ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'colgroup'> & React.RefAttributes<PrimitiveElement<'colgroup'>>>
+const StyledData = styled['data']; export const Data = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledData ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'data'> & React.RefAttributes<PrimitiveElement<'data'>>>
+const StyledDatalist = styled['datalist']; export const Datalist = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledDatalist ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'datalist'> & React.RefAttributes<PrimitiveElement<'datalist'>>>
+const StyledDd = styled['dd']; export const Dd = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledDd ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'dd'> & React.RefAttributes<PrimitiveElement<'dd'>>>
+const StyledDel = styled['del']; export const Del = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledDel ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'del'> & React.RefAttributes<PrimitiveElement<'del'>>>
+const StyledDetails = styled['details']; export const Details = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledDetails ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'details'> & React.RefAttributes<PrimitiveElement<'details'>>>
+const StyledDfn = styled['dfn']; export const Dfn = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledDfn ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'dfn'> & React.RefAttributes<PrimitiveElement<'dfn'>>>
+const StyledDialog = styled['dialog']; export const Dialog = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledDialog ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'dialog'> & React.RefAttributes<PrimitiveElement<'dialog'>>>
+const StyledDiv = styled['div']; export const Div = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledDiv ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'div'> & React.RefAttributes<PrimitiveElement<'div'>>>
+const StyledDl = styled['dl']; export const Dl = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledDl ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'dl'> & React.RefAttributes<PrimitiveElement<'dl'>>>
+const StyledDt = styled['dt']; export const Dt = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledDt ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'dt'> & React.RefAttributes<PrimitiveElement<'dt'>>>
+const StyledEm = styled['em']; export const Em = forwardRef<PrimitiveElement<'em'>, PrimitiveProps<'em'>>(({ className, ...props }, ref) => { const [p, r] = splitBoxProps(props); const recipeClass = emStyle(); return <StyledEm ref={ref} className={recipeClass + (className ? ' ' + className : '')} {...(box.raw(p) as object)} {...(r as object)} /> })
+const StyledEmbed = styled['embed']; export const Embed = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledEmbed ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'embed'> & React.RefAttributes<PrimitiveElement<'embed'>>>
+const StyledFieldset = styled['fieldset']; export const Fieldset = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledFieldset ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'fieldset'> & React.RefAttributes<PrimitiveElement<'fieldset'>>>
+const StyledFigcaption = styled['figcaption']; export const Figcaption = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledFigcaption ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'figcaption'> & React.RefAttributes<PrimitiveElement<'figcaption'>>>
+const StyledFigure = styled['figure']; export const Figure = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledFigure ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'figure'> & React.RefAttributes<PrimitiveElement<'figure'>>>
+const StyledFooter = styled['footer']; export const Footer = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledFooter ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'footer'> & React.RefAttributes<PrimitiveElement<'footer'>>>
+const StyledForm = styled['form']; export const Form = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledForm ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'form'> & React.RefAttributes<PrimitiveElement<'form'>>>
+const StyledH1 = styled['h1']; export const H1 = forwardRef<PrimitiveElement<'h1'>, PrimitiveProps<'h1'>>(({ className, ...props }, ref) => { const [p, r] = splitBoxProps(props); const recipeClass = h1Style(); return <StyledH1 ref={ref} className={recipeClass + (className ? ' ' + className : '')} {...(box.raw(p) as object)} {...(r as object)} /> })
+const StyledH2 = styled['h2']; export const H2 = forwardRef<PrimitiveElement<'h2'>, PrimitiveProps<'h2'>>(({ className, ...props }, ref) => { const [p, r] = splitBoxProps(props); const recipeClass = h2Style(); return <StyledH2 ref={ref} className={recipeClass + (className ? ' ' + className : '')} {...(box.raw(p) as object)} {...(r as object)} /> })
+const StyledH3 = styled['h3']; export const H3 = forwardRef<PrimitiveElement<'h3'>, PrimitiveProps<'h3'>>(({ className, ...props }, ref) => { const [p, r] = splitBoxProps(props); const recipeClass = h3Style(); return <StyledH3 ref={ref} className={recipeClass + (className ? ' ' + className : '')} {...(box.raw(p) as object)} {...(r as object)} /> })
+const StyledH4 = styled['h4']; export const H4 = forwardRef<PrimitiveElement<'h4'>, PrimitiveProps<'h4'>>(({ className, ...props }, ref) => { const [p, r] = splitBoxProps(props); const recipeClass = h4Style(); return <StyledH4 ref={ref} className={recipeClass + (className ? ' ' + className : '')} {...(box.raw(p) as object)} {...(r as object)} /> })
+const StyledH5 = styled['h5']; export const H5 = forwardRef<PrimitiveElement<'h5'>, PrimitiveProps<'h5'>>(({ className, ...props }, ref) => { const [p, r] = splitBoxProps(props); const recipeClass = h5Style(); return <StyledH5 ref={ref} className={recipeClass + (className ? ' ' + className : '')} {...(box.raw(p) as object)} {...(r as object)} /> })
+const StyledH6 = styled['h6']; export const H6 = forwardRef<PrimitiveElement<'h6'>, PrimitiveProps<'h6'>>(({ className, ...props }, ref) => { const [p, r] = splitBoxProps(props); const recipeClass = h6Style(); return <StyledH6 ref={ref} className={recipeClass + (className ? ' ' + className : '')} {...(box.raw(p) as object)} {...(r as object)} /> })
+const StyledHeader = styled['header']; export const Header = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledHeader ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'header'> & React.RefAttributes<PrimitiveElement<'header'>>>
+const StyledHgroup = styled['hgroup']; export const Hgroup = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledHgroup ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'hgroup'> & React.RefAttributes<PrimitiveElement<'hgroup'>>>
+const StyledHr = styled['hr']; export const Hr = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledHr ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'hr'> & React.RefAttributes<PrimitiveElement<'hr'>>>
+const StyledI = styled['i']; export const I = forwardRef<PrimitiveElement<'i'>, PrimitiveProps<'i'>>(({ className, ...props }, ref) => { const [p, r] = splitBoxProps(props); const recipeClass = iStyle(); return <StyledI ref={ref} className={recipeClass + (className ? ' ' + className : '')} {...(box.raw(p) as object)} {...(r as object)} /> })
+const StyledIframe = styled['iframe']; export const Iframe = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledIframe ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'iframe'> & React.RefAttributes<PrimitiveElement<'iframe'>>>
+const StyledImg = styled['img']; export const Img = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledImg ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'img'> & React.RefAttributes<PrimitiveElement<'img'>>>
+const StyledInput = styled['input']; export const Input = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledInput ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'input'> & React.RefAttributes<PrimitiveElement<'input'>>>
+const StyledIns = styled['ins']; export const Ins = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledIns ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'ins'> & React.RefAttributes<PrimitiveElement<'ins'>>>
+const StyledKbd = styled['kbd']; export const Kbd = forwardRef<PrimitiveElement<'kbd'>, PrimitiveProps<'kbd'>>(({ className, ...props }, ref) => { const [p, r] = splitBoxProps(props); const recipeClass = kbdStyle(); return <StyledKbd ref={ref} className={recipeClass + (className ? ' ' + className : '')} {...(box.raw(p) as object)} {...(r as object)} /> })
+const StyledLabel = styled['label']; export const Label = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledLabel ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'label'> & React.RefAttributes<PrimitiveElement<'label'>>>
+const StyledLegend = styled['legend']; export const Legend = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledLegend ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'legend'> & React.RefAttributes<PrimitiveElement<'legend'>>>
+const StyledLi = styled['li']; export const Li = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledLi ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'li'> & React.RefAttributes<PrimitiveElement<'li'>>>
+const StyledMain = styled['main']; export const Main = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledMain ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'main'> & React.RefAttributes<PrimitiveElement<'main'>>>
+const StyledMap = styled['map']; export const Map = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledMap ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'map'> & React.RefAttributes<PrimitiveElement<'map'>>>
+const StyledMark = styled['mark']; export const Mark = forwardRef<PrimitiveElement<'mark'>, PrimitiveProps<'mark'>>(({ className, ...props }, ref) => { const [p, r] = splitBoxProps(props); const recipeClass = markStyle(); return <StyledMark ref={ref} className={recipeClass + (className ? ' ' + className : '')} {...(box.raw(p) as object)} {...(r as object)} /> })
+const StyledMenu = styled['menu']; export const Menu = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledMenu ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'menu'> & React.RefAttributes<PrimitiveElement<'menu'>>>
+const StyledMeter = styled['meter']; export const Meter = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledMeter ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'meter'> & React.RefAttributes<PrimitiveElement<'meter'>>>
+const StyledNav = styled['nav']; export const Nav = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledNav ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'nav'> & React.RefAttributes<PrimitiveElement<'nav'>>>
+const StyledObj = styled['object']; export const Obj = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledObj ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'object'> & React.RefAttributes<PrimitiveElement<'object'>>>
+const StyledOl = styled['ol']; export const Ol = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledOl ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'ol'> & React.RefAttributes<PrimitiveElement<'ol'>>>
+const StyledOptgroup = styled['optgroup']; export const Optgroup = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledOptgroup ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'optgroup'> & React.RefAttributes<PrimitiveElement<'optgroup'>>>
+const StyledOption = styled['option']; export const Option = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledOption ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'option'> & React.RefAttributes<PrimitiveElement<'option'>>>
+const StyledOutput = styled['output']; export const Output = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledOutput ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'output'> & React.RefAttributes<PrimitiveElement<'output'>>>
+const StyledP = styled['p']; export const P = forwardRef<PrimitiveElement<'p'>, PrimitiveProps<'p'>>(({ className, ...props }, ref) => { const [p, r] = splitBoxProps(props); const recipeClass = pStyle(); return <StyledP ref={ref} className={recipeClass + (className ? ' ' + className : '')} {...(box.raw(p) as object)} {...(r as object)} /> })
+const StyledPicture = styled['picture']; export const Picture = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledPicture ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'picture'> & React.RefAttributes<PrimitiveElement<'picture'>>>
+const StyledPre = styled['pre']; export const Pre = forwardRef<PrimitiveElement<'pre'>, PrimitiveProps<'pre'>>(({ className, ...props }, ref) => { const [p, r] = splitBoxProps(props); const recipeClass = preStyle(); return <StyledPre ref={ref} className={recipeClass + (className ? ' ' + className : '')} {...(box.raw(p) as object)} {...(r as object)} /> })
+const StyledProgress = styled['progress']; export const Progress = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledProgress ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'progress'> & React.RefAttributes<PrimitiveElement<'progress'>>>
+const StyledQ = styled['q']; export const Q = forwardRef<PrimitiveElement<'q'>, PrimitiveProps<'q'>>(({ className, ...props }, ref) => { const [p, r] = splitBoxProps(props); const recipeClass = qStyle(); return <StyledQ ref={ref} className={recipeClass + (className ? ' ' + className : '')} {...(box.raw(p) as object)} {...(r as object)} /> })
+const StyledRp = styled['rp']; export const Rp = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledRp ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'rp'> & React.RefAttributes<PrimitiveElement<'rp'>>>
+const StyledRt = styled['rt']; export const Rt = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledRt ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'rt'> & React.RefAttributes<PrimitiveElement<'rt'>>>
+const StyledRuby = styled['ruby']; export const Ruby = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledRuby ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'ruby'> & React.RefAttributes<PrimitiveElement<'ruby'>>>
+const StyledS = styled['s']; export const S = forwardRef<PrimitiveElement<'s'>, PrimitiveProps<'s'>>(({ className, ...props }, ref) => { const [p, r] = splitBoxProps(props); const recipeClass = sStyle(); return <StyledS ref={ref} className={recipeClass + (className ? ' ' + className : '')} {...(box.raw(p) as object)} {...(r as object)} /> })
+const StyledSamp = styled['samp']; export const Samp = forwardRef<PrimitiveElement<'samp'>, PrimitiveProps<'samp'>>(({ className, ...props }, ref) => { const [p, r] = splitBoxProps(props); const recipeClass = sampStyle(); return <StyledSamp ref={ref} className={recipeClass + (className ? ' ' + className : '')} {...(box.raw(p) as object)} {...(r as object)} /> })
+const StyledSearch = styled['search']; export const Search = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledSearch ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'search'> & React.RefAttributes<PrimitiveElement<'search'>>>
+const StyledSection = styled['section']; export const Section = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledSection ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'section'> & React.RefAttributes<PrimitiveElement<'section'>>>
+const StyledSelect = styled['select']; export const Select = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledSelect ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'select'> & React.RefAttributes<PrimitiveElement<'select'>>>
+const StyledSmall = styled['small']; export const Small = forwardRef<PrimitiveElement<'small'>, PrimitiveProps<'small'>>(({ className, ...props }, ref) => { const [p, r] = splitBoxProps(props); const recipeClass = smallStyle(); return <StyledSmall ref={ref} className={recipeClass + (className ? ' ' + className : '')} {...(box.raw(p) as object)} {...(r as object)} /> })
+const StyledSource = styled['source']; export const Source = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledSource ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'source'> & React.RefAttributes<PrimitiveElement<'source'>>>
+const StyledSpan = styled['span']; export const Span = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledSpan ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'span'> & React.RefAttributes<PrimitiveElement<'span'>>>
+const StyledStrong = styled['strong']; export const Strong = forwardRef<PrimitiveElement<'strong'>, PrimitiveProps<'strong'>>(({ className, ...props }, ref) => { const [p, r] = splitBoxProps(props); const recipeClass = strongStyle(); return <StyledStrong ref={ref} className={recipeClass + (className ? ' ' + className : '')} {...(box.raw(p) as object)} {...(r as object)} /> })
+const StyledSub = styled['sub']; export const Sub = forwardRef<PrimitiveElement<'sub'>, PrimitiveProps<'sub'>>(({ className, ...props }, ref) => { const [p, r] = splitBoxProps(props); const recipeClass = subStyle(); return <StyledSub ref={ref} className={recipeClass + (className ? ' ' + className : '')} {...(box.raw(p) as object)} {...(r as object)} /> })
+const StyledSummary = styled['summary']; export const Summary = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledSummary ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'summary'> & React.RefAttributes<PrimitiveElement<'summary'>>>
+const StyledSup = styled['sup']; export const Sup = forwardRef<PrimitiveElement<'sup'>, PrimitiveProps<'sup'>>(({ className, ...props }, ref) => { const [p, r] = splitBoxProps(props); const recipeClass = supStyle(); return <StyledSup ref={ref} className={recipeClass + (className ? ' ' + className : '')} {...(box.raw(p) as object)} {...(r as object)} /> })
+const StyledSvg = styled['svg']; export const Svg = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledSvg ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'svg'> & React.RefAttributes<PrimitiveElement<'svg'>>>
+const StyledTable = styled['table']; export const Table = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledTable ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'table'> & React.RefAttributes<PrimitiveElement<'table'>>>
+const StyledTbody = styled['tbody']; export const Tbody = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledTbody ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'tbody'> & React.RefAttributes<PrimitiveElement<'tbody'>>>
+const StyledTd = styled['td']; export const Td = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledTd ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'td'> & React.RefAttributes<PrimitiveElement<'td'>>>
+const StyledTextarea = styled['textarea']; export const Textarea = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledTextarea ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'textarea'> & React.RefAttributes<PrimitiveElement<'textarea'>>>
+const StyledTfoot = styled['tfoot']; export const Tfoot = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledTfoot ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'tfoot'> & React.RefAttributes<PrimitiveElement<'tfoot'>>>
+const StyledTh = styled['th']; export const Th = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledTh ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'th'> & React.RefAttributes<PrimitiveElement<'th'>>>
+const StyledThead = styled['thead']; export const Thead = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledThead ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'thead'> & React.RefAttributes<PrimitiveElement<'thead'>>>
+const StyledTime = styled['time']; export const Time = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledTime ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'time'> & React.RefAttributes<PrimitiveElement<'time'>>>
+const StyledTr = styled['tr']; export const Tr = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledTr ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'tr'> & React.RefAttributes<PrimitiveElement<'tr'>>>
+const StyledTrack = styled['track']; export const Track = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledTrack ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'track'> & React.RefAttributes<PrimitiveElement<'track'>>>
+const StyledU = styled['u']; export const U = forwardRef<PrimitiveElement<'u'>, PrimitiveProps<'u'>>(({ className, ...props }, ref) => { const [p, r] = splitBoxProps(props); const recipeClass = uStyle(); return <StyledU ref={ref} className={recipeClass + (className ? ' ' + className : '')} {...(box.raw(p) as object)} {...(r as object)} /> })
+const StyledUl = styled['ul']; export const Ul = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledUl ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'ul'> & React.RefAttributes<PrimitiveElement<'ul'>>>
+const StyledVar = styled['var']; export const Var = forwardRef<PrimitiveElement<'var'>, PrimitiveProps<'var'>>(({ className, ...props }, ref) => { const [p, r] = splitBoxProps(props); const recipeClass = varStyle(); return <StyledVar ref={ref} className={recipeClass + (className ? ' ' + className : '')} {...(box.raw(p) as object)} {...(r as object)} /> })
+const StyledVideo = styled['video']; export const Video = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledVideo ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'video'> & React.RefAttributes<PrimitiveElement<'video'>>>
+const StyledWbr = styled['wbr']; export const Wbr = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <StyledWbr ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'wbr'> & React.RefAttributes<PrimitiveElement<'wbr'>>>
 
 export type AProps = PrimitiveProps<'a'>
 export type AbbrProps = PrimitiveProps<'abbr'>
@@ -110,105 +221,3 @@ export type UlProps = PrimitiveProps<'ul'>
 export type VarProps = PrimitiveProps<'var'>
 export type VideoProps = PrimitiveProps<'video'>
 export type WbrProps = PrimitiveProps<'wbr'>
-
-export const A = createPrimitive('a', undefined)
-export const Abbr = createPrimitive('abbr', abbrStyle())
-export const Address = createPrimitive('address', undefined)
-export const Area = createPrimitive('area', undefined)
-export const Article = createPrimitive('article', undefined)
-export const Aside = createPrimitive('aside', undefined)
-export const Audio = createPrimitive('audio', undefined)
-export const B = createPrimitive('b', bStyle())
-export const Bdi = createPrimitive('bdi', undefined)
-export const Bdo = createPrimitive('bdo', undefined)
-export const Blockquote = createPrimitive('blockquote', blockquoteStyle())
-export const Br = createPrimitive('br', undefined)
-export const Button = createPrimitive('button', undefined)
-export const Canvas = createPrimitive('canvas', undefined)
-export const Caption = createPrimitive('caption', undefined)
-export const Cite = createPrimitive('cite', citeStyle())
-export const Code = createPrimitive('code', codeStyle())
-export const Col = createPrimitive('col', undefined)
-export const Colgroup = createPrimitive('colgroup', undefined)
-export const Data = createPrimitive('data', undefined)
-export const Datalist = createPrimitive('datalist', undefined)
-export const Dd = createPrimitive('dd', undefined)
-export const Del = createPrimitive('del', undefined)
-export const Details = createPrimitive('details', undefined)
-export const Dfn = createPrimitive('dfn', undefined)
-export const Dialog = createPrimitive('dialog', undefined)
-export const Div = createPrimitive('div', undefined)
-export const Dl = createPrimitive('dl', undefined)
-export const Dt = createPrimitive('dt', undefined)
-export const Em = createPrimitive('em', emStyle())
-export const Embed = createPrimitive('embed', undefined)
-export const Fieldset = createPrimitive('fieldset', undefined)
-export const Figcaption = createPrimitive('figcaption', undefined)
-export const Figure = createPrimitive('figure', undefined)
-export const Footer = createPrimitive('footer', undefined)
-export const Form = createPrimitive('form', undefined)
-export const H1 = createPrimitive('h1', h1Style())
-export const H2 = createPrimitive('h2', h2Style())
-export const H3 = createPrimitive('h3', h3Style())
-export const H4 = createPrimitive('h4', h4Style())
-export const H5 = createPrimitive('h5', h5Style())
-export const H6 = createPrimitive('h6', h6Style())
-export const Header = createPrimitive('header', undefined)
-export const Hgroup = createPrimitive('hgroup', undefined)
-export const Hr = createPrimitive('hr', undefined)
-export const I = createPrimitive('i', iStyle())
-export const Iframe = createPrimitive('iframe', undefined)
-export const Img = createPrimitive('img', undefined)
-export const Input = createPrimitive('input', undefined)
-export const Ins = createPrimitive('ins', undefined)
-export const Kbd = createPrimitive('kbd', kbdStyle())
-export const Label = createPrimitive('label', undefined)
-export const Legend = createPrimitive('legend', undefined)
-export const Li = createPrimitive('li', undefined)
-export const Main = createPrimitive('main', undefined)
-export const Map = createPrimitive('map', undefined)
-export const Mark = createPrimitive('mark', markStyle())
-export const Menu = createPrimitive('menu', undefined)
-export const Meter = createPrimitive('meter', undefined)
-export const Nav = createPrimitive('nav', undefined)
-export const Obj = createPrimitive('object', undefined)
-export const Ol = createPrimitive('ol', undefined)
-export const Optgroup = createPrimitive('optgroup', undefined)
-export const Option = createPrimitive('option', undefined)
-export const Output = createPrimitive('output', undefined)
-export const P = createPrimitive('p', pStyle())
-export const Picture = createPrimitive('picture', undefined)
-export const Pre = createPrimitive('pre', preStyle())
-export const Progress = createPrimitive('progress', undefined)
-export const Q = createPrimitive('q', qStyle())
-export const Rp = createPrimitive('rp', undefined)
-export const Rt = createPrimitive('rt', undefined)
-export const Ruby = createPrimitive('ruby', undefined)
-export const S = createPrimitive('s', sStyle())
-export const Samp = createPrimitive('samp', sampStyle())
-export const Search = createPrimitive('search', undefined)
-export const Section = createPrimitive('section', undefined)
-export const Select = createPrimitive('select', undefined)
-export const Small = createPrimitive('small', smallStyle())
-export const Source = createPrimitive('source', undefined)
-export const Span = createPrimitive('span', undefined)
-export const Strong = createPrimitive('strong', strongStyle())
-export const Sub = createPrimitive('sub', subStyle())
-export const Summary = createPrimitive('summary', undefined)
-export const Sup = createPrimitive('sup', supStyle())
-export const Svg = createPrimitive('svg', undefined)
-export const Table = createPrimitive('table', undefined)
-export const Tbody = createPrimitive('tbody', undefined)
-export const Td = createPrimitive('td', undefined)
-export const Textarea = createPrimitive('textarea', undefined)
-export const Tfoot = createPrimitive('tfoot', undefined)
-export const Th = createPrimitive('th', undefined)
-export const Thead = createPrimitive('thead', undefined)
-export const Time = createPrimitive('time', undefined)
-export const Tr = createPrimitive('tr', undefined)
-export const Track = createPrimitive('track', undefined)
-export const U = createPrimitive('u', uStyle())
-export const Ul = createPrimitive('ul', undefined)
-export const Var = createPrimitive('var', varStyle())
-export const Video = createPrimitive('video', undefined)
-export const Wbr = createPrimitive('wbr', undefined)

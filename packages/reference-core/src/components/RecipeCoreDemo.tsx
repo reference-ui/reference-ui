@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { Div } from '../primitives/index.js';
-import { recipe } from '../styled/api/runtime/recipe.js';
+import { useState } from 'react'
+import { Div } from '../primitives/index.js'
+import { recipe } from '../styled/api/runtime/recipe.js'
 
 /**
  * Demo component showcasing the recipe() API from reference-core.
@@ -22,8 +22,7 @@ const buttonRecipe = recipe({
     boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
     _hover: {
       transform: 'translateY(-1px)',
-      boxShadow:
-        '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
     },
     _active: {
       transform: 'translateY(0)',
@@ -169,31 +168,25 @@ const buttonRecipe = recipe({
     size: 'md',
     colorScheme: 'blue',
   },
-});
+})
 
 const DemoSection = ({
   title,
   children,
 }: {
-  title: string;
-  children: React.ReactNode;
+  title: string
+  children: React.ReactNode
 }) => (
   <Div>
-    <Div
-      fontSize="md"
-      fontWeight="600"
-      color="gray.700"
-      mb="3r"
-      letterSpacing="-0.5px"
-    >
+    <Div fontSize="md" fontWeight="600" color="gray.700" mb="3r" letterSpacing="-0.5px">
       {title}
     </Div>
     {children}
   </Div>
-);
+)
 
 export function RecipeCoreDemo() {
-  const [count, setCount] = useState(0);
+  const [count, setCount] = useState(0)
 
   return (
     <Div
@@ -209,9 +202,7 @@ export function RecipeCoreDemo() {
       <DemoSection title="Visual Variants">
         <Div display="flex" gap="3r" flexWrap="wrap">
           <button className={buttonRecipe({ visual: 'solid' })}>Solid</button>
-          <button className={buttonRecipe({ visual: 'outline' })}>
-            Outline
-          </button>
+          <button className={buttonRecipe({ visual: 'outline' })}>Outline</button>
           <button className={buttonRecipe({ visual: 'ghost' })}>Ghost</button>
         </Div>
       </DemoSection>
@@ -226,15 +217,9 @@ export function RecipeCoreDemo() {
 
       <DemoSection title="Color Schemes">
         <Div display="flex" gap="3r" flexWrap="wrap">
-          <button className={buttonRecipe({ colorScheme: 'blue' })}>
-            Blue
-          </button>
-          <button className={buttonRecipe({ colorScheme: 'purple' })}>
-            Purple
-          </button>
-          <button className={buttonRecipe({ colorScheme: 'green' })}>
-            Green
-          </button>
+          <button className={buttonRecipe({ colorScheme: 'blue' })}>Blue</button>
+          <button className={buttonRecipe({ colorScheme: 'purple' })}>Purple</button>
+          <button className={buttonRecipe({ colorScheme: 'green' })}>Green</button>
           <button className={buttonRecipe({ colorScheme: 'red' })}>Red</button>
         </Div>
       </DemoSection>
@@ -249,14 +234,10 @@ export function RecipeCoreDemo() {
           >
             Purple Outline
           </button>
-          <button
-            className={buttonRecipe({ visual: 'outline', colorScheme: 'red' })}
-          >
+          <button className={buttonRecipe({ visual: 'outline', colorScheme: 'red' })}>
             Red Outline
           </button>
-          <button
-            className={buttonRecipe({ visual: 'ghost', colorScheme: 'green' })}
-          >
+          <button className={buttonRecipe({ visual: 'ghost', colorScheme: 'green' })}>
             Green Ghost
           </button>
         </Div>
@@ -268,7 +249,7 @@ export function RecipeCoreDemo() {
           gap="3r"
           alignItems="center"
           p="5r"
-          bg="white"
+          bg="gray.50"
           borderRadius="lg"
           border="1px solid"
           borderColor="gray.200"
@@ -279,7 +260,7 @@ export function RecipeCoreDemo() {
               size: 'md',
               colorScheme: 'blue',
             })}
-            onClick={() => setCount((c) => c + 1)}
+            onClick={() => setCount(c => c + 1)}
           >
             Clicked {count} times
           </button>
@@ -299,5 +280,5 @@ export function RecipeCoreDemo() {
         </Div>
       </DemoSection>
     </Div>
-  );
+  )
 }

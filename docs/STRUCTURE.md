@@ -95,10 +95,10 @@ import { css } from '@reference-ui/system/css'
 import { Box } from '@reference-ui/system/jsx'
 
 // Use design tokens and patterns
-<Box 
-  font="sans" 
-  weight="bold" 
-  r="2"  // Responsive rhythm spacing
+;<Box
+  font="sans"
+  weight="bold"
+  r="2" // Responsive rhythm spacing
   container="sidebar"
   css={{ color: 'blue.500' }}
 >
@@ -109,8 +109,8 @@ import { Box } from '@reference-ui/system/jsx'
 const styles = css({
   color: 'blue.500',
   fontSize: 'lg',
-  r: { base: '1', md: '2' },  // Responsive
-  font: 'sans'
+  r: { base: '1', md: '2' }, // Responsive
+  font: 'sans',
 })
 ```
 
@@ -124,18 +124,18 @@ A declarative configuration system for defining design tokens, component styles,
 
 #### Core APIs
 
-| API | Purpose | Example |
-|-----|---------|---------|
-| `tokens()` | Register design tokens | Colors, spacing, fonts, radii |
-| `recipe()` | Single-part component styles | Button variants, badge styles |
-| `slotRecipe()` | Multi-part component styles | Card (header, body, footer) |
-| `pattern()` | Extend box pattern with custom props | Container queries, font presets |
-| `font()` | All-in-one font system | Font families, weights, @font-face |
-| `utilities()` | Custom utility generators | Rhythm spacing, truncation |
-| `globalCss()` | Global styles | `:root` vars, body defaults |
-| `staticCss()` | Force utility/recipe generation | Ensure classes exist |
-| `globalFontface()` | `@font-face` rules | Web font loading |
-| `keyframes()` | Animation keyframes | Fade, slide, spin animations |
+| API                | Purpose                              | Example                            |
+| ------------------ | ------------------------------------ | ---------------------------------- |
+| `tokens()`         | Register design tokens               | Colors, spacing, fonts, radii      |
+| `recipe()`         | Single-part component styles         | Button variants, badge styles      |
+| `slotRecipe()`     | Multi-part component styles          | Card (header, body, footer)        |
+| `pattern()`        | Extend box pattern with custom props | Container queries, font presets    |
+| `font()`           | All-in-one font system               | Font families, weights, @font-face |
+| `utilities()`      | Custom utility generators            | Rhythm spacing, truncation         |
+| `globalCss()`      | Global styles                        | `:root` vars, body defaults        |
+| `staticCss()`      | Force utility/recipe generation      | Ensure classes exist               |
+| `globalFontface()` | `@font-face` rules                   | Web font loading                   |
+| `keyframes()`      | Animation keyframes                  | Fade, slide, spin animations       |
 
 #### Domain-Based Organization
 
@@ -170,8 +170,8 @@ The **eval system** discovers and executes configuration function calls at build
 // User writes in styled/theme/colors.ts
 tokens({
   colors: {
-    brand: { value: '#3b82f6' }
-  }
+    brand: { value: '#3b82f6' },
+  },
 })
 
 // CLI eval discovers this file
@@ -225,7 +225,6 @@ cli/panda/feature/
 1. **`config/`** - Collects and merges Panda config fragments
    - Discovers all `extendPandaConfig()` calls
    - Deep merges into single `panda.config.ts`
-   
 2. **`boxPattern/`** - Combines pattern extensions into unified box
    - Collects all `pattern()` calls from `props/*.ts`
    - Generates `props/box.ts` with merged properties
@@ -368,11 +367,13 @@ packages/reference-core/
 ### Adding New Features
 
 **Simple config (no generation needed):**
+
 - Add API function in `styled/api/`
 - Call `extendPandaConfig()` internally
 - Export from `styled/api/index.ts`
 
 **Complex features (need code generation):**
+
 - Create microbundle in `cli/panda/feature/`
 - Follow pattern: collect → bundle → execute → generate
 - Add to build pipeline

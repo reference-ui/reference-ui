@@ -26,6 +26,7 @@ reference-core/
 ## How It Works
 
 1. **User installs `@reference-ui/core`**
+
    ```bash
    npm install @reference-ui/core
    ```
@@ -35,6 +36,7 @@ reference-core/
    - User doesn't need to do anything manually
 
 3. **User runs `ref-sync` to materialize the system**
+
    ```bash
    npx ref-sync
    ```
@@ -113,13 +115,12 @@ It does not care who uses it or how.
 
 How the pieces fit together
 reference-system
-     ↓
+↓
 reference-compiler
-     ↓
+↓
 @reference-ui/cli
-     ↓
-node_modules/@reference/*   (generated output)
-
+↓
+node_modules/@reference/\* (generated output)
 
 System defines meaning
 

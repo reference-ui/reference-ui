@@ -5,42 +5,42 @@ import { extendKeyframes } from '../api/internal/extendKeyframes'
  */
 extendKeyframes({
   scaleIn: {
-    from: { 
+    from: {
       opacity: '0',
-      transform: 'scale(0.9)' 
+      transform: 'scale(0.9)',
     },
-    to: { 
+    to: {
       opacity: '1',
-      transform: 'scale(1)' 
-    }
+      transform: 'scale(1)',
+    },
   },
   scaleOut: {
-    from: { 
+    from: {
       opacity: '1',
-      transform: 'scale(1)' 
+      transform: 'scale(1)',
     },
-    to: { 
+    to: {
       opacity: '0',
-      transform: 'scale(0.9)' 
-    }
+      transform: 'scale(0.9)',
+    },
   },
   scaleUp: {
     from: { transform: 'scale(0.95)' },
-    to: { transform: 'scale(1)' }
+    to: { transform: 'scale(1)' },
   },
   scaleDown: {
     from: { transform: 'scale(1.05)' },
-    to: { transform: 'scale(1)' }
+    to: { transform: 'scale(1)' },
   },
   pulse: {
     '0%, 100%': { transform: 'scale(1)' },
-    '50%': { transform: 'scale(1.05)' }
+    '50%': { transform: 'scale(1.05)' },
   },
   heartbeat: {
     '0%, 100%': { transform: 'scale(1)' },
     '14%': { transform: 'scale(1.3)' },
     '28%': { transform: 'scale(1)' },
     '42%': { transform: 'scale(1.3)' },
-    '70%': { transform: 'scale(1)' }
-  }
+    '70%': { transform: 'scale(1)' },
+  },
 })

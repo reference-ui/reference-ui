@@ -1,11 +1,11 @@
-import { forwardRef } from 'react';
-import { cx } from '../system/css/index.js';
-import { type RecipeVariantProps } from '../styled/api';
-import { cva } from '../system/css/index.js';
+import { forwardRef } from 'react'
+import { cx } from '../system/css/index.js'
+import { type RecipeVariantProps } from '../styled/api'
+import { cva } from '../system/css/index.js'
 import {
   Button as ButtonPrimitive,
   type ButtonProps as PrimitiveButtonProps,
-} from '../primitives/index.js';
+} from '../primitives/index.js'
 
 const button = cva({
   base: {
@@ -49,10 +49,9 @@ const button = cva({
     visual: 'solid',
     size: 'md',
   },
-});
+})
 
-export type ButtonProps = PrimitiveButtonProps &
-  RecipeVariantProps<typeof button>;
+export type ButtonProps = PrimitiveButtonProps & RecipeVariantProps<typeof button>
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ visual, size, className, ...props }, ref) => {
@@ -62,6 +61,6 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         className={cx(button({ visual, size }), className)}
         {...props}
       />
-    );
-  },
-);
+    )
+  }
+)

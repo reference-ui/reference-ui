@@ -53,9 +53,8 @@ export function recipe<T extends RecipeVariantRecord>(
 }
 
 /** Extract variant props from a recipe function. Same as Panda but for our wrapped recipe. */
-export type RecipeVariantProps<
-  T extends RecipeRuntimeFn<RecipeVariantRecord>
-> = PandaRecipeVariantProps<T>
+export type RecipeVariantProps<T extends RecipeRuntimeFn<RecipeVariantRecord>> =
+  PandaRecipeVariantProps<T>
 
 // Re-export other useful recipe types
 export type { RecipeSelection, RecipeRuntimeFn } from '../../../system/types/recipe.js'
