@@ -2,6 +2,7 @@
 import { Command } from 'commander'
 import { syncCommand } from './sync'
 import { runCommand } from './lib'
+import { log } from './lib/log'
 
 async function main(): Promise<void> {
   const program = new Command()
@@ -21,6 +22,6 @@ async function main(): Promise<void> {
 }
 
 main().catch(error => {
-  console.error('Fatal error:', error)
+  log.error('Fatal error:', error)
   process.exit(1)
 })

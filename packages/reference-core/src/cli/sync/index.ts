@@ -11,14 +11,13 @@ import { log } from '../lib/log'
 // reads config from ui.config.ts, copies user files to codegen, runs Panda codegen and css, generates primitives, and copies final artifacts to node_modules
 
 export const syncCommand = async (cwd: string, options: { watch?: boolean }) => {
-  console.log('🔍 Debug - CWD:', cwd)
-  console.log('🔍 Debug - process.cwd():', process.cwd())
-
   const config = await loadUserConfig(cwd)
 
   initEventBus(config)
   initLog(config)
 
+  log.debug('🔍 Debug - CWD:', cwd)
+  log.debug('🔍 Debug - process.cwd():', process.cwd())
   log('🔄 Syncing Reference UI...')
 
   // Start file watching in a dedicated worker thread (if watch mode)
