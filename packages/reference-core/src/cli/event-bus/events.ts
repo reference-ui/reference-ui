@@ -20,6 +20,8 @@ export type WatchEvents = {
 export type SystemEvents = {
   /** Emitted when Panda config is created */
   'system:config:created': { configPath: string }
+  /** Emitted when system finishes compiling (eval, config, codegen, CSS) */
+  'system:compiled': Record<string, never>
 }
 
 export type PackagerEvents = {
