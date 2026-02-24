@@ -1,11 +1,12 @@
+import { subscribe } from '@parcel/watcher'
+import { resolve, join } from 'node:path'
+import { on, emit } from '../event-bus'
+import { log } from '../lib/log'
 import { resolveCorePackageDir } from '../lib/resolve-core'
 import type { ReferenceUIConfig } from '../config'
 import { runEval } from './eval'
 import { createPandaConfig } from './config'
 import { runPandaCodegen, runPandaCss } from './gen/runner'
-import { resolve } from 'node:path'
-import { on, emit } from '../event-bus'
-import { log } from '../lib/log'
 
 export interface SystemWorkerPayload {
   cwd: string
@@ -14,21 +15,22 @@ export interface SystemWorkerPayload {
   watchMode?: boolean
 }
 
-async function runSystemCore(payload: SystemWorkerPayload): Promise<void> {
+const coreDirs = ['src/styled']
+
+async function runConfigOnly(payload: SystemWorkerPayload): Promise<void> {
   const { cwd, config } = payload
   const coreDir = resolveCorePackageDir()
-
-  const coreDirs = ['src/styled']
-  const userDirs = config.include.map(pattern => {
-    const baseDir = pattern.split('**')[0].replace(/\/+$/, '')
-    return resolve(cwd, baseDir)
-  })
+  const userDirs = config.include.map(p => resolve(cwd, p.split('**')[0].replace(/\/+$/, '')))
 
   const fragments = await runEval(coreDir, [...coreDirs, ...userDirs], ['panda.base.ts'])
   if (fragments.length > 0 && config.include.length > 0) {
     await createPandaConfig(coreDir, { userDirectories: userDirs })
   }
+}
 
+async function runSystemCore(payload: SystemWorkerPayload): Promise<void> {
+  await runConfigOnly(payload)
+  const coreDir = resolveCorePackageDir()
   runPandaCodegen(coreDir)
   runPandaCss(coreDir)
   emit('system:compiled', {})
@@ -47,23 +49,35 @@ function debounce<T extends (...args: unknown[]) => void>(fn: T, ms: number): T 
 
 export async function runSystem(payload: SystemWorkerPayload): Promise<void> {
   const { watchMode = false } = payload
-
-  await runSystemCore(payload)
+  const coreDir = resolveCorePackageDir()
 
   if (watchMode) {
-    const debouncedRecompile = debounce(async () => {
-      log.debug('[system:worker] virtual:fs:change → recompiling')
+    await runConfigOnly(payload)
+
+    // Panda watches .virtual and panda.config.ts — on change it re-runs. We just need to
+    // emit system:compiled when Panda writes styles.css so the packager rebundles.
+    const debouncedEmit = debounce(() => emit('system:compiled', {}), 200)
+    await subscribe(join(coreDir, 'src/system'), (err, events) => {
+      if (err) return log.error('[system:worker] Output watcher:', err)
+      if (events?.some(ev => ev.path.endsWith('styles.css'))) debouncedEmit()
+    })
+
+    runPandaCodegen(coreDir, { watch: true })
+
+    const debouncedConfig = debounce(async () => {
+      log.debug('[system:worker] virtual:fs:change → config')
       try {
-        await runSystemCore(payload)
-      } catch (err) {
-        log.error('[system:worker] Recompile failed:', err)
+        await runConfigOnly(payload)
+      } catch (e) {
+        log.error('[system:worker] Config failed:', e)
       }
     }, 300)
-    on('virtual:fs:change', () => debouncedRecompile())
+    on('virtual:fs:change', () => debouncedConfig())
 
-    // Stay alive
     return new Promise(() => {})
   }
+
+  await runSystemCore(payload)
 }
 
 export default runSystem
