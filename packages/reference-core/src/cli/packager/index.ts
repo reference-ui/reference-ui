@@ -1,6 +1,10 @@
 import type { ReferenceUIConfig } from '../config'
 import { runWorker } from '../thread-pool'
 
+export interface InitPackagerOptions {
+  watch?: boolean
+}
+
 /**
  * Initialize the packager system.
  *
@@ -12,9 +16,14 @@ import { runWorker } from '../thread-pool'
  */
 export async function initPackager(
   cwd: string,
-  config: ReferenceUIConfig
+  config: ReferenceUIConfig,
+  options?: InitPackagerOptions
 ): Promise<void> {
-  await runWorker('packager', { cwd, config })
+  await runWorker('packager', {
+    cwd,
+    config,
+    watchMode: options?.watch ?? false,
+  })
 }
 
 // Re-export for use in other modules
