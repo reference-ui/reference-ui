@@ -10,6 +10,7 @@
 ## Goal
 
 Switch to **React-first** using Panda's generated JSX primitives while preserving:
+
 - The responsive container query system (`r` prop, `container` prop)
 - The rhythm unit system (`r` units + density)
 - All work in `src/styled/` (tokens, responsive patterns, utilities)
@@ -33,10 +34,11 @@ Switch to **React-first** using Panda's generated JSX primitives while preservin
 **File:** `packages/reference-core/panda.config.ts`
 
 **Changes:**
+
 ```typescript
 export default defineConfig({
   // ... existing config
-  jsxFramework: 'react',  // ADD THIS
+  jsxFramework: 'react', // ADD THIS
   // Keep all existing patterns, utilities, theme
 })
 ```
@@ -44,6 +46,7 @@ export default defineConfig({
 **Action:** Run `panda codegen` to generate React JSX components in `src/system/jsx/`
 
 **Result:**
+
 - `src/system/jsx/Box.tsx` with `r` and `container` props
 - `src/system/jsx/Container.tsx` with `name`, `type`, `density` props
 - Full TypeScript types for all props
@@ -55,6 +58,7 @@ export default defineConfig({
 **File:** `packages/reference-core/package.json`
 
 **Changes:**
+
 - Move `react` from `devDependencies` to `peerDependencies`
 - Add `react-dom` as peer dependency
 - Keep `lit` for backward compatibility (optional)
@@ -81,6 +85,7 @@ export default defineConfig({
 **File:** `packages/reference-core/src/entry/index.ts`
 
 **Changes:**
+
 ```typescript
 // Export Panda-generated JSX primitives
 export { Box } from '../system/jsx/box.js'
@@ -102,6 +107,7 @@ export { tokens, defaultTheme, defaultStaticCss } from '../styled/index.js'
 ```
 
 **Remove:**
+
 - Lit-based components (`RefBox`, `RefCard`, `RefButton`, `RefResponsiveExample`)
 - Or move to a separate `@reference-ui/lit` package
 
@@ -144,8 +150,8 @@ import { Container } from '../system/jsx/container.js'
 
 export function ResponsiveExample() {
   return (
-    <Container 
-      style={{ 
+    <Container
+      style={{
         border: '2px solid #666',
         resize: 'horizontal',
         overflow: 'auto',
@@ -153,7 +159,7 @@ export function ResponsiveExample() {
       }}
     >
       <h2>Resize this container →</h2>
-      
+
       <Box
         padding="2r"
         backgroundColor="#ef4444"
@@ -179,11 +185,12 @@ export function ResponsiveExample() {
 **File:** `packages/reference-core/tsconfig.json`
 
 **Changes:**
+
 ```json
 {
   "compilerOptions": {
-    "jsx": "react-jsx",  // Modern JSX transform
-    "target": "es2020",  // Can upgrade from es2015
+    "jsx": "react-jsx", // Modern JSX transform
+    "target": "es2020" // Can upgrade from es2015
     // ... rest stays same
   }
 }
@@ -200,6 +207,7 @@ Check if tsdown needs JSX config updates for React output.
 **File:** `packages/reference-app/src/App.tsx`
 
 **Changes:**
+
 ```typescript
 import { Box, Container } from '@reference-ui/core'
 import '@reference-ui/core/styles.css'
@@ -209,7 +217,7 @@ export default function App() {
     <Container density="comfortable">
       <Box padding="4r" backgroundColor="gray.50">
         <h1>Reference UI - React First</h1>
-        
+
         <Box
           padding="2r"
           r={{
@@ -237,6 +245,7 @@ export default function App() {
 4. **`docs/MIGRATION-FROM-LIT.md`** - For anyone who was using the Lit components
 
 **Archive:**
+
 - Move `docs/USAGE-LIT.md` to `docs/archive/` or delete
 - Move `docs/REF-BOX.md` to `docs/archive/`
 
@@ -257,16 +266,19 @@ export default function App() {
 ## Migration Risks
 
 ### Low Risk
+
 - Panda's React JSX generation is stable and well-tested
 - Pattern transforms stay the same (just consumed differently)
 - Build process should be straightforward
 
 ### Medium Risk
+
 - Type definitions might need adjustment for React-specific types
 - Bundle size could increase if React becomes a hard dependency
 - Need to verify `tsdown` works well with React/JSX output
 
 ### Unknown
+
 - Whether inline `r={{ ... }}` object literals actually extract properly in all cases
 - Need to test with nested objects and various prop combinations
 

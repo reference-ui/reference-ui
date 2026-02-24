@@ -18,8 +18,14 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@reference-ui/core/styles.css': resolve(__dirname, 'node_modules/@reference-ui/core/src/system/styles.css'),
-      '@reference-ui/system/styles.css': resolve(__dirname, 'node_modules/@reference-ui/system/styles.css'),
+      '@reference-ui/core/styles.css': resolve(
+        __dirname,
+        'node_modules/@reference-ui/core/src/system/styles.css'
+      ),
+      '@reference-ui/system/styles.css': resolve(
+        __dirname,
+        'node_modules/@reference-ui/system/styles.css'
+      ),
     },
   },
   server: {

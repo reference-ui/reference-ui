@@ -9,11 +9,23 @@ transform(props) {
     Object.entries(props).filter(([k]) => !extensionKeys.has(k))
   );
   const _r0 = (function(props2) {
-    const { font, weight } = props2;
+    const { font: font2, weight } = props2;
     const FONT_PRESETS = {
-      sans: { fontFamily: "sans", fontWeight: "normal", letterSpacing: "-0.01em" },
-      serif: { fontFamily: "serif", fontWeight: "normal", letterSpacing: "normal" },
-      mono: { fontFamily: "mono", fontWeight: "normal", letterSpacing: "-0.04em" }
+      sans: {
+        fontFamily: "sans",
+        fontWeight: "normal",
+        letterSpacing: "-0.01em"
+      },
+      serif: {
+        fontFamily: "serif",
+        fontWeight: "normal",
+        letterSpacing: "normal"
+      },
+      mono: {
+        fontFamily: "mono",
+        fontWeight: "normal",
+        letterSpacing: "-0.04em"
+      }
     };
     const WEIGHT_TOKENS = {
       "sans.thin": "200",
@@ -35,8 +47,8 @@ transform(props) {
       "mono.bold": "700"
     };
     const result = {};
-    if (font && FONT_PRESETS[font]) {
-      Object.assign(result, FONT_PRESETS[font]);
+    if (font2 && FONT_PRESETS[font2]) {
+      Object.assign(result, FONT_PRESETS[font2]);
     }
     if (weight && WEIGHT_TOKENS[weight]) {
       result.fontWeight = WEIGHT_TOKENS[weight];
@@ -44,17 +56,17 @@ transform(props) {
     return result;
   })(props);
   const _r1 = (function(props2) {
-    const { container } = props2;
-    if (container === void 0) return {};
+    const { container: container2 } = props2;
+    if (container2 === void 0) return {};
     return {
       containerType: "inline-size",
-      ...typeof container === "string" && container && { containerName: container }
+      ...typeof container2 === "string" && container2 && { containerName: container2 }
     };
   })(props);
   const _r2 = (function(props2) {
-    const { r, container } = props2;
+    const { r, container: container2 } = props2;
     if (!r) return {};
-    const prefix = container ? `@container ${container} (min-width:` : `@container (min-width:`;
+    const prefix = container2 ? `@container ${container2} (min-width:` : `@container (min-width:`;
     return Object.fromEntries(
       Object.entries(r).map(([bp, styles]) => [`${prefix} ${bp}px)`, styles])
     );

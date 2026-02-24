@@ -17,9 +17,7 @@ Low-level building block for container-query responsive layouts.
 ### HTML
 
 ```html
-<ref-box padding="2r">
-  Content here
-</ref-box>
+<ref-box padding="2r"> Content here </ref-box>
 ```
 
 ### With Responsive Breakpoints (Programmatic)
@@ -40,12 +38,7 @@ document.body.appendChild(box)
 
 ```html
 <div style="container-name: sidebar; container-type: inline-size;">
-  <ref-box 
-    padding="2r"
-    data-container="sidebar"
-  >
-    Responds to sidebar width
-  </ref-box>
+  <ref-box padding="2r" data-container="sidebar"> Responds to sidebar width </ref-box>
 </div>
 ```
 
@@ -55,29 +48,29 @@ document.body.appendChild(box)
 
 ### Responsive Props
 
-| Prop | Type | Description |
-|------|------|-------------|
-| `r` | `ResponsiveBreakpoints` | Container query breakpoints (programmatic only) |
-| `container` | `string` | Named container to query (optional) |
-| `css` | `SystemStyleObject` | Raw Panda CSS object (escape hatch) |
+| Prop        | Type                    | Description                                     |
+| ----------- | ----------------------- | ----------------------------------------------- |
+| `r`         | `ResponsiveBreakpoints` | Container query breakpoints (programmatic only) |
+| `container` | `string`                | Named container to query (optional)             |
+| `css`       | `SystemStyleObject`     | Raw Panda CSS object (escape hatch)             |
 
 ### Style Props
 
 Common CSS properties available as attributes:
 
-| Prop | CSS Property |
-|------|--------------|
-| `padding` | `padding` |
-| `margin` | `margin` |
+| Prop              | CSS Property       |
+| ----------------- | ------------------ |
+| `padding`         | `padding`          |
+| `margin`          | `margin`           |
 | `backgroundColor` | `background-color` |
-| `color` | `color` |
-| `display` | `display` |
-| `flexDirection` | `flex-direction` |
-| `gap` | `gap` |
-| `width` | `width` |
-| `height` | `height` |
-| `borderRadius` | `border-radius` |
-| `border` | `border` |
+| `color`           | `color`            |
+| `display`         | `display`          |
+| `flexDirection`   | `flex-direction`   |
+| `gap`             | `gap`              |
+| `width`           | `width`            |
+| `height`          | `height`           |
+| `borderRadius`    | `border-radius`    |
+| `border`          | `border`           |
 
 ---
 
@@ -105,11 +98,7 @@ box.r = breakpoints
 
 ```html
 <div style="container-type: inline-size;">
-  <ref-box
-    padding="2r"
-    backgroundColor="gray.100"
-    borderRadius="md"
-  >
+  <ref-box padding="2r" backgroundColor="gray.100" borderRadius="md">
     <h3>Card Title</h3>
     <p>Card content</p>
   </ref-box>
@@ -117,6 +106,7 @@ box.r = breakpoints
 ```
 
 With JS:
+
 ```typescript
 const card = document.createElement('ref-box')
 card.padding = '2r'
@@ -132,10 +122,7 @@ card.r = {
 ```html
 <div style="container-name: page; container-type: inline-size;">
   <div style="container-name: sidebar; container-type: inline-size;">
-    <ref-box 
-      padding="1r"
-      data-container="page"
-    >
+    <ref-box padding="1r" data-container="page">
       Responds to page container, not sidebar
     </ref-box>
   </div>
@@ -146,15 +133,11 @@ card.r = {
 
 ```html
 <div data-density="compact" style="container-type: inline-size;">
-  <ref-box padding="2r">
-    Padding is 2r * 0.75 (compact density)
-  </ref-box>
+  <ref-box padding="2r"> Padding is 2r * 0.75 (compact density) </ref-box>
 </div>
 
 <div data-density="spacious" style="container-type: inline-size;">
-  <ref-box padding="2r">
-    Padding is 2r * 1.25 (spacious density)
-  </ref-box>
+  <ref-box padding="2r"> Padding is 2r * 1.25 (spacious density) </ref-box>
 </div>
 ```
 
@@ -200,9 +183,7 @@ The responsive styles are generated at build time by Panda, resulting in zero ru
 ### With `<ref-box>` (declarative)
 
 ```html
-<ref-box padding="2r" backgroundColor="blue.100">
-  Content
-</ref-box>
+<ref-box padding="2r" backgroundColor="blue.100"> Content </ref-box>
 ```
 
 ### With raw Panda (programmatic)

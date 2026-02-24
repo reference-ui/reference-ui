@@ -1,4 +1,4 @@
-import { Div, H2, H3, P } from '../primitives/index.js';
+import { Div, H2, H3, P } from '../primitives/index.js'
 
 const resizable = {
   border: '[2px solid #666]',
@@ -8,7 +8,7 @@ const resizable = {
   overflow: 'auto',
   maxWidth: '[100%]',
   minWidth: '[200px]',
-};
+}
 
 export function ResponsiveExample() {
   return (
@@ -17,7 +17,7 @@ export function ResponsiveExample() {
         <Div
           padding="2r"
           backgroundColor="red.500"
-          color="white"
+          color="gray.50"
           r={{
             300: { padding: '4r', backgroundColor: 'green.500' },
             500: { padding: '6r', backgroundColor: 'blue.500' },
@@ -50,7 +50,7 @@ export function ResponsiveExample() {
             container="sidebar"
             padding="2r"
             backgroundColor="blue.500"
-            color="white"
+            color="gray.50"
             r={{
               300: { padding: '4r', backgroundColor: 'green.500' },
               500: { padding: '6r', backgroundColor: 'blue.500' },
@@ -75,7 +75,7 @@ export function ResponsiveExample() {
                 container="card"
                 padding="2r"
                 backgroundColor="green.500"
-                color="white"
+                color="gray.50"
                 r={{
                   300: { padding: '4r', backgroundColor: 'green.500' },
                   500: { padding: '6r', backgroundColor: 'blue.500' },
@@ -90,5 +90,5 @@ export function ResponsiveExample() {
         </Div>
       </Div>
     </Div>
-  );
+  )
 }

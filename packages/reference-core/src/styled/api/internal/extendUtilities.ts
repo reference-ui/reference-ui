@@ -1,5 +1,5 @@
 import type { Config } from '@pandacss/dev'
-import { extendPandaConfig } from '../../../cli/panda/config/extendPandaConfig'
+import { extendPandaConfig } from '../../../cli/system/config/extendPandaConfig'
 
 type UtilityExtend = NonNullable<NonNullable<Config['utilities']>['extend']>
 

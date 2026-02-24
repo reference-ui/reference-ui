@@ -7,8 +7,5 @@ export { type ResponsiveBreakpoints, type ResponsivePropDefinition } from './r'
 export { type ContainerProp, type ContainerPropDefinition } from './container'
 
 // Combined system props interface
-export interface SystemProps 
-  extends FontPropDefinition, 
-          ResponsivePropDefinition, 
-          ContainerPropDefinition {}
-
+export interface SystemProps
+  extends FontPropDefinition, ResponsivePropDefinition, ContainerPropDefinition {}

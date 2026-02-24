@@ -36,6 +36,7 @@ node scripts/generate-primitives-docs.cjs
 ### When to run
 
 Run this script whenever:
+
 - New primitives are added to the core library
 - You want to ensure the documentation is in sync with the source code
 - You update the categorization logic
