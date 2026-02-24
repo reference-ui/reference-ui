@@ -1,6 +1,7 @@
 import { EventEmitter } from 'node:events'
 import { BroadcastChannel } from 'node:worker_threads'
 import type { Events } from './events'
+import { log } from '../lib'
 
 export const bus = new EventEmitter()
 
@@ -23,7 +24,7 @@ export function initEventBus(config: { debug?: boolean }) {
     // Wrap emit to log all events
     const originalEmit = bus.emit.bind(bus)
     bus.emit = (event, ...args) => {
-      console.log(`[bus] ${String(event)}`, args[0])
+      log.debug(`[bus] ${String(event)}`, args[0])
       return originalEmit(event, ...args)
     }
   }
