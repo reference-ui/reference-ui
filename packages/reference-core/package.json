@@ -16,6 +16,7 @@
     "esbuild": "^0.27.3",
     "fast-glob": "^3.3.2",
     "picocolors": "^1.1.0",
+    "picomatch": "^4.0.0",
     "piscina": "^5.1.4",
     "tsdown": "^0.20.1"
   },
@@ -31,6 +32,7 @@
     "test:watch": "vitest"
   },
   "devDependencies": {
+    "@types/picomatch": "^4.0.2",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "@types/node": "^25.1.0",

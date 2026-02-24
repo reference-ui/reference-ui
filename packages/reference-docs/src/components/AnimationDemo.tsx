@@ -8,14 +8,7 @@ export function AnimationDemo() {
   const [key, setKey] = useState(0)
 
   return (
-    <Div
-      randomProp="wtrf"
-      p="5r"
-      display="flex"
-      flexDirection="column"
-      alignItems="center"
-      gap="3r"
-    >
+    <Div p="5r" display="flex" flexDirection="column" alignItems="center" gap="3r">
       <Div
         key={key}
         w="10r"

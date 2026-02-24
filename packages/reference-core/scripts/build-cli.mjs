@@ -17,6 +17,7 @@ const external = [
   'typescript',
   'commander',
   'picocolors',
+  'picomatch',
   'piscina',
 ]
 
