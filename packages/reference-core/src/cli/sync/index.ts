@@ -11,7 +11,7 @@ export type { SyncOptions } from './types'
 
 export const syncCommand = async (cwd: string, options: SyncOptions) => {
   const config = await loadUserConfig(cwd)
-  initEventBus(config)
+  initEventBus()
   initLog(config)
   initWatch(cwd, config, options)
   initVirtual(cwd, config, options)
