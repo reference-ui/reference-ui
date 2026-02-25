@@ -1,0 +1,20 @@
+[package]
+name = "reference-virtual-native"
+version = "0.1.0"
+edition = "2021"
+description = "Native transforms for reference-ui virtual module (Rust)"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+napi = { version = "2", features = ["napi8"] }
+napi-derive = "2"
+oxc_parser = "0.115"
+oxc_ast = "0.115"
+oxc_span = "0.115"
+oxc_allocator = "0.115"
+regex = "1.10"
+
+[build-dependencies]
+napi-build = "2"
