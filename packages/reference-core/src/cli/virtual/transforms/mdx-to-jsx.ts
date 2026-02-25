@@ -1,14 +1,20 @@
+import { compile } from '@rspress/mdx-rs'
 import { log } from '../../lib/log'
-import { transformMdx } from '../../lib/microbundle'
 
 /**
- * Convert MDX to JS using esbuild + @mdx-js/esbuild plugin.
- * Uses Go/esbuild for heavy lifting instead of V8 compile(); typically 20-80MB lighter.
+ * Convert MDX to JS using @rspress/mdx-rs (Rust/NAPI binding).
+ * ~10x faster than @mdx-js/mdx, lower memory than esbuild + unified stack.
  * Output is suitable for Panda style extraction.
  */
 export async function mdxToJsx(mdxContent: string, sourceFile: string): Promise<string> {
   try {
-    return await transformMdx(mdxContent, sourceFile)
+    const result = await compile({
+      value: mdxContent,
+      filepath: sourceFile.endsWith('.mdx') ? sourceFile : `${sourceFile}.mdx`,
+      development: false,
+      root: '',
+    })
+    return result.code
   } catch (error) {
     log.error(
       `Failed to compile MDX file ${sourceFile}:`,
