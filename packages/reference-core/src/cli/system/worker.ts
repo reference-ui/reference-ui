@@ -6,7 +6,7 @@ import { resolveCorePackageDir } from '../lib/resolve-core'
 import type { ReferenceUIConfig } from '../config'
 import { runEval } from './eval'
 import { createPandaConfig } from './config'
-import { runPandaCodegen, runPandaCss } from './gen/runner'
+import { runPandaCodegen } from './gen/runner'
 
 export interface SystemWorkerPayload {
   cwd: string
@@ -33,8 +33,7 @@ async function runConfigOnly(payload: SystemWorkerPayload): Promise<void> {
 async function runSystemCore(payload: SystemWorkerPayload): Promise<void> {
   await runConfigOnly(payload)
   const coreDir = resolveCorePackageDir()
-  runPandaCodegen(coreDir) // Generates TS types
-  runPandaCss(coreDir) // Extracts CSS - both needed since codegen doesn't extract CSS in non-watch mode
+  runPandaCodegen(coreDir) // Runs `panda` which does codegen + CSS extraction
   emit('system:compiled', {})
 }
 
