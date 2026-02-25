@@ -1,6 +1,4 @@
-import * as ts from 'typescript'
 import { dirname } from 'node:path'
-import { log } from '../../lib/log'
 
 const CORE_PACKAGE = '@reference-ui/react'
 const CVA_BINDINGS = ['cva', 'recipe'] as const
@@ -23,7 +21,11 @@ function getStyledSystemCssRelativePath(relativePath: string): string {
  * the rest from @reference-ui/core. Also replace all usages of `recipe(` with `cva(` in the code.
  * The rest of the source is left byte-for-byte unchanged.
  */
-export function rewriteCvaImports(sourceCode: string, relativePath: string): string {
+export async function rewriteCvaImports(
+  sourceCode: string,
+  relativePath: string
+): Promise<string> {
+  const ts = await import('typescript')
   const isTsx = /\.(tsx|jsx)$/.test(relativePath)
   const sourceFile = ts.createSourceFile(
     'temp-file',

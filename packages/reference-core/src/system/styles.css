@@ -1558,10 +1558,6 @@
     animation: var(--animations-ping-fast);
 }
 
-  .bg_green\.500 {
-    background: var(--colors-green-500);
-}
-
   .bg_green\.300 {
     background: var(--colors-green-300);
 }
@@ -1580,6 +1576,10 @@
 
   .bg_purple\.100 {
     background: var(--colors-purple-100);
+}
+
+  .bg_green\.500 {
+    background: var(--colors-green-500);
 }
 
   .bg_pink\.200 {
@@ -1654,8 +1654,8 @@
     background: var(--colors-red-600);
 }
 
-  .bg_blue\.100 {
-    background: var(--colors-blue-100);
+  .bg_blue\.300 {
+    background: var(--colors-blue-300);
 }
 
   .m_0_0_1rem {
