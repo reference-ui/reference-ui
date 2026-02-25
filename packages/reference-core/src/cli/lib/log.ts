@@ -32,16 +32,12 @@ export function printDebug(module: string, ...args: unknown[]) {
   if (!isDebug) {
     return
   }
-  const colored = args.map((arg) =>
-    typeof arg === 'string' ? pc.dim(arg) : arg
-  )
-  console.log(pc.dim(`[${timestamp()}] debug [${module}]`), ...colored)
+  const prefix = `${pc.dim(`[${timestamp()}]`)} ${pc.blue(`[${module}]`)}`
+  console.log(prefix, ...args)
 }
 
 export function printError(...args: unknown[]) {
-  const colored = args.map((arg) =>
-    typeof arg === 'string' ? pc.red(arg) : arg
-  )
+  const colored = args.map(arg => (typeof arg === 'string' ? pc.red(arg) : arg))
   console.error(pc.red('error'), ...colored)
 }
 

@@ -25,7 +25,12 @@ export interface VirtualWorkerPayload {
  * This runs in a worker thread for better performance.
  */
 export async function runVirtual(payload: VirtualWorkerPayload): Promise<void> {
-  const { sourceDir, config, virtualDir = DEFAULT_VIRTUAL_DIR, watchMode = false } = payload
+  const {
+    sourceDir,
+    config,
+    virtualDir = DEFAULT_VIRTUAL_DIR,
+    watchMode = false,
+  } = payload
   const { include, debug = false } = config
 
   const absSourceDir = resolve(sourceDir)
@@ -81,10 +86,17 @@ function startWatchMode(context: {
         virtualPath = getVirtualPath(sourcePath, absSourceDir, absVirtualDir)
         await removeFromVirtual(sourcePath, absSourceDir, absVirtualDir, { debug })
       } else {
-        virtualPath = await copyToVirtual(sourcePath, absSourceDir, absVirtualDir, { debug })
+        virtualPath = await copyToVirtual(sourcePath, absSourceDir, absVirtualDir, {
+          debug,
+        })
       }
       emit('virtual:fs:change', { event, path: virtualPath })
-      log.debug('virtual:worker', 'Processed watch:change → virtual:fs:change', event, virtualPath)
+      log.debug(
+        'virtual:worker',
+        'Processed watch:change → virtual:fs:change',
+        event,
+        virtualPath
+      )
     } catch (err) {
       log.error('[virtual:worker] Failed to process', event, sourcePath, err)
     }

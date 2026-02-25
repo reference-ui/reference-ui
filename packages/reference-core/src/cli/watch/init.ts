@@ -11,7 +11,11 @@ import type { SyncOptions } from '../sync/types'
 /**
  * Start file watching in a worker thread when options.watch is true.
  */
-export function initWatch(sourceDir: string, config: ReferenceUIConfig, options: SyncOptions): void {
+export function initWatch(
+  sourceDir: string,
+  config: ReferenceUIConfig,
+  options: SyncOptions
+): void {
   if (!options.watch) return
 
   log.debug('watch', 'Starting watch worker')
