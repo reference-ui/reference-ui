@@ -585,7 +585,7 @@ The packager emits `packager:complete` when done; the packager-ts worker runs af
 
 ```typescript
 log.info('Starting build...')
-log.debug('[worker] Processing file') // Only if debug: true
+log.debug('module', 'Processing file') // Only if debug: true; module = system:eval, system:config, packager, etc.
 log.error('Build failed:', error)
 ```
 

@@ -54,7 +54,7 @@ export async function runVirtual(payload: VirtualWorkerPayload): Promise<void> {
       ...GLOB_CONFIG,
     })
 
-    log.debug(`[virtual:worker] Processing ${files.length} files for pattern: ${pattern}`)
+    log.debug('virtual:worker', `Processing ${files.length} files for pattern: ${pattern}`)
 
     for (const file of files) {
       await copyToVirtual(file, absSourceDir, absVirtualDir, { debug })

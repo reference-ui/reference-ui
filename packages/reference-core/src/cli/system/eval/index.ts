@@ -23,10 +23,9 @@ export async function runEval(
   const files = [...basePaths, ...scannedFiles]
 
   const result = await runFiles(files, coreDir)
-  log.debug(
-    'eval',
-    `Collected ${result.length} config fragments from ${files.length} files`
-  )
+  const n = result.length
+  const label = `${String(n).padStart(3)} ${n === 1 ? 'frag' : 'frags'}`
+  log.debug('system:eval', `Collected ${label} from ${files.length} file(s)`)
 
   return result
 }

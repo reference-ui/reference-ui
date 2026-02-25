@@ -18,7 +18,7 @@ export async function createFontSystem(coreDir: string): Promise<string> {
   const fontsPath = resolve(styledFontDir, 'fonts.ts')
 
   if (!existsSync(fontsPath)) {
-    log.debug('createFontSystem', 'No fonts.ts found, skipping')
+    log.debug('system:font', 'No fonts.ts found, skipping')
     return ''
   }
 
@@ -66,7 +66,7 @@ export async function createFontSystem(coreDir: string): Promise<string> {
   const fontPath = resolve(styledFontDir, 'font.ts')
   const content = generateFontSystemContent(definitions)
   writeFileSync(fontPath, content)
-  log.debug('createFontSystem', 'Wrote font system to src/styled/font/font.ts')
+  log.debug('system:font', 'Wrote font system to src/styled/font/font.ts')
 
   return fontPath
 }
