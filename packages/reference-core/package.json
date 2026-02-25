@@ -30,7 +30,8 @@
   "scripts": {
     "build": "tsup",
     "build:fresh": "rm -rf dist/cli && tsup",
-    "dev": "tsup --watch",
+    "build:native": "cd src/cli/virtual/native && npx napi build --platform --release",
+    "dev": "pnpm run build:native && tsup --watch",
     "test": "vitest run",
     "test:watch": "vitest"
   },
