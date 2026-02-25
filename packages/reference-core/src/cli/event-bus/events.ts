@@ -34,4 +34,8 @@ export type VirtualEvents = {
   'virtual:fs:change': { event: 'add' | 'change' | 'unlink'; path: string }
 }
 
-export type Events = LogEvents & WatchEvents & SystemEvents & PackagerEvents & VirtualEvents
+export type Events = LogEvents &
+  WatchEvents &
+  SystemEvents &
+  PackagerEvents &
+  VirtualEvents
