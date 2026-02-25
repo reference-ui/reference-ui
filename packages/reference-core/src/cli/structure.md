@@ -281,3 +281,61 @@ main()
 - Markdown: CLI.md, README files, build-plan.md, thread.md
 - Rust/native: virtual/native/*.rs, Cargo.toml
 - Config: manifest.json, package.json
+
+---
+
+## CLI Code Improvements
+
+Opportunities to improve and simplify the codebase:
+
+### 1. Extract `debounce` to lib/
+
+Duplicated in `packager/worker.ts` and `system/worker.ts`. Move to `lib/debounce.ts` or `lib/utils.ts`.
+
+### 2. Extract `toRelativeImport` to shared util
+
+Same function copy-pasted in:
+- `system/config/entryTemplate.ts`
+- `system/boxPattern/collectEntryTemplate.ts`
+- `system/fontFace/collectEntryTemplate.ts`
+
+Add `lib/path.ts` or `system/shared/path-utils.ts`.
+
+### 3. Abstract the collect-script pattern
+
+`createBoxPattern` and `createFontSystem` share the same flow: mkdir .ref, build entry, microBundle, spawnSync, read JSON, rm temp, generate output. Extract `runCollectScript<T>(options)` to reduce duplication.
+
+### 4. Unify collector pattern
+
+Panda config, box pattern, and font each have: initCollector, extendX, getX, globalThis key. Create `createCollector<T>(key)` factory.
+
+### 5. `resolveCorePackageDir` consistency
+
+Workers in `packager` and `system` call `resolveCorePackageDir()` with no args (uses process.cwd()). Other workers pass `cwd` explicitly. In worker threads, process.cwd() may differ. Pass project root from payload everywhere.
+
+### 6. Dead code: `copy-to-codegen.ts`
+
+`copyToCodegen` and `watchAndCopyToCodegen` in `system/gen/copy-to-codegen.ts` are never imported or called. Current sync uses virtual/. Either remove or wire up; update Architecture.md if kept.
+
+### 7. Dual import-rewrite implementations
+
+- `virtual/transforms/rewrite-*-imports.ts` — native Rust addon
+- `system/gen/rewrite-*-imports.ts` — TypeScript AST
+
+Document why both exist or consolidate.
+
+### 8. Worker entry boilerplate
+
+Each worker has `worker.ts` → default export `runX` from `run.ts`. Document the pattern or simplify (define runX in worker.ts directly).
+
+### 9. Base worker payload type
+
+`WatchPayload`, `VirtualWorkerPayload`, `PackagerWorkerPayload`, etc. Could share `{ cwd: string; config: ReferenceUIConfig }` base.
+
+### 10. Centralize collector keys
+
+`__refPandaConfigCollector`, `__boxPatternCollector`, `__fontCollector` are magic strings. Put in one file (e.g. `system/collectors/keys.ts`).
+
+---
+
+**Priority:** 1, 2, 6 first (quick wins + dead code). Then 3, 4, 5 (structural). 7–10 as polish.
