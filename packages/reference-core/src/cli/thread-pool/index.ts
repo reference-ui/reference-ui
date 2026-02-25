@@ -9,8 +9,8 @@ function getPool() {
   if (pool) return pool
 
   pool = new Piscina({
-    minThreads: 2,
-    maxThreads: Math.max(4, cpus().length - 1),
+    minThreads: 3,
+    maxThreads: 3,
     idleTimeout: 30000,
   })
 
