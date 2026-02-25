@@ -17,5 +17,5 @@ export const syncCommand = async (cwd: string, options: SyncOptions) => {
   initVirtual(cwd, config, options)
   initPackager(cwd, config, { watch: options?.watch })
   initSystem(cwd, config, { watch: options?.watch })
-  //initTsPackager(cwd, config)
+  initTsPackager(cwd, config)
 }
