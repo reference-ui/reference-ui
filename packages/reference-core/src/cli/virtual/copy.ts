@@ -1,9 +1,9 @@
-import { mkdir, copyFile, writeFile } from 'node:fs/promises'
+import { mkdir, copyFile, writeFile, readFile } from 'node:fs/promises'
 import { dirname, join, relative, extname } from 'node:path'
-import { existsSync } from 'node:fs'
+import { createReadStream, existsSync } from 'node:fs'
 import { transformFile } from './transform'
 import { log } from '../lib/log'
-import { TRANSFORMED_EXTENSIONS } from './config.internal'
+import { TRANSFORMED_EXTENSIONS, isTransformExtension } from './config.internal'
 
 /**
  * Copy a file to the virtual directory, applying transforms if needed.
@@ -23,6 +23,7 @@ export async function copyToVirtual(
 
   // Build destination path in virtual directory
   let destPath = join(virtualDir, relativePath)
+  const sourceExt = extname(sourcePath)
 
   // Ensure destination directory exists
   const destDir = dirname(destPath)
@@ -30,9 +31,18 @@ export async function copyToVirtual(
     await mkdir(destDir, { recursive: true })
   }
 
-  // Read source content
-  const fs = await import('node:fs/promises')
-  const content = await fs.readFile(sourcePath, 'utf-8')
+  const canTransform = isTransformExtension(sourceExt)
+  const shouldTransform =
+    sourceExt === '.mdx' ||
+    (canTransform && (await fileContainsMarkers(sourcePath, TRANSFORM_MARKERS)))
+
+  if (!shouldTransform) {
+    await copyFile(sourcePath, destPath)
+    return destPath
+  }
+
+  // Read source content (only when a transform is needed)
+  const content = await readFile(sourcePath, 'utf-8')
 
   // Apply transforms
   const result = await transformFile({
@@ -90,4 +100,51 @@ export async function removeFromVirtual(
       await fs.unlink(transformedPath)
     }
   }
+}
+
+const TRANSFORM_MARKERS = ['@reference-ui/react'] as const
+const MAX_MARKER_LENGTH = Math.max(...TRANSFORM_MARKERS.map(marker => marker.length))
+
+async function fileContainsMarkers(
+  filePath: string,
+  markers: readonly string[]
+): Promise<boolean> {
+  return new Promise((resolve, reject) => {
+    const stream = createReadStream(filePath, { encoding: 'utf-8' })
+    let tail = ''
+    let settled = false
+
+    const settle = (result: boolean) => {
+      if (settled) return
+      settled = true
+      resolve(result)
+    }
+
+    stream.on('data', chunk => {
+      const data = tail + chunk
+      for (const marker of markers) {
+        if (data.includes(marker)) {
+          stream.close()
+          settle(true)
+          return
+        }
+      }
+      tail = data.slice(-MAX_MARKER_LENGTH)
+    })
+
+    stream.on('error', error => {
+      if (!settled) {
+        settled = true
+        reject(error)
+      }
+    })
+
+    stream.on('close', () => {
+      settle(false)
+    })
+
+    stream.on('end', () => {
+      settle(false)
+    })
+  })
 }

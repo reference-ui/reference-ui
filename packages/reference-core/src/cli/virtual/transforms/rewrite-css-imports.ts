@@ -1,6 +1,4 @@
-import * as ts from 'typescript'
 import { dirname } from 'node:path'
-import { log } from '../../lib/log'
 
 const CORE_PACKAGE = '@reference-ui/react'
 const CSS_BINDING = 'css'
@@ -23,7 +21,11 @@ function getStyledSystemCssRelativePath(relativePath: string): string {
  * the rest from @reference-ui/core.
  * The rest of the source is left byte-for-byte unchanged.
  */
-export function rewriteCssImports(sourceCode: string, relativePath: string): string {
+export async function rewriteCssImports(
+  sourceCode: string,
+  relativePath: string
+): Promise<string> {
+  const ts = await import('typescript')
   const isTsx = /\.(tsx|jsx)$/.test(relativePath)
   const sourceFile = ts.createSourceFile(
     'temp-file',

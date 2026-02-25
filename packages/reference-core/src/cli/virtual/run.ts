@@ -46,18 +46,23 @@ export async function runVirtual(payload: VirtualWorkerPayload): Promise<void> {
     log.debug('virtual:worker', 'Created virtual directory')
   }
 
-  const fg = await import('fast-glob')
+  if (include.length > 0) {
+    const fg = await import('fast-glob')
 
-  for (const pattern of include) {
-    const files = await fg.default(pattern, {
-      cwd: absSourceDir,
-      ...GLOB_CONFIG,
-    })
+    for (const pattern of include) {
+      const files = await fg.default(pattern, {
+        cwd: absSourceDir,
+        ...GLOB_CONFIG,
+      })
 
-    log.debug('virtual:worker', `Processing ${files.length} files for pattern: ${pattern}`)
+      log.debug(
+        'virtual:worker',
+        `Processing ${files.length} files for pattern: ${pattern}`
+      )
 
-    for (const file of files) {
-      await copyToVirtual(file, absSourceDir, absVirtualDir, { debug })
+      for (const file of files) {
+        await copyToVirtual(file, absSourceDir, absVirtualDir, { debug })
+      }
     }
   }
 
