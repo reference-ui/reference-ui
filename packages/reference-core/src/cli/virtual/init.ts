@@ -13,7 +13,7 @@ export function initVirtual(
   config: ReferenceUIConfig,
   options?: InitVirtualOptions
 ): void {
-  log.debug('[virtual] initVirtual called')
+  log.debug('virtual', 'initVirtual called')
 
   runWorker('virtual', {
     sourceDir,
@@ -22,7 +22,7 @@ export function initVirtual(
     watchMode: options?.watch ?? false,
   })
     .then(() => {
-      log.debug('[virtual] Initial copy complete')
+      log.debug('virtual', 'Initial copy complete')
     })
     .catch(error => {
       log.error('[virtual] Initialization failed:', error)

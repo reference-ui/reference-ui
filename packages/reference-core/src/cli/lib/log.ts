@@ -3,10 +3,11 @@ import { isMainThread } from 'node:worker_threads'
 import { on, emit } from '../event-bus'
 
 type LogFn = (...args: unknown[]) => void
+type LogDebugFn = (module: string, ...args: unknown[]) => void
 
 type Log = LogFn & {
   error: LogFn
-  debug: LogFn
+  debug: LogDebugFn
 }
 
 let isDebug = false
@@ -27,14 +28,14 @@ function timestamp(): string {
   return `${h}:${m}:${s}.${ms}`
 }
 
-export function printDebug(...args: unknown[]) {
+export function printDebug(module: string, ...args: unknown[]) {
   if (!isDebug) {
     return
   }
   const colored = args.map((arg) =>
     typeof arg === 'string' ? pc.dim(arg) : arg
   )
-  console.log(pc.dim(`[${timestamp()}] debug`), ...colored)
+  console.log(pc.dim(`[${timestamp()}] debug [${module}]`), ...colored)
 }
 
 export function printError(...args: unknown[]) {
@@ -67,14 +68,14 @@ log.error = (...args: unknown[]) => {
   emit('log:error', { message, args: rest })
 }
 
-log.debug = (...args: unknown[]) => {
+log.debug = (module: string, ...args: unknown[]) => {
   const message = String(args[0] ?? '')
   const rest = args.slice(1)
   if (isMainThread) {
-    printDebug(message, ...rest)
+    printDebug(module, message, ...rest)
     return
   }
-  emit('log:debug', { message, args: rest })
+  emit('log:debug', { module, message, args: rest })
 }
 
 /**
@@ -90,8 +91,8 @@ export function initLog(config: { debug?: boolean }) {
     printInfo(message, ...args)
   })
 
-  on('log:debug', ({ message, args = [] }) => {
-    printDebug(message, ...args)
+  on('log:debug', ({ module, message, args = [] }) => {
+    printDebug(module || 'unknown', message, ...args)
   })
 
   on('log:error', ({ message, args = [] }) => {

@@ -32,13 +32,13 @@ export async function runVirtual(payload: VirtualWorkerPayload): Promise<void> {
   const coreDir = resolveCorePackageDir(sourceDir)
   const absVirtualDir = resolve(coreDir, virtualDir)
 
-  log.debug('[virtual:worker] Initializing virtual filesystem')
-  log.debug('[virtual:worker] Source:', absSourceDir)
-  log.debug('[virtual:worker] Virtual:', absVirtualDir)
+  log.debug('virtual:worker', 'Initializing virtual filesystem')
+  log.debug('virtual:worker', 'Source:', absSourceDir)
+  log.debug('virtual:worker', 'Virtual:', absVirtualDir)
 
   if (!existsSync(absVirtualDir)) {
     await mkdir(absVirtualDir, { recursive: true })
-    log.debug('[virtual:worker] Created virtual directory')
+    log.debug('virtual:worker', 'Created virtual directory')
   }
 
   const fg = await import('fast-glob')
@@ -56,7 +56,7 @@ export async function runVirtual(payload: VirtualWorkerPayload): Promise<void> {
     }
   }
 
-  log.debug('[virtual:worker] Initialization complete')
+  log.debug('virtual:worker', 'Initialization complete')
 
   if (watchMode) {
     return startWatchMode({ absSourceDir, absVirtualDir, debug })
@@ -84,12 +84,12 @@ function startWatchMode(context: {
         virtualPath = await copyToVirtual(sourcePath, absSourceDir, absVirtualDir, { debug })
       }
       emit('virtual:fs:change', { event, path: virtualPath })
-      log.debug('[virtual:worker] Processed watch:change → virtual:fs:change', event, virtualPath)
+      log.debug('virtual:worker', 'Processed watch:change → virtual:fs:change', event, virtualPath)
     } catch (err) {
       log.error('[virtual:worker] Failed to process', event, sourcePath, err)
     }
   })
 
-  log.debug('[virtual:worker] Listening for watch:change, emitting virtual:fs:change')
+  log.debug('virtual:worker', 'Listening for watch:change, emitting virtual:fs:change')
   return new Promise(() => {})
 }

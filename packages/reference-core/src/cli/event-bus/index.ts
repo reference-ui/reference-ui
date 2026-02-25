@@ -27,7 +27,7 @@ export function initEventBus() {
     broadcastChannel.addEventListener('message', (msg: Event) => {
       const data = (msg as any).data
       if (data?.type === 'bus:event') {
-        log.debug(`[bus] ${data.event}`, data.payload)
+        log.debug('bus', `${data.event}`, data.payload)
       }
     })
   }

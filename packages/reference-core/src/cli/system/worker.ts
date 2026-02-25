@@ -67,7 +67,7 @@ export async function runSystem(payload: SystemWorkerPayload): Promise<void> {
     runPandaCodegen(coreDir, { watch: true })
 
     const debouncedConfig = debounce(async () => {
-      log.debug('[system:worker] virtual:fs:change → config')
+      log.debug('system:worker', 'virtual:fs:change → config')
       try {
         await runConfigOnly(payload)
       } catch (e) {
