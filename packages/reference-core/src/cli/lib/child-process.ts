@@ -109,7 +109,7 @@ export function spawnMonitored(
       if (rss !== null) {
         log.debug(
           logCategory,
-          `[${coloredName}] PID ${child.pid} ${ORANGE}RAM${RESET}: ${rss.toFixed(1)}MB`
+          `[${coloredName}] RAM: ${ORANGE}${rss.toFixed(1)}MB${RESET}`
         )
       }
     }, memoryMonitorInterval)
@@ -197,10 +197,25 @@ export async function spawnMonitoredAsync(
       }
     }, memoryMonitorInterval)
 
+    // Log child RSS periodically (every 2s) so we see progress during long runs
+    const logMemory = options.logMemory !== false
+    const logInterval =
+      logMemory &&
+      setInterval(() => {
+        const childRss = getProcessRssMb(child.pid)
+        if (childRss !== null) {
+          log.debug(
+            logCategory,
+            `[${coloredName}] RAM: ${ORANGE}${childRss.toFixed(1)}MB${RESET}`
+          )
+        }
+      }, 2000)
+
     if (timeout > 0) {
       timeoutHandle = setTimeout(() => {
         child.kill('SIGTERM')
         clearInterval(memMonitor)
+        if (logInterval) clearInterval(logInterval)
         reject(new Error(`Process ${processName} timed out after ${timeout}ms`))
       }, timeout)
     }
@@ -216,23 +231,21 @@ export async function spawnMonitoredAsync(
     child.on('error', error => {
       if (timeoutHandle) clearTimeout(timeoutHandle)
       clearInterval(memMonitor)
+      if (logInterval) clearInterval(logInterval)
       reject(new Error(`Failed to spawn ${processName}: ${error.message}`))
     })
 
     child.on('exit', code => {
       if (timeoutHandle) clearTimeout(timeoutHandle)
       clearInterval(memMonitor)
+      if (logInterval) clearInterval(logInterval)
 
       const memAfter = process.memoryUsage().rss / 1024 / 1024
       const parentDelta = memAfter - memBefore
 
       log.debug(
         logCategory,
-        `[${coloredName}] Parent ${ORANGE}RAM${RESET}: ${memBefore.toFixed(1)}MB → ${memAfter.toFixed(1)}MB (${parentDelta.toFixed(1)}MB delta)`
-      )
-      log.debug(
-        logCategory,
-        `[${coloredName}] Child peak ${ORANGE}RAM${RESET}: ${peakChildRss.toFixed(1)}MB`
+        `[${coloredName}] RAM: ${ORANGE}${peakChildRss.toFixed(1)}MB${RESET}`
       )
 
       resolve({
