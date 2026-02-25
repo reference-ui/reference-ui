@@ -13,17 +13,24 @@ export interface InitPackagerOptions {
  * - @reference-ui/react (components, runtime APIs)
  *
  * Uses esbuild to properly bundle and place packages in node_modules.
+ * 
+ * In watch mode, starts the worker but returns immediately (non-blocking).
+ * In cold start mode, waits for the initial bundle to complete.
  */
 export async function initPackager(
   cwd: string,
   config: ReferenceUIConfig,
   options?: InitPackagerOptions
 ): Promise<void> {
-  await runWorker('packager', {
-    cwd,
-    config,
-    watchMode: options?.watch ?? false,
-  })
+  const watchMode = options?.watch ?? false
+  
+  if (watchMode) {
+    // Fire and forget - worker stays alive listening for system:compiled
+    runWorker('packager', { cwd, config, watchMode: true })
+  } else {
+    // Wait for initial bundle
+    await runWorker('packager', { cwd, config, watchMode: false })
+  }
 }
 
 // Re-export for use in other modules
