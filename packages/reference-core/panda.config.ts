@@ -5459,7 +5459,7 @@ var globalCss = extendGlobalCss;
 // src/tokens.ts
 var tokens_exports = {};
 
-// node_modules/@reference-ui/system/system.js
+// .reference-ui/system/system.js
 var COLLECTOR_KEY2 = "__refPandaConfigCollector";
 function extendPandaConfig2(partial) {
   const collector = globalThis[COLLECTOR_KEY2];
@@ -5502,7 +5502,7 @@ __export(RecipeDemo_exports, {
 });
 var import_react26 = __toESM(require_react(), 1);
 
-// node_modules/@reference-ui/react/react.js
+// .reference-ui/react/react.js
 var import_react = __toESM(require_react(), 1);
 var import_react2 = __toESM(require_react(), 1);
 var import_react3 = __toESM(require_react(), 1);

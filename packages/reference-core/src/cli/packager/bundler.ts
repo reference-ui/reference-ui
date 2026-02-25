@@ -2,16 +2,16 @@ import { build } from 'esbuild'
 import { resolve, dirname, extname } from 'node:path'
 
 /** Set to false to skip symlinking .reference-ui/* into node_modules/@reference-ui/* */
-export const ENABLE_REFERENCE_UI_SYMLINKS = false
+export const ENABLE_REFERENCE_UI_SYMLINKS = true
 import {
   mkdirSync,
   writeFileSync,
+  readFileSync,
   cpSync,
   existsSync,
   readdirSync,
   statSync,
   lstatSync,
-  readFileSync,
   rmSync,
   unlinkSync,
 } from 'node:fs'
@@ -26,7 +26,22 @@ export interface BundleOptions {
 }
 
 /**
- * Bundle a package using esbuild (for packages that need bundling)
+ * Write content only if it changed — avoids Vite HMR cascade when JS bundle is unchanged.
+ */
+function writeIfChanged(filePath: string, newContent: string): boolean {
+  try {
+    const existing = readFileSync(filePath, 'utf-8')
+    if (existing === newContent) return false
+  } catch {
+    // File doesn't exist, write it
+  }
+  writeFileSync(filePath, newContent, 'utf-8')
+  return true
+}
+
+/**
+ * Bundle a package using esbuild (for packages that need bundling).
+ * Only writes the main JS output if content changed, to avoid Vite invalidating everything.
  */
 async function bundleWithEsbuild(
   coreDir: string,
@@ -34,21 +49,29 @@ async function bundleWithEsbuild(
   entryPath: string,
   outfile: string
 ): Promise<void> {
-  await build({
+  const destPath = resolve(targetDir, outfile)
+  const result = await build({
     entryPoints: [resolve(coreDir, entryPath)],
-    bundle: true, // Bundle all dependencies into one file
-    outfile: resolve(targetDir, outfile),
+    bundle: true,
+    write: false, // Get output in memory
     format: 'esm',
     platform: 'neutral',
     target: 'es2020',
     jsx: 'automatic',
     jsxImportSource: 'react',
-    external: ['react', 'react-dom', 'react/jsx-runtime'], // Don't bundle React
+    external: ['react', 'react-dom', 'react/jsx-runtime'],
     sourcemap: false,
     treeShaking: true,
     minify: false,
     logLevel: 'warning',
   })
+
+  const out = result.outputFiles?.[0]
+  if (!out) throw new Error('esbuild produced no output')
+  const content = out.text
+
+  mkdirSync(targetDir, { recursive: true })
+  writeIfChanged(destPath, content)
 }
 
 /**
@@ -182,13 +205,13 @@ async function createPackageContent(options: BundleOptions): Promise<void> {
       if (existsSync(srcPath)) {
         mkdirSync(dirname(destPath), { recursive: true })
 
-        // If source is TypeScript, transform it
         if (src.endsWith('.ts') || src.endsWith('.tsx')) {
-          // Rewrite imports for entry point files
           const isEntryPoint = src.includes('/entry/')
           await transformTypeScriptFile(srcPath, destPath, isEntryPoint)
         } else {
-          cpSync(srcPath, destPath)
+          // Only write if changed (avoids Vite HMR cascade for unchanged CSS)
+          const newContent = readFileSync(srcPath, 'utf-8')
+          writeIfChanged(destPath, newContent)
         }
       }
     }
@@ -218,11 +241,7 @@ export async function bundlePackage(options: BundleOptions): Promise<void> {
     exports: pkg.exports,
   }
 
-  writeFileSync(
-    resolve(targetDir, 'package.json'),
-    JSON.stringify(packageJson, null, 2),
-    'utf-8'
-  )
+  writeIfChanged(resolve(targetDir, 'package.json'), JSON.stringify(packageJson, null, 2))
 }
 
 /**
@@ -288,7 +307,9 @@ export async function bundleAllPackages(
       }
 
       if (!existsSync(targetDir) || !statSync(targetDir).isDirectory()) {
-        throw new Error(`Packager target ${targetDir} must be a directory (symlink-dir requires it on Windows)`)
+        throw new Error(
+          `Packager target ${targetDir} must be a directory (symlink-dir requires it on Windows)`
+        )
       }
 
       symlinkDir.sync(targetDir, linkPath)
