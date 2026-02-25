@@ -14,7 +14,7 @@ import type { SyncOptions } from '../sync/types'
 export function initWatch(sourceDir: string, config: ReferenceUIConfig, options: SyncOptions): void {
   if (!options.watch) return
 
-  log.debug('[watch] Starting watch worker')
+  log.debug('watch', 'Starting watch worker')
   runWorker('watch', { sourceDir, config }).catch(error => {
     log.error('[watch] Watch worker failed:', error)
   })

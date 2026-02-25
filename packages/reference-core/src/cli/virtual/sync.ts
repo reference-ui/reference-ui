@@ -26,7 +26,7 @@ export async function syncVirtual(
   const coreDir = resolveCorePackageDir(sourceDir)
   const absVirtualDir = resolve(coreDir, virtualDir)
 
-  log.debug('[virtual] Syncing files to virtual directory')
+  log.debug('virtual', 'Syncing files to virtual directory')
 
   const fg = await import('fast-glob')
 

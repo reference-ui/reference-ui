@@ -15,7 +15,7 @@ export async function runFiles(
   const allFragments: Partial<Config>[] = []
 
   for (const filePath of filePaths) {
-    log.debug(`[eval] Running ${filePath}`)
+    log.debug('eval', `Running ${filePath}`)
     const collector: Partial<Config>[] = []
     ;(globalThis as Record<string, unknown>)[COLLECTOR_KEY] = collector
 
@@ -30,7 +30,7 @@ export async function runFiles(
     }
 
     if (collector.length > 0) {
-      log.debug(`[eval]   → ${collector.length} fragment(s) from ${filePath}`)
+      log.debug('eval', `  → ${collector.length} fragment(s) from ${filePath}`)
     }
     allFragments.push(...collector)
   }

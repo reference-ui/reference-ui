@@ -61,7 +61,7 @@ export async function compileDeclarations(
 
     if (errors.length > 0) {
       for (const diagnostic of errors) {
-        log.debug(`[packager-ts] Error: ${formatDiagnostic(diagnostic)}`)
+        log.debug('packager-ts', `Error: ${formatDiagnostic(diagnostic)}`)
       }
       throw new Error(`TypeScript compilation failed with ${errors.length} error(s)`)
     }

@@ -4,7 +4,7 @@
  */
 export type LogEvents = {
   'log:info': { message: string; args?: unknown[] }
-  'log:debug': { message: string; args?: unknown[] }
+  'log:debug': { module: string; message: string; args?: unknown[] }
   'log:error': { message: string; args?: unknown[] }
 }
 

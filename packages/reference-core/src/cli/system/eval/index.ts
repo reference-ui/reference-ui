@@ -24,7 +24,8 @@ export async function runEval(
 
   const result = await runFiles(files, coreDir)
   log.debug(
-    `[eval] Collected ${result.length} config fragments from ${files.length} files`
+    'eval',
+    `Collected ${result.length} config fragments from ${files.length} files`
   )
 
   return result

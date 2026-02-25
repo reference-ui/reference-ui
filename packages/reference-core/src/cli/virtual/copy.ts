@@ -54,7 +54,7 @@ export async function copyToVirtual(
 
   // Only log if transformed, otherwise silent
   if (result.transformed) {
-    log.debug(`[virtual] ✓ ${relativePath}`)
+    log.debug('virtual', `✓ ${relativePath}`)
   }
 
   return destPath
