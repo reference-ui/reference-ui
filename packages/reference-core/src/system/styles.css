@@ -909,7 +909,6 @@
 
 @layer recipes{
   @layer _base{
-
     .r_abbr {
       text-decoration: underline dotted;
       text-underline-offset: 0.15em;
@@ -1685,10 +1684,6 @@
 
   .m_0 {
     margin: 0;
-}
-
-  .p_fuck {
-    padding: fuck;
 }
 
   .bd-c_gray\.50 {
