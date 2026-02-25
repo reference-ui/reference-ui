@@ -89,10 +89,11 @@ export async function buildDeclarations(
 
     mkdirSync(packageDir, { recursive: true })
 
-    // Compile with tsdown: outputs react.js + react.d.ts to packageDir
-    // Entry path relative to coreDir so tsdown derives correct output basename
+    // Tsdown outputs to temp; we copy only .d.mts so esbuild's .mjs (which
+    // bundles @pandacss/dev) is preserved. Tsdown leaves that import unbundled.
+    const outDtsPath = join(packageDir, pkg.outFile.replace(/\.m?js$/, '.d.mts'))
     try {
-      await compileDeclarations(coreDir, pkg.sourceEntry, packageDir)
+      await compileDeclarations(coreDir, pkg.sourceEntry, outDtsPath)
       log.debug('packager:ts', `✓ Compiled ${pkg.name}`)
     } catch (error) {
       log.debug('packager:ts', `✗ Failed to compile ${pkg.name}:`, error)
