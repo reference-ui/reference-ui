@@ -11,15 +11,12 @@ import { PACKAGES } from '../packager/packages'
 export async function runTsPackager(payload: TsPackagerWorkerPayload): Promise<void> {
   const { cwd, config, packages } = payload
 
-  log.debug('packager-ts', '')
-  log.debug('packager-ts', '🔷 Generating TypeScript declarations...')
-  log.debug('packager-ts', '')
+  log.debug('packager:ts', '🔷 Generating TypeScript declarations...')
 
   try {
     await buildDeclarations(cwd, packages, config)
-    log.debug('packager-ts', '')
   } catch (error) {
-    log.debug('packager-ts', 'Error:', error)
+    log.debug('packager:ts', 'Error:', error)
     throw error
   }
 }

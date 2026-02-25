@@ -76,7 +76,7 @@ export async function removeFromVirtual(
   const relativePath = relative(sourceDir, sourcePath)
   const destPath = join(virtualDir, relativePath)
 
-  log.debug(`[virtual] Removing: ${relativePath}`)
+  log.debug('virtual', `Removing: ${relativePath}`)
 
   // Remove file if it exists
   if (existsSync(destPath)) {

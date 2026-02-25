@@ -18,11 +18,11 @@ export async function createBoxPattern(coreDir: string): Promise<string> {
   const extensionPaths = scanForBoxExtensions([styledDir])
 
   if (extensionPaths.length === 0) {
-    log.debug('createBoxPattern', 'No pattern() files found')
+    log.debug('system:box', 'No pattern() files found')
     return ''
   }
 
-  log.debug('createBoxPattern', `Found ${extensionPaths.length} extension files`)
+  log.debug('system:box', `Found ${extensionPaths.length} extension files`)
 
   const refDir = join(coreDir, '.ref')
   if (!existsSync(refDir)) mkdirSync(refDir, { recursive: true })
@@ -71,7 +71,7 @@ export async function createBoxPattern(coreDir: string): Promise<string> {
   const boxPath = resolve(coreDir, 'src/styled/props/box.ts')
   const content = generateBoxPatternContent(extensions)
   writeFileSync(boxPath, content)
-  log.debug('createBoxPattern', 'Wrote box pattern to src/styled/props/box.ts')
+  log.debug('system:box', 'Wrote box pattern to src/styled/props/box.ts')
 
   return boxPath
 }

@@ -27,16 +27,9 @@ async function runPackagerCore(payload: PackagerWorkerPayload): Promise<void> {
   const { cwd } = payload
   const coreDir = resolveCorePackageDir()
 
-  log.debug('packager', '')
-  log.debug('packager', '📦 Packaging Reference UI...')
-  log.debug('packager', '')
-
+  log.debug('packager', '📦 Packaging...')
   await bundleAllPackages(coreDir, cwd, PACKAGES)
-
-  log.debug('packager', '')
-  log.debug('packager', '✅ Packages ready!')
-  log.debug('packager', `   ${PACKAGES.length} package(s) installed to node_modules`)
-  log.debug('packager', '')
+  log.debug('packager', `✅ ${PACKAGES.length} package(s) ready`)
 
   emit('packager:complete', {})
 }
@@ -60,7 +53,7 @@ export async function runPackager(payload: PackagerWorkerPayload): Promise<void>
 
   if (watchMode) {
     const debouncedBundle = debounce(async () => {
-      log.debug('[packager:worker] system:compiled → bundling packages')
+      log.debug('packager:worker', 'system:compiled → bundling packages')
       try {
         await runPackagerCore(payload)
       } catch (err) {

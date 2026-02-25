@@ -41,5 +41,5 @@ export async function syncVirtual(
     }
   }
 
-  log.debug('[virtual] Sync complete')
+  log.debug('virtual', 'Sync complete')
 }

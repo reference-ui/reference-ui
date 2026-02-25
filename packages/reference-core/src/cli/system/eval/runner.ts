@@ -1,3 +1,4 @@
+import pc from 'picocolors'
 import { COLLECTOR_KEY } from '../config/extendPandaConfig'
 import { microBundle } from '../../lib/microbundle'
 import type { Config } from '@pandacss/dev'
@@ -15,7 +16,6 @@ export async function runFiles(
   const allFragments: Partial<Config>[] = []
 
   for (const filePath of filePaths) {
-    log.debug('eval', `Running ${filePath}`)
     const collector: Partial<Config>[] = []
     ;(globalThis as Record<string, unknown>)[COLLECTOR_KEY] = collector
 
@@ -29,9 +29,9 @@ export async function runFiles(
       delete (globalThis as Record<string, unknown>)[COLLECTOR_KEY]
     }
 
-    if (collector.length > 0) {
-      log.debug('eval', `  → ${collector.length} fragment(s) from ${filePath}`)
-    }
+    const n = collector.length
+    const label = `${String(n).padStart(3)} ${n === 1 ? 'frag' : 'frags'}`.padEnd(10)
+    log.debug('system:eval', pc.dim(label), filePath)
     allFragments.push(...collector)
   }
 
