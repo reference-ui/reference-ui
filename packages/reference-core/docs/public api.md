@@ -19,7 +19,6 @@
 ## Extension APIs (build-time)
 
 - [ ] `import { tokens } from '@reference-ui/system'`
-- [ ] `import { recipe } from '@reference-ui/system'`
 - [ ] `import { keyframes } from '@reference-ui/system'`
 - [ ] `import { font } from '@reference-ui/system'`
 - [ ] `import { globalCss } from '@reference-ui/system'`
