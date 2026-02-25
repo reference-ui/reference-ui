@@ -909,7 +909,6 @@
 
 @layer recipes{
   @layer _base{
-
     .r_abbr {
       text-decoration: underline dotted;
       text-underline-offset: 0.15em;
