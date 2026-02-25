@@ -8,6 +8,8 @@ export default defineConfig({
     'system/worker': 'src/cli/system/worker.ts',
     'packager/worker': 'src/cli/packager/worker.ts',
     'packager-ts/worker': 'src/cli/packager-ts/worker.ts',
+    'vanilla/worker': 'src/cli/vanilla/worker.ts',
+    'vanilla/runner': 'src/cli/vanilla/runner.ts',
   },
   format: 'esm',
   outDir: 'dist/cli',

@@ -3,5 +3,6 @@
   "system": "src/cli/system/worker.ts",
   "packager": "src/cli/packager/worker.ts",
   "packager-ts": "src/cli/packager-ts/worker.ts",
+  "vanilla": "src/cli/vanilla/worker.ts",
   "watch": "src/cli/watch/worker.ts"
 }
