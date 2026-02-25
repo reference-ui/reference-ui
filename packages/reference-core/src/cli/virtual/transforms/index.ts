@@ -79,11 +79,11 @@ export async function applyTransforms(
       const { rewriteCvaImports } = await import('./rewrite-cva-imports')
       const { rewriteCssImports } = await import('./rewrite-css-imports')
 
-      // Rewrite cva/recipe imports
-      transformedContent = await rewriteCvaImports(transformedContent, relativePath)
+      // Rewrite cva/recipe imports (native)
+      transformedContent = rewriteCvaImports(transformedContent, relativePath)
 
-      // Rewrite css imports
-      transformedContent = await rewriteCssImports(transformedContent, relativePath)
+      // Rewrite css imports (native)
+      transformedContent = rewriteCssImports(transformedContent, relativePath)
     }
 
     if (transformedContent !== originalContent) {

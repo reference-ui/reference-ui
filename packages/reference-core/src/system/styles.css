@@ -1654,6 +1654,10 @@
     background: var(--colors-red-600);
 }
 
+  .bg_blue\.200 {
+    background: var(--colors-blue-200);
+}
+
   .m_0_0_1rem {
     margin: 0 0 1rem;
 }

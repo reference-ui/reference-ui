@@ -1,107 +1,16 @@
-import * as ts from 'typescript'
-import { dirname } from 'node:path'
-
-const CORE_PACKAGE = '@reference-ui/react'
-const CVA_BINDINGS = ['cva', 'recipe'] as const
+import { getVirtualNative } from '../native/loader'
 
 /**
- * Compute relative path from a file in virtual to the styled-system css entry.
- * Assumes .virtual/<relativePath> → outdir: src/system/css
- */
-function getStyledSystemCssRelativePath(relativePath: string): string {
-  const dir = dirname(relativePath)
-  const segments = dir.split(/[/\\]/).filter(Boolean)
-  const ups = segments.length + 1 // +1 for .virtual/
-  return '../'.repeat(ups) + 'src/system/css'
-}
-
-/**
- * Rewrite imports only via string replacement so we never re-print the rest of the file.
- * When we see `cva` or `recipe` imported from @reference-ui/react, replace that import
- * with: (1) import { cva } from '<styled-system/css>', (2) optional second line with
- * the rest from @reference-ui/react. Also replace all usages of `recipe(` with `cva(` in the code.
+ * Rewrite cva/recipe imports from @reference-ui/react to styled-system path.
+ * Replaces recipe( with cva(. Uses Rust/NAPI native implementation (Oxc parser).
  */
 export function rewriteCvaImports(sourceCode: string, relativePath: string): string {
-  const isTsx = /\.(tsx|jsx)$/.test(relativePath)
-  const sourceFile = ts.createSourceFile(
-    'temp-file',
-    sourceCode,
-    ts.ScriptTarget.Latest,
-    true,
-    isTsx ? ts.ScriptKind.TSX : ts.ScriptKind.TS
-  )
-
-  const styledSystemPath = getStyledSystemCssRelativePath(relativePath)
-  let replacement: { start: number; end: number; text: string } | null = null
-  let localCvaName: string | null = null
-
-  function visit(node: ts.Node) {
-    if (!ts.isImportDeclaration(node)) {
-      ts.forEachChild(node, visit)
-      return
-    }
-    const specifier = node.moduleSpecifier
-    if (!ts.isStringLiteral(specifier) || specifier.text !== CORE_PACKAGE) {
-      ts.forEachChild(node, visit)
-      return
-    }
-    const clause = node.importClause
-    if (
-      !clause ||
-      clause.isTypeOnly ||
-      !clause.namedBindings ||
-      !ts.isNamedImports(clause.namedBindings)
-    ) {
-      ts.forEachChild(node, visit)
-      return
-    }
-    const elements = clause.namedBindings.elements
-    const restNames: string[] = []
-    let hasCvaOrRecipe = false
-    for (const el of elements) {
-      const importedName = (el.propertyName ?? el.name).getText(sourceFile)
-      if (CVA_BINDINGS.includes(importedName as (typeof CVA_BINDINGS)[number])) {
-        hasCvaOrRecipe = true
-        localCvaName = el.name.getText(sourceFile)
-      } else {
-        const part = el.propertyName
-          ? `${el.propertyName.getText(sourceFile)} as ${el.name.getText(sourceFile)}`
-          : el.name.getText(sourceFile)
-        restNames.push(part)
-      }
-    }
-    if (!hasCvaOrRecipe) {
-      ts.forEachChild(node, visit)
-      return
-    }
-    const start = node.getStart(sourceFile)
-    const end = node.getEnd()
-    const defaultName = clause.name ? clause.name.getText(sourceFile) : null
-    const cvaLine = `import { cva } from '${styledSystemPath}';\n`
-    let coreLine = ''
-    if (restNames.length > 0 || defaultName) {
-      if (restNames.length === 0) {
-        coreLine = `import ${defaultName} from '${CORE_PACKAGE}';\n`
-      } else if (defaultName) {
-        coreLine = `import ${defaultName}, { ${restNames.join(', ')} } from '${CORE_PACKAGE}';\n`
-      } else {
-        coreLine = `import { ${restNames.join(', ')} } from '${CORE_PACKAGE}';\n`
-      }
-    }
-    replacement = { start, end, text: cvaLine + coreLine }
-    ts.forEachChild(node, visit)
+  const native = getVirtualNative()
+  if (!native) {
+    throw new Error(
+      'Virtual native addon not available. Run `pnpm run build:native` in @reference-ui/core. ' +
+        'Supported platforms: darwin x64/arm64, linux x64, win32 x64.'
+    )
   }
-
-  visit(sourceFile)
-  if (!replacement) return sourceCode
-
-  const { start, end, text } = replacement
-  let result = sourceCode.slice(0, start) + text + sourceCode.slice(end)
-
-  if (localCvaName && localCvaName !== 'cva') {
-    const regex = new RegExp(`\\b${localCvaName}\\(`, 'g')
-    result = result.replace(regex, 'cva(')
-  }
-
-  return result
+  return native.rewriteCvaImports(sourceCode, relativePath)
 }

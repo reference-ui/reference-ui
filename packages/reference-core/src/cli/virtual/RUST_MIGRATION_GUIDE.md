@@ -2,6 +2,8 @@
 
 **Goal**: Replace TypeScript-based transforms with Rust + NAPI for 10-20× speed, 50-100 MB memory reduction per worker.
 
+**Status**: ✅ Import rewrites (`rewrite_css_imports`, `rewrite_cva_imports`) are now using the Rust/NAPI implementation when available. JS fallback (TypeScript-based) used when native addon is unavailable.
+
 ---
 
 ## 1. Overview
