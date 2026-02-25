@@ -11,7 +11,6 @@ import {
 import { log } from '../lib/log'
 import { resolveCorePackageDir } from '../lib/resolve-core'
 import { compileDeclarations } from './compiler'
-import { createTsConfig } from './config'
 import type { ReferenceUIConfig } from '../config'
 
 /**
@@ -90,19 +89,10 @@ export async function buildDeclarations(
 
     mkdirSync(packageDir, { recursive: true })
 
-    // Generate tsconfig for this package
-    const tsconfigPath = join(packageDir, 'tsconfig.declarations.json')
-    const tsconfigContent = createTsConfig({
-      rootDir: coreDir,
-      outDir: packageDir,
-      entryFiles: [entryPath],
-    })
-
-    writeFileSync(tsconfigPath, JSON.stringify(tsconfigContent, null, 2), 'utf-8')
-
-    // Compile declarations using TypeScript compiler
+    // Compile with tsdown: outputs react.js + react.d.ts to packageDir
+    // Entry path relative to coreDir so tsdown derives correct output basename
     try {
-      await compileDeclarations(coreDir, tsconfigPath)
+      await compileDeclarations(coreDir, pkg.sourceEntry, packageDir)
       log.debug('packager:ts', `✓ Compiled ${pkg.name}`)
     } catch (error) {
       log.debug('packager:ts', `✗ Failed to compile ${pkg.name}:`, error)
@@ -112,8 +102,8 @@ export async function buildDeclarations(
     // Copy pre-existing .d.ts files from source
     copyExistingDeclarations(srcDir, packageDir, coreDir)
 
-    // Update package.json types field
-    const typesPath = `./${pkg.sourceEntry.replace(/\.tsx?$/, '.d.ts')}`
+    // Update package.json types field (tsdown outputs .d.mts)
+    const typesPath = `./${pkg.outFile.replace(/\.m?js$/, '.d.mts')}`
     updatePackageTypes(packageDir, typesPath)
 
     log.debug('packager:ts', `✓ ${pkg.name} ready`)

@@ -2095,7 +2095,7 @@ var globalCss = extendGlobalCss;
 // src/tokens.ts
 var tokens_exports = {};
 
-// .reference-ui/system/system.js
+// .reference-ui/system/system.mjs
 var COLLECTOR_KEY2 = "__refPandaConfigCollector";
 function extendPandaConfig2(partial) {
   const collector = globalThis[COLLECTOR_KEY2];
