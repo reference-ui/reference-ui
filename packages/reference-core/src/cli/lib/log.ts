@@ -7,6 +7,7 @@ type LogDebugFn = (module: string, ...args: unknown[]) => void
 
 type Log = LogFn & {
   error: LogFn
+  info: LogFn
   debug: LogDebugFn
 }
 
@@ -73,6 +74,8 @@ log.debug = (module: string, ...args: unknown[]) => {
   }
   emit('log:debug', { module, message, args: rest })
 }
+
+log.info = (...args: unknown[]) => (log as LogFn)(...args)
 
 /**
  * Initialize logging system and listen to log events from other threads
