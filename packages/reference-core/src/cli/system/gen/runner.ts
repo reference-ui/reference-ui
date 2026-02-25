@@ -6,6 +6,37 @@ import { log } from '../../lib/log'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
+/**
+ * Get RSS of a child process by PID (macOS/Linux)
+ */
+function getProcessRssMb(pid: number | undefined): number | null {
+  if (!pid) return null
+  try {
+    const rss = parseInt(execSync(`ps -o rss= -p ${pid}`).toString(), 10)
+    return rss / 1024
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Start monitoring child process RSS and log periodically
+ */
+function startMemoryMonitoring(
+  processName: string,
+  pid: number | undefined,
+  interval: number = 5000
+): NodeJS.Timeout | null {
+  if (!pid) return null
+
+  return setInterval(() => {
+    const rss = getProcessRssMb(pid)
+    if (rss !== null) {
+      log.debug('system:gen', `[${processName}] PID ${pid} RSS: ${rss.toFixed(1)}MB`)
+    }
+  }, interval)
+}
+
 function resolvePandaBin(): string {
   // When bundled, __dirname is dist/; CLI root is two levels up from panda/gen/
   const cliRoot = resolve(__dirname, '../..')
@@ -38,26 +69,41 @@ export function runPandaCodegen(cwd: string, options: PandaOptions = {}): void {
     // Spawn Panda watchers as child processes
     // stdio: 'inherit' forwards all output to parent terminal
     // These processes keep the event loop alive - parent never exits
+    const memBefore = process.memoryUsage().rss / 1024 / 1024
+    
     const codegenProcess = spawn(pandaBin, ['codegen', '--watch', '--poll'], {
       cwd,
       stdio: 'inherit',
       shell: true,
     })
+    log.debug('system:gen', `[codegen] spawned PID ${codegenProcess.pid}`)
 
     const cssProcess = spawn(pandaBin, ['--watch', '--poll'], {
       cwd,
       stdio: 'inherit',
       shell: true,
     })
+    log.debug('system:gen', `[css] spawned PID ${cssProcess.pid}`)
+    
+    const memAfter = process.memoryUsage().rss / 1024 / 1024
+    log.debug('system:gen', `Parent RSS: ${memBefore.toFixed(1)}MB → ${memAfter.toFixed(1)}MB (+${(memAfter - memBefore).toFixed(1)}MB)`)
+
+    // Start monitoring child process memory
+    const codegenMonitor = startMemoryMonitoring('codegen', codegenProcess.pid)
+    const cssMonitor = startMemoryMonitoring('css', cssProcess.pid)
 
     // Forward SIGINT/SIGTERM to children, then exit cleanly
     process.on('SIGINT', () => {
+      if (codegenMonitor) clearInterval(codegenMonitor)
+      if (cssMonitor) clearInterval(cssMonitor)
       codegenProcess.kill()
       cssProcess.kill()
       process.exit(0)
     })
 
     process.on('SIGTERM', () => {
+      if (codegenMonitor) clearInterval(codegenMonitor)
+      if (cssMonitor) clearInterval(cssMonitor)
       codegenProcess.kill()
       cssProcess.kill()
       process.exit(0)
