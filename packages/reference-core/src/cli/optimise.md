@@ -97,11 +97,16 @@ on('system:compiled', async () => {
 🐼 info [ctx:updated] config rebuilt ✅
 ```
 
-**Root Cause**: Panda's watch mode detects the config write and rebuilds, but then something triggers a second rebuild.
+**Root Cause**: Watch mode spawns TWO separate Panda processes (see `runner.ts`):
 
-**Investigation Needed**: Why does Panda rebuild twice?
+1. `panda codegen --watch` (generates TypeScript utilities)
+2. `panda --watch` (extracts CSS from source files)
 
-**Expected Improvement**: ~100ms (eliminate redundant rebuild).
+Both processes watch `panda.config.ts`. When the config is written, both detect the change and log their rebuild status. This is **expected behavior** - both processes need to react to config changes since they generate different outputs.
+
+**Status**: ~~Not a bug~~ - Working as designed. Both rebuilds are necessary but happen in parallel (~155ms total, not 2x).
+
+**Improvement Opportunity**: Could silence duplicate logging, but both processes must rebuild.
 
 ## Problem 4: Serial System Pipeline
 
@@ -147,21 +152,16 @@ on('virtual:fs:change', async payload => {
    - Impact: ~400ms saved on 90% of file changes
    - Risk: Low (covered by existing tests)
 
-2. **Investigate Panda double rebuild** (Problem 3)
-   - Complexity: Medium (requires debugging Panda watch mode)
-   - Impact: ~100ms
-   - Risk: Low (Panda-internal issue)
-
 ### Medium Priority
 
-3. **Config hash caching** (Problem 4)
+2. **Config hash caching** (Problem 4)
    - Complexity: Medium (hashing, cache management)
    - Impact: 111ms when config stable
    - Risk: Medium (cache invalidation bugs)
 
 ### Low Priority (Needs More Data)
 
-4. **Smart packager triggering** (Problem 2)
+3. **Smart packager triggering** (Problem 2)
    - Complexity: High (complex dependency tracking)
    - Impact: TBD (might be necessary for HMR)
    - Risk: High (could break hot reload)
@@ -170,10 +170,9 @@ on('virtual:fs:change', async payload => {
 
 **Current**: 1.35s (watch:change → packager:complete)
 
-**After Quick Wins**: ~850ms (37% faster)
+**After Quick Wins**: ~950ms (30% faster)
 
 - Skip config rebuild: -400ms
-- Fix Panda double rebuild: -100ms
 
 **Ideal**: <500ms for typical file changes
 
@@ -197,4 +196,4 @@ Before optimizing:
 2. Add debug timing logs to system/worker.ts
 3. Create benchmark script for watch mode performance
 4. Measure improvement
-5. Move to Problem 3 if significant gains achieved
+5. Move to Problem 4 (config hash caching) if significant gains achieved

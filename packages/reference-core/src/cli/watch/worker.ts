@@ -20,7 +20,7 @@ export async function runWatch(payload: WatchPayload): Promise<void> {
   const { sourceDir, config } = payload
   const { include } = config
 
-  log(`[watch] Starting - source: ${sourceDir} patterns: ${include.join(', ')}`)
+  log.debug(`[watch] Starting - source: ${sourceDir} patterns: ${include.join(', ')}`)
 
   const isMatch = picomatch(include)
 
@@ -37,7 +37,7 @@ export async function runWatch(payload: WatchPayload): Promise<void> {
         const relPath = relative(sourceDir, ev.path)
         if (!isMatch(relPath)) continue
         const mapped = EVENT_MAP[ev.type]
-        log(`[watch] ${mapped}: ${relPath}`)
+        log.debug(`[watch] ${mapped}: ${relPath}`)
         emit('watch:change', { event: mapped, path: ev.path })
       }
     },

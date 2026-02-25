@@ -292,7 +292,7 @@ export async function bundleAllPackages(
       }
     }
 
-    log(`📦 ${pkg.bundle ? 'Bundling' : 'Copying'} ${pkg.name}...`)
+    log.debug(`📦 ${pkg.bundle ? 'Bundling' : 'Copying'} ${pkg.name}...`)
 
     await bundlePackage({
       coreDir,
@@ -313,9 +313,9 @@ export async function bundleAllPackages(
       }
 
       symlinkDir.sync(targetDir, linkPath)
-      log(`   ✓ ${pkg.name} → ${linkPath}`)
+      log.debug(`   ✓ ${pkg.name} → ${linkPath}`)
     } else {
-      log(`   ✓ ${pkg.name} → ${targetDir}`)
+      log.debug(`   ✓ ${pkg.name} → ${targetDir}`)
     }
   }
 }

@@ -82,11 +82,11 @@ export async function buildDeclarations(
     const entryPath = resolve(coreDir, pkg.sourceEntry)
 
     if (!existsSync(entryPath)) {
-      log(`[packager-ts] Skipping ${pkg.name} (no ${pkg.sourceEntry})`)
+      log.debug(`[packager-ts] Skipping ${pkg.name} (no ${pkg.sourceEntry})`)
       continue
     }
 
-    log(`[packager-ts] Building types for ${pkg.name}...`)
+    log.debug(`[packager-ts] Building types for ${pkg.name}...`)
 
     mkdirSync(packageDir, { recursive: true })
 
@@ -103,9 +103,9 @@ export async function buildDeclarations(
     // Compile declarations using TypeScript compiler
     try {
       await compileDeclarations(coreDir, tsconfigPath)
-      log(`[packager-ts] ✓ Compiled ${pkg.name}`)
+      log.debug(`[packager-ts] ✓ Compiled ${pkg.name}`)
     } catch (error) {
-      log(`[packager-ts] ✗ Failed to compile ${pkg.name}:`, error)
+      log.debug(`[packager-ts] ✗ Failed to compile ${pkg.name}:`, error)
       throw error
     }
 
@@ -116,6 +116,6 @@ export async function buildDeclarations(
     const typesPath = `./${pkg.sourceEntry.replace(/\.tsx?$/, '.d.ts')}`
     updatePackageTypes(packageDir, typesPath)
 
-    log(`[packager-ts] ✓ ${pkg.name} ready`)
+    log.debug(`[packager-ts] ✓ ${pkg.name} ready`)
   }
 }
