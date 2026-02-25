@@ -20,7 +20,9 @@ const coreDirs = ['src/styled']
 async function runConfigOnly(payload: SystemWorkerPayload): Promise<void> {
   const { cwd, config } = payload
   const coreDir = resolveCorePackageDir()
-  const userDirs = config.include.map(p => resolve(cwd, p.split('**')[0].replace(/\/+$/, '')))
+  const userDirs = config.include.map(p =>
+    resolve(cwd, p.split('**')[0].replace(/\/+$/, ''))
+  )
 
   const fragments = await runEval(coreDir, [...coreDirs, ...userDirs], ['panda.base.ts'])
   if (fragments.length > 0 && config.include.length > 0) {
@@ -31,8 +33,8 @@ async function runConfigOnly(payload: SystemWorkerPayload): Promise<void> {
 async function runSystemCore(payload: SystemWorkerPayload): Promise<void> {
   await runConfigOnly(payload)
   const coreDir = resolveCorePackageDir()
-  runPandaCodegen(coreDir)
-  runPandaCss(coreDir)
+  runPandaCodegen(coreDir) // Generates TS types
+  runPandaCss(coreDir) // Extracts CSS - both needed since codegen doesn't extract CSS in non-watch mode
   emit('system:compiled', {})
 }
 

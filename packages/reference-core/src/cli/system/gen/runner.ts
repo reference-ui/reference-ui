@@ -31,7 +31,7 @@ export interface PandaOptions {
 }
 
 export function runPandaCodegen(cwd: string, options: PandaOptions = {}): void {
-  log('[panda] Starting codegen...')
+  log.debug('[panda] Starting codegen...')
   const pandaBin = resolvePandaBin()
 
   if (options.watch) {
@@ -76,7 +76,7 @@ export function runPandaCodegen(cwd: string, options: PandaOptions = {}): void {
 
 /** Emit styles.css (preflight + tokens + static CSS) */
 export function runPandaCss(cwd: string): void {
-  log('[panda] Generating CSS...')
+  log.debug('[panda] Generating CSS...')
   const pandaBin = resolvePandaBin()
   execSync(`"${pandaBin}"`, {
     cwd,

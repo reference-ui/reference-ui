@@ -27,16 +27,16 @@ async function runPackagerCore(payload: PackagerWorkerPayload): Promise<void> {
   const { cwd } = payload
   const coreDir = resolveCorePackageDir()
 
-  log('')
-  log('📦 Packaging Reference UI...')
-  log('')
+  log.debug('')
+  log.debug('📦 Packaging Reference UI...')
+  log.debug('')
 
   await bundleAllPackages(coreDir, cwd, PACKAGES)
 
-  log('')
-  log('✅ Packages ready!')
-  log(`   ${PACKAGES.length} package(s) installed to node_modules`)
-  log('')
+  log.debug('')
+  log.debug('✅ Packages ready!')
+  log.debug(`   ${PACKAGES.length} package(s) installed to node_modules`)
+  log.debug('')
 
   emit('packager:complete', {})
 }
