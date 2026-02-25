@@ -70,7 +70,7 @@ export function runPandaCodegen(cwd: string, options: PandaOptions = {}): void {
     // stdio: 'inherit' forwards all output to parent terminal
     // These processes keep the event loop alive - parent never exits
     const memBefore = process.memoryUsage().rss / 1024 / 1024
-    
+
     const codegenProcess = spawn(pandaBin, ['codegen', '--watch', '--poll'], {
       cwd,
       stdio: 'inherit',
@@ -84,9 +84,12 @@ export function runPandaCodegen(cwd: string, options: PandaOptions = {}): void {
       shell: true,
     })
     log.debug('system:gen', `[css] spawned PID ${cssProcess.pid}`)
-    
+
     const memAfter = process.memoryUsage().rss / 1024 / 1024
-    log.debug('system:gen', `Parent RSS: ${memBefore.toFixed(1)}MB → ${memAfter.toFixed(1)}MB (+${(memAfter - memBefore).toFixed(1)}MB)`)
+    log.debug(
+      'system:gen',
+      `Parent RSS: ${memBefore.toFixed(1)}MB → ${memAfter.toFixed(1)}MB (+${(memAfter - memBefore).toFixed(1)}MB)`
+    )
 
     // Start monitoring child process memory
     const codegenMonitor = startMemoryMonitoring('codegen', codegenProcess.pid)
