@@ -44,10 +44,13 @@ export async function createFontSystem(coreDir: string): Promise<string> {
   const collectScriptPath = join(refDir, 'collect-fonts.mjs')
   writeFileSync(collectScriptPath, bundled)
 
+  const memBefore = process.memoryUsage().rss / 1024 / 1024
   const result = spawnSync(process.execPath, [collectScriptPath], {
     cwd: coreDir,
     encoding: 'utf-8',
   })
+  const memAfter = process.memoryUsage().rss / 1024 / 1024
+  log.debug('system:font', `Parent RSS: ${memBefore.toFixed(1)}MB → ${memAfter.toFixed(1)}MB (${(memAfter - memBefore).toFixed(1)}MB delta)`)
   if (result.status !== 0) {
     throw new Error(
       `[createFontSystem] Collect script failed:\n${result.stderr || result.stdout}`
