@@ -5,20 +5,29 @@ Based on trace analysis from a typical watch mode file change in `reference-docs
 ## Current Timeline (Incremental Build)
 
 ```
-07:39:01.441 - watch:change event
-07:39:01.442 - virtual:fs:change (copy complete, ~1ms)
-07:39:01.442 - Vite HMR triggers
-07:39:01.531 - Panda extracts CSS (89ms)
-07:39:01.743 - system:worker starts config rebuild (~302ms from watch:change)
-07:39:01.841 - Eval completes (54 fragments from 31 files, ~98ms)
-07:39:01.854 - Config bundled and written (~13ms)
-07:39:02.009 - Panda codegen completes (~155ms)
-07:39:02.377 - Panda CSS generation completes (~368ms)
-07:39:02.778 - Packager starts (~401ms after CSS)
-07:39:02.794 - Packager completes (16ms)
+08:17:00.875 - [system:worker] virtual:fs:change → config
+08:17:00.892 - Eval starts
+08:17:00.997 - Eval completes (54 fragments from 31 files, ~105ms)
+08:17:00.999 - Config scanning (31 files found, ~2ms)
+08:17:00.999 - Config bundling starts (esbuild)
+08:17:01.013 - Config written (~14ms)
+08:17:01.013 - Both Panda processes detect config change
+08:17:01.013 - Panda codegen + CSS start rebuilding in parallel
+08:17:01.473 - First packager run (460ms after config, ~17ms duration)
+08:17:01.977 - Second packager run (504ms after config, ~21ms duration)
+08:17:03.808 - packager:ts starts (1.8s after packager)
+08:17:04.249 - packager:ts completes (~441ms)
 
-Total: ~1.35 seconds (watch:change → packager:complete)
+Total: ~3.37 seconds (virtual:fs:change → packager:ts complete)
+Total to first packager: ~598ms
 ```
+
+## Key Findings
+
+1. **Config rebuilds on every file change** (105ms eval + 16ms config = 121ms wasted for non-styled files)
+2. **Packager runs twice** (~38ms wasted + triggers duplicate packager:ts = ~460ms total waste)
+3. **packager:ts is the slowest phase** (~441ms for TypeScript declaration generation)
+4. **Most time is in Panda + packager:ts** (460ms + 2.8s = 3.26s out of 3.37s total)
 
 ## Problem 1: Unnecessary Config Recompilation
 
@@ -27,12 +36,14 @@ Total: ~1.35 seconds (watch:change → packager:complete)
 **Evidence**:
 
 ```
-[07:39:01.841] Collected 54 config fragments from 31 files
-[createPandaConfig] Found 31 config files
-[createPandaConfig] Bundling with esbuild...
+[08:17:00.875] [system:worker] virtual:fs:change → config
+[08:17:00.997] [system:eval] Collected 54 frags from 31 file(s)
+[08:17:00.999] [system:config] Found 31 config files
+[08:17:00.999] [system:config] Bundling with esbuild...
+[08:17:01.013] [system:config] Config written successfully
 ```
 
-**Impact**: ~400ms of wasted work for non-config files.
+**Impact**: ~138ms of wasted work for non-config files (105ms eval + 16ms config + 17ms overhead).
 
 **Root Cause**: `system:worker` listens to ALL `virtual:fs:change` events, not just `src/styled/` changes.
 
@@ -57,34 +68,52 @@ on('virtual:fs:change', async payload => {
 
 **Expected Improvement**: ~400ms saved on non-styled file changes (70% faster).
 
-## Problem 2: Packager Waits for Full Pipeline
+## Problem 2: Duplicate Packager Runs
 
-**Finding**: Packager starts 401ms after CSS generation completes.
+**Finding**: Packager runs TWICE for every file change, once per Panda process completion.
 
 **Evidence**:
 
 ```
-07:39:02.377 - system:compiled (CSS done)
-07:39:02.778 - packager starts
+[08:17:01.473] [packager:worker] system:compiled → bundling packages
+[08:17:01.490] [packager] ✅ 2 package(s) ready
+
+[08:17:01.977] [packager:worker] system:compiled → bundling packages  ← DUPLICATE
+[08:17:01.998] [packager] ✅ 2 package(s) ready
 ```
 
-**Root Cause**: Packager worker listens to `system:compiled` and rebundles everything, even when only virtual files changed.
+**Impact**: ~38ms of duplicate work (17ms + 21ms), triggers double packager:ts rebuild.
 
-**Potential Solution**: Skip packager if only virtual files changed (no system/styled changes).
+**Root Cause**: Both Panda processes (`panda codegen --watch` and `panda --watch`) emit `system:compiled` events when they complete. The packager worker listens to this event and rebundles on each emission.
+
+**Solution**: Debounce `system:compiled` events in packager worker:
 
 ```typescript
 // In packager/worker.ts
+let debounceTimer: NodeJS.Timeout | null = null
+
 on('system:compiled', async () => {
-  // Check if system files actually changed
-  // For now, packager always runs (safe but slow)
+  // Clear existing timer
+  if (debounceTimer) {
+    clearTimeout(debounceTimer)
+  }
+
+  // Wait for both processes to settle
+  debounceTimer = setTimeout(async () => {
+    log.debug('[packager:worker] system:compiled → bundling packages')
+    await runPackager(payload)
+    debounceTimer = null
+  }, 100) // 100ms debounce window
 })
 ```
 
-**Alternative**: Make packager watch-mode aware and only rebundle changed entries.
+**Expected Improvement**:
 
-**Expected Improvement**: TBD (needs measurement).
+- Eliminate duplicate packager run (~20ms saved)
+- Eliminate duplicate packager:ts run (~440ms saved)
+- Total: ~460ms saved (13% faster)
 
-## Problem 3: Panda Codegen Double Rebuild
+## Problem 3: Panda Dual Rebuild (Not a Bug)
 
 **Finding**: Panda rebuilds config twice after config file write.
 
@@ -93,7 +122,7 @@ on('system:compiled', async () => {
 ```
 🐼 info [ctx:change] config changed, rebuilding...
 🐼 info [ctx:updated] config rebuilt ✅
-🐼 info [ctx:change] config changed, rebuilding...  ← duplicate
+🐼 info [ctx:change] config changed, rebuilding...  ← Expected
 🐼 info [ctx:updated] config rebuilt ✅
 ```
 
@@ -104,18 +133,18 @@ on('system:compiled', async () => {
 
 Both processes watch `panda.config.ts`. When the config is written, both detect the change and log their rebuild status. This is **expected behavior** - both processes need to react to config changes since they generate different outputs.
 
-**Status**: ~~Not a bug~~ - Working as designed. Both rebuilds are necessary but happen in parallel (~155ms total, not 2x).
+**Status**: Working as designed. Both rebuilds are necessary and happen in parallel (~460ms total from config write to first packager trigger).
 
 **Improvement Opportunity**: Could silence duplicate logging, but both processes must rebuild.
 
 ## Problem 4: Serial System Pipeline
 
-**Finding**: Eval → Config → Codegen → CSS runs serially (~523ms total).
+**Finding**: Eval → Config → Panda runs serially (~598ms total to first packager).
 
 **Current Flow**:
 
 ```
-Eval (98ms) → Config (13ms) → Codegen (155ms) → CSS (368ms)
+Eval (105ms) → Config (16ms) → Panda parallel (460ms) → Packager (17ms × 2)
 ```
 
 **Potential Optimization**: If config unchanged, skip eval and config bundling entirely.
@@ -141,42 +170,50 @@ on('virtual:fs:change', async payload => {
 })
 ```
 
-**Expected Improvement**: Skip 111ms (eval + config) when config unchanged.
+**Expected Improvement**: Skip 121ms (eval + config) when config unchanged for styled file edits.
 
 ## Optimization Priority
 
 ### High Priority (Quick Wins)
 
-1. **Skip config rebuild for non-styled files** (Problem 1)
+1. **Debounce duplicate packager runs** (Problem 2)
+   - Complexity: Low (simple setTimeout debounce)
+   - Impact: ~460ms saved (eliminate duplicate packager + packager:ts)
+   - Risk: Very low (debouncing is a well-known pattern)
+
+2. **Skip config rebuild for non-styled files** (Problem 1)
    - Complexity: Low (simple path check)
-   - Impact: ~400ms saved on 90% of file changes
+   - Impact: ~138ms saved on 90% of file changes
    - Risk: Low (covered by existing tests)
 
 ### Medium Priority
 
-2. **Config hash caching** (Problem 4)
+3. **Config hash caching** (Problem 4)
    - Complexity: Medium (hashing, cache management)
-   - Impact: 111ms when config stable
+   - Impact: 121ms when config stable but styled file changed
    - Risk: Medium (cache invalidation bugs)
-
-### Low Priority (Needs More Data)
-
-3. **Smart packager triggering** (Problem 2)
-   - Complexity: High (complex dependency tracking)
-   - Impact: TBD (might be necessary for HMR)
-   - Risk: High (could break hot reload)
 
 ## Target Performance
 
-**Current**: 1.35s (watch:change → packager:complete)
+**Current**: ~3.37s (virtual:fs:change → packager:ts complete)  
+**Current to first package**: ~598ms (virtual:fs:change → first packager ready)
 
-**After Quick Wins**: ~950ms (30% faster)
+**After Quick Win #1 (debounce packager)**: ~2.91s full, ~598ms to package
 
-- Skip config rebuild: -400ms
+- Single packager run: -20ms
+- Single packager:ts run: -440ms
 
-**Ideal**: <500ms for typical file changes
+**After Quick Win #2 (skip config for non-styled)**: ~2.77s full, ~460ms to package  
+_(applies to 90% of file changes - non-styled files)_
 
-- Requires config hash caching + smarter packager
+- Skip eval + config: -138ms
+
+**After Medium Priority (config hash)**: ~2.65s full, ~339ms to package  
+_(applies when config unchanged but styled file modified)_
+
+- Skip eval + config on unchanged: -121ms
+
+**Ideal Target**: <500ms to first package, <2s to full pipeline completion
 
 ## Testing Strategy
 
@@ -192,8 +229,11 @@ Before optimizing:
 
 ## Next Steps
 
-1. Implement Problem 1 fix (skip config rebuild)
-2. Add debug timing logs to system/worker.ts
-3. Create benchmark script for watch mode performance
-4. Measure improvement
-5. Move to Problem 4 (config hash caching) if significant gains achieved
+1. Implement Problem 2 fix (debounce packager) - **HIGHEST IMPACT**
+2. Implement Problem 1 fix (skip config rebuild for non-styled files)
+3. Add debug timing logs to system/worker.ts and packager/worker.ts
+4. Create benchmark script for watch mode performance
+5. Measure improvement after each optimization
+6. Move to Problem 4 (config hash caching) if significant additional gains needed
+
+**Priority Reasoning**: Problem 2 (debounce) saves the most time (~460ms = 14% of total pipeline) with minimal risk. Problem 1 applies to most file changes and is also low-risk.
