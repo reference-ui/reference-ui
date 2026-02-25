@@ -5,25 +5,8 @@ import mdx from '@mdx-js/rollup'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkMdxFrontmatter from 'remark-mdx-frontmatter'
 
-/** Watch node_modules/@reference-ui so HMR triggers when ref sync rebuilds packages */
-function watchReferenceUi(): Plugin {
-  return {
-    name: 'watch-reference-ui',
-    configureServer(server) {
-      server.watcher.options = {
-        ...server.watcher.options,
-        ignored: [
-          /node_modules\/(?!@reference-ui).*/,
-          '**/.git/**',
-        ],
-      }
-    },
-  }
-}
-
 export default defineConfig({
   plugins: [
-    watchReferenceUi(),
     {
       enforce: 'pre',
       ...mdx({
