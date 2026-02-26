@@ -18,4 +18,8 @@ export const syncCommand = async (cwd: string, options: SyncOptions) => {
   initPackager(cwd, config, { watch: options?.watch })
   initSystem(cwd, config, { watch: options?.watch })
   initTsPackager(cwd, config)
+
+  if (!options?.watch) {
+    process.exit(0)
+  }
 }
