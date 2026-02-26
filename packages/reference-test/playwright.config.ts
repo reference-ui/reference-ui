@@ -1,4 +1,11 @@
 import { defineConfig, devices } from '@playwright/test'
+import { MATRIX, getPort } from './src/matrix.js'
+
+// Playwright doesn't support per-project webServer. We run each project separately
+// via run-matrix.ts, which sets REF_TEST_PROJECT and REF_TEST_PORT.
+const projectName = process.env.REF_TEST_PROJECT
+const port = process.env.REF_TEST_PORT ? parseInt(process.env.REF_TEST_PORT, 10) : 5174
+const blobOutput = process.env.PLAYWRIGHT_BLOB_OUTPUT
 
 export default defineConfig({
   testDir: './src/tests',
@@ -6,23 +13,24 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: 1,
-  reporter: 'html',
+  reporter: blobOutput
+    ? [['blob', { outputFile: blobOutput }]]
+    : 'html',
   use: {
-    baseURL: 'http://localhost:5174',
+    baseURL: `http://localhost:${port}`,
     trace: 'on-first-retry',
   },
-  projects: [
-    {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
-    },
-  ],
-  webServer: {
-    command: 'pnpm run dev',
-    cwd: '.sandbox',
-    url: 'http://localhost:5174',
-    // Always start fresh: prepare nukes .sandbox, so a reused server would serve stale/empty content
-    reuseExistingServer: false,
-    timeout: 30_000,
-  },
+  projects: MATRIX.map((entry) => ({
+    name: entry.name,
+    use: { ...devices['Desktop Chrome'] },
+  })),
+  webServer: projectName
+    ? {
+        command: 'pnpm run dev',
+        cwd: `.sandbox/${projectName}`,
+        url: `http://localhost:${port}`,
+        reuseExistingServer: false,
+        timeout: 60_000,
+      }
+    : undefined,
 })
