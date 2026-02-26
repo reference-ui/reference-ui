@@ -1,7 +1,14 @@
-import { copyFileSync, mkdirSync, mkdtempSync, realpathSync, rmSync } from 'node:fs'
+import {
+  copyFileSync,
+  mkdirSync,
+  mkdtempSync,
+  realpathSync,
+  rmSync,
+} from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { spawnMonitoredAsync } from '../lib/child-process'
+import { findDtsFile } from './find-dts-file'
 
 /**
  * Run tsdown to generate .d.mts declarations only (output to temp dir).
@@ -34,6 +41,7 @@ export async function compileDeclarations(
         'react',
         '--external',
         'react-dom',
+        '--no-inlineOnly',
       ],
       {
         processName: 'tsdown',
@@ -51,9 +59,13 @@ export async function compileDeclarations(
       )
     }
 
-    const basename = entryFile.replace(/^.*\/([^/]+)\.tsx?$/, '$1')
-    const dtsName = `${basename}.d.mts`
-    const tmpDtsPath = join(tmpOut, dtsName)
+    const tmpDtsPath = findDtsFile(tmpOut)
+    if (!tmpDtsPath) {
+      throw new Error(
+        `tsdown did not produce .d.ts or .d.mts in ${tmpOut}. stdout: ${result.stdout}`
+      )
+    }
+
     mkdirSync(dirname(outDtsPath), { recursive: true })
     copyFileSync(tmpDtsPath, outDtsPath)
     return outDtsPath

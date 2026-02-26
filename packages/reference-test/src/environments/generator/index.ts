@@ -28,6 +28,30 @@ function getCorePath(): string {
   return join(__dirname, '..', '..', '..', '..', 'reference-core')
 }
 
+function getWorkspaceRoot(): string {
+  return join(__dirname, '..', '..', '..', '..', '..')
+}
+
+/**
+ * Skip when core is already built (e.g. workspace ran `pnpm test` which builds first).
+ * Set REF_TEST_FRESH=1 to force full bootstrap (install + build).
+ */
+async function ensureWorkspaceReady(): Promise<void> {
+  const corePath = getCorePath()
+  const cliBuilt = existsSync(join(corePath, 'dist/cli/index.mjs'))
+
+  if (cliBuilt && !process.env.REF_TEST_FRESH) {
+    log.debug('generator', 'Core already built, skipping workspace bootstrap')
+    return
+  }
+
+  const workspaceRoot = getWorkspaceRoot()
+  log.debug('generator', 'Ensuring workspace deps (pnpm install)...')
+  await execa('pnpm', ['install'], { cwd: workspaceRoot })
+  log.debug('generator', 'Building reference-core...')
+  await execa('pnpm', ['run', 'build'], { cwd: corePath })
+}
+
 async function ensureSandboxDir(root: string): Promise<void> {
   if (existsSync(root)) {
     await rm(root, { recursive: true, force: true })
@@ -38,6 +62,8 @@ async function ensureSandboxDir(root: string): Promise<void> {
 export async function generateSandbox(): Promise<Project> {
   const packageRoot = join(__dirname, '..', '..', '..')
   const sandboxRoot = join(packageRoot, '.sandbox')
+
+  await ensureWorkspaceReady()
 
   log.debug('generator', 'Generating sandbox at', sandboxRoot)
   await ensureSandboxDir(sandboxRoot)

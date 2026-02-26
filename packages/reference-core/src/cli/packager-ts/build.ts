@@ -9,7 +9,10 @@ import {
   copyFileSync,
 } from 'node:fs'
 import { log } from '../lib/log'
-import { resolveCorePackageDir } from '../lib/resolve-core'
+import {
+  resolveCorePackageDir,
+  resolveCorePackageDirForBuild,
+} from '../lib/resolve-core'
 import { compileDeclarations } from './compiler'
 import type { ReferenceUIConfig } from '../config'
 
@@ -74,6 +77,7 @@ export async function buildDeclarations(
   _config: ReferenceUIConfig
 ): Promise<void> {
   const coreDir = resolveCorePackageDir(cwd)
+  const buildCoreDir = resolveCorePackageDirForBuild(cwd)
   const srcDir = join(coreDir, 'src')
 
   for (const pkg of packages) {
@@ -89,11 +93,11 @@ export async function buildDeclarations(
 
     mkdirSync(packageDir, { recursive: true })
 
-    // Tsdown outputs to temp; we copy only .d.mts so esbuild's .mjs (which
-    // bundles @pandacss/dev) is preserved. Tsdown leaves that import unbundled.
+    // Tsdown outputs .d.mts only when run from workspace (proper tsconfig). Use
+    // buildCoreDir (workspace packages/reference-core) when in a monorepo.
     const outDtsPath = join(packageDir, pkg.outFile.replace(/\.m?js$/, '.d.mts'))
     try {
-      await compileDeclarations(coreDir, pkg.sourceEntry, outDtsPath)
+      await compileDeclarations(buildCoreDir, pkg.sourceEntry, outDtsPath)
       log.debug('packager:ts', `✓ Compiled ${pkg.name}`)
     } catch (error) {
       log.debug('packager:ts', `✗ Failed to compile ${pkg.name}:`, error)
