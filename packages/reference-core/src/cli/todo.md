@@ -17,6 +17,7 @@ need to create a proper entry point for system , public facing api.
 ## performance
 
 - Graceful shutdown? explore it.
+- keep-alive signal ;)
 
 ## scripts vs cli
 

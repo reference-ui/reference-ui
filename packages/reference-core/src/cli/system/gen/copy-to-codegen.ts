@@ -95,7 +95,7 @@ export async function copyToCodegen(
     copiedCount++
   }
 
-  log(`📦 Copied ${copiedCount} file(s) to codegen/`)
+  log.debug('sync', `📦 Copied ${copiedCount} file(s) to codegen/`)
 }
 
 /**
@@ -192,5 +192,5 @@ export async function watchAndCopyToCodegen(
     { ignore }
   )
 
-  log(`📦 Watching ${files.length} file(s) for changes...`)
+  log.debug('sync', `📦 Watching ${files.length} file(s) for changes...`)
 }

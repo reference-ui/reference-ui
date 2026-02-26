@@ -3,10 +3,12 @@ import { isMainThread } from 'node:worker_threads'
 import { on, emit } from '../event-bus'
 
 type LogFn = (...args: unknown[]) => void
+type LogDebugFn = (module: string, ...args: unknown[]) => void
 
 type Log = LogFn & {
   error: LogFn
-  debug: LogFn
+  info: LogFn
+  debug: LogDebugFn
 }
 
 let isDebug = false
@@ -18,20 +20,25 @@ export function printInfo(...args: unknown[]) {
   console.log(...args)
 }
 
-export function printDebug(...args: unknown[]) {
+function timestamp(): string {
+  const now = new Date()
+  const h = now.getHours().toString().padStart(2, '0')
+  const m = now.getMinutes().toString().padStart(2, '0')
+  const s = now.getSeconds().toString().padStart(2, '0')
+  const ms = now.getMilliseconds().toString().padStart(3, '0')
+  return `${h}:${m}:${s}.${ms}`
+}
+
+export function printDebug(module: string, ...args: unknown[]) {
   if (!isDebug) {
     return
   }
-  const colored = args.map((arg) =>
-    typeof arg === 'string' ? pc.dim(arg) : arg
-  )
-  console.log(pc.dim('debug'), ...colored)
+  const prefix = `${pc.dim(`[${timestamp()}]`)} ${pc.blue(`[${module}]`)}`
+  console.log(prefix, ...args)
 }
 
 export function printError(...args: unknown[]) {
-  const colored = args.map((arg) =>
-    typeof arg === 'string' ? pc.red(arg) : arg
-  )
+  const colored = args.map(arg => (typeof arg === 'string' ? pc.red(arg) : arg))
   console.error(pc.red('error'), ...colored)
 }
 
@@ -58,15 +65,17 @@ log.error = (...args: unknown[]) => {
   emit('log:error', { message, args: rest })
 }
 
-log.debug = (...args: unknown[]) => {
+log.debug = (module: string, ...args: unknown[]) => {
   const message = String(args[0] ?? '')
   const rest = args.slice(1)
   if (isMainThread) {
-    printDebug(message, ...rest)
+    printDebug(module, message, ...rest)
     return
   }
-  emit('log:debug', { message, args: rest })
+  emit('log:debug', { module, message, args: rest })
 }
+
+log.info = (...args: unknown[]) => (log as LogFn)(...args)
 
 /**
  * Initialize logging system and listen to log events from other threads
@@ -81,8 +90,8 @@ export function initLog(config: { debug?: boolean }) {
     printInfo(message, ...args)
   })
 
-  on('log:debug', ({ message, args = [] }) => {
-    printDebug(message, ...args)
+  on('log:debug', ({ module, message, args = [] }) => {
+    printDebug(module || 'unknown', message, ...args)
   })
 
   on('log:error', ({ message, args = [] }) => {

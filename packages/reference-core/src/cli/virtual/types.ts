@@ -15,6 +15,10 @@ export interface InitVirtualOptions {
    * @default '.virtual'
    */
   virtualDir?: string
+  /**
+   * When true, virtual stays alive and listens to watch:change, emitting virtual:fs:change
+   */
+  watch?: boolean
 }
 
 /**

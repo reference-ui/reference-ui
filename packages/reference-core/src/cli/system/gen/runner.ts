@@ -1,8 +1,9 @@
-import { execSync, spawn } from 'node:child_process'
+import { execSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { log } from '../../lib/log'
+import { spawnMonitored } from '../../lib/child-process'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -30,53 +31,49 @@ export interface PandaOptions {
   watch?: boolean
 }
 
+/**
+ * Run Panda: codegen (TS utilities) + CSS extraction.
+ * In watch mode, `panda --watch` does BOTH – no need for separate codegen and css watchers.
+ * Panda's default command runs codegen then writes styles.css in one process.
+ */
 export function runPandaCodegen(cwd: string, options: PandaOptions = {}): void {
-  log('[panda] Starting codegen...')
+  log.debug('system:gen', 'Starting Panda...')
   const pandaBin = resolvePandaBin()
 
   if (options.watch) {
-    // Spawn Panda watchers as child processes
-    // stdio: 'inherit' forwards all output to parent terminal
-    // These processes keep the event loop alive - parent never exits
-    const codegenProcess = spawn(pandaBin, ['codegen', '--watch', '--poll'], {
+    const child = spawnMonitored(pandaBin, ['--watch', '--poll'], {
+      processName: 'panda',
       cwd,
       stdio: 'inherit',
       shell: true,
+      logCategory: 'system:gen',
     })
 
-    const cssProcess = spawn(pandaBin, ['--watch', '--poll'], {
-      cwd,
-      stdio: 'inherit',
-      shell: true,
-    })
-
-    // Forward SIGINT/SIGTERM to children, then exit cleanly
     process.on('SIGINT', () => {
-      codegenProcess.kill()
-      cssProcess.kill()
+      child.stopMonitoring()
+      child.process.kill()
       process.exit(0)
     })
 
     process.on('SIGTERM', () => {
-      codegenProcess.kill()
-      cssProcess.kill()
+      child.stopMonitoring()
+      child.process.kill()
       process.exit(0)
     })
 
-    // Function returns but process stays alive (event loop has active children)
-    // This blocks the shell - exactly what we want
     return
   }
 
-  execSync(`"${pandaBin}" codegen`, {
+  // One-shot: `panda` runs codegen + CSS extraction (generate() does both)
+  execSync(`"${pandaBin}"`, {
     cwd,
     stdio: 'inherit',
   })
 }
 
-/** Emit styles.css (preflight + tokens + static CSS) */
+/** Emit styles.css (preflight + tokens + static CSS). Use runPandaCodegen for full build. */
 export function runPandaCss(cwd: string): void {
-  log('[panda] Generating CSS...')
+  log.debug('system:gen', 'Generating CSS...')
   const pandaBin = resolvePandaBin()
   execSync(`"${pandaBin}"`, {
     cwd,

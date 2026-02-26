@@ -18,11 +18,11 @@ export async function createBoxPattern(coreDir: string): Promise<string> {
   const extensionPaths = scanForBoxExtensions([styledDir])
 
   if (extensionPaths.length === 0) {
-    log.debug('[createBoxPattern] No pattern() files found')
+    log.debug('system:box', 'No pattern() files found')
     return ''
   }
 
-  log.debug(`[createBoxPattern] Found ${extensionPaths.length} extension files`)
+  log.debug('system:box', `Found ${extensionPaths.length} extension files`)
 
   const refDir = join(coreDir, '.ref')
   if (!existsSync(refDir)) mkdirSync(refDir, { recursive: true })
@@ -49,10 +49,16 @@ export async function createBoxPattern(coreDir: string): Promise<string> {
   const collectScriptPath = join(refDir, 'collect-extensions.mjs')
   writeFileSync(collectScriptPath, bundled)
 
+  const memBefore = process.memoryUsage().rss / 1024 / 1024
   const result = spawnSync(process.execPath, [collectScriptPath], {
     cwd: coreDir,
     encoding: 'utf-8',
   })
+  const memAfter = process.memoryUsage().rss / 1024 / 1024
+  log.debug(
+    'system:box',
+    `Parent RSS: ${memBefore.toFixed(1)}MB → ${memAfter.toFixed(1)}MB (${(memAfter - memBefore).toFixed(1)}MB delta)`
+  )
   if (result.status !== 0) {
     throw new Error(
       `[createBoxPattern] Collect script failed:\n${result.stderr || result.stdout}`
@@ -71,7 +77,7 @@ export async function createBoxPattern(coreDir: string): Promise<string> {
   const boxPath = resolve(coreDir, 'src/styled/props/box.ts')
   const content = generateBoxPatternContent(extensions)
   writeFileSync(boxPath, content)
-  log.debug('[createBoxPattern] Wrote box pattern to src/styled/props/box.ts')
+  log.debug('system:box', 'Wrote box pattern to src/styled/props/box.ts')
 
   return boxPath
 }

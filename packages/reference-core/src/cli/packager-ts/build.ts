@@ -11,7 +11,6 @@ import {
 import { log } from '../lib/log'
 import { resolveCorePackageDir } from '../lib/resolve-core'
 import { compileDeclarations } from './compiler'
-import { createTsConfig } from './config'
 import type { ReferenceUIConfig } from '../config'
 
 /**
@@ -82,40 +81,32 @@ export async function buildDeclarations(
     const entryPath = resolve(coreDir, pkg.sourceEntry)
 
     if (!existsSync(entryPath)) {
-      log(`[packager-ts] Skipping ${pkg.name} (no ${pkg.sourceEntry})`)
+      log.debug('packager:ts', `Skipping ${pkg.name} (no ${pkg.sourceEntry})`)
       continue
     }
 
-    log(`[packager-ts] Building types for ${pkg.name}...`)
+    log.debug('packager:ts', `Building types for ${pkg.name}...`)
 
     mkdirSync(packageDir, { recursive: true })
 
-    // Generate tsconfig for this package
-    const tsconfigPath = join(packageDir, 'tsconfig.declarations.json')
-    const tsconfigContent = createTsConfig({
-      rootDir: coreDir,
-      outDir: packageDir,
-      entryFiles: [entryPath],
-    })
-
-    writeFileSync(tsconfigPath, JSON.stringify(tsconfigContent, null, 2), 'utf-8')
-
-    // Compile declarations using TypeScript compiler
+    // Tsdown outputs to temp; we copy only .d.mts so esbuild's .mjs (which
+    // bundles @pandacss/dev) is preserved. Tsdown leaves that import unbundled.
+    const outDtsPath = join(packageDir, pkg.outFile.replace(/\.m?js$/, '.d.mts'))
     try {
-      await compileDeclarations(coreDir, tsconfigPath)
-      log(`[packager-ts] ✓ Compiled ${pkg.name}`)
+      await compileDeclarations(coreDir, pkg.sourceEntry, outDtsPath)
+      log.debug('packager:ts', `✓ Compiled ${pkg.name}`)
     } catch (error) {
-      log(`[packager-ts] ✗ Failed to compile ${pkg.name}:`, error)
+      log.debug('packager:ts', `✗ Failed to compile ${pkg.name}:`, error)
       throw error
     }
 
     // Copy pre-existing .d.ts files from source
     copyExistingDeclarations(srcDir, packageDir, coreDir)
 
-    // Update package.json types field
-    const typesPath = `./${pkg.sourceEntry.replace(/\.tsx?$/, '.d.ts')}`
+    // Update package.json types field (tsdown outputs .d.mts)
+    const typesPath = `./${pkg.outFile.replace(/\.m?js$/, '.d.mts')}`
     updatePackageTypes(packageDir, typesPath)
 
-    log(`[packager-ts] ✓ ${pkg.name} ready`)
+    log.debug('packager:ts', `✓ ${pkg.name} ready`)
   }
 }

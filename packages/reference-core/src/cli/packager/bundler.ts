@@ -1,14 +1,21 @@
 import { build } from 'esbuild'
 import { resolve, dirname, extname } from 'node:path'
+
+/** Set to false to skip symlinking .reference-ui/* into node_modules/@reference-ui/* */
+export const ENABLE_REFERENCE_UI_SYMLINKS = true
 import {
   mkdirSync,
   writeFileSync,
+  readFileSync,
   cpSync,
   existsSync,
   readdirSync,
   statSync,
-  readFileSync,
+  lstatSync,
+  rmSync,
+  unlinkSync,
 } from 'node:fs'
+import symlinkDir from 'symlink-dir'
 import { log } from '../lib/log'
 import type { PackageDefinition } from './packages'
 
@@ -19,7 +26,22 @@ export interface BundleOptions {
 }
 
 /**
- * Bundle a package using esbuild (for packages that need bundling)
+ * Write content only if it changed — avoids Vite HMR cascade when JS bundle is unchanged.
+ */
+function writeIfChanged(filePath: string, newContent: string): boolean {
+  try {
+    const existing = readFileSync(filePath, 'utf-8')
+    if (existing === newContent) return false
+  } catch {
+    // File doesn't exist, write it
+  }
+  writeFileSync(filePath, newContent, 'utf-8')
+  return true
+}
+
+/**
+ * Bundle a package using esbuild (for packages that need bundling).
+ * Only writes the main JS output if content changed, to avoid Vite invalidating everything.
  */
 async function bundleWithEsbuild(
   coreDir: string,
@@ -27,21 +49,29 @@ async function bundleWithEsbuild(
   entryPath: string,
   outfile: string
 ): Promise<void> {
-  await build({
+  const destPath = resolve(targetDir, outfile)
+  const result = await build({
     entryPoints: [resolve(coreDir, entryPath)],
-    bundle: true, // Bundle all dependencies into one file
-    outfile: resolve(targetDir, outfile),
+    bundle: true,
+    write: false, // Get output in memory
     format: 'esm',
     platform: 'neutral',
     target: 'es2020',
     jsx: 'automatic',
     jsxImportSource: 'react',
-    external: ['react', 'react-dom', 'react/jsx-runtime'], // Don't bundle React
+    external: ['react', 'react-dom', 'react/jsx-runtime'],
     sourcemap: false,
     treeShaking: true,
     minify: false,
     logLevel: 'warning',
   })
+
+  const out = result.outputFiles?.[0]
+  if (!out) throw new Error('esbuild produced no output')
+  const content = out.text
+
+  mkdirSync(targetDir, { recursive: true })
+  writeIfChanged(destPath, content)
 }
 
 /**
@@ -175,13 +205,13 @@ async function createPackageContent(options: BundleOptions): Promise<void> {
       if (existsSync(srcPath)) {
         mkdirSync(dirname(destPath), { recursive: true })
 
-        // If source is TypeScript, transform it
         if (src.endsWith('.ts') || src.endsWith('.tsx')) {
-          // Rewrite imports for entry point files
           const isEntryPoint = src.includes('/entry/')
           await transformTypeScriptFile(srcPath, destPath, isEntryPoint)
         } else {
-          cpSync(srcPath, destPath)
+          // Only write if changed (avoids Vite HMR cascade for unchanged CSS)
+          const newContent = readFileSync(srcPath, 'utf-8')
+          writeIfChanged(destPath, newContent)
         }
       }
     }
@@ -211,31 +241,56 @@ export async function bundlePackage(options: BundleOptions): Promise<void> {
     exports: pkg.exports,
   }
 
-  writeFileSync(
-    resolve(targetDir, 'package.json'),
-    JSON.stringify(packageJson, null, 2),
-    'utf-8'
-  )
+  writeIfChanged(resolve(targetDir, 'package.json'), JSON.stringify(packageJson, null, 2))
 }
 
 /**
- * Bundle all packages and place them in the user's node_modules
+ * Short name for a scoped package (e.g. @reference-ui/react -> react)
+ */
+function getShortName(pkgName: string): string {
+  const scope = pkgName.indexOf('/')
+  return scope >= 0 ? pkgName.slice(scope + 1) : pkgName
+}
+
+/**
+ * Bundle all packages. When ENABLE_REFERENCE_UI_SYMLINKS is true: output to .reference-ui/
+ * and symlink into node_modules (for Vite HMR). When false: output directly to node_modules
+ * (no .reference-ui folder).
  */
 export async function bundleAllPackages(
   coreDir: string,
   userProjectDir: string,
   packages: PackageDefinition[]
 ): Promise<void> {
+  const refUiDir = resolve(userProjectDir, '.reference-ui')
   const nodeModulesDir = resolve(userProjectDir, 'node_modules')
+  const refUiScopeDir = resolve(nodeModulesDir, '@reference-ui')
 
-  // Ensure @reference-ui scope exists
-  mkdirSync(resolve(nodeModulesDir, '@reference-ui'), { recursive: true })
+  mkdirSync(refUiScopeDir, { recursive: true })
 
-  // Bundle each package
   for (const pkg of packages) {
-    const targetDir = resolve(nodeModulesDir, pkg.name)
+    const shortName = getShortName(pkg.name)
+    const targetDir = ENABLE_REFERENCE_UI_SYMLINKS
+      ? resolve(refUiDir, shortName)
+      : resolve(refUiScopeDir, shortName)
+    const linkPath = resolve(refUiScopeDir, shortName)
 
-    log(`📦 ${pkg.bundle ? 'Bundling' : 'Copying'} ${pkg.name}...`)
+    if (ENABLE_REFERENCE_UI_SYMLINKS) {
+      mkdirSync(refUiDir, { recursive: true })
+    } else {
+      // Writing directly to node_modules: remove existing symlink/dir from pnpm file: deps.
+      // existsSync returns false for broken symlinks (it follows the link), so use lstatSync.
+      try {
+        const stat = lstatSync(linkPath)
+        if (stat.isSymbolicLink()) {
+          unlinkSync(linkPath)
+        } else {
+          rmSync(linkPath, { recursive: true, force: true })
+        }
+      } catch (e: unknown) {
+        if ((e as NodeJS.ErrnoException)?.code !== 'ENOENT') throw e
+      }
+    }
 
     await bundlePackage({
       coreDir,
@@ -243,6 +298,22 @@ export async function bundleAllPackages(
       pkg,
     })
 
-    log(`   ✓ ${pkg.name} → ${targetDir}`)
+    if (ENABLE_REFERENCE_UI_SYMLINKS) {
+      // Remove existing link/dir so we can create a fresh symlink
+      if (existsSync(linkPath)) {
+        rmSync(linkPath, { recursive: true, force: true })
+      }
+
+      if (!existsSync(targetDir) || !statSync(targetDir).isDirectory()) {
+        throw new Error(
+          `Packager target ${targetDir} must be a directory (symlink-dir requires it on Windows)`
+        )
+      }
+
+      symlinkDir.sync(targetDir, linkPath)
+      log.debug('packager', `✓ ${pkg.name} → ${linkPath}`)
+    } else {
+      log.debug('packager', `✓ ${pkg.name} → ${targetDir}`)
+    }
   }
 }

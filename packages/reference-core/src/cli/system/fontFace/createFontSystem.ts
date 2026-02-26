@@ -18,7 +18,7 @@ export async function createFontSystem(coreDir: string): Promise<string> {
   const fontsPath = resolve(styledFontDir, 'fonts.ts')
 
   if (!existsSync(fontsPath)) {
-    log.debug('[createFontSystem] No fonts.ts found, skipping')
+    log.debug('system:font', 'No fonts.ts found, skipping')
     return ''
   }
 
@@ -44,10 +44,16 @@ export async function createFontSystem(coreDir: string): Promise<string> {
   const collectScriptPath = join(refDir, 'collect-fonts.mjs')
   writeFileSync(collectScriptPath, bundled)
 
+  const memBefore = process.memoryUsage().rss / 1024 / 1024
   const result = spawnSync(process.execPath, [collectScriptPath], {
     cwd: coreDir,
     encoding: 'utf-8',
   })
+  const memAfter = process.memoryUsage().rss / 1024 / 1024
+  log.debug(
+    'system:font',
+    `Parent RSS: ${memBefore.toFixed(1)}MB → ${memAfter.toFixed(1)}MB (${(memAfter - memBefore).toFixed(1)}MB delta)`
+  )
   if (result.status !== 0) {
     throw new Error(
       `[createFontSystem] Collect script failed:\n${result.stderr || result.stdout}`
@@ -66,7 +72,7 @@ export async function createFontSystem(coreDir: string): Promise<string> {
   const fontPath = resolve(styledFontDir, 'font.ts')
   const content = generateFontSystemContent(definitions)
   writeFileSync(fontPath, content)
-  log.debug('[createFontSystem] Wrote font system to src/styled/font/font.ts')
+  log.debug('system:font', 'Wrote font system to src/styled/font/font.ts')
 
   return fontPath
 }

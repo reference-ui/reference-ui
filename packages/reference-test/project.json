@@ -1,0 +1,17 @@
+{
+  "name": "@reference-ui/reference-test",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/reference-test/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "test": {
+      "dependsOn": ["reference-core:build"],
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "nx run reference-core:build --skip-nx-cache && pnpm test",
+        "cwd": "packages/reference-test"
+      }
+    }
+  }
+}
