@@ -1,0 +1,41 @@
+---
+title: Get Started
+section: Getting Started
+order: 1
+slug: get-started
+---
+
+import { Button, Container } from '@reference-ui/core';
+
+# Get Started
+
+## Installation
+
+```bash
+pnpm add @reference-ui/core
+```
+
+## Usage
+
+Import the components and styles you need:
+
+```tsx
+import { Button, Container } from '@reference-ui/core';
+import '@reference-ui/core/styles.css';
+
+function App() {
+  return (
+    <Container>
+      <Button>Click me</Button>
+    </Container>
+  );
+}
+```
+
+## Try it
+
+Here's a live example:
+
+<Container style={{ padding: '1rem', background: 'var(--color-surface)', borderRadius: 8 }}>
+  <Button>Design system button</Button>
+</Container>

@@ -1,0 +1,119 @@
+---
+title: Typography
+section: Components
+order: 2
+slug: typography
+---
+
+import { H1, H2, H3, H4, H5, H6, P, Span, Strong, Em, B, I, U, S, Small, Mark, Sub, Sup, Abbr, Code, Pre, Kbd, Samp, Var, Blockquote, Q, Cite, Div } from '@reference-ui/core';
+
+# Typography
+
+Text primitives for building consistent, styled typography.
+
+---
+
+## Headings
+
+<div>
+  <H1>Heading 1</H1>
+  <H2>Heading 2</H2>
+  <H3>Heading 3</H3>
+  <H4>Heading 4</H4>
+  <H5>Heading 5</H5>
+  <H6>Heading 6</H6>
+</div>
+
+---
+
+## Body Text
+
+<div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
+  <P>This is a paragraph. It contains body text that flows naturally across the page.</P>
+  <P><Small>This is small text, useful for fine print or captions.</Small></P>
+</div>
+
+---
+
+## Font Families
+
+<div style={{ display: 'flex', flexDirection: 'row', gap: '1rem', marginBottom: '2rem' }}>
+  <P font="sans">The quick brown fox jumps over the lazy dog.</P>
+  <P font="mono">The quick brown fox jumps over the lazy dog.</P>
+  <P font="serif">The quick brown fox jumps over the lazy dog.</P>
+</div>
+
+---
+
+## Font Overlay
+
+<Div position="relative" width="100%" maxWidth="600px" height="100px" marginBottom="3rem" overflow="hidden" borderWidth="1px" borderColor="gray.300">
+  <Div font="sans" position="absolute" top="0" left="0" fontSize="60px" lineHeight="70px" opacity={0.9} whiteSpace="nowrap">Typography</Div>
+  <Div   font="serif" position="absolute" top="0" left="0" fontSize="60px" lineHeight="70px" opacity={0.6} color="blue" whiteSpace="nowrap">Typography</Div>
+  <Div font="mono" position="absolute" top="0" left="0" fontSize="60px" lineHeight="70px" opacity={0.6} color="red" whiteSpace="nowrap">Typography</Div>
+</Div>
+
+---
+
+## Sentence Overlay
+
+<Div position="relative" width="100%" maxWidth="600px" height="200px" marginBottom="3rem" overflow="hidden" borderWidth="1px" borderColor="gray.300">
+  <Div font="sans" position="absolute" top="0" left="0" fontSize="32px" lineHeight="40px" opacity={0.9}>The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs. How vexingly quick daft zebras jump!</Div>
+  <Div font="serif" position="absolute" top="0" left="0" fontSize="32px" lineHeight="40px" opacity={0.6} color="blue">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs. How vexingly quick daft zebras jump!</Div>
+  <Div font="mono" position="absolute" top="0" left="0" fontSize="32px" lineHeight="40px" opacity={0.6} color="red">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs. How vexingly quick daft zebras jump!</Div>
+</Div>
+
+---
+
+## Inline Emphasis
+
+<div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '2rem' }}>
+  <P><Strong>Strong text for important content</Strong></P>
+  <P><Em>Emphasized text for stress or titles</Em></P>
+  <P><B>Bold text</B></P>
+  <P><I>Italic text</I></P>
+  <P><U>Underlined text</U></P>
+  <P><S>Strikethrough text</S></P>
+  <P><Mark>Highlighted text</Mark></P>
+</div>
+
+---
+
+## Sub & Superscript
+
+<div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '2rem' }}>
+  <P>H<Sub>2</Sub>O is water</P>
+  <P>E = mc<Sup>2</Sup></P>
+</div>
+
+---
+
+## Code & Technical
+
+<div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '2rem' }}>
+  <P>Use <Code>const</Code> for constants</P>
+  <P>Press <Kbd>Cmd</Kbd> + <Kbd>S</Kbd> to save</P>
+  <P>Output: <Samp>Hello, World!</Samp></P>
+  <P>The variable <Var>x</Var> represents the input</P>
+  <Pre>{`function greet() {
+  return "Hello";
+}`}</Pre>
+</div>
+
+---
+
+## Quotations
+
+<div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
+  <Blockquote>
+    The best way to predict the future is to invent it.
+  </Blockquote>
+  <P>As they say, <Q>less is more</Q>.</P>
+  <P><Cite>— Alan Kay</Cite></P>
+</div>
+
+---
+
+## Abbreviations
+
+<P>The <Abbr title="World Wide Web">WWW</Abbr> changed everything.</P>
