@@ -6,7 +6,8 @@
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { execSync } from 'node:child_process'
-import { createTempDirIn, writeFile, removeDir } from '../utils/file-system.js'
+import { createProjectDir, writeFile, removeDir } from '../utils/file-system.js'
+import { log } from '../lib/log.js'
 import { resolveDependencies } from './dependencies.js'
 import { getBundler } from './bundlers/index.js'
 import { buildApp } from './app-builder.js'
@@ -14,7 +15,7 @@ import type { ProjectConfig, ProjectHandle } from './types.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const PACKAGE_ROOT = join(__dirname, '../..')
-const TEMP_BASE = join(PACKAGE_ROOT, '.temp')
+const SANDBOX_BASE = join(PACKAGE_ROOT, '.sandbox')
 
 /**
  * Generate a complete test project for the given config.
@@ -25,9 +26,23 @@ const TEMP_BASE = join(PACKAGE_ROOT, '.temp')
  * @returns Project handle with root path and cleanup function
  */
 export async function generateProject(config: ProjectConfig): Promise<ProjectHandle> {
-  const rootPath = await createTempDirIn(TEMP_BASE)
+  const { reactVersion, bundler } = config.environment
   const deps = resolveDependencies(config.environment)
-  const bundler = getBundler(config.environment.bundler)
+  const folderName = `${bundler}-react${reactVersion}`
+
+  log(
+    'project',
+    'creating project',
+    bundler,
+    'React',
+    reactVersion,
+    `(${bundler} ${deps.bundler.version})`,
+    '→',
+    `.sandbox/${folderName}/`
+  )
+
+  const rootPath = await createProjectDir(SANDBOX_BASE, folderName)
+  const bundlerImpl = getBundler(config.environment.bundler)
 
   const pkg: Record<string, unknown> = {
     name: 'reference-test-app',
@@ -49,11 +64,13 @@ export async function generateProject(config: ProjectConfig): Promise<ProjectHan
   }
 
   await writeFile(join(rootPath, 'package.json'), JSON.stringify(pkg, null, 2))
-  const bundlerConfig = bundler.getConfig(config.environment.reactVersion)
+  const bundlerConfig = bundlerImpl.getConfig(config.environment.reactVersion)
   await writeFile(join(rootPath, bundlerConfig.configFilename), bundlerConfig.configContent)
   await buildApp(rootPath, config)
 
+  log('project', 'pnpm install...')
   execSync('pnpm install', { cwd: rootPath, stdio: 'pipe' })
+  log('project', 'done', `→ .sandbox/${folderName}/`)
 
   const cleanup = async (): Promise<void> => {
     await removeDir(rootPath)

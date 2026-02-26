@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest run",
+    "sandbox": "tsx src/sandbox.ts"
   },
   "dependencies": {
     "chokidar": "^4.0.0",
@@ -12,6 +13,7 @@
     "execa": "^9.0.0",
     "fs-extra": "^11.2.0",
     "get-port": "^7.1.0",
+    "picocolors": "^1.1.1",
     "tree-kill": "^1.2.2",
     "wait-port": "^1.1.0"
   },
@@ -21,6 +23,7 @@
     "@types/debug": "^4.1.12",
     "@types/fs-extra": "^11.0.4",
     "playwright": "^1.48.0",
+    "tsx": "^4.19.0",
     "typescript": "~5.9.3",
     "vitest": "^4.0.18"
   }
