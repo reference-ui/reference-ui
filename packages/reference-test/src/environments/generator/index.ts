@@ -1,6 +1,6 @@
 /**
  * Generate a .sandbox project by copying the base environment and injecting package.json.
- * This is the primary way we run tests.
+ * Supports per-project ui.config.ts from environments/configs/{projectName}/
  */
 
 import { cp, mkdir, rm, writeFile } from 'node:fs/promises'
@@ -11,6 +11,7 @@ import { fileURLToPath } from 'node:url'
 import { execa } from 'execa'
 
 import { log, setDebug } from '../../lib/log.js'
+import type { MatrixEntry } from '../matrix.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -22,9 +23,15 @@ export interface Project {
 }
 
 const BASE_DIR = join(__dirname, '..', 'base')
+const CONFIGS_DIR = join(__dirname, '..', 'configs')
+
+const REACT_VERSIONS: Record<string, string> = {
+  '17': '17.0.2',
+  '18': '18.3.1',
+  '19': '19.0.0',
+}
 
 function getCorePath(): string {
-  // generator -> environments -> src -> reference-test -> packages
   return join(__dirname, '..', '..', '..', '..', 'reference-core')
 }
 
@@ -32,10 +39,6 @@ function getWorkspaceRoot(): string {
   return join(__dirname, '..', '..', '..', '..', '..')
 }
 
-/**
- * Skip when core is already built (e.g. workspace ran `pnpm test` which builds first).
- * Set REF_TEST_FRESH=1 to force full bootstrap (install + build).
- */
 async function ensureWorkspaceReady(): Promise<void> {
   const corePath = getCorePath()
   const cliBuilt = existsSync(join(corePath, 'dist/cli/index.mjs'))
@@ -59,21 +62,29 @@ async function ensureSandboxDir(root: string): Promise<void> {
   await mkdir(root, { recursive: true })
 }
 
-export async function generateSandbox(): Promise<Project> {
+export async function generateSandbox(config: MatrixEntry): Promise<Project> {
   const packageRoot = join(__dirname, '..', '..', '..')
-  const sandboxRoot = join(packageRoot, '.sandbox')
+  const sandboxRoot = join(packageRoot, '.sandbox', config.name)
 
   await ensureWorkspaceReady()
 
-  log.debug('generator', 'Generating sandbox at', sandboxRoot)
+  log.debug('generator', 'Generating sandbox at', sandboxRoot, 'for', config.name)
   await ensureSandboxDir(sandboxRoot)
 
   log.debug('generator', 'Copying base environment...')
   await cp(BASE_DIR, sandboxRoot, { recursive: true })
 
+  // Override ui.config.ts from configs/{projectName}/ if it exists
+  const projectConfigPath = join(CONFIGS_DIR, config.name, 'ui.config.ts')
+  if (existsSync(projectConfigPath)) {
+    log.debug('generator', 'Using project ui.config from', projectConfigPath)
+    await cp(projectConfigPath, join(sandboxRoot, 'ui.config.ts'))
+  }
+
   const corePath = getCorePath()
+  const reactVersion = REACT_VERSIONS[config.react] ?? '18.3.1'
   const packageJson = {
-    name: 'ref-test-sandbox',
+    name: `ref-test-sandbox-${config.name}`,
     private: true,
     type: 'module' as const,
     scripts: {
@@ -82,8 +93,8 @@ export async function generateSandbox(): Promise<Project> {
       test: 'ref sync && vite build',
     },
     dependencies: {
-      react: '18.3.1',
-      'react-dom': '18.3.1',
+      react: reactVersion,
+      'react-dom': reactVersion,
       '@reference-ui/core': `file:${corePath}`,
     },
     devDependencies: {
@@ -100,7 +111,7 @@ export async function generateSandbox(): Promise<Project> {
 
   log.debug('generator', 'Running pnpm install...')
   await execa('pnpm', ['install', '--ignore-workspace'], { cwd: sandboxRoot })
-  log.debug('generator', 'Sandbox ready')
+  log.debug('generator', 'Sandbox ready:', config.name)
 
   return {
     root: sandboxRoot,
