@@ -1,4 +1,4 @@
-import { copyFileSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs'
+import { copyFileSync, mkdirSync, mkdtempSync, realpathSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { spawnMonitoredAsync } from '../lib/child-process'
@@ -15,7 +15,8 @@ export async function compileDeclarations(
   entryFile: string,
   outDtsPath: string
 ): Promise<string> {
-  const tmpOut = mkdtempSync(join(tmpdir(), 'ref-ui-dts-'))
+  // realpathSync ensures consistent path (fixes macOS /var vs /private/var)
+  const tmpOut = realpathSync(mkdtempSync(join(tmpdir(), 'ref-ui-dts-')))
   try {
     const result = await spawnMonitoredAsync(
       'npx',

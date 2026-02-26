@@ -1,6 +1,24 @@
 import { defineConfig } from 'tsup'
+import { cpSync, mkdirSync, readdirSync } from 'node:fs'
+import { join, dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const root = dirname(fileURLToPath(import.meta.url))
+
+const copyNative = async () => {
+  const src = join(root, 'src/cli/virtual/native')
+  const dest = join(root, 'dist/cli/virtual/native')
+  try {
+    const files = readdirSync(src).filter((f) => f.endsWith('.node'))
+    if (files.length) {
+      mkdirSync(dest, { recursive: true })
+      for (const f of files) cpSync(join(src, f), join(dest, f))
+    }
+  } catch (_) {}
+}
 
 export default defineConfig({
+  onSuccess: copyNative,
   entry: {
     index: 'src/cli/index.ts',
     'watch/worker': 'src/cli/watch/worker.ts',
