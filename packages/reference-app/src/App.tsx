@@ -1,8 +1,9 @@
-import { Div, ResponsiveExample, Button } from '@reference-ui/react'
+import { Div, Container, ResponsiveExample, Button } from '@reference-ui/core';
+import '@reference-ui/core/styles.css';
 
 export default function App() {
   return (
-    <Div style={{ padding: '2rem' }}>
+    <Container style={{ padding: '2rem' }}>
       <h1>Reference UI - React First</h1>
       <ResponsiveExample />
       <div style={{ marginTop: '2rem' }}>
@@ -12,6 +13,6 @@ export default function App() {
           Hello
         </Div>
       </div>
-    </Div>
-  )
+    </Container>
+  );
 }

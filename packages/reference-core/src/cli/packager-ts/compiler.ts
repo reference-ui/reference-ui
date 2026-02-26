@@ -1,87 +1,63 @@
-import * as ts from 'typescript'
-import { log } from '../lib/log'
+import { copyFileSync, mkdirSync, mkdtempSync, realpathSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { dirname, join } from 'node:path'
+import { spawnMonitoredAsync } from '../lib/child-process'
 
 /**
- * Run TypeScript compiler programmatically to generate declarations.
- * Uses the TS API for direct control and better performance than CLI.
+ * Run tsdown to generate .d.mts declarations only (output to temp dir).
+ * We use a temp dir because tsdown also emits .mjs, but we keep esbuild's
+ * .mjs (which bundles @pandacss/dev). Tsdown leaves @pandacss/dev as an
+ * import, which breaks at runtime in consumer apps.
+ * Returns the path to the generated .d.mts file.
  */
 export async function compileDeclarations(
   cwd: string,
-  configPath: string
-): Promise<void> {
-  // Read and parse the tsconfig
-  const configFile = ts.readConfigFile(configPath, ts.sys.readFile)
-  if (configFile.error) {
-    throw new Error(formatDiagnostic(configFile.error))
-  }
-
-  const parsedConfig = ts.parseJsonConfigFileContent(
-    configFile.config,
-    ts.sys,
-    cwd,
-    undefined,
-    configPath
-  )
-
-  if (parsedConfig.errors.length > 0) {
-    const errors = parsedConfig.errors.map(formatDiagnostic).join('\n')
-    throw new Error(`TypeScript config errors:\n${errors}`)
-  }
-
-  // Create compiler host (reusable across multiple files)
-  const host = ts.createCompilerHost(parsedConfig.options)
-
-  // Create the program
-  const program = ts.createProgram({
-    rootNames: parsedConfig.fileNames,
-    options: parsedConfig.options,
-    host,
-  })
-
-  // Emit only declarations
-  const emitResult = program.emit(
-    undefined, // All files
-    undefined, // Default writeFile
-    undefined, // No cancellation token
-    true, // Only emit .d.ts files
-    undefined // No custom transformers
-  )
-
-  // Only check emit diagnostics (skip expensive pre-emit checks)
-  const relevantDiagnostics = emitResult.diagnostics.filter(diagnostic => {
-    if (!diagnostic.file) return false
-    return !diagnostic.file.fileName.includes('node_modules')
-  })
-
-  // Log errors only
-  if (relevantDiagnostics.length > 0) {
-    const errors = relevantDiagnostics.filter(
-      d => d.category === ts.DiagnosticCategory.Error
-    )
-
-    if (errors.length > 0) {
-      for (const diagnostic of errors) {
-        log(`[packager-ts] Error: ${formatDiagnostic(diagnostic)}`)
+  entryFile: string,
+  outDtsPath: string
+): Promise<string> {
+  // realpathSync ensures consistent path (fixes macOS /var vs /private/var)
+  const tmpOut = realpathSync(mkdtempSync(join(tmpdir(), 'ref-ui-dts-')))
+  try {
+    const result = await spawnMonitoredAsync(
+      'npx',
+      [
+        'tsdown',
+        entryFile,
+        '--dts',
+        '--format',
+        'esm',
+        '--out-dir',
+        tmpOut,
+        '--target',
+        'es2020',
+        '--external',
+        'react',
+        '--external',
+        'react-dom',
+      ],
+      {
+        processName: 'tsdown',
+        cwd,
+        shell: false,
+        logCategory: 'packager:ts',
+        memoryMonitorInterval: 100,
+        logMemory: true,
       }
-      throw new Error(`TypeScript compilation failed with ${errors.length} error(s)`)
-    }
-  }
-
-  if (emitResult.emitSkipped) {
-    throw new Error('TypeScript emit was skipped')
-  }
-}
-
-/**
- * Format a TypeScript diagnostic message for display
- */
-function formatDiagnostic(diagnostic: ts.Diagnostic): string {
-  if (diagnostic.file && diagnostic.start !== undefined) {
-    const { line, character } = diagnostic.file.getLineAndCharacterOfPosition(
-      diagnostic.start
     )
-    const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')
-    return `${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`
+
+    if (result.code !== 0) {
+      throw new Error(
+        `tsdown exited with code ${result.code}\nstderr: ${result.stderr}\nstdout: ${result.stdout}`
+      )
+    }
+
+    const basename = entryFile.replace(/^.*\/([^/]+)\.tsx?$/, '$1')
+    const dtsName = `${basename}.d.mts`
+    const tmpDtsPath = join(tmpOut, dtsName)
+    mkdirSync(dirname(outDtsPath), { recursive: true })
+    copyFileSync(tmpDtsPath, outDtsPath)
+    return outDtsPath
+  } finally {
+    rmSync(tmpOut, { recursive: true, force: true })
   }
-  return ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')
 }

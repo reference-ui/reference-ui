@@ -1,13 +1,37 @@
 import { resolveCorePackageDir } from '../lib/resolve-core'
 import type { ReferenceUIConfig } from '../config'
 import { log } from '../lib/log'
-import { emit } from '../event-bus'
+import { emit, on } from '../event-bus'
 import { bundleAllPackages } from './bundler'
 import { PACKAGES } from './packages'
 
 export interface PackagerWorkerPayload {
   cwd: string
   config: ReferenceUIConfig
+  /** When true, stay alive and rebundle on system:compiled */
+  watchMode?: boolean
+}
+
+function debounce<T extends (...args: unknown[]) => void>(fn: T, ms: number): T {
+  let timeout: ReturnType<typeof setTimeout> | null = null
+  return ((...args: Parameters<T>) => {
+    if (timeout) clearTimeout(timeout)
+    timeout = setTimeout(() => {
+      timeout = null
+      fn(...args)
+    }, ms)
+  }) as T
+}
+
+async function runPackagerCore(payload: PackagerWorkerPayload): Promise<void> {
+  const { cwd } = payload
+  const coreDir = resolveCorePackageDir()
+
+  log.debug('packager', '📦 Packaging...')
+  await bundleAllPackages(coreDir, cwd, PACKAGES)
+  log.debug('packager', `✅ ${PACKAGES.length} package(s) ready`)
+
+  emit('packager:complete', {})
 }
 
 /**
@@ -23,21 +47,25 @@ export interface PackagerWorkerPayload {
  * - @reference-ui/react: React components, runtime APIs, configuration
  */
 export async function runPackager(payload: PackagerWorkerPayload): Promise<void> {
-  const { cwd, config } = payload
-  const coreDir = resolveCorePackageDir()
+  const { watchMode = false } = payload
 
-  log('')
-  log('📦 Packaging Reference UI...')
-  log('')
+  await runPackagerCore(payload)
 
-  await bundleAllPackages(coreDir, cwd, PACKAGES)
+  if (watchMode) {
+    const debouncedBundle = debounce(async () => {
+      log.debug('packager:worker', 'system:compiled → bundling packages')
+      try {
+        await runPackagerCore(payload)
+      } catch (err) {
+        log.error('[packager:worker] Bundle failed:', err)
+      }
+    }, 400)
 
-  log('')
-  log('✅ Packages ready!')
-  log(`   ${PACKAGES.length} package(s) installed to node_modules`)
-  log('')
+    on('system:compiled', () => debouncedBundle())
 
-  emit('packager:complete', {})
+    // Stay alive
+    return new Promise(() => {})
+  }
 }
 
 export default runPackager

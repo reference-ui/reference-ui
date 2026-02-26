@@ -10,7 +10,11 @@ import { log } from '../lib/log'
 import { emit } from '../event-bus'
 import type { WatchPayload } from './types'
 
-const EVENT_MAP = { create: 'add' as const, update: 'change' as const, delete: 'unlink' as const }
+const EVENT_MAP = {
+  create: 'add' as const,
+  update: 'change' as const,
+  delete: 'unlink' as const,
+}
 
 /**
  * Run file watcher in worker thread
@@ -20,7 +24,7 @@ export async function runWatch(payload: WatchPayload): Promise<void> {
   const { sourceDir, config } = payload
   const { include } = config
 
-  log(`[watch] Starting - source: ${sourceDir} patterns: ${include.join(', ')}`)
+  log.debug('watch', `Starting - source: ${sourceDir} patterns: ${include.join(', ')}`)
 
   const isMatch = picomatch(include)
 
@@ -37,14 +41,14 @@ export async function runWatch(payload: WatchPayload): Promise<void> {
         const relPath = relative(sourceDir, ev.path)
         if (!isMatch(relPath)) continue
         const mapped = EVENT_MAP[ev.type]
-        log(`[watch] ${mapped}: ${relPath}`)
-        emit('watch:change', { event: mapped, path: relPath })
+        log.debug('watch', `${mapped}: ${relPath}`)
+        emit('watch:change', { event: mapped, path: ev.path })
       }
     },
     { ignore: ['**/node_modules/**'] }
   )
 
-  log.debug('[watch] Ready - watching for changes')
+  log.debug('watch', 'Ready - watching for changes')
   emit('watch:ready', { sourceDir, patterns: include })
 
   return new Promise(() => {})

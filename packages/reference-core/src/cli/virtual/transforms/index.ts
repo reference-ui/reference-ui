@@ -1,8 +1,6 @@
 import { extname } from 'node:path'
-import { log } from '../../lib/log'
-import { mdxToJsx } from './mdx-to-jsx'
-import { rewriteCvaImports } from './rewrite-cva-imports'
-import { rewriteCssImports } from './rewrite-css-imports'
+
+const CORE_PACKAGE = '@reference-ui/react'
 
 export interface ApplyTransformsOptions {
   /**
@@ -65,6 +63,7 @@ export async function applyTransforms(
 
   // Step 1: MDX → JSX transformation
   if (ext === '.mdx') {
+    const { mdxToJsx } = await import('./mdx-to-jsx')
     transformedContent = await mdxToJsx(transformedContent, relativePath)
     newExtension = '.jsx'
     wasTransformed = true
@@ -76,11 +75,16 @@ export async function applyTransforms(
   if (['.js', '.jsx', '.ts', '.tsx'].includes(finalExt)) {
     const originalContent = transformedContent
 
-    // Rewrite cva/recipe imports
-    transformedContent = rewriteCvaImports(transformedContent, relativePath)
+    if (transformedContent.includes(CORE_PACKAGE)) {
+      const { rewriteCvaImports } = await import('./rewrite-cva-imports')
+      const { rewriteCssImports } = await import('./rewrite-css-imports')
 
-    // Rewrite css imports
-    transformedContent = rewriteCssImports(transformedContent, relativePath)
+      // Rewrite cva/recipe imports (native)
+      transformedContent = rewriteCvaImports(transformedContent, relativePath)
+
+      // Rewrite css imports (native)
+      transformedContent = rewriteCssImports(transformedContent, relativePath)
+    }
 
     if (transformedContent !== originalContent) {
       wasTransformed = true

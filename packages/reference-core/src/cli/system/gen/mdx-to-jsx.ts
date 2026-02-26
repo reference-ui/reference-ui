@@ -1,26 +1,15 @@
 import { readFileSync } from 'node:fs'
-import { compile } from '@mdx-js/mdx'
 import { log } from '../../lib/log'
+import { transformMdx } from '../../lib/microbundle'
 
 /**
- * Convert MDX to JSX using the official MDX compiler.
- * Generates JSX that Panda can scan for style extraction.
- *
- * Strategy:
- * - Use @mdx-js/mdx to compile MDX to JSX
- * - Return the compiled JSX output
- * - Panda scans the JSX file to extract CSS
+ * Convert MDX to JS using esbuild + @mdx-js/esbuild plugin.
+ * Uses Go/esbuild instead of V8 compile(); typically 20-80MB lighter.
+ * Output is suitable for Panda style extraction.
  */
 export async function mdxToJSX(mdxContent: string, sourceFile: string): Promise<string> {
   try {
-    // Compile MDX to JSX
-    const result = await compile(mdxContent, {
-      jsx: true,
-      format: 'mdx',
-      development: false,
-    })
-
-    return String(result.value)
+    return await transformMdx(mdxContent, sourceFile)
   } catch (error) {
     log.error(
       `⚠️  Failed to compile MDX file ${sourceFile}:`,

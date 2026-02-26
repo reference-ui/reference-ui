@@ -5,13 +5,18 @@
   "description": "Reference UI - Knowledge-First Components",
   "scripts": {
     "build": "pnpm -r run build",
-    "dev": "nx run-many --target=dev --projects=reference-docs,reference-core --parallel --output-style=stream"
+    "dev": "nx run-many --target=dev --projects=reference-docs,reference-core --parallel --output-style=stream",
+    "test": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/reference-test run test"
   },
   "devDependencies": {
+    "@swc-node/register": "~1.9.1",
+    "@swc/core": "~1.5.7",
+    "@swc/helpers": "~0.5.11",
     "@types/node": "^25.1.0",
     "nx": "^22.4.4",
     "prettier": "~3.8.1",
     "typescript": "~5.9.2"
   },
-  "packageManager": "pnpm@10.29.3"
+  "packageManager": "pnpm@10.29.3",
+  "dependencies": {}
 }

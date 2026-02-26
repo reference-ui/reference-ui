@@ -9,7 +9,11 @@
       "options": {
         "command": "pnpm run build",
         "cwd": "packages/reference-core"
-      }
+      },
+      "outputs": [
+        "{projectRoot}/dist",
+        "{projectRoot}/src/cli/virtual/native"
+      ]
     },
     "dev": {
       "executor": "nx:run-commands",

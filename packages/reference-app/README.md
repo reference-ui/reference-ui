@@ -11,7 +11,6 @@ pnpm dev
 ```
 
 This will:
-
 1. Run `reference sync` to generate design system artifacts
 2. Start the Vite dev server
 

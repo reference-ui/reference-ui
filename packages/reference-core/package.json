@@ -9,15 +9,20 @@
     "ref": "./dist/cli/index.mjs"
   },
   "dependencies": {
-    "@pandacss/dev": "^1.8.1",
+    "@mdx-js/esbuild": "^3.1.1",
     "@mdx-js/mdx": "^3.1.1",
+    "@pandacss/dev": "^1.8.1",
     "@parcel/watcher": "^2.5.6",
+    "@rspress/mdx-rs": "^0.6.6",
+    "@vanilla-extract/css": "^1.18.0",
+    "@vanilla-extract/esbuild-plugin": "^2.3.21",
     "commander": "^14.0.3",
     "esbuild": "^0.27.3",
     "fast-glob": "^3.3.2",
     "picocolors": "^1.1.0",
     "picomatch": "^4.0.0",
     "piscina": "^5.1.4",
+    "symlink-dir": "^9.0.0",
     "tsdown": "^0.20.1"
   },
   "peerDependencies": {
@@ -25,19 +30,21 @@
     "react-dom": "^18.0.0"
   },
   "scripts": {
-    "build": "node scripts/build-cli.mjs",
-    "build:fresh": "rm -rf dist/cli && node scripts/build-cli.mjs",
-    "dev": "node scripts/build-cli.mjs --watch",
+    "build": "pnpm run build:native && tsup",
+    "build:fresh": "rm -rf dist/cli && tsup",
+    "build:native": "cd src/cli/virtual/native && npx napi build --platform --release",
+    "dev": "pnpm run build:native && tsup --watch",
     "test": "vitest run",
     "test:watch": "vitest"
   },
   "devDependencies": {
+    "@types/node": "^25.1.0",
     "@types/picomatch": "^4.0.2",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
-    "@types/node": "^25.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "tsup": "^8.4.0",
     "typescript": "~5.9.3",
     "vitest": "^4.0.18"
   }

@@ -1,8 +1,20 @@
 import type { ReferenceUIConfig } from '../config'
 import { runWorker } from '../thread-pool'
 
-export async function initSystem(cwd: string, config: ReferenceUIConfig): Promise<void> {
-  await runWorker('system', { cwd, config })
+export interface InitSystemOptions {
+  watch?: boolean
+}
+
+export async function initSystem(
+  cwd: string,
+  config: ReferenceUIConfig,
+  options?: InitSystemOptions
+): Promise<void> {
+  await runWorker('system', {
+    cwd,
+    config,
+    watchMode: options?.watch ?? false,
+  })
 }
 
 export {

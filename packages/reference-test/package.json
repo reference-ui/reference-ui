@@ -1,0 +1,22 @@
+{
+  "name": "@reference-ui/reference-test",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "test": "DEBUG=1 vitest run"
+  },
+  "dependencies": {
+    "execa": "^9.0.0",
+    "get-port": "^7.1.0",
+    "picocolors": "^1.1.0"
+  },
+  "devDependencies": {
+    "@reference-ui/core": "workspace:*",
+    "playwright": "^1.48.0",
+    "typescript": "~5.9.3",
+    "vitest": "^4.0.18"
+  }
+}

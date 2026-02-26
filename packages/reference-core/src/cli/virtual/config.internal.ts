@@ -38,6 +38,13 @@ export type SupportedVirtualExtension = (typeof TRANSFORM_EXTENSIONS_ENTRIES)[nu
 export const TRANSFORM_EXTENSIONS = new Map(TRANSFORM_EXTENSIONS_ENTRIES)
 
 /**
+ * Type guard for supported input extensions.
+ */
+export function isTransformExtension(ext: string): ext is SupportedInputExtension {
+  return TRANSFORM_EXTENSIONS.has(ext as SupportedInputExtension)
+}
+
+/**
  * File extensions that can appear in the virtual directory.
  * Derived from the output values of TRANSFORM_EXTENSIONS.
  * Used when cleaning up to check for all possible transformed file extensions.

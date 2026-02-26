@@ -4,13 +4,38 @@ import { log } from '../lib/log'
 import { WORKERS, type WorkerName } from './workers'
 
 let pool: Piscina | undefined
+let memoryLogTimer: NodeJS.Timeout | undefined
+const memoryLogIntervalMs = 3000
+
+function formatMb(bytes: number): string {
+  return (bytes / 1024 / 1024).toFixed(1)
+}
+
+function logProcessMemory(reason: string): void {
+  const mem = process.memoryUsage()
+  log.debug('memory', reason, {
+    rssMb: formatMb(mem.rss),
+    heapMb: formatMb(mem.heapUsed),
+    externalMb: formatMb(mem.external),
+  })
+}
+
+function initMemoryLogging(): void {
+  if (memoryLogTimer) return
+
+  logProcessMemory('startup')
+  memoryLogTimer = setInterval(() => {
+    logProcessMemory('interval')
+  }, memoryLogIntervalMs)
+}
 
 function getPool() {
   if (pool) return pool
 
+  initMemoryLogging()
   pool = new Piscina({
-    minThreads: 2,
-    maxThreads: Math.max(4, cpus().length - 1),
+    minThreads: 5,
+    maxThreads: 5,
     idleTimeout: 30000,
   })
 
@@ -32,4 +57,11 @@ export async function shutdown() {
     await pool.destroy()
     pool = undefined
   }
+
+  if (memoryLogTimer) {
+    clearInterval(memoryLogTimer)
+    memoryLogTimer = undefined
+  }
+
+  logProcessMemory('shutdown')
 }

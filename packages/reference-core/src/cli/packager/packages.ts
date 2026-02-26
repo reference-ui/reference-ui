@@ -32,12 +32,12 @@ export const REACT_PACKAGE: PackageDefinition = {
   description: 'Reference UI React components and runtime APIs',
   bundle: true,
   entry: 'src/entry/react.ts',
-  main: './react.js',
-  types: './react.d.ts',
+  main: './react.mjs',
+  types: './react.d.mts',
   exports: {
     '.': {
-      types: './react.d.ts',
-      import: './react.js',
+      types: './react.d.mts',
+      import: './react.mjs',
     },
     './styles.css': './styles.css',
   },
@@ -55,12 +55,12 @@ export const SYSTEM_PACKAGE: PackageDefinition = {
   description: 'Reference UI design system extension APIs',
   bundle: true,
   entry: 'src/entry/system.ts',
-  main: './system.js',
-  types: './system.d.ts',
+  main: './system.mjs',
+  types: './system.d.mts',
   exports: {
     '.': {
-      types: './system.d.ts',
-      import: './system.js',
+      types: './system.d.mts',
+      import: './system.mjs',
     },
   },
 }
