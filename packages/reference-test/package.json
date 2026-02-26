@@ -7,8 +7,8 @@
   "types": "./src/index.ts",
   "scripts": {
     "test:prepare": "tsx src/prepare.ts",
-    "test": "pnpm run test:prepare && playwright test",
-    "test:ui": "pnpm run test:prepare && playwright test --ui"
+    "test": "pnpm run test:prepare && tsx src/run-matrix.ts",
+    "test:ui": "pnpm run test:prepare && REF_TEST_PROJECT=react18-vite5 playwright test --ui --project=react18-vite5"
   },
   "dependencies": {
     "execa": "^9.0.0"
