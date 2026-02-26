@@ -6,11 +6,12 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "scripts": {
-    "test": "vitest run"
+    "test": "DEBUG=1 vitest run"
   },
   "dependencies": {
     "execa": "^9.0.0",
-    "get-port": "^7.1.0"
+    "get-port": "^7.1.0",
+    "picocolors": "^1.1.0"
   },
   "devDependencies": {
     "@reference-ui/core": "workspace:*",
