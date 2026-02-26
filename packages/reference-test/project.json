@@ -9,7 +9,7 @@
       "dependsOn": ["reference-core:build"],
       "executor": "nx:run-commands",
       "options": {
-        "command": "pnpm test",
+        "command": "nx run reference-core:build --skip-nx-cache && pnpm test",
         "cwd": "packages/reference-test"
       }
     }
