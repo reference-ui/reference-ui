@@ -19,7 +19,7 @@ export async function startServer(
   const child = spawnProcess(cmd, args, { cwd: projectRoot })
   const url = `http://localhost:${port}`
 
-  await waitPort({ host: 'localhost', port, timeout: 30_000 })
+  await waitPort({ host: 'localhost', port, timeout: 30_000, output: 'silent' })
 
   return {
     url,

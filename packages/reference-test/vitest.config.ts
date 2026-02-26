@@ -6,5 +6,8 @@ export default defineConfig({
     environment: 'node',
     include: ['src/**/*.test.ts'],
     testTimeout: 60_000,
+    teardownTimeout: 10_000,
+    pool: 'forks',
   },
+  globalTeardown: './src/lib/teardown.ts',
 })

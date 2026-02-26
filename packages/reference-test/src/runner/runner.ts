@@ -9,7 +9,7 @@ import { startServer } from './dev-server.js'
 import { allocatePort } from './port-manager.js'
 import { readFile, updateFile } from './file-operations.js'
 import { registerCleanup, runCleanup } from './cleanup.js'
-import { getBundler } from '../project/bundlers/index.js'
+import { detectBundler } from './detect-bundler.js'
 import type { ProjectHandle } from '../project/types.js'
 import type { CommandResult, DevServerHandle } from './types.js'
 
@@ -18,10 +18,15 @@ export class Runner {
   readonly #bundlerName: string
   #devServer: DevServerHandle | null = null
 
-  constructor(project: ProjectHandle, bundlerName: string) {
+  constructor(project: ProjectHandle, bundlerName?: string) {
     this.#project = project
-    this.#bundlerName = bundlerName
+    this.#bundlerName = bundlerName ?? detectBundler(project.rootPath)
     registerCleanup('project', () => this.#project.cleanup())
+  }
+
+  /** Create Runner for current directory. Auto-detects bundler. */
+  static forProject(projectRoot: string): Runner {
+    return new Runner({ rootPath: projectRoot, cleanup: async () => {} })
   }
 
   get rootPath(): string {

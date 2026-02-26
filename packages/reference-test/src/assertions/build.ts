@@ -5,8 +5,8 @@
 import { pathExists } from '../utils/file-system.js'
 import { join } from 'node:path'
 
-/** Assert styled-system directory exists */
+/** Assert ref sync produced output (node_modules/@reference-ui/react) */
 export async function assertFilesGenerated(projectRoot: string): Promise<boolean> {
-  const styledSystemPath = join(projectRoot, 'styled-system')
-  return pathExists(styledSystemPath)
+  const reactPkg = join(projectRoot, 'node_modules', '@reference-ui', 'react')
+  return pathExists(reactPkg)
 }
