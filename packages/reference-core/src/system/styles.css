@@ -1558,10 +1558,6 @@
     animation: var(--animations-ping-fast);
 }
 
-  .bg_green\.500 {
-    background: var(--colors-green-500);
-}
-
   .bg_green\.300 {
     background: var(--colors-green-300);
 }
@@ -1580,6 +1576,10 @@
 
   .bg_purple\.100 {
     background: var(--colors-purple-100);
+}
+
+  .bg_green\.500 {
+    background: var(--colors-green-500);
 }
 
   .bg_pink\.200 {
@@ -1666,20 +1666,16 @@
     padding: 2rem;
 }
 
-  .p_4 {
-    padding: 4px;
-}
-
-  .m_2 {
-    margin: 2px;
-}
-
   .p_2 {
     padding: 2px;
 }
 
   .p_3 {
     padding: 3px;
+}
+
+  .p_4 {
+    padding: 4px;
 }
 
   .bd_\[2px_solid_\#666\] {
@@ -2789,18 +2785,6 @@
 
   .bd-w_1px {
     border-width: 1px;
-}
-
-  .px_4 {
-    padding-inline: 4px;
-}
-
-  .py_2 {
-    padding-block: 2px;
-}
-
-  .bd-w_2 {
-    border-width: 2px;
 }
 
   .trs_all {
@@ -5927,10 +5911,6 @@
 
   .hover\:bx-sh_none:is(:hover, [data-hover]) {
     box-shadow: none;
-}
-
-  .hover\:op_0\.9:is(:hover, [data-hover]) {
-    opacity: 0.9;
 }
 
   .active\:bg_blue\.800:is(:active, [data-active]) {
