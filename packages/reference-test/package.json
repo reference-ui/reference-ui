@@ -1,0 +1,14 @@
+{
+  "name": "@reference-ui/reference-test",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@reference-ui/core": "workspace:*",
+    "typescript": "~5.9.3",
+    "vitest": "^4.0.18"
+  }
+}
