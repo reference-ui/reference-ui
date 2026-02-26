@@ -1,0 +1,75 @@
+/**
+ * File system utilities.
+ * Wraps fs-extra with convenient operations for project generation and runner.
+ */
+
+import * as fs from 'fs-extra'
+import { join } from 'node:path'
+import { tmpdir } from 'node:os'
+import { randomBytes } from 'node:crypto'
+
+/**
+ * Create a temporary directory with an optional prefix.
+ * Uses system tmp by default.
+ * @param prefix - Optional prefix for the directory name
+ * @returns Absolute path to the created directory
+ */
+export async function createTempDir(prefix = 'reference-test-'): Promise<string> {
+  const dir = join(tmpdir(), `${prefix}${randomBytes(8).toString('hex')}`)
+  await fs.ensureDir(dir)
+  return dir
+}
+
+/**
+ * Create a temporary directory inside the given base path.
+ * Use for projects that need to resolve sibling deps (e.g. file:../../reference-core).
+ */
+export async function createTempDirIn(baseDir: string, prefix = 'ref-test-'): Promise<string> {
+  const dir = join(baseDir, `${prefix}${randomBytes(8).toString('hex')}`)
+  await fs.ensureDir(dir)
+  return dir
+}
+
+/**
+ * Write content to a file. Creates parent directories if needed.
+ */
+export async function writeFile(path: string, content: string): Promise<void> {
+  const dir = join(path, '..')
+  await fs.ensureDir(dir)
+  await fs.writeFile(path, content, 'utf-8')
+}
+
+/**
+ * Read file contents as string.
+ */
+export async function readFile(path: string): Promise<string> {
+  return fs.readFile(path, 'utf-8')
+}
+
+/**
+ * Check if a path exists.
+ */
+export async function pathExists(path: string): Promise<boolean> {
+  return fs.pathExists(path)
+}
+
+/**
+ * Remove a directory and all its contents.
+ */
+export async function removeDir(path: string): Promise<void> {
+  await fs.remove(path)
+}
+
+/**
+ * Copy a file from source to destination.
+ */
+export async function copyFile(src: string, dest: string): Promise<void> {
+  await fs.copy(src, dest)
+}
+
+/**
+ * List files in a directory (non-recursive).
+ */
+export async function listDir(path: string): Promise<string[]> {
+  return fs.readdir(path)
+}

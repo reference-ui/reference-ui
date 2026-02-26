@@ -471,7 +471,6 @@
     --colors-rose-800: oklch(45.5% 0.188 13.697);
     --colors-rose-900: oklch(41% 0.159 10.272);
     --colors-rose-950: oklch(27.1% 0.105 12.094);
-    --colors-my-special-token: red;
     --spacing-px: 1px;
     --spacing-r: 0.25rem;
     --spacing-0\.5r: calc(0.5 * var(--spacing-r));
@@ -2478,10 +2477,6 @@
     border-color: var(--colors-rose-950);
 }
 
-  .bd-c_mySpecialToken {
-    border-color: var(--colors-my-special-token);
-}
-
   .bd-c_colorPalette\.50 {
     border-color: var(--colors-color-palette-50);
 }
@@ -2524,10 +2519,6 @@
 
   .bd-c_colorPalette\.950 {
     border-color: var(--colors-color-palette-950);
-}
-
-  .bd-c_colorPalette {
-    border-color: var(--colors-color-palette);
 }
 
   .gap_px {
@@ -3585,10 +3576,6 @@
     background-color: var(--colors-rose-950);
 }
 
-  .bg-c_mySpecialToken {
-    background-color: var(--colors-my-special-token);
-}
-
   .bg-c_colorPalette\.50 {
     background-color: var(--colors-color-palette-50);
 }
@@ -3631,10 +3618,6 @@
 
   .bg-c_colorPalette\.950 {
     background-color: var(--colors-color-palette-950);
-}
-
-  .bg-c_colorPalette {
-    background-color: var(--colors-color-palette);
 }
 
   .c_gray\.50 {
@@ -4429,10 +4412,6 @@
     color: var(--colors-rose-950);
 }
 
-  .c_mySpecialToken {
-    color: var(--colors-my-special-token);
-}
-
   .c_colorPalette\.50 {
     color: var(--colors-color-palette-50);
 }
@@ -4475,10 +4454,6 @@
 
   .c_colorPalette\.950 {
     color: var(--colors-color-palette-950);
-}
-
-  .c_colorPalette {
-    color: var(--colors-color-palette);
 }
 
   .fs_px {

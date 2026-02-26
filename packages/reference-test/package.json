@@ -6,8 +6,21 @@
   "scripts": {
     "test": "vitest run"
   },
+  "dependencies": {
+    "chokidar": "^4.0.0",
+    "debug": "^4.3.7",
+    "execa": "^9.0.0",
+    "fs-extra": "^11.2.0",
+    "get-port": "^7.1.0",
+    "tree-kill": "^1.2.2",
+    "wait-port": "^1.1.0"
+  },
   "devDependencies": {
+    "@playwright/test": "^1.48.0",
     "@reference-ui/core": "workspace:*",
+    "@types/debug": "^4.1.12",
+    "@types/fs-extra": "^11.0.4",
+    "playwright": "^1.48.0",
     "typescript": "~5.9.3",
     "vitest": "^4.0.18"
   }
