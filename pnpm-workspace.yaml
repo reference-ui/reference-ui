@@ -1,6 +1,5 @@
 packages:
   - packages/*
-  - packages/reference-test/.sandbox/*
   - '!packages/old/**'
 
 ignoredBuiltDependencies:

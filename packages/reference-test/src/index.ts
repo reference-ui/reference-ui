@@ -1,11 +1,7 @@
 /**
- * @reference-ui/reference-test
- * E2E and compatibility tests across bundlers, React versions, etc.
+ * @reference-ui/reference-test - Public API for tests that run inside a project
  */
 
-export * from './project/index.js'
-export { Runner } from './runner/runner.js'
-export * from './browser/index.js'
-export * from './assertions/index.js'
-export * from './orchestrator/index.js'
-export * from './utils/index.js'
+export { Runner, type RunResult } from './lib/runner.js'
+export { navigateTo, queryComputedStyle, close } from './lib/browser.js'
+export { assertFilesGenerated } from './lib/assert.js'

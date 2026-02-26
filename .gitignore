@@ -30,6 +30,7 @@ pnpm-debug.log*
 
 # Reference UI generated
 .reference
+.sandbox-reference-test
 .reference-ui
 .ref
 packages/reference-core/styled-system

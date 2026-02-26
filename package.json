@@ -5,8 +5,8 @@
   "description": "Reference UI - Knowledge-First Components",
   "scripts": {
     "build": "pnpm -r run build",
-    "dev": "nx run-many --target=dev --projects=reference-docs,reference-core --parallel --output-style=stream",
-    "test": "nx run reference-test:test --output-style=stream"
+    "dev": "nx run reference-core:dev --output-style=stream",
+    "test": "pnpm exec nx run reference-test:test --output-style=stream"
   },
   "devDependencies": {
     "@swc-node/register": "~1.9.1",
