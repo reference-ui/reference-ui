@@ -1,6 +1,41 @@
 # reference-test Plan
 
-End-to-end and compatibility testing for Reference UI. Tests that `@reference-ui/core` (CLI, config, bootstrapping) works across multiple environments.
+End-to-end testing for Reference UI design system **output**. Tests that users can define design tokens, fonts, keyframes, etc. in `ui.config.ts` and use them in a real app with correct CSS applied.
+
+---
+
+## Philosophy
+
+**We test the output, not the CLI.**
+
+The CLI is a means to an end. What we're testing:
+
+- Can a user define tokens in `ui.config.ts`?
+- Do those tokens generate correct CSS?
+- Does the app render with styles applied?
+- If they change the config, does watch mode react?
+- Does it work across React versions and bundlers?
+
+**Black-box testing**: We don't care about the CLI's internal pipeline. We care that when a user writes:
+
+```ts
+// ui.config.ts
+export default defineConfig({
+  theme: {
+    tokens: {
+      colors: { brand: { value: '#ff0000' } },
+    },
+  },
+})
+```
+
+And uses it:
+
+```tsx
+<Box css={{ color: 'brand' }}>Hello</Box>
+```
+
+The output is a **red box**.
 
 ---
 
@@ -8,47 +43,69 @@ End-to-end and compatibility testing for Reference UI. Tests that `@reference-ui
 
 ### In scope
 
-- **Core bootstrapping**: Does `ui.config.ts` load? Does `ref sync` work? Does the virtual layer, system, packager pipeline run?
-- **Environment matrix**: React versions, bundlers, bundler versions
-- **Host for React-version testing**: CI/browser tools can handle multi-browser, but testing across React 18 vs 19 vs future is a custom demand—reference-test owns this
+- **Design system output validation**: Do tokens/fonts/keyframes generate correct CSS?
+- **Runtime integration**: Does the CSS apply to rendered components?
+- **Watch mode behavior**: Does config change trigger rebuild and update?
+- **Environment matrix**: React versions, bundlers—does the output work everywhere?
 
 ### Out of scope
 
-- **Component tests**: Higher-level UI component tests (rendering, a11y, etc.)—separate concern. CI tools (Playwright, etc.) handle multi-browser for those. reference-test focuses on "does the stack boot?" not "does Button render correctly?"
+- **CLI internal testing**: Pipeline mechanics, config loader, event bus—these are implementation details
+- **Component library tests**: Testing `Button` behavior—that's a separate concern
+- **Browser compatibility**: Multi-browser rendering—handled by existing tools (Playwright)
 
 ---
 
 ## Pipeline
 
 ```
-generate project → run test suite inside project
+generate test app → define design system → run CLI → render + assert → change + assert
 ```
 
-### 1. Project generator
+### 1. Generate test app
 
-Scaffold a minimal project with a given environment:
+Scaffold a minimal app with a given environment:
 
-| Parameter      | Examples                                   |
-|----------------|--------------------------------------------|
-| React version  | 18, 19                                     |
-| Bundler        | vite, webpack, rollup, esbuild, …          |
-| Bundler version| e.g. vite@5, vite@6                        |
+| Parameter       | Examples                          |
+| --------------- | --------------------------------- |
+| React version   | 18, 19                            |
+| Bundler         | vite, webpack, rollup, esbuild, … |
+| Bundler version | e.g. vite@5, vite@6               |
 
-Output: a temp/workspace project with:
+Output: a temp project with:
 
-- `package.json` (React, bundler deps pinned)
-- `ui.config.ts` (minimal)
-- Entry file that imports something from reference-core
-- Enough structure for `ref sync` + bundler build to run
+- `package.json` (React, bundler deps)
+- `ui.config.ts` (test fixture—tokens, fonts, keyframes, etc.)
+- `App.tsx` (components using the design system)
+- Minimal HTML entry point
 
-### 2. Run test suite
+### 2. Run CLI sync
 
-Inside the generated project:
+Execute `ref sync` (or watch mode) to generate the design system.
 
-- Run the test suite (tests from reference-core, or dedicated e2e tests in reference-test)
-- Assert: config loads, sync succeeds, build completes, no runtime errors
+Expected output:
 
-The same tests run in each generated environment. Success = same assertions pass across all combinations.
+- `styled-system/` directory
+- CSS files
+- TypeScript types
+
+### 3. Build and render
+
+Build the app with the bundler, then render it (jsdom, Playwright, or similar).
+
+### 4. Assert output
+
+Inspect the rendered DOM and computed styles:
+
+- **Token application**: Is `<Box css={{ color: 'brand' }}>` rendered with correct color?
+- **Font loading**: Do custom fonts appear in computed styles?
+- **Keyframes**: Do animations reference the defined keyframes?
+- **Responsive tokens**: Do breakpoints work?
+- **Type safety**: Does TypeScript compilation succeed?
+
+### 5. Dynamic change testing (watch mode)
+
+Modify `ui.config.ts` (e.g., change `brand` color from red to blue), wait for rebuild, re-render, assert the change applied.
 
 ---
 
@@ -89,46 +146,98 @@ CI runs the full matrix (or a subset). Each combination: generate → run suite 
 
 ---
 
-## Architecture (proposed)
+## How: Test Fixtures & Apps
 
-```
-reference-test/
-├── src/
-│   ├── generate/           # Project generators
-│   │   ├── vite.ts
-│   │   ├── webpack.ts
-│   │   └── index.ts        # generate(env) → path
-│   ├── matrix/             # Environment matrix config
-│   │   └── index.ts
-│   ├── suite/              # Tests that run inside generated projects
-│   │   ├── config.test.ts
-│   │   ├── sync.test.ts
-│   │   └── ...
-│   ├── run.ts              # Orchestrator: for each matrix entry → generate → run suite
-│   └── cli.test.ts         # Smoke test (current)
-├── plan.md
-└── ...
-```
+**Fixtures** = `ui.config.ts` files with different design system features:
+
+- Minimal tokens (colors, spacing)
+- Font definitions (custom families, weights)
+- Keyframes (animations)
+- Complex scenarios (nested tokens, responsive values)
+
+**Apps** = React components that consume the design system:
+
+- Basic: Use tokens via `css({ color: 'brand' })`
+- Fonts: Render text with custom font families
+- Animations: Use keyframes in animations
+- Comprehensive: Exercise multiple features at once
 
 ---
 
-## Implementation order
+## How: Assertions
 
-1. **Project generator (vite only)** — Minimal: React 18 + Vite 5. Hardcode first, parameterize later.
-2. **Suite: config + sync** — Tests that run inside generated project: config loads, `ref sync` succeeds.
-3. **Parameterize generator** — React version, Vite version as args.
-4. **Matrix runner** — Loop over matrix, generate, run, report.
-5. **Add more bundlers** — webpack, rollup, etc., as separate generators.
-6. **CI integration** — Wire matrix into CI, cache, parallelize.
+We need to verify **three things**:
+
+### 1. Build succeeds
+
+- `ref sync` completes without error
+- TypeScript compilation succeeds
+- Bundler build produces output
+- Expected files exist (`styled-system/css.mjs`, etc.)
+
+### 2. Runtime output is correct
+
+- Render the app (Playwright)
+- Inspect DOM: correct classes applied
+- Inspect computed styles: `color: rgb(255, 0, 0)` when token is `#ff0000`
+- CSS variables defined: `--colors-brand` exists
+- Fonts loaded: `font-family` matches custom font
+- Animations work: keyframe references valid
+
+### 3. Watch mode reacts to changes
+
+- Start `ref sync --watch`
+- Modify `ui.config.ts` (change token value)
+- Wait for rebuild signal
+- Re-render app
+- Assert new value applied
 
 ---
 
-## Browser testing
+## How: Rendering
 
-reference-test does **not** run browser tests. It validates:
+We need a **real browser** to inspect computed styles correctly.
 
-- Config loads
-- CLI works
-- Build completes
+**Playwright** is the right tool here:
 
-Rendering and cross-browser behavior are covered by component tests and existing CI (Playwright, etc.). reference-test’s job is: “Does the stack boot in environment X?”
+- Full browser environment (Chromium/Firefox/WebKit)
+- Accurate CSS computation (variables, fonts, animations)
+- Can wait for resources (fonts, CSS loads)
+- Good API for style inspection: `page.locator().evaluate(el => getComputedStyle(el))`
+
+**Flow:**
+
+1. Generator produces project
+2. Run `ref sync` in project
+3. Build project with bundler
+4. Start dev server (or serve built output)
+5. Playwright navigates to app
+6. Inspect DOM + computed styles
+7. Assert values match expected
+
+---
+
+## How: Watch Mode Testing
+
+Watch mode is a **critical user workflow**: change config, see changes immediately.
+
+**Scenario:**
+
+1. User runs `ref sync --watch`
+2. Changes `ui.config.ts` (e.g., `brand: red` → `brand: blue`)
+3. Expects: rebuild happens, app reflects new value
+
+**Test approach:**
+
+- Start watch process in background
+- Modify fixture file (change token value)
+- Wait for rebuild to complete (file watcher signal, event, or time-based)
+- Playwright re-inspects the same element
+- Assert computed style changed from old to new value
+
+**Open questions:**
+
+- How to detect rebuild completion? (File watcher? Event emission? Polling?)
+- Does the app need manual refresh or does HMR work?
+- How long to wait before considering rebuild failed?
+- Process cleanup: ensure watch process terminates after test
