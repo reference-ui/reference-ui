@@ -2,6 +2,6 @@
  * Orchestrator - test execution entry point.
  */
 
-export { createProjectAndRunner, getMatrixEntries } from './orchestrator.js'
+export { createProjectAndRunner, generateAllSandboxProjects, getMatrixEntries } from './orchestrator.js'
 export { registerRunner, cleanupAll } from './test-context.js'
 export * from './matrix/index.js'

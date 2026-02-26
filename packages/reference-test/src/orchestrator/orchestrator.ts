@@ -3,10 +3,24 @@
  * Iterates over matrix, generates projects, runs core test suite.
  */
 
+import { log } from '../lib/log.js'
 import { generateProject } from '../project/generator.js'
 import { Runner } from '../runner/runner.js'
 import { MATRIX } from './matrix/index.js'
 import type { ProjectConfig } from '../project/types.js'
+
+/**
+ * Generate sandbox projects for every matrix entry.
+ * Creates .sandbox/<bundler>-react<version>/ for each combination.
+ * Used for inspection; tests use createProjectAndRunner (which generates per run).
+ */
+export async function generateAllSandboxProjects(): Promise<void> {
+  log('orchestrator', 'generating sandbox for', MATRIX.length, 'matrix entr' + (MATRIX.length === 1 ? 'y' : 'ies'))
+  for (const env of MATRIX) {
+    await generateProject({ environment: env })
+  }
+  log('orchestrator', 'sandbox ready')
+}
 
 /**
  * Create a project and runner for a matrix entry.
