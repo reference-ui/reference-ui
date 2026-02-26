@@ -1,25 +1,17 @@
 /**
  * Core system test - runs ref sync and build in sandbox.
+ * Runs for each Vitest project (react17-vite, react18-vite, react19-vite).
  */
 
-import { describe, it, beforeAll, afterAll, expect } from 'vitest'
-import { bootstrap } from '../environments/bootstrap.js'
+import { describe, it, expect } from 'vitest'
+import { getProject } from '../lib/project.js'
 import { Runner } from '../lib/runner.js'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 
 describe('core-system', () => {
-  let project: Awaited<ReturnType<typeof bootstrap>>
-
-  beforeAll(async () => {
-    project = await bootstrap()
-  })
-
-  afterAll(async () => {
-    // Don't cleanup - keep .sandbox for inspection
-  })
-
   it('ref sync works', async () => {
+    const project = getProject()
     const runner = Runner.forProject(project.root)
     const result = await runner.runSync()
 
@@ -33,5 +25,5 @@ describe('core-system', () => {
       existsSync(coreSystemCss) || existsSync(reactStyles),
       'Expected core src/system/styles.css or @reference-ui/react/styles.css after sync'
     ).toBe(true)
-  })
+  }) 
 })
