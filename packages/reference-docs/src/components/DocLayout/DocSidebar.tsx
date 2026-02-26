@@ -1,6 +1,6 @@
-import { Link } from '@tanstack/react-router';
-import { Aside, H2, Nav, Div } from '@reference-ui/core';
-import { docsBySection } from '../../lib/docs';
+import { Link } from '@tanstack/react-router'
+import { Aside, H2, Nav, Div } from '@reference-ui/react'
+import { docsBySection } from '../../lib/docs'
 
 export function DocSidebar() {
   return (
@@ -10,6 +10,7 @@ export function DocSidebar() {
       padding="4r"
       borderRightColor="gray.200"
       borderRight="1px solid"
+      background="blue.200"
       css={{
         position: 'fixed',
         top: 0,
@@ -56,5 +57,5 @@ export function DocSidebar() {
         ))}
       </Nav>
     </Aside>
-  );
+  )
 }

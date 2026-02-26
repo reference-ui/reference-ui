@@ -10,7 +10,7 @@ if (!match) throw new Error('Could not parse TAGS from tags.ts')
 
 const HTML_TAGS = match[1]
   .split(',')
-  .map((s) => s.replace(/['"]/g, '').trim())
+  .map(s => s.replace(/['"]/g, '').trim())
   .filter(Boolean)
 
 function toPascalCase(tag) {
@@ -27,8 +27,19 @@ function escapeTag(tag) {
 
 // Void elements that cannot have children
 const voidElements = new Set([
-  'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 
- 'meta', 'param', 'source', 'track', 'wbr', 
+  'area',
+  'base',
+  'br',
+  'col',
+  'embed',
+  'hr',
+  'img',
+  'input',
+  'meta',
+  'param',
+  'source',
+  'track',
+  'wbr',
 ])
 
 // Categorize tags (excluding 'other' - it will be auto-populated)
@@ -92,15 +103,7 @@ const manualCategories = {
     'meter',
   ],
   lists: ['ul', 'ol', 'li', 'dl', 'dt', 'dd'],
-  media: [
-    'img',
-    'picture',
-    'audio',
-    'video',
-    'canvas',
-    'svg',
-    'iframe',
-  ],
+  media: ['img', 'picture', 'audio', 'video', 'canvas', 'svg', 'iframe'],
   tables: [
     'table',
     'thead',
@@ -128,7 +131,7 @@ const otherTags = HTML_TAGS.filter(tag => !categorizedTags.has(tag))
 // Final categories object with 'other' populated
 const categories = {
   ...manualCategories,
-  other: otherTags
+  other: otherTags,
 }
 
 // Get all unique imports from all categories
@@ -140,21 +143,23 @@ const outPath = path.join(__dirname, '../src/docs/components/primitives.mdx')
 // Generate category sections
 function generateCategorySection(categoryName, tags) {
   const displayName = categoryName.charAt(0).toUpperCase() + categoryName.slice(1)
-  const elements = tags.map(tag => {
-    const name = escapeTag(tag)
-    // Void elements can't have children
-    if (voidElements.has(tag)) {
-      return `#### ${name}
+  const elements = tags
+    .map(tag => {
+      const name = escapeTag(tag)
+      // Void elements can't have children
+      if (voidElements.has(tag)) {
+        return `#### ${name}
 
 <div style={{ padding: '1rem', border: '1px solid #d1d5db', borderRadius: '4px', marginBottom: '1.5rem' }}>
   <${name} />
 </div>`
-    }
-    return `#### ${name}
+      }
+      return `#### ${name}
 
 <${name} style={{ padding: '1rem', border: '1px solid #d1d5db', borderRadius: '4px', marginBottom: '1.5rem', display: 'block' }}></${name}>`
-  }).join('\n\n')
-  
+    })
+    .join('\n\n')
+
   return `### ${displayName}
 
 ${elements}
@@ -169,13 +174,15 @@ order: 1
 slug: primitives
 ---
 
-import { ${allImports.join(', ')} } from '@reference-ui/core';
+import { ${allImports.join(', ')} } from '@reference-ui/react';
 
 # Primitives
 
 Styled HTML elements that integrate with the Panda CSS system. Each primitive supports the box pattern for responsive styling.
 
-${Object.entries(categories).map(([name, tags]) => generateCategorySection(name, tags)).join('\n')}
+${Object.entries(categories)
+  .map(([name, tags]) => generateCategorySection(name, tags))
+  .join('\n')}
 
 ## All Primitives (${HTML_TAGS.length})
 
