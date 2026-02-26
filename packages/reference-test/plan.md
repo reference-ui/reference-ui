@@ -2,6 +2,8 @@
 
 End-to-end testing for Reference UI design system **output**. Tests that users can define design tokens, fonts, keyframes, etc. in `ui.config.ts` and use them in a real app with correct CSS applied.
 
+See **architecture.md** for implementation structure, module design, and folder layout.
+
 ---
 
 ## Philosophy
