@@ -791,10 +791,6 @@ const tokens = {
     "value": "oklch(27.1% 0.105 12.094)",
     "variable": "var(--colors-rose-950)"
   },
-  "colors.mySpecialToken": {
-    "value": "red",
-    "variable": "var(--colors-my-special-token)"
-  },
   "spacing.px": {
     "value": "1px",
     "variable": "var(--spacing-px)"
@@ -1182,10 +1178,6 @@ const tokens = {
   "colors.colorPalette.950": {
     "value": "var(--colors-color-palette-950)",
     "variable": "var(--colors-color-palette-950)"
-  },
-  "colors.colorPalette": {
-    "value": "var(--colors-color-palette)",
-    "variable": "var(--colors-color-palette)"
   }
 }
 
