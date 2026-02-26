@@ -46,6 +46,7 @@ The output is a **red box**.
 - **Design system output validation**: Do tokens/fonts/keyframes generate correct CSS?
 - **Runtime integration**: Does the CSS apply to rendered components?
 - **Watch mode behavior**: Does config change trigger rebuild and update?
+- **Hot reload**: With `ref sync --watch` running, does a config change (e.g. color) propagate to the live screen without manual refresh?
 - **Environment matrix**: React versions, bundlers—does the output work everywhere?
 
 ### Out of scope
@@ -53,6 +54,21 @@ The output is a **red box**.
 - **CLI internal testing**: Pipeline mechanics, config loader, event bus—these are implementation details
 - **Component library tests**: Testing `Button` behavior—that's a separate concern
 - **Browser compatibility**: Multi-browser rendering—handled by existing tools (Playwright)
+
+---
+
+## Core system test (MVP)
+
+**Start with one core design system test.** Layer fonts, keyframes, watch mode, and the matrix afterward.
+
+The MVP validates the full pipeline end-to-end:
+
+1. **Define tokens** in `ui.config.ts` (e.g. `colors.brand: '#ff0000'`)
+2. **Run `ref sync`** → expect `styled-system/` generated, CSS files present
+3. **Build the app** → expect successful build, no TypeScript errors
+4. **Render in Playwright** → expect token applied to DOM (e.g. `color` resolves to `rgb(255, 0, 0)`)
+
+One passing flow: config → CLI → build → render → style assertion. That proves the core system works before expanding scope.
 
 ---
 
@@ -118,6 +134,7 @@ Config-driven project scaffolding. Each generator produces a project for one (Re
 - `generate(env: { reactVersion, bundler, bundlerVersion }) → ProjectPath`
 - Project is isolated (temp dir or workspace subdir)
 - Cleaned up after test run (or kept for debugging)
+- **Virtual, dynamic environments**: We spin up environments on demand—not static, pre-baked setups. Tests run in ephemeral or virtualized environments that are created per run.
 
 ### Test suite
 
@@ -217,27 +234,31 @@ We need a **real browser** to inspect computed styles correctly.
 
 ---
 
-## How: Watch Mode Testing
+## How: Watch Mode & Hot Reload Testing
 
 Watch mode is a **critical user workflow**: change config, see changes immediately.
 
-**Scenario:**
+**Hot reload scenario (primary test):**
 
-1. User runs `ref sync --watch`
-2. Changes `ui.config.ts` (e.g., `brand: red` → `brand: blue`)
-3. Expects: rebuild happens, app reflects new value
+1. User spins up `ref sync --watch`
+2. App is running, user sees the screen (e.g. a box with `brand` color)
+3. User makes an update (e.g. change `brand` from red to blue in `ui.config.ts`)
+4. Expects: change propagates, screen updates without manual refresh—works as expected
+
+This is the real user flow: you're already viewing the app, you tweak config, and the change shows up. We must test that hot reload works (or that a refresh picks up the change if HMR isn't supported).
 
 **Test approach:**
 
 - Start watch process in background
+- Start dev server, Playwright navigates to app, assert initial state (e.g. color is red)
 - Modify fixture file (change token value)
 - Wait for rebuild to complete (file watcher signal, event, or time-based)
-- Playwright re-inspects the same element
+- Re-inspect the same element (page may auto-update via HMR, or we trigger refresh)
 - Assert computed style changed from old to new value
 
 **Open questions:**
 
 - How to detect rebuild completion? (File watcher? Event emission? Polling?)
-- Does the app need manual refresh or does HMR work?
+- Does the app hot-reload or require manual refresh?
 - How long to wait before considering rebuild failed?
 - Process cleanup: ensure watch process terminates after test
