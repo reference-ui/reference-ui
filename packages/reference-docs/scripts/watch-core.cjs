@@ -13,14 +13,14 @@ let isRunning = false
 function runSync() {
   if (isRunning) return
   isRunning = true
-  
+
   console.log('\n🔄 Core changed, running ref sync...')
-  const proc = spawn('npx', ['ref', 'sync'], { 
+  const proc = spawn('npx', ['ref', 'sync'], {
     cwd: path.resolve(__dirname, '..'),
     stdio: 'inherit',
-    shell: true
+    shell: true,
   })
-  
+
   proc.on('close', () => {
     isRunning = false
     console.log('✅ Sync complete\n')

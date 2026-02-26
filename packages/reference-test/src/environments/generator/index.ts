@@ -73,7 +73,7 @@ export async function generateSandbox(): Promise<Project> {
   )
 
   log.debug('generator', 'Running pnpm install...')
-  await execa('pnpm', ['install'], { cwd: sandboxRoot })
+  await execa('pnpm', ['install', '--ignore-workspace'], { cwd: sandboxRoot })
   log.debug('generator', 'Sandbox ready')
 
   return {

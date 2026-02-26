@@ -13,7 +13,7 @@ describe('core-system', () => {
   })
 
   afterAll(async () => {
-    await project.cleanup()
+    // Don't cleanup - keep .sandbox for inspection
   })
 
   it('ok', () => {
