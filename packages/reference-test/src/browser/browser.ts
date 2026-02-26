@@ -11,7 +11,7 @@ let page: Page | null = null
 /** Launch browser (reuses same instance) */
 export async function launchBrowser(): Promise<Browser> {
   if (!browser) {
-    browser = await chromium.launch()
+    browser = await chromium.launch({ headless: true, timeout: 15_000 })
   }
   return browser
 }
@@ -20,7 +20,7 @@ export async function launchBrowser(): Promise<Browser> {
 export async function navigateTo(url: string): Promise<Page> {
   const b = await launchBrowser()
   page = await b.newPage()
-  await page.goto(url, { waitUntil: 'networkidle' })
+  await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15_000 })
   return page
 }
 

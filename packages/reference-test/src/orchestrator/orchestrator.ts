@@ -1,13 +1,21 @@
 /**
  * Orchestrator - entry point for test execution.
- * Iterates over matrix, generates projects, runs core test suite.
+ * Owns matrix knowledge. Iterates over matrix, generates projects, runs tests in each.
  */
 
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { execa } from 'execa'
 import { log } from '../lib/log.js'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
 import { generateProject } from '../project/generator.js'
 import { Runner } from '../runner/runner.js'
 import { MATRIX } from './matrix/index.js'
 import type { ProjectConfig } from '../project/types.js'
+
+const PACKAGE_ROOT = join(__dirname, '..', '..')
+const SANDBOX_BASE = join(PACKAGE_ROOT, '.sandbox')
 
 /**
  * Generate sandbox projects for every matrix entry.
@@ -40,4 +48,28 @@ export function getMatrixEntries(): Array<[string, ProjectConfig['environment']]
     `${env.reactVersion}-${env.bundler}-${env.bundlerVersion}`,
     env,
   ])
+}
+
+/**
+ * Run tests in each sandbox project. Orchestrator-only: knows matrix, project paths.
+ * Tests run from within each project and are environment-agnostic.
+ */
+export async function runMatrixTests(): Promise<void> {
+  await generateAllSandboxProjects()
+
+  for (const env of MATRIX) {
+    const folderName = `${env.bundler}-react${env.reactVersion}`
+    const projectPath = join(SANDBOX_BASE, folderName)
+
+    log('orchestrator', 'running tests in', folderName)
+
+    const result = await execa('pnpm', ['test'], {
+      cwd: projectPath,
+      reject: false,
+    })
+
+    if (result.exitCode !== 0) {
+      throw new Error(`Tests failed in ${folderName}:\n${result.stderr}`)
+    }
+  }
 }
