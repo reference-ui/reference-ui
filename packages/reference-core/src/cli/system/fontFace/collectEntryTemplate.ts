@@ -1,4 +1,4 @@
-import { relative } from 'node:path'
+import { toRelativeImport } from '../../lib/path'
 
 export interface BuildFontCollectEntryOptions {
   refDir: string
@@ -6,13 +6,6 @@ export interface BuildFontCollectEntryOptions {
   initFontCollectorPath: string
   extendFontFacePath: string
   fontsFilePath: string
-}
-
-function toRelativeImport(refDir: string, absolutePath: string): string {
-  const rel = relative(refDir, absolutePath)
-    .replace(/\.tsx?$/, '')
-    .replace(/\\/g, '/')
-  return rel.startsWith('.') ? rel : `./${rel}`
 }
 
 /**

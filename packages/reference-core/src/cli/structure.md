@@ -268,7 +268,7 @@ main()
 
 Opportunities to improve and simplify the codebase:
 
-- [ ] **1. Extract `debounce` to lib/** — Duplicated in `packager/worker.ts` and `system/worker.ts`. Move to `lib/debounce.ts` or `lib/utils.ts`.
+- [x] **1. Extract `debounce` to lib/** — Duplicated in `packager/worker.ts` and `system/worker.ts`. Move to `lib/debounce.ts` or `lib/utils.ts`.
 
 - [ ] **2. Extract `toRelativeImport` to shared util** — Same function copy-pasted in `entryTemplate.ts`, `boxPattern/collectEntryTemplate.ts`, `fontFace/collectEntryTemplate.ts`. Add `lib/path.ts` or `system/shared/path-utils.ts`.
 
