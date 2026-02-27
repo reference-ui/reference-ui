@@ -29,7 +29,8 @@ export function getViteVersion(entry: MatrixEntry): string {
   return VITE_VERSIONS[entry.bundlerVersion] ?? '5.4.0'
 }
 
-const BASE_PORT = 5174
+// Use high ports to avoid clashes with Vite defaults (5173) and stale processes when running in parallel
+const BASE_PORT = 19740
 export function getPort(entry: MatrixEntry): number {
   const i = MATRIX.indexOf(entry)
   return BASE_PORT + i
