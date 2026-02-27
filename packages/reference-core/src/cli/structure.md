@@ -221,15 +221,7 @@ cli/
     └── gen/
         ├── runner.ts
         │   └── resolvePandaBin(), runPandaCodegen(cwd, options), runPandaCss(cwd)
-        ├── mdx-to-jsx.ts
-        │   └── mdxToJSX, mdxToJSXFromFile — Wraps lib/microbundle.transformMdx
-        ├── rewrite-cva-imports.ts
-        │   └── getStyledSystemCssRelativePath, rewriteCvaImports — TS AST
-        ├── rewrite-css-imports.ts
-        │   └── getStyledSystemCssRelativePath, rewriteCssImports — TS AST
-        └── copy-to-codegen.ts
-            └── rewriteImports, copyToCodegen, copyFileToCodegen
-            └── watchAndCopyToCodegen — Parcel watcher
+        └── rewrite-cva-imports.example.md — Documents CVA/recipe transform (lives in virtual/transforms)
 ```
 
 ---
@@ -266,28 +258,34 @@ main()
 
 ## CLI Code Improvements
 
-Opportunities to improve and simplify the codebase:
+### Quick wins
 
-- [x] **1. Extract `debounce` to lib/** — Duplicated in `packager/worker.ts` and `system/worker.ts`. Move to `lib/debounce.ts` or `lib/utils.ts`.
+- [x] **1. Extract `debounce` to lib/** — Duplicated in `packager/worker.ts` and `system/worker.ts`. Move to `lib/debounce.ts`.
 
-- [ ] **2. Extract `toRelativeImport` to shared util** — Same function copy-pasted in `entryTemplate.ts`, `boxPattern/collectEntryTemplate.ts`, `fontFace/collectEntryTemplate.ts`. Add `lib/path.ts` or `system/shared/path-utils.ts`.
+- [x] **2. Extract `toRelativeImport` to lib/** — Same function in `entryTemplate.ts`, `boxPattern/collectEntryTemplate.ts`, `fontFace/collectEntryTemplate.ts`. Add `lib/path.ts`.
 
-- [ ] **3. Abstract the collect-script pattern** — `createBoxPattern` and `createFontSystem` share the same flow: mkdir .ref, build entry, microBundle, spawnSync, read JSON, rm temp, generate output. Extract `runCollectScript<T>(options)` to reduce duplication.
+- [x] **6. Dead code: `copy-to-codegen.ts`** — Removed copy-to-codegen.ts and its only consumers (system/gen mdx-to-jsx, rewrite-cva-imports, rewrite-css-imports). Virtual approach uses native transforms.
 
-- [ ] **4. Unify collector pattern** — Panda config, box pattern, and font each have: initCollector, extendX, getX, globalThis key. Create `createCollector<T>(key)` factory.
+### Collector + collect-script (do in order; 3 and 4 are coupled)
+
+- [ ] **4a. Centralize collector keys** — `__refPandaConfigCollector`, `__boxPatternCollector`, `__fontCollector` are magic strings. Put in `system/collectors/keys.ts`. Prerequisite for 4b.
+
+- [ ] **4b. `createCollector<T>(key)` factory** — Panda, box pattern, and font each have: initCollector, extendX, getX, globalThis key. Unify with a factory. Do this before 3.
+
+- [ ] **3a. `runCollectScript<T>(options)`** — Extract shared flow: mkdir .ref, build entry, microBundle, spawnSync, read JSON, rm temp. Used by createBoxPattern and createFontSystem.
+
+- [ ] **3b. Migrate `createBoxPattern`** — Switch to use `runCollectScript`.
+
+- [ ] **3c. Migrate `createFontSystem`** — Switch to use `runCollectScript`.
+
+### Structural
 
 - [ ] **5. `resolveCorePackageDir` consistency** — Workers in `packager` and `system` call `resolveCorePackageDir()` with no args. Pass project root from payload everywhere.
 
-- [ ] **6. Dead code: `copy-to-codegen.ts`** — `copyToCodegen` and `watchAndCopyToCodegen` in `system/gen/copy-to-codegen.ts` are never imported or called. Either remove or wire up; update Architecture.md if kept.
+### Polish / documentation
 
-- [ ] **7. Dual import-rewrite implementations** — `virtual/transforms/` uses native Rust addon; `system/gen/` uses TypeScript AST. Document why both exist or consolidate.
+- [ ] **7. Document virtual transforms** — `virtual/transforms/` does MDX→JSX and import rewrites via native addon. Document the approach.
 
-- [ ] **8. Worker entry boilerplate** — Each worker has `worker.ts` → default export `runX` from `run.ts`. Document the pattern or simplify.
+- [ ] **8. Worker entry boilerplate** — Each worker has `worker.ts` → default export `runX`. Document the pattern or simplify.
 
 - [ ] **9. Base worker payload type** — `WatchPayload`, `VirtualWorkerPayload`, `PackagerWorkerPayload`, etc. Could share `{ cwd: string; config: ReferenceUIConfig }` base.
-
-- [ ] **10. Centralize collector keys** — `__refPandaConfigCollector`, `__boxPatternCollector`, `__fontCollector` are magic strings. Put in one file (e.g. `system/collectors/keys.ts`).
-
----
-
-**Priority:** 1, 2, 6 first (quick wins + dead code). Then 3, 4, 5 (structural). 7–10 as polish.
