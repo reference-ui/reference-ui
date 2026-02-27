@@ -1,5 +1,11 @@
 import TokensTest from './tests/TokensTest'
+import SyncWatch from './tests/SyncWatch'
 
 export default function App() {
-  return <TokensTest />
+  return (
+    <div>
+      <TokensTest />
+      <SyncWatch />
+    </div>
+  )
 }
