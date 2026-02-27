@@ -51,3 +51,26 @@ export function resolveCorePackageDir(fromCwd: string = process.cwd()): string {
     '@reference-ui/core package directory could not be resolved. Ensure that @reference-ui/core is installed or present in the workspace.'
   )
 }
+
+/**
+ * Prefer workspace reference-core when the resolved core is in node_modules.
+ * Tsdown emits .d.mts only when run from the workspace (proper tsconfig, deps).
+ */
+export function resolveCorePackageDirForBuild(fromCwd: string = process.cwd()): string {
+  const resolved = resolveCorePackageDir(fromCwd)
+  let dir = dirname(resolved)
+  const root = parse(dir).root
+
+  while (dir !== root) {
+    if (existsSync(resolve(dir, 'pnpm-workspace.yaml'))) {
+      const workspaceCore = resolve(dir, 'packages/reference-core')
+      if (existsSync(resolve(workspaceCore, 'package.json'))) {
+        return workspaceCore
+      }
+      break
+    }
+    dir = dirname(dir)
+  }
+
+  return resolved
+}

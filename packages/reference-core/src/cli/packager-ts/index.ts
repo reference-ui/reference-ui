@@ -30,6 +30,8 @@ export async function initTsPackager(
   cwd: string,
   config: ReferenceUIConfig
 ): Promise<void> {
+  if (config.skipTypescript) return
+
   const packages = PACKAGES.filter(p => p.entry).map(p => ({
     name: p.name,
     sourceEntry: p.entry!,

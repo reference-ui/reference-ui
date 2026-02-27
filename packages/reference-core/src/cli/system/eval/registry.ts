@@ -20,6 +20,8 @@ export const REGISTERED_FUNCTIONS = [
   'extendPattern',
   // Public API (@reference-ui/system)
   'tokens',
+  'recipe',
+  'slotRecipe',
   'keyframes',
   'font',
   'globalCss',
