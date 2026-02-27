@@ -38,6 +38,13 @@ export interface ReferenceUIConfig {
    * @default false
    */
   debug?: boolean
+
+  /**
+   * Skip TypeScript declaration generation (tsdown).
+   * Use in test environments where .d.ts output is not needed.
+   * @default false
+   */
+  skipTypescript?: boolean
 }
 
 /**
