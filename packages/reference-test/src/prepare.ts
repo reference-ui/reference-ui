@@ -5,6 +5,8 @@
  * Incremental: does not nuke .sandbox every run. Reuses existing sandboxes when
  * app config and deps are unchanged. Only re-runs ref sync when reference-core
  * has been rebuilt. REF_TEST_FRESH=1 forces full rebuild.
+ *
+ * REF_TEST_PROJECT: when set (e.g. for test:quick), only prepare that one sandbox.
  */
 
 import { cp, mkdir, rm, readFile, writeFile, readdir } from 'node:fs/promises'
@@ -203,11 +205,21 @@ async function prepare(): Promise<void> {
   await mkdir(SANDBOX_ROOT, { recursive: true })
   await ensureWorkspaceReady()
 
+  const projectFilter = process.env.REF_TEST_PROJECT
+  const entries = projectFilter
+    ? MATRIX.filter((e) => e.name === projectFilter)
+    : MATRIX
+  if (projectFilter && entries.length === 0) {
+    throw new Error(`Unknown REF_TEST_PROJECT: ${projectFilter}`)
+  }
+
   console.log('Generating sandboxes:')
-  for (const entry of MATRIX) {
+  for (const entry of entries) {
     await prepareEntry(entry)
   }
-  await pruneStaleSandboxes()
+  if (!projectFilter) {
+    await pruneStaleSandboxes()
+  }
   console.log('Sandboxes ready at', SANDBOX_ROOT)
 }
 
