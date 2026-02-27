@@ -1,4 +1,4 @@
-import { resolveCorePackageDir } from '../lib/resolve-core'
+import { resolveCorePackageDir, debounce } from '../lib'
 import type { ReferenceUIConfig } from '../config'
 import { log } from '../lib/log'
 import { emit, on } from '../event-bus'
@@ -10,17 +10,6 @@ export interface PackagerWorkerPayload {
   config: ReferenceUIConfig
   /** When true, stay alive and rebundle on system:compiled */
   watchMode?: boolean
-}
-
-function debounce<T extends (...args: unknown[]) => void>(fn: T, ms: number): T {
-  let timeout: ReturnType<typeof setTimeout> | null = null
-  return ((...args: Parameters<T>) => {
-    if (timeout) clearTimeout(timeout)
-    timeout = setTimeout(() => {
-      timeout = null
-      fn(...args)
-    }, ms)
-  }) as T
 }
 
 async function runPackagerCore(payload: PackagerWorkerPayload): Promise<void> {
