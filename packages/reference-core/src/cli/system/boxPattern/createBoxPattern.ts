@@ -1,8 +1,7 @@
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
-import { join, resolve } from 'node:path'
-import { spawnSync } from 'node:child_process'
+import { resolve } from 'node:path'
+import { writeFileSync } from 'node:fs'
 import { log } from '../../lib/log'
-import { microBundle } from '../../lib/microbundle'
+import { runCollectScript } from '../collectors/runCollectScript'
 import { scanForBoxExtensions } from '../eval/scanner'
 import { buildCollectEntryContent } from './collectEntryTemplate'
 import { generateBoxPatternContent } from './generateBoxPattern'
@@ -24,15 +23,9 @@ export async function createBoxPattern(coreDir: string): Promise<string> {
 
   log.debug('system:box', `Found ${extensionPaths.length} extension files`)
 
-  const refDir = join(coreDir, '.ref')
-  if (!existsSync(refDir)) mkdirSync(refDir, { recursive: true })
-
-  const extensionsPath = join(refDir, 'extensions.json')
-  const collectEntryPath = join(refDir, 'collect-extensions.ts')
-
   const collectEntryContent = buildCollectEntryContent({
-    refDir,
-    outputPath: extensionsPath,
+    refDir: resolve(coreDir, '.ref'),
+    outputPath: resolve(coreDir, '.ref/extensions.json'),
     initBoxCollectorPath: resolve(
       coreDir,
       'src/cli/system/boxPattern/initBoxCollector.ts'
@@ -43,36 +36,16 @@ export async function createBoxPattern(coreDir: string): Promise<string> {
     ),
     extensionFilePaths: extensionPaths,
   })
-  writeFileSync(collectEntryPath, collectEntryContent)
 
-  const bundled = await microBundle(collectEntryPath)
-  const collectScriptPath = join(refDir, 'collect-extensions.mjs')
-  writeFileSync(collectScriptPath, bundled)
-
-  const memBefore = process.memoryUsage().rss / 1024 / 1024
-  const result = spawnSync(process.execPath, [collectScriptPath], {
-    cwd: coreDir,
-    encoding: 'utf-8',
+  const extensions = await runCollectScript<
+    Array<{ properties: Record<string, unknown>; transformSource: string }>
+  >({
+    coreDir,
+    entryContent: collectEntryContent,
+    entryBasename: 'collect-extensions',
+    jsonFilename: 'extensions.json',
+    logLabel: 'system:box',
   })
-  const memAfter = process.memoryUsage().rss / 1024 / 1024
-  log.debug(
-    'system:box',
-    `Parent RSS: ${memBefore.toFixed(1)}MB → ${memAfter.toFixed(1)}MB (${(memAfter - memBefore).toFixed(1)}MB delta)`
-  )
-  if (result.status !== 0) {
-    throw new Error(
-      `[createBoxPattern] Collect script failed:\n${result.stderr || result.stdout}`
-    )
-  }
-
-  const extensions: Array<{
-    properties: Record<string, unknown>
-    transformSource: string
-  }> = JSON.parse(readFileSync(extensionsPath, 'utf-8'))
-
-  rmSync(collectEntryPath, { force: true })
-  rmSync(collectScriptPath, { force: true })
-  rmSync(extensionsPath, { force: true })
 
   const boxPath = resolve(coreDir, 'src/styled/props/box.ts')
   const content = generateBoxPatternContent(extensions)
