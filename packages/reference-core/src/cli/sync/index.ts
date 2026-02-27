@@ -15,7 +15,11 @@ export const syncCommand = async (cwd: string, options: SyncOptions) => {
   initLog(config)
   initWatch(cwd, config, options)
   initVirtual(cwd, config, options)
-  initPackager(cwd, config, { watch: options?.watch })
   initSystem(cwd, config, { watch: options?.watch })
-  initTsPackager(cwd, config)
+  await initPackager(cwd, config, { watch: options?.watch })
+  await initTsPackager(cwd, config)
+
+  if (!options?.watch) {
+    process.exit(0)
+  }
 }
