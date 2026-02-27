@@ -32,7 +32,7 @@ export default defineConfig({
         cwd: process.cwd(),
         url: `http://localhost:${port}`,
         reuseExistingServer: !process.env.CI,
-        timeout: 60_000,
+        timeout: 90_000,
       }
     : undefined,
 })
