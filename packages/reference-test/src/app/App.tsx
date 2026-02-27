@@ -1,9 +1,5 @@
-import { Div } from '@reference-ui/react'
+import TokensTest from './tests/TokensTest'
 
 export default function App() {
-  return (
-    <Div data-testid="app-box" color="red.500">
-      Hello
-    </Div>
-  )
+  return <TokensTest />
 }

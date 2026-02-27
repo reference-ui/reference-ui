@@ -31,7 +31,7 @@ export default defineConfig({
         command: 'pnpm run dev',
         cwd: `.sandbox/${projectName}`,
         url: `http://localhost:${port}`,
-        reuseExistingServer: false,
+        reuseExistingServer: !process.env.CI,
         timeout: 60_000,
       }
     : undefined,

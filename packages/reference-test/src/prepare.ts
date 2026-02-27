@@ -23,6 +23,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 
 const PACKAGE_ROOT = join(__dirname, '..')
 const BASE_DIR = join(PACKAGE_ROOT, 'src', 'app')
+const LIB_DIR = join(PACKAGE_ROOT, 'src', 'lib')
 const SANDBOX_ROOT = join(PACKAGE_ROOT, '.sandbox')
 const CORE_PATH = join(PACKAGE_ROOT, '..', 'reference-core')
 const CORE_CLI = join(CORE_PATH, 'dist/cli/index.mjs')
@@ -76,7 +77,7 @@ function buildPackageJson(entry: MatrixEntry): object {
     type: 'module' as const,
     scripts: {
       build: 'vite build',
-      dev: `vite --port ${getPort(entry)}`,
+      dev: `ref sync --watch & vite --port ${getPort(entry)}`,
     },
     dependencies: {
       react: reactVersion,
@@ -91,8 +92,10 @@ function buildPackageJson(entry: MatrixEntry): object {
   }
 }
 
-function computePrepHash(packageJson: object, appHash: string): string {
-  return createHash('sha256').update(appHash + JSON.stringify(packageJson)).digest('hex')
+function computePrepHash(packageJson: object, appHash: string, libHash: string): string {
+  return createHash('sha256')
+    .update(appHash + libHash + JSON.stringify(packageJson))
+    .digest('hex')
 }
 
 async function ensureWorkspaceReady(): Promise<void> {
@@ -132,6 +135,11 @@ async function prepareEntryFull(entry: MatrixEntry): Promise<void> {
 
   await cp(BASE_DIR, sandboxDir, { recursive: true })
 
+  // Copy lib into sandbox (app imports via alias lib/*)
+  const sandboxLib = join(sandboxDir, 'lib')
+  if (existsSync(sandboxLib)) await rm(sandboxLib, { recursive: true, force: true })
+  await cp(LIB_DIR, sandboxLib, { recursive: true })
+
   if (entry.react === '17') {
     const main17 = await readFile(join(BASE_DIR, 'main.react17.tsx'), 'utf-8')
     await writeFile(join(sandboxDir, 'main.tsx'), main17)
@@ -148,8 +156,10 @@ async function prepareEntryFull(entry: MatrixEntry): Promise<void> {
   })
   await runSync(sandboxDir)
 
+  const appHash = await hashAppDir(BASE_DIR)
+  const libHash = existsSync(LIB_DIR) ? await hashAppDir(LIB_DIR) : ''
   await writePrepState(sandboxDir, {
-    prepHash: computePrepHash(packageJson, await hashAppDir(BASE_DIR)),
+    prepHash: computePrepHash(packageJson, appHash, libHash),
     coreHash: getCoreHash(),
   })
   console.log('  ✓', entry.name, '(full)')
@@ -170,8 +180,9 @@ async function prepareEntry(entry: MatrixEntry): Promise<void> {
   const sandboxDir = join(SANDBOX_ROOT, entry.name)
 
   const appHash = await hashAppDir(BASE_DIR)
+  const libHash = existsSync(LIB_DIR) ? await hashAppDir(LIB_DIR) : ''
   const packageJson = buildPackageJson(entry)
-  const prepHash = computePrepHash(packageJson, appHash)
+  const prepHash = computePrepHash(packageJson, appHash, libHash)
   const coreHash = getCoreHash()
 
   if (!forceFresh && existsSync(sandboxDir)) {
