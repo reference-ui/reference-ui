@@ -2,7 +2,7 @@ import { subscribe } from '@parcel/watcher'
 import { resolve, join } from 'node:path'
 import { on, emit } from '../event-bus'
 import { log } from '../lib/log'
-import { resolveCorePackageDir } from '../lib/resolve-core'
+import { resolveCorePackageDir, debounce } from '../lib'
 import type { ReferenceUIConfig } from '../config'
 import { runEval } from './eval'
 import { createPandaConfig } from './config'
@@ -35,17 +35,6 @@ async function runSystemCore(payload: SystemWorkerPayload): Promise<void> {
   const coreDir = resolveCorePackageDir()
   runPandaCodegen(coreDir) // Runs `panda` which does codegen + CSS extraction
   emit('system:compiled', {})
-}
-
-function debounce<T extends (...args: unknown[]) => void>(fn: T, ms: number): T {
-  let timeout: ReturnType<typeof setTimeout> | null = null
-  return ((...args: Parameters<T>) => {
-    if (timeout) clearTimeout(timeout)
-    timeout = setTimeout(() => {
-      timeout = null
-      fn(...args)
-    }, ms)
-  }) as T
 }
 
 export async function runSystem(payload: SystemWorkerPayload): Promise<void> {
