@@ -36,7 +36,6 @@ Each worker has a single clear responsibility. This keeps the pipeline understan
 - **system**: Compiles Panda config, runs codegen, generates CSS.
 - **packager**: Bundles outputs into npm packages in `node_modules/`.
 - **packager-ts**: Emits `.d.ts` files from bundled `.js` outputs.
-- **vanilla**: Runs Vanilla Extract benchmark; spawns child process, reports peak memory.
 
 When you add logic, put it in the right worker rather than spreading it across multiple places.
 
