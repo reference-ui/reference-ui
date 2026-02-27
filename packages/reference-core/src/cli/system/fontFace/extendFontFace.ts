@@ -16,7 +16,13 @@ export interface FontFaceRule {
   descentOverride?: string
 }
 
-export type FontWeightName = 'thin' | 'light' | 'normal' | 'semibold' | 'bold' | 'black'
+export type FontWeightName =
+  | 'thin'
+  | 'light'
+  | 'normal'
+  | 'semibold'
+  | 'bold'
+  | 'black'
 
 export interface FontDefinition {
   name: string
@@ -39,7 +45,8 @@ export function extendFontCollector(def: FontDefinition): void {
 
 export function getFontDefinitions(): FontDefinition[] {
   return (
-    ((globalThis as Record<string, unknown>)[FONT_COLLECTOR_KEY] as FontDefinition[]) ||
-    []
+    ((globalThis as Record<string, unknown>)[
+      FONT_COLLECTOR_KEY
+    ] as FontDefinition[]) || []
   )
 }

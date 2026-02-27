@@ -1,0 +1,1 @@
+export { runCollectScript } from './runCollectScript'

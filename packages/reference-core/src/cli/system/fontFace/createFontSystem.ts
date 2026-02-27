@@ -1,8 +1,7 @@
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
-import { join, resolve } from 'node:path'
-import { spawnSync } from 'node:child_process'
+import { existsSync, writeFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { log } from '../../lib/log'
-import { microBundle } from '../../lib/microbundle'
+import { runCollectScript } from '../collectors/runCollectScript'
 import { buildFontCollectEntryContent } from './collectEntryTemplate'
 import { generateFontSystemContent } from './generateFontSystem'
 import type { FontDefinition } from './extendFontFace'
@@ -22,52 +21,27 @@ export async function createFontSystem(coreDir: string): Promise<string> {
     return ''
   }
 
-  const refDir = join(coreDir, '.ref')
-  if (!existsSync(refDir)) mkdirSync(refDir, { recursive: true })
-
-  const definitionsPath = join(refDir, 'font-definitions.json')
-  const collectEntryPath = join(refDir, 'collect-fonts.ts')
-
   const collectEntryContent = buildFontCollectEntryContent({
-    refDir,
-    outputPath: definitionsPath,
+    refDir: resolve(coreDir, '.ref'),
+    outputPath: resolve(coreDir, '.ref/font-definitions.json'),
     initFontCollectorPath: resolve(
       coreDir,
       'src/cli/system/fontFace/initFontCollector.ts'
     ),
-    extendFontFacePath: resolve(coreDir, 'src/cli/system/fontFace/extendFontFace.ts'),
+    extendFontFacePath: resolve(
+      coreDir,
+      'src/cli/system/fontFace/extendFontFace.ts'
+    ),
     fontsFilePath: fontsPath,
   })
-  writeFileSync(collectEntryPath, collectEntryContent)
 
-  const bundled = await microBundle(collectEntryPath)
-  const collectScriptPath = join(refDir, 'collect-fonts.mjs')
-  writeFileSync(collectScriptPath, bundled)
-
-  const memBefore = process.memoryUsage().rss / 1024 / 1024
-  const result = spawnSync(process.execPath, [collectScriptPath], {
-    cwd: coreDir,
-    encoding: 'utf-8',
+  const definitions = await runCollectScript<FontDefinition[]>({
+    coreDir,
+    entryContent: collectEntryContent,
+    entryBasename: 'collect-fonts',
+    jsonFilename: 'font-definitions.json',
+    logLabel: 'system:font',
   })
-  const memAfter = process.memoryUsage().rss / 1024 / 1024
-  log.debug(
-    'system:font',
-    `Parent RSS: ${memBefore.toFixed(1)}MB → ${memAfter.toFixed(1)}MB (${(memAfter - memBefore).toFixed(1)}MB delta)`
-  )
-  if (result.status !== 0) {
-    throw new Error(
-      `[createFontSystem] Collect script failed:\n${result.stderr || result.stdout}`
-    )
-  }
-
-  let definitions: FontDefinition[] = []
-  if (existsSync(definitionsPath)) {
-    definitions = JSON.parse(readFileSync(definitionsPath, 'utf-8'))
-  }
-
-  rmSync(collectEntryPath, { force: true })
-  rmSync(collectScriptPath, { force: true })
-  rmSync(definitionsPath, { force: true })
 
   const fontPath = resolve(styledFontDir, 'font.ts')
   const content = generateFontSystemContent(definitions)

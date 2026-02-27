@@ -218,6 +218,10 @@ cli/
     │       └── extractFontFamilyKey, buildGlobalFontface, buildTransformLines
     │       └── generateFontSystemContent(defs)
     │
+    ├── collectors/
+    │   ├── index.ts — Re-exports runCollectScript
+    │   └── runCollectScript.ts
+    │       └── runCollectScript<T>(options) — mkdir .ref, write entry, microBundle, spawnSync, read JSON, rm temp
     └── gen/
         ├── runner.ts
         │   └── resolvePandaBin(), runPandaCodegen(cwd, options), runPandaCss(cwd)
@@ -268,15 +272,15 @@ main()
 
 ### Collector + collect-script (do in order; 3 and 4 are coupled)
 
-- [ ] **4a. Centralize collector keys** — `__refPandaConfigCollector`, `__boxPatternCollector`, `__fontCollector` are magic strings. Put in `system/collectors/keys.ts`. Prerequisite for 4b.
+- [ ] **4a. Centralize collector keys** — `__refPandaConfigCollector`, `__boxPatternCollector`, `__fontCollector` are magic strings. Put in `system/collectors/keys.ts`. Prerequisite for 4b. (Note: moving to a new module caused resolution issues when package is used from node_modules; may need different approach.)
 
 - [ ] **4b. `createCollector<T>(key)` factory** — Panda, box pattern, and font each have: initCollector, extendX, getX, globalThis key. Unify with a factory. Do this before 3.
 
-- [ ] **3a. `runCollectScript<T>(options)`** — Extract shared flow: mkdir .ref, build entry, microBundle, spawnSync, read JSON, rm temp. Used by createBoxPattern and createFontSystem.
+- [x] **3a. `runCollectScript<T>(options)`** — Extracted to `system/collectors/runCollectScript.ts`.
 
-- [ ] **3b. Migrate `createBoxPattern`** — Switch to use `runCollectScript`.
+- [x] **3b. Migrate `createBoxPattern`** — Uses `runCollectScript`.
 
-- [ ] **3c. Migrate `createFontSystem`** — Switch to use `runCollectScript`.
+- [x] **3c. Migrate `createFontSystem`** — Uses `runCollectScript`.
 
 ### Structural
 
