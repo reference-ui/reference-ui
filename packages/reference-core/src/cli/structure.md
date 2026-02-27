@@ -162,35 +162,36 @@ cli/
 └── system/
     ├── index.ts
     │   └── initSystem(cwd, config, options)
-    │   └── Re-exports: runEval, scanDirectories, runFiles, createBoxPattern, createPandaConfig, createFontSystem
+    │   └── Re-exports: runEval, scanDirectories, runFiles, createBoxPattern, createPandaConfig, createFontSystem (from config)
     ├── worker.ts
     │   └── runSystem(payload) — Config + Panda codegen; watch: virtual:fs:change → config, styles.css → system:compiled
     │   └── runConfigOnly, runSystemCore, debounce
     │
-    ├── config/
-    │   ├── index.ts — Re-exports extendPandaConfig, COLLECTOR_KEY, createPandaConfig
-    │   ├── createPandaConfig.ts
-    │   │   └── createPandaConfig(coreDir, options) — Scan, bundle, write panda.config.ts
-    │   ├── deepMerge.ts
-    │   │   └── deepMerge(target, ...sources)
-    │   ├── initCollector.ts
-    │   │   └── Side effect: globalThis[COLLECTOR_KEY] = []
-    │   ├── entryTemplate.ts
-    │   │   └── buildPandaEntryContent(options), toRelativeImport
-    │   └── extendPandaConfig.ts
-    │       └── COLLECTOR_KEY, extendPandaConfig(partial)
-    │
-    ├── boxPattern/
-    │   ├── index.ts — Re-export createBoxPattern
-    │   ├── createBoxPattern.ts
-    │   │   └── createBoxPattern(coreDir) — Scan pattern(), collect, generate box.ts
-    │   ├── initBoxCollector.ts — globalThis[BOX_PATTERN_COLLECTOR_KEY] = []
-    │   ├── extendBoxPattern.ts
-    │   │   └── BOX_PATTERN_COLLECTOR_KEY, extendBoxPattern, getBoxPatternExtensions
-    │   ├── collectEntryTemplate.ts
-    │   │   └── buildCollectEntryContent(options)
-    │   └── generateBoxPattern.ts
-    │       └── generateBoxPatternContent(extensions), formatProperties
+    ├── config/                    # All Panda config extensions (panda, boxPattern, fontFace)
+    │   ├── index.ts — Re-exports from panda, boxPattern, fontFace
+    │   ├── utils/
+    │   │   ├── index.ts
+    │   │   └── deepMerge.ts — deepMerge(target, ...sources)
+    │   ├── panda/
+    │   │   ├── index.ts — extendPandaConfig, COLLECTOR_KEY, createPandaConfig
+    │   │   ├── createPandaConfig.ts — Scan, bundle, write panda.config.ts
+    │   │   ├── extendPandaConfig.ts — COLLECTOR_KEY, extendPandaConfig
+    │   │   ├── initCollector.ts — globalThis[COLLECTOR_KEY] = []
+    │   │   └── entryTemplate.ts — buildPandaEntryContent(options)
+    │   ├── boxPattern/
+    │   │   ├── index.ts — createBoxPattern, extendBoxPattern
+    │   │   ├── createBoxPattern.ts — Scan pattern(), collect, generate box.ts
+    │   │   ├── initCollector.ts — globalThis[BOX_PATTERN_COLLECTOR_KEY] = []
+    │   │   ├── extendBoxPattern.ts — BOX_PATTERN_COLLECTOR_KEY, extendBoxPattern, getBoxPatternExtensions
+    │   │   ├── collectEntryTemplate.ts — buildCollectEntryContent(options)
+    │   │   └── generateBoxPattern.ts — generateBoxPatternContent(extensions)
+    │   └── fontFace/
+    │       ├── index.ts — createFontSystem, extendFontCollector, FontDefinition, etc.
+    │       ├── createFontSystem.ts — Collect fonts.ts, generate font.ts
+    │       ├── initCollector.ts — globalThis[FONT_COLLECTOR_KEY] = []
+    │       ├── extendFontFace.ts — FONT_COLLECTOR_KEY, extendFontCollector, getFontDefinitions
+    │       ├── collectEntryTemplate.ts — buildFontCollectEntryContent(options)
+    │       └── generateFontSystem.ts — generateFontSystemContent(defs)
     │
     ├── eval/
     │   ├── index.ts
@@ -204,24 +205,10 @@ cli/
     │   └── registry.ts
     │       └── REGISTERED_FUNCTIONS, RegisteredFunction, isRegistered
     │
-    ├── fontFace/
-    │   ├── index.ts — Re-export createFontSystem
-    │   ├── createFontSystem.ts
-    │   │   └── createFontSystem(coreDir) — Collect fonts.ts, generate font.ts
-    │   ├── extendFontFace.ts
-    │   │   └── FONT_COLLECTOR_KEY, extendFontCollector, getFontDefinitions
-    │   │   └── FontFaceRule, FontDefinition, FontWeightName
-    │   ├── initFontCollector.ts — globalThis[FONT_COLLECTOR_KEY] = []
-    │   ├── collectEntryTemplate.ts
-    │   │   └── buildFontCollectEntryContent(options)
-    │   └── generateFontSystem.ts
-    │       └── extractFontFamilyKey, buildGlobalFontface, buildTransformLines
-    │       └── generateFontSystemContent(defs)
-    │
     ├── collectors/
+    │   ├── README.md — Documents collector layout; keys/createCollector inlined in extendPandaConfig (resolution)
     │   ├── index.ts — Re-exports runCollectScript
-    │   └── runCollectScript.ts
-    │       └── runCollectScript<T>(options) — mkdir .ref, write entry, microBundle, spawnSync, read JSON, rm temp
+    │   └── runCollectScript.ts — mkdir .ref, write entry, microBundle, spawnSync, read JSON, rm temp
     └── gen/
         ├── runner.ts
         │   └── resolvePandaBin(), runPandaCodegen(cwd, options), runPandaCss(cwd)
@@ -272,9 +259,6 @@ main()
 
 ### Collector + collect-script (do in order; 3 and 4 are coupled)
 
-- [ ] **4a. Centralize collector keys** — `__refPandaConfigCollector`, `__boxPatternCollector`, `__fontCollector` are magic strings. Put in `system/collectors/keys.ts`. Prerequisite for 4b. (Note: moving to a new module caused resolution issues when package is used from node_modules; may need different approach.)
-
-- [ ] **4b. `createCollector<T>(key)` factory** — Panda, box pattern, and font each have: initCollector, extendX, getX, globalThis key. Unify with a factory. Do this before 3.
 
 - [x] **3a. `runCollectScript<T>(options)`** — Extracted to `system/collectors/runCollectScript.ts`.
 

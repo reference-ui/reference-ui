@@ -1,4 +1,4 @@
-import { toRelativeImport } from '../../lib/path'
+import { toRelativeImport } from '../../../lib/path'
 
 export interface BuildPandaEntryOptions {
   refDir: string

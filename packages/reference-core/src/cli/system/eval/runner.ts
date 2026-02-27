@@ -1,5 +1,5 @@
 import pc from 'picocolors'
-import { COLLECTOR_KEY } from '../config/extendPandaConfig'
+import { COLLECTOR_KEY } from '../config/panda/extendPandaConfig'
 import { microBundle } from '../../lib/microbundle'
 import type { Config } from '@pandacss/dev'
 import { log } from '../../lib/log'

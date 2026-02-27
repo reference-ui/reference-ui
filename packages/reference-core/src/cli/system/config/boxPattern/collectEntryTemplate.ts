@@ -1,9 +1,9 @@
-import { toRelativeImport } from '../../lib/path'
+import { toRelativeImport } from '../../../lib/path'
 
 export interface BuildCollectEntryOptions {
   refDir: string
   outputPath: string
-  initBoxCollectorPath: string
+  initCollectorPath: string
   extendBoxPatternPath: string
   extensionFilePaths: string[]
 }
@@ -12,16 +12,18 @@ export interface BuildCollectEntryOptions {
  * Build entry that imports extensions, collects them, extracts transform sources,
  * and writes to JSON for generateBoxPattern to read.
  */
-export function buildCollectEntryContent(options: BuildCollectEntryOptions): string {
+export function buildCollectEntryContent(
+  options: BuildCollectEntryOptions
+): string {
   const {
     refDir,
     outputPath,
-    initBoxCollectorPath,
+    initCollectorPath,
     extendBoxPatternPath,
     extensionFilePaths,
   } = options
 
-  const initRel = toRelativeImport(refDir, initBoxCollectorPath)
+  const initRel = toRelativeImport(refDir, initCollectorPath)
   const extendRel = toRelativeImport(refDir, extendBoxPatternPath)
 
   const extensionImports = extensionFilePaths.map(
