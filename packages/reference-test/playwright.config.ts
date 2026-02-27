@@ -28,8 +28,8 @@ export default defineConfig({
   })),
   webServer: projectName
     ? {
-        command: 'pnpm run dev',
-        cwd: `.sandbox/${projectName}`,
+        command: 'tsx src/scripts/start-dev.ts',
+        cwd: process.cwd(),
         url: `http://localhost:${port}`,
         reuseExistingServer: !process.env.CI,
         timeout: 60_000,
