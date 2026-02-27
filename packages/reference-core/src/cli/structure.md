@@ -9,7 +9,7 @@ Complete map of the CLI codebase for restructuring. Tree shows directory structu
 ```
 cli/
 ├── index.ts
-│   └── main() — CLI entry. Commander with ref, sync (default), vanilla commands
+│   └── main() — CLI entry. Commander with ref, sync (default) commands
 │   └── runCommand wrapper for error handling
 │
 ├── sync/
@@ -18,26 +18,6 @@ cli/
 │   │   └── SyncOptions (export)
 │   └── types.ts
 │       └── SyncOptions — { watch?: boolean }
-│
-├── vanilla/
-│   ├── index.ts
-│   │   └── vanillaCommand(cwd, options) — Runs VE benchmark via worker
-│   │   └── initVanilla, InitVanillaOptions, VanillaWorkerPayload (re-exports)
-│   ├── types.ts
-│   │   └── VanillaWorkerPayload — cwd, config, benchDir, stressFiles, stressStylesPerFile
-│   │   └── InitVanillaOptions — benchDir, stressFiles, stressStylesPerFile
-│   ├── runner.ts
-│   │   └── Standalone — node runner.mjs <benchDir>, esbuild + vanilla-extract plugin, memory tracking
-│   ├── setup.ts
-│   │   └── generateStyleFile(moduleId, styleCount) — VE stress style file content
-│   │   └── createBenchmarkProject(benchDir, options) — Writes VE project (minimal or stress)
-│   │   └── BenchmarkOptions, BenchmarkResult
-│   ├── worker.ts
-│   │   └── runVanilla(payload) — Creates project, spawns runner, tracks memory
-│   ├── init.ts
-│   │   └── initVanilla(cwd, config, options) — Fire-and-forget benchmark in worker
-│   └── run.ts
-│       └── runVanilla — Re-export for thread-pool
 │
 ├── lib/
 │   ├── index.ts
@@ -104,7 +84,7 @@ cli/
 │   ├── utils.ts
 │   │   └── resolveWorkerUrl(relativeDistPath)
 │   └── manifest.json
-│       └── virtual, system, packager, packager-ts, vanilla, watch → worker paths
+│       └── virtual, system, packager, packager-ts, watch → worker paths
 │
 ├── virtual/
 │   ├── index.ts
@@ -258,7 +238,7 @@ cli/
 
 ```
 main()
-  └─ syncCommand / vanillaCommand
+  └─ syncCommand
        ├─ loadUserConfig
        ├─ initEventBus, initLog
        └─ [sync path]
