@@ -9,10 +9,12 @@ const blobOutput = process.env.PLAYWRIGHT_BLOB_OUTPUT
 
 export default defineConfig({
   testDir: './src/tests',
-  fullyParallel: false,
+  fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: 1,
+  workers: process.env.REF_TEST_WORKERS
+    ? parseInt(process.env.REF_TEST_WORKERS, 10)
+    : 1,
   reporter: blobOutput
     ? [['blob', { outputFile: blobOutput }]]
     : 'html',

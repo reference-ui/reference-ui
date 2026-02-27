@@ -17,14 +17,24 @@ const BLOB_DIR = join(__dirname, '..', 'blob-reports')
 async function run(): Promise<void> {
   await mkdir(BLOB_DIR, { recursive: true })
 
-  for (let i = 0; i < MATRIX.length; i++) {
-    const entry = MATRIX[i]
-    if (i > 0) await new Promise((r) => setTimeout(r, 1500)) // Let OS release ports
+  const workersArg = process.env.REF_TEST_WORKERS
+    ? ['--workers', process.env.REF_TEST_WORKERS]
+    : []
+  const parallel = process.env.REF_TEST_PARALLEL !== '0'
+
+  async function runProject(entry: (typeof MATRIX)[number]) {
     console.log(`\n▶ ${entry.name}`)
     const blobPath = join(BLOB_DIR, `${entry.name}.zip`)
     const result = await execa(
       'pnpm',
-      ['exec', 'playwright', 'test', '--project', entry.name],
+      [
+        'exec',
+        'playwright',
+        'test',
+        '--project',
+        entry.name,
+        ...workersArg,
+      ],
       {
         env: {
           ...process.env,
@@ -35,8 +45,17 @@ async function run(): Promise<void> {
         stdio: 'inherit',
       }
     )
-    if (result.exitCode !== 0) {
-      process.exit(result.exitCode)
+    return { entry, exitCode: result.exitCode ?? 0 }
+  }
+
+  if (parallel) {
+    const results = await Promise.all(MATRIX.map(runProject))
+    const failed = results.find((r) => r.exitCode !== 0)
+    if (failed) process.exit(failed.exitCode)
+  } else {
+    for (const entry of MATRIX) {
+      const { exitCode } = await runProject(entry)
+      if (exitCode !== 0) process.exit(exitCode)
     }
   }
 

@@ -7,7 +7,7 @@
   "types": "./src/index.ts",
   "scripts": {
     "test:prepare": "tsx src/prepare.ts",
-    "test": "pnpm run test:prepare && tsx src/run-matrix.ts",
+    "test": "REF_TEST_WORKERS=3 pnpm run test:prepare && REF_TEST_WORKERS=3 tsx src/run-matrix.ts",
     "test:ui": "pnpm run test:prepare && REF_TEST_PROJECT=react18-vite5 playwright test --ui --project=react18-vite5"
   },
   "dependencies": {
