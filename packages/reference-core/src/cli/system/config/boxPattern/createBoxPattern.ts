@@ -1,8 +1,8 @@
 import { resolve } from 'node:path'
 import { writeFileSync } from 'node:fs'
-import { log } from '../../lib/log'
-import { runCollectScript } from '../collectors/runCollectScript'
-import { scanForBoxExtensions } from '../eval/scanner'
+import { log } from '../../../lib/log'
+import { runCollectScript } from '../../collectors/runCollectScript'
+import { scanForBoxExtensions } from '../../eval/scanner'
 import { buildCollectEntryContent } from './collectEntryTemplate'
 import { generateBoxPatternContent } from './generateBoxPattern'
 
@@ -26,13 +26,13 @@ export async function createBoxPattern(coreDir: string): Promise<string> {
   const collectEntryContent = buildCollectEntryContent({
     refDir: resolve(coreDir, '.ref'),
     outputPath: resolve(coreDir, '.ref/extensions.json'),
-    initBoxCollectorPath: resolve(
+    initCollectorPath: resolve(
       coreDir,
-      'src/cli/system/boxPattern/initBoxCollector.ts'
+      'src/cli/system/config/boxPattern/initCollector.ts'
     ),
     extendBoxPatternPath: resolve(
       coreDir,
-      'src/cli/system/boxPattern/extendBoxPattern.ts'
+      'src/cli/system/config/boxPattern/extendBoxPattern.ts'
     ),
     extensionFilePaths: extensionPaths,
   })

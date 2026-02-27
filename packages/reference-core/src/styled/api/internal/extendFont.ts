@@ -23,8 +23,8 @@
 import type {
   FontFaceRule,
   FontWeightName,
-} from '../../../cli/system/fontFace/extendFontFace'
-import { extendFontCollector } from '../../../cli/system/fontFace/extendFontFace'
+} from '../../../cli/system/config/fontFace/extendFontFace'
+import { extendFontCollector } from '../../../cli/system/config/fontFace/extendFontFace'
 
 export type { FontFaceRule, FontWeightName }
 

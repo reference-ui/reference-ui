@@ -1,9 +1,9 @@
-import { toRelativeImport } from '../../lib/path'
+import { toRelativeImport } from '../../../lib/path'
 
 export interface BuildFontCollectEntryOptions {
   refDir: string
   outputPath: string
-  initFontCollectorPath: string
+  initCollectorPath: string
   extendFontFacePath: string
   fontsFilePath: string
 }
@@ -16,10 +16,15 @@ export interface BuildFontCollectEntryOptions {
 export function buildFontCollectEntryContent(
   options: BuildFontCollectEntryOptions
 ): string {
-  const { refDir, outputPath, initFontCollectorPath, extendFontFacePath, fontsFilePath } =
-    options
+  const {
+    refDir,
+    outputPath,
+    initCollectorPath,
+    extendFontFacePath,
+    fontsFilePath,
+  } = options
 
-  const initRel = toRelativeImport(refDir, initFontCollectorPath)
+  const initRel = toRelativeImport(refDir, initCollectorPath)
   const fontsRel = toRelativeImport(refDir, fontsFilePath)
   const extendRel = toRelativeImport(refDir, extendFontFacePath)
 

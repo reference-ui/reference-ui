@@ -1,9 +1,9 @@
 import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
-import { emit } from '../../event-bus'
-import { log } from '../../lib/log'
-import { microBundlePanda } from '../../lib/microbundle'
-import { scanDirectories } from '../eval/scanner'
+import { emit } from '../../../event-bus'
+import { log } from '../../../lib/log'
+import { microBundlePanda } from '../../../lib/microbundle'
+import { scanDirectories } from '../../eval/scanner'
 import { buildPandaEntryContent } from './entryTemplate'
 
 export interface CreatePandaConfigOptions {
@@ -45,9 +45,18 @@ export async function createPandaConfig(
 
     // Step 2: Create entry file from template
     const entryPath = join(refDir, 'panda-entry.ts')
-    const initCollectorPath = resolve(coreDir, 'src/cli/system/config/initCollector.ts')
-    const extendPandaPath = resolve(coreDir, 'src/cli/system/config/extendPandaConfig.ts')
-    const deepMergePath = resolve(coreDir, 'src/cli/system/config/deepMerge.ts')
+    const initCollectorPath = resolve(
+      coreDir,
+      'src/cli/system/config/panda/initCollector.ts'
+    )
+    const extendPandaPath = resolve(
+      coreDir,
+      'src/cli/system/config/panda/extendPandaConfig.ts'
+    )
+    const deepMergePath = resolve(
+      coreDir,
+      'src/cli/system/config/utils/deepMerge.ts'
+    )
 
     const entryContent = buildPandaEntryContent({
       refDir,

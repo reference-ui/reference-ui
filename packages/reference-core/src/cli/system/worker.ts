@@ -5,7 +5,7 @@ import { log } from '../lib/log'
 import { resolveCorePackageDir, debounce } from '../lib'
 import type { ReferenceUIConfig } from '../config'
 import { runEval } from './eval'
-import { createPandaConfig } from './config'
+import { createPandaConfig } from './config/panda'
 import { runPandaCodegen } from './gen/runner'
 
 export interface SystemWorkerPayload {

@@ -1,7 +1,7 @@
 import { existsSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { log } from '../../lib/log'
-import { runCollectScript } from '../collectors/runCollectScript'
+import { log } from '../../../lib/log'
+import { runCollectScript } from '../../collectors/runCollectScript'
 import { buildFontCollectEntryContent } from './collectEntryTemplate'
 import { generateFontSystemContent } from './generateFontSystem'
 import type { FontDefinition } from './extendFontFace'
@@ -24,13 +24,13 @@ export async function createFontSystem(coreDir: string): Promise<string> {
   const collectEntryContent = buildFontCollectEntryContent({
     refDir: resolve(coreDir, '.ref'),
     outputPath: resolve(coreDir, '.ref/font-definitions.json'),
-    initFontCollectorPath: resolve(
+    initCollectorPath: resolve(
       coreDir,
-      'src/cli/system/fontFace/initFontCollector.ts'
+      'src/cli/system/config/fontFace/initCollector.ts'
     ),
     extendFontFacePath: resolve(
       coreDir,
-      'src/cli/system/fontFace/extendFontFace.ts'
+      'src/cli/system/config/fontFace/extendFontFace.ts'
     ),
     fontsFilePath: fontsPath,
   })
