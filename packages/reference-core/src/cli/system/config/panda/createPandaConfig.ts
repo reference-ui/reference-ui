@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:
 import { join, resolve } from 'node:path'
 import { emit } from '../../../event-bus'
 import { log } from '../../../lib/log'
-import { microBundlePanda } from '../../../lib/microbundle'
+import { microBundle } from '../../../lib/microbundle'
 import { scanDirectories } from '../../eval/scanner'
 import { buildPandaEntryContent } from './entryTemplate'
 
@@ -70,7 +70,7 @@ export async function createPandaConfig(
 
     // Step 3: Bundle with esbuild (reusable helper, in-memory output)
     log.debug('system:config', 'Bundling with esbuild...')
-    const bundled = await microBundlePanda(entryPath)
+    const bundled = await microBundle(entryPath)
     log.debug('system:config', 'Bundle complete')
 
     // Step 4: Write final panda.config.ts (inject codegen into include only when sync requested it)
