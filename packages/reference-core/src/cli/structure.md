@@ -267,12 +267,5 @@ main()
 
 ### Structural
 
-- [ ] **5. `resolveCorePackageDir` consistency** — Workers in `packager` and `system` call `resolveCorePackageDir()` with no args. Pass project root from payload everywhere.
+- [x] **5. `resolveCorePackageDir` consistency** — Resolved: primary path uses Node resolution (not cwd); workers' process.cwd() is correct in practice. Passing payload.cwd would be cosmetic only.
 
-### Polish / documentation
-
-- [ ] **7. Document virtual transforms** — `virtual/transforms/` does MDX→JSX and import rewrites via native addon. Document the approach.
-
-- [ ] **8. Worker entry boilerplate** — Each worker has `worker.ts` → default export `runX`. Document the pattern or simplify.
-
-- [ ] **9. Base worker payload type** — `WatchPayload`, `VirtualWorkerPayload`, `PackagerWorkerPayload`, etc. Could share `{ cwd: string; config: ReferenceUIConfig }` base.
