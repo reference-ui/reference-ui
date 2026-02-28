@@ -7,7 +7,7 @@
 import type { FontDefinition } from './extendFontFace'
 
 /** Extract font family name from value like '"Inter", ui-sans-serif' for globalFontface key */
-function extractFontFamilyKey(value: string): string {
+function parseFontFamily(value: string): string {
   const match = value.match(/^["']([^"']+)["']/)
   if (match) {
     const name = match[1]
@@ -17,13 +17,13 @@ function extractFontFamilyKey(value: string): string {
 }
 
 /** Convert fontFace (single or array) to globalFontface format */
-function buildGlobalFontface(
+function buildFontFaceDeclaration(
   defs: FontDefinition[]
 ): Record<string, Record<string, string> | Record<string, string>[]> {
   const result: Record<string, Record<string, string> | Record<string, string>[]> =
     {}
   for (const def of defs) {
-    const familyKey = extractFontFamilyKey(def.value)
+    const familyKey = parseFontFamily(def.value)
     const rules = Array.isArray(def.fontFace) ? def.fontFace : [def.fontFace]
     const faces = rules.map(rule => {
       const face: Record<string, string> = {
@@ -41,20 +41,37 @@ function buildGlobalFontface(
   return result
 }
 
-/** Build transform body lines: FONT_PRESETS and WEIGHT_TOKENS objects, inlined for Panda codegen */
-function buildTransformLines(defs: FontDefinition[]): string[] {
-  const fontPresetLines = defs.map(d => {
+/** Build FONT_PRESETS and WEIGHT_TOKENS from font definitions */
+function buildTransformMap(
+  defs: FontDefinition[]
+): { fontPresets: Record<string, Record<string, string>>; weightTokens: Record<string, string> } {
+  const fontPresets: Record<string, Record<string, string>> = {}
+  const weightTokens: Record<string, string> = {}
+  for (const d of defs) {
     const css = d.css ?? {}
     const normalWeight = d.weights.normal ?? '400'
     const fontWeight = css.fontWeight ?? normalWeight
-    const parts = [`fontFamily: '${d.name}'`, `fontWeight: '${fontWeight}'`]
-    if (css.letterSpacing) parts.push(`letterSpacing: '${css.letterSpacing}'`)
-    return `      ${d.name}: { ${parts.join(', ')} },`
-  })
-  const weightTokenLines = defs.flatMap(d =>
-    Object.entries(d.weights)
-      .filter(([, v]) => v)
-      .map(([name, value]) => `      '${d.name}.${name}': '${value}',`)
+    fontPresets[d.name] = {
+      fontFamily: d.name,
+      fontWeight,
+      ...(css.letterSpacing && { letterSpacing: css.letterSpacing }),
+    }
+    for (const [name, value] of Object.entries(d.weights)) {
+      if (value) weightTokens[`${d.name}.${name}`] = value
+    }
+  }
+  return { fontPresets, weightTokens }
+}
+
+/** Build transform body lines: FONT_PRESETS and WEIGHT_TOKENS objects, inlined for Panda codegen */
+function buildTransformLines(defs: FontDefinition[]): string[] {
+  const { fontPresets, weightTokens } = buildTransformMap(defs)
+  const fontPresetLines = Object.entries(fontPresets).map(
+    ([name, preset]) =>
+      `      ${name}: { ${Object.entries(preset).map(([k, v]) => `${k}: '${v}'`).join(', ')} },`
+  )
+  const weightTokenLines = Object.entries(weightTokens).map(
+    ([k, v]) => `      '${k}': '${v}',`
   )
 
   return [
@@ -105,7 +122,7 @@ export function generateFontSystemContent(defs: FontDefinition[]): string {
   const fontWeightEntries = Object.entries(fontWeights).map(
     ([k, v]) => `    '${k}': { value: '${v.value}' },`
   )
-  const globalFontfaceObj = buildGlobalFontface(defs)
+  const globalFontfaceObj = buildFontFaceDeclaration(defs)
   const globalFontfaceEntries = Object.entries(globalFontfaceObj).flatMap(
     ([key, val]) => {
       const formattedKey = key.includes(' ') ? `'${key}'` : key

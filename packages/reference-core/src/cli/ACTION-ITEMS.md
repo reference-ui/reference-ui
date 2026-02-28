@@ -86,7 +86,7 @@ Generated from `pnpm run complexity`. Focus on high-impact refactors to reduce c
   4. Move template generation to separate module
   5. Document each step with clear intent comments
 
-### [ ] 7. `src/cli/system/config/fontFace/generateFontSystem.ts` – **COMPLEX LOGIC**
+### [DONE] 7. `src/cli/system/config/fontFace/generateFontSystem.ts` – **COMPLEX LOGIC**
 - **Cyclomatic complexity:** 6
 - **Physical LOC:** 176
 - **Issue:** Large file with complex string building and transformations.
