@@ -84,13 +84,15 @@ export function onWatchChange(context: VirtualContext): (ev: {
   return async ({ event, path: sourcePath }) => {
     try {
       let virtualPath: string
-      if (event === 'unlink') {
-        virtualPath = getVirtualPath(sourcePath, absSourceDir, absVirtualDir)
-        await removeFromVirtual(sourcePath, absSourceDir, absVirtualDir, { debug })
-      } else {
-        virtualPath = await copyToVirtual(sourcePath, absSourceDir, absVirtualDir, {
-          debug,
-        })
+      switch (event) {
+        case 'unlink':
+          virtualPath = getVirtualPath(sourcePath, absSourceDir, absVirtualDir)
+          await removeFromVirtual(sourcePath, absSourceDir, absVirtualDir, { debug })
+          break
+        case 'add':
+        case 'change':
+          virtualPath = await copyToVirtual(sourcePath, absSourceDir, absVirtualDir, { debug })
+          break
       }
       emit('virtual:fs:change', { event, path: virtualPath })
       log.debug('virtual:worker', 'Processed watch:change → virtual:fs:change', event, virtualPath)
