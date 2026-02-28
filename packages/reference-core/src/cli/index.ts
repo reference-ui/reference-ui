@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { Command } from 'commander'
 import { syncCommand, type SyncOptions } from './sync'
-import { runCommand } from './lib'
+import { runCommand } from './lib/run-command'
 import { log } from './lib/log'
 
 async function main(): Promise<void> {

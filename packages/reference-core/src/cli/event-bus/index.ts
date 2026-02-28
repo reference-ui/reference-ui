@@ -2,7 +2,7 @@ import { EventEmitter } from 'node:events'
 import { BroadcastChannel, isMainThread } from 'node:worker_threads'
 import type { Events } from './events'
 import { config } from './config'
-import { log } from '../lib'
+import { log } from '../lib/log'
 
 export const bus = new EventEmitter()
 

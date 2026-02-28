@@ -1,4 +1,5 @@
-import { resolveCorePackageDir, debounce } from '../lib'
+import { resolveCorePackageDir } from '../lib/resolve-core'
+import { debounce } from '../lib/debounce'
 import type { ReferenceUIConfig } from '../config'
 import { log } from '../lib/log'
 import { emit, on } from '../event-bus'
