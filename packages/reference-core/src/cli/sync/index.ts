@@ -3,6 +3,7 @@ import { initEventBus } from '../event-bus'
 import { loadUserConfig } from '../config'
 import { initPackager } from '../packager'
 import { initSystem } from '../system'
+import { initGen } from '../gen'
 import { initTsPackager } from '../packager-ts'
 import { initVirtual } from '../virtual'
 import { initWatch } from '../watch'
@@ -16,6 +17,7 @@ export const syncCommand = async (cwd: string, options: SyncOptions) => {
   initWatch(cwd, config, options)
   initVirtual(cwd, config, options)
   initSystem(cwd, config, { watch: options?.watch })
+  initGen(cwd, config, { watch: options?.watch })
   await initPackager(cwd, config, { watch: options?.watch })
   await initTsPackager(cwd, config)
 

@@ -24,6 +24,7 @@ export default defineConfig({
     'watch/worker': 'src/cli/watch/worker.ts',
     'virtual/worker': 'src/cli/virtual/worker.ts',
     'system/worker': 'src/cli/system/worker.ts',
+    'gen/worker': 'src/cli/gen/worker.ts',
     'packager/worker': 'src/cli/packager/worker.ts',
     'packager-ts/worker': 'src/cli/packager-ts/worker.ts',
   },

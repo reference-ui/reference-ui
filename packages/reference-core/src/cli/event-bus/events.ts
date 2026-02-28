@@ -16,6 +16,10 @@ export type WatchEvents = {
 export type SystemEvents = {
   /** Emitted when Panda config is created */
   'system:config:created': { configPath: string }
+  /** Emitted when eval + config are done; gen worker runs Panda on this */
+  'config:ready': Record<string, never>
+  /** Emitted when gen worker has bootstrapped and is listening; system may re-emit config:ready */
+  'gen:ready': Record<string, never>
   /** Emitted when system finishes compiling (eval, config, codegen, CSS) */
   'system:compiled': Record<string, never>
   /** Emitted when Panda has written styles.css – packager copies to install location */

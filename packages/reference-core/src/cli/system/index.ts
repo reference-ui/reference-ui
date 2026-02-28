@@ -5,16 +5,21 @@ export interface InitSystemOptions {
   watch?: boolean
 }
 
+/**
+ * Initialize system worker (eval + config generation only).
+ * Gen (Panda) runs separately via initGen().
+ */
 export async function initSystem(
   cwd: string,
   config: ReferenceUIConfig,
   options?: InitSystemOptions
 ): Promise<void> {
-  await runWorker('system', {
-    cwd,
-    config,
-    watchMode: options?.watch ?? false,
-  })
+  const watchMode = options?.watch ?? false
+  if (watchMode) {
+    runWorker('system', { cwd, config, watchMode: true })
+    return
+  }
+  await runWorker('system', { cwd, config, watchMode: false })
 }
 
 export {
