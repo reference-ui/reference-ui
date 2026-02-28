@@ -7,22 +7,18 @@ import {
 } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
-import { spawnMonitoredAsync } from '../lib/child-process'
-import { findDtsFile } from './find-dts-file'
+import { spawnMonitoredAsync } from '../../lib/child-process'
+import { findDtsFile } from './find-dts'
 
 /**
- * Run tsdown to generate .d.mts declarations only (output to temp dir).
- * We use a temp dir because tsdown also emits .mjs, but we keep esbuild's
- * .mjs (which bundles @pandacss/dev). Tsdown leaves @pandacss/dev as an
- * import, which breaks at runtime in consumer apps.
- * Returns the path to the generated .d.mts file.
+ * Compile TypeScript source to .d.mts declarations.
+ * Spawns tsdown; outputs to temp dir then copies to out path (keeps esbuild's .mjs).
  */
 export async function compileDeclarations(
   cwd: string,
   entryFile: string,
   outDtsPath: string
 ): Promise<string> {
-  // realpathSync ensures consistent path (fixes macOS /var vs /private/var)
   const tmpOut = realpathSync(mkdtempSync(join(tmpdir(), 'ref-ui-dts-')))
   try {
     const result = await spawnMonitoredAsync(
