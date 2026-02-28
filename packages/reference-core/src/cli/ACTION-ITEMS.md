@@ -63,7 +63,7 @@ Generated from `pnpm run complexity`. Focus on high-impact refactors to reduce c
 
 ## 🟡 High Priority (Refactor for Clarity)
 
-### [ ] 5. `src/cli/lib/child-process.ts` – **OVERSIZED FUNCTIONS**
+### [DONE] 5. `src/cli/lib/child-process.ts` – **OVERSIZED FUNCTIONS**
 - **Physical LOC:** 219
 - **Halstead effort:** 3,314 (`spawnMonitored`), 784 (`spawnMonitoredAsync` callback)
 - **Issue:** `spawnMonitoredAsync` is 82 LOC with nested promise/event handling.
