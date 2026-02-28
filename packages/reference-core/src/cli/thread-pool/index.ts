@@ -43,6 +43,9 @@ function getPool() {
   return pool
 }
 
+/** Never-resolving promise. Return from a worker to keep it alive for event-driven work. */
+export const KEEP_ALIVE = new Promise<never>(() => {})
+
 export async function runWorker(worker: WorkerName | string, payload: any) {
   const workerPath =
     typeof worker === 'string' && worker in WORKERS

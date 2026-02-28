@@ -8,6 +8,7 @@ import { relative } from 'node:path'
 import picomatch from 'picomatch'
 import { log } from '../lib/log'
 import { emit } from '../event-bus'
+import { KEEP_ALIVE } from '../thread-pool'
 import type { WatchPayload } from './types'
 
 const EVENT_MAP = {
@@ -49,7 +50,7 @@ export async function runWatch(payload: WatchPayload): Promise<void> {
 
   log.debug('watch', 'Ready - watching for changes')
 
-  return new Promise(() => {})
+  return KEEP_ALIVE
 }
 
 export default runWatch

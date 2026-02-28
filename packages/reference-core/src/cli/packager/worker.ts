@@ -1,4 +1,5 @@
 import { on } from '../event-bus'
+import { KEEP_ALIVE } from '../thread-pool'
 import { runBundle, onPandaCssCompiled, onSystemCompiled } from './run'
 import type { PackagerWorkerPayload } from './run'
 
@@ -14,7 +15,7 @@ export async function runPackager(payload: PackagerWorkerPayload): Promise<void>
   if (watchMode) {
     on('panda:css:compiled', onPandaCssCompiled(payload))
     on('system:compiled', onSystemCompiled(payload))
-    return new Promise(() => {})
+    return KEEP_ALIVE
   }
 }
 

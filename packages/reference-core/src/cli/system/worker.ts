@@ -1,4 +1,5 @@
 import { on } from '../event-bus'
+import { KEEP_ALIVE } from '../thread-pool'
 import { runConfig, onVirtualFsChange, onGenReady } from './run'
 import type { SystemWorkerPayload } from './run'
 
@@ -15,7 +16,7 @@ export async function runSystem(payload: SystemWorkerPayload): Promise<void> {
   if (watchMode) {
     on('virtual:fs:change', onVirtualFsChange(payload, state))
     on('gen:ready', onGenReady(state))
-    return new Promise(() => {})
+    return KEEP_ALIVE
   }
 }
 
