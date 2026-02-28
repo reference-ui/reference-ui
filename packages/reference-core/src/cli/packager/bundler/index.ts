@@ -58,8 +58,7 @@ async function createPackageContent(options: BundleOptions): Promise<void> {
       if (existsSync(srcPath)) {
         mkdirSync(dirname(destPath), { recursive: true })
         if (src.endsWith('.ts') || src.endsWith('.tsx')) {
-          const isEntryPoint = src.includes('/entry/')
-          await transformTypeScriptFile(srcPath, destPath, isEntryPoint)
+          await transformTypeScriptFile(srcPath, destPath)
         } else {
           const newContent = readFileSync(srcPath, 'utf-8')
           writeIfChanged(destPath, newContent)
