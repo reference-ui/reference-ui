@@ -8,7 +8,7 @@ const STYLES_SRC = 'src/system/styles.css'
 
 /**
  * Copy styles.css from core to the React package install location.
- * Hot path: called on panda:stylecss:change for fast pixels.
+ * Hot path: called on panda:css:compiled for fast pixels.
  */
 export function copyStylesToReactPackage(
   coreDir: string,

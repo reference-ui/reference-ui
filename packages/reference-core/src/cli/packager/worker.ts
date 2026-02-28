@@ -50,8 +50,8 @@ export async function runPackager(payload: PackagerWorkerPayload): Promise<void>
   await runPackagerCore(payload)
 
   if (watchMode) {
-    // Hot path: copy styles.css immediately when Panda writes it
-    on('panda:stylecss:change', () => copyStylesOnly(payload))
+    // Hot path: copy styles.css immediately when Panda compiles it
+    on('panda:css:compiled', () => copyStylesOnly(payload))
 
     const debouncedBundle = debounce(async () => {
       log.debug('packager:worker', 'system:compiled → bundling packages')
