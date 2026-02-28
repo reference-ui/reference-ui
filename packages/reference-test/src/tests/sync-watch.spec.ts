@@ -1,9 +1,11 @@
 import { test, expect } from '@playwright/test'
-import { writeFile } from 'node:fs/promises'
+import { writeFile, appendFile } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
+
+const METRICS_PATH = join(__dirname, '..', '..', '.watch-metrics.jsonl')
 
 function getSandboxDir(): string {
   const project = process.env.REF_TEST_PROJECT
@@ -67,6 +69,7 @@ test.describe('sync-watch', () => {
     await expect(el).toBeVisible()
 
     // Edit css() with new color – ref sync --watch → Panda codegen → packager → vite hmr
+    const t0 = Date.now()
     await writeFile(syncWatchPath, buildSyncWatchContent(randomColor))
 
     // Wait for the color to change (proves Panda codegen ran and extracted the new value)
@@ -79,5 +82,16 @@ test.describe('sync-watch', () => {
         { timeout: 30_000 }
       )
       .toBe(true)
+
+    const timeToChangeMs = Date.now() - t0
+    const project = process.env.REF_TEST_PROJECT ?? 'unknown'
+    const entry = JSON.stringify({
+      timestamp: new Date().toISOString(),
+      timeToChangeMs,
+      project,
+      test: 'sync-watch',
+    }) + '\n'
+    await appendFile(METRICS_PATH, entry)
+    console.log(`[sync-watch] timeToChange: ${timeToChangeMs}ms (file → visible)`)
   })
 })
