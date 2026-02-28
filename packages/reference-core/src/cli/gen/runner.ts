@@ -1,11 +1,8 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
-import { dirname, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { resolve } from 'node:path'
 import { cssgen, generate, loadConfigAndCreateContext } from '@pandacss/node'
-import { log } from '../../lib/log'
-
-const __dirname = dirname(fileURLToPath(import.meta.url))
+import { log } from '../lib/log'
 
 export interface PandaOptions {
   watch?: boolean
@@ -25,7 +22,7 @@ export async function runPandaCodegen(
     throw new Error(`panda.config.ts not found at ${configPath}. Run createPandaConfig first.`)
   }
 
-  log.debug('system:gen', options.watch ? 'Starting Panda (watch)...' : 'Starting Panda...')
+  log.debug('gen', options.watch ? 'Starting Panda (watch)...' : 'Starting Panda...')
 
   await generate(
     options.watch ? { watch: true, poll: true, cwd } : { cwd },
@@ -48,7 +45,7 @@ export async function runPandaCssGen(cwd: string): Promise<void> {
     throw new Error(`panda.config.ts not found at ${configPath}. Run createPandaConfig first.`)
   }
 
-  log.debug('system:gen', 'Panda cssgen (style-only)')
+  log.debug('gen', 'Panda cssgen (style-only)')
   const ctx = await loadConfigAndCreateContext({ config: { cwd }, configPath })
   await cssgen(ctx, { cwd })
 }

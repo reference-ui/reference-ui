@@ -1,5 +1,4 @@
-import { subscribe } from '@parcel/watcher'
-import { resolve, join } from 'node:path'
+import { resolve } from 'node:path'
 import { on, emit } from '../event-bus'
 import { log } from '../lib/log'
 import { resolveCorePackageDir } from '../lib/resolve-core'
@@ -7,20 +6,22 @@ import { debounce } from '../lib/debounce'
 import type { ReferenceUIConfig } from '../config'
 import { runEval } from './eval'
 import { createPandaConfig } from './config/panda'
-import {
-  runPandaCodegen,
-  runPandaCssGen,
-  hashPandaConfig,
-} from './gen/runner'
 
 export interface SystemWorkerPayload {
   cwd: string
   config: ReferenceUIConfig
-  /** When true, stay alive and recompile on virtual:fs:change */
+  /** When true, stay alive and recompile on virtual:fs:change (config-affecting only) */
   watchMode?: boolean
 }
 
 const coreDirs = ['src/styled']
+
+/** Paths that affect Panda config (tokens, recipes, patterns in src/styled, tokens.ts) */
+function isConfigAffectingPath(path: string): boolean {
+  return path.includes('/src/styled/') || path.includes('tokens.ts')
+}
+
+let configWritten = false
 
 async function runConfigOnly(payload: SystemWorkerPayload): Promise<void> {
   const { cwd, config } = payload
@@ -35,54 +36,47 @@ async function runConfigOnly(payload: SystemWorkerPayload): Promise<void> {
       userDirectories: userDirs,
       includeCodegen: true,
     })
+    configWritten = true
   }
+  emit('config:ready', {})
 }
 
-async function runSystemCore(payload: SystemWorkerPayload): Promise<void> {
-  await runConfigOnly(payload)
-  const coreDir = resolveCorePackageDir(payload.cwd)
-  await runPandaCodegen(coreDir)
-  emit('system:compiled', {})
-}
-
+/**
+ * System worker - eval + config generation only.
+ * Panda runs in the gen worker (separate thread).
+ */
 export async function runSystem(payload: SystemWorkerPayload): Promise<void> {
   const { watchMode = false } = payload
-  const coreDir = resolveCorePackageDir(payload.cwd)
+
+  await runConfigOnly(payload)
 
   if (watchMode) {
-    await runConfigOnly(payload)
-
-    const debouncedEmit = debounce(() => emit('system:compiled', {}), 200)
-    await subscribe(join(coreDir, 'src/system'), (err, events) => {
-      if (err) return log.error('[system:worker] Output watcher:', err)
-      if (events?.some(ev => ev.path.endsWith('styles.css'))) debouncedEmit()
-    })
-
-    // Event-driven: virtual:fs:change → Panda (cssgen when config unchanged, else full generate).
-    const debouncedPanda = debounce(async () => {
-      log.debug('system:worker', 'virtual:fs:change → Panda')
+    const debouncedConfig = debounce(async () => {
+      log.debug('system:worker', 'virtual:fs:change → config (config-affecting)')
       try {
-        const configHashBefore = hashPandaConfig(coreDir)
         await runConfigOnly(payload)
-        const configHashAfter = hashPandaConfig(coreDir)
-        const configChanged = configHashBefore !== configHashAfter
-        if (configChanged) {
-          log.debug('system:worker', 'Config changed → full codegen')
-          await runPandaCodegen(coreDir)
-        } else {
-          await runPandaCssGen(coreDir)
-        }
-        emit('panda:stylecss:change', {})
       } catch (e) {
-        log.error('[system:worker] Panda failed:', e)
+        log.error('[system:worker] Config failed:', e)
       }
     }, 150)
-    on('virtual:fs:change', () => debouncedPanda())
+
+    on('gen:ready', () => {
+      if (configWritten) {
+        log.debug('system:worker', 'gen:ready → re-emit config:ready')
+        emit('config:ready', {})
+      }
+    })
+
+    on('virtual:fs:change', ({ path }: { path: string }) => {
+      if (!isConfigAffectingPath(path)) {
+        log.debug('system:worker', 'Non-styled file, skipping config rebuild')
+        return
+      }
+      debouncedConfig()
+    })
 
     return new Promise(() => {})
   }
-
-  await runSystemCore(payload)
 }
 
 export default runSystem
