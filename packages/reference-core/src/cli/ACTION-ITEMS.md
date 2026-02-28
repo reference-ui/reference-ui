@@ -45,7 +45,7 @@ Generated from `pnpm run complexity`. Focus on high-impact refactors to reduce c
   4. Consider moving to a data file (JSON/YAML) if appropriate
   5. Add schema validation for package definitions
 
-### [ ] 4. `src/cli/packager/bundler.ts` – **LARGE MODULE**
+### [DONE] 4. `src/cli/packager/bundler.ts` – **LARGE MODULE**
 
 - **Cyclomatic complexity:** 15
 - **Physical LOC:** 261
