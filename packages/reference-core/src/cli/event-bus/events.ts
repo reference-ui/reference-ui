@@ -18,6 +18,8 @@ export type SystemEvents = {
   'system:config:created': { configPath: string }
   /** Emitted when system finishes compiling (eval, config, codegen, CSS) */
   'system:compiled': Record<string, never>
+  /** Emitted when Panda has written styles.css – packager copies to install location */
+  'panda:stylecss:change': Record<string, never>
 }
 
 export type PackagerEvents = {

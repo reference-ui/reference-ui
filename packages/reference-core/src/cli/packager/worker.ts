@@ -3,7 +3,7 @@ import { debounce } from '../lib/debounce'
 import type { ReferenceUIConfig } from '../config'
 import { log } from '../lib/log'
 import { emit, on } from '../event-bus'
-import { installPackages } from './install'
+import { installPackages, copyStylesToReactPackage } from './install'
 import { PACKAGES } from './packages'
 
 export interface PackagerWorkerPayload {
@@ -15,13 +15,21 @@ export interface PackagerWorkerPayload {
 
 async function runPackagerCore(payload: PackagerWorkerPayload): Promise<void> {
   const { cwd } = payload
-  const coreDir = resolveCorePackageDir()
+  const coreDir = resolveCorePackageDir(cwd)
 
   log.debug('packager', '📦 Packaging...')
   await installPackages(coreDir, cwd, PACKAGES)
   log.debug('packager', `✅ ${PACKAGES.length} package(s) ready`)
 
   emit('packager:complete', {})
+}
+
+function copyStylesOnly(payload: PackagerWorkerPayload): void {
+  const { cwd } = payload
+  const coreDir = resolveCorePackageDir(cwd)
+  if (copyStylesToReactPackage(coreDir, cwd)) {
+    log.debug('packager', 'styles.css → React package (hot path)')
+  }
 }
 
 /**
@@ -42,6 +50,9 @@ export async function runPackager(payload: PackagerWorkerPayload): Promise<void>
   await runPackagerCore(payload)
 
   if (watchMode) {
+    // Hot path: copy styles.css immediately when Panda writes it
+    on('panda:stylecss:change', () => copyStylesOnly(payload))
+
     const debouncedBundle = debounce(async () => {
       log.debug('packager:worker', 'system:compiled → bundling packages')
       try {
