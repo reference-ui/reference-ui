@@ -20,6 +20,9 @@ importers:
       '@types/node':
         specifier: ^25.1.0
         version: 25.1.0
+      concurrently:
+        specifier: ^9.2.1
+        version: 9.2.1
       nx:
         specifier: ^22.4.4
         version: 22.4.4(@swc-node/register@1.9.2(@swc/core@1.5.29(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.5.29(@swc/helpers@0.5.18))
