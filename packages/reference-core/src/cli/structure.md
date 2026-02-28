@@ -148,8 +148,6 @@ cli/
 │   │   └── initTsPackager(cwd, config)
 │   ├── types.ts
 │   │   └── TsPackagerWorkerPayload
-│   ├── config.ts
-│   │   └── createTsConfig(options)
 │   ├── build.ts
 │   │   └── copyExistingDeclarations, updatePackageTypes
 │   │   └── buildDeclarations(cwd, packages, config)
