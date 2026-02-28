@@ -6,6 +6,25 @@ import { microBundle } from '../../../lib/microbundle'
 import { scanDirectories } from '../../eval/scanner'
 import { buildPandaEntryContent } from './entryTemplate'
 
+/** Scan core + user dirs for config files; returns paths that exist. */
+function collectConfigFiles(coreDir: string, userDirectories: string[] = []): string[] {
+  const basePath = resolve(coreDir, 'panda.base.ts')
+  const styledDir = resolve(coreDir, 'src/styled')
+  const dirsToScan = [styledDir, ...userDirectories]
+  const scannedPaths = scanDirectories(dirsToScan)
+  return [basePath, ...scannedPaths].filter(p => existsSync(p))
+}
+
+/** Bundle entry file with esbuild; returns in-memory bundled code. */
+async function bundleConfigFiles(entryPath: string): Promise<string> {
+  return microBundle(entryPath)
+}
+
+/** Emit event so other systems know config is ready. */
+function emitConfigCreated(configPath: string): void {
+  emit('system:config:created', { configPath })
+}
+
 export interface CreatePandaConfigOptions {
   /** When true, add codegen to include so Panda scans the codegen folder (used by sync only). */
   includeCodegen?: boolean
@@ -35,12 +54,9 @@ export async function createPandaConfig(
 
     // Step 1: Find all files that need to be bundled
     log.debug('system:config', 'Scanning for config files...')
-    const basePath = resolve(coreDir, 'panda.base.ts')
-    const styledDir = resolve(coreDir, 'src/styled')
-    const dirsToScan = [styledDir, ...(options.userDirectories || [])]
-    log.debug('system:config', `Scanning directories: ${dirsToScan.join(', ')}`)
-    const scannedPaths = scanDirectories(dirsToScan)
-    const configFiles = [basePath, ...scannedPaths].filter(p => existsSync(p))
+    const userDirs = options.userDirectories || []
+    log.debug('system:config', `Scanning directories: src/styled${userDirs.length ? `, ${userDirs.join(', ')}` : ''}`)
+    const configFiles = collectConfigFiles(coreDir, userDirs)
     log.debug('system:config', `Found ${configFiles.length} config files`)
 
     // Step 2: Create entry file from template
@@ -58,6 +74,7 @@ export async function createPandaConfig(
       'src/cli/system/config/utils/deepMerge.ts'
     )
 
+    // Step 2: Create entry file from template (imports all fragments, merges via deepMerge)
     const entryContent = buildPandaEntryContent({
       refDir,
       initCollectorPath,
@@ -68,12 +85,12 @@ export async function createPandaConfig(
     writeFileSync(entryPath, entryContent)
     log.debug('system:config', 'Created entry file')
 
-    // Step 3: Bundle with esbuild (reusable helper, in-memory output)
+    // Step 3: Bundle entry with esbuild (inlines all imports)
     log.debug('system:config', 'Bundling with esbuild...')
-    const bundled = await microBundle(entryPath)
+    const bundled = await bundleConfigFiles(entryPath)
     log.debug('system:config', 'Bundle complete')
 
-    // Step 4: Write final panda.config.ts (inject codegen into include only when sync requested it)
+    // Step 4: Write final panda.config.ts; inject codegen include when sync requested
     let output = bundled
     if (options.includeCodegen) {
       const srcPattern = '"src/**/*.{ts,tsx}"'
@@ -88,10 +105,10 @@ export async function createPandaConfig(
     writeFileSync(configPath, finalConfig)
     log.debug('system:config', 'Config written successfully')
 
-    // Emit event so other systems know config is ready
-    emit('system:config:created', { configPath })
+    // Step 6: Emit event so other systems know config is ready
+    emitConfigCreated(configPath)
 
-    // Clean up temp files in .ref
+    // Step 7: Clean up temp files in .ref
     const refFiles = readdirSync(refDir)
     for (const file of refFiles) {
       rmSync(join(refDir, file), { force: true, recursive: true })
