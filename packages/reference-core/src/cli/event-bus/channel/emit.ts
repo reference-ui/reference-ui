@@ -1,5 +1,5 @@
 import { broadcastChannel } from './channel'
-import type { Events } from './events'
+import type { Events } from '../events'
 
 /**
  * Typed emit - sends to BroadcastChannel (all threads see it)

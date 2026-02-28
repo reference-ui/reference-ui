@@ -379,33 +379,23 @@ Use events for:
 
 ## Cleanup
 
-Rarely needed with EventEmitter, but available:
+Rarely needed, but available:
 
 ```ts
-import { bus, off } from '../event-bus'
+import { off } from '../event-bus'
 
 // Remove specific handler
 off('file:changed', myHandler)
 
 // Remove all handlers for event
 off('file:changed')
-
-// Nuclear option
-bus.removeAllListeners()
 ```
 
 ---
 
 ## Alternative: mitt
 
-Want zero Node.js deps? Use `mitt`:
-
-```ts
-import mitt from 'mitt'
-export const bus = mitt()
-```
-
-Same API, smaller bundle. EventEmitter is fine though.
+Want zero Node.js deps? Use `mitt` instead of BroadcastChannel. Same API, smaller bundle.
 
 ---
 

@@ -1,5 +1,5 @@
 import { once } from './on'
-import type { Events } from './events'
+import type { Events } from '../events'
 
 /**
  * Run callback once when all listed events have fired at least once.
