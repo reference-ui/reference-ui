@@ -99,27 +99,19 @@ Generated from `pnpm run complexity`. Focus on high-impact refactors to reduce c
 
 ---
 
-## 🟢 Medium Priority (Improve Structure)
 
-### [ ] 8. `src/cli/sync/index.ts` – **HIGH COUPLING**
-- **Maintainability:** 94
-- **Dependency count:** 8
-- **Issue:** Too many dependencies, mixing orchestration with implementation.
-- **Actionable Steps:**
-  1. Review each import: is it needed at this level?
-  2. Extract worker coordination into `sync/coordinator.ts`
-  3. Keep `sync/index.ts` as a thin facade (< 30 LOC)
-  4. Consider dependency injection for testability
 
-### [ ] 9. `src/cli/lib/index.ts` – **BARREL FILE AUDIT**
+### [DONE] 9. `src/cli/lib/index.ts` – **BARREL FILE AUDIT** ✅
 - **Maintainability:** 96
 - **Dependency count:** 5
 - **Action:** Audit unused exports. Consider explicit exports over barrel pattern to improve tree-shaking.
+- **Done:** Removed barrel file; all 4 consumers now use explicit imports (`lib/run-command`, `lib/resolve-core`, `lib/debounce`, `lib/log`).
 
-### [ ] 10. `src/cli/system/collectors/runCollectScript.ts`
+### [x] 10. `src/cli/system/collectors/runCollectScript.ts` ✅
 - **Physical LOC:** 81, Logical LOC: 46
 - **Maintainability:** 96.8
 - **Action:** Extract `invokeMicrobundle(args)` helper function. Simplify error handling.
+- **Done:** Extracted `invokeBundledScript(scriptPath, cwd, logLabel)` for spawn + memory logging. Error message now includes exit code and handles empty output.
 
 ---
 

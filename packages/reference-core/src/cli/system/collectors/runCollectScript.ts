@@ -17,8 +17,32 @@ export interface RunCollectScriptOptions<T> {
   logLabel?: string
 }
 
+/** Run a bundled script with Node, log memory delta, throw on non-zero exit. */
+function invokeBundledScript(
+  scriptPath: string,
+  cwd: string,
+  logLabel: string
+): void {
+  const memBefore = process.memoryUsage().rss / 1024 / 1024
+  const result = spawnSync(process.execPath, [scriptPath], {
+    cwd,
+    encoding: 'utf-8',
+  })
+  const memAfter = process.memoryUsage().rss / 1024 / 1024
+  const delta = (memAfter - memBefore).toFixed(1)
+  log.debug(
+    logLabel,
+    `Parent RSS: ${memBefore.toFixed(1)}MB → ${memAfter.toFixed(1)}MB (${delta}MB delta)`
+  )
+
+  if (result.status !== 0) {
+    const output = (result.stderr || result.stdout || 'No output').trim()
+    throw new Error(`[runCollectScript] Collect script failed (exit ${result.status}):\n${output}`)
+  }
+}
+
 /**
- * Shared flow for collect scripts: mkdir .ref, write entry, microBundle, spawnSync, read JSON, rm temp.
+ * Shared flow for collect scripts: mkdir .ref, write entry, microBundle, run script, read JSON, rm temp.
  * Used by createBoxPattern and createFontSystem.
  */
 export async function runCollectScript<T>(
@@ -38,22 +62,7 @@ export async function runCollectScript<T>(
   const bundled = await microBundle(entryPath)
   writeFileSync(scriptPath, bundled)
 
-  const memBefore = process.memoryUsage().rss / 1024 / 1024
-  const result = spawnSync(process.execPath, [scriptPath], {
-    cwd: coreDir,
-    encoding: 'utf-8',
-  })
-  const memAfter = process.memoryUsage().rss / 1024 / 1024
-  log.debug(
-    logLabel,
-    `Parent RSS: ${memBefore.toFixed(1)}MB → ${memAfter.toFixed(1)}MB (${(memAfter - memBefore).toFixed(1)}MB delta)`
-  )
-
-  if (result.status !== 0) {
-    throw new Error(
-      `[runCollectScript] Collect script failed:\n${result.stderr || result.stdout}`
-    )
-  }
+  invokeBundledScript(scriptPath, coreDir, logLabel)
 
   const data = JSON.parse(readFileSync(jsonPath, 'utf-8')) as T
 
