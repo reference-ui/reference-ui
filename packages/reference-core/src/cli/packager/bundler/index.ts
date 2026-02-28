@@ -71,5 +71,3 @@ export async function bundlePackage(options: BundleOptions): Promise<void> {
   await createPackageContent(options)
   writePackageJson(targetDir, pkg)
 }
-
-export { installAllPackages, ENABLE_REFERENCE_UI_SYMLINKS } from './install'
