@@ -16,6 +16,7 @@ export async function runCodegen(cwd: string): Promise<void> {
   }
   log.debug('gen:code', 'Starting Panda...')
   await generate({ cwd }, configPath)
+  emit('gen:complete', {})
   emit('system:compiled', {})
 }
 

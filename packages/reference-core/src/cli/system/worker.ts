@@ -38,6 +38,8 @@ async function runConfigOnly(payload: SystemWorkerPayload): Promise<void> {
     })
     configWritten = true
   }
+  emit('system:config:complete', {})
+  emit('system:complete', {})
   emit('config:ready', {})
 }
 

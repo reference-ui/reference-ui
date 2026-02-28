@@ -15,11 +15,11 @@ export const syncCommand = async (cwd: string, options: SyncOptions) => {
   initEventBus()
   initLog(config)
   initWatch(cwd, config, options)
-  initVirtual(cwd, config, options)
-  initSystem(cwd, config, { watch: options?.watch })
-  initGen(cwd, config, { watch: options?.watch })
-  await initPackager(cwd, config, { watch: options?.watch })
-  await initTsPackager(cwd, config)
+  initVirtual(cwd, config, options) // completion: virtual:complete
+  initSystem(cwd, config, { watch: options?.watch }) // completion: system:complete
+  initGen(cwd, config, { watch: options?.watch }) // completion: gen:complete
+  await initPackager(cwd, config, { watch: options?.watch }) // completion: packager:complete
+  await initTsPackager(cwd, config) // completion: packager-ts:complete
 
   if (!options?.watch) {
     process.exit(0)
