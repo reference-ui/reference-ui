@@ -32,7 +32,7 @@
     "build": "pnpm run build:native && tsup",
     "build:fresh": "rm -rf dist/cli && tsup",
     "build:native": "cd src/cli/virtual/native && npx napi build --platform --release",
-    "dev": "pnpm run build:native && tsup --watch",
+    "dev": "tsup --watch",
     "test": "vitest run",
     "test:watch": "vitest",
     "complexity": "tsx scripts/complexity.ts",
