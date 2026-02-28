@@ -654,6 +654,7 @@ codegen/src/
 
 | File                    | Purpose                                 |
 | ----------------------- | --------------------------------------- |
+| `SELF_BUILDING_CLI.md` | Self-building CLI, generated output, build order, gitignore |
 | `MIGRATION-TO-REACT.md` | Guide for migrating to React primitives |
 | `response.md`           | Responsive design patterns              |
 | `responsive.md`         | Container query documentation           |
