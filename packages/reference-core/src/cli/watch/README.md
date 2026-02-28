@@ -27,30 +27,12 @@ Watch Worker Thread          Other Modules (listen to events)
 
 ## Events Emitted
 
-### `watch:ready`
-
-Watcher is ready and monitoring files.
-
-```typescript
-{ sourceDir: string; patterns: string[] }
-```
-
 ### `watch:change`
 
 A file was added, changed, or removed.
 
 ```typescript
 { event: 'add' | 'change' | 'unlink'; path: string; stats?: any }
-```
-
-### `watch:error`
-
-Chokidar error occurred.
-
-```typescript
-{
-  error: string
-}
 ```
 
 ## Usage

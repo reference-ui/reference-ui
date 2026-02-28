@@ -31,7 +31,7 @@ Use `log.info` for user-facing status messages and `log.error` for failures.
 
 Each worker has a single clear responsibility. This keeps the pipeline understandable and fast.
 
-- **watch**: Watches source files and emits `watch:change` / `watch:ready` events.
+- **watch**: Watches source files and emits `watch:change` events.
 - **virtual**: Copies and transforms user files into `.virtual/` for Panda scanning.
 - **system**: Compiles Panda config, runs codegen, generates CSS.
 - **packager**: Bundles outputs into npm packages in `node_modules/`.

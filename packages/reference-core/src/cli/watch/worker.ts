@@ -33,7 +33,6 @@ export async function runWatch(payload: WatchPayload): Promise<void> {
     (err, events) => {
       if (err) {
         log.error('[watch] Watcher error:', err)
-        emit('watch:error', { error: String(err) })
         return
       }
 
@@ -49,7 +48,6 @@ export async function runWatch(payload: WatchPayload): Promise<void> {
   )
 
   log.debug('watch', 'Ready - watching for changes')
-  emit('watch:ready', { sourceDir, patterns: include })
 
   return new Promise(() => {})
 }

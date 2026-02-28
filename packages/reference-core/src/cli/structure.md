@@ -70,7 +70,7 @@ cli/
 │   ├── types.ts
 │   │   └── WatchOptions, WatchPayload, FileEvent, FileChangeEvent
 │   └── worker.ts
-│       └── runWatch(payload) — @parcel/watcher, emits watch:change, watch:ready
+│       └── runWatch(payload) — @parcel/watcher, emits watch:change
 │
 ├── thread-pool/
 │   ├── index.ts
@@ -225,7 +225,7 @@ main()
        ├─ initEventBus, initLog
        └─ [sync path]
             ├─ initWatch (worker: watch)
-            │     └─ emits: watch:ready, watch:change
+            │     └─ emits: watch:change
             ├─ initVirtual (worker: virtual)
             │     └─ listens: watch:change → emits: virtual:fs:change
             ├─ initPackager (worker: packager)
