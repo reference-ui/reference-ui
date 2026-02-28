@@ -1,9 +1,9 @@
 import { log } from '../lib/log'
-import { buildDeclarations } from './build'
+import { installPackagesTs } from './install'
 import type { TsPackagerWorkerPayload } from './types'
 
 /**
- * Run declaration build for packages. Called from worker thread.
+ * Run declaration install for packages. Called from worker thread.
  */
 export async function runTsPackager(payload: TsPackagerWorkerPayload): Promise<void> {
   const { cwd, config, packages } = payload
@@ -11,7 +11,7 @@ export async function runTsPackager(payload: TsPackagerWorkerPayload): Promise<v
   log.debug('packager:ts', '🔷 Generating TypeScript declarations...')
 
   try {
-    await buildDeclarations(cwd, packages, config)
+    await installPackagesTs(cwd, packages)
   } catch (error) {
     log.debug('packager:ts', 'Error:', error)
     throw error
