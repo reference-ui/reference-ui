@@ -913,6 +913,7 @@
 
 @layer recipes{
   @layer _base{
+
     .r_abbr {
       text-decoration: underline dotted;
       text-underline-offset: 0.15em;
@@ -4850,6 +4851,10 @@
 
   .cq-n_card {
     container-name: card;
+}
+
+  .c_\#dc2626 {
+    color: #dc2626;
 }
 
   .pl_px {
