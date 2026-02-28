@@ -56,17 +56,17 @@ transform(props) {
     return result;
   })(props);
   const _r1 = (function(props2) {
-    const { container: container2 } = props2;
-    if (container2 === void 0) return {};
+    const { container } = props2;
+    if (container === void 0) return {};
     return {
       containerType: "inline-size",
-      ...typeof container2 === "string" && container2 && { containerName: container2 }
+      ...typeof container === "string" && container && { containerName: container }
     };
   })(props);
   const _r2 = (function(props2) {
-    const { r, container: container2 } = props2;
+    const { r, container } = props2;
     if (!r) return {};
-    const prefix = container2 ? `@container ${container2} (min-width:` : `@container (min-width:`;
+    const prefix = container ? `@container ${container} (min-width:` : `@container (min-width:`;
     return Object.fromEntries(
       Object.entries(r).map(([bp, styles]) => [`${prefix} ${bp}px)`, styles])
     );
