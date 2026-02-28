@@ -67,6 +67,7 @@ export async function runVirtual(payload: VirtualWorkerPayload): Promise<void> {
   }
 
   log.debug('virtual:worker', 'Initialization complete')
+  emit('virtual:complete', {})
 
   if (watchMode) {
     return startWatchMode({ absSourceDir, absVirtualDir, debug })
