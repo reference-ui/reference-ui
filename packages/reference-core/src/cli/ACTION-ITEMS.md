@@ -33,7 +33,7 @@ Generated from `pnpm run complexity`. Focus on high-impact refactors to reduce c
   4. Reduce nesting by using early returns for error cases
   5. Consider using Result type pattern instead of throwing
 
-### [ ] 3. `src/cli/packager/packages.ts` – **LOWEST MAINTAINABILITY**
+### [DONE] 3. `src/cli/packager/packages.ts` – **LOWEST MAINTAINABILITY**
 
 - **Maintainability:** 80 (lowest in codebase)
 - **Logical LOC:** 42 in 57 physical lines (very dense: 73%)

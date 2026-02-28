@@ -2,6 +2,23 @@
  * Package definitions for Reference UI
  */
 
+/** Shared export pattern for bundled modules: . → types + import */
+function createBundleExports(
+  moduleName: string,
+  options?: { includeStyles?: boolean }
+): Record<string, any> {
+  const exports: Record<string, any> = {
+    '.': {
+      types: `./${moduleName}.d.mts`,
+      import: `./${moduleName}.mjs`,
+    },
+  }
+  if (options?.includeStyles) {
+    exports['./styles.css'] = './styles.css'
+  }
+  return exports
+}
+
 export interface PackageDefinition {
   name: string
   version: string
@@ -34,13 +51,7 @@ export const REACT_PACKAGE: PackageDefinition = {
   entry: 'src/entry/react.ts',
   main: './react.mjs',
   types: './react.d.mts',
-  exports: {
-    '.': {
-      types: './react.d.mts',
-      import: './react.mjs',
-    },
-    './styles.css': './styles.css',
-  },
+  exports: createBundleExports('react', { includeStyles: true }),
   additionalFiles: [{ src: 'src/system/styles.css', dest: 'styles.css' }],
 }
 
@@ -57,12 +68,7 @@ export const SYSTEM_PACKAGE: PackageDefinition = {
   entry: 'src/entry/system.ts',
   main: './system.mjs',
   types: './system.d.mts',
-  exports: {
-    '.': {
-      types: './system.d.mts',
-      import: './system.mjs',
-    },
-  },
+  exports: createBundleExports('system'),
 }
 
 /**
