@@ -97,6 +97,36 @@ export function once(event: string, handler: (payload: any) => void | Promise<vo
 }
 
 /**
+ * Run callback once when all listed events have fired at least once.
+ * Events can fire in any order. Callback runs only once.
+ */
+export function onceAll<K extends keyof Events>(
+  events: K[],
+  handler: () => void | Promise<void>
+): void
+export function onceAll(events: string[], handler: () => void | Promise<void>): void
+export function onceAll(events: string[], handler: () => void | Promise<void>): void {
+  if (events.length === 0) {
+    handler()
+    return
+  }
+
+  const received = new Set<string>()
+  let fired = false
+
+  for (const event of events) {
+    once(event, () => {
+      if (fired) return
+      received.add(event)
+      if (received.size === events.length) {
+        fired = true
+        handler()
+      }
+    })
+  }
+}
+
+/**
  * Remove event listener
  */
 export function off<K extends keyof Events>(event: K, handler?: Function): void
