@@ -117,7 +117,6 @@ on('watch:change', payload => {
 **Use Cases**:
 
 - Watch module emitting `watch:change` when files change (consumed by sync for rebuilds)
-- Watch module emitting `watch:ready` when watcher is active
 - Packager emitting `packager:complete` when bundling finishes (for future watch-mode coordination with packager-ts)
 
 ---
@@ -200,9 +199,7 @@ await subscribe(sourceDir, (err, events) => {
 
 **Events Emitted**:
 
-- `watch:ready` - Watcher is active
 - `watch:change` - File added, changed, or removed (matching include patterns)
-- `watch:error` - Watcher error
 
 **Key Features**:
 
