@@ -3,7 +3,7 @@ import { debounce } from '../lib/debounce'
 import type { ReferenceUIConfig } from '../config'
 import { log } from '../lib/log'
 import { emit, on } from '../event-bus'
-import { bundleAllPackages } from './bundler'
+import { installAllPackages } from './bundler'
 import { PACKAGES } from './packages'
 
 export interface PackagerWorkerPayload {
@@ -18,7 +18,7 @@ async function runPackagerCore(payload: PackagerWorkerPayload): Promise<void> {
   const coreDir = resolveCorePackageDir()
 
   log.debug('packager', '📦 Packaging...')
-  await bundleAllPackages(coreDir, cwd, PACKAGES)
+  await installAllPackages(coreDir, cwd, PACKAGES)
   log.debug('packager', `✅ ${PACKAGES.length} package(s) ready`)
 
   emit('packager:complete', {})
