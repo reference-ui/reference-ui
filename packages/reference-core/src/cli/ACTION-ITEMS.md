@@ -6,7 +6,7 @@ Generated from `pnpm run complexity`. Focus on high-impact refactors to reduce c
 
 ## 🔴 Critical Priority (Highest Cognitive Load)
 
-### 1. `src/cli/lib/resolve-core.ts` – **HIGHEST COMPLEXITY**
+### [DONE] 1. `src/cli/lib/resolve-core.ts` – **HIGHEST COMPLEXITY**
 
 - **Cyclomatic complexity:** 11 (module), 8 (`resolveCorePackageDir`)
 - **Halstead effort:** 22,339 (`resolveCorePackageDir`) + 5,405 (`resolveCorePackageDirForBuild`)
@@ -19,7 +19,7 @@ Generated from `pnpm run complexity`. Focus on high-impact refactors to reduce c
   4. Use early returns to flatten nesting in try-catch blocks
   5. Add JSDoc examples for each resolution strategy
 
-### 2. `src/cli/config/load-config.ts` – **HIGH COGNITIVE LOAD**
+### [DONE] 2. `src/cli/config/load-config.ts` – **HIGH COGNITIVE LOAD**
 
 - **Cyclomatic complexity:** 8 (anonymous callback at line 80)
 - **Halstead effort:** 8,414 (callback), 1,955 (loadConfigFile callback)
@@ -33,7 +33,7 @@ Generated from `pnpm run complexity`. Focus on high-impact refactors to reduce c
   4. Reduce nesting by using early returns for error cases
   5. Consider using Result type pattern instead of throwing
 
-### 3. `src/cli/packager/packages.ts` – **LOWEST MAINTAINABILITY**
+### [ ] 3. `src/cli/packager/packages.ts` – **LOWEST MAINTAINABILITY**
 
 - **Maintainability:** 80 (lowest in codebase)
 - **Logical LOC:** 42 in 57 physical lines (very dense: 73%)
@@ -45,7 +45,7 @@ Generated from `pnpm run complexity`. Focus on high-impact refactors to reduce c
   4. Consider moving to a data file (JSON/YAML) if appropriate
   5. Add schema validation for package definitions
 
-### 4. `src/cli/packager/bundler.ts` – **LARGE MODULE**
+### [ ] 4. `src/cli/packager/bundler.ts` – **LARGE MODULE**
 
 - **Cyclomatic complexity:** 15
 - **Physical LOC:** 261
@@ -63,7 +63,7 @@ Generated from `pnpm run complexity`. Focus on high-impact refactors to reduce c
 
 ## 🟡 High Priority (Refactor for Clarity)
 
-### 5. `src/cli/lib/child-process.ts` – **OVERSIZED FUNCTIONS**
+### [ ] 5. `src/cli/lib/child-process.ts` – **OVERSIZED FUNCTIONS**
 - **Physical LOC:** 219
 - **Halstead effort:** 3,314 (`spawnMonitored`), 784 (`spawnMonitoredAsync` callback)
 - **Issue:** `spawnMonitoredAsync` is 82 LOC with nested promise/event handling.
@@ -74,7 +74,7 @@ Generated from `pnpm run complexity`. Focus on high-impact refactors to reduce c
   4. Reduce promise nesting by using async/await more consistently
   5. Consider using an EventEmitter-based API for better composability
 
-### 6. `src/cli/system/config/panda/createPandaConfig.ts` – **LOW MAINTAINABILITY**
+### [ ] 6. `src/cli/system/config/panda/createPandaConfig.ts` – **LOW MAINTAINABILITY**
 - **Maintainability:** 87.77 (below threshold)
 - **Halstead effort:** High across async operations
 - **Dependency count:** 7
@@ -86,7 +86,7 @@ Generated from `pnpm run complexity`. Focus on high-impact refactors to reduce c
   4. Move template generation to separate module
   5. Document each step with clear intent comments
 
-### 7. `src/cli/system/config/fontFace/generateFontSystem.ts` – **COMPLEX LOGIC**
+### [ ] 7. `src/cli/system/config/fontFace/generateFontSystem.ts` – **COMPLEX LOGIC**
 - **Cyclomatic complexity:** 6
 - **Physical LOC:** 176
 - **Issue:** Large file with complex string building and transformations.
@@ -101,7 +101,7 @@ Generated from `pnpm run complexity`. Focus on high-impact refactors to reduce c
 
 ## 🟢 Medium Priority (Improve Structure)
 
-### 8. `src/cli/sync/index.ts` – **HIGH COUPLING**
+### [ ] 8. `src/cli/sync/index.ts` – **HIGH COUPLING**
 - **Maintainability:** 94
 - **Dependency count:** 8
 - **Issue:** Too many dependencies, mixing orchestration with implementation.
@@ -111,12 +111,12 @@ Generated from `pnpm run complexity`. Focus on high-impact refactors to reduce c
   3. Keep `sync/index.ts` as a thin facade (< 30 LOC)
   4. Consider dependency injection for testability
 
-### 9. `src/cli/lib/index.ts` – **BARREL FILE AUDIT**
+### [ ] 9. `src/cli/lib/index.ts` – **BARREL FILE AUDIT**
 - **Maintainability:** 96
 - **Dependency count:** 5
 - **Action:** Audit unused exports. Consider explicit exports over barrel pattern to improve tree-shaking.
 
-### 10. `src/cli/system/collectors/runCollectScript.ts`
+### [ ] 10. `src/cli/system/collectors/runCollectScript.ts`
 - **Physical LOC:** 81, Logical LOC: 46
 - **Maintainability:** 96.8
 - **Action:** Extract `invokeMicrobundle(args)` helper function. Simplify error handling.

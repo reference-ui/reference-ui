@@ -6,6 +6,20 @@ import { fileURLToPath } from 'node:url'
 import type { ReferenceUIConfig } from './index'
 
 /**
+ * Search for a config file in the given directory.
+ * Tries ui.config.ts, ui.config.js, ui.config.mjs in that order.
+ * @returns Absolute path to the config file, or null if not found.
+ */
+function findConfigFile(cwd: string): string | null {
+  const candidates = ['ui.config.ts', 'ui.config.js', 'ui.config.mjs']
+  for (const candidate of candidates) {
+    const path = resolve(cwd, candidate)
+    if (existsSync(path)) return path
+  }
+  return null
+}
+
+/**
  * Load and execute a config file by bundling and evaluating it.
  * Bundles the config file with esbuild and executes it in a controlled environment.
  *
@@ -46,18 +60,7 @@ async function loadConfigFile(
 export async function loadUserConfig(
   cwd: string = process.cwd()
 ): Promise<ReferenceUIConfig> {
-  // Try .ts first (preferred), then .js, then .mjs
-  const candidates = ['ui.config.ts', 'ui.config.js', 'ui.config.mjs']
-  let configPath: string | null = null
-
-  for (const candidate of candidates) {
-    const path = resolve(cwd, candidate)
-    if (existsSync(path)) {
-      configPath = path
-      break
-    }
-  }
-
+  const configPath = findConfigFile(cwd)
   if (!configPath) {
     throw new Error(
       `reference-ui: No ui.config.ts or ui.config.js found in ${cwd}.\n` +
