@@ -1,3 +1,3 @@
 export const config = {
-  debug: TextTrackCueList,
+  debug: false,
 }
