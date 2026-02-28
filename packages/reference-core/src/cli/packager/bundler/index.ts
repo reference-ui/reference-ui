@@ -1,6 +1,6 @@
 import { resolve, dirname } from 'node:path'
 import { cpSync, existsSync, mkdirSync, readFileSync } from 'node:fs'
-import type { PackageDefinition } from '../packages'
+import type { PackageDefinition } from '../package'
 import { bundleWithEsbuild } from './esbuild'
 import { writeIfChanged, copyDirectories } from './files'
 import { transformTypeScriptFile } from './transform'
