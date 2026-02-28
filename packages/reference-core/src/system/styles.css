@@ -913,7 +913,6 @@
 
 @layer recipes{
   @layer _base{
-
     .r_abbr {
       text-decoration: underline dotted;
       text-underline-offset: 0.15em;
@@ -4773,8 +4772,8 @@
     animation-name: shimmer;
 }
 
-  .c_\#059669 {
-    color: #059669;
+  .c_\#dc2626 {
+    color: #dc2626;
 }
 
   .d_inline-flex {
@@ -4851,10 +4850,6 @@
 
   .cq-n_card {
     container-name: card;
-}
-
-  .c_\#dc2626 {
-    color: #dc2626;
 }
 
   .pl_px {
