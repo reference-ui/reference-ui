@@ -1,6 +1,6 @@
 import { resolve } from 'node:path'
 import { mkdirSync } from 'node:fs'
-import type { PackageDefinition } from '../packages'
+import type { PackageDefinition } from '../package'
 import { installPackage } from './package'
 
 /**

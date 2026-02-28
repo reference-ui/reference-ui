@@ -1,5 +1,5 @@
 import { resolve } from 'node:path'
-import type { PackageDefinition } from '../packages'
+import type { PackageDefinition } from '../package'
 import { writeIfChanged } from './files'
 
 /**

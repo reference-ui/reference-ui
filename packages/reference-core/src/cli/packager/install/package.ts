@@ -2,16 +2,11 @@ import { resolve } from 'node:path'
 import { mkdirSync } from 'node:fs'
 import { log } from '../../lib/log'
 import { createSymlink, removeSymlinkOrDir } from './symlink'
-import type { PackageDefinition } from '../packages'
+import { getShortName, type PackageDefinition } from '../package'
 import { bundlePackage } from '../bundler'
 
 /** Set to false to skip symlinking .reference-ui/* into node_modules/@reference-ui/* */
 export const ENABLE_REFERENCE_UI_SYMLINKS = true
-
-function getShortName(pkgName: string): string {
-  const scope = pkgName.indexOf('/')
-  return scope >= 0 ? pkgName.slice(scope + 1) : pkgName
-}
 
 export async function installPackage(
   coreDir: string,
