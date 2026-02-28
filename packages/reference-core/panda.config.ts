@@ -6,7 +6,7 @@ var __export = (target, all) => {
     __defProp(target, name, { get: all[name], enumerable: true });
 };
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/cli/system/config/panda/extendPandaConfig.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/cli/system/config/panda/extendPandaConfig.ts
 var COLLECTOR_KEY = "__refPandaConfigCollector";
 function extendPandaConfig(partial) {
   const collector = globalThis[COLLECTOR_KEY];
@@ -16,13 +16,13 @@ function extendPandaConfig(partial) {
 }
 __name(extendPandaConfig, "extendPandaConfig");
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/cli/system/config/panda/initCollector.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/cli/system/config/panda/initCollector.ts
 globalThis[COLLECTOR_KEY] = [];
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/.ref/panda-entry.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/.ref/panda-entry.ts
 import { defineConfig as defineConfig2 } from "@pandacss/dev";
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/cli/system/config/utils/deepMerge.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/cli/system/config/utils/deepMerge.ts
 function deepMerge(target, ...sources) {
   const result = { ...target };
   for (const source of sources) {
@@ -46,7 +46,7 @@ function deepMerge(target, ...sources) {
 }
 __name(deepMerge, "deepMerge");
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/panda.base.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/panda.base.ts
 var panda_base_exports = {};
 __export(panda_base_exports, {
   baseConfig: () => baseConfig,
@@ -54,13 +54,13 @@ __export(panda_base_exports, {
 });
 import { defineConfig } from "@pandacss/dev";
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/theme/colors.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/theme/colors.ts
 var colors_exports = {};
 __export(colors_exports, {
   colors: () => colors
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/api/internal/extendTokens.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/api/internal/extendTokens.ts
 var extendTokens_exports = {};
 __export(extendTokens_exports, {
   extendTokens: () => extendTokens
@@ -74,7 +74,7 @@ function extendTokens(tokenConfig) {
 }
 __name(extendTokens, "extendTokens");
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/theme/colors.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/theme/colors.ts
 var colors = {
   gray: {
     50: { value: "oklch(98.5% 0.002 247.839)" },
@@ -315,19 +315,19 @@ extendTokens({
   colors
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/theme/spacing.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/theme/spacing.ts
 var spacing_exports = {};
 __export(spacing_exports, {
   spacing: () => spacing
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/rhythm/utilities.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/rhythm/utilities.ts
 var utilities_exports = {};
 __export(utilities_exports, {
   rhythmUtilities: () => rhythmUtilities
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/system/helpers.js
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/system/helpers.js
 function isObject(value) {
   return typeof value === "object" && value != null && !Array.isArray(value);
 }
@@ -569,7 +569,7 @@ function normalizeHTMLProps(props) {
 __name(normalizeHTMLProps, "normalizeHTMLProps");
 normalizeHTMLProps.keys = htmlProps;
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/system/css/conditions.js
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/system/css/conditions.js
 var conditionsStr = "_hover,_focus,_focusWithin,_focusVisible,_disabled,_active,_visited,_target,_readOnly,_readWrite,_empty,_checked,_enabled,_expanded,_highlighted,_complete,_incomplete,_dragging,_before,_after,_firstLetter,_firstLine,_marker,_selection,_file,_backdrop,_first,_last,_only,_even,_odd,_firstOfType,_lastOfType,_onlyOfType,_peerFocus,_peerHover,_peerActive,_peerFocusWithin,_peerFocusVisible,_peerDisabled,_peerChecked,_peerInvalid,_peerExpanded,_peerPlaceholderShown,_groupFocus,_groupHover,_groupActive,_groupFocusWithin,_groupFocusVisible,_groupDisabled,_groupChecked,_groupExpanded,_groupInvalid,_indeterminate,_required,_valid,_invalid,_autofill,_inRange,_outOfRange,_placeholder,_placeholderShown,_pressed,_selected,_grabbed,_underValue,_overValue,_atValue,_default,_optional,_open,_closed,_fullscreen,_loading,_hidden,_current,_currentPage,_currentStep,_today,_unavailable,_rangeStart,_rangeEnd,_now,_topmost,_motionReduce,_motionSafe,_print,_landscape,_portrait,_dark,_light,_osDark,_osLight,_highContrast,_lessContrast,_moreContrast,_ltr,_rtl,_scrollbar,_scrollbarThumb,_scrollbarTrack,_horizontal,_vertical,_icon,_starting,_noscript,_invertedColors,base";
 var conditions = new Set(conditionsStr.split(","));
 var conditionRegex = /^@|&|&$/;
@@ -602,7 +602,7 @@ function sortConditions(paths) {
 }
 __name(sortConditions, "sortConditions");
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/system/css/css.js
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/system/css/css.js
 var utilities = "aspectRatio:asp,boxDecorationBreak:bx-db,zIndex:z,boxSizing:bx-s,objectPosition:obj-p,objectFit:obj-f,overscrollBehavior:ovs-b,overscrollBehaviorX:ovs-bx,overscrollBehaviorY:ovs-by,position:pos/1,top:top,left:left,inset:inset,insetInline:inset-x/insetX,insetBlock:inset-y/insetY,insetBlockEnd:inset-be,insetBlockStart:inset-bs,insetInlineEnd:inset-e/insetEnd/end,insetInlineStart:inset-s/insetStart/start,right:right,bottom:bottom,float:float,visibility:vis,display:d,hideFrom:hide,hideBelow:show,flexBasis:flex-b,flex:flex,flexDirection:flex-d/flexDir,flexGrow:flex-g,flexShrink:flex-sh,gridTemplateColumns:grid-tc,gridTemplateRows:grid-tr,gridColumn:grid-c,gridRow:grid-r,gridColumnStart:grid-cs,gridColumnEnd:grid-ce,gridAutoFlow:grid-af,gridAutoColumns:grid-ac,gridAutoRows:grid-ar,gap:gap,gridGap:grid-g,gridRowGap:grid-rg,gridColumnGap:grid-cg,rowGap:rg,columnGap:cg,justifyContent:jc,alignContent:ac,alignItems:ai,alignSelf:as,padding:p/1,paddingLeft:pl/1,paddingRight:pr/1,paddingTop:pt/1,paddingBottom:pb/1,paddingBlock:py/1/paddingY,paddingBlockEnd:pbe,paddingBlockStart:pbs,paddingInline:px/paddingX/1,paddingInlineEnd:pe/1/paddingEnd,paddingInlineStart:ps/1/paddingStart,marginLeft:ml/1,marginRight:mr/1,marginTop:mt/1,marginBottom:mb/1,margin:m/1,marginBlock:my/1/marginY,marginBlockEnd:mbe,marginBlockStart:mbs,marginInline:mx/1/marginX,marginInlineEnd:me/1/marginEnd,marginInlineStart:ms/1/marginStart,spaceX:sx,spaceY:sy,outlineWidth:ring-w/ringWidth,outlineColor:ring-c/ringColor,outline:ring/1,outlineOffset:ring-o/ringOffset,focusRing:focus-ring,focusVisibleRing:focus-v-ring,focusRingColor:focus-ring-c,focusRingOffset:focus-ring-o,focusRingWidth:focus-ring-w,focusRingStyle:focus-ring-s,divideX:dvd-x,divideY:dvd-y,divideColor:dvd-c,divideStyle:dvd-s,width:w/1,inlineSize:w-is,minWidth:min-w/minW,minInlineSize:min-w-is,maxWidth:max-w/maxW,maxInlineSize:max-w-is,height:h/1,blockSize:h-bs,minHeight:min-h/minH,minBlockSize:min-h-bs,maxHeight:max-h/maxH,maxBlockSize:max-b,boxSize:size,color:c,fontFamily:ff,fontSize:fs,fontSizeAdjust:fs-a,fontPalette:fp,fontKerning:fk,fontFeatureSettings:ff-s,fontWeight:fw,fontSmoothing:fsmt,fontVariant:fv,fontVariantAlternates:fv-alt,fontVariantCaps:fv-caps,fontVariationSettings:fv-s,fontVariantNumeric:fv-num,letterSpacing:ls,lineHeight:lh,textAlign:ta,textDecoration:td,textDecorationColor:td-c,textEmphasisColor:te-c,textDecorationStyle:td-s,textDecorationThickness:td-t,textUnderlineOffset:tu-o,textTransform:tt,textIndent:ti,textShadow:tsh,textShadowColor:tsh-c/textShadowColor,WebkitTextFillColor:wktf-c,textOverflow:tov,verticalAlign:va,wordBreak:wb,textWrap:tw,truncate:trunc,lineClamp:lc,listStyleType:li-t,listStylePosition:li-pos,listStyleImage:li-img,listStyle:li-s,backgroundPosition:bg-p/bgPosition,backgroundPositionX:bg-p-x/bgPositionX,backgroundPositionY:bg-p-y/bgPositionY,backgroundAttachment:bg-a/bgAttachment,backgroundClip:bg-cp/bgClip,background:bg/1,backgroundColor:bg-c/bgColor,backgroundOrigin:bg-o/bgOrigin,backgroundImage:bg-i/bgImage,backgroundRepeat:bg-r/bgRepeat,backgroundBlendMode:bg-bm/bgBlendMode,backgroundSize:bg-s/bgSize,backgroundGradient:bg-grad/bgGradient,backgroundLinear:bg-linear/bgLinear,backgroundRadial:bg-radial/bgRadial,backgroundConic:bg-conic/bgConic,textGradient:txt-grad,gradientFromPosition:grad-from-pos,gradientToPosition:grad-to-pos,gradientFrom:grad-from,gradientTo:grad-to,gradientVia:grad-via,gradientViaPosition:grad-via-pos,borderRadius:bdr/rounded,borderTopLeftRadius:bdr-tl/roundedTopLeft,borderTopRightRadius:bdr-tr/roundedTopRight,borderBottomRightRadius:bdr-br/roundedBottomRight,borderBottomLeftRadius:bdr-bl/roundedBottomLeft,borderTopRadius:bdr-t/roundedTop,borderRightRadius:bdr-r/roundedRight,borderBottomRadius:bdr-b/roundedBottom,borderLeftRadius:bdr-l/roundedLeft,borderStartStartRadius:bdr-ss/roundedStartStart,borderStartEndRadius:bdr-se/roundedStartEnd,borderStartRadius:bdr-s/roundedStart,borderEndStartRadius:bdr-es/roundedEndStart,borderEndEndRadius:bdr-ee/roundedEndEnd,borderEndRadius:bdr-e/roundedEnd,border:bd,borderWidth:bd-w,borderTopWidth:bd-t-w,borderLeftWidth:bd-l-w,borderRightWidth:bd-r-w,borderBottomWidth:bd-b-w,borderBlockStartWidth:bd-bs-w,borderBlockEndWidth:bd-be-w,borderColor:bd-c,borderInline:bd-x/borderX,borderInlineWidth:bd-x-w/borderXWidth,borderInlineColor:bd-x-c/borderXColor,borderBlock:bd-y/borderY,borderBlockWidth:bd-y-w/borderYWidth,borderBlockColor:bd-y-c/borderYColor,borderLeft:bd-l,borderLeftColor:bd-l-c,borderInlineStart:bd-s/borderStart,borderInlineStartWidth:bd-s-w/borderStartWidth,borderInlineStartColor:bd-s-c/borderStartColor,borderRight:bd-r,borderRightColor:bd-r-c,borderInlineEnd:bd-e/borderEnd,borderInlineEndWidth:bd-e-w/borderEndWidth,borderInlineEndColor:bd-e-c/borderEndColor,borderTop:bd-t,borderTopColor:bd-t-c,borderBottom:bd-b,borderBottomColor:bd-b-c,borderBlockEnd:bd-be,borderBlockEndColor:bd-be-c,borderBlockStart:bd-bs,borderBlockStartColor:bd-bs-c,opacity:op,boxShadow:bx-sh/shadow,boxShadowColor:bx-sh-c/shadowColor,mixBlendMode:mix-bm,filter:filter,brightness:brightness,contrast:contrast,grayscale:grayscale,hueRotate:hue-rotate,invert:invert,saturate:saturate,sepia:sepia,dropShadow:drop-shadow,blur:blur,backdropFilter:bkdp,backdropBlur:bkdp-blur,backdropBrightness:bkdp-brightness,backdropContrast:bkdp-contrast,backdropGrayscale:bkdp-grayscale,backdropHueRotate:bkdp-hue-rotate,backdropInvert:bkdp-invert,backdropOpacity:bkdp-opacity,backdropSaturate:bkdp-saturate,backdropSepia:bkdp-sepia,borderCollapse:bd-cl,borderSpacing:bd-sp,borderSpacingX:bd-sx,borderSpacingY:bd-sy,tableLayout:tbl,transitionTimingFunction:trs-tmf,transitionDelay:trs-dly,transitionDuration:trs-dur,transitionProperty:trs-prop,transition:trs,animation:anim,animationName:anim-n,animationTimingFunction:anim-tmf,animationDuration:anim-dur,animationDelay:anim-dly,animationPlayState:anim-ps,animationComposition:anim-comp,animationFillMode:anim-fm,animationDirection:anim-dir,animationIterationCount:anim-ic,animationRange:anim-r,animationState:anim-s,animationRangeStart:anim-rs,animationRangeEnd:anim-re,animationTimeline:anim-tl,transformOrigin:trf-o,transformBox:trf-b,transformStyle:trf-s,transform:trf,rotate:rotate,rotateX:rotate-x,rotateY:rotate-y,rotateZ:rotate-z,scale:scale,scaleX:scale-x,scaleY:scale-y,translate:translate,translateX:translate-x/x,translateY:translate-y/y,translateZ:translate-z/z,accentColor:ac-c,caretColor:ca-c,scrollBehavior:scr-bhv,scrollbar:scr-bar,scrollbarColor:scr-bar-c,scrollbarGutter:scr-bar-g,scrollbarWidth:scr-bar-w,scrollMargin:scr-m,scrollMarginLeft:scr-ml,scrollMarginRight:scr-mr,scrollMarginTop:scr-mt,scrollMarginBottom:scr-mb,scrollMarginBlock:scr-my/scrollMarginY,scrollMarginBlockEnd:scr-mbe,scrollMarginBlockStart:scr-mbt,scrollMarginInline:scr-mx/scrollMarginX,scrollMarginInlineEnd:scr-me,scrollMarginInlineStart:scr-ms,scrollPadding:scr-p,scrollPaddingBlock:scr-py/scrollPaddingY,scrollPaddingBlockStart:scr-pbs,scrollPaddingBlockEnd:scr-pbe,scrollPaddingInline:scr-px/scrollPaddingX,scrollPaddingInlineEnd:scr-pe,scrollPaddingInlineStart:scr-ps,scrollPaddingLeft:scr-pl,scrollPaddingRight:scr-pr,scrollPaddingTop:scr-pt,scrollPaddingBottom:scr-pb,scrollSnapAlign:scr-sa,scrollSnapStop:scrs-s,scrollSnapType:scrs-t,scrollSnapStrictness:scrs-strt,scrollSnapMargin:scrs-m,scrollSnapMarginTop:scrs-mt,scrollSnapMarginBottom:scrs-mb,scrollSnapMarginLeft:scrs-ml,scrollSnapMarginRight:scrs-mr,scrollSnapCoordinate:scrs-c,scrollSnapDestination:scrs-d,scrollSnapPointsX:scrs-px,scrollSnapPointsY:scrs-py,scrollSnapTypeX:scrs-tx,scrollSnapTypeY:scrs-ty,scrollTimeline:scrtl,scrollTimelineAxis:scrtl-a,scrollTimelineName:scrtl-n,touchAction:tch-a,userSelect:us,overflow:ov,overflowWrap:ov-wrap,overflowX:ov-x,overflowY:ov-y,overflowAnchor:ov-a,overflowBlock:ov-b,overflowInline:ov-i,overflowClipBox:ovcp-bx,overflowClipMargin:ovcp-m,overscrollBehaviorBlock:ovs-bb,overscrollBehaviorInline:ovs-bi,fill:fill,stroke:stk,strokeWidth:stk-w,strokeDasharray:stk-dsh,strokeDashoffset:stk-do,strokeLinecap:stk-lc,strokeLinejoin:stk-lj,strokeMiterlimit:stk-ml,strokeOpacity:stk-op,srOnly:sr,debug:debug,appearance:ap,backfaceVisibility:bfv,clipPath:cp-path,hyphens:hy,mask:msk,maskImage:msk-i,maskSize:msk-s,textSizeAdjust:txt-adj,container:cq,containerName:cq-n,containerType:cq-t,cursor:cursor";
 var classNameByProp = /* @__PURE__ */ new Map();
 var shorthands = /* @__PURE__ */ new Map();
@@ -639,7 +639,7 @@ var css = /* @__PURE__ */ __name((...styles) => cssFn(mergeCss(...styles)), "css
 css.raw = (...styles) => mergeCss(...styles);
 var { mergeCss, assignCss } = createMergeCss(context);
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/system/css/cva.js
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/system/css/cva.js
 var defaults = /* @__PURE__ */ __name((conf) => ({
   base: {},
   variants: {},
@@ -713,14 +713,14 @@ function getCompoundVariantCss(compoundVariants, variantMap) {
 }
 __name(getCompoundVariantCss, "getCompoundVariantCss");
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/api/runtime/css.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/api/runtime/css.ts
 function css2(...styles) {
   return css(...styles);
 }
 __name(css2, "css");
 css2.raw = css.raw;
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/api/runtime/recipe.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/api/runtime/recipe.ts
 var recipe_exports = {};
 __export(recipe_exports, {
   recipe: () => recipe
@@ -730,7 +730,7 @@ function recipe(config2) {
 }
 __name(recipe, "recipe");
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/api/internal/extendRecipe.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/api/internal/extendRecipe.ts
 var extendRecipe_exports = {};
 __export(extendRecipe_exports, {
   extendRecipe: () => extendRecipe,
@@ -757,7 +757,7 @@ function extendSlotRecipe(slotRecipeConfig) {
 }
 __name(extendSlotRecipe, "extendSlotRecipe");
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/api/internal/extendUtilities.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/api/internal/extendUtilities.ts
 var extendUtilities_exports = {};
 __export(extendUtilities_exports, {
   extendUtilities: () => extendUtilities
@@ -771,7 +771,7 @@ function extendUtilities(extend) {
 }
 __name(extendUtilities, "extendUtilities");
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/api/internal/extendGlobalCss.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/api/internal/extendGlobalCss.ts
 var extendGlobalCss_exports = {};
 __export(extendGlobalCss_exports, {
   extendGlobalCss: () => extendGlobalCss
@@ -783,7 +783,7 @@ function extendGlobalCss(css3) {
 }
 __name(extendGlobalCss, "extendGlobalCss");
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/api/internal/extendStaticCss.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/api/internal/extendStaticCss.ts
 var extendStaticCss_exports = {};
 __export(extendStaticCss_exports, {
   extendStaticCss: () => extendStaticCss
@@ -795,7 +795,7 @@ function extendStaticCss(config2) {
 }
 __name(extendStaticCss, "extendStaticCss");
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/api/internal/extendGlobalFontface.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/api/internal/extendGlobalFontface.ts
 var extendGlobalFontface_exports = {};
 __export(extendGlobalFontface_exports, {
   extendGlobalFontface: () => extendGlobalFontface
@@ -807,13 +807,13 @@ function extendGlobalFontface(fontface) {
 }
 __name(extendGlobalFontface, "extendGlobalFontface");
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/api/internal/extendFont.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/api/internal/extendFont.ts
 var extendFont_exports = {};
 __export(extendFont_exports, {
   extendFont: () => extendFont
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/cli/system/config/fontFace/extendFontFace.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/cli/system/config/fontFace/extendFontFace.ts
 var FONT_COLLECTOR_KEY = "__fontCollector";
 if (!globalThis[FONT_COLLECTOR_KEY]) {
   ;
@@ -825,13 +825,13 @@ function extendFontCollector(def) {
 }
 __name(extendFontCollector, "extendFontCollector");
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/api/internal/extendFont.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/api/internal/extendFont.ts
 function extendFont(name, options) {
   extendFontCollector({ name, ...options });
 }
 __name(extendFont, "extendFont");
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/api/internal/extendKeyframes.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/api/internal/extendKeyframes.ts
 var extendKeyframes_exports = {};
 __export(extendKeyframes_exports, {
   extendKeyframes: () => extendKeyframes
@@ -847,7 +847,7 @@ function extendKeyframes(config2) {
 }
 __name(extendKeyframes, "extendKeyframes");
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/cli/system/config/boxPattern/extendBoxPattern.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/cli/system/config/boxPattern/extendBoxPattern.ts
 var BOX_PATTERN_COLLECTOR_KEY = "__boxPatternCollector";
 if (!globalThis[BOX_PATTERN_COLLECTOR_KEY]) {
   ;
@@ -859,7 +859,7 @@ function extendBoxPattern(extension) {
 }
 __name(extendBoxPattern, "extendBoxPattern");
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/rhythm/helpers.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/rhythm/helpers.ts
 function getRhythm(num, denom) {
   if (denom !== void 0) {
     return num === 1 ? `calc(var(--spacing-r) / ${denom})` : `calc(${num} * var(--spacing-r) / ${denom})`;
@@ -879,7 +879,7 @@ function resolveRhythm(value) {
 }
 __name(resolveRhythm, "resolveRhythm");
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/rhythm/utilities.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/rhythm/utilities.ts
 var rhythmTransform = /* @__PURE__ */ __name((property) => ({
   property,
   values: "spacing",
@@ -959,7 +959,7 @@ var rhythmUtilities = {
 };
 extendUtilities(rhythmUtilities);
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/theme/spacing.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/theme/spacing.ts
 var spacing = {
   px: { value: "1px" },
   r: { value: "0.25rem" },
@@ -984,7 +984,7 @@ extendTokens({
   spacing
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/theme/radii.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/theme/radii.ts
 var radii_exports = {};
 __export(radii_exports, {
   radii: () => radii
@@ -1004,7 +1004,7 @@ extendTokens({
   radii
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/theme/animations.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/theme/animations.ts
 var animations_exports = {};
 extendTokens({
   animations: {
@@ -1056,7 +1056,7 @@ extendTokens({
   }
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/font/font.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/font/font.ts
 var font_exports = {};
 extendTokens({
   fonts: {
@@ -1173,7 +1173,7 @@ extendBoxPattern({
   }
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/animations/fade.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/animations/fade.ts
 var fade_exports = {};
 extendKeyframes({
   fadeIn: {
@@ -1226,7 +1226,7 @@ extendKeyframes({
   }
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/animations/slide.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/animations/slide.ts
 var slide_exports = {};
 extendKeyframes({
   slideUp: {
@@ -1255,7 +1255,7 @@ extendKeyframes({
   }
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/animations/scale.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/animations/scale.ts
 var scale_exports = {};
 extendKeyframes({
   scaleIn: {
@@ -1299,7 +1299,7 @@ extendKeyframes({
   }
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/animations/spin.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/animations/spin.ts
 var spin_exports = {};
 extendKeyframes({
   spin: {
@@ -1324,7 +1324,7 @@ extendKeyframes({
   }
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/animations/bounce.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/animations/bounce.ts
 var bounce_exports = {};
 extendKeyframes({
   bounce: {
@@ -1376,7 +1376,7 @@ extendKeyframes({
   }
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/animations/attention.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/animations/attention.ts
 var attention_exports = {};
 extendKeyframes({
   ping: {
@@ -1413,17 +1413,17 @@ extendKeyframes({
   }
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/h1.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/h1.style.ts
 import { defineRecipe } from "@pandacss/dev";
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/base.typography.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/base.typography.ts
 var baseTypography = {
   fontFamily: "sans",
   letterSpacing: "-0.01em",
   color: "gray.900"
 };
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/h1.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/h1.style.ts
 var h1Style = defineRecipe({
   className: "r_h1",
   base: {
@@ -1436,7 +1436,7 @@ var h1Style = defineRecipe({
   }
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/h2.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/h2.style.ts
 import { defineRecipe as defineRecipe2 } from "@pandacss/dev";
 var h2Style = defineRecipe2({
   className: "r_h2",
@@ -1450,7 +1450,7 @@ var h2Style = defineRecipe2({
   }
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/h3.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/h3.style.ts
 import { defineRecipe as defineRecipe3 } from "@pandacss/dev";
 var h3Style = defineRecipe3({
   className: "r_h3",
@@ -1464,7 +1464,7 @@ var h3Style = defineRecipe3({
   }
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/h4.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/h4.style.ts
 import { defineRecipe as defineRecipe4 } from "@pandacss/dev";
 var h4Style = defineRecipe4({
   className: "r_h4",
@@ -1478,7 +1478,7 @@ var h4Style = defineRecipe4({
   }
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/h5.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/h5.style.ts
 import { defineRecipe as defineRecipe5 } from "@pandacss/dev";
 var h5Style = defineRecipe5({
   className: "r_h5",
@@ -1492,7 +1492,7 @@ var h5Style = defineRecipe5({
   }
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/h6.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/h6.style.ts
 import { defineRecipe as defineRecipe6 } from "@pandacss/dev";
 var h6Style = defineRecipe6({
   className: "r_h6",
@@ -1507,7 +1507,7 @@ var h6Style = defineRecipe6({
   }
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/p.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/p.style.ts
 import { defineRecipe as defineRecipe7 } from "@pandacss/dev";
 var pStyle = defineRecipe7({
   className: "r_p",
@@ -1520,7 +1520,7 @@ var pStyle = defineRecipe7({
   }
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/strong.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/strong.style.ts
 import { defineRecipe as defineRecipe8 } from "@pandacss/dev";
 var strongStyle = defineRecipe8({
   className: "r_strong",
@@ -1530,7 +1530,7 @@ var strongStyle = defineRecipe8({
   }
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/em.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/em.style.ts
 import { defineRecipe as defineRecipe9 } from "@pandacss/dev";
 var emStyle = defineRecipe9({
   className: "r_em",
@@ -1540,7 +1540,7 @@ var emStyle = defineRecipe9({
   }
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/b.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/b.style.ts
 import { defineRecipe as defineRecipe10 } from "@pandacss/dev";
 var bStyle = defineRecipe10({
   className: "r_b",
@@ -1550,7 +1550,7 @@ var bStyle = defineRecipe10({
   }
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/i.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/i.style.ts
 import { defineRecipe as defineRecipe11 } from "@pandacss/dev";
 var iStyle = defineRecipe11({
   className: "r_i",
@@ -1560,7 +1560,7 @@ var iStyle = defineRecipe11({
   }
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/u.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/u.style.ts
 import { defineRecipe as defineRecipe12 } from "@pandacss/dev";
 var uStyle = defineRecipe12({
   className: "r_u",
@@ -1572,7 +1572,7 @@ var uStyle = defineRecipe12({
   }
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/s.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/s.style.ts
 import { defineRecipe as defineRecipe13 } from "@pandacss/dev";
 var sStyle = defineRecipe13({
   className: "r_s",
@@ -1583,7 +1583,7 @@ var sStyle = defineRecipe13({
   }
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/small.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/small.style.ts
 import { defineRecipe as defineRecipe14 } from "@pandacss/dev";
 var smallStyle = defineRecipe14({
   className: "r_small",
@@ -1594,7 +1594,7 @@ var smallStyle = defineRecipe14({
   }
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/mark.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/mark.style.ts
 import { defineRecipe as defineRecipe15 } from "@pandacss/dev";
 var markStyle = defineRecipe15({
   className: "r_mark",
@@ -1607,7 +1607,7 @@ var markStyle = defineRecipe15({
   }
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/sub.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/sub.style.ts
 import { defineRecipe as defineRecipe16 } from "@pandacss/dev";
 var subStyle = defineRecipe16({
   className: "r_sub",
@@ -1619,7 +1619,7 @@ var subStyle = defineRecipe16({
   }
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/sup.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/sup.style.ts
 import { defineRecipe as defineRecipe17 } from "@pandacss/dev";
 var supStyle = defineRecipe17({
   className: "r_sup",
@@ -1631,7 +1631,7 @@ var supStyle = defineRecipe17({
   }
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/abbr.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/abbr.style.ts
 import { defineRecipe as defineRecipe18 } from "@pandacss/dev";
 var abbrStyle = defineRecipe18({
   className: "r_abbr",
@@ -1643,7 +1643,7 @@ var abbrStyle = defineRecipe18({
   }
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/code.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/code.style.ts
 import { defineRecipe as defineRecipe19 } from "@pandacss/dev";
 var codeStyle = defineRecipe19({
   className: "r_code",
@@ -1659,7 +1659,7 @@ var codeStyle = defineRecipe19({
   }
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/pre.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/pre.style.ts
 import { defineRecipe as defineRecipe20 } from "@pandacss/dev";
 var preStyle = defineRecipe20({
   className: "r_pre",
@@ -1680,7 +1680,7 @@ var preStyle = defineRecipe20({
   }
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/kbd.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/kbd.style.ts
 import { defineRecipe as defineRecipe21 } from "@pandacss/dev";
 var kbdStyle = defineRecipe21({
   className: "r_kbd",
@@ -1702,7 +1702,7 @@ var kbdStyle = defineRecipe21({
   }
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/samp.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/samp.style.ts
 import { defineRecipe as defineRecipe22 } from "@pandacss/dev";
 var sampStyle = defineRecipe22({
   className: "r_samp",
@@ -1719,7 +1719,7 @@ var sampStyle = defineRecipe22({
   }
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/var.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/var.style.ts
 import { defineRecipe as defineRecipe23 } from "@pandacss/dev";
 var varStyle = defineRecipe23({
   className: "r_var",
@@ -1732,7 +1732,7 @@ var varStyle = defineRecipe23({
   }
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/blockquote.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/blockquote.style.ts
 import { defineRecipe as defineRecipe24 } from "@pandacss/dev";
 var blockquoteStyle = defineRecipe24({
   className: "r_blockquote",
@@ -1753,7 +1753,7 @@ var blockquoteStyle = defineRecipe24({
   }
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/q.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/q.style.ts
 import { defineRecipe as defineRecipe25 } from "@pandacss/dev";
 var qStyle = defineRecipe25({
   className: "r_q",
@@ -1769,7 +1769,7 @@ var qStyle = defineRecipe25({
   }
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/cite.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/cite.style.ts
 import { defineRecipe as defineRecipe26 } from "@pandacss/dev";
 var citeStyle = defineRecipe26({
   className: "r_cite",
@@ -1780,7 +1780,7 @@ var citeStyle = defineRecipe26({
   }
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/recipes.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/recipes.ts
 var primitiveCSS = {
   h1Style,
   h2Style,
@@ -1811,7 +1811,7 @@ var primitiveCSS = {
 };
 extendRecipe(primitiveCSS);
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/css.global.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/css.global.ts
 var css_global_exports = {};
 extendGlobalCss({
   ":root": {
@@ -1827,7 +1827,7 @@ extendGlobalCss({
   }
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/css.static.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/css.static.ts
 var css_static_exports = {};
 extendStaticCss({
   css: [
@@ -1859,7 +1859,7 @@ extendStaticCss({
   }
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/panda.base.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/panda.base.ts
 var baseConfig = {
   presets: [],
   jsxFramework: "react",
@@ -1881,7 +1881,7 @@ var baseConfig = {
 extendPandaConfig(baseConfig);
 var panda_base_default = defineConfig(baseConfig);
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/font/fonts.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/font/fonts.ts
 var fonts_exports = {};
 extendFont("sans", {
   value: '"Inter", ui-sans-serif, sans-serif',
@@ -1949,10 +1949,10 @@ extendFont("mono", {
   }
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/props/box.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/props/box.ts
 var box_exports = {};
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/tags.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/tags.ts
 var TAGS = [
   "a",
   "abbr",
@@ -2065,7 +2065,7 @@ function toJsxName(tag) {
 __name(toJsxName, "toJsxName");
 var PRIMITIVE_JSX_NAMES = TAGS.map(toJsxName);
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/props/box.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/props/box.ts
 extendPandaConfig({
   patterns: {
     extend: {
@@ -2154,7 +2154,7 @@ extendPandaConfig({
   }
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/props/container.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/props/container.ts
 var container_exports = {};
 extendBoxPattern({
   properties: {
@@ -2170,7 +2170,7 @@ extendBoxPattern({
   }
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/props/r.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/props/r.ts
 var r_exports = {};
 extendBoxPattern({
   properties: {
@@ -2186,7 +2186,7 @@ extendBoxPattern({
   }
 });
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/api/system/index.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/api/system/index.ts
 var system_exports = {};
 __export(system_exports, {
   font: () => font,
@@ -2255,7 +2255,7 @@ var tokensConfig = {
 // lib/ref-config/register.ts
 tokens2(tokensConfig);
 
-// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/.ref/panda-entry.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@reference-ui/core/.ref/panda-entry.ts
 var defaultFragments = [panda_base_exports, css_global_exports, css_static_exports, attention_exports, bounce_exports, fade_exports, scale_exports, slide_exports, spin_exports, font_exports, fonts_exports, box_exports, container_exports, r_exports, utilities_exports, animations_exports, colors_exports, radii_exports, spacing_exports, extendFont_exports, extendGlobalCss_exports, extendGlobalFontface_exports, extendKeyframes_exports, extendRecipe_exports, extendStaticCss_exports, extendTokens_exports, extendUtilities_exports, recipe_exports, system_exports, register_exports].map((m) => m?.default !== void 0 ? m.default : null).filter(Boolean);
 var collected = globalThis[COLLECTOR_KEY] || [];
 var fragments = [...defaultFragments, ...collected];
