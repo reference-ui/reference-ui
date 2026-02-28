@@ -1,5 +1,5 @@
 import { broadcastChannel, channelListeners } from './channel'
-import type { Events } from './events'
+import type { Events } from '../events'
 
 /**
  * Typed on - listens on BroadcastChannel (works in any thread)

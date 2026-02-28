@@ -1,5 +1,5 @@
 import { broadcastChannel, channelListeners } from './channel'
-import type { Events } from './events'
+import type { Events } from '../events'
 
 /**
  * Remove event listener
