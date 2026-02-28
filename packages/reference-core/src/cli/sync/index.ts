@@ -1,5 +1,5 @@
-import { initLog, log } from '../lib/log'
-import { initEventBus, onceAll } from '../event-bus'
+import { initLog } from '../lib/log'
+import { initEventBus } from '../event-bus'
 import { loadUserConfig } from '../config'
 import { initPackager } from '../packager'
 import { initSystem } from '../system'
@@ -14,11 +14,6 @@ export const syncCommand = async (cwd: string, options: SyncOptions) => {
   const config = await loadUserConfig(cwd)
   initEventBus()
   initLog(config)
-
-  onceAll(['config:ready', 'packager:complete'], () => {
-    log.debug('sync', 'onceAll: all events fired')
-  })
-
   initWatch(cwd, config, options)
   initVirtual(cwd, config, options)
   initSystem(cwd, config, { watch: options?.watch })
