@@ -2,6 +2,33 @@
 
 Based on trace analysis from a typical watch mode file change in `reference-docs/src/components/DocLayout/DocSidebar.tsx`.
 
+---
+
+## THE CRUX (Solvable)
+
+**We re-run config every time before we even get to Panda codegen.**
+
+The system worker uses a single flow for all `virtual:fs:change` events:
+
+```
+virtual:fs:change → runConfigOnly (~107ms) → Panda (cssGen ~118ms)
+```
+
+For component edits (e.g. DocSidebar.tsx changing a `css()` call), the config does **not** change. Yet we run `runConfigOnly` (eval + config bundle + write) every time. That's ~107ms of wasted work blocking the hot path before Panda can run.
+
+**The fix: separate the two flows.**
+
+| Flow | Trigger | What runs | Latency |
+|------|---------|-----------|---------|
+| **Hot path** | Component file (not `src/styled/`, not `tokens.ts`) | cssGen **only** — no runConfigOnly | ~118ms (+ copy) |
+| **Config flow** | Config-affecting file | runConfigOnly → hash → codegen or cssGen | ~225ms+ |
+
+**Implementation**: Use `payload.path` from `virtual:fs:change`. Route to cssGen-only when path is not config-affecting. Route to full flow when it is. The flows must be properly separated so the hot path never touches runConfigOnly.
+
+**This is the real bottleneck. It's solvable.**
+
+---
+
 ## Current Timeline (Incremental Build)
 
 ```
