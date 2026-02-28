@@ -1,57 +1,9 @@
-import { microBundle } from '../lib/microbundle'
-import { existsSync } from 'node:fs'
-import { resolve } from 'node:path'
-import { createRequire } from 'node:module'
-import { fileURLToPath } from 'node:url'
-import type { ReferenceUIConfig } from './index'
-
-/**
- * Search for a config file in the given directory.
- * Tries ui.config.ts, ui.config.js, ui.config.mjs in that order.
- * @returns Absolute path to the config file, or null if not found.
- */
-function findConfigFile(cwd: string): string | null {
-  const candidates = ['ui.config.ts', 'ui.config.js', 'ui.config.mjs']
-  for (const candidate of candidates) {
-    const path = resolve(cwd, candidate)
-    if (existsSync(path)) return path
-  }
-  return null
-}
-
-/**
- * Load and execute a config file by bundling and evaluating it.
- * Bundles the config file with esbuild and executes it in a controlled environment.
- *
- * @param configPath - Absolute path to the config file
- * @param options - Optional esbuild externals
- * @returns The evaluated config object
- */
-async function loadConfigFile(
-  configPath: string,
-  options: { external?: string[] } = {}
-): Promise<any> {
-  const bundled = await microBundle(configPath, {
-    format: 'cjs',
-    ...options,
-  })
-
-  const module = { exports: {} }
-  // Use createRequire with a safe fallback for both ESM and CJS contexts
-  let requireFn: NodeRequire
-  try {
-    // Try ESM approach first
-    requireFn = createRequire(import.meta.url)
-  } catch {
-    // Fallback for CJS: use global require
-    requireFn = require
-  }
-
-  const fn = new Function('module', 'exports', 'require', bundled)
-  fn(module, module.exports, requireFn)
-
-  return module.exports
-}
+import type { ReferenceUIConfig } from './types'
+import { ConfigNotFoundError, LoadConfigError } from './errors'
+import { resolveConfigFile } from './resolve-config-file'
+import { bundleConfig } from './bundle-config'
+import { evaluateConfig } from './evaluate-config'
+import { validateConfig } from './validate-config'
 
 /**
  * Load and evaluate the user's ui.config.ts/js file.
@@ -60,46 +12,18 @@ async function loadConfigFile(
 export async function loadUserConfig(
   cwd: string = process.cwd()
 ): Promise<ReferenceUIConfig> {
-  const configPath = findConfigFile(cwd)
+  const configPath = resolveConfigFile(cwd)
   if (!configPath) {
-    throw new Error(
-      `reference-ui: No ui.config.ts or ui.config.js found in ${cwd}.\n` +
-        `Create a ui.config.ts file with your configuration:\n\n` +
-        `  import { defineConfig } from '@reference-ui/core'\n` +
-        `  export default defineConfig({ include: ['src/**/*.{ts,tsx}'] })`
-    )
+    throw new ConfigNotFoundError(cwd)
   }
 
-  let userConfig: any
-
+  let raw: unknown
   try {
-    // Bundle and load the config file with esbuild
-    // Returns the evaluated module.exports
-    userConfig = await loadConfigFile(configPath, {
-      external: ['esbuild'],
-    })
+    const bundled = await bundleConfig(configPath)
+    raw = evaluateConfig(bundled)
   } catch (err) {
-    throw new Error(
-      `reference-ui: Failed to load ${configPath}:\n${err instanceof Error ? err.message : String(err)}`
-    )
+    throw new LoadConfigError(configPath, err)
   }
 
-  // Handle both default and named exports
-  userConfig = (userConfig?.default ?? userConfig) as ReferenceUIConfig
-
-  if (!userConfig || typeof userConfig !== 'object') {
-    throw new Error(
-      `reference-ui: Config file must export a config object.\n` +
-        `Make sure your ui.config.ts exports: export default defineConfig({ ... })`
-    )
-  }
-
-  if (!userConfig.include || !Array.isArray(userConfig.include)) {
-    throw new Error(
-      `reference-ui: Config must have an 'include' array with file patterns.\n` +
-        `Example: export default defineConfig({ include: ['src/**/*.{ts,tsx}'] })`
-    )
-  }
-
-  return userConfig
+  return validateConfig(raw)
 }
