@@ -80,8 +80,8 @@ log.info = (...args: unknown[]) => (log as LogFn)(...args)
 /**
  * Initialize logging system and listen to log events from other threads
  */
-export function initLog(config: { debug?: boolean }) {
-  if (config.debug) {
+export function initLog(payload: { config: { debug?: boolean } }) {
+  if (payload.config.debug) {
     isDebug = true
   }
 

@@ -42,6 +42,16 @@ All heavy work runs in worker threads for optimal performance.
 └──────────────┘
 ```
 
+## Sync Flow
+
+The sync command is fully event-driven. It bootstraps once, then fires all inits without awaiting:
+
+1. **Bootstrap** — `bootstrap(cwd, options)` loads config and returns `SyncPayload` (cwd, config, options)
+2. **Inits** — All modules receive `SyncPayload`; they start workers and return (fire-and-forget)
+3. **Exit** — `initSyncComplete` registers `onceAll(gates, process.exit)` so the process exits when all cold-sync gates have fired
+
+See `event-flow.md` for the full event chain and module triggers.
+
 ## Key Systems
 
 ### Event Bus
@@ -132,21 +142,25 @@ export default defineConfig({
 cli/
 ├── index.ts              # CLI entry point (Commander)
 ├── sync/                 # Main orchestration command
+│   ├── index.ts          # syncCommand
+│   ├── bootstrap.ts      # Load config, build SyncPayload
+│   ├── complete.ts       # onceAll(gates) → process.exit
+│   └── types.ts          # SyncOptions, SyncPayload
 ├── config/               # Config loading and validation
 ├── event-bus/            # Cross-thread event system
 ├── thread-pool/          # Worker management (Piscina)
 ├── watch/                # File watching (@parcel/watcher)
 ├── virtual/              # File transformation and virtual FS
-├── system/               # Panda CSS integration
-│   ├── config/          # Config compilation
+├── system/               # Panda config compilation
+│   ├── config/           # Config, box pattern, font microbundles
 │   ├── collectors/      # Design token collection
-│   ├── eval/            # Runtime config evaluation
-│   └── gen/             # Panda codegen runner
-├── packager/            # Package bundling
-│   ├── bundler/         # esbuild integration
-│   ├── package/         # Package definitions
-│   └── install/         # node_modules installation
-└── packager-ts/         # TypeScript declaration generation
+│   └── eval/             # Runtime config evaluation
+├── gen/                  # Panda codegen (separate worker)
+├── packager/             # Package bundling
+│   ├── bundler/          # esbuild integration
+│   ├── package/          # Package definitions
+│   └── install/          # node_modules installation
+└── packager-ts/          # TypeScript declaration generation
 ```
 
 ### Key Utilities
@@ -180,5 +194,6 @@ Debug logs only appear when `debug: true` in `ui.config.ts`.
 ## Related Documentation
 
 - **CLI.md** — Deep architectural dive
+- **event-flow.md** — Event chain, SyncPayload, bootstrap flow
 - **LLMS.md** — Practical development guide
 - **thread.md** — Thread pool patterns and best practices

@@ -1,9 +1,5 @@
-import type { ReferenceUIConfig } from '../config'
 import { runWorker } from '../thread-pool'
-
-export interface InitGenOptions {
-  watch?: boolean
-}
+import type { SyncPayload } from '../sync/types'
 
 /**
  * Initialize the gen worker (Panda codegen / cssgen).
@@ -15,15 +11,19 @@ export interface InitGenOptions {
  * In watch mode, starts the worker but returns immediately (non-blocking).
  * In cold start mode, waits for initial codegen to complete.
  */
-export async function initGen(
-  cwd: string,
-  config: ReferenceUIConfig,
-  options?: InitGenOptions
-): Promise<void> {
-  const watchMode = options?.watch ?? false
+export async function initGen(payload: SyncPayload): Promise<void> {
+  const watchMode = payload.options.watch ?? false
   if (watchMode) {
-    runWorker('gen', { cwd, config, watchMode: true })
+    runWorker('gen', {
+      cwd: payload.cwd,
+      config: payload.config,
+      watchMode: true,
+    })
   } else {
-    await runWorker('gen', { cwd, config, watchMode: false })
+    await runWorker('gen', {
+      cwd: payload.cwd,
+      config: payload.config,
+      watchMode: false,
+    })
   }
 }

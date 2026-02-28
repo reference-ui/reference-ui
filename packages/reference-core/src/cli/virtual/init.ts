@@ -1,7 +1,6 @@
 import { log } from '../lib/log'
 import { runWorker } from '../thread-pool'
-import type { ReferenceUIConfig } from '../config'
-import type { InitVirtualOptions } from './types'
+import type { SyncPayload } from '../sync/types'
 
 /**
  * Initialize the virtual filesystem.
@@ -9,18 +8,14 @@ import type { InitVirtualOptions } from './types'
  * In watch mode, subscribes to watch:change and emits virtual:fs:change on each update.
  * @returns Promise that resolves when the initial copy completes (in non-watch) or when worker is ready.
  */
-export function initVirtual(
-  sourceDir: string,
-  config: ReferenceUIConfig,
-  options?: InitVirtualOptions
-): Promise<void> {
+export function initVirtual(payload: SyncPayload): Promise<void> {
   log.debug('virtual', 'initVirtual called')
 
   return runWorker('virtual', {
-    sourceDir,
-    config,
-    virtualDir: config.virtualDir,
-    watchMode: options?.watch ?? false,
+    sourceDir: payload.cwd,
+    config: payload.config,
+    virtualDir: payload.config.virtualDir,
+    watchMode: payload.options.watch ?? false,
   })
     .then(() => {
       log.debug('virtual', 'Initial copy complete')
