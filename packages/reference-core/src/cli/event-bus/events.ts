@@ -49,9 +49,15 @@ export type VirtualEvents = {
   'virtual:complete': Record<string, never>
 }
 
+export type SyncEvents = {
+  /** Emitted when all cold sync gates (packager, packager-ts) have completed */
+  'sync:complete': Record<string, never>
+}
+
 export type Events = LogEvents &
   WatchEvents &
   SystemEvents &
   GenEvents &
   PackagerEvents &
-  VirtualEvents
+  VirtualEvents &
+  SyncEvents

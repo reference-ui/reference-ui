@@ -2,15 +2,19 @@ import { runWorker } from '../thread-pool'
 import type { ReferenceUIConfig } from '../config'
 import { PACKAGES } from '../packager/packages'
 
+export interface InitTsPackagerOptions {
+  watch?: boolean
+}
+
 /**
  * Initialize packager-ts from main thread.
- * Generates .d.ts from TypeScript source (not bundled .js)
- * to preserve proper types like PrimitiveProps<T>, BoxProps, etc.
+ * Starts worker that listens for packager:complete, generates .d.ts, emits packager-ts:complete.
  */
-export async function initTsPackager(
+export function initTsPackager(
   cwd: string,
-  config: ReferenceUIConfig
-): Promise<void> {
+  config: ReferenceUIConfig,
+  options?: InitTsPackagerOptions
+): void {
   if (config.skipTypescript) return
 
   const packages = PACKAGES.filter(p => p.entry).map(p => ({
@@ -19,9 +23,10 @@ export async function initTsPackager(
     outFile: (p.main || './index.js').replace('./', ''),
   }))
 
-  await runWorker('packager-ts', {
+  runWorker('packager-ts', {
     cwd,
     config,
     packages,
+    watchMode: options?.watch ?? false,
   })
 }
