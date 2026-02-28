@@ -1,82 +1,60 @@
-import { execSync } from 'node:child_process'
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { cssgen, generate, loadConfigAndCreateContext } from '@pandacss/node'
 import { log } from '../../lib/log'
-import { spawnMonitored } from '../../lib/child-process'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-
-function resolvePandaBin(): string {
-  // When bundled, __dirname is dist/; CLI root is two levels up from panda/gen/
-  const cliRoot = resolve(__dirname, '../..')
-  const candidates = [
-    resolve(cliRoot, 'node_modules/.bin/panda'),
-    resolve(cliRoot, '../node_modules/.bin/panda'),
-    resolve(cliRoot, '../../node_modules/.bin/panda'),
-  ]
-
-  for (const bin of candidates) {
-    if (existsSync(bin)) {
-      return bin
-    }
-  }
-
-  throw new Error(
-    `@reference-ui/core: panda not found. Ensure @pandacss/dev is installed. Searched: ${candidates.join(', ')}`
-  )
-}
 
 export interface PandaOptions {
   watch?: boolean
 }
 
 /**
- * Run Panda: codegen (TS utilities) + CSS extraction.
- * In watch mode, `panda --watch` does BOTH – no need for separate codegen and css watchers.
- * Panda's default command runs codegen then writes styles.css in one process.
+ * Run Panda full pipeline: codegen (TS utilities) + CSS extraction.
+ * Needed when config changes (new tokens, recipes, patterns).
  */
-export function runPandaCodegen(cwd: string, options: PandaOptions = {}): void {
-  log.debug('system:gen', 'Starting Panda...')
-  const pandaBin = resolvePandaBin()
+export async function runPandaCodegen(
+  cwd: string,
+  options: PandaOptions = {}
+): Promise<void> {
+  const configPath = resolve(cwd, 'panda.config.ts')
 
-  if (options.watch) {
-    const child = spawnMonitored(pandaBin, ['--watch', '--poll'], {
-      processName: 'panda',
-      cwd,
-      stdio: 'inherit',
-      shell: true,
-      logCategory: 'system:gen',
-    })
-
-    process.on('SIGINT', () => {
-      child.stopMonitoring()
-      child.process.kill()
-      process.exit(0)
-    })
-
-    process.on('SIGTERM', () => {
-      child.stopMonitoring()
-      child.process.kill()
-      process.exit(0)
-    })
-
-    return
+  if (!existsSync(configPath)) {
+    throw new Error(`panda.config.ts not found at ${configPath}. Run createPandaConfig first.`)
   }
 
-  // One-shot: `panda` runs codegen + CSS extraction (generate() does both)
-  execSync(`"${pandaBin}"`, {
-    cwd,
-    stdio: 'inherit',
-  })
+  log.debug('system:gen', options.watch ? 'Starting Panda (watch)...' : 'Starting Panda...')
+
+  await generate(
+    options.watch ? { watch: true, poll: true, cwd } : { cwd },
+    configPath
+  )
+
+  if (options.watch) {
+    process.on('SIGINT', () => process.exit(0))
+    process.on('SIGTERM', () => process.exit(0))
+  }
 }
 
-/** Emit styles.css (preflight + tokens + static CSS). Use runPandaCodegen for full build. */
-export function runPandaCss(cwd: string): void {
-  log.debug('system:gen', 'Generating CSS...')
-  const pandaBin = resolvePandaBin()
-  execSync(`"${pandaBin}"`, {
-    cwd,
-    stdio: 'inherit',
-  })
+/**
+ * Run Panda cssgen only: parse files + write styles.css. Skips codegen.
+ * Faster for style-only changes (e.g. css() with new color). Use when config unchanged.
+ */
+export async function runPandaCssGen(cwd: string): Promise<void> {
+  const configPath = resolve(cwd, 'panda.config.ts')
+  if (!existsSync(configPath)) {
+    throw new Error(`panda.config.ts not found at ${configPath}. Run createPandaConfig first.`)
+  }
+
+  log.debug('system:gen', 'Panda cssgen (style-only)')
+  const ctx = await loadConfigAndCreateContext({ config: { cwd }, configPath })
+  await cssgen(ctx, { cwd })
+}
+
+export function hashPandaConfig(cwd: string): string {
+  const configPath = resolve(cwd, 'panda.config.ts')
+  if (!existsSync(configPath)) return ''
+  return createHash('sha256').update(readFileSync(configPath, 'utf-8')).digest('hex')
 }

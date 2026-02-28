@@ -41,6 +41,7 @@ export default defineConfig({
     'esbuild',
     'fast-glob',
     '@parcel/watcher',
+    '@pandacss/node',
     'typescript',
     'commander',
     'picocolors',
