@@ -1,4 +1,5 @@
 import { on } from '../event-bus'
+import { KEEP_ALIVE } from '../thread-pool'
 import { runInitialCopy, onWatchChange } from './run'
 import type { VirtualWorkerPayload } from './run'
 
@@ -13,7 +14,7 @@ export async function runVirtual(payload: VirtualWorkerPayload): Promise<void> {
 
   if (watchMode) {
     on('watch:change', onWatchChange(context))
-    return new Promise(() => {})
+    return KEEP_ALIVE
   }
 }
 

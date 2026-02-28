@@ -18,9 +18,9 @@ export const syncCommand = async (cwd: string, options: SyncOptions) => {
   initVirtual(cwd, config, options) // completion: virtual:complete
   initSystem(cwd, config, { watch: options?.watch }) // completion: system:complete
   initGen(cwd, config, { watch: options?.watch }) // completion: gen:complete
-  await initPackager(cwd, config, { watch: options?.watch }) // completion: packager:complete
+  initPackager(cwd, config, { watch: options?.watch }) // completion: packager:complete
   await initTsPackager(cwd, config) // completion: packager-ts:complete
-
+ 
   if (!options?.watch) {
     process.exit(0)
   }

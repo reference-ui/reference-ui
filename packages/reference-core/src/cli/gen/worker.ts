@@ -1,4 +1,5 @@
 import { on, emit } from '../event-bus'
+import { KEEP_ALIVE } from '../thread-pool'
 import { resolveCorePackageDir } from '../lib/resolve-core'
 import { runCodegen, onConfigReady } from './code'
 import { runCss } from './css'
@@ -18,7 +19,7 @@ export async function runGen(payload: GenWorkerPayload): Promise<void> {
     on('virtual:fs:change', () => runCss(coreDir))
     on('config:ready', onConfigReady(coreDir))
     emit('gen:ready', {})
-    return new Promise(() => {})
+    return KEEP_ALIVE
   }
 
   await runCodegen(coreDir)
