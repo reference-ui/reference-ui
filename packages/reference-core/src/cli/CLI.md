@@ -859,7 +859,7 @@ export default defineConfig(mergedConfig)
 
 ```typescript
 // Use esbuild to create a self-contained bundle
-const bundled = await microBundlePanda(entryPath)
+const bundled = await microBundle(entryPath)
 ```
 
 esbuild resolves:

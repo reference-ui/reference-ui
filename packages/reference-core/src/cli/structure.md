@@ -39,7 +39,6 @@ cli/
 │   │   └── MonitoredSpawnOptions, MonitoredChildProcess
 │   └── microbundle.ts
 │       └── microBundle(entryPath, options) — esbuild bundle → string
-│       └── microBundlePanda(entryPath) — Panda externals
 │       └── transformMdx(mdxContent, sourceFile) — MDX → JS via @mdx-js/esbuild
 │
 ├── config/

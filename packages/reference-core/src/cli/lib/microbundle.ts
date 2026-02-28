@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import * as esbuild from 'esbuild'
 
 export interface MicroBundleOptions {
-  /** Modules to leave as require/import (not bundled). */
+  /** Modules to leave as require/import (not bundled). Defaults to heavy build-tool deps. */
   external?: string[]
   format?: 'esm' | 'cjs' | 'iife'
   platform?: 'node' | 'browser' | 'neutral'
@@ -16,10 +16,8 @@ export interface MicroBundleOptions {
   conditions?: string[]
 }
 
-const DEFAULT_EXTERNALS: string[] = []
-
-/** Externals for bundling the Panda config entry (avoids bundling Panda CLI deps). Internal to microBundle. */
-const BUNDLE_EXTERNALS: string[] = [
+/** Default externals: heavy build-tool / CLI deps we typically don't want to inline. */
+const DEFAULT_EXTERNALS: string[] = [
   '@pandacss/dev',
   'esbuild',
   'fast-glob',
@@ -29,13 +27,6 @@ const BUNDLE_EXTERNALS: string[] = [
   'unrun',
   'birpc',
 ]
-
-/**
- * Micro-bundle the Panda config entry. Uses Panda-specific externals internally.
- */
-export async function microBundlePanda(entryPath: string): Promise<string> {
-  return microBundle(entryPath, { external: BUNDLE_EXTERNALS })
-}
 
 /**
  * Micro-bundle an entry file with esbuild and return the output as a string.
