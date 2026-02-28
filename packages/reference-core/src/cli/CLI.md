@@ -6,6 +6,7 @@ The Reference UI CLI is a sophisticated build system that orchestrates design to
 
 - [Overview](#overview)
 - [Architecture Diagram](#architecture-diagram)
+- [Sync Command](#sync-command)
 - [Core Systems](#core-systems)
 - [Execution Flow](#execution-flow)
 - [Advanced Features](#advanced-features)
@@ -45,10 +46,45 @@ This happens **at build time**, not runtime.
   ────────────                   ─────────────
   CLI (ref sync)                 watch ──────┐
        │                         virtual     │
-       │ runWorker()             system      ├──▶ Event Bus (BroadcastChannel)
-       └──────────────────────── packager    │    watch:change
-                                packager-ts ┘    packager:complete
+       │ bootstrap → payload     system      │
+       │ init*(payload)          gen         ├──▶ Event Bus (BroadcastChannel)
+       └──────────────────────── packager    │    watch:change, packager:complete,
+                                packager-ts ┘    system:compiled, etc.
 ```
+
+---
+
+## Sync Command
+
+The sync command is fully event-driven. It bootstraps once, then fires all inits without awaiting.
+
+### Bootstrap
+
+```typescript
+const payload = await bootstrap(cwd, options)
+// payload: { cwd, config, options }
+```
+
+`bootstrap(cwd, options)` in `sync/bootstrap.ts` loads `ui.config.ts` and returns a `SyncPayload`. All init functions receive this payload.
+
+### Sync Flow
+
+```typescript
+export const syncCommand = async (cwd: string, options?: SyncOptions) => {
+  const payload = await bootstrap(cwd, options)
+  initEventBus()
+  initLog(payload)
+  initSyncComplete(payload)   // onceAll(gates) → process.exit (no-op in watch)
+  initWatch(payload)
+  initVirtual(payload)
+  initSystem(payload)
+  initGen(payload)
+  initTsPackager(payload)     // before packager so listener is ready
+  initPackager(payload)
+}
+```
+
+**Key design**: No cross-module awaits. Inits start workers and return. The event bus drives coordination; `initSyncComplete` registers `onceAll([packager:complete, packager-ts:complete?], () => process.exit(0))` for cold sync. See [event-flow.md](event-flow.md) for the full event chain.
 
 ---
 
@@ -185,7 +221,7 @@ Main Thread                     Worker Threads
 
 ```typescript
 // In sync (watch mode)
-initWatch(cwd, config)
+initWatch(payload)  // payload = { cwd, config, options }
 
 // Worker: subscribes to sourceDir with @parcel/watcher
 await subscribe(sourceDir, (err, events) => {
@@ -383,35 +419,25 @@ const fragments = globalThis.__refPandaConfigCollector
 
 **Why Random Cache Keys?** Node caches imports by URL. Random keys prevent stale imports.
 
-#### 6.3 Code Generation (`system/gen/`)
+#### 6.3 Code Generation (`gen/`)
 
-**Purpose**: Run Panda CSS codegen and CSS generation
+**Purpose**: Run Panda CSS codegen and CSS generation (runs in a separate worker thread)
 
 **Key Files**:
 
-- `runner.ts` - Panda CLI wrapper
+- `worker.ts` - Worker entry point
+- `code.ts` - Panda CLI wrapper, emits `system:compiled`
 
 **Commands Executed**:
 
 ```bash
-# Generate TypeScript utilities (css(), cva(), etc.)
+# Generate TypeScript utilities (css(), cva(), etc.) and styles.css
 panda codegen
-
-# Generate styles.css with @layer tokens
-panda
 ```
 
-**Watch Mode**:
+**Watch Mode**: Gen worker listens for `config:ready` and `virtual:fs:change`; runs Panda incrementally on each event.
 
-```bash
-# Keep both processes alive
-panda codegen --watch --poll &
-panda --watch --poll &
-```
-
-**Why `--poll`?** Some filesystems (Docker, network drives) don't support native watching. Polling is more reliable.
-
-#### 6.4 Box Pattern (`system/boxPattern/`)
+#### 6.4 Box Pattern (`system/config/boxPattern/`)
 
 **Purpose**: Generate Panda's custom `box` pattern for layout primitives
 
@@ -436,7 +462,7 @@ This enables:
 <Box display="flex" p="4" bg="blue.500" />
 ```
 
-#### 6.5 Font System (`system/fontFace/`)
+#### 6.5 Font System (`system/config/fontFace/`)
 
 **Purpose**: Generate `@font-face` declarations and font tokens
 
@@ -469,33 +495,19 @@ And tokens:
 
 #### 6.6 System Worker (`system/worker.ts`)
 
-**Purpose**: Orchestrate all system tasks in a worker thread
+**Purpose**: Eval and config compilation only. Panda codegen runs in the separate `gen` worker.
 
 **Execution Flow**:
 
 ```typescript
 export async function runSystem(payload) {
   // 1. Eval: Scan and collect config fragments
-  const fragments = await runEval(coreDir, ['src/styled'])
-
-  // 2. Compile: Create panda.config.ts
-  if (fragments.length > 0) {
-    await createPandaConfig(coreDir)
-  }
-
-  // 3. Codegen: Generate TypeScript utilities
-  runPandaCodegen(coreDir)
-
-  // 4. CSS: Generate styles.css with tokens
-  runPandaCss(coreDir)
+  await runConfig(payload)
+  // 2. Emits: config:ready (gen worker listens and runs Panda)
 }
 ```
 
-**Why This Order?**
-
-1. Config must exist before codegen
-2. Codegen creates the TS files
-3. CSS generation creates styles.css with tokens layer
+**Why separate gen worker?** System does eval + config; gen runs Panda (codegen + CSS). They run in parallel with other workers. Gen emits `system:compiled` when done; packager listens for that to rebundle in watch mode.
 
 ---
 
@@ -538,7 +550,7 @@ reference-docs/node_modules/
           └─ styles.css
 ```
 
-The packager emits `packager:complete` when done; the packager-ts worker runs afterward to generate TypeScript declarations.
+The packager emits `packager:complete` when done; the packager-ts worker listens for this event and generates TypeScript declarations.
 
 **Why Not `npm install`?** Direct bundling and copying is faster and more reliable than running npm/pnpm in each consumer project.
 
@@ -556,17 +568,18 @@ The packager emits `packager:complete` when done; the packager-ts worker runs af
 
 **How It Works**:
 
-1. Runs **after** the packager (sync calls `initTsPackager(cwd, config)` after `initPackager`)
-2. Reads bundled `.js` files from `node_modules/@reference-ui/*`
-3. Uses the TypeScript compiler with `allowJs: true` and `emitDeclarationOnly: true`
-4. Writes `.d.ts` files next to the `.js` files
+1. **Event-driven** — sync calls `initTsPackager(payload)` which starts a worker that listens for `packager:complete`
+2. When packager emits `packager:complete`, packager-ts runs d.ts generation
+3. Reads bundled `.js` files from `node_modules/@reference-ui/*`
+4. Uses the TypeScript compiler with `allowJs: true` and `emitDeclarationOnly: true`
+5. Writes `.d.ts` files next to the `.js` files, emits `packager-ts:complete`
 
 **No virtual FS involvement** — it operates only on the final bundled outputs in `node_modules`.
 
 **Events**:
 
-- Packager emits `packager:complete` when bundling finishes (for future watch-mode triggers)
-- Minimal event surface — no packager-ts-specific events
+- **Listens**: `packager:complete` — triggers d.ts generation
+- **Emits**: `packager-ts:complete` — when generation finishes (used by initSyncComplete for cold-sync exit)
 
 **Packages**: Derives the list from `PACKAGES` in `packager/packages.ts` (e.g. `@reference-ui/react` → `react.js` → `react.d.ts`).
 
@@ -621,7 +634,7 @@ const coreDir = resolveCorePackageDir()
 #### `run-command.ts` - Command Wrapper
 
 ```typescript
-program.command('sync').action(runCommand(options => syncCommand(cwd, options)))
+program.command('sync').action(runCommand(options => syncCommand(process.cwd(), options)))
 ```
 
 **Benefits**:
@@ -636,40 +649,48 @@ program.command('sync').action(runCommand(options => syncCommand(cwd, options)))
 
 ### Cold Start (Initial Build)
 
+The sync command is fully event-driven. All inits receive `SyncPayload` and are fire-and-forget; the event bus drives coordination.
+
 ```
-1. Load Config
-   └─ Bundle and execute ui.config.ts
+1. Bootstrap
+   └─ payload = await bootstrap(cwd, options)
+   └─ Loads ui.config.ts, returns { cwd, config, options }
 
 2. Init Event Bus
    └─ Setup BroadcastChannel for cross-thread events
 
 3. Init Log
-   └─ Configure logging based on debug flag
+   └─ initLog(payload) — configure logging from payload.config.debug
 
-4. Watch (Worker Thread, if --watch)
-   └─ Subscribe to sourceDir with @parcel/watcher, emit watch:change
+4. Init Sync Complete
+   └─ initSyncComplete(payload) — onceAll([packager:complete, packager-ts:complete?], () => process.exit(0))
+   └─ No-op in watch mode (watch keeps process alive)
 
-5. Virtual Filesystem (Worker Thread)
-   ├─ Create .virtual/ directory
-   ├─ Scan include patterns
-   ├─ Copy files (20-100ms per file)
-   └─ Transform (MDX, imports)
+5. Watch (Worker Thread, if --watch)
+   └─ initWatch(payload) — subscribe to payload.cwd with @parcel/watcher, emit watch:change
 
-6. System (Worker Thread)
-   ├─ Eval: Scan src/styled/ (50-200ms)
-   ├─ Compile: Create panda.config.ts (300-800ms)
-   ├─ Codegen: Run panda codegen (2-5s)
-   └─ CSS: Run panda (1-3s)
+6. Virtual (Worker Thread)
+   └─ initVirtual(payload) — create .virtual/, copy and transform files
 
-7. Packager (Worker Thread)
-   ├─ Bundle @reference-ui/react (500ms-2s)
-   └─ Copy to node_modules (50-200ms)
+7. System (Worker Thread)
+   └─ initSystem(payload) — eval, compile panda.config.ts
 
-8. Packager-TS (Worker Thread)
-   └─ Generate .d.ts from bundled .js (200-500ms)
+8. Gen (Worker Thread)
+   └─ initGen(payload) — Panda codegen, emits system:compiled
+
+9. Packager-TS (Worker Thread)
+   └─ initTsPackager(payload) — register listener for packager:complete (must run before packager)
+   └─ On packager:complete → generate .d.ts → emit packager-ts:complete
+
+10. Packager (Worker Thread)
+    └─ initPackager(payload) — bundle and install to node_modules, emit packager:complete
+
+Exit: when all gates fire, initSyncComplete triggers process.exit(0).
 
 Total: ~5-15 seconds (depending on project size)
 ```
+
+**Key design**: No cross-module awaits. Inits start workers and return. Workers coordinate via events. See `event-flow.md` for the full event chain.
 
 ### Watch Mode (Incremental)
 
@@ -1558,6 +1579,7 @@ The Reference UI CLI is a sophisticated build orchestrator that:
 
 ## Related Documentation
 
+- [Event Flow](event-flow.md) — SyncPayload, bootstrap, event chain, module triggers
 - [Config Compilation](system/config/readme.md)
 - [Eval System](system/eval/readme.md)
 - [Watch Module](watch/README.md)

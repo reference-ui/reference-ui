@@ -1,5 +1,4 @@
 export { initPackager } from './init'
-export type { InitPackagerOptions } from './init'
 export { bundlePackage } from './bundler'
 export { installPackages, ENABLE_REFERENCE_UI_SYMLINKS } from './install'
 export { PACKAGES, REACT_PACKAGE } from './packages'
