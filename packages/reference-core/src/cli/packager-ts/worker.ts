@@ -1,28 +1,17 @@
-import { log } from '../lib/log'
-import { emit } from '../event-bus'
-import { installPackagesTs } from './install'
+import { on } from '../event-bus'
+import { KEEP_ALIVE } from '../thread-pool'
+import { runDtsGeneration } from './run'
 import type { TsPackagerWorkerPayload } from './types'
 
 /**
- * Run declaration install for packages. Called from worker thread.
+ * Packager-ts worker - generates .d.ts from TypeScript source.
+ * Listens for packager:complete (bundle done), runs d.ts generation, emits packager-ts:complete.
  */
 export async function runTsPackager(payload: TsPackagerWorkerPayload): Promise<void> {
-  const { cwd, packages } = payload
+  on('packager:complete', () => runDtsGeneration(payload).catch(() => {}))
 
-  log.debug('packager:ts', '🔷 Generating TypeScript declarations...')
-
-  try {
-    await installPackagesTs(cwd, packages)
-    emit('packager-ts:complete', {})
-  } catch (error) {
-    log.debug('packager:ts', 'Error:', error)
-    throw error
-  }
+  return KEEP_ALIVE
 }
 
-/**
- * Worker entry point for TypeScript declaration generation.
- */
-export default async function worker(payload: TsPackagerWorkerPayload) {
-  return runTsPackager(payload)
-}
+export type { TsPackagerWorkerPayload }
+export default runTsPackager
