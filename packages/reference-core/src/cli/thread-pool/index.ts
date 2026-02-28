@@ -34,8 +34,8 @@ function getPool() {
 
   initMemoryLogging()
   pool = new Piscina({
-    minThreads: 5,
-    maxThreads: 5,
+    minThreads: 6,
+    maxThreads: 6,
     idleTimeout: 30000,
   })
 
