@@ -10,13 +10,13 @@ export function validateConfig(raw: unknown): ReferenceUIConfig {
   const config = (raw as { default?: unknown })?.default ?? raw
 
   if (!config || typeof config !== 'object') {
-    throw new ConfigValidationError(ConfigValidationError.MUST_EXPORT_OBJECT)
+    throw ConfigValidationError.mustExportObject()
   }
 
   const cfg = config as Record<string, unknown>
 
   if (!cfg.include || !Array.isArray(cfg.include)) {
-    throw new ConfigValidationError(ConfigValidationError.MUST_HAVE_INCLUDE)
+    throw ConfigValidationError.mustHaveInclude()
   }
 
   return config as ReferenceUIConfig
