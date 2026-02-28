@@ -1,2 +1,2 @@
-export { installPackages } from './packages'
+export { installPackages, copyStylesToReactPackage } from './packages'
 export { installPackage, ENABLE_REFERENCE_UI_SYMLINKS } from './package'

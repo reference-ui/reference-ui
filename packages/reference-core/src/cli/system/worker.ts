@@ -72,6 +72,7 @@ export async function runSystem(payload: SystemWorkerPayload): Promise<void> {
         } else {
           await runPandaCssGen(coreDir)
         }
+        emit('panda:stylecss:change', {})
       } catch (e) {
         log.error('[system:worker] Panda failed:', e)
       }
