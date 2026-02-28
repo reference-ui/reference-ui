@@ -11,27 +11,6 @@ Comprehensive plan for finalizing the CLI. Combines complexity reduction, archit
 
 ---
 
-## Phase 1: Critical Complexity Reduction
-
-### 1.1 `lib/resolve-core.ts` — Cyclomatic Complexity: 11
-
-**Issue**: Dense branching with nested while loops and try/catch blocks.
-
-**Action**:
-
-```typescript
-// Extract helpers (reduce CC from 11 → 4):
-- findPackageDirUpward(startDir: string, maxDepth: number): string | null
-- detectMonorepoRoot(dir: string): string | null
-- isWithinNodeModules(dir: string): boolean
-
-// Add early returns to flatten nesting
-```
-
-**Impact**: Maintainability 92 → 110+
-
-**Files**: `lib/resolve-core.ts`  
-**Estimate**: 45 minutes
 
 ---
 
