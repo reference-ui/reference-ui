@@ -8,7 +8,7 @@ import { cp, rm } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { execa } from 'execa'
-import { loadConfig } from '../config.js'
+import { loadConfig } from '../config/index.js'
 import { MATRIX, getPort } from '../matrix/index.js'
 import type { MatrixEntry } from '../matrix/index.js'
 
@@ -37,7 +37,7 @@ export function projectEnv(project: MatrixEntry): NodeJS.ProcessEnv {
   }
 }
 
-const LIB_DIR = join(PACKAGE_ROOT, 'src', 'lib')
+const LIB_DIR = join(PACKAGE_ROOT, 'src', 'config', 'lib')
 
 /** Run test:prepare for a single project. */
 export async function prepareProject(project: MatrixEntry): Promise<void> {

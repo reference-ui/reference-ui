@@ -24,7 +24,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 
 const PACKAGE_ROOT = join(__dirname, '..', '..')
 const ENVIRONMENTS_ROOT = join(PACKAGE_ROOT, 'src', 'environments')
-const LIB_DIR = join(PACKAGE_ROOT, 'src', 'lib')
+const LIB_DIR = join(PACKAGE_ROOT, 'src', 'config', 'lib')
 const SANDBOX_ROOT = join(PACKAGE_ROOT, '.sandbox')
 const CORE_PATH = join(PACKAGE_ROOT, '..', 'reference-core')
 const CORE_CLI = join(CORE_PATH, 'dist/cli/index.mjs')
