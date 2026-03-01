@@ -8,8 +8,8 @@
   "scripts": {
     "test:prepare": "tsx src/prepare/index.ts",
     "test": "pnpm run test:prepare && tsx src/matrix/run.ts",
-    "test:quick": "tsx src/run-quick.ts",
-    "test:ui": "tsx src/run-ui.ts"
+    "test:quick": "tsx src/runner/cli.ts quick",
+    "test:ui": "tsx src/runner/cli.ts ui"
   },
   "dependencies": {
     "execa": "^9.0.0"

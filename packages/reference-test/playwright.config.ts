@@ -29,7 +29,7 @@ export default defineConfig({
   })),
   webServer: projectName
     ? {
-          command: 'tsx src/scripts/start-dev.ts',
+          command: 'tsx src/runner/cli.ts dev',
           cwd: process.cwd(),
           url: `http://localhost:${port}`,
           reuseExistingServer: !process.env.CI,
