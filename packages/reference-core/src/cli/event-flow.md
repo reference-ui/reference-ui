@@ -53,6 +53,8 @@ flowchart LR
 | packager-ts | packager:complete            | packager-ts:complete                       |
 | sync      | —                             | — (initSyncComplete uses onceAll → process.exit) |
 
+**Init-order independence**: Packager-ts derives "did I miss packager:complete?" from the filesystem on startup. If bundle output exists, it runs catch-up. No coordination events needed.
+
 ---
 
 ## Module Triggers
