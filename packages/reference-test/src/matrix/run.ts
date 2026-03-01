@@ -9,13 +9,13 @@ import { mkdir, rm } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { execa } from 'execa'
-import { MATRIX, getPort } from './matrix.js'
-import { loadConfig } from './config.js'
+import { MATRIX, getPort } from './index.js'
+import { loadConfig } from '../config.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const BLOB_DIR = join(__dirname, '..', 'blob-reports')
+const BLOB_DIR = join(__dirname, '..', '..', 'blob-reports')
 
-async function run(): Promise<void> {
+export async function run(): Promise<void> {
   await rm(BLOB_DIR, { recursive: true, force: true }).catch(() => {})
   await mkdir(BLOB_DIR, { recursive: true })
 

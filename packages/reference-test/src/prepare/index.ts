@@ -16,13 +16,13 @@ import { createHash } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 import { execa } from 'execa'
 
-import { MATRIX, getReactVersion, getViteVersion, getPort } from './matrix.js'
-import type { MatrixEntry } from './matrix.js'
-import { composeSandbox } from './environments/manifest.js'
+import { MATRIX, getReactVersion, getViteVersion, getPort } from '../matrix/index.js'
+import type { MatrixEntry } from '../matrix/index.js'
+import { composeSandbox } from '../environments/manifest.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
-const PACKAGE_ROOT = join(__dirname, '..')
+const PACKAGE_ROOT = join(__dirname, '..', '..')
 const ENVIRONMENTS_ROOT = join(PACKAGE_ROOT, 'src', 'environments')
 const LIB_DIR = join(PACKAGE_ROOT, 'src', 'lib')
 const SANDBOX_ROOT = join(PACKAGE_ROOT, '.sandbox')
@@ -208,7 +208,7 @@ async function pruneStaleSandboxes(): Promise<void> {
   }
 }
 
-async function prepare(): Promise<void> {
+export async function prepare(): Promise<void> {
   await mkdir(SANDBOX_ROOT, { recursive: true })
   await ensureWorkspaceReady()
 

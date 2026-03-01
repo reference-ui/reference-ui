@@ -6,8 +6,8 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "scripts": {
-    "test:prepare": "tsx src/prepare.ts",
-    "test": "pnpm run test:prepare && tsx src/run-matrix.ts",
+    "test:prepare": "tsx src/prepare/index.ts",
+    "test": "pnpm run test:prepare && tsx src/matrix/run.ts",
     "test:quick": "tsx src/run-quick.ts",
     "test:ui": "tsx src/run-ui.ts"
   },

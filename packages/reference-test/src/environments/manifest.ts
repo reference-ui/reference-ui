@@ -7,7 +7,7 @@ import { existsSync } from 'node:fs'
 import { readFile, writeFile, mkdir } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import type { MatrixEntry } from '../matrix.js'
+import type { MatrixEntry } from '../matrix/index.js'
 
 /** Canonical list of files that make up a sandbox. Paths relative to sandbox root. */
 export const MANIFEST = [
