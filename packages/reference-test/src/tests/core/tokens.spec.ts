@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { tokensConfig } from '../lib'
+import { tokensConfig } from '../../lib/index.js'
 
 /** Hex to rgb string for comparing with getComputedStyle */
 function hexToRgb(hex: string): string {

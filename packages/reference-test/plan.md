@@ -161,7 +161,7 @@ Start with **Option A** (watch + ready signal). If ref sync --watch does not rel
 4. `src/environments/manifest.ts` — `MANIFEST` const + `composeSandbox(entry, destDir)`
 5. `prepare.ts` — uses `composeSandbox` instead of `cp(app)`, hashes `ENVIRONMENTS_ROOT`
 
-### Phase 2: Test structure and config updates
+### Phase 2: Test structure and config updates — DONE
 
 **Test folder structure** — configs and use cases live in tests:
 
