@@ -1,6 +1,5 @@
 /**
- * Config module: ref-test settings + design tokens.
+ * Config module: ref-test settings.
  */
 
 export { loadConfig, type RefTestConfig } from './ref-test.js'
-export { tokensConfig } from './tokens.js'

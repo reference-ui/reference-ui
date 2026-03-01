@@ -1,6 +1,5 @@
 /**
- * Token config – single source of truth for tests and app.
- * Plain object, no runtime dependencies. For registration, see lib/ref-config/register.ts.
+ * Token config for test sandboxes. Plain data – no runtime deps.
  */
 
 export const tokensConfig = {

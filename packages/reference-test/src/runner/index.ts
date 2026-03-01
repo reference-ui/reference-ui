@@ -4,7 +4,6 @@
  */
 
 import { spawn } from 'node:child_process'
-import { cp, rm } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { execa } from 'execa'
@@ -37,21 +36,12 @@ export function projectEnv(project: MatrixEntry): NodeJS.ProcessEnv {
   }
 }
 
-const LIB_DIR = join(PACKAGE_ROOT, 'src', 'config', 'lib')
-
 /** Run test:prepare for a single project. */
 export async function prepareProject(project: MatrixEntry): Promise<void> {
   await execa('pnpm', ['run', 'test:prepare'], {
     env: { ...process.env, REF_TEST_PROJECT: project.name },
     stdio: 'inherit',
   })
-}
-
-/** Copy lib into sandbox to refresh config (tokens, etc.) before a run. */
-export async function refreshSandboxLib(project: MatrixEntry): Promise<void> {
-  const sandboxLib = join(getSandboxDir(project), 'lib')
-  await rm(sandboxLib, { recursive: true, force: true })
-  await cp(LIB_DIR, sandboxLib, { recursive: true })
 }
 
 /** Run tests for default project. */
@@ -74,10 +64,9 @@ export async function runUi(): Promise<void> {
   })
 }
 
-/** Start dev server for default project (copies lib, spawns dev). */
+/** Start dev server for default project. */
 export async function startDev(): Promise<void> {
   const project = getDefaultProject()
-  await refreshSandboxLib(project)
   const proc = spawn('pnpm', ['run', 'dev'], {
     cwd: getSandboxDir(project),
     stdio: 'inherit',

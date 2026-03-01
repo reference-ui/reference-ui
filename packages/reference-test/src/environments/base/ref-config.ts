@@ -1,5 +1,5 @@
 /**
- * Register tokens with the CLI. Only run during ref sync – do not import at runtime.
+ * Register tokens with the CLI. Ref sync discovers this file.
  */
 
 import { tokens } from '@reference-ui/system'
