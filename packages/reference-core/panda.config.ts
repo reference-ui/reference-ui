@@ -2203,8 +2203,8 @@ var keyframes = extendKeyframes;
 var font = extendFont;
 var globalCss = extendGlobalCss;
 
-// lib/ref-config/register.ts
-var register_exports = {};
+// ref-config.ts
+var ref_config_exports = {};
 
 // .reference-ui/system/system.mjs
 var COLLECTOR_KEY2 = "__refPandaConfigCollector";
@@ -2235,7 +2235,7 @@ if (!globalThis[BOX_PATTERN_COLLECTOR_KEY2]) {
 }
 var tokens2 = extendTokens2;
 
-// lib/ref-config/tokens.ts
+// tokens.ts
 var tokensConfig = {
   colors: {
     test: {
@@ -2252,11 +2252,11 @@ var tokensConfig = {
   }
 };
 
-// lib/ref-config/register.ts
+// ref-config.ts
 tokens2(tokensConfig);
 
 // node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/.ref/panda-entry.ts
-var defaultFragments = [panda_base_exports, css_global_exports, css_static_exports, attention_exports, bounce_exports, fade_exports, scale_exports, slide_exports, spin_exports, font_exports, fonts_exports, box_exports, container_exports, r_exports, utilities_exports, animations_exports, colors_exports, radii_exports, spacing_exports, extendFont_exports, extendGlobalCss_exports, extendGlobalFontface_exports, extendKeyframes_exports, extendRecipe_exports, extendStaticCss_exports, extendTokens_exports, extendUtilities_exports, recipe_exports, system_exports, register_exports].map((m) => m?.default !== void 0 ? m.default : null).filter(Boolean);
+var defaultFragments = [panda_base_exports, css_global_exports, css_static_exports, attention_exports, bounce_exports, fade_exports, scale_exports, slide_exports, spin_exports, font_exports, fonts_exports, box_exports, container_exports, r_exports, utilities_exports, animations_exports, colors_exports, radii_exports, spacing_exports, extendFont_exports, extendGlobalCss_exports, extendGlobalFontface_exports, extendKeyframes_exports, extendRecipe_exports, extendStaticCss_exports, extendTokens_exports, extendUtilities_exports, recipe_exports, system_exports, ref_config_exports].map((m) => m?.default !== void 0 ? m.default : null).filter(Boolean);
 var collected = globalThis[COLLECTOR_KEY] || [];
 var fragments = [...defaultFragments, ...collected];
 var config = fragments.reduce((acc, frag) => deepMerge(acc, frag), {});

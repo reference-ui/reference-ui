@@ -9,7 +9,7 @@
  * REF_TEST_PROJECT: when set (e.g. for test:quick), only prepare that one sandbox.
  */
 
-import { cp, mkdir, rm, readFile, writeFile, readdir } from 'node:fs/promises'
+import { mkdir, rm, readFile, writeFile, readdir } from 'node:fs/promises'
 import { existsSync, statSync } from 'node:fs'
 import { join, dirname, relative } from 'node:path'
 import { createHash } from 'node:crypto'
@@ -24,7 +24,6 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 
 const PACKAGE_ROOT = join(__dirname, '..', '..')
 const ENVIRONMENTS_ROOT = join(PACKAGE_ROOT, 'src', 'environments')
-const LIB_DIR = join(PACKAGE_ROOT, 'src', 'config', 'lib')
 const SANDBOX_ROOT = join(PACKAGE_ROOT, '.sandbox')
 const CORE_PATH = join(PACKAGE_ROOT, '..', 'reference-core')
 const CORE_CLI = join(CORE_PATH, 'dist/cli/index.mjs')
@@ -93,9 +92,9 @@ function buildPackageJson(entry: MatrixEntry): object {
   }
 }
 
-function computePrepHash(packageJson: object, appHash: string, libHash: string): string {
+function computePrepHash(packageJson: object, appHash: string): string {
   return createHash('sha256')
-    .update(appHash + libHash + JSON.stringify(packageJson))
+    .update(appHash + JSON.stringify(packageJson))
     .digest('hex')
 }
 
@@ -136,11 +135,6 @@ async function prepareEntryFull(entry: MatrixEntry): Promise<void> {
 
   await composeSandbox(entry, sandboxDir)
 
-  // Copy lib into sandbox (app imports via alias lib/*)
-  const sandboxLib = join(sandboxDir, 'lib')
-  if (existsSync(sandboxLib)) await rm(sandboxLib, { recursive: true, force: true })
-  await cp(LIB_DIR, sandboxLib, { recursive: true })
-
   const packageJson = buildPackageJson(entry)
   await writeFile(
     join(sandboxDir, 'package.json'),
@@ -153,9 +147,8 @@ async function prepareEntryFull(entry: MatrixEntry): Promise<void> {
   await runSync(sandboxDir)
 
   const envHash = await hashAppDir(ENVIRONMENTS_ROOT)
-  const libHash = existsSync(LIB_DIR) ? await hashAppDir(LIB_DIR) : ''
   await writePrepState(sandboxDir, {
-    prepHash: computePrepHash(packageJson, envHash, libHash),
+    prepHash: computePrepHash(packageJson, envHash, ''),
     coreHash: getCoreHash(),
   })
   console.log('  ✓', entry.name, '(full)')
@@ -176,9 +169,8 @@ async function prepareEntry(entry: MatrixEntry): Promise<void> {
   const sandboxDir = join(SANDBOX_ROOT, entry.name)
 
   const envHash = await hashAppDir(ENVIRONMENTS_ROOT)
-  const libHash = existsSync(LIB_DIR) ? await hashAppDir(LIB_DIR) : ''
   const packageJson = buildPackageJson(entry)
-  const prepHash = computePrepHash(packageJson, envHash, libHash)
+  const prepHash = computePrepHash(packageJson, envHash)
   const coreHash = getCoreHash()
 
   if (!forceFresh && existsSync(sandboxDir)) {
