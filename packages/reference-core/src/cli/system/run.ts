@@ -3,9 +3,11 @@ import { emit } from '../event-bus'
 import { log } from '../lib/log'
 import { debounce } from '../lib/debounce'
 import { resolveCorePackageDir } from '../lib/resolve-core'
+import { getSystemPackageDir } from '../packager/install'
 import type { ReferenceUIConfig } from '../config'
 import { runEval } from './eval'
 import { createPandaConfig } from './config/panda'
+import { createBaseSystem } from './config/baseSystem/createBaseSystem'
 
 export interface SystemWorkerPayload {
   cwd: string
@@ -38,6 +40,7 @@ export async function runConfig(
     })
     if (state) state.configWritten = true
   }
+  await createBaseSystem(coreDir, userDirs, config, getSystemPackageDir(cwd))
 
   emit('system:config:complete', {})
   emit('system:complete', {})

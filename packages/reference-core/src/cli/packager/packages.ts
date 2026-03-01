@@ -35,7 +35,10 @@ export const SYSTEM_PACKAGE: PackageDefinition = {
   entry: 'src/entry/system.ts',
   main: './system.mjs',
   types: './system.d.mts',
-  exports: createBundleExports('system'),
+  exports: {
+    ...createBundleExports('system'),
+    './baseSystem': './baseSystem.mjs',
+  },
 }
 
 /**
