@@ -39,7 +39,7 @@ import { defineConfig } from '@reference-ui/core'
 
 export default defineConfig({
   name: 'reference-ui',
-  extends: [],  // no upstream — reference-lib is the root
+  extends: [], // no upstream — reference-lib is the root
   include: ['src/**/*.{ts,tsx}'],
 })
 ```

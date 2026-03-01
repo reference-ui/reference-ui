@@ -32,16 +32,17 @@ is the first design system built on it — colours, components, opt-in layer.
 
 **Two run contexts:**
 
-| Runner       | cwd               | coreDir        | Outputs                                                           |
-| ------------ | ----------------- | -------------- | ----------------------------------------------------------------- |
+| Runner        | cwd                | coreDir        | Outputs                                                                            |
+| ------------- | ------------------ | -------------- | ---------------------------------------------------------------------------------- |
 | reference-lib | reference-lib root | reference-core | `reference-lib/.reference-ui/system/baseSystem.mjs` (bundled config for `extends`) |
-| reference-app | reference-app root | reference-core | Panda config merged with upstream `baseSystem`, no baseSystem emit |
+| reference-app | reference-app root | reference-core | Panda config merged with upstream `baseSystem`, no baseSystem emit                 |
 
 **Event flow:** `createBaseSystem` runs in the **system worker** alongside `createPandaConfig`.
 Same trigger (`runConfig`), same fragments from `runEval`. No new events or init order changes.
 See `event-flow.md` for the full chain: virtual → system → gen → packager → packager-ts.
 
 **Output locations:**
+
 - `createPandaConfig` → `coreDir/panda.config.ts` (existing)
 - `createBaseSystem` → `cwd/.reference-ui/system/baseSystem.mjs` (same location as @reference-ui/system bundle; thin wrapper TBD)
 
@@ -120,7 +121,11 @@ Without this, reference-app cannot resolve tokens from `baseSystem` in step 1.
 In `runConfig`, after `runEval` returns fragments:
 
 ```ts
-await createPandaConfig(coreDir, { userDirectories: userDirs, includeCodegen: true, config })
+await createPandaConfig(coreDir, {
+  userDirectories: userDirs,
+  includeCodegen: true,
+  config,
+})
 await createBaseSystem(cwd, config, fragments)
 ```
 
