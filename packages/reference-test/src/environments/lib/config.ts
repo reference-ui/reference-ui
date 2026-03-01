@@ -88,7 +88,7 @@ function buildConfigContent(merged: Record<string, unknown>, extendsFrom?: strin
  */
 export async function addToConfig(additions: ConfigAdditions): Promise<void> {
   const sandboxDir = getSandboxDir()
-  const { extendsFrom, ...rest } = additions
+  const { extendsFrom = ['@reference-ui/lib'], ...rest } = additions
 
   const merged = deepMerge(
     { ...BASE_CONFIG } as Record<string, unknown>,

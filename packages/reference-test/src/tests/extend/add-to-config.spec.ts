@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import { REF_LIB_CANARY } from '@reference-ui/lib'
 import { addToConfig, getSandboxDir } from '../../environments/lib/config.js'
 
 test.describe('extend', () => {
@@ -16,5 +17,15 @@ test.describe('extend', () => {
     expect(content).toContain('reference-test')
     expect(content).toContain('"debug": false')
     expect(content).toContain('skipTypescript')
+  })
+
+  test('extends reference-lib baseSystem – refLibCanary token renders', async ({
+    page,
+  }) => {
+    await page.goto('/')
+    const el = page.getByTestId('extends-test')
+    await expect(el).toBeVisible()
+    const color = await el.evaluate((e) => getComputedStyle(e).color)
+    expect(color).toBe(REF_LIB_CANARY)
   })
 })
