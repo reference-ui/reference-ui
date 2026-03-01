@@ -34,7 +34,7 @@ function getOverrideLayers(entry: MatrixEntry): string[] {
 }
 
 /**
- * Compose a sandbox: for each manifest file, take the first layer that has it.
+ * Compose a sandbox: for each manifest file, last layer that has it wins (overrides).
  * Writes to destDir.
  */
 export async function composeSandbox(
@@ -49,7 +49,6 @@ export async function composeSandbox(
       const filePath = join(layerDir, relPath)
       if (existsSync(filePath)) {
         content = await readFile(filePath, 'utf-8')
-        break
       }
     }
     if (content === null) {
