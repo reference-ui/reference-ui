@@ -7,7 +7,7 @@ import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const CONFIG_PATH = join(__dirname, '..', 'ref-test.config.json')
+const CONFIG_PATH = join(__dirname, '..', '..', 'ref-test.config.json')
 
 export interface RefTestConfig {
   defaultProject: string
