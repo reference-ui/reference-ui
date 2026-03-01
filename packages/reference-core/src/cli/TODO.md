@@ -34,7 +34,7 @@ is the first design system built on it — colours, components, opt-in layer.
 
 | Runner       | cwd               | coreDir        | Outputs                                                           |
 | ------------ | ----------------- | -------------- | ----------------------------------------------------------------- |
-| reference-lib | reference-lib root | reference-core | `reference-lib/dist/baseSystem.mjs` (bundled config for `extends`) |
+| reference-lib | reference-lib root | reference-core | `reference-lib/.reference-ui/system/baseSystem.mjs` (bundled config for `extends`) |
 | reference-app | reference-app root | reference-core | Panda config merged with upstream `baseSystem`, no baseSystem emit |
 
 **Event flow:** `createBaseSystem` runs in the **system worker** alongside `createPandaConfig`.
@@ -43,7 +43,7 @@ See `event-flow.md` for the full chain: virtual → system → gen → packager 
 
 **Output locations:**
 - `createPandaConfig` → `coreDir/panda.config.ts` (existing)
-- `createBaseSystem` → `cwd/dist/baseSystem.mjs` (new; bundled config read by `extends[]`; thin wrapper TBD)
+- `createBaseSystem` → `cwd/.reference-ui/system/baseSystem.mjs` (same location as @reference-ui/system bundle; thin wrapper TBD)
 
 ---
 
@@ -92,7 +92,7 @@ Steps:
 1. Start with an empty merged object
 2. For each entry in `config.extends`: deep-merge its `tokens`, `font`, `keyframes`, `globalCss` in order (left-to-right, last wins)
 3. Merge this package's own fragments (extract from `extend*` registrations — only tokens, font, keyframes, globalCss) on top
-4. Write `cwd/dist/baseSystem.mjs` as an ESM export:
+4. Write to `cwd/.reference-ui/system/baseSystem.mjs` (same location as @reference-ui/system; exposed via `import { baseSystem } from '@reference-ui/system/baseSystem'`):
 
 ```ts
 export const baseSystem = { name, tokens, font, keyframes, globalCss }

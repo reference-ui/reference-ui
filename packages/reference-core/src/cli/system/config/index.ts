@@ -1,4 +1,5 @@
 export { extendPandaConfig, COLLECTOR_KEY, createPandaConfig } from './panda'
+export { createBaseSystem } from './baseSystem/createBaseSystem'
 export { createBoxPattern, extendBoxPattern } from './boxPattern'
 export { createFontSystem } from './fontFace'
 export type { FontDefinition, FontFaceRule, FontWeightName } from './fontFace'
