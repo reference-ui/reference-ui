@@ -121,6 +121,16 @@ async function writePrepState(sandboxDir: string, state: PrepState): Promise<voi
   await writeFile(join(sandboxDir, PREP_STATE_FILE), JSON.stringify(state, null, 0))
 }
 
+/** Clear ref sync output to avoid stale/corrupt state. Keeps node_modules (core, lib) intact. */
+async function clearRefUiArtifacts(sandboxDir: string): Promise<void> {
+  const refUiDir = join(sandboxDir, '.reference-ui')
+  const scopeDir = join(sandboxDir, 'node_modules', '@reference-ui')
+  await rm(refUiDir, { recursive: true, force: true })
+  await rm(join(scopeDir, 'react'), { recursive: true, force: true })
+  await rm(join(scopeDir, 'system'), { recursive: true, force: true })
+  await rm(join(sandboxDir, 'ref-sync.log'), { force: true })
+}
+
 async function runSync(sandboxDir: string): Promise<void> {
   await execa('node', [CORE_CLI, 'sync'], {
     cwd: sandboxDir,
@@ -147,11 +157,12 @@ async function prepareEntryFull(entry: MatrixEntry): Promise<void> {
   await execa('pnpm', ['install', '--ignore-workspace', '-C', sandboxDir], {
     cwd: WORKSPACE_ROOT,
   })
+  await clearRefUiArtifacts(sandboxDir)
   await runSync(sandboxDir)
 
   const envHash = await hashAppDir(ENVIRONMENTS_ROOT)
   await writePrepState(sandboxDir, {
-    prepHash: computePrepHash(packageJson, envHash, ''),
+    prepHash: computePrepHash(packageJson, envHash),
     coreHash: getCoreHash(),
   })
   console.log('  ✓', entry.name, '(full)')
@@ -159,6 +170,7 @@ async function prepareEntryFull(entry: MatrixEntry): Promise<void> {
 
 async function prepareEntrySyncOnly(entry: MatrixEntry, prepHash: string): Promise<void> {
   const sandboxDir = join(SANDBOX_ROOT, entry.name)
+  await clearRefUiArtifacts(sandboxDir)
   await runSync(sandboxDir)
   await writePrepState(sandboxDir, {
     prepHash,
