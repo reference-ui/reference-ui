@@ -1,19 +1,24 @@
-import type { ReferenceUIConfig } from '../config'
 import { runWorker } from '../thread-pool'
+import type { SyncPayload } from '../sync/types'
 
-export interface InitSystemOptions {
-  watch?: boolean
-}
-
-export async function initSystem(
-  cwd: string,
-  config: ReferenceUIConfig,
-  options?: InitSystemOptions
-): Promise<void> {
+/**
+ * Initialize system worker (eval + config generation only).
+ * Gen (Panda) runs separately via initGen().
+ */
+export async function initSystem(payload: SyncPayload): Promise<void> {
+  const watchMode = payload.options.watch ?? false
+  if (watchMode) {
+    runWorker('system', {
+      cwd: payload.cwd,
+      config: payload.config,
+      watchMode: true,
+    })
+    return
+  }
   await runWorker('system', {
-    cwd,
-    config,
-    watchMode: options?.watch ?? false,
+    cwd: payload.cwd,
+    config: payload.config,
+    watchMode: false,
   })
 }
 
@@ -24,6 +29,4 @@ export {
   REGISTERED_FUNCTIONS,
   isRegistered,
 } from './eval'
-export { createBoxPattern } from './boxPattern'
-export { createPandaConfig } from './config'
-export { createFontSystem } from './fontFace'
+export { createBoxPattern, createPandaConfig, createFontSystem } from './config'

@@ -78,7 +78,6 @@ const header = `/** Generated. Run: node scripts/generate-primitives.cjs
 
 import * as React from 'react'
 import { forwardRef } from 'react'
-// @ts-expect-error - Panda codegen helpers.js has no declaration file
 import { splitProps } from '../system/helpers.js'
 import { box } from '../system/patterns/box.js'
 import { styled } from '../system/jsx/index.js'

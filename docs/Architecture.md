@@ -67,12 +67,8 @@ src/
                 initFontCollector.ts    - Init global collector
 
             gen/
-                copy-to-codegen.ts      - Copy generated output for docs playground
-                mdx-to-jsx.ts           - Convert MDX JSX components
-                rewrite-css-imports.ts  - Rewrite CSS import paths
-                rewrite-cva-imports.example.md - CVA rewrite examples
-                rewrite-cva-imports.ts  - Rewrite CVA imports
                 runner.ts               - Run Panda codegen
+                rewrite-cva-imports.example.md - CVA rewrite examples (transform lives in virtual/transforms)
 
         workspace/
             copy-to-node-modules.ts   - Copy generated system into node_modules
@@ -378,11 +374,7 @@ Each microbundle follows the pattern: **collect → bundle → execute → gener
 | File                             | Purpose                                                  |
 | -------------------------------- | -------------------------------------------------------- |
 | `runner.ts`                      | Runs Panda codegen (`panda codegen`)                     |
-| `copy-to-codegen.ts`             | Copies generated `styled-system/` to `codegen/src/`      |
-| `rewrite-css-imports.ts`         | Rewrites CSS import paths for bundler compatibility      |
-| `rewrite-cva-imports.ts`         | Rewrites CVA (class variance authority) imports          |
-| `rewrite-cva-imports.example.md` | Examples of CVA import transformations                   |
-| `mdx-to-jsx.ts`                  | Converts MDX JSX components to standard React components |
+| `rewrite-cva-imports.example.md` | Examples of CVA import transformations (transform in virtual/transforms) |
 
 ---
 

@@ -2,24 +2,8 @@
  * Package definitions for Reference UI
  */
 
-export interface PackageDefinition {
-  name: string
-  version: string
-  description: string
-  /** Entry point for bundling (if bundle: true) */
-  entry?: string
-  /** Whether to bundle with esbuild (false = just copy files) */
-  bundle?: boolean
-  /** Directories to copy (when bundle: false) */
-  copyDirs?: Array<{ src: string; dest?: string }>
-  /** Main entry point for package.json (defaults to './index.js') */
-  main?: string
-  /** Types entry point for package.json (defaults to './index.d.ts') */
-  types?: string
-  exports: Record<string, any>
-  /** Additional files to copy (e.g., styles.css) */
-  additionalFiles?: Array<{ src: string; dest: string }>
-}
+import type { PackageDefinition } from './package'
+import { createBundleExports } from './package'
 
 /**
  * @reference-ui/react - Runtime React components and APIs
@@ -34,13 +18,7 @@ export const REACT_PACKAGE: PackageDefinition = {
   entry: 'src/entry/react.ts',
   main: './react.mjs',
   types: './react.d.mts',
-  exports: {
-    '.': {
-      types: './react.d.mts',
-      import: './react.mjs',
-    },
-    './styles.css': './styles.css',
-  },
+  exports: createBundleExports('react', { includeStyles: true }),
   additionalFiles: [{ src: 'src/system/styles.css', dest: 'styles.css' }],
 }
 
@@ -57,12 +35,7 @@ export const SYSTEM_PACKAGE: PackageDefinition = {
   entry: 'src/entry/system.ts',
   main: './system.mjs',
   types: './system.d.mts',
-  exports: {
-    '.': {
-      types: './system.d.mts',
-      import: './system.mjs',
-    },
-  },
+  exports: createBundleExports('system'),
 }
 
 /**

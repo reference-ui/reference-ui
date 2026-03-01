@@ -14,69 +14,33 @@ src/
     Architecture.md          - This document
 
     cli/
-        index.ts               - CLI entry point and exports
+        index.ts               - CLI entry point (Commander)
 
-        commands/
-            link-system.ts       - Symlink generated system into src/system
-            sync.ts              - Main build command (eval + microbundles + codegen)
+        sync/
+            index.ts            - syncCommand (main build command)
+            bootstrap.ts       - Load config, build SyncPayload (cwd, config, options)
+            complete.ts        - onceAll(gates) → process.exit for cold sync
+            types.ts           - SyncOptions, SyncPayload
 
         config/
             index.ts             - Config loader exports
             load-config.ts       - Load ui.config.ts
 
-        eval/
-            index.ts             - Eval exports
-            readme.md            - Eval system docs
-            registry.ts          - Function name registry for discovery
-            runner.ts            - Bundle + execute discovered config files
-            scanner.ts           - File scanner for registered calls
+        event-bus/             - Cross-thread event system (BroadcastChannel)
+        thread-pool/            - Worker management (Piscina)
+        watch/                  - File watching (@parcel/watcher)
+        virtual/               - File transformation, virtual FS
+        system/                - Panda config compilation
+            config/            - Config, box pattern, font microbundles (createPandaConfig, etc.)
+            eval/               - Registry, scanner, runner (discovers config calls)
 
-        internal/
-            link-local-system.ts - Local dev symlinks for system output
+        gen/                   - Panda codegen (separate worker)
+        packager/              - esbuild bundling, node_modules install
+        packager-ts/            - TypeScript declaration generation
 
         lib/
-            microBundle.ts       - esbuild wrapper for CLI bundling
-            run-generate-primitives.ts - Runs primitive generation script
-
-        panda/
-            boxPattern/
-                collectEntryTemplate.ts - Temp entry template for box patterns
-                createBoxPattern.ts     - Orchestrate collect/bundle/generate
-                extendBoxPattern.ts     - User API to register pattern extensions
-                generateBoxPattern.ts   - Generate merged pattern code
-                index.ts                - Box pattern exports
-                initBoxCollector.ts     - Init global collector
-
-            config/
-                COMPILER.md         - Compiler details
-                SUMMARY.md          - Quick overview
-                createPandaConfig.ts - Orchestrate config collection + merge
-                deepMerge.ts         - Deep merge helper
-                entryTemplate.ts     - Temp entry for config collection
-                extendPandaConfig.ts - User API to register config fragments
-                index.ts             - Config exports
-                initCollector.ts     - Init global collector
-                readme.md            - Config microbundle docs
-
-            fontFace/
-                collectEntryTemplate.ts - Temp entry template for fonts
-                createFontSystem.ts     - Orchestrate font collection + generation
-                extendFontFace.ts       - User API to register font families
-                generateFontSystem.ts   - Generate font tokens/recipes/patterns
-                index.ts                - Font microbundle exports
-                initFontCollector.ts    - Init global collector
-
-            gen/
-                copy-to-codegen.ts      - Copy generated output for docs playground
-                mdx-to-jsx.ts           - Convert MDX JSX components
-                rewrite-css-imports.ts  - Rewrite CSS import paths
-                rewrite-cva-imports.example.md - CVA rewrite examples
-                rewrite-cva-imports.ts  - Rewrite CVA imports
-                runner.ts               - Run Panda codegen
-
-        workspace/
-            copy-to-node-modules.ts   - Copy generated system into node_modules
-            resolve-core.ts           - Resolve core package location
+            microBundle.ts     - esbuild wrapper for CLI bundling
+            resolve-core.ts    - Resolve @reference-ui/core location
 
     components/
         Button.tsx              - Button example component
@@ -274,22 +238,26 @@ src/
 
 | File           | Purpose                                            |
 | -------------- | -------------------------------------------------- |
-| `cli/index.ts` | Main CLI exports, orchestrates eval + microbundles |
+| `cli/index.ts` | CLI entry point (Commander), runs `ref sync`       |
 
 ---
 
-### Commands (`cli/commands/`)
+### Sync Command (`cli/sync/`)
 
-> **User-facing CLI commands**
+> **Main build command — fully event-driven**
 
-| File             | Purpose                                                                   |
-| ---------------- | ------------------------------------------------------------------------- |
-| `sync.ts`        | Main `ref sync` command - runs eval system + Panda codegen + microbundles |
-| `link-system.ts` | Links generated `styled-system/` to `src/system/` for imports             |
+| File            | Purpose                                                                 |
+| --------------- | ----------------------------------------------------------------------- |
+| `index.ts`      | `syncCommand` — bootstraps, then fires all inits (fire-and-forget)     |
+| `bootstrap.ts`  | Loads config, returns `SyncPayload` (cwd, config, options)               |
+| `complete.ts`   | Registers `onceAll(gates, process.exit)` for cold sync; no-op in watch  |
+| `types.ts`      | `SyncOptions`, `SyncPayload`                                           |
+
+All init functions receive `SyncPayload`. Workers run in separate threads; the event bus (BroadcastChannel) drives coordination. See `cli/event-flow.md` for the event chain.
 
 ---
 
-### Eval System (`cli/eval/`)
+### Eval System (`cli/system/eval/`)
 
 > **Discovers and executes user styling configuration at build time**
 
@@ -310,13 +278,13 @@ src/
 
 ---
 
-### Panda Microbundles (`cli/panda/`)
+### Panda Microbundles (`cli/system/config/`)
 
 > **Feature-specific code generators that produce committed TypeScript**
 
 Each microbundle follows the pattern: **collect → bundle → execute → generate → output**
 
-#### Config Microbundle (`cli/panda/config/`)
+#### Config Microbundle (`cli/system/config/panda/`)
 
 **Collects and merges all Panda config extensions**
 
@@ -336,7 +304,7 @@ Each microbundle follows the pattern: **collect → bundle → execute → gener
 
 ---
 
-#### Box Pattern Microbundle (`cli/panda/boxPattern/`)
+#### Box Pattern Microbundle (`cli/system/config/boxPattern/`)
 
 **Generates unified box pattern from all pattern extensions**
 
@@ -354,7 +322,7 @@ Each microbundle follows the pattern: **collect → bundle → execute → gener
 
 ---
 
-#### Font System Microbundle (`cli/panda/fontFace/`)
+#### Font System Microbundle (`cli/system/config/fontFace/`)
 
 **Generates complete font system from `extendFont()` calls**
 
@@ -371,18 +339,14 @@ Each microbundle follows the pattern: **collect → bundle → execute → gener
 
 ---
 
-#### Panda Codegen Runners (`cli/panda/gen/`)
+#### Panda Codegen Runners (`cli/gen/`)
 
 **Wraps Panda CSS codegen with custom transforms**
 
 | File                             | Purpose                                                  |
 | -------------------------------- | -------------------------------------------------------- |
 | `runner.ts`                      | Runs Panda codegen (`panda codegen`)                     |
-| `copy-to-codegen.ts`             | Copies generated `styled-system/` to `codegen/src/`      |
-| `rewrite-css-imports.ts`         | Rewrites CSS import paths for bundler compatibility      |
-| `rewrite-cva-imports.ts`         | Rewrites CVA (class variance authority) imports          |
-| `rewrite-cva-imports.example.md` | Examples of CVA import transformations                   |
-| `mdx-to-jsx.ts`                  | Converts MDX JSX components to standard React components |
+| `rewrite-cva-imports.example.md` | Examples of CVA import transformations (transform in virtual/transforms) |
 
 ---
 
@@ -662,6 +626,7 @@ codegen/src/
 
 | File                    | Purpose                                 |
 | ----------------------- | --------------------------------------- |
+| `SELF_BUILDING_CLI.md` | Self-building CLI, generated output, build order, gitignore |
 | `MIGRATION-TO-REACT.md` | Guide for migrating to React primitives |
 | `response.md`           | Responsive design patterns              |
 | `responsive.md`         | Container query documentation           |
@@ -680,29 +645,29 @@ codegen/src/
 └──────────────────────────────────────────────────────────────────┘
                                ↓
 ┌──────────────────────────────────────────────────────────────────┐
-│  CLI: ref sync (cli/commands/sync.ts)                           │
-│  1. Eval system discovers config calls                          │
-│  2. Microbundles generate code                                  │
-│  3. Panda codegen creates runtime                               │
+│  CLI: ref sync (cli/sync/index.ts)                               │
+│  1. bootstrap(cwd, options) → SyncPayload                       │
+│  2. Fire-and-forget inits (virtual, system, gen, packager, ...)  │
+│  3. Event bus drives coordination; onceAll(gates) → process.exit │
 └──────────────────────────────────────────────────────────────────┘
                                ↓
 ┌──────────────────────────────────────────────────────────────────┐
-│  Eval System (cli/eval/)                                         │
-│  • scanner.ts → Finds files with registered function calls      │
-│  • runner.ts → Bundles + executes → collects results            │
+│  Eval System (cli/system/eval/)                                  │
+│  • scanner.ts → Finds files with registered function calls       │
+│  • runner.ts → Bundles + executes → collects results             │
 └──────────────────────────────────────────────────────────────────┘
                                ↓
 ┌──────────────────────────────────────────────────────────────────┐
-│  Microbundles (cli/panda/)                                       │
-│  • config/      → Merges all configs → panda.config.ts          │
-│  • boxPattern/  → Merges patterns → styled/props/box.ts         │
-│  • fontFace/    → Generates fonts → styled/font/font.ts         │
-└──────────────────────────────────────────────────────────────────┐
+│  Microbundles (cli/system/config/)                               │
+│  • panda/       → Merges all configs → panda.config.ts           │
+│  • boxPattern/ → Merges patterns → styled/props/box.ts           │
+│  • fontFace/   → Generates fonts → styled/font/font.ts           │
+└──────────────────────────────────────────────────────────────────┘
                                ↓
 ┌──────────────────────────────────────────────────────────────────┐
-│  Panda CSS Codegen (cli/panda/gen/runner.ts)                    │
-│  • Reads panda.config.ts                                        │
-│  • Generates styled-system/ (CSS runtime, patterns, tokens)     │
+│  Panda Codegen (cli/gen/) + Packager (cli/packager/)              │
+│  • Gen worker runs Panda; emits system:compiled                  │
+│  • Packager bundles, installs to node_modules                    │
 └──────────────────────────────────────────────────────────────────┘
                                ↓
 ┌──────────────────────────────────────────────────────────────────┐
@@ -788,9 +753,9 @@ codegen/src/
 | Add custom box props      | `styled/props/` + `styled/api/internal/extendPattern.ts`     |
 | Add font family           | `styled/font/fonts.ts` using `extendFont()`                  |
 | Create animations         | `styled/animations/`                                         |
-| Modify CLI build          | `cli/commands/sync.ts`                                       |
-| Understand eval system    | `cli/eval/readme.md`                                         |
-| Add microbundle           | `cli/panda/` + follow existing pattern                       |
+| Modify CLI build          | `cli/sync/index.ts`, `cli/sync/bootstrap.ts`                 |
+| Understand eval system    | `cli/system/eval/readme.md`                                  |
+| Add microbundle           | `cli/system/config/` + follow existing pattern                 |
 | Create primitive          | `primitives/index.tsx` + `createPrimitive()`                 |
 | Configure Panda           | `panda.base.ts` + `styled/api/internal/extendPandaConfig.ts` |
 | See generated output      | `styled-system/` or `src/system/`                            |
@@ -815,10 +780,11 @@ ref sync --watch # Watch mode
 
 ### 3. **CLI executes:**
 
-1. **Eval system** discovers `extendTokens()` call
-2. **Config microbundle** collects + merges into `panda.config.ts`
-3. **Panda codegen** generates `styled-system/`
-4. **Link system** symlinks to `src/system/`
+1. **Bootstrap** loads config, builds SyncPayload
+2. **Eval system** discovers `extendTokens()` call
+3. **Config microbundle** collects + merges into `panda.config.ts`
+4. **Panda codegen** (gen worker) generates `styled-system/`
+5. **Packager** bundles and installs to `node_modules/`
 
 ### 4. **Use in components:**
 
@@ -867,4 +833,4 @@ Every file has a **clear purpose**, every domain is **self-contained**, and ever
 
 ---
 
-_Last updated: February 19, 2026_
+_Last updated: February 28, 2026_

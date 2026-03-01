@@ -17,4 +17,4 @@
  * })
  * ```
  */
-export { extendBoxPattern as extendPattern } from '../../../cli/system/boxPattern/extendBoxPattern'
+export { extendBoxPattern as extendPattern } from '../../../cli/system/config/boxPattern/extendBoxPattern'

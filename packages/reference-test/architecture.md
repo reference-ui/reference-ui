@@ -16,12 +16,24 @@ packages/reference-test/
 │   │   ├── index.html
 │   │   ├── vite.config.ts
 │   │   ├── ui.config.ts
-│   │   └── tsconfig.json
+│   │   ├── tsconfig.json
+│   │   └── tests/              # App-level test components (rendered in sandbox)
+│   │       ├── SyncWatch.tsx
+│   │       └── TokensTest.tsx
+│   ├── lib/                    # Shared test utilities
+│   │   ├── index.ts
+│   │   └── ref-config/         # Shared reference-ui config fragments for sandboxes
+│   │       ├── register.ts
+│   │       └── tokens.ts
+│   ├── scripts/
+│   │   └── start-dev.ts        # Starts the sandbox dev server (used by Playwright webServer)
 │   ├── matrix.ts               # Matrix config (React × Bundler)
 │   ├── prepare.ts              # Generates all sandboxes
 │   ├── run-matrix.ts           # Runs Playwright per project (webServer workaround)
 │   ├── tests/
-│   │   └── core-system.spec.ts  # Single test suite (same for all entries)
+│   │   ├── core-system.spec.ts  # Artifact presence and basic render checks
+│   │   ├── sync-watch.spec.ts   # Watch mode / incremental sync checks
+│   │   └── tokens.spec.ts       # Design token application checks
 │   └── index.ts
 ├── .sandbox/                   # Generated sandboxes (gitignored)
 │   ├── react17-vite5/
@@ -41,7 +53,8 @@ packages/reference-test/
    - Uses `main.react17.tsx` for React 17, `main.tsx` for React 18+
    - Runs `pnpm install --ignore-workspace` and `ref sync` in each
 2. **run-matrix.ts** — Runs Playwright once per project (Playwright has no per-project webServer):
-   - Sets `REF_TEST_PROJECT={entry}` so config uses `.sandbox/{entry}` for webServer.cwd
+   - Sets `REF_TEST_PROJECT={entry}` and `REF_TEST_PORT={port}` so config picks the right sandbox and port
+   - webServer command: `tsx src/scripts/start-dev.ts` (reads env vars to start the correct sandbox)
    - `playwright test --project=react18-vite5` etc.
 3. **Tests** — Same assertions for every matrix entry; `getSandboxDir()` uses `REF_TEST_PROJECT`
 
@@ -49,13 +62,15 @@ packages/reference-test/
 
 ## Test Suite
 
-The tests in `src/tests/` are **environment-agnostic**:
+Three spec files live in `src/tests/`, all **environment-agnostic**:
 
-- **ref sync produces expected artifacts** — Checks `.sandbox/{project}/node_modules/@reference-ui/` for sync output
-- **app renders with reference-ui components** — Asserts `data-testid="app-box"` visible with "Hello"
-- **reference-ui styles are applied** — Asserts `color` is in `oklch()` format (design tokens applied)
+- **`core-system.spec.ts`** — Artifact presence and basic render: checks `.sandbox/{project}/node_modules/@reference-ui/` for sync output, asserts `data-testid="app-box"` visible
+- **`sync-watch.spec.ts`** — Watch mode / incremental sync: verifies file changes propagate correctly through the pipeline
+- **`tokens.spec.ts`** — Design token application: asserts `color` is in `oklch()` format, tokens are applied to components
 
-These tests must pass for **every** matrix combination. No environment-specific test logic.
+Test components rendered in the sandbox live in `src/app/tests/` (`SyncWatch.tsx`, `TokensTest.tsx`) — these are part of the app template, not Playwright code.
+
+All specs must pass for **every** matrix combination. No environment-specific test logic.
 
 ---
 
@@ -106,13 +121,14 @@ One test suite. Many environments. Run the same Playwright tests across:
 
 ## Matrix Entries (to implement)
 
-| Entry        | React | Bundler      | Notes                        |
-|--------------|-------|--------------|------------------------------|
-| react17-vite5| 17    | Vite 5       |                              |
-| react18-vite5| 18    | Vite 5       | **Current default**          |
-| react19-vite5| 19    | Vite 5       |                              |
-| react18-vite4| 18    | Vite 4       |                              |
-| react18-webpack5| 18  | Webpack 5    | Future                       |
+| Entry            | React | Bundler   | Version | Port  | Status           |
+| ---------------- | ----- | --------- | ------- | ----- | ---------------- |
+| react17-vite5    | 17    | Vite 5    | 5.4.0   | 19740 | Active           |
+| react18-vite5    | 18    | Vite 5    | 5.4.0   | 19741 | Active (default) |
+| react19-vite5    | 19    | Vite 5    | 5.4.0   | 19742 | Active           |
+| react18-webpack5 | 18    | Webpack 5 | —       | —     | Future           |
+
+Ports are assigned deterministically: `BASE_PORT (19740) + matrix index`. High ports avoid clashing with Vite's default 5173 and stale processes during parallel runs.
 
 ---
 

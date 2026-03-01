@@ -12,10 +12,9 @@
     "@mdx-js/esbuild": "^3.1.1",
     "@mdx-js/mdx": "^3.1.1",
     "@pandacss/dev": "^1.8.1",
+    "@pandacss/node": "^1.8.2",
     "@parcel/watcher": "^2.5.6",
     "@rspress/mdx-rs": "^0.6.6",
-    "@vanilla-extract/css": "^1.18.0",
-    "@vanilla-extract/esbuild-plugin": "^2.3.21",
     "commander": "^14.0.3",
     "esbuild": "^0.27.3",
     "fast-glob": "^3.3.2",
@@ -32,19 +31,25 @@
   "scripts": {
     "build": "pnpm run build:native && tsup",
     "build:fresh": "rm -rf dist/cli && tsup",
-    "build:native": "cd src/cli/virtual/native && npx napi build --platform --release",
-    "dev": "pnpm run build:native && tsup --watch",
+    "build:native": "cd src/cli/virtual/native && pnpm exec napi build --platform --release",
+    "dev": "tsup --watch",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "complexity": "tsx scripts/complexity.ts",
+    "complexity:json": "tsx scripts/complexity.ts json",
+    "complexity:markdown": "tsx scripts/complexity.ts markdown"
   },
   "devDependencies": {
+    "@napi-rs/cli": "^3.5.1",
     "@types/node": "^25.1.0",
     "@types/picomatch": "^4.0.2",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
+    "complexity-report": "2.0.0-alpha",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "tsup": "^8.4.0",
+    "tsx": "^4.19.0",
     "typescript": "~5.9.3",
     "vitest": "^4.0.18"
   }
