@@ -2,16 +2,10 @@ import { test, expect } from '@playwright/test'
 import { writeFile, appendFile } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { getSandboxDir } from '../../environments/lib/config.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-
-const METRICS_PATH = join(__dirname, '..', '..', '.watch-metrics.jsonl')
-
-function getSandboxDir(): string {
-  const project = process.env.REF_TEST_PROJECT
-  if (!project) throw new Error('REF_TEST_PROJECT required (set by run-matrix.ts)')
-  return join(__dirname, '..', '..', '.sandbox', project)
-}
+const METRICS_PATH = join(__dirname, '..', '..', '..', '.watch-metrics.jsonl')
 
 /** Generate a random hex color that Panda has never seen (ensures codegen must run). */
 function randomHexColor(): string {
@@ -59,8 +53,6 @@ test.describe('sync-watch', () => {
     const sandboxDir = getSandboxDir()
     const syncWatchPath = join(sandboxDir, 'tests', 'SyncWatch.tsx')
 
-    // Use random color – Panda has never seen it, so codegen MUST run to extract it.
-    // Pre-defined tokens (#dc2626 etc) would pass even when codegen is broken.
     const randomColor = randomHexColor()
     const expectedRgb = hexToRgb(randomColor)
 
@@ -68,11 +60,9 @@ test.describe('sync-watch', () => {
     const el = page.getByTestId('sync-watch')
     await expect(el).toBeVisible()
 
-    // Edit css() with new color – ref sync --watch → Panda codegen → packager → vite hmr
     const t0 = Date.now()
     await writeFile(syncWatchPath, buildSyncWatchContent(randomColor))
 
-    // Wait for the color to change (proves Panda codegen ran and extracted the new value)
     await expect
       .poll(
         async () => {
