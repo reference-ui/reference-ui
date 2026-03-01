@@ -19,5 +19,10 @@ export function validateConfig(raw: unknown): ReferenceUIConfig {
     throw ConfigValidationError.mustHaveInclude()
   }
 
+  const name = cfg.name
+  if (name == null || typeof name !== 'string' || name.trim() === '') {
+    throw ConfigValidationError.mustHaveName()
+  }
+
   return config as ReferenceUIConfig
 }

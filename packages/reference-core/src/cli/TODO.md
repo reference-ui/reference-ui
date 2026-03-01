@@ -1,7 +1,7 @@
 # CLI TODO — baseSystem emission
 
 Goal: `ref sync` emits a bundled config that `extends[]` reads. The artefact is the merged
-tokens/recipes/utilities/patterns — we may need a thin wrapper around it. It's called **baseSystem**.
+tokens, font, keyframes, globalCss (public API only) — we may need a thin wrapper. It's called **baseSystem**.
 
 See `DESIGN_SYSTEMS.md` for the full picture. This tracks step 1.
 
@@ -54,15 +54,16 @@ Add two fields to `ReferenceUIConfig`:
 - `name: string` — required. Identity of this system (CSS @layer, `data-layer` selector).
 - `extends?: BaseSystem[]` — upstream systems (bundled configs) to merge in before this package's own tokens.
 
-Add `BaseSystem` type — the shape of the bundled config read by `extends[]`:
+Add `BaseSystem` type — the shape of the bundled config read by `extends[]`.
+**Only reflects the public API**: `tokens()`, `font()`, `keyframes()`, `globalCss()` — nothing else.
 
 ```ts
 interface BaseSystem {
   name: string
   tokens: Record<string, unknown>
-  recipes: Record<string, unknown>
-  utilities: Record<string, unknown>
-  patterns: Record<string, unknown>
+  font: Record<string, unknown>
+  keyframes: Record<string, unknown>
+  globalCss: Record<string, unknown>
 }
 ```
 
@@ -89,12 +90,12 @@ Takes:
 Steps:
 
 1. Start with an empty merged object
-2. For each entry in `config.extends`: deep-merge its `tokens`, `recipes`, `utilities`, `patterns` in order (left-to-right, last wins)
-3. Merge this package's own `fragments` on top
+2. For each entry in `config.extends`: deep-merge its `tokens`, `font`, `keyframes`, `globalCss` in order (left-to-right, last wins)
+3. Merge this package's own fragments (extract from `extend*` registrations — only tokens, font, keyframes, globalCss) on top
 4. Write `cwd/dist/baseSystem.mjs` as an ESM export:
 
 ```ts
-export const baseSystem = { name, tokens, recipes, utilities, patterns }
+export const baseSystem = { name, tokens, font, keyframes, globalCss }
 ```
 
 Ensure `dist/` exists (mkdir -p). For reference-lib with `extends: []`, step 2 is a no-op; step 3 merges only the local fragments. A thin wrapper may be added around this export.
@@ -107,7 +108,7 @@ When a consumer (e.g. reference-app) has `extends: [baseSystem]`, the Panda conf
 those upstream tokens. Update `createPandaConfig` to:
 
 1. Accept `config: ReferenceUIConfig` (or equivalent) with `extends`
-2. Deep-merge each upstream `baseSystem`'s tokens/recipes/utilities/patterns into the config before writing
+2. Deep-merge each upstream `baseSystem`'s tokens/font/keyframes/globalCss into the config before writing
 
 The existing fragment merge stays; this adds pre-merge of `config.extends` when present.
 Without this, reference-app cannot resolve tokens from `baseSystem` in step 1.

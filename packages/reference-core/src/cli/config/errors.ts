@@ -35,6 +35,13 @@ export class ConfigValidationError extends ConfigError {
     )
   }
 
+  static mustHaveName(): ConfigValidationError {
+    return new ConfigValidationError(
+      "Config must have a non-empty 'name' for this design system.\n" +
+        "Example: export default defineConfig({ name: 'my-design-system', include: ['src/**/*.{ts,tsx}'] })"
+    )
+  }
+
   private constructor(message: string) {
     super(message)
   }
