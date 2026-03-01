@@ -1,3 +1,4 @@
+import type { BaseSystem } from '../../../config'
 import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { emit } from '../../../event-bus'
@@ -30,6 +31,8 @@ export interface CreatePandaConfigOptions {
   includeCodegen?: boolean
   /** Additional directories to scan for config files (e.g., user project directories) */
   userDirectories?: string[]
+  /** Upstream baseSystems from ui.config.extends — merged into theme so Panda generates var() refs */
+  extends?: BaseSystem[]
 }
 
 /**
@@ -81,6 +84,7 @@ export async function createPandaConfig(
       extendPandaConfigPath: extendPandaPath,
       deepMergePath,
       configFilePaths: configFiles,
+      extends: options.extends,
     })
     writeFileSync(entryPath, entryContent)
     log.debug('system:config', 'Created entry file')

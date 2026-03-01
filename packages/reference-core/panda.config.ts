@@ -6,7 +6,7 @@ var __export = (target, all) => {
     __defProp(target, name, { get: all[name], enumerable: true });
 };
 
-// ../reference-core/src/cli/system/config/panda/extendPandaConfig.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/cli/system/config/panda/extendPandaConfig.ts
 var COLLECTOR_KEY = "__refPandaConfigCollector";
 function extendPandaConfig(partial) {
   const collector = globalThis[COLLECTOR_KEY];
@@ -16,13 +16,13 @@ function extendPandaConfig(partial) {
 }
 __name(extendPandaConfig, "extendPandaConfig");
 
-// ../reference-core/src/cli/system/config/panda/initCollector.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/cli/system/config/panda/initCollector.ts
 globalThis[COLLECTOR_KEY] = [];
 
-// ../reference-core/.ref/panda-entry.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/.ref/panda-entry.ts
 import { defineConfig as defineConfig2 } from "@pandacss/dev";
 
-// ../reference-core/src/cli/system/config/utils/deepMerge.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/cli/system/config/utils/deepMerge.ts
 function deepMerge(target, ...sources) {
   const result = { ...target };
   for (const source of sources) {
@@ -46,7 +46,7 @@ function deepMerge(target, ...sources) {
 }
 __name(deepMerge, "deepMerge");
 
-// ../reference-core/panda.base.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/panda.base.ts
 var panda_base_exports = {};
 __export(panda_base_exports, {
   baseConfig: () => baseConfig,
@@ -54,13 +54,13 @@ __export(panda_base_exports, {
 });
 import { defineConfig } from "@pandacss/dev";
 
-// ../reference-core/src/styled/theme/colors.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/theme/colors.ts
 var colors_exports = {};
 __export(colors_exports, {
   colors: () => colors
 });
 
-// ../reference-core/src/styled/api/internal/extendTokens.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/api/internal/extendTokens.ts
 var extendTokens_exports = {};
 __export(extendTokens_exports, {
   extendTokens: () => extendTokens
@@ -74,7 +74,7 @@ function extendTokens(tokenConfig) {
 }
 __name(extendTokens, "extendTokens");
 
-// ../reference-core/src/styled/theme/colors.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/theme/colors.ts
 var colors = {
   gray: {
     50: { value: "oklch(98.5% 0.002 247.839)" },
@@ -315,19 +315,19 @@ extendTokens({
   colors
 });
 
-// ../reference-core/src/styled/theme/spacing.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/theme/spacing.ts
 var spacing_exports = {};
 __export(spacing_exports, {
   spacing: () => spacing
 });
 
-// ../reference-core/src/styled/rhythm/utilities.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/rhythm/utilities.ts
 var utilities_exports = {};
 __export(utilities_exports, {
   rhythmUtilities: () => rhythmUtilities
 });
 
-// ../reference-core/src/system/helpers.js
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/system/helpers.js
 function isObject(value) {
   return typeof value === "object" && value != null && !Array.isArray(value);
 }
@@ -569,7 +569,7 @@ function normalizeHTMLProps(props) {
 __name(normalizeHTMLProps, "normalizeHTMLProps");
 normalizeHTMLProps.keys = htmlProps;
 
-// ../reference-core/src/system/css/conditions.js
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/system/css/conditions.js
 var conditionsStr = "_hover,_focus,_focusWithin,_focusVisible,_disabled,_active,_visited,_target,_readOnly,_readWrite,_empty,_checked,_enabled,_expanded,_highlighted,_complete,_incomplete,_dragging,_before,_after,_firstLetter,_firstLine,_marker,_selection,_file,_backdrop,_first,_last,_only,_even,_odd,_firstOfType,_lastOfType,_onlyOfType,_peerFocus,_peerHover,_peerActive,_peerFocusWithin,_peerFocusVisible,_peerDisabled,_peerChecked,_peerInvalid,_peerExpanded,_peerPlaceholderShown,_groupFocus,_groupHover,_groupActive,_groupFocusWithin,_groupFocusVisible,_groupDisabled,_groupChecked,_groupExpanded,_groupInvalid,_indeterminate,_required,_valid,_invalid,_autofill,_inRange,_outOfRange,_placeholder,_placeholderShown,_pressed,_selected,_grabbed,_underValue,_overValue,_atValue,_default,_optional,_open,_closed,_fullscreen,_loading,_hidden,_current,_currentPage,_currentStep,_today,_unavailable,_rangeStart,_rangeEnd,_now,_topmost,_motionReduce,_motionSafe,_print,_landscape,_portrait,_dark,_light,_osDark,_osLight,_highContrast,_lessContrast,_moreContrast,_ltr,_rtl,_scrollbar,_scrollbarThumb,_scrollbarTrack,_horizontal,_vertical,_icon,_starting,_noscript,_invertedColors,base";
 var conditions = new Set(conditionsStr.split(","));
 var conditionRegex = /^@|&|&$/;
@@ -602,7 +602,7 @@ function sortConditions(paths) {
 }
 __name(sortConditions, "sortConditions");
 
-// ../reference-core/src/system/css/css.js
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/system/css/css.js
 var utilities = "aspectRatio:asp,boxDecorationBreak:bx-db,zIndex:z,boxSizing:bx-s,objectPosition:obj-p,objectFit:obj-f,overscrollBehavior:ovs-b,overscrollBehaviorX:ovs-bx,overscrollBehaviorY:ovs-by,position:pos/1,top:top,left:left,inset:inset,insetInline:inset-x/insetX,insetBlock:inset-y/insetY,insetBlockEnd:inset-be,insetBlockStart:inset-bs,insetInlineEnd:inset-e/insetEnd/end,insetInlineStart:inset-s/insetStart/start,right:right,bottom:bottom,float:float,visibility:vis,display:d,hideFrom:hide,hideBelow:show,flexBasis:flex-b,flex:flex,flexDirection:flex-d/flexDir,flexGrow:flex-g,flexShrink:flex-sh,gridTemplateColumns:grid-tc,gridTemplateRows:grid-tr,gridColumn:grid-c,gridRow:grid-r,gridColumnStart:grid-cs,gridColumnEnd:grid-ce,gridAutoFlow:grid-af,gridAutoColumns:grid-ac,gridAutoRows:grid-ar,gap:gap,gridGap:grid-g,gridRowGap:grid-rg,gridColumnGap:grid-cg,rowGap:rg,columnGap:cg,justifyContent:jc,alignContent:ac,alignItems:ai,alignSelf:as,padding:p/1,paddingLeft:pl/1,paddingRight:pr/1,paddingTop:pt/1,paddingBottom:pb/1,paddingBlock:py/1/paddingY,paddingBlockEnd:pbe,paddingBlockStart:pbs,paddingInline:px/paddingX/1,paddingInlineEnd:pe/1/paddingEnd,paddingInlineStart:ps/1/paddingStart,marginLeft:ml/1,marginRight:mr/1,marginTop:mt/1,marginBottom:mb/1,margin:m/1,marginBlock:my/1/marginY,marginBlockEnd:mbe,marginBlockStart:mbs,marginInline:mx/1/marginX,marginInlineEnd:me/1/marginEnd,marginInlineStart:ms/1/marginStart,spaceX:sx,spaceY:sy,outlineWidth:ring-w/ringWidth,outlineColor:ring-c/ringColor,outline:ring/1,outlineOffset:ring-o/ringOffset,focusRing:focus-ring,focusVisibleRing:focus-v-ring,focusRingColor:focus-ring-c,focusRingOffset:focus-ring-o,focusRingWidth:focus-ring-w,focusRingStyle:focus-ring-s,divideX:dvd-x,divideY:dvd-y,divideColor:dvd-c,divideStyle:dvd-s,width:w/1,inlineSize:w-is,minWidth:min-w/minW,minInlineSize:min-w-is,maxWidth:max-w/maxW,maxInlineSize:max-w-is,height:h/1,blockSize:h-bs,minHeight:min-h/minH,minBlockSize:min-h-bs,maxHeight:max-h/maxH,maxBlockSize:max-b,boxSize:size,color:c,fontFamily:ff,fontSize:fs,fontSizeAdjust:fs-a,fontPalette:fp,fontKerning:fk,fontFeatureSettings:ff-s,fontWeight:fw,fontSmoothing:fsmt,fontVariant:fv,fontVariantAlternates:fv-alt,fontVariantCaps:fv-caps,fontVariationSettings:fv-s,fontVariantNumeric:fv-num,letterSpacing:ls,lineHeight:lh,textAlign:ta,textDecoration:td,textDecorationColor:td-c,textEmphasisColor:te-c,textDecorationStyle:td-s,textDecorationThickness:td-t,textUnderlineOffset:tu-o,textTransform:tt,textIndent:ti,textShadow:tsh,textShadowColor:tsh-c/textShadowColor,WebkitTextFillColor:wktf-c,textOverflow:tov,verticalAlign:va,wordBreak:wb,textWrap:tw,truncate:trunc,lineClamp:lc,listStyleType:li-t,listStylePosition:li-pos,listStyleImage:li-img,listStyle:li-s,backgroundPosition:bg-p/bgPosition,backgroundPositionX:bg-p-x/bgPositionX,backgroundPositionY:bg-p-y/bgPositionY,backgroundAttachment:bg-a/bgAttachment,backgroundClip:bg-cp/bgClip,background:bg/1,backgroundColor:bg-c/bgColor,backgroundOrigin:bg-o/bgOrigin,backgroundImage:bg-i/bgImage,backgroundRepeat:bg-r/bgRepeat,backgroundBlendMode:bg-bm/bgBlendMode,backgroundSize:bg-s/bgSize,backgroundGradient:bg-grad/bgGradient,backgroundLinear:bg-linear/bgLinear,backgroundRadial:bg-radial/bgRadial,backgroundConic:bg-conic/bgConic,textGradient:txt-grad,gradientFromPosition:grad-from-pos,gradientToPosition:grad-to-pos,gradientFrom:grad-from,gradientTo:grad-to,gradientVia:grad-via,gradientViaPosition:grad-via-pos,borderRadius:bdr/rounded,borderTopLeftRadius:bdr-tl/roundedTopLeft,borderTopRightRadius:bdr-tr/roundedTopRight,borderBottomRightRadius:bdr-br/roundedBottomRight,borderBottomLeftRadius:bdr-bl/roundedBottomLeft,borderTopRadius:bdr-t/roundedTop,borderRightRadius:bdr-r/roundedRight,borderBottomRadius:bdr-b/roundedBottom,borderLeftRadius:bdr-l/roundedLeft,borderStartStartRadius:bdr-ss/roundedStartStart,borderStartEndRadius:bdr-se/roundedStartEnd,borderStartRadius:bdr-s/roundedStart,borderEndStartRadius:bdr-es/roundedEndStart,borderEndEndRadius:bdr-ee/roundedEndEnd,borderEndRadius:bdr-e/roundedEnd,border:bd,borderWidth:bd-w,borderTopWidth:bd-t-w,borderLeftWidth:bd-l-w,borderRightWidth:bd-r-w,borderBottomWidth:bd-b-w,borderBlockStartWidth:bd-bs-w,borderBlockEndWidth:bd-be-w,borderColor:bd-c,borderInline:bd-x/borderX,borderInlineWidth:bd-x-w/borderXWidth,borderInlineColor:bd-x-c/borderXColor,borderBlock:bd-y/borderY,borderBlockWidth:bd-y-w/borderYWidth,borderBlockColor:bd-y-c/borderYColor,borderLeft:bd-l,borderLeftColor:bd-l-c,borderInlineStart:bd-s/borderStart,borderInlineStartWidth:bd-s-w/borderStartWidth,borderInlineStartColor:bd-s-c/borderStartColor,borderRight:bd-r,borderRightColor:bd-r-c,borderInlineEnd:bd-e/borderEnd,borderInlineEndWidth:bd-e-w/borderEndWidth,borderInlineEndColor:bd-e-c/borderEndColor,borderTop:bd-t,borderTopColor:bd-t-c,borderBottom:bd-b,borderBottomColor:bd-b-c,borderBlockEnd:bd-be,borderBlockEndColor:bd-be-c,borderBlockStart:bd-bs,borderBlockStartColor:bd-bs-c,opacity:op,boxShadow:bx-sh/shadow,boxShadowColor:bx-sh-c/shadowColor,mixBlendMode:mix-bm,filter:filter,brightness:brightness,contrast:contrast,grayscale:grayscale,hueRotate:hue-rotate,invert:invert,saturate:saturate,sepia:sepia,dropShadow:drop-shadow,blur:blur,backdropFilter:bkdp,backdropBlur:bkdp-blur,backdropBrightness:bkdp-brightness,backdropContrast:bkdp-contrast,backdropGrayscale:bkdp-grayscale,backdropHueRotate:bkdp-hue-rotate,backdropInvert:bkdp-invert,backdropOpacity:bkdp-opacity,backdropSaturate:bkdp-saturate,backdropSepia:bkdp-sepia,borderCollapse:bd-cl,borderSpacing:bd-sp,borderSpacingX:bd-sx,borderSpacingY:bd-sy,tableLayout:tbl,transitionTimingFunction:trs-tmf,transitionDelay:trs-dly,transitionDuration:trs-dur,transitionProperty:trs-prop,transition:trs,animation:anim,animationName:anim-n,animationTimingFunction:anim-tmf,animationDuration:anim-dur,animationDelay:anim-dly,animationPlayState:anim-ps,animationComposition:anim-comp,animationFillMode:anim-fm,animationDirection:anim-dir,animationIterationCount:anim-ic,animationRange:anim-r,animationState:anim-s,animationRangeStart:anim-rs,animationRangeEnd:anim-re,animationTimeline:anim-tl,transformOrigin:trf-o,transformBox:trf-b,transformStyle:trf-s,transform:trf,rotate:rotate,rotateX:rotate-x,rotateY:rotate-y,rotateZ:rotate-z,scale:scale,scaleX:scale-x,scaleY:scale-y,translate:translate,translateX:translate-x/x,translateY:translate-y/y,translateZ:translate-z/z,accentColor:ac-c,caretColor:ca-c,scrollBehavior:scr-bhv,scrollbar:scr-bar,scrollbarColor:scr-bar-c,scrollbarGutter:scr-bar-g,scrollbarWidth:scr-bar-w,scrollMargin:scr-m,scrollMarginLeft:scr-ml,scrollMarginRight:scr-mr,scrollMarginTop:scr-mt,scrollMarginBottom:scr-mb,scrollMarginBlock:scr-my/scrollMarginY,scrollMarginBlockEnd:scr-mbe,scrollMarginBlockStart:scr-mbt,scrollMarginInline:scr-mx/scrollMarginX,scrollMarginInlineEnd:scr-me,scrollMarginInlineStart:scr-ms,scrollPadding:scr-p,scrollPaddingBlock:scr-py/scrollPaddingY,scrollPaddingBlockStart:scr-pbs,scrollPaddingBlockEnd:scr-pbe,scrollPaddingInline:scr-px/scrollPaddingX,scrollPaddingInlineEnd:scr-pe,scrollPaddingInlineStart:scr-ps,scrollPaddingLeft:scr-pl,scrollPaddingRight:scr-pr,scrollPaddingTop:scr-pt,scrollPaddingBottom:scr-pb,scrollSnapAlign:scr-sa,scrollSnapStop:scrs-s,scrollSnapType:scrs-t,scrollSnapStrictness:scrs-strt,scrollSnapMargin:scrs-m,scrollSnapMarginTop:scrs-mt,scrollSnapMarginBottom:scrs-mb,scrollSnapMarginLeft:scrs-ml,scrollSnapMarginRight:scrs-mr,scrollSnapCoordinate:scrs-c,scrollSnapDestination:scrs-d,scrollSnapPointsX:scrs-px,scrollSnapPointsY:scrs-py,scrollSnapTypeX:scrs-tx,scrollSnapTypeY:scrs-ty,scrollTimeline:scrtl,scrollTimelineAxis:scrtl-a,scrollTimelineName:scrtl-n,touchAction:tch-a,userSelect:us,overflow:ov,overflowWrap:ov-wrap,overflowX:ov-x,overflowY:ov-y,overflowAnchor:ov-a,overflowBlock:ov-b,overflowInline:ov-i,overflowClipBox:ovcp-bx,overflowClipMargin:ovcp-m,overscrollBehaviorBlock:ovs-bb,overscrollBehaviorInline:ovs-bi,fill:fill,stroke:stk,strokeWidth:stk-w,strokeDasharray:stk-dsh,strokeDashoffset:stk-do,strokeLinecap:stk-lc,strokeLinejoin:stk-lj,strokeMiterlimit:stk-ml,strokeOpacity:stk-op,srOnly:sr,debug:debug,appearance:ap,backfaceVisibility:bfv,clipPath:cp-path,hyphens:hy,mask:msk,maskImage:msk-i,maskSize:msk-s,textSizeAdjust:txt-adj,container:cq,containerName:cq-n,containerType:cq-t,cursor:cursor";
 var classNameByProp = /* @__PURE__ */ new Map();
 var shorthands = /* @__PURE__ */ new Map();
@@ -639,7 +639,7 @@ var css = /* @__PURE__ */ __name((...styles) => cssFn(mergeCss(...styles)), "css
 css.raw = (...styles) => mergeCss(...styles);
 var { mergeCss, assignCss } = createMergeCss(context);
 
-// ../reference-core/src/system/css/cva.js
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/system/css/cva.js
 var defaults = /* @__PURE__ */ __name((conf) => ({
   base: {},
   variants: {},
@@ -713,14 +713,14 @@ function getCompoundVariantCss(compoundVariants, variantMap) {
 }
 __name(getCompoundVariantCss, "getCompoundVariantCss");
 
-// ../reference-core/src/styled/api/runtime/css.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/api/runtime/css.ts
 function css2(...styles) {
   return css(...styles);
 }
 __name(css2, "css");
 css2.raw = css.raw;
 
-// ../reference-core/src/styled/api/runtime/recipe.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/api/runtime/recipe.ts
 var recipe_exports = {};
 __export(recipe_exports, {
   recipe: () => recipe
@@ -730,7 +730,7 @@ function recipe(config2) {
 }
 __name(recipe, "recipe");
 
-// ../reference-core/src/styled/api/internal/extendRecipe.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/api/internal/extendRecipe.ts
 var extendRecipe_exports = {};
 __export(extendRecipe_exports, {
   extendRecipe: () => extendRecipe,
@@ -757,7 +757,7 @@ function extendSlotRecipe(slotRecipeConfig) {
 }
 __name(extendSlotRecipe, "extendSlotRecipe");
 
-// ../reference-core/src/styled/api/internal/extendUtilities.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/api/internal/extendUtilities.ts
 var extendUtilities_exports = {};
 __export(extendUtilities_exports, {
   extendUtilities: () => extendUtilities
@@ -771,7 +771,7 @@ function extendUtilities(extend) {
 }
 __name(extendUtilities, "extendUtilities");
 
-// ../reference-core/src/styled/api/internal/extendGlobalCss.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/api/internal/extendGlobalCss.ts
 var extendGlobalCss_exports = {};
 __export(extendGlobalCss_exports, {
   extendGlobalCss: () => extendGlobalCss
@@ -783,7 +783,7 @@ function extendGlobalCss(css3) {
 }
 __name(extendGlobalCss, "extendGlobalCss");
 
-// ../reference-core/src/styled/api/internal/extendStaticCss.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/api/internal/extendStaticCss.ts
 var extendStaticCss_exports = {};
 __export(extendStaticCss_exports, {
   extendStaticCss: () => extendStaticCss
@@ -795,7 +795,7 @@ function extendStaticCss(config2) {
 }
 __name(extendStaticCss, "extendStaticCss");
 
-// ../reference-core/src/styled/api/internal/extendGlobalFontface.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/api/internal/extendGlobalFontface.ts
 var extendGlobalFontface_exports = {};
 __export(extendGlobalFontface_exports, {
   extendGlobalFontface: () => extendGlobalFontface
@@ -807,13 +807,13 @@ function extendGlobalFontface(fontface) {
 }
 __name(extendGlobalFontface, "extendGlobalFontface");
 
-// ../reference-core/src/styled/api/internal/extendFont.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/api/internal/extendFont.ts
 var extendFont_exports = {};
 __export(extendFont_exports, {
   extendFont: () => extendFont
 });
 
-// ../reference-core/src/cli/system/config/fontFace/extendFontFace.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/cli/system/config/fontFace/extendFontFace.ts
 var FONT_COLLECTOR_KEY = "__fontCollector";
 if (!globalThis[FONT_COLLECTOR_KEY]) {
   ;
@@ -825,13 +825,13 @@ function extendFontCollector(def) {
 }
 __name(extendFontCollector, "extendFontCollector");
 
-// ../reference-core/src/styled/api/internal/extendFont.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/api/internal/extendFont.ts
 function extendFont(name, options) {
   extendFontCollector({ name, ...options });
 }
 __name(extendFont, "extendFont");
 
-// ../reference-core/src/styled/api/internal/extendKeyframes.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/api/internal/extendKeyframes.ts
 var extendKeyframes_exports = {};
 __export(extendKeyframes_exports, {
   extendKeyframes: () => extendKeyframes
@@ -847,7 +847,7 @@ function extendKeyframes(config2) {
 }
 __name(extendKeyframes, "extendKeyframes");
 
-// ../reference-core/src/cli/system/config/boxPattern/extendBoxPattern.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/cli/system/config/boxPattern/extendBoxPattern.ts
 var BOX_PATTERN_COLLECTOR_KEY = "__boxPatternCollector";
 if (!globalThis[BOX_PATTERN_COLLECTOR_KEY]) {
   ;
@@ -859,7 +859,7 @@ function extendBoxPattern(extension) {
 }
 __name(extendBoxPattern, "extendBoxPattern");
 
-// ../reference-core/src/styled/rhythm/helpers.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/rhythm/helpers.ts
 function getRhythm(num, denom) {
   if (denom !== void 0) {
     return num === 1 ? `calc(var(--spacing-r) / ${denom})` : `calc(${num} * var(--spacing-r) / ${denom})`;
@@ -879,7 +879,7 @@ function resolveRhythm(value) {
 }
 __name(resolveRhythm, "resolveRhythm");
 
-// ../reference-core/src/styled/rhythm/utilities.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/rhythm/utilities.ts
 var rhythmTransform = /* @__PURE__ */ __name((property) => ({
   property,
   values: "spacing",
@@ -959,7 +959,7 @@ var rhythmUtilities = {
 };
 extendUtilities(rhythmUtilities);
 
-// ../reference-core/src/styled/theme/spacing.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/theme/spacing.ts
 var spacing = {
   px: { value: "1px" },
   r: { value: "0.25rem" },
@@ -984,7 +984,7 @@ extendTokens({
   spacing
 });
 
-// ../reference-core/src/styled/theme/radii.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/theme/radii.ts
 var radii_exports = {};
 __export(radii_exports, {
   radii: () => radii
@@ -1004,7 +1004,7 @@ extendTokens({
   radii
 });
 
-// ../reference-core/src/styled/theme/animations.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/theme/animations.ts
 var animations_exports = {};
 extendTokens({
   animations: {
@@ -1056,7 +1056,7 @@ extendTokens({
   }
 });
 
-// ../reference-core/src/styled/font/font.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/font/font.ts
 var font_exports = {};
 extendTokens({
   fonts: {
@@ -1173,7 +1173,7 @@ extendBoxPattern({
   }
 });
 
-// ../reference-core/src/styled/animations/fade.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/animations/fade.ts
 var fade_exports = {};
 extendKeyframes({
   fadeIn: {
@@ -1226,7 +1226,7 @@ extendKeyframes({
   }
 });
 
-// ../reference-core/src/styled/animations/slide.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/animations/slide.ts
 var slide_exports = {};
 extendKeyframes({
   slideUp: {
@@ -1255,7 +1255,7 @@ extendKeyframes({
   }
 });
 
-// ../reference-core/src/styled/animations/scale.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/animations/scale.ts
 var scale_exports = {};
 extendKeyframes({
   scaleIn: {
@@ -1299,7 +1299,7 @@ extendKeyframes({
   }
 });
 
-// ../reference-core/src/styled/animations/spin.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/animations/spin.ts
 var spin_exports = {};
 extendKeyframes({
   spin: {
@@ -1324,7 +1324,7 @@ extendKeyframes({
   }
 });
 
-// ../reference-core/src/styled/animations/bounce.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/animations/bounce.ts
 var bounce_exports = {};
 extendKeyframes({
   bounce: {
@@ -1376,7 +1376,7 @@ extendKeyframes({
   }
 });
 
-// ../reference-core/src/styled/animations/attention.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/animations/attention.ts
 var attention_exports = {};
 extendKeyframes({
   ping: {
@@ -1413,17 +1413,17 @@ extendKeyframes({
   }
 });
 
-// ../reference-core/src/primitives/css/h1.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/h1.style.ts
 import { defineRecipe } from "@pandacss/dev";
 
-// ../reference-core/src/primitives/css/base.typography.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/base.typography.ts
 var baseTypography = {
   fontFamily: "sans",
   letterSpacing: "-0.01em",
   color: "gray.900"
 };
 
-// ../reference-core/src/primitives/css/h1.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/h1.style.ts
 var h1Style = defineRecipe({
   className: "r_h1",
   base: {
@@ -1436,7 +1436,7 @@ var h1Style = defineRecipe({
   }
 });
 
-// ../reference-core/src/primitives/css/h2.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/h2.style.ts
 import { defineRecipe as defineRecipe2 } from "@pandacss/dev";
 var h2Style = defineRecipe2({
   className: "r_h2",
@@ -1450,7 +1450,7 @@ var h2Style = defineRecipe2({
   }
 });
 
-// ../reference-core/src/primitives/css/h3.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/h3.style.ts
 import { defineRecipe as defineRecipe3 } from "@pandacss/dev";
 var h3Style = defineRecipe3({
   className: "r_h3",
@@ -1464,7 +1464,7 @@ var h3Style = defineRecipe3({
   }
 });
 
-// ../reference-core/src/primitives/css/h4.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/h4.style.ts
 import { defineRecipe as defineRecipe4 } from "@pandacss/dev";
 var h4Style = defineRecipe4({
   className: "r_h4",
@@ -1478,7 +1478,7 @@ var h4Style = defineRecipe4({
   }
 });
 
-// ../reference-core/src/primitives/css/h5.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/h5.style.ts
 import { defineRecipe as defineRecipe5 } from "@pandacss/dev";
 var h5Style = defineRecipe5({
   className: "r_h5",
@@ -1492,7 +1492,7 @@ var h5Style = defineRecipe5({
   }
 });
 
-// ../reference-core/src/primitives/css/h6.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/h6.style.ts
 import { defineRecipe as defineRecipe6 } from "@pandacss/dev";
 var h6Style = defineRecipe6({
   className: "r_h6",
@@ -1507,7 +1507,7 @@ var h6Style = defineRecipe6({
   }
 });
 
-// ../reference-core/src/primitives/css/p.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/p.style.ts
 import { defineRecipe as defineRecipe7 } from "@pandacss/dev";
 var pStyle = defineRecipe7({
   className: "r_p",
@@ -1520,7 +1520,7 @@ var pStyle = defineRecipe7({
   }
 });
 
-// ../reference-core/src/primitives/css/strong.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/strong.style.ts
 import { defineRecipe as defineRecipe8 } from "@pandacss/dev";
 var strongStyle = defineRecipe8({
   className: "r_strong",
@@ -1530,7 +1530,7 @@ var strongStyle = defineRecipe8({
   }
 });
 
-// ../reference-core/src/primitives/css/em.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/em.style.ts
 import { defineRecipe as defineRecipe9 } from "@pandacss/dev";
 var emStyle = defineRecipe9({
   className: "r_em",
@@ -1540,7 +1540,7 @@ var emStyle = defineRecipe9({
   }
 });
 
-// ../reference-core/src/primitives/css/b.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/b.style.ts
 import { defineRecipe as defineRecipe10 } from "@pandacss/dev";
 var bStyle = defineRecipe10({
   className: "r_b",
@@ -1550,7 +1550,7 @@ var bStyle = defineRecipe10({
   }
 });
 
-// ../reference-core/src/primitives/css/i.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/i.style.ts
 import { defineRecipe as defineRecipe11 } from "@pandacss/dev";
 var iStyle = defineRecipe11({
   className: "r_i",
@@ -1560,7 +1560,7 @@ var iStyle = defineRecipe11({
   }
 });
 
-// ../reference-core/src/primitives/css/u.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/u.style.ts
 import { defineRecipe as defineRecipe12 } from "@pandacss/dev";
 var uStyle = defineRecipe12({
   className: "r_u",
@@ -1572,7 +1572,7 @@ var uStyle = defineRecipe12({
   }
 });
 
-// ../reference-core/src/primitives/css/s.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/s.style.ts
 import { defineRecipe as defineRecipe13 } from "@pandacss/dev";
 var sStyle = defineRecipe13({
   className: "r_s",
@@ -1583,7 +1583,7 @@ var sStyle = defineRecipe13({
   }
 });
 
-// ../reference-core/src/primitives/css/small.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/small.style.ts
 import { defineRecipe as defineRecipe14 } from "@pandacss/dev";
 var smallStyle = defineRecipe14({
   className: "r_small",
@@ -1594,7 +1594,7 @@ var smallStyle = defineRecipe14({
   }
 });
 
-// ../reference-core/src/primitives/css/mark.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/mark.style.ts
 import { defineRecipe as defineRecipe15 } from "@pandacss/dev";
 var markStyle = defineRecipe15({
   className: "r_mark",
@@ -1607,7 +1607,7 @@ var markStyle = defineRecipe15({
   }
 });
 
-// ../reference-core/src/primitives/css/sub.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/sub.style.ts
 import { defineRecipe as defineRecipe16 } from "@pandacss/dev";
 var subStyle = defineRecipe16({
   className: "r_sub",
@@ -1619,7 +1619,7 @@ var subStyle = defineRecipe16({
   }
 });
 
-// ../reference-core/src/primitives/css/sup.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/sup.style.ts
 import { defineRecipe as defineRecipe17 } from "@pandacss/dev";
 var supStyle = defineRecipe17({
   className: "r_sup",
@@ -1631,7 +1631,7 @@ var supStyle = defineRecipe17({
   }
 });
 
-// ../reference-core/src/primitives/css/abbr.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/abbr.style.ts
 import { defineRecipe as defineRecipe18 } from "@pandacss/dev";
 var abbrStyle = defineRecipe18({
   className: "r_abbr",
@@ -1643,7 +1643,7 @@ var abbrStyle = defineRecipe18({
   }
 });
 
-// ../reference-core/src/primitives/css/code.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/code.style.ts
 import { defineRecipe as defineRecipe19 } from "@pandacss/dev";
 var codeStyle = defineRecipe19({
   className: "r_code",
@@ -1659,7 +1659,7 @@ var codeStyle = defineRecipe19({
   }
 });
 
-// ../reference-core/src/primitives/css/pre.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/pre.style.ts
 import { defineRecipe as defineRecipe20 } from "@pandacss/dev";
 var preStyle = defineRecipe20({
   className: "r_pre",
@@ -1680,7 +1680,7 @@ var preStyle = defineRecipe20({
   }
 });
 
-// ../reference-core/src/primitives/css/kbd.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/kbd.style.ts
 import { defineRecipe as defineRecipe21 } from "@pandacss/dev";
 var kbdStyle = defineRecipe21({
   className: "r_kbd",
@@ -1702,7 +1702,7 @@ var kbdStyle = defineRecipe21({
   }
 });
 
-// ../reference-core/src/primitives/css/samp.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/samp.style.ts
 import { defineRecipe as defineRecipe22 } from "@pandacss/dev";
 var sampStyle = defineRecipe22({
   className: "r_samp",
@@ -1719,7 +1719,7 @@ var sampStyle = defineRecipe22({
   }
 });
 
-// ../reference-core/src/primitives/css/var.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/var.style.ts
 import { defineRecipe as defineRecipe23 } from "@pandacss/dev";
 var varStyle = defineRecipe23({
   className: "r_var",
@@ -1732,7 +1732,7 @@ var varStyle = defineRecipe23({
   }
 });
 
-// ../reference-core/src/primitives/css/blockquote.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/blockquote.style.ts
 import { defineRecipe as defineRecipe24 } from "@pandacss/dev";
 var blockquoteStyle = defineRecipe24({
   className: "r_blockquote",
@@ -1753,7 +1753,7 @@ var blockquoteStyle = defineRecipe24({
   }
 });
 
-// ../reference-core/src/primitives/css/q.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/q.style.ts
 import { defineRecipe as defineRecipe25 } from "@pandacss/dev";
 var qStyle = defineRecipe25({
   className: "r_q",
@@ -1769,7 +1769,7 @@ var qStyle = defineRecipe25({
   }
 });
 
-// ../reference-core/src/primitives/css/cite.style.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/css/cite.style.ts
 import { defineRecipe as defineRecipe26 } from "@pandacss/dev";
 var citeStyle = defineRecipe26({
   className: "r_cite",
@@ -1780,7 +1780,7 @@ var citeStyle = defineRecipe26({
   }
 });
 
-// ../reference-core/src/primitives/recipes.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/recipes.ts
 var primitiveCSS = {
   h1Style,
   h2Style,
@@ -1811,7 +1811,7 @@ var primitiveCSS = {
 };
 extendRecipe(primitiveCSS);
 
-// ../reference-core/src/styled/css.global.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/css.global.ts
 var css_global_exports = {};
 extendGlobalCss({
   ":root": {
@@ -1827,7 +1827,7 @@ extendGlobalCss({
   }
 });
 
-// ../reference-core/src/styled/css.static.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/css.static.ts
 var css_static_exports = {};
 extendStaticCss({
   css: [
@@ -1859,7 +1859,7 @@ extendStaticCss({
   }
 });
 
-// ../reference-core/panda.base.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/panda.base.ts
 var baseConfig = {
   presets: [],
   jsxFramework: "react",
@@ -1881,7 +1881,7 @@ var baseConfig = {
 extendPandaConfig(baseConfig);
 var panda_base_default = defineConfig(baseConfig);
 
-// ../reference-core/src/styled/font/fonts.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/font/fonts.ts
 var fonts_exports = {};
 extendFont("sans", {
   value: '"Inter", ui-sans-serif, sans-serif',
@@ -1949,10 +1949,10 @@ extendFont("mono", {
   }
 });
 
-// ../reference-core/src/styled/props/box.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/props/box.ts
 var box_exports = {};
 
-// ../reference-core/src/primitives/tags.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/primitives/tags.ts
 var TAGS = [
   "a",
   "abbr",
@@ -2065,7 +2065,7 @@ function toJsxName(tag) {
 __name(toJsxName, "toJsxName");
 var PRIMITIVE_JSX_NAMES = TAGS.map(toJsxName);
 
-// ../reference-core/src/styled/props/box.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/props/box.ts
 extendPandaConfig({
   patterns: {
     extend: {
@@ -2154,7 +2154,7 @@ extendPandaConfig({
   }
 });
 
-// ../reference-core/src/styled/props/container.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/props/container.ts
 var container_exports = {};
 extendBoxPattern({
   properties: {
@@ -2170,7 +2170,7 @@ extendBoxPattern({
   }
 });
 
-// ../reference-core/src/styled/props/r.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/props/r.ts
 var r_exports = {};
 extendBoxPattern({
   properties: {
@@ -2186,7 +2186,7 @@ extendBoxPattern({
   }
 });
 
-// ../reference-core/src/styled/api/system/index.ts
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/src/styled/api/system/index.ts
 var system_exports = {};
 __export(system_exports, {
   font: () => font,
@@ -2203,8 +2203,11 @@ var keyframes = extendKeyframes;
 var font = extendFont;
 var globalCss = extendGlobalCss;
 
-// src/styled/theme/canary.ts
-var canary_exports = {};
+// tokens.ts
+var tokens_exports = {};
+__export(tokens_exports, {
+  tokensConfig: () => tokensConfig
+});
 
 // .reference-ui/system/system.mjs
 var COLLECTOR_KEY2 = "__refPandaConfigCollector";
@@ -2235,24 +2238,37 @@ if (!globalThis[BOX_PATTERN_COLLECTOR_KEY2]) {
 }
 var tokens2 = extendTokens2;
 
-// src/colors.ts
-var REF_LIB_CANARY = "rgb(0, 191, 165)";
-
-// src/styled/theme/canary.ts
-tokens2({
+// tokens.ts
+var tokensConfig = {
   colors: {
-    refLibCanary: {
-      value: REF_LIB_CANARY,
-      description: "Canary token \u2014 scan for refLibCanary to verify baseSystem contains reference-lib tokens"
+    test: {
+      primary: { value: "#2563eb" },
+      muted: { value: "#94a3b8" }
     }
+  },
+  spacing: {
+    "test-sm": { value: "0.5rem" },
+    "test-md": { value: "1rem" }
+  },
+  radii: {
+    "test-round": { value: "0.5rem" }
   }
-});
+};
+tokens2(tokensConfig);
 
-// ../reference-core/.ref/panda-entry.ts
-var defaultFragments = [panda_base_exports, css_global_exports, css_static_exports, attention_exports, bounce_exports, fade_exports, scale_exports, slide_exports, spin_exports, font_exports, fonts_exports, box_exports, container_exports, r_exports, utilities_exports, animations_exports, colors_exports, radii_exports, spacing_exports, extendFont_exports, extendGlobalCss_exports, extendGlobalFontface_exports, extendKeyframes_exports, extendRecipe_exports, extendStaticCss_exports, extendTokens_exports, extendUtilities_exports, recipe_exports, system_exports, canary_exports].map((m) => m?.default !== void 0 ? m.default : null).filter(Boolean);
+// node_modules/.pnpm/@reference-ui+core@file+..+..+..+reference-core_react-dom@19.0.0_react@19.0.0__react@19.0.0_typescript@5.9.3/node_modules/@reference-ui/core/.ref/panda-entry.ts
+var defaultFragments = [panda_base_exports, css_global_exports, css_static_exports, attention_exports, bounce_exports, fade_exports, scale_exports, slide_exports, spin_exports, font_exports, fonts_exports, box_exports, container_exports, r_exports, utilities_exports, animations_exports, colors_exports, radii_exports, spacing_exports, extendFont_exports, extendGlobalCss_exports, extendGlobalFontface_exports, extendKeyframes_exports, extendRecipe_exports, extendStaticCss_exports, extendTokens_exports, extendUtilities_exports, recipe_exports, system_exports, tokens_exports].map((m) => m?.default !== void 0 ? m.default : null).filter(Boolean);
 var collected = globalThis[COLLECTOR_KEY] || [];
 var fragments = [...defaultFragments, ...collected];
 var config = fragments.reduce((acc, frag) => deepMerge(acc, frag), {});
+var upstream = [{ "name": "reference-ui", "tokens": { "colors": { "gray": { "50": { "value": "oklch(98.5% 0.002 247.839)" }, "100": { "value": "oklch(96.7% 0.003 264.542)" }, "200": { "value": "oklch(92.8% 0.006 264.531)" }, "300": { "value": "oklch(87.2% 0.01 258.338)" }, "400": { "value": "oklch(70.7% 0.022 261.325)" }, "500": { "value": "oklch(55.1% 0.027 264.364)" }, "600": { "value": "oklch(44.6% 0.03 256.802)" }, "700": { "value": "oklch(37.3% 0.034 259.733)" }, "800": { "value": "oklch(27.8% 0.033 256.848)" }, "900": { "value": "oklch(21% 0.034 264.665)" }, "950": { "value": "oklch(13% 0.028 261.692)" } }, "red": { "50": { "value": "oklch(97.1% 0.013 17.38)" }, "100": { "value": "oklch(93.6% 0.032 17.717)" }, "200": { "value": "oklch(88.5% 0.062 18.334)" }, "300": { "value": "oklch(80.8% 0.114 19.571)" }, "400": { "value": "oklch(70.4% 0.191 22.216)" }, "500": { "value": "oklch(63.7% 0.237 25.331)" }, "600": { "value": "oklch(57.7% 0.245 27.325)" }, "700": { "value": "oklch(50.5% 0.213 27.518)" }, "800": { "value": "oklch(44.4% 0.177 26.899)" }, "900": { "value": "oklch(39.6% 0.141 25.723)" }, "950": { "value": "oklch(25.8% 0.092 26.042)" } }, "orange": { "50": { "value": "oklch(98% 0.016 73.684)" }, "100": { "value": "oklch(95.4% 0.038 75.164)" }, "200": { "value": "oklch(90.1% 0.076 70.697)" }, "300": { "value": "oklch(83.7% 0.128 66.29)" }, "400": { "value": "oklch(75% 0.183 55.934)" }, "500": { "value": "oklch(70.5% 0.213 47.604)" }, "600": { "value": "oklch(64.6% 0.222 41.116)" }, "700": { "value": "oklch(55.3% 0.195 38.402)" }, "800": { "value": "oklch(47% 0.157 37.304)" }, "900": { "value": "oklch(40.8% 0.123 38.172)" }, "950": { "value": "oklch(26.6% 0.079 36.259)" } }, "amber": { "50": { "value": "oklch(98.7% 0.022 95.277)" }, "100": { "value": "oklch(96.2% 0.059 95.617)" }, "200": { "value": "oklch(92.4% 0.12 95.746)" }, "300": { "value": "oklch(87.9% 0.169 91.605)" }, "400": { "value": "oklch(82.8% 0.189 84.429)" }, "500": { "value": "oklch(76.9% 0.188 70.08)" }, "600": { "value": "oklch(66.6% 0.179 58.318)" }, "700": { "value": "oklch(55.5% 0.163 48.998)" }, "800": { "value": "oklch(47.3% 0.137 46.201)" }, "900": { "value": "oklch(41.4% 0.112 45.904)" }, "950": { "value": "oklch(27.9% 0.077 45.635)" } }, "yellow": { "50": { "value": "oklch(98.7% 0.026 102.212)" }, "100": { "value": "oklch(97.3% 0.071 103.193)" }, "200": { "value": "oklch(94.5% 0.129 101.54)" }, "300": { "value": "oklch(90.5% 0.182 98.111)" }, "400": { "value": "oklch(85.2% 0.199 91.936)" }, "500": { "value": "oklch(79.5% 0.184 86.047)" }, "600": { "value": "oklch(68.1% 0.162 75.834)" }, "700": { "value": "oklch(55.4% 0.135 66.442)" }, "800": { "value": "oklch(47.6% 0.114 61.907)" }, "900": { "value": "oklch(42.1% 0.095 57.708)" }, "950": { "value": "oklch(28.6% 0.066 53.813)" } }, "lime": { "50": { "value": "oklch(98.6% 0.031 120.757)" }, "100": { "value": "oklch(96.7% 0.067 122.328)" }, "200": { "value": "oklch(93.8% 0.127 124.321)" }, "300": { "value": "oklch(89.7% 0.196 126.665)" }, "400": { "value": "oklch(84.1% 0.238 128.85)" }, "500": { "value": "oklch(76.8% 0.233 130.85)" }, "600": { "value": "oklch(64.8% 0.2 131.684)" }, "700": { "value": "oklch(53.2% 0.157 131.589)" }, "800": { "value": "oklch(45.3% 0.124 130.933)" }, "900": { "value": "oklch(40.5% 0.101 131.063)" }, "950": { "value": "oklch(27.4% 0.072 132.109)" } }, "green": { "50": { "value": "oklch(98.2% 0.018 155.826)" }, "100": { "value": "oklch(96.2% 0.044 156.743)" }, "200": { "value": "oklch(92.5% 0.084 155.995)" }, "300": { "value": "oklch(87.1% 0.15 154.449)" }, "400": { "value": "oklch(79.2% 0.209 151.711)" }, "500": { "value": "oklch(72.3% 0.219 149.579)" }, "600": { "value": "oklch(62.7% 0.194 149.214)" }, "700": { "value": "oklch(52.7% 0.154 150.069)" }, "800": { "value": "oklch(44.8% 0.119 151.328)" }, "900": { "value": "oklch(39.3% 0.095 152.535)" }, "950": { "value": "oklch(26.6% 0.065 152.934)" } }, "emerald": { "50": { "value": "oklch(97.9% 0.021 166.113)" }, "100": { "value": "oklch(95% 0.052 163.051)" }, "200": { "value": "oklch(90.5% 0.093 164.15)" }, "300": { "value": "oklch(84.5% 0.143 164.978)" }, "400": { "value": "oklch(76.5% 0.177 163.223)" }, "500": { "value": "oklch(69.6% 0.17 162.48)" }, "600": { "value": "oklch(59.6% 0.145 163.225)" }, "700": { "value": "oklch(50.8% 0.118 165.612)" }, "800": { "value": "oklch(43.2% 0.095 166.913)" }, "900": { "value": "oklch(37.8% 0.077 168.94)" }, "950": { "value": "oklch(26.2% 0.051 172.552)" } }, "teal": { "50": { "value": "oklch(98.4% 0.014 180.72)" }, "100": { "value": "oklch(95.3% 0.051 180.801)" }, "200": { "value": "oklch(91% 0.096 180.426)" }, "300": { "value": "oklch(85.5% 0.138 181.071)" }, "400": { "value": "oklch(77.7% 0.152 181.912)" }, "500": { "value": "oklch(70.4% 0.14 182.503)" }, "600": { "value": "oklch(60% 0.118 184.704)" }, "700": { "value": "oklch(51.1% 0.096 186.391)" }, "800": { "value": "oklch(43.7% 0.078 188.216)" }, "900": { "value": "oklch(38.6% 0.063 188.416)" }, "950": { "value": "oklch(27.7% 0.046 192.524)" } }, "cyan": { "50": { "value": "oklch(98.4% 0.019 200.873)" }, "100": { "value": "oklch(95.6% 0.045 203.388)" }, "200": { "value": "oklch(91.7% 0.08 205.041)" }, "300": { "value": "oklch(86.5% 0.127 207.078)" }, "400": { "value": "oklch(78.9% 0.154 211.53)" }, "500": { "value": "oklch(71.5% 0.143 215.221)" }, "600": { "value": "oklch(60.9% 0.126 221.723)" }, "700": { "value": "oklch(52% 0.105 223.128)" }, "800": { "value": "oklch(45% 0.085 224.283)" }, "900": { "value": "oklch(39.8% 0.07 227.392)" }, "950": { "value": "oklch(30.2% 0.056 229.695)" } }, "sky": { "50": { "value": "oklch(97.7% 0.013 236.62)" }, "100": { "value": "oklch(95.1% 0.026 236.824)" }, "200": { "value": "oklch(90.1% 0.058 230.902)" }, "300": { "value": "oklch(82.8% 0.111 230.318)" }, "400": { "value": "oklch(74.6% 0.16 232.661)" }, "500": { "value": "oklch(68.5% 0.169 237.323)" }, "600": { "value": "oklch(58.8% 0.158 241.966)" }, "700": { "value": "oklch(50% 0.134 242.749)" }, "800": { "value": "oklch(44.3% 0.11 240.79)" }, "900": { "value": "oklch(39.1% 0.09 240.876)" }, "950": { "value": "oklch(29.3% 0.066 243.157)" } }, "blue": { "50": { "value": "oklch(97% 0.014 254.604)" }, "100": { "value": "oklch(93.2% 0.032 255.585)" }, "200": { "value": "oklch(88.2% 0.059 254.128)" }, "300": { "value": "oklch(80.9% 0.105 251.813)" }, "400": { "value": "oklch(70.7% 0.165 254.624)" }, "500": { "value": "oklch(62.3% 0.214 259.815)" }, "600": { "value": "oklch(54.6% 0.245 262.881)" }, "700": { "value": "oklch(48.8% 0.243 264.376)" }, "800": { "value": "oklch(42.4% 0.199 265.638)" }, "900": { "value": "oklch(37.9% 0.146 265.522)" }, "950": { "value": "oklch(28.2% 0.091 267.935)" } }, "indigo": { "50": { "value": "oklch(96.2% 0.018 272.314)" }, "100": { "value": "oklch(93% 0.034 272.788)" }, "200": { "value": "oklch(87% 0.065 274.039)" }, "300": { "value": "oklch(78.5% 0.115 274.713)" }, "400": { "value": "oklch(67.3% 0.182 276.935)" }, "500": { "value": "oklch(58.5% 0.233 277.117)" }, "600": { "value": "oklch(51.1% 0.262 276.966)" }, "700": { "value": "oklch(45.7% 0.24 277.023)" }, "800": { "value": "oklch(39.8% 0.195 277.366)" }, "900": { "value": "oklch(35.9% 0.144 278.697)" }, "950": { "value": "oklch(25.7% 0.09 281.288)" } }, "violet": { "50": { "value": "oklch(96.9% 0.016 293.756)" }, "100": { "value": "oklch(94.3% 0.029 294.588)" }, "200": { "value": "oklch(89.4% 0.057 293.283)" }, "300": { "value": "oklch(81.1% 0.111 293.571)" }, "400": { "value": "oklch(70.2% 0.183 293.541)" }, "500": { "value": "oklch(60.6% 0.25 292.717)" }, "600": { "value": "oklch(54.1% 0.281 293.009)" }, "700": { "value": "oklch(49.1% 0.27 292.581)" }, "800": { "value": "oklch(43.2% 0.232 292.759)" }, "900": { "value": "oklch(38% 0.189 293.745)" }, "950": { "value": "oklch(28.3% 0.141 291.089)" } }, "purple": { "50": { "value": "oklch(97.7% 0.014 308.299)" }, "100": { "value": "oklch(94.6% 0.033 307.174)" }, "200": { "value": "oklch(90.2% 0.063 306.703)" }, "300": { "value": "oklch(82.7% 0.119 306.383)" }, "400": { "value": "oklch(71.4% 0.203 305.504)" }, "500": { "value": "oklch(62.7% 0.265 303.9)" }, "600": { "value": "oklch(55.8% 0.288 302.321)" }, "700": { "value": "oklch(49.6% 0.265 301.924)" }, "800": { "value": "oklch(43.8% 0.218 303.724)" }, "900": { "value": "oklch(38.1% 0.176 304.987)" }, "950": { "value": "oklch(29.1% 0.149 302.717)" } }, "magenta": { "50": { "value": "oklch(97.7% 0.017 320.058)" }, "100": { "value": "oklch(95.2% 0.037 318.852)" }, "200": { "value": "oklch(90.3% 0.076 319.62)" }, "300": { "value": "oklch(83.3% 0.145 321.434)" }, "400": { "value": "oklch(74% 0.238 322.16)" }, "500": { "value": "oklch(66.7% 0.295 322.15)" }, "600": { "value": "oklch(59.1% 0.293 322.896)" }, "700": { "value": "oklch(51.8% 0.253 323.949)" }, "800": { "value": "oklch(45.2% 0.211 324.591)" }, "900": { "value": "oklch(40.1% 0.17 325.612)" }, "950": { "value": "oklch(29.3% 0.136 325.661)" } }, "pink": { "50": { "value": "oklch(97.1% 0.014 343.198)" }, "100": { "value": "oklch(94.8% 0.028 342.258)" }, "200": { "value": "oklch(89.9% 0.061 343.231)" }, "300": { "value": "oklch(82.3% 0.12 346.018)" }, "400": { "value": "oklch(71.8% 0.202 349.761)" }, "500": { "value": "oklch(65.6% 0.241 354.308)" }, "600": { "value": "oklch(59.2% 0.249 0.584)" }, "700": { "value": "oklch(52.5% 0.223 3.958)" }, "800": { "value": "oklch(45.9% 0.187 3.815)" }, "900": { "value": "oklch(40.8% 0.153 2.432)" }, "950": { "value": "oklch(28.4% 0.109 3.907)" } }, "rose": { "50": { "value": "oklch(96.9% 0.015 12.422)" }, "100": { "value": "oklch(94.1% 0.03 12.58)" }, "200": { "value": "oklch(89.2% 0.058 10.001)" }, "300": { "value": "oklch(81% 0.117 11.638)" }, "400": { "value": "oklch(71.2% 0.194 13.428)" }, "500": { "value": "oklch(64.5% 0.246 16.439)" }, "600": { "value": "oklch(58.6% 0.253 17.585)" }, "700": { "value": "oklch(51.4% 0.222 16.935)" }, "800": { "value": "oklch(45.5% 0.188 13.697)" }, "900": { "value": "oklch(41% 0.159 10.272)" }, "950": { "value": "oklch(27.1% 0.105 12.094)" } }, "refLibCanary": { "value": "rgb(0, 191, 165)", "description": "Canary token \u2014 scan for refLibCanary to verify baseSystem contains reference-lib tokens" } }, "spacing": { "px": { "value": "1px" }, "r": { "value": "0.25rem" }, "0.5r": { "value": "calc(0.5 * var(--spacing-r))" }, "1/2r": { "value": "calc(var(--spacing-r) / 2)" }, "1/3r": { "value": "calc(var(--spacing-r) / 3)" }, "1/4r": { "value": "calc(var(--spacing-r) / 4)" }, "1/5r": { "value": "calc(var(--spacing-r) / 5)" }, "1/6r": { "value": "calc(var(--spacing-r) / 6)" }, "1r": { "value": "var(--spacing-r)" }, "1.5r": { "value": "calc(1.5 * var(--spacing-r))" }, "2r": { "value": "calc(2 * var(--spacing-r))" }, "3r": { "value": "calc(3 * var(--spacing-r))" }, "4r": { "value": "calc(4 * var(--spacing-r))" }, "5r": { "value": "calc(5 * var(--spacing-r))" }, "6r": { "value": "calc(6 * var(--spacing-r))" }, "8r": { "value": "calc(8 * var(--spacing-r))" }, "10r": { "value": "calc(10 * var(--spacing-r))" }, "12r": { "value": "calc(12 * var(--spacing-r))" } }, "radii": { "none": { "value": "0" }, "sm": { "value": "0.125rem" }, "base": { "value": "0.25rem" }, "md": { "value": "0.375rem" }, "lg": { "value": "0.5rem" }, "xl": { "value": "0.75rem" }, "2xl": { "value": "1rem" }, "3xl": { "value": "1.5rem" }, "full": { "value": "9999px" } }, "animations": { "spin": { "slow": { "value": "spin 4s linear infinite" }, "normal": { "value": "spin 2s linear infinite" }, "fast": { "value": "spin 1s linear infinite" } }, "fadeIn": { "quick": { "value": "fadeIn 0.2s ease-out" }, "normal": { "value": "fadeIn 0.5s ease-out" }, "slow": { "value": "fadeIn 1s ease-out" } }, "fadeOut": { "quick": { "value": "fadeOut 0.2s ease-out" }, "normal": { "value": "fadeOut 0.5s ease-out" } }, "slideUp": { "quick": { "value": "slideUp 0.3s ease-out" }, "normal": { "value": "slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1)" } }, "slideDown": { "quick": { "value": "slideDown 0.3s ease-out" }, "normal": { "value": "slideDown 0.5s cubic-bezier(0.4, 0, 0.2, 1)" } }, "scaleIn": { "quick": { "value": "scaleIn 0.2s ease-out" }, "normal": { "value": "scaleIn 0.3s ease-out" } }, "pulse": { "slow": { "value": "pulse 2s ease-in-out infinite" }, "normal": { "value": "pulse 1s ease-in-out infinite" }, "fast": { "value": "pulse 0.5s ease-in-out infinite" } }, "bounce": { "normal": { "value": "bounce 1s ease-in-out infinite" }, "fast": { "value": "bounce 0.5s ease-in-out infinite" } }, "ping": { "normal": { "value": "ping 1s cubic-bezier(0, 0, 0.2, 1) infinite" }, "fast": { "value": "ping 0.5s cubic-bezier(0, 0, 0.2, 1) infinite" } } }, "fonts": { "sans": { "value": '"Inter", ui-sans-serif, sans-serif' }, "serif": { "value": '"Literata", ui-serif, serif' }, "mono": { "value": '"JetBrains Mono", ui-monospace, monospace' } }, "fontWeights": { "sans.thin": { "value": "200" }, "sans.light": { "value": "300" }, "sans.normal": { "value": "400" }, "sans.semibold": { "value": "600" }, "sans.bold": { "value": "700" }, "sans.black": { "value": "900" }, "serif.thin": { "value": "100" }, "serif.light": { "value": "300" }, "serif.normal": { "value": "373" }, "serif.semibold": { "value": "600" }, "serif.bold": { "value": "700" }, "serif.black": { "value": "900" }, "mono.thin": { "value": "100" }, "mono.light": { "value": "300" }, "mono.normal": { "value": "393" }, "mono.semibold": { "value": "600" }, "mono.bold": { "value": "700" } } }, "font": { "sans": { "value": '"Inter", ui-sans-serif, sans-serif' }, "serif": { "value": '"Literata", ui-serif, serif' }, "mono": { "value": '"JetBrains Mono", ui-monospace, monospace' } }, "keyframes": { "fadeIn": { "from": { "opacity": "0" }, "to": { "opacity": "1" } }, "fadeOut": { "from": { "opacity": "1" }, "to": { "opacity": "0" } }, "fadeInUp": { "from": { "opacity": "0", "transform": "translateY(20px)" }, "to": { "opacity": "1", "transform": "translateY(0)" } }, "fadeInDown": { "from": { "opacity": "0", "transform": "translateY(-20px)" }, "to": { "opacity": "1", "transform": "translateY(0)" } }, "fadeInLeft": { "from": { "opacity": "0", "transform": "translateX(-20px)" }, "to": { "opacity": "1", "transform": "translateX(0)" } }, "fadeInRight": { "from": { "opacity": "0", "transform": "translateX(20px)" }, "to": { "opacity": "1", "transform": "translateX(0)" } }, "slideUp": { "from": { "transform": "translateY(100%)" }, "to": { "transform": "translateY(0)" } }, "slideDown": { "from": { "transform": "translateY(-100%)" }, "to": { "transform": "translateY(0)" } }, "slideLeft": { "from": { "transform": "translateX(100%)" }, "to": { "transform": "translateX(0)" } }, "slideRight": { "from": { "transform": "translateX(-100%)" }, "to": { "transform": "translateX(0)" } }, "slideUpOut": { "from": { "transform": "translateY(0)" }, "to": { "transform": "translateY(-100%)" } }, "slideDownOut": { "from": { "transform": "translateY(0)" }, "to": { "transform": "translateY(100%)" } }, "scaleIn": { "from": { "opacity": "0", "transform": "scale(0.9)" }, "to": { "opacity": "1", "transform": "scale(1)" } }, "scaleOut": { "from": { "opacity": "1", "transform": "scale(1)" }, "to": { "opacity": "0", "transform": "scale(0.9)" } }, "scaleUp": { "from": { "transform": "scale(0.95)" }, "to": { "transform": "scale(1)" } }, "scaleDown": { "from": { "transform": "scale(1.05)" }, "to": { "transform": "scale(1)" } }, "pulse": { "0%, 100%": { "transform": "scale(1)" }, "50%": { "transform": "scale(1.05)" } }, "heartbeat": { "0%, 100%": { "transform": "scale(1)" }, "14%": { "transform": "scale(1.3)" }, "28%": { "transform": "scale(1)" }, "42%": { "transform": "scale(1.3)" }, "70%": { "transform": "scale(1)" } }, "spin": { "from": { "transform": "rotate(0deg)" }, "to": { "transform": "rotate(360deg)" } }, "spinReverse": { "from": { "transform": "rotate(360deg)" }, "to": { "transform": "rotate(0deg)" } }, "rotate90": { "from": { "transform": "rotate(0deg)" }, "to": { "transform": "rotate(90deg)" } }, "rotate180": { "from": { "transform": "rotate(0deg)" }, "to": { "transform": "rotate(180deg)" } }, "wigglewiggle": { "0%, 100%": { "transform": "rotate(-3deg)" }, "50%": { "transform": "rotate(3deg)" } }, "bounce": { "0%, 100%": { "transform": "translateY(0)", "animationTimingFunction": "cubic-bezier(0.8, 0, 1, 1)" }, "50%": { "transform": "translateY(-25%)", "animationTimingFunction": "cubic-bezier(0, 0, 0.2, 1)" } }, "bounceIn": { "0%": { "opacity": "0", "transform": "scale(0.3)" }, "50%": { "opacity": "1", "transform": "scale(1.05)" }, "70%": { "transform": "scale(0.9)" }, "100%": { "transform": "scale(1)" } }, "bounceOut": { "0%": { "transform": "scale(1)" }, "25%": { "transform": "scale(0.95)" }, "50%": { "opacity": "1", "transform": "scale(1.1)" }, "100%": { "opacity": "0", "transform": "scale(0.3)" } }, "shake": { "0%, 100%": { "transform": "translateX(0)" }, "10%, 30%, 50%, 70%, 90%": { "transform": "translateX(-10px)" }, "20%, 40%, 60%, 80%": { "transform": "translateX(10px)" } }, "ping": { "0%": { "transform": "scale(1)", "opacity": "1" }, "75%, 100%": { "transform": "scale(2)", "opacity": "0" } }, "flash": { "0%, 50%, 100%": { "opacity": "1" }, "25%, 75%": { "opacity": "0" } }, "glow": { "0%, 100%": { "opacity": "1", "filter": "brightness(1)" }, "50%": { "opacity": "1", "filter": "brightness(1.5)" } }, "shimmer": { "0%": { "backgroundPosition": "-200% 0" }, "100%": { "backgroundPosition": "200% 0" } } }, "globalCss": { ":root": { "--r-base": "16px", "--r-density": "1", "--spacing-r": "calc(var(--r-base) * var(--r-density))" }, "body": { "fontFamily": "sans", "letterSpacing": "-0.01em", "fontSize": "body", "containerType": "inline-size" } } }];
+if (upstream?.length) {
+  config.theme = config.theme || {};
+  config.theme.tokens = config.theme.tokens || {};
+  for (const sys of upstream) {
+    if (sys?.tokens) config.theme.tokens = deepMerge(config.theme.tokens, sys.tokens);
+  }
+}
 var panda_entry_default = defineConfig2(config);
 export {
   panda_entry_default as default

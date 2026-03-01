@@ -37,6 +37,7 @@ export async function runConfig(
     await createPandaConfig(coreDir, {
       userDirectories: userDirs,
       includeCodegen: true,
+      extends: config.extends,
     })
     if (state) state.configWritten = true
   }
