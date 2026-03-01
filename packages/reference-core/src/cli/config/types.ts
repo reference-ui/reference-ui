@@ -3,6 +3,18 @@
  * Types and defineConfig helper — isolated so bundling user config doesn't pull in load-config.
  */
 
+/**
+ * Shape of the bundled config read by extends[]. Emitted as dist/baseSystem.mjs.
+ * Only reflects the public API: tokens(), font(), keyframes(), globalCss() — nothing else.
+ */
+export interface BaseSystem {
+  name: string
+  tokens: Record<string, unknown>
+  font: Record<string, unknown>
+  keyframes: Record<string, unknown>
+  globalCss: Record<string, unknown>
+}
+
 export interface ReferenceUIConfig {
   /**
    * Glob patterns for files to scan for Panda CSS extraction.
@@ -12,6 +24,18 @@ export interface ReferenceUIConfig {
    * include: ['src/**\/*.{ts,tsx}', 'app/**\/*.{ts,tsx}']
    */
   include: string[]
+
+  /**
+   * Identity of this design system (CSS @layer, data-layer selector).
+   * Required.
+   */
+  name: string
+
+  /**
+   * Upstream systems to merge in before this package's own tokens.
+   * Each entry is a BaseSystem (from dist/baseSystem.mjs of another package).
+   */
+  extends?: BaseSystem[]
 
   /**
    * Virtual directory where transformed files are written.

@@ -22,6 +22,7 @@ import { defineConfig } from '@reference-ui/core'
 // ============================================================================
 
 export default defineConfig({
+  name: 'reference-docs',
   // Glob patterns for files to scan for Panda CSS extraction
   include: ['src/**/*.{ts,tsx,mdx}'],
 
