@@ -78,7 +78,7 @@ function buildPackageJson(entry: MatrixEntry): object {
     type: 'module' as const,
     scripts: {
       build: 'vite build',
-      dev: `ref sync --watch & vite --port ${getPort(entry)}`,
+      dev: `ref sync --watch >> ref-sync.log 2>&1 & vite --port ${getPort(entry)}`,
     },
     dependencies: {
       react: reactVersion,
