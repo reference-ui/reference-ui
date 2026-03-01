@@ -14,7 +14,6 @@ export const MANIFEST = [
   'main.tsx',
   'App.tsx',
   'index.html',
-  'ref-config.ts',
   'tokens.ts',
   'tsconfig.json',
   'ui.config.ts',

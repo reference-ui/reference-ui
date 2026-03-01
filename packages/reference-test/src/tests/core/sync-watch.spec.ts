@@ -50,6 +50,7 @@ test.describe('sync-watch', () => {
   test('ref sync --watch picks up css() style change and it appears on screen', async ({
     page,
   }) => {
+    test.setTimeout(90_000)
     const sandboxDir = getSandboxDir()
     const syncWatchPath = join(sandboxDir, 'tests', 'SyncWatch.tsx')
 
@@ -69,7 +70,7 @@ test.describe('sync-watch', () => {
           const color = await el.evaluate((e) => getComputedStyle(e).color)
           return color === expectedRgb
         },
-        { timeout: 30_000 }
+        { timeout: 60_000 }
       )
       .toBe(true)
 

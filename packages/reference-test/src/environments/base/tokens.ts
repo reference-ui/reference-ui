@@ -1,6 +1,8 @@
 /**
- * Token config for test sandboxes. Plain data – no runtime deps.
+ * Token config for test sandboxes. Ref sync discovers this file and registers tokens.
  */
+
+import { tokens } from '@reference-ui/system'
 
 export const tokensConfig = {
   colors: {
@@ -17,3 +19,5 @@ export const tokensConfig = {
     'test-round': { value: '0.5rem' },
   },
 } as const
+
+tokens(tokensConfig)
