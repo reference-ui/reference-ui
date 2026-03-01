@@ -9,6 +9,10 @@ Users consume it as:
 import { baseSystem } from '@reference-ui/lib'
 ```
 
+reference-lib is the **original consumer** of reference-core. It adds colours, components, and
+the opt-in design layer on top of the framework. reference-core provides the CLI and `extend*`
+API; reference-lib publishes the **baseSystem** (bundled config) that `extends[]` reads.
+
 ---
 
 ## Step 1 — extends: [baseSystem]
@@ -17,11 +21,13 @@ This is the only thing in scope right now.
 
 ### reference-core must ship first
 
-`ref sync` needs a new output step — `createBaseSystem` — that:
+See `packages/reference-core/src/cli/TODO.md` for the CLI work. In short, `ref sync` needs:
 
-1. Collects all `extend*` registrations from `src/styled/`
-2. Merges any upstream `baseSystem` declared in `ui.config.ts` under `extends`
-3. Emits `dist/baseSystem.mjs` as a plain ESM object
+1. `createBaseSystem` — collects `extend*` registrations (from core + lib), merges `extends`, emits `cwd/dist/baseSystem.mjs` (the bundled config)
+2. `createPandaConfig` — updated to merge `config.extends` for consumers (e.g. reference-app)
+3. Config types — `name`, `extends`, `BaseSystem`
+
+When reference-lib runs `ref sync`, `cwd` is reference-lib; output goes to `reference-lib/dist/baseSystem.mjs`.
 
 ### reference-lib wires up
 
@@ -34,6 +40,7 @@ import { defineConfig } from '@reference-ui/core'
 export default defineConfig({
   name: 'reference-ui',
   extends: [],  // no upstream — reference-lib is the root
+  include: ['src/**/*.{ts,tsx}'],
 })
 ```
 
