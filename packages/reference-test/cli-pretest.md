@@ -2,6 +2,8 @@
 
 Analysis of potential failure points in the `ref` CLI and current test coverage. Goal: minimal testing that catches real issues, not exhaustive unit testing.
 
+**See also**: [CLEANUP-PLAN.md](../../reference-core/src/cli/CLEANUP-PLAN.md) for comprehensive refactoring plan.
+
 ---
 
 ## CLI Pipeline Overview

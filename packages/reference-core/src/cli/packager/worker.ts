@@ -1,71 +1,27 @@
-import { resolveCorePackageDir } from '../lib/resolve-core'
-import type { ReferenceUIConfig } from '../config'
-import { log } from '../lib/log'
-import { emit, on } from '../event-bus'
-import { bundleAllPackages } from './bundler'
-import { PACKAGES } from './packages'
-
-export interface PackagerWorkerPayload {
-  cwd: string
-  config: ReferenceUIConfig
-  /** When true, stay alive and rebundle on system:compiled */
-  watchMode?: boolean
-}
-
-function debounce<T extends (...args: unknown[]) => void>(fn: T, ms: number): T {
-  let timeout: ReturnType<typeof setTimeout> | null = null
-  return ((...args: Parameters<T>) => {
-    if (timeout) clearTimeout(timeout)
-    timeout = setTimeout(() => {
-      timeout = null
-      fn(...args)
-    }, ms)
-  }) as T
-}
-
-async function runPackagerCore(payload: PackagerWorkerPayload): Promise<void> {
-  const { cwd } = payload
-  const coreDir = resolveCorePackageDir()
-
-  log.debug('packager', '📦 Packaging...')
-  await bundleAllPackages(coreDir, cwd, PACKAGES)
-  log.debug('packager', `✅ ${PACKAGES.length} package(s) ready`)
-
-  emit('packager:complete', {})
-}
+import { on } from '../event-bus'
+import { KEEP_ALIVE } from '../thread-pool'
+import { runBundle, onPandaCssCompiled, onSystemCompiled } from './run'
+import type { PackagerWorkerPayload } from './run'
 
 /**
- * Packager worker - bundles and installs packages to node_modules
+ * Packager worker - bundles and installs packages to node_modules.
+ * Listens for system:compiled (full bundle) and panda:css:compiled (styles only).
  *
- * This runs after the system worker has generated all design tokens,
- * CSS utilities, and primitives. It takes the generated code and
- * bundles it into proper npm packages that are installed into the
- * user's node_modules directory.
- *
- * Packages created:
- * - @reference-ui/system: Design tokens, CSS utilities, patterns, recipes
- * - @reference-ui/react: React components, runtime APIs, configuration
+ * In watch mode: does NOT run initial bundle. Waits for system:compiled so Panda
+ * has generated src/system/* before bundling. Fixes race where packager-ts would
+ * fail with MISSING_EXPORT (splitProps, h1Style, etc.) when bundle ran too early.
  */
 export async function runPackager(payload: PackagerWorkerPayload): Promise<void> {
   const { watchMode = false } = payload
 
-  await runPackagerCore(payload)
-
   if (watchMode) {
-    const debouncedBundle = debounce(async () => {
-      log.debug('packager:worker', 'system:compiled → bundling packages')
-      try {
-        await runPackagerCore(payload)
-      } catch (err) {
-        log.error('[packager:worker] Bundle failed:', err)
-      }
-    }, 400)
-
-    on('system:compiled', () => debouncedBundle())
-
-    // Stay alive
-    return new Promise(() => {})
+    on('panda:css:compiled', onPandaCssCompiled(payload))
+    on('system:compiled', onSystemCompiled(payload))
+    return KEEP_ALIVE
   }
+
+  await runBundle(payload)
 }
 
+export type { PackagerWorkerPayload }
 export default runPackager

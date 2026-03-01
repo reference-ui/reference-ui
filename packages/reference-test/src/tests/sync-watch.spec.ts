@@ -1,14 +1,24 @@
 import { test, expect } from '@playwright/test'
-import { writeFile } from 'node:fs/promises'
+import { writeFile, appendFile } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
+const METRICS_PATH = join(__dirname, '..', '..', '.watch-metrics.jsonl')
+
 function getSandboxDir(): string {
   const project = process.env.REF_TEST_PROJECT
   if (!project) throw new Error('REF_TEST_PROJECT required (set by run-matrix.ts)')
   return join(__dirname, '..', '..', '.sandbox', project)
+}
+
+/** Generate a random hex color that Panda has never seen (ensures codegen must run). */
+function randomHexColor(): string {
+  const r = Math.floor(Math.random() * 256)
+  const g = Math.floor(Math.random() * 256)
+  const b = Math.floor(Math.random() * 256)
+  return '#' + [r, g, b].map((x) => x.toString(16).padStart(2, '0')).join('')
 }
 
 /** Hex to rgb string for comparing with getComputedStyle */
@@ -18,18 +28,19 @@ function hexToRgb(hex: string): string {
   return `rgb(${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)})`
 }
 
-const UPDATED_CONTENT = `import { css } from '@reference-ui/react'
+function buildSyncWatchContent(hexColor: string): string {
+  return `import { css } from '@reference-ui/react'
 
 /**
  * Slice for testing ref sync --watch: user updates css() style, expect it to appear.
- * The sync-watch spec edits this file to change the color.
+ * Uses a random color so Panda codegen MUST run to extract it – proves watch works.
  */
 export default function SyncWatch() {
   return (
     <div
       data-testid="sync-watch"
       className={css({
-        color: '#dc2626',
+        color: '${hexColor}',
         padding: 'test-md',
         borderRadius: 'test-round',
       })}
@@ -39,6 +50,7 @@ export default function SyncWatch() {
   )
 }
 `
+}
 
 test.describe('sync-watch', () => {
   test('ref sync --watch picks up css() style change and it appears on screen', async ({
@@ -47,15 +59,20 @@ test.describe('sync-watch', () => {
     const sandboxDir = getSandboxDir()
     const syncWatchPath = join(sandboxDir, 'tests', 'SyncWatch.tsx')
 
+    // Use random color – Panda has never seen it, so codegen MUST run to extract it.
+    // Pre-defined tokens (#dc2626 etc) would pass even when codegen is broken.
+    const randomColor = randomHexColor()
+    const expectedRgb = hexToRgb(randomColor)
+
     await page.goto('/')
     const el = page.getByTestId('sync-watch')
     await expect(el).toBeVisible()
 
-    // Edit css() – ref sync --watch is not instant, pipeline takes time
-    await writeFile(syncWatchPath, UPDATED_CONTENT)
+    // Edit css() with new color – ref sync --watch → Panda codegen → packager → vite hmr
+    const t0 = Date.now()
+    await writeFile(syncWatchPath, buildSyncWatchContent(randomColor))
 
-    // Wait for the color to change (watch → virtual → system → packager → vite hmr)
-    const expectedRgb = hexToRgb('#dc2626')
+    // Wait for the color to change (proves Panda codegen ran and extracted the new value)
     await expect
       .poll(
         async () => {
@@ -65,5 +82,16 @@ test.describe('sync-watch', () => {
         { timeout: 30_000 }
       )
       .toBe(true)
+
+    const timeToChangeMs = Date.now() - t0
+    const project = process.env.REF_TEST_PROJECT ?? 'unknown'
+    const entry = JSON.stringify({
+      timestamp: new Date().toISOString(),
+      timeToChangeMs,
+      project,
+      test: 'sync-watch',
+    }) + '\n'
+    await appendFile(METRICS_PATH, entry)
+    console.log(`[sync-watch] timeToChange: ${timeToChangeMs}ms (file → visible)`)
   })
 })

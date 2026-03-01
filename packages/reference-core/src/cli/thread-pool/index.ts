@@ -34,14 +34,17 @@ function getPool() {
 
   initMemoryLogging()
   pool = new Piscina({
-    minThreads: 5,
-    maxThreads: 5,
+    minThreads: 6,
+    maxThreads: 6,
     idleTimeout: 30000,
   })
 
   pool.on('error', err => log.error('[pool]', err))
   return pool
 }
+
+/** Never-resolving promise. Return from a worker to keep it alive for event-driven work. */
+export const KEEP_ALIVE = new Promise<never>(() => {})
 
 export async function runWorker(worker: WorkerName | string, payload: any) {
   const workerPath =

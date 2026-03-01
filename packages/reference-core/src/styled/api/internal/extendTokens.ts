@@ -1,5 +1,5 @@
 import type { Config } from '@pandacss/dev'
-import { extendPandaConfig } from '../../../cli/system/config/extendPandaConfig'
+import { extendPandaConfig } from '../../../cli/system/config/panda/extendPandaConfig'
 
 /**
  * Register design tokens with Panda CSS.

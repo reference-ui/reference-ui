@@ -20,7 +20,8 @@
       "options": {
         "command": "pnpm run dev",
         "cwd": "packages/reference-core"
-      }
+      },
+      "dependsOn": ["reference-core:build"]
     }
   }
 }

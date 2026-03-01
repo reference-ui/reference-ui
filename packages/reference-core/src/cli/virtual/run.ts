@@ -4,32 +4,32 @@ import { existsSync } from 'node:fs'
 import { copyToVirtual, removeFromVirtual } from './copy'
 import { getVirtualPath } from './utils'
 import { log } from '../lib/log'
-import { on, emit } from '../event-bus'
+import { emit } from '../event-bus'
 import { resolveCorePackageDir } from '../lib/resolve-core'
 import { DEFAULT_VIRTUAL_DIR, GLOB_CONFIG } from './config.internal'
 import type { ReferenceUIConfig } from '../config'
 
-/**
- * Payload for the virtual worker
- */
 export interface VirtualWorkerPayload {
   sourceDir: string
   config: ReferenceUIConfig
   virtualDir?: string
-  /** When true, virtual stays alive and reacts to watch:change, emitting virtual:fs:change */
   watchMode?: boolean
 }
 
-/**
- * Heavy entry point for virtual filesystem initialization.
- * This runs in a worker thread for better performance.
- */
-export async function runVirtual(payload: VirtualWorkerPayload): Promise<void> {
+export interface VirtualContext {
+  absSourceDir: string
+  absVirtualDir: string
+  debug: boolean
+}
+
+/** Run initial copy to virtual dir. Emits virtual:complete. Returns context for watch mode. */
+export async function runInitialCopy(
+  payload: VirtualWorkerPayload
+): Promise<VirtualContext> {
   const {
     sourceDir,
     config,
     virtualDir = DEFAULT_VIRTUAL_DIR,
-    watchMode = false,
   } = payload
   const { include, debug = false } = config
 
@@ -67,46 +67,37 @@ export async function runVirtual(payload: VirtualWorkerPayload): Promise<void> {
   }
 
   log.debug('virtual:worker', 'Initialization complete')
+  emit('virtual:complete', {})
 
-  if (watchMode) {
-    return startWatchMode({ absSourceDir, absVirtualDir, debug })
-  }
+  return { absSourceDir, absVirtualDir, debug }
 }
 
-/**
- * Subscribe to watch:change, process each event, emit virtual:fs:change.
- * Never resolves – keeps the worker alive for incremental updates.
- */
-function startWatchMode(context: {
-  absSourceDir: string
-  absVirtualDir: string
-  debug: boolean
-}): Promise<never> {
+/** Returns handler for watch:change – copy/remove, emit virtual:fs:change. */
+export function onWatchChange(context: VirtualContext): (ev: {
+  event: 'add' | 'change' | 'unlink'
+  path: string
+}) => void {
   const { absSourceDir, absVirtualDir, debug } = context
 
-  on('watch:change', async ({ event, path: sourcePath }) => {
+  log.debug('virtual:worker', 'Listening for watch:change, emitting virtual:fs:change')
+
+  return async ({ event, path: sourcePath }) => {
     try {
       let virtualPath: string
-      if (event === 'unlink') {
-        virtualPath = getVirtualPath(sourcePath, absSourceDir, absVirtualDir)
-        await removeFromVirtual(sourcePath, absSourceDir, absVirtualDir, { debug })
-      } else {
-        virtualPath = await copyToVirtual(sourcePath, absSourceDir, absVirtualDir, {
-          debug,
-        })
+      switch (event) {
+        case 'unlink':
+          virtualPath = getVirtualPath(sourcePath, absSourceDir, absVirtualDir)
+          await removeFromVirtual(sourcePath, absSourceDir, absVirtualDir, { debug })
+          break
+        case 'add':
+        case 'change':
+          virtualPath = await copyToVirtual(sourcePath, absSourceDir, absVirtualDir, { debug })
+          break
       }
       emit('virtual:fs:change', { event, path: virtualPath })
-      log.debug(
-        'virtual:worker',
-        'Processed watch:change → virtual:fs:change',
-        event,
-        virtualPath
-      )
+      log.debug('virtual:worker', 'Processed watch:change → virtual:fs:change', event, virtualPath)
     } catch (err) {
       log.error('[virtual:worker] Failed to process', event, sourcePath, err)
     }
-  })
-
-  log.debug('virtual:worker', 'Listening for watch:change, emitting virtual:fs:change')
-  return new Promise(() => {})
+  }
 }

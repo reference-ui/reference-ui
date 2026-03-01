@@ -3,6 +3,24 @@ import { resolve, dirname, parse } from 'node:path'
 import { createRequire } from 'node:module'
 
 /**
+ * Walk up the directory tree from startDir until finding a package.json with the given name.
+ * @returns The directory containing the matching package.json, or null if not found.
+ */
+function walkUpToPackageJson(startDir: string, packageName: string): string | null {
+  let dir = startDir
+  const fsRoot = parse(dir).root
+  while (dir !== fsRoot) {
+    const pkgPath = resolve(dir, 'package.json')
+    if (existsSync(pkgPath)) {
+      const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'))
+      if (pkg.name === packageName) return dir
+    }
+    dir = dirname(dir)
+  }
+  return null
+}
+
+/**
  * Resolve the @reference-ui/core package directory.
  * This is where the virtual folder and other build artifacts will be created.
  *
@@ -16,17 +34,8 @@ export function resolveCorePackageDir(fromCwd: string = process.cwd()): string {
   try {
     const req = createRequire(import.meta.url)
     const entry = req.resolve('@reference-ui/core')
-
-    let dir = dirname(entry)
-    const fsRoot = parse(dir).root
-    while (dir !== fsRoot) {
-      const pkgPath = resolve(dir, 'package.json')
-      if (existsSync(pkgPath)) {
-        const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'))
-        if (pkg.name === '@reference-ui/core') return dir
-      }
-      dir = dirname(dir)
-    }
+    const dir = walkUpToPackageJson(dirname(entry), '@reference-ui/core')
+    if (dir) return dir
   } catch {
     // fall through to monorepo detection
   }
