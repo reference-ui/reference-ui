@@ -16,7 +16,7 @@
  */
 
 import { defineConfig } from '@reference-ui/core'
-
+import { baseSystem } from '@reference-ui/lib'
 // ============================================================================
 // Configuration
 // ============================================================================
@@ -26,6 +26,7 @@ export default defineConfig({
   // Glob patterns for files to scan for Panda CSS extraction
   include: ['src/**/*.{ts,tsx,mdx}'],
 
+  extends: [baseSystem],
   // Optional: Enable normalize CSS reset (default: true)
   normalizeCss: true,
 
@@ -34,4 +35,5 @@ export default defineConfig({
 
   // Optional: Enable debug logging (default: false)
   debug: true,
+
 })
