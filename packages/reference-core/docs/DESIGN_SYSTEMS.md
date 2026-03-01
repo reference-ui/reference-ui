@@ -117,10 +117,7 @@ The surface is intentionally narrow: colours, radii, fonts, keyframes. Adding a 
 
 ## Example: Own Design System + Reference Components
 
-You have your own design system. You want to use Reference UI components, but Reference UI's token scale should not touch your `:root`.
-Components should render correctly with your brand values.
-
-Use `layers` to include component CSS in an isolated cascade layer, and `extendSystem` to map your brand onto Reference UI's component theming surface:
+You have your own design system and want to use Reference UI components alongside it. `layers` lets you include components from another system without adopting its token scale — components render correctly, but nothing lands in your global token space.
 
 ```ts
 // ui.config.ts
@@ -128,13 +125,7 @@ import { baseSystem, extendSystem, defineConfig } from '@reference-ui/core'
 
 const referenceTheme = extendSystem(baseSystem)
 referenceTheme.tokens({
-  color: {
-    background: 'var(--color-bg)',
-    surface: 'var(--color-surface)',
-    text: 'var(--color-text)',
-    border: 'var(--color-border)',
-    accent: 'var(--color-brand)',
-  },
+  ...
 })
 
 export default defineConfig({
@@ -142,16 +133,43 @@ export default defineConfig({
 })
 ```
 
-`layers` injects Reference UI's pre-compiled component CSS into a named CSS cascade layer (`@layer reference-ui { ... }`). Components render with your mapped values. Nothing from Reference UI's token scale lands in your global space.
+---
 
-`extends` and `layers` can coexist in the same config when needed:
+## Example: Publishing a Design System Built on Reference UI
+
+Your org publishes `@your-org/core`. It uses Reference UI components, themed with your brand, but does not adopt Reference UI's token scale.
 
 ```ts
+// @your-org/core — ui.config.ts
+import { baseSystem, extendSystem, defineConfig } from '@reference-ui/core'
+
+const referenceTheme = extendSystem(baseSystem)
+referenceTheme.tokens({
+  color: { accent: '#e63946' },
+  // ...
+})
+
 export default defineConfig({
-  extends: [myOrgDesign], // adopt @my-org/design tokens
-  layers: [referenceTheme], // use Reference UI components in isolation
+  layers: [referenceTheme],
+  // your own tokens registered via extend* in styled/
 })
 ```
+
+`ref sync` runs on `@your-org/core` and emits a `baseSystem`. That artefact carries the `layers` declaration — the Reference UI component CSS is embedded in it.
+
+A consumer of `@your-org/core` just does:
+
+```ts
+// consumer — ui.config.ts
+import { baseSystem } from '@your-org/core'
+import { defineConfig } from '@reference-ui/core'
+
+export default defineConfig({
+  extends: [baseSystem],
+})
+```
+
+They get your org's tokens in their global space and Reference UI components rendering correctly — without ever needing to know about or configure `@reference-ui/core` directly. The layer is carried through the chain.
 
 ---
 
