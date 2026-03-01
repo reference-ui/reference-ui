@@ -1,8 +1,9 @@
 /**
- * Runner: shared helpers for run-quick, run-ui, and start-dev.
+ * Runner: shared helpers and commands for running tests and dev server.
  * Resolves default project, prepares sandboxes, and provides env for Playwright.
  */
 
+import { spawn } from 'node:child_process'
 import { cp, rm } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -51,4 +52,36 @@ export async function refreshSandboxLib(project: MatrixEntry): Promise<void> {
   const sandboxLib = join(getSandboxDir(project), 'lib')
   await rm(sandboxLib, { recursive: true, force: true })
   await cp(LIB_DIR, sandboxLib, { recursive: true })
+}
+
+/** Run tests for default project. */
+export async function runQuick(): Promise<void> {
+  const project = getDefaultProject()
+  await prepareProject(project)
+  await execa('pnpm', ['exec', 'playwright', 'test', '--project', project.name], {
+    env: projectEnv(project),
+    stdio: 'inherit',
+  })
+}
+
+/** Run Playwright UI for default project. */
+export async function runUi(): Promise<void> {
+  const project = getDefaultProject()
+  await prepareProject(project)
+  await execa('playwright', ['test', '--ui', '--project', project.name], {
+    env: projectEnv(project),
+    stdio: 'inherit',
+  })
+}
+
+/** Start dev server for default project (copies lib, spawns dev). */
+export async function startDev(): Promise<void> {
+  const project = getDefaultProject()
+  await refreshSandboxLib(project)
+  const proc = spawn('pnpm', ['run', 'dev'], {
+    cwd: getSandboxDir(project),
+    stdio: 'inherit',
+    env: process.env,
+  })
+  proc.on('exit', (code) => process.exit(code ?? 0))
 }
