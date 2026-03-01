@@ -80,9 +80,61 @@ Run `napi build --platform --release --target aarch64-apple-darwin` once, commit
 
 ---
 
+### 5. Token Isolation — **blocking**
+
+Shipping a design system that dumps tokens into user token space without consent is rude and very hard to undo once people have built on top of it. This needs a position before v1, not after.
+
+**The problem:** Reference UI has its own design tokens — colour scales, spacing, type scales, font faces. These live in Panda's token space. If a user has their own colour tokens, the overlap is unpredictable and potentially breaking. They may not want our red scale. They may not want 11 shades of anything. They definitely shouldn't be forced to.
+
+**The position:**
+
+Reference UI tokens are opt-in. By default, none of our tokens pollute the user's token space. Components reference our tokens via a scoped prefix or theme layer.
+
+```ts
+// ui.config.ts
+export default defineConfig({
+  // Default: false — our tokens exist only as a component theme, not in user space
+  useReferenceTokens: false,
+
+  // true: merge our full token scale into the user's Panda config (red.400, etc.)
+  // use this if you want to build with our design language directly
+  useReferenceTokens: true,
+})
+```
+
+---
+
 ## Should-Have (Quality, Not Blocking)
 
 These don't prevent a first release but will cause friction quickly without them.
+
+### CLI Package Split (`reference-cli`)
+
+`src/cli/` should live in its own package (`reference-cli`) that `reference-core` depends on. This is already implied by the self-building CLI design in [SELF_BUILDING_CLI.md](../../docs/SELF_BUILDING_CLI.md) — the CLI builds itself, so the separation is natural.
+
+**Why it matters for v1:**
+
+- Code-splitting falls out naturally. Today tsup bundles everything together. With a separate package, the CLI tree is isolated and `reference-core`'s public API surface is uncontaminated by build-time internals.
+- Users get `@reference-ui/core` (the runtime) without dragging in esbuild, piscina, microbundle, and the full worker tree.
+- The self-build command (`ref build`) becomes a clean binary from `reference-cli` that `reference-core/package.json` invokes — no circular awkwardness.
+- Makes versioning simpler: CLI can iterate independently of the core runtime.
+
+**Shape:**
+
+```
+packages/
+  reference-cli/     ← new package, src/cli/ moves here
+    src/
+    dist/
+    package.json     ← bin: { ref: ./dist/index.mjs }
+  reference-core/    ← depends on reference-cli in devDependencies
+    src/             ← styled/, api/, system/ only — no cli/ subfolder
+    package.json     ← build: tsup && ref build
+```
+
+**Not strictly blocking**, but the longer this waits the messier the extraction becomes. If `src/cli/` grows more cross-references into core internals, the split gets harder. Better to do it while the seam is still clean.
+
+---
 
 ### Config File Change Detection
 
@@ -187,6 +239,10 @@ Not blocking. Do when there's runway.
 
 **Then**: error messages pass (read through each failure path, make them human).
 
+**Then**: token isolation — design the three modes, update `createPandaConfig`, verify components work scoped. This is the highest-risk decision; do it before any external users touch it.
+
 **Then**: darwin-arm64 binary + minimal user README.
+
+**Alongside (if bandwidth)**: start the `reference-cli` package extraction — move `src/cli/` to its own package while the seam is still clean.
 
 **That's v1.** Everything else is after.
