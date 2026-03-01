@@ -52,12 +52,12 @@ Use cases are variations of `ui.config.ts` and related config (tokens, `extends`
 
 We do **not** create a separate environment/sandbox per use case. Instead, during a test, we:
 
-1. Write the desired `ui.config.ts` (and any supporting files) into the sandbox
+1. Call `addToConfig(additions)` — merges additions onto the environment's base config, writes to sandbox
 2. The CLI (`ref sync --watch`) picks up the change and recompiles
 3. We wait for a **ready signal**
 4. Assert
 
-So: one environment (one sandbox), many use cases (config changes within that sandbox).
+Tests never overwrite each other: each uses `base + own additions`. The `environments/lib` knows the current environment and resolves the canonical base.
 
 ### CLI recompilation on config change
 
@@ -104,7 +104,7 @@ ref sync --watch already watches the sandbox. When a test writes `ui.config.ts`,
 **Steps:**
 1. Add ready-sentinel emission in reference-core CLI (Phase 3).
 2. Test helper: `waitForRefSyncReady(sandboxDir)` — polls sentinel with timeout.
-3. Config-switch test pattern: `writeUseCaseConfig()` → `waitForRefSyncReady()` → assert.
+3. Config-switch test pattern: `addToConfig(additions)` → `waitForRefSyncReady()` → assert.
 
 **Assumption:** ref sync --watch correctly treats `ui.config.ts` changes as full recompile. Must verify.
 
@@ -137,8 +137,8 @@ Start with **Option A** (watch + ready signal). If ref sync --watch does not rel
 - [ ] Verify ref sync --watch recompiles when `ui.config.ts` changes (manual test).
 - [ ] Add ready sentinel in reference-core (packager:complete → write `.reference-ui/ready`).
 - [ ] Add `waitForRefSyncReady(sandboxDir, options?)` helper in reference-test.
-- [ ] Define use-case config templates and `writeUseCaseConfig(sandboxDir, useCase)`.
-- [ ] First config-switch test: write config → wait ready → assert.
+- [ ] Add `src/environments/lib/config.ts` with `addToConfig(additions)`, `getSandboxDir()`.
+- [ ] First config-switch test in `tests/extend/`: addToConfig → wait ready → assert.
 - [ ] If watch fails: implement Option B dev orchestrator.
 
 ---
@@ -161,16 +161,32 @@ Start with **Option A** (watch + ready signal). If ref sync --watch does not rel
 4. `src/environments/manifest.ts` — `MANIFEST` const + `composeSandbox(entry, destDir)`
 5. `prepare.ts` — uses `composeSandbox` instead of `cp(app)`, hashes `ENVIRONMENTS_ROOT`
 
-### Phase 2: Config as test input
+### Phase 2: Test structure and config updates
 
-1. Define use-case configs as data or templates in `src/lib/` or `src/environments/base/configs/`:
-   - `minimal.config.ts`
-   - `extends-base.config.ts`
-   - etc.
+**Test folder structure** — configs and use cases live in tests:
 
-2. Add test helpers: `writeUseCaseConfig(sandboxDir, useCaseName)` — writes the appropriate `ui.config.ts` (and any imported files) into the sandbox.
+```
+src/tests/
+  core/           # Base config tests — asserts environment's default ui.config works
+  extend/         # extend use case — adds extends to base, asserts
+  ...
+```
 
-3. Ensure `ui.config.ts` (and its transitive imports) are under watch. If config lives at project root, add it to the watched set.
+**Merge semantics:** Tests never overwrite each other's configs. They only **add** elements to the environment's base config. Each test gets: `environmentBase + testAdditions`. The base is fixed for the session (from the composed environment); tests merge their additions on top.
+
+**`src/environments/lib/`** — config update function, environment-aware:
+
+- `addToConfig(additions)` — reads environment base, deep-merges `additions`, writes to sandbox `ui.config.ts`
+- Knows current environment: `REF_TEST_PROJECT`, sandbox path (`.sandbox/${project}`), base config source
+- Base comes from the composed environment layer (environments/base/ui.config.ts), not from "what's currently in the sandbox"
+- Parallel tests are safe: each call uses canonical base + that test's additions; no test sees another's writes
+
+**Implementation:**
+
+1. `src/environments/lib/config.ts` — `addToConfig(additions)`, `getSandboxDir()`, uses `REF_TEST_PROJECT` to resolve sandbox
+2. `src/tests/core/` — tests that assert base config works
+3. `src/tests/extend/` — tests that call `addToConfig({ extends: [...] })`, wait for ready, assert
+4. Ensure `ui.config.ts` (and imports) are in the watch set
 
 ### Phase 3: CLI ready signal
 
@@ -180,15 +196,10 @@ Start with **Option A** (watch + ready signal). If ref sync --watch does not rel
 
 ### Phase 4: Use-case tests
 
-1. Tests that:
-   - Start with a base config
-   - Run initial assertions
-   - Call `writeUseCaseConfig(sandboxDir, 'extends-base')`
-   - Poll for ready signal (sentinel updated)
-   - Run assertions for the new config
-   - Optionally switch again and re-assert
-
-2. Ensure sync-watch and similar tests still pass; they already modify files and wait for visible changes. The ready signal is an optimization and a gate for config-switch tests.
+1. **core** — Run with environment base config, assert tokens and base behaviour work.
+2. **extend** — Call `addToConfig({ extends: [...] })` → `waitForRefSyncReady()` → assert extended tokens/components.
+3. Tests never overwrite: each uses `base + own additions`. Lib resolves base from environment, not from sandbox.
+4. Ensure sync-watch and similar tests still pass.
 
 ---
 
@@ -204,6 +215,6 @@ Start with **Option A** (watch + ready signal). If ref sync --watch does not rel
 ## Done when
 
 1. ~~`src/environments/base/` with override layers (react/17, bundlers/vite/5)~~ ✓
-2. Use-case configs can be written into the sandbox during a test.
+2. `addToConfig()` merges additions onto base; tests in `core/` and `extend/` use it.
 3. CLI emits a ready signal (file sentinel) when packager completes in watch mode.
 4. Tests can switch use cases, wait for ready, and assert — all within one environment run.
