@@ -37,6 +37,14 @@ The authoring surface is two functions:
 ```ts
 interface ReferenceConfig {
   /**
+   * The identity of this design system.
+   * Used as the CSS @layer name, the data-layer selector in emitted CSS,
+   * and the identifier consumers pass to the layer prop.
+   * Must be unique across the chain.
+   */
+  name: string
+
+  /**
    * Adopt an upstream system's tokens into your global token space.
    * Tokens land at :root and in your Panda config. You can reference them
    * in your own components. Merged left-to-right, last wins.
@@ -221,12 +229,43 @@ The CLI has no opinion. It resolves whatever `extends` declares.
 
 ### `ref.*` token scoping
 
-Reference UI components use `ref.*` prefixed semantic tokens internally. When a publisher opts out of `baseSystem`, those tokens still resolve correctly via a component-local theme layer — not user token space. There is no collision regardless of what the publisher does.
+Reference UI components use `ref.*` prefixed semantic tokens internally. `ref.*` is a reserved namespace — it cannot collide with user token space. Components always resolve correctly regardless of what a publisher does.
 
 ```
 user token space:       brand.primary, text.default, ...  (user-defined, untouched)
-Reference UI internals: ref.color.text, ref.space.sm, ...  (scoped, never collides)
+Reference UI internals: ref.color.text, ref.space.sm, ...  (reserved, never collides)
 ```
+
+---
+
+## Runtime Token Scoping — the `layer` prop
+
+`extends` and `layers` are build-time declarations. They control what lands in the compiled stylesheet. Neither answers the question: _what if you want a token scope at a specific point in the DOM, without touching `:root`?_
+
+The `layer` prop on any primitive closes that gap. Its value is the `name` declared in that system's `ui.config.ts`:
+
+```tsx
+<Div layer="my-org">
+  <Button /> {/* resolves ref.* tokens from this node, not :root */}
+  <Card />
+</Div>
+```
+
+A `layer` prop renders a `data-layer` attribute on the element. The compiled `layer.css` emitted by `ref sync` — keyed by `name` — scopes all token custom properties to that selector. CSS custom property inheritance does the rest — every descendant resolves the right values without any JS involvement.
+
+Three ways tokens can reach a component, from broadest to narrowest:
+
+| mechanism               | token scope                           | how               |
+| ----------------------- | ------------------------------------- | ----------------- |
+| `extends: [baseSystem]` | `:root` — global                      | build-time config |
+| `layers: [system]`      | component CSS in `@layer`, tokens out | build-time config |
+| `layer="name"`          | subtree from that DOM node            | runtime attribute |
+
+**Nesting works correctly.** A deeper `[data-layer]` overrides tokens for its own subtree. Multiple disconnected `[data-layer]` nodes are independent. There is no coordination required between them.
+
+**No new concepts for consumers.** The prop is just a string that matches a name in the `layer.css` file. If you import `layer.css` from a package and use that package's name as the prop value, everything resolves. The connection is a naming convention, not a wiring step.
+
+This completes the chain: `extends` for full adoption, `layers` for isolated CSS, `layer` prop for scoped DOM subtrees.
 
 ---
 
@@ -237,5 +276,7 @@ Reference UI internals: ref.color.text, ref.space.sm, ...  (scoped, never collid
 **`extends` vs Panda presets.** Panda has its own `presets` key. Reference UI's `extends` should deep-merge on top of the base Panda config (last wins), not map to Panda presets. This matches the existing `createPandaConfig` behaviour and is simpler to reason about.
 
 **Naming collision.** `baseSystem` names the chain artefact (the compiled ESM export). `extendSystem(baseSystem)` takes that artefact as its starting point and returns a new `BaseSystem`. These are the same type — `extendSystem` is a builder that produces a `BaseSystem`. The collision is in prose, not in types. Worth a clear callout in the API docs.
+
+**`ref.*` token resolution when a publisher opts out of `baseSystem`.** `layer.css` emits `ref.*` tokens at `:root`. The `ref.*` prefix is a reserved namespace — it cannot collide with user token space by convention. Components always resolve correctly regardless of what the publisher does. No consumer-side configuration required.
 
 ---
