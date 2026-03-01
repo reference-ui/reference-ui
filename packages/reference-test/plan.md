@@ -91,7 +91,67 @@ The sentinel path should be configurable (e.g. `config.readyFile` or env `REF_RE
 
 ---
 
+## Action Plan: Config-Change-Triggered Ref Sync
+
+**Goal:** During a test, change `ui.config.ts` (or related config) and have ref sync recompile. Tests wait for a ready signal, then assert.
+
+**Constraint:** Playwright workers each run one script. The webServer starts once. We cannot spawn new Playwright processes mid-test. We need ref sync to react in-process (watch mode) or we need a custom run script that orchestrates the lifecycle.
+
+### Option A: Watch-based (ref sync --watch)
+
+ref sync --watch already watches the sandbox. When a test writes `ui.config.ts`, the watcher should fire and the pipeline should re-run. The missing piece is the **ready signal** — tests must poll until ref sync has finished.
+
+**Steps:**
+1. Add ready-sentinel emission in reference-core CLI (Phase 3).
+2. Test helper: `waitForRefSyncReady(sandboxDir)` — polls sentinel with timeout.
+3. Config-switch test pattern: `writeUseCaseConfig()` → `waitForRefSyncReady()` → assert.
+
+**Assumption:** ref sync --watch correctly treats `ui.config.ts` changes as full recompile. Must verify.
+
+### Option B: Custom run script (config watcher + cold ref sync)
+
+If watch-based is unreliable, create a **dev orchestrator** that:
+1. Starts ref sync (cold) then vite.
+2. Watches `ui.config.ts` in the sandbox.
+3. On change: kill ref sync + vite, run ref sync (cold), restart vite, write ready sentinel.
+4. Tests poll for ready.
+
+This requires our own script instead of `ref sync --watch & vite`. More complex, but gives explicit control.
+
+### Option C: Test-driven cold ref sync (no watch for config)
+
+Tests that need config switch:
+1. Write new `ui.config.ts`.
+2. Call `runRefSync(sandboxDir)` — spawns cold ref sync, awaits exit.
+3. Vite HMR may pick up node_modules changes, or we restart vite.
+4. Assert.
+
+Simpler: no watch, no ready signal. But restarting vite mid-test is awkward.
+
+### Recommendation
+
+Start with **Option A** (watch + ready signal). If ref sync --watch does not reliably recompile on config change, fall back to **Option B** with a custom `start-dev-with-config-watch.ts` that wraps the lifecycle.
+
+### Implementation checklist
+
+- [ ] Verify ref sync --watch recompiles when `ui.config.ts` changes (manual test).
+- [ ] Add ready sentinel in reference-core (packager:complete → write `.reference-ui/ready`).
+- [ ] Add `waitForRefSyncReady(sandboxDir, options?)` helper in reference-test.
+- [ ] Define use-case config templates and `writeUseCaseConfig(sandboxDir, useCase)`.
+- [ ] First config-switch test: write config → wait ready → assert.
+- [ ] If watch fails: implement Option B dev orchestrator.
+
+---
+
 ## Implementation Outline
+
+### Phase 0: Config cleanup — DONE
+
+1. `ref-test.config.json` — single source for defaultProject, basePort, workers, parallelSandboxes.
+2. `src/config.ts` — loadConfig(), env vars override.
+3. `playwright.config.ts` — uses config, no scattered process.env.
+4. `run-quick.ts`, `run-ui.ts` — read config, set env for playwright/start-dev.
+5. `package.json` scripts — no inline env vars.
 
 ### Phase 1: Environments structure — DONE
 

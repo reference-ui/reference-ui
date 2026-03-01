@@ -2,6 +2,8 @@
  * Test matrix: React × Bundler. Each entry becomes a Playwright project.
  */
 
+import { loadConfig } from './config.js'
+
 export const MATRIX = [
   { name: 'react17-vite5', react: '17' as const, bundler: 'vite' as const, bundlerVersion: '5' as const },
   { name: 'react18-vite5', react: '18' as const, bundler: 'vite' as const, bundlerVersion: '5' as const },
@@ -29,9 +31,8 @@ export function getViteVersion(entry: MatrixEntry): string {
   return VITE_VERSIONS[entry.bundlerVersion] ?? '5.4.0'
 }
 
-// Use high ports to avoid clashes with Vite defaults (5173) and stale processes when running in parallel
-const BASE_PORT = 19740
 export function getPort(entry: MatrixEntry): number {
+  const { basePort } = loadConfig()
   const i = MATRIX.indexOf(entry)
-  return BASE_PORT + i
+  return basePort + i
 }

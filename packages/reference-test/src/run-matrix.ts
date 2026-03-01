@@ -10,6 +10,7 @@ import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { execa } from 'execa'
 import { MATRIX, getPort } from './matrix.js'
+import { loadConfig } from './config.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const BLOB_DIR = join(__dirname, '..', 'blob-reports')
@@ -18,11 +19,9 @@ async function run(): Promise<void> {
   await rm(BLOB_DIR, { recursive: true, force: true }).catch(() => {})
   await mkdir(BLOB_DIR, { recursive: true })
 
-  const workersArg = process.env.REF_TEST_WORKERS
-    ? ['--workers', process.env.REF_TEST_WORKERS]
-    : []
-  // Sequential by default – parallel ref sync --watch processes conflict on shared .virtual
-  const parallel = process.env.REF_TEST_PARALLEL === '1'
+  const cfg = loadConfig()
+  const workersArg = ['--workers', String(cfg.workers)]
+  const parallel = cfg.parallelSandboxes
 
   async function runProject(entry: (typeof MATRIX)[number]) {
     console.log(`\n▶ ${entry.name}`)

@@ -7,14 +7,15 @@ import { cp, rm } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { spawn } from 'node:child_process'
+import { loadConfig } from '../config.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const PACKAGE_ROOT = join(__dirname, '..', '..')
 const LIB_DIR = join(PACKAGE_ROOT, 'src', 'lib')
 
-const project = process.env.REF_TEST_PROJECT
+const { defaultProject: project } = loadConfig()
 if (!project) {
-  console.error('REF_TEST_PROJECT required')
+  console.error('defaultProject required in ref-test.config.json (or set REF_TEST_PROJECT)')
   process.exit(1)
 }
 
