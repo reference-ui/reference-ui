@@ -26,6 +26,7 @@ const PACKAGE_ROOT = join(__dirname, '..', '..')
 const ENVIRONMENTS_ROOT = join(PACKAGE_ROOT, 'src', 'environments')
 const SANDBOX_ROOT = join(PACKAGE_ROOT, '.sandbox')
 const CORE_PATH = join(PACKAGE_ROOT, '..', 'reference-core')
+const LIB_PATH = join(PACKAGE_ROOT, '..', 'reference-lib')
 const CORE_CLI = join(CORE_PATH, 'dist/cli/index.mjs')
 const WORKSPACE_ROOT = join(PACKAGE_ROOT, '..', '..')
 
@@ -83,6 +84,7 @@ function buildPackageJson(entry: MatrixEntry): object {
       react: reactVersion,
       'react-dom': reactVersion,
       '@reference-ui/core': `file:${CORE_PATH}`,
+      '@reference-ui/lib': `file:${LIB_PATH}`,
     },
     devDependencies: {
       vite: viteVersion,
@@ -103,6 +105,7 @@ async function ensureWorkspaceReady(): Promise<void> {
     await execa('pnpm', ['install'], { cwd: WORKSPACE_ROOT })
     await execa('pnpm', ['run', 'build'], { cwd: CORE_PATH })
   }
+  await execa('node', [CORE_CLI, 'sync'], { cwd: LIB_PATH, stdio: 'pipe' })
 }
 
 async function readPrepState(sandboxDir: string): Promise<PrepState | null> {

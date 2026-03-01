@@ -20,6 +20,7 @@ export const MANIFEST = [
   'vite.config.ts',
   'tests/TokensTest.tsx',
   'tests/SyncWatch.tsx',
+  'tests/ExtendsTest.tsx',
 ] as const
 
 export type ManifestFile = (typeof MANIFEST)[number]
