@@ -18,11 +18,12 @@ import { execa } from 'execa'
 
 import { MATRIX, getReactVersion, getViteVersion, getPort } from './matrix.js'
 import type { MatrixEntry } from './matrix.js'
+import { composeSandbox } from './environments/manifest.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
 const PACKAGE_ROOT = join(__dirname, '..')
-const BASE_DIR = join(PACKAGE_ROOT, 'src', 'app')
+const ENVIRONMENTS_ROOT = join(PACKAGE_ROOT, 'src', 'environments')
 const LIB_DIR = join(PACKAGE_ROOT, 'src', 'lib')
 const SANDBOX_ROOT = join(PACKAGE_ROOT, '.sandbox')
 const CORE_PATH = join(PACKAGE_ROOT, '..', 'reference-core')
@@ -133,17 +134,12 @@ async function prepareEntryFull(entry: MatrixEntry): Promise<void> {
   }
   await mkdir(sandboxDir, { recursive: true })
 
-  await cp(BASE_DIR, sandboxDir, { recursive: true })
+  await composeSandbox(entry, sandboxDir)
 
   // Copy lib into sandbox (app imports via alias lib/*)
   const sandboxLib = join(sandboxDir, 'lib')
   if (existsSync(sandboxLib)) await rm(sandboxLib, { recursive: true, force: true })
   await cp(LIB_DIR, sandboxLib, { recursive: true })
-
-  if (entry.react === '17') {
-    const main17 = await readFile(join(BASE_DIR, 'main.react17.tsx'), 'utf-8')
-    await writeFile(join(sandboxDir, 'main.tsx'), main17)
-  }
 
   const packageJson = buildPackageJson(entry)
   await writeFile(
@@ -156,10 +152,10 @@ async function prepareEntryFull(entry: MatrixEntry): Promise<void> {
   })
   await runSync(sandboxDir)
 
-  const appHash = await hashAppDir(BASE_DIR)
+  const envHash = await hashAppDir(ENVIRONMENTS_ROOT)
   const libHash = existsSync(LIB_DIR) ? await hashAppDir(LIB_DIR) : ''
   await writePrepState(sandboxDir, {
-    prepHash: computePrepHash(packageJson, appHash, libHash),
+    prepHash: computePrepHash(packageJson, envHash, libHash),
     coreHash: getCoreHash(),
   })
   console.log('  ✓', entry.name, '(full)')
@@ -179,10 +175,10 @@ async function prepareEntry(entry: MatrixEntry): Promise<void> {
   const forceFresh = !!process.env.REF_TEST_FRESH
   const sandboxDir = join(SANDBOX_ROOT, entry.name)
 
-  const appHash = await hashAppDir(BASE_DIR)
+  const envHash = await hashAppDir(ENVIRONMENTS_ROOT)
   const libHash = existsSync(LIB_DIR) ? await hashAppDir(LIB_DIR) : ''
   const packageJson = buildPackageJson(entry)
-  const prepHash = computePrepHash(packageJson, appHash, libHash)
+  const prepHash = computePrepHash(packageJson, envHash, libHash)
   const coreHash = getCoreHash()
 
   if (!forceFresh && existsSync(sandboxDir)) {
