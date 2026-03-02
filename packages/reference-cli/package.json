@@ -13,7 +13,8 @@
     "sync": "node dist/cli/index.mjs sync"
   },
   "dependencies": {
-    "commander": "^14.0.3"
+    "commander": "^14.0.3",
+    "picocolors": "^1.1.0"
   },
   "devDependencies": {
     "@types/node": "^25.1.0",

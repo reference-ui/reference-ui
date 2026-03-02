@@ -9,7 +9,7 @@
     "test": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/reference-test run test",
     "test:quick": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/reference-test run test:quick",
     "test:lib": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/lib run test",
-    "test:app": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/cli run build && pnpm --filter @reference-ui/reference-app run test"
+    "test:app": "pnpm --filter @reference-ui/cli run build && pnpm --filter @reference-ui/reference-app run test"
   },
   "devDependencies": {
     "@swc-node/register": "~1.9.1",
