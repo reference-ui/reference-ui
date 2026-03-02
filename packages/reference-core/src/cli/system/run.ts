@@ -57,6 +57,7 @@ export async function runConfig(
       userDirectories: userDirs,
       includeCodegen: true,
       extends: config.extends,
+      userProjectDir: cwd,
     })
     if (state) state.configWritten = true
   }

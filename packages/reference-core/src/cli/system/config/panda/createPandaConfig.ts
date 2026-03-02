@@ -33,6 +33,8 @@ export interface CreatePandaConfigOptions {
   userDirectories?: string[]
   /** Upstream baseSystems from ui.config.extends — merged into theme so Panda generates var() refs */
   extends?: BaseSystem[]
+  /** Consumer project root — virtual dir is written to .reference-ui/virtual here; Panda include uses this path */
+  userProjectDir?: string
 }
 
 /**
@@ -94,11 +96,18 @@ export async function createPandaConfig(
     const bundled = await bundleConfigFiles(entryPath)
     log.debug('system:config', 'Bundle complete')
 
-    // Step 4: Write final panda.config.ts; inject codegen include when sync requested
+    // Step 4: Write final panda.config.ts; inject codegen include when sync requested; replace .virtual with consumer's .reference-ui/virtual
     let output = bundled
     if (options.includeCodegen) {
       const srcPattern = '"src/**/*.{ts,tsx}"'
       output = output.replace(srcPattern, `${srcPattern}, "codegen/**/*.{ts,tsx,jsx}"`)
+    }
+    if (options.userProjectDir) {
+      const consumerVirtualDir = resolve(options.userProjectDir, '.reference-ui', 'virtual')
+      const escapedPath = consumerVirtualDir.replace(/\\/g, '\\\\')
+      const virtualPattern = '".virtual/**/*.{ts,tsx,js,jsx}"'
+      const consumerPattern = `"${escapedPath}/**/*.{ts,tsx,js,jsx}"`
+      output = output.split(virtualPattern).join(consumerPattern)
     }
 
     const configPath = resolve(coreDir, 'panda.config.ts')
