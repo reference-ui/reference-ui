@@ -473,6 +473,7 @@
     --colors-rose-950: oklch(27.1% 0.105 12.094);
     --colors-test-primary: #2563eb;
     --colors-test-muted: #94a3b8;
+    --colors-ref-lib-canary: rgb(0, 191, 165);
     --spacing-px: 1px;
     --spacing-r: 0.25rem;
     --spacing-0\.5r: calc(0.5 * var(--spacing-r));
@@ -914,6 +915,7 @@
 
 @layer recipes{
   @layer _base{
+
     .r_abbr {
       text-decoration: underline dotted;
       text-underline-offset: 0.15em;
@@ -1191,6 +1193,34 @@
 
 @layer utilities{
 
+  .p_test-md {
+    padding: var(--spacing-test-md);
+}
+
+  .p_0\.75rem {
+    padding: 0.75rem;
+}
+
+  .bd_3px_solid_\#16a34a {
+    border: 3px solid #16a34a;
+}
+
+  .p_1rem {
+    padding: 1rem;
+}
+
+  .bd_1px_solid_\#123 {
+    border: 1px solid #123;
+}
+
+  .p_test-sm {
+    padding: var(--spacing-test-sm);
+}
+
+  .bg_test\.muted {
+    background: var(--colors-test-muted);
+}
+
   .p_px {
     padding: var(--spacing-px);
 }
@@ -1261,14 +1291,6 @@
 
   .p_12r {
     padding: var(--spacing-12r);
-}
-
-  .p_test-sm {
-    padding: var(--spacing-test-sm);
-}
-
-  .p_test-md {
-    padding: var(--spacing-test-md);
 }
 
   .p_-px {
@@ -1595,24 +1617,32 @@
     animation: var(--animations-ping-fast);
 }
 
-  .p_0\.75rem {
-    padding: 0.75rem;
+  .bdr_test-round {
+    border-radius: var(--radii-test-round);
 }
 
-  .bd_3px_solid_\#16a34a {
-    border: 3px solid #16a34a;
+  .bd-w_test-1 {
+    border-width: var(--border-widths-test-1);
 }
 
-  .p_1rem {
-    padding: 1rem;
+  .border-style_solid {
+    border-style: solid;
 }
 
-  .bd_1px_solid_\#123 {
-    border: 1px solid #123;
+  .bd-c_test\.primary {
+    border-color: var(--colors-test-primary);
 }
 
-  .bg_test\.muted {
-    background: var(--colors-test-muted);
+  .bdr_8px {
+    border-radius: 8px;
+}
+
+  .bd-w_2px {
+    border-width: 2px;
+}
+
+  .bd-c_\#7c3aed {
+    border-color: #7c3aed;
 }
 
   .bd-c_gray\.50 {
@@ -2407,12 +2437,12 @@
     border-color: var(--colors-rose-950);
 }
 
-  .bd-c_test\.primary {
-    border-color: var(--colors-test-primary);
-}
-
   .bd-c_test\.muted {
     border-color: var(--colors-test-muted);
+}
+
+  .bd-c_refLibCanary {
+    border-color: var(--colors-ref-lib-canary);
 }
 
   .bd-c_colorPalette\.50 {
@@ -2465,6 +2495,10 @@
 
   .bd-c_colorPalette\.muted {
     border-color: var(--colors-color-palette-muted);
+}
+
+  .bd-c_colorPalette {
+    border-color: var(--colors-color-palette);
 }
 
   .gap_px {
@@ -2663,28 +2697,28 @@
     border-radius: var(--radii-full);
 }
 
-  .bdr_test-round {
-    border-radius: var(--radii-test-round);
+  .c_var\(--colors-ref-lib-canary\) {
+    color: var(--colors-ref-lib-canary);
 }
 
-  .bd-w_test-1 {
-    border-width: var(--border-widths-test-1);
+  .c_test\.primary {
+    color: var(--colors-test-primary);
 }
 
-  .border-style_solid {
-    border-style: solid;
+  .bg-c_test\.muted {
+    background-color: var(--colors-test-muted);
 }
 
-  .bdr_8px {
-    border-radius: 8px;
+  .c_\#dc2626 {
+    color: #dc2626;
 }
 
-  .bd-w_2px {
-    border-width: 2px;
+  .bg-c_\#fef3c7 {
+    background-color: #fef3c7;
 }
 
-  .bd-c_\#7c3aed {
-    border-color: #7c3aed;
+  .c_\#818740 {
+    color: #818740;
 }
 
   .bg-c_gray\.50 {
@@ -3483,8 +3517,8 @@
     background-color: var(--colors-test-primary);
 }
 
-  .bg-c_test\.muted {
-    background-color: var(--colors-test-muted);
+  .bg-c_refLibCanary {
+    background-color: var(--colors-ref-lib-canary);
 }
 
   .bg-c_colorPalette\.50 {
@@ -3537,6 +3571,10 @@
 
   .bg-c_colorPalette\.muted {
     background-color: var(--colors-color-palette-muted);
+}
+
+  .bg-c_colorPalette {
+    background-color: var(--colors-color-palette);
 }
 
   .c_gray\.50 {
@@ -4331,12 +4369,12 @@
     color: var(--colors-rose-950);
 }
 
-  .c_test\.primary {
-    color: var(--colors-test-primary);
-}
-
   .c_test\.muted {
     color: var(--colors-test-muted);
+}
+
+  .c_refLibCanary {
+    color: var(--colors-ref-lib-canary);
 }
 
   .c_colorPalette\.50 {
@@ -4389,6 +4427,10 @@
 
   .c_colorPalette\.muted {
     color: var(--colors-color-palette-muted);
+}
+
+  .c_colorPalette {
+    color: var(--colors-color-palette);
 }
 
   .fs_px {
@@ -4753,22 +4795,6 @@
 
   .anim-n_shimmer {
     animation-name: shimmer;
-}
-
-  .c_var\(--colors-ref-lib-canary\) {
-    color: var(--colors-ref-lib-canary);
-}
-
-  .c_\#dc2626 {
-    color: #dc2626;
-}
-
-  .bg-c_\#fef3c7 {
-    background-color: #fef3c7;
-}
-
-  .c_\#0eff2b {
-    color: #0eff2b;
 }
 
   .pl_px {
