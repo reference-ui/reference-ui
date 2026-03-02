@@ -205,15 +205,120 @@ never knows they exist.
 
 ---
 
-## Order of work
+## Implementation status
 
-1. Add `css?: string` to `BaseSystem` type
-2. Add `layers?: BaseSystem[]` to `ReferenceUIConfig`
-3. Implement `createLayerCss` — reads Panda output, wraps in `@layer`, appends `[data-layer]`
-   token block, embeds on `baseSystem`
-4. Update `createBaseSystem` to call `createLayerCss` and include result in emitted artefact
-5. Update `entryTemplate.ts` — `layers` entries excluded from `config.theme.tokens` merge
-6. Update `system/run.ts` — inject `layers[].css` into consumer's virtual CSS output
-7. Add `layer` prop to primitives (`src/primitives/`)
-8. Verify in reference-lib → reference-app: Library A tokens absent from Library B TypeScript,
-   components render, `layer` prop scopes correctly
+| step | what                                                                     | status      |
+| ---- | ------------------------------------------------------------------------ | ----------- |
+| 1    | `css?: string` on `BaseSystem`                                           | ✅ done     |
+| 2    | `layers?: BaseSystem[]` on `ReferenceUIConfig`                           | ✅ done     |
+| 3    | `createLayerCss` — wraps Panda output, appends `[data-layer]` block     | ✅ done     |
+| 4    | `createBaseSystem` calls `createLayerCss`, embeds `css` in artefact     | ✅ done     |
+| 5    | `entryTemplate.ts` — `layers` excluded from token merge                 | ✅ done     |
+| 6    | `appendLayerCss` in packager — appends `layers[].css` to `styles.css`   | ✅ done     |
+| 7    | `layer` prop on primitives                                               | ⬜ not done |
+| **8**| **Named virtual spaces — fix token bleed (see below)**                   | ❌ bug      |
+
+---
+
+## Bug: token bleed via shared `.virtual/` namespace
+
+### What's happening
+
+`panda.base.ts` scans `.virtual/**/*.{ts,tsx}`. The `.virtual/` directory under `reference-core`
+is a **shared flat namespace** — every package that runs `ref sync` copies its `src/**` files
+into the same `reference-core/.virtual/` tree.
+
+When **Library A** (`reference-lib`) syncs:
+
+```
+reference-lib/src/styled/theme/canary.ts
+  → reference-core/.virtual/src/styled/theme/canary.ts
+```
+
+When **Library B** (`reference-docs`) later syncs with `layers: [libBaseSystem]`, Panda scans
+`.virtual/**` and picks up `canary.ts`. The `extendTokens` call inside it runs. `refLibCanary`
+lands in Panda's theme. The Panda `**/node_modules/**` exclude doesn't help — the file isn't in
+node_modules, it's in `.virtual/src/`.
+
+Result: `refLibCanary` utilities appear in Library B's `styles.css` and its TypeScript types,
+even though `reference-lib` is consumed via `layers` (not `extends`).
+
+Additionally, the `pnpm workspace:*` symlinks cause `.virtual/node_modules/@reference-ui/lib/` to
+exist as a real directory populated with lib's project files. Panda's own glob would also walk
+these unless `**/node_modules/**` is correctly applied by Panda's file scanner — which it is, but
+it does not fix the `.virtual/src/` bleed above.
+
+### The fix: named virtual spaces
+
+Scope each consumer's virtual directory to its own `name`:
+
+```
+.virtual/reference-ui/src/styled/theme/canary.ts    ← reference-lib's files
+.virtual/reference-docs/src/...                     ← reference-docs' files (separate)
+```
+
+**Changes required:**
+
+**`virtual/run.ts` + `virtual/sync.ts`** — resolve `absVirtualDir` to
+`resolve(coreDir, virtualDir, config.name)` instead of `resolve(coreDir, virtualDir)`.
+
+**`createPandaConfig`** — the generated `panda.config.ts` must include only the consumer's own
+named space. `panda.base.ts` has a static `.virtual/**` pattern. `createPandaConfig` already
+post-processes the bundled output (see the `includeCodegen` replacement); add a second
+find-and-replace that narrows `.virtual/**` to `.virtual/<name>/**`:
+
+```ts
+// in createPandaConfig, after bundling:
+output = output.replace('".virtual/**/*.{ts,tsx,js,jsx}"', `".virtual/${config.name}/**/*.{ts,tsx,js,jsx}"`)
+```
+
+`config.name` comes from the `ReferenceUIConfig` passed to `createPandaConfig` (already
+threaded through via `options`). When the pattern appears twice (the array has two identical
+entries from `panda.base.ts`), both occurrences must be replaced.
+
+**Migration**: the shared `.virtual/` should be cleaned on `ref sync` before the named copy runs,
+or at minimum a warning should log if old flat files exist.
+
+---
+
+## Bug: `[data-layer]` indentation inconsistency
+
+`createLayerCss`'s `extractTokenDeclarations` returns the inner declaration block with `.trim()`
+applied — this strips the leading whitespace from the **first** line only. All subsequent lines
+retain their original indentation, producing:
+
+```css
+[data-layer="reference-ui"] {
+--colors-gray-50: oklch(...);       ← no indent (trimmed)
+    --colors-gray-100: oklch(...);  ← 4-space indent (original)
+}
+```
+
+**Fix**: after extracting the declarations, normalise indentation. Strip the common leading
+whitespace from every line (dedent), then re-indent uniformly:
+
+```ts
+function dedentDeclarations(declarations: string): string {
+  const lines = declarations.split('\n').filter(l => l.trim())
+  const minIndent = Math.min(...lines.map(l => l.match(/^(\s*)/)?.[1].length ?? 0))
+  return lines.map(l => '  ' + l.slice(minIndent)).join('\n')
+}
+```
+
+Apply before the `[data-layer]` block is assembled in `createLayerCss`.
+
+---
+
+## Order of work (remaining)
+
+1. ✅ ~~Add `css?: string` to `BaseSystem` type~~
+2. ✅ ~~Add `layers?: BaseSystem[]` to `ReferenceUIConfig`~~
+3. ✅ ~~Implement `createLayerCss`~~
+4. ✅ ~~Update `createBaseSystem` to embed `css`~~
+5. ✅ ~~`entryTemplate.ts` — `layers` excluded from token merge~~
+6. ✅ ~~`appendLayerCss` in packager~~
+7. **Fix named virtual spaces** — `virtual/run.ts`, `virtual/sync.ts`, `createPandaConfig`
+8. **Fix `[data-layer]` indentation** — `createLayerCss.extractTokenDeclarations`
+9. Add `layer` prop to primitives (`src/primitives/`)
+10. Verify: Library A tokens absent from Library B TypeScript, components render, `layer` prop
+    scopes correctly
