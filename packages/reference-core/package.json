@@ -5,6 +5,10 @@
   "type": "module",
   "main": "./src/entry/core.ts",
   "types": "./src/entry/core.ts",
+  "exports": {
+    ".": { "types": "./src/entry/core.ts", "default": "./src/entry/core.ts" },
+    "./styles.css": "./src/system/styles.css"
+  },
   "bin": {
     "ref": "./dist/cli/index.mjs"
   },
