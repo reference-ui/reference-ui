@@ -9,3 +9,11 @@ export interface SyncPayload {
   config: ReferenceUIConfig
   options: SyncOptions
 }
+
+/** Sync module events – maps event names to payload types. */
+export type SyncEvents = {
+  /** Emitted by sync hub when watch:change is processed; passed to workers */
+  'sync:changed': { event: 'add' | 'change' | 'unlink'; path: string }
+  /** Emitted when cold sync (packager, etc.) is complete */
+  'sync:complete': Record<string, never>
+}
