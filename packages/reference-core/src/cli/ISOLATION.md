@@ -13,7 +13,6 @@ Multiple consumers (reference-lib, reference-docs, etc.) run `ref sync` in the s
 | **src/system/** | `reference-core/src/system/` | Panda writes styles, jsx, patterns, recipes, types. Last writer wins. |
 | **panda.config.ts** | `reference-core/panda.config.ts` | Per-consumer config overwritten. |
 | **.ref/** | `reference-core/.ref/` | Eval fragments, panda-entry, collected JSON. |
-| **.virtual/** | `reference-core/.virtual/` | Virtual file copies. |
 
 ### Why Symlinks Cause It
 
