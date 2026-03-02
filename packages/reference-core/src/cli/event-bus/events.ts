@@ -16,16 +16,16 @@ export type WatchEvents = {
 export type SystemEvents = {
   /** Emitted when Panda config is created */
   'system:config:created': { configPath: string }
-  /** Emitted when eval + config are done; gen worker runs Panda on this */
-  'config:ready': Record<string, never>
+  /** Emitted when eval + config are done; gen worker runs Panda on this. Carries config when reloaded from ui.config change. */
+  'config:ready': { config?: unknown }
   /** Emitted when gen worker has bootstrapped and is listening; system may re-emit config:ready */
   'gen:ready': Record<string, never>
   /** Emitted when system worker finishes (eval + config) */
   'system:complete': Record<string, never>
   /** Emitted when system config step is done; gen worker runs Panda on this */
   'system:config:complete': Record<string, never>
-  /** Emitted when Panda finishes (codegen + CSS); packager listens to rebundle */
-  'system:compiled': Record<string, never>
+  /** Emitted when Panda finishes (codegen + CSS); packager listens to rebundle. Carries config for appendLayerCss. */
+  'system:compiled': { config?: unknown }
   /** Emitted when Panda has written styles.css – packager copies to install location */
   'panda:css:compiled': Record<string, never>
 }

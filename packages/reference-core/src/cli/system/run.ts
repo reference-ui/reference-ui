@@ -3,6 +3,7 @@ import { emit } from '../event-bus'
 import { log } from '../lib/log'
 import { debounce } from '../lib/debounce'
 import { resolveCorePackageDir } from '../lib/resolve-core'
+import { loadUserConfig } from '../config'
 import type { ReferenceUIConfig } from '../config'
 import { runEval } from './eval'
 import { createPandaConfig } from './config/panda'
@@ -16,15 +17,23 @@ export interface SystemWorkerPayload {
 const CORE_DIRS = ['src/styled'] as const
 
 export function isConfigAffectingPath(path: string): boolean {
-  return path.includes('/src/styled/') || path.includes('tokens.ts')
+  return (
+    path.includes('/src/styled/') ||
+    path.includes('tokens.ts') ||
+    path.includes('ui.config.ts') ||
+    path.includes('ui.config.js') ||
+    path.includes('ui.config.mjs')
+  )
 }
 
-/** Run eval + config generation. Emits when done. */
+/** Run eval + config generation. Emits when done. Uses freshConfig when provided (e.g. after ui.config reload). */
 export async function runConfig(
   payload: SystemWorkerPayload,
-  state?: { configWritten?: boolean }
+  state?: { configWritten?: boolean },
+  freshConfig?: ReferenceUIConfig
 ): Promise<void> {
-  const { cwd, config } = payload
+  const { cwd } = payload
+  const config = freshConfig ?? payload.config
   const coreDir = resolveCorePackageDir(cwd)
   const userDirs = config.include.map(p =>
     resolve(cwd, p.split('**')[0].replace(/\/+$/, ''))
@@ -43,7 +52,7 @@ export async function runConfig(
 
   emit('system:config:complete', {})
   emit('system:complete', {})
-  emit('config:ready', {})
+  emit('config:ready', freshConfig != null ? { config: freshConfig } : {})
 }
 
 export function onConfigRebuild(
@@ -53,7 +62,8 @@ export function onConfigRebuild(
   return debounce(async () => {
     log.debug('system:worker', 'virtual:fs:change → config (config-affecting)')
     try {
-      await runConfig(payload, state)
+      const freshConfig = await loadUserConfig(payload.cwd).catch(() => undefined)
+      await runConfig(payload, state, freshConfig)
     } catch (e) {
       log.error('[system:worker] Config failed:', e)
     }

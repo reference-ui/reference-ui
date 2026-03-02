@@ -31,13 +31,21 @@ export async function runCodegen(cwd: string, config: ReferenceUIConfig): Promis
   await createBaseSystem(coreDir, userDirs, config, getSystemPackageDir(cwd))
 
   emit('gen:complete', {})
-  emit('system:compiled', {})
+  emit('system:compiled', { config })
 }
 
-/** Returns a debounced handler for config:ready. Call on each config:ready. */
-export function onConfigReady(cwd: string, config: ReferenceUIConfig): () => void {
-  return debounce(
-    () => runCodegen(cwd, config).catch(e => log.error('[gen:code] failed:', e)),
+/** Returns a debounced handler for config:ready. Uses config from event when provided (ui.config reload). */
+export function onConfigReady(
+  cwd: string,
+  fallbackConfig: ReferenceUIConfig
+): (evt?: { config?: ReferenceUIConfig }) => void {
+  const run = (cfg: ReferenceUIConfig) =>
+    runCodegen(cwd, cfg).catch(e => log.error('[gen:code] failed:', e))
+  const debounced = debounce(
+    (...args: unknown[]) => run(args[0] as ReferenceUIConfig),
     150
   )
+  return (evt?: { config?: ReferenceUIConfig }) => {
+    debounced(evt?.config ?? fallbackConfig)
+  }
 }
