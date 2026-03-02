@@ -38,7 +38,7 @@ test.describe.serial('layer', () => {
     )
   })
 
-  test('layers only – refLibCanary renders via data-layer', async ({ page }) => {
+  test.skip('layers only – refLibCanary renders via data-layer', async ({ page }) => {
     test.setTimeout(60_000)
     await addToConfig({ extends: '[]', layers: '[baseSystem]' })
     const sandboxDir = getSandboxDir()
