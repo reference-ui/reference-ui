@@ -1,10 +1,39 @@
-# Isolation — Per-Consumer Outputs
+# Isolation — Phased Approach
 
-Multiple consumers (reference-lib, reference-docs, etc.) run `ref sync` in the same monorepo. Without isolation, they overwrite each other's outputs because they share physical paths through symlinked `@reference-ui/core`.
+**Strategy: System-only first.** Isolate the core build so `src/system/` is ephemeral (generated, not source-of-truth). Defer per-consumer isolation until that's stable.
 
 ---
 
-## 1. Problem: Shared State
+## Phase 1: System-Only (Current Focus)
+
+**Goal:** Make `reference-core/src/system/` generated, not committed. Fix the chicken-egg where config loading needs system before Panda creates it.
+
+### In scope
+
+- Bootstrap stubs + Panda generate during core build (see §4)
+- `src/system/` symlinked to `.reference-ui/internal/system` inside core
+- `src/system/` in `.gitignore`
+- Sync flow unchanged: Panda still runs `cwd: coreDir`, output goes to core's system (shared by all consumers — we accept this for Phase 1)
+
+### Out of scope (deferred to Phase 2)
+
+- Per-consumer output dirs (`consumer/.reference-ui/internal/system`)
+- Packager preferring consumer system over core
+- Any gate on `packager:consumer-ready` or spawning gen from system
+
+### Why this first
+
+We tried full per-consumer isolation and hit race conditions (config:ready before gen runs, BroadcastChannel to idle workers, etc.). Narrowing to system-only reduces variables and gets the ephemeral core build right before tackling consumer isolation.
+
+---
+
+## Phase 2: Per-Consumer Outputs (Deferred)
+
+Multiple consumers run `ref sync` in the same monorepo. Without isolation, they overwrite each other's outputs because they share physical paths through symlinked `@reference-ui/core`. Tasks A–H below apply when we resume Phase 2.
+
+---
+
+## 1. Problem: Shared State (Phase 2)
 
 ### What Gets Shared When Core Is Symlinked
 
@@ -195,49 +224,48 @@ Panda's config loader (esbuild) also resolves imports when loading `panda.base.t
 
 ## 7. What We Did / Tried / Went Wrong
 
-### Implemented (Stage 1)
+### Phase 1 (System-Only) — Current State
 
-1. **Path helpers** — `getSystemDir(consumerDir)`, `getRefDir(consumerDir)`, `INTERNAL_SYSTEM_OUTDIR` in `lib/path.ts`. Single canonical location `.reference-ui/internal/system`.
+**To implement:** Bootstrap stubs + `build-panda-system.ts` script that:
+1. Writes minimal stubs so config loading can resolve `../../../system/*`
+2. Symlinks `src/system` → `coreDir/.reference-ui/internal/system`
+3. Runs Panda generate (writes to that dir via symlink)
+4. `process.exit(0)` so script doesn't hang
+5. Add `src/system/` to core `.gitignore`
+6. Add `build:system` before tsup in build pipeline
 
-2. **Ephemeral src/system** — `build-panda-system.ts` script: bootstrap stubs → symlink `src/system` → `.reference-ui/internal/system` → Panda generate. Core's system is generated, not source-of-truth. `src/system/` in `.gitignore`.
+**Sync flow stays simple:** Panda runs `cwd: coreDir`, output goes to `coreDir/src/system` (symlink target). Packager copies from core. No consumer-specific paths, no extra gates.
 
-3. **createPandaConfig** — When `userProjectDir` set: outdir → `.reference-ui/internal/system`, replace `src/**` with absolute core src path so Panda (cwd=consumer) still scans core. Uses `INTERNAL_SYSTEM_OUTDIR`.
+### Phase 2 (Per-Consumer) — What We Tried & Reverted
 
-4. **gen/code** — Panda runs with `cwd: consumer` (not coreDir) so output lands in `consumer/.reference-ui/internal/system`.
+We attempted full per-consumer isolation and reverted due to complexity:
 
-5. **copyStylesToReactPackage** — Prefer `getSystemDir(consumer)/styles.css`, fallback to core. Returns `{ didCopy, fromConsumer }` for packager:consumer-ready gate.
+1. **Path helpers** — Added `getSystemDir`, `getRefDir`, `INTERNAL_SYSTEM_OUTDIR`. Reverted.
+2. **createPandaConfig** — When `userProjectDir` set: outdir override, `src/**` replacement. Reverted.
+3. **gen/code** — `cwd: consumer` so output in consumer dir. Reverted.
+4. **copyStylesToReactPackage** — Prefer consumer system, return `{ fromConsumer }`. Reverted.
+5. **packager:consumer-ready gate** — Wait for consumer styles before exit. Reverted.
+6. **System spawns gen** — Guarantee config before gen. Still hung (BroadcastChannel to idle workers?).
 
-6. **build:panda-system** — `process.exit(0)` after main() to avoid event-loop hang.
+### Why Phase 2 Hung
 
-### Test Environment vs pnpm dev
+- **Gen worker misses config:ready** — Piscina race: config:ready can fire before gen registers.
+- **Packager in cold mode** — Packager returns after initial bundle; when gen emits `system:compiled`, does the idle worker receive it via BroadcastChannel?
+- **Gates** — `packager:complete` fires from first run; we exited before gen finished.
 
-**pnpm dev works** — Watch mode. Gen worker stays alive (KEEP_ALIVE), listens for `config:ready` with `on()`. Packager listens for `system:compiled`. No exit gate; process stays alive for watch.
+### Open Questions (for Phase 2)
 
-**Test env hangs** — Cold sync. `ref sync` runs once, must exit. We need: gen runs Panda → emits `system:compiled` → packager rebundles with consumer styles → process exits. We added gate `packager:consumer-ready` so we wait for consumer styles before exit.
-
-### What Went Wrong
-
-1. **Packager never rebundles in cold mode** — Originally packager only listened for `system:compiled` in watch mode. Fixed: packager always registers `on('system:compiled')`.
-
-2. **Process exits before consumer styles copied** — Gates were `packager:complete`, `packager-ts:complete`. Those fire from initial run; we exited before gen completed. Added `packager:consumer-ready` gate, emitted when packager copies from consumer system. `gen:failed` fallback so we don't hang if gen fails.
-
-3. **Gen worker misses config:ready** — Cold mode: gen used `once('config:ready')` and blocked. Piscina thread pool race: config:ready can fire before gen worker has run and registered. Gen never receives, hangs forever.
-
-4. **Fix attempted: system spawns gen** — System worker calls `runWorker('gen', ...)` after runConfig. Guaranteed order: config exists before gen runs. initGen does nothing in cold mode. **Still hangs** — suspected BroadcastChannel cross-thread delivery: packager worker registers listener, returns; when gen emits `system:compiled`, does the (now idle) packager thread receive it? Unclear.
-
-### Open Questions
-
-- Does BroadcastChannel deliver to idle Piscina workers after they return?
-- Alternative: run cold sync in main thread (no workers) to eliminate cross-thread events?
-- Or: packager blocks on a shared promise/queue until system:compiled processed?
+- Does BroadcastChannel deliver to idle Piscina workers?
+- Alternative: cold sync in main thread (no workers)?
+- Or: packager blocks on a promise until system:compiled processed?
 
 ---
 
-## 8. Sync Flow (Post-Isolation)
+## 8. Sync Flow (Phase 1 — System-Only)
 
-1. **initSystem** — createPandaConfig → writes `core/.ref/panda-<slug>.config.ts`; in cold mode, spawns gen after config
-2. **initPackager** — initial bundle; uses `core/src/system` if consumer system not yet built; listens for system:compiled
-3. **gen** — Panda `generate()` with cwd=consumer, outdir=`consumer/.reference-ui/internal/system`; cold: spawned by system; watch: initGen, listens config:ready
-4. **createBaseSystem** — reads `consumer/.reference-ui/internal/system/styles.css`, writes baseSystem.mjs
-5. **Packager** — copies from consumer system; esbuild alias redirects `../system/*` to consumer
-6. **ref sync complete** — consumer has isolated output
+1. **initPackager** — initial bundle (core's `src/system` must exist from core build)
+2. **initSystem** — createPandaConfig → `core/panda.config.ts`; emits config:ready
+3. **initGen** — runs Panda `cwd: coreDir`, output → `coreDir/src/system`
+4. **createBaseSystem** — reads `coreDir/src/system/styles.css`
+5. **Packager** — copies from `coreDir/src/system` (cold: initial run; watch: system:compiled)
+6. **ref sync complete** — gates: packager:complete [, packager-ts:complete]; process.exit(0)
