@@ -1,7 +1,6 @@
-export { broadcastChannel, channelListeners } from './channel'
-export { config } from './config'
-export { initEventBus } from './init'
-export { emit } from './emit'
-export { off } from './off'
-export { on, once } from './on'
-export { onceAll } from './onceAll'
+import { broadcastChannel, emit, initEventBus, off, on, once, onceAll } from './channel'
+import { config } from './config'
+import type { Events } from '../../events'
+
+export { broadcastChannel, config, emit, initEventBus, off, on, once, onceAll }
+export type { Events }

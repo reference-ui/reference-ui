@@ -1,13 +1,16 @@
 import { once } from './on'
+import type { Events } from '../../../events'
 
 /**
  * Run callback once when all listed events have fired at least once.
- * Events can fire in any order.
+ * Events can fire in any order. Callback runs only once.
  */
-export function onceAll(
-  events: string[],
+export function onceAll<K extends keyof Events>(
+  events: K[],
   handler: () => void | Promise<void>
-): void {
+): void
+export function onceAll(events: string[], handler: () => void | Promise<void>): void
+export function onceAll(events: string[], handler: () => void | Promise<void>) {
   if (events.length === 0) {
     handler()
     return
