@@ -1,0 +1,23 @@
+{
+  "name": "@reference-ui/cli",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Reference UI CLI",
+  "type": "module",
+  "bin": {
+    "ref": "./dist/cli/index.mjs"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "sync": "node dist/cli/index.mjs sync"
+  },
+  "dependencies": {
+    "commander": "^14.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^25.1.0",
+    "tsup": "^8.4.0",
+    "typescript": "~5.9.3"
+  }
+}

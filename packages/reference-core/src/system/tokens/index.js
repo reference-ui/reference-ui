@@ -791,18 +791,6 @@ const tokens = {
     "value": "oklch(27.1% 0.105 12.094)",
     "variable": "var(--colors-rose-950)"
   },
-  "colors.test.primary": {
-    "value": "#2563eb",
-    "variable": "var(--colors-test-primary)"
-  },
-  "colors.test.muted": {
-    "value": "#94a3b8",
-    "variable": "var(--colors-test-muted)"
-  },
-  "colors.refLibCanary": {
-    "value": "rgb(0, 191, 165)",
-    "variable": "var(--colors-ref-lib-canary)"
-  },
   "spacing.px": {
     "value": "1px",
     "variable": "var(--spacing-px)"
@@ -875,14 +863,6 @@ const tokens = {
     "value": "calc(12 * var(--spacing-r))",
     "variable": "var(--spacing-12r)"
   },
-  "spacing.test-sm": {
-    "value": "0.5rem",
-    "variable": "var(--spacing-test-sm)"
-  },
-  "spacing.test-md": {
-    "value": "1rem",
-    "variable": "var(--spacing-test-md)"
-  },
   "radii.none": {
     "value": "0",
     "variable": "var(--radii-none)"
@@ -918,10 +898,6 @@ const tokens = {
   "radii.full": {
     "value": "9999px",
     "variable": "var(--radii-full)"
-  },
-  "radii.test-round": {
-    "value": "0.5rem",
-    "variable": "var(--radii-test-round)"
   },
   "animations.spin.slow": {
     "value": "spin 4s linear infinite",
@@ -1087,10 +1063,6 @@ const tokens = {
     "value": "700",
     "variable": "var(--font-weights-mono\\.bold)"
   },
-  "borderWidths.test-1": {
-    "value": "2px",
-    "variable": "var(--border-widths-test-1)"
-  },
   "spacing.-px": {
     "value": "calc(var(--spacing-px) * -1)",
     "variable": "var(--spacing-px)"
@@ -1163,14 +1135,6 @@ const tokens = {
     "value": "calc(var(--spacing-12r) * -1)",
     "variable": "var(--spacing-12r)"
   },
-  "spacing.-test-sm": {
-    "value": "calc(var(--spacing-test-sm) * -1)",
-    "variable": "var(--spacing-test-sm)"
-  },
-  "spacing.-test-md": {
-    "value": "calc(var(--spacing-test-md) * -1)",
-    "variable": "var(--spacing-test-md)"
-  },
   "colors.colorPalette.50": {
     "value": "var(--colors-color-palette-50)",
     "variable": "var(--colors-color-palette-50)"
@@ -1214,18 +1178,6 @@ const tokens = {
   "colors.colorPalette.950": {
     "value": "var(--colors-color-palette-950)",
     "variable": "var(--colors-color-palette-950)"
-  },
-  "colors.colorPalette.primary": {
-    "value": "var(--colors-color-palette-primary)",
-    "variable": "var(--colors-color-palette-primary)"
-  },
-  "colors.colorPalette.muted": {
-    "value": "var(--colors-color-palette-muted)",
-    "variable": "var(--colors-color-palette-muted)"
-  },
-  "colors.colorPalette": {
-    "value": "var(--colors-color-palette)",
-    "variable": "var(--colors-color-palette)"
   }
 }
 

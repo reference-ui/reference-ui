@@ -35,6 +35,9 @@ importers:
 
   packages/reference-app:
     dependencies:
+      '@reference-ui/cli':
+        specifier: workspace:*
+        version: link:../reference-cli
       react:
         specifier: ^18.2.0
         version: 18.3.1
@@ -42,9 +45,6 @@ importers:
         specifier: ^18.2.0
         version: 18.3.1(react@18.3.1)
     devDependencies:
-      '@reference-ui/core':
-        specifier: workspace:*
-        version: link:../reference-core
       '@types/react':
         specifier: ^18.2.0
         version: 18.3.27
@@ -60,6 +60,25 @@ importers:
       vite:
         specifier: ^6.0.0
         version: 6.4.1(@types/node@25.1.0)(lightningcss@1.30.2)(tsx@4.21.0)(yaml@2.8.2)
+      vitest:
+        specifier: ^4.0.18
+        version: 4.0.18(@types/node@25.1.0)(lightningcss@1.30.2)(tsx@4.21.0)(yaml@2.8.2)
+
+  packages/reference-cli:
+    dependencies:
+      commander:
+        specifier: ^14.0.3
+        version: 14.0.3
+    devDependencies:
+      '@types/node':
+        specifier: ^25.1.0
+        version: 25.1.0
+      tsup:
+        specifier: ^8.4.0
+        version: 8.5.1(@swc/core@1.5.29(@swc/helpers@0.5.18))(postcss@8.5.6)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2)
+      typescript:
+        specifier: ~5.9.3
+        version: 5.9.3
 
   packages/reference-core:
     dependencies:
