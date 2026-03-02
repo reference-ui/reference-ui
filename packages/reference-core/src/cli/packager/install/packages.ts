@@ -3,16 +3,28 @@ import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs'
 import type { PackageDefinition } from '../package'
 import { installPackage } from './package'
 import { ENABLE_REFERENCE_UI_SYMLINKS } from './package'
+import type { ReferenceUIConfig } from '../../config'
 
 const STYLES_SRC = 'src/system/styles.css'
 
+/** Append config.layers[].css to base styles content. */
+function appendLayerCss(content: string, config?: ReferenceUIConfig): string {
+  const layers = config?.layers ?? []
+  if (layers.length === 0) return content
+  const layerCss = layers.filter(s => s?.css).map(s => s!.css!).join('\n\n')
+  if (!layerCss) return content
+  return content + '\n\n' + layerCss
+}
+
 /**
  * Copy styles.css from core to the React package install location.
+ * Appends config.layers[].css for layer consumers.
  * Hot path: called on panda:css:compiled for fast pixels.
  */
 export function copyStylesToReactPackage(
   coreDir: string,
-  userProjectDir: string
+  userProjectDir: string,
+  config?: ReferenceUIConfig
 ): boolean {
   const srcPath = resolve(coreDir, STYLES_SRC)
   if (!existsSync(srcPath)) return false
@@ -24,7 +36,8 @@ export function copyStylesToReactPackage(
     : resolve(refUiScopeDir, 'react')
   const destPath = resolve(targetDir, 'styles.css')
 
-  const content = readFileSync(srcPath, 'utf-8')
+  const baseContent = readFileSync(srcPath, 'utf-8')
+  const content = appendLayerCss(baseContent, config)
   mkdirSync(dirname(destPath), { recursive: true })
 
   try {

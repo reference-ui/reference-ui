@@ -13,6 +13,8 @@ export interface BaseSystem {
   font: Record<string, unknown>
   keyframes: Record<string, unknown>
   globalCss: Record<string, unknown>
+  /** Pre-compiled component CSS for layers mode. Scoped to @layer &lt;name&gt; + [data-layer] token block. */
+  css?: string
 }
 
 export interface ReferenceUIConfig {
@@ -36,6 +38,13 @@ export interface ReferenceUIConfig {
    * Each entry is a BaseSystem (from dist/baseSystem.mjs of another package).
    */
   extends?: BaseSystem[]
+
+  /**
+   * Include an upstream system's component CSS in an isolated cascade layer.
+   * Components render correctly. Tokens do NOT land in your Panda config or TypeScript types.
+   * Each entry must have a `css` field (run `ref sync` on the upstream package first).
+   */
+  layers?: BaseSystem[]
 
   /**
    * Virtual directory where transformed files are written.

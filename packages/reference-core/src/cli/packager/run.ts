@@ -14,11 +14,14 @@ export interface PackagerWorkerPayload {
 
 /** Run full bundle + install. Emits packager:complete when done. */
 export async function runBundle(payload: PackagerWorkerPayload): Promise<void> {
-  const { cwd } = payload
+  const { cwd, config } = payload
   const coreDir = resolveCorePackageDir(cwd)
 
   log.debug('packager', '📦 Packaging...')
   await installPackages(coreDir, cwd, PACKAGES)
+  if (copyStylesToReactPackage(coreDir, cwd, config)) {
+    log.debug('packager', 'styles.css (+layers) → React package')
+  }
   log.debug('packager', `✅ ${PACKAGES.length} package(s) ready`)
 
   emit('packager:complete', {})
@@ -26,9 +29,9 @@ export async function runBundle(payload: PackagerWorkerPayload): Promise<void> {
 
 /** Copy styles.css only (hot path when Panda compiles). */
 export function runCopyStyles(payload: PackagerWorkerPayload): void {
-  const { cwd } = payload
+  const { cwd, config } = payload
   const coreDir = resolveCorePackageDir(cwd)
-  if (copyStylesToReactPackage(coreDir, cwd)) {
+  if (copyStylesToReactPackage(coreDir, cwd, config)) {
     log.debug('packager', 'styles.css → React package (hot path)')
   }
 }

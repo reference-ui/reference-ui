@@ -1,16 +1,19 @@
-import { css } from '@reference-ui/react'
+import { Div } from '@reference-ui/react'
 
 /**
- * Uses refLibCanary from @reference-ui/lib baseSystem.
- * Only works when ui.config has extends: [baseSystem] from @reference-ui/lib.
+ * Uses refLibCanary from @reference-ui/lib baseSystem via extends.
+ * Token is on :root. Works when ui.config has extends: [baseSystem].
+ * Uses var() so it also works when testing layers (token on data-layer).
  */
 export default function ExtendsTest() {
   return (
-    <div
-      data-testid="extends-test"
-      className={css({ color: 'refLibCanary' })}
-    >
-      ExtendsTest: refLibCanary
-    </div>
+    <Div>
+      <span
+        data-testid="extends-test"
+        style={{ color: 'var(--colors-ref-lib-canary)' }}
+      >
+        ExtendsTest: refLibCanary
+      </span>
+    </Div>
   )
 }
