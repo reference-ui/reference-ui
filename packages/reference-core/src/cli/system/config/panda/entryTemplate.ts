@@ -1,4 +1,4 @@
-import type { BaseSystem } from '../../../config'
+import type { BaseSystem } from '@reference-ui/cli/config'
 import { toRelativeImport } from '../../../lib/path'
 
 export interface BuildPandaEntryOptions {

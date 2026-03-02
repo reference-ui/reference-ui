@@ -6,7 +6,7 @@ import { getVirtualPath } from './utils'
 import { log } from '../lib/log'
 import { emit } from '../event-bus'
 import { GLOB_CONFIG } from './config.internal'
-import type { ReferenceUIConfig } from '../config'
+import type { ReferenceUIConfig } from '@reference-ui/cli/config'
 
 export interface VirtualWorkerPayload {
   sourceDir: string

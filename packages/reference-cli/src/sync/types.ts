@@ -1,4 +1,4 @@
-import type { ReferenceUIConfig } from '@reference-ui/cli/config'
+import type { ReferenceUIConfig } from '../config'
 
 export interface SyncOptions {
   watch?: boolean
