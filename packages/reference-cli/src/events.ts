@@ -1,4 +1,4 @@
-import type { SyncEvents } from './sync/event-types'
+import type { SyncEvents } from './sync/types'
 import type { WatchEvents } from './watch/events'
 
 /**

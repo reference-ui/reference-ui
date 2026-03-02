@@ -1,8 +1,6 @@
 import { emit, on } from '../lib/event-bus'
 import type { SyncPayload } from './types'
 
-export type { SyncEvents } from './event-types'
-
 /**
  * Hub for the sync flow – wires events together.
  */
