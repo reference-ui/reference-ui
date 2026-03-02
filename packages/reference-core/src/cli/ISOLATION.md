@@ -259,6 +259,21 @@ We attempted full per-consumer isolation and reverted due to complexity:
 - Alternative: cold sync in main thread (no workers)?
 - Or: packager blocks on a promise until system:compiled processed?
 
+### Event-Driven packager:consumer-ready (Latest Attempt — Failed)
+
+**What we tried:** Use events so packager rebundles after gen without touching syncCommand. Cold mode gate waits for `packager:consumer-ready` instead of `packager:complete`.
+
+1. **Packager worker** — In cold mode, register `on('system:compiled', ...)` after initial bundle. Handler runs `runBundle`, emits `packager:consumer-ready`.
+2. **Packager-ts worker** — Listen for `packager:consumer-ready`, run dts gen, emit `packager-ts:consumer-ready`.
+3. **initSyncComplete** — Cold gate: `onceAll(['packager:consumer-ready', 'packager-ts:consumer-ready'])`.
+
+**Why it failed:** Packager worker returns to the Piscina pool after the initial bundle. When gen emits `system:compiled`, the packager thread must receive it via BroadcastChannel. Either: (a) BroadcastChannel does not deliver to idle/returned workers, or (b) the handler runs but something else fails (process exits before handler? gate never fires?). Outcome: token tests still fail (rgb(0,0,0) instead of consumer color) — consumer tokens never reach the bundle, so the rebundle either never ran or never completed before exit.
+
+**Takeaways:**
+- Same underlying question: does BroadcastChannel deliver to idle Piscina workers?
+- Event-driven design kept syncCommand untouched but did not fix the cold-sync ordering.
+- May need to abandon workers for cold mode and run packager → system → gen → packager (rebundle) → packager-ts sequentially in the main thread.
+
 ---
 
 ## 8. Sync Flow (Phase 1 — System-Only)
