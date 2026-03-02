@@ -13,14 +13,14 @@ export interface DummyPayload {
 }
 
 export default async function runDummy(payload: DummyPayload = {}): Promise<never> {
-  const fire = (p: unknown) => {
-    setTimeout(() => emit('sync:complete', p), DELAY_MS)
+  const fire = () => {
+    setTimeout(() => emit('sync:complete'), DELAY_MS)
   }
 
-  on('sync:changed', fire)
+  on('sync:changed', () => fire())
 
   if (payload.triggerImmediately) {
-    fire({})
+    fire()
   }
 
   return KEEP_ALIVE
