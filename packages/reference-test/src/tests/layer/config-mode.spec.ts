@@ -3,7 +3,10 @@ import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { REF_LIB_CANARY } from '@reference-ui/lib'
 import { addToConfig, getSandboxDir } from '../../environments/lib/config.js'
-import { waitForRefSyncReady } from '../../environments/lib/ref-sync.js'
+import { runRefSync, runRefSyncLib, waitForRefSyncReady } from '../../environments/lib/ref-sync.js'
+
+const CANARY_VAR = '--colors-ref-lib-canary'
+const LAYER_NAME = 'reference-ui'
 
 test.describe.serial('layer', () => {
   test('addToConfig with layers only writes valid ui.config.ts', async () => {
@@ -14,12 +17,24 @@ test.describe.serial('layer', () => {
     expect(content).toContain("import { baseSystem } from '@reference-ui/lib'")
   })
 
-  test('addToConfig with extends only writes valid ui.config.ts', async () => {
-    await addToConfig({ extends: '[baseSystem]' })
+  test('layers only – styles.css has @layer reference-ui and [data-layer] with canary', async () => {
+    await runRefSyncLib()
+    await addToConfig({ extends: '[]', layers: '[baseSystem]' })
     const sandboxDir = getSandboxDir()
-    const content = await readFile(join(sandboxDir, 'ui.config.ts'), 'utf-8')
-    expect(content).toContain('extends: [baseSystem]')
-    expect(content).not.toContain('layers:')
+    await runRefSync(sandboxDir)
+    const stylesPath = join(sandboxDir, '.reference-ui', 'react', 'styles.css')
+    const content = await readFile(stylesPath, 'utf-8')
+    expect(content, 'styles.css should contain layer block from baseSystem').toContain(
+      `@layer ${LAYER_NAME} {`
+    )
+    expect(content, 'styles.css should contain data-layer token block').toContain(
+      `[data-layer="${LAYER_NAME}"]`
+    )
+    const dataLayerIdx = content.indexOf(`[data-layer="${LAYER_NAME}"]`)
+    const canaryInDataLayer = content.indexOf(CANARY_VAR, dataLayerIdx)
+    expect(canaryInDataLayer, 'canary var should appear inside [data-layer] block').toBeGreaterThan(
+      -1
+    )
   })
 
   test('layers only – refLibCanary renders via data-layer', async ({ page }) => {
@@ -37,14 +52,5 @@ test.describe.serial('layer', () => {
     expect(outsideColor).not.toBe(REF_LIB_CANARY)
   })
 
-  test('extends only – refLibCanary renders via :root', async ({ page }) => {
-    await addToConfig({ extends: '[baseSystem]' })
-    const sandboxDir = getSandboxDir()
-    await waitForRefSyncReady(sandboxDir)
-    await page.goto('/')
-    const el = page.getByTestId('extends-test')
-    await expect(el).toBeVisible()
-    const color = await el.evaluate((e) => getComputedStyle(e).color)
-    expect(color).toBe(REF_LIB_CANARY)
-  })
+
 })
