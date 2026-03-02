@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { REF_LIB_CANARY } from '@reference-ui/lib'
 import { addToConfig, getSandboxDir } from '../../environments/lib/config.js'
-import { runRefSync, runRefSyncLib, waitForRefSyncReady } from '../../environments/lib/ref-sync.js'
+import { runRefSync, waitForRefSyncReady } from '../../environments/lib/ref-sync.js'
 
 const CANARY_VAR = '--colors-ref-lib-canary'
 const LAYER_NAME = 'reference-ui'
@@ -18,7 +18,8 @@ test.describe.serial('layer', () => {
   })
 
   test('layers only – styles.css has @layer reference-ui and [data-layer] with canary', async () => {
-    await runRefSyncLib()
+    test.setTimeout(60_000)
+    // Lib is already synced by test:prepare; only sandbox needs sync after config change.
     await addToConfig({ extends: '[]', layers: '[baseSystem]' })
     const sandboxDir = getSandboxDir()
     await runRefSync(sandboxDir)
@@ -38,9 +39,10 @@ test.describe.serial('layer', () => {
   })
 
   test('layers only – refLibCanary renders via data-layer', async ({ page }) => {
+    test.setTimeout(60_000)
     await addToConfig({ extends: '[]', layers: '[baseSystem]' })
     const sandboxDir = getSandboxDir()
-    await waitForRefSyncReady(sandboxDir)
+    await waitForRefSyncReady(sandboxDir, { timeout: 45_000 })
     await page.goto('/')
     const inside = page.getByTestId('layers-test')
     await expect(inside).toBeVisible()

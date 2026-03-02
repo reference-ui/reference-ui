@@ -52,6 +52,7 @@ export async function runRefSync(sandboxDir: string): Promise<void> {
   await execa('node', [CORE_CLI, 'sync'], {
     cwd: sandboxDir,
     stdio: 'pipe',
+    timeout: 45_000,
   })
 }
 
@@ -60,5 +61,6 @@ export async function runRefSyncLib(): Promise<void> {
   await execa('node', [CORE_CLI, 'sync'], {
     cwd: LIB_PATH,
     stdio: 'pipe',
+    timeout: 45_000,
   })
 }
