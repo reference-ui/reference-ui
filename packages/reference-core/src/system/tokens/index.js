@@ -799,6 +799,10 @@ const tokens = {
     "value": "#94a3b8",
     "variable": "var(--colors-test-muted)"
   },
+  "colors.refLibCanary": {
+    "value": "rgb(0, 191, 165)",
+    "variable": "var(--colors-ref-lib-canary)"
+  },
   "spacing.px": {
     "value": "1px",
     "variable": "var(--spacing-px)"
@@ -1218,6 +1222,10 @@ const tokens = {
   "colors.colorPalette.muted": {
     "value": "var(--colors-color-palette-muted)",
     "variable": "var(--colors-color-palette-muted)"
+  },
+  "colors.colorPalette": {
+    "value": "var(--colors-color-palette)",
+    "variable": "var(--colors-color-palette)"
   }
 }
 
