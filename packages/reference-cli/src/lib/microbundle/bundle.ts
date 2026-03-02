@@ -1,29 +1,6 @@
 import * as esbuild from 'esbuild'
-
-export interface MicroBundleOptions {
-  /** Modules to leave as require/import (not bundled). Defaults to heavy build-tool deps. */
-  external?: string[]
-  format?: 'esm' | 'cjs' | 'iife'
-  platform?: 'node' | 'browser' | 'neutral'
-  target?: string | string[]
-  minify?: boolean
-  keepNames?: boolean
-  treeShaking?: boolean
-  mainFields?: string[]
-  conditions?: string[]
-}
-
-/** Default externals: heavy build-tool / CLI deps we typically don't want to inline. */
-const DEFAULT_EXTERNALS: string[] = [
-  '@pandacss/dev',
-  'esbuild',
-  'fast-glob',
-  'tsdown',
-  'rolldown',
-  'unconfig',
-  'unrun',
-  'birpc',
-]
+import { DEFAULT_EXTERNALS } from './externals'
+import type { MicroBundleOptions } from './types'
 
 /**
  * Micro-bundle an entry file with esbuild and return the output as a string.
@@ -67,8 +44,6 @@ export async function microBundle(
 
   const output = result.outputFiles?.[0]
   if (!output?.text) {
-    // No output means the file has no executable code (comments only, type-only, etc.)
-    // This is fine - just return empty string
     return ''
   }
   return output.text
