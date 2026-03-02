@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 import { Command } from 'commander'
+import { log } from './lib/log'
+import { runCommand } from './lib/run'
+import { syncCommand, type SyncOptions } from './sync'
 
 async function main(): Promise<void> {
   const program = new Command()
@@ -7,24 +10,22 @@ async function main(): Promise<void> {
   program
     .name('ref')
     .description('Reference UI CLI')
-    .version('0.0.1', '-v, --version')
+    .version('0.1.0', '-v, --version')
 
   program
     .command('sync', { isDefault: true })
     .description('Build and sync the design system')
     .option('-w, --watch', 'Watch for changes and rebuild')
-    .action((options: { watch?: boolean }) => {
-      console.log('hello world')
-      if (options.watch) {
-        // Keep process alive when running in background
-        setInterval(() => {}, 60_000)
-      }
-    })
+    .action(
+      runCommand((options) =>
+        syncCommand(process.cwd(), options as SyncOptions)
+      )
+    )
 
   program.parse()
 }
 
 main().catch((err) => {
-  console.error('Fatal error:', err)
+  log.error('Fatal error:', err)
   process.exit(1)
 })
