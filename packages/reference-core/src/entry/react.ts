@@ -4,10 +4,6 @@
 export * from '../primitives'
 
 export { Flex, Stack, HStack, VStack } from '../system/jsx/index.js'
-export { Button } from '../components/Button.js'
-export { ResponsiveExample } from '../components/ResponsiveExample.js'
-export { RecipeCoreDemo } from '../components/RecipeCoreDemo.js'
-export type { ButtonProps } from '../components/Button.js'
 
 export { css } from '../styled/api/index.js'
 

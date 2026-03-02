@@ -1,4 +1,4 @@
-import { Div, H2, H3, P } from '../primitives/index.js'
+import { Div, H2, H3, P } from '@reference-ui/react'
 
 const resizable = {
   border: '[2px solid #666]',
