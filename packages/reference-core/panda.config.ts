@@ -1864,7 +1864,7 @@ var baseConfig = {
   presets: [],
   jsxFramework: "react",
   preflight: true,
-  include: [".virtual/**/*.{ts,tsx,js,jsx}", "src/**/*.{ts,tsx,js,jsx}"],
+  include: ["/Users/ryn/Developer/reference-ui/packages/reference-test/.sandbox/react19-vite5/.reference-ui/virtual/**/*.{ts,tsx,js,jsx}", "src/**/*.{ts,tsx,js,jsx}"],
   exclude: [
     "**/node_modules/**",
     "**/*.test.*",

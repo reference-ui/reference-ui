@@ -5,7 +5,7 @@
   "description": "Reference UI - Knowledge-First Components",
   "scripts": {
     "build": "pnpm -r run build",
-    "dev": "pnpm --filter @reference-ui/core run build && concurrently --kill-others-on-fail -n core,docs -c blue,green \"pnpm --filter @reference-ui/core run dev\" \"pnpm --filter @reference-ui/reference-docs run dev\"",
+    "dev": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/lib run sync && concurrently --kill-others-on-fail -n core,docs -c blue,green \"pnpm --filter @reference-ui/core run dev\" \"pnpm --filter @reference-ui/reference-docs run dev\"",
     "test": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/reference-test run test",
     "test:quick": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/reference-test run test:quick",
     "test:lib": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/lib run test"
