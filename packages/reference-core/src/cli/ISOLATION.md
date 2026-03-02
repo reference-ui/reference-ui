@@ -1,81 +1,204 @@
-# Isolation — Symlink Corruption & Per-Consumer Outputs
+# Isolation — Per-Consumer Outputs
 
-## Problem: Shared State Across Consumers
+Multiple consumers (reference-lib, reference-docs, etc.) run `ref sync` in the same monorepo. Without isolation, they overwrite each other's outputs because they share physical paths through symlinked `@reference-ui/core`.
 
-When multiple packages in a monorepo run `ref sync`, they share physical paths through symlinks. That causes corruption and non-determinism.
+---
 
-### What Gets Shared
+## 1. Problem: Shared State
 
-| Artefact | Location | Problem |
-| -------- | -------- | ------- |
-| **src/system/** | `reference-core/src/system/` | Panda writes styles, jsx factory, patterns, recipes, types here. All consumers use the same `@reference-ui/core` (symlinked) → same `src/system/`. Last writer wins. |
-| **panda.config.ts** | Was `reference-core/panda.config.ts`, now `consumer/.reference-ui/panda.config.ts` | Previously shared; moved to consumer. Config content is now per-consumer. |
-| **eval / .ref/** | `reference-core/.ref/` | Eval fragments, panda-entry, collected JSON. All consumers share this dir when core is symlinked. |
-| **.virtual/** | Was `reference-core/.virtual/`, now `consumer/.reference-ui/virtual/` | Virtual file copy — previously shared; moved to consumer. |
+### What Gets Shared When Core Is Symlinked
+
+| Artefact | Shared Location | Problem |
+| -------- | -------------- | ------- |
+| **src/system/** | `reference-core/src/system/` | Panda writes styles, jsx, patterns, recipes, types. Last writer wins. |
+| **panda.config.ts** | `reference-core/panda.config.ts` | Per-consumer config overwritten. |
+| **.ref/** | `reference-core/.ref/` | Eval fragments, panda-entry, collected JSON. |
+| **.virtual/** | `reference-core/.virtual/` | Virtual file copies. |
 
 ### Why Symlinks Cause It
 
-- `reference-docs`, `reference-lib`, `reference-app` depend on `@reference-ui/core` (workspace)
+- Consumers depend on `@reference-ui/core` (workspace)
 - pnpm symlinks `node_modules/@reference-ui/core` → `packages/reference-core`
-- `resolveCorePackageDir(cwd)` returns `packages/reference-core` for all consumers
-- Any output under `reference-core/` is shared; concurrent or sequential syncs overwrite each other
+- `resolveCorePackageDir(cwd)` returns the same core path for all consumers
+- Any output under `reference-core/` is shared
 
 ### Symptoms
 
-- `styled` / `factory` import errors — `src/system/jsx/factory.js` has no exports because it was overwritten for a different consumer
-- Token bleed — one package’s tokens appear in another’s
-- Config from wrong consumer — include paths, virtual dir, extends pointing to the wrong project
-- Flaky tests — order of `pnpm dev` or test matrix changes which consumer’s output “wins”
+- `Could not resolve "../../../system/css/index.js"` — system missing or wrong consumer's output
+- Token bleed — one package's tokens appear in another
+- Styled/factory import errors — jsx/factory.js overwritten for different consumer
+- Flaky tests — order of sync/test changes which output "wins"
 
 ---
 
-## Solution: Per-Consumer Isolation Under `.reference-ui/`
+## 2. Solution: Per-Consumer Layout
 
-Move all mutable, consumer-specific outputs into the consumer project:
+Move mutable outputs into the consumer project:
 
 ```
 consumer/.reference-ui/
-├── panda.config.ts     # already moved
-├── virtual/            # already moved
-└── internal/           # NEW: isolate everything else
-    ├── system/         # Panda outdir (styles, jsx, patterns, recipes, types)
-    ├── .ref/           # Eval temp (panda-entry, fragments, collected JSON)
-    └── (any other eval/codegen temp files)
+├── panda.config.ts        # Per-consumer Panda config (createPandaConfig)
+├── virtual/               # Virtual file copies for Panda scanning
+└── internal/              # Internal outputs (not user-editable)
+    ├── system/            # Panda outdir (styles.css, jsx, patterns, recipes, tokens)
+    └── .ref/              # Eval temp (panda-entry, collected JSON)
 ```
 
-### Changes Required
-
-1. **Panda outdir** — `outdir: 'src/system'` → `outdir: '.reference-ui/internal/system'` (relative to consumer cwd). All Panda output goes to consumer, not core.
-
-2. **createPandaConfig** — Already writes to `consumer/.reference-ui/panda.config.ts`. Keep. Optionally move to `.reference-ui/internal/panda.config.ts` for consistency.
-
-3. **Eval / .ref** — Write to `consumer/.reference-ui/internal/.ref/` instead of `coreDir/.ref/`. Entry files, bundled fragments, collected JSON live in consumer.
-
-4. **createBaseSystem** — Reads `coreDir/src/system/styles.css`. After (1), that path becomes `consumer/.reference-ui/internal/system/styles.css`. Pass consumer path.
-
-5. **Packager** — Copies styles from Panda output to install location. Source path changes from `coreDir/src/system/` to `consumer/.reference-ui/internal/system/`.
-
-6. **Virtual** — Already at `consumer/.reference-ui/virtual/`. No change.
-
-7. **Imports in source** — Primitives, entry/react, etc. import from `../system/jsx`, `../system/patterns/box`, etc. Those paths resolve at runtime in the built `@reference-ui/react` package. The packager bundles from… core’s source? Or from the installed output? Need to trace: packager reads styles from core; it also bundles react entry. The react entry imports from system. So system must exist and be correct when the packager runs. If system moves to consumer, the packager needs to read from `consumer/.reference-ui/internal/system/` or from wherever the “canonical” system is. For the React bundle, we probably still build from core’s system (or a copied path). The key is: Panda writes to consumer; we copy from there. The packager’s input could be the consumer’s system output. Full trace needed. See packager flow.
+**Core still needs its own `src/system/`** — generated during core build for bootstrap (see §4).
 
 ---
 
-## Migration Order
+## 3. Implementation Tasks (Migration Order)
 
-1. **panda.config.ts** — Done (consumer `.reference-ui/`).
-2. **virtual** — Done (consumer `.reference-ui/virtual/`).
-3. **.ref** — Move eval temp dir to `consumer/.reference-ui/internal/.ref/`.
-4. **Panda outdir** — Change to `consumer/.reference-ui/internal/system/`; update all readers (createBaseSystem, packager).
-5. **Verification** — `pnpm dev` with lib + docs; both sync; neither corrupts the other.
+Use this list when breaking work into PRs. Order matters.
+
+### Task A: Path Helpers
+
+- [ ] `getRefDir(consumerDir)` → `consumer/.reference-ui/internal/.ref`
+- [ ] `getSystemDir(consumerDir)` → `consumer/.reference-ui/internal/system`
+- [ ] `getConsumerSlug(consumerDir)` → deterministic hash for per-consumer subdirs under core
+- [ ] `getPandaConfigPath(consumerDir)` → `consumer/.reference-ui/panda.config.ts`
+
+**Files:** `lib/path.ts`
 
 ---
 
-## References
+### Task B: createPandaConfig
 
-- `createPandaConfig.ts` — writes config; uses `.ref` in core.
-- `gen/code.ts` — runs Panda; reads config from consumer; Panda `cwd` and `outdir`.
-- `createBaseSystem.ts` — reads `coreDir/src/system/styles.css`.
-- `packager/install/packages.ts` — copies `coreDir/src/system/styles.css` to React package.
-- `virtual/run.ts`, `virtual/sync.ts` — use `consumer/.reference-ui/virtual/`.
-- `TODO.md` — Panda config bleed; isolation is the fuller fix.
+- [ ] Write config to `coreDir/.ref/panda-<consumerSlug>.config.ts` (config must live under core so Panda's loader resolves `@pandacss/dev`)
+- [ ] When `userProjectDir` set: replace `outdir: 'src/system'` with `outdir: '.reference-ui/internal/system'` in bundled output
+- [ ] Replace `src/**` include with absolute core src path when cwd=consumer
+- [ ] Replace `.virtual/**` with `consumer/.reference-ui/virtual/**`
+- [ ] Use `getRefDir(userProjectDir)` for panda-entry temp (or `coreDir/.ref` when no consumer)
+
+**Files:** `createPandaConfig.ts`
+
+---
+
+### Task C: Panda Execution (gen/code, gen/css)
+
+- [ ] Run Panda with `cwd: consumer`, `outdir: '.reference-ui/internal/system'`
+- [ ] Prefer `coreDir/.ref/panda-<slug>.config.ts` over `coreDir/panda.config.ts`
+- [ ] Config path must be under core (Panda resolves `@pandacss/dev` from core's node_modules)
+
+**Files:** `gen/code.ts`, `gen/css.ts`
+
+---
+
+### Task D: createBaseSystem
+
+- [ ] When `systemDir` provided: read `systemDir/styles.css` instead of `coreDir/src/system/styles.css`
+- [ ] Use `coreDir/.ref/<consumerSlug>/` for collect script (Node needs core for `@pandacss/dev`)
+
+**Files:** `createBaseSystem.ts`
+
+---
+
+### Task E: Packager
+
+- [ ] `copyStylesToReactPackage`: prefer `getSystemDir(consumer)/styles.css`, fallback to `coreDir/src/system/styles.css`
+- [ ] Bundler: when `systemDir` exists, use esbuild plugin to redirect `../system/*` imports to consumer system dir
+- [ ] Install: pass `systemDir` into `installPackage` so copy/bundle use consumer output
+
+**Files:** `packager/install/packages.ts`, `packager/bundler/esbuild.ts`, `packager/install/package.ts`
+
+---
+
+### Task F: Eval / runCollectScript
+
+- [ ] Eval temp: `coreDir/.ref/eval/<consumerSlug>/` (must stay under core for module resolution)
+- [ ] `runCollectScript` refDir: `getRefDir(consumer)` when consumer given, else `coreDir/.ref`
+
+**Files:** `eval/runner.ts`, `eval/index.ts`, `collectors/runCollectScript.ts`
+
+---
+
+### Task G: Core Build Bootstrap (Chicken-Egg Fix)
+
+- [ ] Add `build:system` script that generates `coreDir/src/system/` before tsup
+- [ ] Implement bootstrap stubs + Panda generate (see §4)
+- [ ] Add `src/system/` to core `.gitignore` (generated artifact)
+- [ ] Build order: `build:native` → `build:system` → `tsup`
+
+**Files:** `scripts/build-system.ts`, `scripts/bootstrap-system-stubs.ts`, `package.json`, `.gitignore`
+
+---
+
+### Task H: Verification
+
+- [ ] `pnpm dev` with lib + docs: both sync, neither corrupts the other
+- [ ] Delete `core/src/system`, run `pnpm build` from root: succeeds
+- [ ] Delete `consumer/.reference-ui`, run `ref sync`: recreates consumer output
+- [ ] Each consumer's tokens appear only in its own build
+
+---
+
+## 4. Chicken-Egg: Core Needs system Before system Exists
+
+### The Cycle
+
+1. **Panda generates `src/system/`** from config
+2. **Config loading** (`panda.base.ts`) imports `styled/index` → `primitives/recipes` → `styled/api` → **`styled/api/runtime`** (css.ts, recipe.ts)
+3. **css.ts and recipe.ts** import from `../../../system/css/index.js`
+4. **system doesn't exist yet** → resolution fails
+
+So: system is produced by Panda, but loading the config that Panda needs pulls in code that imports system.
+
+### Fix: Bootstrap Stubs
+
+1. **Before Panda runs:** write minimal stub files to `src/system/` so imports resolve.
+2. **Panda runs:** `generate()` overwrites stubs with real output.
+
+Stub coverage must match every path imported during config load:
+
+- `css/index.js` — `css`, `css.raw`, `cva`, `cx`, `sva` (Panda-generated exports)
+- `types/index.js`, `types/recipe.js`, `types/*.d.ts` — `SystemStyleObject`, `RecipeVariantRecord`, etc.
+- `helpers.js`, `patterns/box.js`, `jsx/index.js`, `recipes/index.js`, `tokens/index.js` — used by primitives, entry/react, etc.
+
+**Files:** `scripts/bootstrap-system-stubs.ts`, `scripts/build-system.ts`
+
+### Why Not createPandaConfig for Core Build?
+
+`createPandaConfig` bundles the config with esbuild. The bundle includes `styled/api` which imports `css.ts`/`recipe.ts` → system. Esbuild fails before Panda can run.
+
+### Why Not panda.base.ts Only?
+
+Panda's config loader (esbuild) also resolves imports when loading `panda.base.ts`. Same failure. Stubs are required either way.
+
+---
+
+## 5. Failure Modes & Debugging
+
+| Failure | Cause | Fix |
+| ------- | ----- | --- |
+| `Could not resolve "../../../system/css/index.js"` | system missing or packager using wrong path | Ensure `build:system` ran; check packager uses `getSystemDir(consumer)` when present |
+| Token bleed (docs tokens in lib) | Shared system or shared config | Verify Panda outdir is `consumer/.reference-ui/internal/system`; config under `core/.ref/panda-<slug>.config.ts` |
+| `panda.config.ts not found` | createPandaConfig didn't run or wrong path | initSystem runs before gen; config path from `core/.ref/panda-<slug>.config.ts` or `core/panda.config.ts` |
+| Build hangs after Panda | Event loop kept alive (event bus, etc.) | Call `process.exit(0)` after build script completes |
+| Stale system after isolation | Old core `src/system` committed | Add `src/system/` to `.gitignore`; rely on `build:system` |
+| Packager bundles wrong system | systemDir not passed or doesn't exist | Packager falls back to core `src/system`; consumer system must exist after first Panda run |
+
+---
+
+## 6. Key Files Reference
+
+| Area | Files |
+| ---- | ----- |
+| Paths | `lib/path.ts` |
+| Config | `createPandaConfig.ts`, `panda.base.ts` |
+| Panda run | `gen/code.ts`, `gen/css.ts` |
+| Base system | `createBaseSystem.ts` |
+| Packager | `packager/install/packages.ts`, `packager/bundler/esbuild.ts` |
+| Bootstrap | `scripts/build-system.ts`, `scripts/bootstrap-system-stubs.ts` |
+| Eval | `eval/runner.ts`, `eval/index.ts`, `collectors/runCollectScript.ts` |
+
+---
+
+## 7. Sync Flow (Post-Isolation)
+
+1. **initSystem** — createPandaConfig → writes `core/.ref/panda-<slug>.config.ts`
+2. **initPackager** — initial bundle; uses `core/src/system` if consumer system not yet built
+3. **initGen** — Panda `generate()` with cwd=consumer, outdir=`consumer/.reference-ui/internal/system`
+4. **createBaseSystem** — reads `consumer/.reference-ui/internal/system/styles.css`, writes baseSystem.mjs
+5. **Packager** — copies from consumer system; esbuild alias redirects `../system/*` to consumer
+6. **ref sync complete** — consumer has isolated output
