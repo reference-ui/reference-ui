@@ -7,13 +7,12 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const pkgRoot = resolve(__dirname, '..')
 
 /**
- * These tests run after globalSetup, which runs `ref sync` once then
- * spawns `ref sync --watch` in the background. This suite verifies
- * the precursor worked and the design system is ready.
+ * These tests run after globalSetup, which runs `ref sync` once.
+ * This suite verifies the precursor worked and the design system is ready.
  */
-describe('ref sync (precursor: setup runs ref sync + ref sync --watch)', () => {
+describe('ref sync (precursor: setup runs ref sync)', () => {
   it('ref sync runs successfully', { timeout: 10_000 }, () => {
-    execSync('ref sync', {
+    execSync('pnpm exec ref sync', {
       cwd: pkgRoot,
       stdio: 'pipe',
       timeout: 8_000,
