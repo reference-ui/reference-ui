@@ -8,3 +8,8 @@
 export type { ReferenceUIConfig, BaseSystem } from './types'
 export { defineConfig } from './types'
 export { loadUserConfig } from './load-config'
+export {
+  ConfigNotFoundError,
+  LoadConfigError,
+  ConfigValidationError,
+} from './errors'

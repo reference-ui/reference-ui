@@ -3,7 +3,7 @@ import { KEEP_ALIVE } from '../thread-pool'
 import { resolveCorePackageDir } from '../lib/resolve-core'
 import { runCodegen, onConfigReady } from './code'
 import { runCss } from './css'
-import type { ReferenceUIConfig } from '../config'
+import type { ReferenceUIConfig } from '@reference-ui/cli/config'
 
 export interface GenWorkerPayload {
   cwd: string

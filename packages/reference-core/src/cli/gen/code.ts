@@ -7,7 +7,7 @@ import { debounce } from '../lib/debounce'
 import { createBaseSystem } from '../system/config/baseSystem/createBaseSystem'
 import { resolveCorePackageDir } from '../lib/resolve-core'
 import { getSystemPackageDir } from '../packager/install'
-import type { ReferenceUIConfig } from '../config'
+import type { ReferenceUIConfig } from '@reference-ui/cli/config'
 
 /**
  * Run Panda full pipeline: codegen (TS utilities) + CSS extraction.

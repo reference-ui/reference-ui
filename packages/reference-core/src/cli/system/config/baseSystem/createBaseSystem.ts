@@ -1,6 +1,9 @@
 import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
-import type { ReferenceUIConfig, BaseSystem } from '../../../config'
+import type {
+  ReferenceUIConfig,
+  BaseSystem,
+} from '@reference-ui/cli/config'
 import { deepMerge } from '../utils/deepMerge'
 import { log } from '../../../lib/log'
 import { microBundle } from '../../../lib/microbundle'

@@ -3,8 +3,10 @@ import { emit, once } from '../event-bus'
 import { log } from '../lib/log'
 import { debounce } from '../lib/debounce'
 import { resolveCorePackageDir } from '../lib/resolve-core'
-import { loadUserConfig } from '../config'
-import type { ReferenceUIConfig } from '../config'
+import {
+  loadUserConfig,
+  type ReferenceUIConfig,
+} from '@reference-ui/cli/config'
 import { runEval } from './eval'
 import { createPandaConfig } from './config/panda'
 

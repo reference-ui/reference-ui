@@ -3,7 +3,7 @@ import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs'
 import type { PackageDefinition } from '../package'
 import { installPackage } from './package'
 import { ENABLE_REFERENCE_UI_SYMLINKS } from './package'
-import type { ReferenceUIConfig } from '../../config'
+import type { ReferenceUIConfig } from '@reference-ui/cli/config'
 
 const STYLES_SRC = 'src/system/styles.css'
 

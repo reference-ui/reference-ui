@@ -1,4 +1,4 @@
-import type { ReferenceUIConfig } from '../config'
+import type { ReferenceUIConfig } from '@reference-ui/cli/config'
 
 /**
  * Event registry - maps event names to their payload types

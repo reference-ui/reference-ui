@@ -1,11 +1,10 @@
-import { log } from '../lib/log'
-import { syncWorkers } from '../lib/thread-pool'
+import { log, setDebug } from '../lib/log'
+import { initEventBus } from '../lib/event-bus'
+import { bootstrap } from './bootstrap'
+import { initWatch } from '../watch/init'
+import type { SyncOptions } from './types'
 
-export type SyncOptions = {
-  watch?: boolean
-}
-
-const DEFAULT_INCLUDE = ['**/*.ts', '**/*.tsx', '**/*.css', '**/*.json']
+export type { SyncOptions, SyncPayload } from './types'
 
 /**
  * Sync command – main hub for the design system build pipeline.
@@ -15,14 +14,10 @@ export async function syncCommand(
   cwd: string,
   options?: SyncOptions
 ): Promise<void> {
-  log.info('hello world')
+  const payload = await bootstrap(cwd, options)
+  if (payload.config.debug) setDebug(true)
+  initEventBus()
+  initWatch(payload)
 
-  if (options?.watch) {
-    syncWorkers.runWorker('watch', {
-      sourceDir: cwd,
-      config: { include: DEFAULT_INCLUDE },
-    }).catch((err) => log.error('[watch]', err))
-    // Keep process alive
-    await new Promise(() => {})
-  }
+
 }

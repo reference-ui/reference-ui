@@ -3,7 +3,7 @@ import { copyToVirtual } from './copy'
 import { log } from '../lib/log'
 import { GLOB_CONFIG } from './config.internal'
 import type { InitVirtualOptions } from './types'
-import type { ReferenceUIConfig } from '../config'
+import type { ReferenceUIConfig } from '@reference-ui/cli/config'
 
 /**
  * Sync all files matching patterns to the virtual directory.

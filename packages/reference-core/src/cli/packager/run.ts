@@ -1,4 +1,4 @@
-import type { ReferenceUIConfig } from '../config'
+import type { ReferenceUIConfig } from '@reference-ui/cli/config'
 import { resolveCorePackageDir } from '../lib/resolve-core'
 import { debounce } from '../lib/debounce'
 import { log } from '../lib/log'

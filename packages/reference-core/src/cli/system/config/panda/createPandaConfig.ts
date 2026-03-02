@@ -1,4 +1,4 @@
-import type { BaseSystem } from '../../../config'
+import type { BaseSystem } from '@reference-ui/cli/config'
 import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { emit } from '../../../event-bus'
