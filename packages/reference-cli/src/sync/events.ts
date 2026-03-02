@@ -1,5 +1,5 @@
 import { emit, on } from '../lib/event-bus'
-import type { SyncOptions } from './types'
+import type { SyncPayload } from './types'
 
 /**
  * Event registry for the sync flow.
@@ -14,13 +14,12 @@ export type SyncEvents = {
  * Uses on() handlers that listen and emit() new events with payloads.
  * This is the actual flow of sync, distinct from the EventBus (cross-thread infra).
  */
-export function initEvents(options?: SyncOptions): void {
-  on('watch:change', (payload: unknown) => {
-    const p = payload as SyncEvents['watch:change']
-    emit('sync:changed', p)
+export function initEvents(payload: SyncPayload): void {
+  on('watch:change', (p: unknown) => {
+    emit('sync:changed', p as SyncEvents['watch:change'])
   })
 
   on('sync:complete', () => {
-    if (!options?.watch) process.exit()
+    if (!payload.options.watch) process.exit()
   })
 }
