@@ -17,13 +17,16 @@ const BASE_CONFIG = {
   skipTypescript: true,
 } as const
 
+/** Key = config key, value = literal expression written to output. e.g. extends: '[baseSystem]' → extends: [baseSystem] */
 export interface ConfigAdditions {
   name?: string
   include?: string[]
   debug?: boolean
   skipTypescript?: boolean
-  /** Package paths to import baseSystem from and add to extends. e.g. ['@reference-ui/lib'] */
-  extendsFrom?: string[]
+  /** Literal value for config.extends. e.g. '[baseSystem]' or '[]' */
+  extends?: string
+  /** Literal value for config.layers. e.g. '[baseSystem]' or '[]' */
+  layers?: string
 }
 
 /** Resolve sandbox dir for the current test run. Requires REF_TEST_PROJECT. */
@@ -59,27 +62,40 @@ function deepMerge<T extends object>(base: T, additions: Partial<T>): T {
   return result
 }
 
-/** Build ui.config.ts content from merged config and optional extends imports. */
-function buildConfigContent(merged: Record<string, unknown>, extendsFrom?: string[]): string {
+const DEFAULT_BASESYSTEM_PKG = '@reference-ui/lib'
+
+/** Collect identifiers from expression like '[baseSystem]' → ['baseSystem'] */
+function collectIdentifiers(expr: string): string[] {
+  const matches = expr.matchAll(/\b([a-zA-Z_][a-zA-Z0-9_]*)\b/g)
+  return [...new Set([...matches].map((m) => m[1]))].filter((id) => id !== 'undefined' && id !== 'null')
+}
+
+/** Build ui.config.ts. extends/layers are literal string values; add imports for identifiers used. */
+function buildConfigContent(merged: Record<string, unknown>, extendsExpr?: string, layersExpr?: string): string {
   const imports: string[] = ["import { defineConfig } from '@reference-ui/core'"]
   const configObj: Record<string, unknown> = { ...merged }
+  delete configObj.extends
+  delete configObj.layers
 
-  let extendsExpr = ''
-  if (extendsFrom?.length) {
-    const extendVars: string[] = []
-    for (let i = 0; i < extendsFrom.length; i++) {
-      const pkg = extendsFrom[i]
-      const varName = i === 0 ? 'baseSystem' : `baseSystem${i}`
-      imports.push(`import { baseSystem as ${varName} } from '${pkg}'`)
-      extendVars.push(varName)
+  const usedIds = new Set<string>()
+  if (extendsExpr) collectIdentifiers(extendsExpr).forEach((id) => usedIds.add(id))
+  if (layersExpr) collectIdentifiers(layersExpr).forEach((id) => usedIds.add(id))
+
+  for (const id of usedIds) {
+    if (id === 'baseSystem') {
+      imports.push(`import { baseSystem } from '${DEFAULT_BASESYSTEM_PKG}'`)
+      break
     }
-    delete configObj.extends
-    extendsExpr = `,\n  extends: [${extendVars.join(', ')}]`
   }
 
+  const extras: string[] = []
+  if (extendsExpr !== undefined) extras.push(`extends: ${extendsExpr}`)
+  if (layersExpr !== undefined) extras.push(`layers: ${layersExpr}`)
+
   const configStr = JSON.stringify(configObj, null, 2)
-  const configWithExtends = configStr.slice(0, -1) + extendsExpr + '\n}'
-  return `${imports.join('\n')}\n\nexport default defineConfig(${configWithExtends})`
+  const suffix = extras.length ? ',\n  ' + extras.join(',\n  ') + '\n}' : '\n}'
+  const configWithExtras = configStr.slice(0, -1) + suffix
+  return `${imports.join('\n')}\n\nexport default defineConfig(${configWithExtras})`
 }
 
 /**
@@ -88,14 +104,14 @@ function buildConfigContent(merged: Record<string, unknown>, extendsFrom?: strin
  */
 export async function addToConfig(additions: ConfigAdditions): Promise<void> {
   const sandboxDir = getSandboxDir()
-  const { extendsFrom = ['@reference-ui/lib'], ...rest } = additions
+  const { extends: extendsExpr = '[baseSystem]', layers: layersExpr, ...rest } = additions
 
   const merged = deepMerge(
     { ...BASE_CONFIG } as Record<string, unknown>,
     rest as Record<string, unknown>
   )
 
-  const content = buildConfigContent(merged, extendsFrom)
+  const content = buildConfigContent(merged, extendsExpr, layersExpr)
   const configPath = join(sandboxDir, 'ui.config.ts')
   await mkdir(dirname(configPath), { recursive: true })
   await writeFile(configPath, content)

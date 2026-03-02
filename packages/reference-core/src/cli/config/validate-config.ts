@@ -1,5 +1,7 @@
-import type { ReferenceUIConfig } from './types'
+import type { ReferenceUIConfig, BaseSystem } from './types'
 import { ConfigValidationError } from './errors'
+import { log } from '../lib/log'
+
 /**
  * Validate and normalize the evaluated config object.
  * Unwraps default export, checks for include array.
@@ -22,6 +24,17 @@ export function validateConfig(raw: unknown): ReferenceUIConfig {
   const name = cfg.name
   if (name == null || typeof name !== 'string' || name.trim() === '') {
     throw ConfigValidationError.mustHaveName()
+  }
+
+  const layers = cfg.layers as BaseSystem[] | undefined
+  if (layers?.length) {
+    for (const sys of layers) {
+      if (sys && !sys.css) {
+        log.info(
+          `[config] Warning: layers entry "${sys.name}" has no css field. Run \`ref sync\` on the upstream package first.`
+        )
+      }
+    }
   }
 
   return config as ReferenceUIConfig

@@ -7,6 +7,7 @@ import { microBundle } from '../../../lib/microbundle'
 import { runCollectScript } from '../../collectors/runCollectScript'
 import { scanDirectories } from '../../eval/scanner'
 import { buildBaseSystemCollectEntryContent } from './collectEntryTemplate'
+import { createLayerCss } from './createLayerCss'
 
 /** Scan core + user dirs for config files; same as createPandaConfig. */
 function collectConfigFiles(coreDir: string, userDirectories: string[] = []): string[] {
@@ -77,9 +78,14 @@ export async function createBaseSystem(
       }
     }
 
+    const layerCss = createLayerCss(
+      resolve(coreDir, 'src/system/styles.css'),
+      name
+    )
     const baseSystem: BaseSystem = {
       name,
       ...base,
+      ...(layerCss != null ? { css: layerCss } : {}),
     }
 
     // Microbundle the output — same pipeline as panda.config

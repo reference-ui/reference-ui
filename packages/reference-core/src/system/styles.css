@@ -2714,12 +2714,12 @@
     border-radius: var(--radii-full);
 }
 
-  .c_refLibCanary {
+  .c_var\(--colors-ref-lib-canary\) {
     color: var(--colors-ref-lib-canary);
 }
 
-  .c_\#f63345 {
-    color: #f63345;
+  .c_\#7d61d2 {
+    color: #7d61d2;
 }
 
   .c_test\.primary {
@@ -4456,6 +4456,10 @@
 
   .c_test\.muted {
     color: var(--colors-test-muted);
+}
+
+  .c_refLibCanary {
+    color: var(--colors-ref-lib-canary);
 }
 
   .c_colorPalette\.50 {

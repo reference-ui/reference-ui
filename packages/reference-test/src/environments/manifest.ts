@@ -21,6 +21,7 @@ export const MANIFEST = [
   'tests/TokensTest.tsx',
   'tests/SyncWatch.tsx',
   'tests/ExtendsTest.tsx',
+  'tests/LayersTest.tsx',
 ] as const
 
 export type ManifestFile = (typeof MANIFEST)[number]

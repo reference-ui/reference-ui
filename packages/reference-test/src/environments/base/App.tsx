@@ -1,6 +1,7 @@
 import TokensTest from './tests/TokensTest'
 import SyncWatch from './tests/SyncWatch'
 import ExtendsTest from './tests/ExtendsTest'
+import LayersTest from './tests/LayersTest'
 
 export default function App() {
   return (
@@ -8,6 +9,7 @@ export default function App() {
       <TokensTest />
       <SyncWatch />
       <ExtendsTest />
+      <LayersTest />
     </div>
   )
 }
