@@ -1,4 +1,5 @@
 import { loadUserConfig } from '../config'
+import { initEventBus } from '../lib/event-bus'
 import type { SyncOptions, SyncPayload } from './types'
 
 /**
@@ -10,5 +11,6 @@ export async function bootstrap(
   options?: SyncOptions
 ): Promise<SyncPayload> {
   const config = await loadUserConfig(cwd)
+  initEventBus()
   return { cwd, config, options: options ?? {} }
 }

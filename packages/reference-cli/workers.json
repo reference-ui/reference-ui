@@ -1,3 +1,4 @@
 {
-  "watch": "src/watch/worker.ts"
+  "watch": "src/watch/worker.ts",
+  "dummy": "src/dummy/worker.ts"
 }
