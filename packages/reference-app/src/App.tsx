@@ -1,5 +1,5 @@
-import { Div, Container, Button } from '@reference-ui/react';
-import '@reference-ui/react/styles.css';
+import { Div, Container, Button } from '@reference-ui/react'
+import '@reference-ui/react/styles.css'
 
 export default function App() {
   return (
@@ -13,5 +13,5 @@ export default function App() {
         </Div>
       </div>
     </Container>
-  );
+  )
 }
