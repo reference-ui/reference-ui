@@ -193,11 +193,51 @@ Panda's config loader (esbuild) also resolves imports when loading `panda.base.t
 
 ---
 
-## 7. Sync Flow (Post-Isolation)
+## 7. What We Did / Tried / Went Wrong
 
-1. **initSystem** — createPandaConfig → writes `core/.ref/panda-<slug>.config.ts`
-2. **initPackager** — initial bundle; uses `core/src/system` if consumer system not yet built
-3. **initGen** — Panda `generate()` with cwd=consumer, outdir=`consumer/.reference-ui/internal/system`
+### Implemented (Stage 1)
+
+1. **Path helpers** — `getSystemDir(consumerDir)`, `getRefDir(consumerDir)`, `INTERNAL_SYSTEM_OUTDIR` in `lib/path.ts`. Single canonical location `.reference-ui/internal/system`.
+
+2. **Ephemeral src/system** — `build-panda-system.ts` script: bootstrap stubs → symlink `src/system` → `.reference-ui/internal/system` → Panda generate. Core's system is generated, not source-of-truth. `src/system/` in `.gitignore`.
+
+3. **createPandaConfig** — When `userProjectDir` set: outdir → `.reference-ui/internal/system`, replace `src/**` with absolute core src path so Panda (cwd=consumer) still scans core. Uses `INTERNAL_SYSTEM_OUTDIR`.
+
+4. **gen/code** — Panda runs with `cwd: consumer` (not coreDir) so output lands in `consumer/.reference-ui/internal/system`.
+
+5. **copyStylesToReactPackage** — Prefer `getSystemDir(consumer)/styles.css`, fallback to core. Returns `{ didCopy, fromConsumer }` for packager:consumer-ready gate.
+
+6. **build:panda-system** — `process.exit(0)` after main() to avoid event-loop hang.
+
+### Test Environment vs pnpm dev
+
+**pnpm dev works** — Watch mode. Gen worker stays alive (KEEP_ALIVE), listens for `config:ready` with `on()`. Packager listens for `system:compiled`. No exit gate; process stays alive for watch.
+
+**Test env hangs** — Cold sync. `ref sync` runs once, must exit. We need: gen runs Panda → emits `system:compiled` → packager rebundles with consumer styles → process exits. We added gate `packager:consumer-ready` so we wait for consumer styles before exit.
+
+### What Went Wrong
+
+1. **Packager never rebundles in cold mode** — Originally packager only listened for `system:compiled` in watch mode. Fixed: packager always registers `on('system:compiled')`.
+
+2. **Process exits before consumer styles copied** — Gates were `packager:complete`, `packager-ts:complete`. Those fire from initial run; we exited before gen completed. Added `packager:consumer-ready` gate, emitted when packager copies from consumer system. `gen:failed` fallback so we don't hang if gen fails.
+
+3. **Gen worker misses config:ready** — Cold mode: gen used `once('config:ready')` and blocked. Piscina thread pool race: config:ready can fire before gen worker has run and registered. Gen never receives, hangs forever.
+
+4. **Fix attempted: system spawns gen** — System worker calls `runWorker('gen', ...)` after runConfig. Guaranteed order: config exists before gen runs. initGen does nothing in cold mode. **Still hangs** — suspected BroadcastChannel cross-thread delivery: packager worker registers listener, returns; when gen emits `system:compiled`, does the (now idle) packager thread receive it? Unclear.
+
+### Open Questions
+
+- Does BroadcastChannel deliver to idle Piscina workers after they return?
+- Alternative: run cold sync in main thread (no workers) to eliminate cross-thread events?
+- Or: packager blocks on a shared promise/queue until system:compiled processed?
+
+---
+
+## 8. Sync Flow (Post-Isolation)
+
+1. **initSystem** — createPandaConfig → writes `core/.ref/panda-<slug>.config.ts`; in cold mode, spawns gen after config
+2. **initPackager** — initial bundle; uses `core/src/system` if consumer system not yet built; listens for system:compiled
+3. **gen** — Panda `generate()` with cwd=consumer, outdir=`consumer/.reference-ui/internal/system`; cold: spawned by system; watch: initGen, listens config:ready
 4. **createBaseSystem** — reads `consumer/.reference-ui/internal/system/styles.css`, writes baseSystem.mjs
 5. **Packager** — copies from consumer system; esbuild alias redirects `../system/*` to consumer
 6. **ref sync complete** — consumer has isolated output
