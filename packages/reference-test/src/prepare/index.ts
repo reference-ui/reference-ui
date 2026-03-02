@@ -154,6 +154,9 @@ async function prepareEntryFull(entry: MatrixEntry): Promise<void> {
     JSON.stringify(packageJson, null, 2)
   )
 
+  // Clear reference-core .ref so pnpm install (file: dep) doesn't hit ENOENT on stale eval files
+  await rm(join(CORE_PATH, '.ref'), { recursive: true, force: true })
+
   await execa('pnpm', ['install', '--ignore-workspace', '-C', sandboxDir], {
     cwd: WORKSPACE_ROOT,
   })
