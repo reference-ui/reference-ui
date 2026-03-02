@@ -7,7 +7,7 @@ export interface BuildPandaEntryOptions {
   extendPandaConfigPath: string
   deepMergePath: string
   configFilePaths: string[]
-  /** Upstream baseSystems from ui.config.extends — merged into theme so Panda generates utilities with proper var() refs */
+  /** Upstream baseSystems from ui.config.extends — merged into theme so Panda generates var() refs */
   extends?: BaseSystem[]
 }
 

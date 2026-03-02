@@ -26,7 +26,7 @@ export default defineConfig({
   // Glob patterns for files to scan for Panda CSS extraction
   include: ['src/**/*.{ts,tsx,mdx}'],
 
-  extends: [baseSystem],
+  layers: [baseSystem],
   // Optional: Enable normalize CSS reset (default: true)
   normalizeCss: true,
 

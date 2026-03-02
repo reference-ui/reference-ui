@@ -1,5 +1,5 @@
 import { resolve } from 'node:path'
-import { emit } from '../event-bus'
+import { emit, once } from '../event-bus'
 import { log } from '../lib/log'
 import { debounce } from '../lib/debounce'
 import { resolveCorePackageDir } from '../lib/resolve-core'
@@ -7,6 +7,17 @@ import { loadUserConfig } from '../config'
 import type { ReferenceUIConfig } from '../config'
 import { runEval } from './eval'
 import { createPandaConfig } from './config/panda'
+
+let packagerComplete = false
+once('packager:complete', () => {
+  packagerComplete = true
+})
+
+/** Wait for packager:complete so @reference-ui/system exists before eval resolves it. */
+function waitForPackager(): Promise<void> {
+  if (packagerComplete) return Promise.resolve()
+  return new Promise(resolve => once('packager:complete', () => resolve()))
+}
 
 export interface SystemWorkerPayload {
   cwd: string
@@ -39,6 +50,7 @@ export async function runConfig(
     resolve(cwd, p.split('**')[0].replace(/\/+$/, ''))
   )
 
+  await waitForPackager()
   const fragments = await runEval(coreDir, [...CORE_DIRS, ...userDirs], ['panda.base.ts'])
   if (fragments.length > 0 && config.include.length > 0) {
     await createPandaConfig(coreDir, {

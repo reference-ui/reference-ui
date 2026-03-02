@@ -1,3 +1,5 @@
+import type { ReferenceUIConfig } from '../config'
+
 /**
  * Event registry - maps event names to their payload types
  * Add new events here to get type safety and autocomplete
@@ -25,7 +27,7 @@ export type SystemEvents = {
   /** Emitted when system config step is done; gen worker runs Panda on this */
   'system:config:complete': Record<string, never>
   /** Emitted when Panda finishes (codegen + CSS); packager listens to rebundle. Carries config for appendLayerCss. */
-  'system:compiled': { config?: unknown }
+  'system:compiled': { config?: ReferenceUIConfig }
   /** Emitted when Panda has written styles.css – packager copies to install location */
   'panda:css:compiled': Record<string, never>
 }
