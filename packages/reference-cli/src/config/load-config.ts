@@ -1,6 +1,6 @@
 import type { ReferenceUIConfig } from './types'
 import { ConfigNotFoundError, LoadConfigError } from './errors'
-import { resolveConfigFile } from './resolve-config-file'
+import { resolveRefConfigFile } from '../lib/paths'
 import { bundleConfig } from './bundle-config'
 import { evaluateConfig } from './evaluate-config'
 import { validateConfig } from './validate-config'
@@ -12,7 +12,7 @@ import { validateConfig } from './validate-config'
 export async function loadUserConfig(
   cwd: string = process.cwd()
 ): Promise<ReferenceUIConfig> {
-  const configPath = resolveConfigFile(cwd)
+  const configPath = resolveRefConfigFile(cwd)
   if (!configPath) {
     throw new ConfigNotFoundError(cwd)
   }
