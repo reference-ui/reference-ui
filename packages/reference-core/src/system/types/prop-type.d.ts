@@ -50,14 +50,17 @@ export interface UtilityValues {
 	marginInlineStart: Tokens["spacing"] | CssProperties["marginInlineStart"];
 	spaceX: "auto" | Tokens["spacing"] | CssProperties["marginInlineStart"];
 	spaceY: "auto" | Tokens["spacing"] | CssProperties["marginBlockStart"];
+	outlineWidth: Tokens["borderWidths"];
 	outlineColor: Tokens["colors"];
 	outlineOffset: Tokens["spacing"] | CssProperties["outlineOffset"];
 	focusRing: "outside" | "inside" | "mixed" | "none";
 	focusVisibleRing: "outside" | "inside" | "mixed" | "none";
 	focusRingColor: Tokens["colors"];
 	focusRingOffset: Tokens["spacing"];
-	focusRingWidth: CssProperties["outlineWidth"];
+	focusRingWidth: Tokens["borderWidths"] | CssProperties["outlineWidth"];
 	focusRingStyle: CssProperties["outlineStyle"];
+	divideX: Tokens["borderWidths"];
+	divideY: Tokens["borderWidths"];
 	divideColor: Tokens["colors"];
 	divideStyle: CssProperties["borderStyle"];
 	width: Tokens["spacing"] | CssProperties["width"];
@@ -110,12 +113,23 @@ export interface UtilityValues {
 	borderEndStartRadius: Tokens["radii"];
 	borderEndEndRadius: Tokens["radii"];
 	borderEndRadius: Tokens["radii"] | CssProperties["borderRadius"];
+	borderWidth: Tokens["borderWidths"];
+	borderTopWidth: Tokens["borderWidths"];
+	borderLeftWidth: Tokens["borderWidths"];
+	borderRightWidth: Tokens["borderWidths"];
+	borderBottomWidth: Tokens["borderWidths"];
+	borderBlockStartWidth: Tokens["borderWidths"];
+	borderBlockEndWidth: Tokens["borderWidths"];
 	borderColor: Tokens["colors"];
+	borderInlineWidth: Tokens["borderWidths"];
 	borderInlineColor: Tokens["colors"];
+	borderBlockWidth: Tokens["borderWidths"];
 	borderBlockColor: Tokens["colors"];
 	borderLeftColor: Tokens["colors"];
+	borderInlineStartWidth: Tokens["borderWidths"];
 	borderInlineStartColor: Tokens["colors"];
 	borderRightColor: Tokens["colors"];
+	borderInlineEndWidth: Tokens["borderWidths"];
 	borderInlineEndColor: Tokens["colors"];
 	borderTopColor: Tokens["colors"];
 	borderBottomColor: Tokens["colors"];
@@ -175,10 +189,11 @@ export interface UtilityValues {
 	scrollSnapMarginRight: Tokens["spacing"];
 	fill: Tokens["colors"];
 	stroke: Tokens["colors"];
+	strokeWidth: Tokens["borderWidths"];
 	srOnly: boolean;
 	debug: boolean;
 	containerName: CssProperties["containerName"];
-	colorPalette: "gray" | "red" | "orange" | "amber" | "yellow" | "lime" | "green" | "emerald" | "teal" | "cyan" | "sky" | "blue" | "indigo" | "violet" | "purple" | "magenta" | "pink" | "rose" | "mySpecialToken";
+	colorPalette: "gray" | "red" | "orange" | "amber" | "yellow" | "lime" | "green" | "emerald" | "teal" | "cyan" | "sky" | "blue" | "indigo" | "violet" | "purple" | "magenta" | "pink" | "rose" | "test";
 }
 
 

@@ -18,6 +18,9 @@ export const tokensConfig = {
   radii: {
     'test-round': { value: '0.5rem' },
   },
+  borderWidths: {
+    'test-1': { value: '2px' },
+  },
 } as const
 
 tokens(tokensConfig)
