@@ -8,7 +8,7 @@ const CONFIG_CANDIDATES = ['ui.config.ts', 'ui.config.js', 'ui.config.mjs'] as c
  * Tries ui.config.ts, ui.config.js, ui.config.mjs in that order.
  * @returns Absolute path to the config file, or null if not found.
  */
-export function resolveConfigFile(cwd: string): string | null {
+export function resolveRefConfigFile(cwd: string): string | null {
   for (const candidate of CONFIG_CANDIDATES) {
     const path = resolve(cwd, candidate)
     if (existsSync(path)) return path
