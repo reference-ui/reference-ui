@@ -1,19 +1,18 @@
 import { emit, on } from '../lib/event-bus'
-import type { SyncPayload } from './types'
 
 /**
- * Hub for the sync flow – wires events together.
+ * Event wiring. Only on/emit/onceAll – pass payloads, no side effects.
  */
-export function initEvents(payload: SyncPayload): void {
-  on('watch:change', (p) => {
-    emit('sync:changed', p)
+export function initEvents(): void {
+  on('virtual:ready', () => {
+    emit('run:virtual:copy')
   })
 
-  on('sync:complete', () => {
-    if (!payload.options.watch) process.exit()
+  on('watch:change', () => {
+    emit('run:virtual:copy')
   })
 
-  if (!payload.options.watch) {
-    setTimeout(() => emit('sync:changed', { event: 'add', path: '' }), 100)
-  }
+  on('virtual:complete', () => {
+    emit('sync:complete')
+  })
 }
