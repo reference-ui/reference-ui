@@ -7,7 +7,7 @@
 
 export type { ReferenceUIConfig, BaseSystem } from './types'
 export { defineConfig } from './types'
-export { loadUserConfig } from './load-config'
+export { loadUserConfig } from './load'
 export {
   ConfigNotFoundError,
   LoadConfigError,

@@ -1,9 +1,9 @@
 import type { ReferenceUIConfig } from './types'
 import { ConfigNotFoundError, LoadConfigError } from './errors'
 import { resolveRefConfigFile } from '../lib/paths'
-import { bundleConfig } from './bundle-config'
-import { evaluateConfig } from './evaluate-config'
-import { validateConfig } from './validate-config'
+import { bundleConfig } from './bundle'
+import { evaluateConfig } from './evaluate'
+import { validateConfig } from './validate'
 
 /**
  * Load and evaluate the user's ui.config.ts/js file.

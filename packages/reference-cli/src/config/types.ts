@@ -1,6 +1,6 @@
 /**
  * Public config API for ui.config.ts files.
- * Types and defineConfig helper — isolated so bundling user config doesn't pull in load-config.
+ * Types and defineConfig helper — isolated so bundling user config doesn't pull in load.
  */
 
 /**
