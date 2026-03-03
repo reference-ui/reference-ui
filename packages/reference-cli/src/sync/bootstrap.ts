@@ -1,7 +1,6 @@
 import { loadUserConfig, setConfig } from '../config'
 import { initEventBus } from '../lib/event-bus'
 import { initPool } from '../lib/thread-pool'
-import { setDebug } from '../lib/log'
 import type { SyncOptions, SyncPayload } from './types'
 
 /**
@@ -15,7 +14,6 @@ export async function bootstrap(
   const config = await loadUserConfig(cwd)
   setConfig(config)
   initPool(config)
-  if (config.debug) setDebug(true)
   initEventBus()
   return { cwd, config, options: options ?? {} }
 }

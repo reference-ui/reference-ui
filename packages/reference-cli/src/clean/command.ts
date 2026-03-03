@@ -2,7 +2,7 @@ import { rm } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { loadUserConfig, setConfig } from '../config'
 import { getOutDirPath } from '../lib/paths'
-import { log, setDebug } from '../lib/log'
+import { log } from '../lib/log'
 
 /**
  * Clean command – removes the outDir (.reference-ui by default, or config.outDir).
@@ -11,7 +11,6 @@ import { log, setDebug } from '../lib/log'
 export async function cleanCommand(cwd: string = process.cwd()): Promise<void> {
   const config = await loadUserConfig(cwd)
   setConfig(config)
-  if (config.debug) setDebug(true)
 
   const outDirPath = getOutDirPath(cwd)
 

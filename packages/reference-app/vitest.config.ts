@@ -8,8 +8,8 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
+    include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx'],
     passWithNoTests: true,
-    globalSetup: resolve(__dirname, 'src/test-setup.ts'),
+    globalSetup: resolve(__dirname, 'tests/setup/global-setup.ts'),
   },
 })
