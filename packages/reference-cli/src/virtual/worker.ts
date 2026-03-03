@@ -11,7 +11,6 @@ import type { VirtualWorkerPayload } from './types'
 export default async function runVirtual(payload: VirtualWorkerPayload): Promise<never> {
   const handler = () => {
     runInitialCopy(payload).catch((err) => {
-      // eslint-disable-next-line no-console
       console.error('[virtual] Copy failed:', err)
     })
   }
