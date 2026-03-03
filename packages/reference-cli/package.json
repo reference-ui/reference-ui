@@ -18,7 +18,7 @@
     "sync": "node dist/cli/index.mjs sync",
     "test": "vitest run",
     "test:watch": "vitest",
-    "eslint:txt": "eslint . --format stylish --output-file .eslint-result.txt --no-color"
+    "eslint:txt": "eslint . --format stylish --color"
   },
   "dependencies": {
     "@rspress/mdx-rs": "^0.6.6",
