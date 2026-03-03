@@ -1,112 +1,56 @@
 # @reference-ui/cli
 
-Reference UI CLI – design system build pipeline and tooling.
+Reference UI CLI – design system build pipeline.
 
 ## Architecture
 
-### Event-Driven Design
+How to use the thread pool and event system to build effectively: workers run in separate threads ([Piscina](https://github.com/piscinajs/piscina)); they communicate via **BroadcastChannel**. The main thread wires flow; workers map events to handlers.
 
-The CLI runs on an event architecture. Workers run in separate threads (via [Piscina](https://github.com/piscinajs/piscina)); they communicate via a shared **BroadcastChannel** so events cross thread boundaries. The main thread orchestrates flow by wiring events together in module init code.
+**Principle:** Logic in `logic.ts`; worker file is wiring only.
 
-**Core principle:** Workers listen for events and call functions. Business logic lives in separate modules; the worker file itself is thin glue – it connects events to handlers and passes data. No logic in the worker, only wiring.
+### Event registry
 
-### Event Registry
+`src/events.ts` – type union of all events. Each domain defines its slice; the event bus imports for typed `emit`/`on`.
 
-All event names and payload types are defined in a central registry:
+### workers.json ↔ Thread pool
 
-- **Location:** [`src/events.ts`](./src/events.ts)
-- **Structure:** A type union (`SyncEvents & WatchEvents` and any future module events)
-- **Format:** `{ 'event:name': PayloadType }` – maps event names to their payload shapes
+Manifest keys map to `dist/cli/${name}/worker.mjs`. The registry imports it; tsup uses `workerEntries` for build. **Keys only** – values exist for tsup paths.
 
-`src/events.ts` is the single source of truth. The event bus (`lib/event-bus`) imports this type for typed `emit`/`on`/`once`. Each domain (sync, watch, etc.) defines its own event slice and exports it; `events.ts` composes them.
+### Flow
 
-```
-src/events.ts          → Events = SyncEvents & WatchEvents & ...
-src/sync/types.ts      → SyncEvents
-src/watch/events.ts    → WatchEvents
-lib/event-bus/         → import { Events } from '../../events' → typed API
-```
-
-### workers.json ↔ Thread Pool
-
-**`workers.json`** is the manifest of worker modules:
-
-```json
-{
-  "watch": "src/watch/worker.ts",
-  "dummy": "src/dummy/worker.ts"
-}
-```
-
-**How it ties into the thread pool:**
-
-1. **Registry** ([`src/lib/thread-pool/registry.ts`](./src/lib/thread-pool/registry.ts)) imports `workers.json` and calls `createWorkerPool(manifest)`.
-2. **createWorkerPool** ([`src/lib/thread-pool/create-pool.ts`](./src/lib/thread-pool/create-pool.ts)) uses **keys only** (e.g. `watch`, `dummy`). Values in the manifest are ignored at runtime – they exist for tsup.
-3. The pool maps each key to an **absolute path**: `dist/cli/${name}/worker.mjs` (resolved from the CLI package dir).
-4. **tsup** uses `workerEntries` from the registry to generate entry points: each `{name}/worker` entry compiles to `dist/cli/${name}/worker.mjs`.
-
-So: **workers.json keys** → **pool WORKERS** → **runWorker(name, payload)** → **Piscina runs the compiled worker**.
-
-### Flow Overview
-
-1. **sync command** boots: load config, init event bus, build `SyncPayload`.
-2. **sync/events.ts** wires cross-domain flow: `watch:change` → `sync:changed`, `sync:complete` → maybe `process.exit`.
-3. **Module inits** (e.g. `initDummyWorker`) call `syncWorkers.runWorker('dummy', payload)`.
-4. Worker runs in a Piscina thread, subscribes to events via `on(...)`, returns `KEEP_ALIVE` so the thread stays alive.
-5. Events flow through BroadcastChannel; all threads see them. Workers react and emit new events as needed.
+1. Main thread bootstraps, wires flow in an events module.
+2. Module inits spawn workers via `runWorker(name, payload)`.
+3. Workers subscribe with `on(...)`, return `KEEP_ALIVE` to stay alive.
+4. Events flow via BroadcastChannel; all threads react.
 
 ---
 
-## Creating a Module (e.g. Dummy)
+## Module pattern
 
-A module is a domain that plugs into the sync pipeline. To add one:
+**Worker** = flat `on(event, handler)` list. **Logic** = handler functions in one file. **Orchestration** = events module (routing, cold triggers, etc.).
 
-### 1. Add to workers.json
+**Layout:** `init.ts` (spawns worker), `worker.ts` (wiring only), `logic.ts` (handlers).
 
-```json
-{
-  "dummy": "src/dummy/worker.ts"
-}
-```
+### Worker
 
-### 2. Create the module layout
-
-```
-src/dummy/
-  init.ts     – called from sync command; spawns the worker with payload
-  worker.ts   – thin glue: on(event, handler), pass payload to logic, return KEEP_ALIVE
-  logic.ts    – actual logic (optional but encouraged)
-  types.ts    – if you need custom payload types
-```
-
-### 3. Worker: events → functions only
-
-The worker should only:
-
-- Subscribe to events with `on('event:name', handler)`
-- Call into logic modules (e.g. `logic.ts`) with the payload or derived data
-- Return `KEEP_ALIVE` so the thread stays alive for event-driven work
-
-**Don’t** put business logic in the worker. Put it in `logic.ts` (or similar) and have the worker call it.
-
-Example (`dummy/worker.ts`):
-
-The worker is a flat list mapping `on(event, handler)`. Event orchestration lives in `sync/events.ts`; the worker only wires events to handlers from logic:
+Flat list only. No conditionals, no branching. Multiple handlers per event is fine.
 
 ```ts
 import { on } from '../lib/event-bus'
 import { KEEP_ALIVE } from '../lib/thread-pool'
-import { onSyncChanged } from './logic'
+import { onEventA, onEventB, onSyncChanged } from './logic'
 
-export default async function runDummy(): Promise<never> {
+export default async function runWorker(): Promise<never> {
   on('sync:changed', onSyncChanged)
+  on('sync:changed', onEventA)
+  on('sync:changed', onEventB)
   return KEEP_ALIVE
 }
 ```
 
-### 4. Logic module (logic.ts)
+### Logic
 
-Exports pure handler functions. No `on` here – the worker does the wiring:
+Pure handler functions. They receive payloads; they emit events. No `on` here.
 
 ```ts
 import { emit } from '../lib/event-bus'
@@ -114,25 +58,16 @@ import { emit } from '../lib/event-bus'
 export function onSyncChanged(): void {
   setTimeout(() => emit('sync:complete'), 500)
 }
+
+export function onEventA(_p: { event: string; path: string }): void {}
+export function onEventB(_p: { event: string; path: string }): void {}
 ```
 
-### 5. Define events (if new)
+### Adding a module
 
-Add your events to the registry. Per-module event types go in that module (e.g. `sync/types.ts`, `watch/events.ts`), then compose in `src/events.ts`.
+1. Add to `workers.json`.
+2. Create `worker.ts` (flat `on` list), `logic.ts` (handlers), `init.ts` (spawn).
+3. Wire init in the command entry point.
+4. Define new events in registry if needed.
 
-### 6. Wire the init
-
-In `sync/command.ts`, call your module’s init (e.g. `initDummyWorker(payload)`). Flow orchestration lives in `sync/events.ts`; the command just runs the inits.
-
----
-
-## Summary
-
-| Concept | Where |
-|--------|-------|
-| Event registry (types) | `src/events.ts` |
-| Flow orchestration | `src/sync/events.ts` |
-| Worker manifest | `workers.json` |
-| Thread pool / run | `src/lib/thread-pool/` |
-| Event bus (emit/on) | `src/lib/event-bus/` |
-| Module pattern | `worker.ts` = wiring, `logic.ts` = behavior |
+See `src/dummy/` for a working example.
