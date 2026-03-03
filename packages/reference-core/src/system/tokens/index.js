@@ -791,6 +791,10 @@ const tokens = {
     "value": "oklch(27.1% 0.105 12.094)",
     "variable": "var(--colors-rose-950)"
   },
+  "colors.refLibCanary": {
+    "value": "rgb(0, 191, 165)",
+    "variable": "var(--colors-ref-lib-canary)"
+  },
   "spacing.px": {
     "value": "1px",
     "variable": "var(--spacing-px)"
@@ -1178,6 +1182,10 @@ const tokens = {
   "colors.colorPalette.950": {
     "value": "var(--colors-color-palette-950)",
     "variable": "var(--colors-color-palette-950)"
+  },
+  "colors.colorPalette": {
+    "value": "var(--colors-color-palette)",
+    "variable": "var(--colors-color-palette)"
   }
 }
 

@@ -1,27 +1,15 @@
 /**
- * Dummy worker – listens for sync:changed, emits sync:complete after a delay.
- * Runs in a worker thread so BroadcastChannel delivers events (cross-thread).
- * In cold mode, triggerImmediately causes it to emit sync:complete on startup (no race).
+ * Dummy worker – maps events to handlers. Runs in a worker thread so BroadcastChannel
+ * delivers events (cross-thread). Event orchestration is in sync/events.ts; this file
+ * is a flat list of on(event, handler) where handlers live in logic.ts.
  */
-import { on, emit } from '../lib/event-bus'
+import { on } from '../lib/event-bus'
 import { KEEP_ALIVE } from '../lib/thread-pool'
+import { onEventA, onEventB, onSyncChanged } from './logic'
 
-const DELAY_MS = 500
-
-export interface DummyPayload {
-  triggerImmediately?: boolean
-}
-
-export default async function runDummy(payload: DummyPayload = {}): Promise<never> {
-  const fire = () => {
-    setTimeout(() => emit('sync:complete'), DELAY_MS)
-  }
-
-  on('sync:changed', () => fire())
-
-  if (payload.triggerImmediately) {
-    fire()
-  }
-
+export default async function runDummy(): Promise<never> {
+  on('sync:changed', onSyncChanged)
+  on('sync:changed', onEventA)
+  on('sync:changed', onEventB)
   return KEEP_ALIVE
 }

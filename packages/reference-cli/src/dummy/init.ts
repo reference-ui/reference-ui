@@ -3,11 +3,11 @@ import type { SyncPayload } from '../sync/types'
 
 /**
  * Start the dummy worker. Listens for sync:changed, emits sync:complete after delay.
- * In cold mode, triggers immediately on startup (no main-thread emit).
+ * Cold-mode trigger is emitted by sync/events.ts.
  */
-export function initDummyWorker(payload: SyncPayload): void {
+export function initDummyWorker(_payload: SyncPayload): void {
   syncWorkers
-    .runWorker('dummy', { triggerImmediately: !payload.options.watch })
+    .runWorker('dummy', undefined)
     .catch((error: unknown) => {
       // eslint-disable-next-line no-console
       console.error('[dummy] Worker failed:', error)
