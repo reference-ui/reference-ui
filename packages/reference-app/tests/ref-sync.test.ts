@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest'
-import { execSync } from 'node:child_process'
 import { resolve, dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { existsSync, readdirSync } from 'node:fs'
@@ -9,18 +8,10 @@ const pkgRoot = resolve(__dirname, '..')
 const virtualDir = join(pkgRoot, '.reference-ui', 'virtual')
 
 /**
- * These tests run after globalSetup, which runs `ref sync` once.
- * This suite verifies the precursor worked and the design system is ready.
+ * globalSetup runs ref sync once before all tests.
+ * This suite verifies the design system output is ready.
  */
-describe('ref sync (precursor: setup runs ref sync)', () => {
-  it('ref sync runs successfully', { timeout: 10_000 }, () => {
-    execSync('pnpm exec ref sync', {
-      cwd: pkgRoot,
-      stdio: 'pipe',
-      timeout: 8_000,
-    })
-  })
-
+describe('ref sync', () => {
   it('creates .reference-ui/virtual directory with copied files', () => {
     expect(existsSync(virtualDir), `.reference-ui/virtual should exist`).toBe(true)
 

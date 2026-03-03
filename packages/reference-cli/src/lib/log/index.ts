@@ -1,4 +1,5 @@
 import pc from 'picocolors'
+import { getConfig } from '../../config/store'
 
 type LogFn = (...args: unknown[]) => void
 type LogDebugFn = (module: string, ...args: unknown[]) => void
@@ -7,12 +8,6 @@ type Log = LogFn & {
   error: LogFn
   info: LogFn
   debug: LogDebugFn
-}
-
-let isDebug = false
-
-export function setDebug(enabled: boolean) {
-  isDebug = enabled
 }
 
 function timestamp(): string {
@@ -38,7 +33,7 @@ log.error = (...args: unknown[]) => {
 }
 
 log.debug = (module: string, ...args: unknown[]) => {
-  if (!isDebug) return
+  if (!getConfig()?.debug) return
   const prefix = `${pc.dim(`[${timestamp()}]`)} ${pc.blue(`[${module}]`)}`
   console.log(prefix, ...args)
 }
