@@ -2,6 +2,7 @@
 import { Command } from 'commander'
 import { log } from './lib/log'
 import { runCommand } from './lib/run'
+import { cleanCommand } from './clean'
 import { syncCommand, type SyncOptions } from './sync'
 
 async function main(): Promise<void> {
@@ -21,6 +22,11 @@ async function main(): Promise<void> {
         syncCommand(process.cwd(), options as SyncOptions)
       )
     )
+
+  program
+    .command('clean')
+    .description('Remove the output directory (.reference-ui) for a fresh state')
+    .action(runCommand(() => cleanCommand(process.cwd())))
 
   program.parse()
 }

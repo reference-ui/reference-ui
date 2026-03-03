@@ -54,12 +54,6 @@ export interface ReferenceUIConfig {
   outDir?: string
 
   /**
-   * Virtual directory where transformed files are written.
-   * @deprecated Use outDir instead; virtual is always outDir/virtual
-   */
-  virtualDir?: string
-
-  /**
    * Enable normalize CSS reset.
    * @default true
    */
