@@ -4,4 +4,4 @@ export {
   type ThreadPoolManifest,
   type ThreadPoolRegistry,
 } from './create-pool'
-export { syncWorkers, workerEntries } from './registry'
+export { workers, workerEntries } from './registry'

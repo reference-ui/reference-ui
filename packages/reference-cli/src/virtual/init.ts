@@ -1,4 +1,4 @@
-import { syncWorkers } from '../lib/thread-pool'
+import { workers } from '../lib/thread-pool'
 import type { SyncPayload } from '../sync/types'
 
 /**
@@ -6,13 +6,8 @@ import type { SyncPayload } from '../sync/types'
  * Listens for sync:changed and performs full copy on each event.
  */
 export function initVirtual(payload: SyncPayload): void {
-  syncWorkers
-    .runWorker('virtual', {
-      sourceDir: payload.cwd,
-      config: payload.config,
-    })
-    .catch((error: unknown) => {
-      // eslint-disable-next-line no-console
-      console.error('[virtual] Worker failed:', error)
-    })
+  workers.runWorker('virtual', {
+    sourceDir: payload.cwd,
+    config: payload.config,
+  })
 }

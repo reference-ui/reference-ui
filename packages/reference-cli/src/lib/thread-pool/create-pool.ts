@@ -1,4 +1,5 @@
 import { runWorker as runPoolWorker } from './run'
+import { log } from '../log'
 import { resolveCliDistPath } from '../paths'
 
 /**
@@ -27,7 +28,10 @@ export function createWorkerPool<T extends ThreadPoolManifest>(manifest: T) {
     WORKERS,
     runWorker: (worker: keyof T | string, payload: unknown) => {
       const path = typeof worker === 'string' && worker in WORKERS ? WORKERS[worker] : worker
-      return runPoolWorker(path as string, payload)
+      const name = typeof worker === 'string' ? worker : 'worker'
+      return runPoolWorker(path as string, payload).catch((err: unknown) => {
+        log.error(`[${name}] Worker failed:`, err)
+      })
     },
   }
 }
