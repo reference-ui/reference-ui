@@ -16,21 +16,27 @@
     "dev": "tsup --watch",
     "sync": "node dist/cli/index.mjs sync",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "complexity:json": "eslint . --format json --output-file complexity-report.json",
+    "complexity:txt": "eslint . --format stylish --output-file .complexity.txt --no-color || true"
   },
   "dependencies": {
     "@parcel/watcher": "^2.5.6",
-    "fast-glob": "^3.3.2",
-    "esbuild": "^0.27.3",
     "commander": "^14.0.3",
+    "esbuild": "^0.27.3",
+    "fast-glob": "^3.3.2",
     "picocolors": "^1.1.0",
     "picomatch": "^4.0.0",
     "piscina": "^5.1.4"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/node": "^25.1.0",
+    "eslint": "^10.0.2",
+    "eslint-plugin-sonarjs": "^4.0.0",
     "tsup": "^8.4.0",
     "typescript": "~5.9.3",
+    "typescript-eslint": "^8.56.1",
     "vitest": "^4.0.18"
   }
 }
