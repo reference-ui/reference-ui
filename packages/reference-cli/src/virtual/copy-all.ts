@@ -10,7 +10,7 @@ import type { ReferenceUIConfig } from '../config'
 
 const GLOB_IGNORE = ['**/node_modules/**', '**/.git/**'] as const
 
-export async function runInitialCopy(payload: {
+export async function copyAll(payload: {
   sourceDir: string
   config: ReferenceUIConfig
 }): Promise<void> {

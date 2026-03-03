@@ -53,14 +53,14 @@ Flat list only. No conditionals, no branching. Multiple handlers per event is fi
 ```ts
 import { emit, on } from '../lib/event-bus'
 import { KEEP_ALIVE } from '../lib/thread-pool'
-import { runInitialCopy } from './initial-copy'
+import { copyAll } from './copy-all'
 
 export default async function runVirtual(payload: VirtualWorkerPayload): Promise<never> {
   const handler = () => {
-    runInitialCopy(payload).catch((err) => console.error('[virtual] Copy failed:', err))
+    copyAll(payload).catch((err) => console.error('[virtual] Copy failed:', err))
   }
 
-  on('run:virtual:copy', handler)
+  on('run:virtual:copy:all', handler)
   emit('virtual:ready')
 
   return KEEP_ALIVE
@@ -74,7 +74,7 @@ Pure handler functions. They receive payloads; they emit events. No `on` here.
 ```ts
 import { emit } from '../lib/event-bus'
 
-export async function runInitialCopy(payload: VirtualWorkerPayload): Promise<void> {
+export async function copyAll(payload: VirtualWorkerPayload): Promise<void> {
   // ... do work ...
   emit('virtual:complete')
 }
@@ -83,8 +83,8 @@ export async function runInitialCopy(payload: VirtualWorkerPayload): Promise<voi
 ### Event wiring (orchestration)
 
 ```ts
-on('virtual:ready', () => emit('run:virtual:copy'))
-on('watch:change', () => emit('run:virtual:copy'))
+on('virtual:ready', () => emit('run:virtual:copy:all'))
+on('watch:change', () => emit('run:virtual:copy:all'))
 on('virtual:complete', () => emit('sync:complete'))
 ```
 
