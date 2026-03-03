@@ -128,8 +128,7 @@ describe('ref sync – virtual copy (e2e)', () => {
 
   /**
    * Virtual should mirror src: same files, no orphans, no missing.
-   * These tests are expected to fail when virtual has stale files (e.g. after
-   * source deletion) or when sync doesn't remove orphans.
+   * watch:change → run:virtual:sync:file removes files from virtual on unlink.
    */
   describe('virtual mirrors src (no orphans or missing)', () => {
     const INCLUDE = ['src/**/*.ts', 'src/**/*.tsx'] as const
@@ -179,18 +178,22 @@ describe('ref sync – virtual copy (e2e)', () => {
       return [virtualRel]
     }
 
-    it('virtual has no orphan files (every virtual file has a source counterpart)', () => {
-      const virtualPaths = getVirtualPaths()
-      const sourcePaths = new Set(getSourcePaths())
-      const orphans: string[] = []
-
-      for (const vRel of virtualPaths) {
-        const candidates = virtualToPossibleSources(vRel)
-        const hasSource = candidates.some((c) => sourcePaths.has(c))
-        if (!hasSource) orphans.push(vRel)
+    it('virtual has no orphan files (every virtual file has a source counterpart)', async () => {
+      const sourcePaths = () => new Set(getSourcePaths())
+      const getOrphans = () => {
+        const virtualPaths = getVirtualPaths()
+        const src = sourcePaths()
+        const list: string[] = []
+        for (const vRel of virtualPaths) {
+          const candidates = virtualToPossibleSources(vRel)
+          if (!candidates.some((c) => src.has(c))) list.push(vRel)
+        }
+        return list
       }
 
-      expect(orphans, `Orphan files in virtual (no source): ${orphans.join(', ')}`).toEqual([])
+      const ok = await waitFor(() => getOrphans().length === 0, { timeoutMs: 3000 })
+      const orphans = getOrphans()
+      expect(ok, `Orphan files in virtual (no source): ${orphans.join(', ')}`).toBe(true)
     })
 
     it('virtual has all source files (no missing)', () => {

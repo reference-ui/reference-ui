@@ -9,6 +9,8 @@ export type VirtualEvents = {
   'virtual:ready': Record<string, never>
   /** Run full copy to .reference-ui/virtual */
   'run:virtual:copy:all': Record<string, never>
+  /** Sync a single file (add/change/unlink, payload from watch:change) */
+  'run:virtual:sync:file': { event: 'add' | 'change' | 'unlink'; path: string }
   /** Emitted when one file is copied/transformed (copy+transform combined) */
   'virtual:fs:change': { event: 'add' | 'change' | 'unlink'; path: string }
   /** Emitted when virtual full copy to .reference-ui/virtual is complete */
