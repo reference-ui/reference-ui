@@ -5,11 +5,11 @@ import { emit, on } from '../lib/event-bus'
  */
 export function initEvents(): void {
   on('virtual:ready', () => {
-    emit('run:virtual:copy')
+    emit('run:virtual:copy:all')
   })
 
   on('watch:change', () => {
-    emit('run:virtual:copy')
+    emit('run:virtual:copy:all')
   })
 
   on('virtual:complete', () => {
