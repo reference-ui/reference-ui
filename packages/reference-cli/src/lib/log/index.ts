@@ -34,8 +34,9 @@ log.error = (...args: unknown[]) => {
 
 log.debug = (module: string, ...args: unknown[]) => {
   if (!getConfig()?.debug) return
-  const prefix = `${pc.dim(`[${timestamp()}]`)} ${pc.blue(`[${module}]`)}`
-  console.log(prefix, ...args)
+  const timePart = pc.dim('[' + timestamp() + ']')
+  const modulePart = pc.blue('[' + module + ']')
+  console.log(timePart, modulePart, ...args)
 }
 
 export { log }

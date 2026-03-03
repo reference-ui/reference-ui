@@ -1,4 +1,3 @@
-import { log } from '../lib/log'
 import { workers } from '../lib/thread-pool'
 import type { SyncPayload } from '../sync/types'
 
