@@ -38,7 +38,7 @@ export function getSourcePaths(): string[] {
   const out: string[] = []
   for (const rel of walkFiles(srcDir, srcDir)) {
     const ext = extname(rel)
-    if (ext === '.ts' || ext === '.tsx') {
+    if (['.ts', '.tsx', '.mdx'].includes(ext)) {
       out.push(join('src', rel))
     }
   }
