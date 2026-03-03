@@ -27,9 +27,9 @@ async function waitForVirtual(maxMs = 12_000): Promise<boolean> {
 
 export default async function globalSetup() {
   execSync(`node "${refCli}" clean`, { cwd: pkgRoot, stdio: 'pipe', timeout: 10_000 })
-  const watchProcess = spawn('node', [refCli, 'sync', '--watch'], {
+  const watchProcess = spawn('node', [refCli, 'sync', '--watch', '--debug'], {
     cwd: pkgRoot,
-    stdio: 'pipe',
+    stdio: 'inherit',
     detached: true,
   })
   watchProcess.unref()
