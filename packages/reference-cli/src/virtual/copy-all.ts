@@ -1,14 +1,13 @@
-import { mkdir, copyFile } from 'node:fs/promises'
-import { join, dirname, relative, resolve } from 'node:path'
+import { mkdir } from 'node:fs/promises'
+import { resolve } from 'node:path'
 import { existsSync } from 'node:fs'
 import fg from 'fast-glob'
-import { getOutDir } from '../config/store'
 import { emit } from '../lib/event-bus'
 import { log } from '../lib/log'
 import { getVirtualDirPath } from '../lib/paths'
+import { copyToVirtual } from './copy'
+import { GLOB_CONFIG } from './config.internal'
 import type { ReferenceUIConfig } from '../config'
-
-const GLOB_IGNORE = ['**/node_modules/**', '**/.git/**'] as const
 
 export async function copyAll(payload: {
   sourceDir: string
@@ -31,26 +30,18 @@ export async function copyAll(payload: {
     return
   }
 
-  const ignore = [...GLOB_IGNORE, `**/${getOutDir()}/**`]
   const files = await fg(include, {
     cwd: root,
-    onlyFiles: true,
-    absolute: true,
-    ignore,
+    ...GLOB_CONFIG,
+    ignore: [...GLOB_CONFIG.ignore],
   })
 
   log.debug('virtual', `Copying ${files.length} files`)
 
-  const destDirs = [...new Set(files.map((f) => dirname(join(virtualDir, relative(root, f)))))]
-  await Promise.all(destDirs.map((d) => mkdir(d, { recursive: true })))
-
-  await Promise.all(
-    files.map(async (file) => {
-      const rel = relative(root, file)
-      await copyFile(file, join(virtualDir, rel))
-      if (debug) log.debug('virtual', `✓ ${rel}`)
-    })
-  )
+  for (const file of files) {
+    const virtualPath = await copyToVirtual(file, root, virtualDir, { debug })
+    emit('virtual:fs:change', { event: 'add', path: virtualPath })
+  }
 
   log.debug('virtual', 'Sync complete')
   emit('virtual:complete', {})

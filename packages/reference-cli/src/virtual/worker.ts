@@ -1,21 +1,49 @@
 /**
- * Virtual worker – copies source files to .reference-ui/virtual for Panda scanning.
- * Listens for run:virtual:copy:all, performs full copy, emits virtual:complete.
- * Emits virtual:ready when handlers are registered.
+ * Virtual worker – copies/transforms source files to .reference-ui/virtual for Panda scanning.
+ * Transform is part of copy; emits virtual:fs:change per file (copy+transform one file).
+ * Listens: run:virtual:copy:all (full), watch:change (incremental).
  */
 import { emit, on } from '../lib/event-bus'
 import { KEEP_ALIVE } from '../lib/thread-pool'
+import { resolve } from 'node:path'
+import { copyToVirtual, removeFromVirtual } from './copy'
 import { copyAll } from './copy-all'
+import { getVirtualPath } from './utils'
+import { log } from '../lib/log'
+import { getVirtualDirPath } from '../lib/paths'
 import type { VirtualWorkerPayload } from './types'
 
 export default async function runVirtual(payload: VirtualWorkerPayload): Promise<never> {
-  const handler = () => {
+  const { sourceDir, config } = payload
+  const root = resolve(sourceDir)
+  const virtualDir = getVirtualDirPath(root)
+  const debug = config.debug ?? false
+
+  const onCopyAll = () => {
     copyAll(payload).catch((err) => {
       console.error('[virtual] Copy failed:', err)
     })
   }
 
-  on('run:virtual:copy:all', handler)
+  const onWatchChange = async (ev: { event: 'add' | 'change' | 'unlink'; path: string }) => {
+    const sourcePath = ev.path
+    try {
+      let virtualPath: string
+      if (ev.event === 'unlink') {
+        virtualPath = getVirtualPath(sourcePath, root, virtualDir)
+        await removeFromVirtual(sourcePath, root, virtualDir)
+      } else {
+        virtualPath = await copyToVirtual(sourcePath, root, virtualDir, { debug })
+      }
+      emit('virtual:fs:change', { event: ev.event, path: virtualPath })
+      log.debug('virtual', 'Processed watch:change → virtual:fs:change', ev.event, virtualPath)
+    } catch (err) {
+      log.error('[virtual] Failed to process', ev.event, sourcePath, err)
+    }
+  }
+
+  on('run:virtual:copy:all', onCopyAll)
+  on('watch:change', onWatchChange)
   emit('virtual:ready')
 
   return KEEP_ALIVE
