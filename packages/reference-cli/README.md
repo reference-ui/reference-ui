@@ -2,6 +2,16 @@
 
 Reference UI CLI – design system build pipeline.
 
+## Commands
+
+### ref sync (default)
+
+Build and sync the design system. Uses workers and the event bus.
+
+### ref clean
+
+Removes the output directory (`.reference-ui` by default, or `config.outDir`). Runs in the main thread only. Use before tests for a fresh state.
+
 ## Architecture
 
 How to use the thread pool and event system to build effectively: workers run in separate threads ([Piscina](https://github.com/piscinajs/piscina)); they communicate via **BroadcastChannel**. The main thread wires flow; workers map events to handlers.
