@@ -12,6 +12,9 @@ export async function bootstrap(
   options?: SyncOptions
 ): Promise<SyncPayload> {
   const config = await loadUserConfig(cwd)
+  if (options?.debug) {
+    config.debug = true
+  }
   setConfig(config)
   initPool(config)
   initEventBus()

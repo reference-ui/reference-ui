@@ -77,14 +77,22 @@ export async function removeFromVirtual(
 
   log.debug('virtual', `Removing: ${relativePath}`)
 
+  const unlinkIfExists = async (p: string) => {
+    try {
+      await fs.unlink(p)
+    } catch (err: unknown) {
+      if ((err as NodeJS.ErrnoException)?.code !== 'ENOENT') throw err
+    }
+  }
+
   if (existsSync(destPath)) {
-    await fs.unlink(destPath)
+    await unlinkIfExists(destPath)
   }
 
   for (const ext of TRANSFORMED_EXTENSIONS) {
     const transformedPath = destPath.replace(extname(destPath), ext)
     if (existsSync(transformedPath) && transformedPath !== destPath) {
-      await fs.unlink(transformedPath)
+      await unlinkIfExists(transformedPath)
     }
   }
 }

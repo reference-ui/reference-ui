@@ -17,6 +17,7 @@ async function main(): Promise<void> {
     .command('sync', { isDefault: true })
     .description('Build and sync the design system')
     .option('-w, --watch', 'Watch for changes and rebuild')
+    .option('-d, --debug', 'Enable debug logging')
     .action(
       runCommand((options) =>
         syncCommand(process.cwd(), options as SyncOptions)

@@ -2,6 +2,7 @@ import type { ReferenceUIConfig } from '../config'
 
 export interface SyncOptions {
   watch?: boolean
+  debug?: boolean
 }
 
 export interface SyncPayload {
