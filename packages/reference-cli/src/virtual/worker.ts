@@ -1,7 +1,7 @@
 /**
  * Virtual worker – copies/transforms source files to .reference-ui/virtual for Panda scanning.
  * Transform is part of copy; emits virtual:fs:change per file (copy+transform one file).
- * Listens: run:virtual:copy:all (full), watch:change (incremental).
+ * Listens: run:virtual:copy:all (full), run:virtual:sync:file (single file, from watch:change).
  */
 import { emit, on } from '../lib/event-bus'
 import { KEEP_ALIVE } from '../lib/thread-pool'
@@ -43,7 +43,7 @@ export default async function runVirtual(payload: VirtualWorkerPayload): Promise
   }
 
   on('run:virtual:copy:all', onCopyAll)
-  on('watch:change', onWatchChange)
+  on('run:virtual:sync:file', onWatchChange)
   emit('virtual:ready')
 
   return KEEP_ALIVE
