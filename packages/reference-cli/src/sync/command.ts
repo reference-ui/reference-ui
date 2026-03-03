@@ -1,4 +1,5 @@
 import { initDummyWorker } from '../dummy/init' // do not modify - flow orchestration lives in events.ts
+import { initVirtual } from '../virtual/init' // do not modify - flow orchestration lives in events.ts
 import { bootstrap } from './bootstrap' // do not modify - flow orchestration lives in events.ts
 import { initEvents } from './events' // do not modify - flow orchestration lives in events.ts
 import { initWatch } from '../watch/init' // do not modify - flow orchestration lives in events.ts
@@ -11,5 +12,6 @@ export async function syncCommand(cwd: string, options?: SyncOptions): Promise<v
   const payload = await bootstrap(cwd, options) // do not modify - flow orchestration lives in events.ts
   initEvents(payload) // do not modify - flow orchestration lives in events.ts
   initWatch(payload) // do not modify - flow orchestration lives in events.ts
+  initVirtual(payload) // do not modify - flow orchestration lives in events.ts
   initDummyWorker(payload) // do not modify - flow orchestration lives in events.ts
 }

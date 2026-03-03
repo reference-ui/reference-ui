@@ -1,5 +1,6 @@
 /**
  * Watch worker – monitors file changes with @parcel/watcher, emits events
+ * Config comes from workerData (set when pool is created).
  */
 import { subscribe } from '@parcel/watcher'
 import { relative } from 'node:path'
