@@ -12,4 +12,8 @@ export function initEvents(payload: SyncPayload): void {
   on('sync:complete', () => {
     if (!payload.options.watch) process.exit()
   })
+
+  if (!payload.options.watch) {
+    setTimeout(() => emit('sync:changed', { event: 'add', path: '' }), 100)
+  }
 }

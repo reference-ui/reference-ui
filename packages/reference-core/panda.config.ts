@@ -1864,7 +1864,7 @@ var baseConfig = {
   presets: [],
   jsxFramework: "react",
   preflight: true,
-  include: ["/Users/ryn/Developer/reference-ui/packages/reference-app/.reference-ui/virtual/**/*.{ts,tsx,js,jsx}", "src/**/*.{ts,tsx,js,jsx}"],
+  include: ["/Users/ryn/Developer/reference-ui/packages/reference-lib/.reference-ui/virtual/**/*.{ts,tsx,js,jsx}", "src/**/*.{ts,tsx,js,jsx}"],
   exclude: [
     "**/node_modules/**",
     "**/*.test.*",
@@ -2203,8 +2203,53 @@ var keyframes = extendKeyframes;
 var font = extendFont;
 var globalCss = extendGlobalCss;
 
+// src/styled/theme/canary.ts
+var canary_exports = {};
+
+// .reference-ui/system/system.mjs
+var COLLECTOR_KEY2 = "__refPandaConfigCollector";
+function extendPandaConfig2(partial) {
+  const collector = globalThis[COLLECTOR_KEY2];
+  if (Array.isArray(collector)) {
+    collector.push(partial);
+  }
+}
+__name(extendPandaConfig2, "extendPandaConfig");
+function extendTokens2(tokenConfig) {
+  extendPandaConfig2({
+    theme: {
+      tokens: tokenConfig
+    }
+  });
+}
+__name(extendTokens2, "extendTokens");
+var FONT_COLLECTOR_KEY2 = "__fontCollector";
+if (!globalThis[FONT_COLLECTOR_KEY2]) {
+  ;
+  globalThis[FONT_COLLECTOR_KEY2] = [];
+}
+var BOX_PATTERN_COLLECTOR_KEY2 = "__boxPatternCollector";
+if (!globalThis[BOX_PATTERN_COLLECTOR_KEY2]) {
+  ;
+  globalThis[BOX_PATTERN_COLLECTOR_KEY2] = [];
+}
+var tokens2 = extendTokens2;
+
+// src/colors.ts
+var REF_LIB_CANARY = "rgb(0, 191, 165)";
+
+// src/styled/theme/canary.ts
+tokens2({
+  colors: {
+    refLibCanary: {
+      value: REF_LIB_CANARY,
+      description: "Canary token \u2014 scan for refLibCanary to verify baseSystem contains reference-lib tokens"
+    }
+  }
+});
+
 // ../reference-core/.ref/panda-entry.ts
-var defaultFragments = [panda_base_exports, css_global_exports, css_static_exports, attention_exports, bounce_exports, fade_exports, scale_exports, slide_exports, spin_exports, font_exports, fonts_exports, box_exports, container_exports, r_exports, utilities_exports, animations_exports, colors_exports, radii_exports, spacing_exports, extendFont_exports, extendGlobalCss_exports, extendGlobalFontface_exports, extendKeyframes_exports, extendRecipe_exports, extendStaticCss_exports, extendTokens_exports, extendUtilities_exports, recipe_exports, system_exports].map((m) => m?.default !== void 0 ? m.default : null).filter(Boolean);
+var defaultFragments = [panda_base_exports, css_global_exports, css_static_exports, attention_exports, bounce_exports, fade_exports, scale_exports, slide_exports, spin_exports, font_exports, fonts_exports, box_exports, container_exports, r_exports, utilities_exports, animations_exports, colors_exports, radii_exports, spacing_exports, extendFont_exports, extendGlobalCss_exports, extendGlobalFontface_exports, extendKeyframes_exports, extendRecipe_exports, extendStaticCss_exports, extendTokens_exports, extendUtilities_exports, recipe_exports, system_exports, canary_exports].map((m) => m?.default !== void 0 ? m.default : null).filter(Boolean);
 var collected = globalThis[COLLECTOR_KEY] || [];
 var fragments = [...defaultFragments, ...collected];
 var config = fragments.reduce((acc, frag) => deepMerge(acc, frag), {});
