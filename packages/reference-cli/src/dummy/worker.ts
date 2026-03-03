@@ -7,7 +7,7 @@ import { on } from '../lib/event-bus'
 import { KEEP_ALIVE } from '../lib/thread-pool'
 import { onEventA, onEventB, onSyncChanged } from './logic'
 
-export default async function runDummy(): Promise<never> {
+export default async function runDummy(_payload?: unknown): Promise<never> {
   on('sync:changed', onSyncChanged)
   on('sync:changed', onEventA)
   on('sync:changed', onEventB)

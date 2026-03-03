@@ -1,4 +1,5 @@
 import Piscina from 'piscina'
+import type { ReferenceUIConfig } from '../../config/types'
 import { log } from '../log'
 
 let pool: Piscina | undefined
@@ -27,17 +28,28 @@ function initMemoryLogging(): void {
   }, memoryLogIntervalMs)
 }
 
-function getPool() {
-  if (pool) return pool
+/**
+ * Initialize the pool with config. Must be called before first runWorker.
+ * Config is passed via workerData so workers can access it without per-task wiring.
+ */
+export function initPool(config: ReferenceUIConfig): void {
+  if (pool) return
 
   initMemoryLogging()
   pool = new Piscina({
     minThreads: 2,
     maxThreads: 6,
     idleTimeout: 30000,
+    workerData: { config },
   })
 
   pool.on('error', (err) => log.error('[pool]', err))
+}
+
+function getPool(): Piscina {
+  if (!pool) {
+    throw new Error('initPool(config) must be called before runWorker')
+  }
   return pool
 }
 

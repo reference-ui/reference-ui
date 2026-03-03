@@ -16,4 +16,6 @@ export type SyncEvents = {
   'sync:changed': { event: 'add' | 'change' | 'unlink'; path: string }
   /** Emitted when cold sync (packager, etc.) is complete */
   'sync:complete': Record<string, never>
+  /** Emitted when virtual copy to .reference-ui/virtual is complete */
+  'virtual:complete': Record<string, never>
 }

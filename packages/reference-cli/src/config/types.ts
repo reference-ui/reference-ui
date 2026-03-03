@@ -47,8 +47,15 @@ export interface ReferenceUIConfig {
   layers?: BaseSystem[]
 
   /**
+   * Output directory for CLI artefacts (virtual, generated config, etc).
+   * Virtual dir is written to outDir/virtual.
+   * @default '.reference-ui'
+   */
+  outDir?: string
+
+  /**
    * Virtual directory where transformed files are written.
-   * @default '.virtual'
+   * @deprecated Use outDir instead; virtual is always outDir/virtual
    */
   virtualDir?: string
 

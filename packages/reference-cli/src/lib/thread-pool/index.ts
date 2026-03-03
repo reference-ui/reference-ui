@@ -1,4 +1,4 @@
-export { KEEP_ALIVE, runWorker, shutdown } from './run'
+export { initPool, KEEP_ALIVE, runWorker, shutdown } from './run'
 export {
   createWorkerPool,
   type ThreadPoolManifest,
