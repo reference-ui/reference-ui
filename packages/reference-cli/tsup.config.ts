@@ -17,4 +17,6 @@ export default defineConfig({
     return { js: '.mjs' }
   },
   external: ['@parcel/watcher', 'picomatch'],
+  // Bundle .ejs templates as text strings — no file copying needed at runtime
+  loader: { '.ejs': 'text' },
 })
