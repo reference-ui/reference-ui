@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { writeFile, readFile, rm, mkdir } from 'node:fs/promises'
-import { existsSync, readFileSync } from 'node:fs'
-import { resolve, dirname, join } from 'node:path'
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
+import { resolve, dirname, join, relative, extname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -123,6 +123,89 @@ describe('ref sync – virtual copy (e2e)', () => {
 
       await waitFor(() => existsSync(virt('src', 'App.tsx')))
       expect(existsSync(virt('src', '__e2e_excluded__.txt'))).toBe(false)
+    })
+  })
+
+  /**
+   * Virtual should mirror src: same files, no orphans, no missing.
+   * These tests are expected to fail when virtual has stale files (e.g. after
+   * source deletion) or when sync doesn't remove orphans.
+   */
+  describe('virtual mirrors src (no orphans or missing)', () => {
+    const INCLUDE = ['src/**/*.ts', 'src/**/*.tsx'] as const
+    const EXTENSION_TRANSFORMS: Record<string, string> = {
+      '.mdx': '.jsx',
+      '.js': '.js',
+      '.jsx': '.jsx',
+      '.ts': '.ts',
+      '.tsx': '.tsx',
+    }
+
+    function* walkFiles(dir: string, base = dir): Generator<string> {
+      for (const name of readdirSync(dir)) {
+        const path = join(dir, name)
+        if (statSync(path).isDirectory()) {
+          yield* walkFiles(path, base)
+        } else {
+          yield relative(base, path)
+        }
+      }
+    }
+
+    function getSourcePaths(): string[] {
+      const out: string[] = []
+      for (const rel of walkFiles(srcDir, srcDir)) {
+        const ext = extname(rel)
+        if (ext === '.ts' || ext === '.tsx') {
+          out.push(join('src', rel))
+        }
+      }
+      return out.sort()
+    }
+
+    function getVirtualPaths(): string[] {
+      if (!existsSync(virtualDir)) return []
+      const out: string[] = []
+      for (const rel of walkFiles(virtualDir, virtualDir)) {
+        out.push(rel)
+      }
+      return out.sort()
+    }
+
+    function virtualToPossibleSources(virtualRel: string): string[] {
+      const ext = extname(virtualRel)
+      const base = virtualRel.slice(0, -ext.length)
+      if (ext === '.jsx') return [`${base}.jsx`, `${base}.mdx`]
+      return [virtualRel]
+    }
+
+    it('virtual has no orphan files (every virtual file has a source counterpart)', () => {
+      const virtualPaths = getVirtualPaths()
+      const sourcePaths = new Set(getSourcePaths())
+      const orphans: string[] = []
+
+      for (const vRel of virtualPaths) {
+        const candidates = virtualToPossibleSources(vRel)
+        const hasSource = candidates.some((c) => sourcePaths.has(c))
+        if (!hasSource) orphans.push(vRel)
+      }
+
+      expect(orphans, `Orphan files in virtual (no source): ${orphans.join(', ')}`).toEqual([])
+    })
+
+    it('virtual has all source files (no missing)', () => {
+      const sourcePaths = getSourcePaths()
+      const missing: string[] = []
+
+      for (const sRel of sourcePaths) {
+        const ext = extname(sRel)
+        const outExt = EXTENSION_TRANSFORMS[ext] ?? ext
+        const virtualRel = sRel.slice(0, -ext.length) + outExt
+        const abs = join(virtualDir, virtualRel)
+        if (!existsSync(abs)) missing.push(sRel)
+      }
+
+      expect(missing, `Missing in virtual (source exists): ${missing.join(', ')}`).toEqual([])
     })
   })
 })

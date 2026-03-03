@@ -2,12 +2,15 @@
  * Virtual module events – triggers and notifications.
  * Triggers: when emitted, virtual runs an action.
  * Notifications: emitted when virtual completes an action.
+ * Transform is part of copy – no separate events.
  */
 export type VirtualEvents = {
   /** Emitted when virtual worker is ready to receive triggers */
   'virtual:ready': Record<string, never>
   /** Run full copy to .reference-ui/virtual */
   'run:virtual:copy:all': Record<string, never>
-  /** Emitted when virtual copy to .reference-ui/virtual is complete */
+  /** Emitted when one file is copied/transformed (copy+transform combined) */
+  'virtual:fs:change': { event: 'add' | 'change' | 'unlink'; path: string }
+  /** Emitted when virtual full copy to .reference-ui/virtual is complete */
   'virtual:complete': Record<string, never>
 }

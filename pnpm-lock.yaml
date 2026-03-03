@@ -69,6 +69,9 @@ importers:
       '@parcel/watcher':
         specifier: ^2.5.6
         version: 2.5.6
+      '@rspress/mdx-rs':
+        specifier: ^0.6.6
+        version: 0.6.6
       commander:
         specifier: ^14.0.3
         version: 14.0.3
@@ -91,6 +94,9 @@ importers:
       '@eslint/js':
         specifier: ^10.0.1
         version: 10.0.1(eslint@10.0.2)
+      '@napi-rs/cli':
+        specifier: ^3.5.1
+        version: 3.5.1(@emnapi/runtime@1.8.1)(@types/node@25.1.0)(node-addon-api@7.1.1)
       '@types/node':
         specifier: ^25.1.0
         version: 25.1.0
@@ -5375,7 +5381,7 @@ snapshots:
       es-toolkit: 1.44.0
       js-yaml: 4.1.1
       obug: 2.1.1
-      semver: 7.7.3
+      semver: 7.7.4
       typanion: 3.14.0
     optionalDependencies:
       '@emnapi/runtime': 1.8.1
