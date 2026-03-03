@@ -24,12 +24,12 @@ How to use the thread pool and event system to build effectively: workers run in
 
 ### workers.json ↔ Thread pool
 
-Manifest keys map to `dist/cli/${name}/worker.mjs`. The registry imports it; tsup uses `workerEntries` for build. **Keys only** – values exist for tsup paths.
+The pool exposes `workers` (registry of all possible workers). Manifest keys map to `dist/cli/${name}/worker.mjs`. `workerEntries` feeds tsup. **Keys only** – values exist for tsup paths. Named generically so the registry can expand beyond ref sync (e.g. lint, check, etc.).
 
 ### Flow
 
 1. Main thread bootstraps, wires flow in an events module.
-2. Module inits spawn workers via `runWorker(name, payload)`.
+2. Module inits spawn workers via `workers.runWorker(name, payload)`.
 3. Workers subscribe with `on(...)`, return `KEEP_ALIVE` to stay alive.
 4. Events flow via BroadcastChannel; all threads react.
 

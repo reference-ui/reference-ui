@@ -1,7 +1,7 @@
 import { createWorkerPool } from './create-pool'
 import manifest from '../../../workers.json'
 
-export const syncWorkers = createWorkerPool(manifest)
+export const workers = createWorkerPool(manifest)
 
 /** Build entries for tsup (from workers.json) */
 export const workerEntries = Object.fromEntries(

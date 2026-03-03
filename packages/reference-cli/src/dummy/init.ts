@@ -1,4 +1,4 @@
-import { syncWorkers } from '../lib/thread-pool'
+import { workers } from '../lib/thread-pool'
 import type { SyncPayload } from '../sync/types'
 
 /**
@@ -6,10 +6,5 @@ import type { SyncPayload } from '../sync/types'
  * Cold-mode trigger is emitted by sync/events.ts.
  */
 export function initDummyWorker(_payload: SyncPayload): void {
-  syncWorkers
-    .runWorker('dummy', undefined)
-    .catch((error: unknown) => {
-      // eslint-disable-next-line no-console
-      console.error('[dummy] Worker failed:', error)
-    })
+  workers.runWorker('dummy', undefined)
 }
