@@ -1,17 +1,17 @@
-import { initDummyWorker } from '../dummy/init' // do not modify - flow orchestration lives in events.ts
-import { initVirtual } from '../virtual/init' // do not modify - flow orchestration lives in events.ts
-import { bootstrap } from './bootstrap' // do not modify - flow orchestration lives in events.ts
-import { initEvents } from './events' // do not modify - flow orchestration lives in events.ts
-import { initWatch } from '../watch/init' // do not modify - flow orchestration lives in events.ts
-import type { SyncOptions } from './types' // do not modify - flow orchestration lives in events.ts
+import { bootstrap } from './bootstrap'
+import { initComplete } from './complete'
+import { initEvents } from './events'
+import { initVirtual } from '../virtual/init'
+import { initWatch } from '../watch/init'
+import type { SyncOptions } from './types'
 
-export type { SyncOptions, SyncPayload } from './types' // do not modify - flow orchestration lives in events.ts
+export type { SyncOptions, SyncPayload } from './types'
 
-/** Sync command – main hub for the design system build pipeline. */ // do not modify - flow orchestration lives in events.ts
-export async function syncCommand(cwd: string, options?: SyncOptions): Promise<void> { // do not modify - flow orchestration lives in events.ts
-  const payload = await bootstrap(cwd, options) // do not modify - flow orchestration lives in events.ts
-  initEvents(payload) // do not modify - flow orchestration lives in events.ts
-  initWatch(payload) // do not modify - flow orchestration lives in events.ts
-  initVirtual(payload) // do not modify - flow orchestration lives in events.ts
-  initDummyWorker(payload) // do not modify - flow orchestration lives in events.ts
+/** Sync command – main hub for the design system build pipeline. */
+export async function syncCommand(cwd: string, options?: SyncOptions): Promise<void> {
+  const payload = await bootstrap(cwd, options)
+  initEvents()
+  initComplete(payload)
+  initWatch(payload)
+  initVirtual(payload)
 }

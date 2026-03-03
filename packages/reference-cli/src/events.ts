@@ -1,4 +1,5 @@
 import type { SyncEvents } from './sync/types'
+import type { VirtualEvents } from './virtual/events'
 import type { WatchEvents } from './watch/events'
 
 /**
@@ -6,4 +7,4 @@ import type { WatchEvents } from './watch/events'
  * Format: { 'event:name': PayloadType }
  * Imported by lib/event-bus for typed emit/on/once.
  */
-export type Events = SyncEvents & WatchEvents
+export type Events = SyncEvents & VirtualEvents & WatchEvents

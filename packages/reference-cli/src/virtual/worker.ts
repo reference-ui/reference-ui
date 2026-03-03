@@ -1,11 +1,11 @@
 /**
  * Virtual worker – copies source files to .reference-ui/virtual for Panda scanning.
- * Listens for sync:changed, performs full copy, emits virtual:complete.
- * Config comes from workerData (set when pool is created).
+ * Listens for run:virtual:copy, performs full copy, emits virtual:complete.
+ * Emits virtual:ready when handlers are registered.
  */
-import { on } from '../lib/event-bus'
+import { emit, on } from '../lib/event-bus'
 import { KEEP_ALIVE } from '../lib/thread-pool'
-import { runInitialCopy } from './logic'
+import { runInitialCopy } from './initial-copy'
 import type { VirtualWorkerPayload } from './types'
 
 export default async function runVirtual(payload: VirtualWorkerPayload): Promise<never> {
@@ -16,10 +16,8 @@ export default async function runVirtual(payload: VirtualWorkerPayload): Promise
     })
   }
 
-  on('sync:changed', handler)
-
-  // Cold sync: run immediately
-  handler()
+  on('run:virtual:copy', handler)
+  emit('virtual:ready')
 
   return KEEP_ALIVE
 }
