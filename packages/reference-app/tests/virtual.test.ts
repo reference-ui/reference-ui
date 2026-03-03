@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { writeFile, readFile, rm } from 'node:fs/promises'
+import { writeFile, readFile, rm, mkdir } from 'node:fs/promises'
 import { existsSync, readFileSync } from 'node:fs'
 import { resolve, dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -26,16 +26,16 @@ async function waitFor(
 }
 
 /**
- * Integration tests: ref sync --watch runs in background (test-setup).
- * Tests make file changes and await results – no ref commands in tests.
+ * E2E: ref sync --watch runs in background (test-setup).
+ * Tests create new files/dirs in src, watch copies to virtual, we assert.
  */
-describe('ref sync – virtual copy (integration)', () => {
+describe('ref sync – virtual copy (e2e)', () => {
   const createdFiles: string[] = []
 
   afterEach(async () => {
-    for (const f of createdFiles) {
+    for (const f of [...createdFiles].reverse()) {
       try {
-        await rm(join(pkgRoot, f), { force: true })
+        await rm(join(pkgRoot, f), { recursive: true, force: true })
       } catch {
         /* ignore */
       }
@@ -64,41 +64,65 @@ describe('ref sync – virtual copy (integration)', () => {
     })
   })
 
-  describe('watch reacts to file changes', () => {
-    it('copies newly added files', async () => {
-      const file = join(srcDir, '__watch_test_new__.tsx')
-      createdFiles.push('src/__watch_test_new__.tsx')
+  describe('watch reacts to new files in src (e2e)', () => {
+    it('copies new .tsx file at src root', async () => {
+      const file = join(srcDir, '__e2e_new__.tsx')
+      createdFiles.push('src/__e2e_new__.tsx')
       await writeFile(file, 'export const New = () => null')
 
-      const ok = await waitFor(() => existsSync(virt('src', '__watch_test_new__.tsx')))
+      const ok = await waitFor(() => existsSync(virt('src', '__e2e_new__.tsx')))
       expect(ok).toBe(true)
-      expect(await readFile(virt('src', '__watch_test_new__.tsx'), 'utf-8')).toBe(
+      expect(await readFile(virt('src', '__e2e_new__.tsx'), 'utf-8')).toBe(
         'export const New = () => null'
       )
     })
 
+    it('copies new .ts file (include has ts and tsx)', async () => {
+      const file = join(srcDir, '__e2e_helper__.ts')
+      createdFiles.push('src/__e2e_helper__.ts')
+      await writeFile(file, 'export const add = (a: number, b: number) => a + b')
+
+      const ok = await waitFor(() => existsSync(virt('src', '__e2e_helper__.ts')))
+      expect(ok).toBe(true)
+      expect(await readFile(virt('src', '__e2e_helper__.ts'), 'utf-8')).toContain('add')
+    })
+
+    it('copies new file in nested dir (preserves structure)', async () => {
+      const dir = join(srcDir, 'components')
+      const file = join(dir, '__e2e_Button__.tsx')
+      createdFiles.push('src/components')
+      await mkdir(dir, { recursive: true })
+      await writeFile(file, 'export const Button = () => <button />')
+
+      const ok = await waitFor(() => existsSync(virt('src', 'components', '__e2e_Button__.tsx')))
+      expect(ok).toBe(true)
+      expect(await readFile(virt('src', 'components', '__e2e_Button__.tsx'), 'utf-8')).toBe(
+        'export const Button = () => <button />'
+      )
+    })
+
     it('updates virtual when source file content changes', async () => {
-      const file = join(srcDir, '__watch_test_update__.tsx')
-      createdFiles.push('src/__watch_test_update__.tsx')
+      const file = join(srcDir, '__e2e_update__.tsx')
+      createdFiles.push('src/__e2e_update__.tsx')
       await writeFile(file, 'export const X = () => <div>v1</div>')
-      await waitFor(() => existsSync(virt('src', '__watch_test_update__.tsx')))
+      await waitFor(() => existsSync(virt('src', '__e2e_update__.tsx')))
 
       await writeFile(file, 'export const X = () => <div>v2</div>')
       const ok = await waitFor(
         () =>
-          readFileSync(virt('src', '__watch_test_update__.tsx'), 'utf-8') ===
+          readFileSync(virt('src', '__e2e_update__.tsx'), 'utf-8') ===
           'export const X = () => <div>v2</div>'
       )
       expect(ok).toBe(true)
     })
 
-    it('excludes files not matching include patterns', async () => {
-      const file = join(srcDir, '__watch_test_excluded__.txt')
-      createdFiles.push('src/__watch_test_excluded__.txt')
+    it('excludes files not matching include (e.g. .txt)', async () => {
+      const file = join(srcDir, '__e2e_excluded__.txt')
+      createdFiles.push('src/__e2e_excluded__.txt')
       await writeFile(file, 'not ts/tsx')
 
       await waitFor(() => existsSync(virt('src', 'App.tsx')))
-      expect(existsSync(virt('src', '__watch_test_excluded__.txt'))).toBe(false)
+      expect(existsSync(virt('src', '__e2e_excluded__.txt'))).toBe(false)
     })
   })
 })
