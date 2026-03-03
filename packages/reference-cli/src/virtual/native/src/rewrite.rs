@@ -10,18 +10,15 @@ use oxc_ast::ast::{
 use oxc_parser::Parser;
 use oxc_span::SourceType;
 use regex::Regex;
-use std::path::Path;
 
 const CORE_PACKAGE: &str = "@reference-ui/react";
 const CSS_BINDING: &str = "css";
 const CVA_BINDINGS: [&str; 2] = ["cva", "recipe"];
 
-fn compute_styled_system_path(relative_path: &str) -> String {
-    let path = Path::new(relative_path);
-    let parent = path.parent().unwrap_or(Path::new(""));
-    let segments: Vec<_> = parent.components().collect();
-    let depth = segments.len() + 1; // +1 for .virtual/
-    "../".repeat(depth) + "src/system/css"
+/// Virtual files are only scanned by Panda (cwd=reference-core). Use fixed path;
+/// never needs to resolve from consumer—Panda picks up system/css from core.
+fn compute_styled_system_path(_relative_path: &str) -> String {
+    "src/system/css".to_string()
 }
 
 fn get_imported_name(spec: &ImportSpecifier) -> String {

@@ -15,8 +15,8 @@ import { virt } from './helpers'
 describe('virtual – transforms (e2e)', () => {
   const virtualSrc = (...p: string[]) => virt('src', 'virtual', ...p)
 
-  // For src/virtual/*.tsx, relative depth = 3 → '../../../src/system/css' (see rewrite.rs compute_styled_system_path)
-  const EXPECTED_SYSTEM_CSS_IMPORT = "from '../../../src/system/css'"
+  // Virtual files use fixed path; Panda (cwd=core) resolves src/system/css from core
+  const EXPECTED_SYSTEM_CSS_IMPORT = "from 'src/system/css'"
 
   it('rewrites css import to styled-system path (src/virtual/css.tsx)', () => {
     expect(existsSync(virtualSrc('css.tsx'))).toBe(true)
