@@ -3,7 +3,7 @@
  * 
  */
 
-import { defineConfig } from '@reference-ui/core'
+import { defineConfig } from '@reference-ui/cli/config'
 
 // ============================================================================
 // Configuration
