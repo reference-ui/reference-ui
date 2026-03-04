@@ -1,29 +1,89 @@
 # Fragments
 
-**General-purpose fragment collection system for build-time code execution.**
+General-purpose fragment collection for build-time code execution. Users call functions like `tokens()` and `recipe()` in their code; the CLI scans, bundles, executes, and collects the data they pass.
 
-The fragments module provides a way to:
-1. **Define** functions users can call (e.g., `tokens()`, `extendPandaConfig()`)
-2. **Scan** directories for files that call those functions
-3. **Execute** those files at build time via microbundle
-4. **Collect** the data passed to those functions
+---
 
-This is the core capability that powers system features like Panda config collection, box pattern extensions, and font system configuration.
+## High-Level API (The Magic)
 
-## Concepts
+### 1. Define a Fragment Collector
 
-### Fragment
+Create a callable function that users will import and call. The collector is a **function with properties** (callable + metadata).
 
-A **fragment** is data collected from user code at build time. The shape is generic (`T`).
+```ts
+import { createFragmentCollector } from '@reference-ui/cli/lib/fragments'
 
-### Collector
+// Create collectors – they ARE the functions users call
+export const tokens = createFragmentCollector({
+  name: 'tokens',
+  targetFunction: 'tokens',
+})
 
-A **FragmentCollector** is:
-- A function users call: `collect(fragment: T)`
-- A globalThis registry that captures those calls during execution
-- Init/cleanup utilities for the global state
+export const recipe = createFragmentCollector({
+  name: 'recipe',
+  targetFunction: 'recipe',
+})
+```
 
-### Workflow
+**Config:**
+- `name` – Unique identifier (used in result object)
+- `targetFunction` – Function name to scan for in user code (e.g. `'tokens'`, `'recipe'`)
+
+**Returns:** A callable function with attached `config`, `init()`, `getFragments()`, and `cleanup()`.
+
+---
+
+### 2. How Users Use Them
+
+Users import the collector functions (e.g. from a library) and call them with plain data. **Fragments are plain JavaScript objects.**
+
+```ts
+// User code – e.g. src/components/Button.tsx
+import { tokens, recipe } from '@reference-ui/system'
+
+tokens({
+  colors: {
+    primary: { value: '#3B82F6' },
+  },
+})
+
+recipe({
+  className: 'button',
+  base: { padding: '8px' },
+})
+```
+
+The library (`@reference-ui/system`) just re-exports the collectors:
+
+```ts
+export { tokens, recipe } from '@reference-ui/cli/collectors'
+```
+
+---
+
+### 3. Collect All Fragments
+
+CLI calls `collectFragments` with glob patterns (e.g. from `ui.config.ts` `include`). You get back a keyed object of arrays.
+
+```ts
+import { collectFragments } from '@reference-ui/cli/lib/fragments'
+import { tokens, recipe } from './collectors'
+
+const config = loadUserConfig() // ui.config.ts
+
+const allFragments = await collectFragments({
+  collectors: [tokens, recipe],
+  include: config.include,  // ['src/**/*.{ts,tsx}', 'app/**/*.{ts,tsx}']
+  tempDir: join(outDir, 'tmp'),  // e.g. .reference-ui/tmp – required; bundled .mjs files go here
+})
+
+// allFragments === { tokens: [...], recipe: [...] }
+```
+
+
+---
+
+## The Flow
 
 ```
 User code:
@@ -32,198 +92,119 @@ User code:
                     ↓
 CLI scans for files calling tokens()
                     ↓
-CLI bundles + executes each file
+For each file:
+  CLI sets globalThis[collectorKey] = []
+  CLI bundles file (microBundle) → temp .mjs
+  CLI imports temp file (executes user code)
+  User's tokens({ ... }) pushes object to globalThis
+  CLI reads fragments, cleans up globalThis
                     ↓
-Collector captures { colors: { primary: '#000' } }
+Collector holds [{ colors: { primary: '#000' } }, ...]
                     ↓
 CLI merges/processes all fragments
 ```
 
-## API
+**Fragments** = the plain data objects.  
+**Bundling** = how we execute user code so those objects get passed into the collector.
 
-### `createFragmentCollector<T>(config)`
+---
 
-Create a collector for a specific fragment type.
+## How It Works (Implementation)
 
-```typescript
-import { createFragmentCollector } from '@reference-ui/cli/lib/fragments'
-import type { Config } from '@pandacss/dev'
+### Microbundle Per File
 
-const pandaCollector = createFragmentCollector<Partial<Config>>({
-  name: 'panda-config',
-  globalKey: '__refPandaConfig',
-  logLabel: 'system:panda',
-})
+For each file that calls a fragment function:
 
-// Export for users
-export const extendPandaConfig = pandaCollector.collect
-```
+1. **Init** – `collector.init()` sets `globalThis[globalKey] = []`
+2. **Bundle** – `microBundle(filePath)` bundles the file and its dependencies (resolves imports, compiles TS)
+3. **Write** – Bundled code is written to a temp `.mjs` file (Node `import()` needs a path)
+4. **Execute** – `import(tempPath)` runs the bundle; user's `tokens({ ... })` runs and pushes to globalThis
+5. **Collect** – `collector.getFragments()` returns a copy of the array
+6. **Cleanup** – `collector.cleanup()` deletes the key from globalThis; temp file is removed
 
-**Config:**
-- `name` - Human-readable identifier (for logging)
-- `globalKey` - Unique key on globalThis (e.g., `__refPandaConfig`)
-- `logLabel` - Optional label for debug logs (defaults to `fragments:${name}`)
-
-**Returns:**
-- `collect(fragment: T)` - Function users call to register fragments
-- `init()` - Set up globalThis collector (call before executing code)
-- `getFragments()` - Get collected fragments
-- `cleanup()` - Remove from globalThis
-
-### `scanForFragments(options)`
-
-Scan directories for files that call specific functions.
-
-```typescript
-import { scanForFragments } from '@reference-ui/cli/lib/fragments'
-
-const files = scanForFragments({
-  directories: ['src/styled', 'src/components'],
-  functionNames: ['extendPandaConfig', 'tokens'],
-  include: ['**/*.{ts,tsx}'], // optional, this is the default
-  exclude: ['**/node_modules/**', '**/*.d.ts'], // optional, this is the default
-})
-// => ['/abs/path/to/button.ts', '/abs/path/to/input.tsx', ...]
-```
-
-**Options:**
-- `directories` - Directories to scan (absolute or relative)
-- `functionNames` - Function names to look for (e.g., `['tokens', 'recipe']`)
-- `include` - Glob patterns to include (default: `['**/*.{ts,tsx}']`)
-- `exclude` - Glob patterns to exclude (default: `['**/node_modules/**', '**/*.d.ts']`)
-
-**Returns:** Array of absolute file paths
-
-### `collectFragments<T>(options)`
-
-Execute files and collect fragments.
-
-```typescript
-import { createFragmentCollector, scanForFragments, collectFragments } from '@reference-ui/cli/lib/fragments'
-
-// 1. Create collector
-const collector = createFragmentCollector<MyFragmentType>({
-  name: 'my-system',
-  globalKey: '__refMySystem',
-})
-
-// 2. Scan for files
-const files = scanForFragments({
-  directories: ['src/styled'],
-  functionNames: ['myFunction'],
-})
-
-// 3. Collect fragments
-const fragments = await collectFragments({
-  files,
-  collector,
-  tempDir: '/path/to/.ref/fragments', // optional
-})
-
-// 4. Do something with fragments
-console.log(fragments) // => [{ ... }, { ... }, ...]
-```
-
-**Options:**
-- `files` - Files to execute (from `scanForFragments` or custom list)
-- `collector` - FragmentCollector instance
-- `tempDir` - Optional temp directory for bundled files (default: `cwd/.ref/fragments`)
-
-**Returns:** `Promise<T[]>` - Array of collected fragments
-
-## Usage in System
-
-System modules configure collectors for their needs:
-
-```typescript
-// packages/reference-core/src/cli/system/panda/collector.ts
-import { createFragmentCollector } from '@reference-ui/cli/lib/fragments'
-import type { Config } from '@pandacss/dev'
-
-export const pandaCollector = createFragmentCollector<Partial<Config>>({
-  name: 'panda-config',
-  globalKey: '__refPandaConfig',
-  logLabel: 'system:panda',
-})
-
-// Public API
-export const extendPandaConfig = pandaCollector.collect
-export const COLLECTOR_KEY = pandaCollector.config.globalKey
-```
-
-Then in the build process:
-
-```typescript
-// packages/reference-core/src/cli/system/panda/build.ts
-import { scanForFragments, collectFragments } from '@reference-ui/cli/lib/fragments'
-import { pandaCollector } from './collector'
-
-const files = scanForFragments({
-  directories: ['src/styled', 'user/project/src'],
-  functionNames: ['extendPandaConfig', 'tokens', 'recipe'],
-})
-
-const fragments = await collectFragments({
-  files,
-  collector: pandaCollector,
-  tempDir: join(coreDir, '.ref', 'panda'),
-})
-
-// Merge fragments into Panda config...
-```
-
-## Why Fragments?
-
-### Before (tangled, Panda-specific)
-
-```
-system/eval/         - Panda-specific runner with COLLECTOR_KEY hardcoded
-system/config/panda/ - initCollector.ts, extendPandaConfig.ts (boilerplate)
-```
-
-### After (general, reusable)
-
-```
-lib/fragments/       - Generic capability, tested & documented
-system/panda/        - Configures fragments for Panda use case
-system/fonts/        - Configures fragments for fonts use case
-system/box/          - Configures fragments for box patterns
-```
-
-**Benefits:**
-- Clear separation: lib = capability, system = configuration
-- No boilerplate files (initCollector, etc.) per use case
-- Type-safe collectors for each domain
-- Easy to add new fragment types
-- Testable in isolation
-
-## Implementation Details
-
-### Microbundle
-
-Each file is bundled with `microBundle()` before execution. This:
-- Resolves imports (including `node_modules`)
-- Compiles TypeScript
-- Inlines dependencies (so the temp file is self-contained)
+So the fragments module **creates one microbundle per fragment file**, runs it, and captures the objects passed to the collector.
 
 ### GlobalThis Pattern
 
-Fragments use `globalThis[collectorKey]` to pass data between:
-- User code (calls `collect(fragment)`)
-- CLI (reads from globalThis after execution)
+The collector function (what users call) does:
 
-This works because:
-1. CLI sets `globalThis[key] = []` before import
-2. User code calls `collect()`, which pushes to that array
-3. CLI reads the array and cleans up
+```ts
+function collect(fragment: T) {
+  const arr = (globalThis as any)[globalKey]
+  if (Array.isArray(arr)) arr.push(fragment)
+}
+```
 
-### Temp Files
+The CLI sets that array before importing the bundle and reads it after. No direct reference to globalThis in user code—it’s all behind the callable collector.
 
-Bundled code is written to temp `.mjs` files because Node's `import()` requires a file path. Temp files are cleaned up after execution.
+### Fragments Are Just Data
 
-## Future
+A **fragment** is a plain JavaScript object:
 
-- Add fragment validation/schema support
-- Add fragment merging strategies (deep merge, array concat, etc.)
-- Add fragment caching based on file mtimes
-- Add parallel execution for large file sets
+```ts
+{ colors: { primary: { value: '#3B82F6' } } }
+{ className: 'button', base: { padding: '8px' } }
+```
+
+Bundling is only the mechanism to run user code and capture these objects.
+
+---
+
+## API Reference
+
+### `createFragmentCollector<T>(config): FragmentCollector<T>`
+
+Returns a callable function with properties:
+
+- **Call:** `collector(fragment)` – same as `collector.collect(fragment)`
+- **config** – `{ name, targetFunction? }`
+- **init()** – Set up globalThis (call before running user code)
+- **getFragments()** – Return collected fragments
+- **cleanup()** – Remove collector from globalThis
+
+### `scanForFragments(options): string[]`
+
+Find files that call any of the given function names.
+
+- **directories** – Paths to scan
+- **functionNames** – e.g. `['tokens', 'recipe']`
+- **include** – (optional) globs, default `['**/*.{ts,tsx}']`
+- **exclude** – (optional) default `['**/node_modules/**', '**/*.d.ts']`
+
+Returns absolute file paths.
+
+### `collectFragments(options): Promise<T[] | Record<string, T[]>>`
+
+**Planner API (multiple collectors):**
+
+- **collectors** – Array of `FragmentCollector`s
+- **include** – Glob patterns (e.g. from `config.include`)
+- **tempDir** – **Required.** Outdir for temp bundled files, usually `<project-outdir>/tmp` (e.g. `.reference-ui/tmp`). Bundled `.mjs` files are written here and cleaned up after each run.
+
+Returns `Record<collectorName, T[]>`.
+
+**Single-collector API:**
+
+- **files** – Paths (e.g. from `scanForFragments`)
+- **collector** – One `FragmentCollector`
+- **tempDir** – Same as planner API; usually `<outdir>/tmp`.
+
+Returns `T[]`.
+
+---
+
+## Why This Exists
+
+**Before:** Panda (and others) had custom eval runners, hardcoded `COLLECTOR_KEY`s, and per-use-case init/collect boilerplate.
+
+**After:** One generic fragments API. System packages (panda, fonts, box, etc.) create collectors and call `collectFragments`; no duplicated globalThis logic or scanner code.
+
+---
+
+## Notes & Gotchas
+
+- **tempDir** – You must pass a temp directory (e.g. `join(outDir, 'tmp')` or `.reference-ui/tmp`). This is where bundled `.mjs` files are written; they are deleted after use. If omitted or wrong, bundling can fail or pollute the wrong directory.
+- **Glob resolution** – `collectFragments({ include })` uses `fast-glob` with `cwd`; handle relative vs absolute as needed.
+- **Collector names** – Result object is keyed by `config.name`; duplicate names overwrite.
+- **Temp files** – Created under `tempDir`, deleted after each run.
+- **reference-core** – This is intended to replace `extendPandaConfig`-style patterns with `createFragmentCollector` + `collectFragments`.
