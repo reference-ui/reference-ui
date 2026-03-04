@@ -32,5 +32,12 @@ export default defineConfig({
         cp(join(LIQUID_SRC, f), join(CONFIG_DIST, f))
       )
     )
+    // Copy internal-fragments.mjs when it exists (produced by build:styled)
+    const internalFragments = join(LIQUID_SRC, '..', 'internal-fragments.mjs')
+    try {
+      await cp(internalFragments, join(CONFIG_DIST, 'internal-fragments.mjs'))
+    } catch {
+      // build:styled may not have run yet
+    }
   },
 })
