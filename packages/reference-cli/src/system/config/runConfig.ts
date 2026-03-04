@@ -4,7 +4,7 @@ import { scanForFragments } from '../../lib/fragments'
 import { createPandaConfig } from './createPandaConfig'
 import { getConfig } from '../../config/store'
 import { log } from '../../lib/log'
-import { tokensCollector } from './collectors/tokens'
+import { tokensCollector } from '../api/tokens'
 import type { FragmentCollector } from '../../lib/fragments'
 
 /** Default collectors for panda config. Extend when adding recipe/utilities/etc. */
