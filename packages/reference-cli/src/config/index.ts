@@ -21,3 +21,6 @@ export {
   LoadConfigError,
   ConfigValidationError,
 } from './errors'
+
+// Fragment collectors - user-facing API for extending Panda config
+export { tokens } from '../system/config/collectors/tokens'

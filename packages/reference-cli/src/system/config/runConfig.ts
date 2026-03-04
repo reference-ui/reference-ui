@@ -4,10 +4,13 @@ import { scanForFragments } from '../../lib/fragments'
 import { createPandaConfig } from './createPandaConfig'
 import { getConfig } from '../../config/store'
 import { log } from '../../lib/log'
+import { tokensCollector } from './collectors/tokens'
 import type { FragmentCollector } from '../../lib/fragments'
 
-/** Default collectors for panda config. Empty for bootstrap; extend when adding tokens/recipe etc. */
-const DEFAULT_PANDA_COLLECTORS: FragmentCollector<unknown>[] = []
+/** Default collectors for panda config. Extend when adding recipe/utilities/etc. */
+const DEFAULT_PANDA_COLLECTORS: FragmentCollector<unknown, unknown>[] = [
+  tokensCollector,
+]
 
 /**
  * Run config generation: scan for fragments, write panda.config to outDir.

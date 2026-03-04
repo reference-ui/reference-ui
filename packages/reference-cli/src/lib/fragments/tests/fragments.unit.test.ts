@@ -72,6 +72,109 @@ describe('createFragmentCollector', () => {
 })
 
 // ---------------------------------------------------------------------------
+// createFragmentCollector with transform
+// ---------------------------------------------------------------------------
+
+describe('createFragmentCollector with transform', () => {
+  it('returns identity when no transform is provided', () => {
+    const c = createFragmentCollector<{ x: number }>({ name: 'identity-test' })
+    c.init()
+    c({ x: 1 })
+    c({ x: 2 })
+    expect(c.getFragments()).toEqual([{ x: 1 }, { x: 2 }])
+    c.cleanup()
+  })
+
+  it('applies transform to each collected fragment', () => {
+    interface FontDef {
+      name: string
+      family: string
+    }
+    interface TokenConfig {
+      theme: { tokens: { fonts: Record<string, { value: string }> } }
+    }
+
+    const fontCollector = createFragmentCollector<FontDef, TokenConfig>({
+      name: 'fonts',
+      transform: (font) => ({
+        theme: {
+          tokens: {
+            fonts: {
+              [font.name]: { value: font.family },
+            },
+          },
+        },
+      }),
+    })
+
+    fontCollector.init()
+    fontCollector({ name: 'sans', family: 'Inter' })
+    fontCollector({ name: 'mono', family: 'Fira Code' })
+
+    const result = fontCollector.getFragments()
+    expect(result).toHaveLength(2)
+    expect(result[0]).toEqual({
+      theme: { tokens: { fonts: { sans: { value: 'Inter' } } } },
+    })
+    expect(result[1]).toEqual({
+      theme: { tokens: { fonts: { mono: { value: 'Fira Code' } } } },
+    })
+    fontCollector.cleanup()
+  })
+
+  it('works with complex transforms', () => {
+    interface RecipeDef {
+      name: string
+      base: Record<string, unknown>
+      variants?: Record<string, unknown>
+    }
+
+    const recipeCollector = createFragmentCollector<RecipeDef, { theme: { recipes: Record<string, RecipeDef> } }>({
+      name: 'recipe',
+      transform: (recipe) => ({
+        theme: {
+          recipes: {
+            [recipe.name]: recipe,
+          },
+        },
+      }),
+    })
+
+    recipeCollector.init()
+    recipeCollector({
+      name: 'button',
+      base: { px: 4, py: 2 },
+      variants: { size: { sm: { px: 2 } } },
+    })
+
+    const result = recipeCollector.getFragments()
+    expect(result).toHaveLength(1)
+    expect(result[0].theme.recipes.button).toEqual({
+      name: 'button',
+      base: { px: 4, py: 2 },
+      variants: { size: { sm: { px: 2 } } },
+    })
+    recipeCollector.cleanup()
+  })
+
+  it('transform receives correct input type', () => {
+    const c = createFragmentCollector<number, string>({
+      name: 'stringify',
+      transform: (num) => {
+        // TypeScript should infer num as number
+        return `value: ${num}`
+      },
+    })
+
+    c.init()
+    c(42)
+    c(100)
+    expect(c.getFragments()).toEqual(['value: 42', 'value: 100'])
+    c.cleanup()
+  })
+})
+
+// ---------------------------------------------------------------------------
 // scanForFragments
 // ---------------------------------------------------------------------------
 
