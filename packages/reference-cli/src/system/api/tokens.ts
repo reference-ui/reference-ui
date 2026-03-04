@@ -1,4 +1,4 @@
-import { createFragmentCollector } from '../../lib/fragments'
+import { createFragmentCollector } from '../../lib/fragments/collector'
 import type { Config } from '@pandacss/dev'
 
 type TokenConfig = NonNullable<Config['theme']>['tokens']
