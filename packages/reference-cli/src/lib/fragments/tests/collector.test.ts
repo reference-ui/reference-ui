@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { createFragmentCollector } from './collector'
+import { createFragmentCollector } from '../collector'
 
 describe('createFragmentCollector', () => {
   const testGlobalKey = '__testFragments'
