@@ -1,10 +1,11 @@
 import { defineConfig } from 'tsup'
 import { workerEntries } from './src/lib/thread-pool'
 import { cp, readdir } from 'node:fs/promises'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 
 const LIQUID_SRC = 'src/system/config/liquid'
 const CONFIG_DIST = 'dist/cli/config'
+const STYLED = resolve('src/system/styled')
 
 export default defineConfig({
   entry: {

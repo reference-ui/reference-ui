@@ -62,6 +62,23 @@ Workers communicate via a `BroadcastChannel` event bus. Each worker subscribes t
 
 ---
 
+## Source Structure
+
+```
+system/
+├── api/          # Extension surface (tokens, recipe, pattern collectors)
+├── internal/    # Rhythm, props — use api to extend config
+├── primitives/  # React components — read from styled
+├── styled/       # Panda output (generated, gitignored)
+├── config/       # Config generation pipeline
+├── panda/        # Panda execution
+└── workers/      # Worker docs
+```
+
+**Flow:** `api` ← `internal` (rhythm, props extend config) → `styled` (Panda) → `primitives` (components)
+
+---
+
 ## Output Structure
 
 All artefacts live under `outDir` (default `.reference-ui`):
@@ -162,3 +179,6 @@ No new workers, no new pipelines, no JSON round-trips.
 - [`config/README.md`](config/README.md) — Fragment merging, base config, extends/layers
 - [`panda/README.md`](panda/README.md) — Codegen and cssgen execution
 - [`workers/README.md`](workers/README.md) — Worker threading model
+- [`api/`](api/) — Extension API (tokens collector, recipe, pattern, etc.)
+- [`primitives/README.md`](primitives/README.md) — React components (source: reference-core primitives)
+- [`internal/README.md`](internal/README.md) — Rhythm, props (source: reference-core styled/rhythm, styled/props)
