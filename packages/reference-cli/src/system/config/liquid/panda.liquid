@@ -10,7 +10,7 @@ const baseConfig = {{ baseConfig }}
 // Fragment bundles (each self-contained IIFE, functions intact)
 {{ bundles }}
 
-{{ deepMergeFn }}
+{{ deepMergePartial | raw }}
 
 const fragments = [{{ collectorKeys }}].flatMap(k => globalThis[k] ?? [])
 ;[{{ collectorKeys }}].forEach(k => delete globalThis[k])
