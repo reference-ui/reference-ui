@@ -2,5 +2,6 @@
   "watch": "src/watch/worker.ts",
   "virtual": "src/virtual/worker.ts",
   "config": "src/system/config/worker.ts",
-  "panda": "src/system/panda/worker.ts"
+  "panda": "src/system/panda/worker.ts",
+  "packager": "src/packager/worker.ts"
 }

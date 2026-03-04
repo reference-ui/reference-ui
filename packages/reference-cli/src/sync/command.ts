@@ -4,6 +4,7 @@ import { initEvents } from './events'
 import { initVirtual } from '../virtual/init'
 import { initConfig } from '../system/config/init'
 import { initWatch } from '../watch/init'
+import { initPackager } from '../packager/init'
 import type { SyncOptions } from './types'
 
 export type { SyncOptions, SyncPayload } from './types'
@@ -16,4 +17,5 @@ export async function syncCommand(cwd: string, options?: SyncOptions): Promise<v
   initWatch(payload)
   initVirtual(payload)
   initConfig()
+  await initPackager({ cwd, watchMode: options?.watch })
 }

@@ -18,6 +18,10 @@ export function initEvents(): void {
   })
   
   on('system:config:complete', () => {
+    emit('run:packager:bundle')
+  })
+
+  on('packager:complete', () => {
     emit('sync:complete')
   })
 }
