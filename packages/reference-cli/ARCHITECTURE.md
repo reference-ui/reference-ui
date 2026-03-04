@@ -1,294 +1,657 @@
 # reference-cli Architecture
 
-This document explains the current state of the architecture, the problems we're solving, and the options for moving forward.
+This document explains the dual-system import aliasing problem and how to solve it.
 
 ---
 
-## Background: Why reference-cli Exists
+## The Real Problem: Two Styled Systems
 
-`reference-cli` is a rewrite of the build pipeline originally in `reference-core/src/cli/`. The rewrite was necessary because of fundamental architectural issues that couldn't be fixed incrementally.
+`reference-cli` (which is actually the core package) ships with:
 
-### The Chicken-Egg Problem
+- **Primitives** (components, typography recipes, etc.)
+- **Styled API** (tokens, recipes, fonts, etc.)
+- **Config generation** that produces a styled-system (Panda config)
 
-Panda CSS generates a `system/` directory containing:
-- `css/` — `css`, `cva`, `cx`, `sva` functions
-- `jsx/` — Box, Stack, styled factory
-- `patterns/`, `recipes/`, `tokens/`, `types/`
+The fundamental issue: **We need TWO styled systems:**
 
-The problem:
-1. **Panda generates `system/`** from a config
-2. **Config loading** needs to import from `styled/` which imports from `system/`
-3. **`system/` doesn't exist yet** → import fails
+1. **Internal system** - For building the CLI itself and its primitives
+2. **User system** - What users generate when they run `ref sync`
 
+### The Import Aliasing Problem
+
+Primitives import from `@reference-ui/styled`:
+
+```typescript
+// primitives/types.ts
+import type { HTMLStyledProps } from '@reference-ui/styled/types/jsx'
+
+// styled/api/runtime/recipe.ts
+import { cva, cx } from '@reference-ui/styled/css'
 ```
-panda.config.ts
-  → imports styled/api
-    → imports styled/api/runtime/css.ts
-      → imports ../../../system/css/index.js
-        → FAILS (system doesn't exist yet)
-```
 
-### The Isolation Problem
+**During CLI build:**
 
-When pnpm symlinks `@reference-ui/core` into `node_modules/`, all consumers share the same physical paths. Multiple consumers running `ref sync` in a monorepo overwrite each other's outputs.
+- These imports need to resolve to an **internal styled package** (generated for CLI development)
 
-### Previous Workarounds
+**When packaged for users:**
 
-1. **Bootstrap stubs** — Write minimal stubs so imports resolve before Panda runs
-2. **Packager-first ordering** — Wait for packager so `@reference-ui/system` exists before eval
-3. **Event choreography** — Eval → createPandaConfig → gen → packager via events
+- These same imports need to resolve to the **user's generated styled package**
 
-These worked but were brittle and hard to reason about.
+Same code, different import destinations depending on context.
+
+### Why This Matters
+
+The CLI is "interlocked":
+
+- Styled API generates config fragments
+- Config fragments generate the styled-system (via Panda)
+- Primitives depend on that styled-system
+
+But we can't ship primitives that import from the CLI's internal styled package - users won't have that path. The primitives need to import from where the user's styled package will be generated.
 
 ---
 
-## Current State
+## Current Approach: Fragments Without Full Solution
 
-### reference-cli (New Architecture)
+### What Works
 
-reference-cli solves the chicken-egg by:
+The **fragments system** solves part of the problem:
 
-1. **Fragments system** — Config contributions are collected via `createFragmentCollector`, bundled as IIFEs, and injected into `panda.config.ts`. No system imports needed at config-time.
+- Config-time APIs (`tokens()`, `recipe()`, etc.) contribute to Panda config without importing from generated system
+- Fragments are bundled as IIFEs and injected into `panda.config.ts`
+- This allows Panda to run without needing the system to exist first
 
-2. **Base config is sacred** — `system/config/base.ts` has zero imports from generated code. This is the bootstrap invariant.
+### What Doesn't Work
 
-3. **Event-driven workers** — Workers communicate via BroadcastChannel. Each does one thing, emits completion.
+**Primitives still have styled imports:**
 
-### reference-core (Old Architecture)
+- `primitives/types.ts` imports from `@reference-ui/styled/types/jsx`
+- `styled/api/runtime/recipe.ts` imports from `@reference-ui/styled/css`
 
-reference-core still has:
-- `styled/api/` with `extendTokens`, `extendRecipe`, etc. using global collectors
-- `primitives/` that import from `system/`
-- `src/entry/system.ts` and `src/entry/react.ts` as package entry points
+These imports need aliasing:
 
-### The Packager Problem
+1. Point to different packages in dev vs production
+2. Need to resolve during CLI build (internal styled package)
+3. Need to resolve after packaging (user styled package)
 
-The packager currently:
-1. Resolves `@reference-ui/core` directory
-2. Bundles `src/entry/system.ts` → produces old `extendTokens` API
-3. Bundles `src/entry/react.ts` → needs `system/` to exist
+### The Missing Piece
 
-This is problematic because:
-- We're bundling the **old** API from reference-core
-- The react package needs `system/` which is generated by reference-cli
-- Double bundling: Panda generates system, then we bundle it again
+**Import aliasing at build/bundle time.** We need:
 
----
-
-## The Core Question
-
-**Where should the design system APIs live?**
-
-Right now we have:
-- **reference-cli** — owns the build pipeline, fragments, config generation
-- **reference-core** — has the APIs (`tokens()`, `recipe()`, etc.) and primitives
-
-But the APIs need to integrate with the build pipeline. So either:
-1. The APIs move into reference-cli
-2. Or reference-core becomes a consumer of reference-cli
+1. An internal system generated via fragments for CLI development
+2. A bundler configuration that rewrites imports when packaging for users
+3. Primitives that remain unchanged but resolve to different systems depending on context
 
 ---
 
-## Options
+## The Solution: Fragments Configure Systems, Bundler Aliases Imports
 
-### Option 1: Everything in reference-cli
+**Fragments configure the styled system. Primitives use the styled system. Bundler rewrites imports.**
 
-**Merge reference-core into reference-cli.** reference-cli becomes the single package that contains:
-- The build pipeline (current)
-- The design system APIs (`tokens()`, `recipe()`, `font()`, etc.)
-- The primitives (typography recipes, components)
-- The packager that bundles these for consumers
-
-**How it works:**
-- User runs `ref sync` in their project
-- CLI generates `panda.config.ts` in outDir
-- Panda runs, outputs `system/` directly to outDir
-- `outDir/system/` IS the package — no separate bundling needed
-- `outDir/react/` is bundled from CLI's own source (not reference-core)
-
-**Pros:**
-- Single source of truth
-- No cross-package coordination
-- Panda output goes directly to outDir — no double bundling
-- Eventually rename reference-cli back to reference-core
-
-**Cons:**
-- Large package
-- reference-core essentially deprecated
-
-**Directory structure:**
-```
-reference-cli/
-├── src/
-│   ├── api/                    # Design system APIs
-│   │   ├── tokens.ts           # tokens() → extendPandaConfig
-│   │   ├── recipe.ts           # recipe() → extendPandaConfig
-│   │   ├── font.ts             # font() → font collector
-│   │   └── ...
-│   ├── primitives/             # Typography recipes, components
-│   ├── system/                 # Config generation, panda execution
-│   ├── packager/               # Bundles API + primitives for consumers
-│   └── ...
-```
-
-### Option 2: System Output Directly to outDir
-
-**Keep current structure, but have Panda output directly to outDir.**
-
-Instead of:
-1. Panda → `reference-core/src/system/`
-2. Packager → bundles to `outDir/system/`
-
-Do:
-1. Panda → `outDir/system/` directly
-2. Packager only bundles the APIs (which don't need system)
-
-**How it works:**
-- `system/panda/` worker runs Panda with `outdir: outDir + '/system'`
-- Panda writes directly to `.reference-ui/system/`
-- `.reference-ui/system/` IS the package (add package.json)
-- Packager bundles the API package separately (no system imports)
-
-**Pros:**
-- No double bundling of system
-- System isolation per-consumer (each gets their own `outDir/system/`)
-- Packager simplified — only bundles config-time APIs
-
-**Cons:**
-- Two "packages" with different origins (Panda output vs bundler output)
-- Need to coordinate package.json generation
-
-### Option 3: reference-cli as Framework, reference-core as Design System
-
-**reference-cli is the build framework. reference-core is a design system built on it.**
+### Architecture Overview
 
 ```
-reference-cli (framework)
-    ↓ provides build pipeline
-reference-core (design system)
-    ↓ runs ref sync, publishes baseSystem
-consumer app
-    ↓ imports baseSystem
+Fragments → Configure → Panda → Generates → @reference-ui/styled → Used by → Primitives
 ```
 
-**How it works:**
-- reference-cli provides `ref sync`, fragments, config generation
-- reference-core is a **consumer** — it has `ui.config.ts`, runs `ref sync` on itself
-- reference-core publishes `baseSystem` that consumers extend
-- The APIs live in reference-cli (the framework layer)
+1. **Fragments** define configuration (tokens, recipes, utilities)
+2. **Panda** takes fragments and generates the styled package
+3. **`@reference-ui/styled`** is an internal package that bundles up Panda CSS
+4. **Primitives** are compiled code that imports from `@reference-ui/styled`
+5. **Bundler** rewrites imports depending on context
 
-**Pros:**
-- Clean separation: framework vs design system
-- reference-core becomes the "Reference Design System" built on the CLI framework
-- Third parties can build their own design systems using reference-cli
+### Two Systems, Same Fragments
 
-**Cons:**
-- Two packages to maintain
-- reference-core needs to run `ref sync` on itself during build
-- Conceptually more complex
+**Internal Styled Package (CLI Development):**
 
-### Option 4: Self-Hosting (ref sync within CLI build)
+```
+Internal fragments
+  → Generate panda.config.ts
+  → Run Panda
+  → Output to internal @reference-ui/styled package
+  → Primitives import from @reference-ui/styled (aliased internally)
+```
 
-**reference-cli runs `ref sync` on itself to generate its own system.**
+**User Styled Package (Consumer):**
 
-**How it works:**
-- During `pnpm build` of reference-cli, run `ref sync` first
-- This generates `.reference-ui/system/` within the CLI package
-- CLI's source can then import from this generated system
-- Packager bundles everything together
+```
+Internal fragments + User fragments
+  → Generate panda.config.ts
+  → Run Panda
+  → Output to user's @reference-ui/styled package
+  → Packaged primitives import from @reference-ui/styled (aliased to user's)
+```
 
-**Pros:**
-- CLI can use Panda features internally
-- Single package with self-contained build
+### How Import Aliasing Works
 
-**Cons:**
-- Chicken-egg at CLI build time — need bootstrap stubs
-- More complex build pipeline
-- This is essentially what we tried before and it was fragile
+**In CLI source code:**
+
+```typescript
+// primitives/types.ts
+import type { HTMLStyledProps } from '@reference-ui/styled/types/jsx'
+
+// During development, tsconfig.json paths:
+"paths": {
+  "@reference-ui/styled": ["./styled/internal"]
+  "@reference-ui/styled/*": ["./styled/internal/*"]
+}
+// Resolves to internal styled package
+```
+
+**When bundling for users:**
+
+```typescript
+// Bundler (tsup/esbuild) config:
+alias: {
+  '@reference-ui/styled': '.reference-ui/styled'
+}
+
+// Output in dist/primitives.js:
+import type { HTMLStyledProps } from '@reference-ui/styled/types/jsx'
+// User's bundler resolves to their generated .reference-ui/styled package
+```
+
+Same source code, different resolved paths via bundler configuration.
+
+### The Fragment System's Role
+
+Fragments are ONLY for configuring Panda. They:
+
+- Define tokens, recipes, patterns
+- Contribute to panda.config.ts
+- Are serialized as IIFEs (no @reference-ui/styled imports)
+- Generate the styled package that primitives will use
+
+Fragments are NOT for primitives. Primitives are regular TypeScript that:
+
+- Import from @reference-ui/styled (after it's generated)
+- Get compiled/bundled normally
+- Have their imports rewritten by the bundler
 
 ---
 
-## Recommendation: Option 1 + Option 2 Hybrid
+## Implementation Plan
 
-**Move everything into reference-cli AND have Panda output directly to outDir.**
+### Phase 1: Build Internal Styled Package
 
-1. **Move APIs into reference-cli**
-   - `src/api/tokens.ts`, `src/api/recipe.ts`, etc.
-   - These use `extendPandaConfig()` from the fragments system
-   - No `system/` imports at config-time
+**`src/build/styled.ts` - Internal build entry point:**
 
-2. **Panda outputs directly to outDir**
-   - `system/panda/` worker runs with `outdir: outDir + '/system'`
-   - Add package.json generation for the system folder
-   - `.reference-ui/system/` is immediately usable as a package
+This script builds the internal styled package that the CLI uses during development:
 
-3. **Packager only handles the API package**
-   - Bundles `src/api/*` → `.reference-ui/api/` (or similar)
-   - No system bundling — Panda already did that
+```typescript
+// src/build/styled.ts
+import { collectFragments } from './internal/collectFragments'
+import { generatePandaConfig } from '../system/config/panda'
+import { runPanda } from '../system/panda'
 
-4. **Primitives are optional**
-   - Can be bundled into a separate package
-   - Or included in the react package
-   - These DO need system — bundled after Panda runs
+export async function buildInternalStyled() {
+  // 1. Collect fragments from actual codebase
+  const fragments = await collectFragments({
+    scanDirs: ['./src/styled', './src/primitives'],
+    // Collect internal fragment definitions
+  })
 
-**Result:**
+  // 2. Generate panda.config.ts using internal fragments
+  const pandaConfig = await generatePandaConfig({
+    fragments,
+    outputDir: './styled/internal',
+    context: 'internal', // Special flag for internal builds
+  })
+
+  // 3. Run Panda to generate styled package
+  await runPanda({
+    config: pandaConfig,
+    outdir: './styled/internal',
+  })
+
+  // 4. Create internalSystem that CLI can inject during ref sync
+  // This allows CLI to understand the structure for user builds
+  return {
+    fragments,
+    config: pandaConfig,
+    outputPath: './styled/internal',
+  }
+}
 ```
-ref sync
-    ↓
-.reference-ui/
-├── panda.config.ts       # Generated config
-├── virtual/              # Source copies for Panda scanning
-├── system/               # Panda output (direct, with package.json)
+
+**Key considerations:**
+
+- **Not using fragments internally**: When building for internal use, we don't wrap everything as fragments. We use the same pipeline functions from `system/` but adapted for internal context.
+- **Dual-context system module**: The system module needs to handle both:
+  - Internal context: Building styled package for CLI development
+  - External context: Building styled package for user via ref sync
+- **internalSystem**: Metadata about the internal build that helps CLI understand how to build user systems
+
+### Phase 2: System Module Dual Context
+
+Update system module to work in both contexts:
+
+```typescript
+// src/system/config/panda/generateConfig.ts
+export async function generatePandaConfig(options: {
+  fragments: Fragment[]
+  outputDir: string
+  context: 'internal' | 'external'
+}) {
+  if (options.context === 'internal') {
+    // Internal build: Use fragments directly, no serialization
+    return createConfigFromFragments(options.fragments)
+  } else {
+    // External build: Serialize fragments, inject into user config
+    return createConfigWithFragmentInjection(options.fragments)
+  }
+}
+```
+
+This allows the same pipeline to handle both internal CLI builds and user builds during `ref sync`.
+
+### Phase 3: Bundle with Import Aliasing via tsup
+
+Configure bundler to rewrite styled imports:
+
+```typescript
+// tsup.config.ts
+export default defineConfig({
+  entry: ['src/primitives/index.ts', 'src/styled/api/index.ts', 'src/fragments/index.ts'],
+  esbuildOptions(options) {
+    options.alias = {
+      // Rewrite internal styled imports to user styled package
+      '@reference-ui/styled': '.reference-ui/styled',
+    }
+  },
+})
+```
+
+During build:
+
+- TypeScript resolves `@reference-ui/styled` to `./styled/internal/` (via tsconfig paths)
+- tsup bundles and rewrites to `.reference-ui/styled/`
+- Output primitives import from user's styled package location
+
+### Phase 4: Separate Styled Packager
+
+**`src/packager/styled/` - Package the styled system:**
+
+Styled gets its own packager because it's a separate concern:
+
+```typescript
+// src/packager/styled/index.ts
+export async function packageStyled(options: {
+  sourceDir: string // './styled/internal' for internal, or user's styled
+  outputDir: string // Where to write packaged output
+}) {
+  // Package the styled system with proper structure
+  // Add package.json, type declarations, etc.
+
+  await bundleStyled({
+    input: options.sourceDir,
+    output: options.outputDir,
+    format: ['esm', 'cjs'],
+  })
+}
+```
+
+**Why separate packager:**
+
+- Users never import `@reference-ui/styled` directly
+- When re-exporting primitives/apis in `@reference-ui/system` (or main package), it pulls from styled internally
+- Styled is the implementation detail; system is the public API
+- Clean separation allows styled to be optimized/bundled independently
+
+### Phase 5: Package Structure & Re-exports
+
+**Final package structure:**
+
+```
+dist/
+├── styled/             # Internal styled package (packaged)
 │   ├── css/
 │   ├── jsx/
 │   ├── patterns/
 │   ├── recipes/
 │   └── package.json
-└── api/                  # Bundled config-time APIs (optional)
-    ├── tokens.mjs
-    ├── recipe.mjs
-    └── package.json
+│
+├── fragments/          # Public fragments (configure user's styled)
+│   ├── tokens.js
+│   ├── recipes.js
+│   └── utilities.js
+│
+├── primitives/         # Compiled primitives (import from @reference-ui/styled)
+│   └── index.js
+│
+├── system/             # Public API re-exports
+│   └── index.js        # Re-exports primitives, styled selectively
+│
+├── api/                # Runtime APIs
+│   └── index.js
+│
+└── cli.js              # CLI entry point
 ```
 
+**Re-export pattern:**
+
+```typescript
+// dist/system/index.ts - Public API
+// Users import from @reference-ui/system
+export * from '../primitives' // Primitives internally use @reference-ui/styled
+export { css, cva, cx } from '../styled/css' // Selective re-exports from styled
+
+// Users never do: import { css } from '@reference-ui/styled'
+// They do: import { css } from '@reference-ui/system'
+// But primitives internally use @reference-ui/styled (via alias)
+```
+
+### Phase 6: User ref sync Integration
+
+When user runs `ref sync`:
+
+1. Load CLI's fragments (not primitives)
+2. Collect user's fragments from ui.config.ts
+3. Merge CLI internal fragments + user fragments
+4. Generate panda.config.ts using external context
+5. Run Panda → outputs .reference-ui/styled/
+6. User's bundler resolves `@reference-ui/styled` to `.reference-ui/styled/`
+7. User imports from `@reference-ui/system` (which re-exports primitives)
+
 ---
 
-## Migration Path
+## Key Architectural Decisions
 
-### Phase 1: Direct System Output
-- Update `system/panda/` to output directly to `outDir/system/`
-- Generate package.json in that folder
-- Remove system bundling from packager
+### 1. Fragments = Configuration Only
 
-### Phase 2: Move APIs to CLI
-- Create `src/api/` in reference-cli
-- Implement `tokens()`, `recipe()`, `font()`, etc. using fragments
-- Update packager to bundle from internal source
+Fragments define what goes INTO the styled package:
 
-### Phase 3: Deprecate reference-core
-- Keep for backwards compatibility
-- New consumers use reference-cli directly
-- Eventually rename reference-cli → reference-core
+- Tokens, colors, spacing
+- Recipes, patterns
+- Utilities, conditions
+- Global styles, keyframes
+
+Fragments do NOT contain primitives or runtime code.
+
+### 2. Primitives = Compiled Code
+
+Primitives are regular TypeScript that:
+
+- Import from @reference-ui/styled (after it's generated)
+- Are compiled/bundled with the CLI
+- Have imports rewritten by bundler
+- Ship as executable code, not config
+
+### 3. Two Fragment Sets
+
+**Internal fragments** (CLI only):
+
+- Used to generate internal @reference-ui/styled for development
+- May use unstable/internal-only APIs
+- Not shipped to users
+
+**Public fragments** (shipped to users):
+
+- Base tokens/recipes users can extend
+- Use stable, documented APIs
+- Included in packaged dist/
+
+### 4. Import Resolution Strategy
+
+**Development time:**
+
+- tsconfig.json `paths` alias @reference-ui/styled → ./styled/internal/
+- Primitives compile against internal styled package
+
+**Package time:**
+
+- Bundler rewrites all @reference-ui/styled imports
+- Point to user's .reference-ui/styled/
+- No runtime resolution needed
 
 ---
 
-## Open Questions
+## Codebase Structure
 
-1. **Package naming** — Should `.reference-ui/system/` be importable as `@reference-ui/system` or just relative imports?
+```
+reference-cli/
+├── src/
+│   ├── build/                  # Build scripts
+│   │   ├── styled.ts           # Internal styled package builder
+│   │   └── index.ts
+│   │
+│   ├── internal/               # CLI development only
+│   │   ├── fragments/          # Internal styled package configuration
+│   │   │   ├── base-tokens.ts
+│   │   │   ├── rhythm.ts
+│   │   │   └── index.ts
+│   │   └── collectFragments.ts # Fragment collection for internal build
+│   │
+│   ├── styled/                 # Styled system
+│   │   ├── api/                # Design system APIs
+│   │   │   ├── tokens.ts       # → fragment exports
+│   │   │   ├── recipe.ts       # → fragment exports
+│   │   │   └── ...
+│   │   ├── internal/           # Generated internal styled package (gitignored)
+│   │   │   ├── css/
+│   │   │   ├── jsx/
+│   │   │   ├── patterns/
+│   │   │   └── ...
+│   │   └── primitives/         # Components (import from @reference-ui/styled)
+│   │       ├── h1.style.ts
+│   │       ├── h6.style.ts
+│   │       └── ...
+│   │
+│   ├── fragments/              # Public fragments (shipped to users)
+│   │   ├── tokens.ts
+│   │   ├── recipes.ts
+│   │   └── index.ts
+│   │
+│   ├── system/                 # Build pipeline (dual-context)
+│   │   ├── config/             # Config generation
+│   │   │   ├── panda/
+│   │   │   │   └── generateConfig.ts  # Handles internal/external
+│   │   │   └── fragments/
+│   │   └── panda/              # Panda execution
+│   │
+│   ├── packager/               # Packagers
+│   │   ├── styled/             # Styled package packager
+│   │   │   └── index.ts
+│   │   ├── fragments/          # Fragment packager
+│   │   └── index.ts
+│   │
+│   └── cli/                    # CLI entry point
+│       └── index.ts
+│
+├── tsconfig.json               # Paths alias: @reference-ui/styled → ./src/styled/internal
+├── tsup.config.ts              # Bundler alias: @reference-ui/styled → .reference-ui/styled
+└── package.json                # "prebuild": "tsx src/build/styled.ts"
+```
 
-2. **Symlinks for HMR** — Do we need symlinks into `node_modules/` for Vite HMR, or can import maps handle this?
+**Key directories:**
 
-3. **TypeScript declarations** — Panda generates `.d.ts` files. Do we need additional type bundling?
+- **`build/styled.ts`**: Orchestrates internal styled package generation
+- **`internal/`**: Internal-only fragments and utilities
+- **`styled/internal/`**: Generated styled package for CLI development (gitignored)
+- **`packager/styled/`**: Packages styled system separately
+- **`system/`**: Dual-context pipeline (internal vs external builds)
+- **`fragments/`**: Public fragments shipped to users
 
-4. **Watch mode** — When files change, Panda regenerates `system/`. How do consumers pick up changes?
+---
+
+## Development Workflow
+
+### Building the CLI
+
+```bash
+# 1. Generate internal styled package
+pnpm prebuild
+  → Run tsx src/build/styled.ts
+  → Collect fragments from codebase (collectFragments)
+  → Generate panda.config.ts using internal context
+  → Run Panda → outputs ./src/styled/internal/
+  → Create internalSystem metadata
+
+# 2. Build CLI with tsup
+pnpm build
+  → TypeScript compiles:
+    - tsconfig paths: @reference-ui/styled → ./src/styled/internal
+    - Primitives import from @reference-ui/styled
+    - Types resolve correctly
+
+  → tsup bundles:
+    - Rewrites @reference-ui/styled → .reference-ui/styled
+    - Outputs primitives, fragments, api to dist/
+
+  → Packagers run:
+    - packager/styled: Package styled system separately
+    - packager/fragments: Bundle public fragments
+    - Creates proper package.json for each
+
+# 3. Result structure
+dist/
+  ├── styled/           # Packaged styled system (internal-only)
+  │   ├── css/
+  │   ├── jsx/
+  │   └── package.json
+  │
+  ├── fragments/        # Public fragments for users
+  │   ├── tokens.js
+  │   └── index.js
+  │
+  ├── primitives/       # Compiled primitives (imports rewritten)
+  │   └── index.js
+  │
+  ├── system/           # Public API (re-exports)
+  │   └── index.js      # Re-exports from primitives + styled
+  │
+  └── cli.js            # CLI entry point
+```
+
+### User Workflow
+
+```bash
+# User installs CLI
+pnpm add @reference-ui/cli
+
+# User creates ui.config.ts
+import { tokens, recipe } from '@reference-ui/cli/fragments'
+
+export default {
+  fragments: [
+    tokens({ /* user tokens */ }),
+    recipe({ /* user recipes */ })
+  ]
+}
+
+# User runs sync
+npx ref sync
+  → CLI loads internalSystem metadata
+  → Injects internal fragments into pipeline
+  → Load CLI's public fragments
+  → Load user's fragments from ui.config.ts
+  → Merge: internal + CLI public + user fragments
+  → Generate panda.config.ts using external context
+  → Run Panda → outputs .reference-ui/styled/
+
+# User imports from public API (not styled directly)
+import { H6, css, cva } from '@reference-ui/system'
+  → @reference-ui/system re-exports:
+    - Primitives (which internally use @reference-ui/styled)
+    - Selected styled utilities (css, cva, cx)
+
+  → User's bundler see imports:
+    - Primitives import from @reference-ui/styled
+    - Resolves to .reference-ui/styled/ generated by ref sync
+    - Everything works transparently
+
+# Users NEVER import from @reference-ui/styled directly
+# @reference-ui/styled is internal implementation detail
+# @reference-ui/system is the public API
+```
+
+**Key insight:** The CLI's `internalSystem` metadata allows `ref sync` to inject the internal fragments that make primitives work, while users only see the public API through `@reference-ui/system`.
 
 ---
 
 ## Summary
 
-The core insight: **Panda already produces bundled output.** We don't need to bundle it again. The packager should only handle APIs that don't depend on system.
+The solution uses **build/styled.ts for internal generation**, **dual-context system pipeline**, **separate styled packager**, and **bundler aliasing**:
 
-By having Panda output directly to outDir and moving the APIs into reference-cli, we:
-- Eliminate double bundling
-- Solve the chicken-egg (APIs use fragments, no system imports)
-- Achieve per-consumer isolation (each outDir is independent)
-- Simplify the architecture to a single package
+### 1. Internal Build Pipeline
+
+**`src/build/styled.ts`** orchestrates internal styled package generation:
+
+- Collects fragments from codebase using `collectFragments()`
+- Uses system pipeline in internal context (no fragment wrapping)
+- Generates `panda.config.ts` with internal fragments
+- Runs Panda → outputs `./styled/internal/`
+- Creates `internalSystem` metadata for ref sync injection
+
+### 2. Dual-Context System Module
+
+**`src/system/`** handles both internal and external builds:
+
+- **Internal context**: Building styled package for CLI development
+- **External context**: Building styled package for users via ref sync
+- Same pipeline functions, different execution modes
+- `generatePandaConfig({ context: 'internal' | 'external' })`
+
+### 3. Styled as Separate Package
+
+**`@reference-ui/styled`** is packaged separately:
+
+- Has its own packager: `src/packager/styled/`
+- Internal implementation detail, not public API
+- Bundled independently for optimization
+- Users never import from it directly
+
+### 4. Public API via Re-exports
+
+**`@reference-ui/system`** is the public interface:
+
+- Re-exports primitives (which use `@reference-ui/styled` internally)
+- Re-exports selected styled utilities (`css`, `cva`, `cx`)
+- Users import from `@reference-ui/system`, not `@reference-ui/styled`
+- Clean separation: implementation vs interface
+
+### 5. Import Aliasing Strategy
+
+**Aliasing happens at two layers:**
+
+**Development time:**
+
+```json
+// tsconfig.json
+"paths": {
+  "@reference-ui/styled": ["./src/styled/internal"],
+  "@reference-ui/styled/*": ["./src/styled/internal/*"]
+}
+```
+
+**Package time:**
+
+```typescript
+// tsup.config.ts
+alias: {
+  '@reference-ui/styled': '.reference-ui/styled'
+}
+```
+
+**Runtime (user's bundler):**
+
+- Sees imports to `@reference-ui/styled`
+- Resolves to `.reference-ui/styled/` (generated by ref sync)
+- No special configuration needed
+
+### 6. Fragment Injection
+
+During `ref sync`:
+
+1. CLI loads `internalSystem` metadata
+2. Injects internal fragments into pipeline
+3. Merges with CLI public fragments + user fragments
+4. Generates complete styled package for user
+
+This keeps the CLI as a single, cohesive package while elegantly solving the dual-system import problem through:
+
+- Build-time generation (`build/styled.ts`)
+- Dual-context pipeline (`system/`)
+- Separate packaging (`packager/styled/`)
+- Import aliasing (tsconfig + tsup)
+- Public API abstraction (`@reference-ui/system`)
