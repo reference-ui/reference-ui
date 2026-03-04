@@ -26,6 +26,7 @@ export const recipe = createFragmentCollector({
 ```
 
 **Config:**
+
 - `name` – Unique identifier (used in result object)
 - `targetFunction` – Function name to scan for in user code (e.g. `'tokens'`, `'recipe'`)
 
@@ -73,13 +74,12 @@ const config = loadUserConfig() // ui.config.ts
 
 const allFragments = await collectFragments({
   collectors: [tokens, recipe],
-  include: config.include,  // ['src/**/*.{ts,tsx}', 'app/**/*.{ts,tsx}']
-  tempDir: join(outDir, 'tmp'),  // e.g. .reference-ui/tmp – required; bundled .mjs files go here
+  include: config.include, // ['src/**/*.{ts,tsx}', 'app/**/*.{ts,tsx}']
+  tempDir: join(outDir, 'tmp'), // e.g. .reference-ui/tmp – required; bundled .mjs files go here
 })
 
 // allFragments === { tokens: [...], recipe: [...] }
 ```
-
 
 ---
 
@@ -199,12 +199,29 @@ Returns `T[]`.
 
 **After:** One generic fragments API. System packages (panda, fonts, box, etc.) create collectors and call `collectFragments`; no duplicated globalThis logic or scanner code.
 
+### Old (reference-core) vs New
+
+| Old system                                                                                                                                        | New fragments API                                                                                 |
+| ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Single hardcoded `COLLECTOR_KEY` on globalThis, tied to `extendPandaConfig`                                                                       | Per-collector named keys (`__refTokensCollector`, etc.) — no collisions                           |
+| Static `REGISTERED_FUNCTIONS` registry — adding a new function means editing the registry                                                         | Dynamic: each `createFragmentCollector` declares its own `targetFunction`                         |
+| `scanDirectories(dirs: string[])` — takes directory paths                                                                                         | `scanForFragments({ include: glob[] })` — takes glob patterns, matching `config.include` directly |
+| Two separate mechanisms: `runFiles()` (globalThis, in-process) for panda config AND `runCollectScript()` (child process + JSON file) for box/font | One unified in-process mechanism for all collectors                                               |
+| Typed to `Partial<Config>` from `@pandacss/dev` throughout                                                                                        | Generic `FragmentCollector<T>` — no panda dependency in the core mechanism                        |
+| `runEval()` always runs all registered functions at once                                                                                          | `collectFragments()` is explicit — you pass only the collectors you want                          |
+
 ---
 
 ## Notes & Gotchas
 
-- **tempDir** – You must pass a temp directory (e.g. `join(outDir, 'tmp')` or `.reference-ui/tmp`). This is where bundled `.mjs` files are written; they are deleted after use. If omitted or wrong, bundling can fail or pollute the wrong directory.
+- **tempDir placement affects module resolution** – When the runner does `import(tempPath)`, Node resolves bare imports (e.g. `@reference-ui/system`) by walking up from `tempDir`. So `tempDir` must be inside the project (or at worst the monorepo root) where those packages are reachable via `node_modules`. Putting it somewhere arbitrary (e.g. `/tmp/`) will cause import failures at runtime. The old system hardcoded `.ref/eval/` inside `coreDir` for exactly this reason. Use something like `join(outDir, 'tmp')` inside the project.
+
+- **In-process vs child process** – The old system had two runners: `runFiles()` ran user code in-process (globalThis), and `runCollectScript()` spawned a child process (`spawnSync`) for box/font collectors that needed clean module state and wrote results to a JSON file. The new fragments API is always in-process. This is simpler and faster, but means you cannot isolate a collector that crashes or has side effects. If isolation becomes necessary, the child-process pattern can be layered on top.
+
 - **Glob resolution** – `collectFragments({ include })` uses `fast-glob` with `cwd`; handle relative vs absolute as needed.
+
 - **Collector names** – Result object is keyed by `config.name`; duplicate names overwrite.
+
 - **Temp files** – Created under `tempDir`, deleted after each run.
-- **reference-core** – This is intended to replace `extendPandaConfig`-style patterns with `createFragmentCollector` + `collectFragments`.
+
+- **reference-core migration** – This replaces the `extendPandaConfig`/`COLLECTOR_KEY`/`runEval` pattern. New system packages should use `createFragmentCollector` + `collectFragments` instead.
