@@ -132,8 +132,8 @@ import type { HTMLStyledProps } from '@reference-ui/styled/types/jsx'
 
 // During development, tsconfig.json paths:
 "paths": {
-  "@reference-ui/styled": ["./styled/internal"]
-  "@reference-ui/styled/*": ["./styled/internal/*"]
+  "@reference-ui/styled": ["./src/system/styled/styled"]
+  "@reference-ui/styled/*": ["./src/system/styled/styled/*"]
 }
 // Resolves to internal styled package
 ```
@@ -174,12 +174,12 @@ Fragments are NOT for primitives. Primitives are regular TypeScript that:
 
 ### Phase 1: Build Internal Styled Package
 
-**`src/build/styled.ts` - Internal build entry point:**
+**`src/system/styled/build.ts` - Internal build entry point:**
 
 This script builds the internal styled package that the CLI uses during development:
 
 ```typescript
-// src/build/styled.ts
+// src/system/styled/build.ts
 import { collectFragments } from './internal/collectFragments'
 import { generatePandaConfig } from '../system/config/panda'
 import { runPanda } from '../system/panda'
@@ -187,21 +187,21 @@ import { runPanda } from '../system/panda'
 export async function buildInternalStyled() {
   // 1. Collect fragments from actual codebase
   const fragments = await collectFragments({
-    scanDirs: ['./src/styled', './src/primitives'],
+    scanDirs: ['./src/system/styled', './src/primitives'],
     // Collect internal fragment definitions
   })
 
   // 2. Generate panda.config.ts using internal fragments
   const pandaConfig = await generatePandaConfig({
     fragments,
-    outputDir: './styled/internal',
+    outputDir: './src/system/styled',
     context: 'internal', // Special flag for internal builds
   })
 
   // 3. Run Panda to generate styled package
   await runPanda({
     config: pandaConfig,
-    outdir: './styled/internal',
+    outdir: './src/system/styled',
   })
 
   // 4. Create internalSystem that CLI can inject during ref sync
@@ -209,7 +209,7 @@ export async function buildInternalStyled() {
   return {
     fragments,
     config: pandaConfig,
-    outputPath: './styled/internal',
+    outputPath: './src/system/styled',
   }
 }
 ```
@@ -252,7 +252,7 @@ Configure bundler to rewrite styled imports:
 ```typescript
 // tsup.config.ts
 export default defineConfig({
-  entry: ['src/primitives/index.ts', 'src/styled/api/index.ts', 'src/fragments/index.ts'],
+  entry: ['src/primitives/index.ts', 'src/system/styled/api/index.ts', 'src/fragments/index.ts'],
   esbuildOptions(options) {
     options.alias = {
       // Rewrite internal styled imports to user styled package
@@ -264,7 +264,7 @@ export default defineConfig({
 
 During build:
 
-- TypeScript resolves `@reference-ui/styled` to `./styled/internal/` (via tsconfig paths)
+- TypeScript resolves `@reference-ui/styled` to `./src/system/styled/styled/` (via tsconfig paths)
 - tsup bundles and rewrites to `.reference-ui/styled/`
 - Output primitives import from user's styled package location
 
@@ -277,7 +277,7 @@ Styled gets its own packager because it's a separate concern:
 ```typescript
 // src/packager/styled/index.ts
 export async function packageStyled(options: {
-  sourceDir: string // './styled/internal' for internal, or user's styled
+  sourceDir: string // './src/system/styled' for internal, or user's styled
   outputDir: string // Where to write packaged output
 }) {
   // Package the styled system with proper structure
@@ -395,7 +395,7 @@ Primitives are regular TypeScript that:
 
 **Development time:**
 
-- tsconfig.json `paths` alias @reference-ui/styled → ./styled/internal/
+- tsconfig.json `paths` alias @reference-ui/styled → ./src/system/styled/styled/
 - Primitives compile against internal styled package
 
 **Package time:**
@@ -458,16 +458,16 @@ reference-cli/
 │   └── cli/                    # CLI entry point
 │       └── index.ts
 │
-├── tsconfig.json               # Paths alias: @reference-ui/styled → ./src/styled/internal
+├── tsconfig.json               # Paths alias: @reference-ui/styled → ./src/system/styled/styled
 ├── tsup.config.ts              # Bundler alias: @reference-ui/styled → .reference-ui/styled
-└── package.json                # "prebuild": "tsx src/build/styled.ts"
+└── package.json                # "prebuild": "tsx src/system/styled/build.ts"
 ```
 
 **Key directories:**
 
 - **`build/styled.ts`**: Orchestrates internal styled package generation
 - **`internal/`**: Internal-only fragments and utilities
-- **`styled/internal/`**: Generated styled package for CLI development (gitignored)
+- **`system/styled/`**: Generated styled package for CLI development (gitignored)
 - **`packager/styled/`**: Packages styled system separately
 - **`system/`**: Dual-context pipeline (internal vs external builds)
 - **`fragments/`**: Public fragments shipped to users
@@ -481,16 +481,16 @@ reference-cli/
 ```bash
 # 1. Generate internal styled package
 pnpm prebuild
-  → Run tsx src/build/styled.ts
+  → Run tsx src/system/styled/build.ts
   → Collect fragments from codebase (collectFragments)
   → Generate panda.config.ts using internal context
-  → Run Panda → outputs ./src/styled/internal/
+  → Run Panda → outputs ./src/system/styled/
   → Create internalSystem metadata
 
 # 2. Build CLI with tsup
 pnpm build
   → TypeScript compiles:
-    - tsconfig paths: @reference-ui/styled → ./src/styled/internal
+    - tsconfig paths: @reference-ui/styled → ./src/system/styled/styled
     - Primitives import from @reference-ui/styled
     - Types resolve correctly
 
@@ -575,12 +575,12 @@ The solution uses **build/styled.ts for internal generation**, **dual-context sy
 
 ### 1. Internal Build Pipeline
 
-**`src/build/styled.ts`** orchestrates internal styled package generation:
+**`src/system/styled/build.ts`** orchestrates internal styled package generation:
 
 - Collects fragments from codebase using `collectFragments()`
 - Uses system pipeline in internal context (no fragment wrapping)
 - Generates `panda.config.ts` with internal fragments
-- Runs Panda → outputs `./styled/internal/`
+- Runs Panda → outputs `./src/system/styled/`
 - Creates `internalSystem` metadata for ref sync injection
 
 ### 2. Dual-Context System Module
@@ -619,8 +619,8 @@ The solution uses **build/styled.ts for internal generation**, **dual-context sy
 ```json
 // tsconfig.json
 "paths": {
-  "@reference-ui/styled": ["./src/styled/internal"],
-  "@reference-ui/styled/*": ["./src/styled/internal/*"]
+  "@reference-ui/styled": ["./src/system/styled/styled"],
+  "@reference-ui/styled/*": ["./src/system/styled/styled/*"]
 }
 ```
 

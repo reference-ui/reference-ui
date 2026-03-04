@@ -11,7 +11,7 @@ type PandaConfig = Partial<Config>
 export const tokensCollector = createFragmentCollector<TokenConfig, PandaConfig>({
   name: 'tokens',
   targetFunction: 'tokens',
-  transform: (tokenConfig) => ({
+  transform: tokenConfig => ({
     theme: {
       tokens: tokenConfig,
     },

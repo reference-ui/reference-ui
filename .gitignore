@@ -39,6 +39,7 @@ packages/.sandbox
 .ref
 packages/reference-core/styled-system
 packages/reference-core/codegen
+packages/reference-cli/src/system/styled
 
 # Nx
 .nx
