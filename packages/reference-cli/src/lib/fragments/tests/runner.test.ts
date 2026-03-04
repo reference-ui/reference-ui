@@ -25,7 +25,7 @@ describe('collectFragments', () => {
   })
 
   it('collects fragments from a single file', async () => {
-    const collector = createFragmentCollector<any>({
+    const collector = createFragmentCollector<Record<string, unknown>>({
       name: 'test',
       globalKey: '__testSingle',
     })
@@ -52,7 +52,7 @@ if (Array.isArray(collector)) {
   })
 
   it('collects fragments from multiple files', async () => {
-    const collector = createFragmentCollector<any>({
+    const collector = createFragmentCollector<Record<string, unknown>>({
       name: 'test',
       globalKey: '__testMultiple',
     })
@@ -92,7 +92,7 @@ if (Array.isArray(collector)) {
   })
 
   it('returns empty array when no fragments are collected', async () => {
-    const collector = createFragmentCollector<any>({
+    const collector = createFragmentCollector<Record<string, unknown>>({
       name: 'test',
       globalKey: '__testEmpty',
     })
@@ -110,7 +110,7 @@ if (Array.isArray(collector)) {
   })
 
   it('cleans up globalThis after collection', async () => {
-    const collector = createFragmentCollector<any>({
+    const collector = createFragmentCollector<Record<string, unknown>>({
       name: 'test',
       globalKey: '__testCleanup',
     })
@@ -132,7 +132,7 @@ if (Array.isArray(collector)) {
       tempDir: TEMP_DIR,
     })
 
-    const global = (globalThis as any)[collector.config.globalKey]
+    const global = (globalThis as Record<string, unknown>)[collector.config.globalKey]
     expect(global).toBeUndefined()
   })
 })

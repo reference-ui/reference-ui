@@ -5,7 +5,7 @@
 
 const COLLECTOR_KEY = '__myFunctionCollector'
 
-export const myFunction = (obj: any) => {
+export const myFunction = (obj: unknown) => {
   const collector = (globalThis as Record<string, unknown>)[COLLECTOR_KEY]
   if (Array.isArray(collector)) {
     collector.push(obj)
