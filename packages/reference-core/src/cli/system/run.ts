@@ -1,11 +1,25 @@
 import { resolve } from 'node:path'
-import { emit } from '../event-bus'
+import { emit, once } from '../event-bus'
 import { log } from '../lib/log'
 import { debounce } from '../lib/debounce'
 import { resolveCorePackageDir } from '../lib/resolve-core'
-import type { ReferenceUIConfig } from '../config'
+import {
+  loadUserConfig,
+  type ReferenceUIConfig,
+} from '@reference-ui/cli/config'
 import { runEval } from './eval'
 import { createPandaConfig } from './config/panda'
+
+let packagerComplete = false
+once('packager:complete', () => {
+  packagerComplete = true
+})
+
+/** Wait for packager:complete so @reference-ui/system exists before eval resolves it. */
+function waitForPackager(): Promise<void> {
+  if (packagerComplete) return Promise.resolve()
+  return new Promise(resolve => once('packager:complete', () => resolve()))
+}
 
 export interface SystemWorkerPayload {
   cwd: string
@@ -16,32 +30,44 @@ export interface SystemWorkerPayload {
 const CORE_DIRS = ['src/styled'] as const
 
 export function isConfigAffectingPath(path: string): boolean {
-  return path.includes('/src/styled/') || path.includes('tokens.ts')
+  return (
+    path.includes('/src/styled/') ||
+    path.includes('tokens.ts') ||
+    path.includes('ui.config.ts') ||
+    path.includes('ui.config.js') ||
+    path.includes('ui.config.mjs')
+  )
 }
 
-/** Run eval + config generation. Emits when done. */
+/** Run eval + config generation. Emits when done. Uses freshConfig when provided (e.g. after ui.config reload). */
 export async function runConfig(
   payload: SystemWorkerPayload,
-  state?: { configWritten?: boolean }
+  state?: { configWritten?: boolean },
+  freshConfig?: ReferenceUIConfig
 ): Promise<void> {
-  const { cwd, config } = payload
+  const { cwd } = payload
+  const config = freshConfig ?? payload.config
   const coreDir = resolveCorePackageDir(cwd)
   const userDirs = config.include.map(p =>
     resolve(cwd, p.split('**')[0].replace(/\/+$/, ''))
   )
 
+  await waitForPackager()
   const fragments = await runEval(coreDir, [...CORE_DIRS, ...userDirs], ['panda.base.ts'])
   if (fragments.length > 0 && config.include.length > 0) {
     await createPandaConfig(coreDir, {
       userDirectories: userDirs,
       includeCodegen: true,
+      extends: config.extends,
+      userProjectDir: cwd,
     })
     if (state) state.configWritten = true
   }
+  // createBaseSystem runs in gen worker after Panda emits styles.css
 
   emit('system:config:complete', {})
   emit('system:complete', {})
-  emit('config:ready', {})
+  emit('config:ready', freshConfig != null ? { config: freshConfig } : {})
 }
 
 export function onConfigRebuild(
@@ -51,7 +77,8 @@ export function onConfigRebuild(
   return debounce(async () => {
     log.debug('system:worker', 'virtual:fs:change → config (config-affecting)')
     try {
-      await runConfig(payload, state)
+      const freshConfig = await loadUserConfig(payload.cwd).catch(() => undefined)
+      await runConfig(payload, state, freshConfig)
     } catch (e) {
       log.error('[system:worker] Config failed:', e)
     }

@@ -1,3 +1,4 @@
+import type { BaseSystem } from '@reference-ui/cli/config'
 import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { emit } from '../../../event-bus'
@@ -30,6 +31,10 @@ export interface CreatePandaConfigOptions {
   includeCodegen?: boolean
   /** Additional directories to scan for config files (e.g., user project directories) */
   userDirectories?: string[]
+  /** Upstream baseSystems from ui.config.extends — merged into theme so Panda generates var() refs */
+  extends?: BaseSystem[]
+  /** Consumer project root — virtual dir is written to .reference-ui/virtual here; Panda include uses this path */
+  userProjectDir?: string
 }
 
 /**
@@ -81,6 +86,7 @@ export async function createPandaConfig(
       extendPandaConfigPath: extendPandaPath,
       deepMergePath,
       configFilePaths: configFiles,
+      extends: options.extends,
     })
     writeFileSync(entryPath, entryContent)
     log.debug('system:config', 'Created entry file')
@@ -90,11 +96,18 @@ export async function createPandaConfig(
     const bundled = await bundleConfigFiles(entryPath)
     log.debug('system:config', 'Bundle complete')
 
-    // Step 4: Write final panda.config.ts; inject codegen include when sync requested
+    // Step 4: Write final panda.config.ts; inject codegen include when sync requested; replace .virtual with consumer's .reference-ui/virtual
     let output = bundled
     if (options.includeCodegen) {
       const srcPattern = '"src/**/*.{ts,tsx}"'
       output = output.replace(srcPattern, `${srcPattern}, "codegen/**/*.{ts,tsx,jsx}"`)
+    }
+    if (options.userProjectDir) {
+      const consumerVirtualDir = resolve(options.userProjectDir, '.reference-ui', 'virtual')
+      const escapedPath = consumerVirtualDir.replace(/\\/g, '\\\\')
+      const virtualPattern = '".virtual/**/*.{ts,tsx,js,jsx}"'
+      const consumerPattern = `"${escapedPath}/**/*.{ts,tsx,js,jsx}"`
+      output = output.split(virtualPattern).join(consumerPattern)
     }
 
     const configPath = resolve(coreDir, 'panda.config.ts')

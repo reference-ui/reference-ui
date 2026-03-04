@@ -6,18 +6,19 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "scripts": {
-    "test:prepare": "tsx src/prepare.ts",
-    "test": "REF_TEST_WORKERS=3 pnpm run test:prepare && REF_TEST_WORKERS=3 tsx src/run-matrix.ts",
-    "test:quick": "REF_TEST_PROJECT=react18-vite5 pnpm run test:prepare && REF_TEST_PROJECT=react18-vite5 REF_TEST_PORT=19741 pnpm exec playwright test --project=react18-vite5",
-    "test:ui": "pnpm run test:prepare && REF_TEST_PROJECT=react18-vite5 playwright test --ui --project=react18-vite5"
+    "test:prepare": "tsx src/prepare/index.ts",
+    "test": "pnpm run test:prepare && tsx src/matrix/run.ts",
+    "test:quick": "tsx src/runner/cli.ts quick",
+    "test:ui": "tsx src/runner/cli.ts ui"
   },
   "dependencies": {
     "execa": "^9.0.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.48.0",
-    "tsx": "^4.19.0",
     "@reference-ui/core": "workspace:*",
+    "@reference-ui/lib": "workspace:*",
+    "tsx": "^4.19.0",
     "typescript": "~5.9.3"
   }
 }

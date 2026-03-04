@@ -97,4 +97,12 @@ export const GLOB_CONFIG = {
    * Return absolute paths
    */
   absolute: true,
+
+  /**
+   * Never copy these into virtual — regardless of user's include patterns.
+   * - node_modules: dependencies, never source
+   * - .reference-ui: our output dir (would be circular)
+   * - .git: version control metadata
+   */
+  ignore: ['**/node_modules/**', '**/.reference-ui/**', '**/.git/**'],
 } as const

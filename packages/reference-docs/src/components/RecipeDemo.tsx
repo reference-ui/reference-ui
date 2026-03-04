@@ -297,12 +297,6 @@ export function RecipeDemo() {
         </Div>
       </Div>
 
-      {/* Demo using recipe() from reference-core (should be transformed by parser) */}
-      <Div>
-        <Div fontSize="xl" fontWeight="700" mb="4r" color="gray.800">
-          RecipeCoreDemo (reference-core - using recipe)
-        </Div>
-      </Div>
     </Div>
   )
 }

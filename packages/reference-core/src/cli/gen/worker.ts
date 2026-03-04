@@ -12,17 +12,17 @@ export interface GenWorkerPayload {
 }
 
 export async function runGen(payload: GenWorkerPayload): Promise<void> {
-  const { cwd, watchMode = false } = payload
+  const { cwd, config, watchMode = false } = payload
   const coreDir = resolveCorePackageDir(cwd)
 
   if (watchMode) {
     on('virtual:fs:change', () => runCss(coreDir))
-    on('config:ready', onConfigReady(coreDir))
+    on('config:ready', onConfigReady(cwd, config))
     emit('gen:ready', {})
     return KEEP_ALIVE
   }
 
-  await runCodegen(coreDir)
+  await runCodegen(cwd, config)
 }
 
 export default runGen

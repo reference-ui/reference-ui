@@ -42,11 +42,6 @@ src/
             microBundle.ts     - esbuild wrapper for CLI bundling
             resolve-core.ts    - Resolve @reference-ui/core location
 
-    components/
-        Button.tsx              - Button example component
-        RecipeCoreDemo.tsx      - Recipe system demo
-        ResponsiveExample.tsx   - Responsive/container query demo
-
     entry/
         index.ts                - Package entry exports
 
@@ -555,18 +550,6 @@ Each microbundle follows the pattern: **collect → bundle → execute → gener
 | Code elements        | `code.style.ts`, `pre.style.ts`, `kbd.style.ts`, etc.   |
 | Semantic elements    | `strong.style.ts`, `em.style.ts`, `mark.style.ts`, etc. |
 | Quote elements       | `blockquote.style.ts`, `q.style.ts`, `cite.style.ts`    |
-
----
-
-### Example Components (`src/components/`)
-
-**Demo components showing API usage**
-
-| File                    | Purpose                                |
-| ----------------------- | -------------------------------------- |
-| `Button.tsx`            | Example button component with variants |
-| `RecipeCoreDemo.tsx`    | Recipe system demonstration            |
-| `ResponsiveExample.tsx` | Container query responsive example     |
 
 ---
 

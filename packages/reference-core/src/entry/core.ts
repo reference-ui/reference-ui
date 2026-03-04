@@ -1,3 +1,2 @@
-// Configuration API (for ui.config.ts files) — uses types so bundling ui.config doesn't pull in load-config
-export { defineConfig } from '../cli/config/types.js'
-export type { ReferenceUIConfig } from '../cli/config/types.js'
+// Configuration API (for ui.config.ts files) — re-export from CLI
+export { defineConfig, type ReferenceUIConfig } from '@reference-ui/cli/config'

@@ -5,9 +5,8 @@ import { copyToVirtual, removeFromVirtual } from './copy'
 import { getVirtualPath } from './utils'
 import { log } from '../lib/log'
 import { emit } from '../event-bus'
-import { resolveCorePackageDir } from '../lib/resolve-core'
-import { DEFAULT_VIRTUAL_DIR, GLOB_CONFIG } from './config.internal'
-import type { ReferenceUIConfig } from '../config'
+import { GLOB_CONFIG } from './config.internal'
+import type { ReferenceUIConfig } from '@reference-ui/cli/config'
 
 export interface VirtualWorkerPayload {
   sourceDir: string
@@ -26,16 +25,11 @@ export interface VirtualContext {
 export async function runInitialCopy(
   payload: VirtualWorkerPayload
 ): Promise<VirtualContext> {
-  const {
-    sourceDir,
-    config,
-    virtualDir = DEFAULT_VIRTUAL_DIR,
-  } = payload
+  const { sourceDir, config } = payload
   const { include, debug = false } = config
 
   const absSourceDir = resolve(sourceDir)
-  const coreDir = resolveCorePackageDir(sourceDir)
-  const absVirtualDir = resolve(coreDir, virtualDir)
+  const absVirtualDir = resolve(absSourceDir, '.reference-ui', 'virtual')
 
   log.debug('virtual:worker', 'Initializing virtual filesystem')
   log.debug('virtual:worker', 'Source:', absSourceDir)

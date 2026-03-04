@@ -1,3 +1,4 @@
+import type { BaseSystem } from '@reference-ui/cli/config'
 import { toRelativeImport } from '../../../lib/path'
 
 export interface BuildPandaEntryOptions {
@@ -6,6 +7,8 @@ export interface BuildPandaEntryOptions {
   extendPandaConfigPath: string
   deepMergePath: string
   configFilePaths: string[]
+  /** Upstream baseSystems from ui.config.extends — merged into theme so Panda generates var() refs */
+  extends?: BaseSystem[]
 }
 
 /**
@@ -19,6 +22,7 @@ export function buildPandaEntryContent(options: BuildPandaEntryOptions): string 
     extendPandaConfigPath,
     deepMergePath,
     configFilePaths,
+    extends: upstream = [],
   } = options
 
   const initCollectorRel = toRelativeImport(refDir, initCollectorPath)
@@ -46,7 +50,17 @@ export function buildPandaEntryContent(options: BuildPandaEntryOptions): string 
     ``,
     `const collected = (globalThis[COLLECTOR_KEY] || [])`,
     `const fragments = [...defaultFragments, ...collected]`,
-    `const config = fragments.reduce((acc, frag) => deepMerge(acc, frag), {})`,
+    `let config = fragments.reduce((acc, frag) => deepMerge(acc, frag), {})`,
+    ``,
+    `// Merge extends[] baseSystem tokens into theme so Panda generates utilities with proper var() refs`,
+    `const upstream = ${JSON.stringify(upstream)}`,
+    `if (upstream?.length) {`,
+    `  config.theme = config.theme || {}`,
+    `  config.theme.tokens = config.theme.tokens || {}`,
+    `  for (const sys of upstream) {`,
+    `    if (sys?.tokens) config.theme.tokens = deepMerge(config.theme.tokens, sys.tokens)`,
+    `  }`,
+    `}`,
     ``,
     `export default defineConfig(config)`,
     ``,

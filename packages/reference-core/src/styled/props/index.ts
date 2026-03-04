@@ -6,6 +6,11 @@ export { type FontProp, type FontPropDefinition } from './font'
 export { type ResponsiveBreakpoints, type ResponsivePropDefinition } from './r'
 export { type ContainerProp, type ContainerPropDefinition } from './container'
 
+/** Scopes descendants to a layer's token context via data-layer. Value = BaseSystem.name. */
+export interface LayerPropDefinition {
+  layer?: string
+}
+
 // Combined system props interface
 export interface SystemProps
-  extends FontPropDefinition, ResponsivePropDefinition, ContainerPropDefinition {}
+  extends FontPropDefinition, ResponsivePropDefinition, ContainerPropDefinition, LayerPropDefinition {}
