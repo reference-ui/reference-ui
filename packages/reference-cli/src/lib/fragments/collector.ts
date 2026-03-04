@@ -68,6 +68,14 @@ export function createFragmentCollector<T = unknown>(
     delete (globalThis as Record<string, unknown>)[globalKey]
   }
 
+  /**
+   * Returns the JS snippet that initialises this collector's globalThis slot.
+   * Inline this into generated files (e.g. panda.config.ts) before bundles run.
+   */
+  function toScript(): string {
+    return `globalThis['${globalKey}'] = []`
+  }
+
   const configObj = { name, globalKey, logLabel, targetFunction }
   const collectorFn = Object.assign(collect, {
     config: configObj,
@@ -75,6 +83,7 @@ export function createFragmentCollector<T = unknown>(
     init,
     getFragments,
     cleanup,
+    toScript,
   })
   return collectorFn as FragmentCollector<T>
 }

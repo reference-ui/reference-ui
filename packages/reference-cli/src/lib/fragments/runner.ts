@@ -4,7 +4,33 @@ import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { microBundle } from '../microbundle'
 import { scanForFragments } from './scanner'
-import type { CollectOptions, CollectOptionsPlanner, FragmentCollector } from './types'
+import type {
+  BundleFragmentsOptions,
+  CollectOptions,
+  CollectOptionsPlanner,
+  FragmentBundle,
+  FragmentCollector,
+} from './types'
+
+// ---------------------------------------------------------------------------
+// Bundle-only: returns portable IIFE strings, does not execute
+// ---------------------------------------------------------------------------
+
+export async function bundleFragments(
+  options: BundleFragmentsOptions
+): Promise<FragmentBundle[]> {
+  const { files } = options
+  const results: FragmentBundle[] = []
+  for (const file of files) {
+    const bundle = await microBundle(file, { format: 'iife' })
+    results.push({ file, bundle })
+  }
+  return results
+}
+
+// ---------------------------------------------------------------------------
+// Collect: executes bundles, returns plain data objects
+// ---------------------------------------------------------------------------
 
 export async function collectFragments<T>(options: CollectOptions<T>): Promise<T[]>
 export async function collectFragments(
