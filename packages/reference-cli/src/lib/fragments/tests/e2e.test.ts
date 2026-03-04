@@ -6,25 +6,29 @@ import { createFragmentCollector, scanForFragments, collectFragments } from '../
 
 const TEST_PROJECT = join(process.cwd(), '.test-e2e-fragments')
 const FIXTURES_DIR = join(dirname(fileURLToPath(import.meta.url)), 'fixtures')
+const SRC_DIR = join(TEST_PROJECT, 'src')
+const DEFINE_FUNCTION_FILE = 'define-function.ts'
+const USE_FUNCTION_FILE = 'use-function.ts'
+const WITH_CONSTANTS_FILE = 'with-constants.ts'
 
 describe('fragments end-to-end', () => {
   beforeAll(() => {
-    mkdirSync(join(TEST_PROJECT, 'src'), { recursive: true })
+    mkdirSync(SRC_DIR, { recursive: true })
 
     // Copy all fixture files to test project
     copyFileSync(
-      join(FIXTURES_DIR, 'define-function.ts'),
-      join(TEST_PROJECT, 'src', 'define-function.ts')
+      join(FIXTURES_DIR, DEFINE_FUNCTION_FILE),
+      join(SRC_DIR, DEFINE_FUNCTION_FILE)
     )
 
     copyFileSync(
-      join(FIXTURES_DIR, 'use-function.ts'),
-      join(TEST_PROJECT, 'src', 'use-function.ts')
+      join(FIXTURES_DIR, USE_FUNCTION_FILE),
+      join(SRC_DIR, USE_FUNCTION_FILE)
     )
 
     copyFileSync(
-      join(FIXTURES_DIR, 'with-constants.ts'),
-      join(TEST_PROJECT, 'src', 'with-constants.ts')
+      join(FIXTURES_DIR, WITH_CONSTANTS_FILE),
+      join(SRC_DIR, WITH_CONSTANTS_FILE)
     )
   })
 
@@ -34,19 +38,19 @@ describe('fragments end-to-end', () => {
 
   it('scans for function calls, collects fragments, and merges them', async () => {
     // Create collector with same key as define-function.ts uses
-    const collector = createFragmentCollector<any>({
+    const collector = createFragmentCollector<Record<string, unknown>>({
       name: 'test',
       globalKey: '__myFunctionCollector',
     })
 
     // Scan for files calling myFunction
     const files = scanForFragments({
-      directories: [join(TEST_PROJECT, 'src')],
+      directories: [SRC_DIR],
       functionNames: ['myFunction'],
     })
 
     expect(files).toHaveLength(2)
-    expect(files.every(f => f.includes('use-function.ts') || f.includes('with-constants.ts'))).toBe(true)
+    expect(files.every(f => f.includes(USE_FUNCTION_FILE) || f.includes(WITH_CONSTANTS_FILE))).toBe(true)
 
     // Collect fragments from those files
     const fragments = await collectFragments({
