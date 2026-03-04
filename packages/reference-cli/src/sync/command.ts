@@ -11,7 +11,7 @@ export type { SyncOptions, SyncPayload } from './types'
 /** Sync command – main hub for the design system build pipeline. */
 export async function syncCommand(cwd: string, options?: SyncOptions): Promise<void> {
   const payload = await bootstrap(cwd, options)
-  initEvents(payload)
+  initEvents()
   initComplete(payload)
   initWatch(payload)
   initVirtual(payload)

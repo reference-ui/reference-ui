@@ -14,6 +14,10 @@ export function initEvents(): void {
   })
 
   on('virtual:complete', () => {
+    emit('run:system:config')
+  })
+  
+  on('system:config:complete', () => {
     emit('sync:complete')
   })
 }
