@@ -1,14 +1,10 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { resolve, dirname, parse } from 'node:path'
-import { fileURLToPath } from 'node:url'
 
 /**
  * Walk up from startDir to find package.json with the given name.
  */
-function walkUpToPackage(
-  startDir: string,
-  packageName: string
-): string | null {
+function walkUpToPackage(startDir: string, packageName: string): string | null {
   let dir = startDir
   const root = parse(dir).root
   while (dir !== root) {
@@ -24,12 +20,10 @@ function walkUpToPackage(
 
 /**
  * Resolve the @reference-ui/cli package directory.
- * Used for worker paths and other runtime resolution.
+ * Used by packager to find source files for bundling.
  */
 export function resolveCliPackageDir(fromCwd: string = process.cwd()): string {
-  const selfDir = dirname(fileURLToPath(import.meta.url))
-
-  const cliDir = walkUpToPackage(selfDir, '@reference-ui/cli')
+  const cliDir = walkUpToPackage(fromCwd, '@reference-ui/cli')
   if (cliDir) return cliDir
 
   // Fallback: monorepo workspace
@@ -47,7 +41,5 @@ export function resolveCliPackageDir(fromCwd: string = process.cwd()): string {
     dir = dirname(dir)
   }
 
-  throw new Error(
-    '@reference-ui/cli package directory could not be resolved.'
-  )
+  throw new Error('@reference-ui/cli package directory could not be resolved.')
 }

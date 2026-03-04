@@ -60,7 +60,7 @@ async function collectTokenFragments(): Promise<{
     return { fragmentFiles: [], collectedTokens: [] }
   }
 
-  const tempDir = join(CLI_ROOT, 'node_modules/.ref-tmp/fragments')
+  const tempDir = join(STYLED_DIR, '.tmp')
 
   const result = await collectFragments({
     files: fragmentFiles,
