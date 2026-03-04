@@ -2,7 +2,7 @@ import { bootstrap } from './bootstrap'
 import { initComplete } from './complete'
 import { initEvents } from './events'
 import { initVirtual } from '../virtual/init'
-import { initPanda } from '../system/panda/init'
+import { initConfig } from '../system/config/init'
 import { initWatch } from '../watch/init'
 import type { SyncOptions } from './types'
 
@@ -15,5 +15,5 @@ export async function syncCommand(cwd: string, options?: SyncOptions): Promise<v
   initComplete(payload)
   initWatch(payload)
   initVirtual(payload)
-  initPanda()
+  initConfig()
 }

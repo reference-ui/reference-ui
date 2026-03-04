@@ -1,36 +1,57 @@
 # System Workers
 
-Two worker threads. Each worker is a flat `on()` list wired to event handlers — no internal orchestration logic.
+Worker threads for the system pipeline. Each worker is a flat `on()` list wired to event handlers — no internal orchestration logic. Coordination happens in `sync/events.ts`.
+
+Workers are registered in `workers.json` at the package root and bundled by tsup.
 
 ---
 
-## `config` worker (`config.ts`)
+## Threading Model
 
-Handles eval and panda.config generation.
+Workers run in Piscina thread pools. They communicate via `BroadcastChannel` — events emitted in one worker are received by all others and the main thread.
 
-```
-on('run:system:config', onRunConfig)
-
-emit('system:config:complete')
-```
-
-`onRunConfig` — scans dirs, runs the eval/collector loop, generates `panda.config` via Handlebars, emits `system:config:complete` when done.
+Each worker:
+1. Subscribes to trigger events (`run:*`)
+2. Does its work
+3. Emits completion events (`system:*:complete`)
+4. Returns `KEEP_ALIVE` to stay alive for subsequent triggers
 
 ---
 
-## `panda` worker (`panda.ts`)
+## `config` worker
 
-Handles all Panda-related steps: cssgen, codegen, baseSystem.
+**Location:** `system/config/worker.ts`
+
+Generates `panda.config.ts` from base config + fragments.
 
 ```
-on('run:panda:css',     onRunCss)
-on('run:panda:codegen', onRunCodegen)
-
-emit('system:panda:ready')
-emit('system:panda:css')
-emit('system:panda:codegen')
+on('run:system:config')  →  write panda.config  →  emit('system:config:complete')
 ```
 
-`onRunCss` — runs cssgen only (fast path, watch mode file changes), emits `system:panda:css`.
+Payload: `{ cwd: string }` — project root for resolving outDir.
 
-`onRunCodegen` — runs full Panda pipeline (codegen + CSS + baseSystem), emits `system:panda:css` then `system:panda:codegen`.
+---
+
+## `panda` worker
+
+**Location:** `system/panda/worker.ts`
+
+Runs Panda codegen and cssgen. Requires `panda.config.ts` to already exist.
+
+```
+on('run:panda:codegen')  →  panda codegen  →  emit('system:panda:codegen')
+on('run:panda:css')      →  panda cssgen   →  emit('system:panda:css')
+```
+
+Fast path: `run:panda:css` for watch-mode file changes (CSS only, no codegen).
+
+---
+
+## Adding a Worker
+
+1. Create `src/<domain>/worker.ts` exporting a default async function returning `KEEP_ALIVE`.
+2. Add to `workers.json`: `"<name>": "src/<domain>/worker.ts"`.
+3. Create `init.ts` calling `workers.runWorker('<name>', payload)`.
+4. Wire events in `sync/events.ts`.
+
+Workers should be single-purpose. If you need conditional logic about what runs next, put it in the sync event wiring, not the worker.

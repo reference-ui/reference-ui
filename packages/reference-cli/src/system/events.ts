@@ -21,6 +21,8 @@ export type SystemEvents = {
 
   // Config worker (eval + panda.config generation)
 
+  /** Config worker is up and subscribed */
+  'system:config:ready': Record<string, never>
   /** Config worker done: eval ran, panda.config written */
   'system:config:complete': Record<string, never>
 
