@@ -24,6 +24,14 @@
         "command": "pnpm preview",
         "cwd": "packages/reference-app"
       }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm run test",
+        "cwd": "packages/reference-app"
+      },
+      "dependsOn": ["reference-cli:build"]
     }
   },
   "tags": []

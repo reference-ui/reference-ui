@@ -2,7 +2,7 @@
  * Watch module types
  */
 
-import type { ReferenceUIConfig } from '../config'
+import type { ReferenceUIConfig } from '@reference-ui/cli/config'
 
 export interface WatchOptions {
   /**

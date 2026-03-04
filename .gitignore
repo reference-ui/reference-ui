@@ -31,6 +31,7 @@ pnpm-debug.log*
 # Reference UI generated
 .complexity-temp
 reports/
+.eslint-result.txt
 .reference
 .sandbox-reference-test
 packages/.sandbox

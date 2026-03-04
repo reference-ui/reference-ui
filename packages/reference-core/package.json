@@ -5,10 +5,15 @@
   "type": "module",
   "main": "./src/entry/core.ts",
   "types": "./src/entry/core.ts",
+  "exports": {
+    ".": { "types": "./src/entry/core.ts", "default": "./src/entry/core.ts" },
+    "./styles.css": "./src/system/styles.css"
+  },
   "bin": {
     "ref": "./dist/cli/index.mjs"
   },
   "dependencies": {
+    "@reference-ui/cli": "workspace:*",
     "@mdx-js/esbuild": "^3.1.1",
     "@mdx-js/mdx": "^3.1.1",
     "@pandacss/dev": "^1.8.1",

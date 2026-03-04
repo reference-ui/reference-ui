@@ -1,4 +1,5 @@
 .sandbox
 blob-reports
 playwright-report
+test-results
 .watch-metrics.jsonl

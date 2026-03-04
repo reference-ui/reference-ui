@@ -1,4 +1,4 @@
-import { loadUserConfig } from '../config'
+import { loadUserConfig } from '@reference-ui/cli/config'
 import type { SyncOptions, SyncPayload } from './types'
 
 /**

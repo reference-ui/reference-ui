@@ -88,7 +88,9 @@ export { TAGS as HTML_TAGS, type Tag as HtmlTag } from './tags'
 export type { PrimitiveElement, PrimitiveProps } from './types'
 
 const BOX_KEYS = ['font', 'weight', 'container', 'r'] as const
+const LAYER_KEYS = ['layer'] as const
 const splitBoxProps = <T extends Record<string, unknown>>(props: T) => splitProps(props, BOX_KEYS)
+const splitLayerProps = <T extends Record<string, unknown>>(props: T) => splitProps(props, LAYER_KEYS)
 
 `
 
@@ -99,11 +101,14 @@ function genPrimitive(tag, exportName) {
   // All primitives use styled[tag]
   const styledCall = `styled['${tag}']`
 
+  const layerSpread = `const [layerProps, rest] = splitLayerProps(r); const dataLayerAttr = layerProps.layer != null ? { 'data-layer': layerProps.layer } : {};`
+  const layerSpreadRender = `{...(box.raw(p) as object)} {...rest} {...dataLayerAttr}`
+
   // If recipe exists, merge its className into props
   if (recipe) {
-    return `const ${styledVar} = ${styledCall}; export const ${exportName} = forwardRef<PrimitiveElement<'${tag}'>, PrimitiveProps<'${tag}'>>(({ className, ...props }, ref) => { const [p, r] = splitBoxProps(props); const recipeClass = ${recipe}(); return <${styledVar} ref={ref} className={recipeClass + (className ? ' ' + className : '')} {...(box.raw(p) as object)} {...(r as object)} /> })`
+    return `const ${styledVar} = ${styledCall}; export const ${exportName} = forwardRef<PrimitiveElement<'${tag}'>, PrimitiveProps<'${tag}'>>(({ className, ...props }, ref) => { const [p, r] = splitBoxProps(props); ${layerSpread} const recipeClass = ${recipe}(); return <${styledVar} ref={ref} className={recipeClass + (className ? ' ' + className : '')} ${layerSpreadRender} /> })`
   } else {
-    return `const ${styledVar} = ${styledCall}; export const ${exportName} = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); return <${styledVar} ref={ref} {...(box.raw(p) as object)} {...(r as object)} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'${tag}'> & React.RefAttributes<PrimitiveElement<'${tag}'>>>`
+    return `const ${styledVar} = ${styledCall}; export const ${exportName} = forwardRef((props, ref) => { const [p, r] = splitBoxProps(props); ${layerSpread} return <${styledVar} ref={ref} ${layerSpreadRender} /> }) as React.ForwardRefExoticComponent<PrimitiveProps<'${tag}'> & React.RefAttributes<PrimitiveElement<'${tag}'>>>`
   }
 }
 

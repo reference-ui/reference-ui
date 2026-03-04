@@ -791,9 +791,9 @@ const tokens = {
     "value": "oklch(27.1% 0.105 12.094)",
     "variable": "var(--colors-rose-950)"
   },
-  "colors.mySpecialToken": {
-    "value": "red",
-    "variable": "var(--colors-my-special-token)"
+  "colors.refLibCanary": {
+    "value": "rgb(0, 191, 165)",
+    "variable": "var(--colors-ref-lib-canary)"
   },
   "spacing.px": {
     "value": "1px",
