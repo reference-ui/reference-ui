@@ -12,7 +12,7 @@
 import { resolve, join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { mkdirSync, writeFileSync } from 'node:fs'
-import { collectFragments, scanForFragments } from '../lib/fragments'
+import { collectFragments, scanForFragments, bundleFragments } from '../lib/fragments'
 import { createPandaConfig } from '../system/config/createPandaConfig'
 import { tokensCollector } from '../system/api/tokens'
 import { spawnSync } from 'node:child_process'
@@ -21,6 +21,7 @@ const __filename = fileURLToPath(import.meta.url)
 const CLI_ROOT = resolve(dirname(__filename), '../..')
 const STYLED_DIR = join(CLI_ROOT, 'src/system/styled')
 const PANDA_CONFIG_PATH = join(STYLED_DIR, 'panda.config.ts')
+const INTERNAL_FRAGMENTS_PATH = join(CLI_ROOT, 'src/system/config/internal-fragments.mjs')
 
 interface StylePackageMetadata {
   fragmentsCollected: number
@@ -84,14 +85,27 @@ async function generateStyleConfig(fragmentFiles: string[]): Promise<void> {
   }
 
   const configFragmentFiles = fragmentFiles.filter(
-    f => !f.includes('/build/') && !f.includes('/system/styled/') && !f.includes('/scripts/')
+    f =>
+      !f.includes('/build/') &&
+      !f.includes('/system/styled/') &&
+      !f.includes('/scripts/') &&
+      !f.includes('/system/internal/')
   )
+  const internalFragmentFiles = fragmentFiles.filter((f) => f.includes('/system/internal/'))
+  const internalBundles =
+    internalFragmentFiles.length > 0
+      ? await bundleFragments({ files: internalFragmentFiles })
+      : []
+  mkdirSync(dirname(INTERNAL_FRAGMENTS_PATH), { recursive: true })
+  const concatenated = internalBundles.map((b) => `;${b.bundle}`).join('\n')
+  writeFileSync(INTERNAL_FRAGMENTS_PATH, concatenated, 'utf-8')
 
   await createPandaConfig({
     outputPath: PANDA_CONFIG_PATH,
     fragmentFiles: configFragmentFiles,
     collectors: [tokensCollector],
     baseConfig: styledBaseConfig,
+    internalFragments: concatenated || undefined,
   })
 
   console.log('[build:styled] Config generated at:', PANDA_CONFIG_PATH)

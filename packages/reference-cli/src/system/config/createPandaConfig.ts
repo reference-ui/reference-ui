@@ -17,6 +17,8 @@ export interface CreatePandaConfigOptions {
   collectors: FragmentCollector[]
   /** Base config to merge with fragments. Defaults to baseConfig from ./base */
   baseConfig?: Record<string, unknown>
+  /** Pre-bundled internal fragments (from CLI build). Injected before user fragments. */
+  internalFragments?: string
 }
 
 export async function createPandaConfig(
@@ -27,18 +29,23 @@ export async function createPandaConfig(
     fragmentFiles,
     collectors,
     baseConfig: baseConfigOverride,
+    internalFragments,
   } = options
 
   const base = baseConfigOverride ?? baseConfig
   const templates = loadTemplates()
 
-  const bundles = await bundleFragments({ files: fragmentFiles })
+  const userFragments = (await bundleFragments({ files: fragmentFiles }))
+    .map(({ bundle }) => `;${bundle}`)
+    .join('\n')
+  const bundles = [internalFragments, userFragments].filter(Boolean).join('\n')
+
   const collectorKeys = collectors.map(c => `'${c.config.globalKey}'`).join(', ')
 
   const rendered = await engine.parseAndRender(templates.panda, {
     baseConfig: JSON.stringify(base),
     collectorSetups: collectors.map(c => c.toScript()).join('\n'),
-    bundles: bundles.map(({ bundle }) => `;${bundle}`).join('\n'),
+    bundles,
     deepMergePartial: templates.deepMerge,
     collectorKeys,
   })
