@@ -17,6 +17,8 @@ export interface FragmentCollector<T = unknown> {
   init: () => void
   getFragments: () => T[]
   cleanup: () => void
+  /** Returns the JS snippet that initialises this collector's globalThis slot in generated files */
+  toScript: () => string
 }
 
 export interface ScanOptions {
@@ -28,6 +30,19 @@ export interface ScanOptions {
   exclude?: string[]
   /** Working directory for glob resolution. Default: process.cwd() */
   cwd?: string
+}
+
+/** A bundled fragment file — the source bundled to a self-contained IIFE string */
+export interface FragmentBundle {
+  /** Absolute path of the original source file */
+  file: string
+  /** Self-contained IIFE JS bundle (functions intact, all imports inlined) */
+  bundle: string
+}
+
+/** Bundle-only API: pass resolved file paths, get portable IIFE bundle strings back */
+export interface BundleFragmentsOptions {
+  files: string[]
 }
 
 /** Single-collector API: pass resolved file paths + one collector, get T[] back */
