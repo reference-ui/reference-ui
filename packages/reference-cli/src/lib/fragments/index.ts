@@ -6,4 +6,5 @@ export type {
   FragmentCollectorConfig,
   ScanOptions,
   CollectOptions,
+  CollectOptionsPlanner,
 } from './types'

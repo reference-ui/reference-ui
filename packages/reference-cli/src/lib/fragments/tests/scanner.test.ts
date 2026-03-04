@@ -7,15 +7,20 @@ import { scanForFragments } from '../scanner'
 const TEST_DIR = join(process.cwd(), '.test-fragments-scanner')
 const FIXTURES_DIR = join(dirname(fileURLToPath(import.meta.url)), 'fixtures')
 const SRC_DIR = join(TEST_DIR, 'src')
-const HAS_CALL_FILE = 'has-call.ts'
+const USE_FUNCTION_FILE = 'use-function.ts'
+const WITH_CONSTANTS_FILE = 'with-constants.ts'
 
 describe('scanForFragments', () => {
   beforeAll(() => {
     mkdirSync(SRC_DIR, { recursive: true })
 
     copyFileSync(
-      join(FIXTURES_DIR, HAS_CALL_FILE),
-      join(SRC_DIR, HAS_CALL_FILE)
+      join(FIXTURES_DIR, USE_FUNCTION_FILE),
+      join(SRC_DIR, USE_FUNCTION_FILE)
+    )
+    copyFileSync(
+      join(FIXTURES_DIR, WITH_CONSTANTS_FILE),
+      join(SRC_DIR, WITH_CONSTANTS_FILE)
     )
   })
 
@@ -29,8 +34,10 @@ describe('scanForFragments', () => {
       functionNames: ['myFunction'],
     })
 
-    expect(files).toHaveLength(1)
-    expect(files[0].endsWith(HAS_CALL_FILE)).toBe(true)
+    expect(files).toHaveLength(2)
+    expect(files.every(
+      f => f.endsWith(USE_FUNCTION_FILE) || f.endsWith(WITH_CONSTANTS_FILE)
+    )).toBe(true)
   })
 
   it('returns empty array for non-existent directories', () => {

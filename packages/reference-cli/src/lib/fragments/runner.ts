@@ -3,15 +3,15 @@ import { writeFileSync, rmSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { microBundle } from '../microbundle'
-import type { CollectOptions } from './types'
+import type { CollectOptions, CollectOptionsPlanner } from './types'
 
 /**
- * Execute files and collect fragments using the provided collector.
- * Each file is:
- * 1. Bundled with microbundle (resolves imports, TypeScript, etc.)
- * 2. Written to a temp file
- * 3. Imported to execute side effects (fragment collection)
- * 4. Cleaned up
+ * Execute files and collect fragments using the provided collector(s).
+ *
+ * **Legacy API:** `{ files, collector }` → returns `T[]`
+ *
+ * **Planner API:** `{ collectors, include }` → returns `Record<string, T[]>` (keyed by collector name).
+ * Not yet implemented; throws when used.
  *
  * @example
  * ```ts
@@ -24,9 +24,15 @@ import type { CollectOptions } from './types'
  */
 // eslint-disable-next-line max-statements -- complex but clear async flow
 export async function collectFragments<T = unknown>(
-  options: CollectOptions<T>
-): Promise<T[]> {
-  const { files, collector, tempDir: customTempDir } = options
+  options: CollectOptions<T> | CollectOptionsPlanner<T>
+): Promise<T[] | Record<string, T[]>> {
+  if ('collectors' in options && 'include' in options) {
+    throw new Error(
+      'collectFragments({ collectors, include }) planner API not implemented yet'
+    )
+  }
+
+  const { files, collector, tempDir: customTempDir } = options as CollectOptions<T>
   const allFragments: T[] = []
   const tempDir = customTempDir ?? join(process.cwd(), '.ref', 'fragments')
   mkdirSync(tempDir, { recursive: true })
