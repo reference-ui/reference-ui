@@ -13,6 +13,16 @@ import type { FragmentCollector, FragmentCollectorConfig } from './types'
  * // Export the collect function for users
  * export const extendPandaConfig = pandaCollector.collect
  * ```
+ *
+ * @example With transform
+ * ```ts
+ * const fontCollector = createFragmentCollector({
+ *   name: 'fonts',
+ *   transform: fontDefs => ({
+ *     theme: { tokens: { fonts: fontDefs } }
+ *   })
+ * })
+ * ```
  */
 function defaultGlobalKey(name: string, targetFunction?: string): string {
   const base = targetFunction ?? name
@@ -20,21 +30,22 @@ function defaultGlobalKey(name: string, targetFunction?: string): string {
   return `__ref${cap}Collector`
 }
 
-export function createFragmentCollector<T = unknown>(
-  config: FragmentCollectorConfig
-): FragmentCollector<T> {
+export function createFragmentCollector<TInput = unknown, TOutput = TInput>(
+  config: FragmentCollectorConfig<TInput, TOutput>
+): FragmentCollector<TInput, TOutput> {
   const {
     name,
     targetFunction,
     globalKey = defaultGlobalKey(name, targetFunction),
     logLabel = `fragments:${name}`,
+    transform,
   } = config
 
   /**
    * Function users call to register a fragment.
    * Must be called after init() has set up the collector on globalThis.
    */
-  function collect(fragment: T): void {
+  function collect(fragment: TInput): void {
     const collector = (globalThis as Record<string, unknown>)[globalKey]
     if (Array.isArray(collector)) {
       collector.push(fragment)
@@ -52,13 +63,18 @@ export function createFragmentCollector<T = unknown>(
   /**
    * Get all collected fragments and return them.
    * Does NOT clean up globalThis (call cleanup() separately if needed).
+   * Applies transform to each fragment if provided.
    */
-  function getFragments(): T[] {
+  function getFragments(): TOutput[] {
     const collector = (globalThis as Record<string, unknown>)[globalKey]
-    if (Array.isArray(collector)) {
-      return [...collector] as T[]
+    if (!Array.isArray(collector)) {
+      return []
     }
-    return []
+    const fragments = [...collector] as TInput[]
+    if (transform) {
+      return fragments.map(transform)
+    }
+    return fragments as unknown as TOutput[]
   }
 
   /**
@@ -76,7 +92,7 @@ export function createFragmentCollector<T = unknown>(
     return `globalThis['${globalKey}'] = []`
   }
 
-  const configObj = { name, globalKey, logLabel, targetFunction }
+  const configObj = { name, globalKey, logLabel, targetFunction, transform }
   const collectorFn = Object.assign(collect, {
     config: configObj,
     collect,
@@ -85,5 +101,5 @@ export function createFragmentCollector<T = unknown>(
     cleanup,
     toScript,
   })
-  return collectorFn as FragmentCollector<T>
+  return collectorFn as FragmentCollector<TInput, TOutput>
 }

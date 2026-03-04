@@ -1,21 +1,24 @@
-export interface FragmentCollectorConfig {
+export interface FragmentCollectorConfig<TInput = unknown, TOutput = TInput> {
   name: string
   targetFunction?: string
   globalKey?: string
   logLabel?: string
+  /** Transform collected fragments before returning them. Defaults to identity (input === output). */
+  transform?: (input: TInput) => TOutput
 }
 
-export interface FragmentCollector<T = unknown> {
-  (fragment: T): void
+export interface FragmentCollector<TInput = unknown, TOutput = TInput> {
+  (fragment: TInput): void
   config: {
     name: string
     globalKey: string
     logLabel: string
     targetFunction?: string
+    transform?: (input: TInput) => TOutput
   }
-  collect: (fragment: T) => void
+  collect: (fragment: TInput) => void
   init: () => void
-  getFragments: () => T[]
+  getFragments: () => TOutput[]
   cleanup: () => void
   /** Returns the JS snippet that initialises this collector's globalThis slot in generated files */
   toScript: () => string
@@ -45,10 +48,10 @@ export interface BundleFragmentsOptions {
   files: string[]
 }
 
-/** Single-collector API: pass resolved file paths + one collector, get T[] back */
-export interface CollectOptions<T = unknown> {
+/** Single-collector API: pass resolved file paths + one collector, get TOutput[] back */
+export interface CollectOptions<TInput = unknown, TOutput = TInput> {
   files: string[]
-  collector: FragmentCollector<T>
+  collector: FragmentCollector<TInput, TOutput>
   tempDir: string
 }
 

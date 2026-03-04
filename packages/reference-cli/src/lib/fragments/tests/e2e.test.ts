@@ -79,6 +79,27 @@ describe('collectFragments – planner API (glob patterns, multiple collectors)'
 
     expect(result.unused).toEqual([])
   })
+
+  it('applies transform to collected fragments in planner mode', async () => {
+    const tokenCollector = createFragmentCollector<Record<string, unknown>, { theme: { tokens: Record<string, unknown> } }>({
+      name: 'tokens',
+      targetFunction: 'myFunction',
+      transform: (fragment) => ({
+        theme: { tokens: fragment },
+      }),
+    })
+
+    const result = await collectFragments({
+      collectors: [tokenCollector],
+      include: ['**/*.ts'],
+      tempDir,
+      cwd: fixtureDir,
+    })
+
+    expect(result.tokens).toHaveLength(2)
+    expect(result.tokens[0]).toHaveProperty('theme.tokens')
+    expect(result.tokens[0].theme.tokens).toEqual({ name: 'simple', value: 42 })
+  })
 })
 
 describe('collectFragments – single-collector API (explicit file list)', () => {
@@ -125,5 +146,37 @@ describe('collectFragments – single-collector API (explicit file list)', () =>
     })
 
     expect(fragments).toHaveLength(2)
+  })
+
+  it('applies transform in single-collector mode', async () => {
+    interface Input {
+      name: string
+      value: number
+    }
+    interface Output {
+      transformed: boolean
+      original: Input
+    }
+
+    const transformCollector = createFragmentCollector<Input, Output>({
+      name: 'transform',
+      targetFunction: 'myFunction',
+      transform: (input) => ({
+        transformed: true,
+        original: input,
+      }),
+    })
+
+    const fragments = await collectFragments({
+      files: [join(fixtureDir, 'use-function.ts')],
+      collector: transformCollector,
+      tempDir,
+    })
+
+    expect(fragments).toHaveLength(1)
+    expect(fragments[0]).toEqual({
+      transformed: true,
+      original: { name: 'simple', value: 42 },
+    })
   })
 })
