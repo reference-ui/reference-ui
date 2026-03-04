@@ -1,5 +1,4 @@
 import { join } from 'node:path'
-import { emit } from '../../lib/event-bus'
 import { getOutDirPath } from '../../lib/paths'
 import { scanForFragments } from '../../lib/fragments'
 import { createPandaConfig } from './createPandaConfig'
@@ -12,7 +11,7 @@ const DEFAULT_PANDA_COLLECTORS: FragmentCollector<unknown>[] = []
 
 /**
  * Run config generation: scan for fragments, write panda.config to outDir.
- * Call from main thread after virtual:ready. Emits system:config:complete when done.
+ * Caller (config worker or main thread) is responsible for emitting system:config:complete.
  */
 export async function runConfig(cwd: string): Promise<void> {
   log.debug('config', 'runConfig started', { cwd })
@@ -44,5 +43,4 @@ export async function runConfig(cwd: string): Promise<void> {
   })
 
   log.debug('config', 'Wrote panda.config', outputPath)
-  emit('system:config:complete')
 }
