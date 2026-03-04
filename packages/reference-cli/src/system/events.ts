@@ -1,8 +1,8 @@
 export type SystemEvents = {
   // Triggers
 
-  /** Tell the config step to run: eval + generate panda.config. Payload carries cwd. */
-  'run:system:config': { cwd: string }
+  /** Tell the config step to run: eval + generate panda.config. Worker gets cwd from getCwd(). */
+  'run:system:config': Record<string, never>
   /**
    * Run CSS only (cssgen). Fast path — file changes in watch mode.
    * Requires a valid panda.config to already exist.
