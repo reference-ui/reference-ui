@@ -7,7 +7,6 @@ import { createFragmentCollector, scanForFragments, collectFragments } from '../
 const TEST_PROJECT = join(process.cwd(), '.test-e2e-fragments')
 const FIXTURES_DIR = join(dirname(fileURLToPath(import.meta.url)), 'fixtures')
 const SRC_DIR = join(TEST_PROJECT, 'src')
-const DEFINE_FUNCTION_FILE = 'define-function.ts'
 const USE_FUNCTION_FILE = 'use-function.ts'
 const WITH_CONSTANTS_FILE = 'with-constants.ts'
 
@@ -15,17 +14,10 @@ describe('fragments end-to-end', () => {
   beforeAll(() => {
     mkdirSync(SRC_DIR, { recursive: true })
 
-    // Copy all fixture files to test project
-    copyFileSync(
-      join(FIXTURES_DIR, DEFINE_FUNCTION_FILE),
-      join(SRC_DIR, DEFINE_FUNCTION_FILE)
-    )
-
     copyFileSync(
       join(FIXTURES_DIR, USE_FUNCTION_FILE),
       join(SRC_DIR, USE_FUNCTION_FILE)
     )
-
     copyFileSync(
       join(FIXTURES_DIR, WITH_CONSTANTS_FILE),
       join(SRC_DIR, WITH_CONSTANTS_FILE)
@@ -37,10 +29,9 @@ describe('fragments end-to-end', () => {
   })
 
   it('scans for function calls, collects fragments, and merges them', async () => {
-    // Create collector with same key as define-function.ts uses
     const collector = createFragmentCollector<Record<string, unknown>>({
-      name: 'test',
-      globalKey: '__myFunctionCollector',
+      name: 'myFunction',
+      targetFunction: 'myFunction',
     })
 
     // Scan for files calling myFunction

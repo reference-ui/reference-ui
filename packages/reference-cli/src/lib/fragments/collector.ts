@@ -14,10 +14,21 @@ import type { FragmentCollector, FragmentCollectorConfig } from './types'
  * export const extendPandaConfig = pandaCollector.collect
  * ```
  */
+function defaultGlobalKey(name: string, targetFunction?: string): string {
+  const base = targetFunction ?? name
+  const cap = base.charAt(0).toUpperCase() + base.slice(1)
+  return `__ref${cap}Collector`
+}
+
 export function createFragmentCollector<T = unknown>(
   config: FragmentCollectorConfig
 ): FragmentCollector<T> {
-  const { name, globalKey, logLabel = `fragments:${name}` } = config
+  const {
+    name,
+    targetFunction,
+    globalKey = defaultGlobalKey(name, targetFunction),
+    logLabel = `fragments:${name}`,
+  } = config
 
   /**
    * Function users call to register a fragment.
@@ -57,11 +68,13 @@ export function createFragmentCollector<T = unknown>(
     delete (globalThis as Record<string, unknown>)[globalKey]
   }
 
-  return {
-    config: { name, globalKey, logLabel },
+  const configObj = { name, globalKey, logLabel, targetFunction }
+  const collectorFn = Object.assign(collect, {
+    config: configObj,
     collect,
     init,
     getFragments,
     cleanup,
-  }
+  })
+  return collectorFn as FragmentCollector<T>
 }

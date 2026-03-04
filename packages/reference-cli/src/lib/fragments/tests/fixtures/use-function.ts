@@ -1,6 +1,6 @@
-import { myFunction } from './define-function'
+import { myFunction } from './setup'
 
-myFunction({ 
+myFunction({
   name: 'simple',
-  value: 42 
+  value: 42,
 })
