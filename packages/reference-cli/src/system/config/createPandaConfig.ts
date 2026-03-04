@@ -3,9 +3,8 @@ import { writeFileSync, mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
 import { bundleFragments } from '../../lib/fragments'
 import type { FragmentCollector } from '../../lib/fragments'
-import pandaTemplate from './liquid/panda.liquid'
-import deepMergeTemplate from './liquid/deepMerge.liquid'
 import { baseConfig } from './base'
+import { loadTemplates } from './liquid'
 
 const engine = new Liquid()
 
@@ -31,15 +30,16 @@ export async function createPandaConfig(
   } = options
 
   const base = baseConfigOverride ?? baseConfig
+  const templates = loadTemplates()
 
   const bundles = await bundleFragments({ files: fragmentFiles })
   const collectorKeys = collectors.map(c => `'${c.config.globalKey}'`).join(', ')
 
-  const rendered = await engine.parseAndRender(pandaTemplate as string, {
+  const rendered = await engine.parseAndRender(templates.panda, {
     baseConfig: JSON.stringify(base),
     collectorSetups: collectors.map(c => c.toScript()).join('\n'),
     bundles: bundles.map(({ bundle }) => `;${bundle}`).join('\n'),
-    deepMergePartial: deepMergeTemplate as string,
+    deepMergePartial: templates.deepMerge,
     collectorKeys,
   })
 

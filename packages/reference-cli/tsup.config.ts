@@ -1,5 +1,10 @@
 import { defineConfig } from 'tsup'
 import { workerEntries } from './src/lib/thread-pool'
+import { cp, readdir } from 'node:fs/promises'
+import { join } from 'node:path'
+
+const LIQUID_SRC = 'src/system/config/liquid'
+const CONFIG_DIST = 'dist/cli/config'
 
 export default defineConfig({
   entry: {
@@ -17,6 +22,14 @@ export default defineConfig({
     return { js: '.mjs' }
   },
   external: ['@parcel/watcher', 'picomatch'],
-  // Bundle .liquid templates as text strings — no file copying needed at runtime
-  loader: { '.liquid': 'text' },
+  async onSuccess() {
+    // Copy .liquid files to dist/cli/config so bundled worker can read them via __dirname
+    const files = await readdir(LIQUID_SRC)
+    const liquidFiles = files.filter((f) => f.endsWith('.liquid'))
+    await Promise.all(
+      liquidFiles.map((f) =>
+        cp(join(LIQUID_SRC, f), join(CONFIG_DIST, f))
+      )
+    )
+  },
 })

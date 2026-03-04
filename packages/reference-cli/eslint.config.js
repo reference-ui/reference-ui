@@ -1,9 +1,9 @@
-import eslint from '@eslint/js';
-import tseslint from 'typescript-eslint';
-import sonarjs from 'eslint-plugin-sonarjs';
+import eslint from '@eslint/js'
+import tseslint from 'typescript-eslint'
+import sonarjs from 'eslint-plugin-sonarjs'
 
 export default [
-  { ignores: ['node_modules/**', 'dist/**', '**/*.config.ts'] },
+  { ignores: ['node_modules/**', 'dist/**', '**/*.config.ts', 'src/system/styled/**'] },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
   {
@@ -24,4 +24,4 @@ export default [
       'sonarjs/no-ignored-return': 'warn',
     },
   },
-];
+]

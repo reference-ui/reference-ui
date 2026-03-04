@@ -12,6 +12,7 @@
     "./config": "./dist/cli/config.mjs"
   },
   "scripts": {
+    "prebuild": "tsx src/build/styled.ts",
     "build": "pnpm run build:native && tsup",
     "build:native": "cd src/virtual/native && pnpm exec napi build --platform --release",
     "dev": "tsup --watch",

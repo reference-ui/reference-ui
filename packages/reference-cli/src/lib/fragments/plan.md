@@ -143,7 +143,7 @@ Looking at `createPandaConfig`, `createBoxPattern`, and `createBaseSystem`:
 
 ```ts
 // 1. Scan for files calling extendPandaConfig()
-const configFiles = scanDirectories(['src/styled', ...userDirs])
+const configFiles = scanDirectories(['src/system/styled', ...userDirs])
 
 // 2. Create entry importing ALL fragment files
 const entryContent = buildPandaEntryContent({
