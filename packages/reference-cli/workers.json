@@ -1,4 +1,5 @@
 {
   "watch": "src/watch/worker.ts",
-  "virtual": "src/virtual/worker.ts"
+  "virtual": "src/virtual/worker.ts",
+  "panda": "src/system/panda/worker.ts"
 }

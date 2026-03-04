@@ -2,6 +2,12 @@
 
 Owns everything needed to produce a valid `panda.config` from user and core source files.
 
+## Base config (`base.ts`)
+
+A **pure structural config** with no side-effect imports and no dependency on generated code (e.g. `system/styled/`). It defines `outdir: 'system/styled'`, `include`/`exclude`, `jsxFramework`, etc. This is merged with fragment contributions in the generated `panda.config` via `deepMerge(baseConfig, ...fragments)`.
+
+Because `base.ts` does not import from Panda’s generated output, the CLI can run `ref sync` on itself: config is written to `outDir/panda.config.ts`, Panda runs from `outDir`, and the system is bootstrapped without a chicken-and-egg.
+
 ## How the old CLI did it
 
 Each subsystem (fontFace, boxPattern, baseSystem, panda) ran its own isolated pipeline:

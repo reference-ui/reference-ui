@@ -32,6 +32,7 @@
     "piscina": "^5.1.4"
   },
   "devDependencies": {
+    "@pandacss/dev": "^1.8.1",
     "@eslint/js": "^10.0.1",
     "@napi-rs/cli": "^3.5.1",
     "@types/node": "^25.1.0",

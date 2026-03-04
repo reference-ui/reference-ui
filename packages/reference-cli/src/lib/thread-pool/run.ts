@@ -28,11 +28,16 @@ function initMemoryLogging(): void {
   }, memoryLogIntervalMs)
 }
 
+export interface PoolWorkerData {
+  config: ReferenceUIConfig
+  cwd: string
+}
+
 /**
- * Initialize the pool with config. Must be called before first runWorker.
- * Config is passed via workerData so workers can access it without per-task wiring.
+ * Initialize the pool with config and cwd. Must be called before first runWorker.
+ * Passed via workerData so workers can access them without per-task wiring.
  */
-export function initPool(config: ReferenceUIConfig): void {
+export function initPool(data: PoolWorkerData): void {
   if (pool) return
 
   initMemoryLogging()
@@ -40,7 +45,7 @@ export function initPool(config: ReferenceUIConfig): void {
     minThreads: 2,
     maxThreads: 6,
     idleTimeout: 30000,
-    workerData: { config },
+    workerData: data,
   })
 
   pool.on('error', (err) => log.error('[pool]', err))

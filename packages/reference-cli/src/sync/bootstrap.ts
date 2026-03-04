@@ -1,4 +1,4 @@
-import { loadUserConfig, setConfig } from '../config'
+import { loadUserConfig, setConfig, setCwd } from '../config'
 import { initEventBus } from '../lib/event-bus'
 import { initPool } from '../lib/thread-pool'
 import type { SyncOptions, SyncPayload } from './types'
@@ -16,7 +16,8 @@ export async function bootstrap(
     config.debug = true
   }
   setConfig(config)
-  initPool(config)
+  setCwd(cwd)
+  initPool({ config, cwd })
   initEventBus()
   return { cwd, config, options: options ?? {} }
 }
