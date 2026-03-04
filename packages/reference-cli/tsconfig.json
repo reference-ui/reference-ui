@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "rootDir": "src",
+    "jsx": "react-jsx",
     "outDir": null,
     "noEmit": true,
     "strict": true,
@@ -16,6 +17,6 @@
       "@reference-ui/styled/*": ["./src/system/styled/*"]
     }
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules", "dist"]
 }
