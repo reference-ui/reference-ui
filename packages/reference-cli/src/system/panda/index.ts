@@ -11,7 +11,17 @@ export function onRunCodegen(): void {
       err instanceof Error ? err.message : String(err)
     )
     if (err instanceof Error && err.stack) log.debug('panda', err.stack)
+    emit('system:panda:codegen')
+    return
   }
+
+  try {
+    runPandaCss()
+  } catch (err) {
+    log.error('[panda] cssgen failed', err instanceof Error ? err.message : String(err))
+    if (err instanceof Error && err.stack) log.debug('panda', err.stack)
+  }
+
   emit('system:panda:css')
   emit('system:panda:codegen')
 }
