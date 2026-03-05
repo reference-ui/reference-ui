@@ -1,4 +1,4 @@
-import { emit, on } from '../lib/event-bus'
+import { emit, on, onceAll } from '../lib/event-bus'
 
 /**
  * Event wiring. Only on/emit/onceAll – pass payloads, no side effects.
@@ -16,8 +16,8 @@ export function initEvents(): void {
   on('virtual:complete', () => {
     emit('run:system:config')
   })
-  
-  on('system:config:complete', () => {
+
+  onceAll(['system:config:complete', 'system:panda:ready'], () => {
     emit('run:panda:codegen')
   })
 
