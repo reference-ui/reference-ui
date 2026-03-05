@@ -666,7 +666,7 @@ The react bundle keeps `@reference-ui/styled` as an external import. At runtime 
 - **Package deps**: `"@reference-ui/styled": "file:.reference-ui/styled"` in app's `package.json` + `pnpm install`
 - **Bundler alias**: Vite `resolve.alias` pointing `@reference-ui/styled` to `.reference-ui/styled`
 
-Without this, the app cannot resolve the styled package. The internal styled structure in `.reference-ui/styled` must match what the react bundle expects (css, patterns, etc.).
+**Implementation:** The packager creates symlinks `node_modules/@reference-ui/<pkg>` → `.reference-ui/<pkg>` after bundling. Node and Vite resolve `@reference-ui/react`, `@reference-ui/styled`, `@reference-ui/system` via these symlinks.
 
 ---
 
@@ -675,5 +675,14 @@ This keeps the CLI as a single, cohesive package while elegantly solving the dua
 - Build-time generation (`build/styled.ts`) and internal-fragments export
 - Dual-context pipeline (`system/`) with `internalFragments` injection
 - Separate packaging (`packager/`) — styled copied from CLI internal
-- Import aliasing (tsconfig for CLI dev; userspace needs symlinks/deps/alias for resolution)
+- Import aliasing (tsconfig for CLI dev; symlinks in node_modules for userspace)
 - Public API abstraction (`@reference-ui/system` / `@reference-ui/react`)
+
+
+### Optional: Panda in the sync flow (when enabled)
+.reference-ui/react and .reference-ui/styled must be resolvable as @reference-ui/react and @reference-ui/styled. The current packager doesn’t create symlinks in node_modules. That’s the main missing step for the app to run (e.g. via symlinks like reference-core).
+
+
+
+The panda worker isn’t wired into sync yet. Right now users get the CLI’s pre-built styled via copy. If you want user fragments to affect the styled output, you’d need to wire run:panda:codegen after system:config:complete (as noted in the panda README).
+So the hard part is done; the remaining work is mostly wiring and configuration (symlinks/resolution and optionally Panda).
