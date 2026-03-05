@@ -40,19 +40,17 @@ export const REACT_PACKAGE: PackageDefinition = {
   main: './react.mjs',
   types: './react.d.mts',
   exports: createBundleExports('react', { includeStyles: true }),
-  additionalFiles: [],
 }
 
 /**
  * @reference-ui/styled - Panda output (css, cva, patterns)
- * Copied from CLI's system/styled
+ * Content comes from Panda (runs before packager). Packager only writes package.json.
  */
 export const STYLED_PACKAGE: PackageDefinition = {
   name: '@reference-ui/styled',
   version: '0.0.0-generated',
   description: 'Reference UI styled system (Panda CSS output)',
   bundle: false,
-  copyDirs: [{ src: 'src/system/styled' }],
   main: './css/index.mjs',
   types: './css/index.d.ts',
   exports: {

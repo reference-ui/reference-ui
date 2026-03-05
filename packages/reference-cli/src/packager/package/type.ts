@@ -17,6 +17,6 @@ export interface PackageDefinition {
   /** Types entry point for package.json (defaults to './index.d.ts') */
   types?: string
   exports: Record<string, unknown>
-  /** Additional files to copy (e.g., styles.css) */
+  /** Additional files to copy (e.g., styles.css). src relative to coreDir. */
   additionalFiles?: Array<{ src: string; dest: string }>
 }
