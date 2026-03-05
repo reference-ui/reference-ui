@@ -23,7 +23,7 @@
     "eslint:txt": "eslint . --format stylish --color"
   },
   "dependencies": {
-    "@pandacss/dev": "^1.8.1",
+    "@pandacss/dev": "^1.8.2",
     "@pandacss/node": "^1.8.2",
     "@pandacss/types": "^1.8.2",
     "@parcel/watcher": "^2.5.6",
@@ -36,17 +36,18 @@
     "picomatch": "^4.0.0",
     "piscina": "^5.1.4",
     "symlink-dir": "^9.0.0",
-    "tsdown": "^0.20.1"
+    "tsdown": "^0.21.0"
   },
   "devDependencies": {
-    "@types/react": "^19.0.0",
-    "react": "^19.0.0",
     "@eslint/js": "^10.0.1",
     "@napi-rs/cli": "^3.5.1",
     "@types/node": "^25.1.0",
+    "@types/react": "^19.0.0",
     "eslint": "^10.0.2",
     "eslint-plugin-sonarjs": "^4.0.0",
+    "react": "^19.0.0",
     "tsup": "^8.4.0",
+    "tsx": "^4.21.0",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.56.1",
     "vitest": "^4.0.18"
