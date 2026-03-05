@@ -37,6 +37,8 @@ export async function compileDeclarations(
         'react',
         '--external',
         'react-dom',
+        '--external',
+        '@pandacss/types',
         '--no-inlineOnly',
       ],
       {
