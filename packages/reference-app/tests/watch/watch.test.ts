@@ -1,11 +1,11 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { writeFile, readFile, rm } from 'node:fs/promises'
+import { writeFile, rm } from 'node:fs/promises'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { pkgRoot, srcDir, virt, waitFor } from './helpers'
+import { pkgRoot, virt, waitFor } from '../virtual/helpers'
 
 /**
- * Watch reactivity: ref sync --watch runs in background (global-setup).
+ * Watch / dev server: ref sync --watch runs in background (global-setup).
  * We create/update a file with a Div and a bg color, then assert the virtual copy updates.
  */
 
@@ -21,7 +21,7 @@ export function WatchE2E() {
 `
 }
 
-describe('virtual – watch and recompile', () => {
+describe('watch – dev server reactivity', () => {
   afterEach(async () => {
     try {
       await rm(join(pkgRoot, WATCH_E2E_FILE), { force: true })
