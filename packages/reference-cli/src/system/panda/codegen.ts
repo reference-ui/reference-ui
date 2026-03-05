@@ -1,68 +1,72 @@
-import { spawnSync } from 'node:child_process'
+import { existsSync, mkdirSync, symlinkSync } from 'node:fs'
 import { join } from 'node:path'
+import { generate as pandaGenerate, cssgen as pandaCssgen, loadConfigAndCreateContext } from '@pandacss/node'
 import { getCwd } from '../../config/store'
-import { getOutDirPath } from '../../lib/paths'
+import { getOutDirPath, resolveCliPackageDir } from '../../lib/paths'
 import { log } from '../../lib/log'
 
-function getPandaBinPath(projectRoot: string): string {
-  return join(projectRoot, 'node_modules', '.bin', 'panda')
+/**
+ * Ensure outDir has node_modules/@pandacss so panda.config.ts can resolve '@pandacss/dev'
+ * when loaded by @pandacss/node (config is in outDir; user project may not have Panda).
+ * Same idea as reference-core using coreDir for cwd — we make outDir resolvable via symlink.
+ */
+function ensurePandaResolvableFromOutDir(userCwd: string, outDir: string): void {
+  const cliDir = resolveCliPackageDir(userCwd)
+  const cliPandacss = join(cliDir, 'node_modules', '@pandacss')
+  const outNodeModules = join(outDir, 'node_modules')
+  const outPandacss = join(outNodeModules, '@pandacss')
+  if (!existsSync(cliPandacss)) return
+  if (existsSync(outPandacss)) return
+  mkdirSync(outNodeModules, { recursive: true })
+  symlinkSync(cliPandacss, outPandacss)
 }
 
 /**
- * Run Panda codegen from the project's outDir so it finds panda.config.ts.
- * Writes system/styled (codegen) and style.css (cssgen).
- * Binary is resolved from project root node_modules; process cwd is outDir so config is found.
- * Uses fixed path to panda binary to satisfy sonarjs/no-os-command-from-path.
+ * Run Panda full pipeline via @pandacss/node (same pattern as reference-core gen/code.ts).
+ * Config lives in outDir; we ensure outDir can resolve @pandacss then call generate() and cssgen().
  */
-export function runPandaCodegen(): void {
+export async function runPandaCodegen(): Promise<void> {
   const cwd = getCwd()
   if (!cwd) {
     throw new Error('runPandaCodegen: getCwd() is undefined')
   }
 
   const outDir = getOutDirPath(cwd)
-  const pandaBin = getPandaBinPath(cwd)
+  ensurePandaResolvableFromOutDir(cwd, outDir)
 
-  const result = spawnSync(pandaBin, ['codegen'], {
-    cwd: outDir,
-    stdio: 'pipe',
-  })
-
-  if (result.status !== 0) {
-    const stderr = result.stderr?.toString() ?? ''
-    const stdout = result.stdout?.toString() ?? ''
-    log.error('panda', 'codegen failed', { status: result.status, stderr, stdout })
-    throw new Error(`Panda codegen failed: ${stderr || stdout || result.status}`)
+  const configPath = join(outDir, 'panda.config.ts')
+  if (!existsSync(configPath)) {
+    throw new Error(`panda.config.ts not found at ${configPath}. Run config worker first.`)
   }
 
+  log.debug('panda', 'codegen start', outDir)
+  await pandaGenerate({ cwd: outDir }, configPath)
   log.debug('panda', 'codegen done', outDir)
+
+  const ctx = await loadConfigAndCreateContext({ config: { cwd: outDir }, configPath })
+  await pandaCssgen(ctx, { cwd: outDir })
+  log.debug('panda', 'cssgen done', outDir)
 }
 
 /**
- * Run Panda cssgen only (fast path for watch).
- * Call when run:panda:css is received.
- * Uses fixed path to panda binary to satisfy sonarjs/no-os-command-from-path.
+ * Run Panda cssgen only via @pandacss/node (same pattern as reference-core gen/css.ts).
  */
-export function runPandaCss(): void {
+export async function runPandaCss(): Promise<void> {
   const cwd = getCwd()
   if (!cwd) {
     throw new Error('runPandaCss: getCwd() is undefined')
   }
 
   const outDir = getOutDirPath(cwd)
-  const pandaBin = getPandaBinPath(cwd)
+  ensurePandaResolvableFromOutDir(cwd, outDir)
 
-  const result = spawnSync(pandaBin, ['cssgen'], {
-    cwd: outDir,
-    stdio: 'pipe',
-  })
-
-  if (result.status !== 0) {
-    const stderr = result.stderr?.toString() ?? ''
-    const stdout = result.stdout?.toString() ?? ''
-    log.error('panda', 'cssgen failed', { status: result.status, stderr, stdout })
-    throw new Error(`Panda cssgen failed: ${stderr || stdout || result.status}`)
+  const configPath = join(outDir, 'panda.config.ts')
+  if (!existsSync(configPath)) {
+    throw new Error(`panda.config.ts not found at ${configPath}. Run config worker first.`)
   }
 
+  log.debug('panda', 'cssgen')
+  const ctx = await loadConfigAndCreateContext({ config: { cwd: outDir }, configPath })
+  await pandaCssgen(ctx, { cwd: outDir })
   log.debug('panda', 'cssgen done', outDir)
 }

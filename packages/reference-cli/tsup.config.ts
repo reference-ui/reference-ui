@@ -22,7 +22,7 @@ export default defineConfig({
   outExtension() {
     return { js: '.mjs' }
   },
-  external: ['@parcel/watcher', 'picomatch'],
+  external: ['@pandacss/node', '@parcel/watcher', 'picomatch'],
   async onSuccess() {
     // Copy .liquid files to dist/cli/config so bundled worker can read them via __dirname
     const files = await readdir(LIQUID_SRC)

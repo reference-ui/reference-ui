@@ -19,3 +19,16 @@ This will:
 - Imports `@reference-ui/cli` as a dev dependency
 - Uses the `ref` CLI command to sync design system
 - No manual Panda CSS configuration needed - handled by the CLI
+
+## Testing
+
+- **Node tests** (`tests/ref-sync.test.ts`, `tests/virtual/*`) run in the default Vitest environment.
+- **Primitives tests** (`tests/primitives/*`) run in **happy-dom** (via `@vitest-environment happy-dom`). They use React Testing Library to mount the Div primitive, pass style props, and assert on the DOM and (when design system CSS is present) computed styles.
+
+To run only primitives tests:
+
+```bash
+pnpm test -- tests/primitives/
+```
+
+Primitives tests resolve `@reference-ui/styled` to the CLI’s built styled output (`reference-cli/src/system/styled`) via a Vitest alias, so they don’t depend on a successful app `ref sync` for module resolution. For full computed-style assertions, the design system CSS must exist (e.g. after a successful `ref sync` that runs Panda); otherwise those tests are skipped.
