@@ -4,9 +4,13 @@
  */
 
 import * as React from 'react'
+import type { SystemStyleObject } from '@reference-ui/styled/types'
 import { box } from '@reference-ui/styled/patterns/box'
 
-export const Div = React.forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<'div'>>(
+/** Div accepts HTML div attributes plus style props (padding, marginTop, bg, etc.) from the styled system. */
+type DivProps = React.ComponentPropsWithoutRef<'div'> & SystemStyleObject
+
+export const Div = React.forwardRef<HTMLDivElement, DivProps>(
   (props, ref) => {
     const { className, ...rest } = props
     const boxClass = box({})
