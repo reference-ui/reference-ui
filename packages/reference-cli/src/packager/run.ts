@@ -1,6 +1,6 @@
 import { log } from '../lib/log'
 import { emit } from '../lib/event-bus'
-import { getCwd } from '../config'
+import { getCwd, getConfig } from '../config'
 import { resolveCliPackageDir } from '../lib/paths'
 import { installPackages } from './install'
 import { PACKAGES } from './packages'
@@ -11,6 +11,7 @@ export interface RunBundlePayload {
 
 /**
  * Run full bundle + install. Emits packager:complete when done.
+ * When skipTypescript, also emits packager-ts:complete so sync completes without packager-ts worker.
  */
 export async function runBundle(payload: RunBundlePayload): Promise<void> {
   const { cwd } = payload
@@ -21,6 +22,9 @@ export async function runBundle(payload: RunBundlePayload): Promise<void> {
   log.debug('packager', `✅ ${PACKAGES.length} package(s) ready`)
 
   emit('packager:complete')
+  if (getConfig()?.skipTypescript) {
+    emit('packager-ts:complete', {})
+  }
 }
 
 /**

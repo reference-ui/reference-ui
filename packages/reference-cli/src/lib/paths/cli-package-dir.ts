@@ -43,3 +43,26 @@ export function resolveCliPackageDir(fromCwd: string = process.cwd()): string {
 
   throw new Error('@reference-ui/cli package directory could not be resolved.')
 }
+
+/**
+ * Prefer workspace CLI when the resolved CLI is in node_modules.
+ * Tsdown emits .d.mts only when run from the workspace (proper tsconfig, deps).
+ */
+export function resolveCliPackageDirForBuild(fromCwd: string = process.cwd()): string {
+  const resolved = resolveCliPackageDir(fromCwd)
+  let dir = dirname(resolved)
+  const root = parse(dir).root
+
+  while (dir !== root) {
+    if (existsSync(resolve(dir, 'pnpm-workspace.yaml'))) {
+      const workspaceCli = resolve(dir, 'packages/reference-cli')
+      if (existsSync(resolve(workspaceCli, 'package.json'))) {
+        return workspaceCli
+      }
+      break
+    }
+    dir = dirname(dir)
+  }
+
+  return resolved
+}

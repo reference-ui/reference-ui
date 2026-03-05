@@ -16,3 +16,5 @@ export function initPackager(payload: SyncPayload): void {
     watchMode: payload.options?.watch,
   })
 }
+
+export { initTsPackager } from './ts/init'

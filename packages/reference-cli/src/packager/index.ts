@@ -1,4 +1,4 @@
-export { initPackager } from './init'
+export { initPackager, initTsPackager } from './init'
 export {
   PACKAGES,
   REACT_PACKAGE,
