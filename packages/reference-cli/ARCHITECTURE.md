@@ -343,6 +343,7 @@ For minimal versions of the same patterns (worker, logic, event wiring), see **R
 | config | `src/system/config/worker.ts` | Eval fragments, generate panda.config.ts |
 | panda | `src/system/panda/worker.ts` | Panda codegen / CSS (when wired) |
 | packager | `src/packager/worker.ts` | Bundle packages, write package.json, install/symlink |
+| packager-ts | `src/packager/ts/worker.ts` | Generate .d.ts from TS source (tsdown), write to outDir |
 
 ---
 
@@ -427,6 +428,13 @@ Prebuild script: `pnpm prebuild` → `tsx src/build/styled.ts`.
 - **install.ts**: can run symlink-dir or package manager so `node_modules/@reference-ui/*` point to `.reference-ui/*`.
 - Worker listens for completion events, runs packager when system is ready.
 
+### TypeScript packager (`packager/ts/`)
+
+- **Separate worker** (`ts/worker.ts`) for perf: listens for `packager:complete`, runs `.d.ts` generation, emits `packager-ts:complete`.
+- **compile/**: spawns `tsdown` (via `lib/child-process`) to emit `.d.mts` from source entries; writes into outDir (same tree as bundles so symlinks expose types).
+- **install/**: `installPackagesTs(cwd, packages)` — uses `resolveCliPackageDir` / `resolveCliPackageDirForBuild` (workspace CLI when in node_modules for correct tsconfig).
+- **Sync flow**: `sync:complete` fires on `packager-ts:complete`; when `config.skipTypescript` the packager worker emits `packager-ts:complete` after `packager:complete` so sync still completes.
+
 ---
 
 ## Config Layer (`src/config/`)
@@ -477,7 +485,7 @@ src/
 │   ├── run/
 │   ├── thread-pool/           # Piscina pool, workers, registry, KEEP_ALIVE
 │   └── microbundle/
-├── packager/                 # packages, bundler, run, worker, install
+├── packager/                 # packages, bundler, run, worker, install, ts/ (dts worker + compile, install)
 ├── sync/                     # bootstrap, command, complete, events
 ├── system/
 │   ├── api/                  # tokens collector, etc.

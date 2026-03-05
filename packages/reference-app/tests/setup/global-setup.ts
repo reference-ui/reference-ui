@@ -22,7 +22,6 @@ async function waitForSyncComplete(maxMs = 15_000): Promise<boolean> {
   const start = Date.now()
   while (Date.now() - start < maxMs) {
     if (existsSync(reactMjs) && existsSync(virtualDir)) {
-      // Brief settle delay for filesystem sync before tests run
       await new Promise((r) => setTimeout(r, 100))
       return true
     }

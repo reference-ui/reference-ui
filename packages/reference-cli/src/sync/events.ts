@@ -25,7 +25,8 @@ export function initEvents(): void {
     emit('run:packager:bundle')
   })
 
-  on('packager:complete', () => {
+  /** Sync completes after packager-ts:complete. Packager emits packager-ts:complete when skipTypescript so this always fires. */
+  on('packager-ts:complete', () => {
     emit('sync:complete')
   })
 }

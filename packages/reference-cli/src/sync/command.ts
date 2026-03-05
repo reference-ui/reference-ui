@@ -4,7 +4,7 @@ import { initEvents } from './events'
 import { initVirtual } from '../virtual/init'
 import { initConfig } from '../system/config/init'
 import { initWatch } from '../watch/init'
-import { initPackager } from '../packager/init'
+import { initPackager, initTsPackager } from '../packager/init'
 import { initPanda } from '../system/panda/init'
 import type { SyncOptions } from './types'
 
@@ -20,4 +20,5 @@ export async function syncCommand(cwd: string, options?: SyncOptions): Promise<v
   initConfig()
   initPanda()
   initPackager(payload)
+  initTsPackager(payload)
 }
