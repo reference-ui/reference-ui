@@ -1,9 +1,8 @@
 import { resolve, dirname } from 'node:path'
-import { cpSync, existsSync, mkdirSync, readFileSync } from 'node:fs'
+import { cpSync, existsSync, mkdirSync } from 'node:fs'
 import type { PackageDefinition } from '../package'
 import { bundleWithEsbuild } from './esbuild'
-import { writeIfChanged, copyDirectories } from './files'
-import { transformTypeScriptFile } from './transform'
+import { copyDirectories } from './files'
 import { writePackageJson } from './package'
 
 export interface BundleOptions {
@@ -27,22 +26,14 @@ async function copyEntry(options: BundleOptions): Promise<void> {
   }
 }
 
-async function copyAdditionalFile(
-  coreDir: string,
-  targetDir: string,
-  src: string,
-  dest: string
-): Promise<void> {
-  const srcPath = resolve(coreDir, src)
+async function copyFile(srcPath: string, destPath: string): Promise<void> {
   if (!existsSync(srcPath)) return
-
-  const destPath = resolve(targetDir, dest)
   mkdirSync(dirname(destPath), { recursive: true })
-
-  if (src.endsWith('.ts') || src.endsWith('.tsx')) {
+  if (srcPath.endsWith('.ts') || srcPath.endsWith('.tsx')) {
+    const { transformTypeScriptFile } = await import('./transform')
     await transformTypeScriptFile(srcPath, destPath)
   } else {
-    writeIfChanged(destPath, readFileSync(srcPath, 'utf-8'))
+    cpSync(srcPath, destPath)
   }
 }
 
@@ -57,7 +48,7 @@ async function createPackageContent(options: BundleOptions): Promise<void> {
 
   if (pkg.additionalFiles) {
     for (const { src, dest } of pkg.additionalFiles) {
-      await copyAdditionalFile(coreDir, targetDir, src, dest)
+      await copyFile(resolve(coreDir, src), resolve(targetDir, dest))
     }
   }
 }

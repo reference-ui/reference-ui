@@ -1,17 +1,20 @@
 import type { Config } from '@pandacss/dev'
 
 /**
- * Pure structural Panda config. No side-effect imports, no dependency on
- * generated code. Used as the base merged with fragment contributions when
- * generating panda.config. Breaks the chicken-and-egg: CLI can run ref sync
- * on itself because this file does not import from system/styled.
+ * Userspace base config for ref sync.
+ * Used when generating panda.config.ts in the user's outDir (.reference-ui).
+ * Panda runs with cwd=outDir, so outdir 'styled' → output to outDir/styled.
+ *
+ * NOT used by build/styled.ts (CLI internal build) — that passes a full
+ * baseConfig override tailored for src/system/styled.
  */
 export const baseConfig = {
   presets: [],
   jsxFramework: 'react' as const,
   preflight: true,
 
-  include: ['.virtual/**/*.{ts,tsx,js,jsx}', 'src/**/*.{ts,tsx,js,jsx}'],
+  /** Relative to outDir: virtual/ = transformed sources, src/ = user src */
+  include: ['virtual/**/*.{ts,tsx,js,jsx}', 'src/**/*.{ts,tsx,js,jsx}'],
 
   exclude: [
     '**/node_modules/**',
@@ -19,7 +22,8 @@ export const baseConfig = {
     '**/*.spec.*',
   ],
 
-  outdir: 'system/styled',
+  /** Output directly into the styled package (outDir/styled) */
+  outdir: 'styled',
   outExtension: 'js' as const,
   hash: false,
 } satisfies Partial<Config>

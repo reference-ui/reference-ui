@@ -15,11 +15,17 @@ const refCli = join(
   'index.mjs'
 )
 
-async function waitForVirtual(maxMs = 12_000): Promise<boolean> {
-  const virtualApp = join(pkgRoot, '.reference-ui', 'virtual', 'src', 'App.tsx')
+async function waitForSyncComplete(maxMs = 15_000): Promise<boolean> {
+  const refUi = join(pkgRoot, '.reference-ui')
+  const reactMjs = join(refUi, 'react', 'react.mjs')
+  const virtualDir = join(refUi, 'virtual')
   const start = Date.now()
   while (Date.now() - start < maxMs) {
-    if (existsSync(virtualApp)) return true
+    if (existsSync(reactMjs) && existsSync(virtualDir)) {
+      // Brief settle delay for filesystem sync before tests run
+      await new Promise((r) => setTimeout(r, 100))
+      return true
+    }
     await new Promise((r) => setTimeout(r, 80))
   }
   return false
@@ -34,14 +40,14 @@ export default async function globalSetup() {
   })
   watchProcess.unref()
 
-  const ok = await waitForVirtual()
+  const ok = await waitForSyncComplete()
   if (!ok) {
     try {
       process.kill(-watchProcess.pid!, 'SIGKILL')
     } catch {
       watchProcess.kill('SIGKILL')
     }
-    throw new Error('ref sync --watch failed to produce initial virtual copy')
+    throw new Error('ref sync --watch failed to produce .reference-ui/react (full pipeline did not complete)')
   }
 
   return () => {

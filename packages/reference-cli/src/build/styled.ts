@@ -77,9 +77,11 @@ async function collectTokenFragments(): Promise<{
 async function generateStyleConfig(fragmentFiles: string[]): Promise<void> {
   console.log('[build:styled] Generating panda.config.ts...')
 
+  // Full override — do NOT use baseConfig (that's for userspace ref sync).
+  // We run from STYLED_DIR, so outdir '.' → src/system/styled
   const styledBaseConfig = {
     preflight: false,
-    outdir: '.', // Output directly to system/styled
+    outdir: '.',
     include: ['./src/**/*.{ts,tsx}'],
     exclude: ['**/*.d.ts'],
   }

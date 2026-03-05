@@ -5,6 +5,7 @@ import { initVirtual } from '../virtual/init'
 import { initConfig } from '../system/config/init'
 import { initWatch } from '../watch/init'
 import { initPackager } from '../packager/init'
+import { initPanda } from '../system/panda/init'
 import type { SyncOptions } from './types'
 
 export type { SyncOptions, SyncPayload } from './types'
@@ -17,5 +18,6 @@ export async function syncCommand(cwd: string, options?: SyncOptions): Promise<v
   initWatch(payload)
   initVirtual(payload)
   initConfig()
+  initPanda()
   await initPackager({ cwd, watchMode: options?.watch })
 }

@@ -18,6 +18,10 @@ export function initEvents(): void {
   })
   
   on('system:config:complete', () => {
+    emit('run:panda:codegen')
+  })
+
+  on('system:panda:codegen', () => {
     emit('run:packager:bundle')
   })
 
