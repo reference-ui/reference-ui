@@ -57,9 +57,20 @@ export interface CollectOptions<TInput = unknown, TOutput = TInput> {
   tempDir: string
 }
 
+/**
+ * Minimum interface required by the planner. Use this so any FragmentCollector is accepted
+ * without needing explicit casts (variance prevents FragmentCollector<A, B> → FragmentCollector<unknown, unknown>).
+ */
+export interface CollectorForPlanner {
+  config: { name: string; targetFunction?: string; [k: string]: unknown }
+  init: () => void
+  getFragments: () => unknown[]
+  cleanup: () => void
+}
+
 /** Planner API: pass multiple collectors + glob patterns, get Record<name, T[]> back */
 export interface CollectOptionsPlanner {
-  collectors: FragmentCollector<unknown>[]
+  collectors: CollectorForPlanner[]
   include: string[]
   tempDir: string
   /** Working directory for glob resolution. Default: process.cwd() */

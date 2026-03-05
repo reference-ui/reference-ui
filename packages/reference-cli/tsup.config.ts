@@ -1,11 +1,13 @@
 import { defineConfig } from 'tsup'
-import { workerEntries } from './src/lib/thread-pool'
+import { mkdirSync } from 'node:fs'
 import { cp, readdir } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
+import { workerEntries } from './src/lib/thread-pool'
 
 const LIQUID_SRC = 'src/system/config/liquid'
 const CONFIG_DIST = 'dist/cli/config'
-const STYLED = resolve('src/system/styled')
+const STYLED_SRC = resolve('src/system/styled')
+const STYLED_DIST = 'dist/cli/styled'
 
 export default defineConfig({
   entry: {
@@ -32,12 +34,15 @@ export default defineConfig({
         cp(join(LIQUID_SRC, f), join(CONFIG_DIST, f))
       )
     )
-    // Copy internal-fragments.mjs when it exists (produced by build:styled)
-    const internalFragments = join(LIQUID_SRC, '..', 'internal-fragments.mjs')
+    // Copy internal-fragments.mjs when it exists (produced by prebuild / build:styled)
     try {
-      await cp(internalFragments, join(CONFIG_DIST, 'internal-fragments.mjs'))
+      mkdirSync(STYLED_DIST, { recursive: true })
+      await cp(
+        join(STYLED_SRC, 'internal-fragments.mjs'),
+        join(STYLED_DIST, 'internal-fragments.mjs')
+      )
     } catch {
-      // build:styled may not have run yet
+      // prebuild may not have run yet
     }
   },
 })

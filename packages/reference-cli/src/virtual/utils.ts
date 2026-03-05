@@ -12,7 +12,7 @@ export function getVirtualPath(
 ): string {
   const relPath = relative(sourceDir, sourcePath)
   const ext = extname(relPath)
-  const outExt = TRANSFORM_EXTENSIONS.get(ext) ?? ext
+  const outExt = (TRANSFORM_EXTENSIONS as Map<string, string>).get(ext) ?? ext
   const base = relPath.slice(0, -ext.length)
   return join(virtualDir, base + outExt)
 }

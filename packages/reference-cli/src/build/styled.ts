@@ -12,6 +12,7 @@
 import { resolve, join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { mkdirSync, writeFileSync } from 'node:fs'
+import type { FragmentCollector } from '../lib/fragments'
 import { collectFragments, scanForFragments, bundleFragments } from '../lib/fragments'
 import { createPandaConfig } from '../system/config/createPandaConfig'
 import { tokensCollector } from '../system/api/tokens'
@@ -21,7 +22,7 @@ const __filename = fileURLToPath(import.meta.url)
 const CLI_ROOT = resolve(dirname(__filename), '../..')
 const STYLED_DIR = join(CLI_ROOT, 'src/system/styled')
 const PANDA_CONFIG_PATH = join(STYLED_DIR, 'panda.config.ts')
-const INTERNAL_FRAGMENTS_PATH = join(CLI_ROOT, 'src/system/config/internal-fragments.mjs')
+const INTERNAL_FRAGMENTS_PATH = join(CLI_ROOT, 'src/system/styled/internal-fragments.mjs')
 
 interface StylePackageMetadata {
   fragmentsCollected: number
@@ -65,7 +66,7 @@ async function collectTokenFragments(): Promise<{
 
   const result = await collectFragments({
     files: fragmentFiles,
-    collector: tokensCollector,
+    collector: tokensCollector as FragmentCollector<unknown, unknown>,
     tempDir,
   })
 
@@ -105,7 +106,7 @@ async function generateStyleConfig(fragmentFiles: string[]): Promise<void> {
   await createPandaConfig({
     outputPath: PANDA_CONFIG_PATH,
     fragmentFiles: configFragmentFiles,
-    collectors: [tokensCollector],
+    collectors: [tokensCollector as FragmentCollector<unknown, unknown>],
     baseConfig: styledBaseConfig,
     internalFragments: concatenated || undefined,
   })

@@ -97,8 +97,9 @@ describe('collectFragments – planner API (glob patterns, multiple collectors)'
     })
 
     expect(result.tokens).toHaveLength(2)
-    expect(result.tokens[0]).toHaveProperty('theme.tokens')
-    expect(result.tokens[0].theme.tokens).toEqual({ name: 'simple', value: 42 })
+    const first = result.tokens[0] as { theme: { tokens: Record<string, unknown> } }
+    expect(first).toHaveProperty('theme.tokens')
+    expect(first.theme.tokens).toEqual({ name: 'simple', value: 42 })
   })
 })
 
@@ -167,7 +168,7 @@ describe('collectFragments – single-collector API (explicit file list)', () =>
       }),
     })
 
-    const fragments = await collectFragments({
+    const fragments = await collectFragments<Input, Output>({
       files: [join(fixtureDir, 'use-function.ts')],
       collector: transformCollector,
       tempDir,

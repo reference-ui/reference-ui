@@ -48,7 +48,7 @@ export async function runConfig(cwd: string): Promise<void> {
   let internalFragments: string | undefined
   try {
     const cliDir = resolveCliPackageDir(cwd)
-    const internalPath = join(cliDir, 'dist/cli/config', INTERNAL_FRAGMENTS_FILENAME)
+    const internalPath = join(cliDir, 'dist/cli/styled', INTERNAL_FRAGMENTS_FILENAME)
     if (existsSync(internalPath)) {
       internalFragments = readFileSync(internalPath, 'utf-8')
     }

@@ -10,7 +10,7 @@
     "module": "esnext",
     "allowSyntheticDefaultImports": true,
     "target": "es2020",
-    "lib": ["es2020"],
+    "lib": ["es2020", "es2022"],
     "resolveJsonModule": true,
     "paths": {
       "@reference-ui/styled": ["./src/system/styled"],
@@ -18,5 +18,5 @@
     }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["node_modules", "dist"]
+  "exclude": ["node_modules", "dist", "src/system/styled"]
 }

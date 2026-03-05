@@ -22,7 +22,7 @@ export function evaluateConfig(bundledCode: string): unknown {
   }
 
   const requireFn = ((id: string) => {
-    if (PROVIDE_DEFINE_CONFIG.includes(id)) {
+    if ((PROVIDE_DEFINE_CONFIG as readonly string[]).includes(id)) {
       return { defineConfig }
     }
     return baseRequire(id)
