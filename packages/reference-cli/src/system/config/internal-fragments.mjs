@@ -50,6 +50,11 @@
       return `globalThis['${globalKey}'] = []`;
     }
     __name(toScript, "toScript");
+    function toGetter() {
+      const transformCode = transform ? `fragments.map(${transform.toString()})` : "fragments";
+      return `(function() { const fragments = globalThis['${globalKey}'] ?? []; return ${transformCode}; })()`;
+    }
+    __name(toGetter, "toGetter");
     const configObj = { name, globalKey, logLabel, targetFunction, transform };
     const collectorFn = Object.assign(collect, {
       config: configObj,
@@ -57,7 +62,8 @@
       init,
       getFragments,
       cleanup,
-      toScript
+      toScript,
+      toGetter
     });
     return collectorFn;
   }
@@ -78,6 +84,7 @@
   // src/system/internal/tokens.ts
   tokens({
     colors: {
+      mySpecialToken: { value: "red" },
       brand: {
         primary: { value: "#0066cc" },
         secondary: { value: "#ff6600" }

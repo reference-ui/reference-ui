@@ -7,6 +7,7 @@ import { tokens } from '../api/tokens'
 
 tokens({
   colors: {
+    mySpecialToken: { value: 'red' },
     brand: {
       primary: { value: '#0066cc' },
       secondary: { value: '#ff6600' },

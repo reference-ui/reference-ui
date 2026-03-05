@@ -12,8 +12,7 @@ const baseConfig = {{ baseConfig }}
 
 {{ deepMergePartial | raw }}
 
-const fragments = [{{ collectorKeys }}].flatMap(k => globalThis[k] ?? [])
-;[{{ collectorKeys }}].forEach(k => delete globalThis[k])
+const fragments = [{{ collectorGetters }}].flat()
 const config = deepMerge(baseConfig, ...fragments)
 
 export default defineConfig(config)

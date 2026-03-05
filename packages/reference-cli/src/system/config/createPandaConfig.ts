@@ -40,14 +40,14 @@ export async function createPandaConfig(
     .join('\n')
   const bundles = [internalFragments, userFragments].filter(Boolean).join('\n')
 
-  const collectorKeys = collectors.map(c => `'${c.config.globalKey}'`).join(', ')
+  const collectorGetters = collectors.map(c => c.toGetter()).join(', ')
 
   const rendered = await engine.parseAndRender(templates.panda, {
     baseConfig: JSON.stringify(base),
     collectorSetups: collectors.map(c => c.toScript()).join('\n'),
     bundles,
     deepMergePartial: templates.deepMerge,
-    collectorKeys,
+    collectorGetters,
   })
 
   mkdirSync(dirname(outputPath), { recursive: true })
