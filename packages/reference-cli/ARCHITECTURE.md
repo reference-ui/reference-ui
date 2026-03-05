@@ -1,688 +1,522 @@
-# reference-cli Architecture
+# @reference-ui/cli — Architecture
 
-This document explains the dual-system import aliasing problem and how to solve it.
-
----
-
-## The Real Problem: Two Styled Systems
-
-`reference-cli` (which is actually the core package) ships with:
-
-- **Primitives** (components, typography recipes, etc.)
-- **Styled API** (tokens, recipes, fonts, etc.)
-- **Config generation** that produces a styled-system (Panda config)
-
-The fundamental issue: **We need TWO styled systems:**
-
-1. **Internal system** - For building the CLI itself and its primitives
-2. **User system** - What users generate when they run `ref sync`
-
-### The Import Aliasing Problem
-
-Primitives import from `@reference-ui/styled`:
-
-```typescript
-// primitives/types.ts
-import type { HTMLStyledProps } from '@reference-ui/styled/types/jsx'
-
-// styled/api/runtime/recipe.ts
-import { cva, cx } from '@reference-ui/styled/css'
-```
-
-**During CLI build:**
-
-- These imports need to resolve to an **internal styled package** (generated for CLI development)
-
-**When packaged for users:**
-
-- These same imports need to resolve to the **user's generated styled package**
-
-Same code, different import destinations depending on context.
-
-### Why This Matters
-
-The CLI is "interlocked":
-
-- Styled API generates config fragments
-- Config fragments generate the styled-system (via Panda)
-- Primitives depend on that styled-system
-
-But we can't ship primitives that import from the CLI's internal styled package - users won't have that path. The primitives need to import from where the user's styled package will be generated.
+Design system build pipeline: workers, event bus, fragments, config generation, virtual FS, and packager.
 
 ---
 
-## Current Approach: Fragments Without Full Solution
+## Commands
 
-### What Works
-
-The **fragments system** solves part of the problem:
-
-- Config-time APIs (`tokens()`, `recipe()`, etc.) contribute to Panda config without importing from generated system
-- Fragments are bundled as IIFEs and injected into `panda.config.ts`
-- This allows Panda to run without needing the system to exist first
-
-### What Doesn't Work
-
-**Primitives still have styled imports:**
-
-- `primitives/types.ts` imports from `@reference-ui/styled/types/jsx`
-- `styled/api/runtime/recipe.ts` imports from `@reference-ui/styled/css`
-
-These imports need aliasing:
-
-1. Point to different packages in dev vs production
-2. Need to resolve during CLI build (internal styled package)
-3. Need to resolve after packaging (user styled package)
-
-### The Missing Piece
-
-**Import aliasing at build/bundle time.** We need:
-
-1. An internal system generated via fragments for CLI development
-2. A bundler configuration that rewrites imports when packaging for users
-3. Primitives that remain unchanged but resolve to different systems depending on context
+| Command | Description |
+|--------|--------------|
+| **ref sync** (default) | Build and sync the design system. Uses workers + event bus. |
+| **ref clean** | Removes output directory (`.reference-ui` or `config.outDir`). Main thread only. Use before tests for fresh state. |
 
 ---
 
-## The Solution: Fragments Configure Systems, Bundler Aliases Imports
+## High-Level Flow
 
-**Fragments configure the styled system. Primitives use the styled system. Bundler rewrites imports.**
+1. **Main thread** bootstraps (config, event bus, thread pool), wires flow in events modules.
+2. **Workers** are spawned via `workers.runWorker(name, payload)` from init modules.
+3. Workers subscribe with `on(event, handler)` and return `KEEP_ALIVE` to stay alive.
+4. **Events** flow via **BroadcastChannel**; all threads (main + workers) react.
+5. **Sync** runs: virtual copy → config (panda.config) → (optional Panda) → packager → symlinks/install.
 
-### Architecture Overview
+---
 
-```
-Fragments → Configure → Panda → Generates → @reference-ui/styled → Used by → Primitives
-```
+## Event Bus & Thread Pool
 
-1. **Fragments** define configuration (tokens, recipes, utilities)
-2. **Panda** takes fragments and generates the styled package
-3. **`@reference-ui/styled`** is an internal package that bundles up Panda CSS
-4. **Primitives** are compiled code that imports from `@reference-ui/styled`
-5. **Bundler** rewrites imports depending on context
+### Event bus (`src/lib/event-bus/`)
 
-### Two Systems, Same Fragments
+- **BroadcastChannel** for cross-thread messaging.
+- Typed `emit`, `on`, `off`, `once`, `onceAll`; types come from `src/events.ts`.
+- `initEventBus()` must run in main thread before any worker uses emit/on.
 
-**Internal Styled Package (CLI Development):**
+### Event registry (`src/events.ts`)
 
-```
-Internal fragments
-  → Generate panda.config.ts
-  → Run Panda
-  → Output to internal @reference-ui/styled package
-  → Primitives import from @reference-ui/styled (aliased internally)
+Central union of all event maps; each domain exports its slice:
+
+```ts
+export type Events = SyncEvents & VirtualEvents & WatchEvents & SystemEvents & PackagerEvents
 ```
 
-**User Styled Package (Consumer):**
+Domains: `sync/events.ts`, `virtual/events.ts`, `watch/events.ts`, `system/events.ts`, `packager/events.ts`.
 
-```
-Internal fragments + User fragments
-  → Generate panda.config.ts
-  → Run Panda
-  → Output to user's @reference-ui/styled package
-  → Packaged primitives import from @reference-ui/styled (aliased to user's)
-```
+### Thread pool (Piscina)
 
-### How Import Aliasing Works
+- **Manifest**: `workers.json` — keys are worker names, values are source paths (e.g. `src/virtual/worker.ts`).
+- **Registry**: `src/lib/thread-pool/registry.ts` builds pool from manifest; `workerEntries` feeds tsup for bundling workers to `dist/cli/${name}/worker.mjs`.
+- **API**: `initPool({ config, cwd })`, `runWorker(name, payload)`, `KEEP_ALIVE`, `shutdown`.
 
-**In CLI source code:**
+**Principle:** Logic lives in handler functions; worker files are wiring only (flat `on` list).
 
-```typescript
-// primitives/types.ts
-import type { HTMLStyledProps } from '@reference-ui/styled/types/jsx'
+---
 
-// During development, tsconfig.json paths:
-"paths": {
-  "@reference-ui/styled": ["./src/system/styled/styled"]
-  "@reference-ui/styled/*": ["./src/system/styled/styled/*"]
+## Module Pattern
+
+- **Worker** = single file, flat `on(event, handler)` list; no branching. Returns `KEEP_ALIVE`.
+- **Logic** = separate modules with pure handlers (receive payloads, emit events; no `on`).
+- **Orchestration** = events modules that route (e.g. `on('virtual:ready', () => emit('run:virtual:copy:all'))`).
+
+**Layout per domain:** `init.ts` (spawns worker), `worker.ts` (wiring), `events.ts` (event types), plus logic files (e.g. `copy-all.ts`).
+
+---
+
+## Code highlights
+
+Real snippets that define the style of the codebase: orchestration as pure event wiring, typed bus, flat workers, and declarative event maps.
+
+### Sync command — single entry point
+
+The sync command is the main hub: bootstrap once, wire events, register completion, then spawn all workers in order. No branching; each init is one line.
+
+```ts
+// src/sync/command.ts
+import { bootstrap } from './bootstrap'
+import { initComplete } from './complete'
+import { initEvents } from './events'
+import { initVirtual } from '../virtual/init'
+import { initConfig } from '../system/config/init'
+import { initWatch } from '../watch/init'
+import { initPackager } from '../packager/init'
+import { initPanda } from '../system/panda/init'
+
+export async function syncCommand(cwd: string, options?: SyncOptions): Promise<void> {
+  const payload = await bootstrap(cwd, options)
+  initEvents()
+  initComplete(payload)
+  initWatch(payload)
+  initVirtual(payload)
+  initConfig()
+  initPanda()
+  await initPackager({ cwd, watchMode: options?.watch })
 }
-// Resolves to internal styled package
 ```
 
-**When bundling for users:**
+### Sync events — orchestration only
 
-```typescript
-// Bundler (tsup/esbuild) config:
-alias: {
-  '@reference-ui/styled': '.reference-ui/styled'
-}
+All pipeline flow lives in one place: `on` / `emit` only. Payloads are passed through (e.g. `watch:change` → `run:virtual:sync:file`). No side effects, no conditionals.
 
-// Output in dist/primitives.js:
-import type { HTMLStyledProps } from '@reference-ui/styled/types/jsx'
-// User's bundler resolves to their generated .reference-ui/styled package
-```
+```ts
+// src/sync/events.ts
+import { emit, on } from '../lib/event-bus'
 
-Same source code, different resolved paths via bundler configuration.
-
-### The Fragment System's Role
-
-Fragments are ONLY for configuring Panda. They:
-
-- Define tokens, recipes, patterns
-- Contribute to panda.config.ts
-- Are serialized as IIFEs (no @reference-ui/styled imports)
-- Generate the styled package that primitives will use
-
-Fragments are NOT for primitives. Primitives are regular TypeScript that:
-
-- Import from @reference-ui/styled (after it's generated)
-- Get compiled/bundled normally
-- Have their imports rewritten by the bundler
-
----
-
-## Implementation Plan
-
-### Phase 1: Build Internal Styled Package
-
-**`src/system/styled/build.ts` - Internal build entry point:**
-
-This script builds the internal styled package that the CLI uses during development:
-
-```typescript
-// src/system/styled/build.ts
-import { collectFragments } from './internal/collectFragments'
-import { generatePandaConfig } from '../system/config/panda'
-import { runPanda } from '../system/panda'
-
-export async function buildInternalStyled() {
-  // 1. Collect fragments from actual codebase
-  const fragments = await collectFragments({
-    scanDirs: ['./src/system/styled', './src/primitives'],
-    // Collect internal fragment definitions
+export function initEvents(): void {
+  on('virtual:ready', () => {
+    emit('run:virtual:copy:all')
   })
 
-  // 2. Generate panda.config.ts using internal fragments
-  const pandaConfig = await generatePandaConfig({
-    fragments,
-    outputDir: './src/system/styled',
-    context: 'internal', // Special flag for internal builds
+  on('watch:change', (payload) => {
+    emit('run:virtual:sync:file', payload)
   })
 
-  // 3. Run Panda to generate styled package
-  await runPanda({
-    config: pandaConfig,
-    outdir: './src/system/styled',
+  on('virtual:complete', () => {
+    emit('run:system:config')
   })
 
-  // 4. Create internalSystem that CLI can inject during ref sync
-  // This allows CLI to understand the structure for user builds
-  return {
-    fragments,
-    config: pandaConfig,
-    outputPath: './src/system/styled',
-  }
+  on('system:config:complete', () => {
+    emit('run:panda:codegen')
+  })
+
+  on('system:panda:codegen', () => {
+    emit('run:packager:bundle')
+  })
+
+  on('packager:complete', () => {
+    emit('sync:complete')
+  })
 }
 ```
 
-**Key considerations:**
+### Sync complete — cold vs watch
 
-- **Not using fragments internally**: When building for internal use, we don't wrap everything as fragments. We use the same pipeline functions from `system/` but adapted for internal context.
-- **Dual-context system module**: The system module needs to handle both:
-  - Internal context: Building styled package for CLI development
-  - External context: Building styled package for user via ref sync
-- **internalSystem**: Metadata about the internal build that helps CLI understand how to build user systems
+Completion is handled with `once`: exit in cold mode, write a ready message in watch mode so tests can detect “sync ready”.
 
-### Phase 2: System Module Dual Context
+```ts
+// src/sync/complete.ts
+import { once } from '../lib/event-bus'
 
-Update system module to work in both contexts:
+export const REF_SYNC_READY_MESSAGE = '[ref sync] ready\n'
 
-```typescript
-// src/system/config/panda/generateConfig.ts
-export async function generatePandaConfig(options: {
-  fragments: Fragment[]
-  outputDir: string
-  context: 'internal' | 'external'
-}) {
-  if (options.context === 'internal') {
-    // Internal build: Use fragments directly, no serialization
-    return createConfigFromFragments(options.fragments)
-  } else {
-    // External build: Serialize fragments, inject into user config
-    return createConfigWithFragmentInjection(options.fragments)
-  }
-}
-```
-
-This allows the same pipeline to handle both internal CLI builds and user builds during `ref sync`.
-
-### Phase 3: Bundle with Import Aliasing via tsup
-
-Configure bundler to rewrite styled imports:
-
-```typescript
-// tsup.config.ts
-export default defineConfig({
-  entry: ['src/primitives/index.ts', 'src/system/styled/api/index.ts', 'src/fragments/index.ts'],
-  esbuildOptions(options) {
-    options.alias = {
-      // Rewrite internal styled imports to user styled package
-      '@reference-ui/styled': '.reference-ui/styled',
+export function initComplete(payload: SyncPayload): void {
+  once('sync:complete', () => {
+    if (!payload.options.watch) {
+      process.exit(0)
+    } else {
+      process.stdout.write(REF_SYNC_READY_MESSAGE)
     }
-  },
-})
-```
-
-During build:
-
-- TypeScript resolves `@reference-ui/styled` to `./src/system/styled/styled/` (via tsconfig paths)
-- tsup bundles and rewrites to `.reference-ui/styled/`
-- Output primitives import from user's styled package location
-
-### Phase 4: Separate Styled Packager
-
-**`src/packager/styled/` - Package the styled system:**
-
-Styled gets its own packager because it's a separate concern:
-
-```typescript
-// src/packager/styled/index.ts
-export async function packageStyled(options: {
-  sourceDir: string // './src/system/styled' for internal, or user's styled
-  outputDir: string // Where to write packaged output
-}) {
-  // Package the styled system with proper structure
-  // Add package.json, type declarations, etc.
-
-  await bundleStyled({
-    input: options.sourceDir,
-    output: options.outputDir,
-    format: ['esm', 'cjs'],
   })
 }
 ```
 
-**Why separate packager:**
-
-- Users never import `@reference-ui/styled` directly
-- When re-exporting primitives/apis in `@reference-ui/system` (or main package), it pulls from styled internally
-- Styled is the implementation detail; system is the public API
-- Clean separation allows styled to be optimized/bundled independently
-
-### Phase 5: Package Structure & Re-exports
-
-**Final package structure:**
-
-```
-dist/
-├── styled/             # Internal styled package (packaged)
-│   ├── css/
-│   ├── jsx/
-│   ├── patterns/
-│   ├── recipes/
-│   └── package.json
-│
-├── fragments/          # Public fragments (configure user's styled)
-│   ├── tokens.js
-│   ├── recipes.js
-│   └── utilities.js
-│
-├── primitives/         # Compiled primitives (import from @reference-ui/styled)
-│   └── index.js
-│
-├── system/             # Public API re-exports
-│   └── index.js        # Re-exports primitives, styled selectively
-│
-├── api/                # Runtime APIs
-│   └── index.js
-│
-└── cli.js              # CLI entry point
-```
-
-**Re-export pattern:**
-
-```typescript
-// dist/system/index.ts - Public API
-// Users import from @reference-ui/system
-export * from '../primitives' // Primitives internally use @reference-ui/styled
-export { css, cva, cx } from '../styled/css' // Selective re-exports from styled
-
-// Users never do: import { css } from '@reference-ui/styled'
-// They do: import { css } from '@reference-ui/system'
-// But primitives internally use @reference-ui/styled (via alias)
-```
-
-### Phase 6: User ref sync Integration
-
-When user runs `ref sync`:
-
-1. Load CLI's fragments (not primitives)
-2. Collect user's fragments from ui.config.ts
-3. Merge CLI internal fragments + user fragments
-4. Generate panda.config.ts using external context
-5. Run Panda → outputs .reference-ui/styled/
-6. User's bundler resolves `@reference-ui/styled` to `.reference-ui/styled/`
-7. User imports from `@reference-ui/system` (which re-exports primitives)
-
----
-
-## Key Architectural Decisions
-
-### 1. Fragments = Configuration Only
-
-Fragments define what goes INTO the styled package:
-
-- Tokens, colors, spacing
-- Recipes, patterns
-- Utilities, conditions
-- Global styles, keyframes
-
-Fragments do NOT contain primitives or runtime code.
-
-### 2. Primitives = Compiled Code
-
-Primitives are regular TypeScript that:
-
-- Import from @reference-ui/styled (after it's generated)
-- Are compiled/bundled with the CLI
-- Have imports rewritten by bundler
-- Ship as executable code, not config
-
-### 3. Two Fragment Sets
-
-**Internal fragments** (CLI only):
-
-- Used to generate internal @reference-ui/styled for development
-- May use unstable/internal-only APIs
-- Not shipped to users
-
-**Public fragments** (shipped to users):
-
-- Base tokens/recipes users can extend
-- Use stable, documented APIs
-- Included in packaged dist/
-
-### 4. Import Resolution Strategy
-
-**Development time:**
-
-- tsconfig.json `paths` alias @reference-ui/styled → ./src/system/styled/styled/
-- Primitives compile against internal styled package
-
-**Package time:**
-
-- Bundler rewrites all @reference-ui/styled imports
-- Point to user's .reference-ui/styled/
-- No runtime resolution needed
-
----
-
-## Codebase Structure
-
-```
-reference-cli/
-├── src/
-│   ├── build/                  # Build scripts
-│   │   ├── styled.ts           # Internal styled package builder
-│   │   └── index.ts
-│   │
-│   ├── internal/               # CLI development only
-│   │   ├── fragments/          # Internal styled package configuration
-│   │   │   ├── base-tokens.ts
-│   │   │   ├── rhythm.ts
-│   │   │   └── index.ts
-│   │   └── collectFragments.ts # Fragment collection for internal build
-│   │
-│   ├── styled/                 # Styled system
-│   │   ├── api/                # Design system APIs
-│   │   │   ├── tokens.ts       # → fragment exports
-│   │   │   ├── recipe.ts       # → fragment exports
-│   │   │   └── ...
-│   │   ├── internal/           # Generated internal styled package (gitignored)
-│   │   │   ├── css/
-│   │   │   ├── jsx/
-│   │   │   ├── patterns/
-│   │   │   └── ...
-│   │   └── primitives/         # Components (import from @reference-ui/styled)
-│   │       ├── h1.style.ts
-│   │       ├── h6.style.ts
-│   │       └── ...
-│   │
-│   ├── fragments/              # Public fragments (shipped to users)
-│   │   ├── tokens.ts
-│   │   ├── recipes.ts
-│   │   └── index.ts
-│   │
-│   ├── system/                 # Build pipeline (dual-context)
-│   │   ├── config/             # Config generation
-│   │   │   ├── panda/
-│   │   │   │   └── generateConfig.ts  # Handles internal/external
-│   │   │   └── fragments/
-│   │   └── panda/              # Panda execution
-│   │
-│   ├── packager/               # Packagers
-│   │   ├── styled/             # Styled package packager
-│   │   │   └── index.ts
-│   │   ├── fragments/          # Fragment packager
-│   │   └── index.ts
-│   │
-│   └── cli/                    # CLI entry point
-│       └── index.ts
-│
-├── tsconfig.json               # Paths alias: @reference-ui/styled → ./src/system/styled/styled
-├── tsup.config.ts              # Bundler alias: @reference-ui/styled → .reference-ui/styled
-└── package.json                # "prebuild": "tsx src/system/styled/build.ts"
-```
-
-**Key directories:**
-
-- **`build/styled.ts`**: Orchestrates internal styled package generation
-- **`internal/`**: Internal-only fragments and utilities
-- **`system/styled/`**: Generated styled package for CLI development (gitignored)
-- **`packager/styled/`**: Packages styled system separately
-- **`system/`**: Dual-context pipeline (internal vs external builds)
-- **`fragments/`**: Public fragments shipped to users
-
----
-
-## Development Workflow
-
-### Building the CLI
-
-```bash
-# 1. Generate internal styled package
-pnpm prebuild
-  → Run tsx src/system/styled/build.ts
-  → Collect fragments from codebase (collectFragments)
-  → Generate panda.config.ts using internal context
-  → Run Panda → outputs ./src/system/styled/
-  → Create internalSystem metadata
-
-# 2. Build CLI with tsup
-pnpm build
-  → TypeScript compiles:
-    - tsconfig paths: @reference-ui/styled → ./src/system/styled/styled
-    - Primitives import from @reference-ui/styled
-    - Types resolve correctly
-
-  → tsup bundles:
-    - Rewrites @reference-ui/styled → .reference-ui/styled
-    - Outputs primitives, fragments, api to dist/
-
-  → Packagers run:
-    - packager/styled: Package styled system separately
-    - packager/fragments: Bundle public fragments
-    - Creates proper package.json for each
-
-# 3. Result structure
-dist/
-  ├── styled/           # Packaged styled system (internal-only)
-  │   ├── css/
-  │   ├── jsx/
-  │   └── package.json
-  │
-  ├── fragments/        # Public fragments for users
-  │   ├── tokens.js
-  │   └── index.js
-  │
-  ├── primitives/       # Compiled primitives (imports rewritten)
-  │   └── index.js
-  │
-  ├── system/           # Public API (re-exports)
-  │   └── index.js      # Re-exports from primitives + styled
-  │
-  └── cli.js            # CLI entry point
-```
-
-### User Workflow
-
-```bash
-# User installs CLI
-pnpm add @reference-ui/cli
-
-# User creates ui.config.ts
-import { tokens, recipe } from '@reference-ui/cli/fragments'
-
-export default {
-  fragments: [
-    tokens({ /* user tokens */ }),
-    recipe({ /* user recipes */ })
-  ]
-}
-
-# User runs sync
-npx ref sync
-  → CLI loads internalSystem metadata
-  → Injects internal fragments into pipeline
-  → Load CLI's public fragments
-  → Load user's fragments from ui.config.ts
-  → Merge: internal + CLI public + user fragments
-  → Generate panda.config.ts using external context
-  → Run Panda → outputs .reference-ui/styled/
-
-# User imports from public API (not styled directly)
-import { H6, css, cva } from '@reference-ui/system'
-  → @reference-ui/system re-exports:
-    - Primitives (which internally use @reference-ui/styled)
-    - Selected styled utilities (css, cva, cx)
-
-  → User's bundler see imports:
-    - Primitives import from @reference-ui/styled
-    - Resolves to .reference-ui/styled/ generated by ref sync
-    - Everything works transparently
-
-# Users NEVER import from @reference-ui/styled directly
-# @reference-ui/styled is internal implementation detail
-# @reference-ui/system is the public API
-```
-
-**Key insight:** The CLI's `internalSystem` metadata allows `ref sync` to inject the internal fragments that make primitives work, while users only see the public API through `@reference-ui/system`.
-
----
-
-## Summary
-
-The solution uses **build/styled.ts for internal generation**, **dual-context system pipeline**, **separate styled packager**, and **bundler aliasing**:
-
-### 1. Internal Build Pipeline
-
-**`src/system/styled/build.ts`** orchestrates internal styled package generation:
-
-- Collects fragments from codebase using `collectFragments()`
-- Uses system pipeline in internal context (no fragment wrapping)
-- Generates `panda.config.ts` with internal fragments
-- Runs Panda → outputs `./src/system/styled/`
-- Creates `internalSystem` metadata for ref sync injection
-
-### 2. Dual-Context System Module
-
-**`src/system/`** handles both internal and external builds:
-
-- **Internal context**: Building styled package for CLI development
-- **External context**: Building styled package for users via ref sync
-- Same pipeline functions, different execution modes
-- `generatePandaConfig({ context: 'internal' | 'external' })`
-
-### 3. Styled as Separate Package
-
-**`@reference-ui/styled`** is packaged separately:
-
-- Has its own packager: `src/packager/styled/`
-- Internal implementation detail, not public API
-- Bundled independently for optimization
-- Users never import from it directly
-
-### 4. Public API via Re-exports
-
-**`@reference-ui/system`** is the public interface:
-
-- Re-exports primitives (which use `@reference-ui/styled` internally)
-- Re-exports selected styled utilities (`css`, `cva`, `cx`)
-- Users import from `@reference-ui/system`, not `@reference-ui/styled`
-- Clean separation: implementation vs interface
-
-### 5. Import Aliasing Strategy
-
-**Aliasing happens at two layers:**
-
-**Development time:**
-
-```json
-// tsconfig.json
-"paths": {
-  "@reference-ui/styled": ["./src/system/styled/styled"],
-  "@reference-ui/styled/*": ["./src/system/styled/styled/*"]
+### Virtual worker — flat subscription list
+
+Worker file: subscribe to triggers, delegate to logic, emit ready, return `KEEP_ALIVE`. Two handlers (full copy vs single-file sync from watch); both are simple wrappers around `copyAll` / `copyToVirtual` + `emit`.
+
+```ts
+// src/virtual/worker.ts (excerpt)
+export default async function runVirtual(payload: VirtualWorkerPayload): Promise<never> {
+  const { sourceDir, config } = payload
+  const root = resolve(sourceDir)
+  const virtualDir = getVirtualDirPath(root)
+  const debug = config.debug ?? false
+
+  const onCopyAll = () => {
+    copyAll(payload).catch((err) => {
+      console.error('[virtual] Copy failed:', err)
+    })
+  }
+
+  const onWatchChange = async (ev: { event: 'add' | 'change' | 'unlink'; path: string }) => {
+    // ... copy or remove one file, then emit('virtual:fs:change', { event, path })
+  }
+
+  on('run:virtual:copy:all', onCopyAll)
+  on('run:virtual:sync:file', onWatchChange)
+  emit('virtual:ready')
+
+  return KEEP_ALIVE
 }
 ```
 
-**Package time:**
+### Config worker — one trigger, one side effect
 
-```typescript
-// tsup.config.ts
-alias: {
-  '@reference-ui/styled': '.reference-ui/styled'
+Config worker subscribes to a single trigger, gets `cwd` from shared state, runs `runConfig(cwd)`, then always emits `system:config:complete` (success or failure) so the pipeline never stalls.
+
+```ts
+// src/system/config/worker.ts
+export default async function runConfigWorker(): Promise<never> {
+  on('run:system:config', () => {
+    const cwd = getCwd()
+    if (!cwd) {
+      log.error('[config] run:system:config: getCwd() is undefined')
+      emit('system:config:complete')
+      return
+    }
+    runConfig(cwd)
+      .then(() => emit('system:config:complete'))
+      .catch((err) => {
+        log.error('[config] runConfig failed', ...)
+        emit('system:config:complete')
+      })
+  })
+  emit('system:config:ready')
+  return KEEP_ALIVE
 }
 ```
 
-**Runtime (user's bundler):**
+### Event bus — typed emit
 
-- Sees imports to `@reference-ui/styled`
-- Resolves to `.reference-ui/styled/` (generated by ref sync)
-- No special configuration needed
+`emit` is generic: for events whose payload is `Record<string, never>`, no second argument is required; otherwise payload is required. BroadcastChannel carries `{ type: 'bus:event', event, payload }`.
 
-### 6. Fragment Injection (Internal Fragments)
+```ts
+// src/lib/event-bus/channel/emit.ts
+export function emit<K extends keyof Events>(
+  event: K,
+  ...args: Events[K] extends Record<string, never> ? [] : [payload: Events[K]]
+): void
+export function emit(event: string, payload?: unknown): void
+export function emit(event: string, payload?: unknown) {
+  broadcastChannel.postMessage({
+    type: 'bus:event',
+    event,
+    payload: payload ?? {},
+  })
+}
+```
 
-During `ref sync`:
+### Event bus — typed on
 
-1. CLI loads pre-bundled internal fragments from `dist/cli/config/internal-fragments.mjs` (produced by `build:styled`)
-2. Injects them into `createPandaConfig` as `internalFragments` before user fragments
-3. The generated `panda.config.ts` receives: internal bundles (tokens, etc.) + user bundles
-4. Same fragment shape in CLI internal build and user-space; the styled package structure matches
+Handlers receive the correct payload type for the event key; listeners are stored per event for cleanup (`off`).
 
-**Internal fragments flow:**
-- `build/styled.ts` bundles `system/internal/*` → writes `internal-fragments.mjs` (concatenated bundle)
-- `runConfig` reads that file and passes it to `createPandaConfig`
-- Packager copies CLI's internal styled (from `src/system/styled`) to `.reference-ui/styled`
+```ts
+// src/lib/event-bus/channel/on.ts
+export function on<K extends keyof Events>(
+  event: K,
+  handler: (payload: Events[K]) => void | Promise<void>
+): void
+export function on(event: string, handler: (payload: unknown) => void | Promise<void>) {
+  const listener = (msg: Event) => {
+    if ((msg as MessageEvent).data?.type === 'bus:event' && (msg as MessageEvent).data?.event === event) {
+      handler((msg as MessageEvent).data.payload)
+    }
+  }
+  broadcastChannel.addEventListener('message', listener as EventListener)
+  // ... channelListeners.set(event, ...).add(listener)
+}
+```
 
-### 7. Userspace Resolution: @reference-ui/styled → .reference-ui/styled
+### Event type maps — domain slices
 
-The react bundle keeps `@reference-ui/styled` as an external import. At runtime in the app:
+Each domain exports a single type map: event name → payload type. Triggers vs notifications are documented in comments. Empty payloads use `Record<string, never>`.
 
-- `import { Div } from '@reference-ui/react'` → resolves to `.reference-ui/react/`
-- Inside `react.mjs`: `import { box } from '@reference-ui/styled/patterns/box'` → must resolve to `.reference-ui/styled/`
+```ts
+// src/system/events.ts
+export type SystemEvents = {
+  'run:system:config': Record<string, never>
+  'run:panda:css': Record<string, never>
+  'run:panda:codegen': Record<string, never>
+  'system:ready': Record<string, never>
+  'system:config:ready': Record<string, never>
+  'system:config:complete': Record<string, never>
+  'system:panda:ready': Record<string, never>
+  'system:panda:css': Record<string, never>
+  'system:panda:codegen': Record<string, never>
+  'system:complete': Record<string, never>
+}
+```
 
-**Node/bundler resolution:** For `@reference-ui/styled` to resolve, the app needs one of:
+```ts
+// src/virtual/events.ts
+export type VirtualEvents = {
+  'virtual:ready': Record<string, never>
+  'run:virtual:copy:all': Record<string, never>
+  'run:virtual:sync:file': { event: 'add' | 'change' | 'unlink'; path: string }
+  'virtual:fs:change': { event: 'add' | 'change' | 'unlink'; path: string }
+  'virtual:complete': Record<string, never>
+}
+```
 
-- **Symlinks** (like `reference-core`): `node_modules/@reference-ui/styled` → `.reference-ui/styled`
-- **Package deps**: `"@reference-ui/styled": "file:.reference-ui/styled"` in app's `package.json` + `pnpm install`
-- **Bundler alias**: Vite `resolve.alias` pointing `@reference-ui/styled` to `.reference-ui/styled`
+### Fragment collector — globalThis bridge
 
-**Implementation:** The packager creates symlinks `node_modules/@reference-ui/<pkg>` → `.reference-ui/<pkg>` after bundling. Node and Vite resolve `@reference-ui/react`, `@reference-ui/styled`, `@reference-ui/system` via these symlinks.
+Collectors give a single function users call (e.g. `tokens({ ... })`) that pushes into a globalThis array. Generated configs get `toScript()` (init the array) and `toGetter()` (IIFE that returns collected fragments). Same pattern for any config slice (tokens, recipes, etc.).
+
+```ts
+// src/lib/fragments/collector.ts (concept)
+function collect(fragment: TInput): void {
+  const collector = (globalThis as Record<string, unknown>)[globalKey]
+  if (Array.isArray(collector)) {
+    collector.push(fragment)
+  }
+}
+
+function toScript(): string {
+  return `globalThis['${globalKey}'] = []`
+}
+
+function toGetter(): string {
+  const transformCode = transform
+    ? `fragments.map(${transform.toString()})`
+    : 'fragments'
+  return `(function() { const fragments = globalThis['${globalKey}'] ?? []; return ${transformCode}; })()`
+}
+```
+
+### Config generation — fragments + Liquid
+
+Internal and user fragment bundles are concatenated; collector setup scripts and getters are injected into the Liquid template. One function owns the whole panda.config write.
+
+```ts
+// src/system/config/createPandaConfig.ts (excerpt)
+const userFragments = (await bundleFragments({ files: fragmentFiles }))
+  .map(({ bundle }) => `;${bundle}`)
+  .join('\n')
+const bundles = [internalFragments, userFragments].filter(Boolean).join('\n')
+
+const collectorGetters = collectors.map(c => c.toGetter()).join(', ')
+
+const rendered = await engine.parseAndRender(templates.panda, {
+  baseConfig: JSON.stringify(base),
+  collectorSetups: collectors.map(c => c.toScript()).join('\n'),
+  bundles,
+  deepMergePartial: templates.deepMerge,
+  collectorGetters,
+})
+
+mkdirSync(dirname(outputPath), { recursive: true })
+writeFileSync(outputPath, rendered, 'utf-8')
+```
 
 ---
 
-This keeps the CLI as a single, cohesive package while elegantly solving the dual-system import problem through:
+For minimal versions of the same patterns (worker, logic, event wiring), see **README.md** in this package.
 
-- Build-time generation (`build/styled.ts`) and internal-fragments export
-- Dual-context pipeline (`system/`) with `internalFragments` injection
-- Separate packaging (`packager/`) — styled copied from CLI internal
-- Import aliasing (tsconfig for CLI dev; symlinks in node_modules for userspace)
-- Public API abstraction (`@reference-ui/system` / `@reference-ui/react`)
+---
 
+## Workers (workers.json) and thread pool
 
-### Optional: Panda in the sync flow (when enabled)
-.reference-ui/react and .reference-ui/styled must be resolvable as @reference-ui/react and @reference-ui/styled. The current packager doesn’t create symlinks in node_modules. That’s the main missing step for the app to run (e.g. via symlinks like reference-core).
+`workers.json` is the **manifest for the thread pool** ([Piscina](https://github.com/piscinajs/piscina)). Each key is a worker name; each value is the source path to that worker’s entry file. The pool is created from this manifest in `src/lib/thread-pool/registry.ts`: `workers` is the pool instance, and `workerEntries` (derived from the same keys) feeds tsup so each worker is built to `dist/cli/${name}/worker.mjs`. Sync calls `initPool({ config, cwd })` during bootstrap, then each init calls `workers.runWorker(name, payload)` to spawn a worker in a separate thread. Workers subscribe to events and return `KEEP_ALIVE` so the process stays running.
 
+| Worker | Path | Role |
+|--------|------|------|
+| watch | `src/watch/worker.ts` | File watcher; emits watch events |
+| virtual | `src/virtual/worker.ts` | Copies project files into virtual dir, applies transforms |
+| config | `src/system/config/worker.ts` | Eval fragments, generate panda.config.ts |
+| panda | `src/system/panda/worker.ts` | Panda codegen / CSS (when wired) |
+| packager | `src/packager/worker.ts` | Bundle packages, write package.json, install/symlink |
 
+---
 
-The panda worker isn’t wired into sync yet. Right now users get the CLI’s pre-built styled via copy. If you want user fragments to affect the styled output, you’d need to wire run:panda:codegen after system:config:complete (as noted in the panda README).
-So the hard part is done; the remaining work is mostly wiring and configuration (symlinks/resolution and optionally Panda).
+## Sync Pipeline
+
+1. **Bootstrap** (`sync/bootstrap.ts`): load user config, setCwd/setConfig, initPool, initEventBus → SyncPayload.
+2. **Inits** run: virtual, watch, system config, (panda), packager — each spawns its worker.
+3. **Virtual**: on `run:virtual:copy:all` copies files from `config.include` into `.reference-ui` (or outDir), applies transforms, emits `virtual:complete` / `virtual:fs:change`.
+4. **Config**: on `run:system:config` runs fragment collection + Liquid template → writes `panda.config.ts`, emits `system:config:complete`.
+5. **Panda** (optional): on `run:panda:codegen` / `run:panda:css` runs Panda; emits `system:panda:codegen` / `system:panda:css`.
+6. **Packager**: gates on `system:complete` (or equivalent); bundles system/react/styled, writes package.json, can run install/symlinks so `@reference-ui/styled` etc. resolve to `.reference-ui/...`.
+
+---
+
+## Fragments System
+
+### Purpose
+
+Fragments configure the **styled system** (Panda). They define tokens, recipes, utilities, etc. They are **config-only**; no runtime code. They are bundled as IIFEs and injected into generated `panda.config.ts` so Panda can run without the styled package existing first.
+
+### Fragment collector (`src/lib/fragments/`)
+
+- **createFragmentCollector(config)** → collector with: `collect`, `init`, `getFragments`, `cleanup`, `toScript`, `toGetter`.
+- **globalThis** slot holds an array; user code calls e.g. `tokens({ ... })` which pushes to that array.
+- **toScript()**: JS string to init the slot in generated config (e.g. `globalThis['__refTokensCollector'] = []`).
+- **toGetter()**: IIFE string that reads and optionally transforms fragments for the template.
+
+### Scanning & bundling
+
+- **scanForFragments({ include, functionNames, exclude, cwd })**: glob for files that call given function names.
+- **bundleFragments({ files })**: bundle each file to a self-contained IIFE string (no `@reference-ui/styled` in fragments).
+- **collectFragments({ files, collector, tempDir })**: run bundles in a temp context, call collector.getFragments() → array of collected values.
+
+### Config generation (`src/system/config/`)
+
+- **createPandaConfig(options)**:
+  - Takes `outputPath`, `fragmentFiles`, `collectors`, optional `baseConfig`, optional `internalFragments` (pre-bundled CLI internal fragments).
+  - Bundles user fragment files, concatenates `internalFragments` + user bundles.
+  - Renders Liquid template (`panda.liquid`) with baseConfig, collector setup scripts, bundle code, collector getters.
+  - Writes `panda.config.ts`.
+
+Internal fragments are injected **before** user fragments so CLI’s tokens/recipes are always present.
+
+---
+
+## Dual Styled Systems (Internal vs User)
+
+- **Internal**: CLI build uses fragments to generate `src/system/styled/` (panda.config + Panda codegen). Used for CLI development; tsconfig paths alias `@reference-ui/styled` to that output.
+- **User**: `ref sync` generates `.reference-ui/` (config + styled output). User app resolves `@reference-ui/styled` to `.reference-ui/styled` (symlink or bundler alias).
+
+Same fragments pipeline; two contexts (internal build vs ref sync). Primitives and APIs always import from `@reference-ui/styled`; bundler/tsconfig resolve it per context.
+
+---
+
+## Build / Styled Package (`src/build/styled.ts`)
+
+1. **Scan** for token fragments (`tokens(...)`), collect fragment file paths.
+2. **Separate** internal fragment files (e.g. `system/internal/`) from rest.
+3. **Bundle** internal fragments → write `src/system/config/internal-fragments.mjs`.
+4. **createPandaConfig** with those fragment files, `internalFragments` from the bundle, baseConfig for internal (outdir `'.'`, etc.).
+5. **Run Panda codegen** from `src/system/styled` (e.g. `panda codegen --silent`).
+6. **Write metadata.json** (fragment count, output path, timestamp).
+
+Prebuild script: `pnpm prebuild` → `tsx src/build/styled.ts`.
+
+---
+
+## Virtual Layer (`src/virtual/`)
+
+- **Purpose**: Copy project files (by `config.include`) into a virtual directory (e.g. `.reference-ui/virtual` or similar), apply transforms so files work with Panda (e.g. rewrite `@reference-ui/styled` imports, MDX→JSX).
+- **copy-all.ts**: fast-glob with config.include, for each file calls **copyToVirtual** (copy + transform), emits `virtual:fs:change` and finally `virtual:complete`.
+- **transform.ts**: delegates to **transforms** (e.g. rewrite-css-imports, rewrite-cva-imports, mdx-to-jsx).
+- Worker subscribes to `run:virtual:copy:all`, runs copyAll(payload), emits when done.
+
+---
+
+## Packager (`src/packager/`)
+
+- **Packages** (from `packages.ts`): **@reference-ui/system**, **@reference-ui/react**, **@reference-ui/styled** — each has PackageDefinition (name, entry, bundle, exports, copyDirs, etc.).
+- **Bundler** (`bundler/`): esbuild for bundling; copyDirectories; writePackageJson; optional transform for TS files.
+- **run.ts**: orchestrates bundling each package into target dir (e.g. `.reference-ui/`).
+- **install.ts**: can run symlink-dir or package manager so `node_modules/@reference-ui/*` point to `.reference-ui/*`.
+- Worker listens for completion events, runs packager when system is ready.
+
+---
+
+## Config Layer (`src/config/`)
+
+- **loadUserConfig(cwd)**: resolve and load user config (e.g. ref.config or from package).
+- **setConfig / setCwd**: store in module state for workers (and getCwd() in workers).
+- **validate**: schema/validation for ReferenceUIConfig.
+- **constants**: outDir name (`.reference-ui`), config file names.
+
+---
+
+## Paths & Entries
+
+- **lib/paths**: getVirtualDirPath, getCwd, ref-config resolution, cli-dist paths.
+- **entry/system.ts** and **entry/react.ts**: public entry points for @reference-ui/system and @reference-ui/react bundles.
+
+---
+
+## Watch
+
+- **@parcel/watcher** (or similar) on project files.
+- Emits **watch:change** (or similar); orchestration can re-emit `run:virtual:copy:all` or `run:system:config` for incremental sync.
+
+---
+
+## Clean
+
+- **ref clean**: deletes output directory (config.outDir). Main thread only; no workers. Used for fresh state before tests or full sync.
+
+---
+
+## Codebase Layout (Summary)
+
+```
+src/
+├── events.ts                 # Event type union (Events)
+├── index.ts                  # CLI entry (commander)
+├── build/
+│   └── styled.ts             # Internal styled build (prebuild)
+├── clean/                    # ref clean command
+├── config/                   # User config load, validate, constants
+├── entry/                    # system.ts, react.ts (packager entries)
+├── lib/
+│   ├── event-bus/            # BroadcastChannel, emit, on, init
+│   ├── fragments/             # Collector, scan, bundle, collect
+│   ├── log/
+│   ├── paths/
+│   ├── run/
+│   ├── thread-pool/           # Piscina pool, workers, registry, KEEP_ALIVE
+│   └── microbundle/
+├── packager/                 # packages, bundler, run, worker, install
+├── sync/                     # bootstrap, command, complete, events
+├── system/
+│   ├── api/                  # tokens collector, etc.
+│   ├── config/               # createPandaConfig, Liquid, base, runConfig, worker, init
+│   ├── events.ts
+│   ├── internal/             # Internal token fragments
+│   ├── panda/                # codegen, worker, init
+│   └── styled/               # Generated internal styled output (gitignored)
+├── virtual/                  # copy, copy-all, transform, worker, init, events
+├── watch/                    # worker, init, events
+└── workers.json              # Worker manifest for pool + tsup entries
+```
+
+---
+
+## Adding a New Module
+
+1. Add entry to **workers.json** (name → source path).
+2. Create **worker.ts**: flat `on(event, handler)` list; emit ready; return KEEP_ALIVE.
+3. Create **logic** modules: pure handlers (receive payload, emit events).
+4. Create **init.ts**: call `workers.runWorker(name, payload)`.
+5. Add **event types** to a domain `events.ts` and to `src/events.ts`.
+6. Wire in **orchestration**: in a central flow module, `on('x:ready', () => emit('run:x:...'))` and `on('x:complete', () => emit('next:step'))`.
+7. Call init from sync command (or bootstrap) so worker spawns when sync runs.
+
+See **src/virtual/** for a full example (worker, copy-all, init, events).
+
+---
+
+## Dependencies (Notable)
+
+- **piscina**: worker threads pool.
+- **BroadcastChannel**: event bus (built-in).
+- **liquidjs**: panda.config template.
+- **esbuild**: fragment bundling, packager bundles.
+- **fast-glob**: virtual file discovery.
+- **@parcel/watcher**: file watching.
+- **symlink-dir**: packager install step.
+
+---
+
+This document expands the README with full pipeline, events, fragments, dual-system, build, virtual, and packager details in one place.
