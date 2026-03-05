@@ -17,7 +17,7 @@ const collector = createFragmentCollector<UtilityExtend, PandaConfig>({
 
 /**
  * Fragment collector for custom utilities.
- * Type cast to portable Record for declaration emit (tsdown/rolldown-plugin-dts limitation).
+ * Type cast to portable Record for declaration emit (pnpm + tsdown/rolldown-plugin-dts limitation).
  */
 export const utilitiesCollector = collector as FragmentCollector<
   Record<string, unknown>,
