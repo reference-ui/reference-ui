@@ -56,11 +56,17 @@ export async function runConfig(cwd: string): Promise<void> {
     // CLI not found or file missing — skip internal fragments
   }
 
+  const cliDir = resolveCliPackageDir(cwd)
+  const fragmentBundleAlias: Record<string, string> = {
+    '@reference-ui/system': join(cliDir, 'src/entry/system.ts'),
+  }
+
   await createPandaConfig({
     outputPath,
     fragmentFiles,
     collectors: DEFAULT_PANDA_COLLECTORS,
     internalFragments,
+    fragmentBundleAlias,
   })
 
   log.debug('config', 'Wrote panda.config', outputPath)
