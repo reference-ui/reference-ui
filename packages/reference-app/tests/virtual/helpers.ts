@@ -26,7 +26,14 @@ export async function waitFor(
 function* walkFiles(dir: string, base = dir): Generator<string> {
   for (const name of readdirSync(dir)) {
     const path = join(dir, name)
-    if (statSync(path).isDirectory()) {
+    let stat
+    try {
+      stat = statSync(path)
+    } catch (err: unknown) {
+      if ((err as NodeJS.ErrnoException).code === 'ENOENT') continue
+      throw err
+    }
+    if (stat.isDirectory()) {
       yield* walkFiles(path, base)
     } else {
       yield relative(base, path)
