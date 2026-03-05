@@ -92,6 +92,17 @@ export function createFragmentCollector<TInput = unknown, TOutput = TInput>(
     return `globalThis['${globalKey}'] = []`
   }
 
+  /**
+   * Returns a JS function that retrieves and transforms fragments from globalThis.
+   * Use in generated configs where collector instances aren't available.
+   */
+  function toGetter(): string {
+    const transformCode = transform 
+      ? `fragments.map(${transform.toString()})`
+      : 'fragments'
+    return `(function() { const fragments = globalThis['${globalKey}'] ?? []; return ${transformCode}; })()`
+  }
+
   const configObj = { name, globalKey, logLabel, targetFunction, transform }
   const collectorFn = Object.assign(collect, {
     config: configObj,
@@ -100,6 +111,7 @@ export function createFragmentCollector<TInput = unknown, TOutput = TInput>(
     getFragments,
     cleanup,
     toScript,
+    toGetter,
   })
   return collectorFn as FragmentCollector<TInput, TOutput>
 }

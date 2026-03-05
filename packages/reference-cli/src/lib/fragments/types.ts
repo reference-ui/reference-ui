@@ -22,6 +22,8 @@ export interface FragmentCollector<TInput = unknown, TOutput = TInput> {
   cleanup: () => void
   /** Returns the JS snippet that initialises this collector's globalThis slot in generated files */
   toScript: () => string
+  /** Returns an IIFE that retrieves and transforms fragments from globalThis (for templates) */
+  toGetter: () => string
 }
 
 export interface ScanOptions {
