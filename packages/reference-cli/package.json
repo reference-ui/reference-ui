@@ -17,7 +17,8 @@
     "build:native": "cd src/virtual/native && pnpm exec napi build --platform --release",
     "dev": "tsup --watch",
     "sync": "node dist/cli/index.mjs sync",
-    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "test": "pnpm run typecheck && vitest run",
     "test:watch": "vitest",
     "eslint:txt": "eslint . --format stylish --color"
   },
