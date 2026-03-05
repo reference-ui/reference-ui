@@ -1,9 +1,5 @@
 import { workers } from '../lib/thread-pool'
-
-export interface PackagerInitPayload {
-  cwd: string
-  watchMode?: boolean
-}
+import type { SyncPayload } from '../sync/types'
 
 /**
  * Initialize the packager worker.
@@ -14,6 +10,9 @@ export interface PackagerInitPayload {
  *
  * Uses esbuild to bundle and place packages in outDir.
  */
-export async function initPackager(payload: PackagerInitPayload): Promise<void> {
-  await workers.runWorker('packager', payload)
+export function initPackager(payload: SyncPayload): void {
+  workers.runWorker('packager', {
+    cwd: payload.cwd,
+    watchMode: payload.options?.watch,
+  })
 }
