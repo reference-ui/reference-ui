@@ -19,5 +19,5 @@ export async function syncCommand(cwd: string, options?: SyncOptions): Promise<v
   initVirtual(payload)
   initConfig()
   initPanda()
-  await initPackager({ cwd, watchMode: options?.watch })
+  initPackager(payload)
 }
