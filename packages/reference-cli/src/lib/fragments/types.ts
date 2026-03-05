@@ -48,6 +48,8 @@ export interface FragmentBundle {
 /** Bundle-only API: pass resolved file paths, get portable IIFE bundle strings back */
 export interface BundleFragmentsOptions {
   files: string[]
+  /** Alias module ids to paths when bundling (e.g. @reference-ui/system → CLI entry). */
+  alias?: Record<string, string>
 }
 
 /** Single-collector API: pass resolved file paths + one collector, get TOutput[] back */

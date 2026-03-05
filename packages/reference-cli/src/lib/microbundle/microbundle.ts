@@ -1,5 +1,6 @@
 import * as esbuild from 'esbuild'
 import { DEFAULT_EXTERNALS } from './externals'
+import { getPlugins } from './plugins'
 import type { MicroBundleOptions } from './types'
 
 function buildOptions(
@@ -26,6 +27,7 @@ function buildOptions(
     target,
     write: false,
     external,
+    plugins: getPlugins(options),
     minify,
     keepNames,
     treeShaking,

@@ -19,6 +19,8 @@ export interface CreatePandaConfigOptions {
   baseConfig?: Record<string, unknown>
   /** Pre-bundled internal fragments (from CLI build). Injected before user fragments. */
   internalFragments?: string
+  /** Alias module ids to paths when bundling fragment files (e.g. @reference-ui/system → CLI entry). */
+  fragmentBundleAlias?: Record<string, string>
 }
 
 export async function createPandaConfig(
@@ -30,12 +32,18 @@ export async function createPandaConfig(
     collectors,
     baseConfig: baseConfigOverride,
     internalFragments,
+    fragmentBundleAlias,
   } = options
 
   const base = baseConfigOverride ?? baseConfig
   const templates = loadTemplates()
 
-  const userFragments = (await bundleFragments({ files: fragmentFiles }))
+  const userFragments = (
+    await bundleFragments({
+      files: fragmentFiles,
+      ...(fragmentBundleAlias && { alias: fragmentBundleAlias }),
+    })
+  )
     .map(({ bundle }) => `;${bundle}`)
     .join('\n')
   const bundles = [internalFragments, userFragments].filter(Boolean).join('\n')

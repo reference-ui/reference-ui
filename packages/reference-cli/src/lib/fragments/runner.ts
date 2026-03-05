@@ -19,10 +19,11 @@ import type {
 export async function bundleFragments(
   options: BundleFragmentsOptions
 ): Promise<FragmentBundle[]> {
-  const { files } = options
+  const { files, alias } = options
   const results: FragmentBundle[] = []
+  const microOptions = { format: 'iife' as const, ...(alias && { alias }) }
   for (const file of files) {
-    const bundle = await microBundle(file, { format: 'iife' })
+    const bundle = await microBundle(file, microOptions)
     results.push({ file, bundle })
   }
   return results
