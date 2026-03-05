@@ -8,8 +8,8 @@ import type {
   BundleFragmentsOptions,
   CollectOptions,
   CollectOptionsPlanner,
+  CollectorForPlanner,
   FragmentBundle,
-  FragmentCollector,
 } from './types'
 
 // ---------------------------------------------------------------------------
@@ -32,13 +32,15 @@ export async function bundleFragments(
 // Collect: executes bundles, returns plain data objects
 // ---------------------------------------------------------------------------
 
-export async function collectFragments<T>(options: CollectOptions<T>): Promise<T[]>
+export async function collectFragments<TInput, TOutput = TInput>(
+  options: CollectOptions<TInput, TOutput>
+): Promise<TOutput[]>
 export async function collectFragments(
   options: CollectOptionsPlanner
 ): Promise<Record<string, unknown[]>>
-export async function collectFragments<T>(
-  options: CollectOptions<T> | CollectOptionsPlanner
-): Promise<T[] | Record<string, unknown[]>> {
+export async function collectFragments<TInput, TOutput>(
+  options: CollectOptions<TInput, TOutput> | CollectOptionsPlanner
+): Promise<TOutput[] | Record<string, unknown[]>> {
   if ('collectors' in options) {
     return runPlanner(options)
   }
@@ -49,11 +51,13 @@ export async function collectFragments<T>(
 // Single-collector: caller passes resolved file paths explicitly
 // ---------------------------------------------------------------------------
 
-async function runSingle<T>(options: CollectOptions<T>): Promise<T[]> {
+async function runSingle<TInput, TOutput>(
+  options: CollectOptions<TInput, TOutput>
+): Promise<TOutput[]> {
   const { files, collector, tempDir } = options
   mkdirSync(tempDir, { recursive: true })
 
-  const allFragments: T[] = []
+  const allFragments: TOutput[] = []
 
   for (const filePath of files) {
     const tmpPath = uniqueTmpPath(tempDir)
@@ -119,11 +123,11 @@ function uniqueTmpPath(dir: string): string {
   return join(dir, `frag-${Date.now()}-${randomBytes(6).toString('hex')}.mjs`)
 }
 
-function initAll(collectors: FragmentCollector<unknown>[]): void {
+function initAll(collectors: CollectorForPlanner[]): void {
   for (const c of collectors) c.init()
 }
 
-function cleanupAll(collectors: FragmentCollector<unknown>[]): void {
+function cleanupAll(collectors: CollectorForPlanner[]): void {
   for (const c of collectors) c.cleanup()
 }
 

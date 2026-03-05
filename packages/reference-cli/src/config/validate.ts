@@ -45,5 +45,5 @@ export function validateConfig(raw: unknown): ReferenceUIConfig {
   validateInclude(cfg)
   validateName(cfg)
   warnLayersWithoutCss(cfg.layers as BaseSystem[] | undefined)
-  return cfg as ReferenceUIConfig
+  return cfg as unknown as ReferenceUIConfig
 }

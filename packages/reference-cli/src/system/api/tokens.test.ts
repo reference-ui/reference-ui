@@ -2,6 +2,7 @@ import { describe, expect, it, afterEach } from 'vitest'
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { tokensCollector } from './tokens'
+import type { FragmentCollector } from '../../lib/fragments'
 import { collectFragments } from '../../lib/fragments'
 
 const fixtureDir = join(import.meta.dirname, '__fixtures__')
@@ -59,8 +60,8 @@ describe('tokensCollector', () => {
 
     const result = tokensCollector.getFragments()
     expect(result).toHaveLength(2)
-    expect(result[0].theme.tokens).toHaveProperty('colors')
-    expect(result[1].theme.tokens).toHaveProperty('spacing')
+    expect(result[0]?.theme?.tokens).toHaveProperty('colors')
+    expect(result[1]?.theme?.tokens).toHaveProperty('spacing')
     tokensCollector.cleanup()
   })
 })
@@ -88,7 +89,7 @@ describe('tokens() - E2E', () => {
 
     const result = await collectFragments({
       files: [join(fixtureDir, 'my-tokens.ts')],
-      collector: tokensCollector,
+      collector: tokensCollector as FragmentCollector<unknown, unknown>,
       tempDir,
     })
 
@@ -138,12 +139,13 @@ describe('tokens() - E2E', () => {
 
     const result = await collectFragments({
       files: [join(fixtureDir, 'colors.ts'), join(fixtureDir, 'spacing.ts')],
-      collector: tokensCollector,
+      collector: tokensCollector as FragmentCollector<unknown, unknown>,
       tempDir,
     })
 
     expect(result).toHaveLength(2)
-    expect(result[0].theme.tokens).toHaveProperty('colors')
-    expect(result[1].theme.tokens).toHaveProperty('spacing')
+    type WithTheme = { theme?: { tokens?: Record<string, unknown> } }
+    expect((result[0] as WithTheme)?.theme?.tokens).toHaveProperty('colors')
+    expect((result[1] as WithTheme)?.theme?.tokens).toHaveProperty('spacing')
   })
 })
