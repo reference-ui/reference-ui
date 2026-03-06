@@ -3,7 +3,7 @@ import { log } from './log'
 
 /**
  * Spawn a child process and wait for it to complete.
- * Used by packager-ts to run tsdown for .d.mts generation.
+ * Used by packager-ts to run tsup for .d.mts generation.
  */
 export async function spawnMonitoredAsync(
   command: string,

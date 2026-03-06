@@ -36,7 +36,7 @@
     "picomatch": "^4.0.0",
     "piscina": "^5.1.4",
     "symlink-dir": "^9.0.0",
-    "tsdown": "^0.21.0"
+    "tsup": "^8.4.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -46,7 +46,6 @@
     "eslint": "^10.0.2",
     "eslint-plugin-sonarjs": "^4.0.0",
     "react": "^19.0.0",
-    "tsup": "^8.4.0",
     "tsx": "^4.21.0",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.56.1",

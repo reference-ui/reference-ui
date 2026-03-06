@@ -72,7 +72,7 @@ export interface ReferenceUIConfig {
   debug?: boolean
 
   /**
-   * Skip TypeScript declaration generation (tsdown).
+   * Skip TypeScript declaration generation (tsup).
    * Use in test environments where .d.ts output is not needed.
    * @default false
    */

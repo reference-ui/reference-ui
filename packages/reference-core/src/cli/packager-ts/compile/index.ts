@@ -12,7 +12,7 @@ import { findDtsFile } from './find-dts'
 
 /**
  * Compile TypeScript source to .d.mts declarations.
- * Spawns tsdown; outputs to temp dir then copies to out path (keeps esbuild's .mjs).
+ * Spawns tsup; outputs to temp dir then copies to out path (keeps esbuild's .mjs).
  */
 export async function compileDeclarations(
   cwd: string,
@@ -24,7 +24,7 @@ export async function compileDeclarations(
     const result = await spawnMonitoredAsync(
       'npx',
       [
-        'tsdown',
+        'tsup',
         entryFile,
         '--dts',
         '--format',
@@ -37,10 +37,9 @@ export async function compileDeclarations(
         'react',
         '--external',
         'react-dom',
-        '--no-inlineOnly',
       ],
       {
-        processName: 'tsdown',
+        processName: 'tsup',
         cwd,
         shell: false,
         logCategory: 'packager:ts',
@@ -51,14 +50,14 @@ export async function compileDeclarations(
 
     if (result.code !== 0) {
       throw new Error(
-        `tsdown exited with code ${result.code}\nstderr: ${result.stderr}\nstdout: ${result.stdout}`
+        `tsup exited with code ${result.code}\nstderr: ${result.stderr}\nstdout: ${result.stdout}`
       )
     }
 
     const tmpDtsPath = findDtsFile(tmpOut)
     if (!tmpDtsPath) {
       throw new Error(
-        `tsdown did not produce .d.ts or .d.mts in ${tmpOut}. stdout: ${result.stdout}`
+        `tsup did not produce .d.ts or .d.mts in ${tmpOut}. stdout: ${result.stdout}`
       )
     }
 

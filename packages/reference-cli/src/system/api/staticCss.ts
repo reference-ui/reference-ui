@@ -13,10 +13,7 @@ const collector = createFragmentCollector<StaticCssConfig, PandaConfig>({
   }),
 })
 
-/**
- * Fragment collector for static CSS.
- * Type cast to portable Record for declaration emit (rolldown-plugin-dts limitation).
- */
+/** Cast for declaration emit — tsup/tsdown cannot inline ExtendableStaticCssOptions (TS4023). */
 export const staticCssCollector = collector as FragmentCollector<
   Record<string, unknown>,
   Record<string, unknown>

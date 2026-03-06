@@ -27,7 +27,7 @@
     "picomatch": "^4.0.0",
     "piscina": "^5.1.4",
     "symlink-dir": "^9.0.0",
-    "tsdown": "^0.20.1"
+    "tsup": "^8.4.0"
   },
   "peerDependencies": {
     "react": "^18.0.0",
@@ -53,7 +53,6 @@
     "complexity-report": "2.0.0-alpha",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "tsup": "^8.4.0",
     "tsx": "^4.19.0",
     "typescript": "~5.9.3",
     "vitest": "^4.0.18"

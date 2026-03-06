@@ -2,7 +2,7 @@
 
 ## Problem Statement
 
-When building TypeScript declarations (`.d.ts` files) for the `@reference-ui/system` package using `tsdown` (which uses `rolldown-plugin-dts`), we encountered errors where the declaration bundler couldn't emit portable type definitions for certain API exports.
+When building TypeScript declarations (`.d.ts` files) for the `@reference-ui/system` package (using tsdown → tsup), we encountered errors where the declaration bundler couldn't emit portable type definitions for certain API exports. Both tsdown (rolldown-plugin-dts) and tsup (rollup-plugin-dts) hit the same TS4023.
 
 ### Error Example
 
@@ -179,6 +179,12 @@ export const utilitiesCollector: FragmentCollector<Record<string, unknown>, Reco
 
 **Result:** `utilities` and `staticCss` still failed declaration generation with the same `.pnpm` path errors.
 
+### 4. Switching from tsdown to tsup
+
+**Tried:** Replaced tsdown (rolldown-plugin-dts) with tsup (rollup-plugin-dts) in packager-ts.
+
+**Result:** Same TS4023 for `staticCss`/`utilities`. Different bundler, same limitation — neither can inline `ExtendableStaticCssOptions`.
+
 ## Future Considerations
 
 ### Potential Long-term Solutions
@@ -236,7 +242,9 @@ All tests pass with current solution:
 
 **Current State:** Working with workarounds for `utilities` and `staticCss`.
 
-**Root Cause:** rolldown-plugin-dts cannot inline complex Panda types (mapped types, generic functions, nested conditionals). It emits path references; TypeScript rejects non-portable paths. pnpm's `.pnpm` symlinks make those paths obviously non-portable.
+**Root Cause:** Declaration bundlers (rolldown-plugin-dts, rollup-plugin-dts) cannot inline complex Panda types (mapped types, generic functions, nested conditionals). They emit path references; TypeScript rejects non-portable paths. pnpm's `.pnpm` symlinks make those paths obviously non-portable.
+
+**tsup (rollup-plugin-dts) same issue:** Switched from tsdown to tsup (Mar 2026). tsup hits the same TS4023 for `staticCss`/`utilities` — both bundlers emit references to `ExtendableStaticCssOptions` from `@pandacss/types/dist/config`, which TypeScript rejects as non-portable. The limitation is in the type inlining, not the bundler choice.
 
 **Attempted Solutions:**
 - ✅ Upgraded tsdown from v0.20.1 → v0.21.0 (latest, released March 5, 2026)
@@ -245,6 +253,7 @@ All tests pass with current solution:
 - ❌ Tried `.npmrc` with `node-linker=hoisted` in package (doesn't work in pnpm workspaces)
 - ❌ Vendored Panda types locally (path reference still rejected)
 - ❌ Tested `isolatedDeclarations` (requires 100+ explicit annotations)
+- ❌ Switched packager-ts from tsdown to tsup (same TS4023)
 
 **Why This Only Affects Two APIs:**
 - `tokens`, `keyframes`, `globalCss`, `globalFontface` use simple interfaces → bundler can inline them

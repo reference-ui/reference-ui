@@ -4,7 +4,7 @@ import { join } from 'node:path'
 /**
  * Recursively find the first .d.ts or .d.mts file in a directory.
  *
- * Tsdown's output structure is not reliably predictable (flat vs nested, .d.ts vs .d.mts).
+ * tsup's output structure is not reliably predictable (flat vs nested, .d.ts vs .d.mts).
  * We scan for whatever declaration file tsdown produced.
  */
 export function findDtsFile(dir: string): string | null {
