@@ -19,6 +19,11 @@ function buildOptions(
     conditions = ['import', 'node'],
   } = options
 
+  // Esbuild 0.27 requires external to be string[] (no RegExp)
+  const externalStrings = (Array.isArray(external) ? external : []).filter(
+    (e): e is string => typeof e === 'string'
+  )
+
   return {
     entryPoints: [entryPath],
     bundle: true,
@@ -26,7 +31,7 @@ function buildOptions(
     platform,
     target,
     write: false,
-    external,
+    external: externalStrings,
     plugins: getPlugins(options),
     minify,
     keepNames,

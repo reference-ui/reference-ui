@@ -1,22 +1,7 @@
-import { createFragmentCollector } from '../../lib/fragments/collector'
 import type { Config } from '@pandacss/dev'
+import { extendPandaConfig } from './extendPandaConfig'
 
 type TokenConfig = NonNullable<Config['theme']>['tokens']
-type PandaConfig = Partial<Config>
-
-/**
- * Fragment collector for design tokens.
- * Transforms token definitions into Panda config shape: { theme: { tokens } }
- */
-export const tokensCollector = createFragmentCollector<TokenConfig, PandaConfig>({
-  name: 'tokens',
-  targetFunction: 'tokens',
-  transform: tokenConfig => ({
-    theme: {
-      tokens: tokenConfig,
-    },
-  }),
-})
 
 /**
  * Register design tokens with Panda CSS.
@@ -40,4 +25,6 @@ export const tokensCollector = createFragmentCollector<TokenConfig, PandaConfig>
  * })
  * ```
  */
-export const tokens = tokensCollector.collect
+export function tokens(tokensConfig: TokenConfig): void {
+  extendPandaConfig({ theme: { tokens: tokensConfig } })
+}
