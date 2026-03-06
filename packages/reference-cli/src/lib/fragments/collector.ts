@@ -115,3 +115,31 @@ export function createFragmentCollector<TInput = unknown, TOutput = TInput>(
   })
   return collectorFn as FragmentCollector<TInput, TOutput>
 }
+
+/**
+ * Create a fragment function + collector pair. Use when you need both:
+ * - A function to export (what users call, e.g. extendPandaConfig)
+ * - A collector for runConfig, createPandaConfig, etc.
+ *
+ * Avoids hand-rolling globalThis logic — the collector owns the abstraction.
+ *
+ * @example
+ * ```ts
+ * const { fn, collector } = createFragmentFunction<Partial<Config>>({
+ *   name: 'panda-config',
+ *   targetFunction: 'tokens',
+ *   globalKey: '__refPandaConfigCollector',
+ * })
+ * export const extendPandaConfig = fn
+ * export const createPandaConfigCollector = () => collector
+ * ```
+ */
+export function createFragmentFunction<TInput = unknown, TOutput = TInput>(
+  config: FragmentCollectorConfig<TInput, TOutput>
+): {
+  fn: (fragment: TInput) => void
+  collector: FragmentCollector<TInput, TOutput>
+} {
+  const collector = createFragmentCollector(config)
+  return { fn: collector, collector }
+}

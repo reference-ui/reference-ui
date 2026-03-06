@@ -1,5 +1,5 @@
 import { createFragmentCollector } from '../../lib/fragments/collector'
-import type { FragmentCollector } from '../../lib/fragments'
+import type { FragmentCollector } from '../../lib/fragments/types'
 import type { Config } from '@pandacss/dev'
 
 type StaticCssConfig = NonNullable<Config['staticCss']>

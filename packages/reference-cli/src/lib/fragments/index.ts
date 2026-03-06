@@ -1,4 +1,4 @@
-export { createFragmentCollector } from './collector'
+export { createFragmentCollector, createFragmentFunction } from './collector'
 export { scanForFragments } from './scanner'
 export { bundleFragments, collectFragments } from './runner'
 export type {

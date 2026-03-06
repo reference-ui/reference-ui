@@ -29,6 +29,13 @@ export async function bundleWithEsbuild(
       'react/jsx-runtime',
       '@reference-ui/styled',
       '@reference-ui/styled/*',
+      // Node build-tools (fragments scanner/runner) — must not be bundled for neutral platform
+      'node:fs',
+      'node:path',
+      'node:crypto',
+      'node:url',
+      'fast-glob',
+      'esbuild',
     ],
     sourcemap: false,
     treeShaking: true,
