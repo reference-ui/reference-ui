@@ -67,10 +67,10 @@ We're building types for APIs that internally use Panda CSS types, but:
      ".reference-ui/system/system.d.mts"  ← Output
    )
 
-4. Spawns: npx tsdown src/entry/system.ts --dts --format esm ...
+4. Spawns: npx tsup src/entry/system.ts --dts-only --format esm ...
    - Working directory: packages/reference-cli
-   - Uses: rolldown-plugin-dts to bundle type declarations
-   - Externalizes: react, react-dom, @pandacss/types
+   - Uses: rollup-plugin-dts (via tsup) to bundle type declarations
+   - Same TS4023 issue as tsdown for `staticCss`/`utilities` — neither bundler can inline `ExtendableStaticCssOptions`
 
 5. Success: Writes .reference-ui/system/system.d.mts
    - This file is what consumers import from '@reference-ui/system'
@@ -82,12 +82,11 @@ We're building types for APIs that internally use Panda CSS types, but:
 **When building declarations, some APIs fail with TS4023 error:**
 
 ```
-[plugin rolldown-plugin-dts:generate]
-RollupError: src/system/api/staticCss.ts(11,14): error TS4023: 
+src/system/api/staticCss.ts(15,14): error TS4023: 
 Exported variable 'staticCssCollector' has or is using name 'ExtendableStaticCssOptions' 
-from external module ".../node_modules/.pnpm/@pandacss+types@1.8.2/node_modules/@pandacss/types/dist/config" 
-but cannot be named.
+from external module ".../node_modules/.pnpm/@pandacss+types@.../dist/config" but cannot be named.
 ```
+Both tsdown and tsup hit this — the limitation is in type inlining, not the bundler.
 
 ### Failing Code Pattern
 

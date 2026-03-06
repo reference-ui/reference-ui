@@ -12,7 +12,7 @@ import { findDtsFile } from './find-dts'
 
 /**
  * Compile TypeScript source to .d.mts declarations.
- * Spawns tsdown; outputs to temp dir then copies to out path (keeps esbuild's .mjs naming).
+ * Spawns tsup; outputs to temp dir then copies to out path (keeps esbuild's .mjs naming).
  */
 export async function compileDeclarations(
   cliDir: string,
@@ -24,42 +24,37 @@ export async function compileDeclarations(
     const result = await spawnMonitoredAsync(
       'npx',
       [
-        'tsdown',
+        'tsup',
         entryFile,
-        '--dts',
+        '--dts-only',
         '--format',
         'esm',
         '--out-dir',
         tmpOut,
         '--target',
         'es2020',
-        '--deps.neverBundle',
+        '--external',
         'react',
-        '--deps.neverBundle',
+        '--external',
         'react-dom',
-        '--deps.alwaysBundle',
-        '@pandacss/types',
-        '--deps.alwaysBundle',
-        '@pandacss/dev',
-        '--no-deps.onlyAllowBundle',
       ],
       {
         cwd: cliDir,
-        processName: 'tsdown',
+        processName: 'tsup',
         logCategory: 'packager:ts',
       }
     )
 
     if (result.code !== 0) {
       throw new Error(
-        `tsdown exited with code ${result.code}\nstderr: ${result.stderr}\nstdout: ${result.stdout}`
+        `tsup exited with code ${result.code}\nstderr: ${result.stderr}\nstdout: ${result.stdout}`
       )
     }
 
     const tmpDtsPath = findDtsFile(tmpOut)
     if (!tmpDtsPath) {
       throw new Error(
-        `tsdown did not produce .d.ts or .d.mts in ${tmpOut}. stdout: ${result.stdout}`
+        `tsup did not produce .d.ts or .d.mts in ${tmpOut}. stdout: ${result.stdout}`
       )
     }
 
