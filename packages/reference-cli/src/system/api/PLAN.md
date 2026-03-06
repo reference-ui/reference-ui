@@ -22,6 +22,7 @@ globalCss(cfg)   → extendPandaConfig({ globalCss: cfg })
 When we bundle user files, they import `tokens`, `staticCss`, etc. from `@reference-ui/system`. Those run and eventually call `extendPandaConfig`. The transform is at the call site — each API is a thin, typed wrapper.
 
 **Benefits:**
+
 - One collector, one `toScript`, one `toGetter` — simpler Liquid/config generation
 - `extendPandaConfig` has a clean, declaration-friendly signature: `Partial<Config>`
 - API layer = typed "transform functions" that may emit better than collector objects
@@ -59,7 +60,9 @@ export function staticCss(config: NonNullable<Config['staticCss']>): void {
 }
 
 // src/system/api/utilities.ts
-export function utilities(extend: NonNullable<NonNullable<Config['utilities']>['extend']>): void {
+export function utilities(
+  extend: NonNullable<NonNullable<Config['utilities']>['extend']>
+): void {
   extendPandaConfig({ utilities: { extend } })
 }
 
@@ -124,15 +127,15 @@ No `createFragmentCollector` per API. No `staticCssCollector`, `utilitiesCollect
 
 ## Files to Touch (when implementing)
 
-| Area | Files |
-|------|-------|
-| extendPandaConfig | Add to CLI or wire from core; ensure COLLECTOR_KEY for sync flow |
-| runConfig | Use single panda collector instead of DEFAULT_PANDA_COLLECTORS |
-| createPandaConfig | Accept one collector (or derive from extendPandaConfig) |
-| Liquid template | One collectorSetup, one collectorGetter |
-| API layer | tokens.ts, staticCss.ts, utilities.ts, keyframes.ts, globalCss.ts, globalFontface.ts → transform functions |
-| system entry | Unchanged export list |
-| Fragments lib | Optional: add defineConfigFragment or createPandaConfigCollector |
+| Area              | Files                                                                                                      |
+| ----------------- | ---------------------------------------------------------------------------------------------------------- |
+| extendPandaConfig | Add to CLI or wire from core; ensure COLLECTOR_KEY for sync flow                                           |
+| runConfig         | Use single panda collector instead of DEFAULT_PANDA_COLLECTORS                                             |
+| createPandaConfig | Accept one collector (or derive from extendPandaConfig)                                                    |
+| Liquid template   | One collectorSetup, one collectorGetter                                                                    |
+| API layer         | tokens.ts, staticCss.ts, utilities.ts, keyframes.ts, globalCss.ts, globalFontface.ts → transform functions |
+| system entry      | Unchanged export list                                                                                      |
+| Fragments lib     | Optional: add defineConfigFragment or createPandaConfigCollector                                           |
 
 ---
 
