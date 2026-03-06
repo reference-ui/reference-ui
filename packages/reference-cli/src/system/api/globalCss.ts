@@ -1,20 +1,7 @@
-import { createFragmentCollector } from '../../lib/fragments/collector'
 import type { Config } from '@pandacss/dev'
+import { extendPandaConfig } from './extendPandaConfig'
 
 type GlobalCssConfig = NonNullable<Config['globalCss']>
-type PandaConfig = Partial<Config>
-
-/**
- * Fragment collector for global CSS.
- * Transforms global CSS definitions into Panda config shape: { globalCss }
- */
-export const globalCssCollector = createFragmentCollector<GlobalCssConfig, PandaConfig>({
-  name: 'globalCss',
-  targetFunction: 'globalCss',
-  transform: config => ({
-    globalCss: config,
-  }),
-})
 
 /**
  * Register global CSS with your design system.
@@ -64,4 +51,6 @@ export const globalCssCollector = createFragmentCollector<GlobalCssConfig, Panda
  * })
  * ```
  */
-export const globalCss = globalCssCollector.collect
+export function globalCss(config: GlobalCssConfig): void {
+  extendPandaConfig({ globalCss: config })
+}

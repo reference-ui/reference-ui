@@ -1,23 +1,7 @@
-import { createFragmentCollector } from '../../lib/fragments/collector'
 import type { Config } from '@pandacss/dev'
+import { extendPandaConfig } from './extendPandaConfig'
 
 type KeyframesConfig = NonNullable<Config['theme']>['keyframes']
-type PandaConfig = Partial<Config>
-
-export const keyframesCollector = createFragmentCollector<
-  KeyframesConfig,
-  PandaConfig
->({
-  name: 'keyframes',
-  targetFunction: 'keyframes',
-  transform: config => ({
-    theme: {
-      extend: {
-        keyframes: config,
-      },
-    },
-  }),
-})
 
 /**
  * Register animation keyframes with Panda CSS.
@@ -36,4 +20,12 @@ export const keyframesCollector = createFragmentCollector<
  * })
  * ```
  */
-export const keyframes = keyframesCollector.collect
+export function keyframes(keyframesConfig: KeyframesConfig): void {
+  extendPandaConfig({
+    theme: {
+      extend: {
+        keyframes: keyframesConfig,
+      },
+    },
+  })
+}
