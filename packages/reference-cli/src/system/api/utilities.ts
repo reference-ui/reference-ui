@@ -1,22 +1,7 @@
-import { createFragmentCollector } from '../../lib/fragments/collector'
 import type { Config } from '@pandacss/dev'
+import { extendPandaConfig } from './extendPandaConfig'
 
 type UtilityExtend = NonNullable<NonNullable<Config['utilities']>['extend']>
-type PandaConfig = Partial<Config>
-
-/**
- * Fragment collector for custom utilities.
- * Transforms utility definitions into Panda config shape: { utilities: { extend } }
- */
-export const utilitiesCollector = createFragmentCollector<UtilityExtend, PandaConfig>({
-  name: 'utilities',
-  targetFunction: 'utilities',
-  transform: config => ({
-    utilities: {
-      extend: config,
-    },
-  }),
-})
 
 /**
  * Register custom utilities with your design system.
@@ -33,4 +18,10 @@ export const utilitiesCollector = createFragmentCollector<UtilityExtend, PandaCo
  * })
  * ```
  */
-export const utilities = utilitiesCollector.collect
+export function utilities(utilitiesConfig: UtilityExtend): void {
+  extendPandaConfig({
+    utilities: {
+      extend: utilitiesConfig,
+    },
+  })
+}

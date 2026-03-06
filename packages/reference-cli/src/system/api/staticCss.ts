@@ -1,23 +1,7 @@
-import { createFragmentCollector } from '../../lib/fragments/collector'
-import type { FragmentCollector } from '../../lib/fragments/types'
 import type { Config } from '@pandacss/dev'
+import { extendPandaConfig } from './extendPandaConfig'
 
 type StaticCssConfig = NonNullable<Config['staticCss']>
-type PandaConfig = Partial<Config>
-
-const collector = createFragmentCollector<StaticCssConfig, PandaConfig>({
-  name: 'staticCss',
-  targetFunction: 'staticCss',
-  transform: config => ({
-    staticCss: config,
-  }),
-})
-
-/** Cast for declaration emit — tsup/tsdown cannot inline ExtendableStaticCssOptions (TS4023). */
-export const staticCssCollector = collector as FragmentCollector<
-  Record<string, unknown>,
-  Record<string, unknown>
->
 
 /**
  * Register static CSS with your design system.
@@ -31,4 +15,6 @@ export const staticCssCollector = collector as FragmentCollector<
  * })
  * ```
  */
-export const staticCss = collector.collect as (config: Record<string, unknown>) => void
+export function staticCss(config: StaticCssConfig): void {
+  extendPandaConfig({ staticCss: config })
+}

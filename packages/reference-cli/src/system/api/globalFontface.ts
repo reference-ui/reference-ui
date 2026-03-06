@@ -1,23 +1,7 @@
-import { createFragmentCollector } from '../../lib/fragments/collector'
 import type { Config } from '@pandacss/dev'
+import { extendPandaConfig } from './extendPandaConfig'
 
 type GlobalFontfaceConfig = NonNullable<Config['globalFontface']>
-type PandaConfig = Partial<Config>
-
-/**
- * Fragment collector for global @font-face rules.
- * Transforms font-face definitions into Panda config shape: { globalFontface }
- */
-export const globalFontfaceCollector = createFragmentCollector<
-  GlobalFontfaceConfig,
-  PandaConfig
->({
-  name: 'globalFontface',
-  targetFunction: 'globalFontface',
-  transform: config => ({
-    globalFontface: config,
-  }),
-})
 
 /**
  * Register global @font-face rules with Panda CSS.
@@ -33,4 +17,6 @@ export const globalFontfaceCollector = createFragmentCollector<
  * })
  * ```
  */
-export const globalFontface = globalFontfaceCollector.collect
+export function globalFontface(config: GlobalFontfaceConfig): void {
+  extendPandaConfig({ globalFontface: config })
+}
