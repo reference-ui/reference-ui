@@ -50,6 +50,8 @@ export interface BundleFragmentsOptions {
   files: string[]
   /** Alias module ids to paths when bundling (e.g. @reference-ui/system → CLI entry). */
   alias?: Record<string, string>
+  /** Additional externals to avoid bundling. Esbuild requires string[] only. */
+  external?: string[]
 }
 
 /** Single-collector API: pass resolved file paths + one collector, get TOutput[] back */

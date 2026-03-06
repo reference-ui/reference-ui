@@ -2,7 +2,7 @@ import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { randomBytes } from 'node:crypto'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { microBundle } from '../microbundle'
+import { microBundle, DEFAULT_EXTERNALS } from '../microbundle'
 import { scanForFragments } from './scanner'
 import type {
   BundleFragmentsOptions,
@@ -19,9 +19,13 @@ import type {
 export async function bundleFragments(
   options: BundleFragmentsOptions
 ): Promise<FragmentBundle[]> {
-  const { files, alias } = options
+  const { files, alias, external = [] } = options
   const results: FragmentBundle[] = []
-  const microOptions = { format: 'iife' as const, ...(alias && { alias }) }
+  const microOptions = {
+    format: 'iife' as const,
+    ...(alias && { alias }),
+    external: [...DEFAULT_EXTERNALS, ...external],
+  }
   for (const file of files) {
     const bundle = await microBundle(file, microOptions)
     results.push({ file, bundle })

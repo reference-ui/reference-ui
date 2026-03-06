@@ -15,12 +15,13 @@ import { mkdirSync, writeFileSync } from 'node:fs'
 import type { FragmentCollector } from '../lib/fragments'
 import { collectFragments, scanForFragments, bundleFragments } from '../lib/fragments'
 import { createPandaConfig } from '../system/config/createPandaConfig'
-import { tokensCollector } from '../system/api/tokens'
-import { spawnSync } from 'node:child_process'
+import { createPandaConfigCollector } from '../system/api/extendPandaConfig'
+import { generate as pandaGenerate } from '@pandacss/node'
 
 const __filename = fileURLToPath(import.meta.url)
 const CLI_ROOT = resolve(dirname(__filename), '../..')
 const STYLED_DIR = join(CLI_ROOT, 'src/system/styled')
+const pandaCollector = createPandaConfigCollector()
 const PANDA_CONFIG_PATH = join(STYLED_DIR, 'panda.config.ts')
 const INTERNAL_FRAGMENTS_PATH = join(CLI_ROOT, 'src/system/styled/internal-fragments.mjs')
 
@@ -66,7 +67,7 @@ async function collectTokenFragments(): Promise<{
 
   const result = await collectFragments({
     files: fragmentFiles,
-    collector: tokensCollector as FragmentCollector<unknown, unknown>,
+    collector: pandaCollector as FragmentCollector<unknown, unknown>,
     tempDir,
   })
 
@@ -106,7 +107,7 @@ async function generateStyleConfig(fragmentFiles: string[]): Promise<void> {
   await createPandaConfig({
     outputPath: PANDA_CONFIG_PATH,
     fragmentFiles: configFragmentFiles,
-    collectors: [tokensCollector as FragmentCollector<unknown, unknown>],
+    collectors: [pandaCollector as FragmentCollector<unknown, unknown>],
     baseConfig: styledBaseConfig,
     internalFragments: concatenated || undefined,
   })
@@ -114,22 +115,10 @@ async function generateStyleConfig(fragmentFiles: string[]): Promise<void> {
   console.log('[build:styled] Config generated at:', PANDA_CONFIG_PATH)
 }
 
-function runPandaCodegen(): void {
+async function runPandaCodegen(): Promise<void> {
   console.log('[build:styled] Running Panda codegen...')
 
-  const pandaBin = join(CLI_ROOT, 'node_modules', '.bin', 'panda')
-
-  const result = spawnSync(pandaBin, ['codegen', '--silent'], {
-    cwd: STYLED_DIR,
-    stdio: 'pipe',
-  })
-
-  if (result.status !== 0) {
-    const stderr = result.stderr?.toString() ?? ''
-    const stdout = result.stdout?.toString() ?? ''
-    console.error('[build:styled] Panda codegen failed:', stderr || stdout)
-    throw new Error(`Panda codegen failed: ${stderr || stdout || result.status}`)
-  }
+  await pandaGenerate({ cwd: STYLED_DIR }, PANDA_CONFIG_PATH)
 
   console.log('[build:styled] Panda codegen complete')
 }
@@ -157,11 +146,12 @@ async function buildStyledPackage(): Promise<void> {
 
     const { fragmentFiles } = await collectTokenFragments()
     await generateStyleConfig(fragmentFiles)
-    runPandaCodegen()
+    await runPandaCodegen()
     createMetadata(fragmentFiles.length)
 
     console.log('\n[build:styled] ✓ Styled package built successfully!')
     console.log(`[build:styled] Output: ${STYLED_DIR}`)
+    process.exit(0)
   } catch (error) {
     console.error('\n[build:styled] ✗ Build failed:', error)
     process.exit(1)
@@ -169,7 +159,7 @@ async function buildStyledPackage(): Promise<void> {
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  buildStyledPackage()
+  await buildStyledPackage()
 }
 
 export { buildStyledPackage }

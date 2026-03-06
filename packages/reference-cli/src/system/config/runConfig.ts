@@ -8,25 +8,15 @@ import { emit } from '../../lib/event-bus'
 import { createPandaConfig } from './createPandaConfig'
 import { getConfig } from '../../config/store'
 import { log } from '../../lib/log'
-import { tokensCollector } from '../api/tokens'
-import { keyframesCollector } from '../api/keyframes'
-import { utilitiesCollector } from '../api/utilities'
-import { globalCssCollector } from '../api/globalCss'
-import { staticCssCollector } from '../api/staticCss'
-import { globalFontfaceCollector } from '../api/globalFontface'
+import {
+  createPandaConfigCollector,
+} from '../api/extendPandaConfig'
 import type { FragmentCollector } from '../../lib/fragments'
 
 const INTERNAL_FRAGMENTS_FILENAME = 'internal-fragments.mjs'
 
-/** Collectors for panda config (tokens, keyframes, utilities, globalCss, staticCss, globalFontface). */
-const DEFAULT_PANDA_COLLECTORS: FragmentCollector<unknown>[] = [
-  tokensCollector as FragmentCollector<unknown>,
-  keyframesCollector as FragmentCollector<unknown>,
-  utilitiesCollector as FragmentCollector<unknown>,
-  globalCssCollector as FragmentCollector<unknown>,
-  staticCssCollector as FragmentCollector<unknown>,
-  globalFontfaceCollector as FragmentCollector<unknown>,
-]
+/** Single panda config collector. tokens() and other APIs call extendPandaConfig; this captures partials. */
+const PANDA_CONFIG_COLLECTOR = createPandaConfigCollector() as FragmentCollector<unknown>
 
 /**
  * Run config generation: scan for fragments, write panda.config to outDir.
@@ -42,9 +32,9 @@ export async function runConfig(cwd: string): Promise<void> {
   const outDir = getOutDirPath(cwd)
   const outputPath = join(outDir, 'panda.config.ts')
 
-  const functionNames = DEFAULT_PANDA_COLLECTORS.map(
-    c => c.config.targetFunction
-  ).filter((name): name is string => Boolean(name))
+  const functionNames = [PANDA_CONFIG_COLLECTOR.config.targetFunction].filter(
+    (name): name is string => Boolean(name)
+  )
 
   const fragmentFiles =
     functionNames.length > 0
@@ -74,7 +64,7 @@ export async function runConfig(cwd: string): Promise<void> {
   await createPandaConfig({
     outputPath,
     fragmentFiles,
-    collectors: DEFAULT_PANDA_COLLECTORS,
+    collectors: [PANDA_CONFIG_COLLECTOR],
     internalFragments,
     fragmentBundleAlias,
   })
