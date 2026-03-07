@@ -90,7 +90,7 @@ export interface CollectorValue {
   expression: string
 }
 
-export interface CollectorBundleCollection {
+export interface CollectorBundles {
   collectorFragments: string
   values: CollectorValue[]
   getValue: (name: string) => string

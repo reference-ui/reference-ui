@@ -5,7 +5,7 @@ export type {
   BundleCollectorRuntimeOptions,
   FragmentBundle,
   BundleFragmentsOptions,
-  CollectorBundleCollection,
+  CollectorBundles,
   FragmentCollector,
   FragmentCollectorConfig,
   CollectorRuntimeAdapter,

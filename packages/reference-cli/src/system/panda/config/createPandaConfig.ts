@@ -1,7 +1,7 @@
 import { Liquid } from 'liquidjs'
 import { writeFileSync, mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
-import type { CollectorBundleCollection } from '../../../lib/fragments'
+import type { CollectorBundles } from '../../../lib/fragments'
 import { baseConfig } from './base'
 import { loadTemplates } from './liquid'
 
@@ -11,7 +11,7 @@ export interface CreatePandaConfigOptions {
   /** Absolute path to write the final panda.config.ts */
   outputPath: string
   /** Prepared collector runtime with bundled fragment files and value getters. */
-  collectorBundle: CollectorBundleCollection
+  collectorBundle: CollectorBundles
   /** Base config. Defaults to baseConfig from ./base */
   baseConfig?: Record<string, unknown>
 }
@@ -40,7 +40,6 @@ export async function createPandaConfig(options: CreatePandaConfigOptions): Prom
     deepMergePartial: templates.deepMerge,
     baseConfigLiteral,
     tokensValue,
-
   })
 
   mkdirSync(dirname(outputPath), { recursive: true })
