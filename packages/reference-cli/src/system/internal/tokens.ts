@@ -6,7 +6,7 @@
  * font definitions in internal/fonts.ts
  */
 
-import { tokens } from '../panda/api/tokens'
+import { tokens } from '../api/tokens'
 
 tokens({
   colors: {
