@@ -10,7 +10,7 @@ import { getConfig } from '../../config/store'
 import { log } from '../../lib/log'
 import {
   createPandaConfigCollector,
-} from '../api/extendPandaConfig'
+} from '../collectors/extendPandaConfig'
 import type { FragmentCollector } from '../../lib/fragments'
 
 const INTERNAL_FRAGMENTS_FILENAME = 'internal-fragments.mjs'

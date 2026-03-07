@@ -1,4 +1,4 @@
-import type { FontDefinition } from '../../api/font'
+import type { FontDefinition } from '../../collectors/extendFont'
 
 /**
  * Context object passed to Liquid templates for font generation

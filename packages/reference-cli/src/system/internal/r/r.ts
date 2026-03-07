@@ -2,7 +2,7 @@
  * Responsive container query prop (r)
  */
 
-import { extendPattern } from '../../api/patterns'
+import { extendPattern } from '../../collectors/extendPattern'
 
 export interface ResponsiveProp {
   r?: {
