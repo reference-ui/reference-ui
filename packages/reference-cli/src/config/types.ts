@@ -5,14 +5,12 @@
 
 /**
  * Shape of the bundled config read by extends[]. Emitted as dist/baseSystem.mjs.
- * Only reflects the public API: tokens(), keyframes(), globalCss() — nothing else.
+ * Public API is tokens() only.
  */
 export interface BaseSystem {
   name: string
   tokens: Record<string, unknown>
   font: Record<string, unknown>
-  keyframes: Record<string, unknown>
-  globalCss: Record<string, unknown>
   /** Pre-compiled component CSS for layers mode. Scoped to @layer &lt;name&gt; + [data-layer] token block. */
   css?: string
 }

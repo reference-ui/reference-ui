@@ -1,10 +1,9 @@
 import { describe, expect, it, afterEach } from 'vitest'
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { tokens } from './tokens'
-import { createTokensCollector } from '../../api/tokens'
-import type { FragmentCollector } from '../../../lib/fragments'
-import { collectFragments } from '../../../lib/fragments'
+import { tokens, createTokensCollector } from './tokens'
+import type { FragmentCollector } from '../../lib/fragments'
+import { collectFragments } from '../../lib/fragments'
 
 const fixtureDir = join(import.meta.dirname, '__fixtures__')
 const tempDir = join(import.meta.dirname, '__temp__')
