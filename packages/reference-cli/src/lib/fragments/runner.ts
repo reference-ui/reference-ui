@@ -9,7 +9,7 @@ import type {
   BundleFragmentsOptions,
   CollectOptions,
   CollectOptionsPlanner,
-  CollectorBundleCollection,
+  CollectorBundles,
   CollectorForPlanner,
   FragmentBundle,
 } from './types'
@@ -37,7 +37,7 @@ export async function bundleFragments(
 
 export async function bundleCollectorRuntime(
   options: BundleCollectorRuntimeOptions
-): Promise<CollectorBundleCollection> {
+): Promise<CollectorBundles> {
   const { files, collectors, alias, external = [] } = options
   const bundles =
     files.length > 0
