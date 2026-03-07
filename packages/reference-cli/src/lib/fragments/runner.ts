@@ -59,8 +59,9 @@ export async function bundleCollectorRuntime(
 
   return {
     bundles,
-    collectorSetups: collectors.map((collector) => collector.toScript()).join('\n'),
-    collectorFunctions: collectors.map((collector) => collector.toRuntimeFunction()).join('\n'),
+    collectorSetup: collectors
+      .flatMap((collector) => [collector.toScript(), collector.toRuntimeFunction()])
+      .join('\n'),
     values,
     getValue(name: string) {
       return values.find((value) => value.name === name)?.expression ?? '[]'
