@@ -2,7 +2,7 @@
  * Container query prop: Set up container context
  */
 
-import { extendPattern } from '../../api/patterns'
+import { extendPattern } from '../../collectors/extendPattern'
 
 export interface ContainerProp {
   container?: string | boolean

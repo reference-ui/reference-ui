@@ -5,7 +5,7 @@
  * from user font definitions collected during ref sync.
  */
 
-import type { FontDefinition } from '../../api/font'
+import type { FontDefinition } from '../../collectors/extendFont'
 import type { FontSystemOutput, ParsedFontFamily } from './types'
 
 /**
@@ -44,32 +44,10 @@ export function generateFontSystem(fonts: FontDefinition[]): FontSystemOutput {
     }
   }
 
-  // TODO: Implement Liquid template rendering
-  // For now, return placeholders
   return {
-    tokens: generateTokens(fonts),
-    fontface: generateFontface(fonts),
-    recipe: generateRecipe(fonts),
-    pattern: generatePattern(fonts),
+    tokens: '',
+    fontface: '',
+    recipe: '',
+    pattern: '',
   }
-}
-
-function generateTokens(fonts: FontDefinition[]): string {
-  // TODO: Use Liquid template
-  return `// Font tokens for ${fonts.length} fonts\n`
-}
-
-function generateFontface(fonts: FontDefinition[]): string {
-  // TODO: Use Liquid template
-  return `// @font-face rules for ${fonts.length} fonts\n`
-}
-
-function generateRecipe(fonts: FontDefinition[]): string {
-  // TODO: Use Liquid template
-  return `// Font recipe for ${fonts.length} fonts\n`
-}
-
-function generatePattern(fonts: FontDefinition[]): string {
-  // TODO: Use Liquid template
-  return `// Font pattern for ${fonts.length} fonts\n`
 }

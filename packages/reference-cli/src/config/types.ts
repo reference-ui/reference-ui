@@ -5,7 +5,7 @@
 
 /**
  * Shape of the bundled config read by extends[]. Emitted as dist/baseSystem.mjs.
- * Only reflects the public API: tokens(), font(), keyframes(), globalCss() — nothing else.
+ * Only reflects the public API: tokens(), extendFont(), keyframes(), globalCss() — nothing else.
  */
 export interface BaseSystem {
   name: string

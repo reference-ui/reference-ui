@@ -2,7 +2,7 @@ import { describe, expect, it, afterEach } from 'vitest'
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { tokens } from './tokens'
-import { createPandaConfigCollector } from './extendPandaConfig'
+import { createPandaConfigCollector } from '../collectors/extendPandaConfig'
 import type { FragmentCollector } from '../../lib/fragments'
 import { collectFragments } from '../../lib/fragments'
 

@@ -1,5 +1,5 @@
 import type { Config } from '@pandacss/dev'
-import { extendPandaConfig } from './extendPandaConfig'
+import { extendPandaConfig } from '../collectors/extendPandaConfig'
 
 type KeyframesConfig = NonNullable<Config['theme']>['keyframes']
 

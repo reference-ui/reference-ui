@@ -19,7 +19,7 @@ export interface FontDefinition {
 
 const { fn, collector } = createFragmentFunction<FontDefinition>({
   name: 'font',
-  targetFunction: 'font',
+  targetFunction: 'extendFont',
   globalKey: '__refFontCollector',
 })
 
@@ -30,7 +30,7 @@ const { fn, collector } = createFragmentFunction<FontDefinition>({
  *
  * @example
  * ```ts
- * font('sans', {
+ * extendFont('sans', {
  *   value: '"Inter", ui-sans-serif, sans-serif',
  *   fontFace: {
  *     src: 'url(...) format("woff2")',
@@ -47,7 +47,7 @@ const { fn, collector } = createFragmentFunction<FontDefinition>({
  * })
  * ```
  */
-export function font(
+export function extendFont(
   name: string,
   definition: Omit<FontDefinition, 'name'>,
 ): void {

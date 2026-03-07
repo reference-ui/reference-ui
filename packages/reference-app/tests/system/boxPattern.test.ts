@@ -72,13 +72,13 @@ describe('Box pattern generation', () => {
     expect(content).toMatch(/return Object\.assign\({}, _r\d+, _r\d+, rest\)/)
   })
 
-  it('uses extendPandaConfig API', () => {
+  it('pushes to panda config collector', () => {
     if (!existsSync(boxPatternPath)) return
 
     const content = readFileSync(boxPatternPath, 'utf-8')
     
-    expect(content).toContain("import { extendPandaConfig } from '../api/extendPandaConfig.js'")
-    expect(content).toContain('extendPandaConfig({')
+    expect(content).toContain("__refPandaConfigCollector")
+    expect(content).toContain('.push(')
     expect(content).toContain('patterns: {')
     expect(content).toContain('extend: {')
     expect(content).toContain('box: {')
