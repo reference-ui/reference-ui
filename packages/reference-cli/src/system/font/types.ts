@@ -24,8 +24,10 @@ export interface CollectFontsOptions {
   cwd: string
   /** Include globs (config.include) — where to scan for extendFont calls */
   userInclude: string[]
-  /** Temp directory for fragment execution */
+  /** Temp directory for ephemeral files (e.g. bundle entry) */
   tempDir: string
+  /** Directory for userspace fragment output (e.g. outDir/styled/fragments). Font pattern is written here as font-pattern.mjs. */
+  styledFragmentsDir?: string
   /** Alias for fragment bundling so app code doesn't pull in full config (e.g. @reference-ui/cli/config → system entry). */
   fragmentBundleAlias?: Record<string, string>
 }
@@ -49,7 +51,7 @@ export interface FontSystemOutput {
 /** Font subsystem outputs consumed by config and patterns during ref sync. */
 export interface FontFragmentsForConfig {
   fontConfigFragments: string
-  /** Path to generated file in outDir containing extendPattern() call; patterns pipeline picks it up from here. */
+  /** Path to generated file in outDir/styled/fragments (userspace). Contains extendPattern() call; patterns pipeline picks it up from here. */
   fontPatternFile?: string
   definitionsCount: number
 }

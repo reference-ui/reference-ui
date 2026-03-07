@@ -66,10 +66,12 @@ export async function runConfig(cwd: string): Promise<void> {
   }
 
   const tempDir = join(outDir, '.tmp')
+  const styledFragmentsDir = join(outDir, 'styled/fragments')
   const { fontConfigFragments } = await getFontFragmentsForConfig({
     cwd,
     userInclude: config.include,
     tempDir,
+    styledFragmentsDir,
     fragmentBundleAlias: { '@reference-ui/cli/config': systemEntry },
   })
 

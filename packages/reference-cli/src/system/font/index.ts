@@ -31,9 +31,8 @@ const FONT_PATTERN_FILENAME = 'font-pattern.mjs'
  * Collect and render font outputs for runtime config generation.
  *
  * `fontConfigFragments` are injected directly into Panda config assembly.
- * The generated pattern (extendPattern call) is written to a file in tempDir
- * so the patterns pipeline can pick it up via additionalPatternFiles without
- * any font-specific knowledge.
+ * The generated pattern (extendPattern call) is written to outDir/styled/fragments
+ * (userspace; font is not internal) so the patterns pipeline can pick it up.
  */
 export async function getFontFragmentsForConfig(
   options: CollectFontsOptions
@@ -43,9 +42,10 @@ export async function getFontFragmentsForConfig(
 
   let fontPatternFile: string | undefined
   if (rendered.pattern.trim()) {
-    const tempDir = options.tempDir
-    mkdirSync(tempDir, { recursive: true })
-    fontPatternFile = join(tempDir, FONT_PATTERN_FILENAME)
+    // Font is always userspace — write to styled/fragments (not internal)
+    const outputDir = options.styledFragmentsDir ?? options.tempDir
+    mkdirSync(outputDir, { recursive: true })
+    fontPatternFile = join(outputDir, FONT_PATTERN_FILENAME)
     // Portable fragment: import extendPattern from CLI collector only (not config), then microbundle to IIFE
     let extendPatternPath: string
     try {
@@ -59,7 +59,7 @@ export async function getFontFragmentsForConfig(
       const srcPath = join(cliDir, 'src/system/collectors/extendPattern.ts')
       extendPatternPath = existsSync(srcPath) ? srcPath : join(cliDir, 'src/system/collectors/extendPattern.mjs')
     }
-    const entryPath = join(tempDir, 'font-pattern-entry.mjs')
+    const entryPath = join(options.tempDir, 'font-pattern-entry.mjs')
     const entryContent =
       `import { extendPattern } from '${extendPatternPath}';\n\n` + rendered.pattern
     writeFileSync(entryPath, entryContent, 'utf-8')
