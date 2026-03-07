@@ -32,5 +32,9 @@ export default defineConfig({
       src: resolve('src/system/styled/internal-fragments.mjs'),
       dest: resolve('dist/cli/styled/internal-fragments.mjs'),
     })
+    await copyFile({
+      src: resolve('src/system/styled/fragments/internal/patterns.mjs'),
+      dest: resolve('dist/cli/styled/fragments/internal/patterns.mjs'),
+    })
   },
 })

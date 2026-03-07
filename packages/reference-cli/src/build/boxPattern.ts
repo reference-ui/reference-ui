@@ -13,7 +13,8 @@ import { runPatternPipeline } from '../system/patterns/index.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const CLI_ROOT = resolve(dirname(__filename), '../..')
-const BOX_PATTERN_OUTPUT = join(CLI_ROOT, 'src/system/internal/box.mjs')
+/** Pattern fragment lives under styled so styled is a clear mirror of outDir/styled. */
+const PATTERNS_FRAGMENT_OUTPUT = join(CLI_ROOT, 'src/system/styled/fragments/internal/patterns.mjs')
 
 async function buildBoxPattern(): Promise<void> {
   try {
@@ -41,10 +42,10 @@ async function buildBoxPattern(): Promise<void> {
 ${fragment}
 `
 
-    mkdirSync(dirname(BOX_PATTERN_OUTPUT), { recursive: true })
-    writeFileSync(BOX_PATTERN_OUTPUT, content, 'utf-8')
+    mkdirSync(dirname(PATTERNS_FRAGMENT_OUTPUT), { recursive: true })
+    writeFileSync(PATTERNS_FRAGMENT_OUTPUT, content, 'utf-8')
 
-    console.log(`[build:box] ✓ Generated ${BOX_PATTERN_OUTPUT}`)
+    console.log(`[build:box] ✓ Generated ${PATTERNS_FRAGMENT_OUTPUT}`)
     process.exit(0)
   } catch (error) {
     console.error('[build:box] ✗ Build failed:', error)

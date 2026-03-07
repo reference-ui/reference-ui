@@ -1,4 +1,4 @@
 dist/
 .eslint-result.txt
-src/system/internal/box.mjs
+src/system/styled/fragments/
 src/system/internal/.tmp/

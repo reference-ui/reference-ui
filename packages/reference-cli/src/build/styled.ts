@@ -101,9 +101,9 @@ async function generateStyleConfig(fragmentFiles: string[]): Promise<void> {
       ? await bundleFragments({ files: internalFragmentFiles })
       : []
   
-  // Include generated .mjs files from internal/
+  // Include pattern fragment (patterns write into styled/fragments/internal so styled mirrors outDir)
   const generatedMjsFiles = [
-    join(CLI_ROOT, 'src/system/internal/box.mjs'),
+    join(STYLED_DIR, 'fragments/internal/patterns.mjs'),
   ]
   const generatedFragments = generatedMjsFiles
     .filter(existsSync)
