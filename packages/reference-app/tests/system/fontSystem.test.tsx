@@ -22,7 +22,8 @@ beforeAll(() => {
   }
 })
 
-describe('font subsystem', () => {
+// Skipped: font module removed; config only has extendPandaConfig collector (see fragments.md)
+describe.skip('font subsystem', () => {
   it('injects generated font config fragments into panda.config.ts', () => {
     if (!existsSync(pandaConfigPath)) return
 

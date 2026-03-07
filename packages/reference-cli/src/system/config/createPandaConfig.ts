@@ -19,10 +19,6 @@ export interface CreatePandaConfigOptions {
   baseConfig?: Record<string, unknown>
   /** Pre-bundled internal fragments (from CLI build). Injected before user fragments. */
   internalFragments?: string
-  /** Pre-rendered font config fragments from the font subsystem. */
-  fontConfigFragments?: string
-  /** Pattern fragments (from system/patterns). When provided, merged box pattern overrides internal. */
-  patternFragments?: string
   /** Alias module ids to paths when bundling fragment files (e.g. @reference-ui/system → CLI entry). */
   fragmentBundleAlias?: Record<string, string>
 }
@@ -36,8 +32,6 @@ export async function createPandaConfig(
     collectors,
     baseConfig: baseConfigOverride,
     internalFragments,
-    fontConfigFragments,
-    patternFragments,
     fragmentBundleAlias,
   } = options
 
@@ -52,9 +46,7 @@ export async function createPandaConfig(
   )
     .map(({ bundle }) => `;${bundle}`)
     .join('\n')
-  const bundles = [internalFragments, fontConfigFragments, patternFragments, userFragments]
-    .filter(Boolean)
-    .join('\n')
+  const bundles = [internalFragments, userFragments].filter(Boolean).join('\n')
 
   const collectorGetters = collectors.map(c => c.toGetter()).join(', ')
 
