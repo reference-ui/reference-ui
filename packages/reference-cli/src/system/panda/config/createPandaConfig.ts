@@ -11,51 +11,59 @@ const engine = new Liquid()
 export interface CreatePandaConfigOptions {
   /** Absolute path to write the final panda.config.ts */
   outputPath: string
-  /** Absolute paths to source files that call fragment functions (from scanForFragments) */
+  /** Absolute paths to source files that call tokens() (from scanForFragments). */
   fragmentFiles: string[]
-  /** Collectors whose globalThis slots will be initialised in the output file */
-  collectors: FragmentCollector[]
-  /** Base config to merge with fragments. Defaults to baseConfig from ./base */
+  /** Tokens collector — its globalThis slot is initialised and read in the generated file. */
+  collector: FragmentCollector
+  /** Base config. Defaults to baseConfig from ./base */
   baseConfig?: Record<string, unknown>
-  /** Pre-bundled internal fragments (from CLI build). Injected before user fragments. */
+  /** Pre-bundled internal fragments (e.g. from CLI build). Injected before user bundles. */
   internalFragments?: string
-  /** Alias module ids to paths when bundling fragment files (e.g. @reference-ui/system → CLI entry). */
+  /** Alias for bundling fragment files (e.g. @reference-ui/system → CLI entry). */
   fragmentBundleAlias?: Record<string, string>
 }
 
-export async function createPandaConfig(
-  options: CreatePandaConfigOptions
-): Promise<void> {
+/**
+ * Write panda.config.ts using the tokens collector and injected fragment bundles.
+ * The generated file: inits the collector, defines tokens(), runs the bundled fragment IIFEs
+ * (so they call tokens()), then reads the collector, merges token fragments, and defineConfig().
+ */
+export async function createPandaConfig(options: CreatePandaConfigOptions): Promise<void> {
   const {
     outputPath,
     fragmentFiles,
-    collectors,
-    baseConfig: baseConfigOverride,
+    collector,
+    baseConfig: baseOverride,
     internalFragments,
     fragmentBundleAlias,
   } = options
 
-  const base = baseConfigOverride ?? baseConfig
+  const base = (baseOverride ?? baseConfig) as Record<string, unknown>
   const templates = loadTemplates()
 
-  const userFragments = (
-    await bundleFragments({
-      files: fragmentFiles,
-      ...(fragmentBundleAlias && { alias: fragmentBundleAlias }),
-    })
-  )
-    .map(({ bundle }) => `;${bundle}`)
-    .join('\n')
-  const bundles = [internalFragments, userFragments].filter(Boolean).join('\n')
+  const userBundles =
+    fragmentFiles.length > 0
+      ? (
+          await bundleFragments({
+            files: fragmentFiles,
+            ...(fragmentBundleAlias && { alias: fragmentBundleAlias }),
+          })
+        )
+          .map(({ bundle }) => `;${bundle}`)
+          .join('\n')
+      : ''
 
-  const collectorGetters = collectors.map(c => c.toGetter()).join(', ')
+  const bundles = [internalFragments, userBundles].filter(Boolean).join('\n')
+
+  // Valid JS object literal for baseConfig (inserted raw in template)
+  const baseConfigLiteral = JSON.stringify(base, null, 2)
+  const collectorSetups = collector.toScript()
 
   const rendered = await engine.parseAndRender(templates.panda, {
-    baseConfig: JSON.stringify(base),
-    collectorSetups: collectors.map(c => c.toScript()).join('\n'),
+    baseConfigLiteral,
+    collectorSetups,
     bundles,
     deepMergePartial: templates.deepMerge,
-    collectorGetters,
   })
 
   mkdirSync(dirname(outputPath), { recursive: true })

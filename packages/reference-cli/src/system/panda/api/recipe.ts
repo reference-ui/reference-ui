@@ -1,4 +1,4 @@
-import { extendPandaConfig } from '../../collectors/extendPandaConfig'
+import { extendPandaConfig } from '../../api/extendPandaConfig'
 import type { RecipeConfig } from '@pandacss/types'
 
 /**

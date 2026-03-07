@@ -1,24 +1,21 @@
 import { join } from 'node:path'
-import { readFileSync, existsSync } from 'node:fs'
 import { getCwd } from '../../../config'
 import { getOutDirPath } from '../../../lib/paths'
 import { resolveCliPackageDir } from '../../../lib/paths/cli-package-dir'
+import type { FragmentCollector } from '../../../lib/fragments'
 import { scanForFragments } from '../../../lib/fragments'
 import { emit } from '../../../lib/event-bus'
 import { createPandaConfig } from './createPandaConfig'
 import { getConfig } from '../../../config/store'
 import { log } from '../../../lib/log'
-import { createPandaConfigCollector } from '../../collectors/extendPandaConfig'
-import type { FragmentCollector } from '../../../lib/fragments'
-
-const INTERNAL_FRAGMENTS_FILENAME = 'internal-fragments.mjs'
-
-/** Single panda config collector. tokens() and other APIs call extendPandaConfig; this captures partials. */
-const PANDA_CONFIG_COLLECTOR = createPandaConfigCollector() as FragmentCollector<unknown>
+import { createTokensCollector } from '../../api/tokens'
 
 /**
- * Run config generation: scan for fragments, write panda.config to outDir.
- * Caller (config worker or main thread) is responsible for emitting system:config:complete.
+ * Run config generation: scan for fragment files that call tokens(),
+ * then createPandaConfig bundles them and writes panda.config.ts with
+ * collector setup + injected bundle JS. When the file is loaded, the
+ * bundles run and call tokens(); the generated file reads the collector
+ * and merges into defineConfig().
  */
 export async function runConfig(cwd: string): Promise<void> {
   log.debug('config', 'runConfig started', { cwd })
@@ -30,29 +27,11 @@ export async function runConfig(cwd: string): Promise<void> {
   const outDir = getOutDirPath(cwd)
   const outputPath = join(outDir, 'panda.config.ts')
 
-  const functionNames = [PANDA_CONFIG_COLLECTOR.config.targetFunction].filter(
-    (name): name is string => Boolean(name)
-  )
-
-  const fragmentFiles =
-    functionNames.length > 0
-      ? scanForFragments({
-          include: config.include,
-          functionNames,
-          cwd,
-        })
-      : []
-
-  let internalFragments: string | undefined
-  try {
-    const cliDir = resolveCliPackageDir(cwd)
-    const internalPath = join(cliDir, 'dist/cli/styled', INTERNAL_FRAGMENTS_FILENAME)
-    if (existsSync(internalPath)) {
-      internalFragments = readFileSync(internalPath, 'utf-8')
-    }
-  } catch {
-    // CLI not found or file missing — skip internal fragments
-  }
+  const fragmentFiles = scanForFragments({
+    include: config.include,
+    functionNames: ['tokens'],
+    cwd,
+  })
 
   const cliDir = resolveCliPackageDir(cwd)
   const systemEntry = join(cliDir, 'src/entry/system.ts')
@@ -64,8 +43,7 @@ export async function runConfig(cwd: string): Promise<void> {
   await createPandaConfig({
     outputPath,
     fragmentFiles,
-    collectors: [PANDA_CONFIG_COLLECTOR],
-    internalFragments,
+    collector: createTokensCollector() as FragmentCollector,
     fragmentBundleAlias,
   })
 

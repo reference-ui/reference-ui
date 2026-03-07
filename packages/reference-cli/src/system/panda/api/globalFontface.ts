@@ -1,5 +1,5 @@
 import type { Config } from '@pandacss/dev'
-import { extendPandaConfig } from '../../collectors/extendPandaConfig'
+import { extendPandaConfig } from '../../api/extendPandaConfig'
 
 type GlobalFontfaceConfig = NonNullable<Config['globalFontface']>
 
