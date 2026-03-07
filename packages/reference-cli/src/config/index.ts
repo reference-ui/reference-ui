@@ -22,8 +22,8 @@ export {
   ConfigValidationError,
 } from './errors'
 
-// Fragment collectors - user-facing API for extending Panda config
-export { tokens } from '../system/panda/api/tokens'
+// System API — tokens() is the single public entry for now (see system/fragments.md)
+export { tokens } from '../system/api'
 export { keyframes } from '../system/panda/api/keyframes'
 export { utilities } from '../system/panda/api/utilities'
 export { globalCss } from '../system/panda/api/globalCss'

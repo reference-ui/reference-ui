@@ -2,28 +2,28 @@ import { describe, expect, it, afterEach } from 'vitest'
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { tokens } from './tokens'
-import { createPandaConfigCollector } from '../../collectors/extendPandaConfig'
+import { createTokensCollector } from '../../api/tokens'
 import type { FragmentCollector } from '../../../lib/fragments'
 import { collectFragments } from '../../../lib/fragments'
 
 const fixtureDir = join(import.meta.dirname, '__fixtures__')
 const tempDir = join(import.meta.dirname, '__temp__')
 
-const pandaCollector = createPandaConfigCollector()
+const tokensCollector = createTokensCollector()
 
 afterEach(() => {
   rmSync(tempDir, { recursive: true, force: true })
   rmSync(fixtureDir, { recursive: true, force: true })
 })
 
-describe('tokens() with panda collector', () => {
+describe('tokens() with tokens collector', () => {
   it('has correct collector config', () => {
-    expect(pandaCollector.config.name).toBe('panda-config')
-    expect(pandaCollector.config.targetFunction).toBe('tokens')
+    expect(tokensCollector.config.name).toBe('tokens')
+    expect(tokensCollector.config.targetFunction).toBe('tokens')
   })
 
-  it('transforms token definitions into panda config shape', () => {
-    pandaCollector.init()
+  it('collects raw token definitions', () => {
+    tokensCollector.init()
     tokens({
       colors: {
         brand: {
@@ -32,24 +32,20 @@ describe('tokens() with panda collector', () => {
       },
     })
 
-    const result = pandaCollector.getFragments()
+    const result = tokensCollector.getFragments()
     expect(result).toHaveLength(1)
     expect(result[0]).toEqual({
-      theme: {
-        tokens: {
-          colors: {
-            brand: {
-              primary: { value: '#0066cc' },
-            },
-          },
+      colors: {
+        brand: {
+          primary: { value: '#0066cc' },
         },
       },
     })
-    pandaCollector.cleanup()
+    tokensCollector.cleanup()
   })
 
   it('handles multiple token calls', () => {
-    pandaCollector.init()
+    tokensCollector.init()
     tokens({
       colors: {
         brand: { value: '#0066cc' },
@@ -61,24 +57,23 @@ describe('tokens() with panda collector', () => {
       },
     })
 
-    const result = pandaCollector.getFragments()
+    const result = tokensCollector.getFragments()
     expect(result).toHaveLength(2)
-    expect(result[0]?.theme?.tokens).toHaveProperty('colors')
-    expect(result[1]?.theme?.tokens).toHaveProperty('spacing')
-    pandaCollector.cleanup()
+    expect(result[0]).toHaveProperty('colors')
+    expect(result[1]).toHaveProperty('spacing')
+    tokensCollector.cleanup()
   })
 })
 
 describe('tokens() - E2E', () => {
   it('collects tokens from user files', async () => {
     mkdirSync(fixtureDir, { recursive: true })
-    
-    // User file calling tokens()
+
     writeFileSync(
       join(fixtureDir, 'my-tokens.ts'),
       `
       import { tokens } from '@reference-ui/cli/config'
-      
+
       tokens({
         colors: {
           brand: {
@@ -92,20 +87,16 @@ describe('tokens() - E2E', () => {
 
     const result = await collectFragments({
       files: [join(fixtureDir, 'my-tokens.ts')],
-      collector: pandaCollector as FragmentCollector<unknown, unknown>,
+      collector: tokensCollector as FragmentCollector<unknown, unknown>,
       tempDir,
     })
 
     expect(result).toHaveLength(1)
     expect(result[0]).toEqual({
-      theme: {
-        tokens: {
-          colors: {
-            brand: {
-              primary: { value: '#0066cc' },
-              secondary: { value: '#ff6600' },
-            },
-          },
+      colors: {
+        brand: {
+          primary: { value: '#0066cc' },
+          secondary: { value: '#ff6600' },
         },
       },
     })
@@ -113,12 +104,12 @@ describe('tokens() - E2E', () => {
 
   it('collects from multiple files', async () => {
     mkdirSync(fixtureDir, { recursive: true })
-    
+
     writeFileSync(
       join(fixtureDir, 'colors.ts'),
       `
       import { tokens } from '@reference-ui/cli/config'
-      
+
       tokens({
         colors: {
           red: { value: '#ff0000' }
@@ -131,7 +122,7 @@ describe('tokens() - E2E', () => {
       join(fixtureDir, 'spacing.ts'),
       `
       import { tokens } from '@reference-ui/cli/config'
-      
+
       tokens({
         spacing: {
           sm: { value: '0.5rem' }
@@ -142,13 +133,12 @@ describe('tokens() - E2E', () => {
 
     const result = await collectFragments({
       files: [join(fixtureDir, 'colors.ts'), join(fixtureDir, 'spacing.ts')],
-      collector: pandaCollector as FragmentCollector<unknown, unknown>,
+      collector: tokensCollector as FragmentCollector<unknown, unknown>,
       tempDir,
     })
 
     expect(result).toHaveLength(2)
-    type WithTheme = { theme?: { tokens?: Record<string, unknown> } }
-    expect((result[0] as WithTheme)?.theme?.tokens).toHaveProperty('colors')
-    expect((result[1] as WithTheme)?.theme?.tokens).toHaveProperty('spacing')
+    expect(result[0]).toHaveProperty('colors')
+    expect(result[1]).toHaveProperty('spacing')
   })
 })

@@ -1,6 +1,6 @@
 /**
  * User-space design system config for reference-app.
- * tokens, keyframes, and globalCss are collected by ref sync and merged into the generated Panda config.
+ * All from @reference-ui/system (tokens is canonical API; keyframes/globalCss compat — see fragments.md).
  */
 
 import { tokens, keyframes, globalCss } from '@reference-ui/system'
