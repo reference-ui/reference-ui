@@ -1,7 +1,7 @@
 /**
  * @vitest-environment happy-dom
  *
- * Tests user-space token eval: tokens() in src/system/tokens.ts defines
+ * Tests user-space token eval: tokens() in src/system/styles.ts defines
  * referenceAppToken; ref sync merges it into the design system. We mount a Div
  * with bg set to that token and assert the computed style.
  */
@@ -9,7 +9,7 @@
 import { describe, it, expect, beforeAll } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { Div } from '@reference-ui/react'
-import { REFERENCE_APP_TOKEN_RGB } from '../../src/system/tokens'
+import { REFERENCE_APP_TOKEN_RGB } from '../../src/system/styles'
 import { injectDesignSystemCss, getDesignSystemCssPath } from '../primitives/setup'
 
 beforeAll(() => {
