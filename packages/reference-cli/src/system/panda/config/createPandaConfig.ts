@@ -31,6 +31,7 @@ export async function createPandaConfig(options: CreatePandaConfigOptions): Prom
   const base = (baseOverride ?? baseConfig) as Record<string, unknown>
   const templates = loadTemplates()
   const tokensValueExpression = collectorBundle.getValue('tokens')
+  const keyframesValueExpression = collectorBundle.getValue('keyframes')
 
   // Valid JS object literal for baseConfig (inserted raw in template)
   const baseConfigLiteral = JSON.stringify(base, null, 2)
@@ -40,6 +41,7 @@ export async function createPandaConfig(options: CreatePandaConfigOptions): Prom
     deepMergePartial: templates.deepMerge,
     baseConfigLiteral,
     tokensValueExpression,
+    keyframesValueExpression,
   })
 
   mkdirSync(dirname(outputPath), { recursive: true })

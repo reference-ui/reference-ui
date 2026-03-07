@@ -12,10 +12,16 @@ const baseConfig = {{ baseConfigLiteral | raw }}
 // Read collected token fragments and merge into config
 const tokensFragments = {{ tokensValueExpression | raw }}
 const mergedTokens = deepMerge({}, ...tokensFragments)
+const keyframesFragments = {{ keyframesValueExpression | raw }}
+const mergedKeyframes = deepMerge({}, ...keyframesFragments)
 const config = {
   ...baseConfig,
   theme: {
-    ...(baseConfig.theme || {}),
+    ...deepMerge({}, baseConfig.theme || {}, {
+      extend: {
+        keyframes: mergedKeyframes,
+      },
+    }),
     tokens: mergedTokens,
   },
 }

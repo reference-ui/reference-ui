@@ -1,6 +1,6 @@
 /**
  * @reference-ui/system entry
- * Build-time design system extension API: tokens() only (see system/fragments.md).
+ * Build-time design system extension API (see system/fragments.md).
  */
 
-export { tokens } from '../system/api'
+export { tokens, keyframes } from '../system/api'

@@ -7,6 +7,7 @@ import { emit } from '../../../lib/event-bus'
 import { createPandaConfig } from './createPandaConfig'
 import { getConfig } from '../../../config/store'
 import { log } from '../../../lib/log'
+import { createKeyframesCollector } from '../../api/keyframes'
 import { createTokensCollector } from '../../api/tokens'
 
 /**
@@ -40,7 +41,7 @@ export async function runConfig(cwd: string): Promise<void> {
   }
   const collectorBundle = await bundleCollectorRuntime({
     files: fragmentFiles,
-    collectors: [createTokensCollector()],
+    collectors: [createTokensCollector(), createKeyframesCollector()],
     alias: fragmentBundleAlias,
   })
 

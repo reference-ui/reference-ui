@@ -5,8 +5,8 @@ import { tokens, createTokensCollector } from './tokens'
 import type { FragmentCollector } from '../../lib/fragments'
 import { collectFragments } from '../../lib/fragments'
 
-const fixtureDir = join(import.meta.dirname, '__fixtures__')
-const tempDir = join(import.meta.dirname, '__temp__')
+const fixtureDir = join(import.meta.dirname, '__fixtures__-tokens')
+const tempDir = join(import.meta.dirname, '__temp__-tokens')
 
 const tokensCollector = createTokensCollector()
 
