@@ -3,15 +3,14 @@
  * Build script for generating the internal styled package.
  *
  * 1. Scans for token fragment files
- * 2. Generates panda.config.ts (collector + injected bundles via createPandaConfig)
+ * 2. Prepares collector runtime + bundled fragments, then generates panda.config.ts
  * 3. Runs Panda to output styled package to ./src/system/styled/
  */
 
 import { resolve, join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { mkdirSync, writeFileSync } from 'node:fs'
-import type { FragmentCollector } from '../lib/fragments'
-import { scanForFragments } from '../lib/fragments'
+import { bundleCollectorRuntime, scanForFragments } from '../lib/fragments'
 import { createPandaConfig } from '../system/panda/config/createPandaConfig'
 import { createTokensCollector } from '../system/api/tokens'
 import { generate as pandaGenerate } from '@pandacss/node'
@@ -62,16 +61,19 @@ async function generateStyleConfig(fragmentFiles: string[]): Promise<void> {
       !f.includes('/system/styled/') &&
       !f.includes('/scripts/')
   )
-
-  await createPandaConfig({
-    outputPath: PANDA_CONFIG_PATH,
-    fragmentFiles: configFragmentFiles,
-    collector: createTokensCollector() as FragmentCollector,
-    baseConfig: styledBaseConfig,
-    fragmentBundleAlias: {
+  const collectorBundle = await bundleCollectorRuntime({
+    files: configFragmentFiles,
+    collectors: [createTokensCollector()],
+    alias: {
       '@reference-ui/system': systemEntry,
       '@reference-ui/cli/config': systemEntry,
     },
+  })
+
+  await createPandaConfig({
+    outputPath: PANDA_CONFIG_PATH,
+    collectorBundle,
+    baseConfig: styledBaseConfig,
   })
 
   console.log('[build:styled] Config generated at:', PANDA_CONFIG_PATH)

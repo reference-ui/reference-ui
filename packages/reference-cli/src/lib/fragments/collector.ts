@@ -93,11 +93,20 @@ export function createFragmentCollector<TInput = unknown, TOutput = TInput>(
   }
 
   /**
+   * Returns the JS function that bundled fragment files call at runtime.
+   * This keeps generated files from needing to know globalThis collector details.
+   */
+  function toRuntimeFunction(): string {
+    const functionName = targetFunction ?? name
+    return `const ${functionName} = (fragment) => { const c = globalThis['${globalKey}']; if (Array.isArray(c)) c.push(fragment) }`
+  }
+
+  /**
    * Returns a JS function that retrieves and transforms fragments from globalThis.
    * Use in generated configs where collector instances aren't available.
    */
   function toGetter(): string {
-    const transformCode = transform 
+    const transformCode = transform
       ? `fragments.map(${transform.toString()})`
       : 'fragments'
     return `(function() { const fragments = globalThis['${globalKey}'] ?? []; return ${transformCode}; })()`
@@ -111,6 +120,7 @@ export function createFragmentCollector<TInput = unknown, TOutput = TInput>(
     getFragments,
     cleanup,
     toScript,
+    toRuntimeFunction,
     toGetter,
   })
   return collectorFn as FragmentCollector<TInput, TOutput>

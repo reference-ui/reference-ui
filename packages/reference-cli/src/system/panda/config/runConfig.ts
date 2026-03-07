@@ -2,8 +2,7 @@ import { join } from 'node:path'
 import { getCwd } from '../../../config'
 import { getOutDirPath } from '../../../lib/paths'
 import { resolveCliPackageDir } from '../../../lib/paths/cli-package-dir'
-import type { FragmentCollector } from '../../../lib/fragments'
-import { scanForFragments } from '../../../lib/fragments'
+import { bundleCollectorRuntime, scanForFragments } from '../../../lib/fragments'
 import { emit } from '../../../lib/event-bus'
 import { createPandaConfig } from './createPandaConfig'
 import { getConfig } from '../../../config/store'
@@ -12,10 +11,10 @@ import { createTokensCollector } from '../../api/tokens'
 
 /**
  * Run config generation: scan for fragment files that call tokens(),
- * then createPandaConfig bundles them and writes panda.config.ts with
- * collector setup + injected bundle JS. When the file is loaded, the
- * bundles run and call tokens(); the generated file reads the collector
- * and merges into defineConfig().
+ * prepare a collector bundle runtime, then write panda.config.ts.
+ * When the generated file is loaded, the bundled fragment IIFEs call
+ * the injected runtime functions and the collected values are merged
+ * into defineConfig().
  */
 export async function runConfig(cwd: string): Promise<void> {
   log.debug('config', 'runConfig started', { cwd })
@@ -39,12 +38,15 @@ export async function runConfig(cwd: string): Promise<void> {
     '@reference-ui/system': systemEntry,
     '@reference-ui/cli/config': systemEntry,
   }
+  const collectorBundle = await bundleCollectorRuntime({
+    files: fragmentFiles,
+    collectors: [createTokensCollector()],
+    alias: fragmentBundleAlias,
+  })
 
   await createPandaConfig({
     outputPath,
-    fragmentFiles,
-    collector: createTokensCollector() as FragmentCollector,
-    fragmentBundleAlias,
+    collectorBundle,
   })
 
   log.debug('config', 'Wrote panda.config', outputPath)

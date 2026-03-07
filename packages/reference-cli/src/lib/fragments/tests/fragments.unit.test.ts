@@ -69,6 +69,23 @@ describe('createFragmentCollector', () => {
     const c = createFragmentCollector({ name: 'recipe' })
     expect(c.config.globalKey).toBe('__refRecipeCollector')
   })
+
+  it('emits runtime setup helpers for generated files', () => {
+    const c = createFragmentCollector({
+      name: 'tokens',
+      targetFunction: 'tokens',
+      transform: (fragment: { colors: Record<string, unknown> }) => ({
+        theme: { tokens: fragment },
+      }),
+    })
+
+    expect(c.toScript()).toBe("globalThis['__refTokensCollector'] = []")
+    expect(c.toRuntimeFunction()).toBe(
+      "const tokens = (fragment) => { const c = globalThis['__refTokensCollector']; if (Array.isArray(c)) c.push(fragment) }"
+    )
+    expect(c.toGetter()).toContain("globalThis['__refTokensCollector']")
+    expect(c.toGetter()).toContain('fragments.map(')
+  })
 })
 
 // ---------------------------------------------------------------------------

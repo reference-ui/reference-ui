@@ -11,7 +11,7 @@ import { afterAll, describe, expect, it } from 'vitest'
 import { rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { createFragmentCollector } from '../index'
-import { collectFragments } from '../runner'
+import { bundleCollectorRuntime, collectFragments } from '../runner'
 
 const fixtureDir = join(import.meta.dirname, 'fixtures')
 const tempDir = join(import.meta.dirname, '__temp__')
@@ -179,5 +179,25 @@ describe('collectFragments – single-collector API (explicit file list)', () =>
       transformed: true,
       original: { name: 'simple', value: 42 },
     })
+  })
+})
+
+describe('bundleCollectorRuntime', () => {
+  it('prepares bundled runtime helpers separately from createPandaConfig', async () => {
+    const functionName = 'myFunction'
+    const tokens = createFragmentCollector<Record<string, unknown>>({
+      name: 'tokens',
+      targetFunction: functionName,
+    })
+
+    const runtime = await bundleCollectorRuntime({
+      files: [join(fixtureDir, 'use-function.ts')],
+      collectors: [tokens],
+    })
+
+    expect(runtime.bundles).toContain(functionName)
+    expect(runtime.collectorSetups).toContain("__refMyFunctionCollector")
+    expect(runtime.collectorFunctions).toContain(`const ${functionName} = (fragment) =>`)
+    expect(runtime.getValue('tokens')).toContain("__refMyFunctionCollector")
   })
 })

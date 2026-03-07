@@ -5,9 +5,11 @@ import { pathToFileURL } from 'node:url'
 import { microBundle, DEFAULT_EXTERNALS } from '../microbundle'
 import { scanForFragments } from './scanner'
 import type {
+  BundleCollectorRuntimeOptions,
   BundleFragmentsOptions,
   CollectOptions,
   CollectOptionsPlanner,
+  CollectorBundleCollection,
   CollectorForPlanner,
   FragmentBundle,
 } from './types'
@@ -31,6 +33,39 @@ export async function bundleFragments(
     results.push({ file, bundle })
   }
   return results
+}
+
+export async function bundleCollectorRuntime(
+  options: BundleCollectorRuntimeOptions
+): Promise<CollectorBundleCollection> {
+  const { files, collectors, alias, external = [] } = options
+  const bundles =
+    files.length > 0
+      ? (
+          await bundleFragments({
+            files,
+            ...(alias && { alias }),
+            external,
+          })
+        )
+          .map(({ bundle }) => `;${bundle}`)
+          .join('\n')
+      : ''
+
+  const values = collectors.map((collector) => ({
+    name: collector.config.name,
+    expression: collector.toGetter(),
+  }))
+
+  return {
+    bundles,
+    collectorSetups: collectors.map((collector) => collector.toScript()).join('\n'),
+    collectorFunctions: collectors.map((collector) => collector.toRuntimeFunction()).join('\n'),
+    values,
+    getValue(name: string) {
+      return values.find((value) => value.name === name)?.expression ?? '[]'
+    },
+  }
 }
 
 // ---------------------------------------------------------------------------
