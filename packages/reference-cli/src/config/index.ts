@@ -22,5 +22,5 @@ export {
   ConfigValidationError,
 } from './errors'
 
-// System API — tokens() only (see system/fragments.md)
-export { tokens } from '../system/api'
+// System API surface used by bundled fragment files.
+export { tokens, keyframes } from '../system/api'
