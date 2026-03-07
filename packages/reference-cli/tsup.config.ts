@@ -1,14 +1,8 @@
 import { defineConfig } from 'tsup'
-import { mkdirSync } from 'node:fs'
-import { cp, readdir } from 'node:fs/promises'
-import { join, resolve } from 'node:path'
+import { resolve } from 'node:path'
 import { workerEntries } from './src/lib/thread-pool'
-
-const CONFIG_LIQUID_SRC = 'src/system/config/liquid'
-const PATTERNS_LIQUID_SRC = 'src/system/patterns/liquid'
-const CONFIG_DIST = 'dist/cli/config'
-const STYLED_SRC = resolve('src/system/styled')
-const STYLED_DIST = 'dist/cli/styled'
+import { copyLiquidTemplates } from './tsup/liquid'
+import { copyFile } from './tsup/copy'
 
 export default defineConfig({
   entry: {
@@ -27,30 +21,16 @@ export default defineConfig({
   },
   external: ['@pandacss/node', '@parcel/watcher', 'picomatch'],
   async onSuccess() {
-    // Copy .liquid files to dist/cli/config so bundled worker can read them via __dirname
-    const configFiles = await readdir(CONFIG_LIQUID_SRC)
-    const configLiquid = configFiles.filter((f) => f.endsWith('.liquid'))
-    await Promise.all(
-      configLiquid.map((f) =>
-        cp(join(CONFIG_LIQUID_SRC, f), join(CONFIG_DIST, f))
-      )
-    )
-    const patternsFiles = await readdir(PATTERNS_LIQUID_SRC)
-    const patternsLiquid = patternsFiles.filter((f) => f.endsWith('.liquid'))
-    await Promise.all(
-      patternsLiquid.map((f) =>
-        cp(join(PATTERNS_LIQUID_SRC, f), join(CONFIG_DIST, f))
-      )
-    )
-    // Copy internal-fragments.mjs when it exists (produced by prebuild / build:styled)
-    try {
-      mkdirSync(STYLED_DIST, { recursive: true })
-      await cp(
-        join(STYLED_SRC, 'internal-fragments.mjs'),
-        join(STYLED_DIST, 'internal-fragments.mjs')
-      )
-    } catch {
-      // prebuild may not have run yet
-    }
+    await copyLiquidTemplates({
+      sources: [
+        'src/system/config/liquid',
+        'src/system/patterns/liquid',
+      ],
+      dest: 'dist/cli/config',
+    })
+    await copyFile({
+      src: resolve('src/system/styled/internal-fragments.mjs'),
+      dest: resolve('dist/cli/styled/internal-fragments.mjs'),
+    })
   },
 })
