@@ -9,6 +9,7 @@ import { Liquid } from 'liquidjs'
 import { readFileSync, existsSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { resolveCliPackageDir } from '../../lib/paths/cli-package-dir'
 import type { FontDefinition } from '../collectors/extendFont'
 import type { FontSystemOutput, ParsedFontFamily } from './types'
 
@@ -18,8 +19,16 @@ function getLiquidDir(): string {
   try {
     const url = (import.meta as { url?: string }).url
     if (url) {
-      return dirname(fileURLToPath(url))
+      const dir = join(dirname(fileURLToPath(url)), 'liquid')
+      if (existsSync(join(dir, 'tokens.liquid'))) return dir
     }
+  } catch {
+    /* ignore */
+  }
+  try {
+    const cliDir = resolveCliPackageDir(process.cwd())
+    const liquidDir = join(cliDir, 'src/system/font/liquid')
+    if (existsSync(join(liquidDir, 'tokens.liquid'))) return liquidDir
   } catch {
     /* ignore */
   }

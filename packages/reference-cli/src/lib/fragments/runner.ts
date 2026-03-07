@@ -59,8 +59,13 @@ export async function collectFragments<TInput, TOutput>(
 async function runSingle<TInput, TOutput>(
   options: CollectOptions<TInput, TOutput>
 ): Promise<TOutput[]> {
-  const { files, collector, tempDir } = options
+  const { files, collector, tempDir, alias, external = [] } = options
   mkdirSync(tempDir, { recursive: true })
+
+  const microOptions = {
+    ...(alias && { alias }),
+    external: [...DEFAULT_EXTERNALS, ...external],
+  }
 
   const allFragments: TOutput[] = []
 
@@ -68,7 +73,7 @@ async function runSingle<TInput, TOutput>(
     const tmpPath = uniqueTmpPath(tempDir)
     collector.init()
     try {
-      const bundled = await microBundle(filePath)
+      const bundled = await microBundle(filePath, microOptions)
       writeFileSync(tmpPath, bundled, 'utf-8')
       await import(pathToFileURL(tmpPath).href)
       allFragments.push(...collector.getFragments())

@@ -16,7 +16,7 @@ export type { CollectFontsOptions } from './types'
  * Collect font definitions from app code (extendFont calls).
  */
 export async function collectFonts(options: CollectFontsOptions): Promise<FontDefinition[]> {
-  const { cwd, userInclude, tempDir } = options
+  const { cwd, userInclude, tempDir, fragmentBundleAlias } = options
 
   if (userInclude.length === 0) {
     return []
@@ -26,7 +26,7 @@ export async function collectFonts(options: CollectFontsOptions): Promise<FontDe
 
   const fragmentFiles = scanForFragments({
     include: userInclude,
-    functionNames: ['extendFont'],
+    functionNames: ['extendFont', 'font'],
     exclude: ['**/node_modules/**', '**/*.d.ts', '**/dist/**', '**/.reference-ui/**'],
     cwd,
   })
@@ -39,6 +39,7 @@ export async function collectFonts(options: CollectFontsOptions): Promise<FontDe
     files: fragmentFiles,
     collector: fontCollector,
     tempDir,
+    ...(fragmentBundleAlias && { alias: fragmentBundleAlias }),
   })
 
   return definitions as FontDefinition[]

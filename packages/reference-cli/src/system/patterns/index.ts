@@ -8,6 +8,8 @@
  * Config hooks in with a one-liner to get pattern fragments.
  */
 
+import { existsSync } from 'node:fs'
+import { join } from 'node:path'
 import { collectPatterns } from './collect'
 import { renderBoxPattern } from './render'
 import type {
@@ -50,7 +52,7 @@ export type {
 export async function runPatternPipeline(
   options: RunPatternPipelineOptions
 ): Promise<PatternPipelineResult> {
-  const { cwd, tempDir, cliRoot, includeUser = false, userInclude = [] } = options
+  const { cwd, tempDir, cliRoot, includeUser = false, userInclude = [], fragmentBundleAlias } = options
 
   const { system, user, merged } = await collectPatterns({
     cwd,
@@ -58,6 +60,7 @@ export async function runPatternPipeline(
     includeUser,
     userInclude,
     tempDir,
+    fragmentBundleAlias,
   })
 
   const fragment = await renderBoxPattern({ extensions: merged })
@@ -78,6 +81,11 @@ export async function getPatternFragmentsForConfig(
   options: GetPatternFragmentsForConfigOptions
 ): Promise<string | undefined> {
   const { cwd, cliDir, userInclude, tempDir } = options
+  const extendSrc = join(cliDir, 'src/system/collectors/extendPattern.ts')
+  const extendDist = join(cliDir, 'dist/system/collectors/extendPattern.mjs')
+  const fragmentBundleAlias = {
+    '@reference-ui/cli/config': existsSync(extendSrc) ? extendSrc : extendDist,
+  }
 
   const { fragment, userCount } = await runPatternPipeline({
     cwd,
@@ -85,6 +93,7 @@ export async function getPatternFragmentsForConfig(
     includeUser: true,
     userInclude,
     cliRoot: cliDir,
+    fragmentBundleAlias,
   })
 
   // Only return merged fragment when user has extendPattern — otherwise internal-fragments (from build) has the box pattern

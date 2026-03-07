@@ -11,6 +11,7 @@ import { log } from '../../lib/log'
 import {
   createPandaConfigCollector,
 } from '../collectors/extendPandaConfig'
+import { getFontFragmentsForConfig } from '../font'
 import { getPatternFragmentsForConfig } from '../patterns'
 import type { FragmentCollector } from '../../lib/fragments'
 
@@ -58,15 +59,25 @@ export async function runConfig(cwd: string): Promise<void> {
   }
 
   const cliDir = resolveCliPackageDir(cwd)
+  const systemEntry = join(cliDir, 'src/entry/system.ts')
   const fragmentBundleAlias: Record<string, string> = {
-    '@reference-ui/system': join(cliDir, 'src/entry/system.ts'),
+    '@reference-ui/system': systemEntry,
+    '@reference-ui/cli/config': systemEntry,
   }
+
+  const tempDir = join(outDir, '.tmp')
+  const { fontConfigFragments } = await getFontFragmentsForConfig({
+    cwd,
+    userInclude: config.include,
+    tempDir,
+    fragmentBundleAlias: { '@reference-ui/cli/config': systemEntry },
+  })
 
   const patternFragments = await getPatternFragmentsForConfig({
     cwd,
     cliDir,
     userInclude: config.include,
-    tempDir: join(outDir, '.tmp'),
+    tempDir,
   })
 
   await createPandaConfig({
@@ -74,6 +85,7 @@ export async function runConfig(cwd: string): Promise<void> {
     fragmentFiles,
     collectors: [PANDA_CONFIG_COLLECTOR],
     internalFragments,
+    fontConfigFragments: fontConfigFragments || undefined,
     patternFragments: patternFragments ?? undefined,
     fragmentBundleAlias,
   })
