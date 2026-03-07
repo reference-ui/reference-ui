@@ -1,33 +1,11 @@
 /**
- * Responsive container query prop (r)
+ * Responsive container query prop (r).
+ * Pattern extension removed (extendPattern collector removed; see system/fragments.md).
+ * Will be restored when single-run multi-collector fragment pipeline is in place.
  */
-
-import { extendPattern } from '../../collectors/extendPattern'
 
 export interface ResponsiveProp {
   r?: {
     [breakpoint: number]: Record<string, unknown>
   }
 }
-
-extendPattern({
-  properties: {
-    r: { type: 'object' },
-  },
-  transform(props: Record<string, unknown>) {
-    const { r, container } = props
-
-    if (!r) return {}
-
-    const prefix = container
-      ? `@container ${container} (min-width:`
-      : `@container (min-width:`
-
-    return Object.fromEntries(
-      Object.entries(r as Record<string, unknown>).map(([bp, styles]) => [
-        `${prefix} ${bp}px)`,
-        styles,
-      ])
-    )
-  },
-})

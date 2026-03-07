@@ -1,8 +1,7 @@
 /**
  * Fragment collectors — the layer that extends Panda config.
- * These are distinct from the api/ layer: tokens, recipe, globalCss, etc.
- * use extendPandaConfig; extendPattern and extendFont are collectors for box pattern
- * and font definitions respectively.
+ * extendPandaConfig is the sole collector; tokens/keyframes/etc. write to it.
+ * extendPattern and extendFont were removed (see system/fragments.md).
  */
 
 export {
@@ -10,14 +9,3 @@ export {
   createPandaConfigCollector,
   COLLECTOR_KEY,
 } from './extendPandaConfig'
-export {
-  extendPattern,
-  createBoxPatternCollector,
-  type BoxPatternExtension,
-} from './extendPattern'
-export {
-  extendFont,
-  createFontCollector,
-  type FontDefinition,
-  type FontFaceRule,
-} from './extendFont'
