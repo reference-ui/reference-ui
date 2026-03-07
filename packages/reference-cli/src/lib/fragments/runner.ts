@@ -133,12 +133,14 @@ async function runSingle<TInput, TOutput>(
 async function runPlanner(
   options: CollectOptionsPlanner
 ): Promise<Record<string, unknown[]>> {
-  const { collectors, include, tempDir, cwd } = options
+  const { collectors, include, importFrom, tempDir, cwd } = options
   mkdirSync(tempDir, { recursive: true })
 
-  // Derive function names to scan for from each collector's config
-  const functionNames = collectors.map(c => c.config.targetFunction ?? c.config.name)
-  const files = scanForFragments({ include, functionNames, cwd })
+  const files = scanForFragments({
+    include,
+    ...(importFrom ? { importFrom } : { functionNames: collectors.map(c => c.config.targetFunction ?? c.config.name) }),
+    cwd,
+  })
 
   // Pre-seed result keyed by collector name
   const result: Record<string, unknown[]> = {}

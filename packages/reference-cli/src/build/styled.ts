@@ -2,7 +2,7 @@
 /**
  * Build script for generating the internal styled package.
  *
- * 1. Scans for token fragment files
+ * 1. Scans for files that import the system API
  * 2. Prepares collector runtime + bundled fragments, then generates panda.config.ts
  * 3. Runs Panda to output styled package to ./src/system/styled/
  */
@@ -22,10 +22,10 @@ const PANDA_CONFIG_PATH = join(STYLED_DIR, 'panda.config.ts')
 const systemEntry = join(CLI_ROOT, 'src/entry/system.ts')
 
 async function getFragmentFiles(): Promise<string[]> {
-  console.log('[build:styled] Scanning for token fragments...')
+  console.log('[build:styled] Scanning for system fragments...')
   const files = scanForFragments({
     include: ['src/**/*.{ts,tsx}'],
-    functionNames: ['tokens'],
+    importFrom: ['@reference-ui/system', '@reference-ui/cli/config'],
     exclude: [
       '**/node_modules/**',
       '**/*.d.ts',
