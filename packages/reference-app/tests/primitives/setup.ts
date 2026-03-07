@@ -29,6 +29,13 @@ export function getDesignSystemCssPath(): string | undefined {
   return undefined
 }
 
+/** Read design system CSS content. Returns undefined if no CSS file found. */
+export function getDesignSystemCss(): string | undefined {
+  const path = getDesignSystemCssPath()
+  if (!path) return undefined
+  return readFileSync(path, 'utf-8')
+}
+
 /**
  * Inject the design system CSS into document.head.
  * Call once in beforeAll for tests that need computed styles.
