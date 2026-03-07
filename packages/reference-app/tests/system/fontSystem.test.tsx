@@ -38,7 +38,7 @@ describe('font subsystem', () => {
     if (!css) return
 
     expect(css).toContain('@font-face')
-    expect(css).toContain('font-display:swap')
+    expect(css).toMatch(/font-display:\s*swap/)
     expect(css).toMatch(/font-family:\s*["']?Inter["']?/)
   })
 })
