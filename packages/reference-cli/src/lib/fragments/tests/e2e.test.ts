@@ -21,7 +21,7 @@ afterAll(() => {
 })
 
 describe('collectFragments – planner API (glob patterns, multiple collectors)', () => {
-  it('scans user code by glob and returns fragments keyed by collector name', async () => {
+  it('scans user code by import and returns fragments keyed by collector name', async () => {
     // System package author defines collectors once
     const myFunction = createFragmentCollector<Record<string, unknown>>({
       name: 'myFunction',
@@ -32,6 +32,7 @@ describe('collectFragments – planner API (glob patterns, multiple collectors)'
     const result = await collectFragments({
       collectors: [myFunction],
       include: ['**/*.ts'],
+      importFrom: './setup',
       tempDir,
       cwd: fixtureDir,
     })
@@ -58,6 +59,7 @@ describe('collectFragments – planner API (glob patterns, multiple collectors)'
     const result = await collectFragments({
       collectors: [tokens, recipe],
       include: ['**/*.ts'],
+      importFrom: './setup',
       tempDir,
       cwd: fixtureDir,
     })
@@ -73,6 +75,7 @@ describe('collectFragments – planner API (glob patterns, multiple collectors)'
     const result = await collectFragments({
       collectors: [unused],
       include: ['**/*.ts'],
+      importFrom: 'does-not-exist',
       tempDir,
       cwd: fixtureDir,
     })
@@ -92,6 +95,7 @@ describe('collectFragments – planner API (glob patterns, multiple collectors)'
     const result = await collectFragments({
       collectors: [tokenCollector],
       include: ['**/*.ts'],
+      importFrom: './setup',
       tempDir,
       cwd: fixtureDir,
     })

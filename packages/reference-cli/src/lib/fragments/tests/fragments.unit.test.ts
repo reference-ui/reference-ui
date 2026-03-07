@@ -237,4 +237,28 @@ describe('scanForFragments', () => {
     })
     expect(files).toHaveLength(0)
   })
+
+  it('finds files that import the target module', () => {
+    const files = scanForFragments({
+      include: ['**/*.ts'],
+      importFrom: './setup',
+      cwd: fixtureDir,
+    })
+    const names = files.map(f => f.split('/').at(-1))
+    expect(names).toContain('use-function.ts')
+    expect(names).toContain('with-constants.ts')
+    expect(names).not.toContain('setup.ts')
+  })
+
+  it('supports multiple import targets', () => {
+    const files = scanForFragments({
+      include: ['**/*.ts'],
+      importFrom: ['./setup', '../../index'],
+      cwd: fixtureDir,
+    })
+    const names = files.map(f => f.split('/').at(-1))
+    expect(names).toContain('use-function.ts')
+    expect(names).toContain('with-constants.ts')
+    expect(names).toContain('setup.ts')
+  })
 })

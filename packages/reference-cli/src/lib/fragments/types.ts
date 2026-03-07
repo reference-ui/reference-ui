@@ -31,8 +31,10 @@ export interface FragmentCollector<TInput = unknown, TOutput = TInput> {
 export interface ScanOptions {
   /** Glob patterns to search (e.g. from config.include) */
   include: string[]
-  /** Function call names to look for (e.g. ['tokens', 'recipe']) */
-  functionNames: string[]
+  /** Function call names to look for (e.g. ['tokens', 'recipe']). Used when importFrom is not provided. */
+  functionNames?: string[]
+  /** Module ids to detect in import statements (e.g. '@reference-ui/system'). Preferred discovery mode. */
+  importFrom?: string | string[]
   /** Glob patterns to exclude node_modules and declaration files. Defaults to node_modules and .d.ts globs. */
   exclude?: string[]
   /** Working directory for glob resolution. Default: process.cwd() */
@@ -109,6 +111,8 @@ export interface BundleCollectorRuntimeOptions {
 export interface CollectOptionsPlanner {
   collectors: CollectorForPlanner[]
   include: string[]
+  /** Module ids to detect in import statements. When provided, planner discovery uses imports instead of function names. */
+  importFrom?: string | string[]
   tempDir: string
   /** Working directory for glob resolution. Default: process.cwd() */
   cwd?: string

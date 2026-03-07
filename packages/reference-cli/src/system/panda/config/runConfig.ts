@@ -10,7 +10,7 @@ import { log } from '../../../lib/log'
 import { createTokensCollector } from '../../api/tokens'
 
 /**
- * Run config generation: scan for fragment files that call tokens(),
+ * Run config generation: scan for fragment files that import the system API,
  * prepare a collector bundle runtime, then write panda.config.ts.
  * When the generated file is loaded, the bundled fragment IIFEs call
  * the injected runtime functions and the collected values are merged
@@ -28,7 +28,7 @@ export async function runConfig(cwd: string): Promise<void> {
 
   const fragmentFiles = scanForFragments({
     include: config.include,
-    functionNames: ['tokens'],
+    importFrom: ['@reference-ui/system', '@reference-ui/cli/config'],
     cwd,
   })
 
