@@ -39,7 +39,7 @@ async function collectTokenFragments(): Promise<{
 
   const fragmentFiles = scanForFragments({
     include: ['src/**/*.{ts,tsx}'],
-    functionNames: ['tokens'],
+    functionNames: ['tokens', 'extendPandaConfig'],
     exclude: [
       '**/node_modules/**',
       '**/*.d.ts',
