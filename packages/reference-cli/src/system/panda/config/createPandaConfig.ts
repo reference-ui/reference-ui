@@ -36,13 +36,14 @@ export async function createPandaConfig(options: CreatePandaConfigOptions): Prom
   const baseConfigLiteral = JSON.stringify(base, null, 2)
 
   const rendered = await engine.parseAndRender(templates.panda, {
-    collectorSetup: collectorBundle.collectorSetup,
-    bundles: collectorBundle.bundles,
+    collectorFragments: collectorBundle.collectorFragments,
+    deepMergePartial: templates.deepMerge,
     baseConfigLiteral,
     tokensValue,
-    deepMergePartial: templates.deepMerge,
+
   })
 
   mkdirSync(dirname(outputPath), { recursive: true })
   writeFileSync(outputPath, rendered, 'utf-8')
 }
+ 

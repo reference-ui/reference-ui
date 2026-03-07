@@ -58,9 +58,13 @@ export async function bundleCollectorRuntime(
   }))
 
   return {
-    bundles,
-    collectorSetup: collectors
-      .flatMap((collector) => [collector.toScript(), collector.toRuntimeFunction()])
+    collectorFragments: [
+      collectors
+        .flatMap((collector) => [collector.toScript(), collector.toRuntimeFunction()])
+        .join('\n'),
+      bundles,
+    ]
+      .filter(Boolean)
       .join('\n'),
     values,
     getValue(name: string) {
