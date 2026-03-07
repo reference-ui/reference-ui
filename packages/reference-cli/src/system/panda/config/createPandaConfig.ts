@@ -36,10 +36,9 @@ export async function createPandaConfig(options: CreatePandaConfigOptions): Prom
   const baseConfigLiteral = JSON.stringify(base, null, 2)
 
   const rendered = await engine.parseAndRender(templates.panda, {
-    baseConfigLiteral,
-    collectorSetups: collectorBundle.collectorSetups,
-    collectorFunctions: collectorBundle.collectorFunctions,
+    collectorSetup: collectorBundle.collectorSetup,
     bundles: collectorBundle.bundles,
+    baseConfigLiteral,
     tokensValue,
     deepMergePartial: templates.deepMerge,
   })

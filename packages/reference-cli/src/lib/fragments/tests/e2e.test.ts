@@ -196,8 +196,8 @@ describe('bundleCollectorRuntime', () => {
     })
 
     expect(runtime.bundles).toContain(functionName)
-    expect(runtime.collectorSetups).toContain("__refMyFunctionCollector")
-    expect(runtime.collectorFunctions).toContain(`const ${functionName} = (fragment) =>`)
+    expect(runtime.collectorSetup).toContain("__refMyFunctionCollector")
+    expect(runtime.collectorSetup).toContain(`const ${functionName} = (fragment) =>`)
     expect(runtime.getValue('tokens')).toContain("__refMyFunctionCollector")
   })
 })

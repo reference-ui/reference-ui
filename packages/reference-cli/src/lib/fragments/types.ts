@@ -91,9 +91,7 @@ export interface CollectorValue {
 }
 
 export interface CollectorBundleCollection {
-  bundles: string
-  collectorSetups: string
-  collectorFunctions: string
+  collectorFragments: string
   values: CollectorValue[]
   getValue: (name: string) => string
 }
