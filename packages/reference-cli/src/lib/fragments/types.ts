@@ -59,6 +59,10 @@ export interface CollectOptions<TInput = unknown, TOutput = TInput> {
   files: string[]
   collector: FragmentCollector<TInput, TOutput>
   tempDir: string
+  /** Alias module ids to paths when bundling (avoids pulling in full config/esbuild). */
+  alias?: Record<string, string>
+  /** Additional externals when bundling. */
+  external?: string[]
 }
 
 /**

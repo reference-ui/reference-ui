@@ -23,6 +23,8 @@ export interface CollectPatternsOptions {
   userInclude?: string[]
   /** Temp directory for fragment execution */
   tempDir: string
+  /** Alias for fragment bundling so user extendPattern files don't pull in full config (e.g. @reference-ui/cli/config → extendPattern path). */
+  fragmentBundleAlias?: Record<string, string>
 }
 
 /** Result of collecting system and user patterns — merged for rendering. */
@@ -60,6 +62,8 @@ export interface RunPatternPipelineOptions {
   includeUser?: boolean
   /** User include globs (from config.include). Required when includeUser is true */
   userInclude?: string[]
+  /** Alias for user fragment bundling (avoids pulling in full config). */
+  fragmentBundleAlias?: Record<string, string>
 }
 
 /** Result of running the pattern pipeline. */

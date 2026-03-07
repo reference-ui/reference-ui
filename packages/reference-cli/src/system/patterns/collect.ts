@@ -54,7 +54,8 @@ export async function collectSystemPatterns(
 export async function collectUserPatterns(
   cwd: string,
   userInclude: string[],
-  tempDir: string
+  tempDir: string,
+  fragmentBundleAlias?: Record<string, string>
 ): Promise<BoxPatternExtension[]> {
   const patternCollector = createBoxPatternCollector()
 
@@ -73,6 +74,7 @@ export async function collectUserPatterns(
     files: fragmentFiles,
     collector: patternCollector,
     tempDir,
+    ...(fragmentBundleAlias && { alias: fragmentBundleAlias }),
   })
 
   return extensions as BoxPatternExtension[]
@@ -85,14 +87,14 @@ export async function collectUserPatterns(
 export async function collectPatterns(
   options: CollectPatternsOptions
 ): Promise<CollectedPatterns> {
-  const { cwd, cliRoot, includeUser = false, userInclude = [], tempDir } = options
+  const { cwd, cliRoot, includeUser = false, userInclude = [], tempDir, fragmentBundleAlias } = options
   const systemCwd = cliRoot ?? cwd
 
   const system = await collectSystemPatterns(systemCwd, tempDir)
 
   let user: BoxPatternExtension[] = []
   if (includeUser && userInclude.length > 0) {
-    user = await collectUserPatterns(cwd, userInclude, tempDir)
+    user = await collectUserPatterns(cwd, userInclude, tempDir, fragmentBundleAlias)
   }
 
   const merged = [...system, ...user]
