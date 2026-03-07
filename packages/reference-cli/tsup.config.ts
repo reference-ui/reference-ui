@@ -1,8 +1,6 @@
 import { defineConfig } from 'tsup'
-import { resolve } from 'node:path'
 import { workerEntries } from './src/lib/thread-pool'
 import { copyLiquidTemplates } from './tsup/liquid'
-import { copyFile } from './tsup/copy'
 
 export default defineConfig({
   entry: {
@@ -24,10 +22,6 @@ export default defineConfig({
     await copyLiquidTemplates({
       sources: ['src/system/panda/config/liquid'],
       dest: 'dist/cli/config',
-    })
-    await copyFile({
-      src: resolve('src/system/styled/internal-fragments.mjs'),
-      dest: resolve('dist/cli/styled/internal-fragments.mjs'),
     })
   },
 })

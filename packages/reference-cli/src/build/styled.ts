@@ -11,7 +11,7 @@ import { resolve, join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import type { FragmentCollector } from '../lib/fragments'
-import { scanForFragments, bundleFragments } from '../lib/fragments'
+import { scanForFragments } from '../lib/fragments'
 import { createPandaConfig } from '../system/panda/config/createPandaConfig'
 import { createTokensCollector } from '../system/api/tokens'
 import { generate as pandaGenerate } from '@pandacss/node'
@@ -60,22 +60,14 @@ async function generateStyleConfig(fragmentFiles: string[]): Promise<void> {
     (f) =>
       !f.includes('/build/') &&
       !f.includes('/system/styled/') &&
-      !f.includes('/scripts/') &&
-      !f.includes('/system/internal/')
+      !f.includes('/scripts/')
   )
-  const internalFragmentFiles = fragmentFiles.filter((f) => f.includes('/system/internal/'))
-  const internalBundles =
-    internalFragmentFiles.length > 0
-      ? await bundleFragments({ files: internalFragmentFiles })
-      : []
-  const internalFragments = internalBundles.map((b) => `;${b.bundle}`).join('\n')
 
   await createPandaConfig({
     outputPath: PANDA_CONFIG_PATH,
     fragmentFiles: configFragmentFiles,
     collector: createTokensCollector() as FragmentCollector,
     baseConfig: styledBaseConfig,
-    internalFragments: internalFragments || undefined,
     fragmentBundleAlias: {
       '@reference-ui/system': systemEntry,
       '@reference-ui/cli/config': systemEntry,
