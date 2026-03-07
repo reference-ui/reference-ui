@@ -17,8 +17,6 @@ export interface CreatePandaConfigOptions {
   collector: FragmentCollector
   /** Base config. Defaults to baseConfig from ./base */
   baseConfig?: Record<string, unknown>
-  /** Pre-bundled internal fragments (e.g. from CLI build). Injected before user bundles. */
-  internalFragments?: string
   /** Alias for bundling fragment files (e.g. @reference-ui/system → CLI entry). */
   fragmentBundleAlias?: Record<string, string>
 }
@@ -34,7 +32,6 @@ export async function createPandaConfig(options: CreatePandaConfigOptions): Prom
     fragmentFiles,
     collector,
     baseConfig: baseOverride,
-    internalFragments,
     fragmentBundleAlias,
   } = options
 
@@ -53,7 +50,7 @@ export async function createPandaConfig(options: CreatePandaConfigOptions): Prom
           .join('\n')
       : ''
 
-  const bundles = [internalFragments, userBundles].filter(Boolean).join('\n')
+  const bundles = userBundles
 
   // Valid JS object literal for baseConfig (inserted raw in template)
   const baseConfigLiteral = JSON.stringify(base, null, 2)
