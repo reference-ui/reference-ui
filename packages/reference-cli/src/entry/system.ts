@@ -6,5 +6,3 @@
 export { tokens } from '../system/panda/api/tokens'
 export { keyframes } from '../system/panda/api/keyframes'
 export { globalCss } from '../system/panda/api/globalCss'
-export { extendFont } from '../system/collectors/extendFont'
-export { extendFont as font } from '../system/collectors/extendFont'

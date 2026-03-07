@@ -1,25 +1,9 @@
 /**
- * Container query prop: Set up container context
+ * Container query prop: Set up container context.
+ * Pattern extension removed (extendPattern collector removed; see system/fragments.md).
+ * Will be restored when single-run multi-collector fragment pipeline is in place.
  */
-
-import { extendPattern } from '../../collectors/extendPattern'
 
 export interface ContainerProp {
   container?: string | boolean
 }
-
-extendPattern({
-  properties: {
-    container: { type: 'string' },
-  },
-  transform(props: Record<string, unknown>) {
-    const { container } = props
-
-    if (container === undefined) return {}
-
-    return {
-      containerType: 'inline-size',
-      ...(typeof container === 'string' && container && { containerName: container }),
-    }
-  },
-})

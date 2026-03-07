@@ -5,8 +5,7 @@
  * from user font definitions collected during ref sync.
  */
 
-import type { FontDefinition } from '../../collectors/extendFont'
-import type { FontSystemOutput, ParsedFontFamily } from './types'
+import type { FontDefinition, FontSystemOutput, ParsedFontFamily } from './types'
 
 /**
  * Parse font family name from font value string
