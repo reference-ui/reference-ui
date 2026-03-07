@@ -55,45 +55,44 @@
 
 ---
 
-## Implementation plan
+## Checkpoint
 
-## Progress so far
+### What is done
 
-### Done
+1. **Discovery is now import-based**: `scanForFragments(...)` supports `importFrom`, and the Panda config flow now discovers fragment files by `@reference-ui/system` / `@reference-ui/cli/config` instead of scanning for `tokens(...)`.
+2. **`createPandaConfig(...)` is simpler**: It no longer bundles files or knows collector internals. It consumes prepared `CollectorBundles`, injects `collectorFragments`, and reads named fragment values from that bundle.
+3. **The fragments layer owns runtime setup**: Collector initialisation, runtime fragment functions, and generated getter code all live in the fragments layer instead of being redefined inside Panda config generation.
+4. **Missing fragment calls are normal**: If a file imports the system API but does not call `tokens()` or `keyframes()`, the generated Panda config still works and treats those as empty fragment lists.
+5. **Multiple collectors are already supported by the runtime bundle**: The current Panda config flow now prepares both `tokens()` and `keyframes()` in the same collector bundle.
+6. **First multi-collector API step is in place**: `tokens()` and `keyframes()` both exist in the new architecture and both feed Panda config correctly.
 
-1. **createPandaConfig boundary is simpler**: `createPandaConfig(...)` no longer bundles files or knows collector internals. It now consumes prepared `CollectorBundles`, injects `collectorFragments`, and asks for the tokens value source.
-2. **Fragment runtime details moved down**: The fragments layer now owns the generated setup/runtime code needed to initialise collectors and expose runtime fragment functions before bundled files run.
-3. **Discovery switched to imports**: `scanForFragments(...)` now supports `importFrom`, and the current Panda config flow uses import-based discovery (`@reference-ui/system` / `@reference-ui/cli/config`) instead of scanning for `tokens(...)`.
-4. **Generated Panda config is more declarative**: The Liquid template just injects collector fragments, reads token fragments, and merges them into the final Panda config.
-5. **Missing `tokens()` is a normal case**: If user code imports the system API but never calls `tokens(...)`, the generated Panda config still works and treats tokens as an empty fragment list.
+### Verified
 
-### Next
+1. **Focused CLI fragments/API tests pass**:
+   - `src/lib/fragments/tests/fragments.unit.test.ts`
+   - `src/lib/fragments/tests/e2e.test.ts`
+   - `src/system/api/tokens.test.ts`
+   - `src/system/api/keyframes.test.ts`
+2. **Full system verification passes**: `pnpm test:system`
+3. **Reference app still works with the new flow**: system config generation, Panda codegen, packaging, and app tests all pass in the full system run.
 
-1. **Use one execution for multiple collectors**: Keep the single import-based discovery loop, but evaluate the discovered files once with multiple collectors initialised together instead of preparing only the Panda/tokens path.
-2. **Thread multi-collector output downstream**: Use the same single-run result to feed Panda config, font rendering, and pattern collection rather than letting each subsystem rescan or rerun user files.
-3. **Add import-discovery coverage for non-token files**: Add fixtures/tests for files that import `@reference-ui/system` but only call `font()` or pattern APIs, so discovery stays aligned with the public API contract.
-4. **Clean up remaining collector-era naming where helpful**: The current surface is much better, but there may still be places where the API can speak more directly in terms of fragments/values instead of collection mechanics.
+### What remains
 
-### Phase A: Discovery by import
+1. **Add more public fragment APIs**: `font()`, `globalCss()`, `recipe()`, `slotRecipe()`, `textStyle()`, `layerStyle()`, etc. should follow the same shape as `tokens()` / `keyframes()`.
+2. **Use one evaluation for all downstream consumers**: The runtime bundle already supports multiple collectors, but Panda/font/pattern consumers still need to be wired around the same single run rather than separate subsystem flows.
+3. **Add non-token import-discovery coverage**: We now cover `tokens()` and `keyframes()`. Add fixtures/tests for files that import the system API but only call other public fragment functions, especially `font()`.
+4. **Keep internal sinks internal**: `extendPandaConfig` / similar implementation details should stay out of discovery and remain just downstream sinks for the public API.
 
-1. **Scanner**: Add import-based discovery (e.g. `scanForFragments({ include, importFrom: '@reference-ui/system', cwd })` or a dedicated `scanFragmentFilesByImport()`). Detect files that contain an import from the given module (string/regex for `from '@reference-ui/system'` or `from "@reference-ui/system"`).
-2. **runConfig**: Switch to import-based scan for user fragment files instead of `functionNames: ['tokens']`. Keep `config.include` for globs.
-3. **Tests**: Add fixtures that only call `font()` (no `tokens`) and ensure they are discovered and their output is used (panda still gets internal + font/pattern fragments; font pipeline gets font defs).
+### Tonight's conclusion
 
-### Phase B: Single run with multiple collectors
+This work is in a good stopping place. The fragments architecture now matches the intended direction much better:
 
-1. **Runner**: Extend the fragment runner so we can pass **multiple collectors** and run the bundle once, initialising all of them before execution and gathering all results after. (Today `collectFragments` takes a single collector; we need "run this bundle, feed these N collectors.")
-2. **runConfig**:
-   - Get fragment files (import-based).
-   - Run **one** bundle execution with panda + font + pattern collectors.
-   - From that run: panda partials → createPandaConfig; font defs → getFontFragmentsForConfig (or inline font render); pattern extensions → getPatternFragmentsForConfig (or merge and produce pattern fragment).
-3. **Font/pattern "collect"**: Remove separate `scanForFragments` + `collectFragments` for font and user patterns. They become consumers of the single-run result (font collector output, pattern collector output). System patterns (internal) can stay a separate path if they don’t live in user fragment files.
+- one discovery rule based on public API usage
+- a cleaner `createPandaConfig(...)` boundary
+- prepared multi-collector fragment bundles
+- verified support for both `tokens()` and `keyframes()`
 
-### Phase C: Clean up and document
-
-1. **API surface**: Document that fragment discovery is "import from @reference-ui/system"; collection is "one execution, all API calls recorded."
-2. **extendPandaConfig**: Keep as internal; ensure liquid/generated config still only exposes tokens, keyframes, recipe, etc., not extendPandaConfig to the bundle (or expose it only as the internal sink).
-3. **Optional**: Deprecate or remove `targetFunction` from the panda collector for *scanning* (it can still exist for debugging or backward compatibility). Discovery is import-based; collection is multi-collector single-run.
+The next session should mostly be about extending the same pattern to the remaining public system APIs rather than revisiting the core fragments mechanics.
 
 ---
 
