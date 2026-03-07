@@ -22,7 +22,7 @@ export default defineConfig({
   external: ['@pandacss/node', '@parcel/watcher', 'picomatch'],
   async onSuccess() {
     await copyLiquidTemplates({
-      sources: ['src/system/config/liquid'],
+      sources: ['src/system/panda/config/liquid'],
       dest: 'dist/cli/config',
     })
     await copyFile({

@@ -21,8 +21,8 @@ function getLiquidDir(): string {
   }
   const cwd = process.cwd()
   const candidates = [
-    join(cwd, 'packages/reference-cli/src/system/config/liquid'),
-    join(cwd, 'src/system/config/liquid'),
+    join(cwd, 'packages/reference-cli/src/system/panda/config/liquid'),
+    join(cwd, 'src/system/panda/config/liquid'),
   ]
   for (const dir of candidates) {
     if (existsSync(join(dir, 'panda.liquid'))) return dir

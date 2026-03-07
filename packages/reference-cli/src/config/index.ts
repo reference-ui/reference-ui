@@ -23,9 +23,9 @@ export {
 } from './errors'
 
 // Fragment collectors - user-facing API for extending Panda config
-export { tokens } from '../system/api/tokens'
-export { keyframes } from '../system/api/keyframes'
-export { utilities } from '../system/api/utilities'
-export { globalCss } from '../system/api/globalCss'
-export { staticCss } from '../system/api/staticCss'
-export { globalFontface } from '../system/api/globalFontface'
+export { tokens } from '../system/panda/api/tokens'
+export { keyframes } from '../system/panda/api/keyframes'
+export { utilities } from '../system/panda/api/utilities'
+export { globalCss } from '../system/panda/api/globalCss'
+export { staticCss } from '../system/panda/api/staticCss'
+export { globalFontface } from '../system/panda/api/globalFontface'
