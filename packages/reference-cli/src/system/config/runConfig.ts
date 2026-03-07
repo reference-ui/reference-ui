@@ -1,5 +1,5 @@
 import { join } from 'node:path'
-import { readFileSync, existsSync } from 'node:fs'
+import { readFileSync, existsSync, mkdirSync, copyFileSync } from 'node:fs'
 import { getCwd } from '../../config'
 import { getOutDirPath } from '../../lib/paths'
 import { resolveCliPackageDir } from '../../lib/paths/cli-package-dir'
@@ -89,6 +89,18 @@ export async function runConfig(cwd: string): Promise<void> {
     patternFragments: patternFragments ?? undefined,
     fragmentBundleAlias,
   })
+
+  // Mirror styled/fragments into outDir so userspace outDir/styled matches CLI layout
+  try {
+    const cliStyledFragments = join(cliDir, 'dist/cli/styled/fragments/internal/patterns.mjs')
+    if (existsSync(cliStyledFragments)) {
+      const outFragmentsDir = join(outDir, 'styled/fragments/internal')
+      mkdirSync(outFragmentsDir, { recursive: true })
+      copyFileSync(cliStyledFragments, join(outFragmentsDir, 'patterns.mjs'))
+    }
+  } catch {
+    // CLI dist or path may not exist
+  }
 
   log.debug('config', 'Wrote panda.config', outputPath)
 }
