@@ -22,6 +22,8 @@ export interface FragmentCollector<TInput = unknown, TOutput = TInput> {
   cleanup: () => void
   /** Returns the JS snippet that initialises this collector's globalThis slot in generated files */
   toScript: () => string
+  /** Returns the JS snippet that defines the runtime function bundled files call */
+  toRuntimeFunction: () => string
   /** Returns an IIFE that retrieves and transforms fragments from globalThis (for templates) */
   toGetter: () => string
 }
@@ -74,6 +76,35 @@ export interface CollectorForPlanner {
   init: () => void
   getFragments: () => unknown[]
   cleanup: () => void
+}
+
+export interface CollectorRuntimeAdapter {
+  config: { name: string; targetFunction?: string; [k: string]: unknown }
+  toScript: () => string
+  toRuntimeFunction: () => string
+  toGetter: () => string
+}
+
+export interface CollectorValue {
+  name: string
+  expression: string
+}
+
+export interface CollectorBundleCollection {
+  bundles: string
+  collectorSetups: string
+  collectorFunctions: string
+  values: CollectorValue[]
+  getValue: (name: string) => string
+}
+
+export interface BundleCollectorRuntimeOptions {
+  files: string[]
+  collectors: CollectorRuntimeAdapter[]
+  /** Alias module ids to paths when bundling (e.g. @reference-ui/system → CLI entry). */
+  alias?: Record<string, string>
+  /** Additional externals to avoid bundling. Esbuild requires string[] only. */
+  external?: string[]
 }
 
 /** Planner API: pass multiple collectors + glob patterns, get Record<name, T[]> back */

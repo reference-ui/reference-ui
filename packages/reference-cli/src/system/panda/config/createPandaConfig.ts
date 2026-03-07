@@ -1,8 +1,7 @@
 import { Liquid } from 'liquidjs'
 import { writeFileSync, mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
-import { bundleFragments } from '../../../lib/fragments'
-import type { FragmentCollector } from '../../../lib/fragments'
+import type { CollectorBundleCollection } from '../../../lib/fragments'
 import { baseConfig } from './base'
 import { loadTemplates } from './liquid'
 
@@ -11,55 +10,37 @@ const engine = new Liquid()
 export interface CreatePandaConfigOptions {
   /** Absolute path to write the final panda.config.ts */
   outputPath: string
-  /** Absolute paths to source files that call tokens() (from scanForFragments). */
-  fragmentFiles: string[]
-  /** Tokens collector — its globalThis slot is initialised and read in the generated file. */
-  collector: FragmentCollector
+  /** Prepared collector runtime with bundled fragment files and value getters. */
+  collectorBundle: CollectorBundleCollection
   /** Base config. Defaults to baseConfig from ./base */
   baseConfig?: Record<string, unknown>
-  /** Alias for bundling fragment files (e.g. @reference-ui/system → CLI entry). */
-  fragmentBundleAlias?: Record<string, string>
 }
 
 /**
- * Write panda.config.ts using the tokens collector and injected fragment bundles.
- * The generated file: inits the collector, defines tokens(), runs the bundled fragment IIFEs
- * (so they call tokens()), then reads the collector, merges token fragments, and defineConfig().
+ * Write panda.config.ts using a prepared collector bundle.
+ * The generated file initialises collectors, exposes runtime fragment functions,
+ * runs the bundled fragment IIFEs, then reads the collected token values into defineConfig().
  */
 export async function createPandaConfig(options: CreatePandaConfigOptions): Promise<void> {
   const {
     outputPath,
-    fragmentFiles,
-    collector,
+    collectorBundle,
     baseConfig: baseOverride,
-    fragmentBundleAlias,
   } = options
 
   const base = (baseOverride ?? baseConfig) as Record<string, unknown>
   const templates = loadTemplates()
-
-  const userBundles =
-    fragmentFiles.length > 0
-      ? (
-          await bundleFragments({
-            files: fragmentFiles,
-            ...(fragmentBundleAlias && { alias: fragmentBundleAlias }),
-          })
-        )
-          .map(({ bundle }) => `;${bundle}`)
-          .join('\n')
-      : ''
-
-  const bundles = userBundles
+  const tokensValue = collectorBundle.getValue('tokens')
 
   // Valid JS object literal for baseConfig (inserted raw in template)
   const baseConfigLiteral = JSON.stringify(base, null, 2)
-  const collectorSetups = collector.toScript()
 
   const rendered = await engine.parseAndRender(templates.panda, {
     baseConfigLiteral,
-    collectorSetups,
-    bundles,
+    collectorSetups: collectorBundle.collectorSetups,
+    collectorFunctions: collectorBundle.collectorFunctions,
+    bundles: collectorBundle.bundles,
+    tokensValue,
     deepMergePartial: templates.deepMerge,
   })
 

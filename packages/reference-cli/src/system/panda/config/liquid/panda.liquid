@@ -7,11 +7,8 @@ const baseConfig = {{ baseConfigLiteral | raw }}
 // Collector setup — tokens collector
 {{ collectorSetups }}
 
-// tokens() shim so injected fragment bundles can call it
-const tokens = (config) => {
-  const c = globalThis['__refTokensCollector']
-  if (Array.isArray(c)) c.push(config)
-}
+// Runtime fragment functions so injected bundles can register fragments
+{{ collectorFunctions }}
 
 // Fragment bundles (IIFEs run on load; they call tokens() which pushes to the collector)
 {{ bundles }}
@@ -19,8 +16,8 @@ const tokens = (config) => {
 {{ deepMergePartial | raw }}
 
 // Read collected token fragments and merge into config
-const tokensFragments = globalThis['__refTokensCollector'] ?? []
-const mergedTokens = deepMerge({}, ...tokensFragments)
+const tokensValue = {{ tokensValue | raw }}
+const mergedTokens = deepMerge({}, ...tokensValue)
 const config = {
   ...baseConfig,
   theme: {
