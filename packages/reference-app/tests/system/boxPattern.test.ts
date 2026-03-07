@@ -24,24 +24,24 @@ describe('Box pattern generation', () => {
 
   it('includes all pattern properties', () => {
     if (!existsSync(boxPatternPath)) {
-      console.warn('box.ts not found - run prebuild first')
+      console.warn('box.mjs not found - run prebuild first')
       return
     }
 
     const content = readFileSync(boxPatternPath, 'utf-8')
     
-    // Check for all expected properties
+    // Check for expected properties (font is NOT here - it's runtime-generated)
     expect(content).toContain('container:')
-    expect(content).toContain('font:')
-    expect(content).toContain('weight:')
     expect(content).toContain('r:')
     
     // Check blocklist
     expect(content).toContain('blocklist:')
     expect(content).toContain('"container"')
-    expect(content).toContain('"font"')
-    expect(content).toContain('"weight"')
     expect(content).toContain('"r"')
+    
+    // Font should NOT be in the box pattern - it's generated at runtime
+    expect(content).not.toContain('"font"')
+    expect(content).not.toContain('"weight"')
   })
 
   it('includes transform functions for each extension', () => {
@@ -50,15 +50,17 @@ describe('Box pattern generation', () => {
     const content = readFileSync(boxPatternPath, 'utf-8')
     
     // Check for transform IIFEs (JavaScript, not TypeScript)
+    // Should only have 2 extensions now: container and r
     expect(content).toContain('const _r0 = (function(props) {')
     expect(content).toContain('const _r1 = (function(props) {')
-    expect(content).toContain('const _r2 = (function(props) {')
     
     // Check for transform logic
     expect(content).toContain('containerType')
-    expect(content).toContain('FONT_PRESETS')
-    expect(content).toContain('WEIGHT_TOKENS')
     expect(content).toContain('@container')
+    
+    // Font-related transforms should NOT be in box pattern
+    expect(content).not.toContain('FONT_PRESETS')
+    expect(content).not.toContain('WEIGHT_TOKENS')
   })
 
   it('combines all transforms with Object.assign', () => {
@@ -66,8 +68,8 @@ describe('Box pattern generation', () => {
 
     const content = readFileSync(boxPatternPath, 'utf-8')
     
-    // Check final transform return
-    expect(content).toMatch(/return Object\.assign\({}, _r\d+, _r\d+, _r\d+, rest\)/)
+    // Check final transform return (only 2 extensions now)
+    expect(content).toMatch(/return Object\.assign\({}, _r\d+, _r\d+, rest\)/)
   })
 
   it('uses extendPandaConfig API', () => {
@@ -92,11 +94,9 @@ describe('Box pattern generation', () => {
   })
 })
 
-describe('Pattern prop modules', () => {
-  const propsDir = join(cliRoot, 'src/system/internal/props')
-
-  it('has container prop module', () => {
-    const containerPath = join(propsDir, 'container.ts')
+describe('Pattern extension modules', () => {
+  it('has container extension module', () => {
+    const containerPath = join(cliRoot, 'src/system/internal/container/container.ts')
     expect(existsSync(containerPath)).toBe(true)
     
     const content = readFileSync(containerPath, 'utf-8')
@@ -104,18 +104,17 @@ describe('Pattern prop modules', () => {
     expect(content).toContain('containerType')
   })
 
-  it('has font prop module', () => {
-    const fontPath = join(propsDir, 'font.ts')
-    expect(existsSync(fontPath)).toBe(true)
+  it('has font extension directory (runtime generation)', () => {
+    const fontDir = join(cliRoot, 'src/system/internal/font')
+    expect(existsSync(fontDir)).toBe(true)
     
-    const content = readFileSync(fontPath, 'utf-8')
-    expect(content).toContain('extendPattern')
-    expect(content).toContain('FONT_PRESETS')
-    expect(content).toContain('WEIGHT_TOKENS')
+    // Font system uses runtime generation, not static pattern file
+    const readmePath = join(fontDir, 'README.md')
+    expect(existsSync(readmePath)).toBe(true)
   })
 
-  it('has responsive prop module', () => {
-    const rPath = join(propsDir, 'r.ts')
+  it('has responsive extension module', () => {
+    const rPath = join(cliRoot, 'src/system/internal/r/r.ts')
     expect(existsSync(rPath)).toBe(true)
     
     const content = readFileSync(rPath, 'utf-8')

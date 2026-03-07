@@ -1,0 +1,23 @@
+/**
+ * Font recipe template
+ * Generates font style recipe with variants
+ */
+
+recipe('fontStyle', {
+  className: 'r_font',
+  variants: {
+    font: {
+      {% for font in fonts %}
+        {% assign normalWeight = font.weights.normal | default: "400" %}
+        {% assign cssWeight = font.css.fontWeight | default: normalWeight %}
+      {{ font.name }}: {
+        fontFamily: '{{ font.name }}',
+        fontWeight: '{{ cssWeight }}',
+        {% if font.css.letterSpacing %}
+        letterSpacing: '{{ font.css.letterSpacing }}',
+        {% endif %}
+      },
+      {% endfor %}
+    },
+  },
+})
