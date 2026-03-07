@@ -11,6 +11,7 @@ import { log } from '../../lib/log'
 import {
   createPandaConfigCollector,
 } from '../collectors/extendPandaConfig'
+import { getPatternFragmentsForConfig } from '../patterns'
 import type { FragmentCollector } from '../../lib/fragments'
 
 const INTERNAL_FRAGMENTS_FILENAME = 'internal-fragments.mjs'
@@ -61,11 +62,19 @@ export async function runConfig(cwd: string): Promise<void> {
     '@reference-ui/system': join(cliDir, 'src/entry/system.ts'),
   }
 
+  const patternFragments = await getPatternFragmentsForConfig({
+    cwd,
+    cliDir,
+    userInclude: config.include,
+    tempDir: join(outDir, '.tmp'),
+  })
+
   await createPandaConfig({
     outputPath,
     fragmentFiles,
     collectors: [PANDA_CONFIG_COLLECTOR],
     internalFragments,
+    patternFragments: patternFragments ?? undefined,
     fragmentBundleAlias,
   })
 
