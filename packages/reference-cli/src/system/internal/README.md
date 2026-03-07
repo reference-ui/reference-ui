@@ -4,36 +4,29 @@ Internal utilities that extend the design system via the API. Used by config gen
 
 ## Structure
 
-This folder contains internal design system extensions:
+This folder contains internal design system extensions organized by feature:
 
 - **tokens.ts** — Default design tokens (colors, spacing, etc.)
-- **props/** — Pattern prop definitions (font, container, r)
-- **box.ts** — Generated combined box pattern (gitignored, built by `build/boxPattern.ts`)
+- **box.mjs** — Generated combined box pattern (gitignored, built by `build/boxPattern.ts`)
+- **container/** — Container query pattern
+- **r/** — Responsive container query pattern  
+- **font/** — Font system (runtime generation during `ref sync`)
 
-## Pattern Props
+## Pattern Extensions
 
-Pattern props extend the Panda box pattern with custom properties:
+Each pattern extension lives in its own directory and extends the Panda box pattern:
 
-### Font Props (`props/font.ts`)
+### Container (`container/`)
 
-- `font` — Font family preset (sans, serif, mono)
-- `weight` — Font weight token (e.g., sans.bold, serif.normal)
-
-```tsx
-<Div font="sans" weight="sans.bold">Bold Sans</Div>
-```
-
-### Container Props (`props/container.ts`)
-
-- `container` — Set up container context for container queries
+Set up container context for container queries.
 
 ```tsx
 <Div container="sidebar">Container Context</Div>
 ```
 
-### Responsive Props (`props/r.ts`)
+### Responsive (`r/`)
 
-- `r` — Responsive styles using container queries
+Responsive styles using container queries.
 
 ```tsx
 <Div container r={{ 400: { padding: '1rem' }, 800: { padding: '2rem' } }}>
@@ -41,12 +34,18 @@ Pattern props extend the Panda box pattern with custom properties:
 </Div>
 ```
 
+### Font (`font/`)
+
+Font system with dynamic generation. Users define fonts with the `font()` API, and the CLI generates tokens, @font-face rules, recipes, and pattern extensions during `ref sync`.
+
+See `font/README.md` for details.
+
 ## Build Flow
 
-1. **Source files** — `props/*.ts` define pattern extensions using `extendPattern()`
+1. **Source files** — Pattern extensions define using `extendPattern()`
 2. **Collection** — `build/boxPattern.ts` scans and collects extensions
-3. **Generation** — `box.ts` is generated with inlined transforms
-4. **Bundling** — `build/styled.ts` includes `box.ts` in internal fragments
+3. **Generation** — `box.mjs` is generated with inlined transforms
+4. **Bundling** — `build/styled.ts` includes `box.mjs` in internal fragments
 5. **Panda** — Generated config includes box pattern extensions
 
 ## Dependencies
@@ -56,7 +55,7 @@ Internal modules use the **api** (`system/api`):
 - `extendPattern` — add properties to box pattern
 - `extendPandaConfig` — extend Panda config directly
 - `tokens` — contribute tokens
-- `utilities` — contribute utilities
+- `font` — define fonts (user-facing, handled at runtime)
 - etc.
 
 ## Relationship to styled

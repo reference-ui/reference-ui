@@ -11,7 +11,7 @@
 
 import { resolve, join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs'
 import type { FragmentCollector } from '../lib/fragments'
 import { collectFragments, scanForFragments, bundleFragments } from '../lib/fragments'
 import { createPandaConfig } from '../system/config/createPandaConfig'
@@ -100,8 +100,20 @@ async function generateStyleConfig(fragmentFiles: string[]): Promise<void> {
     internalFragmentFiles.length > 0
       ? await bundleFragments({ files: internalFragmentFiles })
       : []
+  
+  // Include generated .mjs files from internal/
+  const generatedMjsFiles = [
+    join(CLI_ROOT, 'src/system/internal/box.mjs'),
+  ]
+  const generatedFragments = generatedMjsFiles
+    .filter(existsSync)
+    .map(file => readFileSync(file, 'utf-8'))
+  
   mkdirSync(dirname(INTERNAL_FRAGMENTS_PATH), { recursive: true })
-  const concatenated = internalBundles.map((b) => `;${b.bundle}`).join('\n')
+  const concatenated = [
+    ...internalBundles.map((b) => `;${b.bundle}`),
+    ...generatedFragments.map((content) => `;${content}`)
+  ].join('\n')
   writeFileSync(INTERNAL_FRAGMENTS_PATH, concatenated, 'utf-8')
 
   await createPandaConfig({

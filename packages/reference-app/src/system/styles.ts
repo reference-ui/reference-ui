@@ -5,6 +5,9 @@
 
 import { tokens, keyframes, globalCss } from '@reference-ui/system'
 
+// Import font definitions
+import './fonts'
+
 /** Reference-app token color (single source of truth). */
 export const REFERENCE_APP_TOKEN_RGB = 'rgb(168, 85, 247)'
 

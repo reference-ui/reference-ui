@@ -28,9 +28,9 @@ async function buildBoxPattern(): Promise<void> {
 
     const patternCollector = createBoxPatternCollector()
 
-    // Scan for extendPattern calls in internal/props/
+    // Scan for extendPattern calls in internal/
     const fragmentFiles = scanForFragments({
-      include: ['src/system/internal/props/**/*.ts'],
+      include: ['src/system/internal/container/**/*.ts', 'src/system/internal/r/**/*.ts'],
       functionNames: ['extendPattern'],
       exclude: ['**/*.d.ts', '**/index.ts'],
       cwd: CLI_ROOT,
