@@ -22,19 +22,12 @@ export default defineConfig({
   external: ['@pandacss/node', '@parcel/watcher', 'picomatch'],
   async onSuccess() {
     await copyLiquidTemplates({
-      sources: [
-        'src/system/config/liquid',
-        'src/system/patterns/liquid',
-      ],
+      sources: ['src/system/config/liquid'],
       dest: 'dist/cli/config',
     })
     await copyFile({
       src: resolve('src/system/styled/internal-fragments.mjs'),
       dest: resolve('dist/cli/styled/internal-fragments.mjs'),
-    })
-    await copyFile({
-      src: resolve('src/system/styled/fragments/internal/patterns.mjs'),
-      dest: resolve('dist/cli/styled/fragments/internal/patterns.mjs'),
     })
   },
 })

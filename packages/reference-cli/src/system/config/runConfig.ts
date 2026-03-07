@@ -1,5 +1,5 @@
 import { join } from 'node:path'
-import { readFileSync, existsSync, mkdirSync, copyFileSync } from 'node:fs'
+import { readFileSync, existsSync } from 'node:fs'
 import { getCwd } from '../../config'
 import { getOutDirPath } from '../../lib/paths'
 import { resolveCliPackageDir } from '../../lib/paths/cli-package-dir'
@@ -8,11 +8,7 @@ import { emit } from '../../lib/event-bus'
 import { createPandaConfig } from './createPandaConfig'
 import { getConfig } from '../../config/store'
 import { log } from '../../lib/log'
-import {
-  createPandaConfigCollector,
-} from '../collectors/extendPandaConfig'
-import { getFontFragmentsForConfig } from '../font'
-import { getPatternFragmentsForConfig } from '../patterns'
+import { createPandaConfigCollector } from '../collectors/extendPandaConfig'
 import type { FragmentCollector } from '../../lib/fragments'
 
 const INTERNAL_FRAGMENTS_FILENAME = 'internal-fragments.mjs'
@@ -65,44 +61,13 @@ export async function runConfig(cwd: string): Promise<void> {
     '@reference-ui/cli/config': systemEntry,
   }
 
-  const tempDir = join(outDir, '.tmp')
-  const styledFragmentsDir = join(outDir, 'styled/fragments')
-  const { fontConfigFragments } = await getFontFragmentsForConfig({
-    cwd,
-    userInclude: config.include,
-    tempDir,
-    styledFragmentsDir,
-    fragmentBundleAlias: { '@reference-ui/cli/config': systemEntry },
-  })
-
-  const patternFragments = await getPatternFragmentsForConfig({
-    cwd,
-    cliDir,
-    userInclude: config.include,
-    tempDir,
-  })
-
   await createPandaConfig({
     outputPath,
     fragmentFiles,
     collectors: [PANDA_CONFIG_COLLECTOR],
     internalFragments,
-    fontConfigFragments: fontConfigFragments || undefined,
-    patternFragments: patternFragments ?? undefined,
     fragmentBundleAlias,
   })
-
-  // Mirror styled/fragments into outDir so userspace outDir/styled matches CLI layout
-  try {
-    const cliStyledFragments = join(cliDir, 'dist/cli/styled/fragments/internal/patterns.mjs')
-    if (existsSync(cliStyledFragments)) {
-      const outFragmentsDir = join(outDir, 'styled/fragments/internal')
-      mkdirSync(outFragmentsDir, { recursive: true })
-      copyFileSync(cliStyledFragments, join(outFragmentsDir, 'patterns.mjs'))
-    }
-  } catch {
-    // CLI dist or path may not exist
-  }
 
   log.debug('config', 'Wrote panda.config', outputPath)
 }

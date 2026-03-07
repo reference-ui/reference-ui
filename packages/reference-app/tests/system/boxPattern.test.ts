@@ -18,7 +18,8 @@ const cliRoot = join(__dirname, '..', '..', '..', 'reference-cli')
 /** Pattern fragment lives under styled/fragments/internal (styled mirrors outDir). */
 const patternsFragmentPath = join(cliRoot, 'src/system/styled/fragments/internal/patterns.mjs')
 
-describe('Box pattern generation', () => {
+// Skipped: patterns module removed; config only has extendPandaConfig collector (see fragments.md)
+describe.skip('Box pattern generation', () => {
   it('generates patterns.mjs fragment during build', () => {
     expect(existsSync(patternsFragmentPath)).toBe(true)
   })
@@ -95,7 +96,8 @@ describe('Box pattern generation', () => {
   })
 })
 
-describe('Pattern extension modules', () => {
+// Skipped: patterns module removed
+describe.skip('Pattern extension modules', () => {
   it('has container extension module', () => {
     const containerPath = join(cliRoot, 'src/system/internal/container/container.ts')
     expect(existsSync(containerPath)).toBe(true)

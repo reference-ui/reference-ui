@@ -11,7 +11,8 @@ afterEach(() => {
   rmSync(fixtureDir, { recursive: true, force: true })
 })
 
-describe('getFontFragmentsForConfig()', () => {
+// Skipped: font module and font export removed; config only has extendPandaConfig (see system/fragments.md)
+describe.skip('getFontFragmentsForConfig()', () => {
   it('renders config and pattern outputs from font() definitions', async () => {
     mkdirSync(fixtureDir, { recursive: true })
 
