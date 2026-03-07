@@ -7,7 +7,7 @@ Internal utilities that extend the design system via the API. Used by config gen
 This folder contains internal design system extensions organized by feature:
 
 - **tokens.ts** — Default design tokens (colors, spacing, etc.)
-- **box.mjs** — Generated combined box pattern (gitignored, built by `build/boxPattern.ts`)
+- **box.mjs** — Generated combined box pattern (gitignored, built by `build/boxPattern.ts` via `system/patterns` Liquid templates)
 - **container/** — Container query pattern
 - **r/** — Responsive container query pattern  
 - **font/** — Font system (runtime generation during `ref sync`)

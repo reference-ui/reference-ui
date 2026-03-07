@@ -1,59 +1,52 @@
-# Patterns Migration Plan
+# Box Pattern System
 
-**Status**: ✅ **COMPLETED** - Successfully implemented in reference-cli
+**Status**: ✅ **Implemented** — Liquid templates, patterns module, config integration
 
-**Goal**: Port pattern-based styling props from `@reference-ui/core` to `@reference-ui/cli`, leveraging the new fragment-based architecture.
+**Goal**: Box pattern extensions (container, r, etc.) collected from system and user sources, merged, and rendered via Liquid templates. Setup mirrors config: `systemPatterns` (internal) and `userPatterns` (user code).
 
 ---
 
-## Implementation Summary
+## Current Architecture
 
-✅ **Completed Implementation** (All phases done)
+### Structure
 
-Successfully migrated pattern props (font, container, r) from reference-core to reference-cli with major architectural improvements:
+```
+src/system/patterns/
+├── liquid/
+│   ├── box-pattern.liquid   # Renders merged box pattern → push to Panda config collector
+│   └── index.ts             # loadPatternTemplates()
+├── collect.ts               # collectSystemPatterns, collectUserPatterns, collectPatterns
+├── render.ts                # renderBoxPattern (Liquid)
+└── index.ts                 # runPatternPipeline, getPatternFragmentsForConfig
+```
 
-### What Was Delivered
+### System vs User Patterns
 
-1. **Pattern Fragment API** (`src/system/api/patterns.ts`)
-   - `extendPattern()` function using fragment collector
-   - Type-safe `BoxPatternExtension` interface
-   - Properly typed (no `any` types)
+- **System patterns** — `internal/container`, `internal/r` (built-in extensions)
+- **User patterns** — `extendPattern` calls in user code (scanned at runtime during ref sync)
 
-2. **Internal Pattern Props** (`src/system/internal/props/`)
-   - `font.ts` - Font family presets + weight tokens
-   - `container.ts` - Container query setup
-   - `r.ts` - Responsive container queries
+### Flow
 
-3. **Build System** (`src/build/boxPattern.ts`)
-   - Scans pattern fragments at build time
-   - Generates `internal/box.mjs` (JavaScript output, not TypeScript)
-   - Inlines transform functions for Panda compatibility
+1. **Build time** (`prebuild`): `boxPattern.ts` → `runPatternPipeline({ cwd: CLI_ROOT })` → Liquid template → `box.mjs`
+2. **Build time** (`styled.ts`): Includes `box.mjs` in `internal-fragments.mjs`
+3. **Runtime** (`runConfig`): One-liner `getPatternFragmentsForConfig(...)` — when user has `extendPattern`, returns merged fragment (overrides system-only from internal-fragments)
 
-4. **Updated Primitives**
-   - `Div` component uses box pattern with custom props
-   - Full TypeScript type support
+### Config Integration
 
-5. **Comprehensive Tests**
-   - 9 box pattern generation tests ✅
-   - 10 custom props integration tests ✅
-   - All 24 tests passing ✅
+```ts
+// runConfig.ts — one-liner
+const patternFragments = await getPatternFragmentsForConfig({
+  cwd, cliDir, userInclude: config.include, tempDir: join(outDir, '.tmp'),
+})
+await createPandaConfig({ ..., patternFragments })
+```
 
-### Key Architectural Decisions
+### Key Files
 
-- **Generate `.mjs` not `.ts`** - Output is JavaScript since it's only bundled into internal-fragments.mjs
-- **Build-time only** - No runtime scanning/evaluation
-- **Fragment system** - Consistent with existing architecture
-- **Type-safe source** - Props files are TypeScript, generated output is JavaScript
-- **No ESLint errors** - Clean implementation
-
-### Files Created
-
-- `src/system/api/patterns.ts` (40 lines)
-- `src/build/boxPattern.ts` (137 lines)
-- `src/system/internal/props/{font,container,r,index}.ts`
-- `tests/system/boxPattern.test.ts`
-- `tests/primitives/customProps.test.tsx`
-- `src/system/internal/box.mjs` (generated, gitignored)
+- `src/system/patterns/` — patterns module (collect, render, Liquid)
+- `src/system/collectors/extendPattern.ts` — `extendPattern` + box collector
+- `src/system/internal/container/`, `internal/r/` — system pattern sources
+- `src/build/boxPattern.ts` — uses `runPatternPipeline`, writes `box.mjs`
 
 ---
 

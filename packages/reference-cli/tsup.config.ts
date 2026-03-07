@@ -4,7 +4,8 @@ import { cp, readdir } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { workerEntries } from './src/lib/thread-pool'
 
-const LIQUID_SRC = 'src/system/config/liquid'
+const CONFIG_LIQUID_SRC = 'src/system/config/liquid'
+const PATTERNS_LIQUID_SRC = 'src/system/patterns/liquid'
 const CONFIG_DIST = 'dist/cli/config'
 const STYLED_SRC = resolve('src/system/styled')
 const STYLED_DIST = 'dist/cli/styled'
@@ -27,11 +28,18 @@ export default defineConfig({
   external: ['@pandacss/node', '@parcel/watcher', 'picomatch'],
   async onSuccess() {
     // Copy .liquid files to dist/cli/config so bundled worker can read them via __dirname
-    const files = await readdir(LIQUID_SRC)
-    const liquidFiles = files.filter((f) => f.endsWith('.liquid'))
+    const configFiles = await readdir(CONFIG_LIQUID_SRC)
+    const configLiquid = configFiles.filter((f) => f.endsWith('.liquid'))
     await Promise.all(
-      liquidFiles.map((f) =>
-        cp(join(LIQUID_SRC, f), join(CONFIG_DIST, f))
+      configLiquid.map((f) =>
+        cp(join(CONFIG_LIQUID_SRC, f), join(CONFIG_DIST, f))
+      )
+    )
+    const patternsFiles = await readdir(PATTERNS_LIQUID_SRC)
+    const patternsLiquid = patternsFiles.filter((f) => f.endsWith('.liquid'))
+    await Promise.all(
+      patternsLiquid.map((f) =>
+        cp(join(PATTERNS_LIQUID_SRC, f), join(CONFIG_DIST, f))
       )
     )
     // Copy internal-fragments.mjs when it exists (produced by prebuild / build:styled)

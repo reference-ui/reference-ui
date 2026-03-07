@@ -1,0 +1,27 @@
+{% comment %}
+  Box pattern fragment — pushes merged box pattern to Panda config collector.
+  Rendered by system/patterns/render.ts. Variables are pre-formatted strings.
+{% endcomment %}
+;(globalThis['{{ collectorKey }}'] = globalThis['{{ collectorKey }}'] || []).push({
+  patterns: {
+    extend: {
+      box: {
+        properties: {
+{{ propertiesStr | raw }}
+        },
+        blocklist: {{ blocklistStr | raw }},
+        transform(props) {
+          const blocklist = {{ blocklistStr | raw }}
+          const extensionKeys = new Set(blocklist)
+          const rest = Object.fromEntries(
+            Object.entries(props).filter(([k]) => !extensionKeys.has(k))
+          )
+
+{{ transformIIFEs | raw }}
+
+          return Object.assign({}, {{ resultVars | raw }}, rest)
+        },
+      },
+    },
+  },
+})
