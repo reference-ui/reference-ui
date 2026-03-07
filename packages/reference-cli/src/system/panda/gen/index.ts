@@ -1,6 +1,6 @@
-import { emit } from '../../lib/event-bus'
+import { emit } from '../../../lib/event-bus'
 import { runPandaCodegen, runPandaCss } from './codegen'
-import { log } from '../../lib/log'
+import { log } from '../../../lib/log'
 
 export function onRunCodegen(): void {
   runPandaCodegen()

@@ -1,8 +1,8 @@
 import { Liquid } from 'liquidjs'
 import { writeFileSync, mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
-import { bundleFragments } from '../../lib/fragments'
-import type { FragmentCollector } from '../../lib/fragments'
+import { bundleFragments } from '../../../lib/fragments'
+import type { FragmentCollector } from '../../../lib/fragments'
 import { baseConfig } from './base'
 import { loadTemplates } from './liquid'
 

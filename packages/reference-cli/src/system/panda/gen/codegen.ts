@@ -1,9 +1,9 @@
 import { existsSync, mkdirSync, symlinkSync } from 'node:fs'
 import { join } from 'node:path'
 import { generate as pandaGenerate, cssgen as pandaCssgen, loadConfigAndCreateContext } from '@pandacss/node'
-import { getCwd } from '../../config/store'
-import { getOutDirPath, resolveCliPackageDir } from '../../lib/paths'
-import { log } from '../../lib/log'
+import { getCwd } from '../../../config/store'
+import { getOutDirPath, resolveCliPackageDir } from '../../../lib/paths'
+import { log } from '../../../lib/log'
 
 /**
  * Ensure outDir has node_modules/@pandacss so panda.config.ts can resolve '@pandacss/dev'

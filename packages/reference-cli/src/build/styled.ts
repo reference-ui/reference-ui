@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import type { FragmentCollector } from '../lib/fragments'
 import { collectFragments, scanForFragments, bundleFragments } from '../lib/fragments'
-import { createPandaConfig } from '../system/config/createPandaConfig'
+import { createPandaConfig } from '../system/panda/config/createPandaConfig'
 import { createPandaConfigCollector } from '../system/collectors/extendPandaConfig'
 import { generate as pandaGenerate } from '@pandacss/node'
 
