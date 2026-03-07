@@ -1,0 +1,26 @@
+{% comment %}
+  Font @font-face template.
+  Uses font.familyKey (pre-computed in render) for the globalFontface key.
+{% endcomment %}
+globalFontface({
+  {% for font in fonts %}
+    {% if font.fontFace %}
+  {{ font.familyKey | default: font.name }}: {
+    src: '{{ font.fontFace.src }}',
+    fontDisplay: '{{ font.fontFace.fontDisplay | default: "swap" }}',
+      {% if font.fontFace.fontWeight %}
+    fontWeight: '{{ font.fontFace.fontWeight }}',
+      {% endif %}
+      {% if font.fontFace.fontStyle %}
+    fontStyle: '{{ font.fontFace.fontStyle }}',
+      {% endif %}
+      {% if font.fontFace.sizeAdjust %}
+    sizeAdjust: '{{ font.fontFace.sizeAdjust }}',
+      {% endif %}
+      {% if font.fontFace.descentOverride %}
+    descentOverride: '{{ font.fontFace.descentOverride }}',
+      {% endif %}
+  },
+    {% endif %}
+  {% endfor %}
+})
