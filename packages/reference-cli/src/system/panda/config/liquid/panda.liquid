@@ -4,11 +4,8 @@ import { defineConfig } from '@pandacss/dev'
 // Base config (from base.ts or override)
 const baseConfig = {{ baseConfigLiteral | raw }}
 
-// Collector setup
-{{ collectorSetup }}
-
-// Fragment bundles (IIFEs run on load; they call tokens() which pushes to the collector)
-{{ bundles }}
+// Collector fragments
+{{ collectorFragments }}
 
 {{ deepMergePartial | raw }}
 
