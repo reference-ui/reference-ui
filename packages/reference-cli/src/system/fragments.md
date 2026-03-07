@@ -57,6 +57,23 @@
 
 ## Implementation plan
 
+## Progress so far
+
+### Done
+
+1. **createPandaConfig boundary is simpler**: `createPandaConfig(...)` no longer bundles files or knows collector internals. It now consumes prepared `CollectorBundles`, injects `collectorFragments`, and asks for the tokens value source.
+2. **Fragment runtime details moved down**: The fragments layer now owns the generated setup/runtime code needed to initialise collectors and expose runtime fragment functions before bundled files run.
+3. **Discovery switched to imports**: `scanForFragments(...)` now supports `importFrom`, and the current Panda config flow uses import-based discovery (`@reference-ui/system` / `@reference-ui/cli/config`) instead of scanning for `tokens(...)`.
+4. **Generated Panda config is more declarative**: The Liquid template just injects collector fragments, reads token fragments, and merges them into the final Panda config.
+5. **Missing `tokens()` is a normal case**: If user code imports the system API but never calls `tokens(...)`, the generated Panda config still works and treats tokens as an empty fragment list.
+
+### Next
+
+1. **Use one execution for multiple collectors**: Keep the single import-based discovery loop, but evaluate the discovered files once with multiple collectors initialised together instead of preparing only the Panda/tokens path.
+2. **Thread multi-collector output downstream**: Use the same single-run result to feed Panda config, font rendering, and pattern collection rather than letting each subsystem rescan or rerun user files.
+3. **Add import-discovery coverage for non-token files**: Add fixtures/tests for files that import `@reference-ui/system` but only call `font()` or pattern APIs, so discovery stays aligned with the public API contract.
+4. **Clean up remaining collector-era naming where helpful**: The current surface is much better, but there may still be places where the API can speak more directly in terms of fragments/values instead of collection mechanics.
+
 ### Phase A: Discovery by import
 
 1. **Scanner**: Add import-based discovery (e.g. `scanForFragments({ include, importFrom: '@reference-ui/system', cwd })` or a dedicated `scanFragmentFilesByImport()`). Detect files that contain an import from the given module (string/regex for `from '@reference-ui/system'` or `from "@reference-ui/system"`).
