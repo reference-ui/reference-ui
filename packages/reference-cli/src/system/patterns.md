@@ -648,3 +648,83 @@ src/
 - [reference-core box pattern](../../reference-core/src/cli/system/config/boxPattern/)
 - [reference-cli fragments](../lib/fragments/)
 - [reference-cli architecture](../ARCHITECTURE.md)
+
+---
+
+## Refactor: Patterns as a Separate Submodule
+
+**Goal**: Isolate pattern complexity so the config module stays untouched. Patterns become their own subsystem that eventually outputs to the right fragment streams.
+
+### The Problem
+
+Patterns (box extensions) have special needs:
+- Multiple sources: system (container, r) + user (font, custom extendPattern)
+- Must be merged into one box config before reaching Panda
+- Font pattern is generated at ref sync from `font()` definitions
+- Running/eval complexity was leaking into `createPandaConfig`
+
+### The Approach: Patterns Submodule
+
+**Patterns run as a separate module within system.** They own:
+- Their own Liquid templates (for extending the box pattern only)
+- Collection of system pattern fragments (container, r, etc.)
+- Collection of user pattern fragments (from `font()`, direct `extendPattern` calls)
+- Merging logic
+- Output that fits into the existing fragment streams
+
+**On that layer, we differentiate:**
+- **System pattern fragments** — internal (container, r) + font pattern (generated from `font()`)
+- **User pattern fragments** — user code that calls `extendPattern` directly
+
+### End State
+
+Eventually:
+- **System patterns** → turn into system fragments (injected into `internalFragments`)
+- **User patterns** → injected into `userFragments`
+
+**In theory, we don't have to touch the config module at all.** The pattern module produces output that is just another fragment bundle. Config receives `internalFragments` and `userFragments` as it does today — it doesn't need to know that some of that content came from the pattern pipeline.
+
+### Structure (Proposed)
+
+```
+src/system/
+├── patterns/                    # Patterns submodule (new)
+│   ├── index.ts                 # Public API: runPatternPipeline(), etc.
+│   ├── collect.ts               # Collect system + user pattern fragments
+│   ├── merge.ts                 # Merge extensions into one box config
+│   ├── liquid/                  # Pattern-specific Liquid templates
+│   │   ├── box-pattern.liquid    # Renders merged box pattern as extendPandaConfig
+│   │   └── font-pattern.liquid   # Font/weight props (from font() definitions)
+│   ├── system/                  # System pattern sources
+│   │   ├── container.ts
+│   │   └── r.ts
+│   └── ...
+├── config/                      # Stays clean — just receives fragments
+│   ├── createPandaConfig.ts     # No pattern logic
+│   └── ...
+└── ...
+```
+
+### Flow
+
+1. **Pattern module** runs (during ref sync or build):
+   - Collects system patterns (container, r)
+   - Collects user patterns (font from `font()`, any direct `extendPattern`)
+   - Merges via Liquid templates
+   - Outputs: `systemPatternFragments` string, `userPatternFragments` string
+
+2. **Fragment assembly** (whoever calls createPandaConfig):
+   - `internalFragments` = tokens + ... + `systemPatternFragments`
+   - `userFragments` = ... + `userPatternFragments`
+
+3. **Config module**:
+   - Receives `internalFragments` and `userFragments`
+   - Renders panda template
+   - No pattern-specific logic
+
+### Benefits
+
+- Config module stays dumb — no pattern pipeline, no eval, no merge logic
+- Pattern complexity is isolated and testable
+- Clear boundary: patterns submodule owns "how box gets extended"
+- Liquid templates live where they're used (patterns), not in config
