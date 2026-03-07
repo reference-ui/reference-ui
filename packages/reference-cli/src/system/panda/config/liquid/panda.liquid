@@ -10,8 +10,8 @@ const baseConfig = {{ baseConfigLiteral | raw }}
 {{ deepMergePartial | raw }}
 
 // Read collected token fragments and merge into config
-const tokensValue = {{ tokensValue | raw }}
-const mergedTokens = deepMerge({}, ...tokensValue)
+const tokensFragments = {{ tokensValueExpression | raw }}
+const mergedTokens = deepMerge({}, ...tokensFragments)
 const config = {
   ...baseConfig,
   theme: {

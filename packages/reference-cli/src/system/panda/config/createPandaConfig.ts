@@ -30,7 +30,7 @@ export async function createPandaConfig(options: CreatePandaConfigOptions): Prom
 
   const base = (baseOverride ?? baseConfig) as Record<string, unknown>
   const templates = loadTemplates()
-  const tokensValue = collectorBundle.getValue('tokens')
+  const tokensValueExpression = collectorBundle.getValue('tokens')
 
   // Valid JS object literal for baseConfig (inserted raw in template)
   const baseConfigLiteral = JSON.stringify(base, null, 2)
@@ -39,7 +39,7 @@ export async function createPandaConfig(options: CreatePandaConfigOptions): Prom
     collectorFragments: collectorBundle.collectorFragments,
     deepMergePartial: templates.deepMerge,
     baseConfigLiteral,
-    tokensValue,
+    tokensValueExpression,
   })
 
   mkdirSync(dirname(outputPath), { recursive: true })
