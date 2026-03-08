@@ -2,7 +2,7 @@ import { Liquid } from 'liquidjs'
 import { writeFileSync, mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
 import type { CollectorBundles } from '../../../lib/fragments'
-import { baseConfig } from './base'
+import { baseConfig as defaultBaseConfig } from './base'
 import { loadTemplates } from './liquid'
 
 const engine = new Liquid()
@@ -25,16 +25,15 @@ export async function createPandaConfig(options: CreatePandaConfigOptions): Prom
   const {
     outputPath,
     collectorBundle,
-    baseConfig: baseOverride,
+    baseConfig = defaultBaseConfig,
   } = options
 
-  const base = (baseOverride ?? baseConfig) as Record<string, unknown>
   const templates = loadTemplates()
   const tokensValueExpression = collectorBundle.getValue('tokens')
   const keyframesValueExpression = collectorBundle.getValue('keyframes')
 
   // Valid JS object literal for baseConfig (inserted raw in template)
-  const baseConfigLiteral = JSON.stringify(base, null, 2)
+  const baseConfigLiteral = JSON.stringify(baseConfig, null, 2)
 
   const rendered = await engine.parseAndRender(templates.panda, {
     collectorFragments: collectorBundle.collectorFragments,
