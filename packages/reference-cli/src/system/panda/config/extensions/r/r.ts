@@ -2,7 +2,7 @@
  * Responsive container query prop (r) for the box pattern.
  */
 
-import { extendPattern } from '../../api/patterns'
+import { extendPattern } from '../../../../api/patterns'
 
 export interface ResponsiveProp {
   r?: {

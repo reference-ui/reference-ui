@@ -14,9 +14,9 @@ import { createGlobalCssCollector } from '../../api/globalCss'
 import { createBoxPatternCollector } from '../../api/patterns'
 import {
   mirrorPandaExtensionsBundle,
+  resolveInternalPatternFiles,
   writePandaExtensionsBundle,
-} from './extensions/bundle'
-import { resolveInternalPatternFiles } from '../../internal/patternFiles'
+} from './extensions/api/bundle'
 
 /**
  * Run config generation: scan for fragment files that import the system API,

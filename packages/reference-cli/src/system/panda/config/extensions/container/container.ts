@@ -2,7 +2,7 @@
  * Container query prop: set up container context for the box pattern.
  */
 
-import { extendPattern } from '../../api/patterns'
+import { extendPattern } from '../../../../api/patterns'
 
 export interface ContainerProp {
   container?: string | boolean

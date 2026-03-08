@@ -12,13 +12,15 @@ import { fileURLToPath } from 'node:url'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { bundleCollectorRuntime, scanForFragments } from '../lib/fragments'
 import { createPandaConfig } from '../system/panda/config/createPandaConfig'
-import { writePandaExtensionsBundle } from '../system/panda/config/extensions/bundle'
+import {
+  resolveInternalPatternFiles,
+  writePandaExtensionsBundle,
+} from '../system/panda/config/extensions/api/bundle'
 import { createKeyframesCollector } from '../system/api/keyframes'
 import { createTokensCollector } from '../system/api/tokens'
 import { createFontCollector } from '../system/api/font'
 import { createGlobalCssCollector } from '../system/api/globalCss'
 import { createBoxPatternCollector } from '../system/api/patterns'
-import { resolveInternalPatternFiles } from '../system/internal/patternFiles'
 import { generate as pandaGenerate } from '@pandacss/node'
 
 const __filename = fileURLToPath(import.meta.url)
