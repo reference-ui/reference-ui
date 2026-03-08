@@ -17,6 +17,8 @@ import { createKeyframesCollector } from '../system/api/keyframes'
 import { createTokensCollector } from '../system/api/tokens'
 import { createFontCollector } from '../system/api/font'
 import { createGlobalCssCollector } from '../system/api/globalCss'
+import { createBoxPatternCollector } from '../system/api/patterns'
+import { resolveInternalPatternFiles } from '../system/internal/patternFiles'
 import { generate as pandaGenerate } from '@pandacss/node'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -65,13 +67,15 @@ async function generateStyleConfig(fragmentFiles: string[]): Promise<void> {
       !f.includes('/system/styled/') &&
       !f.includes('/scripts/')
   )
+  const internalPatternFiles = resolveInternalPatternFiles(CLI_ROOT)
   const collectorBundle = await bundleCollectorRuntime({
-    files: configFragmentFiles,
+    files: [...configFragmentFiles, ...internalPatternFiles],
     collectors: [
       createTokensCollector(),
       createKeyframesCollector(),
       createFontCollector(),
       createGlobalCssCollector(),
+      createBoxPatternCollector(),
     ],
     alias: {
       '@reference-ui/system': systemEntry,

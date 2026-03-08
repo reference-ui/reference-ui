@@ -2,6 +2,7 @@
 import { defineConfig } from '@pandacss/dev'
 import {
   extendKeyframes,
+  extendPatterns,
   extendTokens,
   getPandaConfig,
   initPandaConfig,
@@ -18,6 +19,9 @@ extendTokens(tokensFragments)
 
 const keyframesFragments = {{ keyframesValueExpression | raw }}
 extendKeyframes(keyframesFragments)
+
+const patternExtensions = {{ patternsValueExpression | raw }}
+extendPatterns(patternExtensions)
 
 const config = getPandaConfig()
 

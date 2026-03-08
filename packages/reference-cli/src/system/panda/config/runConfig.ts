@@ -11,10 +11,12 @@ import { createKeyframesCollector } from '../../api/keyframes'
 import { createTokensCollector } from '../../api/tokens'
 import { createFontCollector } from '../../api/font'
 import { createGlobalCssCollector } from '../../api/globalCss'
+import { createBoxPatternCollector } from '../../api/patterns'
 import {
   mirrorPandaExtensionsBundle,
   writePandaExtensionsBundle,
 } from './extensions/bundle'
+import { resolveInternalPatternFiles } from '../../internal/patternFiles'
 
 /**
  * Run config generation: scan for fragment files that import the system API,
@@ -42,17 +44,19 @@ export async function runConfig(cwd: string): Promise<void> {
   const cliDir = resolveCliPackageDir(cwd)
   const systemEntry = join(cliDir, 'src/entry/system.ts')
   const cliStyledDir = join(cliDir, 'src/system/styled')
+  const internalPatternFiles = resolveInternalPatternFiles(cliDir)
   const fragmentBundleAlias: Record<string, string> = {
     '@reference-ui/system': systemEntry,
     '@reference-ui/cli/config': systemEntry,
   }
   const collectorBundle = await bundleCollectorRuntime({
-    files: fragmentFiles,
+    files: [...fragmentFiles, ...internalPatternFiles],
     collectors: [
       createTokensCollector(),
       createKeyframesCollector(),
       createFontCollector(),
       createGlobalCssCollector(),
+      createBoxPatternCollector(),
     ],
     alias: fragmentBundleAlias,
   })
