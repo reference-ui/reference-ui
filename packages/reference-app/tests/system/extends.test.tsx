@@ -9,7 +9,6 @@ import { render, screen } from '@testing-library/react'
 import { Div } from '@reference-ui/react'
 import {
   REF_LIB_CANARY,
-  REF_LIB_FONT_FAMILY,
   REF_LIB_GLOBAL_CSS_VALUE,
   REF_LIB_GLOBAL_CSS_VAR,
   REF_LIB_KEYFRAME_NAME,
@@ -83,12 +82,13 @@ describe('extends baseSystem from reference-lib', () => {
     if (!css) return
 
     expect(css).toContain('@font-face')
-    expect(css).toContain(REF_LIB_FONT_FAMILY)
-    expect(css).toContain('ref-lib-sans.woff2')
+    expect(css).toContain('Inter')
+    expect(css).toContain('Literata')
+    expect(css).toContain('JetBrains Mono')
     expect(css).toMatch(/font-display:\s*swap/)
 
     render(
-      <Div data-testid="extends-font" fontFamily="refLibSans">
+      <Div data-testid="extends-font" fontFamily="sans">
         Extended font
       </Div>
     )
