@@ -27,17 +27,17 @@ function generatePrimitive(tag: string): string {
   const exportName = toExportName(tag)
   const primitiveClass = `ref-${tag}`
 
-  return `export const ${exportName} = React.forwardRef<PrimitiveElement<'${tag}'>, PrimitiveProps<'${tag}'>>(
-  ({ className, children, layer, ...props }, ref) => {
-    const primitiveClass = '${primitiveClass}'
-    const boxClass = box(props)
-    const classes = joinClassName(primitiveClass, boxClass, className)
-    const dataLayerAttr = layer != null ? { 'data-layer': layer } : {}
-    return <${tag} ref={ref} className={classes} {...dataLayerAttr} {...(props as Record<string, unknown>)}>{children}</${tag}>
-  }
-)
-
-${exportName}.displayName = '${exportName}'`
+  return [
+    `export const ${exportName} = React.forwardRef<PrimitiveElement<'${tag}'>, PrimitiveProps<'${tag}'>>(`,
+    `({ className, children, layer, ...props }, ref) => { `,
+    `const primitiveClass = '${primitiveClass}'; `,
+    `const boxClass = box(props); `,
+    `const classes = joinClassName(primitiveClass, boxClass, className); `,
+    `const dataLayerAttr = layer != null ? { 'data-layer': layer } : {}; `,
+    `return <${tag} ref={ref} className={classes} {...dataLayerAttr} {...(props as Record<string, unknown>)}>{children}</${tag}>; `,
+    `}); `,
+    `${exportName}.displayName = '${exportName}'`,
+  ].join('')
 }
 
 function generateFile(tags: string[], generatorPath: string): string {
@@ -48,22 +48,15 @@ function generateFile(tags: string[], generatorPath: string): string {
     '',
     "import * as React from 'react'",
     "import { box } from '@reference-ui/styled/patterns/box'",
-    "import { TAGS } from './tags'",
+    "import { joinClassName } from './utils'",
     "import type { PrimitiveElement, PrimitiveProps } from './types'",
     '',
     "export { TAGS as HTML_TAGS, type Tag as HtmlTag } from './tags'",
     "export type { PrimitiveElement, PrimitiveProps } from './types'",
     '',
-    'function joinClassName(...parts: Array<string | undefined>): string | undefined {',
-    '  const className = parts.filter(Boolean).join(\' \').trim()',
-    '  return className || undefined',
-    '}',
-    '',
     ...tags.map(generatePrimitive),
     '',
     ...tags.map((tag) => `export type ${toExportName(tag)}Props = PrimitiveProps<'${tag}'>`),
-    '',
-    'void TAGS',
     '',
   ]
 
