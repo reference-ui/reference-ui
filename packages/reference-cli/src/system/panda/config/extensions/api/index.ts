@@ -2,3 +2,5 @@ export { deepMerge, getPandaConfig, initPandaConfig, PANDA_CONFIG_GLOBAL_KEY } f
 export { extendTokens } from './extendTokens'
 export { extendKeyframes } from './extendKeyframes'
 export { extendPatterns } from './extendPatterns'
+export { extendUtilities } from './extendUtilities'
+export { extendGlobalCss } from './extendGlobalCss'

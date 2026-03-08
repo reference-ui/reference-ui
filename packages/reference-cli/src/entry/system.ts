@@ -4,3 +4,4 @@
  */
 
 export { tokens, keyframes, font, globalCss, extendPattern } from '../system/api'
+export { getRhythm } from '../system/panda/config/extensions/rhythm'

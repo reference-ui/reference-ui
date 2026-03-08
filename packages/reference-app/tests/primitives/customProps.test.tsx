@@ -20,8 +20,7 @@ beforeAll(() => {
 
 const hasDesignSystemCss = () => Boolean(getDesignSystemCssPath())
 
-// Skipped: internalFragments removed; custom props (font, container, r) depend on internal utilities.
-describe.skip('Custom props (font, weight, container, r)', () => {
+describe('Custom props (font, weight, container, r)', () => {
 describe('Font prop', () => {
   it('applies sans font preset - verifies className is set', () => {
     render(
@@ -210,4 +209,4 @@ describe('Combined props', () => {
     expect(el.className).toBeTruthy()
   })
 })
-}) // describe.skip: internalFragments removed
+})
