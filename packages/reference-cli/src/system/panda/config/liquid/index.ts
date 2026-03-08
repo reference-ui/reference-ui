@@ -34,7 +34,6 @@ const __dirname = getLiquidDir()
 
 interface Templates {
   panda: string
-  deepMerge: string
 }
 
 let cachedTemplates: Templates | null = null
@@ -50,7 +49,6 @@ export function loadTemplates(): Templates {
 
   cachedTemplates = {
     panda: readFileSync(join(__dirname, 'panda.liquid'), 'utf-8'),
-    deepMerge: readFileSync(join(__dirname, 'deepMerge.liquid'), 'utf-8'),
   }
 
   return cachedTemplates

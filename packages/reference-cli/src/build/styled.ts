@@ -12,6 +12,7 @@ import { fileURLToPath } from 'node:url'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { bundleCollectorRuntime, scanForFragments } from '../lib/fragments'
 import { createPandaConfig } from '../system/panda/config/createPandaConfig'
+import { writePandaExtensionsBundle } from '../system/panda/config/extensions/bundle'
 import { createKeyframesCollector } from '../system/api/keyframes'
 import { createTokensCollector } from '../system/api/tokens'
 import { createFontCollector } from '../system/api/font'
@@ -78,10 +79,13 @@ async function generateStyleConfig(fragmentFiles: string[]): Promise<void> {
     },
   })
 
+  await writePandaExtensionsBundle(CLI_ROOT, STYLED_DIR)
+
   await createPandaConfig({
     outputPath: PANDA_CONFIG_PATH,
     collectorBundle,
     baseConfig: styledBaseConfig,
+    extensionsImportPath: './extensions/index.mjs',
   })
 
   console.log('[build:styled] Config generated at:', PANDA_CONFIG_PATH)
