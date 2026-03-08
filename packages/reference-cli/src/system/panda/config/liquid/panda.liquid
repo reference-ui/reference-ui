@@ -52,10 +52,12 @@ const fontTokens = buildFontTokens(fontDefinitions)
 const fontFaces = buildFontFaces(fontDefinitions)
 const fontRecipes = buildFontRecipes(fontDefinitions)
 const fontPatternExtensions = buildFontPatternExtensions(fontDefinitions)
+const globalCssFragments = {{ globalCssValueExpression | raw }}
 
 extendTokens(fontTokens)
 extendFontFaces(fontFaces)
 extendRecipes(fontRecipes)
+extendGlobalCss(globalCssFragments)
 
 // ─────────────────────────────────────────────────────────────────────────
 // patterns
@@ -68,8 +70,8 @@ extendPatterns([...patternExtensions, ...fontPatternExtensions])
 // utilities
 // ─────────────────────────────────────────────────────────────────────────
 
-extendGlobalCss(rhythmGlobalCss)
 extendUtilities(rhythmUtilities)
+extendGlobalCss(rhythmGlobalCss)
 
 // ─────────────────────────────────────────────────────────────────────────
 // export

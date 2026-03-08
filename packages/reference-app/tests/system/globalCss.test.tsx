@@ -18,8 +18,7 @@ beforeAll(() => {
 })
 
 describe('globalCss() API', () => {
-  // extendPandaConfig is a no-op; config generation merges tokens only (fragments.md)
-  it.skip('emits :root with --ref-app-test-var in design system CSS', () => {
+  it('emits :root with --ref-app-test-var in design system CSS', () => {
     const css = getDesignSystemCss()
     if (!css) return
 
