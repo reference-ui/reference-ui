@@ -1,12 +1,12 @@
 /**
- * Watch reference-core for changes and run ref sync
+ * Watch reference-lib for changes and run ref sync
  * For development purposes only
  */
 const { spawn } = require('child_process')
 const { watch } = require('fs')
 const path = require('path')
 
-const coreDir = path.resolve(__dirname, '../../reference-core/src')
+const libDir = path.resolve(__dirname, '../../reference-lib/src')
 let debounceTimer = null
 let isRunning = false
 
@@ -14,7 +14,7 @@ function runSync() {
   if (isRunning) return
   isRunning = true
 
-  console.log('\n🔄 Core changed, running ref sync...')
+  console.log('\n🔄 Reference lib changed, running ref sync...')
   const proc = spawn('npx', ['ref', 'sync'], {
     cwd: path.resolve(__dirname, '..'),
     stdio: 'inherit',
@@ -27,9 +27,9 @@ function runSync() {
   })
 }
 
-console.log(`👀 Watching ${coreDir} for changes (excluding system/, primitives/)...`)
+console.log(`👀 Watching ${libDir} for changes (excluding system/, primitives/)...`)
 
-watch(coreDir, { recursive: true }, (event, filename) => {
+watch(libDir, { recursive: true }, (event, filename) => {
   if (!filename || filename.endsWith('.css')) return
   // Exclude paths that ref sync writes to (avoid loop: sync → these change → sync again)
   if (filename.startsWith('system') || filename.startsWith('system/')) return

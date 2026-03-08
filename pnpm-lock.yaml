@@ -239,9 +239,9 @@ importers:
 
   packages/reference-docs:
     dependencies:
-      '@reference-ui/core':
+      '@reference-ui/cli':
         specifier: workspace:*
-        version: link:../reference-core
+        version: link:../reference-cli
       '@reference-ui/lib':
         specifier: workspace:*
         version: link:../reference-lib

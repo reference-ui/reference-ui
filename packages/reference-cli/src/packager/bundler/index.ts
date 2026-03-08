@@ -7,6 +7,7 @@ import { writePackageJson } from './package'
 
 export interface BundleOptions {
   coreDir: string
+  outDir: string
   targetDir: string
   pkg: PackageDefinition
 }
@@ -37,18 +38,23 @@ async function copyFile(srcPath: string, destPath: string): Promise<void> {
   }
 }
 
-async function createPackageContent(options: BundleOptions): Promise<void> {
-  const { coreDir, targetDir, pkg } = options
+function resolveAssetRoot(options: BundleOptions, from: 'cli' | 'outDir'): string {
+  return from === 'cli' ? options.coreDir : options.outDir
+}
 
-  if (pkg.copyDirs) {
-    await copyDirectories(coreDir, targetDir, pkg.copyDirs)
-  }
+async function createPackageContent(options: BundleOptions): Promise<void> {
+  const { targetDir, pkg } = options
 
   await copyEntry(options)
 
-  if (pkg.additionalFiles) {
-    for (const { src, dest } of pkg.additionalFiles) {
-      await copyFile(resolve(coreDir, src), resolve(targetDir, dest))
+  if (pkg.copyFrom) {
+    for (const entry of pkg.copyFrom) {
+      const rootDir = resolveAssetRoot(options, entry.from)
+      if (entry.kind === 'dir') {
+        await copyDirectories(rootDir, targetDir, [{ src: entry.src, dest: entry.dest }])
+      } else {
+        await copyFile(resolve(rootDir, entry.src), resolve(targetDir, entry.dest))
+      }
     }
   }
 }

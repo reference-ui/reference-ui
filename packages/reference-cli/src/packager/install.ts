@@ -22,7 +22,7 @@ export async function installPackage(
   mkdirSync(outDir, { recursive: true })
   mkdirSync(nodeModulesScope, { recursive: true })
 
-  await bundlePackage({ coreDir, targetDir, pkg })
+  await bundlePackage({ coreDir, outDir, targetDir, pkg })
   createSymlink(targetDir, linkPath)
 
   log.debug('packager', `✓ ${pkg.name} → ${linkPath}`)
