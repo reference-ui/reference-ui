@@ -1,11 +1,11 @@
 import { test, expect } from '@playwright/test'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { REF_LIB_CANARY } from '@reference-ui/lib'
+import { colors } from '@reference-ui/lib/theme'
 import { addToConfig, getSandboxDir } from '../../environments/lib/config.js'
 import { runRefSync, waitForRefSyncReady } from '../../environments/lib/ref-sync.js'
 
-const CANARY_VAR = '--colors-ref-lib-canary'
+const FOUNDATION_VAR = '--colors-teal-500'
 const LAYER_NAME = 'reference-ui'
 
 test.describe.serial('layer', () => {
@@ -17,7 +17,7 @@ test.describe.serial('layer', () => {
     expect(content).toContain("import { baseSystem } from '@reference-ui/lib'")
   })
 
-  test('layers only – styles.css has @layer reference-ui and [data-layer] with canary', async () => {
+  test('layers only – styles.css has @layer reference-ui and [data-layer] with theme tokens', async () => {
     test.setTimeout(60_000)
     // Lib is already synced by test:prepare; only sandbox needs sync after config change.
     await addToConfig({ extends: '[]', layers: '[baseSystem]' })
@@ -32,13 +32,16 @@ test.describe.serial('layer', () => {
       `[data-layer="${LAYER_NAME}"]`
     )
     const dataLayerIdx = content.indexOf(`[data-layer="${LAYER_NAME}"]`)
-    const canaryInDataLayer = content.indexOf(CANARY_VAR, dataLayerIdx)
-    expect(canaryInDataLayer, 'canary var should appear inside [data-layer] block').toBeGreaterThan(
+    const foundationTokenInDataLayer = content.indexOf(FOUNDATION_VAR, dataLayerIdx)
+    expect(
+      foundationTokenInDataLayer,
+      'theme token var should appear inside [data-layer] block'
+    ).toBeGreaterThan(
       -1
     )
   })
 
-  test.skip('layers only – refLibCanary renders via data-layer', async ({ page }) => {
+  test.skip('layers only – theme token renders via data-layer', async ({ page }) => {
     test.setTimeout(60_000)
     await addToConfig({ extends: '[]', layers: '[baseSystem]' })
     const sandboxDir = getSandboxDir()
@@ -46,12 +49,16 @@ test.describe.serial('layer', () => {
     await page.goto('/')
     const inside = page.getByTestId('layers-test')
     await expect(inside).toBeVisible()
-    const insideColor = await inside.evaluate((e) => getComputedStyle(e).color)
-    expect(insideColor).toBe(REF_LIB_CANARY)
+    const insideColor = await inside.evaluate((e) =>
+      getComputedStyle(e.parentElement as HTMLElement).getPropertyValue('--colors-teal-500').trim()
+    )
+    expect(insideColor).toBe(colors.teal[500].value)
     const outside = page.getByTestId('layers-outside')
     await expect(outside).toBeVisible()
-    const outsideColor = await outside.evaluate((e) => getComputedStyle(e).color)
-    expect(outsideColor).not.toBe(REF_LIB_CANARY)
+    const outsideColor = await outside.evaluate((e) =>
+      getComputedStyle(e).getPropertyValue('--colors-teal-500').trim()
+    )
+    expect(outsideColor).not.toBe(colors.teal[500].value)
   })
 
 

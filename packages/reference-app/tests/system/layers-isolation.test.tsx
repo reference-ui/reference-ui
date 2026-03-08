@@ -14,7 +14,7 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { render, screen } from '@testing-library/react'
 import { Div } from '@reference-ui/react'
-import { REF_LIB_CANARY } from '@reference-ui/lib'
+import { colors } from '@reference-ui/lib/theme'
 import { REFERENCE_APP_TOKEN_RGB } from '../../src/system/styles'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -125,7 +125,7 @@ describe('layers isolation fixture', () => {
     expect(pandaConfig).toContain('fixtureAccent')
     expect(pandaConfig).toContain(FIXTURE_ACCENT_RGB)
     expect(pandaConfig).not.toContain('referenceAppToken')
-    expect(pandaConfig).not.toContain('refLibCanary')
+    expect(pandaConfig).not.toContain('--colors-teal-500')
   })
 
   it('appends upstream layer CSS and data-layer token scope', () => {
@@ -133,7 +133,7 @@ describe('layers isolation fixture', () => {
     expect(fixtureCss).toMatch(/@layer\s+reference-app\s*\{/)
     expect(fixtureCss).toMatch(/\[data-layer="reference-app"\]\s*\{/)
     expect(fixtureCss).toContain(`--colors-reference-app-token: ${REFERENCE_APP_TOKEN_RGB};`)
-    expect(fixtureCss).toContain(`--colors-ref-lib-canary: ${REF_LIB_CANARY};`)
+    expect(fixtureCss).toContain(`--colors-teal-500: ${colors.teal[500].value};`)
     expect(fixtureCss).toContain(`--colors-fixture-accent: ${FIXTURE_ACCENT_RGB};`)
   })
 
@@ -150,7 +150,6 @@ describe('layers isolation fixture', () => {
           <Div
             data-testid="fixture-layer-target"
             color="var(--colors-reference-app-token)"
-            backgroundColor="var(--colors-ref-lib-canary)"
             padding="var(--spacing-1r)"
           >
             Layer target
@@ -174,9 +173,13 @@ describe('layers isolation fixture', () => {
       .getComputedStyle(unlayeredScope)
       .getPropertyValue('--colors-reference-app-token')
       .trim()
+    const upstreamLayerTokenValue = window.getComputedStyle(layeredScope).getPropertyValue('--colors-teal-500').trim()
 
     if (layeredTokenValue) {
       expect(layeredTokenValue).toBe(REFERENCE_APP_TOKEN_RGB)
+    }
+    if (upstreamLayerTokenValue) {
+      expect(upstreamLayerTokenValue).toBe(colors.teal[500].value)
     }
 
     if (layeredTokenValue || unlayeredTokenValue) {
@@ -187,8 +190,6 @@ describe('layers isolation fixture', () => {
     if (targetStyle.color && !targetStyle.color.includes('var(')) {
       expect(targetStyle.color).toBe(REFERENCE_APP_TOKEN_RGB)
     }
-    if (targetStyle.backgroundColor && !targetStyle.backgroundColor.includes('var(')) {
-      expect(targetStyle.backgroundColor).toBe(REF_LIB_CANARY)
-    }
+    expect(layeredTarget).toBeInTheDocument()
   })
 })
