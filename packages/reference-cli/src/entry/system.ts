@@ -3,4 +3,4 @@
  * Build-time design system extension API (see system/fragments.md).
  */
 
-export { tokens, keyframes } from '../system/api'
+export { tokens, keyframes, font, globalCss } from '../system/api'

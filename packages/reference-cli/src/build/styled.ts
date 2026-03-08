@@ -14,6 +14,8 @@ import { bundleCollectorRuntime, scanForFragments } from '../lib/fragments'
 import { createPandaConfig } from '../system/panda/config/createPandaConfig'
 import { createKeyframesCollector } from '../system/api/keyframes'
 import { createTokensCollector } from '../system/api/tokens'
+import { createFontCollector } from '../system/api/font'
+import { createGlobalCssCollector } from '../system/api/globalCss'
 import { generate as pandaGenerate } from '@pandacss/node'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -64,7 +66,12 @@ async function generateStyleConfig(fragmentFiles: string[]): Promise<void> {
   )
   const collectorBundle = await bundleCollectorRuntime({
     files: configFragmentFiles,
-    collectors: [createTokensCollector(), createKeyframesCollector()],
+    collectors: [
+      createTokensCollector(),
+      createKeyframesCollector(),
+      createFontCollector(),
+      createGlobalCssCollector(),
+    ],
     alias: {
       '@reference-ui/system': systemEntry,
       '@reference-ui/cli/config': systemEntry,

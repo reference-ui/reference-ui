@@ -5,3 +5,16 @@
 
 export { tokens, createTokensCollector, type TokenConfig } from './tokens'
 export { keyframes, createKeyframesCollector, type KeyframesConfig } from './keyframes'
+export {
+  font,
+  createFontCollector,
+  type FontDefinition,
+  type FontOptions,
+  type FontFaceRule,
+  type FontWeightName,
+} from './font'
+export {
+  globalCss,
+  createGlobalCssCollector,
+  type GlobalCssConfig,
+} from './globalCss'
