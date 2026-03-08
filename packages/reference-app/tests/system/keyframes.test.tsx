@@ -20,8 +20,7 @@ beforeAll(() => {
 })
 
 describe('keyframes() API', () => {
-  // extendPandaConfig is a no-op; config generation merges tokens only (fragments.md)
-  it.skip('emits @keyframes fadeIn in design system CSS', () => {
+  it('emits @keyframes fadeIn in design system CSS', () => {
     const css = getDesignSystemCss()
     if (!css) return
 

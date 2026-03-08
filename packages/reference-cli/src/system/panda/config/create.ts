@@ -35,6 +35,7 @@ export async function createPandaConfig(options: CreatePandaConfigOptions): Prom
   const tokensValueExpression = collectorBundle.getValue('tokens')
   const keyframesValueExpression = collectorBundle.getValue('keyframes')
   const fontValueExpression = collectorBundle.getValue('font')
+  const globalCssValueExpression = collectorBundle.getValue('globalCss')
   const patternsValueExpression = collectorBundle.getValue('box-pattern')
 
   // Valid JS object literal for baseConfig (inserted raw in template)
@@ -46,6 +47,7 @@ export async function createPandaConfig(options: CreatePandaConfigOptions): Prom
     tokensValueExpression,
     keyframesValueExpression,
     fontValueExpression,
+    globalCssValueExpression,
     patternsValueExpression,
     extensionsImportPath,
   })
