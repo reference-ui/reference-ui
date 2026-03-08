@@ -5,12 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "ref sync && (ref sync --watch & vite)",
-    "build": "node scripts/generate-primitives-docs.cjs & ref-sync sync && vite build",
+    "build": "node scripts/generate-primitives-docs.cjs && ref sync && vite build",
     "preview": "vite preview",
     "generate:primitives": "node scripts/generate-primitives-docs.cjs"
   },
   "dependencies": {
-    "@reference-ui/core": "workspace:*",
+    "@reference-ui/cli": "workspace:*",
     "@reference-ui/lib": "workspace:*",
     "@tanstack/react-router": "^1.158.4",
     "react": "^18.2.0",

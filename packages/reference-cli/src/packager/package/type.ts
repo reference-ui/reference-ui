@@ -2,6 +2,20 @@
  * Package definition for Reference UI
  */
 
+export type PackageCopySource =
+  | {
+      kind: 'file'
+      from: 'cli' | 'outDir'
+      src: string
+      dest: string
+    }
+  | {
+      kind: 'dir'
+      from: 'cli' | 'outDir'
+      src: string
+      dest?: string
+    }
+
 export interface PackageDefinition {
   name: string
   version: string
@@ -10,13 +24,11 @@ export interface PackageDefinition {
   entry?: string
   /** Whether to bundle with esbuild (false = just copy files) */
   bundle?: boolean
-  /** Directories to copy (when bundle: false) */
-  copyDirs?: Array<{ src: string; dest?: string }>
   /** Main entry point for package.json (defaults to './index.js') */
   main?: string
   /** Types entry point for package.json (defaults to './index.d.ts') */
   types?: string
   exports: Record<string, unknown>
-  /** Additional files to copy (e.g., styles.css). src relative to coreDir. */
-  additionalFiles?: Array<{ src: string; dest: string }>
+  /** Extra generated or source files/directories to copy into the package output. */
+  copyFrom?: PackageCopySource[]
 }

@@ -44,6 +44,9 @@ export const REACT_PACKAGE: PackageDefinition = {
   main: './react.mjs',
   types: './react.d.mts',
   exports: createBundleExports('react', { includeStyles: true }),
+  copyFrom: [
+    { kind: 'file', from: 'outDir', src: 'styled/styles.css', dest: 'styles.css' },
+  ],
 }
 
 /**
@@ -55,16 +58,16 @@ export const STYLED_PACKAGE: PackageDefinition = {
   version: '0.0.0-generated',
   description: 'Reference UI styled system (Panda CSS output)',
   bundle: false,
-  main: './css/index.mjs',
+  main: './css/index.js',
   types: './css/index.d.ts',
   exports: {
-    '.': { types: './css/index.d.ts', import: './css/index.mjs' },
-    './css': { types: './css/index.d.ts', import: './css/index.mjs' },
-    './css/cva': { types: './css/cva.d.ts', import: './css/cva.mjs' },
-    './css/cx': { types: './css/cx.d.ts', import: './css/cx.mjs' },
-    './css/sva': { types: './css/sva.d.ts', import: './css/sva.mjs' },
-    './patterns': { types: './patterns/index.d.ts', import: './patterns/index.mjs' },
-    './patterns/box': { types: './patterns/box.d.ts', import: './patterns/box.mjs' },
+    '.': { types: './css/index.d.ts', import: './css/index.js' },
+    './css': { types: './css/index.d.ts', import: './css/index.js' },
+    './css/cva': { types: './css/cva.d.ts', import: './css/cva.js' },
+    './css/cx': { types: './css/cx.d.ts', import: './css/cx.js' },
+    './css/sva': { types: './css/sva.d.ts', import: './css/sva.js' },
+    './patterns': { types: './patterns/index.d.ts', import: './patterns/index.js' },
+    './patterns/box': { types: './patterns/box.d.ts', import: './patterns/box.js' },
   },
 }
 

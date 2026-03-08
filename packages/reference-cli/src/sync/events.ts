@@ -5,6 +5,9 @@ import { emit, on, onceAll } from '../lib/event-bus'
  * watch:change → run:virtual:sync:file (single file), passing payload through.
  */
 export function initEvents(): void {
+  let packagerReady = false
+  let pendingPackagerBundle = false
+
   on('virtual:ready', () => {
     emit('run:virtual:copy:all')
   })
@@ -21,8 +24,20 @@ export function initEvents(): void {
     emit('run:panda:codegen')
   })
 
+  on('packager:ready', () => {
+    packagerReady = true
+    if (pendingPackagerBundle) {
+      pendingPackagerBundle = false
+      emit('run:packager:bundle')
+    }
+  })
+
   on('system:panda:codegen', () => {
-    emit('run:packager:bundle')
+    if (packagerReady) {
+      emit('run:packager:bundle')
+    } else {
+      pendingPackagerBundle = true
+    }
   })
 
   /** Sync completes after packager-ts:complete. Packager emits packager-ts:complete when skipTypescript so this always fires. */
