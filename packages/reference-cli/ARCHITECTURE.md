@@ -398,7 +398,7 @@ Same fragments pipeline; two contexts (internal build vs ref sync). Primitives a
 
 ---
 
-## Build / Styled Package (`src/build/styled.ts`)
+## Build / Styled Package (`src/system/build/styled/index.ts`)
 
 1. **Scan** for token fragments (`tokens(...)`), collect fragment file paths.
 2. **Separate** internal fragment files (e.g. `system/internal/`) from rest.
@@ -407,7 +407,7 @@ Same fragments pipeline; two contexts (internal build vs ref sync). Primitives a
 5. **Run Panda codegen** from `src/system/styled` (e.g. `panda codegen --silent`).
 6. **Write metadata.json** (fragment count, output path, timestamp).
 
-Prebuild script: `pnpm prebuild` → `tsx src/build/styled.ts`.
+Prebuild script: `pnpm prebuild` → `tsx src/system/build/primitives/index.ts && tsx src/system/build/styled/index.ts`.
 
 ---
 

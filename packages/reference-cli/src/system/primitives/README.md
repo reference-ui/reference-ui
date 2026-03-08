@@ -12,6 +12,8 @@ This folder will be populated from **@reference-ui/core** `src/primitives`:
 - `recipes.ts` — recipe exports for typography
 - `primitives/css/*.style.ts` — per-tag style recipes
 
+Generation lives under `src/system/build/primitives/`.
+
 ## Dependencies
 
 Primitives import from:
