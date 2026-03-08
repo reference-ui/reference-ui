@@ -11,6 +11,10 @@ import { createKeyframesCollector } from '../../api/keyframes'
 import { createTokensCollector } from '../../api/tokens'
 import { createFontCollector } from '../../api/font'
 import { createGlobalCssCollector } from '../../api/globalCss'
+import {
+  mirrorPandaExtensionsBundle,
+  writePandaExtensionsBundle,
+} from './extensions/bundle'
 
 /**
  * Run config generation: scan for fragment files that import the system API,
@@ -37,6 +41,7 @@ export async function runConfig(cwd: string): Promise<void> {
 
   const cliDir = resolveCliPackageDir(cwd)
   const systemEntry = join(cliDir, 'src/entry/system.ts')
+  const cliStyledDir = join(cliDir, 'src/system/styled')
   const fragmentBundleAlias: Record<string, string> = {
     '@reference-ui/system': systemEntry,
     '@reference-ui/cli/config': systemEntry,
@@ -52,9 +57,13 @@ export async function runConfig(cwd: string): Promise<void> {
     alias: fragmentBundleAlias,
   })
 
+  await writePandaExtensionsBundle(cliDir, cliStyledDir)
+  mirrorPandaExtensionsBundle(cliStyledDir, outDir)
+
   await createPandaConfig({
     outputPath,
     collectorBundle,
+    extensionsImportPath: './styled/extensions/index.mjs',
   })
 
   log.debug('config', 'Wrote panda.config', outputPath)

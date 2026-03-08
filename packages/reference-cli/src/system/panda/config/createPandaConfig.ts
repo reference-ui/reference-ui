@@ -14,6 +14,8 @@ export interface CreatePandaConfigOptions {
   collectorBundle: CollectorBundles
   /** Base config. Defaults to baseConfig from ./base */
   baseConfig?: Record<string, unknown>
+  /** Relative import path from panda.config.ts to the bundled extensions runtime. */
+  extensionsImportPath: string
 }
 
 /**
@@ -26,6 +28,7 @@ export async function createPandaConfig(options: CreatePandaConfigOptions): Prom
     outputPath,
     collectorBundle,
     baseConfig = defaultBaseConfig,
+    extensionsImportPath,
   } = options
 
   const templates = loadTemplates()
@@ -37,10 +40,10 @@ export async function createPandaConfig(options: CreatePandaConfigOptions): Prom
 
   const rendered = await engine.parseAndRender(templates.panda, {
     collectorFragments: collectorBundle.collectorFragments,
-    deepMergePartial: templates.deepMerge,
     baseConfigLiteral,
     tokensValueExpression,
     keyframesValueExpression,
+    extensionsImportPath,
   })
 
   mkdirSync(dirname(outputPath), { recursive: true })
