@@ -18,7 +18,7 @@
     }
   },
   "scripts": {
-    "prebuild": "tsx src/build/styled.ts",
+    "prebuild": "tsx src/build/primitives.ts && tsx src/build/styled.ts",
     "build": "pnpm run build:native && tsup",
     "build:native": "cd src/virtual/native && pnpm exec napi build --platform --release",
     "dev": "tsup --watch",
