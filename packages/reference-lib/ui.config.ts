@@ -5,7 +5,7 @@
  * Uses reference-cli as the live config/runtime pipeline.
  */
 
-import { defineConfig } from '@reference-ui/cli/config'
+import { defineConfig } from '@reference-ui/cli'
 
 export default defineConfig({
   name: 'reference-ui',

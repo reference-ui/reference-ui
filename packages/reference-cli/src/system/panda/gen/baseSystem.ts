@@ -33,7 +33,7 @@ export async function writeBaseSystem(): Promise<void> {
   )
   writeFileSync(
     typesPath,
-    `import type { BaseSystem } from '@reference-ui/cli/config'\nexport declare const baseSystem: BaseSystem\n`,
+    `import type { BaseSystem } from '@reference-ui/cli'\nexport declare const baseSystem: BaseSystem\n`,
     'utf-8'
   )
 
