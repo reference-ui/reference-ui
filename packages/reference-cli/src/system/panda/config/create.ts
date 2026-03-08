@@ -51,4 +51,3 @@ export async function createPandaConfig(options: CreatePandaConfigOptions): Prom
   mkdirSync(dirname(outputPath), { recursive: true })
   writeFileSync(outputPath, rendered, 'utf-8')
 }
- 
