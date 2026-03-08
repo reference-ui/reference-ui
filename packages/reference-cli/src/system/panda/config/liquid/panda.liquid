@@ -13,24 +13,47 @@ import {
   rhythmUtilities,
 } from '{{ extensionsImportPath | raw }}'
 
+// ─────────────────────────────────────────────────────────────────────────
+// init
+// ─────────────────────────────────────────────────────────────────────────
+
 const baseConfig = {{ baseConfigLiteral | raw }}
 initPandaConfig(baseConfig)
 
 {{ collectorFragments }}
-const tokensFragments = {{ tokensValueExpression | raw }}
-const keyframesFragments = {{ keyframesValueExpression | raw }}
 
+// ─────────────────────────────────────────────────────────────────────────
+// tokens
+// ─────────────────────────────────────────────────────────────────────────
+
+const tokensFragments = {{ tokensValueExpression | raw }}
 extendTokens(rhythmSpacingTokens)
 extendTokens(tokensFragments)
 
+// ─────────────────────────────────────────────────────────────────────────
+// keyframes
+// ─────────────────────────────────────────────────────────────────────────
+
+const keyframesFragments = {{ keyframesValueExpression | raw }}
 extendKeyframes(keyframesFragments)
+
+// ─────────────────────────────────────────────────────────────────────────
+// patterns
+// ─────────────────────────────────────────────────────────────────────────
 
 const patternExtensions = {{ patternsValueExpression | raw }}
 extendPatterns(patternExtensions)
 
+// ─────────────────────────────────────────────────────────────────────────
+// utilities
+// ─────────────────────────────────────────────────────────────────────────
+
 extendGlobalCss(rhythmGlobalCss)
 extendUtilities(rhythmUtilities)
 
-const config = getPandaConfig()
+// ─────────────────────────────────────────────────────────────────────────
+// export
+// ─────────────────────────────────────────────────────────────────────────
 
+const config = getPandaConfig()
 export default defineConfig(config)
