@@ -14,7 +14,7 @@ export class ConfigNotFoundError extends ConfigError {
     super(
       `${PREFIX}No ui.config.ts or ui.config.js found in ${cwd}.\n` +
         `Create a ui.config.ts file with your configuration:\n\n` +
-        `  import { defineConfig } from '@reference-ui/core'\n` +
+        `  import { defineConfig } from '@reference-ui/cli/config'\n` +
         `  export default defineConfig({ include: ['src/**/*.{ts,tsx}'] })`
     )
   }
@@ -40,6 +40,10 @@ export class ConfigValidationError extends ConfigError {
       "Config must have a non-empty 'name' for this design system.\n" +
         "Example: export default defineConfig({ name: 'my-design-system', include: ['src/**/*.{ts,tsx}'] })"
     )
+  }
+
+  static invalidBaseSystem(field: 'extends' | 'layers', reason: string): ConfigValidationError {
+    return new ConfigValidationError(`Config field '${field}' is invalid.\n${reason}`)
   }
 
   private constructor(message: string) {

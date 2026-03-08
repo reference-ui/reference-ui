@@ -25,6 +25,10 @@ export const SYSTEM_PACKAGE: PackageDefinition = {
   types: './system.d.mts',
   exports: {
     ...createBundleExports('system'),
+    './baseSystem': {
+      types: './baseSystem.d.mts',
+      import: './baseSystem.mjs',
+    },
   },
 }
 

@@ -2,10 +2,10 @@
  * Reference Lib - Design system consumer
  *
  * Minimal config for testing the chainable design system pattern.
- * Uses reference-core's defineConfig; will extend baseSystem once that API exists.
+ * Uses reference-cli as the live config/runtime pipeline.
  */
 
-import { defineConfig } from '@reference-ui/core'
+import { defineConfig } from '@reference-ui/cli/config'
 
 export default defineConfig({
   name: 'reference-ui',
