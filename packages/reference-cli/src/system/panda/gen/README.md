@@ -40,6 +40,7 @@ Regenerates CSS without codegen. Fast path for watch mode.
 
 - Does not eval files
 - Does not write `panda.config` (that's the config worker's job)
+- Does not write `baseSystem` (that's the `system/base` module's job)
 - Does not know about fragments or collectors
 - Does not orchestrate — just responds to trigger events
 
@@ -52,7 +53,6 @@ panda/
   codegen.ts   — runPandaCodegen() / runPandaCss()
   index.ts     — onRunCss / onRunCodegen event handlers
   init.ts      — initPanda(); starts the worker
-  worker.ts    — worker entry; subscribes to events, emits system:panda:ready
 ```
 
 ---

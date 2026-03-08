@@ -55,7 +55,7 @@ interface BaseSystem {
 
 These serve two entirely separate consumers:
 
-- **`extends`** uses `fragment`. The upstream fragment is passed to `bundleFragments` alongside local fragment files and enters the same generated config flow. `createPandaConfig` has no special handling — upstream config and local config are the same input.
+- **`extends`** uses `fragment`. The `system/base` module prepares this portable fragment bundle, and config generation consumes the resulting collector bundle. `createPandaConfig` still has no special handling — upstream config and local config are the same input.
 - **`layers`** uses `css`. The upstream CSS is injected into the consumer's output stylesheet as-is. No config merge happens — tokens stay out entirely.
 
 ```

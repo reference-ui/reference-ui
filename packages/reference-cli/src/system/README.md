@@ -66,13 +66,14 @@ Workers communicate via a `BroadcastChannel` event bus. Each worker subscribes t
 
 ```
 system/
+├── base/         # Portable baseSystem collection + emission
 ├── api/          # Extension surface (tokens, recipe, pattern collectors)
 ├── internal/    # Rhythm, props — use api to extend config
 ├── primitives/  # React components — read from styled
 ├── styled/       # Panda output (generated, gitignored)
-├── config/       # Config generation pipeline
+├── config/       # Panda config generation pipeline
 ├── panda/        # Panda execution
-└── workers/      # Worker docs
+└── workers/      # Worker entrypoints + docs
 ```
 
 **Flow:** `api` ← `internal` (rhythm, props extend config) → `styled` (Panda) → `primitives` (components)
@@ -88,6 +89,8 @@ All artefacts live under `outDir` (default `.reference-ui`):
   panda.config.ts      # Generated config (base + fragments merged)
   virtual/             # Transformed source files for Panda scanning
   system/
+    baseSystem.mjs     # Portable Reference UI composition artefact
+    baseSystem.d.mts   # Types for the generated baseSystem module
     styled/            # Panda codegen (css, cva, patterns, jsx, recipes)
     style.css          # Compiled CSS
 ```
@@ -98,14 +101,21 @@ Consumer code imports from `system/styled/`. The generated `panda.config.ts` poi
 
 ## Module Breakdown
 
+### `base/`
+
+Owns the Reference UI `baseSystem` concept.
+
+- Scans and bundles high-level API fragments once
+- Writes the portable `baseSystem` artefact under `outDir/system/`
+- Prepares the collector bundle that `config/` uses to write `panda.config.ts`
+
 ### `config/`
 
 Owns config generation. Key pieces:
 
 - **`base.ts`** — Pure structural config. No side-effect imports. The bootstrap foundation.
 - **`createPandaConfig.ts`** — Renders the final `panda.config.ts` from a liquid template, injecting base config + bundled fragments + deepMerge.
-- **`runConfig.ts`** — Orchestrates scanning, bundling, and writing. Called by the config worker.
-- **`worker.ts`** — Worker entry. Listens for `run:system:config`, calls `runConfig`, emits `system:config:complete`.
+- **`runConfig.ts`** — Consumes prepared base artefacts and writes `panda.config.ts`. Called by the config worker.
 
 See [`config/README.md`](config/README.md) for details on the fragment merging strategy and how this replaces the old multi-pipeline system.
 
@@ -116,7 +126,7 @@ Owns Panda execution. Two modes:
 - **Codegen** — Full pipeline: generates TS utilities + CSS. Runs on cold start or config change.
 - **CSS-only** — Fast path: regenerates CSS without codegen. Runs on file changes in watch mode.
 
-The panda worker requires `panda.config.ts` to already exist (written by config worker). It invokes the Panda CLI from `outDir` so Panda finds the config.
+The panda worker requires `panda.config.ts` to already exist (written by config worker). It invokes the Panda CLI from `outDir` so Panda finds the config. It does not know about `baseSystem`.
 
 See [`panda/README.md`](panda/README.md) for event details.
 
@@ -138,7 +148,7 @@ Example flow for `ref sync`:
 
 1. `initVirtual` → virtual worker starts, emits `virtual:ready`
 2. `virtual:ready` → emit `run:system:config`
-3. Config worker writes `panda.config.ts`, emits `system:config:complete`
+3. Config worker prepares `baseSystem`, writes `panda.config.ts`, emits `system:config:complete`
 4. `system:config:complete` → emit `run:virtual:copy:all`
 5. Virtual worker copies files, emits `virtual:complete`
 6. `virtual:complete` → emit `sync:complete`
@@ -177,6 +187,7 @@ No new workers, no new pipelines, no JSON round-trips.
 ## Subdirectory READMEs
 
 - [`config/README.md`](config/README.md) — Fragment merging, base config, extends/layers
+- [`base/README.md`](base/README.md) — Portable base-system collection + emission
 - [`panda/README.md`](panda/README.md) — Codegen and cssgen execution
 - [`workers/README.md`](workers/README.md) — Worker threading model
 - [`api/`](api/) — Extension API (tokens collector, recipe, pattern, etc.)
