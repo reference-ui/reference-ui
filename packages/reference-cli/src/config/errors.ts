@@ -14,7 +14,7 @@ export class ConfigNotFoundError extends ConfigError {
     super(
       `${PREFIX}No ui.config.ts or ui.config.js found in ${cwd}.\n` +
         `Create a ui.config.ts file with your configuration:\n\n` +
-        `  import { defineConfig } from '@reference-ui/cli/config'\n` +
+        `  import { defineConfig } from '@reference-ui/cli'\n` +
         `  export default defineConfig({ include: ['src/**/*.{ts,tsx}'] })`
     )
   }

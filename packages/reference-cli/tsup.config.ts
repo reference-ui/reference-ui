@@ -4,6 +4,7 @@ import { copyLiquidTemplates } from './tsup/liquid'
 
 export default defineConfig({
   entry: {
+    public: 'src/public.ts',
     index: 'src/index.ts',
     config: 'src/config/index.ts',
     ...workerEntries,

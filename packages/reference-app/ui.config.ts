@@ -3,7 +3,7 @@
  * 
  */
 
-import { defineConfig } from '@reference-ui/cli/config'
+import { defineConfig } from '@reference-ui/cli'
 import { baseSystem } from '@reference-ui/lib'
 
 // ============================================================================
