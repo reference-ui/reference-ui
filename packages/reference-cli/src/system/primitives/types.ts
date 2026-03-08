@@ -6,9 +6,17 @@ export interface PrimitiveLayerProps {
   layer?: string
 }
 
+export interface PrimitiveCssProps {
+  css?: SystemStyleObject
+}
+
 export type PrimitiveProps<T extends keyof React.JSX.IntrinsicElements> =
-  Omit<React.ComponentPropsWithoutRef<T>, keyof BoxProperties | keyof PrimitiveLayerProps> &
+  Omit<
+    React.ComponentPropsWithoutRef<T>,
+    keyof BoxProperties | keyof PrimitiveLayerProps | keyof PrimitiveCssProps
+  > &
   BoxProperties &
+  PrimitiveCssProps &
   SystemStyleObject &
   PrimitiveLayerProps
 
