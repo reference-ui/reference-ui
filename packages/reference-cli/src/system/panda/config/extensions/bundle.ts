@@ -17,7 +17,7 @@ export async function writePandaExtensionsBundle(
   cliDir: string,
   styledDir: string
 ): Promise<string> {
-  const entryPath = join(cliDir, 'src/system/panda/config/extensions/runtime.ts')
+  const entryPath = join(cliDir, 'src/system/panda/config/extensions/index.ts')
   const outputPath = getPandaExtensionsBundlePath(styledDir)
 
   mkdirSync(getPandaExtensionsDir(styledDir), { recursive: true })
