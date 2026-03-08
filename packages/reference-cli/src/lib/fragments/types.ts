@@ -105,6 +105,8 @@ export interface BundleCollectorRuntimeOptions {
   alias?: Record<string, string>
   /** Additional externals to avoid bundling. Esbuild requires string[] only. */
   external?: string[]
+  /** Already-bundled fragment IIFEs to prepend before local fragment files. */
+  prebundledFragments?: string[]
 }
 
 /** Planner API: pass multiple collectors + glob patterns, get Record<name, T[]> back */

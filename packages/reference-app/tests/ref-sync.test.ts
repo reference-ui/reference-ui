@@ -36,6 +36,7 @@ describe('ref sync', () => {
     expect(existsSync(systemDir), '.reference-ui/system should exist').toBe(true)
     expect(existsSync(join(systemDir, 'package.json')), 'system package.json').toBe(true)
     expect(existsSync(join(systemDir, 'system.mjs')), 'system.mjs entry').toBe(true)
+    expect(existsSync(join(systemDir, 'baseSystem.mjs')), 'system/baseSystem.mjs entry').toBe(true)
   })
 
   it('creates .reference-ui/virtual with copied source files', () => {

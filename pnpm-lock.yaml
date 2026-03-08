@@ -38,6 +38,9 @@ importers:
       '@reference-ui/cli':
         specifier: workspace:*
         version: link:../reference-cli
+      '@reference-ui/lib':
+        specifier: workspace:*
+        version: link:../reference-lib
       react:
         specifier: ^18.2.0
         version: 18.3.1
@@ -288,9 +291,9 @@ importers:
 
   packages/reference-lib:
     devDependencies:
-      '@reference-ui/core':
+      '@reference-ui/cli':
         specifier: workspace:*
-        version: link:../reference-core
+        version: link:../reference-cli
       typescript:
         specifier: ~5.9.3
         version: 5.9.3

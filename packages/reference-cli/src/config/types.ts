@@ -5,12 +5,12 @@
 
 /**
  * Shape of the bundled config read by extends[]. Emitted as dist/baseSystem.mjs.
- * Public API is tokens() only.
+ * Portable output from `ref sync` for design-system composition.
  */
 export interface BaseSystem {
   name: string
-  tokens: Record<string, unknown>
-  font: Record<string, unknown>
+  /** Bundled fragment IIFEs representing the full upstream config contribution. */
+  fragment: string
   /** Pre-compiled component CSS for layers mode. Scoped to @layer &lt;name&gt; + [data-layer] token block. */
   css?: string
 }

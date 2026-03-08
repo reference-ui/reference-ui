@@ -13,7 +13,7 @@
     "test:watch": "vitest"
   },
   "devDependencies": {
-    "@reference-ui/core": "workspace:*",
+    "@reference-ui/cli": "workspace:*",
     "typescript": "~5.9.3",
     "vitest": "^4.0.18"
   }

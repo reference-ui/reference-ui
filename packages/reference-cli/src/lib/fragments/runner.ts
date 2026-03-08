@@ -38,19 +38,19 @@ export async function bundleFragments(
 export async function bundleCollectorRuntime(
   options: BundleCollectorRuntimeOptions
 ): Promise<CollectorBundles> {
-  const { files, collectors, alias, external = [] } = options
-  const bundles =
+  const { files, collectors, alias, external = [], prebundledFragments = [] } = options
+  const localBundles =
     files.length > 0
-      ? (
-          await bundleFragments({
-            files,
-            ...(alias && { alias }),
-            external,
-          })
-        )
-          .map(({ bundle }) => `;${bundle}`)
-          .join('\n')
-      : ''
+      ? await bundleFragments({
+          files,
+          ...(alias && { alias }),
+          external,
+        })
+      : []
+  const bundles = [
+    ...prebundledFragments.map((bundle) => `;${bundle}`),
+    ...localBundles.map(({ bundle }) => `;${bundle}`),
+  ].join('\n')
 
   const values = collectors.map((collector) => ({
     name: collector.config.name,

@@ -2,21 +2,15 @@ import { join } from 'node:path'
 import { getCwd } from '../../../config'
 import { getOutDirPath } from '../../../lib/paths'
 import { resolveCliPackageDir } from '../../../lib/paths/cli-package-dir'
-import { bundleCollectorRuntime, scanForFragments } from '../../../lib/fragments'
 import { emit } from '../../../lib/event-bus'
 import { createPandaConfig } from './create'
 import { getConfig } from '../../../config/store'
 import { log } from '../../../lib/log'
-import { createKeyframesCollector } from '../../api/keyframes'
-import { createTokensCollector } from '../../api/tokens'
-import { createFontCollector } from '../../api/font'
-import { createGlobalCssCollector } from '../../api/globalCss'
-import { createBoxPatternCollector } from '../../api/patterns'
 import {
   mirrorPandaExtensionsBundle,
-  resolveInternalPatternFiles,
   writePandaExtensionsBundle,
 } from './extensions/api/bundle'
+import { createCollectorBundleForConfig } from './fragments'
 
 /**
  * Run config generation: scan for fragment files that import the system API,
@@ -34,32 +28,9 @@ export async function runConfig(cwd: string): Promise<void> {
 
   const outDir = getOutDirPath(cwd)
   const outputPath = join(outDir, 'panda.config.ts')
-
-  const fragmentFiles = scanForFragments({
-    include: config.include,
-    importFrom: ['@reference-ui/system', '@reference-ui/cli/config'],
-    cwd,
-  })
-
   const cliDir = resolveCliPackageDir(cwd)
-  const systemEntry = join(cliDir, 'src/entry/system.ts')
   const cliStyledDir = join(cliDir, 'src/system/styled')
-  const internalPatternFiles = resolveInternalPatternFiles(cliDir)
-  const fragmentBundleAlias: Record<string, string> = {
-    '@reference-ui/system': systemEntry,
-    '@reference-ui/cli/config': systemEntry,
-  }
-  const collectorBundle = await bundleCollectorRuntime({
-    files: [...fragmentFiles, ...internalPatternFiles],
-    collectors: [
-      createTokensCollector(),
-      createKeyframesCollector(),
-      createFontCollector(),
-      createGlobalCssCollector(),
-      createBoxPatternCollector(),
-    ],
-    alias: fragmentBundleAlias,
-  })
+  const collectorBundle = await createCollectorBundleForConfig(cwd, config)
 
   await writePandaExtensionsBundle(cliDir, cliStyledDir)
   mirrorPandaExtensionsBundle(cliStyledDir, outDir)
