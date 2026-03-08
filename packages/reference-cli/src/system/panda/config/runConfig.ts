@@ -9,6 +9,8 @@ import { getConfig } from '../../../config/store'
 import { log } from '../../../lib/log'
 import { createKeyframesCollector } from '../../api/keyframes'
 import { createTokensCollector } from '../../api/tokens'
+import { createFontCollector } from '../../api/font'
+import { createGlobalCssCollector } from '../../api/globalCss'
 
 /**
  * Run config generation: scan for fragment files that import the system API,
@@ -41,7 +43,12 @@ export async function runConfig(cwd: string): Promise<void> {
   }
   const collectorBundle = await bundleCollectorRuntime({
     files: fragmentFiles,
-    collectors: [createTokensCollector(), createKeyframesCollector()],
+    collectors: [
+      createTokensCollector(),
+      createKeyframesCollector(),
+      createFontCollector(),
+      createGlobalCssCollector(),
+    ],
     alias: fragmentBundleAlias,
   })
 
