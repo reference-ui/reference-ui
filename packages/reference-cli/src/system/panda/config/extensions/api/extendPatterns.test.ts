@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { extendPatterns } from './extendPatterns'
 import { getPandaConfig, initPandaConfig, PANDA_CONFIG_GLOBAL_KEY } from './runtime'
-import type { BoxPatternExtension } from '../../../api/patterns'
+import type { BoxPatternExtension } from '../../../../api/patterns'
 
 afterEach(() => {
   delete (globalThis as Record<string, unknown>)[PANDA_CONFIG_GLOBAL_KEY]

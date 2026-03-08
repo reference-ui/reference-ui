@@ -1,5 +1,5 @@
 import type { Config } from '@pandacss/dev'
-import type { BoxPatternExtension } from '../../../api/patterns'
+import type { BoxPatternExtension } from '../../../../api/patterns'
 import { deepMerge, getPandaConfig, toRecord, type RuntimeStore } from './runtime'
 
 function getTransformBody(transform: BoxPatternExtension['transform']): string {

@@ -1,6 +1,6 @@
 import { cpSync, mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { microBundle } from '../../../../lib/microbundle'
+import { microBundle } from '../../../../../lib/microbundle'
 
 export const PANDA_EXTENSIONS_DIRNAME = 'extensions'
 export const PANDA_EXTENSIONS_FILENAME = 'index.mjs'
@@ -38,4 +38,11 @@ export function mirrorPandaExtensionsBundle(
   cpSync(sourceDir, targetDir, { recursive: true })
 
   return join(targetDir, PANDA_EXTENSIONS_FILENAME)
+}
+
+export function resolveInternalPatternFiles(rootDir: string): string[] {
+  return [
+    join(rootDir, 'src/system/panda/config/extensions/container/container.ts'),
+    join(rootDir, 'src/system/panda/config/extensions/r/r.ts'),
+  ]
 }
