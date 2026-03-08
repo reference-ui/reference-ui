@@ -22,16 +22,16 @@ beforeAll(() => {
   }
 })
 
-// Skipped: font module removed; config only has extendPandaConfig collector (see fragments.md)
-describe.skip('font subsystem', () => {
+describe('font subsystem', () => {
   it('injects generated font config fragments into panda.config.ts', () => {
     if (!existsSync(pandaConfigPath)) return
 
     const content = readFileSync(pandaConfigPath, 'utf-8')
 
-    expect(content).toContain('globalFontface({')
-    expect(content).toContain("recipe('fontStyle'")
-    expect(content).toContain("'sans.bold': { value: '700' }")
+    expect(content).toContain('const fontDefinitions =')
+    expect(content).toContain('buildFontFaces(fontDefinitions)')
+    expect(content).toContain('buildFontRecipes(fontDefinitions)')
+    expect(content).toContain('buildFontPatternExtensions(fontDefinitions)')
   })
 
   it('emits @font-face rules in generated CSS', () => {

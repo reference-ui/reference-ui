@@ -7,6 +7,7 @@ export { tokens, createTokensCollector, type TokenConfig } from './tokens'
 export { keyframes, createKeyframesCollector, type KeyframesConfig } from './keyframes'
 export {
   font,
+  extendFont,
   createFontCollector,
   type FontDefinition,
   type FontOptions,

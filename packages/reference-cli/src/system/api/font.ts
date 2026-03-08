@@ -64,6 +64,11 @@ export function font(name: string, options: FontOptions): void {
   fn({ name, ...options })
 }
 
+/** Compatibility alias while docs and apps migrate to font(). */
+export function extendFont(name: string, options: FontOptions): void {
+  font(name, options)
+}
+
 /** Used by runConfig and build/styled to collect font fragments when running fragment files. */
 export function createFontCollector() {
   return collector
