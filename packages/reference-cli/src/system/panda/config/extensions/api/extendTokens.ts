@@ -3,7 +3,15 @@ import { deepMerge, getPandaConfig, toRecord, type RuntimeStore } from './runtim
 
 type TokenFragment = Record<string, unknown>
 
-export function extendTokens(tokenFragments: TokenFragment[]): Partial<Config> {
+export function extendTokens(fragments: TokenFragment[]): Partial<Config>
+export function extendTokens(...fragments: TokenFragment[]): Partial<Config>
+export function extendTokens(
+  first: TokenFragment | TokenFragment[],
+  ...rest: TokenFragment[]
+): Partial<Config> {
+  const tokenFragments = Array.isArray(first) && rest.length === 0
+    ? first
+    : ([first, ...rest] as TokenFragment[])
   if (tokenFragments.length === 0) {
     return getPandaConfig()
   }
