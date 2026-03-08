@@ -4,7 +4,7 @@
  */
 import { emit, on } from '../../../lib/event-bus'
 import { KEEP_ALIVE } from '../../../lib/thread-pool'
-import { onRunConfig } from './runConfig'
+import { onRunConfig } from './run'
 
 export default async function runConfigWorker(): Promise<never> {
   on('run:system:config', onRunConfig)

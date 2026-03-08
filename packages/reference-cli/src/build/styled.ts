@@ -11,7 +11,7 @@ import { resolve, join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { bundleCollectorRuntime, scanForFragments } from '../lib/fragments'
-import { createPandaConfig } from '../system/panda/config/createPandaConfig'
+import { createPandaConfig } from '../system/panda/config/create'
 import {
   resolveInternalPatternFiles,
   writePandaExtensionsBundle,
