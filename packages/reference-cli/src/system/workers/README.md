@@ -20,7 +20,7 @@ Each worker:
 
 ## `config` worker
 
-**Location:** `system/config/worker.ts`
+**Location:** `system/workers/config.ts`
 
 Generates `panda.config.ts` from base config + fragments.
 
@@ -34,7 +34,7 @@ Payload: `{ cwd: string }` — project root for resolving outDir.
 
 ## `panda` worker
 
-**Location:** `system/panda/worker.ts`
+**Location:** `system/workers/panda.ts`
 
 Runs Panda codegen and cssgen. Requires `panda.config.ts` to already exist.
 
@@ -49,8 +49,8 @@ Fast path: `run:panda:css` for watch-mode file changes (CSS only, no codegen).
 
 ## Adding a Worker
 
-1. Create `src/<domain>/worker.ts` exporting a default async function returning `KEEP_ALIVE`.
-2. Add to `workers.json`: `"<name>": "src/<domain>/worker.ts"`.
+1. Create `src/system/workers/<name>.ts` exporting a default async function returning `KEEP_ALIVE`.
+2. Add to `workers.json`: `"<name>": "src/system/workers/<name>.ts"`.
 3. Create `init.ts` calling `workers.runWorker('<name>', payload)`.
 4. Wire events in `sync/events.ts`.
 
