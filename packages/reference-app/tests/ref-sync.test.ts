@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { resolve, dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { existsSync, readdirSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const pkgRoot = resolve(__dirname, '..')
@@ -31,12 +31,30 @@ describe('ref sync', () => {
     }
   })
 
+  it('emits layer-ready styles.css (@layer <name> and [data-layer]) when Panda runs', () => {
+    const stylesPath = join(refUiDir, 'styled', 'styles.css')
+    if (!existsSync(stylesPath)) return
+    const css = readFileSync(stylesPath, 'utf-8')
+    expect(css).toMatch(/@layer\s+reference-app\s*\{/)
+    expect(css).toMatch(/\[data-layer="reference-app"\]/)
+  })
+
   it('creates .reference-ui/system with package.json and system.mjs', () => {
     const systemDir = join(refUiDir, 'system')
     expect(existsSync(systemDir), '.reference-ui/system should exist').toBe(true)
     expect(existsSync(join(systemDir, 'package.json')), 'system package.json').toBe(true)
     expect(existsSync(join(systemDir, 'system.mjs')), 'system.mjs entry').toBe(true)
     expect(existsSync(join(systemDir, 'baseSystem.mjs')), 'system/baseSystem.mjs entry').toBe(true)
+  })
+
+  it('emits baseSystem.mjs with portable css for layers consumers', () => {
+    const basePath = join(refUiDir, 'system', 'baseSystem.mjs')
+    if (!existsSync(basePath)) return
+    const content = readFileSync(basePath, 'utf-8')
+    expect(content).toMatch(/"css":\s*"/)
+    expect(content).toMatch(/@layer\s+reference-app/)
+    // In JSON the css string has escaped quotes: [data-layer=\"reference-app\"]
+    expect(content).toMatch(/data-layer.*reference-app/)
   })
 
   it('creates .reference-ui/virtual with copied source files', () => {

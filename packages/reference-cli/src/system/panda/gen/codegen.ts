@@ -1,9 +1,11 @@
 import { existsSync, mkdirSync, symlinkSync } from 'node:fs'
 import { join } from 'node:path'
 import { generate as pandaGenerate, cssgen as pandaCssgen, loadConfigAndCreateContext } from '@pandacss/node'
-import { getCwd } from '../../../config/store'
+import { getConfig, getCwd } from '../../../config/store'
 import { getOutDirPath, resolveCliPackageDir } from '../../../lib/paths'
 import { log } from '../../../lib/log'
+import { updateBaseSystemCss } from '../../base/create'
+import { applyLayerPostprocess } from '../../layers/applyLayerPostprocess'
 
 /**
  * Ensure outDir has node_modules/@pandacss so panda.config.ts can resolve '@pandacss/dev'
@@ -46,6 +48,12 @@ export async function runPandaCodegen(): Promise<void> {
   const ctx = await loadConfigAndCreateContext({ config: { cwd: outDir }, configPath })
   await pandaCssgen(ctx, { cwd: outDir })
   log.debug('panda', 'cssgen done', outDir)
+
+  const config = getConfig()
+  if (config && cwd) {
+    const layerCss = applyLayerPostprocess(outDir, config)
+    if (layerCss) updateBaseSystemCss(cwd, layerCss)
+  }
 }
 
 /**
@@ -69,4 +77,10 @@ export async function runPandaCss(): Promise<void> {
   const ctx = await loadConfigAndCreateContext({ config: { cwd: outDir }, configPath })
   await pandaCssgen(ctx, { cwd: outDir })
   log.debug('panda', 'cssgen done', outDir)
+
+  const config = getConfig()
+  if (config && cwd) {
+    const layerCss = applyLayerPostprocess(outDir, config)
+    if (layerCss) updateBaseSystemCss(cwd, layerCss)
+  }
 }

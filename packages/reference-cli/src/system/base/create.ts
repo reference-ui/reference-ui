@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { ReferenceUIConfig } from '../../config'
 import type { BaseSystem } from '../../config/types'
@@ -36,6 +36,35 @@ function writeBaseSystem(cwd: string, baseSystem: BaseSystem): void {
   )
 
   log.debug('base', 'baseSystem written', outputPath)
+}
+
+/**
+ * Update the existing baseSystem.mjs artefact with layer-ready CSS.
+ * Call after Panda cssgen and layer postprocess so baseSystem.css is portable for layers consumers.
+ */
+export function updateBaseSystemCss(cwd: string, css: string): void {
+  const systemDir = join(getOutDirPath(cwd), 'system')
+  const outputPath = join(systemDir, 'baseSystem.mjs')
+  if (!existsSync(outputPath)) return
+
+  const content = readFileSync(outputPath, 'utf-8')
+  const prefix = 'export const baseSystem = '
+  const i = content.indexOf(prefix)
+  if (i === -1) return
+  const start = content.indexOf('{', i + prefix.length)
+  if (start === -1) return
+  let depth = 1
+  let end = start + 1
+  while (end < content.length && depth > 0) {
+    const c = content[end]
+    if (c === '{') depth++
+    else if (c === '}') depth--
+    end++
+  }
+  const jsonStr = content.slice(start, end)
+  const baseSystem = JSON.parse(jsonStr) as BaseSystem
+  baseSystem.css = css
+  writeBaseSystem(cwd, baseSystem)
 }
 
 /**
