@@ -15,5 +15,54 @@ const card = recipe({
   },
 })
 
+export const showcaseRecipe = recipe({
+  base: {
+    px: '5r',
+    py: '2.5r',
+    borderRadius: 'lg',
+    fontWeight: '600',
+    borderWidth: '1px',
+    borderStyle: 'solid',
+  },
+  variants: {
+    visual: {
+      solid: {
+        bg: 'teal.700',
+        color: 'white',
+        borderColor: 'teal.700',
+      },
+      outline: {
+        bg: 'white',
+        color: 'gray.900',
+        borderColor: 'gray.300',
+      },
+    },
+    tone: {
+      teal: {},
+      pink: {},
+    },
+  },
+  compoundVariants: [
+    {
+      visual: 'outline',
+      tone: 'pink',
+      css: {
+        color: 'pink.700',
+        borderColor: 'pink.700',
+        _hover: {
+          bg: 'pink.50',
+        },
+      },
+    },
+  ],
+  defaultVariants: {
+    visual: 'solid',
+    tone: 'teal',
+  },
+})
+
 export const Button = () => <button className={button()}>Click</button>
 export const Card = () => <div className={card()}>Card</div>
+export const ShowcaseButton = () => (
+  <button className={showcaseRecipe({ visual: 'outline', tone: 'pink' })}>Showcase</button>
+)
