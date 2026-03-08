@@ -5,7 +5,6 @@ import { fileURLToPath } from 'node:url'
 import { existsSync } from 'node:fs'
 import {
   REF_LIB_CANARY,
-  REF_LIB_FONT_FAMILY,
   REF_LIB_GLOBAL_CSS_VALUE,
   REF_LIB_GLOBAL_CSS_VAR,
   REF_LIB_KEYFRAME_NAME,
@@ -38,6 +37,11 @@ describe('baseSystem', () => {
     expect(baseSystem.fragment).toContain(REF_LIB_GLOBAL_CSS_VAR)
     expect(baseSystem.fragment).toContain(REF_LIB_GLOBAL_CSS_VALUE)
     expect(baseSystem.fragment).toContain(REF_LIB_KEYFRAME_NAME)
-    expect(baseSystem.fragment).toContain(REF_LIB_FONT_FAMILY)
+    expect(baseSystem.fragment).toContain('Inter')
+    expect(baseSystem.fragment).toContain('Literata')
+    expect(baseSystem.fragment).toContain('JetBrains Mono')
+    expect(baseSystem.fragment).toContain('ref-h1')
+    expect(baseSystem.fragment).toContain('ref-code')
+    expect(baseSystem.fragment).toContain('--colors-gray-900')
   })
 })
