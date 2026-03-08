@@ -102,4 +102,34 @@ describe('Div primitive', () => {
       expect(style.backgroundColor).toBe(TEST_BG)
     }
   })
+
+  it('composes the css prop into classes instead of leaking it to the DOM', () => {
+    render(
+      <Div
+        data-testid="div-css-prop"
+        css={{
+          position: 'fixed',
+          top: '0',
+          left: '1rem',
+        }}
+      >
+        CSS prop
+      </Div>
+    )
+
+    const el = screen.getByTestId('div-css-prop')
+    expect(el).toBeInTheDocument()
+    expect(el.getAttribute('css')).toBeNull()
+    expect(el.className).toContain('ref-div')
+    expect(el.className).not.toContain('[object Object]')
+
+    if (hasDesignSystemCss()) {
+      const style = window.getComputedStyle(el)
+      if (style.position) {
+        expect(style.position).toBe('fixed')
+        expect(style.top).toBe('0px')
+        expect(style.left).toBe('16px')
+      }
+    }
+  })
 })
