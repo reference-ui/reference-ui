@@ -3,7 +3,13 @@ import { execSync } from 'node:child_process'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { existsSync } from 'node:fs'
-import { REF_LIB_CANARY } from './colors.js'
+import {
+  REF_LIB_CANARY,
+  REF_LIB_FONT_FAMILY,
+  REF_LIB_GLOBAL_CSS_VALUE,
+  REF_LIB_GLOBAL_CSS_VAR,
+  REF_LIB_KEYFRAME_NAME,
+} from './colors.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const pkgRoot = resolve(__dirname, '..')
@@ -29,5 +35,9 @@ describe('baseSystem', () => {
     expect(typeof baseSystem.fragment).toBe('string')
     expect(baseSystem.fragment).toContain('refLibCanary')
     expect(baseSystem.fragment).toContain(REF_LIB_CANARY)
+    expect(baseSystem.fragment).toContain(REF_LIB_GLOBAL_CSS_VAR)
+    expect(baseSystem.fragment).toContain(REF_LIB_GLOBAL_CSS_VALUE)
+    expect(baseSystem.fragment).toContain(REF_LIB_KEYFRAME_NAME)
+    expect(baseSystem.fragment).toContain(REF_LIB_FONT_FAMILY)
   })
 })
