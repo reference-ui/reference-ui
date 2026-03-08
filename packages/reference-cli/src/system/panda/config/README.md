@@ -4,7 +4,7 @@ Owns everything needed to produce a valid `panda.config` from user and core sour
 
 ## Base config (`base.ts`)
 
-A **pure structural config** with no side-effect imports and no dependency on generated code (e.g. `system/styled/`). It defines `outdir: 'system/styled'`, `include`/`exclude`, `jsxFramework`, etc. This is merged with fragment contributions in the generated `panda.config` via `deepMerge(baseConfig, ...fragments)`.
+A **pure structural config** with no side-effect imports and no dependency on generated code (e.g. `system/styled/`). It defines `outdir: 'system/styled'`, `include`/`exclude`, `jsxFramework`, etc. The generated `panda.config` seeds the extensions runtime with this base config, then extension helpers merge collected fragment values into that shared Panda config state.
 
 Because `base.ts` does not import from Panda’s generated output, the CLI can run `ref sync` on itself: config is written to `outDir/panda.config.ts`, Panda runs from `outDir`, and the system is bootstrapped without a chicken-and-egg.
 
@@ -17,11 +17,11 @@ Each subsystem (fontFace, boxPattern, baseSystem, panda) ran its own isolated pi
 3. Serialize the result to a JSON file
 4. Read that JSON back and run a separate generator to produce the final artifact
 
-Three subsystems meant three full pipelines, three entry templates, three JSON round-trips. The only thing they shared was `deepMerge`. They were structurally identical but could not see each other.
+Three subsystems meant three full pipelines, three entry templates, three JSON round-trips. They were structurally identical but could not see each other.
 
 ## How this one works
 
-There is one pipeline. `bundleFragments` scans user files, bundles all fragment calls into self-contained IIFEs, and injects them into a single generated `panda.config`. Each IIFE executes at Panda's parse time, pushes a partial config object into a `globalThis` slot, and the final `deepMerge` fold assembles the complete config.
+There is one pipeline. `bundleFragments` scans user files, bundles all fragment calls into self-contained IIFEs, and injects them into a single generated `panda.config`. Each IIFE executes at Panda's parse time, pushes fragment values into named collectors on `globalThis`, and the bundled extensions runtime assembles the final Panda config from those collected values.
 
 All of the old subsystems — fonts, box patterns, tokens, globalCss, keyframes — output panda config shapes. They always did. The old system just couldn't see that because each ran in isolation.
 
@@ -38,9 +38,9 @@ const fontCollector = createFragmentCollector({
 })
 ```
 
-The user calls `font(...)`, the collector captures the raw definition, the transform shapes it into the correct config slice, and it enters the same `deepMerge` fold as everything else. No separate pipeline. No JSON round-trip.
+The user calls `font(...)`, the collector captures the raw definition, the transform shapes it into the correct config slice, and the extensions runtime merges it into the same Panda config state as everything else. No separate pipeline. No JSON round-trip.
 
-`createPandaConfig` stays unchanged — it just receives whichever collectors are registered, and merges whatever they produce.
+`createPandaConfig` stays thin — it wires collectors and the bundled extensions runtime together, then exports the final Panda config state.
 
 ## Extends and BaseSystem
 
@@ -55,7 +55,7 @@ interface BaseSystem {
 
 These serve two entirely separate consumers:
 
-- **`extends`** uses `fragment`. The upstream fragment is passed to `bundleFragments` alongside local fragment files and enters the same `deepMerge` fold. `createPandaConfig` has no special handling — upstream config and local config are the same input.
+- **`extends`** uses `fragment`. The upstream fragment is passed to `bundleFragments` alongside local fragment files and enters the same generated config flow. `createPandaConfig` has no special handling — upstream config and local config are the same input.
 - **`layers`** uses `css`. The upstream CSS is injected into the consumer's output stylesheet as-is. No config merge happens — tokens stay out entirely.
 
 ```
