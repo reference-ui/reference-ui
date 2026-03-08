@@ -12,7 +12,7 @@ type SystemTriggerEvents = {
   'run:panda:css': Record<string, never>
 
   /**
-   * Run full Panda pipeline: codegen (TS utilities) + CSS + baseSystem.
+   * Run full Panda pipeline: codegen (TS utilities) + CSS.
    * Slower — triggered after config is written (cold start or config-affecting change).
    */
   'run:panda:codegen': Record<string, never>
@@ -49,7 +49,7 @@ type SystemPandaEvents = {
   'system:panda:css': Record<string, never>
 
   /**
-   * Panda codegen done (TS utilities + baseSystem generated).
+   * Panda codegen done (TS utilities + CSS generated).
    */
   'system:panda:codegen': Record<string, never>
 }

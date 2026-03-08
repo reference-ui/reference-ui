@@ -4,7 +4,6 @@ import { generate as pandaGenerate, cssgen as pandaCssgen, loadConfigAndCreateCo
 import { getCwd } from '../../../config/store'
 import { getOutDirPath, resolveCliPackageDir } from '../../../lib/paths'
 import { log } from '../../../lib/log'
-import { writeBaseSystem } from './baseSystem'
 
 /**
  * Ensure outDir has node_modules/@pandacss so panda.config.ts can resolve '@pandacss/dev'
@@ -47,9 +46,6 @@ export async function runPandaCodegen(): Promise<void> {
   const ctx = await loadConfigAndCreateContext({ config: { cwd: outDir }, configPath })
   await pandaCssgen(ctx, { cwd: outDir })
   log.debug('panda', 'cssgen done', outDir)
-
-  await writeBaseSystem()
-  log.debug('panda', 'baseSystem done', outDir)
 }
 
 /**

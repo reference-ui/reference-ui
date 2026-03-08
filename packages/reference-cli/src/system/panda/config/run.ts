@@ -6,18 +6,15 @@ import { emit } from '../../../lib/event-bus'
 import { createPandaConfig } from './create'
 import { getConfig } from '../../../config/store'
 import { log } from '../../../lib/log'
+import { createBaseArtifacts } from '../../base/create'
 import {
   mirrorPandaExtensionsBundle,
   writePandaExtensionsBundle,
 } from './extensions/api/bundle'
-import { createCollectorBundleForConfig } from './fragments'
 
 /**
- * Run config generation: scan for fragment files that import the system API,
- * prepare a collector bundle runtime, then write panda.config.ts.
- * When the generated file is loaded, the bundled fragment IIFEs call
- * the injected runtime functions and the collected values are merged
- * into defineConfig().
+ * Run config generation: prepare the portable base-system artefact,
+ * then use its collector bundle to write panda.config.ts.
  */
 export async function runConfig(cwd: string): Promise<void> {
   log.debug('config', 'runConfig started', { cwd })
@@ -30,7 +27,7 @@ export async function runConfig(cwd: string): Promise<void> {
   const outputPath = join(outDir, 'panda.config.ts')
   const cliDir = resolveCliPackageDir(cwd)
   const cliStyledDir = join(cliDir, 'src/system/styled')
-  const collectorBundle = await createCollectorBundleForConfig(cwd, config)
+  const { collectorBundle } = await createBaseArtifacts(cwd, config)
 
   await writePandaExtensionsBundle(cliDir, cliStyledDir)
   mirrorPandaExtensionsBundle(cliStyledDir, outDir)
