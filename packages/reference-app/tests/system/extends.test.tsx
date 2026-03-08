@@ -7,12 +7,7 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { Div } from '@reference-ui/react'
-import {
-  REF_LIB_CANARY,
-  REF_LIB_GLOBAL_CSS_VALUE,
-  REF_LIB_GLOBAL_CSS_VAR,
-  REF_LIB_KEYFRAME_NAME,
-} from '@reference-ui/lib'
+import { colors, fadeKeyframes, fonts, rootThemeVars } from '@reference-ui/lib/theme'
 import { getDesignSystemCss, getDesignSystemCssPath, injectDesignSystemCss } from '../primitives/setup'
 
 beforeAll(() => {
@@ -26,7 +21,7 @@ beforeAll(() => {
 describe('extends baseSystem from reference-lib', () => {
   it('renders a Div using the upstream token name', () => {
     render(
-      <Div data-testid="extends-token" color="refLibCanary">
+      <Div data-testid="extends-token" color="teal.500">
         Extended token
       </Div>
     )
@@ -36,19 +31,19 @@ describe('extends baseSystem from reference-lib', () => {
     expect(el).toHaveTextContent('Extended token')
   })
 
-  it('applies the upstream token value when design system CSS is present', () => {
+  it('includes upstream token values when design system CSS is present', () => {
     if (!getDesignSystemCssPath()) return
 
+    const css = getDesignSystemCss()
     render(
-      <Div data-testid="extends-token-color" color="refLibCanary">
+      <Div data-testid="extends-token-color" color="teal.500">
         Extended token color
       </Div>
     )
 
-    const el = screen.getByTestId('extends-token-color')
-    const style = window.getComputedStyle(el)
-    if (style.color) {
-      expect(style.color).toBe(REF_LIB_CANARY)
+    expect(screen.getByTestId('extends-token-color')).toBeInTheDocument()
+    if (css) {
+      expect(css).toContain(`--colors-teal-500: ${colors.teal[500].value};`)
     }
   })
 
@@ -56,20 +51,22 @@ describe('extends baseSystem from reference-lib', () => {
     const css = getDesignSystemCss()
     if (!css) return
 
-    expect(css).toContain(REF_LIB_GLOBAL_CSS_VAR)
-    expect(css).toContain(REF_LIB_GLOBAL_CSS_VALUE)
+    expect(css).toContain('--r-base')
+    expect(css).toContain(rootThemeVars['--r-base'])
+    expect(css).toContain('--spacing-r')
+    expect(css).toContain(rootThemeVars['--spacing-r'])
   })
 
   it('includes upstream keyframes in generated CSS and accepts the animation name', () => {
     const css = getDesignSystemCss()
     if (css) {
-      expect(css).toContain(`@keyframes ${REF_LIB_KEYFRAME_NAME}`)
-      expect(css).toMatch(new RegExp(`${REF_LIB_KEYFRAME_NAME}[\\s\\S]*?scale\\(0\\.98\\)`))
-      expect(css).toMatch(new RegExp(`${REF_LIB_KEYFRAME_NAME}[\\s\\S]*?scale\\(1\\)`))
+      expect(css).toContain('@keyframes fadeIn')
+      expect(css).toMatch(new RegExp(`fadeIn[\\s\\S]*?${fadeKeyframes.fadeIn.from.opacity}`))
+      expect(css).toMatch(new RegExp(`fadeIn[\\s\\S]*?${fadeKeyframes.fadeIn.to.opacity}`))
     }
 
     render(
-      <Div data-testid="extends-keyframes" animation={`${REF_LIB_KEYFRAME_NAME} 1s ease`}>
+      <Div data-testid="extends-keyframes" animation="fadeIn 1s ease">
         Extended animation
       </Div>
     )
@@ -82,9 +79,9 @@ describe('extends baseSystem from reference-lib', () => {
     if (!css) return
 
     expect(css).toContain('@font-face')
-    expect(css).toContain('Inter')
-    expect(css).toContain('Literata')
-    expect(css).toContain('JetBrains Mono')
+    expect(css).toContain(fonts.sans.value)
+    expect(css).toContain(fonts.serif.value)
+    expect(css).toContain(fonts.mono.value)
     expect(css).toMatch(/font-display:\s*swap/)
 
     render(
