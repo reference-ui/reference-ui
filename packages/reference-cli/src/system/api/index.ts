@@ -18,3 +18,9 @@ export {
   createGlobalCssCollector,
   type GlobalCssConfig,
 } from './globalCss'
+export {
+  extendPattern,
+  createBoxPatternCollector,
+  type BoxPatternExtension,
+  type BoxPatternProperty,
+} from './patterns'

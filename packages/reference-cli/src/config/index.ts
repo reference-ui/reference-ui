@@ -23,4 +23,4 @@ export {
 } from './errors'
 
 // System API surface used by bundled fragment files.
-export { tokens, keyframes } from '../system/api'
+export { tokens, keyframes, font, globalCss, extendPattern } from '../system/api'
