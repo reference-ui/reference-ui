@@ -4,6 +4,7 @@ import type { ReferenceUIConfig } from '../../config'
 import type { BaseSystem } from '../../config/types'
 import { getOutDirPath } from '../../lib/paths'
 import { log } from '../../lib/log'
+import { writeGeneratedSystemFontTypes } from '../types/generate'
 import {
   createCollectorBundleFromBase,
   createPortableBaseFragmentBundle,
@@ -83,6 +84,7 @@ export async function createBaseArtifacts(
   )
 
   writeBaseSystem(cwd, baseSystem)
+  await writeGeneratedSystemFontTypes(cwd, baseSystem.fragment)
 
   return {
     collectorBundle,

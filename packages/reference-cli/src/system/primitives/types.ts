@@ -1,6 +1,6 @@
 import type * as React from 'react'
 import type { SystemStyleObject } from '@reference-ui/styled/types'
-import type { BoxProperties } from '@reference-ui/styled/patterns/box'
+import type { ReferenceBoxPatternProps, ReferenceSystemStyleObject } from '../types'
 
 export interface PrimitiveLayerProps {
   layer?: string
@@ -13,11 +13,11 @@ export interface PrimitiveCssProps {
 export type PrimitiveProps<T extends keyof React.JSX.IntrinsicElements> =
   Omit<
     React.ComponentPropsWithoutRef<T>,
-    keyof BoxProperties | keyof PrimitiveLayerProps | keyof PrimitiveCssProps
+    keyof ReferenceBoxPatternProps | keyof PrimitiveLayerProps | keyof PrimitiveCssProps
   > &
-  BoxProperties &
+  ReferenceBoxPatternProps &
   PrimitiveCssProps &
-  SystemStyleObject &
+  ReferenceSystemStyleObject &
   PrimitiveLayerProps
 
 export type PrimitiveElement<T extends keyof React.JSX.IntrinsicElements> = React.ComponentRef<T>

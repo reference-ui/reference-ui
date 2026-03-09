@@ -5,6 +5,7 @@ import {
   resolveCliPackageDirForBuild,
 } from '../../../lib/paths'
 import { getOutDirPath } from '../../../lib/paths/out-dir'
+import { writeGeneratedReactTypes, writeGeneratedSystemTypes } from '../../../system/types/generate'
 import { getShortName } from '../../package/name'
 import { installPackageTs } from './package'
 import type { TsPackageInput } from '../types'
@@ -27,4 +28,12 @@ export async function installPackagesTs(
     const targetDir = resolve(outDir, shortName)
     await installPackageTs(cliDir, cliDirForBuild, targetDir, pkg)
   }
+
+  const systemDir = resolve(outDir, getShortName('@reference-ui/system'))
+  const systemTypesPath = resolve(systemDir, 'system.d.mts')
+  const reactDir = resolve(outDir, getShortName('@reference-ui/react'))
+  const reactTypesPath = resolve(reactDir, 'react.d.mts')
+
+  await writeGeneratedSystemTypes(cwd, systemTypesPath)
+  await writeGeneratedReactTypes(cwd, reactTypesPath)
 }
