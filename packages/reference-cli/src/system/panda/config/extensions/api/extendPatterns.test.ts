@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { extendPatterns } from './extendPatterns'
 import { getPandaConfig, initPandaConfig, PANDA_CONFIG_GLOBAL_KEY } from './runtime'
 import type { BoxPatternExtension } from '../../../../api/patterns'
+import { PRIMITIVE_JSX_NAMES } from '../../../../primitives/tags'
 
 afterEach(() => {
   delete (globalThis as Record<string, unknown>)[PANDA_CONFIG_GLOBAL_KEY]
@@ -18,9 +19,12 @@ describe('extendPatterns()', () => {
         },
         transform(props: Record<string, unknown>) {
           const { container } = props
-          return container
-            ? { containerType: 'inline-size', containerName: container }
-            : {}
+          if (container === undefined) return {}
+
+          return {
+            containerType: 'inline-size',
+            ...(typeof container === 'string' && container && { containerName: container }),
+          }
         },
       },
       {
@@ -31,8 +35,10 @@ describe('extendPatterns()', () => {
           const { r, container } = props
           if (!r || typeof r !== 'object') return {}
 
-          const prefix = container
-            ? `@container ${container} (min-width:`
+          const containerName =
+            typeof container === 'string' && container.length > 0 ? container : undefined
+          const prefix = containerName
+            ? `@container ${containerName} (min-width:`
             : '@container (min-width:'
 
           return Object.fromEntries(
@@ -51,6 +57,7 @@ describe('extendPatterns()', () => {
     const boxPattern = config.patterns?.extend?.box
 
     expect(boxPattern).toBeDefined()
+    expect(boxPattern?.jsx).toEqual(PRIMITIVE_JSX_NAMES)
     expect(boxPattern?.properties).toEqual({
       container: { type: 'string' },
       r: { type: 'object' },
@@ -72,6 +79,17 @@ describe('extendPatterns()', () => {
       containerName: 'sidebar',
       '@container sidebar (min-width: 640px)': { padding: '4' },
       color: 'red.500',
+    })
+    expect(
+      transform?.({
+        container: true,
+        r: {
+          480: { padding: '2' },
+        },
+      })
+    ).toEqual({
+      containerType: 'inline-size',
+      '@container (min-width: 480px)': { padding: '2' },
     })
   })
 })

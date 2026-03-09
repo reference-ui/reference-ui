@@ -111,8 +111,6 @@ describe('Container prop', () => {
 
 describe('Responsive prop (r)', () => {
   it('applies responsive styles at breakpoints', () => {
-    if (!hasDesignSystemCss()) return
-
     render(
       <Div
         data-testid="responsive"
@@ -127,14 +125,14 @@ describe('Responsive prop (r)', () => {
     )
     
     const el = screen.getByTestId('responsive')
-    // The r prop generates @container queries, which are in the stylesheet
-    // We can't easily test container queries in happy-dom, but we can verify the element exists
     expect(el).toBeInTheDocument()
+    expect(el.className).toContain('cq-t_inline-size')
+    expect(el.className).toContain('[@container_(min-width:_400px)]:p_1rem')
+    expect(el.className).toContain('[@container_(min-width:_800px)]:p_2rem')
+    expect(el.className).not.toContain('@container_true_')
   })
 
   it('works with named containers', () => {
-    if (!hasDesignSystemCss()) return
-
     render(
       <Div data-testid="container-wrapper" container="main">
         <Div
@@ -153,6 +151,8 @@ describe('Responsive prop (r)', () => {
     
     expect(wrapper).toBeInTheDocument()
     expect(child).toBeInTheDocument()
+    expect(child.className).toContain('[@container_(min-width:_600px)]:fs_1.5rem')
+    expect(child.className).not.toContain('@container_main_')
     
     const wrapperStyle = window.getComputedStyle(wrapper)
     if (wrapperStyle.containerName) {
