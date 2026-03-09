@@ -167,7 +167,7 @@ describe('Combined props', () => {
       <Div
         data-testid="combined"
         font="sans"
-        weight="sans.semibold"
+        weight="semibold"
         container="card"
         r={{
           500: { padding: '1.5rem' },
