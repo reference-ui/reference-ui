@@ -1,4 +1,4 @@
-import { defineConfig } from '@reference-ui/core'
+import { defineConfig } from '@reference-ui/cli'
 import { baseSystem } from '@reference-ui/lib'
 
 export default defineConfig({
