@@ -86,7 +86,7 @@ describe('font config helpers', () => {
     expect(
       transform?.({
         font: 'sans',
-        weight: 'sans.bold',
+        weight: 'bold',
         color: 'red.500',
       })
     ).toEqual({
@@ -94,6 +94,17 @@ describe('font config helpers', () => {
       fontWeight: '700',
       letterSpacing: '-0.01em',
       color: 'red.500',
+    })
+
+    expect(
+      transform?.({
+        font: 'sans',
+        weight: 'sans.bold',
+      })
+    ).toEqual({
+      fontFamily: 'sans',
+      fontWeight: '700',
+      letterSpacing: '-0.01em',
     })
   })
 })

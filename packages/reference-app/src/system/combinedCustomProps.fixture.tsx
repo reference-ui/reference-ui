@@ -4,7 +4,8 @@ export function SourceCombinedCustomProps() {
   return (
     <Div
       font="sans"
-      weight="sans.semibold"
+      // @ts-expect-error Source fixture exercises generated custom prop extraction.
+      weight="semibold"
       container="card"
       r={{
         555: { padding: '2.25rem' },

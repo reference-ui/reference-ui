@@ -5,7 +5,7 @@ export function SourceFontMono() {
     <Div
       font="mono"
       // @ts-expect-error Source fixture exercises generated custom prop extraction.
-      weight="mono.bold"
+      weight="bold"
     >
       Mono Bold Source Fixture
     </Div>
