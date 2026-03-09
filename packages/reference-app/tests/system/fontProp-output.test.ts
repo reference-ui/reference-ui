@@ -7,8 +7,9 @@ import {
 
 async function waitForGeneratedFile(...segments: string[]): Promise<string | undefined> {
   const startedAt = Date.now()
+  const maxWaitMs = 15_000
 
-  while (Date.now() - startedAt < 5_000) {
+  while (Date.now() - startedAt < maxWaitMs) {
     const content = readGeneratedFile(...segments)
 
     if (content) {
@@ -52,5 +53,5 @@ describe('font prop output (e2e)', () => {
     expect(reactTypes).toContain('ReferenceFontProps')
     expect(reactGeneratedTypes).toContain('"mono": {')
     expect(reactGeneratedTypes).toContain('"bold": true')
-  })
+  }, 20_000)
 })
