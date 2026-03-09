@@ -20,8 +20,8 @@ export interface ApplyTransformsResult {
  *
  * Transform pipeline:
  * 1. MDX → JSX (if .mdx file)
- * 2. Rewrite cva/recipe imports from @reference-ui/core
- * 3. Rewrite css imports from @reference-ui/core
+ * 2. Rewrite cva/recipe imports from @reference-ui/react
+ * 3. Rewrite css imports from @reference-ui/react
  */
 export async function applyTransforms(
   options: ApplyTransformsOptions

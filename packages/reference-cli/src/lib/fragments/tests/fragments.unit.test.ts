@@ -209,7 +209,7 @@ describe('scanForFragments', () => {
 
   it('matches function calls inside comments (known regex limitation)', () => {
     // Regex scanning is fast but not AST-aware — comments with `fn(` are matched.
-    // This is the same behaviour as the old reference-core scanner.
+    // Keep this behaviour explicit unless we move to AST-based scanning.
     const files = scanForFragments({
       include: ['**/*.ts'],
       functionNames: ['myFunction'],

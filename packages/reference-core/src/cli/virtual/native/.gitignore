@@ -1,9 +1,0 @@
-# Rust build output
-target/
-
-# NAPI artifacts
-artifacts/
-*.node
-
-# Node (if npm install runs here)
-node_modules/
