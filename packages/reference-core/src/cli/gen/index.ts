@@ -1,1 +1,0 @@
-export { initGen } from './init'

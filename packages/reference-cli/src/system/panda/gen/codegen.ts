@@ -10,7 +10,7 @@ import { applyLayerPostprocess } from '../../layers/applyLayerPostprocess'
 /**
  * Ensure outDir has node_modules/@pandacss so panda.config.ts can resolve '@pandacss/dev'
  * when loaded by @pandacss/node (config is in outDir; user project may not have Panda).
- * Same idea as reference-core using coreDir for cwd — we make outDir resolvable via symlink.
+ * We make outDir resolvable via symlink so Panda can load from generated config safely.
  */
 function ensurePandaResolvableFromOutDir(userCwd: string, outDir: string): void {
   const cliDir = resolveCliPackageDir(userCwd)
@@ -24,7 +24,7 @@ function ensurePandaResolvableFromOutDir(userCwd: string, outDir: string): void 
 }
 
 /**
- * Run Panda full pipeline via @pandacss/node (same pattern as reference-core gen/code.ts).
+ * Run Panda full pipeline via @pandacss/node.
  * Config lives in outDir; we ensure outDir can resolve @pandacss then call generate() and cssgen().
  */
 export async function runPandaCodegen(): Promise<void> {
@@ -57,7 +57,7 @@ export async function runPandaCodegen(): Promise<void> {
 }
 
 /**
- * Run Panda cssgen only via @pandacss/node (same pattern as reference-core gen/css.ts).
+ * Run Panda cssgen only via @pandacss/node.
  */
 export async function runPandaCss(): Promise<void> {
   const cwd = getCwd()

@@ -83,7 +83,7 @@ export interface ReferenceUIConfig {
  *
  * @example
  * ```ts
- * import { defineConfig } from '@reference-ui/core'
+ * import { defineConfig } from '@reference-ui/cli'
  *
  * export default defineConfig({
  *   include: ['src/**\/*.{ts,tsx}']

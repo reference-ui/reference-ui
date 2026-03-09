@@ -16,6 +16,6 @@ export async function bundleConfig(
 ): Promise<string> {
   return microBundle(configPath, {
     format: 'cjs',
-    external: options.external ?? ['esbuild', '@reference-ui/core', '@reference-ui/cli', '@reference-ui/cli/config'],
+    external: options.external ?? ['esbuild', '@reference-ui/cli', '@reference-ui/cli/config'],
   })
 }

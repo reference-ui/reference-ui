@@ -158,88 +158,6 @@ importers:
         specifier: ^4.0.18
         version: 4.0.18(@types/node@25.1.0)(happy-dom@15.11.7)(lightningcss@1.30.2)(tsx@4.21.0)(yaml@2.8.2)
 
-  packages/reference-core:
-    dependencies:
-      '@mdx-js/esbuild':
-        specifier: ^3.1.1
-        version: 3.1.1(esbuild@0.27.3)
-      '@mdx-js/mdx':
-        specifier: ^3.1.1
-        version: 3.1.1
-      '@pandacss/dev':
-        specifier: ^1.8.1
-        version: 1.8.2(typescript@5.9.3)
-      '@pandacss/node':
-        specifier: ^1.8.2
-        version: 1.8.2(typescript@5.9.3)
-      '@parcel/watcher':
-        specifier: ^2.5.6
-        version: 2.5.6
-      '@reference-ui/cli':
-        specifier: workspace:*
-        version: link:../reference-cli
-      '@rspress/mdx-rs':
-        specifier: ^0.6.6
-        version: 0.6.6
-      commander:
-        specifier: ^14.0.3
-        version: 14.0.3
-      esbuild:
-        specifier: ^0.27.3
-        version: 0.27.3
-      fast-glob:
-        specifier: ^3.3.2
-        version: 3.3.3
-      picocolors:
-        specifier: ^1.1.0
-        version: 1.1.1
-      picomatch:
-        specifier: ^4.0.0
-        version: 4.0.3
-      piscina:
-        specifier: ^5.1.4
-        version: 5.1.4
-      symlink-dir:
-        specifier: ^9.0.0
-        version: 9.0.0
-      tsup:
-        specifier: ^8.4.0
-        version: 8.5.1(@swc/core@1.5.29(@swc/helpers@0.5.18))(postcss@8.5.6)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2)
-    devDependencies:
-      '@napi-rs/cli':
-        specifier: ^3.5.1
-        version: 3.5.1(@emnapi/runtime@1.8.1)(@types/node@25.1.0)(node-addon-api@7.1.1)
-      '@types/node':
-        specifier: ^25.1.0
-        version: 25.1.0
-      '@types/picomatch':
-        specifier: ^4.0.2
-        version: 4.0.2
-      '@types/react':
-        specifier: ^18.2.0
-        version: 18.3.27
-      '@types/react-dom':
-        specifier: ^18.2.0
-        version: 18.3.7(@types/react@18.3.27)
-      complexity-report:
-        specifier: 2.0.0-alpha
-        version: 2.0.0-alpha
-      react:
-        specifier: ^18.2.0
-        version: 18.3.1
-      react-dom:
-        specifier: ^18.2.0
-        version: 18.3.1(react@18.3.1)
-      tsx:
-        specifier: ^4.19.0
-        version: 4.21.0
-      typescript:
-        specifier: ~5.9.3
-        version: 5.9.3
-      vitest:
-        specifier: ^4.0.18
-        version: 4.0.18(@types/node@25.1.0)(happy-dom@15.11.7)(lightningcss@1.30.2)(tsx@4.21.0)(yaml@2.8.2)
-
   packages/reference-docs:
     dependencies:
       '@reference-ui/cli':
@@ -987,11 +905,6 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
-
-  '@mdx-js/esbuild@3.1.1':
-    resolution: {integrity: sha512-NS35VhTdvKNj5/B1JSD5W3kN1R0WDHgk+zCWq+tSChQw5L2Bgeiz7yyZPFrc5LWuPVOxE1xMbJr82bO9VVzmfQ==}
-    peerDependencies:
-      esbuild: '>=0.14.0'
 
   '@mdx-js/mdx@3.1.1':
     resolution: {integrity: sha512-f6ZO2ifpwAQIpzGWaBQT2TXxPv6z3RBzQKpVftEWN78Vl/YweF1uwussDx8ECAXVtr3Rs89fKyG9YlzUs9DyGQ==}
@@ -2169,9 +2082,6 @@ packages:
   '@types/node@25.1.0':
     resolution: {integrity: sha512-t7frlewr6+cbx+9Ohpl0NOTKXZNV9xHRmNOvql47BFJKcEG1CxtxlPEEe+gR9uhVWM4DwhnvTF110mIL4yP9RA==}
 
-  '@types/picomatch@4.0.2':
-    resolution: {integrity: sha512-qHHxQ+P9PysNEGbALT8f8YOSHW0KJu6l2xU8DYY0fu/EmGxXdVnuTLvFUvBgPJMSqXq29SYHveejeAha+4AYgA==}
-
   '@types/prop-types@15.7.15':
     resolution: {integrity: sha512-F6bEyamV9jKGAFBEmlQnesRPGOQqS2+Uwi0Em15xenOxHaf2hv6L8YCVn3rPdPJOiJfPiCnLIRyvwVaqMY3MIw==}
 
@@ -2392,9 +2302,6 @@ packages:
     resolution: {integrity: sha512-LElXdjswlqjWrPpJFg1Fx4wpkOCxj1TDHlSV4PlaRxHGWko024xICaa97ZkMfs6DRKlCguiAI+rbXv5GWwXIkg==}
     hasBin: true
 
-  async@1.5.2:
-    resolution: {integrity: sha512-nSVgobk4rv61R9PUSDtYt7mPVB2olxNR5RWJcAsH676/ef11bUZwvu7+RGYrYauVdDPcO519v68wRhXQtxsV9w==}
-
   asynckit@0.4.0:
     resolution: {integrity: sha512-Oei9OH4tRh0YqU3GxhX79dM/mwVgvbZJaSNaRk+bshkj0S5cfHcgYakreBjrHwatXKbz+IoIdYLxrKim2MjW0Q==}
 
@@ -2514,12 +2421,6 @@ packages:
   chardet@2.1.1:
     resolution: {integrity: sha512-PsezH1rqdV9VvyNhxxOW32/d75r01NY7TQCmOqomRo15ZSOKbpTFVsfjghxo6JloQUCGnH4k1LGu0R4yCLlWQQ==}
 
-  check-types@4.3.0:
-    resolution: {integrity: sha512-Bio+lel1H6bZILbZNx+htTc13ir2AfgHIitBZHz3YV7XzMKOjyjV5ttwrqx9+MpI2J1b1c5cGZ1yebcWuudciQ==}
-
-  check-types@5.1.0:
-    resolution: {integrity: sha512-avyYsSECJeYxowzVMGxzwXz9gc+LAEQ8l8nDVRJqbJilfwHDBPxpjTZC0mb1gr8AAARDc/I7P4+IG6SxokWWmw==}
-
   chokidar@4.0.3:
     resolution: {integrity: sha512-Qgzu8kfBvo+cA4962jnP1KkS6Dop5NS6g7R5LFYJr4b8Ub94PPQXUksCw9PvXoeXPRRddRNC5C1JQUR2SMGtnA==}
     engines: {node: '>= 14.16.0'}
@@ -2584,16 +2485,9 @@ packages:
     resolution: {integrity: sha512-H+y0Jo/T1RZ9qPP4Eh1pkcQcLRglraJaSLoyOtHxu6AapkjWVCy2Sit1QQ4x3Dng8qDlSsZEet7g5Pq06MvTgw==}
     engines: {node: '>=20'}
 
-  commander@2.20.3:
-    resolution: {integrity: sha512-GpVkmM8vF2vQUkj2LvZmD35JxeJOLCwJ9cUkugyk2nuhbv3+mJvpLYYt+0+USMxE+oj+ey/lJEnhZw75x/OMcQ==}
-
   commander@4.1.1:
     resolution: {integrity: sha512-NOKm8xhkzAjzFx8B2v5OAHT+u5pRQc2UCa2Vq9jYL/31o2wi9mxBA7LIFs3sV5VSC49z6pEhfbMULvShKj26WA==}
     engines: {node: '>= 6'}
-
-  complexity-report@2.0.0-alpha:
-    resolution: {integrity: sha512-e9falJSmTSqCdZYnMKXuJcmDE9qkJec73HbZPi1fqzaurXdmUZosfZ19px/WCsMLRYN+bF5Ck+aV+p7YCHmipA==}
-    hasBin: true
 
   concurrently@9.2.1:
     resolution: {integrity: sha512-fsfrO0MxV64Znoy8/l1vVIjjHa29SZyyqPgQBwhiDcaW8wJc2W3XWVOGx4M3oJBnv/zdUZIIp1gDeS98GzP8Ng==}
@@ -2813,9 +2707,6 @@ packages:
     resolution: {integrity: sha512-/veY75JbMK4j1yjvuUxuVsiS/hr/4iHs9FTT6cgTexxdE0Ly/glccBAkloH/DofkjRbZU3bnoj38mOmhkZ0lHw==}
     engines: {node: '>=12'}
 
-  escomplex@2.0.0-alpha:
-    resolution: {integrity: sha512-svXitH4tBpW1CPLlGQOxZrqosDj/88GEIoul1bM7WpVGgBnp/5RXb2L0Fo62TAt56k1ZrqTgn+93vnLsAchCcw==}
-
   eslint-plugin-sonarjs@4.0.0:
     resolution: {integrity: sha512-ihyH9HO52OeeWer/gWRndkW/ZhGqx9HDg+Iptu+ApSfiomT2LzhHgHCoyJrhh7DjCyKhjU3Hmmz1pzcXRf7B3g==}
     peerDependencies:
@@ -2846,11 +2737,6 @@ packages:
   espree@11.1.1:
     resolution: {integrity: sha512-AVHPqQoZYc+RUM4/3Ly5udlZY/U4LS8pIG05jEjWM2lQMU/oaZ7qshzAl2YP1tfNmXfftH3ohurfwNAug+MnsQ==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
-
-  esprima@2.7.3:
-    resolution: {integrity: sha512-OarPfz0lFCiW4/AV2Oy1Rp9qu0iusTKqykwTspGCZtPxmF81JR4MmIebvF1F9+UOKth2ZubLQ4XGGaU+hSn99A==}
-    engines: {node: '>=0.10.0'}
-    hasBin: true
 
   esprima@4.0.1:
     resolution: {integrity: sha512-eGuFFw7Upda+g4p+QHvnW0RyTX/SVeJBDM/gCtMARO0cLuT2HcEKnTPvhjV6aGeqrCB/sbNop0Kszm0jsaWU4A==}
@@ -5195,17 +5081,6 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@mdx-js/esbuild@3.1.1(esbuild@0.27.3)':
-    dependencies:
-      '@mdx-js/mdx': 3.1.1
-      '@types/unist': 3.0.3
-      esbuild: 0.27.3
-      source-map: 0.7.6
-      vfile: 6.0.3
-      vfile-message: 4.0.3
-    transitivePeerDependencies:
-      - supports-color
-
   '@mdx-js/mdx@3.1.1':
     dependencies:
       '@types/estree': 1.0.8
@@ -6303,8 +6178,6 @@ snapshots:
     dependencies:
       undici-types: 7.16.0
 
-  '@types/picomatch@4.0.2': {}
-
   '@types/prop-types@15.7.15': {}
 
   '@types/react-dom@18.3.7(@types/react@18.3.27)':
@@ -6588,8 +6461,6 @@ snapshots:
 
   astring@1.9.0: {}
 
-  async@1.5.2: {}
-
   asynckit@0.4.0: {}
 
   axios@1.13.3:
@@ -6719,10 +6590,6 @@ snapshots:
 
   chardet@2.1.1: {}
 
-  check-types@4.3.0: {}
-
-  check-types@5.1.0: {}
-
   chokidar@4.0.3:
     dependencies:
       readdirp: 4.1.2
@@ -6771,17 +6638,7 @@ snapshots:
 
   commander@14.0.3: {}
 
-  commander@2.20.3: {}
-
   commander@4.1.1: {}
-
-  complexity-report@2.0.0-alpha:
-    dependencies:
-      async: 1.5.2
-      check-types: 4.3.0
-      commander: 2.20.3
-      escomplex: 2.0.0-alpha
-      esprima: 2.7.3
 
   concurrently@9.2.1:
     dependencies:
@@ -7004,10 +6861,6 @@ snapshots:
 
   escape-string-regexp@5.0.0: {}
 
-  escomplex@2.0.0-alpha:
-    dependencies:
-      check-types: 5.1.0
-
   eslint-plugin-sonarjs@4.0.0(eslint@10.0.2):
     dependencies:
       '@eslint-community/regexpp': 4.12.2
@@ -7075,8 +6928,6 @@ snapshots:
       acorn: 8.16.0
       acorn-jsx: 5.3.2(acorn@8.16.0)
       eslint-visitor-keys: 5.0.1
-
-  esprima@2.7.3: {}
 
   esprima@4.0.1: {}
 

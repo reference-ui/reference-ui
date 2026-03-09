@@ -1,6 +1,69 @@
 # @reference-ui/cli — Architecture
 
-Design system build pipeline: workers, event bus, fragments, config generation, virtual FS, and packager.
+`@reference-ui/cli` is now the active design-system platform for Reference UI. This document describes the current system: workers, event bus, fragments, config generation, virtual FS, composition artifacts, and packaging.
+
+`reference-core` should be treated as historical context only. Future architecture and API work should be documented here and in `ROADMAP.md`.
+
+---
+
+## Status
+
+- `defineConfig` is the current public authoring API.
+- `baseSystem` is the portable composition artifact emitted by `ref sync`.
+- `extends` merges upstream fragment bundles into config generation.
+- `layers` appends upstream layer-ready CSS without merging upstream tokens into the consumer's Panda config.
+- generated primitives support `layer="<name>"` and emit `data-layer="<name>"` at runtime.
+- the old `extendSystem(baseSystem)` idea is still interesting, but it is not a shipped public API yet.
+
+See `ROADMAP.md` for future API and `reference-core` removal work.
+
+---
+
+## Composition Model
+
+The current composition model has three pieces:
+
+- `defineConfig({ extends: [...] })` for adopting upstream tokens and config fragments
+- `defineConfig({ layers: [...] })` for consuming upstream component CSS without adopting upstream token space
+- `layer="<name>"` on primitives for subtree token scoping at runtime
+
+The portable `BaseSystem` artifact currently carries:
+
+```ts
+interface BaseSystem {
+  name: string
+  fragment: string
+  css?: string
+}
+```
+
+This is the current chain shape:
+
+```ts
+import { defineConfig } from '@reference-ui/cli'
+import { baseSystem } from '@reference-ui/lib'
+
+export default defineConfig({
+  name: 'reference-app',
+  include: ['src/**/*.{ts,tsx}'],
+  extends: [baseSystem],
+})
+```
+
+And this is the current layers shape:
+
+```ts
+import { defineConfig } from '@reference-ui/cli'
+import { baseSystem } from '@reference-ui/lib'
+
+export default defineConfig({
+  name: 'my-layered-app',
+  include: ['src/**/*.{ts,tsx}'],
+  layers: [baseSystem],
+})
+```
+
+`extendSystem(baseSystem)` is a future idea, not a current contract. If we add it, it should be introduced as a deliberate authoring API on top of this composition model, not as an accidental compatibility shim.
 
 ---
 
@@ -19,7 +82,7 @@ Design system build pipeline: workers, event bus, fragments, config generation, 
 2. **Workers** are spawned via `workers.runWorker(name, payload)` from init modules.
 3. Workers subscribe with `on(event, handler)` and return `KEEP_ALIVE` to stay alive.
 4. **Events** flow via **BroadcastChannel**; all threads (main + workers) react.
-5. **Sync** runs: virtual copy → config (panda.config) → (optional Panda) → packager → symlinks/install.
+5. **Sync** runs: virtual copy → config (panda.config + baseSystem fragment) → Panda → packager → type packager → ready.
 
 ---
 
@@ -94,13 +157,16 @@ export async function syncCommand(cwd: string, options?: SyncOptions): Promise<v
 
 ### Sync events — orchestration only
 
-All pipeline flow lives in one place: `on` / `emit` only. Payloads are passed through (e.g. `watch:change` → `run:virtual:sync:file`). No side effects, no conditionals.
+All pipeline flow lives in one place: `on` / `emit` only. Payloads are passed through (e.g. `watch:change` → `run:virtual:sync:file`). Readiness gating is event-driven rather than hidden inside worker logic.
 
 ```ts
 // src/sync/events.ts
-import { emit, on } from '../lib/event-bus'
+import { emit, on, onceAll } from '../lib/event-bus'
 
 export function initEvents(): void {
+  let packagerReady = false
+  let pendingPackagerBundle = false
+
   on('virtual:ready', () => {
     emit('run:virtual:copy:all')
   })
@@ -113,15 +179,27 @@ export function initEvents(): void {
     emit('run:system:config')
   })
 
-  on('system:config:complete', () => {
+  onceAll(['system:config:complete', 'system:panda:ready'], () => {
     emit('run:panda:codegen')
   })
 
-  on('system:panda:codegen', () => {
-    emit('run:packager:bundle')
+  on('packager:ready', () => {
+    packagerReady = true
+    if (pendingPackagerBundle) {
+      pendingPackagerBundle = false
+      emit('run:packager:bundle')
+    }
   })
 
-  on('packager:complete', () => {
+  on('system:panda:codegen', () => {
+    if (packagerReady) {
+      emit('run:packager:bundle')
+    } else {
+      pendingPackagerBundle = true
+    }
+  })
+
+  on('packager-ts:complete', () => {
     emit('sync:complete')
   })
 }
@@ -129,16 +207,17 @@ export function initEvents(): void {
 
 ### Sync complete — cold vs watch
 
-Completion is handled with `once`: exit in cold mode, write a ready message in watch mode so tests can detect “sync ready”.
+Completion is handled with `once`: exit in cold mode, write a ready message in watch mode so tests can detect "sync ready". The completion event comes from `packager-ts:complete`, so ready means bundles and declaration generation are finished.
 
 ```ts
 // src/sync/complete.ts
 import { once } from '../lib/event-bus'
+import type { SyncPayload } from './types'
 
 export const REF_SYNC_READY_MESSAGE = '[ref sync] ready\n'
 
 export function initComplete(payload: SyncPayload): void {
-  once('sync:complete', () => {
+  once('packager-ts:complete', () => {
     if (!payload.options.watch) {
       process.exit(0)
     } else {
@@ -352,9 +431,10 @@ For minimal versions of the same patterns (worker, logic, event wiring), see **R
 1. **Bootstrap** (`sync/bootstrap.ts`): load user config, setCwd/setConfig, initPool, initEventBus → SyncPayload.
 2. **Inits** run: virtual, watch, system config, (panda), packager — each spawns its worker.
 3. **Virtual**: on `run:virtual:copy:all` copies files from `config.include` into `.reference-ui` (or outDir), applies transforms, emits `virtual:complete` / `virtual:fs:change`.
-4. **Config**: on `run:system:config` runs fragment collection + Liquid template → writes `panda.config.ts`, emits `system:config:complete`.
-5. **Panda** (optional): on `run:panda:codegen` / `run:panda:css` runs Panda; emits `system:panda:codegen` / `system:panda:css`.
-6. **Packager**: gates on `system:complete` (or equivalent); bundles system/react/styled, writes package.json, can run install/symlinks so `@reference-ui/styled` etc. resolve to `.reference-ui/...`.
+4. **Config**: on `run:system:config` runs fragment collection + Liquid template, writes `panda.config.ts`, and emits the portable `baseSystem` artifact.
+5. **Panda**: on `run:panda:codegen` / `run:panda:css` runs Panda; after cssgen, layer post-processing updates the current `baseSystem.css` and appends any configured upstream `layers[].css`.
+6. **Packager**: bundles `@reference-ui/system`, `@reference-ui/react`, and `@reference-ui/styled`, writes package metadata, and installs/symlinks them into the consumer project.
+7. **Type packager**: emits `.d.mts` files into the same generated package tree, then emits the final ready signal.
 
 ---
 
@@ -444,6 +524,10 @@ Prebuild script: `pnpm prebuild` → `tsx src/system/build/primitives/index.ts &
 - **validate**: schema/validation for ReferenceUIConfig.
 - **constants**: outDir name (`.reference-ui`), config file names.
 
+### Compatibility note
+
+There are still a few `@reference-ui/core` compatibility paths in config loading and bundling. They exist only to ease the final migration off `reference-core`; they are not part of the intended long-term `reference-cli` architecture.
+
 ---
 
 ## Paths & Entries
@@ -463,6 +547,21 @@ Prebuild script: `pnpm prebuild` → `tsx src/system/build/primitives/index.ts &
 ## Clean
 
 - **ref clean**: deletes output directory (config.outDir). Main thread only; no workers. Used for fresh state before tests or full sync.
+
+---
+
+## Reference-Core Transition
+
+The migration has effectively flipped: `reference-cli` is the primary platform, and `reference-core` is the legacy codebase.
+
+What still remains to finish:
+
+- remove `@reference-ui/core` compatibility handling from config load/eval paths
+- delete the old workspace package and Nx project
+- sweep comments, docs, and examples that still present `reference-core` as active
+- keep only the historical notes that still contain useful product ideas, such as the `extendSystem(baseSystem)` concept
+
+Those removal tasks are tracked in `ROADMAP.md`.
 
 ---
 

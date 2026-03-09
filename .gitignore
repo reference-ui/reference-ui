@@ -37,8 +37,6 @@ reports/
 packages/.sandbox
 .reference-ui
 .ref
-packages/reference-core/styled-system
-packages/reference-core/codegen
 packages/reference-cli/src/system/styled
 
 # Nx
