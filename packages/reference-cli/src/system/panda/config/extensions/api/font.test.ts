@@ -3,6 +3,7 @@ import type { FontDefinition } from '../../../../api/font'
 import { buildFontFaces, buildFontPatternExtensions, buildFontRecipes, buildFontTokens } from './font'
 import { extendPatterns } from './extendPatterns'
 import { getPandaConfig, initPandaConfig, PANDA_CONFIG_GLOBAL_KEY } from './runtime'
+import { PRIMITIVE_JSX_NAMES } from '../../../../primitives/tags'
 
 const fonts: FontDefinition[] = [
   {
@@ -75,6 +76,7 @@ describe('font config helpers', () => {
     const boxPattern = config.patterns?.extend?.box
     const transform = boxPattern?.transform as ((props: Record<string, unknown>) => Record<string, unknown>) | undefined
 
+    expect(boxPattern?.jsx).toEqual(PRIMITIVE_JSX_NAMES)
     expect(boxPattern?.properties).toEqual({
       font: { type: 'string' },
       weight: { type: 'string' },

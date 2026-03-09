@@ -1,6 +1,7 @@
 import type { Config } from '@pandacss/dev'
 import type { BoxPatternExtension } from '../../../../api/patterns'
 import { deepMerge, getPandaConfig, toRecord, type RuntimeStore } from './runtime'
+import { PRIMITIVE_JSX_NAMES } from '../../../../primitives/tags'
 
 function getTransformBody(transform: BoxPatternExtension['transform']): string {
   const source = transform.toString()
@@ -55,6 +56,7 @@ function createBoxTransform(extensions: BoxPatternExtension[]) {
   ) => Record<string, unknown>
 
   return {
+    jsx: [...PRIMITIVE_JSX_NAMES],
     properties,
     blocklist,
     transform,

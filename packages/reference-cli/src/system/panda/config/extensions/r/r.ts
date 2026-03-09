@@ -19,8 +19,10 @@ extendPattern({
 
     if (!r) return {}
 
-    const prefix = container
-      ? `@container ${container} (min-width:`
+    const containerName =
+      typeof container === 'string' && container.length > 0 ? container : undefined
+    const prefix = containerName
+      ? `@container ${containerName} (min-width:`
       : '@container (min-width:'
 
     return Object.fromEntries(
