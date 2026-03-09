@@ -3,7 +3,7 @@
  * Each sandbox is a full project with its own package.json, node_modules, ref sync output.
  *
  * Incremental: does not nuke .sandbox every run. Reuses existing sandboxes when
- * app config and deps are unchanged. Only re-runs ref sync when reference-core
+ * app config and deps are unchanged. Only re-runs ref sync when reference-cli
  * has been rebuilt. REF_TEST_FRESH=1 forces full rebuild.
  *
  * REF_TEST_PROJECT: when set (e.g. for test:quick), only prepare that one sandbox.
@@ -25,16 +25,16 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const PACKAGE_ROOT = join(__dirname, '..', '..')
 const ENVIRONMENTS_ROOT = join(PACKAGE_ROOT, 'src', 'environments')
 const SANDBOX_ROOT = join(PACKAGE_ROOT, '.sandbox')
-const CORE_PATH = join(PACKAGE_ROOT, '..', 'reference-core')
+const CLI_PATH = join(PACKAGE_ROOT, '..', 'reference-cli')
 const LIB_PATH = join(PACKAGE_ROOT, '..', 'reference-lib')
-const CORE_CLI = join(CORE_PATH, 'dist/cli/index.mjs')
+const CLI_BIN = join(CLI_PATH, 'dist/cli/index.mjs')
 const WORKSPACE_ROOT = join(PACKAGE_ROOT, '..', '..')
 
 const PREP_STATE_FILE = '.prep-state.json'
 
 interface PrepState {
   prepHash: string
-  coreHash: string
+  cliHash: string
 }
 
 async function hashAppDir(dir: string): Promise<string> {
@@ -60,9 +60,9 @@ async function hashAppDir(dir: string): Promise<string> {
   return hash.digest('hex')
 }
 
-function getCoreHash(): string {
+function getCliHash(): string {
   try {
-    const st = statSync(CORE_CLI)
+    const st = statSync(CLI_BIN)
     return createHash('sha256').update(`${st.mtimeMs}-${st.size}`).digest('hex')
   } catch {
     return ''
@@ -83,8 +83,8 @@ function buildPackageJson(entry: MatrixEntry): object {
     dependencies: {
       react: reactVersion,
       'react-dom': reactVersion,
-      '@reference-ui/core': `file:${CORE_PATH}`,
-      '@reference-ui/lib': `file:${LIB_PATH}`,
+      '@reference-ui/cli': `link:${CLI_PATH}`,
+      '@reference-ui/lib': `link:${LIB_PATH}`,
     },
     devDependencies: {
       vite: viteVersion,
@@ -101,11 +101,11 @@ function computePrepHash(packageJson: object, appHash: string): string {
 }
 
 async function ensureWorkspaceReady(): Promise<void> {
-  if (!existsSync(CORE_CLI) || process.env.REF_TEST_FRESH) {
+  if (!existsSync(CLI_BIN) || process.env.REF_TEST_FRESH) {
     await execa('pnpm', ['install'], { cwd: WORKSPACE_ROOT })
-    await execa('pnpm', ['run', 'build'], { cwd: CORE_PATH })
+    await execa('pnpm', ['run', 'build'], { cwd: CLI_PATH })
   }
-  await execa('node', [CORE_CLI, 'sync'], { cwd: LIB_PATH, stdio: 'pipe' })
+  await execa('pnpm', ['exec', 'ref', 'sync'], { cwd: LIB_PATH, stdio: 'pipe' })
 }
 
 async function readPrepState(sandboxDir: string): Promise<PrepState | null> {
@@ -121,7 +121,7 @@ async function writePrepState(sandboxDir: string, state: PrepState): Promise<voi
   await writeFile(join(sandboxDir, PREP_STATE_FILE), JSON.stringify(state, null, 0))
 }
 
-/** Clear ref sync output to avoid stale/corrupt state. Keeps node_modules (core, lib) intact. */
+/** Clear ref sync output to avoid stale/corrupt state. Keeps node_modules (cli, lib) intact. */
 async function clearRefUiArtifacts(sandboxDir: string): Promise<void> {
   const refUiDir = join(sandboxDir, '.reference-ui')
   const scopeDir = join(sandboxDir, 'node_modules', '@reference-ui')
@@ -132,7 +132,7 @@ async function clearRefUiArtifacts(sandboxDir: string): Promise<void> {
 }
 
 async function runSync(sandboxDir: string): Promise<void> {
-  await execa('node', [CORE_CLI, 'sync'], {
+  await execa('pnpm', ['exec', 'ref', 'sync'], {
     cwd: sandboxDir,
     stdio: 'inherit',
   })
@@ -154,9 +154,6 @@ async function prepareEntryFull(entry: MatrixEntry): Promise<void> {
     JSON.stringify(packageJson, null, 2)
   )
 
-  // Clear reference-core .ref so pnpm install (file: dep) doesn't hit ENOENT on stale eval files
-  await rm(join(CORE_PATH, '.ref'), { recursive: true, force: true })
-
   await execa('pnpm', ['install', '--ignore-workspace', '-C', sandboxDir], {
     cwd: WORKSPACE_ROOT,
   })
@@ -166,7 +163,7 @@ async function prepareEntryFull(entry: MatrixEntry): Promise<void> {
   const envHash = await hashAppDir(ENVIRONMENTS_ROOT)
   await writePrepState(sandboxDir, {
     prepHash: computePrepHash(packageJson, envHash),
-    coreHash: getCoreHash(),
+    cliHash: getCliHash(),
   })
   console.log('  ✓', entry.name, '(full)')
 }
@@ -177,7 +174,7 @@ async function prepareEntrySyncOnly(entry: MatrixEntry, prepHash: string): Promi
   await runSync(sandboxDir)
   await writePrepState(sandboxDir, {
     prepHash,
-    coreHash: getCoreHash(),
+    cliHash: getCliHash(),
   })
   console.log('  ✓', entry.name, '(sync only)')
 }
@@ -189,12 +186,12 @@ async function prepareEntry(entry: MatrixEntry): Promise<void> {
   const envHash = await hashAppDir(ENVIRONMENTS_ROOT)
   const packageJson = buildPackageJson(entry)
   const prepHash = computePrepHash(packageJson, envHash)
-  const coreHash = getCoreHash()
+  const cliHash = getCliHash()
 
   if (!forceFresh && existsSync(sandboxDir)) {
     const state = await readPrepState(sandboxDir)
     if (state?.prepHash === prepHash) {
-      if (state.coreHash === coreHash) {
+      if (state.cliHash === cliHash) {
         console.log('  ✓', entry.name, '(cached)')
         return
       }

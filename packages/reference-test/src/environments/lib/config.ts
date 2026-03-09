@@ -72,7 +72,7 @@ function collectIdentifiers(expr: string): string[] {
 
 /** Build ui.config.ts. extends/layers are literal string values; add imports for identifiers used. */
 function buildConfigContent(merged: Record<string, unknown>, extendsExpr?: string, layersExpr?: string): string {
-  const imports: string[] = ["import { defineConfig } from '@reference-ui/core'"]
+  const imports: string[] = ["import { defineConfig } from '@reference-ui/cli'"]
   const configObj: Record<string, unknown> = { ...merged }
   delete configObj.extends
   delete configObj.layers

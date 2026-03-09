@@ -6,12 +6,12 @@
   "scripts": {
     "build": "pnpm -r run build",
     "dev": "pnpm --filter @reference-ui/cli run build && pnpm --filter @reference-ui/lib run sync && concurrently --kill-others-on-fail -n cli,docs -c blue,green \"pnpm --filter @reference-ui/cli run dev\" \"pnpm --filter @reference-ui/reference-docs run dev\"",
-    "test": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/reference-test run test",
-    "test:quick": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/reference-test run test:quick",
-    "test:lib": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/lib run test",
+    "test": "pnpm --filter @reference-ui/cli run build && pnpm --filter @reference-ui/reference-test run test",
+    "test:quick": "pnpm --filter @reference-ui/cli run build && pnpm --filter @reference-ui/reference-test run test:quick",
+    "test:lib": "pnpm --filter @reference-ui/cli run build && pnpm --filter @reference-ui/lib run test",
     "test:cli": "nx run reference-cli:test",
     "test:app": "nx run reference-app:test",
-    "test:system": "pnpm --filter @reference-ui/cli run build && pnpm --filter @reference-ui/cli run eslint:txt && concurrently --kill-others-on-fail -n cli,app -c blue,green \"pnpm --filter @reference-ui/cli run test\" \"pnpm --filter @reference-ui/reference-app run test\""
+    "test:system": "pnpm --filter @reference-ui/cli run build && pnpm --filter @reference-ui/cli run eslint:txt && concurrently --kill-others-on-fail -n cli,app -c blue,green \"pnpm --filter @reference-ui/cli run test\" \"pnpm --filter @reference-ui/reference-app run test\" && REF_TEST_FRESH=1 pnpm --filter @reference-ui/reference-test run test:quick"
   },
   "devDependencies": {
     "@swc-node/register": "~1.9.1",
