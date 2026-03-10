@@ -22,6 +22,46 @@ export default function LayersTest() {
           Inside layer: teal.500 via data-layer
         </Span>
       </Div>
+      <Span
+        data-testid="consumer-layer-outside"
+        color="var(--colors-test-primary)"
+      >
+        Outside consumer layer: var has no value
+      </Span>
+      <Div
+        data-testid="consumer-layer-host"
+        id="consumer-layer-id"
+        layer="reference-test"
+      >
+        <Span
+          data-testid="consumer-layer-text"
+          color="var(--colors-test-primary)"
+        >
+          Inside consumer layer: test.primary via data-layer
+        </Span>
+      </Div>
+      <Div
+        data-testid="consumer-layer-mismatch-host"
+        layer="reference-ui"
+      >
+        <Span
+          data-testid="consumer-layer-mismatch"
+          color="var(--colors-test-primary)"
+        >
+          Mismatched layer: test.primary should stay unset
+        </Span>
+        <Div
+          data-testid="consumer-layer-nested-host"
+          layer="reference-test"
+        >
+          <Span
+            data-testid="consumer-layer-nested"
+            color="var(--colors-test-primary)"
+          >
+            Nested matching layer restores test.primary
+          </Span>
+        </Div>
+      </Div>
     </Div>
   )
 }
