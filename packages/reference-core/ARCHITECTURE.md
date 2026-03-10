@@ -12,7 +12,7 @@
 - `baseSystem` is the portable composition artifact emitted by `ref sync`.
 - `extends` merges upstream fragment bundles into config generation.
 - `layers` appends upstream layer-ready CSS without merging upstream tokens into the consumer's Panda config.
-- generated primitives support `layer="<name>"` and emit `data-layer="<name>"` at runtime.
+- generated primitives emit `data-layer="<name>"` at runtime from `ui.config.name` (no `layer` prop).
 - the old `extendSystem(baseSystem)` idea is still interesting, but it is not a shipped public API yet.
 
 See `ROADMAP.md` for future API work and remaining naming cleanup.
@@ -25,7 +25,7 @@ The current composition model has three pieces:
 
 - `defineConfig({ extends: [...] })` for adopting upstream tokens and config fragments
 - `defineConfig({ layers: [...] })` for consuming upstream component CSS without adopting upstream token space
-- `layer="<name>"` on primitives for subtree token scoping at runtime
+- `ui.config.name` as the sole layer identity; primitives automatically get `data-layer="<name>"` at runtime
 
 The portable `BaseSystem` artifact currently carries:
 

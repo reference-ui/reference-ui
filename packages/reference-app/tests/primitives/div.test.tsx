@@ -33,14 +33,11 @@ describe('Div primitive', () => {
     expect(el).toHaveTextContent('Hello')
   })
 
-  it('sets data-layer when layer prop is provided (for layer runtime scoping)', () => {
-    render(
-      <Div data-testid="div-layer" layer="upstream-name">
-        Content
-      </Div>
-    )
+  it('sets data-layer from ui.config.name (automatic layer identity)', () => {
+    render(<Div data-testid="div-layer">Content</Div>)
     const el = screen.getByTestId('div-layer')
-    expect(el.getAttribute('data-layer')).toBe('upstream-name')
+    // Primitives get data-layer from the project config name at packager time.
+    expect(el.getAttribute('data-layer')).toBe('reference-app')
   })
 
   it('accepts style props and renders in the document', () => {

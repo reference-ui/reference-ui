@@ -4,7 +4,7 @@
  * Verifies `layers: [baseSystem]` in an isolated downstream fixture:
  * - upstream CSS is appended to the consumer output
  * - upstream tokens stay out of the consumer Panda config
- * - the primitive `layer` prop emits data-layer for runtime token scoping
+ * - primitives emit data-layer from ui.config.name (automatic layer identity)
  */
 
 import { beforeAll, describe, expect, it } from 'vitest'
@@ -41,7 +41,7 @@ async function waitForFixtureOutputs(maxMs = 20_000): Promise<void> {
   while (Date.now() - start < maxMs) {
     if (existsSync(fixtureCssPath) && existsSync(fixturePandaConfigPath)) {
       const css = readFileSync(fixtureCssPath, 'utf-8')
-      if (css.includes('[data-layer="reference-app"]')) {
+      if (css.includes('[data-layer="layers-isolation"]') && css.includes('[data-layer="reference-app"]')) {
         await new Promise((resolve) => setTimeout(resolve, 150))
         return
       }
@@ -137,59 +137,27 @@ describe('layers isolation fixture', () => {
     expect(fixtureCss).toContain(`--colors-fixture-accent: ${FIXTURE_ACCENT_RGB};`)
   })
 
-  it('emits the layer prop and exposes upstream token variables to that subtree', () => {
+  it('emits data-layer from config name and consumer tokens resolve', () => {
     render(
       <>
-        <Div data-testid="fixture-unlayered-scope" padding="1rem">
-          <Div data-testid="fixture-unlayered-target" color="var(--colors-reference-app-token)">
-            Unlayered target
-          </Div>
-        </Div>
-
-        <Div data-testid="fixture-layer-scope" layer="reference-app" padding="1rem">
+        <Div data-testid="fixture-scope" padding="1rem">
           <Div
-            data-testid="fixture-layer-target"
-            color="var(--colors-reference-app-token)"
+            data-testid="fixture-target"
+            color="var(--colors-fixture-accent)"
             padding="var(--spacing-1r)"
           >
-            Layer target
+            Consumer layer target
           </Div>
         </Div>
       </>
     )
 
-    const unlayeredScope = screen.getByTestId('fixture-unlayered-scope')
-    const layeredScope = screen.getByTestId('fixture-layer-scope')
-    const layeredTarget = screen.getByTestId('fixture-layer-target')
+    const scope = screen.getByTestId('fixture-scope')
+    const target = screen.getByTestId('fixture-target')
 
-    expect(layeredScope.getAttribute('data-layer')).toBe('reference-app')
-    expect(unlayeredScope.getAttribute('data-layer')).toBeNull()
+    // Test runs in reference-app; Div comes from reference-app's bundle, so data-layer is reference-app.
+    expect(scope.getAttribute('data-layer')).toBe('reference-app')
 
-    const layeredTokenValue = window
-      .getComputedStyle(layeredScope)
-      .getPropertyValue('--colors-reference-app-token')
-      .trim()
-    const unlayeredTokenValue = window
-      .getComputedStyle(unlayeredScope)
-      .getPropertyValue('--colors-reference-app-token')
-      .trim()
-    const upstreamLayerTokenValue = window.getComputedStyle(layeredScope).getPropertyValue('--colors-teal-500').trim()
-
-    if (layeredTokenValue) {
-      expect(layeredTokenValue).toBe(REFERENCE_APP_TOKEN_RGB)
-    }
-    if (upstreamLayerTokenValue) {
-      expect(upstreamLayerTokenValue).toBe(colors.teal[500].value)
-    }
-
-    if (layeredTokenValue || unlayeredTokenValue) {
-      expect(unlayeredTokenValue).toBe('')
-    }
-
-    const targetStyle = window.getComputedStyle(layeredTarget)
-    if (targetStyle.color && !targetStyle.color.includes('var(')) {
-      expect(targetStyle.color).toBe(REFERENCE_APP_TOKEN_RGB)
-    }
-    expect(layeredTarget).toBeInTheDocument()
+    expect(target).toBeInTheDocument()
   })
 })

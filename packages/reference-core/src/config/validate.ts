@@ -21,6 +21,12 @@ function validateName(cfg: Record<string, unknown>): void {
   if (name == null || typeof name !== 'string' || name.trim() === '') {
     throw ConfigValidationError.mustHaveName()
   }
+  const trimmed = name.trim()
+  if (trimmed.includes('"') || /[\r\n]/.test(trimmed)) {
+    throw ConfigValidationError.invalidName(
+      'name must be safe for CSS @layer and [data-layer] (no double-quotes or newlines)'
+    )
+  }
 }
 
 function validateBaseSystems(

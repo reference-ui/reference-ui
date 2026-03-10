@@ -27,7 +27,7 @@ export interface ReferenceUIConfig {
 
   /**
    * Identity of this design system (CSS @layer, data-layer selector).
-   * Required.
+   * Required. Primitives automatically render this value as data-layer on the DOM.
    */
   name: string
 
@@ -86,6 +86,7 @@ export interface ReferenceUIConfig {
  * import { defineConfig } from '@reference-ui/core'
  *
  * export default defineConfig({
+ *   name: 'my-app',
  *   include: ['src/**\/*.{ts,tsx}']
  * })
  * ```

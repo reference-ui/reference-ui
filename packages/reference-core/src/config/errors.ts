@@ -42,6 +42,10 @@ export class ConfigValidationError extends ConfigError {
     )
   }
 
+  static invalidName(reason: string): ConfigValidationError {
+    return new ConfigValidationError(`Config 'name' is invalid.\n${reason}`)
+  }
+
   static invalidBaseSystem(field: 'extends' | 'layers', reason: string): ConfigValidationError {
     return new ConfigValidationError(`Config field '${field}' is invalid.\n${reason}`)
   }
