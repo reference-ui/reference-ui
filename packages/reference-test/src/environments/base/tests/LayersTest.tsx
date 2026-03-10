@@ -18,6 +18,12 @@ export default function LayersTest() {
           data-testid="consumer-layer-host"
           id="consumer-layer-id"
         >
+          <span
+            data-testid="consumer-layer-raw-child"
+            style={{ color: 'var(--colors-test-primary)' }}
+          >
+            Raw DOM inside consumer layer host inherits the scoped token
+          </span>
           <Span
             data-testid="consumer-layer-text"
             color="var(--colors-test-primary)"

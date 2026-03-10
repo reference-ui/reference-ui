@@ -8,6 +8,8 @@ import { runRefSync, waitForRefSyncReady } from '../../environments/lib/ref-sync
 
 const LAYER_TOKEN_VAR = '--colors-test-primary'
 const LAYER_NAME = 'reference-test'
+const RENAMED_LAYER_NAME = 'reference-test-renamed'
+const REACT_LAYER_PLACEHOLDER = '__REFERENCE_UI_LAYER_NAME__'
 const sandboxDir = getSandboxDir()
 const { tokensConfig } = await import(pathToFileURL(join(sandboxDir, 'tokens.ts')).href)
 
@@ -100,6 +102,25 @@ test.describe.serial('layer', () => {
     expect(outsideToken).toBe('')
   })
 
+  test('primitive host scopes tokens to raw DOM descendants, but not outside DOM', async ({ page }) => {
+    test.setTimeout(60_000)
+    await enableLayersMode()
+    await page.goto('/')
+
+    const outside = page.getByTestId('consumer-layer-outside')
+    const rawChild = page.getByTestId('consumer-layer-raw-child')
+
+    await expect(rawChild).toBeVisible()
+
+    const outsideToken = await outside.evaluate((e) =>
+      getComputedStyle(e).getPropertyValue('--colors-test-primary').trim()
+    )
+    const rawChildColor = await rawChild.evaluate((e) => getComputedStyle(e).color)
+
+    expect(outsideToken).toBe('')
+    expect(rawChildColor).toBe(hexToRgb(tokensConfig.colors.test.primary.value))
+  })
+
   test('layers only – upstream theme token in CSS; consumer primitives use consumer scope', async ({ page }) => {
     test.setTimeout(60_000)
     await addToConfig({ extends: '[]', layers: '[baseSystem]' })
@@ -115,6 +136,28 @@ test.describe.serial('layer', () => {
       getComputedStyle(e).getPropertyValue('--colors-teal-500').trim()
     )
     expect(outsideColor).not.toBe(colors.teal[500].value)
+  })
+
+  test('renaming ui.config.name updates CSS scope and packaged react runtime', async () => {
+    test.setTimeout(60_000)
+    await addToConfig({
+      name: RENAMED_LAYER_NAME,
+      extends: '[]',
+      layers: '[baseSystem]',
+    })
+    await runRefSync(sandboxDir)
+
+    const stylesPath = join(sandboxDir, '.reference-ui', 'react', 'styles.css')
+    const reactBundlePath = join(sandboxDir, '.reference-ui', 'react', 'react.mjs')
+    const stylesContent = await readFile(stylesPath, 'utf-8')
+    const reactBundle = await readFile(reactBundlePath, 'utf-8')
+
+    expect(stylesContent).toContain(`@layer ${RENAMED_LAYER_NAME} {`)
+    expect(stylesContent).toContain(`[data-layer="${RENAMED_LAYER_NAME}"]`)
+    expect(stylesContent).not.toContain(`[data-layer="${LAYER_NAME}"]`)
+
+    expect(reactBundle).toContain(RENAMED_LAYER_NAME)
+    expect(reactBundle).not.toContain(REACT_LAYER_PLACEHOLDER)
   })
 
 

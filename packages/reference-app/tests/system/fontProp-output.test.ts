@@ -22,6 +22,26 @@ async function waitForGeneratedFile(...segments: string[]): Promise<string | und
   return readGeneratedFile(...segments)
 }
 
+async function waitForGeneratedFileContaining(
+  needle: string,
+  ...segments: string[]
+): Promise<string | undefined> {
+  const startedAt = Date.now()
+  const maxWaitMs = 20_000
+
+  while (Date.now() - startedAt < maxWaitMs) {
+    const content = readGeneratedFile(...segments)
+
+    if (content?.includes(needle)) {
+      return content
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 50))
+  }
+
+  return readGeneratedFile(...segments)
+}
+
 describe('font prop output (e2e)', () => {
   it('copies the source-backed font prop fixture into virtual output', () => {
     expect(hasVirtualSystemFile('fontProp.fixture.tsx')).toBe(true)
@@ -41,9 +61,17 @@ describe('font prop output (e2e)', () => {
   })
 
   it('emits generated system font registry types', async () => {
-    const systemTypes = await waitForGeneratedFile('system', 'system.d.mts')
+    const systemTypes = await waitForGeneratedFileContaining(
+      'interface ReferenceFontRegistry {',
+      'system',
+      'system.d.mts'
+    )
     const systemGeneratedTypes = await waitForGeneratedFile('system', 'types.generated.d.mts')
-    const reactTypes = await waitForGeneratedFile('react', 'react.d.mts')
+    const reactTypes = await waitForGeneratedFileContaining(
+      'interface ReferenceFontRegistry {',
+      'react',
+      'react.d.mts'
+    )
     const reactGeneratedTypes = await waitForGeneratedFile('react', 'types.generated.d.mts')
 
     expect(systemTypes).toContain('interface ReferenceFontRegistry {')
