@@ -6,10 +6,10 @@
   "tags": [],
   "targets": {
     "test": {
-      "dependsOn": ["reference-cli:build"],
+      "dependsOn": ["reference-core:build"],
       "executor": "nx:run-commands",
       "options": {
-        "command": "nx run reference-cli:build --skip-nx-cache && pnpm test",
+        "command": "nx run reference-core:build --skip-nx-cache && pnpm test",
         "cwd": "packages/reference-test"
       }
     }

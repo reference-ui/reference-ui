@@ -3,7 +3,7 @@
  *
  * Unit/component tests for the Div primitive: mount with style props and
  * verify output (class names and, when CSS is available, computed styles).
- * Uses CLI's built styled output via vitest alias; design system CSS is
+ * Uses reference-core's built styled output via vitest alias; design system CSS is
  * injected when present (e.g. after ref sync).
  */
 
@@ -57,7 +57,7 @@ describe('Div primitive', () => {
     const el = screen.getByTestId('div-styled')
     expect(el).toBeInTheDocument()
     expect(el.tagName).toBe('DIV')
-    // When using reference-core Div (or CLI primitives with full box pattern), className will be set from Panda utilities
+    // When using reference-core Div (or the legacy CLI package with full box pattern), className will be set from Panda utilities
   })
 
   it('resolves computed styles when design system CSS is injected', () => {
@@ -75,7 +75,7 @@ describe('Div primitive', () => {
     )
     const el = screen.getByTestId('div-computed')
     const style = window.getComputedStyle(el)
-    // CLI scaffold Div spreads props to DOM; full box-based Div emits utility classes. Assert only when applied.
+    // The core scaffold Div spreads props to DOM; the full box-based Div emits utility classes. Assert only when applied.
     if (style.paddingTop) {
       expect(style.paddingTop).toBe('16px')
       expect(style.backgroundColor).toBe(TEST_BG)

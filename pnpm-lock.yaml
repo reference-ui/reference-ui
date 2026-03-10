@@ -35,9 +35,9 @@ importers:
 
   packages/reference-app:
     dependencies:
-      '@reference-ui/cli':
+      '@reference-ui/core':
         specifier: workspace:*
-        version: link:../reference-cli
+        version: link:../reference-core
       '@reference-ui/lib':
         specifier: workspace:*
         version: link:../reference-lib
@@ -79,7 +79,7 @@ importers:
         specifier: ^4.0.18
         version: 4.0.18(@types/node@25.1.0)(happy-dom@15.11.7)(lightningcss@1.30.2)(tsx@4.21.0)(yaml@2.8.2)
 
-  packages/reference-cli:
+  packages/reference-core:
     dependencies:
       '@pandacss/dev':
         specifier: ^1.8.2
@@ -160,9 +160,9 @@ importers:
 
   packages/reference-docs:
     dependencies:
-      '@reference-ui/cli':
+      '@reference-ui/core':
         specifier: workspace:*
-        version: link:../reference-cli
+        version: link:../reference-core
       '@reference-ui/lib':
         specifier: workspace:*
         version: link:../reference-lib
@@ -212,9 +212,9 @@ importers:
 
   packages/reference-lib:
     devDependencies:
-      '@reference-ui/cli':
+      '@reference-ui/core':
         specifier: workspace:*
-        version: link:../reference-cli
+        version: link:../reference-core
       typescript:
         specifier: ~5.9.3
         version: 5.9.3
@@ -231,9 +231,9 @@ importers:
       '@playwright/test':
         specifier: ^1.48.0
         version: 1.58.2
-      '@reference-ui/cli':
+      '@reference-ui/core':
         specifier: workspace:*
-        version: link:../reference-cli
+        version: link:../reference-core
       '@reference-ui/lib':
         specifier: workspace:*
         version: link:../reference-lib

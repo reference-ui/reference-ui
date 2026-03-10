@@ -2,7 +2,7 @@
  * @vitest-environment happy-dom
  *
  * Tests rhythm spacing utilities: padding="2r" etc. map to calc(n * var(--spacing-r)).
- * Rhythm is a built-in extension in reference-cli.
+ * Rhythm is a built-in extension in reference-core.
  */
 
 import { describe, it, expect, beforeAll } from 'vitest'

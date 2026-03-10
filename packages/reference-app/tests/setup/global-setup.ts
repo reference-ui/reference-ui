@@ -6,11 +6,11 @@ import { fileURLToPath } from 'node:url'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const pkgRoot = resolve(__dirname, '..', '..')
 const libRoot = resolve(pkgRoot, '..', 'reference-lib')
-const refCli = join(
+const refCore = join(
   pkgRoot,
   'node_modules',
   '@reference-ui',
-  'cli',
+  'core',
   'dist',
   'cli',
   'index.mjs'
@@ -42,7 +42,7 @@ function killProcessTree(pid: number | undefined): void {
 }
 
 export default async function globalSetup() {
-  const libWatchProcess = spawn('node', [refCli, 'sync', '--watch', '--debug'], {
+  const libWatchProcess = spawn('node', [refCore, 'sync', '--watch', '--debug'], {
     cwd: libRoot,
     stdio: 'inherit',
     detached: true,
@@ -57,8 +57,8 @@ export default async function globalSetup() {
     throw new Error('reference-lib ref sync --watch failed to produce .reference-ui/system/baseSystem.mjs')
   }
 
-  execSync(`node "${refCli}" clean`, { cwd: pkgRoot, stdio: 'pipe', timeout: 10_000 })
-  const appWatchProcess = spawn('node', [refCli, 'sync', '--watch', '--debug'], {
+  execSync(`node "${refCore}" clean`, { cwd: pkgRoot, stdio: 'pipe', timeout: 10_000 })
+  const appWatchProcess = spawn('node', [refCore, 'sync', '--watch', '--debug'], {
     cwd: pkgRoot,
     stdio: 'inherit',
     detached: true,

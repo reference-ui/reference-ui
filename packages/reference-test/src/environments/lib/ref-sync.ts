@@ -11,7 +11,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const PACKAGE_ROOT = join(__dirname, '..', '..', '..')
 const LIB_PATH = join(PACKAGE_ROOT, '..', 'reference-lib')
 
-/** Must match REF_SYNC_READY_MESSAGE in @reference-ui/cli sync/complete.ts */
+/** Must match REF_SYNC_READY_MESSAGE in @reference-ui/core sync/complete.ts */
 const REF_SYNC_READY_MESSAGE = '[ref sync] ready'
 
 const REF_SYNC_LOG = 'ref-sync.log'

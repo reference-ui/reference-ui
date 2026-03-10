@@ -6,7 +6,7 @@ import { addToConfig, getSandboxDir } from '../../environments/lib/config.js'
 import { runRefSync, waitForRefSyncReady } from '../../environments/lib/ref-sync.js'
 
 const FOUNDATION_VAR = '--colors-teal-500'
-const LAYER_NAME = 'reference-ui'
+const LAYER_NAME = 'reference-test'
 
 test.describe.serial('layer', () => {
   test('addToConfig with layers only writes valid ui.config.ts', async () => {
@@ -17,7 +17,7 @@ test.describe.serial('layer', () => {
     expect(content).toContain("import { baseSystem } from '@reference-ui/lib'")
   })
 
-  test('layers only – styles.css has @layer reference-ui and [data-layer] with theme tokens', async () => {
+  test('layers only – styles.css has @layer reference-test and [data-layer] with theme tokens', async () => {
     test.setTimeout(60_000)
     // Lib is already synced by test:prepare; only sandbox needs sync after config change.
     await addToConfig({ extends: '[]', layers: '[baseSystem]' })

@@ -1,6 +1,6 @@
 # reference-lib TODO
 
-`@reference-ui/lib` is the first-party foundational design system built on `@reference-ui/cli`.
+`@reference-ui/lib` is the first-party foundational design system built on `@reference-ui/core`.
 
 Users consume it as:
 
