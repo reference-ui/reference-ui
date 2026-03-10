@@ -259,7 +259,62 @@ Must-have test shape for each feature:
 Release note:
 The goal is not more tests everywhere. The goal is a clear ownership model for where each contract lives.
 
-## 8. Determinism And Snapshot-Style Output Contracts
+## 8. Native N-API / Rust Release Readiness
+
+Status: `partially defined, not yet release-gated`
+
+Files:
+
+- `src/virtual/native/Cargo.toml`
+- `src/virtual/native/package.json`
+- `src/virtual/native/src/lib.rs`
+- `src/virtual/native/src/rewrite.rs`
+- `src/virtual/native/loader.ts`
+- `src/virtual/transforms/rewrite-css-imports.ts`
+- `src/virtual/transforms/rewrite-cva-imports.ts`
+
+Current native target list:
+
+- `x86_64-apple-darwin`
+- `aarch64-apple-darwin`
+- `x86_64-pc-windows-msvc`
+- `x86_64-unknown-linux-gnu`
+
+Must-have test coverage:
+
+- native rewrite behavior matches the expected JS-side transform contract
+- `rewriteCssImports` handles supported import shapes correctly
+- `rewriteCvaImports` handles supported import shapes correctly
+- aliasing behavior is correct
+- type-only imports are ignored correctly
+- files with no relevant imports are returned unchanged
+- parse failures or load failures surface stable, actionable errors
+- loader resolves the correct binary name for each supported platform
+- unsupported platforms fail predictably
+- missing native binary fails predictably
+
+Must-have release/distribution coverage:
+
+- each declared target can actually be built in CI
+- each target artifact can be loaded by Node successfully
+- the binary is packaged in the location the loader expects
+- release artifacts are named consistently with the loader's platform map
+- macOS Intel and Apple Silicon are both verified
+- Linux x64 GNU is verified
+- Windows x64 MSVC is verified
+- the supported-platform error message stays in sync with the real target list
+
+Recommended release matrix:
+
+- macOS x64
+- macOS arm64
+- Linux x64 GNU
+- Windows x64 MSVC
+
+Release note:
+This is not just a correctness problem. It is a publishing problem. A native binding that works locally but is not built, packaged, and loadable on every supported target is a release blocker.
+
+## 9. Determinism And Snapshot-Style Output Contracts
 
 Status: `partial`
 
@@ -282,7 +337,7 @@ Must-have assertions:
 Release note:
 Release quality depends heavily on deterministic generated output.
 
-## 9. Negative And Recovery Testing
+## 10. Negative And Recovery Testing
 
 Status: `started downstream, still sparse in core`
 
@@ -320,11 +375,13 @@ Definition of done:
 - deterministic artifact assertions for all generated outputs
 - rerun/idempotence tests for sync, packager, and clean
 - failure-recovery tests where partial outputs already exist
+- native target packaging and load verification for every supported platform
 
 Definition of done:
 
 - reruns are proven safe
 - interruption and stale-artifact scenarios are explicitly covered
+- native binaries are proven buildable and loadable on all supported targets
 
 ## Phase 3: Compatibility Confidence
 
@@ -345,6 +402,15 @@ A release candidate should not be cut unless all of these are green:
 4. `pnpm --filter @reference-ui/reference-app run test`
 5. `REF_TEST_FRESH=1 pnpm --filter @reference-ui/reference-test run test:quick`
 6. `pnpm test:system`
+
+In addition, a publishable release of `reference-core` with native bindings should have a platform matrix that proves:
+
+1. the N-API binary builds on macOS x64
+2. the N-API binary builds on macOS arm64
+3. the N-API binary builds on Linux x64 GNU
+4. the N-API binary builds on Windows x64 MSVC
+5. a Node smoke test can load the built binary on each target
+6. the packaged artifact path matches what `src/virtual/native/loader.ts` expects
 
 If release cadence or runtime becomes an issue, `pnpm test:system` remains the ultimate gate and the others can be partitioned in CI, but they should still all run before publishing.
 
@@ -377,5 +443,6 @@ Recommended order:
 4. add direct tests for `src/clean/command.ts`
 5. add direct tests for `src/watch/worker.ts` event mapping and filtering
 6. add one worker-failure recovery suite
+7. define and automate the native N-API release matrix for macOS, Linux, and Windows
 
 That sequence closes the most serious release-readiness gap fastest.
