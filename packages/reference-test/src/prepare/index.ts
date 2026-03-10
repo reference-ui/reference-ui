@@ -27,7 +27,7 @@ const ENVIRONMENTS_ROOT = join(PACKAGE_ROOT, 'src', 'environments')
 const SANDBOX_ROOT = join(PACKAGE_ROOT, '.sandbox')
 const CORE_PATH = join(PACKAGE_ROOT, '..', 'reference-core')
 const LIB_PATH = join(PACKAGE_ROOT, '..', 'reference-lib')
-const CORE_CLI = join(CORE_PATH, 'dist/cli/index.mjs')
+const CORE_BIN = join(CORE_PATH, 'dist/cli/index.mjs')
 const WORKSPACE_ROOT = join(PACKAGE_ROOT, '..', '..')
 
 const PREP_STATE_FILE = '.prep-state.json'
@@ -62,7 +62,7 @@ async function hashAppDir(dir: string): Promise<string> {
 
 function getCoreHash(): string {
   try {
-    const st = statSync(CORE_CLI)
+    const st = statSync(CORE_BIN)
     return createHash('sha256').update(`${st.mtimeMs}-${st.size}`).digest('hex')
   } catch {
     return ''
@@ -83,8 +83,8 @@ function buildPackageJson(entry: MatrixEntry): object {
     dependencies: {
       react: reactVersion,
       'react-dom': reactVersion,
-      '@reference-ui/core': `file:${CORE_PATH}`,
-      '@reference-ui/lib': `file:${LIB_PATH}`,
+      '@reference-ui/core': `link:${CORE_PATH}`,
+      '@reference-ui/lib': `link:${LIB_PATH}`,
     },
     devDependencies: {
       vite: viteVersion,
@@ -101,11 +101,11 @@ function computePrepHash(packageJson: object, appHash: string): string {
 }
 
 async function ensureWorkspaceReady(): Promise<void> {
-  if (!existsSync(CORE_CLI) || process.env.REF_TEST_FRESH) {
+  if (!existsSync(CORE_BIN) || process.env.REF_TEST_FRESH) {
     await execa('pnpm', ['install'], { cwd: WORKSPACE_ROOT })
     await execa('pnpm', ['run', 'build'], { cwd: CORE_PATH })
   }
-  await execa('node', [CORE_CLI, 'sync'], { cwd: LIB_PATH, stdio: 'pipe' })
+  await execa('pnpm', ['exec', 'ref', 'sync'], { cwd: LIB_PATH, stdio: 'pipe' })
 }
 
 async function readPrepState(sandboxDir: string): Promise<PrepState | null> {
@@ -132,7 +132,7 @@ async function clearRefUiArtifacts(sandboxDir: string): Promise<void> {
 }
 
 async function runSync(sandboxDir: string): Promise<void> {
-  await execa('node', [CORE_CLI, 'sync'], {
+  await execa('pnpm', ['exec', 'ref', 'sync'], {
     cwd: sandboxDir,
     stdio: 'inherit',
   })
@@ -153,9 +153,6 @@ async function prepareEntryFull(entry: MatrixEntry): Promise<void> {
     join(sandboxDir, 'package.json'),
     JSON.stringify(packageJson, null, 2)
   )
-
-  // Clear reference-core .ref so pnpm install (file: dep) doesn't hit ENOENT on stale eval files
-  await rm(join(CORE_PATH, '.ref'), { recursive: true, force: true })
 
   await execa('pnpm', ['install', '--ignore-workspace', '-C', sandboxDir], {
     cwd: WORKSPACE_ROOT,

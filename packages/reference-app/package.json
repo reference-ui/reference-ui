@@ -7,19 +7,23 @@
     "dev": "ref sync && (ref sync --watch & vite)",
     "build": "ref sync && vite build",
     "preview": "vite preview",
-    "test": "vitest run",
+    "test": "concurrently --kill-others-on-fail -n typecheck,test -c yellow,green \"tsc --noEmit\" \"vitest run\"",
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@reference-ui/cli": "workspace:*",
+    "@reference-ui/core": "workspace:*",
+    "@reference-ui/lib": "workspace:*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
-
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.0.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "@vitejs/plugin-react": "^4.2.0",
+    "concurrently": "^9.2.1",
+    "happy-dom": "^15.0.0",
     "typescript": "~5.9.3",
     "vite": "^6.0.0",
     "vitest": "^4.0.18"

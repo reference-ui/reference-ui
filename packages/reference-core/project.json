@@ -10,15 +10,12 @@
         "command": "pnpm run build",
         "cwd": "packages/reference-core"
       },
-      "outputs": [
-        "{projectRoot}/dist",
-        "{projectRoot}/src/cli/virtual/native"
-      ]
+      "outputs": ["{projectRoot}/dist"]
     },
-    "dev": {
+    "test": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "pnpm run dev",
+        "command": "pnpm run test",
         "cwd": "packages/reference-core"
       },
       "dependsOn": ["reference-core:build"]

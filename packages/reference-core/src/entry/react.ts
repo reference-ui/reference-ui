@@ -1,16 +1,24 @@
-// Runtime React components and APIs (browser-safe)
-// This is what users import in their React app
+/**
+ * @reference-ui/react entry
+ * Runtime React components and APIs
+ */
 
-export * from '../primitives'
+import type React from 'react'
+import type { SystemStyleObject } from '@reference-ui/styled/types'
+import type { ReferenceSystemStyleObject } from '../system/types'
 
-export { Flex, Stack, HStack, VStack } from '../system/jsx/index.js'
-
-export { css } from '../styled/api/index.js'
-
-export { cva as recipe } from '../system/css/index.js'
-export type { RecipeVariantProps } from '../system/css/index.js'
-export type { BoxProps } from '../system/jsx/box.js'
-export type { SystemStyleObject } from '../system/types/index.js'
-export type { ResponsiveBreakpoints } from '../styled/patterns.d.js'
-export { getRhythm } from '../styled/index.js'
-export { colors } from '../styled/theme/colors.js'
+export * from '../system/primitives'
+export { css } from '@reference-ui/styled/css'
+export { cva, cva as recipe } from '@reference-ui/styled/css/cva'
+export type { RecipeVariantProps } from '@reference-ui/styled/css/cva'
+export type { SystemStyleObject } from '@reference-ui/styled/types'
+export type {
+  ReferenceFontName,
+  ReferenceFontProps,
+  ReferenceFontRegistry,
+  ReferenceFontWeightName,
+  ReferenceFontWeightValue,
+  ReferenceSystemStyleObject,
+} from '../system/types'
+export type BoxProps = React.ComponentPropsWithoutRef<'div'> & ReferenceSystemStyleObject
+export type ResponsiveBreakpoints = { [breakpoint: number]: SystemStyleObject }

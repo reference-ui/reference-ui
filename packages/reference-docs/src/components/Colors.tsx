@@ -1,6 +1,6 @@
 import { Div, H3 } from '@reference-ui/react'
+import { colors as coreColors } from '@reference-ui/lib/theme'
 import { Color } from './Color'
-import { colors as coreColors } from '@reference-ui/react'
 
 interface ColorScale {
   [key: string]: { value: string }
