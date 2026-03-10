@@ -1,6 +1,6 @@
 # @reference-ui/lib
 
-Foundational design system package built on `@reference-ui/cli`.
+Foundational design system package built on `@reference-ui/core`.
 
 ## Exports
 

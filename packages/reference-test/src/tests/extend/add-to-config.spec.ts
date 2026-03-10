@@ -12,7 +12,7 @@ test.describe('extend', () => {
     const configPath = join(sandboxDir, 'ui.config.ts')
     const content = await readFile(configPath, 'utf-8')
 
-    expect(content).toContain("import { defineConfig } from '@reference-ui/cli'")
+    expect(content).toContain("import { defineConfig } from '@reference-ui/core'")
     expect(content).toContain('defineConfig(')
     expect(content).toContain('reference-test')
     expect(content).toContain('"debug": false')

@@ -1,4 +1,4 @@
-import { defineConfig } from '@reference-ui/cli'
+import { defineConfig } from '@reference-ui/core'
 import { baseSystem as referenceAppBaseSystem } from '../../../.reference-ui/system/baseSystem.mjs'
 
 export default defineConfig({

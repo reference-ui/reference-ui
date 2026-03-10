@@ -11,8 +11,8 @@ Knowledge-first UI component library.
 ```
 reference-ui/
 ├── packages/
-│   ├── reference-cli/       # Design system CLI and generated package pipeline
-│   ├── reference-lib/       # First-party design system built on reference-cli
+│   ├── reference-core/      # Design system core package and generated pipeline
+│   ├── reference-lib/       # First-party design system built on reference-core
 │   ├── reference-app/       # App dogfood bed for the generated runtime
 │   ├── reference-docs/      # Documentation site using the CLI
 │   └── reference-test/      # End-to-end/system composition testbed
@@ -28,4 +28,4 @@ reference-ui/
 
 ## Next Steps
 
-See `packages/reference-cli/ROADMAP.md` for the active platform roadmap.
+See `packages/reference-core/ROADMAP.md` for the active platform roadmap.

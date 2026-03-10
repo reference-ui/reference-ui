@@ -11,7 +11,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@reference-ui/cli": "workspace:*",
+    "@reference-ui/core": "workspace:*",
     "@reference-ui/lib": "workspace:*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"

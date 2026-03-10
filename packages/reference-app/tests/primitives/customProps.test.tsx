@@ -2,7 +2,7 @@
  * @vitest-environment happy-dom
  *
  * Tests for custom pattern props: font, weight, container, r
- * These props are defined in reference-cli internal/props/ and extend the box pattern.
+ * These props are defined in reference-core internal/props/ and extend the box pattern.
  */
 
 import { describe, it, expect, beforeAll } from 'vitest'

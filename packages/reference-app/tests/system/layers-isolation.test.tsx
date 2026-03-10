@@ -25,11 +25,11 @@ const fixtureCssPath = join(fixtureOutDir, 'styled', 'styles.css')
 const fixturePandaConfigPath = join(fixtureOutDir, 'panda.config.ts')
 const upstreamBaseSystemPath = join(pkgRoot, '.reference-ui', 'system', 'baseSystem.mjs')
 const FIXTURE_ACCENT_RGB = 'rgb(17, 24, 39)'
-const refCli = join(
+const refCore = join(
   pkgRoot,
   'node_modules',
   '@reference-ui',
-  'cli',
+  'core',
   'dist',
   'cli',
   'index.mjs'
@@ -68,13 +68,13 @@ function killProcessTree(pid: number | undefined): void {
 }
 
 async function runFixtureSync(): Promise<void> {
-  execSync(`node "${refCli}" clean`, {
+  execSync(`node "${refCore}" clean`, {
     cwd: fixtureRoot,
     stdio: 'pipe',
     timeout: 15_000,
   })
 
-  const syncProcess = spawn('node', [refCli, 'sync'], {
+  const syncProcess = spawn('node', [refCore, 'sync'], {
     cwd: fixtureRoot,
     stdio: 'pipe',
     detached: true,

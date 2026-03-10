@@ -1,6 +1,6 @@
 # @reference-ui/reference-app
 
-Reference application demonstrating the new CLI workflow.
+Reference application demonstrating the current core workflow.
 
 ## Usage
 
@@ -16,9 +16,9 @@ This will:
 
 ## How it works
 
-- Imports `@reference-ui/cli` as a dev dependency
+- Imports `@reference-ui/core` as a dev dependency
 - Uses the `ref` CLI command to sync design system
-- No manual Panda CSS configuration needed - handled by the CLI
+- No manual Panda CSS configuration needed - handled by the core package
 
 ## Testing
 
@@ -31,4 +31,4 @@ To run only primitives tests:
 pnpm test -- tests/primitives/
 ```
 
-Primitives tests resolve `@reference-ui/styled` to the CLI’s built styled output (`reference-cli/src/system/styled`) via a Vitest alias, so they don’t depend on a successful app `ref sync` for module resolution. For full computed-style assertions, the design system CSS must exist (e.g. after a successful `ref sync` that runs Panda); otherwise those tests are skipped.
+Primitives tests resolve `@reference-ui/styled` to the core package’s built styled output (`reference-core/src/system/styled`) via a Vitest alias, so they don’t depend on a successful app `ref sync` for module resolution. For full computed-style assertions, the design system CSS must exist (e.g. after a successful `ref sync` that runs Panda); otherwise those tests are skipped.
