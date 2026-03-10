@@ -8,9 +8,11 @@ export const PANDA_CSS_FILENAME = 'styles.css'
 
 /**
  * After Panda cssgen: transform the emitted CSS into layer-ready form and append upstream layers.
- * - Replaces file content with @layer <name> { ... } + [data-layer="<name>"] token block.
- * - Appends config.layers[].css to the stylesheet.
- * Returns the layer-ready CSS for the current system (for baseSystem.css) or undefined if no file.
+ * - Always computes layer-ready CSS for the current system (for baseSystem.css).
+ * - Only rewrites the runtime stylesheet when config.layers is enabled.
+ * - In layers mode, replaces file content with @layer <name> { ... } + [data-layer="<name>"] token block
+ *   and appends config.layers[].css to the stylesheet.
+ * Returns the layer-ready CSS for the current system or undefined if no file.
  */
 export function applyLayerPostprocess(
   outDir: string,
@@ -22,9 +24,13 @@ export function applyLayerPostprocess(
 
   const raw = readFileSync(stylesPath, 'utf-8')
   const layerCss = createLayerCssFromContent(raw, config.name)
-  let finalCss = layerCss
 
   const layers = config.layers ?? []
+  if (layers.length === 0) {
+    return layerCss
+  }
+
+  let finalCss = layerCss
   for (const layer of layers) {
     if (layer.css) {
       finalCss += '\n\n' + layer.css.trim()

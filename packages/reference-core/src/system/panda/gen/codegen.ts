@@ -1,5 +1,5 @@
 import { createRequire } from 'node:module'
-import { existsSync, lstatSync, mkdirSync, readlinkSync, rmSync, symlinkSync } from 'node:fs'
+import { existsSync, lstatSync, mkdirSync, readlinkSync, rmSync, symlinkSync, unlinkSync } from 'node:fs'
 import { dirname, join, parse, resolve } from 'node:path'
 import { generate as pandaGenerate, cssgen as pandaCssgen, loadConfigAndCreateContext } from '@pandacss/node'
 import { getConfig, getCwd } from '../../../config/store'
@@ -44,8 +44,11 @@ function ensurePandaResolvableFromOutDir(userCwd: string, outDir: string): void 
     if (stats.isSymbolicLink() && readlinkSync(outPandacss) === corePandacss) {
       return
     }
-
-    rmSync(outPandacss, { recursive: true, force: true })
+    if (stats.isSymbolicLink()) {
+      unlinkSync(outPandacss)
+    } else {
+      rmSync(outPandacss, { recursive: true, force: true })
+    }
   } catch {
     // No existing entry to replace.
   }

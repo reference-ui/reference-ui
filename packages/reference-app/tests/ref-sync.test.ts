@@ -31,12 +31,13 @@ describe('ref sync', () => {
     }
   })
 
-  it('emits layer-ready styles.css (@layer <name> and [data-layer]) when Panda runs', () => {
+  it('keeps runtime styles.css in normal Panda form when layers mode is disabled', () => {
     const stylesPath = join(refUiDir, 'styled', 'styles.css')
     if (!existsSync(stylesPath)) return
     const css = readFileSync(stylesPath, 'utf-8')
-    expect(css).toMatch(/@layer\s+reference-app\s*\{/)
-    expect(css).toMatch(/\[data-layer="reference-app"\]/)
+    expect(css).not.toMatch(/@layer\s+reference-app\s*\{/)
+    expect(css).not.toMatch(/\[data-layer="reference-app"\]/)
+    expect(css).toMatch(/^@layer\s+[^;\n]+;/)
   })
 
   it('creates .reference-ui/system with package.json and system.mjs', () => {
