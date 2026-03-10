@@ -5,7 +5,7 @@ import { colors } from '@reference-ui/lib/theme'
 import { addToConfig, getSandboxDir } from '../../environments/lib/config.js'
 import { runRefSync, waitForRefSyncReady } from '../../environments/lib/ref-sync.js'
 
-const FOUNDATION_VAR = '--colors-teal-500'
+const LAYER_TOKEN_VAR = '--colors-test-primary'
 const LAYER_NAME = 'reference-test'
 
 test.describe.serial('layer', () => {
@@ -17,7 +17,7 @@ test.describe.serial('layer', () => {
     expect(content).toContain("import { baseSystem } from '@reference-ui/lib'")
   })
 
-  test('layers only – styles.css has @layer reference-test and [data-layer] with theme tokens', async () => {
+  test('layers only – styles.css has the consumer layer and [data-layer] token block', async () => {
     test.setTimeout(60_000)
     // Lib is already synced by test:prepare; only sandbox needs sync after config change.
     await addToConfig({ extends: '[]', layers: '[baseSystem]' })
@@ -32,10 +32,10 @@ test.describe.serial('layer', () => {
       `[data-layer="${LAYER_NAME}"]`
     )
     const dataLayerIdx = content.indexOf(`[data-layer="${LAYER_NAME}"]`)
-    const foundationTokenInDataLayer = content.indexOf(FOUNDATION_VAR, dataLayerIdx)
+    const layerTokenInDataLayer = content.indexOf(LAYER_TOKEN_VAR, dataLayerIdx)
     expect(
-      foundationTokenInDataLayer,
-      'theme token var should appear inside [data-layer] block'
+      layerTokenInDataLayer,
+      'consumer token var should appear inside [data-layer] block'
     ).toBeGreaterThan(
       -1
     )
