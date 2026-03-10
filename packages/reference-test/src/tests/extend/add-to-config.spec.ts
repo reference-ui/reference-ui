@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { REF_LIB_CANARY } from '@reference-ui/lib'
+import { colors } from '@reference-ui/lib/theme'
 import { addToConfig, getSandboxDir } from '../../environments/lib/config.js'
 
 test.describe('extend', () => {
@@ -19,13 +19,15 @@ test.describe('extend', () => {
     expect(content).toContain('skipTypescript')
   })
 
-  test('extends reference-lib baseSystem – refLibCanary token renders', async ({
+  test('extends reference-lib baseSystem exposes foundational tokens', async ({
     page,
   }) => {
     await page.goto('/')
     const el = page.getByTestId('extends-test')
     await expect(el).toBeVisible()
-    const color = await el.evaluate((e) => getComputedStyle(e).color)
-    expect(color).toBe(REF_LIB_CANARY)
+    const colorToken = await el.evaluate(() =>
+      getComputedStyle(document.documentElement).getPropertyValue('--colors-teal-500').trim()
+    )
+    expect(colorToken).toBe(colors.teal[500].value)
   })
 })

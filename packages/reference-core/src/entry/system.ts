@@ -1,14 +1,16 @@
 /**
- * Public API entry point for @reference-ui/system
- *
- * Build-time extension APIs for design systems
+ * @reference-ui/system entry
+ * Build-time design system extension API (see system/fragments.md).
  */
 
-export {
-  tokens,
-  recipe,
-  slotRecipe,
-  keyframes,
-  font,
-  globalCss,
-} from '../styled/api/system/index.js'
+export { tokens, keyframes, font, extendFont, globalCss, extendPattern } from '../system/api'
+export { getRhythm } from '../system/panda/config/extensions/rhythm'
+export type {
+  ReferenceBoxPatternProps,
+  ReferenceFontName,
+  ReferenceFontProps,
+  ReferenceFontRegistry,
+  ReferenceFontWeightName,
+  ReferenceFontWeightValue,
+  ReferenceSystemStyleObject,
+} from '../system/types'

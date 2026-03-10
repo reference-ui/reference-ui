@@ -10,7 +10,7 @@ export function CssDemo() {
   const [isHovered, setIsHovered] = useState(false)
 
   return (
-    <Div background="refLibCanary" display="flex" flexDirection="column" gap="10r">
+    <Div background="teal.500" display="flex" flexDirection="column" gap="10r">
       {/* Basic Usage */}
       <Div>
         <Div fontSize="xl" fontWeight="700" mb="4r" color="gray.800">

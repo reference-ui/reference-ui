@@ -9,7 +9,6 @@ import { execa } from 'execa'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const PACKAGE_ROOT = join(__dirname, '..', '..', '..')
-const CORE_CLI = join(PACKAGE_ROOT, '..', 'reference-core', 'dist/cli/index.mjs')
 const LIB_PATH = join(PACKAGE_ROOT, '..', 'reference-lib')
 
 /** Must match REF_SYNC_READY_MESSAGE in @reference-ui/core sync/complete.ts */
@@ -49,7 +48,7 @@ export async function waitForRefSyncReady(
 
 /** Run ref sync (cold) in sandbox. Use when tests need to assert on file output after config change. */
 export async function runRefSync(sandboxDir: string): Promise<void> {
-  await execa('node', [CORE_CLI, 'sync'], {
+  await execa('pnpm', ['exec', 'ref', 'sync'], {
     cwd: sandboxDir,
     stdio: 'pipe',
     timeout: 45_000,
@@ -58,7 +57,7 @@ export async function runRefSync(sandboxDir: string): Promise<void> {
 
 /** Run ref sync on reference-lib so baseSystem.mjs has css for layers consumers. */
 export async function runRefSyncLib(): Promise<void> {
-  await execa('node', [CORE_CLI, 'sync'], {
+  await execa('pnpm', ['exec', 'ref', 'sync'], {
     cwd: LIB_PATH,
     stdio: 'pipe',
     timeout: 45_000,

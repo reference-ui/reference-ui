@@ -11,9 +11,11 @@ Knowledge-first UI component library.
 ```
 reference-ui/
 ├── packages/
-│   ├── reference-core/      # Stencil.js web components (stub)
-│   ├── reference-react/     # React bindings (stub)
-│   └── reference-storybook/ # Storybook docs (stub)
+│   ├── reference-core/      # Design system core package and generated pipeline
+│   ├── reference-lib/       # First-party design system built on reference-core
+│   ├── reference-app/       # App dogfood bed for the generated runtime
+│   ├── reference-docs/      # Documentation site using the CLI
+│   └── reference-test/      # End-to-end/system composition testbed
 ```
 
 ## Tech Stack
@@ -26,4 +28,4 @@ reference-ui/
 
 ## Next Steps
 
-See `Plan.md` for detailed implementation roadmap.
+See `packages/reference-core/ROADMAP.md` for the active platform roadmap.

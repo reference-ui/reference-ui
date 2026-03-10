@@ -1,0 +1,8 @@
+{
+  "watch": "src/watch/worker.ts",
+  "virtual": "src/virtual/worker.ts",
+  "config": "src/system/workers/config.ts",
+  "panda": "src/system/workers/panda.ts",
+  "packager": "src/packager/worker.ts",
+  "packager-ts": "src/packager/ts/worker.ts"
+}

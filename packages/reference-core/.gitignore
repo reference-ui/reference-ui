@@ -1,12 +1,4 @@
-# Build outputs
 dist/
-
-# CLI cache (eval fragments, panda-entry, etc.) — excluded so file: deps
-# don't hit ENOENT when pnpm copies the package
-.ref/
-
-# Old codegen approach (deprecated)
-codegen/
-
-
-.virtual/
+.eslint-result.txt
+src/system/styled/fragments/
+src/system/internal/.tmp/
