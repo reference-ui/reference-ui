@@ -9,10 +9,10 @@ const coreStyledDir = resolve(__dirname, '../reference-core/src/system/styled')
 
 export default defineConfig({
   resolve: {
-    alias: {
-      '@reference-ui/styled': coreStyledDir,
-      '@reference-ui/styled/*': join(coreStyledDir, '*'),
-    },
+    alias: [
+      { find: /^@reference-ui\/styled\/(.*)$/, replacement: join(coreStyledDir, '$1') },
+      { find: '@reference-ui/styled', replacement: coreStyledDir },
+    ],
   },
   test: {
     globals: true,

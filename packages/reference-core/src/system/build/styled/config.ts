@@ -11,8 +11,10 @@ import { createGlobalCssCollector } from '../../api/globalCss'
 import { createBoxPatternCollector } from '../../api/patterns'
 
 const styledBaseConfig = {
+  jsxFramework: 'react' as const,
   preflight: false,
   outdir: '.',
+  outExtension: 'js' as const,
   include: ['./src/**/*.{ts,tsx}'],
   exclude: ['**/*.d.ts'],
 }

@@ -66,6 +66,7 @@ export const STYLED_PACKAGE: PackageDefinition = {
     './css/cva': { types: './css/cva.d.ts', import: './css/cva.js' },
     './css/cx': { types: './css/cx.d.ts', import: './css/cx.js' },
     './css/sva': { types: './css/sva.d.ts', import: './css/sva.js' },
+    './jsx': { types: './jsx/index.d.ts', import: './jsx/index.js' },
     './patterns': { types: './patterns/index.d.ts', import: './patterns/index.js' },
     './patterns/box': { types: './patterns/box.d.ts', import: './patterns/box.js' },
   },
