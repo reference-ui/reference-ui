@@ -24,6 +24,19 @@ describe('createLayerCssFromContent', () => {
     expect(out).toMatch(/--space:\s*8px/)
   })
 
+  it('removes root token declarations from the wrapped Panda output', () => {
+    const raw = `@layer base, tokens, utilities;
+@layer base { .root { display: block; } }
+@layer tokens { :where(:root, :host) { --color: red; --space: 8px; } }
+@layer utilities { .text_red { color: var(--color); } }`
+    const out = createLayerCssFromContent(raw, 'my-system')
+    expect(out).not.toMatch(/:where\(:root,\s*:host\)/)
+    expect(out).not.toMatch(/@layer tokens\s*\{/)
+    expect(out).toMatch(/@layer my-system \{[\s\S]*@layer base/)
+    expect(out).toMatch(/@layer my-system \{[\s\S]*@layer utilities/)
+    expect(out).toMatch(/\[data-layer="my-system"\]\s*\{[\s\S]*--color:\s*red;/)
+  })
+
   it('returns layer block even when no @layer tokens block (no [data-layer] block)', () => {
     const raw = '@layer base;\n.some-utility { color: red; }'
     const out = createLayerCssFromContent(raw, 'sys')

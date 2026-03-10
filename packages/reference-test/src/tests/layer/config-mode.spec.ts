@@ -65,7 +65,7 @@ test.describe.serial('layer', () => {
     await expect(host).toHaveAttribute('id', 'consumer-layer-id')
   })
 
-  test.fixme('layer prop scopes consumer tokens to matching subtrees only', async ({ page }) => {
+  test('layer prop scopes consumer tokens to matching subtrees only', async ({ page }) => {
     test.setTimeout(60_000)
     await enableLayersMode()
     await page.goto('/')
@@ -93,7 +93,7 @@ test.describe.serial('layer', () => {
     expect(nestedToken).toBe(tokensConfig.colors.test.primary.value)
   })
 
-  test.fixme('layer prop resolves var() color only for matching hosts', async ({ page }) => {
+  test('layer prop resolves var() color only for matching hosts', async ({ page }) => {
     test.setTimeout(60_000)
     await enableLayersMode()
     await page.goto('/')
@@ -110,7 +110,7 @@ test.describe.serial('layer', () => {
     expect(outsideToken).toBe('')
   })
 
-  test.skip('layers only – upstream theme token renders via data-layer', async ({ page }) => {
+  test('layers only – upstream theme token renders via data-layer', async ({ page }) => {
     test.setTimeout(60_000)
     await addToConfig({ extends: '[]', layers: '[baseSystem]' })
     await waitForRefSyncReady(sandboxDir, { timeout: 45_000 })

@@ -36,6 +36,18 @@ function extractTokenDeclarations(css: string): string {
 }
 
 /**
+ * Remove Panda's root token layer so layers mode does not leak tokens globally.
+ */
+function stripTokensLayer(css: string): string {
+  const tokensMatch = css.match(/@layer\s+tokens\s*\{/)
+  if (!tokensMatch) return css
+
+  const start = tokensMatch.index ?? 0
+  const end = findMatchingBrace(css, start + tokensMatch[0].length - 1) + 1
+  return (css.slice(0, start) + css.slice(end)).trim()
+}
+
+/**
  * Normalise indentation of extracted declarations so [data-layer] block is consistent.
  */
 function dedentDeclarations(declarations: string): string {
@@ -65,7 +77,7 @@ function stripOrderDeclaration(css: string): string {
  */
 export function createLayerCssFromContent(css: string, layerName: string): string {
   const tokenDeclarations = dedentDeclarations(extractTokenDeclarations(css))
-  const withoutOrder = stripOrderDeclaration(css)
+  const withoutOrder = stripOrderDeclaration(stripTokensLayer(css))
   const dataLayerBlock =
     tokenDeclarations.length > 0
       ? `\n\n[data-layer="${layerName}"] {\n${tokenDeclarations}\n}\n`
