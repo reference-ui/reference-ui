@@ -6,5 +6,4 @@ export default defineConfig({
   include: ['src/**/*.{ts,tsx}'],
   layers: [referenceAppBaseSystem],
   debug: true,
-  skipTypescript: true,
 })

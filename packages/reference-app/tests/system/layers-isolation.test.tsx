@@ -23,8 +23,14 @@ const fixtureRoot = resolve(pkgRoot, 'tests', 'fixtures', 'layers-isolation')
 const fixtureOutDir = join(fixtureRoot, '.reference-ui')
 const fixtureCssPath = join(fixtureOutDir, 'styled', 'styles.css')
 const fixturePandaConfigPath = join(fixtureOutDir, 'panda.config.ts')
+const fixtureReactBundlePath = join(fixtureOutDir, 'react', 'react.mjs')
+const fixtureReactTypesPath = join(fixtureOutDir, 'react', 'react.d.mts')
+const fixtureReactGeneratedTypesPath = join(fixtureOutDir, 'react', 'types.generated.d.mts')
+const fixtureSystemTypesPath = join(fixtureOutDir, 'system', 'system.d.mts')
+const fixtureSystemGeneratedTypesPath = join(fixtureOutDir, 'system', 'types.generated.d.mts')
 const upstreamBaseSystemPath = join(pkgRoot, '.reference-ui', 'system', 'baseSystem.mjs')
 const FIXTURE_ACCENT_RGB = 'rgb(17, 24, 39)'
+const REACT_LAYER_PLACEHOLDER = '__REFERENCE_UI_LAYER_NAME__'
 const refCore = join(
   pkgRoot,
   'node_modules',
@@ -39,7 +45,15 @@ async function waitForFixtureOutputs(maxMs = 20_000): Promise<void> {
   const start = Date.now()
 
   while (Date.now() - start < maxMs) {
-    if (existsSync(fixtureCssPath) && existsSync(fixturePandaConfigPath)) {
+    if (
+      existsSync(fixtureCssPath) &&
+      existsSync(fixturePandaConfigPath) &&
+      existsSync(fixtureReactBundlePath) &&
+      existsSync(fixtureReactTypesPath) &&
+      existsSync(fixtureReactGeneratedTypesPath) &&
+      existsSync(fixtureSystemTypesPath) &&
+      existsSync(fixtureSystemGeneratedTypesPath)
+    ) {
       const css = readFileSync(fixtureCssPath, 'utf-8')
       if (css.includes('[data-layer="layers-isolation"]') && css.includes('[data-layer="reference-app"]')) {
         await new Promise((resolve) => setTimeout(resolve, 150))
@@ -99,6 +113,11 @@ function injectFixtureCss(): string {
 describe('layers isolation fixture', () => {
   let fixtureCss = ''
   let pandaConfig = ''
+  let fixtureReactBundle = ''
+  let fixtureReactTypes = ''
+  let fixtureReactGeneratedTypes = ''
+  let fixtureSystemTypes = ''
+  let fixtureSystemGeneratedTypes = ''
 
   beforeAll(async () => {
     if (!existsSync(upstreamBaseSystemPath)) {
@@ -119,22 +138,48 @@ describe('layers isolation fixture', () => {
 
     fixtureCss = injectFixtureCss()
     pandaConfig = readFileSync(fixturePandaConfigPath, 'utf-8')
+    fixtureReactBundle = readFileSync(fixtureReactBundlePath, 'utf-8')
+    fixtureReactTypes = readFileSync(fixtureReactTypesPath, 'utf-8')
+    fixtureReactGeneratedTypes = readFileSync(fixtureReactGeneratedTypesPath, 'utf-8')
+    fixtureSystemTypes = readFileSync(fixtureSystemTypesPath, 'utf-8')
+    fixtureSystemGeneratedTypes = readFileSync(fixtureSystemGeneratedTypesPath, 'utf-8')
   }, 75_000)
 
-  it('keeps upstream tokens out of the consumer Panda config', () => {
+  it('keeps upstream tokens, fonts, and keyframes out of the consumer Panda config', () => {
     expect(pandaConfig).toContain('fixtureAccent')
     expect(pandaConfig).toContain(FIXTURE_ACCENT_RGB)
     expect(pandaConfig).not.toContain('referenceAppToken')
     expect(pandaConfig).not.toContain('--colors-teal-500')
+    expect(pandaConfig).not.toContain('fadeIn')
+    expect(pandaConfig).not.toContain('mono')
   })
 
-  it('appends upstream layer CSS and data-layer token scope', () => {
+  it('appends upstream layer CSS, tokens, fonts, and keyframes', () => {
     expect(fixtureCss).toMatch(/@layer\s+layers-isolation\s*\{/)
     expect(fixtureCss).toMatch(/@layer\s+reference-app\s*\{/)
     expect(fixtureCss).toMatch(/\[data-layer="reference-app"\]\s*\{/)
     expect(fixtureCss).toContain(`--colors-reference-app-token: ${REFERENCE_APP_TOKEN_RGB};`)
     expect(fixtureCss).toContain(`--colors-teal-500: ${colors.teal[500].value};`)
     expect(fixtureCss).toContain(`--colors-fixture-accent: ${FIXTURE_ACCENT_RGB};`)
+    expect(fixtureCss).toContain('@font-face')
+    expect(fixtureCss).toContain('fadeIn')
+  })
+
+  it('keeps upstream font registries out of consumer generated types', () => {
+    expect(fixtureReactTypes).toContain('interface ReferenceFontRegistry')
+    expect(fixtureSystemTypes).toContain('interface ReferenceFontRegistry')
+
+    expect(fixtureReactGeneratedTypes).not.toContain('"mono": {')
+    expect(fixtureReactGeneratedTypes).not.toContain('"sans": {')
+    expect(fixtureReactGeneratedTypes).not.toContain('"serif": {')
+    expect(fixtureSystemGeneratedTypes).not.toContain('"mono": {')
+    expect(fixtureSystemGeneratedTypes).not.toContain('"sans": {')
+    expect(fixtureSystemGeneratedTypes).not.toContain('"serif": {')
+  })
+
+  it('injects the fixture runtime with the local ui.config.name', () => {
+    expect(fixtureReactBundle).toContain('layers-isolation')
+    expect(fixtureReactBundle).not.toContain(REACT_LAYER_PLACEHOLDER)
   })
 
   it('emits data-layer from config name and consumer tokens resolve', () => {
