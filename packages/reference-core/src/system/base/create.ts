@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { ReferenceUIConfig } from '../../config'
-import type { BaseSystem } from '../../config/types'
+import type { BaseSystem } from '../../types'
 import { getOutDirPath } from '../../lib/paths'
 import { log } from '../../lib/log'
 import { writeGeneratedSystemFontTypes } from '../types/generate'

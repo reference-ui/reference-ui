@@ -3,17 +3,7 @@
  * Types and defineConfig helper — isolated so bundling user config doesn't pull in load.
  */
 
-/**
- * Shape of the bundled config read by extends[]. Emitted as dist/baseSystem.mjs.
- * Portable output from `ref sync` for design-system composition.
- */
-export interface BaseSystem {
-  name: string
-  /** Bundled fragment IIFEs representing the full upstream config contribution. */
-  fragment: string
-  /** Pre-compiled component CSS for layers mode. Scoped to @layer &lt;name&gt; + [data-layer] token block. */
-  css?: string
-}
+import type { BaseSystem } from '../types'
 
 export interface ReferenceUIConfig {
   /**

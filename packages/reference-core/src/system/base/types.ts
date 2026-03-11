@@ -1,4 +1,4 @@
-import type { BaseSystem } from '../../config/types'
+import type { BaseSystem } from '../../types'
 import type { CollectorBundles, FragmentBundle } from '../../lib/fragments'
 
 export interface PreparedBaseFragments {
