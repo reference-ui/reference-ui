@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process'
-import { log } from './log'
+import { log } from '../log'
 
 /**
  * Spawn a child process and wait for it to complete.
