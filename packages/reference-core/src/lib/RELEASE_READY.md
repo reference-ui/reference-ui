@@ -19,21 +19,17 @@ enough direct tests for their failure and lifecycle contracts.
 - `fragments`: yes
 - `run`: yes
 - `log`: yes, low-risk internal helper
-- `event-bus`: not yet
-- `microbundle`: not yet
-- `paths`: not yet
-- `thread-pool`: not yet
+- `event-bus`: yes
+- `paths`: yes
+- `microbundle`: yes
+- `thread-pool`: yes
 - `child-process.ts`: not yet
 
 ## Why the overall answer is not yet "yes"
 
-The weak spots are exactly the kinds of infrastructure that can make the whole
+The remaining weak spots are the kinds of infrastructure that can make the whole
 product feel unreliable when they regress:
 
-- worker orchestration
-- bundling helpers
-- path resolution
-- cross-thread messaging
 - process spawning
 
 These are high-leverage internals. Even when their code is small, they need
