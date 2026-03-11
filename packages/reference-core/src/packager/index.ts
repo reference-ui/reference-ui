@@ -5,6 +5,6 @@ export {
   SYSTEM_PACKAGE,
   STYLED_PACKAGE,
   SOURCE_PACKAGE,
-} from './config'
+} from './packages'
 export type { PackageDefinition } from './package'
 export type { PackagerEvents } from './events'
