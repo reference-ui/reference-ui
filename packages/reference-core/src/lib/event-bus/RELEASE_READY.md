@@ -2,27 +2,34 @@
 
 ## Verdict
 
-Not release-ready yet.
+Release-ready for internal use.
 
 ## Why
 
-This module is small, but it is still under-proven for something that sits on a
-cross-thread boundary.
+This module is small, but it sits on a cross-thread boundary, so it needed
+direct behavioral proof before being considered ready.
+
+That proof now exists through direct tests covering:
+
+- `emit()` message shape
+- `on()` delivery from another `BroadcastChannel` instance
+- `once()` single-fire cleanup behavior
+- `off()` removing one listener vs all listeners
+- `onceAll()` any-order coordination behavior
+- `initEventBus()` debug logging behavior
+- repeated `initEventBus()` calls not duplicating debug listeners
 
 `TEST_RELEASE_PLAN.md` calls out worker orchestration and failure propagation as
-thin in `reference-core`, and this module sits directly in that risk area.
+thin in `reference-core`, but this module itself now has a direct contract suite
+for its own core behavior.
 
-## Missing confidence
+## Remaining limits
 
-- no direct tests for `emit()` -> `on()` delivery
-- no direct tests for `once()` cleanup behavior
-- no direct tests for `off()` removing one listener vs all listeners
-- no direct tests for `onceAll()` ordering behavior
-- no direct tests for `initEventBus()` debug logging behavior
-- no explicit contract for listener cleanup across repeated init/use cycles
+- worker-level integration confidence still depends on the surrounding worker
+  modules
+- the bus is still an internal transport, not a hardened public API
 
 ## Practical judgment
 
-The implementation is understandable and probably fine for internal iteration,
-but it does not yet meet a strong release bar for infrastructure because its
-behavior is not pinned down directly.
+For its actual role inside `reference-core`, this module is now solid enough to
+ship as part of Reference UI.
