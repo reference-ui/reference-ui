@@ -2,25 +2,31 @@
 
 ## Verdict
 
-Not release-ready yet.
+Release-ready for internal use.
 
 ## Why
 
 These helpers are small, but they sit on critical resolution paths for config,
 workers, packaging, and generated output. A path bug here can break the whole
-toolchain in a way that is hard to diagnose.
+toolchain in a way that is hard to diagnose, so they needed direct tests before
+earning a release-ready label.
 
-## Missing confidence
+That direct coverage now exists for:
 
-- no direct tests for config candidate order (`ts` / `js` / `mjs`)
-- no direct tests for custom `outDir` resolution
-- no direct tests for workspace fallback in `resolveCorePackageDir()`
-- no direct tests for legacy `@reference-ui/cli` fallback behavior
-- no direct tests for `resolveCorePackageDirForBuild()` choosing workspace
-  sources over `node_modules`
-- no direct tests for dist path construction
+- config candidate order (`ts` / `js` / `mjs`)
+- `outDir` and `outDir/virtual` path derivation
+- direct package-root discovery
+- legacy `@reference-ui/cli` fallback behavior
+- workspace fallback in `resolveCorePackageDir()`
+- workspace preference in `resolveCorePackageDirForBuild()`
+- dist path construction
+
+## Remaining limits
+
+- these are still internal helpers rather than hardened public APIs
+- broader confidence still depends on the higher-level modules that consume them
 
 ## Practical judgment
 
-The functions are simple enough to trust during iteration, but they do not yet
-meet a release bar that treats path resolution as a product contract.
+For their actual role inside `reference-core`, these path helpers are now solid
+enough to ship as part of Reference UI.
