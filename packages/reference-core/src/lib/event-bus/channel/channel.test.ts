@@ -7,6 +7,9 @@ import { on, once } from './on'
 import { onceAll } from './onceAll'
 
 const CHANNEL_NAME = 'reference-ui:events'
+const OFF_ONE_EVENT = 'test:off-one'
+const OFF_ALL_EVENT = 'test:off-all'
+const ALL_EVENTS = ['test:all:a', 'test:all:b'] as const
 
 function waitForValue<T>(register: (resolve: (value: T) => void) => void): Promise<T> {
   return new Promise<T>((resolve, reject) => {
@@ -88,11 +91,11 @@ describe('event bus channel helpers', () => {
     const removed = vi.fn()
     const kept = vi.fn()
 
-    on('test:off-one', removed)
-    on('test:off-one', kept)
-    off('test:off-one', removed)
+    on(OFF_ONE_EVENT, removed)
+    on(OFF_ONE_EVENT, kept)
+    off(OFF_ONE_EVENT, removed)
 
-    postFromPeer('test:off-one', { ok: true })
+    postFromPeer(OFF_ONE_EVENT, { ok: true })
 
     await vi.waitFor(() => {
       expect(removed).not.toHaveBeenCalled()
@@ -104,27 +107,27 @@ describe('event bus channel helpers', () => {
     const handlerA = vi.fn()
     const handlerB = vi.fn()
 
-    on('test:off-all', handlerA)
-    on('test:off-all', handlerB)
-    off('test:off-all')
+    on(OFF_ALL_EVENT, handlerA)
+    on(OFF_ALL_EVENT, handlerB)
+    off(OFF_ALL_EVENT)
 
-    postFromPeer('test:off-all', { ok: true })
+    postFromPeer(OFF_ALL_EVENT, { ok: true })
 
     await new Promise((resolve) => setTimeout(resolve, 25))
 
     expect(handlerA).not.toHaveBeenCalled()
     expect(handlerB).not.toHaveBeenCalled()
-    expect(channelListeners.get('test:off-all')?.size ?? 0).toBe(0)
+    expect(channelListeners.get(OFF_ALL_EVENT)?.size ?? 0).toBe(0)
   })
 
   it('onceAll() waits for all events in any order and fires once', async () => {
     const handler = vi.fn()
 
-    onceAll(['test:all:a', 'test:all:b'], handler)
+    onceAll([...ALL_EVENTS], handler)
 
-    postFromPeer('test:all:b')
-    postFromPeer('test:all:a')
-    postFromPeer('test:all:a')
+    postFromPeer(ALL_EVENTS[1])
+    postFromPeer(ALL_EVENTS[0])
+    postFromPeer(ALL_EVENTS[0])
 
     await vi.waitFor(() => {
       expect(handler).toHaveBeenCalledTimes(1)
