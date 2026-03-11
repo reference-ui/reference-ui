@@ -2,21 +2,24 @@ import type { ReferenceUIConfig, BaseSystem } from './types'
 import { ConfigValidationError } from './errors'
 import { log } from '../lib/log'
 
-function mustBeObject(raw: unknown): Record<string, unknown> {
+type ConfigRecord = Record<string, unknown>
+type BaseSystemField = 'extends' | 'layers'
+
+function mustBeObject(raw: unknown): ConfigRecord {
   const config = (raw as { default?: unknown })?.default ?? raw
   if (!config || typeof config !== 'object') {
     throw ConfigValidationError.mustExportObject()
   }
-  return config as Record<string, unknown>
+  return config as ConfigRecord
 }
 
-function validateInclude(cfg: Record<string, unknown>): void {
+function validateInclude(cfg: ConfigRecord): void {
   if (!cfg.include || !Array.isArray(cfg.include)) {
     throw ConfigValidationError.mustHaveInclude()
   }
 }
 
-function validateName(cfg: Record<string, unknown>): void {
+function validateName(cfg: ConfigRecord): void {
   const name = cfg.name
   if (name == null || typeof name !== 'string' || name.trim() === '') {
     throw ConfigValidationError.mustHaveName()
@@ -29,10 +32,7 @@ function validateName(cfg: Record<string, unknown>): void {
   }
 }
 
-function validateBaseSystems(
-  field: 'extends' | 'layers',
-  value: unknown
-): BaseSystem[] | undefined {
+function validateBaseSystems(field: BaseSystemField, value: unknown): BaseSystem[] | undefined {
   if (value == null) {
     return undefined
   }
@@ -44,35 +44,33 @@ function validateBaseSystems(
   return value as BaseSystem[]
 }
 
-function validateExtends(extendsSystems: BaseSystem[] | undefined): void {
-  if (!extendsSystems?.length) return
+function validateBaseSystemEntries(
+  field: BaseSystemField,
+  systems: BaseSystem[] | undefined,
+  options: {
+    requireFragment?: boolean
+    warnIfCssMissing?: boolean
+  } = {}
+): void {
+  if (!systems?.length) return
 
-  for (const [index, sys] of extendsSystems.entries()) {
+  for (const [index, sys] of systems.entries()) {
     if (!sys || typeof sys !== 'object') {
-      throw ConfigValidationError.invalidBaseSystem('extends', `Entry ${index} must be an object.`)
+      throw ConfigValidationError.invalidBaseSystem(field, `Entry ${index} must be an object.`)
     }
+
     if (typeof sys.name !== 'string' || sys.name.trim() === '') {
-      throw ConfigValidationError.invalidBaseSystem('extends', `Entry ${index} must have a non-empty 'name'.`)
+      throw ConfigValidationError.invalidBaseSystem(field, `Entry ${index} must have a non-empty 'name'.`)
     }
-    if (typeof sys.fragment !== 'string' || sys.fragment.trim() === '') {
+
+    if (options.requireFragment && (typeof sys.fragment !== 'string' || sys.fragment.trim() === '')) {
       throw ConfigValidationError.invalidBaseSystem(
-        'extends',
+        field,
         `Entry ${index} (${sys.name}) must include a non-empty 'fragment'. Run \`ref sync\` on the upstream package first.`
       )
     }
-  }
-}
 
-function warnLayersWithoutCss(layers: BaseSystem[] | undefined): void {
-  if (!layers?.length) return
-  for (const [index, sys] of layers.entries()) {
-    if (!sys || typeof sys !== 'object') {
-      throw ConfigValidationError.invalidBaseSystem('layers', `Entry ${index} must be an object.`)
-    }
-    if (typeof sys.name !== 'string' || sys.name.trim() === '') {
-      throw ConfigValidationError.invalidBaseSystem('layers', `Entry ${index} must have a non-empty 'name'.`)
-    }
-    if (sys && !sys.css) {
+    if (options.warnIfCssMissing && !sys.css) {
       log.info(
         `[config] Warning: layers entry "${sys.name}" has no css field. Run \`ref sync\` on the upstream package first.`
       )
@@ -92,7 +90,7 @@ export function validateConfig(raw: unknown): ReferenceUIConfig {
   validateName(cfg)
   const extendsSystems = validateBaseSystems('extends', cfg.extends)
   const layers = validateBaseSystems('layers', cfg.layers)
-  validateExtends(extendsSystems)
-  warnLayersWithoutCss(layers)
+  validateBaseSystemEntries('extends', extendsSystems, { requireFragment: true })
+  validateBaseSystemEntries('layers', layers, { warnIfCssMissing: true })
   return cfg as unknown as ReferenceUIConfig
 }
