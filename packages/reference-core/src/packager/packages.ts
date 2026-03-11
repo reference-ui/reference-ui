@@ -53,6 +53,7 @@ export const REACT_PACKAGE: PackageDefinition = {
   copyFrom: [
     { kind: 'file', from: 'outDir', src: 'styled/styles.css', dest: 'styles.css' },
   ],
+  postprocess: ['injectLayerName'],
 }
 
 /**

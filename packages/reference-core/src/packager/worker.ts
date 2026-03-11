@@ -9,13 +9,13 @@ import { onRunBundle } from './run'
 export interface PackagerWorkerPayload {
   cwd: string
   watchMode?: boolean
+  skipTypescript?: boolean
 }
 
 export default async function runPackager(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- payload passed to thread as workerData; handler uses getCwd()
-  _payload: PackagerWorkerPayload
+  payload: PackagerWorkerPayload
 ): Promise<never> {
-  on('run:packager:bundle', onRunBundle)
+  on('run:packager:bundle', () => onRunBundle(payload))
   emit('packager:ready')
 
   return KEEP_ALIVE

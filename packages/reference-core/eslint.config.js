@@ -24,4 +24,12 @@ export default [
       'sonarjs/no-ignored-return': 'warn',
     },
   },
+  // Relax SonarJS in tests: duplicate strings and temp dirs are normal there
+  {
+    files: ['**/*.test.ts', '**/*.spec.ts'],
+    rules: {
+      'sonarjs/no-duplicate-string': 'off',
+      'sonarjs/publicly-writable-directories': 'off',
+    },
+  },
 ]
