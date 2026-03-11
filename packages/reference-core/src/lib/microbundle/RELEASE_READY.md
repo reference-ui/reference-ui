@@ -2,7 +2,7 @@
 
 ## Verdict
 
-Not release-ready yet.
+Release-ready for internal use.
 
 ## Why
 
@@ -12,19 +12,27 @@ This helper is central to some of the most important flows in `reference-core`:
 - fragment execution
 - generated runtime assembly
 
-That makes it high leverage, and right now it does not have direct tests that
-pin down its own contracts.
+That makes it high leverage, so it needed direct tests to pin down its own
+contracts before earning a release-ready label.
 
-## Missing confidence
+Those tests now exist for:
 
-- no direct tests for default option shaping
-- no direct tests for `alias` plugin behavior
-- no direct tests for `external` handling
-- no direct tests for output format selection (`esm` / `cjs` / `iife`)
-- no direct tests for error surfacing when esbuild fails
+- default option shaping
+- explicit overrides
+- `external` filtering
+- output format selection (`esm` / `cjs` / `iife`)
+- `alias` plugin exact-match behavior
+- error surfacing when esbuild fails
+- empty-output behavior
+
+## Remaining limits
+
+- broader confidence still depends on downstream consumers like config and
+  fragments
+- esbuild integration is lightly mocked in one test rather than exercised
+  exhaustively against real files
 
 ## Practical judgment
 
-The code is clean and understandable, but this module is too important to rely
-only on downstream coverage. It should gain focused tests before being called
-release-ready.
+For its role as an internal bundling primitive, this module is now solid enough
+to ship as part of Reference UI.
