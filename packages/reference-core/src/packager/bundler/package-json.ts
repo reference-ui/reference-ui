@@ -18,7 +18,7 @@ function createPackageJson(pkg: PackageDefinition) {
 }
 
 /**
- * Generate and write package.json for a bundled package
+ * Generate and write package.json for a bundled package.
  */
 export function writePackageJson(targetDir: string, pkg: PackageDefinition): void {
   const packageJson = createPackageJson(pkg)

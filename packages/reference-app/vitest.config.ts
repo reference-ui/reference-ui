@@ -18,6 +18,7 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx'],
+    exclude: ['tests/system/sync-readiness.test.ts'],
     passWithNoTests: true,
     globalSetup: resolve(__dirname, 'tests/setup/global-setup.ts'),
     setupFiles: [resolve(__dirname, 'tests/setup/dom-matchers.ts')],

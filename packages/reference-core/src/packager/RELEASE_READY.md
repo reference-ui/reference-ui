@@ -2,26 +2,36 @@
 
 ## Verdict
 
-Not yet release-ready.
+Release-ready for internal use.
 
 ## Why
 
-The packager has a clean shape and an understandable responsibility, but by the
-standards in `TEST_RELEASE_PLAN.md` it is still missing the direct proof needed
-for a high-leverage output stage.
+This is one of the highest-leverage parts of `reference-core`: even correct
+generated artifacts are not useful if packaging, linking, or completion
+signaling are flaky.
 
-This subsystem is responsible for the final packaging contract that the rest of
-the product depends on:
+That is why this area needed direct tests for its own contracts rather than
+relying only on downstream proof. That direct coverage now exists across the
+main runtime and declaration-packaging paths.
+
+## Direct coverage now in place
+
+The current tests verify:
 
 - writing package contents into `outDir`
-- generating `package.json` metadata and export maps
+- creating `node_modules/@reference-ui/*` symlinks to those outputs
+- rerunning install safely for the same package
+- replacing the React layer-name placeholder with `config.name`
+- leaving non-React package bundles untouched
+- failing loudly when bundling fails before linking
+- delegating bundled package entry output through the esbuild path
 - copying runtime assets like `styles.css`
-- exposing those outputs through `node_modules/@reference-ui/*` symlinks
-- coordinating completion signals with the TypeScript packaging phase
-
-If this layer regresses, the product can appear "generated successfully" while
-consumer imports still fail at runtime or build time. That makes it too central
-to mark release-ready without direct tests.
+- writing `package.json` metadata for packaged outputs
+- emitting `packager:complete`
+- emitting `packager-ts:complete` only in the `skipTypescript` case
+- propagating packaging failures clearly
+- routing declaration-package installs and generated entry types into the
+  expected output paths
 
 ## What looks good already
 
@@ -32,26 +42,23 @@ to mark release-ready without direct tests.
 - the event contract is small and readable
 - the internal README now describes the real package/output model
 
-## What is still missing
+## Remaining limits
 
-I did not find direct test coverage for the core packager contracts themselves.
-In particular, this area would benefit from explicit tests for:
-
-- `installPackages()` writing packages into the expected `outDir`
-- symlink creation into `node_modules/@reference-ui`
-- package.json generation for bundled and non-bundled packages
-- asset copying from generated output
-- layer-name placeholder replacement in the React bundle
-- `runBundle()` completion signaling, especially the `skipTypescript` branch
-- failure behavior when bundling, copying, or symlink creation goes wrong
-
-Without those tests, confidence in this module is mostly based on code shape and
-indirect integration behavior rather than on pinned contracts.
+- the declaration-compilation internals are still tested one layer up through
+  `installPackagesTs()` wiring rather than exhaustively at every lower-level
+  compiler edge
+- the symlink helper still depends on `symlink-dir` and real platform behavior,
+  so cross-platform confidence should continue to come from broader integration
+  coverage too
+- deterministic packaged artifact snapshots would still be useful as additional
+  hardening, especially in downstream app/system suites
 
 ## Practical judgment
 
-This is close to being a release-ready internal subsystem, but not there yet.
+For its role as internal packaging infrastructure inside Reference UI, this is
+now strong enough to ship.
 
-The implementation is coherent enough that I would document and keep building on
-it, but I would not use this file to claim packager is fully release-ready until
-the output, symlink, and completion-event contracts are covered directly.
+The dangerous contracts in this module are no longer just implied by code shape;
+they are pinned down directly enough that a regression in install, linking,
+placeholder replacement, event signaling, or declaration-package pathing should
+be caught inside `reference-core` itself.

@@ -6,6 +6,7 @@ import {
   readFileSync,
 } from 'node:fs'
 import { log } from '../../../lib/log'
+import { getDeclarationBasename } from '../../layout'
 import { compileDeclarations } from '../compile'
 import type { TsPackageInput } from '../types'
 
@@ -45,11 +46,11 @@ export async function installPackageTs(
   log.debug(PACKAGER_TS_LOG, `Building types for ${pkg.name}...`)
   mkdirSync(targetDir, { recursive: true })
 
-  const outDtsPath = join(targetDir, pkg.outFile.replace(/\.m?js$/, '.d.mts'))
+  const outDtsPath = join(targetDir, getDeclarationBasename(pkg.outFile))
   await compileDeclarations(cliDirForBuild, pkg.sourceEntry, outDtsPath)
   log.debug(PACKAGER_TS_LOG, `✓ Compiled ${pkg.name}`)
 
-  const typesPath = `./${pkg.outFile.replace(/\.m?js$/, '.d.mts')}`
+  const typesPath = `./${getDeclarationBasename(pkg.outFile)}`
   updatePackageTypes(targetDir, typesPath)
 
   log.debug(PACKAGER_TS_LOG, `✓ ${pkg.name} ready`)
