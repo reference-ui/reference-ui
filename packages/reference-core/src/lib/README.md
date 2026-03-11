@@ -15,6 +15,7 @@ wrapping.
 - `microbundle`: small esbuild wrapper for in-memory bundling
 - `paths`: path resolution helpers for config, outDir, dist, and package roots
 - `run`: command wrapper that standardizes CLI error handling
+- `symlink`: small directory-symlink helpers used by packager install
 - `thread-pool`: Piscina-based worker pool helpers
 - `child-process.ts`: monitored child-process spawn helper used by packaging
 

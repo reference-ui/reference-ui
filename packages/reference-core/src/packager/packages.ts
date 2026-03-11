@@ -16,6 +16,8 @@ const GENERATED_VERSION = '0.0.0-generated'
 const STYLED_INDEX_JS = './css/index.js'
 const STYLED_INDEX_D_TS = './css/index.d.ts'
 
+export const SOURCE_PACKAGE = '@reference-ui/core'
+
 /**
  * @reference-ui/system - Build-time design system extension APIs
  */
