@@ -5,6 +5,10 @@ import { log } from '../lib/log'
 
 type ConfigRecord = Record<string, unknown>
 type BaseSystemField = 'extends' | 'layers'
+type BaseSystemValidationOptions = {
+  requireFragment?: boolean
+  warnIfCssMissing?: boolean
+}
 
 function mustBeObject(raw: unknown): ConfigRecord {
   const config = (raw as { default?: unknown })?.default ?? raw
@@ -45,37 +49,71 @@ function validateBaseSystems(field: BaseSystemField, value: unknown): BaseSystem
   return value as BaseSystem[]
 }
 
+function assertBaseSystemObject(
+  field: BaseSystemField,
+  sys: BaseSystem,
+  index: number
+): void {
+  if (!sys || typeof sys !== 'object') {
+    throw ConfigValidationError.invalidBaseSystem(field, `Entry ${index} must be an object.`)
+  }
+}
+
+function assertBaseSystemName(
+  field: BaseSystemField,
+  sys: BaseSystem,
+  index: number
+): void {
+  if (typeof sys.name !== 'string' || sys.name.trim() === '') {
+    throw ConfigValidationError.invalidBaseSystem(field, `Entry ${index} must have a non-empty 'name'.`)
+  }
+}
+
+function assertRequiredFragment(
+  field: BaseSystemField,
+  sys: BaseSystem,
+  index: number,
+  requireFragment: boolean
+): void {
+  if (!requireFragment) return
+
+  if (typeof sys.fragment !== 'string' || sys.fragment.trim() === '') {
+    throw ConfigValidationError.invalidBaseSystem(
+      field,
+      `Entry ${index} (${sys.name}) must include a non-empty 'fragment'. Run \`ref sync\` on the upstream package first.`
+    )
+  }
+}
+
+function warnIfBaseSystemCssMissing(sys: BaseSystem, warnIfCssMissing: boolean): void {
+  if (!warnIfCssMissing || sys.css) return
+
+  log.info(
+    `[config] Warning: layers entry "${sys.name}" has no css field. Run \`ref sync\` on the upstream package first.`
+  )
+}
+
+function validateBaseSystemEntry(
+  field: BaseSystemField,
+  sys: BaseSystem,
+  index: number,
+  options: BaseSystemValidationOptions
+): void {
+  assertBaseSystemObject(field, sys, index)
+  assertBaseSystemName(field, sys, index)
+  assertRequiredFragment(field, sys, index, options.requireFragment ?? false)
+  warnIfBaseSystemCssMissing(sys, options.warnIfCssMissing ?? false)
+}
+
 function validateBaseSystemEntries(
   field: BaseSystemField,
   systems: BaseSystem[] | undefined,
-  options: {
-    requireFragment?: boolean
-    warnIfCssMissing?: boolean
-  } = {}
+  options: BaseSystemValidationOptions = {}
 ): void {
   if (!systems?.length) return
 
   for (const [index, sys] of systems.entries()) {
-    if (!sys || typeof sys !== 'object') {
-      throw ConfigValidationError.invalidBaseSystem(field, `Entry ${index} must be an object.`)
-    }
-
-    if (typeof sys.name !== 'string' || sys.name.trim() === '') {
-      throw ConfigValidationError.invalidBaseSystem(field, `Entry ${index} must have a non-empty 'name'.`)
-    }
-
-    if (options.requireFragment && (typeof sys.fragment !== 'string' || sys.fragment.trim() === '')) {
-      throw ConfigValidationError.invalidBaseSystem(
-        field,
-        `Entry ${index} (${sys.name}) must include a non-empty 'fragment'. Run \`ref sync\` on the upstream package first.`
-      )
-    }
-
-    if (options.warnIfCssMissing && !sys.css) {
-      log.info(
-        `[config] Warning: layers entry "${sys.name}" has no css field. Run \`ref sync\` on the upstream package first.`
-      )
-    }
+    validateBaseSystemEntry(field, sys, index, options)
   }
 }
 

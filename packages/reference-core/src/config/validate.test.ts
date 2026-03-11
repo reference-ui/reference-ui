@@ -10,6 +10,13 @@ vi.mock('../lib/log', () => ({
 
 import { validateConfig } from './validate'
 
+const SYSTEM_NAME = 'my-system'
+const DEFAULT_INCLUDE = ['src/**/*.{ts,tsx}']
+const FRAGMENT_CODE = 'fragment-code'
+const LAYERS_CSS = '.root { color: red; }'
+const LAYERS_WARNING =
+  '[config] Warning: layers entry "upstream" has no css field. Run `ref sync` on the upstream package first.'
+
 describe('validateConfig', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -18,14 +25,14 @@ describe('validateConfig', () => {
   it('unwraps a default export object', () => {
     const config = validateConfig({
       default: {
-        name: 'my-system',
-        include: ['src/**/*.{ts,tsx}'],
+        name: SYSTEM_NAME,
+        include: DEFAULT_INCLUDE,
       },
     })
 
     expect(config).toEqual({
-      name: 'my-system',
-      include: ['src/**/*.{ts,tsx}'],
+      name: SYSTEM_NAME,
+      include: DEFAULT_INCLUDE,
     })
   })
 
@@ -36,7 +43,7 @@ describe('validateConfig', () => {
   it('requires include to be an array', () => {
     expect(() =>
       validateConfig({
-        name: 'my-system',
+        name: SYSTEM_NAME,
       })
     ).toThrowError(/must have an 'include' array/i)
   })
@@ -45,7 +52,7 @@ describe('validateConfig', () => {
     expect(() =>
       validateConfig({
         name: '   ',
-        include: ['src/**/*.{ts,tsx}'],
+        include: DEFAULT_INCLUDE,
       })
     ).toThrowError(/must have a non-empty 'name'/i)
   })
@@ -54,14 +61,14 @@ describe('validateConfig', () => {
     expect(() =>
       validateConfig({
         name: 'bad"name',
-        include: ['src/**/*.{ts,tsx}'],
+        include: DEFAULT_INCLUDE,
       })
     ).toThrowError(/safe for CSS @layer/i)
 
     expect(() =>
       validateConfig({
         name: 'bad\nname',
-        include: ['src/**/*.{ts,tsx}'],
+        include: DEFAULT_INCLUDE,
       })
     ).toThrowError(/safe for CSS @layer/i)
   })
@@ -69,24 +76,24 @@ describe('validateConfig', () => {
   it('requires extends to be an array of named systems with fragments', () => {
     expect(() =>
       validateConfig({
-        name: 'my-system',
-        include: ['src/**/*.{ts,tsx}'],
+        name: SYSTEM_NAME,
+        include: DEFAULT_INCLUDE,
         extends: {} as never,
       })
     ).toThrowError(/field 'extends' is invalid/i)
 
     expect(() =>
       validateConfig({
-        name: 'my-system',
-        include: ['src/**/*.{ts,tsx}'],
+        name: SYSTEM_NAME,
+        include: DEFAULT_INCLUDE,
         extends: [{} as never],
       })
     ).toThrowError(/must have a non-empty 'name'/i)
 
     expect(() =>
       validateConfig({
-        name: 'my-system',
-        include: ['src/**/*.{ts,tsx}'],
+        name: SYSTEM_NAME,
+        include: DEFAULT_INCLUDE,
         extends: [{ name: 'upstream' } as never],
       })
     ).toThrowError(/must include a non-empty 'fragment'/i)
@@ -95,16 +102,16 @@ describe('validateConfig', () => {
   it('requires layers to be an array of named systems', () => {
     expect(() =>
       validateConfig({
-        name: 'my-system',
-        include: ['src/**/*.{ts,tsx}'],
+        name: SYSTEM_NAME,
+        include: DEFAULT_INCLUDE,
         layers: {} as never,
       })
     ).toThrowError(/field 'layers' is invalid/i)
 
     expect(() =>
       validateConfig({
-        name: 'my-system',
-        include: ['src/**/*.{ts,tsx}'],
+        name: SYSTEM_NAME,
+        include: DEFAULT_INCLUDE,
         layers: [{} as never],
       })
     ).toThrowError(/must have a non-empty 'name'/i)
@@ -112,27 +119,25 @@ describe('validateConfig', () => {
 
   it('warns when a layers entry has no css field', () => {
     const config = validateConfig({
-      name: 'my-system',
-      include: ['src/**/*.{ts,tsx}'],
-      layers: [{ name: 'upstream', fragment: 'fragment-code' }],
+      name: SYSTEM_NAME,
+      include: DEFAULT_INCLUDE,
+      layers: [{ name: 'upstream', fragment: FRAGMENT_CODE }],
     })
 
-    expect(config.layers).toEqual([{ name: 'upstream', fragment: 'fragment-code' }])
-    expect(info).toHaveBeenCalledWith(
-      '[config] Warning: layers entry "upstream" has no css field. Run `ref sync` on the upstream package first.'
-    )
+    expect(config.layers).toEqual([{ name: 'upstream', fragment: FRAGMENT_CODE }])
+    expect(info).toHaveBeenCalledWith(LAYERS_WARNING)
   })
 
   it('accepts valid extends and layers entries without warnings', () => {
     const config = validateConfig({
-      name: 'my-system',
-      include: ['src/**/*.{ts,tsx}'],
-      extends: [{ name: 'base', fragment: 'fragment-code' }],
-      layers: [{ name: 'layered', fragment: 'fragment-code', css: '.root { color: red; }' }],
+      name: SYSTEM_NAME,
+      include: DEFAULT_INCLUDE,
+      extends: [{ name: 'base', fragment: FRAGMENT_CODE }],
+      layers: [{ name: 'layered', fragment: FRAGMENT_CODE, css: LAYERS_CSS }],
     })
 
-    expect(config.extends).toEqual([{ name: 'base', fragment: 'fragment-code' }])
-    expect(config.layers).toEqual([{ name: 'layered', fragment: 'fragment-code', css: '.root { color: red; }' }])
+    expect(config.extends).toEqual([{ name: 'base', fragment: FRAGMENT_CODE }])
+    expect(config.layers).toEqual([{ name: 'layered', fragment: FRAGMENT_CODE, css: LAYERS_CSS }])
     expect(info).not.toHaveBeenCalled()
   })
 })
