@@ -1,4 +1,5 @@
-import type { ReferenceUIConfig, BaseSystem } from './types'
+import type { ReferenceUIConfig } from './types'
+import type { BaseSystem } from '../types'
 import { ConfigValidationError } from './errors'
 import { log } from '../lib/log'
 
