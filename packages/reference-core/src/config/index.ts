@@ -21,7 +21,3 @@ export {
   LoadConfigError,
   ConfigValidationError,
 } from './errors'
-
-// Re-exported for fragment files that import from '@reference-ui/core/config'.
-// Not used by ui.config.ts (which only needs defineConfig).
-//export { tokens, keyframes, font, extendFont, globalCss, extendPattern } from '../system/api'
