@@ -9,6 +9,31 @@ import { createSymlink } from './symlink'
 
 const REACT_PACKAGE_NAME = '@reference-ui/react'
 const LAYER_NAME_PLACEHOLDER = '__REFERENCE_UI_LAYER_NAME__'
+const TEXT_ENCODING = 'utf-8'
+
+function getPackageEntryFile(pkg: PackageDefinition): string {
+  return pkg.main?.replace('./', '') || 'index.js'
+}
+
+function injectReactLayerName(targetDir: string, pkg: PackageDefinition): void {
+  if (pkg.name !== REACT_PACKAGE_NAME) return
+
+  const layerName = getConfig()?.name ?? ''
+  const bundlePath = resolve(targetDir, getPackageEntryFile(pkg))
+
+  try {
+    const content = readFileSync(bundlePath, TEXT_ENCODING)
+    if (!content.includes(LAYER_NAME_PLACEHOLDER)) return
+
+    writeFileSync(
+      bundlePath,
+      content.replaceAll(LAYER_NAME_PLACEHOLDER, layerName),
+      TEXT_ENCODING
+    )
+  } catch (error) {
+    log.debug('packager', `Could not inject layer name into react bundle: ${error}`)
+  }
+}
 
 /**
  * Install a single package to outDir (e.g., .reference-ui/react/) and symlink into node_modules.
@@ -28,22 +53,7 @@ export async function installPackage(
   mkdirSync(nodeModulesScope, { recursive: true })
 
   await bundlePackage({ coreDir, outDir, targetDir, pkg })
-
-  if (pkg.name === REACT_PACKAGE_NAME) {
-    const config = getConfig()
-    const layerName = config?.name ?? ''
-    const mainFile = pkg.main?.replace('./', '') || 'index.js'
-    const bundlePath = resolve(targetDir, mainFile)
-    try {
-      let content = readFileSync(bundlePath, 'utf-8')
-      if (content.includes(LAYER_NAME_PLACEHOLDER)) {
-        content = content.replaceAll(LAYER_NAME_PLACEHOLDER, layerName)
-        writeFileSync(bundlePath, content, 'utf-8')
-      }
-    } catch (err) {
-      log.debug('packager', `Could not inject layer name into react bundle: ${err}`)
-    }
-  }
+  injectReactLayerName(targetDir, pkg)
 
   createSymlink(targetDir, linkPath)
 

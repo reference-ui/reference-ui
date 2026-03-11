@@ -52,7 +52,7 @@ describe('extendPattern() - E2E', () => {
     writeFileSync(
       join(fixtureDir, 'my-pattern.ts'),
       `
-      import { extendPattern } from '@reference-ui/core/config'
+      import { extendPattern } from '../patterns'
 
       extendPattern({
         properties: {

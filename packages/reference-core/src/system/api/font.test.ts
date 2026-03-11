@@ -65,7 +65,7 @@ describe('extendFont() - E2E', () => {
     writeFileSync(
       join(fixtureDir, 'my-fonts.ts'),
       `
-      import { extendFont } from '../../../config/index.ts'
+      import { extendFont } from '../font'
 
       extendFont('sans', {
         value: '"Inter", ui-sans-serif, sans-serif',

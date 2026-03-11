@@ -12,7 +12,8 @@
     "test:core": "nx run reference-core:test",
     "test:cli": "pnpm run test:core",
     "test:app": "nx run reference-app:test",
-    "test:system": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/core run eslint:txt && concurrently --kill-others-on-fail -n core,app -c blue,green \"pnpm --filter @reference-ui/core run test\" \"pnpm --filter @reference-ui/reference-app run test\" && REF_TEST_FRESH=1 pnpm --filter @reference-ui/reference-test run test:quick"
+    "test:system": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/core run eslint:txt && concurrently --kill-others-on-fail -n core,app -c blue,green \"pnpm --filter @reference-ui/core run test\" \"pnpm --filter @reference-ui/reference-app run test\"",
+    "test:e2e": "pnpm run test:system && REF_TEST_FRESH=1 pnpm --filter @reference-ui/reference-test run test:quick"
   },
   "devDependencies": {
     "@swc-node/register": "~1.9.1",

@@ -2,7 +2,7 @@ import { resolve, dirname } from 'node:path'
 import { cpSync, existsSync, mkdirSync } from 'node:fs'
 import type { PackageDefinition } from '../package'
 import { bundleWithEsbuild } from './esbuild'
-import { copyDirectories } from './files'
+import { copyDirectory, copyFileWithTransforms } from './files'
 import { writePackageJson } from './package'
 
 export interface BundleOptions {
@@ -20,42 +20,42 @@ async function copyEntry(options: BundleOptions): Promise<void> {
   if (!existsSync(entrySource)) return
 
   const outfile = pkg.main?.replace('./', '') || 'index.js'
+  const destPath = resolve(targetDir, outfile)
+
   if (pkg.bundle) {
     await bundleWithEsbuild(coreDir, targetDir, pkg.entry, outfile)
-  } else {
-    cpSync(entrySource, resolve(targetDir, outfile))
+    return
   }
-}
 
-async function copyFile(srcPath: string, destPath: string): Promise<void> {
-  if (!existsSync(srcPath)) return
   mkdirSync(dirname(destPath), { recursive: true })
-  if (srcPath.endsWith('.ts') || srcPath.endsWith('.tsx')) {
-    const { transformTypeScriptFile } = await import('./transform')
-    await transformTypeScriptFile(srcPath, destPath)
-  } else {
-    cpSync(srcPath, destPath)
-  }
+  cpSync(entrySource, destPath)
 }
 
-function resolveAssetRoot(options: BundleOptions, from: 'cli' | 'outDir'): string {
+async function copyPackageFile(srcPath: string, destPath: string): Promise<void> {
+  if (!existsSync(srcPath)) return
+
+  mkdirSync(dirname(destPath), { recursive: true })
+
+  await copyFileWithTransforms(srcPath, destPath)
+}
+
+function getCopySourceRoot(options: BundleOptions, from: 'cli' | 'outDir'): string {
   return from === 'cli' ? options.coreDir : options.outDir
 }
 
-async function createPackageContent(options: BundleOptions): Promise<void> {
+async function copyPackageAssets(options: BundleOptions): Promise<void> {
   const { targetDir, pkg } = options
+  if (!pkg.copyFrom) return
 
-  await copyEntry(options)
+  for (const entry of pkg.copyFrom) {
+    const sourceRoot = getCopySourceRoot(options, entry.from)
 
-  if (pkg.copyFrom) {
-    for (const entry of pkg.copyFrom) {
-      const rootDir = resolveAssetRoot(options, entry.from)
-      if (entry.kind === 'dir') {
-        await copyDirectories(rootDir, targetDir, [{ src: entry.src, dest: entry.dest }])
-      } else {
-        await copyFile(resolve(rootDir, entry.src), resolve(targetDir, entry.dest))
-      }
+    if (entry.kind === 'dir') {
+      await copyDirectory(sourceRoot, targetDir, entry.src, entry.dest)
+      continue
     }
+
+    await copyPackageFile(resolve(sourceRoot, entry.src), resolve(targetDir, entry.dest))
   }
 }
 
@@ -65,6 +65,8 @@ async function createPackageContent(options: BundleOptions): Promise<void> {
 export async function bundlePackage(options: BundleOptions): Promise<void> {
   const { targetDir, pkg } = options
   mkdirSync(targetDir, { recursive: true })
-  await createPackageContent(options)
+
+  await copyEntry(options)
+  await copyPackageAssets(options)
   writePackageJson(targetDir, pkg)
 }
