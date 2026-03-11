@@ -12,12 +12,16 @@ const ENTRIES = {
   react: 'src/entry/react.ts',
 } as const
 
+const GENERATED_VERSION = '0.0.0-generated'
+const STYLED_INDEX_JS = './css/index.js'
+const STYLED_INDEX_D_TS = './css/index.d.ts'
+
 /**
  * @reference-ui/system - Build-time design system extension APIs
  */
 export const SYSTEM_PACKAGE: PackageDefinition = {
   name: '@reference-ui/system',
-  version: '0.0.0-generated',
+  version: GENERATED_VERSION,
   description: 'Reference UI design system extension APIs',
   bundle: true,
   entry: ENTRIES.system,
@@ -37,7 +41,7 @@ export const SYSTEM_PACKAGE: PackageDefinition = {
  */
 export const REACT_PACKAGE: PackageDefinition = {
   name: '@reference-ui/react',
-  version: '0.0.0-generated',
+  version: GENERATED_VERSION,
   description: 'Reference UI React components and runtime APIs',
   bundle: true,
   entry: ENTRIES.react,
@@ -55,14 +59,14 @@ export const REACT_PACKAGE: PackageDefinition = {
  */
 export const STYLED_PACKAGE: PackageDefinition = {
   name: '@reference-ui/styled',
-  version: '0.0.0-generated',
+  version: GENERATED_VERSION,
   description: 'Reference UI styled system (Panda CSS output)',
   bundle: false,
-  main: './css/index.js',
-  types: './css/index.d.ts',
+  main: STYLED_INDEX_JS,
+  types: STYLED_INDEX_D_TS,
   exports: {
-    '.': { types: './css/index.d.ts', import: './css/index.js' },
-    './css': { types: './css/index.d.ts', import: './css/index.js' },
+    '.': { types: STYLED_INDEX_D_TS, import: STYLED_INDEX_JS },
+    './css': { types: STYLED_INDEX_D_TS, import: STYLED_INDEX_JS },
     './css/cva': { types: './css/cva.d.ts', import: './css/cva.js' },
     './css/cx': { types: './css/cx.d.ts', import: './css/cx.js' },
     './css/sva': { types: './css/sva.d.ts', import: './css/sva.js' },

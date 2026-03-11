@@ -71,7 +71,7 @@ describe('keyframes() - E2E', () => {
     writeFileSync(
       join(fixtureDir, 'my-keyframes.ts'),
       `
-      import { keyframes } from '@reference-ui/core/config'
+      import { keyframes } from '../keyframes'
 
       keyframes({
         fadeIn: {
@@ -103,7 +103,7 @@ describe('keyframes() - E2E', () => {
     writeFileSync(
       join(fixtureDir, 'fade.ts'),
       `
-      import { keyframes } from '@reference-ui/core/config'
+      import { keyframes } from '../keyframes'
 
       keyframes({
         fadeIn: {
@@ -117,7 +117,7 @@ describe('keyframes() - E2E', () => {
     writeFileSync(
       join(fixtureDir, 'slide.ts'),
       `
-      import { keyframes } from '@reference-ui/core/config'
+      import { keyframes } from '../keyframes'
 
       keyframes({
         slideUp: {

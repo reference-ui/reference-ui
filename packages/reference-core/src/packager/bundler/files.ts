@@ -1,73 +1,102 @@
-import {
-  mkdirSync,
-  writeFileSync,
-  readFileSync,
-  cpSync,
-  existsSync,
-  readdirSync,
-  statSync,
-} from 'node:fs'
-import { resolve, extname } from 'node:path'
+import { cpSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
+import { extname, resolve } from 'node:path'
 import { transformTypeScriptFile } from './transform'
+
+const TEXT_ENCODING = 'utf-8'
+
+function isMissingFileError(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    error.code === 'ENOENT'
+  )
+}
+
+function isTypeScriptFile(filePath: string): boolean {
+  const extension = extname(filePath)
+  return extension === '.ts' || extension === '.tsx'
+}
 
 /**
  * Write content only if it changed — avoids unnecessary file writes.
  */
 export function writeIfChanged(filePath: string, newContent: string): boolean {
   try {
-    const existing = readFileSync(filePath, 'utf-8')
+    const existing = readFileSync(filePath, TEXT_ENCODING)
     if (existing === newContent) return false
-  } catch {
-    // File doesn't exist, write it
+  } catch (error) {
+    if (!isMissingFileError(error)) {
+      throw error
+    }
   }
-  writeFileSync(filePath, newContent, 'utf-8')
+
+  writeFileSync(filePath, newContent, TEXT_ENCODING)
   return true
 }
 
 /**
- * Recursively copy a directory, transforming TS files to JS
+ * Copy a file, transforming TypeScript sources to JavaScript on the way out.
  */
-export async function copyDirRecursive(srcDir: string, destDir: string): Promise<void> {
+export async function copyFileWithTransforms(srcPath: string, destPath: string): Promise<void> {
+  if (isTypeScriptFile(srcPath)) {
+    await transformTypeScriptFile(srcPath, destPath)
+    return
+  }
+
+  cpSync(srcPath, destPath)
+}
+
+/**
+ * Recursively copy a directory, transforming TS files to JS.
+ */
+export async function copyDirectoryRecursive(srcDir: string, destDir: string): Promise<void> {
   mkdirSync(destDir, { recursive: true })
-  const entries = readdirSync(srcDir)
 
-  for (const entry of entries) {
+  for (const entry of readdirSync(srcDir)) {
     const srcPath = resolve(srcDir, entry)
-    const stat = statSync(srcPath)
+    const destPath = resolve(destDir, entry)
+    const entryStats = statSync(srcPath)
 
-    if (stat.isDirectory()) {
-      const destPath = resolve(destDir, entry)
-      await copyDirRecursive(srcPath, destPath)
-    } else if (stat.isFile()) {
-      const ext = extname(entry)
-      if (ext === '.ts' || ext === '.tsx') {
-        const destPath = resolve(destDir, entry)
-        await transformTypeScriptFile(srcPath, destPath)
-      } else {
-        const destPath = resolve(destDir, entry)
-        cpSync(srcPath, destPath)
-      }
+    if (entryStats.isDirectory()) {
+      await copyDirectoryRecursive(srcPath, destPath)
+      continue
+    }
+
+    if (entryStats.isFile()) {
+      await copyFileWithTransforms(srcPath, destPath)
     }
   }
 }
 
 /**
- * Copy directories, transforming TypeScript files to JavaScript
+ * Copy a source directory into the package output.
  */
-export async function copyDirectories(
-  coreDir: string,
+export async function copyDirectory(
+  sourceRoot: string,
   targetDir: string,
-  dirs: Array<{ src: string; dest?: string }>
+  src: string,
+  dest?: string
 ): Promise<void> {
   const { log } = await import('../../lib/log')
-  for (const { src, dest } of dirs) {
-    const srcPath = resolve(coreDir, src)
-    const destPath = dest ? resolve(targetDir, dest) : targetDir
 
-    if (!existsSync(srcPath)) {
+  const srcPath = resolve(sourceRoot, src)
+  const destPath = dest ? resolve(targetDir, dest) : targetDir
+
+  try {
+    const entryStats = statSync(srcPath)
+    if (!entryStats.isDirectory()) {
       log.error(`⚠️  Source directory not found: ${srcPath}`)
-      continue
+      return
     }
-    await copyDirRecursive(srcPath, destPath)
+  } catch (error) {
+    if (isMissingFileError(error)) {
+      log.error(`⚠️  Source directory not found: ${srcPath}`)
+      return
+    }
+
+    throw error
   }
+
+  await copyDirectoryRecursive(srcPath, destPath)
 }

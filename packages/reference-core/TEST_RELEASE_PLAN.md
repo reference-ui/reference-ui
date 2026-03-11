@@ -401,7 +401,7 @@ A release candidate should not be cut unless all of these are green:
 3. `pnpm --filter @reference-ui/core run test`
 4. `pnpm --filter @reference-ui/reference-app run test`
 5. `REF_TEST_FRESH=1 pnpm --filter @reference-ui/reference-test run test:quick`
-6. `pnpm test:system`
+6. `pnpm test:e2e`
 
 In addition, a publishable release of `reference-core` with native bindings should have a platform matrix that proves:
 
@@ -412,7 +412,7 @@ In addition, a publishable release of `reference-core` with native bindings shou
 5. a Node smoke test can load the built binary on each target
 6. the packaged artifact path matches what `src/virtual/native/loader.ts` expects
 
-If release cadence or runtime becomes an issue, `pnpm test:system` remains the ultimate gate and the others can be partitioned in CI, but they should still all run before publishing.
+For rapid iteration, `pnpm test:system` should remain the fast unit/integration loop for `reference-core` and `reference-app`, while `pnpm test:e2e` stays the full publish gate that also runs `reference-test`.
 
 ## Where We Are Right Now
 

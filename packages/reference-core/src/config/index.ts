@@ -22,5 +22,6 @@ export {
   ConfigValidationError,
 } from './errors'
 
-// System API surface used by bundled fragment files.
-export { tokens, keyframes, font, extendFont, globalCss, extendPattern } from '../system/api'
+// Re-exported for fragment files that import from '@reference-ui/core/config'.
+// Not used by ui.config.ts (which only needs defineConfig).
+//export { tokens, keyframes, font, extendFont, globalCss, extendPattern } from '../system/api'
