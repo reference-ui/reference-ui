@@ -3,6 +3,12 @@ import { DEFAULT_EXTERNALS } from './externals'
 import { getPlugins } from './plugins'
 import type { MicroBundleOptions } from './types'
 
+function normalizeExternal(external: MicroBundleOptions['external']): string[] {
+  return (Array.isArray(external) ? external : []).filter(
+    (entry): entry is string => typeof entry === 'string'
+  )
+}
+
 export function buildMicroBundleOptions(
   entryPath: string,
   options: MicroBundleOptions
@@ -19,11 +25,6 @@ export function buildMicroBundleOptions(
     conditions = ['import', 'node'],
   } = options
 
-  // Esbuild 0.27 requires external to be string[] (no RegExp)
-  const externalStrings = (Array.isArray(external) ? external : []).filter(
-    (e): e is string => typeof e === 'string'
-  )
-
   return {
     entryPoints: [entryPath],
     bundle: true,
@@ -31,7 +32,8 @@ export function buildMicroBundleOptions(
     platform,
     target,
     write: false,
-    external: externalStrings,
+    // Esbuild 0.27 requires external to be string[] (no RegExp)
+    external: normalizeExternal(external),
     plugins: getPlugins(options),
     minify,
     keepNames,

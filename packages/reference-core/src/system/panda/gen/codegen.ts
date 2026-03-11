@@ -8,41 +8,46 @@ import { log } from '../../../lib/log'
 import { updateBaseSystemCss } from '../../base/create'
 import { applyLayerPostprocess } from '../../layers/applyLayerPostprocess'
 
-/**
- * Ensure outDir has node_modules/@pandacss so panda.config.ts can resolve '@pandacss/dev'
- * when loaded by @pandacss/node (config is in outDir; user project may not have Panda).
- * We make outDir resolvable via symlink so Panda can load from generated config safely.
- */
-function ensurePandaResolvableFromOutDir(userCwd: string, outDir: string): void {
-  let corePandacss: string | null = null
-  let dir = userCwd
+const WORKSPACE_MARKERS = ['pnpm-workspace.yaml', 'nx.json'] as const
+const CORE_PANDACSS_PATH = ['packages', 'reference-core', 'node_modules', '@pandacss'] as const
+
+function findWorkspaceRoot(startDir: string): string | null {
+  let dir = startDir
   const root = parse(dir).root
 
   while (dir !== root) {
-    if (existsSync(resolve(dir, 'pnpm-workspace.yaml')) || existsSync(resolve(dir, 'nx.json'))) {
-      const workspaceCorePandacss = resolve(dir, 'packages', 'reference-core', 'node_modules', '@pandacss')
-      if (existsSync(workspaceCorePandacss)) {
-        corePandacss = workspaceCorePandacss
-      }
-      break
+    if (WORKSPACE_MARKERS.some((marker) => existsSync(resolve(dir, marker)))) {
+      return dir
     }
     dir = dirname(dir)
   }
 
-  if (!corePandacss) {
-    const req = createRequire(import.meta.url)
-    const pandaDevPkg = req.resolve('@pandacss/dev/package.json')
-    corePandacss = dirname(dirname(pandaDevPkg))
-  }
+  return null
+}
 
-  const outNodeModules = join(outDir, 'node_modules')
-  const outPandacss = join(outNodeModules, '@pandacss')
-  if (!existsSync(corePandacss)) return
+function resolveWorkspaceCorePandacss(userCwd: string): string | null {
+  const workspaceRoot = findWorkspaceRoot(userCwd)
+  if (!workspaceRoot) return null
 
+  const workspaceCorePandacss = resolve(workspaceRoot, ...CORE_PANDACSS_PATH)
+  return existsSync(workspaceCorePandacss) ? workspaceCorePandacss : null
+}
+
+function resolveInstalledPandacss(): string {
+  const req = createRequire(import.meta.url)
+  const pandaDevPkg = req.resolve('@pandacss/dev/package.json')
+  return dirname(dirname(pandaDevPkg))
+}
+
+function resolveCorePandacssPath(userCwd: string): string {
+  return resolveWorkspaceCorePandacss(userCwd) ?? resolveInstalledPandacss()
+}
+
+function removeExistingPandacssLink(outPandacss: string, corePandacss: string): boolean {
   try {
     const stats = lstatSync(outPandacss)
     if (stats.isSymbolicLink() && readlinkSync(outPandacss) === corePandacss) {
-      return
+      return true
     }
     if (stats.isSymbolicLink()) {
       unlinkSync(outPandacss)
@@ -53,6 +58,15 @@ function ensurePandaResolvableFromOutDir(userCwd: string, outDir: string): void 
     // No existing entry to replace.
   }
 
+  return false
+}
+
+function ensurePandacssLink(outDir: string, corePandacss: string): void {
+  const outNodeModules = join(outDir, 'node_modules')
+  const outPandacss = join(outNodeModules, '@pandacss')
+
+  if (removeExistingPandacssLink(outPandacss, corePandacss)) return
+
   mkdirSync(outNodeModules, { recursive: true })
   try {
     symlinkSync(corePandacss, outPandacss)
@@ -61,6 +75,18 @@ function ensurePandaResolvableFromOutDir(userCwd: string, outDir: string): void 
       throw error
     }
   }
+}
+
+/**
+ * Ensure outDir has node_modules/@pandacss so panda.config.ts can resolve '@pandacss/dev'
+ * when loaded by @pandacss/node (config is in outDir; user project may not have Panda).
+ * We make outDir resolvable via symlink so Panda can load from generated config safely.
+ */
+function ensurePandaResolvableFromOutDir(userCwd: string, outDir: string): void {
+  const corePandacss = resolveCorePandacssPath(userCwd)
+  if (!existsSync(corePandacss)) return
+
+  ensurePandacssLink(outDir, corePandacss)
 }
 
 /**

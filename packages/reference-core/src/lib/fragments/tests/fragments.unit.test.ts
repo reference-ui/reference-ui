@@ -4,6 +4,8 @@ import { createFragmentCollector } from '../index'
 import { scanForFragments } from '../scanner'
 
 const fixtureDir = join(import.meta.dirname, 'fixtures')
+const USE_FUNCTION_FILE = 'use-function.ts'
+const WITH_CONSTANTS_FILE = 'with-constants.ts'
 
 // ---------------------------------------------------------------------------
 // createFragmentCollector
@@ -203,8 +205,8 @@ describe('scanForFragments', () => {
       cwd: fixtureDir,
     })
     const names = files.map(f => f.split('/').at(-1))
-    expect(names).toContain('use-function.ts')
-    expect(names).toContain('with-constants.ts')
+    expect(names).toContain(USE_FUNCTION_FILE)
+    expect(names).toContain(WITH_CONSTANTS_FILE)
   })
 
   it('matches function calls inside comments (known regex limitation)', () => {
@@ -245,8 +247,8 @@ describe('scanForFragments', () => {
       cwd: fixtureDir,
     })
     const names = files.map(f => f.split('/').at(-1))
-    expect(names).toContain('use-function.ts')
-    expect(names).toContain('with-constants.ts')
+    expect(names).toContain(USE_FUNCTION_FILE)
+    expect(names).toContain(WITH_CONSTANTS_FILE)
     expect(names).not.toContain('setup.ts')
   })
 
@@ -257,8 +259,8 @@ describe('scanForFragments', () => {
       cwd: fixtureDir,
     })
     const names = files.map(f => f.split('/').at(-1))
-    expect(names).toContain('use-function.ts')
-    expect(names).toContain('with-constants.ts')
+    expect(names).toContain(USE_FUNCTION_FILE)
+    expect(names).toContain(WITH_CONSTANTS_FILE)
     expect(names).toContain('setup.ts')
   })
 })

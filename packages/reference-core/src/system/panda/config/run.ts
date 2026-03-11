@@ -12,6 +12,8 @@ import {
   writePandaExtensionsBundle,
 } from './extensions/api/bundle'
 
+const SYSTEM_CONFIG_COMPLETE_EVENT = 'system:config:complete'
+
 /**
  * Run config generation: prepare the portable base-system artefact,
  * then use its collector bundle to write panda.config.ts.
@@ -48,14 +50,14 @@ export function onRunConfig(): void {
   const cwd = getCwd()
   if (!cwd) {
     log.error('[config] run:system:config: getCwd() is undefined')
-    emit('system:config:complete')
+    emit(SYSTEM_CONFIG_COMPLETE_EVENT)
     return
   }
   log.debug('config', 'run:system:config received', cwd)
   runConfig(cwd)
     .then(() => {
-      log.debug('config', 'runConfig done → system:config:complete')
-      emit('system:config:complete')
+      log.debug('config', `runConfig done → ${SYSTEM_CONFIG_COMPLETE_EVENT}`)
+      emit(SYSTEM_CONFIG_COMPLETE_EVENT)
     })
     .catch((err) => {
       log.error(
@@ -63,6 +65,6 @@ export function onRunConfig(): void {
         err instanceof Error ? err.message : String(err),
         err instanceof Error ? err.stack : ''
       )
-      emit('system:config:complete')
+      emit(SYSTEM_CONFIG_COMPLETE_EVENT)
     })
 }
