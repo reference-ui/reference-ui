@@ -32,9 +32,14 @@ type SystemConfigEvents = {
   'system:config:ready': Record<string, never>
 
   /**
-   * Config worker done: eval ran, panda.config written.
+   * Config worker succeeded: panda.config written.
    */
   'system:config:complete': Record<string, never>
+
+  /**
+   * Config worker failed (e.g. missing cwd, runConfig threw). Pipeline must not proceed.
+   */
+  'system:config:failed': Record<string, never>
 }
 
 type SystemPandaEvents = {
@@ -49,9 +54,14 @@ type SystemPandaEvents = {
   'system:panda:css': Record<string, never>
 
   /**
-   * Panda codegen done (TS utilities + CSS generated).
+   * Panda codegen done (TS utilities + CSS generated). Emitted only on success.
    */
   'system:panda:codegen': Record<string, never>
+
+  /**
+   * Panda codegen failed. Pipeline must not proceed to packager.
+   */
+  'system:panda:codegen:failed': Record<string, never>
 }
 
 type SystemPipelineEvents = {

@@ -14,7 +14,7 @@ export function onRunCodegen(): void {
         err instanceof Error ? err.message : String(err)
       )
       if (err instanceof Error && err.stack) log.debug('panda', err.stack)
-      emit('system:panda:codegen')
+      emit('system:panda:codegen:failed')
     })
 }
 

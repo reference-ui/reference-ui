@@ -45,9 +45,19 @@ previously the biggest gap:
 - direct tests cover extensions bundle path helpers, bundle writes, and outDir
   mirroring
 - direct tests cover the config run handler emitting `system:config:complete`
-  for missing `cwd`, success, and failure
-- direct tests cover the Panda run handlers emitting the expected completion
-  events on success and logging the current failure path clearly
+  only on success and `system:config:failed` on missing `cwd` or runConfig failure
+- direct tests cover the Panda run handlers emitting `system:panda:codegen` only
+  on success and `system:panda:codegen:failed` on codegen failure
+- direct tests cover sync event wiring: config/panda failure emits `sync:failed`,
+  and downstream phases run only after upstream success (fail-closed)
+- direct tests cover `updateBaseSystemCss()` corruption edges: truncated JSON,
+  trailing garbage, null/array/missing-fields payloads leave file untouched
+- direct tests cover deterministic reruns for `panda.config.ts`, font-registry
+  output, layer postprocess result, and primitive source
+- direct tests cover the Panda codegen helper: missing cwd, missing
+  `panda.config.ts`, correct API call order, and updateBaseSystemCss gating
+- direct tests cover primitive-source generation: tag parsing, reserved names
+  (Obj, Var), single-letter tags (A), malformed tags.ts, and emitted structure
 
 ## What is already strong
 
@@ -64,25 +74,32 @@ The workspace release loop is also clear enough to be meaningful:
 - `pnpm test:system` exercises the fast release gate across `reference-core` and
   `reference-app`
 
-## Remaining limits
+## Hardening (fail-closed and artifact stability)
 
-This verdict is for internal CLI infrastructure use, not for claiming that every
-low-level edge is exhaustively hardened.
+The following former limits have been addressed:
 
-The main remaining limits are:
-
-- malformed existing `baseSystem.mjs` JSON is still not exhaustively defended at
-  every corruption edge
-- the current config and Panda handler contracts intentionally favor pipeline
-  progress by emitting completion signals even on failure, so broader integration
-  coverage remains important
-- some orchestration confidence still comes from downstream system tests rather
-  than from a full in-core failure matrix
-- deterministic reruns are now pinned for base artifacts, but not yet for every
-  generated system artifact snapshot
-- primitive-source generation is still covered more indirectly than directly
-- the low-level Panda execution helper in `panda/gen/codegen.ts` still depends on
-  broader integration coverage for filesystem and package-resolution behavior
+- **baseSystem.mjs corruption:** Safe parsing and shape validation; corrupted or
+  malformed existing content leaves the file untouched (no throw, no rewrite).
+  Table-driven tests cover truncated JSON, trailing garbage, null/array/missing
+  fields, and optional trailing semicolon.
+- **Config and Panda contracts:** Orchestration is fail-closed. Config and
+  Panda emit success-only completion events; on failure they emit
+  `system:config:failed` / `system:panda:codegen:failed`, and sync emits
+  `sync:failed` and exits with code 1. Downstream phases (Panda, packager) run
+  only after upstream success.
+- **In-core failure matrix:** Direct tests cover sync event gating, config run
+  success/failure signaling, Panda codegen success/failure signaling, and the
+  codegen helper (missing cwd, missing panda.config.ts, API call order,
+  updateBaseSystemCss gating).
+- **Deterministic reruns:** Pinned for base artifacts, `panda.config.ts`,
+  font-registry/types output, layer postprocess result, and primitive source.
+- **Primitive-source generation:** Direct tests for tag parsing, reserved
+  export names (Obj, Var), single-letter tags (A), malformed tags.ts, and
+  emitted source structure.
+- **Panda codegen helper:** Direct unit tests for `runPandaCodegen` and
+  `runPandaCss` (cwd/config presence, Panda API usage, layer postprocess and
+  baseSystem update); integration coverage remains for symlink and
+  package-resolution behavior in real envs.
 
 ## Practical judgment
 

@@ -39,9 +39,40 @@ function writeBaseSystem(cwd: string, baseSystem: BaseSystem): void {
   log.debug('base', 'baseSystem written', outputPath)
 }
 
+const BASE_SYSTEM_PREFIX = 'export const baseSystem = '
+
+/**
+ * Parse existing baseSystem.mjs content. Returns undefined on corruption or invalid shape.
+ * Tolerates optional trailing semicolon/whitespace. Does not throw.
+ */
+function readExistingBaseSystem(content: string): BaseSystem | undefined {
+  const i = content.indexOf(BASE_SYSTEM_PREFIX)
+  if (i === -1) return undefined
+
+  let jsonStr = content.slice(i + BASE_SYSTEM_PREFIX.length).trim()
+  if (jsonStr.endsWith(';')) jsonStr = jsonStr.slice(0, -1).trim()
+
+  try {
+    const parsed = JSON.parse(jsonStr) as unknown
+    if (
+      parsed &&
+      typeof parsed === 'object' &&
+      typeof (parsed as BaseSystem).name === 'string' &&
+      typeof (parsed as BaseSystem).fragment === 'string'
+    ) {
+      return parsed as BaseSystem
+    }
+  } catch {
+    // Invalid JSON
+  }
+  log.debug('base', 'baseSystem.mjs content invalid or corrupted, leaving file untouched')
+  return undefined
+}
+
 /**
  * Update the existing baseSystem.mjs artefact with layer-ready CSS.
  * Call after Panda cssgen and layer postprocess so baseSystem.css is portable for layers consumers.
+ * If the existing file is missing, missing the export, or contains invalid JSON/shape, the file is left untouched and no error is thrown.
  */
 export function updateBaseSystemCss(cwd: string, css: string): void {
   const systemDir = join(getOutDirPath(cwd), 'system')
@@ -49,11 +80,9 @@ export function updateBaseSystemCss(cwd: string, css: string): void {
   if (!existsSync(outputPath)) return
 
   const content = readFileSync(outputPath, 'utf-8')
-  const prefix = 'export const baseSystem = '
-  const i = content.indexOf(prefix)
-  if (i === -1) return
-  const jsonStr = content.slice(i + prefix.length).trim()
-  const baseSystem = JSON.parse(jsonStr) as BaseSystem
+  const baseSystem = readExistingBaseSystem(content)
+  if (!baseSystem) return
+
   baseSystem.css = css
   writeBaseSystem(cwd, baseSystem)
 }
