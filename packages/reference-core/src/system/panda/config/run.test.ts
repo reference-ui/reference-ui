@@ -123,13 +123,13 @@ describe('system/panda/config/run', () => {
     })
   })
 
-  it('onRunConfig logs and emits complete when cwd is missing', async () => {
+  it('onRunConfig logs and emits failed when cwd is missing', async () => {
     const { onRunConfig, error, emit } = await importRunModule({ cwd: undefined })
 
     onRunConfig()
 
     expect(error).toHaveBeenCalledWith('[config] run:system:config: getCwd() is undefined')
-    expect(emit).toHaveBeenCalledWith('system:config:complete')
+    expect(emit).toHaveBeenCalledWith('system:config:failed')
   })
 
   it('onRunConfig emits complete after a successful config run', async () => {
@@ -142,7 +142,7 @@ describe('system/panda/config/run', () => {
     })
   })
 
-  it('onRunConfig logs failures and still emits complete', async () => {
+  it('onRunConfig logs failures and emits failed (not complete)', async () => {
     const { onRunConfig, error, emit } = await importRunModule({
       cwd: '/workspace/app',
       runConfigFailure: new Error('base artifacts exploded'),
@@ -156,7 +156,7 @@ describe('system/panda/config/run', () => {
         'base artifacts exploded',
         expect.any(String)
       )
-      expect(emit).toHaveBeenCalledWith('system:config:complete')
+      expect(emit).toHaveBeenCalledWith('system:config:failed')
     })
   })
 })

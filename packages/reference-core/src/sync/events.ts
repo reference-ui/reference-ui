@@ -24,6 +24,14 @@ export function initEvents(): void {
     emit('run:panda:codegen')
   })
 
+  on('system:config:failed', () => {
+    emit('sync:failed')
+  })
+
+  on('system:panda:codegen:failed', () => {
+    emit('sync:failed')
+  })
+
   on('packager:ready', () => {
     packagerReady = true
     if (pendingPackagerBundle) {

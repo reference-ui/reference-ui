@@ -52,7 +52,7 @@ describe('system/panda/gen', () => {
     })
   })
 
-  it('onRunCodegen logs failures and still emits codegen completion only', async () => {
+  it('onRunCodegen logs failures and emits codegen:failed (not codegen)', async () => {
     const { onRunCodegen, emit, error, debug } = await importGenModule({
       codegenFailure: Object.assign(new Error('panda exploded'), {
         stack: 'stack: panda exploded',
@@ -68,7 +68,7 @@ describe('system/panda/gen', () => {
       )
       expect(debug).toHaveBeenCalledWith('panda', 'stack: panda exploded')
       expect(emit).toHaveBeenCalledTimes(1)
-      expect(emit).toHaveBeenCalledWith('system:panda:codegen')
+      expect(emit).toHaveBeenCalledWith('system:panda:codegen:failed')
     })
   })
 

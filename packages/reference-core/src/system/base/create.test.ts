@@ -178,4 +178,120 @@ describe('system/base/create', () => {
     expect(() => updateBaseSystemCss(workspaceDir, '@layer x {}')).not.toThrow()
     expect(readFileSync(baseSystemPath, 'utf-8')).toBe('export const nope = {}')
   })
+
+  describe('updateBaseSystemCss corruption edges', () => {
+    async function assertUnchanged(opts: {
+      workspaceDir: string
+      outDir: string
+      baseSystemPath: string
+      fileContent: string
+      css: string
+    }) {
+      const { updateBaseSystemCss } = await importCreateModule({ outDir: opts.outDir })
+      const fs = await import('node:fs')
+      const systemDir = join(opts.outDir, 'system')
+      rmSync(systemDir, { recursive: true, force: true })
+      fs.mkdirSync(systemDir, { recursive: true })
+      fs.writeFileSync(opts.baseSystemPath, opts.fileContent, 'utf-8')
+
+      expect(() => updateBaseSystemCss(opts.workspaceDir, opts.css)).not.toThrow()
+      expect(readFileSync(opts.baseSystemPath, 'utf-8')).toBe(opts.fileContent)
+    }
+
+    it('leaves file untouched when JSON is truncated', async () => {
+      const workspaceDir = createTempDir()
+      const outDir = resolve(workspaceDir, '.reference-ui')
+      const baseSystemPath = join(outDir, 'system', 'baseSystem.mjs')
+      const content =
+        '/** generated */\nexport const baseSystem = {"name":"x","fragment":"y'
+      await assertUnchanged({
+        workspaceDir,
+        outDir,
+        baseSystemPath,
+        fileContent: content,
+        css: '@layer a {}',
+      })
+    })
+
+    it('leaves file untouched when there is trailing non-JSON garbage', async () => {
+      const workspaceDir = createTempDir()
+      const outDir = resolve(workspaceDir, '.reference-ui')
+      const baseSystemPath = join(outDir, 'system', 'baseSystem.mjs')
+      const content =
+        'export const baseSystem = {"name":"x","fragment":"y"} garbage\n'
+      await assertUnchanged({
+        workspaceDir,
+        outDir,
+        baseSystemPath,
+        fileContent: content,
+        css: '@layer a {}',
+      })
+    })
+
+    it('leaves file untouched when payload is null', async () => {
+      const workspaceDir = createTempDir()
+      const outDir = resolve(workspaceDir, '.reference-ui')
+      const baseSystemPath = join(outDir, 'system', 'baseSystem.mjs')
+      const content = 'export const baseSystem = null'
+      await assertUnchanged({
+        workspaceDir,
+        outDir,
+        baseSystemPath,
+        fileContent: content,
+        css: '@layer a {}',
+      })
+    })
+
+    it('leaves file untouched when payload is an array', async () => {
+      const workspaceDir = createTempDir()
+      const outDir = resolve(workspaceDir, '.reference-ui')
+      const baseSystemPath = join(outDir, 'system', 'baseSystem.mjs')
+      const content = 'export const baseSystem = [{"name":"x","fragment":"y"}]'
+      await assertUnchanged({
+        workspaceDir,
+        outDir,
+        baseSystemPath,
+        fileContent: content,
+        css: '@layer a {}',
+      })
+    })
+
+    it('leaves file untouched when payload is missing required name or fragment', async () => {
+      const workspaceDir = createTempDir()
+      const outDir = resolve(workspaceDir, '.reference-ui')
+      const baseSystemPath = join(outDir, 'system', 'baseSystem.mjs')
+      const content = 'export const baseSystem = {"name":"x"}'
+      await assertUnchanged({
+        workspaceDir,
+        outDir,
+        baseSystemPath,
+        fileContent: content,
+        css: '@layer a {}',
+      })
+    })
+
+    it('strips optional trailing semicolon and updates when valid', async () => {
+      const workspaceDir = createTempDir()
+      const outDir = resolve(workspaceDir, '.reference-ui')
+      const baseSystemPath = join(outDir, 'system', 'baseSystem.mjs')
+      const { updateBaseSystemCss } = await importCreateModule({ outDir })
+      const fs = await import('node:fs')
+      const systemDir = join(outDir, 'system')
+      fs.mkdirSync(systemDir, { recursive: true })
+      fs.writeFileSync(
+        baseSystemPath,
+        'export const baseSystem = {"name":"s","fragment":"f"};\n',
+        'utf-8'
+      )
+
+      expect(() =>
+        updateBaseSystemCss(workspaceDir, '@layer s { .x {} }')
+      ).not.toThrow()
+      expect(readBaseSystemFile(baseSystemPath).json).toEqual({
+        name: 's',
+        fragment: 'f',
+        css: '@layer s { .x {} }',
+      })
+    })
+  })
 })

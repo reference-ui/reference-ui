@@ -101,4 +101,26 @@ describe('system/panda/config/create', () => {
     expect(output).toContain('"outdir": "custom-styled"')
     expect(output).not.toContain('"outdir": "styled"')
   })
+
+  it('produces identical panda.config.ts on rerun with same inputs', async () => {
+    const tempDir = createTempDir()
+    const outputPath = resolve(tempDir, '.reference-ui', 'panda.config.ts')
+    const { createPandaConfig } = await importCreateModule()
+
+    const opts = {
+      outputPath,
+      collectorBundle: {
+        collectorFragments: 'collectorFragments()',
+        getValue: (name: string) => `getValue:${name}`,
+      } as never,
+      extensionsImportPath: './styled/extensions/index.mjs',
+    }
+
+    await createPandaConfig(opts)
+    const first = readFileSync(outputPath, 'utf-8')
+    await createPandaConfig(opts)
+    const second = readFileSync(outputPath, 'utf-8')
+
+    expect(second).toBe(first)
+  })
 })

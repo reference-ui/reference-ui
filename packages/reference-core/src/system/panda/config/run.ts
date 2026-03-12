@@ -13,6 +13,7 @@ import {
 } from './extensions/api/bundle'
 
 const SYSTEM_CONFIG_COMPLETE_EVENT = 'system:config:complete'
+const SYSTEM_CONFIG_FAILED_EVENT = 'system:config:failed'
 
 /**
  * Run config generation: prepare the portable base-system artefact,
@@ -44,13 +45,14 @@ export async function runConfig(cwd: string): Promise<void> {
 }
 
 /**
- * Handler for run:system:config. Resolves cwd, runs config generation, always emits system:config:complete.
+ * Handler for run:system:config. Resolves cwd, runs config generation.
+ * Emits system:config:complete only on success; system:config:failed on missing cwd or runConfig failure.
  */
 export function onRunConfig(): void {
   const cwd = getCwd()
   if (!cwd) {
     log.error('[config] run:system:config: getCwd() is undefined')
-    emit(SYSTEM_CONFIG_COMPLETE_EVENT)
+    emit(SYSTEM_CONFIG_FAILED_EVENT)
     return
   }
   log.debug('config', 'run:system:config received', cwd)
@@ -65,6 +67,6 @@ export function onRunConfig(): void {
         err instanceof Error ? err.message : String(err),
         err instanceof Error ? err.stack : ''
       )
-      emit(SYSTEM_CONFIG_COMPLETE_EVENT)
+      emit(SYSTEM_CONFIG_FAILED_EVENT)
     })
 }

@@ -77,4 +77,32 @@ describe('system/layers/applyLayerPostprocess', () => {
       ].join('\n\n')
     )
   })
+
+  it('produces identical result and file content on rerun with same inputs', () => {
+    const outDir = createTempDir()
+    const styledDir = resolve(outDir, 'styled')
+    const stylesPath = resolve(styledDir, 'styles.css')
+    const rawCss =
+      '@layer base, tokens, utilities;\n@layer tokens { :where(:root, :host) { --color: red; } }\n@layer utilities { .x { color: red; } }'
+
+    mkdirSync(styledDir, { recursive: true })
+    writeFileSync(stylesPath, rawCss, 'utf-8')
+
+    const config = {
+      name: 'local-system',
+      layers: [
+        { name: 'upstream-one', css: '@layer upstream-one { .one { color: blue; } }' },
+      ],
+    } as never
+
+    const first = applyLayerPostprocess(outDir, config)
+    const firstFile = readFileSync(stylesPath, 'utf-8')
+    // Reset file to same initial content so second run has same input
+    writeFileSync(stylesPath, rawCss, 'utf-8')
+    const second = applyLayerPostprocess(outDir, config)
+    const secondFile = readFileSync(stylesPath, 'utf-8')
+
+    expect(second).toBe(first)
+    expect(secondFile).toBe(firstFile)
+  })
 })

@@ -11,8 +11,10 @@ export interface SyncPayload {
   options: SyncOptions
 }
 
-/** Sync module events – only complete. */
+/** Sync module events – complete and failure. */
 export type SyncEvents = {
-  /** Emitted when sync pipeline is complete */
+  /** Emitted when sync pipeline is complete (packager finished). */
   'sync:complete': Record<string, never>
+  /** Emitted when config or Panda failed; pipeline did not produce artifacts. */
+  'sync:failed': Record<string, never>
 }
