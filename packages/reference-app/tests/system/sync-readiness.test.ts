@@ -27,8 +27,6 @@ const GENERATED_FILE_COUNT = 250
 
 const reactEntryPath = join(fixtureOutDir, 'react', 'react.mjs')
 const systemEntryPath = join(fixtureOutDir, 'system', 'system.mjs')
-const baseSystemPath = join(fixtureOutDir, 'system', 'baseSystem.mjs')
-
 function killProcessTree(pid: number | undefined): void {
   if (!pid) return
 
@@ -67,7 +65,6 @@ function seedStaleOutputs(): void {
 
   writeFileSync(reactEntryPath, `export const layer = "${STALE_MARKER}"\n`, 'utf-8')
   writeFileSync(systemEntryPath, `export const systemName = "${STALE_MARKER}"\n`, 'utf-8')
-  writeFileSync(baseSystemPath, `export const baseSystem = "${STALE_MARKER}"\n`, 'utf-8')
 }
 
 function writeGeneratedSources(): void {
@@ -128,11 +125,10 @@ describe('sync readiness', () => {
       await waitForLog(logs, READY_MESSAGE)
 
       expect(existsSync(reactEntryPath)).toBe(true)
-      expect(existsSync(baseSystemPath)).toBe(true)
+      expect(existsSync(systemEntryPath)).toBe(true)
       expect(readFileSync(reactEntryPath, 'utf-8')).toContain(FRESH_MARKER)
       expect(readFileSync(reactEntryPath, 'utf-8')).not.toContain(STALE_MARKER)
-      expect(readFileSync(baseSystemPath, 'utf-8')).toContain(FRESH_MARKER)
-      expect(readFileSync(baseSystemPath, 'utf-8')).not.toContain(STALE_MARKER)
+      expect(readFileSync(systemEntryPath, 'utf-8')).not.toContain(STALE_MARKER)
     } finally {
       killProcessTree(syncProcess.pid)
     }
