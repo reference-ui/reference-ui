@@ -2,7 +2,7 @@
 
 ## Verdict
 
-Not yet release-ready.
+Release-ready for internal use.
 
 ## Why
 
@@ -19,15 +19,40 @@ That means a regression here can still look like "sync ran" while producing
 broken config, incomplete runtime CSS, malformed `baseSystem`, or stale final
 artifacts.
 
-## What is already strong
+## Direct coverage now in place
 
-There is real confidence in the feature behavior:
+There is now direct `reference-core` proof for the contracts that were
+previously the biggest gap:
 
 - direct tests cover system API helpers like `tokens`, `font`, `keyframes`, and
   `patterns`
 - direct tests cover Panda config extension helpers
 - direct tests cover the layer CSS transform logic
 - direct tests cover generated font-registry output
+- direct tests cover `createBaseArtifacts()` writing `baseSystem.mjs`
+- direct tests cover `createBaseArtifacts()` writing `baseSystem.d.mts`
+- direct tests cover `baseSystem` carrying the configured `name`
+- direct tests cover `updateBaseSystemCss()` attaching CSS without corrupting the
+  existing artifact
+- direct tests cover deterministic reruns for base artifact creation
+- direct tests cover base fragment preparation, aliasing, collector-bundle
+  wiring, and portable fragment bundle ordering
+- direct tests cover file-level layer postprocess behavior for missing CSS,
+  local-only layers, and appended upstream layers
+- direct tests cover `createLayerCss()` missing-file and file-read behavior
+- direct tests cover `createPandaConfig()` rendering collector expressions,
+  extensions import paths, and base-config overrides
+- direct tests cover extensions bundle path helpers, bundle writes, and outDir
+  mirroring
+- direct tests cover the config run handler emitting `system:config:complete`
+  for missing `cwd`, success, and failure
+- direct tests cover the Panda run handlers emitting the expected completion
+  events on success and logging the current failure path clearly
+
+## What is already strong
+
+There is also strong downstream confidence in the real pipeline:
+
 - downstream app tests verify real sync artifacts under `.reference-ui`
 - downstream app tests verify `layers` isolation behavior
 - downstream app tests verify generated type augmentation
@@ -39,43 +64,32 @@ The workspace release loop is also clear enough to be meaningful:
 - `pnpm test:system` exercises the fast release gate across `reference-core` and
   `reference-app`
 
-## What is still missing
+## Remaining limits
 
-By the standards in `TEST_RELEASE_PLAN.md`, the remaining gap is still direct
-ownership of the most dangerous system contracts.
+This verdict is for internal CLI infrastructure use, not for claiming that every
+low-level edge is exhaustively hardened.
 
-In particular, I did not find direct `reference-core` tests that pin down:
+The main remaining limits are:
 
-- `system/base/create.ts` writing `baseSystem.mjs` with the expected `name`
-- `system/base/create.ts` writing `baseSystem.d.mts`
-- `updateBaseSystemCss()` attaching CSS without corrupting the existing artifact
-- deterministic rerun behavior for base artifact creation
-- malformed or partial `baseSystem.mjs` handling
-- worker-level failure propagation for config and Panda phases
-- "failed upstream phase does not silently unlock downstream work" inside
-  `reference-core` itself
-
-Those are exactly the kinds of contracts that should not rely only on downstream
-proof.
+- malformed existing `baseSystem.mjs` JSON is still not exhaustively defended at
+  every corruption edge
+- the current config and Panda handler contracts intentionally favor pipeline
+  progress by emitting completion signals even on failure, so broader integration
+  coverage remains important
+- some orchestration confidence still comes from downstream system tests rather
+  than from a full in-core failure matrix
+- deterministic reruns are now pinned for base artifacts, but not yet for every
+  generated system artifact snapshot
+- primitive-source generation is still covered more indirectly than directly
+- the low-level Panda execution helper in `panda/gen/codegen.ts` still depends on
+  broader integration coverage for filesystem and package-resolution behavior
 
 ## Practical judgment
 
-This subsystem is in good shape for active internal development.
+This subsystem is now strong enough to ship as internal infrastructure inside
+Reference UI.
 
-The feature set is real, the downstream behavior is strong, and the main system
-suite now exercises important recovery and stale-output cases. But the module
-still falls short of a clean release-ready verdict because its most central
-artifact contract, `baseSystem`, is not yet directly tested at the level it
-deserves, and worker-failure behavior is still only partially pinned down.
-
-## What would change the verdict
-
-I would be comfortable flipping this to release-ready once `reference-core`
-itself directly proves:
-
-- `baseSystem` creation and CSS attachment
-- deterministic reruns for those artifacts
-- at least one stable failure-path contract for config/Panda worker orchestration
-
-That would move this area from "behavior looks strong downstream" to "the core
-module owns its own critical contracts."
+The dangerous `baseSystem` artifact contract is no longer carried only by code
+shape or downstream proof; `reference-core` now directly owns its creation,
+types output, CSS attachment, and rerun stability. Combined with the existing
+system suite, that is enough to treat `system` as release-ready for internal use.
