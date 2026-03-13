@@ -1,195 +1,240 @@
 # System
 
-The system module generates a design system's runtime artefacts: a Panda config, CSS utilities, and compiled styles. It solves a fundamental bootstrapping problem and provides an event-driven architecture for incremental builds.
+The `system` module owns the design-system generation pipeline inside
+`reference-core`.
 
----
+Its job is to turn user config and fragment calls into generated artifacts under
+`outDir`, then hand those artifacts off to the packager so downstream code can
+import `@reference-ui/system`, `@reference-ui/styled`, and `@reference-ui/react`
+like normal packages.
 
-## The Problem We're Solving
+## What It Produces
 
-Design systems built with Panda CSS face a chicken-and-egg:
+On a normal `ref sync`, the system pipeline is responsible for:
 
-1. **Primitives** (buttons, tokens, recipes) need to import from Panda's generated output (`css`, `cva`, etc.)
-2. **Panda's codegen** needs a config that includes those primitives' contributions (tokens, recipes, patterns)
-3. The config can't import the primitives without the generated output existing first
+- writing `panda.config.ts` into `outDir`
+- mirroring transformed source files into `outDir/virtual`
+- generating Panda output into `outDir/styled`
+- writing the portable `baseSystem` artifact into `outDir/system`
+- generating font-registry-driven type artifacts under `outDir/system`
+- preparing the runtime artifacts that the packager later bundles and links
 
-The old approach was to check in generated code or run Panda manually before the build. This broke CI, made the repo messy, and created subtle sync issues.
+## Why This Exists
 
----
+Reference UI has a bootstrapping problem:
 
-## The Solution
+1. user code contributes tokens, patterns, fonts, keyframes, and global CSS
+2. Panda needs a config that includes those contributions
+3. runtime primitives eventually depend on Panda output
+4. the CLI still has to be able to generate everything from a cold start
 
-**Separate the base config from the primitives.**
+The system solves that by separating:
 
-The CLI owns a pure structural config (`system/config/base.ts`) that has zero imports from generated code. It defines the scaffold: `jsxFramework`, `preflight`, `outdir`, `include`/`exclude` patterns. This config can always be written without any dependencies.
+- fragment collection from code generation
+- base artifact creation from Panda execution
+- worker orchestration from worker implementation
 
-User code (and eventually primitives) contribute **fragments** — small config slices collected at build time via the fragments system. The CLI scans source files, bundles fragment calls into IIFEs, and merges them with the base config to produce a complete `panda.config.ts`.
+## High-Level Flow
 
-Because the base config is import-free, the CLI can run `ref sync` on itself and bootstrap the generated output. Once the output exists, primitives can import from it and contribute their own fragments.
+The live orchestration is in `src/sync/events.ts`, not inside the workers.
 
----
+Current cold-start flow:
+
+1. virtual worker starts and emits `virtual:ready`
+2. `virtual:ready` triggers `run:virtual:copy:all`
+3. virtual mirror finishes and emits `virtual:complete`
+4. `virtual:complete` triggers `run:system:config`
+5. config worker prepares base artifacts and writes `panda.config.ts`
+6. once `system:config:complete` and `system:panda:ready` have both happened, sync emits `run:panda:codegen`
+7. Panda writes `outDir/styled/*` and layer postprocessing updates `outDir/system/baseSystem.mjs`
+8. packager then bundles and links the generated packages
+9. sync only reports ready after packaging and type generation finish
+
+Important nuance:
+
+- `run:panda:css` exists as a worker capability, but the default sync flow
+  currently drives full `run:panda:codegen`
+- watch events currently feed the virtual mirror directly; they do not yet wire a
+  separate CSS-only Panda fast path
 
 ## Architecture
 
-```
-ref sync
-    │
-    ▼
-┌───────────────────────────────────────────────────────────────┐
-│  virtual worker                                               │
-│  Copies/transforms source files → .reference-ui/virtual      │
-│  Emits: virtual:ready, virtual:complete                       │
-└───────────────────────────────────────────────────────────────┘
-    │ virtual:ready
-    ▼
-┌───────────────────────────────────────────────────────────────┐
-│  config worker                                                │
-│  Scans fragments, merges with base config, writes panda.config│
-│  Emits: system:config:ready, system:config:complete           │
-└───────────────────────────────────────────────────────────────┘
-    │ system:config:complete
-    ▼
-┌───────────────────────────────────────────────────────────────┐
-│  panda worker (optional)                                      │
-│  Runs Panda codegen/cssgen → system/styled, style.css         │
-│  Emits: system:panda:ready, system:panda:css, system:panda:codegen │
-└───────────────────────────────────────────────────────────────┘
-    │
-    ▼
-  sync:complete
-```
+### `api/`
 
-Workers communicate via a `BroadcastChannel` event bus. Each worker subscribes to trigger events (`run:*`) and emits completion events (`system:*:complete`). The sync module wires them together — workers don't know about each other.
+Public fragment authoring surface.
 
----
+These functions collect data from user code. They do not run Panda and they do
+not write files themselves.
 
-## Source Structure
+Examples:
 
-```
-system/
-├── base/         # Portable baseSystem collection + emission
-├── api/          # Extension surface (tokens, recipe, pattern collectors)
-├── internal/    # Rhythm, props — use api to extend config
-├── primitives/  # React components — read from styled
-├── styled/       # Panda output (generated, gitignored)
-├── config/       # Panda config generation pipeline
-├── panda/        # Panda execution
-└── workers/      # Worker entrypoints + docs
-```
-
-**Flow:** `api` ← `internal` (rhythm, props extend config) → `styled` (Panda) → `primitives` (components)
-
----
-
-## Output Structure
-
-All artefacts live under `outDir` (default `.reference-ui`):
-
-```
-.reference-ui/
-  panda.config.ts      # Generated config (base + fragments merged)
-  virtual/             # Transformed source files for Panda scanning
-  system/
-    baseSystem.mjs     # Portable Reference UI composition artefact
-    baseSystem.d.mts   # Types for the generated baseSystem module
-    styled/            # Panda codegen (css, cva, patterns, jsx, recipes)
-    style.css          # Compiled CSS
-```
-
-Consumer code imports from `system/styled/`. The generated `panda.config.ts` points `outdir` there.
-
----
-
-## Module Breakdown
+- `tokens()`
+- `font()`
+- `globalCss()`
+- `keyframes()`
+- `extendPattern()`
 
 ### `base/`
 
-Owns the Reference UI `baseSystem` concept.
+Owns the portable `baseSystem` contract.
 
-- Scans and bundles high-level API fragments once
-- Writes the portable `baseSystem` artefact under `outDir/system/`
-- Prepares the collector bundle that `config/` uses to write `panda.config.ts`
+Responsibilities:
 
-### `config/`
+- resolve upstream and local fragment inputs for `extends`
+- build the portable fragment bundle stored in `baseSystem.fragment`
+- write `outDir/system/baseSystem.mjs`
+- write `outDir/system/baseSystem.d.mts`
+- attach portable layer CSS to `baseSystem.css` after Panda runs
 
-Owns config generation. Key pieces:
+### `panda/config/`
 
-- **`base.ts`** — Pure structural config. No side-effect imports. The bootstrap foundation.
-- **`createPandaConfig.ts`** — Renders the final `panda.config.ts` from a liquid template, injecting base config + bundled fragments + deepMerge.
-- **`runConfig.ts`** — Consumes prepared base artefacts and writes `panda.config.ts`. Called by the config worker.
+Owns generated Panda config creation.
 
-See [`config/README.md`](config/README.md) for details on the fragment merging strategy and how this replaces the old multi-pipeline system.
+Responsibilities:
 
-### `panda/`
+- define the import-free structural base config
+- bundle the extensions runtime used by generated config
+- render `outDir/panda.config.ts`
+- merge built-in and collected fragment contributions
 
-Owns Panda execution. Two modes:
+The userspace base config writes Panda output to `outDir/styled`, not to a
+source-side `system/styled` directory.
 
-- **Codegen** — Full pipeline: generates TS utilities + CSS. Runs on cold start or config change.
-- **CSS-only** — Fast path: regenerates CSS without codegen. Runs on file changes in watch mode.
+### `panda/gen/`
 
-The panda worker requires `panda.config.ts` to already exist (written by config worker). It invokes the Panda CLI from `outDir` so Panda finds the config. It does not know about `baseSystem`.
+Owns Panda execution.
 
-See [`panda/README.md`](panda/README.md) for event details.
+Responsibilities:
+
+- ensure `outDir` can resolve `@pandacss/*`
+- run full Panda codegen and CSS generation
+- run the optional CSS-only generation entrypoint
+- apply layer postprocessing to generated CSS
+- update `baseSystem.css` with the portable layer-safe CSS form
+
+### `layers/`
+
+Owns CSS transforms for layer-aware output.
+
+This is where Panda output is rewritten into the portable form used by
+`baseSystem.css` and layered consumer flows.
+
+### `types/`
+
+Owns generated type augmentation for system/runtime outputs.
+
+Today this is mostly about font-registry-derived declarations such as:
+
+- `outDir/system/font-registry.json`
+- `outDir/system/types.generated.d.mts`
+
+These generated types are later folded into the packaged `system` and `react`
+type outputs.
+
+### `primitives/`
+
+Generated React primitive source used by the runtime package build.
+
+This directory is source for packaging, not the final user output directory.
+The generated runtime contains the layer-name placeholder that the packager later
+replaces with `ui.config.name`.
+
+### `build/`
+
+Internal prebuild tooling for `reference-core` itself.
+
+This is distinct from user-project sync output:
+
+- internal prebuild writes `src/system/styled/*`
+- user sync writes `.reference-ui/styled/*`
 
 ### `workers/`
 
-Documents the worker threading model. Workers are flat event handlers — no orchestration logic. Coordination happens in `sync/events.ts`.
+Worker entrypoints only.
 
----
+They subscribe to events, run a narrow task, and emit completion. They do not
+decide what happens next.
 
-## Event Flow
+## Generated Output Layout
 
-Events follow a naming convention:
+For a user project, the relevant system-owned outputs are:
 
-- **`run:*`** — Trigger events. Tell a worker to do something.
-- **`system:*:ready`** — Worker is up and subscribed.
-- **`system:*:complete`** — Worker finished its task.
+```text
+.reference-ui/
+  panda.config.ts
+  virtual/
+  styled/
+    styles.css
+    css/
+    patterns/
+    jsx/
+    extensions/
+  system/
+    baseSystem.mjs
+    baseSystem.d.mts
+    font-registry.json
+    types.generated.d.mts
+```
 
-Example flow for `ref sync`:
+Then the packager turns those artifacts into generated packages under:
 
-1. `initVirtual` → virtual worker starts, emits `virtual:ready`
-2. `virtual:ready` → emit `run:system:config`
-3. Config worker prepares `baseSystem`, writes `panda.config.ts`, emits `system:config:complete`
-4. `system:config:complete` → emit `run:virtual:copy:all`
-5. Virtual worker copies files, emits `virtual:complete`
-6. `virtual:complete` → emit `sync:complete`
+- `outDir/react`
+- `outDir/system`
+- `outDir/styled`
 
-Panda can be inserted between config and virtual copy when needed.
+and links them into `node_modules/@reference-ui/*`.
 
----
+## Event Contract
 
-## Adding a New Subsystem
+Important system events today:
 
-To add a new fragment type (e.g. `font()`):
+- `run:system:config`
+- `system:config:ready`
+- `system:config:complete`
+- `run:panda:codegen`
+- `run:panda:css`
+- `system:panda:ready`
+- `system:panda:codegen`
+- `system:panda:css`
 
-1. Create a collector via `createFragmentCollector({ name: 'font', targetFunction: 'font' })`.
-2. Export the collector so user code can call `font({ ... })`.
-3. Register the collector in `runConfig.ts` so it's scanned and bundled.
-4. The collector's contributions enter the same `deepMerge` fold as everything else.
+The main orchestration rule is:
 
-No new workers, no new pipelines, no JSON round-trips.
+- worker code stays local and dumb
+- pipeline order lives in `src/sync/events.ts`
 
----
+## Confidence Today
 
-## Design Principles
+The current implementation has meaningful direct coverage for:
 
-**Workers are dumb.** They subscribe to events, do one thing, emit completion. No conditional logic about what to run next.
+- fragment authoring helpers in `api/*.test.ts`
+- Panda config merge helpers in `panda/config/extensions/api/*.test.ts`
+- layer CSS transforms in `layers/transform.test.ts`
+- generated font registry output in `types/generate.test.ts`
 
-**Events are the orchestration layer.** `sync/events.ts` wires workers together. Change the flow there, not in workers.
+And it has strong downstream proof in `reference-app` for:
 
-**Base config is sacred.** It must never import from generated code. This is the bootstrap invariant.
+- real sync artifact creation
+- layer isolation behavior
+- generated type augmentation
+- interrupted-sync recovery
+- stale-output readiness behavior
 
-**Fragments are data.** User code calls functions that push objects to globalThis. The CLI bundles and merges. No magic, no hidden state.
+That downstream coverage is important, but it does not replace direct module
+tests for every dangerous path in `system/base` and worker orchestration.
 
-**Fail gracefully.** If a step fails (e.g. Panda not installed), log clearly and continue. Don't block the entire pipeline.
+## Design Rules
 
----
+- Base config must stay import-free so cold-start sync is always possible.
+- Fragments are collected data, not ad hoc runtime behavior.
+- `baseSystem` is a real contract, not an implementation detail.
+- Worker orchestration belongs in events, not inside workers.
+- Internal prebuild output and user sync output are different pipelines and
+  should be documented separately.
 
-## Subdirectory READMEs
+## Related Docs
 
-- [`config/README.md`](config/README.md) — Fragment merging, base config, extends/layers
-- [`base/README.md`](base/README.md) — Portable base-system collection + emission
-- [`panda/README.md`](panda/README.md) — Codegen and cssgen execution
-- [`workers/README.md`](workers/README.md) — Worker threading model
-- [`api/`](api/) — Extension API (tokens collector, recipe, pattern, etc.)
-- [`primitives/README.md`](primitives/README.md) — React components (source: reference-core primitives)
-- [`internal/README.md`](internal/README.md) — Rhythm, props (source: reference-core styled/rhythm, styled/props)
+- [`base/README.md`](base/README.md)
+- [`panda/config/README.md`](panda/config/README.md)
+- [`panda/gen/README.md`](panda/gen/README.md)
+- [`workers/README.md`](workers/README.md)
+- [`primitives/README.md`](primitives/README.md)

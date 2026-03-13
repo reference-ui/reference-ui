@@ -1,7 +1,22 @@
 import { build } from 'esbuild'
 import { mkdirSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { dirname, resolve } from 'node:path'
 import { writeIfChanged } from './files'
+
+const ESBUILD_EXTERNALS = [
+  'react',
+  'react-dom',
+  'react/jsx-runtime',
+  '@reference-ui/styled',
+  '@reference-ui/styled/*',
+  // Node build-tools (fragments scanner/runner) must stay external for neutral bundles.
+  'node:fs',
+  'node:path',
+  'node:crypto',
+  'node:url',
+  'fast-glob',
+  'esbuild',
+]
 
 /**
  * Bundle a package using esbuild (for packages that need bundling).
@@ -14,6 +29,7 @@ export async function bundleWithEsbuild(
   outfile: string
 ): Promise<void> {
   const destPath = resolve(targetDir, outfile)
+
   const result = await build({
     entryPoints: [resolve(coreDir, entryPath)],
     bundle: true,
@@ -23,29 +39,16 @@ export async function bundleWithEsbuild(
     target: 'es2020',
     jsx: 'automatic',
     jsxImportSource: 'react',
-    external: [
-      'react',
-      'react-dom',
-      'react/jsx-runtime',
-      '@reference-ui/styled',
-      '@reference-ui/styled/*',
-      // Node build-tools (fragments scanner/runner) — must not be bundled for neutral platform
-      'node:fs',
-      'node:path',
-      'node:crypto',
-      'node:url',
-      'fast-glob',
-      'esbuild',
-    ],
+    external: ESBUILD_EXTERNALS,
     sourcemap: false,
     treeShaking: true,
     minify: false,
     logLevel: 'warning',
   })
 
-  const out = result.outputFiles?.[0]
-  if (!out) throw new Error('esbuild produced no output')
+  const [outputFile] = result.outputFiles ?? []
+  if (!outputFile) throw new Error('esbuild produced no output')
 
-  mkdirSync(targetDir, { recursive: true })
-  writeIfChanged(destPath, out.text)
+  mkdirSync(dirname(destPath), { recursive: true })
+  writeIfChanged(destPath, outputFile.text)
 }

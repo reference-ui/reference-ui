@@ -13,6 +13,13 @@ export type VirtualEvents = {
   'run:virtual:sync:file': { event: 'add' | 'change' | 'unlink'; path: string }
   /** Emitted when one file is copied/transformed (copy+transform combined) */
   'virtual:fs:change': { event: 'add' | 'change' | 'unlink'; path: string }
+  /** Emitted when virtual cannot complete a copy or sync operation. */
+  'virtual:failed': {
+    operation: 'copy:all' | 'sync:file'
+    message: string
+    event?: 'add' | 'change' | 'unlink'
+    path?: string
+  }
   /** Emitted when virtual full copy to .reference-ui/virtual is complete */
   'virtual:complete': Record<string, never>
 }

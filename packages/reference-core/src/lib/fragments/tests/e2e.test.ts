@@ -15,6 +15,9 @@ import { bundleCollectorRuntime, collectFragments } from '../runner'
 
 const fixtureDir = join(import.meta.dirname, 'fixtures')
 const tempDir = join(import.meta.dirname, '__temp__')
+const USE_FUNCTION_FILE = join(fixtureDir, 'use-function.ts')
+const WITH_CONSTANTS_FILE = join(fixtureDir, 'with-constants.ts')
+const MY_FUNCTION_COLLECTOR = '__refMyFunctionCollector'
 
 afterAll(() => {
   rmSync(tempDir, { recursive: true, force: true })
@@ -115,7 +118,7 @@ describe('collectFragments – single-collector API (explicit file list)', () =>
     })
 
     const fragments = await collectFragments({
-      files: [join(fixtureDir, 'use-function.ts')],
+      files: [USE_FUNCTION_FILE],
       collector: myFunction,
       tempDir,
     })
@@ -130,7 +133,7 @@ describe('collectFragments – single-collector API (explicit file list)', () =>
     })
 
     const fragments = await collectFragments({
-      files: [join(fixtureDir, 'with-constants.ts')],
+      files: [WITH_CONSTANTS_FILE],
       collector: myFunction,
       tempDir,
     })
@@ -145,7 +148,7 @@ describe('collectFragments – single-collector API (explicit file list)', () =>
     })
 
     const fragments = await collectFragments({
-      files: [join(fixtureDir, 'use-function.ts'), join(fixtureDir, 'with-constants.ts')],
+      files: [USE_FUNCTION_FILE, WITH_CONSTANTS_FILE],
       collector: myFunction,
       tempDir,
     })
@@ -173,7 +176,7 @@ describe('collectFragments – single-collector API (explicit file list)', () =>
     })
 
     const fragments = await collectFragments<Input, Output>({
-      files: [join(fixtureDir, 'use-function.ts')],
+      files: [USE_FUNCTION_FILE],
       collector: transformCollector,
       tempDir,
     })
@@ -200,8 +203,8 @@ describe('bundleCollectorRuntime', () => {
     })
 
     expect(runtime.collectorFragments).toContain(functionName)
-    expect(runtime.collectorFragments).toContain("__refMyFunctionCollector")
+    expect(runtime.collectorFragments).toContain(MY_FUNCTION_COLLECTOR)
     expect(runtime.collectorFragments).toContain(`const ${functionName} = (fragment) =>`)
-    expect(runtime.getValue('tokens')).toContain("__refMyFunctionCollector")
+    expect(runtime.getValue('tokens')).toContain(MY_FUNCTION_COLLECTOR)
   })
 })

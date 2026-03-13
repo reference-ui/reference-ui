@@ -1,4 +1,5 @@
 import { microBundle } from '../lib/microbundle'
+import { CONFIG_EXTERNALS } from './constants'
 
 export interface BundleConfigOptions {
   /** Modules to leave as external (not bundled). */
@@ -18,10 +19,7 @@ export async function bundleConfig(
     format: 'cjs',
     external: options.external ?? [
       'esbuild',
-      '@reference-ui/core',
-      '@reference-ui/core/config',
-      '@reference-ui/cli',
-      '@reference-ui/cli/config',
+      ...CONFIG_EXTERNALS,
     ],
   })
 }

@@ -14,6 +14,7 @@ export function initPackager(payload: SyncPayload): void {
   workers.runWorker('packager', {
     cwd: payload.cwd,
     watchMode: payload.options?.watch,
+    skipTypescript: payload.config?.skipTypescript,
   })
 }
 

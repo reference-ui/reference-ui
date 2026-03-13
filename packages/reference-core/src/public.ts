@@ -4,4 +4,5 @@
  */
 
 export { defineConfig } from './config'
-export type { BaseSystem, ReferenceUIConfig } from './config'
+export type { ReferenceUIConfig } from './config'
+export type { BaseSystem } from './types'
