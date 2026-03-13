@@ -1,5 +1,7 @@
 import { emit, on, onceAll } from '../lib/event-bus'
 
+const SYNC_FAILED_EVENT = 'sync:failed'
+
 /**
  * Event wiring. Only on/emit/onceAll – pass payloads, no side effects.
  * watch:change → run:virtual:sync:file (single file), passing payload through.
@@ -25,11 +27,15 @@ export function initEvents(): void {
   })
 
   on('system:config:failed', () => {
-    emit('sync:failed')
+    emit(SYNC_FAILED_EVENT)
   })
 
   on('system:panda:codegen:failed', () => {
-    emit('sync:failed')
+    emit(SYNC_FAILED_EVENT)
+  })
+
+  on('virtual:failed', () => {
+    emit(SYNC_FAILED_EVENT)
   })
 
   on('packager:ready', () => {
