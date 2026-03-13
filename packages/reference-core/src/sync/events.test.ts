@@ -57,6 +57,19 @@ describe('sync/events', () => {
     expect(emit).toHaveBeenCalledWith('sync:failed', undefined)
   })
 
+  it('virtual failure emits sync:failed', async () => {
+    const { initEvents } = await loadEventsModule()
+    initEvents()
+
+    expect(onHandlers.has('virtual:failed')).toBe(true)
+    fireOn('virtual:failed', {
+      operation: 'copy:all',
+      message: 'native binary missing',
+    })
+
+    expect(emit).toHaveBeenCalledWith('sync:failed', undefined)
+  })
+
   it('run:panda:codegen emitted only when system:config:complete and system:panda:ready both fired', async () => {
     const { initEvents } = await loadEventsModule()
     initEvents()

@@ -2,76 +2,49 @@
 
 ## Verdict
 
-Not yet release-ready.
+Release-ready inside `reference-core`.
 
 ## Why
 
-The `virtual` module is a narrow subsystem, but it sits on a critical boundary:
+The `virtual` module is still a narrow subsystem, but it now owns its dangerous
+contracts directly instead of relying mostly on downstream proof.
 
-- it decides what Panda actually scans
-- it rewrites source imports into the generated system shape
-- it keeps watch-mode source changes flowing into the generated pipeline
+`reference-core` now has focused tests for:
 
-If virtual is wrong, later stages can still run and appear healthy while Panda is
-scanning stale files, missing files, or incorrectly rewritten files.
+- `copyAll()` directory creation, include handling, and completion behavior
+- `copyToVirtual()` selecting copy vs transform
+- `removeFromVirtual()` cleaning up transformed extensions
+- `worker.ts` success paths and failure propagation through `virtual:failed`
+- `native/loader.ts` supported-target resolution and missing-binary behavior
 
-## What is already strong
+Those direct tests sit alongside the existing downstream checks that already
+prove the live mirror, rewrite behavior, MDX conversion, watch updates, and
+end-to-end styling flow in real apps.
 
-There is meaningful downstream confidence today.
+## What changed the verdict
 
-The current test surface proves:
+The biggest release-readiness gaps were:
 
-- `.reference-ui/virtual` is created for a real app
-- files matching include patterns are copied into the mirror
-- `node_modules`, `.reference-ui`, and out-of-scope files stay out
-- CSS import rewrites happen for `@reference-ui/react`
-- `recipe()`-to-`cva()` rewrites happen in the virtual mirror
-- MDX is converted into JSX output
-- the mirror has no missing files and no orphan files in the app fixture
-- watch-mode source edits update the virtual mirror
-- watch-mode edits propagate all the way to visible runtime styling in the
-  broader `reference-test` environment
+- no direct core tests for the mirror/copy contracts
+- weak worker failure propagation
+- a native loader platform map that implied Linux arm64 support even though the
+  declared native targets did not
 
-That is good evidence that the live system behavior works.
+That is now tightened up:
 
-## What is still missing
+- failures in full copy and per-file watch sync emit `virtual:failed`
+- sync treats `virtual:failed` as a pipeline failure
+- the native loader now matches the documented supported targets:
+  - macOS x64 / arm64
+  - Linux x64 GNU
+  - Windows x64 MSVC
 
-By the standard in `TEST_RELEASE_PLAN.md`, the main gap is still direct
-`reference-core` ownership of the virtual contracts.
+## Remaining release gate
 
-I did not find focused core-level tests that directly pin down:
+There is still one package-level responsibility outside the module itself:
 
-- `copyAll()` include filtering and ignore behavior
-- `copyToVirtual()` choosing copy-vs-transform correctly
-- `removeFromVirtual()` unlink behavior for transformed extensions
-- repeated edits and reruns staying deterministic
-- native loader behavior across supported and unsupported platforms
-- missing native binary behavior
-- rewrite failure behavior and error contracts
-- worker-level failure propagation for full copy and watch handling
+- CI should build and smoke-test the native artifact on every supported target
 
-That means confidence is still carried more by downstream artifact proof than by
-fast local module tests in the subsystem itself.
-
-## Practical judgment
-
-`virtual` is in good shape for ongoing internal use.
-
-Its responsibility is small, the current downstream tests are valuable, and the
-real app/watch behavior looks healthy. But for a release-ready verdict, this area
-still needs direct module tests because it sits upstream of Panda, packager, and
-watch behavior. A quiet regression here can distort the whole pipeline.
-
-## What would change the verdict
-
-I would be comfortable calling this release-ready once `reference-core` directly
-proves:
-
-- mirror creation and filtering rules
-- per-file add/change/unlink behavior
-- transform path selection and transformed-extension cleanup
-- native loader and rewrite error contracts
-- at least one worker-level failure-path contract
-
-That would move this subsystem from "strong downstream evidence" to "owned core
-contract."
+That is a publication gate for `@reference-ui/core`, not a blocker for calling
+the `virtual` subsystem release-ready on its own implementation and contract
+surface.

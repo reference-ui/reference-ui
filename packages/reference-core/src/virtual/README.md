@@ -112,8 +112,8 @@ Important behavior:
 Supported binary targets are currently documented in the transform error path as:
 
 - macOS x64 / arm64
-- Linux x64
-- Windows x64
+- Linux x64 GNU
+- Windows x64 MSVC
 
 ## MDX Behavior
 
@@ -138,14 +138,16 @@ Virtual owns these events:
 - `run:virtual:copy:all`
 - `run:virtual:sync:file`
 - `virtual:fs:change`
+- `virtual:failed`
 - `virtual:complete`
 
 In the current sync flow:
 
 1. the worker starts and emits `virtual:ready`
 2. sync triggers `run:virtual:copy:all`
-3. when the mirror is complete, virtual emits `virtual:complete`
-4. sync then moves on to config generation
+3. if the full copy or a watch sync fails, virtual emits `virtual:failed`
+4. when the mirror is complete, virtual emits `virtual:complete`
+5. sync then moves on to config generation
 
 Watch events are routed from `watch:change` to `run:virtual:sync:file`.
 
@@ -162,8 +164,17 @@ The strongest current confidence is downstream:
 - `reference-test` verifies watch updates propagate all the way to visible runtime
   styling in a broader environment
 
-What is still relatively thin is direct `reference-core` coverage for the
-virtual module itself.
+Direct `reference-core` coverage now pins down:
+
+- `copyAll()` include handling and completion behavior
+- `copyToVirtual()` copy-vs-transform selection
+- transformed-extension cleanup during unlink
+- native loader target resolution and missing-binary behavior
+- worker-level failure propagation through `virtual:failed`
+
+The main confidence that still lives outside this package is end-to-end proof of
+the rewrite semantics themselves, which remain covered downstream in
+`reference-app`.
 
 ## Design Rules
 
