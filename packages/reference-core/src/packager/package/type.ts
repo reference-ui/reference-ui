@@ -31,4 +31,6 @@ export interface PackageDefinition {
   exports: Record<string, unknown>
   /** Extra generated or source files/directories to copy into the package output. */
   copyFrom?: PackageCopySource[]
+  /** Optional post-build steps to run before linking (e.g. token replacement). */
+  postprocess?: readonly string[]
 }

@@ -4,6 +4,8 @@ import { getPandaConfig, initPandaConfig, PANDA_CONFIG_GLOBAL_KEY } from './runt
 import type { BoxPatternExtension } from '../../../../api/patterns'
 import { PRIMITIVE_JSX_NAMES } from '../../../../primitives/tags'
 
+const INLINE_SIZE = 'inline-size'
+
 afterEach(() => {
   delete (globalThis as Record<string, unknown>)[PANDA_CONFIG_GLOBAL_KEY]
 })
@@ -75,7 +77,7 @@ describe('extendPatterns()', () => {
         color: 'red.500',
       })
     ).toEqual({
-      containerType: 'inline-size',
+      containerType: INLINE_SIZE,
       containerName: 'sidebar',
       '@container sidebar (min-width: 640px)': { padding: '4' },
       color: 'red.500',
@@ -88,7 +90,7 @@ describe('extendPatterns()', () => {
         },
       })
     ).toEqual({
-      containerType: 'inline-size',
+      containerType: INLINE_SIZE,
       '@container (min-width: 480px)': { padding: '2' },
     })
   })

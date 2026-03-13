@@ -1,5 +1,5 @@
 import type { ReferenceUIConfig } from '../../config'
-import type { BaseSystem } from '../../config/types'
+import type { BaseSystem } from '../../types'
 import {
   bundleCollectorRuntime,
   bundleFragments,

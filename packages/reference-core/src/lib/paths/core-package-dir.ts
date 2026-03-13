@@ -1,6 +1,12 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { resolve, dirname, parse } from 'node:path'
 
+const PACKAGE_JSON = 'package.json'
+const CORE_PACKAGE_NAME = '@reference-ui/core'
+const LEGACY_CORE_PACKAGE_NAME = '@reference-ui/cli'
+const WORKSPACE_MARKERS = ['pnpm-workspace.yaml', 'nx.json'] as const
+const WORKSPACE_CORE_PATH = ['packages', 'reference-core'] as const
+
 /**
  * Walk up from startDir to find package.json with the given name.
  */
@@ -8,7 +14,7 @@ function walkUpToPackage(startDir: string, packageName: string): string | null {
   let dir = startDir
   const root = parse(dir).root
   while (dir !== root) {
-    const pkgPath = resolve(dir, 'package.json')
+    const pkgPath = resolve(dir, PACKAGE_JSON)
     if (existsSync(pkgPath)) {
       const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'))
       if (pkg.name === packageName) return dir
@@ -24,8 +30,8 @@ function walkUpToPackage(startDir: string, packageName: string): string | null {
  */
 export function resolveCorePackageDir(fromCwd: string = process.cwd()): string {
   const coreDir =
-    walkUpToPackage(fromCwd, '@reference-ui/core') ??
-    walkUpToPackage(fromCwd, '@reference-ui/cli')
+    walkUpToPackage(fromCwd, CORE_PACKAGE_NAME) ??
+    walkUpToPackage(fromCwd, LEGACY_CORE_PACKAGE_NAME)
   if (coreDir) return coreDir
 
   // Fallback: monorepo workspace
@@ -33,11 +39,10 @@ export function resolveCorePackageDir(fromCwd: string = process.cwd()): string {
   const root = parse(dir).root
   while (dir !== root) {
     if (
-      existsSync(resolve(dir, 'pnpm-workspace.yaml')) ||
-      existsSync(resolve(dir, 'nx.json'))
+      WORKSPACE_MARKERS.some((marker) => existsSync(resolve(dir, marker)))
     ) {
-      const candidate = resolve(dir, 'packages/reference-core')
-      if (existsSync(resolve(candidate, 'package.json'))) return candidate
+      const candidate = resolve(dir, ...WORKSPACE_CORE_PATH)
+      if (existsSync(resolve(candidate, PACKAGE_JSON))) return candidate
       break
     }
     dir = dirname(dir)
@@ -58,9 +63,9 @@ export function resolveCorePackageDirForBuild(fromCwd: string = process.cwd()): 
   const root = parse(dir).root
 
   while (dir !== root) {
-    if (existsSync(resolve(dir, 'pnpm-workspace.yaml'))) {
-      const workspaceCore = resolve(dir, 'packages/reference-core')
-      if (existsSync(resolve(workspaceCore, 'package.json'))) {
+    if (existsSync(resolve(dir, WORKSPACE_MARKERS[0]))) {
+      const workspaceCore = resolve(dir, ...WORKSPACE_CORE_PATH)
+      if (existsSync(resolve(workspaceCore, PACKAGE_JSON))) {
         return workspaceCore
       }
       break

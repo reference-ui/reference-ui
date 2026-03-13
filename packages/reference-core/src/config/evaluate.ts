@@ -1,17 +1,17 @@
 import { createRequire } from 'node:module'
+import { CONFIG_EXTERNALS } from './constants'
 import { defineConfig } from './types'
 
-const PROVIDE_DEFINE_CONFIG = [
-  '@reference-ui/core',
-  '@reference-ui/core/config',
-  '@reference-ui/cli',
-  '@reference-ui/cli/config',
-] as const
-
 /**
- * Evaluate bundled config code in a controlled environment.
- * Runs the bundled CJS-style code and returns the module.exports result.
- * When config bundles the core package (or the legacy cli alias) as external, we provide defineConfig.
+ * Evaluate the bundled user config in a tiny CommonJS runtime.
+ * We intentionally bundle config to CJS so it can be executed from a string via
+ * `new Function('module', 'exports', 'require', code)` without writing a temp
+ * file or spinning up a custom ESM loader. That also lets us intercept
+ * `require('@reference-ui/core')` and related ids to provide only
+ * `{ defineConfig }` while leaving every other dependency to Node resolution.
+ *
+ * This is an internal loader detail only. The package itself is ESM; CJS is
+ * used here purely as the cheapest way to evaluate bundled config code.
  *
  * @param bundledCode - The bundled JavaScript string (CJS format)
  * @returns The evaluated config object (raw, may have default export)
@@ -27,7 +27,7 @@ export function evaluateConfig(bundledCode: string): unknown {
   }
 
   const requireFn = ((id: string) => {
-    if ((PROVIDE_DEFINE_CONFIG as readonly string[]).includes(id)) {
+    if ((CONFIG_EXTERNALS as readonly string[]).includes(id)) {
       return { defineConfig }
     }
     return baseRequire(id)

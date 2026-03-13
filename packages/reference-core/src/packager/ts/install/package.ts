@@ -6,8 +6,11 @@ import {
   readFileSync,
 } from 'node:fs'
 import { log } from '../../../lib/log'
+import { getDeclarationBasename } from '../../layout'
 import { compileDeclarations } from '../compile'
 import type { TsPackageInput } from '../types'
+
+const PACKAGER_TS_LOG = 'packager:ts'
 
 /**
  * Update package.json types and exports.types in place.
@@ -36,19 +39,19 @@ export async function installPackageTs(
   const entryPath = resolve(cliDir, pkg.sourceEntry)
 
   if (!existsSync(entryPath)) {
-    log.debug('packager:ts', `Skipping ${pkg.name} (no ${pkg.sourceEntry})`)
+    log.debug(PACKAGER_TS_LOG, `Skipping ${pkg.name} (no ${pkg.sourceEntry})`)
     return
   }
 
-  log.debug('packager:ts', `Building types for ${pkg.name}...`)
+  log.debug(PACKAGER_TS_LOG, `Building types for ${pkg.name}...`)
   mkdirSync(targetDir, { recursive: true })
 
-  const outDtsPath = join(targetDir, pkg.outFile.replace(/\.m?js$/, '.d.mts'))
+  const outDtsPath = join(targetDir, getDeclarationBasename(pkg.outFile))
   await compileDeclarations(cliDirForBuild, pkg.sourceEntry, outDtsPath)
-  log.debug('packager:ts', `✓ Compiled ${pkg.name}`)
+  log.debug(PACKAGER_TS_LOG, `✓ Compiled ${pkg.name}`)
 
-  const typesPath = `./${pkg.outFile.replace(/\.m?js$/, '.d.mts')}`
+  const typesPath = `./${getDeclarationBasename(pkg.outFile)}`
   updatePackageTypes(targetDir, typesPath)
 
-  log.debug('packager:ts', `✓ ${pkg.name} ready`)
+  log.debug(PACKAGER_TS_LOG, `✓ ${pkg.name} ready`)
 }

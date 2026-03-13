@@ -6,7 +6,7 @@ import {
 } from '../../../lib/paths'
 import { getOutDirPath } from '../../../lib/paths/out-dir'
 import { writeGeneratedReactTypes, writeGeneratedSystemTypes } from '../../../system/types/generate'
-import { getShortName } from '../../package/name'
+import { getPackageDir, getDeclarationBasename } from '../../layout'
 import { installPackageTs } from './package'
 import type { TsPackageInput } from '../types'
 
@@ -24,15 +24,14 @@ export async function installPackagesTs(
   mkdirSync(outDir, { recursive: true })
 
   for (const pkg of packages) {
-    const shortName = getShortName(pkg.name)
-    const targetDir = resolve(outDir, shortName)
+    const targetDir = getPackageDir(outDir, pkg.name)
     await installPackageTs(cliDir, cliDirForBuild, targetDir, pkg)
   }
 
-  const systemDir = resolve(outDir, getShortName('@reference-ui/system'))
-  const systemTypesPath = resolve(systemDir, 'system.d.mts')
-  const reactDir = resolve(outDir, getShortName('@reference-ui/react'))
-  const reactTypesPath = resolve(reactDir, 'react.d.mts')
+  const systemDir = getPackageDir(outDir, '@reference-ui/system')
+  const systemTypesPath = resolve(systemDir, getDeclarationBasename('system.mjs'))
+  const reactDir = getPackageDir(outDir, '@reference-ui/react')
+  const reactTypesPath = resolve(reactDir, getDeclarationBasename('react.mjs'))
 
   await writeGeneratedSystemTypes(cwd, systemTypesPath)
   await writeGeneratedReactTypes(cwd, reactTypesPath)

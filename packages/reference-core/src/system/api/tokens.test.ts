@@ -71,7 +71,7 @@ describe('tokens() - E2E', () => {
     writeFileSync(
       join(fixtureDir, 'my-tokens.ts'),
       `
-      import { tokens } from '@reference-ui/core/config'
+      import { tokens } from '../tokens'
 
       tokens({
         colors: {
@@ -107,7 +107,7 @@ describe('tokens() - E2E', () => {
     writeFileSync(
       join(fixtureDir, 'colors.ts'),
       `
-      import { tokens } from '@reference-ui/core/config'
+      import { tokens } from '../tokens'
 
       tokens({
         colors: {
@@ -120,7 +120,7 @@ describe('tokens() - E2E', () => {
     writeFileSync(
       join(fixtureDir, 'spacing.ts'),
       `
-      import { tokens } from '@reference-ui/core/config'
+      import { tokens } from '../tokens'
 
       tokens({
         spacing: {

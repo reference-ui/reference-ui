@@ -18,10 +18,15 @@ export default async function runVirtual(payload: VirtualWorkerPayload): Promise
   const root = resolve(sourceDir)
   const virtualDir = getVirtualDirPath(root)
   const debug = config.debug ?? false
+  const toMessage = (error: unknown) => (error instanceof Error ? error.message : String(error))
 
   const onCopyAll = () => {
     copyAll(payload).catch((err) => {
-      console.error('[virtual] Copy failed:', err)
+      log.error('[virtual] Copy failed:', err)
+      emit('virtual:failed', {
+        operation: 'copy:all',
+        message: toMessage(err),
+      })
     })
   }
 
@@ -39,6 +44,12 @@ export default async function runVirtual(payload: VirtualWorkerPayload): Promise
       log.debug('virtual', 'Processed watch:change → virtual:fs:change', ev.event, virtualPath)
     } catch (err) {
       log.error('[virtual] Failed to process', ev.event, sourcePath, err)
+      emit('virtual:failed', {
+        operation: 'sync:file',
+        event: ev.event,
+        path: sourcePath,
+        message: toMessage(err),
+      })
     }
   }
 

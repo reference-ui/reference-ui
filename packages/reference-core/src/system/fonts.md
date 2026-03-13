@@ -182,7 +182,7 @@ Both names should be collectible during scanning while the migration is in progr
 For output verification, use:
 
 ```sh
-pnpm test:system
+pnpm test:e2e
 ```
 
 Useful coverage for the font subsystem:
@@ -201,4 +201,4 @@ Useful coverage for the font subsystem:
 3. Thread `fontConfigFragments` into `runConfig()` and `createPandaConfig()`.
 4. Thread `fontPatternFragments` into `patterns/` so that subsystem owns merge and final render.
 5. Keep `font()` as the preferred public API and retain `extendFont()` as compatibility where needed.
-6. Verify with `pnpm test:system`.
+6. Verify with `pnpm test:e2e`.
