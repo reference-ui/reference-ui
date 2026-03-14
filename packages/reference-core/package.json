@@ -1,7 +1,7 @@
 {
   "name": "@reference-ui/core",
   "version": "0.0.1",
-  "private": true,
+  "private": false,
   "description": "Reference UI core",
   "type": "module",
   "bin": {
@@ -21,12 +21,16 @@
     "prebuild": "tsx src/system/build/primitives/index.ts && tsx src/system/build/styled/index.ts",
     "build": "pnpm run build:native && tsup",
     "build:native": "cd src/virtual/native && pnpm exec napi build --platform --release",
+    "prepack": "pnpm run build",
     "dev": "tsup --watch",
     "sync": "node dist/cli/index.mjs sync",
     "typecheck": "tsc --noEmit",
     "test": "pnpm run typecheck && vitest run",
     "test:watch": "vitest",
     "eslint:txt": "eslint . --format stylish --color"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "dependencies": {
     "@pandacss/dev": "^1.8.2",

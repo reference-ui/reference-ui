@@ -5,7 +5,9 @@
   "description": "Reference UI - Knowledge-First Components",
   "scripts": {
     "build": "pnpm -r run build",
+    "changeset": "changeset",
     "dev": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/lib run sync && concurrently --kill-others-on-fail -n core,docs -c blue,green \"pnpm --filter @reference-ui/core run dev\" \"pnpm --filter @reference-ui/reference-docs run dev\"",
+    "release": "changeset publish",
     "test": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/reference-test run test",
     "test:quick": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/reference-test run test:quick",
     "test:lib": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/lib run test",
@@ -13,9 +15,11 @@
     "test:cli": "pnpm run test:core",
     "test:app": "nx run reference-app:test",
     "test:system": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/core run eslint:txt && concurrently --kill-others-on-fail -n core,app -c blue,green \"pnpm --filter @reference-ui/core run test\" \"pnpm --filter @reference-ui/reference-app run test\"",
-    "test:e2e": "pnpm run test:system && REF_TEST_FRESH=1 pnpm --filter @reference-ui/reference-test run test:quick"
+    "test:e2e": "pnpm run test:system && REF_TEST_FRESH=1 pnpm --filter @reference-ui/reference-test run test:quick",
+    "version-packages": "changeset version && pnpm install --lockfile-only"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.30.0",
     "@swc-node/register": "~1.9.1",
     "@swc/core": "~1.5.7",
     "@swc/helpers": "~0.5.11",
