@@ -3,6 +3,10 @@
   "version": "0.0.1",
   "private": false,
   "description": "Reference UI Rust and native bindings",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/reference-ui/reference-ui"
+  },
   "type": "module",
   "napi": {
     "targets": [
