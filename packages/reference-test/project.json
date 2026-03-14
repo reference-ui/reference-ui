@@ -5,11 +5,19 @@
   "projectType": "library",
   "tags": [],
   "targets": {
+    "quick": {
+      "dependsOn": ["reference-core:build"],
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "REF_TEST_FRESH=1 pnpm run test:quick",
+        "cwd": "packages/reference-test"
+      }
+    },
     "test": {
       "dependsOn": ["reference-core:build"],
       "executor": "nx:run-commands",
       "options": {
-        "command": "nx run reference-core:build --skip-nx-cache && pnpm test",
+        "command": "pnpm test",
         "cwd": "packages/reference-test"
       }
     }
