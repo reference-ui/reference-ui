@@ -1,5 +1,12 @@
 # @reference-ui/core
 
+## 0.0.2
+
+### Patch Changes
+
+- Updated dependencies [4a1243d]
+  - @reference-ui/rust@0.0.2
+
 ## 0.0.1
 
 ### Patch Changes
