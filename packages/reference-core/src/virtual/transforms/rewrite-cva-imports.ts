@@ -1,1 +1,1 @@
-export { rewriteCvaImports } from '@reference-ui/reference-rs'
+export { rewriteCvaImports } from '@reference-ui/rust'

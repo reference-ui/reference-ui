@@ -30,7 +30,7 @@ function isPublished(name, version) {
 }
 
 if (!existsSync(artifactsDir)) {
-  throw new Error('Missing native artifacts for @reference-ui/reference-rs publish.')
+  throw new Error('Missing native artifacts for @reference-ui/rust publish.')
 }
 
 run('pnpm', ['run', 'create-npm-dirs'])

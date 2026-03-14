@@ -4,7 +4,7 @@ async function importLoaderModule() {
   vi.resetModules()
 
   const existsSync = vi.fn((path: string) => path === '/workspace/packages/reference-rs/package.json')
-  const readFileSync = vi.fn(() => JSON.stringify({ name: '@reference-ui/reference-rs' }))
+  const readFileSync = vi.fn(() => JSON.stringify({ name: '@reference-ui/rust' }))
   const requireBinding = vi.fn(() => ({
     rewriteCssImports: vi.fn(),
     rewriteCvaImports: vi.fn(),

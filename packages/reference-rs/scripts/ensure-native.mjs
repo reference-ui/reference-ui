@@ -6,7 +6,7 @@ import { packageDir } from './paths.mjs'
 
 const triple = getCurrentTriple()
 if (!triple) {
-  throw new Error('Unsupported platform for @reference-ui/reference-rs native build.')
+  throw new Error('Unsupported platform for @reference-ui/rust native build.')
 }
 
 const binaryPath = join(packageDir, `virtual-native.${triple}.node`)

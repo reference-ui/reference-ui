@@ -1,5 +1,5 @@
 {
-  "name": "@reference-ui/reference-rs",
+  "name": "@reference-ui/rust",
   "version": "0.0.1",
   "private": false,
   "description": "Reference UI Rust and native bindings",

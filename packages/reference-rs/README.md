@@ -1,4 +1,4 @@
-# @reference-ui/reference-rs
+# @reference-ui/rust
 
 Rust-backed native bindings for `reference-ui`.
 
