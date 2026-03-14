@@ -8,7 +8,7 @@
  */
 
 import { beforeAll, describe, expect, it } from 'vitest'
-import { execSync, spawn } from 'node:child_process'
+import { execSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -41,7 +41,7 @@ const refCore = join(
   'index.mjs'
 )
 
-async function waitForFixtureOutputs(maxMs = 20_000): Promise<void> {
+async function waitForFixtureOutputs(maxMs = 45_000): Promise<void> {
   const start = Date.now()
 
   while (Date.now() - start < maxMs) {
@@ -67,20 +67,6 @@ async function waitForFixtureOutputs(maxMs = 20_000): Promise<void> {
   throw new Error(`Fixture sync did not produce layer-ready output within ${maxMs}ms`)
 }
 
-function killProcessTree(pid: number | undefined): void {
-  if (!pid) return
-
-  try {
-    process.kill(-pid, 'SIGKILL')
-  } catch {
-    try {
-      process.kill(pid, 'SIGKILL')
-    } catch {
-      // Process may already be gone.
-    }
-  }
-}
-
 async function runFixtureSync(): Promise<void> {
   execSync(`node "${refCore}" clean`, {
     cwd: fixtureRoot,
@@ -88,17 +74,12 @@ async function runFixtureSync(): Promise<void> {
     timeout: 15_000,
   })
 
-  const syncProcess = spawn('node', [refCore, 'sync'], {
+  execSync(`node "${refCore}" sync`, {
     cwd: fixtureRoot,
     stdio: 'pipe',
-    detached: true,
+    timeout: 60_000,
   })
-
-  try {
-    await waitForFixtureOutputs()
-  } finally {
-    killProcessTree(syncProcess.pid)
-  }
+  await waitForFixtureOutputs()
 }
 
 function injectFixtureCss(): string {

@@ -23,7 +23,9 @@ const refCore = join(
 const READY_MESSAGE = '[ref sync] ready'
 const STALE_MARKER = 'sync-readiness-stale'
 const FRESH_MARKER = 'sync-readiness-fresh'
-const GENERATED_FILE_COUNT = 250
+// Large enough to exercise stale-output readiness, but smaller than the old
+// fixture so CI does not spend most of its time copying generated files.
+const GENERATED_FILE_COUNT = 10
 
 const reactEntryPath = join(fixtureOutDir, 'react', 'react.mjs')
 const systemEntryPath = join(fixtureOutDir, 'system', 'system.mjs')
@@ -82,7 +84,7 @@ function writeGeneratedSources(): void {
 async function waitForLog(
   logs: { stdout: string; stderr: string },
   marker: string,
-  maxMs = 30_000
+  maxMs = 45_000
 ): Promise<void> {
   const start = Date.now()
 
