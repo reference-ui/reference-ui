@@ -34,7 +34,7 @@ if (!existsSync(artifactsDir)) {
 }
 
 run('pnpm', ['run', 'create-npm-dirs'])
-run('pnpm', ['run', 'artifacts', '--', '--output-dir', 'artifacts'])
+run('pnpm', ['run', 'artifacts'])
 run('pnpm', ['run', 'prepublish:npm'])
 
 const npmDir = join(packageDir, 'npm')
