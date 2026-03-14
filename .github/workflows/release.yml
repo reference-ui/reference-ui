@@ -18,6 +18,7 @@ jobs:
   changesets:
     runs-on: ubuntu-latest
     outputs:
+      has_changesets: ${{ steps.changesets.outputs.hasChangesets }}
       should_publish: ${{ steps.detect.outputs.should_publish }}
       needs_reference_rs: ${{ steps.detect.outputs.needs_reference_rs }}
 
@@ -64,7 +65,7 @@ jobs:
 
   compile-reference-rs:
     needs: changesets
-    if: needs.changesets.outputs.needs_reference_rs == 'true'
+    if: ${{ needs.changesets.outputs.has_changesets != 'true' && needs.changesets.outputs.needs_reference_rs == 'true' }}
     uses: ./.github/workflows/reference-rs-compile.yml
     with:
       matrix_json: >-
@@ -75,7 +76,7 @@ jobs:
     needs:
       - changesets
       - compile-reference-rs
-    if: ${{ needs.changesets.outputs.should_publish == 'true' && (needs.changesets.outputs.needs_reference_rs != 'true' || needs.compile-reference-rs.result == 'success') }}
+    if: ${{ needs.changesets.outputs.has_changesets != 'true' && needs.changesets.outputs.should_publish == 'true' && (needs.changesets.outputs.needs_reference_rs != 'true' || needs.compile-reference-rs.result == 'success') }}
 
     steps:
       - name: Check out repository
