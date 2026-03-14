@@ -5,6 +5,15 @@ import sonarjs from 'eslint-plugin-sonarjs'
 export default [
   { ignores: ['node_modules/**', 'dist/**', '**/*.config.ts', 'src/system/styled/**'] },
   eslint.configs.recommended,
+  {
+    files: ['bin/**/*.mjs'],
+    languageOptions: {
+      globals: {
+        console: 'readonly',
+        process: 'readonly',
+      },
+    },
+  },
   ...tseslint.configs.recommended,
   {
     files: ['**/*.ts'],
