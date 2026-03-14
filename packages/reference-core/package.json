@@ -5,7 +5,7 @@
   "description": "Reference UI core",
   "type": "module",
   "bin": {
-    "ref": "./dist/cli/index.mjs"
+    "ref": "./bin/ref.mjs"
   },
   "exports": {
     ".": {
