@@ -410,7 +410,7 @@ In addition, a publishable release of `reference-core` with native bindings shou
 3. the N-API binary builds on Linux x64 GNU
 4. the N-API binary builds on Windows x64 MSVC
 5. a Node smoke test can load the built binary on each target
-6. the packaged artifact path matches what `@reference-ui/reference-rs` loader expects
+6. the packaged artifact path matches what `@reference-ui/rust` loader expects
 
 For rapid iteration, `pnpm test:system` should remain the fast unit/integration loop for `reference-core` and `reference-app`, while `pnpm test:e2e` stays the full publish gate that also runs `reference-test`.
 

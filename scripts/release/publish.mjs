@@ -3,7 +3,7 @@ import { dirname, join, resolve } from 'node:path'
 import { execFileSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 
-const REFERENCE_RS_PACKAGE = '@reference-ui/reference-rs'
+const RUST_PACKAGE = '@reference-ui/rust'
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const packagesDir = join(repoRoot, 'packages')
 
@@ -57,9 +57,9 @@ if (unpublishedPackages.length === 0) {
   process.exit(0)
 }
 
-if (unpublishedPackages.some((pkg) => pkg.name === REFERENCE_RS_PACKAGE)) {
-  console.log('Publishing native packages for @reference-ui/reference-rs')
-  run('pnpm', ['--filter', REFERENCE_RS_PACKAGE, 'run', 'publish:native'])
+if (unpublishedPackages.some((pkg) => pkg.name === RUST_PACKAGE)) {
+  console.log('Publishing native packages for @reference-ui/rust')
+  run('pnpm', ['--filter', RUST_PACKAGE, 'run', 'publish:native'])
 }
 
 console.log('Publishing workspace packages with Changesets')

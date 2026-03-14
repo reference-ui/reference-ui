@@ -11,7 +11,7 @@ import { dirname, join, parse, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const PACKAGE_JSON = 'package.json'
-const REFERENCE_RS_PACKAGE_NAME = '@reference-ui/reference-rs'
+const RUST_PACKAGE_NAME = '@reference-ui/rust'
 
 export const SUPPORTED_VIRTUAL_NATIVE_TARGETS = [
   'darwin-x64',
@@ -35,12 +35,12 @@ export function resolveReferenceRsPackageDir(fromUrl: string = import.meta.url):
     const packageJsonPath = resolve(dir, PACKAGE_JSON)
     if (existsSync(packageJsonPath)) {
       const pkg = JSON.parse(readFileSync(packageJsonPath, 'utf-8'))
-      if (pkg.name === REFERENCE_RS_PACKAGE_NAME) return dir
+      if (pkg.name === RUST_PACKAGE_NAME) return dir
     }
     dir = dirname(dir)
   }
 
-  throw new Error('@reference-ui/reference-rs package directory could not be resolved.')
+  throw new Error('@reference-ui/rust package directory could not be resolved.')
 }
 
 export function getVirtualNativeTriple(

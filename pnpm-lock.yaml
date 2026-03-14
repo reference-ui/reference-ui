@@ -96,7 +96,7 @@ importers:
       '@parcel/watcher':
         specifier: ^2.5.6
         version: 2.5.6
-      '@reference-ui/reference-rs':
+      '@reference-ui/rust':
         specifier: workspace:*
         version: link:../reference-rs
       '@rspress/mdx-rs':

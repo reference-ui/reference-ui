@@ -15,7 +15,7 @@ contracts directly instead of relying mostly on downstream proof.
 - `copyToVirtual()` selecting copy vs transform
 - `removeFromVirtual()` cleaning up transformed extensions
 - `worker.ts` success paths and failure propagation through `virtual:failed`
-- `@reference-ui/reference-rs` loader supported-target resolution and missing-binary behavior
+- `@reference-ui/rust` loader supported-target resolution and missing-binary behavior
 
 Those direct tests sit alongside the existing downstream checks that already
 prove the live mirror, rewrite behavior, MDX conversion, watch updates, and

@@ -1,1 +1,1 @@
-export { rewriteCssImports } from '@reference-ui/reference-rs'
+export { rewriteCssImports } from '@reference-ui/rust'

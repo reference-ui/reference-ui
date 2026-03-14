@@ -3,7 +3,7 @@ import { dirname, join, resolve } from 'node:path'
 import { execFileSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 
-const REFERENCE_RS_PACKAGE = '@reference-ui/reference-rs'
+const RUST_PACKAGE = '@reference-ui/rust'
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const packagesDir = join(repoRoot, 'packages')
 
@@ -55,13 +55,13 @@ const unpublishedPackages = publicPackages
   .map(({ dir, private: isPrivate, ...pkg }) => pkg)
 
 const shouldPublish = unpublishedPackages.length > 0
-const needsReferenceRs = unpublishedPackages.some((pkg) => pkg.name === REFERENCE_RS_PACKAGE)
+const needsRust = unpublishedPackages.some((pkg) => pkg.name === RUST_PACKAGE)
 
 console.log(
   JSON.stringify(
     {
       shouldPublish,
-      needsReferenceRs,
+      needsRust,
       unpublishedPackages,
     },
     null,
@@ -70,5 +70,5 @@ console.log(
 )
 
 writeGithubOutput('should_publish', String(shouldPublish))
-writeGithubOutput('needs_reference_rs', String(needsReferenceRs))
+writeGithubOutput('needs_rust', String(needsRust))
 writeGithubOutput('unpublished_packages_json', JSON.stringify(unpublishedPackages))

@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { artifactsDir, packageDir } from './paths.mjs'
 
 if (!existsSync(artifactsDir)) {
-  console.log('No local artifacts directory found for @reference-ui/reference-rs')
+  console.log('No local artifacts directory found for @reference-ui/rust')
   process.exit(0)
 }
 
@@ -20,4 +20,4 @@ for (const entry of readdirSync(artifactsDir, { withFileTypes: true })) {
   }
 }
 
-console.log(`Staged ${copied} native artifact(s) into @reference-ui/reference-rs`)
+console.log(`Staged ${copied} native artifact(s) into @reference-ui/rust`)
