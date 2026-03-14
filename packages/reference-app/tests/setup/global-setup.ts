@@ -51,10 +51,13 @@ export default async function globalSetup() {
 
   const libReady = await waitForOutputs([
     join(libRoot, '.reference-ui', 'system', 'baseSystem.mjs'),
+    join(libRoot, 'node_modules', '@reference-ui', 'system', 'baseSystem.mjs'),
   ], 20_000)
   if (!libReady) {
     killProcessTree(libWatchProcess.pid)
-    throw new Error('reference-lib ref sync --watch failed to produce .reference-ui/system/baseSystem.mjs')
+    throw new Error(
+      'reference-lib ref sync --watch failed to produce baseSystem outputs for downstream consumers'
+    )
   }
 
   execSync(`node "${refCore}" clean`, { cwd: pkgRoot, stdio: 'pipe', timeout: 10_000 })
