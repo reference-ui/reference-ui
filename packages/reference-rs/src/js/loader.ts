@@ -1,14 +1,17 @@
 /**
  * Load the Rust native addon for virtual transforms.
- * Provides rewrite_css_imports and rewrite_cva_imports via NAPI.
+ * Provides rewriteCssImports and rewriteCvaImports via NAPI.
  *
  * Falls back to undefined if the native addon is unavailable (e.g. wrong platform,
  * not built, or load error). Callers should use JS fallback when native is null.
  */
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
-import { join } from 'node:path'
-import { resolveCorePackageDir } from '../../lib/paths'
+import { dirname, join, parse, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const PACKAGE_JSON = 'package.json'
+const REFERENCE_RS_PACKAGE_NAME = '@reference-ui/reference-rs'
 
 export const SUPPORTED_VIRTUAL_NATIVE_TARGETS = [
   'darwin-x64',
@@ -23,6 +26,22 @@ export interface VirtualNativeBinding {
 }
 
 let _native: VirtualNativeBinding | null | undefined = undefined
+
+export function resolveReferenceRsPackageDir(fromUrl: string = import.meta.url): string {
+  let dir = dirname(fileURLToPath(fromUrl))
+  const root = parse(dir).root
+
+  while (dir !== root) {
+    const packageJsonPath = resolve(dir, PACKAGE_JSON)
+    if (existsSync(packageJsonPath)) {
+      const pkg = JSON.parse(readFileSync(packageJsonPath, 'utf-8'))
+      if (pkg.name === REFERENCE_RS_PACKAGE_NAME) return dir
+    }
+    dir = dirname(dir)
+  }
+
+  throw new Error('@reference-ui/reference-rs package directory could not be resolved.')
+}
 
 export function getVirtualNativeTriple(
   platform: NodeJS.Platform = process.platform,
@@ -47,15 +66,15 @@ export function getVirtualNativeTriple(
   return null
 }
 
-export function getVirtualNativeCandidates(coreDir: string, triple: string): string[] {
+export function getVirtualNativeCandidates(packageDir: string, triple: string): string[] {
   return [
-    join(coreDir, 'src/virtual/native', `virtual-native.${triple}.node`),
-    join(coreDir, 'dist/cli/virtual/native', `virtual-native.${triple}.node`),
+    join(packageDir, `virtual-native.${triple}.node`),
+    join(packageDir, 'dist', `virtual-native.${triple}.node`),
   ]
 }
 
 export function resolveVirtualNativeBinaryPath(
-  coreDir: string,
+  packageDir: string,
   platform: NodeJS.Platform = process.platform,
   arch: string = process.arch,
   fileExists: (path: string) => boolean = existsSync
@@ -63,15 +82,15 @@ export function resolveVirtualNativeBinaryPath(
   const triple = getVirtualNativeTriple(platform, arch)
   if (!triple) return null
 
-  return getVirtualNativeCandidates(coreDir, triple).find((path) => fileExists(path)) ?? null
+  return getVirtualNativeCandidates(packageDir, triple).find((path) => fileExists(path)) ?? null
 }
 
 export function loadVirtualNative(): VirtualNativeBinding | null {
   if (_native !== undefined) return _native
 
   try {
-    const cliDir = resolveCorePackageDir()
-    const nodePath = resolveVirtualNativeBinaryPath(cliDir)
+    const packageDir = resolveReferenceRsPackageDir()
+    const nodePath = resolveVirtualNativeBinaryPath(packageDir)
     if (!nodePath) {
       _native = null
       return null

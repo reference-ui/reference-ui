@@ -1,8 +1,8 @@
 //! Import rewriting transforms using Oxc parser.
 //! Replaces TypeScript compiler with ~10x faster, lower memory Oxc.
 
-use napi_derive::napi;
 use napi::Result;
+use napi_derive::napi;
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
     ImportDeclarationSpecifier, ImportOrExportKind, ImportSpecifier, Statement,

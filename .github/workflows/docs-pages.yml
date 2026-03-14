@@ -6,11 +6,13 @@ on:
       - main
     paths:
       - .github/workflows/docs-pages.yml
+      - .github/workflows/reference-rs-compile.yml
       - package.json
       - pnpm-lock.yaml
       - packages/reference-core/**
       - packages/reference-lib/**
       - packages/reference-docs/**
+      - packages/reference-rs/**
   workflow_dispatch:
 
 permissions:
@@ -23,7 +25,14 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  compile-reference-rs:
+    uses: ./.github/workflows/reference-rs-compile.yml
+    with:
+      matrix_json: >-
+        [{"runner":"ubuntu-latest","target":"x86_64-unknown-linux-gnu"}]
+
   build:
+    needs: compile-reference-rs
     runs-on: ubuntu-latest
 
     steps:
@@ -43,6 +52,15 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Download native artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: bindings-x86_64-unknown-linux-gnu
+          path: packages/reference-rs/artifacts/bindings-x86_64-unknown-linux-gnu
+
+      - name: Stage local native artifacts
+        run: pnpm --filter @reference-ui/reference-rs run stage-local-artifacts
 
       - name: Build docs site
         run: pnpm --filter @reference-ui/lib run build && pnpm --filter @reference-ui/reference-docs run build:pages

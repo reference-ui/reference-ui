@@ -3,7 +3,8 @@ target/
 
 # NAPI artifacts
 artifacts/
+npm/
 *.node
 
-# Node (if npm install runs here)
+# Node
 node_modules/

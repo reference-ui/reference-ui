@@ -96,7 +96,8 @@ rewriters operate on it.
 
 ## Native Rewrite Dependency
 
-The import-rewrite transforms use the Rust/N-API binding under `virtual/native`.
+The import-rewrite transforms use the Rust/N-API binding from
+`@reference-ui/reference-rs`.
 
 That native binding is used for:
 
