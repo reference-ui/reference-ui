@@ -15,7 +15,7 @@
     "test:cli": "pnpm run test:core",
     "test:app": "nx run reference-app:test",
     "test:system": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/core run eslint:txt && concurrently --kill-others-on-fail -n core,app -c blue,green \"pnpm --filter @reference-ui/core run test\" \"pnpm --filter @reference-ui/reference-app run test\"",
-    "test:e2e": "pnpm run test:system && REF_TEST_FRESH=1 pnpm --filter @reference-ui/reference-test run test:quick",
+    "test:e2e": "pnpm --filter @reference-ui/core run build && concurrently --kill-others-on-fail -n core,app -c blue,green \"pnpm --filter @reference-ui/core run test\" \"pnpm --filter @reference-ui/reference-app run test\" && REF_TEST_FRESH=1 pnpm --filter @reference-ui/reference-test run test:quick",
     "version-packages": "changeset version && pnpm install --lockfile-only"
   },
   "devDependencies": {
