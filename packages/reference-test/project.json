@@ -6,7 +6,7 @@
   "tags": [],
   "targets": {
     "quick": {
-      "dependsOn": ["reference-core:build"],
+      "dependsOn": ["reference-core:build", "@reference-ui/lib:build"],
       "executor": "nx:run-commands",
       "options": {
         "command": "REF_TEST_FRESH=1 pnpm run test:quick",
@@ -14,7 +14,7 @@
       }
     },
     "test": {
-      "dependsOn": ["reference-core:build"],
+      "dependsOn": ["reference-core:build", "@reference-ui/lib:build"],
       "executor": "nx:run-commands",
       "options": {
         "command": "pnpm test",
