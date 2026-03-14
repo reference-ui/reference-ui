@@ -265,11 +265,11 @@ Status: `partially defined, not yet release-gated`
 
 Files:
 
-- `src/virtual/native/Cargo.toml`
-- `src/virtual/native/package.json`
-- `src/virtual/native/src/lib.rs`
-- `src/virtual/native/src/rewrite.rs`
-- `src/virtual/native/loader.ts`
+- `../reference-rs/Cargo.toml`
+- `../reference-rs/package.json`
+- `../reference-rs/src/lib.rs`
+- `../reference-rs/src/rewrite.rs`
+- `../reference-rs/src/js/loader.ts`
 - `src/virtual/transforms/rewrite-css-imports.ts`
 - `src/virtual/transforms/rewrite-cva-imports.ts`
 
@@ -410,7 +410,7 @@ In addition, a publishable release of `reference-core` with native bindings shou
 3. the N-API binary builds on Linux x64 GNU
 4. the N-API binary builds on Windows x64 MSVC
 5. a Node smoke test can load the built binary on each target
-6. the packaged artifact path matches what `src/virtual/native/loader.ts` expects
+6. the packaged artifact path matches what `@reference-ui/reference-rs` loader expects
 
 For rapid iteration, `pnpm test:system` should remain the fast unit/integration loop for `reference-core` and `reference-app`, while `pnpm test:e2e` stays the full publish gate that also runs `reference-test`.
 

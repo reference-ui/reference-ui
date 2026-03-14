@@ -1,0 +1,51 @@
+{
+  "name": "@reference-ui/reference-rs",
+  "version": "0.0.1",
+  "private": false,
+  "description": "Reference UI Rust and native bindings",
+  "type": "module",
+  "napi": {
+    "targets": [
+      "x86_64-apple-darwin",
+      "aarch64-apple-darwin",
+      "x86_64-pc-windows-msvc",
+      "x86_64-unknown-linux-gnu"
+    ],
+    "binaryName": "virtual-native"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs"
+    }
+  },
+  "files": [
+    "dist",
+    "*.node",
+    "README.md",
+    "npm"
+  ],
+  "scripts": {
+    "artifacts": "pnpm exec napi artifacts",
+    "build": "pnpm run ensure-native && pnpm run build:js",
+    "build:js": "tsup",
+    "build:native": "pnpm exec napi build --platform --release",
+    "create-npm-dirs": "pnpm exec napi create-npm-dirs",
+    "ensure-native": "node ./scripts/ensure-native.mjs",
+    "prepack": "pnpm run build:js",
+    "prepublish:npm": "pnpm exec napi prepublish --no-gh-release -t npm",
+    "publish:native": "node ./scripts/publish-native.mjs",
+    "stage-local-artifacts": "node ./scripts/stage-local-artifacts.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "^3.5.1",
+    "tsup": "^8.5.1",
+    "typescript": "~5.9.3",
+    "vitest": "^4.0.18"
+  }
+}

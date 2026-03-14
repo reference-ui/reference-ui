@@ -1,0 +1,79 @@
+name: Reference RS Compile
+
+on:
+  workflow_call:
+    inputs:
+      matrix_json:
+        required: true
+        type: string
+      artifact_prefix:
+        required: false
+        type: string
+        default: bindings
+  workflow_dispatch:
+    inputs:
+      matrix_json:
+        description: JSON matrix entries with runner/target
+        required: true
+        type: string
+        default: '[{"runner":"ubuntu-latest","target":"x86_64-unknown-linux-gnu"}]'
+      artifact_prefix:
+        description: Artifact name prefix
+        required: false
+        type: string
+        default: bindings
+
+permissions:
+  contents: read
+
+jobs:
+  compile:
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(inputs.matrix_json) }}
+    runs-on: ${{ matrix.runner }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.29.3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            ~/.napi-rs
+            packages/reference-rs/target/
+          key: ${{ runner.os }}-${{ matrix.target }}-cargo-${{ hashFiles('packages/reference-rs/Cargo.lock') }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Compile native binary
+        run: pnpm --filter @reference-ui/reference-rs exec napi build --platform --release --target ${{ matrix.target }}
+
+      - name: Upload native artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.artifact_prefix }}-${{ matrix.target }}
+          path: packages/reference-rs/virtual-native.*.node
+          if-no-files-found: error
