@@ -42,6 +42,12 @@ function killProcessTree(pid: number | undefined): void {
 }
 
 export default async function globalSetup() {
+  execSync('pnpm run build', {
+    cwd: libRoot,
+    stdio: 'pipe',
+    timeout: 180_000,
+  })
+
   const libWatchProcess = spawn('node', [refCore, 'sync', '--watch', '--debug'], {
     cwd: libRoot,
     stdio: 'inherit',
