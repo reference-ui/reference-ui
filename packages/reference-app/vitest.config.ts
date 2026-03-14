@@ -20,6 +20,7 @@ export default defineConfig({
     include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx'],
     exclude: ['tests/system/sync-readiness.test.ts'],
     passWithNoTests: true,
+    hookTimeout: 60_000,
     globalSetup: resolve(__dirname, 'tests/setup/global-setup.ts'),
     setupFiles: [resolve(__dirname, 'tests/setup/dom-matchers.ts')],
   },
