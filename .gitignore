@@ -38,6 +38,7 @@ packages/.sandbox
 .reference-ui
 .ref
 packages/reference-core/src/system/styled
+packages/reference-app/tests/fixtures/sync-readiness/src/generated/
 
 # Nx
 .nx

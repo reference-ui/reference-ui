@@ -7,7 +7,7 @@
     "dev": "ref sync && (ref sync --watch & vite)",
     "build": "ref sync && vite build",
     "preview": "vite preview",
-    "test": "concurrently --kill-others-on-fail -n typecheck,test -c yellow,green \"tsc --noEmit\" \"pnpm run test:vitest\"",
+    "test": "pnpm run test:vitest && tsc --noEmit",
     "test:vitest": "vitest run && vitest run --config vitest.sync-readiness.config.ts",
     "test:watch": "vitest"
   },
