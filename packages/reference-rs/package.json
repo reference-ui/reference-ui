@@ -5,7 +5,8 @@
   "description": "Reference UI Rust and native bindings",
   "repository": {
     "type": "git",
-    "url": "https://github.com/reference-ui/reference-ui"
+    "url": "https://github.com/reference-ui/reference-ui",
+    "directory": "packages/reference-rs"
   },
   "type": "module",
   "napi": {

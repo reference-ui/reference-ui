@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import { join } from 'node:path'
 import { artifactsDir, packageDir } from './paths.mjs'
@@ -35,28 +35,44 @@ if (!existsSync(artifactsDir)) {
 
 run('pnpm', ['run', 'create-npm-dirs'])
 run('pnpm', ['run', 'artifacts'])
-run('pnpm', ['run', 'prepublish:npm'])
 
 const npmDir = join(packageDir, 'npm')
+const targetPackages = []
+
 for (const entry of readdirSync(npmDir, { withFileTypes: true })) {
   if (!entry.isDirectory()) continue
 
   const targetPackageDir = join(npmDir, entry.name)
   const pkg = readJson(join(targetPackageDir, 'package.json'))
-  if (isPublished(pkg.name, pkg.version)) {
-    console.log(`Skipping already published native package ${pkg.name}@${pkg.version}`)
-    continue
+  targetPackages.push({ dir: targetPackageDir, pkg })
+}
+
+const rootPackageJsonPath = join(packageDir, 'package.json')
+const rootPackageJsonRaw = readFileSync(rootPackageJsonPath, 'utf8')
+const rootPkg = JSON.parse(rootPackageJsonRaw)
+rootPkg.optionalDependencies = Object.fromEntries(
+  targetPackages.map(({ pkg }) => [pkg.name, pkg.version])
+)
+writeFileSync(rootPackageJsonPath, `${JSON.stringify(rootPkg, null, 2)}\n`)
+
+try {
+  for (const { dir: targetPackageDir, pkg } of targetPackages) {
+    if (isPublished(pkg.name, pkg.version)) {
+      console.log(`Skipping already published native package ${pkg.name}@${pkg.version}`)
+      continue
+    }
+
+    console.log(`Publishing native package ${pkg.name}@${pkg.version}`)
+    run('npm', ['publish', '--provenance', '--access', 'public'], targetPackageDir)
   }
 
-  console.log(`Publishing native package ${pkg.name}@${pkg.version}`)
-  run('npm', ['publish', '--provenance', '--access', 'public'], targetPackageDir)
-}
+  if (isPublished(rootPkg.name, rootPkg.version)) {
+    console.log(`Skipping already published root package ${rootPkg.name}@${rootPkg.version}`)
+    process.exit(0)
+  }
 
-const rootPkg = readJson(join(packageDir, 'package.json'))
-if (isPublished(rootPkg.name, rootPkg.version)) {
-  console.log(`Skipping already published root package ${rootPkg.name}@${rootPkg.version}`)
-  process.exit(0)
+  console.log(`Publishing root package ${rootPkg.name}@${rootPkg.version}`)
+  run('npm', ['publish', '--provenance', '--access', 'public'])
+} finally {
+  writeFileSync(rootPackageJsonPath, rootPackageJsonRaw)
 }
-
-console.log(`Publishing root package ${rootPkg.name}@${rootPkg.version}`)
-run('npm', ['publish', '--provenance', '--access', 'public'])
