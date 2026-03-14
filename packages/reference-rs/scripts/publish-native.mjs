@@ -65,14 +65,6 @@ try {
     console.log(`Publishing native package ${pkg.name}@${pkg.version}`)
     run('npm', ['publish', '--provenance', '--access', 'public'], targetPackageDir)
   }
-
-  if (isPublished(rootPkg.name, rootPkg.version)) {
-    console.log(`Skipping already published root package ${rootPkg.name}@${rootPkg.version}`)
-    process.exit(0)
-  }
-
-  console.log(`Publishing root package ${rootPkg.name}@${rootPkg.version}`)
-  run('npm', ['publish', '--provenance', '--access', 'public'])
 } finally {
   writeFileSync(rootPackageJsonPath, rootPackageJsonRaw)
 }
