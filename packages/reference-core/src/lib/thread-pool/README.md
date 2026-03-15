@@ -15,7 +15,7 @@ This module owns the shared worker pool and the small conventions around it:
 - pool lifecycle
 - `workerData` wiring for config and cwd
 - manifest-to-worker-path mapping
-- memory debug logging around pool lifetime
+- optional resource-usage logging around pool lifetime via `config.ts`
 
 ## What it does not own
 
