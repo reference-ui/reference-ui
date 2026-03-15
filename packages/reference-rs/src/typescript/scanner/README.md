@@ -9,7 +9,9 @@ Its job is to answer a narrower question than the AST layer:
 - how an import path maps to another file on disk
 
 It should not know how to interpret TypeScript declarations beyond the minimum
-needed to discover more files.
+needed to discover more files. Comment text is captured by the AST layer (raw
+leading comments only); JSDoc interpretation is intentionally deferred to
+downstream consumers (e.g. docs, MCP).
 
 ## Responsibilities
 

@@ -79,6 +79,9 @@ fn emit_symbol_object(
         format!("  name: {},", to_js_literal(&symbol.name)?),
         format!("  library: {},", to_js_literal(&symbol.library)?),
     ];
+    if let Some(ref d) = symbol.description {
+        fields.push(format!("  description: {},", to_js_literal(d)?));
+    }
 
     match symbol.kind {
         TsSymbolKind::Interface => {
@@ -134,12 +137,18 @@ fn emit_member(
     member: &TsMember,
     export_names: &BTreeMap<String, String>,
 ) -> Result<String, String> {
-    Ok(format!(
-        "{{\n  name: {},\n  optional: {},\n  type: {},\n}}",
-        to_js_literal(&member.name)?,
-        to_js_literal(&member.optional)?,
-        emit_optional_type_ref(bundle, member.type_ref.as_ref(), export_names)?,
-    ))
+    let mut parts = vec![
+        format!("  name: {}", to_js_literal(&member.name)?),
+        format!("  optional: {}", to_js_literal(&member.optional)?),
+    ];
+    if let Some(ref d) = member.description {
+        parts.push(format!("  description: {}", to_js_literal(d)?));
+    }
+    parts.push(format!(
+        "  type: {}",
+        emit_optional_type_ref(bundle, member.type_ref.as_ref(), export_names)?
+    ));
+    Ok(format!("{{\n{}\n}}", parts.join(",\n")))
 }
 
 fn emit_optional_type_ref(
@@ -334,12 +343,23 @@ fn collect_libraries_from_type_ref(type_ref: &TypeRef, libraries: &mut BTreeSet<
     }
 }
 
+/// Deterministic hash for symbol IDs so the same id always gets the same export name.
+fn stable_hash_symbol_id(symbol_id: &str) -> u64 {
+    const FNV_OFFSET: u64 = 14695981039346656037;
+    const FNV_PRIME: u64 = 1099511628211;
+    symbol_id
+        .bytes()
+        .fold(FNV_OFFSET, |h, b| h.wrapping_mul(FNV_PRIME) ^ u64::from(b))
+}
+
 fn build_symbol_export_names(bundle: &TypeScriptBundle) -> BTreeMap<String, String> {
     bundle
         .symbols
         .keys()
-        .enumerate()
-        .map(|(index, symbol_id)| (symbol_id.clone(), format!("_${index}")))
+        .map(|symbol_id| {
+            let h = stable_hash_symbol_id(symbol_id);
+            (symbol_id.clone(), format!("_{:016x}", h))
+        })
         .collect()
 }
 

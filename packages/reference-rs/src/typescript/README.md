@@ -11,6 +11,7 @@ bundle for docs and MCP use cases.
 - fixture-driven Rust tests
 - local TypeScript file scanning from a root folder
 - initial exported symbol extraction for interfaces and type aliases
+- raw leading comment capture for exported types and their members (descriptions)
 - ESM bundle output for inspection during development
 
 ## Architecture
@@ -30,6 +31,16 @@ The critical distinction is:
 - scanner output is not AST
 - AST extraction is not final emitted output
 - the resolved graph is an internal input to JS emission
+
+## Comments and descriptions
+
+The scanner captures **raw leading comments** only: the comment block
+immediately above an exported interface, type alias, or property is stored as
+plain text on the symbol or member. Comment markers (`//`, `/*`, `*/`, `/**`,
+leading `*`) are stripped and whitespace is normalized; newlines are preserved.
+No JSDoc parsing is performed—no `@param`, `@returns`, or other tags. That
+keeps the data model minimal and downstream-friendly. Docs and MCP consumers
+can use the raw description as-is or parse it as JSDoc later if they choose.
 
 ## Output Direction
 

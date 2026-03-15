@@ -35,6 +35,7 @@ pub struct TsSymbol {
     pub kind: TsSymbolKind,
     pub file_id: String,
     pub exported: bool,
+    pub description: Option<String>,
     pub defined_members: Vec<TsMember>,
     pub extends: Vec<TypeRef>,
     pub underlying: Option<TypeRef>,
@@ -51,6 +52,7 @@ pub enum TsSymbolKind {
 pub struct TsMember {
     pub name: String,
     pub optional: bool,
+    pub description: Option<String>,
     pub type_ref: Option<TypeRef>,
 }
 

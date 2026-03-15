@@ -117,6 +117,7 @@ fn resolve_symbol_references(
         kind: symbol.kind,
         file_id: parsed.file_id.clone(),
         exported: symbol.exported,
+        description: symbol.description,
         defined_members: symbol.defined_members,
         extends: symbol.extends,
         underlying: symbol.underlying,
