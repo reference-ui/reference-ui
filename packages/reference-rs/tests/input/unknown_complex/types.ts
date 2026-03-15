@@ -24,3 +24,9 @@ export interface UsesOptionalKeys {
   /** User with all keys optional (mapped type). */
   partialUser: OptionalKeys<User>;
 }
+
+/** Template literal type → Unknown with summary. */
+export type TemplateLiteralAlias = `foo-${string}`;
+
+/** Type query (typeof) → Unknown with summary. */
+export type TypeQueryAlias = typeof Array.prototype.map;

@@ -5,4 +5,8 @@ export type {
   MaybeId,
   OptionalProps,
   ButtonVariant,
+  BigintAlias,
+  SymbolAlias,
+  NeverAlias,
+  VoidAlias,
 } from './types';

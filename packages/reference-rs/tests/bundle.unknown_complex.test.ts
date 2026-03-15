@@ -55,6 +55,23 @@ describe('unknown_complex bundle', () => {
     expect(names).toContain('OptionalKeys')
     expect(names).toContain('StringKeys')
     expect(names).toContain('UsesOptionalKeys')
+    expect(names).toContain('TemplateLiteralAlias')
+    expect(names).toContain('TypeQueryAlias')
+  })
+
+  it('emits template literal and type query as Unknown with summary', async () => {
+    const mod = await loadBundle('unknown_complex')
+    const symbols = getSymbols(mod)
+    const templateLiteral = findSymbol(symbols, 'TemplateLiteralAlias')
+    const typeQuery = findSymbol(symbols, 'TypeQueryAlias')
+    const def = (s: ReturnType<typeof findSymbol>) => s.definition as { kind?: string; summary?: string }
+    expect(def(templateLiteral).kind).toBe('unknown')
+    expect(def(templateLiteral).summary).toBeDefined()
+    expect(typeof def(templateLiteral).summary).toBe('string')
+    expect(def(templateLiteral).summary!.length).toBeGreaterThan(0)
+    expect(def(typeQuery).kind).toBe('unknown')
+    expect(def(typeQuery).summary).toBeDefined()
+    expect(def(typeQuery).summary!.length).toBeGreaterThan(0)
   })
 
   it('User interface has normal member types', async () => {

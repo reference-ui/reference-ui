@@ -924,7 +924,61 @@ fn type_to_ref(
                 }
             }
         }
-        _ => TypeRef::Unknown {
+        // Remaining TSType variants: explicit handling so nothing slips through.
+        // Intrinsic keywords (TS 5.9+ bigint, symbol, never, void, intrinsic).
+        TSType::TSBigIntKeyword(_) => TypeRef::Intrinsic {
+            name: "bigint".to_string(),
+        },
+        TSType::TSSymbolKeyword(_) => TypeRef::Intrinsic {
+            name: "symbol".to_string(),
+        },
+        TSType::TSNeverKeyword(_) => TypeRef::Intrinsic {
+            name: "never".to_string(),
+        },
+        TSType::TSVoidKeyword(_) => TypeRef::Intrinsic {
+            name: "void".to_string(),
+        },
+        TSType::TSIntrinsicKeyword(kw) => TypeRef::Intrinsic {
+            name: slice_span(source, kw.span()).to_string(),
+        },
+        // Single named tuple member as type (e.g. in union): treat as one-element tuple.
+        TSType::TSNamedTupleMember(named) => {
+            let inner =
+                tuple_element_to_tuple_element(
+                    &named.element_type,
+                    source,
+                    import_bindings,
+                    current_module_specifier,
+                    current_library,
+                );
+            TypeRef::Tuple {
+                elements: vec![TupleElement {
+                    label: Some(slice_span(source, named.label.span()).to_string()),
+                    optional: named.optional,
+                    rest: false,
+                    element: inner.element,
+                }],
+            }
+        }
+        // Complex types we do not model: emit Unknown with source summary.
+        TSType::TSConditionalType(_)
+        | TSType::TSMappedType(_)
+        | TSType::TSTemplateLiteralType(_)
+        | TSType::TSImportType(_)
+        | TSType::TSIndexedAccessType(_)
+        | TSType::TSInferType(_)
+        | TSType::TSConstructorType(_)
+        | TSType::TSFunctionType(_)
+        | TSType::TSTypeOperatorType(_)
+        | TSType::TSTypePredicate(_)
+        | TSType::TSTypeQuery(_)
+        | TSType::TSThisType(_) => TypeRef::Unknown {
+            summary: slice_span(source, type_annotation.span()).to_string(),
+        },
+        // JSDoc-only types: preserve source as Unknown.
+        TSType::JSDocNullableType(_)
+        | TSType::JSDocNonNullableType(_)
+        | TSType::JSDocUnknownType(_) => TypeRef::Unknown {
             summary: slice_span(source, type_annotation.span()).to_string(),
         },
     }
