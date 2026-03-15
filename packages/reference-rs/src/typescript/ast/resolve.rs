@@ -1,6 +1,8 @@
 use std::collections::BTreeMap;
 
-use super::super::api::{ExportMap, ScannerDiagnostic, TsFile, TsMember, TsSymbol, TypeRef};
+use super::super::api::{
+    ExportMap, ScannerDiagnostic, TsFile, TsMember, TsSymbol, TsTypeParameter, TypeRef,
+};
 use super::model::{ParsedFileAst, ParsedTypeScriptAst, SymbolShell};
 
 #[derive(Debug, Clone)]
@@ -110,6 +112,18 @@ fn resolve_symbol_references(
         .map(|type_ref| resolve_type_ref(type_ref, symbol_index, parsed))
         .collect();
 
+    let type_parameters = symbol
+        .type_parameters
+        .into_iter()
+        .map(|param| TsTypeParameter {
+            name: param.name,
+            constraint: param
+                .constraint
+                .map(|t| resolve_type_ref(t, symbol_index, parsed)),
+            default: param.default.map(|t| resolve_type_ref(t, symbol_index, parsed)),
+        })
+        .collect();
+
     TsSymbol {
         id: symbol.id,
         name: symbol.name,
@@ -118,6 +132,7 @@ fn resolve_symbol_references(
         file_id: parsed.file_id.clone(),
         exported: symbol.exported,
         description: symbol.description,
+        type_parameters,
         defined_members: symbol.defined_members,
         extends: symbol.extends,
         underlying: symbol.underlying,
@@ -135,12 +150,20 @@ fn resolve_type_ref(
             name,
             target_id,
             source_module,
+            type_arguments,
         } => {
+            let resolved_args = type_arguments.map(|args| {
+                args.into_iter()
+                    .map(|t| resolve_type_ref(t, symbol_index, parsed))
+                    .collect()
+            });
+
             if target_id.is_some() {
                 return TypeRef::Reference {
                     name,
                     target_id,
                     source_module,
+                    type_arguments: resolved_args,
                 };
             }
 
@@ -153,6 +176,7 @@ fn resolve_type_ref(
                             name,
                             target_id: Some(target_id.clone()),
                             source_module,
+                            type_arguments: resolved_args,
                         };
                     }
                 }
@@ -163,6 +187,7 @@ fn resolve_type_ref(
                     name,
                     target_id: Some(target_id.clone()),
                     source_module,
+                    type_arguments: resolved_args,
                 };
             }
 
@@ -170,12 +195,24 @@ fn resolve_type_ref(
                 name,
                 target_id: None,
                 source_module,
+                type_arguments: resolved_args,
             }
         }
         TypeRef::Union { types } => TypeRef::Union {
             types: types
                 .into_iter()
                 .map(|nested| resolve_type_ref(nested, symbol_index, parsed))
+                .collect(),
+        },
+        TypeRef::Object { members } => TypeRef::Object {
+            members: members
+                .into_iter()
+                .map(|m| TsMember {
+                    type_ref: m
+                        .type_ref
+                        .map(|t| resolve_type_ref(t, symbol_index, parsed)),
+                    ..m
+                })
                 .collect(),
         },
         other => other,

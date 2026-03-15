@@ -3,7 +3,7 @@ use std::fmt::Write;
 
 use serde::Serialize;
 
-use super::super::api::{TsMember, TsSymbol, TsSymbolKind, TypeRef, TypeScriptBundle};
+use super::super::api::{TsMember, TsSymbol, TsSymbolKind, TsTypeParameter, TypeRef, TypeScriptBundle};
 
 #[allow(dead_code)]
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -82,6 +82,12 @@ fn emit_symbol_object(
     if let Some(ref d) = symbol.description {
         fields.push(format!("  description: {},", to_js_literal(d)?));
     }
+    if !symbol.type_parameters.is_empty() {
+        fields.push(format!(
+            "  typeParameters: {},",
+            emit_type_parameters(bundle, &symbol.type_parameters, export_names)?
+        ));
+    }
 
     match symbol.kind {
         TsSymbolKind::Interface => {
@@ -111,6 +117,32 @@ fn emit_symbol_object(
     }
 
     Ok(format!("{{\n{}\n}}", fields.join("\n")))
+}
+
+fn emit_type_parameters(
+    bundle: &TypeScriptBundle,
+    params: &[TsTypeParameter],
+    export_names: &BTreeMap<String, String>,
+) -> Result<String, String> {
+    if params.is_empty() {
+        return Ok("[]".to_string());
+    }
+    let lines = params
+        .iter()
+        .map(|p| {
+            let mut parts = vec![format!("  name: {}", to_js_literal(&p.name)?)];
+            if let Some(ref c) = p.constraint {
+                let constraint_str = emit_type_ref(bundle, c, export_names)?;
+                parts.push(format!("  constraint: {}", indent_block(&constraint_str, 2)));
+            }
+            if let Some(ref d) = p.default {
+                let default_str = emit_type_ref(bundle, d, export_names)?;
+                parts.push(format!("  default: {}", indent_block(&default_str, 2)));
+            }
+            Ok::<String, String>(indent_block(&format!("{{\n{}\n}}", parts.join(",\n")), 2))
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(format!("[\n{}\n]", lines.join(",\n")))
 }
 
 fn emit_members(
@@ -176,10 +208,42 @@ fn emit_type_ref(
             "{{\n  kind: \"literal\",\n  value: {},\n}}",
             to_js_literal(value)?,
         )),
+        TypeRef::Reference {
+            type_arguments: Some(args),
+            ..
+        } => {
+            let reference = reference_descriptor(bundle, type_ref, export_names)
+                .ok_or_else(|| "Failed to emit reference.".to_string())?;
+            let args_lines: Vec<_> = args
+                .iter()
+                .map(|t| {
+                    emit_type_ref(bundle, t, export_names).map(|s| indent_block(&s, 2))
+                })
+                .collect::<Result<Vec<_>, _>>()?;
+            Ok(format!(
+                "{{\n  id: {},\n  name: {},\n  library: {},\n  typeArguments: [\n{}\n  ],\n}}",
+                to_js_literal(&reference.id)?,
+                to_js_literal(&reference.name)?,
+                to_js_literal(&reference.library)?,
+                args_lines.join(",\n")
+            ))
+        }
         TypeRef::Reference { .. } => {
             let reference = reference_descriptor(bundle, type_ref, export_names)
                 .ok_or_else(|| "Failed to emit reference.".to_string())?;
             emit_ref_object(&reference)
+        }
+        TypeRef::Object { members } => {
+            let lines = members
+                .iter()
+                .map(|m| {
+                    emit_member(bundle, m, export_names).map(|s| indent_block(&s, 2))
+                })
+                .collect::<Result<Vec<_>, _>>()?;
+            Ok(format!(
+                "{{\n  kind: \"object\",\n  members: [\n{}\n  ],\n}}",
+                lines.join(",\n")
+            ))
         }
         TypeRef::Union { types } => {
             let lines = types
@@ -273,6 +337,7 @@ fn reference_descriptor(
         name,
         target_id,
         source_module,
+        type_arguments: _,
     } = type_ref
     else {
         return None;
@@ -298,9 +363,7 @@ fn emit_libraries(bundle: &TypeScriptBundle) -> Result<String, String> {
     let mut libraries = BTreeSet::new();
 
     for symbol in bundle.symbols.values() {
-        if symbol.library != "user" {
-            libraries.insert(symbol.library.clone());
-        }
+        libraries.insert(symbol.library.clone());
         collect_libraries_from_type_refs(&symbol.extends, &mut libraries);
         collect_libraries_from_type_refs(&symbol.references, &mut libraries);
 
@@ -337,6 +400,21 @@ fn collect_libraries_from_type_ref(type_ref: &TypeRef, libraries: &mut BTreeSet<
         TypeRef::Union { types } => {
             for nested in types {
                 collect_libraries_from_type_ref(nested, libraries);
+            }
+        }
+        TypeRef::Object { members } => {
+            for m in members {
+                if let Some(ref tr) = m.type_ref {
+                    collect_libraries_from_type_ref(tr, libraries);
+                }
+            }
+        }
+        TypeRef::Reference {
+            type_arguments: Some(args),
+            ..
+        } => {
+            for arg in args {
+                collect_libraries_from_type_ref(arg, libraries);
             }
         }
         _ => {}

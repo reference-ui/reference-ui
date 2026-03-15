@@ -28,6 +28,13 @@ pub struct TsFile {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TsTypeParameter {
+    pub name: String,
+    pub constraint: Option<TypeRef>,
+    pub default: Option<TypeRef>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TsSymbol {
     pub id: String,
     pub name: String,
@@ -36,6 +43,7 @@ pub struct TsSymbol {
     pub file_id: String,
     pub exported: bool,
     pub description: Option<String>,
+    pub type_parameters: Vec<TsTypeParameter>,
     pub defined_members: Vec<TsMember>,
     pub extends: Vec<TypeRef>,
     pub underlying: Option<TypeRef>,
@@ -68,9 +76,13 @@ pub enum TypeRef {
         name: String,
         target_id: Option<String>,
         source_module: Option<String>,
+        type_arguments: Option<Vec<TypeRef>>,
     },
     Union {
         types: Vec<TypeRef>,
+    },
+    Object {
+        members: Vec<TsMember>,
     },
     Unknown {
         summary: String,
