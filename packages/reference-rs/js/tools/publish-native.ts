@@ -1,13 +1,20 @@
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import { join } from 'node:path'
-import { artifactsDir, packageDir } from './paths.mjs'
 
-function readJson(path) {
-  return JSON.parse(readFileSync(path, 'utf8'))
+import { artifactsDir, packageDir } from '../shared/paths'
+
+interface PackageJson {
+  name: string
+  version: string
+  optionalDependencies?: Record<string, string>
 }
 
-function run(command, args, cwd = packageDir) {
+function readJson<T>(path: string): T {
+  return JSON.parse(readFileSync(path, 'utf8')) as T
+}
+
+function run(command: string, args: string[], cwd = packageDir) {
   execFileSync(command, args, {
     cwd,
     stdio: 'inherit',
@@ -15,7 +22,7 @@ function run(command, args, cwd = packageDir) {
   })
 }
 
-function isPublished(name, version) {
+function isPublished(name: string, version: string) {
   try {
     const output = execFileSync('npm', ['view', `${name}@${version}`, 'version', '--json'], {
       cwd: packageDir,
@@ -37,22 +44,20 @@ run('pnpm', ['run', 'create-npm-dirs'])
 run('pnpm', ['run', 'artifacts'])
 
 const npmDir = join(packageDir, 'npm')
-const targetPackages = []
+const targetPackages: Array<{ dir: string; pkg: PackageJson }> = []
 
 for (const entry of readdirSync(npmDir, { withFileTypes: true })) {
   if (!entry.isDirectory()) continue
 
   const targetPackageDir = join(npmDir, entry.name)
-  const pkg = readJson(join(targetPackageDir, 'package.json'))
+  const pkg = readJson<PackageJson>(join(targetPackageDir, 'package.json'))
   targetPackages.push({ dir: targetPackageDir, pkg })
 }
 
 const rootPackageJsonPath = join(packageDir, 'package.json')
 const rootPackageJsonRaw = readFileSync(rootPackageJsonPath, 'utf8')
-const rootPkg = JSON.parse(rootPackageJsonRaw)
-rootPkg.optionalDependencies = Object.fromEntries(
-  targetPackages.map(({ pkg }) => [pkg.name, pkg.version])
-)
+const rootPkg = JSON.parse(rootPackageJsonRaw) as PackageJson
+rootPkg.optionalDependencies = Object.fromEntries(targetPackages.map(({ pkg }) => [pkg.name, pkg.version]))
 writeFileSync(rootPackageJsonPath, `${JSON.stringify(rootPkg, null, 2)}\n`)
 
 try {

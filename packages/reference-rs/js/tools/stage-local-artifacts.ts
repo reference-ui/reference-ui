@@ -1,6 +1,7 @@
 import { copyFileSync, existsSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
-import { artifactsDir, packageDir } from './paths.mjs'
+
+import { artifactsDir, packageDir } from '../shared/paths'
 
 if (!existsSync(artifactsDir)) {
   console.log('No local artifacts directory found for @reference-ui/rust')

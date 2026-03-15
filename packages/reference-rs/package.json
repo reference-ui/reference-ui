@@ -36,11 +36,11 @@
     "build:js": "tsup",
     "build:native": "pnpm exec napi build --platform --release",
     "create-npm-dirs": "pnpm exec napi create-npm-dirs",
-    "ensure-native": "node ./scripts/ensure-native.mjs",
+    "ensure-native": "pnpm exec tsx ./js/tools/ensure-native.ts",
     "prepack": "pnpm run build:js",
     "prepublish:npm": "pnpm exec napi prepublish --no-gh-release -t npm",
-    "publish:native": "node ./scripts/publish-native.mjs",
-    "stage-local-artifacts": "node ./scripts/stage-local-artifacts.mjs",
+    "publish:native": "pnpm exec tsx ./js/tools/publish-native.ts",
+    "stage-local-artifacts": "pnpm exec tsx ./js/tools/stage-local-artifacts.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -50,6 +50,7 @@
   "devDependencies": {
     "@napi-rs/cli": "^3.5.1",
     "tsup": "^8.5.1",
+    "tsx": "^4.21.0",
     "typescript": "~5.9.3",
     "vitest": "^4.0.18"
   }

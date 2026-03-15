@@ -1,7 +1,7 @@
 {
   "name": "@reference-ui/rust",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "packages/reference-rs/src/js",
+  "sourceRoot": "packages/reference-rs/js",
   "projectType": "library",
   "targets": {
     "build": {

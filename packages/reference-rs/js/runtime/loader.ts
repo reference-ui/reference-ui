@@ -10,15 +10,12 @@ import { createRequire } from 'node:module'
 import { dirname, join, parse, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { getVirtualNativeTriple, SUPPORTED_VIRTUAL_NATIVE_TARGETS } from '../shared/targets'
+
 const PACKAGE_JSON = 'package.json'
 const RUST_PACKAGE_NAME = '@reference-ui/rust'
 
-export const SUPPORTED_VIRTUAL_NATIVE_TARGETS = [
-  'darwin-x64',
-  'darwin-arm64',
-  'linux-x64-gnu',
-  'win32-x64-msvc',
-] as const
+export { getVirtualNativeTriple, SUPPORTED_VIRTUAL_NATIVE_TARGETS }
 
 export interface VirtualNativeBinding {
   rewriteCssImports: (sourceCode: string, relativePath: string) => string
@@ -41,29 +38,6 @@ export function resolveReferenceRsPackageDir(fromUrl: string = import.meta.url):
   }
 
   throw new Error('@reference-ui/rust package directory could not be resolved.')
-}
-
-export function getVirtualNativeTriple(
-  platform: NodeJS.Platform = process.platform,
-  arch: string = process.arch
-): (typeof SUPPORTED_VIRTUAL_NATIVE_TARGETS)[number] | null {
-  if (platform === 'darwin') {
-    if (arch === 'arm64') return 'darwin-arm64'
-    if (arch === 'x64') return 'darwin-x64'
-    return null
-  }
-
-  if (platform === 'linux') {
-    if (arch === 'x64') return 'linux-x64-gnu'
-    return null
-  }
-
-  if (platform === 'win32') {
-    if (arch === 'x64') return 'win32-x64-msvc'
-    return null
-  }
-
-  return null
 }
 
 export function getVirtualNativeCandidates(packageDir: string, triple: string): string[] {
