@@ -1,19 +1,13 @@
 name: Deploy Docs
 
 on:
-  push:
+  workflow_run:
+    workflows:
+      - CI E2E
+    types:
+      - completed
     branches:
       - main
-    paths:
-      - .github/workflows/docs-pages.yml
-      - .github/workflows/rust-compile.yml
-      - package.json
-      - pnpm-lock.yaml
-      - packages/reference-core/**
-      - packages/reference-lib/**
-      - packages/reference-docs/**
-      - packages/reference-rs/**
-  workflow_dispatch:
 
 permissions:
   contents: read
@@ -26,18 +20,23 @@ concurrency:
 
 jobs:
   compile-rust:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     uses: ./.github/workflows/rust-compile.yml
     with:
       matrix_json: >-
         [{"runner":"ubuntu-latest","target":"x86_64-unknown-linux-gnu"}]
+      ref: ${{ github.event.workflow_run.head_sha }}
 
   build:
     needs: compile-rust
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
@@ -75,6 +74,7 @@ jobs:
 
   deploy:
     needs: build
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages
