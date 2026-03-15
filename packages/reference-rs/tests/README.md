@@ -9,5 +9,6 @@ Two test suites:
 
 **Layout:**
 
-- **`input/`** – scenario folders (e.g. `scan_here/`). Each direct subfolder is one scenario; see `input/README.md`.
+- **`input/`** – scenario folders (e.g. `generics/`, `external_libs/`). Each direct subfolder is one scenario; see `input/README.md`.
 - **`output/`** – emitted bundles, one folder per scenario: `output/{scenario}/bundle.js`. Emitted by Vitest globalSetup using the native `scanAndEmitBundle` binding. See `output/README.md`.
+- **Test files** – `bundle.{scenario}.test.ts` (e.g. `bundle.generics.test.ts`, `bundle.external_libs.test.ts`) load and assert on the corresponding bundle.

@@ -8,14 +8,14 @@ use std::sync::OnceLock;
 
 use super::{scan_typescript_bundle, ScanRequest};
 
-const SCAN_HERE: &str = "scan_here";
+const SCENARIO_EXTERNAL_LIBS: &str = "external_libs";
 
 #[test]
 fn scans_fixture_successfully() {
     ensure_fixture_dependencies_installed();
     let bundle = scan_typescript_bundle(&ScanRequest {
         root_dir: fixture_input_dir(),
-        include: vec![format!("{SCAN_HERE}/**/*.{{ts,tsx}}")],
+        include: vec![format!("{SCENARIO_EXTERNAL_LIBS}/**/*.{{ts,tsx}}")],
     })
     .expect("fixture scan should succeed");
     assert_eq!(bundle.version, 1);

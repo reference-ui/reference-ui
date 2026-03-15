@@ -1,7 +1,8 @@
 /**
- * Vitest tests for the scan_here scenario bundle.
+ * Vitest tests for the external_libs scenario bundle.
+ * Tests scanning with external packages (node_modules: csstype, json-schema, etc.).
  * Bundles are emitted by globalSetup using the compiled napi-rs runtime (scanAndEmitBundle).
- * Output: output/scan_here/bundle.js
+ * Output: output/external_libs/bundle.js
  */
 import { pathToFileURL } from 'node:url'
 import { describe, expect, it } from 'vitest'
@@ -39,9 +40,9 @@ function findMember(members: Array<{ name: string; description?: string; type?: 
   return m
 }
 
-describe('scan_here bundle', () => {
+describe('external_libs bundle', () => {
   it('exports interfaces and types arrays', async () => {
-    const mod = await loadBundle('scan_here')
+    const mod = await loadBundle('external_libs')
     expect(mod.interfaces).toBeDefined()
     expect(Array.isArray(mod.interfaces)).toBe(true)
     expect(mod.types).toBeDefined()
@@ -50,7 +51,7 @@ describe('scan_here bundle', () => {
   })
 
   it('has expected exported symbols from button and index', async () => {
-    const mod = await loadBundle('scan_here')
+    const mod = await loadBundle('external_libs')
     const symbols = getSymbols(mod)
     const names = symbols.map((s) => s.name)
     expect(names).toContain('ButtonSchema')
@@ -61,7 +62,7 @@ describe('scan_here bundle', () => {
   })
 
   it('ButtonProps extends StyleProps and has expected members', async () => {
-    const mod = await loadBundle('scan_here')
+    const mod = await loadBundle('external_libs')
     const symbols = getSymbols(mod)
     const buttonProps = findSymbol(symbols, 'ButtonProps')
     expect(buttonProps.library).toBe('user')
@@ -79,7 +80,7 @@ describe('scan_here bundle', () => {
   })
 
   it('preserves external library references (css, schema)', async () => {
-    const mod = await loadBundle('scan_here')
+    const mod = await loadBundle('external_libs')
     const symbols = getSymbols(mod)
     const buttonProps = findSymbol(symbols, 'ButtonProps')
     const cssMember = findMember(buttonProps.members ?? [], 'css')
@@ -95,7 +96,7 @@ describe('scan_here bundle', () => {
   })
 
   it('tracks library metadata on symbols', async () => {
-    const mod = await loadBundle('scan_here')
+    const mod = await loadBundle('external_libs')
     const symbols = getSymbols(mod)
     const buttonSchema = findSymbol(symbols, 'ButtonSchema')
     const cssProperties = symbols.find((s) => s.name === 'Properties' && s.library === 'csstype')
@@ -106,7 +107,7 @@ describe('scan_here bundle', () => {
   })
 
   it('captures leading comments for types and members', async () => {
-    const mod = await loadBundle('scan_here')
+    const mod = await loadBundle('external_libs')
     const symbols = getSymbols(mod)
     const size = findSymbol(symbols, 'Size')
     expect(size.description).toBe('Supported button size variants.')
@@ -132,7 +133,7 @@ describe('scan_here bundle', () => {
   })
 
   it('does not attach local comment snippets to external symbols', async () => {
-    const mod = await loadBundle('scan_here')
+    const mod = await loadBundle('external_libs')
     const symbols = getSymbols(mod)
     const cssProperties = symbols.find((s) => s.name === 'Properties' && s.library === 'csstype')
     expect(cssProperties).toBeDefined()
