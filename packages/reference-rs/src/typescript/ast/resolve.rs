@@ -1,7 +1,8 @@
 use std::collections::BTreeMap;
 
 use super::super::api::{
-    ExportMap, ScannerDiagnostic, TsFile, TsMember, TsSymbol, TsTypeParameter, TypeRef,
+    ExportMap, ScannerDiagnostic, TsFile, TsMember, TsSymbol, TsTypeParameter, TupleElement,
+    TypeRef,
 };
 use super::model::{ParsedFileAst, ParsedTypeScriptAst, SymbolShell};
 
@@ -210,7 +211,10 @@ fn resolve_type_ref(
         TypeRef::Tuple { elements } => TypeRef::Tuple {
             elements: elements
                 .into_iter()
-                .map(|t| resolve_type_ref(t, symbol_index, parsed))
+                .map(|te| TupleElement {
+                    element: resolve_type_ref(te.element, symbol_index, parsed),
+                    ..te
+                })
                 .collect(),
         },
         TypeRef::Intersection { types } => TypeRef::Intersection {

@@ -4,7 +4,8 @@ use std::fmt::Write;
 use serde::Serialize;
 
 use super::super::api::{
-    TsMember, TsMemberKind, TsSymbol, TsSymbolKind, TsTypeParameter, TypeRef, TypeScriptBundle,
+    TsMember, TsMemberKind, TsSymbol, TsSymbolKind, TsTypeParameter, TupleElement, TypeRef,
+    TypeScriptBundle,
 };
 
 #[allow(dead_code)]
@@ -176,6 +177,7 @@ fn emit_member(
         TsMemberKind::Method => "method",
         TsMemberKind::CallSignature => "call",
         TsMemberKind::IndexSignature => "index",
+        TsMemberKind::ConstructSignature => "construct",
     };
     let mut parts = vec![
         format!("  name: {}", to_js_literal(&member.name)?),
@@ -190,6 +192,25 @@ fn emit_member(
         "  type: {}",
         emit_optional_type_ref(bundle, member.type_ref.as_ref(), export_names)?
     ));
+    Ok(format!("{{\n{}\n}}", parts.join(",\n")))
+}
+
+fn emit_tuple_element(
+    bundle: &TypeScriptBundle,
+    te: &TupleElement,
+    export_names: &BTreeMap<String, String>,
+) -> Result<String, String> {
+    let mut parts = vec![
+        format!("  optional: {}", to_js_literal(&te.optional)?),
+        format!("  rest: {}", to_js_literal(&te.rest)?),
+        format!(
+            "  element: {}",
+            indent_block(&emit_type_ref(bundle, &te.element, export_names)?, 2)
+        ),
+    ];
+    if let Some(ref label) = te.label {
+        parts.insert(0, format!("  label: {}", to_js_literal(label)?));
+    }
     Ok(format!("{{\n{}\n}}", parts.join(",\n")))
 }
 
@@ -278,9 +299,7 @@ fn emit_type_ref(
         TypeRef::Tuple { elements } => {
             let lines = elements
                 .iter()
-                .map(|t| {
-                    emit_type_ref(bundle, t, export_names).map(|s| indent_block(&s, 2))
-                })
+                .map(|te| emit_tuple_element(bundle, te, export_names))
                 .collect::<Result<Vec<_>, _>>()?;
             Ok(format!(
                 "{{\n  kind: \"tuple\",\n  elements: [\n{}\n  ],\n}}",
@@ -447,8 +466,8 @@ fn collect_libraries_from_type_ref(type_ref: &TypeRef, libraries: &mut BTreeSet<
             collect_libraries_from_type_ref(element, libraries);
         }
         TypeRef::Tuple { elements } => {
-            for t in elements {
-                collect_libraries_from_type_ref(t, libraries);
+            for te in elements {
+                collect_libraries_from_type_ref(&te.element, libraries);
             }
         }
         TypeRef::Intersection { types } => {
