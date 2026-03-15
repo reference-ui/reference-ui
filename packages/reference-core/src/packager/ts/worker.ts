@@ -3,7 +3,7 @@ import { on } from '../../lib/event-bus'
 import { KEEP_ALIVE } from '../../lib/thread-pool'
 import { getOutDirPath } from '../../lib/paths/out-dir'
 import { getRuntimeEntryPath } from '../layout'
-import { runDtsGeneration } from './run'
+import { createDtsGenerationRuntime } from './run'
 import type { TsPackagerWorkerPayload } from './types'
 
 /** True only if every package's bundle output exists (runtime packager has fully completed). */
@@ -25,11 +25,12 @@ export function hasAllBundleOutputs(
 export default async function runTsPackager(
   payload: TsPackagerWorkerPayload
 ): Promise<never> {
-  on('packager:complete', () => runDtsGeneration(payload).catch(() => {}))
+  const runtime = createDtsGenerationRuntime(payload, {
+    bundlesReady: hasAllBundleOutputs(payload.cwd, payload.packages),
+  })
 
-  if (hasAllBundleOutputs(payload.cwd, payload.packages)) {
-    await runDtsGeneration(payload).catch(() => {})
-  }
+  on('packager:complete', runtime.onPackagerComplete)
+  await runtime.runCatchUpIfNeeded()
 
   return KEEP_ALIVE
 }
