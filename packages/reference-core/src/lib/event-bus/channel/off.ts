@@ -1,4 +1,4 @@
-import { broadcastChannel, channelListeners } from './channel'
+import { channelListeners } from './channel'
 import type { ChannelListener } from './channel'
 import type { Events } from '../../../events'
 
@@ -19,14 +19,10 @@ export function off(event: string, handler?: EventHandler | ChannelListener) {
         listener === handler ||
         (listener as { originalHandler?: EventHandler | ChannelListener }).originalHandler === handler
       if (match) {
-        broadcastChannel.removeEventListener('message', listener as EventListener)
         listeners.delete(listener)
       }
     })
   } else {
-    listeners.forEach(listener => {
-      broadcastChannel.removeEventListener('message', listener as EventListener)
-    })
     listeners.clear()
   }
 }
