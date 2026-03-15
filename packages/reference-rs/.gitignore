@@ -8,3 +8,6 @@ npm/
 
 # Node
 node_modules/
+
+# Generated TypeScript test output
+src/typescript/tests/output/

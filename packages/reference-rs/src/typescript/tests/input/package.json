@@ -1,0 +1,8 @@
+{
+  "name": "typescript-scanner-test-fixture",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "react": "^19.0.0"
+  }
+}
