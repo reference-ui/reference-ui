@@ -12,5 +12,5 @@ mod scanner;
 #[cfg(test)]
 mod tests;
 
-pub use api::{ScanRequest, TsSymbolKind, TypeRef, TypeScriptBundle};
+pub use api::{ScanRequest, TsSymbolKind, TsTypeParameter, TypeRef, TypeScriptBundle};
 pub use scan::{scan_and_emit_bundle, scan_typescript_bundle};

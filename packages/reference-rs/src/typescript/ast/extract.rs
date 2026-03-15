@@ -4,12 +4,12 @@ use oxc_allocator::Allocator;
 use oxc_ast::ast::{
     Comment, Declaration, ExportNamedDeclaration, ImportDeclarationSpecifier, ImportOrExportKind,
     PropertyKey, Statement, TSInterfaceDeclaration, TSPropertySignature, TSSignature, TSType,
-    TSTypeAliasDeclaration,
+    TSTypeAliasDeclaration, TSTypeParameterDeclaration,
 };
 use oxc_parser::Parser;
 use oxc_span::{GetSpan, SourceType, Span};
 
-use super::super::api::{ScannerDiagnostic, TsMember, TsSymbolKind, TypeRef};
+use super::super::api::{ScannerDiagnostic, TsMember, TsSymbolKind, TsTypeParameter, TypeRef};
 use super::super::scanner::{resolve_import, symbol_id, ScannedFile, ScannedWorkspace};
 use super::model::{ImportBinding, ParsedFileAst, SymbolShell};
 
@@ -301,6 +301,7 @@ fn push_interface_shell<'a>(
     let name = interface_decl.id.name.to_string();
     let id = symbol_id(file_id, &name);
     let description = leading_comment_for_span(source, comments, interface_decl.span(), None);
+    let interface_start = interface_decl.span().start;
     let property_spans: Vec<u32> = interface_decl
         .body
         .body
@@ -316,10 +317,13 @@ fn push_interface_shell<'a>(
         .iter()
         .filter_map(|signature| match signature {
             TSSignature::TSPropertySignature(property) => {
-                let others: Vec<u32> = property_spans
-                    .iter()
-                    .copied()
-                    .filter(|&s| s != property.span().start)
+                let others: Vec<u32> = std::iter::once(interface_start)
+                    .chain(
+                        property_spans
+                            .iter()
+                            .copied()
+                            .filter(|&s| s != property.span().start),
+                    )
                     .collect();
                 let exclude = if others.is_empty() {
                     None
@@ -354,7 +358,16 @@ fn push_interface_shell<'a>(
         })
         .collect::<Vec<_>>();
 
-    let references = collect_references_from_members(&defined_members, &extends, None);
+    let type_parameters = type_parameters_from_oxc(
+        interface_decl.type_parameters.as_deref(),
+        source,
+        comments,
+        import_bindings,
+        current_module_specifier,
+        current_library,
+    );
+
+    let references = collect_references_from_members(&defined_members, &extends, None, &type_parameters);
 
     exports.push(SymbolShell {
         id,
@@ -362,6 +375,7 @@ fn push_interface_shell<'a>(
         kind: TsSymbolKind::Interface,
         exported,
         description,
+        type_parameters,
         defined_members,
         extends,
         underlying: None,
@@ -383,6 +397,15 @@ fn push_type_alias_shell<'a>(
     let name = type_alias.id.name.to_string();
     let id = symbol_id(file_id, &name);
     let description = leading_comment_for_span(source, comments, type_alias.span(), None);
+    let type_parameters = type_parameters_from_oxc(
+        type_alias.type_parameters.as_deref(),
+        source,
+        comments,
+        import_bindings,
+        _current_module_specifier,
+        current_library,
+    );
+
     let underlying = Some(type_to_ref(
         &type_alias.type_annotation,
         source,
@@ -390,7 +413,7 @@ fn push_type_alias_shell<'a>(
         _current_module_specifier,
         current_library,
     ));
-    let references = collect_references_from_members(&[], &[], underlying.as_ref());
+    let references = collect_references_from_members(&[], &[], underlying.as_ref(), &type_parameters);
 
     exports.push(SymbolShell {
         id,
@@ -398,6 +421,7 @@ fn push_type_alias_shell<'a>(
         kind: TsSymbolKind::TypeAlias,
         exported,
         description,
+        type_parameters,
         defined_members: Vec::new(),
         extends: Vec::new(),
         underlying,
@@ -439,6 +463,38 @@ fn property_signature_to_member(
     }
 }
 
+fn type_parameters_from_oxc<'a>(
+    decl: Option<&TSTypeParameterDeclaration<'a>>,
+    source: &str,
+    _comments: &[Comment],
+    import_bindings: &BTreeMap<String, ImportBinding>,
+    current_module_specifier: &str,
+    current_library: &str,
+) -> Vec<TsTypeParameter> {
+    let Some(decl) = decl else {
+        return Vec::new();
+    };
+    decl.params
+        .iter()
+        .map(|param| {
+            let name = slice_span(source, param.name.span()).to_string();
+            let constraint = param
+                .constraint
+                .as_ref()
+                .map(|t| type_to_ref(t, source, import_bindings, current_module_specifier, current_library));
+            let default = param
+                .default
+                .as_ref()
+                .map(|t| type_to_ref(t, source, import_bindings, current_module_specifier, current_library));
+            TsTypeParameter {
+                name,
+                constraint,
+                default,
+            }
+        })
+        .collect()
+}
+
 fn type_to_ref(
     type_annotation: &TSType<'_>,
     source: &str,
@@ -468,6 +524,9 @@ fn type_to_ref(
         TSType::TSNullKeyword(_) => TypeRef::Intrinsic {
             name: "null".to_string(),
         },
+        TSType::TSObjectKeyword(_) => TypeRef::Intrinsic {
+            name: "object".to_string(),
+        },
         TSType::TSLiteralType(literal) => TypeRef::Literal {
             value: slice_span(source, literal.span).to_string(),
         },
@@ -486,6 +545,46 @@ fn type_to_ref(
                 })
                 .collect(),
         },
+        TSType::TSTypeLiteral(lit) => {
+            let member_spans: Vec<u32> = lit
+                .members
+                .iter()
+                .filter_map(|sig| match sig {
+                    TSSignature::TSPropertySignature(p) => Some(p.span().start),
+                    _ => None,
+                })
+                .collect();
+            let no_comments: &[Comment] = &[];
+            let members = lit
+                .members
+                .iter()
+                .filter_map(|sig| match sig {
+                    TSSignature::TSPropertySignature(property) => {
+                        let others: Vec<u32> = member_spans
+                            .iter()
+                            .copied()
+                            .filter(|&s| s != property.span().start)
+                            .collect();
+                        let exclude = if others.is_empty() {
+                            None
+                        } else {
+                            Some(others.as_slice())
+                        };
+                        Some(property_signature_to_member(
+                            property,
+                            source,
+                            no_comments,
+                            exclude,
+                            import_bindings,
+                            current_module_specifier,
+                            current_library,
+                        ))
+                    }
+                    _ => None,
+                })
+                .collect();
+            TypeRef::Object { members }
+        }
         TSType::TSTypeReference(reference) => {
             let name = slice_span(source, reference.type_name.span()).to_string();
             let source_module = reference_source_module(
@@ -494,11 +593,17 @@ fn type_to_ref(
                 current_module_specifier,
                 current_library,
             );
-
+            let type_arguments = reference.type_arguments.as_ref().map(|inst| {
+                inst.params
+                    .iter()
+                    .map(|t| type_to_ref(t, source, import_bindings, current_module_specifier, current_library))
+                    .collect()
+            });
             TypeRef::Reference {
                 name,
                 target_id: None,
                 source_module,
+                type_arguments,
             }
         }
         _ => TypeRef::Unknown {
@@ -526,6 +631,7 @@ fn expression_to_reference(
         name,
         target_id: None,
         source_module,
+        type_arguments: None,
     }
 }
 
@@ -533,6 +639,7 @@ fn collect_references_from_members(
     members: &[TsMember],
     extends: &[TypeRef],
     underlying: Option<&TypeRef>,
+    type_parameters: &[TsTypeParameter],
 ) -> Vec<TypeRef> {
     let mut references = Vec::new();
     references.extend(extends.iter().cloned());
@@ -544,15 +651,39 @@ fn collect_references_from_members(
             collect_type_ref_references(type_ref, &mut references);
         }
     }
+    for param in type_parameters {
+        if let Some(ref c) = param.constraint {
+            collect_type_ref_references(c, &mut references);
+        }
+        if let Some(ref d) = param.default {
+            collect_type_ref_references(d, &mut references);
+        }
+    }
     references
 }
 
 fn collect_type_ref_references(type_ref: &TypeRef, references: &mut Vec<TypeRef>) {
     match type_ref {
+        TypeRef::Reference {
+            type_arguments: Some(args),
+            ..
+        } => {
+            references.push(type_ref.clone());
+            for arg in args {
+                collect_type_ref_references(arg, references);
+            }
+        }
         TypeRef::Reference { .. } => references.push(type_ref.clone()),
         TypeRef::Union { types } => {
             for nested in types {
                 collect_type_ref_references(nested, references);
+            }
+        }
+        TypeRef::Object { members } => {
+            for m in members {
+                if let Some(ref tr) = m.type_ref {
+                    collect_type_ref_references(tr, references);
+                }
             }
         }
         _ => {}

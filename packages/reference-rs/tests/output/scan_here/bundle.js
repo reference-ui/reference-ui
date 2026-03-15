@@ -7,7 +7,6 @@ export const _5143c6bcf4273c2f = {
   {
     name: "id",
     optional: true,
-    description: "JSON Schema V4\n@see https://tools.ietf.org/html/draft-zyp-json-schema-04",
     type: {
     kind: "union",
     types: [
@@ -430,8 +429,10 @@ export const _5143c6bcf4273c2f = {
     kind: "union",
     types: [
     {
-      kind: "unknown",
-      summary: "{\n        [k: string]: JSONSchema4;\n    }",
+      kind: "object",
+      members: [
+    
+      ],
     },
     {
       kind: "intrinsic",
@@ -448,8 +449,10 @@ export const _5143c6bcf4273c2f = {
     kind: "union",
     types: [
     {
-      kind: "unknown",
-      summary: "{\n        [k: string]: JSONSchema4;\n    }",
+      kind: "object",
+      members: [
+    
+      ],
     },
     {
       kind: "intrinsic",
@@ -466,8 +469,10 @@ export const _5143c6bcf4273c2f = {
     kind: "union",
     types: [
     {
-      kind: "unknown",
-      summary: "{\n        [k: string]: JSONSchema4;\n    }",
+      kind: "object",
+      members: [
+    
+      ],
     },
     {
       kind: "intrinsic",
@@ -483,8 +488,10 @@ export const _5143c6bcf4273c2f = {
     kind: "union",
     types: [
     {
-      kind: "unknown",
-      summary: "{\n        [k: string]: JSONSchema4 | string[];\n    }",
+      kind: "object",
+      members: [
+    
+      ],
     },
     {
       kind: "intrinsic",
@@ -792,7 +799,6 @@ export const _5143c6bcf4273c2d = {
   {
     name: "$id",
     optional: true,
-    description: "JSON Schema V6\n@see https://tools.ietf.org/html/draft-wright-json-schema-validation-01",
     type: {
     kind: "union",
     types: [
@@ -1163,8 +1169,10 @@ export const _5143c6bcf4273c2d = {
     kind: "union",
     types: [
     {
-      kind: "unknown",
-      summary: "{\n        [k: string]: JSONSchema6Definition;\n    }",
+      kind: "object",
+      members: [
+    
+      ],
     },
     {
       kind: "intrinsic",
@@ -1181,8 +1189,10 @@ export const _5143c6bcf4273c2d = {
     kind: "union",
     types: [
     {
-      kind: "unknown",
-      summary: "{\n        [k: string]: JSONSchema6Definition;\n    }",
+      kind: "object",
+      members: [
+    
+      ],
     },
     {
       kind: "intrinsic",
@@ -1218,8 +1228,10 @@ export const _5143c6bcf4273c2d = {
     kind: "union",
     types: [
     {
-      kind: "unknown",
-      summary: "{\n        [k: string]: JSONSchema6Definition | string[];\n    }",
+      kind: "object",
+      members: [
+    
+      ],
     },
     {
       kind: "intrinsic",
@@ -1388,8 +1400,10 @@ export const _5143c6bcf4273c2d = {
     kind: "union",
     types: [
     {
-      kind: "unknown",
-      summary: "{\n        [k: string]: JSONSchema6Definition;\n    }",
+      kind: "object",
+      members: [
+    
+      ],
     },
     {
       kind: "intrinsic",
@@ -1663,7 +1677,6 @@ export const _5143c6bcf4273c2c = {
   {
     name: "$id",
     optional: true,
-    description: "JSON Schema v7\n@see https://tools.ietf.org/html/draft-handrews-json-schema-validation-01",
     type: {
     kind: "union",
     types: [
@@ -1738,8 +1751,10 @@ export const _5143c6bcf4273c2c = {
     kind: "union",
     types: [
     {
-      kind: "unknown",
-      summary: "{\n        [key: string]: JSONSchema7Definition;\n    }",
+      kind: "object",
+      members: [
+    
+      ],
     },
     {
       kind: "intrinsic",
@@ -2113,8 +2128,10 @@ export const _5143c6bcf4273c2c = {
     kind: "union",
     types: [
     {
-      kind: "unknown",
-      summary: "{\n        [key: string]: JSONSchema7Definition;\n    }",
+      kind: "object",
+      members: [
+    
+      ],
     },
     {
       kind: "intrinsic",
@@ -2130,8 +2147,10 @@ export const _5143c6bcf4273c2c = {
     kind: "union",
     types: [
     {
-      kind: "unknown",
-      summary: "{\n        [key: string]: JSONSchema7Definition;\n    }",
+      kind: "object",
+      members: [
+    
+      ],
     },
     {
       kind: "intrinsic",
@@ -2165,8 +2184,10 @@ export const _5143c6bcf4273c2c = {
     kind: "union",
     types: [
     {
-      kind: "unknown",
-      summary: "{\n        [key: string]: JSONSchema7Definition | string[];\n    }",
+      kind: "object",
+      members: [
+    
+      ],
     },
     {
       kind: "intrinsic",
@@ -2379,8 +2400,10 @@ export const _5143c6bcf4273c2c = {
     kind: "union",
     types: [
     {
-      kind: "unknown",
-      summary: "{\n        [key: string]: JSONSchema7Definition;\n    }",
+      kind: "object",
+      members: [
+    
+      ],
     },
     {
       kind: "intrinsic",
@@ -2665,7 +2688,6 @@ export const _6300e488b1f1b39b = {
   {
     name: "property",
     optional: false,
-    description: "@see https://tools.ietf.org/html/draft-handrews-json-schema-validation-01#section-10",
     type: {
     kind: "intrinsic",
     name: "string",
@@ -2693,7 +2715,6 @@ export const _076b3be44c56f0bc = {
   {
     name: "valid",
     optional: false,
-    description: "@see https://tools.ietf.org/html/draft-handrews-json-schema-validation-01#section-10",
     type: {
     kind: "intrinsic",
     name: "boolean",
@@ -2928,6 +2949,11 @@ export const _b2a8703557247e8b = {
   id: "_b2a8703557247e8b",
   name: "Fallback",
   library: "csstype",
+  typeParameters: [
+  {
+    name: "T"
+  }
+],
   definition: {
   kind: "unknown",
   summary: "{ [P in keyof T]: T[P] | readonly NonNullable<T[P]>[] }",
@@ -3827,6 +3853,31 @@ export const _c458c2f5a4eb128b = {
   name: "ObsoleteProperties",
   library: "csstype",
   description: "This feature is well established and works across many devices and browser versions. It’s been available across browsers since September 2015.\n\n**Syntax**: `<single-transition>#`",
+  typeParameters: [
+  {
+    name: "TLength",
+    default:   {
+      kind: "union",
+      types: [
+      {
+        kind: "unknown",
+        summary: "(string & {})",
+      },
+      {
+        kind: "literal",
+        value: "0",
+      }
+      ],
+    }
+  },
+  {
+    name: "TTime",
+    default:   {
+      kind: "unknown",
+      summary: "string & {}",
+    }
+  }
+],
   members: [
   {
     name: "boxAlign",
@@ -4029,6 +4080,13 @@ export const _c458c2f5a4eb128b = {
       id: "Property.GridColumnGap",
       name: "Property.GridColumnGap",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -4048,6 +4106,13 @@ export const _c458c2f5a4eb128b = {
       id: "Property.GridGap",
       name: "Property.GridGap",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -4067,6 +4132,13 @@ export const _c458c2f5a4eb128b = {
       id: "Property.GridRowGap",
       name: "Property.GridRowGap",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -4124,6 +4196,13 @@ export const _c458c2f5a4eb128b = {
       id: "Property.InsetBlock",
       name: "Property.InsetBlock",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -4143,6 +4222,13 @@ export const _c458c2f5a4eb128b = {
       id: "Property.InsetBlockEnd",
       name: "Property.InsetBlockEnd",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -4162,6 +4248,13 @@ export const _c458c2f5a4eb128b = {
       id: "Property.InsetBlockStart",
       name: "Property.InsetBlockStart",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -4181,6 +4274,13 @@ export const _c458c2f5a4eb128b = {
       id: "Property.InsetInline",
       name: "Property.InsetInline",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -4200,6 +4300,13 @@ export const _c458c2f5a4eb128b = {
       id: "Property.InsetInlineEnd",
       name: "Property.InsetInlineEnd",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -4219,6 +4326,13 @@ export const _c458c2f5a4eb128b = {
       id: "Property.InsetInlineStart",
       name: "Property.InsetInlineStart",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -4314,6 +4428,13 @@ export const _c458c2f5a4eb128b = {
       id: "Property.ScrollSnapCoordinate",
       name: "Property.ScrollSnapCoordinate",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -4333,6 +4454,13 @@ export const _c458c2f5a4eb128b = {
       id: "Property.ScrollSnapDestination",
       name: "Property.ScrollSnapDestination",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -4675,6 +4803,13 @@ export const _c458c2f5a4eb128b = {
       id: "Property.BackgroundSize",
       name: "Property.BackgroundSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -4694,6 +4829,13 @@ export const _c458c2f5a4eb128b = {
       id: "Property.BorderRadius",
       name: "Property.BorderRadius",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -4713,6 +4855,13 @@ export const _c458c2f5a4eb128b = {
       id: "Property.BorderBottomLeftRadius",
       name: "Property.BorderBottomLeftRadius",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -4732,6 +4881,13 @@ export const _c458c2f5a4eb128b = {
       id: "Property.BorderBottomRightRadius",
       name: "Property.BorderBottomRightRadius",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -4751,6 +4907,13 @@ export const _c458c2f5a4eb128b = {
       id: "Property.BorderTopLeftRadius",
       name: "Property.BorderTopLeftRadius",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -4770,6 +4933,13 @@ export const _c458c2f5a4eb128b = {
       id: "Property.BorderTopRightRadius",
       name: "Property.BorderTopRightRadius",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -5017,6 +5187,13 @@ export const _c458c2f5a4eb128b = {
       id: "Property.Outline",
       name: "Property.Outline",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -5074,6 +5251,13 @@ export const _c458c2f5a4eb128b = {
       id: "Property.OutlineWidth",
       name: "Property.OutlineWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -5169,6 +5353,13 @@ export const _c458c2f5a4eb128b = {
       id: "Property.TransitionDelay",
       name: "Property.TransitionDelay",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -5188,6 +5379,13 @@ export const _c458c2f5a4eb128b = {
       id: "Property.TransitionDuration",
       name: "Property.TransitionDuration",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -5302,6 +5500,13 @@ export const _c458c2f5a4eb128b = {
       id: "Property.Animation",
       name: "Property.Animation",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -5321,6 +5526,13 @@ export const _c458c2f5a4eb128b = {
       id: "Property.AnimationDelay",
       name: "Property.AnimationDelay",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -5359,6 +5571,13 @@ export const _c458c2f5a4eb128b = {
       id: "Property.AnimationDuration",
       name: "Property.AnimationDuration",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -5473,6 +5692,13 @@ export const _c458c2f5a4eb128b = {
       id: "Property.BackgroundSize",
       name: "Property.BackgroundSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -5530,6 +5756,13 @@ export const _c458c2f5a4eb128b = {
       id: "Property.ObjectPosition",
       name: "Property.ObjectPosition",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -5549,6 +5782,13 @@ export const _c458c2f5a4eb128b = {
       id: "Property.TabSize",
       name: "Property.TabSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -5606,6 +5846,13 @@ export const _c458c2f5a4eb128b = {
       id: "Property.TransformOrigin",
       name: "Property.TransformOrigin",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -5625,6 +5872,13 @@ export const _c458c2f5a4eb128b = {
       id: "Property.Transition",
       name: "Property.Transition",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -5644,6 +5898,13 @@ export const _c458c2f5a4eb128b = {
       id: "Property.TransitionDelay",
       name: "Property.TransitionDelay",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -5663,6 +5924,13 @@ export const _c458c2f5a4eb128b = {
       id: "Property.TransitionDuration",
       name: "Property.TransitionDuration",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -5871,10 +6139,54 @@ export const _fd5610fd861b7285 = {
   name: "ObsoletePropertiesFallback",
   library: "csstype",
   description: "The **`-moz-box-pack`** and **`-webkit-box-pack`** CSS properties specify how a `-moz-box` or `-webkit-box` packs its contents in the direction of its layout. The effect of this is only visible if there is extra space in the box.\n\n**Syntax**: `start | center | end | justify`\n\n**Initial value**: `start`\n\n@deprecated",
+  typeParameters: [
+  {
+    name: "TLength",
+    default:   {
+      kind: "union",
+      types: [
+      {
+        kind: "unknown",
+        summary: "(string & {})",
+      },
+      {
+        kind: "literal",
+        value: "0",
+      }
+      ],
+    }
+  },
+  {
+    name: "TTime",
+    default:   {
+      kind: "unknown",
+      summary: "string & {}",
+    }
+  }
+],
   definition: {
   id: "_b2a8703557247e8b",
   name: "Fallback",
   library: "csstype",
+  typeArguments: [
+  {
+    id: "_c458c2f5a4eb128b",
+    name: "ObsoleteProperties",
+    library: "csstype",
+    typeArguments: [
+    {
+      id: "TLength",
+      name: "TLength",
+      library: "csstype",
+    },
+    {
+      id: "TTime",
+      name: "TTime",
+      library: "csstype",
+    }
+    ],
+  }
+  ],
 },
 };
 
@@ -5883,6 +6195,31 @@ export const _67526a21fa732cef = {
   name: "ObsoletePropertiesHyphen",
   library: "csstype",
   description: "This feature is well established and works across many devices and browser versions. It’s been available across browsers since September 2015.\n\n**Syntax**: `<single-transition>#`",
+  typeParameters: [
+  {
+    name: "TLength",
+    default:   {
+      kind: "union",
+      types: [
+      {
+        kind: "unknown",
+        summary: "(string & {})",
+      },
+      {
+        kind: "literal",
+        value: "0",
+      }
+      ],
+    }
+  },
+  {
+    name: "TTime",
+    default:   {
+      kind: "unknown",
+      summary: "string & {}",
+    }
+  }
+],
   members: [
   {
     name: "\"box-align\"",
@@ -6085,6 +6422,13 @@ export const _67526a21fa732cef = {
       id: "Property.GridColumnGap",
       name: "Property.GridColumnGap",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -6104,6 +6448,13 @@ export const _67526a21fa732cef = {
       id: "Property.GridGap",
       name: "Property.GridGap",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -6123,6 +6474,13 @@ export const _67526a21fa732cef = {
       id: "Property.GridRowGap",
       name: "Property.GridRowGap",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -6180,6 +6538,13 @@ export const _67526a21fa732cef = {
       id: "Property.InsetBlock",
       name: "Property.InsetBlock",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -6199,6 +6564,13 @@ export const _67526a21fa732cef = {
       id: "Property.InsetBlockEnd",
       name: "Property.InsetBlockEnd",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -6218,6 +6590,13 @@ export const _67526a21fa732cef = {
       id: "Property.InsetBlockStart",
       name: "Property.InsetBlockStart",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -6237,6 +6616,13 @@ export const _67526a21fa732cef = {
       id: "Property.InsetInline",
       name: "Property.InsetInline",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -6256,6 +6642,13 @@ export const _67526a21fa732cef = {
       id: "Property.InsetInlineEnd",
       name: "Property.InsetInlineEnd",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -6275,6 +6668,13 @@ export const _67526a21fa732cef = {
       id: "Property.InsetInlineStart",
       name: "Property.InsetInlineStart",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -6370,6 +6770,13 @@ export const _67526a21fa732cef = {
       id: "Property.ScrollSnapCoordinate",
       name: "Property.ScrollSnapCoordinate",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -6389,6 +6796,13 @@ export const _67526a21fa732cef = {
       id: "Property.ScrollSnapDestination",
       name: "Property.ScrollSnapDestination",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -6731,6 +7145,13 @@ export const _67526a21fa732cef = {
       id: "Property.BackgroundSize",
       name: "Property.BackgroundSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -6750,6 +7171,13 @@ export const _67526a21fa732cef = {
       id: "Property.BorderRadius",
       name: "Property.BorderRadius",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -6769,6 +7197,13 @@ export const _67526a21fa732cef = {
       id: "Property.BorderBottomLeftRadius",
       name: "Property.BorderBottomLeftRadius",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -6788,6 +7223,13 @@ export const _67526a21fa732cef = {
       id: "Property.BorderBottomRightRadius",
       name: "Property.BorderBottomRightRadius",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -6807,6 +7249,13 @@ export const _67526a21fa732cef = {
       id: "Property.BorderTopLeftRadius",
       name: "Property.BorderTopLeftRadius",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -6826,6 +7275,13 @@ export const _67526a21fa732cef = {
       id: "Property.BorderTopRightRadius",
       name: "Property.BorderTopRightRadius",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -7073,6 +7529,13 @@ export const _67526a21fa732cef = {
       id: "Property.Outline",
       name: "Property.Outline",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -7130,6 +7593,13 @@ export const _67526a21fa732cef = {
       id: "Property.OutlineWidth",
       name: "Property.OutlineWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -7225,6 +7695,13 @@ export const _67526a21fa732cef = {
       id: "Property.TransitionDelay",
       name: "Property.TransitionDelay",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -7244,6 +7721,13 @@ export const _67526a21fa732cef = {
       id: "Property.TransitionDuration",
       name: "Property.TransitionDuration",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -7358,6 +7842,13 @@ export const _67526a21fa732cef = {
       id: "Property.Animation",
       name: "Property.Animation",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -7377,6 +7868,13 @@ export const _67526a21fa732cef = {
       id: "Property.AnimationDelay",
       name: "Property.AnimationDelay",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -7415,6 +7913,13 @@ export const _67526a21fa732cef = {
       id: "Property.AnimationDuration",
       name: "Property.AnimationDuration",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -7529,6 +8034,13 @@ export const _67526a21fa732cef = {
       id: "Property.BackgroundSize",
       name: "Property.BackgroundSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -7586,6 +8098,13 @@ export const _67526a21fa732cef = {
       id: "Property.ObjectPosition",
       name: "Property.ObjectPosition",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -7605,6 +8124,13 @@ export const _67526a21fa732cef = {
       id: "Property.TabSize",
       name: "Property.TabSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -7662,6 +8188,13 @@ export const _67526a21fa732cef = {
       id: "Property.TransformOrigin",
       name: "Property.TransformOrigin",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -7681,6 +8214,13 @@ export const _67526a21fa732cef = {
       id: "Property.Transition",
       name: "Property.Transition",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -7700,6 +8240,13 @@ export const _67526a21fa732cef = {
       id: "Property.TransitionDelay",
       name: "Property.TransitionDelay",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -7719,6 +8266,13 @@ export const _67526a21fa732cef = {
       id: "Property.TransitionDuration",
       name: "Property.TransitionDuration",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -7927,10 +8481,54 @@ export const _9c7fc9e379a600d1 = {
   name: "ObsoletePropertiesHyphenFallback",
   library: "csstype",
   description: "The **`-moz-box-pack`** and **`-webkit-box-pack`** CSS properties specify how a `-moz-box` or `-webkit-box` packs its contents in the direction of its layout. The effect of this is only visible if there is extra space in the box.\n\n**Syntax**: `start | center | end | justify`\n\n**Initial value**: `start`\n\n@deprecated",
+  typeParameters: [
+  {
+    name: "TLength",
+    default:   {
+      kind: "union",
+      types: [
+      {
+        kind: "unknown",
+        summary: "(string & {})",
+      },
+      {
+        kind: "literal",
+        value: "0",
+      }
+      ],
+    }
+  },
+  {
+    name: "TTime",
+    default:   {
+      kind: "unknown",
+      summary: "string & {}",
+    }
+  }
+],
   definition: {
   id: "_b2a8703557247e8b",
   name: "Fallback",
   library: "csstype",
+  typeArguments: [
+  {
+    id: "_67526a21fa732cef",
+    name: "ObsoletePropertiesHyphen",
+    library: "csstype",
+    typeArguments: [
+    {
+      id: "TLength",
+      name: "TLength",
+      library: "csstype",
+    },
+    {
+      id: "TTime",
+      name: "TTime",
+      library: "csstype",
+    }
+    ],
+  }
+  ],
 },
 };
 
@@ -7939,6 +8537,31 @@ export const _573f17bade1b2d36 = {
   name: "Properties",
   library: "csstype",
   description: "The **`-moz-box-pack`** and **`-webkit-box-pack`** CSS properties specify how a `-moz-box` or `-webkit-box` packs its contents in the direction of its layout. The effect of this is only visible if there is extra space in the box.\n\n**Syntax**: `start | center | end | justify`\n\n**Initial value**: `start`\n\n@deprecated",
+  typeParameters: [
+  {
+    name: "TLength",
+    default:   {
+      kind: "union",
+      types: [
+      {
+        kind: "unknown",
+        summary: "(string & {})",
+      },
+      {
+        kind: "literal",
+        value: "0",
+      }
+      ],
+    }
+  },
+  {
+    name: "TTime",
+    default:   {
+      kind: "unknown",
+      summary: "string & {}",
+    }
+  }
+],
   members: [],
   extends: [
   {
@@ -7970,6 +8593,31 @@ export const _fa770ea9a70cb260 = {
   name: "PropertiesFallback",
   library: "csstype",
   description: "The **`-moz-box-pack`** and **`-webkit-box-pack`** CSS properties specify how a `-moz-box` or `-webkit-box` packs its contents in the direction of its layout. The effect of this is only visible if there is extra space in the box.\n\n**Syntax**: `start | center | end | justify`\n\n**Initial value**: `start`\n\n@deprecated",
+  typeParameters: [
+  {
+    name: "TLength",
+    default:   {
+      kind: "union",
+      types: [
+      {
+        kind: "unknown",
+        summary: "(string & {})",
+      },
+      {
+        kind: "literal",
+        value: "0",
+      }
+      ],
+    }
+  },
+  {
+    name: "TTime",
+    default:   {
+      kind: "unknown",
+      summary: "string & {}",
+    }
+  }
+],
   members: [],
   extends: [
   {
@@ -8012,6 +8660,31 @@ export const _9c208f340246cc2e = {
   name: "PropertiesHyphen",
   library: "csstype",
   description: "The **`-moz-box-pack`** and **`-webkit-box-pack`** CSS properties specify how a `-moz-box` or `-webkit-box` packs its contents in the direction of its layout. The effect of this is only visible if there is extra space in the box.\n\n**Syntax**: `start | center | end | justify`\n\n**Initial value**: `start`\n\n@deprecated",
+  typeParameters: [
+  {
+    name: "TLength",
+    default:   {
+      kind: "union",
+      types: [
+      {
+        kind: "unknown",
+        summary: "(string & {})",
+      },
+      {
+        kind: "literal",
+        value: "0",
+      }
+      ],
+    }
+  },
+  {
+    name: "TTime",
+    default:   {
+      kind: "unknown",
+      summary: "string & {}",
+    }
+  }
+],
   members: [],
   extends: [
   {
@@ -8043,6 +8716,31 @@ export const _f7c39caffe3331e8 = {
   name: "PropertiesHyphenFallback",
   library: "csstype",
   description: "The **`-moz-box-pack`** and **`-webkit-box-pack`** CSS properties specify how a `-moz-box` or `-webkit-box` packs its contents in the direction of its layout. The effect of this is only visible if there is extra space in the box.\n\n**Syntax**: `start | center | end | justify`\n\n**Initial value**: `start`\n\n@deprecated",
+  typeParameters: [
+  {
+    name: "TLength",
+    default:   {
+      kind: "union",
+      types: [
+      {
+        kind: "unknown",
+        summary: "(string & {})",
+      },
+      {
+        kind: "literal",
+        value: "0",
+      }
+      ],
+    }
+  },
+  {
+    name: "TTime",
+    default:   {
+      kind: "unknown",
+      summary: "string & {}",
+    }
+  }
+],
   members: [],
   extends: [
   {
@@ -8084,6 +8782,11 @@ export const _eb3df24835d78bd9 = {
   id: "_eb3df24835d78bd9",
   name: "PropertyValue",
   library: "csstype",
+  typeParameters: [
+  {
+    name: "TValue"
+  }
+],
   definition: {
   kind: "unknown",
   summary: "TValue extends Array<infer AValue> ? Array<AValue extends infer TUnpacked & {} ? TUnpacked : AValue> : TValue extends infer TUnpacked & {} ? TUnpacked : TValue",
@@ -8648,6 +9351,31 @@ export const _f0c6334bec1581d4 = {
   id: "_f0c6334bec1581d4",
   name: "StandardLonghandProperties",
   library: "csstype",
+  typeParameters: [
+  {
+    name: "TLength",
+    default:   {
+      kind: "union",
+      types: [
+      {
+        kind: "unknown",
+        summary: "(string & {})",
+      },
+      {
+        kind: "literal",
+        value: "0",
+      }
+      ],
+    }
+  },
+  {
+    name: "TTime",
+    default:   {
+      kind: "unknown",
+      summary: "string & {}",
+    }
+  }
+],
   members: [
   {
     name: "accentColor",
@@ -8831,6 +9559,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.AnimationDelay",
       name: "Property.AnimationDelay",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -8869,6 +9604,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.AnimationDuration",
       name: "Property.AnimationDuration",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -8964,6 +9706,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.AnimationRangeEnd",
       name: "Property.AnimationRangeEnd",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -8983,6 +9732,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.AnimationRangeStart",
       name: "Property.AnimationRangeStart",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -9230,6 +9986,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.BackgroundPositionX",
       name: "Property.BackgroundPositionX",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -9249,6 +10012,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.BackgroundPositionY",
       name: "Property.BackgroundPositionY",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -9287,6 +10057,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.BackgroundSize",
       name: "Property.BackgroundSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -9306,6 +10083,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.BaselineShift",
       name: "Property.BaselineShift",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -9325,6 +10109,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.BlockSize",
       name: "Property.BlockSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -9382,6 +10173,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.BorderBlockEndWidth",
       name: "Property.BorderBlockEndWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -9439,6 +10237,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.BorderBlockStartWidth",
       name: "Property.BorderBlockStartWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -9477,6 +10282,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.BorderBottomLeftRadius",
       name: "Property.BorderBottomLeftRadius",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -9496,6 +10308,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.BorderBottomRightRadius",
       name: "Property.BorderBottomRightRadius",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -9534,6 +10353,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.BorderBottomWidth",
       name: "Property.BorderBottomWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -9572,6 +10398,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.BorderEndEndRadius",
       name: "Property.BorderEndEndRadius",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -9591,6 +10424,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.BorderEndStartRadius",
       name: "Property.BorderEndStartRadius",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -9610,6 +10450,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.BorderImageOutset",
       name: "Property.BorderImageOutset",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -9686,6 +10533,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.BorderImageWidth",
       name: "Property.BorderImageWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -9743,6 +10597,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.BorderInlineEndWidth",
       name: "Property.BorderInlineEndWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -9800,6 +10661,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.BorderInlineStartWidth",
       name: "Property.BorderInlineStartWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -9857,6 +10725,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.BorderLeftWidth",
       name: "Property.BorderLeftWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -9914,6 +10789,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.BorderRightWidth",
       name: "Property.BorderRightWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -9933,6 +10815,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.BorderSpacing",
       name: "Property.BorderSpacing",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -9952,6 +10841,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.BorderStartEndRadius",
       name: "Property.BorderStartEndRadius",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -9971,6 +10867,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.BorderStartStartRadius",
       name: "Property.BorderStartStartRadius",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -10009,6 +10912,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.BorderTopLeftRadius",
       name: "Property.BorderTopLeftRadius",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -10028,6 +10938,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.BorderTopRightRadius",
       name: "Property.BorderTopRightRadius",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -10066,6 +10983,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.BorderTopWidth",
       name: "Property.BorderTopWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -10085,6 +11009,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.Bottom",
       name: "Property.Bottom",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -10446,6 +11377,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.ColumnGap",
       name: "Property.ColumnGap",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -10503,6 +11441,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.ColumnRuleWidth",
       name: "Property.ColumnRuleWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -10541,6 +11486,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.ColumnWidth",
       name: "Property.ColumnWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -10579,6 +11531,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.ContainIntrinsicBlockSize",
       name: "Property.ContainIntrinsicBlockSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -10598,6 +11557,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.ContainIntrinsicHeight",
       name: "Property.ContainIntrinsicHeight",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -10617,6 +11583,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.ContainIntrinsicInlineSize",
       name: "Property.ContainIntrinsicInlineSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -10636,6 +11609,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.ContainIntrinsicWidth",
       name: "Property.ContainIntrinsicWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -10807,6 +11787,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.Cx",
       name: "Property.Cx",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -10826,6 +11813,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.Cy",
       name: "Property.Cy",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -11035,6 +12029,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.FlexBasis",
       name: "Property.FlexBasis",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -11301,6 +12302,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.FontSize",
       name: "Property.FontSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -11339,6 +12347,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.FontSmooth",
       name: "Property.FontSmooth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -11700,6 +12715,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.GridAutoColumns",
       name: "Property.GridAutoColumns",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -11738,6 +12760,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.GridAutoRows",
       name: "Property.GridAutoRows",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -11852,6 +12881,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.GridTemplateColumns",
       name: "Property.GridTemplateColumns",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -11871,6 +12907,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.GridTemplateRows",
       name: "Property.GridTemplateRows",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -11909,6 +12952,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.Height",
       name: "Property.Height",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -12080,6 +13130,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.InlineSize",
       name: "Property.InlineSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -12099,6 +13156,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.InsetBlockEnd",
       name: "Property.InsetBlockEnd",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -12118,6 +13182,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.InsetBlockStart",
       name: "Property.InsetBlockStart",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -12137,6 +13208,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.InsetInlineEnd",
       name: "Property.InsetInlineEnd",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -12156,6 +13234,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.InsetInlineStart",
       name: "Property.InsetInlineStart",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -12289,6 +13374,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.Left",
       name: "Property.Left",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -12308,6 +13400,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.LetterSpacing",
       name: "Property.LetterSpacing",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -12365,6 +13464,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.LineHeight",
       name: "Property.LineHeight",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -12384,6 +13490,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.LineHeightStep",
       name: "Property.LineHeightStep",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -12460,6 +13573,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.MarginBlockEnd",
       name: "Property.MarginBlockEnd",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -12479,6 +13599,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.MarginBlockStart",
       name: "Property.MarginBlockStart",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -12498,6 +13625,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.MarginBottom",
       name: "Property.MarginBottom",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -12517,6 +13651,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.MarginInlineEnd",
       name: "Property.MarginInlineEnd",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -12536,6 +13677,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.MarginInlineStart",
       name: "Property.MarginInlineStart",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -12555,6 +13703,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.MarginLeft",
       name: "Property.MarginLeft",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -12574,6 +13729,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.MarginRight",
       name: "Property.MarginRight",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -12593,6 +13755,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.MarginTop",
       name: "Property.MarginTop",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -12726,6 +13895,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.MaskBorderOutset",
       name: "Property.MaskBorderOutset",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -12802,6 +13978,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.MaskBorderWidth",
       name: "Property.MaskBorderWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -12916,6 +14099,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.MaskPosition",
       name: "Property.MaskPosition",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -12954,6 +14144,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.MaskSize",
       name: "Property.MaskSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -13068,6 +14265,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.MaxBlockSize",
       name: "Property.MaxBlockSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -13087,6 +14291,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.MaxHeight",
       name: "Property.MaxHeight",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -13106,6 +14317,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.MaxInlineSize",
       name: "Property.MaxInlineSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -13144,6 +14362,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.MaxWidth",
       name: "Property.MaxWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -13163,6 +14388,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.MinBlockSize",
       name: "Property.MinBlockSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -13182,6 +14414,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.MinHeight",
       name: "Property.MinHeight",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -13201,6 +14440,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.MinInlineSize",
       name: "Property.MinInlineSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -13220,6 +14466,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.MinWidth",
       name: "Property.MinWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -13258,6 +14511,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.OffsetDistance",
       name: "Property.OffsetDistance",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -13334,6 +14594,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.ObjectPosition",
       name: "Property.ObjectPosition",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -13372,6 +14639,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.OffsetAnchor",
       name: "Property.OffsetAnchor",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -13391,6 +14665,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.OffsetDistance",
       name: "Property.OffsetDistance",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -13429,6 +14710,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.OffsetPosition",
       name: "Property.OffsetPosition",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -13562,6 +14850,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.OutlineOffset",
       name: "Property.OutlineOffset",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -13600,6 +14895,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.OutlineWidth",
       name: "Property.OutlineWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -13676,6 +14978,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.OverflowClipMargin",
       name: "Property.OverflowClipMargin",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -13866,6 +15175,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.PaddingBlockEnd",
       name: "Property.PaddingBlockEnd",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -13885,6 +15201,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.PaddingBlockStart",
       name: "Property.PaddingBlockStart",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -13904,6 +15227,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.PaddingBottom",
       name: "Property.PaddingBottom",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -13923,6 +15253,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.PaddingInlineEnd",
       name: "Property.PaddingInlineEnd",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -13942,6 +15279,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.PaddingInlineStart",
       name: "Property.PaddingInlineStart",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -13961,6 +15305,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.PaddingLeft",
       name: "Property.PaddingLeft",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -13980,6 +15331,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.PaddingRight",
       name: "Property.PaddingRight",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -13999,6 +15357,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.PaddingTop",
       name: "Property.PaddingTop",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -14056,6 +15421,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.Perspective",
       name: "Property.Perspective",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -14075,6 +15447,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.PerspectiveOrigin",
       name: "Property.PerspectiveOrigin",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -14265,6 +15644,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.R",
       name: "Property.R",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -14303,6 +15689,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.Right",
       name: "Property.Right",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -14341,6 +15734,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.RowGap",
       name: "Property.RowGap",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -14436,6 +15836,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.Rx",
       name: "Property.Rx",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -14455,6 +15862,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.Ry",
       name: "Property.Ry",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -14531,6 +15945,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.ScrollMarginBlockEnd",
       name: "Property.ScrollMarginBlockEnd",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -14550,6 +15971,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.ScrollMarginBlockStart",
       name: "Property.ScrollMarginBlockStart",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -14569,6 +15997,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.ScrollMarginBottom",
       name: "Property.ScrollMarginBottom",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -14588,6 +16023,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.ScrollMarginInlineEnd",
       name: "Property.ScrollMarginInlineEnd",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -14607,6 +16049,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.ScrollMarginInlineStart",
       name: "Property.ScrollMarginInlineStart",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -14626,6 +16075,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.ScrollMarginLeft",
       name: "Property.ScrollMarginLeft",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -14645,6 +16101,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.ScrollMarginRight",
       name: "Property.ScrollMarginRight",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -14664,6 +16127,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.ScrollMarginTop",
       name: "Property.ScrollMarginTop",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -14683,6 +16153,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.ScrollPaddingBlockEnd",
       name: "Property.ScrollPaddingBlockEnd",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -14702,6 +16179,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.ScrollPaddingBlockStart",
       name: "Property.ScrollPaddingBlockStart",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -14721,6 +16205,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.ScrollPaddingBottom",
       name: "Property.ScrollPaddingBottom",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -14740,6 +16231,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.ScrollPaddingInlineEnd",
       name: "Property.ScrollPaddingInlineEnd",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -14759,6 +16257,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.ScrollPaddingInlineStart",
       name: "Property.ScrollPaddingInlineStart",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -14778,6 +16283,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.ScrollPaddingLeft",
       name: "Property.ScrollPaddingLeft",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -14797,6 +16309,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.ScrollPaddingRight",
       name: "Property.ScrollPaddingRight",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -14816,6 +16335,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.ScrollPaddingTop",
       name: "Property.ScrollPaddingTop",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -14854,6 +16380,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.ScrollMarginBottom",
       name: "Property.ScrollMarginBottom",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -14873,6 +16406,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.ScrollMarginLeft",
       name: "Property.ScrollMarginLeft",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -14892,6 +16432,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.ScrollMarginRight",
       name: "Property.ScrollMarginRight",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -14911,6 +16458,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.ScrollMarginTop",
       name: "Property.ScrollMarginTop",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -15082,6 +16636,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.ShapeMargin",
       name: "Property.ShapeMargin",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -15234,6 +16795,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.StrokeDasharray",
       name: "Property.StrokeDasharray",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -15253,6 +16821,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.StrokeDashoffset",
       name: "Property.StrokeDashoffset",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -15348,6 +16923,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.StrokeWidth",
       name: "Property.StrokeWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -15367,6 +16949,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.TabSize",
       name: "Property.TabSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -15652,6 +17241,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.TextDecorationThickness",
       name: "Property.TextDecorationThickness",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -15728,6 +17324,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.TextIndent",
       name: "Property.TextIndent",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -15899,6 +17502,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.TextUnderlineOffset",
       name: "Property.TextUnderlineOffset",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -15994,6 +17604,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.Top",
       name: "Property.Top",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -16070,6 +17687,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.TransformOrigin",
       name: "Property.TransformOrigin",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -16127,6 +17751,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.TransitionDelay",
       name: "Property.TransitionDelay",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -16146,6 +17777,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.TransitionDuration",
       name: "Property.TransitionDuration",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -16203,6 +17841,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.Translate",
       name: "Property.Translate",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -16279,6 +17924,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.VerticalAlign",
       name: "Property.VerticalAlign",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -16317,6 +17969,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.ViewTimelineInset",
       name: "Property.ViewTimelineInset",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -16469,6 +18128,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.Width",
       name: "Property.Width",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -16526,6 +18192,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.WordSpacing",
       name: "Property.WordSpacing",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -16583,6 +18256,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.X",
       name: "Property.X",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -16602,6 +18282,13 @@ export const _f0c6334bec1581d4 = {
       id: "Property.Y",
       name: "Property.Y",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -16658,10 +18345,54 @@ export const _38b64b024c492cee = {
   name: "StandardLonghandPropertiesFallback",
   library: "csstype",
   description: "The **`-moz-box-pack`** and **`-webkit-box-pack`** CSS properties specify how a `-moz-box` or `-webkit-box` packs its contents in the direction of its layout. The effect of this is only visible if there is extra space in the box.\n\n**Syntax**: `start | center | end | justify`\n\n**Initial value**: `start`\n\n@deprecated",
+  typeParameters: [
+  {
+    name: "TLength",
+    default:   {
+      kind: "union",
+      types: [
+      {
+        kind: "unknown",
+        summary: "(string & {})",
+      },
+      {
+        kind: "literal",
+        value: "0",
+      }
+      ],
+    }
+  },
+  {
+    name: "TTime",
+    default:   {
+      kind: "unknown",
+      summary: "string & {}",
+    }
+  }
+],
   definition: {
   id: "_b2a8703557247e8b",
   name: "Fallback",
   library: "csstype",
+  typeArguments: [
+  {
+    id: "_f0c6334bec1581d4",
+    name: "StandardLonghandProperties",
+    library: "csstype",
+    typeArguments: [
+    {
+      id: "TLength",
+      name: "TLength",
+      library: "csstype",
+    },
+    {
+      id: "TTime",
+      name: "TTime",
+      library: "csstype",
+    }
+    ],
+  }
+  ],
 },
 };
 
@@ -16670,6 +18401,31 @@ export const _5bd7940637f757b0 = {
   name: "StandardLonghandPropertiesHyphen",
   library: "csstype",
   description: "The **`-moz-box-pack`** and **`-webkit-box-pack`** CSS properties specify how a `-moz-box` or `-webkit-box` packs its contents in the direction of its layout. The effect of this is only visible if there is extra space in the box.\n\n**Syntax**: `start | center | end | justify`\n\n**Initial value**: `start`\n\n@deprecated",
+  typeParameters: [
+  {
+    name: "TLength",
+    default:   {
+      kind: "union",
+      types: [
+      {
+        kind: "unknown",
+        summary: "(string & {})",
+      },
+      {
+        kind: "literal",
+        value: "0",
+      }
+      ],
+    }
+  },
+  {
+    name: "TTime",
+    default:   {
+      kind: "unknown",
+      summary: "string & {}",
+    }
+  }
+],
   members: [
   {
     name: "\"accent-color\"",
@@ -16853,6 +18609,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.AnimationDelay",
       name: "Property.AnimationDelay",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -16891,6 +18654,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.AnimationDuration",
       name: "Property.AnimationDuration",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -16986,6 +18756,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.AnimationRangeEnd",
       name: "Property.AnimationRangeEnd",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -17005,6 +18782,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.AnimationRangeStart",
       name: "Property.AnimationRangeStart",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -17252,6 +19036,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.BackgroundPositionX",
       name: "Property.BackgroundPositionX",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -17271,6 +19062,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.BackgroundPositionY",
       name: "Property.BackgroundPositionY",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -17309,6 +19107,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.BackgroundSize",
       name: "Property.BackgroundSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -17328,6 +19133,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.BaselineShift",
       name: "Property.BaselineShift",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -17347,6 +19159,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.BlockSize",
       name: "Property.BlockSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -17404,6 +19223,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.BorderBlockEndWidth",
       name: "Property.BorderBlockEndWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -17461,6 +19287,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.BorderBlockStartWidth",
       name: "Property.BorderBlockStartWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -17499,6 +19332,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.BorderBottomLeftRadius",
       name: "Property.BorderBottomLeftRadius",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -17518,6 +19358,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.BorderBottomRightRadius",
       name: "Property.BorderBottomRightRadius",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -17556,6 +19403,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.BorderBottomWidth",
       name: "Property.BorderBottomWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -17594,6 +19448,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.BorderEndEndRadius",
       name: "Property.BorderEndEndRadius",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -17613,6 +19474,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.BorderEndStartRadius",
       name: "Property.BorderEndStartRadius",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -17632,6 +19500,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.BorderImageOutset",
       name: "Property.BorderImageOutset",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -17708,6 +19583,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.BorderImageWidth",
       name: "Property.BorderImageWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -17765,6 +19647,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.BorderInlineEndWidth",
       name: "Property.BorderInlineEndWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -17822,6 +19711,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.BorderInlineStartWidth",
       name: "Property.BorderInlineStartWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -17879,6 +19775,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.BorderLeftWidth",
       name: "Property.BorderLeftWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -17936,6 +19839,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.BorderRightWidth",
       name: "Property.BorderRightWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -17955,6 +19865,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.BorderSpacing",
       name: "Property.BorderSpacing",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -17974,6 +19891,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.BorderStartEndRadius",
       name: "Property.BorderStartEndRadius",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -17993,6 +19917,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.BorderStartStartRadius",
       name: "Property.BorderStartStartRadius",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -18031,6 +19962,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.BorderTopLeftRadius",
       name: "Property.BorderTopLeftRadius",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -18050,6 +19988,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.BorderTopRightRadius",
       name: "Property.BorderTopRightRadius",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -18088,6 +20033,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.BorderTopWidth",
       name: "Property.BorderTopWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -18107,6 +20059,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.Bottom",
       name: "Property.Bottom",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -18468,6 +20427,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.ColumnGap",
       name: "Property.ColumnGap",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -18525,6 +20491,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.ColumnRuleWidth",
       name: "Property.ColumnRuleWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -18563,6 +20536,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.ColumnWidth",
       name: "Property.ColumnWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -18601,6 +20581,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.ContainIntrinsicBlockSize",
       name: "Property.ContainIntrinsicBlockSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -18620,6 +20607,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.ContainIntrinsicHeight",
       name: "Property.ContainIntrinsicHeight",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -18639,6 +20633,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.ContainIntrinsicInlineSize",
       name: "Property.ContainIntrinsicInlineSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -18658,6 +20659,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.ContainIntrinsicWidth",
       name: "Property.ContainIntrinsicWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -18829,6 +20837,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.Cx",
       name: "Property.Cx",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -18848,6 +20863,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.Cy",
       name: "Property.Cy",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -19057,6 +21079,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.FlexBasis",
       name: "Property.FlexBasis",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -19323,6 +21352,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.FontSize",
       name: "Property.FontSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -19361,6 +21397,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.FontSmooth",
       name: "Property.FontSmooth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -19722,6 +21765,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.GridAutoColumns",
       name: "Property.GridAutoColumns",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -19760,6 +21810,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.GridAutoRows",
       name: "Property.GridAutoRows",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -19874,6 +21931,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.GridTemplateColumns",
       name: "Property.GridTemplateColumns",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -19893,6 +21957,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.GridTemplateRows",
       name: "Property.GridTemplateRows",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -19931,6 +22002,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.Height",
       name: "Property.Height",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -20102,6 +22180,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.InlineSize",
       name: "Property.InlineSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -20121,6 +22206,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.InsetBlockEnd",
       name: "Property.InsetBlockEnd",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -20140,6 +22232,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.InsetBlockStart",
       name: "Property.InsetBlockStart",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -20159,6 +22258,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.InsetInlineEnd",
       name: "Property.InsetInlineEnd",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -20178,6 +22284,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.InsetInlineStart",
       name: "Property.InsetInlineStart",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -20311,6 +22424,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.Left",
       name: "Property.Left",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -20330,6 +22450,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.LetterSpacing",
       name: "Property.LetterSpacing",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -20387,6 +22514,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.LineHeight",
       name: "Property.LineHeight",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -20406,6 +22540,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.LineHeightStep",
       name: "Property.LineHeightStep",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -20482,6 +22623,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.MarginBlockEnd",
       name: "Property.MarginBlockEnd",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -20501,6 +22649,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.MarginBlockStart",
       name: "Property.MarginBlockStart",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -20520,6 +22675,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.MarginBottom",
       name: "Property.MarginBottom",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -20539,6 +22701,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.MarginInlineEnd",
       name: "Property.MarginInlineEnd",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -20558,6 +22727,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.MarginInlineStart",
       name: "Property.MarginInlineStart",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -20577,6 +22753,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.MarginLeft",
       name: "Property.MarginLeft",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -20596,6 +22779,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.MarginRight",
       name: "Property.MarginRight",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -20615,6 +22805,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.MarginTop",
       name: "Property.MarginTop",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -20748,6 +22945,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.MaskBorderOutset",
       name: "Property.MaskBorderOutset",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -20824,6 +23028,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.MaskBorderWidth",
       name: "Property.MaskBorderWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -20938,6 +23149,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.MaskPosition",
       name: "Property.MaskPosition",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -20976,6 +23194,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.MaskSize",
       name: "Property.MaskSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -21090,6 +23315,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.MaxBlockSize",
       name: "Property.MaxBlockSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -21109,6 +23341,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.MaxHeight",
       name: "Property.MaxHeight",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -21128,6 +23367,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.MaxInlineSize",
       name: "Property.MaxInlineSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -21166,6 +23412,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.MaxWidth",
       name: "Property.MaxWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -21185,6 +23438,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.MinBlockSize",
       name: "Property.MinBlockSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -21204,6 +23464,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.MinHeight",
       name: "Property.MinHeight",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -21223,6 +23490,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.MinInlineSize",
       name: "Property.MinInlineSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -21242,6 +23516,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.MinWidth",
       name: "Property.MinWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -21280,6 +23561,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.OffsetDistance",
       name: "Property.OffsetDistance",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -21356,6 +23644,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.ObjectPosition",
       name: "Property.ObjectPosition",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -21394,6 +23689,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.OffsetAnchor",
       name: "Property.OffsetAnchor",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -21413,6 +23715,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.OffsetDistance",
       name: "Property.OffsetDistance",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -21451,6 +23760,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.OffsetPosition",
       name: "Property.OffsetPosition",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -21584,6 +23900,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.OutlineOffset",
       name: "Property.OutlineOffset",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -21622,6 +23945,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.OutlineWidth",
       name: "Property.OutlineWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -21698,6 +24028,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.OverflowClipMargin",
       name: "Property.OverflowClipMargin",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -21888,6 +24225,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.PaddingBlockEnd",
       name: "Property.PaddingBlockEnd",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -21907,6 +24251,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.PaddingBlockStart",
       name: "Property.PaddingBlockStart",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -21926,6 +24277,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.PaddingBottom",
       name: "Property.PaddingBottom",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -21945,6 +24303,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.PaddingInlineEnd",
       name: "Property.PaddingInlineEnd",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -21964,6 +24329,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.PaddingInlineStart",
       name: "Property.PaddingInlineStart",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -21983,6 +24355,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.PaddingLeft",
       name: "Property.PaddingLeft",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -22002,6 +24381,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.PaddingRight",
       name: "Property.PaddingRight",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -22021,6 +24407,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.PaddingTop",
       name: "Property.PaddingTop",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -22078,6 +24471,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.Perspective",
       name: "Property.Perspective",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -22097,6 +24497,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.PerspectiveOrigin",
       name: "Property.PerspectiveOrigin",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -22287,6 +24694,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.R",
       name: "Property.R",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -22325,6 +24739,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.Right",
       name: "Property.Right",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -22363,6 +24784,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.RowGap",
       name: "Property.RowGap",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -22458,6 +24886,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.Rx",
       name: "Property.Rx",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -22477,6 +24912,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.Ry",
       name: "Property.Ry",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -22553,6 +24995,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.ScrollMarginBlockEnd",
       name: "Property.ScrollMarginBlockEnd",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -22572,6 +25021,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.ScrollMarginBlockStart",
       name: "Property.ScrollMarginBlockStart",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -22591,6 +25047,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.ScrollMarginBottom",
       name: "Property.ScrollMarginBottom",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -22610,6 +25073,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.ScrollMarginInlineEnd",
       name: "Property.ScrollMarginInlineEnd",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -22629,6 +25099,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.ScrollMarginInlineStart",
       name: "Property.ScrollMarginInlineStart",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -22648,6 +25125,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.ScrollMarginLeft",
       name: "Property.ScrollMarginLeft",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -22667,6 +25151,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.ScrollMarginRight",
       name: "Property.ScrollMarginRight",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -22686,6 +25177,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.ScrollMarginTop",
       name: "Property.ScrollMarginTop",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -22705,6 +25203,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.ScrollPaddingBlockEnd",
       name: "Property.ScrollPaddingBlockEnd",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -22724,6 +25229,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.ScrollPaddingBlockStart",
       name: "Property.ScrollPaddingBlockStart",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -22743,6 +25255,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.ScrollPaddingBottom",
       name: "Property.ScrollPaddingBottom",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -22762,6 +25281,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.ScrollPaddingInlineEnd",
       name: "Property.ScrollPaddingInlineEnd",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -22781,6 +25307,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.ScrollPaddingInlineStart",
       name: "Property.ScrollPaddingInlineStart",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -22800,6 +25333,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.ScrollPaddingLeft",
       name: "Property.ScrollPaddingLeft",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -22819,6 +25359,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.ScrollPaddingRight",
       name: "Property.ScrollPaddingRight",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -22838,6 +25385,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.ScrollPaddingTop",
       name: "Property.ScrollPaddingTop",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -22876,6 +25430,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.ScrollMarginBottom",
       name: "Property.ScrollMarginBottom",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -22895,6 +25456,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.ScrollMarginLeft",
       name: "Property.ScrollMarginLeft",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -22914,6 +25482,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.ScrollMarginRight",
       name: "Property.ScrollMarginRight",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -22933,6 +25508,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.ScrollMarginTop",
       name: "Property.ScrollMarginTop",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -23104,6 +25686,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.ShapeMargin",
       name: "Property.ShapeMargin",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -23256,6 +25845,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.StrokeDasharray",
       name: "Property.StrokeDasharray",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -23275,6 +25871,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.StrokeDashoffset",
       name: "Property.StrokeDashoffset",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -23370,6 +25973,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.StrokeWidth",
       name: "Property.StrokeWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -23389,6 +25999,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.TabSize",
       name: "Property.TabSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -23674,6 +26291,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.TextDecorationThickness",
       name: "Property.TextDecorationThickness",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -23750,6 +26374,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.TextIndent",
       name: "Property.TextIndent",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -23921,6 +26552,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.TextUnderlineOffset",
       name: "Property.TextUnderlineOffset",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -24016,6 +26654,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.Top",
       name: "Property.Top",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -24092,6 +26737,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.TransformOrigin",
       name: "Property.TransformOrigin",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -24149,6 +26801,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.TransitionDelay",
       name: "Property.TransitionDelay",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -24168,6 +26827,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.TransitionDuration",
       name: "Property.TransitionDuration",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -24225,6 +26891,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.Translate",
       name: "Property.Translate",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -24301,6 +26974,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.VerticalAlign",
       name: "Property.VerticalAlign",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -24339,6 +27019,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.ViewTimelineInset",
       name: "Property.ViewTimelineInset",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -24491,6 +27178,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.Width",
       name: "Property.Width",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -24548,6 +27242,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.WordSpacing",
       name: "Property.WordSpacing",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -24605,6 +27306,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.X",
       name: "Property.X",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -24624,6 +27332,13 @@ export const _5bd7940637f757b0 = {
       id: "Property.Y",
       name: "Property.Y",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -24680,10 +27395,54 @@ export const _56d275a8d1416f92 = {
   name: "StandardLonghandPropertiesHyphenFallback",
   library: "csstype",
   description: "The **`-moz-box-pack`** and **`-webkit-box-pack`** CSS properties specify how a `-moz-box` or `-webkit-box` packs its contents in the direction of its layout. The effect of this is only visible if there is extra space in the box.\n\n**Syntax**: `start | center | end | justify`\n\n**Initial value**: `start`\n\n@deprecated",
+  typeParameters: [
+  {
+    name: "TLength",
+    default:   {
+      kind: "union",
+      types: [
+      {
+        kind: "unknown",
+        summary: "(string & {})",
+      },
+      {
+        kind: "literal",
+        value: "0",
+      }
+      ],
+    }
+  },
+  {
+    name: "TTime",
+    default:   {
+      kind: "unknown",
+      summary: "string & {}",
+    }
+  }
+],
   definition: {
   id: "_b2a8703557247e8b",
   name: "Fallback",
   library: "csstype",
+  typeArguments: [
+  {
+    id: "_5bd7940637f757b0",
+    name: "StandardLonghandPropertiesHyphen",
+    library: "csstype",
+    typeArguments: [
+    {
+      id: "TLength",
+      name: "TLength",
+      library: "csstype",
+    },
+    {
+      id: "TTime",
+      name: "TTime",
+      library: "csstype",
+    }
+    ],
+  }
+  ],
 },
 };
 
@@ -24692,6 +27451,31 @@ export const _831a5af16d048b6d = {
   name: "StandardProperties",
   library: "csstype",
   description: "This feature is not Baseline because it does not work in some of the most widely-used browsers.\n\n**Syntax**: `[ <'view-timeline-name'> [ <'view-timeline-axis'> || <'view-timeline-inset'> ]? ]#`\n\n| Chrome  | Firefox | Safari |  Edge   | IE  |\n| :-----: | :-----: | :----: | :-----: | :-: |\n| **115** |   No    | **26** | **115** | No  |\n\n@see https://developer.mozilla.org/docs/Web/CSS/Reference/Properties/view-timeline",
+  typeParameters: [
+  {
+    name: "TLength",
+    default:   {
+      kind: "union",
+      types: [
+      {
+        kind: "unknown",
+        summary: "(string & {})",
+      },
+      {
+        kind: "literal",
+        value: "0",
+      }
+      ],
+    }
+  },
+  {
+    name: "TTime",
+    default:   {
+      kind: "unknown",
+      summary: "string & {}",
+    }
+  }
+],
   members: [],
   extends: [
   {
@@ -24713,6 +27497,31 @@ export const _2db061ba7193fc07 = {
   name: "StandardPropertiesFallback",
   library: "csstype",
   description: "The **`-moz-box-pack`** and **`-webkit-box-pack`** CSS properties specify how a `-moz-box` or `-webkit-box` packs its contents in the direction of its layout. The effect of this is only visible if there is extra space in the box.\n\n**Syntax**: `start | center | end | justify`\n\n**Initial value**: `start`\n\n@deprecated",
+  typeParameters: [
+  {
+    name: "TLength",
+    default:   {
+      kind: "union",
+      types: [
+      {
+        kind: "unknown",
+        summary: "(string & {})",
+      },
+      {
+        kind: "literal",
+        value: "0",
+      }
+      ],
+    }
+  },
+  {
+    name: "TTime",
+    default:   {
+      kind: "unknown",
+      summary: "string & {}",
+    }
+  }
+],
   members: [],
   extends: [
   {
@@ -24745,6 +27554,31 @@ export const _733df3d9dbc793fd = {
   name: "StandardPropertiesHyphen",
   library: "csstype",
   description: "This feature is not Baseline because it does not work in some of the most widely-used browsers.\n\n**Syntax**: `[ <'view-timeline-name'> [ <'view-timeline-axis'> || <'view-timeline-inset'> ]? ]#`\n\n| Chrome  | Firefox | Safari |  Edge   | IE  |\n| :-----: | :-----: | :----: | :-----: | :-: |\n| **115** |   No    | **26** | **115** | No  |\n\n@see https://developer.mozilla.org/docs/Web/CSS/Reference/Properties/view-timeline",
+  typeParameters: [
+  {
+    name: "TLength",
+    default:   {
+      kind: "union",
+      types: [
+      {
+        kind: "unknown",
+        summary: "(string & {})",
+      },
+      {
+        kind: "literal",
+        value: "0",
+      }
+      ],
+    }
+  },
+  {
+    name: "TTime",
+    default:   {
+      kind: "unknown",
+      summary: "string & {}",
+    }
+  }
+],
   members: [],
   extends: [
   {
@@ -24766,6 +27600,31 @@ export const _d86135245cd6dd97 = {
   name: "StandardPropertiesHyphenFallback",
   library: "csstype",
   description: "The **`-moz-box-pack`** and **`-webkit-box-pack`** CSS properties specify how a `-moz-box` or `-webkit-box` packs its contents in the direction of its layout. The effect of this is only visible if there is extra space in the box.\n\n**Syntax**: `start | center | end | justify`\n\n**Initial value**: `start`\n\n@deprecated",
+  typeParameters: [
+  {
+    name: "TLength",
+    default:   {
+      kind: "union",
+      types: [
+      {
+        kind: "unknown",
+        summary: "(string & {})",
+      },
+      {
+        kind: "literal",
+        value: "0",
+      }
+      ],
+    }
+  },
+  {
+    name: "TTime",
+    default:   {
+      kind: "unknown",
+      summary: "string & {}",
+    }
+  }
+],
   members: [],
   extends: [
   {
@@ -24798,6 +27657,31 @@ export const _3ce37d160aac0c1c = {
   name: "StandardShorthandProperties",
   library: "csstype",
   description: "Since May 2024, this feature works across the latest devices and browser versions. This feature might not work in older devices or browsers.\n\n**Syntax**: `normal | reset | <number [0,∞]> || <percentage [0,∞]>`\n\n**Initial value**: `1`\n\n| Chrome | Firefox | Safari  |  Edge  |   IE    |\n| :----: | :-----: | :-----: | :----: | :-----: |\n| **1**  | **126** | **3.1** | **12** | **5.5** |\n\n@see https://developer.mozilla.org/docs/Web/CSS/Reference/Properties/zoom",
+  typeParameters: [
+  {
+    name: "TLength",
+    default:   {
+      kind: "union",
+      types: [
+      {
+        kind: "unknown",
+        summary: "(string & {})",
+      },
+      {
+        kind: "literal",
+        value: "0",
+      }
+      ],
+    }
+  },
+  {
+    name: "TTime",
+    default:   {
+      kind: "unknown",
+      summary: "string & {}",
+    }
+  }
+],
   members: [
   {
     name: "all",
@@ -24829,6 +27713,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.Animation",
       name: "Property.Animation",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -24848,6 +27739,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.AnimationRange",
       name: "Property.AnimationRange",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -24867,6 +27765,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.Background",
       name: "Property.Background",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -24886,6 +27791,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.BackgroundPosition",
       name: "Property.BackgroundPosition",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -24905,6 +27817,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.Border",
       name: "Property.Border",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -24924,6 +27843,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.BorderBlock",
       name: "Property.BorderBlock",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -24962,6 +27888,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.BorderBlockEnd",
       name: "Property.BorderBlockEnd",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -24981,6 +27914,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.BorderBlockStart",
       name: "Property.BorderBlockStart",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -25019,6 +27959,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.BorderBlockWidth",
       name: "Property.BorderBlockWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -25038,6 +27985,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.BorderBottom",
       name: "Property.BorderBottom",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -25095,6 +28049,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.BorderInline",
       name: "Property.BorderInline",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -25133,6 +28094,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.BorderInlineEnd",
       name: "Property.BorderInlineEnd",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -25152,6 +28120,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.BorderInlineStart",
       name: "Property.BorderInlineStart",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -25190,6 +28165,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.BorderInlineWidth",
       name: "Property.BorderInlineWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -25209,6 +28191,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.BorderLeft",
       name: "Property.BorderLeft",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -25228,6 +28217,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.BorderRadius",
       name: "Property.BorderRadius",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -25247,6 +28243,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.BorderRight",
       name: "Property.BorderRight",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -25285,6 +28288,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.BorderTop",
       name: "Property.BorderTop",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -25304,6 +28314,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.BorderWidth",
       name: "Property.BorderWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -25342,6 +28359,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.ColumnRule",
       name: "Property.ColumnRule",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -25361,6 +28385,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.Columns",
       name: "Property.Columns",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -25380,6 +28411,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.ContainIntrinsicSize",
       name: "Property.ContainIntrinsicSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -25418,6 +28456,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.Flex",
       name: "Property.Flex",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -25475,6 +28520,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.Gap",
       name: "Property.Gap",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -25589,6 +28641,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.Inset",
       name: "Property.Inset",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -25608,6 +28667,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.InsetBlock",
       name: "Property.InsetBlock",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -25627,6 +28693,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.InsetInline",
       name: "Property.InsetInline",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -25684,6 +28757,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.Margin",
       name: "Property.Margin",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -25703,6 +28783,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.MarginBlock",
       name: "Property.MarginBlock",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -25722,6 +28809,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.MarginInline",
       name: "Property.MarginInline",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -25741,6 +28835,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.Mask",
       name: "Property.Mask",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -25779,6 +28880,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.Offset",
       name: "Property.Offset",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -25798,6 +28906,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.Offset",
       name: "Property.Offset",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -25817,6 +28932,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.Outline",
       name: "Property.Outline",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -25874,6 +28996,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.Padding",
       name: "Property.Padding",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -25893,6 +29022,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.PaddingBlock",
       name: "Property.PaddingBlock",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -25912,6 +29048,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.PaddingInline",
       name: "Property.PaddingInline",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -26007,6 +29150,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.ScrollMargin",
       name: "Property.ScrollMargin",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -26026,6 +29176,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.ScrollMarginBlock",
       name: "Property.ScrollMarginBlock",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -26045,6 +29202,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.ScrollMarginInline",
       name: "Property.ScrollMarginInline",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -26064,6 +29228,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.ScrollPadding",
       name: "Property.ScrollPadding",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -26083,6 +29254,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.ScrollPaddingBlock",
       name: "Property.ScrollPaddingBlock",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -26102,6 +29280,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.ScrollPaddingInline",
       name: "Property.ScrollPaddingInline",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -26121,6 +29306,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.ScrollMargin",
       name: "Property.ScrollMargin",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -26159,6 +29351,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.TextDecoration",
       name: "Property.TextDecoration",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -26216,6 +29415,13 @@ export const _3ce37d160aac0c1c = {
       id: "Property.Transition",
       name: "Property.Transition",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -26253,10 +29459,54 @@ export const _d091e4d1ae790e06 = {
   name: "StandardShorthandPropertiesFallback",
   library: "csstype",
   description: "The **`-moz-box-pack`** and **`-webkit-box-pack`** CSS properties specify how a `-moz-box` or `-webkit-box` packs its contents in the direction of its layout. The effect of this is only visible if there is extra space in the box.\n\n**Syntax**: `start | center | end | justify`\n\n**Initial value**: `start`\n\n@deprecated",
+  typeParameters: [
+  {
+    name: "TLength",
+    default:   {
+      kind: "union",
+      types: [
+      {
+        kind: "unknown",
+        summary: "(string & {})",
+      },
+      {
+        kind: "literal",
+        value: "0",
+      }
+      ],
+    }
+  },
+  {
+    name: "TTime",
+    default:   {
+      kind: "unknown",
+      summary: "string & {}",
+    }
+  }
+],
   definition: {
   id: "_b2a8703557247e8b",
   name: "Fallback",
   library: "csstype",
+  typeArguments: [
+  {
+    id: "_3ce37d160aac0c1c",
+    name: "StandardShorthandProperties",
+    library: "csstype",
+    typeArguments: [
+    {
+      id: "TLength",
+      name: "TLength",
+      library: "csstype",
+    },
+    {
+      id: "TTime",
+      name: "TTime",
+      library: "csstype",
+    }
+    ],
+  }
+  ],
 },
 };
 
@@ -26265,6 +29515,31 @@ export const _8473b07ab9b1a5d8 = {
   name: "StandardShorthandPropertiesHyphen",
   library: "csstype",
   description: "Since May 2024, this feature works across the latest devices and browser versions. This feature might not work in older devices or browsers.\n\n**Syntax**: `normal | reset | <number [0,∞]> || <percentage [0,∞]>`\n\n**Initial value**: `1`\n\n| Chrome | Firefox | Safari  |  Edge  |   IE    |\n| :----: | :-----: | :-----: | :----: | :-----: |\n| **1**  | **126** | **3.1** | **12** | **5.5** |\n\n@see https://developer.mozilla.org/docs/Web/CSS/Reference/Properties/zoom",
+  typeParameters: [
+  {
+    name: "TLength",
+    default:   {
+      kind: "union",
+      types: [
+      {
+        kind: "unknown",
+        summary: "(string & {})",
+      },
+      {
+        kind: "literal",
+        value: "0",
+      }
+      ],
+    }
+  },
+  {
+    name: "TTime",
+    default:   {
+      kind: "unknown",
+      summary: "string & {}",
+    }
+  }
+],
   members: [
   {
     name: "all",
@@ -26296,6 +29571,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.Animation",
       name: "Property.Animation",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -26315,6 +29597,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.AnimationRange",
       name: "Property.AnimationRange",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -26334,6 +29623,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.Background",
       name: "Property.Background",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -26353,6 +29649,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.BackgroundPosition",
       name: "Property.BackgroundPosition",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -26372,6 +29675,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.Border",
       name: "Property.Border",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -26391,6 +29701,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.BorderBlock",
       name: "Property.BorderBlock",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -26429,6 +29746,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.BorderBlockEnd",
       name: "Property.BorderBlockEnd",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -26448,6 +29772,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.BorderBlockStart",
       name: "Property.BorderBlockStart",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -26486,6 +29817,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.BorderBlockWidth",
       name: "Property.BorderBlockWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -26505,6 +29843,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.BorderBottom",
       name: "Property.BorderBottom",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -26562,6 +29907,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.BorderInline",
       name: "Property.BorderInline",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -26600,6 +29952,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.BorderInlineEnd",
       name: "Property.BorderInlineEnd",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -26619,6 +29978,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.BorderInlineStart",
       name: "Property.BorderInlineStart",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -26657,6 +30023,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.BorderInlineWidth",
       name: "Property.BorderInlineWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -26676,6 +30049,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.BorderLeft",
       name: "Property.BorderLeft",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -26695,6 +30075,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.BorderRadius",
       name: "Property.BorderRadius",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -26714,6 +30101,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.BorderRight",
       name: "Property.BorderRight",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -26752,6 +30146,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.BorderTop",
       name: "Property.BorderTop",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -26771,6 +30172,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.BorderWidth",
       name: "Property.BorderWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -26809,6 +30217,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.ColumnRule",
       name: "Property.ColumnRule",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -26828,6 +30243,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.Columns",
       name: "Property.Columns",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -26847,6 +30269,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.ContainIntrinsicSize",
       name: "Property.ContainIntrinsicSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -26885,6 +30314,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.Flex",
       name: "Property.Flex",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -26942,6 +30378,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.Gap",
       name: "Property.Gap",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -27056,6 +30499,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.Inset",
       name: "Property.Inset",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -27075,6 +30525,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.InsetBlock",
       name: "Property.InsetBlock",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -27094,6 +30551,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.InsetInline",
       name: "Property.InsetInline",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -27151,6 +30615,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.Margin",
       name: "Property.Margin",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -27170,6 +30641,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.MarginBlock",
       name: "Property.MarginBlock",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -27189,6 +30667,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.MarginInline",
       name: "Property.MarginInline",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -27208,6 +30693,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.Mask",
       name: "Property.Mask",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -27246,6 +30738,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.Offset",
       name: "Property.Offset",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -27265,6 +30764,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.Offset",
       name: "Property.Offset",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -27284,6 +30790,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.Outline",
       name: "Property.Outline",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -27341,6 +30854,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.Padding",
       name: "Property.Padding",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -27360,6 +30880,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.PaddingBlock",
       name: "Property.PaddingBlock",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -27379,6 +30906,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.PaddingInline",
       name: "Property.PaddingInline",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -27474,6 +31008,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.ScrollMargin",
       name: "Property.ScrollMargin",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -27493,6 +31034,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.ScrollMarginBlock",
       name: "Property.ScrollMarginBlock",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -27512,6 +31060,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.ScrollMarginInline",
       name: "Property.ScrollMarginInline",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -27531,6 +31086,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.ScrollPadding",
       name: "Property.ScrollPadding",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -27550,6 +31112,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.ScrollPaddingBlock",
       name: "Property.ScrollPaddingBlock",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -27569,6 +31138,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.ScrollPaddingInline",
       name: "Property.ScrollPaddingInline",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -27588,6 +31164,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.ScrollMargin",
       name: "Property.ScrollMargin",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -27626,6 +31209,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.TextDecoration",
       name: "Property.TextDecoration",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -27683,6 +31273,13 @@ export const _8473b07ab9b1a5d8 = {
       id: "Property.Transition",
       name: "Property.Transition",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -27720,10 +31317,54 @@ export const _d24fc7629ed15f8a = {
   name: "StandardShorthandPropertiesHyphenFallback",
   library: "csstype",
   description: "The **`-moz-box-pack`** and **`-webkit-box-pack`** CSS properties specify how a `-moz-box` or `-webkit-box` packs its contents in the direction of its layout. The effect of this is only visible if there is extra space in the box.\n\n**Syntax**: `start | center | end | justify`\n\n**Initial value**: `start`\n\n@deprecated",
+  typeParameters: [
+  {
+    name: "TLength",
+    default:   {
+      kind: "union",
+      types: [
+      {
+        kind: "unknown",
+        summary: "(string & {})",
+      },
+      {
+        kind: "literal",
+        value: "0",
+      }
+      ],
+    }
+  },
+  {
+    name: "TTime",
+    default:   {
+      kind: "unknown",
+      summary: "string & {}",
+    }
+  }
+],
   definition: {
   id: "_b2a8703557247e8b",
   name: "Fallback",
   library: "csstype",
+  typeArguments: [
+  {
+    id: "_8473b07ab9b1a5d8",
+    name: "StandardShorthandPropertiesHyphen",
+    library: "csstype",
+    typeArguments: [
+    {
+      id: "TLength",
+      name: "TLength",
+      library: "csstype",
+    },
+    {
+      id: "TTime",
+      name: "TTime",
+      library: "csstype",
+    }
+    ],
+  }
+  ],
 },
 };
 
@@ -28520,11 +32161,35 @@ export const _dd0cd150cd4fb94a = {
   name: "SvgProperties",
   library: "csstype",
   description: "The **`-moz-box-pack`** and **`-webkit-box-pack`** CSS properties specify how a `-moz-box` or `-webkit-box` packs its contents in the direction of its layout. The effect of this is only visible if there is extra space in the box.\n\n**Syntax**: `start | center | end | justify`\n\n**Initial value**: `start`\n\n@deprecated",
+  typeParameters: [
+  {
+    name: "TLength",
+    default:   {
+      kind: "union",
+      types: [
+      {
+        kind: "unknown",
+        summary: "(string & {})",
+      },
+      {
+        kind: "literal",
+        value: "0",
+      }
+      ],
+    }
+  },
+  {
+    name: "TTime",
+    default:   {
+      kind: "unknown",
+      summary: "string & {}",
+    }
+  }
+],
   members: [
   {
     name: "alignmentBaseline",
     optional: true,
-    description: "The **`-moz-box-pack`** and **`-webkit-box-pack`** CSS properties specify how a `-moz-box` or `-webkit-box` packs its contents in the direction of its layout. The effect of this is only visible if there is extra space in the box.\n\n**Syntax**: `start | center | end | justify`\n\n**Initial value**: `start`\n\n@deprecated",
     type: {
     kind: "union",
     types: [
@@ -28550,6 +32215,13 @@ export const _dd0cd150cd4fb94a = {
       id: "Property.BaselineShift",
       name: "Property.BaselineShift",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -28892,6 +32564,13 @@ export const _dd0cd150cd4fb94a = {
       id: "Property.FontSize",
       name: "Property.FontSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -29036,6 +32715,13 @@ export const _dd0cd150cd4fb94a = {
       id: "Property.LetterSpacing",
       name: "Property.LetterSpacing",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -29072,6 +32758,13 @@ export const _dd0cd150cd4fb94a = {
       id: "Property.LineHeight",
       name: "Property.LineHeight",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -29162,6 +32855,13 @@ export const _dd0cd150cd4fb94a = {
       id: "Property.Mask",
       name: "Property.Mask",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -29324,6 +33024,13 @@ export const _dd0cd150cd4fb94a = {
       id: "Property.StrokeDasharray",
       name: "Property.StrokeDasharray",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -29342,6 +33049,13 @@ export const _dd0cd150cd4fb94a = {
       id: "Property.StrokeDashoffset",
       name: "Property.StrokeDashoffset",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -29432,6 +33146,13 @@ export const _dd0cd150cd4fb94a = {
       id: "Property.StrokeWidth",
       name: "Property.StrokeWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -29468,6 +33189,13 @@ export const _dd0cd150cd4fb94a = {
       id: "Property.TextDecoration",
       name: "Property.TextDecoration",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -29576,6 +33304,13 @@ export const _dd0cd150cd4fb94a = {
       id: "Property.WordSpacing",
       name: "Property.WordSpacing",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -29612,10 +33347,54 @@ export const _2ab4d9962768ac8c = {
   name: "SvgPropertiesFallback",
   library: "csstype",
   description: "The **`-moz-box-pack`** and **`-webkit-box-pack`** CSS properties specify how a `-moz-box` or `-webkit-box` packs its contents in the direction of its layout. The effect of this is only visible if there is extra space in the box.\n\n**Syntax**: `start | center | end | justify`\n\n**Initial value**: `start`\n\n@deprecated",
+  typeParameters: [
+  {
+    name: "TLength",
+    default:   {
+      kind: "union",
+      types: [
+      {
+        kind: "unknown",
+        summary: "(string & {})",
+      },
+      {
+        kind: "literal",
+        value: "0",
+      }
+      ],
+    }
+  },
+  {
+    name: "TTime",
+    default:   {
+      kind: "unknown",
+      summary: "string & {}",
+    }
+  }
+],
   definition: {
   id: "_b2a8703557247e8b",
   name: "Fallback",
   library: "csstype",
+  typeArguments: [
+  {
+    id: "_dd0cd150cd4fb94a",
+    name: "SvgProperties",
+    library: "csstype",
+    typeArguments: [
+    {
+      id: "TLength",
+      name: "TLength",
+      library: "csstype",
+    },
+    {
+      id: "TTime",
+      name: "TTime",
+      library: "csstype",
+    }
+    ],
+  }
+  ],
 },
 };
 
@@ -29624,11 +33403,35 @@ export const _93766d12a02a65b2 = {
   name: "SvgPropertiesHyphen",
   library: "csstype",
   description: "The **`-moz-box-pack`** and **`-webkit-box-pack`** CSS properties specify how a `-moz-box` or `-webkit-box` packs its contents in the direction of its layout. The effect of this is only visible if there is extra space in the box.\n\n**Syntax**: `start | center | end | justify`\n\n**Initial value**: `start`\n\n@deprecated",
+  typeParameters: [
+  {
+    name: "TLength",
+    default:   {
+      kind: "union",
+      types: [
+      {
+        kind: "unknown",
+        summary: "(string & {})",
+      },
+      {
+        kind: "literal",
+        value: "0",
+      }
+      ],
+    }
+  },
+  {
+    name: "TTime",
+    default:   {
+      kind: "unknown",
+      summary: "string & {}",
+    }
+  }
+],
   members: [
   {
     name: "\"alignment-baseline\"",
     optional: true,
-    description: "The **`-moz-box-pack`** and **`-webkit-box-pack`** CSS properties specify how a `-moz-box` or `-webkit-box` packs its contents in the direction of its layout. The effect of this is only visible if there is extra space in the box.\n\n**Syntax**: `start | center | end | justify`\n\n**Initial value**: `start`\n\n@deprecated",
     type: {
     kind: "union",
     types: [
@@ -29654,6 +33457,13 @@ export const _93766d12a02a65b2 = {
       id: "Property.BaselineShift",
       name: "Property.BaselineShift",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -29996,6 +33806,13 @@ export const _93766d12a02a65b2 = {
       id: "Property.FontSize",
       name: "Property.FontSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -30140,6 +33957,13 @@ export const _93766d12a02a65b2 = {
       id: "Property.LetterSpacing",
       name: "Property.LetterSpacing",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -30176,6 +34000,13 @@ export const _93766d12a02a65b2 = {
       id: "Property.LineHeight",
       name: "Property.LineHeight",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -30266,6 +34097,13 @@ export const _93766d12a02a65b2 = {
       id: "Property.Mask",
       name: "Property.Mask",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -30428,6 +34266,13 @@ export const _93766d12a02a65b2 = {
       id: "Property.StrokeDasharray",
       name: "Property.StrokeDasharray",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -30446,6 +34291,13 @@ export const _93766d12a02a65b2 = {
       id: "Property.StrokeDashoffset",
       name: "Property.StrokeDashoffset",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -30536,6 +34388,13 @@ export const _93766d12a02a65b2 = {
       id: "Property.StrokeWidth",
       name: "Property.StrokeWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -30572,6 +34431,13 @@ export const _93766d12a02a65b2 = {
       id: "Property.TextDecoration",
       name: "Property.TextDecoration",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -30680,6 +34546,13 @@ export const _93766d12a02a65b2 = {
       id: "Property.WordSpacing",
       name: "Property.WordSpacing",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -30716,10 +34589,54 @@ export const _3510ada788ad5ac4 = {
   name: "SvgPropertiesHyphenFallback",
   library: "csstype",
   description: "The **`-moz-box-pack`** and **`-webkit-box-pack`** CSS properties specify how a `-moz-box` or `-webkit-box` packs its contents in the direction of its layout. The effect of this is only visible if there is extra space in the box.\n\n**Syntax**: `start | center | end | justify`\n\n**Initial value**: `start`\n\n@deprecated",
+  typeParameters: [
+  {
+    name: "TLength",
+    default:   {
+      kind: "union",
+      types: [
+      {
+        kind: "unknown",
+        summary: "(string & {})",
+      },
+      {
+        kind: "literal",
+        value: "0",
+      }
+      ],
+    }
+  },
+  {
+    name: "TTime",
+    default:   {
+      kind: "unknown",
+      summary: "string & {}",
+    }
+  }
+],
   definition: {
   id: "_b2a8703557247e8b",
   name: "Fallback",
   library: "csstype",
+  typeArguments: [
+  {
+    id: "_93766d12a02a65b2",
+    name: "SvgPropertiesHyphen",
+    library: "csstype",
+    typeArguments: [
+    {
+      id: "TLength",
+      name: "TLength",
+      library: "csstype",
+    },
+    {
+      id: "TTime",
+      name: "TTime",
+      library: "csstype",
+    }
+    ],
+  }
+  ],
 },
 };
 
@@ -30728,6 +34645,31 @@ export const _b67f4a5f2e6cbd69 = {
   name: "VendorLonghandProperties",
   library: "csstype",
   description: "This feature is not Baseline because it does not work in some of the most widely-used browsers.\n\n**Syntax**: `[ <'view-timeline-name'> [ <'view-timeline-axis'> || <'view-timeline-inset'> ]? ]#`\n\n| Chrome  | Firefox | Safari |  Edge   | IE  |\n| :-----: | :-----: | :----: | :-----: | :-: |\n| **115** |   No    | **26** | **115** | No  |\n\n@see https://developer.mozilla.org/docs/Web/CSS/Reference/Properties/view-timeline",
+  typeParameters: [
+  {
+    name: "TLength",
+    default:   {
+      kind: "union",
+      types: [
+      {
+        kind: "unknown",
+        summary: "(string & {})",
+      },
+      {
+        kind: "literal",
+        value: "0",
+      }
+      ],
+    }
+  },
+  {
+    name: "TTime",
+    default:   {
+      kind: "unknown",
+      summary: "string & {}",
+    }
+  }
+],
   members: [
   {
     name: "MozAnimationDelay",
@@ -30740,6 +34682,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.AnimationDelay",
       name: "Property.AnimationDelay",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -30778,6 +34727,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.AnimationDuration",
       name: "Property.AnimationDuration",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -31006,6 +34962,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.BorderInlineEndWidth",
       name: "Property.BorderInlineEndWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -31177,6 +35140,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.ColumnRuleWidth",
       name: "Property.ColumnRuleWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -31196,6 +35166,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.ColumnWidth",
       name: "Property.ColumnWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -31291,6 +35268,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.MarginInlineEnd",
       name: "Property.MarginInlineEnd",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -31310,6 +35294,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.MarginInlineStart",
       name: "Property.MarginInlineStart",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -31348,6 +35339,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.FontSmooth",
       name: "Property.FontSmooth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -31367,6 +35365,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.MozOutlineRadiusBottomleft",
       name: "Property.MozOutlineRadiusBottomleft",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -31386,6 +35391,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.MozOutlineRadiusBottomright",
       name: "Property.MozOutlineRadiusBottomright",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -31405,6 +35417,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.MozOutlineRadiusTopleft",
       name: "Property.MozOutlineRadiusTopleft",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -31424,6 +35443,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.MozOutlineRadiusTopright",
       name: "Property.MozOutlineRadiusTopright",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -31443,6 +35469,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.PaddingInlineEnd",
       name: "Property.PaddingInlineEnd",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -31462,6 +35495,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.PaddingInlineStart",
       name: "Property.PaddingInlineStart",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -31481,6 +35521,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.Perspective",
       name: "Property.Perspective",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -31500,6 +35547,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.PerspectiveOrigin",
       name: "Property.PerspectiveOrigin",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -31538,6 +35592,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.TabSize",
       name: "Property.TabSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -31614,6 +35675,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.TransformOrigin",
       name: "Property.TransformOrigin",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -31975,6 +36043,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.MsGridColumns",
       name: "Property.MsGridColumns",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -31994,6 +36069,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.MsGridRows",
       name: "Property.MsGridRows",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -32070,6 +36152,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.MsHyphenateLimitZone",
       name: "Property.MsHyphenateLimitZone",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -32241,6 +36330,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.MsScrollLimitXMax",
       name: "Property.MsScrollLimitXMax",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -32260,6 +36356,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.MsScrollLimitXMin",
       name: "Property.MsScrollLimitXMin",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -32279,6 +36382,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.MsScrollLimitYMax",
       name: "Property.MsScrollLimitYMax",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -32298,6 +36408,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.MsScrollLimitYMin",
       name: "Property.MsScrollLimitYMin",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -32678,6 +36795,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.TransformOrigin",
       name: "Property.TransformOrigin",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -32697,6 +36821,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.TransitionDelay",
       name: "Property.TransitionDelay",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -32716,6 +36847,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.TransitionDuration",
       name: "Property.TransitionDuration",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -32830,6 +36968,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.MsWrapMargin",
       name: "Property.MsWrapMargin",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -32944,6 +37089,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.AnimationDelay",
       name: "Property.AnimationDelay",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -32982,6 +37134,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.AnimationDuration",
       name: "Property.AnimationDuration",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -33191,6 +37350,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.BackgroundSize",
       name: "Property.BackgroundSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -33248,6 +37414,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.WebkitBorderBeforeWidth",
       name: "Property.WebkitBorderBeforeWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -33267,6 +37440,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.BorderBottomLeftRadius",
       name: "Property.BorderBottomLeftRadius",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -33286,6 +37466,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.BorderBottomRightRadius",
       name: "Property.BorderBottomRightRadius",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -33324,6 +37511,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.BorderTopLeftRadius",
       name: "Property.BorderTopLeftRadius",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -33343,6 +37537,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.BorderTopRightRadius",
       name: "Property.BorderTopRightRadius",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -33381,6 +37582,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.WebkitBoxReflect",
       name: "Property.WebkitBoxReflect",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -33533,6 +37741,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.ColumnRuleWidth",
       name: "Property.ColumnRuleWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -33571,6 +37786,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.ColumnWidth",
       name: "Property.ColumnWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -33609,6 +37831,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.FlexBasis",
       name: "Property.FlexBasis",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -33742,6 +37971,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.FontSmooth",
       name: "Property.FontSmooth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -33894,6 +38130,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.BlockSize",
       name: "Property.BlockSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -33913,6 +38156,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.InlineSize",
       name: "Property.InlineSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -33932,6 +38182,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.MarginInlineEnd",
       name: "Property.MarginInlineEnd",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -33951,6 +38208,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.MarginInlineStart",
       name: "Property.MarginInlineStart",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -33989,6 +38253,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.MaskBorderOutset",
       name: "Property.MaskBorderOutset",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -34065,6 +38336,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.MaskBorderWidth",
       name: "Property.MaskBorderWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -34160,6 +38438,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.WebkitMaskPosition",
       name: "Property.WebkitMaskPosition",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -34179,6 +38464,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.WebkitMaskPositionX",
       name: "Property.WebkitMaskPositionX",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -34198,6 +38490,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.WebkitMaskPositionY",
       name: "Property.WebkitMaskPositionY",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -34274,6 +38573,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.WebkitMaskSize",
       name: "Property.WebkitMaskSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -34293,6 +38599,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.MaxInlineSize",
       name: "Property.MaxInlineSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -34350,6 +38663,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.PaddingInlineEnd",
       name: "Property.PaddingInlineEnd",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -34369,6 +38689,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.PaddingInlineStart",
       name: "Property.PaddingInlineStart",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -34388,6 +38715,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.Perspective",
       name: "Property.Perspective",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -34407,6 +38741,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.PerspectiveOrigin",
       name: "Property.PerspectiveOrigin",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -34483,6 +38824,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.ShapeMargin",
       name: "Property.ShapeMargin",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -34749,6 +39097,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.WebkitTextStrokeWidth",
       name: "Property.WebkitTextStrokeWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -34825,6 +39180,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.TransformOrigin",
       name: "Property.TransformOrigin",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -34863,6 +39225,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.TransitionDelay",
       name: "Property.TransitionDelay",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -34882,6 +39251,13 @@ export const _b67f4a5f2e6cbd69 = {
       id: "Property.TransitionDuration",
       name: "Property.TransitionDuration",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -34995,10 +39371,54 @@ export const _0e670764ef1af00b = {
   name: "VendorLonghandPropertiesFallback",
   library: "csstype",
   description: "The **`-moz-box-pack`** and **`-webkit-box-pack`** CSS properties specify how a `-moz-box` or `-webkit-box` packs its contents in the direction of its layout. The effect of this is only visible if there is extra space in the box.\n\n**Syntax**: `start | center | end | justify`\n\n**Initial value**: `start`\n\n@deprecated",
+  typeParameters: [
+  {
+    name: "TLength",
+    default:   {
+      kind: "union",
+      types: [
+      {
+        kind: "unknown",
+        summary: "(string & {})",
+      },
+      {
+        kind: "literal",
+        value: "0",
+      }
+      ],
+    }
+  },
+  {
+    name: "TTime",
+    default:   {
+      kind: "unknown",
+      summary: "string & {}",
+    }
+  }
+],
   definition: {
   id: "_b2a8703557247e8b",
   name: "Fallback",
   library: "csstype",
+  typeArguments: [
+  {
+    id: "_b67f4a5f2e6cbd69",
+    name: "VendorLonghandProperties",
+    library: "csstype",
+    typeArguments: [
+    {
+      id: "TLength",
+      name: "TLength",
+      library: "csstype",
+    },
+    {
+      id: "TTime",
+      name: "TTime",
+      library: "csstype",
+    }
+    ],
+  }
+  ],
 },
 };
 
@@ -35007,6 +39427,31 @@ export const _955bc0721d0cb3b9 = {
   name: "VendorLonghandPropertiesHyphen",
   library: "csstype",
   description: "This feature is not Baseline because it does not work in some of the most widely-used browsers.\n\n**Syntax**: `[ <'view-timeline-name'> [ <'view-timeline-axis'> || <'view-timeline-inset'> ]? ]#`\n\n| Chrome  | Firefox | Safari |  Edge   | IE  |\n| :-----: | :-----: | :----: | :-----: | :-: |\n| **115** |   No    | **26** | **115** | No  |\n\n@see https://developer.mozilla.org/docs/Web/CSS/Reference/Properties/view-timeline",
+  typeParameters: [
+  {
+    name: "TLength",
+    default:   {
+      kind: "union",
+      types: [
+      {
+        kind: "unknown",
+        summary: "(string & {})",
+      },
+      {
+        kind: "literal",
+        value: "0",
+      }
+      ],
+    }
+  },
+  {
+    name: "TTime",
+    default:   {
+      kind: "unknown",
+      summary: "string & {}",
+    }
+  }
+],
   members: [
   {
     name: "\"-moz-animation-delay\"",
@@ -35019,6 +39464,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.AnimationDelay",
       name: "Property.AnimationDelay",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -35057,6 +39509,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.AnimationDuration",
       name: "Property.AnimationDuration",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -35285,6 +39744,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.BorderInlineEndWidth",
       name: "Property.BorderInlineEndWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -35456,6 +39922,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.ColumnRuleWidth",
       name: "Property.ColumnRuleWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -35475,6 +39948,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.ColumnWidth",
       name: "Property.ColumnWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -35570,6 +40050,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.MarginInlineEnd",
       name: "Property.MarginInlineEnd",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -35589,6 +40076,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.MarginInlineStart",
       name: "Property.MarginInlineStart",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -35627,6 +40121,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.FontSmooth",
       name: "Property.FontSmooth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -35646,6 +40147,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.MozOutlineRadiusBottomleft",
       name: "Property.MozOutlineRadiusBottomleft",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -35665,6 +40173,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.MozOutlineRadiusBottomright",
       name: "Property.MozOutlineRadiusBottomright",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -35684,6 +40199,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.MozOutlineRadiusTopleft",
       name: "Property.MozOutlineRadiusTopleft",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -35703,6 +40225,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.MozOutlineRadiusTopright",
       name: "Property.MozOutlineRadiusTopright",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -35722,6 +40251,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.PaddingInlineEnd",
       name: "Property.PaddingInlineEnd",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -35741,6 +40277,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.PaddingInlineStart",
       name: "Property.PaddingInlineStart",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -35760,6 +40303,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.Perspective",
       name: "Property.Perspective",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -35779,6 +40329,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.PerspectiveOrigin",
       name: "Property.PerspectiveOrigin",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -35817,6 +40374,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.TabSize",
       name: "Property.TabSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -35893,6 +40457,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.TransformOrigin",
       name: "Property.TransformOrigin",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -36254,6 +40825,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.MsGridColumns",
       name: "Property.MsGridColumns",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -36273,6 +40851,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.MsGridRows",
       name: "Property.MsGridRows",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -36349,6 +40934,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.MsHyphenateLimitZone",
       name: "Property.MsHyphenateLimitZone",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -36520,6 +41112,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.MsScrollLimitXMax",
       name: "Property.MsScrollLimitXMax",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -36539,6 +41138,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.MsScrollLimitXMin",
       name: "Property.MsScrollLimitXMin",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -36558,6 +41164,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.MsScrollLimitYMax",
       name: "Property.MsScrollLimitYMax",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -36577,6 +41190,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.MsScrollLimitYMin",
       name: "Property.MsScrollLimitYMin",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -36957,6 +41577,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.TransformOrigin",
       name: "Property.TransformOrigin",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -36976,6 +41603,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.TransitionDelay",
       name: "Property.TransitionDelay",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -36995,6 +41629,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.TransitionDuration",
       name: "Property.TransitionDuration",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -37109,6 +41750,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.MsWrapMargin",
       name: "Property.MsWrapMargin",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -37223,6 +41871,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.AnimationDelay",
       name: "Property.AnimationDelay",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -37261,6 +41916,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.AnimationDuration",
       name: "Property.AnimationDuration",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -37470,6 +42132,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.BackgroundSize",
       name: "Property.BackgroundSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -37527,6 +42196,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.WebkitBorderBeforeWidth",
       name: "Property.WebkitBorderBeforeWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -37546,6 +42222,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.BorderBottomLeftRadius",
       name: "Property.BorderBottomLeftRadius",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -37565,6 +42248,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.BorderBottomRightRadius",
       name: "Property.BorderBottomRightRadius",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -37603,6 +42293,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.BorderTopLeftRadius",
       name: "Property.BorderTopLeftRadius",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -37622,6 +42319,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.BorderTopRightRadius",
       name: "Property.BorderTopRightRadius",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -37660,6 +42364,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.WebkitBoxReflect",
       name: "Property.WebkitBoxReflect",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -37812,6 +42523,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.ColumnRuleWidth",
       name: "Property.ColumnRuleWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -37850,6 +42568,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.ColumnWidth",
       name: "Property.ColumnWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -37888,6 +42613,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.FlexBasis",
       name: "Property.FlexBasis",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -38021,6 +42753,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.FontSmooth",
       name: "Property.FontSmooth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -38173,6 +42912,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.BlockSize",
       name: "Property.BlockSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -38192,6 +42938,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.InlineSize",
       name: "Property.InlineSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -38211,6 +42964,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.MarginInlineEnd",
       name: "Property.MarginInlineEnd",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -38230,6 +42990,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.MarginInlineStart",
       name: "Property.MarginInlineStart",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -38268,6 +43035,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.MaskBorderOutset",
       name: "Property.MaskBorderOutset",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -38344,6 +43118,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.MaskBorderWidth",
       name: "Property.MaskBorderWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -38439,6 +43220,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.WebkitMaskPosition",
       name: "Property.WebkitMaskPosition",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -38458,6 +43246,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.WebkitMaskPositionX",
       name: "Property.WebkitMaskPositionX",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -38477,6 +43272,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.WebkitMaskPositionY",
       name: "Property.WebkitMaskPositionY",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -38553,6 +43355,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.WebkitMaskSize",
       name: "Property.WebkitMaskSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -38572,6 +43381,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.MaxInlineSize",
       name: "Property.MaxInlineSize",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -38629,6 +43445,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.PaddingInlineEnd",
       name: "Property.PaddingInlineEnd",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -38648,6 +43471,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.PaddingInlineStart",
       name: "Property.PaddingInlineStart",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -38667,6 +43497,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.Perspective",
       name: "Property.Perspective",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -38686,6 +43523,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.PerspectiveOrigin",
       name: "Property.PerspectiveOrigin",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -38762,6 +43606,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.ShapeMargin",
       name: "Property.ShapeMargin",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -39028,6 +43879,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.WebkitTextStrokeWidth",
       name: "Property.WebkitTextStrokeWidth",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -39104,6 +43962,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.TransformOrigin",
       name: "Property.TransformOrigin",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -39142,6 +44007,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.TransitionDelay",
       name: "Property.TransitionDelay",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -39161,6 +44033,13 @@ export const _955bc0721d0cb3b9 = {
       id: "Property.TransitionDuration",
       name: "Property.TransitionDuration",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -39274,10 +44153,54 @@ export const _c91d495a9734cf5b = {
   name: "VendorLonghandPropertiesHyphenFallback",
   library: "csstype",
   description: "The **`-moz-box-pack`** and **`-webkit-box-pack`** CSS properties specify how a `-moz-box` or `-webkit-box` packs its contents in the direction of its layout. The effect of this is only visible if there is extra space in the box.\n\n**Syntax**: `start | center | end | justify`\n\n**Initial value**: `start`\n\n@deprecated",
+  typeParameters: [
+  {
+    name: "TLength",
+    default:   {
+      kind: "union",
+      types: [
+      {
+        kind: "unknown",
+        summary: "(string & {})",
+      },
+      {
+        kind: "literal",
+        value: "0",
+      }
+      ],
+    }
+  },
+  {
+    name: "TTime",
+    default:   {
+      kind: "unknown",
+      summary: "string & {}",
+    }
+  }
+],
   definition: {
   id: "_b2a8703557247e8b",
   name: "Fallback",
   library: "csstype",
+  typeArguments: [
+  {
+    id: "_955bc0721d0cb3b9",
+    name: "VendorLonghandPropertiesHyphen",
+    library: "csstype",
+    typeArguments: [
+    {
+      id: "TLength",
+      name: "TLength",
+      library: "csstype",
+    },
+    {
+      id: "TTime",
+      name: "TTime",
+      library: "csstype",
+    }
+    ],
+  }
+  ],
 },
 };
 
@@ -39286,6 +44209,31 @@ export const _3ebbfc2277dd34f0 = {
   name: "VendorProperties",
   library: "csstype",
   description: "This feature is well established and works across many devices and browser versions. It’s been available across browsers since September 2015.\n\n**Syntax**: `<single-transition>#`",
+  typeParameters: [
+  {
+    name: "TLength",
+    default:   {
+      kind: "union",
+      types: [
+      {
+        kind: "unknown",
+        summary: "(string & {})",
+      },
+      {
+        kind: "literal",
+        value: "0",
+      }
+      ],
+    }
+  },
+  {
+    name: "TTime",
+    default:   {
+      kind: "unknown",
+      summary: "string & {}",
+    }
+  }
+],
   members: [],
   extends: [
   {
@@ -39307,6 +44255,31 @@ export const _7707e7b4c331c3d2 = {
   name: "VendorPropertiesFallback",
   library: "csstype",
   description: "The **`-moz-box-pack`** and **`-webkit-box-pack`** CSS properties specify how a `-moz-box` or `-webkit-box` packs its contents in the direction of its layout. The effect of this is only visible if there is extra space in the box.\n\n**Syntax**: `start | center | end | justify`\n\n**Initial value**: `start`\n\n@deprecated",
+  typeParameters: [
+  {
+    name: "TLength",
+    default:   {
+      kind: "union",
+      types: [
+      {
+        kind: "unknown",
+        summary: "(string & {})",
+      },
+      {
+        kind: "literal",
+        value: "0",
+      }
+      ],
+    }
+  },
+  {
+    name: "TTime",
+    default:   {
+      kind: "unknown",
+      summary: "string & {}",
+    }
+  }
+],
   members: [],
   extends: [
   {
@@ -39339,6 +44312,31 @@ export const _08bce17756b3f58c = {
   name: "VendorPropertiesHyphen",
   library: "csstype",
   description: "This feature is well established and works across many devices and browser versions. It’s been available across browsers since September 2015.\n\n**Syntax**: `<single-transition>#`",
+  typeParameters: [
+  {
+    name: "TLength",
+    default:   {
+      kind: "union",
+      types: [
+      {
+        kind: "unknown",
+        summary: "(string & {})",
+      },
+      {
+        kind: "literal",
+        value: "0",
+      }
+      ],
+    }
+  },
+  {
+    name: "TTime",
+    default:   {
+      kind: "unknown",
+      summary: "string & {}",
+    }
+  }
+],
   members: [],
   extends: [
   {
@@ -39360,6 +44358,31 @@ export const _b1fa0e685f58bbf6 = {
   name: "VendorPropertiesHyphenFallback",
   library: "csstype",
   description: "The **`-moz-box-pack`** and **`-webkit-box-pack`** CSS properties specify how a `-moz-box` or `-webkit-box` packs its contents in the direction of its layout. The effect of this is only visible if there is extra space in the box.\n\n**Syntax**: `start | center | end | justify`\n\n**Initial value**: `start`\n\n@deprecated",
+  typeParameters: [
+  {
+    name: "TLength",
+    default:   {
+      kind: "union",
+      types: [
+      {
+        kind: "unknown",
+        summary: "(string & {})",
+      },
+      {
+        kind: "literal",
+        value: "0",
+      }
+      ],
+    }
+  },
+  {
+    name: "TTime",
+    default:   {
+      kind: "unknown",
+      summary: "string & {}",
+    }
+  }
+],
   members: [],
   extends: [
   {
@@ -39392,6 +44415,31 @@ export const _13e458cb1a7c33bb = {
   name: "VendorShorthandProperties",
   library: "csstype",
   description: "This feature is well established and works across many devices and browser versions. It’s been available across browsers since March 2017.\n\n**Syntax**: `horizontal-tb | vertical-rl | vertical-lr | sideways-rl | sideways-lr`\n\n**Initial value**: `horizontal-tb`",
+  typeParameters: [
+  {
+    name: "TLength",
+    default:   {
+      kind: "union",
+      types: [
+      {
+        kind: "unknown",
+        summary: "(string & {})",
+      },
+      {
+        kind: "literal",
+        value: "0",
+      }
+      ],
+    }
+  },
+  {
+    name: "TTime",
+    default:   {
+      kind: "unknown",
+      summary: "string & {}",
+    }
+  }
+],
   members: [
   {
     name: "MozAnimation",
@@ -39404,6 +44452,13 @@ export const _13e458cb1a7c33bb = {
       id: "Property.Animation",
       name: "Property.Animation",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -39442,6 +44497,13 @@ export const _13e458cb1a7c33bb = {
       id: "Property.ColumnRule",
       name: "Property.ColumnRule",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -39461,6 +44523,13 @@ export const _13e458cb1a7c33bb = {
       id: "Property.Columns",
       name: "Property.Columns",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -39480,6 +44549,13 @@ export const _13e458cb1a7c33bb = {
       id: "Property.MozOutlineRadius",
       name: "Property.MozOutlineRadius",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -39499,6 +44575,13 @@ export const _13e458cb1a7c33bb = {
       id: "Property.Transition",
       name: "Property.Transition",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -39556,6 +44639,13 @@ export const _13e458cb1a7c33bb = {
       id: "Property.Flex",
       name: "Property.Flex",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -39632,6 +44722,13 @@ export const _13e458cb1a7c33bb = {
       id: "Property.Transition",
       name: "Property.Transition",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -39651,6 +44748,13 @@ export const _13e458cb1a7c33bb = {
       id: "Property.Animation",
       name: "Property.Animation",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -39670,6 +44774,13 @@ export const _13e458cb1a7c33bb = {
       id: "Property.WebkitBorderBefore",
       name: "Property.WebkitBorderBefore",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -39708,6 +44819,13 @@ export const _13e458cb1a7c33bb = {
       id: "Property.BorderRadius",
       name: "Property.BorderRadius",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -39727,6 +44845,13 @@ export const _13e458cb1a7c33bb = {
       id: "Property.ColumnRule",
       name: "Property.ColumnRule",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -39746,6 +44871,13 @@ export const _13e458cb1a7c33bb = {
       id: "Property.Columns",
       name: "Property.Columns",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -39765,6 +44897,13 @@ export const _13e458cb1a7c33bb = {
       id: "Property.Flex",
       name: "Property.Flex",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -39803,6 +44942,13 @@ export const _13e458cb1a7c33bb = {
       id: "Property.WebkitMask",
       name: "Property.WebkitMask",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -39860,6 +45006,13 @@ export const _13e458cb1a7c33bb = {
       id: "Property.WebkitTextStroke",
       name: "Property.WebkitTextStroke",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -39879,6 +45032,13 @@ export const _13e458cb1a7c33bb = {
       id: "Property.Transition",
       name: "Property.Transition",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -39897,10 +45057,54 @@ export const _2c2cd4b497da19f5 = {
   name: "VendorShorthandPropertiesFallback",
   library: "csstype",
   description: "The **`-moz-box-pack`** and **`-webkit-box-pack`** CSS properties specify how a `-moz-box` or `-webkit-box` packs its contents in the direction of its layout. The effect of this is only visible if there is extra space in the box.\n\n**Syntax**: `start | center | end | justify`\n\n**Initial value**: `start`\n\n@deprecated",
+  typeParameters: [
+  {
+    name: "TLength",
+    default:   {
+      kind: "union",
+      types: [
+      {
+        kind: "unknown",
+        summary: "(string & {})",
+      },
+      {
+        kind: "literal",
+        value: "0",
+      }
+      ],
+    }
+  },
+  {
+    name: "TTime",
+    default:   {
+      kind: "unknown",
+      summary: "string & {}",
+    }
+  }
+],
   definition: {
   id: "_b2a8703557247e8b",
   name: "Fallback",
   library: "csstype",
+  typeArguments: [
+  {
+    id: "_13e458cb1a7c33bb",
+    name: "VendorShorthandProperties",
+    library: "csstype",
+    typeArguments: [
+    {
+      id: "TLength",
+      name: "TLength",
+      library: "csstype",
+    },
+    {
+      id: "TTime",
+      name: "TTime",
+      library: "csstype",
+    }
+    ],
+  }
+  ],
 },
 };
 
@@ -39909,6 +45113,31 @@ export const _2dec2bedce09e25f = {
   name: "VendorShorthandPropertiesHyphen",
   library: "csstype",
   description: "This feature is well established and works across many devices and browser versions. It’s been available across browsers since March 2017.\n\n**Syntax**: `horizontal-tb | vertical-rl | vertical-lr | sideways-rl | sideways-lr`\n\n**Initial value**: `horizontal-tb`",
+  typeParameters: [
+  {
+    name: "TLength",
+    default:   {
+      kind: "union",
+      types: [
+      {
+        kind: "unknown",
+        summary: "(string & {})",
+      },
+      {
+        kind: "literal",
+        value: "0",
+      }
+      ],
+    }
+  },
+  {
+    name: "TTime",
+    default:   {
+      kind: "unknown",
+      summary: "string & {}",
+    }
+  }
+],
   members: [
   {
     name: "\"-moz-animation\"",
@@ -39921,6 +45150,13 @@ export const _2dec2bedce09e25f = {
       id: "Property.Animation",
       name: "Property.Animation",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -39959,6 +45195,13 @@ export const _2dec2bedce09e25f = {
       id: "Property.ColumnRule",
       name: "Property.ColumnRule",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -39978,6 +45221,13 @@ export const _2dec2bedce09e25f = {
       id: "Property.Columns",
       name: "Property.Columns",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -39997,6 +45247,13 @@ export const _2dec2bedce09e25f = {
       id: "Property.MozOutlineRadius",
       name: "Property.MozOutlineRadius",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -40016,6 +45273,13 @@ export const _2dec2bedce09e25f = {
       id: "Property.Transition",
       name: "Property.Transition",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -40073,6 +45337,13 @@ export const _2dec2bedce09e25f = {
       id: "Property.Flex",
       name: "Property.Flex",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -40149,6 +45420,13 @@ export const _2dec2bedce09e25f = {
       id: "Property.Transition",
       name: "Property.Transition",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -40168,6 +45446,13 @@ export const _2dec2bedce09e25f = {
       id: "Property.Animation",
       name: "Property.Animation",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -40187,6 +45472,13 @@ export const _2dec2bedce09e25f = {
       id: "Property.WebkitBorderBefore",
       name: "Property.WebkitBorderBefore",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -40225,6 +45517,13 @@ export const _2dec2bedce09e25f = {
       id: "Property.BorderRadius",
       name: "Property.BorderRadius",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -40244,6 +45543,13 @@ export const _2dec2bedce09e25f = {
       id: "Property.ColumnRule",
       name: "Property.ColumnRule",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -40263,6 +45569,13 @@ export const _2dec2bedce09e25f = {
       id: "Property.Columns",
       name: "Property.Columns",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -40282,6 +45595,13 @@ export const _2dec2bedce09e25f = {
       id: "Property.Flex",
       name: "Property.Flex",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -40320,6 +45640,13 @@ export const _2dec2bedce09e25f = {
       id: "Property.WebkitMask",
       name: "Property.WebkitMask",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -40377,6 +45704,13 @@ export const _2dec2bedce09e25f = {
       id: "Property.WebkitTextStroke",
       name: "Property.WebkitTextStroke",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TLength",
+        name: "TLength",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -40396,6 +45730,13 @@ export const _2dec2bedce09e25f = {
       id: "Property.Transition",
       name: "Property.Transition",
       library: "csstype",
+      typeArguments: [
+      {
+        id: "TTime",
+        name: "TTime",
+        library: "csstype",
+      }
+      ],
     },
     {
       kind: "intrinsic",
@@ -40414,10 +45755,54 @@ export const _19d1538b52760d81 = {
   name: "VendorShorthandPropertiesHyphenFallback",
   library: "csstype",
   description: "The **`-moz-box-pack`** and **`-webkit-box-pack`** CSS properties specify how a `-moz-box` or `-webkit-box` packs its contents in the direction of its layout. The effect of this is only visible if there is extra space in the box.\n\n**Syntax**: `start | center | end | justify`\n\n**Initial value**: `start`\n\n@deprecated",
+  typeParameters: [
+  {
+    name: "TLength",
+    default:   {
+      kind: "union",
+      types: [
+      {
+        kind: "unknown",
+        summary: "(string & {})",
+      },
+      {
+        kind: "literal",
+        value: "0",
+      }
+      ],
+    }
+  },
+  {
+    name: "TTime",
+    default:   {
+      kind: "unknown",
+      summary: "string & {}",
+    }
+  }
+],
   definition: {
   id: "_b2a8703557247e8b",
   name: "Fallback",
   library: "csstype",
+  typeArguments: [
+  {
+    id: "_2dec2bedce09e25f",
+    name: "VendorShorthandPropertiesHyphen",
+    library: "csstype",
+    typeArguments: [
+    {
+      id: "TLength",
+      name: "TLength",
+      library: "csstype",
+    },
+    {
+      id: "TTime",
+      name: "TTime",
+      library: "csstype",
+    }
+    ],
+  }
+  ],
 },
 };
 
@@ -40490,7 +45875,6 @@ export const _9003fdfa43802732 = {
   {
     name: "componentName",
     optional: true,
-    description: "JSON Schema extension for button component configuration.",
     type: {
     kind: "intrinsic",
     name: "string",
@@ -40941,6 +46325,7 @@ export const types = [
 ];
 export const libraries = [
   "csstype",
-  "json-schema"
+  "json-schema",
+  "user"
 ];
 
