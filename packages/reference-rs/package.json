@@ -41,9 +41,8 @@
     "prepublish:npm": "pnpm exec napi prepublish --no-gh-release -t npm",
     "publish:native": "pnpm exec tsx ./js/tools/publish-native.ts",
     "stage-local-artifacts": "pnpm exec tsx ./js/tools/stage-local-artifacts.ts",
-    "test": "pnpm test:rust",
-    "test:emit": "cargo test -- typescript::tests::emits_bundle_for_each_scenario_folder",
-    "test:rust": "cargo test && vitest run",
+    "test": "pnpm run ensure-native && cargo test && vitest run",
+    "test:rust": "cargo test",
     "test:vitest": "vitest run",
     "test:watch": "vitest"
   },
