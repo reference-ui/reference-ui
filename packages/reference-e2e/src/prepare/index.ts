@@ -28,6 +28,7 @@ const SANDBOX_ROOT = join(PACKAGE_ROOT, '.sandbox')
 const CORE_PATH = join(PACKAGE_ROOT, '..', 'reference-core')
 const LIB_PATH = join(PACKAGE_ROOT, '..', 'reference-lib')
 const CORE_BIN = join(CORE_PATH, 'dist/cli/index.mjs')
+const LIB_BIN = join(LIB_PATH, 'dist/index.mjs')
 const WORKSPACE_ROOT = join(PACKAGE_ROOT, '..', '..')
 
 const PREP_STATE_FILE = '.prep-state.json'
@@ -101,10 +102,20 @@ function computePrepHash(packageJson: object, appHash: string): string {
 }
 
 async function ensureWorkspaceReady(): Promise<void> {
-  if (!existsSync(CORE_BIN) || process.env.REF_TEST_FRESH) {
+  const needsFreshBuild = !!process.env.REF_TEST_FRESH
+  const needsCoreBuild = !existsSync(CORE_BIN)
+  const needsLibBuild = !existsSync(LIB_BIN)
+
+  if (needsFreshBuild || needsCoreBuild || needsLibBuild) {
     await execa('pnpm', ['install'], { cwd: WORKSPACE_ROOT })
+  }
+
+  if (needsFreshBuild || needsLibBuild) {
+    await execa('pnpm', ['run', 'build'], { cwd: LIB_PATH })
+  } else if (needsCoreBuild) {
     await execa('pnpm', ['run', 'build'], { cwd: CORE_PATH })
   }
+
   await execa('pnpm', ['exec', 'ref', 'sync'], { cwd: LIB_PATH, stdio: 'pipe' })
 }
 
