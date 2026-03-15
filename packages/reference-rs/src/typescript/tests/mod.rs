@@ -1,6 +1,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use super::generator::emit_esm_bundle;
 use super::{scan_typescript_bundle, ScanRequest, TsSymbolKind, TypeRef, TypeScriptBundle};
 
 #[test]
@@ -100,6 +101,21 @@ fn preserves_external_library_references_inside_the_bundle() {
     );
 }
 
+#[test]
+fn writes_a_concrete_esm_output_for_fixture_inspection() {
+    let bundle = scan_fixture();
+    let esm_bundle = emit_esm_bundle(&bundle).expect("ESM emission should succeed");
+    let entry_module = esm_bundle
+        .modules
+        .get(&esm_bundle.entrypoint)
+        .expect("entry module should exist");
+
+    assert_eq!(esm_bundle.entrypoint, "./bundle.js");
+    assert!(fixture_output_esm_path().exists());
+    assert!(!entry_module.trim().is_empty());
+    assert!(entry_module.contains("export const"));
+}
+
 fn tests_dir() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("src")
@@ -113,6 +129,10 @@ fn fixture_input_dir() -> PathBuf {
 
 fn fixture_output_path() -> PathBuf {
     tests_dir().join("output").join("bundle.json")
+}
+
+fn fixture_output_esm_path() -> PathBuf {
+    tests_dir().join("output").join("bundle.js")
 }
 
 fn scan_fixture() -> TypeScriptBundle {
@@ -133,6 +153,20 @@ fn scan_fixture() -> TypeScriptBundle {
     .expect("fixture output directory should be creatable");
     fs::write(&output_path, format!("{actual_pretty}\n"))
         .expect("fixture output bundle should be writable");
+
+    let esm_bundle = emit_esm_bundle(&bundle).expect("fixture ESM emission should succeed");
+    let esm_output_path = fixture_output_esm_path();
+    fs::write(
+        &esm_output_path,
+        format!(
+            "{}\n",
+            esm_bundle
+                .modules
+                .get(&esm_bundle.entrypoint)
+                .expect("fixture ESM entry module should exist")
+        ),
+    )
+    .expect("fixture output ESM should be writable");
 
     bundle
 }
