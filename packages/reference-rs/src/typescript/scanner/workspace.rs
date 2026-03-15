@@ -4,7 +4,7 @@ use std::path::Path;
 
 use globwalk::GlobWalkerBuilder;
 
-use super::imports::extract_module_specifiers;
+use super::imports::{extract_module_specifiers, extract_reexport_module_specifiers};
 use super::model::{DiscoveredFile, ResolvedModule, ScannedFile, ScannedWorkspace};
 use super::packages::{resolve_external_import, resolve_relative_import};
 use super::paths::{
@@ -71,6 +71,18 @@ fn discover_reachable_files(
         let source = fs::read_to_string(&absolute_path)
             .map_err(|err| format!("failed to read {}: {err}", absolute_path.display()))?;
         let known_file_ids = discovered.keys().cloned().collect::<BTreeSet<_>>();
+        let is_user_file = user_file_id_set.contains(&file_id);
+        let current_library = discovered
+            .get(&file_id)
+            .map(|d| d.library.clone())
+            .unwrap_or_else(|| "user".to_string());
+        let reexport_specifiers: BTreeSet<String> = if is_user_file {
+            extract_reexport_module_specifiers(&file_id, &source)
+                .into_iter()
+                .collect()
+        } else {
+            BTreeSet::new()
+        };
 
         for source_module in extract_module_specifiers(&file_id, &source) {
             let Some(resolved) = resolve_import_for_discovery(
@@ -79,6 +91,9 @@ fn discover_reachable_files(
                 &source_module,
                 &known_file_ids,
                 &user_file_id_set,
+                is_user_file,
+                &reexport_specifiers,
+                &current_library,
             ) else {
                 continue;
             };
@@ -107,6 +122,9 @@ fn resolve_import_for_discovery(
     source_module: &str,
     known_file_ids: &BTreeSet<String>,
     user_file_ids: &BTreeSet<String>,
+    is_user_file: bool,
+    reexport_specifiers: &BTreeSet<String>,
+    current_library: &str,
 ) -> Option<ResolvedModule> {
     if source_module.starts_with('.') {
         let file_id = if is_external_file_id(current_file_id) {
@@ -132,6 +150,18 @@ fn resolve_import_for_discovery(
             library: package_name_from_file_id(&file_id),
             file_id,
         });
+    }
+
+    // External import (library): only follow when user re-exports it, or when we're in the same package.
+    if is_user_file && !reexport_specifiers.contains(source_module) {
+        return None;
+    }
+    if !is_user_file {
+        let resolved = resolve_external_import(root_dir, source_module)?;
+        if resolved.library != current_library {
+            return None;
+        }
+        return Some(resolved);
     }
 
     resolve_external_import(root_dir, source_module)

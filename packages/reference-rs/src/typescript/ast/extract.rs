@@ -3,7 +3,8 @@ use std::collections::BTreeMap;
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
     Comment, Declaration, ExportNamedDeclaration, ImportDeclarationSpecifier, ImportOrExportKind,
-    PropertyKey, Statement, TSPropertySignature, TSSignature, TSType,
+    PropertyKey, Statement, TSInterfaceDeclaration, TSPropertySignature, TSSignature, TSType,
+    TSTypeAliasDeclaration,
 };
 use oxc_parser::Parser;
 use oxc_span::{GetSpan, SourceType, Span};
@@ -165,6 +166,32 @@ fn extract_file(
                     &mut exports,
                 );
             }
+            Statement::TSInterfaceDeclaration(interface_decl) if scanned_file.library == "user" => {
+                push_interface_shell(
+                    &scanned_file.file_id,
+                    &scanned_file.module_specifier,
+                    &scanned_file.library,
+                    interface_decl,
+                    &scanned_file.source,
+                    &parse_result.program.comments,
+                    &import_bindings,
+                    false,
+                    &mut exports,
+                );
+            }
+            Statement::TSTypeAliasDeclaration(type_alias) if scanned_file.library == "user" => {
+                push_type_alias_shell(
+                    &scanned_file.file_id,
+                    &scanned_file.module_specifier,
+                    &scanned_file.library,
+                    type_alias,
+                    &scanned_file.source,
+                    &parse_result.program.comments,
+                    &import_bindings,
+                    false,
+                    &mut exports,
+                );
+            }
             _ => {}
         }
     }
@@ -231,105 +258,151 @@ fn collect_exported_declaration(
 
     match declaration {
         Declaration::TSInterfaceDeclaration(interface_decl) => {
-            let name = interface_decl.id.name.to_string();
-            let id = symbol_id(file_id, &name);
-            let description =
-                leading_comment_for_span(source, comments, interface_decl.span(), None);
-            let property_spans: Vec<u32> = interface_decl
-                .body
-                .body
-                .iter()
-                .filter_map(|sig| match sig {
-                    TSSignature::TSPropertySignature(p) => Some(p.span().start),
-                    _ => None,
-                })
-                .collect();
-            let defined_members = interface_decl
-                .body
-                .body
-                .iter()
-                .filter_map(|signature| match signature {
-                    TSSignature::TSPropertySignature(property) => {
-                        let others: Vec<u32> = property_spans
-                            .iter()
-                            .copied()
-                            .filter(|&s| s != property.span().start)
-                            .collect();
-                        let exclude = if others.is_empty() {
-                            None
-                        } else {
-                            Some(others.as_slice())
-                        };
-                        Some(property_signature_to_member(
-                            property,
-                            source,
-                            comments,
-                            exclude,
-                            import_bindings,
-                            current_module_specifier,
-                            current_library,
-                        ))
-                    }
-                    _ => None,
-                })
-                .collect::<Vec<_>>();
-
-            let extends = interface_decl
-                .extends
-                .iter()
-                .map(|heritage| {
-                    expression_to_reference(
-                        &heritage.expression,
-                        source,
-                        import_bindings,
-                        current_module_specifier,
-                        current_library,
-                    )
-                })
-                .collect::<Vec<_>>();
-
-            let references = collect_references_from_members(&defined_members, &extends, None);
-
-            exports.push(SymbolShell {
-                id,
-                name,
-                kind: TsSymbolKind::Interface,
-                exported: true,
-                description,
-                defined_members,
-                extends,
-                underlying: None,
-                references,
-            });
+            push_interface_shell(
+                file_id,
+                current_module_specifier,
+                current_library,
+                interface_decl,
+                source,
+                comments,
+                import_bindings,
+                true,
+                exports,
+            );
         }
         Declaration::TSTypeAliasDeclaration(type_alias) => {
-            let name = type_alias.id.name.to_string();
-            let id = symbol_id(file_id, &name);
-            let description =
-                leading_comment_for_span(source, comments, type_alias.span(), None);
-            let underlying = Some(type_to_ref(
-                &type_alias.type_annotation,
+            push_type_alias_shell(
+                file_id,
+                current_module_specifier,
+                current_library,
+                type_alias,
+                source,
+                comments,
+                import_bindings,
+                true,
+                exports,
+            );
+        }
+        _ => {}
+    }
+}
+
+fn push_interface_shell<'a>(
+    file_id: &str,
+    current_module_specifier: &str,
+    current_library: &str,
+    interface_decl: &TSInterfaceDeclaration<'a>,
+    source: &str,
+    comments: &[Comment],
+    import_bindings: &BTreeMap<String, ImportBinding>,
+    exported: bool,
+    exports: &mut Vec<SymbolShell>,
+) {
+    let name = interface_decl.id.name.to_string();
+    let id = symbol_id(file_id, &name);
+    let description = leading_comment_for_span(source, comments, interface_decl.span(), None);
+    let property_spans: Vec<u32> = interface_decl
+        .body
+        .body
+        .iter()
+        .filter_map(|sig| match sig {
+            TSSignature::TSPropertySignature(p) => Some(p.span().start),
+            _ => None,
+        })
+        .collect();
+    let defined_members = interface_decl
+        .body
+        .body
+        .iter()
+        .filter_map(|signature| match signature {
+            TSSignature::TSPropertySignature(property) => {
+                let others: Vec<u32> = property_spans
+                    .iter()
+                    .copied()
+                    .filter(|&s| s != property.span().start)
+                    .collect();
+                let exclude = if others.is_empty() {
+                    None
+                } else {
+                    Some(others.as_slice())
+                };
+                Some(property_signature_to_member(
+                    property,
+                    source,
+                    comments,
+                    exclude,
+                    import_bindings,
+                    current_module_specifier,
+                    current_library,
+                ))
+            }
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+
+    let extends = interface_decl
+        .extends
+        .iter()
+        .map(|heritage| {
+            expression_to_reference(
+                &heritage.expression,
                 source,
                 import_bindings,
                 current_module_specifier,
                 current_library,
-            ));
-            let references = collect_references_from_members(&[], &[], underlying.as_ref());
+            )
+        })
+        .collect::<Vec<_>>();
 
-            exports.push(SymbolShell {
-                id,
-                name,
-                kind: TsSymbolKind::TypeAlias,
-                exported: true,
-                description,
-                defined_members: Vec::new(),
-                extends: Vec::new(),
-                underlying,
-                references,
-            });
-        }
-        _ => {}
-    }
+    let references = collect_references_from_members(&defined_members, &extends, None);
+
+    exports.push(SymbolShell {
+        id,
+        name,
+        kind: TsSymbolKind::Interface,
+        exported,
+        description,
+        defined_members,
+        extends,
+        underlying: None,
+        references,
+    });
+}
+
+fn push_type_alias_shell<'a>(
+    file_id: &str,
+    _current_module_specifier: &str,
+    current_library: &str,
+    type_alias: &TSTypeAliasDeclaration<'a>,
+    source: &str,
+    comments: &[Comment],
+    import_bindings: &BTreeMap<String, ImportBinding>,
+    exported: bool,
+    exports: &mut Vec<SymbolShell>,
+) {
+    let name = type_alias.id.name.to_string();
+    let id = symbol_id(file_id, &name);
+    let description = leading_comment_for_span(source, comments, type_alias.span(), None);
+    let underlying = Some(type_to_ref(
+        &type_alias.type_annotation,
+        source,
+        import_bindings,
+        _current_module_specifier,
+        current_library,
+    ));
+    let references = collect_references_from_members(&[], &[], underlying.as_ref());
+
+    exports.push(SymbolShell {
+        id,
+        name,
+        kind: TsSymbolKind::TypeAlias,
+        exported,
+        description,
+        defined_members: Vec::new(),
+        extends: Vec::new(),
+        underlying,
+        references,
+    });
 }
 
 fn property_signature_to_member(

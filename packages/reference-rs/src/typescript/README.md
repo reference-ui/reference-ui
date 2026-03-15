@@ -6,11 +6,18 @@ The scanner is intended to walk user-owned TypeScript files, parse them with a
 real AST, build a normalized internal graph, and eventually emit a proper ESM
 bundle for docs and MCP use cases.
 
-## Current Scope
+## Scan boundary
+
+**User space defines the scan.** We do not pull in all of `node_modules` or every type from every library.
+
+- **User space** (files under the scan root): We map **everything**—exported and non-exported interfaces and type aliases—so the graph is complete and types resolve correctly.
+- **Libraries (e.g. node_modules)**: We only add a library file when the user **re-exports** something from that module (e.g. `export type { X } from 'some-library'` or `export * from 'some-library'`). That re-export is the signal that the user wants those types documented. From a library file we only follow imports that stay **within the same package**; we do not follow into other packages, so we avoid sucking in entire dependency trees.
+
+## Current scope
 
 - fixture-driven Rust tests
 - local TypeScript file scanning from a root folder
-- initial exported symbol extraction for interfaces and type aliases
+- symbol extraction: exported types from all files; in user space, non-exported interfaces and type aliases as well
 - raw leading comment capture for exported types and their members (descriptions)
 - ESM bundle output for inspection during development
 
