@@ -42,7 +42,7 @@ describe('rhythm spacing utilities', () => {
     const style = window.getComputedStyle(el)
     // 2r = calc(2 * var(--spacing-r)), with --spacing-r = 16px by default → 32px
     if (style.paddingTop) {
-      expect(parseFloat(style.paddingTop)).toBeGreaterThan(0)
+      expect(Number.parseFloat(style.paddingTop)).toBeGreaterThan(0)
     }
   })
 })

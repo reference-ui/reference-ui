@@ -6,7 +6,7 @@ const cfg = loadConfig()
 const projectName = cfg.defaultProject
 const project = MATRIX.find((e) => e.name === projectName) ?? MATRIX[0]
 const port = process.env.REF_TEST_PORT
-  ? parseInt(process.env.REF_TEST_PORT, 10)
+  ? Number.parseInt(process.env.REF_TEST_PORT, 10)
   : getPort(project)
 const blobOutput = process.env.PLAYWRIGHT_BLOB_OUTPUT
 

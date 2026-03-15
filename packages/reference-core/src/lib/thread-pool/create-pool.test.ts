@@ -75,4 +75,14 @@ describe('createWorkerPool', () => {
     await expect(pool.runWorker('watch', { task: true })).resolves.toBeUndefined()
     expect(error).toHaveBeenCalledWith('[watch] Worker failed:', expect.any(Error))
   })
+
+  it('does not log expected worker termination during pool shutdown', async () => {
+    const { createWorkerPool, runPoolWorker, error } = await importCreatePoolModule()
+    const pool = createWorkerPool({ watch: 'ignored' })
+
+    runPoolWorker.mockRejectedValue(new Error('Terminating worker thread'))
+
+    await expect(pool.runWorker('watch', { task: true })).resolves.toBeUndefined()
+    expect(error).not.toHaveBeenCalled()
+  })
 })

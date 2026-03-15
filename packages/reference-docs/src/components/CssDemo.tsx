@@ -261,7 +261,8 @@ export function CssDemo() {
             <Div fontSize="sm" fontWeight="600" mb="2r" color="gray.600">
               Conditional styling
             </Div>
-            <div
+            <button
+              type="button"
               onMouseEnter={() => setIsHovered(true)}
               onMouseLeave={() => setIsHovered(false)}
               className={css({
@@ -273,10 +274,12 @@ export function CssDemo() {
                 cursor: 'pointer',
                 textAlign: 'center',
                 fontWeight: '600',
+                border: 'none',
+                width: '100%',
               })}
             >
               {isHovered ? 'You are hovering!' : 'Hover over me'}
-            </div>
+            </button>
           </div>
         </Div>
       </Div>

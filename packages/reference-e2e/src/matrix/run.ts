@@ -14,6 +14,7 @@ import { loadConfig } from '../config/index.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const BLOB_DIR = join(__dirname, '..', '..', 'blob-reports')
+const REPORT_DIR = join(__dirname, '..', '..', 'playwright-report')
 
 export async function run(): Promise<void> {
   await rm(BLOB_DIR, { recursive: true, force: true }).catch(() => {})
@@ -67,9 +68,15 @@ export async function run(): Promise<void> {
     { stdio: 'inherit' }
   )
   console.log('Opening report in browser...')
-  await execa('pnpm', ['exec', 'playwright', 'show-report'], {
-    stdio: 'inherit',
-  })
+  try {
+    await execa('pnpm', ['exec', 'playwright', 'show-report'], {
+      stdio: 'inherit',
+    })
+  } catch (error) {
+    console.warn(
+      `Could not open the Playwright HTML report automatically. The merged report is still available at ${REPORT_DIR}.`
+    )
+  }
 }
 
 run().catch((err) => {
