@@ -1,4 +1,5 @@
 export { broadcastChannel, channelListeners } from './channel'
+export { closeEventBus } from './close'
 export { emit } from './emit'
 export { initEventBus } from './init'
 export { on, once } from './on'
