@@ -1,5 +1,6 @@
 #![deny(clippy::all)]
 
+mod typescript;
 mod virtual_postprocess;
 
 use napi::Result;
