@@ -1,10 +1,11 @@
 import { existsSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import { join } from 'node:path'
-import { getCurrentTriple, supportedTargets } from './native-targets.mjs'
-import { packageDir } from './paths.mjs'
 
-const triple = getCurrentTriple()
+import { packageDir } from '../shared/paths'
+import { getRustTarget, getVirtualNativeTriple } from '../shared/targets'
+
+const triple = getVirtualNativeTriple()
 if (!triple) {
   throw new Error('Unsupported platform for @reference-ui/rust native build.')
 }
@@ -15,7 +16,7 @@ if (existsSync(binaryPath)) {
   process.exit(0)
 }
 
-const target = supportedTargets[triple]
+const target = getRustTarget(triple)
 console.log(`Building native binary for ${target}`)
 
 execFileSync('pnpm', ['run', 'build:native', '--', '--target', target], {

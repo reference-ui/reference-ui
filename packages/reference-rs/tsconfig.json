@@ -6,5 +6,5 @@
     "moduleResolution": "bundler",
     "baseUrl": "."
   },
-  "include": ["src/js/**/*.ts"]
+  "include": ["js/**/*.ts"]
 }

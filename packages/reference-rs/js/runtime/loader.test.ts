@@ -10,7 +10,7 @@ async function importLoaderModule() {
     rewriteCvaImports: vi.fn(),
   }))
   const createRequire = vi.fn(() => requireBinding)
-  const fileURLToPath = vi.fn(() => '/workspace/packages/reference-rs/src/js/loader.ts')
+  const fileURLToPath = vi.fn(() => '/workspace/packages/reference-rs/js/runtime/loader.ts')
 
   vi.doMock('node:fs', () => ({
     existsSync,
@@ -36,25 +36,14 @@ afterEach(() => {
 })
 
 describe('loader', () => {
-  it('maps only supported platform and architecture combinations', async () => {
-    const { getVirtualNativeTriple } = await importLoaderModule()
-
-    expect(getVirtualNativeTriple('darwin', 'x64')).toBe('darwin-x64')
-    expect(getVirtualNativeTriple('darwin', 'arm64')).toBe('darwin-arm64')
-    expect(getVirtualNativeTriple('linux', 'x64')).toBe('linux-x64-gnu')
-    expect(getVirtualNativeTriple('linux', 'arm64')).toBeNull()
-    expect(getVirtualNativeTriple('win32', 'x64')).toBe('win32-x64-msvc')
-    expect(getVirtualNativeTriple('win32', 'arm64')).toBeNull()
-  })
-
   it('resolves the package dir by walking up to the package.json', async () => {
     const { existsSync, readFileSync, resolveReferenceRsPackageDir } = await importLoaderModule()
 
-    expect(resolveReferenceRsPackageDir('file:///workspace/packages/reference-rs/src/js/loader.ts')).toBe(
+    expect(resolveReferenceRsPackageDir('file:///workspace/packages/reference-rs/js/runtime/loader.ts')).toBe(
       '/workspace/packages/reference-rs'
     )
-    expect(existsSync).toHaveBeenCalledWith('/workspace/packages/reference-rs/src/js/package.json')
-    expect(existsSync).toHaveBeenCalledWith('/workspace/packages/reference-rs/src/package.json')
+    expect(existsSync).toHaveBeenCalledWith('/workspace/packages/reference-rs/js/runtime/package.json')
+    expect(existsSync).toHaveBeenCalledWith('/workspace/packages/reference-rs/js/package.json')
     expect(existsSync).toHaveBeenCalledWith('/workspace/packages/reference-rs/package.json')
     expect(readFileSync).toHaveBeenCalledWith('/workspace/packages/reference-rs/package.json', 'utf-8')
   })
