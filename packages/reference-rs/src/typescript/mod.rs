@@ -9,5 +9,5 @@ mod scan;
 #[cfg(test)]
 mod tests;
 
-pub use model::ScanRequest;
+pub use model::{ScanRequest, TsSymbolKind, TypeRef, TypeScriptBundle};
 pub use scan::scan_typescript_bundle;
