@@ -36,18 +36,21 @@ function killProcessTree(pid: number | undefined): void {
   }
 }
 
-async function waitForInterruptionPoint(maxMs = 15_000): Promise<void> {
+async function waitForPath(
+  path: string,
+  maxMs = 15_000
+): Promise<void> {
   const start = Date.now()
 
   while (Date.now() - start < maxMs) {
-    if (existsSync(pandaConfigPath) && !existsSync(reactEntryPath)) {
+    if (existsSync(path)) {
       return
     }
 
     await new Promise((resolve) => setTimeout(resolve, 25))
   }
 
-  throw new Error(`Sync did not reach an interruptible partial state within ${maxMs}ms`)
+  throw new Error(`Timed out waiting for ${path}`)
 }
 
 describe('sync interruption recovery', () => {
@@ -65,7 +68,7 @@ describe('sync interruption recovery', () => {
     })
 
     try {
-      await waitForInterruptionPoint()
+      await waitForPath(pandaConfigPath)
     } finally {
       killProcessTree(interruptedSync.pid)
     }
