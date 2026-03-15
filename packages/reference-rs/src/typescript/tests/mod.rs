@@ -7,16 +7,18 @@ use std::time::{Duration, Instant};
 use super::generator::emit_esm_bundle;
 use super::{scan_typescript_bundle, ScanRequest, TsSymbolKind, TypeRef, TypeScriptBundle};
 
+const SCAN_HERE: &str = "scan_here";
+
 #[test]
 fn scans_fixture_successfully() {
-    let bundle = scan_fixture();
+    let bundle = scan_fixture(SCAN_HERE);
 
     assert_eq!(bundle.version, 1);
 }
 
 #[test]
 fn collects_expected_exported_symbols_from_scanned_files() {
-    let bundle = scan_fixture();
+    let bundle = scan_fixture(SCAN_HERE);
 
     assert_eq!(
         bundle
@@ -52,7 +54,7 @@ fn collects_expected_exported_symbols_from_scanned_files() {
 
 #[test]
 fn resolves_local_extends_and_member_references() {
-    let bundle = scan_fixture();
+    let bundle = scan_fixture(SCAN_HERE);
     let button_props = bundle
         .symbols
         .get("sym:scan_here/button.ts#ButtonProps")
@@ -85,7 +87,7 @@ fn resolves_local_extends_and_member_references() {
 
 #[test]
 fn preserves_external_library_references_inside_the_bundle() {
-    let bundle = scan_fixture();
+    let bundle = scan_fixture(SCAN_HERE);
     let button_props = bundle
         .symbols
         .get("sym:scan_here/button.ts#ButtonProps")
@@ -124,7 +126,7 @@ fn preserves_external_library_references_inside_the_bundle() {
 
 #[test]
 fn resolves_external_symbols_and_tracks_library_metadata() {
-    let bundle = scan_fixture();
+    let bundle = scan_fixture(SCAN_HERE);
 
     let button_schema = bundle
         .symbols
@@ -156,7 +158,7 @@ fn resolves_external_symbols_and_tracks_library_metadata() {
 
 #[test]
 fn captures_leading_comments_for_exported_types_and_members() {
-    let bundle = scan_fixture();
+    let bundle = scan_fixture(SCAN_HERE);
 
     let size = bundle
         .symbols
@@ -260,21 +262,34 @@ fn captures_leading_comments_for_exported_types_and_members() {
 }
 
 #[test]
+fn emits_bundle_for_each_scenario_folder() {
+    ensure_fixture_dependencies_installed();
+    let scenarios = scenario_folders();
+    assert!(!scenarios.is_empty(), "at least one scenario folder (e.g. scan_here) must exist under input/");
+
+    for scenario in &scenarios {
+        let _bundle = scan_fixture(scenario);
+        let path = fixture_output_esm_path(scenario);
+        assert!(path.exists(), "bundle should be written for scenario {scenario}: {}", path.display());
+    }
+}
+
+#[test]
 fn writes_a_concrete_esm_output_for_fixture_inspection() {
-    let bundle = scan_fixture();
+    let bundle = scan_fixture(SCAN_HERE);
     let esm_bundle = emit_esm_bundle(&bundle).expect("ESM emission should succeed");
     let entry_module = esm_bundle
         .modules
         .get(&esm_bundle.entrypoint)
         .expect("entry module should exist");
-    let written_output = fs::read_to_string(fixture_output_esm_path())
+    let written_output = fs::read_to_string(fixture_output_esm_path(SCAN_HERE))
         .expect("fixture ESM output should be readable");
-    let metrics_output = fs::read_to_string(fixture_metrics_path())
+    let metrics_output = fs::read_to_string(fixture_metrics_path(SCAN_HERE))
         .expect("fixture metrics output should be readable");
 
     assert_eq!(esm_bundle.entrypoint, "./bundle.js");
-    assert!(fixture_output_esm_path().exists());
-    assert!(fixture_metrics_path().exists());
+    assert!(fixture_output_esm_path(SCAN_HERE).exists());
+    assert!(fixture_metrics_path(SCAN_HERE).exists());
     assert!(!entry_module.trim().is_empty());
     assert!(entry_module.contains("export const"));
     assert!(entry_module.contains("\"csstype\""));
@@ -312,27 +327,46 @@ fn fixture_input_dir() -> PathBuf {
     tests_dir().join("input")
 }
 
-fn fixture_output_esm_path() -> PathBuf {
-    tests_dir().join("output").join("bundle.js")
+fn fixture_output_dir() -> PathBuf {
+    tests_dir().join("output")
 }
 
-fn fixture_metrics_path() -> PathBuf {
-    tests_dir().join("output").join("bundle-metrics.txt")
+/// Direct subfolders of `input/` (excluding `node_modules`) are scenarios. Each gets `output/{name}/bundle.js`.
+fn scenario_folders() -> Vec<String> {
+    let input = fixture_input_dir();
+    let mut names: Vec<String> = fs::read_dir(&input)
+        .expect("fixture input dir should be readable")
+        .filter_map(|e| e.ok())
+        .filter(|e| e.path().is_dir())
+        .filter_map(|e| e.file_name().into_string().ok())
+        .filter(|name| name != "node_modules")
+        .collect();
+    names.sort();
+    names
 }
 
-fn scan_fixture() -> TypeScriptBundle {
+fn fixture_output_esm_path(scenario: &str) -> PathBuf {
+    fixture_output_dir().join(scenario).join("bundle.js")
+}
+
+fn fixture_metrics_path(scenario: &str) -> PathBuf {
+    fixture_output_dir().join(scenario).join("bundle-metrics.txt")
+}
+
+/// Scan one scenario, write `output/bundle-{scenario}.js` (and metrics), return the bundle.
+fn scan_fixture(scenario: &str) -> TypeScriptBundle {
     ensure_fixture_dependencies_installed();
     let total_start = Instant::now();
     let scan_start = Instant::now();
     let bundle = scan_typescript_bundle(&ScanRequest {
         root_dir: fixture_input_dir(),
-        include: vec!["scan_here/**/*.{ts,tsx}".to_string()],
+        include: vec![format!("{scenario}/**/*.{{ts,tsx}}")],
     })
     .expect("fixture scan should succeed");
     let scan_duration = scan_start.elapsed();
 
     fs::create_dir_all(
-        fixture_output_esm_path()
+        fixture_output_esm_path(scenario)
             .parent()
             .expect("output path should have parent"),
     )
@@ -342,7 +376,7 @@ fn scan_fixture() -> TypeScriptBundle {
     let esm_bundle = emit_esm_bundle(&bundle).expect("fixture ESM emission should succeed");
     let emit_duration = emit_start.elapsed();
     let total_duration = total_start.elapsed();
-    let esm_output_path = fixture_output_esm_path();
+    let esm_output_path = fixture_output_esm_path(scenario);
     fs::write(
         &esm_output_path,
         format!(
@@ -355,7 +389,7 @@ fn scan_fixture() -> TypeScriptBundle {
     )
     .expect("fixture output ESM should be writable");
     fs::write(
-        fixture_metrics_path(),
+        fixture_metrics_path(scenario),
         render_bundle_metrics(&bundle, scan_duration, emit_duration, total_duration),
     )
     .expect("fixture metrics output should be writable");

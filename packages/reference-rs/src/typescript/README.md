@@ -61,7 +61,7 @@ The main test loop should stay in Rust:
 
 - point the scanner at a fixture input directory
 - build the resolved graph
-- write the emitted JS to `tests/output/bundle.js`
+- write one emitted JS per scenario to `tests/output/{scenario}/bundle.js` (see `tests/input/README.md`)
 - assert focused behaviors in unit tests
 
 This keeps scanner debugging close to the real logic while avoiding brittle
