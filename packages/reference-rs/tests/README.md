@@ -2,14 +2,12 @@
 
 Two test suites:
 
-- **Rust** (`pnpm test:rust` / `cargo test`): unit and smoke tests for the scanner, AST, and resolver. No output-file assertions.
-- **Vitest** (`pnpm test:vitest`): loads the emitted bundles and asserts on their shape and content. Requires bundles to be emitted first.
+- **Rust** (`pnpm test:rust` / `cargo test`): unit and smoke tests for the scanner, AST, and resolver. No bundle emission; output correctness is tested in Vitest.
+- **Vitest** (`pnpm test:vitest`): uses the **compiled napi-rs runtime** in globalSetup to emit bundles, then loads and asserts on their shape and content.
 
-**Full test run:** `pnpm test` runs Rust tests, then emits bundles, then Vitest.
+**Full test run:** `pnpm test` ensures the native binary is built, runs Rust tests, then Vitest (which emits bundles via the native addon and runs bundle tests).
 
-**Layout (same as before):**
+**Layout:**
 
 - **`input/`** – scenario folders (e.g. `scan_here/`). Each direct subfolder is one scenario; see `input/README.md`.
-- **`output/`** – emitted bundles, one folder per scenario: `output/{scenario}/bundle.js` and `bundle-metrics.txt`. See `output/README.md`.
-
-To emit bundles without running Vitest: `cargo run --bin emit-test-bundles` (or `pnpm test:emit` if wired).
+- **`output/`** – emitted bundles, one folder per scenario: `output/{scenario}/bundle.js`. Emitted by Vitest globalSetup using the native `scanAndEmitBundle` binding. See `output/README.md`.

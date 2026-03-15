@@ -13,4 +13,4 @@ mod scanner;
 mod tests;
 
 pub use api::{ScanRequest, TsSymbolKind, TypeRef, TypeScriptBundle};
-pub use scan::scan_typescript_bundle;
+pub use scan::{scan_and_emit_bundle, scan_typescript_bundle};

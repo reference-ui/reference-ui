@@ -1,7 +1,7 @@
 /**
  * Vitest tests for the scan_here scenario bundle.
- * Run after emitting bundles (e.g. after `pnpm test:rust` or `cargo test`).
- * Bundles live in output/scan_here/bundle.js (same structure as input).
+ * Bundles are emitted by globalSetup using the compiled napi-rs runtime (scanAndEmitBundle).
+ * Output: output/scan_here/bundle.js
  */
 import { pathToFileURL } from 'node:url'
 import { describe, expect, it } from 'vitest'
