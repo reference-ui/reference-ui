@@ -24,7 +24,9 @@ export function loadConfig(): RefTestConfig {
   _config = {
     defaultProject: process.env.REF_TEST_PROJECT ?? raw.defaultProject,
     basePort: raw.basePort,
-    workers: process.env.REF_TEST_WORKERS ? parseInt(process.env.REF_TEST_WORKERS, 10) : raw.workers,
+    workers: process.env.REF_TEST_WORKERS
+      ? Number.parseInt(process.env.REF_TEST_WORKERS, 10)
+      : raw.workers,
     parallelSandboxes:
       process.env.REF_TEST_PARALLEL !== undefined
         ? process.env.REF_TEST_PARALLEL === '1'

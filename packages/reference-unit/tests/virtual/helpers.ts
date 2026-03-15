@@ -49,7 +49,7 @@ export function getSourcePaths(): string[] {
       out.push(join('src', rel))
     }
   }
-  return out.sort()
+  return out.sort((a, b) => a.localeCompare(b))
 }
 
 export function getVirtualPaths(): string[] {
@@ -58,7 +58,7 @@ export function getVirtualPaths(): string[] {
   for (const rel of walkFiles(virtualDir, virtualDir)) {
     out.push(rel)
   }
-  return out.sort()
+  return out.sort((a, b) => a.localeCompare(b))
 }
 
 export function virtualToPossibleSources(virtualRel: string): string[] {

@@ -54,7 +54,7 @@ async function hashAppDir(dir: string): Promise<string> {
     }
   }
   await walk(dir)
-  for (const f of files.sort()) {
+  for (const f of files.sort((a, b) => a.localeCompare(b))) {
     const content = await readFile(join(dir, f), 'utf-8').catch(() => '')
     hash.update(f + '\0' + content)
   }
