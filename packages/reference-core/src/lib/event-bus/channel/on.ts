@@ -1,4 +1,5 @@
-import { broadcastChannel, channelListeners } from './channel'
+import { channelListeners } from './channel'
+import './dispatch'
 import type { Events } from '../../../events'
 
 type EventHandler = (payload: unknown) => void | Promise<void>
@@ -29,7 +30,6 @@ export function on(event: string, handler: (payload: unknown) => void | Promise<
   }
   listener.originalHandler = handler
 
-  broadcastChannel.addEventListener('message', listener as EventListener)
   trackListener(event, listener)
 }
 
@@ -44,13 +44,11 @@ export function once(event: string, handler: (payload: unknown) => void | Promis
 export function once(event: string, handler: (payload: unknown) => void | Promise<void>) {
   const listener: WrappedListener = (msg: Event) => {
     if ((msg as MessageEvent).data?.type === 'bus:event' && (msg as MessageEvent).data?.event === event) {
-      broadcastChannel.removeEventListener('message', listener as EventListener)
       channelListeners.get(event)?.delete(listener)
       handler((msg as MessageEvent).data.payload)
     }
   }
   listener.originalHandler = handler
 
-  broadcastChannel.addEventListener('message', listener as EventListener)
   trackListener(event, listener)
 }

@@ -1,4 +1,5 @@
 import { broadcastChannel, channelListeners } from './channel'
+import { dispatchChannelMessage } from './dispatch'
 
 let isClosed = false
 
@@ -9,13 +10,8 @@ let isClosed = false
 export function closeEventBus(): void {
   if (isClosed) return
 
-  for (const listeners of channelListeners.values()) {
-    for (const listener of listeners) {
-      broadcastChannel.removeEventListener('message', listener as EventListener)
-    }
-  }
-
   channelListeners.clear()
+  broadcastChannel.removeEventListener('message', dispatchChannelMessage as EventListener)
   broadcastChannel.close()
   isClosed = true
 }
