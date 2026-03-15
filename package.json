@@ -18,6 +18,7 @@
     "test": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/reference-e2e run test",
     "test:quick": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/reference-e2e run test:quick",
     "test:lib": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/lib run test",
+    "test:rust": "pnpm --filter @reference-ui/rust run test:rust",
     "test:core": "nx run reference-core:test",
     "test:cli": "pnpm run test:core",
     "test:app": "nx run @reference-ui/reference-unit:test",

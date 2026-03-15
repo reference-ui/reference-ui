@@ -42,6 +42,7 @@
     "publish:native": "pnpm exec tsx ./js/tools/publish-native.ts",
     "stage-local-artifacts": "pnpm exec tsx ./js/tools/stage-local-artifacts.ts",
     "test": "vitest run",
+    "test:rust": "cargo test",
     "test:watch": "vitest"
   },
   "publishConfig": {
