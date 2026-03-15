@@ -102,6 +102,8 @@ So: **Oxc gives us full TS structure; we intentionally expose a subset.** Extend
 
 **Possible next steps (only if needed):** Enums, or further TS type variants.
 
+**Oxc exhaustiveness:** Every `TSType` and `TSTupleElement` variant is handled explicitly (no catch-all). See `OXC_TYPE_AUDIT.md` for the full checklist. New Oxc variants will cause a compile error until an arm is added.
+
 ---
 
 ## 7. Test coverage (TS scenarios)

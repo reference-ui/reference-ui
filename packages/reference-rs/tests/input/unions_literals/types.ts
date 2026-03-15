@@ -27,3 +27,9 @@ export interface OptionalProps {
 
 /** Type alias that is a union of object types. */
 export type ButtonVariant = { type: 'primary' } | { type: 'secondary'; outline: boolean };
+
+/** Oxc coverage: intrinsic keywords we handle explicitly. */
+export type BigintAlias = bigint;
+export type SymbolAlias = symbol;
+export type NeverAlias = never;
+export type VoidAlias = void;

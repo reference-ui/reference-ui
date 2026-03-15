@@ -30,6 +30,28 @@ export const _f0631b896d577312 = {
 },
 };
 
+export const _e6a653180c040998 = {
+  id: "_e6a653180c040998",
+  name: "TemplateLiteralAlias",
+  library: "user",
+  description: "Template literal type → Unknown with summary.",
+  definition: {
+  kind: "unknown",
+  summary: "`foo-${string}`",
+},
+};
+
+export const _4b619f9ef2ff1695 = {
+  id: "_4b619f9ef2ff1695",
+  name: "TypeQueryAlias",
+  library: "user",
+  description: "Type query (typeof) → Unknown with summary.",
+  definition: {
+  kind: "unknown",
+  summary: "typeof Array.prototype.map",
+},
+};
+
 export const _f724b00f1a7d9d24 = {
   id: "_f724b00f1a7d9d24",
   name: "User",
@@ -118,6 +140,16 @@ export const types = [
   {
     id: "_f0631b896d577312",
     name: "StringKeys",
+    library: "user",
+  },
+  {
+    id: "_e6a653180c040998",
+    name: "TemplateLiteralAlias",
+    library: "user",
+  },
+  {
+    id: "_4b619f9ef2ff1695",
+    name: "TypeQueryAlias",
     library: "user",
   }
 ];

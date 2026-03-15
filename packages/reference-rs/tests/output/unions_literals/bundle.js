@@ -1,3 +1,14 @@
+export const _5bdbc3234d9d3678 = {
+  id: "_5bdbc3234d9d3678",
+  name: "BigintAlias",
+  library: "user",
+  description: "Oxc coverage: intrinsic keywords we handle explicitly.",
+  definition: {
+  kind: "intrinsic",
+  name: "bigint",
+},
+};
+
 export const _97e64045b2d2504c = {
   id: "_97e64045b2d2504c",
   name: "ButtonVariant",
@@ -98,6 +109,17 @@ export const _c105c6e2851ff804 = {
 },
 };
 
+export const _919098afeeceb483 = {
+  id: "_919098afeeceb483",
+  name: "NeverAlias",
+  library: "user",
+  description: "Oxc coverage: intrinsic keywords we handle explicitly.",
+  definition: {
+  kind: "intrinsic",
+  name: "never",
+},
+};
+
 export const _fdbc3396a3bc9575 = {
   id: "_fdbc3396a3bc9575",
   name: "OptionalProps",
@@ -186,6 +208,28 @@ export const _c6576ce6ab61aca6 = {
 },
 };
 
+export const _f4624ee562742d67 = {
+  id: "_f4624ee562742d67",
+  name: "SymbolAlias",
+  library: "user",
+  description: "Oxc coverage: intrinsic keywords we handle explicitly.",
+  definition: {
+  kind: "intrinsic",
+  name: "symbol",
+},
+};
+
+export const _f40fb2fc7a8048ed = {
+  id: "_f40fb2fc7a8048ed",
+  name: "VoidAlias",
+  library: "user",
+  description: "Oxc coverage: intrinsic keywords we handle explicitly.",
+  definition: {
+  kind: "intrinsic",
+  name: "void",
+},
+};
+
 export const interfaces = [
   {
     id: "_fdbc3396a3bc9575",
@@ -194,6 +238,11 @@ export const interfaces = [
   }
 ];
 export const types = [
+  {
+    id: "_5bdbc3234d9d3678",
+    name: "BigintAlias",
+    library: "user",
+  },
   {
     id: "_97e64045b2d2504c",
     name: "ButtonVariant",
@@ -210,6 +259,11 @@ export const types = [
     library: "user",
   },
   {
+    id: "_919098afeeceb483",
+    name: "NeverAlias",
+    library: "user",
+  },
+  {
     id: "_d18d41faa3b4342f",
     name: "Status",
     library: "user",
@@ -217,6 +271,16 @@ export const types = [
   {
     id: "_c6576ce6ab61aca6",
     name: "StringOrNumber",
+    library: "user",
+  },
+  {
+    id: "_f4624ee562742d67",
+    name: "SymbolAlias",
+    library: "user",
+  },
+  {
+    id: "_f40fb2fc7a8048ed",
+    name: "VoidAlias",
     library: "user",
   }
 ];

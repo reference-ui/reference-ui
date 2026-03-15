@@ -59,6 +59,28 @@ describe('unions_literals bundle', () => {
     expect(names).toContain('MaybeId')
     expect(names).toContain('OptionalProps')
     expect(names).toContain('ButtonVariant')
+    expect(names).toContain('BigintAlias')
+    expect(names).toContain('SymbolAlias')
+    expect(names).toContain('NeverAlias')
+    expect(names).toContain('VoidAlias')
+  })
+
+  it('emits intrinsic keywords (bigint, symbol, never, void)', async () => {
+    const mod = await loadBundle('unions_literals')
+    const symbols = getSymbols(mod)
+    const bigintAlias = findSymbol(symbols, 'BigintAlias')
+    const symbolAlias = findSymbol(symbols, 'SymbolAlias')
+    const neverAlias = findSymbol(symbols, 'NeverAlias')
+    const voidAlias = findSymbol(symbols, 'VoidAlias')
+    const def = (s: ReturnType<typeof findSymbol>) => s.definition as { kind?: string; name?: string }
+    expect(def(bigintAlias).kind).toBe('intrinsic')
+    expect(def(bigintAlias).name).toBe('bigint')
+    expect(def(symbolAlias).kind).toBe('intrinsic')
+    expect(def(symbolAlias).name).toBe('symbol')
+    expect(def(neverAlias).kind).toBe('intrinsic')
+    expect(def(neverAlias).name).toBe('never')
+    expect(def(voidAlias).kind).toBe('intrinsic')
+    expect(def(voidAlias).name).toBe('void')
   })
 
   it('emits union type definition (Status: string literals)', async () => {
