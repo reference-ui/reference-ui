@@ -115,48 +115,25 @@ describe('thread-pool/run', () => {
     expect(error).toHaveBeenCalledWith('[pool]', expect.any(Error))
   })
 
-  it('starts interval memory logging and stops it on shutdown()', async () => {
+  it('does not emit memory debug logs by default', async () => {
     const { initPool, shutdown, debug, instances } = await importRunModule()
     initPool(WORKER_DATA)
 
-    expect(debug).toHaveBeenCalledWith(
+    expect(debug).not.toHaveBeenCalledWith(
       'memory',
-      'startup',
-      expect.objectContaining({
-        rssMb: expect.any(String),
-        heapMb: expect.any(String),
-        externalMb: expect.any(String),
-      })
+      expect.any(String),
+      expect.anything()
     )
 
     vi.advanceTimersByTime(3000)
-
-    expect(debug).toHaveBeenCalledWith(
-      'memory',
-      'interval',
-      expect.objectContaining({
-        rssMb: expect.any(String),
-        heapMb: expect.any(String),
-        externalMb: expect.any(String),
-      })
-    )
 
     const callCountBeforeShutdown = debug.mock.calls.length
     await shutdown()
 
     expect(instances[0]?.destroy).toHaveBeenCalledTimes(1)
-    expect(debug).toHaveBeenCalledWith(
-      'memory',
-      'shutdown',
-      expect.objectContaining({
-        rssMb: expect.any(String),
-        heapMb: expect.any(String),
-        externalMb: expect.any(String),
-      })
-    )
 
     vi.advanceTimersByTime(6000)
-    expect(debug.mock.calls.length).toBe(callCountBeforeShutdown + 1)
+    expect(debug.mock.calls.length).toBe(callCountBeforeShutdown)
   })
 
   it('allows re-initialization after shutdown()', async () => {

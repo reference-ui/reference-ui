@@ -1,6 +1,7 @@
 import Piscina from 'piscina'
 import type { ReferenceUIConfig } from '../../config/types'
 import { log } from '../log'
+import { config } from './config'
 
 let pool: Piscina | undefined
 let memoryLogTimer: NodeJS.Timeout | undefined
@@ -11,6 +12,8 @@ function formatMb(bytes: number): string {
 }
 
 function logProcessMemory(reason: string): void {
+  if (!config.resourceUsageLogs) return
+
   const mem = process.memoryUsage()
   log.debug('memory', reason, {
     rssMb: formatMb(mem.rss),
@@ -20,7 +23,7 @@ function logProcessMemory(reason: string): void {
 }
 
 function initMemoryLogging(): void {
-  if (memoryLogTimer) return
+  if (!config.resourceUsageLogs || memoryLogTimer) return
 
   logProcessMemory('startup')
   memoryLogTimer = setInterval(() => {

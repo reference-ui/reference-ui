@@ -5,8 +5,8 @@ const CHANNEL_NAME = 'reference-ui:events'
 
 async function importInitModule(debug: boolean) {
   vi.resetModules()
-  vi.doMock('../config', () => ({
-    config: { debug },
+  vi.doMock('../../../config/store', () => ({
+    getConfig: () => ({ debug }),
   }))
 
   const debugSpy = vi.fn()
@@ -27,7 +27,7 @@ async function importInitModule(debug: boolean) {
 afterEach(() => {
   vi.resetModules()
   vi.clearAllMocks()
-  vi.doUnmock('../config')
+  vi.doUnmock('../../../config/store')
   vi.doUnmock('../../log')
 })
 
@@ -44,8 +44,13 @@ describe('initEventBus', () => {
     })
 
     await vi.waitFor(() => {
-      expect(debugSpy).toHaveBeenCalledWith('bus', 'test:init', { ok: true })
+      expect(debugSpy).toHaveBeenCalledTimes(1)
     })
+
+    expect(debugSpy.mock.calls[0]).toHaveLength(2)
+    expect(debugSpy.mock.calls[0]?.[0]).toBe('bus')
+    expect(String(debugSpy.mock.calls[0]?.[1])).toContain('test:init')
+    expect(String(debugSpy.mock.calls[0]?.[1])).toContain('ok')
 
     peer.close()
     broadcastChannel.close()

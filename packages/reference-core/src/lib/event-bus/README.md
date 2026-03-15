@@ -16,7 +16,7 @@ This module wraps Node's `BroadcastChannel` and exposes a small typed event API:
 - one shared `BroadcastChannel` instance for Reference UI events
 - listener registration and cleanup bookkeeping
 - typed event dispatch based on the central `Events` map
-- optional debug logging of bus traffic
+- global-debug logging of bus traffic with structured payload output
 
 ## What it does not own
 
