@@ -22,8 +22,14 @@ export const _eba256af489576a9 = {
     kind: "property",
     description: "Optional click handler.",
     type: {
-    kind: "unknown",
-    summary: "() => void",
+    kind: "function",
+    params: [
+  
+    ],
+    returnType:   {
+      kind: "intrinsic",
+      name: "void",
+    },
   }
   },
   {

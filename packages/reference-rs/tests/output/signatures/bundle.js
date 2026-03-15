@@ -102,6 +102,28 @@ export const _b677c97a9d5e706e = {
   types: [],
 };
 
+export const _8ed205096007e4eb = {
+  id: "_8ed205096007e4eb",
+  name: "MouseEvent",
+  library: "user",
+  description: "Simple event-like type for callback tests.",
+  definition: {
+  kind: "object",
+  members: [
+  {
+    name: "target",
+    optional: false,
+    readonly: false,
+    kind: "property",
+    type: {
+    kind: "intrinsic",
+    name: "unknown",
+  }
+  }
+  ],
+},
+};
+
 export const _7b3b52c30a1cb1f3 = {
   id: "_7b3b52c30a1cb1f3",
   name: "NamedPair",
@@ -282,6 +304,48 @@ export const _3da1bee03f34a580 = {
 },
 };
 
+export const _59a2ab269a56f209 = {
+  id: "_59a2ab269a56f209",
+  name: "WithCallback",
+  library: "user",
+  description: "Interface with a callback property: we document the function signature (params + return type).",
+  members: [
+  {
+    name: "onClick",
+    optional: false,
+    readonly: false,
+    kind: "property",
+    description: "Called when the element is clicked.",
+    type: {
+    kind: "function",
+    params: [
+    {
+      name: "event",
+      optional: false,
+      typeRef:   {
+        id: "_8ed205096007e4eb",
+        name: "MouseEvent",
+        library: "user",
+      },
+    }
+    ],
+    returnType:   {
+      kind: "intrinsic",
+      name: "void",
+    },
+  }
+  }
+],
+  extends: [],
+  types: [
+  {
+    id: "_8ed205096007e4eb",
+    name: "MouseEvent",
+    library: "user",
+  }
+],
+};
+
 export const _6bab5b18975daebf = {
   id: "_6bab5b18975daebf",
   name: "WithIdAndName",
@@ -432,12 +496,22 @@ export const interfaces = [
     library: "user",
   },
   {
+    id: "_59a2ab269a56f209",
+    name: "WithCallback",
+    library: "user",
+  },
+  {
     id: "_3ad186f5e93cfb4b",
     name: "WithMethod",
     library: "user",
   }
 ];
 export const types = [
+  {
+    id: "_8ed205096007e4eb",
+    name: "MouseEvent",
+    library: "user",
+  },
   {
     id: "_7b3b52c30a1cb1f3",
     name: "NamedPair",

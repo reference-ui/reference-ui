@@ -4,8 +4,8 @@ use std::fmt::Write;
 use serde::Serialize;
 
 use super::super::api::{
-    TsMember, TsMemberKind, TsSymbol, TsSymbolKind, TsTypeParameter, TupleElement, TypeRef,
-    TypeScriptBundle,
+    FnParam, TsMember, TsMemberKind, TsSymbol, TsSymbolKind, TsTypeParameter, TupleElement,
+    TypeRef, TypeScriptBundle,
 };
 
 #[allow(dead_code)]
@@ -214,6 +214,24 @@ fn emit_tuple_element(
     Ok(format!("{{\n{}\n}}", parts.join(",\n")))
 }
 
+fn emit_fn_param(
+    bundle: &TypeScriptBundle,
+    p: &FnParam,
+    export_names: &BTreeMap<String, String>,
+) -> Result<String, String> {
+    let name_str = match &p.name {
+        Some(n) => to_js_literal(n)?,
+        None => "null".to_string(),
+    };
+    let type_ref_str = emit_optional_type_ref(bundle, p.type_ref.as_ref(), export_names)?;
+    Ok(format!(
+        "{{\n  name: {},\n  optional: {},\n  typeRef: {},\n}}",
+        name_str,
+        to_js_literal(&p.optional)?,
+        indent_block(&type_ref_str, 2)
+    ))
+}
+
 fn emit_optional_type_ref(
     bundle: &TypeScriptBundle,
     type_ref: Option<&TypeRef>,
@@ -316,6 +334,31 @@ fn emit_type_ref(
             Ok(format!(
                 "{{\n  kind: \"intersection\",\n  types: [\n{}\n  ],\n}}",
                 lines.join(",\n")
+            ))
+        }
+        TypeRef::IndexedAccess { object, index } => {
+            let object_str = emit_type_ref(bundle, object, export_names)?;
+            let index_str = emit_type_ref(bundle, index, export_names)?;
+            Ok(format!(
+                "{{\n  kind: \"indexed_access\",\n  object: {},\n  index: {},\n}}",
+                indent_block(&object_str, 2),
+                indent_block(&index_str, 2)
+            ))
+        }
+        TypeRef::Function { params, return_type } => {
+            let param_lines: Vec<_> = params
+                .iter()
+                .map(|p| emit_fn_param(bundle, p, export_names))
+                .collect::<Result<Vec<_>, _>>()?;
+            let return_str = emit_type_ref(bundle, return_type, export_names)?;
+            Ok(format!(
+                "{{\n  kind: \"function\",\n  params: [\n{}\n  ],\n  returnType: {},\n}}",
+                param_lines
+                    .iter()
+                    .map(|s| indent_block(s, 2))
+                    .collect::<Vec<_>>()
+                    .join(",\n"),
+                indent_block(&return_str, 2)
             ))
         }
         TypeRef::Unknown { summary } => Ok(format!(
@@ -469,6 +512,18 @@ fn collect_libraries_from_type_ref(type_ref: &TypeRef, libraries: &mut BTreeSet<
             for te in elements {
                 collect_libraries_from_type_ref(&te.element, libraries);
             }
+        }
+        TypeRef::IndexedAccess { object, index } => {
+            collect_libraries_from_type_ref(object, libraries);
+            collect_libraries_from_type_ref(index, libraries);
+        }
+        TypeRef::Function { params, return_type } => {
+            for p in params {
+                if let Some(ref tr) = p.type_ref {
+                    collect_libraries_from_type_ref(tr, libraries);
+                }
+            }
+            collect_libraries_from_type_ref(return_type, libraries);
         }
         TypeRef::Intersection { types } => {
             for t in types {

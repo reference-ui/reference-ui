@@ -64,3 +64,12 @@ export interface Constructible {
 
 /** Parenthesized type (should unwrap to string). */
 export type ParenType = (string);
+
+/** Simple event-like type for callback tests. */
+export type MouseEvent = { target: unknown };
+
+/** Interface with a callback property: we document the function signature (params + return type). */
+export interface WithCallback {
+  /** Called when the element is clicked. */
+  onClick: (event: MouseEvent) => void;
+}

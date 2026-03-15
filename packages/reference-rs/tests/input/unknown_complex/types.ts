@@ -30,3 +30,12 @@ export type TemplateLiteralAlias = `foo-${string}`;
 
 /** Type query (typeof) → Unknown with summary. */
 export type TypeQueryAlias = typeof Array.prototype.map;
+
+/** Indexed access type: property key from another type. */
+export type UserName = User['name'];
+
+/** Interface member with indexed access type. */
+export interface WithIndexedAccess {
+  /** Type of the name property from User. */
+  nameType: User['name'];
+}
