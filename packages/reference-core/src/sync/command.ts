@@ -1,6 +1,7 @@
 import { bootstrap } from './bootstrap'
 import { initComplete } from './complete'
 import { initEvents } from './events'
+import { initShutdown } from './shutdown'
 import { initVirtual } from '../virtual/init'
 import { initConfig } from '../system/panda/config/init'
 import { initWatch } from '../watch/init'
@@ -13,6 +14,7 @@ export type { SyncOptions, SyncPayload } from './types'
 /** Sync command – main hub for the design system build pipeline. */
 export async function syncCommand(cwd: string, options?: SyncOptions): Promise<void> {
   const payload = await bootstrap(cwd, options)
+  initShutdown()
   initEvents()
   initComplete(payload)
   initWatch(payload)

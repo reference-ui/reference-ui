@@ -1,5 +1,9 @@
 import { spawn } from 'node:child_process'
+import { emit } from '../event-bus'
 import { log } from '../log'
+
+const PROCESS_SPAWNED_EVENT = 'process:spawned'
+const PROCESS_EXIT_EVENT = 'process:exit'
 
 /**
  * Spawn a child process and wait for it to complete.
@@ -24,6 +28,9 @@ export async function spawnMonitoredAsync(
   })
 
   log.debug(logCategory, `[${processName}] spawned PID ${child.pid}`)
+  if (typeof child.pid === 'number') {
+    emit(PROCESS_SPAWNED_EVENT, { pid: child.pid, processName })
+  }
 
   child.stdout?.on('data', (chunk) => {
     output.stdout += chunk.toString()
@@ -33,7 +40,17 @@ export async function spawnMonitoredAsync(
   })
 
   const code = await new Promise<number | null>((resolve, reject) => {
-    child.on('exit', resolve)
+    child.on('exit', (exitCode, signalCode) => {
+      if (typeof child.pid === 'number') {
+        emit(PROCESS_EXIT_EVENT, {
+          pid: child.pid,
+          processName,
+          code: exitCode,
+          signal: signalCode,
+        })
+      }
+      resolve(exitCode)
+    })
     child.on('error', (err) =>
       reject(new Error(`Failed to spawn ${processName}: ${err.message}`))
     )

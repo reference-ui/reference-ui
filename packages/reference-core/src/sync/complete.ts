@@ -1,5 +1,6 @@
 import { once } from '../lib/event-bus'
 import type { SyncPayload } from './types'
+import { shutdownAndExit } from './shutdown'
 
 /** Message printed to stdout when ref sync finishes a build (watch mode). Test env scans for this. */
 export const REF_SYNC_READY_MESSAGE = '[ref sync] ready\n'
@@ -18,21 +19,33 @@ export const REF_SYNC_FAILED_MESSAGE = '[ref sync] failed\n'
  * `sync:complete` is emitted from the main thread, and BroadcastChannel does not
  * deliver a message back to the same channel instance that sent it.
  *
- * If config or Panda fails, we receive `sync:failed` and exit with code 1.
+ * Failure events are observed directly here because `sync:failed` is emitted by
+ * the main thread, and BroadcastChannel does not deliver messages back to the
+ * same channel instance that emitted them.
  */
 export function initComplete(payload: SyncPayload): void {
-  once('sync:failed', () => {
+  let failureHandled = false
+
+  const handleFailure = () => {
+    if (failureHandled) return
+    failureHandled = true
+
     if (!payload.options.watch) {
-      process.exit(1)
+      void shutdownAndExit(1, 'sync:failed')
     } else {
       process.stderr.write(REF_SYNC_FAILED_MESSAGE)
     }
-  })
+  }
+
+  once('sync:failed', handleFailure)
+  once('system:config:failed', handleFailure)
+  once('system:panda:codegen:failed', handleFailure)
+  once('virtual:failed', handleFailure)
 
   once('packager:complete', () => {
     once('packager-ts:complete', () => {
       if (!payload.options.watch) {
-        process.exit(0)
+        void shutdownAndExit(0, 'sync:complete')
       } else {
         process.stdout.write(REF_SYNC_READY_MESSAGE)
       }
