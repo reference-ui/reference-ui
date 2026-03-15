@@ -6,6 +6,10 @@ on:
       matrix_json:
         required: true
         type: string
+      ref:
+        required: false
+        type: string
+        default: ""
       artifact_prefix:
         required: false
         type: string
@@ -17,6 +21,11 @@ on:
         required: true
         type: string
         default: '[{"runner":"ubuntu-latest","target":"x86_64-unknown-linux-gnu"}]'
+      ref:
+        description: Git ref or SHA to check out
+        required: false
+        type: string
+        default: ""
       artifact_prefix:
         description: Artifact name prefix
         required: false
@@ -37,6 +46,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref || github.sha }}
 
       - name: Set up pnpm
         uses: pnpm/action-setup@v4

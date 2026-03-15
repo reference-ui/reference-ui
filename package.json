@@ -21,7 +21,9 @@
     "test:core": "nx run reference-core:test",
     "test:cli": "pnpm run test:core",
     "test:app": "nx run @reference-ui/reference-unit:test",
-    "test:ci": "pnpm --filter @reference-ui/core run eslint:txt && nx run-many -t test --projects=reference-core,@reference-ui/reference-unit --parallel=2 --outputStyle=stream --skipNxCache && nx run @reference-ui/reference-e2e:quick --outputStyle=stream --skipNxCache",
+    "test:ci": "pnpm run test:ci:unit && pnpm run playwright:install && pnpm run test:ci:e2e",
+    "test:ci:unit": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/lib run build && pnpm --filter @reference-ui/core run eslint:txt && pnpm --filter @reference-ui/rust run test && pnpm --filter @reference-ui/core run test && pnpm --filter @reference-ui/lib run test && pnpm --filter @reference-ui/reference-unit run test",
+    "test:ci:e2e": "REF_TEST_FRESH=1 pnpm --filter @reference-ui/reference-e2e run test:quick",
     "test:system": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/core run eslint:txt && concurrently --kill-others-on-fail -n core,app -c blue,green \"pnpm --filter @reference-ui/core run test\" \"pnpm --filter @reference-ui/reference-unit run test\"",
     "test:e2e": "pnpm --filter @reference-ui/core run build && concurrently --kill-others-on-fail -n core,app -c blue,green \"pnpm --filter @reference-ui/core run test\" \"pnpm --filter @reference-ui/reference-unit run test\" && REF_TEST_FRESH=1 pnpm --filter @reference-ui/reference-e2e run test:quick",
     "version-packages": "changeset version && pnpm install --lockfile-only"
