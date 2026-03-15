@@ -3,12 +3,19 @@ import {
   mkdirSync,
   mkdtempSync,
   realpathSync,
+  renameSync,
   rmSync,
 } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { spawnMonitoredAsync } from '../../../lib/child-process'
 import { findDtsFile } from './find-dts'
+
+function copyFileAtomic(sourcePath: string, targetPath: string): void {
+  const tempPath = `${targetPath}.tmp-${process.pid}-${Date.now()}`
+  copyFileSync(sourcePath, tempPath)
+  renameSync(tempPath, targetPath)
+}
 
 /**
  * Compile TypeScript source to .d.mts declarations.
@@ -59,7 +66,7 @@ export async function compileDeclarations(
     }
 
     mkdirSync(dirname(outDtsPath), { recursive: true })
-    copyFileSync(tmpDtsPath, outDtsPath)
+    copyFileAtomic(tmpDtsPath, outDtsPath)
     return outDtsPath
   } finally {
     rmSync(tmpOut, { recursive: true, force: true })
