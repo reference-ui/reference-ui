@@ -77,7 +77,7 @@ fn emit_symbol_object(
     let mut fields = vec![
         format!("  id: {},", to_js_literal(export_name)?),
         format!("  name: {},", to_js_literal(&symbol.name)?),
-        "  library: \"user\",".to_string(),
+        format!("  library: {},", to_js_literal(&symbol.library)?),
     ];
 
     match symbol.kind {
@@ -207,7 +207,7 @@ fn emit_symbol_refs_by_kind(
                 .expect("symbol export name should exist")
                 .clone(),
             name: symbol.name.clone(),
-            library: "user".to_string(),
+            library: symbol.library.clone(),
         })
         .collect::<Vec<_>>();
 
@@ -274,7 +274,7 @@ fn reference_descriptor(
         return Some(SymbolRef {
             id: export_names.get(target_id)?.clone(),
             name: target_symbol.name.clone(),
-            library: "user".to_string(),
+            library: target_symbol.library.clone(),
         });
     }
 
@@ -289,6 +289,9 @@ fn emit_libraries(bundle: &TypeScriptBundle) -> Result<String, String> {
     let mut libraries = BTreeSet::new();
 
     for symbol in bundle.symbols.values() {
+        if symbol.library != "user" {
+            libraries.insert(symbol.library.clone());
+        }
         collect_libraries_from_type_refs(&symbol.extends, &mut libraries);
         collect_libraries_from_type_refs(&symbol.references, &mut libraries);
 

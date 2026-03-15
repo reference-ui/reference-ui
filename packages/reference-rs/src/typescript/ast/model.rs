@@ -6,6 +6,7 @@ use super::super::api::{ScannerDiagnostic, TsMember, TsSymbolKind, TypeRef};
 pub(crate) struct ParsedFileAst {
     pub(crate) file_id: String,
     pub(crate) module_specifier: String,
+    pub(crate) library: String,
     pub(crate) source: String,
     pub(crate) import_bindings: BTreeMap<String, ImportBinding>,
     pub(crate) exports: Vec<SymbolShell>,
