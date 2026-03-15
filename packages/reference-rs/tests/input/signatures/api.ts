@@ -46,3 +46,21 @@ export type WithIdAndName = { id: string } & { name: string };
 
 /** Nested: array of tuples. */
 export type Pairs = [string, number][];
+
+/** Named tuple (labels on elements). */
+export type NamedPair = [name: string, age: number];
+
+/** Tuple with optional trailing element. */
+export type WithOptionalElement = [string, number?];
+
+/** Tuple with rest element. */
+export type WithRest = [string, ...number[]];
+
+/** Interface with construct signature. */
+export interface Constructible {
+  /** Construct with a number. */
+  new (value: number): { value: number };
+}
+
+/** Parenthesized type (should unwrap to string). */
+export type ParenType = (string);

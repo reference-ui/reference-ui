@@ -4597,8 +4597,19 @@ export const _c458c2f5a4eb128b = {
       kind: "union",
       types: [
       {
-        kind: "unknown",
-        summary: "(string & {})",
+        kind: "intersection",
+        types: [
+        {
+          kind: "intrinsic",
+          name: "string",
+        },
+        {
+          kind: "object",
+          members: [
+        
+          ],
+        }
+        ],
       },
       {
         kind: "literal",
@@ -7108,8 +7119,19 @@ export const _fd5610fd861b7285 = {
       kind: "union",
       types: [
       {
-        kind: "unknown",
-        summary: "(string & {})",
+        kind: "intersection",
+        types: [
+        {
+          kind: "intrinsic",
+          name: "string",
+        },
+        {
+          kind: "object",
+          members: [
+        
+          ],
+        }
+        ],
       },
       {
         kind: "literal",
@@ -7175,8 +7197,19 @@ export const _67526a21fa732cef = {
       kind: "union",
       types: [
       {
-        kind: "unknown",
-        summary: "(string & {})",
+        kind: "intersection",
+        types: [
+        {
+          kind: "intrinsic",
+          name: "string",
+        },
+        {
+          kind: "object",
+          members: [
+        
+          ],
+        }
+        ],
       },
       {
         kind: "literal",
@@ -9686,8 +9719,19 @@ export const _9c7fc9e379a600d1 = {
       kind: "union",
       types: [
       {
-        kind: "unknown",
-        summary: "(string & {})",
+        kind: "intersection",
+        types: [
+        {
+          kind: "intrinsic",
+          name: "string",
+        },
+        {
+          kind: "object",
+          members: [
+        
+          ],
+        }
+        ],
       },
       {
         kind: "literal",
@@ -9753,8 +9797,19 @@ export const _573f17bade1b2d36 = {
       kind: "union",
       types: [
       {
-        kind: "unknown",
-        summary: "(string & {})",
+        kind: "intersection",
+        types: [
+        {
+          kind: "intrinsic",
+          name: "string",
+        },
+        {
+          kind: "object",
+          members: [
+        
+          ],
+        }
+        ],
       },
       {
         kind: "literal",
@@ -9820,8 +9875,19 @@ export const _fa770ea9a70cb260 = {
       kind: "union",
       types: [
       {
-        kind: "unknown",
-        summary: "(string & {})",
+        kind: "intersection",
+        types: [
+        {
+          kind: "intrinsic",
+          name: "string",
+        },
+        {
+          kind: "object",
+          members: [
+        
+          ],
+        }
+        ],
       },
       {
         kind: "literal",
@@ -9898,8 +9964,19 @@ export const _9c208f340246cc2e = {
       kind: "union",
       types: [
       {
-        kind: "unknown",
-        summary: "(string & {})",
+        kind: "intersection",
+        types: [
+        {
+          kind: "intrinsic",
+          name: "string",
+        },
+        {
+          kind: "object",
+          members: [
+        
+          ],
+        }
+        ],
       },
       {
         kind: "literal",
@@ -9965,8 +10042,19 @@ export const _f7c39caffe3331e8 = {
       kind: "union",
       types: [
       {
-        kind: "unknown",
-        summary: "(string & {})",
+        kind: "intersection",
+        types: [
+        {
+          kind: "intrinsic",
+          name: "string",
+        },
+        {
+          kind: "object",
+          members: [
+        
+          ],
+        }
+        ],
       },
       {
         kind: "literal",
@@ -10611,8 +10699,19 @@ export const _f0c6334bec1581d4 = {
       kind: "union",
       types: [
       {
-        kind: "unknown",
-        summary: "(string & {})",
+        kind: "intersection",
+        types: [
+        {
+          kind: "intrinsic",
+          name: "string",
+        },
+        {
+          kind: "object",
+          members: [
+        
+          ],
+        }
+        ],
       },
       {
         kind: "literal",
@@ -20458,8 +20557,19 @@ export const _38b64b024c492cee = {
       kind: "union",
       types: [
       {
-        kind: "unknown",
-        summary: "(string & {})",
+        kind: "intersection",
+        types: [
+        {
+          kind: "intrinsic",
+          name: "string",
+        },
+        {
+          kind: "object",
+          members: [
+        
+          ],
+        }
+        ],
       },
       {
         kind: "literal",
@@ -20525,8 +20635,19 @@ export const _5bd7940637f757b0 = {
       kind: "union",
       types: [
       {
-        kind: "unknown",
-        summary: "(string & {})",
+        kind: "intersection",
+        types: [
+        {
+          kind: "intrinsic",
+          name: "string",
+        },
+        {
+          kind: "object",
+          members: [
+        
+          ],
+        }
+        ],
       },
       {
         kind: "literal",
@@ -30372,8 +30493,19 @@ export const _56d275a8d1416f92 = {
       kind: "union",
       types: [
       {
-        kind: "unknown",
-        summary: "(string & {})",
+        kind: "intersection",
+        types: [
+        {
+          kind: "intrinsic",
+          name: "string",
+        },
+        {
+          kind: "object",
+          members: [
+        
+          ],
+        }
+        ],
       },
       {
         kind: "literal",
@@ -30439,8 +30571,19 @@ export const _831a5af16d048b6d = {
       kind: "union",
       types: [
       {
-        kind: "unknown",
-        summary: "(string & {})",
+        kind: "intersection",
+        types: [
+        {
+          kind: "intrinsic",
+          name: "string",
+        },
+        {
+          kind: "object",
+          members: [
+        
+          ],
+        }
+        ],
       },
       {
         kind: "literal",
@@ -30496,8 +30639,19 @@ export const _2db061ba7193fc07 = {
       kind: "union",
       types: [
       {
-        kind: "unknown",
-        summary: "(string & {})",
+        kind: "intersection",
+        types: [
+        {
+          kind: "intrinsic",
+          name: "string",
+        },
+        {
+          kind: "object",
+          members: [
+        
+          ],
+        }
+        ],
       },
       {
         kind: "literal",
@@ -30564,8 +30718,19 @@ export const _733df3d9dbc793fd = {
       kind: "union",
       types: [
       {
-        kind: "unknown",
-        summary: "(string & {})",
+        kind: "intersection",
+        types: [
+        {
+          kind: "intrinsic",
+          name: "string",
+        },
+        {
+          kind: "object",
+          members: [
+        
+          ],
+        }
+        ],
       },
       {
         kind: "literal",
@@ -30621,8 +30786,19 @@ export const _d86135245cd6dd97 = {
       kind: "union",
       types: [
       {
-        kind: "unknown",
-        summary: "(string & {})",
+        kind: "intersection",
+        types: [
+        {
+          kind: "intrinsic",
+          name: "string",
+        },
+        {
+          kind: "object",
+          members: [
+        
+          ],
+        }
+        ],
       },
       {
         kind: "literal",
@@ -30689,8 +30865,19 @@ export const _3ce37d160aac0c1c = {
       kind: "union",
       types: [
       {
-        kind: "unknown",
-        summary: "(string & {})",
+        kind: "intersection",
+        types: [
+        {
+          kind: "intrinsic",
+          name: "string",
+        },
+        {
+          kind: "object",
+          members: [
+        
+          ],
+        }
+        ],
       },
       {
         kind: "literal",
@@ -32654,8 +32841,19 @@ export const _d091e4d1ae790e06 = {
       kind: "union",
       types: [
       {
-        kind: "unknown",
-        summary: "(string & {})",
+        kind: "intersection",
+        types: [
+        {
+          kind: "intrinsic",
+          name: "string",
+        },
+        {
+          kind: "object",
+          members: [
+        
+          ],
+        }
+        ],
       },
       {
         kind: "literal",
@@ -32721,8 +32919,19 @@ export const _8473b07ab9b1a5d8 = {
       kind: "union",
       types: [
       {
-        kind: "unknown",
-        summary: "(string & {})",
+        kind: "intersection",
+        types: [
+        {
+          kind: "intrinsic",
+          name: "string",
+        },
+        {
+          kind: "object",
+          members: [
+        
+          ],
+        }
+        ],
       },
       {
         kind: "literal",
@@ -34686,8 +34895,19 @@ export const _d24fc7629ed15f8a = {
       kind: "union",
       types: [
       {
-        kind: "unknown",
-        summary: "(string & {})",
+        kind: "intersection",
+        types: [
+        {
+          kind: "intrinsic",
+          name: "string",
+        },
+        {
+          kind: "object",
+          members: [
+        
+          ],
+        }
+        ],
       },
       {
         kind: "literal",
@@ -35541,8 +35761,19 @@ export const _dd0cd150cd4fb94a = {
       kind: "union",
       types: [
       {
-        kind: "unknown",
-        summary: "(string & {})",
+        kind: "intersection",
+        types: [
+        {
+          kind: "intrinsic",
+          name: "string",
+        },
+        {
+          kind: "object",
+          members: [
+        
+          ],
+        }
+        ],
       },
       {
         kind: "literal",
@@ -36858,8 +37089,19 @@ export const _2ab4d9962768ac8c = {
       kind: "union",
       types: [
       {
-        kind: "unknown",
-        summary: "(string & {})",
+        kind: "intersection",
+        types: [
+        {
+          kind: "intrinsic",
+          name: "string",
+        },
+        {
+          kind: "object",
+          members: [
+        
+          ],
+        }
+        ],
       },
       {
         kind: "literal",
@@ -36925,8 +37167,19 @@ export const _93766d12a02a65b2 = {
       kind: "union",
       types: [
       {
-        kind: "unknown",
-        summary: "(string & {})",
+        kind: "intersection",
+        types: [
+        {
+          kind: "intrinsic",
+          name: "string",
+        },
+        {
+          kind: "object",
+          members: [
+        
+          ],
+        }
+        ],
       },
       {
         kind: "literal",
@@ -38242,8 +38495,19 @@ export const _3510ada788ad5ac4 = {
       kind: "union",
       types: [
       {
-        kind: "unknown",
-        summary: "(string & {})",
+        kind: "intersection",
+        types: [
+        {
+          kind: "intrinsic",
+          name: "string",
+        },
+        {
+          kind: "object",
+          members: [
+        
+          ],
+        }
+        ],
       },
       {
         kind: "literal",
@@ -38309,8 +38573,19 @@ export const _b67f4a5f2e6cbd69 = {
       kind: "union",
       types: [
       {
-        kind: "unknown",
-        summary: "(string & {})",
+        kind: "intersection",
+        types: [
+        {
+          kind: "intrinsic",
+          name: "string",
+        },
+        {
+          kind: "object",
+          members: [
+        
+          ],
+        }
+        ],
       },
       {
         kind: "literal",
@@ -43494,8 +43769,19 @@ export const _0e670764ef1af00b = {
       kind: "union",
       types: [
       {
-        kind: "unknown",
-        summary: "(string & {})",
+        kind: "intersection",
+        types: [
+        {
+          kind: "intrinsic",
+          name: "string",
+        },
+        {
+          kind: "object",
+          members: [
+        
+          ],
+        }
+        ],
       },
       {
         kind: "literal",
@@ -43561,8 +43847,19 @@ export const _955bc0721d0cb3b9 = {
       kind: "union",
       types: [
       {
-        kind: "unknown",
-        summary: "(string & {})",
+        kind: "intersection",
+        types: [
+        {
+          kind: "intrinsic",
+          name: "string",
+        },
+        {
+          kind: "object",
+          members: [
+        
+          ],
+        }
+        ],
       },
       {
         kind: "literal",
@@ -48746,8 +49043,19 @@ export const _c91d495a9734cf5b = {
       kind: "union",
       types: [
       {
-        kind: "unknown",
-        summary: "(string & {})",
+        kind: "intersection",
+        types: [
+        {
+          kind: "intrinsic",
+          name: "string",
+        },
+        {
+          kind: "object",
+          members: [
+        
+          ],
+        }
+        ],
       },
       {
         kind: "literal",
@@ -48813,8 +49121,19 @@ export const _3ebbfc2277dd34f0 = {
       kind: "union",
       types: [
       {
-        kind: "unknown",
-        summary: "(string & {})",
+        kind: "intersection",
+        types: [
+        {
+          kind: "intrinsic",
+          name: "string",
+        },
+        {
+          kind: "object",
+          members: [
+        
+          ],
+        }
+        ],
       },
       {
         kind: "literal",
@@ -48870,8 +49189,19 @@ export const _7707e7b4c331c3d2 = {
       kind: "union",
       types: [
       {
-        kind: "unknown",
-        summary: "(string & {})",
+        kind: "intersection",
+        types: [
+        {
+          kind: "intrinsic",
+          name: "string",
+        },
+        {
+          kind: "object",
+          members: [
+        
+          ],
+        }
+        ],
       },
       {
         kind: "literal",
@@ -48938,8 +49268,19 @@ export const _08bce17756b3f58c = {
       kind: "union",
       types: [
       {
-        kind: "unknown",
-        summary: "(string & {})",
+        kind: "intersection",
+        types: [
+        {
+          kind: "intrinsic",
+          name: "string",
+        },
+        {
+          kind: "object",
+          members: [
+        
+          ],
+        }
+        ],
       },
       {
         kind: "literal",
@@ -48995,8 +49336,19 @@ export const _b1fa0e685f58bbf6 = {
       kind: "union",
       types: [
       {
-        kind: "unknown",
-        summary: "(string & {})",
+        kind: "intersection",
+        types: [
+        {
+          kind: "intrinsic",
+          name: "string",
+        },
+        {
+          kind: "object",
+          members: [
+        
+          ],
+        }
+        ],
       },
       {
         kind: "literal",
@@ -49063,8 +49415,19 @@ export const _13e458cb1a7c33bb = {
       kind: "union",
       types: [
       {
-        kind: "unknown",
-        summary: "(string & {})",
+        kind: "intersection",
+        types: [
+        {
+          kind: "intrinsic",
+          name: "string",
+        },
+        {
+          kind: "object",
+          members: [
+        
+          ],
+        }
+        ],
       },
       {
         kind: "literal",
@@ -49768,8 +50131,19 @@ export const _2c2cd4b497da19f5 = {
       kind: "union",
       types: [
       {
-        kind: "unknown",
-        summary: "(string & {})",
+        kind: "intersection",
+        types: [
+        {
+          kind: "intrinsic",
+          name: "string",
+        },
+        {
+          kind: "object",
+          members: [
+        
+          ],
+        }
+        ],
       },
       {
         kind: "literal",
@@ -49835,8 +50209,19 @@ export const _2dec2bedce09e25f = {
       kind: "union",
       types: [
       {
-        kind: "unknown",
-        summary: "(string & {})",
+        kind: "intersection",
+        types: [
+        {
+          kind: "intrinsic",
+          name: "string",
+        },
+        {
+          kind: "object",
+          members: [
+        
+          ],
+        }
+        ],
       },
       {
         kind: "literal",
@@ -50540,8 +50925,19 @@ export const _19d1538b52760d81 = {
       kind: "union",
       types: [
       {
-        kind: "unknown",
-        summary: "(string & {})",
+        kind: "intersection",
+        types: [
+        {
+          kind: "intrinsic",
+          name: "string",
+        },
+        {
+          kind: "object",
+          members: [
+        
+          ],
+        }
+        ],
       },
       {
         kind: "literal",

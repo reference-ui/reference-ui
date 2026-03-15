@@ -3,15 +3,16 @@ use std::collections::BTreeMap;
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
     Comment, Declaration, ExportNamedDeclaration, ImportDeclarationSpecifier, ImportOrExportKind,
-    PropertyKey, Statement, TSIndexSignature, TSCallSignatureDeclaration, TSInterfaceDeclaration,
-    TSMethodSignature, TSPropertySignature, TSSignature, TSType, TSTypeAliasDeclaration,
+    PropertyKey, Statement, TSConstructSignatureDeclaration, TSIndexSignature,
+    TSCallSignatureDeclaration, TSInterfaceDeclaration, TSMethodSignature, TSPropertySignature,
+    TSSignature, TSType, TSTypeAliasDeclaration,
     TSTypeParameterDeclaration, TSTupleElement,
 };
 use oxc_parser::Parser;
 use oxc_span::{GetSpan, SourceType, Span};
 
 use super::super::api::{
-    ScannerDiagnostic, TsMember, TsMemberKind, TsSymbolKind, TsTypeParameter, TypeRef,
+    ScannerDiagnostic, TsMember, TsMemberKind, TsSymbolKind, TsTypeParameter, TupleElement, TypeRef,
 };
 use super::super::scanner::{resolve_import, symbol_id, ScannedFile, ScannedWorkspace};
 use super::model::{ImportBinding, ParsedFileAst, SymbolShell};
@@ -362,7 +363,15 @@ fn push_interface_shell<'a>(
                     current_module_specifier,
                     current_library,
                 )),
-                TSSignature::TSConstructSignatureDeclaration(_) => None,
+                TSSignature::TSConstructSignatureDeclaration(decl) => Some(construct_signature_to_member(
+                    decl,
+                    source,
+                    comments,
+                    exclude,
+                    import_bindings,
+                    current_module_specifier,
+                    current_library,
+                )),
             }
         })
         .collect::<Vec<_>>();
@@ -549,6 +558,36 @@ fn call_signature_to_member(
     }
 }
 
+fn construct_signature_to_member(
+    decl: &TSConstructSignatureDeclaration<'_>,
+    source: &str,
+    comments: &[Comment],
+    exclude_starts_between: Option<&[u32]>,
+    import_bindings: &BTreeMap<String, ImportBinding>,
+    current_module_specifier: &str,
+    current_library: &str,
+) -> TsMember {
+    let description = leading_comment_for_span(source, comments, decl.span(), exclude_starts_between);
+    let type_ref = decl.return_type.as_ref().map(|annotation| {
+        type_to_ref(
+            &annotation.type_annotation,
+            source,
+            import_bindings,
+            current_module_specifier,
+            current_library,
+        )
+    });
+
+    TsMember {
+        name: "[new]".to_string(),
+        optional: false,
+        readonly: false,
+        kind: TsMemberKind::ConstructSignature,
+        description,
+        type_ref,
+    }
+}
+
 fn index_signature_to_member(
     index: &TSIndexSignature<'_>,
     source: &str,
@@ -577,39 +616,69 @@ fn index_signature_to_member(
     }
 }
 
-/// Converts a tuple element to TypeRef. TSTupleElement inherits TSType variants; for optional/rest we
-/// extract the inner type; for other variants we re-use type_to_ref via layout-compatible transmute.
-fn tuple_element_to_ref(
+/// Converts a tuple element to TupleElement (label, optional, rest, element type).
+fn tuple_element_to_tuple_element(
     el: &TSTupleElement<'_>,
     source: &str,
     import_bindings: &BTreeMap<String, ImportBinding>,
     current_module_specifier: &str,
     current_library: &str,
-) -> TypeRef {
+) -> TupleElement {
     match el {
-        TSTupleElement::TSOptionalType(opt) => type_to_ref(
-            &opt.type_annotation,
-            source,
-            import_bindings,
-            current_module_specifier,
-            current_library,
-        ),
-        TSTupleElement::TSRestType(rest) => type_to_ref(
-            &rest.type_annotation,
-            source,
-            import_bindings,
-            current_module_specifier,
-            current_library,
-        ),
-        _ => {
-            // TSTupleElement shares layout with TSType for inherited variants (per oxc inherit_variants macro).
-            type_to_ref(
-                unsafe { &*(el as *const TSTupleElement<'_> as *const TSType<'_>) },
+        TSTupleElement::TSOptionalType(opt) => TupleElement {
+            label: None,
+            optional: true,
+            rest: false,
+            element: type_to_ref(
+                &opt.type_annotation,
                 source,
                 import_bindings,
                 current_module_specifier,
                 current_library,
-            )
+            ),
+        },
+        TSTupleElement::TSRestType(rest) => TupleElement {
+            label: None,
+            optional: false,
+            rest: true,
+            element: type_to_ref(
+                &rest.type_annotation,
+                source,
+                import_bindings,
+                current_module_specifier,
+                current_library,
+            ),
+        },
+        TSTupleElement::TSNamedTupleMember(named) => {
+            let label = slice_span(source, named.label.span()).to_string();
+            let element = tuple_element_to_tuple_element(
+                &named.element_type,
+                source,
+                import_bindings,
+                current_module_specifier,
+                current_library,
+            );
+            TupleElement {
+                label: Some(label),
+                optional: named.optional,
+                rest: false,
+                element: element.element,
+            }
+        }
+        _ => {
+            // TSTupleElement shares layout with TSType for inherited variants (per oxc inherit_variants macro).
+            TupleElement {
+                label: None,
+                optional: false,
+                rest: false,
+                element: type_to_ref(
+                    unsafe { &*(el as *const TSTupleElement<'_> as *const TSType<'_>) },
+                    source,
+                    import_bindings,
+                    current_module_specifier,
+                    current_library,
+                ),
+            }
         }
     }
 }
@@ -710,7 +779,7 @@ fn type_to_ref(
                 .element_types
                 .iter()
                 .map(|el| {
-                    tuple_element_to_ref(
+                    tuple_element_to_tuple_element(
                         el,
                         source,
                         import_bindings,
@@ -791,12 +860,29 @@ fn type_to_ref(
                             current_module_specifier,
                             current_library,
                         )),
-                        TSSignature::TSConstructSignatureDeclaration(_) => None,
+                        TSSignature::TSConstructSignatureDeclaration(decl) => {
+                            Some(construct_signature_to_member(
+                                decl,
+                                source,
+                                no_comments,
+                                exclude,
+                                import_bindings,
+                                current_module_specifier,
+                                current_library,
+                            ))
+                        }
                     }
                 })
                 .collect();
             TypeRef::Object { members }
         }
+        TSType::TSParenthesizedType(parent) => type_to_ref(
+            &parent.type_annotation,
+            source,
+            import_bindings,
+            current_module_specifier,
+            current_library,
+        ),
         TSType::TSTypeReference(reference) => {
             let name = slice_span(source, reference.type_name.span()).to_string();
             let lookup = reference_lookup_name(&name);
@@ -913,8 +999,8 @@ fn collect_type_ref_references(type_ref: &TypeRef, references: &mut Vec<TypeRef>
         }
         TypeRef::Array { element } => collect_type_ref_references(element, references),
         TypeRef::Tuple { elements } => {
-            for t in elements {
-                collect_type_ref_references(t, references);
+            for te in elements {
+                collect_type_ref_references(&te.element, references);
             }
         }
         TypeRef::Intersection { types } => {

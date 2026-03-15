@@ -9,4 +9,9 @@ export type {
   StringNumberPair,
   WithIdAndName,
   Pairs,
+  NamedPair,
+  WithOptionalElement,
+  WithRest,
+  Constructible,
+  ParenType,
 } from './api';

@@ -6,6 +6,8 @@
 
 **Out of scope:** Source locations (§4.6) are not planned. Also not in this scope: §4.4 (MCP schema/index), §4.5 (JSDoc tag parsing), §4.7 (re-export/alias chain).
 
+**Focus:** The scanner is focused on **the TypeScript type system itself** — capturing type shape and structure cleanly. JSDoc (e.g. `@default`, `@deprecated`) can be built on top of this later; we care about types first.
+
 ---
 
 ## 1. Is the current data model enough for docs?
@@ -51,6 +53,12 @@ We then **narrow** that into our own model:
 
 So: **Oxc gives us full TS structure; we intentionally expose a subset.** Extending docs/MCP support is mostly about mapping more of the Oxc AST into our types and emission, not about replacing Oxc.
 
+**Capturing type data cleanly:** Within interfaces and type aliases we aim to represent TS type structure faithfully:
+
+- **Captured today:** Intrinsics, literals, unions, references (with type args), object type literals (with members), arrays, tuples (element types), intersections. On members: optional, readonly, kind (property / method / call / index). On symbols: type parameters (name, constraint, default). Optional tuple elements and rest are currently reduced to their inner type (we keep the type, drop the optional/rest marker). Named tuple labels (e.g. `[name: string, age: number]`) are not yet preserved.
+- **Still become Unknown (with source summary):** Mapped types, conditional types, template literal types, `import()` types, indexed access, `infer` — we keep the source slice as `summary` so “this exists” is visible; full structure would require a larger model.
+- **Done (improvements):** (1) Tuple elements are structured: `TupleElement { label?, optional, rest, element }`; named tuple labels, optional and rest flags are emitted. (2) Construct signatures are extracted: member name `[new]`, kind `construct`. (3) Parenthesized types are unwrapped so `(string)` is emitted as intrinsic `string`. (4) Everything else stays Unknown with source summary.
+
 ---
 
 ## 4. What would we extend for docs + MCP?
@@ -82,14 +90,32 @@ So: **Oxc gives us full TS structure; we intentionally expose a subset.** Extend
 
 - **Symbols:** Interfaces and type aliases only; generics (params + args) fully supported.
 - **TypeRef:** Intrinsics, literals, unions, arrays, tuples, intersections, references, object literals; everything else → `Unknown` with a summary.
-- **Members:** Properties (optional, readonly), method signatures, call signatures, index signatures; leading-comment descriptions.
-- **Test scenarios:** `generics` (type params/args, object literals), `external_libs` (node_modules resolution, extends, descriptions), `signatures` (readonly, method/call/index, array/tuple/intersection).
+- **Members:** Properties (optional, readonly), method signatures, call signatures, index signatures, construct signatures; leading-comment descriptions.
+- **Tuples:** Element shape includes optional, rest, and optional label (named tuple).
+- **Test scenarios:** `generics` (type params/args, object literals), `external_libs` (node_modules resolution, extends, descriptions), `signatures` (readonly, method/call/index/construct, array/tuple with element metadata, parenthesized unwrap).
 
 **Intentional / acceptable gaps:**
 
 - **Out of scope:** JSDoc tags, source locations, re-export/alias chains.
 - **Advanced types:** Mapped, conditional, template-literal types remain `Unknown` with summary (enough for “this exists” in docs).
-- **Construct signatures:** Not extracted (skipped); add later if needed.
 - **Enums / namespaces:** Not in scope (interfaces and type aliases only).
 
-**Possible next steps (only if needed):** Construct signatures, enums, or named tuple member labels.
+**Possible next steps (only if needed):** Enums, or further TS type variants.
+
+---
+
+## 7. Test coverage (TS scenarios)
+
+**Scenarios and what they cover:**
+
+| Scenario          | Coverage |
+|-------------------|----------|
+| `generics`        | Type parameters, type arguments, constraints, object type literals, member descriptions, re-exports. |
+| `external_libs`   | node_modules resolution, extends, external refs (csstype, json-schema), descriptions, library metadata. |
+| `signatures`      | readonly, optional, kind (property/method/call/index/construct), array, tuple (with label/optional/rest per element), intersection, parenthesized unwrap. |
+| `unions_literals` | Union types, literal types (string/number), optional members. |
+| `tsx`             | .tsx file scanning, interfaces and type aliases from TSX. |
+| `default_params` | Type parameters with default (e.g. `T = string`). |
+| `unknown_complex` | Mapped types, conditional types → `Unknown` with summary. |
+
+**Vitest:** Each scenario has a matching `bundle.{scenario}.test.ts` that loads `output/{scenario}/bundle.js` and asserts shape and content. globalSetup emits one bundle per scenario directory under `tests/input/`.

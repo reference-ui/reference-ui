@@ -19,6 +19,39 @@ export const _e465cbb273371f30 = {
   types: [],
 };
 
+export const _ebfaaf9e244444a7 = {
+  id: "_ebfaaf9e244444a7",
+  name: "Constructible",
+  library: "user",
+  description: "Interface with construct signature.",
+  members: [
+  {
+    name: "[new]",
+    optional: false,
+    readonly: false,
+    kind: "construct",
+    description: "Construct with a number.",
+    type: {
+    kind: "object",
+    members: [
+    {
+      name: "value",
+      optional: false,
+      readonly: false,
+      kind: "property",
+      type: {
+      kind: "intrinsic",
+      name: "number",
+    }
+    }
+    ],
+  }
+  }
+],
+  extends: [],
+  types: [],
+};
+
 export const _b677c97a9d5e706e = {
   id: "_b677c97a9d5e706e",
   name: "MixedMembers",
@@ -69,6 +102,36 @@ export const _b677c97a9d5e706e = {
   types: [],
 };
 
+export const _7b3b52c30a1cb1f3 = {
+  id: "_7b3b52c30a1cb1f3",
+  name: "NamedPair",
+  library: "user",
+  description: "Named tuple (labels on elements).",
+  definition: {
+  kind: "tuple",
+  elements: [
+{
+  label: "name",
+  optional: false,
+  rest: false,
+  element:   {
+    kind: "intrinsic",
+    name: "string",
+  }
+},
+{
+  label: "age",
+  optional: false,
+  rest: false,
+  element:   {
+    kind: "intrinsic",
+    name: "number",
+  }
+}
+  ],
+},
+};
+
 export const _1d9db75ec3ed2f66 = {
   id: "_1d9db75ec3ed2f66",
   name: "NumberArray",
@@ -93,16 +156,35 @@ export const _f305cc1e7199217f = {
   element:   {
     kind: "tuple",
     elements: [
-    {
+  {
+    optional: false,
+    rest: false,
+    element:   {
       kind: "intrinsic",
       name: "string",
-    },
-    {
+    }
+  },
+  {
+    optional: false,
+    rest: false,
+    element:   {
       kind: "intrinsic",
       name: "number",
     }
+  }
     ],
   },
+},
+};
+
+export const _50eb8f1095b4faac = {
+  id: "_50eb8f1095b4faac",
+  name: "ParenType",
+  library: "user",
+  description: "Parenthesized type (should unwrap to string).",
+  definition: {
+  kind: "intrinsic",
+  name: "string",
 },
 };
 
@@ -180,14 +262,22 @@ export const _3da1bee03f34a580 = {
   definition: {
   kind: "tuple",
   elements: [
-  {
+{
+  optional: false,
+  rest: false,
+  element:   {
     kind: "intrinsic",
     name: "string",
-  },
-  {
+  }
+},
+{
+  optional: false,
+  rest: false,
+  element:   {
     kind: "intrinsic",
     name: "number",
   }
+}
   ],
 },
 };
@@ -256,10 +346,74 @@ export const _3ad186f5e93cfb4b = {
   types: [],
 };
 
+export const _da23b67f682e846c = {
+  id: "_da23b67f682e846c",
+  name: "WithOptionalElement",
+  library: "user",
+  description: "Tuple with optional trailing element.",
+  definition: {
+  kind: "tuple",
+  elements: [
+{
+  optional: false,
+  rest: false,
+  element:   {
+    kind: "intrinsic",
+    name: "string",
+  }
+},
+{
+  optional: true,
+  rest: false,
+  element:   {
+    kind: "intrinsic",
+    name: "number",
+  }
+}
+  ],
+},
+};
+
+export const _63db840b5bad946a = {
+  id: "_63db840b5bad946a",
+  name: "WithRest",
+  library: "user",
+  description: "Tuple with rest element.",
+  definition: {
+  kind: "tuple",
+  elements: [
+{
+  optional: false,
+  rest: false,
+  element:   {
+    kind: "intrinsic",
+    name: "string",
+  }
+},
+{
+  optional: false,
+  rest: true,
+  element:   {
+    kind: "array",
+    element:   {
+      kind: "intrinsic",
+      name: "number",
+    },
+  }
+}
+  ],
+},
+};
+
 export const interfaces = [
   {
     id: "_e465cbb273371f30",
     name: "Callable",
+    library: "user",
+  },
+  {
+    id: "_ebfaaf9e244444a7",
+    name: "Constructible",
     library: "user",
   },
   {
@@ -285,6 +439,11 @@ export const interfaces = [
 ];
 export const types = [
   {
+    id: "_7b3b52c30a1cb1f3",
+    name: "NamedPair",
+    library: "user",
+  },
+  {
     id: "_1d9db75ec3ed2f66",
     name: "NumberArray",
     library: "user",
@@ -292,6 +451,11 @@ export const types = [
   {
     id: "_f305cc1e7199217f",
     name: "Pairs",
+    library: "user",
+  },
+  {
+    id: "_50eb8f1095b4faac",
+    name: "ParenType",
     library: "user",
   },
   {
@@ -307,6 +471,16 @@ export const types = [
   {
     id: "_6bab5b18975daebf",
     name: "WithIdAndName",
+    library: "user",
+  },
+  {
+    id: "_da23b67f682e846c",
+    name: "WithOptionalElement",
+    library: "user",
+  },
+  {
+    id: "_63db840b5bad946a",
+    name: "WithRest",
     library: "user",
   }
 ];

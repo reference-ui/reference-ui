@@ -30,6 +30,7 @@ function getSymbols(mod: Record<string, unknown>) {
       name: string
       kind?: string
       readonly?: boolean
+      optional?: boolean
       type?: unknown
     }>
     definition?: unknown
@@ -68,9 +69,14 @@ describe('signatures bundle', () => {
     expect(names).toContain('StringNumberPair')
     expect(names).toContain('WithIdAndName')
     expect(names).toContain('Pairs')
+    expect(names).toContain('NamedPair')
+    expect(names).toContain('WithOptionalElement')
+    expect(names).toContain('WithRest')
+    expect(names).toContain('Constructible')
+    expect(names).toContain('ParenType')
   })
 
-  it('emits readonly and kind on members (ReadonlyProps)', async () => {
+  it('emits readonly, optional, and kind on members (ReadonlyProps)', async () => {
     const mod = await loadBundle('signatures')
     const symbols = getSymbols(mod)
     const readonlyProps = findSymbol(symbols, 'ReadonlyProps')
@@ -79,9 +85,11 @@ describe('signatures bundle', () => {
     const labelMember = readonlyProps.members!.find((m) => m.name === 'label')
     expect(idMember).toBeDefined()
     expect(idMember!.readonly).toBe(true)
+    expect(idMember!.optional).toBe(false)
     expect(idMember!.kind).toBe('property')
     expect(labelMember).toBeDefined()
     expect(labelMember!.readonly).toBe(false)
+    expect(labelMember!.optional).toBe(true)
     expect(labelMember!.kind).toBe('property')
   })
 
@@ -126,14 +134,85 @@ describe('signatures bundle', () => {
     expect(numDef.kind).toBe('array')
   })
 
-  it('emits tuple type (StringNumberPair)', async () => {
+  it('emits tuple type with element shape (StringNumberPair)', async () => {
     const mod = await loadBundle('signatures')
     const symbols = getSymbols(mod)
     const pair = findSymbol(symbols, 'StringNumberPair')
-    const def = pair.definition as { kind?: string; elements?: unknown[] }
+    const def = pair.definition as {
+      kind?: string
+      elements?: Array<{ optional?: boolean; rest?: boolean; label?: string; element?: unknown }>
+    }
     expect(def.kind).toBe('tuple')
     expect(Array.isArray(def.elements)).toBe(true)
     expect(def.elements!.length).toBe(2)
+    def.elements!.forEach((el) => {
+      expect(el.optional).toBe(false)
+      expect(el.rest).toBe(false)
+      expect(el.element).toBeDefined()
+    })
+  })
+
+  it('emits named tuple with labels (NamedPair)', async () => {
+    const mod = await loadBundle('signatures')
+    const symbols = getSymbols(mod)
+    const namedPair = findSymbol(symbols, 'NamedPair')
+    const def = namedPair.definition as {
+      kind?: string
+      elements?: Array<{ optional?: boolean; rest?: boolean; label?: string; element?: unknown }>
+    }
+    expect(def.kind).toBe('tuple')
+    expect(def.elements!.length).toBe(2)
+    expect(def.elements![0].label).toBe('name')
+    expect(def.elements![1].label).toBe('age')
+    expect(def.elements![0].optional).toBe(false)
+    expect(def.elements![1].optional).toBe(false)
+  })
+
+  it('emits tuple with optional element (WithOptionalElement)', async () => {
+    const mod = await loadBundle('signatures')
+    const symbols = getSymbols(mod)
+    const withOpt = findSymbol(symbols, 'WithOptionalElement')
+    const def = withOpt.definition as {
+      kind?: string
+      elements?: Array<{ optional?: boolean; rest?: boolean; element?: unknown }>
+    }
+    expect(def.kind).toBe('tuple')
+    expect(def.elements!.length).toBe(2)
+    expect(def.elements![0].optional).toBe(false)
+    expect(def.elements![1].optional).toBe(true)
+  })
+
+  it('emits tuple with rest element (WithRest)', async () => {
+    const mod = await loadBundle('signatures')
+    const symbols = getSymbols(mod)
+    const withRest = findSymbol(symbols, 'WithRest')
+    const def = withRest.definition as {
+      kind?: string
+      elements?: Array<{ optional?: boolean; rest?: boolean; element?: unknown }>
+    }
+    expect(def.kind).toBe('tuple')
+    expect(def.elements!.length).toBe(2)
+    expect(def.elements![0].rest).toBe(false)
+    expect(def.elements![1].rest).toBe(true)
+  })
+
+  it('emits construct signature as [new] with kind "construct" (Constructible)', async () => {
+    const mod = await loadBundle('signatures')
+    const symbols = getSymbols(mod)
+    const constructible = findSymbol(symbols, 'Constructible')
+    const newMember = constructible.members!.find((m) => m.name === '[new]')
+    expect(newMember).toBeDefined()
+    expect(newMember!.kind).toBe('construct')
+    expect(newMember!.type).toBeDefined()
+  })
+
+  it('unwraps parenthesized type (ParenType)', async () => {
+    const mod = await loadBundle('signatures')
+    const symbols = getSymbols(mod)
+    const parenType = findSymbol(symbols, 'ParenType')
+    const def = parenType.definition as { kind?: string; name?: string }
+    expect(def.kind).toBe('intrinsic')
+    expect(def.name).toBe('string')
   })
 
   it('emits intersection type (WithIdAndName)', async () => {

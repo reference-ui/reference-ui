@@ -56,7 +56,7 @@ pub enum TsSymbolKind {
     TypeAlias,
 }
 
-/// Kind of interface/type-literal member: property, method, call signature, or index signature.
+/// Kind of interface/type-literal member: property, method, call signature, index signature, or construct signature.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum TsMemberKind {
     #[default]
@@ -64,6 +64,16 @@ pub enum TsMemberKind {
     Method,
     CallSignature,
     IndexSignature,
+    ConstructSignature,
+}
+
+/// A single element in a tuple type: optional label (named tuple), optional/rest flags, and the element type.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TupleElement {
+    pub label: Option<String>,
+    pub optional: bool,
+    pub rest: bool,
+    pub element: TypeRef,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -97,7 +107,7 @@ pub enum TypeRef {
         element: Box<TypeRef>,
     },
     Tuple {
-        elements: Vec<TypeRef>,
+        elements: Vec<TupleElement>,
     },
     Intersection {
         types: Vec<TypeRef>,
