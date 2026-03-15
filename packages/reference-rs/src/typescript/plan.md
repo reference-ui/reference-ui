@@ -73,3 +73,23 @@ So: **Oxc gives us full TS structure; we intentionally expose a subset.** Extend
 ## 5. Different scan directories / one bundle per scenario?
 
 **Done.** We use one `ScanRequest` per scenario; Vitest globalSetup runs the native addon per scenario dir (`generics`, `external_libs`, `signatures`, etc.) and writes `output/{scenario}/bundle.js`. Tests load and assert per scenario. API stays one root + one include per request; N scenarios → N requests → N bundles.
+
+---
+
+## 6. Coverage assessment
+
+**Good coverage for the stated goal** (driving TypeScript API docs for users’ own folders):
+
+- **Symbols:** Interfaces and type aliases only; generics (params + args) fully supported.
+- **TypeRef:** Intrinsics, literals, unions, arrays, tuples, intersections, references, object literals; everything else → `Unknown` with a summary.
+- **Members:** Properties (optional, readonly), method signatures, call signatures, index signatures; leading-comment descriptions.
+- **Test scenarios:** `generics` (type params/args, object literals), `external_libs` (node_modules resolution, extends, descriptions), `signatures` (readonly, method/call/index, array/tuple/intersection).
+
+**Intentional / acceptable gaps:**
+
+- **Out of scope:** JSDoc tags, source locations, re-export/alias chains.
+- **Advanced types:** Mapped, conditional, template-literal types remain `Unknown` with summary (enough for “this exists” in docs).
+- **Construct signatures:** Not extracted (skipped); add later if needed.
+- **Enums / namespaces:** Not in scope (interfaces and type aliases only).
+
+**Possible next steps (only if needed):** Construct signatures, enums, or named tuple member labels.
