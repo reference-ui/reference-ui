@@ -83,6 +83,25 @@ export const _f724b00f1a7d9d24 = {
   types: [],
 };
 
+export const _52cc92eeeb08e45d = {
+  id: "_52cc92eeeb08e45d",
+  name: "UserName",
+  library: "user",
+  description: "Indexed access type: property key from another type.",
+  definition: {
+  kind: "indexed_access",
+  object:   {
+    id: "_f724b00f1a7d9d24",
+    name: "User",
+    library: "user",
+  },
+  index:   {
+    kind: "literal",
+    value: "'name'",
+  },
+},
+};
+
 export const _d997f0f1502f7bad = {
   id: "_d997f0f1502f7bad",
   name: "UsesOptionalKeys",
@@ -119,6 +138,36 @@ export const _d997f0f1502f7bad = {
 ],
 };
 
+export const _9e73920757acf05a = {
+  id: "_9e73920757acf05a",
+  name: "WithIndexedAccess",
+  library: "user",
+  description: "Interface member with indexed access type.",
+  members: [
+  {
+    name: "nameType",
+    optional: false,
+    readonly: false,
+    kind: "property",
+    description: "Type of the name property from User.",
+    type: {
+    kind: "indexed_access",
+    object:   {
+      id: "_f724b00f1a7d9d24",
+      name: "User",
+      library: "user",
+    },
+    index:   {
+      kind: "literal",
+      value: "'name'",
+    },
+  }
+  }
+],
+  extends: [],
+  types: [],
+};
+
 export const interfaces = [
   {
     id: "_f724b00f1a7d9d24",
@@ -128,6 +177,11 @@ export const interfaces = [
   {
     id: "_d997f0f1502f7bad",
     name: "UsesOptionalKeys",
+    library: "user",
+  },
+  {
+    id: "_9e73920757acf05a",
+    name: "WithIndexedAccess",
     library: "user",
   }
 ];
@@ -150,6 +204,11 @@ export const types = [
   {
     id: "_4b619f9ef2ff1695",
     name: "TypeQueryAlias",
+    library: "user",
+  },
+  {
+    id: "_52cc92eeeb08e45d",
+    name: "UserName",
     library: "user",
   }
 ];

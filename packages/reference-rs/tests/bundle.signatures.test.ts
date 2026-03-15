@@ -74,6 +74,8 @@ describe('signatures bundle', () => {
     expect(names).toContain('WithRest')
     expect(names).toContain('Constructible')
     expect(names).toContain('ParenType')
+    expect(names).toContain('MouseEvent')
+    expect(names).toContain('WithCallback')
   })
 
   it('emits readonly, optional, and kind on members (ReadonlyProps)', async () => {
@@ -223,5 +225,29 @@ describe('signatures bundle', () => {
     expect(def.kind).toBe('intersection')
     expect(Array.isArray(def.types)).toBe(true)
     expect(def.types!.length).toBeGreaterThanOrEqual(1)
+  })
+
+  it('emits callback (function) type with params and returnType (WithCallback)', async () => {
+    const mod = await loadBundle('signatures')
+    const symbols = getSymbols(mod)
+    const withCallback = findSymbol(symbols, 'WithCallback')
+    expect(withCallback.members).toBeDefined()
+    const onClickMember = withCallback.members!.find((m) => m.name === 'onClick')
+    expect(onClickMember).toBeDefined()
+    const type = onClickMember!.type as {
+      kind?: string
+      params?: Array<{ name?: string; optional?: boolean; typeRef?: unknown }>
+      returnType?: unknown
+    }
+    expect(type.kind).toBe('function')
+    expect(Array.isArray(type.params)).toBe(true)
+    expect(type.params!.length).toBe(1)
+    expect(type.params![0].name).toBe('event')
+    expect(type.params![0].optional).toBe(false)
+    expect(type.params![0].typeRef).toBeDefined()
+    expect(type.returnType).toBeDefined()
+    const returnType = type.returnType as { kind?: string; name?: string }
+    expect(returnType.kind).toBe('intrinsic')
+    expect(returnType.name).toBe('void')
   })
 })

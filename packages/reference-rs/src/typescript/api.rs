@@ -67,6 +67,14 @@ pub enum TsMemberKind {
     ConstructSignature,
 }
 
+/// A single parameter in a function type: name (if simple identifier), optional flag, and type.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FnParam {
+    pub name: Option<String>,
+    pub optional: bool,
+    pub type_ref: Option<TypeRef>,
+}
+
 /// A single element in a tuple type: optional label (named tuple), optional/rest flags, and the element type.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TupleElement {
@@ -114,6 +122,16 @@ pub enum TypeRef {
     },
     Object {
         members: Vec<TsMember>,
+    },
+    /// Indexed access type `T[K]`: object type and index type (key).
+    IndexedAccess {
+        object: Box<TypeRef>,
+        index: Box<TypeRef>,
+    },
+    /// Function type `(params) => returnType`: for callback properties etc.; params include name and type.
+    Function {
+        params: Vec<FnParam>,
+        return_type: Box<TypeRef>,
     },
     Unknown {
         summary: String,

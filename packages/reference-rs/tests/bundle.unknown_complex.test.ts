@@ -57,6 +57,38 @@ describe('unknown_complex bundle', () => {
     expect(names).toContain('UsesOptionalKeys')
     expect(names).toContain('TemplateLiteralAlias')
     expect(names).toContain('TypeQueryAlias')
+    expect(names).toContain('UserName')
+    expect(names).toContain('WithIndexedAccess')
+  })
+
+  it('emits indexed access type (UserName = User["name"]) with object and index', async () => {
+    const mod = await loadBundle('unknown_complex')
+    const symbols = getSymbols(mod)
+    const userName = findSymbol(symbols, 'UserName')
+    const def = userName.definition as {
+      kind?: string
+      object?: { id?: string; name?: string; library?: string }
+      index?: { kind?: string; value?: string }
+    }
+    expect(def.kind).toBe('indexed_access')
+    expect(def.object).toBeDefined()
+    expect(def.index).toBeDefined()
+    expect(def.object!.name).toBe('User')
+    expect(def.object!.library).toBe('user')
+    expect(def.index!.kind).toBe('literal')
+    expect(def.index!.value).toBeDefined()
+  })
+
+  it('emits member type as indexed access (WithIndexedAccess.nameType)', async () => {
+    const mod = await loadBundle('unknown_complex')
+    const symbols = getSymbols(mod)
+    const withIdx = findSymbol(symbols, 'WithIndexedAccess')
+    const nameTypeMember = withIdx.members!.find((m) => m.name === 'nameType')
+    expect(nameTypeMember).toBeDefined()
+    const typeRef = nameTypeMember!.type as { kind?: string; object?: { name?: string }; index?: unknown }
+    expect(typeRef.kind).toBe('indexed_access')
+    expect(typeRef.object).toBeDefined()
+    expect(typeRef.object!.name).toBe('User')
   })
 
   it('emits template literal and type query as Unknown with summary', async () => {

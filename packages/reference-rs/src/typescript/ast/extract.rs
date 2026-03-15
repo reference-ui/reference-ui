@@ -2,17 +2,18 @@ use std::collections::BTreeMap;
 
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
-    Comment, Declaration, ExportNamedDeclaration, ImportDeclarationSpecifier, ImportOrExportKind,
-    PropertyKey, Statement, TSConstructSignatureDeclaration, TSIndexSignature,
-    TSCallSignatureDeclaration, TSInterfaceDeclaration, TSMethodSignature, TSPropertySignature,
-    TSSignature, TSType, TSTypeAliasDeclaration,
+    Comment, Declaration, ExportNamedDeclaration, FormalParameters, ImportDeclarationSpecifier,
+    ImportOrExportKind, PropertyKey, Statement, TSConstructSignatureDeclaration, TSIndexSignature,
+    TSCallSignatureDeclaration, TSInterfaceDeclaration, TSMethodSignature,
+    TSPropertySignature, TSSignature, TSType, TSTypeAliasDeclaration,
     TSTypeParameterDeclaration, TSTupleElement,
 };
 use oxc_parser::Parser;
 use oxc_span::{GetSpan, SourceType, Span};
 
 use super::super::api::{
-    ScannerDiagnostic, TsMember, TsMemberKind, TsSymbolKind, TsTypeParameter, TupleElement, TypeRef,
+    FnParam, ScannerDiagnostic, TsMember, TsMemberKind, TsSymbolKind, TsTypeParameter, TupleElement,
+    TypeRef,
 };
 use super::super::scanner::{resolve_import, symbol_id, ScannedFile, ScannedWorkspace};
 use super::model::{ImportBinding, ParsedFileAst, SymbolShell};
@@ -683,6 +684,52 @@ fn tuple_element_to_tuple_element(
     }
 }
 
+/// Converts Oxc formal parameters to FnParam list (including rest if present).
+fn formal_params_to_fn_params(
+    params: &FormalParameters<'_>,
+    source: &str,
+    import_bindings: &BTreeMap<String, ImportBinding>,
+    current_module_specifier: &str,
+    current_library: &str,
+) -> Vec<FnParam> {
+    let mut out = Vec::with_capacity(params.items.len() + params.rest.as_ref().map(|_| 1).unwrap_or(0));
+    for param in &params.items {
+        let name = Some(slice_span(source, param.pattern.span()).to_string());
+        let type_ref = param.type_annotation.as_ref().map(|ann| {
+            type_to_ref(
+                &ann.type_annotation,
+                source,
+                import_bindings,
+                current_module_specifier,
+                current_library,
+            )
+        });
+        out.push(FnParam {
+            name,
+            optional: param.optional,
+            type_ref,
+        });
+    }
+    if let Some(rest) = &params.rest {
+        let name = Some(slice_span(source, rest.rest.span()).to_string());
+        let type_ref = rest.type_annotation.as_ref().map(|ann| {
+            type_to_ref(
+                &ann.type_annotation,
+                source,
+                import_bindings,
+                current_module_specifier,
+                current_library,
+            )
+        });
+        out.push(FnParam {
+            name,
+            optional: false,
+            type_ref,
+        });
+    }
+    out
+}
+
 fn type_parameters_from_oxc<'a>(
     decl: Option<&TSTypeParameterDeclaration<'a>>,
     source: &str,
@@ -960,16 +1007,53 @@ fn type_to_ref(
                 }],
             }
         }
+        // Indexed access type T[K]: object type + index type (key).
+        TSType::TSIndexedAccessType(idx) => TypeRef::IndexedAccess {
+            object: Box::new(type_to_ref(
+                &idx.object_type,
+                source,
+                import_bindings,
+                current_module_specifier,
+                current_library,
+            )),
+            index: Box::new(type_to_ref(
+                &idx.index_type,
+                source,
+                import_bindings,
+                current_module_specifier,
+                current_library,
+            )),
+        },
         // Complex types we do not model: emit Unknown with source summary.
         TSType::TSConditionalType(_)
         | TSType::TSMappedType(_)
         | TSType::TSTemplateLiteralType(_)
         | TSType::TSImportType(_)
-        | TSType::TSIndexedAccessType(_)
         | TSType::TSInferType(_)
-        | TSType::TSConstructorType(_)
-        | TSType::TSFunctionType(_)
-        | TSType::TSTypeOperatorType(_)
+        | TSType::TSConstructorType(_) => TypeRef::Unknown {
+            summary: slice_span(source, type_annotation.span()).to_string(),
+        },
+        TSType::TSFunctionType(func) => {
+            let params = formal_params_to_fn_params(
+                &func.params,
+                source,
+                import_bindings,
+                current_module_specifier,
+                current_library,
+            );
+            let return_type = type_to_ref(
+                &func.return_type.type_annotation,
+                source,
+                import_bindings,
+                current_module_specifier,
+                current_library,
+            );
+            TypeRef::Function {
+                params,
+                return_type: Box::new(return_type),
+            }
+        },
+        TSType::TSTypeOperatorType(_)
         | TSType::TSTypePredicate(_)
         | TSType::TSTypeQuery(_)
         | TSType::TSThisType(_) => TypeRef::Unknown {
@@ -1068,6 +1152,18 @@ fn collect_type_ref_references(type_ref: &TypeRef, references: &mut Vec<TypeRef>
                     collect_type_ref_references(tr, references);
                 }
             }
+        }
+        TypeRef::IndexedAccess { object, index } => {
+            collect_type_ref_references(object, references);
+            collect_type_ref_references(index, references);
+        }
+        TypeRef::Function { params, return_type } => {
+            for p in params {
+                if let Some(ref tr) = p.type_ref {
+                    collect_type_ref_references(tr, references);
+                }
+            }
+            collect_type_ref_references(return_type, references);
         }
         _ => {}
     }
