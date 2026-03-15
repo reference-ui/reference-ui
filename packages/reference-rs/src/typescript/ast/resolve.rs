@@ -21,6 +21,7 @@ pub(crate) fn resolve_ast(parsed_ast: ParsedTypeScriptAst) -> ResolvedTypeScript
         let ParsedFileAst {
             file_id,
             module_specifier,
+            library,
             source,
             import_bindings,
             exports: parsed_exports,
@@ -31,6 +32,7 @@ pub(crate) fn resolve_ast(parsed_ast: ParsedTypeScriptAst) -> ResolvedTypeScript
             TsFile {
                 path: file_id.clone(),
                 module_specifier: module_specifier.clone(),
+                library: library.clone(),
             },
         );
 
@@ -38,6 +40,7 @@ pub(crate) fn resolve_ast(parsed_ast: ParsedTypeScriptAst) -> ResolvedTypeScript
         let parsed_view = ParsedFileAst {
             file_id: file_id.clone(),
             module_specifier: module_specifier.clone(),
+            library: library.clone(),
             source,
             import_bindings,
             exports: Vec::new(),
@@ -110,6 +113,7 @@ fn resolve_symbol_references(
     TsSymbol {
         id: symbol.id,
         name: symbol.name,
+        library: parsed.library.clone(),
         kind: symbol.kind,
         file_id: parsed.file_id.clone(),
         exported: symbol.exported,

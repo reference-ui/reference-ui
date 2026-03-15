@@ -9,7 +9,7 @@ use oxc_parser::Parser;
 use oxc_span::{GetSpan, SourceType, Span};
 
 use super::super::api::{ScannerDiagnostic, TsMember, TsSymbolKind, TypeRef};
-use super::super::scanner::{resolve_local_import, symbol_id, ScannedFile, ScannedWorkspace};
+use super::super::scanner::{resolve_import, symbol_id, ScannedFile, ScannedWorkspace};
 use super::model::{ImportBinding, ParsedFileAst, SymbolShell};
 
 pub(super) fn extract_files(
@@ -19,11 +19,19 @@ pub(super) fn extract_files(
     scanned_workspace
         .files
         .iter()
-        .map(|scanned_file| extract_file(scanned_file, &scanned_workspace.file_ids, diagnostics))
+        .map(|scanned_file| {
+            extract_file(
+                &scanned_workspace.root_dir,
+                scanned_file,
+                &scanned_workspace.file_ids,
+                diagnostics,
+            )
+        })
         .collect()
 }
 
 fn extract_file(
+    root_dir: &std::path::Path,
     scanned_file: &ScannedFile,
     file_id_set: &std::collections::BTreeSet<String>,
     diagnostics: &mut Vec<ScannerDiagnostic>,
@@ -46,6 +54,7 @@ fn extract_file(
         match statement {
             Statement::ImportDeclaration(import) => {
                 collect_import_bindings(
+                    root_dir,
                     &scanned_file.file_id,
                     import,
                     &scanned_file.source,
@@ -56,6 +65,8 @@ fn extract_file(
             Statement::ExportNamedDeclaration(export_decl) => {
                 collect_exported_declaration(
                     &scanned_file.file_id,
+                    &scanned_file.module_specifier,
+                    &scanned_file.library,
                     export_decl,
                     &scanned_file.source,
                     &import_bindings,
@@ -69,6 +80,7 @@ fn extract_file(
     ParsedFileAst {
         file_id: scanned_file.file_id.clone(),
         module_specifier: scanned_file.module_specifier.clone(),
+        library: scanned_file.library.clone(),
         source: scanned_file.source.clone(),
         import_bindings,
         exports,
@@ -76,6 +88,7 @@ fn extract_file(
 }
 
 fn collect_import_bindings(
+    root_dir: &std::path::Path,
     current_file_id: &str,
     import: &oxc_ast::ast::ImportDeclaration<'_>,
     source: &str,
@@ -89,7 +102,7 @@ fn collect_import_bindings(
             .trim_matches('"')
             .trim_matches('\'')
             .to_string();
-        let target_file_id = resolve_local_import(current_file_id, &source_module, file_id_set);
+        let target_file_id = resolve_import(root_dir, current_file_id, &source_module, file_id_set);
 
         if let Some(specifiers) = &import.specifiers {
             for specifier in specifiers {
@@ -112,6 +125,8 @@ fn collect_import_bindings(
 
 fn collect_exported_declaration(
     file_id: &str,
+    current_module_specifier: &str,
+    current_library: &str,
     export_decl: &ExportNamedDeclaration<'_>,
     source: &str,
     import_bindings: &BTreeMap<String, ImportBinding>,
@@ -130,9 +145,15 @@ fn collect_exported_declaration(
                 .body
                 .iter()
                 .filter_map(|signature| match signature {
-                    TSSignature::TSPropertySignature(property) => Some(
-                        property_signature_to_member(property, source, import_bindings),
-                    ),
+                    TSSignature::TSPropertySignature(property) => {
+                        Some(property_signature_to_member(
+                            property,
+                            source,
+                            import_bindings,
+                            current_module_specifier,
+                            current_library,
+                        ))
+                    }
                     _ => None,
                 })
                 .collect::<Vec<_>>();
@@ -141,7 +162,13 @@ fn collect_exported_declaration(
                 .extends
                 .iter()
                 .map(|heritage| {
-                    expression_to_reference(&heritage.expression, source, import_bindings)
+                    expression_to_reference(
+                        &heritage.expression,
+                        source,
+                        import_bindings,
+                        current_module_specifier,
+                        current_library,
+                    )
                 })
                 .collect::<Vec<_>>();
 
@@ -165,6 +192,8 @@ fn collect_exported_declaration(
                 &type_alias.type_annotation,
                 source,
                 import_bindings,
+                current_module_specifier,
+                current_library,
             ));
             let references = collect_references_from_members(&[], &[], underlying.as_ref());
 
@@ -187,12 +216,19 @@ fn property_signature_to_member(
     property: &TSPropertySignature<'_>,
     source: &str,
     import_bindings: &BTreeMap<String, ImportBinding>,
+    current_module_specifier: &str,
+    current_library: &str,
 ) -> TsMember {
     let name = property_key_name(&property.key, source);
-    let type_ref = property
-        .type_annotation
-        .as_ref()
-        .map(|annotation| type_to_ref(&annotation.type_annotation, source, import_bindings));
+    let type_ref = property.type_annotation.as_ref().map(|annotation| {
+        type_to_ref(
+            &annotation.type_annotation,
+            source,
+            import_bindings,
+            current_module_specifier,
+            current_library,
+        )
+    });
 
     TsMember {
         name,
@@ -205,6 +241,8 @@ fn type_to_ref(
     type_annotation: &TSType<'_>,
     source: &str,
     import_bindings: &BTreeMap<String, ImportBinding>,
+    current_module_specifier: &str,
+    current_library: &str,
 ) -> TypeRef {
     match type_annotation {
         TSType::TSStringKeyword(_) => TypeRef::Intrinsic {
@@ -235,14 +273,25 @@ fn type_to_ref(
             types: union
                 .types
                 .iter()
-                .map(|nested| type_to_ref(nested, source, import_bindings))
+                .map(|nested| {
+                    type_to_ref(
+                        nested,
+                        source,
+                        import_bindings,
+                        current_module_specifier,
+                        current_library,
+                    )
+                })
                 .collect(),
         },
         TSType::TSTypeReference(reference) => {
             let name = slice_span(source, reference.type_name.span()).to_string();
-            let source_module = import_bindings
-                .get(&name)
-                .map(|binding| binding.source_module.clone());
+            let source_module = reference_source_module(
+                &name,
+                import_bindings,
+                current_module_specifier,
+                current_library,
+            );
 
             TypeRef::Reference {
                 name,
@@ -260,11 +309,16 @@ fn expression_to_reference(
     expression: &oxc_ast::ast::Expression<'_>,
     source: &str,
     import_bindings: &BTreeMap<String, ImportBinding>,
+    current_module_specifier: &str,
+    current_library: &str,
 ) -> TypeRef {
     let name = slice_span(source, expression.span()).to_string();
-    let source_module = import_bindings
-        .get(&name)
-        .map(|binding| binding.source_module.clone());
+    let source_module = reference_source_module(
+        &name,
+        import_bindings,
+        current_module_specifier,
+        current_library,
+    );
 
     TypeRef::Reference {
         name,
@@ -301,6 +355,33 @@ fn collect_type_ref_references(type_ref: &TypeRef, references: &mut Vec<TypeRef>
         }
         _ => {}
     }
+}
+
+fn reference_source_module(
+    reference_name: &str,
+    import_bindings: &BTreeMap<String, ImportBinding>,
+    current_module_specifier: &str,
+    current_library: &str,
+) -> Option<String> {
+    let lookup_name = reference_lookup_name(reference_name);
+
+    import_bindings
+        .get(lookup_name)
+        .map(|binding| binding.source_module.clone())
+        .or_else(|| {
+            if current_library == "user" {
+                None
+            } else {
+                Some(current_module_specifier.to_string())
+            }
+        })
+}
+
+fn reference_lookup_name(reference_name: &str) -> &str {
+    reference_name
+        .split(['.', '<'])
+        .next()
+        .unwrap_or(reference_name)
 }
 
 fn property_key_name(key: &PropertyKey<'_>, source: &str) -> String {

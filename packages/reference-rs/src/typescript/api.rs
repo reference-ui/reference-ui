@@ -1,16 +1,13 @@
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
-use serde::Serialize;
-
 #[derive(Debug, Clone)]
 pub struct ScanRequest {
     pub root_dir: PathBuf,
     pub include: Vec<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TypeScriptBundle {
     pub version: u8,
     pub root_dir: String,
@@ -23,18 +20,18 @@ pub struct TypeScriptBundle {
 
 pub type ExportMap = BTreeMap<String, String>;
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TsFile {
     pub path: String,
     pub module_specifier: String,
+    pub library: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TsSymbol {
     pub id: String,
     pub name: String,
+    pub library: String,
     pub kind: TsSymbolKind,
     pub file_id: String,
     pub exported: bool,
@@ -44,23 +41,20 @@ pub struct TsSymbol {
     pub references: Vec<TypeRef>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-#[serde(rename_all = "snake_case")]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TsSymbolKind {
     Interface,
     TypeAlias,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TsMember {
     pub name: String,
     pub optional: bool,
     pub type_ref: Option<TypeRef>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-#[serde(tag = "kind", rename_all = "snake_case")]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TypeRef {
     Intrinsic {
         name: String,
@@ -81,8 +75,7 @@ pub enum TypeRef {
     },
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ScannerDiagnostic {
     pub file_id: String,
     pub message: String,

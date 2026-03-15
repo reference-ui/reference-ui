@@ -3,6 +3,8 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "react": "^19.0.0"
+    "@types/json-schema": "^7.0.15",
+    "csstype": "^3.2.3",
+    "json-schema": "^0.4.0"
   }
 }
