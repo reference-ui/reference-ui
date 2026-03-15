@@ -8,8 +8,8 @@
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
   "ignore": [
-    "@reference-ui/reference-app",
+    "@reference-ui/reference-unit",
     "@reference-ui/reference-docs",
-    "@reference-ui/reference-test"
+    "@reference-ui/reference-e2e"
   ]
 }

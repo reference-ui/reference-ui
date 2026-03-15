@@ -7,8 +7,8 @@ import { addToConfig, getSandboxDir } from '../../environments/lib/config.js'
 import { runRefSync, waitForRefSyncReady } from '../../environments/lib/ref-sync.js'
 
 const LAYER_TOKEN_VAR = '--colors-test-primary'
-const LAYER_NAME = 'reference-test'
-const RENAMED_LAYER_NAME = 'reference-test-renamed'
+const LAYER_NAME = 'reference-e2e'
+const RENAMED_LAYER_NAME = 'reference-e2e-renamed'
 const REACT_LAYER_PLACEHOLDER = '__REFERENCE_UI_LAYER_NAME__'
 const sandboxDir = getSandboxDir()
 const { tokensConfig } = await import(pathToFileURL(join(sandboxDir, 'tokens.ts')).href)
@@ -128,7 +128,7 @@ test.describe.serial('layer', () => {
     await page.goto('/')
     const inside = page.getByTestId('layers-test')
     await expect(inside).toBeVisible()
-    // Consumer primitives have data-layer="reference-test"; upstream tokens are under [data-layer="reference-ui"].
+    // Consumer primitives have data-layer="reference-e2e"; upstream tokens are under [data-layer="reference-ui"].
     // So consumer DOM does not see --colors-teal-500 (upstream). Assert upstream CSS is present via stylesheet.
     const outside = page.getByTestId('layers-outside')
     await expect(outside).toBeVisible()

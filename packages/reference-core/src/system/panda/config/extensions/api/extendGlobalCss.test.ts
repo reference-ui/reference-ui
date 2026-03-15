@@ -13,7 +13,7 @@ describe('extendGlobalCss()', () => {
     extendGlobalCss([
       {
         ':root': {
-          '--ref-app-test-var': '42px',
+          '--ref-unit-test-var': '42px',
         },
       },
       {
@@ -27,7 +27,7 @@ describe('extendGlobalCss()', () => {
 
     expect(config.globalCss).toEqual({
       ':root': {
-        '--ref-app-test-var': '42px',
+        '--ref-unit-test-var': '42px',
       },
       body: {
         margin: '0',

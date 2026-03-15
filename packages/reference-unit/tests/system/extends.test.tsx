@@ -1,7 +1,7 @@
 /**
  * @vitest-environment happy-dom
  *
- * Verifies `extends: [baseSystem]` pulls reference-lib tokens into reference-app.
+ * Verifies `extends: [baseSystem]` pulls reference-lib tokens into reference-unit.
  */
 
 import { beforeAll, describe, expect, it } from 'vitest'

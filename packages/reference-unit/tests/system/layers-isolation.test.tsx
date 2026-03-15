@@ -15,7 +15,7 @@ import { fileURLToPath } from 'node:url'
 import { render, screen } from '@testing-library/react'
 import { Div } from '@reference-ui/react'
 import { colors } from '@reference-ui/lib/theme'
-import { REFERENCE_APP_TOKEN_RGB } from '../../src/system/styles'
+import { REFERENCE_UNIT_TOKEN_RGB } from '../../src/system/styles'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const pkgRoot = resolve(__dirname, '..', '..')
@@ -55,7 +55,7 @@ async function waitForFixtureOutputs(maxMs = 45_000): Promise<void> {
       existsSync(fixtureSystemGeneratedTypesPath)
     ) {
       const css = readFileSync(fixtureCssPath, 'utf-8')
-      if (css.includes('[data-layer="layers-isolation"]') && css.includes('[data-layer="reference-app"]')) {
+      if (css.includes('[data-layer="layers-isolation"]') && css.includes('[data-layer="reference-unit"]')) {
         await new Promise((resolve) => setTimeout(resolve, 150))
         return
       }
@@ -103,7 +103,7 @@ describe('layers isolation fixture', () => {
   beforeAll(async () => {
     if (!existsSync(upstreamBaseSystemPath)) {
       throw new Error(
-        `Upstream baseSystem not found at ${upstreamBaseSystemPath}. The reference-app global setup should run ref sync first.`
+        `Upstream baseSystem not found at ${upstreamBaseSystemPath}. The reference-unit global setup should run ref sync first.`
       )
     }
 
@@ -129,7 +129,7 @@ describe('layers isolation fixture', () => {
   it('keeps upstream tokens, fonts, and keyframes out of the consumer Panda config', () => {
     expect(pandaConfig).toContain('fixtureAccent')
     expect(pandaConfig).toContain(FIXTURE_ACCENT_RGB)
-    expect(pandaConfig).not.toContain('referenceAppToken')
+    expect(pandaConfig).not.toContain('referenceUnitToken')
     expect(pandaConfig).not.toContain('--colors-teal-500')
     expect(pandaConfig).not.toContain('fadeIn')
     expect(pandaConfig).not.toContain('mono')
@@ -137,9 +137,9 @@ describe('layers isolation fixture', () => {
 
   it('appends upstream layer CSS, tokens, fonts, and keyframes', () => {
     expect(fixtureCss).toMatch(/@layer\s+layers-isolation\s*\{/)
-    expect(fixtureCss).toMatch(/@layer\s+reference-app\s*\{/)
-    expect(fixtureCss).toMatch(/\[data-layer="reference-app"\]\s*\{/)
-    expect(fixtureCss).toContain(`--colors-reference-app-token: ${REFERENCE_APP_TOKEN_RGB};`)
+    expect(fixtureCss).toMatch(/@layer\s+reference-unit\s*\{/)
+    expect(fixtureCss).toMatch(/\[data-layer="reference-unit"\]\s*\{/)
+    expect(fixtureCss).toContain(`--colors-reference-unit-token: ${REFERENCE_UNIT_TOKEN_RGB};`)
     expect(fixtureCss).toContain(`--colors-teal-500: ${colors.teal[500].value};`)
     expect(fixtureCss).toContain(`--colors-fixture-accent: ${FIXTURE_ACCENT_RGB};`)
     expect(fixtureCss).toContain('@font-face')
@@ -181,8 +181,8 @@ describe('layers isolation fixture', () => {
     const scope = screen.getByTestId('fixture-scope')
     const target = screen.getByTestId('fixture-target')
 
-    // Test runs in reference-app; Div comes from reference-app's bundle, so data-layer is reference-app.
-    expect(scope.getAttribute('data-layer')).toBe('reference-app')
+    // Test runs in reference-unit; Div comes from reference-unit's bundle, so data-layer is reference-unit.
+    expect(scope.getAttribute('data-layer')).toBe('reference-unit')
 
     expect(target).toBeInTheDocument()
   })

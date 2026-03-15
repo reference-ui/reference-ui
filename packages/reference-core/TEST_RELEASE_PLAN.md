@@ -20,7 +20,7 @@ Release-ready means:
 
 ### Why it is in decent shape
 
-- `layers` and `extends` now have strong behavioral coverage downstream in `reference-app` and `reference-test`
+- `layers` and `extends` now have strong behavioral coverage downstream in `reference-unit` and `reference-e2e`
 - `reference-core` already has targeted tests around:
   - fragment collection and runtime bundling
   - layer CSS transform behavior
@@ -70,7 +70,7 @@ Target characteristics:
 - very fast
 - most failures point directly to one module
 
-### Ring 2: Contract tests in `reference-app`
+### Ring 2: Contract tests in `reference-unit`
 
 Purpose:
 Prove that `ref sync` produces correct generated outputs in a real app environment.
@@ -81,7 +81,7 @@ Target characteristics:
 - verifies generated CSS, bundles, and types
 - exercises real file output and rerun behavior
 
-### Ring 3: Environment breadth in `reference-test`
+### Ring 3: Environment breadth in `reference-e2e`
 
 Purpose:
 Prove cross-environment behavior across React versions, bundlers, and runtime environments.
@@ -253,8 +253,8 @@ Features that must be release-gated explicitly:
 Must-have test shape for each feature:
 
 - unit-level transform or helper test in `reference-core`
-- app-level artifact test in `reference-app`
-- at least one environment or browser-level contract in `reference-test` for the highest-risk features
+- app-level artifact test in `reference-unit`
+- at least one environment or browser-level contract in `reference-e2e` for the highest-risk features
 
 Release note:
 The goal is not more tests everywhere. The goal is a clear ownership model for where each contract lives.
@@ -385,7 +385,7 @@ Definition of done:
 
 ## Phase 3: Compatibility Confidence
 
-- maintain `reference-test` matrix for React/bundler breadth
+- maintain `reference-e2e` matrix for React/bundler breadth
 - expand only the highest-risk cross-environment feature contracts
 
 Definition of done:
@@ -399,8 +399,8 @@ A release candidate should not be cut unless all of these are green:
 1. `pnpm --filter @reference-ui/core run build`
 2. `pnpm --filter @reference-ui/core run typecheck`
 3. `pnpm --filter @reference-ui/core run test`
-4. `pnpm --filter @reference-ui/reference-app run test`
-5. `REF_TEST_FRESH=1 pnpm --filter @reference-ui/reference-test run test:quick`
+4. `pnpm --filter @reference-ui/reference-unit run test`
+5. `REF_TEST_FRESH=1 pnpm --filter @reference-ui/reference-e2e run test:quick`
 6. `pnpm test:e2e`
 
 In addition, a publishable release of `reference-core` with native bindings should have a platform matrix that proves:
@@ -412,7 +412,7 @@ In addition, a publishable release of `reference-core` with native bindings shou
 5. a Node smoke test can load the built binary on each target
 6. the packaged artifact path matches what `@reference-ui/rust` loader expects
 
-For rapid iteration, `pnpm test:system` should remain the fast unit/integration loop for `reference-core` and `reference-app`, while `pnpm test:e2e` stays the full publish gate that also runs `reference-test`.
+For rapid iteration, `pnpm test:system` should remain the fast unit/integration loop for `reference-core` and `reference-unit`, while `pnpm test:e2e` stays the full publish gate that also runs `reference-e2e`.
 
 ## Where We Are Right Now
 

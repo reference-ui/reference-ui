@@ -11,7 +11,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 
 /** Base config from environments/base. Tests merge additions on top. */
 const BASE_CONFIG = {
-  name: 'reference-test',
+  name: 'reference-e2e',
   include: ['**/*.{ts,tsx}'] as const,
   debug: true,
   skipTypescript: true,

@@ -11,7 +11,7 @@ import { baseSystem } from '@reference-ui/lib'
 // ============================================================================
 
 export default defineConfig({
-  name: 'reference-app',
+  name: 'reference-unit',
   extends: [baseSystem],
   // Glob patterns for files to scan for Panda CSS extraction
   include: [

@@ -14,7 +14,7 @@ test.describe('extend', () => {
 
     expect(content).toContain("import { defineConfig } from '@reference-ui/core'")
     expect(content).toContain('defineConfig(')
-    expect(content).toContain('reference-test')
+    expect(content).toContain('reference-e2e')
     expect(content).toContain('"debug": false')
     expect(content).toContain('skipTypescript')
   })

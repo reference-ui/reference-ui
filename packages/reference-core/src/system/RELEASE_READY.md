@@ -72,7 +72,7 @@ There is also strong downstream confidence in the real pipeline:
 The workspace release loop is also clear enough to be meaningful:
 
 - `pnpm test:system` exercises the fast release gate across `reference-core` and
-  `reference-app`
+  `reference-unit`
 
 ## Hardening (fail-closed and artifact stability)
 

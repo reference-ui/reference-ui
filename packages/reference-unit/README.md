@@ -1,4 +1,4 @@
-# @reference-ui/reference-app
+# @reference-ui/reference-unit
 
 Reference application demonstrating the current core workflow.
 

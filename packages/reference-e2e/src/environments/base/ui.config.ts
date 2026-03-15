@@ -2,7 +2,7 @@ import { defineConfig } from '@reference-ui/core'
 import { baseSystem } from '@reference-ui/lib'
 
 export default defineConfig({
-  name: 'reference-test',
+  name: 'reference-e2e',
   include: ['**/*.{ts,tsx}'],
   debug: true,
   skipTypescript: true,

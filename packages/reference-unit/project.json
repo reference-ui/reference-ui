@@ -1,35 +1,35 @@
 {
-  "name": "@reference-ui/reference-app",
+  "name": "@reference-ui/reference-unit",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "packages/reference-app/src",
+  "sourceRoot": "packages/reference-unit/src",
   "projectType": "application",
   "targets": {
     "dev": {
       "executor": "nx:run-commands",
       "options": {
         "command": "pnpm dev",
-        "cwd": "packages/reference-app"
+        "cwd": "packages/reference-unit"
       }
     },
     "build": {
       "executor": "nx:run-commands",
       "options": {
         "command": "pnpm build",
-        "cwd": "packages/reference-app"
+        "cwd": "packages/reference-unit"
       }
     },
     "preview": {
       "executor": "nx:run-commands",
       "options": {
         "command": "pnpm preview",
-        "cwd": "packages/reference-app"
+        "cwd": "packages/reference-unit"
       }
     },
     "test": {
       "executor": "nx:run-commands",
       "options": {
         "command": "pnpm run test",
-        "cwd": "packages/reference-app"
+        "cwd": "packages/reference-unit"
       },
       "dependsOn": ["reference-core:build", "@reference-ui/lib:build"]
     }
