@@ -3,7 +3,9 @@ use std::fmt::Write;
 
 use serde::Serialize;
 
-use super::super::api::{TsMember, TsSymbol, TsSymbolKind, TsTypeParameter, TypeRef, TypeScriptBundle};
+use super::super::api::{
+    TsMember, TsMemberKind, TsSymbol, TsSymbolKind, TsTypeParameter, TypeRef, TypeScriptBundle,
+};
 
 #[allow(dead_code)]
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -169,9 +171,17 @@ fn emit_member(
     member: &TsMember,
     export_names: &BTreeMap<String, String>,
 ) -> Result<String, String> {
+    let kind_str = match member.kind {
+        TsMemberKind::Property => "property",
+        TsMemberKind::Method => "method",
+        TsMemberKind::CallSignature => "call",
+        TsMemberKind::IndexSignature => "index",
+    };
     let mut parts = vec![
         format!("  name: {}", to_js_literal(&member.name)?),
         format!("  optional: {}", to_js_literal(&member.optional)?),
+        format!("  readonly: {}", to_js_literal(&member.readonly)?),
+        format!("  kind: {}", to_js_literal(kind_str)?),
     ];
     if let Some(ref d) = member.description {
         parts.push(format!("  description: {}", to_js_literal(d)?));
@@ -255,6 +265,37 @@ fn emit_type_ref(
 
             Ok(format!(
                 "{{\n  kind: \"union\",\n  types: [\n{}\n  ],\n}}",
+                lines.join(",\n")
+            ))
+        }
+        TypeRef::Array { element } => {
+            let inner = emit_type_ref(bundle, element, export_names)?;
+            Ok(format!(
+                "{{\n  kind: \"array\",\n  element: {},\n}}",
+                indent_block(&inner, 2)
+            ))
+        }
+        TypeRef::Tuple { elements } => {
+            let lines = elements
+                .iter()
+                .map(|t| {
+                    emit_type_ref(bundle, t, export_names).map(|s| indent_block(&s, 2))
+                })
+                .collect::<Result<Vec<_>, _>>()?;
+            Ok(format!(
+                "{{\n  kind: \"tuple\",\n  elements: [\n{}\n  ],\n}}",
+                lines.join(",\n")
+            ))
+        }
+        TypeRef::Intersection { types } => {
+            let lines = types
+                .iter()
+                .map(|t| {
+                    emit_type_ref(bundle, t, export_names).map(|s| indent_block(&s, 2))
+                })
+                .collect::<Result<Vec<_>, _>>()?;
+            Ok(format!(
+                "{{\n  kind: \"intersection\",\n  types: [\n{}\n  ],\n}}",
                 lines.join(",\n")
             ))
         }
@@ -400,6 +441,19 @@ fn collect_libraries_from_type_ref(type_ref: &TypeRef, libraries: &mut BTreeSet<
         TypeRef::Union { types } => {
             for nested in types {
                 collect_libraries_from_type_ref(nested, libraries);
+            }
+        }
+        TypeRef::Array { element } => {
+            collect_libraries_from_type_ref(element, libraries);
+        }
+        TypeRef::Tuple { elements } => {
+            for t in elements {
+                collect_libraries_from_type_ref(t, libraries);
+            }
+        }
+        TypeRef::Intersection { types } => {
+            for t in types {
+                collect_libraries_from_type_ref(t, libraries);
             }
         }
         TypeRef::Object { members } => {

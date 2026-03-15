@@ -2,15 +2,9 @@
 
 ## Status & scope
 
-**Done:** Generics (type parameters on symbols, type arguments on references); object type literals (`TypeRef::Object` with members); per-scenario bundles and tests (`scan_here`, `scan_generics`); member description attribution (exclude interface start); libraries array includes `user`.
+**Done:** Generics (type parameters on symbols, type arguments on references); object type literals (`TypeRef::Object` with members); per-scenario bundles and tests (`generics`, `external_libs`, `signatures`); member description attribution (exclude interface start); libraries array includes `user`; **§4.2** richer type refs (array `T[]`/`Array<T>`, tuple, intersection); **§4.3** member metadata (`readonly`, kind: property vs method vs call vs index signature).
 
-**In scope (remaining):**
-
-- **§4.2** – Richer type refs: array (`T[]` / `Array<T>`), tuple, intersection; keep summary for the rest.
-- **§4.3** – Member metadata: `readonly`; kind (property vs method vs index signature).
-- **§4.7** – Re-export / alias chain: expose enough so docs can show “alias of …” or “re-exported from …”.
-
-**Out of scope:** Source locations (§4.6) are not planned. Also not in this scope: §4.4 (MCP schema/index), §4.5 (JSDoc tag parsing).
+**Out of scope:** Source locations (§4.6) are not planned. Also not in this scope: §4.4 (MCP schema/index), §4.5 (JSDoc tag parsing), §4.7 (re-export/alias chain).
 
 ---
 
@@ -24,9 +18,8 @@
 **Gaps for “nice” docs:**
 
 - **Generics** – now supported (type parameters, type arguments; see §2).
-- **No `readonly`** on members (in scope, §4.3).
-- **No distinction** for index signatures, call signatures, or method vs property.
-- **TypeRef** is a subset: we have Intrinsic, Literal, Union, Reference, Object (type literal), Unknown; we don’t yet model arrays (`T[]`), tuples, or intersection (in scope, §4.2); mapped/conditional types still end up as `Unknown { summary: "..." }`.
+- **Readonly and member kind** – now supported (§4.3).
+- **TypeRef** – we have Intrinsic, Literal, Union, Reference, Object, Array, Tuple, Intersection, Unknown; mapped/conditional types still end up as `Unknown { summary: "..." }`.
 - **Single description** only; no structured tags (e.g. `@default`, `@deprecated`, `@example`) unless you parse JSDoc downstream.
 
 So: **yes for simple “props and types” docs**, **no for full, rich API docs** without extending the model and extraction.
@@ -54,7 +47,7 @@ So: **yes for simple “props and types” docs**, **no for full, rich API docs*
 We then **narrow** that into our own model:
 
 - Only interfaces and type aliases (no enums, namespaces, etc.).
-- A `TypeRef` subset: intrinsic, literal, union, reference, object (type literal), unknown; plus generics (type parameters and type arguments). Arrays, tuples, intersection not yet modeled; conditional/mapped types still become `Unknown`.
+- A `TypeRef` subset: intrinsic, literal, union, reference, object (type literal), array, tuple, intersection, unknown; plus generics. Conditional/mapped types still become `Unknown`.
 
 So: **Oxc gives us full TS structure; we intentionally expose a subset.** Extending docs/MCP support is mostly about mapping more of the Oxc AST into our types and emission, not about replacing Oxc.
 
@@ -64,9 +57,7 @@ So: **Oxc gives us full TS structure; we intentionally expose a subset.** Extend
 
 **Done (in this scope):** (1) Generics – type parameters on symbols, type arguments on references, emitted in bundle. Object type literals added to type refs.
 
-**Remaining (in scope):**
-
-2. **Richer type refs** (§4.2)
+**Done in this work:** (2) Richer type refs (§4.2)
    - Array (`T[]` / `Array<T>`), tuple, intersection.
    - Keep a “summary” string for complex types we don’t fully model.
 
@@ -74,13 +65,11 @@ So: **Oxc gives us full TS structure; we intentionally expose a subset.** Extend
    - `readonly`.
    - Kind: property vs method (call signature) vs index signature.
 
-7. **Re-export / alias chain** (§4.7)
-   - For “this type is re-exported from X” or “type Y = Z”, expose enough to show the chain so docs can say “alias of …” or “re-exported from …”.
 
-**Out of scope (this work):** (4) MCP schema/index, (5) JSDoc tag parsing, (6) source locations (purposely left out).
+**Out of scope (this work):** (4) MCP schema/index, (5) JSDoc tag parsing, (6) source locations (purposely left out), (7) re-export/alias chain.
 
 ---
 
 ## 5. Different scan directories / one bundle per scenario?
 
-**Done.** We use one `ScanRequest` per scenario; Vitest globalSetup runs the native addon per scenario dir (`scan_here`, `scan_generics`, etc.) and writes `output/{scenario}/bundle.js`. Tests load and assert per scenario. API stays one root + one include per request; N scenarios → N requests → N bundles.
+**Done.** We use one `ScanRequest` per scenario; Vitest globalSetup runs the native addon per scenario dir (`generics`, `external_libs`, `signatures`, etc.) and writes `output/{scenario}/bundle.js`. Tests load and assert per scenario. API stays one root + one include per request; N scenarios → N requests → N bundles.

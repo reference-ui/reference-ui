@@ -56,10 +56,22 @@ pub enum TsSymbolKind {
     TypeAlias,
 }
 
+/// Kind of interface/type-literal member: property, method, call signature, or index signature.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum TsMemberKind {
+    #[default]
+    Property,
+    Method,
+    CallSignature,
+    IndexSignature,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TsMember {
     pub name: String,
     pub optional: bool,
+    pub readonly: bool,
+    pub kind: TsMemberKind,
     pub description: Option<String>,
     pub type_ref: Option<TypeRef>,
 }
@@ -79,6 +91,15 @@ pub enum TypeRef {
         type_arguments: Option<Vec<TypeRef>>,
     },
     Union {
+        types: Vec<TypeRef>,
+    },
+    Array {
+        element: Box<TypeRef>,
+    },
+    Tuple {
+        elements: Vec<TypeRef>,
+    },
+    Intersection {
         types: Vec<TypeRef>,
     },
     Object {

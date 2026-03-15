@@ -1,7 +1,7 @@
 /**
- * Vitest tests for the scan_generics scenario bundle.
- * Bundles are emitted by globalSetup using the compiled napi-rs runtime (scanAndEmitBundle).
+ * Vitest tests for the generics scenario bundle.
  * Asserts that type parameters and type arguments are captured and emitted.
+ * Bundles are emitted by globalSetup using the compiled napi-rs runtime (scanAndEmitBundle).
  */
 import { pathToFileURL } from 'node:url'
 import { describe, expect, it } from 'vitest'
@@ -42,9 +42,9 @@ function findSymbol(
   return s
 }
 
-describe('scan_generics bundle', () => {
+describe('generics bundle', () => {
   it('exports interfaces and types arrays', async () => {
-    const mod = await loadBundle('scan_generics')
+    const mod = await loadBundle('generics')
     expect(mod.interfaces).toBeDefined()
     expect(Array.isArray(mod.interfaces)).toBe(true)
     expect(mod.types).toBeDefined()
@@ -52,7 +52,7 @@ describe('scan_generics bundle', () => {
   })
 
   it('has expected symbols including generic types', async () => {
-    const mod = await loadBundle('scan_generics')
+    const mod = await loadBundle('generics')
     const symbols = getSymbols(mod)
     const names = symbols.map((s) => s.name)
     expect(names).toContain('Box')
@@ -63,7 +63,7 @@ describe('scan_generics bundle', () => {
   })
 
   it('emits typeParameters on generic type alias (Box<T>)', async () => {
-    const mod = await loadBundle('scan_generics')
+    const mod = await loadBundle('generics')
     const symbols = getSymbols(mod)
     const box = findSymbol(symbols, 'Box')
     expect(box.typeParameters).toBeDefined()
@@ -74,7 +74,7 @@ describe('scan_generics bundle', () => {
   })
 
   it('emits typeParameters with constraint on interface (Props<T extends object>)', async () => {
-    const mod = await loadBundle('scan_generics')
+    const mod = await loadBundle('generics')
     const symbols = getSymbols(mod)
     const props = findSymbol(symbols, 'Props')
     expect(props.typeParameters).toBeDefined()
@@ -87,7 +87,7 @@ describe('scan_generics bundle', () => {
   })
 
   it('emits multiple typeParameters (WithGenerics<T, U>)', async () => {
-    const mod = await loadBundle('scan_generics')
+    const mod = await loadBundle('generics')
     const symbols = getSymbols(mod)
     const withGenerics = findSymbol(symbols, 'WithGenerics')
     expect(withGenerics.typeParameters).toBeDefined()
@@ -96,7 +96,7 @@ describe('scan_generics bundle', () => {
   })
 
   it('emits typeArguments on member type (Props<Box<string>>)', async () => {
-    const mod = await loadBundle('scan_generics')
+    const mod = await loadBundle('generics')
     const symbols = getSymbols(mod)
     const usesRef = findSymbol(symbols, 'UsesGenericRef')
     expect(usesRef.members).toBeDefined()
@@ -110,7 +110,7 @@ describe('scan_generics bundle', () => {
   })
 
   it('emits Box definition as object type with members (not unknown)', async () => {
-    const mod = await loadBundle('scan_generics')
+    const mod = await loadBundle('generics')
     const symbols = getSymbols(mod)
     const box = findSymbol(symbols, 'Box')
     expect(box.definition).toBeDefined()
@@ -122,7 +122,7 @@ describe('scan_generics bundle', () => {
   })
 
   it('emits member-specific descriptions (not interface leading comment)', async () => {
-    const mod = await loadBundle('scan_generics')
+    const mod = await loadBundle('generics')
     const symbols = getSymbols(mod)
     const usesRef = findSymbol(symbols, 'UsesGenericRef')
     const itemMember = usesRef.members!.find((m) => m.name === 'item')
@@ -136,7 +136,7 @@ describe('scan_generics bundle', () => {
   })
 
   it('emits libraries array including user', async () => {
-    const mod = await loadBundle('scan_generics')
+    const mod = await loadBundle('generics')
     expect(mod.libraries).toBeDefined()
     expect(Array.isArray(mod.libraries)).toBe(true)
     expect(mod.libraries).toContain('user')

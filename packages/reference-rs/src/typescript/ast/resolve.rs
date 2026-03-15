@@ -204,6 +204,21 @@ fn resolve_type_ref(
                 .map(|nested| resolve_type_ref(nested, symbol_index, parsed))
                 .collect(),
         },
+        TypeRef::Array { element } => TypeRef::Array {
+            element: Box::new(resolve_type_ref(*element, symbol_index, parsed)),
+        },
+        TypeRef::Tuple { elements } => TypeRef::Tuple {
+            elements: elements
+                .into_iter()
+                .map(|t| resolve_type_ref(t, symbol_index, parsed))
+                .collect(),
+        },
+        TypeRef::Intersection { types } => TypeRef::Intersection {
+            types: types
+                .into_iter()
+                .map(|t| resolve_type_ref(t, symbol_index, parsed))
+                .collect(),
+        },
         TypeRef::Object { members } => TypeRef::Object {
             members: members
                 .into_iter()

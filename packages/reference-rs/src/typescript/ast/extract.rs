@@ -3,13 +3,16 @@ use std::collections::BTreeMap;
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
     Comment, Declaration, ExportNamedDeclaration, ImportDeclarationSpecifier, ImportOrExportKind,
-    PropertyKey, Statement, TSInterfaceDeclaration, TSPropertySignature, TSSignature, TSType,
-    TSTypeAliasDeclaration, TSTypeParameterDeclaration,
+    PropertyKey, Statement, TSIndexSignature, TSCallSignatureDeclaration, TSInterfaceDeclaration,
+    TSMethodSignature, TSPropertySignature, TSSignature, TSType, TSTypeAliasDeclaration,
+    TSTypeParameterDeclaration, TSTupleElement,
 };
 use oxc_parser::Parser;
 use oxc_span::{GetSpan, SourceType, Span};
 
-use super::super::api::{ScannerDiagnostic, TsMember, TsSymbolKind, TsTypeParameter, TypeRef};
+use super::super::api::{
+    ScannerDiagnostic, TsMember, TsMemberKind, TsSymbolKind, TsTypeParameter, TypeRef,
+};
 use super::super::scanner::{resolve_import, symbol_id, ScannedFile, ScannedWorkspace};
 use super::model::{ImportBinding, ParsedFileAst, SymbolShell};
 
@@ -302,35 +305,28 @@ fn push_interface_shell<'a>(
     let id = symbol_id(file_id, &name);
     let description = leading_comment_for_span(source, comments, interface_decl.span(), None);
     let interface_start = interface_decl.span().start;
-    let property_spans: Vec<u32> = interface_decl
+    let all_member_starts: Vec<u32> = interface_decl
         .body
         .body
         .iter()
-        .filter_map(|sig| match sig {
-            TSSignature::TSPropertySignature(p) => Some(p.span().start),
-            _ => None,
-        })
+        .map(|sig| sig.span().start)
         .collect();
     let defined_members = interface_decl
         .body
         .body
         .iter()
-        .filter_map(|signature| match signature {
-            TSSignature::TSPropertySignature(property) => {
-                let others: Vec<u32> = std::iter::once(interface_start)
-                    .chain(
-                        property_spans
-                            .iter()
-                            .copied()
-                            .filter(|&s| s != property.span().start),
-                    )
-                    .collect();
-                let exclude = if others.is_empty() {
-                    None
-                } else {
-                    Some(others.as_slice())
-                };
-                Some(property_signature_to_member(
+        .filter_map(|signature| {
+            let start = signature.span().start;
+            let others: Vec<u32> = std::iter::once(interface_start)
+                .chain(all_member_starts.iter().copied().filter(|&s| s != start))
+                .collect();
+            let exclude = if others.is_empty() {
+                None
+            } else {
+                Some(others.as_slice())
+            };
+            match signature {
+                TSSignature::TSPropertySignature(property) => Some(property_signature_to_member(
                     property,
                     source,
                     comments,
@@ -338,9 +334,36 @@ fn push_interface_shell<'a>(
                     import_bindings,
                     current_module_specifier,
                     current_library,
-                ))
+                )),
+                TSSignature::TSMethodSignature(method) => Some(method_signature_to_member(
+                    method,
+                    source,
+                    comments,
+                    exclude,
+                    import_bindings,
+                    current_module_specifier,
+                    current_library,
+                )),
+                TSSignature::TSCallSignatureDeclaration(call) => Some(call_signature_to_member(
+                    call,
+                    source,
+                    comments,
+                    exclude,
+                    import_bindings,
+                    current_module_specifier,
+                    current_library,
+                )),
+                TSSignature::TSIndexSignature(index) => Some(index_signature_to_member(
+                    index,
+                    source,
+                    comments,
+                    exclude,
+                    import_bindings,
+                    current_module_specifier,
+                    current_library,
+                )),
+                TSSignature::TSConstructSignatureDeclaration(_) => None,
             }
-            _ => None,
         })
         .collect::<Vec<_>>();
 
@@ -458,8 +481,136 @@ fn property_signature_to_member(
     TsMember {
         name,
         optional: property.optional,
+        readonly: property.readonly,
+        kind: TsMemberKind::Property,
         description,
         type_ref,
+    }
+}
+
+fn method_signature_to_member(
+    method: &TSMethodSignature<'_>,
+    source: &str,
+    comments: &[Comment],
+    exclude_starts_between: Option<&[u32]>,
+    import_bindings: &BTreeMap<String, ImportBinding>,
+    current_module_specifier: &str,
+    current_library: &str,
+) -> TsMember {
+    let name = property_key_name(&method.key, source);
+    let description = leading_comment_for_span(source, comments, method.span(), exclude_starts_between);
+    let type_ref = method.return_type.as_ref().map(|annotation| {
+        type_to_ref(
+            &annotation.type_annotation,
+            source,
+            import_bindings,
+            current_module_specifier,
+            current_library,
+        )
+    });
+
+    TsMember {
+        name,
+        optional: method.optional,
+        readonly: false,
+        kind: TsMemberKind::Method,
+        description,
+        type_ref,
+    }
+}
+
+fn call_signature_to_member(
+    call: &TSCallSignatureDeclaration<'_>,
+    source: &str,
+    comments: &[Comment],
+    exclude_starts_between: Option<&[u32]>,
+    import_bindings: &BTreeMap<String, ImportBinding>,
+    current_module_specifier: &str,
+    current_library: &str,
+) -> TsMember {
+    let description = leading_comment_for_span(source, comments, call.span(), exclude_starts_between);
+    let type_ref = call.return_type.as_ref().map(|annotation| {
+        type_to_ref(
+            &annotation.type_annotation,
+            source,
+            import_bindings,
+            current_module_specifier,
+            current_library,
+        )
+    });
+
+    TsMember {
+        name: "[call]".to_string(),
+        optional: false,
+        readonly: false,
+        kind: TsMemberKind::CallSignature,
+        description,
+        type_ref,
+    }
+}
+
+fn index_signature_to_member(
+    index: &TSIndexSignature<'_>,
+    source: &str,
+    comments: &[Comment],
+    exclude_starts_between: Option<&[u32]>,
+    import_bindings: &BTreeMap<String, ImportBinding>,
+    current_module_specifier: &str,
+    current_library: &str,
+) -> TsMember {
+    let description = leading_comment_for_span(source, comments, index.span(), exclude_starts_between);
+    let type_ref = Some(type_to_ref(
+        &index.type_annotation.type_annotation,
+        source,
+        import_bindings,
+        current_module_specifier,
+        current_library,
+    ));
+
+    TsMember {
+        name: "[index]".to_string(),
+        optional: false,
+        readonly: index.readonly,
+        kind: TsMemberKind::IndexSignature,
+        description,
+        type_ref,
+    }
+}
+
+/// Converts a tuple element to TypeRef. TSTupleElement inherits TSType variants; for optional/rest we
+/// extract the inner type; for other variants we re-use type_to_ref via layout-compatible transmute.
+fn tuple_element_to_ref(
+    el: &TSTupleElement<'_>,
+    source: &str,
+    import_bindings: &BTreeMap<String, ImportBinding>,
+    current_module_specifier: &str,
+    current_library: &str,
+) -> TypeRef {
+    match el {
+        TSTupleElement::TSOptionalType(opt) => type_to_ref(
+            &opt.type_annotation,
+            source,
+            import_bindings,
+            current_module_specifier,
+            current_library,
+        ),
+        TSTupleElement::TSRestType(rest) => type_to_ref(
+            &rest.type_annotation,
+            source,
+            import_bindings,
+            current_module_specifier,
+            current_library,
+        ),
+        _ => {
+            // TSTupleElement shares layout with TSType for inherited variants (per oxc inherit_variants macro).
+            type_to_ref(
+                unsafe { &*(el as *const TSTupleElement<'_> as *const TSType<'_>) },
+                source,
+                import_bindings,
+                current_module_specifier,
+                current_library,
+            )
+        }
     }
 }
 
@@ -545,65 +696,146 @@ fn type_to_ref(
                 })
                 .collect(),
         },
-        TSType::TSTypeLiteral(lit) => {
-            let member_spans: Vec<u32> = lit
-                .members
+        TSType::TSArrayType(arr) => TypeRef::Array {
+            element: Box::new(type_to_ref(
+                &arr.element_type,
+                source,
+                import_bindings,
+                current_module_specifier,
+                current_library,
+            )),
+        },
+        TSType::TSTupleType(tuple) => TypeRef::Tuple {
+            elements: tuple
+                .element_types
                 .iter()
-                .filter_map(|sig| match sig {
-                    TSSignature::TSPropertySignature(p) => Some(p.span().start),
-                    _ => None,
+                .map(|el| {
+                    tuple_element_to_ref(
+                        el,
+                        source,
+                        import_bindings,
+                        current_module_specifier,
+                        current_library,
+                    )
                 })
-                .collect();
+                .collect(),
+        },
+        TSType::TSIntersectionType(inter) => TypeRef::Intersection {
+            types: inter
+                .types
+                .iter()
+                .map(|t| {
+                    type_to_ref(
+                        t,
+                        source,
+                        import_bindings,
+                        current_module_specifier,
+                        current_library,
+                    )
+                })
+                .collect(),
+        },
+        TSType::TSTypeLiteral(lit) => {
+            let all_starts: Vec<u32> = lit.members.iter().map(|s| s.span().start).collect();
             let no_comments: &[Comment] = &[];
-            let members = lit
+            let members: Vec<TsMember> = lit
                 .members
                 .iter()
-                .filter_map(|sig| match sig {
-                    TSSignature::TSPropertySignature(property) => {
-                        let others: Vec<u32> = member_spans
-                            .iter()
-                            .copied()
-                            .filter(|&s| s != property.span().start)
-                            .collect();
-                        let exclude = if others.is_empty() {
-                            None
-                        } else {
-                            Some(others.as_slice())
-                        };
-                        Some(property_signature_to_member(
-                            property,
+                .filter_map(|sig| {
+                    let start = sig.span().start;
+                    let others: Vec<u32> =
+                        all_starts.iter().copied().filter(|&s| s != start).collect();
+                    let exclude = if others.is_empty() {
+                        None
+                    } else {
+                        Some(others.as_slice())
+                    };
+                    match sig {
+                        TSSignature::TSPropertySignature(property) => {
+                            Some(property_signature_to_member(
+                                property,
+                                source,
+                                no_comments,
+                                exclude,
+                                import_bindings,
+                                current_module_specifier,
+                                current_library,
+                            ))
+                        }
+                        TSSignature::TSMethodSignature(method) => Some(method_signature_to_member(
+                            method,
                             source,
                             no_comments,
                             exclude,
                             import_bindings,
                             current_module_specifier,
                             current_library,
-                        ))
+                        )),
+                        TSSignature::TSCallSignatureDeclaration(call) => {
+                            Some(call_signature_to_member(
+                                call,
+                                source,
+                                no_comments,
+                                exclude,
+                                import_bindings,
+                                current_module_specifier,
+                                current_library,
+                            ))
+                        }
+                        TSSignature::TSIndexSignature(index) => Some(index_signature_to_member(
+                            index,
+                            source,
+                            no_comments,
+                            exclude,
+                            import_bindings,
+                            current_module_specifier,
+                            current_library,
+                        )),
+                        TSSignature::TSConstructSignatureDeclaration(_) => None,
                     }
-                    _ => None,
                 })
                 .collect();
             TypeRef::Object { members }
         }
         TSType::TSTypeReference(reference) => {
             let name = slice_span(source, reference.type_name.span()).to_string();
-            let source_module = reference_source_module(
-                &name,
-                import_bindings,
-                current_module_specifier,
-                current_library,
-            );
+            let lookup = reference_lookup_name(&name);
             let type_arguments = reference.type_arguments.as_ref().map(|inst| {
                 inst.params
                     .iter()
-                    .map(|t| type_to_ref(t, source, import_bindings, current_module_specifier, current_library))
-                    .collect()
+                    .map(|t| {
+                        type_to_ref(
+                            t,
+                            source,
+                            import_bindings,
+                            current_module_specifier,
+                            current_library,
+                        )
+                    })
+                    .collect::<Vec<_>>()
             });
-            TypeRef::Reference {
-                name,
-                target_id: None,
-                source_module,
-                type_arguments,
+            if lookup == "Array"
+                && type_arguments
+                    .as_ref()
+                    .map_or(false, |a| a.len() == 1)
+            {
+                let element = type_arguments.as_ref().unwrap()[0].clone();
+                TypeRef::Array {
+                    element: Box::new(element),
+                }
+            } else {
+                let source_module = reference_source_module(
+                    &name,
+                    import_bindings,
+                    current_module_specifier,
+                    current_library,
+                );
+                TypeRef::Reference {
+                    name,
+                    target_id: None,
+                    source_module,
+                    type_arguments,
+                }
             }
         }
         _ => TypeRef::Unknown {
@@ -677,6 +909,17 @@ fn collect_type_ref_references(type_ref: &TypeRef, references: &mut Vec<TypeRef>
         TypeRef::Union { types } => {
             for nested in types {
                 collect_type_ref_references(nested, references);
+            }
+        }
+        TypeRef::Array { element } => collect_type_ref_references(element, references),
+        TypeRef::Tuple { elements } => {
+            for t in elements {
+                collect_type_ref_references(t, references);
+            }
+        }
+        TypeRef::Intersection { types } => {
+            for t in types {
+                collect_type_ref_references(t, references);
             }
         }
         TypeRef::Object { members } => {

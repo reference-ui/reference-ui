@@ -1,5 +1,5 @@
-export const _1581e925a676a5e5 = {
-  id: "_1581e925a676a5e5",
+export const _d72dafd30b57674f = {
+  id: "_d72dafd30b57674f",
   name: "Box",
   library: "user",
   description: "A generic box wrapping a value of type T.",
@@ -14,6 +14,8 @@ export const _1581e925a676a5e5 = {
   {
     name: "value",
     optional: false,
+    readonly: false,
+    kind: "property",
     type: {
     id: "T",
     name: "T",
@@ -24,8 +26,8 @@ export const _1581e925a676a5e5 = {
 },
 };
 
-export const _83c6e08e8a0e8a45 = {
-  id: "_83c6e08e8a0e8a45",
+export const _baac0abc322c453f = {
+  id: "_baac0abc322c453f",
   name: "ComponentProps",
   library: "user",
   description: "Component props type alias – extracts props from a component type.",
@@ -41,8 +43,8 @@ export const _83c6e08e8a0e8a45 = {
 },
 };
 
-export const _0d88b9154bc485c2 = {
-  id: "_0d88b9154bc485c2",
+export const _475818659ca3200c = {
+  id: "_475818659ca3200c",
   name: "UsesGenericRef",
   library: "user",
   description: "Uses a type reference with type arguments: Props<Box<string>>.",
@@ -50,14 +52,16 @@ export const _0d88b9154bc485c2 = {
   {
     name: "item",
     optional: false,
+    readonly: false,
+    kind: "property",
     description: "The wrapped Props<Box<string>> instance.",
     type: {
-    id: "_e8366d69bb3a474b",
+    id: "_412f5cd6920b373d",
     name: "Props",
     library: "user",
     typeArguments: [
     {
-      id: "_1581e925a676a5e5",
+      id: "_d72dafd30b57674f",
       name: "Box",
       library: "user",
       typeArguments: [
@@ -74,15 +78,15 @@ export const _0d88b9154bc485c2 = {
   extends: [],
   types: [
   {
-    id: "_1581e925a676a5e5",
+    id: "_d72dafd30b57674f",
     name: "Box",
     library: "user",
   }
 ],
 };
 
-export const _40cce056badfd48a = {
-  id: "_40cce056badfd48a",
+export const _0ff4e4f4f8ad760c = {
+  id: "_0ff4e4f4f8ad760c",
   name: "WithGenerics",
   library: "user",
   description: "Interface with multiple type parameters.",
@@ -98,6 +102,8 @@ export const _40cce056badfd48a = {
   {
     name: "a",
     optional: false,
+    readonly: false,
+    kind: "property",
     description: "First generic field.",
     type: {
     id: "T",
@@ -108,6 +114,8 @@ export const _40cce056badfd48a = {
   {
     name: "b",
     optional: false,
+    readonly: false,
+    kind: "property",
     description: "Second generic field.",
     type: {
     id: "U",
@@ -120,8 +128,8 @@ export const _40cce056badfd48a = {
   types: [],
 };
 
-export const _e8366d69bb3a474b = {
-  id: "_e8366d69bb3a474b",
+export const _412f5cd6920b373d = {
+  id: "_412f5cd6920b373d",
   name: "Props",
   library: "user",
   description: "Generic props interface with a constraint.",
@@ -138,6 +146,8 @@ export const _e8366d69bb3a474b = {
   {
     name: "data",
     optional: false,
+    readonly: false,
+    kind: "property",
     description: "The payload.",
     type: {
     id: "T",
@@ -152,29 +162,29 @@ export const _e8366d69bb3a474b = {
 
 export const interfaces = [
   {
-    id: "_0d88b9154bc485c2",
+    id: "_475818659ca3200c",
     name: "UsesGenericRef",
     library: "user",
   },
   {
-    id: "_40cce056badfd48a",
+    id: "_0ff4e4f4f8ad760c",
     name: "WithGenerics",
     library: "user",
   },
   {
-    id: "_e8366d69bb3a474b",
+    id: "_412f5cd6920b373d",
     name: "Props",
     library: "user",
   }
 ];
 export const types = [
   {
-    id: "_1581e925a676a5e5",
+    id: "_d72dafd30b57674f",
     name: "Box",
     library: "user",
   },
   {
-    id: "_83c6e08e8a0e8a45",
+    id: "_baac0abc322c453f",
     name: "ComponentProps",
     library: "user",
   }
