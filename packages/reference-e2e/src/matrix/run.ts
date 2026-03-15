@@ -67,6 +67,12 @@ export async function run(): Promise<void> {
     ['exec', 'playwright', 'merge-reports', '--reporter=html', BLOB_DIR],
     { stdio: 'inherit' }
   )
+
+  if (process.env.CI) {
+    console.log(`Playwright HTML report available at ${REPORT_DIR}`)
+    return
+  }
+
   console.log('Opening report in browser...')
   try {
     await execa('pnpm', ['exec', 'playwright', 'show-report'], {
