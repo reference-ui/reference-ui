@@ -35,8 +35,8 @@ describe('ref sync', () => {
     const stylesPath = join(refUiDir, 'styled', 'styles.css')
     if (!existsSync(stylesPath)) return
     const css = readFileSync(stylesPath, 'utf-8')
-    expect(css).not.toMatch(/@layer\s+reference-app\s*\{/)
-    expect(css).not.toMatch(/\[data-layer="reference-app"\]/)
+    expect(css).not.toMatch(/@layer\s+reference-unit\s*\{/)
+    expect(css).not.toMatch(/\[data-layer="reference-unit"\]/)
     expect(css).toMatch(/^@layer\s+[^;\n]+;/)
   })
 
@@ -53,9 +53,9 @@ describe('ref sync', () => {
     if (!existsSync(basePath)) return
     const content = readFileSync(basePath, 'utf-8')
     expect(content).toMatch(/"css":\s*"/)
-    expect(content).toMatch(/@layer\s+reference-app/)
-    // In JSON the css string has escaped quotes: [data-layer=\"reference-app\"]
-    expect(content).toMatch(/data-layer.*reference-app/)
+    expect(content).toMatch(/@layer\s+reference-unit/)
+    // In JSON the css string has escaped quotes: [data-layer=\"reference-unit\"]
+    expect(content).toMatch(/data-layer.*reference-unit/)
   })
 
   it('creates .reference-ui/virtual with copied source files', () => {

@@ -1,23 +1,23 @@
 /**
- * User-space design system config for reference-app.
+ * User-space design system config for reference-unit.
  */
 
 import { globalCss, keyframes, tokens } from '@reference-ui/system'
 
 import './fonts'
 
-/** Reference-app token color (single source of truth). */
-export const REFERENCE_APP_TOKEN_RGB = 'rgb(168, 85, 247)'
+/** Reference-unit token color (single source of truth). */
+export const REFERENCE_UNIT_TOKEN_RGB = 'rgb(168, 85, 247)'
 
 tokens({
   colors: {
-    referenceAppToken: { value: REFERENCE_APP_TOKEN_RGB },
+    referenceUnitToken: { value: REFERENCE_UNIT_TOKEN_RGB },
   },
 })
 
 globalCss({
   ':root': {
-    '--ref-app-test-var': '42px',
+    '--ref-unit-test-var': '42px',
   },
 })
 

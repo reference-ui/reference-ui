@@ -156,13 +156,13 @@ Watch events are routed from `watch:change` to `run:virtual:sync:file`.
 
 The strongest current confidence is downstream:
 
-- `reference-app` verifies the baseline mirror exists and respects include/exclude
+- `reference-unit` verifies the baseline mirror exists and respects include/exclude
   behavior
-- `reference-app` verifies transform behavior for CSS, recipe/cva, and MDX cases
-- `reference-app` verifies mirror invariants like no missing files and no orphan
+- `reference-unit` verifies transform behavior for CSS, recipe/cva, and MDX cases
+- `reference-unit` verifies mirror invariants like no missing files and no orphan
   files
-- `reference-app` verifies watch-mode updates flow through to the virtual mirror
-- `reference-test` verifies watch updates propagate all the way to visible runtime
+- `reference-unit` verifies watch-mode updates flow through to the virtual mirror
+- `reference-e2e` verifies watch updates propagate all the way to visible runtime
   styling in a broader environment
 
 Direct `reference-core` coverage now pins down:
@@ -175,7 +175,7 @@ Direct `reference-core` coverage now pins down:
 
 The main confidence that still lives outside this package is end-to-end proof of
 the rewrite semantics themselves, which remain covered downstream in
-`reference-app`.
+`reference-unit`.
 
 ## Design Rules
 

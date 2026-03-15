@@ -105,8 +105,8 @@ Current confidence is mostly downstream rather than direct.
 
 Proven today:
 
-- `reference-app` verifies watch-mode edits update the virtual mirror
-- `reference-test` verifies a watch-mode edit propagates all the way to visible
+- `reference-unit` verifies watch-mode edits update the virtual mirror
+- `reference-e2e` verifies a watch-mode edit propagates all the way to visible
   runtime styling in a sandboxed app
 
 What is still missing:

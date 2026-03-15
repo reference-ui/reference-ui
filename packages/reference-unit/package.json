@@ -1,5 +1,5 @@
 {
-  "name": "@reference-ui/reference-app",
+  "name": "@reference-ui/reference-unit",
   "version": "0.0.0",
   "private": true,
   "type": "module",

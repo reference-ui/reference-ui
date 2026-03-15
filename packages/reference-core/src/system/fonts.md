@@ -187,7 +187,7 @@ pnpm test:e2e
 
 Useful coverage for the font subsystem:
 - CLI-level tests for font collection and rendered outputs
-- reference-app tests that verify:
+- reference-unit tests that verify:
   - `@font-face` rules land in generated CSS
   - `font` and `weight` props work through the merged box pattern
   - user-defined fonts are reflected in the generated config and CSS

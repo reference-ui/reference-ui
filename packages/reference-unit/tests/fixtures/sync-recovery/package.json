@@ -1,5 +1,5 @@
 {
-  "name": "@reference-ui/reference-app-sync-recovery",
+  "name": "@reference-ui/reference-unit-sync-recovery",
   "private": true,
   "type": "module"
 }

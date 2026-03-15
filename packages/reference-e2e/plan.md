@@ -1,4 +1,4 @@
-# reference-test Re-architecture Plan
+# reference-e2e Re-architecture Plan
 
 > Align the test suite with the DESIGN_SYSTEMS.md vision and support multiple ui.config use cases without multiplying environments.
 
@@ -136,7 +136,7 @@ Start with **Option A** (watch + ready signal). If ref sync --watch does not rel
 
 - [ ] Verify ref sync --watch recompiles when `ui.config.ts` changes (manual test).
 - [ ] Add ready sentinel in reference-core (packager:complete → write `.reference-ui/ready`).
-- [ ] Add `waitForRefSyncReady(sandboxDir, options?)` helper in reference-test.
+- [ ] Add `waitForRefSyncReady(sandboxDir, options?)` helper in reference-e2e.
 - [ ] Add `src/environments/lib/config.ts` with `addToConfig(additions)`, `getSandboxDir()`.
 - [ ] First config-switch test in `tests/extend/`: addToConfig → wait ready → assert.
 - [ ] If watch fails: implement Option B dev orchestrator.

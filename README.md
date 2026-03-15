@@ -13,9 +13,9 @@ reference-ui/
 ├── packages/
 │   ├── reference-core/      # Design system core package and generated pipeline
 │   ├── reference-lib/       # First-party design system built on reference-core
-│   ├── reference-app/       # App dogfood bed for the generated runtime
+│   ├── reference-unit/       # App dogfood bed for the generated runtime
 │   ├── reference-docs/      # Documentation site using the CLI
-│   └── reference-test/      # End-to-end/system composition testbed
+│   └── reference-e2e/      # End-to-end/system composition testbed
 ```
 
 ## Tech Stack

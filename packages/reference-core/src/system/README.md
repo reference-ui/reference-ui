@@ -211,7 +211,7 @@ The current implementation has meaningful direct coverage for:
 - layer CSS transforms in `layers/transform.test.ts`
 - generated font registry output in `types/generate.test.ts`
 
-And it has strong downstream proof in `reference-app` for:
+And it has strong downstream proof in `reference-unit` for:
 
 - real sync artifact creation
 - layer isolation behavior

@@ -37,7 +37,7 @@ describe('Div primitive', () => {
     render(<Div data-testid="div-layer">Content</Div>)
     const el = screen.getByTestId('div-layer')
     // Primitives get data-layer from the project config name at packager time.
-    expect(el.getAttribute('data-layer')).toBe('reference-app')
+    expect(el.getAttribute('data-layer')).toBe('reference-unit')
   })
 
   it('accepts style props and renders in the document', () => {
