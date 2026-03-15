@@ -1,0 +1,8 @@
+// bundle build metrics
+// scan_ms: 78.583
+// emit_ms: 43.764
+// total_ms: 122.360
+// files: 6
+// symbols: 72
+// note: excludes fixture npm install
+
