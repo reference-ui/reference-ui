@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
-    Declaration, ExportNamedDeclaration, ImportDeclarationSpecifier, ImportOrExportKind,
+    Comment, Declaration, ExportNamedDeclaration, ImportDeclarationSpecifier, ImportOrExportKind,
     PropertyKey, Statement, TSPropertySignature, TSSignature, TSType,
 };
 use oxc_parser::Parser;
@@ -11,6 +11,97 @@ use oxc_span::{GetSpan, SourceType, Span};
 use super::super::api::{ScannerDiagnostic, TsMember, TsSymbolKind, TypeRef};
 use super::super::scanner::{resolve_import, symbol_id, ScannedFile, ScannedWorkspace};
 use super::model::{ImportBinding, ParsedFileAst, SymbolShell};
+
+/// Returns the raw text of the leading comment block immediately before `node_span`, or None.
+/// Only comments that end before `node_span.start` are considered; the block is the one(s)
+/// that end closest to the node. If `exclude_starts_between` is provided, a comment is only
+/// used when no excluded start lies strictly between the comment end and `node_span.start`
+/// (so we don't attribute a comment to a declaration when another declaration appears in between).
+fn leading_comment_for_span(
+    source: &str,
+    comments: &[Comment],
+    node_span: Span,
+    exclude_starts_between: Option<&[u32]>,
+) -> Option<String> {
+    let node_start = node_span.start;
+    let leading: Vec<_> = comments
+        .iter()
+        .filter(|c| c.span.end <= node_start)
+        .collect();
+    if leading.is_empty() {
+        return None;
+    }
+    // Sort by end position descending so the comment closest to the node is first.
+    let mut by_end: Vec<_> = leading.into_iter().collect();
+    by_end.sort_by_key(|c| std::cmp::Reverse(c.span.end));
+
+    let first = by_end[0];
+    // If another node starts between this comment and our node, this comment belongs to that node.
+    if let Some(exclude) = exclude_starts_between {
+        if exclude
+            .iter()
+            .any(|&s| s > first.span.end && s < node_start)
+        {
+            return None;
+        }
+    }
+    let mut block_start = first.span.start as usize;
+    let block_end = first.span.end as usize;
+
+    // Extend backward to include adjacent leading comments (e.g. multiple lines or blocks).
+    for c in by_end.iter().skip(1) {
+        let c_end = c.span.end as usize;
+        let c_start = c.span.start as usize;
+        // Consider adjacent if the gap is only whitespace (e.g. newlines).
+        let gap = source.get(c_end..block_start).unwrap_or("");
+        if gap.trim().is_empty() && c_end <= block_start {
+            block_start = c_start;
+        } else {
+            break;
+        }
+    }
+
+    let raw = source.get(block_start..block_end)?;
+    let normalized = normalize_comment_text(raw);
+    if normalized.is_empty() {
+        None
+    } else {
+        Some(normalized)
+    }
+}
+
+/// Strips comment markers (//, /*, */, /**) and leading `*` on lines; trims; preserves newlines.
+fn normalize_comment_text(raw: &str) -> String {
+    let mut s = raw.trim();
+    // Strip block start
+    if s.starts_with("/**") {
+        s = s[3..].trim_start();
+    } else if s.starts_with("/*") {
+        s = s[2..].trim_start();
+    }
+    // Strip block end
+    if s.ends_with("*/") {
+        s = s[..s.len() - 2].trim_end();
+    }
+    // Line comments: strip // from each line
+    let lines: Vec<&str> = s.lines().collect();
+    let normalized_lines: Vec<String> = lines
+        .iter()
+        .map(|line| {
+            let t = line.trim_start();
+            let stripped = if t.starts_with("//") {
+                t[2..].trim_start()
+            } else if t.starts_with('*') {
+                t[1..].trim_start()
+            } else {
+                t
+            };
+            stripped.to_string()
+        })
+        .collect();
+    let result = normalized_lines.join("\n").trim().to_string();
+    result
+}
 
 pub(super) fn extract_files(
     scanned_workspace: &ScannedWorkspace,
@@ -69,6 +160,7 @@ fn extract_file(
                     &scanned_file.library,
                     export_decl,
                     &scanned_file.source,
+                    &parse_result.program.comments,
                     &import_bindings,
                     &mut exports,
                 );
@@ -129,6 +221,7 @@ fn collect_exported_declaration(
     current_library: &str,
     export_decl: &ExportNamedDeclaration<'_>,
     source: &str,
+    comments: &[Comment],
     import_bindings: &BTreeMap<String, ImportBinding>,
     exports: &mut Vec<SymbolShell>,
 ) {
@@ -140,15 +233,38 @@ fn collect_exported_declaration(
         Declaration::TSInterfaceDeclaration(interface_decl) => {
             let name = interface_decl.id.name.to_string();
             let id = symbol_id(file_id, &name);
+            let description =
+                leading_comment_for_span(source, comments, interface_decl.span(), None);
+            let property_spans: Vec<u32> = interface_decl
+                .body
+                .body
+                .iter()
+                .filter_map(|sig| match sig {
+                    TSSignature::TSPropertySignature(p) => Some(p.span().start),
+                    _ => None,
+                })
+                .collect();
             let defined_members = interface_decl
                 .body
                 .body
                 .iter()
                 .filter_map(|signature| match signature {
                     TSSignature::TSPropertySignature(property) => {
+                        let others: Vec<u32> = property_spans
+                            .iter()
+                            .copied()
+                            .filter(|&s| s != property.span().start)
+                            .collect();
+                        let exclude = if others.is_empty() {
+                            None
+                        } else {
+                            Some(others.as_slice())
+                        };
                         Some(property_signature_to_member(
                             property,
                             source,
+                            comments,
+                            exclude,
                             import_bindings,
                             current_module_specifier,
                             current_library,
@@ -179,6 +295,7 @@ fn collect_exported_declaration(
                 name,
                 kind: TsSymbolKind::Interface,
                 exported: true,
+                description,
                 defined_members,
                 extends,
                 underlying: None,
@@ -188,6 +305,8 @@ fn collect_exported_declaration(
         Declaration::TSTypeAliasDeclaration(type_alias) => {
             let name = type_alias.id.name.to_string();
             let id = symbol_id(file_id, &name);
+            let description =
+                leading_comment_for_span(source, comments, type_alias.span(), None);
             let underlying = Some(type_to_ref(
                 &type_alias.type_annotation,
                 source,
@@ -202,6 +321,7 @@ fn collect_exported_declaration(
                 name,
                 kind: TsSymbolKind::TypeAlias,
                 exported: true,
+                description,
                 defined_members: Vec::new(),
                 extends: Vec::new(),
                 underlying,
@@ -215,11 +335,19 @@ fn collect_exported_declaration(
 fn property_signature_to_member(
     property: &TSPropertySignature<'_>,
     source: &str,
+    comments: &[Comment],
+    exclude_starts_between: Option<&[u32]>,
     import_bindings: &BTreeMap<String, ImportBinding>,
     current_module_specifier: &str,
     current_library: &str,
 ) -> TsMember {
     let name = property_key_name(&property.key, source);
+    let description = leading_comment_for_span(
+        source,
+        comments,
+        property.span(),
+        exclude_starts_between,
+    );
     let type_ref = property.type_annotation.as_ref().map(|annotation| {
         type_to_ref(
             &annotation.type_annotation,
@@ -233,6 +361,7 @@ fn property_signature_to_member(
     TsMember {
         name,
         optional: property.optional,
+        description,
         type_ref,
     }
 }

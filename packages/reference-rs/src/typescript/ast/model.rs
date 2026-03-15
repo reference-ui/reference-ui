@@ -25,6 +25,7 @@ pub(crate) struct SymbolShell {
     pub(crate) name: String,
     pub(crate) kind: TsSymbolKind,
     pub(crate) exported: bool,
+    pub(crate) description: Option<String>,
     pub(crate) defined_members: Vec<TsMember>,
     pub(crate) extends: Vec<TypeRef>,
     pub(crate) underlying: Option<TypeRef>,
