@@ -16,17 +16,26 @@ fn collects_expected_exported_symbols_from_scanned_files() {
     let bundle = scan_fixture();
 
     assert_eq!(
-        bundle.exports.get("./scan_here/button").expect("button exports"),
+        bundle
+            .exports
+            .get("./scan_here/button")
+            .expect("button exports"),
         &std::collections::BTreeMap::from([
             (
                 "ButtonProps".to_string(),
                 "sym:scan_here/button.ts#ButtonProps".to_string(),
             ),
-            ("Size".to_string(), "sym:scan_here/button.ts#Size".to_string()),
+            (
+                "Size".to_string(),
+                "sym:scan_here/button.ts#Size".to_string()
+            ),
         ])
     );
     assert_eq!(
-        bundle.exports.get("./scan_here/index").expect("index exports"),
+        bundle
+            .exports
+            .get("./scan_here/index")
+            .expect("index exports"),
         &std::collections::BTreeMap::from([(
             "DocsEntry".to_string(),
             "sym:scan_here/index.ts#DocsEntry".to_string(),
@@ -116,8 +125,12 @@ fn scan_fixture() -> TypeScriptBundle {
     let actual_pretty =
         serde_json::to_string_pretty(&bundle).expect("bundle should serialize to pretty JSON");
     let output_path = fixture_output_path();
-    fs::create_dir_all(output_path.parent().expect("output path should have parent"))
-        .expect("fixture output directory should be creatable");
+    fs::create_dir_all(
+        output_path
+            .parent()
+            .expect("output path should have parent"),
+    )
+    .expect("fixture output directory should be creatable");
     fs::write(&output_path, format!("{actual_pretty}\n"))
         .expect("fixture output bundle should be writable");
 
