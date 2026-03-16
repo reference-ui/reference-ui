@@ -52,7 +52,7 @@ describe('loader', () => {
     const { getVirtualNativeCandidates } = await importLoaderModule()
 
     expect(getVirtualNativeCandidates('/workspace/packages/reference-rs', 'darwin-arm64')).toEqual([
-      '/workspace/packages/reference-rs/dist/native/virtual-native.darwin-arm64.node',
+      '/workspace/packages/reference-rs/native/virtual-native.darwin-arm64.node',
       '/workspace/packages/reference-rs/virtual-native.darwin-arm64.node',
       '/workspace/packages/reference-rs/dist/virtual-native.darwin-arm64.node',
     ])
@@ -68,12 +68,12 @@ describe('loader', () => {
   it('prefers the first existing candidate when resolving a binary path', async () => {
     const { resolveVirtualNativeBinaryPath } = await importLoaderModule()
     const fileExists = vi.fn((path: string) => {
-      return path === '/workspace/packages/reference-rs/dist/native/virtual-native.win32-x64-msvc.node'
+      return path === '/workspace/packages/reference-rs/native/virtual-native.win32-x64-msvc.node'
     })
 
     expect(
       resolveVirtualNativeBinaryPath('/workspace/packages/reference-rs', 'win32', 'x64', fileExists)
-    ).toBe('/workspace/packages/reference-rs/dist/native/virtual-native.win32-x64-msvc.node')
+    ).toBe('/workspace/packages/reference-rs/native/virtual-native.win32-x64-msvc.node')
     expect(fileExists).toHaveBeenCalledTimes(1)
   })
 })

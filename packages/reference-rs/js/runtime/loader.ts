@@ -44,7 +44,7 @@ export function resolveReferenceRsPackageDir(fromUrl: string = import.meta.url):
 
 export function getVirtualNativeCandidates(packageDir: string, triple: string): string[] {
   return [
-    join(packageDir, 'dist', 'native', `virtual-native.${triple}.node`),
+    join(packageDir, 'native', `virtual-native.${triple}.node`),
     join(packageDir, `virtual-native.${triple}.node`),
     join(packageDir, 'dist', `virtual-native.${triple}.node`),
   ]
