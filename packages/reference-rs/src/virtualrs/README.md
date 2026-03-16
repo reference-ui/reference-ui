@@ -1,6 +1,6 @@
-# Virtual Postprocess
+# Virtualrs
 
-`virtual_postprocess` owns the Rust-side semantics for postprocessing generated
+`virtualrs` owns the Rust-side semantics for postprocessing generated
 virtual source files before they are consumed by the rest of the Reference UI
 toolchain.
 

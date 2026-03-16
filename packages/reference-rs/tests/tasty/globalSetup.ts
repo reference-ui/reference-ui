@@ -12,7 +12,7 @@ import {
   getVirtualNative,
   resolveReferenceRsPackageDir,
   scanAndEmitBundle,
-} from '../js/runtime/index'
+} from '../../js/runtime/index'
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
 
@@ -24,8 +24,8 @@ export default async function globalSetup() {
   }
 
   const packageDir = resolveReferenceRsPackageDir(pathToFileURL(__dirname).href)
-  const inputDir = join(packageDir, 'tests', 'input')
-  const outputDir = join(packageDir, 'tests', 'output')
+  const inputDir = join(packageDir, 'tests', 'tasty', 'input')
+  const outputDir = join(packageDir, 'tests', 'tasty', 'output')
 
   // Install fixture deps so scanner can resolve node_modules
   execFileSync('npm', ['install', '--no-audit', '--no-fund'], {
@@ -39,7 +39,7 @@ export default async function globalSetup() {
     .sort()
 
   if (scenarioFolders.length === 0) {
-    throw new Error('At least one scenario folder must exist under tests/input/')
+    throw new Error('At least one scenario folder must exist under tests/tasty/input/')
   }
 
   for (const scenario of scenarioFolders) {

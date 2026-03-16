@@ -1,6 +1,6 @@
 use super::{rewrite_css_imports, rewrite_cva_imports};
 
-const VIRTUAL_PATH: &str = "src/virtual/example.tsx";
+const VIRTUAL_PATH: &str = "src/virtualrs/example.tsx";
 
 #[test]
 fn rewrites_css_import_and_preserves_other_bindings() {

@@ -1,18 +1,18 @@
 #![deny(clippy::all)]
 
-mod typescript;
-mod virtual_postprocess;
+mod tasty;
+mod virtualrs;
 
 use std::path::PathBuf;
 
 use napi::Result;
 use napi_derive::napi;
 
-use typescript::{scan_and_emit_bundle as do_scan_and_emit_bundle, ScanRequest};
+use tasty::{scan_and_emit_bundle as do_scan_and_emit_bundle, ScanRequest};
 
 #[napi]
 pub fn rewrite_css_imports(source_code: String, relative_path: String) -> Result<String> {
-    Ok(virtual_postprocess::rewrite_css_imports(
+    Ok(virtualrs::rewrite_css_imports(
         &source_code,
         &relative_path,
     ))
@@ -20,7 +20,7 @@ pub fn rewrite_css_imports(source_code: String, relative_path: String) -> Result
 
 #[napi]
 pub fn rewrite_cva_imports(source_code: String, relative_path: String) -> Result<String> {
-    Ok(virtual_postprocess::rewrite_cva_imports(
+    Ok(virtualrs::rewrite_cva_imports(
         &source_code,
         &relative_path,
     ))
