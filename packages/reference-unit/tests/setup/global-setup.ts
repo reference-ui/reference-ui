@@ -48,21 +48,13 @@ export default async function globalSetup() {
     timeout: 180_000,
   })
 
-  const libWatchProcess = spawn('node', [refCore, 'sync', '--watch', '--debug'], {
-    cwd: libRoot,
-    stdio: 'inherit',
-    detached: true,
-  })
-  libWatchProcess.unref()
-
   const libReady = await waitForOutputs([
     join(libRoot, '.reference-ui', 'system', 'baseSystem.mjs'),
     join(libRoot, 'node_modules', '@reference-ui', 'system', 'baseSystem.mjs'),
   ], 20_000)
   if (!libReady) {
-    killProcessTree(libWatchProcess.pid)
     throw new Error(
-      'reference-lib ref sync --watch failed to produce baseSystem outputs for downstream consumers'
+      'reference-lib build failed to produce baseSystem outputs for downstream consumers'
     )
   }
 
@@ -79,13 +71,11 @@ export default async function globalSetup() {
     join(pkgRoot, '.reference-ui', 'virtual'),
   ])
   if (!appReady) {
-    killProcessTree(libWatchProcess.pid)
     killProcessTree(appWatchProcess.pid)
     throw new Error('ref sync --watch failed to produce .reference-ui/react (full pipeline did not complete)')
   }
 
   return () => {
-    killProcessTree(libWatchProcess.pid)
     killProcessTree(appWatchProcess.pid)
   }
 }

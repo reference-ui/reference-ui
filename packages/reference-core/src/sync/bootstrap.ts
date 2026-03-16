@@ -1,6 +1,7 @@
 import { loadUserConfig, setConfig, setCwd } from '../config'
 import { initEventBus } from '../lib/event-bus'
 import { initPool } from '../lib/thread-pool'
+import workersManifest from '../../workers.json'
 import type { SyncOptions, SyncPayload } from './types'
 
 /**
@@ -17,7 +18,13 @@ export async function bootstrap(
   }
   setConfig(config)
   setCwd(cwd)
-  initPool({ config, cwd })
+  initPool(
+    { config, cwd },
+    {
+      // Sync starts one long-lived task per registered worker.
+      maxThreads: Object.keys(workersManifest).length,
+    }
+  )
   initEventBus()
   return { cwd, config, options: options ?? {} }
 }

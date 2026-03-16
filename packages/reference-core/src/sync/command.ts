@@ -7,6 +7,7 @@ import { initConfig } from '../system/panda/config/init'
 import { initWatch } from '../watch/init'
 import { initPackager, initTsPackager } from '../packager/init'
 import { initPanda } from '../system/panda/gen/init'
+import { initReference } from '../reference/init'
 import type { SyncOptions } from './types'
 
 export type { SyncOptions, SyncPayload } from './types'
@@ -19,6 +20,7 @@ export async function syncCommand(cwd: string, options?: SyncOptions): Promise<v
   initComplete(payload)
   initWatch(payload)
   initVirtual(payload)
+  initReference(payload)
   initConfig()
   initPanda()
   initPackager(payload)

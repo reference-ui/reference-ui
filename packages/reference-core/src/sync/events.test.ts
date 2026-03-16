@@ -89,6 +89,37 @@ describe('sync/events', () => {
     expect(emit).toHaveBeenCalledWith('run:panda:codegen', undefined)
   })
 
+  it('virtual:complete triggers config and reference work immediately when both workers are ready', async () => {
+    const { initEvents } = await loadEventsModule()
+    initEvents()
+
+    fireOn('system:config:ready')
+    fireOn('reference:ready')
+    emit.mockClear()
+    fireOn('virtual:complete')
+
+    expect(emit).toHaveBeenCalledWith('run:system:config', undefined)
+    expect(emit).toHaveBeenCalledWith('run:reference:build', {})
+  })
+
+  it('buffers config and reference work until the workers become ready', async () => {
+    const { initEvents } = await loadEventsModule()
+    initEvents()
+
+    fireOn('virtual:complete')
+    expect(emit).not.toHaveBeenCalledWith('run:system:config', undefined)
+    expect(emit).not.toHaveBeenCalledWith('run:reference:build', {})
+
+    emit.mockClear()
+    fireOn('system:config:ready')
+    expect(emit).toHaveBeenCalledWith('run:system:config', undefined)
+    expect(emit).not.toHaveBeenCalledWith('run:reference:build', {})
+
+    emit.mockClear()
+    fireOn('reference:ready')
+    expect(emit).toHaveBeenCalledWith('run:reference:build', {})
+  })
+
   it('system:panda:codegen triggers run:packager:bundle when packager already ready', async () => {
     const { initEvents } = await loadEventsModule()
     initEvents()

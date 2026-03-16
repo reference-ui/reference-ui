@@ -7,6 +7,10 @@ const SYNC_FAILED_EVENT = 'sync:failed'
  * watch:change → run:virtual:sync:file (single file), passing payload through.
  */
 export function initEvents(): void {
+  let configReady = false
+  let referenceReady = false
+  let pendingSystemConfig = false
+  let pendingReferenceBuild = false
   let packagerReady = false
   let pendingPackagerBundle = false
 
@@ -19,7 +23,33 @@ export function initEvents(): void {
   })
 
   on('virtual:complete', () => {
-    emit('run:system:config')
+    if (configReady) {
+      emit('run:system:config')
+    } else {
+      pendingSystemConfig = true
+    }
+
+    if (referenceReady) {
+      emit('run:reference:build', {})
+    } else {
+      pendingReferenceBuild = true
+    }
+  })
+
+  on('system:config:ready', () => {
+    configReady = true
+    if (pendingSystemConfig) {
+      pendingSystemConfig = false
+      emit('run:system:config')
+    }
+  })
+
+  on('reference:ready', () => {
+    referenceReady = true
+    if (pendingReferenceBuild) {
+      pendingReferenceBuild = false
+      emit('run:reference:build', {})
+    }
   })
 
   onceAll(['system:config:complete', 'system:panda:ready'], () => {
@@ -35,6 +65,10 @@ export function initEvents(): void {
   })
 
   on('virtual:failed', () => {
+    emit(SYNC_FAILED_EVENT)
+  })
+
+  on('reference:failed', () => {
     emit(SYNC_FAILED_EVENT)
   })
 
