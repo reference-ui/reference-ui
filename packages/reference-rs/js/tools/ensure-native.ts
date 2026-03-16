@@ -11,7 +11,7 @@ if (!triple) {
   throw new Error('Unsupported platform for @reference-ui/rust native build.')
 }
 
-const binaryPath = join(packageDir, `virtual-native.${triple}.node`)
+const binaryPath = join(packageDir, 'dist', 'native', `virtual-native.${triple}.node`)
 const requiredExports = [
   'rewriteCssImports',
   'rewriteCvaImports',
