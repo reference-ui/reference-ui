@@ -9,11 +9,14 @@ const ESBUILD_EXTERNALS = [
   'react/jsx-runtime',
   '@reference-ui/styled',
   '@reference-ui/styled/*',
+  '@reference-ui/types',
+  '@reference-ui/types/*',
   // Node build-tools (fragments scanner/runner) must stay external for neutral bundles.
   'node:fs',
   'node:path',
   'node:crypto',
   'node:url',
+  'url',
   'fast-glob',
   'esbuild',
 ]

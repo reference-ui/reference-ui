@@ -36,17 +36,24 @@ export interface PoolWorkerData {
   cwd: string
 }
 
+export interface PoolOptions {
+  minThreads?: number
+  maxThreads?: number
+}
+
 /**
  * Initialize the pool with config and cwd. Must be called before first runWorker.
  * Passed via workerData so workers can access them without per-task wiring.
  */
-export function initPool(data: PoolWorkerData): void {
+export function initPool(data: PoolWorkerData, options: PoolOptions = {}): void {
   if (pool) return
 
   initMemoryLogging()
+  const minThreads = options.minThreads ?? 2
+  const maxThreads = options.maxThreads ?? 6
   pool = new Piscina({
-    minThreads: 2,
-    maxThreads: 6,
+    minThreads,
+    maxThreads,
     idleTimeout: 30000,
     workerData: data,
   })

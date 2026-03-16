@@ -37,13 +37,13 @@ describe('thread-pool registry', () => {
   it('builds tsup worker entries from workers.json', async () => {
     const { workerEntries } = await importRegistryModule()
 
-    expect(workerEntries).toEqual({
-      'watch/worker': 'src/watch/worker.ts',
-      'virtual/worker': 'src/virtual/worker.ts',
-      'config/worker': 'src/system/workers/config.ts',
-      'panda/worker': 'src/system/workers/panda.ts',
-      'packager/worker': 'src/packager/worker.ts',
-      'packager-ts/worker': 'src/packager/ts/worker.ts',
-    })
+    const expectedEntries = Object.fromEntries(
+      Object.entries(manifest as Record<string, string>).map(([name, src]) => [
+        `${name}/worker`,
+        src,
+      ])
+    )
+
+    expect(workerEntries).toEqual(expectedEntries)
   })
 })

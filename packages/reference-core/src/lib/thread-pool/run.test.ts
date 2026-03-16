@@ -81,6 +81,20 @@ describe('thread-pool/run', () => {
     })
   })
 
+  it('accepts pool size overrides', async () => {
+    const { initPool, instances } = await importRunModule()
+
+    initPool(WORKER_DATA, {
+      minThreads: 3,
+      maxThreads: 8,
+    })
+
+    expect(instances[0]?.options).toMatchObject({
+      minThreads: 3,
+      maxThreads: 8,
+    })
+  })
+
   it('runWorker() delegates payload and filename to Piscina', async () => {
     const { initPool, runWorker, instances } = await importRunModule()
     initPool(WORKER_DATA)

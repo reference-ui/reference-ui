@@ -1,0 +1,43 @@
+---
+title: Reference API Table
+section: Reference
+order: 0
+slug: reference-api-table
+---
+
+import { Reference } from '@reference-ui/types'
+
+# Reference API Table
+
+The `Reference` component renders API documentation from the generated Tasty manifest at runtime. For interfaces, that means a live members table without hand-maintained docs.
+
+## Define a public type
+
+```ts
+export interface DocsReferenceButtonProps {
+  label: string
+  disabled?: boolean
+  variant: 'solid' | 'ghost'
+  icon?: 'plus' | 'minus'
+}
+```
+
+Any exported symbol inside the docs app can be picked up by `ref sync` and exposed through `@reference-ui/types`.
+
+## Render the table
+
+```tsx
+import { Reference } from '@reference-ui/types'
+
+<Reference name="DocsReferenceButtonProps" />
+```
+
+## Live example
+
+<Reference name="DocsReferenceButtonProps" />
+
+Type aliases work too, but they render as a definition block instead of a members table:
+
+```tsx
+<Reference name="DocsReferenceButtonVariant" />
+```

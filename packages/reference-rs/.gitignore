@@ -8,3 +8,9 @@ npm/
 
 # Node
 node_modules/
+
+# Generated Tasty test output
+tests/tasty/cases/**/output/
+
+# Generated Virtualfs test output
+tests/virtualfs/cases/**/output/
