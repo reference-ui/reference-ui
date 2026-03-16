@@ -9,8 +9,8 @@ import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
-async function loadBundle(scenario: string) {
-  const bundlePath = join(__dirname, 'output', scenario, 'bundle.js')
+async function loadBundle() {
+  const bundlePath = join(__dirname, 'output', 'bundle.js')
   return import(pathToFileURL(bundlePath).href)
 }
 
@@ -39,7 +39,7 @@ function findSymbol(symbols: ReturnType<typeof getSymbols>, name: string) {
 
 describe('template_literals bundle', () => {
   it('has expected symbols', async () => {
-    const mod = await loadBundle('template_literals')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const names = symbols.map((s) => s.name)
     expect(names).toContain('Tokens')
@@ -49,7 +49,7 @@ describe('template_literals bundle', () => {
   })
 
   it('emits union interpolation as template literal parts', async () => {
-    const mod = await loadBundle('template_literals')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const sizeVariant = findSymbol(symbols, 'SizeVariant')
     const def = sizeVariant.definition as {
@@ -67,7 +67,7 @@ describe('template_literals bundle', () => {
   })
 
   it('emits nested structured types inside template literal parts', async () => {
-    const mod = await loadBundle('template_literals')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const tokenKeyLabel = findSymbol(symbols, 'TokenKeyLabel')
     const def = tokenKeyLabel.definition as {
@@ -87,7 +87,7 @@ describe('template_literals bundle', () => {
   })
 
   it('emits member types that use template literals structurally', async () => {
-    const mod = await loadBundle('template_literals')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const withTemplateLiterals = findSymbol(symbols, 'WithTemplateLiterals')
     const sizeMember = withTemplateLiterals.members?.find((m) => m.name === 'size')

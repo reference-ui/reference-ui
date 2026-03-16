@@ -24,28 +24,28 @@ export default async function globalSetup() {
   }
 
   const packageDir = resolveReferenceRsPackageDir(pathToFileURL(__dirname).href)
-  const inputDir = join(packageDir, 'tests', 'tasty', 'input')
-  const outputDir = join(packageDir, 'tests', 'tasty', 'output')
+  const tastyDir = join(packageDir, 'tests', 'tasty')
+  const casesDir = join(tastyDir, 'cases')
 
   // Install fixture deps so scanner can resolve node_modules
   execFileSync('npm', ['install', '--no-audit', '--no-fund'], {
-    cwd: inputDir,
+    cwd: tastyDir,
     stdio: 'inherit',
   })
 
-  const scenarioFolders = readdirSync(inputDir, { withFileTypes: true })
+  const scenarioFolders = readdirSync(casesDir, { withFileTypes: true })
     .filter((e) => e.isDirectory() && e.name !== 'node_modules')
     .map((e) => e.name)
     .sort()
 
   if (scenarioFolders.length === 0) {
-    throw new Error('At least one scenario folder must exist under tests/tasty/input/')
+    throw new Error('At least one case folder must exist under tests/tasty/cases/')
   }
 
   for (const scenario of scenarioFolders) {
-    const include = [`${scenario}/**/*.{ts,tsx}`]
-    const bundleSource = scanAndEmitBundle(inputDir, include)
-    const scenarioOutputDir = join(outputDir, scenario)
+    const include = [`cases/${scenario}/input/**/*.{ts,tsx}`]
+    const bundleSource = scanAndEmitBundle(tastyDir, include)
+    const scenarioOutputDir = join(casesDir, scenario, 'output')
     mkdirSync(scenarioOutputDir, { recursive: true })
     writeFileSync(join(scenarioOutputDir, 'bundle.js'), bundleSource + '\n', 'utf-8')
   }

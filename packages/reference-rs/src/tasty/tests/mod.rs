@@ -1,5 +1,6 @@
 //! Rust-side smoke tests for the TypeScript scanner. Bundle output is emitted by the
-//! compiled napi-rs runtime in Vitest globalSetup; Vitest tests (tests/tasty/*.test.ts) then
+//! compiled napi-rs runtime in Vitest globalSetup; Vitest tests under
+//! tests/tasty/cases/*/bundle.test.ts then
 //! load and assert on that output.
 
 use std::path::{Path, PathBuf};
@@ -14,8 +15,8 @@ const SCENARIO_EXTERNAL_LIBS: &str = "external_libs";
 fn scans_fixture_successfully() {
     ensure_fixture_dependencies_installed();
     let bundle = scan_typescript_bundle(&ScanRequest {
-        root_dir: fixture_input_dir(),
-        include: vec![format!("{SCENARIO_EXTERNAL_LIBS}/**/*.{{ts,tsx}}")],
+        root_dir: fixture_tasty_dir(),
+        include: vec![format!("cases/{SCENARIO_EXTERNAL_LIBS}/input/**/*.{{ts,tsx}}")],
     })
     .expect("fixture scan should succeed");
     assert_eq!(bundle.version, 1);
@@ -27,8 +28,8 @@ fn tests_dir() -> PathBuf {
         .join("tasty")
 }
 
-fn fixture_input_dir() -> PathBuf {
-    tests_dir().join("input")
+fn fixture_tasty_dir() -> PathBuf {
+    tests_dir()
 }
 
 fn ensure_fixture_dependencies_installed() {
@@ -37,7 +38,7 @@ fn ensure_fixture_dependencies_installed() {
     INSTALL_ONCE.get_or_init(|| {
         let status = Command::new("npm")
             .args(["install", "--no-audit", "--no-fund"])
-            .current_dir(fixture_input_dir())
+            .current_dir(fixture_tasty_dir())
             .status()
             .expect("fixture npm install should launch");
 

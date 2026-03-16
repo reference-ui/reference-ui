@@ -80,7 +80,7 @@ So: **Oxc gives us full TS structure; we intentionally expose a subset.** Extend
 
 ## 5. Different scan directories / one bundle per scenario?
 
-**Done.** We use one `ScanRequest` per scenario; Vitest globalSetup runs the native addon per scenario dir (`generics`, `external_libs`, `signatures`, etc.) and writes `output/{scenario}/bundle.js`. Tests load and assert per scenario. API stays one root + one include per request; N scenarios → N requests → N bundles.
+**Done.** We use one `ScanRequest` per scenario; Vitest globalSetup runs the native addon per scenario dir (`generics`, `external_libs`, `signatures`, etc.) and writes `cases/{scenario}/output/bundle.js`. Tests live beside each case and load that local output. API stays one root + one include per request; N scenarios → N requests → N bundles.
 
 ---
 
@@ -120,4 +120,4 @@ So: **Oxc gives us full TS structure; we intentionally expose a subset.** Extend
 | `default_params` | Type parameters with default (e.g. `T = string`). |
 | `unknown_complex` | Mixed advanced types: mapped + conditional structural, nested unsupported pieces may still be `Raw`. |
 
-**Vitest:** Each scenario has a matching `bundle.{scenario}.test.ts` that loads `output/{scenario}/bundle.js` and asserts shape and content. globalSetup emits one bundle per scenario directory under `tests/tasty/input/`.
+**Vitest:** Each scenario has a matching `tests/tasty/cases/{scenario}/bundle.test.ts` that loads `output/bundle.js` from the same case folder and asserts shape and content. globalSetup emits one bundle per scenario directory under `tests/tasty/cases/{scenario}/input/`.

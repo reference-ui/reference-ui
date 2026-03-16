@@ -9,8 +9,8 @@ import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
-async function loadBundle(scenario: string) {
-  const bundlePath = join(__dirname, 'output', scenario, 'bundle.js')
+async function loadBundle() {
+  const bundlePath = join(__dirname, 'output', 'bundle.js')
   return import(pathToFileURL(bundlePath).href)
 }
 
@@ -39,7 +39,7 @@ function findSymbol(symbols: ReturnType<typeof getSymbols>, name: string) {
 
 describe('mapped_types bundle', () => {
   it('has expected symbols', async () => {
-    const mod = await loadBundle('mapped_types')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const names = symbols.map((s) => s.name)
     expect(names).toContain('Tokens')
@@ -49,7 +49,7 @@ describe('mapped_types bundle', () => {
   })
 
   it('emits mapped aliases with key binding, source type, modifiers, and value type', async () => {
-    const mod = await loadBundle('mapped_types')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const optionalTokens = findSymbol(symbols, 'OptionalTokens')
     const def = optionalTokens.definition as {
@@ -73,7 +73,7 @@ describe('mapped_types bundle', () => {
   })
 
   it('emits remapped keys and readonly modifier structurally', async () => {
-    const mod = await loadBundle('mapped_types')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const tokenLabels = findSymbol(symbols, 'TokenLabels')
     const def = tokenLabels.definition as {
@@ -92,7 +92,7 @@ describe('mapped_types bundle', () => {
   })
 
   it('emits member types that use mapped types structurally', async () => {
-    const mod = await loadBundle('mapped_types')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const withMappedTypes = findSymbol(symbols, 'WithMappedTypes')
     const optionalMember = withMappedTypes.members?.find((m) => m.name === 'optional')

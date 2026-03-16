@@ -9,8 +9,8 @@ import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
-async function loadBundle(scenario: string) {
-  const bundlePath = join(__dirname, 'output', scenario, 'bundle.js')
+async function loadBundle() {
+  const bundlePath = join(__dirname, 'output', 'bundle.js')
   return import(pathToFileURL(bundlePath).href)
 }
 
@@ -42,7 +42,7 @@ function findSymbol(
 
 describe('unions_literals bundle', () => {
   it('exports interfaces and types arrays', async () => {
-    const mod = await loadBundle('unions_literals')
+    const mod = await loadBundle()
     expect(mod.interfaces).toBeDefined()
     expect(Array.isArray(mod.interfaces)).toBe(true)
     expect(mod.types).toBeDefined()
@@ -50,7 +50,7 @@ describe('unions_literals bundle', () => {
   })
 
   it('has expected symbols', async () => {
-    const mod = await loadBundle('unions_literals')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const names = symbols.map((s) => s.name)
     expect(names).toContain('Status')
@@ -66,7 +66,7 @@ describe('unions_literals bundle', () => {
   })
 
   it('emits intrinsic keywords (bigint, symbol, never, void)', async () => {
-    const mod = await loadBundle('unions_literals')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const bigintAlias = findSymbol(symbols, 'BigintAlias')
     const symbolAlias = findSymbol(symbols, 'SymbolAlias')
@@ -84,7 +84,7 @@ describe('unions_literals bundle', () => {
   })
 
   it('emits union type definition (Status: string literals)', async () => {
-    const mod = await loadBundle('unions_literals')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const status = findSymbol(symbols, 'Status')
     expect(status.definition).toBeDefined()
@@ -95,7 +95,7 @@ describe('unions_literals bundle', () => {
   })
 
   it('emits union type (StringOrNumber: string | number)', async () => {
-    const mod = await loadBundle('unions_literals')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const stringOrNumber = findSymbol(symbols, 'StringOrNumber')
     const def = stringOrNumber.definition as { kind?: string; types?: unknown[] }
@@ -104,7 +104,7 @@ describe('unions_literals bundle', () => {
   })
 
   it('emits literal in type ref when present', async () => {
-    const mod = await loadBundle('unions_literals')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const status = findSymbol(symbols, 'Status')
     const def = status.definition as { kind?: string; types?: Array<{ kind?: string; value?: string }> }
@@ -113,7 +113,7 @@ describe('unions_literals bundle', () => {
   })
 
   it('emits optional: true for optional members (OptionalProps)', async () => {
-    const mod = await loadBundle('unions_literals')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const optionalProps = findSymbol(symbols, 'OptionalProps')
     expect(optionalProps.members).toBeDefined()
@@ -129,7 +129,7 @@ describe('unions_literals bundle', () => {
   })
 
   it('emits libraries array including user', async () => {
-    const mod = await loadBundle('unions_literals')
+    const mod = await loadBundle()
     expect(mod.libraries).toBeDefined()
     expect(mod.libraries).toContain('user')
   })

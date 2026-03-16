@@ -9,8 +9,8 @@ import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
-async function loadBundle(scenario: string) {
-  const bundlePath = join(__dirname, 'output', scenario, 'bundle.js')
+async function loadBundle() {
+  const bundlePath = join(__dirname, 'output', 'bundle.js')
   return import(pathToFileURL(bundlePath).href)
 }
 
@@ -48,7 +48,7 @@ function findSymbol(
 
 describe('signatures bundle', () => {
   it('exports interfaces and types arrays', async () => {
-    const mod = await loadBundle('signatures')
+    const mod = await loadBundle()
     expect(mod.interfaces).toBeDefined()
     expect(Array.isArray(mod.interfaces)).toBe(true)
     expect(mod.types).toBeDefined()
@@ -56,7 +56,7 @@ describe('signatures bundle', () => {
   })
 
   it('has expected symbols', async () => {
-    const mod = await loadBundle('signatures')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const names = symbols.map((s) => s.name)
     expect(names).toContain('ReadonlyProps')
@@ -81,7 +81,7 @@ describe('signatures bundle', () => {
   })
 
   it('emits readonly, optional, and kind on members (ReadonlyProps)', async () => {
-    const mod = await loadBundle('signatures')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const readonlyProps = findSymbol(symbols, 'ReadonlyProps')
     expect(readonlyProps.members).toBeDefined()
@@ -98,7 +98,7 @@ describe('signatures bundle', () => {
   })
 
   it('emits method signature with kind "method" (WithMethod)', async () => {
-    const mod = await loadBundle('signatures')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const withMethod = findSymbol(symbols, 'WithMethod')
     const getNameMember = withMethod.members!.find((m) => m.name === 'getName')
@@ -107,7 +107,7 @@ describe('signatures bundle', () => {
   })
 
   it('emits call signature as [call] with kind "call" (Callable)', async () => {
-    const mod = await loadBundle('signatures')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const callable = findSymbol(symbols, 'Callable')
     const callMember = callable.members!.find((m) => m.name === '[call]')
@@ -116,7 +116,7 @@ describe('signatures bundle', () => {
   })
 
   it('emits index signature as [index] with kind "index" (StringMap)', async () => {
-    const mod = await loadBundle('signatures')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const stringMap = findSymbol(symbols, 'StringMap')
     const indexMember = stringMap.members!.find((m) => m.name === '[index]')
@@ -125,7 +125,7 @@ describe('signatures bundle', () => {
   })
 
   it('emits array type (StringArray, NumberArray)', async () => {
-    const mod = await loadBundle('signatures')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const stringArray = findSymbol(symbols, 'StringArray')
     expect(stringArray.definition).toBeDefined()
@@ -139,7 +139,7 @@ describe('signatures bundle', () => {
   })
 
   it('emits tuple type with element shape (StringNumberPair)', async () => {
-    const mod = await loadBundle('signatures')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const pair = findSymbol(symbols, 'StringNumberPair')
     const def = pair.definition as {
@@ -157,7 +157,7 @@ describe('signatures bundle', () => {
   })
 
   it('emits named tuple with labels (NamedPair)', async () => {
-    const mod = await loadBundle('signatures')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const namedPair = findSymbol(symbols, 'NamedPair')
     const def = namedPair.definition as {
@@ -173,7 +173,7 @@ describe('signatures bundle', () => {
   })
 
   it('emits tuple with optional element (WithOptionalElement)', async () => {
-    const mod = await loadBundle('signatures')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const withOpt = findSymbol(symbols, 'WithOptionalElement')
     const def = withOpt.definition as {
@@ -187,7 +187,7 @@ describe('signatures bundle', () => {
   })
 
   it('emits tuple with rest element (WithRest)', async () => {
-    const mod = await loadBundle('signatures')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const withRest = findSymbol(symbols, 'WithRest')
     const def = withRest.definition as {
@@ -201,7 +201,7 @@ describe('signatures bundle', () => {
   })
 
   it('emits construct signature as [new] with kind "construct" (Constructible)', async () => {
-    const mod = await loadBundle('signatures')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const constructible = findSymbol(symbols, 'Constructible')
     const newMember = constructible.members!.find((m) => m.name === '[new]')
@@ -211,7 +211,7 @@ describe('signatures bundle', () => {
   })
 
   it('unwraps parenthesized type (ParenType)', async () => {
-    const mod = await loadBundle('signatures')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const parenType = findSymbol(symbols, 'ParenType')
     const def = parenType.definition as { kind?: string; name?: string }
@@ -220,7 +220,7 @@ describe('signatures bundle', () => {
   })
 
   it('emits intersection type (WithIdAndName)', async () => {
-    const mod = await loadBundle('signatures')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const withIdAndName = findSymbol(symbols, 'WithIdAndName')
     const def = withIdAndName.definition as { kind?: string; types?: unknown[] }
@@ -230,7 +230,7 @@ describe('signatures bundle', () => {
   })
 
   it('emits callback (function) type with params and returnType (WithCallback)', async () => {
-    const mod = await loadBundle('signatures')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const withCallback = findSymbol(symbols, 'WithCallback')
     expect(withCallback.members).toBeDefined()
@@ -254,7 +254,7 @@ describe('signatures bundle', () => {
   })
 
   it('emits constructor type with params and returnType (MouseEventCtor)', async () => {
-    const mod = await loadBundle('signatures')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const mouseEventCtor = findSymbol(symbols, 'MouseEventCtor')
     const def = mouseEventCtor.definition as {
@@ -273,7 +273,7 @@ describe('signatures bundle', () => {
   })
 
   it('emits abstract constructor type with type parameters (AbstractMouseEventCtor)', async () => {
-    const mod = await loadBundle('signatures')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const abstractCtor = findSymbol(symbols, 'AbstractMouseEventCtor')
     const def = abstractCtor.definition as {

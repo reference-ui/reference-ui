@@ -9,8 +9,8 @@ import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
-async function loadBundle(scenario: string) {
-  const bundlePath = join(__dirname, 'output', scenario, 'bundle.js')
+async function loadBundle() {
+  const bundlePath = join(__dirname, 'output', 'bundle.js')
   return import(pathToFileURL(bundlePath).href)
 }
 
@@ -42,13 +42,13 @@ function findSymbol(
 
 describe('unknown_complex bundle', () => {
   it('exports interfaces and types arrays', async () => {
-    const mod = await loadBundle('unknown_complex')
+    const mod = await loadBundle()
     expect(mod.interfaces).toBeDefined()
     expect(mod.types).toBeDefined()
   })
 
   it('has expected symbols including User and UsesOptionalKeys', async () => {
-    const mod = await loadBundle('unknown_complex')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const names = symbols.map((s) => s.name)
     expect(names).toContain('User')
@@ -62,7 +62,7 @@ describe('unknown_complex bundle', () => {
   })
 
   it('emits indexed access type (UserName = User["name"]) with object and index', async () => {
-    const mod = await loadBundle('unknown_complex')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const userName = findSymbol(symbols, 'UserName')
     const def = userName.definition as {
@@ -80,7 +80,7 @@ describe('unknown_complex bundle', () => {
   })
 
   it('emits member type as indexed access (WithIndexedAccess.nameType)', async () => {
-    const mod = await loadBundle('unknown_complex')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const withIdx = findSymbol(symbols, 'WithIndexedAccess')
     const nameTypeMember = withIdx.members!.find((m) => m.name === 'nameType')
@@ -92,7 +92,7 @@ describe('unknown_complex bundle', () => {
   })
 
   it('emits template literal and type query structurally', async () => {
-    const mod = await loadBundle('unknown_complex')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const templateLiteral = findSymbol(symbols, 'TemplateLiteralAlias')
     const typeQuery = findSymbol(symbols, 'TypeQueryAlias')
@@ -114,7 +114,7 @@ describe('unknown_complex bundle', () => {
   })
 
   it('User interface has normal member types', async () => {
-    const mod = await loadBundle('unknown_complex')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const user = findSymbol(symbols, 'User')
     expect(user.members).toBeDefined()
@@ -125,7 +125,7 @@ describe('unknown_complex bundle', () => {
   })
 
   it('mapped type (OptionalKeys) is emitted structurally', async () => {
-    const mod = await loadBundle('unknown_complex')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const optionalKeys = findSymbol(symbols, 'OptionalKeys')
     expect(optionalKeys.definition).toBeDefined()
@@ -150,7 +150,7 @@ describe('unknown_complex bundle', () => {
   })
 
   it('member type that uses mapped type (partialUser) is reference with typeArguments', async () => {
-    const mod = await loadBundle('unknown_complex')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const usesOptionalKeys = findSymbol(symbols, 'UsesOptionalKeys')
     const partialUserMember = usesOptionalKeys.members!.find((m) => m.name === 'partialUser')
@@ -174,7 +174,7 @@ describe('unknown_complex bundle', () => {
   })
 
   it('conditional type (StringKeys) is emitted structurally', async () => {
-    const mod = await loadBundle('unknown_complex')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const stringKeys = findSymbol(symbols, 'StringKeys')
     expect(stringKeys.definition).toBeDefined()

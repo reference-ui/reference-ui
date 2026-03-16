@@ -9,8 +9,8 @@ import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
-async function loadBundle(scenario: string) {
-  const bundlePath = join(__dirname, 'output', scenario, 'bundle.js')
+async function loadBundle() {
+  const bundlePath = join(__dirname, 'output', 'bundle.js')
   return import(pathToFileURL(bundlePath).href)
 }
 
@@ -39,7 +39,7 @@ function findSymbol(symbols: ReturnType<typeof getSymbols>, name: string) {
 
 describe('type_operators bundle', () => {
   it('has expected symbols', async () => {
-    const mod = await loadBundle('type_operators')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const names = symbols.map((s) => s.name)
     expect(names).toContain('User')
@@ -49,7 +49,7 @@ describe('type_operators bundle', () => {
   })
 
   it('emits keyof as a structured type operator', async () => {
-    const mod = await loadBundle('type_operators')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const keysOfUser = findSymbol(symbols, 'KeysOfUser')
     const def = keysOfUser.definition as {
@@ -64,7 +64,7 @@ describe('type_operators bundle', () => {
   })
 
   it('emits readonly as a structured type operator around arrays', async () => {
-    const mod = await loadBundle('type_operators')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const readonlyUsers = findSymbol(symbols, 'ReadonlyUsers')
     const def = readonlyUsers.definition as {
@@ -80,7 +80,7 @@ describe('type_operators bundle', () => {
   })
 
   it('emits member types that use operators structurally', async () => {
-    const mod = await loadBundle('type_operators')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const withOperators = findSymbol(symbols, 'WithOperators')
     const keyMember = withOperators.members?.find((m) => m.name === 'key')
