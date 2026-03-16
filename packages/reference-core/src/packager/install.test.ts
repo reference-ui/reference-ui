@@ -1,6 +1,6 @@
 import { mkdtempSync, lstatSync, mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { PackageDefinition } from './package'
 
@@ -42,12 +42,12 @@ const TYPES_PACKAGE: PackageDefinition = {
   version: '0.0.0-test',
   description: 'types test package',
   bundle: false,
-  main: './manifest.js',
-  types: './manifest.d.ts',
+  main: './tasty/manifest.js',
+  types: './tasty/manifest.d.ts',
   exports: {
     '.': {
-      import: './manifest.js',
-      types: './manifest.d.ts',
+      import: './tasty/manifest.js',
+      types: './tasty/manifest.d.ts',
     },
   },
 }
@@ -224,15 +224,19 @@ describe('packager/install', () => {
     const { installPackage } = await importInstallModule({
       bundleImpl: async ({ targetDir: dir, pkg }) => {
         mkdirSync(dir, { recursive: true })
-        writeFileSync(resolve(dir, pkg.main?.replace('./', '') || 'index.js'), 'export default {}\n')
-        writeFileSync(resolve(dir, pkg.types?.replace('./', '') || 'index.d.ts'), 'export default {}\n')
+        const mainPath = resolve(dir, pkg.main?.replace('./', '') || 'index.js')
+        const typesPath = resolve(dir, pkg.types?.replace('./', '') || 'index.d.ts')
+        mkdirSync(dirname(mainPath), { recursive: true })
+        mkdirSync(dirname(typesPath), { recursive: true })
+        writeFileSync(mainPath, 'export default {}\n')
+        writeFileSync(typesPath, 'export default {}\n')
       },
     })
 
     await installPackage('/core', outDir, nodeModulesScope, TYPES_PACKAGE)
 
-    expect(readFileSync(resolve(targetDir, 'manifest.js'), 'utf-8')).toContain('export default')
-    expect(readFileSync(resolve(targetDir, 'manifest.d.ts'), 'utf-8')).toContain('export default')
+    expect(readFileSync(resolve(targetDir, 'tasty', 'manifest.js'), 'utf-8')).toContain('export default')
+    expect(readFileSync(resolve(targetDir, 'tasty', 'manifest.d.ts'), 'utf-8')).toContain('export default')
     expect(lstatSync(linkPath).isSymbolicLink()).toBe(true)
     expect(realpathSync(linkPath)).toBe(realpathSync(targetDir))
   })
