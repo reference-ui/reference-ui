@@ -107,11 +107,7 @@ export const TYPES_PACKAGE: PackageDefinition = {
       import: TYPES_RUNTIME_JS,
     },
   },
-  copyFrom: [
-    { kind: 'file', from: 'cli', src: 'src/reference/manifest.d.ts', dest: 'tasty/manifest.d.ts' },
-    { kind: 'file', from: 'cli', src: 'src/reference/types-runtime.ts', dest: 'tasty/runtime.ts' },
-    { kind: 'file', from: 'cli', src: 'src/reference/types-runtime.d.ts', dest: 'tasty/runtime.d.ts' },
-  ],
+  postprocess: ['rewriteTypesRuntimeImport'],
 }
 
 export const PACKAGES: PackageDefinition[] = [

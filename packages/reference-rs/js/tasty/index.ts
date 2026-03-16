@@ -50,6 +50,7 @@ export interface CreateTastyApiOptions {
 export interface CreateTastyApiFromManifestOptions {
   manifest: RawTastyManifest
   importer: ArtifactImporter
+  manifestPath?: string
 }
 
 export interface TastySymbolSearchResult {
@@ -144,6 +145,7 @@ class TastyApiRuntime implements TastyApi {
     if ('manifest' in options) {
       this.manifest = options.manifest
       this.manifestPromise = Promise.resolve(options.manifest)
+      this.manifestPath = options.manifestPath
     } else {
       this.manifestPath = options.manifestPath
     }
