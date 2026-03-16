@@ -137,24 +137,23 @@ describe('packager/bundler', () => {
       resolve(targetDir, 'tasty', 'manifest.js'),
       'export const manifest = { version: "1" }\nexport default manifest\n'
     )
-    writeFileSync(resolve(targetDir, 'tasty', 'chunks/example.js'), 'export default {}\n')
-    mkdirSync(resolve(coreDir, 'src/entry'), { recursive: true })
-    mkdirSync(resolve(coreDir, 'src/reference'), { recursive: true })
     writeFileSync(
-      resolve(coreDir, 'src/entry/types.ts'),
-      'export { Reference } from "../reference/component"\n'
+      resolve(targetDir, 'tasty', 'runtime.js'),
+      'export const manifestUrl = new URL("./manifest.js", import.meta.url).href\n'
     )
+    writeFileSync(resolve(targetDir, 'tasty', 'chunks/example.js'), 'export default {}\n')
     writeFileSync(
-      resolve(coreDir, 'src/reference/manifest.d.ts'),
+      resolve(targetDir, 'tasty', 'manifest.d.ts'),
       'declare const manifest: { version: string }\nexport default manifest\n'
     )
     writeFileSync(
-      resolve(coreDir, 'src/reference/types-runtime.ts'),
-      'export const manifestUrl = new URL("./manifest.js", import.meta.url).href\n'
-    )
-    writeFileSync(
-      resolve(coreDir, 'src/reference/types-runtime.d.ts'),
+      resolve(targetDir, 'tasty', 'runtime.d.ts'),
       'export declare const manifestUrl: string\n'
+    )
+    mkdirSync(resolve(coreDir, 'src/entry'), { recursive: true })
+    writeFileSync(
+      resolve(coreDir, 'src/entry/types.ts'),
+      'export { Reference } from "../reference/component"\n'
     )
 
     const pkg: PackageDefinition = {
@@ -179,26 +178,6 @@ describe('packager/bundler', () => {
           types: './tasty/runtime.d.ts',
         },
       },
-      copyFrom: [
-        {
-          kind: 'file',
-          from: 'cli',
-          src: 'src/reference/manifest.d.ts',
-          dest: 'tasty/manifest.d.ts',
-        },
-        {
-          kind: 'file',
-          from: 'cli',
-          src: 'src/reference/types-runtime.ts',
-          dest: 'tasty/runtime.ts',
-        },
-        {
-          kind: 'file',
-          from: 'cli',
-          src: 'src/reference/types-runtime.d.ts',
-          dest: 'tasty/runtime.d.ts',
-        },
-      ],
     }
 
     const { bundlePackage, bundleWithEsbuild } = await importBundlerModule({

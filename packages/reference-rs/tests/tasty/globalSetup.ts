@@ -57,7 +57,11 @@ export default async function globalSetup() {
 
     rmSync(scenarioOutputDir, { recursive: true, force: true })
     mkdirSync(scenarioOutputDir, { recursive: true })
-    for (const [relativeModulePath, source] of Object.entries(emitted.modules)) {
+    const files = {
+      ...emitted.modules,
+      ...emitted.type_declarations,
+    }
+    for (const [relativeModulePath, source] of Object.entries(files)) {
       const outputPath = join(scenarioOutputDir, relativeModulePath.replace(/^\.\//, ''))
       mkdirSync(dirname(outputPath), { recursive: true })
       writeFileSync(outputPath, source + '\n', 'utf-8')

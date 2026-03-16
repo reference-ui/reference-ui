@@ -3,5 +3,22 @@
  * Runtime reference APIs plus generated Tasty metadata subpaths.
  */
 
-export { Reference } from '../reference/component'
+import {
+  createReferenceComponent,
+  type ReferenceRuntimeModule,
+} from '../reference/component'
+
+let runtimeModulePromise: Promise<ReferenceRuntimeModule> | undefined
+
+function loadReferenceRuntime(): Promise<ReferenceRuntimeModule> {
+  if (!runtimeModulePromise) {
+    const specifier = new URL('./tasty/runtime.js', import.meta.url).href
+    runtimeModulePromise = import(/* @vite-ignore */ specifier) as Promise<ReferenceRuntimeModule>
+  }
+
+  return runtimeModulePromise
+}
+
+export const Reference = createReferenceComponent(loadReferenceRuntime)
+
 export type { ReferenceProps } from '../reference/component'
