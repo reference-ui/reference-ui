@@ -12,8 +12,8 @@ use oxc_parser::Parser;
 use oxc_span::{GetSpan, SourceType, Span};
 
 use super::super::api::{
-    FnParam, ScannerDiagnostic, TsMember, TsMemberKind, TsSymbolKind, TsTypeParameter, TupleElement,
-    TypeRef,
+    FnParam, ScannerDiagnostic, TsMember, TsMemberKind, TsSymbolKind, TsTypeParameter,
+    TupleElement, TypeOperatorKind, TypeRef,
 };
 use super::super::scanner::{resolve_import, symbol_id, ScannedFile, ScannedWorkspace};
 use super::model::{ImportBinding, ParsedFileAst, SymbolShell};
@@ -1053,8 +1053,21 @@ fn type_to_ref(
                 return_type: Box::new(return_type),
             }
         },
-        TSType::TSTypeOperatorType(_)
-        | TSType::TSTypePredicate(_)
+        TSType::TSTypeOperatorType(operator) => TypeRef::TypeOperator {
+            operator: match operator.operator {
+                oxc_ast::ast::TSTypeOperatorOperator::Keyof => TypeOperatorKind::Keyof,
+                oxc_ast::ast::TSTypeOperatorOperator::Readonly => TypeOperatorKind::Readonly,
+                oxc_ast::ast::TSTypeOperatorOperator::Unique => TypeOperatorKind::Unique,
+            },
+            target: Box::new(type_to_ref(
+                &operator.type_annotation,
+                source,
+                import_bindings,
+                current_module_specifier,
+                current_library,
+            )),
+        },
+        TSType::TSTypePredicate(_)
         | TSType::TSTypeQuery(_)
         | TSType::TSThisType(_) => TypeRef::Unknown {
             summary: slice_span(source, type_annotation.span()).to_string(),
@@ -1164,6 +1177,9 @@ fn collect_type_ref_references(type_ref: &TypeRef, references: &mut Vec<TypeRef>
                 }
             }
             collect_type_ref_references(return_type, references);
+        }
+        TypeRef::TypeOperator { target, .. } => {
+            collect_type_ref_references(target, references);
         }
         _ => {}
     }

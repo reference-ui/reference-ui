@@ -361,6 +361,14 @@ fn emit_type_ref(
                 indent_block(&return_str, 2)
             ))
         }
+        TypeRef::TypeOperator { operator, target } => {
+            let target_str = emit_type_ref(bundle, target, export_names)?;
+            Ok(format!(
+                "{{\n  kind: \"type_operator\",\n  operator: {},\n  target: {},\n}}",
+                to_js_literal(operator.as_str())?,
+                indent_block(&target_str, 2)
+            ))
+        }
         TypeRef::Unknown { summary } => Ok(format!(
             "{{\n  kind: \"unknown\",\n  summary: {},\n}}",
             to_js_literal(summary)?,
@@ -524,6 +532,9 @@ fn collect_libraries_from_type_ref(type_ref: &TypeRef, libraries: &mut BTreeSet<
                 }
             }
             collect_libraries_from_type_ref(return_type, libraries);
+        }
+        TypeRef::TypeOperator { target, .. } => {
+            collect_libraries_from_type_ref(target, libraries);
         }
         TypeRef::Intersection { types } => {
             for t in types {

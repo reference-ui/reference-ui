@@ -27,7 +27,7 @@ Example: if the source has `theme: Props['theme']`, the member’s type is `TSIn
 | **Type-level computation** | Conditional, Mapped, Template literal | These are type-level expressions (e.g. `T extends U ? A : B`, `{ [K in keyof T]: ... }`, `` `foo-${T}` ``). Fully representing them would require resolving type params and executing the “type algebra.” We only need “there is a type here” and the source text for docs. |
 | **Value-dependent types** | Type query (`typeof x`), Type predicate (`x is T`) | `typeof x` depends on the value `x`; we don’t have a value environment. Type predicates are assertion shapes, not data shapes. We keep the source so the doc can show “type: typeof config” or “x is string.” |
 | **Callable shapes** | Function type, Constructor type | **Function type** is now modeled when it appears as a property type (e.g. callback props): we emit `TypeRef::Function { params, return_type }` so we can document the callback signature. Call/construct *signatures* on interfaces are already modeled as members. **Constructor type** (bare `new (...) => T`) remains Unknown. |
-| **Operators & keywords** | Type operator (`keyof`, `readonly`), This type | `keyof T` / `readonly T` are type operators; representing them would mean parsing their operand and possibly resolving. `this` is a polymorphic type; we’d need context. Source slice is enough to show “keyof T” or “this” in docs. |
+| **Operators & keywords** | This type | **Type operators are now modeled** as `TypeRef::TypeOperator { operator, target }` for `keyof`, `readonly`, and `unique`. `this` remains context-dependent, so it stays Unknown. |
 | **Module/value references** | Import type (`import('pkg')`) | We could resolve the module and expose its export type; that’s a larger feature. For now we preserve the source so docs can show “type: import('react').FC”. |
 | **Indexed access** | — | We now support it: `TypeRef::IndexedAccess { object, index }`; object and index are full type refs (e.g. reference to `User` + literal `'name'`). |
 | **Infer** | `infer X` (inside conditional types) | Only meaningful inside conditional types, which we don’t evaluate. Keeping summary is consistent. |
@@ -73,7 +73,7 @@ Below, “→ Unknown { summary }” means: we emit `TypeRef::Unknown` with `sum
 | `TSInferType`           | → `Unknown { summary }`                    | `infer X`                                                    |
 | `TSConstructorType`     | → `Unknown { summary }`                    | `new (...args) => T`                                         |
 | `TSFunctionType`         | → `Function { params, return_type }`        | `(x: T) => R` — params (name, optional, typeRef), returnType; used for callback properties so we can document the signature. |
-| `TSTypeOperatorType`    | → `Unknown { summary }`                    | e.g. `keyof`, `readonly`                                     |
+| `TSTypeOperatorType`    | → `TypeOperator { operator, target }`     | `keyof`, `readonly`, `unique`                                |
 | `TSTypePredicate`       | → `Unknown { summary }`                    | `x is T`                                                     |
 | `TSTypeQuery`           | → `Unknown { summary }`                    | `typeof x`                                                   |
 | `TSThisType`            | → `Unknown { summary }`                    | `this`                                                       |
@@ -97,32 +97,17 @@ All other tuple-element variants (e.g. `TSStringKeyword` inside a tuple) are han
 
 ## Summary
 
-- **Fully modeled:** intrinsics (including bigint, symbol, never, void, intrinsic), literal, union, array, tuple (with element metadata), intersection, object type literal, parenthesized (unwrapped), type reference, **indexed access** (`T[K]` with object + index), **function type** (`(params) => returnType` with param names, optionality, and types for callback properties), named tuple member as type. These cover the data shapes we need for “props and types” docs.
-- **Intentionally Unknown:** conditional, mapped, template literal, import type, infer, constructor type, type operator, type predicate, type query, this type, JSDoc types. All emit `Unknown { summary: source_slice }` — see “Why we leave some variants as Unknown” above. This does not block our current goal; we can add structured handling later if we need it.
+- **Fully modeled:** intrinsics (including bigint, symbol, never, void, intrinsic), literal, union, array, tuple (with element metadata), intersection, object type literal, parenthesized (unwrapped), type reference, **indexed access** (`T[K]` with object + index), **function type** (`(params) => returnType` with param names, optionality, and types for callback properties), **type operators** (`keyof`, `readonly`, `unique` as `TypeOperator { operator, target }`), named tuple member as type. These cover the data shapes we need for “props and types” docs.
+- **Intentionally Unknown:** conditional, mapped, template literal, import type, infer, constructor type, type predicate, type query, this type, JSDoc types. All emit `Unknown { summary: source_slice }` — see “Why we leave some variants as Unknown” above. This does not block our current goal; we can add structured handling later if we need it.
 - **No implicit catch-all:** the `type_to_ref` match is exhaustive; any new variant added by Oxc will cause a compile error until we add an arm and document it here.
 
 ---
 
-## Planned structured variants (agreed)
+## Planned structured variants (remaining)
 
 These variants are currently `Unknown { summary }`. Adding **structural representation only** (no evaluation) is agreed as useful; implementation is pending.
 
-### 1. Type operators (`keyof T`, `readonly T`, optionally `unique symbol`)
-
-**Why:** `keyof T` is very common in utility-heavy TS APIs and is easy to render. Composes with the existing graph (target is a `TypeRef`). No resolution needed.
-
-**Proposed shape:**
-
-```text
-TypeOperator {
-  operator: "keyof" | "readonly" | "unique",   // or similar; unique symbol if needed later
-  target: TypeRef
-}
-```
-
-**Oxc:** `TSTypeOperatorType` — use operator kind + recurse on operand.
-
-### 2. Type query (`typeof x`)
+### 1. Type query (`typeof x`)
 
 **Why:** Library APIs often export types derived from const objects (e.g. `type Theme = typeof themeConfig`). A structured node is nicer than opaque unknown; we do **not** need value-environment resolution.
 
@@ -138,7 +123,7 @@ Alternatively `summary: "typeof themeConfig"` if we want a single display string
 
 **Oxc:** `TSTypeQuery` — expression is a `TSQualifiedName` or similar; capture its source slice or a simple name.
 
-### 3. Template literal types (`` `size-${"sm" | "lg"}` ``)
+### 2. Template literal types (`` `size-${"sm" | "lg"}` ``)
 
 **Why:** Increasingly common in token systems, variant APIs, and CSS-ish prop systems. We do not need to evaluate; just represent for docs.
 
@@ -155,5 +140,5 @@ TemplateLiteral {
 
 **Oxc:** `TSTemplateLiteralType` has segments (template spans); map to text vs type parts.
 
-**Priority:** Type operators (especially keyof) first, then type query, then template literal as nice-to-have.
+**Priority:** Type query next, then template literal as nice-to-have.
 
