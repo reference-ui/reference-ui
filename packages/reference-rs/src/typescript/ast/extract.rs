@@ -12,8 +12,8 @@ use oxc_parser::Parser;
 use oxc_span::{GetSpan, SourceType, Span};
 
 use super::super::api::{
-    FnParam, ScannerDiagnostic, TsMember, TsMemberKind, TsSymbolKind, TsTypeParameter,
-    TupleElement, TypeOperatorKind, TypeRef,
+    FnParam, ScannerDiagnostic, TemplateLiteralPart, TsMember, TsMemberKind, TsSymbolKind,
+    TsTypeParameter, TupleElement, TypeOperatorKind, TypeRef,
 };
 use super::super::scanner::{resolve_import, symbol_id, ScannedFile, ScannedWorkspace};
 use super::model::{ImportBinding, ParsedFileAst, SymbolShell};
@@ -1027,7 +1027,6 @@ fn type_to_ref(
         // Complex types we do not model: emit Unknown with source summary.
         TSType::TSConditionalType(_)
         | TSType::TSMappedType(_)
-        | TSType::TSTemplateLiteralType(_)
         | TSType::TSImportType(_)
         | TSType::TSInferType(_)
         | TSType::TSConstructorType(_) => TypeRef::Unknown {
@@ -1070,6 +1069,26 @@ fn type_to_ref(
         TSType::TSTypeQuery(query) => TypeRef::TypeQuery {
             expression: slice_span(source, query.expr_name.span()).to_string(),
         },
+        TSType::TSTemplateLiteralType(template) => {
+            let mut parts = Vec::with_capacity(template.quasis.len() + template.types.len());
+            for (index, quasi) in template.quasis.iter().enumerate() {
+                parts.push(TemplateLiteralPart::Text {
+                    value: quasi.value.raw.as_str().to_string(),
+                });
+                if let Some(ty) = template.types.get(index) {
+                    parts.push(TemplateLiteralPart::Type {
+                        value: type_to_ref(
+                            ty,
+                            source,
+                            import_bindings,
+                            current_module_specifier,
+                            current_library,
+                        ),
+                    });
+                }
+            }
+            TypeRef::TemplateLiteral { parts }
+        }
         TSType::TSTypePredicate(_) | TSType::TSThisType(_) => TypeRef::Unknown {
             summary: slice_span(source, type_annotation.span()).to_string(),
         },
@@ -1183,6 +1202,13 @@ fn collect_type_ref_references(type_ref: &TypeRef, references: &mut Vec<TypeRef>
             collect_type_ref_references(target, references);
         }
         TypeRef::TypeQuery { .. } => {}
+        TypeRef::TemplateLiteral { parts } => {
+            for part in parts {
+                if let TemplateLiteralPart::Type { value } = part {
+                    collect_type_ref_references(value, references);
+                }
+            }
+        }
         _ => {}
     }
 }

@@ -34,10 +34,26 @@ export const _e6a653180c040998 = {
   id: "_e6a653180c040998",
   name: "TemplateLiteralAlias",
   library: "user",
-  description: "Template literal type → Unknown with summary.",
+  description: "Template literal type → structured TemplateLiteral with parts.",
   definition: {
-  kind: "unknown",
-  summary: "`foo-${string}`",
+  kind: "template_literal",
+  parts: [
+  {
+    kind: "text",
+    value: "foo-",
+  },
+  {
+    kind: "type",
+    value:   {
+      kind: "intrinsic",
+      name: "string",
+    },
+  },
+  {
+    kind: "text",
+    value: "",
+  }
+  ],
 },
 };
 

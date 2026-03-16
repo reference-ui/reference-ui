@@ -25,7 +25,7 @@ export interface UsesOptionalKeys {
   partialUser: OptionalKeys<User>;
 }
 
-/** Template literal type → Unknown with summary. */
+/** Template literal type → structured TemplateLiteral with parts. */
 export type TemplateLiteralAlias = `foo-${string}`;
 
 /** Type query (typeof) → structured TypeQuery with expression. */

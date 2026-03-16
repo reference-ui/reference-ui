@@ -4,8 +4,8 @@ use std::fmt::Write;
 use serde::Serialize;
 
 use super::super::api::{
-    FnParam, TsMember, TsMemberKind, TsSymbol, TsSymbolKind, TsTypeParameter, TupleElement,
-    TypeRef, TypeScriptBundle,
+    FnParam, TemplateLiteralPart, TsMember, TsMemberKind, TsSymbol, TsSymbolKind,
+    TsTypeParameter, TupleElement, TypeRef, TypeScriptBundle,
 };
 
 #[allow(dead_code)]
@@ -243,6 +243,23 @@ fn emit_optional_type_ref(
     }
 }
 
+fn emit_template_literal_part(
+    bundle: &TypeScriptBundle,
+    part: &TemplateLiteralPart,
+    export_names: &BTreeMap<String, String>,
+) -> Result<String, String> {
+    match part {
+        TemplateLiteralPart::Text { value } => Ok(format!(
+            "{{\n  kind: \"text\",\n  value: {},\n}}",
+            to_js_literal(value)?,
+        )),
+        TemplateLiteralPart::Type { value } => Ok(format!(
+            "{{\n  kind: \"type\",\n  value: {},\n}}",
+            indent_block(&emit_type_ref(bundle, value, export_names)?, 2)
+        )),
+    }
+}
+
 fn emit_type_ref(
     bundle: &TypeScriptBundle,
     type_ref: &TypeRef,
@@ -373,6 +390,19 @@ fn emit_type_ref(
             "{{\n  kind: \"type_query\",\n  expression: {},\n}}",
             to_js_literal(expression)?,
         )),
+        TypeRef::TemplateLiteral { parts } => {
+            let lines = parts
+                .iter()
+                .map(|part| {
+                    emit_template_literal_part(bundle, part, export_names)
+                        .map(|value| indent_block(&value, 2))
+                })
+                .collect::<Result<Vec<_>, _>>()?;
+            Ok(format!(
+                "{{\n  kind: \"template_literal\",\n  parts: [\n{}\n  ],\n}}",
+                lines.join(",\n")
+            ))
+        }
         TypeRef::Unknown { summary } => Ok(format!(
             "{{\n  kind: \"unknown\",\n  summary: {},\n}}",
             to_js_literal(summary)?,
@@ -541,6 +571,13 @@ fn collect_libraries_from_type_ref(type_ref: &TypeRef, libraries: &mut BTreeSet<
             collect_libraries_from_type_ref(target, libraries);
         }
         TypeRef::TypeQuery { .. } => {}
+        TypeRef::TemplateLiteral { parts } => {
+            for part in parts {
+                if let TemplateLiteralPart::Type { value } = part {
+                    collect_libraries_from_type_ref(value, libraries);
+                }
+            }
+        }
         TypeRef::Intersection { types } => {
             for t in types {
                 collect_libraries_from_type_ref(t, libraries);

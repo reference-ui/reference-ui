@@ -24,7 +24,7 @@ Example: if the source has `theme: Props['theme']`, the member’s type is `TSIn
 
 | Category | Variants | Reason we don’t model them (yet) |
 |----------|----------|-----------------------------------|
-| **Type-level computation** | Conditional, Mapped, Template literal | These are type-level expressions (e.g. `T extends U ? A : B`, `{ [K in keyof T]: ... }`, `` `foo-${T}` ``). Fully representing them would require resolving type params and executing the “type algebra.” We only need “there is a type here” and the source text for docs. |
+| **Type-level computation** | Conditional, Mapped | These are type-level expressions (e.g. `T extends U ? A : B`, `{ [K in keyof T]: ... }`). Fully representing them would require resolving type params and executing the “type algebra.” We only need “there is a type here” and the source text for docs. |
 | **Value-dependent types** | Type predicate (`x is T`) | **Type query is now modeled** as `TypeRef::TypeQuery { expression }` with the queried expression preserved as source text; we still do not resolve values. Type predicates remain assertion shapes rather than data shapes, so they stay Unknown. |
 | **Callable shapes** | Function type, Constructor type | **Function type** is now modeled when it appears as a property type (e.g. callback props): we emit `TypeRef::Function { params, return_type }` so we can document the callback signature. Call/construct *signatures* on interfaces are already modeled as members. **Constructor type** (bare `new (...) => T`) remains Unknown. |
 | **Operators & keywords** | This type | **Type operators are now modeled** as `TypeRef::TypeOperator { operator, target }` for `keyof`, `readonly`, and `unique`. `this` remains context-dependent, so it stays Unknown. |
@@ -67,7 +67,7 @@ Below, “→ Unknown { summary }” means: we emit `TypeRef::Unknown` with `sum
 | `TSNamedTupleMember`    | → `Tuple { elements: [one TupleElement] }` | when used as a standalone type                               |
 | `TSConditionalType`     | → `Unknown { summary }`                    |                                                              |
 | `TSMappedType`          | → `Unknown { summary }`                    |                                                              |
-| `TSTemplateLiteralType` | → `Unknown { summary }`                    |                                                              |
+| `TSTemplateLiteralType` | → `TemplateLiteral { parts }`              | alternating text/type parts; no evaluation                   |
 | `TSImportType`          | → `Unknown { summary }`                    | `import('module')`                                           |
 | `TSIndexedAccessType`   | → `IndexedAccess { object, index }`         | `T[K]` — object type and index type (key) fully modeled       |
 | `TSInferType`           | → `Unknown { summary }`                    | `infer X`                                                    |
@@ -97,32 +97,13 @@ All other tuple-element variants (e.g. `TSStringKeyword` inside a tuple) are han
 
 ## Summary
 
-- **Fully modeled:** intrinsics (including bigint, symbol, never, void, intrinsic), literal, union, array, tuple (with element metadata), intersection, object type literal, parenthesized (unwrapped), type reference, **indexed access** (`T[K]` with object + index), **function type** (`(params) => returnType` with param names, optionality, and types for callback properties), **type operators** (`keyof`, `readonly`, `unique` as `TypeOperator { operator, target }`), **type query** (`typeof x` as `TypeQuery { expression }`), named tuple member as type. These cover the data shapes we need for “props and types” docs.
-- **Intentionally Unknown:** conditional, mapped, template literal, import type, infer, constructor type, type predicate, this type, JSDoc types. All emit `Unknown { summary: source_slice }` — see “Why we leave some variants as Unknown” above. This does not block our current goal; we can add structured handling later if we need it.
+- **Fully modeled:** intrinsics (including bigint, symbol, never, void, intrinsic), literal, union, array, tuple (with element metadata), intersection, object type literal, parenthesized (unwrapped), type reference, **indexed access** (`T[K]` with object + index), **function type** (`(params) => returnType` with param names, optionality, and types for callback properties), **type operators** (`keyof`, `readonly`, `unique` as `TypeOperator { operator, target }`), **type query** (`typeof x` as `TypeQuery { expression }`), **template literal** (as `TemplateLiteral { parts }` with alternating text/type segments), named tuple member as type. These cover the data shapes we need for “props and types” docs.
+- **Intentionally Unknown:** conditional, mapped, import type, infer, constructor type, type predicate, this type, JSDoc types. All emit `Unknown { summary: source_slice }` — see “Why we leave some variants as Unknown” above. This does not block our current goal; we can add structured handling later if we need it.
 - **No implicit catch-all:** the `type_to_ref` match is exhaustive; any new variant added by Oxc will cause a compile error until we add an arm and document it here.
 
 ---
 
 ## Planned structured variants (remaining)
 
-These variants are currently `Unknown { summary }`. Adding **structural representation only** (no evaluation) is agreed as useful; implementation is pending.
-
-### 1. Template literal types (`` `size-${"sm" | "lg"}` ``)
-
-**Why:** Increasingly common in token systems, variant APIs, and CSS-ish prop systems. We do not need to evaluate; just represent for docs.
-
-**Proposed shape:**
-
-```text
-TemplateLiteral {
-  parts: [
-    { kind: "text", value: String },
-    { kind: "type", value: TypeRef }
-  ]
-}
-```
-
-**Oxc:** `TSTemplateLiteralType` has segments (template spans); map to text vs type parts.
-
-**Priority:** Template literal next as nice-to-have.
+There are no additional agreed “small structured wins” queued in this audit right now. Remaining Unknown cases are the more semantic/heavier ones: conditional, mapped, import type, infer, constructor type, type predicate, this type, and JSDoc variants.
 
