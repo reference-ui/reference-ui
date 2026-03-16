@@ -1,124 +1,255 @@
-# TypeScript Scanner – Plan & Analysis
+# Tasty Implementation Plan
 
-## Status & scope
+## Purpose
 
-**Done:** Generics (type parameters on symbols, type arguments on references); object type literals (`TypeRef::Object` with members); per-scenario bundles and tests (`generics`, `external_libs`, `signatures`); member description attribution (exclude interface start); libraries array includes `user`; **§4.2** richer type refs (array `T[]`/`Array<T>`, tuple, intersection); **§4.3** member metadata (`readonly`, kind: property vs method vs call vs index signature).
+This plan tracks the implementation work needed to move from the current Rust
+scanner/bundle output to the broader Tasty runtime described in:
 
-**Out of scope:** Source locations (§4.6) are not planned. Also not in this scope: §4.4 (MCP schema/index), §4.5 (JSDoc tag parsing), §4.7 (re-export/alias chain).
+* `high-level.md`
+* `high-level-api.md`
 
-**Focus:** The scanner is focused on **the TypeScript type system itself** — capturing type shape and structure cleanly. JSDoc (e.g. `@default`, `@deprecated`) can be built on top of this later; we care about types first.
-
----
-
-## 1. Is the current data model enough for docs?
-
-**Partly.** It’s enough for **basic** docs:
-
-- **We have:** symbol name, kind (interface / type alias), description (raw comment), `extends`, `underlying`, `defined_members` (name, optional, description, `type_ref`), `references`, `library`, `file_id`, export vs local.
-- **Enough for:** “This is interface X from library Y, it extends Z, here are its props and their types and descriptions.”
-
-**Gaps for “nice” docs:**
-
-- **Generics** – now supported (type parameters, type arguments; see §2).
-- **Readonly and member kind** – now supported (§4.3).
-- **TypeRef** – we have Intrinsic, Literal, Union, Reference, Object, Array, Tuple, Intersection, Conditional, Mapped, Raw; the remaining advanced cases still end up as `Raw { summary: "..." }`.
-- **Single description** only; no structured tags (e.g. `@default`, `@deprecated`, `@example`) unless you parse JSDoc downstream.
-
-So: **yes for simple “props and types” docs**, **no for full, rich API docs** without extending the model and extraction.
+This document is intentionally forward-looking. It is no longer an audit or a
+retrospective of the scanner feature work already completed.
 
 ---
 
-## 2. Do we support generics?
+## Current position
 
-**Yes.** Implemented:
+We already have a strong base:
 
-- **API/model:** `TsSymbol` has `type_parameters: Vec<TsTypeParameter>` (name, constraint, default); `TypeRef::Reference` has optional `type_arguments: Vec<TypeRef>`.
-- **Extract:** We read `interface_decl.type_parameters` and `type_alias.type_parameters`, and `type_arguments` from `TSTypeReference` when present.
-- **Emit:** Type parameters and type arguments are emitted in the bundle (e.g. `ComponentProps<Button>`).
+* the Rust scanner covers the modeled `TypeRef` surface described in
+  `OXC_TYPE_AUDIT.md`
+* the existing `tests/tasty/cases/*` bundle tests give us good confidence in the
+  emitted graph shape
+* `tests/virtualfs/*` covers the native rewrite surface through the compiled
+  N-API binding
 
----
-
-## 3. Do we get a lot of TypeScript functionality from Oxc / the AST?
-
-**Yes.** We lean on Oxc for:
-
-- **Parsing** (TS/TSX, with errors).
-- **AST:** interfaces, type aliases, property signatures, type references, unions, literals, intrinsics, `extends`, imports/exports, comments.
-- **Source spans** for slicing and for leading-comment attribution.
-
-We then **narrow** that into our own model:
-
-- Only interfaces and type aliases (no enums, namespaces, etc.).
-- A `TypeRef` subset: intrinsic, literal, union, reference, object (type literal), array, tuple, intersection, conditional, mapped, raw; plus generics. The remaining advanced cases still become `Raw`.
-
-So: **Oxc gives us full TS structure; we intentionally expose a subset.** Extending docs/MCP support is mostly about mapping more of the Oxc AST into our types and emission, not about replacing Oxc.
-
-**Capturing type data cleanly:** Within interfaces and type aliases we aim to represent TS type structure faithfully:
-
-- **Captured today:** Intrinsics, literals, unions, references (with type args), object type literals (with members), arrays, tuples (element types), intersections. On members: optional, readonly, kind (property / method / call / index). On symbols: type parameters (name, constraint, default). Optional tuple elements and rest are currently reduced to their inner type (we keep the type, drop the optional/rest marker). Named tuple labels (e.g. `[name: string, age: number]`) are not yet preserved.
-- **Still become Raw (with source summary):** Mapped types, conditional types, `import()` types, `infer` — we keep the source slice as `summary` so “this exists” is visible; full structure would require a larger model.
-- **Done (improvements):** (1) Tuple elements are structured: `TupleElement { label?, optional, rest, element }`; named tuple labels, optional and rest flags are emitted. (2) Construct signatures are extracted: member name `[new]`, kind `construct`. (3) Parenthesized types are unwrapped so `(string)` is emitted as intrinsic `string`. (4) Everything else stays Raw with source summary.
+What we do **not** have yet is the dedicated TypeScript runtime layer for
+loading, traversing, and consuming Tasty artifacts.
 
 ---
 
-## 4. What would we extend for docs + MCP?
+## North-star direction
 
-**Done (in this scope):** (1) Generics – type parameters on symbols, type arguments on references, emitted in bundle. Object type literals added to type refs.
+The direction is now:
 
-**Done in this work:** (2) Richer type refs (§4.2)
-   - Array (`T[]` / `Array<T>`), tuple, intersection.
-   - Keep a “summary” string for complex types we don’t fully model.
+1. clean up the Rust surface so the emitted/public contract is explicit
+2. generate TypeScript types from that Rust-owned contract
+3. build `js/tasty` as the runtime graph API over those artifacts
+4. test the runtime API with the same fixture discipline we already use for
+   bundle tests
 
-3. **Member metadata** (§4.3)
-   - `readonly`.
-   - Kind: property vs method (call signature) vs index signature.
+Tasty itself should remain:
 
+* a graph runtime
+* lazy and manifest-first
+* Rust-contract-driven
 
-**Out of scope (this work):** (4) MCP schema/index, (5) JSDoc tag parsing, (6) source locations (purposely left out), (7) re-export/alias chain.
+It should **not** become:
 
----
+* a second compiler
+* a docs framework
+* an MCP framework
 
-## 5. Different scan directories / one bundle per scenario?
-
-**Done.** We use one `ScanRequest` per scenario; Vitest globalSetup runs the native addon per scenario dir (`generics`, `external_libs`, `signatures`, etc.) and writes `cases/{scenario}/output/bundle.js`. Tests live beside each case and load that local output. API stays one root + one include per request; N scenarios → N requests → N bundles.
-
----
-
-## 6. Coverage assessment
-
-**Good coverage for the stated goal** (driving TypeScript API docs for users’ own folders):
-
-- **Symbols:** Interfaces and type aliases only; generics (params + args) fully supported.
-- **TypeRef:** Intrinsics, literals, unions, arrays, tuples, intersections, references, object literals; everything else → `Raw` with a summary.
-- **Members:** Properties (optional, readonly), method signatures, call signatures, index signatures, construct signatures; leading-comment descriptions.
-- **Tuples:** Element shape includes optional, rest, and optional label (named tuple).
-- **Test scenarios:** `generics` (type params/args, object literals), `external_libs` (node_modules resolution, extends, descriptions), `signatures` (readonly, method/call/index/construct, array/tuple with element metadata, parenthesized unwrap).
-
-**Intentional / acceptable gaps:**
-
-- **Out of scope:** JSDoc tags, source locations, re-export/alias chains.
-- **Advanced types:** Mapped and conditional types remain `Raw` with summary (enough for “this exists” in docs).
-- **Enums / namespaces:** Not in scope (interfaces and type aliases only).
-
-**Possible next steps (only if needed):** Enums, or further TS type variants.
-
-**Oxc exhaustiveness:** Every `TSType` and `TSTupleElement` variant is handled explicitly (no catch-all). See `OXC_TYPE_AUDIT.md` for the full checklist. New Oxc variants will cause a compile error until an arm is added.
+Docs, MCP, hover, and other downstream consumers should build on top of the core
+runtime.
 
 ---
 
-## 7. Test coverage (TS scenarios)
+## Phase 1: Refactor the Rust contract surface
 
-**Scenarios and what they cover:**
+### Goal
 
-| Scenario          | Coverage |
-|-------------------|----------|
-| `generics`        | Type parameters, type arguments, constraints, object type literals, member descriptions, re-exports. |
-| `external_libs`   | node_modules resolution, extends, external refs (csstype, json-schema), descriptions, library metadata. |
-| `signatures`      | readonly, optional, kind (property/method/call/index/construct), array, tuple (with label/optional/rest per element), intersection, parenthesized unwrap. |
-| `unions_literals` | Union types, literal types (string/number), optional members. |
-| `tsx`             | .tsx file scanning, interfaces and type aliases from TSX. |
-| `default_params` | Type parameters with default (e.g. `T = string`). |
-| `unknown_complex` | Mixed advanced types: mapped + conditional structural, nested unsupported pieces may still be `Raw`. |
-| `audit_alignment` | Audit-driven coverage for intentionally raw variants (`import()`, `infer`, `type predicate`, `this`) plus their surrounding structured shapes. |
+Create a dedicated Rust model entry point for the emitted/public Tasty contract.
 
-**Vitest:** Each scenario has a matching `tests/tasty/cases/{scenario}/bundle.test.ts` that loads `output/bundle.js` from the same case folder and asserts shape and content. globalSetup emits one bundle per scenario directory under `tests/tasty/cases/{scenario}/input/`.
+### Why first
+
+Before we build `js/tasty`, we need a stable place in Rust that clearly says:
+"these are the types we expose to TypeScript."
+
+Right now that boundary is blurred by the current `api.rs` shape.
+
+### Work
+
+* rename or split the current public Tasty types into `src/tasty/model.rs`
+* move request/orchestration input types like `ScanRequest` out of that contract
+  surface into a separate module such as `request.rs`
+* keep parser-adjacent and lowering-internal types out of `model.rs`
+* make `src/tasty/mod.rs` re-export the public model cleanly
+
+### Desired result
+
+By the end of this phase:
+
+* `model.rs` is the Rust-owned emitted artifact contract
+* scanner/lowering internals remain internal
+* the TypeScript generation story has a clear source of truth
+
+---
+
+## Phase 2: Decide and wire Rust -> TypeScript type generation
+
+### Goal
+
+Generate TypeScript boundary types directly from the Rust model contract.
+
+### Work
+
+* choose the Rust -> TypeScript generation approach/library
+* scope generation to the Tasty contract model, not the whole crate
+* emit generated TypeScript contract types into a clear location under
+  `packages/reference-rs/js/`
+
+Suggested direction:
+
+* `packages/reference-rs/js/tasty/generated/`
+
+### Desired result
+
+By the end of this phase:
+
+* TypeScript does not maintain parallel hand-written copies of the Rust contract
+* generated types are easy to import from the future runtime layer
+* contract drift between Rust and TypeScript becomes much harder
+
+---
+
+## Phase 3: Create `js/tasty`
+
+### Goal
+
+Introduce the TypeScript runtime layer described in `high-level-api.md`.
+
+### Initial scope
+
+The first implementation pass should stay small and core-runtime-focused:
+
+* manifest loading
+* chunk loading
+* symbol lookup by id/name
+* wrapper identity stability
+* core graph operations under `api.graph`
+
+### Suggested layout
+
+Something like:
+
+* `packages/reference-rs/js/tasty/`
+* `packages/reference-rs/js/tasty/generated/`
+* `packages/reference-rs/js/tasty/index.ts`
+
+### Important boundary
+
+Do **not** bake docs or MCP helper namespaces into the core runtime.
+
+The runtime should expose:
+
+* loader/store behavior
+* graph wrappers
+* graph traversal operations
+
+Downstream layers can then consume that runtime in their own way.
+
+---
+
+## Phase 4: Runtime API tests
+
+### Goal
+
+Test the TypeScript runtime API against real generated Tasty artifacts.
+
+### Strategy
+
+We already have strong bundle-shape tests in `tests/tasty/cases`.
+
+The next step is to add API tests alongside them, using the same scenarios and
+fixture discipline.
+
+That means:
+
+* keep the existing bundle tests
+* add API tests for each use case as needed
+* use the compiled/native output rather than mocking the graph
+
+### Suggested direction
+
+For each useful scenario, we should be able to test things like:
+
+* exact symbol lookup by name/id
+* wrapper stability
+* `getMembers()`
+* `getExtends()`
+* `loadExtendsSymbols()`
+* `api.graph.loadImmediateDependencies()`
+* `api.graph.loadExtendsChain()`
+* flattened interface views
+* raw vs structured type-ref inspection
+
+### Test placement
+
+We do not need a separate giant test universe for the runtime.
+
+Instead, we should leverage the scenarios we already have under `tests/tasty/`
+and add API-oriented assertions alongside the current bundle assertions.
+
+---
+
+## Phase 5: First consumer proof
+
+### Goal
+
+Prove that the runtime is actually good enough for a real downstream consumer.
+
+The first proof does not need to be a full docs site or a full MCP product.
+
+A good early proof would be:
+
+* load a symbol
+* inspect members and type refs
+* walk inheritance
+* assemble a simple API-table-ready shape outside the runtime itself
+
+That validates the most important architectural claim:
+
+the core Tasty runtime is enough for downstream consumers to shape their own
+outputs without Tasty owning those projections directly.
+
+---
+
+## Practical sequence
+
+If we keep this concrete, the next steps should be:
+
+1. refactor `src/tasty/api.rs` into a dedicated `model.rs` contract boundary
+2. separate request/orchestration types from the exposed model
+3. choose and wire Rust -> TypeScript type generation
+4. create `js/tasty`
+5. implement the first minimal runtime slice:
+   manifest + chunk + symbol lookup + graph wrappers
+6. add API tests alongside the existing tasty case suite
+7. prove the runtime with one small downstream consumer-shaped example
+
+---
+
+## Guardrails
+
+As we build this, we should keep these guardrails explicit:
+
+* Rust remains the source of truth for the artifact contract
+* the runtime stays lazy and manifest-first
+* symbol wrappers stay thin
+* recursive graph logic lives in graph operations, not everywhere
+* docs/MCP are consumers of Tasty, not sub-frameworks inside Tasty
+* bundle tests and runtime API tests should both stay fixture-driven
+
+---
+
+## Immediate next step
+
+The immediate next implementation step is:
+
+* refactor the Rust Tasty surface so there is a dedicated `model.rs` entry point
+  for the public/emitted types we intend to expose and transform to TypeScript
+
+That is the cleanest place to start because it sharpens the boundary for every
+phase that follows.
