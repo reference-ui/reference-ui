@@ -12,8 +12,8 @@ use oxc_parser::Parser;
 use oxc_span::{GetSpan, SourceType, Span};
 
 use super::super::api::{
-    FnParam, ScannerDiagnostic, TemplateLiteralPart, TsMember, TsMemberKind, TsSymbolKind,
-    TsTypeParameter, TupleElement, TypeOperatorKind, TypeRef,
+    FnParam, MappedModifierKind, ScannerDiagnostic, TemplateLiteralPart, TsMember, TsMemberKind,
+    TsSymbolKind, TsTypeParameter, TupleElement, TypeOperatorKind, TypeRef,
 };
 use super::super::scanner::{resolve_import, symbol_id, ScannedFile, ScannedWorkspace};
 use super::model::{ImportBinding, ParsedFileAst, SymbolShell};
@@ -1025,9 +1025,7 @@ fn type_to_ref(
             )),
         },
         // Complex types we do not model structurally: preserve the source as Raw.
-        TSType::TSConditionalType(_)
-        | TSType::TSMappedType(_)
-        | TSType::TSImportType(_)
+        TSType::TSImportType(_)
         | TSType::TSInferType(_)
         | TSType::TSConstructorType(_) => TypeRef::Raw {
             summary: slice_span(source, type_annotation.span()).to_string(),
@@ -1068,6 +1066,66 @@ fn type_to_ref(
         },
         TSType::TSTypeQuery(query) => TypeRef::TypeQuery {
             expression: slice_span(source, query.expr_name.span()).to_string(),
+        },
+        TSType::TSConditionalType(conditional) => TypeRef::Conditional {
+            check_type: Box::new(type_to_ref(
+                &conditional.check_type,
+                source,
+                import_bindings,
+                current_module_specifier,
+                current_library,
+            )),
+            extends_type: Box::new(type_to_ref(
+                &conditional.extends_type,
+                source,
+                import_bindings,
+                current_module_specifier,
+                current_library,
+            )),
+            true_type: Box::new(type_to_ref(
+                &conditional.true_type,
+                source,
+                import_bindings,
+                current_module_specifier,
+                current_library,
+            )),
+            false_type: Box::new(type_to_ref(
+                &conditional.false_type,
+                source,
+                import_bindings,
+                current_module_specifier,
+                current_library,
+            )),
+        },
+        TSType::TSMappedType(mapped) => TypeRef::Mapped {
+            type_param: slice_span(source, mapped.key.span()).to_string(),
+            source_type: Box::new(type_to_ref(
+                &mapped.constraint,
+                source,
+                import_bindings,
+                current_module_specifier,
+                current_library,
+            )),
+            name_type: mapped.name_type.as_ref().map(|name_type| {
+                Box::new(type_to_ref(
+                    name_type,
+                    source,
+                    import_bindings,
+                    current_module_specifier,
+                    current_library,
+                ))
+            }),
+            optional_modifier: mapped_modifier_kind(mapped.optional),
+            readonly_modifier: mapped_modifier_kind(mapped.readonly),
+            value_type: mapped.type_annotation.as_ref().map(|value_type| {
+                Box::new(type_to_ref(
+                    value_type,
+                    source,
+                    import_bindings,
+                    current_module_specifier,
+                    current_library,
+                ))
+            }),
         },
         TSType::TSTemplateLiteralType(template) => {
             let mut parts = Vec::with_capacity(template.quasis.len() + template.types.len());
@@ -1202,6 +1260,31 @@ fn collect_type_ref_references(type_ref: &TypeRef, references: &mut Vec<TypeRef>
             collect_type_ref_references(target, references);
         }
         TypeRef::TypeQuery { .. } => {}
+        TypeRef::Conditional {
+            check_type,
+            extends_type,
+            true_type,
+            false_type,
+        } => {
+            collect_type_ref_references(check_type, references);
+            collect_type_ref_references(extends_type, references);
+            collect_type_ref_references(true_type, references);
+            collect_type_ref_references(false_type, references);
+        }
+        TypeRef::Mapped {
+            source_type,
+            name_type,
+            value_type,
+            ..
+        } => {
+            collect_type_ref_references(source_type, references);
+            if let Some(name_type) = name_type {
+                collect_type_ref_references(name_type, references);
+            }
+            if let Some(value_type) = value_type {
+                collect_type_ref_references(value_type, references);
+            }
+        }
         TypeRef::TemplateLiteral { parts } => {
             for part in parts {
                 if let TemplateLiteralPart::Type { value } = part {
@@ -1210,6 +1293,17 @@ fn collect_type_ref_references(type_ref: &TypeRef, references: &mut Vec<TypeRef>
             }
         }
         _ => {}
+    }
+}
+
+fn mapped_modifier_kind(
+    modifier: Option<oxc_ast::ast::TSMappedTypeModifierOperator>,
+) -> MappedModifierKind {
+    match modifier {
+        None => MappedModifierKind::Preserve,
+        Some(oxc_ast::ast::TSMappedTypeModifierOperator::True)
+        | Some(oxc_ast::ast::TSMappedTypeModifierOperator::Plus) => MappedModifierKind::Add,
+        Some(oxc_ast::ast::TSMappedTypeModifierOperator::Minus) => MappedModifierKind::Remove,
     }
 }
 

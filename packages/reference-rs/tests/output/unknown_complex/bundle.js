@@ -9,8 +9,32 @@ export const _9906dd2bd9a95dcd = {
   }
 ],
   definition: {
-  kind: "raw",
-  summary: "{\n  [P in keyof T]?: T[P];\n}",
+  kind: "mapped",
+  typeParam: "P",
+  sourceType:   {
+    kind: "type_operator",
+    operator: "keyof",
+    target:   {
+      id: "T",
+      name: "T",
+      library: "user",
+    },
+  },
+  optionalModifier: "add",
+  readonlyModifier: "preserve",
+  valueType:   {
+    kind: "indexed_access",
+    object:   {
+      id: "T",
+      name: "T",
+      library: "user",
+    },
+    index:   {
+      id: "P",
+      name: "P",
+      library: "user",
+    },
+  }
 },
 };
 
@@ -25,8 +49,69 @@ export const _f0631b896d577312 = {
   }
 ],
   definition: {
-  kind: "raw",
-  summary: "T extends object\n  ? { [K in keyof T as K extends string ? K : never]: T[K] }\n  : never",
+  kind: "conditional",
+  checkType:   {
+    id: "T",
+    name: "T",
+    library: "user",
+  },
+  extendsType:   {
+    kind: "intrinsic",
+    name: "object",
+  },
+  trueType:   {
+    kind: "mapped",
+    typeParam: "K",
+    sourceType:   {
+      kind: "type_operator",
+      operator: "keyof",
+      target:   {
+        id: "T",
+        name: "T",
+        library: "user",
+      },
+    },
+    optionalModifier: "preserve",
+    readonlyModifier: "preserve",
+    nameType:   {
+      kind: "conditional",
+      checkType:   {
+        id: "K",
+        name: "K",
+        library: "user",
+      },
+      extendsType:   {
+        kind: "intrinsic",
+        name: "string",
+      },
+      trueType:   {
+        id: "K",
+        name: "K",
+        library: "user",
+      },
+      falseType:   {
+        kind: "intrinsic",
+        name: "never",
+      },
+    },
+    valueType:   {
+      kind: "indexed_access",
+      object:   {
+        id: "T",
+        name: "T",
+        library: "user",
+      },
+      index:   {
+        id: "K",
+        name: "K",
+        library: "user",
+      },
+    }
+  },
+  falseType:   {
+    kind: "intrinsic",
+    name: "never",
+  },
 },
 };
 
@@ -72,7 +157,7 @@ export const _f724b00f1a7d9d24 = {
   id: "_f724b00f1a7d9d24",
   name: "User",
   library: "user",
-  description: "Raw/complex scenario: mapped types and conditional types become Raw with summary.\nWe do not fully model these; the scanner should emit kind: \"raw\" with a summary string.\n/\n\n/** Simple interface for testing reference from complex type.",
+  description: "Complex scenario: mapped and conditional types are structural.\nWe still preserve unsupported nested pieces as raw summaries when needed.\n/\n\n/** Simple interface for testing reference from complex type.",
   members: [
   {
     name: "id",
@@ -122,7 +207,7 @@ export const _d997f0f1502f7bad = {
   id: "_d997f0f1502f7bad",
   name: "UsesOptionalKeys",
   library: "user",
-  description: "Type alias that references the mapped type (so we see Raw in a member).",
+  description: "Type alias that references the mapped type.",
   members: [
   {
     name: "partialUser",

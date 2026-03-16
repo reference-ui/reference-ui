@@ -390,6 +390,49 @@ fn emit_type_ref(
             "{{\n  kind: \"type_query\",\n  expression: {},\n}}",
             to_js_literal(expression)?,
         )),
+        TypeRef::Conditional {
+            check_type,
+            extends_type,
+            true_type,
+            false_type,
+        } => Ok(format!(
+            "{{\n  kind: \"conditional\",\n  checkType: {},\n  extendsType: {},\n  trueType: {},\n  falseType: {},\n}}",
+            indent_block(&emit_type_ref(bundle, check_type, export_names)?, 2),
+            indent_block(&emit_type_ref(bundle, extends_type, export_names)?, 2),
+            indent_block(&emit_type_ref(bundle, true_type, export_names)?, 2),
+            indent_block(&emit_type_ref(bundle, false_type, export_names)?, 2)
+        )),
+        TypeRef::Mapped {
+            type_param,
+            source_type,
+            name_type,
+            optional_modifier,
+            readonly_modifier,
+            value_type,
+        } => {
+            let mut parts = vec![
+                format!("  kind: {}", to_js_literal("mapped")?),
+                format!("  typeParam: {}", to_js_literal(type_param)?),
+                format!(
+                    "  sourceType: {}",
+                    indent_block(&emit_type_ref(bundle, source_type, export_names)?, 2)
+                ),
+                format!("  optionalModifier: {}", to_js_literal(optional_modifier.as_str())?),
+                format!("  readonlyModifier: {}", to_js_literal(readonly_modifier.as_str())?),
+            ];
+            if let Some(name_type) = name_type {
+                parts.push(format!(
+                    "  nameType: {}",
+                    indent_block(&emit_type_ref(bundle, name_type, export_names)?, 2)
+                ));
+            }
+            let value_type_str = match value_type {
+                Some(value_type) => emit_type_ref(bundle, value_type, export_names)?,
+                None => "null".to_string(),
+            };
+            parts.push(format!("  valueType: {}", indent_block(&value_type_str, 2)));
+            Ok(format!("{{\n{}\n}}", parts.join(",\n")))
+        }
         TypeRef::TemplateLiteral { parts } => {
             let lines = parts
                 .iter()
@@ -571,6 +614,31 @@ fn collect_libraries_from_type_ref(type_ref: &TypeRef, libraries: &mut BTreeSet<
             collect_libraries_from_type_ref(target, libraries);
         }
         TypeRef::TypeQuery { .. } => {}
+        TypeRef::Conditional {
+            check_type,
+            extends_type,
+            true_type,
+            false_type,
+        } => {
+            collect_libraries_from_type_ref(check_type, libraries);
+            collect_libraries_from_type_ref(extends_type, libraries);
+            collect_libraries_from_type_ref(true_type, libraries);
+            collect_libraries_from_type_ref(false_type, libraries);
+        }
+        TypeRef::Mapped {
+            source_type,
+            name_type,
+            value_type,
+            ..
+        } => {
+            collect_libraries_from_type_ref(source_type, libraries);
+            if let Some(name_type) = name_type {
+                collect_libraries_from_type_ref(name_type, libraries);
+            }
+            if let Some(value_type) = value_type {
+                collect_libraries_from_type_ref(value_type, libraries);
+            }
+        }
         TypeRef::TemplateLiteral { parts } => {
             for part in parts {
                 if let TemplateLiteralPart::Type { value } = part {

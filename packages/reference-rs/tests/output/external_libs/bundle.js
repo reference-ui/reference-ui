@@ -3692,8 +3692,64 @@ export const _b2a8703557247e8b = {
   }
 ],
   definition: {
-  kind: "raw",
-  summary: "{ [P in keyof T]: T[P] | readonly NonNullable<T[P]>[] }",
+  kind: "mapped",
+  typeParam: "P",
+  sourceType:   {
+    kind: "type_operator",
+    operator: "keyof",
+    target:   {
+      id: "T",
+      name: "T",
+      library: "csstype",
+    },
+  },
+  optionalModifier: "preserve",
+  readonlyModifier: "preserve",
+  valueType:   {
+    kind: "union",
+    types: [
+    {
+      kind: "indexed_access",
+      object:   {
+        id: "T",
+        name: "T",
+        library: "csstype",
+      },
+      index:   {
+        id: "P",
+        name: "P",
+        library: "csstype",
+      },
+    },
+    {
+      kind: "type_operator",
+      operator: "readonly",
+      target:   {
+        kind: "array",
+        element:   {
+          id: "NonNullable",
+          name: "NonNullable",
+          library: "csstype",
+          typeArguments: [
+          {
+            kind: "indexed_access",
+            object:   {
+              id: "T",
+              name: "T",
+              library: "csstype",
+            },
+            index:   {
+              id: "P",
+              name: "P",
+              library: "csstype",
+            },
+          }
+          ],
+        },
+      },
+    }
+    ],
+  }
 },
 };
 
@@ -10129,8 +10185,88 @@ export const _eb3df24835d78bd9 = {
   }
 ],
   definition: {
-  kind: "raw",
-  summary: "TValue extends Array<infer AValue> ? Array<AValue extends infer TUnpacked & {} ? TUnpacked : AValue> : TValue extends infer TUnpacked & {} ? TUnpacked : TValue",
+  kind: "conditional",
+  checkType:   {
+    id: "TValue",
+    name: "TValue",
+    library: "csstype",
+  },
+  extendsType:   {
+    kind: "array",
+    element:   {
+      kind: "raw",
+      summary: "infer AValue",
+    },
+  },
+  trueType:   {
+    kind: "array",
+    element:   {
+      kind: "conditional",
+      checkType:   {
+        id: "AValue",
+        name: "AValue",
+        library: "csstype",
+      },
+      extendsType:   {
+        kind: "intersection",
+        types: [
+        {
+          kind: "raw",
+          summary: "infer TUnpacked",
+        },
+        {
+          kind: "object",
+          members: [
+        
+          ],
+        }
+        ],
+      },
+      trueType:   {
+        id: "TUnpacked",
+        name: "TUnpacked",
+        library: "csstype",
+      },
+      falseType:   {
+        id: "AValue",
+        name: "AValue",
+        library: "csstype",
+      },
+    },
+  },
+  falseType:   {
+    kind: "conditional",
+    checkType:   {
+      id: "TValue",
+      name: "TValue",
+      library: "csstype",
+    },
+    extendsType:   {
+      kind: "intersection",
+      types: [
+      {
+        kind: "raw",
+        summary: "infer TUnpacked",
+      },
+      {
+        kind: "object",
+        members: [
+      
+        ],
+      }
+      ],
+    },
+    trueType:   {
+      id: "TUnpacked",
+      name: "TUnpacked",
+      library: "csstype",
+    },
+    falseType:   {
+      id: "TValue",
+      name: "TValue",
+      library: "csstype",
+    },
+  },
 },
 };
 

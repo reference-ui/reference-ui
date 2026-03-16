@@ -21,7 +21,7 @@
 
 - **Generics** – now supported (type parameters, type arguments; see §2).
 - **Readonly and member kind** – now supported (§4.3).
-- **TypeRef** – we have Intrinsic, Literal, Union, Reference, Object, Array, Tuple, Intersection, Raw; mapped/conditional types still end up as `Raw { summary: "..." }`.
+- **TypeRef** – we have Intrinsic, Literal, Union, Reference, Object, Array, Tuple, Intersection, Conditional, Mapped, Raw; the remaining advanced cases still end up as `Raw { summary: "..." }`.
 - **Single description** only; no structured tags (e.g. `@default`, `@deprecated`, `@example`) unless you parse JSDoc downstream.
 
 So: **yes for simple “props and types” docs**, **no for full, rich API docs** without extending the model and extraction.
@@ -49,7 +49,7 @@ So: **yes for simple “props and types” docs**, **no for full, rich API docs*
 We then **narrow** that into our own model:
 
 - Only interfaces and type aliases (no enums, namespaces, etc.).
-- A `TypeRef` subset: intrinsic, literal, union, reference, object (type literal), array, tuple, intersection, raw; plus generics. Conditional/mapped types still become `Raw`.
+- A `TypeRef` subset: intrinsic, literal, union, reference, object (type literal), array, tuple, intersection, conditional, mapped, raw; plus generics. The remaining advanced cases still become `Raw`.
 
 So: **Oxc gives us full TS structure; we intentionally expose a subset.** Extending docs/MCP support is mostly about mapping more of the Oxc AST into our types and emission, not about replacing Oxc.
 
@@ -118,6 +118,6 @@ So: **Oxc gives us full TS structure; we intentionally expose a subset.** Extend
 | `unions_literals` | Union types, literal types (string/number), optional members. |
 | `tsx`             | .tsx file scanning, interfaces and type aliases from TSX. |
 | `default_params` | Type parameters with default (e.g. `T = string`). |
-| `unknown_complex` | Mapped types, conditional types → `Raw` with summary. |
+| `unknown_complex` | Mixed advanced types: mapped + conditional structural, nested unsupported pieces may still be `Raw`. |
 
 **Vitest:** Each scenario has a matching `bundle.{scenario}.test.ts` that loads `output/{scenario}/bundle.js` and asserts shape and content. globalSetup emits one bundle per scenario directory under `tests/input/`.

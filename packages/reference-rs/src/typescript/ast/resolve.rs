@@ -256,6 +256,34 @@ fn resolve_type_ref(
             target: Box::new(resolve_type_ref(*target, symbol_index, parsed)),
         },
         TypeRef::TypeQuery { expression } => TypeRef::TypeQuery { expression },
+        TypeRef::Conditional {
+            check_type,
+            extends_type,
+            true_type,
+            false_type,
+        } => TypeRef::Conditional {
+            check_type: Box::new(resolve_type_ref(*check_type, symbol_index, parsed)),
+            extends_type: Box::new(resolve_type_ref(*extends_type, symbol_index, parsed)),
+            true_type: Box::new(resolve_type_ref(*true_type, symbol_index, parsed)),
+            false_type: Box::new(resolve_type_ref(*false_type, symbol_index, parsed)),
+        },
+        TypeRef::Mapped {
+            type_param,
+            source_type,
+            name_type,
+            optional_modifier,
+            readonly_modifier,
+            value_type,
+        } => TypeRef::Mapped {
+            type_param,
+            source_type: Box::new(resolve_type_ref(*source_type, symbol_index, parsed)),
+            name_type: name_type
+                .map(|name_type| Box::new(resolve_type_ref(*name_type, symbol_index, parsed))),
+            optional_modifier,
+            readonly_modifier,
+            value_type: value_type
+                .map(|value_type| Box::new(resolve_type_ref(*value_type, symbol_index, parsed))),
+        },
         TypeRef::TemplateLiteral { parts } => TypeRef::TemplateLiteral {
             parts: parts
                 .into_iter()
