@@ -1027,7 +1027,7 @@ fn type_to_ref(
         // Complex types we do not model structurally: preserve the source as Raw.
         TSType::TSImportType(_)
         | TSType::TSInferType(_)
-        | TSType::TSConstructorType(_) => TypeRef::Raw {
+         => TypeRef::Raw {
             summary: slice_span(source, type_annotation.span()).to_string(),
         },
         TSType::TSFunctionType(func) => {
@@ -1050,6 +1050,36 @@ fn type_to_ref(
                 return_type: Box::new(return_type),
             }
         },
+        TSType::TSConstructorType(constructor) => {
+            let params = formal_params_to_fn_params(
+                &constructor.params,
+                source,
+                import_bindings,
+                current_module_specifier,
+                current_library,
+            );
+            let return_type = type_to_ref(
+                &constructor.return_type.type_annotation,
+                source,
+                import_bindings,
+                current_module_specifier,
+                current_library,
+            );
+            let type_parameters = type_parameters_from_oxc(
+                constructor.type_parameters.as_deref(),
+                source,
+                &[],
+                import_bindings,
+                current_module_specifier,
+                current_library,
+            );
+            TypeRef::Constructor {
+                r#abstract: constructor.r#abstract,
+                type_parameters,
+                params,
+                return_type: Box::new(return_type),
+            }
+        }
         TSType::TSTypeOperatorType(operator) => TypeRef::TypeOperator {
             operator: match operator.operator {
                 oxc_ast::ast::TSTypeOperatorOperator::Keyof => TypeOperatorKind::Keyof,
@@ -1249,6 +1279,27 @@ fn collect_type_ref_references(type_ref: &TypeRef, references: &mut Vec<TypeRef>
             collect_type_ref_references(index, references);
         }
         TypeRef::Function { params, return_type } => {
+            for p in params {
+                if let Some(ref tr) = p.type_ref {
+                    collect_type_ref_references(tr, references);
+                }
+            }
+            collect_type_ref_references(return_type, references);
+        }
+        TypeRef::Constructor {
+            type_parameters,
+            params,
+            return_type,
+            ..
+        } => {
+            for param in type_parameters {
+                if let Some(ref c) = param.constraint {
+                    collect_type_ref_references(c, references);
+                }
+                if let Some(ref d) = param.default {
+                    collect_type_ref_references(d, references);
+                }
+            }
             for p in params {
                 if let Some(ref tr) = p.type_ref {
                     collect_type_ref_references(tr, references);
