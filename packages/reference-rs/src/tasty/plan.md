@@ -119,5 +119,6 @@ So: **Oxc gives us full TS structure; we intentionally expose a subset.** Extend
 | `tsx`             | .tsx file scanning, interfaces and type aliases from TSX. |
 | `default_params` | Type parameters with default (e.g. `T = string`). |
 | `unknown_complex` | Mixed advanced types: mapped + conditional structural, nested unsupported pieces may still be `Raw`. |
+| `audit_alignment` | Audit-driven coverage for intentionally raw variants (`import()`, `infer`, `type predicate`, `this`) plus their surrounding structured shapes. |
 
 **Vitest:** Each scenario has a matching `tests/tasty/cases/{scenario}/bundle.test.ts` that loads `output/bundle.js` from the same case folder and asserts shape and content. globalSetup emits one bundle per scenario directory under `tests/tasty/cases/{scenario}/input/`.
