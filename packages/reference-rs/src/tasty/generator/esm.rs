@@ -73,7 +73,7 @@ pub fn emit_esm_bundle(bundle: &TypeScriptBundle) -> Result<TypeScriptEsmBundle,
 }
 
 fn emit_runtime_module() -> &'static str {
-    "import manifest from \"./manifest.js\";\nimport { tastyChunkLoaders } from \"./chunk-registry.js\";\n\nexport { manifest };\n\nexport const manifestUrl = new URL(\"./manifest.js\", import.meta.url).href;\n\nconst loadersBySpecifier = new Map();\nfor (const [specifier, loader] of Object.entries(tastyChunkLoaders)) {\n  loadersBySpecifier.set(specifier, loader);\n  loadersBySpecifier.set(new URL(specifier, manifestUrl).href, loader);\n}\n\nexport async function importTastyArtifact(specifier) {\n  const loader = loadersBySpecifier.get(specifier);\n  if (!loader) {\n    throw new Error(`Unknown Tasty artifact: ${specifier}`);\n  }\n  return loader();\n}\n"
+    "import manifest from \"./manifest.js\";\nimport { tastyChunkLoaders } from \"./chunk-registry.js\";\n\nexport { manifest };\n\nexport const manifestUrl = new URL(\"./manifest.js\", import.meta.url).href;\n\nconst loadersBySpecifier = new Map();\nfor (const [specifier, loader] of Object.entries(tastyChunkLoaders)) {\n  loadersBySpecifier.set(specifier, loader);\n  try {\n    loadersBySpecifier.set(new URL(specifier, manifestUrl).href, loader);\n  } catch {\n    // Bundlers may inline the manifest into a data: URL, which cannot act as a base URL.\n  }\n}\n\nexport async function importTastyArtifact(specifier) {\n  const loader = loadersBySpecifier.get(specifier);\n  if (!loader) {\n    throw new Error(`Unknown Tasty artifact: ${specifier}`);\n  }\n  return loader();\n}\n"
 }
 
 fn emit_manifest_declaration_module() -> &'static str {
