@@ -251,6 +251,10 @@ fn resolve_type_ref(
                 .collect(),
             return_type: Box::new(resolve_type_ref((*return_type).clone(), symbol_index, parsed)),
         },
+        TypeRef::TypeOperator { operator, target } => TypeRef::TypeOperator {
+            operator,
+            target: Box::new(resolve_type_ref(*target, symbol_index, parsed)),
+        },
         other => other,
     }
 }

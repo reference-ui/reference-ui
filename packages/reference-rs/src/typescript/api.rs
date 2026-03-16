@@ -94,6 +94,23 @@ pub struct TsMember {
     pub type_ref: Option<TypeRef>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TypeOperatorKind {
+    Keyof,
+    Readonly,
+    Unique,
+}
+
+impl TypeOperatorKind {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Keyof => "keyof",
+            Self::Readonly => "readonly",
+            Self::Unique => "unique",
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TypeRef {
     Intrinsic {
@@ -132,6 +149,11 @@ pub enum TypeRef {
     Function {
         params: Vec<FnParam>,
         return_type: Box<TypeRef>,
+    },
+    /// Type operator like `keyof T`, `readonly T[]`, or `unique symbol`.
+    TypeOperator {
+        operator: TypeOperatorKind,
+        target: Box<TypeRef>,
     },
     Unknown {
         summary: String,

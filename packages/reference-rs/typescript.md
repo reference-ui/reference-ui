@@ -173,7 +173,7 @@ type TypeRef =
   | { kind: 'object'; members: InlineMember[] }
   | { kind: 'function'; signature: Signature }
   | { kind: 'reference'; name: string; targetId?: SymbolId; typeArgs?: TypeRef[] }
-  | { kind: 'keyof'; target: TypeRef }
+  | { kind: 'type_operator'; operator: 'keyof' | 'readonly' | 'unique'; target: TypeRef }
   | { kind: 'indexed_access'; object: TypeRef; index: TypeRef }
   | { kind: 'mapped'; summary: string }
   | { kind: 'conditional'; summary: string }
