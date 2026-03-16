@@ -1,4 +1,5 @@
 import { emit, on, onceAll } from '../lib/event-bus'
+import { forWorker } from './events.utils'
 
 const SYNC_FAILED_EVENT = 'sync:failed'
 
@@ -7,13 +8,6 @@ const SYNC_FAILED_EVENT = 'sync:failed'
  * watch:change → run:virtual:sync:file (single file), passing payload through.
  */
 export function initEvents(): void {
-  let configReady = false
-  let referenceReady = false
-  let pendingSystemConfig = false
-  let pendingReferenceBuild = false
-  let packagerReady = false
-  let pendingPackagerBundle = false
-
   on('virtual:ready', () => {
     emit('run:virtual:copy:all')
   })
@@ -22,34 +16,17 @@ export function initEvents(): void {
     emit('run:virtual:sync:file', payload)
   })
 
-  on('virtual:complete', () => {
-    if (configReady) {
-      emit('run:system:config')
-    } else {
-      pendingSystemConfig = true
-    }
-
-    if (referenceReady) {
-      emit('run:reference:build', {})
-    } else {
-      pendingReferenceBuild = true
-    }
+  forWorker({
+    ready: 'system:config:ready',
+    on: 'virtual:complete',
+    emit: 'run:system:config',
   })
 
-  on('system:config:ready', () => {
-    configReady = true
-    if (pendingSystemConfig) {
-      pendingSystemConfig = false
-      emit('run:system:config')
-    }
-  })
-
-  on('reference:ready', () => {
-    referenceReady = true
-    if (pendingReferenceBuild) {
-      pendingReferenceBuild = false
-      emit('run:reference:build', {})
-    }
+  forWorker({
+    ready: 'reference:ready',
+    on: 'virtual:complete',
+    emit: 'run:reference:build',
+    payload: {},
   })
 
   onceAll(['system:config:complete', 'system:panda:ready'], () => {
@@ -72,20 +49,10 @@ export function initEvents(): void {
     emit(SYNC_FAILED_EVENT)
   })
 
-  on('packager:ready', () => {
-    packagerReady = true
-    if (pendingPackagerBundle) {
-      pendingPackagerBundle = false
-      emit('run:packager:bundle')
-    }
-  })
-
-  on('system:panda:codegen', () => {
-    if (packagerReady) {
-      emit('run:packager:bundle')
-    } else {
-      pendingPackagerBundle = true
-    }
+  forWorker({
+    ready: 'packager:ready',
+    on: 'system:panda:codegen',
+    emit: 'run:packager:bundle',
   })
 
   /** Sync completes after packager-ts:complete. Packager emits packager-ts:complete when skipTypescript so this always fires. */
