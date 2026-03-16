@@ -1,3 +1,4 @@
+import { createRequire } from 'node:module'
 import { existsSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import { join } from 'node:path'
@@ -11,9 +12,27 @@ if (!triple) {
 }
 
 const binaryPath = join(packageDir, `virtual-native.${triple}.node`)
+const requiredExports = [
+  'rewriteCssImports',
+  'rewriteCvaImports',
+  'scanAndEmitBundle',
+  'scanAndEmitModules',
+]
+
 if (existsSync(binaryPath)) {
-  console.log(`Using existing native binary ${binaryPath}`)
-  process.exit(0)
+  try {
+    const require = createRequire(import.meta.url)
+    const binding = require(binaryPath) as Record<string, unknown>
+    const hasRequiredExports = requiredExports.every((name) => typeof binding[name] === 'function')
+    if (hasRequiredExports) {
+      console.log(`Using existing native binary ${binaryPath}`)
+      process.exit(0)
+    }
+
+    console.log(`Rebuilding stale native binary ${binaryPath}`)
+  } catch {
+    console.log(`Rebuilding unloadable native binary ${binaryPath}`)
+  }
 }
 
 const target = getRustTarget(triple)

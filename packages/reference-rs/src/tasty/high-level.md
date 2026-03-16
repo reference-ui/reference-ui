@@ -159,7 +159,7 @@ export interface SymbolIndexEntry {
   chunk: string;
 }
 
-export interface BundleManifest {
+export interface TastyManifest {
   symbolsByName: Record<string, string>;
   symbolsById: Record<string, SymbolIndexEntry>;
 }

@@ -21,3 +21,10 @@ pub fn scan_and_emit_bundle(request: &ScanRequest) -> Result<String, String> {
         .cloned()
         .ok_or_else(|| "missing entrypoint module".to_string())
 }
+
+/// Scan and emit all Tasty ESM modules as a JSON payload for filesystem writing.
+pub fn scan_and_emit_modules(request: &ScanRequest) -> Result<String, String> {
+    let bundle = scan_typescript_bundle(request)?;
+    let esm = emit_esm_bundle(&bundle)?;
+    serde_json::to_string(&esm).map_err(|error| format!("failed to serialize ESM modules: {error}"))
+}

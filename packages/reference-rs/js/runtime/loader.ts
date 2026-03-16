@@ -21,6 +21,7 @@ export interface VirtualNativeBinding {
   rewriteCssImports: (sourceCode: string, relativePath: string) => string
   rewriteCvaImports: (sourceCode: string, relativePath: string) => string
   scanAndEmitBundle: (rootDir: string, include: string[]) => string
+  scanAndEmitModules: (rootDir: string, include: string[]) => string
 }
 
 let _native: VirtualNativeBinding | null | undefined = undefined
