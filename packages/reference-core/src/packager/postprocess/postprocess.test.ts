@@ -77,4 +77,27 @@ describe('packager/postprocess', () => {
 
     expect(() => runPostprocess(targetDir, pkg, { layerName: 'x' })).not.toThrow()
   })
+
+  it('rewrites the generated types runtime placeholder to the tasty runtime subpath', () => {
+    const targetDir = createTempDir()
+    writeFileSync(
+      resolve(targetDir, 'types.mjs'),
+      'const load = () => import("__REFERENCE_UI_TYPES_RUNTIME__")\n'
+    )
+    const pkg: PackageDefinition = {
+      name: '@reference-ui/types',
+      version: '0.0.0-test',
+      description: 'types',
+      main: './types.mjs',
+      types: './types.d.mts',
+      exports: {},
+      postprocess: ['rewriteTypesRuntimeImport'],
+    }
+
+    runPostprocess(targetDir, pkg, { layerName: 'unused' })
+
+    const output = readFileSync(resolve(targetDir, 'types.mjs'), 'utf-8')
+    expect(output).toContain('import("./tasty/runtime.js")')
+    expect(output).not.toContain('__REFERENCE_UI_TYPES_RUNTIME__')
+  })
 })

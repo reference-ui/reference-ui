@@ -107,6 +107,7 @@ export const TYPES_PACKAGE: PackageDefinition = {
       import: TYPES_RUNTIME_JS,
     },
   },
+  postprocess: ['rewriteTypesRuntimeImport'],
 }
 
 export const PACKAGES: PackageDefinition[] = [

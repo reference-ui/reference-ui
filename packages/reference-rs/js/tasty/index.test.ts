@@ -22,6 +22,7 @@ describe('tasty runtime', () => {
     const outputDir = join(packageDir, 'tests', 'tasty', 'cases', 'external_libs', 'output')
     const manifest = join(outputDir, 'manifest.js')
     const runtime = join(outputDir, 'runtime.js')
+    const chunkRegistry = join(outputDir, 'chunk-registry.js')
     const manifestTypes = join(outputDir, 'manifest.d.ts')
     const runtimeTypes = join(outputDir, 'runtime.d.ts')
     const chunkDir = join(outputDir, 'chunks')
@@ -29,6 +30,7 @@ describe('tasty runtime', () => {
 
     expect(existsSync(manifest)).toBe(true)
     expect(existsSync(runtime)).toBe(true)
+    expect(existsSync(chunkRegistry)).toBe(true)
     expect(existsSync(manifestTypes)).toBe(true)
     expect(existsSync(runtimeTypes)).toBe(true)
     expect(existsSync(chunkDir)).toBe(true)
@@ -132,10 +134,11 @@ describe('tasty runtime', () => {
 
     const withDefault = await api.loadSymbolByName('WithDefault')
     const underlying = withDefault.getUnderlyingType()
+    const defaultType = withDefault.getTypeParameters()[0]?.default
 
     expect(withDefault.getKind()).toBe('typeAlias')
     expect(withDefault.getTypeParameters()).toHaveLength(1)
-    expect(withDefault.getTypeParameters()[0]?.default?.kind).toBe('intrinsic')
+    expect(defaultType).toMatchObject({ kind: 'intrinsic' })
     expect(underlying?.getKind()).toBe('object')
     expect(underlying?.describe()).toBe('{ ... }')
   })

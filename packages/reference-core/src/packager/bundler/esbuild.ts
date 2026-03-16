@@ -4,6 +4,7 @@ import { dirname, resolve } from 'node:path'
 import { writeIfChanged } from './files'
 
 const ESBUILD_EXTERNALS = [
+  '__REFERENCE_UI_TYPES_RUNTIME__',
   'react',
   'react-dom',
   'react/jsx-runtime',
