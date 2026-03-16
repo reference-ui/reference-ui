@@ -178,18 +178,24 @@ describe('packager/bundler', () => {
           types: './tasty/runtime.d.ts',
         },
       },
+      postprocess: ['rewriteTypesRuntimeImport'],
     }
 
     const { bundlePackage, bundleWithEsbuild } = await importBundlerModule({
       bundleImpl: async (_coreDir, dir, _entryPath, outfile) => {
-        writeFileSync(resolve(dir, outfile), 'export const Reference = () => null\n')
+        writeFileSync(
+          resolve(dir, outfile),
+          'export const loadRuntime = () => import("__REFERENCE_UI_TYPES_RUNTIME__")\n'
+        )
       },
     })
 
     await bundlePackage({ coreDir, outDir, targetDir, pkg })
 
     expect(bundleWithEsbuild).toHaveBeenCalledWith(coreDir, targetDir, 'src/entry/types.ts', 'types.mjs')
-    expect(readFileSync(resolve(targetDir, 'types.mjs'), 'utf-8')).toContain('Reference')
+    expect(readFileSync(resolve(targetDir, 'types.mjs'), 'utf-8')).toContain(
+      '__REFERENCE_UI_TYPES_RUNTIME__'
+    )
     expect(readFileSync(resolve(targetDir, 'tasty', 'manifest.js'), 'utf-8')).toContain('export const manifest')
     expect(readFileSync(resolve(targetDir, 'tasty', 'chunks/example.js'), 'utf-8')).toContain('export default')
     expect(readFileSync(resolve(targetDir, 'tasty', 'manifest.d.ts'), 'utf-8')).toContain('declare const manifest')

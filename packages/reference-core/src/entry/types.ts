@@ -12,8 +12,7 @@ let runtimeModulePromise: Promise<ReferenceRuntimeModule> | undefined
 
 function loadReferenceRuntime(): Promise<ReferenceRuntimeModule> {
   if (!runtimeModulePromise) {
-    const specifier = new URL('./tasty/runtime.js', import.meta.url).href
-    runtimeModulePromise = import(/* @vite-ignore */ specifier) as Promise<ReferenceRuntimeModule>
+    runtimeModulePromise = import('__REFERENCE_UI_TYPES_RUNTIME__' as string) as Promise<ReferenceRuntimeModule>
   }
 
   return runtimeModulePromise
