@@ -11,7 +11,7 @@ use oxc_ast::ast::{
 use oxc_parser::Parser;
 use oxc_span::{GetSpan, SourceType, Span};
 
-use super::super::api::{
+use super::super::model::{
     FnParam, JsDoc, JsDocTag, MappedModifierKind, ScannerDiagnostic, TemplateLiteralPart,
     TsMember, TsMemberKind, TsSymbolKind, TsTypeParameter, TupleElement, TypeOperatorKind, TypeRef,
 };

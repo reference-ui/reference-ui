@@ -3,7 +3,7 @@ use std::fmt::Write;
 
 use serde::Serialize;
 
-use super::super::api::{
+use super::super::model::{
     FnParam, JsDoc, JsDocTag, TemplateLiteralPart, TsMember, TsMemberKind, TsSymbol,
     TsSymbolKind, TsTypeParameter, TupleElement, TypeRef, TypeScriptBundle,
 };
