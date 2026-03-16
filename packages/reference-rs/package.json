@@ -22,11 +22,15 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs"
+    },
+    "./tasty": {
+      "types": "./dist/tasty.d.ts",
+      "import": "./dist/tasty.mjs"
     }
   },
   "files": [
     "dist",
-    "*.node",
+    "native",
     "README.md",
     "npm"
   ],
@@ -34,14 +38,16 @@
     "artifacts": "pnpm exec napi artifacts --output-dir artifacts",
     "build": "pnpm run ensure-native && pnpm run build:js",
     "build:js": "tsup",
-    "build:native": "pnpm exec napi build --platform --release",
+    "build:native": "pnpm exec napi build --platform --release --output-dir native --no-js",
     "create-npm-dirs": "pnpm exec napi create-npm-dirs",
     "ensure-native": "pnpm exec tsx ./js/tools/ensure-native.ts",
     "prepack": "pnpm run build:js",
     "prepublish:npm": "pnpm exec napi prepublish --no-gh-release -t npm",
     "publish:native": "pnpm exec tsx ./js/tools/publish-native.ts",
     "stage-local-artifacts": "pnpm exec tsx ./js/tools/stage-local-artifacts.ts",
-    "test": "vitest run",
+    "test": "pnpm run ensure-native && cargo test && vitest run",
+    "test:rust": "cargo test",
+    "test:vitest": "vitest run",
     "test:watch": "vitest"
   },
   "publishConfig": {

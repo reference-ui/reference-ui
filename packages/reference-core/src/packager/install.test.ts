@@ -1,6 +1,6 @@
 import { mkdtempSync, lstatSync, mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { PackageDefinition } from './package'
 
@@ -33,6 +33,21 @@ const SYSTEM_PACKAGE: PackageDefinition = {
     '.': {
       import: './system.mjs',
       types: './system.d.mts',
+    },
+  },
+}
+
+const TYPES_PACKAGE: PackageDefinition = {
+  name: '@reference-ui/types',
+  version: '0.0.0-test',
+  description: 'types test package',
+  bundle: true,
+  main: './types.mjs',
+  types: './types.d.mts',
+  exports: {
+    '.': {
+      import: './types.mjs',
+      types: './types.d.mts',
     },
   },
 }
@@ -197,6 +212,33 @@ describe('packager/install', () => {
     expect(
       lstatSync(resolve(workspaceDir, 'node_modules', '@reference-ui', 'system')).isSymbolicLink()
     ).toBe(true)
+  })
+
+  it('links generated runtime packages like @reference-ui/types', async () => {
+    const workspaceDir = createTempDir()
+    const outDir = resolve(workspaceDir, '.reference-ui')
+    const nodeModulesScope = resolve(workspaceDir, 'node_modules', '@reference-ui')
+    const targetDir = resolve(outDir, 'types')
+    const linkPath = resolve(nodeModulesScope, 'types')
+
+    const { installPackage } = await importInstallModule({
+      bundleImpl: async ({ targetDir: dir, pkg }) => {
+        mkdirSync(dir, { recursive: true })
+        const mainPath = resolve(dir, pkg.main?.replace('./', '') || 'index.js')
+        const typesPath = resolve(dir, pkg.types?.replace('./', '') || 'index.d.ts')
+        mkdirSync(dirname(mainPath), { recursive: true })
+        mkdirSync(dirname(typesPath), { recursive: true })
+        writeFileSync(mainPath, 'export const Reference = () => null\n')
+        writeFileSync(typesPath, 'export declare const Reference: () => null\n')
+      },
+    })
+
+    await installPackage('/core', outDir, nodeModulesScope, TYPES_PACKAGE)
+
+    expect(readFileSync(resolve(targetDir, 'types.mjs'), 'utf-8')).toContain('Reference')
+    expect(readFileSync(resolve(targetDir, 'types.d.mts'), 'utf-8')).toContain('Reference')
+    expect(lstatSync(linkPath).isSymbolicLink()).toBe(true)
+    expect(realpathSync(linkPath)).toBe(realpathSync(targetDir))
   })
 
   it('fails loudly when bundling fails before linking', async () => {

@@ -1,4 +1,3 @@
-import React from 'react'
 import { Div } from '@reference-ui/react'
 
 interface ColorProps {

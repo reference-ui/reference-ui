@@ -1,0 +1,25 @@
+export type { TastyChunkModule } from './TastyChunkModule'
+export type { TastyFnParam } from './TastyFnParam'
+export type { TastyInterfaceSymbol } from './TastyInterfaceSymbol'
+export type { TastyJsDoc } from './TastyJsDoc'
+export type { TastyJsDocTag } from './TastyJsDocTag'
+export type { TastyManifest } from './TastyManifest'
+export type { TastyMappedModifierKind } from './TastyMappedModifierKind'
+export type { TastyMember } from './TastyMember'
+export type { TastyMemberKind } from './TastyMemberKind'
+export type { TastyModule } from './TastyModule'
+export type { TastyStructuredTypeRef } from './TastyStructuredTypeRef'
+export type { TastySymbolIndexEntry } from './TastySymbolIndexEntry'
+export type { TastySymbolKind } from './TastySymbolKind'
+export type { TastySymbolRef } from './TastySymbolRef'
+export type { TastyTemplateLiteralPart } from './TastyTemplateLiteralPart'
+export type { TastyTupleElement } from './TastyTupleElement'
+export type { TastyTypeAliasSymbol } from './TastyTypeAliasSymbol'
+export type { TastyTypeOperatorKind } from './TastyTypeOperatorKind'
+export type { TastyTypeParameter } from './TastyTypeParameter'
+export type { TastyTypeRef } from './TastyTypeRef'
+export type { TastyTypeReference } from './TastyTypeReference'
+
+export type TastySymbol =
+  | import('./TastyInterfaceSymbol').TastyInterfaceSymbol
+  | import('./TastyTypeAliasSymbol').TastyTypeAliasSymbol

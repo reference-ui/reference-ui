@@ -1,0 +1,10 @@
+{
+  "name": "typescript-scanner-test-fixture",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@types/json-schema": "^7.0.15",
+    "csstype": "^3.2.3",
+    "json-schema": "^0.4.0"
+  }
+}

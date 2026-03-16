@@ -20,6 +20,7 @@ export { getVirtualNativeTriple, SUPPORTED_VIRTUAL_NATIVE_TARGETS }
 export interface VirtualNativeBinding {
   rewriteCssImports: (sourceCode: string, relativePath: string) => string
   rewriteCvaImports: (sourceCode: string, relativePath: string) => string
+  scanAndEmitModules: (rootDir: string, include: string[]) => string
 }
 
 let _native: VirtualNativeBinding | null | undefined = undefined
@@ -42,6 +43,7 @@ export function resolveReferenceRsPackageDir(fromUrl: string = import.meta.url):
 
 export function getVirtualNativeCandidates(packageDir: string, triple: string): string[] {
   return [
+    join(packageDir, 'native', `virtual-native.${triple}.node`),
     join(packageDir, `virtual-native.${triple}.node`),
     join(packageDir, 'dist', `virtual-native.${triple}.node`),
   ]

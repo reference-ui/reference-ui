@@ -125,4 +125,101 @@ describe('packager/bundler', () => {
       types: './react.d.mts',
     })
   })
+
+  it('bundles the @reference-ui/types entry while preserving generated Tasty artifacts', async () => {
+    const workspaceDir = createTempDir()
+    const coreDir = resolve(workspaceDir, 'core')
+    const outDir = resolve(workspaceDir, '.reference-ui')
+    const targetDir = resolve(outDir, 'types')
+
+    mkdirSync(resolve(targetDir, 'tasty', 'chunks'), { recursive: true })
+    writeFileSync(
+      resolve(targetDir, 'tasty', 'manifest.js'),
+      'export const manifest = { version: "1" }\nexport default manifest\n'
+    )
+    writeFileSync(resolve(targetDir, 'tasty', 'chunks/example.js'), 'export default {}\n')
+    mkdirSync(resolve(coreDir, 'src/entry'), { recursive: true })
+    mkdirSync(resolve(coreDir, 'src/reference'), { recursive: true })
+    writeFileSync(
+      resolve(coreDir, 'src/entry/types.ts'),
+      'export { Reference } from "../reference/component"\n'
+    )
+    writeFileSync(
+      resolve(coreDir, 'src/reference/manifest.d.ts'),
+      'declare const manifest: { version: string }\nexport default manifest\n'
+    )
+    writeFileSync(
+      resolve(coreDir, 'src/reference/types-runtime.ts'),
+      'export const manifestUrl = new URL("./manifest.js", import.meta.url).href\n'
+    )
+    writeFileSync(
+      resolve(coreDir, 'src/reference/types-runtime.d.ts'),
+      'export declare const manifestUrl: string\n'
+    )
+
+    const pkg: PackageDefinition = {
+      name: '@reference-ui/types',
+      version: '0.0.0-test',
+      description: 'types test package',
+      entry: 'src/entry/types.ts',
+      bundle: true,
+      main: './types.mjs',
+      types: './types.d.mts',
+      exports: {
+        '.': {
+          import: './types.mjs',
+          types: './types.d.mts',
+        },
+        './manifest': {
+          import: './tasty/manifest.js',
+          types: './tasty/manifest.d.ts',
+        },
+        './runtime': {
+          import: './tasty/runtime.js',
+          types: './tasty/runtime.d.ts',
+        },
+      },
+      copyFrom: [
+        {
+          kind: 'file',
+          from: 'cli',
+          src: 'src/reference/manifest.d.ts',
+          dest: 'tasty/manifest.d.ts',
+        },
+        {
+          kind: 'file',
+          from: 'cli',
+          src: 'src/reference/types-runtime.ts',
+          dest: 'tasty/runtime.ts',
+        },
+        {
+          kind: 'file',
+          from: 'cli',
+          src: 'src/reference/types-runtime.d.ts',
+          dest: 'tasty/runtime.d.ts',
+        },
+      ],
+    }
+
+    const { bundlePackage, bundleWithEsbuild } = await importBundlerModule({
+      bundleImpl: async (_coreDir, dir, _entryPath, outfile) => {
+        writeFileSync(resolve(dir, outfile), 'export const Reference = () => null\n')
+      },
+    })
+
+    await bundlePackage({ coreDir, outDir, targetDir, pkg })
+
+    expect(bundleWithEsbuild).toHaveBeenCalledWith(coreDir, targetDir, 'src/entry/types.ts', 'types.mjs')
+    expect(readFileSync(resolve(targetDir, 'types.mjs'), 'utf-8')).toContain('Reference')
+    expect(readFileSync(resolve(targetDir, 'tasty', 'manifest.js'), 'utf-8')).toContain('export const manifest')
+    expect(readFileSync(resolve(targetDir, 'tasty', 'chunks/example.js'), 'utf-8')).toContain('export default')
+    expect(readFileSync(resolve(targetDir, 'tasty', 'manifest.d.ts'), 'utf-8')).toContain('declare const manifest')
+    expect(readFileSync(resolve(targetDir, 'tasty', 'runtime.js'), 'utf-8')).toContain('manifestUrl')
+    expect(readFileSync(resolve(targetDir, 'tasty', 'runtime.d.ts'), 'utf-8')).toContain('manifestUrl')
+    expect(JSON.parse(readFileSync(resolve(targetDir, 'package.json'), 'utf-8'))).toMatchObject({
+      name: '@reference-ui/types',
+      main: './types.mjs',
+      types: './types.d.mts',
+    })
+  })
 })
