@@ -15,7 +15,6 @@ const binaryPath = join(packageDir, 'native', `virtual-native.${triple}.node`)
 const requiredExports = [
   'rewriteCssImports',
   'rewriteCvaImports',
-  'scanAndEmitBundle',
   'scanAndEmitModules',
 ]
 
@@ -24,7 +23,8 @@ if (existsSync(binaryPath)) {
     const require = createRequire(import.meta.url)
     const binding = require(binaryPath) as Record<string, unknown>
     const hasRequiredExports = requiredExports.every((name) => typeof binding[name] === 'function')
-    if (hasRequiredExports) {
+    const hasDeprecatedBundleExport = typeof binding.scanAndEmitBundle === 'function'
+    if (hasRequiredExports && !hasDeprecatedBundleExport) {
       console.log(`Using existing native binary ${binaryPath}`)
       process.exit(0)
     }

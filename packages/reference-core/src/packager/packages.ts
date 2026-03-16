@@ -15,6 +15,8 @@ const ENTRIES = {
 const GENERATED_VERSION = '0.0.0-generated'
 const STYLED_INDEX_JS = './css/index.js'
 const STYLED_INDEX_D_TS = './css/index.d.ts'
+const TYPES_INDEX_JS = './tasty/manifest.js'
+const TYPES_INDEX_D_TS = './tasty/manifest.d.ts'
 
 export const SOURCE_PACKAGE = '@reference-ui/core'
 
@@ -79,8 +81,31 @@ export const STYLED_PACKAGE: PackageDefinition = {
   },
 }
 
+/**
+ * @reference-ui/types - Generated Tasty AST bundle for reference metadata.
+ * JavaScript content is emitted directly by the reference worker into .reference-ui/types/tasty.
+ */
+export const TYPES_PACKAGE: PackageDefinition = {
+  name: '@reference-ui/types',
+  version: GENERATED_VERSION,
+  description: 'Reference UI TypeScript AST bundle (Tasty output)',
+  bundle: false,
+  main: TYPES_INDEX_JS,
+  types: TYPES_INDEX_D_TS,
+  exports: {
+    '.': {
+      types: TYPES_INDEX_D_TS,
+      import: TYPES_INDEX_JS,
+    },
+  },
+  copyFrom: [
+    { kind: 'file', from: 'cli', src: 'src/entry/types.d.ts', dest: 'tasty/manifest.d.ts' },
+  ],
+}
+
 export const PACKAGES: PackageDefinition[] = [
   REACT_PACKAGE,
   SYSTEM_PACKAGE,
+  TYPES_PACKAGE,
   STYLED_PACKAGE,
 ]

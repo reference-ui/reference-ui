@@ -8,6 +8,22 @@ const SYNC_FAILED_EVENT = 'sync:failed'
  * watch:change → run:virtual:sync:file (single file), passing payload through.
  */
 export function initEvents(): void {
+  let packagerReady = false
+  let pandaCodegenCount = 0
+  let referenceCompleteCount = 0
+  let lastPackagerPandaCount = 0
+  let lastPackagerReferenceCount = 0
+
+  const maybeRunPackager = () => {
+    if (!packagerReady) return
+    if (pandaCodegenCount <= lastPackagerPandaCount) return
+    if (referenceCompleteCount <= lastPackagerReferenceCount) return
+
+    lastPackagerPandaCount = pandaCodegenCount
+    lastPackagerReferenceCount = referenceCompleteCount
+    emit('run:packager:bundle')
+  }
+
   on('virtual:ready', () => {
     emit('run:virtual:copy:all')
   })
@@ -49,10 +65,19 @@ export function initEvents(): void {
     emit(SYNC_FAILED_EVENT)
   })
 
-  forWorker({
-    ready: 'packager:ready',
-    on: 'system:panda:codegen',
-    emit: 'run:packager:bundle',
+  on('packager:ready', () => {
+    packagerReady = true
+    maybeRunPackager()
+  })
+
+  on('system:panda:codegen', () => {
+    pandaCodegenCount += 1
+    maybeRunPackager()
+  })
+
+  on('reference:complete', () => {
+    referenceCompleteCount += 1
+    maybeRunPackager()
   })
 
   /** Sync completes after packager-ts:complete. Packager emits packager-ts:complete when skipTypescript so this always fires. */

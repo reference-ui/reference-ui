@@ -6,8 +6,7 @@ TypeScript input, its Vitest assertions, and its generated output.
 When you run the Tasty test suite:
 
 - Each case is scanned with the glob `{case_name}/input/**/*.{ts,tsx}`.
-- Output is written back into that same case under `output/`, including `bundle.js` and `perf-metrics.txt`.
-- Each case keeps its own `bundle.test.ts` beside the fixture source.
+- Output is written back into that same case under `output/`, including `manifest.js`, `chunks/*`, and `perf-metrics.txt`.
 
 So:
 
@@ -21,8 +20,8 @@ So:
 - `audit_alignment/` → audit-driven coverage for intentionally raw variants (`import()`, `infer`, `type predicate`, `this`) plus their surrounding structured shapes.
 
 Add a new case folder to add a new scenario. The test suite will automatically
-scan `input/`, write `output/bundle.js` and `output/perf-metrics.txt`, and run
-that case's `bundle.test.ts`.
+scan `input/` and write `output/manifest.js`, `output/chunks/*`, and
+`output/perf-metrics.txt`.
 
 Shared setup (`package.json`, `package-lock.json`, `node_modules`) lives one
 level up at `tests/tasty/`; each case folder contains only its scenario-specific

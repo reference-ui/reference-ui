@@ -125,4 +125,59 @@ describe('packager/bundler', () => {
       types: './react.d.mts',
     })
   })
+
+  it('preserves generated Tasty bundle files for @reference-ui/types and adds package metadata', async () => {
+    const workspaceDir = createTempDir()
+    const coreDir = resolve(workspaceDir, 'core')
+    const outDir = resolve(workspaceDir, '.reference-ui')
+    const targetDir = resolve(outDir, 'types')
+
+    mkdirSync(resolve(targetDir, 'tasty', 'chunks'), { recursive: true })
+    writeFileSync(
+      resolve(targetDir, 'tasty', 'manifest.js'),
+      'export const manifest = { version: "1" }\nexport default manifest\n'
+    )
+    writeFileSync(resolve(targetDir, 'tasty', 'chunks/example.js'), 'export default {}\n')
+    mkdirSync(resolve(coreDir, 'src/entry'), { recursive: true })
+    writeFileSync(
+      resolve(coreDir, 'src/entry/types.d.ts'),
+      'declare const manifest: { version: string }\nexport default manifest\n'
+    )
+
+    const pkg: PackageDefinition = {
+      name: '@reference-ui/types',
+      version: '0.0.0-test',
+      description: 'types test package',
+      bundle: false,
+      main: './tasty/manifest.js',
+      types: './tasty/manifest.d.ts',
+      exports: {
+        '.': {
+          import: './tasty/manifest.js',
+          types: './tasty/manifest.d.ts',
+        },
+      },
+      copyFrom: [
+        {
+          kind: 'file',
+          from: 'cli',
+          src: 'src/entry/types.d.ts',
+          dest: 'tasty/manifest.d.ts',
+        },
+      ],
+    }
+
+    const { bundlePackage } = await importBundlerModule()
+
+    await bundlePackage({ coreDir, outDir, targetDir, pkg })
+
+    expect(readFileSync(resolve(targetDir, 'tasty', 'manifest.js'), 'utf-8')).toContain('export const manifest')
+    expect(readFileSync(resolve(targetDir, 'tasty', 'chunks/example.js'), 'utf-8')).toContain('export default')
+    expect(readFileSync(resolve(targetDir, 'tasty', 'manifest.d.ts'), 'utf-8')).toContain('declare const manifest')
+    expect(JSON.parse(readFileSync(resolve(targetDir, 'package.json'), 'utf-8'))).toMatchObject({
+      name: '@reference-ui/types',
+      main: './tasty/manifest.js',
+      types: './tasty/manifest.d.ts',
+    })
+  })
 })

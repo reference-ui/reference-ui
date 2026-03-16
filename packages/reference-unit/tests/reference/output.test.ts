@@ -1,14 +1,15 @@
 import { existsSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { createTastyApi } from '@reference-ui/rust/tasty'
-import { referenceManifestPath, referenceTastyDir, waitForReferenceArtifacts } from './helpers'
+import { typesPackageDir, typesPackageManifestPath, typesTastyDir, waitForReferenceArtifacts } from './helpers'
 
 describe('reference output', () => {
-  it('emits Tasty artifacts under .reference-ui/reference/tasty', async () => {
+  it('emits Tasty artifacts under .reference-ui/types/tasty', async () => {
     const ready = await waitForReferenceArtifacts()
     expect(ready, 'reference manifest should be emitted by the reference worker').toBe(true)
-    expect(existsSync(referenceTastyDir), '.reference-ui/reference/tasty should exist').toBe(true)
-    expect(existsSync(referenceManifestPath), 'reference manifest.js should exist').toBe(true)
+    expect(existsSync(typesPackageDir), '.reference-ui/types should exist').toBe(true)
+    expect(existsSync(typesTastyDir), '.reference-ui/types/tasty should exist').toBe(true)
+    expect(existsSync(typesPackageManifestPath), 'types manifest.js should exist').toBe(true)
   })
 
   it('loads known symbols from the reference-unit source fixture', async () => {
@@ -16,7 +17,7 @@ describe('reference output', () => {
     expect(ready, 'reference manifest should be emitted by the reference worker').toBe(true)
 
     const api = createTastyApi({
-      manifestPath: referenceManifestPath,
+      manifestPath: typesPackageManifestPath,
     })
 
     await api.ready()

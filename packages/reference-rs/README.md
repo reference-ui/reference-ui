@@ -27,7 +27,6 @@ Main entrypoints:
 
 - `rewriteCssImports()`
 - `rewriteCvaImports()`
-- `scanAndEmitBundle()`
 - `scanAndEmitModules()`
 
 ### `@reference-ui/rust/tasty`
@@ -164,7 +163,6 @@ const emitted = JSON.parse(
   scanAndEmitModules('/path/to/workspace', ['src/**/*.{ts,tsx}'])
 )
 
-console.log(emitted.entrypoint)
 console.log(Object.keys(emitted.modules))
 ```
 

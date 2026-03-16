@@ -5,6 +5,6 @@ All **output correctness** tests live in Vitest under `tests/tasty/`.
 
 - **Fixtures (cases):** Use `tests/tasty/cases/` (see `packages/reference-rs/tests/tasty/cases/README.md`).  
   `tests_dir()` in `mod.rs` points to `CARGO_MANIFEST_DIR/tests/tasty`, and Rust smoke tests install shared fixture deps from `tests/tasty/`.
-- **Vitest:** `tests/globalSetup.ts` runs `tests/tasty/globalSetup.ts`, which uses the compiled napi-rs runtime (`scanAndEmitBundle`) to emit bundles; `tests/tasty/cases/*/bundle.test.ts` then load and assert on their shape.
+- **Vitest:** `tests/globalSetup.ts` runs `tests/tasty/globalSetup.ts`, which uses the compiled napi-rs runtime (`scanAndEmitModules`) to emit manifest-plus-chunks artifacts; runtime tests then load and assert on their shape.
 
 Run the full suite: `pnpm test` (Rust then Vitest).

@@ -1,5 +1,4 @@
 use std::collections::{BTreeMap, BTreeSet};
-use std::fmt::Write;
 
 use serde::Serialize;
 
@@ -12,7 +11,6 @@ use super::super::model::{
 #[allow(dead_code)]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct TypeScriptEsmBundle {
-    pub entrypoint: String,
     pub modules: BTreeMap<String, String>,
     pub type_declarations: BTreeMap<String, String>,
 }
@@ -26,15 +24,10 @@ struct SymbolRef {
 
 #[allow(dead_code)]
 pub fn emit_esm_bundle(bundle: &TypeScriptBundle) -> Result<TypeScriptEsmBundle, String> {
-    let entrypoint = "./bundle.js".to_string();
     let manifest_path = "./manifest.js".to_string();
     let export_names = build_symbol_export_names(bundle);
 
     let mut modules = BTreeMap::new();
-    modules.insert(
-        entrypoint.clone(),
-        emit_bundle_entrypoint(bundle, &export_names)?,
-    );
     modules.insert(
         manifest_path,
         emit_manifest_module(bundle, &export_names)?,
@@ -51,51 +44,9 @@ pub fn emit_esm_bundle(bundle: &TypeScriptBundle) -> Result<TypeScriptEsmBundle,
     }
 
     Ok(TypeScriptEsmBundle {
-        entrypoint,
         modules,
         type_declarations: BTreeMap::new(),
     })
-}
-
-fn emit_bundle_entrypoint(
-    bundle: &TypeScriptBundle,
-    export_names: &BTreeMap<String, String>,
-) -> Result<String, String> {
-    let mut source = String::new();
-
-    for (symbol_id, symbol) in &bundle.symbols {
-        let export_name = export_names
-            .get(symbol_id)
-            .expect("symbol export name should exist");
-        writeln!(
-            source,
-            "export const {export_name} = {};",
-            emit_symbol_object(bundle, symbol, export_name, export_names)?,
-        )
-        .expect("write to string should succeed");
-        source.push('\n');
-    }
-
-    writeln!(
-        source,
-        "export const interfaces = {};",
-        emit_symbol_refs_by_kind(bundle, export_names, TsSymbolKind::Interface)?,
-    )
-    .expect("write to string should succeed");
-    writeln!(
-        source,
-        "export const types = {};",
-        emit_symbol_refs_by_kind(bundle, export_names, TsSymbolKind::TypeAlias)?,
-    )
-    .expect("write to string should succeed");
-    writeln!(
-        source,
-        "export const libraries = {};",
-        emit_libraries(bundle)?
-    )
-    .expect("write to string should succeed");
-
-    Ok(source)
 }
 
 fn emit_manifest_module(
@@ -604,28 +555,6 @@ fn emit_type_ref(
     }
 }
 
-fn emit_symbol_refs_by_kind(
-    bundle: &TypeScriptBundle,
-    export_names: &BTreeMap<String, String>,
-    kind: TsSymbolKind,
-) -> Result<String, String> {
-    let refs = bundle
-        .symbols
-        .iter()
-        .filter(|(_, symbol)| symbol.kind == kind)
-        .map(|(symbol_id, symbol)| SymbolRef {
-            id: export_names
-                .get(symbol_id)
-                .expect("symbol export name should exist")
-                .clone(),
-            name: symbol.name.clone(),
-            library: symbol.library.clone(),
-        })
-        .collect::<Vec<_>>();
-
-    emit_ref_array(refs)
-}
-
 fn supporting_type_descriptors(
     bundle: &TypeScriptBundle,
     symbol: &TsSymbol,
@@ -698,150 +627,6 @@ fn reference_descriptor(
     })
 }
 
-fn emit_libraries(bundle: &TypeScriptBundle) -> Result<String, String> {
-    let mut libraries = BTreeSet::new();
-
-    for symbol in bundle.symbols.values() {
-        libraries.insert(symbol.library.clone());
-        collect_libraries_from_type_refs(&symbol.extends, &mut libraries);
-        collect_libraries_from_type_refs(&symbol.references, &mut libraries);
-
-        if let Some(underlying) = &symbol.underlying {
-            collect_libraries_from_type_ref(underlying, &mut libraries);
-        }
-
-        for member in &symbol.defined_members {
-            if let Some(type_ref) = &member.type_ref {
-                collect_libraries_from_type_ref(type_ref, &mut libraries);
-            }
-        }
-    }
-
-    let libraries = libraries.into_iter().collect::<Vec<_>>();
-    emit_string_array(libraries.iter())
-}
-
-fn collect_libraries_from_type_refs(type_refs: &[TypeRef], libraries: &mut BTreeSet<String>) {
-    for type_ref in type_refs {
-        collect_libraries_from_type_ref(type_ref, libraries);
-    }
-}
-
-fn collect_libraries_from_type_ref(type_ref: &TypeRef, libraries: &mut BTreeSet<String>) {
-    match type_ref {
-        TypeRef::Reference {
-            source_module: Some(source_module),
-            target_id: None,
-            ..
-        } if is_library_module(source_module) => {
-            libraries.insert(source_module.clone());
-        }
-        TypeRef::Union { types } => {
-            for nested in types {
-                collect_libraries_from_type_ref(nested, libraries);
-            }
-        }
-        TypeRef::Array { element } => {
-            collect_libraries_from_type_ref(element, libraries);
-        }
-        TypeRef::Tuple { elements } => {
-            for te in elements {
-                collect_libraries_from_type_ref(&te.element, libraries);
-            }
-        }
-        TypeRef::IndexedAccess { object, index } => {
-            collect_libraries_from_type_ref(object, libraries);
-            collect_libraries_from_type_ref(index, libraries);
-        }
-        TypeRef::Function { params, return_type } => {
-            for p in params {
-                if let Some(ref tr) = p.type_ref {
-                    collect_libraries_from_type_ref(tr, libraries);
-                }
-            }
-            collect_libraries_from_type_ref(return_type, libraries);
-        }
-        TypeRef::Constructor {
-            type_parameters,
-            params,
-            return_type,
-            ..
-        } => {
-            for param in type_parameters {
-                if let Some(ref tr) = param.constraint {
-                    collect_libraries_from_type_ref(tr, libraries);
-                }
-                if let Some(ref tr) = param.default {
-                    collect_libraries_from_type_ref(tr, libraries);
-                }
-            }
-            for p in params {
-                if let Some(ref tr) = p.type_ref {
-                    collect_libraries_from_type_ref(tr, libraries);
-                }
-            }
-            collect_libraries_from_type_ref(return_type, libraries);
-        }
-        TypeRef::TypeOperator { target, .. } => {
-            collect_libraries_from_type_ref(target, libraries);
-        }
-        TypeRef::TypeQuery { .. } => {}
-        TypeRef::Conditional {
-            check_type,
-            extends_type,
-            true_type,
-            false_type,
-        } => {
-            collect_libraries_from_type_ref(check_type, libraries);
-            collect_libraries_from_type_ref(extends_type, libraries);
-            collect_libraries_from_type_ref(true_type, libraries);
-            collect_libraries_from_type_ref(false_type, libraries);
-        }
-        TypeRef::Mapped {
-            source_type,
-            name_type,
-            value_type,
-            ..
-        } => {
-            collect_libraries_from_type_ref(source_type, libraries);
-            if let Some(name_type) = name_type {
-                collect_libraries_from_type_ref(name_type, libraries);
-            }
-            if let Some(value_type) = value_type {
-                collect_libraries_from_type_ref(value_type, libraries);
-            }
-        }
-        TypeRef::TemplateLiteral { parts } => {
-            for part in parts {
-                if let TemplateLiteralPart::Type { value } = part {
-                    collect_libraries_from_type_ref(value, libraries);
-                }
-            }
-        }
-        TypeRef::Intersection { types } => {
-            for t in types {
-                collect_libraries_from_type_ref(t, libraries);
-            }
-        }
-        TypeRef::Object { members } => {
-            for m in members {
-                if let Some(ref tr) = m.type_ref {
-                    collect_libraries_from_type_ref(tr, libraries);
-                }
-            }
-        }
-        TypeRef::Reference {
-            type_arguments: Some(args),
-            ..
-        } => {
-            for arg in args {
-                collect_libraries_from_type_ref(arg, libraries);
-            }
-        }
-        _ => {}
-    }
-}
-
 /// Deterministic hash for symbol IDs so the same id always gets the same export name.
 fn stable_hash_symbol_id(symbol_id: &str) -> u64 {
     const FNV_OFFSET: u64 = 14695981039346656037;
@@ -893,24 +678,6 @@ fn emit_ref_object(reference: &SymbolRef) -> Result<String, String> {
         to_js_literal(&reference.name)?,
         to_js_literal(&reference.library)?,
     ))
-}
-
-fn emit_string_array<'a>(values: impl Iterator<Item = &'a String>) -> Result<String, String> {
-    let values = values.collect::<Vec<_>>();
-    if values.is_empty() {
-        return Ok("[]".to_string());
-    }
-
-    let lines = values
-        .into_iter()
-        .map(|value| to_js_literal(value).map(|value| format!("  {value}")))
-        .collect::<Result<Vec<_>, _>>()?;
-
-    Ok(format!("[\n{}\n]", lines.join(",\n")))
-}
-
-fn is_library_module(source_module: &str) -> bool {
-    !source_module.starts_with('.')
 }
 
 fn to_js_literal<T: Serialize + ?Sized>(value: &T) -> Result<String, String> {
