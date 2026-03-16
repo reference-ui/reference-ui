@@ -1024,12 +1024,12 @@ fn type_to_ref(
                 current_library,
             )),
         },
-        // Complex types we do not model: emit Unknown with source summary.
+        // Complex types we do not model structurally: preserve the source as Raw.
         TSType::TSConditionalType(_)
         | TSType::TSMappedType(_)
         | TSType::TSImportType(_)
         | TSType::TSInferType(_)
-        | TSType::TSConstructorType(_) => TypeRef::Unknown {
+        | TSType::TSConstructorType(_) => TypeRef::Raw {
             summary: slice_span(source, type_annotation.span()).to_string(),
         },
         TSType::TSFunctionType(func) => {
@@ -1089,13 +1089,13 @@ fn type_to_ref(
             }
             TypeRef::TemplateLiteral { parts }
         }
-        TSType::TSTypePredicate(_) | TSType::TSThisType(_) => TypeRef::Unknown {
+        TSType::TSTypePredicate(_) | TSType::TSThisType(_) => TypeRef::Raw {
             summary: slice_span(source, type_annotation.span()).to_string(),
         },
-        // JSDoc-only types: preserve source as Unknown.
+        // JSDoc-only types: preserve source as Raw.
         TSType::JSDocNullableType(_)
         | TSType::JSDocNonNullableType(_)
-        | TSType::JSDocUnknownType(_) => TypeRef::Unknown {
+        | TSType::JSDocUnknownType(_) => TypeRef::Raw {
             summary: slice_span(source, type_annotation.span()).to_string(),
         },
     }

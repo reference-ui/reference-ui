@@ -403,8 +403,8 @@ fn emit_type_ref(
                 lines.join(",\n")
             ))
         }
-        TypeRef::Unknown { summary } => Ok(format!(
-            "{{\n  kind: \"unknown\",\n  summary: {},\n}}",
+        TypeRef::Raw { summary } => Ok(format!(
+            "{{\n  kind: \"raw\",\n  summary: {},\n}}",
             to_js_literal(summary)?,
         )),
     }

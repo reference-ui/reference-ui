@@ -13,7 +13,7 @@ So:
 - `unions_literals/` → union types, literal types, optional members.
 - `tsx/` → .tsx file scanning (interfaces and type aliases from TSX).
 - `default_params/` → type parameters with default (e.g. `T = string`).
-- `unknown_complex/` → mapped and conditional types (emitted as Unknown with summary).
+- `unknown_complex/` → mapped and conditional types (emitted as Raw with summary).
 
 Add a new folder to add a new scenario; the test suite will automatically scan it and write `../output/{scenario}/bundle.js`. Add a matching `bundle.{scenario}.test.ts` to assert on it.
 

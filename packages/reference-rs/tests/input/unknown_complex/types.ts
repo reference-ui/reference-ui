@@ -1,6 +1,6 @@
 /**
- * Unknown/complex scenario: mapped types and conditional types become Unknown with summary.
- * We do not fully model these; the scanner should emit kind: "unknown" with a summary string.
+ * Raw/complex scenario: mapped types and conditional types become Raw with summary.
+ * We do not fully model these; the scanner should emit kind: "raw" with a summary string.
  */
 
 /** Simple interface for testing reference from complex type. */
@@ -19,7 +19,7 @@ export type StringKeys<T> = T extends object
   ? { [K in keyof T as K extends string ? K : never]: T[K] }
   : never;
 
-/** Type alias that references the mapped type (so we see Unknown in a member). */
+/** Type alias that references the mapped type (so we see Raw in a member). */
 export interface UsesOptionalKeys {
   /** User with all keys optional (mapped type). */
   partialUser: OptionalKeys<User>;

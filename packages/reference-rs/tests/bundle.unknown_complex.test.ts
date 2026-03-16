@@ -1,6 +1,6 @@
 /**
  * Vitest tests for the unknown_complex scenario bundle.
- * Mapped and conditional types are emitted as kind: "unknown" with a summary.
+ * Mapped and conditional types are emitted as kind: "raw" with a summary.
  */
 import { pathToFileURL } from 'node:url'
 import { describe, expect, it } from 'vitest'
@@ -124,13 +124,13 @@ describe('unknown_complex bundle', () => {
     expect(typeRef.kind).toBe('intrinsic')
   })
 
-  it('mapped type (OptionalKeys) is emitted as type alias with unknown definition', async () => {
+  it('mapped type (OptionalKeys) is emitted as type alias with raw definition', async () => {
     const mod = await loadBundle('unknown_complex')
     const symbols = getSymbols(mod)
     const optionalKeys = findSymbol(symbols, 'OptionalKeys')
     expect(optionalKeys.definition).toBeDefined()
     const def = optionalKeys.definition as { kind?: string; summary?: string }
-    expect(def.kind).toBe('unknown')
+    expect(def.kind).toBe('raw')
     expect(def.summary).toBeDefined()
     expect(typeof def.summary).toBe('string')
     expect(def.summary!.length).toBeGreaterThan(0)
@@ -144,7 +144,7 @@ describe('unknown_complex bundle', () => {
     expect(partialUserMember).toBeDefined()
     expect(partialUserMember!.type).toBeDefined()
     // OptionalKeys<User> is emitted as a reference to OptionalKeys with typeArguments [User]
-    // (the definition of OptionalKeys is unknown; the usage is still a typed ref)
+    // (the definition of OptionalKeys is raw; the usage is still a typed ref)
     const typeRef = partialUserMember!.type as {
       id?: string
       name?: string
@@ -160,13 +160,13 @@ describe('unknown_complex bundle', () => {
     expect(userArg.name).toBe('User')
   })
 
-  it('conditional type (StringKeys) is emitted as unknown with summary', async () => {
+  it('conditional type (StringKeys) is emitted as raw with summary', async () => {
     const mod = await loadBundle('unknown_complex')
     const symbols = getSymbols(mod)
     const stringKeys = findSymbol(symbols, 'StringKeys')
     expect(stringKeys.definition).toBeDefined()
     const def = stringKeys.definition as { kind?: string; summary?: string }
-    expect(def.kind).toBe('unknown')
+    expect(def.kind).toBe('raw')
     expect(def.summary).toBeDefined()
   })
 })
