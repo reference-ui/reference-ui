@@ -9,8 +9,8 @@ import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
-async function loadBundle(scenario: string) {
-  const bundlePath = join(__dirname, 'output', scenario, 'bundle.js')
+async function loadBundle() {
+  const bundlePath = join(__dirname, 'output', 'bundle.js')
   return import(pathToFileURL(bundlePath).href)
 }
 
@@ -41,13 +41,13 @@ function findSymbol(
 
 describe('default_params bundle', () => {
   it('exports interfaces and types arrays', async () => {
-    const mod = await loadBundle('default_params')
+    const mod = await loadBundle()
     expect(mod.interfaces).toBeDefined()
     expect(mod.types).toBeDefined()
   })
 
   it('has expected symbols', async () => {
-    const mod = await loadBundle('default_params')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const names = symbols.map((s) => s.name)
     expect(names).toContain('WithDefault')
@@ -56,7 +56,7 @@ describe('default_params bundle', () => {
   })
 
   it('emits default on type parameter (WithDefault<T = string>)', async () => {
-    const mod = await loadBundle('default_params')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const withDefault = findSymbol(symbols, 'WithDefault')
     expect(withDefault.typeParameters).toBeDefined()
@@ -70,7 +70,7 @@ describe('default_params bundle', () => {
   })
 
   it('emits defaults on multiple params (KeyValue<K = string, V = unknown>)', async () => {
-    const mod = await loadBundle('default_params')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const keyValue = findSymbol(symbols, 'KeyValue')
     expect(keyValue.typeParameters).toBeDefined()
@@ -88,7 +88,7 @@ describe('default_params bundle', () => {
   })
 
   it('emits only second param with default (PartialDefault<T, U = number>)', async () => {
-    const mod = await loadBundle('default_params')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const partialDefault = findSymbol(symbols, 'PartialDefault')
     expect(partialDefault.typeParameters).toBeDefined()

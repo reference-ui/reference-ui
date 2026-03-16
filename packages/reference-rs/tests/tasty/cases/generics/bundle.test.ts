@@ -10,8 +10,8 @@ import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
-async function loadBundle(scenario: string) {
-  const bundlePath = join(__dirname, 'output', scenario, 'bundle.js')
+async function loadBundle() {
+  const bundlePath = join(__dirname, 'output', 'bundle.js')
   return import(pathToFileURL(bundlePath).href)
 }
 
@@ -44,7 +44,7 @@ function findSymbol(
 
 describe('generics bundle', () => {
   it('exports interfaces and types arrays', async () => {
-    const mod = await loadBundle('generics')
+    const mod = await loadBundle()
     expect(mod.interfaces).toBeDefined()
     expect(Array.isArray(mod.interfaces)).toBe(true)
     expect(mod.types).toBeDefined()
@@ -52,7 +52,7 @@ describe('generics bundle', () => {
   })
 
   it('has expected symbols including generic types', async () => {
-    const mod = await loadBundle('generics')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const names = symbols.map((s) => s.name)
     expect(names).toContain('Box')
@@ -63,7 +63,7 @@ describe('generics bundle', () => {
   })
 
   it('emits typeParameters on generic type alias (Box<T>)', async () => {
-    const mod = await loadBundle('generics')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const box = findSymbol(symbols, 'Box')
     expect(box.typeParameters).toBeDefined()
@@ -74,7 +74,7 @@ describe('generics bundle', () => {
   })
 
   it('emits typeParameters with constraint on interface (Props<T extends object>)', async () => {
-    const mod = await loadBundle('generics')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const props = findSymbol(symbols, 'Props')
     expect(props.typeParameters).toBeDefined()
@@ -87,7 +87,7 @@ describe('generics bundle', () => {
   })
 
   it('emits multiple typeParameters (WithGenerics<T, U>)', async () => {
-    const mod = await loadBundle('generics')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const withGenerics = findSymbol(symbols, 'WithGenerics')
     expect(withGenerics.typeParameters).toBeDefined()
@@ -96,7 +96,7 @@ describe('generics bundle', () => {
   })
 
   it('emits typeArguments on member type (Props<Box<string>>)', async () => {
-    const mod = await loadBundle('generics')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const usesRef = findSymbol(symbols, 'UsesGenericRef')
     expect(usesRef.members).toBeDefined()
@@ -110,7 +110,7 @@ describe('generics bundle', () => {
   })
 
   it('emits Box definition as object type with members (not unknown)', async () => {
-    const mod = await loadBundle('generics')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const box = findSymbol(symbols, 'Box')
     expect(box.definition).toBeDefined()
@@ -122,7 +122,7 @@ describe('generics bundle', () => {
   })
 
   it('emits member-specific descriptions (not interface leading comment)', async () => {
-    const mod = await loadBundle('generics')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const usesRef = findSymbol(symbols, 'UsesGenericRef')
     const itemMember = usesRef.members!.find((m) => m.name === 'item')
@@ -136,7 +136,7 @@ describe('generics bundle', () => {
   })
 
   it('emits libraries array including user', async () => {
-    const mod = await loadBundle('generics')
+    const mod = await loadBundle()
     expect(mod.libraries).toBeDefined()
     expect(Array.isArray(mod.libraries)).toBe(true)
     expect(mod.libraries).toContain('user')

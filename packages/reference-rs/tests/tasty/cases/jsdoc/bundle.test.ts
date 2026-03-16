@@ -9,8 +9,8 @@ import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
-async function loadBundle(scenario: string) {
-  const bundlePath = join(__dirname, 'output', scenario, 'bundle.js')
+async function loadBundle() {
+  const bundlePath = join(__dirname, 'output', 'bundle.js')
   return import(pathToFileURL(bundlePath).href)
 }
 
@@ -47,7 +47,7 @@ function findSymbol(symbols: ReturnType<typeof getSymbols>, name: string) {
 
 describe('jsdoc bundle', () => {
   it('has expected symbols', async () => {
-    const mod = await loadBundle('jsdoc')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const names = symbols.map((s) => s.name)
     expect(names).toContain('ButtonProps')
@@ -55,7 +55,7 @@ describe('jsdoc bundle', () => {
   })
 
   it('derives description from JSDoc summary and preserves raw text', async () => {
-    const mod = await loadBundle('jsdoc')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const buttonProps = findSymbol(symbols, 'ButtonProps')
     expect(buttonProps.description).toBe('Props for a button.\n\nIncludes common sizing options.')
@@ -65,7 +65,7 @@ describe('jsdoc bundle', () => {
   })
 
   it('parses JSDoc tags on symbols and members', async () => {
-    const mod = await loadBundle('jsdoc')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const buttonProps = findSymbol(symbols, 'ButtonProps')
     expect(buttonProps.jsdoc?.tags?.map((t) => t.name)).toEqual(['deprecated', 'remarks'])
@@ -82,7 +82,7 @@ describe('jsdoc bundle', () => {
   })
 
   it('falls back cleanly for non-JSDoc comments', async () => {
-    const mod = await loadBundle('jsdoc')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const buttonProps = findSymbol(symbols, 'ButtonProps')
     const disabledMember = buttonProps.members?.find((m) => m.name === 'disabled')

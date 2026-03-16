@@ -9,8 +9,8 @@ import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
-async function loadBundle(scenario: string) {
-  const bundlePath = join(__dirname, 'output', scenario, 'bundle.js')
+async function loadBundle() {
+  const bundlePath = join(__dirname, 'output', 'bundle.js')
   return import(pathToFileURL(bundlePath).href)
 }
 
@@ -39,7 +39,7 @@ function findSymbol(symbols: ReturnType<typeof getSymbols>, name: string) {
 
 describe('type_queries bundle', () => {
   it('has expected symbols', async () => {
-    const mod = await loadBundle('type_queries')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const names = symbols.map((s) => s.name)
     expect(names).toContain('ThemeConfig')
@@ -48,7 +48,7 @@ describe('type_queries bundle', () => {
   })
 
   it('emits typeof identifier as a structured type query', async () => {
-    const mod = await loadBundle('type_queries')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const themeConfig = findSymbol(symbols, 'ThemeConfig')
     const def = themeConfig.definition as { kind?: string; expression?: string }
@@ -57,7 +57,7 @@ describe('type_queries bundle', () => {
   })
 
   it('emits typeof qualified access as a structured type query', async () => {
-    const mod = await loadBundle('type_queries')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const spacingScale = findSymbol(symbols, 'SpacingScale')
     const def = spacingScale.definition as { kind?: string; expression?: string }
@@ -66,7 +66,7 @@ describe('type_queries bundle', () => {
   })
 
   it('emits member types that use type queries structurally', async () => {
-    const mod = await loadBundle('type_queries')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const withTypeQueries = findSymbol(symbols, 'WithTypeQueries')
     const configMember = withTypeQueries.members?.find((m) => m.name === 'config')

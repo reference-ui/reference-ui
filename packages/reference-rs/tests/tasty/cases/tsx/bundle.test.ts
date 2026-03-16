@@ -9,8 +9,8 @@ import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
-async function loadBundle(scenario: string) {
-  const bundlePath = join(__dirname, 'output', scenario, 'bundle.js')
+async function loadBundle() {
+  const bundlePath = join(__dirname, 'output', 'bundle.js')
   return import(pathToFileURL(bundlePath).href)
 }
 
@@ -42,7 +42,7 @@ function findSymbol(
 
 describe('tsx bundle', () => {
   it('exports interfaces and types arrays', async () => {
-    const mod = await loadBundle('tsx')
+    const mod = await loadBundle()
     expect(mod.interfaces).toBeDefined()
     expect(Array.isArray(mod.interfaces)).toBe(true)
     expect(mod.types).toBeDefined()
@@ -50,7 +50,7 @@ describe('tsx bundle', () => {
   })
 
   it('has symbols from .tsx file (ButtonProps, ButtonVariant)', async () => {
-    const mod = await loadBundle('tsx')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const names = symbols.map((s) => s.name)
     expect(names).toContain('ButtonProps')
@@ -58,7 +58,7 @@ describe('tsx bundle', () => {
   })
 
   it('ButtonProps has expected members and optional flags', async () => {
-    const mod = await loadBundle('tsx')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const buttonProps = findSymbol(symbols, 'ButtonProps')
     expect(buttonProps.members).toBeDefined()
@@ -74,7 +74,7 @@ describe('tsx bundle', () => {
   })
 
   it('ButtonVariant is type alias with definition', async () => {
-    const mod = await loadBundle('tsx')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const buttonVariant = findSymbol(symbols, 'ButtonVariant')
     expect(buttonVariant.definition).toBeDefined()
@@ -83,7 +83,7 @@ describe('tsx bundle', () => {
   })
 
   it('emits libraries array including user', async () => {
-    const mod = await loadBundle('tsx')
+    const mod = await loadBundle()
     expect(mod.libraries).toBeDefined()
     expect(mod.libraries).toContain('user')
   })

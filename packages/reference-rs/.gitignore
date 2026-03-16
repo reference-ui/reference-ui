@@ -9,5 +9,5 @@ npm/
 # Node
 node_modules/
 
-# Generated TypeScript test output
-tests/tasty/output/
+# Generated Tasty test output
+tests/tasty/cases/**/output/

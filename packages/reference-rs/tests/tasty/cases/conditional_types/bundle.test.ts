@@ -9,8 +9,8 @@ import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
-async function loadBundle(scenario: string) {
-  const bundlePath = join(__dirname, 'output', scenario, 'bundle.js')
+async function loadBundle() {
+  const bundlePath = join(__dirname, 'output', 'bundle.js')
   return import(pathToFileURL(bundlePath).href)
 }
 
@@ -39,7 +39,7 @@ function findSymbol(symbols: ReturnType<typeof getSymbols>, name: string) {
 
 describe('conditional_types bundle', () => {
   it('has expected symbols', async () => {
-    const mod = await loadBundle('conditional_types')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const names = symbols.map((s) => s.name)
     expect(names).toContain('User')
@@ -49,7 +49,7 @@ describe('conditional_types bundle', () => {
   })
 
   it('emits simple conditional aliases structurally', async () => {
-    const mod = await loadBundle('conditional_types')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const isString = findSymbol(symbols, 'IsString')
     const def = isString.definition as {
@@ -70,7 +70,7 @@ describe('conditional_types bundle', () => {
   })
 
   it('emits referenced branches inside conditionals', async () => {
-    const mod = await loadBundle('conditional_types')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const toUser = findSymbol(symbols, 'ToUser')
     const def = toUser.definition as {
@@ -86,7 +86,7 @@ describe('conditional_types bundle', () => {
   })
 
   it('emits member types that use conditionals structurally', async () => {
-    const mod = await loadBundle('conditional_types')
+    const mod = await loadBundle()
     const symbols = getSymbols(mod)
     const withConditionals = findSymbol(symbols, 'WithConditionals')
     const resultMember = withConditionals.members?.find((m) => m.name === 'result')

@@ -9,6 +9,6 @@ Two test suites:
 
 **Layout:**
 
-- **`input/`** – scenario folders (e.g. `generics/`, `external_libs/`). Each direct subfolder is one scenario; see `input/README.md`.
-- **`output/`** – emitted bundles, one folder per scenario: `output/{scenario}/bundle.js`. Emitted by Vitest globalSetup using the native `scanAndEmitBundle` binding. See `output/README.md`.
-- **Test files** – `bundle.{scenario}.test.ts` (e.g. `bundle.generics.test.ts`, `bundle.external_libs.test.ts`) load and assert on the corresponding bundle.
+- **`cases/`** – one folder per scenario. Each case contains `input/`, a local `bundle.test.ts`, and generated `output/bundle.js`.
+- **Shared fixture deps** – `package.json`, `package-lock.json`, and `node_modules/` live at the `tests/tasty/` root so each case can resolve the same external packages.
+- **Vitest setup** – `globalSetup.ts` scans each `cases/{scenario}/input/` folder and writes generated output back to `cases/{scenario}/output/`.
