@@ -94,6 +94,16 @@ pub struct TsMember {
     pub type_ref: Option<TypeRef>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TemplateLiteralPart {
+    Text {
+        value: String,
+    },
+    Type {
+        value: TypeRef,
+    },
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TypeOperatorKind {
     Keyof,
@@ -158,6 +168,10 @@ pub enum TypeRef {
     /// Type query like `typeof themeConfig`; expression is preserved structurally.
     TypeQuery {
         expression: String,
+    },
+    /// Template literal type like `` `size-${"sm" | "lg"}` `` with alternating text/type parts.
+    TemplateLiteral {
+        parts: Vec<TemplateLiteralPart>,
     },
     Unknown {
         summary: String,

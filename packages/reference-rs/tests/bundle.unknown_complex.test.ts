@@ -91,17 +91,24 @@ describe('unknown_complex bundle', () => {
     expect(typeRef.object!.name).toBe('User')
   })
 
-  it('emits template literal as Unknown with summary and type query structurally', async () => {
+  it('emits template literal and type query structurally', async () => {
     const mod = await loadBundle('unknown_complex')
     const symbols = getSymbols(mod)
     const templateLiteral = findSymbol(symbols, 'TemplateLiteralAlias')
     const typeQuery = findSymbol(symbols, 'TypeQueryAlias')
     const def = (s: ReturnType<typeof findSymbol>) =>
-      s.definition as { kind?: string; summary?: string; expression?: string }
-    expect(def(templateLiteral).kind).toBe('unknown')
-    expect(def(templateLiteral).summary).toBeDefined()
-    expect(typeof def(templateLiteral).summary).toBe('string')
-    expect(def(templateLiteral).summary!.length).toBeGreaterThan(0)
+      s.definition as {
+        kind?: string
+        summary?: string
+        expression?: string
+        parts?: Array<{ kind?: string; value?: unknown }>
+      }
+    expect(def(templateLiteral).kind).toBe('template_literal')
+    expect(Array.isArray(def(templateLiteral).parts)).toBe(true)
+    expect(def(templateLiteral).parts?.length).toBe(3)
+    expect(def(templateLiteral).parts?.[0]?.kind).toBe('text')
+    expect(def(templateLiteral).parts?.[1]?.kind).toBe('type')
+    expect(def(templateLiteral).parts?.[2]).toEqual({ kind: 'text', value: '' })
     expect(def(typeQuery).kind).toBe('type_query')
     expect(def(typeQuery).expression).toBe('Array.prototype.map')
   })

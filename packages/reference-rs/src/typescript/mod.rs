@@ -14,7 +14,8 @@ mod tests;
 
 #[allow(unused_imports)]
 pub use api::{
-    ScanRequest, TsSymbolKind, TsTypeParameter, TypeOperatorKind, TypeRef, TypeScriptBundle,
+    ScanRequest, TemplateLiteralPart, TsSymbolKind, TsTypeParameter, TypeOperatorKind, TypeRef,
+    TypeScriptBundle,
 };
 pub use scan::scan_and_emit_bundle;
 #[allow(unused_imports)]

@@ -1,8 +1,8 @@
 use std::collections::BTreeMap;
 
 use super::super::api::{
-    ExportMap, FnParam, ScannerDiagnostic, TsFile, TsMember, TsSymbol, TsTypeParameter,
-    TupleElement, TypeRef,
+    ExportMap, FnParam, ScannerDiagnostic, TemplateLiteralPart, TsFile, TsMember, TsSymbol,
+    TsTypeParameter, TupleElement, TypeRef,
 };
 use super::model::{ParsedFileAst, ParsedTypeScriptAst, SymbolShell};
 
@@ -256,6 +256,17 @@ fn resolve_type_ref(
             target: Box::new(resolve_type_ref(*target, symbol_index, parsed)),
         },
         TypeRef::TypeQuery { expression } => TypeRef::TypeQuery { expression },
+        TypeRef::TemplateLiteral { parts } => TypeRef::TemplateLiteral {
+            parts: parts
+                .into_iter()
+                .map(|part| match part {
+                    TemplateLiteralPart::Text { value } => TemplateLiteralPart::Text { value },
+                    TemplateLiteralPart::Type { value } => TemplateLiteralPart::Type {
+                        value: resolve_type_ref(value, symbol_index, parsed),
+                    },
+                })
+                .collect(),
+        },
         other => other,
     }
 }
