@@ -238,6 +238,9 @@ importers:
         specifier: ^18.2.0
         version: 18.3.1(react@18.3.1)
     devDependencies:
+      '@reference-ui/rust':
+        specifier: workspace:*
+        version: link:../reference-rs
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
