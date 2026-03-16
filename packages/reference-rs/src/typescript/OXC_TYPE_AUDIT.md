@@ -101,3 +101,59 @@ All other tuple-element variants (e.g. `TSStringKeyword` inside a tuple) are han
 - **Intentionally Unknown:** conditional, mapped, template literal, import type, infer, constructor type, type operator, type predicate, type query, this type, JSDoc types. All emit `Unknown { summary: source_slice }` — see “Why we leave some variants as Unknown” above. This does not block our current goal; we can add structured handling later if we need it.
 - **No implicit catch-all:** the `type_to_ref` match is exhaustive; any new variant added by Oxc will cause a compile error until we add an arm and document it here.
 
+---
+
+## Planned structured variants (agreed)
+
+These variants are currently `Unknown { summary }`. Adding **structural representation only** (no evaluation) is agreed as useful; implementation is pending.
+
+### 1. Type operators (`keyof T`, `readonly T`, optionally `unique symbol`)
+
+**Why:** `keyof T` is very common in utility-heavy TS APIs and is easy to render. Composes with the existing graph (target is a `TypeRef`). No resolution needed.
+
+**Proposed shape:**
+
+```text
+TypeOperator {
+  operator: "keyof" | "readonly" | "unique",   // or similar; unique symbol if needed later
+  target: TypeRef
+}
+```
+
+**Oxc:** `TSTypeOperatorType` — use operator kind + recurse on operand.
+
+### 2. Type query (`typeof x`)
+
+**Why:** Library APIs often export types derived from const objects (e.g. `type Theme = typeof themeConfig`). A structured node is nicer than opaque unknown; we do **not** need value-environment resolution.
+
+**Proposed shape:**
+
+```text
+TypeQuery {
+  expression: String   // e.g. "themeConfig" or "pkg.config" — source slice of the expression is enough
+}
+```
+
+Alternatively `summary: "typeof themeConfig"` if we want a single display string. Prefer `expression` for consistency with “we store structure, display layer formats.”
+
+**Oxc:** `TSTypeQuery` — expression is a `TSQualifiedName` or similar; capture its source slice or a simple name.
+
+### 3. Template literal types (`` `size-${"sm" | "lg"}` ``)
+
+**Why:** Increasingly common in token systems, variant APIs, and CSS-ish prop systems. We do not need to evaluate; just represent for docs.
+
+**Proposed shape:**
+
+```text
+TemplateLiteral {
+  parts: [
+    { kind: "text", value: String },
+    { kind: "type", value: TypeRef }
+  ]
+}
+```
+
+**Oxc:** `TSTemplateLiteralType` has segments (template spans); map to text vs type parts.
+
+**Priority:** Type operators (especially keyof) first, then type query, then template literal as nice-to-have.
+
