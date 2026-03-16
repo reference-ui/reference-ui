@@ -24,8 +24,14 @@ We already have a strong base:
 * `tests/virtualfs/*` covers the native rewrite surface through the compiled
   N-API binding
 
-What we do **not** have yet is the dedicated TypeScript runtime layer for
-loading, traversing, and consuming Tasty artifacts.
+What changed since this plan was first drafted:
+
+* the dedicated TypeScript runtime layer in `js/tasty` now exists
+* Rust-owned contract types are being generated into `js/tasty/generated`
+* the runtime has its own direct API tests in `js/tasty/index.test.ts`
+
+What we do **not** have yet is full hardening coverage across all existing Tasty
+fixture scenarios.
 
 ---
 
@@ -58,6 +64,10 @@ runtime.
 
 ## Phase 1: Refactor the Rust contract surface
 
+### Status
+
+Largely complete.
+
 ### Goal
 
 Create a dedicated Rust model entry point for the emitted/public Tasty contract.
@@ -89,6 +99,10 @@ By the end of this phase:
 
 ## Phase 2: Decide and wire Rust -> TypeScript type generation
 
+### Status
+
+Complete for the current contract surface.
+
 ### Goal
 
 Generate TypeScript boundary types directly from the Rust model contract.
@@ -115,6 +129,10 @@ By the end of this phase:
 ---
 
 ## Phase 3: Create `js/tasty`
+
+### Status
+
+Complete for the initial manifest/chunk runtime slice.
 
 ### Goal
 
@@ -153,6 +171,11 @@ Downstream layers can then consume that runtime in their own way.
 ---
 
 ## Phase 4: Runtime API tests
+
+### Status
+
+Started and working, but not yet exhaustively applied to every Tasty fixture
+scenario.
 
 ### Goal
 
@@ -194,25 +217,54 @@ and add API-oriented assertions alongside the current bundle assertions.
 
 ---
 
-## Phase 5: First consumer proof
+## Phase 5: Hardening
 
 ### Goal
 
-Prove that the runtime is actually good enough for a real downstream consumer.
+Harden the Tasty runtime so it is reliable across the full fixture matrix we
+already use for emitted bundle validation.
 
-The first proof does not need to be a full docs site or a full MCP product.
+This phase is not about downstream docs or MCP adoption yet.
 
-A good early proof would be:
+This phase is about making the core runtime a pocket rocket:
 
-* load a symbol
-* inspect members and type refs
-* walk inheritance
-* assemble a simple API-table-ready shape outside the runtime itself
+* broad fixture coverage
+* predictable graph behavior
+* fewer regressions during future schema/runtime changes
+* confidence that every supported Tasty case works through the TypeScript API,
+  not just through raw emitted bundle inspection
 
-That validates the most important architectural claim:
+### Work
 
-the core Tasty runtime is enough for downstream consumers to shape their own
-outputs without Tasty owning those projections directly.
+The core hardening task is:
+
+* add API-level tests to each scenario under `packages/reference-rs/tests/tasty/cases/*`
+
+Concretely, that means:
+
+* keep the existing bundle-shape tests
+* add runtime-oriented assertions per case where they are missing
+* exercise `createTastyApi()` against each case's emitted manifest/chunk output
+* validate the scenario-specific graph behavior, not just generic smoke checks
+
+Examples of the kinds of assertions we should cover across the matrix:
+
+* symbol lookup by name and id
+* wrapper identity stability
+* member access
+* type-parameter access
+* underlying type access for aliases
+* extends traversal where applicable
+* dependency collection where applicable
+* type-ref inspection/description for the scenario's specialty
+
+### Desired result
+
+By the end of this phase:
+
+* every Tasty fixture scenario has at least some direct runtime API coverage
+* regressions show up in the runtime layer, not only in emitted object snapshots
+* future schema/runtime refactors can move faster with better confidence
 
 ---
 
@@ -220,14 +272,11 @@ outputs without Tasty owning those projections directly.
 
 If we keep this concrete, the next steps should be:
 
-1. refactor `src/tasty/api.rs` into a dedicated `model.rs` contract boundary
-2. separate request/orchestration types from the exposed model
-3. choose and wire Rust -> TypeScript type generation
-4. create `js/tasty`
-5. implement the first minimal runtime slice:
-   manifest + chunk + symbol lookup + graph wrappers
-6. add API tests alongside the existing tasty case suite
-7. prove the runtime with one small downstream consumer-shaped example
+1. keep the Rust contract and generated TypeScript types stable
+2. keep `js/tasty` focused on manifest-first graph runtime behavior
+3. add API tests alongside the existing Tasty case suite
+4. extend API coverage across every `tests/tasty/cases/*` scenario
+5. close runtime behavior gaps revealed by those scenario-level tests
 
 ---
 
@@ -248,8 +297,9 @@ As we build this, we should keep these guardrails explicit:
 
 The immediate next implementation step is:
 
-* refactor the Rust Tasty surface so there is a dedicated `model.rs` entry point
-  for the public/emitted types we intend to expose and transform to TypeScript
+* add API-level tests for each scenario under `packages/reference-rs/tests/tasty/cases/*`
+  so the runtime is validated against the full fixture matrix, not just a small
+  representative subset
 
-That is the cleanest place to start because it sharpens the boundary for every
-phase that follows.
+That is the highest-value hardening work now that the core runtime and generated
+contract layer are already in place.
