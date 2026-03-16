@@ -1,6 +1,6 @@
 /**
  * Vitest tests for the unknown_complex scenario bundle.
- * Mapped and conditional types are emitted as kind: "raw" with a summary.
+ * Mapped and conditional types are structural.
  */
 import { pathToFileURL } from 'node:url'
 import { describe, expect, it } from 'vitest'
@@ -124,16 +124,29 @@ describe('unknown_complex bundle', () => {
     expect(typeRef.kind).toBe('intrinsic')
   })
 
-  it('mapped type (OptionalKeys) is emitted as type alias with raw definition', async () => {
+  it('mapped type (OptionalKeys) is emitted structurally', async () => {
     const mod = await loadBundle('unknown_complex')
     const symbols = getSymbols(mod)
     const optionalKeys = findSymbol(symbols, 'OptionalKeys')
     expect(optionalKeys.definition).toBeDefined()
-    const def = optionalKeys.definition as { kind?: string; summary?: string }
-    expect(def.kind).toBe('raw')
-    expect(def.summary).toBeDefined()
-    expect(typeof def.summary).toBe('string')
-    expect(def.summary!.length).toBeGreaterThan(0)
+    const def = optionalKeys.definition as {
+      kind?: string
+      typeParam?: string
+      sourceType?: { kind?: string; operator?: string; target?: { name?: string } }
+      optionalModifier?: string
+      readonlyModifier?: string
+      valueType?: { kind?: string; object?: { name?: string }; index?: { name?: string } }
+    }
+    expect(def.kind).toBe('mapped')
+    expect(def.typeParam).toBe('P')
+    expect(def.sourceType?.kind).toBe('type_operator')
+    expect(def.sourceType?.operator).toBe('keyof')
+    expect(def.sourceType?.target?.name).toBe('T')
+    expect(def.optionalModifier).toBe('add')
+    expect(def.readonlyModifier).toBe('preserve')
+    expect(def.valueType?.kind).toBe('indexed_access')
+    expect(def.valueType?.object?.name).toBe('T')
+    expect(def.valueType?.index?.name).toBe('P')
   })
 
   it('member type that uses mapped type (partialUser) is reference with typeArguments', async () => {
@@ -144,7 +157,7 @@ describe('unknown_complex bundle', () => {
     expect(partialUserMember).toBeDefined()
     expect(partialUserMember!.type).toBeDefined()
     // OptionalKeys<User> is emitted as a reference to OptionalKeys with typeArguments [User]
-    // (the definition of OptionalKeys is raw; the usage is still a typed ref)
+    // (the definition of OptionalKeys is mapped; the usage is still a typed ref)
     const typeRef = partialUserMember!.type as {
       id?: string
       name?: string
@@ -160,13 +173,32 @@ describe('unknown_complex bundle', () => {
     expect(userArg.name).toBe('User')
   })
 
-  it('conditional type (StringKeys) is emitted as raw with summary', async () => {
+  it('conditional type (StringKeys) is emitted structurally', async () => {
     const mod = await loadBundle('unknown_complex')
     const symbols = getSymbols(mod)
     const stringKeys = findSymbol(symbols, 'StringKeys')
     expect(stringKeys.definition).toBeDefined()
-    const def = stringKeys.definition as { kind?: string; summary?: string }
-    expect(def.kind).toBe('raw')
-    expect(def.summary).toBeDefined()
+    const def = stringKeys.definition as {
+      kind?: string
+      checkType?: { name?: string }
+      extendsType?: { kind?: string; name?: string }
+      trueType?: {
+        kind?: string
+        typeParam?: string
+        nameType?: { kind?: string }
+        valueType?: { kind?: string }
+      }
+      falseType?: { kind?: string; name?: string }
+    }
+    expect(def.kind).toBe('conditional')
+    expect(def.checkType?.name).toBe('T')
+    expect(def.extendsType?.kind).toBe('intrinsic')
+    expect(def.extendsType?.name).toBe('object')
+    expect(def.trueType?.kind).toBe('mapped')
+    expect(def.trueType?.typeParam).toBe('K')
+    expect(def.trueType?.nameType?.kind).toBe('conditional')
+    expect(def.trueType?.valueType?.kind).toBe('indexed_access')
+    expect(def.falseType?.kind).toBe('intrinsic')
+    expect(def.falseType?.name).toBe('never')
   })
 })

@@ -105,6 +105,23 @@ pub enum TemplateLiteralPart {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MappedModifierKind {
+    Preserve,
+    Add,
+    Remove,
+}
+
+impl MappedModifierKind {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Preserve => "preserve",
+            Self::Add => "add",
+            Self::Remove => "remove",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TypeOperatorKind {
     Keyof,
     Readonly,
@@ -168,6 +185,22 @@ pub enum TypeRef {
     /// Type query like `typeof themeConfig`; expression is preserved structurally.
     TypeQuery {
         expression: String,
+    },
+    /// Conditional type `T extends U ? A : B`; preserved structurally without evaluation.
+    Conditional {
+        check_type: Box<TypeRef>,
+        extends_type: Box<TypeRef>,
+        true_type: Box<TypeRef>,
+        false_type: Box<TypeRef>,
+    },
+    /// Mapped type like `{ [K in keyof T]?: T[K] }`; preserved structurally without evaluation.
+    Mapped {
+        type_param: String,
+        source_type: Box<TypeRef>,
+        name_type: Option<Box<TypeRef>>,
+        optional_modifier: MappedModifierKind,
+        readonly_modifier: MappedModifierKind,
+        value_type: Option<Box<TypeRef>>,
     },
     /// Template literal type like `` `size-${"sm" | "lg"}` `` with alternating text/type parts.
     TemplateLiteral {

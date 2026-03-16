@@ -175,10 +175,10 @@ type TypeRef =
   | { kind: 'reference'; name: string; targetId?: SymbolId; typeArgs?: TypeRef[] }
   | { kind: 'type_operator'; operator: 'keyof' | 'readonly' | 'unique'; target: TypeRef }
   | { kind: 'type_query'; expression: string }
+  | { kind: 'mapped'; typeParam: string; sourceType: TypeRef; nameType?: TypeRef; optionalModifier: 'preserve' | 'add' | 'remove'; readonlyModifier: 'preserve' | 'add' | 'remove'; valueType: TypeRef | null }
   | { kind: 'template_literal'; parts: Array<{ kind: 'text'; value: string } | { kind: 'type'; value: TypeRef }> }
   | { kind: 'indexed_access'; object: TypeRef; index: TypeRef }
-  | { kind: 'mapped'; summary: string }
-  | { kind: 'conditional'; summary: string }
+  | { kind: 'conditional'; checkType: TypeRef; extendsType: TypeRef; trueType: TypeRef; falseType: TypeRef }
   | { kind: 'raw'; summary: string }
 ```
 
