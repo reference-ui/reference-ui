@@ -1,11 +1,11 @@
 import * as React from 'react'
 import {
   createTastyApiFromManifest,
+  type RawTastyManifest,
   type TastyApi,
   type TastyMember,
   type TastySymbol,
 } from '@reference-ui/rust/tasty'
-import { importTastyArtifact, manifest } from '@reference-ui/types/runtime'
 import {
   Code,
   Div,
@@ -26,6 +26,14 @@ export interface ReferenceProps {
   name: string
 }
 
+export interface ReferenceRuntimeModule {
+  manifest: RawTastyManifest
+  manifestUrl: string
+  importTastyArtifact(specifier: string): Promise<unknown>
+}
+
+export type ReferenceRuntimeLoader = () => Promise<ReferenceRuntimeModule>
+
 interface LoadedReferenceState {
   symbol: TastySymbol
   members: TastyMember[]
@@ -35,34 +43,6 @@ type ReferenceStatus =
   | { state: 'loading' }
   | { state: 'ready'; data: LoadedReferenceState }
   | { state: 'error'; message: string }
-
-let apiPromise: Promise<TastyApi> | undefined
-
-function getReferenceApi(): Promise<TastyApi> {
-  if (!apiPromise) {
-    const api = createTastyApiFromManifest({
-      manifest,
-      importer: importTastyArtifact,
-    })
-    apiPromise = api.ready().then(() => api)
-  }
-
-  return apiPromise
-}
-
-async function loadReferenceState(name: string): Promise<LoadedReferenceState> {
-  const api = await getReferenceApi()
-  const symbol = await api.loadSymbolByName(name)
-  const members =
-    symbol.getKind() === 'interface'
-      ? await api.graph.flattenInterfaceMembers(symbol)
-      : []
-
-  return {
-    symbol,
-    members,
-  }
-}
 
 function formatModifiers(member: TastyMember): string {
   const modifiers = [
@@ -232,45 +212,82 @@ function renderContent(status: ReferenceStatus): React.ReactNode {
   )
 }
 
-export function Reference({ name }: ReferenceProps) {
-  const [status, setStatus] = React.useState<ReferenceStatus>({ state: 'loading' })
+export function createReferenceComponent(loadRuntime: ReferenceRuntimeLoader) {
+  let apiPromise: Promise<TastyApi> | undefined
 
-  React.useEffect(() => {
-    let active = true
-    setStatus({ state: 'loading' })
-
-    void loadReferenceState(name)
-      .then(data => {
-        if (!active) return
-        setStatus({ state: 'ready', data })
+  function getReferenceApi(): Promise<TastyApi> {
+    if (!apiPromise) {
+      apiPromise = loadRuntime().then(async (runtime) => {
+        const api = createTastyApiFromManifest({
+          manifest: runtime.manifest,
+          manifestPath: runtime.manifestUrl,
+          importer: runtime.importTastyArtifact,
+        })
+        await api.ready()
+        return api
       })
-      .catch((error: unknown) => {
-        if (!active) return
-        const message = error instanceof Error ? error.message : String(error)
-        setStatus({ state: 'error', message })
-      })
-
-    return () => {
-      active = false
     }
-  }, [name])
 
-  return (
-    <Div
-      css={{
-        color: referenceTokens.color.foreground,
-        background: referenceTokens.color.background,
-        borderWidth: '1px',
-        borderStyle: 'solid',
-        borderColor: referenceTokens.color.border,
-        padding: referenceTokens.space.lg,
-      }}
-    >
-      <H2 margin="0 0 0.5rem 0" fontSize="1rem">
-        Reference
-      </H2>
-      {renderSummary(status, name)}
-      {renderContent(status)}
-    </Div>
-  )
+    return apiPromise
+  }
+
+  async function loadReferenceState(name: string): Promise<LoadedReferenceState> {
+    const api = await getReferenceApi()
+    const symbol = await api.loadSymbolByName(name)
+    const members =
+      symbol.getKind() === 'interface'
+        ? await api.graph.flattenInterfaceMembers(symbol)
+        : []
+
+    return {
+      symbol,
+      members,
+    }
+  }
+
+  function Reference({ name }: ReferenceProps) {
+    const [status, setStatus] = React.useState<ReferenceStatus>({ state: 'loading' })
+
+    React.useEffect(() => {
+      let active = true
+      setStatus({ state: 'loading' })
+
+      void loadReferenceState(name)
+        .then(data => {
+          if (!active) return
+          setStatus({ state: 'ready', data })
+        })
+        .catch((error: unknown) => {
+          if (!active) return
+          const message = error instanceof Error ? error.message : String(error)
+          setStatus({ state: 'error', message })
+        })
+
+      return () => {
+        active = false
+      }
+    }, [name])
+
+    return (
+      <Div
+        css={{
+          color: referenceTokens.color.foreground,
+          background: referenceTokens.color.background,
+          borderWidth: '1px',
+          borderStyle: 'solid',
+          borderColor: referenceTokens.color.border,
+          padding: referenceTokens.space.lg,
+        }}
+      >
+        <H2 margin="0 0 0.5rem 0" fontSize="1rem">
+          Reference
+        </H2>
+        {renderSummary(status, name)}
+        {renderContent(status)}
+      </Div>
+    )
+  }
+
+  Reference.displayName = 'Reference'
+  return Reference
 }
