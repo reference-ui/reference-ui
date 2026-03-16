@@ -378,6 +378,41 @@ fn emit_type_ref(
                 indent_block(&return_str, 2)
             ))
         }
+        TypeRef::Constructor {
+            r#abstract,
+            type_parameters,
+            params,
+            return_type,
+        } => {
+            let param_lines: Vec<_> = params
+                .iter()
+                .map(|p| emit_fn_param(bundle, p, export_names))
+                .collect::<Result<Vec<_>, _>>()?;
+            let return_str = emit_type_ref(bundle, return_type, export_names)?;
+            let mut parts = vec![
+                "  kind: \"constructor\"".to_string(),
+                format!("  abstract: {}", to_js_literal(r#abstract)?),
+                format!(
+                    "  params: [\n{}\n  ]",
+                    param_lines
+                        .iter()
+                        .map(|s| indent_block(s, 2))
+                        .collect::<Vec<_>>()
+                        .join(",\n")
+                ),
+                format!("  returnType: {}", indent_block(&return_str, 2)),
+            ];
+            if !type_parameters.is_empty() {
+                parts.insert(
+                    2,
+                    format!(
+                        "  typeParameters: {}",
+                        indent_block(&emit_type_parameters(bundle, type_parameters, export_names)?, 2)
+                    ),
+                );
+            }
+            Ok(format!("{{\n{}\n}}", parts.join(",\n")))
+        }
         TypeRef::TypeOperator { operator, target } => {
             let target_str = emit_type_ref(bundle, target, export_names)?;
             Ok(format!(
@@ -603,6 +638,27 @@ fn collect_libraries_from_type_ref(type_ref: &TypeRef, libraries: &mut BTreeSet<
             collect_libraries_from_type_ref(index, libraries);
         }
         TypeRef::Function { params, return_type } => {
+            for p in params {
+                if let Some(ref tr) = p.type_ref {
+                    collect_libraries_from_type_ref(tr, libraries);
+                }
+            }
+            collect_libraries_from_type_ref(return_type, libraries);
+        }
+        TypeRef::Constructor {
+            type_parameters,
+            params,
+            return_type,
+            ..
+        } => {
+            for param in type_parameters {
+                if let Some(ref tr) = param.constraint {
+                    collect_libraries_from_type_ref(tr, libraries);
+                }
+                if let Some(ref tr) = param.default {
+                    collect_libraries_from_type_ref(tr, libraries);
+                }
+            }
             for p in params {
                 if let Some(ref tr) = p.type_ref {
                     collect_libraries_from_type_ref(tr, libraries);

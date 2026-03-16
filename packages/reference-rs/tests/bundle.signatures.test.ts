@@ -76,6 +76,8 @@ describe('signatures bundle', () => {
     expect(names).toContain('ParenType')
     expect(names).toContain('MouseEvent')
     expect(names).toContain('WithCallback')
+    expect(names).toContain('MouseEventCtor')
+    expect(names).toContain('AbstractMouseEventCtor')
   })
 
   it('emits readonly, optional, and kind on members (ReadonlyProps)', async () => {
@@ -249,5 +251,46 @@ describe('signatures bundle', () => {
     const returnType = type.returnType as { kind?: string; name?: string }
     expect(returnType.kind).toBe('intrinsic')
     expect(returnType.name).toBe('void')
+  })
+
+  it('emits constructor type with params and returnType (MouseEventCtor)', async () => {
+    const mod = await loadBundle('signatures')
+    const symbols = getSymbols(mod)
+    const mouseEventCtor = findSymbol(symbols, 'MouseEventCtor')
+    const def = mouseEventCtor.definition as {
+      kind?: string
+      abstract?: boolean
+      params?: Array<{ name?: string; optional?: boolean; typeRef?: unknown }>
+      returnType?: { name?: string; library?: string }
+    }
+    expect(def.kind).toBe('constructor')
+    expect(def.abstract).toBe(false)
+    expect(Array.isArray(def.params)).toBe(true)
+    expect(def.params?.length).toBe(1)
+    expect(def.params?.[0]?.name).toBe('event')
+    expect(def.returnType?.name).toBe('MouseEvent')
+    expect(def.returnType?.library).toBe('user')
+  })
+
+  it('emits abstract constructor type with type parameters (AbstractMouseEventCtor)', async () => {
+    const mod = await loadBundle('signatures')
+    const symbols = getSymbols(mod)
+    const abstractCtor = findSymbol(symbols, 'AbstractMouseEventCtor')
+    const def = abstractCtor.definition as {
+      kind?: string
+      abstract?: boolean
+      typeParameters?: Array<{ name?: string; default?: { kind?: string; name?: string } }>
+      params?: Array<{ name?: string; typeRef?: { name?: string } }>
+      returnType?: { name?: string }
+    }
+    expect(def.kind).toBe('constructor')
+    expect(def.abstract).toBe(true)
+    expect(def.typeParameters?.length).toBe(1)
+    expect(def.typeParameters?.[0]?.name).toBe('T')
+    expect(def.typeParameters?.[0]?.default?.kind).toBe('intrinsic')
+    expect(def.typeParameters?.[0]?.default?.name).toBe('string')
+    expect(def.params?.[0]?.name).toBe('value')
+    expect(def.params?.[0]?.typeRef?.name).toBe('T')
+    expect(def.returnType?.name).toBe('MouseEvent')
   })
 })

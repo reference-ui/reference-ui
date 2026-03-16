@@ -177,6 +177,13 @@ pub enum TypeRef {
         params: Vec<FnParam>,
         return_type: Box<TypeRef>,
     },
+    /// Constructor type `new (...args) => T`; params include name and type.
+    Constructor {
+        r#abstract: bool,
+        type_parameters: Vec<TsTypeParameter>,
+        params: Vec<FnParam>,
+        return_type: Box<TypeRef>,
+    },
     /// Type operator like `keyof T`, `readonly T[]`, or `unique symbol`.
     TypeOperator {
         operator: TypeOperatorKind,

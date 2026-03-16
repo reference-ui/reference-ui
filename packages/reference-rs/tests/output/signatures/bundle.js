@@ -1,3 +1,39 @@
+export const _96b7c1ab57376cbf = {
+  id: "_96b7c1ab57376cbf",
+  name: "AbstractMouseEventCtor",
+  library: "user",
+  description: "Abstract constructor type alias.",
+  definition: {
+  kind: "constructor",
+  abstract: true,
+  typeParameters:   [
+    {
+      name: "T",
+      default:   {
+        kind: "intrinsic",
+        name: "string",
+      }
+    }
+  ],
+  params: [
+  {
+    name: "value",
+    optional: false,
+    typeRef:   {
+      id: "T",
+      name: "T",
+      library: "user",
+    },
+  }
+  ],
+  returnType:   {
+    id: "_8ed205096007e4eb",
+    name: "MouseEvent",
+    library: "user",
+  }
+},
+};
+
 export const _e465cbb273371f30 = {
   id: "_e465cbb273371f30",
   name: "Callable",
@@ -121,6 +157,33 @@ export const _8ed205096007e4eb = {
   }
   }
   ],
+},
+};
+
+export const _01b3b6b55300a919 = {
+  id: "_01b3b6b55300a919",
+  name: "MouseEventCtor",
+  library: "user",
+  description: "Bare constructor type alias.",
+  definition: {
+  kind: "constructor",
+  abstract: false,
+  params: [
+  {
+    name: "event",
+    optional: false,
+    typeRef:   {
+      id: "_8ed205096007e4eb",
+      name: "MouseEvent",
+      library: "user",
+    },
+  }
+  ],
+  returnType:   {
+    id: "_8ed205096007e4eb",
+    name: "MouseEvent",
+    library: "user",
+  }
 },
 };
 
@@ -508,8 +571,18 @@ export const interfaces = [
 ];
 export const types = [
   {
+    id: "_96b7c1ab57376cbf",
+    name: "AbstractMouseEventCtor",
+    library: "user",
+  },
+  {
     id: "_8ed205096007e4eb",
     name: "MouseEvent",
+    library: "user",
+  },
+  {
+    id: "_01b3b6b55300a919",
+    name: "MouseEventCtor",
     library: "user",
   },
   {

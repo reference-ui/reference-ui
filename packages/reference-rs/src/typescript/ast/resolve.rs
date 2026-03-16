@@ -251,6 +251,35 @@ fn resolve_type_ref(
                 .collect(),
             return_type: Box::new(resolve_type_ref((*return_type).clone(), symbol_index, parsed)),
         },
+        TypeRef::Constructor {
+            r#abstract,
+            type_parameters,
+            params,
+            return_type,
+        } => TypeRef::Constructor {
+            r#abstract,
+            type_parameters: type_parameters
+                .into_iter()
+                .map(|param| TsTypeParameter {
+                    name: param.name,
+                    constraint: param
+                        .constraint
+                        .map(|t| resolve_type_ref(t, symbol_index, parsed)),
+                    default: param.default.map(|t| resolve_type_ref(t, symbol_index, parsed)),
+                })
+                .collect(),
+            params: params
+                .iter()
+                .map(|p| FnParam {
+                    type_ref: p
+                        .type_ref
+                        .as_ref()
+                        .map(|t| resolve_type_ref(t.clone(), symbol_index, parsed)),
+                    ..p.clone()
+                })
+                .collect(),
+            return_type: Box::new(resolve_type_ref((*return_type).clone(), symbol_index, parsed)),
+        },
         TypeRef::TypeOperator { operator, target } => TypeRef::TypeOperator {
             operator,
             target: Box::new(resolve_type_ref(*target, symbol_index, parsed)),

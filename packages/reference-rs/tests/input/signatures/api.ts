@@ -73,3 +73,11 @@ export interface WithCallback {
   /** Called when the element is clicked. */
   onClick: (event: MouseEvent) => void;
 }
+
+/** Bare constructor type alias. */
+export type MouseEventCtor = new (event: MouseEvent) => MouseEvent;
+
+/** Abstract constructor type alias. */
+export type AbstractMouseEventCtor = abstract new <T = string>(
+  value: T
+) => MouseEvent;

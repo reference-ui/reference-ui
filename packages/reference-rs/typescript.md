@@ -172,6 +172,7 @@ type TypeRef =
   | { kind: 'intersection'; types: TypeRef[] }
   | { kind: 'object'; members: InlineMember[] }
   | { kind: 'function'; signature: Signature }
+  | { kind: 'constructor'; abstract: boolean; typeParameters?: Array<{ name: string; constraint?: TypeRef; default?: TypeRef }>; params: Array<{ name?: string; optional: boolean; typeRef: TypeRef | null }>; returnType: TypeRef }
   | { kind: 'reference'; name: string; targetId?: SymbolId; typeArgs?: TypeRef[] }
   | { kind: 'type_operator'; operator: 'keyof' | 'readonly' | 'unique'; target: TypeRef }
   | { kind: 'type_query'; expression: string }

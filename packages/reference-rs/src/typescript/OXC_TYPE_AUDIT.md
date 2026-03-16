@@ -27,9 +27,9 @@ Example: if the source has `theme: Props['theme']`, the member’s type is `TSIn
 | Category | Variants | Reason we don’t model them (yet) |
 |----------|----------|-----------------------------------|
 | **Type-level computation** | — | Conditional and mapped types are now modeled structurally without evaluation. The remaining heavier raw cases are listed below. |
-| **Value-dependent types** | Type predicate (`x is T`) | **Type query is now modeled** as `TypeRef::TypeQuery { expression }` with the queried expression preserved as source text; we still do not resolve values. Type predicates remain assertion shapes rather than data shapes, so they stay Raw. |
-| **Callable shapes** | Function type, Constructor type | **Function type** is now modeled when it appears as a property type (e.g. callback props): we emit `TypeRef::Function { params, return_type }` so we can document the callback signature. Call/construct *signatures* on interfaces are already modeled as members. **Constructor type** (bare `new (...) => T`) remains Raw. |
-| **Operators & keywords** | This type | **Type operators are now modeled** as `TypeRef::TypeOperator { operator, target }` for `keyof`, `readonly`, and `unique`. `this` remains context-dependent, so it stays Raw. |
+| **Value-dependent types** | Type predicate (`x is T`) | **Type query is now modeled** as `TypeRef::TypeQuery { expression }` with the queried expression preserved as source text; we still do not resolve values. Type predicates remain assertion shapes rather than data shapes, so they stay Raw and are low priority for docs. |
+| **Callable shapes** | Function type | **Function type** is now modeled when it appears as a property type (e.g. callback props): we emit `TypeRef::Function { params, return_type }` so we can document the callback signature. Call/construct *signatures* on interfaces are already modeled as members, and bare constructor types are now modeled separately as `TypeRef::Constructor { abstract, type_parameters, params, return_type }`. |
+| **Operators & keywords** | This type | **Type operators are now modeled** as `TypeRef::TypeOperator { operator, target }` for `keyof`, `readonly`, and `unique`. `this` remains context-dependent, so it stays Raw and low priority. |
 | **Module/value references** | Import type (`import('pkg')`) | We could resolve the module and expose its export type; that’s a larger feature. For now we preserve the source so docs can show “type: import('react').FC”. |
 | **Indexed access** | — | We now support it: `TypeRef::IndexedAccess { object, index }`; object and index are full type refs (e.g. reference to `User` + literal `'name'`). |
 | **Infer** | `infer X` (inside conditional types) | Conditional types are now structural, but `infer` is still only meaningful semantically inside them. Keeping `infer` Raw inside those branches is consistent. |
@@ -70,13 +70,13 @@ Below, “→ Raw { summary }” means: we emit `TypeRef::Raw` with `summary` se
 | `TSTemplateLiteralType` | → `TemplateLiteral { parts }`              | alternating text/type parts; no evaluation                   |
 | `TSIndexedAccessType`   | → `IndexedAccess { object, index }`         | `T[K]` — object type and index type (key) fully modeled       |
 | `TSFunctionType`         | → `Function { params, return_type }`        | `(x: T) => R` — params (name, optional, typeRef), returnType; used for callback properties so we can document the signature. |
+| `TSConstructorType`     | → `Constructor { abstract, type_parameters, params, return_type }` | `new (...args) => T` or `abstract new (...args) => T` |
 | `TSTypeOperatorType`    | → `TypeOperator { operator, target }`     | `keyof`, `readonly`, `unique`                                |
 | `TSTypeQuery`           | → `TypeQuery { expression }`              | `typeof x` — expression preserved without resolution         |
 | `TSConditionalType`     | → `Conditional { check_type, extends_type, true_type, false_type }` | structural only; no evaluation |
 | `TSMappedType`          | → `Mapped { type_param, source_type, name_type?, optional_modifier, readonly_modifier, value_type? }` | structural only; no evaluation |
 | `TSImportType`          | → `Raw { summary }`                        | `import('module')`                                           |
 | `TSInferType`           | → `Raw { summary }`                        | `infer X`                                                    |
-| `TSConstructorType`     | → `Raw { summary }`                        | `new (...args) => T`                                         |
 | `TSTypePredicate`       | → `Raw { summary }`                        | `x is T`                                                     |
 | `TSThisType`            | → `Raw { summary }`                        | `this`                                                       |
 | `JSDocNullableType`     | → `Raw { summary }`                        | JSDoc-only                                                   |
@@ -99,13 +99,19 @@ All other tuple-element variants (e.g. `TSStringKeyword` inside a tuple) are han
 
 ## Summary
 
-- **Fully modeled:** intrinsics (including bigint, symbol, never, void, intrinsic), literal, union, array, tuple (with element metadata), intersection, object type literal, parenthesized (unwrapped), type reference, **indexed access** (`T[K]` with object + index), **function type** (`(params) => returnType` with param names, optionality, and types for callback properties), **type operators** (`keyof`, `readonly`, `unique` as `TypeOperator { operator, target }`), **type query** (`typeof x` as `TypeQuery { expression }`), **conditional** (`Conditional { check_type, extends_type, true_type, false_type }`), **mapped** (`Mapped { type_param, source_type, name_type?, optional_modifier, readonly_modifier, value_type? }`), **template literal** (as `TemplateLiteral { parts }` with alternating text/type segments), named tuple member as type. These cover the data shapes we need for “props and types” docs.
-- **Intentionally Raw:** import type, infer, constructor type, type predicate, this type, JSDoc types. All emit `Raw { summary: source_slice }` — see “Why we leave some variants as Raw” above. This does not block our current goal; we can add structured handling later if we need it.
+- **Fully modeled:** intrinsics (including bigint, symbol, never, void, intrinsic), literal, union, array, tuple (with element metadata), intersection, object type literal, parenthesized (unwrapped), type reference, **indexed access** (`T[K]` with object + index), **function type** (`(params) => returnType` with param names, optionality, and types for callback properties), **constructor type** (`Constructor { abstract, type_parameters, params, return_type }`), **type operators** (`keyof`, `readonly`, `unique` as `TypeOperator { operator, target }`), **type query** (`typeof x` as `TypeQuery { expression }`), **conditional** (`Conditional { check_type, extends_type, true_type, false_type }`), **mapped** (`Mapped { type_param, source_type, name_type?, optional_modifier, readonly_modifier, value_type? }`), **template literal** (as `TemplateLiteral { parts }` with alternating text/type segments), named tuple member as type. These cover the data shapes we need for “props and types” docs.
+- **Intentionally Raw:** import type, infer, type predicate, this type, JSDoc types. All emit `Raw { summary: source_slice }` — see “Why we leave some variants as Raw” above. This does not block our current goal; we can add structured handling later if we need it.
 - **No implicit catch-all:** the `type_to_ref` match is exhaustive; any new variant added by Oxc will cause a compile error until we add an arm and document it here.
 
 ---
 
 ## Planned structured variants (remaining)
 
-There are no additional agreed “small structured wins” queued in this audit right now. Remaining Raw cases are the more semantic/heavier ones: import type, infer, constructor type, type predicate, this type, and JSDoc variants.
+There are no additional agreed “small structured wins” queued in this audit right now. Remaining Raw cases are the more semantic/heavier ones: import type, infer, type predicate, this type, and JSDoc variants.
+
+### Lower-priority remaining Raw variants
+
+- `TSInferType`: not useful on its own; it only really pays off if we later want richer conditional-type explanation semantics.
+- `TSTypePredicate`: usually not useful for our current docs goal because `x is T` describes narrowing behavior more than data shape.
+- `TSThisType`: low-value and highly context-sensitive; representing `this` structurally would not add much on its own.
 
