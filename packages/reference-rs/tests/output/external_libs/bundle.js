@@ -3692,7 +3692,7 @@ export const _b2a8703557247e8b = {
   }
 ],
   definition: {
-  kind: "unknown",
+  kind: "raw",
   summary: "{ [P in keyof T]: T[P] | readonly NonNullable<T[P]>[] }",
 },
 };
@@ -10129,7 +10129,7 @@ export const _eb3df24835d78bd9 = {
   }
 ],
   definition: {
-  kind: "unknown",
+  kind: "raw",
   summary: "TValue extends Array<infer AValue> ? Array<AValue extends infer TUnpacked & {} ? TUnpacked : AValue> : TValue extends infer TUnpacked & {} ? TUnpacked : TValue",
 },
 };

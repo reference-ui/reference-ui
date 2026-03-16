@@ -179,7 +179,7 @@ type TypeRef =
   | { kind: 'indexed_access'; object: TypeRef; index: TypeRef }
   | { kind: 'mapped'; summary: string }
   | { kind: 'conditional'; summary: string }
-  | { kind: 'unknown_source'; summary: string }
+  | { kind: 'raw'; summary: string }
 ```
 
 That gives us a pragmatic split:

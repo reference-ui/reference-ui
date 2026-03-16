@@ -21,7 +21,7 @@
 
 - **Generics** – now supported (type parameters, type arguments; see §2).
 - **Readonly and member kind** – now supported (§4.3).
-- **TypeRef** – we have Intrinsic, Literal, Union, Reference, Object, Array, Tuple, Intersection, Unknown; mapped/conditional types still end up as `Unknown { summary: "..." }`.
+- **TypeRef** – we have Intrinsic, Literal, Union, Reference, Object, Array, Tuple, Intersection, Raw; mapped/conditional types still end up as `Raw { summary: "..." }`.
 - **Single description** only; no structured tags (e.g. `@default`, `@deprecated`, `@example`) unless you parse JSDoc downstream.
 
 So: **yes for simple “props and types” docs**, **no for full, rich API docs** without extending the model and extraction.
@@ -49,15 +49,15 @@ So: **yes for simple “props and types” docs**, **no for full, rich API docs*
 We then **narrow** that into our own model:
 
 - Only interfaces and type aliases (no enums, namespaces, etc.).
-- A `TypeRef` subset: intrinsic, literal, union, reference, object (type literal), array, tuple, intersection, unknown; plus generics. Conditional/mapped types still become `Unknown`.
+- A `TypeRef` subset: intrinsic, literal, union, reference, object (type literal), array, tuple, intersection, raw; plus generics. Conditional/mapped types still become `Raw`.
 
 So: **Oxc gives us full TS structure; we intentionally expose a subset.** Extending docs/MCP support is mostly about mapping more of the Oxc AST into our types and emission, not about replacing Oxc.
 
 **Capturing type data cleanly:** Within interfaces and type aliases we aim to represent TS type structure faithfully:
 
 - **Captured today:** Intrinsics, literals, unions, references (with type args), object type literals (with members), arrays, tuples (element types), intersections. On members: optional, readonly, kind (property / method / call / index). On symbols: type parameters (name, constraint, default). Optional tuple elements and rest are currently reduced to their inner type (we keep the type, drop the optional/rest marker). Named tuple labels (e.g. `[name: string, age: number]`) are not yet preserved.
-- **Still become Unknown (with source summary):** Mapped types, conditional types, template literal types, `import()` types, indexed access, `infer` — we keep the source slice as `summary` so “this exists” is visible; full structure would require a larger model.
-- **Done (improvements):** (1) Tuple elements are structured: `TupleElement { label?, optional, rest, element }`; named tuple labels, optional and rest flags are emitted. (2) Construct signatures are extracted: member name `[new]`, kind `construct`. (3) Parenthesized types are unwrapped so `(string)` is emitted as intrinsic `string`. (4) Everything else stays Unknown with source summary.
+- **Still become Raw (with source summary):** Mapped types, conditional types, `import()` types, `infer` — we keep the source slice as `summary` so “this exists” is visible; full structure would require a larger model.
+- **Done (improvements):** (1) Tuple elements are structured: `TupleElement { label?, optional, rest, element }`; named tuple labels, optional and rest flags are emitted. (2) Construct signatures are extracted: member name `[new]`, kind `construct`. (3) Parenthesized types are unwrapped so `(string)` is emitted as intrinsic `string`. (4) Everything else stays Raw with source summary.
 
 ---
 
@@ -89,7 +89,7 @@ So: **Oxc gives us full TS structure; we intentionally expose a subset.** Extend
 **Good coverage for the stated goal** (driving TypeScript API docs for users’ own folders):
 
 - **Symbols:** Interfaces and type aliases only; generics (params + args) fully supported.
-- **TypeRef:** Intrinsics, literals, unions, arrays, tuples, intersections, references, object literals; everything else → `Unknown` with a summary.
+- **TypeRef:** Intrinsics, literals, unions, arrays, tuples, intersections, references, object literals; everything else → `Raw` with a summary.
 - **Members:** Properties (optional, readonly), method signatures, call signatures, index signatures, construct signatures; leading-comment descriptions.
 - **Tuples:** Element shape includes optional, rest, and optional label (named tuple).
 - **Test scenarios:** `generics` (type params/args, object literals), `external_libs` (node_modules resolution, extends, descriptions), `signatures` (readonly, method/call/index/construct, array/tuple with element metadata, parenthesized unwrap).
@@ -97,7 +97,7 @@ So: **Oxc gives us full TS structure; we intentionally expose a subset.** Extend
 **Intentional / acceptable gaps:**
 
 - **Out of scope:** JSDoc tags, source locations, re-export/alias chains.
-- **Advanced types:** Mapped, conditional, template-literal types remain `Unknown` with summary (enough for “this exists” in docs).
+- **Advanced types:** Mapped and conditional types remain `Raw` with summary (enough for “this exists” in docs).
 - **Enums / namespaces:** Not in scope (interfaces and type aliases only).
 
 **Possible next steps (only if needed):** Enums, or further TS type variants.
@@ -118,6 +118,6 @@ So: **Oxc gives us full TS structure; we intentionally expose a subset.** Extend
 | `unions_literals` | Union types, literal types (string/number), optional members. |
 | `tsx`             | .tsx file scanning, interfaces and type aliases from TSX. |
 | `default_params` | Type parameters with default (e.g. `T = string`). |
-| `unknown_complex` | Mapped types, conditional types → `Unknown` with summary. |
+| `unknown_complex` | Mapped types, conditional types → `Raw` with summary. |
 
 **Vitest:** Each scenario has a matching `bundle.{scenario}.test.ts` that loads `output/{scenario}/bundle.js` and asserts shape and content. globalSetup emits one bundle per scenario directory under `tests/input/`.

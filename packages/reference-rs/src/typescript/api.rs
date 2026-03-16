@@ -173,7 +173,15 @@ pub enum TypeRef {
     TemplateLiteral {
         parts: Vec<TemplateLiteralPart>,
     },
-    Unknown {
+    /// Raw source-preserved type expression.
+    ///
+    /// `Raw` means we parsed the AST variant successfully, but intentionally keep
+    /// the original type expression as source text instead of lowering it into a
+    /// more structured `TypeRef`.
+    ///
+    /// This is not an error state and not parser uncertainty; it is an explicit
+    /// IR choice for variants we do not currently model structurally.
+    Raw {
         summary: String,
     },
 }

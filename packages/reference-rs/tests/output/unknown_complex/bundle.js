@@ -9,7 +9,7 @@ export const _9906dd2bd9a95dcd = {
   }
 ],
   definition: {
-  kind: "unknown",
+  kind: "raw",
   summary: "{\n  [P in keyof T]?: T[P];\n}",
 },
 };
@@ -25,7 +25,7 @@ export const _f0631b896d577312 = {
   }
 ],
   definition: {
-  kind: "unknown",
+  kind: "raw",
   summary: "T extends object\n  ? { [K in keyof T as K extends string ? K : never]: T[K] }\n  : never",
 },
 };
@@ -72,7 +72,7 @@ export const _f724b00f1a7d9d24 = {
   id: "_f724b00f1a7d9d24",
   name: "User",
   library: "user",
-  description: "Unknown/complex scenario: mapped types and conditional types become Unknown with summary.\nWe do not fully model these; the scanner should emit kind: \"unknown\" with a summary string.\n/\n\n/** Simple interface for testing reference from complex type.",
+  description: "Raw/complex scenario: mapped types and conditional types become Raw with summary.\nWe do not fully model these; the scanner should emit kind: \"raw\" with a summary string.\n/\n\n/** Simple interface for testing reference from complex type.",
   members: [
   {
     name: "id",
@@ -122,7 +122,7 @@ export const _d997f0f1502f7bad = {
   id: "_d997f0f1502f7bad",
   name: "UsesOptionalKeys",
   library: "user",
-  description: "Type alias that references the mapped type (so we see Unknown in a member).",
+  description: "Type alias that references the mapped type (so we see Raw in a member).",
   members: [
   {
     name: "partialUser",
