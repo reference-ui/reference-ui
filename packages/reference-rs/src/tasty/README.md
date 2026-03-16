@@ -1,178 +1,81 @@
-# Tasty
+# Tasty Rust
 
-Tasty is the TypeScript metadata system inside `@reference-ui/rust`.
+Tasty is the Rust-side TypeScript metadata pipeline in `packages/reference-rs`.
+This directory owns scanning, lowering, and artifact emission.
 
-It has two halves:
+There is also a JavaScript runtime elsewhere at `packages/reference-rs/js/tasty`.
+That runtime loads the emitted artifacts lazily and exposes the graph API, but
+the contract itself starts here in Rust.
 
-1. a Rust scanner/emitter that turns TypeScript source into metadata artifacts
-2. a TypeScript runtime that loads those artifacts lazily as a graph API
-
-This directory owns the Rust side of that system.
+The most important thing in Tasty is how OXC type nodes are lowered into the
+Rust `TypeRef` IR. This README is the canonical doc for that.
 
 ## What Tasty Does
 
-Tasty is designed for:
+Rust Tasty:
 
-- API docs
-- symbol browsing
-- inheritance inspection
-- graph queries over user TypeScript
-- downstream tooling such as MCP or editor-like consumers
+- discovers the relevant TypeScript files
+- parses them with OXC
+- resolves symbols, members, and references into a normalized graph
+- lowers OXC type syntax into `TypeRef`
+- emits a manifest-first artifact set
+- generates the raw TypeScript contract types consumed by the JS runtime
 
-Tasty is not trying to become:
+It is not trying to be another TypeScript compiler, a type evaluator, a
+bundler, or the runtime graph API.
 
-- a second TypeScript compiler
-- a second lowering pass
-- a bundler
-- a docs framework
-- an MCP framework
+## Shape Of The Pipeline
 
-Rust owns the metadata contract and artifact generation.
-TypeScript owns runtime loading, traversal, and ergonomics.
+The pipeline is:
 
-## End-To-End Shape
+1. discover files
+2. parse with OXC
+3. resolve symbol and reference structure
+4. lower types into `TypeRef`
+5. emit manifest and chunk artifacts
+6. let the JS runtime load those artifacts on demand
 
-The full flow looks like this:
+The architecture split is simple:
 
-1. discover and read the relevant TypeScript files
-2. parse them with OXC
-3. resolve symbols and references into a normalized internal graph
-4. emit a Tasty artifact surface:
-   - manifest module
-   - chunk modules
-   - raw generated TypeScript contract types
-5. load those artifacts through `js/tasty`
+| Layer | Role |
+| --- | --- |
+| OXC AST | parser-facing syntax tree |
+| `model.rs` | normalized Rust IR |
+| `emitted.rs` | raw emitted artifact contract |
+| `packages/reference-rs/js/tasty` | lazy runtime API built on top of emitted artifacts |
 
-The runtime starts from a small eager manifest and imports symbol chunks only
-when needed.
-
-That is the main performance story: manifest-first, chunk-level lazy loading.
+If you are changing Tasty, the usual starting points are `model.rs` for the IR,
+`ast/resolve.rs` for type lowering and graph resolution, `scan.rs` for
+orchestration, `generator/esm.rs` for output shape, and `emitted.rs` for the
+generated contract.
 
 ## Scan Boundary
 
-User space defines the scan.
+Within the scan root, Tasty maps exported interfaces and type aliases, plus the
+non-exported interfaces and aliases needed to keep the graph coherent. The goal
+is a usable user-owned type graph, not just a list of public names.
 
-### User space
+Tasty does not eagerly ingest all of `node_modules`. Library code is only
+pulled in when the user explicitly re-exports from a package, such as
+`export type { X } from 'some-library'` or `export * from 'some-library'`.
+From there, Tasty follows imports within that same package, but it does not
+walk arbitrary dependency trees.
 
-For files under the scan root, Tasty maps:
+## Emitted Shape
 
-- exported interfaces and type aliases
-- non-exported interfaces and type aliases needed to keep the graph coherent
+Tasty emits a manifest-first artifact set.
 
-The goal is a complete user-owned type graph, not just a list of public names.
+The manifest is a small eager module containing `version`, `symbolsByName`, and
+`symbolsById`. Each symbol index entry records the symbol `id`, `name`, `kind`,
+`chunk`, and whether it comes from a library.
 
-### Libraries
+Chunk modules hold the actual symbol payloads keyed by exported ids.
 
-Tasty does not eagerly ingest all of `node_modules`.
+Rust also generates the raw TypeScript contract types into
+`packages/reference-rs/js/tasty/generated/`. Those generated types are the
+bridge between the Rust emitter and the JS runtime.
 
-A library file is only pulled in when the user re-exports something from that
-module, for example:
-
-- `export type { X } from 'some-library'`
-- `export * from 'some-library'`
-
-From there, Tasty follows imports that stay within the same package, but does
-not recurse through arbitrary dependency trees.
-
-## Current Architecture
-
-The important files in this directory are:
-
-| Path | Role |
-| --- | --- |
-| `mod.rs` | module entrypoint and public re-exports |
-| `request.rs` | scan request input types |
-| `model.rs` | internal normalized graph IR (`TypeScriptBundle`, `TsSymbol`, `TypeRef`, etc.) |
-| `emitted.rs` | emitted/public raw Tasty artifact contract generated to TS |
-| `scan.rs` | top-level orchestration for scan and emit flows |
-| `scanner/` | workspace/file discovery and source loading |
-| `ast/` | OXC extraction and graph resolution |
-| `generator/esm.rs` | manifest + chunk module emission |
-| `tests/` | Rust-side smoke tests |
-
-The critical distinction is:
-
-| Layer | What it is | What it is not |
-| --- | --- | --- |
-| OXC AST | parser-facing syntax tree | public runtime contract |
-| `model.rs` | normalized internal IR | emitted JS/TS artifact surface |
-| `emitted.rs` | raw Tasty artifact contract | ergonomic runtime wrapper API |
-| `js/tasty` | lazy runtime graph API | compiler/lowering layer |
-
-## Artifact Model
-
-Tasty currently emits a manifest-first artifact set.
-
-### Manifest
-
-The manifest is a small eager module containing:
-
-- `version`
-- `symbolsByName`
-- `symbolsById`
-
-Each symbol index entry includes:
-
-- `id`
-- `name`
-- `kind`
-- `chunk`
-- `library`
-
-### Chunk modules
-
-Each chunk contains actual symbol objects keyed by exported ids.
-
-### Raw generated contract types
-
-The emitted contract is generated from Rust into:
-
-- `packages/reference-rs/js/tasty/generated/`
-
-These are the raw artifact types consumed by the TypeScript runtime.
-
-## Runtime Surface
-
-The TypeScript runtime lives in:
-
-- `packages/reference-rs/js/tasty`
-
-It exposes:
-
-| Area | Main API |
-| --- | --- |
-| loader/store | `createTastyApi()`, `loadManifest()`, `loadSymbolByName()`, `loadSymbolById()` |
-| wrappers | `TastySymbol`, `TastyMember`, `TastyTypeRef`, `TastySymbolRef` |
-| graph ops | `api.graph.resolveReference()`, `loadImmediateDependencies()`, `loadExtendsChain()`, `flattenInterfaceMembers()`, `collectUserOwnedReferences()` |
-
-The runtime follows two rules:
-
-- cheap local inspection is synchronous
-- graph-expanding operations are asynchronous
-
-## Public Runtime Model
-
-The core runtime wrapper types are:
-
-| Wrapper | Purpose |
-| --- | --- |
-| `TastySymbol` | main graph node for interfaces and type aliases |
-| `TastyMember` | member metadata and type access |
-| `TastyTypeRef` | structured or raw type inspection |
-| `TastySymbolRef` | lightweight edge to another symbol that may not be loaded yet |
-
-Some especially important methods are:
-
-| API | Meaning |
-| --- | --- |
-| `symbol.getMembers()` | cheap local member inspection |
-| `symbol.getExtends()` | cheap local extends references |
-| `symbol.loadExtendsSymbols()` | async load of parent symbols |
-| `symbol.getUnderlyingType()` | alias definition access |
-| `typeRef.describe()` | cheap display-oriented description |
-| `typeRef.getRaw()` | exact raw emitted contract |
-
-## Comment and JSDoc Capture
+## Comments And JSDoc
 
 Tasty captures leading comments on symbols and members in three forms:
 
@@ -182,116 +85,132 @@ Tasty captures leading comments on symbols and members in three forms:
 | `descriptionRaw` | normalized comment text including tags |
 | `jsdoc` | lightweight parsed JSDoc object with `summary` and flat `tags` |
 
-This is a best-effort JSDoc pass-through layer, not a full TSDoc semantic model.
+This is a best-effort JSDoc pass-through layer, not a full TSDoc semantic
+model.
 
-## Type Surface Coverage
+## OXC Type Lowering
 
-Tasty now models a substantial part of the OXC type surface structurally.
+This is the core design surface.
 
-### Structured today
+Every OXC `TSType` and `TSTupleElement` variant should be handled deliberately.
+Useful data-shape constructs are modeled structurally. Harder or lower-priority
+constructs are preserved as `Raw { summary }`. Nothing should silently fall
+through an implicit catch-all.
 
-| Category | Examples |
+### What `Raw` Means
+
+`Raw` is intentional, not an error state.
+
+When a type stays raw, Tasty preserves the original source slice as `summary`.
+That lets downstream consumers show the exact type text without pretending that
+Tasty understands more than it actually does.
+
+Example:
+
+- source: `type X = import('./dep').Widget`
+- emitted shape: `{ kind: "raw", summary: "import('./dep').Widget" }`
+
+### Structurally modeled today
+
+| Category | Lowered shape |
 | --- | --- |
-| intrinsics | `string`, `number`, `boolean`, `bigint`, `symbol`, `never`, `void` |
-| literals | `'sm'`, `42`, `true` |
-| references | `ButtonProps`, `Array<T>`, `OptionalKeys<User>` |
-| unions/intersections | `A | B`, `A & B` |
-| arrays/tuples | `T[]`, `[string, number]`, named/optional/rest tuple elements |
-| object literals | `{ foo: string }` |
-| indexed access | `T[K]`, `User['name']` |
-| function types | `(value: T) => U` |
-| constructor types | `new (...args) => T`, `abstract new (...) => T` |
-| type operators | `keyof`, `readonly`, `unique` |
-| type queries | `typeof themeConfig` |
-| conditional types | `T extends U ? A : B` |
-| mapped types | `{ [K in keyof T]?: T[K] }` |
-| template literals | `` `size-${"sm" | "lg"}` `` |
+| intrinsic keywords | `Intrinsic { name }` |
+| literal types | `Literal { value }` |
+| references | `Reference { name, target_id, source_module, type_arguments }` |
+| unions | `Union { types }` |
+| arrays | `Array { element }` |
+| tuples | `Tuple { elements }` |
+| intersections | `Intersection { types }` |
+| object type literals | `Object { members }` |
+| indexed access | `IndexedAccess { object, index }` |
+| function types | `Function { params, return_type }` |
+| constructor types | `Constructor { abstract, type_parameters, params, return_type }` |
+| type operators | `TypeOperator { operator, target }` |
+| type queries | `TypeQuery { expression }` |
+| conditional types | `Conditional { check_type, extends_type, true_type, false_type }` |
+| mapped types | `Mapped { type_param, source_type, name_type, optional_modifier, readonly_modifier, value_type }` |
+| template literal types | `TemplateLiteral { parts }` |
 
 ### Intentionally raw today
 
-| Category | Why raw |
+| Variant family | Why it stays raw |
 | --- | --- |
-| import types | requires richer module/export semantics |
-| `infer` | only really useful with deeper type-level evaluation |
-| type predicates | describes narrowing behavior more than data shape |
-| `this` types | highly context-dependent |
-| JSDoc-only type variants | outside the main TS syntax modeling path |
+| `TSImportType` | needs richer module and export semantics |
+| `TSInferType` | only really matters with deeper type-level evaluation |
+| `TSTypePredicate` | describes narrowing behavior more than data shape |
+| `TSThisType` | highly context-dependent |
+| JSDoc-only type variants | outside the main TypeScript syntax path we model |
 
-For those cases, Tasty still preserves the original source text as
-`Raw { summary }`.
+### Full `TSType` matrix
 
-See `OXC_TYPE_AUDIT.md` for the per-variant matrix.
+`Raw { summary }` means the original source text is preserved exactly.
 
-## Current Status
+| OXC variant | Tasty lowering | Notes |
+| --- | --- | --- |
+| `TSStringKeyword` | `Intrinsic "string"` | |
+| `TSNumberKeyword` | `Intrinsic "number"` | |
+| `TSBooleanKeyword` | `Intrinsic "boolean"` | |
+| `TSUnknownKeyword` | `Intrinsic "unknown"` | |
+| `TSAnyKeyword` | `Intrinsic "any"` | |
+| `TSUndefinedKeyword` | `Intrinsic "undefined"` | |
+| `TSNullKeyword` | `Intrinsic "null"` | |
+| `TSObjectKeyword` | `Intrinsic "object"` | |
+| `TSBigIntKeyword` | `Intrinsic "bigint"` | |
+| `TSSymbolKeyword` | `Intrinsic "symbol"` | |
+| `TSNeverKeyword` | `Intrinsic "never"` | |
+| `TSVoidKeyword` | `Intrinsic "void"` | |
+| `TSIntrinsicKeyword` | `Intrinsic { name }` | preserves intrinsic keyword text |
+| `TSLiteralType` | `Literal { value }` | |
+| `TSUnionType` | `Union { types }` | |
+| `TSArrayType` | `Array { element }` | |
+| `TSTupleType` | `Tuple { elements }` | tuple metadata preserved via `TupleElement` |
+| `TSIntersectionType` | `Intersection { types }` | |
+| `TSTypeLiteral` | `Object { members }` | property, method, call, index, and construct signatures |
+| `TSParenthesizedType` | unwrap to inner type | no extra wrapper layer |
+| `TSTypeReference` | `Reference` or array special-case | `Array<T>` lowers to `Array` |
+| `TSNamedTupleMember` | one-element `Tuple` | when encountered as a standalone type node |
+| `TSTemplateLiteralType` | `TemplateLiteral { parts }` | alternating text and type parts |
+| `TSIndexedAccessType` | `IndexedAccess { object, index }` | fully structural |
+| `TSFunctionType` | `Function { params, return_type }` | callback-style types stay structural |
+| `TSConstructorType` | `Constructor { abstract, type_parameters, params, return_type }` | includes abstract constructors |
+| `TSTypeOperatorType` | `TypeOperator { operator, target }` | currently `keyof`, `readonly`, `unique` |
+| `TSTypeQuery` | `TypeQuery { expression }` | preserves `typeof ...` expression text |
+| `TSConditionalType` | `Conditional { check_type, extends_type, true_type, false_type }` | structural only, no evaluation |
+| `TSMappedType` | `Mapped { ... }` | structural only, no evaluation |
+| `TSImportType` | `Raw { summary }` | preserved text only |
+| `TSInferType` | `Raw { summary }` | preserved text only |
+| `TSTypePredicate` | `Raw { summary }` | preserved text only |
+| `TSThisType` | `Raw { summary }` | preserved text only |
+| `JSDocNullableType` | `Raw { summary }` | JSDoc-only |
+| `JSDocNonNullableType` | `Raw { summary }` | JSDoc-only |
+| `JSDocUnknownType` | `Raw { summary }` | JSDoc-only |
 
-Tasty is no longer just a scanner experiment. The core system is now in place.
+### `TSTupleElement` matrix
 
-### Implemented
+| OXC tuple-element variant | Tasty lowering | Notes |
+| --- | --- | --- |
+| `TSOptionalType` | `TupleElement { optional: true, rest: false, element }` | |
+| `TSRestType` | `TupleElement { optional: false, rest: true, element }` | |
+| `TSNamedTupleMember` | `TupleElement { label, optional, rest: false, element }` | preserves tuple labels |
+| inherited `TSType` variants | `TupleElement { label: None, optional: false, rest: false, element }` | lowered via `type_to_ref` |
 
-| Area | Status |
-| --- | --- |
-| Rust scanner and normalized IR | implemented |
-| manifest + chunk emission | implemented |
-| Rust-generated TS raw contract types | implemented |
-| `js/tasty` runtime | implemented |
-| wrapper API | implemented |
-| graph operations | implemented |
-| fixture-driven bundle tests | implemented |
-| fixture-driven runtime API tests across all current Tasty cases | implemented |
+### Why the remaining raw cases are acceptable
 
-### What remains
+For Tasty's current goal, the important thing is preserving graph shape:
+symbol identity, member shape, optionality, references, and the common
+structural forms that matter for docs and graph navigation.
 
-Mostly iterative hardening and future expansion, not foundational architecture.
+For the remaining cases, exact source preservation is still enough for display,
+hover-ish presentation, and honest runtime inspection without pretending we
+have a full evaluator for the TypeScript type system.
 
-Examples:
+## Status And Testing
 
-- more type variants if they become worth the complexity
-- richer search/prefetch behavior
-- downstream consumer layers built on top of the core runtime
+The core Rust pipeline is in place: scanner, normalized IR, manifest and chunk
+emission, generated TS contract types, and fixture-driven tests. The JS runtime
+layer exists elsewhere and is also covered by runtime-facing tests.
 
-## Testing
-
-Tasty is tested at multiple layers.
-
-| Test layer | Location |
-| --- | --- |
-| Rust scanner/emission smoke tests | `src/tasty/tests/` |
-| bundle-shape fixture tests | `tests/tasty/cases/*/bundle.test.ts` |
-| runtime API fixture tests | `tests/tasty/cases/*/api.test.ts` |
-| runtime-focused unit tests | `js/tasty/index.test.ts` |
-
-The fixture matrix gives Tasty coverage across:
-
-- generics
-- signatures
-- unions and literals
-- default type parameters
-- external library references
-- mapped types
-- conditional types
-- template literals
-- type queries
-- type operators
-- JSDoc handling
-- audit-alignment raw/structural edge cases
-- TSX scanning
-- more complex mixed scenarios
-
-## Working On Tasty
-
-If you are making Tasty changes, these files are the main ones to know:
-
-- `model.rs`
-- `emitted.rs`
-- `scan.rs`
-- `generator/esm.rs`
-- `ast/resolve.rs`
-- `packages/reference-rs/js/tasty/index.ts`
-- `packages/reference-rs/tests/tasty/`
-
-## Related Docs
-
-The two Tasty docs worth keeping are:
-
-- `README.md` in this directory for the full system overview
-- `OXC_TYPE_AUDIT.md` for the exact type-surface handling matrix
+Coverage today includes generics, signatures, unions, literals, default type
+parameters, external library references, mapped types, conditional types,
+template literals, type queries, type operators, JSDoc handling, raw-versus-
+structural edge cases, TSX scanning, and mixed fixture scenarios.
