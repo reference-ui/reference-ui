@@ -1,6 +1,3 @@
-import { dirname, resolve } from 'node:path'
-import { pathToFileURL } from 'node:url'
-
 import type {
   TastyFnParam as RawTastyFnParam,
   TastyInterfaceSymbol as RawTastyInterfaceSymbol,
@@ -48,6 +45,11 @@ type TastySymbolKind = 'interface' | 'typeAlias'
 export interface CreateTastyApiOptions {
   manifestPath: string
   importer?: ArtifactImporter
+}
+
+export interface CreateTastyApiFromManifestOptions {
+  manifest: RawTastyManifest
+  importer: ArtifactImporter
 }
 
 export interface TastySymbolSearchResult {
@@ -127,7 +129,7 @@ export interface TastyApi {
 }
 
 class TastyApiRuntime implements TastyApi {
-  private readonly manifestPath: string
+  private readonly manifestPath?: string
   private readonly importer: ArtifactImporter
   private manifestPromise: Promise<RawTastyManifest> | undefined
   private manifest: RawTastyManifest | undefined
@@ -137,9 +139,14 @@ class TastyApiRuntime implements TastyApi {
 
   public readonly graph: TastyGraphApi
 
-  constructor(options: CreateTastyApiOptions) {
-    this.manifestPath = options.manifestPath
+  constructor(options: CreateTastyApiOptions | CreateTastyApiFromManifestOptions) {
     this.importer = options.importer ?? defaultArtifactImporter
+    if ('manifest' in options) {
+      this.manifest = options.manifest
+      this.manifestPromise = Promise.resolve(options.manifest)
+    } else {
+      this.manifestPath = options.manifestPath
+    }
     this.graph = {
       resolveReference: async (ref) => ref.load(),
       loadImmediateDependencies: async (symbol) => {
@@ -186,7 +193,13 @@ class TastyApiRuntime implements TastyApi {
 
   async loadManifest(): Promise<RawTastyManifest> {
     if (!this.manifestPromise) {
-      this.manifestPromise = this.importer(this.manifestPath).then((moduleValue) => {
+      if (!this.manifestPath) {
+        throw new Error('Tasty runtime is missing a manifest source.')
+      }
+
+      this.manifestPromise = resolveArtifactSpecifier(this.manifestPath).then((manifestSpecifier) =>
+        this.importer(manifestSpecifier)
+      ).then((moduleValue) => {
         const manifest = extractManifest(moduleValue)
         this.manifest = manifest
         return manifest
@@ -290,7 +303,9 @@ class TastyApiRuntime implements TastyApi {
   }
 
   private async loadChunk(relativeChunkPath: string): Promise<ModuleNamespace> {
-    const resolvedChunkPath = resolveArtifactPath(this.manifestPath, relativeChunkPath)
+    const resolvedChunkPath = this.manifestPath
+      ? await resolveArtifactPath(this.manifestPath, relativeChunkPath)
+      : relativeChunkPath
     let cached = this.chunkCache.get(resolvedChunkPath)
     if (!cached) {
       cached = this.importer(resolvedChunkPath).then((moduleValue) => normalizeModuleNamespace(moduleValue))
@@ -516,8 +531,12 @@ export function createTastyApi(options: CreateTastyApiOptions): TastyApi {
   return new TastyApiRuntime(options)
 }
 
+export function createTastyApiFromManifest(options: CreateTastyApiFromManifestOptions): TastyApi {
+  return new TastyApiRuntime(options)
+}
+
 async function defaultArtifactImporter(artifactPath: string): Promise<unknown> {
-  return import(pathToFileURL(artifactPath).href)
+  return import(await resolveArtifactSpecifier(artifactPath))
 }
 
 function extractManifest(value: unknown): RawTastyManifest {
@@ -548,11 +567,29 @@ function normalizeModuleNamespace(value: unknown): ModuleNamespace {
   return value as ModuleNamespace
 }
 
-function resolveArtifactPath(basePath: string, relativePath: string): string {
+async function resolveArtifactPath(basePath: string, relativePath: string): Promise<string> {
   if (relativePath.startsWith('./') || relativePath.startsWith('../')) {
-    return resolve(dirname(basePath), relativePath)
+    const baseSpecifier = await resolveArtifactSpecifier(basePath)
+    return new URL(relativePath, baseSpecifier).href
   }
   return relativePath
+}
+
+async function resolveArtifactSpecifier(pathOrSpecifier: string): Promise<string> {
+  if (isUrlLike(pathOrSpecifier)) {
+    return pathOrSpecifier
+  }
+
+  const { pathToFileURL } = await import('node:url')
+  return pathToFileURL(pathOrSpecifier).href
+}
+
+function isUrlLike(value: string): boolean {
+  return value.startsWith('file:')
+    || value.startsWith('http:')
+    || value.startsWith('https:')
+    || value.startsWith('data:')
+    || value.startsWith('blob:')
 }
 
 function isRawTastyManifest(value: unknown): value is RawTastyManifest {

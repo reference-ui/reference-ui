@@ -28,13 +28,17 @@ export function createCaseApi(
   })
 }
 
+function toImportSpecifier(artifactPath: string): string {
+  return artifactPath.startsWith('file:') ? artifactPath : pathToFileURL(artifactPath).href
+}
+
 export function addCaseRuntimeSmokeTests(caseName: string, symbolName: string) {
   it('loads only the manifest during ready()', async () => {
     const loads: string[] = []
     const api = createCaseApi(caseName, {
       importer: async (artifactPath) => {
         loads.push(artifactPath)
-        return import(pathToFileURL(artifactPath).href)
+        return import(toImportSpecifier(artifactPath))
       },
     })
 

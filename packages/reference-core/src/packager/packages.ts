@@ -10,13 +10,16 @@ import { createBundleExports } from './package'
 const ENTRIES = {
   system: 'src/entry/system.ts',
   react: 'src/entry/react.ts',
+  types: 'src/entry/types.ts',
 } as const
 
 const GENERATED_VERSION = '0.0.0-generated'
 const STYLED_INDEX_JS = './css/index.js'
 const STYLED_INDEX_D_TS = './css/index.d.ts'
-const TYPES_INDEX_JS = './tasty/manifest.js'
-const TYPES_INDEX_D_TS = './tasty/manifest.d.ts'
+const TYPES_MANIFEST_JS = './tasty/manifest.js'
+const TYPES_MANIFEST_D_TS = './tasty/manifest.d.ts'
+const TYPES_RUNTIME_JS = './tasty/runtime.js'
+const TYPES_RUNTIME_D_TS = './tasty/runtime.d.ts'
 
 export const SOURCE_PACKAGE = '@reference-ui/core'
 
@@ -82,24 +85,32 @@ export const STYLED_PACKAGE: PackageDefinition = {
 }
 
 /**
- * @reference-ui/types - Generated Tasty AST bundle for reference metadata.
- * JavaScript content is emitted directly by the reference worker into .reference-ui/types/tasty.
+ * @reference-ui/types - Reference runtime entry plus generated Tasty metadata.
+ * Tasty JavaScript content is emitted directly by the reference worker into .reference-ui/types/tasty.
  */
 export const TYPES_PACKAGE: PackageDefinition = {
   name: '@reference-ui/types',
   version: GENERATED_VERSION,
-  description: 'Reference UI TypeScript AST bundle (Tasty output)',
-  bundle: false,
-  main: TYPES_INDEX_JS,
-  types: TYPES_INDEX_D_TS,
+  description: 'Reference UI types runtime and generated Tasty metadata',
+  bundle: true,
+  entry: ENTRIES.types,
+  main: './types.mjs',
+  types: './types.d.mts',
   exports: {
-    '.': {
-      types: TYPES_INDEX_D_TS,
-      import: TYPES_INDEX_JS,
+    ...createBundleExports('types'),
+    './manifest': {
+      types: TYPES_MANIFEST_D_TS,
+      import: TYPES_MANIFEST_JS,
+    },
+    './runtime': {
+      types: TYPES_RUNTIME_D_TS,
+      import: TYPES_RUNTIME_JS,
     },
   },
   copyFrom: [
-    { kind: 'file', from: 'cli', src: 'src/entry/types.d.ts', dest: 'tasty/manifest.d.ts' },
+    { kind: 'file', from: 'cli', src: 'src/reference/manifest.d.ts', dest: 'tasty/manifest.d.ts' },
+    { kind: 'file', from: 'cli', src: 'src/reference/types-runtime.ts', dest: 'tasty/runtime.ts' },
+    { kind: 'file', from: 'cli', src: 'src/reference/types-runtime.d.ts', dest: 'tasty/runtime.d.ts' },
   ],
 }
 
