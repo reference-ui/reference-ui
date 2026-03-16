@@ -1,7 +1,7 @@
 export interface DocsReferenceButtonProps {
   label: string
   disabled?: boolean
-  variant: 'solid' | 'ghost'
+  variant: 'solid' | 'ghost' | 'another'
   icon?: 'plus' | 'minus'
 }
 
