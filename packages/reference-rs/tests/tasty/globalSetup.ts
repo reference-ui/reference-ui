@@ -1,21 +1,27 @@
 /**
- * Vitest globalSetup: emit test bundles using the compiled napi-rs runtime
- * so that bundle tests load real native output instead of Rust-test-produced files.
+ * Vitest globalSetup: emit test Tasty artifacts using the compiled napi-rs runtime
+ * so that bundle/runtime tests load real native output instead of Rust-test-produced files.
  */
 import { execFileSync } from 'node:child_process'
-import { readdirSync, writeFileSync, mkdirSync } from 'node:fs'
+import { mkdirSync, readdirSync, writeFileSync } from 'node:fs'
 import { performance } from 'node:perf_hooks'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { pathToFileURL } from 'node:url'
 
 import {
   getVirtualNative,
   resolveReferenceRsPackageDir,
-  scanAndEmitBundle,
+  scanAndEmitModules,
 } from '../../js/runtime/index'
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
+
+interface EmittedModulesPayload {
+  entrypoint: string
+  modules: Record<string, string>
+  type_declarations: Record<string, string>
+}
 
 export default async function globalSetup() {
   if (!getVirtualNative()) {
@@ -47,18 +53,22 @@ export default async function globalSetup() {
     const include = [`cases/${scenario}/input/**/*.{ts,tsx}`]
     const scenarioOutputDir = join(casesDir, scenario, 'output')
     const startedAt = performance.now()
-    const bundleSource = scanAndEmitBundle(tastyDir, include)
+    const emitted = JSON.parse(scanAndEmitModules(tastyDir, include)) as EmittedModulesPayload
     const rustApiMs = performance.now() - startedAt
 
     mkdirSync(scenarioOutputDir, { recursive: true })
-    writeFileSync(join(scenarioOutputDir, 'bundle.js'), bundleSource + '\n', 'utf-8')
+    for (const [relativeModulePath, source] of Object.entries(emitted.modules)) {
+      const outputPath = join(scenarioOutputDir, relativeModulePath.replace(/^\.\//, ''))
+      mkdirSync(dirname(outputPath), { recursive: true })
+      writeFileSync(outputPath, source + '\n', 'utf-8')
+    }
     writeFileSync(
       join(scenarioOutputDir, 'perf-metrics.txt'),
       [
         '// perf metrics',
         `// rust_api_ms: ${rustApiMs.toFixed(3)}`,
         `// include: ${include[0]}`,
-        '// note: measured around the native scanAndEmitBundle call only',
+        '// note: measured around the native scanAndEmitModules call only',
         '',
       ].join('\n'),
       'utf-8'

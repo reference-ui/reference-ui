@@ -3,13 +3,14 @@ use std::fmt::Write;
 
 use serde::Serialize;
 
+use super::super::emitted::{TastyManifest, TastySymbolIndexEntry, TastySymbolKind};
 use super::super::model::{
     FnParam, JsDoc, JsDocTag, TemplateLiteralPart, TsMember, TsMemberKind, TsSymbol,
     TsSymbolKind, TsTypeParameter, TupleElement, TypeRef, TypeScriptBundle,
 };
 
 #[allow(dead_code)]
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct TypeScriptEsmBundle {
     pub entrypoint: String,
     pub modules: BTreeMap<String, String>,
@@ -26,7 +27,40 @@ struct SymbolRef {
 #[allow(dead_code)]
 pub fn emit_esm_bundle(bundle: &TypeScriptBundle) -> Result<TypeScriptEsmBundle, String> {
     let entrypoint = "./bundle.js".to_string();
+    let manifest_path = "./manifest.js".to_string();
     let export_names = build_symbol_export_names(bundle);
+
+    let mut modules = BTreeMap::new();
+    modules.insert(
+        entrypoint.clone(),
+        emit_bundle_entrypoint(bundle, &export_names)?,
+    );
+    modules.insert(
+        manifest_path,
+        emit_manifest_module(bundle, &export_names)?,
+    );
+
+    for (symbol_id, symbol) in &bundle.symbols {
+        let export_name = export_names
+            .get(symbol_id)
+            .expect("symbol export name should exist");
+        modules.insert(
+            chunk_path_for_export_name(export_name),
+            emit_chunk_module(bundle, symbol, export_name, &export_names)?,
+        );
+    }
+
+    Ok(TypeScriptEsmBundle {
+        entrypoint,
+        modules,
+        type_declarations: BTreeMap::new(),
+    })
+}
+
+fn emit_bundle_entrypoint(
+    bundle: &TypeScriptBundle,
+    export_names: &BTreeMap<String, String>,
+) -> Result<String, String> {
     let mut source = String::new();
 
     for (symbol_id, symbol) in &bundle.symbols {
@@ -36,7 +70,7 @@ pub fn emit_esm_bundle(bundle: &TypeScriptBundle) -> Result<TypeScriptEsmBundle,
         writeln!(
             source,
             "export const {export_name} = {};",
-            emit_symbol_object(bundle, symbol, export_name, &export_names)?,
+            emit_symbol_object(bundle, symbol, export_name, export_names)?,
         )
         .expect("write to string should succeed");
         source.push('\n');
@@ -45,13 +79,13 @@ pub fn emit_esm_bundle(bundle: &TypeScriptBundle) -> Result<TypeScriptEsmBundle,
     writeln!(
         source,
         "export const interfaces = {};",
-        emit_symbol_refs_by_kind(bundle, &export_names, TsSymbolKind::Interface)?,
+        emit_symbol_refs_by_kind(bundle, export_names, TsSymbolKind::Interface)?,
     )
     .expect("write to string should succeed");
     writeln!(
         source,
         "export const types = {};",
-        emit_symbol_refs_by_kind(bundle, &export_names, TsSymbolKind::TypeAlias)?,
+        emit_symbol_refs_by_kind(bundle, export_names, TsSymbolKind::TypeAlias)?,
     )
     .expect("write to string should succeed");
     writeln!(
@@ -61,14 +95,54 @@ pub fn emit_esm_bundle(bundle: &TypeScriptBundle) -> Result<TypeScriptEsmBundle,
     )
     .expect("write to string should succeed");
 
-    let mut modules = BTreeMap::new();
-    modules.insert(entrypoint.clone(), source);
+    Ok(source)
+}
 
-    Ok(TypeScriptEsmBundle {
-        entrypoint,
-        modules,
-        type_declarations: BTreeMap::new(),
-    })
+fn emit_manifest_module(
+    bundle: &TypeScriptBundle,
+    export_names: &BTreeMap<String, String>,
+) -> Result<String, String> {
+    let mut symbols_by_name = BTreeMap::new();
+    let mut symbols_by_id = BTreeMap::new();
+
+    for (symbol_id, symbol) in &bundle.symbols {
+        let export_name = export_names
+            .get(symbol_id)
+            .expect("symbol export name should exist")
+            .clone();
+        symbols_by_name.insert(symbol.name.clone(), export_name.clone());
+        symbols_by_id.insert(
+            export_name.clone(),
+            TastySymbolIndexEntry {
+                id: export_name.clone(),
+                name: symbol.name.clone(),
+                kind: emitted_symbol_kind(symbol.kind.clone()),
+                chunk: chunk_path_for_export_name(&export_name),
+                library: symbol.library.clone(),
+            },
+        );
+    }
+
+    let manifest = TastyManifest {
+        version: "1".to_string(),
+        symbols_by_name,
+        symbols_by_id,
+    };
+    let literal = to_js_literal(&manifest)?;
+
+    Ok(format!("export const manifest = {literal};\nexport default manifest;\n"))
+}
+
+fn emit_chunk_module(
+    bundle: &TypeScriptBundle,
+    symbol: &TsSymbol,
+    export_name: &str,
+    export_names: &BTreeMap<String, String>,
+) -> Result<String, String> {
+    let symbol_source = emit_symbol_object(bundle, symbol, export_name, export_names)?;
+    Ok(format!(
+        "const symbol = {symbol_source};\nexport {{ symbol as {export_name} }};\nexport default symbol;\n"
+    ))
 }
 
 fn emit_symbol_object(
@@ -775,6 +849,17 @@ fn stable_hash_symbol_id(symbol_id: &str) -> u64 {
     symbol_id
         .bytes()
         .fold(FNV_OFFSET, |h, b| h.wrapping_mul(FNV_PRIME) ^ u64::from(b))
+}
+
+fn emitted_symbol_kind(kind: TsSymbolKind) -> TastySymbolKind {
+    match kind {
+        TsSymbolKind::Interface => TastySymbolKind::Interface,
+        TsSymbolKind::TypeAlias => TastySymbolKind::TypeAlias,
+    }
+}
+
+fn chunk_path_for_export_name(export_name: &str) -> String {
+    format!("./chunks/{export_name}.js")
 }
 
 fn build_symbol_export_names(bundle: &TypeScriptBundle) -> BTreeMap<String, String> {

@@ -8,36 +8,73 @@ use ts_rs::TS;
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export, export_to = "js/tasty/generated/", rename_all = "camelCase")]
-pub struct BundleModule {
+pub struct TastyModule {
     #[serde(flatten)]
     #[ts(flatten)]
-    pub symbols: BTreeMap<String, BundleSymbol>,
-    pub interfaces: Vec<BundleSymbolRef>,
-    pub types: Vec<BundleSymbolRef>,
+    pub symbols: BTreeMap<String, TastySymbol>,
+    pub interfaces: Vec<TastySymbolRef>,
+    pub types: Vec<TastySymbolRef>,
     pub libraries: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export, export_to = "js/tasty/generated/", rename_all = "camelCase")]
+pub struct TastyManifest {
+    pub version: String,
+    pub symbols_by_name: BTreeMap<String, String>,
+    pub symbols_by_id: BTreeMap<String, TastySymbolIndexEntry>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export_to = "js/tasty/generated/", rename_all = "camelCase")]
+pub struct TastySymbolIndexEntry {
+    pub id: String,
+    pub name: String,
+    pub kind: TastySymbolKind,
+    pub chunk: String,
+    pub library: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export, export_to = "js/tasty/generated/", rename_all = "camelCase")]
+pub struct TastyChunkModule {
+    #[serde(flatten)]
+    #[ts(flatten)]
+    pub symbols: BTreeMap<String, TastySymbol>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export_to = "js/tasty/generated/", rename_all = "camelCase")]
-pub struct BundleSymbolRef {
+pub struct TastySymbolRef {
     pub id: String,
     pub name: String,
     pub library: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export_to = "js/tasty/generated/", rename_all = "camelCase")]
+pub enum TastySymbolKind {
+    Interface,
+    TypeAlias,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
 #[serde(untagged)]
 #[ts(export_to = "js/tasty/generated/")]
-pub enum BundleSymbol {
-    Interface(BundleInterfaceSymbol),
-    TypeAlias(BundleTypeAliasSymbol),
+pub enum TastySymbol {
+    Interface(TastyInterfaceSymbol),
+    TypeAlias(TastyTypeAliasSymbol),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export_to = "js/tasty/generated/", rename_all = "camelCase")]
-pub struct BundleInterfaceSymbol {
+pub struct TastyInterfaceSymbol {
     pub id: String,
     pub name: String,
     pub library: String,
@@ -49,19 +86,19 @@ pub struct BundleInterfaceSymbol {
     pub description_raw: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
-    pub jsdoc: Option<BundleJsDoc>,
+    pub jsdoc: Option<TastyJsDoc>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
-    pub type_parameters: Option<Vec<BundleTypeParameter>>,
-    pub members: Vec<BundleMember>,
-    pub extends: Vec<BundleSymbolRef>,
-    pub types: Vec<BundleSymbolRef>,
+    pub type_parameters: Option<Vec<TastyTypeParameter>>,
+    pub members: Vec<TastyMember>,
+    pub extends: Vec<TastySymbolRef>,
+    pub types: Vec<TastySymbolRef>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export_to = "js/tasty/generated/", rename_all = "camelCase")]
-pub struct BundleTypeAliasSymbol {
+pub struct TastyTypeAliasSymbol {
     pub id: String,
     pub name: String,
     pub library: String,
@@ -73,17 +110,17 @@ pub struct BundleTypeAliasSymbol {
     pub description_raw: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
-    pub jsdoc: Option<BundleJsDoc>,
+    pub jsdoc: Option<TastyJsDoc>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
-    pub type_parameters: Option<Vec<BundleTypeParameter>>,
-    pub definition: Option<BundleTypeRef>,
+    pub type_parameters: Option<Vec<TastyTypeParameter>>,
+    pub definition: Option<TastyTypeRef>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export_to = "js/tasty/generated/", rename_all = "camelCase")]
-pub struct BundleJsDocTag {
+pub struct TastyJsDocTag {
     pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
@@ -93,34 +130,34 @@ pub struct BundleJsDocTag {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export_to = "js/tasty/generated/", rename_all = "camelCase")]
-pub struct BundleJsDoc {
+pub struct TastyJsDoc {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub summary: Option<String>,
-    pub tags: Vec<BundleJsDocTag>,
+    pub tags: Vec<TastyJsDocTag>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export_to = "js/tasty/generated/", rename_all = "camelCase")]
-pub struct BundleTypeParameter {
+pub struct TastyTypeParameter {
     pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
-    pub constraint: Option<BundleTypeRef>,
+    pub constraint: Option<TastyTypeRef>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
-    pub default: Option<BundleTypeRef>,
+    pub default: Option<TastyTypeRef>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export_to = "js/tasty/generated/", rename_all = "camelCase")]
-pub struct BundleMember {
+pub struct TastyMember {
     pub name: String,
     pub optional: bool,
     pub readonly: bool,
-    pub kind: BundleMemberKind,
+    pub kind: TastyMemberKind,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub description: Option<String>,
@@ -129,14 +166,14 @@ pub struct BundleMember {
     pub description_raw: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
-    pub jsdoc: Option<BundleJsDoc>,
-    pub r#type: Option<BundleTypeRef>,
+    pub jsdoc: Option<TastyJsDoc>,
+    pub r#type: Option<TastyTypeRef>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
 #[serde(rename_all = "snake_case")]
 #[ts(export_to = "js/tasty/generated/", rename_all = "snake_case")]
-pub enum BundleMemberKind {
+pub enum TastyMemberKind {
     Property,
     Method,
     Call,
@@ -147,42 +184,42 @@ pub enum BundleMemberKind {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export_to = "js/tasty/generated/", rename_all = "camelCase")]
-pub struct BundleFnParam {
+pub struct TastyFnParam {
     pub name: Option<String>,
     pub optional: bool,
-    pub type_ref: Option<BundleTypeRef>,
+    pub type_ref: Option<TastyTypeRef>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export_to = "js/tasty/generated/", rename_all = "camelCase")]
-pub struct BundleTupleElement {
+pub struct TastyTupleElement {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub label: Option<String>,
     pub optional: bool,
     pub rest: bool,
-    pub element: BundleTypeRef,
+    pub element: TastyTypeRef,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export_to = "js/tasty/generated/", rename_all = "camelCase")]
-pub struct BundleTypeReference {
+pub struct TastyTypeReference {
     pub id: String,
     pub name: String,
     pub library: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
-    pub type_arguments: Option<Vec<BundleTypeRef>>,
+    pub type_arguments: Option<Vec<TastyTypeRef>>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
 #[serde(untagged)]
 #[ts(export_to = "js/tasty/generated/")]
-pub enum BundleTypeRef {
-    Reference(BundleTypeReference),
-    Structured(BundleStructuredTypeRef),
+pub enum TastyTypeRef {
+    Reference(TastyTypeReference),
+    Structured(TastyStructuredTypeRef),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
@@ -193,7 +230,7 @@ pub enum BundleTypeRef {
     rename_all = "snake_case",
     rename_all_fields = "camelCase"
 )]
-pub enum BundleStructuredTypeRef {
+pub enum TastyStructuredTypeRef {
     Intrinsic {
         name: String,
     },
@@ -201,61 +238,61 @@ pub enum BundleStructuredTypeRef {
         value: String,
     },
     Object {
-        members: Vec<BundleMember>,
+        members: Vec<TastyMember>,
     },
     Union {
-        types: Vec<BundleTypeRef>,
+        types: Vec<TastyTypeRef>,
     },
     Array {
-        element: Box<BundleTypeRef>,
+        element: Box<TastyTypeRef>,
     },
     Tuple {
-        elements: Vec<BundleTupleElement>,
+        elements: Vec<TastyTupleElement>,
     },
     Intersection {
-        types: Vec<BundleTypeRef>,
+        types: Vec<TastyTypeRef>,
     },
     IndexedAccess {
-        object: Box<BundleTypeRef>,
-        index: Box<BundleTypeRef>,
+        object: Box<TastyTypeRef>,
+        index: Box<TastyTypeRef>,
     },
     Function {
-        params: Vec<BundleFnParam>,
-        return_type: Box<BundleTypeRef>,
+        params: Vec<TastyFnParam>,
+        return_type: Box<TastyTypeRef>,
     },
     Constructor {
         r#abstract: bool,
         #[serde(skip_serializing_if = "Option::is_none")]
         #[ts(optional)]
-        type_parameters: Option<Vec<BundleTypeParameter>>,
-        params: Vec<BundleFnParam>,
-        return_type: Box<BundleTypeRef>,
+        type_parameters: Option<Vec<TastyTypeParameter>>,
+        params: Vec<TastyFnParam>,
+        return_type: Box<TastyTypeRef>,
     },
     TypeOperator {
-        operator: BundleTypeOperatorKind,
-        target: Box<BundleTypeRef>,
+        operator: TastyTypeOperatorKind,
+        target: Box<TastyTypeRef>,
     },
     TypeQuery {
         expression: String,
     },
     Conditional {
-        check_type: Box<BundleTypeRef>,
-        extends_type: Box<BundleTypeRef>,
-        true_type: Box<BundleTypeRef>,
-        false_type: Box<BundleTypeRef>,
+        check_type: Box<TastyTypeRef>,
+        extends_type: Box<TastyTypeRef>,
+        true_type: Box<TastyTypeRef>,
+        false_type: Box<TastyTypeRef>,
     },
     Mapped {
         type_param: String,
-        source_type: Box<BundleTypeRef>,
+        source_type: Box<TastyTypeRef>,
         #[serde(skip_serializing_if = "Option::is_none")]
         #[ts(optional)]
-        name_type: Option<Box<BundleTypeRef>>,
-        optional_modifier: BundleMappedModifierKind,
-        readonly_modifier: BundleMappedModifierKind,
-        value_type: Option<Box<BundleTypeRef>>,
+        name_type: Option<Box<TastyTypeRef>>,
+        optional_modifier: TastyMappedModifierKind,
+        readonly_modifier: TastyMappedModifierKind,
+        value_type: Option<Box<TastyTypeRef>>,
     },
     TemplateLiteral {
-        parts: Vec<BundleTemplateLiteralPart>,
+        parts: Vec<TastyTemplateLiteralPart>,
     },
     Raw {
         summary: String,
@@ -270,19 +307,19 @@ pub enum BundleStructuredTypeRef {
     rename_all = "snake_case",
     rename_all_fields = "camelCase"
 )]
-pub enum BundleTemplateLiteralPart {
+pub enum TastyTemplateLiteralPart {
     Text {
         value: String,
     },
     Type {
-        value: BundleTypeRef,
+        value: TastyTypeRef,
     },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
 #[serde(rename_all = "snake_case")]
 #[ts(export_to = "js/tasty/generated/", rename_all = "snake_case")]
-pub enum BundleMappedModifierKind {
+pub enum TastyMappedModifierKind {
     Preserve,
     Add,
     Remove,
@@ -291,7 +328,7 @@ pub enum BundleMappedModifierKind {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
 #[serde(rename_all = "snake_case")]
 #[ts(export_to = "js/tasty/generated/", rename_all = "snake_case")]
-pub enum BundleTypeOperatorKind {
+pub enum TastyTypeOperatorKind {
     Keyof,
     Readonly,
     Unique,

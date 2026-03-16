@@ -18,4 +18,6 @@ mod tests;
 pub use emitted::*;
 pub use request::ScanRequest;
 pub use scan::scan_and_emit_bundle;
-use scan::scan_typescript_bundle;
+pub use scan::scan_and_emit_modules;
+#[allow(unused_imports)]
+pub use scan::scan_typescript_bundle;

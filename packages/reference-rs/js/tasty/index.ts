@@ -1,53 +1,66 @@
+import { dirname, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
 import type {
-  BundleFnParam,
-  BundleInterfaceSymbol,
-  BundleMember,
-  BundleModule,
-  BundleSymbolRef,
-  BundleTypeAliasSymbol,
-  BundleTypeParameter,
-  BundleTypeRef,
-  BundleTypeReference,
-} from './generated'
-export type {
-  BundleFnParam,
-  BundleInterfaceSymbol,
-  BundleMember,
-  BundleMemberKind,
-  BundleModule,
-  BundleStructuredTypeRef,
-  BundleSymbol,
-  BundleSymbolRef,
-  BundleTemplateLiteralPart,
-  BundleTupleElement,
-  BundleTypeAliasSymbol,
-  BundleTypeParameter,
-  BundleTypeRef,
-  BundleTypeReference,
+  TastyFnParam as RawTastyFnParam,
+  TastyInterfaceSymbol as RawTastyInterfaceSymbol,
+  TastyManifest as RawTastyManifest,
+  TastyMember as RawTastyMember,
+  TastySymbol as RawTastySymbol,
+  TastySymbolIndexEntry as RawTastySymbolIndexEntry,
+  TastySymbolRef as RawTastySymbolRef,
+  TastyTypeAliasSymbol as RawTastyTypeAliasSymbol,
+  TastyTypeParameter as RawTastyTypeParameter,
+  TastyTypeRef as RawTastyTypeRef,
+  TastyTypeReference as RawTastyTypeReference,
 } from './generated'
 
-type BundleSymbol = BundleInterfaceSymbol | BundleTypeAliasSymbol
-type BundleImporter = (bundlePath: string) => Promise<BundleModule>
+export type {
+  TastyChunkModule as RawTastyChunkModule,
+  TastyFnParam as RawTastyFnParam,
+  TastyInterfaceSymbol as RawTastyInterfaceSymbol,
+  TastyJsDoc as RawTastyJsDoc,
+  TastyJsDocTag as RawTastyJsDocTag,
+  TastyManifest as RawTastyManifest,
+  TastyMappedModifierKind as RawTastyMappedModifierKind,
+  TastyMember as RawTastyMember,
+  TastyMemberKind as RawTastyMemberKind,
+  TastyModule as RawTastyModule,
+  TastyStructuredTypeRef as RawTastyStructuredTypeRef,
+  TastySymbol as RawTastySymbol,
+  TastySymbolIndexEntry as RawTastySymbolIndexEntry,
+  TastySymbolKind as RawTastySymbolKind,
+  TastySymbolRef as RawTastySymbolRef,
+  TastyTemplateLiteralPart as RawTastyTemplateLiteralPart,
+  TastyTupleElement as RawTastyTupleElement,
+  TastyTypeAliasSymbol as RawTastyTypeAliasSymbol,
+  TastyTypeOperatorKind as RawTastyTypeOperatorKind,
+  TastyTypeParameter as RawTastyTypeParameter,
+  TastyTypeRef as RawTastyTypeRef,
+  TastyTypeReference as RawTastyTypeReference,
+} from './generated'
+
+type TastySymbolModel = RawTastySymbol
+type ModuleNamespace = Record<string, unknown>
+type ArtifactImporter = (artifactPath: string) => Promise<unknown>
 type TastySymbolKind = 'interface' | 'typeAlias'
 
 export interface CreateTastyApiOptions {
-  bundlePath: string
-  importer?: BundleImporter
+  manifestPath: string
+  importer?: ArtifactImporter
 }
 
 export interface TastySymbolSearchResult {
   id: string
   name: string
   kind: TastySymbolKind
+  chunk: string
   library: string
-  symbol: TastySymbol
 }
 
 export interface TastyTypeRef {
   getKind(): string
-  getRaw(): BundleTypeRef
+  getRaw(): RawTastyTypeRef
   isRaw(): boolean
   getSummary(): string | undefined
   isLiteral(): boolean
@@ -65,7 +78,7 @@ export interface TastyMember {
   isReadonly(): boolean
   getKind(): string
   getType(): TastyTypeRef | undefined
-  getRaw(): BundleMember
+  getRaw(): RawTastyMember
 }
 
 export interface TastySymbolRef {
@@ -83,9 +96,9 @@ export interface TastySymbol {
   getName(): string
   getKind(): TastySymbolKind
   getLibrary(): string | undefined
-  getRaw(): BundleSymbol
+  getRaw(): TastySymbolModel
   getMembers(): TastyMember[]
-  getTypeParameters(): BundleTypeParameter[]
+  getTypeParameters(): RawTastyTypeParameter[]
   getExtends(): TastySymbolRef[]
   getUnderlyingType(): TastyTypeRef | undefined
   loadExtendsSymbols(): Promise<TastySymbol[]>
@@ -101,11 +114,12 @@ export interface TastyGraphApi {
 
 export interface TastyApi {
   ready(): Promise<void>
-  loadBundle(): Promise<BundleModule>
-  getBundle(): BundleModule | undefined
+  loadManifest(): Promise<RawTastyManifest>
+  getManifest(): RawTastyManifest | undefined
   loadSymbolById(id: string): Promise<TastySymbol>
   loadSymbolByName(name: string): Promise<TastySymbol>
   findSymbolByName(name: string): Promise<TastySymbol | undefined>
+  prefetchChunk(path: string): Promise<void>
   prefetchSymbolById(id: string): Promise<void>
   prefetchSymbolByName(name: string): Promise<void>
   searchSymbols(query: string): Promise<TastySymbolSearchResult[]>
@@ -113,19 +127,19 @@ export interface TastyApi {
 }
 
 class TastyApiRuntime implements TastyApi {
-  private readonly bundlePath: string
-  private readonly importer: BundleImporter
-  private bundlePromise: Promise<BundleModule> | undefined
-  private bundle: BundleModule | undefined
-  private readonly symbolNameToId = new Map<string, string>()
-  private readonly rawSymbolsById = new Map<string, BundleSymbol>()
+  private readonly manifestPath: string
+  private readonly importer: ArtifactImporter
+  private manifestPromise: Promise<RawTastyManifest> | undefined
+  private manifest: RawTastyManifest | undefined
+  private readonly chunkCache = new Map<string, Promise<ModuleNamespace>>()
+  private readonly rawSymbolsById = new Map<string, TastySymbolModel>()
   private readonly symbolCache = new Map<string, TastySymbolImpl>()
 
   public readonly graph: TastyGraphApi
 
   constructor(options: CreateTastyApiOptions) {
-    this.bundlePath = options.bundlePath
-    this.importer = options.importer ?? defaultBundleImporter
+    this.manifestPath = options.manifestPath
+    this.importer = options.importer ?? defaultArtifactImporter
     this.graph = {
       resolveReference: async (ref) => ref.load(),
       loadImmediateDependencies: async (symbol) => {
@@ -134,7 +148,7 @@ class TastyApiRuntime implements TastyApi {
       },
       loadExtendsChain: async (symbol) => {
         const visited = new Set<string>()
-        const ordered: TastySymbol[] = []
+        const chain: TastySymbol[] = []
 
         const visit = async (current: TastySymbol) => {
           for (const ref of current.getExtends()) {
@@ -142,24 +156,24 @@ class TastyApiRuntime implements TastyApi {
             if (visited.has(id)) continue
             visited.add(id)
             const loaded = await ref.load()
-            ordered.push(loaded)
+            chain.push(loaded)
             await visit(loaded)
           }
         }
 
         await visit(symbol)
-        return ordered
+        return chain
       },
       flattenInterfaceMembers: async (symbol) => {
         const inherited = await this.graph.loadExtendsChain(symbol)
-        const members = inherited.flatMap((item) => item.getMembers())
-        members.push(...symbol.getMembers())
-        return members
+        const flattened = inherited.flatMap((item) => item.getMembers())
+        flattened.push(...symbol.getMembers())
+        return flattened
       },
       collectUserOwnedReferences: async (symbol) => {
         const refs = collectUserOwnedReferencesFromSymbol(symbol.getRaw())
-        return uniqueSymbolRefs(
-          refs.map((ref) => this.createSymbolRef(ref)),
+        return uniqueById(
+          refs.filter((ref) => ref.library === 'user').map((ref) => this.createSymbolRef(ref)),
           (ref) => ref.getId()
         )
       },
@@ -167,28 +181,39 @@ class TastyApiRuntime implements TastyApi {
   }
 
   async ready(): Promise<void> {
-    await this.loadBundle()
+    await this.loadManifest()
   }
 
-  async loadBundle(): Promise<BundleModule> {
-    if (!this.bundlePromise) {
-      this.bundlePromise = this.importer(this.bundlePath).then((bundle) => {
-        this.bundle = bundle
-        this.indexBundle(bundle)
-        return bundle
+  async loadManifest(): Promise<RawTastyManifest> {
+    if (!this.manifestPromise) {
+      this.manifestPromise = this.importer(this.manifestPath).then((moduleValue) => {
+        const manifest = extractManifest(moduleValue)
+        this.manifest = manifest
+        return manifest
       })
     }
 
-    return this.bundlePromise
+    return this.manifestPromise
   }
 
-  getBundle(): BundleModule | undefined {
-    return this.bundle
+  getManifest(): RawTastyManifest | undefined {
+    return this.manifest
   }
 
   async loadSymbolById(id: string): Promise<TastySymbol> {
-    await this.loadBundle()
-    return this.getOrCreateSymbol(id)
+    const cached = this.symbolCache.get(id)
+    if (cached) return cached
+
+    const manifest = await this.loadManifest()
+    const entry = manifest.symbolsById[id]
+    if (!entry) {
+      throw new Error(`Symbol id not found in manifest: ${id}`)
+    }
+
+    const raw = await this.loadRawSymbol(entry)
+    const created = new TastySymbolImpl(this, entry, raw)
+    this.symbolCache.set(id, created)
+    return created
   }
 
   async loadSymbolByName(name: string): Promise<TastySymbol> {
@@ -200,10 +225,14 @@ class TastyApiRuntime implements TastyApi {
   }
 
   async findSymbolByName(name: string): Promise<TastySymbol | undefined> {
-    await this.loadBundle()
-    const id = this.symbolNameToId.get(name)
+    const manifest = await this.loadManifest()
+    const id = manifest.symbolsByName[name]
     if (!id) return undefined
-    return this.getOrCreateSymbol(id)
+    return this.loadSymbolById(id)
+  }
+
+  async prefetchChunk(path: string): Promise<void> {
+    await this.loadChunk(path)
   }
 
   async prefetchSymbolById(id: string): Promise<void> {
@@ -215,88 +244,86 @@ class TastyApiRuntime implements TastyApi {
   }
 
   async searchSymbols(query: string): Promise<TastySymbolSearchResult[]> {
-    await this.loadBundle()
+    const manifest = await this.loadManifest()
     const normalized = query.trim().toLowerCase()
-    const matches = [...this.rawSymbolsById.entries()]
-      .filter(([, symbol]) => symbol.name.toLowerCase().includes(normalized))
-      .sort((a, b) => a[1].name.localeCompare(b[1].name))
 
-    return Promise.all(
-      matches.map(async ([id, symbol]) => ({
-        id,
-        name: symbol.name,
-        kind: getSymbolKind(symbol),
-        library: symbol.library,
-        symbol: await this.loadSymbolById(id),
+    return Object.values(manifest.symbolsById)
+      .filter((entry) => entry.name.toLowerCase().includes(normalized))
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((entry) => ({
+        id: entry.id,
+        name: entry.name,
+        kind: entry.kind,
+        chunk: entry.chunk,
+        library: entry.library,
       }))
-    )
   }
 
   isSymbolLoaded(id: string): boolean {
-    return this.symbolCache.has(id)
+    return this.rawSymbolsById.has(id)
   }
 
   getLoadedSymbol(id: string): TastySymbol | undefined {
     return this.symbolCache.get(id)
   }
 
-  createSymbolRef(raw: BundleSymbolRef): TastySymbolRef {
+  getManifestEntry(id: string): RawTastySymbolIndexEntry | undefined {
+    return this.manifest?.symbolsById[id]
+  }
+
+  createSymbolRef(raw: RawTastySymbolRef): TastySymbolRef {
     return new TastySymbolRefImpl(this, raw)
   }
 
-  createTypeRef(raw: BundleTypeRef): TastyTypeRef {
+  createTypeRef(raw: RawTastyTypeRef): TastyTypeRef {
     return new TastyTypeRefImpl(this, raw)
   }
 
-  private indexBundle(bundle: BundleModule) {
-    this.rawSymbolsById.clear()
-    this.symbolNameToId.clear()
-
-    for (const [key, value] of Object.entries(bundle)) {
-      if (!isBundleSymbol(value)) continue
-      this.rawSymbolsById.set(key, value)
-      this.symbolNameToId.set(value.name, key)
-    }
-  }
-
-  private getOrCreateSymbol(id: string): TastySymbolImpl {
-    const cached = this.symbolCache.get(id)
+  private async loadRawSymbol(entry: RawTastySymbolIndexEntry): Promise<TastySymbolModel> {
+    const cached = this.rawSymbolsById.get(entry.id)
     if (cached) return cached
 
-    const raw = this.rawSymbolsById.get(id)
-    if (!raw) {
-      throw new Error(`Symbol id not found: ${id}`)
-    }
+    const moduleValue = await this.loadChunk(entry.chunk)
+    const symbol = extractChunkSymbol(moduleValue, entry.id)
+    this.rawSymbolsById.set(entry.id, symbol)
+    return symbol
+  }
 
-    const created = new TastySymbolImpl(this, raw)
-    this.symbolCache.set(id, created)
-    return created
+  private async loadChunk(relativeChunkPath: string): Promise<ModuleNamespace> {
+    const resolvedChunkPath = resolveArtifactPath(this.manifestPath, relativeChunkPath)
+    let cached = this.chunkCache.get(resolvedChunkPath)
+    if (!cached) {
+      cached = this.importer(resolvedChunkPath).then((moduleValue) => normalizeModuleNamespace(moduleValue))
+      this.chunkCache.set(resolvedChunkPath, cached)
+    }
+    return cached
   }
 }
 
 class TastySymbolImpl implements TastySymbol {
   constructor(
     private readonly api: TastyApiRuntime,
-    private readonly raw: BundleSymbol
+    private readonly entry: RawTastySymbolIndexEntry,
+    private readonly raw: TastySymbolModel
   ) {}
 
   getId(): string {
-    return this.raw.id
+    return this.entry.id
   }
 
   getName(): string {
-    return this.raw.name
+    return this.entry.name
   }
 
   getKind(): TastySymbolKind {
-    return getSymbolKind(this.raw)
+    return this.entry.kind
   }
 
   getLibrary(): string | undefined {
-    return this.raw.library
+    return this.entry.library
   }
 
-  getRaw(): BundleSymbol {
+  getRaw(): TastySymbolModel {
     return this.raw
   }
 
@@ -305,7 +332,7 @@ class TastySymbolImpl implements TastySymbol {
     return this.raw.members.map((member) => new TastyMemberImpl(this.api, member))
   }
 
-  getTypeParameters(): BundleTypeParameter[] {
+  getTypeParameters(): RawTastyTypeParameter[] {
     return this.raw.typeParameters ?? []
   }
 
@@ -327,7 +354,7 @@ class TastySymbolImpl implements TastySymbol {
 class TastySymbolRefImpl implements TastySymbolRef {
   constructor(
     private readonly api: TastyApiRuntime,
-    private readonly raw: BundleSymbolRef
+    private readonly raw: RawTastySymbolRef
   ) {}
 
   getId(): string {
@@ -339,7 +366,7 @@ class TastySymbolRefImpl implements TastySymbolRef {
   }
 
   getKind(): string | undefined {
-    return undefined
+    return this.api.getManifestEntry(this.raw.id)?.kind
   }
 
   getLibrary(): string | undefined {
@@ -362,7 +389,7 @@ class TastySymbolRefImpl implements TastySymbolRef {
 class TastyMemberImpl implements TastyMember {
   constructor(
     private readonly api: TastyApiRuntime,
-    private readonly raw: BundleMember
+    private readonly raw: RawTastyMember
   ) {}
 
   getName(): string {
@@ -386,7 +413,7 @@ class TastyMemberImpl implements TastyMember {
     return this.api.createTypeRef(this.raw.type)
   }
 
-  getRaw(): BundleMember {
+  getRaw(): RawTastyMember {
     return this.raw
   }
 }
@@ -394,14 +421,14 @@ class TastyMemberImpl implements TastyMember {
 class TastyTypeRefImpl implements TastyTypeRef {
   constructor(
     private readonly api: TastyApiRuntime,
-    private readonly raw: BundleTypeRef
+    private readonly raw: RawTastyTypeRef
   ) {}
 
   getKind(): string {
     return isTypeReference(this.raw) ? 'reference' : this.raw.kind
   }
 
-  getRaw(): BundleTypeRef {
+  getRaw(): RawTastyTypeRef {
     return this.raw
   }
 
@@ -489,36 +516,72 @@ export function createTastyApi(options: CreateTastyApiOptions): TastyApi {
   return new TastyApiRuntime(options)
 }
 
-async function defaultBundleImporter(bundlePath: string): Promise<BundleModule> {
-  return import(pathToFileURL(bundlePath).href) as Promise<BundleModule>
+async function defaultArtifactImporter(artifactPath: string): Promise<unknown> {
+  return import(pathToFileURL(artifactPath).href)
 }
 
-function isBundleSymbol(value: unknown): value is BundleSymbol {
+function extractManifest(value: unknown): RawTastyManifest {
+  const moduleValue = normalizeModuleNamespace(value)
+  const manifest = (moduleValue.default ?? moduleValue.manifest) as unknown
+  if (!isRawTastyManifest(manifest)) {
+    throw new Error('Malformed manifest module.')
+  }
+  return manifest
+}
+
+function extractChunkSymbol(moduleValue: ModuleNamespace, symbolId: string): TastySymbolModel {
+  const direct = moduleValue[symbolId]
+  if (isTastySymbolModel(direct)) return direct
+
+  const defaultExport = moduleValue.default
+  if (isTastySymbolModel(defaultExport) && defaultExport.id === symbolId) {
+    return defaultExport
+  }
+
+  throw new Error(`Missing symbol export in chunk for id: ${symbolId}`)
+}
+
+function normalizeModuleNamespace(value: unknown): ModuleNamespace {
+  if (value == null || typeof value !== 'object') {
+    throw new Error('Expected imported artifact module to be an object.')
+  }
+  return value as ModuleNamespace
+}
+
+function resolveArtifactPath(basePath: string, relativePath: string): string {
+  if (relativePath.startsWith('./') || relativePath.startsWith('../')) {
+    return resolve(dirname(basePath), relativePath)
+  }
+  return relativePath
+}
+
+function isRawTastyManifest(value: unknown): value is RawTastyManifest {
+  if (value == null || typeof value !== 'object') return false
+  return 'version' in value && 'symbolsByName' in value && 'symbolsById' in value
+}
+
+function isTastySymbolModel(value: unknown): value is TastySymbolModel {
   if (value == null || typeof value !== 'object') return false
   return 'id' in value && 'name' in value && 'library' in value
 }
 
-function isInterfaceSymbol(symbol: BundleSymbol): symbol is BundleInterfaceSymbol {
+function isInterfaceSymbol(symbol: TastySymbolModel): symbol is RawTastyInterfaceSymbol {
   return 'members' in symbol && 'extends' in symbol && 'types' in symbol
 }
 
-function isTypeAliasSymbol(symbol: BundleSymbol): symbol is BundleTypeAliasSymbol {
+function isTypeAliasSymbol(symbol: TastySymbolModel): symbol is RawTastyTypeAliasSymbol {
   return 'definition' in symbol
 }
 
-function getSymbolKind(symbol: BundleSymbol): TastySymbolKind {
-  return isInterfaceSymbol(symbol) ? 'interface' : 'typeAlias'
-}
-
-function isTypeReference(typeRef: BundleTypeRef): typeRef is BundleTypeReference {
+function isTypeReference(typeRef: RawTastyTypeRef): typeRef is RawTastyTypeReference {
   return typeof typeRef === 'object' && typeRef !== null && 'id' in typeRef && 'name' in typeRef && 'library' in typeRef
 }
 
-function isRawStructuredTypeRef(typeRef: BundleTypeRef): typeRef is Extract<BundleTypeRef, { kind: 'raw' }> {
+function isRawStructuredTypeRef(typeRef: RawTastyTypeRef): typeRef is Extract<RawTastyTypeRef, { kind: 'raw' }> {
   return !isTypeReference(typeRef) && typeRef.kind === 'raw'
 }
 
-function uniqueSymbolRefs<T>(values: T[], getId: (value: T) => string): T[] {
+function uniqueById<T>(values: T[], getId: (value: T) => string): T[] {
   const seen = new Set<string>()
   return values.filter((value) => {
     const id = getId(value)
@@ -528,8 +591,8 @@ function uniqueSymbolRefs<T>(values: T[], getId: (value: T) => string): T[] {
   })
 }
 
-function collectUserOwnedReferencesFromSymbol(symbol: BundleSymbol): BundleSymbolRef[] {
-  const refs: BundleSymbolRef[] = []
+function collectUserOwnedReferencesFromSymbol(symbol: TastySymbolModel): RawTastySymbolRef[] {
+  const refs: RawTastySymbolRef[] = []
 
   if (isInterfaceSymbol(symbol)) {
     refs.push(...symbol.extends)
@@ -546,16 +609,16 @@ function collectUserOwnedReferencesFromSymbol(symbol: BundleSymbol): BundleSymbo
     if (param.default) collectUserOwnedReferencesFromTypeRef(param.default, refs)
   }
 
-  return refs.filter((ref) => ref.library === 'user')
+  return refs
 }
 
-function collectUserOwnedReferencesFromMember(member: BundleMember, refs: BundleSymbolRef[]) {
+function collectUserOwnedReferencesFromMember(member: RawTastyMember, refs: RawTastySymbolRef[]) {
   if (member.type) {
     collectUserOwnedReferencesFromTypeRef(member.type, refs)
   }
 }
 
-function collectUserOwnedReferencesFromTypeRef(typeRef: BundleTypeRef, refs: BundleSymbolRef[]) {
+function collectUserOwnedReferencesFromTypeRef(typeRef: RawTastyTypeRef, refs: RawTastySymbolRef[]) {
   if (isTypeReference(typeRef)) {
     refs.push({
       id: typeRef.id,
@@ -634,7 +697,7 @@ function collectUserOwnedReferencesFromTypeRef(typeRef: BundleTypeRef, refs: Bun
   }
 }
 
-function collectUserOwnedReferencesFromFnParam(param: BundleFnParam, refs: BundleSymbolRef[]) {
+function collectUserOwnedReferencesFromFnParam(param: RawTastyFnParam, refs: RawTastySymbolRef[]) {
   if (param.typeRef) {
     collectUserOwnedReferencesFromTypeRef(param.typeRef, refs)
   }

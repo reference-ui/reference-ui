@@ -1,5 +1,5 @@
 import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 
 import { describe, expect, it } from 'vitest'
 
@@ -8,14 +8,30 @@ import { createTastyApi } from './index'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const packageDir = join(__dirname, '..', '..')
 
-function bundlePath(...segments: string[]) {
-  return join(packageDir, 'tests', 'tasty', 'cases', ...segments, 'output', 'bundle.js')
+function manifestPath(...segments: string[]) {
+  return join(packageDir, 'tests', 'tasty', 'cases', ...segments, 'output', 'manifest.js')
 }
 
 describe('tasty runtime', () => {
+  it('loads only the manifest during ready()', async () => {
+    const loads: string[] = []
+    const api = createTastyApi({
+      manifestPath: manifestPath('external_libs'),
+      importer: async (artifactPath) => {
+        loads.push(artifactPath)
+        return import(pathToFileURL(artifactPath).href)
+      },
+    })
+
+    await api.ready()
+
+    expect(loads).toHaveLength(1)
+    expect(loads[0]?.endsWith('manifest.js')).toBe(true)
+  })
+
   it('keeps symbol wrapper identity stable across lookup paths', async () => {
     const api = createTastyApi({
-      bundlePath: bundlePath('external_libs'),
+      manifestPath: manifestPath('external_libs'),
     })
 
     const byName = await api.loadSymbolByName('ButtonProps')
@@ -24,9 +40,26 @@ describe('tasty runtime', () => {
     expect(byId).toBe(byName)
   })
 
+  it('does not import the same chunk twice', async () => {
+    const loads: string[] = []
+    const api = createTastyApi({
+      manifestPath: manifestPath('external_libs'),
+      importer: async (artifactPath) => {
+        loads.push(artifactPath)
+        return import(pathToFileURL(artifactPath).href)
+      },
+    })
+
+    await api.loadSymbolByName('ButtonProps')
+    await api.loadSymbolByName('ButtonProps')
+
+    const chunkLoads = loads.filter((artifactPath) => artifactPath.includes('/chunks/'))
+    expect(chunkLoads).toHaveLength(1)
+  })
+
   it('loads extends symbols and flattens inherited members', async () => {
     const api = createTastyApi({
-      bundlePath: bundlePath('external_libs'),
+      manifestPath: manifestPath('external_libs'),
     })
 
     const buttonProps = await api.loadSymbolByName('ButtonProps')
@@ -40,7 +73,7 @@ describe('tasty runtime', () => {
 
   it('collects only user-owned immediate dependencies', async () => {
     const api = createTastyApi({
-      bundlePath: bundlePath('external_libs'),
+      manifestPath: manifestPath('external_libs'),
     })
 
     const buttonProps = await api.loadSymbolByName('ButtonProps')
@@ -53,7 +86,7 @@ describe('tasty runtime', () => {
 
   it('exposes type-alias helpers over the emitted definition shape', async () => {
     const api = createTastyApi({
-      bundlePath: bundlePath('default_params'),
+      manifestPath: manifestPath('default_params'),
     })
 
     const withDefault = await api.loadSymbolByName('WithDefault')
@@ -66,9 +99,9 @@ describe('tasty runtime', () => {
     expect(underlying?.describe()).toBe('{ ... }')
   })
 
-  it('supports simple symbol search over the loaded bundle', async () => {
+  it('supports simple symbol search over the loaded manifest', async () => {
     const api = createTastyApi({
-      bundlePath: bundlePath('external_libs'),
+      manifestPath: manifestPath('external_libs'),
     })
 
     const results = await api.searchSymbols('button')

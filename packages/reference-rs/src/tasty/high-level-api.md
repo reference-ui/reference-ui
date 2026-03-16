@@ -176,7 +176,7 @@ export interface SymbolIndexEntry {
   chunk: string;
 }
 
-export interface BundleManifest {
+export interface TastyManifest {
   version: string;
   symbolsByName: Record<string, string>;
   symbolsById: Record<string, SymbolIndexEntry>;
@@ -196,8 +196,8 @@ export interface CreateTastyApiOptions {
 export interface TastyApi {
   ready(): Promise<void>;
 
-  loadManifest(): Promise<BundleManifest>;
-  getManifest(): BundleManifest | undefined;
+  loadManifest(): Promise<TastyManifest>;
+  getManifest(): TastyManifest | undefined;
 
   loadSymbolById(id: string): Promise<TastySymbol>;
   loadSymbolByName(name: string): Promise<TastySymbol>;
