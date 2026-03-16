@@ -17,15 +17,15 @@ Example: if the source has `theme: Props['theme']`, the member’s type is `TSIn
 
 **Will this affect us?**
 
-- **For the stated goal (props-and-types docs):** **No.** When a member has type “conditional” or “function” or “typeof x”, we emit `Unknown { summary: "..." }`. Consumers see that the member has a type and can display the source (e.g. in a tooltip). We don’t need to evaluate conditional types or resolve `typeof` to generate “this prop exists and here’s its type label.”
-- **If we later want** to resolve `typeof x` to a full type, or show the resolved shape of `Partial<T>`, or represent function signatures in a structured way, we would add handling for those variants. Until then, Unknown + summary is an explicit, documented choice.
+- **For the stated goal (props-and-types docs):** **No.** When a member has a conditional or mapped type, we emit `Unknown { summary: "..." }`. Consumers still see the type text (e.g. in a tooltip). We do not need to evaluate those expressions to generate “this prop exists and here’s its type label.”
+- **If we later want** to resolve `typeof x` to a full type, or show the resolved shape of `Partial<T>`, or evaluate conditional/mapped types, we would add more handling. For now, `typeof x` is modeled structurally as `TypeQuery { expression }`, while harder type-level computations still use Unknown + summary.
 
 **Why each category is Unknown:**
 
 | Category | Variants | Reason we don’t model them (yet) |
 |----------|----------|-----------------------------------|
 | **Type-level computation** | Conditional, Mapped, Template literal | These are type-level expressions (e.g. `T extends U ? A : B`, `{ [K in keyof T]: ... }`, `` `foo-${T}` ``). Fully representing them would require resolving type params and executing the “type algebra.” We only need “there is a type here” and the source text for docs. |
-| **Value-dependent types** | Type query (`typeof x`), Type predicate (`x is T`) | `typeof x` depends on the value `x`; we don’t have a value environment. Type predicates are assertion shapes, not data shapes. We keep the source so the doc can show “type: typeof config” or “x is string.” |
+| **Value-dependent types** | Type predicate (`x is T`) | **Type query is now modeled** as `TypeRef::TypeQuery { expression }` with the queried expression preserved as source text; we still do not resolve values. Type predicates remain assertion shapes rather than data shapes, so they stay Unknown. |
 | **Callable shapes** | Function type, Constructor type | **Function type** is now modeled when it appears as a property type (e.g. callback props): we emit `TypeRef::Function { params, return_type }` so we can document the callback signature. Call/construct *signatures* on interfaces are already modeled as members. **Constructor type** (bare `new (...) => T`) remains Unknown. |
 | **Operators & keywords** | This type | **Type operators are now modeled** as `TypeRef::TypeOperator { operator, target }` for `keyof`, `readonly`, and `unique`. `this` remains context-dependent, so it stays Unknown. |
 | **Module/value references** | Import type (`import('pkg')`) | We could resolve the module and expose its export type; that’s a larger feature. For now we preserve the source so docs can show “type: import('react').FC”. |
@@ -75,7 +75,7 @@ Below, “→ Unknown { summary }” means: we emit `TypeRef::Unknown` with `sum
 | `TSFunctionType`         | → `Function { params, return_type }`        | `(x: T) => R` — params (name, optional, typeRef), returnType; used for callback properties so we can document the signature. |
 | `TSTypeOperatorType`    | → `TypeOperator { operator, target }`     | `keyof`, `readonly`, `unique`                                |
 | `TSTypePredicate`       | → `Unknown { summary }`                    | `x is T`                                                     |
-| `TSTypeQuery`           | → `Unknown { summary }`                    | `typeof x`                                                   |
+| `TSTypeQuery`           | → `TypeQuery { expression }`              | `typeof x` — expression preserved without resolution         |
 | `TSThisType`            | → `Unknown { summary }`                    | `this`                                                       |
 | `JSDocNullableType`     | → `Unknown { summary }`                    | JSDoc-only                                                   |
 | `JSDocNonNullableType`  | → `Unknown { summary }`                    | JSDoc-only                                                   |
@@ -97,8 +97,8 @@ All other tuple-element variants (e.g. `TSStringKeyword` inside a tuple) are han
 
 ## Summary
 
-- **Fully modeled:** intrinsics (including bigint, symbol, never, void, intrinsic), literal, union, array, tuple (with element metadata), intersection, object type literal, parenthesized (unwrapped), type reference, **indexed access** (`T[K]` with object + index), **function type** (`(params) => returnType` with param names, optionality, and types for callback properties), **type operators** (`keyof`, `readonly`, `unique` as `TypeOperator { operator, target }`), named tuple member as type. These cover the data shapes we need for “props and types” docs.
-- **Intentionally Unknown:** conditional, mapped, template literal, import type, infer, constructor type, type predicate, type query, this type, JSDoc types. All emit `Unknown { summary: source_slice }` — see “Why we leave some variants as Unknown” above. This does not block our current goal; we can add structured handling later if we need it.
+- **Fully modeled:** intrinsics (including bigint, symbol, never, void, intrinsic), literal, union, array, tuple (with element metadata), intersection, object type literal, parenthesized (unwrapped), type reference, **indexed access** (`T[K]` with object + index), **function type** (`(params) => returnType` with param names, optionality, and types for callback properties), **type operators** (`keyof`, `readonly`, `unique` as `TypeOperator { operator, target }`), **type query** (`typeof x` as `TypeQuery { expression }`), named tuple member as type. These cover the data shapes we need for “props and types” docs.
+- **Intentionally Unknown:** conditional, mapped, template literal, import type, infer, constructor type, type predicate, this type, JSDoc types. All emit `Unknown { summary: source_slice }` — see “Why we leave some variants as Unknown” above. This does not block our current goal; we can add structured handling later if we need it.
 - **No implicit catch-all:** the `type_to_ref` match is exhaustive; any new variant added by Oxc will cause a compile error until we add an arm and document it here.
 
 ---
@@ -107,23 +107,7 @@ All other tuple-element variants (e.g. `TSStringKeyword` inside a tuple) are han
 
 These variants are currently `Unknown { summary }`. Adding **structural representation only** (no evaluation) is agreed as useful; implementation is pending.
 
-### 1. Type query (`typeof x`)
-
-**Why:** Library APIs often export types derived from const objects (e.g. `type Theme = typeof themeConfig`). A structured node is nicer than opaque unknown; we do **not** need value-environment resolution.
-
-**Proposed shape:**
-
-```text
-TypeQuery {
-  expression: String   // e.g. "themeConfig" or "pkg.config" — source slice of the expression is enough
-}
-```
-
-Alternatively `summary: "typeof themeConfig"` if we want a single display string. Prefer `expression` for consistency with “we store structure, display layer formats.”
-
-**Oxc:** `TSTypeQuery` — expression is a `TSQualifiedName` or similar; capture its source slice or a simple name.
-
-### 2. Template literal types (`` `size-${"sm" | "lg"}` ``)
+### 1. Template literal types (`` `size-${"sm" | "lg"}` ``)
 
 **Why:** Increasingly common in token systems, variant APIs, and CSS-ish prop systems. We do not need to evaluate; just represent for docs.
 
@@ -140,5 +124,5 @@ TemplateLiteral {
 
 **Oxc:** `TSTemplateLiteralType` has segments (template spans); map to text vs type parts.
 
-**Priority:** Type query next, then template literal as nice-to-have.
+**Priority:** Template literal next as nice-to-have.
 

@@ -1067,9 +1067,10 @@ fn type_to_ref(
                 current_library,
             )),
         },
-        TSType::TSTypePredicate(_)
-        | TSType::TSTypeQuery(_)
-        | TSType::TSThisType(_) => TypeRef::Unknown {
+        TSType::TSTypeQuery(query) => TypeRef::TypeQuery {
+            expression: slice_span(source, query.expr_name.span()).to_string(),
+        },
+        TSType::TSTypePredicate(_) | TSType::TSThisType(_) => TypeRef::Unknown {
             summary: slice_span(source, type_annotation.span()).to_string(),
         },
         // JSDoc-only types: preserve source as Unknown.
@@ -1181,6 +1182,7 @@ fn collect_type_ref_references(type_ref: &TypeRef, references: &mut Vec<TypeRef>
         TypeRef::TypeOperator { target, .. } => {
             collect_type_ref_references(target, references);
         }
+        TypeRef::TypeQuery { .. } => {}
         _ => {}
     }
 }

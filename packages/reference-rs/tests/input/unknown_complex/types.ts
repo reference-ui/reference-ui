@@ -28,7 +28,7 @@ export interface UsesOptionalKeys {
 /** Template literal type → Unknown with summary. */
 export type TemplateLiteralAlias = `foo-${string}`;
 
-/** Type query (typeof) → Unknown with summary. */
+/** Type query (typeof) → structured TypeQuery with expression. */
 export type TypeQueryAlias = typeof Array.prototype.map;
 
 /** Indexed access type: property key from another type. */

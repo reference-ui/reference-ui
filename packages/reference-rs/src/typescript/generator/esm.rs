@@ -369,6 +369,10 @@ fn emit_type_ref(
                 indent_block(&target_str, 2)
             ))
         }
+        TypeRef::TypeQuery { expression } => Ok(format!(
+            "{{\n  kind: \"type_query\",\n  expression: {},\n}}",
+            to_js_literal(expression)?,
+        )),
         TypeRef::Unknown { summary } => Ok(format!(
             "{{\n  kind: \"unknown\",\n  summary: {},\n}}",
             to_js_literal(summary)?,
@@ -536,6 +540,7 @@ fn collect_libraries_from_type_ref(type_ref: &TypeRef, libraries: &mut BTreeSet<
         TypeRef::TypeOperator { target, .. } => {
             collect_libraries_from_type_ref(target, libraries);
         }
+        TypeRef::TypeQuery { .. } => {}
         TypeRef::Intersection { types } => {
             for t in types {
                 collect_libraries_from_type_ref(t, libraries);

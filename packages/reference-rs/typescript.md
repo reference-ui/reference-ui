@@ -174,6 +174,7 @@ type TypeRef =
   | { kind: 'function'; signature: Signature }
   | { kind: 'reference'; name: string; targetId?: SymbolId; typeArgs?: TypeRef[] }
   | { kind: 'type_operator'; operator: 'keyof' | 'readonly' | 'unique'; target: TypeRef }
+  | { kind: 'type_query'; expression: string }
   | { kind: 'indexed_access'; object: TypeRef; index: TypeRef }
   | { kind: 'mapped'; summary: string }
   | { kind: 'conditional'; summary: string }
