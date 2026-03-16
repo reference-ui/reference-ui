@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use super::super::api::{
+use super::super::model::{
     ExportMap, FnParam, ScannerDiagnostic, TemplateLiteralPart, TsFile, TsMember, TsSymbol,
     TsTypeParameter, TupleElement, TypeRef,
 };

@@ -7,7 +7,7 @@ mod extract;
 pub(crate) mod model;
 mod resolve;
 
-use super::api::ScannerDiagnostic;
+use super::model::ScannerDiagnostic;
 use super::scanner::ScannedWorkspace;
 use model::ParsedTypeScriptAst;
 pub(crate) use resolve::{resolve_ast, ResolvedTypeScriptGraph};

@@ -1,7 +1,8 @@
 mod esm;
 
-use super::api::{ScanRequest, TypeScriptBundle};
 use super::ast::ResolvedTypeScriptGraph;
+use super::model::TypeScriptBundle;
+use super::request::ScanRequest;
 pub(crate) use esm::emit_esm_bundle;
 
 pub(crate) fn generate_debug_bundle(

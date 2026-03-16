@@ -1,4 +1,5 @@
-use super::api::{ScanRequest, TypeScriptBundle};
+use super::model::TypeScriptBundle;
+use super::request::ScanRequest;
 use super::ast::{extract_ast, resolve_ast};
 use super::generator::emit_esm_bundle;
 use super::generator::generate_debug_bundle;

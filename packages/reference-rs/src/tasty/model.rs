@@ -1,11 +1,4 @@
 use std::collections::BTreeMap;
-use std::path::PathBuf;
-
-#[derive(Debug, Clone)]
-pub struct ScanRequest {
-    pub root_dir: PathBuf,
-    pub include: Vec<String>,
-}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TypeScriptBundle {

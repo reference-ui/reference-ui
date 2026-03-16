@@ -1,6 +1,8 @@
 use std::collections::BTreeMap;
 
-use super::super::api::{JsDoc, ScannerDiagnostic, TsMember, TsSymbolKind, TsTypeParameter, TypeRef};
+use super::super::model::{
+    JsDoc, ScannerDiagnostic, TsMember, TsSymbolKind, TsTypeParameter, TypeRef,
+};
 
 #[derive(Debug, Clone)]
 pub(crate) struct ParsedFileAst {
