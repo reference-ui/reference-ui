@@ -220,7 +220,6 @@ export function createReferenceComponent(loadRuntime: ReferenceRuntimeLoader) {
       apiPromise = loadRuntime().then(async (runtime) => {
         const api = createTastyApiFromManifest({
           manifest: runtime.manifest,
-          manifestPath: runtime.manifestUrl,
           importer: runtime.importTastyArtifact,
         })
         await api.ready()
