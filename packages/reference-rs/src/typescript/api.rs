@@ -155,6 +155,10 @@ pub enum TypeRef {
         operator: TypeOperatorKind,
         target: Box<TypeRef>,
     },
+    /// Type query like `typeof themeConfig`; expression is preserved structurally.
+    TypeQuery {
+        expression: String,
+    },
     Unknown {
         summary: String,
     },

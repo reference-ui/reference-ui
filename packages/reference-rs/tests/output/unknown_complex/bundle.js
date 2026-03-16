@@ -45,10 +45,10 @@ export const _4b619f9ef2ff1695 = {
   id: "_4b619f9ef2ff1695",
   name: "TypeQueryAlias",
   library: "user",
-  description: "Type query (typeof) → Unknown with summary.",
+  description: "Type query (typeof) → structured TypeQuery with expression.",
   definition: {
-  kind: "unknown",
-  summary: "typeof Array.prototype.map",
+  kind: "type_query",
+  expression: "Array.prototype.map",
 },
 };
 

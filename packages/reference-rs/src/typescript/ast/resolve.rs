@@ -255,6 +255,7 @@ fn resolve_type_ref(
             operator,
             target: Box::new(resolve_type_ref(*target, symbol_index, parsed)),
         },
+        TypeRef::TypeQuery { expression } => TypeRef::TypeQuery { expression },
         other => other,
     }
 }
