@@ -211,6 +211,9 @@ Example normalized output:
 type InterfaceSymbol = {
   kind: 'interface'
   name: 'ButtonProps'
+  description?: string
+  descriptionRaw?: string
+  jsdoc?: { summary?: string; tags: Array<{ name: string; value?: string }> }
   extends: [{ kind: 'reference', name: 'StyleProps', targetId: 'sym:style-props' }]
   definedMembers: [
     {

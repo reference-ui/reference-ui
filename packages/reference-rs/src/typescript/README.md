@@ -41,13 +41,19 @@ The critical distinction is:
 
 ## Comments and descriptions
 
-The scanner captures **raw leading comments** only: the comment block
-immediately above an exported interface, type alias, or property is stored as
-plain text on the symbol or member. Comment markers (`//`, `/*`, `*/`, `/**`,
-leading `*`) are stripped and whitespace is normalized; newlines are preserved.
-No JSDoc parsing is performed—no `@param`, `@returns`, or other tags. That
-keeps the data model minimal and downstream-friendly. Docs and MCP consumers
-can use the raw description as-is or parse it as JSDoc later if they choose.
+The scanner captures **leading comments** and exposes them in three forms:
+
+- `description`: a display-friendly summary. For JSDoc, this is the parsed
+  summary text before tags. For plain comments, this falls back to the normalized
+  comment text.
+- `descriptionRaw`: the normalized leading comment text, including any JSDoc tags.
+- `jsdoc`: when the leading comment is JSDoc, a lightweight parsed object with
+  `summary` and flat `tags` (`name`, `value`).
+
+Comment markers (`//`, `/*`, `*/`, `/**`, leading `*`) are stripped and
+whitespace is normalized; newlines are preserved. This is a best-effort JSDoc
+pass-through layer on top of Oxc’s JSDoc comment detection, not a full TSDoc
+semantic model.
 
 ## Output Direction
 

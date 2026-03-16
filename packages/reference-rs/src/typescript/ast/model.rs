@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use super::super::api::{ScannerDiagnostic, TsMember, TsSymbolKind, TsTypeParameter, TypeRef};
+use super::super::api::{JsDoc, ScannerDiagnostic, TsMember, TsSymbolKind, TsTypeParameter, TypeRef};
 
 #[derive(Debug, Clone)]
 pub(crate) struct ParsedFileAst {
@@ -26,6 +26,8 @@ pub(crate) struct SymbolShell {
     pub(crate) kind: TsSymbolKind,
     pub(crate) exported: bool,
     pub(crate) description: Option<String>,
+    pub(crate) description_raw: Option<String>,
+    pub(crate) jsdoc: Option<JsDoc>,
     pub(crate) type_parameters: Vec<TsTypeParameter>,
     pub(crate) defined_members: Vec<TsMember>,
     pub(crate) extends: Vec<TypeRef>,

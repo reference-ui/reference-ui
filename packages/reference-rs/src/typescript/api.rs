@@ -35,6 +35,18 @@ pub struct TsTypeParameter {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub struct JsDocTag {
+    pub name: String,
+    pub value: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct JsDoc {
+    pub summary: Option<String>,
+    pub tags: Vec<JsDocTag>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TsSymbol {
     pub id: String,
     pub name: String,
@@ -43,6 +55,8 @@ pub struct TsSymbol {
     pub file_id: String,
     pub exported: bool,
     pub description: Option<String>,
+    pub description_raw: Option<String>,
+    pub jsdoc: Option<JsDoc>,
     pub type_parameters: Vec<TsTypeParameter>,
     pub defined_members: Vec<TsMember>,
     pub extends: Vec<TypeRef>,
@@ -91,6 +105,8 @@ pub struct TsMember {
     pub readonly: bool,
     pub kind: TsMemberKind,
     pub description: Option<String>,
+    pub description_raw: Option<String>,
+    pub jsdoc: Option<JsDoc>,
     pub type_ref: Option<TypeRef>,
 }
 

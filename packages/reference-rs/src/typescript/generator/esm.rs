@@ -4,8 +4,8 @@ use std::fmt::Write;
 use serde::Serialize;
 
 use super::super::api::{
-    FnParam, TemplateLiteralPart, TsMember, TsMemberKind, TsSymbol, TsSymbolKind,
-    TsTypeParameter, TupleElement, TypeRef, TypeScriptBundle,
+    FnParam, JsDoc, JsDocTag, TemplateLiteralPart, TsMember, TsMemberKind, TsSymbol,
+    TsSymbolKind, TsTypeParameter, TupleElement, TypeRef, TypeScriptBundle,
 };
 
 #[allow(dead_code)]
@@ -84,6 +84,12 @@ fn emit_symbol_object(
     ];
     if let Some(ref d) = symbol.description {
         fields.push(format!("  description: {},", to_js_literal(d)?));
+    }
+    if let Some(ref d) = symbol.description_raw {
+        fields.push(format!("  descriptionRaw: {},", to_js_literal(d)?));
+    }
+    if let Some(ref jsdoc) = symbol.jsdoc {
+        fields.push(format!("  jsdoc: {},", emit_jsdoc(bundle, jsdoc, export_names)?));
     }
     if !symbol.type_parameters.is_empty() {
         fields.push(format!(
@@ -188,11 +194,47 @@ fn emit_member(
     if let Some(ref d) = member.description {
         parts.push(format!("  description: {}", to_js_literal(d)?));
     }
+    if let Some(ref d) = member.description_raw {
+        parts.push(format!("  descriptionRaw: {}", to_js_literal(d)?));
+    }
+    if let Some(ref jsdoc) = member.jsdoc {
+        parts.push(format!("  jsdoc: {}", emit_jsdoc(bundle, jsdoc, export_names)?));
+    }
     parts.push(format!(
         "  type: {}",
         emit_optional_type_ref(bundle, member.type_ref.as_ref(), export_names)?
     ));
     Ok(format!("{{\n{}\n}}", parts.join(",\n")))
+}
+
+fn emit_jsdoc(
+    _bundle: &TypeScriptBundle,
+    jsdoc: &JsDoc,
+    _export_names: &BTreeMap<String, String>,
+) -> Result<String, String> {
+    let mut parts = Vec::new();
+    if let Some(ref summary) = jsdoc.summary {
+        parts.push(format!("  summary: {}", to_js_literal(summary)?));
+    }
+    parts.push(format!("  tags: {}", emit_jsdoc_tags(&jsdoc.tags)?));
+    Ok(format!("{{\n{}\n}}", parts.join(",\n")))
+}
+
+fn emit_jsdoc_tags(tags: &[JsDocTag]) -> Result<String, String> {
+    if tags.is_empty() {
+        return Ok("[]".to_string());
+    }
+    let lines = tags
+        .iter()
+        .map(|tag| {
+            let mut parts = vec![format!("  name: {}", to_js_literal(&tag.name)?)];
+            if let Some(ref value) = tag.value {
+                parts.push(format!("  value: {}", to_js_literal(value)?));
+            }
+            Ok::<String, String>(indent_block(&format!("{{\n{}\n}}", parts.join(",\n")), 2))
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(format!("[\n{}\n]", lines.join(",\n")))
 }
 
 fn emit_tuple_element(

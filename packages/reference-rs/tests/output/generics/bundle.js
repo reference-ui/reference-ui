@@ -3,6 +3,11 @@ export const _d72dafd30b57674f = {
   name: "Box",
   library: "user",
   description: "A generic box wrapping a value of type T.",
+  descriptionRaw: "A generic box wrapping a value of type T.",
+  jsdoc: {
+  summary: "A generic box wrapping a value of type T.",
+  tags: []
+},
   typeParameters: [
   {
     name: "T"
@@ -31,6 +36,11 @@ export const _baac0abc322c453f = {
   name: "ComponentProps",
   library: "user",
   description: "Component props type alias – extracts props from a component type.",
+  descriptionRaw: "Component props type alias – extracts props from a component type.",
+  jsdoc: {
+  summary: "Component props type alias – extracts props from a component type.",
+  tags: []
+},
   typeParameters: [
   {
     name: "T"
@@ -48,6 +58,11 @@ export const _475818659ca3200c = {
   name: "UsesGenericRef",
   library: "user",
   description: "Uses a type reference with type arguments: Props<Box<string>>.",
+  descriptionRaw: "Uses a type reference with type arguments: Props<Box<string>>.",
+  jsdoc: {
+  summary: "Uses a type reference with type arguments: Props<Box<string>>.",
+  tags: []
+},
   members: [
   {
     name: "item",
@@ -55,6 +70,11 @@ export const _475818659ca3200c = {
     readonly: false,
     kind: "property",
     description: "The wrapped Props<Box<string>> instance.",
+    descriptionRaw: "The wrapped Props<Box<string>> instance.",
+    jsdoc: {
+    summary: "The wrapped Props<Box<string>> instance.",
+    tags: []
+  },
     type: {
     id: "_412f5cd6920b373d",
     name: "Props",
@@ -90,6 +110,11 @@ export const _0ff4e4f4f8ad760c = {
   name: "WithGenerics",
   library: "user",
   description: "Interface with multiple type parameters.",
+  descriptionRaw: "Interface with multiple type parameters.",
+  jsdoc: {
+  summary: "Interface with multiple type parameters.",
+  tags: []
+},
   typeParameters: [
   {
     name: "T"
@@ -105,6 +130,11 @@ export const _0ff4e4f4f8ad760c = {
     readonly: false,
     kind: "property",
     description: "First generic field.",
+    descriptionRaw: "First generic field.",
+    jsdoc: {
+    summary: "First generic field.",
+    tags: []
+  },
     type: {
     id: "T",
     name: "T",
@@ -117,6 +147,11 @@ export const _0ff4e4f4f8ad760c = {
     readonly: false,
     kind: "property",
     description: "Second generic field.",
+    descriptionRaw: "Second generic field.",
+    jsdoc: {
+    summary: "Second generic field.",
+    tags: []
+  },
     type: {
     id: "U",
     name: "U",
@@ -133,6 +168,11 @@ export const _412f5cd6920b373d = {
   name: "Props",
   library: "user",
   description: "Generic props interface with a constraint.",
+  descriptionRaw: "Generic props interface with a constraint.",
+  jsdoc: {
+  summary: "Generic props interface with a constraint.",
+  tags: []
+},
   typeParameters: [
   {
     name: "T",
@@ -149,6 +189,11 @@ export const _412f5cd6920b373d = {
     readonly: false,
     kind: "property",
     description: "The payload.",
+    descriptionRaw: "The payload.",
+    jsdoc: {
+    summary: "The payload.",
+    tags: []
+  },
     type: {
     id: "T",
     name: "T",

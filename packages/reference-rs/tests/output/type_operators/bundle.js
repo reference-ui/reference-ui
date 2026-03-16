@@ -3,6 +3,11 @@ export const _1528b9f2eb9b6286 = {
   name: "KeysOfUser",
   library: "user",
   description: "Type operator alias using keyof.",
+  descriptionRaw: "Type operator alias using keyof.",
+  jsdoc: {
+  summary: "Type operator alias using keyof.",
+  tags: []
+},
   definition: {
   kind: "type_operator",
   operator: "keyof",
@@ -19,6 +24,11 @@ export const _3d3fcad8e01a9a82 = {
   name: "ReadonlyUsers",
   library: "user",
   description: "Type operator alias using readonly on an array type.",
+  descriptionRaw: "Type operator alias using readonly on an array type.",
+  jsdoc: {
+  summary: "Type operator alias using readonly on an array type.",
+  tags: []
+},
   definition: {
   kind: "type_operator",
   operator: "readonly",
@@ -38,6 +48,11 @@ export const _88a3913fe13c8181 = {
   name: "User",
   library: "user",
   description: "Type-operator scenario: keyof, readonly, and unique symbol.\nUsed to verify structural TypeRef emission for TS type operators.\n/\n\n/** Base shape used by keyof and readonly operator tests.",
+  descriptionRaw: "Type-operator scenario: keyof, readonly, and unique symbol.\nUsed to verify structural TypeRef emission for TS type operators.\n/\n\n/** Base shape used by keyof and readonly operator tests.",
+  jsdoc: {
+  summary: "Type-operator scenario: keyof, readonly, and unique symbol.\nUsed to verify structural TypeRef emission for TS type operators.\n/\n\n/** Base shape used by keyof and readonly operator tests.",
+  tags: []
+},
   members: [
   {
     name: "id",
@@ -69,6 +84,11 @@ export const _f8b65fb925a092eb = {
   name: "WithOperators",
   library: "user",
   description: "Interface members that use type operators directly.",
+  descriptionRaw: "Interface members that use type operators directly.",
+  jsdoc: {
+  summary: "Interface members that use type operators directly.",
+  tags: []
+},
   members: [
   {
     name: "key",
