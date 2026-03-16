@@ -38,7 +38,7 @@
     "artifacts": "pnpm exec napi artifacts --output-dir artifacts",
     "build": "pnpm run ensure-native && pnpm run build:js",
     "build:js": "tsup",
-    "build:native": "pnpm exec napi build --platform --release",
+    "build:native": "pnpm exec napi build --platform --release --output-dir dist/native --no-js",
     "create-npm-dirs": "pnpm exec napi create-npm-dirs",
     "ensure-native": "pnpm exec tsx ./js/tools/ensure-native.ts",
     "prepack": "pnpm run build:js",
