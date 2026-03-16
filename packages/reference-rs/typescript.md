@@ -35,19 +35,19 @@ or MCP layers.
 
 ## Proposed Module
 
-Create a new Rust module at `src/typescript`.
+Create a new Rust module at `src/tasty`.
 
 Suggested initial layout:
 
-- `src/typescript/mod.rs`
-- `src/typescript/scan.rs`
-- `src/typescript/glob.rs`
-- `src/typescript/parse.rs`
-- `src/typescript/index.rs`
-- `src/typescript/model.rs`
-- `src/typescript/serialize.rs`
-- `src/typescript/tests.rs`
-- `src/typescript/README.md`
+- `src/tasty/mod.rs`
+- `src/tasty/scan.rs`
+- `src/tasty/glob.rs`
+- `src/tasty/parse.rs`
+- `src/tasty/index.rs`
+- `src/tasty/model.rs`
+- `src/tasty/serialize.rs`
+- `src/tasty/tests.rs`
+- `src/tasty/README.md`
 
 The outer package can also keep this top-level planning document as the source
 of truth for the first implementation pass.
@@ -446,7 +446,7 @@ After v1 works, expand into:
 
 ## Recommendation
 
-Build `src/typescript` as a fast structural type indexer that returns a
+Build `src/tasty` as a fast structural type indexer that returns a
 reference-rich, self-contained bundle to JS.
 
 Do not aim for full checker parity up front.

@@ -1,5 +1,5 @@
 //! Rust-side smoke tests for the TypeScript scanner. Bundle output is emitted by the
-//! compiled napi-rs runtime in Vitest globalSetup; Vitest tests (tests/*.test.ts) then
+//! compiled napi-rs runtime in Vitest globalSetup; Vitest tests (tests/tasty/*.test.ts) then
 //! load and assert on that output.
 
 use std::path::{Path, PathBuf};
@@ -22,7 +22,9 @@ fn scans_fixture_successfully() {
 }
 
 fn tests_dir() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("tests")
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("tests")
+        .join("tasty")
 }
 
 fn fixture_input_dir() -> PathBuf {

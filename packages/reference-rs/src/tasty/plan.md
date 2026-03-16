@@ -120,4 +120,4 @@ So: **Oxc gives us full TS structure; we intentionally expose a subset.** Extend
 | `default_params` | Type parameters with default (e.g. `T = string`). |
 | `unknown_complex` | Mixed advanced types: mapped + conditional structural, nested unsupported pieces may still be `Raw`. |
 
-**Vitest:** Each scenario has a matching `bundle.{scenario}.test.ts` that loads `output/{scenario}/bundle.js` and asserts shape and content. globalSetup emits one bundle per scenario directory under `tests/input/`.
+**Vitest:** Each scenario has a matching `bundle.{scenario}.test.ts` that loads `output/{scenario}/bundle.js` and asserts shape and content. globalSetup emits one bundle per scenario directory under `tests/tasty/input/`.

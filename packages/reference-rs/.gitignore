@@ -10,4 +10,4 @@ npm/
 node_modules/
 
 # Generated TypeScript test output
-src/typescript/tests/output/
+tests/tasty/output/

@@ -1,4 +1,4 @@
-# TypeScript scanner tests
+# Tasty tests
 
 Two test suites:
 
