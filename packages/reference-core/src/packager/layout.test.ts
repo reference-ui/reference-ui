@@ -12,6 +12,7 @@ describe('packager/layout', () => {
     it('strips scope from scoped package name', () => {
       expect(getShortName('@reference-ui/react')).toBe('react')
       expect(getShortName('@reference-ui/system')).toBe('system')
+      expect(getShortName('@reference-ui/types')).toBe('types')
       expect(getShortName('@reference-ui/styled')).toBe('styled')
     })
 
@@ -25,6 +26,7 @@ describe('packager/layout', () => {
       const outDir = '/project/.reference-ui'
       expect(getPackageDir(outDir, '@reference-ui/react')).toMatch(/\.reference-ui[/\\]react$/)
       expect(getPackageDir(outDir, '@reference-ui/system')).toMatch(/\.reference-ui[/\\]system$/)
+      expect(getPackageDir(outDir, '@reference-ui/types')).toMatch(/\.reference-ui[/\\]types$/)
     })
   })
 

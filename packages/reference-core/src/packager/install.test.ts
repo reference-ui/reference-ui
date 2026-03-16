@@ -41,13 +41,13 @@ const TYPES_PACKAGE: PackageDefinition = {
   name: '@reference-ui/types',
   version: '0.0.0-test',
   description: 'types test package',
-  bundle: false,
-  main: './tasty/manifest.js',
-  types: './tasty/manifest.d.ts',
+  bundle: true,
+  main: './types.mjs',
+  types: './types.d.mts',
   exports: {
     '.': {
-      import: './tasty/manifest.js',
-      types: './tasty/manifest.d.ts',
+      import: './types.mjs',
+      types: './types.d.mts',
     },
   },
 }
@@ -214,7 +214,7 @@ describe('packager/install', () => {
     ).toBe(true)
   })
 
-  it('links non-bundled generated packages like @reference-ui/types', async () => {
+  it('links generated runtime packages like @reference-ui/types', async () => {
     const workspaceDir = createTempDir()
     const outDir = resolve(workspaceDir, '.reference-ui')
     const nodeModulesScope = resolve(workspaceDir, 'node_modules', '@reference-ui')
@@ -228,15 +228,15 @@ describe('packager/install', () => {
         const typesPath = resolve(dir, pkg.types?.replace('./', '') || 'index.d.ts')
         mkdirSync(dirname(mainPath), { recursive: true })
         mkdirSync(dirname(typesPath), { recursive: true })
-        writeFileSync(mainPath, 'export default {}\n')
-        writeFileSync(typesPath, 'export default {}\n')
+        writeFileSync(mainPath, 'export const Reference = () => null\n')
+        writeFileSync(typesPath, 'export declare const Reference: () => null\n')
       },
     })
 
     await installPackage('/core', outDir, nodeModulesScope, TYPES_PACKAGE)
 
-    expect(readFileSync(resolve(targetDir, 'tasty', 'manifest.js'), 'utf-8')).toContain('export default')
-    expect(readFileSync(resolve(targetDir, 'tasty', 'manifest.d.ts'), 'utf-8')).toContain('export default')
+    expect(readFileSync(resolve(targetDir, 'types.mjs'), 'utf-8')).toContain('Reference')
+    expect(readFileSync(resolve(targetDir, 'types.d.mts'), 'utf-8')).toContain('Reference')
     expect(lstatSync(linkPath).isSymbolicLink()).toBe(true)
     expect(realpathSync(linkPath)).toBe(realpathSync(targetDir))
   })

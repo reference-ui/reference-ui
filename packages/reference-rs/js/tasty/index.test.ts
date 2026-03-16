@@ -13,6 +13,10 @@ function manifestPath(...segments: string[]) {
   return join(packageDir, 'tests', 'tasty', 'cases', ...segments, 'output', 'manifest.js')
 }
 
+function toImportSpecifier(artifactPath: string): string {
+  return artifactPath.startsWith('file:') ? artifactPath : pathToFileURL(artifactPath).href
+}
+
 describe('tasty runtime', () => {
   it('emits manifest-plus-chunks artifacts without bundle.js', () => {
     const outputDir = join(packageDir, 'tests', 'tasty', 'cases', 'external_libs', 'output')
@@ -31,7 +35,7 @@ describe('tasty runtime', () => {
       manifestPath: manifestPath('external_libs'),
       importer: async (artifactPath) => {
         loads.push(artifactPath)
-        return import(pathToFileURL(artifactPath).href)
+        return import(toImportSpecifier(artifactPath))
       },
     })
 
@@ -58,7 +62,7 @@ describe('tasty runtime', () => {
       manifestPath: manifestPath('external_libs'),
       importer: async (artifactPath) => {
         loads.push(artifactPath)
-        return import(pathToFileURL(artifactPath).href)
+        return import(toImportSpecifier(artifactPath))
       },
     })
 

@@ -10,7 +10,7 @@ import {
 } from './helpers'
 
 describe('@reference-ui/types package', () => {
-  it('creates the generated package with manifest entry metadata', async () => {
+  it('creates the generated package with a runtime entry plus manifest subpath exports', async () => {
     const ready = await waitForTypesPackage()
     expect(ready, '@reference-ui/types should be emitted by packager').toBe(true)
     expect(existsSync(typesPackageDir), '.reference-ui/types should exist').toBe(true)
@@ -19,12 +19,20 @@ describe('@reference-ui/types package', () => {
     const pkg = JSON.parse(readFileSync(typesPackageJsonPath, 'utf-8'))
     expect(pkg).toMatchObject({
       name: '@reference-ui/types',
-      main: './tasty/manifest.js',
-      types: './tasty/manifest.d.ts',
+      main: './types.mjs',
+      types: './types.d.mts',
       exports: {
         '.': {
+          import: './types.mjs',
+          types: './types.d.mts',
+        },
+        './manifest': {
           import: './tasty/manifest.js',
           types: './tasty/manifest.d.ts',
+        },
+        './runtime': {
+          import: './tasty/runtime.js',
+          types: './tasty/runtime.d.ts',
         },
       },
     })
@@ -39,17 +47,19 @@ describe('@reference-ui/types package', () => {
     expect(realpathSync(installedTypesPackageDir)).toBe(realpathSync(typesPackageDir))
   })
 
-  it('resolves as a package and can load symbols through the Tasty API', async () => {
+  it('resolves as a package, exports Reference, and still exposes manifest metadata', async () => {
     const ready = await waitForTypesPackage()
     expect(ready, '@reference-ui/types should be emitted by packager').toBe(true)
 
     const manifestPath = realpathSync(join(installedTypesPackageDir, 'tasty', 'manifest.js'))
     const pkg = await import('@reference-ui/types')
+    const manifestModule = await import('@reference-ui/types/manifest')
     const api = createTastyApi({ manifestPath })
     await api.ready()
     const fixture = await api.loadSymbolByName('ReferenceApiFixture')
 
-    expect(pkg.default).toEqual(pkg.manifest)
+    expect(typeof pkg.Reference).toBe('function')
+    expect(manifestModule.default).toEqual(manifestModule.manifest)
     expect(fixture.getName()).toBe('ReferenceApiFixture')
     expect(fixture.getKind()).toBe('interface')
   })
