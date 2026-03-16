@@ -53,9 +53,10 @@ function getReferenceApi(): Promise<TastyApi> {
 async function loadReferenceState(name: string): Promise<LoadedReferenceState> {
   const api = await getReferenceApi()
   const symbol = await api.loadSymbolByName(name)
-  const members = symbol.getKind() === 'interface'
-    ? await api.graph.flattenInterfaceMembers(symbol)
-    : []
+  const members =
+    symbol.getKind() === 'interface'
+      ? await api.graph.flattenInterfaceMembers(symbol)
+      : []
 
   return {
     symbol,
@@ -76,7 +77,8 @@ function renderSummary(status: ReferenceStatus, name: string): React.ReactNode {
   if (status.state === 'loading') {
     return (
       <P margin="0" color={referenceTokens.color.muted}>
-        Loading reference docs for <Code fontFamily={referenceTokens.font.mono}>{name}</Code>.
+        Loading reference docs for{' '}
+        <Code fontFamily={referenceTokens.font.mono}>{name}</Code>.
       </P>
     )
   }
@@ -84,14 +86,15 @@ function renderSummary(status: ReferenceStatus, name: string): React.ReactNode {
   if (status.state === 'error') {
     return (
       <P margin="0" color={referenceTokens.color.muted}>
-        Failed to load <Code fontFamily={referenceTokens.font.mono}>{name}</Code>: {status.message}
+        Failed to load <Code fontFamily={referenceTokens.font.mono}>{name}</Code>:{' '}
+        {status.message}
       </P>
     )
   }
 
   const { symbol } = status.data
-  const extendsNames = symbol.getExtends().map((ref) => ref.getName())
-  const typeParameterNames = symbol.getTypeParameters().map((param) => param.name)
+  const extendsNames = symbol.getExtends().map(ref => ref.getName())
+  const typeParameterNames = symbol.getTypeParameters().map(param => param.name)
   const kindLabel = symbol.getKind() === 'typeAlias' ? 'Type alias' : 'Interface'
 
   return (
@@ -123,7 +126,11 @@ function renderContent(status: ReferenceStatus): React.ReactNode {
 
   if (symbol.getKind() === 'typeAlias') {
     return (
-      <Div marginTop={referenceTokens.space.lg} display="grid" gap={referenceTokens.space.sm}>
+      <Div
+        marginTop={referenceTokens.space.lg}
+        display="grid"
+        gap={referenceTokens.space.sm}
+      >
         <Small color={referenceTokens.color.muted}>Definition</Small>
         <Code
           display="block"
@@ -138,7 +145,11 @@ function renderContent(status: ReferenceStatus): React.ReactNode {
   }
 
   return (
-    <Div marginTop={referenceTokens.space.lg} display="grid" gap={referenceTokens.space.sm}>
+    <Div
+      marginTop={referenceTokens.space.lg}
+      display="grid"
+      gap={referenceTokens.space.sm}
+    >
       <Small color={referenceTokens.color.muted}>Members</Small>
       <Div overflow="auto">
         <Table
@@ -181,7 +192,7 @@ function renderContent(status: ReferenceStatus): React.ReactNode {
             </Tr>
           </Thead>
           <Tbody>
-            {members.map((member) => (
+            {members.map(member => (
               <Tr key={member.getName()}>
                 <Td
                   verticalAlign="top"
@@ -229,7 +240,7 @@ export function Reference({ name }: ReferenceProps) {
     setStatus({ state: 'loading' })
 
     void loadReferenceState(name)
-      .then((data) => {
+      .then(data => {
         if (!active) return
         setStatus({ state: 'ready', data })
       })
