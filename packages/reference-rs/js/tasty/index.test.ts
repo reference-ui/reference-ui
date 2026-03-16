@@ -1,0 +1,78 @@
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+import { describe, expect, it } from 'vitest'
+
+import { createTastyApi } from './index'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const packageDir = join(__dirname, '..', '..')
+
+function bundlePath(...segments: string[]) {
+  return join(packageDir, 'tests', 'tasty', 'cases', ...segments, 'output', 'bundle.js')
+}
+
+describe('tasty runtime', () => {
+  it('keeps symbol wrapper identity stable across lookup paths', async () => {
+    const api = createTastyApi({
+      bundlePath: bundlePath('external_libs'),
+    })
+
+    const byName = await api.loadSymbolByName('ButtonProps')
+    const byId = await api.loadSymbolById(byName.getId())
+
+    expect(byId).toBe(byName)
+  })
+
+  it('loads extends symbols and flattens inherited members', async () => {
+    const api = createTastyApi({
+      bundlePath: bundlePath('external_libs'),
+    })
+
+    const buttonProps = await api.loadSymbolByName('ButtonProps')
+    const extendsSymbols = await buttonProps.loadExtendsSymbols()
+    const flattened = await api.graph.flattenInterfaceMembers(buttonProps)
+
+    expect(extendsSymbols.map((symbol) => symbol.getName())).toEqual(['StyleProps'])
+    expect(flattened.map((member) => member.getName())).toContain('tone')
+    expect(flattened.map((member) => member.getName())).toContain('size')
+  })
+
+  it('collects only user-owned immediate dependencies', async () => {
+    const api = createTastyApi({
+      bundlePath: bundlePath('external_libs'),
+    })
+
+    const buttonProps = await api.loadSymbolByName('ButtonProps')
+    const refs = await api.graph.collectUserOwnedReferences(buttonProps)
+    const dependencies = await api.graph.loadImmediateDependencies(buttonProps)
+
+    expect(refs.map((ref) => ref.getName()).sort()).toEqual(['Size', 'StyleProps'])
+    expect(dependencies.map((symbol) => symbol.getName()).sort()).toEqual(['Size', 'StyleProps'])
+  })
+
+  it('exposes type-alias helpers over the emitted definition shape', async () => {
+    const api = createTastyApi({
+      bundlePath: bundlePath('default_params'),
+    })
+
+    const withDefault = await api.loadSymbolByName('WithDefault')
+    const underlying = withDefault.getUnderlyingType()
+
+    expect(withDefault.getKind()).toBe('typeAlias')
+    expect(withDefault.getTypeParameters()).toHaveLength(1)
+    expect(withDefault.getTypeParameters()[0]?.default?.kind).toBe('intrinsic')
+    expect(underlying?.getKind()).toBe('object')
+    expect(underlying?.describe()).toBe('{ ... }')
+  })
+
+  it('supports simple symbol search over the loaded bundle', async () => {
+    const api = createTastyApi({
+      bundlePath: bundlePath('external_libs'),
+    })
+
+    const results = await api.searchSymbols('button')
+
+    expect(results.map((result) => result.name)).toEqual(['ButtonProps', 'ButtonSchema'])
+  })
+})
