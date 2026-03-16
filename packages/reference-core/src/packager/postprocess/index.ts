@@ -1,5 +1,6 @@
 import type { PackageDefinition } from '../package'
 import { injectLayerName, type InjectLayerNameContext } from './inject-layer-name'
+import { rewriteTypesRuntimeImport } from './rewrite-types-runtime-import'
 
 export type PostprocessContext = InjectLayerNameContext
 
@@ -11,6 +12,7 @@ type PostprocessStep = (
 
 const STEPS: Record<string, PostprocessStep> = {
   injectLayerName,
+  rewriteTypesRuntimeImport,
 }
 
 /**
