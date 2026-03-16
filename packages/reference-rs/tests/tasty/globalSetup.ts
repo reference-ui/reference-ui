@@ -4,6 +4,7 @@
  */
 import { execFileSync } from 'node:child_process'
 import { readdirSync, writeFileSync, mkdirSync } from 'node:fs'
+import { performance } from 'node:perf_hooks'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { pathToFileURL } from 'node:url'
@@ -44,9 +45,23 @@ export default async function globalSetup() {
 
   for (const scenario of scenarioFolders) {
     const include = [`cases/${scenario}/input/**/*.{ts,tsx}`]
-    const bundleSource = scanAndEmitBundle(tastyDir, include)
     const scenarioOutputDir = join(casesDir, scenario, 'output')
+    const startedAt = performance.now()
+    const bundleSource = scanAndEmitBundle(tastyDir, include)
+    const rustApiMs = performance.now() - startedAt
+
     mkdirSync(scenarioOutputDir, { recursive: true })
     writeFileSync(join(scenarioOutputDir, 'bundle.js'), bundleSource + '\n', 'utf-8')
+    writeFileSync(
+      join(scenarioOutputDir, 'perf-metrics.txt'),
+      [
+        '// perf metrics',
+        `// rust_api_ms: ${rustApiMs.toFixed(3)}`,
+        `// include: ${include[0]}`,
+        '// note: measured around the native scanAndEmitBundle call only',
+        '',
+      ].join('\n'),
+      'utf-8'
+    )
   }
 }
