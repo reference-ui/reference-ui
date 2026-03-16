@@ -3,6 +3,11 @@ export const _ea914f06121bc9ff = {
   name: "SizeVariant",
   library: "user",
   description: "Template literal alias using a union interpolation.",
+  descriptionRaw: "Template literal alias using a union interpolation.",
+  jsdoc: {
+  summary: "Template literal alias using a union interpolation.",
+  tags: []
+},
   definition: {
   kind: "template_literal",
   parts: [
@@ -39,6 +44,11 @@ export const _33bd5473c267675b = {
   name: "TokenKeyLabel",
   library: "user",
   description: "Template literal alias using a nested type operator interpolation.",
+  descriptionRaw: "Template literal alias using a nested type operator interpolation.",
+  jsdoc: {
+  summary: "Template literal alias using a nested type operator interpolation.",
+  tags: []
+},
   definition: {
   kind: "template_literal",
   parts: [
@@ -71,6 +81,11 @@ export const _11b1360b226ecf31 = {
   name: "Tokens",
   library: "user",
   description: "Template-literal scenario: text and interpolated type parts.\nUsed to verify structural TypeRef emission for template literal types.",
+  descriptionRaw: "Template-literal scenario: text and interpolated type parts.\nUsed to verify structural TypeRef emission for template literal types.",
+  jsdoc: {
+  summary: "Template-literal scenario: text and interpolated type parts.\nUsed to verify structural TypeRef emission for template literal types.",
+  tags: []
+},
   members: [
   {
     name: "sm",
@@ -102,6 +117,11 @@ export const _7b7d01145e871065 = {
   name: "WithTemplateLiterals",
   library: "user",
   description: "Interface members that use template literal types directly.",
+  descriptionRaw: "Interface members that use template literal types directly.",
+  jsdoc: {
+  summary: "Interface members that use template literal types directly.",
+  tags: []
+},
   members: [
   {
     name: "size",

@@ -12,13 +12,26 @@ use oxc_parser::Parser;
 use oxc_span::{GetSpan, SourceType, Span};
 
 use super::super::api::{
-    FnParam, MappedModifierKind, ScannerDiagnostic, TemplateLiteralPart, TsMember, TsMemberKind,
-    TsSymbolKind, TsTypeParameter, TupleElement, TypeOperatorKind, TypeRef,
+    FnParam, JsDoc, JsDocTag, MappedModifierKind, ScannerDiagnostic, TemplateLiteralPart,
+    TsMember, TsMemberKind, TsSymbolKind, TsTypeParameter, TupleElement, TypeOperatorKind, TypeRef,
 };
 use super::super::scanner::{resolve_import, symbol_id, ScannedFile, ScannedWorkspace};
 use super::model::{ImportBinding, ParsedFileAst, SymbolShell};
 
-/// Returns the raw text of the leading comment block immediately before `node_span`, or None.
+#[derive(Debug, Clone)]
+struct LeadingComment {
+    normalized_text: String,
+    is_jsdoc: bool,
+}
+
+#[derive(Debug, Clone, Default)]
+struct CommentMetadata {
+    description: Option<String>,
+    description_raw: Option<String>,
+    jsdoc: Option<JsDoc>,
+}
+
+/// Returns the normalized text of the leading comment block immediately before `node_span`, or None.
 /// Only comments that end before `node_span.start` are considered; the block is the one(s)
 /// that end closest to the node. If `exclude_starts_between` is provided, a comment is only
 /// used when no excluded start lies strictly between the comment end and `node_span.start`
@@ -28,7 +41,7 @@ fn leading_comment_for_span(
     comments: &[Comment],
     node_span: Span,
     exclude_starts_between: Option<&[u32]>,
-) -> Option<String> {
+) -> Option<LeadingComment> {
     let node_start = node_span.start;
     let leading: Vec<_> = comments
         .iter()
@@ -53,6 +66,7 @@ fn leading_comment_for_span(
     }
     let mut block_start = first.span.start as usize;
     let block_end = first.span.end as usize;
+    let mut is_jsdoc = first.is_jsdoc();
 
     // Extend backward to include adjacent leading comments (e.g. multiple lines or blocks).
     for c in by_end.iter().skip(1) {
@@ -62,6 +76,7 @@ fn leading_comment_for_span(
         let gap = source.get(c_end..block_start).unwrap_or("");
         if gap.trim().is_empty() && c_end <= block_start {
             block_start = c_start;
+            is_jsdoc = is_jsdoc || c.is_jsdoc();
         } else {
             break;
         }
@@ -72,7 +87,10 @@ fn leading_comment_for_span(
     if normalized.is_empty() {
         None
     } else {
-        Some(normalized)
+        Some(LeadingComment {
+            normalized_text: normalized,
+            is_jsdoc,
+        })
     }
 }
 
@@ -107,6 +125,98 @@ fn normalize_comment_text(raw: &str) -> String {
         .collect();
     let result = normalized_lines.join("\n").trim().to_string();
     result
+}
+
+fn parse_comment_metadata(comment: Option<LeadingComment>) -> CommentMetadata {
+    let Some(comment) = comment else {
+        return CommentMetadata::default();
+    };
+    let description_raw = Some(comment.normalized_text.clone());
+    if !comment.is_jsdoc {
+        return CommentMetadata {
+            description: description_raw.clone(),
+            description_raw,
+            jsdoc: None,
+        };
+    }
+
+    let jsdoc = parse_jsdoc(&comment.normalized_text);
+    let description = jsdoc
+        .summary
+        .clone()
+        .or_else(|| description_raw.clone());
+
+    CommentMetadata {
+        description,
+        description_raw,
+        jsdoc: Some(jsdoc),
+    }
+}
+
+fn parse_jsdoc(normalized_text: &str) -> JsDoc {
+    let mut summary_lines = Vec::new();
+    let mut tags = Vec::new();
+    let mut current_tag_name: Option<String> = None;
+    let mut current_tag_lines: Vec<String> = Vec::new();
+    let mut in_tags = false;
+
+    for raw_line in normalized_text.lines() {
+        let line = raw_line.trim();
+        if let Some(tag_line) = line.strip_prefix('@') {
+            if let Some(name) = current_tag_name.take() {
+                tags.push(JsDocTag {
+                    name,
+                    value: normalize_jsdoc_tag_value(&current_tag_lines),
+                });
+                current_tag_lines.clear();
+            }
+
+            in_tags = true;
+            let mut parts = tag_line.splitn(2, char::is_whitespace);
+            let name = parts.next().unwrap_or("").trim().to_string();
+            let value = parts.next().unwrap_or("").trim();
+            if !value.is_empty() {
+                current_tag_lines.push(value.to_string());
+            }
+            current_tag_name = if name.is_empty() { None } else { Some(name) };
+        } else if in_tags {
+            if current_tag_name.is_some() {
+                current_tag_lines.push(line.to_string());
+            }
+        } else {
+            summary_lines.push(line.to_string());
+        }
+    }
+
+    if let Some(name) = current_tag_name.take() {
+        tags.push(JsDocTag {
+            name,
+            value: normalize_jsdoc_tag_value(&current_tag_lines),
+        });
+    }
+
+    JsDoc {
+        summary: normalize_jsdoc_summary(&summary_lines),
+        tags,
+    }
+}
+
+fn normalize_jsdoc_summary(lines: &[String]) -> Option<String> {
+    let summary = lines.join("\n").trim().to_string();
+    if summary.is_empty() {
+        None
+    } else {
+        Some(summary)
+    }
+}
+
+fn normalize_jsdoc_tag_value(lines: &[String]) -> Option<String> {
+    let value = lines.join("\n").trim().to_string();
+    if value.is_empty() {
+        None
+    } else {
+        Some(value)
+    }
 }
 
 pub(super) fn extract_files(
@@ -305,7 +415,12 @@ fn push_interface_shell<'a>(
 ) {
     let name = interface_decl.id.name.to_string();
     let id = symbol_id(file_id, &name);
-    let description = leading_comment_for_span(source, comments, interface_decl.span(), None);
+    let comment = parse_comment_metadata(leading_comment_for_span(
+        source,
+        comments,
+        interface_decl.span(),
+        None,
+    ));
     let interface_start = interface_decl.span().start;
     let all_member_starts: Vec<u32> = interface_decl
         .body
@@ -407,7 +522,9 @@ fn push_interface_shell<'a>(
         name,
         kind: TsSymbolKind::Interface,
         exported,
-        description,
+        description: comment.description,
+        description_raw: comment.description_raw,
+        jsdoc: comment.jsdoc,
         type_parameters,
         defined_members,
         extends,
@@ -429,7 +546,12 @@ fn push_type_alias_shell<'a>(
 ) {
     let name = type_alias.id.name.to_string();
     let id = symbol_id(file_id, &name);
-    let description = leading_comment_for_span(source, comments, type_alias.span(), None);
+    let comment = parse_comment_metadata(leading_comment_for_span(
+        source,
+        comments,
+        type_alias.span(),
+        None,
+    ));
     let type_parameters = type_parameters_from_oxc(
         type_alias.type_parameters.as_deref(),
         source,
@@ -453,7 +575,9 @@ fn push_type_alias_shell<'a>(
         name,
         kind: TsSymbolKind::TypeAlias,
         exported,
-        description,
+        description: comment.description,
+        description_raw: comment.description_raw,
+        jsdoc: comment.jsdoc,
         type_parameters,
         defined_members: Vec::new(),
         extends: Vec::new(),
@@ -472,12 +596,12 @@ fn property_signature_to_member(
     current_library: &str,
 ) -> TsMember {
     let name = property_key_name(&property.key, source);
-    let description = leading_comment_for_span(
+    let comment = parse_comment_metadata(leading_comment_for_span(
         source,
         comments,
         property.span(),
         exclude_starts_between,
-    );
+    ));
     let type_ref = property.type_annotation.as_ref().map(|annotation| {
         type_to_ref(
             &annotation.type_annotation,
@@ -493,7 +617,9 @@ fn property_signature_to_member(
         optional: property.optional,
         readonly: property.readonly,
         kind: TsMemberKind::Property,
-        description,
+        description: comment.description,
+        description_raw: comment.description_raw,
+        jsdoc: comment.jsdoc,
         type_ref,
     }
 }
@@ -508,7 +634,12 @@ fn method_signature_to_member(
     current_library: &str,
 ) -> TsMember {
     let name = property_key_name(&method.key, source);
-    let description = leading_comment_for_span(source, comments, method.span(), exclude_starts_between);
+    let comment = parse_comment_metadata(leading_comment_for_span(
+        source,
+        comments,
+        method.span(),
+        exclude_starts_between,
+    ));
     let type_ref = method.return_type.as_ref().map(|annotation| {
         type_to_ref(
             &annotation.type_annotation,
@@ -524,7 +655,9 @@ fn method_signature_to_member(
         optional: method.optional,
         readonly: false,
         kind: TsMemberKind::Method,
-        description,
+        description: comment.description,
+        description_raw: comment.description_raw,
+        jsdoc: comment.jsdoc,
         type_ref,
     }
 }
@@ -538,7 +671,12 @@ fn call_signature_to_member(
     current_module_specifier: &str,
     current_library: &str,
 ) -> TsMember {
-    let description = leading_comment_for_span(source, comments, call.span(), exclude_starts_between);
+    let comment = parse_comment_metadata(leading_comment_for_span(
+        source,
+        comments,
+        call.span(),
+        exclude_starts_between,
+    ));
     let type_ref = call.return_type.as_ref().map(|annotation| {
         type_to_ref(
             &annotation.type_annotation,
@@ -554,7 +692,9 @@ fn call_signature_to_member(
         optional: false,
         readonly: false,
         kind: TsMemberKind::CallSignature,
-        description,
+        description: comment.description,
+        description_raw: comment.description_raw,
+        jsdoc: comment.jsdoc,
         type_ref,
     }
 }
@@ -568,7 +708,12 @@ fn construct_signature_to_member(
     current_module_specifier: &str,
     current_library: &str,
 ) -> TsMember {
-    let description = leading_comment_for_span(source, comments, decl.span(), exclude_starts_between);
+    let comment = parse_comment_metadata(leading_comment_for_span(
+        source,
+        comments,
+        decl.span(),
+        exclude_starts_between,
+    ));
     let type_ref = decl.return_type.as_ref().map(|annotation| {
         type_to_ref(
             &annotation.type_annotation,
@@ -584,7 +729,9 @@ fn construct_signature_to_member(
         optional: false,
         readonly: false,
         kind: TsMemberKind::ConstructSignature,
-        description,
+        description: comment.description,
+        description_raw: comment.description_raw,
+        jsdoc: comment.jsdoc,
         type_ref,
     }
 }
@@ -598,7 +745,12 @@ fn index_signature_to_member(
     current_module_specifier: &str,
     current_library: &str,
 ) -> TsMember {
-    let description = leading_comment_for_span(source, comments, index.span(), exclude_starts_between);
+    let comment = parse_comment_metadata(leading_comment_for_span(
+        source,
+        comments,
+        index.span(),
+        exclude_starts_between,
+    ));
     let type_ref = Some(type_to_ref(
         &index.type_annotation.type_annotation,
         source,
@@ -612,7 +764,9 @@ fn index_signature_to_member(
         optional: false,
         readonly: index.readonly,
         kind: TsMemberKind::IndexSignature,
-        description,
+        description: comment.description,
+        description_raw: comment.description_raw,
+        jsdoc: comment.jsdoc,
         type_ref,
     }
 }

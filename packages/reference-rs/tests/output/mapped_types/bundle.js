@@ -3,6 +3,11 @@ export const _47008842910ac067 = {
   name: "OptionalTokens",
   library: "user",
   description: "Basic optional mapped type.",
+  descriptionRaw: "Basic optional mapped type.",
+  jsdoc: {
+  summary: "Basic optional mapped type.",
+  tags: []
+},
   typeParameters: [
   {
     name: "T"
@@ -43,6 +48,11 @@ export const _28df340f7b9f8a79 = {
   name: "TokenLabels",
   library: "user",
   description: "Readonly mapped type with key remapping.",
+  descriptionRaw: "Readonly mapped type with key remapping.",
+  jsdoc: {
+  summary: "Readonly mapped type with key remapping.",
+  tags: []
+},
   typeParameters: [
   {
     name: "T"
@@ -104,6 +114,11 @@ export const _dad5c7c05a60c36f = {
   name: "Tokens",
   library: "user",
   description: "Mapped-type scenario: key binding, modifiers, remapping, and value type.\nUsed to verify structural TypeRef emission for mapped types.",
+  descriptionRaw: "Mapped-type scenario: key binding, modifiers, remapping, and value type.\nUsed to verify structural TypeRef emission for mapped types.",
+  jsdoc: {
+  summary: "Mapped-type scenario: key binding, modifiers, remapping, and value type.\nUsed to verify structural TypeRef emission for mapped types.",
+  tags: []
+},
   members: [
   {
     name: "sm",
@@ -135,6 +150,11 @@ export const _1178349df458d16f = {
   name: "WithMappedTypes",
   library: "user",
   description: "Interface members that use mapped types directly.",
+  descriptionRaw: "Interface members that use mapped types directly.",
+  jsdoc: {
+  summary: "Interface members that use mapped types directly.",
+  tags: []
+},
   typeParameters: [
   {
     name: "T"

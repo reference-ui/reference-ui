@@ -3,6 +3,11 @@ export const _9906dd2bd9a95dcd = {
   name: "OptionalKeys",
   library: "user",
   description: "Mapped type: all keys of T become optional. Partial<T> style.",
+  descriptionRaw: "Mapped type: all keys of T become optional. Partial<T> style.",
+  jsdoc: {
+  summary: "Mapped type: all keys of T become optional. Partial<T> style.",
+  tags: []
+},
   typeParameters: [
   {
     name: "T"
@@ -43,6 +48,11 @@ export const _f0631b896d577312 = {
   name: "StringKeys",
   library: "user",
   description: "Conditional type: picks string keys from T.",
+  descriptionRaw: "Conditional type: picks string keys from T.",
+  jsdoc: {
+  summary: "Conditional type: picks string keys from T.",
+  tags: []
+},
   typeParameters: [
   {
     name: "T"
@@ -120,6 +130,11 @@ export const _e6a653180c040998 = {
   name: "TemplateLiteralAlias",
   library: "user",
   description: "Template literal type → structured TemplateLiteral with parts.",
+  descriptionRaw: "Template literal type → structured TemplateLiteral with parts.",
+  jsdoc: {
+  summary: "Template literal type → structured TemplateLiteral with parts.",
+  tags: []
+},
   definition: {
   kind: "template_literal",
   parts: [
@@ -147,6 +162,11 @@ export const _4b619f9ef2ff1695 = {
   name: "TypeQueryAlias",
   library: "user",
   description: "Type query (typeof) → structured TypeQuery with expression.",
+  descriptionRaw: "Type query (typeof) → structured TypeQuery with expression.",
+  jsdoc: {
+  summary: "Type query (typeof) → structured TypeQuery with expression.",
+  tags: []
+},
   definition: {
   kind: "type_query",
   expression: "Array.prototype.map",
@@ -158,6 +178,11 @@ export const _f724b00f1a7d9d24 = {
   name: "User",
   library: "user",
   description: "Complex scenario: mapped and conditional types are structural.\nWe still preserve unsupported nested pieces as raw summaries when needed.\n/\n\n/** Simple interface for testing reference from complex type.",
+  descriptionRaw: "Complex scenario: mapped and conditional types are structural.\nWe still preserve unsupported nested pieces as raw summaries when needed.\n/\n\n/** Simple interface for testing reference from complex type.",
+  jsdoc: {
+  summary: "Complex scenario: mapped and conditional types are structural.\nWe still preserve unsupported nested pieces as raw summaries when needed.\n/\n\n/** Simple interface for testing reference from complex type.",
+  tags: []
+},
   members: [
   {
     name: "id",
@@ -189,6 +214,11 @@ export const _52cc92eeeb08e45d = {
   name: "UserName",
   library: "user",
   description: "Indexed access type: property key from another type.",
+  descriptionRaw: "Indexed access type: property key from another type.",
+  jsdoc: {
+  summary: "Indexed access type: property key from another type.",
+  tags: []
+},
   definition: {
   kind: "indexed_access",
   object:   {
@@ -208,6 +238,11 @@ export const _d997f0f1502f7bad = {
   name: "UsesOptionalKeys",
   library: "user",
   description: "Type alias that references the mapped type.",
+  descriptionRaw: "Type alias that references the mapped type.",
+  jsdoc: {
+  summary: "Type alias that references the mapped type.",
+  tags: []
+},
   members: [
   {
     name: "partialUser",
@@ -215,6 +250,11 @@ export const _d997f0f1502f7bad = {
     readonly: false,
     kind: "property",
     description: "User with all keys optional (mapped type).",
+    descriptionRaw: "User with all keys optional (mapped type).",
+    jsdoc: {
+    summary: "User with all keys optional (mapped type).",
+    tags: []
+  },
     type: {
     id: "_9906dd2bd9a95dcd",
     name: "OptionalKeys",
@@ -244,6 +284,11 @@ export const _9e73920757acf05a = {
   name: "WithIndexedAccess",
   library: "user",
   description: "Interface member with indexed access type.",
+  descriptionRaw: "Interface member with indexed access type.",
+  jsdoc: {
+  summary: "Interface member with indexed access type.",
+  tags: []
+},
   members: [
   {
     name: "nameType",
@@ -251,6 +296,11 @@ export const _9e73920757acf05a = {
     readonly: false,
     kind: "property",
     description: "Type of the name property from User.",
+    descriptionRaw: "Type of the name property from User.",
+    jsdoc: {
+    summary: "Type of the name property from User.",
+    tags: []
+  },
     type: {
     kind: "indexed_access",
     object:   {

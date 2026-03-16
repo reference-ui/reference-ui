@@ -133,6 +133,8 @@ fn resolve_symbol_references(
         file_id: parsed.file_id.clone(),
         exported: symbol.exported,
         description: symbol.description,
+        description_raw: symbol.description_raw,
+        jsdoc: symbol.jsdoc,
         type_parameters,
         defined_members: symbol.defined_members,
         extends: symbol.extends,
