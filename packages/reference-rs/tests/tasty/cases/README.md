@@ -18,6 +18,7 @@ So:
 - `tsx/` → .tsx file scanning (interfaces and type aliases from TSX).
 - `default_params/` → type parameters with default (e.g. `T = string`).
 - `unknown_complex/` → mapped and conditional types (structural, with nested unsupported pieces still emitted as Raw when needed).
+- `audit_alignment/` → audit-driven coverage for intentionally raw variants (`import()`, `infer`, `type predicate`, `this`) plus their surrounding structured shapes.
 
 Add a new case folder to add a new scenario. The test suite will automatically
 scan `input/`, write `output/bundle.js` and `output/perf-metrics.txt`, and run
