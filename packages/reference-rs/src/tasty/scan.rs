@@ -12,16 +12,6 @@ pub fn scan_typescript_bundle(request: &ScanRequest) -> Result<TypeScriptBundle,
     Ok(generate_debug_bundle(request, resolved_graph))
 }
 
-/// Scan and emit the ESM bundle, returning the entrypoint module source.
-pub fn scan_and_emit_bundle(request: &ScanRequest) -> Result<String, String> {
-    let bundle = scan_typescript_bundle(request)?;
-    let esm = emit_esm_bundle(&bundle)?;
-    esm.modules
-        .get(&esm.entrypoint)
-        .cloned()
-        .ok_or_else(|| "missing entrypoint module".to_string())
-}
-
 /// Scan and emit all Tasty ESM modules as a JSON payload for filesystem writing.
 pub fn scan_and_emit_modules(request: &ScanRequest) -> Result<String, String> {
     let bundle = scan_typescript_bundle(request)?;

@@ -37,6 +37,21 @@ const SYSTEM_PACKAGE: PackageDefinition = {
   },
 }
 
+const TYPES_PACKAGE: PackageDefinition = {
+  name: '@reference-ui/types',
+  version: '0.0.0-test',
+  description: 'types test package',
+  bundle: false,
+  main: './manifest.js',
+  types: './manifest.d.ts',
+  exports: {
+    '.': {
+      import: './manifest.js',
+      types: './manifest.d.ts',
+    },
+  },
+}
+
 function createTempDir(): string {
   const dir = mkdtempSync(join(tmpdir(), 'reference-ui-packager-'))
   createdDirs.push(dir)
@@ -197,6 +212,29 @@ describe('packager/install', () => {
     expect(
       lstatSync(resolve(workspaceDir, 'node_modules', '@reference-ui', 'system')).isSymbolicLink()
     ).toBe(true)
+  })
+
+  it('links non-bundled generated packages like @reference-ui/types', async () => {
+    const workspaceDir = createTempDir()
+    const outDir = resolve(workspaceDir, '.reference-ui')
+    const nodeModulesScope = resolve(workspaceDir, 'node_modules', '@reference-ui')
+    const targetDir = resolve(outDir, 'types')
+    const linkPath = resolve(nodeModulesScope, 'types')
+
+    const { installPackage } = await importInstallModule({
+      bundleImpl: async ({ targetDir: dir, pkg }) => {
+        mkdirSync(dir, { recursive: true })
+        writeFileSync(resolve(dir, pkg.main?.replace('./', '') || 'index.js'), 'export default {}\n')
+        writeFileSync(resolve(dir, pkg.types?.replace('./', '') || 'index.d.ts'), 'export default {}\n')
+      },
+    })
+
+    await installPackage('/core', outDir, nodeModulesScope, TYPES_PACKAGE)
+
+    expect(readFileSync(resolve(targetDir, 'manifest.js'), 'utf-8')).toContain('export default')
+    expect(readFileSync(resolve(targetDir, 'manifest.d.ts'), 'utf-8')).toContain('export default')
+    expect(lstatSync(linkPath).isSymbolicLink()).toBe(true)
+    expect(realpathSync(linkPath)).toBe(realpathSync(targetDir))
   })
 
   it('fails loudly when bundling fails before linking', async () => {

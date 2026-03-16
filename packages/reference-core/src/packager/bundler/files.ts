@@ -14,6 +14,9 @@ function isMissingFileError(error: unknown): boolean {
 }
 
 function isTypeScriptFile(filePath: string): boolean {
+  if (filePath.endsWith('.d.ts') || filePath.endsWith('.d.mts') || filePath.endsWith('.d.cts')) {
+    return false
+  }
   const extension = extname(filePath)
   return extension === '.ts' || extension === '.tsx'
 }

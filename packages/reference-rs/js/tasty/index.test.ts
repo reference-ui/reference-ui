@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
@@ -13,6 +14,17 @@ function manifestPath(...segments: string[]) {
 }
 
 describe('tasty runtime', () => {
+  it('emits manifest-plus-chunks artifacts without bundle.js', () => {
+    const outputDir = join(packageDir, 'tests', 'tasty', 'cases', 'external_libs', 'output')
+    const manifest = join(outputDir, 'manifest.js')
+    const chunkDir = join(outputDir, 'chunks')
+    const legacyBundle = join(outputDir, 'bundle.js')
+
+    expect(existsSync(manifest)).toBe(true)
+    expect(existsSync(chunkDir)).toBe(true)
+    expect(existsSync(legacyBundle)).toBe(false)
+  })
+
   it('loads only the manifest during ready()', async () => {
     const loads: string[] = []
     const api = createTastyApi({

@@ -3,7 +3,7 @@
  * so that bundle/runtime tests load real native output instead of Rust-test-produced files.
  */
 import { execFileSync } from 'node:child_process'
-import { mkdirSync, readdirSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { performance } from 'node:perf_hooks'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -18,7 +18,6 @@ import {
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
 
 interface EmittedModulesPayload {
-  entrypoint: string
   modules: Record<string, string>
   type_declarations: Record<string, string>
 }
@@ -56,6 +55,7 @@ export default async function globalSetup() {
     const emitted = JSON.parse(scanAndEmitModules(tastyDir, include)) as EmittedModulesPayload
     const rustApiMs = performance.now() - startedAt
 
+    rmSync(scenarioOutputDir, { recursive: true, force: true })
     mkdirSync(scenarioOutputDir, { recursive: true })
     for (const [relativeModulePath, source] of Object.entries(emitted.modules)) {
       const outputPath = join(scenarioOutputDir, relativeModulePath.replace(/^\.\//, ''))

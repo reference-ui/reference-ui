@@ -7,7 +7,6 @@ import type { ReferenceWorkerPayload } from './worker-types'
 import { getReferenceTastyDirPath } from './paths'
 
 interface EmittedModulesPayload {
-  entrypoint: string
   modules: Record<string, string>
   type_declarations: Record<string, string>
 }
@@ -97,7 +96,6 @@ function stripRelativePrefix(relativePath: string): string {
 function parseEmittedPayload(raw: string): EmittedModulesPayload {
   const parsed = JSON.parse(raw) as Partial<EmittedModulesPayload>
   if (
-    typeof parsed.entrypoint !== 'string' ||
     parsed.modules == null ||
     typeof parsed.modules !== 'object' ||
     parsed.type_declarations == null ||
