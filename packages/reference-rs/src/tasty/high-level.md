@@ -75,6 +75,13 @@ This layer should be lightweight and ergonomic.
 
 It should **not** attempt to reimplement the Rust compiler/lowering logic.
 
+In this repository, the natural home for this layer is:
+
+* `packages/reference-rs/js/tasty`
+
+That keeps the runtime API colocated with the Rust package and the generated
+artifact contract it consumes.
+
 ---
 
 ## Design principles
@@ -96,6 +103,13 @@ TypeScript owns:
 * composition
 * lazy loading
 * consumer ergonomics
+
+Concretely:
+
+* Rust should expose the emitted artifact contract from a dedicated
+  `src/tasty/model.rs`
+* TypeScript should consume generated types from that Rust-owned contract inside
+  `js/tasty`
 
 ### 2. Manifest-first loading
 
@@ -120,6 +134,9 @@ A little repetition is acceptable if it reduces runtime assembly cost.
 ---
 
 ## Broad artifact model
+
+These artifact shapes are the contract that should be generated from the Rust
+model layer, not hand-maintained separately in TypeScript.
 
 ### Manifest
 
@@ -178,124 +195,22 @@ The TypeScript API should navigate this graph lazily.
 
 ---
 
-## What the TypeScript API should expose
+## TypeScript API Surface
 
-## Loader primitives
+The concrete runtime API shape lives in `high-level-api.md`.
 
-Low-level functions that do the minimum necessary work.
+This document should stay focused on architecture, responsibilities, boundaries,
+and the broader design goals for the system.
 
-Broad examples:
+At a high level, the TypeScript layer should expose:
 
-* `loadManifest()`
-* `loadChunk(path)`
-* `loadSymbolById(id)`
-* `loadSymbolByName(name)`
-* `prefetchChunk(path)`
-* `prefetchSymbol(nameOrId)`
+* manifest-first loading
+* lazy symbol and chunk access
+* graph traversal helpers
+* docs/MCP composition helpers
 
-These should be small, predictable, and cache-aware.
-
-## Graph helpers
-
-Helpers for following references and combining related objects.
-
-Broad examples:
-
-* `resolveReference(ref)`
-* `loadImmediateDependencies(symbol)`
-* `loadExtendsChain(symbol)`
-* `loadRelatedTypes(symbol)`
-* `flattenInterfaceMembers(symbol)`
-* `collectUserOwnedReferences(symbol)`
-
-These helpers should be explicit about whether they are:
-
-* shallow
-* recursive
-* eager
-* lazy
-
-## Docs-oriented helpers
-
-Helpers that shape raw symbol graph data into docs-ready output.
-
-Broad examples:
-
-* `buildApiTable(symbol)`
-* `buildTypeLabel(typeRef)`
-* `buildDocsEntry(symbol)`
-* `buildInheritanceView(symbol)`
-* `buildRelatedSymbolsView(symbol)`
-
-These should be consumers of the graph, not owners of the graph.
-
-## MCP-oriented helpers
-
-Helpers for serving the MCP use case.
-
-Broad examples:
-
-* `getSymbolSummary(name)`
-* `getSymbolDetails(name)`
-* `getSymbolDependencies(name)`
-* `searchSymbols(query)`
-* `describeTypeRef(typeRef)`
-
-These should prioritise stable structured output and fast lookup.
-
----
-
-## Caching strategy
-
-The TypeScript API should cache at two levels.
-
-### Chunk cache
-
-Avoid importing the same chunk module more than once.
-
-### Symbol cache
-
-Avoid repeatedly resolving the same symbol object from the same chunk.
-
-Broad shape:
-
-```ts
-const chunkCache = new Map<string, Promise<unknown>>();
-const symbolCache = new Map<string, unknown>();
-```
-
-Cache invalidation is not a runtime concern for static generated artifacts in normal operation.
-
----
-
-## Loading strategy
-
-### Initial load
-
-Load only:
-
-* application shell
-* manifest
-* maybe minimal search index metadata
-
-### Symbol load
-
-When a consumer requests a symbol:
-
-1. resolve name -> id from manifest
-2. resolve id -> chunk from manifest
-3. dynamically import chunk
-4. read exported symbol object
-5. cache result
-
-### Graph expansion
-
-Only load additional chunks when:
-
-* a related symbol is explicitly requested
-* a docs page needs inherited or referenced symbols
-* MCP asks for deeper information
-* hover/preview/prefetch behavior is triggered
+But the specific function list, object model, and usage examples should live in
+the separate API-focused document so we do not duplicate or drift.
 
 ---
 
@@ -340,30 +255,16 @@ It **may** need to:
 
 ---
 
-## Error handling
-
-The TypeScript API should produce clear failures for:
-
-* unknown symbol names
-* missing symbol ids
-* missing chunks
-* missing exports inside a chunk
-* malformed manifest entries
-
-Errors should be practical and diagnostics-friendly.
-
-Example categories:
-
-* `UnknownSymbolError`
-* `MissingChunkError`
-* `MissingExportError`
-* `ManifestContractError`
-
----
-
 ## Contract boundaries
 
 The TypeScript API should consume generated contract types emitted from Rust.
+
+The intended Rust boundary is:
+
+* `src/tasty/model.rs` for the emitted/public artifact model
+* scanner/lowering internals stay in their own internal modules
+* request/orchestration types like `ScanRequest` do not need to be part of the
+  generated TypeScript runtime contract unless they are explicitly exposed
 
 Rust remains the source of truth for:
 
@@ -373,6 +274,13 @@ Rust remains the source of truth for:
 * diagnostics schema
 
 The TypeScript API should use generated contract types rather than drift into hand-maintained copies of boundary structures.
+
+That means TypeScript should not define its own parallel versions of:
+
+* bundle manifest types
+* symbol graph node types
+* type reference unions
+* diagnostics payloads
 
 ---
 
@@ -390,45 +298,34 @@ It should remain a clean runtime composition layer over the generated artifact g
 
 ---
 
-## Broad example usage
-
-```ts
-const api = await createReferenceApi({ manifestPath: "/reference/manifest.js" });
-
-const symbol = await api.loadSymbolByName("ButtonProps");
-const docsEntry = await api.buildDocsEntry(symbol);
-const dependencies = await api.loadImmediateDependencies(symbol);
-```
-
-This is the sort of ergonomic shape we want.
-
----
-
 ## Near-term implementation plan
 
 ### Phase 1
 
+* split the Rust artifact contract into `src/tasty/model.rs`
+* keep scanner request/orchestration types separate from the emitted model
 * define manifest contract
 * define chunk contract
+* generate TypeScript contract types from the Rust model
+* create `js/tasty`
 * implement manifest loader
 * implement chunk loader
 * implement symbol cache
-* implement `loadSymbolById`
-* implement `loadSymbolByName`
+* implement core symbol lookup by id and name
 
 ### Phase 2
 
-* implement reference resolution helpers
+* implement reference traversal helpers
 * implement shallow dependency loading
-* implement inheritance flattening helpers
-* implement basic docs table shaping
+* implement inheritance flattening
+* implement basic docs shaping
 
 ### Phase 3
 
 * implement MCP-friendly query helpers
 * add prefetch hooks
 * add search helpers
-* add richer docs composition helpers
+* add richer docs composition
 
 ---
 
