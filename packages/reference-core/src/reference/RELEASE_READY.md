@@ -91,16 +91,16 @@ Remaining sharp edges:
 
 - Tasty still does not expose a first-class diagnostics/warnings channel beyond what is packed into the manifest and logged during build. We can build and load a partial graph, but still have limited structured visibility into what degraded during lowering.
 - Reference resolution is still incomplete for some import forms and symbol shapes, especially default imports, namespace imports, and more complex cross-module reference patterns. Those cases can still degrade into unresolved or weaker references.
-- There is still an `unsafe` AST-layout cast in the lowering path for tuple elements. That is a parser-coupling risk and should eventually be removed.
+- Tuple-element lowering now uses an explicit safe conversion path instead of relying on an `unsafe` AST-layout cast, but we should still keep an eye on its reparsing fallback behavior and coverage.
 - Artifact writing is better, but not yet a true atomic directory swap. The flow still removes the old output directory before renaming the new one into place, so there is a brief gap where readers could observe missing outputs.
-- Packaging still relies on the placeholder-runtime rewrite step. The runtime boundary is cleaner now, but the package edge should still fail hard if that rewrite ever does not happen.
-- `reference` still owns the build-state/session cache keyed by source directory. That is okay for now, but config-sensitive invalidation is still something to keep an eye on as the build surface grows.
+- Packaging still relies on the placeholder-runtime rewrite step, but that edge is now enforced as a hard invariant so the package build fails loudly if the rewrite does not happen.
+- Build/session caching now lives behind the Tasty build layer instead of `reference`, but config-sensitive invalidation is still something to keep an eye on as the build surface grows.
 
 TODOs:
 
-- Remove the remaining `unsafe` tuple-element lowering cast in Tasty and replace it with an explicit safe conversion path.
-- Make the placeholder runtime rewrite step a hard packaging invariant so the build fails immediately if the final literal runtime edge is missing.
-- Revisit ownership of the build/session cache and decide whether it should stay in `reference` or move behind a Tasty-owned build/session layer.
+
+- Finish the output-write hardening so the directory replacement is truly atomic.
+- Expose Tasty diagnostics and warnings as structured build output rather than only embedding them in the manifest and logging them.
 
 ## Quick Wins
 
@@ -108,18 +108,17 @@ These are the fastest hardening wins before any larger Tasty runtime refactor:
 
 1. Expose Tasty diagnostics and warnings as structured build output instead of only embedding them in the manifest and logging them.
 2. Improve reference resolution for default imports, namespace imports, and other unresolved cross-module cases.
-3. Replace the remaining `unsafe` tuple-element lowering cast with an explicit safe conversion path.
-4. Finish the output-write hardening so the directory replacement is truly atomic.
-5. Make the placeholder runtime rewrite step fail the package build if it does not happen.
+3. Finish the output-write hardening so the directory replacement is truly atomic.
+4. Add package-boundary integration coverage that exercises the emitted runtime through real bundler flows.
 
 More detail:
 
 - Duplicate names are now preserved and warned on, while emitted-id collisions are rejected during emit time in `packages/reference-rs/src/tasty/generator/esm.rs`. That removes the silent-overwrite behavior while still treating a generated export-name collision as a Tasty integrity failure.
 - Manifest validation in `packages/reference-rs/js/tasty/index.ts` is now a real compatibility gate, but the next step is to make more of the lowering/build diagnostics explicit to callers rather than only surfacing them through manifest warnings and logs.
 - Runtime validation in `packages/reference-rs/js/tasty/index.ts` is tighter now, but the bigger remaining gap is unresolved or degraded references produced upstream by incomplete lowering/resolution.
-- Generated artifact writes moved into the Tasty build layer, but the replacement flow should still be tightened so the directory swap is fully atomic rather than "remove old, then rename new".
+- Generated artifact writes and session caching now live in the Tasty build layer, but the replacement flow should still be tightened so the directory swap is fully atomic rather than "remove old, then rename new".
 - Retry behavior is improved now, so the next reliability step is less about retries and more about making build diagnostics and ambiguous symbol cases easier to consume upstream.
-- Packaging still needs a stricter guard around the runtime placeholder rewrite. The generated package should fail loudly if the final literal `./tasty/runtime.js` edge is missing.
+- Packaging now fails loudly if the final literal `./tasty/runtime.js` edge is missing, so the next step there is broader package-boundary integration coverage rather than a softer postprocess warning.
 
 These should give a noticeable reliability bump without needing to redesign the full package boundary first.
 

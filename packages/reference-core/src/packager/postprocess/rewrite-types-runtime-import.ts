@@ -1,6 +1,5 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { log } from '../../lib/log'
 import { getEntryBasename } from '../layout'
 import type { PackageDefinition } from '../package'
 
@@ -28,17 +27,27 @@ export function rewriteTypesRuntimeImport(
 ): void {
   const entryFile = getEntryBasename(pkg)
   const bundlePath = resolve(targetDir, entryFile)
+  const content = readFileSync(bundlePath, TEXT_ENCODING)
 
-  try {
-    const content = readFileSync(bundlePath, TEXT_ENCODING)
-    if (!content.includes(RUNTIME_IMPORT_PLACEHOLDER)) return
-
-    writeFileSync(
-      bundlePath,
-      content.replaceAll(RUNTIME_IMPORT_PLACEHOLDER, GENERATED_RUNTIME_SPECIFIER),
-      TEXT_ENCODING
+  if (!content.includes(RUNTIME_IMPORT_PLACEHOLDER)) {
+    throw new Error(
+      `Expected ${pkg.name} bundle to contain ${RUNTIME_IMPORT_PLACEHOLDER} before postprocess: ${bundlePath}`
     )
-  } catch (error) {
-    log.debug('packager', `Could not rewrite generated types runtime import: ${error}`)
   }
+
+  const rewritten = content.replaceAll(RUNTIME_IMPORT_PLACEHOLDER, GENERATED_RUNTIME_SPECIFIER)
+
+  if (rewritten.includes(RUNTIME_IMPORT_PLACEHOLDER)) {
+    throw new Error(
+      `Failed to fully rewrite ${pkg.name} runtime placeholder in bundle: ${bundlePath}`
+    )
+  }
+
+  if (!rewritten.includes(GENERATED_RUNTIME_SPECIFIER)) {
+    throw new Error(
+      `Expected ${pkg.name} bundle to contain ${GENERATED_RUNTIME_SPECIFIER} after rewrite: ${bundlePath}`
+    )
+  }
+
+  writeFileSync(bundlePath, rewritten, TEXT_ENCODING)
 }

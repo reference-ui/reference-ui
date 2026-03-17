@@ -23,6 +23,13 @@ export interface BuiltTasty {
   api: TastyApi
 }
 
+export interface TastyBuildSession {
+  get(key: string): BuiltTasty | undefined
+  ensureReady(key: string): Promise<BuiltTasty | undefined>
+  rebuild(key: string, options: BuildTastyOptions): Promise<BuiltTasty>
+  getOrRebuild(key: string, options: BuildTastyOptions): Promise<BuiltTasty>
+}
+
 export async function buildTasty(options: BuildTastyOptions): Promise<BuiltTasty> {
   const rootDir = resolve(options.rootDir)
   const outputDir = resolve(options.outputDir)
@@ -40,6 +47,47 @@ export async function buildTasty(options: BuildTastyOptions): Promise<BuiltTasty
     manifestPath,
     warnings: api.getWarnings(),
     api,
+  }
+}
+
+export function createTastyBuildSession(): TastyBuildSession {
+  return new TastyBuildSessionImpl()
+}
+
+class TastyBuildSessionImpl implements TastyBuildSession {
+  private readonly buildsByKey = new Map<string, BuiltTasty>()
+  private readonly rebuildsByKey = new Map<string, Promise<BuiltTasty>>()
+
+  get(key: string): BuiltTasty | undefined {
+    return this.buildsByKey.get(key)
+  }
+
+  async ensureReady(key: string): Promise<BuiltTasty | undefined> {
+    const cached = this.buildsByKey.get(key)
+    if (!cached) return undefined
+    await cached.api.ready()
+    return cached
+  }
+
+  async rebuild(key: string, options: BuildTastyOptions): Promise<BuiltTasty> {
+    const existing = this.rebuildsByKey.get(key)
+    if (existing) return existing
+
+    const rebuild = buildTasty(options)
+      .then((built) => {
+        this.buildsByKey.set(key, built)
+        return built
+      })
+      .finally(() => {
+        this.rebuildsByKey.delete(key)
+      })
+
+    this.rebuildsByKey.set(key, rebuild)
+    return rebuild
+  }
+
+  async getOrRebuild(key: string, options: BuildTastyOptions): Promise<BuiltTasty> {
+    return (await this.ensureReady(key)) ?? (await this.rebuild(key, options))
   }
 }
 
