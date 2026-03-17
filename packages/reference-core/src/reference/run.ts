@@ -1,6 +1,6 @@
 import { emit } from '../lib/event-bus'
 import { log } from '../lib/log'
-import { rebuildReferenceRuntime } from './runtime'
+import { rebuildReferenceTastyBuild } from './tasty-build'
 import type { ReferenceWorkerPayload } from './worker-types'
 
 export interface ReferenceBuildPayload {
@@ -14,7 +14,7 @@ export async function onRunBuild(
   const { name } = buildPayload
 
   try {
-    const state = await rebuildReferenceRuntime(workerPayload)
+    const state = await rebuildReferenceTastyBuild(workerPayload)
     const symbol = name ? await state.api.loadSymbolByName(name) : undefined
 
     log.debug('reference', 'Reference build completed', {
