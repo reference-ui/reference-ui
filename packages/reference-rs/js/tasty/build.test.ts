@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url'
 
 import { describe, expect, it } from 'vitest'
 
-import { buildTasty } from './build'
+import { buildTasty, createTastyBuildSession } from './build'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const packageDir = join(__dirname, '..', '..')
@@ -33,6 +33,33 @@ describe('buildTasty', () => {
 
       const symbol = await built.api.loadSymbolByName('ButtonProps')
       expect(symbol.getName()).toBe('ButtonProps')
+    } finally {
+      await rm(tempRoot, { recursive: true, force: true })
+    }
+  })
+
+  it('stores build/session cache inside the tasty build layer', async () => {
+    const tempRoot = await mkdtemp(join(tmpdir(), 'reference-ui-tasty-session-'))
+    const outputDir = join(tempRoot, 'tasty-output')
+    const session = createTastyBuildSession()
+
+    try {
+      const first = await session.rebuild('fixture', {
+        rootDir: tastyDir,
+        include: ['cases/external_libs/input/**/*.{ts,tsx}'],
+        outputDir,
+      })
+      const cached = session.get('fixture')
+      const ensured = await session.ensureReady('fixture')
+      const reused = await session.getOrRebuild('fixture', {
+        rootDir: tastyDir,
+        include: ['cases/external_libs/input/**/*.{ts,tsx}'],
+        outputDir,
+      })
+
+      expect(cached).toBe(first)
+      expect(ensured).toBe(first)
+      expect(reused).toBe(first)
     } finally {
       await rm(tempRoot, { recursive: true, force: true })
     }

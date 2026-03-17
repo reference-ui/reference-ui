@@ -1,6 +1,6 @@
 import { resolve } from 'node:path'
 import { type TastyApi, type TastySymbol } from '@reference-ui/rust/tasty'
-import { buildTasty } from '@reference-ui/rust/tasty/build'
+import { createTastyBuildSession } from '@reference-ui/rust/tasty/build'
 import { getVirtualDirPath } from '../lib/paths'
 import type { ReferenceWorkerPayload } from './worker-types'
 import { getReferenceTastyDirPath } from './paths'
@@ -14,10 +14,13 @@ export interface ReferenceTastyBuildState {
   api: TastyApi
 }
 
-const tastyBuildBySourceDir = new Map<string, ReferenceTastyBuildState>()
+const tastyBuildSession = createTastyBuildSession()
 
 export function getReferenceTastyBuild(sourceDir: string): ReferenceTastyBuildState | undefined {
-  return tastyBuildBySourceDir.get(resolve(sourceDir))
+  const resolvedSourceDir = resolve(sourceDir)
+  const built = tastyBuildSession.get(resolvedSourceDir)
+  if (!built) return undefined
+  return toReferenceTastyBuildState(resolvedSourceDir, built)
 }
 
 export async function rebuildReferenceTastyBuild(
@@ -26,23 +29,12 @@ export async function rebuildReferenceTastyBuild(
   const sourceDir = resolve(payload.sourceDir)
   const virtualDir = getVirtualDirPath(sourceDir)
   const outputDir = getReferenceTastyDirPath(sourceDir)
-  const builtTasty = await buildTasty({
+  const builtTasty = await tastyBuildSession.rebuild(sourceDir, {
     rootDir: virtualDir,
     include: payload.config.include,
     outputDir,
   })
-
-  const state: ReferenceTastyBuildState = {
-    sourceDir,
-    virtualDir,
-    outputDir: builtTasty.outputDir,
-    manifestPath: builtTasty.manifestPath,
-    warnings: builtTasty.warnings,
-    api: builtTasty.api,
-  }
-
-  tastyBuildBySourceDir.set(sourceDir, state)
-  return state
+  return toReferenceTastyBuildState(sourceDir, builtTasty)
 }
 
 export async function loadReferenceSymbol(
@@ -57,8 +49,27 @@ export async function loadReferenceSymbol(
 async function maybeGetReadyTastyBuildState(
   payload: ReferenceWorkerPayload
 ): Promise<ReferenceTastyBuildState | undefined> {
-  const state = getReferenceTastyBuild(payload.sourceDir)
-  if (!state) return undefined
-  await state.api.ready()
-  return state
+  const sourceDir = resolve(payload.sourceDir)
+  const built = await tastyBuildSession.ensureReady(sourceDir)
+  if (!built) return undefined
+  return toReferenceTastyBuildState(sourceDir, built)
+}
+
+function toReferenceTastyBuildState(
+  sourceDir: string,
+  builtTasty: {
+    outputDir: string
+    manifestPath: string
+    warnings: string[]
+    api: TastyApi
+  }
+): ReferenceTastyBuildState {
+  return {
+    sourceDir,
+    virtualDir: getVirtualDirPath(sourceDir),
+    outputDir: builtTasty.outputDir,
+    manifestPath: builtTasty.manifestPath,
+    warnings: builtTasty.warnings,
+    api: builtTasty.api,
+  }
 }
