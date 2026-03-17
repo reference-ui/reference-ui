@@ -55,13 +55,14 @@ Done:
 - common import/reference resolution gaps for default imports and namespace imports are now fixed
 - package-boundary integration coverage for the emitted runtime is now in place
 - rebuild/cache invalidation coverage is now in place
+- structured Tasty build diagnostics are now surfaced through the wider Reference build flow, and the final cleanup pass in `packages/reference-core/src/reference` has started landing
 
 Next:
 
-- final cleanup pass in `packages/reference-core/src/reference`
+- release-candidate verification pass and final polish as needed
 
 Still to do after that:
-- release-candidate verification pass and final polish as needed
+- cut release once the verification pass stays green and no further cleanup issues turn up
 
 ## Release Priorities
 
@@ -126,7 +127,7 @@ Before release, this is the practical sequence:
 2. Done: fix the common import/reference resolution gaps for default imports, namespace imports, and user-owned dependency loading.
 3. Done: add package-boundary integration coverage so the emitted runtime path is tested the way consumers actually use it.
 4. Done: add rebuild/cache coverage that exercises config-sensitive invalidation and protects against stale output reuse.
-5. Next: make good use of the new structured Tasty build diagnostics in the wider Reference build flow and do a final cleanup pass on `packages/reference-core/src/reference` so naming, ownership, and file responsibilities are clear and unsurprising.
+5. Done: make good use of the new structured Tasty build diagnostics in the wider Reference build flow and do a final cleanup pass on `packages/reference-core/src/reference` so naming, ownership, and file responsibilities are clear and unsurprising.
 
 ## What Not To Do
 
