@@ -691,8 +691,11 @@ export function createTastyBrowserRuntime(
   return new TastyBrowserRuntimeImpl(options)
 }
 
+let artifactImportVersion = 0
+
 async function defaultArtifactImporter(artifactPath: string): Promise<unknown> {
-  return import(await resolveArtifactSpecifier(artifactPath))
+  const specifier = await resolveArtifactSpecifier(artifactPath)
+  return import(withFreshFileSpecifier(specifier))
 }
 
 function extractManifest(value: unknown): RawTastyManifest {
@@ -771,6 +774,16 @@ async function resolveArtifactSpecifier(pathOrSpecifier: string): Promise<string
 
   const { pathToFileURL } = await import('node:url')
   return pathToFileURL(pathOrSpecifier).href
+}
+
+function withFreshFileSpecifier(specifier: string): string {
+  if (!specifier.startsWith('file:')) {
+    return specifier
+  }
+
+  const url = new URL(specifier)
+  url.searchParams.set('tastyv', String(++artifactImportVersion))
+  return url.href
 }
 
 function isUrlLike(value: string): boolean {
