@@ -1,5 +1,9 @@
 import { emit } from '../lib/event-bus'
 import { log } from '../lib/log'
+import {
+  createReferenceBuildReport,
+  formatReferenceBuildDiagnostic,
+} from './build-report'
 import { rebuildReferenceTastyBuild } from './tasty-build'
 import type { ReferenceWorkerPayload } from './worker-types'
 
@@ -16,10 +20,10 @@ export async function onRunBuild(
   try {
     const state = await rebuildReferenceTastyBuild(workerPayload)
     const symbol = name ? await state.api.loadSymbolByName(name) : undefined
+    const report = createReferenceBuildReport(state)
 
-    for (const diagnostic of state.diagnostics) {
-      const location = diagnostic.fileId ? `${diagnostic.fileId}: ` : ''
-      log.info('[reference] warning:', `${location}${diagnostic.message}`)
+    for (const diagnostic of report.diagnostics) {
+      log.info('[reference] warning:', formatReferenceBuildDiagnostic(diagnostic))
     }
 
     log.debug('reference', 'Reference build completed', {
@@ -27,8 +31,8 @@ export async function onRunBuild(
       manifestPath: state.manifestPath,
       outputDir: state.outputDir,
       virtualDir: state.virtualDir,
-      warningCount: state.warnings.length,
-      diagnosticCount: state.diagnostics.length,
+      warningCount: report.warningCount,
+      diagnosticCount: report.diagnosticCount,
     })
 
     emit('reference:complete', {
@@ -37,6 +41,9 @@ export async function onRunBuild(
       source: 'virtual',
       manifestPath: state.manifestPath,
       outputDir: state.outputDir,
+      warningCount: report.warningCount,
+      diagnosticCount: report.diagnosticCount,
+      diagnostics: report.diagnostics,
     })
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
