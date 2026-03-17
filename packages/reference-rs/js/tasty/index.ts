@@ -129,6 +129,11 @@ export interface TastyApi {
   graph: TastyGraphApi
 }
 
+interface CreateTastyApiRuntimeOptions {
+  manifestPath: string
+  importer: ArtifactImporter
+}
+
 export interface TastyRuntimeModule {
   manifest: RawTastyManifest
   manifestUrl: string
@@ -220,8 +225,8 @@ class TastyApiRuntime implements TastyApi {
 
   public readonly graph: TastyGraphApi
 
-  constructor(options: CreateTastyApiOptions | CreateTastyApiFromManifestOptions) {
-    this.importer = options.importer ?? defaultArtifactImporter
+  constructor(options: CreateTastyApiRuntimeOptions | CreateTastyApiFromManifestOptions) {
+    this.importer = options.importer
     if ('manifest' in options) {
       this.manifest = options.manifest
       this.manifestPromise = Promise.resolve(options.manifest)
@@ -626,7 +631,10 @@ class TastyTypeRefImpl implements TastyTypeRef {
 }
 
 export function createTastyApi(options: CreateTastyApiOptions): TastyApi {
-  return new TastyApiRuntime(options)
+  return new TastyApiRuntime({
+    manifestPath: options.manifestPath,
+    importer: options.importer ?? defaultArtifactImporter,
+  })
 }
 
 export function createTastyApiFromManifest(options: CreateTastyApiFromManifestOptions): TastyApi {

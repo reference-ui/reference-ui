@@ -27,6 +27,10 @@
       "types": "./dist/tasty.d.ts",
       "import": "./dist/tasty.mjs"
     },
+    "./tasty/browser": {
+      "types": "./dist/tasty/browser.d.ts",
+      "import": "./dist/tasty/browser.mjs"
+    },
     "./tasty/build": {
       "types": "./dist/tasty/build.d.ts",
       "import": "./dist/tasty/build.mjs"

@@ -3,7 +3,7 @@
  * Runtime reference APIs plus generated Tasty metadata subpaths.
  */
 
-import { createTastyBrowserRuntime } from '@reference-ui/rust/tasty'
+import { createTastyBrowserRuntime } from '@reference-ui/rust/tasty/browser'
 import { createReferenceComponent } from '../reference/component'
 
 const tastyBrowserRuntime = createTastyBrowserRuntime({
