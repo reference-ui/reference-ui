@@ -2,10 +2,11 @@ use std::collections::BTreeMap;
 
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
-    Comment, Declaration, ExportNamedDeclaration, FormalParameters, ImportDeclarationSpecifier,
-    ImportOrExportKind, PropertyKey, Statement, TSConstructSignatureDeclaration, TSIndexSignature,
-    TSCallSignatureDeclaration, TSInterfaceDeclaration, TSMethodSignature,
-    TSPropertySignature, TSSignature, TSType, TSTypeAliasDeclaration,
+    Comment, Declaration, ExportDefaultDeclaration, ExportDefaultDeclarationKind,
+    ExportNamedDeclaration, FormalParameters, ImportDeclarationSpecifier, ImportOrExportKind,
+    ModuleExportName, PropertyKey, Statement, TSConstructSignatureDeclaration, TSIndexSignature,
+    TSCallSignatureDeclaration, TSInterfaceDeclaration, TSMethodSignature, TSPropertySignature,
+    TSSignature, TSType, TSTypeAliasDeclaration,
     TSTypeParameterDeclaration, TSTupleElement,
 };
 use oxc_parser::Parser;
@@ -16,7 +17,7 @@ use super::super::model::{
     TsMember, TsMemberKind, TsSymbolKind, TsTypeParameter, TupleElement, TypeOperatorKind, TypeRef,
 };
 use super::super::scanner::{resolve_import, symbol_id, ScannedFile, ScannedWorkspace};
-use super::model::{ImportBinding, ParsedFileAst, SymbolShell};
+use super::model::{ImportBinding, ImportBindingKind, ParsedFileAst, SymbolShell};
 
 #[derive(Debug, Clone)]
 struct LeadingComment {
@@ -255,6 +256,7 @@ fn extract_file(
     }
 
     let mut import_bindings = BTreeMap::new();
+    let mut export_bindings = BTreeMap::new();
     let mut exports = Vec::new();
 
     for statement in parse_result.program.body.iter() {
@@ -278,6 +280,22 @@ fn extract_file(
                     &scanned_file.source,
                     &parse_result.program.comments,
                     &import_bindings,
+                    &mut export_bindings,
+                    &mut exports,
+                );
+            }
+            Statement::ExportDefaultDeclaration(export_default)
+                if scanned_file.library == "user" =>
+            {
+                collect_default_export_declaration(
+                    &scanned_file.file_id,
+                    &scanned_file.module_specifier,
+                    &scanned_file.library,
+                    export_default,
+                    &scanned_file.source,
+                    &parse_result.program.comments,
+                    &import_bindings,
+                    &mut export_bindings,
                     &mut exports,
                 );
             }
@@ -317,6 +335,7 @@ fn extract_file(
         library: scanned_file.library.clone(),
         source: scanned_file.source.clone(),
         import_bindings,
+        export_bindings,
         exports,
     }
 }
@@ -341,12 +360,38 @@ fn collect_import_bindings(
         if let Some(specifiers) = &import.specifiers {
             for specifier in specifiers {
                 if let ImportDeclarationSpecifier::ImportSpecifier(named) = specifier {
-                    let local_name = slice_span(source, named.local.span).to_string();
-                    let imported_name = named.imported.name().to_string();
-                    import_bindings.insert(
-                        local_name,
+                    insert_import_binding(
+                        import_bindings,
+                        slice_span(source, named.local.span).to_string(),
                         ImportBinding {
-                            imported_name,
+                            kind: ImportBindingKind::Named,
+                            imported_name: module_export_name_to_string(&named.imported, source),
+                            source_module: source_module.clone(),
+                            target_file_id: target_file_id.clone(),
+                        },
+                    );
+                } else if let ImportDeclarationSpecifier::ImportDefaultSpecifier(default_specifier) =
+                    specifier
+                {
+                    insert_import_binding(
+                        import_bindings,
+                        slice_span(source, default_specifier.local.span).to_string(),
+                        ImportBinding {
+                            kind: ImportBindingKind::Default,
+                            imported_name: "default".to_string(),
+                            source_module: source_module.clone(),
+                            target_file_id: target_file_id.clone(),
+                        },
+                    );
+                } else if let ImportDeclarationSpecifier::ImportNamespaceSpecifier(namespace_specifier) =
+                    specifier
+                {
+                    insert_import_binding(
+                        import_bindings,
+                        slice_span(source, namespace_specifier.local.span).to_string(),
+                        ImportBinding {
+                            kind: ImportBindingKind::Namespace,
+                            imported_name: "*".to_string(),
                             source_module: source_module.clone(),
                             target_file_id: target_file_id.clone(),
                         },
@@ -365,14 +410,19 @@ fn collect_exported_declaration(
     source: &str,
     comments: &[Comment],
     import_bindings: &BTreeMap<String, ImportBinding>,
+    export_bindings: &mut BTreeMap<String, String>,
     exports: &mut Vec<SymbolShell>,
 ) {
-    let Some(declaration) = &export_decl.declaration else {
+    if export_decl.declaration.is_none() {
+        collect_export_specifiers(export_decl, source, export_bindings);
         return;
-    };
+    }
+
+    let declaration = export_decl.declaration.as_ref().unwrap();
 
     match declaration {
         Declaration::TSInterfaceDeclaration(interface_decl) => {
+            export_bindings.insert(interface_decl.id.name.to_string(), interface_decl.id.name.to_string());
             push_interface_shell(
                 file_id,
                 current_module_specifier,
@@ -386,6 +436,7 @@ fn collect_exported_declaration(
             );
         }
         Declaration::TSTypeAliasDeclaration(type_alias) => {
+            export_bindings.insert(type_alias.id.name.to_string(), type_alias.id.name.to_string());
             push_type_alias_shell(
                 file_id,
                 current_module_specifier,
@@ -400,6 +451,66 @@ fn collect_exported_declaration(
         }
         _ => {}
     }
+}
+
+fn collect_default_export_declaration(
+    file_id: &str,
+    current_module_specifier: &str,
+    current_library: &str,
+    export_default: &ExportDefaultDeclaration<'_>,
+    source: &str,
+    comments: &[Comment],
+    import_bindings: &BTreeMap<String, ImportBinding>,
+    export_bindings: &mut BTreeMap<String, String>,
+    exports: &mut Vec<SymbolShell>,
+) {
+    match &export_default.declaration {
+        ExportDefaultDeclarationKind::TSInterfaceDeclaration(interface_decl) => {
+            export_bindings.insert("default".to_string(), interface_decl.id.name.to_string());
+            push_interface_shell(
+                file_id,
+                current_module_specifier,
+                current_library,
+                interface_decl,
+                source,
+                comments,
+                import_bindings,
+                true,
+                exports,
+            );
+        }
+        ExportDefaultDeclarationKind::Identifier(identifier) => {
+            export_bindings.insert("default".to_string(), identifier.name.to_string());
+        }
+        _ => {}
+    }
+}
+
+fn collect_export_specifiers(
+    export_decl: &ExportNamedDeclaration<'_>,
+    source: &str,
+    export_bindings: &mut BTreeMap<String, String>,
+) {
+    for specifier in &export_decl.specifiers {
+        let local_name = module_export_name_to_string(&specifier.local, source);
+        let exported_name = module_export_name_to_string(&specifier.exported, source);
+        export_bindings.insert(exported_name, local_name);
+    }
+}
+
+fn insert_import_binding(
+    import_bindings: &mut BTreeMap<String, ImportBinding>,
+    local_name: String,
+    binding: ImportBinding,
+) {
+    import_bindings.insert(local_name, binding);
+}
+
+fn module_export_name_to_string(name: &ModuleExportName<'_>, source: &str) -> String {
+    slice_span(source, name.span())
+        .trim_matches('"')
+        .trim_matches('\'')
+        .to_string()
 }
 
 fn push_interface_shell<'a>(
