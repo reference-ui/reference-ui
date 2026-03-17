@@ -92,15 +92,15 @@ Remaining sharp edges:
 - Tasty still does not expose a first-class diagnostics/warnings channel beyond what is packed into the manifest and logged during build. We can build and load a partial graph, but still have limited structured visibility into what degraded during lowering.
 - Reference resolution is still incomplete for some import forms and symbol shapes, especially default imports, namespace imports, and more complex cross-module reference patterns. Those cases can still degrade into unresolved or weaker references.
 - Tuple-element lowering now uses an explicit safe conversion path instead of relying on an `unsafe` AST-layout cast, but we should still keep an eye on its reparsing fallback behavior and coverage.
-- Artifact writing is better, but not yet a true atomic directory swap. The flow still removes the old output directory before renaming the new one into place, so there is a brief gap where readers could observe missing outputs.
+- Tasty output publication now writes into versioned directories and swaps the stable output path atomically, but we should still add coverage around first-run migration and package-boundary behavior.
 - Packaging still relies on the placeholder-runtime rewrite step, but that edge is now enforced as a hard invariant so the package build fails loudly if the rewrite does not happen.
 - Build/session caching now lives behind the Tasty build layer instead of `reference`, but config-sensitive invalidation is still something to keep an eye on as the build surface grows.
 
 TODOs:
 
 
-- Finish the output-write hardening so the directory replacement is truly atomic.
 - Expose Tasty diagnostics and warnings as structured build output rather than only embedding them in the manifest and logging them.
+- Add integration coverage for the atomic Tasty output publication path, especially around migration from legacy directories and package-boundary consumers.
 
 ## Quick Wins
 
@@ -108,15 +108,15 @@ These are the fastest hardening wins before any larger Tasty runtime refactor:
 
 1. Expose Tasty diagnostics and warnings as structured build output instead of only embedding them in the manifest and logging them.
 2. Improve reference resolution for default imports, namespace imports, and other unresolved cross-module cases.
-3. Finish the output-write hardening so the directory replacement is truly atomic.
-4. Add package-boundary integration coverage that exercises the emitted runtime through real bundler flows.
+3. Add package-boundary integration coverage that exercises the emitted runtime through real bundler flows.
+4. Add explicit coverage for atomic Tasty publication and legacy-directory migration behavior.
 
 More detail:
 
 - Duplicate names are now preserved and warned on, while emitted-id collisions are rejected during emit time in `packages/reference-rs/src/tasty/generator/esm.rs`. That removes the silent-overwrite behavior while still treating a generated export-name collision as a Tasty integrity failure.
 - Manifest validation in `packages/reference-rs/js/tasty/index.ts` is now a real compatibility gate, but the next step is to make more of the lowering/build diagnostics explicit to callers rather than only surfacing them through manifest warnings and logs.
 - Runtime validation in `packages/reference-rs/js/tasty/index.ts` is tighter now, but the bigger remaining gap is unresolved or degraded references produced upstream by incomplete lowering/resolution.
-- Generated artifact writes and session caching now live in the Tasty build layer, but the replacement flow should still be tightened so the directory swap is fully atomic rather than "remove old, then rename new".
+- Generated artifact writes and session caching now live in the Tasty build layer, and the stable output path is now published via an atomic symlink swap onto versioned directories.
 - Retry behavior is improved now, so the next reliability step is less about retries and more about making build diagnostics and ambiguous symbol cases easier to consume upstream.
 - Packaging now fails loudly if the final literal `./tasty/runtime.js` edge is missing, so the next step there is broader package-boundary integration coverage rather than a softer postprocess warning.
 
