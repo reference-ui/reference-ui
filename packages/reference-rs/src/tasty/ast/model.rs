@@ -11,11 +11,20 @@ pub(crate) struct ParsedFileAst {
     pub(crate) library: String,
     pub(crate) source: String,
     pub(crate) import_bindings: BTreeMap<String, ImportBinding>,
+    pub(crate) export_bindings: BTreeMap<String, String>,
     pub(crate) exports: Vec<SymbolShell>,
 }
 
 #[derive(Debug, Clone)]
+pub(crate) enum ImportBindingKind {
+    Named,
+    Default,
+    Namespace,
+}
+
+#[derive(Debug, Clone)]
 pub(crate) struct ImportBinding {
+    pub(crate) kind: ImportBindingKind,
     pub(crate) imported_name: String,
     pub(crate) source_module: String,
     pub(crate) target_file_id: Option<String>,

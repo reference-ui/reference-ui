@@ -52,14 +52,14 @@ Done:
 
 - graceful and explicit packaging/runtime error handling is in place
 - structured Tasty build diagnostics now exist as a real build output contract
+- common import/reference resolution gaps for default imports and namespace imports are now fixed
 
 Next:
 
-- import/reference resolution for default imports, namespace imports, and common cross-module cases
+- package-boundary integration coverage for the emitted runtime
 
 Still to do after that:
 
-- package-boundary integration coverage
 - rebuild/cache invalidation coverage
 - final cleanup pass in `packages/reference-core/src/reference`
 
@@ -69,7 +69,6 @@ Still to do after that:
 
 Highest priority reliability work:
 
-- Improve reference resolution for default imports, namespace imports, and other unresolved cross-module cases.
 - Keep the current simple `tasty` output model, but make sure rebuild behavior is predictable and well covered.
 - Keep the packaging/runtime boundary explicit and fail gracefully, explicitly, and early when it is violated.
   In practice, this means the generated package should have a clear, testable contract for how `reference` reaches the emitted Tasty runtime and manifest.
@@ -81,7 +80,7 @@ Highest priority reliability work:
 
 Remaining reliability risks:
 
-- Reference resolution is still incomplete for some import forms and symbol shapes, especially default imports, namespace imports, and more complex cross-module reference patterns.
+- Reference resolution is in better shape now for common default-import and namespace-import cases, but more complex cross-module patterns should still be treated as an area to keep testing and tightening.
 - Build/session caching now lives behind the Tasty build layer, but config-sensitive invalidation is still something to keep an eye on as the build surface grows.
 
 ### Code Quality
@@ -102,7 +101,6 @@ Testing should prove the system works in the ways it is actually consumed.
 Highest-value test gaps:
 
 - Integration coverage for the emitted runtime through the package boundary in realistic bundler/package flows.
-- Coverage for the unresolved import/reference cases once they are fixed.
 - Rebuild/cache behavior tests that prove changed inputs do not silently reuse stale state.
 
 ### Separation Of Concerns
@@ -126,7 +124,7 @@ For `reference`, good separation of concerns means:
 Before release, this is the practical sequence:
 
 1. Done: expose structured diagnostics/warnings from the Tasty build side so degraded output is visible as a real contract, not just logs.
-2. In progress: fix the known import/reference resolution gaps, starting with default imports, namespace imports, and the most common cross-module failures.
+2. Done: fix the common import/reference resolution gaps for default imports, namespace imports, and user-owned dependency loading.
 3. Next: add package-boundary integration coverage so the emitted runtime path is tested the way consumers actually use it.
 4. Next: add rebuild/cache coverage that exercises config-sensitive invalidation and protects against stale output reuse.
 5. Later in release prep: make good use of the new structured Tasty build diagnostics in the wider Reference build flow and do a final cleanup pass on `packages/reference-core/src/reference` so naming, ownership, and file responsibilities are clear and unsurprising.
