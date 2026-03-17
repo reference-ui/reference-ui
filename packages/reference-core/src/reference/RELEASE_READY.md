@@ -46,6 +46,23 @@ The major hardening work already completed is meaningful:
 
 This means the release plan does not need another big conceptual refactor first. The remaining work is about tightening the weak spots that still matter.
 
+## Status
+
+Done:
+
+- graceful and explicit packaging/runtime error handling is in place
+- structured Tasty build diagnostics now exist as a real build output contract
+
+Next:
+
+- import/reference resolution for default imports, namespace imports, and common cross-module cases
+
+Still to do after that:
+
+- package-boundary integration coverage
+- rebuild/cache invalidation coverage
+- final cleanup pass in `packages/reference-core/src/reference`
+
 ## Release Priorities
 
 ### Reliability
@@ -108,11 +125,11 @@ For `reference`, good separation of concerns means:
 
 Before release, this is the practical sequence:
 
-1. Fix the known import/reference resolution gaps, starting with default imports, namespace imports, and the most common cross-module failures.
-2. Add package-boundary integration coverage so the emitted runtime path is tested the way consumers actually use it.
-3. Add rebuild/cache coverage that exercises config-sensitive invalidation and protects against stale output reuse.
-4. Make good use of the new structured Tasty build diagnostics so degraded output is visible and actionable in the Reference build flow.
-5. Do a final cleanup pass on `packages/reference-core/src/reference` so naming, ownership, and file responsibilities are clear and unsurprising.
+1. Done: expose structured diagnostics/warnings from the Tasty build side so degraded output is visible as a real contract, not just logs.
+2. In progress: fix the known import/reference resolution gaps, starting with default imports, namespace imports, and the most common cross-module failures.
+3. Next: add package-boundary integration coverage so the emitted runtime path is tested the way consumers actually use it.
+4. Next: add rebuild/cache coverage that exercises config-sensitive invalidation and protects against stale output reuse.
+5. Later in release prep: make good use of the new structured Tasty build diagnostics in the wider Reference build flow and do a final cleanup pass on `packages/reference-core/src/reference` so naming, ownership, and file responsibilities are clear and unsurprising.
 
 ## What Not To Do
 
