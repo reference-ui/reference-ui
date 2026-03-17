@@ -1,83 +1,37 @@
 
-# Reference
+# Reference Release Plan
 
-## Runtime Ownership
+## Goal
 
-Tasty should own the low-level runtime contract.
+This plan is for getting `reference` release-ready without piling on architecture changes for their own sake.
 
-Today, `reference` is carrying too much knowledge about generated artifact structure, chunk loading, manifest handling, and rebuild semantics. That works, but it means a higher-level feature package is acting as the integration layer for a lower-level IR system.
+The current shape is broadly good:
 
-## First Step
+- Tasty lowers and emits the artifact set.
+- `reference` builds from the current project state and consumes those artifacts.
+- The browser/runtime boundary is already cleaner than it was before.
 
-Start with the broadest stroke first: separate the runtime boundary more clearly.
+From here, the work should stay centered on four things:
 
-The most sensible first move is to introduce `createTastyBrowserRuntime(...)` inside Tasty and make that the main browser-facing entrypoint for loading emitted Tasty artifacts.
+1. making sure the system is reliable
+2. making sure code quality is good
+3. making sure things are well tested
+4. making sure `reference` has good separation of concerns and stays well written
 
-Why this first:
+## Working Rule
 
-- It moves low-level loading logic out of `reference` without needing to solve every downstream design question yet.
-- It gives us one place to harden production loading behavior.
-- It reduces the number of places that need to understand manifest paths, chunk imports, and runtime module shape.
-- It creates a cleaner seam for future work, since we can review the remaining responsibilities after the runtime boundary is in the right package.
+Do not redesign the system unless a concrete reliability, correctness, or maintainability problem demands it.
 
-Recommended split after that first move:
+That means:
 
-- `tasty` owns artifact shape, manifest versioning, chunk import rules, runtime validation, symbol loading, and browser-safe loading helpers.
-- `reference` owns presentation, higher-level composition, worker orchestration, and "load symbol X and render it" behavior.
+- prefer tightening contracts over introducing new layers
+- prefer better tests over cleverer architecture
+- prefer clearer ownership over broader abstractions
+- prefer removing sharp edges over chasing idealized end states
 
-That likely means introducing a first-class Tasty runtime surface, something like:
+## Current Position
 
-- `createBrowserTastyRuntime(...)`
-- `createTastyApiFromManifest(...)`
-- `loadTastyManifest(...)`
-- `importTastyArtifact(...)`
-
-The important part is not the exact name, but that `reference` should not need to understand generated file layout beyond "here is a runtime entry" or "here is a manifest URL/module".
-
-## Production Path Hardening
-
-This needs to be part of the first step, not a later cleanup.
-
-We already saw production breakage around relative-path handling, which is a strong signal that the current boundary is too implicit. Right now, the system relies on a mix of:
-
-- a placeholder import in `packages/reference-core/src/entry/types.ts`
-- a postprocess rewrite to `./tasty/runtime.js` in `packages/reference-core/src/packager/postprocess/rewrite-types-runtime-import.ts`
-- manifest-relative chunk resolution in `packages/reference-rs/js/tasty/index.ts`
-
-That is workable, but fragile if any packaging step, base path, or emitted location changes.
-
-For `createTastyBrowserRuntime(...)`, document and enforce these rules explicitly:
-
-- The runtime entry must be a real literal import edge in the final packaged output so app bundlers can see and include it.
-- Chunk resolution must be anchored to the runtime or manifest location, not to caller-relative assumptions.
-- Relative paths should be normalized in one place only, inside the Tasty browser runtime.
-- If the placeholder runtime import was not rewritten correctly, packaging should fail hard.
-- If a manifest-relative chunk cannot be resolved in production, the runtime should throw a clear path-resolution error rather than a vague missing-module failure.
-
-This is both a documentation issue and a hardening issue. The path contract should live in Tasty, be tested in Tasty, and be described as part of the public browser runtime behavior.
-
-## Recommended Direction
-
-Add a browser-oriented runtime inside Tasty.
-
-Why:
-
-- It gives Tasty a single place to define and test the emitted artifact contract.
-- It reduces duplication if anything else besides `reference` wants to consume the IR later.
-- It makes bundler assumptions explicit and testable where they belong.
-- It lets `reference` become a thin consumer rather than a partial runtime host.
-
-A good end state is:
-
-- Rust/Tasty emitter generates `manifest.js`, chunks, and a small runtime entry.
-- Tasty JS exposes the runtime adapter for browser usage.
-- `reference` imports the Tasty runtime and renders data from it.
-
-## Reliability
-
-Yes, reliability can be increased quite a bit.
-
-Implemented hardening:
+The major hardening work already completed is meaningful:
 
 - Duplicate symbol names are preserved instead of silently overwriting each other in the manifest.
 - Duplicate-name lookups now warn and require explicit disambiguation instead of pretending a bare name is always unique.
@@ -86,57 +40,81 @@ Implemented hardening:
 - Browser-safe loading is separated from the Node/build-side manifest-path loader.
 - Failed runtime initialization and chunk-load promises can retry instead of staying permanently rejected.
 - The Tasty build path now owns emitted artifact writing rather than `reference` open-coding it.
+- Tuple-element lowering now uses an explicit safe conversion path instead of relying on an `unsafe` AST-layout cast.
+- Packaging now fails hard if the runtime placeholder rewrite does not happen.
 
-Remaining sharp edges:
+This means the release plan does not need another big conceptual refactor first. The remaining work is about tightening the weak spots that still matter.
 
-- Tasty still does not expose a first-class diagnostics/warnings channel beyond what is packed into the manifest and logged during build. We can build and load a partial graph, but still have limited structured visibility into what degraded during lowering.
-- Reference resolution is still incomplete for some import forms and symbol shapes, especially default imports, namespace imports, and more complex cross-module reference patterns. Those cases can still degrade into unresolved or weaker references.
-- Tuple-element lowering now uses an explicit safe conversion path instead of relying on an `unsafe` AST-layout cast, but we should still keep an eye on its reparsing fallback behavior and coverage.
-- Tasty output publication now writes into versioned directories and swaps the stable output path atomically, but we should still add coverage around first-run migration and package-boundary behavior.
-- Packaging still relies on the placeholder-runtime rewrite step, but that edge is now enforced as a hard invariant so the package build fails loudly if the rewrite does not happen.
-- Build/session caching now lives behind the Tasty build layer instead of `reference`, but config-sensitive invalidation is still something to keep an eye on as the build surface grows.
+## Release Priorities
 
-TODOs:
+### Reliability
 
+Highest priority reliability work:
 
 - Expose Tasty diagnostics and warnings as structured build output rather than only embedding them in the manifest and logging them.
-- Add integration coverage for the atomic Tasty output publication path, especially around migration from legacy directories and package-boundary consumers.
+- Improve reference resolution for default imports, namespace imports, and other unresolved cross-module cases.
+- Keep the current simple `tasty` output model, but make sure rebuild behavior is predictable and well covered.
+- Keep the packaging/runtime boundary explicit and fail loudly when it is violated.
 
-## Quick Wins
+Remaining reliability risks:
 
-These are the fastest hardening wins before any larger Tasty runtime refactor:
+- Reference resolution is still incomplete for some import forms and symbol shapes, especially default imports, namespace imports, and more complex cross-module reference patterns.
+- Tasty still does not expose a first-class diagnostics/warnings channel beyond what is packed into the manifest and logged during build.
+- Build/session caching now lives behind the Tasty build layer, but config-sensitive invalidation is still something to keep an eye on as the build surface grows.
 
-1. Expose Tasty diagnostics and warnings as structured build output instead of only embedding them in the manifest and logging them.
-2. Improve reference resolution for default imports, namespace imports, and other unresolved cross-module cases.
-3. Add package-boundary integration coverage that exercises the emitted runtime through real bundler flows.
-4. Add explicit coverage for atomic Tasty publication and legacy-directory migration behavior.
+### Code Quality
 
-More detail:
+For release, code quality here means keeping the boundary understandable and the implementation boring in a good way.
 
-- Duplicate names are now preserved and warned on, while emitted-id collisions are rejected during emit time in `packages/reference-rs/src/tasty/generator/esm.rs`. That removes the silent-overwrite behavior while still treating a generated export-name collision as a Tasty integrity failure.
-- Manifest validation in `packages/reference-rs/js/tasty/index.ts` is now a real compatibility gate, but the next step is to make more of the lowering/build diagnostics explicit to callers rather than only surfacing them through manifest warnings and logs.
-- Runtime validation in `packages/reference-rs/js/tasty/index.ts` is tighter now, but the bigger remaining gap is unresolved or degraded references produced upstream by incomplete lowering/resolution.
-- Generated artifact writes and session caching now live in the Tasty build layer, and the stable output path is now published via an atomic symlink swap onto versioned directories.
-- Retry behavior is improved now, so the next reliability step is less about retries and more about making build diagnostics and ambiguous symbol cases easier to consume upstream.
-- Packaging now fails loudly if the final literal `./tasty/runtime.js` edge is missing, so the next step there is broader package-boundary integration coverage rather than a softer postprocess warning.
+The main code quality goals are:
 
-These should give a noticeable reliability bump without needing to redesign the full package boundary first.
+- `reference` should orchestrate builds and consumption, not reimplement Tasty internals.
+- Tasty-facing logic should live in Tasty when it depends on artifact shape or runtime contract details.
+- `reference` code should stay small, explicit, and easy to follow rather than becoming an integration dumping ground.
+- New hardening work should come with cleanup when it makes ownership or naming clearer.
 
-## Suggested Ownership Rule
+### Testing
 
-Use this rule going forward:
+Testing should prove the system works in the ways it is actually consumed.
 
-- If the code needs to know how Tasty artifacts are structured, it belongs in Tasty.
-- If the code decides how to present or consume resolved symbols for the Reference UI, it belongs in `reference`.
+Highest-value test gaps:
 
-By that rule, a `browserRuntime` in Tasty is the right direction.
+- Integration coverage for the emitted runtime through the package boundary in realistic bundler/package flows.
+- Coverage for the unresolved import/reference cases once they are fixed.
+- Coverage for structured diagnostics/warnings once that output exists.
+- Rebuild/cache behavior tests that prove changed inputs do not silently reuse stale state.
 
-## Near-Term Plan
+### Separation Of Concerns
 
-Before release, the most practical sequence is:
+The release concern here is not "invent more architecture." It is "keep responsibilities clean enough that the code stays dependable."
 
-1. Move browser/runtime loading helpers into Tasty so `reference` depends on a cleaner public API.
-2. Expose structured diagnostics/warnings from the Tasty build side so Reference can reason about degraded output more cleanly.
-3. Improve import/reference resolution for the unresolved cases we still know about.
-4. Make artifact writes fully atomic and lock down the packaging rewrite failure mode.
-5. Add integration tests that verify the emitted runtime works through the package boundary in real bundlers.
+Use this rule:
+
+- If code needs to understand emitted Tasty artifact structure, manifest rules, chunk loading, or runtime validation, it belongs in Tasty.
+- If code decides how `reference` builds, orchestrates, selects symbols, or renders resolved information, it belongs in `reference`.
+
+For `reference`, good separation of concerns means:
+
+- the worker/build path stays focused on orchestration
+- the component layer stays focused on presentation and symbol consumption
+- packager logic stays focused on packaging
+- docs reflect the real boundary instead of aspirational architecture
+
+## Release Checklist
+
+Before release, this is the practical sequence:
+
+1. Expose structured diagnostics/warnings from the Tasty build side so degraded output is visible as a real contract, not just logs.
+2. Fix the known import/reference resolution gaps, starting with default imports, namespace imports, and the most common cross-module failures.
+3. Add package-boundary integration coverage so the emitted runtime path is tested the way consumers actually use it.
+4. Add rebuild/cache coverage that exercises config-sensitive invalidation and protects against stale output reuse.
+5. Do a final cleanup pass on `packages/reference-core/src/reference` so naming, ownership, and file responsibilities are clear and unsurprising.
+
+## What Not To Do
+
+Before release, avoid:
+
+- adding new architectural layers without a specific failure mode driving them
+- changing the output layout just to make it feel more abstract or more "correct"
+- moving logic between Tasty and `reference` unless it clearly improves reliability or ownership
+- treating documentation as a design pitch instead of a release-readiness checklist

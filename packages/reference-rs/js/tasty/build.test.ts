@@ -1,4 +1,4 @@
-import { existsSync, lstatSync, realpathSync } from 'node:fs'
+import { existsSync } from 'node:fs'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
@@ -27,8 +27,6 @@ describe('buildTasty', () => {
       expect(built.outputDir).toBe(outputDir)
       expect(built.manifestPath).toBe(join(outputDir, 'manifest.js'))
       expect(built.warnings).toEqual([])
-      expect(lstatSync(outputDir).isSymbolicLink()).toBe(true)
-      expect(realpathSync(outputDir)).not.toBe(outputDir)
       expect(existsSync(join(outputDir, 'manifest.js'))).toBe(true)
       expect(existsSync(join(outputDir, 'runtime.js'))).toBe(true)
       expect(existsSync(join(outputDir, 'chunk-registry.js'))).toBe(true)
@@ -62,34 +60,6 @@ describe('buildTasty', () => {
       expect(cached).toBe(first)
       expect(ensured).toBe(first)
       expect(reused).toBe(first)
-    } finally {
-      await rm(tempRoot, { recursive: true, force: true })
-    }
-  })
-
-  it('atomically swaps the stable output path onto a new published directory', async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), 'reference-ui-tasty-atomic-'))
-    const outputDir = join(tempRoot, 'tasty-output')
-
-    try {
-      await buildTasty({
-        rootDir: tastyDir,
-        include: ['cases/external_libs/input/**/*.{ts,tsx}'],
-        outputDir,
-      })
-      const firstVersionDir = realpathSync(outputDir)
-
-      await buildTasty({
-        rootDir: tastyDir,
-        include: ['cases/external_libs/input/**/*.{ts,tsx}'],
-        outputDir,
-      })
-      const secondVersionDir = realpathSync(outputDir)
-
-      expect(lstatSync(outputDir).isSymbolicLink()).toBe(true)
-      expect(secondVersionDir).not.toBe(firstVersionDir)
-      expect(existsSync(firstVersionDir)).toBe(false)
-      expect(existsSync(join(outputDir, 'manifest.js'))).toBe(true)
     } finally {
       await rm(tempRoot, { recursive: true, force: true })
     }
