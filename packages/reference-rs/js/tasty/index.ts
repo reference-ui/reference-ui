@@ -129,6 +129,86 @@ export interface TastyApi {
   graph: TastyGraphApi
 }
 
+export interface TastyRuntimeModule {
+  manifest: RawTastyManifest
+  manifestUrl: string
+  importTastyArtifact(specifier: string): Promise<unknown>
+}
+
+export type TastyRuntimeModuleLoader = () => Promise<unknown>
+
+export interface CreateTastyBrowserRuntimeOptions {
+  loadRuntimeModule: TastyRuntimeModuleLoader
+}
+
+export interface TastyBrowserRuntime {
+  ready(): Promise<void>
+  loadRuntimeModule(): Promise<TastyRuntimeModule>
+  loadApi(): Promise<TastyApi>
+  getApi(): TastyApi | undefined
+}
+
+const CURRENT_TASTY_MANIFEST_VERSION = '1'
+
+class TastyBrowserRuntimeImpl implements TastyBrowserRuntime {
+  private runtimeModulePromise: Promise<TastyRuntimeModule> | undefined
+  private runtimeModule: TastyRuntimeModule | undefined
+  private apiPromise: Promise<TastyApi> | undefined
+  private api: TastyApi | undefined
+
+  constructor(private readonly options: CreateTastyBrowserRuntimeOptions) {}
+
+  async ready(): Promise<void> {
+    await this.loadApi()
+  }
+
+  getApi(): TastyApi | undefined {
+    return this.api
+  }
+
+  async loadRuntimeModule(): Promise<TastyRuntimeModule> {
+    if (!this.runtimeModulePromise) {
+      this.runtimeModulePromise = Promise.resolve()
+        .then(() => this.options.loadRuntimeModule())
+        .then((moduleValue) => {
+          const runtimeModule = extractTastyRuntimeModule(moduleValue)
+          this.runtimeModule = runtimeModule
+          return runtimeModule
+        })
+        .catch((error: unknown) => {
+          this.runtimeModulePromise = undefined
+          this.runtimeModule = undefined
+          throw wrapRuntimeError('Failed to load Tasty browser runtime module.', error)
+        })
+    }
+
+    return this.runtimeModulePromise
+  }
+
+  async loadApi(): Promise<TastyApi> {
+    if (!this.apiPromise) {
+      this.apiPromise = this.loadRuntimeModule()
+        .then(async (runtimeModule) => {
+          const api = createTastyApiFromManifest({
+            manifest: runtimeModule.manifest,
+            manifestPath: runtimeModule.manifestUrl,
+            importer: runtimeModule.importTastyArtifact,
+          })
+          await api.ready()
+          this.api = api
+          return api
+        })
+        .catch((error: unknown) => {
+          this.apiPromise = undefined
+          this.api = undefined
+          throw error
+        })
+    }
+
+    return this.apiPromise
+  }
+}
+
 class TastyApiRuntime implements TastyApi {
   private readonly manifestPath?: string
   private readonly importer: ArtifactImporter
@@ -199,13 +279,21 @@ class TastyApiRuntime implements TastyApi {
         throw new Error('Tasty runtime is missing a manifest source.')
       }
 
-      this.manifestPromise = resolveArtifactSpecifier(this.manifestPath).then((manifestSpecifier) =>
-        this.importer(manifestSpecifier)
-      ).then((moduleValue) => {
-        const manifest = extractManifest(moduleValue)
-        this.manifest = manifest
-        return manifest
-      })
+      this.manifestPromise = resolveArtifactSpecifier(this.manifestPath)
+        .then((manifestSpecifier) => this.importer(manifestSpecifier))
+        .then((moduleValue) => {
+          const manifest = extractManifest(moduleValue)
+          this.manifest = manifest
+          return manifest
+        })
+        .catch((error: unknown) => {
+          this.manifestPromise = undefined
+          this.manifest = undefined
+          throw wrapRuntimeError(
+            `Failed to load Tasty manifest from "${this.manifestPath}".`,
+            error
+          )
+        })
     }
 
     return this.manifestPromise
@@ -310,7 +398,15 @@ class TastyApiRuntime implements TastyApi {
       : relativeChunkPath
     let cached = this.chunkCache.get(resolvedChunkPath)
     if (!cached) {
-      cached = this.importer(resolvedChunkPath).then((moduleValue) => normalizeModuleNamespace(moduleValue))
+      cached = this.importer(resolvedChunkPath)
+        .then((moduleValue) => normalizeModuleNamespace(moduleValue))
+        .catch((error: unknown) => {
+          this.chunkCache.delete(resolvedChunkPath)
+          throw wrapRuntimeError(
+            `Failed to load Tasty chunk "${relativeChunkPath}" from "${resolvedChunkPath}".`,
+            error
+          )
+        })
       this.chunkCache.set(resolvedChunkPath, cached)
     }
     return cached
@@ -537,6 +633,12 @@ export function createTastyApiFromManifest(options: CreateTastyApiFromManifestOp
   return new TastyApiRuntime(options)
 }
 
+export function createTastyBrowserRuntime(
+  options: CreateTastyBrowserRuntimeOptions
+): TastyBrowserRuntime {
+  return new TastyBrowserRuntimeImpl(options)
+}
+
 async function defaultArtifactImporter(artifactPath: string): Promise<unknown> {
   return import(await resolveArtifactSpecifier(artifactPath))
 }
@@ -547,12 +649,19 @@ function extractManifest(value: unknown): RawTastyManifest {
   if (!isRawTastyManifest(manifest)) {
     throw new Error('Malformed manifest module.')
   }
+  if (manifest.version !== CURRENT_TASTY_MANIFEST_VERSION) {
+    throw new Error(
+      `Unsupported Tasty manifest version "${manifest.version}". Expected "${CURRENT_TASTY_MANIFEST_VERSION}".`
+    )
+  }
   return manifest
 }
 
 function extractChunkSymbol(moduleValue: ModuleNamespace, symbolId: string): TastySymbolModel {
   const direct = moduleValue[symbolId]
-  if (isTastySymbolModel(direct)) return direct
+  if (isTastySymbolModel(direct)) {
+    return assertChunkSymbolId(direct, symbolId, 'named')
+  }
 
   const defaultExport = moduleValue.default
   if (isTastySymbolModel(defaultExport) && defaultExport.id === symbolId) {
@@ -569,10 +678,32 @@ function normalizeModuleNamespace(value: unknown): ModuleNamespace {
   return value as ModuleNamespace
 }
 
+function extractTastyRuntimeModule(value: unknown): TastyRuntimeModule {
+  const moduleValue = normalizeModuleNamespace(value)
+  const runtimeModule = isTastyRuntimeModule(moduleValue)
+    ? moduleValue
+    : moduleValue.default
+
+  if (!isTastyRuntimeModule(runtimeModule)) {
+    throw new Error(
+      'Malformed Tasty browser runtime module. Expected manifest, manifestUrl, and importTastyArtifact exports.'
+    )
+  }
+
+  return runtimeModule
+}
+
 async function resolveArtifactPath(basePath: string, relativePath: string): Promise<string> {
   if (relativePath.startsWith('./') || relativePath.startsWith('../')) {
     const baseSpecifier = await resolveArtifactSpecifier(basePath)
-    return new URL(relativePath, baseSpecifier).href
+    try {
+      return new URL(relativePath, baseSpecifier).href
+    } catch (error: unknown) {
+      throw wrapRuntimeError(
+        `Could not resolve Tasty artifact path "${relativePath}" relative to "${basePath}".`,
+        error
+      )
+    }
   }
   return relativePath
 }
@@ -596,12 +727,44 @@ function isUrlLike(value: string): boolean {
 
 function isRawTastyManifest(value: unknown): value is RawTastyManifest {
   if (value == null || typeof value !== 'object') return false
-  return 'version' in value && 'symbolsByName' in value && 'symbolsById' in value
+  const candidate = value as Record<string, unknown>
+  return typeof candidate.version === 'string'
+    && candidate.symbolsByName != null
+    && typeof candidate.symbolsByName === 'object'
+    && candidate.symbolsById != null
+    && typeof candidate.symbolsById === 'object'
+}
+
+function isTastyRuntimeModule(value: unknown): value is TastyRuntimeModule {
+  if (value == null || typeof value !== 'object') return false
+  const candidate = value as Record<string, unknown>
+  return isRawTastyManifest(candidate.manifest)
+    && typeof candidate.manifestUrl === 'string'
+    && isUrlLike(candidate.manifestUrl)
+    && typeof candidate.importTastyArtifact === 'function'
 }
 
 function isTastySymbolModel(value: unknown): value is TastySymbolModel {
   if (value == null || typeof value !== 'object') return false
   return 'id' in value && 'name' in value && 'library' in value
+}
+
+function assertChunkSymbolId(
+  symbol: TastySymbolModel,
+  expectedId: string,
+  exportKind: 'default' | 'named'
+): TastySymbolModel {
+  if (symbol.id !== expectedId) {
+    throw new Error(
+      `Malformed ${exportKind} chunk export for symbol id "${expectedId}". Received "${symbol.id}".`
+    )
+  }
+  return symbol
+}
+
+function wrapRuntimeError(prefix: string, error: unknown): Error {
+  const suffix = error instanceof Error ? error.message : String(error)
+  return new Error(`${prefix} ${suffix}`)
 }
 
 function isInterfaceSymbol(symbol: TastySymbolModel): symbol is RawTastyInterfaceSymbol {

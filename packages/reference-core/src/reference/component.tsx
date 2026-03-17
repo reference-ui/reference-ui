@@ -1,8 +1,7 @@
 import * as React from 'react'
 import {
-  createTastyApiFromManifest,
-  type RawTastyManifest,
   type TastyApi,
+  type TastyBrowserRuntime,
   type TastyMember,
   type TastySymbol,
 } from '@reference-ui/rust/tasty'
@@ -25,14 +24,6 @@ import { referenceTokens } from './tokens'
 export interface ReferenceProps {
   name: string
 }
-
-export interface ReferenceRuntimeModule {
-  manifest: RawTastyManifest
-  manifestUrl: string
-  importTastyArtifact(specifier: string): Promise<unknown>
-}
-
-export type ReferenceRuntimeLoader = () => Promise<ReferenceRuntimeModule>
 
 interface LoadedReferenceState {
   symbol: TastySymbol
@@ -212,22 +203,9 @@ function renderContent(status: ReferenceStatus): React.ReactNode {
   )
 }
 
-export function createReferenceComponent(loadRuntime: ReferenceRuntimeLoader) {
-  let apiPromise: Promise<TastyApi> | undefined
-
+export function createReferenceComponent(runtime: TastyBrowserRuntime) {
   function getReferenceApi(): Promise<TastyApi> {
-    if (!apiPromise) {
-      apiPromise = loadRuntime().then(async (runtime) => {
-        const api = createTastyApiFromManifest({
-          manifest: runtime.manifest,
-          importer: runtime.importTastyArtifact,
-        })
-        await api.ready()
-        return api
-      })
-    }
-
-    return apiPromise
+    return runtime.loadApi()
   }
 
   async function loadReferenceState(name: string): Promise<LoadedReferenceState> {

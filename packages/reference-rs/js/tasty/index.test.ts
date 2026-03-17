@@ -4,13 +4,21 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 
 import { describe, expect, it } from 'vitest'
 
-import { createTastyApi, createTastyApiFromManifest } from './index'
+import {
+  createTastyApi,
+  createTastyApiFromManifest,
+  createTastyBrowserRuntime,
+} from './index'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const packageDir = join(__dirname, '..', '..')
 
 function manifestPath(...segments: string[]) {
   return join(packageDir, 'tests', 'tasty', 'cases', ...segments, 'output', 'manifest.js')
+}
+
+function runtimePath(...segments: string[]) {
+  return join(packageDir, 'tests', 'tasty', 'cases', ...segments, 'output', 'runtime.js')
 }
 
 function toImportSpecifier(artifactPath: string): string {
@@ -72,6 +80,18 @@ describe('tasty runtime', () => {
     expect(chunkLoads[0]?.endsWith('.js')).toBe(true)
   })
 
+  it('creates a browser runtime from the generated runtime module', async () => {
+    const runtime = createTastyBrowserRuntime({
+      loadRuntimeModule: async () => import(toImportSpecifier(runtimePath('external_libs'))),
+    })
+
+    const api = await runtime.loadApi()
+    const symbol = await api.loadSymbolByName('ButtonProps')
+
+    expect(symbol.getName()).toBe('ButtonProps')
+    expect(runtime.getApi()).toBe(api)
+  })
+
   it('keeps symbol wrapper identity stable across lookup paths', async () => {
     const api = createTastyApi({
       manifestPath: manifestPath('external_libs'),
@@ -98,6 +118,44 @@ describe('tasty runtime', () => {
 
     const chunkLoads = loads.filter((artifactPath) => artifactPath.includes('/chunks/'))
     expect(chunkLoads).toHaveLength(1)
+  })
+
+  it('retries chunk imports after a transient failure', async () => {
+    let failNextChunkLoad = true
+    const api = createTastyApi({
+      manifestPath: manifestPath('external_libs'),
+      importer: async (artifactPath) => {
+        if (artifactPath.includes('/chunks/') && failNextChunkLoad) {
+          failNextChunkLoad = false
+          throw new Error('temporary chunk failure')
+        }
+        return import(toImportSpecifier(artifactPath))
+      },
+    })
+
+    await expect(api.loadSymbolByName('ButtonProps')).rejects.toThrow('temporary chunk failure')
+    await expect(api.loadSymbolByName('ButtonProps')).resolves.toMatchObject({
+      getName: expect.any(Function),
+    })
+  })
+
+  it('retries browser runtime initialization after a transient failure', async () => {
+    let failNextLoad = true
+    const runtime = createTastyBrowserRuntime({
+      loadRuntimeModule: async () => {
+        if (failNextLoad) {
+          failNextLoad = false
+          throw new Error('temporary runtime failure')
+        }
+        return import(toImportSpecifier(runtimePath('external_libs')))
+      },
+    })
+
+    await expect(runtime.loadApi()).rejects.toThrow('temporary runtime failure')
+    const api = await runtime.loadApi()
+    await expect(api.loadSymbolByName('ButtonProps')).resolves.toMatchObject({
+      getName: expect.any(Function),
+    })
   })
 
   it('loads extends symbols and flattens inherited members', async () => {
