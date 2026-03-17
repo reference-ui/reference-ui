@@ -1,4 +1,5 @@
-import { mkdir, mkdtemp, rename, rm, writeFile } from 'node:fs/promises'
+import { randomUUID } from 'node:crypto'
+import { mkdir, mkdtemp, rename, rm, writeFile, lstat, readdir, realpath, symlink } from 'node:fs/promises'
 import { basename, dirname, join, resolve } from 'node:path'
 
 import { scanAndEmitModules } from '../runtime/index'
@@ -108,9 +109,12 @@ async function writeEmittedArtifacts(
   outputDir: string,
   emitted: EmittedModulesPayload
 ): Promise<void> {
-  await mkdir(dirname(outputDir), { recursive: true })
+  const outputParentDir = dirname(outputDir)
+  const outputStoreDir = join(outputParentDir, `.${basename(outputDir)}.versions`)
+  await mkdir(outputParentDir, { recursive: true })
+  await mkdir(outputStoreDir, { recursive: true })
 
-  const tempDir = await mkdtemp(join(dirname(outputDir), `${basename(outputDir)}.tmp-`))
+  const tempDir = await mkdtemp(join(outputStoreDir, `${basename(outputDir)}.build-`))
 
   try {
     const files = {
@@ -126,12 +130,78 @@ async function writeEmittedArtifacts(
       })
     )
 
-    await rm(outputDir, { recursive: true, force: true })
-    await rename(tempDir, outputDir)
+    await activateOutputDir(outputDir, tempDir, outputStoreDir)
+    await cleanupStaleOutputVersions(outputDir, outputStoreDir)
   } catch (error) {
     await rm(tempDir, { recursive: true, force: true })
     throw error
   }
+}
+
+async function activateOutputDir(
+  outputDir: string,
+  nextVersionDir: string,
+  outputStoreDir: string
+): Promise<void> {
+  const nextLinkPath = join(outputStoreDir, `${basename(outputDir)}.next-${randomUUID()}`)
+  const legacyVersionDir = join(outputStoreDir, `${basename(outputDir)}.legacy-${randomUUID()}`)
+  const symlinkType = process.platform === 'win32' ? 'junction' : 'dir'
+  let migratedLegacyDir = false
+
+  await symlink(nextVersionDir, nextLinkPath, symlinkType)
+
+  try {
+    const existing = await lstat(outputDir).catch((error: NodeJS.ErrnoException) => {
+      if (error.code === 'ENOENT') return undefined
+      throw error
+    })
+
+    if (!existing) {
+      await rename(nextLinkPath, outputDir)
+      return
+    }
+
+    if (existing.isSymbolicLink()) {
+      await rename(nextLinkPath, outputDir)
+      return
+    }
+
+    if (!existing.isDirectory()) {
+      throw new Error(`Expected Tasty output path "${outputDir}" to be a directory or symlink.`)
+    }
+
+    await rename(outputDir, legacyVersionDir)
+    migratedLegacyDir = true
+
+    try {
+      await rename(nextLinkPath, outputDir)
+    } catch (error) {
+      await rename(legacyVersionDir, outputDir).catch(() => undefined)
+      throw error
+    }
+  } finally {
+    await rm(nextLinkPath, { force: true }).catch(() => undefined)
+
+    if (!migratedLegacyDir) {
+      await rm(legacyVersionDir, { recursive: true, force: true }).catch(() => undefined)
+    }
+  }
+}
+
+async function cleanupStaleOutputVersions(outputDir: string, outputStoreDir: string): Promise<void> {
+  const currentVersionDir = await realpath(outputDir)
+  const currentVersionDirName = basename(currentVersionDir)
+  const storeEntries = await readdir(outputStoreDir, { withFileTypes: true })
+
+  await Promise.all(
+    storeEntries
+      .filter((entry) => entry.isDirectory())
+      .map(async (entry) => {
+        if (entry.name === currentVersionDirName) return
+        const entryPath = join(outputStoreDir, entry.name)
+        await rm(entryPath, { recursive: true, force: true })
+      })
+  )
 }
 
 function stripRelativePrefix(relativePath: string): string {
