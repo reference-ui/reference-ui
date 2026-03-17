@@ -96,6 +96,12 @@ Remaining sharp edges:
 - Packaging still relies on the placeholder-runtime rewrite step. The runtime boundary is cleaner now, but the package edge should still fail hard if that rewrite ever does not happen.
 - `reference` still owns the build-state/session cache keyed by source directory. That is okay for now, but config-sensitive invalidation is still something to keep an eye on as the build surface grows.
 
+TODOs:
+
+- Remove the remaining `unsafe` tuple-element lowering cast in Tasty and replace it with an explicit safe conversion path.
+- Make the placeholder runtime rewrite step a hard packaging invariant so the build fails immediately if the final literal runtime edge is missing.
+- Revisit ownership of the build/session cache and decide whether it should stay in `reference` or move behind a Tasty-owned build/session layer.
+
 ## Quick Wins
 
 These are the fastest hardening wins before any larger Tasty runtime refactor:
