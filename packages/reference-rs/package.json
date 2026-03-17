@@ -26,6 +26,10 @@
     "./tasty": {
       "types": "./dist/tasty.d.ts",
       "import": "./dist/tasty.mjs"
+    },
+    "./tasty/build": {
+      "types": "./dist/tasty/build.d.ts",
+      "import": "./dist/tasty/build.mjs"
     }
   },
   "files": [
