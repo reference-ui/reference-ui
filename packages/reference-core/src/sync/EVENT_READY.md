@@ -202,3 +202,35 @@ If a concept describes actual build work or actual build completion, it belongs
 in sync.
 
 That is the boundary this folder should aim to preserve.
+
+## Naming Note: `runWorker` vs `startWorker`
+
+One naming problem that came up during this work is that `runWorker(...)` is not
+an especially honest name for what the thread-pool layer is doing.
+
+In this codebase, the call mostly means:
+
+- resolve a worker entry script
+- load it into the pool
+- let that worker install subscriptions and remain alive
+
+That is much closer to "start this worker module" than "run some work on a
+worker".
+
+The worker script itself owns the real runtime behavior:
+
+- what events it subscribes to
+- when it is app-ready
+- whether it waits for a startup barrier
+- how it handles incoming triggers
+
+So the thread-pool API should not imply more control than it actually has.
+
+Preferred terminology:
+
+- `startWorker(...)` for the pool/registry API
+
+That name matches the real responsibility better:
+
+- the pool starts the worker
+- the worker decides how it behaves after startup
