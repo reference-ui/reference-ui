@@ -7,7 +7,20 @@ Tasty should own the low-level runtime contract.
 
 Today, `reference` is carrying too much knowledge about generated artifact structure, chunk loading, manifest handling, and rebuild semantics. That works, but it means a higher-level feature package is acting as the integration layer for a lower-level IR system.
 
-Recommended split:
+## First Step
+
+Start with the broadest stroke first: separate the runtime boundary more clearly.
+
+The most sensible first move is to introduce `createTastyBrowserRuntime(...)` inside Tasty and make that the main browser-facing entrypoint for loading emitted Tasty artifacts.
+
+Why this first:
+
+- It moves low-level loading logic out of `reference` without needing to solve every downstream design question yet.
+- It gives us one place to harden production loading behavior.
+- It reduces the number of places that need to understand manifest paths, chunk imports, and runtime module shape.
+- It creates a cleaner seam for future work, since we can review the remaining responsibilities after the runtime boundary is in the right package.
+
+Recommended split after that first move:
 
 - `tasty` owns artifact shape, manifest versioning, chunk import rules, runtime validation, symbol loading, and browser-safe loading helpers.
 - `reference` owns presentation, higher-level composition, worker orchestration, and "load symbol X and render it" behavior.
@@ -20,6 +33,28 @@ That likely means introducing a first-class Tasty runtime surface, something lik
 - `importTastyArtifact(...)`
 
 The important part is not the exact name, but that `reference` should not need to understand generated file layout beyond "here is a runtime entry" or "here is a manifest URL/module".
+
+## Production Path Hardening
+
+This needs to be part of the first step, not a later cleanup.
+
+We already saw production breakage around relative-path handling, which is a strong signal that the current boundary is too implicit. Right now, the system relies on a mix of:
+
+- a placeholder import in `packages/reference-core/src/entry/types.ts`
+- a postprocess rewrite to `./tasty/runtime.js` in `packages/reference-core/src/packager/postprocess/rewrite-types-runtime-import.ts`
+- manifest-relative chunk resolution in `packages/reference-rs/js/tasty/index.ts`
+
+That is workable, but fragile if any packaging step, base path, or emitted location changes.
+
+For `createTastyBrowserRuntime(...)`, document and enforce these rules explicitly:
+
+- The runtime entry must be a real literal import edge in the final packaged output so app bundlers can see and include it.
+- Chunk resolution must be anchored to the runtime or manifest location, not to caller-relative assumptions.
+- Relative paths should be normalized in one place only, inside the Tasty browser runtime.
+- If the placeholder runtime import was not rewritten correctly, packaging should fail hard.
+- If a manifest-relative chunk cannot be resolved in production, the runtime should throw a clear path-resolution error rather than a vague missing-module failure.
+
+This is both a documentation issue and a hardening issue. The path contract should live in Tasty, be tested in Tasty, and be described as part of the public browser runtime behavior.
 
 ## Recommended Direction
 
