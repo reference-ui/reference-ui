@@ -92,6 +92,27 @@ describe('tasty runtime', () => {
     expect(runtime.getApi()).toBe(api)
   })
 
+  it('fails gracefully when the browser runtime module shape is malformed', async () => {
+    const runtime = createTastyBrowserRuntime({
+      loadRuntimeModule: async () => ({ notManifest: true }),
+    })
+
+    await expect(runtime.loadApi()).rejects.toThrow(
+      'Malformed Tasty browser runtime module. Expected manifest, manifestUrl, and importTastyArtifact exports.'
+    )
+  })
+
+  it('fails gracefully when the manifest module shape is malformed', async () => {
+    const api = createTastyApi({
+      manifestPath: '/tmp/tasty/manifest.js',
+      importer: async () => ({ default: { nope: true } }),
+    })
+
+    await expect(api.ready()).rejects.toThrow(
+      'Malformed Tasty manifest module. Expected a default or manifest export with version, warnings, symbolsByName, and symbolsById.'
+    )
+  })
+
   it('rejects ambiguous bare-name lookup and supports scoped-name lookup', async () => {
     const api = createTastyApiFromManifest({
       manifest: {
@@ -202,6 +223,33 @@ describe('tasty runtime', () => {
     await expect(api.loadSymbolByName('ButtonProps')).resolves.toMatchObject({
       getName: expect.any(Function),
     })
+  })
+
+  it('fails gracefully when a chunk loads but does not export the requested symbol', async () => {
+    const api = createTastyApiFromManifest({
+      manifest: {
+        version: '2',
+        warnings: [],
+        symbolsByName: {
+          Broken: ['_broken'],
+        },
+        symbolsById: {
+          _broken: {
+            id: '_broken',
+            name: 'Broken',
+            kind: 'interface',
+            chunk: './chunks/_broken.js',
+            library: 'user',
+          },
+        },
+      },
+      manifestPath: '/tmp/tasty/manifest.js',
+      importer: async () => ({ default: { id: 'not-the-right-symbol', name: 'Broken' } }),
+    })
+
+    await expect(api.loadSymbolByName('Broken')).rejects.toThrow(
+      'Missing symbol export in Tasty chunk for id "_broken". Expected a named export "_broken" or a matching default export.'
+    )
   })
 
   it('retries browser runtime initialization after a transient failure', async () => {

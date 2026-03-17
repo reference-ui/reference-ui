@@ -699,7 +699,9 @@ function extractManifest(value: unknown): RawTastyManifest {
   const moduleValue = normalizeModuleNamespace(value)
   const manifest = (moduleValue.default ?? moduleValue.manifest) as unknown
   if (!isRawTastyManifest(manifest)) {
-    throw new Error('Malformed manifest module.')
+    throw new Error(
+      'Malformed Tasty manifest module. Expected a default or manifest export with version, warnings, symbolsByName, and symbolsById.'
+    )
   }
   if (manifest.version !== CURRENT_TASTY_MANIFEST_VERSION) {
     throw new Error(
@@ -720,7 +722,9 @@ function extractChunkSymbol(moduleValue: ModuleNamespace, symbolId: string): Tas
     return defaultExport
   }
 
-  throw new Error(`Missing symbol export in chunk for id: ${symbolId}`)
+  throw new Error(
+    `Missing symbol export in Tasty chunk for id "${symbolId}". Expected a named export "${symbolId}" or a matching default export.`
+  )
 }
 
 function normalizeModuleNamespace(value: unknown): ModuleNamespace {

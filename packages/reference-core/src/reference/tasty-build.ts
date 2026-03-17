@@ -1,6 +1,6 @@
 import { resolve } from 'node:path'
 import { type TastyApi, type TastySymbol } from '@reference-ui/rust/tasty'
-import { createTastyBuildSession } from '@reference-ui/rust/tasty/build'
+import { createTastyBuildSession, type TastyBuildDiagnostic } from '@reference-ui/rust/tasty/build'
 import { getVirtualDirPath } from '../lib/paths'
 import type { ReferenceWorkerPayload } from './worker-types'
 import { getReferenceTastyDirPath } from './paths'
@@ -11,6 +11,7 @@ export interface ReferenceTastyBuildState {
   outputDir: string
   manifestPath: string
   warnings: string[]
+  diagnostics: TastyBuildDiagnostic[]
   api: TastyApi
 }
 
@@ -61,6 +62,7 @@ function toReferenceTastyBuildState(
     outputDir: string
     manifestPath: string
     warnings: string[]
+    diagnostics: TastyBuildDiagnostic[]
     api: TastyApi
   }
 ): ReferenceTastyBuildState {
@@ -70,6 +72,7 @@ function toReferenceTastyBuildState(
     outputDir: builtTasty.outputDir,
     manifestPath: builtTasty.manifestPath,
     warnings: builtTasty.warnings,
+    diagnostics: builtTasty.diagnostics,
     api: builtTasty.api,
   }
 }
