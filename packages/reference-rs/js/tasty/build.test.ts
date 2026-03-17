@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs'
-import { mkdtemp, rm } from 'node:fs/promises'
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -27,6 +27,7 @@ describe('buildTasty', () => {
       expect(built.outputDir).toBe(outputDir)
       expect(built.manifestPath).toBe(join(outputDir, 'manifest.js'))
       expect(built.warnings).toEqual([])
+      expect(built.diagnostics).toEqual([])
       expect(existsSync(join(outputDir, 'manifest.js'))).toBe(true)
       expect(existsSync(join(outputDir, 'runtime.js'))).toBe(true)
       expect(existsSync(join(outputDir, 'chunk-registry.js'))).toBe(true)
@@ -60,6 +61,55 @@ describe('buildTasty', () => {
       expect(cached).toBe(first)
       expect(ensured).toBe(first)
       expect(reused).toBe(first)
+    } finally {
+      await rm(tempRoot, { recursive: true, force: true })
+    }
+  })
+
+  it('exposes structured build diagnostics from scanner and manifest warnings', async () => {
+    const tempRoot = await mkdtemp(join(tmpdir(), 'reference-ui-tasty-diagnostics-'))
+    const rootDir = join(tempRoot, 'workspace')
+    const sourceDir = join(rootDir, 'src')
+    const outputDir = join(tempRoot, 'tasty-output')
+
+    try {
+      await mkdir(sourceDir, { recursive: true })
+      await writeFile(join(sourceDir, 'broken.ts'), 'export interface Broken {\n', 'utf-8')
+      await writeFile(
+        join(sourceDir, 'alpha.ts'),
+        'export interface Shared {\n  alpha: string\n}\n',
+        'utf-8'
+      )
+      await writeFile(
+        join(sourceDir, 'beta.ts'),
+        'export interface Shared {\n  beta: number\n}\n',
+        'utf-8'
+      )
+
+      const built = await buildTasty({
+        rootDir,
+        include: ['src/**/*.{ts,tsx}'],
+        outputDir,
+      })
+
+      expect(built.diagnostics).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            level: 'warning',
+            source: 'scanner',
+            fileId: expect.stringContaining('src/broken.ts'),
+            message: expect.stringContaining('parse reported'),
+          }),
+          expect.objectContaining({
+            level: 'warning',
+            source: 'manifest',
+            message: expect.stringContaining('Duplicate symbol name "Shared"'),
+          }),
+        ])
+      )
+      expect(
+        built.warnings.some((warning) => warning.includes('Duplicate symbol name "Shared"'))
+      ).toBe(true)
     } finally {
       await rm(tempRoot, { recursive: true, force: true })
     }

@@ -4,6 +4,14 @@ use super::ast::{extract_ast, resolve_ast};
 use super::generator::emit_esm_bundle;
 use super::generator::generate_debug_bundle;
 use super::scanner::scan_workspace;
+use serde::Serialize;
+
+#[derive(Debug, Serialize)]
+struct EmittedModulesPayload {
+    modules: std::collections::BTreeMap<String, String>,
+    type_declarations: std::collections::BTreeMap<String, String>,
+    diagnostics: Vec<super::model::ScannerDiagnostic>,
+}
 
 pub fn scan_typescript_bundle(request: &ScanRequest) -> Result<TypeScriptBundle, String> {
     let scanned_workspace = scan_workspace(&request.root_dir, &request.include)?;
@@ -16,5 +24,11 @@ pub fn scan_typescript_bundle(request: &ScanRequest) -> Result<TypeScriptBundle,
 pub fn scan_and_emit_modules(request: &ScanRequest) -> Result<String, String> {
     let bundle = scan_typescript_bundle(request)?;
     let esm = emit_esm_bundle(&bundle)?;
-    serde_json::to_string(&esm).map_err(|error| format!("failed to serialize ESM modules: {error}"))
+    let payload = EmittedModulesPayload {
+        modules: esm.modules,
+        type_declarations: esm.type_declarations,
+        diagnostics: bundle.diagnostics,
+    };
+    serde_json::to_string(&payload)
+        .map_err(|error| format!("failed to serialize ESM modules: {error}"))
 }

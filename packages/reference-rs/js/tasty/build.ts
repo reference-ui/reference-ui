@@ -7,6 +7,19 @@ import { createTastyApi, type TastyApi } from './index'
 interface EmittedModulesPayload {
   modules: Record<string, string>
   type_declarations: Record<string, string>
+  diagnostics?: RawScannerDiagnostic[]
+}
+
+interface RawScannerDiagnostic {
+  file_id: string
+  message: string
+}
+
+export interface TastyBuildDiagnostic {
+  level: 'warning'
+  source: 'scanner' | 'manifest'
+  message: string
+  fileId?: string
 }
 
 export interface BuildTastyOptions {
@@ -20,6 +33,7 @@ export interface BuiltTasty {
   outputDir: string
   manifestPath: string
   warnings: string[]
+  diagnostics: TastyBuildDiagnostic[]
   api: TastyApi
 }
 
@@ -40,12 +54,23 @@ export async function buildTasty(options: BuildTastyOptions): Promise<BuiltTasty
   const manifestPath = resolveManifestPath(outputDir, emitted)
   const api = createTastyApi({ manifestPath })
   await api.ready()
+  const warnings = api.getWarnings()
+  const scannerDiagnostics = normalizeScannerDiagnostics(emitted.diagnostics)
+  const scannerWarningTexts = new Set(scannerDiagnostics.map(formatScannerWarning))
+  const manifestDiagnostics = warnings
+    .filter((warning) => !scannerWarningTexts.has(warning))
+    .map((warning) => ({
+      level: 'warning' as const,
+      source: 'manifest' as const,
+      message: warning,
+    }))
 
   return {
     rootDir,
     outputDir,
     manifestPath,
-    warnings: api.getWarnings(),
+    warnings,
+    diagnostics: [...scannerDiagnostics, ...manifestDiagnostics],
     api,
   }
 }
@@ -97,11 +122,42 @@ function parseEmittedPayload(raw: string): EmittedModulesPayload {
     parsed.modules == null ||
     typeof parsed.modules !== 'object' ||
     parsed.type_declarations == null ||
-    typeof parsed.type_declarations !== 'object'
+    typeof parsed.type_declarations !== 'object' ||
+    (parsed.diagnostics != null && !isRawScannerDiagnostics(parsed.diagnostics))
   ) {
     throw new Error('Malformed emitted Tasty modules payload.')
   }
-  return parsed as EmittedModulesPayload
+  return {
+    modules: parsed.modules as Record<string, string>,
+    type_declarations: parsed.type_declarations as Record<string, string>,
+    diagnostics: parsed.diagnostics ?? [],
+  }
+}
+
+function isRawScannerDiagnostics(value: unknown): value is RawScannerDiagnostic[] {
+  return Array.isArray(value) && value.every((entry) =>
+    entry != null &&
+    typeof entry === 'object' &&
+    'file_id' in entry &&
+    typeof entry.file_id === 'string' &&
+    'message' in entry &&
+    typeof entry.message === 'string'
+  )
+}
+
+function normalizeScannerDiagnostics(
+  diagnostics: RawScannerDiagnostic[] | undefined
+): TastyBuildDiagnostic[] {
+  return (diagnostics ?? []).map((diagnostic) => ({
+    level: 'warning',
+    source: 'scanner',
+    fileId: diagnostic.file_id,
+    message: diagnostic.message,
+  }))
+}
+
+function formatScannerWarning(diagnostic: TastyBuildDiagnostic): string {
+  return diagnostic.fileId ? `${diagnostic.fileId}: ${diagnostic.message}` : diagnostic.message
 }
 
 async function writeEmittedArtifacts(

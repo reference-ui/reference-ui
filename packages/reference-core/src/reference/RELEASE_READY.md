@@ -42,6 +42,7 @@ The major hardening work already completed is meaningful:
 - The Tasty build path now owns emitted artifact writing rather than `reference` open-coding it.
 - Tuple-element lowering now uses an explicit safe conversion path instead of relying on an `unsafe` AST-layout cast.
 - Packaging now fails hard if the runtime placeholder rewrite does not happen.
+- Tasty build diagnostics and warnings are now exposed as structured build output instead of only being buried in manifest warnings and logs.
 
 This means the release plan does not need another big conceptual refactor first. The remaining work is about tightening the weak spots that still matter.
 
@@ -51,15 +52,19 @@ This means the release plan does not need another big conceptual refactor first.
 
 Highest priority reliability work:
 
-- Expose Tasty diagnostics and warnings as structured build output rather than only embedding them in the manifest and logging them.
 - Improve reference resolution for default imports, namespace imports, and other unresolved cross-module cases.
 - Keep the current simple `tasty` output model, but make sure rebuild behavior is predictable and well covered.
-- Keep the packaging/runtime boundary explicit and fail loudly when it is violated.
+- Keep the packaging/runtime boundary explicit and fail gracefully, explicitly, and early when it is violated.
+  In practice, this means the generated package should have a clear, testable contract for how `reference` reaches the emitted Tasty runtime and manifest.
+  If that contract breaks, we should error immediately during build or load instead of silently producing a package that looks valid but fails later in the app.
+  Examples:
+  - if the runtime placeholder rewrite does not produce the final literal runtime import, packaging should fail
+  - if the packaged runtime cannot resolve the emitted manifest or chunks, the runtime should throw a direct, specific error
+  - if a consumer would need hidden knowledge of internal file layout to make things work, the boundary is too implicit and should be tightened
 
 Remaining reliability risks:
 
 - Reference resolution is still incomplete for some import forms and symbol shapes, especially default imports, namespace imports, and more complex cross-module reference patterns.
-- Tasty still does not expose a first-class diagnostics/warnings channel beyond what is packed into the manifest and logged during build.
 - Build/session caching now lives behind the Tasty build layer, but config-sensitive invalidation is still something to keep an eye on as the build surface grows.
 
 ### Code Quality
@@ -81,7 +86,6 @@ Highest-value test gaps:
 
 - Integration coverage for the emitted runtime through the package boundary in realistic bundler/package flows.
 - Coverage for the unresolved import/reference cases once they are fixed.
-- Coverage for structured diagnostics/warnings once that output exists.
 - Rebuild/cache behavior tests that prove changed inputs do not silently reuse stale state.
 
 ### Separation Of Concerns
@@ -104,10 +108,10 @@ For `reference`, good separation of concerns means:
 
 Before release, this is the practical sequence:
 
-1. Expose structured diagnostics/warnings from the Tasty build side so degraded output is visible as a real contract, not just logs.
-2. Fix the known import/reference resolution gaps, starting with default imports, namespace imports, and the most common cross-module failures.
-3. Add package-boundary integration coverage so the emitted runtime path is tested the way consumers actually use it.
-4. Add rebuild/cache coverage that exercises config-sensitive invalidation and protects against stale output reuse.
+1. Fix the known import/reference resolution gaps, starting with default imports, namespace imports, and the most common cross-module failures.
+2. Add package-boundary integration coverage so the emitted runtime path is tested the way consumers actually use it.
+3. Add rebuild/cache coverage that exercises config-sensitive invalidation and protects against stale output reuse.
+4. Make good use of the new structured Tasty build diagnostics so degraded output is visible and actionable in the Reference build flow.
 5. Do a final cleanup pass on `packages/reference-core/src/reference` so naming, ownership, and file responsibilities are clear and unsurprising.
 
 ## What Not To Do
