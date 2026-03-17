@@ -17,6 +17,10 @@ export async function onRunBuild(
     const state = await rebuildReferenceTastyBuild(workerPayload)
     const symbol = name ? await state.api.loadSymbolByName(name) : undefined
 
+    for (const warning of state.warnings) {
+      log.info('[reference] warning:', warning)
+    }
+
     log.debug('reference', 'Reference build completed', {
       name,
       manifestPath: state.manifestPath,

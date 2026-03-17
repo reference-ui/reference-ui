@@ -19,6 +19,7 @@ export interface BuiltTasty {
   rootDir: string
   outputDir: string
   manifestPath: string
+  warnings: string[]
   api: TastyApi
 }
 
@@ -37,6 +38,7 @@ export async function buildTasty(options: BuildTastyOptions): Promise<BuiltTasty
     rootDir,
     outputDir,
     manifestPath,
+    warnings: api.getWarnings(),
     api,
   }
 }

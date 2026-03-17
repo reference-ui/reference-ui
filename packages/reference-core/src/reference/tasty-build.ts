@@ -10,6 +10,7 @@ export interface ReferenceTastyBuildState {
   virtualDir: string
   outputDir: string
   manifestPath: string
+  warnings: string[]
   api: TastyApi
 }
 
@@ -36,6 +37,7 @@ export async function rebuildReferenceTastyBuild(
     virtualDir,
     outputDir: builtTasty.outputDir,
     manifestPath: builtTasty.manifestPath,
+    warnings: builtTasty.warnings,
     api: builtTasty.api,
   }
 

@@ -77,35 +77,43 @@ A good end state is:
 
 Yes, reliability can be increased quite a bit.
 
-Highest-value improvements:
+Implemented hardening:
 
-- Make duplicate symbol names a build error instead of allowing silent overwrite in `symbolsByName`.
-- Detect emitted symbol id or chunk-name collisions during generation and fail closed.
-- Enforce manifest version compatibility at runtime rather than only checking for key presence.
-- Validate chunk/module shape more strictly before use.
-- Clear failed promise cache entries so transient import failures can retry.
-- Write generated artifacts atomically instead of deleting the output directory and rewriting in place.
-- Make unresolved references explicit in the emitted model instead of allowing them to fail later during load.
-- Fail packaging if the runtime import placeholder rewrite did not occur.
+- Duplicate symbol names are preserved instead of silently overwriting each other in the manifest.
+- Duplicate-name lookups now warn and require explicit disambiguation instead of pretending a bare name is always unique.
+- Emitted symbol id collisions now fail closed during generation.
+- Manifest version compatibility is enforced at runtime.
+- Browser-safe loading is separated from the Node/build-side manifest-path loader.
+- Failed runtime initialization and chunk-load promises can retry instead of staying permanently rejected.
+- The Tasty build path now owns emitted artifact writing rather than `reference` open-coding it.
+
+Remaining sharp edges:
+
+- Tasty still does not expose a first-class diagnostics/warnings channel beyond what is packed into the manifest and logged during build. We can build and load a partial graph, but still have limited structured visibility into what degraded during lowering.
+- Reference resolution is still incomplete for some import forms and symbol shapes, especially default imports, namespace imports, and more complex cross-module reference patterns. Those cases can still degrade into unresolved or weaker references.
+- There is still an `unsafe` AST-layout cast in the lowering path for tuple elements. That is a parser-coupling risk and should eventually be removed.
+- Artifact writing is better, but not yet a true atomic directory swap. The flow still removes the old output directory before renaming the new one into place, so there is a brief gap where readers could observe missing outputs.
+- Packaging still relies on the placeholder-runtime rewrite step. The runtime boundary is cleaner now, but the package edge should still fail hard if that rewrite ever does not happen.
+- `reference` still owns the build-state/session cache keyed by source directory. That is okay for now, but config-sensitive invalidation is still something to keep an eye on as the build surface grows.
 
 ## Quick Wins
 
 These are the fastest hardening wins before any larger Tasty runtime refactor:
 
-1. Fail closed on duplicate symbol names, hash collisions, unresolved references, and placeholder rewrite failures.
-2. Add explicit manifest version checks instead of only checking for the presence of top-level keys.
-3. Tighten runtime validation for chunk modules so malformed exports fail early with good errors.
-4. Make generated artifact writes atomic so readers never see a half-written runtime.
-5. Clear rejected chunk-load and API-load promises from caches so transient failures can retry cleanly.
+1. Expose Tasty diagnostics and warnings as structured build output instead of only embedding them in the manifest and logging them.
+2. Improve reference resolution for default imports, namespace imports, and other unresolved cross-module cases.
+3. Replace the remaining `unsafe` tuple-element lowering cast with an explicit safe conversion path.
+4. Finish the output-write hardening so the directory replacement is truly atomic.
+5. Make the placeholder runtime rewrite step fail the package build if it does not happen.
 
 More detail:
 
-- Duplicate names and id collisions should be rejected during emit time in `packages/reference-rs/src/tasty/generator/esm.rs`. Right now `emit_manifest_module()` inserts into `symbols_by_name` directly, and `build_symbol_export_names()` derives public ids from a short deterministic hash. That means ambiguous names or a hash collision can silently corrupt the manifest.
-- Manifest validation should become a real compatibility gate in `packages/reference-rs/js/tasty/index.ts`. `extractManifest()` currently only checks that the object looks roughly right and `isRawTastyManifest()` only verifies the presence of `version`, `symbolsByName`, and `symbolsById`. The runtime should reject unsupported versions immediately and surface a clear "emitter/runtime mismatch" error.
-- Chunk validation should also get stricter in `packages/reference-rs/js/tasty/index.ts`. `extractChunkSymbol()` currently accepts either `module[symbolId]` or `default`, then only checks a shallow object shape. We should validate the required symbol fields and emit a more diagnostic error when the chunk export contract is wrong.
-- Generated artifact writes in `packages/reference-core/src/reference/runtime.ts` should stop doing "delete and rewrite in place". `writeEmittedArtifacts()` currently removes the whole output directory and recreates it. A temp directory plus rename would make rebuilds atomic and prevent readers from seeing partially written manifests or chunk trees.
-- Retry behavior should improve in both `packages/reference-rs/js/tasty/index.ts` and `packages/reference-core/src/reference/component.tsx`. `loadChunk()` caches the promise for each chunk path, and `getReferenceApi()` caches the whole API promise. If either promise rejects once, the failure becomes sticky. Rejected entries should be removed from cache so transient import or rebuild races can recover.
-- Packaging should fail hard if the generated runtime edge is missing. `packages/reference-core/src/entry/types.ts` still imports a placeholder specifier, so the postprocess step must guarantee that placeholder was rewritten to `./tasty/runtime.js`. If not, the build should error instead of quietly shipping a package that app bundlers cannot fully follow.
+- Duplicate names are now preserved and warned on, while emitted-id collisions are rejected during emit time in `packages/reference-rs/src/tasty/generator/esm.rs`. That removes the silent-overwrite behavior while still treating a generated export-name collision as a Tasty integrity failure.
+- Manifest validation in `packages/reference-rs/js/tasty/index.ts` is now a real compatibility gate, but the next step is to make more of the lowering/build diagnostics explicit to callers rather than only surfacing them through manifest warnings and logs.
+- Runtime validation in `packages/reference-rs/js/tasty/index.ts` is tighter now, but the bigger remaining gap is unresolved or degraded references produced upstream by incomplete lowering/resolution.
+- Generated artifact writes moved into the Tasty build layer, but the replacement flow should still be tightened so the directory swap is fully atomic rather than "remove old, then rename new".
+- Retry behavior is improved now, so the next reliability step is less about retries and more about making build diagnostics and ambiguous symbol cases easier to consume upstream.
+- Packaging still needs a stricter guard around the runtime placeholder rewrite. The generated package should fail loudly if the final literal `./tasty/runtime.js` edge is missing.
 
 These should give a noticeable reliability bump without needing to redesign the full package boundary first.
 
@@ -123,7 +131,7 @@ By that rule, a `browserRuntime` in Tasty is the right direction.
 Before release, the most practical sequence is:
 
 1. Move browser/runtime loading helpers into Tasty so `reference` depends on a cleaner public API.
-2. Add strict manifest and chunk validation with explicit version checks.
-3. Add collision detection and duplicate-name handling in generation.
-4. Make artifact writes atomic and failed imports retryable.
+2. Expose structured diagnostics/warnings from the Tasty build side so Reference can reason about degraded output more cleanly.
+3. Improve import/reference resolution for the unresolved cases we still know about.
+4. Make artifact writes fully atomic and lock down the packaging rewrite failure mode.
 5. Add integration tests that verify the emitted runtime works through the package boundary in real bundlers.
