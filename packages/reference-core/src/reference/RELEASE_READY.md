@@ -54,14 +54,14 @@ Done:
 - structured Tasty build diagnostics now exist as a real build output contract
 - common import/reference resolution gaps for default imports and namespace imports are now fixed
 - package-boundary integration coverage for the emitted runtime is now in place
+- rebuild/cache invalidation coverage is now in place
 
 Next:
 
-- rebuild/cache invalidation coverage
+- final cleanup pass in `packages/reference-core/src/reference`
 
 Still to do after that:
-
-- final cleanup pass in `packages/reference-core/src/reference`
+- release-candidate verification pass and final polish as needed
 
 ## Release Priorities
 
@@ -100,7 +100,7 @@ Testing should prove the system works in the ways it is actually consumed.
 
 Highest-value test gaps:
 
-- Rebuild/cache behavior tests that prove changed inputs do not silently reuse stale state.
+- no major release-blocking test gaps are currently called out here; keep using the full Rust and system suites as the release gate
 
 ### Separation Of Concerns
 
@@ -125,8 +125,8 @@ Before release, this is the practical sequence:
 1. Done: expose structured diagnostics/warnings from the Tasty build side so degraded output is visible as a real contract, not just logs.
 2. Done: fix the common import/reference resolution gaps for default imports, namespace imports, and user-owned dependency loading.
 3. Done: add package-boundary integration coverage so the emitted runtime path is tested the way consumers actually use it.
-4. Next: add rebuild/cache coverage that exercises config-sensitive invalidation and protects against stale output reuse.
-5. Later in release prep: make good use of the new structured Tasty build diagnostics in the wider Reference build flow and do a final cleanup pass on `packages/reference-core/src/reference` so naming, ownership, and file responsibilities are clear and unsurprising.
+4. Done: add rebuild/cache coverage that exercises config-sensitive invalidation and protects against stale output reuse.
+5. Next: make good use of the new structured Tasty build diagnostics in the wider Reference build flow and do a final cleanup pass on `packages/reference-core/src/reference` so naming, ownership, and file responsibilities are clear and unsurprising.
 
 ## What Not To Do
 

@@ -66,6 +66,86 @@ describe('buildTasty', () => {
     }
   })
 
+  it('rebuilds fresh artifacts when source contents change for the same session key', async () => {
+    const tempRoot = await mkdtemp(join(tmpdir(), 'reference-ui-tasty-rebuild-inputs-'))
+    const rootDir = join(tempRoot, 'workspace')
+    const sourceDir = join(rootDir, 'src')
+    const outputDir = join(tempRoot, 'tasty-output')
+    const session = createTastyBuildSession()
+
+    try {
+      await mkdir(sourceDir, { recursive: true })
+      await writeFile(
+        join(sourceDir, 'config.ts'),
+        'export interface BuildConfig {\n  value: string\n}\n',
+        'utf-8'
+      )
+
+      const first = await session.rebuild('fixture', {
+        rootDir,
+        include: ['src/**/*.{ts,tsx}'],
+        outputDir,
+      })
+      const firstSymbol = await first.api.loadSymbolByName('BuildConfig')
+
+      await writeFile(
+        join(sourceDir, 'config.ts'),
+        'export interface BuildConfig {\n  value: number\n}\n',
+        'utf-8'
+      )
+
+      const second = await session.rebuild('fixture', {
+        rootDir,
+        include: ['src/**/*.{ts,tsx}'],
+        outputDir,
+      })
+      const secondSymbol = await second.api.loadSymbolByName('BuildConfig')
+
+      expect(first).not.toBe(second)
+      expect(firstSymbol.getMembers()[0]?.getType()?.describe()).toBe('string')
+      expect(secondSymbol.getMembers()[0]?.getType()?.describe()).toBe('number')
+    } finally {
+      await rm(tempRoot, { recursive: true, force: true })
+    }
+  })
+
+  it('rebuilds fresh artifacts when include config changes for the same session key', async () => {
+    const tempRoot = await mkdtemp(join(tmpdir(), 'reference-ui-tasty-rebuild-config-'))
+    const rootDir = join(tempRoot, 'workspace')
+    const sourceDir = join(rootDir, 'src')
+    const outputDir = join(tempRoot, 'tasty-output')
+    const session = createTastyBuildSession()
+
+    try {
+      await mkdir(sourceDir, { recursive: true })
+      await writeFile(join(sourceDir, 'alpha.ts'), 'export interface AlphaOnly {}\n', 'utf-8')
+      await writeFile(join(sourceDir, 'beta.ts'), 'export interface BetaOnly {}\n', 'utf-8')
+
+      const first = await session.rebuild('fixture', {
+        rootDir,
+        include: ['src/alpha.ts'],
+        outputDir,
+      })
+      await expect(first.api.loadSymbolByName('AlphaOnly')).resolves.toMatchObject({
+        getName: expect.any(Function),
+      })
+      await expect(first.api.loadSymbolByName('BetaOnly')).rejects.toThrow('Symbol not found: BetaOnly')
+
+      const second = await session.rebuild('fixture', {
+        rootDir,
+        include: ['src/beta.ts'],
+        outputDir,
+      })
+
+      await expect(second.api.loadSymbolByName('AlphaOnly')).rejects.toThrow('Symbol not found: AlphaOnly')
+      await expect(second.api.loadSymbolByName('BetaOnly')).resolves.toMatchObject({
+        getName: expect.any(Function),
+      })
+    } finally {
+      await rm(tempRoot, { recursive: true, force: true })
+    }
+  })
+
   it('exposes structured build diagnostics from scanner and manifest warnings', async () => {
     const tempRoot = await mkdtemp(join(tmpdir(), 'reference-ui-tasty-diagnostics-'))
     const rootDir = join(tempRoot, 'workspace')
