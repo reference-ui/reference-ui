@@ -821,13 +821,12 @@ fn tuple_element_to_tuple_element(
             }
         }
         _ => {
-            // TSTupleElement shares layout with TSType for inherited variants (per oxc inherit_variants macro).
             TupleElement {
                 label: None,
                 optional: false,
                 rest: false,
-                element: type_to_ref(
-                    unsafe { &*(el as *const TSTupleElement<'_> as *const TSType<'_>) },
+                element: tuple_element_type_to_ref(
+                    el,
                     source,
                     import_bindings,
                     current_module_specifier,
@@ -835,6 +834,34 @@ fn tuple_element_to_tuple_element(
                 ),
             }
         }
+    }
+}
+
+fn tuple_element_type_to_ref(
+    el: &TSTupleElement<'_>,
+    source: &str,
+    import_bindings: &BTreeMap<String, ImportBinding>,
+    current_module_specifier: &str,
+    current_library: &str,
+) -> TypeRef {
+    let element_source = slice_span(source, el.span());
+    let wrapped_source = format!("type __TastyTupleElement = {element_source};");
+    let allocator = Allocator::default();
+    let source_type = SourceType::from_path("tuple-element.ts").unwrap_or_default();
+    let parse_result = Parser::new(&allocator, &wrapped_source, source_type).parse();
+
+    if let Some(Statement::TSTypeAliasDeclaration(type_alias)) = parse_result.program.body.first() {
+        return type_to_ref(
+            &type_alias.type_annotation,
+            &wrapped_source,
+            import_bindings,
+            current_module_specifier,
+            current_library,
+        );
+    }
+
+    TypeRef::Raw {
+        summary: element_source.to_string(),
     }
 }
 
