@@ -22,7 +22,8 @@ pub struct TastyModule {
 #[ts(export, export_to = "js/tasty/generated/", rename_all = "camelCase")]
 pub struct TastyManifest {
     pub version: String,
-    pub symbols_by_name: BTreeMap<String, String>,
+    pub warnings: Vec<String>,
+    pub symbols_by_name: BTreeMap<String, Vec<String>>,
     pub symbols_by_id: BTreeMap<String, TastySymbolIndexEntry>,
 }
 

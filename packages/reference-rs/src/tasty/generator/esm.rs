@@ -30,7 +30,7 @@ struct SymbolRef {
 
 #[allow(dead_code)]
 pub fn emit_esm_bundle(bundle: &TypeScriptBundle) -> Result<TypeScriptEsmBundle, String> {
-    let export_names = build_symbol_export_names(bundle);
+    let export_names = build_symbol_export_names(bundle)?;
 
     let mut modules = BTreeMap::new();
     modules.insert(
@@ -107,13 +107,21 @@ fn emit_manifest_module(
 ) -> Result<String, String> {
     let mut symbols_by_name = BTreeMap::new();
     let mut symbols_by_id = BTreeMap::new();
+    let mut warnings = bundle
+        .diagnostics
+        .iter()
+        .map(|diagnostic| format!("{}: {}", diagnostic.file_id, diagnostic.message))
+        .collect::<Vec<_>>();
 
     for (symbol_id, symbol) in &bundle.symbols {
         let export_name = export_names
             .get(symbol_id)
             .expect("symbol export name should exist")
             .clone();
-        symbols_by_name.insert(symbol.name.clone(), export_name.clone());
+        symbols_by_name
+            .entry(symbol.name.clone())
+            .or_insert_with(Vec::new)
+            .push(export_name.clone());
         symbols_by_id.insert(
             export_name.clone(),
             TastySymbolIndexEntry {
@@ -126,8 +134,28 @@ fn emit_manifest_module(
         );
     }
 
+    for (symbol_name, symbol_ids) in &symbols_by_name {
+        if symbol_ids.len() <= 1 {
+            continue;
+        }
+        let matches = symbol_ids
+            .iter()
+            .filter_map(|symbol_id| {
+                symbols_by_id
+                    .get(symbol_id)
+                    .map(|entry| format!("{} ({})", entry.id, entry.library))
+            })
+            .collect::<Vec<_>>()
+            .join(", ");
+        warnings.push(format!(
+            "Duplicate symbol name \"{symbol_name}\" matched {} entries: {matches}. Use symbol id or scoped lookup to disambiguate.",
+            symbol_ids.len()
+        ));
+    }
+
     let manifest = TastyManifest {
-        version: "1".to_string(),
+        version: "2".to_string(),
+        warnings,
         symbols_by_name,
         symbols_by_id,
     };
@@ -699,15 +727,33 @@ fn chunk_path_for_export_name(export_name: &str) -> String {
     format!("./chunks/{export_name}.js")
 }
 
-fn build_symbol_export_names(bundle: &TypeScriptBundle) -> BTreeMap<String, String> {
-    bundle
-        .symbols
-        .keys()
-        .map(|symbol_id| {
-            let h = stable_hash_symbol_id(symbol_id);
-            (symbol_id.clone(), format!("_{:016x}", h))
-        })
-        .collect()
+fn build_symbol_export_names(bundle: &TypeScriptBundle) -> Result<BTreeMap<String, String>, String> {
+    build_symbol_export_names_with(bundle, stable_hash_symbol_id)
+}
+
+fn build_symbol_export_names_with<F>(
+    bundle: &TypeScriptBundle,
+    hash_symbol_id: F,
+) -> Result<BTreeMap<String, String>, String>
+where
+    F: Fn(&str) -> u64,
+{
+    let mut export_names = BTreeMap::new();
+    let mut symbol_ids_by_export_name = BTreeMap::new();
+
+    for symbol_id in bundle.symbols.keys() {
+        let export_name = format!("_{:016x}", hash_symbol_id(symbol_id));
+        if let Some(existing_symbol_id) =
+            symbol_ids_by_export_name.insert(export_name.clone(), symbol_id.clone())
+        {
+            return Err(format!(
+                "Tasty emitted-id collision between \"{existing_symbol_id}\" and \"{symbol_id}\" for export name \"{export_name}\"."
+            ));
+        }
+        export_names.insert(symbol_id.clone(), export_name);
+    }
+
+    Ok(export_names)
 }
 
 fn emit_ref_array(refs: Vec<SymbolRef>) -> Result<String, String> {
@@ -743,4 +789,70 @@ fn indent_block(value: &str, spaces: usize) -> String {
         .map(|line| format!("{indent}{line}"))
         .collect::<Vec<_>>()
         .join("\n")
+}
+
+#[cfg(test)]
+mod tests {
+    use std::collections::BTreeMap;
+
+    use super::build_symbol_export_names_with;
+    use crate::tasty::model::{TsSymbol, TsSymbolKind, TypeScriptBundle};
+
+    #[test]
+    fn build_symbol_export_names_rejects_hash_collisions() {
+        let mut symbols = BTreeMap::new();
+        symbols.insert(
+            "symbol-a".to_string(),
+            TsSymbol {
+                id: "symbol-a".to_string(),
+                name: "Shared".to_string(),
+                library: "user".to_string(),
+                kind: TsSymbolKind::Interface,
+                file_id: "a.ts".to_string(),
+                exported: true,
+                description: None,
+                description_raw: None,
+                jsdoc: None,
+                type_parameters: Vec::new(),
+                defined_members: Vec::new(),
+                extends: Vec::new(),
+                underlying: None,
+                references: Vec::new(),
+            },
+        );
+        symbols.insert(
+            "symbol-b".to_string(),
+            TsSymbol {
+                id: "symbol-b".to_string(),
+                name: "Shared".to_string(),
+                library: "user".to_string(),
+                kind: TsSymbolKind::TypeAlias,
+                file_id: "b.ts".to_string(),
+                exported: true,
+                description: None,
+                description_raw: None,
+                jsdoc: None,
+                type_parameters: Vec::new(),
+                defined_members: Vec::new(),
+                extends: Vec::new(),
+                underlying: None,
+                references: Vec::new(),
+            },
+        );
+
+        let bundle = TypeScriptBundle {
+            version: 1,
+            root_dir: ".".to_string(),
+            entry_globs: Vec::new(),
+            files: BTreeMap::new(),
+            symbols,
+            exports: BTreeMap::new(),
+            diagnostics: Vec::new(),
+        };
+
+        let error = build_symbol_export_names_with(&bundle, |_symbol_id| 7)
+            .expect_err("hash collision should be rejected");
+
+        assert!(error.contains("Tasty emitted-id collision"));
+    }
 }

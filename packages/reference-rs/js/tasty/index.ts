@@ -119,9 +119,13 @@ export interface TastyApi {
   ready(): Promise<void>
   loadManifest(): Promise<RawTastyManifest>
   getManifest(): RawTastyManifest | undefined
+  getWarnings(): string[]
   loadSymbolById(id: string): Promise<TastySymbol>
   loadSymbolByName(name: string): Promise<TastySymbol>
   findSymbolByName(name: string): Promise<TastySymbol | undefined>
+  findSymbolsByName(name: string): Promise<TastySymbolSearchResult[]>
+  loadSymbolByScopedName(library: string, name: string): Promise<TastySymbol>
+  findSymbolByScopedName(library: string, name: string): Promise<TastySymbol | undefined>
   prefetchChunk(path: string): Promise<void>
   prefetchSymbolById(id: string): Promise<void>
   prefetchSymbolByName(name: string): Promise<void>
@@ -153,7 +157,7 @@ export interface TastyBrowserRuntime {
   getApi(): TastyApi | undefined
 }
 
-const CURRENT_TASTY_MANIFEST_VERSION = '1'
+const CURRENT_TASTY_MANIFEST_VERSION = '2'
 
 class TastyBrowserRuntimeImpl implements TastyBrowserRuntime {
   private runtimeModulePromise: Promise<TastyRuntimeModule> | undefined
@@ -308,6 +312,10 @@ class TastyApiRuntime implements TastyApi {
     return this.manifest
   }
 
+  getWarnings(): string[] {
+    return this.manifest?.warnings ?? []
+  }
+
   async loadSymbolById(id: string): Promise<TastySymbol> {
     const cached = this.symbolCache.get(id)
     if (cached) return cached
@@ -333,10 +341,46 @@ class TastyApiRuntime implements TastyApi {
   }
 
   async findSymbolByName(name: string): Promise<TastySymbol | undefined> {
+    const matches = await this.findSymbolsByName(name)
+    if (matches.length === 0) return undefined
+    if (matches.length > 1) {
+      throw createAmbiguousSymbolNameError(name, matches)
+    }
+    return this.loadSymbolById(matches[0]!.id)
+  }
+
+  async findSymbolsByName(name: string): Promise<TastySymbolSearchResult[]> {
     const manifest = await this.loadManifest()
-    const id = manifest.symbolsByName[name]
-    if (!id) return undefined
-    return this.loadSymbolById(id)
+    const ids = manifest.symbolsByName[name] ?? []
+    return ids
+      .map((id) => manifest.symbolsById[id])
+      .filter((entry): entry is RawTastySymbolIndexEntry => entry != null)
+      .map((entry) => ({
+        id: entry.id,
+        name: entry.name,
+        kind: entry.kind,
+        chunk: entry.chunk,
+        library: entry.library,
+      }))
+  }
+
+  async loadSymbolByScopedName(library: string, name: string): Promise<TastySymbol> {
+    const symbol = await this.findSymbolByScopedName(library, name)
+    if (!symbol) {
+      throw new Error(`Symbol not found for library "${library}": ${name}`)
+    }
+    return symbol
+  }
+
+  async findSymbolByScopedName(library: string, name: string): Promise<TastySymbol | undefined> {
+    const matches = (await this.findSymbolsByName(name)).filter((entry) => entry.library === library)
+    if (matches.length === 0) return undefined
+    if (matches.length > 1) {
+      throw new Error(
+        `Ambiguous symbol name "${name}" within library "${library}". Matches: ${matches.map(formatSymbolCandidate).join(', ')}`
+      )
+    }
+    return this.loadSymbolById(matches[0]!.id)
   }
 
   async prefetchChunk(path: string): Promise<void> {
@@ -737,8 +781,13 @@ function isRawTastyManifest(value: unknown): value is RawTastyManifest {
   if (value == null || typeof value !== 'object') return false
   const candidate = value as Record<string, unknown>
   return typeof candidate.version === 'string'
+    && Array.isArray(candidate.warnings)
+    && candidate.warnings.every((warning) => typeof warning === 'string')
     && candidate.symbolsByName != null
     && typeof candidate.symbolsByName === 'object'
+    && Object.values(candidate.symbolsByName).every((symbolIds) =>
+      Array.isArray(symbolIds) && symbolIds.every((symbolId) => typeof symbolId === 'string')
+    )
     && candidate.symbolsById != null
     && typeof candidate.symbolsById === 'object'
 }
@@ -773,6 +822,19 @@ function assertChunkSymbolId(
 function wrapRuntimeError(prefix: string, error: unknown): Error {
   const suffix = error instanceof Error ? error.message : String(error)
   return new Error(`${prefix} ${suffix}`)
+}
+
+function createAmbiguousSymbolNameError(
+  name: string,
+  matches: TastySymbolSearchResult[]
+): Error {
+  return new Error(
+    `Ambiguous symbol name "${name}". Matches: ${matches.map(formatSymbolCandidate).join(', ')}`
+  )
+}
+
+function formatSymbolCandidate(result: TastySymbolSearchResult): string {
+  return `${result.id} (${result.library})`
 }
 
 function isInterfaceSymbol(symbol: TastySymbolModel): symbol is RawTastyInterfaceSymbol {

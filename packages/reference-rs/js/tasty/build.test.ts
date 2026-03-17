@@ -26,6 +26,7 @@ describe('buildTasty', () => {
 
       expect(built.outputDir).toBe(outputDir)
       expect(built.manifestPath).toBe(join(outputDir, 'manifest.js'))
+      expect(built.warnings).toEqual([])
       expect(existsSync(join(outputDir, 'manifest.js'))).toBe(true)
       expect(existsSync(join(outputDir, 'runtime.js'))).toBe(true)
       expect(existsSync(join(outputDir, 'chunk-registry.js'))).toBe(true)

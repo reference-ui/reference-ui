@@ -92,6 +92,71 @@ describe('tasty runtime', () => {
     expect(runtime.getApi()).toBe(api)
   })
 
+  it('rejects ambiguous bare-name lookup and supports scoped-name lookup', async () => {
+    const api = createTastyApiFromManifest({
+      manifest: {
+        version: '2',
+        warnings: ['Duplicate symbol name "Shared" matched 2 entries.'],
+        symbolsByName: {
+          Shared: ['_alpha', '_beta'],
+        },
+        symbolsById: {
+          _alpha: {
+            id: '_alpha',
+            name: 'Shared',
+            kind: 'interface',
+            chunk: './chunks/_alpha.js',
+            library: 'alpha-lib',
+          },
+          _beta: {
+            id: '_beta',
+            name: 'Shared',
+            kind: 'typeAlias',
+            chunk: './chunks/_beta.js',
+            library: 'beta-lib',
+          },
+        },
+      },
+      importer: async (artifactPath) => {
+        if (artifactPath.includes('_alpha')) {
+          return {
+            _alpha: {
+              id: '_alpha',
+              name: 'Shared',
+              library: 'alpha-lib',
+              members: [],
+              extends: [],
+              types: [],
+            },
+          }
+        }
+
+        if (artifactPath.includes('_beta')) {
+          return {
+            _beta: {
+              id: '_beta',
+              name: 'Shared',
+              library: 'beta-lib',
+              definition: { kind: 'intrinsic', name: 'string' },
+            },
+          }
+        }
+
+        throw new Error(`Unexpected artifact path: ${artifactPath}`)
+      },
+    })
+
+    await expect(api.loadSymbolByName('Shared')).rejects.toThrow('Ambiguous symbol name "Shared"')
+    expect(await api.findSymbolsByName('Shared')).toHaveLength(2)
+
+    const alpha = await api.loadSymbolByScopedName('alpha-lib', 'Shared')
+    const beta = await api.loadSymbolByScopedName('beta-lib', 'Shared')
+
+    expect(alpha.getId()).toBe('_alpha')
+    expect(beta.getId()).toBe('_beta')
+    expect(api.getWarnings()).toEqual(['Duplicate symbol name "Shared" matched 2 entries.'])
+  })
+
   it('keeps symbol wrapper identity stable across lookup paths', async () => {
     const api = createTastyApi({
       manifestPath: manifestPath('external_libs'),
