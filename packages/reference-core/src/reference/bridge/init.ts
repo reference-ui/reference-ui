@@ -1,5 +1,5 @@
-import { workers } from '../lib/thread-pool'
-import type { SyncPayload } from '../sync/types'
+import { workers } from '../../lib/thread-pool'
+import type { SyncPayload } from '../../sync/types'
 
 /**
  * Start the reference worker.

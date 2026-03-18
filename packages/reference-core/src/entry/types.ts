@@ -4,7 +4,7 @@
  */
 
 import { createTastyBrowserRuntime } from '@reference-ui/rust/tasty/browser'
-import { createReferenceComponent } from '../reference/component'
+import { createReferenceComponent } from '../reference/browser'
 
 const tastyBrowserRuntime = createTastyBrowserRuntime({
   loadRuntimeModule: () => import('__REFERENCE_UI_TYPES_RUNTIME__' as string),
@@ -12,4 +12,4 @@ const tastyBrowserRuntime = createTastyBrowserRuntime({
 
 export const Reference = createReferenceComponent(tastyBrowserRuntime)
 
-export type { ReferenceProps } from '../reference/component'
+export type { ReferenceProps } from '../reference/browser'

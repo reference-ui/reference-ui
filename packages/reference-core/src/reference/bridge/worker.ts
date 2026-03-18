@@ -1,5 +1,5 @@
-import { emit, on } from '../lib/event-bus'
-import { KEEP_ALIVE } from '../lib/thread-pool'
+import { emit, on } from '../../lib/event-bus'
+import { KEEP_ALIVE } from '../../lib/thread-pool'
 import { onRunBuild } from './run'
 import type { ReferenceWorkerPayload } from './worker-types'
 

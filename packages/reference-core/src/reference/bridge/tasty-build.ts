@@ -1,7 +1,7 @@
 import { resolve } from 'node:path'
 import { type TastyApi, type TastySymbol } from '@reference-ui/rust/tasty'
 import { createTastyBuildSession, type TastyBuildDiagnostic } from '@reference-ui/rust/tasty/build'
-import { getVirtualDirPath } from '../lib/paths'
+import { getVirtualDirPath } from '../../lib/paths'
 import type { ReferenceWorkerPayload } from './worker-types'
 import { getReferenceTastyDirPath } from './paths'
 
