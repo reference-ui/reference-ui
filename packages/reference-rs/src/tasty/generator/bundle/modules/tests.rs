@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 
 use super::export_names::build_symbol_export_names_with;
+use crate::tasty::constants::libraries::USER_LIBRARY_NAME;
 use crate::tasty::model::{TsSymbol, TsSymbolKind, TypeScriptBundle};
 
 #[test]
@@ -11,7 +12,7 @@ fn build_symbol_export_names_rejects_hash_collisions() {
         TsSymbol {
             id: "symbol-a".to_string(),
             name: "Shared".to_string(),
-            library: "user".to_string(),
+            library: USER_LIBRARY_NAME.to_string(),
             kind: TsSymbolKind::Interface,
             file_id: "a.ts".to_string(),
             exported: true,
@@ -30,7 +31,7 @@ fn build_symbol_export_names_rejects_hash_collisions() {
         TsSymbol {
             id: "symbol-b".to_string(),
             name: "Shared".to_string(),
-            library: "user".to_string(),
+            library: USER_LIBRARY_NAME.to_string(),
             kind: TsSymbolKind::TypeAlias,
             file_id: "b.ts".to_string(),
             exported: true,

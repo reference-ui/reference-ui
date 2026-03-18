@@ -2,6 +2,10 @@ use std::path::{Path, PathBuf};
 
 use serde_json::Value;
 
+use crate::tasty::constants::scanner::{
+    NODE_MODULES_DIR, PACKAGE_INDEX_BASENAME, PACKAGE_JSON_FILENAME,
+};
+
 use super::super::model::ResolvedModule;
 use super::super::paths::{module_specifier_for_file_id, package_name_from_file_id, path_to_unix};
 use super::node_modules::installed_package_dirs;
@@ -13,7 +17,7 @@ pub(super) fn find_installed_declaration_provider(
     source_module: &str,
 ) -> Option<ResolvedModule> {
     for package_dir in installed_package_dirs(root_dir) {
-        let package_json = read_package_json(&package_dir.join("package.json"));
+        let package_json = read_package_json(&package_dir.join(PACKAGE_JSON_FILENAME));
         let Some(entry_path) = resolve_package_root_entry(&package_dir, package_json.as_ref())
         else {
             continue;
@@ -38,12 +42,12 @@ pub(super) fn resolve_package_import_from_root(
     package_name: &str,
     subpath: Option<&str>,
 ) -> Option<ResolvedModule> {
-    let package_dir = root_dir.join("node_modules").join(package_name);
+    let package_dir = root_dir.join(NODE_MODULES_DIR).join(package_name);
     if !package_dir.is_dir() {
         return None;
     }
 
-    let package_json_path = package_dir.join("package.json");
+    let package_json_path = package_dir.join(PACKAGE_JSON_FILENAME);
     let package_json = read_package_json(&package_json_path);
     let entry_path = if let Some(subpath) = subpath {
         resolve_package_subpath(&package_dir, package_json.as_ref(), subpath)
@@ -65,7 +69,7 @@ fn resolve_package_root_entry(package_dir: &Path, package_json: Option<&Value>) 
     package_root_entry_candidates(package_json)
         .into_iter()
         .find_map(|entry| first_existing_candidate(package_dir, &entry))
-        .or_else(|| first_existing_candidate(package_dir, "index"))
+        .or_else(|| first_existing_candidate(package_dir, PACKAGE_INDEX_BASENAME))
 }
 
 fn resolve_package_subpath(

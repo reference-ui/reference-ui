@@ -12,6 +12,8 @@ use oxc_ast::ast::Statement;
 use oxc_parser::Parser;
 use oxc_span::{SourceType, Span};
 
+use crate::tasty::constants::libraries::USER_LIBRARY_NAME;
+
 use self::module_bindings::{
     collect_default_export_declaration, collect_exported_declaration, collect_import_bindings,
 };
@@ -180,7 +182,7 @@ fn collect_user_export_statement(
     export_bindings: &mut BTreeMap<String, String>,
     exports: &mut Vec<SymbolShell>,
 ) {
-    if scanned_file.library != "user" {
+    if scanned_file.library != USER_LIBRARY_NAME {
         return;
     }
 
@@ -208,7 +210,7 @@ fn collect_user_type_shell(
     import_bindings: &BTreeMap<String, ImportBinding>,
     exports: &mut Vec<SymbolShell>,
 ) {
-    if scanned_file.library != "user" {
+    if scanned_file.library != USER_LIBRARY_NAME {
         return;
     }
 

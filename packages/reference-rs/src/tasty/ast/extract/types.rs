@@ -7,6 +7,8 @@ use oxc_ast::ast::{
 use oxc_parser::Parser;
 use oxc_span::{GetSpan, SourceType};
 
+use crate::tasty::constants::libraries::USER_LIBRARY_NAME;
+
 use super::super::super::model::{
     FnParam, MappedModifierKind, TemplateLiteralPart, TsTypeParameter, TupleElement, TypeOperatorKind,
     TypeRef,
@@ -513,7 +515,7 @@ fn reference_source_module(
         .get(lookup_name)
         .map(|binding| binding.source_module.clone())
         .or_else(|| {
-            if current_library == "user" {
+            if current_library == USER_LIBRARY_NAME {
                 None
             } else {
                 Some(current_module_specifier.to_string())

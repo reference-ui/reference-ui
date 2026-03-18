@@ -4,6 +4,7 @@
 //! a portable, self-contained metadata bundle for docs and MCP use cases.
 
 mod ast;
+mod constants;
 mod emitted;
 mod generator;
 mod model;

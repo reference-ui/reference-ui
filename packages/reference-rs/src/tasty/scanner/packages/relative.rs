@@ -1,6 +1,8 @@
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
+use crate::tasty::constants::scanner::{TS_INDEX_FILENAMES, TS_PATH_EXTENSIONS};
+
 use super::super::paths::{normalize_relative_path, path_to_unix};
 
 pub(super) fn resolve_relative_import(
@@ -68,19 +70,13 @@ fn push_path_candidates(candidates: &mut Vec<PathBuf>, path: &Path, include_runt
 }
 
 fn push_extension_candidates(candidates: &mut Vec<PathBuf>, path: &Path) {
-    for extension in ["d.ts", "d.mts", "d.cts", "ts", "tsx"] {
+    for extension in TS_PATH_EXTENSIONS {
         push_unique_candidate(candidates, path.with_extension(extension));
     }
 }
 
 fn push_index_candidates(candidates: &mut Vec<PathBuf>, path: &Path) {
-    for index_name in [
-        "index.d.ts",
-        "index.d.mts",
-        "index.d.cts",
-        "index.ts",
-        "index.tsx",
-    ] {
+    for index_name in TS_INDEX_FILENAMES {
         push_unique_candidate(candidates, path.join(index_name));
     }
 }

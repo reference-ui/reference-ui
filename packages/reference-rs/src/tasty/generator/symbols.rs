@@ -2,6 +2,8 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use serde::Serialize;
 
+use crate::tasty::constants::libraries::USER_LIBRARY_NAME;
+
 use super::super::model::{TsSymbol, TsSymbolKind, TypeRef, TypeScriptBundle};
 use super::types::{emit_jsdoc, emit_members, emit_optional_type_ref, emit_type_parameters};
 use super::util::{emit_array, emit_field, emit_object, indent_block, to_js_literal};
@@ -251,6 +253,6 @@ fn external_reference_descriptor(name: &str, source_module: Option<&str>) -> Sym
     SymbolRef {
         id: name.to_string(),
         name: name.to_string(),
-        library: source_module.unwrap_or("user").to_string(),
+        library: source_module.unwrap_or(USER_LIBRARY_NAME).to_string(),
     }
 }
