@@ -1,5 +1,5 @@
-import { emit } from '../lib/event-bus'
-import { log } from '../lib/log'
+import { emit } from '../../lib/event-bus'
+import { log } from '../../lib/log'
 import {
   createReferenceBuildReport,
   formatReferenceBuildDiagnostic,

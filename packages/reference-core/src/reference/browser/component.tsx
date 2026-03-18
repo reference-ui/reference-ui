@@ -18,7 +18,7 @@ import {
   Th,
   Thead,
   Tr,
-} from '../system/primitives'
+} from '../../system/primitives'
 import { referenceTokens } from './tokens'
 
 export interface ReferenceProps {
@@ -48,8 +48,7 @@ function renderSummary(status: ReferenceStatus, name: string): React.ReactNode {
   if (status.state === 'loading') {
     return (
       <P margin="0" color={referenceTokens.color.muted}>
-        Loading reference docs for{' '}
-        <Code fontFamily={referenceTokens.font.mono}>{name}</Code>.
+        Loading reference docs for <Code fontFamily={referenceTokens.font.mono}>{name}</Code>.
       </P>
     )
   }
@@ -57,8 +56,7 @@ function renderSummary(status: ReferenceStatus, name: string): React.ReactNode {
   if (status.state === 'error') {
     return (
       <P margin="0" color={referenceTokens.color.muted}>
-        Failed to load <Code fontFamily={referenceTokens.font.mono}>{name}</Code>:{' '}
-        {status.message}
+        Failed to load <Code fontFamily={referenceTokens.font.mono}>{name}</Code>: {status.message}
       </P>
     )
   }
@@ -80,9 +78,7 @@ function renderSummary(status: ReferenceStatus, name: string): React.ReactNode {
         </Small>
       ) : null}
       {extendsNames.length > 0 ? (
-        <Small color={referenceTokens.color.muted}>
-          Extends: {extendsNames.join(', ')}
-        </Small>
+        <Small color={referenceTokens.color.muted}>Extends: {extendsNames.join(', ')}</Small>
       ) : null}
     </Div>
   )

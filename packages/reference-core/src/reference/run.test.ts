@@ -57,11 +57,11 @@ async function importRunModule(options?: {
       info,
     },
   }))
-  vi.doMock('./tasty-build', () => ({
+  vi.doMock('./bridge/tasty-build', () => ({
     rebuildReferenceTastyBuild,
   }))
 
-  const mod = await import('./run')
+  const mod = await import('./bridge/run')
   return {
     ...mod,
     emit,
@@ -77,11 +77,11 @@ afterEach(() => {
   vi.resetModules()
   vi.doUnmock('../lib/event-bus')
   vi.doUnmock('../lib/log')
-  vi.doUnmock('./tasty-build')
+  vi.doUnmock('./bridge/tasty-build')
   vi.restoreAllMocks()
 })
 
-describe('reference/run', () => {
+describe('reference/bridge/run', () => {
   it('logs diagnostics and emits structured build details on success', async () => {
     const { onRunBuild, emit, debug, info, loadSymbolByName } = await importRunModule()
 
