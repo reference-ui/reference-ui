@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use super::build_symbol_export_names_with;
+use super::export_names::build_symbol_export_names_with;
 use crate::tasty::model::{TsSymbol, TsSymbolKind, TypeScriptBundle};
 
 #[test]

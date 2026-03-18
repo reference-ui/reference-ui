@@ -2,6 +2,7 @@ mod comments;
 mod members;
 mod module_bindings;
 mod symbols;
+mod type_references;
 mod types;
 
 use std::collections::BTreeMap;
