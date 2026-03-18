@@ -28,6 +28,7 @@ describe('tokens() with tokens collector', () => {
         brand: {
           primary: { value: '#0066cc' },
         },
+        text: { value: '#111111', dark: '#f5f5f5' },
       },
     })
 
@@ -38,6 +39,7 @@ describe('tokens() with tokens collector', () => {
         brand: {
           primary: { value: '#0066cc' },
         },
+        text: { value: '#111111', dark: '#f5f5f5' },
       },
     })
     tokensCollector.cleanup()

@@ -10,10 +10,12 @@ import {
   extendKeyframes,
   extendPatterns,
   extendRecipes,
+  extendThemes,
   extendTokens,
   extendUtilities,
   getPandaConfig,
   initPandaConfig,
+  normalizeTokenFragments,
   referenceBrowserGlobalCss,
   rhythmGlobalCss,
   rhythmSpacingTokens,
@@ -34,8 +36,10 @@ initPandaConfig(baseConfig)
 // ─────────────────────────────────────────────────────────────────────────
 
 const tokensFragments = {{ tokensValueExpression | raw }}
+const normalizedTokens = normalizeTokenFragments(tokensFragments)
 extendTokens(rhythmSpacingTokens)
-extendTokens(tokensFragments)
+extendTokens(normalizedTokens.baseTokens)
+extendThemes(normalizedTokens.themes)
 
 // ─────────────────────────────────────────────────────────────────────────
 // keyframes

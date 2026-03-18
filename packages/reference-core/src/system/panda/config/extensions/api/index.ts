@@ -6,9 +6,11 @@ export {
   buildFontTokens,
 } from './font'
 export { extendFontFaces } from './extendFontFaces'
+export { extendThemes } from './extendThemes'
 export { extendTokens } from './extendTokens'
 export { extendKeyframes } from './extendKeyframes'
 export { extendPatterns } from './extendPatterns'
 export { extendRecipes } from './extendRecipes'
 export { extendUtilities } from './extendUtilities'
 export { extendGlobalCss } from './extendGlobalCss'
+export { normalizeTokenFragments, type NormalizedTokenFragments } from './normalizeTokens'
