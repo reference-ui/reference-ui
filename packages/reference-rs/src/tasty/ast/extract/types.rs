@@ -15,6 +15,337 @@ use super::super::super::model::{
 use super::super::model::ImportBinding;
 use super::slice_span;
 
+struct LoweringContext<'a> {
+    source: &'a str,
+    import_bindings: &'a BTreeMap<String, ImportBinding>,
+    current_module_specifier: &'a str,
+    current_library: &'a str,
+}
+
+impl<'a> LoweringContext<'a> {
+    fn new(
+        source: &'a str,
+        import_bindings: &'a BTreeMap<String, ImportBinding>,
+        current_module_specifier: &'a str,
+        current_library: &'a str,
+    ) -> Self {
+        Self {
+            source,
+            import_bindings,
+            current_module_specifier,
+            current_library,
+        }
+    }
+
+    fn lower_type_parameters<'b>(
+        &self,
+        decl: Option<&TSTypeParameterDeclaration<'b>>,
+    ) -> Vec<TsTypeParameter> {
+        let Some(decl) = decl else {
+            return Vec::new();
+        };
+
+        decl.params
+            .iter()
+            .map(|param| TsTypeParameter {
+                name: slice_span(self.source, param.name.span()).to_string(),
+                constraint: param.constraint.as_ref().map(|constraint| self.lower_type(constraint)),
+                default: param.default.as_ref().map(|default| self.lower_type(default)),
+            })
+            .collect()
+    }
+
+    fn lower_type(&self, type_annotation: &TSType<'_>) -> TypeRef {
+        match type_annotation {
+            TSType::TSStringKeyword(_) => intrinsic("string"),
+            TSType::TSNumberKeyword(_) => intrinsic("number"),
+            TSType::TSBooleanKeyword(_) => intrinsic("boolean"),
+            TSType::TSUnknownKeyword(_) => intrinsic("unknown"),
+            TSType::TSAnyKeyword(_) => intrinsic("any"),
+            TSType::TSUndefinedKeyword(_) => intrinsic("undefined"),
+            TSType::TSNullKeyword(_) => intrinsic("null"),
+            TSType::TSObjectKeyword(_) => intrinsic("object"),
+            TSType::TSBigIntKeyword(_) => intrinsic("bigint"),
+            TSType::TSSymbolKeyword(_) => intrinsic("symbol"),
+            TSType::TSNeverKeyword(_) => intrinsic("never"),
+            TSType::TSVoidKeyword(_) => intrinsic("void"),
+            TSType::TSIntrinsicKeyword(keyword) => TypeRef::Intrinsic {
+                name: slice_span(self.source, keyword.span()).to_string(),
+            },
+            TSType::TSLiteralType(literal) => TypeRef::Literal {
+                value: slice_span(self.source, literal.span).to_string(),
+            },
+            TSType::TSUnionType(union) => TypeRef::Union {
+                types: union
+                    .types
+                    .iter()
+                    .map(|nested| self.lower_type(nested))
+                    .collect(),
+            },
+            TSType::TSArrayType(array_type) => TypeRef::Array {
+                element: Box::new(self.lower_type(&array_type.element_type)),
+            },
+            TSType::TSTupleType(tuple_type) => TypeRef::Tuple {
+                elements: tuple_type
+                    .element_types
+                    .iter()
+                    .map(|element| self.lower_tuple_element(element))
+                    .collect(),
+            },
+            TSType::TSIntersectionType(intersection) => TypeRef::Intersection {
+                types: intersection
+                    .types
+                    .iter()
+                    .map(|nested| self.lower_type(nested))
+                    .collect(),
+            },
+            TSType::TSTypeLiteral(type_literal) => TypeRef::Object {
+                members: members_from_signatures(
+                    type_literal.members.as_slice(),
+                    self.source,
+                    &[],
+                    None,
+                    self.import_bindings,
+                    self.current_module_specifier,
+                    self.current_library,
+                ),
+            },
+            TSType::TSParenthesizedType(parenthesized) => {
+                self.lower_type(&parenthesized.type_annotation)
+            }
+            TSType::TSTypeReference(reference) => self.lower_type_reference(reference),
+            TSType::TSNamedTupleMember(named) => {
+                let inner = self.lower_tuple_element(&named.element_type);
+                TypeRef::Tuple {
+                    elements: vec![TupleElement {
+                        label: Some(slice_span(self.source, named.label.span()).to_string()),
+                        optional: named.optional,
+                        rest: false,
+                        element: inner.element,
+                    }],
+                }
+            }
+            TSType::TSIndexedAccessType(indexed_access) => TypeRef::IndexedAccess {
+                object: Box::new(self.lower_type(&indexed_access.object_type)),
+                index: Box::new(self.lower_type(&indexed_access.index_type)),
+            },
+            TSType::TSImportType(_) | TSType::TSInferType(_) => self.raw_type(type_annotation),
+            TSType::TSFunctionType(function_type) => TypeRef::Function {
+                params: self.lower_fn_params(&function_type.params),
+                return_type: Box::new(self.lower_type(&function_type.return_type.type_annotation)),
+            },
+            TSType::TSConstructorType(constructor_type) => TypeRef::Constructor {
+                r#abstract: constructor_type.r#abstract,
+                type_parameters: self
+                    .lower_type_parameters(constructor_type.type_parameters.as_deref()),
+                params: self.lower_fn_params(&constructor_type.params),
+                return_type: Box::new(
+                    self.lower_type(&constructor_type.return_type.type_annotation),
+                ),
+            },
+            TSType::TSTypeOperatorType(operator) => TypeRef::TypeOperator {
+                operator: match operator.operator {
+                    oxc_ast::ast::TSTypeOperatorOperator::Keyof => TypeOperatorKind::Keyof,
+                    oxc_ast::ast::TSTypeOperatorOperator::Readonly => TypeOperatorKind::Readonly,
+                    oxc_ast::ast::TSTypeOperatorOperator::Unique => TypeOperatorKind::Unique,
+                },
+                target: Box::new(self.lower_type(&operator.type_annotation)),
+            },
+            TSType::TSTypeQuery(query) => TypeRef::TypeQuery {
+                expression: slice_span(self.source, query.expr_name.span()).to_string(),
+            },
+            TSType::TSConditionalType(conditional) => TypeRef::Conditional {
+                check_type: Box::new(self.lower_type(&conditional.check_type)),
+                extends_type: Box::new(self.lower_type(&conditional.extends_type)),
+                true_type: Box::new(self.lower_type(&conditional.true_type)),
+                false_type: Box::new(self.lower_type(&conditional.false_type)),
+            },
+            TSType::TSMappedType(mapped) => TypeRef::Mapped {
+                type_param: slice_span(self.source, mapped.key.span()).to_string(),
+                source_type: Box::new(self.lower_type(&mapped.constraint)),
+                name_type: mapped
+                    .name_type
+                    .as_ref()
+                    .map(|name_type| Box::new(self.lower_type(name_type))),
+                optional_modifier: mapped_modifier_kind(mapped.optional),
+                readonly_modifier: mapped_modifier_kind(mapped.readonly),
+                value_type: mapped
+                    .type_annotation
+                    .as_ref()
+                    .map(|value_type| Box::new(self.lower_type(value_type))),
+            },
+            TSType::TSTemplateLiteralType(template) => TypeRef::TemplateLiteral {
+                parts: self.lower_template_literal_parts(template),
+            },
+            TSType::TSTypePredicate(_) | TSType::TSThisType(_) => self.raw_type(type_annotation),
+            TSType::JSDocNullableType(_)
+            | TSType::JSDocNonNullableType(_)
+            | TSType::JSDocUnknownType(_) => self.raw_type(type_annotation),
+        }
+    }
+
+    fn lower_type_reference(&self, reference: &oxc_ast::ast::TSTypeReference<'_>) -> TypeRef {
+        let name = slice_span(self.source, reference.type_name.span()).to_string();
+        let lookup_name = reference_lookup_name(&name);
+        let type_arguments = reference.type_arguments.as_ref().map(|instantiation| {
+            instantiation
+                .params
+                .iter()
+                .map(|argument| self.lower_type(argument))
+                .collect::<Vec<_>>()
+        });
+
+        if lookup_name == "Array" {
+            if let Some([element]) = type_arguments.as_deref() {
+                return TypeRef::Array {
+                    element: Box::new(element.clone()),
+                };
+            }
+        }
+
+        let source_module = self.reference_source_module(&name);
+        TypeRef::Reference {
+            name,
+            target_id: None,
+            source_module,
+            type_arguments,
+        }
+    }
+
+    fn lower_expression_reference(&self, expression: &Expression<'_>) -> TypeRef {
+        let name = slice_span(self.source, expression.span()).to_string();
+
+        TypeRef::Reference {
+            name: name.clone(),
+            target_id: None,
+            source_module: self.reference_source_module(&name),
+            type_arguments: None,
+        }
+    }
+
+    fn lower_tuple_element(&self, element: &TSTupleElement<'_>) -> TupleElement {
+        match element {
+            TSTupleElement::TSOptionalType(optional) => TupleElement {
+                label: None,
+                optional: true,
+                rest: false,
+                element: self.lower_type(&optional.type_annotation),
+            },
+            TSTupleElement::TSRestType(rest) => TupleElement {
+                label: None,
+                optional: false,
+                rest: true,
+                element: self.lower_type(&rest.type_annotation),
+            },
+            TSTupleElement::TSNamedTupleMember(named) => {
+                let lowered = self.lower_tuple_element(&named.element_type);
+
+                TupleElement {
+                    label: Some(slice_span(self.source, named.label.span()).to_string()),
+                    optional: named.optional,
+                    rest: false,
+                    element: lowered.element,
+                }
+            }
+            _ => TupleElement {
+                label: None,
+                optional: false,
+                rest: false,
+                element: self.lower_tuple_element_type(element),
+            },
+        }
+    }
+
+    fn lower_tuple_element_type(&self, element: &TSTupleElement<'_>) -> TypeRef {
+        let element_source = slice_span(self.source, element.span());
+        let wrapped_source = format!("type __TastyTupleElement = {element_source};");
+        let allocator = Allocator::default();
+        let source_type = SourceType::from_path("tuple-element.ts").unwrap_or_default();
+        let parse_result = Parser::new(&allocator, &wrapped_source, source_type).parse();
+
+        // Reparse a single tuple element through a synthetic alias so we can reuse
+        // the normal type-lowering path without special-casing every tuple variant.
+        if let Some(oxc_ast::ast::Statement::TSTypeAliasDeclaration(type_alias)) =
+            parse_result.program.body.first()
+        {
+            return LoweringContext::new(
+                &wrapped_source,
+                self.import_bindings,
+                self.current_module_specifier,
+                self.current_library,
+            )
+            .lower_type(&type_alias.type_annotation);
+        }
+
+        TypeRef::Raw {
+            summary: element_source.to_string(),
+        }
+    }
+
+    fn lower_fn_params(&self, params: &FormalParameters<'_>) -> Vec<FnParam> {
+        let mut lowered_params =
+            Vec::with_capacity(params.items.len() + params.rest.as_ref().map(|_| 1).unwrap_or(0));
+
+        for param in &params.items {
+            lowered_params.push(FnParam {
+                name: Some(slice_span(self.source, param.pattern.span()).to_string()),
+                optional: param.optional,
+                type_ref: param
+                    .type_annotation
+                    .as_ref()
+                    .map(|annotation| self.lower_type(&annotation.type_annotation)),
+            });
+        }
+
+        if let Some(rest) = &params.rest {
+            lowered_params.push(FnParam {
+                name: Some(slice_span(self.source, rest.rest.span()).to_string()),
+                optional: false,
+                type_ref: rest
+                    .type_annotation
+                    .as_ref()
+                    .map(|annotation| self.lower_type(&annotation.type_annotation)),
+            });
+        }
+
+        lowered_params
+    }
+
+    fn lower_template_literal_parts(
+        &self,
+        template: &oxc_ast::ast::TSTemplateLiteralType<'_>,
+    ) -> Vec<TemplateLiteralPart> {
+        let mut parts = Vec::with_capacity(template.quasis.len() + template.types.len());
+
+        for (index, quasi) in template.quasis.iter().enumerate() {
+            parts.push(TemplateLiteralPart::Text {
+                value: quasi.value.raw.as_str().to_string(),
+            });
+
+            if let Some(type_part) = template.types.get(index) {
+                parts.push(TemplateLiteralPart::Type {
+                    value: self.lower_type(type_part),
+                });
+            }
+        }
+
+        parts
+    }
+
+    fn reference_source_module(&self, reference_name: &str) -> Option<String> {
+        reference_source_module(
+            reference_name,
+            self.import_bindings,
+            self.current_module_specifier,
+            self.current_library,
+        )
+    }
+
+    fn raw_type(&self, type_annotation: &TSType<'_>) -> TypeRef {
+        raw_type(type_annotation, self.source)
+    }
+}
+
 pub(super) fn type_parameters_from_oxc<'a>(
     decl: Option<&TSTypeParameterDeclaration<'a>>,
     source: &str,
@@ -22,40 +353,13 @@ pub(super) fn type_parameters_from_oxc<'a>(
     current_module_specifier: &str,
     current_library: &str,
 ) -> Vec<TsTypeParameter> {
-    let Some(decl) = decl else {
-        return Vec::new();
-    };
-
-    decl.params
-        .iter()
-        .map(|param| {
-            let name = slice_span(source, param.name.span()).to_string();
-            let constraint = param.constraint.as_ref().map(|t| {
-                type_to_ref(
-                    t,
-                    source,
-                    import_bindings,
-                    current_module_specifier,
-                    current_library,
-                )
-            });
-            let default = param.default.as_ref().map(|t| {
-                type_to_ref(
-                    t,
-                    source,
-                    import_bindings,
-                    current_module_specifier,
-                    current_library,
-                )
-            });
-
-            TsTypeParameter {
-                name,
-                constraint,
-                default,
-            }
-        })
-        .collect()
+    LoweringContext::new(
+        source,
+        import_bindings,
+        current_module_specifier,
+        current_library,
+    )
+    .lower_type_parameters(decl)
 }
 
 pub(super) fn type_to_ref(
@@ -65,301 +369,13 @@ pub(super) fn type_to_ref(
     current_module_specifier: &str,
     current_library: &str,
 ) -> TypeRef {
-    match type_annotation {
-        TSType::TSStringKeyword(_) => intrinsic("string"),
-        TSType::TSNumberKeyword(_) => intrinsic("number"),
-        TSType::TSBooleanKeyword(_) => intrinsic("boolean"),
-        TSType::TSUnknownKeyword(_) => intrinsic("unknown"),
-        TSType::TSAnyKeyword(_) => intrinsic("any"),
-        TSType::TSUndefinedKeyword(_) => intrinsic("undefined"),
-        TSType::TSNullKeyword(_) => intrinsic("null"),
-        TSType::TSObjectKeyword(_) => intrinsic("object"),
-        TSType::TSBigIntKeyword(_) => intrinsic("bigint"),
-        TSType::TSSymbolKeyword(_) => intrinsic("symbol"),
-        TSType::TSNeverKeyword(_) => intrinsic("never"),
-        TSType::TSVoidKeyword(_) => intrinsic("void"),
-        TSType::TSIntrinsicKeyword(keyword) => TypeRef::Intrinsic {
-            name: slice_span(source, keyword.span()).to_string(),
-        },
-        TSType::TSLiteralType(literal) => TypeRef::Literal {
-            value: slice_span(source, literal.span).to_string(),
-        },
-        TSType::TSUnionType(union) => TypeRef::Union {
-            types: union
-                .types
-                .iter()
-                .map(|nested| {
-                    type_to_ref(
-                        nested,
-                        source,
-                        import_bindings,
-                        current_module_specifier,
-                        current_library,
-                    )
-                })
-                .collect(),
-        },
-        TSType::TSArrayType(array_type) => TypeRef::Array {
-            element: Box::new(type_to_ref(
-                &array_type.element_type,
-                source,
-                import_bindings,
-                current_module_specifier,
-                current_library,
-            )),
-        },
-        TSType::TSTupleType(tuple_type) => TypeRef::Tuple {
-            elements: tuple_type
-                .element_types
-                .iter()
-                .map(|element| {
-                    tuple_element_to_tuple_element(
-                        element,
-                        source,
-                        import_bindings,
-                        current_module_specifier,
-                        current_library,
-                    )
-                })
-                .collect(),
-        },
-        TSType::TSIntersectionType(intersection) => TypeRef::Intersection {
-            types: intersection
-                .types
-                .iter()
-                .map(|nested| {
-                    type_to_ref(
-                        nested,
-                        source,
-                        import_bindings,
-                        current_module_specifier,
-                        current_library,
-                    )
-                })
-                .collect(),
-        },
-        TSType::TSTypeLiteral(type_literal) => TypeRef::Object {
-            members: members_from_signatures(
-                type_literal.members.as_slice(),
-                source,
-                &[],
-                None,
-                import_bindings,
-                current_module_specifier,
-                current_library,
-            ),
-        },
-        TSType::TSParenthesizedType(parenthesized) => type_to_ref(
-            &parenthesized.type_annotation,
-            source,
-            import_bindings,
-            current_module_specifier,
-            current_library,
-        ),
-        TSType::TSTypeReference(reference) => {
-            let name = slice_span(source, reference.type_name.span()).to_string();
-            let lookup_name = reference_lookup_name(&name);
-            let type_arguments = reference.type_arguments.as_ref().map(|instantiation| {
-                instantiation
-                    .params
-                    .iter()
-                    .map(|argument| {
-                        type_to_ref(
-                            argument,
-                            source,
-                            import_bindings,
-                            current_module_specifier,
-                            current_library,
-                        )
-                    })
-                    .collect::<Vec<_>>()
-            });
-
-            if lookup_name == "Array" && type_arguments.as_ref().is_some_and(|args| args.len() == 1) {
-                let element = type_arguments.as_ref().unwrap()[0].clone();
-                TypeRef::Array {
-                    element: Box::new(element),
-                }
-            } else {
-                let source_module = reference_source_module(
-                    &name,
-                    import_bindings,
-                    current_module_specifier,
-                    current_library,
-                );
-                TypeRef::Reference {
-                    name,
-                    target_id: None,
-                    source_module,
-                    type_arguments,
-                }
-            }
-        }
-        TSType::TSNamedTupleMember(named) => {
-            let inner = tuple_element_to_tuple_element(
-                &named.element_type,
-                source,
-                import_bindings,
-                current_module_specifier,
-                current_library,
-            );
-            TypeRef::Tuple {
-                elements: vec![TupleElement {
-                    label: Some(slice_span(source, named.label.span()).to_string()),
-                    optional: named.optional,
-                    rest: false,
-                    element: inner.element,
-                }],
-            }
-        }
-        TSType::TSIndexedAccessType(indexed_access) => TypeRef::IndexedAccess {
-            object: Box::new(type_to_ref(
-                &indexed_access.object_type,
-                source,
-                import_bindings,
-                current_module_specifier,
-                current_library,
-            )),
-            index: Box::new(type_to_ref(
-                &indexed_access.index_type,
-                source,
-                import_bindings,
-                current_module_specifier,
-                current_library,
-            )),
-        },
-        TSType::TSImportType(_) | TSType::TSInferType(_) => raw_type(type_annotation, source),
-        TSType::TSFunctionType(function_type) => TypeRef::Function {
-            params: formal_params_to_fn_params(
-                &function_type.params,
-                source,
-                import_bindings,
-                current_module_specifier,
-                current_library,
-            ),
-            return_type: Box::new(type_to_ref(
-                &function_type.return_type.type_annotation,
-                source,
-                import_bindings,
-                current_module_specifier,
-                current_library,
-            )),
-        },
-        TSType::TSConstructorType(constructor_type) => TypeRef::Constructor {
-            r#abstract: constructor_type.r#abstract,
-            type_parameters: type_parameters_from_oxc(
-                constructor_type.type_parameters.as_deref(),
-                source,
-                import_bindings,
-                current_module_specifier,
-                current_library,
-            ),
-            params: formal_params_to_fn_params(
-                &constructor_type.params,
-                source,
-                import_bindings,
-                current_module_specifier,
-                current_library,
-            ),
-            return_type: Box::new(type_to_ref(
-                &constructor_type.return_type.type_annotation,
-                source,
-                import_bindings,
-                current_module_specifier,
-                current_library,
-            )),
-        },
-        TSType::TSTypeOperatorType(operator) => TypeRef::TypeOperator {
-            operator: match operator.operator {
-                oxc_ast::ast::TSTypeOperatorOperator::Keyof => TypeOperatorKind::Keyof,
-                oxc_ast::ast::TSTypeOperatorOperator::Readonly => TypeOperatorKind::Readonly,
-                oxc_ast::ast::TSTypeOperatorOperator::Unique => TypeOperatorKind::Unique,
-            },
-            target: Box::new(type_to_ref(
-                &operator.type_annotation,
-                source,
-                import_bindings,
-                current_module_specifier,
-                current_library,
-            )),
-        },
-        TSType::TSTypeQuery(query) => TypeRef::TypeQuery {
-            expression: slice_span(source, query.expr_name.span()).to_string(),
-        },
-        TSType::TSConditionalType(conditional) => TypeRef::Conditional {
-            check_type: Box::new(type_to_ref(
-                &conditional.check_type,
-                source,
-                import_bindings,
-                current_module_specifier,
-                current_library,
-            )),
-            extends_type: Box::new(type_to_ref(
-                &conditional.extends_type,
-                source,
-                import_bindings,
-                current_module_specifier,
-                current_library,
-            )),
-            true_type: Box::new(type_to_ref(
-                &conditional.true_type,
-                source,
-                import_bindings,
-                current_module_specifier,
-                current_library,
-            )),
-            false_type: Box::new(type_to_ref(
-                &conditional.false_type,
-                source,
-                import_bindings,
-                current_module_specifier,
-                current_library,
-            )),
-        },
-        TSType::TSMappedType(mapped) => TypeRef::Mapped {
-            type_param: slice_span(source, mapped.key.span()).to_string(),
-            source_type: Box::new(type_to_ref(
-                &mapped.constraint,
-                source,
-                import_bindings,
-                current_module_specifier,
-                current_library,
-            )),
-            name_type: mapped.name_type.as_ref().map(|name_type| {
-                Box::new(type_to_ref(
-                    name_type,
-                    source,
-                    import_bindings,
-                    current_module_specifier,
-                    current_library,
-                ))
-            }),
-            optional_modifier: mapped_modifier_kind(mapped.optional),
-            readonly_modifier: mapped_modifier_kind(mapped.readonly),
-            value_type: mapped.type_annotation.as_ref().map(|value_type| {
-                Box::new(type_to_ref(
-                    value_type,
-                    source,
-                    import_bindings,
-                    current_module_specifier,
-                    current_library,
-                ))
-            }),
-        },
-        TSType::TSTemplateLiteralType(template) => TypeRef::TemplateLiteral {
-            parts: template_literal_parts(
-                template,
-                source,
-                import_bindings,
-                current_module_specifier,
-                current_library,
-            ),
-        },
-        TSType::TSTypePredicate(_) | TSType::TSThisType(_) => raw_type(type_annotation, source),
-        TSType::JSDocNullableType(_)
-        | TSType::JSDocNonNullableType(_)
-        | TSType::JSDocUnknownType(_) => raw_type(type_annotation, source),
-    }
+    LoweringContext::new(
+        source,
+        import_bindings,
+        current_module_specifier,
+        current_library,
+    )
+    .lower_type(type_annotation)
 }
 
 pub(super) fn expression_to_reference(
@@ -369,20 +385,13 @@ pub(super) fn expression_to_reference(
     current_module_specifier: &str,
     current_library: &str,
 ) -> TypeRef {
-    let name = slice_span(source, expression.span()).to_string();
-    let source_module = reference_source_module(
-        &name,
+    LoweringContext::new(
+        source,
         import_bindings,
         current_module_specifier,
         current_library,
-    );
-
-    TypeRef::Reference {
-        name,
-        target_id: None,
-        source_module,
-        type_arguments: None,
-    }
+    )
+    .lower_expression_reference(expression)
 }
 
 pub(super) fn collect_references_from_members(
@@ -399,21 +408,32 @@ pub(super) fn collect_references_from_members(
     }
 
     for member in members {
-        if let Some(type_ref) = &member.type_ref {
-            collect_type_ref_references(type_ref, &mut references);
-        }
+        collect_optional_type_ref_references(member.type_ref.as_ref(), &mut references);
     }
 
     for type_parameter in type_parameters {
-        if let Some(constraint) = &type_parameter.constraint {
-            collect_type_ref_references(constraint, &mut references);
-        }
-        if let Some(default) = &type_parameter.default {
-            collect_type_ref_references(default, &mut references);
-        }
+        collect_type_parameter_references(type_parameter, &mut references);
     }
 
     references
+}
+
+fn collect_optional_type_ref_references(type_ref: Option<&TypeRef>, references: &mut Vec<TypeRef>) {
+    if let Some(type_ref) = type_ref {
+        collect_type_ref_references(type_ref, references);
+    }
+}
+
+fn collect_type_parameter_references(
+    type_parameter: &TsTypeParameter,
+    references: &mut Vec<TypeRef>,
+) {
+    collect_optional_type_ref_references(type_parameter.constraint.as_ref(), references);
+    collect_optional_type_ref_references(type_parameter.default.as_ref(), references);
+}
+
+fn collect_fn_param_references(param: &FnParam, references: &mut Vec<TypeRef>) {
+    collect_optional_type_ref_references(param.type_ref.as_ref(), references);
 }
 
 fn collect_type_ref_references(type_ref: &TypeRef, references: &mut Vec<TypeRef>) {
@@ -441,9 +461,7 @@ fn collect_type_ref_references(type_ref: &TypeRef, references: &mut Vec<TypeRef>
         }
         TypeRef::Object { members } => {
             for member in members {
-                if let Some(type_ref) = &member.type_ref {
-                    collect_type_ref_references(type_ref, references);
-                }
+                collect_optional_type_ref_references(member.type_ref.as_ref(), references);
             }
         }
         TypeRef::IndexedAccess { object, index } => {
@@ -452,9 +470,7 @@ fn collect_type_ref_references(type_ref: &TypeRef, references: &mut Vec<TypeRef>
         }
         TypeRef::Function { params, return_type } => {
             for param in params {
-                if let Some(type_ref) = &param.type_ref {
-                    collect_type_ref_references(type_ref, references);
-                }
+                collect_fn_param_references(param, references);
             }
             collect_type_ref_references(return_type, references);
         }
@@ -465,17 +481,10 @@ fn collect_type_ref_references(type_ref: &TypeRef, references: &mut Vec<TypeRef>
             ..
         } => {
             for type_parameter in type_parameters {
-                if let Some(constraint) = &type_parameter.constraint {
-                    collect_type_ref_references(constraint, references);
-                }
-                if let Some(default) = &type_parameter.default {
-                    collect_type_ref_references(default, references);
-                }
+                collect_type_parameter_references(type_parameter, references);
             }
             for param in params {
-                if let Some(type_ref) = &param.type_ref {
-                    collect_type_ref_references(type_ref, references);
-                }
+                collect_fn_param_references(param, references);
             }
             collect_type_ref_references(return_type, references);
         }
@@ -501,12 +510,8 @@ fn collect_type_ref_references(type_ref: &TypeRef, references: &mut Vec<TypeRef>
             ..
         } => {
             collect_type_ref_references(source_type, references);
-            if let Some(name_type) = name_type {
-                collect_type_ref_references(name_type, references);
-            }
-            if let Some(value_type) = value_type {
-                collect_type_ref_references(value_type, references);
-            }
+            collect_optional_type_ref_references(name_type.as_deref(), references);
+            collect_optional_type_ref_references(value_type.as_deref(), references);
         }
         TypeRef::TemplateLiteral { parts } => {
             for part in parts {
@@ -517,176 +522,6 @@ fn collect_type_ref_references(type_ref: &TypeRef, references: &mut Vec<TypeRef>
         }
         _ => {}
     }
-}
-
-fn tuple_element_to_tuple_element(
-    element: &TSTupleElement<'_>,
-    source: &str,
-    import_bindings: &BTreeMap<String, ImportBinding>,
-    current_module_specifier: &str,
-    current_library: &str,
-) -> TupleElement {
-    match element {
-        TSTupleElement::TSOptionalType(optional) => TupleElement {
-            label: None,
-            optional: true,
-            rest: false,
-            element: type_to_ref(
-                &optional.type_annotation,
-                source,
-                import_bindings,
-                current_module_specifier,
-                current_library,
-            ),
-        },
-        TSTupleElement::TSRestType(rest) => TupleElement {
-            label: None,
-            optional: false,
-            rest: true,
-            element: type_to_ref(
-                &rest.type_annotation,
-                source,
-                import_bindings,
-                current_module_specifier,
-                current_library,
-            ),
-        },
-        TSTupleElement::TSNamedTupleMember(named) => {
-            let lowered = tuple_element_to_tuple_element(
-                &named.element_type,
-                source,
-                import_bindings,
-                current_module_specifier,
-                current_library,
-            );
-
-            TupleElement {
-                label: Some(slice_span(source, named.label.span()).to_string()),
-                optional: named.optional,
-                rest: false,
-                element: lowered.element,
-            }
-        }
-        _ => TupleElement {
-            label: None,
-            optional: false,
-            rest: false,
-            element: tuple_element_type_to_ref(
-                element,
-                source,
-                import_bindings,
-                current_module_specifier,
-                current_library,
-            ),
-        },
-    }
-}
-
-fn tuple_element_type_to_ref(
-    element: &TSTupleElement<'_>,
-    source: &str,
-    import_bindings: &BTreeMap<String, ImportBinding>,
-    current_module_specifier: &str,
-    current_library: &str,
-) -> TypeRef {
-    let element_source = slice_span(source, element.span());
-    let wrapped_source = format!("type __TastyTupleElement = {element_source};");
-    let allocator = Allocator::default();
-    let source_type = SourceType::from_path("tuple-element.ts").unwrap_or_default();
-    let parse_result = Parser::new(&allocator, &wrapped_source, source_type).parse();
-
-    // Reparse a single tuple element through a synthetic alias so we can reuse
-    // the normal type-lowering path without special-casing every tuple variant.
-    if let Some(oxc_ast::ast::Statement::TSTypeAliasDeclaration(type_alias)) =
-        parse_result.program.body.first()
-    {
-        return type_to_ref(
-            &type_alias.type_annotation,
-            &wrapped_source,
-            import_bindings,
-            current_module_specifier,
-            current_library,
-        );
-    }
-
-    TypeRef::Raw {
-        summary: element_source.to_string(),
-    }
-}
-
-fn formal_params_to_fn_params(
-    params: &FormalParameters<'_>,
-    source: &str,
-    import_bindings: &BTreeMap<String, ImportBinding>,
-    current_module_specifier: &str,
-    current_library: &str,
-) -> Vec<FnParam> {
-    let mut lowered_params =
-        Vec::with_capacity(params.items.len() + params.rest.as_ref().map(|_| 1).unwrap_or(0));
-
-    for param in &params.items {
-        lowered_params.push(FnParam {
-            name: Some(slice_span(source, param.pattern.span()).to_string()),
-            optional: param.optional,
-            type_ref: param.type_annotation.as_ref().map(|annotation| {
-                type_to_ref(
-                    &annotation.type_annotation,
-                    source,
-                    import_bindings,
-                    current_module_specifier,
-                    current_library,
-                )
-            }),
-        });
-    }
-
-    if let Some(rest) = &params.rest {
-        lowered_params.push(FnParam {
-            name: Some(slice_span(source, rest.rest.span()).to_string()),
-            optional: false,
-            type_ref: rest.type_annotation.as_ref().map(|annotation| {
-                type_to_ref(
-                    &annotation.type_annotation,
-                    source,
-                    import_bindings,
-                    current_module_specifier,
-                    current_library,
-                )
-            }),
-        });
-    }
-
-    lowered_params
-}
-
-fn template_literal_parts(
-    template: &oxc_ast::ast::TSTemplateLiteralType<'_>,
-    source: &str,
-    import_bindings: &BTreeMap<String, ImportBinding>,
-    current_module_specifier: &str,
-    current_library: &str,
-) -> Vec<TemplateLiteralPart> {
-    let mut parts = Vec::with_capacity(template.quasis.len() + template.types.len());
-
-    for (index, quasi) in template.quasis.iter().enumerate() {
-        parts.push(TemplateLiteralPart::Text {
-            value: quasi.value.raw.as_str().to_string(),
-        });
-
-        if let Some(type_part) = template.types.get(index) {
-            parts.push(TemplateLiteralPart::Type {
-                value: type_to_ref(
-                    type_part,
-                    source,
-                    import_bindings,
-                    current_module_specifier,
-                    current_library,
-                ),
-            });
-        }
-    }
-
-    parts
 }
 
 fn mapped_modifier_kind(

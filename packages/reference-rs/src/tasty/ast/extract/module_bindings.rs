@@ -13,6 +13,11 @@ use super::super::model::{ImportBinding, ImportBindingKind, SymbolShell};
 use super::symbols::{push_interface_shell, push_type_alias_shell};
 use super::slice_span;
 
+struct ImportBindingEntry {
+    local_name: String,
+    binding: ImportBinding,
+}
+
 pub(super) fn collect_import_bindings(
     root_dir: &Path,
     current_file_id: &str,
@@ -21,57 +26,31 @@ pub(super) fn collect_import_bindings(
     file_id_set: &std::collections::BTreeSet<String>,
     import_bindings: &mut BTreeMap<String, ImportBinding>,
 ) {
-    if import.import_kind == ImportOrExportKind::Value
-        || import.import_kind == ImportOrExportKind::Type
-    {
-        let source_module = slice_span(source, import.source.span)
-            .trim_matches('"')
-            .trim_matches('\'')
-            .to_string();
-        let target_file_id = resolve_import(root_dir, current_file_id, &source_module, file_id_set);
+    if !matches!(
+        import.import_kind,
+        ImportOrExportKind::Value | ImportOrExportKind::Type
+    ) {
+        return;
+    }
 
-        if let Some(specifiers) = &import.specifiers {
-            for specifier in specifiers {
-                match specifier {
-                    ImportDeclarationSpecifier::ImportSpecifier(named) => {
-                        insert_import_binding(
-                            import_bindings,
-                            slice_span(source, named.local.span).to_string(),
-                            ImportBinding {
-                                kind: ImportBindingKind::Named,
-                                imported_name: module_export_name_to_string(&named.imported, source),
-                                source_module: source_module.clone(),
-                                target_file_id: target_file_id.clone(),
-                            },
-                        );
-                    }
-                    ImportDeclarationSpecifier::ImportDefaultSpecifier(default_specifier) => {
-                        insert_import_binding(
-                            import_bindings,
-                            slice_span(source, default_specifier.local.span).to_string(),
-                            ImportBinding {
-                                kind: ImportBindingKind::Default,
-                                imported_name: "default".to_string(),
-                                source_module: source_module.clone(),
-                                target_file_id: target_file_id.clone(),
-                            },
-                        );
-                    }
-                    ImportDeclarationSpecifier::ImportNamespaceSpecifier(namespace_specifier) => {
-                        insert_import_binding(
-                            import_bindings,
-                            slice_span(source, namespace_specifier.local.span).to_string(),
-                            ImportBinding {
-                                kind: ImportBindingKind::Namespace,
-                                imported_name: "*".to_string(),
-                                source_module: source_module.clone(),
-                                target_file_id: target_file_id.clone(),
-                            },
-                        );
-                    }
-                }
-            }
-        }
+    let Some(specifiers) = &import.specifiers else {
+        return;
+    };
+
+    let source_module = slice_span(source, import.source.span)
+        .trim_matches('"')
+        .trim_matches('\'')
+        .to_string();
+    let target_file_id = resolve_import(root_dir, current_file_id, &source_module, file_id_set);
+
+    for specifier in specifiers {
+        let entry = import_binding_from_specifier(
+            specifier,
+            source,
+            source_module.clone(),
+            target_file_id.clone(),
+        );
+        insert_import_binding(import_bindings, entry);
     }
 }
 
@@ -86,41 +65,34 @@ pub(super) fn collect_exported_declaration(
     export_bindings: &mut BTreeMap<String, String>,
     exports: &mut Vec<SymbolShell>,
 ) {
-    if export_decl.declaration.is_none() {
+    let Some(declaration) = export_decl.declaration.as_ref() else {
         collect_export_specifiers(export_decl, source, export_bindings);
         return;
-    }
+    };
 
-    let declaration = export_decl.declaration.as_ref().unwrap();
     match declaration {
-        Declaration::TSInterfaceDeclaration(interface_decl) => {
-            export_bindings.insert(interface_decl.id.name.to_string(), interface_decl.id.name.to_string());
-            push_interface_shell(
-                file_id,
-                current_module_specifier,
-                current_library,
-                interface_decl,
-                source,
-                comments,
-                import_bindings,
-                true,
-                exports,
-            );
-        }
-        Declaration::TSTypeAliasDeclaration(type_alias) => {
-            export_bindings.insert(type_alias.id.name.to_string(), type_alias.id.name.to_string());
-            push_type_alias_shell(
-                file_id,
-                current_module_specifier,
-                current_library,
-                type_alias,
-                source,
-                comments,
-                import_bindings,
-                true,
-                exports,
-            );
-        }
+        Declaration::TSInterfaceDeclaration(interface_decl) => push_exported_interface(
+            file_id,
+            current_module_specifier,
+            current_library,
+            interface_decl,
+            source,
+            comments,
+            import_bindings,
+            export_bindings,
+            exports,
+        ),
+        Declaration::TSTypeAliasDeclaration(type_alias) => push_exported_type_alias(
+            file_id,
+            current_module_specifier,
+            current_library,
+            type_alias,
+            source,
+            comments,
+            import_bindings,
+            export_bindings,
+            exports,
+        ),
         _ => {}
     }
 }
@@ -137,20 +109,17 @@ pub(super) fn collect_default_export_declaration(
     exports: &mut Vec<SymbolShell>,
 ) {
     match &export_default.declaration {
-        ExportDefaultDeclarationKind::TSInterfaceDeclaration(interface_decl) => {
-            export_bindings.insert("default".to_string(), interface_decl.id.name.to_string());
-            push_interface_shell(
-                file_id,
-                current_module_specifier,
-                current_library,
-                interface_decl,
-                source,
-                comments,
-                import_bindings,
-                true,
-                exports,
-            );
-        }
+        ExportDefaultDeclarationKind::TSInterfaceDeclaration(interface_decl) => push_default_interface(
+            file_id,
+            current_module_specifier,
+            current_library,
+            interface_decl,
+            source,
+            comments,
+            import_bindings,
+            export_bindings,
+            exports,
+        ),
         ExportDefaultDeclarationKind::Identifier(identifier) => {
             export_bindings.insert("default".to_string(), identifier.name.to_string());
         }
@@ -172,10 +141,9 @@ fn collect_export_specifiers(
 
 fn insert_import_binding(
     import_bindings: &mut BTreeMap<String, ImportBinding>,
-    local_name: String,
-    binding: ImportBinding,
+    entry: ImportBindingEntry,
 ) {
-    import_bindings.insert(local_name, binding);
+    import_bindings.insert(entry.local_name, entry.binding);
 }
 
 fn module_export_name_to_string(name: &ModuleExportName<'_>, source: &str) -> String {
@@ -183,4 +151,116 @@ fn module_export_name_to_string(name: &ModuleExportName<'_>, source: &str) -> St
         .trim_matches('"')
         .trim_matches('\'')
         .to_string()
+}
+
+fn import_binding_from_specifier(
+    specifier: &ImportDeclarationSpecifier<'_>,
+    source: &str,
+    source_module: String,
+    target_file_id: Option<String>,
+) -> ImportBindingEntry {
+    let (local_name, kind, imported_name) = match specifier {
+        ImportDeclarationSpecifier::ImportSpecifier(named) => (
+            slice_span(source, named.local.span).to_string(),
+            ImportBindingKind::Named,
+            module_export_name_to_string(&named.imported, source),
+        ),
+        ImportDeclarationSpecifier::ImportDefaultSpecifier(default_specifier) => (
+            slice_span(source, default_specifier.local.span).to_string(),
+            ImportBindingKind::Default,
+            "default".to_string(),
+        ),
+        ImportDeclarationSpecifier::ImportNamespaceSpecifier(namespace_specifier) => (
+            slice_span(source, namespace_specifier.local.span).to_string(),
+            ImportBindingKind::Namespace,
+            "*".to_string(),
+        ),
+    };
+
+    ImportBindingEntry {
+        local_name,
+        binding: ImportBinding {
+            kind,
+            imported_name,
+            source_module,
+            target_file_id,
+        },
+    }
+}
+
+fn push_exported_interface(
+    file_id: &str,
+    current_module_specifier: &str,
+    current_library: &str,
+    interface_decl: &oxc_ast::ast::TSInterfaceDeclaration<'_>,
+    source: &str,
+    comments: &[Comment],
+    import_bindings: &BTreeMap<String, ImportBinding>,
+    export_bindings: &mut BTreeMap<String, String>,
+    exports: &mut Vec<SymbolShell>,
+) {
+    let name = interface_decl.id.name.to_string();
+    export_bindings.insert(name.clone(), name);
+    push_interface_shell(
+        file_id,
+        current_module_specifier,
+        current_library,
+        interface_decl,
+        source,
+        comments,
+        import_bindings,
+        true,
+        exports,
+    );
+}
+
+fn push_exported_type_alias(
+    file_id: &str,
+    current_module_specifier: &str,
+    current_library: &str,
+    type_alias: &oxc_ast::ast::TSTypeAliasDeclaration<'_>,
+    source: &str,
+    comments: &[Comment],
+    import_bindings: &BTreeMap<String, ImportBinding>,
+    export_bindings: &mut BTreeMap<String, String>,
+    exports: &mut Vec<SymbolShell>,
+) {
+    let name = type_alias.id.name.to_string();
+    export_bindings.insert(name.clone(), name);
+    push_type_alias_shell(
+        file_id,
+        current_module_specifier,
+        current_library,
+        type_alias,
+        source,
+        comments,
+        import_bindings,
+        true,
+        exports,
+    );
+}
+
+fn push_default_interface(
+    file_id: &str,
+    current_module_specifier: &str,
+    current_library: &str,
+    interface_decl: &oxc_ast::ast::TSInterfaceDeclaration<'_>,
+    source: &str,
+    comments: &[Comment],
+    import_bindings: &BTreeMap<String, ImportBinding>,
+    export_bindings: &mut BTreeMap<String, String>,
+    exports: &mut Vec<SymbolShell>,
+) {
+    export_bindings.insert("default".to_string(), interface_decl.id.name.to_string());
+    push_interface_shell(
+        file_id,
+        current_module_specifier,
+        current_library,
+        interface_decl,
+        source,
+        comments,
+        import_bindings,
+        true,
+        exports,
+    );
 }
