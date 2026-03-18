@@ -3,6 +3,8 @@ mod package;
 
 use std::path::{Path, PathBuf};
 
+use crate::tasty::constants::scanner::{NODE_MODULES_DIR, TS_PATH_SUFFIXES};
+
 pub(crate) fn path_to_unix(path: &Path) -> String {
     path.to_string_lossy().replace('\\', "/")
 }
@@ -24,7 +26,7 @@ pub(crate) fn split_package_specifier(source_module: &str) -> Option<(String, Op
 }
 
 pub(super) fn strip_typescript_suffix(value: &str) -> String {
-    for suffix in [".d.ts", ".d.mts", ".d.cts", ".ts", ".tsx"] {
+    for suffix in TS_PATH_SUFFIXES {
         if let Some(stripped) = value.strip_suffix(suffix) {
             return stripped.to_string();
         }
@@ -53,5 +55,5 @@ pub(super) fn normalize_relative_path(path: &Path) -> PathBuf {
 }
 
 pub(crate) fn is_external_file_id(file_id: &str) -> bool {
-    file_id.split('/').any(|segment| segment == "node_modules")
+    file_id.split('/').any(|segment| segment == NODE_MODULES_DIR)
 }

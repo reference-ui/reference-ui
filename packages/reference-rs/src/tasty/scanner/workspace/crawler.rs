@@ -2,12 +2,12 @@ use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::fs;
 use std::path::Path;
 
+use crate::tasty::constants::libraries::USER_LIBRARY_NAME;
+
 use super::super::imports::{extract_module_specifiers, extract_reexport_module_specifiers};
 use super::super::model::{DiscoveredFile, ResolvedModule};
 use super::super::paths::module_specifier_for_file_id;
 use super::policy::resolve_import_for_discovery;
-
-const USER_LIBRARY: &str = "user";
 
 pub(super) struct Crawler<'a> {
     root_dir: &'a Path,
@@ -108,7 +108,7 @@ impl<'a> Crawler<'a> {
         self.discovered
             .get(file_id)
             .map(|file| file.library.clone())
-            .unwrap_or_else(|| USER_LIBRARY.to_string())
+            .unwrap_or_else(|| USER_LIBRARY_NAME.to_string())
     }
 
     fn reexports_of(
@@ -144,7 +144,7 @@ impl<'a> Crawler<'a> {
     fn discovered_user_file(file_id: &str) -> DiscoveredFile {
         DiscoveredFile {
             module_specifier: module_specifier_for_file_id(file_id),
-            library: USER_LIBRARY.to_string(),
+            library: USER_LIBRARY_NAME.to_string(),
         }
     }
 }
