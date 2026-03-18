@@ -14,6 +14,7 @@ import {
   extendUtilities,
   getPandaConfig,
   initPandaConfig,
+  referenceBrowserGlobalCss,
   rhythmGlobalCss,
   rhythmSpacingTokens,
   rhythmUtilities,
@@ -72,6 +73,7 @@ extendPatterns([...patternExtensions, ...fontPatternExtensions])
 
 extendUtilities(rhythmUtilities)
 extendGlobalCss(rhythmGlobalCss)
+extendGlobalCss(referenceBrowserGlobalCss)
 
 // ─────────────────────────────────────────────────────────────────────────
 // export

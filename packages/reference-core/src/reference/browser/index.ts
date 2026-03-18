@@ -1,3 +1,3 @@
 export { createReferenceComponent } from './component'
-export { referenceTokens } from './tokens'
+export { referenceTokens } from './theme'
 export type { ReferenceProps } from './component'
