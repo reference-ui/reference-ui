@@ -6,9 +6,7 @@ mod relative;
 use std::collections::BTreeSet;
 use std::path::Path;
 
-use self::package_entry::{
-    find_installed_declaration_provider, resolve_package_import_from_root,
-};
+use self::package_entry::{find_installed_declaration_provider, resolve_package_import_from_root};
 use super::model::ResolvedModule;
 use super::paths::{is_external_file_id, split_package_specifier};
 

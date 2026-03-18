@@ -99,7 +99,9 @@ pub(super) fn emit_manifest_module(
     };
     let literal = to_js_literal(&manifest)?;
 
-    Ok(format!("export const manifest = {literal};\nexport default manifest;\n"))
+    Ok(format!(
+        "export const manifest = {literal};\nexport default manifest;\n"
+    ))
 }
 
 /// Deterministic hash for symbol IDs so the same id always gets the same export name.

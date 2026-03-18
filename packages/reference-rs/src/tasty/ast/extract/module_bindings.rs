@@ -10,8 +10,8 @@ use oxc_span::GetSpan;
 
 use super::super::super::scanner::resolve_import;
 use super::super::model::{ImportBinding, ImportBindingKind, SymbolShell};
-use super::symbols::{push_interface_shell, push_type_alias_shell};
 use super::slice_span;
+use super::symbols::{push_interface_shell, push_type_alias_shell};
 
 struct ImportBindingEntry {
     local_name: String,
@@ -109,17 +109,19 @@ pub(super) fn collect_default_export_declaration(
     exports: &mut Vec<SymbolShell>,
 ) {
     match &export_default.declaration {
-        ExportDefaultDeclarationKind::TSInterfaceDeclaration(interface_decl) => push_default_interface(
-            file_id,
-            current_module_specifier,
-            current_library,
-            interface_decl,
-            source,
-            comments,
-            import_bindings,
-            export_bindings,
-            exports,
-        ),
+        ExportDefaultDeclarationKind::TSInterfaceDeclaration(interface_decl) => {
+            push_default_interface(
+                file_id,
+                current_module_specifier,
+                current_library,
+                interface_decl,
+                source,
+                comments,
+                import_bindings,
+                export_bindings,
+                exports,
+            )
+        }
         ExportDefaultDeclarationKind::Identifier(identifier) => {
             export_bindings.insert("default".to_string(), identifier.name.to_string());
         }

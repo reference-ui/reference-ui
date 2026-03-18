@@ -16,7 +16,9 @@ fn scans_fixture_successfully() {
     ensure_fixture_dependencies_installed();
     let bundle = scan_typescript_bundle(&ScanRequest {
         root_dir: fixture_tasty_dir(),
-        include: vec![format!("cases/{SCENARIO_EXTERNAL_LIBS}/input/**/*.{{ts,tsx}}")],
+        include: vec![format!(
+            "cases/{SCENARIO_EXTERNAL_LIBS}/input/**/*.{{ts,tsx}}"
+        )],
     })
     .expect("fixture scan should succeed");
     assert_eq!(bundle.version, 1);

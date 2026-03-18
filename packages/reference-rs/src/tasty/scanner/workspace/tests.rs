@@ -57,7 +57,10 @@ fn scan_workspace_follows_user_reexports_of_external_modules() {
     let workspace = scan_workspace(root.path(), &["src/**/*.ts".to_string()])
         .expect("workspace scan should succeed");
 
-    assert!(workspace.files.iter().any(|file| file.file_id == "src/index.ts"));
+    assert!(workspace
+        .files
+        .iter()
+        .any(|file| file.file_id == "src/index.ts"));
     assert!(workspace
         .files
         .iter()

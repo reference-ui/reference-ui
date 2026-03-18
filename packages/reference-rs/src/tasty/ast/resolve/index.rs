@@ -1,9 +1,9 @@
 use std::collections::BTreeMap;
 
-use super::graph::ResolvedTypeScriptGraph;
-use super::resolver::Resolver;
 use super::super::super::model::{ExportMap, TsFile, TsSymbol};
 use super::super::model::{ParsedFileAst, ParsedTypeScriptAst, SymbolShell};
+use super::graph::ResolvedTypeScriptGraph;
+use super::resolver::Resolver;
 
 pub(crate) fn resolve_ast(parsed_ast: ParsedTypeScriptAst) -> ResolvedTypeScriptGraph {
     let ParsedTypeScriptAst {

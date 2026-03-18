@@ -2,13 +2,11 @@ use std::path::{Path, PathBuf};
 
 use serde_json::Value;
 
+use super::super::model::ResolvedModule;
+use super::super::paths::{module_specifier_for_file_id, package_name_from_file_id, path_to_unix};
 use super::node_modules::installed_package_dirs;
 use super::package_json::{package_export_target, read_package_json};
 use super::relative::declaration_candidates;
-use super::super::model::ResolvedModule;
-use super::super::paths::{
-    module_specifier_for_file_id, package_name_from_file_id, path_to_unix,
-};
 
 pub(super) fn find_installed_declaration_provider(
     root_dir: &Path,

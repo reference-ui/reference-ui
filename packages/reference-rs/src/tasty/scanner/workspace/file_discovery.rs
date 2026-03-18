@@ -5,7 +5,10 @@ use globwalk::GlobWalkerBuilder;
 
 use super::super::paths::path_to_unix;
 
-pub(super) fn discover_file_ids(root_dir: &Path, include: &[String]) -> Result<Vec<String>, String> {
+pub(super) fn discover_file_ids(
+    root_dir: &Path,
+    include: &[String],
+) -> Result<Vec<String>, String> {
     let walker = GlobWalkerBuilder::from_patterns(root_dir, include)
         .follow_links(true)
         .build()

@@ -1,8 +1,8 @@
-use super::model::TypeScriptBundle;
-use super::request::ScanRequest;
 use super::ast::{extract_ast, resolve_ast};
 use super::generator::build_typescript_bundle;
 use super::generator::emit_artifact_bundle;
+use super::model::TypeScriptBundle;
+use super::request::ScanRequest;
 use super::scanner::scan_workspace;
 use serde::Serialize;
 

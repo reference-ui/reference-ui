@@ -37,7 +37,11 @@ pub enum TastyTypeRef {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
-#[serde(tag = "kind", rename_all = "snake_case", rename_all_fields = "camelCase")]
+#[serde(
+    tag = "kind",
+    rename_all = "snake_case",
+    rename_all_fields = "camelCase"
+)]
 #[ts(
     export_to = "js/tasty/generated/",
     tag = "kind",
@@ -114,7 +118,11 @@ pub enum TastyStructuredTypeRef {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
-#[serde(tag = "kind", rename_all = "snake_case", rename_all_fields = "camelCase")]
+#[serde(
+    tag = "kind",
+    rename_all = "snake_case",
+    rename_all_fields = "camelCase"
+)]
 #[ts(
     export_to = "js/tasty/generated/",
     tag = "kind",
@@ -122,12 +130,8 @@ pub enum TastyStructuredTypeRef {
     rename_all_fields = "camelCase"
 )]
 pub enum TastyTemplateLiteralPart {
-    Text {
-        value: String,
-    },
-    Type {
-        value: TastyTypeRef,
-    },
+    Text { value: String },
+    Type { value: TastyTypeRef },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]

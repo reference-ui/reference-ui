@@ -44,13 +44,8 @@ fn relative_import_prefers_declaration_candidates_for_runtime_entries() {
     let root = TempDir::new("scanner-packages-relative");
     let file_ids = BTreeSet::from(["src/button.d.ts".to_string(), "src/index.ts".to_string()]);
 
-    let resolved = resolve_relative_import(
-        root.path(),
-        "src/index.ts",
-        "./button.js",
-        &file_ids,
-        false,
-    );
+    let resolved =
+        resolve_relative_import(root.path(), "src/index.ts", "./button.js", &file_ids, false);
 
     assert_eq!(resolved.as_deref(), Some("src/button.d.ts"));
 }
@@ -68,17 +63,26 @@ fn external_import_uses_types_exports_for_root_and_subpath() {
               }
             }"#,
     );
-    root.write("node_modules/fancy-lib/dist/index.d.ts", "export interface Button {}\n");
-    root.write("node_modules/fancy-lib/dist/tokens.d.ts", "export interface Tokens {}\n");
+    root.write(
+        "node_modules/fancy-lib/dist/index.d.ts",
+        "export interface Button {}\n",
+    );
+    root.write(
+        "node_modules/fancy-lib/dist/tokens.d.ts",
+        "export interface Tokens {}\n",
+    );
 
     let root_entry =
         resolve_external_import(root.path(), "fancy-lib").expect("root entry should resolve");
-    assert_eq!(root_entry.file_id, "node_modules/fancy-lib/./dist/index.d.ts");
+    assert_eq!(
+        root_entry.file_id,
+        "node_modules/fancy-lib/./dist/index.d.ts"
+    );
     assert_eq!(root_entry.module_specifier, "fancy-lib");
     assert_eq!(root_entry.library, "fancy-lib");
 
-    let subpath =
-        resolve_external_import(root.path(), "fancy-lib/tokens").expect("subpath entry should resolve");
+    let subpath = resolve_external_import(root.path(), "fancy-lib/tokens")
+        .expect("subpath entry should resolve");
     assert_eq!(subpath.file_id, "node_modules/fancy-lib/./dist/tokens.d.ts");
     assert_eq!(subpath.module_specifier, "fancy-lib/tokens");
     assert_eq!(subpath.library, "fancy-lib");
@@ -91,11 +95,17 @@ fn external_import_falls_back_to_installed_types_provider() {
         "node_modules/@types/json-schema/package.json",
         r#"{ "name": "@types/json-schema", "types": "index.d.ts" }"#,
     );
-    root.write("node_modules/@types/json-schema/index.d.ts", "export interface JSONSchema4 {}\n");
+    root.write(
+        "node_modules/@types/json-schema/index.d.ts",
+        "export interface JSONSchema4 {}\n",
+    );
 
     let resolved =
         resolve_external_import(root.path(), "json-schema").expect("types provider should resolve");
-    assert_eq!(resolved.file_id, "node_modules/@types/json-schema/index.d.ts");
+    assert_eq!(
+        resolved.file_id,
+        "node_modules/@types/json-schema/index.d.ts"
+    );
     assert_eq!(resolved.module_specifier, "json-schema");
     assert_eq!(resolved.library, "json-schema");
 }
