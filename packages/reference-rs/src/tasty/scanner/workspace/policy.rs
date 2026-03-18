@@ -18,6 +18,9 @@ pub(super) fn resolve_import_for_discovery(
     current_library: &str,
 ) -> Option<ResolvedModule> {
     if source_module.starts_with('.') {
+        // External declaration files are allowed to walk the filesystem because we
+        // discover them incrementally from package entrypoints rather than from the
+        // original user include globs.
         let file_id = if is_external_file_id(current_file_id) {
             resolve_relative_import(
                 root_dir,
@@ -43,9 +46,15 @@ pub(super) fn resolve_import_for_discovery(
         });
     }
 
+    // User files only pull external libraries into the graph when the user
+    // re-exports them. Plain imports are not part of the public bridge.
     if is_user_file && !reexport_specifiers.contains(source_module) {
         return None;
     }
+
+    // Once we are traversing inside an external package, stay inside that same
+    // package. This keeps discovery scoped to the declarations that back the
+    // symbols we already chose to bridge.
     if !is_user_file {
         let resolved = resolve_external_import(root_dir, source_module)?;
         if resolved.library != current_library {

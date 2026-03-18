@@ -1,7 +1,8 @@
 mod comments;
-mod lowering;
+mod members;
 mod module_bindings;
 mod symbols;
+mod types;
 
 use std::collections::BTreeMap;
 

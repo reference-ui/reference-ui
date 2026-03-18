@@ -1,15 +1,14 @@
 use std::collections::BTreeMap;
 
-use oxc_ast::ast::{Comment, TSSignature, TSInterfaceDeclaration, TSTypeAliasDeclaration};
+use oxc_ast::ast::{Comment, TSInterfaceDeclaration, TSTypeAliasDeclaration};
 use oxc_span::GetSpan;
 
 use super::comments::{leading_comment_for_span, parse_comment_metadata};
-use super::lowering::{
-    call_signature_to_member, collect_references_from_members, construct_signature_to_member,
-    expression_to_reference, index_signature_to_member, method_signature_to_member,
-    property_signature_to_member, type_parameters_from_oxc, type_to_ref,
+use super::members::members_from_signatures;
+use super::types::{
+    collect_references_from_members, expression_to_reference, type_parameters_from_oxc, type_to_ref,
 };
-use super::super::super::model::{TsSymbolKind};
+use super::super::super::model::TsSymbolKind;
 use super::super::super::scanner::symbol_id;
 use super::super::model::{ImportBinding, SymbolShell};
 
@@ -32,78 +31,15 @@ pub(super) fn push_interface_shell<'a>(
         interface_decl.span(),
         None,
     ));
-    let interface_start = interface_decl.span().start;
-    let all_member_starts: Vec<u32> = interface_decl
-        .body
-        .body
-        .iter()
-        .map(|sig| sig.span().start)
-        .collect();
-    let defined_members = interface_decl
-        .body
-        .body
-        .iter()
-        .filter_map(|signature| {
-            let start = signature.span().start;
-            let others: Vec<u32> = std::iter::once(interface_start)
-                .chain(all_member_starts.iter().copied().filter(|&s| s != start))
-                .collect();
-            let exclude = if others.is_empty() {
-                None
-            } else {
-                Some(others.as_slice())
-            };
-            match signature {
-                TSSignature::TSPropertySignature(property) => Some(property_signature_to_member(
-                    property,
-                    source,
-                    comments,
-                    exclude,
-                    import_bindings,
-                    current_module_specifier,
-                    current_library,
-                )),
-                TSSignature::TSMethodSignature(method) => Some(method_signature_to_member(
-                    method,
-                    source,
-                    comments,
-                    exclude,
-                    import_bindings,
-                    current_module_specifier,
-                    current_library,
-                )),
-                TSSignature::TSCallSignatureDeclaration(call) => Some(call_signature_to_member(
-                    call,
-                    source,
-                    comments,
-                    exclude,
-                    import_bindings,
-                    current_module_specifier,
-                    current_library,
-                )),
-                TSSignature::TSIndexSignature(index) => Some(index_signature_to_member(
-                    index,
-                    source,
-                    comments,
-                    exclude,
-                    import_bindings,
-                    current_module_specifier,
-                    current_library,
-                )),
-                TSSignature::TSConstructSignatureDeclaration(decl) => Some(
-                    construct_signature_to_member(
-                        decl,
-                        source,
-                        comments,
-                        exclude,
-                        import_bindings,
-                        current_module_specifier,
-                        current_library,
-                    ),
-                ),
-            }
-        })
-        .collect::<Vec<_>>();
+    let defined_members = members_from_signatures(
+        interface_decl.body.body.as_slice(),
+        source,
+        comments,
+        Some(interface_decl.span().start),
+        import_bindings,
+        current_module_specifier,
+        current_library,
+    );
 
     let extends = interface_decl
         .extends
@@ -122,7 +58,6 @@ pub(super) fn push_interface_shell<'a>(
     let type_parameters = type_parameters_from_oxc(
         interface_decl.type_parameters.as_deref(),
         source,
-        comments,
         import_bindings,
         current_module_specifier,
         current_library,
@@ -169,7 +104,6 @@ pub(super) fn push_type_alias_shell<'a>(
     let type_parameters = type_parameters_from_oxc(
         type_alias.type_parameters.as_deref(),
         source,
-        comments,
         import_bindings,
         current_module_specifier,
         current_library,
