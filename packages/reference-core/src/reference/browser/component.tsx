@@ -19,7 +19,8 @@ import {
   Thead,
   Tr,
 } from '../../system/primitives'
-import { referenceTokens } from './tokens'
+import { REFERENCE_BROWSER_ATTR } from './constants'
+import { referenceTokens } from './theme'
 
 export interface ReferenceProps {
   name: string
@@ -220,6 +221,7 @@ export function createReferenceComponent(runtime: TastyBrowserRuntime) {
 
   function Reference({ name }: ReferenceProps) {
     const [status, setStatus] = React.useState<ReferenceStatus>({ state: 'loading' })
+    const referenceRootProps = { [REFERENCE_BROWSER_ATTR]: '' }
 
     React.useEffect(() => {
       let active = true
@@ -243,6 +245,7 @@ export function createReferenceComponent(runtime: TastyBrowserRuntime) {
 
     return (
       <Div
+        {...referenceRootProps}
         css={{
           color: referenceTokens.color.foreground,
           background: referenceTokens.color.background,
