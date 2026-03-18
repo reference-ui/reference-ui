@@ -1,3 +1,4 @@
+mod crawler;
 mod discovery;
 mod file_discovery;
 mod policy;
