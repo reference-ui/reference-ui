@@ -43,13 +43,39 @@ pub(super) fn emit_manifest_module(
     bundle: &TypeScriptBundle,
     export_names: &BTreeMap<String, String>,
 ) -> Result<String, String> {
-    let mut symbols_by_name = BTreeMap::new();
-    let mut symbols_by_id = BTreeMap::new();
+    let (symbols_by_name, symbols_by_id) = build_manifest_symbol_indices(bundle, export_names);
     let mut warnings = bundle
         .diagnostics
         .iter()
         .map(|diagnostic| format!("{}: {}", diagnostic.file_id, diagnostic.message))
         .collect::<Vec<_>>();
+    warnings.extend(duplicate_symbol_name_warnings(
+        &symbols_by_name,
+        &symbols_by_id,
+    ));
+
+    let manifest = TastyManifest {
+        version: "2".to_string(),
+        warnings,
+        symbols_by_name,
+        symbols_by_id,
+    };
+    let literal = to_js_literal(&manifest)?;
+
+    Ok(format!(
+        "export const manifest = {literal};\nexport default manifest;\n"
+    ))
+}
+
+fn build_manifest_symbol_indices(
+    bundle: &TypeScriptBundle,
+    export_names: &BTreeMap<String, String>,
+) -> (
+    BTreeMap<String, Vec<String>>,
+    BTreeMap<String, TastySymbolIndexEntry>,
+) {
+    let mut symbols_by_name = BTreeMap::new();
+    let mut symbols_by_id = BTreeMap::new();
 
     for (symbol_id, symbol) in &bundle.symbols {
         let export_name = export_names
@@ -72,36 +98,39 @@ pub(super) fn emit_manifest_module(
         );
     }
 
-    for (symbol_name, symbol_ids) in &symbols_by_name {
-        if symbol_ids.len() <= 1 {
-            continue;
-        }
-        let matches = symbol_ids
-            .iter()
-            .filter_map(|symbol_id| {
-                symbols_by_id
-                    .get(symbol_id)
-                    .map(|entry| format!("{} ({})", entry.id, entry.library))
-            })
-            .collect::<Vec<_>>()
-            .join(", ");
-        warnings.push(format!(
-            "Duplicate symbol name \"{symbol_name}\" matched {} entries: {matches}. Use symbol id or scoped lookup to disambiguate.",
-            symbol_ids.len()
-        ));
-    }
+    (symbols_by_name, symbols_by_id)
+}
 
-    let manifest = TastyManifest {
-        version: "2".to_string(),
-        warnings,
-        symbols_by_name,
-        symbols_by_id,
-    };
-    let literal = to_js_literal(&manifest)?;
+fn duplicate_symbol_name_warnings(
+    symbols_by_name: &BTreeMap<String, Vec<String>>,
+    symbols_by_id: &BTreeMap<String, TastySymbolIndexEntry>,
+) -> Vec<String> {
+    symbols_by_name
+        .iter()
+        .filter(|(_, symbol_ids)| symbol_ids.len() > 1)
+        .map(|(symbol_name, symbol_ids)| {
+            let matches = duplicate_symbol_matches(symbol_ids, symbols_by_id);
+            format!(
+                "Duplicate symbol name \"{symbol_name}\" matched {} entries: {matches}. Use symbol id or scoped lookup to disambiguate.",
+                symbol_ids.len()
+            )
+        })
+        .collect()
+}
 
-    Ok(format!(
-        "export const manifest = {literal};\nexport default manifest;\n"
-    ))
+fn duplicate_symbol_matches(
+    symbol_ids: &[String],
+    symbols_by_id: &BTreeMap<String, TastySymbolIndexEntry>,
+) -> String {
+    symbol_ids
+        .iter()
+        .filter_map(|symbol_id| {
+            symbols_by_id
+                .get(symbol_id)
+                .map(|entry| format!("{} ({})", entry.id, entry.library))
+        })
+        .collect::<Vec<_>>()
+        .join(", ")
 }
 
 /// Deterministic hash for symbol IDs so the same id always gets the same export name.
@@ -142,17 +171,31 @@ where
 
     for symbol_id in bundle.symbols.keys() {
         let export_name = format!("_{:016x}", hash_symbol_id(symbol_id));
-        if let Some(existing_symbol_id) =
-            symbol_ids_by_export_name.insert(export_name.clone(), symbol_id.clone())
-        {
-            return Err(format!(
-                "Tasty emitted-id collision between \"{existing_symbol_id}\" and \"{symbol_id}\" for export name \"{export_name}\"."
-            ));
-        }
+        ensure_unique_export_name(
+            &mut symbol_ids_by_export_name,
+            export_name.clone(),
+            symbol_id.as_str(),
+        )?;
         export_names.insert(symbol_id.clone(), export_name);
     }
 
     Ok(export_names)
+}
+
+fn ensure_unique_export_name(
+    symbol_ids_by_export_name: &mut BTreeMap<String, String>,
+    export_name: String,
+    symbol_id: &str,
+) -> Result<(), String> {
+    if let Some(existing_symbol_id) =
+        symbol_ids_by_export_name.insert(export_name.clone(), symbol_id.to_string())
+    {
+        return Err(format!(
+            "Tasty emitted-id collision between \"{existing_symbol_id}\" and \"{symbol_id}\" for export name \"{export_name}\"."
+        ));
+    }
+
+    Ok(())
 }
 
 #[cfg(test)]

@@ -62,13 +62,10 @@ pub(super) fn resolve_package_import_from_root(
 }
 
 fn resolve_package_root_entry(package_dir: &Path, package_json: Option<&Value>) -> Option<PathBuf> {
-    for entry in package_root_entry_candidates(package_json) {
-        if let Some(path) = first_existing_candidate(package_dir, &entry) {
-            return Some(path);
-        }
-    }
-
-    first_existing_candidate(package_dir, "index")
+    package_root_entry_candidates(package_json)
+        .into_iter()
+        .find_map(|entry| first_existing_candidate(package_dir, &entry))
+        .or_else(|| first_existing_candidate(package_dir, "index"))
 }
 
 fn resolve_package_subpath(
@@ -77,43 +74,50 @@ fn resolve_package_subpath(
     subpath: &str,
 ) -> Option<PathBuf> {
     let export_key = format!("./{subpath}");
-    if let Some(package_json) = package_json {
-        if let Some(exports) = package_json.get("exports") {
-            if let Some(target) = package_export_target(exports, &export_key) {
-                if let Some(path) = first_existing_candidate(package_dir, &target) {
-                    return Some(path);
-                }
-            }
-        }
-    }
-
-    first_existing_candidate(package_dir, subpath)
+    package_json
+        .and_then(|package_json| package_json.get("exports"))
+        .and_then(|exports| package_export_target(exports, &export_key))
+        .and_then(|target| first_existing_candidate(package_dir, &target))
+        .or_else(|| first_existing_candidate(package_dir, subpath))
 }
 
 fn package_root_entry_candidates(package_json: Option<&Value>) -> Vec<String> {
+    package_json
+        .map(package_root_entry_candidates_from_package_json)
+        .unwrap_or_default()
+}
+
+fn package_root_entry_candidates_from_package_json(package_json: &Value) -> Vec<String> {
     let mut entries = Vec::new();
+    push_package_json_entries(&mut entries, package_json, ["types", "typings"]);
+    push_exports_entry(&mut entries, package_json);
+    push_package_json_entries(&mut entries, package_json, ["module", "main"]);
+    entries
+}
 
-    if let Some(package_json) = package_json {
-        for key in ["types", "typings"] {
-            if let Some(value) = package_json.get(key).and_then(Value::as_str) {
-                entries.push(value.to_string());
-            }
-        }
+fn push_exports_entry(entries: &mut Vec<String>, package_json: &Value) {
+    if let Some(target) = package_json
+        .get("exports")
+        .and_then(|exports| package_export_target(exports, "."))
+    {
+        entries.push(target);
+    }
+}
 
-        if let Some(exports) = package_json.get("exports") {
-            if let Some(target) = package_export_target(exports, ".") {
-                entries.push(target);
-            }
-        }
-
-        for key in ["module", "main"] {
-            if let Some(value) = package_json.get(key).and_then(Value::as_str) {
-                entries.push(value.to_string());
-            }
+fn push_package_json_entries<const N: usize>(
+    entries: &mut Vec<String>,
+    package_json: &Value,
+    keys: [&str; N],
+) {
+    for key in keys {
+        if let Some(value) = package_json_string(package_json, key) {
+            entries.push(value.to_string());
         }
     }
+}
 
-    entries
+fn package_json_string<'a>(package_json: &'a Value, key: &str) -> Option<&'a str> {
+    package_json.get(key).and_then(Value::as_str)
 }
 
 fn first_existing_candidate(package_dir: &Path, entry: &str) -> Option<PathBuf> {
