@@ -1,8 +1,8 @@
-use super::Resolver;
 use super::super::super::super::model::{
     FnParam, TemplateLiteralPart, TsMember, TsSymbol, TsTypeParameter,
 };
 use super::super::super::model::SymbolShell;
+use super::Resolver;
 
 impl<'a> Resolver<'a> {
     pub(in super::super) fn resolve_symbol(self, mut symbol: SymbolShell) -> TsSymbol {
@@ -11,7 +11,9 @@ impl<'a> Resolver<'a> {
             .into_iter()
             .map(|type_ref| self.resolve_type_ref(type_ref))
             .collect();
-        symbol.underlying = symbol.underlying.map(|type_ref| self.resolve_type_ref(type_ref));
+        symbol.underlying = symbol
+            .underlying
+            .map(|type_ref| self.resolve_type_ref(type_ref));
         symbol.defined_members = symbol
             .defined_members
             .into_iter()
@@ -49,7 +51,9 @@ impl<'a> Resolver<'a> {
 
     pub(super) fn resolve_member(&self, member: TsMember) -> TsMember {
         TsMember {
-            type_ref: member.type_ref.map(|type_ref| self.resolve_type_ref(type_ref)),
+            type_ref: member
+                .type_ref
+                .map(|type_ref| self.resolve_type_ref(type_ref)),
             ..member
         }
     }
@@ -64,7 +68,9 @@ impl<'a> Resolver<'a> {
 
     pub(super) fn resolve_fn_param(&self, param: FnParam) -> FnParam {
         FnParam {
-            type_ref: param.type_ref.map(|type_ref| self.resolve_type_ref(type_ref)),
+            type_ref: param
+                .type_ref
+                .map(|type_ref| self.resolve_type_ref(type_ref)),
             ..param
         }
     }

@@ -6,11 +6,11 @@ use oxc_ast::ast::{
 };
 use oxc_span::GetSpan;
 
-use super::comments::{leading_comment_for_span, parse_comment_metadata};
-use super::types::type_to_ref;
 use super::super::super::model::{TsMember, TsMemberKind};
 use super::super::model::ImportBinding;
+use super::comments::{leading_comment_for_span, parse_comment_metadata};
 use super::slice_span;
+use super::types::type_to_ref;
 
 pub(super) fn members_from_signatures(
     signatures: &[TSSignature<'_>],
@@ -21,7 +21,10 @@ pub(super) fn members_from_signatures(
     current_module_specifier: &str,
     current_library: &str,
 ) -> Vec<TsMember> {
-    let all_member_starts: Vec<u32> = signatures.iter().map(|signature| signature.span().start).collect();
+    let all_member_starts: Vec<u32> = signatures
+        .iter()
+        .map(|signature| signature.span().start)
+        .collect();
 
     signatures
         .iter()
@@ -65,15 +68,17 @@ pub(super) fn members_from_signatures(
                     current_module_specifier,
                     current_library,
                 ),
-                TSSignature::TSConstructSignatureDeclaration(decl) => construct_signature_to_member(
-                    decl,
-                    source,
-                    comments,
-                    exclude.as_deref(),
-                    import_bindings,
-                    current_module_specifier,
-                    current_library,
-                ),
+                TSSignature::TSConstructSignatureDeclaration(decl) => {
+                    construct_signature_to_member(
+                        decl,
+                        source,
+                        comments,
+                        exclude.as_deref(),
+                        import_bindings,
+                        current_module_specifier,
+                        current_library,
+                    )
+                }
             }
         })
         .collect()

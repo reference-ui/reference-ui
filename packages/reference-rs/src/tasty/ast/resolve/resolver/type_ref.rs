@@ -1,7 +1,7 @@
-use super::Resolver;
-use super::super::names::{namespace_export_lookup_name, reference_lookup_name};
 use super::super::super::super::model::{TupleElement, TypeRef};
 use super::super::super::model::ImportBindingKind;
+use super::super::names::{namespace_export_lookup_name, reference_lookup_name};
+use super::Resolver;
 
 impl<'a> Resolver<'a> {
     pub(super) fn resolve_type_ref(&self, type_ref: TypeRef) -> TypeRef {
@@ -40,7 +40,10 @@ impl<'a> Resolver<'a> {
                 object: Box::new(self.resolve_type_ref(*object)),
                 index: Box::new(self.resolve_type_ref(*index)),
             },
-            TypeRef::Function { params, return_type } => TypeRef::Function {
+            TypeRef::Function {
+                params,
+                return_type,
+            } => TypeRef::Function {
                 params: params
                     .into_iter()
                     .map(|param| self.resolve_fn_param(param))

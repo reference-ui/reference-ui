@@ -115,10 +115,7 @@ pub(super) fn parse_comment_metadata(comment: Option<LeadingComment>) -> Comment
     }
 
     let jsdoc = parse_jsdoc(&comment.normalized_text);
-    let description = jsdoc
-        .summary
-        .clone()
-        .or_else(|| description_raw.clone());
+    let description = jsdoc.summary.clone().or_else(|| description_raw.clone());
 
     CommentMetadata {
         description,

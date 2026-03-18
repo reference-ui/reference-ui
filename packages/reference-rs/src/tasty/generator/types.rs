@@ -1,36 +1,20 @@
 use std::collections::BTreeMap;
 
-use super::symbols::{emit_ref_object, reference_descriptor};
-use super::util::{indent_block, to_js_literal};
 use super::super::model::{
     FnParam, JsDoc, JsDocTag, TemplateLiteralPart, TsMember, TsMemberKind, TsTypeParameter,
     TupleElement, TypeRef, TypeScriptBundle,
 };
+use super::symbols::{emit_ref_object, reference_descriptor};
+use super::util::{emit_array, emit_field, emit_object, indent_block, to_js_literal};
 
 pub(super) fn emit_type_parameters(
     bundle: &TypeScriptBundle,
     params: &[TsTypeParameter],
     export_names: &BTreeMap<String, String>,
 ) -> Result<String, String> {
-    if params.is_empty() {
-        return Ok("[]".to_string());
-    }
-    let lines = params
-        .iter()
-        .map(|p| {
-            let mut parts = vec![format!("  name: {}", to_js_literal(&p.name)?)];
-            if let Some(ref c) = p.constraint {
-                let constraint_str = emit_type_ref(bundle, c, export_names)?;
-                parts.push(format!("  constraint: {}", indent_block(&constraint_str, 2)));
-            }
-            if let Some(ref d) = p.default {
-                let default_str = emit_type_ref(bundle, d, export_names)?;
-                parts.push(format!("  default: {}", indent_block(&default_str, 2)));
-            }
-            Ok::<String, String>(indent_block(&format!("{{\n{}\n}}", parts.join(",\n")), 2))
-        })
-        .collect::<Result<Vec<_>, _>>()?;
-    Ok(format!("[\n{}\n]", lines.join(",\n")))
+    emit_indented_array(params, |param| {
+        emit_type_parameter(bundle, param, export_names)
+    })
 }
 
 pub(super) fn emit_members(
@@ -38,16 +22,31 @@ pub(super) fn emit_members(
     members: &[TsMember],
     export_names: &BTreeMap<String, String>,
 ) -> Result<String, String> {
-    if members.is_empty() {
-        return Ok("[]".to_string());
+    emit_indented_array(members, |member| emit_member(bundle, member, export_names))
+}
+
+fn emit_type_parameter(
+    bundle: &TypeScriptBundle,
+    param: &TsTypeParameter,
+    export_names: &BTreeMap<String, String>,
+) -> Result<String, String> {
+    let mut fields = vec![emit_field("name", to_js_literal(&param.name)?)];
+
+    if let Some(constraint) = param.constraint.as_ref() {
+        fields.push(emit_field(
+            "constraint",
+            emit_type_ref(bundle, constraint, export_names)?,
+        ));
     }
 
-    let lines = members
-        .iter()
-        .map(|member| emit_member(bundle, member, export_names).map(|value| indent_block(&value, 2)))
-        .collect::<Result<Vec<_>, _>>()?;
+    if let Some(default) = param.default.as_ref() {
+        fields.push(emit_field(
+            "default",
+            emit_type_ref(bundle, default, export_names)?,
+        ));
+    }
 
-    Ok(format!("[\n{}\n]", lines.join(",\n")))
+    Ok(emit_object(fields))
 }
 
 fn emit_member(
@@ -55,96 +54,92 @@ fn emit_member(
     member: &TsMember,
     export_names: &BTreeMap<String, String>,
 ) -> Result<String, String> {
-    let kind_str = match member.kind {
-        TsMemberKind::Property => "property",
-        TsMemberKind::Method => "method",
-        TsMemberKind::CallSignature => "call",
-        TsMemberKind::IndexSignature => "index",
-        TsMemberKind::ConstructSignature => "construct",
-    };
-    let mut parts = vec![
-        format!("  name: {}", to_js_literal(&member.name)?),
-        format!("  optional: {}", to_js_literal(&member.optional)?),
-        format!("  readonly: {}", to_js_literal(&member.readonly)?),
-        format!("  kind: {}", to_js_literal(kind_str)?),
+    let mut fields = vec![
+        emit_field("name", to_js_literal(&member.name)?),
+        emit_field("optional", to_js_literal(&member.optional)?),
+        emit_field("readonly", to_js_literal(&member.readonly)?),
+        emit_field("kind", to_js_literal(member_kind_name(member.kind))?),
     ];
-    if let Some(ref d) = member.description {
-        parts.push(format!("  description: {}", to_js_literal(d)?));
-    }
-    if let Some(ref d) = member.description_raw {
-        parts.push(format!("  descriptionRaw: {}", to_js_literal(d)?));
-    }
-    if let Some(ref jsdoc) = member.jsdoc {
-        parts.push(format!("  jsdoc: {}", emit_jsdoc(jsdoc)?));
-    }
-    parts.push(format!(
-        "  type: {}",
-        emit_optional_type_ref(bundle, member.type_ref.as_ref(), export_names)?
+    push_description_fields(
+        &mut fields,
+        member.description.as_ref(),
+        member.description_raw.as_ref(),
+        member.jsdoc.as_ref(),
+    )?;
+    fields.push(emit_field(
+        "type",
+        emit_optional_type_ref(bundle, member.type_ref.as_ref(), export_names)?,
     ));
-    Ok(format!("{{\n{}\n}}", parts.join(",\n")))
+
+    Ok(emit_object(fields))
 }
 
 pub(super) fn emit_jsdoc(jsdoc: &JsDoc) -> Result<String, String> {
-    let mut parts = Vec::new();
-    if let Some(ref summary) = jsdoc.summary {
-        parts.push(format!("  summary: {}", to_js_literal(summary)?));
+    let mut fields = Vec::new();
+
+    if let Some(summary) = jsdoc.summary.as_ref() {
+        fields.push(emit_field("summary", to_js_literal(summary)?));
     }
-    parts.push(format!("  tags: {}", emit_jsdoc_tags(&jsdoc.tags)?));
-    Ok(format!("{{\n{}\n}}", parts.join(",\n")))
+
+    fields.push(emit_field("tags", emit_jsdoc_tags(&jsdoc.tags)?));
+
+    Ok(emit_object(fields))
 }
 
 fn emit_jsdoc_tags(tags: &[JsDocTag]) -> Result<String, String> {
-    if tags.is_empty() {
-        return Ok("[]".to_string());
+    emit_indented_array(tags, emit_jsdoc_tag)
+}
+
+fn emit_jsdoc_tag(tag: &JsDocTag) -> Result<String, String> {
+    let mut fields = vec![emit_field("name", to_js_literal(&tag.name)?)];
+
+    if let Some(value) = tag.value.as_ref() {
+        fields.push(emit_field("value", to_js_literal(value)?));
     }
-    let lines = tags
-        .iter()
-        .map(|tag| {
-            let mut parts = vec![format!("  name: {}", to_js_literal(&tag.name)?)];
-            if let Some(ref value) = tag.value {
-                parts.push(format!("  value: {}", to_js_literal(value)?));
-            }
-            Ok::<String, String>(indent_block(&format!("{{\n{}\n}}", parts.join(",\n")), 2))
-        })
-        .collect::<Result<Vec<_>, _>>()?;
-    Ok(format!("[\n{}\n]", lines.join(",\n")))
+
+    Ok(emit_object(fields))
 }
 
 fn emit_tuple_element(
     bundle: &TypeScriptBundle,
-    te: &TupleElement,
+    element: &TupleElement,
     export_names: &BTreeMap<String, String>,
 ) -> Result<String, String> {
-    let mut parts = vec![
-        format!("  optional: {}", to_js_literal(&te.optional)?),
-        format!("  rest: {}", to_js_literal(&te.rest)?),
-        format!(
-            "  element: {}",
-            indent_block(&emit_type_ref(bundle, &te.element, export_names)?, 2)
+    let mut fields = vec![
+        emit_field("optional", to_js_literal(&element.optional)?),
+        emit_field("rest", to_js_literal(&element.rest)?),
+        emit_field(
+            "element",
+            emit_type_ref(bundle, &element.element, export_names)?,
         ),
     ];
-    if let Some(ref label) = te.label {
-        parts.insert(0, format!("  label: {}", to_js_literal(label)?));
+
+    if let Some(label) = element.label.as_ref() {
+        fields.insert(0, emit_field("label", to_js_literal(label)?));
     }
-    Ok(format!("{{\n{}\n}}", parts.join(",\n")))
+
+    Ok(emit_object(fields))
 }
 
 fn emit_fn_param(
     bundle: &TypeScriptBundle,
-    p: &FnParam,
+    param: &FnParam,
     export_names: &BTreeMap<String, String>,
 ) -> Result<String, String> {
-    let name_str = match &p.name {
-        Some(n) => to_js_literal(n)?,
-        None => "null".to_string(),
-    };
-    let type_ref_str = emit_optional_type_ref(bundle, p.type_ref.as_ref(), export_names)?;
-    Ok(format!(
-        "{{\n  name: {},\n  optional: {},\n  typeRef: {},\n}}",
-        name_str,
-        to_js_literal(&p.optional)?,
-        indent_block(&type_ref_str, 2)
-    ))
+    Ok(emit_object(vec![
+        emit_field(
+            "name",
+            match param.name.as_ref() {
+                Some(name) => to_js_literal(name)?,
+                None => "null".to_string(),
+            },
+        ),
+        emit_field("optional", to_js_literal(&param.optional)?),
+        emit_field(
+            "typeRef",
+            emit_optional_type_ref(bundle, param.type_ref.as_ref(), export_names)?,
+        ),
+    ]))
 }
 
 pub(super) fn emit_optional_type_ref(
@@ -164,14 +159,14 @@ fn emit_template_literal_part(
     export_names: &BTreeMap<String, String>,
 ) -> Result<String, String> {
     match part {
-        TemplateLiteralPart::Text { value } => Ok(format!(
-            "{{\n  kind: \"text\",\n  value: {},\n}}",
-            to_js_literal(value)?,
-        )),
-        TemplateLiteralPart::Type { value } => Ok(format!(
-            "{{\n  kind: \"type\",\n  value: {},\n}}",
-            indent_block(&emit_type_ref(bundle, value, export_names)?, 2)
-        )),
+        TemplateLiteralPart::Text { value } => Ok(emit_object(vec![
+            emit_field("kind", to_js_literal("text")?),
+            emit_field("value", to_js_literal(value)?),
+        ])),
+        TemplateLiteralPart::Type { value } => Ok(emit_object(vec![
+            emit_field("kind", to_js_literal("type")?),
+            emit_field("value", emit_type_ref(bundle, value, export_names)?),
+        ])),
     }
 }
 
@@ -181,169 +176,123 @@ pub(super) fn emit_type_ref(
     export_names: &BTreeMap<String, String>,
 ) -> Result<String, String> {
     match type_ref {
-        TypeRef::Intrinsic { name } => Ok(format!(
-            "{{\n  kind: \"intrinsic\",\n  name: {},\n}}",
-            to_js_literal(name)?,
-        )),
-        TypeRef::Literal { value } => Ok(format!(
-            "{{\n  kind: \"literal\",\n  value: {},\n}}",
-            to_js_literal(value)?,
-        )),
+        TypeRef::Intrinsic { name } => Ok(emit_object(vec![
+            emit_field("kind", to_js_literal("intrinsic")?),
+            emit_field("name", to_js_literal(name)?),
+        ])),
+        TypeRef::Literal { value } => Ok(emit_object(vec![
+            emit_field("kind", to_js_literal("literal")?),
+            emit_field("value", to_js_literal(value)?),
+        ])),
         TypeRef::Reference {
             type_arguments: Some(args),
             ..
-        } => {
-            let reference = reference_descriptor(bundle, type_ref, export_names)
-                .ok_or_else(|| "Failed to emit reference.".to_string())?;
-            let args_lines: Vec<_> = args
-                .iter()
-                .map(|t| emit_type_ref(bundle, t, export_names).map(|s| indent_block(&s, 2)))
-                .collect::<Result<Vec<_>, _>>()?;
-            Ok(format!(
-                "{{\n  id: {},\n  name: {},\n  library: {},\n  typeArguments: [\n{}\n  ],\n}}",
-                to_js_literal(&reference.id)?,
-                to_js_literal(&reference.name)?,
-                to_js_literal(&reference.library)?,
-                args_lines.join(",\n")
-            ))
-        }
+        } => emit_reference_with_type_arguments(bundle, type_ref, args, export_names),
         TypeRef::Reference { .. } => {
             let reference = reference_descriptor(bundle, type_ref, export_names)
                 .ok_or_else(|| "Failed to emit reference.".to_string())?;
             emit_ref_object(&reference)
         }
-        TypeRef::Object { members } => {
-            let lines = members
-                .iter()
-                .map(|m| emit_member(bundle, m, export_names).map(|s| indent_block(&s, 2)))
-                .collect::<Result<Vec<_>, _>>()?;
-            Ok(format!(
-                "{{\n  kind: \"object\",\n  members: [\n{}\n  ],\n}}",
-                lines.join(",\n")
-            ))
-        }
-        TypeRef::Union { types } => {
-            let lines = types
-                .iter()
-                .map(|nested| emit_type_ref(bundle, nested, export_names).map(|value| indent_block(&value, 2)))
-                .collect::<Result<Vec<_>, _>>()?;
-
-            Ok(format!(
-                "{{\n  kind: \"union\",\n  types: [\n{}\n  ],\n}}",
-                lines.join(",\n")
-            ))
-        }
-        TypeRef::Array { element } => {
-            let inner = emit_type_ref(bundle, element, export_names)?;
-            Ok(format!(
-                "{{\n  kind: \"array\",\n  element: {},\n}}",
-                indent_block(&inner, 2)
-            ))
-        }
-        TypeRef::Tuple { elements } => {
-            let lines = elements
-                .iter()
-                .map(|te| emit_tuple_element(bundle, te, export_names))
-                .collect::<Result<Vec<_>, _>>()?;
-            Ok(format!(
-                "{{\n  kind: \"tuple\",\n  elements: [\n{}\n  ],\n}}",
-                lines.join(",\n")
-            ))
-        }
-        TypeRef::Intersection { types } => {
-            let lines = types
-                .iter()
-                .map(|t| emit_type_ref(bundle, t, export_names).map(|s| indent_block(&s, 2)))
-                .collect::<Result<Vec<_>, _>>()?;
-            Ok(format!(
-                "{{\n  kind: \"intersection\",\n  types: [\n{}\n  ],\n}}",
-                lines.join(",\n")
-            ))
-        }
-        TypeRef::IndexedAccess { object, index } => {
-            let object_str = emit_type_ref(bundle, object, export_names)?;
-            let index_str = emit_type_ref(bundle, index, export_names)?;
-            Ok(format!(
-                "{{\n  kind: \"indexed_access\",\n  object: {},\n  index: {},\n}}",
-                indent_block(&object_str, 2),
-                indent_block(&index_str, 2)
-            ))
-        }
-        TypeRef::Function { params, return_type } => {
-            let param_lines: Vec<_> = params
-                .iter()
-                .map(|p| emit_fn_param(bundle, p, export_names))
-                .collect::<Result<Vec<_>, _>>()?;
-            let return_str = emit_type_ref(bundle, return_type, export_names)?;
-            Ok(format!(
-                "{{\n  kind: \"function\",\n  params: [\n{}\n  ],\n  returnType: {},\n}}",
-                param_lines
-                    .iter()
-                    .map(|s| indent_block(s, 2))
-                    .collect::<Vec<_>>()
-                    .join(",\n"),
-                indent_block(&return_str, 2)
-            ))
-        }
+        TypeRef::Object { members } => Ok(emit_object(vec![
+            emit_field("kind", to_js_literal("object")?),
+            emit_field("members", emit_members(bundle, members, export_names)?),
+        ])),
+        TypeRef::Union { types } => Ok(emit_object(vec![
+            emit_field("kind", to_js_literal("union")?),
+            emit_field("types", emit_type_ref_array(bundle, types, export_names)?),
+        ])),
+        TypeRef::Array { element } => Ok(emit_object(vec![
+            emit_field("kind", to_js_literal("array")?),
+            emit_field("element", emit_type_ref(bundle, element, export_names)?),
+        ])),
+        TypeRef::Tuple { elements } => Ok(emit_object(vec![
+            emit_field("kind", to_js_literal("tuple")?),
+            emit_field(
+                "elements",
+                emit_indented_array(elements, |element| {
+                    emit_tuple_element(bundle, element, export_names)
+                })?,
+            ),
+        ])),
+        TypeRef::Intersection { types } => Ok(emit_object(vec![
+            emit_field("kind", to_js_literal("intersection")?),
+            emit_field("types", emit_type_ref_array(bundle, types, export_names)?),
+        ])),
+        TypeRef::IndexedAccess { object, index } => Ok(emit_object(vec![
+            emit_field("kind", to_js_literal("indexed_access")?),
+            emit_field("object", emit_type_ref(bundle, object, export_names)?),
+            emit_field("index", emit_type_ref(bundle, index, export_names)?),
+        ])),
+        TypeRef::Function {
+            params,
+            return_type,
+        } => Ok(emit_object(vec![
+            emit_field("kind", to_js_literal("function")?),
+            emit_field("params", emit_fn_params(bundle, params, export_names)?),
+            emit_field(
+                "returnType",
+                emit_type_ref(bundle, return_type, export_names)?,
+            ),
+        ])),
         TypeRef::Constructor {
             r#abstract,
             type_parameters,
             params,
             return_type,
         } => {
-            let param_lines: Vec<_> = params
-                .iter()
-                .map(|p| emit_fn_param(bundle, p, export_names))
-                .collect::<Result<Vec<_>, _>>()?;
-            let return_str = emit_type_ref(bundle, return_type, export_names)?;
-            let mut parts = vec![
-                "  kind: \"constructor\"".to_string(),
-                format!("  abstract: {}", to_js_literal(r#abstract)?),
-                format!(
-                    "  params: [\n{}\n  ]",
-                    param_lines
-                        .iter()
-                        .map(|s| indent_block(s, 2))
-                        .collect::<Vec<_>>()
-                        .join(",\n")
-                ),
-                format!("  returnType: {}", indent_block(&return_str, 2)),
+            let mut fields = vec![
+                emit_field("kind", to_js_literal("constructor")?),
+                emit_field("abstract", to_js_literal(r#abstract)?),
             ];
+
             if !type_parameters.is_empty() {
-                parts.insert(
-                    2,
-                    format!(
-                        "  typeParameters: {}",
-                        indent_block(&emit_type_parameters(bundle, type_parameters, export_names)?, 2)
-                    ),
-                );
+                fields.push(emit_field(
+                    "typeParameters",
+                    emit_type_parameters(bundle, type_parameters, export_names)?,
+                ));
             }
-            Ok(format!("{{\n{}\n}}", parts.join(",\n")))
+
+            fields.push(emit_field(
+                "params",
+                emit_fn_params(bundle, params, export_names)?,
+            ));
+            fields.push(emit_field(
+                "returnType",
+                emit_type_ref(bundle, return_type, export_names)?,
+            ));
+
+            Ok(emit_object(fields))
         }
-        TypeRef::TypeOperator { operator, target } => {
-            let target_str = emit_type_ref(bundle, target, export_names)?;
-            Ok(format!(
-                "{{\n  kind: \"type_operator\",\n  operator: {},\n  target: {},\n}}",
-                to_js_literal(operator.as_str())?,
-                indent_block(&target_str, 2)
-            ))
-        }
-        TypeRef::TypeQuery { expression } => Ok(format!(
-            "{{\n  kind: \"type_query\",\n  expression: {},\n}}",
-            to_js_literal(expression)?,
-        )),
+        TypeRef::TypeOperator { operator, target } => Ok(emit_object(vec![
+            emit_field("kind", to_js_literal("type_operator")?),
+            emit_field("operator", to_js_literal(operator.as_str())?),
+            emit_field("target", emit_type_ref(bundle, target, export_names)?),
+        ])),
+        TypeRef::TypeQuery { expression } => Ok(emit_object(vec![
+            emit_field("kind", to_js_literal("type_query")?),
+            emit_field("expression", to_js_literal(expression)?),
+        ])),
         TypeRef::Conditional {
             check_type,
             extends_type,
             true_type,
             false_type,
-        } => Ok(format!(
-            "{{\n  kind: \"conditional\",\n  checkType: {},\n  extendsType: {},\n  trueType: {},\n  falseType: {},\n}}",
-            indent_block(&emit_type_ref(bundle, check_type, export_names)?, 2),
-            indent_block(&emit_type_ref(bundle, extends_type, export_names)?, 2),
-            indent_block(&emit_type_ref(bundle, true_type, export_names)?, 2),
-            indent_block(&emit_type_ref(bundle, false_type, export_names)?, 2)
-        )),
+        } => Ok(emit_object(vec![
+            emit_field("kind", to_js_literal("conditional")?),
+            emit_field(
+                "checkType",
+                emit_type_ref(bundle, check_type, export_names)?,
+            ),
+            emit_field(
+                "extendsType",
+                emit_type_ref(bundle, extends_type, export_names)?,
+            ),
+            emit_field("trueType", emit_type_ref(bundle, true_type, export_names)?),
+            emit_field(
+                "falseType",
+                emit_type_ref(bundle, false_type, export_names)?,
+            ),
+        ])),
         TypeRef::Mapped {
             type_param,
             source_type,
@@ -352,45 +301,133 @@ pub(super) fn emit_type_ref(
             readonly_modifier,
             value_type,
         } => {
-            let mut parts = vec![
-                format!("  kind: {}", to_js_literal("mapped")?),
-                format!("  typeParam: {}", to_js_literal(type_param)?),
-                format!(
-                    "  sourceType: {}",
-                    indent_block(&emit_type_ref(bundle, source_type, export_names)?, 2)
+            let mut fields = vec![
+                emit_field("kind", to_js_literal("mapped")?),
+                emit_field("typeParam", to_js_literal(type_param)?),
+                emit_field(
+                    "sourceType",
+                    emit_type_ref(bundle, source_type, export_names)?,
                 ),
-                format!("  optionalModifier: {}", to_js_literal(optional_modifier.as_str())?),
-                format!("  readonlyModifier: {}", to_js_literal(readonly_modifier.as_str())?),
+                emit_field(
+                    "optionalModifier",
+                    to_js_literal(optional_modifier.as_str())?,
+                ),
+                emit_field(
+                    "readonlyModifier",
+                    to_js_literal(readonly_modifier.as_str())?,
+                ),
             ];
-            if let Some(name_type) = name_type {
-                parts.push(format!(
-                    "  nameType: {}",
-                    indent_block(&emit_type_ref(bundle, name_type, export_names)?, 2)
+
+            if let Some(name_type) = name_type.as_deref() {
+                fields.push(emit_field(
+                    "nameType",
+                    emit_type_ref(bundle, name_type, export_names)?,
                 ));
             }
-            let value_type_str = match value_type {
-                Some(value_type) => emit_type_ref(bundle, value_type, export_names)?,
-                None => "null".to_string(),
-            };
-            parts.push(format!("  valueType: {}", indent_block(&value_type_str, 2)));
-            Ok(format!("{{\n{}\n}}", parts.join(",\n")))
+
+            fields.push(emit_field(
+                "valueType",
+                emit_optional_type_ref(bundle, value_type.as_deref(), export_names)?,
+            ));
+
+            Ok(emit_object(fields))
         }
-        TypeRef::TemplateLiteral { parts } => {
-            let lines = parts
-                .iter()
-                .map(|part| {
+        TypeRef::TemplateLiteral { parts } => Ok(emit_object(vec![
+            emit_field("kind", to_js_literal("template_literal")?),
+            emit_field(
+                "parts",
+                emit_indented_array(parts, |part| {
                     emit_template_literal_part(bundle, part, export_names)
-                        .map(|value| indent_block(&value, 2))
-                })
-                .collect::<Result<Vec<_>, _>>()?;
-            Ok(format!(
-                "{{\n  kind: \"template_literal\",\n  parts: [\n{}\n  ],\n}}",
-                lines.join(",\n")
-            ))
-        }
-        TypeRef::Raw { summary } => Ok(format!(
-            "{{\n  kind: \"raw\",\n  summary: {},\n}}",
-            to_js_literal(summary)?,
-        )),
+                })?,
+            ),
+        ])),
+        TypeRef::Raw { summary } => Ok(emit_object(vec![
+            emit_field("kind", to_js_literal("raw")?),
+            emit_field("summary", to_js_literal(summary)?),
+        ])),
+    }
+}
+
+fn emit_reference_with_type_arguments(
+    bundle: &TypeScriptBundle,
+    type_ref: &TypeRef,
+    args: &[TypeRef],
+    export_names: &BTreeMap<String, String>,
+) -> Result<String, String> {
+    let reference = reference_descriptor(bundle, type_ref, export_names)
+        .ok_or_else(|| "Failed to emit reference.".to_string())?;
+
+    Ok(emit_object(vec![
+        emit_field("id", to_js_literal(&reference.id)?),
+        emit_field("name", to_js_literal(&reference.name)?),
+        emit_field("library", to_js_literal(&reference.library)?),
+        emit_field(
+            "typeArguments",
+            emit_type_ref_array(bundle, args, export_names)?,
+        ),
+    ]))
+}
+
+fn emit_type_ref_array(
+    bundle: &TypeScriptBundle,
+    types: &[TypeRef],
+    export_names: &BTreeMap<String, String>,
+) -> Result<String, String> {
+    emit_indented_array(types, |type_ref| {
+        emit_type_ref(bundle, type_ref, export_names)
+    })
+}
+
+fn emit_fn_params(
+    bundle: &TypeScriptBundle,
+    params: &[FnParam],
+    export_names: &BTreeMap<String, String>,
+) -> Result<String, String> {
+    emit_indented_array(params, |param| emit_fn_param(bundle, param, export_names))
+}
+
+fn emit_indented_array<T>(
+    items: &[T],
+    mut emit_item: impl FnMut(&T) -> Result<String, String>,
+) -> Result<String, String> {
+    let items = items
+        .iter()
+        .map(|item| emit_item(item).map(|value| indent_block(&value, 2)))
+        .collect::<Result<Vec<_>, _>>()?;
+
+    Ok(emit_array(items))
+}
+
+fn push_description_fields(
+    fields: &mut Vec<String>,
+    description: Option<&String>,
+    description_raw: Option<&String>,
+    jsdoc: Option<&JsDoc>,
+) -> Result<(), String> {
+    if let Some(description) = description {
+        fields.push(emit_field("description", to_js_literal(description)?));
+    }
+
+    if let Some(description_raw) = description_raw {
+        fields.push(emit_field(
+            "descriptionRaw",
+            to_js_literal(description_raw)?,
+        ));
+    }
+
+    if let Some(jsdoc) = jsdoc {
+        fields.push(emit_field("jsdoc", emit_jsdoc(jsdoc)?));
+    }
+
+    Ok(())
+}
+
+fn member_kind_name(kind: TsMemberKind) -> &'static str {
+    match kind {
+        TsMemberKind::Property => "property",
+        TsMemberKind::Method => "method",
+        TsMemberKind::CallSignature => "call",
+        TsMemberKind::IndexSignature => "index",
+        TsMemberKind::ConstructSignature => "construct",
     }
 }

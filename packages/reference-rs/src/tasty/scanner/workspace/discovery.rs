@@ -2,10 +2,10 @@ use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::fs;
 use std::path::Path;
 
-use super::policy::resolve_import_for_discovery;
 use super::super::imports::{extract_module_specifiers, extract_reexport_module_specifiers};
 use super::super::model::DiscoveredFile;
 use super::super::paths::module_specifier_for_file_id;
+use super::policy::resolve_import_for_discovery;
 
 pub(super) fn discover_reachable_files(
     root_dir: &Path,

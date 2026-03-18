@@ -2,17 +2,17 @@ use std::collections::BTreeMap;
 
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
-    Expression, FormalParameters, TSType, TSTypeParameterDeclaration, TSTupleElement,
+    Expression, FormalParameters, TSTupleElement, TSType, TSTypeParameterDeclaration,
 };
 use oxc_parser::Parser;
 use oxc_span::{GetSpan, SourceType};
 
-use super::members::members_from_signatures;
 use super::super::super::model::{
     FnParam, MappedModifierKind, TemplateLiteralPart, TsMember, TsTypeParameter, TupleElement,
     TypeOperatorKind, TypeRef,
 };
 use super::super::model::ImportBinding;
+use super::members::members_from_signatures;
 use super::slice_span;
 
 struct LoweringContext<'a> {
@@ -49,8 +49,14 @@ impl<'a> LoweringContext<'a> {
             .iter()
             .map(|param| TsTypeParameter {
                 name: slice_span(self.source, param.name.span()).to_string(),
-                constraint: param.constraint.as_ref().map(|constraint| self.lower_type(constraint)),
-                default: param.default.as_ref().map(|default| self.lower_type(default)),
+                constraint: param
+                    .constraint
+                    .as_ref()
+                    .map(|constraint| self.lower_type(constraint)),
+                default: param
+                    .default
+                    .as_ref()
+                    .map(|default| self.lower_type(default)),
             })
             .collect()
     }
@@ -468,7 +474,10 @@ fn collect_type_ref_references(type_ref: &TypeRef, references: &mut Vec<TypeRef>
             collect_type_ref_references(object, references);
             collect_type_ref_references(index, references);
         }
-        TypeRef::Function { params, return_type } => {
+        TypeRef::Function {
+            params,
+            return_type,
+        } => {
             for param in params {
                 collect_fn_param_references(param, references);
             }

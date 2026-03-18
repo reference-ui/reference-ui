@@ -107,12 +107,8 @@ pub struct TsMember {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TemplateLiteralPart {
-    Text {
-        value: String,
-    },
-    Type {
-        value: TypeRef,
-    },
+    Text { value: String },
+    Type { value: TypeRef },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
