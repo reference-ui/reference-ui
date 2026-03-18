@@ -55,14 +55,15 @@ Done:
 - common import/reference resolution gaps for default imports and namespace imports are now fixed
 - package-boundary integration coverage for the emitted runtime is now in place
 - rebuild/cache invalidation coverage is now in place
-- structured Tasty build diagnostics are now surfaced through the wider Reference build flow, and the final cleanup pass in `packages/reference-core/src/reference` has started landing
+- structured Tasty build diagnostics are now surfaced through the wider Reference build flow, and the final cleanup pass in `packages/reference-core/src/reference` has landed
+- the remaining CLI/runtime path issue around resolving the installed core package dir has been tightened so worker/runtime lookup does not depend on the caller's cwd layout
 
 Next:
 
-- release-candidate verification pass and final polish as needed
+- release is ready unless a concrete bug turns up during final smoke verification
 
 Still to do after that:
-- cut release once the verification pass stays green and no further cleanup issues turn up
+- cut release
 
 ## Release Priorities
 
@@ -101,7 +102,8 @@ Testing should prove the system works in the ways it is actually consumed.
 
 Highest-value test gaps:
 
-- no major release-blocking test gaps are currently called out here; keep using the full Rust and system suites as the release gate
+- no major release-blocking test gaps are currently called out here
+- the system is already proved through the existing Rust, package-boundary, rebuild/cache, and system coverage; avoid inventing new pre-release yak-shave tests unless a specific failure mode appears
 
 ### Separation Of Concerns
 
@@ -128,6 +130,7 @@ Before release, this is the practical sequence:
 3. Done: add package-boundary integration coverage so the emitted runtime path is tested the way consumers actually use it.
 4. Done: add rebuild/cache coverage that exercises config-sensitive invalidation and protects against stale output reuse.
 5. Done: make good use of the new structured Tasty build diagnostics in the wider Reference build flow and do a final cleanup pass on `packages/reference-core/src/reference` so naming, ownership, and file responsibilities are clear and unsurprising.
+6. Done: tighten installed-CLI core package resolution so worker/runtime lookup does not rely on the caller being inside the monorepo.
 
 ## What Not To Do
 
