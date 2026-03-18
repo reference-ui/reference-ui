@@ -1,8 +1,8 @@
 use super::model::TypeScriptBundle;
 use super::request::ScanRequest;
 use super::ast::{extract_ast, resolve_ast};
-use super::generator::emit_esm_bundle;
-use super::generator::generate_debug_bundle;
+use super::generator::build_typescript_bundle;
+use super::generator::emit_artifact_bundle;
 use super::scanner::scan_workspace;
 use serde::Serialize;
 
@@ -17,18 +17,18 @@ pub fn scan_typescript_bundle(request: &ScanRequest) -> Result<TypeScriptBundle,
     let scanned_workspace = scan_workspace(&request.root_dir, &request.include)?;
     let parsed_ast = extract_ast(&scanned_workspace);
     let resolved_graph = resolve_ast(parsed_ast);
-    Ok(generate_debug_bundle(request, resolved_graph))
+    Ok(build_typescript_bundle(request, resolved_graph))
 }
 
-/// Scan and emit all Tasty ESM modules as a JSON payload for filesystem writing.
+/// Scan and emit all Tasty artifact modules as a JSON payload for filesystem writing.
 pub fn scan_and_emit_modules(request: &ScanRequest) -> Result<String, String> {
     let bundle = scan_typescript_bundle(request)?;
-    let esm = emit_esm_bundle(&bundle)?;
+    let artifact_bundle = emit_artifact_bundle(&bundle)?;
     let payload = EmittedModulesPayload {
-        modules: esm.modules,
-        type_declarations: esm.type_declarations,
+        modules: artifact_bundle.modules,
+        type_declarations: artifact_bundle.type_declarations,
         diagnostics: bundle.diagnostics,
     };
     serde_json::to_string(&payload)
-        .map_err(|error| format!("failed to serialize ESM modules: {error}"))
+        .map_err(|error| format!("failed to serialize artifact modules: {error}"))
 }

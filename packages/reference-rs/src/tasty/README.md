@@ -45,9 +45,9 @@ The architecture split is simple:
 | `packages/reference-rs/js/tasty` | lazy runtime API built on top of emitted artifacts |
 
 If you are changing Tasty, the usual starting points are `model.rs` for the IR,
-`ast/resolve.rs` for type lowering and graph resolution, `scan.rs` for
-orchestration, `generator/esm.rs` for output shape, and `emitted.rs` for the
-generated contract.
+`ast/` for parsing and graph resolution, `scan.rs` for orchestration,
+`generator/` for emitted artifact shape, and `emitted.rs` for the generated
+contract.
 
 ## Scan Boundary
 
