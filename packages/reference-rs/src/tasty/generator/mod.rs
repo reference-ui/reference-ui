@@ -1,11 +1,14 @@
-mod esm;
+mod bundle;
+mod symbols;
+mod types;
+mod util;
 
 use super::ast::ResolvedTypeScriptGraph;
 use super::model::TypeScriptBundle;
 use super::request::ScanRequest;
-pub(crate) use esm::emit_esm_bundle;
+pub(crate) use bundle::emit_artifact_bundle;
 
-pub(crate) fn generate_debug_bundle(
+pub(crate) fn build_typescript_bundle(
     request: &ScanRequest,
     resolved_graph: ResolvedTypeScriptGraph,
 ) -> TypeScriptBundle {
