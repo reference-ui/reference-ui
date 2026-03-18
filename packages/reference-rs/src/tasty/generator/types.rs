@@ -188,11 +188,7 @@ pub(super) fn emit_type_ref(
             type_arguments: Some(args),
             ..
         } => emit_reference_with_type_arguments(bundle, type_ref, args, export_names),
-        TypeRef::Reference { .. } => {
-            let reference = reference_descriptor(bundle, type_ref, export_names)
-                .ok_or_else(|| "Failed to emit reference.".to_string())?;
-            emit_ref_object(&reference)
-        }
+        TypeRef::Reference { .. } => emit_reference_type_ref(bundle, type_ref, export_names),
         TypeRef::Object { members } => Ok(emit_object(vec![
             emit_field("kind", to_js_literal("object")?),
             emit_field("members", emit_members(bundle, members, export_names)?),
@@ -239,30 +235,14 @@ pub(super) fn emit_type_ref(
             type_parameters,
             params,
             return_type,
-        } => {
-            let mut fields = vec![
-                emit_field("kind", to_js_literal("constructor")?),
-                emit_field("abstract", to_js_literal(r#abstract)?),
-            ];
-
-            if !type_parameters.is_empty() {
-                fields.push(emit_field(
-                    "typeParameters",
-                    emit_type_parameters(bundle, type_parameters, export_names)?,
-                ));
-            }
-
-            fields.push(emit_field(
-                "params",
-                emit_fn_params(bundle, params, export_names)?,
-            ));
-            fields.push(emit_field(
-                "returnType",
-                emit_type_ref(bundle, return_type, export_names)?,
-            ));
-
-            Ok(emit_object(fields))
-        }
+        } => emit_constructor_type_ref(
+            bundle,
+            *r#abstract,
+            type_parameters,
+            params,
+            return_type,
+            export_names,
+        ),
         TypeRef::TypeOperator { operator, target } => Ok(emit_object(vec![
             emit_field("kind", to_js_literal("type_operator")?),
             emit_field("operator", to_js_literal(operator.as_str())?),
@@ -300,38 +280,16 @@ pub(super) fn emit_type_ref(
             optional_modifier,
             readonly_modifier,
             value_type,
-        } => {
-            let mut fields = vec![
-                emit_field("kind", to_js_literal("mapped")?),
-                emit_field("typeParam", to_js_literal(type_param)?),
-                emit_field(
-                    "sourceType",
-                    emit_type_ref(bundle, source_type, export_names)?,
-                ),
-                emit_field(
-                    "optionalModifier",
-                    to_js_literal(optional_modifier.as_str())?,
-                ),
-                emit_field(
-                    "readonlyModifier",
-                    to_js_literal(readonly_modifier.as_str())?,
-                ),
-            ];
-
-            if let Some(name_type) = name_type.as_deref() {
-                fields.push(emit_field(
-                    "nameType",
-                    emit_type_ref(bundle, name_type, export_names)?,
-                ));
-            }
-
-            fields.push(emit_field(
-                "valueType",
-                emit_optional_type_ref(bundle, value_type.as_deref(), export_names)?,
-            ));
-
-            Ok(emit_object(fields))
-        }
+        } => emit_mapped_type_ref(
+            bundle,
+            type_param,
+            source_type,
+            name_type.as_deref(),
+            optional_modifier.as_str(),
+            readonly_modifier.as_str(),
+            value_type.as_deref(),
+            export_names,
+        ),
         TypeRef::TemplateLiteral { parts } => Ok(emit_object(vec![
             emit_field("kind", to_js_literal("template_literal")?),
             emit_field(
@@ -346,6 +304,16 @@ pub(super) fn emit_type_ref(
             emit_field("summary", to_js_literal(summary)?),
         ])),
     }
+}
+
+fn emit_reference_type_ref(
+    bundle: &TypeScriptBundle,
+    type_ref: &TypeRef,
+    export_names: &BTreeMap<String, String>,
+) -> Result<String, String> {
+    let reference = reference_descriptor(bundle, type_ref, export_names)
+        .ok_or_else(|| "Failed to emit reference.".to_string())?;
+    emit_ref_object(&reference)
 }
 
 fn emit_reference_with_type_arguments(
@@ -366,6 +334,95 @@ fn emit_reference_with_type_arguments(
             emit_type_ref_array(bundle, args, export_names)?,
         ),
     ]))
+}
+
+fn emit_constructor_type_ref(
+    bundle: &TypeScriptBundle,
+    is_abstract: bool,
+    type_parameters: &[TsTypeParameter],
+    params: &[FnParam],
+    return_type: &TypeRef,
+    export_names: &BTreeMap<String, String>,
+) -> Result<String, String> {
+    let mut fields = vec![
+        emit_field("kind", to_js_literal("constructor")?),
+        emit_field("abstract", to_js_literal(&is_abstract)?),
+    ];
+
+    push_constructor_type_parameters(&mut fields, bundle, type_parameters, export_names)?;
+    fields.push(emit_field(
+        "params",
+        emit_fn_params(bundle, params, export_names)?,
+    ));
+    fields.push(emit_field(
+        "returnType",
+        emit_type_ref(bundle, return_type, export_names)?,
+    ));
+
+    Ok(emit_object(fields))
+}
+
+fn push_constructor_type_parameters(
+    fields: &mut Vec<String>,
+    bundle: &TypeScriptBundle,
+    type_parameters: &[TsTypeParameter],
+    export_names: &BTreeMap<String, String>,
+) -> Result<(), String> {
+    if !type_parameters.is_empty() {
+        fields.push(emit_field(
+            "typeParameters",
+            emit_type_parameters(bundle, type_parameters, export_names)?,
+        ));
+    }
+
+    Ok(())
+}
+
+fn emit_mapped_type_ref(
+    bundle: &TypeScriptBundle,
+    type_param: &str,
+    source_type: &TypeRef,
+    name_type: Option<&TypeRef>,
+    optional_modifier: &str,
+    readonly_modifier: &str,
+    value_type: Option<&TypeRef>,
+    export_names: &BTreeMap<String, String>,
+) -> Result<String, String> {
+    let mut fields = vec![
+        emit_field("kind", to_js_literal("mapped")?),
+        emit_field("typeParam", to_js_literal(type_param)?),
+        emit_field(
+            "sourceType",
+            emit_type_ref(bundle, source_type, export_names)?,
+        ),
+        emit_field("optionalModifier", to_js_literal(optional_modifier)?),
+        emit_field("readonlyModifier", to_js_literal(readonly_modifier)?),
+    ];
+
+    push_optional_type_ref_field(fields.as_mut(), "nameType", bundle, name_type, export_names)?;
+    fields.push(emit_field(
+        "valueType",
+        emit_optional_type_ref(bundle, value_type, export_names)?,
+    ));
+
+    Ok(emit_object(fields))
+}
+
+fn push_optional_type_ref_field(
+    fields: &mut Vec<String>,
+    name: &str,
+    bundle: &TypeScriptBundle,
+    type_ref: Option<&TypeRef>,
+    export_names: &BTreeMap<String, String>,
+) -> Result<(), String> {
+    if let Some(type_ref) = type_ref {
+        fields.push(emit_field(
+            name,
+            emit_type_ref(bundle, type_ref, export_names)?,
+        ));
+    }
+
+    Ok(())
 }
 
 fn emit_type_ref_array(

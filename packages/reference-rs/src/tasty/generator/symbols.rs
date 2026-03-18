@@ -132,21 +132,43 @@ fn push_symbol_metadata_fields(
     symbol: &TsSymbol,
     export_names: &BTreeMap<String, String>,
 ) -> Result<(), String> {
-    if let Some(description) = symbol.description.as_ref() {
-        fields.push(emit_field("description", to_js_literal(description)?));
+    push_optional_string_field(fields, "description", symbol.description.as_ref())?;
+    push_optional_string_field(fields, "descriptionRaw", symbol.description_raw.as_ref())?;
+    push_optional_jsdoc_field(fields, symbol.jsdoc.as_ref())?;
+    push_type_parameters_field(fields, bundle, symbol, export_names)?;
+
+    Ok(())
+}
+
+fn push_optional_string_field(
+    fields: &mut Vec<String>,
+    name: &str,
+    value: Option<&String>,
+) -> Result<(), String> {
+    if let Some(value) = value {
+        fields.push(emit_field(name, to_js_literal(value)?));
     }
 
-    if let Some(description_raw) = symbol.description_raw.as_ref() {
-        fields.push(emit_field(
-            "descriptionRaw",
-            to_js_literal(description_raw)?,
-        ));
-    }
+    Ok(())
+}
 
-    if let Some(jsdoc) = symbol.jsdoc.as_ref() {
+fn push_optional_jsdoc_field(
+    fields: &mut Vec<String>,
+    jsdoc: Option<&super::super::model::JsDoc>,
+) -> Result<(), String> {
+    if let Some(jsdoc) = jsdoc {
         fields.push(emit_field("jsdoc", emit_jsdoc(jsdoc)?));
     }
 
+    Ok(())
+}
+
+fn push_type_parameters_field(
+    fields: &mut Vec<String>,
+    bundle: &TypeScriptBundle,
+    symbol: &TsSymbol,
+    export_names: &BTreeMap<String, String>,
+) -> Result<(), String> {
     if !symbol.type_parameters.is_empty() {
         fields.push(emit_field(
             "typeParameters",

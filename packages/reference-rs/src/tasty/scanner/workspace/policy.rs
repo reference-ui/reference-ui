@@ -18,37 +18,18 @@ pub(super) fn resolve_import_for_discovery(
     current_library: &str,
 ) -> Option<ResolvedModule> {
     if source_module.starts_with('.') {
-        // External declaration files are allowed to walk the filesystem because we
-        // discover them incrementally from package entrypoints rather than from the
-        // original user include globs.
-        let file_id = if is_external_file_id(current_file_id) {
-            resolve_relative_import(
-                root_dir,
-                current_file_id,
-                source_module,
-                known_file_ids,
-                true,
-            )?
-        } else {
-            resolve_relative_import(
-                root_dir,
-                current_file_id,
-                source_module,
-                user_file_ids,
-                false,
-            )?
-        };
-
-        return Some(ResolvedModule {
-            module_specifier: module_specifier_for_file_id(&file_id),
-            library: package_name_from_file_id(&file_id),
-            file_id,
-        });
+        return resolve_relative_import_for_discovery(
+            root_dir,
+            current_file_id,
+            source_module,
+            known_file_ids,
+            user_file_ids,
+        );
     }
 
     // User files only pull external libraries into the graph when the user
     // re-exports them. Plain imports are not part of the public bridge.
-    if is_user_file && !reexport_specifiers.contains(source_module) {
+    if should_skip_user_external_import(is_user_file, reexport_specifiers, source_module) {
         return None;
     }
 
@@ -56,12 +37,64 @@ pub(super) fn resolve_import_for_discovery(
     // package. This keeps discovery scoped to the declarations that back the
     // symbols we already chose to bridge.
     if !is_user_file {
-        let resolved = resolve_external_import(root_dir, source_module)?;
-        if resolved.library != current_library {
-            return None;
-        }
-        return Some(resolved);
+        return resolve_external_import_in_current_library(
+            root_dir,
+            source_module,
+            current_library,
+        );
     }
 
     resolve_external_import(root_dir, source_module)
+}
+
+fn resolve_relative_import_for_discovery(
+    root_dir: &Path,
+    current_file_id: &str,
+    source_module: &str,
+    known_file_ids: &BTreeSet<String>,
+    user_file_ids: &BTreeSet<String>,
+) -> Option<ResolvedModule> {
+    let is_external = is_external_file_id(current_file_id);
+    let (file_ids, allow_file_lookup) = if is_external {
+        // External declaration files are allowed to walk the filesystem because we
+        // discover them incrementally from package entrypoints rather than from the
+        // original user include globs.
+        (known_file_ids, true)
+    } else {
+        (user_file_ids, false)
+    };
+    let file_id = resolve_relative_import(
+        root_dir,
+        current_file_id,
+        source_module,
+        file_ids,
+        allow_file_lookup,
+    )?;
+
+    Some(resolved_module_from_file_id(file_id))
+}
+
+fn resolved_module_from_file_id(file_id: String) -> ResolvedModule {
+    ResolvedModule {
+        module_specifier: module_specifier_for_file_id(&file_id),
+        library: package_name_from_file_id(&file_id),
+        file_id,
+    }
+}
+
+fn should_skip_user_external_import(
+    is_user_file: bool,
+    reexport_specifiers: &BTreeSet<String>,
+    source_module: &str,
+) -> bool {
+    is_user_file && !reexport_specifiers.contains(source_module)
+}
+
+fn resolve_external_import_in_current_library(
+    root_dir: &Path,
+    source_module: &str,
+    current_library: &str,
+) -> Option<ResolvedModule> {
+    let resolved = resolve_external_import(root_dir, source_module)?;
+    (resolved.library == current_library).then_some(resolved)
 }

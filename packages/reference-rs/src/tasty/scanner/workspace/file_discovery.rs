@@ -9,31 +9,42 @@ pub(super) fn discover_file_ids(
     root_dir: &Path,
     include: &[String],
 ) -> Result<Vec<String>, String> {
-    let walker = GlobWalkerBuilder::from_patterns(root_dir, include)
-        .follow_links(true)
-        .build()
-        .map_err(|err| format!("failed to build glob walker: {err}"))?;
+    let walker = build_glob_walker(root_dir, include)?;
 
     let mut file_ids = BTreeSet::new();
     for entry in walker {
         let entry = entry.map_err(|err| format!("failed to walk scan root: {err}"))?;
-        if !entry.file_type().is_file() {
+        if !is_supported_source_entry(&entry) {
             continue;
         }
 
-        let Some(extension) = entry.path().extension().and_then(|ext| ext.to_str()) else {
-            continue;
-        };
-        if !matches!(extension, "ts" | "tsx") {
-            continue;
-        }
-
-        let relative = entry
-            .path()
-            .strip_prefix(root_dir)
-            .map_err(|err| format!("failed to normalize path {}: {err}", entry.path().display()))?;
-        file_ids.insert(path_to_unix(relative));
+        file_ids.insert(normalized_file_id(root_dir, entry.path())?);
     }
 
     Ok(file_ids.into_iter().collect())
+}
+
+fn build_glob_walker(root_dir: &Path, include: &[String]) -> Result<globwalk::GlobWalker, String> {
+    GlobWalkerBuilder::from_patterns(root_dir, include)
+        .follow_links(true)
+        .build()
+        .map_err(|err| format!("failed to build glob walker: {err}"))
+}
+
+fn is_supported_source_entry(entry: &globwalk::DirEntry) -> bool {
+    entry.file_type().is_file() && has_supported_source_extension(entry.path())
+}
+
+fn has_supported_source_extension(path: &Path) -> bool {
+    matches!(
+        path.extension().and_then(|ext| ext.to_str()),
+        Some("ts" | "tsx")
+    )
+}
+
+fn normalized_file_id(root_dir: &Path, path: &Path) -> Result<String, String> {
+    let relative = path
+        .strip_prefix(root_dir)
+        .map_err(|err| format!("failed to normalize path {}: {err}", path.display()))?;
+    Ok(path_to_unix(relative))
 }
