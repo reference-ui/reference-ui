@@ -1,15 +1,13 @@
-use std::collections::{BTreeMap, BTreeSet, VecDeque};
+mod discovery;
+mod file_discovery;
+mod policy;
+
 use std::fs;
 use std::path::Path;
 
-use globwalk::GlobWalkerBuilder;
-
-use super::imports::{extract_module_specifiers, extract_reexport_module_specifiers};
-use super::model::{DiscoveredFile, ResolvedModule, ScannedFile, ScannedWorkspace};
-use super::packages::{resolve_external_import, resolve_relative_import};
-use super::paths::{
-    is_external_file_id, module_specifier_for_file_id, package_name_from_file_id, path_to_unix,
-};
+use self::discovery::discover_reachable_files;
+use self::file_discovery::discover_file_ids;
+use super::model::{DiscoveredFile, ScannedFile, ScannedWorkspace};
 
 pub(crate) fn scan_workspace(
     root_dir: &Path,
@@ -47,152 +45,127 @@ pub(crate) fn scan_workspace(
     })
 }
 
-fn discover_reachable_files(
-    root_dir: &Path,
-    user_file_ids: Vec<String>,
-) -> Result<BTreeMap<String, DiscoveredFile>, String> {
-    let user_file_id_set = user_file_ids.iter().cloned().collect::<BTreeSet<_>>();
-    let mut discovered = BTreeMap::new();
-    let mut pending = VecDeque::new();
+#[cfg(test)]
+mod tests {
+    use std::fs;
+    use std::path::{Path, PathBuf};
+    use std::time::{SystemTime, UNIX_EPOCH};
 
-    for file_id in user_file_ids {
-        discovered.insert(
-            file_id.clone(),
-            DiscoveredFile {
-                module_specifier: module_specifier_for_file_id(&file_id),
-                library: "user".to_string(),
-            },
-        );
-        pending.push_back(file_id);
+    use super::scan_workspace;
+
+    struct TempDir {
+        path: PathBuf,
     }
 
-    while let Some(file_id) = pending.pop_front() {
-        let absolute_path = root_dir.join(&file_id);
-        let source = fs::read_to_string(&absolute_path)
-            .map_err(|err| format!("failed to read {}: {err}", absolute_path.display()))?;
-        let known_file_ids = discovered.keys().cloned().collect::<BTreeSet<_>>();
-        let is_user_file = user_file_id_set.contains(&file_id);
-        let current_library = discovered
-            .get(&file_id)
-            .map(|d| d.library.clone())
-            .unwrap_or_else(|| "user".to_string());
-        let reexport_specifiers: BTreeSet<String> = if is_user_file {
-            extract_reexport_module_specifiers(&file_id, &source)
-                .into_iter()
-                .collect()
-        } else {
-            BTreeSet::new()
-        };
+    impl TempDir {
+        fn new(prefix: &str) -> Self {
+            let unique = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .expect("time should move forward")
+                .as_nanos();
+            let path = std::env::temp_dir().join(format!("reference-ui-{prefix}-{unique}"));
+            fs::create_dir_all(&path).expect("temp dir should be created");
+            Self { path }
+        }
 
-        for source_module in extract_module_specifiers(&file_id, &source) {
-            let Some(resolved) = resolve_import_for_discovery(
-                root_dir,
-                &file_id,
-                &source_module,
-                &known_file_ids,
-                &user_file_id_set,
-                is_user_file,
-                &reexport_specifiers,
-                &current_library,
-            ) else {
-                continue;
-            };
+        fn path(&self) -> &Path {
+            &self.path
+        }
 
-            if discovered.contains_key(&resolved.file_id) {
-                continue;
+        fn write(&self, relative_path: &str, contents: &str) {
+            let path = self.path.join(relative_path);
+            if let Some(parent) = path.parent() {
+                fs::create_dir_all(parent).expect("parent dir should be created");
             }
-
-            discovered.insert(
-                resolved.file_id.clone(),
-                DiscoveredFile {
-                    module_specifier: resolved.module_specifier,
-                    library: resolved.library,
-                },
-            );
-            pending.push_back(resolved.file_id);
+            fs::write(path, contents).expect("fixture file should be written");
         }
     }
 
-    Ok(discovered)
-}
-
-fn resolve_import_for_discovery(
-    root_dir: &Path,
-    current_file_id: &str,
-    source_module: &str,
-    known_file_ids: &BTreeSet<String>,
-    user_file_ids: &BTreeSet<String>,
-    is_user_file: bool,
-    reexport_specifiers: &BTreeSet<String>,
-    current_library: &str,
-) -> Option<ResolvedModule> {
-    if source_module.starts_with('.') {
-        let file_id = if is_external_file_id(current_file_id) {
-            resolve_relative_import(
-                root_dir,
-                current_file_id,
-                source_module,
-                known_file_ids,
-                true,
-            )?
-        } else {
-            resolve_relative_import(
-                root_dir,
-                current_file_id,
-                source_module,
-                user_file_ids,
-                false,
-            )?
-        };
-
-        return Some(ResolvedModule {
-            module_specifier: module_specifier_for_file_id(&file_id),
-            library: package_name_from_file_id(&file_id),
-            file_id,
-        });
-    }
-
-    // External import (library): only follow when user re-exports it, or when we're in the same package.
-    if is_user_file && !reexport_specifiers.contains(source_module) {
-        return None;
-    }
-    if !is_user_file {
-        let resolved = resolve_external_import(root_dir, source_module)?;
-        if resolved.library != current_library {
-            return None;
+    impl Drop for TempDir {
+        fn drop(&mut self) {
+            let _ = fs::remove_dir_all(&self.path);
         }
-        return Some(resolved);
     }
 
-    resolve_external_import(root_dir, source_module)
-}
+    #[test]
+    fn scan_workspace_follows_user_reexports_of_external_modules() {
+        let root = TempDir::new("scanner-workspace-reexports");
+        root.write(
+            "src/index.ts",
+            "export type { ButtonProps } from 'external-lib';\n",
+        );
+        root.write(
+            "node_modules/external-lib/package.json",
+            r#"{ "name": "external-lib", "types": "index.d.ts" }"#,
+        );
+        root.write(
+            "node_modules/external-lib/index.d.ts",
+            "export interface ButtonProps { label: string }\n",
+        );
 
-fn discover_file_ids(root_dir: &Path, include: &[String]) -> Result<Vec<String>, String> {
-    let walker = GlobWalkerBuilder::from_patterns(root_dir, include)
-        .follow_links(true)
-        .build()
-        .map_err(|err| format!("failed to build glob walker: {err}"))?;
+        let workspace = scan_workspace(root.path(), &["src/**/*.ts".to_string()])
+            .expect("workspace scan should succeed");
 
-    let mut file_ids = BTreeSet::new();
-    for entry in walker {
-        let entry = entry.map_err(|err| format!("failed to walk scan root: {err}"))?;
-        if !entry.file_type().is_file() {
-            continue;
-        }
-
-        let Some(extension) = entry.path().extension().and_then(|ext| ext.to_str()) else {
-            continue;
-        };
-        if !matches!(extension, "ts" | "tsx") {
-            continue;
-        }
-
-        let relative = entry
-            .path()
-            .strip_prefix(root_dir)
-            .map_err(|err| format!("failed to normalize path {}: {err}", entry.path().display()))?;
-        file_ids.insert(path_to_unix(relative));
+        assert!(workspace.files.iter().any(|file| file.file_id == "src/index.ts"));
+        assert!(workspace
+            .files
+            .iter()
+            .any(|file| file.file_id == "node_modules/external-lib/index.d.ts"));
     }
 
-    Ok(file_ids.into_iter().collect())
+    #[test]
+    fn scan_workspace_skips_user_external_imports_that_are_not_reexported() {
+        let root = TempDir::new("scanner-workspace-import-only");
+        root.write(
+            "src/index.ts",
+            "import type { ButtonProps } from 'external-lib';\nexport interface Local {}\n",
+        );
+        root.write(
+            "node_modules/external-lib/package.json",
+            r#"{ "name": "external-lib", "types": "index.d.ts" }"#,
+        );
+        root.write(
+            "node_modules/external-lib/index.d.ts",
+            "export interface ButtonProps { label: string }\n",
+        );
+
+        let workspace = scan_workspace(root.path(), &["src/**/*.ts".to_string()])
+            .expect("workspace scan should succeed");
+
+        assert_eq!(workspace.files.len(), 1);
+        assert_eq!(workspace.files[0].file_id, "src/index.ts");
+    }
+
+    #[test]
+    fn scan_workspace_follows_same_library_relative_imports_for_external_modules() {
+        let root = TempDir::new("scanner-workspace-external-relative");
+        root.write(
+            "src/index.ts",
+            "export type { ButtonProps } from 'external-lib';\n",
+        );
+        root.write(
+            "node_modules/external-lib/package.json",
+            r#"{ "name": "external-lib", "types": "index.d.ts" }"#,
+        );
+        root.write(
+            "node_modules/external-lib/index.d.ts",
+            "export type { SharedProps as ButtonProps } from './shared';\n",
+        );
+        root.write(
+            "node_modules/external-lib/shared.d.ts",
+            "export interface SharedProps { label: string }\n",
+        );
+
+        let workspace = scan_workspace(root.path(), &["src/**/*.ts".to_string()])
+            .expect("workspace scan should succeed");
+
+        assert!(workspace
+            .files
+            .iter()
+            .any(|file| file.file_id == "node_modules/external-lib/index.d.ts"));
+        assert!(workspace
+            .files
+            .iter()
+            .any(|file| file.file_id == "node_modules/external-lib/shared.d.ts"));
+    }
 }
