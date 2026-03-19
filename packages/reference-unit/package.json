@@ -4,14 +4,16 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "ref sync && (ref sync --watch & vite)",
-    "build": "ref sync && vite build",
+    "build:fixture": "pnpm --filter @fixtures/extend-library run build",
+    "dev": "pnpm run build:fixture && ref sync && (ref sync --watch & vite)",
+    "build": "pnpm run build:fixture && ref sync && vite build",
     "preview": "vite preview",
     "test": "pnpm run test:vitest && tsc --noEmit",
     "test:vitest": "vitest run",
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@fixtures/extend-library": "workspace:*",
     "@reference-ui/core": "workspace:*",
     "@reference-ui/lib": "workspace:*",
     "react": "^18.2.0",

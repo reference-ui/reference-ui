@@ -1,14 +1,21 @@
 /**
  * @vitest-environment happy-dom
  *
- * Verifies `extends: [baseSystem]` pulls reference-lib tokens into reference-unit.
+ * Verifies `extends: [baseSystem]` pulls fixture-library tokens into reference-unit.
  */
 
 import { beforeAll, describe, expect, it } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { Div } from '@reference-ui/react'
-import { colors, fadeKeyframes, fonts, rootThemeVars } from '@reference-ui/lib/theme'
 import { getDesignSystemCss, getDesignSystemCssPath, injectDesignSystemCss } from '../primitives/setup'
+
+const FIXTURE_DEMO_BG = '#0f172a'
+const FIXTURE_DEMO_TEXT = '#f8fafc'
+const FIXTURE_DEMO_ACCENT = '#14b8a6'
+const LIGHT_DARK_DEMO_BG = '#f8fafc'
+const LIGHT_DARK_DEMO_DARK_BG = '#020617'
+const LIGHT_DARK_DEMO_TEXT = '#020617'
+const LIGHT_DARK_DEMO_DARK_TEXT = '#f8fafc'
 
 beforeAll(() => {
   try {
@@ -18,78 +25,51 @@ beforeAll(() => {
   }
 })
 
-describe('extends baseSystem from reference-lib', () => {
-  it('renders a Div using the upstream token name', () => {
+describe('extends baseSystem from fixture library', () => {
+  it('renders a Div using fixture-owned token names', () => {
     render(
-      <Div data-testid="extends-token" color="teal.500">
-        Extended token
+      <Div data-testid="extends-token" bg="fixtureDemoBg" color="fixtureDemoText">
+        Extended fixture token
       </Div>
     )
 
     const el = screen.getByTestId('extends-token')
     expect(el).toBeInTheDocument()
-    expect(el).toHaveTextContent('Extended token')
+    expect(el).toHaveTextContent('Extended fixture token')
   })
 
-  it('includes upstream token values when design system CSS is present', () => {
+  it('includes fixture token values when design system CSS is present', () => {
     if (!getDesignSystemCssPath()) return
 
     const css = getDesignSystemCss()
     render(
-      <Div data-testid="extends-token-color" color="teal.500">
-        Extended token color
+      <Div data-testid="extends-token-color" color="fixtureDemoAccent">
+        Extended fixture token color
       </Div>
     )
 
     expect(screen.getByTestId('extends-token-color')).toBeInTheDocument()
     if (css) {
-      expect(css).toContain(`--colors-teal-500: ${colors.teal[500].value};`)
+      expect(css).toContain(`--colors-fixture-demo-bg: ${FIXTURE_DEMO_BG};`)
+      expect(css).toContain(`--colors-fixture-demo-text: ${FIXTURE_DEMO_TEXT};`)
+      expect(css).toContain(`--colors-fixture-demo-accent: ${FIXTURE_DEMO_ACCENT};`)
     }
   })
 
-  it('includes upstream globalCss in generated CSS', () => {
+  it('includes fixture light and dark token values in generated CSS', () => {
     const css = getDesignSystemCss()
     if (!css) return
 
-    expect(css).toContain('--r-base')
-    expect(css).toContain(rootThemeVars['--r-base'])
-    expect(css).toContain('--spacing-r')
-    expect(css).toContain(rootThemeVars['--spacing-r'])
-  })
-
-  it('includes upstream keyframes in generated CSS and accepts the animation name', () => {
-    const css = getDesignSystemCss()
-    if (css) {
-      expect(css).toContain('@keyframes fadeIn')
-      expect(css).toMatch(new RegExp(`fadeIn[\\s\\S]*?${fadeKeyframes.fadeIn.from.opacity}`))
-      expect(css).toMatch(new RegExp(`fadeIn[\\s\\S]*?${fadeKeyframes.fadeIn.to.opacity}`))
-    }
-
     render(
-      <Div data-testid="extends-keyframes" animation="fadeIn 1s ease">
-        Extended animation
+      <Div data-testid="extends-light-dark" bg="lightDarkDemoBg" color="lightDarkDemoText">
+        Extended light dark tokens
       </Div>
     )
 
-    expect(screen.getByTestId('extends-keyframes')).toBeInTheDocument()
-  })
-
-  it('includes upstream font definitions in generated CSS', () => {
-    const css = getDesignSystemCss()
-    if (!css) return
-
-    expect(css).toContain('@font-face')
-    expect(css).toContain(fonts.sans.value)
-    expect(css).toContain(fonts.serif.value)
-    expect(css).toContain(fonts.mono.value)
-    expect(css).toMatch(/font-display:\s*swap/)
-
-    render(
-      <Div data-testid="extends-font" fontFamily="sans">
-        Extended font
-      </Div>
-    )
-
-    expect(screen.getByTestId('extends-font')).toBeInTheDocument()
+    expect(screen.getByTestId('extends-light-dark')).toBeInTheDocument()
+    expect(css).toContain(`--colors-light-dark-demo-bg: ${LIGHT_DARK_DEMO_BG};`)
+    expect(css).toContain(`--colors-light-dark-demo-text: ${LIGHT_DARK_DEMO_TEXT};`)
+    expect(css).toContain(LIGHT_DARK_DEMO_DARK_BG)
+    expect(css).toContain(LIGHT_DARK_DEMO_DARK_TEXT)
   })
 })

@@ -14,7 +14,6 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { render, screen } from '@testing-library/react'
 import { Div } from '@reference-ui/react'
-import { colors } from '@reference-ui/lib/theme'
 import { REFERENCE_UNIT_TOKEN_RGB } from '../../src/system/styles'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -40,6 +39,13 @@ const fixtureSystemGeneratedTypesPath = join(
 )
 const upstreamBaseSystemPath = join(pkgRoot, '.reference-ui', 'system', 'baseSystem.mjs')
 const FIXTURE_ACCENT_RGB = 'rgb(17, 24, 39)'
+const FIXTURE_DEMO_BG = '#0f172a'
+const FIXTURE_DEMO_TEXT = '#f8fafc'
+const FIXTURE_DEMO_ACCENT = '#14b8a6'
+const LIGHT_DARK_DEMO_BG = '#f8fafc'
+const LIGHT_DARK_DEMO_DARK_BG = '#020617'
+const LIGHT_DARK_DEMO_TEXT = '#020617'
+const LIGHT_DARK_DEMO_DARK_TEXT = '#f8fafc'
 const REACT_LAYER_PLACEHOLDER = '__REFERENCE_UI_LAYER_NAME__'
 const refCore = join(
   pkgRoot,
@@ -149,9 +155,10 @@ describe('layers isolation fixture', () => {
     expect(pandaConfig).toContain('fixtureAccent')
     expect(pandaConfig).toContain(FIXTURE_ACCENT_RGB)
     expect(pandaConfig).not.toContain('referenceUnitToken')
-    expect(pandaConfig).not.toContain('--colors-teal-500')
+    expect(pandaConfig).not.toContain('--colors-fixture-demo-bg')
+    expect(pandaConfig).not.toContain('--colors-light-dark-demo-bg')
     expect(pandaConfig).not.toContain('fadeIn')
-    expect(pandaConfig).not.toContain('mono')
+    expect(pandaConfig).not.toContain('"sans": {')
   })
 
   it('appends upstream layer CSS, tokens, fonts, and keyframes', () => {
@@ -161,7 +168,13 @@ describe('layers isolation fixture', () => {
     expect(fixtureCss).toContain(
       `--colors-reference-unit-token: ${REFERENCE_UNIT_TOKEN_RGB};`
     )
-    expect(fixtureCss).toContain(`--colors-teal-500: ${colors.teal[500].value};`)
+    expect(fixtureCss).toContain(`--colors-fixture-demo-bg: ${FIXTURE_DEMO_BG};`)
+    expect(fixtureCss).toContain(`--colors-fixture-demo-text: ${FIXTURE_DEMO_TEXT};`)
+    expect(fixtureCss).toContain(`--colors-fixture-demo-accent: ${FIXTURE_DEMO_ACCENT};`)
+    expect(fixtureCss).toContain(`--colors-light-dark-demo-bg: ${LIGHT_DARK_DEMO_BG};`)
+    expect(fixtureCss).toContain(`--colors-light-dark-demo-text: ${LIGHT_DARK_DEMO_TEXT};`)
+    expect(fixtureCss).toContain(LIGHT_DARK_DEMO_DARK_BG)
+    expect(fixtureCss).toContain(LIGHT_DARK_DEMO_DARK_TEXT)
     expect(fixtureCss).toContain(`--colors-fixture-accent: ${FIXTURE_ACCENT_RGB};`)
     expect(fixtureCss).toContain('@font-face')
     expect(fixtureCss).toContain('fadeIn')
@@ -176,12 +189,12 @@ describe('layers isolation fixture', () => {
     expect(fixtureReactTypes).toContain('interface ReferenceFontRegistry')
     expect(fixtureSystemTypes).toContain('interface ReferenceFontRegistry')
 
-    expect(fixtureReactGeneratedTypes).not.toContain('"mono": {')
     expect(fixtureReactGeneratedTypes).not.toContain('"sans": {')
-    expect(fixtureReactGeneratedTypes).not.toContain('"serif": {')
-    expect(fixtureSystemGeneratedTypes).not.toContain('"mono": {')
+    expect(fixtureReactGeneratedTypes).not.toContain('"normal": true')
+    expect(fixtureReactGeneratedTypes).not.toContain('"bold": true')
     expect(fixtureSystemGeneratedTypes).not.toContain('"sans": {')
-    expect(fixtureSystemGeneratedTypes).not.toContain('"serif": {')
+    expect(fixtureSystemGeneratedTypes).not.toContain('"normal": true')
+    expect(fixtureSystemGeneratedTypes).not.toContain('"bold": true')
   })
 
   it('injects the fixture runtime with the local ui.config.name', () => {
