@@ -21,14 +21,17 @@ export function renderLayerCss(options: RenderLayerCssOptions): string {
 }
 
 export function renderLayerStylesheet(
+  localLayerName: string,
   localLayerCss: string,
-  upstreamLayerCss: string[]
+  upstreamLayers: Array<{ name: string; css: string }>
 ): string {
   const templates = loadLayerTemplates()
+  const layerOrder = [...upstreamLayers.map((layer) => layer.name), localLayerName]
   return engine
     .parseAndRenderSync(templates.runtimeStylesheet, {
+      layerOrder,
       localLayerCss,
-      upstreamLayerCss: upstreamLayerCss.join('\n\n'),
+      upstreamLayerCss: upstreamLayers.map((layer) => layer.css).join('\n\n'),
     })
     .trim()
 }

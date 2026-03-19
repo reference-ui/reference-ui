@@ -2,11 +2,11 @@ import { describe, it, expect } from 'vitest'
 import { createLayerCssFromContent } from './transform'
 
 describe('createLayerCssFromContent', () => {
-  it('strips top-level @layer order declaration', () => {
+  it('preserves Panda layer order declaration inside the wrapped system layer', () => {
     const raw = '@layer base, tokens, recipes, utilities;\n\n@layer tokens { :where(:root,:host) { --foo: 1; } }'
     const out = createLayerCssFromContent(raw, 'my-system')
-    expect(out).not.toMatch(/^@layer\s+base,/)
     expect(out).toMatch(/@layer my-system \{/)
+    expect(out).toMatch(/@layer base, tokens, recipes, utilities;/)
   })
 
   it('wraps content in @layer <name> { ... }', () => {
@@ -34,6 +34,7 @@ describe('createLayerCssFromContent', () => {
     expect(out).not.toMatch(/@layer tokens\s*\{/)
     expect(out).toMatch(/@layer my-system \{[\s\S]*@layer base/)
     expect(out).toMatch(/@layer my-system \{[\s\S]*@layer utilities/)
+    expect(out).toMatch(/@layer my-system \{[\s\S]*@layer base, tokens, utilities;/)
     expect(out).toMatch(/\[data-layer="my-system"\]\s*\{[\s\S]*--color:\s*red;/)
   })
 
@@ -54,5 +55,20 @@ describe('createLayerCssFromContent', () => {
     expect(out).toMatch(/\[data-layer="sys"\] \[data-panda-theme=dark\]\s*\{/)
     expect(out).toMatch(/\[data-layer="sys"\]\[data-panda-theme=dark\]\s*,/)
     expect(out).toMatch(/--color:\s*blue;/)
+  })
+
+  it('preserves non-selector at-rules from Panda token layer without selector rewriting', () => {
+    const raw = `@layer base, tokens;
+@layer tokens {
+  :where(:root, :host) { --color: red; }
+  @keyframes ping {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+}`
+    const out = createLayerCssFromContent(raw, 'sys')
+    expect(out).toMatch(/@layer tokens\s*\{[\s\S]*@keyframes ping/)
+    expect(out).not.toMatch(/\[data-layer="sys"\]\s*@keyframes ping/)
+    expect(out).not.toMatch(/\[data-layer="sys"\]@keyframes ping/)
   })
 })
