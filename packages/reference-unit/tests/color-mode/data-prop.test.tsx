@@ -16,10 +16,7 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { Div } from '@reference-ui/react'
-import {
-  lightDarkDemoBgLightRgb,
-  lightDarkDemoBgDarkRgb,
-} from '@fixtures/extend-library'
+import { lightDarkDemoBgLightRgb, lightDarkDemoBgDarkRgb } from '@fixtures/extend-library'
 import {
   lightDarkDemoBgLightRgb as layerBgLightRgb,
   lightDarkDemoBgDarkRgb as layerBgDarkRgb,
@@ -44,14 +41,24 @@ describe('data-panda-theme toggle works across all token sources', () => {
 
     render(
       <>
-        <Div data-testid="toggle-ext" bg="lightDarkDemoBg">extends</Div>
-        <Div data-testid="toggle-layer" bg="lightDarkDemoBg">layers</Div>
-        <Div data-testid="toggle-root" color="referenceUnitColorModeToken">root</Div>
+        <Div data-testid="toggle-ext" bg="lightDarkDemoBg">
+          extends
+        </Div>
+        <Div data-testid="toggle-layer" bg="lightDarkDemoBg">
+          layers
+        </Div>
+        <Div data-testid="toggle-root" color="referenceUnitColorModeToken">
+          root
+        </Div>
       </>
     )
 
-    const extBg = window.getComputedStyle(screen.getByTestId('toggle-ext')).backgroundColor
-    const layerBg = window.getComputedStyle(screen.getByTestId('toggle-layer')).backgroundColor
+    const extBg = window.getComputedStyle(
+      screen.getByTestId('toggle-ext')
+    ).backgroundColor
+    const layerBg = window.getComputedStyle(
+      screen.getByTestId('toggle-layer')
+    ).backgroundColor
     const rootColor = window.getComputedStyle(screen.getByTestId('toggle-root')).color
 
     if (extBg) expect(extBg).toBe(lightDarkDemoBgLightRgb)
@@ -64,15 +71,27 @@ describe('data-panda-theme toggle works across all token sources', () => {
 
     render(
       <div data-panda-theme="dark">
-        <Div data-testid="toggle-dark-ext" bg="lightDarkDemoBg">extends dark</Div>
-        <Div data-testid="toggle-dark-layer" bg="lightDarkDemoBg">layers dark</Div>
-        <Div data-testid="toggle-dark-root" color="referenceUnitColorModeToken">root dark</Div>
+        <Div data-testid="toggle-dark-ext" bg="lightDarkDemoBg">
+          extends dark
+        </Div>
+        <Div data-testid="toggle-dark-layer" bg="lightDarkDemoBg">
+          layers dark
+        </Div>
+        <Div data-testid="toggle-dark-root" color="referenceUnitColorModeToken">
+          root dark
+        </Div>
       </div>
     )
 
-    const extBg = window.getComputedStyle(screen.getByTestId('toggle-dark-ext')).backgroundColor
-    const layerBg = window.getComputedStyle(screen.getByTestId('toggle-dark-layer')).backgroundColor
-    const rootColor = window.getComputedStyle(screen.getByTestId('toggle-dark-root')).color
+    const extBg = window.getComputedStyle(
+      screen.getByTestId('toggle-dark-ext')
+    ).backgroundColor
+    const layerBg = window.getComputedStyle(
+      screen.getByTestId('toggle-dark-layer')
+    ).backgroundColor
+    const rootColor = window.getComputedStyle(
+      screen.getByTestId('toggle-dark-root')
+    ).color
 
     if (extBg) expect(extBg).toBe(lightDarkDemoBgDarkRgb)
     if (layerBg) expect(layerBg).toBe(layerBgDarkRgb)
@@ -85,14 +104,22 @@ describe('data-panda-theme toggle works across all token sources', () => {
     render(
       <div>
         <div data-panda-theme="dark">
-          <Div data-testid="scoped-dark" bg="lightDarkDemoBg">dark zone</Div>
+          <Div data-testid="scoped-dark" bg="lightDarkDemoBg">
+            dark zone
+          </Div>
         </div>
-        <Div data-testid="scoped-light" bg="lightDarkDemoBg">light zone</Div>
+        <Div data-testid="scoped-light" bg="lightDarkDemoBg">
+          light zone
+        </Div>
       </div>
     )
 
-    const darkBg = window.getComputedStyle(screen.getByTestId('scoped-dark')).backgroundColor
-    const lightBg = window.getComputedStyle(screen.getByTestId('scoped-light')).backgroundColor
+    const darkBg = window.getComputedStyle(
+      screen.getByTestId('scoped-dark')
+    ).backgroundColor
+    const lightBg = window.getComputedStyle(
+      screen.getByTestId('scoped-light')
+    ).backgroundColor
 
     if (darkBg) expect(darkBg).toBe(lightDarkDemoBgDarkRgb)
     if (lightBg) expect(lightBg).toBe(lightDarkDemoBgLightRgb)
