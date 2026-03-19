@@ -1,22 +1,16 @@
 /**
  * Reference UI Configuration
- * 
+ *
+ * Uses reference-lib only. Fixture integration (extend-library, layer-library) deferred
+ * until build orchestration supports pre-building without blocking test:system.
  */
 
 import { defineConfig } from '@reference-ui/core'
 import { baseSystem } from '@reference-ui/lib'
 
-// ============================================================================
-// Configuration
-// ============================================================================
-
 export default defineConfig({
   name: 'reference-unit',
   extends: [baseSystem],
-  // Glob patterns for files to scan for Panda CSS extraction
-  include: [
-    'src/**/*.{ts,tsx,mdx}',
-  ],
-
+  include: ['src/**/*.{ts,tsx,mdx}'],
   debug: true,
 })

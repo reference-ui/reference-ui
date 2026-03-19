@@ -2,6 +2,7 @@ declare module '@reference-ui/react' {
   import type { ComponentType } from 'react'
 
   export const Div: ComponentType<any>
+  export const Span: ComponentType<any>
   export function css(...args: any[]): any
   export function recipe(...args: any[]): any
 }

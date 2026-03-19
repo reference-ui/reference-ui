@@ -1,6 +1,6 @@
-@layer reference-ui, reference-e2e;
+@layer reference-ui, reference-e2e-renamed;
 
-@layer reference-e2e {
+@layer reference-e2e-renamed {
 @layer reset, base, tokens, recipes, utilities;
 
 @layer reset{
@@ -324,8 +324,8 @@
     background-color: #fef3c7;
 }
 
-  .c_\#43caf8 {
-    color: #43caf8;
+  .c_\#a4fb23 {
+    color: #a4fb23;
 }
 }
 }
@@ -334,7 +334,7 @@
 
 
 
-[data-layer="reference-e2e"] {
+[data-layer="reference-e2e-renamed"] {
   --spacing-px: 1px;
   --spacing-r: 0.25rem;
   --spacing-0\.5r: calc(0.5 * var(--spacing-r));
@@ -366,7 +366,7 @@
 
 
 
-[data-layer="reference-e2e"][data-panda-theme=dark], [data-layer="reference-e2e"] [data-panda-theme=dark] {
+[data-layer="reference-e2e-renamed"][data-panda-theme=dark], [data-layer="reference-e2e-renamed"] [data-panda-theme=dark] {
   --colors-test-color-mode: #1e293b
 }
 
