@@ -2,13 +2,13 @@ import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
-import { applyLayerPostprocess } from './applyLayerPostprocess'
-import { createLayerCssFromContent } from './transform'
+import { postprocessCss } from './postprocess'
+import { createPortableStylesheetFromContent } from './transform/createPortableStylesheetFromContent'
 
 const createdDirs: string[] = []
 
 function createTempDir(): string {
-  const dir = mkdtempSync(join(tmpdir(), 'reference-ui-layers-postprocess-'))
+  const dir = mkdtempSync(join(tmpdir(), 'reference-ui-css-postprocess-'))
   createdDirs.push(dir)
   return dir
 }
@@ -19,18 +19,18 @@ afterEach(() => {
   }
 })
 
-describe('system/layers/applyLayerPostprocess', () => {
+describe('system/css/postprocess', () => {
   it('returns undefined when styles.css does not exist', () => {
     const outDir = createTempDir()
 
     expect(
-      applyLayerPostprocess(outDir, {
+      postprocessCss(outDir, {
         name: 'missing-styles',
-      } as never)
+      } as never),
     ).toBeUndefined()
   })
 
-  it('returns layer css without rewriting the runtime stylesheet when no upstream layers are configured', () => {
+  it('returns portable css without rewriting the runtime stylesheet when no upstream layers are configured', () => {
     const outDir = createTempDir()
     const styledDir = resolve(outDir, 'styled')
     const stylesPath = resolve(styledDir, 'styles.css')
@@ -39,12 +39,12 @@ describe('system/layers/applyLayerPostprocess', () => {
     mkdirSync(styledDir, { recursive: true })
     writeFileSync(stylesPath, rawCss, 'utf-8')
 
-    const result = applyLayerPostprocess(outDir, {
+    const result = postprocessCss(outDir, {
       name: 'local-system',
       layers: [],
     } as never)
 
-    expect(result).toBe(createLayerCssFromContent(rawCss, 'local-system'))
+    expect(result).toBe(createPortableStylesheetFromContent(rawCss, 'local-system'))
     expect(readFileSync(stylesPath, 'utf-8')).toBe(rawCss)
   })
 
@@ -58,8 +58,8 @@ describe('system/layers/applyLayerPostprocess', () => {
     mkdirSync(styledDir, { recursive: true })
     writeFileSync(stylesPath, rawCss, 'utf-8')
 
-    const localLayerCss = createLayerCssFromContent(rawCss, 'local-system')
-    const result = applyLayerPostprocess(outDir, {
+    const localPortableStylesheet = createPortableStylesheetFromContent(rawCss, 'local-system')
+    const result = postprocessCss(outDir, {
       name: 'local-system',
       layers: [
         { name: 'upstream-one', css: '@layer upstream-one { .one { color: blue; } }' },
@@ -68,14 +68,14 @@ describe('system/layers/applyLayerPostprocess', () => {
       ],
     } as never)
 
-    expect(result).toBe(localLayerCss)
+    expect(result).toBe(localPortableStylesheet)
     expect(readFileSync(stylesPath, 'utf-8')).toBe(
       [
         '@layer upstream-one, upstream-three, local-system;',
-        localLayerCss,
+        localPortableStylesheet,
         '@layer upstream-one { .one { color: blue; } }',
         '@layer upstream-three { .three { color: green; } }',
-      ].join('\n\n')
+      ].join('\n\n'),
     )
   })
 
@@ -96,11 +96,10 @@ describe('system/layers/applyLayerPostprocess', () => {
       ],
     } as never
 
-    const first = applyLayerPostprocess(outDir, config)
+    const first = postprocessCss(outDir, config)
     const firstFile = readFileSync(stylesPath, 'utf-8')
-    // Reset file to same initial content so second run has same input
     writeFileSync(stylesPath, rawCss, 'utf-8')
-    const second = applyLayerPostprocess(outDir, config)
+    const second = postprocessCss(outDir, config)
     const secondFile = readFileSync(stylesPath, 'utf-8')
 
     expect(second).toBe(first)

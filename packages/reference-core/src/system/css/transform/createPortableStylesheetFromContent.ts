@@ -1,12 +1,12 @@
-import { renderLayerCss, type LayerTokenBlock } from './render'
+import { renderPortableStylesheet, type LayerTokenBlock } from '../render/stylesheet'
 
 /**
- * Transform Panda-emitted CSS into layer-ready CSS for layers mode.
- * Preserves Panda's internal layer declarations, wraps content in
- * @layer <name>, and re-scopes token declarations to [data-layer="<name>"].
+ * Transform Panda-emitted CSS into the portable stylesheet shape we store on
+ * `baseSystem.css`. Preserves Panda's internal layer declarations, wraps
+ * content in `@layer <name>`, and re-scopes token declarations to
+ * `[data-layer="<name>"]`.
  */
 
-/** Find the index of the closing '}' that matches the '{' at startIndex (exclusive end). */
 function findMatchingBrace(text: string, startIndex: number): number {
   let depth = 1
   for (let i = startIndex + 1; i < text.length; i++) {
@@ -95,9 +95,6 @@ function parseTokensLayer(css: string, layerName: string): ParsedTokensLayer {
   }
 }
 
-/**
- * Remove Panda's root token layer so layers mode does not leak tokens globally.
- */
 function stripTokensLayer(css: string): string {
   const tokensMatch = css.match(/@layer\s+tokens\s*\{/)
   if (!tokensMatch) return css
@@ -107,25 +104,22 @@ function stripTokensLayer(css: string): string {
   return (css.slice(0, start) + css.slice(end)).trim()
 }
 
-/**
- * Normalise indentation of extracted declarations so [data-layer] block is consistent.
- */
 function dedentDeclarations(declarations: string): string {
   if (!declarations.trim()) return ''
   const lines = declarations.split('\n').filter((l) => l.trim())
   const minIndent = Math.min(
-    ...lines.map((l) => l.match(/^(\s*)/)?.[1].length ?? 0)
+    ...lines.map((l) => l.match(/^(\s*)/)?.[1].length ?? 0),
   )
-  return lines.map((l) => '  ' + l.slice(minIndent).trim()).join('\n')
+  return lines.map((l) => `  ${l.slice(minIndent).trim()}`).join('\n')
 }
 
 /**
- * Transform raw Panda CSS into layer-ready CSS.
- * 1. Preserves Panda's internal @layer order declaration
- * 2. Wraps the stylesheet in @layer <layerName> { ... }
- * 3. Extracts token declarations and appends [data-layer="<layerName>"] { ... }
+ * Transform raw Panda CSS into the portable stylesheet shape.
+ * 1. Preserve Panda's internal @layer order declaration
+ * 2. Wrap the stylesheet in `@layer <layerName> { ... }`
+ * 3. Extract token declarations and append `[data-layer="<layerName>"] { ... }`
  */
-export function createLayerCssFromContent(css: string, layerName: string): string {
+export function createPortableStylesheetFromContent(css: string, layerName: string): string {
   const parsedTokensLayer = parseTokensLayer(css, layerName)
   const rootTokenDeclarations = dedentDeclarations(parsedTokensLayer.rootTokenDeclarations)
   const { themeTokenBlocks, preservedContent } = parsedTokensLayer
@@ -134,7 +128,7 @@ export function createLayerCssFromContent(css: string, layerName: string): strin
     ? `${strippedContent}\n\n@layer tokens {\n${preservedContent}\n}`
     : strippedContent
 
-  return renderLayerCss({
+  return renderPortableStylesheet({
     layerName,
     content,
     rootTokenDeclarations,

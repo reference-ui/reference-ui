@@ -1,24 +1,24 @@
-import { describe, it, expect } from 'vitest'
-import { createLayerCssFromContent } from './transform'
+import { describe, expect, it } from 'vitest'
+import { createPortableStylesheetFromContent } from './createPortableStylesheetFromContent'
 
-describe('createLayerCssFromContent', () => {
+describe('createPortableStylesheetFromContent', () => {
   it('preserves Panda layer order declaration inside the wrapped system layer', () => {
     const raw = '@layer base, tokens, recipes, utilities;\n\n@layer tokens { :where(:root,:host) { --foo: 1; } }'
-    const out = createLayerCssFromContent(raw, 'my-system')
+    const out = createPortableStylesheetFromContent(raw, 'my-system')
     expect(out).toMatch(/@layer my-system \{/)
     expect(out).toMatch(/@layer base, tokens, recipes, utilities;/)
   })
 
   it('wraps content in @layer <name> { ... }', () => {
     const raw = '@layer base, tokens;\n@layer tokens { :where(:root,:host) { --color: red; } }'
-    const out = createLayerCssFromContent(raw, 'my-layer')
+    const out = createPortableStylesheetFromContent(raw, 'my-layer')
     expect(out).toMatch(/@layer my-layer \{[\s\S]*\}/)
   })
 
   it('extracts token block and re-scopes to [data-layer="<name>"]', () => {
     const raw =
       '@layer base, tokens;\n@layer tokens { :where(:root, :host) { --color: red; --space: 8px; } }'
-    const out = createLayerCssFromContent(raw, 'my-system')
+    const out = createPortableStylesheetFromContent(raw, 'my-system')
     expect(out).toMatch(/\[data-layer="my-system"\]\s*\{/)
     expect(out).toMatch(/--color:\s*red/)
     expect(out).toMatch(/--space:\s*8px/)
@@ -29,7 +29,7 @@ describe('createLayerCssFromContent', () => {
 @layer base { .root { display: block; } }
 @layer tokens { :where(:root, :host) { --color: red; --space: 8px; } }
 @layer utilities { .text_red { color: var(--color); } }`
-    const out = createLayerCssFromContent(raw, 'my-system')
+    const out = createPortableStylesheetFromContent(raw, 'my-system')
     expect(out).not.toMatch(/:where\(:root,\s*:host\)/)
     expect(out).not.toMatch(/@layer tokens\s*\{/)
     expect(out).toMatch(/@layer my-system \{[\s\S]*@layer base/)
@@ -38,9 +38,9 @@ describe('createLayerCssFromContent', () => {
     expect(out).toMatch(/\[data-layer="my-system"\]\s*\{[\s\S]*--color:\s*red;/)
   })
 
-  it('returns layer block even when no @layer tokens block (no [data-layer] block)', () => {
+  it('returns portable stylesheet even when no @layer tokens block exists', () => {
     const raw = '@layer base;\n.some-utility { color: red; }'
-    const out = createLayerCssFromContent(raw, 'sys')
+    const out = createPortableStylesheetFromContent(raw, 'sys')
     expect(out).toMatch(/@layer sys \{/)
     expect(out).not.toMatch(/\[data-layer="sys"\]/)
   })
@@ -51,7 +51,7 @@ describe('createLayerCssFromContent', () => {
   :where(:root, :host) { --color: red; }
   [data-panda-theme=dark] { --color: blue; }
 }`
-    const out = createLayerCssFromContent(raw, 'sys')
+    const out = createPortableStylesheetFromContent(raw, 'sys')
     expect(out).toMatch(/\[data-layer="sys"\] \[data-panda-theme=dark\]\s*\{/)
     expect(out).toMatch(/\[data-layer="sys"\]\[data-panda-theme=dark\]\s*,/)
     expect(out).toMatch(/--color:\s*blue;/)
@@ -66,7 +66,7 @@ describe('createLayerCssFromContent', () => {
     to { opacity: 1; }
   }
 }`
-    const out = createLayerCssFromContent(raw, 'sys')
+    const out = createPortableStylesheetFromContent(raw, 'sys')
     expect(out).toMatch(/@layer tokens\s*\{[\s\S]*@keyframes ping/)
     expect(out).not.toMatch(/\[data-layer="sys"\]\s*@keyframes ping/)
     expect(out).not.toMatch(/\[data-layer="sys"\]@keyframes ping/)

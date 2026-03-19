@@ -1,5 +1,5 @@
 @layer {{ layerOrder | join: ", " }};
 
-{{ localLayerCss | raw }}{% if upstreamLayerCss != blank %}
+{{ localPortableStylesheet | raw }}{% if upstreamLayerCss != blank %}
 
 {{ upstreamLayerCss | raw }}{% endif %}
