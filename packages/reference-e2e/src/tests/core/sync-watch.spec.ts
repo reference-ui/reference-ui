@@ -3,6 +3,7 @@ import { writeFile, appendFile } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { getSandboxDir } from '../../environments/lib/config.js'
+import { testRoutes } from '../../environments/base/routes.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const METRICS_PATH = join(__dirname, '..', '..', '..', '.watch-metrics.jsonl')
@@ -57,7 +58,7 @@ test.describe('sync-watch', () => {
     const randomColor = randomHexColor()
     const expectedRgb = hexToRgb(randomColor)
 
-    await page.goto('/')
+    await page.goto(testRoutes.syncWatch)
     const el = page.getByTestId('sync-watch')
     await expect(el).toBeVisible()
 

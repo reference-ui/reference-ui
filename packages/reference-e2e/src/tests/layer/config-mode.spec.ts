@@ -5,6 +5,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { colors } from '@reference-ui/lib/theme'
 import { addToConfig, getSandboxDir } from '../../environments/lib/config.js'
 import { runRefSync, waitForRefSyncReady } from '../../environments/lib/ref-sync.js'
+import { testRoutes } from '../../environments/base/routes.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const PACKAGE_ROOT = join(__dirname, '..', '..', '..')
@@ -71,7 +72,7 @@ test.describe.serial('layer', () => {
   test('primitives emit data-layer from config name and preserve other props', async ({ page }) => {
     test.setTimeout(60_000)
     await enableLayersMode()
-    await page.goto('/')
+    await page.goto(testRoutes.layers)
     const host = page.getByTestId('consumer-layer-host')
     await expect(host).toBeVisible()
     await expect(host).toHaveAttribute('data-layer', LAYER_NAME)
@@ -81,7 +82,7 @@ test.describe.serial('layer', () => {
   test('data-layer from config name scopes consumer tokens to primitives', async ({ page }) => {
     test.setTimeout(60_000)
     await enableLayersMode()
-    await page.goto('/')
+    await page.goto(testRoutes.layers)
     const outside = page.getByTestId('consumer-layer-outside')
     const host = page.getByTestId('consumer-layer-host')
 
@@ -99,7 +100,7 @@ test.describe.serial('layer', () => {
   test('data-layer resolves var() color for primitives in scope', async ({ page }) => {
     test.setTimeout(60_000)
     await enableLayersMode()
-    await page.goto('/')
+    await page.goto(testRoutes.layers)
     const inside = page.getByTestId('consumer-layer-text')
     await expect(inside).toBeVisible()
     const insideColor = await inside.evaluate((e) => getComputedStyle(e).color)
@@ -117,7 +118,7 @@ test.describe.serial('layer', () => {
     test.setTimeout(60_000)
     await enableLayersMode()
     await snapshotLayerCss('color-mode')
-    await page.goto('/')
+    await page.goto(testRoutes.layers)
 
     const lightTarget = page.getByTestId('consumer-layer-color-mode-light')
     const darkTarget = page.getByTestId('consumer-layer-color-mode-dark')
@@ -135,7 +136,7 @@ test.describe.serial('layer', () => {
   test('primitive host scopes tokens to raw DOM descendants, but not outside DOM', async ({ page }) => {
     test.setTimeout(60_000)
     await enableLayersMode()
-    await page.goto('/')
+    await page.goto(testRoutes.layers)
 
     const outside = page.getByTestId('consumer-layer-outside')
     const rawChild = page.getByTestId('consumer-layer-raw-child')
@@ -155,7 +156,7 @@ test.describe.serial('layer', () => {
     test.setTimeout(60_000)
     await addToConfig({ extends: '[]', layers: '[baseSystem]' })
     await waitForRefSyncReady(sandboxDir, { timeout: 45_000 })
-    await page.goto('/')
+    await page.goto(testRoutes.layers)
     const inside = page.getByTestId('layers-test')
     await expect(inside).toBeVisible()
     // Consumer primitives have data-layer="reference-e2e"; upstream tokens are under [data-layer="reference-ui"].

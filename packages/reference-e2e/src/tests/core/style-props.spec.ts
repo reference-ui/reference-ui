@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { getSandboxDir } from '../../environments/lib/config.js'
+import { testRoutes } from '../../environments/base/routes.js'
 
 const { tokensConfig } = await import(
   pathToFileURL(join(getSandboxDir(), 'tokens.ts')).href
@@ -23,7 +24,7 @@ function computedEquivalent(value: string): string {
 
 test.describe('style-props', () => {
   test('StylePropsTest mounts', async ({ page }) => {
-    await page.goto('/')
+    await page.goto(testRoutes.styleProps)
     const root = page.getByTestId('style-props-test')
     await expect(root).toBeVisible()
   })
@@ -31,7 +32,7 @@ test.describe('style-props', () => {
   test('Div renders custom tokens: color, bg, padding, radii, border', async ({
     page,
   }) => {
-    await page.goto('/')
+    await page.goto(testRoutes.styleProps)
     const el = page.getByTestId('style-props-tokens')
     await expect(el).toBeVisible()
 
@@ -51,7 +52,7 @@ test.describe('style-props', () => {
   })
 
   test('Div renders inline colors (hex on the fly)', async ({ page }) => {
-    await page.goto('/')
+    await page.goto(testRoutes.styleProps)
     const el = page.getByTestId('style-props-inline-color')
     await expect(el).toBeVisible()
 
@@ -63,7 +64,7 @@ test.describe('style-props', () => {
   })
 
   test('Div renders inline border 1px solid #123', async ({ page }) => {
-    await page.goto('/')
+    await page.goto(testRoutes.styleProps)
     const el = page.getByTestId('style-props-border-shorthand-hex')
     await expect(el).toBeVisible()
 
@@ -77,7 +78,7 @@ test.describe('style-props', () => {
   })
 
   test('Div renders inline border shorthand and radius', async ({ page }) => {
-    await page.goto('/')
+    await page.goto(testRoutes.styleProps)
     const el = page.getByTestId('style-props-inline-border')
     await expect(el).toBeVisible()
 
@@ -93,7 +94,7 @@ test.describe('style-props', () => {
   })
 
   test('Div renders mixed tokens and inline values', async ({ page }) => {
-    await page.goto('/')
+    await page.goto(testRoutes.styleProps)
     const el = page.getByTestId('style-props-mixed')
     await expect(el).toBeVisible()
 
