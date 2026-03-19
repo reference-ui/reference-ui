@@ -3,14 +3,16 @@ import { createPortableStylesheetFromContent } from './createPortableStylesheetF
 
 describe('createPortableStylesheetFromContent', () => {
   it('preserves Panda layer order declaration inside the wrapped system layer', () => {
-    const raw = '@layer base, tokens, recipes, utilities;\n\n@layer tokens { :where(:root,:host) { --foo: 1; } }'
+    const raw =
+      '@layer base, tokens, recipes, utilities;\n\n@layer tokens { :where(:root,:host) { --foo: 1; } }'
     const out = createPortableStylesheetFromContent(raw, 'my-system')
     expect(out).toMatch(/@layer my-system \{/)
     expect(out).toMatch(/@layer base, tokens, recipes, utilities;/)
   })
 
   it('wraps content in @layer <name> { ... }', () => {
-    const raw = '@layer base, tokens;\n@layer tokens { :where(:root,:host) { --color: red; } }'
+    const raw =
+      '@layer base, tokens;\n@layer tokens { :where(:root,:host) { --color: red; } }'
     const out = createPortableStylesheetFromContent(raw, 'my-layer')
     expect(out).toMatch(/@layer my-layer \{[\s\S]*\}/)
   })
@@ -70,6 +72,37 @@ describe('createPortableStylesheetFromContent', () => {
     expect(out).toMatch(/@layer tokens\s*\{[\s\S]*@keyframes ping/)
     expect(out).not.toMatch(/\[data-layer="sys"\]\s*@keyframes ping/)
     expect(out).not.toMatch(/\[data-layer="sys"\]@keyframes ping/)
+  })
+
+  it('ignores braces inside token comments and strings when extracting the tokens layer', () => {
+    const raw = `@layer base, tokens, utilities;
+@layer tokens {
+  :where(:root, :host) {
+    /* keep { comment } balanced */
+    --colors-demo-bg: "value { with } braces";
+  }
+}
+@layer utilities { .text_demo { color: red; } }`
+    const out = createPortableStylesheetFromContent(raw, 'sys')
+    expect(out).toMatch(
+      /\[data-layer="sys"\]\s*\{[\s\S]*--colors-demo-bg:\s*"value \{ with \} braces";/
+    )
+    expect(out).toMatch(/@layer sys \{[\s\S]*@layer utilities/)
+  })
+
+  it('re-scopes selector lists without splitting commas inside selector functions', () => {
+    const raw = `@layer base, tokens;
+@layer tokens {
+  :where(:root, :host) { --color: red; }
+  :is([data-panda-theme=dark], [data-panda-theme=dim]) { --color: blue; }
+}`
+    const out = createPortableStylesheetFromContent(raw, 'sys')
+    expect(out).toMatch(
+      /\[data-layer="sys"\]:is\(\[data-panda-theme=dark\], \[data-panda-theme=dim\]\)\s*,/
+    )
+    expect(out).toMatch(
+      /:is\(\[data-panda-theme=dark\], \[data-panda-theme=dim\]\) \[data-layer="sys"\]\s*\{/
+    )
   })
 
   it('synthesizes public color token utilities when Panda did not emit them', () => {

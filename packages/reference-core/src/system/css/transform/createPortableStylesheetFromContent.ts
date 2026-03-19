@@ -1,3 +1,5 @@
+import postcss, { type AtRule, type ChildNode, type Container, type Rule } from 'postcss'
+import selectorParser from 'postcss-selector-parser'
 import { renderPortableStylesheet, type LayerTokenBlock } from '../render/stylesheet'
 
 /**
@@ -7,40 +9,123 @@ import { renderPortableStylesheet, type LayerTokenBlock } from '../render/styles
  * `[data-layer="<name>"]`.
  */
 
-function findMatchingBrace(text: string, startIndex: number): number {
-  let depth = 1
-  for (let i = startIndex + 1; i < text.length; i++) {
-    const c = text[i]
-    if (c === '{') depth++
-    else if (c === '}') depth--
-    if (depth === 0) return i
-  }
-  return text.length
-}
-
 interface ParsedTokensLayer {
   rootTokenDeclarations: string
   themeTokenBlocks: LayerTokenBlock[]
   preservedContent: string
 }
 
-function extractTokensLayerContent(css: string): string {
-  const tokensMatch = css.match(/@layer\s+tokens\s*\{/)
-  if (!tokensMatch) return ''
+function isTokensLayerRule(node: ChildNode | undefined): node is AtRule {
+  return Boolean(
+    node &&
+    node.type === 'atrule' &&
+    node.name === 'layer' &&
+    node.params.trim() === 'tokens' &&
+    node.nodes
+  )
+}
 
-  const afterTokensOpen = tokensMatch.index! + tokensMatch[0].length
-  const tokensEnd = findMatchingBrace(css, afterTokensOpen - 1)
-  return css.slice(afterTokensOpen, tokensEnd)
+function findTokensLayer(container: Container): AtRule | undefined {
+  return container.nodes?.find(isTokensLayerRule)
+}
+
+function isRootTokenRule(node: Rule): boolean {
+  return node.selector.trim().startsWith(':where(:root')
+}
+
+function stringifyCssNode(node: ChildNode): string {
+  const text = node.toString()
+  if (node.type === 'decl' || (node.type === 'atrule' && !node.nodes)) {
+    return text.endsWith(';') ? text : `${text};`
+  }
+  return text
+}
+
+function stringifyNodes(nodes: ChildNode[] | undefined): string {
+  if (!nodes?.length) return ''
+  return normalizeBlockContent(nodes.map(stringifyCssNode).join('\n'))
+}
+
+function normalizeBlockContent(content: string): string {
+  const trimmed = content.trim()
+  if (!trimmed) return ''
+
+  const lines = trimmed.split('\n')
+  const nonEmptyLines = lines.filter(line => line.trim())
+  const minIndent = Math.min(
+    ...nonEmptyLines.map(line => line.match(/^(\s*)/)?.[1].length ?? 0)
+  )
+
+  return lines
+    .map(line => {
+      if (!line.trim()) return ''
+      return `  ${line.slice(minIndent).trimEnd()}`
+    })
+    .join('\n')
+    .trim()
+}
+
+function splitSelectorList(selector: string): string[] {
+  const ast = selectorParser().astSync(selector)
+  return ast.nodes.map(entry => entry.toString().trim()).filter(Boolean)
 }
 
 function rewriteTokenSelector(selector: string, layerName: string): string {
   const layerSelector = `[data-layer="${layerName}"]`
-  return selector
-    .split(',')
-    .map((part) => part.trim())
-    .filter(Boolean)
-    .flatMap((part) => [`${layerSelector}${part}`, `${part} ${layerSelector}`])
+  return splitSelectorList(selector)
+    .flatMap(part => [`${layerSelector}${part}`, `${part} ${layerSelector}`])
     .join(', ')
+}
+
+function parseTokensLayer(
+  tokensLayer: AtRule | undefined,
+  layerName: string
+): ParsedTokensLayer {
+  if (!tokensLayer?.nodes?.length) {
+    return {
+      rootTokenDeclarations: '',
+      themeTokenBlocks: [],
+      preservedContent: '',
+    }
+  }
+
+  let rootTokenDeclarations = ''
+  const themeTokenBlocks: LayerTokenBlock[] = []
+  const preservedBlocks: string[] = []
+
+  for (const node of tokensLayer.nodes) {
+    if (node.type === 'rule') {
+      if (isRootTokenRule(node)) {
+        rootTokenDeclarations = stringifyNodes(node.nodes)
+        continue
+      }
+
+      const declarations = stringifyNodes(node.nodes)
+      if (!declarations) continue
+      themeTokenBlocks.push({
+        selector: rewriteTokenSelector(node.selector, layerName),
+        declarations,
+      })
+      continue
+    }
+
+    if (node.type === 'atrule') {
+      preservedBlocks.push(node.toString().trim())
+    }
+  }
+
+  return {
+    rootTokenDeclarations,
+    themeTokenBlocks,
+    preservedContent: preservedBlocks.join('\n\n'),
+  }
+}
+
+function removeOriginalTokensLayer(root: postcss.Root): string {
+  const strippedRoot = root.clone()
+  const tokensLayer = findTokensLayer(strippedRoot)
+  tokensLayer?.remove()
+  return strippedRoot.nodes.map(stringifyCssNode).join('\n').trim()
 }
 
 function kebabToCamelCase(value: string): string {
@@ -49,7 +134,7 @@ function kebabToCamelCase(value: string): string {
 
 function extractPublicColorTokenUtilities(
   rootTokenDeclarations: string,
-  content: string,
+  content: string
 ): string {
   const colorTokens = new Map<string, string>()
   const matches = rootTokenDeclarations.matchAll(/--colors-([a-z0-9-]+)\s*:/gi)
@@ -88,93 +173,29 @@ function extractPublicColorTokenUtilities(
   return utilityRules.join('\n')
 }
 
-function parseTokensLayer(css: string, layerName: string): ParsedTokensLayer {
-  const layerContent = extractTokensLayerContent(css)
-  if (!layerContent) {
-    return {
-      rootTokenDeclarations: '',
-      themeTokenBlocks: [],
-      preservedContent: '',
-    }
-  }
-
-  let rootTokenDeclarations = ''
-  const themeTokenBlocks: LayerTokenBlock[] = []
-  const preservedBlocks: string[] = []
-  let index = 0
-
-  while (index < layerContent.length) {
-    const openIndex = layerContent.indexOf('{', index)
-    if (openIndex === -1) break
-
-    const blockStart = index
-    const selector = layerContent.slice(index, openIndex).trim()
-    const closeIndex = findMatchingBrace(layerContent, openIndex)
-    const body = layerContent.slice(openIndex + 1, closeIndex).trim()
-    index = closeIndex + 1
-
-    if (!selector || !body) {
-      continue
-    }
-
-    if (selector.startsWith(':where(:root')) {
-      rootTokenDeclarations = body
-      continue
-    }
-
-    if (selector.startsWith('@')) {
-      preservedBlocks.push(layerContent.slice(blockStart, closeIndex + 1).trim())
-      continue
-    }
-
-    themeTokenBlocks.push({
-      selector: rewriteTokenSelector(selector, layerName),
-      declarations: dedentDeclarations(body),
-    })
-  }
-
-  return {
-    rootTokenDeclarations,
-    themeTokenBlocks,
-    preservedContent: preservedBlocks.join('\n\n'),
-  }
-}
-
-function stripTokensLayer(css: string): string {
-  const tokensMatch = css.match(/@layer\s+tokens\s*\{/)
-  if (!tokensMatch) return css
-
-  const start = tokensMatch.index ?? 0
-  const end = findMatchingBrace(css, start + tokensMatch[0].length - 1) + 1
-  return (css.slice(0, start) + css.slice(end)).trim()
-}
-
-function dedentDeclarations(declarations: string): string {
-  if (!declarations.trim()) return ''
-  const lines = declarations.split('\n').filter((l) => l.trim())
-  const minIndent = Math.min(
-    ...lines.map((l) => l.match(/^(\s*)/)?.[1].length ?? 0),
-  )
-  return lines.map((l) => `  ${l.slice(minIndent).trim()}`).join('\n')
-}
-
 /**
  * Transform raw Panda CSS into the portable stylesheet shape.
  * 1. Preserve Panda's internal @layer order declaration
  * 2. Wrap the stylesheet in `@layer <layerName> { ... }`
  * 3. Extract token declarations and append `[data-layer="<layerName>"] { ... }`
  */
-export function createPortableStylesheetFromContent(css: string, layerName: string): string {
-  const parsedTokensLayer = parseTokensLayer(css, layerName)
-  const rootTokenDeclarations = dedentDeclarations(parsedTokensLayer.rootTokenDeclarations)
-  const { themeTokenBlocks, preservedContent } = parsedTokensLayer
-  const strippedContent = stripTokensLayer(css)
+export function createPortableStylesheetFromContent(
+  css: string,
+  layerName: string
+): string {
+  const root = postcss.parse(css)
+  const tokensLayer = findTokensLayer(root)
+  const { rootTokenDeclarations, themeTokenBlocks, preservedContent } = parseTokensLayer(
+    tokensLayer,
+    layerName
+  )
+  const strippedContent = removeOriginalTokensLayer(root)
   const baseContent = preservedContent
     ? `${strippedContent}\n\n@layer tokens {\n${preservedContent}\n}`
     : strippedContent
   const generatedColorUtilities = extractPublicColorTokenUtilities(
     rootTokenDeclarations,
-    baseContent,
+    baseContent
   )
   const content = generatedColorUtilities
     ? `${baseContent}\n\n@layer utilities {\n${generatedColorUtilities}\n}`
