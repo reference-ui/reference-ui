@@ -1,15 +1,21 @@
 import { Div, Span } from '@reference-ui/react'
 import { tokens } from '@reference-ui/system'
+import {
+  lightDarkDemoBgLight,
+  lightDarkDemoBgDark,
+  lightDarkDemoTextLight,
+  lightDarkDemoTextDark,
+} from '../tokens.js'
 
 tokens({
   colors: {
     lightDarkDemoBg: {
-      value: '#f8fafc',
-      dark: '#020617',
+      value: lightDarkDemoBgLight,
+      dark: lightDarkDemoBgDark,
     },
     lightDarkDemoText: {
-      value: '#020617',
-      dark: '#f8fafc',
+      value: lightDarkDemoTextLight,
+      dark: lightDarkDemoTextDark,
     },
   },
 })
