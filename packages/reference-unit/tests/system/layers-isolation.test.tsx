@@ -9,7 +9,7 @@
 
 import { beforeAll, describe, expect, it } from 'vitest'
 import { execSync } from 'node:child_process'
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { render, screen } from '@testing-library/react'
@@ -22,6 +22,8 @@ const pkgRoot = resolve(__dirname, '..', '..')
 const fixtureRoot = resolve(pkgRoot, 'tests', 'fixtures', 'layers-isolation')
 const fixtureOutDir = join(fixtureRoot, '.reference-ui')
 const fixtureCssPath = join(fixtureOutDir, 'styled', 'styles.css')
+const cssSnapshotDir = join(pkgRoot, 'tests', 'system', 'css_snapshot')
+const cssSnapshotPath = join(cssSnapshotDir, 'layers-isolation.css')
 const fixturePandaConfigPath = join(fixtureOutDir, 'panda.config.ts')
 const fixtureReactBundlePath = join(fixtureOutDir, 'react', 'react.mjs')
 const fixtureReactTypesPath = join(fixtureOutDir, 'react', 'react.d.mts')
@@ -102,6 +104,11 @@ function injectFixtureCss(): string {
   return css
 }
 
+function snapshotFixtureCss(css: string): void {
+  mkdirSync(cssSnapshotDir, { recursive: true })
+  writeFileSync(cssSnapshotPath, css, 'utf-8')
+}
+
 describe('layers isolation fixture', () => {
   let fixtureCss = ''
   let pandaConfig = ''
@@ -129,6 +136,7 @@ describe('layers isolation fixture', () => {
     }
 
     fixtureCss = injectFixtureCss()
+    snapshotFixtureCss(fixtureCss)
     pandaConfig = readFileSync(fixturePandaConfigPath, 'utf-8')
     fixtureReactBundle = readFileSync(fixtureReactBundlePath, 'utf-8')
     fixtureReactTypes = readFileSync(fixtureReactTypesPath, 'utf-8')
@@ -157,6 +165,11 @@ describe('layers isolation fixture', () => {
     expect(fixtureCss).toContain(`--colors-fixture-accent: ${FIXTURE_ACCENT_RGB};`)
     expect(fixtureCss).toContain('@font-face')
     expect(fixtureCss).toContain('fadeIn')
+  })
+
+  it('writes a CSS snapshot for fast layer inspection', () => {
+    expect(existsSync(cssSnapshotPath)).toBe(true)
+    expect(readFileSync(cssSnapshotPath, 'utf-8')).toBe(fixtureCss)
   })
 
   it('keeps upstream font registries out of consumer generated types', () => {

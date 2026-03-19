@@ -1,3 +1,5 @@
+@layer {{ layerOrder | join: ", " }};
+
 {{ localLayerCss | raw }}{% if upstreamLayerCss != blank %}
 
 {{ upstreamLayerCss | raw }}{% endif %}

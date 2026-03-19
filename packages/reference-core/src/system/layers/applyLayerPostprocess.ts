@@ -31,10 +31,13 @@ export function applyLayerPostprocess(
     return layerCss
   }
 
-  const upstreamLayerCss = layers
-    .map((layer) => layer.css?.trim())
-    .filter((css): css is string => Boolean(css))
-  const finalCss = renderLayerStylesheet(layerCss, upstreamLayerCss)
+  const upstreamLayers = layers
+    .map((layer) => {
+      const css = layer.css?.trim()
+      return css ? { name: layer.name, css } : undefined
+    })
+    .filter((layer): layer is { name: string; css: string } => Boolean(layer))
+  const finalCss = renderLayerStylesheet(config.name, layerCss, upstreamLayers)
 
   writeFileSync(stylesPath, finalCss, 'utf-8')
   return layerCss

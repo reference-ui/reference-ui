@@ -1,9 +1,9 @@
-import { renderLayerCss } from './render'
+import { renderLayerCss, type LayerTokenBlock } from './render'
 
 /**
  * Transform Panda-emitted CSS into layer-ready CSS for layers mode.
- * Strips the top-level @layer order declaration, wraps content in @layer <name>,
- * and re-scopes token declarations to [data-layer="<name>"].
+ * Preserves Panda's internal layer declarations, wraps content in
+ * @layer <name>, and re-scopes token declarations to [data-layer="<name>"].
  */
 
 /** Find the index of the closing '}' that matches the '{' at startIndex (exclusive end). */
@@ -18,6 +18,12 @@ function findMatchingBrace(text: string, startIndex: number): number {
   return text.length
 }
 
+interface ParsedTokensLayer {
+  rootTokenDeclarations: string
+  themeTokenBlocks: LayerTokenBlock[]
+  preservedContent: string
+}
+
 function extractTokensLayerContent(css: string): string {
   const tokensMatch = css.match(/@layer\s+tokens\s*\{/)
   if (!tokensMatch) return ''
@@ -25,21 +31,6 @@ function extractTokensLayerContent(css: string): string {
   const afterTokensOpen = tokensMatch.index! + tokensMatch[0].length
   const tokensEnd = findMatchingBrace(css, afterTokensOpen - 1)
   return css.slice(afterTokensOpen, tokensEnd)
-}
-
-/**
- * Extract token declarations from Panda's @layer tokens { :where(:root, :host) { ... } } block.
- * Returns the inner declarations (custom properties) for re-scoping to [data-layer].
- */
-function extractTokenDeclarations(css: string): string {
-  const layerContent = extractTokensLayerContent(css)
-  if (!layerContent) return ''
-  const whereMatch = layerContent.match(/:where\(:root,\s*:host\)\s*\{/)
-  if (!whereMatch) return ''
-
-  const afterWhereOpen = whereMatch.index! + whereMatch[0].length
-  const whereEnd = findMatchingBrace(layerContent, afterWhereOpen - 1)
-  return layerContent.slice(afterWhereOpen, whereEnd).trim()
 }
 
 function rewriteTokenSelector(selector: string, layerName: string): string {
@@ -52,36 +43,56 @@ function rewriteTokenSelector(selector: string, layerName: string): string {
     .join(', ')
 }
 
-function extractThemeTokenBlocks(
-  css: string,
-  layerName: string
-): Array<{ selector: string; declarations: string }> {
+function parseTokensLayer(css: string, layerName: string): ParsedTokensLayer {
   const layerContent = extractTokensLayerContent(css)
-  if (!layerContent) return []
+  if (!layerContent) {
+    return {
+      rootTokenDeclarations: '',
+      themeTokenBlocks: [],
+      preservedContent: '',
+    }
+  }
 
-  const blocks: Array<{ selector: string; declarations: string }> = []
+  let rootTokenDeclarations = ''
+  const themeTokenBlocks: LayerTokenBlock[] = []
+  const preservedBlocks: string[] = []
   let index = 0
 
   while (index < layerContent.length) {
     const openIndex = layerContent.indexOf('{', index)
     if (openIndex === -1) break
 
+    const blockStart = index
     const selector = layerContent.slice(index, openIndex).trim()
     const closeIndex = findMatchingBrace(layerContent, openIndex)
     const body = layerContent.slice(openIndex + 1, closeIndex).trim()
     index = closeIndex + 1
 
-    if (!selector || !body || selector.startsWith(':where(:root')) {
+    if (!selector || !body) {
       continue
     }
 
-    blocks.push({
+    if (selector.startsWith(':where(:root')) {
+      rootTokenDeclarations = body
+      continue
+    }
+
+    if (selector.startsWith('@')) {
+      preservedBlocks.push(layerContent.slice(blockStart, closeIndex + 1).trim())
+      continue
+    }
+
+    themeTokenBlocks.push({
       selector: rewriteTokenSelector(selector, layerName),
       declarations: dedentDeclarations(body),
     })
   }
 
-  return blocks
+  return {
+    rootTokenDeclarations,
+    themeTokenBlocks,
+    preservedContent: preservedBlocks.join('\n\n'),
+  }
 }
 
 /**
@@ -109,25 +120,19 @@ function dedentDeclarations(declarations: string): string {
 }
 
 /**
- * Strip the top-level @layer a, b, c; order declaration from Panda output.
- * Must appear at stylesheet root; we rely on source order instead.
- * Uses bounded [^;\n]{0,200} to avoid sonarjs/slow-regex (Panda order lists are short).
- */
-function stripOrderDeclaration(css: string): string {
-  const orderRegex = /^@layer\s+[^;\n]{0,200};\s*\n?/
-  return css.replace(orderRegex, '').trimStart()
-}
-
-/**
  * Transform raw Panda CSS into layer-ready CSS.
- * 1. Strips the @layer order declaration
- * 2. Wraps remaining content in @layer <layerName> { ... }
- * 3. Extracts token declarations and appends [data-layer="<layerName>"] { ... } with normalised indentation
+ * 1. Preserves Panda's internal @layer order declaration
+ * 2. Wraps the stylesheet in @layer <layerName> { ... }
+ * 3. Extracts token declarations and appends [data-layer="<layerName>"] { ... }
  */
 export function createLayerCssFromContent(css: string, layerName: string): string {
-  const rootTokenDeclarations = dedentDeclarations(extractTokenDeclarations(css))
-  const themeTokenBlocks = extractThemeTokenBlocks(css, layerName)
-  const content = stripOrderDeclaration(stripTokensLayer(css))
+  const parsedTokensLayer = parseTokensLayer(css, layerName)
+  const rootTokenDeclarations = dedentDeclarations(parsedTokensLayer.rootTokenDeclarations)
+  const { themeTokenBlocks, preservedContent } = parsedTokensLayer
+  const strippedContent = stripTokensLayer(css)
+  const content = preservedContent
+    ? `${strippedContent}\n\n@layer tokens {\n${preservedContent}\n}`
+    : strippedContent
 
   return renderLayerCss({
     layerName,

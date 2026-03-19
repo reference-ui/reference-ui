@@ -1,4 +1,6 @@
 @layer reference-e2e {
+@layer reset, base, tokens, recipes, utilities;
+
 @layer reset{
   html,:host {
     --font-fallback: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
@@ -320,8 +322,8 @@
     background-color: #fef3c7;
 }
 
-  .c_\#22de51 {
-    color: #22de51;
+  .c_\#512d30 {
+    color: #512d30;
 }
 }
 }
@@ -367,6 +369,8 @@
 }
 
 @layer reference-ui {
+@layer reset, base, tokens, recipes, utilities;
+
 @layer reset{
   html,:host {
     --font-fallback: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';

@@ -71,6 +71,7 @@ describe('system/layers/applyLayerPostprocess', () => {
     expect(result).toBe(localLayerCss)
     expect(readFileSync(stylesPath, 'utf-8')).toBe(
       [
+        '@layer upstream-one, upstream-three, local-system;',
         localLayerCss,
         '@layer upstream-one { .one { color: blue; } }',
         '@layer upstream-three { .three { color: green; } }',
