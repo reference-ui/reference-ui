@@ -60,7 +60,10 @@ function getLayerLibCssPath(): string | undefined {
 
 function injectLayerLibCss(): void {
   const p = getLayerLibCssPath()
-  if (!p) throw new Error(`Layer library CSS not found. Tried: ${layerLibCssCandidates.join(', ')}`)
+  if (!p)
+    throw new Error(
+      `Layer library CSS not found. Tried: ${layerLibCssCandidates.join(', ')}`
+    )
   const style = document.createElement('style')
   style.setAttribute('data-layer-library', '')
   style.textContent = readFileSync(p, 'utf-8')

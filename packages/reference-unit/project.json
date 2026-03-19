@@ -31,7 +31,7 @@
         "command": "pnpm run test",
         "cwd": "packages/reference-unit"
       },
-      "dependsOn": ["reference-core:build", "@reference-ui/lib:build"]
+      "dependsOn": ["reference-core:build"]
     }
   },
   "tags": []
