@@ -37,9 +37,9 @@ previously the biggest gap:
 - direct tests cover deterministic reruns for base artifact creation
 - direct tests cover base fragment preparation, aliasing, collector-bundle
   wiring, and portable fragment bundle ordering
-- direct tests cover file-level layer postprocess behavior for missing CSS,
+- direct tests cover file-level CSS postprocess behavior for missing CSS,
   local-only layers, and appended upstream layers
-- direct tests cover `createLayerCss()` missing-file and file-read behavior
+- direct tests cover `createPortableStylesheet()` missing-file and file-read behavior
 - direct tests cover `createPandaConfig()` rendering collector expressions,
   extensions import paths, and base-config overrides
 - direct tests cover extensions bundle path helpers, bundle writes, and outDir
@@ -97,7 +97,7 @@ The following former limits have been addressed:
   export names (Obj, Var), single-letter tags (A), malformed tags.ts, and
   emitted source structure.
 - **Panda codegen helper:** Direct unit tests for `runPandaCodegen` and
-  `runPandaCss` (cwd/config presence, Panda API usage, layer postprocess and
+  `runPandaCss` (cwd/config presence, Panda API usage, CSS postprocess and
   baseSystem update); integration coverage remains for symlink and
   package-resolution behavior in real envs.
 

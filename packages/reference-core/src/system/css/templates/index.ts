@@ -1,5 +1,5 @@
 /**
- * Liquid template loader and cache for layer CSS generation.
+ * Liquid template loader and cache for CSS generation.
  */
 
 import { existsSync, readFileSync } from 'node:fs'
@@ -8,8 +8,8 @@ import { fileURLToPath } from 'node:url'
 
 function hasTemplates(dir: string): boolean {
   return (
-    existsSync(join(dir, 'layerCss.liquid')) &&
-    existsSync(join(dir, 'runtimeStylesheet.liquid'))
+    existsSync(join(dir, 'portableStylesheet.liquid')) &&
+    existsSync(join(dir, 'assembledStylesheet.liquid'))
   )
 }
 
@@ -25,7 +25,7 @@ function* ancestorDirs(startDir: string): Generator<string> {
   }
 }
 
-function getLiquidDir(): string {
+function getTemplatesDir(): string {
   const searchRoots: string[] = []
 
   try {
@@ -42,8 +42,8 @@ function getLiquidDir(): string {
   for (const root of searchRoots) {
     for (const dir of ancestorDirs(root)) {
       const candidates = [
-        join(dir, 'packages/reference-core/src/system/layers/liquid'),
-        join(dir, 'src/system/layers/liquid'),
+        join(dir, 'packages/reference-core/src/system/css/templates'),
+        join(dir, 'src/system/css/templates'),
       ]
 
       for (const candidate of candidates) {
@@ -54,26 +54,26 @@ function getLiquidDir(): string {
     }
   }
 
-  return join(process.cwd(), 'packages/reference-core/src/system/layers/liquid')
+  return join(process.cwd(), 'packages/reference-core/src/system/css/templates')
 }
 
-const __dirname = getLiquidDir()
+const templatesDir = getTemplatesDir()
 
 interface Templates {
-  layerCss: string
-  runtimeStylesheet: string
+  portableStylesheet: string
+  assembledStylesheet: string
 }
 
 let cachedTemplates: Templates | null = null
 
-export function loadLayerTemplates(): Templates {
+export function loadCssTemplates(): Templates {
   if (cachedTemplates) {
     return cachedTemplates
   }
 
   cachedTemplates = {
-    layerCss: readFileSync(join(__dirname, 'layerCss.liquid'), 'utf-8'),
-    runtimeStylesheet: readFileSync(join(__dirname, 'runtimeStylesheet.liquid'), 'utf-8'),
+    portableStylesheet: readFileSync(join(templatesDir, 'portableStylesheet.liquid'), 'utf-8'),
+    assembledStylesheet: readFileSync(join(templatesDir, 'assembledStylesheet.liquid'), 'utf-8'),
   }
 
   return cachedTemplates

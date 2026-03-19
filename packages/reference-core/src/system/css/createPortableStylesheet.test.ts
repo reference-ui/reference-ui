@@ -2,24 +2,24 @@ import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { createLayerCssFromContent } from './transform'
+import { createPortableStylesheetFromContent } from './transform/createPortableStylesheetFromContent'
 
 const createdDirs: string[] = []
 
 function createTempDir(): string {
-  const dir = mkdtempSync(join(tmpdir(), 'reference-ui-create-layer-css-'))
+  const dir = mkdtempSync(join(tmpdir(), 'reference-ui-create-portable-stylesheet-'))
   createdDirs.push(dir)
   return dir
 }
 
-async function importCreateLayerCssModule() {
+async function importCreatePortableStylesheetModule() {
   const debug = vi.fn()
 
   vi.doMock('../../lib/log', () => ({
     log: { debug },
   }))
 
-  const mod = await import('./createLayerCss')
+  const mod = await import('./createPortableStylesheet')
   return { ...mod, debug }
 }
 
@@ -32,20 +32,20 @@ afterEach(() => {
   }
 })
 
-describe('system/layers/createLayerCss', () => {
+describe('system/css/createPortableStylesheet', () => {
   it('logs and returns undefined when the stylesheet is missing', async () => {
     const tempDir = createTempDir()
     const missingPath = resolve(tempDir, 'styled', 'styles.css')
-    const { createLayerCss, debug } = await importCreateLayerCssModule()
+    const { createPortableStylesheet, debug } = await importCreatePortableStylesheetModule()
 
-    expect(createLayerCss(missingPath, 'missing-layer')).toBeUndefined()
+    expect(createPortableStylesheet(missingPath, 'missing-layer')).toBeUndefined()
     expect(debug).toHaveBeenCalledWith(
-      'layers',
-      `styles not found at ${missingPath}, skipping layer CSS`
+      'css',
+      `styles not found at ${missingPath}, skipping portable stylesheet`,
     )
   })
 
-  it('reads the stylesheet and returns transformed layer css', async () => {
+  it('reads the stylesheet and returns transformed portable css', async () => {
     const tempDir = createTempDir()
     const styledDir = resolve(tempDir, 'styled')
     const stylesPath = resolve(styledDir, 'styles.css')
@@ -54,10 +54,10 @@ describe('system/layers/createLayerCss', () => {
     mkdirSync(styledDir, { recursive: true })
     writeFileSync(stylesPath, rawCss, 'utf-8')
 
-    const { createLayerCss } = await importCreateLayerCssModule()
-    const result = createLayerCss(stylesPath, 'local-system')
+    const { createPortableStylesheet } = await importCreatePortableStylesheetModule()
+    const result = createPortableStylesheet(stylesPath, 'local-system')
 
-    expect(result).toBe(createLayerCssFromContent(rawCss, 'local-system'))
+    expect(result).toBe(createPortableStylesheetFromContent(rawCss, 'local-system'))
     expect(readFileSync(stylesPath, 'utf-8')).toBe(rawCss)
   })
 })
