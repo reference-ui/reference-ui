@@ -8,8 +8,6 @@ import {
   lightDarkDemoTextDark,
 } from '../tokens.js'
 
-void React
-
 tokens({
   colors: {
     lightDarkDemoBg: {
@@ -23,7 +21,7 @@ tokens({
   },
 })
 
-export function LightDarkDemo() {
+export function LightDarkDemo(): React.ReactElement {
   return (
     <Div
       data-testid="light-dark-demo"
