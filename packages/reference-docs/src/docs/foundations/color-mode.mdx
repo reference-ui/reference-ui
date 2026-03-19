@@ -5,6 +5,7 @@ order: 1
 slug: color-mode
 ---
 
+import { ColorModeDemo as LibColorModeDemo } from '@reference-ui/lib'
 import { ColorModeDemo } from '../../components/ColorModeDemo'
 
 # Light & Dark Mode
@@ -12,5 +13,11 @@ import { ColorModeDemo } from '../../components/ColorModeDemo'
 This page is a simple proof that theme-aware tokens are working in the docs app.
 
 The demo below uses docs-local tokens defined with a default value and a `dark` override. Toggling the preview changes the `data-panda-theme` scope, and the same token names resolve to different colors without swapping components or styles.
+
+## Reference Lib demo
+
+<LibColorModeDemo />
+
+## Docs-local demo
 
 <ColorModeDemo />
