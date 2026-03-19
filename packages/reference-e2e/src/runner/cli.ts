@@ -5,14 +5,15 @@
 import { runQuick, runUi, startDev } from './index.js'
 
 const cmd = process.argv[2] ?? 'quick'
+const playwrightArgs = process.argv.slice(3).filter((arg) => arg !== '--')
 
 async function main() {
   switch (cmd) {
     case 'quick':
-      await runQuick()
+      await runQuick(playwrightArgs)
       break
     case 'ui':
-      await runUi()
+      await runUi(playwrightArgs)
       break
     case 'dev':
       await startDev()

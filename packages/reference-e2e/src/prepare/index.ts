@@ -2,17 +2,12 @@
  * Prepare test sandboxes: generate one per matrix entry.
  * Each sandbox is a full project with its own package.json, node_modules, ref sync output.
  *
- * Incremental: does not nuke .sandbox every run. Reuses existing sandboxes when
- * app config and deps are unchanged. Only re-runs ref sync when reference-core
- * has been rebuilt. REF_TEST_FRESH=1 forces full rebuild.
- *
  * REF_TEST_PROJECT: when set (e.g. for test:quick), only prepare that one sandbox.
  */
 
-import { mkdir, rm, readFile, writeFile, readdir } from 'node:fs/promises'
-import { existsSync, statSync } from 'node:fs'
-import { join, dirname, relative } from 'node:path'
-import { createHash } from 'node:crypto'
+import { mkdir, rm, writeFile, readdir } from 'node:fs/promises'
+import { existsSync } from 'node:fs'
+import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { execa } from 'execa'
 
@@ -23,52 +18,14 @@ import { composeSandbox } from '../environments/manifest.js'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
 const PACKAGE_ROOT = join(__dirname, '..', '..')
-const ENVIRONMENTS_ROOT = join(PACKAGE_ROOT, 'src', 'environments')
 const SANDBOX_ROOT = join(PACKAGE_ROOT, '.sandbox')
+const CSS_SNAPSHOT_DIR = join(PACKAGE_ROOT, 'css_snapshot')
+const LEGACY_CSS_SNAPSHOT_DIR = join(PACKAGE_ROOT, 'src', 'tests', 'layer', 'css_snapshot')
 const CORE_PATH = join(PACKAGE_ROOT, '..', 'reference-core')
 const LIB_PATH = join(PACKAGE_ROOT, '..', 'reference-lib')
 const CORE_BIN = join(CORE_PATH, 'dist/cli/index.mjs')
 const LIB_BIN = join(LIB_PATH, 'dist/index.mjs')
 const WORKSPACE_ROOT = join(PACKAGE_ROOT, '..', '..')
-
-const PREP_STATE_FILE = '.prep-state.json'
-
-interface PrepState {
-  prepHash: string
-  coreHash: string
-}
-
-async function hashAppDir(dir: string): Promise<string> {
-  const hash = createHash('sha256')
-  const files: string[] = []
-  async function walk(path: string): Promise<void> {
-    const entries = await readdir(path, { withFileTypes: true })
-    for (const e of entries.sort((a, b) => a.name.localeCompare(b.name))) {
-      const full = join(path, e.name)
-      const rel = relative(dir, full)
-      if (e.isDirectory()) {
-        await walk(full)
-      } else {
-        files.push(rel)
-      }
-    }
-  }
-  await walk(dir)
-  for (const f of files.sort((a, b) => a.localeCompare(b))) {
-    const content = await readFile(join(dir, f), 'utf-8').catch(() => '')
-    hash.update(f + '\0' + content)
-  }
-  return hash.digest('hex')
-}
-
-function getCoreHash(): string {
-  try {
-    const st = statSync(CORE_BIN)
-    return createHash('sha256').update(`${st.mtimeMs}-${st.size}`).digest('hex')
-  } catch {
-    return ''
-  }
-}
 
 function buildPackageJson(entry: MatrixEntry): object {
   const reactVersion = getReactVersion(entry)
@@ -95,12 +52,6 @@ function buildPackageJson(entry: MatrixEntry): object {
   }
 }
 
-function computePrepHash(packageJson: object, appHash: string): string {
-  return createHash('sha256')
-    .update(appHash + JSON.stringify(packageJson))
-    .digest('hex')
-}
-
 async function ensureWorkspaceReady(): Promise<void> {
   const needsFreshBuild = !!process.env.REF_TEST_FRESH
   const needsCoreBuild = !existsSync(CORE_BIN)
@@ -119,19 +70,6 @@ async function ensureWorkspaceReady(): Promise<void> {
   await execa('pnpm', ['exec', 'ref', 'sync'], { cwd: LIB_PATH, stdio: 'pipe' })
 }
 
-async function readPrepState(sandboxDir: string): Promise<PrepState | null> {
-  try {
-    const raw = await readFile(join(sandboxDir, PREP_STATE_FILE), 'utf-8')
-    return JSON.parse(raw) as PrepState
-  } catch {
-    return null
-  }
-}
-
-async function writePrepState(sandboxDir: string, state: PrepState): Promise<void> {
-  await writeFile(join(sandboxDir, PREP_STATE_FILE), JSON.stringify(state, null, 0))
-}
-
 /** Clear ref sync output to avoid stale/corrupt state. Keeps node_modules (core, lib) intact. */
 async function clearRefUiArtifacts(sandboxDir: string): Promise<void> {
   const refUiDir = join(sandboxDir, '.reference-ui')
@@ -147,6 +85,11 @@ async function runSync(sandboxDir: string): Promise<void> {
     cwd: sandboxDir,
     stdio: 'inherit',
   })
+}
+
+async function clearGeneratedTestArtifacts(): Promise<void> {
+  await rm(CSS_SNAPSHOT_DIR, { recursive: true, force: true })
+  await rm(LEGACY_CSS_SNAPSHOT_DIR, { recursive: true, force: true })
 }
 
 async function prepareEntryFull(entry: MatrixEntry): Promise<void> {
@@ -170,47 +113,10 @@ async function prepareEntryFull(entry: MatrixEntry): Promise<void> {
   })
   await clearRefUiArtifacts(sandboxDir)
   await runSync(sandboxDir)
-
-  const envHash = await hashAppDir(ENVIRONMENTS_ROOT)
-  await writePrepState(sandboxDir, {
-    prepHash: computePrepHash(packageJson, envHash),
-    coreHash: getCoreHash(),
-  })
   console.log('  ✓', entry.name, '(full)')
 }
 
-async function prepareEntrySyncOnly(entry: MatrixEntry, prepHash: string): Promise<void> {
-  const sandboxDir = join(SANDBOX_ROOT, entry.name)
-  await clearRefUiArtifacts(sandboxDir)
-  await runSync(sandboxDir)
-  await writePrepState(sandboxDir, {
-    prepHash,
-    coreHash: getCoreHash(),
-  })
-  console.log('  ✓', entry.name, '(sync only)')
-}
-
 async function prepareEntry(entry: MatrixEntry): Promise<void> {
-  const forceFresh = !!process.env.REF_TEST_FRESH
-  const sandboxDir = join(SANDBOX_ROOT, entry.name)
-
-  const envHash = await hashAppDir(ENVIRONMENTS_ROOT)
-  const packageJson = buildPackageJson(entry)
-  const prepHash = computePrepHash(packageJson, envHash)
-  const coreHash = getCoreHash()
-
-  if (!forceFresh && existsSync(sandboxDir)) {
-    const state = await readPrepState(sandboxDir)
-    if (state?.prepHash === prepHash) {
-      if (state.coreHash === coreHash) {
-        console.log('  ✓', entry.name, '(cached)')
-        return
-      }
-      await prepareEntrySyncOnly(entry, prepHash)
-      return
-    }
-  }
-
   await prepareEntryFull(entry)
 }
 
@@ -228,6 +134,7 @@ async function pruneStaleSandboxes(): Promise<void> {
 
 export async function prepare(): Promise<void> {
   await mkdir(SANDBOX_ROOT, { recursive: true })
+  await clearGeneratedTestArtifacts()
   await ensureWorkspaceReady()
 
   const projectFilter = process.env.REF_TEST_PROJECT

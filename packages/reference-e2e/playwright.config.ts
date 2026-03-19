@@ -22,6 +22,7 @@ export default defineConfig({
   use: {
     baseURL: `http://localhost:${port}`,
     trace: 'on-first-retry',
+    ...(process.env.REF_TEST_HEADED === '1' ? { headless: false } : {}),
   },
   projects: MATRIX.map((entry) => ({
     name: entry.name,

@@ -7,12 +7,13 @@ import { addToConfig, getSandboxDir } from '../../environments/lib/config.js'
 import { runRefSync, waitForRefSyncReady } from '../../environments/lib/ref-sync.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
+const PACKAGE_ROOT = join(__dirname, '..', '..', '..')
 const LAYER_TOKEN_VAR = '--colors-test-primary'
 const LAYER_NAME = 'reference-e2e'
 const RENAMED_LAYER_NAME = 'reference-e2e-renamed'
 const REACT_LAYER_PLACEHOLDER = '__REFERENCE_UI_LAYER_NAME__'
 const sandboxDir = getSandboxDir()
-const cssSnapshotDir = join(__dirname, 'css_snapshot')
+const cssSnapshotDir = join(PACKAGE_ROOT, 'css_snapshot')
 const { tokensConfig } = await import(pathToFileURL(join(sandboxDir, 'tokens.ts')).href)
 
 function hexToRgb(hex: string): string {
