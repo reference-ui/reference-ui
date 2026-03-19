@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const pkgRoot = resolve(__dirname, '..', '..')
+const REF_SYNC_TIMEOUT_MS = 180_000
 const refCore = join(
   pkgRoot,
   'node_modules',
@@ -45,7 +46,7 @@ export default async function globalSetup() {
   execSync(`node "${refCore}" sync`, {
     cwd: pkgRoot,
     stdio: 'pipe',
-    timeout: 90_000,
+    timeout: REF_SYNC_TIMEOUT_MS,
   })
 
   const appReady = await waitForOutputs([

@@ -9,8 +9,8 @@ export const PANDA_CSS_FILENAME = 'styles.css'
 
 /**
  * After Panda cssgen: derive portable CSS for the current system and, when
- * `config.layers` is enabled, rewrite the runtime stylesheet to append upstream
- * layered CSS in final source order.
+ * upstream systems expose precompiled CSS, rewrite the runtime stylesheet to
+ * append upstream CSS in final source order.
  */
 export function postprocessCss(
   outDir: string,
@@ -23,18 +23,17 @@ export function postprocessCss(
   const raw = readFileSync(stylesPath, 'utf-8')
   const portableStylesheet = createPortableStylesheetFromContent(raw, config.name)
 
-  const layers = config.layers ?? []
-  if (layers.length === 0) {
-    return portableStylesheet
-  }
-
-  const upstreamLayers = layers
+  const upstreamSystems = [...(config.extends ?? []), ...(config.layers ?? [])]
     .map((layer) => {
       const css = layer.css?.trim()
       return css ? { name: layer.name, css } : undefined
     })
     .filter((layer): layer is { name: string; css: string } => Boolean(layer))
-  const finalCss = renderAssembledStylesheet(config.name, portableStylesheet, upstreamLayers)
+  if (upstreamSystems.length === 0) {
+    return portableStylesheet
+  }
+
+  const finalCss = renderAssembledStylesheet(config.name, portableStylesheet, upstreamSystems)
 
   writeFileSync(stylesPath, finalCss, 'utf-8')
   return portableStylesheet

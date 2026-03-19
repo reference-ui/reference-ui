@@ -39,8 +39,53 @@ function rewriteTokenSelector(selector: string, layerName: string): string {
     .split(',')
     .map((part) => part.trim())
     .filter(Boolean)
-    .flatMap((part) => [`${layerSelector}${part}`, `${layerSelector} ${part}`])
+    .flatMap((part) => [`${layerSelector}${part}`, `${part} ${layerSelector}`])
     .join(', ')
+}
+
+function kebabToCamelCase(value: string): string {
+  return value.replace(/-([a-z0-9])/g, (_, char: string) => char.toUpperCase())
+}
+
+function extractPublicColorTokenUtilities(
+  rootTokenDeclarations: string,
+  content: string,
+): string {
+  const colorTokens = new Map<string, string>()
+  const matches = rootTokenDeclarations.matchAll(/--colors-([a-z0-9-]+)\s*:/gi)
+  for (const match of matches) {
+    const cssVarSuffix = match[1]
+    const tokenName = kebabToCamelCase(cssVarSuffix)
+    if (!/^[A-Za-z][A-Za-z0-9]*$/.test(tokenName)) continue
+    colorTokens.set(tokenName, cssVarSuffix)
+  }
+
+  const utilityRules: string[] = []
+  for (const [tokenName, cssVarSuffix] of colorTokens) {
+    if (!content.includes(`.bg_${tokenName}`)) {
+      utilityRules.push(`  .bg_${tokenName} {`)
+      utilityRules.push(`    background: var(--colors-${cssVarSuffix});`)
+      utilityRules.push('}')
+      utilityRules.push('')
+    }
+
+    if (!content.includes(`.bg-c_${tokenName}`)) {
+      utilityRules.push(`  .bg-c_${tokenName} {`)
+      utilityRules.push(`    background-color: var(--colors-${cssVarSuffix});`)
+      utilityRules.push('}')
+      utilityRules.push('')
+    }
+
+    if (!content.includes(`.c_${tokenName}`)) {
+      utilityRules.push(`  .c_${tokenName} {`)
+      utilityRules.push(`    color: var(--colors-${cssVarSuffix});`)
+      utilityRules.push('}')
+      utilityRules.push('')
+    }
+  }
+
+  while (utilityRules.at(-1) === '') utilityRules.pop()
+  return utilityRules.join('\n')
 }
 
 function parseTokensLayer(css: string, layerName: string): ParsedTokensLayer {
@@ -124,9 +169,16 @@ export function createPortableStylesheetFromContent(css: string, layerName: stri
   const rootTokenDeclarations = dedentDeclarations(parsedTokensLayer.rootTokenDeclarations)
   const { themeTokenBlocks, preservedContent } = parsedTokensLayer
   const strippedContent = stripTokensLayer(css)
-  const content = preservedContent
+  const baseContent = preservedContent
     ? `${strippedContent}\n\n@layer tokens {\n${preservedContent}\n}`
     : strippedContent
+  const generatedColorUtilities = extractPublicColorTokenUtilities(
+    rootTokenDeclarations,
+    baseContent,
+  )
+  const content = generatedColorUtilities
+    ? `${baseContent}\n\n@layer utilities {\n${generatedColorUtilities}\n}`
+    : baseContent
 
   return renderPortableStylesheet({
     layerName,
