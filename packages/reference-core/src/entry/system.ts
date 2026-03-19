@@ -7,6 +7,7 @@ export { tokens, keyframes, font, extendFont, globalCss, extendPattern } from '.
 export { getRhythm } from '../system/panda/config/extensions/rhythm'
 export type {
   ReferenceBoxPatternProps,
+  ReferenceColorModeProps,
   ReferenceFontName,
   ReferenceFontProps,
   ReferenceFontRegistry,

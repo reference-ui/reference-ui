@@ -46,7 +46,7 @@ So the module is no longer relying on raw brace matching or naive
 1. Read Panda-emitted `styled/styles.css`
 2. Extract the `@layer tokens` block
 3. Move root token declarations onto `[data-layer="<name>"]`
-4. Re-scope theme selectors like `[data-panda-theme=dark]`
+4. Preserve Panda theme selectors like `[data-panda-theme=dark]` and scope token output under the current layer
 5. Preserve non-selector token-layer at-rules
 6. Strip the original token layer from the wrapped Panda content
 7. Synthesize public color utility classes when Panda did not emit them

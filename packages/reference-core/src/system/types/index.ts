@@ -38,6 +38,15 @@ export interface ReferenceContainerProps {
   container?: ConditionalValue<string | boolean>
 }
 
+/**
+ * Theme scope for token resolution.
+ * Supported on HTML primitives only and emitted as Panda's `data-panda-theme`
+ * attribute, not through the Panda `box()` pattern / `ReferenceSystemStyleObject`.
+ */
+export interface ReferenceColorModeProps {
+  colorMode?: ConditionalValue<string>
+}
+
 export interface ReferenceResponsiveProps {
   r?: ConditionalValue<Record<string | number, SystemStyleObject>>
 }

@@ -128,7 +128,9 @@ export async function shutdownAndExit(code: number, reason: string): Promise<num
       process.exitCode = exitCode
     }
 
-    return exitCode
+    // Relying on exitCode alone can leave the process alive if any handle keeps
+    // the event loop open; `ref sync` must always terminate for execSync callers.
+    process.exit(exitCode)
   })()
 
   return shutdownPromise

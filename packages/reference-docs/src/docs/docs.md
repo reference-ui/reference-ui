@@ -125,7 +125,7 @@ The **programming model** exposed by Reference UI.
 
 ### Light & dark
 
-- Single mechanism: `data-panda-theme="dark"` / `data-panda-theme="light"` on a root or subtree; no `_osDark` / `_osLight` helpers. Drive theme from JS if needed (for example by reading `prefers-color-scheme` and setting the attribute).
+- Single mechanism: `data-panda-theme="dark"` / `data-panda-theme="light"` on a root or subtree, or the `colorMode` prop on primitives (sets `data-panda-theme`); no `_osDark` / `_osLight` helpers. Drive theme from JS if needed (for example by reading `prefers-color-scheme` and setting the attribute).
 - `colorModeStyles()`: small helper that takes `{ base?, light?, dark? }` and returns one style object with `_dark` / `_light` set. Use the same helper in both `cva()` recipe base/variants and `css()` so adding or extending light/dark is consistent and minimal.
 - Extending: spread the result and override or add keys as needed in your recipes and `css()` calls.
 

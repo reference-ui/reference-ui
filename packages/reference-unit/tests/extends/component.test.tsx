@@ -52,7 +52,7 @@ function ExtendLightDarkDemoLayout() {
 
       <Div
         data-testid="light-dark-demo-dark"
-        data-panda-theme="dark"
+        colorMode="dark"
         bg="lightDarkDemoBg"
         color="lightDarkDemoText"
         borderRadius="xl"
