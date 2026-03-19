@@ -3,8 +3,6 @@ import { css } from '@reference-ui/react'
 import { tokens } from '@reference-ui/system'
 import { fixtureDemoBg, fixtureDemoText, fixtureDemoAccent } from '../tokens.js'
 
-void React
-
 tokens({
   colors: {
     fixtureDemoBg: { value: fixtureDemoBg },
@@ -13,7 +11,7 @@ tokens({
   },
 })
 
-export function DemoComponent() {
+export function DemoComponent(): React.ReactElement {
   return (
     <div
       data-testid="fixture-demo"
@@ -33,10 +31,7 @@ export function DemoComponent() {
       >
         Fixture library component
       </span>
-      <span
-        data-testid="fixture-demo-copy"
-        className={css({ color: 'fixtureDemoText' })}
-      >
+      <span data-testid="fixture-demo-copy" className={css({ color: 'fixtureDemoText' })}>
         DemoComponent renders from @fixtures/extend-library.
       </span>
     </div>
