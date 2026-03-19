@@ -91,7 +91,7 @@ export function ColorModeDemo() {
       </Div>
 
       <Div
-        data-panda-theme={theme}
+        colorMode={theme}
         bg="docsPageBg"
         color="docsText"
         border="1px solid"
@@ -117,7 +117,7 @@ export function ColorModeDemo() {
               {mode === 'light' ? 'Light mode tokens' : 'Dark mode tokens'}
             </H2>
           </Div>
-          <Code>{theme ? `data-panda-theme="${theme}"` : 'no theme attribute'}</Code>
+          <Code>{theme ? `colorMode="${theme}"` : 'no theme attribute'}</Code>
         </Div>
 
         <Div

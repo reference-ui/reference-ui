@@ -47,7 +47,7 @@ export function ColorModeDemo() {
 
       <Div
         data-testid="color-mode-demo-dark"
-        data-panda-theme="dark"
+        colorMode="dark"
         bg="colorModeDemoBg"
         color="colorModeDemoText"
         borderRadius="xl"

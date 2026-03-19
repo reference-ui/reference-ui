@@ -1,6 +1,10 @@
 import type * as React from 'react'
 import type { SystemStyleObject } from '@reference-ui/styled/types'
-import type { ReferenceBoxPatternProps, ReferenceSystemStyleObject } from '../types'
+import type {
+  ReferenceBoxPatternProps,
+  ReferenceColorModeProps,
+  ReferenceSystemStyleObject,
+} from '../types'
 
 export interface PrimitiveCssProps {
   css?: SystemStyleObject
@@ -9,9 +13,10 @@ export interface PrimitiveCssProps {
 export type PrimitiveProps<T extends keyof React.JSX.IntrinsicElements> =
   Omit<
     React.ComponentPropsWithoutRef<T>,
-    keyof ReferenceBoxPatternProps | keyof PrimitiveCssProps
+    keyof ReferenceBoxPatternProps | keyof PrimitiveCssProps | keyof ReferenceColorModeProps
   > &
   ReferenceBoxPatternProps &
+  ReferenceColorModeProps &
   PrimitiveCssProps &
   ReferenceSystemStyleObject
 
