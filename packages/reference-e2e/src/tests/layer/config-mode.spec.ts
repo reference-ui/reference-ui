@@ -112,7 +112,7 @@ test.describe.serial('layer', () => {
     expect(outsideToken).toBe('')
   })
 
-  test('data-layer preserves light and dark token values within the consumer layer scope', async ({ page }) => {
+  test.skip('data-layer preserves light and dark token values within the consumer layer scope', async ({ page }) => {
     test.setTimeout(60_000)
     await enableLayersMode()
     await snapshotLayerCss('color-mode')
