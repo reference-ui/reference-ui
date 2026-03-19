@@ -1364,6 +1364,8 @@
   --spacing-8r: calc(8 * var(--spacing-r));
   --spacing-10r: calc(10 * var(--spacing-r));
   --spacing-12r: calc(12 * var(--spacing-r));
+  --colors-color-mode-demo-bg: var(--colors-gray-50);
+  --colors-color-mode-demo-text: var(--colors-gray-950);
   --colors-gray-50: oklch(98.5% 0.002 247.839);
   --colors-gray-100: oklch(96.7% 0.003 264.542);
   --colors-gray-200: oklch(92.8% 0.006 264.531);
@@ -1621,5 +1623,7 @@
 
 
 [data-layer="reference-unit"][data-panda-theme=dark], [data-layer="reference-unit"] [data-panda-theme=dark] {
+  --colors-color-mode-demo-bg: var(--colors-gray-950);
+  --colors-color-mode-demo-text: var(--colors-gray-50);
   --colors-reference-unit-color-mode-token: rgb(30, 41, 59)
 }
