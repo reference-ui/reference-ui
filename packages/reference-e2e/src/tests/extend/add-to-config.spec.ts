@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { getSandboxDir } from '../../environments/lib/config.js'
+import { testRoutes } from '../../environments/base/routes.js'
 
 function hexToRgb(hex: string): string {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
@@ -26,7 +27,7 @@ test.describe('extend', () => {
 
   test.describe('runtime', () => {
     test('renders fixture DemoComponent with fixture-owned tokens', async ({ page }) => {
-      await page.goto('/')
+      await page.goto(testRoutes.extends)
       const root = page.getByTestId('extends-test')
       const demo = page.getByTestId('fixture-demo')
       const eyebrow = page.getByTestId('fixture-demo-eyebrow')
@@ -49,7 +50,7 @@ test.describe('extend', () => {
     test('renders fixture LightDarkDemo variants from the extend library', async ({
       page,
     }) => {
-      await page.goto('/')
+      await page.goto(testRoutes.extends)
       const demo = page.getByTestId('light-dark-demo')
       const lightCard = page.getByTestId('light-dark-demo-light')
       const darkCard = page.getByTestId('light-dark-demo-dark')

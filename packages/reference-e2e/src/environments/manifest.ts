@@ -13,6 +13,8 @@ import type { MatrixEntry } from '../matrix/index.js'
 export const MANIFEST = [
   'main.tsx',
   'App.tsx',
+  'Router.tsx',
+  'routes.ts',
   'index.html',
   'package.json',
   'tokens.ts',
