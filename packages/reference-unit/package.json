@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@fixtures/extend-library": "workspace:*",
+    "@fixtures/layer-library": "workspace:*",
     "@reference-ui/core": "workspace:*",
     "@reference-ui/lib": "workspace:*",
     "react": "^18.2.0",
