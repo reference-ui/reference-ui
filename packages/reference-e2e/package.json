@@ -9,6 +9,7 @@
     "test:prepare": "tsx src/prepare/index.ts",
     "test": "pnpm run test:prepare && tsx src/matrix/run.ts",
     "test:quick": "tsx src/runner/cli.ts quick",
+    "test:dev": "REF_TEST_HEADED=1 tsx src/runner/cli.ts ui",
     "test:ui": "tsx src/runner/cli.ts ui"
   },
   "dependencies": {
