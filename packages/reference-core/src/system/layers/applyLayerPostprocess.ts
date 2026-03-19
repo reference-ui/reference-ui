@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { ReferenceUIConfig } from '../../config'
+import { renderLayerStylesheet } from './render'
 import { createLayerCssFromContent } from './transform'
 
 /** Default Panda CSS filename under outdir (e.g. outDir/styled/styles.css). */
@@ -30,12 +31,10 @@ export function applyLayerPostprocess(
     return layerCss
   }
 
-  let finalCss = layerCss
-  for (const layer of layers) {
-    if (layer.css) {
-      finalCss += '\n\n' + layer.css.trim()
-    }
-  }
+  const upstreamLayerCss = layers
+    .map((layer) => layer.css?.trim())
+    .filter((css): css is string => Boolean(css))
+  const finalCss = renderLayerStylesheet(layerCss, upstreamLayerCss)
 
   writeFileSync(stylesPath, finalCss, 'utf-8')
   return layerCss

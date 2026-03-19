@@ -15,7 +15,7 @@ import {
   extendUtilities,
   getPandaConfig,
   initPandaConfig,
-  normalizeTokenFragments,
+  resolveColorModeTokens,
   referenceBrowserGlobalCss,
   rhythmGlobalCss,
   rhythmSpacingTokens,
@@ -36,10 +36,10 @@ initPandaConfig(baseConfig)
 // ─────────────────────────────────────────────────────────────────────────
 
 const tokensFragments = {{ tokensValueExpression | raw }}
-const normalizedTokens = normalizeTokenFragments(tokensFragments)
+const resolvedColorModeTokens = resolveColorModeTokens(tokensFragments)
 extendTokens(rhythmSpacingTokens)
-extendTokens(normalizedTokens.baseTokens)
-extendThemes(normalizedTokens.themes)
+extendTokens(resolvedColorModeTokens.baseTokens)
+extendThemes(resolvedColorModeTokens.themes)
 
 // ─────────────────────────────────────────────────────────────────────────
 // keyframes

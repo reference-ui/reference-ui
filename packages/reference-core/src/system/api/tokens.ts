@@ -1,7 +1,7 @@
 import { createFragmentFunction } from '../../lib/fragments/collector'
 
 export interface ReferenceTokenLeaf {
-  value: unknown
+  value?: unknown
   light?: unknown
   dark?: unknown
   description?: string
@@ -29,6 +29,7 @@ const { fn, collector } = createFragmentFunction<ReferenceTokenConfig>({
  * tokens({
  *   colors: {
  *     text: { value: '#111111', dark: '#f5f5f5' },
+ *     icon: { light: '#222222', dark: '#f5f5f5' },
  *     brand: { primary: { value: '#0066cc' }, secondary: { value: '#ff6600' } },
  *   },
  *   spacing: { sm: { value: '0.5rem' }, md: { value: '1rem' } },

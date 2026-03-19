@@ -1,0 +1,21 @@
+@layer {{ layerName }} {
+{{ content | raw }}
+}
+{% assign hasRootTokens = rootTokenDeclarations != blank %}
+{% assign hasThemeTokens = themeTokenBlocks.size > 0 %}
+{% if hasRootTokens or hasThemeTokens %}
+
+{% if hasRootTokens %}
+[data-layer="{{ layerName }}"] {
+{{ rootTokenDeclarations | raw }}
+}
+{% endif %}
+{% for tokenBlock in themeTokenBlocks %}
+{% if hasRootTokens or forloop.index0 > 0 %}
+
+{% endif %}
+{{ tokenBlock.selector | raw }} {
+{{ tokenBlock.declarations | raw }}
+}
+{% endfor %}
+{% endif %}

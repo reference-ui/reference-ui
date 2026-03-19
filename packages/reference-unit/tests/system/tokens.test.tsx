@@ -9,8 +9,16 @@
 import { describe, it, expect, beforeAll } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { Div } from '@reference-ui/react'
-import { REFERENCE_UNIT_TOKEN_RGB } from '../../src/system/styles'
-import { injectDesignSystemCss, getDesignSystemCssPath } from '../primitives/setup'
+import {
+  REFERENCE_UNIT_MODE_DARK_RGB,
+  REFERENCE_UNIT_MODE_LIGHT_RGB,
+  REFERENCE_UNIT_TOKEN_RGB,
+} from '../../src/system/styles'
+import {
+  getDesignSystemCss,
+  injectDesignSystemCss,
+  getDesignSystemCssPath,
+} from '../primitives/setup'
 
 beforeAll(() => {
   try {
@@ -45,6 +53,47 @@ describe('user-space tokens (referenceUnitToken)', () => {
     const style = window.getComputedStyle(el)
     if (style.backgroundColor) {
       expect(style.backgroundColor).toBe(REFERENCE_UNIT_TOKEN_RGB)
+    }
+  })
+
+  it('emits color-mode token CSS for the normal reference-unit system', () => {
+    const css = getDesignSystemCss()
+    if (!css) return
+
+    expect(css).toContain(`--colors-reference-unit-color-mode-token: ${REFERENCE_UNIT_MODE_LIGHT_RGB};`)
+    expect(css).toMatch(/data-panda-theme=dark|data-panda-theme=["']dark["']/)
+    expect(css).toMatch(
+      new RegExp(`--colors-reference-unit-color-mode-token:\\s*${REFERENCE_UNIT_MODE_DARK_RGB.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`)
+    )
+  })
+
+  it('applies the dark-mode token value inside a dark panda theme scope', () => {
+    if (!getDesignSystemCssPath()) return
+
+    render(
+      <>
+        <Div data-testid="light-mode-token" color="referenceUnitColorModeToken">
+          Light mode token
+        </Div>
+        <div data-panda-theme="dark">
+          <Div data-testid="dark-mode-token" color="referenceUnitColorModeToken">
+            Dark mode token
+          </Div>
+        </div>
+      </>
+    )
+
+    const lightToken = screen.getByTestId('light-mode-token')
+    const darkToken = screen.getByTestId('dark-mode-token')
+    const lightStyle = window.getComputedStyle(lightToken)
+    const darkStyle = window.getComputedStyle(darkToken)
+
+    if (lightStyle.color) {
+      expect(lightStyle.color).toBe(REFERENCE_UNIT_MODE_LIGHT_RGB)
+    }
+
+    if (darkStyle.color) {
+      expect(darkStyle.color).toBe(REFERENCE_UNIT_MODE_DARK_RGB)
     }
   })
 })

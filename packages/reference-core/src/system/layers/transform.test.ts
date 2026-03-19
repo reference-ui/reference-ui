@@ -43,4 +43,16 @@ describe('createLayerCssFromContent', () => {
     expect(out).toMatch(/@layer sys \{/)
     expect(out).not.toMatch(/\[data-layer="sys"\]/)
   })
+
+  it('re-scopes token theme selectors into the layer domain', () => {
+    const raw = `@layer base, tokens;
+@layer tokens {
+  :where(:root, :host) { --color: red; }
+  [data-panda-theme=dark] { --color: blue; }
+}`
+    const out = createLayerCssFromContent(raw, 'sys')
+    expect(out).toMatch(/\[data-layer="sys"\] \[data-panda-theme=dark\]\s*\{/)
+    expect(out).toMatch(/\[data-layer="sys"\]\[data-panda-theme=dark\]\s*,/)
+    expect(out).toMatch(/--color:\s*blue;/)
+  })
 })

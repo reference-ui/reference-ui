@@ -1,3 +1,5 @@
+import { renderLayerCss } from './render'
+
 /**
  * Transform Panda-emitted CSS into layer-ready CSS for layers mode.
  * Strips the top-level @layer order declaration, wraps content in @layer <name>,
@@ -16,23 +18,70 @@ function findMatchingBrace(text: string, startIndex: number): number {
   return text.length
 }
 
-/**
- * Extract token declarations from Panda's @layer tokens { :where(:root, :host) { ... } } block.
- * Returns the inner declarations (custom properties) for re-scoping to [data-layer].
- */
-function extractTokenDeclarations(css: string): string {
+function extractTokensLayerContent(css: string): string {
   const tokensMatch = css.match(/@layer\s+tokens\s*\{/)
   if (!tokensMatch) return ''
 
   const afterTokensOpen = tokensMatch.index! + tokensMatch[0].length
   const tokensEnd = findMatchingBrace(css, afterTokensOpen - 1)
-  const layerContent = css.slice(afterTokensOpen, tokensEnd)
+  return css.slice(afterTokensOpen, tokensEnd)
+}
+
+/**
+ * Extract token declarations from Panda's @layer tokens { :where(:root, :host) { ... } } block.
+ * Returns the inner declarations (custom properties) for re-scoping to [data-layer].
+ */
+function extractTokenDeclarations(css: string): string {
+  const layerContent = extractTokensLayerContent(css)
+  if (!layerContent) return ''
   const whereMatch = layerContent.match(/:where\(:root,\s*:host\)\s*\{/)
   if (!whereMatch) return ''
 
   const afterWhereOpen = whereMatch.index! + whereMatch[0].length
   const whereEnd = findMatchingBrace(layerContent, afterWhereOpen - 1)
   return layerContent.slice(afterWhereOpen, whereEnd).trim()
+}
+
+function rewriteTokenSelector(selector: string, layerName: string): string {
+  const layerSelector = `[data-layer="${layerName}"]`
+  return selector
+    .split(',')
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .flatMap((part) => [`${layerSelector}${part}`, `${layerSelector} ${part}`])
+    .join(', ')
+}
+
+function extractThemeTokenBlocks(
+  css: string,
+  layerName: string
+): Array<{ selector: string; declarations: string }> {
+  const layerContent = extractTokensLayerContent(css)
+  if (!layerContent) return []
+
+  const blocks: Array<{ selector: string; declarations: string }> = []
+  let index = 0
+
+  while (index < layerContent.length) {
+    const openIndex = layerContent.indexOf('{', index)
+    if (openIndex === -1) break
+
+    const selector = layerContent.slice(index, openIndex).trim()
+    const closeIndex = findMatchingBrace(layerContent, openIndex)
+    const body = layerContent.slice(openIndex + 1, closeIndex).trim()
+    index = closeIndex + 1
+
+    if (!selector || !body || selector.startsWith(':where(:root')) {
+      continue
+    }
+
+    blocks.push({
+      selector: rewriteTokenSelector(selector, layerName),
+      declarations: dedentDeclarations(body),
+    })
+  }
+
+  return blocks
 }
 
 /**
@@ -76,11 +125,14 @@ function stripOrderDeclaration(css: string): string {
  * 3. Extracts token declarations and appends [data-layer="<layerName>"] { ... } with normalised indentation
  */
 export function createLayerCssFromContent(css: string, layerName: string): string {
-  const tokenDeclarations = dedentDeclarations(extractTokenDeclarations(css))
-  const withoutOrder = stripOrderDeclaration(stripTokensLayer(css))
-  const dataLayerBlock =
-    tokenDeclarations.length > 0
-      ? `\n\n[data-layer="${layerName}"] {\n${tokenDeclarations}\n}\n`
-      : ''
-  return `@layer ${layerName} {\n${withoutOrder}\n}${dataLayerBlock}`
+  const rootTokenDeclarations = dedentDeclarations(extractTokenDeclarations(css))
+  const themeTokenBlocks = extractThemeTokenBlocks(css, layerName)
+  const content = stripOrderDeclaration(stripTokensLayer(css))
+
+  return renderLayerCss({
+    layerName,
+    content,
+    rootTokenDeclarations,
+    themeTokenBlocks,
+  })
 }

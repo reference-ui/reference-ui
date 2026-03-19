@@ -25,9 +25,17 @@ const fixtureCssPath = join(fixtureOutDir, 'styled', 'styles.css')
 const fixturePandaConfigPath = join(fixtureOutDir, 'panda.config.ts')
 const fixtureReactBundlePath = join(fixtureOutDir, 'react', 'react.mjs')
 const fixtureReactTypesPath = join(fixtureOutDir, 'react', 'react.d.mts')
-const fixtureReactGeneratedTypesPath = join(fixtureOutDir, 'react', 'types.generated.d.mts')
+const fixtureReactGeneratedTypesPath = join(
+  fixtureOutDir,
+  'react',
+  'types.generated.d.mts'
+)
 const fixtureSystemTypesPath = join(fixtureOutDir, 'system', 'system.d.mts')
-const fixtureSystemGeneratedTypesPath = join(fixtureOutDir, 'system', 'types.generated.d.mts')
+const fixtureSystemGeneratedTypesPath = join(
+  fixtureOutDir,
+  'system',
+  'types.generated.d.mts'
+)
 const upstreamBaseSystemPath = join(pkgRoot, '.reference-ui', 'system', 'baseSystem.mjs')
 const FIXTURE_ACCENT_RGB = 'rgb(17, 24, 39)'
 const REACT_LAYER_PLACEHOLDER = '__REFERENCE_UI_LAYER_NAME__'
@@ -55,13 +63,16 @@ async function waitForFixtureOutputs(maxMs = 45_000): Promise<void> {
       existsSync(fixtureSystemGeneratedTypesPath)
     ) {
       const css = readFileSync(fixtureCssPath, 'utf-8')
-      if (css.includes('[data-layer="layers-isolation"]') && css.includes('[data-layer="reference-unit"]')) {
-        await new Promise((resolve) => setTimeout(resolve, 150))
+      if (
+        css.includes('[data-layer="layers-isolation"]') &&
+        css.includes('[data-layer="reference-unit"]')
+      ) {
+        await new Promise(resolve => setTimeout(resolve, 150))
         return
       }
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 80))
+    await new Promise(resolve => setTimeout(resolve, 80))
   }
 
   throw new Error(`Fixture sync did not produce layer-ready output within ${maxMs}ms`)
@@ -139,7 +150,9 @@ describe('layers isolation fixture', () => {
     expect(fixtureCss).toMatch(/@layer\s+layers-isolation\s*\{/)
     expect(fixtureCss).toMatch(/@layer\s+reference-unit\s*\{/)
     expect(fixtureCss).toMatch(/\[data-layer="reference-unit"\]\s*\{/)
-    expect(fixtureCss).toContain(`--colors-reference-unit-token: ${REFERENCE_UNIT_TOKEN_RGB};`)
+    expect(fixtureCss).toContain(
+      `--colors-reference-unit-token: ${REFERENCE_UNIT_TOKEN_RGB};`
+    )
     expect(fixtureCss).toContain(`--colors-teal-500: ${colors.teal[500].value};`)
     expect(fixtureCss).toContain(`--colors-fixture-accent: ${FIXTURE_ACCENT_RGB};`)
     expect(fixtureCss).toContain('@font-face')
