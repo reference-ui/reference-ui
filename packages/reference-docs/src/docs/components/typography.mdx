@@ -44,37 +44,49 @@ Text primitives for building consistent, styled typography.
 
 ## Headings
 
-<div>
-  <H1>Heading 1</H1>
-  <H2>Heading 2</H2>
-  <H3>Heading 3</H3>
-  <H4>Heading 4</H4>
-  <H5>Heading 5</H5>
-  <H6>Heading 6</H6>
-</div>
+<Div color="docsText">
+  <H1 color="docsText">Heading 1</H1>
+  <H2 color="docsText">Heading 2</H2>
+  <H3 color="docsText">Heading 3</H3>
+  <H4 color="docsText">Heading 4</H4>
+  <H5 color="docsText">Heading 5</H5>
+  <H6 color="docsText">Heading 6</H6>
+</Div>
 
 ---
 
 ## Body Text
 
-<div
-  style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}
->
-  <P>This is a paragraph. It contains body text that flows naturally across the page.</P>
-  <P>
-    <Small>This is small text, useful for fine print or captions.</Small>
+<Div display="flex" flexDirection="column" gap="4r" marginBottom="8r">
+  <P color="docsText">
+    This is a paragraph. It contains body text that flows naturally across the page.
   </P>
-</div>
+  <P color="docsText">
+    <Small color="docsMuted">This is small text, useful for fine print or captions.</Small>
+  </P>
+</Div>
 
 ---
 
 ## Font Families
 
-<div style={{ display: 'flex', flexDirection: 'row', gap: '1rem', marginBottom: '2rem' }}>
-  <P font="sans">The quick brown fox jumps over the lazy dog.</P>
-  <P font="mono">The quick brown fox jumps over the lazy dog.</P>
-  <P font="serif">The quick brown fox jumps over the lazy dog.</P>
-</div>
+<Div
+  display="flex"
+  flexDirection={{ base: 'column', md: 'row' }}
+  gap="4r"
+  marginBottom="8r"
+  flexWrap="wrap"
+>
+  <P font="sans" color="docsText">
+    The quick brown fox jumps over the lazy dog.
+  </P>
+  <P font="mono" color="docsText">
+    The quick brown fox jumps over the lazy dog.
+  </P>
+  <P font="serif" color="docsText">
+    The quick brown fox jumps over the lazy dog.
+  </P>
+</Div>
 
 ---
 
@@ -85,10 +97,13 @@ Text primitives for building consistent, styled typography.
   width="100%"
   maxWidth="600px"
   height="100px"
-  marginBottom="3rem"
+  marginBottom="12r"
   overflow="hidden"
   borderWidth="1px"
-  borderColor="gray.300"
+  borderStyle="solid"
+  borderColor="docsPanelBorder"
+  borderRadius="lg"
+  bg="docsDemoMutedBg"
 >
   <Div
     font="sans"
@@ -99,6 +114,7 @@ Text primitives for building consistent, styled typography.
     lineHeight="70px"
     opacity={0.9}
     whiteSpace="nowrap"
+    color="docsText"
   >
     Typography
   </Div>
@@ -110,7 +126,7 @@ Text primitives for building consistent, styled typography.
     fontSize="60px"
     lineHeight="70px"
     opacity={0.6}
-    color="blue"
+    color="docsAccent"
     whiteSpace="nowrap"
   >
     Typography
@@ -123,7 +139,7 @@ Text primitives for building consistent, styled typography.
     fontSize="60px"
     lineHeight="70px"
     opacity={0.6}
-    color="red"
+    color="red.500"
     whiteSpace="nowrap"
   >
     Typography
@@ -139,10 +155,13 @@ Text primitives for building consistent, styled typography.
   width="100%"
   maxWidth="600px"
   height="200px"
-  marginBottom="3rem"
+  marginBottom="12r"
   overflow="hidden"
   borderWidth="1px"
-  borderColor="gray.300"
+  borderStyle="solid"
+  borderColor="docsPanelBorder"
+  borderRadius="lg"
+  bg="docsDemoMutedBg"
 >
   <Div
     font="sans"
@@ -152,6 +171,7 @@ Text primitives for building consistent, styled typography.
     fontSize="32px"
     lineHeight="40px"
     opacity={0.9}
+    color="docsText"
   >
     The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.
     How vexingly quick daft zebras jump!
@@ -164,7 +184,7 @@ Text primitives for building consistent, styled typography.
     fontSize="32px"
     lineHeight="40px"
     opacity={0.6}
-    color="blue"
+    color="docsAccent"
   >
     The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.
     How vexingly quick daft zebras jump!
@@ -177,7 +197,7 @@ Text primitives for building consistent, styled typography.
     fontSize="32px"
     lineHeight="40px"
     opacity={0.6}
-    color="red"
+    color="red.500"
   >
     The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.
     How vexingly quick daft zebras jump!
@@ -188,106 +208,113 @@ Text primitives for building consistent, styled typography.
 
 ## Inline Emphasis
 
-<div
-  style={{
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.75rem',
-    marginBottom: '2rem',
-  }}
->
-  <P>
-    <Strong>Strong text for important content</Strong>
+<Div display="flex" flexDirection="column" gap="3r" marginBottom="8r">
+  <P color="docsText">
+    <Strong color="docsText">Strong text for important content</Strong>
   </P>
-  <P>
-    <Em>Emphasized text for stress or titles</Em>
+  <P color="docsText">
+    <Em color="docsText">Emphasized text for stress or titles</Em>
   </P>
-  <P>
-    <B>Bold text</B>
+  <P color="docsText">
+    <B color="docsText">Bold text</B>
   </P>
-  <P>
-    <I>Italic text</I>
+  <P color="docsText">
+    <I color="docsText">Italic text</I>
   </P>
-  <P>
-    <U>Underlined text</U>
+  <P color="docsText">
+    <U color="docsText">Underlined text</U>
   </P>
-  <P>
-    <S>Strikethrough text</S>
+  <P color="docsText">
+    <S color="docsMuted">Strikethrough text</S>
   </P>
-  <P>
-    <Mark>Highlighted text</Mark>
+  <P color="docsText">
+    <Mark bg="docsAccentSoft" color="docsText">
+      Highlighted text
+    </Mark>
   </P>
-</div>
+</Div>
 
 ---
 
 ## Sub & Superscript
 
-<div
-  style={{
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.75rem',
-    marginBottom: '2rem',
-  }}
->
-  <P>
-    H<Sub>2</Sub>O is water
+<Div display="flex" flexDirection="column" gap="3r" marginBottom="8r">
+  <P color="docsText">
+    H<Sub color="docsText">2</Sub>O is water
   </P>
-  <P>
-    E = mc<Sup>2</Sup>
+  <P color="docsText">
+    E = mc<Sup color="docsText">2</Sup>
   </P>
-</div>
+</Div>
 
 ---
 
 ## Code & Technical
 
-<div
-  style={{
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.75rem',
-    marginBottom: '2rem',
-  }}
->
-  <P>
-    Use <Code>const</Code> for constants
+<Div display="flex" flexDirection="column" gap="3r" marginBottom="8r">
+  <P color="docsText">
+    Use{' '}
+    <Code fontFamily="mono" bg="docsInlineCodeBg" color="docsText" paddingX="1r" paddingY="0.5r" borderRadius="sm">{'const'}</Code>
+    {' '}for constants
   </P>
-  <P>
-    Press <Kbd>Cmd</Kbd> + <Kbd>S</Kbd> to save
+  <P color="docsText">
+    Press{' '}
+    <Kbd bg="docsInlineCodeBg" color="docsText" paddingX="2r" paddingY="1r" borderRadius="sm" borderWidth="1px" borderColor="docsPanelBorder">Cmd</Kbd>
+    {' '}+{' '}
+    <Kbd bg="docsInlineCodeBg" color="docsText" paddingX="2r" paddingY="1r" borderRadius="sm" borderWidth="1px" borderColor="docsPanelBorder">S</Kbd>
+    {' '}to save
   </P>
-  <P>
-    Output: <Samp>Hello, World!</Samp>
+  <P color="docsText">
+    Output: <Samp fontFamily="mono" color="docsAccent">Hello, World!</Samp>
   </P>
-  <P>
-    The variable <Var>x</Var> represents the input
+  <P color="docsText">
+    The variable <Var fontStyle="italic" color="docsAccent">x</Var> represents the input
   </P>
-  <Pre>{`function greet() {
+  <Pre
+    bg="docsPanelBg"
+    color="docsText"
+    borderWidth="1px"
+    borderStyle="solid"
+    borderColor="docsPanelBorder"
+    borderRadius="lg"
+    padding="4r"
+    overflow="auto"
+  >{`function greet() {
   return "Hello";
 }`}</Pre>
-</div>
+</Div>
 
 ---
 
 ## Quotations
 
-<div
-  style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}
->
-  <Blockquote>The best way to predict the future is to invent it.</Blockquote>
-  <P>
-    As they say, <Q>less is more</Q>.
+<Div display="flex" flexDirection="column" gap="4r" marginBottom="8r">
+  <Blockquote
+    color="docsMuted"
+    borderLeftWidth="4px"
+    borderLeftStyle="solid"
+    borderLeftColor="docsBlockquoteBorder"
+    paddingLeft="4r"
+    fontStyle="italic"
+  >
+    The best way to predict the future is to invent it.
+  </Blockquote>
+  <P color="docsText">
+    As they say, <Q color="docsAccent">less is more</Q>.
   </P>
-  <P>
-    <Cite>— Alan Kay</Cite>
+  <P color="docsMuted">
+    <Cite fontStyle="normal">— Alan Kay</Cite>
   </P>
-</div>
+</Div>
 
 ---
 
 ## Abbreviations
 
-<P>
-  The <Abbr title="World Wide Web">WWW</Abbr> changed everything.
+<P color="docsText">
+  The{' '}
+  <Abbr title="World Wide Web" color="docsAccent" textDecoration="underline dotted" cursor="help">
+    WWW
+  </Abbr>{' '}
+  changed everything.
 </P>

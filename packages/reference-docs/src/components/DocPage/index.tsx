@@ -5,7 +5,13 @@ import { slugToModule } from '../../lib/docs'
 export function DocPage() {
   const { slug } = useParams({ strict: false })
   const mod = slugToModule[slug as string]
-  if (!mod) return <Div>Not found</Div>
+  if (!mod) {
+    return (
+      <Div color="docsMuted" fontSize="md">
+        Not found
+      </Div>
+    )
+  }
   const Doc = mod.default
   return <Doc />
 }
