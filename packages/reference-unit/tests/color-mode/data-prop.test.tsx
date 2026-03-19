@@ -1,127 +1,158 @@
 /**
  * @vitest-environment happy-dom
  *
- * Asserts that the `data-panda-theme="dark"` attribute on any ancestor element
- * correctly switches ALL token sources into dark mode:
- *
- *   - tokens from an extends library   (extend-library)
- *   - tokens from a layers library     (layer-library)
- *   - tokens defined in the root project itself
- *
- * This is the key contract: regardless of how a token entered the design
- * system — via extends, layers, or local definition — the same single
- * data-attribute toggle controls the color mode switch for all of them.
+ * Color mode is a consumer-controlled, global concern. These tests intentionally
+ * document the contract we want: root tokens, extended libraries, and layered
+ * libraries should all respond when the consumer toggles theme state.
  */
 
-import { beforeAll, describe, expect, it } from 'vitest'
+import { beforeAll, describe, it } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { Div } from '@reference-ui/react'
-import { lightDarkDemoBgLightRgb, lightDarkDemoBgDarkRgb } from '@fixtures/extend-library'
+import {
+  lightDarkDemoBgLightRgb,
+  lightDarkDemoBgDarkRgb,
+  lightDarkDemoTextLightRgb,
+  lightDarkDemoTextDarkRgb,
+} from '@fixtures/extend-library'
 import {
   lightDarkDemoBgLightRgb as layerBgLightRgb,
   lightDarkDemoBgDarkRgb as layerBgDarkRgb,
+  lightDarkDemoTextLightRgb as layerTextLightRgb,
+  lightDarkDemoTextDarkRgb as layerTextDarkRgb,
 } from '@fixtures/layer-library'
 import {
   REFERENCE_UNIT_MODE_LIGHT_RGB,
   REFERENCE_UNIT_MODE_DARK_RGB,
 } from '../../src/system/styles'
-import { getDesignSystemCssPath, injectDesignSystemCss } from '../primitives/setup'
+import { injectDesignSystemCss } from '../primitives/setup'
+import { expectResolvedRgb, requireDesignSystemCss } from '../utils/design-system-css'
 
 beforeAll(() => {
-  try {
-    injectDesignSystemCss()
-  } catch {
-    // ref sync hasn't run — style assertions skip via getDesignSystemCssPath() guard.
-  }
+  requireDesignSystemCss()
+  injectDesignSystemCss({ flattenCascadeLayers: true })
 })
 
-describe('data-panda-theme toggle works across all token sources', () => {
-  it('without the attribute all three sources resolve to their light values', () => {
-    if (!getDesignSystemCssPath()) return
-
+describe('consumer token resolution in light mode', () => {
+  it('consumer primitives resolve extended library color-mode tokens in light mode', () => {
     render(
-      <>
-        <Div data-testid="toggle-ext" bg="lightDarkDemoBg">
-          extends
-        </Div>
-        <Div data-testid="toggle-layer" bg="lightDarkDemoBg">
-          layers
-        </Div>
-        <Div data-testid="toggle-root" color="referenceUnitColorModeToken">
-          root
-        </Div>
-      </>
+      <Div data-testid="ext" bg="lightDarkDemoBg" color="lightDarkDemoText">
+        e
+      </Div>,
     )
 
-    const extBg = window.getComputedStyle(
-      screen.getByTestId('toggle-ext')
-    ).backgroundColor
-    const layerBg = window.getComputedStyle(
-      screen.getByTestId('toggle-layer')
-    ).backgroundColor
-    const rootColor = window.getComputedStyle(screen.getByTestId('toggle-root')).color
-
-    if (extBg) expect(extBg).toBe(lightDarkDemoBgLightRgb)
-    if (layerBg) expect(layerBg).toBe(layerBgLightRgb)
-    if (rootColor) expect(rootColor).toBe(REFERENCE_UNIT_MODE_LIGHT_RGB)
+    expectResolvedRgb(
+      screen.getByTestId('ext'),
+      'backgroundColor',
+      lightDarkDemoBgLightRgb,
+      'extended library token resolves on consumer primitive in light mode',
+    )
+    expectResolvedRgb(
+      screen.getByTestId('ext'),
+      'color',
+      lightDarkDemoTextLightRgb,
+      'extended library text token resolves on consumer primitive in light mode',
+    )
   })
 
-  it('with data-panda-theme="dark" on a wrapper all three sources switch to their dark values', () => {
-    if (!getDesignSystemCssPath()) return
+  it('consumer primitives resolve layered public color-mode tokens in light mode', () => {
+    render(
+      <Div data-testid="layer" bg="lightDarkDemoBg" color="lightDarkDemoText">
+        l
+      </Div>,
+    )
 
+    expectResolvedRgb(
+      screen.getByTestId('layer'),
+      'backgroundColor',
+      layerBgLightRgb,
+      'layered public token resolves on consumer primitive in light mode',
+    )
+    expectResolvedRgb(
+      screen.getByTestId('layer'),
+      'color',
+      layerTextLightRgb,
+      'layered public text token resolves on consumer primitive in light mode',
+    )
+  })
+
+  it('consumer primitives resolve root color-mode tokens in light mode', () => {
+    render(
+      <Div data-testid="root" color="referenceUnitColorModeToken">
+        r
+      </Div>,
+    )
+
+    expectResolvedRgb(
+      screen.getByTestId('root'),
+      'color',
+      REFERENCE_UNIT_MODE_LIGHT_RGB,
+      'root color-mode token resolves on consumer primitive in light mode',
+    )
+  })
+})
+
+describe('global dark-mode control from the consumer', () => {
+  it('ancestor theme wrapper flips extended library tokens to dark', () => {
     render(
       <div data-panda-theme="dark">
-        <Div data-testid="toggle-dark-ext" bg="lightDarkDemoBg">
-          extends dark
+        <Div data-testid="ext-wrap" bg="lightDarkDemoBg" color="lightDarkDemoText">
+          e
         </Div>
-        <Div data-testid="toggle-dark-layer" bg="lightDarkDemoBg">
-          layers dark
-        </Div>
-        <Div data-testid="toggle-dark-root" color="referenceUnitColorModeToken">
-          root dark
-        </Div>
-      </div>
+      </div>,
     )
 
-    const extBg = window.getComputedStyle(
-      screen.getByTestId('toggle-dark-ext')
-    ).backgroundColor
-    const layerBg = window.getComputedStyle(
-      screen.getByTestId('toggle-dark-layer')
-    ).backgroundColor
-    const rootColor = window.getComputedStyle(
-      screen.getByTestId('toggle-dark-root')
-    ).color
-
-    if (extBg) expect(extBg).toBe(lightDarkDemoBgDarkRgb)
-    if (layerBg) expect(layerBg).toBe(layerBgDarkRgb)
-    if (rootColor) expect(rootColor).toBe(REFERENCE_UNIT_MODE_DARK_RGB)
+    expectResolvedRgb(
+      screen.getByTestId('ext-wrap'),
+      'backgroundColor',
+      lightDarkDemoBgDarkRgb,
+      'ancestor dark theme flips extended library background token',
+    )
+    expectResolvedRgb(
+      screen.getByTestId('ext-wrap'),
+      'color',
+      lightDarkDemoTextDarkRgb,
+      'ancestor dark theme flips extended library text token',
+    )
   })
 
-  it('scopes correctly — sibling outside the dark wrapper stays in light mode', () => {
-    if (!getDesignSystemCssPath()) return
-
+  it('ancestor theme wrapper flips layered public tokens to dark', () => {
     render(
-      <div>
-        <div data-panda-theme="dark">
-          <Div data-testid="scoped-dark" bg="lightDarkDemoBg">
-            dark zone
-          </Div>
-        </div>
-        <Div data-testid="scoped-light" bg="lightDarkDemoBg">
-          light zone
+      <div data-panda-theme="dark">
+        <Div data-testid="layer-wrap" bg="lightDarkDemoBg" color="lightDarkDemoText">
+          l
         </Div>
-      </div>
+      </div>,
     )
 
-    const darkBg = window.getComputedStyle(
-      screen.getByTestId('scoped-dark')
-    ).backgroundColor
-    const lightBg = window.getComputedStyle(
-      screen.getByTestId('scoped-light')
-    ).backgroundColor
+    expectResolvedRgb(
+      screen.getByTestId('layer-wrap'),
+      'backgroundColor',
+      layerBgDarkRgb,
+      'ancestor dark theme flips layered public background token',
+    )
+    expectResolvedRgb(
+      screen.getByTestId('layer-wrap'),
+      'color',
+      layerTextDarkRgb,
+      'ancestor dark theme flips layered public text token',
+    )
+  })
 
-    if (darkBg) expect(darkBg).toBe(lightDarkDemoBgDarkRgb)
-    if (lightBg) expect(lightBg).toBe(lightDarkDemoBgLightRgb)
+  it('ancestor theme wrapper flips root color-mode tokens to dark', () => {
+    render(
+      <div data-panda-theme="dark">
+        <Div data-testid="root-wrap" color="referenceUnitColorModeToken">
+          r
+        </Div>
+      </div>,
+    )
+
+    expectResolvedRgb(
+      screen.getByTestId('root-wrap'),
+      'color',
+      REFERENCE_UNIT_MODE_DARK_RGB,
+      'ancestor dark theme flips root color-mode token',
+    )
   })
 })
