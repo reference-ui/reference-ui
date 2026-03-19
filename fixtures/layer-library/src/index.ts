@@ -6,3 +6,16 @@
  */
 export { baseSystem } from '@reference-ui/system/baseSystem'
 export { LightDarkDemo } from './components/LightDarkDemo.js'
+export { LayerPrivateDemo } from './components/LayerPrivateDemo.js'
+export {
+  lightDarkDemoBgLight,
+  lightDarkDemoBgDark,
+  lightDarkDemoTextLight,
+  lightDarkDemoTextDark,
+  lightDarkDemoBgLightRgb,
+  lightDarkDemoBgDarkRgb,
+  lightDarkDemoTextLightRgb,
+  lightDarkDemoTextDarkRgb,
+  layerPrivateAccent,
+  layerPrivateAccentRgb,
+} from './tokens.js'

@@ -279,6 +279,9 @@ importers:
       '@fixtures/extend-library':
         specifier: workspace:*
         version: link:../../fixtures/extend-library
+      '@fixtures/layer-library':
+        specifier: workspace:*
+        version: link:../../fixtures/layer-library
       '@reference-ui/core':
         specifier: workspace:*
         version: link:../reference-core
