@@ -20,25 +20,25 @@ const buttonRecipe = recipe({
   variants: {
     visual: {
       solid: {
-        bg: 'blue.600',
+        bg: 'docsAccent',
         color: 'white',
-        _hover: { bg: 'blue.700' },
-        _active: { bg: 'blue.800' },
+        _hover: { filter: 'brightness(0.92)' },
+        _active: { filter: 'brightness(0.85)' },
       },
       ghost: {
         bg: 'transparent',
-        color: 'blue.600',
-        _hover: { bg: 'blue.50' },
-        _active: { bg: 'blue.100' },
+        color: 'docsAccent',
+        _hover: { bg: 'docsAccentSoft' },
+        _active: { bg: 'docsAccentSoft' },
       },
       outline: {
-        bg: 'white',
-        color: 'blue.600',
+        bg: 'docsDemoCard',
+        color: 'docsAccent',
         borderWidth: '2px',
         borderStyle: 'solid',
-        borderColor: 'blue.300',
-        _hover: { bg: 'blue.50', borderColor: 'blue.400' },
-        _active: { bg: 'blue.100' },
+        borderColor: 'docsAccent',
+        _hover: { bg: 'docsAccentSoft', borderColor: 'docsAccent' },
+        _active: { bg: 'docsAccentSoft' },
       },
     },
     size: {

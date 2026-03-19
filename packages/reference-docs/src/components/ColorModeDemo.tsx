@@ -73,7 +73,7 @@ export function ColorModeDemo() {
         flexWrap="wrap"
         gap="4r"
       >
-        <P margin="0" color="gray.700">
+        <P margin="0" color="docsMuted">
           Toggle the preview scope below. The same token names are used in both modes.
         </P>
         <Div display="flex" gap="2r">
