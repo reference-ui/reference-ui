@@ -1,17 +1,16 @@
 /**
- * Liquid template loader and cache.
- * Provides typed access to template files with caching.
- *
- * Uses import.meta.url when available (ESM). When bundled as IIFE (e.g. fragment
- * bundles), import.meta may be empty — fallback to path relative to process.cwd().
+ * Liquid template loader and cache for layer CSS generation.
  */
 
-import { readFileSync, existsSync } from 'node:fs'
-import { join, dirname } from 'node:path'
+import { existsSync, readFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 function hasTemplates(dir: string): boolean {
-  return existsSync(join(dir, 'panda.liquid'))
+  return (
+    existsSync(join(dir, 'layerCss.liquid')) &&
+    existsSync(join(dir, 'runtimeStylesheet.liquid'))
+  )
 }
 
 function* ancestorDirs(startDir: string): Generator<string> {
@@ -43,8 +42,8 @@ function getLiquidDir(): string {
   for (const root of searchRoots) {
     for (const dir of ancestorDirs(root)) {
       const candidates = [
-        join(dir, 'packages/reference-core/src/system/panda/config/liquid'),
-        join(dir, 'src/system/panda/config/liquid'),
+        join(dir, 'packages/reference-core/src/system/layers/liquid'),
+        join(dir, 'src/system/layers/liquid'),
       ]
 
       for (const candidate of candidates) {
@@ -55,28 +54,26 @@ function getLiquidDir(): string {
     }
   }
 
-  return join(process.cwd(), 'packages/reference-core/src/system/panda/config/liquid')
+  return join(process.cwd(), 'packages/reference-core/src/system/layers/liquid')
 }
 
 const __dirname = getLiquidDir()
 
 interface Templates {
-  panda: string
+  layerCss: string
+  runtimeStylesheet: string
 }
 
 let cachedTemplates: Templates | null = null
 
-/**
- * Load and cache Liquid templates.
- * Templates are loaded from disk on first call and cached in memory.
- */
-export function loadTemplates(): Templates {
+export function loadLayerTemplates(): Templates {
   if (cachedTemplates) {
     return cachedTemplates
   }
 
   cachedTemplates = {
-    panda: readFileSync(join(__dirname, 'panda.liquid'), 'utf-8'),
+    layerCss: readFileSync(join(__dirname, 'layerCss.liquid'), 'utf-8'),
+    runtimeStylesheet: readFileSync(join(__dirname, 'runtimeStylesheet.liquid'), 'utf-8'),
   }
 
   return cachedTemplates

@@ -13,4 +13,7 @@ export { extendPatterns } from './extendPatterns'
 export { extendRecipes } from './extendRecipes'
 export { extendUtilities } from './extendUtilities'
 export { extendGlobalCss } from './extendGlobalCss'
-export { normalizeTokenFragments, type NormalizedTokenFragments } from './normalizeTokens'
+export {
+  resolveColorModeTokens,
+  type ResolvedColorModeTokens,
+} from './resolveColorModeTokens'

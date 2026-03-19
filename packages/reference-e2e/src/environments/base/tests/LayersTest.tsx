@@ -30,6 +30,20 @@ export default function LayersTest() {
           >
             Inside consumer layer: test.primary via data-layer
           </Span>
+          <Span
+            data-testid="consumer-layer-color-mode-light"
+            color="test.colorMode"
+          >
+            Consumer color mode token in default scope
+          </Span>
+          <div data-panda-theme="dark">
+            <Span
+              data-testid="consumer-layer-color-mode-dark"
+              color="test.colorMode"
+            >
+              Consumer color mode token in dark scope
+            </Span>
+          </div>
         </Div>
         <Div data-testid="layers-outside">
           <Span
