@@ -37,17 +37,16 @@ importers:
         version: 5.9.3
 
   fixtures/extend-library:
-    dependencies:
+    devDependencies:
       '@reference-ui/core':
         specifier: workspace:*
         version: link:../../packages/reference-core
-      react:
-        specifier: ^19.2.4
-        version: 19.2.4
-    devDependencies:
       '@types/react':
         specifier: ^19.2.14
         version: 19.2.14
+      react:
+        specifier: ^19.2.4
+        version: 19.2.4
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(@swc/core@1.5.29(@swc/helpers@0.5.18))(postcss@8.5.6)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2)
@@ -59,17 +58,16 @@ importers:
         version: 4.0.18(@types/node@25.1.0)(happy-dom@15.11.7)(lightningcss@1.31.1)(tsx@4.21.0)(yaml@2.8.2)
 
   fixtures/layer-library:
-    dependencies:
+    devDependencies:
       '@reference-ui/core':
         specifier: workspace:*
         version: link:../../packages/reference-core
-      react:
-        specifier: ^19.2.4
-        version: 19.2.4
-    devDependencies:
       '@types/react':
         specifier: ^19.2.14
         version: 19.2.14
+      react:
+        specifier: ^19.2.4
+        version: 19.2.4
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(@swc/core@1.5.29(@swc/helpers@0.5.18))(postcss@8.5.6)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2)
@@ -278,6 +276,9 @@ importers:
 
   packages/reference-unit:
     dependencies:
+      '@fixtures/extend-library':
+        specifier: workspace:*
+        version: link:../../fixtures/extend-library
       '@reference-ui/core':
         specifier: workspace:*
         version: link:../reference-core

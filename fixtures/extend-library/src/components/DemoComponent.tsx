@@ -1,4 +1,3 @@
-import React from 'react'
 import { css } from '@reference-ui/react'
 import { tokens } from '@reference-ui/system'
 

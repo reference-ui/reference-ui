@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const pkgRoot = resolve(__dirname, '..', '..')
 const libRoot = resolve(pkgRoot, '..', 'reference-lib')
+const extendFixtureRoot = resolve(pkgRoot, '..', '..', 'fixtures', 'extend-library')
 const refCore = join(
   pkgRoot,
   'node_modules',
@@ -42,10 +43,10 @@ function killProcessTree(pid: number | undefined): void {
 }
 
 export default async function globalSetup() {
-  execSync('pnpm run build', {
+  execSync(`node "${refCore}" sync`, {
     cwd: libRoot,
     stdio: 'pipe',
-    timeout: 180_000,
+    timeout: 90_000,
   })
 
   const libReady = await waitForOutputs([
@@ -55,6 +56,34 @@ export default async function globalSetup() {
   if (!libReady) {
     throw new Error(
       'reference-lib build failed to produce baseSystem outputs for downstream consumers'
+    )
+  }
+
+  execSync('node scripts/bootstrap-runtime.mjs', {
+    cwd: extendFixtureRoot,
+    stdio: 'pipe',
+    timeout: 15_000,
+  })
+
+  execSync(`node "${refCore}" clean`, {
+    cwd: extendFixtureRoot,
+    stdio: 'pipe',
+    timeout: 15_000,
+  })
+
+  execSync(`node "${refCore}" sync`, {
+    cwd: extendFixtureRoot,
+    stdio: 'pipe',
+    timeout: 90_000,
+  })
+
+  const extendFixtureReady = await waitForOutputs([
+    join(extendFixtureRoot, '.reference-ui', 'system', 'baseSystem.mjs'),
+    join(extendFixtureRoot, 'node_modules', '@reference-ui', 'system', 'baseSystem.mjs'),
+  ], 20_000)
+  if (!extendFixtureReady) {
+    throw new Error(
+      'extend-library sync failed to produce baseSystem outputs for consumers'
     )
   }
 
