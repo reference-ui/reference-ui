@@ -63,11 +63,11 @@ importers:
         specifier: workspace:*
         version: link:../../packages/reference-core
       '@types/react':
-        specifier: ^19.2.14
-        version: 19.2.14
+        specifier: ^18.2.0
+        version: 18.3.27
       react:
-        specifier: ^19.2.4
-        version: 19.2.4
+        specifier: ^18.2.0
+        version: 18.3.1
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(@swc/core@1.5.29(@swc/helpers@0.5.18))(postcss@8.5.6)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2)

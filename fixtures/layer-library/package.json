@@ -19,7 +19,8 @@
   ],
   "scripts": {
     "sync": "node scripts/bootstrap-runtime.mjs && ref sync",
-    "build": "pnpm --filter @reference-ui/core run build && pnpm run sync && tsup && node scripts/build-package.mjs",
+    "build": "node ../../scripts/fixture-build-cache.mjs",
+    "build:full": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/lib run sync && pnpm run sync && tsup && node scripts/build-package.mjs",
     "dev": "node scripts/bootstrap-runtime.mjs && ref sync --watch",
     "prepack": "pnpm run build",
     "test": "vitest run",
@@ -30,8 +31,8 @@
   },
   "devDependencies": {
     "@reference-ui/core": "workspace:*",
-    "@types/react": "^19.2.14",
-    "react": "^19.2.4",
+    "@types/react": "^18.2.0",
+    "react": "^18.2.0",
     "tsup": "^8.5.1",
     "typescript": "~5.9.3",
     "vitest": "^4.0.18"

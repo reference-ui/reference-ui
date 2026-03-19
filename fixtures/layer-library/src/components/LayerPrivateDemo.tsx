@@ -1,3 +1,4 @@
+import * as React from 'react'
 import { Div, Span } from '@reference-ui/react'
 import { tokens } from '@reference-ui/system'
 
@@ -32,17 +33,12 @@ export function LayerPrivateDemo() {
       flexDirection="column"
       gap="2r"
     >
-      <Span
-        data-testid="layer-private-demo-label"
-        fontWeight="600"
-        color="white"
-      >
+      <Span data-testid="layer-private-demo-label" fontWeight="600" color="white">
         Layer-private token
       </Span>
       <Span data-testid="layer-private-demo-copy" color="white">
-        This indigo background resolves because this component lives inside the
-        layer. A bare &lt;Div bg="layerPrivateAccent"&gt; in the consumer would
-        not.
+        This indigo background resolves because this component lives inside the layer. A
+        bare &lt;Div bg="layerPrivateAccent"&gt; in the consumer would not.
       </Span>
     </Div>
   )
