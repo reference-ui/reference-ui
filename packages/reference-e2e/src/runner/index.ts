@@ -48,7 +48,7 @@ export async function prepareProject(project: MatrixEntry): Promise<void> {
 export async function runQuick(args: string[] = []): Promise<void> {
   const project = getDefaultProject()
   await prepareProject(project)
-  await execa('pnpm', ['exec', 'playwright', 'test', '--project', project.name, ...args], {
+  await execa('pnpm', ['exec', 'playwright', 'test', ...args, '--project', project.name], {
     env: projectEnv(project),
     stdio: 'inherit',
   })
@@ -58,7 +58,7 @@ export async function runQuick(args: string[] = []): Promise<void> {
 export async function runUi(args: string[] = []): Promise<void> {
   const project = getDefaultProject()
   await prepareProject(project)
-  await execa('pnpm', ['exec', 'playwright', 'test', '--ui', '--project', project.name, ...args], {
+  await execa('pnpm', ['exec', 'playwright', 'test', '--ui', ...args, '--project', project.name], {
     env: projectEnv(project),
     stdio: 'inherit',
   })

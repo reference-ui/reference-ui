@@ -1,0 +1,20 @@
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite"
+  },
+  "dependencies": {
+    "@fixtures/extend-library": "__REF_TEST_EXTEND_FIXTURE_PATH__",
+    "@reference-ui/core": "__REF_TEST_CORE_PATH__",
+    "@reference-ui/lib": "__REF_TEST_LIB_PATH__",
+    "react": "__REF_TEST_REACT_VERSION__",
+    "react-dom": "__REF_TEST_REACT_VERSION__"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "4.3.4",
+    "typescript": "~5.9.3",
+    "vite": "__REF_TEST_VITE_VERSION__"
+  }
+}

@@ -5,7 +5,7 @@
  * REF_TEST_PROJECT: when set (e.g. for test:quick), only prepare that one sandbox.
  */
 
-import { mkdir, rm, writeFile, readdir } from 'node:fs/promises'
+import { mkdir, rm, writeFile, readdir, readFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -23,31 +23,53 @@ const CSS_SNAPSHOT_DIR = join(PACKAGE_ROOT, 'css_snapshot')
 const LEGACY_CSS_SNAPSHOT_DIR = join(PACKAGE_ROOT, 'src', 'tests', 'layer', 'css_snapshot')
 const CORE_PATH = join(PACKAGE_ROOT, '..', 'reference-core')
 const LIB_PATH = join(PACKAGE_ROOT, '..', 'reference-lib')
+const EXTEND_FIXTURE_PATH = join(PACKAGE_ROOT, '..', '..', 'fixtures', 'extend-library')
 const CORE_BIN = join(CORE_PATH, 'dist/cli/index.mjs')
 const LIB_BIN = join(LIB_PATH, 'dist/index.mjs')
 const WORKSPACE_ROOT = join(PACKAGE_ROOT, '..', '..')
 
-function buildPackageJson(entry: MatrixEntry): object {
+function interpolateTemplate(
+  value: unknown,
+  replacements: Record<string, string>
+): unknown {
+  if (typeof value === 'string') {
+    return replacements[value] ?? value
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => interpolateTemplate(item, replacements))
+  }
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, entryValue]) => [
+        key,
+        interpolateTemplate(entryValue, replacements),
+      ])
+    )
+  }
+  return value
+}
+
+async function buildPackageJson(entry: MatrixEntry, sandboxDir: string): Promise<object> {
   const reactVersion = getReactVersion(entry)
   const viteVersion = getViteVersion(entry)
+  const rawTemplate = JSON.parse(
+    await readFile(join(sandboxDir, 'package.json'), 'utf-8')
+  ) as Record<string, unknown>
+  const template = interpolateTemplate(rawTemplate, {
+    __REF_TEST_CORE_PATH__: `link:${CORE_PATH}`,
+    __REF_TEST_EXTEND_FIXTURE_PATH__: `link:${EXTEND_FIXTURE_PATH}`,
+    __REF_TEST_LIB_PATH__: `link:${LIB_PATH}`,
+    __REF_TEST_REACT_VERSION__: reactVersion,
+    __REF_TEST_VITE_VERSION__: viteVersion,
+  }) as Record<string, unknown>
+  const scripts = { ...(template.scripts as Record<string, string> | undefined) }
+
   return {
+    ...template,
     name: `ref-test-sandbox-${entry.name}`,
-    private: true,
-    type: 'module' as const,
     scripts: {
-      build: 'vite build',
+      ...scripts,
       dev: `ref sync --watch >> ref-sync.log 2>&1 & vite --port ${getPort(entry)}`,
-    },
-    dependencies: {
-      react: reactVersion,
-      'react-dom': reactVersion,
-      '@reference-ui/core': `link:${CORE_PATH}`,
-      '@reference-ui/lib': `link:${LIB_PATH}`,
-    },
-    devDependencies: {
-      vite: viteVersion,
-      '@vitejs/plugin-react': '4.3.4',
-      typescript: '~5.9.3',
     },
   }
 }
@@ -68,6 +90,12 @@ async function ensureWorkspaceReady(): Promise<void> {
   }
 
   await execa('pnpm', ['exec', 'ref', 'sync'], { cwd: LIB_PATH, stdio: 'pipe' })
+  await execa('pnpm', ['run', 'sync'], { cwd: EXTEND_FIXTURE_PATH, stdio: 'inherit' })
+  await execa('pnpm', ['exec', 'tsup'], { cwd: EXTEND_FIXTURE_PATH, stdio: 'inherit' })
+  await execa('node', ['scripts/build-package.mjs'], {
+    cwd: EXTEND_FIXTURE_PATH,
+    stdio: 'inherit',
+  })
 }
 
 /** Clear ref sync output to avoid stale/corrupt state. Keeps node_modules (core, lib) intact. */
@@ -102,7 +130,7 @@ async function prepareEntryFull(entry: MatrixEntry): Promise<void> {
 
   await composeSandbox(entry, sandboxDir)
 
-  const packageJson = buildPackageJson(entry)
+  const packageJson = await buildPackageJson(entry, sandboxDir)
   await writeFile(
     join(sandboxDir, 'package.json'),
     JSON.stringify(packageJson, null, 2)

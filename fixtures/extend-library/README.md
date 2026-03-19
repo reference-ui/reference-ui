@@ -4,7 +4,7 @@ Reusable fixture library for `extends`-based tests.
 
 ## Exports
 
-- `@fixtures/extend-library`: exports `baseSystem` and `LightDarkDemo`
+- `@fixtures/extend-library`: exports `baseSystem`, `DemoComponent`, and `LightDarkDemo`
 
 ## Usage
 
