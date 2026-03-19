@@ -30,7 +30,7 @@ describe('system/css/postprocess', () => {
     ).toBeUndefined()
   })
 
-  it('returns portable css without rewriting the runtime stylesheet when no upstream layers are configured', () => {
+  it('returns portable css without rewriting the runtime stylesheet when no upstream css is configured', () => {
     const outDir = createTempDir()
     const styledDir = resolve(outDir, 'styled')
     const stylesPath = resolve(styledDir, 'styles.css')
@@ -41,6 +41,7 @@ describe('system/css/postprocess', () => {
 
     const result = postprocessCss(outDir, {
       name: 'local-system',
+      extends: [],
       layers: [],
     } as never)
 
@@ -48,7 +49,7 @@ describe('system/css/postprocess', () => {
     expect(readFileSync(stylesPath, 'utf-8')).toBe(rawCss)
   })
 
-  it('rewrites styles.css in layers mode and appends only upstream layers with css', () => {
+  it('rewrites styles.css when upstream extends or layers expose css', () => {
     const outDir = createTempDir()
     const styledDir = resolve(outDir, 'styled')
     const stylesPath = resolve(styledDir, 'styles.css')
@@ -61,6 +62,9 @@ describe('system/css/postprocess', () => {
     const localPortableStylesheet = createPortableStylesheetFromContent(rawCss, 'local-system')
     const result = postprocessCss(outDir, {
       name: 'local-system',
+      extends: [
+        { name: 'upstream-extend', css: '@layer upstream-extend { .extend { color: purple; } }' },
+      ],
       layers: [
         { name: 'upstream-one', css: '@layer upstream-one { .one { color: blue; } }' },
         { name: 'upstream-two' },
@@ -71,8 +75,9 @@ describe('system/css/postprocess', () => {
     expect(result).toBe(localPortableStylesheet)
     expect(readFileSync(stylesPath, 'utf-8')).toBe(
       [
-        '@layer upstream-one, upstream-three, local-system;',
+        '@layer upstream-extend, upstream-one, upstream-three, local-system;',
         localPortableStylesheet,
+        '@layer upstream-extend { .extend { color: purple; } }',
         '@layer upstream-one { .one { color: blue; } }',
         '@layer upstream-three { .three { color: green; } }',
       ].join('\n\n'),

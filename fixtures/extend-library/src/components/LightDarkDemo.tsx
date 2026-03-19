@@ -8,6 +8,8 @@ import {
   lightDarkDemoTextDark,
 } from '../tokens.js'
 
+void React
+
 tokens({
   colors: {
     lightDarkDemoBg: {

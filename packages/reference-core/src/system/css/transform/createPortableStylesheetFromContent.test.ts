@@ -52,7 +52,7 @@ describe('createPortableStylesheetFromContent', () => {
   [data-panda-theme=dark] { --color: blue; }
 }`
     const out = createPortableStylesheetFromContent(raw, 'sys')
-    expect(out).toMatch(/\[data-layer="sys"\] \[data-panda-theme=dark\]\s*\{/)
+    expect(out).toMatch(/\[data-panda-theme=dark\] \[data-layer="sys"\]\s*\{/)
     expect(out).toMatch(/\[data-layer="sys"\]\[data-panda-theme=dark\]\s*,/)
     expect(out).toMatch(/--color:\s*blue;/)
   })
@@ -70,5 +70,20 @@ describe('createPortableStylesheetFromContent', () => {
     expect(out).toMatch(/@layer tokens\s*\{[\s\S]*@keyframes ping/)
     expect(out).not.toMatch(/\[data-layer="sys"\]\s*@keyframes ping/)
     expect(out).not.toMatch(/\[data-layer="sys"\]@keyframes ping/)
+  })
+
+  it('synthesizes public color token utilities when Panda did not emit them', () => {
+    const raw = `@layer base, tokens;
+@layer tokens {
+  :where(:root, :host) {
+    --colors-reference-unit-color-mode-token: rgb(219, 234, 254);
+    --colors-fixture-demo-bg: #0f172a;
+  }
+}`
+    const out = createPortableStylesheetFromContent(raw, 'sys')
+    expect(out).toMatch(/\.c_referenceUnitColorModeToken\s*\{/)
+    expect(out).toMatch(/color:\s*var\(--colors-reference-unit-color-mode-token\);/)
+    expect(out).toMatch(/\.bg_fixtureDemoBg\s*\{/)
+    expect(out).toMatch(/background:\s*var\(--colors-fixture-demo-bg\);/)
   })
 })
