@@ -15,13 +15,29 @@ This module is now doing real work:
 That means it should now be treated as a real subsystem, not just a helper.
 This document is the hardening map.
 
+## Status Update
+
+The first hardening pass is now in place.
+
+Completed work:
+
+- adopted `postcss` for stylesheet parsing
+- adopted `postcss-selector-parser` for selector-list handling
+- kept the public programmatic API stable
+- added direct transform coverage for braces in comments/strings
+- added direct transform coverage for selector functions containing commas
+- validated the change against core tests and `reference-unit`
+
+So the module is no longer relying on raw brace matching or naive
+`selector.split(',')` for the core transform path.
+
 ## Current Shape
 
 ### Files
 
 - `createPortableStylesheet.ts` — file IO wrapper around the transform
 - `postprocess.ts` — post-Panda orchestration and runtime stylesheet rewrite
-- `transform/createPortableStylesheetFromContent.ts` — main CSS transform logic
+- `transform/createPortableStylesheetFromContent.ts` — main PostCSS-backed transform logic
 - `render/stylesheet.ts` — Liquid-backed rendering helpers
 - `templates/*.liquid` — output templates
 
@@ -51,23 +67,31 @@ Readability work should happen, but not at the expense of correctness.
 
 ## 1) Robustness: what is most likely to break
 
-### A. The parser is currently string-based, not CSS-aware
+### A. The parser migration is done, but the transform still needs stronger structure
 
-`createPortableStylesheetFromContent.ts` currently uses regex and manual brace
-matching. That is fast and easy to control, but it is also the main risk area.
+`createPortableStylesheetFromContent.ts` now parses CSS through `postcss` and
+uses `postcss-selector-parser` for selector-list handling. That removes the
+worst fragility from the original string-based approach.
 
-#### Current risks
+#### What improved
 
-- braces inside comments or strings can confuse `findMatchingBrace()`
+- braces inside comments or strings no longer rely on homegrown brace scanning
+- selector lists no longer rely on naive comma splitting
+- nested CSS structure is now parsed through a real stylesheet AST
+- token-layer traversal is now operating on nodes rather than string slices
+
+#### Remaining risks
+
 - multiple `@layer tokens` blocks are not explicitly validated
-- nested at-rules inside token blocks are only partially modeled
-- selector parsing is done by splitting on `,`, which can break for selectors
-  containing commas inside functions
+- nested at-rules inside token blocks are preserved, but not yet classified with
+  a richer intermediate model
 - token-layer discovery assumes a narrow Panda-emitted shape
+- serialization and normalization rules still live in one transform file
 
 #### Recommendation
 
-Move the transform onto an explicit intermediate representation.
+Keep the PostCSS foundation, but move the transform onto an explicit
+intermediate representation.
 
 The most practical way to do that without changing the public API is to adopt a
 programmatic CSS AST library internally.
@@ -101,12 +125,12 @@ Suggested phases:
 5. `buildPortableStylesheetModel(...)`
 6. `renderPortableStylesheet(model)`
 
-If the string-based approach stays for now, it still needs stronger guardrails:
+Next guardrails to add:
 
 - reject or warn on multiple `@layer tokens` blocks
-- reject malformed or unbalanced token blocks
-- preserve comments safely or strip them deliberately
-- make selector splitting safer than `selector.split(',')`
+- make unsupported Panda shapes fail predictably
+- decide whether comments inside extracted declarations are a preserved contract
+- distinguish preserved token at-rules from transformed token rules explicitly
 
 ### B. Failure modes are mostly silent
 
@@ -171,17 +195,16 @@ our only correctness story.
 
 ### E. Performance should be measured, not guessed
 
-The current string-based approach is likely faster in raw throughput than an AST
-parser, but this code runs in sync/build/test flows, not on a request path.
-That means the decision should optimize for correctness first, then confirm the
-runtime cost is acceptable with a benchmark.
+The module now uses an AST-backed transform. That was the right trade for
+correctness, but performance should still be measured against real generated CSS
+so the cost stays visible.
 
 #### Recommendation
 
 Add a small internal benchmark harness and compare:
 
-- current string implementation
-- `postcss`-backed implementation
+- current `postcss` implementation
+- any future refactored `postcss` implementation
 - total parse + transform + render time
 - repeated runs over real generated `styles.css` files from this repo
 
@@ -216,7 +239,7 @@ with tests proving each step is idempotent on its own domain.
 
 Right now one file owns:
 
-- block extraction
+- AST traversal
 - selector rewriting
 - declaration normalization
 - utility synthesis
@@ -227,10 +250,10 @@ That makes it the correct place to start, but not the easiest place to extend.
 #### Suggested shape
 
 - `transform/extract.ts`
-  - tokens-layer extraction
-  - brace-safe block slicing
+  - PostCSS token-layer extraction
+  - token-rule classification
 - `transform/rewriteSelectors.ts`
-  - layer-domain selector rewriting
+  - selector-parser-backed layer-domain rewriting
 - `transform/synthesizeUtilities.ts`
   - public color utility generation
 - `transform/model.ts`
@@ -279,10 +302,10 @@ That will make regression debugging much easier.
 
 A few examples worth considering:
 
-- `stripTokensLayer()` → `removeOriginalTokensLayer()`
 - `preservedContent` → `preservedTokenAtRules`
 - `content` → `wrappedLayerContent` or `portableLayerContent`
 - `raw` in file-level functions → `rawPandaCss`
+- `parseTokensLayer()` → something closer to `extractPortableTokenModel()`
 
 Small naming improvements matter a lot in transform code.
 
@@ -309,7 +332,7 @@ for future edits.
 When the code reads like:
 
 1. parse
-2. normalize
+2. classify
 3. rewrite
 4. synthesize
 5. render
@@ -337,15 +360,18 @@ These are not `reference-unit` tests; they belong next to the transform.
 
 ### High-value direct tests
 
-- token layer contains comments with braces
-- token layer contains strings with braces
 - multiple `@layer tokens` blocks
 - nested `@media` inside the token layer
-- selectors with comma-like syntax inside `:is(...)` or `:where(...)`
 - duplicate color utility opportunities do not emit duplicates
 - non-color root tokens do not generate public utility classes
 - duplicate upstream layer names are either rejected or normalized deterministically
 - template loading works from packaged and workspace-relative execution roots
+
+Already covered directly:
+
+- token layer contains comments with braces
+- token layer contains strings with braces
+- selectors with comma-like syntax inside `:is(...)` or `:where(...)`
 
 ---
 
@@ -433,10 +459,10 @@ That helps catch brittle assumptions about style tag order.
 If we harden this incrementally, the order should be:
 
 1. write this document
-2. freeze current behavior with higher-value direct tests around parser edge cases
-3. introduce an internal transform model while preserving the current programmatic API
-4. add a benchmark harness against real generated `styles.css`
-5. implement a `postcss`-backed parser/rewrite path behind the existing public entrypoints
+2. freeze current behavior with higher-value direct tests around parser edge cases ✅
+3. implement a `postcss`-backed parser/rewrite path behind the existing public entrypoints ✅
+4. introduce an internal transform model while preserving the current programmatic API
+5. add a benchmark harness against real generated `styles.css`
 6. split the transform into extraction / rewrite / synthesis helpers
 7. tighten upstream-layer normalization
 8. add the new `reference-unit` integration cases
@@ -489,11 +515,15 @@ Measure:
 - relative overhead of parsing vs rendering
 - output parity for the same input
 
-Only switch after:
+Switch criteria were:
 
-- direct CSS module tests pass
-- `reference-unit` still passes unchanged
-- the implementation cost stays operationally insignificant
+- direct CSS module tests pass ✅
+- `reference-unit` still passes unchanged ✅
+- the public API remains stable ✅
+
+Still to do:
+
+- measure and document runtime cost explicitly
 
 ## Bottom Line
 
