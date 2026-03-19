@@ -1,11 +1,12 @@
 import { css } from '@reference-ui/react'
 import { tokens } from '@reference-ui/system'
+import { fixtureDemoBg, fixtureDemoText, fixtureDemoAccent } from '../tokens.js'
 
 tokens({
   colors: {
-    fixtureDemoBg: { value: '#0f172a' },
-    fixtureDemoText: { value: '#f8fafc' },
-    fixtureDemoAccent: { value: '#14b8a6' },
+    fixtureDemoBg: { value: fixtureDemoBg },
+    fixtureDemoText: { value: fixtureDemoText },
+    fixtureDemoAccent: { value: fixtureDemoAccent },
   },
 })
 
