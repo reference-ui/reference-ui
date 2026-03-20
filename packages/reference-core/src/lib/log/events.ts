@@ -1,4 +1,4 @@
-export type LogLevel = 'log' | 'info' | 'error' | 'debug'
+export type LogLevel = 'log' | 'info' | 'warn' | 'error' | 'debug'
 
 export interface LogEntryPayload {
   level: LogLevel
