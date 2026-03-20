@@ -6,6 +6,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 export const pkgRoot = resolve(__dirname, '..', '..')
 export const virtualDir = join(pkgRoot, '.reference-ui', 'virtual')
 export const srcDir = join(pkgRoot, 'src')
+export const testsDir = join(pkgRoot, 'tests')
 
 export const virt = (...p: string[]) => join(virtualDir, ...p)
 
@@ -43,10 +44,18 @@ function* walkFiles(dir: string, base = dir): Generator<string> {
 
 export function getSourcePaths(): string[] {
   const out: string[] = []
-  for (const rel of walkFiles(srcDir, srcDir)) {
-    const ext = extname(rel)
-    if (['.ts', '.tsx', '.mdx'].includes(ext)) {
-      out.push(join('src', rel))
+  const roots = [
+    ['src', srcDir],
+    ['tests', testsDir],
+  ] as const
+
+  for (const [prefix, dir] of roots) {
+    if (!existsSync(dir)) continue
+    for (const rel of walkFiles(dir, dir)) {
+      const ext = extname(rel)
+      if (['.ts', '.tsx', '.mdx'].includes(ext)) {
+        out.push(join(prefix, rel))
+      }
     }
   }
   return out.sort((a, b) => a.localeCompare(b))

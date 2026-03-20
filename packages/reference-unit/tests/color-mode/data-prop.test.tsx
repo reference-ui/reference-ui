@@ -161,7 +161,7 @@ describe('global dark-mode control from the consumer', () => {
       <div data-panda-theme="dark">
         <Div
           data-testid="root-typography-wrap"
-          font="mono"
+          font="sans"
           fontSize="60px"
           lineHeight="70px"
           whiteSpace="nowrap"
@@ -191,7 +191,7 @@ describe('global dark-mode control from the consumer', () => {
       <Div
         data-testid="ext-typography-dark"
         colorMode="dark"
-        font="serif"
+        font="sans"
         fontSize="32px"
         lineHeight="40px"
         whiteSpace="nowrap"

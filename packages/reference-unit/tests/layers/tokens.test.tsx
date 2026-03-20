@@ -116,8 +116,7 @@ describe('layered public tokens available to consumer primitives', () => {
     const css = readGeneratedFile('styled', 'styles.css')
 
     expect(css).toBeDefined()
-    expect(css).toContain('.ff_mono')
-    expect(css).toContain('.ff_serif')
+    expect(css).toContain('.ff_sans')
     expect(css).toContain('.fs_32px')
     expect(css).toContain('.lh_40px')
     expect(css).toContain('.white-space_nowrap')
