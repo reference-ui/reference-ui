@@ -53,6 +53,36 @@ So the module is no longer relying on raw brace matching or naive
 8. Render the portable stylesheet
 9. Optionally prepend upstream layer order and append upstream CSS
 
+## Color-Mode Truth Table
+
+This needs to be treated as a first-class contract.
+
+The important rule is that `value` is not “neutral”. It implies the opposite
+mode when paired with a single override:
+
+- `value` -> emit a base token only
+- `value + dark` -> assumed light theme by default, plus an explicit dark override
+- `value + light` -> assumed dark theme by default, plus an explicit light override
+- `light + dark` -> emit explicit light and dark theme tokens, with no base token
+- `value + light + dark` -> prefer the explicit `light + dark` pair and ignore `value`
+- `light` -> treat `light` as the base token and emit a light theme token
+- `dark` -> treat `dark` as the base token and emit a dark theme token
+
+Examples:
+
+- `value + dark` means “this token is light unless a dark scope overrides it”
+- `value + light` means “this token is dark unless a light scope overrides it”
+
+Implication for authored scopes:
+
+- `colorMode="dark"` must behave as a real dark island
+- `colorMode="light"` must behave as a real light island
+- relying on “no theme attribute means light” is not sufficient when a node is
+  nested inside a dark ancestor, because absence does not override the parent
+
+So if nested theme islands are part of the contract, the CSS output needs to be
+able to represent explicit light overrides, not just dark overrides.
+
 ## Hardening Priorities
 
 Priority order here is deliberate:

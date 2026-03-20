@@ -54,9 +54,39 @@ describe('createPortableStylesheetFromContent', () => {
   [data-panda-theme=dark] { --color: blue; }
 }`
     const out = createPortableStylesheetFromContent(raw, 'sys')
-    expect(out).toMatch(/\[data-panda-theme=dark\] \[data-layer="sys"\]\s*\{/)
+    expect(out).toMatch(/\[data-panda-theme=dark\] \[data-layer="sys"\]:not\(\[data-panda-theme\]\)\s*\{/)
     expect(out).toMatch(/\[data-layer="sys"\]\[data-panda-theme=dark\]\s*,/)
     expect(out).toMatch(/--color:\s*blue;/)
+  })
+
+  it('re-scopes explicit light and dark theme selectors into the layer domain', () => {
+    const raw = `@layer base, tokens;
+@layer tokens {
+  :where(:root, :host) { --color: red; }
+  [data-panda-theme=light] { --color: white; }
+  [data-panda-theme=dark] { --color: black; }
+}`
+    const out = createPortableStylesheetFromContent(raw, 'sys')
+    expect(out).toMatch(/\[data-panda-theme=light\] \[data-layer="sys"\]:not\(\[data-panda-theme\]\)\s*\{/)
+    expect(out).toMatch(/\[data-layer="sys"\]\[data-panda-theme=light\]\s*,/)
+    expect(out).toMatch(/--color:\s*white;/)
+    expect(out).toMatch(/\[data-panda-theme=dark\] \[data-layer="sys"\]:not\(\[data-panda-theme\]\)\s*\{/)
+    expect(out).toMatch(/\[data-layer="sys"\]\[data-panda-theme=dark\]\s*,/)
+    expect(out).toMatch(/--color:\s*black;/)
+  })
+
+  it('prevents ancestor theme selectors from overriding an explicitly themed host', () => {
+    const raw = `@layer base, tokens;
+@layer tokens {
+  :where(:root, :host) { --color: red; }
+  [data-panda-theme=light] { --color: white; }
+  [data-panda-theme=dark] { --color: black; }
+}`
+    const out = createPortableStylesheetFromContent(raw, 'sys')
+    expect(out).toContain('[data-panda-theme=light] [data-layer="sys"]:not([data-panda-theme])')
+    expect(out).toContain('[data-panda-theme=dark] [data-layer="sys"]:not([data-panda-theme])')
+    expect(out).not.toContain('[data-panda-theme=light] [data-layer="sys"] {')
+    expect(out).not.toContain('[data-panda-theme=dark] [data-layer="sys"] {')
   })
 
   it('preserves non-selector at-rules from Panda token layer without selector rewriting', () => {
@@ -101,7 +131,7 @@ describe('createPortableStylesheetFromContent', () => {
       /\[data-layer="sys"\]:is\(\[data-panda-theme=dark\], \[data-panda-theme=dim\]\)\s*,/
     )
     expect(out).toMatch(
-      /:is\(\[data-panda-theme=dark\], \[data-panda-theme=dim\]\) \[data-layer="sys"\]\s*\{/
+      /:is\(\[data-panda-theme=dark\], \[data-panda-theme=dim\]\) \[data-layer="sys"\]:not\(\[data-panda-theme\]\)\s*\{/
     )
   })
 
