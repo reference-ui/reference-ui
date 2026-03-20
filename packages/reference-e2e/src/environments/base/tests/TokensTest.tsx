@@ -12,7 +12,7 @@ export default function TokensTest() {
         Tokens: primitive
       </Div>
 
-      <div
+      <Div
         data-testid="tokens-css"
         className={css({
           color: 'test.primary',
@@ -22,7 +22,7 @@ export default function TokensTest() {
         })}
       >
         Tokens: css()
-      </div>
+      </Div>
     </div>
   )
 }
