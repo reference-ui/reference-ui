@@ -186,6 +186,96 @@ describe('global dark-mode control from the consumer', () => {
     expect(style.whiteSpace).toBe('nowrap')
   })
 
+  it('nested dark colorMode creates a dark island inside a light theme scope', () => {
+    render(
+      <div data-panda-theme="light">
+        <Div data-testid="outer-light-token" color="referenceUnitColorModeToken">
+          Outer light token
+        </Div>
+        <Div
+          data-testid="inner-dark-token"
+          colorMode="dark"
+          color="referenceUnitColorModeToken"
+        >
+          Inner dark token
+        </Div>
+      </div>,
+    )
+
+    expectResolvedRgb(
+      screen.getByTestId('outer-light-token'),
+      'color',
+      REFERENCE_UNIT_MODE_LIGHT_RGB,
+      'outer light scope keeps the light token value',
+    )
+    expectResolvedRgb(
+      screen.getByTestId('inner-dark-token'),
+      'color',
+      REFERENCE_UNIT_MODE_DARK_RGB,
+      'nested dark colorMode should override the surrounding light scope',
+    )
+  })
+
+  it('docs-style light preview should create a light island inside a dark theme scope', () => {
+    render(
+      <div data-panda-theme="dark">
+        <Div
+          data-testid="docs-preview-dark-token"
+          colorMode="dark"
+          color="referenceUnitColorModeToken"
+        >
+          Docs preview dark token
+        </Div>
+        <Div data-testid="docs-preview-light-token" color="referenceUnitColorModeToken">
+          Docs preview light token
+        </Div>
+      </div>,
+    )
+
+    expectResolvedRgb(
+      screen.getByTestId('docs-preview-dark-token'),
+      'color',
+      REFERENCE_UNIT_MODE_DARK_RGB,
+      'docs preview dark branch keeps the dark token value',
+    )
+    expectResolvedRgb(
+      screen.getByTestId('docs-preview-light-token'),
+      'color',
+      REFERENCE_UNIT_MODE_LIGHT_RGB,
+      'docs preview light branch should escape the surrounding dark scope',
+    )
+  })
+
+  it('docs-style dark preview should create a dark island inside a light theme scope', () => {
+    render(
+      <div data-panda-theme="light">
+        <Div data-testid="docs-preview-light-host-token" color="referenceUnitColorModeToken">
+          Docs preview light host token
+        </Div>
+        <Div
+          data-testid="docs-preview-dark-island-token"
+          colorMode="dark"
+          color="referenceUnitColorModeToken"
+        >
+          Docs preview dark island token
+        </Div>
+      </div>,
+    )
+
+    expectResolvedRgb(
+      screen.getByTestId('docs-preview-light-host-token'),
+      'color',
+      REFERENCE_UNIT_MODE_LIGHT_RGB,
+      'docs preview light host keeps the light token value',
+    )
+    expectResolvedRgb(
+      screen.getByTestId('docs-preview-dark-island-token'),
+      'color',
+      REFERENCE_UNIT_MODE_DARK_RGB,
+      'docs preview dark branch should override the surrounding light scope',
+    )
+  })
+
   it('node-level dark mode preserves large typography utility props with extended tokens', () => {
     render(
       <Div
