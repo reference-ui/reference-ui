@@ -1,85 +1,82 @@
-import { BroadcastChannel, isMainThread, threadId } from 'node:worker_threads'
-import type { LogEntryPayload, LogLevel } from './events'
+/**
+ * Dedicated channel handle (`openBusChannel`) so this pipe can close without
+ * `closeEventBus`. Envelope helpers live in `event-bus/channel/wire.ts` next to `emit`.
+ */
+import { isMainThread, threadId } from 'node:worker_threads'
+import { createBusEnvelope, openBusChannel, parseBusMessage } from '../event-bus/channel/wire'
+import {
+  isLogEntryPayload,
+  LOG_ENTRY_EVENT,
+  type LogEntryPayload,
+  type LogLevel,
+} from './events'
 import { writeLogEntry } from './console-write'
 import { formatTransportArg } from './serialize-args'
 
-let isRelayInitialized = false
-let logChannel: BroadcastChannel | undefined
-let relayListener: ((msg: Event) => void) | undefined
-
-function getLogChannel(): BroadcastChannel {
-  if (logChannel) return logChannel
-
-  logChannel = new BroadcastChannel('reference-ui:events')
-  return logChannel
-}
-
-export function forwardWorkerLog(entry: {
+type WorkerLogFields = {
   level: LogLevel
   args: unknown[]
   module?: string
   timestamp?: string
-}): void {
-  try {
-    getLogChannel().postMessage({
-      type: 'bus:event',
-      event: 'log:entry',
-      payload: {
-        ...entry,
-        args: entry.args.map(formatTransportArg),
-        source: 'worker',
-        threadId,
-      },
-    })
-  } catch (error) {
-    writeLogEntry(
-      'error',
-      ['[log] Failed to forward worker log:', formatTransportArg(error)],
-      {
-        source: 'worker',
-        threadId,
-      }
-    )
-    writeLogEntry(entry.level, entry.args.map(formatTransportArg), {
-      module: entry.module,
-      source: 'worker',
-      threadId,
-      timestamp: entry.timestamp,
-    })
+}
+
+let isRelayInitialized = false
+let logChannel: ReturnType<typeof openBusChannel> | undefined
+let relayListener: ((msg: Event) => void) | undefined
+
+function getLogChannel(): ReturnType<typeof openBusChannel> {
+  if (logChannel) return logChannel
+
+  logChannel = openBusChannel()
+  return logChannel
+}
+
+function toRelayPayload(entry: WorkerLogFields): LogEntryPayload {
+  return {
+    ...entry,
+    args: entry.args.map(formatTransportArg),
+    source: 'worker',
+    threadId,
   }
 }
 
-export function isLogEntryPayload(payload: unknown): payload is LogEntryPayload {
-  if (!payload || typeof payload !== 'object') return false
-
-  const candidate = payload as Partial<LogEntryPayload>
-  return (
-    candidate.source === 'worker' &&
-    typeof candidate.threadId === 'number' &&
-    Array.isArray(candidate.args) &&
-    (candidate.level === 'log' ||
-      candidate.level === 'info' ||
-      candidate.level === 'warn' ||
-      candidate.level === 'error' ||
-      candidate.level === 'debug')
+/** If postMessage fails, at least surface something on this thread. */
+function writeWorkerLogFallback(entry: WorkerLogFields, error: unknown): void {
+  writeLogEntry(
+    'error',
+    ['[log] Failed to forward worker log:', formatTransportArg(error)],
+    { source: 'worker', threadId }
   )
+  writeLogEntry(entry.level, entry.args.map(formatTransportArg), {
+    module: entry.module,
+    source: 'worker',
+    threadId,
+    timestamp: entry.timestamp,
+  })
+}
+
+export function forwardWorkerLog(entry: WorkerLogFields): void {
+  try {
+    getLogChannel().postMessage(createBusEnvelope(LOG_ENTRY_EVENT, toRelayPayload(entry)))
+  } catch (error) {
+    writeWorkerLogFallback(entry, error)
+  }
 }
 
 export function initLogRelay(): void {
   if (!isMainThread || isRelayInitialized) return
 
   relayListener = (msg: Event) => {
-    const data = (msg as MessageEvent).data
-    if (data?.type !== 'bus:event' || data?.event !== 'log:entry') return
+    const parsed = parseBusMessage((msg as MessageEvent).data)
+    if (!parsed || parsed.event !== LOG_ENTRY_EVENT) return
 
-    const payload = data.payload
-    if (!isLogEntryPayload(payload)) return
+    if (!isLogEntryPayload(parsed.payload)) return
 
-    writeLogEntry(payload.level, payload.args, {
-      module: payload.module,
-      source: payload.source,
-      threadId: payload.threadId,
-      timestamp: payload.timestamp,
+    writeLogEntry(parsed.payload.level, parsed.payload.args, {
+      module: parsed.payload.module,
+      source: parsed.payload.source,
+      threadId: parsed.payload.threadId,
+      timestamp: parsed.payload.timestamp,
     })
   }
 
