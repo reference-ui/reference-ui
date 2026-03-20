@@ -11,10 +11,10 @@ initialized.
 
 | File | Role |
 |------|------|
-| `events.ts` | Shared types (`LogLevel`, `LogEntryPayload`, bus typing) |
+| `events.ts` | Shared types + `isLogEntryPayload` guard for `LogEntryPayload` |
 | `serialize-args.ts` | Args safe for `postMessage` / display (errors, `inspect`, etc.) |
 | `console-write.ts` | Timestamps, colors, and `console.*` output |
-| `relay.ts` | Channel + `initLogRelay` / `closeLogRelay` + payload validation |
+| `relay.ts` | `openBusChannel` + `createBusEnvelope` / `parseBusMessage` from `event-bus/channel/wire.ts` |
 | `dispatch.ts` | Main-thread write vs worker forward |
 | `index.ts` | `log` facade and public exports |
 

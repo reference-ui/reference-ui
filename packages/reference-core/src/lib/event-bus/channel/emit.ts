@@ -1,4 +1,5 @@
 import { broadcastChannel } from './channel'
+import { createBusEnvelope } from './wire'
 import type { Events } from '../../../events'
 
 /**
@@ -11,9 +12,5 @@ export function emit<K extends keyof Events>(
 ): void
 export function emit(event: string, payload?: unknown): void
 export function emit(event: string, payload?: unknown) {
-  broadcastChannel.postMessage({
-    type: 'bus:event',
-    event,
-    payload: payload ?? {},
-  })
+  broadcastChannel.postMessage(createBusEnvelope(event, payload))
 }

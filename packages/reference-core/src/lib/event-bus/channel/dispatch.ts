@@ -1,10 +1,11 @@
 import { broadcastChannel, channelListeners } from './channel'
+import { parseBusMessage } from './wire'
 
 export function dispatchChannelMessage(message: Event): void {
-  const data = (message as MessageEvent).data
-  if (data?.type !== 'bus:event' || typeof data.event !== 'string') return
+  const parsed = parseBusMessage((message as MessageEvent).data)
+  if (!parsed) return
 
-  const listeners = channelListeners.get(data.event)
+  const listeners = channelListeners.get(parsed.event)
   if (!listeners?.size) return
 
   for (const listener of [...listeners]) {

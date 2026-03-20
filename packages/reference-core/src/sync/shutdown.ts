@@ -1,6 +1,5 @@
 import { closeEventBus, on } from '../lib/event-bus'
-import { log } from '../lib/log'
-import { closeLogRelay } from '../lib/log'
+import { closeLogRelay, log } from '../lib/log'
 import { shutdown as shutdownPool } from '../lib/thread-pool'
 
 const LOG_SCOPE = 'sync:shutdown'
