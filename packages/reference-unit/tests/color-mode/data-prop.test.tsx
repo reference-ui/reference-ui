@@ -92,7 +92,7 @@ describe('consumer token resolution in light mode', () => {
   })
 })
 
-describe('global dark-mode control from the consumer', () => {
+describe('ancestor theme wrappers', () => {
   it('ancestor theme wrapper flips extended library tokens to dark', () => {
     render(
       <div data-panda-theme="dark">
@@ -185,7 +185,9 @@ describe('global dark-mode control from the consumer', () => {
     expect(style.lineHeight).toBe('70px')
     expect(style.whiteSpace).toBe('nowrap')
   })
+})
 
+describe('authored host scopes', () => {
   it('nested dark colorMode creates a dark island inside a light theme scope', () => {
     render(
       <div data-panda-theme="light">
@@ -216,7 +218,7 @@ describe('global dark-mode control from the consumer', () => {
     )
   })
 
-  it('docs-style light preview should create a light island inside a dark theme scope', () => {
+  it('docs-style explicit light preview should create a light island inside a dark theme scope', () => {
     render(
       <div data-panda-theme="dark">
         <Div
@@ -226,7 +228,11 @@ describe('global dark-mode control from the consumer', () => {
         >
           Docs preview dark token
         </Div>
-        <Div data-testid="docs-preview-light-token" color="referenceUnitColorModeToken">
+        <Div
+          data-testid="docs-preview-light-token"
+          colorMode="light"
+          color="referenceUnitColorModeToken"
+        >
           Docs preview light token
         </Div>
       </div>,
@@ -275,7 +281,155 @@ describe('global dark-mode control from the consumer', () => {
       'docs preview dark branch should override the surrounding light scope',
     )
   })
+})
 
+describe('descendant cascade', () => {
+  it('nested descendants follow the nearest explicit light or dark scope', () => {
+    render(
+      <div data-panda-theme="dark">
+        <Div data-testid="cascade-light-scope" colorMode="light">
+          <Div data-testid="cascade-light-child" color="referenceUnitColorModeToken">
+            Cascade light child
+          </Div>
+        </Div>
+        <Div data-testid="cascade-dark-scope" colorMode="dark">
+          <Div data-testid="cascade-dark-child" color="referenceUnitColorModeToken">
+            Cascade dark child
+          </Div>
+        </Div>
+      </div>,
+    )
+
+    expectResolvedRgb(
+      screen.getByTestId('cascade-light-child'),
+      'color',
+      REFERENCE_UNIT_MODE_LIGHT_RGB,
+      'descendant inside explicit light scope should resolve the light token value',
+    )
+    expectResolvedRgb(
+      screen.getByTestId('cascade-dark-child'),
+      'color',
+      REFERENCE_UNIT_MODE_DARK_RGB,
+      'descendant inside explicit dark scope should resolve the dark token value',
+    )
+  })
+
+  it('extended public tokens cascade to descendants inside explicit light and dark scopes', () => {
+    render(
+      <div data-panda-theme="dark">
+        <Div data-testid="ext-light-scope" colorMode="light">
+          <Div data-testid="ext-light-child" bg="lightDarkDemoBg" color="lightDarkDemoText">
+            Extended light child
+          </Div>
+        </Div>
+        <Div data-testid="ext-dark-scope" colorMode="dark">
+          <Div data-testid="ext-dark-child" bg="lightDarkDemoBg" color="lightDarkDemoText">
+            Extended dark child
+          </Div>
+        </Div>
+      </div>,
+    )
+
+    expectResolvedRgb(
+      screen.getByTestId('ext-light-child'),
+      'backgroundColor',
+      lightDarkDemoBgLightRgb,
+      'extended descendant inside explicit light scope should resolve the light background token',
+    )
+    expectResolvedRgb(
+      screen.getByTestId('ext-light-child'),
+      'color',
+      lightDarkDemoTextLightRgb,
+      'extended descendant inside explicit light scope should resolve the light text token',
+    )
+    expectResolvedRgb(
+      screen.getByTestId('ext-dark-child'),
+      'backgroundColor',
+      lightDarkDemoBgDarkRgb,
+      'extended descendant inside explicit dark scope should resolve the dark background token',
+    )
+    expectResolvedRgb(
+      screen.getByTestId('ext-dark-child'),
+      'color',
+      lightDarkDemoTextDarkRgb,
+      'extended descendant inside explicit dark scope should resolve the dark text token',
+    )
+  })
+
+  it('layered public tokens cascade to descendants inside explicit light and dark scopes', () => {
+    render(
+      <div data-panda-theme="dark">
+        <Div data-testid="layer-light-scope" colorMode="light">
+          <Div data-testid="layer-light-child" bg="lightDarkDemoBg" color="lightDarkDemoText">
+            Layer light child
+          </Div>
+        </Div>
+        <Div data-testid="layer-dark-scope" colorMode="dark">
+          <Div data-testid="layer-dark-child" bg="lightDarkDemoBg" color="lightDarkDemoText">
+            Layer dark child
+          </Div>
+        </Div>
+      </div>,
+    )
+
+    expectResolvedRgb(
+      screen.getByTestId('layer-light-child'),
+      'backgroundColor',
+      layerBgLightRgb,
+      'layered descendant inside explicit light scope should resolve the light background token',
+    )
+    expectResolvedRgb(
+      screen.getByTestId('layer-light-child'),
+      'color',
+      layerTextLightRgb,
+      'layered descendant inside explicit light scope should resolve the light text token',
+    )
+    expectResolvedRgb(
+      screen.getByTestId('layer-dark-child'),
+      'backgroundColor',
+      layerBgDarkRgb,
+      'layered descendant inside explicit dark scope should resolve the dark background token',
+    )
+    expectResolvedRgb(
+      screen.getByTestId('layer-dark-child'),
+      'color',
+      layerTextDarkRgb,
+      'layered descendant inside explicit dark scope should resolve the dark text token',
+    )
+  })
+
+  it('sibling light and dark descendant islands stay independent under one dark ancestor', () => {
+    render(
+      <div data-panda-theme="dark">
+        <Div data-testid="sibling-light-scope" colorMode="light">
+          <Div data-testid="sibling-light-child" color="referenceUnitColorModeToken">
+            Sibling light child
+          </Div>
+        </Div>
+        <Div data-testid="sibling-dark-scope" colorMode="dark">
+          <Div data-testid="sibling-dark-child" color="referenceUnitColorModeToken">
+            Sibling dark child
+          </Div>
+        </Div>
+      </div>,
+    )
+
+    expectResolvedRgb(
+      screen.getByTestId('sibling-light-child'),
+      'color',
+      REFERENCE_UNIT_MODE_LIGHT_RGB,
+      'sibling explicit light scope should stay light even next to a dark island',
+    )
+    expectResolvedRgb(
+      screen.getByTestId('sibling-dark-child'),
+      'color',
+      REFERENCE_UNIT_MODE_DARK_RGB,
+      'sibling explicit dark scope should stay dark independently',
+    )
+  })
+})
+
+describe('authored host scopes with utility props', () => {
   it('node-level dark mode preserves large typography utility props with extended tokens', () => {
     render(
       <Div

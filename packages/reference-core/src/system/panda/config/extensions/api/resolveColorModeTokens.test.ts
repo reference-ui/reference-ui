@@ -50,6 +50,13 @@ describe('resolveColorModeTokens()', () => {
       light: {
         tokens: {
           colors: {
+            text: {
+              value: '{colors.gray.950}',
+              description: 'Primary text color',
+            },
+            surface: {
+              value: '{colors.white}',
+            },
             accent: {
               value: '{colors.blue.700}',
             },
@@ -231,6 +238,18 @@ describe('resolveColorModeTokens()', () => {
     })
 
     expect(resolved.themes).toEqual({
+      light: {
+        tokens: {
+          colors: {
+            text: {
+              value: '{colors.gray.950}',
+            },
+            border: {
+              value: '{colors.gray.200}',
+            },
+          },
+        },
+      },
       dark: {
         tokens: {
           colors: {
@@ -239,6 +258,90 @@ describe('resolveColorModeTokens()', () => {
             },
             border: {
               value: '{colors.gray.700}',
+            },
+          },
+        },
+      },
+    })
+  })
+
+  it('treats value + dark as default light plus explicit light and dark theme tokens', () => {
+    const resolved = resolveColorModeTokens([
+      {
+        colors: {
+          text: {
+            value: '{colors.gray.950}',
+            dark: '{colors.gray.50}',
+          },
+        },
+      },
+    ])
+
+    expect(resolved.baseTokens).toEqual({
+      colors: {
+        text: {
+          value: '{colors.gray.950}',
+        },
+      },
+    })
+
+    expect(resolved.themes).toEqual({
+      light: {
+        tokens: {
+          colors: {
+            text: {
+              value: '{colors.gray.950}',
+            },
+          },
+        },
+      },
+      dark: {
+        tokens: {
+          colors: {
+            text: {
+              value: '{colors.gray.50}',
+            },
+          },
+        },
+      },
+    })
+  })
+
+  it('treats value + light as default dark plus explicit dark and light theme tokens', () => {
+    const resolved = resolveColorModeTokens([
+      {
+        colors: {
+          text: {
+            value: '{colors.gray.50}',
+            light: '{colors.gray.950}',
+          },
+        },
+      },
+    ])
+
+    expect(resolved.baseTokens).toEqual({
+      colors: {
+        text: {
+          value: '{colors.gray.50}',
+        },
+      },
+    })
+
+    expect(resolved.themes).toEqual({
+      light: {
+        tokens: {
+          colors: {
+            text: {
+              value: '{colors.gray.950}',
+            },
+          },
+        },
+      },
+      dark: {
+        tokens: {
+          colors: {
+            text: {
+              value: '{colors.gray.50}',
             },
           },
         },

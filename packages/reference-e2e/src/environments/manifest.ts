@@ -22,6 +22,7 @@ export const MANIFEST = [
   'ui.config.ts',
   'vite.config.ts',
   'tests/TokensTest.tsx',
+  'tests/ColorModeTest.tsx',
   'tests/SyncWatch.tsx',
   'tests/ExtendsTest.tsx',
   'tests/LayersTest.tsx',

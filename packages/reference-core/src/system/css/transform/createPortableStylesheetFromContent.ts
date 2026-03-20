@@ -72,8 +72,9 @@ function splitSelectorList(selector: string): string[] {
 
 function rewriteTokenSelector(selector: string, layerName: string): string {
   const layerSelector = `[data-layer="${layerName}"]`
+  const unthemedLayerSelector = `${layerSelector}:not([data-panda-theme])`
   return splitSelectorList(selector)
-    .flatMap(part => [`${layerSelector}${part}`, `${part} ${layerSelector}`])
+    .flatMap(part => [`${layerSelector}${part}`, `${part} ${unthemedLayerSelector}`])
     .join(', ')
 }
 

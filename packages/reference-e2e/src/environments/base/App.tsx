@@ -1,4 +1,5 @@
 import TokensTest from './tests/TokensTest'
+import ColorModeTest from './tests/ColorModeTest'
 import SyncWatch from './tests/SyncWatch'
 import ExtendsTest from './tests/ExtendsTest'
 import LayersTest from './tests/LayersTest'
@@ -12,6 +13,9 @@ export default function App() {
     <Router>
       <Route path={testRoutes.tokens}>
         <TokensTest />
+      </Route>
+      <Route path={testRoutes.colorMode}>
+        <ColorModeTest />
       </Route>
       <Route path={testRoutes.syncWatch}>
         <SyncWatch />

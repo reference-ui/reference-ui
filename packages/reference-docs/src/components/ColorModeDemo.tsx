@@ -62,7 +62,7 @@ function TokenRow({
 
 export function ColorModeDemo() {
   const [mode, setMode] = useState<Mode>('light')
-  const theme = mode === 'dark' ? 'dark' : undefined
+  const theme = mode
 
   return (
     <Div display="flex" flexDirection="column" gap="6r">
@@ -117,7 +117,7 @@ export function ColorModeDemo() {
               {mode === 'light' ? 'Light mode tokens' : 'Dark mode tokens'}
             </H2>
           </Div>
-          <Code>{theme ? `colorMode="${theme}"` : 'no theme attribute'}</Code>
+          <Code>{`colorMode="${theme}"`}</Code>
         </Div>
 
         <Div
