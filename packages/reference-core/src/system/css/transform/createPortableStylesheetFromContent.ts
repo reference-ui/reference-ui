@@ -132,6 +132,34 @@ function kebabToCamelCase(value: string): string {
   return value.replace(/-([a-z0-9])/g, (_, char: string) => char.toUpperCase())
 }
 
+function pushColorUtilityRulesForToken(
+  utilityRules: string[],
+  content: string,
+  tokenName: string,
+  cssVarSuffix: string
+): void {
+  if (!content.includes(`.bg_${tokenName}`)) {
+    utilityRules.push(`  .bg_${tokenName} {`)
+    utilityRules.push(`    background: var(--colors-${cssVarSuffix});`)
+    utilityRules.push('}')
+    utilityRules.push('')
+  }
+
+  if (!content.includes(`.bg-c_${tokenName}`)) {
+    utilityRules.push(`  .bg-c_${tokenName} {`)
+    utilityRules.push(`    background-color: var(--colors-${cssVarSuffix});`)
+    utilityRules.push('}')
+    utilityRules.push('')
+  }
+
+  if (!content.includes(`.c_${tokenName}`)) {
+    utilityRules.push(`  .c_${tokenName} {`)
+    utilityRules.push(`    color: var(--colors-${cssVarSuffix});`)
+    utilityRules.push('}')
+    utilityRules.push('')
+  }
+}
+
 function extractPublicColorTokenUtilities(
   rootTokenDeclarations: string,
   content: string
@@ -147,26 +175,7 @@ function extractPublicColorTokenUtilities(
 
   const utilityRules: string[] = []
   for (const [tokenName, cssVarSuffix] of colorTokens) {
-    if (!content.includes(`.bg_${tokenName}`)) {
-      utilityRules.push(`  .bg_${tokenName} {`)
-      utilityRules.push(`    background: var(--colors-${cssVarSuffix});`)
-      utilityRules.push('}')
-      utilityRules.push('')
-    }
-
-    if (!content.includes(`.bg-c_${tokenName}`)) {
-      utilityRules.push(`  .bg-c_${tokenName} {`)
-      utilityRules.push(`    background-color: var(--colors-${cssVarSuffix});`)
-      utilityRules.push('}')
-      utilityRules.push('')
-    }
-
-    if (!content.includes(`.c_${tokenName}`)) {
-      utilityRules.push(`  .c_${tokenName} {`)
-      utilityRules.push(`    color: var(--colors-${cssVarSuffix});`)
-      utilityRules.push('}')
-      utilityRules.push('')
-    }
+    pushColorUtilityRulesForToken(utilityRules, content, tokenName, cssVarSuffix)
   }
 
   while (utilityRules.at(-1) === '') utilityRules.pop()
