@@ -1,5 +1,6 @@
 import { closeEventBus, on } from '../lib/event-bus'
 import { log } from '../lib/log'
+import { closeLogRelay } from '../lib/log'
 import { shutdown as shutdownPool } from '../lib/thread-pool'
 
 const LOG_SCOPE = 'sync:shutdown'
@@ -117,6 +118,13 @@ export async function shutdownAndExit(code: number, reason: string): Promise<num
       log.error('[sync] Shutdown failed:', error)
     } finally {
       clearTimeout(forceExitTimer)
+
+      try {
+        closeLogRelay()
+      } catch (error) {
+        exitCode = exitCode === 0 ? 1 : exitCode
+        log.error('[sync] Failed to close log relay:', error)
+      }
 
       try {
         closeEventBus()

@@ -48,35 +48,55 @@ function createThemeLeaf(
   }
 }
 
-function normalizeTokenNode(node: ReferenceTokenConfig | ReferenceTokenLeaf): {
+type NormalizedTokenParts = {
   baseNode: Record<string, unknown>
   themeNodes: Partial<ThemeTokenTree>
-} {
-  if (isReferenceTokenLeaf(node)) {
-    const tokenFields = stripModeOverrides(node)
-    const themeNodes: Partial<ThemeTokenTree> = {}
-    const hasExplicitPair = node.light !== undefined && node.dark !== undefined
-    const baseValue = hasExplicitPair
-      ? undefined
-      : node.value ?? node.light ?? node.dark
-    const baseNode = baseValue !== undefined
-      ? { ...tokenFields, value: baseValue }
-      : {}
+}
 
-    if (node.light !== undefined) {
-      themeNodes.light = createThemeLeaf(tokenFields, node.light)
-    }
+function normalizeLeafTokenNode(node: ReferenceTokenLeaf): NormalizedTokenParts {
+  const tokenFields = stripModeOverrides(node)
+  const themeNodes: Partial<ThemeTokenTree> = {}
+  const hasExplicitPair = node.light !== undefined && node.dark !== undefined
+  const baseValue = hasExplicitPair
+    ? undefined
+    : node.value ?? node.light ?? node.dark
+  const baseNode = baseValue !== undefined
+    ? { ...tokenFields, value: baseValue }
+    : {}
 
-    if (node.dark !== undefined) {
-      themeNodes.dark = createThemeLeaf(tokenFields, node.dark)
-    }
-
-    return {
-      baseNode,
-      themeNodes,
-    }
+  if (node.light !== undefined) {
+    themeNodes.light = createThemeLeaf(tokenFields, node.light)
   }
 
+  if (node.dark !== undefined) {
+    themeNodes.dark = createThemeLeaf(tokenFields, node.dark)
+  }
+
+  return {
+    baseNode,
+    themeNodes,
+  }
+}
+
+function mergeChildIntoParentThemes(
+  themeNodes: Partial<ThemeTokenTree>,
+  key: string,
+  child: NormalizedTokenParts
+): void {
+  if (child.themeNodes.light && hasKeys(child.themeNodes.light)) {
+    const lightNode = themeNodes.light ?? {}
+    lightNode[key] = child.themeNodes.light
+    themeNodes.light = lightNode
+  }
+
+  if (child.themeNodes.dark && hasKeys(child.themeNodes.dark)) {
+    const darkNode = themeNodes.dark ?? {}
+    darkNode[key] = child.themeNodes.dark
+    themeNodes.dark = darkNode
+  }
+}
+
+function normalizeObjectTokenNode(node: ReferenceTokenConfig): NormalizedTokenParts {
   const baseNode: Record<string, unknown> = {}
   const themeNodes: Partial<ThemeTokenTree> = {}
 
@@ -91,20 +111,18 @@ function normalizeTokenNode(node: ReferenceTokenConfig | ReferenceTokenLeaf): {
       baseNode[key] = normalizedChild.baseNode
     }
 
-    if (normalizedChild.themeNodes.light && hasKeys(normalizedChild.themeNodes.light)) {
-      const lightNode = themeNodes.light ?? {}
-      lightNode[key] = normalizedChild.themeNodes.light
-      themeNodes.light = lightNode
-    }
-
-    if (normalizedChild.themeNodes.dark && hasKeys(normalizedChild.themeNodes.dark)) {
-      const darkNode = themeNodes.dark ?? {}
-      darkNode[key] = normalizedChild.themeNodes.dark
-      themeNodes.dark = darkNode
-    }
+    mergeChildIntoParentThemes(themeNodes, key, normalizedChild)
   }
 
   return { baseNode, themeNodes }
+}
+
+function normalizeTokenNode(node: ReferenceTokenConfig | ReferenceTokenLeaf): NormalizedTokenParts {
+  if (isReferenceTokenLeaf(node)) {
+    return normalizeLeafTokenNode(node)
+  }
+
+  return normalizeObjectTokenNode(node)
 }
 
 export function resolveColorModeTokens(

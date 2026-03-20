@@ -12,6 +12,32 @@ function createTempDir(): string {
   return dir
 }
 
+function writeTastyTypesFixture(coreDir: string, targetDir: string): void {
+  mkdirSync(resolve(targetDir, 'tasty', 'chunks'), { recursive: true })
+  writeFileSync(
+    resolve(targetDir, 'tasty', 'manifest.js'),
+    'export const manifest = { version: "1" }\nexport default manifest\n'
+  )
+  writeFileSync(
+    resolve(targetDir, 'tasty', 'runtime.js'),
+    'export const manifestUrl = new URL("./manifest.js", import.meta.url).href\n'
+  )
+  writeFileSync(resolve(targetDir, 'tasty', 'chunks/example.js'), 'export default {}\n')
+  writeFileSync(
+    resolve(targetDir, 'tasty', 'manifest.d.ts'),
+    'declare const manifest: { version: string }\nexport default manifest\n'
+  )
+  writeFileSync(
+    resolve(targetDir, 'tasty', 'runtime.d.ts'),
+    'export declare const manifestUrl: string\n'
+  )
+  mkdirSync(resolve(coreDir, 'src/entry'), { recursive: true })
+  writeFileSync(
+    resolve(coreDir, 'src/entry/types.ts'),
+    'export { Reference } from "../reference/browser/component"\n'
+  )
+}
+
 async function importBundlerModule(options?: {
   bundleImpl?: (coreDir: string, targetDir: string, entryPath: string, outfile: string) => Promise<void> | void
 }) {
@@ -132,29 +158,7 @@ describe('packager/bundler', () => {
     const outDir = resolve(workspaceDir, '.reference-ui')
     const targetDir = resolve(outDir, 'types')
 
-    mkdirSync(resolve(targetDir, 'tasty', 'chunks'), { recursive: true })
-    writeFileSync(
-      resolve(targetDir, 'tasty', 'manifest.js'),
-      'export const manifest = { version: "1" }\nexport default manifest\n'
-    )
-    writeFileSync(
-      resolve(targetDir, 'tasty', 'runtime.js'),
-      'export const manifestUrl = new URL("./manifest.js", import.meta.url).href\n'
-    )
-    writeFileSync(resolve(targetDir, 'tasty', 'chunks/example.js'), 'export default {}\n')
-    writeFileSync(
-      resolve(targetDir, 'tasty', 'manifest.d.ts'),
-      'declare const manifest: { version: string }\nexport default manifest\n'
-    )
-    writeFileSync(
-      resolve(targetDir, 'tasty', 'runtime.d.ts'),
-      'export declare const manifestUrl: string\n'
-    )
-    mkdirSync(resolve(coreDir, 'src/entry'), { recursive: true })
-    writeFileSync(
-      resolve(coreDir, 'src/entry/types.ts'),
-      'export { Reference } from "../reference/browser/component"\n'
-    )
+    writeTastyTypesFixture(coreDir, targetDir)
 
     const pkg: PackageDefinition = {
       name: '@reference-ui/types',
