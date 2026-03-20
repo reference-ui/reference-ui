@@ -53,7 +53,7 @@ describe('lib/log', () => {
     })
     const peer = new BroadcastChannel(CHANNEL_NAME)
 
-    const messagePromise = new Promise<MessageEvent>((resolve) => {
+    const messagePromise = new Promise<MessageEvent>(resolve => {
       peer.addEventListener('message', resolve as EventListener, { once: true })
     })
 
@@ -105,7 +105,7 @@ describe('lib/log', () => {
 
     log.debug('watch', 'quiet')
 
-    await new Promise((resolve) => setTimeout(resolve, 25))
+    await new Promise(resolve => setTimeout(resolve, 25))
 
     expect(messageSpy).not.toHaveBeenCalled()
 
