@@ -6,7 +6,7 @@
  * libraries should all respond when the consumer toggles theme state.
  */
 
-import { beforeAll, describe, it } from 'vitest'
+import { beforeAll, describe, expect, it } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { Div } from '@reference-ui/react'
 import {
@@ -154,5 +154,71 @@ describe('global dark-mode control from the consumer', () => {
       REFERENCE_UNIT_MODE_DARK_RGB,
       'ancestor dark theme flips root color-mode token',
     )
+  })
+
+  it('ancestor dark theme preserves large typography utility props on consumer primitives', () => {
+    render(
+      <div data-panda-theme="dark">
+        <Div
+          data-testid="root-typography-wrap"
+          font="mono"
+          fontSize="60px"
+          lineHeight="70px"
+          whiteSpace="nowrap"
+          color="referenceUnitColorModeToken"
+        >
+          Typography
+        </Div>
+      </div>,
+    )
+
+    const el = screen.getByTestId('root-typography-wrap')
+    const style = window.getComputedStyle(el)
+
+    expectResolvedRgb(
+      el,
+      'color',
+      REFERENCE_UNIT_MODE_DARK_RGB,
+      'ancestor dark theme keeps root token color while typography utilities are applied',
+    )
+    expect(style.fontSize).toBe('60px')
+    expect(style.lineHeight).toBe('70px')
+    expect(style.whiteSpace).toBe('nowrap')
+  })
+
+  it('node-level dark mode preserves large typography utility props with extended tokens', () => {
+    render(
+      <Div
+        data-testid="ext-typography-dark"
+        colorMode="dark"
+        font="serif"
+        fontSize="32px"
+        lineHeight="40px"
+        whiteSpace="nowrap"
+        bg="lightDarkDemoBg"
+        color="lightDarkDemoText"
+      >
+        Extended typography
+      </Div>,
+    )
+
+    const el = screen.getByTestId('ext-typography-dark')
+    const style = window.getComputedStyle(el)
+
+    expectResolvedRgb(
+      el,
+      'backgroundColor',
+      lightDarkDemoBgDarkRgb,
+      'node-level dark mode keeps extended background token while typography utilities are applied',
+    )
+    expectResolvedRgb(
+      el,
+      'color',
+      lightDarkDemoTextDarkRgb,
+      'node-level dark mode keeps extended text token while typography utilities are applied',
+    )
+    expect(style.fontSize).toBe('32px')
+    expect(style.lineHeight).toBe('40px')
+    expect(style.whiteSpace).toBe('nowrap')
   })
 })

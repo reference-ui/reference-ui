@@ -6,7 +6,7 @@
  * Color-mode propagation is covered separately in `tests/color-mode/data-prop.test.tsx`.
  */
 
-import { beforeAll, describe, it } from 'vitest'
+import { beforeAll, describe, expect, it } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { Div } from '@reference-ui/react'
 import {
@@ -16,6 +16,7 @@ import {
   lightDarkDemoTextLightRgb,
 } from '@fixtures/extend-library'
 import { injectDesignSystemCss } from '../primitives/setup'
+import { readGeneratedFile } from '../system/customProps-output.helpers'
 import { expectResolvedRgb, requireDesignSystemCss } from '../utils/design-system-css'
 
 beforeAll(() => {
@@ -53,5 +54,16 @@ describe('extends baseSystem from fixture library', () => {
     const el = screen.getByTestId('extends-light')
     expectResolvedRgb(el, 'backgroundColor', lightDarkDemoBgLightRgb, 'consumer primitive resolves extended public background token')
     expectResolvedRgb(el, 'color', lightDarkDemoTextLightRgb, 'consumer primitive resolves extended public text token')
+  })
+
+  it('consumer stylesheet emits typography utility classes used alongside extended color-mode tokens', () => {
+    const css = readGeneratedFile('styled', 'styles.css')
+
+    expect(css).toBeDefined()
+    expect(css).toContain('.ff_mono')
+    expect(css).toContain('.ff_serif')
+    expect(css).toContain('.fs_60px')
+    expect(css).toContain('.lh_70px')
+    expect(css).toContain('.white-space_nowrap')
   })
 })

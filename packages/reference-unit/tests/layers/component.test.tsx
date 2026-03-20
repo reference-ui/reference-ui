@@ -6,7 +6,8 @@
  * separately in `tests/color-mode/data-prop.test.tsx`.
  */
 
-import { beforeAll, describe, it } from 'vitest'
+import { beforeAll, describe, expect, it } from 'vitest'
+import { Div } from '@reference-ui/react'
 import { render, screen } from '@testing-library/react'
 import { LightDarkDemo } from '@fixtures/layer-library'
 import {
@@ -36,5 +37,31 @@ describe('LightDarkDemo (layer-library)', () => {
     const el = screen.getByTestId('light-dark-demo-dark')
     expectResolvedRgb(el, 'backgroundColor', lightDarkDemoBgDarkRgb, 'layered demo dark panel background')
     expectResolvedRgb(el, 'color', lightDarkDemoTextDarkRgb, 'layered demo dark panel text')
+  })
+
+  it('layered public tokens can coexist with large typography utility props on a dark authored node', () => {
+    render(
+      <Div
+        data-testid="layer-typography-dark"
+        colorMode="dark"
+        bg="lightDarkDemoBg"
+        color="lightDarkDemoText"
+        font="serif"
+        fontSize="32px"
+        lineHeight="40px"
+        whiteSpace="nowrap"
+      >
+        Typography
+      </Div>,
+    )
+
+    const el = screen.getByTestId('layer-typography-dark')
+    const style = window.getComputedStyle(el)
+
+    expectResolvedRgb(el, 'backgroundColor', lightDarkDemoBgDarkRgb, 'layered dark node keeps background token')
+    expectResolvedRgb(el, 'color', lightDarkDemoTextDarkRgb, 'layered dark node keeps text token')
+    expect(style.fontSize).toBe('32px')
+    expect(style.lineHeight).toBe('40px')
+    expect(style.whiteSpace).toBe('nowrap')
   })
 })

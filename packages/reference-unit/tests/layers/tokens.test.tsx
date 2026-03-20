@@ -10,7 +10,7 @@
 import { readFileSync, existsSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { beforeAll, describe, it } from 'vitest'
+import { beforeAll, describe, expect, it } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { Div } from '@reference-ui/react'
 import {
@@ -28,6 +28,7 @@ import {
   expectResolvedRgb,
   requireDesignSystemCss,
 } from '../utils/design-system-css'
+import { readGeneratedFile } from '../system/customProps-output.helpers'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const layerLibRoot = join(__dirname, '../../../../fixtures/layer-library')
@@ -109,5 +110,16 @@ describe('layered public tokens available to consumer primitives', () => {
       lightDarkDemoTextLightRgb,
       'consumer primitive resolves layered public text token',
     )
+  })
+
+  it('consumer stylesheet emits typography utility classes used alongside layered color-mode tokens', () => {
+    const css = readGeneratedFile('styled', 'styles.css')
+
+    expect(css).toBeDefined()
+    expect(css).toContain('.ff_mono')
+    expect(css).toContain('.ff_serif')
+    expect(css).toContain('.fs_32px')
+    expect(css).toContain('.lh_40px')
+    expect(css).toContain('.white-space_nowrap')
   })
 })
