@@ -6,6 +6,6 @@ export default defineConfig({
   name: 'reference-unit',
   extends: [baseSystem],
   layers: [layerLibSystem],
-  include: ['src/**/*.{ts,tsx,mdx}'],
+  include: ['src/**/*.{ts,tsx,mdx}', 'tests/**/*.{ts,tsx,mdx}'],
   debug: true,
 })
