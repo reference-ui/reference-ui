@@ -11,7 +11,7 @@
  * in `tests/color-mode/data-prop.test.tsx`.
  */
 
-import { beforeAll, describe, it } from 'vitest'
+import { beforeAll, describe, expect, it } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { Div, Span } from '@reference-ui/react'
 import {
@@ -90,5 +90,31 @@ describe('extend-library demo layout (inlined)', () => {
     const el = screen.getByTestId('light-dark-demo-dark')
     expectResolvedRgb(el, 'backgroundColor', lightDarkDemoBgDarkRgb, 'extended demo dark panel background')
     expectResolvedRgb(el, 'color', lightDarkDemoTextDarkRgb, 'extended demo dark panel text')
+  })
+
+  it('extended tokens can coexist with large typography utility props on a dark authored node', () => {
+    render(
+      <Div
+        data-testid="extend-typography-dark"
+        colorMode="dark"
+        bg="lightDarkDemoBg"
+        color="lightDarkDemoText"
+        font="mono"
+        fontSize="60px"
+        lineHeight="70px"
+        whiteSpace="nowrap"
+      >
+        Typography
+      </Div>,
+    )
+
+    const el = screen.getByTestId('extend-typography-dark')
+    const style = window.getComputedStyle(el)
+
+    expectResolvedRgb(el, 'backgroundColor', lightDarkDemoBgDarkRgb, 'extended dark node keeps background token')
+    expectResolvedRgb(el, 'color', lightDarkDemoTextDarkRgb, 'extended dark node keeps text token')
+    expect(style.fontSize).toBe('60px')
+    expect(style.lineHeight).toBe('70px')
+    expect(style.whiteSpace).toBe('nowrap')
   })
 })
