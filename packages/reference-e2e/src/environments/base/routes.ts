@@ -4,4 +4,5 @@ export const testRoutes = {
   extends: '/tests/extends',
   layers: '/tests/layers',
   styleProps: '/tests/style-props',
+  responsiveContainer: '/tests/responsive-container',
 } as const

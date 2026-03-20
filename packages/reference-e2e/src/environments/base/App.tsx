@@ -3,6 +3,7 @@ import SyncWatch from './tests/SyncWatch'
 import ExtendsTest from './tests/ExtendsTest'
 import LayersTest from './tests/LayersTest'
 import StylePropsTest from './tests/StylePropsTest'
+import ResponsiveContainerTest from './tests/ResponsiveContainerTest'
 import { Route, Router } from './Router'
 import { testRoutes } from './routes'
 
@@ -23,6 +24,9 @@ export default function App() {
       </Route>
       <Route path={testRoutes.styleProps}>
         <StylePropsTest />
+      </Route>
+      <Route path={testRoutes.responsiveContainer}>
+        <ResponsiveContainerTest />
       </Route>
     </Router>
   )
