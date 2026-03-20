@@ -15,7 +15,7 @@ let initialized = false
 let shutdownPromise: Promise<number> | undefined
 
 function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms))
+  return new Promise(resolve => setTimeout(resolve, ms))
 }
 
 function readPid(payload: unknown): number | undefined {
