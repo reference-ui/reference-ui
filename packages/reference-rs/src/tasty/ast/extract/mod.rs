@@ -1,4 +1,7 @@
 mod comments;
+mod infer_arrays;
+mod infer_objects;
+mod infer_primitives;
 mod members;
 mod module_bindings;
 mod symbols;
