@@ -15,8 +15,8 @@ killing duplication, and finding the natural seams.
 | 8   | Split extract/values          | **Done** (`infer_*.rs`, `values/mod.rs` + `collect`, `infer_dispatch`, `ts_assertions`) |
 | 9   | Shared `typeref_util`         | **Done** (`shared/typeref_util.rs`) |
 | 10  | `crate::tasty::` imports      | **Done** |
-| 11  | TypeRef visitor               | Open   |
-| 12  | emitted vs generator          | Open (decision) |
+| 11  | TypeRef visitor               | **Done** (`shared/type_ref_map.rs` + hooks in `resolve.rs` / `instantiate.rs`) |
+| 12  | emitted vs generator          | **Done** (hybrid; see §12) |
 | 13  | `parsed_file_view`            | **Done** (uses `.clone()`) |
 | 14  | `ExtractionContext`           | Open   |
 | 15  | Housekeeping                  | Open   |
@@ -144,56 +144,55 @@ crate (resolver split files included).
 
 ---
 
-## 11. Consider a `TypeRef` visitor trait
+## 11. Consider a `TypeRef` visitor trait ✅ DONE
 
-Three different operations walk the full `TypeRef` tree with near-identical
-match arms:
+**Resolve** and **instantiate** shared one large structural `match` on
+`TypeRef`. **Emit** (`generator/types`) still has its own match — it produces
+`String`, not `TypeRef`, so it stays separate.
 
-1. **resolve** (`resolve_type_ref`) — fills in target IDs and resolved slots
-2. **instantiate** (`instantiate_type_ref`) — substitutes type parameters
-3. **emit** (`emit_type_ref`) — generates JS artifact text
+**Implemented:**
 
-Each one has a 17-arm match that reconstructs every variant. When a new
-variant is added to `TypeRef`, all three must be updated in lockstep.
+- `shared/type_ref_map.rs` — `TypeRefMap` trait (hooks for variants that differ)
+  and `map_type_ref` with the single full structural `match`. Default
+  `map_member` / `map_fn_param` recurse via `map_type_ref`; `map_type_ref` is
+  `M: TypeRefMap + ?Sized` so those defaults compile.
+- `ResolverTypeRefMap` in `ast/resolve/resolver/resolve.rs` — wires resolve
+  hooks (`resolve_reference`, `resolve_indexed_access_result`, …).
+- `InstantiateTypeRefMap` in `ast/resolve/resolver/instantiate.rs` — substitution
+  and identity rebuilds.
 
-A `TypeRefVisitor` or `TypeRefMapper` trait with a default recursive walk
-would let each operation override only the arms it cares about:
-
-```rust
-trait TypeRefMapper {
-    fn map_reference(&mut self, name: String, target_id: Option<String>, ...) -> TypeRef { ... }
-    fn map_type_ref(&mut self, type_ref: TypeRef) -> TypeRef {
-        // default: recurse structurally, call map_reference for Reference, etc.
-    }
-}
-```
-
-This is the most invasive change and should come **after** the file splits are
-stable. But it would collapse ~400 lines of boilerplate across the three
-call sites.
+Adding a new `TypeRef` variant: update `map_type_ref` once, then adjust emit in
+`generator/types/mod.rs` and any extract walks (e.g. `type_references/walk`).
 
 ---
 
-## 12. Trim the `emitted/` ↔ `model` parallel hierarchy
+## 12. Trim the `emitted/` ↔ `model` parallel hierarchy ✅ DONE
 
-`emitted/types.rs` defines `TastyTypeRef`, `TastyStructuredTypeRef`,
-`TastyMember`, etc. — serde/TS-export mirrors of the internal `TypeRef`,
-`TsMember`, etc. in `model.rs`.
+`emitted/` defines `TastyTypeRef`, `TastyMember`, manifest types, etc. — serde +
+`ts_rs` mirrors of the wire format the JS runtime expects. Internals stay on
+`model.rs` (`TypeRef`, `TsMember`, …).
 
-These exist for good reason (the emitted contract is versioned and decoupled
-from internals), but the **generator currently doesn't use them** — it does
-hand-rolled string-based JS codegen in `generator/types.rs` instead.
+**Decision (hybrid — not A or B wholesale):**
 
-Two possible paths:
+- **Symbol / chunk JSON** stays **hand-rolled string codegen** in
+  `generator/types` and siblings. That path is battle-tested and controls the
+  exact wire format without allocating full `Tasty*` trees.
+- **`emitted/` stays in production** as the **versioned contract**:
+  - **`ts_rs`** exports TypeScript under `js/tasty/generated/` so Rust and JS
+    agree on field names and nesting.
+  - **`TastyManifest` / `TastySymbolIndexEntry` / `TastySymbolKind`** are built
+    in Rust (`generator/bundle/modules/manifest.rs`) and serialized for the
+    bundle — that *is* serde-backed emission, not dead code.
+- **We are not** switching the whole generator to `serde_json` through
+  `TastyTypeRef` (option B) without an explicit product decision: it would be a
+  large behavioral/format change for marginal gain.
 
-- **A.** Keep the string codegen (it's battle-tested), but remove or
-  `#[cfg(test)]`-gate the `emitted/` serde types if nothing actually
-  serializes through them in production.
-- **B.** Switch the generator to serialize through the `emitted/` types
-  (i.e. build `TastyTypeRef` trees, then `serde_json::to_string`). This would
-  eliminate `generator/types.rs` entirely but changes the artifact format.
+So there is only **one** live codegen path for symbols (strings), and **one**
+schema source of truth for the TS/JSON shape (`emitted/` + targeted manifest
+serde). The “parallel hierarchy” is intentional: internals vs wire types.
 
-Decide which path; don't carry both.
+`emitted.rs` keeps `#![allow(dead_code)]` with a module doc: most `Tasty*`
+structs exist for `TS` export only and are never constructed in Rust.
 
 ---
 
@@ -235,7 +234,7 @@ signatures from 7+ params down to 2–3.
 | Item                                                   | Detail                                                                                                                                                     |
 | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **`#[allow(unused_imports)]` on `pub use emitted::*`** | Either use the imports or remove the allow.                                                                                                                |
-| **`emitted.rs` has `#![allow(dead_code)]`**            | Same — audit and remove dead items or drop the allow.                                                                                                      |
+| **`emitted.rs` has `#![allow(dead_code)]`**            | **§12:** keep — contract types are for `ts_rs` / serde shape; see module doc on `emitted.rs`. Manifest types are constructed in `manifest.rs`.             |
 | **`generator/util.rs` string codegen**                 | `emit_object`, `emit_field`, `emit_array` are fine but consider `write!` into a `String` buffer instead of `format!` + `join` for lower alloc pressure.    |
 | **`scanner/model.rs` types**                           | `DiscoveredFile`, `ResolvedModule`, `ScannedFile` are small — verify these aren't duplicating fields already on `ParsedFileAst`.                           |
 | **Tests**                                              | `tests/mod.rs` is a single file. As tests grow, split by pipeline stage: `tests/scanner.rs`, `tests/extract.rs`, `tests/resolve.rs`, `tests/generator.rs`. |
@@ -257,7 +256,7 @@ Do these in dependency order so each step is independently shippable:
 9. ~~**§13** — Drop `parsed_file_view` clone boilerplate~~ **done**
 10. **§14** — Introduce `ExtractionContext`
 11. **§15** — Housekeeping
-12. **§12** — Decide emitted/ vs generator string codegen
-13. **§11** — TypeRef visitor trait (only once everything else is stable)
+12. ~~**§12** — emitted/ vs generator~~ **done** (hybrid; see §12)
+13. ~~**§11** — TypeRef map / visitor~~ **done** (`shared/type_ref_map.rs`; emit stays separate)
 
 Each step should pass `cargo check` and existing tests before moving on.

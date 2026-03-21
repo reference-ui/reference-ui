@@ -3,8 +3,9 @@ use std::collections::BTreeMap;
 use super::Resolver;
 use crate::tasty::ast::model::SymbolShell;
 use crate::tasty::model::{
-    FnParam, TemplateLiteralPart, TsMember, TsTypeParameter, TupleElement, TypeRef,
+    TemplateLiteralPart, TsTypeParameter, TupleElement, TypeOperatorKind, TypeRef,
 };
+use crate::tasty::shared::type_ref_map::{map_type_ref, TypeRefMap};
 
 impl<'a> Resolver<'a> {
     pub(super) fn instantiate_symbol_type_alias(
@@ -49,212 +50,109 @@ impl<'a> Resolver<'a> {
         type_ref: &TypeRef,
         substitutions: &BTreeMap<String, TypeRef>,
     ) -> TypeRef {
-        match type_ref {
-            TypeRef::Reference {
-                name,
-                target_id,
-                source_module,
-                type_arguments,
-            } => {
-                if target_id.is_none() && source_module.is_none() {
-                    if let Some(substitution) = substitutions.get(name) {
-                        return substitution.clone();
-                    }
-                }
+        let mut mapper = InstantiateTypeRefMap { substitutions };
+        map_type_ref(&mut mapper, type_ref.clone())
+    }
+}
 
-                TypeRef::Reference {
-                    name: name.clone(),
-                    target_id: target_id.clone(),
-                    source_module: source_module.clone(),
-                    type_arguments: type_arguments.as_ref().map(|arguments| {
-                        arguments
-                            .iter()
-                            .map(|argument| self.instantiate_type_ref(argument, substitutions))
-                            .collect()
-                    }),
-                }
+struct InstantiateTypeRefMap<'a> {
+    substitutions: &'a BTreeMap<String, TypeRef>,
+}
+
+impl TypeRefMap for InstantiateTypeRefMap<'_> {
+    fn map_reference(
+        &mut self,
+        name: String,
+        target_id: Option<String>,
+        source_module: Option<String>,
+        type_arguments: Option<Vec<TypeRef>>,
+    ) -> TypeRef {
+        if target_id.is_none() && source_module.is_none() {
+            if let Some(substitution) = self.substitutions.get(&name) {
+                return substitution.clone();
             }
-            TypeRef::Union { types } => TypeRef::Union {
-                types: types
-                    .iter()
-                    .map(|item| self.instantiate_type_ref(item, substitutions))
-                    .collect(),
-            },
-            TypeRef::Array { element } => TypeRef::Array {
-                element: Box::new(self.instantiate_type_ref(element, substitutions)),
-            },
-            TypeRef::Tuple { elements } => TypeRef::Tuple {
-                elements: elements
-                    .iter()
-                    .map(|element| TupleElement {
-                        label: element.label.clone(),
-                        optional: element.optional,
-                        rest: element.rest,
-                        element: self.instantiate_type_ref(&element.element, substitutions),
-                    })
-                    .collect(),
-            },
-            TypeRef::Intersection { types } => TypeRef::Intersection {
-                types: types
-                    .iter()
-                    .map(|item| self.instantiate_type_ref(item, substitutions))
-                    .collect(),
-            },
-            TypeRef::Object { members } => TypeRef::Object {
-                members: members
-                    .iter()
-                    .map(|member| self.instantiate_member(member, substitutions))
-                    .collect(),
-            },
-            TypeRef::IndexedAccess {
-                object,
-                index,
-                resolved,
-            } => TypeRef::IndexedAccess {
-                object: Box::new(self.instantiate_type_ref(object, substitutions)),
-                index: Box::new(self.instantiate_type_ref(index, substitutions)),
-                resolved: resolved
-                    .as_ref()
-                    .map(|resolved| Box::new(self.instantiate_type_ref(resolved, substitutions))),
-            },
-            TypeRef::Function {
-                params,
-                return_type,
-            } => TypeRef::Function {
-                params: params
-                    .iter()
-                    .map(|param| self.instantiate_fn_param(param, substitutions))
-                    .collect(),
-                return_type: Box::new(self.instantiate_type_ref(return_type, substitutions)),
-            },
-            TypeRef::Constructor {
-                r#abstract,
-                type_parameters,
-                params,
-                return_type,
-            } => TypeRef::Constructor {
-                r#abstract: *r#abstract,
-                type_parameters: type_parameters.clone(),
-                params: params
-                    .iter()
-                    .map(|param| self.instantiate_fn_param(param, substitutions))
-                    .collect(),
-                return_type: Box::new(self.instantiate_type_ref(return_type, substitutions)),
-            },
-            TypeRef::TypeOperator {
-                operator,
-                target,
-                resolved,
-            } => TypeRef::TypeOperator {
-                operator: *operator,
-                target: Box::new(self.instantiate_type_ref(target, substitutions)),
-                resolved: resolved
-                    .as_ref()
-                    .map(|resolved| Box::new(self.instantiate_type_ref(resolved, substitutions))),
-            },
-            TypeRef::TypeQuery {
-                expression,
-                resolved,
-            } => TypeRef::TypeQuery {
-                expression: expression.clone(),
-                resolved: resolved
-                    .as_ref()
-                    .map(|resolved| Box::new(self.instantiate_type_ref(resolved, substitutions))),
-            },
-            TypeRef::Conditional {
-                check_type,
-                extends_type,
-                true_type,
-                false_type,
-                resolved,
-            } => TypeRef::Conditional {
-                check_type: Box::new(self.instantiate_type_ref(check_type, substitutions)),
-                extends_type: Box::new(self.instantiate_type_ref(extends_type, substitutions)),
-                true_type: Box::new(self.instantiate_type_ref(true_type, substitutions)),
-                false_type: Box::new(self.instantiate_type_ref(false_type, substitutions)),
-                resolved: resolved
-                    .as_ref()
-                    .map(|resolved| Box::new(self.instantiate_type_ref(resolved, substitutions))),
-            },
-            TypeRef::Mapped {
-                type_param,
-                source_type,
-                name_type,
-                optional_modifier,
-                readonly_modifier,
-                value_type,
-            } => TypeRef::Mapped {
-                type_param: type_param.clone(),
-                source_type: Box::new(self.instantiate_type_ref(source_type, substitutions)),
-                name_type: name_type
-                    .as_ref()
-                    .map(|name_type| Box::new(self.instantiate_type_ref(name_type, substitutions))),
-                optional_modifier: *optional_modifier,
-                readonly_modifier: *readonly_modifier,
-                value_type: value_type.as_ref().map(|value_type| {
-                    Box::new(self.instantiate_type_ref(value_type, substitutions))
-                }),
-            },
-            TypeRef::TemplateLiteral { parts, resolved } => TypeRef::TemplateLiteral {
-                parts: parts
-                    .iter()
-                    .map(|part| self.instantiate_template_literal_part(part, substitutions))
-                    .collect(),
-                resolved: resolved
-                    .as_ref()
-                    .map(|resolved| Box::new(self.instantiate_type_ref(resolved, substitutions))),
-            },
-            other => other.clone(),
+        }
+
+        TypeRef::Reference {
+            name,
+            target_id,
+            source_module,
+            type_arguments: type_arguments.map(|args| {
+                args.into_iter().map(|t| map_type_ref(self, t)).collect()
+            }),
         }
     }
 
-    fn instantiate_member(
-        &self,
-        member: &TsMember,
-        substitutions: &BTreeMap<String, TypeRef>,
-    ) -> TsMember {
-        TsMember {
-            name: member.name.clone(),
-            optional: member.optional,
-            readonly: member.readonly,
-            kind: member.kind,
-            description: member.description.clone(),
-            description_raw: member.description_raw.clone(),
-            jsdoc: member.jsdoc.clone(),
-            type_ref: member
-                .type_ref
-                .as_ref()
-                .map(|type_ref| self.instantiate_type_ref(type_ref, substitutions)),
+    fn map_indexed_access(
+        &mut self,
+        object: TypeRef,
+        index: TypeRef,
+        resolved: Option<Box<TypeRef>>,
+    ) -> TypeRef {
+        TypeRef::IndexedAccess {
+            object: Box::new(object),
+            index: Box::new(index),
+            resolved,
         }
     }
 
-    fn instantiate_fn_param(
-        &self,
-        param: &FnParam,
-        substitutions: &BTreeMap<String, TypeRef>,
-    ) -> FnParam {
-        FnParam {
-            name: param.name.clone(),
-            optional: param.optional,
-            type_ref: param
-                .type_ref
-                .as_ref()
-                .map(|type_ref| self.instantiate_type_ref(type_ref, substitutions)),
+    fn map_type_operator(
+        &mut self,
+        operator: TypeOperatorKind,
+        target: TypeRef,
+        resolved: Option<Box<TypeRef>>,
+    ) -> TypeRef {
+        TypeRef::TypeOperator {
+            operator,
+            target: Box::new(target),
+            resolved,
         }
     }
 
-    fn instantiate_template_literal_part(
-        &self,
-        part: &TemplateLiteralPart,
-        substitutions: &BTreeMap<String, TypeRef>,
-    ) -> TemplateLiteralPart {
-        match part {
-            TemplateLiteralPart::Text { value } => TemplateLiteralPart::Text {
-                value: value.clone(),
-            },
-            TemplateLiteralPart::Type { value } => TemplateLiteralPart::Type {
-                value: self.instantiate_type_ref(value, substitutions),
-            },
+    fn map_type_query(
+        &mut self,
+        expression: String,
+        resolved: Option<Box<TypeRef>>,
+    ) -> TypeRef {
+        TypeRef::TypeQuery {
+            expression,
+            resolved,
+        }
+    }
+
+    fn map_conditional(
+        &mut self,
+        check_type: TypeRef,
+        extends_type: TypeRef,
+        true_type: TypeRef,
+        false_type: TypeRef,
+        resolved: Option<Box<TypeRef>>,
+    ) -> TypeRef {
+        TypeRef::Conditional {
+            check_type: Box::new(check_type),
+            extends_type: Box::new(extends_type),
+            true_type: Box::new(true_type),
+            false_type: Box::new(false_type),
+            resolved,
+        }
+    }
+
+    fn map_template_literal(
+        &mut self,
+        parts: Vec<TemplateLiteralPart>,
+        resolved: Option<Box<TypeRef>>,
+    ) -> TypeRef {
+        TypeRef::TemplateLiteral { parts, resolved }
+    }
+
+    fn map_type_parameter(&mut self, param: TsTypeParameter) -> TsTypeParameter {
+        param.clone()
+    }
+
+    fn map_tuple_element(&mut self, element: TupleElement) -> TupleElement {
+        TupleElement {
+            element: map_type_ref(self, element.element),
+            ..element
         }
     }
 }
