@@ -4,9 +4,9 @@ use crate::tasty::shared::typeref_util::property_key_name;
 
 use crate::tasty::model::{JsDoc, TsMember, TsMemberKind, TypeRef};
 
-use super::values::infer_value_type_with_const_context;
+use super::super::values::infer_value_type_with_const_context;
 
-pub(super) fn infer_object_type(
+pub(crate) fn infer_object_type(
     object: &ObjectExpression<'_>,
     source: &str,
     import_bindings: &std::collections::BTreeMap<String, crate::tasty::ast::model::ImportBinding>,

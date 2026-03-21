@@ -12,7 +12,7 @@ killing duplication, and finding the natural seams.
 | 5   | Split resolver `type_ref`     | **Done** (`resolver/resolve.rs`, `instantiate.rs`, `evaluate.rs`) |
 | 6   | Split `extract/types`         | **Done** (`extract/types/mod.rs`, `lower_keywords.rs`, `lower_composites.rs`, `lower_references.rs`) |
 | 7   | Split generator/types         | **Done** (`types/mod.rs`, `emit_compounds.rs`, `emit_collections.rs`, `emit_leaves.rs`) |
-| 8   | Split extract/values          | **Done** (`infer_objects.rs`, `infer_arrays.rs`, `infer_primitives.rs`, `values.rs`) |
+| 8   | Split extract/values          | **Done** (`infer_*.rs`, `values/mod.rs` + `collect`, `infer_dispatch`, `ts_assertions`) |
 | 9   | Shared `typeref_util`         | **Done** (`shared/typeref_util.rs`) |
 | 10  | `crate::tasty::` imports      | **Done** |
 | 11  | TypeRef visitor               | Open   |
@@ -111,9 +111,12 @@ The value inference logic is one long chain. Split:
 | **object inference** — `infer_object_type` (uses shared `property_key_name`)                                                                                                                                                        | `extract/infer_objects.rs`    |
 | **array inference** — `infer_array_type`, `infer_array_element_type`                                                                                                                                                               | `extract/infer_arrays.rs`     |
 | **primitive inference** — `infer_boolean_type_span`, `infer_numeric_type_span`, `infer_string_type_span`                                                                                                                           | `extract/infer_primitives.rs` |
-| **statement collection** — `collect_statement_value_bindings`, `collect_variable_declaration_value_bindings`, `infer_value_type`, `infer_value_type_with_const_context`, `infer_ts_as_expression`, `infer_ts_satisfies_expression` | `extract/values.rs`           |
+| **statement collection** — `collect_statement_value_bindings`, `collect_variable_declaration_value_bindings`, `infer_value_type` | `extract/values/collect.rs`   |
+| **expression dispatch** — `infer_value_type_with_const_context` | `extract/values/infer_dispatch.rs` |
+| **TS assertions** — `infer_ts_as_expression`, `infer_ts_satisfies_expression` | `extract/values/ts_assertions.rs` |
+| **facade** — `pub(super) use` of the above | `extract/values/mod.rs` |
 
-**Implemented:** sibling modules under `extract/`; `infer_value_type_with_const_context` and the `as`/`satisfies` helpers are `pub(super)` on `values` for the infer modules. `slice_span` stays on `extract::mod`.
+**Implemented:** sibling `infer_*` modules under `extract/`; `values/` mirrors `generator/types/` (`collect` / `infer_dispatch` / `ts_assertions` + `mod.rs`). Re-exported APIs use `pub(crate)` in submodules so `pub(super) use` works. `slice_span` stays on `extract::mod`.
 
 ---
 

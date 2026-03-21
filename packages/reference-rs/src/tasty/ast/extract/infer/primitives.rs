@@ -2,9 +2,9 @@ use oxc_span::Span;
 
 use crate::tasty::model::TypeRef;
 
-use super::slice_span;
+use super::super::slice_span;
 
-pub(super) fn infer_boolean_type_span(source: &str, span: Span, const_asserted: bool) -> TypeRef {
+pub(crate) fn infer_boolean_type_span(source: &str, span: Span, const_asserted: bool) -> TypeRef {
     if const_asserted {
         return TypeRef::Literal {
             value: slice_span(source, span).to_string(),
@@ -16,7 +16,7 @@ pub(super) fn infer_boolean_type_span(source: &str, span: Span, const_asserted: 
     }
 }
 
-pub(super) fn infer_numeric_type_span(source: &str, span: Span, const_asserted: bool) -> TypeRef {
+pub(crate) fn infer_numeric_type_span(source: &str, span: Span, const_asserted: bool) -> TypeRef {
     if const_asserted {
         return TypeRef::Literal {
             value: slice_span(source, span).to_string(),
@@ -28,7 +28,7 @@ pub(super) fn infer_numeric_type_span(source: &str, span: Span, const_asserted: 
     }
 }
 
-pub(super) fn infer_string_type_span(source: &str, span: Span, const_asserted: bool) -> TypeRef {
+pub(crate) fn infer_string_type_span(source: &str, span: Span, const_asserted: bool) -> TypeRef {
     if const_asserted {
         return TypeRef::Literal {
             value: slice_span(source, span).to_string(),

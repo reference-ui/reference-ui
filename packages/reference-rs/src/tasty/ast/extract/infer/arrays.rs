@@ -5,13 +5,11 @@ use crate::tasty::shared::typeref_util::collapse_union;
 
 use crate::tasty::model::{TupleElement, TypeRef};
 
-use super::infer_objects::infer_object_type;
-use super::infer_primitives::{
-    infer_boolean_type_span, infer_numeric_type_span, infer_string_type_span,
-};
-use super::values::{infer_ts_as_expression, infer_ts_satisfies_expression};
+use super::super::values::{infer_ts_as_expression, infer_ts_satisfies_expression};
+use super::objects::infer_object_type;
+use super::primitives::{infer_boolean_type_span, infer_numeric_type_span, infer_string_type_span};
 
-pub(super) fn infer_array_type(
+pub(crate) fn infer_array_type(
     array: &ArrayExpression<'_>,
     source: &str,
     import_bindings: &std::collections::BTreeMap<String, crate::tasty::ast::model::ImportBinding>,
@@ -53,7 +51,7 @@ pub(super) fn infer_array_type(
     })
 }
 
-pub(super) fn infer_array_element_type(
+fn infer_array_element_type(
     element: &ArrayExpressionElement<'_>,
     source: &str,
     import_bindings: &std::collections::BTreeMap<String, crate::tasty::ast::model::ImportBinding>,

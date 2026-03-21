@@ -2,91 +2,19 @@ use std::collections::BTreeMap;
 
 use oxc_ast::ast::{
     Comment, TSCallSignatureDeclaration, TSConstructSignatureDeclaration, TSIndexSignature,
-    TSMethodSignature, TSPropertySignature, TSSignature,
+    TSMethodSignature, TSPropertySignature,
 };
 use oxc_span::GetSpan;
 
 use crate::tasty::shared::typeref_util::property_key_name as property_key_name_opt;
 
-use super::comments::{leading_comment_for_span, parse_comment_metadata};
-use super::slice_span;
-use super::types::type_to_ref;
+use super::super::comments::{leading_comment_for_span, parse_comment_metadata};
+use super::super::slice_span;
+use super::super::types::type_to_ref;
 use crate::tasty::ast::model::ImportBinding;
 use crate::tasty::model::{TsMember, TsMemberKind};
 
-pub(super) fn members_from_signatures(
-    signatures: &[TSSignature<'_>],
-    source: &str,
-    comments: &[Comment],
-    container_start: Option<u32>,
-    import_bindings: &BTreeMap<String, ImportBinding>,
-    current_module_specifier: &str,
-    current_library: &str,
-) -> Vec<TsMember> {
-    let all_member_starts: Vec<u32> = signatures
-        .iter()
-        .map(|signature| signature.span().start)
-        .collect();
-
-    signatures
-        .iter()
-        .map(|signature| {
-            let exclude = member_exclusion_starts(signature, &all_member_starts, container_start);
-
-            match signature {
-                TSSignature::TSPropertySignature(property) => property_signature_to_member(
-                    property,
-                    source,
-                    comments,
-                    exclude.as_deref(),
-                    import_bindings,
-                    current_module_specifier,
-                    current_library,
-                ),
-                TSSignature::TSMethodSignature(method) => method_signature_to_member(
-                    method,
-                    source,
-                    comments,
-                    exclude.as_deref(),
-                    import_bindings,
-                    current_module_specifier,
-                    current_library,
-                ),
-                TSSignature::TSCallSignatureDeclaration(call) => call_signature_to_member(
-                    call,
-                    source,
-                    comments,
-                    exclude.as_deref(),
-                    import_bindings,
-                    current_module_specifier,
-                    current_library,
-                ),
-                TSSignature::TSIndexSignature(index) => index_signature_to_member(
-                    index,
-                    source,
-                    comments,
-                    exclude.as_deref(),
-                    import_bindings,
-                    current_module_specifier,
-                    current_library,
-                ),
-                TSSignature::TSConstructSignatureDeclaration(decl) => {
-                    construct_signature_to_member(
-                        decl,
-                        source,
-                        comments,
-                        exclude.as_deref(),
-                        import_bindings,
-                        current_module_specifier,
-                        current_library,
-                    )
-                }
-            }
-        })
-        .collect()
-}
-
-pub(super) fn property_signature_to_member(
+pub(crate) fn property_signature_to_member(
     property: &TSPropertySignature<'_>,
     source: &str,
     comments: &[Comment],
@@ -125,7 +53,7 @@ pub(super) fn property_signature_to_member(
     }
 }
 
-pub(super) fn method_signature_to_member(
+pub(crate) fn method_signature_to_member(
     method: &TSMethodSignature<'_>,
     source: &str,
     comments: &[Comment],
@@ -164,7 +92,7 @@ pub(super) fn method_signature_to_member(
     }
 }
 
-pub(super) fn call_signature_to_member(
+pub(crate) fn call_signature_to_member(
     call: &TSCallSignatureDeclaration<'_>,
     source: &str,
     comments: &[Comment],
@@ -201,7 +129,7 @@ pub(super) fn call_signature_to_member(
     }
 }
 
-pub(super) fn construct_signature_to_member(
+pub(crate) fn construct_signature_to_member(
     decl: &TSConstructSignatureDeclaration<'_>,
     source: &str,
     comments: &[Comment],
@@ -238,7 +166,7 @@ pub(super) fn construct_signature_to_member(
     }
 }
 
-pub(super) fn index_signature_to_member(
+pub(crate) fn index_signature_to_member(
     index: &TSIndexSignature<'_>,
     source: &str,
     comments: &[Comment],
@@ -271,23 +199,4 @@ pub(super) fn index_signature_to_member(
         jsdoc: comment.jsdoc,
         type_ref,
     }
-}
-
-fn member_exclusion_starts(
-    current_signature: &TSSignature<'_>,
-    all_member_starts: &[u32],
-    container_start: Option<u32>,
-) -> Option<Vec<u32>> {
-    let current_start = current_signature.span().start;
-    let mut exclude: Vec<u32> = all_member_starts
-        .iter()
-        .copied()
-        .filter(|&start| start != current_start)
-        .collect();
-
-    if let Some(container_start) = container_start {
-        exclude.insert(0, container_start);
-    }
-
-    (!exclude.is_empty()).then_some(exclude)
 }
