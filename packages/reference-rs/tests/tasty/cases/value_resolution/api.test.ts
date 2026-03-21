@@ -12,6 +12,7 @@ describe('value_resolution tasty api', () => {
     const sizeValue = await api.loadSymbolByName('SizeValue')
     const toneLabel = await api.loadSymbolByName('ToneLabel')
     const variantTone = await api.loadSymbolByName('VariantTone')
+    const concreteVariantMeta = await api.loadSymbolByName('ConcreteVariantMeta')
     const intentFromInterface = await api.loadSymbolByName('IntentFromInterface')
     const withValueResolution = await api.loadSymbolByName('WithValueResolution')
 
@@ -62,6 +63,22 @@ describe('value_resolution tasty api', () => {
       "'tone-ghost'",
       "'tone-outline'",
     ])
+
+    const concreteVariantMetaRaw = concreteVariantMeta.getUnderlyingType()?.getRaw() as {
+      kind?: string
+      resolved?: { kind?: string; types?: Array<{ kind?: string; members?: Array<{ name?: string }> }> }
+    }
+    expect(concreteVariantMetaRaw.kind).toBe('conditional')
+    expect(concreteVariantMetaRaw.resolved?.kind).toBe('union')
+    expect(concreteVariantMetaRaw.resolved?.types?.map((item) => item.kind)).toEqual([
+      'object',
+      'object',
+    ])
+    expect(
+      concreteVariantMetaRaw.resolved?.types?.map((item) =>
+        item.members?.map((member) => member.name).join(','),
+      ),
+    ).toEqual(['emphasis,fill', 'emphasis,fill'])
 
     const intentFromInterfaceRaw = intentFromInterface.getUnderlyingType()?.getRaw() as {
       kind?: string

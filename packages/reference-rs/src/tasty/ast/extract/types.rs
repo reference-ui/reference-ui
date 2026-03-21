@@ -256,6 +256,7 @@ impl<'a> LoweringContext<'a> {
             extends_type: Box::new(self.lower_type(&conditional.extends_type)),
             true_type: Box::new(self.lower_type(&conditional.true_type)),
             false_type: Box::new(self.lower_type(&conditional.false_type)),
+            resolved: None,
         }
     }
 

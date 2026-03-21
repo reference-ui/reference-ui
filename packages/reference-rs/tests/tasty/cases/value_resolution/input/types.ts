@@ -1,5 +1,5 @@
 /**
- * Value-derived resolution scenario for keyof/typeof/indexed access/template literals.
+ * Value-derived and local-alias resolution scenarios.
  */
 
 const intents = {
@@ -15,6 +15,16 @@ export type SizeValue = (typeof sizes)[number]
 export type ToneLabel = `tone-${(typeof sizes)[number]}`
 export type Variant = 'solid' | 'ghost' | 'outline'
 export type VariantTone = `tone-${Variant}`
+export type VariantMeta<T extends string> = T extends 'solid'
+  ? {
+      emphasis: 'high'
+      fill: true
+    }
+  : {
+      emphasis: 'low'
+      fill: false
+    }
+export type ConcreteVariantMeta = VariantMeta<Variant>
 export type IntentFromInterface = WithValueResolution['intent']
 
 export interface WithValueResolution {

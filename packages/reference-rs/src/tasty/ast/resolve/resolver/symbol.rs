@@ -1,11 +1,12 @@
 use super::super::super::super::model::{
-    FnParam, TemplateLiteralPart, TsMember, TsSymbol, TsTypeParameter,
+    FnParam, TemplateLiteralPart, TsMember, TsSymbol, TsSymbolKind, TsTypeParameter, TypeRef,
 };
 use super::super::super::model::SymbolShell;
 use super::Resolver;
 
 impl<'a> Resolver<'a> {
     pub(in super::super) fn resolve_symbol(self, mut symbol: SymbolShell) -> TsSymbol {
+        let symbol_kind = symbol.kind.clone();
         symbol.extends = symbol
             .extends
             .into_iter()
@@ -13,7 +14,7 @@ impl<'a> Resolver<'a> {
             .collect();
         symbol.underlying = symbol
             .underlying
-            .map(|type_ref| self.resolve_type_ref(type_ref));
+            .map(|type_ref| self.resolve_symbol_underlying(symbol_kind.clone(), type_ref));
         symbol.defined_members = symbol
             .defined_members
             .into_iter()
@@ -72,6 +73,24 @@ impl<'a> Resolver<'a> {
                 .type_ref
                 .map(|type_ref| self.resolve_type_ref(type_ref)),
             ..param
+        }
+    }
+
+    fn resolve_symbol_underlying(&self, symbol_kind: TsSymbolKind, type_ref: TypeRef) -> TypeRef {
+        let resolved = self.resolve_type_ref(type_ref);
+
+        if symbol_kind != TsSymbolKind::TypeAlias {
+            return resolved;
+        }
+
+        match &resolved {
+            TypeRef::Reference {
+                type_arguments: Some(_),
+                ..
+            } => self
+                .dereference_local_reference(&resolved)
+                .unwrap_or(resolved),
+            _ => resolved,
         }
     }
 

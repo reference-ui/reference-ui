@@ -67,9 +67,6 @@ describe('Reference component', () => {
     expectVisibleText('tone-outline')
     expectVisibleText('{ [K in DocsReferenceButtonVariant as `tone-${K}`]: K }')
     expectVisibleText('{ compact: 4; comfortable: 8; spacious: 12 }')
-    expectVisibleText(
-      "T extends 'solid' ? { emphasis: 'high'; fill: true } : { emphasis: 'low'; fill: false }",
-    )
 
     expect(screen.getAllByText('@default').length).toBeGreaterThanOrEqual(3)
     expect(screen.getByText('"solid"')).toBeInTheDocument()
@@ -217,13 +214,13 @@ describe('Reference component', () => {
     expectTextAbsent('Last resolved payload when the state is successful.')
   })
 
-  it('renders concrete conditional aliases in their declared form', async () => {
+  it('renders concrete conditional aliases as resolved unions when tasty emits them', async () => {
     await renderReference('DocsReferenceButtonVariantMeta')
 
     expect(screen.getByText('DocsReferenceButtonVariantMeta')).toBeInTheDocument()
     expect(screen.getByText('Type alias')).toBeInTheDocument()
     expectVisibleText(
-      'DocsReferenceVariantMeta<DocsReferenceButtonVariant>',
+      "{ emphasis: 'high'; fill: true } | { emphasis: 'low'; fill: false }",
     )
     expectTextAbsent('Last resolved payload when the state is successful.')
   })

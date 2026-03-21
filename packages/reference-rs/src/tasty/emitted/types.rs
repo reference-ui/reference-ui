@@ -107,6 +107,9 @@ pub enum TastyStructuredTypeRef {
         extends_type: Box<TastyTypeRef>,
         true_type: Box<TastyTypeRef>,
         false_type: Box<TastyTypeRef>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        resolved: Option<Box<TastyTypeRef>>,
     },
     Mapped {
         type_param: String,

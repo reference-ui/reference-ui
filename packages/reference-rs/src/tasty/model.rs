@@ -209,6 +209,7 @@ pub enum TypeRef {
         extends_type: Box<TypeRef>,
         true_type: Box<TypeRef>,
         false_type: Box<TypeRef>,
+        resolved: Option<Box<TypeRef>>,
     },
     /// Mapped type like `{ [K in keyof T]?: T[K] }`; preserved structurally without evaluation.
     Mapped {

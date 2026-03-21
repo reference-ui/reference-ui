@@ -46,6 +46,10 @@ The browser model now preserves and renders more of the `tasty` type graph:
   `DocsReferenceButtonProps['currentIntent']` -> `'primary' | 'danger'` and
   `` `tone-${DocsReferenceButtonVariant}` `` ->
   `'tone-solid' | 'tone-ghost' | 'tone-outline'`
+- instantiated local generic conditional aliases reduced by `tasty` when the
+  type arguments are concrete enough to evaluate honestly, such as
+  `DocsReferenceVariantMeta<DocsReferenceButtonVariant>` ->
+  `{ emphasis: 'high'; fill: true } | { emphasis: 'low'; fill: false }`
 - broader JSDoc rendering, including non-`@param` tags like `@returns`,
   `@deprecated`, `@see`, `@example`, and `@remarks`
 - inherited member origin tracking with per-row labels like
@@ -80,6 +84,8 @@ browser:
 
 - evaluated template-literal unions sourced from imported or generic-backed
   unions beyond local dereferenceable aliases
+- conditional and mapped expansion that depends on imported or still-unresolved
+  generic inputs
 - selective utility-type evaluation where the reduced result is materially more
   useful than the declared form
 - deeper merged previews for intersections and utility-expanded object aliases
@@ -88,10 +94,10 @@ browser:
 
 This is the recommended sequence for the next passes:
 
-1. template literal evaluation beyond local/value-derived unions
+1. mapped-type expansion when the key/value space can be evaluated honestly
 2. intersection rendering and safe merged previews
 3. richer discriminated union rendering
-4. richer generic display improvements
+4. richer generic display improvements beyond concrete local instantiation
 5. selected utility types:
    `Pick`, `Omit`, `Partial`, `Required`, `Readonly`, maybe `Record`
 6. overload rendering if target libraries need it
