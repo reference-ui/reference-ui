@@ -3,7 +3,7 @@ import { MonoText } from './shared/MonoText'
 
 export function MemberType({ typeLabel }: { typeLabel: string }) {
   return (
-    <Div paddingTop="reference.xs">
+    <Div>
       <MonoText color="reference.muted">{typeLabel}</MonoText>
     </Div>
   )

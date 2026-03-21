@@ -14,11 +14,30 @@ The `Reference` component renders API documentation from the generated Tasty man
 ## Define a public type
 
 ```ts
+/**
+ * Public button props used to exercise the live reference table.
+ */
 export interface DocsReferenceButtonProps {
+  /** Visible text shown inside the button. */
   label: string
+
+  /** Disables pointer and keyboard interaction. */
   disabled?: boolean
-  variant: 'solid' | 'ghost'
-  icon?: 'plus' | 'minus'
+
+  /**
+   * Visual treatment for the button shell.
+   *
+   * @default "solid"
+   */
+  variant?: DocsReferenceButtonVariant
+
+  /**
+   * Called when the button is pressed.
+   *
+   * @param event - Pointer event metadata from the trigger interaction.
+   * @param state - Snapshot of the button state at click time.
+   */
+  onPress?: (event: DocsReferencePressEvent, state: DocsReferenceButtonState) => void
 }
 ```
 
@@ -41,3 +60,17 @@ Type aliases work too, but they render as a definition block instead of a member
 ```tsx
 <Reference name="DocsReferenceButtonVariant" />
 ```
+
+<Reference name="DocsReferenceButtonVariant" />
+
+More complex aliases are useful for seeing the current edges of the model:
+
+```tsx
+<Reference name="DocsReferenceButtonSpacing" />
+<Reference name="DocsReferenceToneLabels" />
+<Reference name="DocsReferenceCurrentIntent" />
+```
+
+<Reference name="DocsReferenceButtonSpacing" />
+<Reference name="DocsReferenceToneLabels" />
+<Reference name="DocsReferenceCurrentIntent" />
