@@ -1,8 +1,139 @@
-export interface DocsReferenceButtonProps {
-  label: string
-  disabled?: boolean
-  variant: 'solid' | 'ghost' | 'another'
-  icon?: 'plus' | 'minus'
+export const docsReferenceTheme = {
+  spacing: {
+    compact: 4,
+    comfortable: 8,
+    spacious: 12,
+  },
+  intents: {
+    primary: 'blue',
+    danger: 'red',
+  },
+} as const
+
+export type DocsReferenceButtonVariant = 'solid' | 'ghost' | 'outline'
+export type DocsReferenceButtonSize = 'sm' | 'md' | 'lg'
+export type DocsReferenceIconName = 'plus' | 'minus' | 'chevron-down'
+export type DocsReferenceButtonSpacing = typeof docsReferenceTheme.spacing
+export type DocsReferenceButtonPadding = [inline: number, block: number]
+export type DocsReferenceButtonIntent = keyof typeof docsReferenceTheme.intents
+export type DocsReferenceToneKey = `tone-${DocsReferenceButtonVariant}`
+
+export interface DocsReferencePressEvent {
+  pointerType: 'mouse' | 'touch' | 'keyboard'
+  shiftKey: boolean
 }
 
-export type DocsReferenceButtonVariant = DocsReferenceButtonProps['variant']
+export interface DocsReferenceButtonState {
+  pressed: boolean
+  loading: boolean
+  intent: DocsReferenceButtonIntent
+}
+
+export type DocsReferenceToneLabels = {
+  [K in DocsReferenceButtonVariant as `tone-${K}`]: K
+}
+
+export type DocsReferenceVariantMeta<T extends string> = T extends 'solid'
+  ? {
+      emphasis: 'high'
+      fill: true
+    }
+  : {
+      emphasis: 'low'
+      fill: false
+    }
+
+/**
+ * Public button props used to exercise the live reference table.
+ *
+ * This example intentionally mixes literals, aliases, callbacks, tuples, type
+ * queries, indexed access, mapped types, and conditional types so we can see
+ * what the current reference browser handles well.
+ */
+export interface DocsReferenceButtonProps {
+  /**
+   * Visible text shown inside the button.
+   */
+  label: string
+
+  /**
+   * Disables pointer and keyboard interaction.
+   */
+  disabled?: boolean
+
+  /**
+   * Visual treatment for the button shell.
+   *
+   * @default "solid"
+   */
+  variant?: DocsReferenceButtonVariant
+
+  /**
+   * Size preset applied to spacing and icon scale.
+   *
+   * @default "md"
+   */
+  size?: DocsReferenceButtonSize
+
+  /**
+   * Optional icon rendered next to the label.
+   */
+  icon?: DocsReferenceIconName
+
+  /**
+   * Placement for the optional icon.
+   *
+   * @default "start"
+   */
+  iconPosition?: 'start' | 'end'
+
+  /**
+   * Explicit inline and block padding override.
+   */
+  padding?: DocsReferenceButtonPadding
+
+  /**
+   * Theme spacing token source used by the component.
+   */
+  spacingScale?: DocsReferenceButtonSpacing
+
+  /**
+   * Current visual intent pulled from the state model.
+   */
+  currentIntent?: DocsReferenceButtonState['intent']
+
+  /**
+   * Labels keyed by the generated tone name.
+   */
+  toneLabels?: DocsReferenceToneLabels
+
+  /**
+   * Conditional metadata derived from the current variant.
+   */
+  variantMeta?: DocsReferenceVariantMeta<DocsReferenceButtonVariant>
+
+  /**
+   * Called when the button is pressed.
+   *
+   * @param event - Pointer event metadata from the trigger interaction.
+   * @param state - Snapshot of the button state at click time.
+   */
+  onPress?: (event: DocsReferencePressEvent, state: DocsReferenceButtonState) => void
+
+  /**
+   * Render override for the icon slot.
+   *
+   * @param icon - Icon name that would be rendered by default.
+   * @param size - Resolved button size.
+   */
+  renderIcon?: (icon: DocsReferenceIconName, size: DocsReferenceButtonSize) => string
+
+  /**
+   * Optional formatter for the visible label.
+   *
+   * @param value - Current label text.
+   */
+  formatLabel?: (value: string) => string
+}
+
+export type DocsReferenceCurrentIntent = DocsReferenceButtonProps['currentIntent']

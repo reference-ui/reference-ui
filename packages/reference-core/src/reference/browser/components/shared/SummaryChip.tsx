@@ -20,16 +20,18 @@ export function SummaryChip({
       css={{
         display: 'inline-flex',
         alignItems: 'center',
-        minHeight: '2rem',
+        minHeight: '1.5rem',
         width: 'fit-content',
         maxWidth: '100%',
-        paddingInline: '0.75rem',
+        paddingInline: '0.2rem',
         borderWidth: '1px',
         borderStyle: 'solid',
         borderColor: isAccent ? 'reference.primary' : 'reference.primarySoftBorder',
         borderRadius: radius === 'pill' ? '9999px' : '0.5rem',
         background: isAccent ? 'reference.primary' : 'reference.primarySoftBackground',
-        color: isAccent ? 'reference.primaryForeground' : 'reference.primarySoftForeground',
+        color: isAccent
+          ? 'reference.primaryForeground'
+          : 'reference.primarySoftForeground',
       }}
     >
       <MonoText>{children}</MonoText>

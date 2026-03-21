@@ -3,7 +3,7 @@ import { MonoText } from './shared/MonoText'
 
 export function MemberName({ name }: { name: string }) {
   return (
-    <Div paddingTop="reference.xs">
+    <Div>
       <MonoText>{name}</MonoText>
     </Div>
   )
