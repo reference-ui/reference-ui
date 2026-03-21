@@ -90,18 +90,11 @@ describe('sync/events', () => {
     const { initEvents } = await loadEventsModule()
     initEvents()
 
-    const pair = [...onceAllHandlers.entries()].find(
-      ([, v]) =>
-        v.events.length === 2 &&
-        v.events.includes('system:config:complete') &&
-        v.events.includes('system:panda:ready')
-    )
-    expect(pair).toBeDefined()
-    const [, { handler }] = pair!
+    fireOn('system:config:complete')
+    expect(emit).not.toHaveBeenCalledWith('run:panda:codegen', undefined)
 
     emit.mockClear()
-    handler()
-
+    fireOn('system:panda:ready')
     expect(emit).toHaveBeenCalledWith('run:panda:codegen', undefined)
   })
 
@@ -127,6 +120,21 @@ describe('sync/events', () => {
     fireOn('reference:component:copied')
 
     expect(emit).toHaveBeenCalledWith('virtual:complete', {})
+  })
+
+  it('reruns panda codegen when config completes again after panda is ready', async () => {
+    const { initEvents } = await loadEventsModule()
+    initEvents()
+
+    fireOn('system:panda:ready')
+    emit.mockClear()
+
+    fireOn('system:config:complete')
+    expect(emit).toHaveBeenCalledWith('run:panda:codegen', undefined)
+
+    emit.mockClear()
+    fireOn('system:config:complete')
+    expect(emit).toHaveBeenCalledWith('run:panda:codegen', undefined)
   })
 
   it('virtual:complete triggers config and reference work immediately when both workers are ready', async () => {
@@ -157,6 +165,22 @@ describe('sync/events', () => {
 
     emit.mockClear()
     fireOn('reference:ready')
+    expect(emit).toHaveBeenCalledWith('run:reference:build', {})
+  })
+
+  it('virtual fs changes trigger config and reference rebuilds after initial startup completes', async () => {
+    const { initEvents } = await loadEventsModule()
+    initEvents()
+
+    fireOn('virtual:complete')
+    emit.mockClear()
+
+    fireOn('virtual:fs:change', {
+      event: 'change',
+      path: '/workspace/app/.reference-ui/virtual/src/button.tsx',
+    })
+
+    expect(emit).toHaveBeenCalledWith('run:system:config', undefined)
     expect(emit).toHaveBeenCalledWith('run:reference:build', {})
   })
 
