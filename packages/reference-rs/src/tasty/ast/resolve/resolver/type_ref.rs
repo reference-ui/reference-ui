@@ -1,5 +1,5 @@
-use super::super::super::super::model::{TupleElement, TypeRef};
-use super::super::super::model::ImportBindingKind;
+use super::super::super::super::model::{TsSymbolKind, TupleElement, TypeRef};
+use super::super::super::model::{ImportBindingKind, SymbolShell};
 use super::super::names::{namespace_export_lookup_name, reference_lookup_name};
 use super::Resolver;
 
@@ -215,7 +215,7 @@ impl<'a> Resolver<'a> {
     ) -> Option<TypeRef> {
         match operator {
             super::super::super::super::model::TypeOperatorKind::Keyof => {
-                let target = resolved_or_self(target);
+                let target = self.reduce_type_for_evaluation(target);
                 let TypeRef::Object { members } = target else {
                     return None;
                 };
@@ -232,7 +232,11 @@ impl<'a> Resolver<'a> {
     }
 
     fn resolve_indexed_access_result(&self, object: &TypeRef, index: &TypeRef) -> Option<TypeRef> {
-        resolve_indexed_access(resolved_or_self(object), resolved_or_self(index))
+        let object = self.reduce_type_for_evaluation(object);
+        let index = self.reduce_type_for_evaluation(index);
+
+        resolve_indexed_access(&object, &index)
+            .map(|resolved| self.reduce_type_for_evaluation(&resolved))
     }
 
     fn resolve_template_literal_result(
@@ -247,7 +251,7 @@ impl<'a> Resolver<'a> {
                     vec![value.clone()]
                 }
                 super::super::super::super::model::TemplateLiteralPart::Type { value } => {
-                    literal_fragments_from_type(value)?
+                    self.literal_fragments_from_type(value)?
                 }
             };
 
@@ -266,6 +270,98 @@ impl<'a> Resolver<'a> {
                 .map(|variant| string_literal_type(&variant))
                 .collect(),
         )
+    }
+
+    fn reduce_type_for_evaluation(&self, type_ref: &TypeRef) -> TypeRef {
+        let mut visited = Vec::new();
+        self.reduce_type_for_evaluation_inner(type_ref, &mut visited)
+    }
+
+    fn reduce_type_for_evaluation_inner(
+        &self,
+        type_ref: &TypeRef,
+        visited: &mut Vec<String>,
+    ) -> TypeRef {
+        let current = resolved_or_self(type_ref);
+
+        let Some(visit_key) = self.reference_visit_key(current) else {
+            return current.clone();
+        };
+        if visited.contains(&visit_key) {
+            return current.clone();
+        }
+
+        let Some(dereferenced) = self.dereference_local_reference(current) else {
+            return current.clone();
+        };
+
+        visited.push(visit_key);
+        let reduced = self.reduce_type_for_evaluation_inner(&dereferenced, visited);
+        visited.pop();
+
+        reduced
+    }
+
+    fn dereference_local_reference(&self, type_ref: &TypeRef) -> Option<TypeRef> {
+        let TypeRef::Reference {
+            name, target_id, ..
+        } = type_ref
+        else {
+            return None;
+        };
+
+        let symbol = self.lookup_local_symbol(target_id.as_deref(), name)?;
+        match symbol.kind {
+            TsSymbolKind::TypeAlias => symbol
+                .underlying
+                .clone()
+                .map(|underlying| self.resolve_type_ref(underlying)),
+            TsSymbolKind::Interface => Some(TypeRef::Object {
+                members: symbol
+                    .defined_members
+                    .clone()
+                    .into_iter()
+                    .map(|member| self.resolve_member(member))
+                    .collect(),
+            }),
+        }
+    }
+
+    fn lookup_local_symbol<'b>(
+        &'b self,
+        target_id: Option<&str>,
+        name: &str,
+    ) -> Option<&'b SymbolShell> {
+        if let Some(target_id) = target_id {
+            return self.parsed.exports.iter().find(|symbol| symbol.id == target_id);
+        }
+
+        self.parsed.exports.iter().find(|symbol| symbol.name == name)
+    }
+
+    fn reference_visit_key(&self, type_ref: &TypeRef) -> Option<String> {
+        let TypeRef::Reference {
+            name, target_id, ..
+        } = type_ref
+        else {
+            return None;
+        };
+
+        Some(target_id.clone().unwrap_or_else(|| name.clone()))
+    }
+
+    fn literal_fragments_from_type(&self, type_ref: &TypeRef) -> Option<Vec<String>> {
+        match self.reduce_type_for_evaluation(type_ref) {
+            TypeRef::Literal { value } => Some(vec![literal_fragment(&value)?]),
+            TypeRef::Union { types } => {
+                let mut fragments = Vec::new();
+                for item in types {
+                    fragments.extend(self.literal_fragments_from_type(&item)?);
+                }
+                Some(fragments)
+            }
+            _ => None,
+        }
     }
 }
 
@@ -416,20 +512,6 @@ fn parse_numeric_literal(value: &str) -> Option<usize> {
         trimmed
     };
     normalized.parse::<usize>().ok()
-}
-
-fn literal_fragments_from_type(type_ref: &TypeRef) -> Option<Vec<String>> {
-    match resolved_or_self(type_ref) {
-        TypeRef::Literal { value } => Some(vec![literal_fragment(value)?]),
-        TypeRef::Union { types } => {
-            let mut fragments = Vec::new();
-            for item in types {
-                fragments.extend(literal_fragments_from_type(item)?);
-            }
-            Some(fragments)
-        }
-        _ => None,
-    }
 }
 
 fn literal_fragment(value: &str) -> Option<String> {

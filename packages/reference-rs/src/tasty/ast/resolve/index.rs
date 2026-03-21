@@ -139,7 +139,7 @@ fn parsed_file_view(parsed: &ParsedFileAst) -> ParsedFileAst {
         import_bindings: parsed.import_bindings.clone(),
         value_bindings: parsed.value_bindings.clone(),
         export_bindings: parsed.export_bindings.clone(),
-        exports: Vec::new(),
+        exports: parsed.exports.clone(),
     }
 }
 
