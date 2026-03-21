@@ -10,16 +10,16 @@ import type { ReferenceWorkerPayload } from './worker-types'
  */
 export default async function runReference(payload: ReferenceWorkerPayload): Promise<never> {
   on('run:reference:build', (buildPayload) => onRunBuild(payload, buildPayload))
-  on('run:reference:copy-browser', async ({ virtualDir }) => {
+  on('run:reference:component:copy', async ({ virtualDir }) => {
     try {
       const paths = await copyReferenceBrowserToVirtual(virtualDir)
       for (const path of paths) {
         emit('virtual:fs:change', { event: 'add', path })
       }
-      emit('reference:browser:virtual-ready', {})
+      emit('reference:component:copied', {})
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      emit('reference:browser:virtual-failed', { message })
+      emit('reference:component:copy-failed', { message })
     }
   })
   emit('reference:ready')

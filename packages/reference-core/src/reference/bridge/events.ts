@@ -3,12 +3,12 @@ import type { TastyBuildDiagnostic } from '@reference-ui/rust/tasty/build'
 export type ReferenceEvents = {
   /** Emitted when the reference worker is ready to receive triggers. */
   'reference:ready': Record<string, never>
-  /** Virtual worker requests reference-browser files into `.reference-ui/virtual` (Panda scan). */
-  'run:reference:copy-browser': { virtualDir: string }
-  /** Reference browser slice copied into virtual; virtual copy-all may continue. */
-  'reference:browser:virtual-ready': Record<string, never>
-  /** Copy failed (e.g. missing source path). */
-  'reference:browser:virtual-failed': { message: string }
+  /** Sync requests copying the reference component into `.reference-ui/virtual` for Panda scan. */
+  'run:reference:component:copy': { virtualDir: string }
+  /** Reference component copied into virtual; downstream virtual work may continue. */
+  'reference:component:copied': Record<string, never>
+  /** Reference component copy failed (e.g. missing source path). */
+  'reference:component:copy-failed': { message: string }
   /** Run a full reference build from the virtual filesystem. */
   'run:reference:build': { name?: string }
   /** Emitted when a reference build completes. */
