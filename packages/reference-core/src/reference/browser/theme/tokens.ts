@@ -1,25 +1,45 @@
-import { referenceTheme, type ReferenceThemeTokenDefinition } from './vars'
+import type { ReferenceTokenConfig } from '../../../system/api'
 
-export function token(definition: ReferenceThemeTokenDefinition): string {
-  return `var(${definition.variable}, ${definition.fallback})`
-}
-
-export const referenceTokens = {
-  color: {
-    foreground: token(referenceTheme.color.foreground),
-    muted: token(referenceTheme.color.muted),
-    border: token(referenceTheme.color.border),
-    background: token(referenceTheme.color.background),
-    subtleBackground: token(referenceTheme.color.subtleBackground),
+export const referenceBrowserTokenConfig = {
+  colors: {
+    reference: {
+      foreground: {
+        value: '#111827',
+        dark: '#f9fafb',
+      },
+      muted: {
+        value: '#4b5563',
+        dark: '#9ca3af',
+      },
+      border: {
+        value: '#d1d5db',
+        dark: '#374151',
+      },
+      background: {
+        value: '#ffffff',
+        dark: '#111827',
+      },
+      subtleBackground: {
+        value: '#f9fafb',
+        dark: '#1f2937',
+      },
+    },
   },
-  space: {
-    xxs: token(referenceTheme.space.xxs),
-    xs: token(referenceTheme.space.xs),
-    sm: token(referenceTheme.space.sm),
-    md: token(referenceTheme.space.md),
-    lg: token(referenceTheme.space.lg),
+  spacing: {
+    reference: {
+      xxs: { value: '0.125rem' },
+      xs: { value: '0.25rem' },
+      sm: { value: '0.5rem' },
+      md: { value: '0.75rem' },
+      lg: { value: '1rem' },
+    },
   },
-  font: {
-    mono: token(referenceTheme.font.mono),
+  fonts: {
+    reference: {
+      mono: {
+        value:
+          'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace',
+      },
+    },
   },
-} as const
+} as const satisfies ReferenceTokenConfig

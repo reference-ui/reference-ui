@@ -6,7 +6,7 @@ import { combineTrigger, emitOnAny, forWorker, onReady } from './events.utils'
  * watch:change → run:virtual:sync:file (single file), passing payload through.
  */
 export function initEvents(): void {
-  on('virtual:ready', () => {
+  onceAll(['virtual:ready', 'reference:ready'], () => {
     emit('run:virtual:copy:all')
   })
 

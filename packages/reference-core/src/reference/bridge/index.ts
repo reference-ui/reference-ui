@@ -1,3 +1,4 @@
+export { copyReferenceBrowserToVirtual } from './copy-browser-virtual'
 export { createReferenceBuildReport, formatReferenceBuildDiagnostic } from './build-report'
 export { initReference } from './init'
 export {

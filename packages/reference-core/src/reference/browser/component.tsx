@@ -5,22 +5,7 @@ import {
   type TastyMember,
   type TastySymbol,
 } from '@reference-ui/rust/tasty'
-import {
-  Code,
-  Div,
-  H2,
-  P,
-  Small,
-  Span,
-  Table,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr,
-} from '../../system/primitives'
-import { REFERENCE_BROWSER_ATTR } from './constants'
-import { referenceTokens } from './theme'
+import { Code, Div, H2, P, Small, Span, Table, Tbody, Td, Th, Thead, Tr } from './primitives'
 
 export interface ReferenceProps {
   name: string
@@ -48,16 +33,16 @@ function formatModifiers(member: TastyMember): string {
 function renderSummary(status: ReferenceStatus, name: string): React.ReactNode {
   if (status.state === 'loading') {
     return (
-      <P margin="0" color={referenceTokens.color.muted}>
-        Loading reference docs for <Code fontFamily={referenceTokens.font.mono}>{name}</Code>.
+      <P margin="0" color="reference.muted">
+        Loading reference docs for <Code fontFamily="reference.mono">{name}</Code>.
       </P>
     )
   }
 
   if (status.state === 'error') {
     return (
-      <P margin="0" color={referenceTokens.color.muted}>
-        Failed to load <Code fontFamily={referenceTokens.font.mono}>{name}</Code>: {status.message}
+      <P margin="0" color="reference.muted">
+        Failed to load <Code fontFamily="reference.mono">{name}</Code>: {status.message}
       </P>
     )
   }
@@ -68,18 +53,18 @@ function renderSummary(status: ReferenceStatus, name: string): React.ReactNode {
   const kindLabel = symbol.getKind() === 'typeAlias' ? 'Type alias' : 'Interface'
 
   return (
-    <Div display="grid" gap={referenceTokens.space.xs}>
-      <P margin="0" color={referenceTokens.color.muted}>
+    <Div display="grid" gap="reference.xs">
+      <P margin="0" color="reference.muted">
         {kindLabel} loaded from the generated Tasty manifest for{' '}
-        <Code fontFamily={referenceTokens.font.mono}>{symbol.getName()}</Code>.
+        <Code fontFamily="reference.mono">{symbol.getName()}</Code>.
       </P>
       {typeParameterNames.length > 0 ? (
-        <Small color={referenceTokens.color.muted}>
+        <Small color="reference.muted">
           Generics: {typeParameterNames.join(', ')}
         </Small>
       ) : null}
       {extendsNames.length > 0 ? (
-        <Small color={referenceTokens.color.muted}>Extends: {extendsNames.join(', ')}</Small>
+        <Small color="reference.muted">Extends: {extendsNames.join(', ')}</Small>
       ) : null}
     </Div>
   )
@@ -94,17 +79,13 @@ function renderContent(status: ReferenceStatus): React.ReactNode {
 
   if (symbol.getKind() === 'typeAlias') {
     return (
-      <Div
-        marginTop={referenceTokens.space.lg}
-        display="grid"
-        gap={referenceTokens.space.sm}
-      >
-        <Small color={referenceTokens.color.muted}>Definition</Small>
+      <Div marginTop="reference.lg" display="grid" gap="reference.sm">
+        <Small color="reference.muted">Definition</Small>
         <Code
           display="block"
-          fontFamily={referenceTokens.font.mono}
-          padding={referenceTokens.space.sm}
-          background={referenceTokens.color.subtleBackground}
+          fontFamily="reference.mono"
+          padding="reference.sm"
+          background="reference.subtleBackground"
         >
           {symbol.getUnderlyingType()?.describe() ?? 'unknown'}
         </Code>
@@ -113,47 +94,43 @@ function renderContent(status: ReferenceStatus): React.ReactNode {
   }
 
   return (
-    <Div
-      marginTop={referenceTokens.space.lg}
-      display="grid"
-      gap={referenceTokens.space.sm}
-    >
-      <Small color={referenceTokens.color.muted}>Members</Small>
+    <Div marginTop="reference.lg" display="grid" gap="reference.sm">
+      <Small color="reference.muted">Members</Small>
       <Div overflow="auto">
         <Table
           width="100%"
           borderCollapse="collapse"
           css={{ tableLayout: 'fixed', minWidth: '42rem' }}
         >
-          <Thead background={referenceTokens.color.subtleBackground}>
+          <Thead background="reference.subtleBackground">
             <Tr>
               <Th
                 textAlign="left"
                 verticalAlign="top"
-                padding={referenceTokens.space.sm}
+                padding="reference.sm"
                 borderWidth="1px"
                 borderStyle="solid"
-                borderColor={referenceTokens.color.border}
+                borderColor="reference.border"
               >
                 <Span>Name</Span>
               </Th>
               <Th
                 textAlign="left"
                 verticalAlign="top"
-                padding={referenceTokens.space.sm}
+                padding="reference.sm"
                 borderWidth="1px"
                 borderStyle="solid"
-                borderColor={referenceTokens.color.border}
+                borderColor="reference.border"
               >
                 <Span>Type</Span>
               </Th>
               <Th
                 textAlign="left"
                 verticalAlign="top"
-                padding={referenceTokens.space.sm}
+                padding="reference.sm"
                 borderWidth="1px"
                 borderStyle="solid"
-                borderColor={referenceTokens.color.border}
+                borderColor="reference.border"
               >
                 <Span>Modifiers</Span>
               </Th>
@@ -164,30 +141,30 @@ function renderContent(status: ReferenceStatus): React.ReactNode {
               <Tr key={member.getName()}>
                 <Td
                   verticalAlign="top"
-                  padding={referenceTokens.space.sm}
+                  padding="reference.sm"
                   borderWidth="1px"
                   borderStyle="solid"
-                  borderColor={referenceTokens.color.border}
+                  borderColor="reference.border"
                 >
-                  <Code fontFamily={referenceTokens.font.mono}>{member.getName()}</Code>
+                  <Code fontFamily="reference.mono">{member.getName()}</Code>
                 </Td>
                 <Td
                   verticalAlign="top"
-                  padding={referenceTokens.space.sm}
+                  padding="reference.sm"
                   borderWidth="1px"
                   borderStyle="solid"
-                  borderColor={referenceTokens.color.border}
+                  borderColor="reference.border"
                 >
-                  <Code fontFamily={referenceTokens.font.mono}>
+                  <Code fontFamily="reference.mono">
                     {member.getType()?.describe() ?? 'unknown'}
                   </Code>
                 </Td>
                 <Td
                   verticalAlign="top"
-                  padding={referenceTokens.space.sm}
+                  padding="reference.sm"
                   borderWidth="1px"
                   borderStyle="solid"
-                  borderColor={referenceTokens.color.border}
+                  borderColor="reference.border"
                 >
                   {formatModifiers(member)}
                 </Td>
@@ -221,7 +198,6 @@ export function createReferenceComponent(runtime: TastyBrowserRuntime) {
 
   function Reference({ name }: ReferenceProps) {
     const [status, setStatus] = React.useState<ReferenceStatus>({ state: 'loading' })
-    const referenceRootProps = { [REFERENCE_BROWSER_ATTR]: '' }
 
     React.useEffect(() => {
       let active = true
@@ -245,14 +221,13 @@ export function createReferenceComponent(runtime: TastyBrowserRuntime) {
 
     return (
       <Div
-        {...referenceRootProps}
         css={{
-          color: referenceTokens.color.foreground,
-          background: referenceTokens.color.background,
+          color: 'reference.foreground',
+          background: 'reference.background',
           borderWidth: '1px',
           borderStyle: 'solid',
-          borderColor: referenceTokens.color.border,
-          padding: referenceTokens.space.lg,
+          borderColor: 'reference.border',
+          padding: 'reference.lg',
         }}
       >
         <H2 margin="0 0 0.5rem 0" fontSize="1rem">
