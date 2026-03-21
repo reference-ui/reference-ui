@@ -11,6 +11,7 @@ export interface ReferenceRuntime {
 export interface ReferenceRuntimeData {
   symbol: TastySymbol
   members: TastyMember[]
+  relatedSymbols: TastySymbol[]
   warnings: string[]
 }
 
@@ -31,12 +32,43 @@ async function loadReferenceRuntimeData(
   const api = await getReferenceApi(runtime)
   const symbol = await api.loadSymbolByName(name)
   const members = symbol.getKind() === 'interface' ? await api.graph.getEffectiveMembers(symbol) : []
+  const relatedSymbols = await loadReferenceRelatedSymbols(api, symbol)
 
   return {
     symbol,
     members,
+    relatedSymbols,
     warnings: api.getWarnings(),
   }
+}
+
+async function loadReferenceRelatedSymbols(api: TastyApi, rootSymbol: TastySymbol): Promise<TastySymbol[]> {
+  const visited = new Set<string>([rootSymbol.getId()])
+  const queue: TastySymbol[] = [rootSymbol]
+  const relatedSymbols: TastySymbol[] = []
+
+  while (queue.length > 0) {
+    const currentSymbol = queue.shift()
+    if (!currentSymbol) continue
+
+    const dependencyRefs = await api.graph.collectUserOwnedReferences(currentSymbol)
+    for (const dependencyRef of dependencyRefs) {
+      const dependencyId = dependencyRef.getId()
+      if (visited.has(dependencyId)) continue
+
+      visited.add(dependencyId)
+
+      try {
+        const dependency = await dependencyRef.load()
+        relatedSymbols.push(dependency)
+        queue.push(dependency)
+      } catch {
+        // Some raw references are not manifest-backed symbols (for example mapped type params).
+      }
+    }
+  }
+
+  return relatedSymbols
 }
 
 export function createReferenceRuntime(runtime: TastyBrowserRuntime): ReferenceRuntime {
@@ -76,7 +108,7 @@ export function useReferenceDocument(
       .load(name)
       .then((data) => {
         if (!active) return
-        setDocument(createReferenceDocument(data.symbol, data.members, data.warnings))
+        setDocument(createReferenceDocument(data.symbol, data.members, data.relatedSymbols, data.warnings))
         setIsLoading(false)
       })
       .catch((error: unknown) => {

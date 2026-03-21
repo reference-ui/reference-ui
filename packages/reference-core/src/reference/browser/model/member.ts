@@ -1,11 +1,14 @@
 import { getTastyMemberSemanticKind } from '@reference-ui/rust/tasty'
-import type { TastyMember } from '@reference-ui/rust/tasty'
+import type { TastyMember, TastySymbol } from '@reference-ui/rust/tasty'
 import type { ReferenceMemberDocument } from '../types'
 import { createReferenceMemberSummary } from './summary'
 import { getReferenceTypeLabel } from './typeLabel'
 import { createReferenceJsDoc, createReferenceType } from './type'
 
-export function createReferenceMemberDocument(member: TastyMember): ReferenceMemberDocument {
+export function createReferenceMemberDocument(
+  member: TastyMember,
+  symbolLookup: Map<string, TastySymbol>,
+): ReferenceMemberDocument {
   const type = member.getType()
   const typeLabel = getReferenceTypeLabel(member, type)
 
@@ -20,6 +23,6 @@ export function createReferenceMemberDocument(member: TastyMember): ReferenceMem
     typeLabel,
     type: createReferenceType(type),
     jsDoc: createReferenceJsDoc(member.getRaw()),
-    summary: createReferenceMemberSummary(member, type, typeLabel),
+    summary: createReferenceMemberSummary(member, type, typeLabel, symbolLookup),
   }
 }

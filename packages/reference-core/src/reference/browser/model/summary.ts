@@ -3,22 +3,23 @@ import {
   getTastyTypeInlineVariants,
   normalizeTastyInlineValue,
 } from '@reference-ui/rust/tasty'
-import type { TastyMember, TastyTypeRef } from '@reference-ui/rust/tasty'
+import type { RawTastyTypeRef, RawTastyTypeReference, TastyMember, TastySymbol, TastyTypeRef } from '@reference-ui/rust/tasty'
 import type {
   ReferenceMemberSummary,
   ReferenceMemberTypeSummary,
   ReferenceParamDoc,
   ReferenceValueOption,
 } from '../types'
-import { createReferenceType } from './type'
+import { createReferenceType, formatReferenceType } from './type'
 
 export function createReferenceMemberSummary(
   member: TastyMember,
   type: ReturnType<TastyMember['getType']>,
   typeLabel: string,
+  symbolLookup: Map<string, TastySymbol>,
 ): ReferenceMemberSummary {
   return {
-    memberTypeSummary: createReferenceMemberTypeSummary(member, type, typeLabel),
+    memberTypeSummary: createReferenceMemberTypeSummary(member, type, typeLabel, symbolLookup),
     description: member.getDescription(),
     paramDocs: createReferenceParams(member, type),
   }
@@ -28,6 +29,7 @@ function createReferenceMemberTypeSummary(
   member: TastyMember,
   type: TastyTypeRef | undefined,
   typeLabel: string,
+  symbolLookup: Map<string, TastySymbol>,
 ): ReferenceMemberTypeSummary | undefined {
   if (!type) return undefined
 
@@ -38,16 +40,19 @@ function createReferenceMemberTypeSummary(
     }
   }
 
-  const valueOptions = createReferenceValueOptions(member, type)
-  if (shouldUseReferenceValueSet(type, valueOptions)) {
+  const resolvedType = resolveReferenceSummaryType(type, symbolLookup) ?? type
+  const valueOptions = createReferenceValueOptions(member, resolvedType)
+  if (shouldUseReferenceValueSet(resolvedType, valueOptions)) {
     return {
       kind: 'valueSet',
       options: valueOptions,
     }
   }
 
-  const expression = type.describe()
-  if (!expression || expression === typeLabel) return undefined
+  const resolvedReferenceType = createReferenceType(resolvedType)
+  const expression = resolvedReferenceType ? formatReferenceType(resolvedReferenceType) : resolvedType.describe()
+  if (!expression) return undefined
+  if (expression === typeLabel && resolvedType === type) return undefined
 
   if (isReferenceTypeExpression(type)) {
     return {
@@ -127,4 +132,69 @@ function isReferenceTypeExpression(type: TastyTypeRef): boolean {
 
 function isOpaqueReferenceSummary(expression: string): boolean {
   return expression !== 'unknown'
+}
+
+function resolveReferenceSummaryType(
+  type: TastyTypeRef,
+  symbolLookup: Map<string, TastySymbol>,
+  visited = new Set<string>(),
+): TastyTypeRef | undefined {
+  if (type.getKind() === 'indexed_access') {
+    const resolvedIndexedAccessType = resolveIndexedAccessType(type, symbolLookup, visited)
+    if (resolvedIndexedAccessType) {
+      return resolveReferenceSummaryType(resolvedIndexedAccessType, symbolLookup, visited)
+    }
+  }
+
+  if (type.getKind() !== 'reference') {
+    return type
+  }
+
+  const symbolId = type.getReferencedSymbol()?.getId()
+  if (!symbolId || visited.has(symbolId)) return type
+
+  const symbol = symbolLookup.get(symbolId)
+  if (!symbol || symbol.getKind() !== 'typeAlias') return type
+
+  const underlyingType = symbol.getUnderlyingType()
+  if (!underlyingType) return type
+
+  visited.add(symbolId)
+  return resolveReferenceSummaryType(underlyingType, symbolLookup, visited) ?? underlyingType
+}
+
+function resolveIndexedAccessType(
+  type: TastyTypeRef,
+  symbolLookup: Map<string, TastySymbol>,
+  visited: Set<string>,
+): TastyTypeRef | undefined {
+  const raw = type.getRaw()
+  if (!isRawIndexedAccessType(raw)) return undefined
+  if (!isRawTypeReference(raw.object)) return undefined
+  if (!isRawLiteralType(raw.index)) return undefined
+
+  const symbol = symbolLookup.get(raw.object.id)
+  if (!symbol || symbol.getKind() !== 'interface') return undefined
+  if (visited.has(symbol.getId())) return undefined
+
+  const memberName = normalizeTastyInlineValue(raw.index.value)
+  if (!memberName) return undefined
+
+  visited.add(symbol.getId())
+  const member = symbol.getMembers().find((candidate) => candidate.getName() === memberName)
+  return member?.getType()
+}
+
+function isRawIndexedAccessType(
+  raw: RawTastyTypeRef,
+): raw is Extract<RawTastyTypeRef, { kind: 'indexed_access' }> {
+  return 'kind' in raw && raw.kind === 'indexed_access'
+}
+
+function isRawLiteralType(raw: RawTastyTypeRef): raw is Extract<RawTastyTypeRef, { kind: 'literal' }> {
+  return 'kind' in raw && raw.kind === 'literal'
+}
+
+function isRawTypeReference(raw: RawTastyTypeRef): raw is RawTastyTypeReference {
+  return !('kind' in raw)
 }
