@@ -26,7 +26,7 @@ export function ReferenceMemberRow({ member }: { member: ReferenceMemberDocument
       <Div display="grid" gap="reference.md" minWidth="0">
         <MemberTypeSummary summary={member.summary.memberTypeSummary} />
         <MemberDescription description={member.summary.description} />
-        <MemberJsDoc memberId={member.id} params={member.summary.paramDocs} />
+        <MemberJsDoc memberId={member.id} jsDoc={member.jsDoc} params={member.summary.paramDocs} />
       </Div>
     </Div>
   )

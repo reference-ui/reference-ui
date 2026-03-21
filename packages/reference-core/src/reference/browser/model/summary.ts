@@ -10,6 +10,7 @@ import type {
   ReferenceParamDoc,
   ReferenceValueOption,
 } from '../types'
+import { createReferenceType } from './type'
 
 export function createReferenceMemberSummary(
   member: TastyMember,
@@ -19,7 +20,7 @@ export function createReferenceMemberSummary(
   return {
     memberTypeSummary: createReferenceMemberTypeSummary(member, type, typeLabel),
     description: member.getDescription(),
-    paramDocs: createReferenceParams(member),
+    paramDocs: createReferenceParams(member, type),
   }
 }
 
@@ -84,8 +85,23 @@ function createReferenceValueOptions(member: TastyMember, type: TastyTypeRef): R
   return [...optionsByKey.values()]
 }
 
-function createReferenceParams(member: TastyMember): ReferenceParamDoc[] {
-  return member.getParameters()
+function createReferenceParams(
+  member: TastyMember,
+  type: TastyTypeRef | undefined,
+): ReferenceParamDoc[] {
+  const params = member.getParameters()
+  if (!type?.isCallable()) return params
+
+  return type.getParameters().map((param, index) => {
+    const fallback = params[index]
+    return {
+      name: fallback?.name ?? param.getName() ?? `arg${index + 1}`,
+      type: fallback?.type ?? param.getType()?.describe(),
+      typeRef: createReferenceType(param.getType()),
+      optional: fallback?.optional ?? param.isOptional(),
+      description: fallback?.description,
+    }
+  })
 }
 
 function normalizeReferenceValueOption(value: string): string {

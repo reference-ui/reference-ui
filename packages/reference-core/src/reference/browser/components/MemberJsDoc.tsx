@@ -1,9 +1,19 @@
 import { Div, P, Small } from '@reference-ui/react'
-import type { ReferenceParamDoc } from '../types'
+import type { ReferenceJsDoc, ReferenceParamDoc } from '../types'
 import { MonoText } from './shared/MonoText'
+import { SummaryChip } from './shared/SummaryChip'
 
-export function MemberJsDoc({ memberId, params }: { memberId: string; params: ReferenceParamDoc[] }) {
-  if (params.length === 0) return null
+export function MemberJsDoc({
+  memberId,
+  jsDoc,
+  params,
+}: {
+  memberId: string
+  jsDoc: ReferenceJsDoc
+  params: ReferenceParamDoc[]
+}) {
+  const tags = jsDoc.tags.filter((tag) => tag.name !== 'param')
+  if (params.length === 0 && tags.length === 0) return null
 
   return (
     <Div
@@ -19,7 +29,9 @@ export function MemberJsDoc({ memberId, params }: { memberId: string; params: Re
       {params.map((param) => (
         <Div key={`${memberId}-${param.name}`} display="grid" gap="reference.xxs">
           <Div display="flex" alignItems="center" gap="reference.xs" flexWrap="wrap">
-            <Small color="reference.muted">Param</Small>
+            <SummaryChip>
+              <MonoText>@param</MonoText>
+            </SummaryChip>
             <MonoText>{param.name}</MonoText>
             {param.type ? (
               <Small color="reference.muted">
@@ -31,6 +43,21 @@ export function MemberJsDoc({ memberId, params }: { memberId: string; params: Re
           {param.description ? (
             <P margin="0" color="reference.muted">
               {param.description}
+            </P>
+          ) : null}
+        </Div>
+      ))}
+
+      {tags.map((tag, index) => (
+        <Div key={`${memberId}-${tag.name}-${index}`} display="grid" gap="reference.xxs">
+          <Div display="flex" alignItems="center" gap="reference.xs" flexWrap="wrap">
+            <SummaryChip>
+              <MonoText>@{tag.name}</MonoText>
+            </SummaryChip>
+          </Div>
+          {tag.value ? (
+            <P margin="0" color="reference.muted">
+              {tag.value}
             </P>
           ) : null}
         </Div>
