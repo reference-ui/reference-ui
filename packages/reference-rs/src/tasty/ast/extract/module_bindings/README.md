@@ -1,19 +1,10 @@
-# Module Bindings
+# Module bindings
 
-This folder handles the import/export binding bookkeeping used during AST
-extraction.
+Collects **import** and **export** name bindings from top-level statements: default
+exports, named exports, and re-exports that feed `ParsedFileAst` and symbol shells.
 
-It answers the narrow question "what local name refers to what imported or
-exported symbol?" so the rest of extraction can build symbol shells without
-re-parsing module-binding logic everywhere.
+## Files
 
-## Responsibilities
-
-- collect imported bindings from `import` declarations
-- collect named export bindings
-- collect default export declarations that should become symbol shells
-
-## Boundaries
-
-- this layer does not resolve references across files
-- it only records binding information local to one parsed source file
+- `imports.rs` — resolve import specifiers and populate `import_bindings`
+- `exports.rs` — named/default exports, user-library shells, and export name maps
+- `mod.rs` — public entry points for `extract::mod`
