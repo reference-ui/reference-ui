@@ -4,6 +4,7 @@ mod module_bindings;
 mod symbols;
 mod type_references;
 mod types;
+mod values;
 
 use std::collections::BTreeMap;
 
@@ -18,6 +19,7 @@ use self::module_bindings::{
     collect_default_export_declaration, collect_exported_declaration, collect_import_bindings,
 };
 use self::symbols::{push_interface_shell, push_type_alias_shell};
+use self::values::collect_statement_value_bindings;
 use super::super::model::ScannerDiagnostic;
 use super::super::scanner::{ScannedFile, ScannedWorkspace};
 use super::model::{ImportBinding, ParsedFileAst, SymbolShell};
@@ -53,6 +55,7 @@ fn extract_file(
     record_parse_errors(scanned_file, parse_result.errors.len(), diagnostics);
 
     let mut import_bindings = BTreeMap::new();
+    let mut value_bindings = BTreeMap::new();
     let mut export_bindings = BTreeMap::new();
     let mut exports = Vec::new();
     let comments = &parse_result.program.comments;
@@ -64,6 +67,14 @@ fn extract_file(
             statement,
             file_id_set,
             &mut import_bindings,
+        );
+        collect_statement_value_bindings(
+            statement,
+            &scanned_file.source,
+            &import_bindings,
+            &scanned_file.module_specifier,
+            &scanned_file.library,
+            &mut value_bindings,
         );
         collect_statement_exports(
             scanned_file,
@@ -81,6 +92,7 @@ fn extract_file(
         library: scanned_file.library.clone(),
         source: scanned_file.source.clone(),
         import_bindings,
+        value_bindings,
         export_bindings,
         exports,
     }

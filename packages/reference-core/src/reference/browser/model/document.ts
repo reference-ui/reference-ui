@@ -1,3 +1,4 @@
+import { getTastyResolvedType } from '@reference-ui/rust/tasty'
 import type { RawTastySymbol, RawTastySymbolRef, TastyMember, TastySymbol, TastySymbolRef } from '@reference-ui/rust/tasty'
 import type { ReferenceDocument, ReferenceSymbolRef } from '../types'
 import { createReferenceMemberDocument } from './member'
@@ -13,7 +14,8 @@ export function createReferenceDocument(
   const typeParameterDetails = symbol.getTypeParameters().map(createReferenceTypeParameter)
   const extendsRefs = symbol.getExtends().map(createReferenceSymbolRef)
   const relatedTypes = getReferenceRelatedTypes(symbol.getRaw())
-  const definitionType = createReferenceType(symbol.getUnderlyingType()) ?? null
+  const underlyingType = symbol.getUnderlyingType()
+  const definitionType = createReferenceType(getTastyResolvedType(underlyingType) ?? underlyingType) ?? null
   const rootRef = createReferenceOwnedSymbolRef(symbol)
   const memberOrigins = createReferenceMemberOrigins(symbol, extendsChain)
   const symbolLookup = new Map<string, TastySymbol>([
@@ -35,7 +37,7 @@ export function createReferenceDocument(
     extendsNames: extendsRefs.map((ref) => ref.name),
     extends: extendsRefs,
     types: relatedTypes,
-    definition: definitionType ? formatReferenceType(definitionType) : symbol.getUnderlyingType()?.describe() ?? null,
+    definition: definitionType ? formatReferenceType(definitionType) : underlyingType?.describe() ?? null,
     definitionType,
     members: members.map((member) =>
       createReferenceMemberDocument(member, symbolLookup, {

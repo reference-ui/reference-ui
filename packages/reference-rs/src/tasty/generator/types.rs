@@ -214,11 +214,25 @@ pub(super) fn emit_type_ref(
             emit_field("kind", to_js_literal("intersection")?),
             emit_field("types", emit_type_ref_array(bundle, types, export_names)?),
         ])),
-        TypeRef::IndexedAccess { object, index } => Ok(emit_object(vec![
-            emit_field("kind", to_js_literal("indexed_access")?),
-            emit_field("object", emit_type_ref(bundle, object, export_names)?),
-            emit_field("index", emit_type_ref(bundle, index, export_names)?),
-        ])),
+        TypeRef::IndexedAccess {
+            object,
+            index,
+            resolved,
+        } => {
+            let mut fields = vec![
+                emit_field("kind", to_js_literal("indexed_access")?),
+                emit_field("object", emit_type_ref(bundle, object, export_names)?),
+                emit_field("index", emit_type_ref(bundle, index, export_names)?),
+            ];
+            push_optional_type_ref_field(
+                fields.as_mut(),
+                "resolved",
+                bundle,
+                resolved.as_deref(),
+                export_names,
+            )?;
+            Ok(emit_object(fields))
+        }
         TypeRef::Function {
             params,
             return_type,
@@ -243,15 +257,42 @@ pub(super) fn emit_type_ref(
             return_type,
             export_names,
         ),
-        TypeRef::TypeOperator { operator, target } => Ok(emit_object(vec![
-            emit_field("kind", to_js_literal("type_operator")?),
-            emit_field("operator", to_js_literal(operator.as_str())?),
-            emit_field("target", emit_type_ref(bundle, target, export_names)?),
-        ])),
-        TypeRef::TypeQuery { expression } => Ok(emit_object(vec![
-            emit_field("kind", to_js_literal("type_query")?),
-            emit_field("expression", to_js_literal(expression)?),
-        ])),
+        TypeRef::TypeOperator {
+            operator,
+            target,
+            resolved,
+        } => {
+            let mut fields = vec![
+                emit_field("kind", to_js_literal("type_operator")?),
+                emit_field("operator", to_js_literal(operator.as_str())?),
+                emit_field("target", emit_type_ref(bundle, target, export_names)?),
+            ];
+            push_optional_type_ref_field(
+                fields.as_mut(),
+                "resolved",
+                bundle,
+                resolved.as_deref(),
+                export_names,
+            )?;
+            Ok(emit_object(fields))
+        }
+        TypeRef::TypeQuery {
+            expression,
+            resolved,
+        } => {
+            let mut fields = vec![
+                emit_field("kind", to_js_literal("type_query")?),
+                emit_field("expression", to_js_literal(expression)?),
+            ];
+            push_optional_type_ref_field(
+                fields.as_mut(),
+                "resolved",
+                bundle,
+                resolved.as_deref(),
+                export_names,
+            )?;
+            Ok(emit_object(fields))
+        }
         TypeRef::Conditional {
             check_type,
             extends_type,
@@ -290,15 +331,25 @@ pub(super) fn emit_type_ref(
             value_type.as_deref(),
             export_names,
         ),
-        TypeRef::TemplateLiteral { parts } => Ok(emit_object(vec![
-            emit_field("kind", to_js_literal("template_literal")?),
-            emit_field(
-                "parts",
-                emit_indented_array(parts, |part| {
-                    emit_template_literal_part(bundle, part, export_names)
-                })?,
-            ),
-        ])),
+        TypeRef::TemplateLiteral { parts, resolved } => {
+            let mut fields = vec![
+                emit_field("kind", to_js_literal("template_literal")?),
+                emit_field(
+                    "parts",
+                    emit_indented_array(parts, |part| {
+                        emit_template_literal_part(bundle, part, export_names)
+                    })?,
+                ),
+            ];
+            push_optional_type_ref_field(
+                fields.as_mut(),
+                "resolved",
+                bundle,
+                resolved.as_deref(),
+                export_names,
+            )?;
+            Ok(emit_object(fields))
+        }
         TypeRef::Raw { summary } => Ok(emit_object(vec![
             emit_field("kind", to_js_literal("raw")?),
             emit_field("summary", to_js_literal(summary)?),

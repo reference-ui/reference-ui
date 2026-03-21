@@ -72,6 +72,7 @@ export interface TastySymbolSearchResult {
 export interface TastyTypeRef {
   getKind(): TastyTypeKind
   getRaw(): RawTastyTypeRef
+  getResolved(): TastyTypeRef | undefined
   isRaw(): boolean
   getSummary(): string | undefined
   getLiteralValue(): string | undefined

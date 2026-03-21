@@ -207,6 +207,7 @@ impl<'a> LoweringContext<'a> {
         TypeRef::IndexedAccess {
             object: Box::new(self.lower_type(&indexed_access.object_type)),
             index: Box::new(self.lower_type(&indexed_access.index_type)),
+            resolved: None,
         }
     }
 
@@ -238,12 +239,14 @@ impl<'a> LoweringContext<'a> {
                 oxc_ast::ast::TSTypeOperatorOperator::Unique => TypeOperatorKind::Unique,
             },
             target: Box::new(self.lower_type(&operator.type_annotation)),
+            resolved: None,
         }
     }
 
     fn lower_type_query(&self, query: &oxc_ast::ast::TSTypeQuery<'_>) -> TypeRef {
         TypeRef::TypeQuery {
             expression: slice_span(self.source, query.expr_name.span()).to_string(),
+            resolved: None,
         }
     }
 
@@ -279,6 +282,7 @@ impl<'a> LoweringContext<'a> {
     ) -> TypeRef {
         TypeRef::TemplateLiteral {
             parts: self.lower_template_literal_parts(template),
+            resolved: None,
         }
     }
 

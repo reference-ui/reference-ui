@@ -48,8 +48,10 @@ describe('Reference component', () => {
     expectVisibleText('size')
     expectVisibleText('padding')
     expectVisibleText('currentIntent')
+    expectVisibleText('resolvedSize')
     expectVisibleText('iconPosition')
     expectVisibleText('toneKey')
+    expectVisibleText('resolvedTone')
     expectVisibleText('toneLabels')
     expectVisibleText('spacingPreview')
     expectVisibleText('variantMeta')
@@ -93,7 +95,8 @@ describe('Reference component', () => {
     expectVisibleText('Useful for exercising non-param JSDoc tags in the browser.')
 
     expect(screen.getByText("DocsReferenceButtonState['intent']")).toBeInTheDocument()
-    expectVisibleText('keyof typeof docsReferenceTheme.intents')
+    expectVisibleText('primary')
+    expectVisibleText('danger')
     expect(screen.queryByText((content) => content === 'mapped')).not.toBeInTheDocument()
     expect(screen.queryByText('[tuple]')).not.toBeInTheDocument()
     expect(screen.queryByText((content) => content === 'conditional')).not.toBeInTheDocument()
@@ -108,12 +111,12 @@ describe('Reference component', () => {
     expect(screen.getByText("DocsReferenceButtonProps['currentIntent']")).toBeInTheDocument()
   })
 
-  it('renders keyof typeof aliases in their declared form until tasty exposes value-derived unions', async () => {
+  it('renders keyof typeof aliases as resolved literal unions when tasty emits them', async () => {
     await renderReference('DocsReferenceButtonIntent')
 
     expect(screen.getByText('DocsReferenceButtonIntent')).toBeInTheDocument()
     expect(screen.getByText('Type alias')).toBeInTheDocument()
-    expectVisibleText('keyof typeof docsReferenceTheme.intents')
+    expectVisibleText("'primary' | 'danger'")
   })
 
   it('renders inherited members with origin labels', async () => {
@@ -171,6 +174,14 @@ describe('Reference component', () => {
     expect(screen.queryByText('template literal')).not.toBeInTheDocument()
   })
 
+  it('renders tuple-derived indexed access aliases as resolved literal unions', async () => {
+    await renderReference('DocsReferenceResolvedSize')
+
+    expect(screen.getByText('DocsReferenceResolvedSize')).toBeInTheDocument()
+    expect(screen.getByText('Type alias')).toBeInTheDocument()
+    expectVisibleText("'sm' | 'md' | 'lg'")
+  })
+
   it('renders object aliases with their member previews', async () => {
     await renderReference('DocsReferenceSpacingPreview')
 
@@ -207,12 +218,20 @@ describe('Reference component', () => {
     )
   })
 
-  it('renders typeof aliases in their declared form when tasty has no resolved object shape', async () => {
+  it('renders typeof aliases with resolved object previews when tasty emits them', async () => {
     await renderReference('DocsReferenceButtonSpacing')
 
     expect(screen.getByText('DocsReferenceButtonSpacing')).toBeInTheDocument()
     expect(screen.getByText('Type alias')).toBeInTheDocument()
-    expectVisibleText('typeof docsReferenceTheme.spacing')
+    expectVisibleText('{ readonly compact: 4; readonly comfortable: 8; readonly spacious: 12 }')
+  })
+
+  it('renders tuple-derived template literal aliases as resolved literal unions', async () => {
+    await renderReference('DocsReferenceResolvedTone')
+
+    expect(screen.getByText('DocsReferenceResolvedTone')).toBeInTheDocument()
+    expect(screen.getByText('Type alias')).toBeInTheDocument()
+    expectVisibleText("'tone-sm' | 'tone-md' | 'tone-lg'")
   })
 
 })
