@@ -41,6 +41,11 @@ The browser model now preserves and renders more of the `tasty` type graph:
 - value-derived resolution from `tasty` for exported `const` sources, including:
   `keyof typeof ...`, `typeof arr[number]`, resolved `typeof` object previews,
   and evaluated template literals built from those reduced unions
+- local-alias reduction in `tasty` when a type-level expression can be
+  honestly dereferenced to a nearby alias or interface member, including:
+  `DocsReferenceButtonProps['currentIntent']` -> `'primary' | 'danger'` and
+  `` `tone-${DocsReferenceButtonVariant}` `` ->
+  `'tone-solid' | 'tone-ghost' | 'tone-outline'`
 - broader JSDoc rendering, including non-`@param` tags like `@returns`,
   `@deprecated`, `@see`, `@example`, and `@remarks`
 - inherited member origin tracking with per-row labels like
@@ -73,9 +78,8 @@ These should continue to improve inside this package:
 These still require richer emitted data rather than more formatting in the
 browser:
 
-- evaluated template-literal unions sourced from arbitrary type-level unions such
-  as `` `tone-${DocsReferenceButtonVariant}` `` -> `'tone-solid' | 'tone-ghost' |
-  'tone-outline'`
+- evaluated template-literal unions sourced from imported or generic-backed
+  unions beyond local dereferenceable aliases
 - selective utility-type evaluation where the reduced result is materially more
   useful than the declared form
 - deeper merged previews for intersections and utility-expanded object aliases
@@ -84,7 +88,7 @@ browser:
 
 This is the recommended sequence for the next passes:
 
-1. template literal evaluation beyond value-derived tuple/object sources
+1. template literal evaluation beyond local/value-derived unions
 2. intersection rendering and safe merged previews
 3. richer discriminated union rendering
 4. richer generic display improvements

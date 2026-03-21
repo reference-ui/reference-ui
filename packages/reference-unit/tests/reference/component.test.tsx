@@ -62,7 +62,9 @@ describe('Reference component', () => {
     expectVisibleText('renderIcon')
     expectVisibleText("'start' | 'end'")
     expectVisibleText('[inline: number, block: number]')
-    expectVisibleText('`tone-${DocsReferenceButtonVariant}`')
+    expectVisibleText('tone-solid')
+    expectVisibleText('tone-ghost')
+    expectVisibleText('tone-outline')
     expectVisibleText('{ [K in DocsReferenceButtonVariant as `tone-${K}`]: K }')
     expectVisibleText('{ compact: 4; comfortable: 8; spacious: 12 }')
     expectVisibleText(
@@ -112,7 +114,7 @@ describe('Reference component', () => {
 
     expect(screen.getByText('DocsReferenceCurrentIntent')).toBeInTheDocument()
     expect(screen.getByText('Type alias')).toBeInTheDocument()
-    expect(screen.getByText("DocsReferenceButtonProps['currentIntent']")).toBeInTheDocument()
+    expectVisibleText("'primary' | 'danger'")
     expectTextAbsent('Optional formatter for the visible label.')
   })
 
@@ -171,13 +173,12 @@ describe('Reference component', () => {
     expectTextAbsent('Last resolved payload when the state is successful.')
   })
 
-  it('renders template literal aliases with the full template expression', async () => {
+  it('renders template literal aliases as resolved literal unions when tasty emits them', async () => {
     await renderReference('DocsReferenceToneKey')
 
     expect(screen.getByText('DocsReferenceToneKey')).toBeInTheDocument()
     expect(screen.getByText('Type alias')).toBeInTheDocument()
-    expectVisibleText('`tone-${DocsReferenceButtonVariant}`')
-    expect(screen.queryByText('template literal')).not.toBeInTheDocument()
+    expectVisibleText("'tone-solid' | 'tone-ghost' | 'tone-outline'")
   })
 
   it('renders tuple-derived indexed access aliases as resolved literal unions', async () => {

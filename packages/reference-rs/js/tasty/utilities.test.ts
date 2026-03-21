@@ -120,6 +120,8 @@ describe('tasty utilities', () => {
     const intentKey = await api.loadSymbolByName('IntentKey')
     const sizeValue = await api.loadSymbolByName('SizeValue')
     const toneLabel = await api.loadSymbolByName('ToneLabel')
+    const variantTone = await api.loadSymbolByName('VariantTone')
+    const intentFromInterface = await api.loadSymbolByName('IntentFromInterface')
 
     expect(intentKey.getUnderlyingType()?.describe()).toBe('keyof typeof intents')
     expect(getTastyResolvedType(intentKey.getUnderlyingType())?.describe()).toBe(
@@ -128,6 +130,12 @@ describe('tasty utilities', () => {
     expect(sizeValue.getUnderlyingType()?.getResolved()?.describe()).toBe("'sm' | 'md' | 'lg'")
     expect(getTastyResolvedType(toneLabel.getUnderlyingType())?.describe()).toBe(
       "'tone-sm' | 'tone-md' | 'tone-lg'",
+    )
+    expect(getTastyResolvedType(variantTone.getUnderlyingType())?.describe()).toBe(
+      "'tone-solid' | 'tone-ghost' | 'tone-outline'",
+    )
+    expect(getTastyResolvedType(intentFromInterface.getUnderlyingType())?.describe()).toBe(
+      "'primary' | 'danger'",
     )
   })
 })

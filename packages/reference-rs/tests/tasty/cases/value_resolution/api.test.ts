@@ -11,6 +11,8 @@ describe('value_resolution tasty api', () => {
     const intentValue = await api.loadSymbolByName('IntentValue')
     const sizeValue = await api.loadSymbolByName('SizeValue')
     const toneLabel = await api.loadSymbolByName('ToneLabel')
+    const variantTone = await api.loadSymbolByName('VariantTone')
+    const intentFromInterface = await api.loadSymbolByName('IntentFromInterface')
     const withValueResolution = await api.loadSymbolByName('WithValueResolution')
 
     const intentKeyRaw = intentKey.getUnderlyingType()?.getRaw() as {
@@ -47,6 +49,29 @@ describe('value_resolution tasty api', () => {
       "'tone-sm'",
       "'tone-md'",
       "'tone-lg'",
+    ])
+
+    const variantToneRaw = variantTone.getUnderlyingType()?.getRaw() as {
+      kind?: string
+      resolved?: { kind?: string; types?: Array<{ kind?: string; value?: string }> }
+    }
+    expect(variantToneRaw.kind).toBe('template_literal')
+    expect(variantToneRaw.resolved?.kind).toBe('union')
+    expect(variantToneRaw.resolved?.types?.map((item) => item.value)).toEqual([
+      "'tone-solid'",
+      "'tone-ghost'",
+      "'tone-outline'",
+    ])
+
+    const intentFromInterfaceRaw = intentFromInterface.getUnderlyingType()?.getRaw() as {
+      kind?: string
+      resolved?: { kind?: string; types?: Array<{ kind?: string; value?: string }> }
+    }
+    expect(intentFromInterfaceRaw.kind).toBe('indexed_access')
+    expect(intentFromInterfaceRaw.resolved?.kind).toBe('union')
+    expect(intentFromInterfaceRaw.resolved?.types?.map((item) => item.value)).toEqual([
+      "'primary'",
+      "'danger'",
     ])
 
     const sizeMember = findMember(withValueResolution, 'size').getType()

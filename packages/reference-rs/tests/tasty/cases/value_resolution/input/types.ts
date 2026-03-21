@@ -13,6 +13,9 @@ export type IntentKey = keyof typeof intents
 export type IntentValue = (typeof intents)[keyof typeof intents]
 export type SizeValue = (typeof sizes)[number]
 export type ToneLabel = `tone-${(typeof sizes)[number]}`
+export type Variant = 'solid' | 'ghost' | 'outline'
+export type VariantTone = `tone-${Variant}`
+export type IntentFromInterface = WithValueResolution['intent']
 
 export interface WithValueResolution {
   intent: keyof typeof intents
