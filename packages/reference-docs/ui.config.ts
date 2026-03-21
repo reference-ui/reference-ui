@@ -7,5 +7,5 @@ export default defineConfig({
   include: ['src/**/*.{ts,tsx,mdx}'],
   normalizeCss: true,
   useDesignSystem: true,
-  debug: false,
+  debug: true,
 })

@@ -3,6 +3,28 @@ import { tokens } from '@reference-ui/system'
 tokens({
   colors: {
     mySpecialToken: { value: 'red' },
+    reference: {
+      foreground: {
+        value: '#fef08a',
+        dark: '#3b0764',
+      },
+      muted: {
+        value: '#f9a8d4',
+        dark: '#6b21a8',
+      },
+      border: {
+        value: '#22d3ee',
+        dark: '#f97316',
+      },
+      background: {
+        value: '#082f49',
+        dark: '#fef3c7',
+      },
+      subtleBackground: {
+        value: '#0f766e',
+        dark: '#fde68a',
+      },
+    },
     docsPageBg: {
       value: '{colors.gray.50}',
       dark: '{colors.gray.950}',
