@@ -10,6 +10,14 @@ export function initEvents(): void {
     emit('run:virtual:copy:all')
   })
 
+  on('virtual:copy:complete', ({ virtualDir }) => {
+    emit('run:reference:copy-browser', { virtualDir })
+  })
+
+  on('reference:browser:virtual-ready', () => {
+    emit('virtual:complete', {})
+  })
+
   on('watch:change', (payload) => {
     emit('run:virtual:sync:file', payload)
   })
@@ -37,6 +45,7 @@ export function initEvents(): void {
       'system:panda:codegen:failed',
       'virtual:failed',
       'reference:failed',
+      'reference:browser:virtual-failed',
     ],
     emit: 'sync:failed',
   })
