@@ -18,8 +18,8 @@ killing duplication, and finding the natural seams.
 | 11  | TypeRef visitor               | **Done** (`shared/type_ref_map.rs` + hooks in `resolve.rs` / `instantiate.rs`) |
 | 12  | emitted vs generator          | **Done** (hybrid; see §12) |
 | 13  | `parsed_file_view`            | **Done** (uses `.clone()`) |
-| 14  | `ExtractionContext`           | Open   |
-| 15  | Housekeeping                  | Open   |
+| 14  | `ExtractionContext`           | **Done** (`extract/context.rs`) |
+| 15  | Housekeeping                  | **Done** (see §15) |
 
 ---
 
@@ -203,41 +203,23 @@ structs exist for `TS` export only and are never constructed in Rust.
 
 ---
 
-## 14. Reduce parameter threading in `extract/`
+## 14. Reduce parameter threading in `extract/` ✅ DONE
 
-Many `extract/` functions pass the same 5 parameters:
-`(source, comments, import_bindings, current_module_specifier, current_library)`.
-
-This is already partially solved — `types.rs` has `LoweringContext`. Extend that
-pattern: give `members.rs` and `symbols.rs` access to a shared extraction
-context struct instead of threading five arguments through every call.
-
-The shape would be something like:
-
-```rust
-struct ExtractionContext<'a> {
-    source: &'a str,
-    comments: &'a [Comment],
-    import_bindings: &'a BTreeMap<String, ImportBinding>,
-    module_specifier: &'a str,
-    library: &'a str,
-}
-```
-
-`LoweringContext` could become a thin wrapper or alias. This cuts function
-signatures from 7+ params down to 2–3.
+**Implemented:** `extract/context.rs` — `ExtractionContext` + `LoweringContext` holding
+`&ExtractionContext`; members, symbols, exports, values, and infer paths updated
+(see §14 in an earlier revision of this file for the full note).
 
 ---
 
-## 15. Small housekeeping
+## 15. Small housekeeping ✅ DONE
 
-| Item                                                   | Detail                                                                                                                                                     |
+| Item                                                   | Resolution                                                                                                                                                 |
 | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`#[allow(unused_imports)]` on `pub use emitted::*`** | Either use the imports or remove the allow.                                                                                                                |
-| **`emitted.rs` has `#![allow(dead_code)]`**            | **§12:** keep — contract types are for `ts_rs` / serde shape; see module doc on `emitted.rs`. Manifest types are constructed in `manifest.rs`.             |
-| **`generator/util.rs` string codegen**                 | `emit_object`, `emit_field`, `emit_array` are fine but consider `write!` into a `String` buffer instead of `format!` + `join` for lower alloc pressure.    |
-| **`scanner/model.rs` types**                           | `DiscoveredFile`, `ResolvedModule`, `ScannedFile` are small — verify these aren't duplicating fields already on `ParsedFileAst`.                           |
-| **Tests**                                              | `tests/mod.rs` is a single file. As tests grow, split by pipeline stage: `tests/scanner.rs`, `tests/extract.rs`, `tests/resolve.rs`, `tests/generator.rs`. |
+| **`pub use emitted::*` / `scan_typescript_bundle`**    | **`#[allow(unused_imports)]`** on those lines only, plus module doc in `tasty/mod.rs`: re-exports are for embedders/tests, not used inside the crate.     |
+| **`emitted.rs` `#![allow(dead_code)]`**                | Unchanged per **§12** (ts-rs contract types).                                                                                                               |
+| **`generator/util.rs`**                                | **`emit_object` / `emit_array` / `indent_block`** use `String` pushes; **`emit_field`** uses **`write!`** into a `String`.                                  |
+| **`scanner/model.rs`**                                 | Module doc: scan structs are **pre-extract**; **`ParsedFileAst`** adds bindings + shells — **not** redundant fields.                                        |
+| **Tests**                                              | **`tasty/tests/scanner.rs`** holds the fixture smoke test; **`tasty/tests/mod.rs`** is `mod scanner` only (room for `extract.rs` etc. later).                 |
 
 ---
 
@@ -254,8 +236,8 @@ Do these in dependency order so each step is independently shippable:
 7. ~~**§7** — Split `generator/types.rs`~~ **done** (`types/mod.rs` + `emit_*` modules)
 8. ~~**§8** — Split `extract/values.rs`~~ **done** (`infer_*` + `values.rs`)
 9. ~~**§13** — Drop `parsed_file_view` clone boilerplate~~ **done**
-10. **§14** — Introduce `ExtractionContext`
-11. **§15** — Housekeeping
+10. ~~**§14** — `ExtractionContext`~~ **done** (`extract/context.rs`)
+11. ~~**§15** — Housekeeping~~ **done** (see §15)
 12. ~~**§12** — emitted/ vs generator~~ **done** (hybrid; see §12)
 13. ~~**§11** — TypeRef map / visitor~~ **done** (`shared/type_ref_map.rs`; emit stays separate)
 

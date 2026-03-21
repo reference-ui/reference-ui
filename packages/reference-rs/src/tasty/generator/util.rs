@@ -1,3 +1,5 @@
+use std::fmt::Write as _;
+
 use serde::Serialize;
 
 pub(super) fn to_js_literal<T: Serialize + ?Sized>(value: &T) -> Result<String, String> {
@@ -6,15 +8,30 @@ pub(super) fn to_js_literal<T: Serialize + ?Sized>(value: &T) -> Result<String, 
 }
 
 pub(super) fn emit_object(fields: Vec<String>) -> String {
-    format!("{{\n{}\n}}", fields.join(",\n"))
+    let mut s = String::from("{\n");
+    for (i, f) in fields.iter().enumerate() {
+        if i > 0 {
+            s.push_str(",\n");
+        }
+        s.push_str(f);
+    }
+    s.push_str("\n}");
+    s
 }
 
 pub(super) fn emit_array(items: Vec<String>) -> String {
     if items.is_empty() {
-        "[]".to_string()
-    } else {
-        format!("[\n{}\n]", items.join(",\n"))
+        return "[]".to_string();
     }
+    let mut s = String::from("[\n");
+    for (i, item) in items.iter().enumerate() {
+        if i > 0 {
+            s.push_str(",\n");
+        }
+        s.push_str(item);
+    }
+    s.push_str("\n]");
+    s
 }
 
 pub(super) fn emit_field(name: &str, value: String) -> String {
@@ -24,14 +41,21 @@ pub(super) fn emit_field(name: &str, value: String) -> String {
         value
     };
 
-    format!("  {name}: {value}")
+    let mut s = String::new();
+    write!(&mut s, "  {name}: {value}").expect("write to String");
+    s
 }
 
 pub(super) fn indent_block(value: &str, spaces: usize) -> String {
     let indent = " ".repeat(spaces);
-    value
-        .lines()
-        .map(|line| format!("{indent}{line}"))
-        .collect::<Vec<_>>()
-        .join("\n")
+    let mut s = String::with_capacity(value.len() + value.lines().count().saturating_mul(spaces + 1));
+    for line in value.lines() {
+        s.push_str(&indent);
+        s.push_str(line);
+        s.push('\n');
+    }
+    if !s.is_empty() {
+        s.pop();
+    }
+    s
 }
