@@ -12,7 +12,7 @@ const REFERENCE_BROWSER_VIRTUAL_DIR = '_reference-component'
 const MODULE_DIR = dirname(fileURLToPath(import.meta.url))
 
 /** Paths under `src/reference` mirrored into the app virtual dir (flat under `_reference-component`). */
-const REFERENCE_BROWSER_VIRTUAL_FILES = ['browser/component.tsx', 'browser/primitives.ts'] as const
+const REFERENCE_BROWSER_VIRTUAL_FILES = ['browser/component.tsx'] as const
 
 function resolveReferenceSourcePath(coreDir: string, refRelativePath: string): string {
   const p = join(coreDir, 'src/reference', refRelativePath)

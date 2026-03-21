@@ -13,7 +13,7 @@ import {
   Th,
   Thead,
   Tr,
-} from './primitives'
+} from '@reference-ui/react'
 import { createReferenceRuntime, useReferenceStatus } from './Runtime'
 import type { ReferenceProps, ReferenceStatus } from './types'
 
