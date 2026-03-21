@@ -9,6 +9,7 @@ use super::super::module_bindings::{
     collect_default_export_declaration, collect_exported_declaration,
 };
 use super::super::symbols::{push_interface_shell, push_type_alias_shell};
+use super::super::ExtractionContext;
 use crate::tasty::ast::model::{ImportBinding, SymbolShell};
 use crate::tasty::scanner::ScannedFile;
 
@@ -20,30 +21,35 @@ pub(crate) fn collect_statement_exports(
     export_bindings: &mut BTreeMap<String, String>,
     exports: &mut Vec<SymbolShell>,
 ) {
-    collect_named_export_statement(
-        scanned_file,
-        statement,
+    let ctx = ExtractionContext {
+        source: &scanned_file.source,
         comments,
         import_bindings,
+        module_specifier: &scanned_file.module_specifier,
+        library: &scanned_file.library,
+    };
+
+    collect_named_export_statement(
+        scanned_file,
+        &ctx,
+        statement,
         export_bindings,
         exports,
     );
     collect_user_export_statement(
         scanned_file,
+        &ctx,
         statement,
-        comments,
-        import_bindings,
         export_bindings,
         exports,
     );
-    collect_user_type_shell(scanned_file, statement, comments, import_bindings, exports);
+    collect_user_type_shell(scanned_file, &ctx, statement, exports);
 }
 
 fn collect_named_export_statement(
     scanned_file: &ScannedFile,
+    ctx: &ExtractionContext<'_>,
     statement: &Statement<'_>,
-    comments: &[oxc_ast::ast::Comment],
-    import_bindings: &BTreeMap<String, ImportBinding>,
     export_bindings: &mut BTreeMap<String, String>,
     exports: &mut Vec<SymbolShell>,
 ) {
@@ -53,12 +59,8 @@ fn collect_named_export_statement(
 
     collect_exported_declaration(
         &scanned_file.file_id,
-        &scanned_file.module_specifier,
-        &scanned_file.library,
+        ctx,
         export_decl,
-        &scanned_file.source,
-        comments,
-        import_bindings,
         export_bindings,
         exports,
     );
@@ -66,9 +68,8 @@ fn collect_named_export_statement(
 
 fn collect_user_export_statement(
     scanned_file: &ScannedFile,
+    ctx: &ExtractionContext<'_>,
     statement: &Statement<'_>,
-    comments: &[oxc_ast::ast::Comment],
-    import_bindings: &BTreeMap<String, ImportBinding>,
     export_bindings: &mut BTreeMap<String, String>,
     exports: &mut Vec<SymbolShell>,
 ) {
@@ -82,12 +83,8 @@ fn collect_user_export_statement(
 
     collect_default_export_declaration(
         &scanned_file.file_id,
-        &scanned_file.module_specifier,
-        &scanned_file.library,
+        ctx,
         export_default,
-        &scanned_file.source,
-        comments,
-        import_bindings,
         export_bindings,
         exports,
     );
@@ -95,9 +92,8 @@ fn collect_user_export_statement(
 
 fn collect_user_type_shell(
     scanned_file: &ScannedFile,
+    ctx: &ExtractionContext<'_>,
     statement: &Statement<'_>,
-    comments: &[oxc_ast::ast::Comment],
-    import_bindings: &BTreeMap<String, ImportBinding>,
     exports: &mut Vec<SymbolShell>,
 ) {
     if scanned_file.library != USER_LIBRARY_NAME {
@@ -107,25 +103,17 @@ fn collect_user_type_shell(
     match statement {
         Statement::TSInterfaceDeclaration(interface_decl) => push_interface_shell(
             &scanned_file.file_id,
-            &scanned_file.module_specifier,
-            &scanned_file.library,
+            ctx,
             interface_decl,
             interface_decl.span(),
-            &scanned_file.source,
-            comments,
-            import_bindings,
             false,
             exports,
         ),
         Statement::TSTypeAliasDeclaration(type_alias) => push_type_alias_shell(
             &scanned_file.file_id,
-            &scanned_file.module_specifier,
-            &scanned_file.library,
+            ctx,
             type_alias,
             type_alias.span(),
-            &scanned_file.source,
-            comments,
-            import_bindings,
             false,
             exports,
         ),

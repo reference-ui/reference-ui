@@ -24,7 +24,7 @@ impl<'a> LoweringContext<'a> {
         &self,
         reference: &oxc_ast::ast::TSTypeReference<'_>,
     ) -> TypeRef {
-        let name = slice_span(self.source, reference.type_name.span()).to_string();
+        let name = slice_span(self.ctx.source, reference.type_name.span()).to_string();
         let lookup_name = reference_lookup_name(&name);
         let type_arguments = reference.type_arguments.as_ref().map(|instantiation| {
             instantiation
@@ -52,7 +52,7 @@ impl<'a> LoweringContext<'a> {
     }
 
     pub(super) fn lower_expression_reference(&self, expression: &Expression<'_>) -> TypeRef {
-        let name = slice_span(self.source, expression.span()).to_string();
+        let name = slice_span(self.ctx.source, expression.span()).to_string();
 
         TypeRef::Reference {
             name: name.clone(),
@@ -63,11 +63,6 @@ impl<'a> LoweringContext<'a> {
     }
 
     pub(super) fn reference_source_module(&self, reference_name: &str) -> Option<String> {
-        reference_source_module(
-            reference_name,
-            self.import_bindings,
-            self.current_module_specifier,
-            self.current_library,
-        )
+        reference_source_module(reference_name, self.ctx)
     }
 }

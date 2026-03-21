@@ -1,39 +1,29 @@
 use std::collections::BTreeMap;
 
 use oxc_ast::ast::{
-    Comment, Declaration, ExportDefaultDeclaration, ExportDefaultDeclarationKind,
-    ExportNamedDeclaration, TSInterfaceDeclaration, TSTypeAliasDeclaration,
+    Declaration, ExportDefaultDeclaration, ExportDefaultDeclarationKind, ExportNamedDeclaration,
+    TSInterfaceDeclaration, TSTypeAliasDeclaration,
 };
 use oxc_span::{GetSpan, Span};
 
 use super::super::symbols::{push_interface_shell, push_type_alias_shell};
+use super::super::ExtractionContext;
 use super::imports::module_export_name_to_string;
-use crate::tasty::ast::model::{ImportBinding, SymbolShell};
+use crate::tasty::ast::model::SymbolShell;
 
 pub(in crate::tasty::ast::extract) fn collect_exported_declaration(
     file_id: &str,
-    current_module_specifier: &str,
-    current_library: &str,
+    ctx: &ExtractionContext<'_>,
     export_decl: &ExportNamedDeclaration<'_>,
-    source: &str,
-    comments: &[Comment],
-    import_bindings: &BTreeMap<String, ImportBinding>,
     export_bindings: &mut BTreeMap<String, String>,
     exports: &mut Vec<SymbolShell>,
 ) {
     let Some(declaration) = export_decl.declaration.as_ref() else {
-        record_named_reexports(export_decl, source, export_bindings);
+        record_named_reexports(export_decl, ctx.source, export_bindings);
         return;
     };
 
-    let pass = ExportPass::new(
-        file_id,
-        current_module_specifier,
-        current_library,
-        source,
-        comments,
-        import_bindings,
-    );
+    let pass = ExportPass::new(file_id, ctx);
 
     match declaration {
         Declaration::TSInterfaceDeclaration(decl) => {
@@ -48,23 +38,12 @@ pub(in crate::tasty::ast::extract) fn collect_exported_declaration(
 
 pub(in crate::tasty::ast::extract) fn collect_default_export_declaration(
     file_id: &str,
-    current_module_specifier: &str,
-    current_library: &str,
+    ctx: &ExtractionContext<'_>,
     export_default: &ExportDefaultDeclaration<'_>,
-    source: &str,
-    comments: &[Comment],
-    import_bindings: &BTreeMap<String, ImportBinding>,
     export_bindings: &mut BTreeMap<String, String>,
     exports: &mut Vec<SymbolShell>,
 ) {
-    let pass = ExportPass::new(
-        file_id,
-        current_module_specifier,
-        current_library,
-        source,
-        comments,
-        import_bindings,
-    );
+    let pass = ExportPass::new(file_id, ctx);
 
     match &export_default.declaration {
         ExportDefaultDeclarationKind::TSInterfaceDeclaration(decl) => {
@@ -79,30 +58,12 @@ pub(in crate::tasty::ast::extract) fn collect_default_export_declaration(
 
 struct ExportPass<'a> {
     file_id: &'a str,
-    module_specifier: &'a str,
-    library: &'a str,
-    source: &'a str,
-    comments: &'a [Comment],
-    import_bindings: &'a BTreeMap<String, ImportBinding>,
+    ctx: &'a ExtractionContext<'a>,
 }
 
 impl<'a> ExportPass<'a> {
-    fn new(
-        file_id: &'a str,
-        module_specifier: &'a str,
-        library: &'a str,
-        source: &'a str,
-        comments: &'a [Comment],
-        import_bindings: &'a BTreeMap<String, ImportBinding>,
-    ) -> Self {
-        Self {
-            file_id,
-            module_specifier,
-            library,
-            source,
-            comments,
-            import_bindings,
-        }
+    fn new(file_id: &'a str, ctx: &'a ExtractionContext<'a>) -> Self {
+        Self { file_id, ctx }
     }
 
     fn named_interface(
@@ -114,18 +75,7 @@ impl<'a> ExportPass<'a> {
     ) {
         let name = decl.id.name.to_string();
         bind_export_name_to_local(&name, &name, export_bindings);
-        push_interface_shell(
-            self.file_id,
-            self.module_specifier,
-            self.library,
-            decl,
-            comment_span,
-            self.source,
-            self.comments,
-            self.import_bindings,
-            true,
-            exports,
-        );
+        push_interface_shell(self.file_id, self.ctx, decl, comment_span, true, exports);
     }
 
     fn named_type_alias(
@@ -137,18 +87,7 @@ impl<'a> ExportPass<'a> {
     ) {
         let name = decl.id.name.to_string();
         bind_export_name_to_local(&name, &name, export_bindings);
-        push_type_alias_shell(
-            self.file_id,
-            self.module_specifier,
-            self.library,
-            decl,
-            comment_span,
-            self.source,
-            self.comments,
-            self.import_bindings,
-            true,
-            exports,
-        );
+        push_type_alias_shell(self.file_id, self.ctx, decl, comment_span, true, exports);
     }
 
     fn default_interface(
@@ -159,18 +98,7 @@ impl<'a> ExportPass<'a> {
         exports: &mut Vec<SymbolShell>,
     ) {
         bind_default_to(decl.id.name.as_str(), export_bindings);
-        push_interface_shell(
-            self.file_id,
-            self.module_specifier,
-            self.library,
-            decl,
-            comment_span,
-            self.source,
-            self.comments,
-            self.import_bindings,
-            true,
-            exports,
-        );
+        push_interface_shell(self.file_id, self.ctx, decl, comment_span, true, exports);
     }
 }
 

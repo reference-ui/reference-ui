@@ -5,13 +5,11 @@ use crate::tasty::shared::typeref_util::property_key_name;
 use crate::tasty::model::{JsDoc, TsMember, TsMemberKind, TypeRef};
 
 use super::super::values::infer_value_type_with_const_context;
+use super::super::ExtractionContext;
 
 pub(crate) fn infer_object_type(
     object: &ObjectExpression<'_>,
-    source: &str,
-    import_bindings: &std::collections::BTreeMap<String, crate::tasty::ast::model::ImportBinding>,
-    current_module_specifier: &str,
-    current_library: &str,
+    ctx: &ExtractionContext<'_>,
     const_asserted: bool,
 ) -> Option<TypeRef> {
     let mut members = Vec::new();
@@ -25,13 +23,10 @@ pub(crate) fn infer_object_type(
             return None;
         }
 
-        let name = property_key_name(&property.key, source)?;
+        let name = property_key_name(&property.key, ctx.source)?;
         let value_type = infer_value_type_with_const_context(
             &property.value,
-            source,
-            import_bindings,
-            current_module_specifier,
-            current_library,
+            ctx,
             const_asserted,
         )?;
 

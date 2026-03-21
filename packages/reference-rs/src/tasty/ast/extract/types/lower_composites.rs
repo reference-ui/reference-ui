@@ -5,6 +5,7 @@ use oxc_span::{GetSpan, SourceType};
 
 use crate::tasty::model::{FnParam, TemplateLiteralPart, TupleElement, TypeOperatorKind, TypeRef};
 
+use crate::tasty::ast::extract::ExtractionContext;
 use super::super::members::members_from_signatures;
 use super::super::slice_span;
 use super::mapped_modifier_kind;
@@ -34,12 +35,8 @@ impl<'a> LoweringContext<'a> {
         TypeRef::Object {
             members: members_from_signatures(
                 type_literal.members.as_slice(),
-                self.source,
-                &[],
+                &self.ctx.with_empty_comments(),
                 None,
-                self.import_bindings,
-                self.current_module_specifier,
-                self.current_library,
             ),
         }
     }
@@ -51,7 +48,7 @@ impl<'a> LoweringContext<'a> {
         let inner = self.lower_tuple_element(&named.element_type);
         TypeRef::Tuple {
             elements: vec![TupleElement {
-                label: Some(slice_span(self.source, named.label.span()).to_string()),
+                label: Some(slice_span(self.ctx.source, named.label.span()).to_string()),
                 optional: named.optional,
                 rest: false,
                 element: inner.element,
@@ -99,7 +96,7 @@ impl<'a> LoweringContext<'a> {
 
     pub(super) fn lower_type_query(&self, query: &oxc_ast::ast::TSTypeQuery<'_>) -> TypeRef {
         TypeRef::TypeQuery {
-            expression: slice_span(self.source, query.expr_name.span()).to_string(),
+            expression: slice_span(self.ctx.source, query.expr_name.span()).to_string(),
             resolved: None,
         }
     }
@@ -119,7 +116,7 @@ impl<'a> LoweringContext<'a> {
 
     pub(super) fn lower_mapped_type(&self, mapped: &oxc_ast::ast::TSMappedType<'_>) -> TypeRef {
         TypeRef::Mapped {
-            type_param: slice_span(self.source, mapped.key.span()).to_string(),
+            type_param: slice_span(self.ctx.source, mapped.key.span()).to_string(),
             source_type: Box::new(self.lower_type(&mapped.constraint)),
             name_type: mapped
                 .name_type
@@ -162,7 +159,7 @@ impl<'a> LoweringContext<'a> {
                 let lowered = self.lower_tuple_element(&named.element_type);
 
                 TupleElement {
-                    label: Some(slice_span(self.source, named.label.span()).to_string()),
+                    label: Some(slice_span(self.ctx.source, named.label.span()).to_string()),
                     optional: named.optional,
                     rest: false,
                     element: lowered.element,
@@ -179,7 +176,7 @@ impl<'a> LoweringContext<'a> {
 
     /// HACK: synthetic reparse of a single tuple element via a type alias wrapper.
     pub(super) fn lower_tuple_element_type(&self, element: &TSTupleElement<'_>) -> TypeRef {
-        let element_source = slice_span(self.source, element.span());
+        let element_source = slice_span(self.ctx.source, element.span());
         let wrapped_source = format!("type __TastyTupleElement = {element_source};");
         let allocator = Allocator::default();
         let source_type = SourceType::from_path("tuple-element.ts").unwrap_or_default();
@@ -190,13 +187,14 @@ impl<'a> LoweringContext<'a> {
         if let Some(oxc_ast::ast::Statement::TSTypeAliasDeclaration(type_alias)) =
             parse_result.program.body.first()
         {
-            return LoweringContext::new(
-                &wrapped_source,
-                self.import_bindings,
-                self.current_module_specifier,
-                self.current_library,
-            )
-            .lower_type(&type_alias.type_annotation);
+            let ctx = ExtractionContext {
+                source: wrapped_source.as_str(),
+                comments: &[],
+                import_bindings: self.ctx.import_bindings,
+                module_specifier: self.ctx.module_specifier,
+                library: self.ctx.library,
+            };
+            return LoweringContext::new(&ctx).lower_type(&type_alias.type_annotation);
         }
 
         TypeRef::Raw {
@@ -210,7 +208,7 @@ impl<'a> LoweringContext<'a> {
 
         for param in &params.items {
             lowered_params.push(FnParam {
-                name: Some(slice_span(self.source, param.pattern.span()).to_string()),
+                name: Some(slice_span(self.ctx.source, param.pattern.span()).to_string()),
                 optional: param.optional,
                 type_ref: param
                     .type_annotation
@@ -221,7 +219,7 @@ impl<'a> LoweringContext<'a> {
 
         if let Some(rest) = &params.rest {
             lowered_params.push(FnParam {
-                name: Some(slice_span(self.source, rest.rest.span()).to_string()),
+                name: Some(slice_span(self.ctx.source, rest.rest.span()).to_string()),
                 optional: false,
                 type_ref: rest
                     .type_annotation

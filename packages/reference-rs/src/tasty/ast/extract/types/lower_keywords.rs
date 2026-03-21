@@ -33,13 +33,13 @@ impl<'a> LoweringContext<'a> {
         keyword: &oxc_ast::ast::TSIntrinsicKeyword,
     ) -> TypeRef {
         TypeRef::Intrinsic {
-            name: slice_span(self.source, keyword.span()).to_string(),
+            name: slice_span(self.ctx.source, keyword.span()).to_string(),
         }
     }
 
     pub(super) fn lower_literal_type(&self, literal: &oxc_ast::ast::TSLiteralType<'_>) -> TypeRef {
         TypeRef::Literal {
-            value: slice_span(self.source, literal.span).to_string(),
+            value: slice_span(self.ctx.source, literal.span).to_string(),
         }
     }
 }
