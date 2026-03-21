@@ -2,7 +2,8 @@ import * as React from 'react'
 import { createTastyBrowserRuntime } from '@reference-ui/rust/tasty/browser'
 import type { TastyBrowserRuntime } from '@reference-ui/rust/tasty'
 import { Code } from '@reference-ui/react'
-import { ReferenceDocumentView, ReferenceFrame, ReferenceNotice, createReferenceDocument } from './components'
+import { ReferenceDocumentView, ReferenceFrame, ReferenceNotice } from './components'
+import { createReferenceDocument } from './model'
 import { createReferenceRuntime } from './Runtime'
 import type { ReferenceDocument, ReferenceProps } from './types'
 
@@ -25,7 +26,7 @@ export function createReferenceComponent(runtime: TastyBrowserRuntime) {
         .load(name)
         .then(data => {
           if (!active) return
-          setDocument(createReferenceDocument(data))
+          setDocument(createReferenceDocument(data.symbol, data.members))
           setIsLoading(false)
         })
         .catch((error: unknown) => {
@@ -37,7 +38,7 @@ export function createReferenceComponent(runtime: TastyBrowserRuntime) {
       return () => {
         active = false
       }
-    }, [name])
+    }, [name, referenceRuntime])
 
     if (isLoading) {
       return (
