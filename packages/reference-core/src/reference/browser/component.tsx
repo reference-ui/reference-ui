@@ -5,7 +5,20 @@ import {
   type TastyMember,
   type TastySymbol,
 } from '@reference-ui/rust/tasty'
-import { Code, Div, H2, P, Small, Span, Table, Tbody, Td, Th, Thead, Tr } from './primitives'
+import {
+  Code,
+  Div,
+  H2,
+  P,
+  Small,
+  Span,
+  Table,
+  Tbody,
+  Td,
+  Th,
+  Thead,
+  Tr,
+} from './primitives'
 
 export interface ReferenceProps {
   name: string
@@ -59,9 +72,7 @@ function renderSummary(status: ReferenceStatus, name: string): React.ReactNode {
         <Code fontFamily="reference.mono">{symbol.getName()}</Code>.
       </P>
       {typeParameterNames.length > 0 ? (
-        <Small color="reference.muted">
-          Generics: {typeParameterNames.join(', ')}
-        </Small>
+        <Small color="reference.muted">Generics: {typeParameterNames.join(', ')}</Small>
       ) : null}
       {extendsNames.length > 0 ? (
         <Small color="reference.muted">Extends: {extendsNames.join(', ')}</Small>
@@ -230,7 +241,7 @@ export function createReferenceComponent(runtime: TastyBrowserRuntime) {
           padding: 'reference.lg',
         }}
       >
-        <H2 margin="0 0 0.5rem 0" fontSize="1rem">
+        <H2 margin="0 0 0.5rem 0" fontSize="1rem" color="reference.foreground">
           Reference
         </H2>
         {renderSummary(status, name)}

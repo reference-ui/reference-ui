@@ -2,7 +2,7 @@ import { mkdir, rm } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { existsSync } from 'node:fs'
 import fg from 'fast-glob'
-import { emit, once } from '../lib/event-bus'
+import { emit } from '../lib/event-bus'
 import { log } from '../lib/log'
 import { getVirtualDirPath } from '../lib/paths'
 import { copyToVirtual } from './copy'
@@ -26,15 +26,9 @@ export async function copyAll(payload: {
 
   await mkdir(virtualDir, { recursive: true })
 
-  await new Promise<void>((resolvePromise, rejectPromise) => {
-    once('reference:browser:virtual-ready', () => resolvePromise())
-    once('reference:browser:virtual-failed', (p) => rejectPromise(new Error(p.message)))
-    emit('run:reference:copy-browser', { virtualDir })
-  })
-
   if (!include.length) {
     log.debug('virtual', 'No include patterns - skipping')
-    emit('virtual:complete', {})
+    emit('virtual:copy:complete', { virtualDir })
     return
   }
 
@@ -52,5 +46,5 @@ export async function copyAll(payload: {
   }
 
   log.debug('virtual', 'Sync complete')
-  emit('virtual:complete', {})
+  emit('virtual:copy:complete', { virtualDir })
 }
