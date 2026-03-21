@@ -116,8 +116,27 @@ function normalizeReferenceValueOption(value: string): string {
 
 function shouldUseReferenceValueSet(type: TastyTypeRef, options: ReferenceValueOption[]): boolean {
   if (options.length === 0) return false
-  if (type.isLiteral() || type.isUnion()) return true
+  if (type.isLiteral()) return true
+  if (type.isUnion()) {
+    return type.getUnionTypes().every(isReferenceInlineValueBranch)
+  }
   return options.some((option) => option.isDefault)
+}
+
+function isReferenceInlineValueBranch(type: TastyTypeRef): boolean {
+  if (type.isLiteral()) return true
+  if (type.isUnion()) return type.getUnionTypes().every(isReferenceInlineValueBranch)
+
+  switch (type.getKind()) {
+    case 'intrinsic':
+      return type.describe() === 'boolean'
+    case 'function':
+    case 'constructor':
+    case 'raw':
+      return true
+    default:
+      return false
+  }
 }
 
 function isReferenceTypeExpression(type: TastyTypeRef): boolean {
