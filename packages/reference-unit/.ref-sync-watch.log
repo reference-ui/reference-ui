@@ -1,4 +1,4 @@
-[10:43:20.550] [bus] [38;5;208mlog:entry[0m
+[10:51:38.547] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -8,15 +8,19 @@ payload:
   module: [32m'watch'[39m,
   source: [32m'worker'[39m,
   threadId: [33m1[39m,
-  timestamp: [32m'10:43:20.536'[39m
+  timestamp: [32m'10:51:38.536'[39m
 }
 [2m--------------------[0m
-[10:43:20.550] [bus] [38;5;208mreference:ready[0m
+[10:51:38.548] [bus] [38;5;208mreference:ready[0m
 payload:
 {}
 [2m--------------------[0m
-[10:43:20.536] [worker:1] [watch] Starting - source: /Users/ryn/Developer/reference-ui/packages/reference-unit patterns: src/**/*.{ts,tsx,mdx}, tests/**/*.{ts,tsx,mdx}
-[10:43:20.552] [bus] [38;5;208mlog:entry[0m
+[10:51:38.536] [worker:1] [watch] Starting - source: /Users/ryn/Developer/reference-ui/packages/reference-unit patterns: src/**/*.{ts,tsx,mdx}, tests/**/*.{ts,tsx,mdx}
+[10:51:38.550] [bus] [38;5;208mvirtual:ready[0m
+payload:
+{}
+[2m--------------------[0m
+[10:51:38.550] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -26,42 +30,11 @@ payload:
   module: [32m'watch'[39m,
   source: [32m'worker'[39m,
   threadId: [33m1[39m,
-  timestamp: [32m'10:43:20.551'[39m
+  timestamp: [32m'10:51:38.550'[39m
 }
 [2m--------------------[0m
-[10:43:20.551] [worker:1] [watch] Ready - watching for changes
-[10:43:20.554] [bus] [38;5;208mvirtual:ready[0m
-payload:
-{}
-[2m--------------------[0m
-[10:43:20.565] [bus] [38;5;208mlog:entry[0m
-payload:
-{
-  args: [
-    [32m'Generating TypeScript declarations...'[39m
-  ],
-  level: [32m'debug'[39m,
-  module: [32m'packager:ts'[39m,
-  source: [32m'worker'[39m,
-  threadId: [33m6[39m,
-  timestamp: [32m'10:43:20.565'[39m
-}
-[2m--------------------[0m
-[10:43:20.565] [worker:6] [packager:ts] Generating TypeScript declarations...
-[10:43:20.566] [bus] [38;5;208mlog:entry[0m
-payload:
-{
-  args: [
-    [32m'Building types for @reference-ui/react...'[39m
-  ],
-  level: [32m'debug'[39m,
-  module: [32m'packager:ts'[39m,
-  source: [32m'worker'[39m,
-  threadId: [33m6[39m,
-  timestamp: [32m'10:43:20.565'[39m
-}
-[2m--------------------[0m
-[10:43:20.566] [bus] [38;5;208mlog:entry[0m
+[10:51:38.550] [worker:1] [watch] Ready - watching for changes
+[10:51:38.561] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -74,33 +47,61 @@ payload:
   module: [32m'virtual'[39m,
   source: [32m'worker'[39m,
   threadId: [33m2[39m,
-  timestamp: [32m'10:43:20.565'[39m
+  timestamp: [32m'10:51:38.561'[39m
 }
 [2m--------------------[0m
-[10:43:20.565] [worker:6] [packager:ts] Building types for @reference-ui/react...
-[10:43:20.565] [worker:2] [virtual] Initializing /Users/ryn/Developer/reference-ui/packages/reference-unit → /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual
-[10:43:20.569] [bus] [38;5;208mlog:entry[0m
+[10:51:38.561] [worker:2] [virtual] Initializing /Users/ryn/Developer/reference-ui/packages/reference-unit → /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual
+[10:51:38.563] [worker:6] [packager:ts] Generating TypeScript declarations...
+[10:51:38.564] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
-    [32m'[tsup] spawned PID 37549'[39m
+    [32m'Generating TypeScript declarations...'[39m
   ],
   level: [32m'debug'[39m,
   module: [32m'packager:ts'[39m,
   source: [32m'worker'[39m,
   threadId: [33m6[39m,
-  timestamp: [32m'10:43:20.569'[39m
+  timestamp: [32m'10:51:38.563'[39m
 }
 [2m--------------------[0m
-[10:43:20.569] [bus] [38;5;208mprocess:spawned[0m
+[10:51:38.564] [bus] [38;5;208mlog:entry[0m
 payload:
 {
-  pid: [33m37549[39m,
+  args: [
+    [32m'Building types for @reference-ui/react...'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'packager:ts'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m6[39m,
+  timestamp: [32m'10:51:38.564'[39m
+}
+[2m--------------------[0m
+[10:51:38.564] [worker:6] [packager:ts] Building types for @reference-ui/react...
+[10:51:38.567] [worker:6] [packager:ts] [tsup] spawned PID 45917
+[10:51:38.567] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'[tsup] spawned PID 45917'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'packager:ts'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m6[39m,
+  timestamp: [32m'10:51:38.567'[39m
+}
+[2m--------------------[0m
+[10:51:38.567] [bus] [38;5;208mprocess:spawned[0m
+payload:
+{
+  pid: [33m45917[39m,
   processName: [32m'tsup'[39m
 }
 [2m--------------------[0m
-[10:43:20.569] [worker:6] [packager:ts] [tsup] spawned PID 37549
-[10:43:20.581] [bus] [38;5;208mlog:entry[0m
+[10:51:38.576] [worker:2] [virtual] Copying 53 files
+[10:51:38.576] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -110,99 +111,98 @@ payload:
   module: [32m'virtual'[39m,
   source: [32m'worker'[39m,
   threadId: [33m2[39m,
-  timestamp: [32m'10:43:20.581'[39m
+  timestamp: [32m'10:51:38.576'[39m
 }
 [2m--------------------[0m
-[10:43:20.581] [worker:2] [virtual] Copying 53 files
-[10:43:20.585] [bus] [38;5;208mvirtual:fs:change[0m
+[10:51:38.580] [bus] [38;5;208mvirtual:fs:change[0m
 payload:
 {
   event: [32m'add'[39m,
   path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/src/App.tsx'[39m
 }
 [2m--------------------[0m
-[10:43:20.586] [bus] [38;5;208mvirtual:fs:change[0m
+[10:51:38.581] [bus] [38;5;208mvirtual:fs:change[0m
 payload:
 {
   event: [32m'add'[39m,
   path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/src/main.tsx'[39m
 }
 [2m--------------------[0m
-[10:43:20.586] [bus] [38;5;208mpackager:ready[0m
-payload:
-{}
-[2m--------------------[0m
-[10:43:20.586] [bus] [38;5;208mvirtual:fs:change[0m
+[10:51:38.581] [bus] [38;5;208mvirtual:fs:change[0m
 payload:
 {
   event: [32m'add'[39m,
   path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/src/reference/fixtures.ts'[39m
 }
 [2m--------------------[0m
-[10:43:20.587] [bus] [38;5;208mvirtual:fs:change[0m
-payload:
-{
-  event: [32m'add'[39m,
-  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/src/system/combinedCustomProps.fixture.tsx'[39m
-}
-[2m--------------------[0m
-[10:43:20.587] [bus] [38;5;208mvirtual:fs:change[0m
-payload:
-{
-  event: [32m'add'[39m,
-  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/src/system/containerAnonymous.fixture.tsx'[39m
-}
-[2m--------------------[0m
-[10:43:20.588] [bus] [38;5;208mvirtual:fs:change[0m
-payload:
-{
-  event: [32m'add'[39m,
-  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/src/system/containerNamed.fixture.tsx'[39m
-}
-[2m--------------------[0m
-[10:43:20.588] [bus] [38;5;208mvirtual:fs:change[0m
-payload:
-{
-  event: [32m'add'[39m,
-  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/src/system/containerNamedNested.fixture.tsx'[39m
-}
-[2m--------------------[0m
-[10:43:20.589] [bus] [38;5;208mvirtual:fs:change[0m
-payload:
-{
-  event: [32m'add'[39m,
-  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/src/system/containerNested.fixture.tsx'[39m
-}
-[2m--------------------[0m
-[10:43:20.590] [bus] [38;5;208mvirtual:fs:change[0m
-payload:
-{
-  event: [32m'add'[39m,
-  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/src/system/fontProp.fixture.tsx'[39m
-}
-[2m--------------------[0m
-[10:43:20.590] [bus] [38;5;208mvirtual:fs:change[0m
-payload:
-{
-  event: [32m'add'[39m,
-  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/src/system/fonts.ts'[39m
-}
-[2m--------------------[0m
-[10:43:20.591] [bus] [38;5;208mvirtual:fs:change[0m
-payload:
-{
-  event: [32m'add'[39m,
-  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/src/system/styles.ts'[39m
-}
-[2m--------------------[0m
-[10:43:20.591] [bus] [38;5;208mvirtual:fs:change[0m
+[10:51:38.582] [bus] [38;5;208mvirtual:fs:change[0m
 payload:
 {
   event: [32m'add'[39m,
   path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/src/types/reference-ui-generated.d.ts'[39m
 }
 [2m--------------------[0m
-[10:43:20.592] [bus] [38;5;208mlog:entry[0m
+[10:51:38.582] [bus] [38;5;208mvirtual:fs:change[0m
+payload:
+{
+  event: [32m'add'[39m,
+  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/src/system/combinedCustomProps.fixture.tsx'[39m
+}
+[2m--------------------[0m
+[10:51:38.583] [bus] [38;5;208mvirtual:fs:change[0m
+payload:
+{
+  event: [32m'add'[39m,
+  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/src/system/containerAnonymous.fixture.tsx'[39m
+}
+[2m--------------------[0m
+[10:51:38.584] [bus] [38;5;208mvirtual:fs:change[0m
+payload:
+{
+  event: [32m'add'[39m,
+  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/src/system/containerNamed.fixture.tsx'[39m
+}
+[2m--------------------[0m
+[10:51:38.584] [bus] [38;5;208mvirtual:fs:change[0m
+payload:
+{
+  event: [32m'add'[39m,
+  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/src/system/containerNamedNested.fixture.tsx'[39m
+}
+[2m--------------------[0m
+[10:51:38.584] [bus] [38;5;208mpackager:ready[0m
+payload:
+{}
+[2m--------------------[0m
+[10:51:38.585] [bus] [38;5;208mvirtual:fs:change[0m
+payload:
+{
+  event: [32m'add'[39m,
+  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/src/system/containerNested.fixture.tsx'[39m
+}
+[2m--------------------[0m
+[10:51:38.585] [bus] [38;5;208mvirtual:fs:change[0m
+payload:
+{
+  event: [32m'add'[39m,
+  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/src/system/fontProp.fixture.tsx'[39m
+}
+[2m--------------------[0m
+[10:51:38.586] [bus] [38;5;208mvirtual:fs:change[0m
+payload:
+{
+  event: [32m'add'[39m,
+  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/src/system/fonts.ts'[39m
+}
+[2m--------------------[0m
+[10:51:38.586] [bus] [38;5;208mvirtual:fs:change[0m
+payload:
+{
+  event: [32m'add'[39m,
+  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/src/system/styles.ts'[39m
+}
+[2m--------------------[0m
+[10:51:38.587] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -212,18 +212,19 @@ payload:
   module: [32m'virtual'[39m,
   source: [32m'worker'[39m,
   threadId: [33m2[39m,
-  timestamp: [32m'10:43:20.592'[39m
+  timestamp: [32m'10:51:38.587'[39m
 }
 [2m--------------------[0m
-[10:43:20.592] [bus] [38;5;208mvirtual:fs:change[0m
+[10:51:38.587] [bus] [38;5;208mvirtual:fs:change[0m
 payload:
 {
   event: [32m'add'[39m,
   path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/src/virtual/css.tsx'[39m
 }
 [2m--------------------[0m
-[10:43:20.592] [worker:2] [virtual] ✓ src/virtual/css.tsx
-[10:43:20.594] [bus] [38;5;208mlog:entry[0m
+[10:51:38.587] [worker:2] [virtual] ✓ src/virtual/css.tsx
+[10:51:38.588] [worker:2] [virtual] ✓ src/virtual/demo.mdx
+[10:51:38.589] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -233,18 +234,18 @@ payload:
   module: [32m'virtual'[39m,
   source: [32m'worker'[39m,
   threadId: [33m2[39m,
-  timestamp: [32m'10:43:20.593'[39m
+  timestamp: [32m'10:51:38.588'[39m
 }
 [2m--------------------[0m
-[10:43:20.594] [bus] [38;5;208mvirtual:fs:change[0m
+[10:51:38.589] [bus] [38;5;208mvirtual:fs:change[0m
 payload:
 {
   event: [32m'add'[39m,
   path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/src/virtual/demo.jsx'[39m
 }
 [2m--------------------[0m
-[10:43:20.593] [worker:2] [virtual] ✓ src/virtual/demo.mdx
-[10:43:20.594] [bus] [38;5;208mlog:entry[0m
+[10:51:38.589] [worker:2] [virtual] ✓ src/virtual/recipes.tsx
+[10:51:38.589] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -254,284 +255,283 @@ payload:
   module: [32m'virtual'[39m,
   source: [32m'worker'[39m,
   threadId: [33m2[39m,
-  timestamp: [32m'10:43:20.594'[39m
+  timestamp: [32m'10:51:38.589'[39m
 }
 [2m--------------------[0m
-[10:43:20.594] [bus] [38;5;208mvirtual:fs:change[0m
+[10:51:38.589] [bus] [38;5;208mvirtual:fs:change[0m
 payload:
 {
   event: [32m'add'[39m,
   path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/src/virtual/recipes.tsx'[39m
 }
 [2m--------------------[0m
-[10:43:20.594] [worker:2] [virtual] ✓ src/virtual/recipes.tsx
-[10:43:20.595] [bus] [38;5;208mvirtual:fs:change[0m
+[10:51:38.589] [bus] [38;5;208mvirtual:fs:change[0m
 payload:
 {
   event: [32m'add'[39m,
   path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/packager-ts.test.ts'[39m
 }
 [2m--------------------[0m
-[10:43:20.595] [bus] [38;5;208mvirtual:fs:change[0m
+[10:51:38.590] [bus] [38;5;208mvirtual:fs:change[0m
 payload:
 {
   event: [32m'add'[39m,
   path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/ref-sync.test.ts'[39m
 }
 [2m--------------------[0m
-[10:43:20.596] [bus] [38;5;208mvirtual:fs:change[0m
+[10:51:38.590] [bus] [38;5;208mvirtual:fs:change[0m
 payload:
 {
   event: [32m'add'[39m,
   path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/color-mode/data-prop.test.tsx'[39m
 }
 [2m--------------------[0m
-[10:43:20.597] [bus] [38;5;208mvirtual:fs:change[0m
-payload:
-{
-  event: [32m'add'[39m,
-  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/extends/component.test.tsx'[39m
-}
-[2m--------------------[0m
-[10:43:20.597] [bus] [38;5;208mvirtual:fs:change[0m
-payload:
-{
-  event: [32m'add'[39m,
-  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/extends/tokens.test.tsx'[39m
-}
-[2m--------------------[0m
-[10:43:20.598] [bus] [38;5;208mvirtual:fs:change[0m
+[10:51:38.591] [bus] [38;5;208mvirtual:fs:change[0m
 payload:
 {
   event: [32m'add'[39m,
   path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/layers/component.test.tsx'[39m
 }
 [2m--------------------[0m
-[10:43:20.598] [bus] [38;5;208mvirtual:fs:change[0m
+[10:51:38.591] [bus] [38;5;208mvirtual:fs:change[0m
 payload:
 {
   event: [32m'add'[39m,
   path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/layers/tokens.test.tsx'[39m
 }
 [2m--------------------[0m
-[10:43:20.599] [bus] [38;5;208mvirtual:fs:change[0m
+[10:51:38.592] [bus] [38;5;208mvirtual:fs:change[0m
+payload:
+{
+  event: [32m'add'[39m,
+  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/extends/component.test.tsx'[39m
+}
+[2m--------------------[0m
+[10:51:38.592] [bus] [38;5;208mvirtual:fs:change[0m
+payload:
+{
+  event: [32m'add'[39m,
+  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/extends/tokens.test.tsx'[39m
+}
+[2m--------------------[0m
+[10:51:38.593] [bus] [38;5;208mvirtual:fs:change[0m
 payload:
 {
   event: [32m'add'[39m,
   path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/primitives/css-flatten-layers.test.ts'[39m
 }
 [2m--------------------[0m
-[10:43:20.599] [bus] [38;5;208mvirtual:fs:change[0m
+[10:51:38.593] [bus] [38;5;208mvirtual:fs:change[0m
 payload:
 {
   event: [32m'add'[39m,
   path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/primitives/customProps.test.tsx'[39m
 }
 [2m--------------------[0m
-[10:43:20.601] [bus] [38;5;208mvirtual:fs:change[0m
+[10:51:38.595] [bus] [38;5;208mvirtual:fs:change[0m
 payload:
 {
   event: [32m'add'[39m,
   path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/primitives/div.test.tsx'[39m
 }
 [2m--------------------[0m
-[10:43:20.601] [bus] [38;5;208mvirtual:fs:change[0m
+[10:51:38.595] [bus] [38;5;208mvirtual:fs:change[0m
 payload:
 {
   event: [32m'add'[39m,
   path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/primitives/recipe.test.tsx'[39m
 }
 [2m--------------------[0m
-[10:43:20.601] [bus] [38;5;208mvirtual:fs:change[0m
+[10:51:38.595] [bus] [38;5;208mvirtual:fs:change[0m
 payload:
 {
   event: [32m'add'[39m,
   path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/primitives/setup.ts'[39m
 }
 [2m--------------------[0m
-[10:43:20.601] [bus] [38;5;208mvirtual:fs:change[0m
+[10:51:38.595] [bus] [38;5;208mvirtual:fs:change[0m
 payload:
 {
   event: [32m'add'[39m,
   path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/reference/component.test.tsx'[39m
 }
 [2m--------------------[0m
-[10:43:20.601] [bus] [38;5;208mvirtual:fs:change[0m
+[10:51:38.596] [bus] [38;5;208mvirtual:fs:change[0m
 payload:
 {
   event: [32m'add'[39m,
   path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/reference/helpers.ts'[39m
 }
 [2m--------------------[0m
-[10:43:20.602] [bus] [38;5;208mvirtual:fs:change[0m
+[10:51:38.596] [bus] [38;5;208mvirtual:fs:change[0m
 payload:
 {
   event: [32m'add'[39m,
   path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/reference/output.test.ts'[39m
 }
 [2m--------------------[0m
-[10:43:20.602] [bus] [38;5;208mvirtual:fs:change[0m
+[10:51:38.596] [bus] [38;5;208mvirtual:fs:change[0m
 payload:
 {
   event: [32m'add'[39m,
   path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/reference/types-package.test.ts'[39m
 }
 [2m--------------------[0m
-[10:43:20.602] [bus] [38;5;208mvirtual:fs:change[0m
+[10:51:38.597] [bus] [38;5;208mvirtual:fs:change[0m
 payload:
 {
   event: [32m'add'[39m,
   path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/setup/dom-matchers.ts'[39m
 }
 [2m--------------------[0m
-[10:43:20.603] [bus] [38;5;208mvirtual:fs:change[0m
+[10:51:38.597] [bus] [38;5;208mvirtual:fs:change[0m
 payload:
 {
   event: [32m'add'[39m,
   path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/setup/global-setup.ts'[39m
 }
 [2m--------------------[0m
-[10:43:20.603] [bus] [38;5;208mvirtual:fs:change[0m
+[10:51:38.597] [bus] [38;5;208mvirtual:fs:change[0m
 payload:
 {
   event: [32m'add'[39m,
   path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/setup/vitest-dom.d.ts'[39m
 }
 [2m--------------------[0m
-[10:43:20.604] [bus] [38;5;208mvirtual:fs:change[0m
-payload:
-{
-  event: [32m'add'[39m,
-  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/utils/design-system-css.ts'[39m
-}
-[2m--------------------[0m
-[10:43:20.604] [bus] [38;5;208mvirtual:fs:change[0m
-payload:
-{
-  event: [32m'add'[39m,
-  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/system/combinedCustomProps-output.test.ts'[39m
-}
-[2m--------------------[0m
-[10:43:20.604] [bus] [38;5;208mvirtual:fs:change[0m
-payload:
-{
-  event: [32m'add'[39m,
-  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/system/containerAnonymous-output.test.ts'[39m
-}
-[2m--------------------[0m
-[10:43:20.605] [bus] [38;5;208mvirtual:fs:change[0m
-payload:
-{
-  event: [32m'add'[39m,
-  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/system/containerNamed-output.test.ts'[39m
-}
-[2m--------------------[0m
-[10:43:20.605] [bus] [38;5;208mvirtual:fs:change[0m
-payload:
-{
-  event: [32m'add'[39m,
-  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/system/containerNamedNested-output.test.ts'[39m
-}
-[2m--------------------[0m
-[10:43:20.605] [bus] [38;5;208mvirtual:fs:change[0m
-payload:
-{
-  event: [32m'add'[39m,
-  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/system/containerNested-output.test.ts'[39m
-}
-[2m--------------------[0m
-[10:43:20.606] [bus] [38;5;208mvirtual:fs:change[0m
-payload:
-{
-  event: [32m'add'[39m,
-  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/system/customProps-output.helpers.ts'[39m
-}
-[2m--------------------[0m
-[10:43:20.606] [bus] [38;5;208mvirtual:fs:change[0m
-payload:
-{
-  event: [32m'add'[39m,
-  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/system/fontProp-output.test.ts'[39m
-}
-[2m--------------------[0m
-[10:43:20.606] [bus] [38;5;208mvirtual:fs:change[0m
-payload:
-{
-  event: [32m'add'[39m,
-  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/system/fontSystem.test.tsx'[39m
-}
-[2m--------------------[0m
-[10:43:20.607] [bus] [38;5;208mvirtual:fs:change[0m
-payload:
-{
-  event: [32m'add'[39m,
-  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/system/globalCss.test.tsx'[39m
-}
-[2m--------------------[0m
-[10:43:20.608] [bus] [38;5;208mvirtual:fs:change[0m
-payload:
-{
-  event: [32m'add'[39m,
-  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/system/keyframes.test.tsx'[39m
-}
-[2m--------------------[0m
-[10:43:20.608] [bus] [38;5;208mvirtual:fs:change[0m
-payload:
-{
-  event: [32m'add'[39m,
-  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/system/rhythm.test.tsx'[39m
-}
-[2m--------------------[0m
-[10:43:20.608] [bus] [38;5;208mvirtual:fs:change[0m
-payload:
-{
-  event: [32m'add'[39m,
-  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/system/tokens.test.tsx'[39m
-}
-[2m--------------------[0m
-[10:43:20.609] [bus] [38;5;208mvirtual:fs:change[0m
-payload:
-{
-  event: [32m'add'[39m,
-  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/watch/helpers.ts'[39m
-}
-[2m--------------------[0m
-[10:43:20.609] [bus] [38;5;208mvirtual:fs:change[0m
-payload:
-{
-  event: [32m'add'[39m,
-  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/watch/watch.test.ts'[39m
-}
-[2m--------------------[0m
-[10:43:20.610] [bus] [38;5;208mvirtual:fs:change[0m
+[10:51:38.598] [bus] [38;5;208mvirtual:fs:change[0m
 payload:
 {
   event: [32m'add'[39m,
   path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/virtual/baseline.test.ts'[39m
 }
 [2m--------------------[0m
-[10:43:20.610] [bus] [38;5;208mvirtual:fs:change[0m
+[10:51:38.598] [bus] [38;5;208mvirtual:fs:change[0m
 payload:
 {
   event: [32m'add'[39m,
   path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/virtual/helpers.ts'[39m
 }
 [2m--------------------[0m
-[10:43:20.610] [bus] [38;5;208mvirtual:fs:change[0m
+[10:51:38.598] [bus] [38;5;208mvirtual:fs:change[0m
 payload:
 {
   event: [32m'add'[39m,
   path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/virtual/mirror.test.ts'[39m
 }
 [2m--------------------[0m
-[10:43:20.611] [bus] [38;5;208mvirtual:fs:change[0m
+[10:51:38.599] [bus] [38;5;208mvirtual:fs:change[0m
 payload:
 {
   event: [32m'add'[39m,
   path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/virtual/transform.test.ts'[39m
 }
 [2m--------------------[0m
-[10:43:20.611] [bus] [38;5;208mlog:entry[0m
+[10:51:38.599] [bus] [38;5;208mvirtual:fs:change[0m
+payload:
+{
+  event: [32m'add'[39m,
+  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/utils/design-system-css.ts'[39m
+}
+[2m--------------------[0m
+[10:51:38.599] [bus] [38;5;208mvirtual:fs:change[0m
+payload:
+{
+  event: [32m'add'[39m,
+  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/watch/helpers.ts'[39m
+}
+[2m--------------------[0m
+[10:51:38.600] [bus] [38;5;208mvirtual:fs:change[0m
+payload:
+{
+  event: [32m'add'[39m,
+  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/watch/watch.test.ts'[39m
+}
+[2m--------------------[0m
+[10:51:38.601] [bus] [38;5;208mvirtual:fs:change[0m
+payload:
+{
+  event: [32m'add'[39m,
+  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/system/combinedCustomProps-output.test.ts'[39m
+}
+[2m--------------------[0m
+[10:51:38.601] [bus] [38;5;208mvirtual:fs:change[0m
+payload:
+{
+  event: [32m'add'[39m,
+  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/system/containerAnonymous-output.test.ts'[39m
+}
+[2m--------------------[0m
+[10:51:38.601] [bus] [38;5;208mvirtual:fs:change[0m
+payload:
+{
+  event: [32m'add'[39m,
+  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/system/containerNamed-output.test.ts'[39m
+}
+[2m--------------------[0m
+[10:51:38.602] [bus] [38;5;208mvirtual:fs:change[0m
+payload:
+{
+  event: [32m'add'[39m,
+  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/system/containerNamedNested-output.test.ts'[39m
+}
+[2m--------------------[0m
+[10:51:38.602] [bus] [38;5;208mvirtual:fs:change[0m
+payload:
+{
+  event: [32m'add'[39m,
+  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/system/containerNested-output.test.ts'[39m
+}
+[2m--------------------[0m
+[10:51:38.603] [bus] [38;5;208mvirtual:fs:change[0m
+payload:
+{
+  event: [32m'add'[39m,
+  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/system/customProps-output.helpers.ts'[39m
+}
+[2m--------------------[0m
+[10:51:38.603] [bus] [38;5;208mvirtual:fs:change[0m
+payload:
+{
+  event: [32m'add'[39m,
+  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/system/fontProp-output.test.ts'[39m
+}
+[2m--------------------[0m
+[10:51:38.603] [bus] [38;5;208mvirtual:fs:change[0m
+payload:
+{
+  event: [32m'add'[39m,
+  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/system/fontSystem.test.tsx'[39m
+}
+[2m--------------------[0m
+[10:51:38.604] [bus] [38;5;208mvirtual:fs:change[0m
+payload:
+{
+  event: [32m'add'[39m,
+  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/system/globalCss.test.tsx'[39m
+}
+[2m--------------------[0m
+[10:51:38.604] [bus] [38;5;208mvirtual:fs:change[0m
+payload:
+{
+  event: [32m'add'[39m,
+  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/system/keyframes.test.tsx'[39m
+}
+[2m--------------------[0m
+[10:51:38.605] [bus] [38;5;208mvirtual:fs:change[0m
+payload:
+{
+  event: [32m'add'[39m,
+  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/system/rhythm.test.tsx'[39m
+}
+[2m--------------------[0m
+[10:51:38.606] [bus] [38;5;208mvirtual:fs:change[0m
+payload:
+{
+  event: [32m'add'[39m,
+  path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/tests/system/tokens.test.tsx'[39m
+}
+[2m--------------------[0m
+[10:51:38.606] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -541,39 +541,47 @@ payload:
   module: [32m'virtual'[39m,
   source: [32m'worker'[39m,
   threadId: [33m2[39m,
-  timestamp: [32m'10:43:20.611'[39m
+  timestamp: [32m'10:51:38.606'[39m
 }
 [2m--------------------[0m
-[10:43:20.611] [bus] [38;5;208mvirtual:copy:complete[0m
+[10:51:38.606] [bus] [38;5;208mvirtual:copy:complete[0m
 payload:
 {
   virtualDir: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual'[39m
 }
 [2m--------------------[0m
-[10:43:20.611] [worker:2] [virtual] Sync complete
-[10:43:20.615] [bus] [38;5;208mvirtual:fs:change[0m
+[10:51:38.606] [worker:2] [virtual] Sync complete
+[10:51:38.610] [bus] [38;5;208mvirtual:fs:change[0m
 payload:
 {
   event: [32m'add'[39m,
   path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/_reference-component/component.tsx'[39m
 }
 [2m--------------------[0m
-[10:43:20.615] [bus] [38;5;208mvirtual:fs:change[0m
+[10:51:38.610] [bus] [38;5;208mvirtual:fs:change[0m
 payload:
 {
   event: [32m'add'[39m,
   path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/_reference-component/primitives.ts'[39m
 }
 [2m--------------------[0m
-[10:43:20.615] [bus] [38;5;208mreference:component:copied[0m
+[10:51:38.610] [bus] [38;5;208mreference:component:copied[0m
 payload:
 {}
 [2m--------------------[0m
-[10:43:20.616] [bus] [38;5;208msystem:config:ready[0m
+[10:51:38.613] [bus] [38;5;208msystem:config:ready[0m
 payload:
 {}
 [2m--------------------[0m
-[10:43:20.624] [bus] [38;5;208mlog:entry[0m
+[10:51:38.618] [worker:3] [reference] Reference build completed {
+  diagnosticCount: 0,
+  manifestPath: '/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/types/tasty/manifest.js',
+  name: undefined,
+  outputDir: '/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/types/tasty',
+  virtualDir: '/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual',
+  warningCount: 0
+}
+[10:51:38.619] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -591,10 +599,10 @@ payload:
   module: [32m'reference'[39m,
   source: [32m'worker'[39m,
   threadId: [33m3[39m,
-  timestamp: [32m'10:43:20.624'[39m
+  timestamp: [32m'10:51:38.618'[39m
 }
 [2m--------------------[0m
-[10:43:20.624] [bus] [38;5;208mreference:complete[0m
+[10:51:38.619] [bus] [38;5;208mreference:complete[0m
 payload:
 {
   diagnosticCount: [33m0[39m,
@@ -607,15 +615,8 @@ payload:
   warningCount: [33m0[39m
 }
 [2m--------------------[0m
-[10:43:20.624] [worker:3] [reference] Reference build completed {
-  diagnosticCount: 0,
-  manifestPath: '/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/types/tasty/manifest.js',
-  name: undefined,
-  outputDir: '/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/types/tasty',
-  virtualDir: '/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual',
-  warningCount: 0
-}
-[10:43:20.625] [bus] [38;5;208mlog:entry[0m
+[10:51:38.621] [worker:7] [config] run:system:config received /Users/ryn/Developer/reference-ui/packages/reference-unit
+[10:51:38.622] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -626,14 +627,10 @@ payload:
   module: [32m'config'[39m,
   source: [32m'worker'[39m,
   threadId: [33m7[39m,
-  timestamp: [32m'10:43:20.625'[39m
+  timestamp: [32m'10:51:38.621'[39m
 }
 [2m--------------------[0m
-[10:43:20.625] [worker:7] [config] run:system:config received /Users/ryn/Developer/reference-ui/packages/reference-unit
-[10:43:20.625] [worker:7] [config] runConfig started {
-  cwd: '/Users/ryn/Developer/reference-ui/packages/reference-unit'
-}
-[10:43:20.625] [bus] [38;5;208mlog:entry[0m
+[10:51:38.622] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -644,10 +641,14 @@ payload:
   module: [32m'config'[39m,
   source: [32m'worker'[39m,
   threadId: [33m7[39m,
-  timestamp: [32m'10:43:20.625'[39m
+  timestamp: [32m'10:51:38.622'[39m
 }
 [2m--------------------[0m
-[10:43:20.658] [bus] [38;5;208mlog:entry[0m
+[10:51:38.622] [worker:7] [config] runConfig started {
+  cwd: '/Users/ryn/Developer/reference-ui/packages/reference-unit'
+}
+[10:51:38.653] [worker:7] [base] baseSystem written /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/system/baseSystem.mjs
+[10:51:38.654] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -658,11 +659,12 @@ payload:
   module: [32m'base'[39m,
   source: [32m'worker'[39m,
   threadId: [33m7[39m,
-  timestamp: [32m'10:43:20.658'[39m
+  timestamp: [32m'10:51:38.653'[39m
 }
 [2m--------------------[0m
-[10:43:20.658] [worker:7] [base] baseSystem written /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/system/baseSystem.mjs
-[10:43:20.683] [bus] [38;5;208mlog:entry[0m
+[10:51:38.678] [worker:7] [config] Wrote panda.config /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/panda.config.ts
+[10:51:38.679] [worker:7] [config] runConfig done → system:config:complete
+[10:51:38.679] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -673,10 +675,10 @@ payload:
   module: [32m'config'[39m,
   source: [32m'worker'[39m,
   threadId: [33m7[39m,
-  timestamp: [32m'10:43:20.683'[39m
+  timestamp: [32m'10:51:38.678'[39m
 }
 [2m--------------------[0m
-[10:43:20.684] [bus] [38;5;208mlog:entry[0m
+[10:51:38.679] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -686,20 +688,19 @@ payload:
   module: [32m'config'[39m,
   source: [32m'worker'[39m,
   threadId: [33m7[39m,
-  timestamp: [32m'10:43:20.683'[39m
+  timestamp: [32m'10:51:38.679'[39m
 }
 [2m--------------------[0m
-[10:43:20.684] [bus] [38;5;208msystem:config:complete[0m
+[10:51:38.679] [bus] [38;5;208msystem:config:complete[0m
 payload:
 {}
 [2m--------------------[0m
-[10:43:20.683] [worker:7] [config] Wrote panda.config /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/panda.config.ts
-[10:43:20.683] [worker:7] [config] runConfig done → system:config:complete
-[10:43:21.090] [bus] [38;5;208msystem:panda:ready[0m
+[10:51:39.089] [bus] [38;5;208msystem:panda:ready[0m
 payload:
 {}
 [2m--------------------[0m
-[10:43:21.099] [bus] [38;5;208mlog:entry[0m
+[10:51:39.097] [worker:4] [panda] codegen start /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui
+[10:51:39.097] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -710,13 +711,12 @@ payload:
   module: [32m'panda'[39m,
   source: [32m'worker'[39m,
   threadId: [33m4[39m,
-  timestamp: [32m'10:43:21.099'[39m
+  timestamp: [32m'10:51:39.097'[39m
 }
 [2m--------------------[0m
-[10:43:21.099] [worker:4] [panda] codegen start /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui
 🐼 info [css] /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/styled/styles.css
-🐼 info [hrtime] Successfully extracted css from 55 file(s) ✨ (56.06ms)
-[10:43:21.352] [bus] [38;5;208mlog:entry[0m
+🐼 info [hrtime] Successfully extracted css from 55 file(s) ✨ (53.93ms)
+[10:51:39.333] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -727,13 +727,13 @@ payload:
   module: [32m'panda'[39m,
   source: [32m'worker'[39m,
   threadId: [33m4[39m,
-  timestamp: [32m'10:43:21.352'[39m
+  timestamp: [32m'10:51:39.333'[39m
 }
 [2m--------------------[0m
-[10:43:21.352] [worker:4] [panda] codegen done /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui
+[10:51:39.333] [worker:4] [panda] codegen done /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui
 🐼 info [css] /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/styled/styles.css
-🐼 info [hrtime] Successfully extracted css from 55 file(s) ✨ (13.12ms)
-[10:43:21.460] [bus] [38;5;208mlog:entry[0m
+🐼 info [hrtime] Successfully extracted css from 55 file(s) ✨ (14.10ms)
+[10:51:39.439] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -744,11 +744,12 @@ payload:
   module: [32m'panda'[39m,
   source: [32m'worker'[39m,
   threadId: [33m4[39m,
-  timestamp: [32m'10:43:21.460'[39m
+  timestamp: [32m'10:51:39.439'[39m
 }
 [2m--------------------[0m
-[10:43:21.460] [worker:4] [panda] cssgen done /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui
-[10:43:21.476] [bus] [38;5;208mlog:entry[0m
+[10:51:39.439] [worker:4] [panda] cssgen done /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui
+[10:51:39.454] [worker:4] [base] baseSystem written /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/system/baseSystem.mjs
+[10:51:39.454] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -759,19 +760,19 @@ payload:
   module: [32m'base'[39m,
   source: [32m'worker'[39m,
   threadId: [33m4[39m,
-  timestamp: [32m'10:43:21.476'[39m
+  timestamp: [32m'10:51:39.454'[39m
 }
 [2m--------------------[0m
-[10:43:21.476] [bus] [38;5;208msystem:panda:css[0m
+[10:51:39.455] [bus] [38;5;208msystem:panda:css[0m
 payload:
 {}
 [2m--------------------[0m
-[10:43:21.476] [bus] [38;5;208msystem:panda:codegen[0m
+[10:51:39.455] [bus] [38;5;208msystem:panda:codegen[0m
 payload:
 {}
 [2m--------------------[0m
-[10:43:21.476] [worker:4] [base] baseSystem written /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/system/baseSystem.mjs
-[10:43:21.477] [bus] [38;5;208mlog:entry[0m
+[10:51:39.455] [worker:5] [packager] 📦 Packaging...
+[10:51:39.455] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -781,11 +782,11 @@ payload:
   module: [32m'packager'[39m,
   source: [32m'worker'[39m,
   threadId: [33m5[39m,
-  timestamp: [32m'10:43:21.477'[39m
+  timestamp: [32m'10:51:39.455'[39m
 }
 [2m--------------------[0m
-[10:43:21.477] [worker:5] [packager] 📦 Packaging...
-[10:43:21.494] [bus] [38;5;208mlog:entry[0m
+[10:51:39.471] [worker:5] [packager] ✓ @reference-ui/react → /Users/ryn/Developer/reference-ui/packages/reference-unit/node_modules/@reference-ui/react
+[10:51:39.471] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -795,11 +796,11 @@ payload:
   module: [32m'packager'[39m,
   source: [32m'worker'[39m,
   threadId: [33m5[39m,
-  timestamp: [32m'10:43:21.494'[39m
+  timestamp: [32m'10:51:39.471'[39m
 }
 [2m--------------------[0m
-[10:43:21.494] [worker:5] [packager] ✓ @reference-ui/react → /Users/ryn/Developer/reference-ui/packages/reference-unit/node_modules/@reference-ui/react
-[10:43:21.498] [bus] [38;5;208mlog:entry[0m
+[10:51:39.474] [worker:5] [packager] ✓ @reference-ui/system → /Users/ryn/Developer/reference-ui/packages/reference-unit/node_modules/@reference-ui/system
+[10:51:39.474] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -809,11 +810,11 @@ payload:
   module: [32m'packager'[39m,
   source: [32m'worker'[39m,
   threadId: [33m5[39m,
-  timestamp: [32m'10:43:21.497'[39m
+  timestamp: [32m'10:51:39.474'[39m
 }
 [2m--------------------[0m
-[10:43:21.497] [worker:5] [packager] ✓ @reference-ui/system → /Users/ryn/Developer/reference-ui/packages/reference-unit/node_modules/@reference-ui/system
-[10:43:21.506] [bus] [38;5;208mlog:entry[0m
+[10:51:39.482] [worker:5] [packager] ✓ @reference-ui/types → /Users/ryn/Developer/reference-ui/packages/reference-unit/node_modules/@reference-ui/types
+[10:51:39.482] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -823,11 +824,11 @@ payload:
   module: [32m'packager'[39m,
   source: [32m'worker'[39m,
   threadId: [33m5[39m,
-  timestamp: [32m'10:43:21.506'[39m
+  timestamp: [32m'10:51:39.482'[39m
 }
 [2m--------------------[0m
-[10:43:21.506] [worker:5] [packager] ✓ @reference-ui/types → /Users/ryn/Developer/reference-ui/packages/reference-unit/node_modules/@reference-ui/types
-[10:43:21.506] [bus] [38;5;208mlog:entry[0m
+[10:51:39.482] [worker:5] [packager] ✓ @reference-ui/styled → /Users/ryn/Developer/reference-ui/packages/reference-unit/node_modules/@reference-ui/styled
+[10:51:39.483] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -837,10 +838,10 @@ payload:
   module: [32m'packager'[39m,
   source: [32m'worker'[39m,
   threadId: [33m5[39m,
-  timestamp: [32m'10:43:21.506'[39m
+  timestamp: [32m'10:51:39.482'[39m
 }
 [2m--------------------[0m
-[10:43:21.507] [bus] [38;5;208mlog:entry[0m
+[10:51:39.483] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -850,25 +851,25 @@ payload:
   module: [32m'packager'[39m,
   source: [32m'worker'[39m,
   threadId: [33m5[39m,
-  timestamp: [32m'10:43:21.506'[39m
+  timestamp: [32m'10:51:39.483'[39m
 }
 [2m--------------------[0m
-[10:43:21.507] [bus] [38;5;208mpackager:complete[0m
+[10:51:39.483] [bus] [38;5;208mpackager:complete[0m
 payload:
 {}
 [2m--------------------[0m
-[10:43:21.506] [worker:5] [packager] ✓ @reference-ui/styled → /Users/ryn/Developer/reference-ui/packages/reference-unit/node_modules/@reference-ui/styled
-[10:43:21.506] [worker:5] [packager] ✅ 4 package(s) ready
-[10:43:23.432] [bus] [38;5;208mprocess:exit[0m
+[10:51:39.483] [worker:5] [packager] ✅ 4 package(s) ready
+[10:51:41.381] [bus] [38;5;208mprocess:exit[0m
 payload:
 {
   code: [33m0[39m,
-  pid: [33m37549[39m,
+  pid: [33m45917[39m,
   processName: [32m'tsup'[39m,
   signal: [1mnull[22m
 }
 [2m--------------------[0m
-[10:43:23.433] [bus] [38;5;208mlog:entry[0m
+[10:51:41.382] [worker:6] [packager:ts] ✓ Compiled @reference-ui/react
+[10:51:41.383] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -878,11 +879,11 @@ payload:
   module: [32m'packager:ts'[39m,
   source: [32m'worker'[39m,
   threadId: [33m6[39m,
-  timestamp: [32m'10:43:23.433'[39m
+  timestamp: [32m'10:51:41.382'[39m
 }
 [2m--------------------[0m
-[10:43:23.433] [worker:6] [packager:ts] ✓ Compiled @reference-ui/react
-[10:43:23.433] [bus] [38;5;208mlog:entry[0m
+[10:51:41.383] [worker:6] [packager:ts] ✓ @reference-ui/react ready
+[10:51:41.383] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -892,10 +893,11 @@ payload:
   module: [32m'packager:ts'[39m,
   source: [32m'worker'[39m,
   threadId: [33m6[39m,
-  timestamp: [32m'10:43:23.433'[39m
+  timestamp: [32m'10:51:41.383'[39m
 }
 [2m--------------------[0m
-[10:43:23.433] [bus] [38;5;208mlog:entry[0m
+[10:51:41.383] [worker:6] [packager:ts] Building types for @reference-ui/system...
+[10:51:41.383] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -905,42 +907,41 @@ payload:
   module: [32m'packager:ts'[39m,
   source: [32m'worker'[39m,
   threadId: [33m6[39m,
-  timestamp: [32m'10:43:23.433'[39m
+  timestamp: [32m'10:51:41.383'[39m
 }
 [2m--------------------[0m
-[10:43:23.433] [worker:6] [packager:ts] ✓ @reference-ui/react ready
-[10:43:23.433] [worker:6] [packager:ts] Building types for @reference-ui/system...
-[10:43:23.434] [bus] [38;5;208mlog:entry[0m
+[10:51:41.384] [worker:6] [packager:ts] [tsup] spawned PID 45970
+[10:51:41.384] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
-    [32m'[tsup] spawned PID 37602'[39m
+    [32m'[tsup] spawned PID 45970'[39m
   ],
   level: [32m'debug'[39m,
   module: [32m'packager:ts'[39m,
   source: [32m'worker'[39m,
   threadId: [33m6[39m,
-  timestamp: [32m'10:43:23.434'[39m
+  timestamp: [32m'10:51:41.384'[39m
 }
 [2m--------------------[0m
-[10:43:23.434] [worker:6] [packager:ts] [tsup] spawned PID 37602
-[10:43:23.434] [bus] [38;5;208mprocess:spawned[0m
+[10:51:41.384] [bus] [38;5;208mprocess:spawned[0m
 payload:
 {
-  pid: [33m37602[39m,
+  pid: [33m45970[39m,
   processName: [32m'tsup'[39m
 }
 [2m--------------------[0m
-[10:43:24.926] [bus] [38;5;208mprocess:exit[0m
+[10:51:42.828] [bus] [38;5;208mprocess:exit[0m
 payload:
 {
   code: [33m0[39m,
-  pid: [33m37602[39m,
+  pid: [33m45970[39m,
   processName: [32m'tsup'[39m,
   signal: [1mnull[22m
 }
 [2m--------------------[0m
-[10:43:24.927] [bus] [38;5;208mlog:entry[0m
+[10:51:42.829] [worker:6] [packager:ts] ✓ Compiled @reference-ui/system
+[10:51:42.830] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -950,11 +951,11 @@ payload:
   module: [32m'packager:ts'[39m,
   source: [32m'worker'[39m,
   threadId: [33m6[39m,
-  timestamp: [32m'10:43:24.927'[39m
+  timestamp: [32m'10:51:42.829'[39m
 }
 [2m--------------------[0m
-[10:43:24.927] [worker:6] [packager:ts] ✓ Compiled @reference-ui/system
-[10:43:24.927] [bus] [38;5;208mlog:entry[0m
+[10:51:42.830] [worker:6] [packager:ts] ✓ @reference-ui/system ready
+[10:51:42.830] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -964,10 +965,11 @@ payload:
   module: [32m'packager:ts'[39m,
   source: [32m'worker'[39m,
   threadId: [33m6[39m,
-  timestamp: [32m'10:43:24.927'[39m
+  timestamp: [32m'10:51:42.830'[39m
 }
 [2m--------------------[0m
-[10:43:24.927] [bus] [38;5;208mlog:entry[0m
+[10:51:42.830] [worker:6] [packager:ts] Building types for @reference-ui/types...
+[10:51:42.830] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -977,42 +979,41 @@ payload:
   module: [32m'packager:ts'[39m,
   source: [32m'worker'[39m,
   threadId: [33m6[39m,
-  timestamp: [32m'10:43:24.927'[39m
+  timestamp: [32m'10:51:42.830'[39m
 }
 [2m--------------------[0m
-[10:43:24.927] [worker:6] [packager:ts] ✓ @reference-ui/system ready
-[10:43:24.927] [worker:6] [packager:ts] Building types for @reference-ui/types...
-[10:43:24.929] [bus] [38;5;208mlog:entry[0m
+[10:51:42.831] [worker:6] [packager:ts] [tsup] spawned PID 46037
+[10:51:42.831] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
-    [32m'[tsup] spawned PID 37654'[39m
+    [32m'[tsup] spawned PID 46037'[39m
   ],
   level: [32m'debug'[39m,
   module: [32m'packager:ts'[39m,
   source: [32m'worker'[39m,
   threadId: [33m6[39m,
-  timestamp: [32m'10:43:24.929'[39m
+  timestamp: [32m'10:51:42.831'[39m
 }
 [2m--------------------[0m
-[10:43:24.929] [bus] [38;5;208mprocess:spawned[0m
+[10:51:42.831] [bus] [38;5;208mprocess:spawned[0m
 payload:
 {
-  pid: [33m37654[39m,
+  pid: [33m46037[39m,
   processName: [32m'tsup'[39m
 }
 [2m--------------------[0m
-[10:43:24.929] [worker:6] [packager:ts] [tsup] spawned PID 37654
-[10:43:27.504] [bus] [38;5;208mprocess:exit[0m
+[10:51:45.365] [bus] [38;5;208mprocess:exit[0m
 payload:
 {
   code: [33m0[39m,
-  pid: [33m37654[39m,
+  pid: [33m46037[39m,
   processName: [32m'tsup'[39m,
   signal: [1mnull[22m
 }
 [2m--------------------[0m
-[10:43:27.504] [bus] [38;5;208mlog:entry[0m
+[10:51:45.365] [worker:6] [packager:ts] ✓ Compiled @reference-ui/types
+[10:51:45.365] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -1022,11 +1023,10 @@ payload:
   module: [32m'packager:ts'[39m,
   source: [32m'worker'[39m,
   threadId: [33m6[39m,
-  timestamp: [32m'10:43:27.504'[39m
+  timestamp: [32m'10:51:45.365'[39m
 }
 [2m--------------------[0m
-[10:43:27.504] [worker:6] [packager:ts] ✓ Compiled @reference-ui/types
-[10:43:27.504] [bus] [38;5;208mlog:entry[0m
+[10:51:45.365] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -1036,16 +1036,18 @@ payload:
   module: [32m'packager:ts'[39m,
   source: [32m'worker'[39m,
   threadId: [33m6[39m,
-  timestamp: [32m'10:43:27.504'[39m
+  timestamp: [32m'10:51:45.365'[39m
 }
 [2m--------------------[0m
-[10:43:27.504] [worker:6] [packager:ts] ✓ @reference-ui/types ready
+[10:51:45.365] [worker:6] [packager:ts] ✓ @reference-ui/types ready
+[10:51:45.376] [worker:6] [packager:ts] Declarations ready
+[10:51:45.376] [worker:6] [packager:ts] Generating TypeScript declarations...
 [ref sync] ready
-[10:43:27.515] [bus] [38;5;208mpackager-ts:complete[0m
+[10:51:45.376] [bus] [38;5;208mpackager-ts:complete[0m
 payload:
 {}
 [2m--------------------[0m
-[10:43:27.515] [bus] [38;5;208mlog:entry[0m
+[10:51:45.376] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -1055,10 +1057,10 @@ payload:
   module: [32m'packager:ts'[39m,
   source: [32m'worker'[39m,
   threadId: [33m6[39m,
-  timestamp: [32m'10:43:27.515'[39m
+  timestamp: [32m'10:51:45.376'[39m
 }
 [2m--------------------[0m
-[10:43:27.515] [bus] [38;5;208mlog:entry[0m
+[10:51:45.376] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -1068,10 +1070,10 @@ payload:
   module: [32m'packager:ts'[39m,
   source: [32m'worker'[39m,
   threadId: [33m6[39m,
-  timestamp: [32m'10:43:27.515'[39m
+  timestamp: [32m'10:51:45.376'[39m
 }
 [2m--------------------[0m
-[10:43:27.515] [bus] [38;5;208mlog:entry[0m
+[10:51:45.376] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -1081,34 +1083,33 @@ payload:
   module: [32m'packager:ts'[39m,
   source: [32m'worker'[39m,
   threadId: [33m6[39m,
-  timestamp: [32m'10:43:27.515'[39m
+  timestamp: [32m'10:51:45.376'[39m
 }
 [2m--------------------[0m
-[10:43:27.515] [worker:6] [packager:ts] Declarations ready
-[10:43:27.515] [worker:6] [packager:ts] Generating TypeScript declarations...
-[10:43:27.515] [worker:6] [packager:ts] Building types for @reference-ui/react...
-[10:43:27.516] [bus] [38;5;208mlog:entry[0m
+[10:51:45.376] [worker:6] [packager:ts] Building types for @reference-ui/react...
+[10:51:45.377] [worker:6] [packager:ts] [tsup] spawned PID 46118
+[10:51:45.377] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
-    [32m'[tsup] spawned PID 37704'[39m
+    [32m'[tsup] spawned PID 46118'[39m
   ],
   level: [32m'debug'[39m,
   module: [32m'packager:ts'[39m,
   source: [32m'worker'[39m,
   threadId: [33m6[39m,
-  timestamp: [32m'10:43:27.516'[39m
+  timestamp: [32m'10:51:45.377'[39m
 }
 [2m--------------------[0m
-[10:43:27.517] [bus] [38;5;208mprocess:spawned[0m
+[10:51:45.377] [bus] [38;5;208mprocess:spawned[0m
 payload:
 {
-  pid: [33m37704[39m,
+  pid: [33m46118[39m,
   processName: [32m'tsup'[39m
 }
 [2m--------------------[0m
-[10:43:27.516] [worker:6] [packager:ts] [tsup] spawned PID 37704
-[10:43:27.745] [bus] [38;5;208mlog:entry[0m
+[10:51:45.647] [worker:1] [watch] add: src/__e2e_watch__.tsx
+[10:51:45.647] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -1118,25 +1119,24 @@ payload:
   module: [32m'watch'[39m,
   source: [32m'worker'[39m,
   threadId: [33m1[39m,
-  timestamp: [32m'10:43:27.745'[39m
+  timestamp: [32m'10:51:45.647'[39m
 }
 [2m--------------------[0m
-[10:43:27.745] [bus] [38;5;208mwatch:change[0m
+[10:51:45.647] [bus] [38;5;208mwatch:change[0m
 payload:
 {
   event: [32m'add'[39m,
   path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/src/__e2e_watch__.tsx'[39m
 }
 [2m--------------------[0m
-[10:43:27.745] [worker:1] [watch] add: src/__e2e_watch__.tsx
-[10:43:27.746] [bus] [38;5;208mvirtual:fs:change[0m
+[10:51:45.648] [bus] [38;5;208mvirtual:fs:change[0m
 payload:
 {
   event: [32m'add'[39m,
   path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/src/__e2e_watch__.tsx'[39m
 }
 [2m--------------------[0m
-[10:43:27.746] [bus] [38;5;208mlog:entry[0m
+[10:51:45.648] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -1148,11 +1148,149 @@ payload:
   module: [32m'virtual'[39m,
   source: [32m'worker'[39m,
   threadId: [33m2[39m,
-  timestamp: [32m'10:43:27.746'[39m
+  timestamp: [32m'10:51:45.648'[39m
 }
 [2m--------------------[0m
-[10:43:27.746] [worker:2] [virtual] Processed watch:change → virtual:fs:change add /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/src/__e2e_watch__.tsx
-[10:43:27.823] [bus] [38;5;208mlog:entry[0m
+[10:51:45.648] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'run:system:config received'[39m,
+    [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'config'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m7[39m,
+  timestamp: [32m'10:51:45.648'[39m
+}
+[2m--------------------[0m
+[10:51:45.648] [worker:2] [virtual] Processed watch:change → virtual:fs:change add /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/src/__e2e_watch__.tsx
+[10:51:45.648] [worker:7] [config] run:system:config received /Users/ryn/Developer/reference-ui/packages/reference-unit
+[10:51:45.648] [worker:7] [config] runConfig started {
+  cwd: '/Users/ryn/Developer/reference-ui/packages/reference-unit'
+}
+[10:51:45.648] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'runConfig started'[39m,
+    [32m"{\n  cwd: '/Users/ryn/Developer/reference-ui/packages/reference-unit'\n}"[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'config'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m7[39m,
+  timestamp: [32m'10:51:45.648'[39m
+}
+[2m--------------------[0m
+[10:51:45.655] [worker:3] [reference] Reference build completed {
+  diagnosticCount: 0,
+  manifestPath: '/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/types/tasty/manifest.js',
+  name: undefined,
+  outputDir: '/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/types/tasty',
+  virtualDir: '/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual',
+  warningCount: 0
+}
+[10:51:45.655] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'Reference build completed'[39m,
+    [32m'{\n'[39m +
+      [32m'  diagnosticCount: 0,\n'[39m +
+      [32m"  manifestPath: '/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/types/tasty/manifest.js',\n"[39m +
+      [32m'  name: undefined,\n'[39m +
+      [32m"  outputDir: '/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/types/tasty',\n"[39m +
+      [32m"  virtualDir: '/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual',\n"[39m +
+      [32m'  warningCount: 0\n'[39m +
+      [32m'}'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'reference'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m3[39m,
+  timestamp: [32m'10:51:45.655'[39m
+}
+[2m--------------------[0m
+[10:51:45.655] [bus] [38;5;208mreference:complete[0m
+payload:
+{
+  diagnosticCount: [33m0[39m,
+  diagnostics: [],
+  manifestPath: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/types/tasty/manifest.js'[39m,
+  name: [90mundefined[39m,
+  outputDir: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/types/tasty'[39m,
+  source: [32m'virtual'[39m,
+  symbolId: [90mundefined[39m,
+  warningCount: [33m0[39m
+}
+[2m--------------------[0m
+[10:51:45.666] [worker:7] [base] baseSystem written /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/system/baseSystem.mjs
+[10:51:45.667] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'baseSystem written'[39m,
+    [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/system/baseSystem.mjs'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'base'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m7[39m,
+  timestamp: [32m'10:51:45.666'[39m
+}
+[2m--------------------[0m
+[10:51:45.687] [worker:7] [config] Wrote panda.config /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/panda.config.ts
+[10:51:45.687] [worker:7] [config] runConfig done → system:config:complete
+[10:51:45.687] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'Wrote panda.config'[39m,
+    [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/panda.config.ts'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'config'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m7[39m,
+  timestamp: [32m'10:51:45.687'[39m
+}
+[2m--------------------[0m
+[10:51:45.687] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'runConfig done → system:config:complete'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'config'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m7[39m,
+  timestamp: [32m'10:51:45.687'[39m
+}
+[2m--------------------[0m
+[10:51:45.687] [bus] [38;5;208msystem:config:complete[0m
+payload:
+{}
+[2m--------------------[0m
+[10:51:45.688] [worker:4] [panda] codegen start /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui
+[10:51:45.688] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'codegen start'[39m,
+    [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'panda'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m4[39m,
+  timestamp: [32m'10:51:45.688'[39m
+}
+[2m--------------------[0m
+[10:51:45.745] [worker:1] [watch] change: src/__e2e_watch__.tsx
+[10:51:45.745] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -1162,25 +1300,24 @@ payload:
   module: [32m'watch'[39m,
   source: [32m'worker'[39m,
   threadId: [33m1[39m,
-  timestamp: [32m'10:43:27.822'[39m
+  timestamp: [32m'10:51:45.745'[39m
 }
 [2m--------------------[0m
-[10:43:27.823] [bus] [38;5;208mwatch:change[0m
+[10:51:45.745] [bus] [38;5;208mwatch:change[0m
 payload:
 {
   event: [32m'change'[39m,
   path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/src/__e2e_watch__.tsx'[39m
 }
 [2m--------------------[0m
-[10:43:27.822] [worker:1] [watch] change: src/__e2e_watch__.tsx
-[10:43:27.823] [bus] [38;5;208mvirtual:fs:change[0m
+[10:51:45.746] [bus] [38;5;208mvirtual:fs:change[0m
 payload:
 {
   event: [32m'change'[39m,
   path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/src/__e2e_watch__.tsx'[39m
 }
 [2m--------------------[0m
-[10:43:27.824] [bus] [38;5;208mlog:entry[0m
+[10:51:45.746] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -1192,11 +1329,184 @@ payload:
   module: [32m'virtual'[39m,
   source: [32m'worker'[39m,
   threadId: [33m2[39m,
-  timestamp: [32m'10:43:27.823'[39m
+  timestamp: [32m'10:51:45.746'[39m
 }
 [2m--------------------[0m
-[10:43:27.823] [worker:2] [virtual] Processed watch:change → virtual:fs:change change /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/src/__e2e_watch__.tsx
-[10:43:27.907] [bus] [38;5;208mlog:entry[0m
+[10:51:45.746] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'run:system:config received'[39m,
+    [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'config'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m7[39m,
+  timestamp: [32m'10:51:45.746'[39m
+}
+[2m--------------------[0m
+[10:51:45.746] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'runConfig started'[39m,
+    [32m"{\n  cwd: '/Users/ryn/Developer/reference-ui/packages/reference-unit'\n}"[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'config'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m7[39m,
+  timestamp: [32m'10:51:45.746'[39m
+}
+[2m--------------------[0m
+[10:51:45.746] [worker:2] [virtual] Processed watch:change → virtual:fs:change change /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/src/__e2e_watch__.tsx
+[10:51:45.746] [worker:7] [config] run:system:config received /Users/ryn/Developer/reference-ui/packages/reference-unit
+[10:51:45.746] [worker:7] [config] runConfig started {
+  cwd: '/Users/ryn/Developer/reference-ui/packages/reference-unit'
+}
+[10:51:45.753] [worker:3] [reference] Reference build completed {
+  diagnosticCount: 0,
+  manifestPath: '/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/types/tasty/manifest.js',
+  name: undefined,
+  outputDir: '/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/types/tasty',
+  virtualDir: '/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual',
+  warningCount: 0
+}
+[10:51:45.753] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'Reference build completed'[39m,
+    [32m'{\n'[39m +
+      [32m'  diagnosticCount: 0,\n'[39m +
+      [32m"  manifestPath: '/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/types/tasty/manifest.js',\n"[39m +
+      [32m'  name: undefined,\n'[39m +
+      [32m"  outputDir: '/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/types/tasty',\n"[39m +
+      [32m"  virtualDir: '/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual',\n"[39m +
+      [32m'  warningCount: 0\n'[39m +
+      [32m'}'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'reference'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m3[39m,
+  timestamp: [32m'10:51:45.753'[39m
+}
+[2m--------------------[0m
+[10:51:45.753] [bus] [38;5;208mreference:complete[0m
+payload:
+{
+  diagnosticCount: [33m0[39m,
+  diagnostics: [],
+  manifestPath: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/types/tasty/manifest.js'[39m,
+  name: [90mundefined[39m,
+  outputDir: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/types/tasty'[39m,
+  source: [32m'virtual'[39m,
+  symbolId: [90mundefined[39m,
+  warningCount: [33m0[39m
+}
+[2m--------------------[0m
+[10:51:45.768] [worker:7] [base] baseSystem written /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/system/baseSystem.mjs
+[10:51:45.768] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'baseSystem written'[39m,
+    [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/system/baseSystem.mjs'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'base'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m7[39m,
+  timestamp: [32m'10:51:45.768'[39m
+}
+[2m--------------------[0m
+[10:51:45.788] [worker:7] [config] Wrote panda.config /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/panda.config.ts
+[10:51:45.788] [worker:7] [config] runConfig done → system:config:complete
+[10:51:45.788] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'Wrote panda.config'[39m,
+    [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/panda.config.ts'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'config'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m7[39m,
+  timestamp: [32m'10:51:45.788'[39m
+}
+[2m--------------------[0m
+[10:51:45.788] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'runConfig done → system:config:complete'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'config'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m7[39m,
+  timestamp: [32m'10:51:45.788'[39m
+}
+[2m--------------------[0m
+[10:51:45.789] [bus] [38;5;208msystem:config:complete[0m
+payload:
+{}
+[2m--------------------[0m
+🐼 info [css] /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/styled/styles.css
+[10:51:45.795] [worker:4] [panda] codegen start /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui
+[10:51:45.795] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'codegen start'[39m,
+    [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'panda'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m4[39m,
+  timestamp: [32m'10:51:45.795'[39m
+}
+[2m--------------------[0m
+🐼 info [hrtime] Successfully extracted css from 56 file(s) ✨ (31.78ms)
+[10:51:45.796] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'codegen done'[39m,
+    [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'panda'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m4[39m,
+  timestamp: [32m'10:51:45.796'[39m
+}
+[2m--------------------[0m
+[10:51:45.796] [worker:4] [panda] codegen done /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui
+🐼 info [css] /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/styled/styles.css
+🐼 info [hrtime] Successfully extracted css from 56 file(s) ✨ (46.08ms)
+[10:51:45.923] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'codegen done'[39m,
+    [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'panda'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m4[39m,
+  timestamp: [32m'10:51:45.923'[39m
+}
+[2m--------------------[0m
+[10:51:45.923] [worker:4] [panda] codegen done /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui
+[10:51:45.931] [worker:1] [watch] unlink: src/__e2e_watch__.tsx
+[10:51:45.931] [worker:1] [watch] add: src/__e2e_watch_css__.tsx
+[10:51:45.931] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -1206,17 +1516,17 @@ payload:
   module: [32m'watch'[39m,
   source: [32m'worker'[39m,
   threadId: [33m1[39m,
-  timestamp: [32m'10:43:27.907'[39m
+  timestamp: [32m'10:51:45.931'[39m
 }
 [2m--------------------[0m
-[10:43:27.907] [bus] [38;5;208mwatch:change[0m
+[10:51:45.931] [bus] [38;5;208mwatch:change[0m
 payload:
 {
   event: [32m'unlink'[39m,
   path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/src/__e2e_watch__.tsx'[39m
 }
 [2m--------------------[0m
-[10:43:27.907] [bus] [38;5;208mlog:entry[0m
+[10:51:45.931] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -1226,19 +1536,18 @@ payload:
   module: [32m'watch'[39m,
   source: [32m'worker'[39m,
   threadId: [33m1[39m,
-  timestamp: [32m'10:43:27.907'[39m
+  timestamp: [32m'10:51:45.931'[39m
 }
 [2m--------------------[0m
-[10:43:27.908] [bus] [38;5;208mwatch:change[0m
+[10:51:45.931] [bus] [38;5;208mwatch:change[0m
 payload:
 {
   event: [32m'add'[39m,
   path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/src/__e2e_watch_css__.tsx'[39m
 }
 [2m--------------------[0m
-[10:43:27.907] [worker:1] [watch] unlink: src/__e2e_watch__.tsx
-[10:43:27.907] [worker:1] [watch] add: src/__e2e_watch_css__.tsx
-[10:43:27.908] [bus] [38;5;208mlog:entry[0m
+[10:51:45.931] [worker:2] [virtual] Removing: src/__e2e_watch__.tsx
+[10:51:45.931] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -1248,18 +1557,17 @@ payload:
   module: [32m'virtual'[39m,
   source: [32m'worker'[39m,
   threadId: [33m2[39m,
-  timestamp: [32m'10:43:27.908'[39m
+  timestamp: [32m'10:51:45.931'[39m
 }
 [2m--------------------[0m
-[10:43:27.908] [worker:2] [virtual] Removing: src/__e2e_watch__.tsx
-[10:43:27.908] [bus] [38;5;208mvirtual:fs:change[0m
+[10:51:45.932] [bus] [38;5;208mvirtual:fs:change[0m
 payload:
 {
   event: [32m'unlink'[39m,
   path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/src/__e2e_watch__.tsx'[39m
 }
 [2m--------------------[0m
-[10:43:27.908] [bus] [38;5;208mlog:entry[0m
+[10:51:45.932] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -1271,11 +1579,45 @@ payload:
   module: [32m'virtual'[39m,
   source: [32m'worker'[39m,
   threadId: [33m2[39m,
-  timestamp: [32m'10:43:27.908'[39m
+  timestamp: [32m'10:51:45.932'[39m
 }
 [2m--------------------[0m
-[10:43:27.908] [worker:2] [virtual] Processed watch:change → virtual:fs:change unlink /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/src/__e2e_watch__.tsx
-[10:43:27.908] [bus] [38;5;208mlog:entry[0m
+[10:51:45.932] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'run:system:config received'[39m,
+    [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'config'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m7[39m,
+  timestamp: [32m'10:51:45.932'[39m
+}
+[2m--------------------[0m
+[10:51:45.932] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'runConfig started'[39m,
+    [32m"{\n  cwd: '/Users/ryn/Developer/reference-ui/packages/reference-unit'\n}"[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'config'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m7[39m,
+  timestamp: [32m'10:51:45.932'[39m
+}
+[2m--------------------[0m
+[10:51:45.932] [worker:2] [virtual] Processed watch:change → virtual:fs:change unlink /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/src/__e2e_watch__.tsx
+[10:51:45.932] [worker:7] [config] run:system:config received /Users/ryn/Developer/reference-ui/packages/reference-unit
+[10:51:45.932] [worker:7] [config] runConfig started {
+  cwd: '/Users/ryn/Developer/reference-ui/packages/reference-unit'
+}
+[10:51:45.932] [worker:2] [virtual] ✓ src/__e2e_watch_css__.tsx
+[10:51:45.932] [worker:2] [virtual] Processed watch:change → virtual:fs:change add /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/src/__e2e_watch_css__.tsx
+[10:51:45.932] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -1285,17 +1627,17 @@ payload:
   module: [32m'virtual'[39m,
   source: [32m'worker'[39m,
   threadId: [33m2[39m,
-  timestamp: [32m'10:43:27.908'[39m
+  timestamp: [32m'10:51:45.932'[39m
 }
 [2m--------------------[0m
-[10:43:27.908] [bus] [38;5;208mvirtual:fs:change[0m
+[10:51:45.932] [bus] [38;5;208mvirtual:fs:change[0m
 payload:
 {
   event: [32m'add'[39m,
   path: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/src/__e2e_watch_css__.tsx'[39m
 }
 [2m--------------------[0m
-[10:43:27.908] [bus] [38;5;208mlog:entry[0m
+[10:51:45.932] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -1307,21 +1649,544 @@ payload:
   module: [32m'virtual'[39m,
   source: [32m'worker'[39m,
   threadId: [33m2[39m,
-  timestamp: [32m'10:43:27.908'[39m
+  timestamp: [32m'10:51:45.932'[39m
 }
 [2m--------------------[0m
-[10:43:27.908] [worker:2] [virtual] ✓ src/__e2e_watch_css__.tsx
-[10:43:27.908] [worker:2] [virtual] Processed watch:change → virtual:fs:change add /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual/src/__e2e_watch_css__.tsx
-[10:43:30.369] [bus] [38;5;208mprocess:exit[0m
+[10:51:45.934] [worker:7] [config] run:system:config received /Users/ryn/Developer/reference-ui/packages/reference-unit
+[10:51:45.934] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'run:system:config received'[39m,
+    [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'config'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m7[39m,
+  timestamp: [32m'10:51:45.934'[39m
+}
+[2m--------------------[0m
+[10:51:45.934] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'runConfig started'[39m,
+    [32m"{\n  cwd: '/Users/ryn/Developer/reference-ui/packages/reference-unit'\n}"[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'config'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m7[39m,
+  timestamp: [32m'10:51:45.934'[39m
+}
+[2m--------------------[0m
+[10:51:45.934] [worker:7] [config] runConfig started {
+  cwd: '/Users/ryn/Developer/reference-ui/packages/reference-unit'
+}
+[10:51:45.939] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'Reference build completed'[39m,
+    [32m'{\n'[39m +
+      [32m'  diagnosticCount: 0,\n'[39m +
+      [32m"  manifestPath: '/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/types/tasty/manifest.js',\n"[39m +
+      [32m'  name: undefined,\n'[39m +
+      [32m"  outputDir: '/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/types/tasty',\n"[39m +
+      [32m"  virtualDir: '/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual',\n"[39m +
+      [32m'  warningCount: 0\n'[39m +
+      [32m'}'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'reference'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m3[39m,
+  timestamp: [32m'10:51:45.939'[39m
+}
+[2m--------------------[0m
+[10:51:45.940] [bus] [38;5;208mreference:complete[0m
+payload:
+{
+  diagnosticCount: [33m0[39m,
+  diagnostics: [],
+  manifestPath: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/types/tasty/manifest.js'[39m,
+  name: [90mundefined[39m,
+  outputDir: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/types/tasty'[39m,
+  source: [32m'virtual'[39m,
+  symbolId: [90mundefined[39m,
+  warningCount: [33m0[39m
+}
+[2m--------------------[0m
+[10:51:45.940] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'Reference build completed'[39m,
+    [32m'{\n'[39m +
+      [32m'  diagnosticCount: 0,\n'[39m +
+      [32m"  manifestPath: '/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/types/tasty/manifest.js',\n"[39m +
+      [32m'  name: undefined,\n'[39m +
+      [32m"  outputDir: '/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/types/tasty',\n"[39m +
+      [32m"  virtualDir: '/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual',\n"[39m +
+      [32m'  warningCount: 0\n'[39m +
+      [32m'}'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'reference'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m3[39m,
+  timestamp: [32m'10:51:45.939'[39m
+}
+[2m--------------------[0m
+[10:51:45.940] [bus] [38;5;208mreference:complete[0m
+payload:
+{
+  diagnosticCount: [33m0[39m,
+  diagnostics: [],
+  manifestPath: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/types/tasty/manifest.js'[39m,
+  name: [90mundefined[39m,
+  outputDir: [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/types/tasty'[39m,
+  source: [32m'virtual'[39m,
+  symbolId: [90mundefined[39m,
+  warningCount: [33m0[39m
+}
+[2m--------------------[0m
+[10:51:45.939] [worker:3] [reference] Reference build completed {
+  diagnosticCount: 0,
+  manifestPath: '/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/types/tasty/manifest.js',
+  name: undefined,
+  outputDir: '/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/types/tasty',
+  virtualDir: '/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual',
+  warningCount: 0
+}
+[10:51:45.939] [worker:3] [reference] Reference build completed {
+  diagnosticCount: 0,
+  manifestPath: '/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/types/tasty/manifest.js',
+  name: undefined,
+  outputDir: '/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/types/tasty',
+  virtualDir: '/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/virtual',
+  warningCount: 0
+}
+[10:51:45.954] [worker:7] [base] baseSystem written /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/system/baseSystem.mjs
+[10:51:45.954] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'baseSystem written'[39m,
+    [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/system/baseSystem.mjs'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'base'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m7[39m,
+  timestamp: [32m'10:51:45.954'[39m
+}
+[2m--------------------[0m
+[10:51:45.961] [worker:7] [base] baseSystem written /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/system/baseSystem.mjs
+[10:51:45.961] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'baseSystem written'[39m,
+    [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/system/baseSystem.mjs'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'base'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m7[39m,
+  timestamp: [32m'10:51:45.961'[39m
+}
+[2m--------------------[0m
+🐼 info [css] /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/styled/styles.css
+🐼 info [hrtime] Successfully extracted css from 56 file(s) ✨ (9.05ms)
+[10:51:45.989] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'cssgen done'[39m,
+    [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'panda'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m4[39m,
+  timestamp: [32m'10:51:45.989'[39m
+}
+[2m--------------------[0m
+[10:51:45.989] [worker:4] [panda] cssgen done /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui
+[10:51:45.992] [worker:7] [config] Wrote panda.config /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/panda.config.ts
+[10:51:45.992] [worker:7] [config] runConfig done → system:config:complete
+[10:51:45.992] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'Wrote panda.config'[39m,
+    [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/panda.config.ts'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'config'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m7[39m,
+  timestamp: [32m'10:51:45.992'[39m
+}
+[2m--------------------[0m
+[10:51:45.992] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'runConfig done → system:config:complete'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'config'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m7[39m,
+  timestamp: [32m'10:51:45.992'[39m
+}
+[2m--------------------[0m
+[10:51:45.992] [bus] [38;5;208msystem:config:complete[0m
+payload:
+{}
+[2m--------------------[0m
+[10:51:45.995] [worker:7] [config] Wrote panda.config /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/panda.config.ts
+[10:51:45.995] [worker:7] [config] runConfig done → system:config:complete
+[10:51:45.995] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'Wrote panda.config'[39m,
+    [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/panda.config.ts'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'config'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m7[39m,
+  timestamp: [32m'10:51:45.995'[39m
+}
+[2m--------------------[0m
+[10:51:45.995] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'runConfig done → system:config:complete'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'config'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m7[39m,
+  timestamp: [32m'10:51:45.995'[39m
+}
+[2m--------------------[0m
+[10:51:45.995] [bus] [38;5;208msystem:config:complete[0m
+payload:
+{}
+[2m--------------------[0m
+[10:51:46.000] [worker:4] [base] baseSystem written /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/system/baseSystem.mjs
+[10:51:46.000] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'baseSystem written'[39m,
+    [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/system/baseSystem.mjs'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'base'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m4[39m,
+  timestamp: [32m'10:51:46.000'[39m
+}
+[2m--------------------[0m
+[10:51:46.000] [bus] [38;5;208msystem:panda:css[0m
+payload:
+{}
+[2m--------------------[0m
+[10:51:46.000] [bus] [38;5;208msystem:panda:codegen[0m
+payload:
+{}
+[2m--------------------[0m
+[10:51:46.000] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'codegen start'[39m,
+    [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'panda'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m4[39m,
+  timestamp: [32m'10:51:46.000'[39m
+}
+[2m--------------------[0m
+[10:51:46.000] [worker:4] [panda] codegen start /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui
+[10:51:46.000] [worker:5] [packager] 📦 Packaging...
+[10:51:46.001] [worker:4] [panda] codegen start /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui
+[10:51:46.001] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'📦 Packaging...'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'packager'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m5[39m,
+  timestamp: [32m'10:51:46.000'[39m
+}
+[2m--------------------[0m
+[10:51:46.001] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'codegen start'[39m,
+    [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'panda'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m4[39m,
+  timestamp: [32m'10:51:46.001'[39m
+}
+[2m--------------------[0m
+[10:51:46.009] [worker:5] [packager] ✓ @reference-ui/react → /Users/ryn/Developer/reference-ui/packages/reference-unit/node_modules/@reference-ui/react
+[10:51:46.009] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'✓ @reference-ui/react → /Users/ryn/Developer/reference-ui/packages/reference-unit/node_modules/@reference-ui/react'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'packager'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m5[39m,
+  timestamp: [32m'10:51:46.009'[39m
+}
+[2m--------------------[0m
+[10:51:46.012] [worker:5] [packager] ✓ @reference-ui/system → /Users/ryn/Developer/reference-ui/packages/reference-unit/node_modules/@reference-ui/system
+[10:51:46.012] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'✓ @reference-ui/system → /Users/ryn/Developer/reference-ui/packages/reference-unit/node_modules/@reference-ui/system'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'packager'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m5[39m,
+  timestamp: [32m'10:51:46.012'[39m
+}
+[2m--------------------[0m
+[10:51:46.024] [worker:5] [packager] ✓ @reference-ui/types → /Users/ryn/Developer/reference-ui/packages/reference-unit/node_modules/@reference-ui/types
+[10:51:46.024] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'✓ @reference-ui/types → /Users/ryn/Developer/reference-ui/packages/reference-unit/node_modules/@reference-ui/types'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'packager'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m5[39m,
+  timestamp: [32m'10:51:46.024'[39m
+}
+[2m--------------------[0m
+[10:51:46.024] [worker:5] [packager] ✓ @reference-ui/styled → /Users/ryn/Developer/reference-ui/packages/reference-unit/node_modules/@reference-ui/styled
+[10:51:46.024] [worker:5] [packager] ✅ 4 package(s) ready
+[10:51:46.024] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'✓ @reference-ui/styled → /Users/ryn/Developer/reference-ui/packages/reference-unit/node_modules/@reference-ui/styled'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'packager'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m5[39m,
+  timestamp: [32m'10:51:46.024'[39m
+}
+[2m--------------------[0m
+[10:51:46.024] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'✅ 4 package(s) ready'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'packager'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m5[39m,
+  timestamp: [32m'10:51:46.024'[39m
+}
+[2m--------------------[0m
+[10:51:46.025] [bus] [38;5;208mpackager:complete[0m
+payload:
+{}
+[2m--------------------[0m
+🐼 info [css] /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/styled/styles.css
+🐼 info [hrtime] Successfully extracted css from 56 file(s) ✨ (7.78ms)
+[10:51:46.067] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'cssgen done'[39m,
+    [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'panda'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m4[39m,
+  timestamp: [32m'10:51:46.067'[39m
+}
+[2m--------------------[0m
+[10:51:46.067] [worker:4] [panda] cssgen done /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui
+[10:51:46.076] [worker:4] [base] baseSystem written /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/system/baseSystem.mjs
+[10:51:46.077] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'baseSystem written'[39m,
+    [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/system/baseSystem.mjs'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'base'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m4[39m,
+  timestamp: [32m'10:51:46.076'[39m
+}
+[2m--------------------[0m
+[10:51:46.077] [bus] [38;5;208msystem:panda:css[0m
+payload:
+{}
+[2m--------------------[0m
+[10:51:46.077] [bus] [38;5;208msystem:panda:codegen[0m
+payload:
+{}
+[2m--------------------[0m
+🐼 info [css] /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/styled/styles.css
+🐼 info [hrtime] Successfully extracted css from 56 file(s) ✨ (46.83ms)
+[10:51:46.197] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'codegen done'[39m,
+    [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'panda'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m4[39m,
+  timestamp: [32m'10:51:46.197'[39m
+}
+[2m--------------------[0m
+[10:51:46.197] [worker:4] [panda] codegen done /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui
+🐼 info [css] /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/styled/styles.css
+🐼 info [hrtime] Successfully extracted css from 56 file(s) ✨ (29.90ms)
+[10:51:46.228] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'codegen done'[39m,
+    [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'panda'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m4[39m,
+  timestamp: [32m'10:51:46.228'[39m
+}
+[2m--------------------[0m
+[10:51:46.228] [worker:4] [panda] codegen done /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui
+🐼 info [css] /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/styled/styles.css
+[10:51:46.287] [worker:4] [panda] cssgen done /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui
+🐼 info [hrtime] Successfully extracted css from 56 file(s) ✨ (7.45ms)
+[10:51:46.287] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'cssgen done'[39m,
+    [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'panda'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m4[39m,
+  timestamp: [32m'10:51:46.287'[39m
+}
+[2m--------------------[0m
+[10:51:46.297] [worker:4] [base] baseSystem written /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/system/baseSystem.mjs
+[10:51:46.297] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'baseSystem written'[39m,
+    [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/system/baseSystem.mjs'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'base'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m4[39m,
+  timestamp: [32m'10:51:46.297'[39m
+}
+[2m--------------------[0m
+[10:51:46.297] [bus] [38;5;208msystem:panda:css[0m
+payload:
+{}
+[2m--------------------[0m
+[10:51:46.297] [bus] [38;5;208msystem:panda:codegen[0m
+payload:
+{}
+[2m--------------------[0m
+🐼 info [css] /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/styled/styles.css
+🐼 info [hrtime] Successfully extracted css from 56 file(s) ✨ (7.54ms)
+[10:51:46.350] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'cssgen done'[39m,
+    [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'panda'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m4[39m,
+  timestamp: [32m'10:51:46.350'[39m
+}
+[2m--------------------[0m
+[10:51:46.350] [worker:4] [panda] cssgen done /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui
+[10:51:46.359] [worker:4] [base] baseSystem written /Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/system/baseSystem.mjs
+[10:51:46.359] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'baseSystem written'[39m,
+    [32m'/Users/ryn/Developer/reference-ui/packages/reference-unit/.reference-ui/system/baseSystem.mjs'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'base'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m4[39m,
+  timestamp: [32m'10:51:46.359'[39m
+}
+[2m--------------------[0m
+[10:51:46.359] [bus] [38;5;208msystem:panda:css[0m
+payload:
+{}
+[2m--------------------[0m
+[10:51:46.359] [bus] [38;5;208msystem:panda:codegen[0m
+payload:
+{}
+[2m--------------------[0m
+[10:51:48.306] [bus] [38;5;208mprocess:exit[0m
 payload:
 {
   code: [33m0[39m,
-  pid: [33m37704[39m,
+  pid: [33m46118[39m,
   processName: [32m'tsup'[39m,
   signal: [1mnull[22m
 }
 [2m--------------------[0m
-[10:43:30.370] [bus] [38;5;208mlog:entry[0m
+[10:51:48.307] [worker:6] [packager:ts] ✓ Compiled @reference-ui/react
+[10:51:48.307] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -1331,11 +2196,11 @@ payload:
   module: [32m'packager:ts'[39m,
   source: [32m'worker'[39m,
   threadId: [33m6[39m,
-  timestamp: [32m'10:43:30.370'[39m
+  timestamp: [32m'10:51:48.307'[39m
 }
 [2m--------------------[0m
-[10:43:30.370] [worker:6] [packager:ts] ✓ Compiled @reference-ui/react
-[10:43:30.371] [bus] [38;5;208mlog:entry[0m
+[10:51:48.307] [worker:6] [packager:ts] ✓ @reference-ui/react ready
+[10:51:48.307] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -1345,10 +2210,10 @@ payload:
   module: [32m'packager:ts'[39m,
   source: [32m'worker'[39m,
   threadId: [33m6[39m,
-  timestamp: [32m'10:43:30.370'[39m
+  timestamp: [32m'10:51:48.307'[39m
 }
 [2m--------------------[0m
-[10:43:30.371] [bus] [38;5;208mlog:entry[0m
+[10:51:48.307] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -1358,42 +2223,42 @@ payload:
   module: [32m'packager:ts'[39m,
   source: [32m'worker'[39m,
   threadId: [33m6[39m,
-  timestamp: [32m'10:43:30.371'[39m
+  timestamp: [32m'10:51:48.307'[39m
 }
 [2m--------------------[0m
-[10:43:30.370] [worker:6] [packager:ts] ✓ @reference-ui/react ready
-[10:43:30.371] [worker:6] [packager:ts] Building types for @reference-ui/system...
-[10:43:30.372] [bus] [38;5;208mlog:entry[0m
+[10:51:48.307] [worker:6] [packager:ts] Building types for @reference-ui/system...
+[10:51:48.308] [worker:6] [packager:ts] [tsup] spawned PID 46192
+[10:51:48.308] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
-    [32m'[tsup] spawned PID 37774'[39m
+    [32m'[tsup] spawned PID 46192'[39m
   ],
   level: [32m'debug'[39m,
   module: [32m'packager:ts'[39m,
   source: [32m'worker'[39m,
   threadId: [33m6[39m,
-  timestamp: [32m'10:43:30.372'[39m
+  timestamp: [32m'10:51:48.308'[39m
 }
 [2m--------------------[0m
-[10:43:30.372] [bus] [38;5;208mprocess:spawned[0m
+[10:51:48.308] [bus] [38;5;208mprocess:spawned[0m
 payload:
 {
-  pid: [33m37774[39m,
+  pid: [33m46192[39m,
   processName: [32m'tsup'[39m
 }
 [2m--------------------[0m
-[10:43:30.372] [worker:6] [packager:ts] [tsup] spawned PID 37774
-[10:43:31.829] [bus] [38;5;208mprocess:exit[0m
+[10:51:49.754] [bus] [38;5;208mprocess:exit[0m
 payload:
 {
   code: [33m0[39m,
-  pid: [33m37774[39m,
+  pid: [33m46192[39m,
   processName: [32m'tsup'[39m,
   signal: [1mnull[22m
 }
 [2m--------------------[0m
-[10:43:31.831] [bus] [38;5;208mlog:entry[0m
+[10:51:49.755] [worker:6] [packager:ts] ✓ Compiled @reference-ui/system
+[10:51:49.755] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -1403,11 +2268,11 @@ payload:
   module: [32m'packager:ts'[39m,
   source: [32m'worker'[39m,
   threadId: [33m6[39m,
-  timestamp: [32m'10:43:31.831'[39m
+  timestamp: [32m'10:51:49.755'[39m
 }
 [2m--------------------[0m
-[10:43:31.831] [worker:6] [packager:ts] ✓ Compiled @reference-ui/system
-[10:43:31.831] [bus] [38;5;208mlog:entry[0m
+[10:51:49.755] [worker:6] [packager:ts] ✓ @reference-ui/system ready
+[10:51:49.755] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -1417,10 +2282,10 @@ payload:
   module: [32m'packager:ts'[39m,
   source: [32m'worker'[39m,
   threadId: [33m6[39m,
-  timestamp: [32m'10:43:31.831'[39m
+  timestamp: [32m'10:51:49.755'[39m
 }
 [2m--------------------[0m
-[10:43:31.831] [bus] [38;5;208mlog:entry[0m
+[10:51:49.755] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -1430,42 +2295,42 @@ payload:
   module: [32m'packager:ts'[39m,
   source: [32m'worker'[39m,
   threadId: [33m6[39m,
-  timestamp: [32m'10:43:31.831'[39m
+  timestamp: [32m'10:51:49.755'[39m
 }
 [2m--------------------[0m
-[10:43:31.831] [worker:6] [packager:ts] ✓ @reference-ui/system ready
-[10:43:31.831] [worker:6] [packager:ts] Building types for @reference-ui/types...
-[10:43:31.832] [bus] [38;5;208mlog:entry[0m
+[10:51:49.755] [worker:6] [packager:ts] Building types for @reference-ui/types...
+[10:51:49.756] [worker:6] [packager:ts] [tsup] spawned PID 46238
+[10:51:49.756] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
-    [32m'[tsup] spawned PID 37822'[39m
+    [32m'[tsup] spawned PID 46238'[39m
   ],
   level: [32m'debug'[39m,
   module: [32m'packager:ts'[39m,
   source: [32m'worker'[39m,
   threadId: [33m6[39m,
-  timestamp: [32m'10:43:31.832'[39m
+  timestamp: [32m'10:51:49.756'[39m
 }
 [2m--------------------[0m
-[10:43:31.832] [bus] [38;5;208mprocess:spawned[0m
+[10:51:49.756] [bus] [38;5;208mprocess:spawned[0m
 payload:
 {
-  pid: [33m37822[39m,
+  pid: [33m46238[39m,
   processName: [32m'tsup'[39m
 }
 [2m--------------------[0m
-[10:43:31.832] [worker:6] [packager:ts] [tsup] spawned PID 37822
-[10:43:34.459] [bus] [38;5;208mprocess:exit[0m
+[10:51:52.280] [bus] [38;5;208mprocess:exit[0m
 payload:
 {
   code: [33m0[39m,
-  pid: [33m37822[39m,
+  pid: [33m46238[39m,
   processName: [32m'tsup'[39m,
   signal: [1mnull[22m
 }
 [2m--------------------[0m
-[10:43:34.460] [bus] [38;5;208mlog:entry[0m
+[10:51:52.280] [worker:6] [packager:ts] ✓ Compiled @reference-ui/types
+[10:51:52.280] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -1475,11 +2340,11 @@ payload:
   module: [32m'packager:ts'[39m,
   source: [32m'worker'[39m,
   threadId: [33m6[39m,
-  timestamp: [32m'10:43:34.459'[39m
+  timestamp: [32m'10:51:52.280'[39m
 }
 [2m--------------------[0m
-[10:43:34.459] [worker:6] [packager:ts] ✓ Compiled @reference-ui/types
-[10:43:34.460] [bus] [38;5;208mlog:entry[0m
+[10:51:52.280] [worker:6] [packager:ts] ✓ @reference-ui/types ready
+[10:51:52.280] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -1489,15 +2354,16 @@ payload:
   module: [32m'packager:ts'[39m,
   source: [32m'worker'[39m,
   threadId: [33m6[39m,
-  timestamp: [32m'10:43:34.460'[39m
+  timestamp: [32m'10:51:52.280'[39m
 }
 [2m--------------------[0m
-[10:43:34.460] [worker:6] [packager:ts] ✓ @reference-ui/types ready
-[10:43:34.470] [bus] [38;5;208mpackager-ts:complete[0m
+[10:51:52.287] [worker:6] [packager:ts] Declarations ready
+[10:51:52.287] [worker:6] [packager:ts] Generating TypeScript declarations...
+[10:51:52.287] [bus] [38;5;208mpackager-ts:complete[0m
 payload:
 {}
 [2m--------------------[0m
-[10:43:34.470] [bus] [38;5;208mlog:entry[0m
+[10:51:52.288] [bus] [38;5;208mlog:entry[0m
 payload:
 {
   args: [
@@ -1507,7 +2373,253 @@ payload:
   module: [32m'packager:ts'[39m,
   source: [32m'worker'[39m,
   threadId: [33m6[39m,
-  timestamp: [32m'10:43:34.470'[39m
+  timestamp: [32m'10:51:52.287'[39m
 }
 [2m--------------------[0m
-[10:43:34.470] [worker:6] [packager:ts] Declarations ready
+[10:51:52.288] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'Generating TypeScript declarations...'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'packager:ts'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m6[39m,
+  timestamp: [32m'10:51:52.287'[39m
+}
+[2m--------------------[0m
+[10:51:52.288] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'Building types for @reference-ui/react...'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'packager:ts'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m6[39m,
+  timestamp: [32m'10:51:52.287'[39m
+}
+[2m--------------------[0m
+[10:51:52.287] [worker:6] [packager:ts] Building types for @reference-ui/react...
+[10:51:52.288] [worker:6] [packager:ts] [tsup] spawned PID 46317
+[10:51:52.289] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'[tsup] spawned PID 46317'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'packager:ts'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m6[39m,
+  timestamp: [32m'10:51:52.288'[39m
+}
+[2m--------------------[0m
+[10:51:52.289] [bus] [38;5;208mprocess:spawned[0m
+payload:
+{
+  pid: [33m46317[39m,
+  processName: [32m'tsup'[39m
+}
+[2m--------------------[0m
+[10:51:55.065] [bus] [38;5;208mprocess:exit[0m
+payload:
+{
+  code: [33m0[39m,
+  pid: [33m46317[39m,
+  processName: [32m'tsup'[39m,
+  signal: [1mnull[22m
+}
+[2m--------------------[0m
+[10:51:55.066] [worker:6] [packager:ts] ✓ Compiled @reference-ui/react
+[10:51:55.067] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'✓ Compiled @reference-ui/react'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'packager:ts'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m6[39m,
+  timestamp: [32m'10:51:55.066'[39m
+}
+[2m--------------------[0m
+[10:51:55.067] [worker:6] [packager:ts] ✓ @reference-ui/react ready
+[10:51:55.067] [worker:6] [packager:ts] Building types for @reference-ui/system...
+[10:51:55.067] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'✓ @reference-ui/react ready'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'packager:ts'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m6[39m,
+  timestamp: [32m'10:51:55.067'[39m
+}
+[2m--------------------[0m
+[10:51:55.067] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'Building types for @reference-ui/system...'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'packager:ts'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m6[39m,
+  timestamp: [32m'10:51:55.067'[39m
+}
+[2m--------------------[0m
+[10:51:55.068] [worker:6] [packager:ts] [tsup] spawned PID 46369
+[10:51:55.068] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'[tsup] spawned PID 46369'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'packager:ts'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m6[39m,
+  timestamp: [32m'10:51:55.068'[39m
+}
+[2m--------------------[0m
+[10:51:55.068] [bus] [38;5;208mprocess:spawned[0m
+payload:
+{
+  pid: [33m46369[39m,
+  processName: [32m'tsup'[39m
+}
+[2m--------------------[0m
+[10:51:56.518] [bus] [38;5;208mprocess:exit[0m
+payload:
+{
+  code: [33m0[39m,
+  pid: [33m46369[39m,
+  processName: [32m'tsup'[39m,
+  signal: [1mnull[22m
+}
+[2m--------------------[0m
+[10:51:56.519] [worker:6] [packager:ts] ✓ Compiled @reference-ui/system
+[10:51:56.520] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'✓ Compiled @reference-ui/system'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'packager:ts'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m6[39m,
+  timestamp: [32m'10:51:56.519'[39m
+}
+[2m--------------------[0m
+[10:51:56.520] [worker:6] [packager:ts] ✓ @reference-ui/system ready
+[10:51:56.520] [worker:6] [packager:ts] Building types for @reference-ui/types...
+[10:51:56.520] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'✓ @reference-ui/system ready'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'packager:ts'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m6[39m,
+  timestamp: [32m'10:51:56.520'[39m
+}
+[2m--------------------[0m
+[10:51:56.520] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'Building types for @reference-ui/types...'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'packager:ts'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m6[39m,
+  timestamp: [32m'10:51:56.520'[39m
+}
+[2m--------------------[0m
+[10:51:56.521] [worker:6] [packager:ts] [tsup] spawned PID 46415
+[10:51:56.521] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'[tsup] spawned PID 46415'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'packager:ts'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m6[39m,
+  timestamp: [32m'10:51:56.521'[39m
+}
+[2m--------------------[0m
+[10:51:56.521] [bus] [38;5;208mprocess:spawned[0m
+payload:
+{
+  pid: [33m46415[39m,
+  processName: [32m'tsup'[39m
+}
+[2m--------------------[0m
+[10:51:59.041] [bus] [38;5;208mprocess:exit[0m
+payload:
+{
+  code: [33m0[39m,
+  pid: [33m46415[39m,
+  processName: [32m'tsup'[39m,
+  signal: [1mnull[22m
+}
+[2m--------------------[0m
+[10:51:59.042] [worker:6] [packager:ts] ✓ Compiled @reference-ui/types
+[10:51:59.042] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'✓ Compiled @reference-ui/types'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'packager:ts'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m6[39m,
+  timestamp: [32m'10:51:59.042'[39m
+}
+[2m--------------------[0m
+[10:51:59.042] [worker:6] [packager:ts] ✓ @reference-ui/types ready
+[10:51:59.042] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'✓ @reference-ui/types ready'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'packager:ts'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m6[39m,
+  timestamp: [32m'10:51:59.042'[39m
+}
+[2m--------------------[0m
+[10:51:59.049] [worker:6] [packager:ts] Declarations ready
+[10:51:59.049] [bus] [38;5;208mpackager-ts:complete[0m
+payload:
+{}
+[2m--------------------[0m
+[10:51:59.049] [bus] [38;5;208mlog:entry[0m
+payload:
+{
+  args: [
+    [32m'Declarations ready'[39m
+  ],
+  level: [32m'debug'[39m,
+  module: [32m'packager:ts'[39m,
+  source: [32m'worker'[39m,
+  threadId: [33m6[39m,
+  timestamp: [32m'10:51:59.049'[39m
+}
+[2m--------------------[0m
