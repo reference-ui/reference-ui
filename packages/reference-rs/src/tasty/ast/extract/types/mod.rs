@@ -1,12 +1,10 @@
-use std::collections::BTreeMap;
-
 use oxc_ast::ast::{Expression, TSType, TSTypeParameterDeclaration};
 
 use crate::tasty::constants::libraries::USER_LIBRARY_NAME;
 use crate::tasty::shared::typeref_util::reference_lookup_name;
 
+use crate::tasty::ast::extract::ExtractionContext;
 use super::slice_span;
-use crate::tasty::ast::model::ImportBinding;
 use crate::tasty::model::{MappedModifierKind, TsTypeParameter, TypeRef};
 use oxc_span::GetSpan;
 
@@ -15,25 +13,12 @@ mod lower_keywords;
 mod lower_references;
 
 struct LoweringContext<'a> {
-    source: &'a str,
-    import_bindings: &'a BTreeMap<String, ImportBinding>,
-    current_module_specifier: &'a str,
-    current_library: &'a str,
+    ctx: &'a ExtractionContext<'a>,
 }
 
 impl<'a> LoweringContext<'a> {
-    fn new(
-        source: &'a str,
-        import_bindings: &'a BTreeMap<String, ImportBinding>,
-        current_module_specifier: &'a str,
-        current_library: &'a str,
-    ) -> Self {
-        Self {
-            source,
-            import_bindings,
-            current_module_specifier,
-            current_library,
-        }
+    fn new(ctx: &'a ExtractionContext<'a>) -> Self {
+        Self { ctx }
     }
 
     pub(super) fn lower_type_parameters<'b>(
@@ -47,7 +32,7 @@ impl<'a> LoweringContext<'a> {
         decl.params
             .iter()
             .map(|param| TsTypeParameter {
-                name: slice_span(self.source, param.name.span()).to_string(),
+                name: slice_span(self.ctx.source, param.name.span()).to_string(),
                 constraint: param
                     .constraint
                     .as_ref()
@@ -121,56 +106,26 @@ impl<'a> LoweringContext<'a> {
     }
 
     pub(super) fn raw_type(&self, type_annotation: &TSType<'_>) -> TypeRef {
-        raw_type(type_annotation, self.source)
+        raw_type(type_annotation, self.ctx.source)
     }
 }
 
 pub(super) fn type_parameters_from_oxc<'a>(
     decl: Option<&TSTypeParameterDeclaration<'a>>,
-    source: &str,
-    import_bindings: &BTreeMap<String, ImportBinding>,
-    current_module_specifier: &str,
-    current_library: &str,
+    ctx: &ExtractionContext<'_>,
 ) -> Vec<TsTypeParameter> {
-    LoweringContext::new(
-        source,
-        import_bindings,
-        current_module_specifier,
-        current_library,
-    )
-    .lower_type_parameters(decl)
+    LoweringContext::new(ctx).lower_type_parameters(decl)
 }
 
-pub(super) fn type_to_ref(
-    type_annotation: &TSType<'_>,
-    source: &str,
-    import_bindings: &BTreeMap<String, ImportBinding>,
-    current_module_specifier: &str,
-    current_library: &str,
-) -> TypeRef {
-    LoweringContext::new(
-        source,
-        import_bindings,
-        current_module_specifier,
-        current_library,
-    )
-    .lower_type(type_annotation)
+pub(super) fn type_to_ref(type_annotation: &TSType<'_>, ctx: &ExtractionContext<'_>) -> TypeRef {
+    LoweringContext::new(ctx).lower_type(type_annotation)
 }
 
 pub(super) fn expression_to_reference(
     expression: &Expression<'_>,
-    source: &str,
-    import_bindings: &BTreeMap<String, ImportBinding>,
-    current_module_specifier: &str,
-    current_library: &str,
+    ctx: &ExtractionContext<'_>,
 ) -> TypeRef {
-    LoweringContext::new(
-        source,
-        import_bindings,
-        current_module_specifier,
-        current_library,
-    )
-    .lower_expression_reference(expression)
+    LoweringContext::new(ctx).lower_expression_reference(expression)
 }
 
 fn mapped_modifier_kind(
@@ -184,22 +139,17 @@ fn mapped_modifier_kind(
     }
 }
 
-fn reference_source_module(
-    reference_name: &str,
-    import_bindings: &BTreeMap<String, ImportBinding>,
-    current_module_specifier: &str,
-    current_library: &str,
-) -> Option<String> {
+fn reference_source_module(reference_name: &str, ctx: &ExtractionContext<'_>) -> Option<String> {
     let lookup_name = reference_lookup_name(reference_name);
 
-    import_bindings
+    ctx.import_bindings
         .get(lookup_name)
         .map(|binding| binding.source_module.clone())
         .or_else(|| {
-            if current_library == USER_LIBRARY_NAME {
+            if ctx.library == USER_LIBRARY_NAME {
                 None
             } else {
-                Some(current_module_specifier.to_string())
+                Some(ctx.module_specifier.to_string())
             }
         })
 }

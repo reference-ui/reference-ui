@@ -7,6 +7,7 @@ use oxc_span::SourceType;
 
 use super::statements::{collect_statement_exports, collect_statement_import_bindings};
 use super::values::collect_statement_value_bindings;
+use super::ExtractionContext;
 use crate::tasty::ast::model::{ImportBinding, ParsedFileAst, SymbolShell};
 use crate::tasty::model::{ScannerDiagnostic, TypeRef};
 use crate::tasty::scanner::{ScannedFile, ScannedWorkspace};
@@ -84,14 +85,14 @@ impl FileBindings {
             file_id_set,
             &mut self.import_bindings,
         );
-        collect_statement_value_bindings(
-            statement,
-            &scanned_file.source,
-            &self.import_bindings,
-            &scanned_file.module_specifier,
-            &scanned_file.library,
-            &mut self.value_bindings,
-        );
+        let value_ctx = ExtractionContext {
+            source: &scanned_file.source,
+            comments: &[],
+            import_bindings: &self.import_bindings,
+            module_specifier: &scanned_file.module_specifier,
+            library: &scanned_file.library,
+        };
+        collect_statement_value_bindings(statement, &value_ctx, &mut self.value_bindings);
         collect_statement_exports(
             scanned_file,
             statement,

@@ -1,7 +1,5 @@
-use std::collections::BTreeMap;
-
 use oxc_ast::ast::{
-    Comment, TSCallSignatureDeclaration, TSConstructSignatureDeclaration, TSIndexSignature,
+    TSCallSignatureDeclaration, TSConstructSignatureDeclaration, TSIndexSignature,
     TSMethodSignature, TSPropertySignature,
 };
 use oxc_span::GetSpan;
@@ -11,34 +9,24 @@ use crate::tasty::shared::typeref_util::property_key_name as property_key_name_o
 use super::super::comments::{leading_comment_for_span, parse_comment_metadata};
 use super::super::slice_span;
 use super::super::types::type_to_ref;
-use crate::tasty::ast::model::ImportBinding;
+use super::super::ExtractionContext;
 use crate::tasty::model::{TsMember, TsMemberKind};
 
 pub(crate) fn property_signature_to_member(
     property: &TSPropertySignature<'_>,
-    source: &str,
-    comments: &[Comment],
+    ctx: &ExtractionContext<'_>,
     exclude_starts_between: Option<&[u32]>,
-    import_bindings: &BTreeMap<String, ImportBinding>,
-    current_module_specifier: &str,
-    current_library: &str,
 ) -> TsMember {
-    let name = property_key_name_opt(&property.key, source)
-        .unwrap_or_else(|| slice_span(source, property.key.span()).to_string());
+    let name = property_key_name_opt(&property.key, ctx.source)
+        .unwrap_or_else(|| slice_span(ctx.source, property.key.span()).to_string());
     let comment = parse_comment_metadata(leading_comment_for_span(
-        source,
-        comments,
+        ctx.source,
+        ctx.comments,
         property.span(),
         exclude_starts_between,
     ));
     let type_ref = property.type_annotation.as_ref().map(|annotation| {
-        type_to_ref(
-            &annotation.type_annotation,
-            source,
-            import_bindings,
-            current_module_specifier,
-            current_library,
-        )
+        type_to_ref(&annotation.type_annotation, ctx)
     });
 
     TsMember {
@@ -55,29 +43,19 @@ pub(crate) fn property_signature_to_member(
 
 pub(crate) fn method_signature_to_member(
     method: &TSMethodSignature<'_>,
-    source: &str,
-    comments: &[Comment],
+    ctx: &ExtractionContext<'_>,
     exclude_starts_between: Option<&[u32]>,
-    import_bindings: &BTreeMap<String, ImportBinding>,
-    current_module_specifier: &str,
-    current_library: &str,
 ) -> TsMember {
-    let name = property_key_name_opt(&method.key, source)
-        .unwrap_or_else(|| slice_span(source, method.key.span()).to_string());
+    let name = property_key_name_opt(&method.key, ctx.source)
+        .unwrap_or_else(|| slice_span(ctx.source, method.key.span()).to_string());
     let comment = parse_comment_metadata(leading_comment_for_span(
-        source,
-        comments,
+        ctx.source,
+        ctx.comments,
         method.span(),
         exclude_starts_between,
     ));
     let type_ref = method.return_type.as_ref().map(|annotation| {
-        type_to_ref(
-            &annotation.type_annotation,
-            source,
-            import_bindings,
-            current_module_specifier,
-            current_library,
-        )
+        type_to_ref(&annotation.type_annotation, ctx)
     });
 
     TsMember {
@@ -94,27 +72,17 @@ pub(crate) fn method_signature_to_member(
 
 pub(crate) fn call_signature_to_member(
     call: &TSCallSignatureDeclaration<'_>,
-    source: &str,
-    comments: &[Comment],
+    ctx: &ExtractionContext<'_>,
     exclude_starts_between: Option<&[u32]>,
-    import_bindings: &BTreeMap<String, ImportBinding>,
-    current_module_specifier: &str,
-    current_library: &str,
 ) -> TsMember {
     let comment = parse_comment_metadata(leading_comment_for_span(
-        source,
-        comments,
+        ctx.source,
+        ctx.comments,
         call.span(),
         exclude_starts_between,
     ));
     let type_ref = call.return_type.as_ref().map(|annotation| {
-        type_to_ref(
-            &annotation.type_annotation,
-            source,
-            import_bindings,
-            current_module_specifier,
-            current_library,
-        )
+        type_to_ref(&annotation.type_annotation, ctx)
     });
 
     TsMember {
@@ -131,27 +99,17 @@ pub(crate) fn call_signature_to_member(
 
 pub(crate) fn construct_signature_to_member(
     decl: &TSConstructSignatureDeclaration<'_>,
-    source: &str,
-    comments: &[Comment],
+    ctx: &ExtractionContext<'_>,
     exclude_starts_between: Option<&[u32]>,
-    import_bindings: &BTreeMap<String, ImportBinding>,
-    current_module_specifier: &str,
-    current_library: &str,
 ) -> TsMember {
     let comment = parse_comment_metadata(leading_comment_for_span(
-        source,
-        comments,
+        ctx.source,
+        ctx.comments,
         decl.span(),
         exclude_starts_between,
     ));
     let type_ref = decl.return_type.as_ref().map(|annotation| {
-        type_to_ref(
-            &annotation.type_annotation,
-            source,
-            import_bindings,
-            current_module_specifier,
-            current_library,
-        )
+        type_to_ref(&annotation.type_annotation, ctx)
     });
 
     TsMember {
@@ -168,25 +126,18 @@ pub(crate) fn construct_signature_to_member(
 
 pub(crate) fn index_signature_to_member(
     index: &TSIndexSignature<'_>,
-    source: &str,
-    comments: &[Comment],
+    ctx: &ExtractionContext<'_>,
     exclude_starts_between: Option<&[u32]>,
-    import_bindings: &BTreeMap<String, ImportBinding>,
-    current_module_specifier: &str,
-    current_library: &str,
 ) -> TsMember {
     let comment = parse_comment_metadata(leading_comment_for_span(
-        source,
-        comments,
+        ctx.source,
+        ctx.comments,
         index.span(),
         exclude_starts_between,
     ));
     let type_ref = Some(type_to_ref(
         &index.type_annotation.type_annotation,
-        source,
-        import_bindings,
-        current_module_specifier,
-        current_library,
+        ctx,
     ));
 
     TsMember {
