@@ -1,10 +1,10 @@
+use super::Resolver;
 use crate::tasty::ast::model::SymbolShell;
 use crate::tasty::model::{TsSymbolKind, TypeRef};
 use crate::tasty::shared::typeref_util::{
-    collapse_union, literal_fragment, resolve_indexed_access, resolved_or_self, string_literal_type,
-    type_extends,
+    collapse_union, literal_fragment, resolve_indexed_access, resolved_or_self,
+    string_literal_type, type_extends,
 };
-use super::Resolver;
 
 impl<'a> Resolver<'a> {
     pub(super) fn resolve_type_operator_result(
@@ -90,12 +90,7 @@ impl<'a> Resolver<'a> {
                 types
                     .iter()
                     .filter_map(|item| {
-                        self.resolve_conditional_result(
-                            item,
-                            &extends_type,
-                            true_type,
-                            false_type,
-                        )
+                        self.resolve_conditional_result(item, &extends_type, true_type, false_type)
                     })
                     .collect(),
             );
@@ -152,8 +147,11 @@ impl<'a> Resolver<'a> {
         match symbol.kind {
             TsSymbolKind::TypeAlias => {
                 let underlying = symbol.underlying.as_ref()?;
-                let instantiated =
-                    self.instantiate_symbol_type_alias(symbol, underlying, type_arguments.as_deref());
+                let instantiated = self.instantiate_symbol_type_alias(
+                    symbol,
+                    underlying,
+                    type_arguments.as_deref(),
+                );
                 Some(self.resolve_type_ref(instantiated))
             }
             TsSymbolKind::Interface => Some(TypeRef::Object {
@@ -173,10 +171,17 @@ impl<'a> Resolver<'a> {
         name: &str,
     ) -> Option<&'b SymbolShell> {
         if let Some(target_id) = target_id {
-            return self.parsed.exports.iter().find(|symbol| symbol.id == target_id);
+            return self
+                .parsed
+                .exports
+                .iter()
+                .find(|symbol| symbol.id == target_id);
         }
 
-        self.parsed.exports.iter().find(|symbol| symbol.name == name)
+        self.parsed
+            .exports
+            .iter()
+            .find(|symbol| symbol.name == name)
     }
 
     fn reference_visit_key(&self, type_ref: &TypeRef) -> Option<String> {

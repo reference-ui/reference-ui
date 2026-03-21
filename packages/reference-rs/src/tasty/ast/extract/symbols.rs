@@ -3,13 +3,13 @@ use std::collections::BTreeMap;
 use oxc_ast::ast::{Comment, TSInterfaceDeclaration, TSTypeAliasDeclaration};
 use oxc_span::{GetSpan, Span};
 
-use crate::tasty::ast::model::{ImportBinding, SymbolShell};
-use crate::tasty::model::TsSymbolKind;
-use crate::tasty::scanner::symbol_id;
 use super::comments::{leading_comment_for_span, parse_comment_metadata};
 use super::members::members_from_signatures;
 use super::type_references::collect_references_from_members;
 use super::types::{expression_to_reference, type_parameters_from_oxc, type_to_ref};
+use crate::tasty::ast::model::{ImportBinding, SymbolShell};
+use crate::tasty::model::TsSymbolKind;
+use crate::tasty::scanner::symbol_id;
 
 pub(super) fn push_interface_shell<'a>(
     file_id: &str,

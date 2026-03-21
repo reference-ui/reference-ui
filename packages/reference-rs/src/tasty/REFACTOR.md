@@ -11,7 +11,8 @@ killing duplication, and finding the natural seams.
 | 1–4 | Dedup + literal inference     | **Done** |
 | 5   | Split resolver `type_ref`     | **Done** (`resolver/resolve.rs`, `instantiate.rs`, `evaluate.rs`) |
 | 6   | Split `extract/types`         | **Done** (`extract/types/mod.rs`, `lower_keywords.rs`, `lower_composites.rs`, `lower_references.rs`) |
-| 7–8 | Split generator/types, values | Open   |
+| 7   | Split generator/types         | **Done** (`types/mod.rs`, `emit_compounds.rs`, `emit_collections.rs`, `emit_leaves.rs`) |
+| 8   | Split extract/values          | Open   |
 | 9   | Shared `typeref_util`         | **Done** (`shared/typeref_util.rs`) |
 | 10  | `crate::tasty::` imports      | **Done** |
 | 11  | TypeRef visitor               | Open   |
@@ -86,16 +87,18 @@ holds the `Resolver` struct and constructor.
 
 ---
 
-## 7. Break up `generator/types.rs` (532 lines)
+## 7. Break up `generator/types.rs` ✅ DONE
 
 One giant `emit_type_ref` match plus two dozen small helpers. Split by concern:
 
 | Concern                                                                                                                                                              | New file                        |
 | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
-| **core dispatch** — `emit_type_ref`, `emit_optional_type_ref`, `emit_type_ref_with_optional_resolved`                                                                | stays in `generator/types.rs`   |
-| **compound emitters** — `emit_reference_*`, `emit_constructor_type_ref`, `emit_mapped_type_ref`                                                                      | `generator/emit_compounds.rs`   |
-| **collection emitters** — `emit_type_ref_array`, `emit_fn_params`, `emit_indented_array`, `emit_members`, `emit_type_parameters`                                     | `generator/emit_collections.rs` |
-| **leaf emitters** — `emit_member`, `emit_tuple_element`, `emit_fn_param`, `emit_jsdoc*`, `emit_template_literal_part`, `push_description_fields`, `member_kind_name` | `generator/emit_leaves.rs`      |
+| **core dispatch** — `emit_type_ref`, `emit_optional_type_ref`, `emit_type_ref_with_optional_resolved`, `emit_indented_array`, `push_optional_type_ref_field`         | `generator/types/mod.rs`        |
+| **compound emitters** — `emit_reference_*`, `emit_constructor_type_ref`, `emit_mapped_type_ref`                                                                      | `generator/types/emit_compounds.rs`   |
+| **collection emitters** — `emit_type_ref_array`, `emit_fn_params`, `emit_type_parameters`, `emit_members` (+ local `emit_type_parameter`)                         | `generator/types/emit_collections.rs` |
+| **leaf emitters** — `emit_member`, `emit_tuple_element`, `emit_fn_param`, `emit_jsdoc*`, `emit_template_literal_part`, `push_description_fields`, `member_kind_name` | `generator/types/emit_leaves.rs`      |
+
+**Implemented:** `pub(super) use` re-exports `emit_jsdoc`, `emit_members`, and `emit_type_parameters` for `symbols.rs`; sibling imports use `crate::tasty::generator::util`.
 
 ---
 
@@ -244,7 +247,7 @@ Do these in dependency order so each step is independently shippable:
 4. ~~**§10** — Switch to `crate::tasty::` imports everywhere~~ **done**
 5. ~~**§5** — Split `resolver/type_ref.rs` → resolve / instantiate / evaluate~~ **done**
 6. ~~**§6** — Split `extract/types.rs`~~ **done**
-7. **§7** — Split `generator/types.rs`
+7. ~~**§7** — Split `generator/types.rs`~~ **done** (`types/mod.rs` + `emit_*` modules)
 8. **§8** — Split `extract/values.rs`
 9. ~~**§13** — Drop `parsed_file_view` clone boilerplate~~ **done**
 10. **§14** — Introduce `ExtractionContext`

@@ -1,18 +1,18 @@
 use std::collections::BTreeMap;
 
 use oxc_ast::ast::{
-    Comment, TSCallSignatureDeclaration, TSConstructSignatureDeclaration,
-    TSIndexSignature, TSMethodSignature, TSPropertySignature, TSSignature,
+    Comment, TSCallSignatureDeclaration, TSConstructSignatureDeclaration, TSIndexSignature,
+    TSMethodSignature, TSPropertySignature, TSSignature,
 };
 use oxc_span::GetSpan;
 
 use crate::tasty::shared::typeref_util::property_key_name as property_key_name_opt;
 
-use crate::tasty::ast::model::ImportBinding;
-use crate::tasty::model::{TsMember, TsMemberKind};
 use super::comments::{leading_comment_for_span, parse_comment_metadata};
 use super::slice_span;
 use super::types::type_to_ref;
+use crate::tasty::ast::model::ImportBinding;
+use crate::tasty::model::{TsMember, TsMemberKind};
 
 pub(super) fn members_from_signatures(
     signatures: &[TSSignature<'_>],

@@ -1,9 +1,9 @@
 use std::collections::BTreeMap;
 
+use super::chunk_path_for_export_name;
 use crate::tasty::emitted::{TastyManifest, TastySymbolIndexEntry, TastySymbolKind};
 use crate::tasty::generator::util::to_js_literal;
 use crate::tasty::model::{TsSymbolKind, TypeScriptBundle};
-use super::chunk_path_for_export_name;
 
 pub(crate) fn emit_manifest_module(
     bundle: &TypeScriptBundle,

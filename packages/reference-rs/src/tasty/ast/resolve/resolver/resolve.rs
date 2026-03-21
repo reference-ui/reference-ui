@@ -1,8 +1,8 @@
+use super::super::names::namespace_export_lookup_name;
+use super::Resolver;
 use crate::tasty::ast::model::ImportBindingKind;
 use crate::tasty::model::{TupleElement, TypeRef};
 use crate::tasty::shared::typeref_util::reference_lookup_name;
-use super::super::names::namespace_export_lookup_name;
-use super::Resolver;
 
 impl<'a> Resolver<'a> {
     pub(super) fn resolve_type_ref(&self, type_ref: TypeRef) -> TypeRef {
@@ -77,7 +77,9 @@ impl<'a> Resolver<'a> {
                     .collect(),
                 return_type: Box::new(self.resolve_type_ref(*return_type)),
             },
-            TypeRef::TypeOperator { operator, target, .. } => {
+            TypeRef::TypeOperator {
+                operator, target, ..
+            } => {
                 let resolved_target = self.resolve_type_ref(*target);
                 let resolved = self
                     .resolve_type_operator_result(operator, &resolved_target)
@@ -220,7 +222,8 @@ impl<'a> Resolver<'a> {
         let mut current = self.parsed.value_bindings.get(first)?.clone();
 
         for segment in path {
-            current = crate::tasty::shared::typeref_util::resolve_object_member_type(&current, segment)?;
+            current =
+                crate::tasty::shared::typeref_util::resolve_object_member_type(&current, segment)?;
         }
 
         Some(current)

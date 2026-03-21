@@ -109,7 +109,8 @@ pub(crate) fn unquote_string_literal(value: &str) -> Option<String> {
 
     let starts_with_quote =
         trimmed.starts_with('"') || trimmed.starts_with('\'') || trimmed.starts_with('`');
-    let ends_with_quote = trimmed.ends_with('"') || trimmed.ends_with('\'') || trimmed.ends_with('`');
+    let ends_with_quote =
+        trimmed.ends_with('"') || trimmed.ends_with('\'') || trimmed.ends_with('`');
     if !starts_with_quote || !ends_with_quote {
         return None;
     }
@@ -236,9 +237,7 @@ pub(crate) fn type_extends(check_type: &TypeRef, extends_type: &TypeRef) -> Opti
                 _ => Some(check_type == extends_type),
             },
             TypeRef::Intrinsic { name } => match extends_type {
-                TypeRef::Intrinsic {
-                    name: extends_name,
-                } => Some(name == extends_name),
+                TypeRef::Intrinsic { name: extends_name } => Some(name == extends_name),
                 _ => Some(check_type == extends_type),
             },
             _ => Some(check_type == extends_type),
