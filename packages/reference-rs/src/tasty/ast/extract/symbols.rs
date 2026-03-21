@@ -3,9 +3,9 @@ use std::collections::BTreeMap;
 use oxc_ast::ast::{Comment, TSInterfaceDeclaration, TSTypeAliasDeclaration};
 use oxc_span::{GetSpan, Span};
 
-use super::super::super::model::TsSymbolKind;
-use super::super::super::scanner::symbol_id;
-use super::super::model::{ImportBinding, SymbolShell};
+use crate::tasty::ast::model::{ImportBinding, SymbolShell};
+use crate::tasty::model::TsSymbolKind;
+use crate::tasty::scanner::symbol_id;
 use super::comments::{leading_comment_for_span, parse_comment_metadata};
 use super::members::members_from_signatures;
 use super::type_references::collect_references_from_members;

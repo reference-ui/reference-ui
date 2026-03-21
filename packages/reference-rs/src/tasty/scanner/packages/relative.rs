@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 
 use crate::tasty::constants::scanner::{TS_INDEX_FILENAMES, TS_PATH_EXTENSIONS};
 
-use super::super::paths::{normalize_relative_path, path_to_unix};
+use crate::tasty::scanner::paths::{normalize_relative_path, path_to_unix};
 
 pub(super) fn resolve_relative_import(
     root_dir: &Path,

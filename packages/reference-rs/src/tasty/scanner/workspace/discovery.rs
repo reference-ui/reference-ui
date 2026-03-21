@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 use std::path::Path;
 
-use super::super::model::DiscoveredFile;
+use crate::tasty::scanner::model::DiscoveredFile;
 use super::crawler::Crawler;
 
 pub(super) fn discover_reachable_files(

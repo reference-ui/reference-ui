@@ -4,9 +4,9 @@ use std::path::Path;
 
 use crate::tasty::constants::libraries::USER_LIBRARY_NAME;
 
-use super::super::imports::{extract_module_specifiers, extract_reexport_module_specifiers};
-use super::super::model::{DiscoveredFile, ResolvedModule};
-use super::super::paths::module_specifier_for_file_id;
+use crate::tasty::scanner::imports::{extract_module_specifiers, extract_reexport_module_specifiers};
+use crate::tasty::scanner::model::{DiscoveredFile, ResolvedModule};
+use crate::tasty::scanner::paths::module_specifier_for_file_id;
 use super::policy::resolve_import_for_discovery;
 
 pub(super) struct Crawler<'a> {

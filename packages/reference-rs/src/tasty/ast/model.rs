@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use super::super::model::{
+use crate::tasty::model::{
     JsDoc, ScannerDiagnostic, TsMember, TsSymbolKind, TsTypeParameter, TypeRef,
 };
 

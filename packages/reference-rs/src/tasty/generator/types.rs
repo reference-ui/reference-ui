@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use super::super::model::{
+use crate::tasty::model::{
     FnParam, JsDoc, JsDocTag, TemplateLiteralPart, TsMember, TsMemberKind, TsTypeParameter,
     TupleElement, TypeRef, TypeScriptBundle,
 };

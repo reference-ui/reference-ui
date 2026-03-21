@@ -20,9 +20,9 @@ use self::module_bindings::{
 };
 use self::symbols::{push_interface_shell, push_type_alias_shell};
 use self::values::collect_statement_value_bindings;
-use super::super::model::ScannerDiagnostic;
-use super::super::scanner::{ScannedFile, ScannedWorkspace};
-use super::model::{ImportBinding, ParsedFileAst, SymbolShell};
+use crate::tasty::ast::model::{ImportBinding, ParsedFileAst, SymbolShell};
+use crate::tasty::model::ScannerDiagnostic;
+use crate::tasty::scanner::{ScannedFile, ScannedWorkspace};
 
 pub(super) fn extract_files(
     scanned_workspace: &ScannedWorkspace,

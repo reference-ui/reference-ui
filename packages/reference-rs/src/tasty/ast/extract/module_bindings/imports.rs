@@ -6,8 +6,8 @@ use oxc_ast::ast::{
 };
 use oxc_span::GetSpan;
 
-use super::super::super::super::scanner::resolve_import;
-use super::super::super::model::{ImportBinding, ImportBindingKind};
+use crate::tasty::ast::model::{ImportBinding, ImportBindingKind};
+use crate::tasty::scanner::resolve_import;
 use super::super::slice_span;
 
 struct ImportBindingEntry {

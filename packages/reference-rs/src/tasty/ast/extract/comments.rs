@@ -1,7 +1,7 @@
 use oxc_ast::ast::Comment;
 use oxc_span::Span;
 
-use super::super::super::model::{JsDoc, JsDocTag};
+use crate::tasty::model::{JsDoc, JsDocTag};
 
 #[derive(Debug, Clone)]
 pub(super) struct LeadingComment {

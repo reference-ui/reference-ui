@@ -4,95 +4,85 @@ The functionality is there. The pipeline works. This is purely about making the
 Rust crate clean, tight, and pleasant — breaking big files into focused modules,
 killing duplication, and finding the natural seams.
 
----
+### Status (as of last pass)
 
-## 1. Deduplicate `collapse_union`
-
-There are two identical `collapse_union` implementations:
-
-- `ast/extract/values.rs` (line 399)
-- `ast/resolve/resolver/type_ref.rs` (line 836)
-
-Both do the same thing: deduplicate a `Vec<TypeRef>` and return
-`None | Some(single) | Some(Union)`.
-
-**Move to:** `model.rs` as `TypeRef::collapse_union(types: Vec<TypeRef>)` or a
-free function next to the `TypeRef` definition. Everyone imports from one place.
-
----
-
-## 2. Deduplicate `reference_lookup_name`
-
-Two copies:
-
-- `ast/resolve/names.rs` (line 6) — the canonical one used by the resolver
-- `ast/extract/types.rs` (line 531) — a private copy inside the lowering context
-
-They do the same split on `['.', '<']`. The extract-side copy should be removed
-and `types.rs` should import from `ast::resolve::names` (or promote the helper
-to a shared utility).
+| §   | Topic                         | Status |
+| --- | ----------------------------- | ------ |
+| 1–4 | Dedup + literal inference     | **Done** |
+| 5   | Split resolver `type_ref`     | **Done** (`resolver/resolve.rs`, `instantiate.rs`, `evaluate.rs`) |
+| 6   | Split `extract/types`         | **Done** (`extract/types/mod.rs`, `lower_keywords.rs`, `lower_composites.rs`, `lower_references.rs`) |
+| 7–8 | Split generator/types, values | Open   |
+| 9   | Shared `typeref_util`         | **Done** (`shared/typeref_util.rs`) |
+| 10  | `crate::tasty::` imports      | **Done** |
+| 11  | TypeRef visitor               | Open   |
+| 12  | emitted vs generator          | Open (decision) |
+| 13  | `parsed_file_view`            | **Done** (uses `.clone()`) |
+| 14  | `ExtractionContext`           | Open   |
+| 15  | Housekeeping                  | Open   |
 
 ---
 
-## 3. Deduplicate `property_key_name`
+## 1. Deduplicate `collapse_union` ✅ DONE
 
-Two slightly different versions:
+There were two identical `collapse_union` implementations (`ast/extract/values.rs`
+and the old monolithic resolver). Both do the same thing: deduplicate a
+`Vec<TypeRef>` and return `None | Some(single) | Some(Union)`.
 
-- `ast/extract/members.rs` (line 291) — returns the raw span slice as `String`
-- `ast/extract/values.rs` (line 388) — returns `Option<String>`, handles
-  string literal unquoting and numeric literals
-
-These serve different needs but share intent. Unify into a single
-`property_key_name` in a shared util (or in `members.rs` with the richer
-signature) and have both call-sites use it.
+**Implemented:** single implementation in `shared/typeref_util.rs`; call-sites
+import from there.
 
 ---
 
-## 4. Deduplicate literal inference helpers in `values.rs`
+## 2. Deduplicate `reference_lookup_name` ✅ DONE
 
-`infer_boolean_type` / `infer_numeric_type` / `infer_string_type` each have a
-two-function pair: one takes an `Expression`, the other takes a raw `Span`. The
-`Expression` version just calls the `Span` version with `expression.span()`.
+Two copies existed (`ast/resolve/names.rs` and extract). Same split on
+`['.', '<']`.
 
-**Collapse** to a single set of functions that take `Span` directly — callers
-can pass `expression.span()` at the call site. Cuts six functions down to three.
+**Implemented:** canonical helper in `shared/typeref_util.rs`; extract imports it.
 
 ---
 
-## 5. Break up `ast/resolve/resolver/type_ref.rs` (891 lines)
+## 3. Deduplicate `property_key_name` ✅ DONE
 
-This is the biggest file. It contains three distinct operations on `TypeRef`,
-all as `impl Resolver` methods:
-
-| Concern                                                                                                    | Lines | New file                  |
-| ---------------------------------------------------------------------------------------------------------- | ----- | ------------------------- |
-| **resolve** — walk `TypeRef` to fill in `target_id`, resolved fields                                       | ~160  | `resolver/resolve.rs`     |
-| **instantiate** — substitute type parameters into a `TypeRef` tree                                         | ~200  | `resolver/instantiate.rs` |
-| **evaluate** — runtime-like evaluation: indexed access, conditional, template literal, keyof, type_extends | ~350  | `resolver/evaluate.rs`    |
-| **literal helpers** — `collapse_union`, `literal_key`, `parse_numeric_literal`, `is_wrapped_literal`, etc. | ~80   | shared util (see §9)      |
-
-The file also has `resolve_reference`, `resolve_import_target_id`,
-`resolve_local_target_id` which belong structurally in the resolve split.
-
-After the split, `resolver/mod.rs` just holds the `Resolver` struct and its
-constructor, and each sub-file adds an `impl Resolver` block for its concern.
+Members and values had divergent helpers; unified richer `Option<String>` logic
+in `shared/typeref_util.rs` with a fallback where needed for signatures.
 
 ---
 
-## 6. Break up `ast/extract/types.rs` (548 lines)
+## 4. Deduplicate literal inference helpers in `values.rs` ✅ DONE
 
-This is one big `impl LoweringContext` block. Natural splits:
+Collapsed the `Expression` vs `Span` pairs so only `*_span(source, span, …)`
+remains; call sites pass `expression.span()`.
 
-| Concern                                                                                                                                                           | New file                      |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
-| **keyword lowering** — `lower_keyword_type`, `lower_intrinsic_keyword`, `lower_literal_type`                                                                      | `extract/lower_keywords.rs`   |
-| **composite lowering** — `lower_tuple_*`, `lower_array_type`, `lower_function_type`, `lower_constructor_type`, `lower_mapped_type`, `lower_template_literal_type` | `extract/lower_composites.rs` |
-| **reference lowering** — `lower_type_reference`, `lower_expression_reference`, `reference_source_module`                                                          | `extract/lower_references.rs` |
-| **entry + context** — `LoweringContext` struct, `lower_type` dispatch, `type_to_ref`, `expression_to_reference`, `type_parameters_from_oxc`                       | stays in `extract/types.rs`   |
+---
 
-The tricky `lower_tuple_element_type` reparse hack can stay with composites for
-now but deserves a `// HACK: synthetic reparse` comment and eventually a cleaner
-approach.
+## 5. Break up `ast/resolve/resolver/type_ref.rs` ✅ DONE
+
+Was one large file; split into three `impl Resolver` modules:
+
+| Concern       | New file                  |
+| ------------- | ------------------------- |
+| resolve       | `resolver/resolve.rs`     |
+| instantiate   | `resolver/instantiate.rs` |
+| evaluate      | `resolver/evaluate.rs`    |
+
+Literal helpers live in `shared/typeref_util.rs` (see §9). `resolver/mod.rs`
+holds the `Resolver` struct and constructor.
+
+---
+
+## 6. Break up `ast/extract/types.rs` ✅ DONE
+
+`LoweringContext` entry and dispatch stay under `extract/types/`; splits:
+
+| Concern              | File                      |
+| -------------------- | ------------------------- |
+| keyword lowering     | `extract/types/lower_keywords.rs`   |
+| composite lowering   | `extract/types/lower_composites.rs` |
+| reference lowering     | `extract/types/lower_references.rs` |
+| entry + `type_to_ref`  | `extract/types/mod.rs`    |
+
+`lower_tuple_element_type` reparse hack is in composites with a `// HACK:` comment.
 
 ---
 
@@ -122,38 +112,27 @@ The value inference logic is one long chain. Split:
 
 ---
 
-## 9. Introduce a shared `typeref_util` module
+## 9. Introduce a shared `typeref_util` module ✅ DONE
 
-Several helpers are used across both `ast/extract/` and `ast/resolve/` (and
-should be):
+Helpers shared by extract and resolve:
 
 - `collapse_union`
 - `reference_lookup_name`
 - `literal_key` / `parse_numeric_literal` / `is_wrapped_literal` /
   `literal_fragment` / `string_literal_type`
 - `resolved_or_self`
+- plus `property_key_name`, evaluation helpers (`resolve_indexed_access`, etc.)
 
-These belong in a shared `typeref_util.rs` (or `model_util.rs`) at the `tasty/`
-root, next to `model.rs`. This eliminates the duplication _and_ removes the
-deep `super::super::super::super::model::` import chains that currently
-litter `type_ref.rs`.
+**Implemented:** `shared/typeref_util.rs`, wired from `shared/mod.rs` as
+`pub(crate) mod typeref_util`.
 
 ---
 
-## 10. Kill the `super::super::super::super::` chains
+## 10. Kill the `super::super::super::super::` chains ✅ DONE
 
-Currently `ast/resolve/resolver/type_ref.rs` has **12 occurrences** of
-`super::super::super::super::model::` — four-level relative imports. These are
-fragile and unreadable.
-
-**Fix:** Use `crate::tasty::model::` absolute imports everywhere inside the
-crate. The code already does this in some files (e.g. `crawler.rs` uses
-`crate::tasty::constants::libraries::USER_LIBRARY_NAME`). Be consistent:
-`crate::tasty::model::{TypeRef, TsMember, ...}` everywhere.
-
-Similarly, `ast/extract/module_bindings/imports.rs` has
-`super::super::super::super::scanner::resolve_import` — just use
-`crate::tasty::scanner::resolve_import`.
+**Implemented:** prefer `crate::tasty::model::…`, `crate::tasty::ast::model::…`,
+`crate::tasty::scanner::…`, `crate::tasty::generator::…`, etc., across the tasty
+crate (resolver split files included).
 
 ---
 
@@ -210,11 +189,10 @@ Decide which path; don't carry both.
 
 ---
 
-## 13. Simplify `ParsedFileAst` cloning
+## 13. Simplify `ParsedFileAst` cloning ✅ DONE
 
-`ast/resolve/index.rs` has a `parsed_file_view()` function that manually clones
-every field of `ParsedFileAst`. Since `ParsedFileAst` already derives `Clone`
-(via its `#[derive(Debug, Clone)]`), this can just be `.clone()`.
+**Implemented:** `ast/resolve/index.rs` uses `parsed.clone()` instead of a manual
+`parsed_file_view()` field-by-field clone.
 
 ---
 
@@ -260,16 +238,15 @@ signatures from 7+ params down to 2–3.
 
 Do these in dependency order so each step is independently shippable:
 
-1. **§9** — Create `typeref_util.rs` with the shared helpers
-2. **§1–3** — Deduplicate `collapse_union`, `reference_lookup_name`,
-   `property_key_name` (now trivial since §9 exists)
-3. **§4** — Collapse literal inference pairs
-4. **§10** — Switch to `crate::tasty::` imports everywhere
-5. **§5** — Split `resolver/type_ref.rs` → resolve / instantiate / evaluate
-6. **§6** — Split `extract/types.rs`
+1. ~~**§9** — Create `typeref_util`~~ **done** (`shared/typeref_util.rs`)
+2. ~~**§1–3** — Deduplicate `collapse_union`, `reference_lookup_name`, `property_key_name`~~ **done**
+3. ~~**§4** — Collapse literal inference pairs~~ **done**
+4. ~~**§10** — Switch to `crate::tasty::` imports everywhere~~ **done**
+5. ~~**§5** — Split `resolver/type_ref.rs` → resolve / instantiate / evaluate~~ **done**
+6. ~~**§6** — Split `extract/types.rs`~~ **done**
 7. **§7** — Split `generator/types.rs`
 8. **§8** — Split `extract/values.rs`
-9. **§13** — Drop `parsed_file_view` clone boilerplate
+9. ~~**§13** — Drop `parsed_file_view` clone boilerplate~~ **done**
 10. **§14** — Introduce `ExtractionContext`
 11. **§15** — Housekeeping
 12. **§12** — Decide emitted/ vs generator string codegen

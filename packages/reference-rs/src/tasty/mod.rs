@@ -11,6 +11,7 @@ mod model;
 mod request;
 mod scan;
 mod scanner;
+mod shared;
 
 #[cfg(test)]
 mod tests;

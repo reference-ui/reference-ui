@@ -2,13 +2,15 @@ use std::collections::BTreeMap;
 
 use oxc_ast::ast::{
     ArrayExpression, ArrayExpressionElement, BindingPattern, Declaration, Expression,
-    ObjectExpression, ObjectPropertyKind, PropertyKey, PropertyKind, Statement, TSAsExpression,
+    ObjectExpression, ObjectPropertyKind, PropertyKind, Statement, TSAsExpression,
     TSSatisfiesExpression, VariableDeclarationKind,
 };
 use oxc_span::GetSpan;
 
-use super::super::super::model::{JsDoc, TsMember, TsMemberKind, TypeRef};
-use super::super::model::ImportBinding;
+use crate::tasty::shared::typeref_util::{collapse_union, property_key_name};
+
+use crate::tasty::ast::model::ImportBinding;
+use crate::tasty::model::{JsDoc, TsMember, TsMemberKind, TypeRef};
 use super::slice_span;
 
 pub(super) fn collect_statement_value_bindings(
@@ -105,12 +107,24 @@ fn infer_value_type_with_const_context(
     const_asserted: bool,
 ) -> Option<TypeRef> {
     match expression {
-        Expression::BooleanLiteral(_) => Some(infer_boolean_type(source, expression, const_asserted)),
+        Expression::BooleanLiteral(_) => Some(infer_boolean_type_span(
+            source,
+            expression.span(),
+            const_asserted,
+        )),
         Expression::NullLiteral(_) => Some(TypeRef::Intrinsic {
             name: "null".to_string(),
         }),
-        Expression::NumericLiteral(_) => Some(infer_numeric_type(source, expression, const_asserted)),
-        Expression::StringLiteral(_) => Some(infer_string_type(source, expression, const_asserted)),
+        Expression::NumericLiteral(_) => Some(infer_numeric_type_span(
+            source,
+            expression.span(),
+            const_asserted,
+        )),
+        Expression::StringLiteral(_) => Some(infer_string_type_span(
+            source,
+            expression.span(),
+            const_asserted,
+        )),
         Expression::ObjectExpression(object) => Some(infer_object_type(
             object,
             source,
@@ -257,7 +271,7 @@ fn infer_array_type(
         return Some(TypeRef::Tuple {
             elements: element_types
                 .into_iter()
-                .map(|element| super::super::super::model::TupleElement {
+                .map(|element| crate::tasty::model::TupleElement {
                     label: None,
                     optional: false,
                     rest: false,
@@ -337,10 +351,6 @@ fn infer_array_element_type(
     }
 }
 
-fn infer_boolean_type(source: &str, expression: &Expression<'_>, const_asserted: bool) -> TypeRef {
-    infer_boolean_type_span(source, expression.span(), const_asserted)
-}
-
 fn infer_boolean_type_span(source: &str, span: oxc_span::Span, const_asserted: bool) -> TypeRef {
     if const_asserted {
         return TypeRef::Literal {
@@ -351,10 +361,6 @@ fn infer_boolean_type_span(source: &str, span: oxc_span::Span, const_asserted: b
     TypeRef::Intrinsic {
         name: "boolean".to_string(),
     }
-}
-
-fn infer_numeric_type(source: &str, expression: &Expression<'_>, const_asserted: bool) -> TypeRef {
-    infer_numeric_type_span(source, expression.span(), const_asserted)
 }
 
 fn infer_numeric_type_span(source: &str, span: oxc_span::Span, const_asserted: bool) -> TypeRef {
@@ -369,10 +375,6 @@ fn infer_numeric_type_span(source: &str, span: oxc_span::Span, const_asserted: b
     }
 }
 
-fn infer_string_type(source: &str, expression: &Expression<'_>, const_asserted: bool) -> TypeRef {
-    infer_string_type_span(source, expression.span(), const_asserted)
-}
-
 fn infer_string_type_span(source: &str, span: oxc_span::Span, const_asserted: bool) -> TypeRef {
     if const_asserted {
         return TypeRef::Literal {
@@ -385,44 +387,3 @@ fn infer_string_type_span(source: &str, span: oxc_span::Span, const_asserted: bo
     }
 }
 
-fn property_key_name(property_key: &PropertyKey<'_>, source: &str) -> Option<String> {
-    match property_key {
-        PropertyKey::StaticIdentifier(identifier) => Some(identifier.name.to_string()),
-        PropertyKey::StringLiteral(_) => Some(unquote_string_literal(
-            slice_span(source, property_key.span()),
-        )?),
-        PropertyKey::NumericLiteral(_) => Some(slice_span(source, property_key.span()).to_string()),
-        _ => None,
-    }
-}
-
-fn collapse_union(types: Vec<TypeRef>) -> Option<TypeRef> {
-    let mut unique_types = Vec::new();
-
-    for type_ref in types {
-        if !unique_types.contains(&type_ref) {
-            unique_types.push(type_ref);
-        }
-    }
-
-    match unique_types.len() {
-        0 => None,
-        1 => unique_types.into_iter().next(),
-        _ => Some(TypeRef::Union { types: unique_types }),
-    }
-}
-
-fn unquote_string_literal(value: &str) -> Option<String> {
-    let trimmed = value.trim();
-    if trimmed.len() < 2 {
-        return None;
-    }
-
-    let starts_with_quote = trimmed.starts_with('"') || trimmed.starts_with('\'') || trimmed.starts_with('`');
-    let ends_with_quote = trimmed.ends_with('"') || trimmed.ends_with('\'') || trimmed.ends_with('`');
-    if !starts_with_quote || !ends_with_quote {
-        return None;
-    }
-
-    Some(trimmed[1..trimmed.len() - 1].to_string())
-}

@@ -1,7 +1,7 @@
-use super::super::super::super::model::{
+use crate::tasty::ast::model::SymbolShell;
+use crate::tasty::model::{
     FnParam, TemplateLiteralPart, TsMember, TsSymbol, TsSymbolKind, TsTypeParameter, TypeRef,
 };
-use super::super::super::model::SymbolShell;
 use super::Resolver;
 
 impl<'a> Resolver<'a> {

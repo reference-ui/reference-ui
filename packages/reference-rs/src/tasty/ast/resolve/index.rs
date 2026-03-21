@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
-use super::super::super::model::{ExportMap, TsFile, TsSymbol};
-use super::super::model::{ParsedFileAst, ParsedTypeScriptAst, SymbolShell};
+use crate::tasty::ast::model::{ParsedFileAst, ParsedTypeScriptAst, SymbolShell};
+use crate::tasty::model::{ExportMap, TsFile, TsSymbol};
 use super::graph::ResolvedTypeScriptGraph;
 use super::resolver::Resolver;
 
@@ -92,7 +92,7 @@ fn resolve_file(
 ) -> (String, String, TsFile, ExportMap, Vec<TsSymbol>) {
     let ts_file = ts_file_from_parsed(&parsed);
     let file_exports = build_file_exports(&parsed.file_id, &parsed.export_bindings, symbol_index);
-    let parsed_view = parsed_file_view(&parsed);
+    let parsed_view = parsed.clone();
     let resolved_symbols = parsed
         .exports
         .into_iter()
@@ -128,19 +128,6 @@ fn build_file_exports(
                 .map(|symbol_id| (export_name.clone(), symbol_id.clone()))
         })
         .collect()
-}
-
-fn parsed_file_view(parsed: &ParsedFileAst) -> ParsedFileAst {
-    ParsedFileAst {
-        file_id: parsed.file_id.clone(),
-        module_specifier: parsed.module_specifier.clone(),
-        library: parsed.library.clone(),
-        source: parsed.source.clone(),
-        import_bindings: parsed.import_bindings.clone(),
-        value_bindings: parsed.value_bindings.clone(),
-        export_bindings: parsed.export_bindings.clone(),
-        exports: parsed.exports.clone(),
-    }
 }
 
 fn resolve_symbol_id<'a>(

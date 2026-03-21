@@ -1,13 +1,15 @@
 use std::collections::BTreeMap;
 
 use oxc_ast::ast::{
-    Comment, PropertyKey, TSCallSignatureDeclaration, TSConstructSignatureDeclaration,
+    Comment, TSCallSignatureDeclaration, TSConstructSignatureDeclaration,
     TSIndexSignature, TSMethodSignature, TSPropertySignature, TSSignature,
 };
 use oxc_span::GetSpan;
 
-use super::super::super::model::{TsMember, TsMemberKind};
-use super::super::model::ImportBinding;
+use crate::tasty::shared::typeref_util::property_key_name as property_key_name_opt;
+
+use crate::tasty::ast::model::ImportBinding;
+use crate::tasty::model::{TsMember, TsMemberKind};
 use super::comments::{leading_comment_for_span, parse_comment_metadata};
 use super::slice_span;
 use super::types::type_to_ref;
@@ -93,7 +95,8 @@ pub(super) fn property_signature_to_member(
     current_module_specifier: &str,
     current_library: &str,
 ) -> TsMember {
-    let name = property_key_name(&property.key, source);
+    let name = property_key_name_opt(&property.key, source)
+        .unwrap_or_else(|| slice_span(source, property.key.span()).to_string());
     let comment = parse_comment_metadata(leading_comment_for_span(
         source,
         comments,
@@ -131,7 +134,8 @@ pub(super) fn method_signature_to_member(
     current_module_specifier: &str,
     current_library: &str,
 ) -> TsMember {
-    let name = property_key_name(&method.key, source);
+    let name = property_key_name_opt(&method.key, source)
+        .unwrap_or_else(|| slice_span(source, method.key.span()).to_string());
     let comment = parse_comment_metadata(leading_comment_for_span(
         source,
         comments,
@@ -286,8 +290,4 @@ fn member_exclusion_starts(
     }
 
     (!exclude.is_empty()).then_some(exclude)
-}
-
-fn property_key_name(key: &PropertyKey<'_>, source: &str) -> String {
-    slice_span(source, key.span()).to_string()
 }
