@@ -7,6 +7,7 @@ use std::sync::OnceLock;
 use super::super::{scan_typescript_bundle, ScanRequest};
 
 const SCENARIO_EXTERNAL_LIBS: &str = "external_libs";
+const SCENARIO_KITCHEN_SINK: &str = "kitchen_sink";
 
 #[test]
 fn scans_fixture_successfully() {
@@ -19,6 +20,26 @@ fn scans_fixture_successfully() {
     })
     .expect("fixture scan should succeed");
     assert_eq!(bundle.version, 1);
+}
+
+#[test]
+fn scans_kitchen_sink_fixture() {
+    ensure_fixture_dependencies_installed();
+    let bundle = scan_typescript_bundle(&ScanRequest {
+        root_dir: fixture_tasty_dir(),
+        include: vec![format!(
+            "cases/{SCENARIO_KITCHEN_SINK}/input/**/*.{{ts,tsx}}"
+        )],
+    })
+    .expect("kitchen sink fixture scan should succeed");
+    assert_eq!(bundle.version, 1);
+    assert!(
+        bundle
+            .symbols
+            .values()
+            .any(|symbol| symbol.name == "DocsReferenceButtonProps"),
+        "expected DocsReferenceButtonProps symbol in bundle"
+    );
 }
 
 fn tests_dir() -> PathBuf {
