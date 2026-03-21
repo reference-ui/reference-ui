@@ -11,7 +11,7 @@ describe('virtual – baseline', () => {
   it('creates .reference-ui/virtual with files matching include', () => {
     expect(existsSync(virtualDir)).toBe(true)
     expect(existsSync(virt('_reference-component', 'Reference.tsx'))).toBe(true)
-    expect(existsSync(virt('_reference-component', 'components.tsx'))).toBe(true)
+    expect(existsSync(virt('_reference-component', 'components', 'index.ts'))).toBe(true)
     expect(existsSync(virt('_reference-component', 'theme', 'tokens.ts'))).toBe(true)
     expect(existsSync(virt('src', 'App.tsx'))).toBe(true)
     expect(existsSync(virt('src', 'main.tsx'))).toBe(true)

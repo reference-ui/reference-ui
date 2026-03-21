@@ -108,6 +108,14 @@ describe('Reference component', () => {
     expect(screen.getByText("DocsReferenceButtonProps['currentIntent']")).toBeInTheDocument()
   })
 
+  it('renders keyof typeof aliases in their declared form until tasty exposes value-derived unions', async () => {
+    await renderReference('DocsReferenceButtonIntent')
+
+    expect(screen.getByText('DocsReferenceButtonIntent')).toBeInTheDocument()
+    expect(screen.getByText('Type alias')).toBeInTheDocument()
+    expectVisibleText('keyof typeof docsReferenceTheme.intents')
+  })
+
   it('renders tuple aliases with their element labels instead of placeholder text', async () => {
     await renderReference('DocsReferenceButtonPadding')
 
