@@ -13,16 +13,23 @@ function getReferenceApi(runtime: TastyBrowserRuntime): Promise<TastyApi> {
   return runtime.loadApi()
 }
 
+async function loadReferenceRuntimeData(
+  runtime: TastyBrowserRuntime,
+  name: string,
+): Promise<ReferenceRuntimeData> {
+  const api = await getReferenceApi(runtime)
+  const symbol = await api.loadSymbolByName(name)
+  const members = symbol.getKind() === 'interface' ? await api.graph.getEffectiveMembers(symbol) : []
+
+  return {
+    symbol,
+    members,
+  }
+}
+
 export function createReferenceRuntime(runtime: TastyBrowserRuntime): ReferenceRuntime {
   async function load(name: string): Promise<ReferenceRuntimeData> {
-    const api = await getReferenceApi(runtime)
-    const symbol = await api.loadSymbolByName(name)
-    const members = symbol.getKind() === 'interface' ? await api.graph.getEffectiveMembers(symbol) : []
-
-    return {
-      symbol,
-      members,
-    }
+    return loadReferenceRuntimeData(runtime, name)
   }
 
   return {
