@@ -137,11 +137,13 @@ fn collect_type_ref_references(type_ref: &TypeRef, references: &mut Vec<TypeRef>
             extends_type,
             true_type,
             false_type,
+            resolved,
         } => {
             collect_type_ref_references(check_type, references);
             collect_type_ref_references(extends_type, references);
             collect_type_ref_references(true_type, references);
             collect_type_ref_references(false_type, references);
+            collect_optional_type_ref_references(resolved.as_deref(), references);
         }
         TypeRef::Mapped {
             source_type,

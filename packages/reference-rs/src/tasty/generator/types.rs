@@ -298,22 +298,33 @@ pub(super) fn emit_type_ref(
             extends_type,
             true_type,
             false_type,
-        } => Ok(emit_object(vec![
-            emit_field("kind", to_js_literal("conditional")?),
-            emit_field(
-                "checkType",
-                emit_type_ref(bundle, check_type, export_names)?,
-            ),
-            emit_field(
-                "extendsType",
-                emit_type_ref(bundle, extends_type, export_names)?,
-            ),
-            emit_field("trueType", emit_type_ref(bundle, true_type, export_names)?),
-            emit_field(
-                "falseType",
-                emit_type_ref(bundle, false_type, export_names)?,
-            ),
-        ])),
+            resolved,
+        } => {
+            let mut fields = vec![
+                emit_field("kind", to_js_literal("conditional")?),
+                emit_field(
+                    "checkType",
+                    emit_type_ref(bundle, check_type, export_names)?,
+                ),
+                emit_field(
+                    "extendsType",
+                    emit_type_ref(bundle, extends_type, export_names)?,
+                ),
+                emit_field("trueType", emit_type_ref(bundle, true_type, export_names)?),
+                emit_field(
+                    "falseType",
+                    emit_type_ref(bundle, false_type, export_names)?,
+                ),
+            ];
+            push_optional_type_ref_field(
+                fields.as_mut(),
+                "resolved",
+                bundle,
+                resolved.as_deref(),
+                export_names,
+            )?;
+            Ok(emit_object(fields))
+        }
         TypeRef::Mapped {
             type_param,
             source_type,

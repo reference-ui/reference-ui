@@ -121,6 +121,7 @@ describe('tasty utilities', () => {
     const sizeValue = await api.loadSymbolByName('SizeValue')
     const toneLabel = await api.loadSymbolByName('ToneLabel')
     const variantTone = await api.loadSymbolByName('VariantTone')
+    const concreteVariantMeta = await api.loadSymbolByName('ConcreteVariantMeta')
     const intentFromInterface = await api.loadSymbolByName('IntentFromInterface')
 
     expect(intentKey.getUnderlyingType()?.describe()).toBe('keyof typeof intents')
@@ -134,6 +135,26 @@ describe('tasty utilities', () => {
     expect(getTastyResolvedType(variantTone.getUnderlyingType())?.describe()).toBe(
       "'tone-solid' | 'tone-ghost' | 'tone-outline'",
     )
+    const concreteVariantMetaResolved = getTastyResolvedType(concreteVariantMeta.getUnderlyingType())
+    expect(concreteVariantMetaResolved?.getRaw()).toEqual({
+      kind: 'union',
+      types: [
+        {
+          kind: 'object',
+          members: [
+            { name: 'emphasis', optional: false, readonly: false, kind: 'property', type: { kind: 'literal', value: "'high'" } },
+            { name: 'fill', optional: false, readonly: false, kind: 'property', type: { kind: 'literal', value: 'true' } },
+          ],
+        },
+        {
+          kind: 'object',
+          members: [
+            { name: 'emphasis', optional: false, readonly: false, kind: 'property', type: { kind: 'literal', value: "'low'" } },
+            { name: 'fill', optional: false, readonly: false, kind: 'property', type: { kind: 'literal', value: 'false' } },
+          ],
+        },
+      ],
+    })
     expect(getTastyResolvedType(intentFromInterface.getUnderlyingType())?.describe()).toBe(
       "'primary' | 'danger'",
     )

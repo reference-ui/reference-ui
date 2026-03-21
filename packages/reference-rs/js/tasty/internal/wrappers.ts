@@ -370,6 +370,7 @@ function getResolvedRawTypeRef(raw: Exclude<RawTastyTypeRef, import('../api-type
     case 'indexed_access':
     case 'type_operator':
     case 'type_query':
+    case 'conditional':
     case 'template_literal':
       return raw.resolved
     default:

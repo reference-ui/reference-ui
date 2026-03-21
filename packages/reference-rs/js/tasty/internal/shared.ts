@@ -317,6 +317,7 @@ function collectUserOwnedReferencesFromTypeRef(typeRef: RawTastyTypeRef, refs: R
       collectUserOwnedReferencesFromTypeRef(typeRef.extendsType, refs)
       collectUserOwnedReferencesFromTypeRef(typeRef.trueType, refs)
       collectUserOwnedReferencesFromTypeRef(typeRef.falseType, refs)
+      if (typeRef.resolved) collectUserOwnedReferencesFromTypeRef(typeRef.resolved, refs)
       return
     case 'mapped':
       collectUserOwnedReferencesFromTypeRef(typeRef.sourceType, refs)
