@@ -1,10 +1,5 @@
 import * as React from 'react'
-import {
-  type TastyApi,
-  type TastyBrowserRuntime,
-  type TastyMember,
-  type TastySymbol,
-} from '@reference-ui/rust/tasty'
+import type { TastyBrowserRuntime } from '@reference-ui/rust/tasty'
 import {
   Code,
   Div,
@@ -19,29 +14,8 @@ import {
   Thead,
   Tr,
 } from './primitives'
-
-export interface ReferenceProps {
-  name: string
-}
-
-interface LoadedReferenceState {
-  symbol: TastySymbol
-  members: TastyMember[]
-}
-
-type ReferenceStatus =
-  | { state: 'loading' }
-  | { state: 'ready'; data: LoadedReferenceState }
-  | { state: 'error'; message: string }
-
-function formatModifiers(member: TastyMember): string {
-  const modifiers = [
-    member.isReadonly() ? 'readonly' : null,
-    member.isOptional() ? 'optional' : null,
-  ].filter(Boolean)
-
-  return modifiers.length > 0 ? modifiers.join(', ') : '-'
-}
+import { createReferenceRuntime, useReferenceStatus } from './Runtime'
+import type { ReferenceProps, ReferenceStatus } from './types'
 
 function renderSummary(status: ReferenceStatus, name: string): React.ReactNode {
   if (status.state === 'loading') {
@@ -60,22 +34,20 @@ function renderSummary(status: ReferenceStatus, name: string): React.ReactNode {
     )
   }
 
-  const { symbol } = status.data
-  const extendsNames = symbol.getExtends().map(ref => ref.getName())
-  const typeParameterNames = symbol.getTypeParameters().map(param => param.name)
-  const kindLabel = symbol.getKind() === 'typeAlias' ? 'Type alias' : 'Interface'
+  const { data } = status
+  const kindLabel = data.kind === 'typeAlias' ? 'Type alias' : 'Interface'
 
   return (
     <Div display="grid" gap="reference.xs">
       <P margin="0" color="reference.muted">
         {kindLabel} loaded from the generated Tasty manifest for{' '}
-        <Code fontFamily="reference.mono">{symbol.getName()}</Code>.
+        <Code fontFamily="reference.mono">{data.name}</Code>.
       </P>
-      {typeParameterNames.length > 0 ? (
-        <Small color="reference.muted">Generics: {typeParameterNames.join(', ')}</Small>
+      {data.typeParameters.length > 0 ? (
+        <Small color="reference.muted">Generics: {data.typeParameters.join(', ')}</Small>
       ) : null}
-      {extendsNames.length > 0 ? (
-        <Small color="reference.muted">Extends: {extendsNames.join(', ')}</Small>
+      {data.extendsNames.length > 0 ? (
+        <Small color="reference.muted">Extends: {data.extendsNames.join(', ')}</Small>
       ) : null}
     </Div>
   )
@@ -86,9 +58,9 @@ function renderContent(status: ReferenceStatus): React.ReactNode {
     return null
   }
 
-  const { symbol, members } = status.data
+  const { data } = status
 
-  if (symbol.getKind() === 'typeAlias') {
+  if (data.kind === 'typeAlias') {
     return (
       <Div marginTop="reference.lg" display="grid" gap="reference.sm">
         <Small color="reference.muted">Definition</Small>
@@ -98,7 +70,7 @@ function renderContent(status: ReferenceStatus): React.ReactNode {
           padding="reference.sm"
           background="reference.subtleBackground"
         >
-          {symbol.getUnderlyingType()?.describe() ?? 'unknown'}
+          {data.definition ?? 'unknown'}
         </Code>
       </Div>
     )
@@ -148,8 +120,8 @@ function renderContent(status: ReferenceStatus): React.ReactNode {
             </Tr>
           </Thead>
           <Tbody>
-            {members.map(member => (
-              <Tr key={member.getName()}>
+            {data.members.map(member => (
+              <Tr key={member.name}>
                 <Td
                   verticalAlign="top"
                   padding="reference.sm"
@@ -157,7 +129,7 @@ function renderContent(status: ReferenceStatus): React.ReactNode {
                   borderStyle="solid"
                   borderColor="reference.border"
                 >
-                  <Code fontFamily="reference.mono">{member.getName()}</Code>
+                  <Code fontFamily="reference.mono">{member.name}</Code>
                 </Td>
                 <Td
                   verticalAlign="top"
@@ -166,9 +138,7 @@ function renderContent(status: ReferenceStatus): React.ReactNode {
                   borderStyle="solid"
                   borderColor="reference.border"
                 >
-                  <Code fontFamily="reference.mono">
-                    {member.getType()?.describe() ?? 'unknown'}
-                  </Code>
+                  <Code fontFamily="reference.mono">{member.type}</Code>
                 </Td>
                 <Td
                   verticalAlign="top"
@@ -177,7 +147,7 @@ function renderContent(status: ReferenceStatus): React.ReactNode {
                   borderStyle="solid"
                   borderColor="reference.border"
                 >
-                  {formatModifiers(member)}
+                  {member.modifiers}
                 </Td>
               </Tr>
             ))}
@@ -189,46 +159,10 @@ function renderContent(status: ReferenceStatus): React.ReactNode {
 }
 
 export function createReferenceComponent(runtime: TastyBrowserRuntime) {
-  function getReferenceApi(): Promise<TastyApi> {
-    return runtime.loadApi()
-  }
-
-  async function loadReferenceState(name: string): Promise<LoadedReferenceState> {
-    const api = await getReferenceApi()
-    const symbol = await api.loadSymbolByName(name)
-    const members =
-      symbol.getKind() === 'interface'
-        ? await api.graph.flattenInterfaceMembers(symbol)
-        : []
-
-    return {
-      symbol,
-      members,
-    }
-  }
+  const referenceRuntime = createReferenceRuntime(runtime)
 
   function Reference({ name }: ReferenceProps) {
-    const [status, setStatus] = React.useState<ReferenceStatus>({ state: 'loading' })
-
-    React.useEffect(() => {
-      let active = true
-      setStatus({ state: 'loading' })
-
-      void loadReferenceState(name)
-        .then(data => {
-          if (!active) return
-          setStatus({ state: 'ready', data })
-        })
-        .catch((error: unknown) => {
-          if (!active) return
-          const message = error instanceof Error ? error.message : String(error)
-          setStatus({ state: 'error', message })
-        })
-
-      return () => {
-        active = false
-      }
-    }, [name])
+    const status = useReferenceStatus(referenceRuntime, name)
 
     return (
       <Div
