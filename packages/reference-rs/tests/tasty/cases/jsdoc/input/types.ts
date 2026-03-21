@@ -18,6 +18,8 @@ export interface ButtonProps {
   disabled?: boolean
 }
 
+export type ButtonSize = ButtonProps['size']
+
 /**
  * Create a button definition.
  * @returns A normalized button props object.

@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use oxc_ast::ast::{Comment, TSInterfaceDeclaration, TSTypeAliasDeclaration};
-use oxc_span::GetSpan;
+use oxc_span::{GetSpan, Span};
 
 use super::super::super::model::TsSymbolKind;
 use super::super::super::scanner::symbol_id;
@@ -16,6 +16,7 @@ pub(super) fn push_interface_shell<'a>(
     current_module_specifier: &str,
     current_library: &str,
     interface_decl: &TSInterfaceDeclaration<'a>,
+    comment_span: Span,
     source: &str,
     comments: &[Comment],
     import_bindings: &BTreeMap<String, ImportBinding>,
@@ -27,7 +28,7 @@ pub(super) fn push_interface_shell<'a>(
     let comment = parse_comment_metadata(leading_comment_for_span(
         source,
         comments,
-        interface_decl.span(),
+        comment_span,
         None,
     ));
     let defined_members = members_from_signatures(
@@ -86,6 +87,7 @@ pub(super) fn push_type_alias_shell<'a>(
     current_module_specifier: &str,
     current_library: &str,
     type_alias: &TSTypeAliasDeclaration<'a>,
+    comment_span: Span,
     source: &str,
     comments: &[Comment],
     import_bindings: &BTreeMap<String, ImportBinding>,
@@ -97,7 +99,7 @@ pub(super) fn push_type_alias_shell<'a>(
     let comment = parse_comment_metadata(leading_comment_for_span(
         source,
         comments,
-        type_alias.span(),
+        comment_span,
         None,
     ));
     let type_parameters = type_parameters_from_oxc(
