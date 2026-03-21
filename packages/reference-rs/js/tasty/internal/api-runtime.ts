@@ -11,6 +11,7 @@ import type {
   TastySymbolSearchResult,
   TastyTypeRef,
 } from '../api-types'
+import { dedupeTastyMembers } from '../members'
 import {
   collectUserOwnedReferencesFromSymbol,
   createAmbiguousSymbolNameError,
@@ -82,6 +83,9 @@ export class TastyApiRuntime implements TastyApi {
         const flattened = inherited.flatMap((item) => item.getMembers())
         flattened.push(...symbol.getMembers())
         return flattened
+      },
+      getEffectiveMembers: async (symbol) => {
+        return dedupeTastyMembers(await this.graph.flattenInterfaceMembers(symbol))
       },
       collectUserOwnedReferences: async (symbol) => {
         const refs = collectUserOwnedReferencesFromSymbol(symbol.getRaw())

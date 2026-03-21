@@ -4,6 +4,8 @@ import type {
   TastyJsDocTag as RawTastyJsDocTag,
   TastyManifest as RawTastyManifest,
   TastyMember as RawTastyMember,
+  TastyMemberKind as RawTastyMemberKind,
+  TastyStructuredTypeRef as RawTastyStructuredTypeRef,
   TastySymbol as RawTastySymbol,
   TastySymbolIndexEntry as RawTastySymbolIndexEntry,
   TastySymbolRef as RawTastySymbolRef,
@@ -39,6 +41,14 @@ export type {
 } from './generated'
 
 export type TastySymbolKind = 'interface' | 'typeAlias'
+export type TastyTypeKind = RawTastyStructuredTypeRef['kind'] | 'reference'
+
+export interface TastyCallableParameter {
+  name: string
+  type?: string
+  optional?: boolean
+  description?: string
+}
 
 export interface CreateTastyApiOptions {
   manifestPath: string
@@ -60,7 +70,7 @@ export interface TastySymbolSearchResult {
 }
 
 export interface TastyTypeRef {
-  getKind(): string
+  getKind(): TastyTypeKind
   getRaw(): RawTastyTypeRef
   isRaw(): boolean
   getSummary(): string | undefined
@@ -69,6 +79,7 @@ export interface TastyTypeRef {
   isUnion(): boolean
   isArray(): boolean
   isReference(): boolean
+  isCallable(): boolean
   getUnionTypes(): TastyTypeRef[]
   getParameters(): TastyFnParam[]
   getReturnType(): TastyTypeRef | undefined
@@ -89,14 +100,17 @@ export interface TastyJsDocTag {
 }
 
 export interface TastyMember {
+  getId(): string
   getName(): string
   isOptional(): boolean
   isReadonly(): boolean
-  getKind(): string
+  getKind(): RawTastyMemberKind
   getType(): TastyTypeRef | undefined
   getDescription(): string | undefined
   getJsDocTags(): TastyJsDocTag[]
   getJsDocTag(name: string): TastyJsDocTag | undefined
+  getDefaultValue(): string | undefined
+  getParameters(): TastyCallableParameter[]
   getRaw(): RawTastyMember
 }
 
@@ -131,6 +145,7 @@ export interface TastyGraphApi {
   loadImmediateDependencies(symbol: TastySymbol): Promise<TastySymbol[]>
   loadExtendsChain(symbol: TastySymbol): Promise<TastySymbol[]>
   flattenInterfaceMembers(symbol: TastySymbol): Promise<TastyMember[]>
+  getEffectiveMembers(symbol: TastySymbol): Promise<TastyMember[]>
   collectUserOwnedReferences(symbol: TastySymbol): Promise<TastySymbolRef[]>
 }
 

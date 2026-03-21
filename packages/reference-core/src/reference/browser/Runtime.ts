@@ -17,8 +17,7 @@ export function createReferenceRuntime(runtime: TastyBrowserRuntime): ReferenceR
   async function load(name: string): Promise<ReferenceRuntimeData> {
     const api = await getReferenceApi(runtime)
     const symbol = await api.loadSymbolByName(name)
-    const members =
-      symbol.getKind() === 'interface' ? await api.graph.flattenInterfaceMembers(symbol) : []
+    const members = symbol.getKind() === 'interface' ? await api.graph.getEffectiveMembers(symbol) : []
 
     return {
       symbol,

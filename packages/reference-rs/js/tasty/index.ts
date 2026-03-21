@@ -26,6 +26,7 @@ export type {
   RawTastyTypeReference,
   TastyApi,
   TastyBrowserRuntime,
+  TastyCallableParameter,
   TastyFnParam,
   TastyGraphApi,
   TastyJsDocTag,
@@ -35,6 +36,7 @@ export type {
   TastySymbolKind,
   TastySymbolRef,
   TastySymbolSearchResult,
+  TastyTypeKind,
   TastyTypeRef,
 } from './api-types'
 

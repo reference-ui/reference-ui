@@ -1,18 +1,22 @@
 import type {
+  RawTastyMemberKind,
   RawTastyFnParam,
   RawTastyJsDocTag,
   RawTastyMember,
   RawTastySymbolIndexEntry,
   RawTastySymbolRef,
   RawTastyTypeRef,
+  TastyCallableParameter,
   TastyFnParam,
   TastyJsDocTag,
   TastyMember,
   TastySymbol,
   TastySymbolKind,
   TastySymbolRef,
+  TastyTypeKind,
   TastyTypeRef,
 } from '../api-types'
+import { normalizeTastyInlineValue, parseTastyParamTag } from '../jsdoc'
 import {
   isInterfaceSymbol,
   isRawStructuredTypeRef,
@@ -126,6 +130,10 @@ export class TastyMemberImpl implements TastyMember {
     private readonly raw: RawTastyMember,
   ) {}
 
+  getId(): string {
+    return `${this.raw.kind}:${this.raw.name}`
+  }
+
   getName(): string {
     return this.raw.name
   }
@@ -138,7 +146,7 @@ export class TastyMemberImpl implements TastyMember {
     return this.raw.readonly
   }
 
-  getKind(): string {
+  getKind(): RawTastyMemberKind {
     return this.raw.kind
   }
 
@@ -157,6 +165,32 @@ export class TastyMemberImpl implements TastyMember {
 
   getJsDocTag(name: string): TastyJsDocTag | undefined {
     return this.getJsDocTags().find((tag) => tag.getName() === name)
+  }
+
+  getDefaultValue(): string | undefined {
+    return normalizeTastyInlineValue(this.getJsDocTag('default')?.getValue())
+  }
+
+  getParameters(): TastyCallableParameter[] {
+    const type = this.getType()
+    if (!type?.isCallable()) return []
+
+    const descriptions = new Map(
+      this.getJsDocTags()
+        .filter((tag) => tag.getName() === 'param')
+        .map((tag) => parseTastyParamTag(tag.getValue()))
+        .filter((entry): entry is [string, string] => entry != null),
+    )
+
+    return type.getParameters().map((param, index) => {
+      const name = param.getName() ?? `arg${index + 1}`
+      return {
+        name,
+        type: param.getType()?.describe(),
+        optional: param.isOptional(),
+        description: descriptions.get(name),
+      }
+    })
   }
 
   getRaw(): RawTastyMember {
@@ -202,7 +236,7 @@ export class TastyTypeRefImpl implements TastyTypeRef {
     private readonly raw: RawTastyTypeRef,
   ) {}
 
-  getKind(): string {
+  getKind(): TastyTypeKind {
     return isTypeReference(this.raw) ? 'reference' : this.raw.kind
   }
 
@@ -238,6 +272,11 @@ export class TastyTypeRefImpl implements TastyTypeRef {
 
   isReference(): boolean {
     return isTypeReference(this.raw)
+  }
+
+  isCallable(): boolean {
+    if (isTypeReference(this.raw)) return false
+    return this.raw.kind === 'function' || this.raw.kind === 'constructor'
   }
 
   getUnionTypes(): TastyTypeRef[] {
