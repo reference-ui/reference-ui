@@ -116,6 +116,23 @@ describe('Reference component', () => {
     expectVisibleText('keyof typeof docsReferenceTheme.intents')
   })
 
+  it('renders inherited members with origin labels', async () => {
+    await renderReference('DocsReferenceSplitButtonProps')
+
+    expect(screen.getByText('DocsReferenceSplitButtonProps')).toBeInTheDocument()
+    expect(screen.getByText('Interface')).toBeInTheDocument()
+    expectVisibleText('Extends: DocsReferenceButtonProps, DocsReferencePressableProps')
+    expectVisibleText('label')
+    expectVisibleText('controlId')
+    expectVisibleText('interactionRole')
+    expectVisibleText('announceLabel')
+    expectVisibleText('hasMenu')
+    expectVisibleText('from DocsReferenceButtonProps')
+    expectVisibleText('from DocsReferencePressableProps')
+    expectVisibleText('from DocsReferenceControlBaseProps')
+    expect(screen.getByText('"lg"')).toBeInTheDocument()
+  })
+
   it('renders tuple aliases with their element labels instead of placeholder text', async () => {
     await renderReference('DocsReferenceButtonPadding')
 
@@ -149,6 +166,14 @@ describe('Reference component', () => {
     expect(screen.getByText('DocsReferenceSpacingPreview')).toBeInTheDocument()
     expect(screen.getByText('Type alias')).toBeInTheDocument()
     expectVisibleText('{ compact: 4; comfortable: 8; spacious: 12 }')
+  })
+
+  it('renders intersection aliases with a readable composed expression', async () => {
+    await renderReference('DocsReferenceComposedButtonProps')
+
+    expect(screen.getByText('DocsReferenceComposedButtonProps')).toBeInTheDocument()
+    expect(screen.getByText('Type alias')).toBeInTheDocument()
+    expectVisibleText('DocsReferenceButtonProps & DocsReferencePressableProps')
   })
 
   it('renders concrete conditional aliases in their declared form', async () => {
