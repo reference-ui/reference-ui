@@ -6,11 +6,13 @@ use crate::tasty::constants::scanner::{
     NODE_MODULES_DIR, PACKAGE_INDEX_BASENAME, PACKAGE_JSON_FILENAME,
 };
 
-use crate::tasty::scanner::model::ResolvedModule;
-use crate::tasty::scanner::paths::{module_specifier_for_file_id, package_name_from_file_id, path_to_unix};
 use super::node_modules::installed_package_dirs;
 use super::package_json::{package_export_target, read_package_json};
 use super::relative::declaration_candidates;
+use crate::tasty::scanner::model::ResolvedModule;
+use crate::tasty::scanner::paths::{
+    module_specifier_for_file_id, package_name_from_file_id, path_to_unix,
+};
 
 pub(super) fn find_installed_declaration_provider(
     root_dir: &Path,

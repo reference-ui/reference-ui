@@ -11,7 +11,7 @@ modules and declaration shims.
 - `mod.rs`: generator surface and raw bundle assembly
 - `bundle/`: emitted artifact bundle assembly and module emission
 - `symbols.rs`: symbol payload and reference emission
-- `types.rs`: member and `TypeRef` emission
+- `types/`: member and `TypeRef` emission (`mod.rs` + `emit_*` splits)
 - `util.rs`: shared formatting helpers
 
 ## Boundaries

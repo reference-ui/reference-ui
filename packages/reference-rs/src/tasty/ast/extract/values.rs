@@ -9,9 +9,9 @@ use oxc_span::GetSpan;
 
 use crate::tasty::shared::typeref_util::{collapse_union, property_key_name};
 
+use super::slice_span;
 use crate::tasty::ast::model::ImportBinding;
 use crate::tasty::model::{JsDoc, TsMember, TsMemberKind, TypeRef};
-use super::slice_span;
 
 pub(super) fn collect_statement_value_bindings(
     statement: &Statement<'_>,
@@ -31,7 +31,8 @@ pub(super) fn collect_statement_value_bindings(
             value_bindings,
         ),
         Statement::ExportNamedDeclaration(export_named) => {
-            let Some(Declaration::VariableDeclaration(declaration)) = export_named.declaration.as_ref()
+            let Some(Declaration::VariableDeclaration(declaration)) =
+                export_named.declaration.as_ref()
             else {
                 return;
             };
@@ -169,7 +170,8 @@ fn infer_ts_as_expression(
     current_library: &str,
     const_asserted: bool,
 ) -> Option<TypeRef> {
-    let next_const_context = const_asserted || slice_span(source, assertion.type_annotation.span()) == "const";
+    let next_const_context =
+        const_asserted || slice_span(source, assertion.type_annotation.span()) == "const";
     infer_value_type_with_const_context(
         &assertion.expression,
         source,
@@ -386,4 +388,3 @@ fn infer_string_type_span(source: &str, span: oxc_span::Span, const_asserted: bo
         name: "string".to_string(),
     }
 }
-

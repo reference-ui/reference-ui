@@ -1,10 +1,10 @@
 use std::collections::BTreeMap;
 
+use super::Resolver;
 use crate::tasty::ast::model::SymbolShell;
 use crate::tasty::model::{
     FnParam, TemplateLiteralPart, TsMember, TsTypeParameter, TupleElement, TypeRef,
 };
-use super::Resolver;
 
 impl<'a> Resolver<'a> {
     pub(super) fn instantiate_symbol_type_alias(
@@ -30,10 +30,12 @@ impl<'a> Resolver<'a> {
         let mut substitutions = BTreeMap::new();
 
         for (index, parameter) in type_parameters.iter().enumerate() {
-            let argument = resolved_arguments
-                .get(index)
-                .cloned()
-                .or_else(|| parameter.default.clone().map(|default| self.resolve_type_ref(default)));
+            let argument = resolved_arguments.get(index).cloned().or_else(|| {
+                parameter
+                    .default
+                    .clone()
+                    .map(|default| self.resolve_type_ref(default))
+            });
             if let Some(argument) = argument {
                 substitutions.insert(parameter.name.clone(), argument);
             }
@@ -189,9 +191,9 @@ impl<'a> Resolver<'a> {
                     .map(|name_type| Box::new(self.instantiate_type_ref(name_type, substitutions))),
                 optional_modifier: *optional_modifier,
                 readonly_modifier: *readonly_modifier,
-                value_type: value_type
-                    .as_ref()
-                    .map(|value_type| Box::new(self.instantiate_type_ref(value_type, substitutions))),
+                value_type: value_type.as_ref().map(|value_type| {
+                    Box::new(self.instantiate_type_ref(value_type, substitutions))
+                }),
             },
             TypeRef::TemplateLiteral { parts, resolved } => TypeRef::TemplateLiteral {
                 parts: parts

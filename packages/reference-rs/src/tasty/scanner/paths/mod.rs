@@ -55,5 +55,7 @@ pub(super) fn normalize_relative_path(path: &Path) -> PathBuf {
 }
 
 pub(crate) fn is_external_file_id(file_id: &str) -> bool {
-    file_id.split('/').any(|segment| segment == NODE_MODULES_DIR)
+    file_id
+        .split('/')
+        .any(|segment| segment == NODE_MODULES_DIR)
 }

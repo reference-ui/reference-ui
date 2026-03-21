@@ -1,8 +1,8 @@
+use super::Resolver;
 use crate::tasty::ast::model::SymbolShell;
 use crate::tasty::model::{
     FnParam, TemplateLiteralPart, TsMember, TsSymbol, TsSymbolKind, TsTypeParameter, TypeRef,
 };
-use super::Resolver;
 
 impl<'a> Resolver<'a> {
     pub(in super::super) fn resolve_symbol(self, mut symbol: SymbolShell) -> TsSymbol {

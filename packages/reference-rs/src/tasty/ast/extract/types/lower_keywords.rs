@@ -3,9 +3,9 @@ use oxc_span::GetSpan;
 
 use crate::tasty::model::TypeRef;
 
-use super::LoweringContext;
-use super::intrinsic;
 use super::super::slice_span;
+use super::intrinsic;
+use super::LoweringContext;
 
 impl<'a> LoweringContext<'a> {
     pub(super) fn lower_keyword_type(&self, type_annotation: &TSType<'_>) -> Option<TypeRef> {
@@ -28,7 +28,10 @@ impl<'a> LoweringContext<'a> {
         Some(intrinsic(name))
     }
 
-    pub(super) fn lower_intrinsic_keyword(&self, keyword: &oxc_ast::ast::TSIntrinsicKeyword) -> TypeRef {
+    pub(super) fn lower_intrinsic_keyword(
+        &self,
+        keyword: &oxc_ast::ast::TSIntrinsicKeyword,
+    ) -> TypeRef {
         TypeRef::Intrinsic {
             name: slice_span(self.source, keyword.span()).to_string(),
         }

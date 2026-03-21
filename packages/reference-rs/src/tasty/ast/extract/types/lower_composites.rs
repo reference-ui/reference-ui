@@ -3,14 +3,12 @@ use oxc_ast::ast::{FormalParameters, TSTupleElement};
 use oxc_parser::Parser;
 use oxc_span::{GetSpan, SourceType};
 
-use crate::tasty::model::{
-    FnParam, TemplateLiteralPart, TupleElement, TypeOperatorKind, TypeRef,
-};
+use crate::tasty::model::{FnParam, TemplateLiteralPart, TupleElement, TypeOperatorKind, TypeRef};
 
-use super::LoweringContext;
-use super::mapped_modifier_kind;
 use super::super::members::members_from_signatures;
 use super::super::slice_span;
+use super::mapped_modifier_kind;
+use super::LoweringContext;
 
 impl<'a> LoweringContext<'a> {
     pub(super) fn lower_array_type(&self, array_type: &oxc_ast::ast::TSArrayType<'_>) -> TypeRef {
@@ -29,7 +27,10 @@ impl<'a> LoweringContext<'a> {
         }
     }
 
-    pub(super) fn lower_type_literal(&self, type_literal: &oxc_ast::ast::TSTypeLiteral<'_>) -> TypeRef {
+    pub(super) fn lower_type_literal(
+        &self,
+        type_literal: &oxc_ast::ast::TSTypeLiteral<'_>,
+    ) -> TypeRef {
         TypeRef::Object {
             members: members_from_signatures(
                 type_literal.members.as_slice(),
@@ -58,7 +59,10 @@ impl<'a> LoweringContext<'a> {
         }
     }
 
-    pub(super) fn lower_function_type(&self, function_type: &oxc_ast::ast::TSFunctionType<'_>) -> TypeRef {
+    pub(super) fn lower_function_type(
+        &self,
+        function_type: &oxc_ast::ast::TSFunctionType<'_>,
+    ) -> TypeRef {
         TypeRef::Function {
             params: self.lower_fn_params(&function_type.params),
             return_type: Box::new(self.lower_type(&function_type.return_type.type_annotation)),
@@ -78,7 +82,10 @@ impl<'a> LoweringContext<'a> {
         }
     }
 
-    pub(super) fn lower_type_operator_type(&self, operator: &oxc_ast::ast::TSTypeOperator<'_>) -> TypeRef {
+    pub(super) fn lower_type_operator_type(
+        &self,
+        operator: &oxc_ast::ast::TSTypeOperator<'_>,
+    ) -> TypeRef {
         TypeRef::TypeOperator {
             operator: match operator.operator {
                 oxc_ast::ast::TSTypeOperatorOperator::Keyof => TypeOperatorKind::Keyof,
@@ -97,7 +104,10 @@ impl<'a> LoweringContext<'a> {
         }
     }
 
-    pub(super) fn lower_conditional_type(&self, conditional: &oxc_ast::ast::TSConditionalType<'_>) -> TypeRef {
+    pub(super) fn lower_conditional_type(
+        &self,
+        conditional: &oxc_ast::ast::TSConditionalType<'_>,
+    ) -> TypeRef {
         TypeRef::Conditional {
             check_type: Box::new(self.lower_type(&conditional.check_type)),
             extends_type: Box::new(self.lower_type(&conditional.extends_type)),

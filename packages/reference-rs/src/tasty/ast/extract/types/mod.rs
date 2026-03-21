@@ -5,13 +5,13 @@ use oxc_ast::ast::{Expression, TSType, TSTypeParameterDeclaration};
 use crate::tasty::constants::libraries::USER_LIBRARY_NAME;
 use crate::tasty::shared::typeref_util::reference_lookup_name;
 
+use super::slice_span;
 use crate::tasty::ast::model::ImportBinding;
 use crate::tasty::model::{MappedModifierKind, TsTypeParameter, TypeRef};
 use oxc_span::GetSpan;
-use super::slice_span;
 
-mod lower_keywords;
 mod lower_composites;
+mod lower_keywords;
 mod lower_references;
 
 struct LoweringContext<'a> {

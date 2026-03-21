@@ -2,10 +2,10 @@ use std::collections::BTreeMap;
 
 use crate::tasty::ast::model::ParsedFileAst;
 
-mod symbol;
-mod resolve;
-mod instantiate;
 mod evaluate;
+mod instantiate;
+mod resolve;
+mod symbol;
 
 pub(super) struct Resolver<'a> {
     symbol_index: &'a BTreeMap<(String, String), String>,

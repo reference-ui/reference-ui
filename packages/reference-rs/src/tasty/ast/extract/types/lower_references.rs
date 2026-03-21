@@ -4,9 +4,9 @@ use oxc_span::GetSpan;
 use crate::tasty::model::TypeRef;
 use crate::tasty::shared::typeref_util::reference_lookup_name;
 
-use super::LoweringContext;
-use super::reference_source_module;
 use super::super::slice_span;
+use super::reference_source_module;
+use super::LoweringContext;
 
 impl<'a> LoweringContext<'a> {
     pub(super) fn lower_indexed_access_type(
@@ -20,7 +20,10 @@ impl<'a> LoweringContext<'a> {
         }
     }
 
-    pub(super) fn lower_type_reference(&self, reference: &oxc_ast::ast::TSTypeReference<'_>) -> TypeRef {
+    pub(super) fn lower_type_reference(
+        &self,
+        reference: &oxc_ast::ast::TSTypeReference<'_>,
+    ) -> TypeRef {
         let name = slice_span(self.source, reference.type_name.span()).to_string();
         let lookup_name = reference_lookup_name(&name);
         let type_arguments = reference.type_arguments.as_ref().map(|instantiation| {

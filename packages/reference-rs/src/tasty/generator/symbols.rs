@@ -4,9 +4,9 @@ use serde::Serialize;
 
 use crate::tasty::constants::libraries::USER_LIBRARY_NAME;
 
-use crate::tasty::model::{TsSymbol, TsSymbolKind, TypeRef, TypeScriptBundle};
 use super::types::{emit_jsdoc, emit_members, emit_optional_type_ref, emit_type_parameters};
 use super::util::{emit_array, emit_field, emit_object, indent_block, to_js_literal};
+use crate::tasty::model::{TsSymbol, TsSymbolKind, TypeRef, TypeScriptBundle};
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize)]
 pub(super) struct SymbolRef {
