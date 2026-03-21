@@ -1,8 +1,6 @@
 use super::Resolver;
 use crate::tasty::ast::model::SymbolShell;
-use crate::tasty::model::{
-    FnParam, TemplateLiteralPart, TsMember, TsSymbol, TsSymbolKind, TsTypeParameter, TypeRef,
-};
+use crate::tasty::model::{TsMember, TsSymbol, TsSymbolKind, TsTypeParameter, TypeRef};
 
 impl<'a> Resolver<'a> {
     pub(in super::super) fn resolve_symbol(self, mut symbol: SymbolShell) -> TsSymbol {
@@ -67,15 +65,6 @@ impl<'a> Resolver<'a> {
         }
     }
 
-    pub(super) fn resolve_fn_param(&self, param: FnParam) -> FnParam {
-        FnParam {
-            type_ref: param
-                .type_ref
-                .map(|type_ref| self.resolve_type_ref(type_ref)),
-            ..param
-        }
-    }
-
     fn resolve_symbol_underlying(&self, symbol_kind: TsSymbolKind, type_ref: TypeRef) -> TypeRef {
         let resolved = self.resolve_type_ref(type_ref);
 
@@ -91,18 +80,6 @@ impl<'a> Resolver<'a> {
                 .dereference_local_reference(&resolved)
                 .unwrap_or(resolved),
             _ => resolved,
-        }
-    }
-
-    pub(super) fn resolve_template_literal_part(
-        &self,
-        part: TemplateLiteralPart,
-    ) -> TemplateLiteralPart {
-        match part {
-            TemplateLiteralPart::Text { value } => TemplateLiteralPart::Text { value },
-            TemplateLiteralPart::Type { value } => TemplateLiteralPart::Type {
-                value: self.resolve_type_ref(value),
-            },
         }
     }
 }
