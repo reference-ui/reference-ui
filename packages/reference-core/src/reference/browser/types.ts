@@ -2,9 +2,9 @@ export interface ReferenceProps {
   name: string
 }
 
-export interface ReferenceTag {
+export interface ReferenceValueOption {
   label: string
-  highlighted?: boolean
+  isDefault?: boolean
 }
 
 export interface ReferenceParamDoc {
@@ -14,14 +14,28 @@ export interface ReferenceParamDoc {
   description?: string
 }
 
+export type ReferenceMemberTypeSummary =
+  | {
+      kind: 'valueSet'
+      options: ReferenceValueOption[]
+    }
+  | {
+      kind: 'callSignature' | 'typeExpression' | 'opaqueType'
+      text: string
+    }
+
+export interface ReferenceMemberSummary {
+  memberTypeSummary?: ReferenceMemberTypeSummary
+  description?: string
+  paramDocs: ReferenceParamDoc[]
+}
+
 export interface ReferenceMemberDocument {
   id: string
   name: string
   kind: string
   typeLabel: string
-  tags: ReferenceTag[]
-  description?: string
-  params: ReferenceParamDoc[]
+  summary: ReferenceMemberSummary
 }
 
 export interface ReferenceDocument {
