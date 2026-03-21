@@ -3,6 +3,7 @@ import { writeFile, appendFile } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { getSandboxDir } from '../../environments/lib/config.js'
+import { waitForRefSyncReady } from '../../environments/lib/ref-sync.js'
 import { testRoutes } from '../../environments/base/routes.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -64,6 +65,7 @@ test.describe('sync-watch', () => {
 
     const t0 = Date.now()
     await writeFile(syncWatchPath, buildSyncWatchContent(randomColor))
+    await waitForRefSyncReady(sandboxDir, { timeout: 60_000 })
 
     await expect
       .poll(
