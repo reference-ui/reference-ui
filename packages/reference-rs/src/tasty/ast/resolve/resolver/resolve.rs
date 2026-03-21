@@ -1,3 +1,5 @@
+//! `TypeRef` resolution pass: resolves import references and evaluates type-level expressions.
+
 use super::super::names::namespace_export_lookup_name;
 use super::Resolver;
 use crate::tasty::ast::model::ImportBindingKind;
@@ -5,7 +7,7 @@ use crate::tasty::model::{
     TemplateLiteralPart, TsTypeParameter, TupleElement, TypeOperatorKind, TypeRef,
 };
 use crate::tasty::shared::type_ref_map::{map_type_ref, TypeRefMap};
-use crate::tasty::shared::typeref_util::reference_lookup_name;
+use crate::tasty::shared::type_ref_util::reference_lookup_name;
 
 impl<'a> Resolver<'a> {
     pub(super) fn resolve_type_ref(&self, type_ref: TypeRef) -> TypeRef {
@@ -77,7 +79,7 @@ impl<'a> Resolver<'a> {
 
         for segment in path {
             current =
-                crate::tasty::shared::typeref_util::resolve_object_member_type(&current, segment)?;
+                crate::tasty::shared::type_ref_util::resolve_object_member_type(&current, segment)?;
         }
 
         Some(current)

@@ -4,7 +4,7 @@ use oxc_ast::ast::{
 };
 use oxc_span::GetSpan;
 
-use crate::tasty::shared::typeref_util::property_key_name as property_key_name_opt;
+use crate::tasty::shared::type_ref_util::property_key_name as property_key_name_opt;
 
 use super::super::comments::{leading_comment_for_span, parse_comment_metadata};
 use super::super::slice_span;

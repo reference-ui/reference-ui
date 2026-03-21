@@ -1,3 +1,5 @@
+//! Leading comment extraction and normalization for JSDoc and block comments.
+
 use oxc_ast::ast::Comment;
 use oxc_span::Span;
 
@@ -95,13 +97,17 @@ fn build_leading_comment(raw: &str, is_jsdoc: bool) -> Option<LeadingComment> {
 }
 
 fn normalize_comment_text(raw: &str) -> String {
-    strip_block_comment_delimiters(raw)
-        .lines()
-        .map(normalize_comment_line)
-        .collect::<Vec<_>>()
-        .join("\n")
-        .trim()
-        .to_string()
+    let stripped = strip_block_comment_delimiters(raw);
+    let mut out = String::with_capacity(raw.len());
+    let mut first = true;
+    for line in stripped.lines() {
+        if !first {
+            out.push('\n');
+        }
+        first = false;
+        out.push_str(&normalize_comment_line(line));
+    }
+    out.trim().to_string()
 }
 
 fn strip_block_comment_delimiters(raw: &str) -> &str {

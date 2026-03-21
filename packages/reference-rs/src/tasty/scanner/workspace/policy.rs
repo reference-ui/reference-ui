@@ -1,37 +1,38 @@
+//! Discovery-phase import policy: which imports to follow and when.
+
 use std::collections::BTreeSet;
 use std::path::Path;
 
 use crate::tasty::scanner::model::ResolvedModule;
-use crate::tasty::scanner::packages::{resolve_external_import, resolve_relative_import};
+use crate::tasty::scanner::packages::{resolve_external_import, resolve_relative_import, FileLookup};
 use crate::tasty::scanner::paths::{
     is_external_file_id, module_specifier_for_file_id, package_name_from_file_id,
 };
 
+/// Everything known about the file currently being crawled.
+pub(super) struct DiscoveryContext<'a> {
+    pub(super) root_dir: &'a Path,
+    pub(super) file_id: &'a str,
+    pub(super) current_library: &'a str,
+    pub(super) is_user_file: bool,
+    pub(super) known_file_ids: &'a BTreeSet<String>,
+    pub(super) user_file_ids: &'a BTreeSet<String>,
+    pub(super) reexport_specifiers: &'a BTreeSet<String>,
+}
+
 pub(super) fn resolve_import_for_discovery(
-    root_dir: &Path,
-    current_file_id: &str,
+    ctx: &DiscoveryContext<'_>,
     source_module: &str,
-    known_file_ids: &BTreeSet<String>,
-    user_file_ids: &BTreeSet<String>,
-    is_user_file: bool,
-    reexport_specifiers: &BTreeSet<String>,
-    current_library: &str,
 ) -> Option<ResolvedModule> {
     let is_relative_import = source_module.starts_with('.');
     if is_relative_import {
-        return resolve_relative_import_for_discovery(
-            root_dir,
-            current_file_id,
-            source_module,
-            known_file_ids,
-            user_file_ids,
-        );
+        return resolve_relative_import_for_discovery(ctx, source_module);
     }
 
     // User files only pull external libraries into the graph when the user
     // re-exports them. Plain imports are not part of the public bridge.
     let should_skip_external_import =
-        should_skip_user_external_import(is_user_file, reexport_specifiers, source_module);
+        should_skip_user_external_import(ctx.is_user_file, ctx.reexport_specifiers, source_module);
     if should_skip_external_import {
         return None;
     }
@@ -39,39 +40,36 @@ pub(super) fn resolve_import_for_discovery(
     // Once we are traversing inside an external package, stay inside that same
     // package. This keeps discovery scoped to the declarations that back the
     // symbols we already chose to bridge.
-    if !is_user_file {
+    if !ctx.is_user_file {
         return resolve_external_import_in_current_library(
-            root_dir,
+            ctx.root_dir,
             source_module,
-            current_library,
+            ctx.current_library,
         );
     }
 
-    resolve_external_import(root_dir, source_module)
+    resolve_external_import(ctx.root_dir, source_module)
 }
 
 fn resolve_relative_import_for_discovery(
-    root_dir: &Path,
-    current_file_id: &str,
+    ctx: &DiscoveryContext<'_>,
     source_module: &str,
-    known_file_ids: &BTreeSet<String>,
-    user_file_ids: &BTreeSet<String>,
 ) -> Option<ResolvedModule> {
-    let is_external = is_external_file_id(current_file_id);
-    let (file_ids, allow_file_lookup) = if is_external {
+    let is_external = is_external_file_id(ctx.file_id);
+    let (file_ids, file_lookup) = if is_external {
         // External declaration files are allowed to walk the filesystem because we
         // discover them incrementally from package entrypoints rather than from the
         // original user include globs.
-        (known_file_ids, true)
+        (ctx.known_file_ids, FileLookup::Allowed)
     } else {
-        (user_file_ids, false)
+        (ctx.user_file_ids, FileLookup::Denied)
     };
     let file_id = resolve_relative_import(
-        root_dir,
-        current_file_id,
+        ctx.root_dir,
+        ctx.file_id,
         source_module,
         file_ids,
-        allow_file_lookup,
+        file_lookup,
     )?;
 
     Some(resolved_module_from_file_id(file_id))

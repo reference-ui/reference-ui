@@ -6,7 +6,7 @@ use super::super::module_bindings::collect_import_bindings;
 use crate::tasty::ast::model::ImportBinding;
 use crate::tasty::scanner::ScannedFile;
 
-pub(crate) fn collect_statement_import_bindings(
+pub(crate) fn import_bindings_from_statement(
     root_dir: &std::path::Path,
     scanned_file: &ScannedFile,
     statement: &Statement<'_>,

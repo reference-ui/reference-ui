@@ -1,3 +1,5 @@
+//! External and relative import resolution dispatch.
+
 mod node_modules;
 mod package_entry;
 mod package_json;
@@ -10,6 +12,8 @@ use self::package_entry::{find_installed_declaration_provider, resolve_package_i
 use super::model::ResolvedModule;
 use super::paths::{is_external_file_id, split_package_specifier};
 
+pub(crate) use relative::FileLookup;
+
 pub(crate) fn resolve_import(
     root_dir: &Path,
     current_file_id: &str,
@@ -17,13 +21,17 @@ pub(crate) fn resolve_import(
     file_id_set: &BTreeSet<String>,
 ) -> Option<String> {
     if source_module.starts_with('.') {
-        let allow_file_lookup = is_external_file_id(current_file_id);
+        let file_lookup = if is_external_file_id(current_file_id) {
+            FileLookup::Allowed
+        } else {
+            FileLookup::Denied
+        };
         return resolve_relative_import(
             root_dir,
             current_file_id,
             source_module,
             file_id_set,
-            allow_file_lookup,
+            file_lookup,
         );
     }
 
@@ -35,14 +43,14 @@ pub(super) fn resolve_relative_import(
     current_file_id: &str,
     source_module: &str,
     file_id_set: &BTreeSet<String>,
-    allow_file_lookup: bool,
+    file_lookup: FileLookup,
 ) -> Option<String> {
     relative::resolve_relative_import(
         root_dir,
         current_file_id,
         source_module,
         file_id_set,
-        allow_file_lookup,
+        file_lookup,
     )
 }
 

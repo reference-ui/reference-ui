@@ -1,6 +1,6 @@
 use oxc_ast::ast::{ObjectExpression, ObjectPropertyKind, PropertyKind};
 
-use crate::tasty::shared::typeref_util::property_key_name;
+use crate::tasty::shared::type_ref_util::property_key_name;
 
 use crate::tasty::model::{JsDoc, TsMember, TsMemberKind, TypeRef};
 

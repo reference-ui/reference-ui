@@ -1,10 +1,12 @@
+//! Breadth-first import graph crawler that builds the reachable file set.
+
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::fs;
 use std::path::Path;
 
 use crate::tasty::constants::libraries::USER_LIBRARY_NAME;
 
-use super::policy::resolve_import_for_discovery;
+use super::policy::{resolve_import_for_discovery, DiscoveryContext};
 use crate::tasty::scanner::imports::{
     extract_module_specifiers, extract_reexport_module_specifiers,
 };
@@ -60,14 +62,17 @@ impl<'a> Crawler<'a> {
         let current_library = self.library_of(file_id);
         let reexport_specifiers = self.reexports_of(is_user_file, file_id, &source);
 
-        for resolved in self.resolve_imports(
+        let ctx = DiscoveryContext {
+            root_dir: self.root_dir,
             file_id,
-            &source,
-            &known_file_ids,
+            current_library: current_library.as_str(),
             is_user_file,
-            &reexport_specifiers,
-            &current_library,
-        ) {
+            known_file_ids: &known_file_ids,
+            user_file_ids: &self.user_file_ids,
+            reexport_specifiers: &reexport_specifiers,
+        };
+
+        for resolved in self.resolve_imports(&ctx, &source) {
             self.enqueue(resolved);
         }
 
@@ -90,47 +95,13 @@ impl<'a> Crawler<'a> {
 
     fn resolve_imports(
         &self,
-        file_id: &str,
+        ctx: &DiscoveryContext<'_>,
         source: &str,
-        known_file_ids: &BTreeSet<String>,
-        is_user_file: bool,
-        reexport_specifiers: &BTreeSet<String>,
-        current_library: &str,
     ) -> Vec<ResolvedModule> {
-        extract_module_specifiers(file_id, source)
+        extract_module_specifiers(ctx.file_id, source)
             .into_iter()
-            .filter_map(|source_module| {
-                self.resolve_import(
-                    file_id,
-                    &source_module,
-                    known_file_ids,
-                    is_user_file,
-                    reexport_specifiers,
-                    current_library,
-                )
-            })
+            .filter_map(|source_module| resolve_import_for_discovery(ctx, &source_module))
             .collect()
-    }
-
-    fn resolve_import(
-        &self,
-        file_id: &str,
-        source_module: &str,
-        known_file_ids: &BTreeSet<String>,
-        is_user_file: bool,
-        reexport_specifiers: &BTreeSet<String>,
-        current_library: &str,
-    ) -> Option<ResolvedModule> {
-        resolve_import_for_discovery(
-            self.root_dir,
-            file_id,
-            source_module,
-            known_file_ids,
-            &self.user_file_ids,
-            is_user_file,
-            reexport_specifiers,
-            current_library,
-        )
     }
 
     fn library_of(&self, file_id: &str) -> String {

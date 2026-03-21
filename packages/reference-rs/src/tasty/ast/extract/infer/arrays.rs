@@ -2,7 +2,7 @@ use oxc_ast::ast::{ArrayExpression, ArrayExpressionElement};
 use oxc_span::GetSpan;
 
 use crate::tasty::model::{TupleElement, TypeRef};
-use crate::tasty::shared::typeref_util::collapse_union;
+use crate::tasty::shared::type_ref_util::collapse_union;
 
 use super::objects::infer_object_type;
 use super::primitives::{infer_boolean_type_span, infer_numeric_type_span, infer_string_type_span};

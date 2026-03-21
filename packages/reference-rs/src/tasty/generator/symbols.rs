@@ -1,11 +1,12 @@
+//! JavaScript source emission for symbol descriptors and cross-references.
+
 use std::collections::{BTreeMap, BTreeSet};
 
 use serde::Serialize;
 
-use crate::tasty::constants::libraries::USER_LIBRARY_NAME;
-
 use super::types::{emit_jsdoc, emit_members, emit_optional_type_ref, emit_type_parameters};
-use super::util::{emit_array, emit_field, emit_object, indent_block, to_js_literal};
+use super::util::{emit_array, emit_field, emit_object, indent_block, to_js_literal, JsObjectBuilder};
+use crate::tasty::constants::libraries::USER_LIBRARY_NAME;
 use crate::tasty::model::{TsSymbol, TsSymbolKind, TypeRef, TypeScriptBundle};
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize)]
@@ -33,24 +34,18 @@ fn emit_symbol_object(
     export_name: &str,
     export_names: &BTreeMap<String, String>,
 ) -> Result<String, String> {
-    let mut fields = vec![
-        emit_field("id", to_js_literal(export_name)?),
-        emit_field("name", to_js_literal(&symbol.name)?),
-        emit_field("library", to_js_literal(&symbol.library)?),
-    ];
+    let base = JsObjectBuilder::new()
+        .try_field("id", to_js_literal(export_name))?
+        .try_field("name", to_js_literal(&symbol.name))?
+        .try_field("library", to_js_literal(&symbol.library))?
+        .extend(symbol_metadata_fields(bundle, symbol, export_names)?);
 
-    push_symbol_metadata_fields(&mut fields, bundle, symbol, export_names)?;
+    let base = match symbol.kind {
+        TsSymbolKind::Interface => base.extend(interface_fields(bundle, symbol, export_names)?),
+        TsSymbolKind::TypeAlias => base.extend(type_alias_fields(bundle, symbol, export_names)?),
+    };
 
-    match symbol.kind {
-        TsSymbolKind::Interface => {
-            push_interface_fields(&mut fields, bundle, symbol, export_names)?
-        }
-        TsSymbolKind::TypeAlias => {
-            push_type_alias_fields(&mut fields, bundle, symbol, export_names)?
-        }
-    }
-
-    Ok(emit_object(fields))
+    Ok(base.build())
 }
 
 fn supporting_type_descriptors(
@@ -124,21 +119,20 @@ pub(super) fn emit_ref_object(reference: &SymbolRef) -> Result<String, String> {
     Ok(emit_object(symbol_ref_fields(reference)?))
 }
 
-fn push_symbol_metadata_fields(
-    fields: &mut Vec<String>,
+fn symbol_metadata_fields(
     bundle: &TypeScriptBundle,
     symbol: &TsSymbol,
     export_names: &BTreeMap<String, String>,
-) -> Result<(), String> {
-    push_optional_string_field(fields, "description", symbol.description.as_ref())?;
-    push_optional_string_field(fields, "descriptionRaw", symbol.description_raw.as_ref())?;
-    push_optional_jsdoc_field(fields, symbol.jsdoc.as_ref())?;
-    push_type_parameters_field(fields, bundle, symbol, export_names)?;
-
-    Ok(())
+) -> Result<Vec<String>, String> {
+    let mut out = Vec::new();
+    optional_string_field(&mut out, "description", symbol.description.as_ref())?;
+    optional_string_field(&mut out, "descriptionRaw", symbol.description_raw.as_ref())?;
+    optional_jsdoc_field(&mut out, symbol.jsdoc.as_ref())?;
+    type_parameters_field(&mut out, bundle, symbol, export_names)?;
+    Ok(out)
 }
 
-fn push_optional_string_field(
+fn optional_string_field(
     fields: &mut Vec<String>,
     name: &str,
     value: Option<&String>,
@@ -146,22 +140,20 @@ fn push_optional_string_field(
     if let Some(value) = value {
         fields.push(emit_field(name, to_js_literal(value)?));
     }
-
     Ok(())
 }
 
-fn push_optional_jsdoc_field(
+fn optional_jsdoc_field(
     fields: &mut Vec<String>,
     jsdoc: Option<&crate::tasty::model::JsDoc>,
 ) -> Result<(), String> {
     if let Some(jsdoc) = jsdoc {
         fields.push(emit_field("jsdoc", emit_jsdoc(jsdoc)?));
     }
-
     Ok(())
 }
 
-fn push_type_parameters_field(
+fn type_parameters_field(
     fields: &mut Vec<String>,
     bundle: &TypeScriptBundle,
     symbol: &TsSymbol,
@@ -173,48 +165,43 @@ fn push_type_parameters_field(
             emit_type_parameters(bundle, &symbol.type_parameters, export_names)?,
         ));
     }
-
     Ok(())
 }
 
-fn push_interface_fields(
-    fields: &mut Vec<String>,
+fn interface_fields(
     bundle: &TypeScriptBundle,
     symbol: &TsSymbol,
     export_names: &BTreeMap<String, String>,
-) -> Result<(), String> {
-    fields.push(emit_field(
-        "members",
-        emit_members(bundle, &symbol.defined_members, export_names)?,
-    ));
-    fields.push(emit_field(
-        "extends",
-        emit_ref_array(reference_descriptors_from_type_refs(
-            bundle,
-            &symbol.extends,
-            export_names,
-        ))?,
-    ));
-    fields.push(emit_field(
-        "types",
-        emit_ref_array(supporting_type_descriptors(bundle, symbol, export_names))?,
-    ));
-
-    Ok(())
+) -> Result<Vec<String>, String> {
+    Ok(vec![
+        emit_field(
+            "members",
+            emit_members(bundle, &symbol.defined_members, export_names)?,
+        ),
+        emit_field(
+            "extends",
+            emit_ref_array(reference_descriptors_from_type_refs(
+                bundle,
+                &symbol.extends,
+                export_names,
+            ))?,
+        ),
+        emit_field(
+            "types",
+            emit_ref_array(supporting_type_descriptors(bundle, symbol, export_names))?,
+        ),
+    ])
 }
 
-fn push_type_alias_fields(
-    fields: &mut Vec<String>,
+fn type_alias_fields(
     bundle: &TypeScriptBundle,
     symbol: &TsSymbol,
     export_names: &BTreeMap<String, String>,
-) -> Result<(), String> {
-    fields.push(emit_field(
+) -> Result<Vec<String>, String> {
+    Ok(vec![emit_field(
         "definition",
         emit_optional_type_ref(bundle, symbol.underlying.as_ref(), export_names)?,
-    ));
-
-    Ok(())
+    )])
 }
 
 fn collect_reference_descriptors<'a>(

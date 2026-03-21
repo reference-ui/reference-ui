@@ -1,3 +1,5 @@
+//! Package entrypoint resolution from `node_modules` layout and `package.json` exports.
+
 use std::path::{Path, PathBuf};
 
 use serde_json::Value;

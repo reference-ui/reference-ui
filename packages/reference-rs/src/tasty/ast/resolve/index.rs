@@ -1,3 +1,5 @@
+//! Top-level resolve orchestration: symbol index → export index → resolved graph.
+
 use std::collections::BTreeMap;
 
 use super::graph::ResolvedTypeScriptGraph;
@@ -40,13 +42,17 @@ pub(crate) fn resolve_ast(parsed_ast: ParsedTypeScriptAst) -> ResolvedTypeScript
     }
 }
 
+fn file_symbol_key(file_id: &str, name: &str) -> (String, String) {
+    (file_id.to_string(), name.to_string())
+}
+
 fn build_symbol_index(parsed_files: &[ParsedFileAst]) -> BTreeMap<(String, String), String> {
     parsed_files
         .iter()
         .flat_map(|parsed| {
             parsed.exports.iter().map(|symbol| {
                 (
-                    (parsed.file_id.clone(), symbol.name.clone()),
+                    file_symbol_key(&parsed.file_id, &symbol.name),
                     symbol.id.clone(),
                 )
             })
@@ -67,7 +73,7 @@ fn build_export_index(
                 .filter_map(|(export_name, local_name)| {
                     resolve_symbol_id(symbol_index, &parsed.file_id, local_name).map(|symbol_id| {
                         (
-                            (parsed.file_id.clone(), export_name.clone()),
+                            file_symbol_key(&parsed.file_id, export_name),
                             symbol_id.clone(),
                         )
                     })
@@ -135,5 +141,5 @@ fn resolve_symbol_id<'a>(
     file_id: &str,
     local_name: &str,
 ) -> Option<&'a String> {
-    symbol_index.get(&(file_id.to_string(), local_name.to_string()))
+    symbol_index.get(&file_symbol_key(file_id, local_name))
 }

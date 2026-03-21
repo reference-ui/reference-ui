@@ -1,3 +1,5 @@
+//! Relative import path resolution and declaration candidate enumeration.
+
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
@@ -5,12 +7,19 @@ use crate::tasty::constants::scanner::{TS_INDEX_FILENAMES, TS_PATH_EXTENSIONS};
 
 use crate::tasty::scanner::paths::{normalize_relative_path, path_to_unix};
 
+/// Whether filesystem lookup is allowed when resolving relative imports beyond the known set.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum FileLookup {
+    Allowed,
+    Denied,
+}
+
 pub(super) fn resolve_relative_import(
     root_dir: &Path,
     current_file_id: &str,
     source_module: &str,
     file_id_set: &BTreeSet<String>,
-    allow_file_lookup: bool,
+    file_lookup: FileLookup,
 ) -> Option<String> {
     let current_path = Path::new(current_file_id);
     let base_dir = current_path.parent().unwrap_or_else(|| Path::new(""));
@@ -19,7 +28,7 @@ pub(super) fn resolve_relative_import(
     declaration_candidates(&joined, true)
         .into_iter()
         .map(|candidate| path_to_unix(&candidate))
-        .find(|file_id| candidate_matches(root_dir, file_id, file_id_set, allow_file_lookup))
+        .find(|file_id| candidate_matches(root_dir, file_id, file_id_set, file_lookup))
 }
 
 pub(super) fn declaration_candidates(path: &Path, include_runtime_entry: bool) -> Vec<PathBuf> {
@@ -46,9 +55,10 @@ fn candidate_matches(
     root_dir: &Path,
     file_id: &str,
     file_id_set: &BTreeSet<String>,
-    allow_file_lookup: bool,
+    file_lookup: FileLookup,
 ) -> bool {
-    file_id_set.contains(file_id) || (allow_file_lookup && root_dir.join(file_id).is_file())
+    file_id_set.contains(file_id)
+        || (matches!(file_lookup, FileLookup::Allowed) && root_dir.join(file_id).is_file())
 }
 
 fn push_path_candidates(candidates: &mut Vec<PathBuf>, path: &Path, include_runtime_entry: bool) {
