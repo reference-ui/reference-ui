@@ -20,6 +20,10 @@ type EmitOnAnyOptions<KOn extends keyof Events, KEmit extends keyof Events> = {
   on: KOn[]
 } & EmitOptions<KEmit>
 
+type AfterFirstOptions<KOn extends keyof Events, KEmit extends keyof Events> = {
+  on: KOn
+} & EmitOptions<KEmit>
+
 type CombineTriggerOptions<
   KRequire extends keyof Events,
   KEmit extends keyof Events,
@@ -70,6 +74,28 @@ export function emitOnAny<KOn extends keyof Events, KEmit extends keyof Events>(
       emitConfigured(options)
     })
   }
+}
+
+/**
+ * Ignore `on` until `ready` has happened once, then emit for every later `on`.
+ */
+export function afterFirst<
+  KOn extends keyof Events,
+  KEmit extends keyof Events,
+>(
+  readyEvent: keyof Events,
+  options: AfterFirstOptions<KOn, KEmit>
+): void {
+  let ready = false
+
+  on(readyEvent, () => {
+    ready = true
+  })
+
+  on(options.on, () => {
+    if (!ready) return
+    emitConfigured(options)
+  })
 }
 
 /**
