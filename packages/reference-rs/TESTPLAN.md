@@ -13,7 +13,7 @@ loud:
 
 Here is why. An AST is a tree that represents every possible thing a human could
 write in a programming language. Every valid program. Every edge case. Every
-three-year-old syntax that nobody uses except one library author in Finland who
+three-year-old syntax that nobody uses except one library author far far away who
 will absolutely file a bug if you handle it wrong.
 
 The code that walks an AST inherits the shape of the language it reads. If the
