@@ -1,13 +1,11 @@
 import { emit, on, onceAll } from '../lib/event-bus'
-import { combineTrigger, emitOnAny, forWorker, onReady } from './events.utils'
+import { afterFirst, combineTrigger, emitOnAny, forWorker, onReady } from './events.utils'
 
 /**
  * Event wiring. Only on/emit/onceAll – pass payloads, no side effects.
  * watch:change → run:virtual:sync:file (single file), passing payload through.
  */
 export function initEvents(): void {
-  let watchUpdatesEnabled = false
-
   onceAll(['virtual:ready', 'reference:ready'], () => {
     emit('run:virtual:copy:all')
   })
@@ -20,18 +18,19 @@ export function initEvents(): void {
     emit('virtual:complete', {})
   })
 
-  on('virtual:complete', () => {
-    watchUpdatesEnabled = true
-  })
-
   on('watch:change', (payload) => {
     emit('run:virtual:sync:file', payload)
   })
 
-  on('virtual:fs:change', () => {
-    if (!watchUpdatesEnabled) return
-    emit('run:system:config')
-    emit('run:reference:build', {})
+  afterFirst('virtual:complete', {
+    on: 'virtual:fs:change',
+    emit: 'run:system:config',
+  })
+
+  afterFirst('virtual:complete', {
+    on: 'virtual:fs:change',
+    emit: 'run:reference:build',
+    payload: {},
   })
 
   forWorker({

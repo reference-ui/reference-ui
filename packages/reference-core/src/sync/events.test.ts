@@ -2,14 +2,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 const emit = vi.fn()
 const onHandlers = new Map<string, Array<(payload?: unknown) => void>>()
-const onceAllHandlers = new Map<string, { events: string[]; handler: () => void }>()
-let onceAllCallCount = 0
 
 async function loadEventsModule() {
   vi.resetModules()
   onHandlers.clear()
-  onceAllHandlers.clear()
-  onceAllCallCount = 0
   emit.mockClear()
 
   vi.doMock('../lib/event-bus', () => ({
@@ -19,9 +15,7 @@ async function loadEventsModule() {
       handlers.push(handler)
       onHandlers.set(event, handlers)
     },
-    onceAll: (events: string[], handler: () => void) => {
-      onceAllHandlers.set(`onceAll:${onceAllCallCount++}`, { events, handler })
-    },
+    onceAll: () => {},
   }))
 
   const mod = await import('./events')
