@@ -1,10 +1,10 @@
 # BEAUTIFY
 
 A targeted guide for turning the `tasty` Rust codebase into something that reads
-like it was *meant* to be read.
+like it was _meant_ to be read.
 
 This is not a style guide. Style guides are for strangers. This is a love letter
-to code that already works — a plan for making it *sing*.
+to code that already works — a plan for making it _sing_.
 
 ---
 
@@ -12,12 +12,12 @@ to code that already works — a plan for making it *sing*.
 
 The `tasty` module is ~7,000 lines of Rust across four subsystems:
 
-| Layer | Role | Entry |
-|---|---|---|
-| **scanner** | Finds files, resolves imports, builds the workspace graph | `scan_workspace()` |
-| **ast/extract** | Parses TypeScript via Oxc, lowers into symbol shells | `extract_ast()` |
-| **ast/resolve** | Resolves cross-file references, evaluates type-level expressions | `resolve_ast()` |
-| **generator** | Emits JavaScript artifact modules from the resolved bundle | `emit_artifact_bundle()` |
+| Layer           | Role                                                             | Entry                    |
+| --------------- | ---------------------------------------------------------------- | ------------------------ |
+| **scanner**     | Finds files, resolves imports, builds the workspace graph        | `scan_workspace()`       |
+| **ast/extract** | Parses TypeScript via Oxc, lowers into symbol shells             | `extract_ast()`          |
+| **ast/resolve** | Resolves cross-file references, evaluates type-level expressions | `resolve_ast()`          |
+| **generator**   | Emits JavaScript artifact modules from the resolved bundle       | `emit_artifact_bundle()` |
 
 The pipeline is clean: **scan → extract → resolve → generate**. That clarity is a
 gift. Everything below is about making each layer worthy of the architecture it
@@ -46,11 +46,11 @@ shared/typeref_util.rs  →  shared/type_ref_util.rs
 Update the `mod` declaration in `shared/mod.rs` and all `use` paths. One find-
 and-replace. One commit.
 
-### 2. Name functions for what they *return*, not what they *do*
+### 2. Name functions for what they _return_, not what they _do_
 
 Several `push_*` helpers in `ast/extract` and `generator/symbols.rs` mutate a
 `&mut Vec` parameter. When a function pushes into a collection it was handed,
-the name should still tell you *what* it contributes:
+the name should still tell you _what_ it contributes:
 
 ```rust
 // before
@@ -74,12 +74,12 @@ The codebase already favors these well:
 
 But a few functions break the rule:
 
-| Current | Proposed |
-|---|---|
-| `members_from_signatures` | keep (good) |
-| `collect_statement_exports` | `exports_from_statement` |
+| Current                             | Proposed                         |
+| ----------------------------------- | -------------------------------- |
+| `members_from_signatures`           | keep (good)                      |
+| `collect_statement_exports`         | `exports_from_statement`         |
 | `collect_statement_import_bindings` | `import_bindings_from_statement` |
-| `collect_statement_value_bindings` | `value_bindings_from_statement` |
+| `collect_statement_value_bindings`  | `value_bindings_from_statement`  |
 
 The `collect_*` prefix was an early pattern. It implies iteration — fine when
 you're folding a list, misleading when you're inspecting one statement and
@@ -174,6 +174,7 @@ impl JsBuilder {
 ```
 
 Before:
+
 ```rust
 let mut fields = vec![
     emit_field("id", to_js_literal(export_name)?),
@@ -186,6 +187,7 @@ Ok(emit_object(fields))
 ```
 
 After:
+
 ```rust
 JsBuilder::new()
     .field("id", to_js_literal(export_name)?)
@@ -197,7 +199,7 @@ JsBuilder::new()
 ```
 
 No more `push_*_fields` mutation. No more 4-parameter helper that exists only to
-append to someone else's vec. The builder *is* the intermediate representation.
+append to someone else's vec. The builder _is_ the intermediate representation.
 
 ---
 
@@ -260,18 +262,18 @@ Others — equally important — have nothing. The rule is simple:
 
 Priority targets (files with no module doc today):
 
-| File | Suggested header |
-|---|---|
-| `scanner/packages.rs` | `//! External and relative import resolution dispatch.` |
-| `scanner/packages/package_entry.rs` | `//! Package entrypoint resolution from node_modules layout and package.json exports.` |
-| `scanner/workspace/crawler.rs` | `//! Breadth-first import graph crawler that builds the reachable file set.` |
-| `scanner/workspace/policy.rs` | `//! Discovery-phase import policy: which imports to follow and when.` |
-| `generator/symbols.rs` | `//! JavaScript source emission for symbol descriptors and cross-references.` |
-| `ast/extract/pipeline.rs` | `//! Per-file Oxc parse + statement walk that produces ParsedFileAst.` |
-| `ast/extract/statements/exports.rs` | `//! Export statement collection: named exports, default exports, and bare type declarations.` |
-| `ast/extract/comments/leading.rs` | `//! Leading comment extraction and normalization for JSDoc and block comments.` |
-| `ast/resolve/index.rs` | `//! Top-level resolve orchestration: symbol index → export index → resolved graph.` |
-| `ast/resolve/resolver/resolve.rs` | `//! TypeRef resolution pass: resolves import references and evaluates type-level expressions.` |
+| File                                | Suggested header                                                                                |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `scanner/packages.rs`               | `//! External and relative import resolution dispatch.`                                         |
+| `scanner/packages/package_entry.rs` | `//! Package entrypoint resolution from node_modules layout and package.json exports.`          |
+| `scanner/workspace/crawler.rs`      | `//! Breadth-first import graph crawler that builds the reachable file set.`                    |
+| `scanner/workspace/policy.rs`       | `//! Discovery-phase import policy: which imports to follow and when.`                          |
+| `generator/symbols.rs`              | `//! JavaScript source emission for symbol descriptors and cross-references.`                   |
+| `ast/extract/pipeline.rs`           | `//! Per-file Oxc parse + statement walk that produces ParsedFileAst.`                          |
+| `ast/extract/statements/exports.rs` | `//! Export statement collection: named exports, default exports, and bare type declarations.`  |
+| `ast/extract/comments/leading.rs`   | `//! Leading comment extraction and normalization for JSDoc and block comments.`                |
+| `ast/resolve/index.rs`              | `//! Top-level resolve orchestration: symbol index → export index → resolved graph.`            |
+| `ast/resolve/resolver/resolve.rs`   | `//! TypeRef resolution pass: resolves import references and evaluates type-level expressions.` |
 
 One sentence per file. That's all it takes. A reader opening any file should know
 what room they're standing in before they read a single function.
@@ -305,7 +307,7 @@ pub(super) fn emit_type_ref(...) -> Result<String, String> {
 }
 ```
 
-The match becomes a *table of contents*. Each helper lives in the sub-module
+The match becomes a _table of contents_. Each helper lives in the sub-module
 where it belongs. The reader sees the full vocabulary at a glance and dives into
 the one variant they care about.
 
@@ -351,7 +353,7 @@ fn normalize_comment_text(raw: &str) -> String {
 
 The `.collect::<Vec<_>>().join("\n")` allocates an intermediate vec. Use
 `itertools::join` or `fold` directly. Tiny savings, but it's the kind of care
-that signals this code was *polished*, not just correct.
+that signals this code was _polished_, not just correct.
 
 ### 3. Unify `first_existing_candidate` patterns
 
@@ -402,18 +404,18 @@ resolve_relative_import(root_dir, file_id, source, file_ids, FileLookup::Allowed
 These files are functional but would benefit most from the changes above,
 ranked by impact:
 
-| Priority | File | What to do |
-|---|---|---|
-| 1 | `scanner/workspace/policy.rs` | Introduce `DiscoveryContext`, add `//!` header |
-| 2 | `generator/symbols.rs` | Introduce `JsBuilder`, eliminate `push_*_fields` mutation |
-| 3 | `generator/types/mod.rs` | Factor remaining match arms into one-line delegations |
-| 4 | `ast/extract/statements/exports.rs` | Rename `collect_*` → `_from_*`, add `//!` header |
-| 5 | `ast/resolve/index.rs` | Extract `file_symbol_key`, add `//!` header |
-| 6 | `scanner/packages.rs` | Boolean → enum for `allow_file_lookup`, add `//!` header |
-| 7 | `scanner/workspace/crawler.rs` | Adopt `DiscoveryContext` from policy, add `//!` header |
-| 8 | `shared/typeref_util.rs` | Rename file, add `//!` header |
-| 9 | `ast/extract/pipeline.rs` | Add `//!` header |
-| 10 | `ast/extract/comments/leading.rs` | Iterator cleanup, add `//!` header |
+| Priority | File                                | What to do                                                |
+| -------- | ----------------------------------- | --------------------------------------------------------- |
+| 1        | `scanner/workspace/policy.rs`       | Introduce `DiscoveryContext`, add `//!` header            |
+| 2        | `generator/symbols.rs`              | Introduce `JsBuilder`, eliminate `push_*_fields` mutation |
+| 3        | `generator/types/mod.rs`            | Factor remaining match arms into one-line delegations     |
+| 4        | `ast/extract/statements/exports.rs` | Rename `collect_*` → `_from_*`, add `//!` header          |
+| 5        | `ast/resolve/index.rs`              | Extract `file_symbol_key`, add `//!` header               |
+| 6        | `scanner/packages.rs`               | Boolean → enum for `allow_file_lookup`, add `//!` header  |
+| 7        | `scanner/workspace/crawler.rs`      | Adopt `DiscoveryContext` from policy, add `//!` header    |
+| 8        | `shared/typeref_util.rs`            | Rename file, add `//!` header                             |
+| 9        | `ast/extract/pipeline.rs`           | Add `//!` header                                          |
+| 10       | `ast/extract/comments/leading.rs`   | Iterator cleanup, add `//!` header                        |
 
 ---
 
@@ -465,6 +467,6 @@ Some things look like they could be "improved" but are exactly right:
 
 ---
 
-*Code that is clear is code that invites contribution.*
-*Code that is beautiful is code that resists decay.*
-*This codebase is already good. Let's make it undeniable.*
+_Code that is clear is code that invites contribution._
+_Code that is beautiful is code that resists decay._
+_This codebase is already good. Let's make it undeniable._
