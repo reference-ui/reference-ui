@@ -169,6 +169,71 @@ export function createReferenceTypeParameter(param: RawTastyTypeParameter): Refe
   }
 }
 
+export function formatReferenceType(type: ReferenceType): string {
+  switch (type.kind) {
+    case 'reference':
+      return type.typeArguments.length > 0
+        ? `${type.name}<${type.typeArguments.map(formatReferenceType).join(', ')}>`
+        : type.name
+    case 'intrinsic':
+      return type.name
+    case 'literal':
+      return formatReferenceLiteral(type.value)
+    case 'object':
+      return `{ ${type.members.map(formatReferenceInlineMember).join('; ')} }`
+    case 'union':
+      return type.types.map(formatReferenceType).join(' | ')
+    case 'array':
+      return `${formatReferenceType(type.element)}[]`
+    case 'tuple':
+      return `[${type.elements.map(formatReferenceTupleElement).join(', ')}]`
+    case 'intersection':
+      return type.types.map(formatReferenceType).join(' & ')
+    case 'indexed_access':
+      return `${formatReferenceType(type.object)}[${formatReferenceType(type.index)}]`
+    case 'function':
+      return `(${type.params.map(formatReferenceCallableParameter).join(', ')}) => ${formatReferenceType(type.returnType)}`
+    case 'constructor': {
+      const typeParameters = formatReferenceTypeParameters(type.typeParameters)
+      return `new ${typeParameters}(${type.params
+        .map(formatReferenceCallableParameter)
+        .join(', ')}) => ${formatReferenceType(type.returnType)}`
+    }
+    case 'type_operator':
+      return `${type.operator} ${formatReferenceType(type.target)}`
+    case 'type_query':
+      return `typeof ${type.expression}`
+    case 'conditional':
+      return `${formatReferenceType(type.checkType)} extends ${formatReferenceType(type.extendsType)} ? ${formatReferenceType(type.trueType)} : ${formatReferenceType(type.falseType)}`
+    case 'mapped': {
+      const readonlyModifier = formatMappedReadonlyModifier(type.readonlyModifier)
+      const nameClause = type.nameType ? ` as ${formatReferenceType(type.nameType)}` : ''
+      const optionalModifier = formatMappedOptionalModifier(type.optionalModifier)
+      const valueType = type.valueType ? formatReferenceType(type.valueType) : 'unknown'
+      return `{ ${readonlyModifier}[${type.typeParam} in ${formatReferenceType(type.sourceType)}${nameClause}]${optionalModifier}: ${valueType} }`
+    }
+    case 'template_literal':
+      return `\`${type.parts.map(formatReferenceTemplateLiteralPart).join('')}\``
+    case 'raw':
+      return type.summary
+    default:
+      return 'unknown'
+  }
+}
+
+function formatReferenceLiteral(value: string): string {
+  const trimmed = value.trim()
+  if (trimmed.startsWith("'") || trimmed.startsWith('"') || trimmed.startsWith('`')) {
+    return trimmed
+  }
+  const isPrimitiveLiteral =
+    /^[+-]?\d+(\.\d+)?$/.test(trimmed) || trimmed === 'true' || trimmed === 'false'
+  if (isPrimitiveLiteral) {
+    return trimmed
+  }
+  return JSON.stringify(trimmed)
+}
+
 function createReferenceInlineMember(member: RawTastyMember): ReferenceInlineMember {
   return {
     name: member.name,
@@ -179,6 +244,67 @@ function createReferenceInlineMember(member: RawTastyMember): ReferenceInlineMem
     descriptionRaw: member.descriptionRaw,
     jsDoc: createReferenceJsDoc(member),
     type: createReferenceType(member.type),
+  }
+}
+
+function formatReferenceInlineMember(member: ReferenceInlineMember): string {
+  const readonlyPrefix = member.readonly ? 'readonly ' : ''
+  const optionalSuffix = member.optional ? '?' : ''
+  const typeLabel = member.type ? formatReferenceType(member.type) : 'unknown'
+  return `${readonlyPrefix}${member.name}${optionalSuffix}: ${typeLabel}`
+}
+
+function formatReferenceCallableParameter(param: ReferenceCallableParameter, index: number): string {
+  const name = param.name ?? `arg${index + 1}`
+  const optional = param.optional ? '?' : ''
+  const typeLabel = param.type ? formatReferenceType(param.type) : 'unknown'
+  return `${name}${optional}: ${typeLabel}`
+}
+
+function formatReferenceTupleElement(element: ReferenceTupleElement): string {
+  let label = ''
+  if (element.label) {
+    const optionalSuffix = element.optional ? '?' : ''
+    label = `${element.label}${optionalSuffix}: `
+  }
+  const prefix = element.rest ? '...' : ''
+  return `${prefix}${label}${formatReferenceType(element.element)}`
+}
+
+function formatReferenceTemplateLiteralPart(part: ReferenceTemplateLiteralPart): string {
+  return part.kind === 'text' ? part.value : `\${${formatReferenceType(part.value)}}`
+}
+
+function formatReferenceTypeParameters(typeParameters: ReferenceTypeParameter[]): string {
+  if (typeParameters.length === 0) return ''
+  return `<${typeParameters.map(formatReferenceTypeParameter).join(', ')}>`
+}
+
+function formatReferenceTypeParameter(param: ReferenceTypeParameter): string {
+  const constraint = param.constraint ? ` extends ${formatReferenceType(param.constraint)}` : ''
+  const defaultValue = param.default ? ` = ${formatReferenceType(param.default)}` : ''
+  return `${param.name}${constraint}${defaultValue}`
+}
+
+function formatMappedReadonlyModifier(modifier: 'preserve' | 'add' | 'remove'): string {
+  switch (modifier) {
+    case 'add':
+      return 'readonly '
+    case 'remove':
+      return '-readonly '
+    default:
+      return ''
+  }
+}
+
+function formatMappedOptionalModifier(modifier: 'preserve' | 'add' | 'remove'): string {
+  switch (modifier) {
+    case 'add':
+      return '?'
+    case 'remove':
+      return '-?'
+    default:
+      return ''
   }
 }
 
