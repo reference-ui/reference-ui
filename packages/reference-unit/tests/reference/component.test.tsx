@@ -67,6 +67,9 @@ describe('Reference component', () => {
     expectVisibleText('tone-outline')
     expectVisibleText('{ [K in DocsReferenceButtonVariant as `tone-${K}`]: K }')
     expectVisibleText('{ compact: 4; comfortable: 8; spacious: 12 }')
+    expectVisibleText(
+      "{ emphasis: 'high'; fill: true } | { emphasis: 'low'; fill: false }",
+    )
 
     expect(screen.getAllByText('@default').length).toBeGreaterThanOrEqual(3)
     expect(screen.getByText('"solid"')).toBeInTheDocument()
