@@ -1,0 +1,33 @@
+import { Div, H2, P, Small } from '@reference-ui/react'
+import type { ReferenceDocument } from '../types'
+import { ReferenceMemberList } from './ReferenceMemberList'
+import { ReferenceTypeAliasDefinition } from './ReferenceTypeAliasDefinition'
+import { MonoText } from './shared/MonoText'
+
+export function ReferenceDocumentView({ document }: { document: ReferenceDocument }) {
+  return (
+    <Div display="grid" gap="reference.lg">
+      <Div display="grid" gap="reference.sm">
+        <Div display="flex" alignItems="center" gap="reference.sm" flexWrap="wrap">
+          <H2 margin="0" fontSize="1rem" color="reference.foreground">
+            <MonoText>{document.name}</MonoText>
+          </H2>
+          <Small color="reference.muted">{document.kindLabel}</Small>
+        </Div>
+        {document.description ? <P margin="0">{document.description}</P> : null}
+        {document.typeParameters.length > 0 ? (
+          <Small color="reference.muted">Generics: {document.typeParameters.join(', ')}</Small>
+        ) : null}
+        {document.extendsNames.length > 0 ? (
+          <Small color="reference.muted">Extends: {document.extendsNames.join(', ')}</Small>
+        ) : null}
+      </Div>
+
+      {document.kind === 'typeAlias' ? (
+        <ReferenceTypeAliasDefinition definition={document.definition} />
+      ) : (
+        <ReferenceMemberList members={document.members} />
+      )}
+    </Div>
+  )
+}

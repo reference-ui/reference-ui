@@ -1,0 +1,1 @@
+export { createReferenceDocument } from './document'

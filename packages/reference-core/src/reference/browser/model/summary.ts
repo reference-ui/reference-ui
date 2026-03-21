@@ -1,55 +1,17 @@
 import {
   formatTastyCallableSignature,
   getTastyTypeInlineVariants,
-  getTastyMemberSemanticKind,
   normalizeTastyInlineValue,
 } from '@reference-ui/rust/tasty'
-import type { TastyMember, TastySemanticKind, TastySymbol, TastyTypeRef } from '@reference-ui/rust/tasty'
+import type { TastyMember, TastyTypeRef } from '@reference-ui/rust/tasty'
 import type {
-  ReferenceDocument,
-  ReferenceMemberDocument,
   ReferenceMemberSummary,
   ReferenceMemberTypeSummary,
   ReferenceParamDoc,
   ReferenceValueOption,
-} from './types'
+} from '../types'
 
-const REFERENCE_TYPE_LABEL_ALIASES = new Map<TastySemanticKind, string>([
-  ['indexed_access', 'indexed'],
-  ['type_query', 'typeof'],
-  ['template_literal', 'template literal'],
-])
-
-export function createReferenceDocument(
-  symbol: TastySymbol,
-  members: TastyMember[],
-): ReferenceDocument {
-  return {
-    name: symbol.getName(),
-    kind: symbol.getKind(),
-    kindLabel: symbol.getKind() === 'typeAlias' ? 'Type alias' : 'Interface',
-    description: symbol.getDescription(),
-    typeParameters: symbol.getTypeParameters().map(param => param.name),
-    extendsNames: symbol.getExtends().map(ref => ref.getName()),
-    definition: symbol.getUnderlyingType()?.describe() ?? null,
-    members: members.map(createReferenceMemberDocument),
-  }
-}
-
-function createReferenceMemberDocument(member: TastyMember): ReferenceMemberDocument {
-  const type = member.getType()
-  const typeLabel = getReferenceTypeLabel(member, type)
-
-  return {
-    id: member.getId(),
-    name: member.getName(),
-    kind: member.getKind(),
-    typeLabel,
-    summary: createReferenceMemberSummary(member, type, typeLabel),
-  }
-}
-
-function createReferenceMemberSummary(
+export function createReferenceMemberSummary(
   member: TastyMember,
   type: ReturnType<TastyMember['getType']>,
   typeLabel: string,
@@ -149,12 +111,4 @@ function isReferenceTypeExpression(type: TastyTypeRef): boolean {
 
 function isOpaqueReferenceSummary(expression: string): boolean {
   return expression !== 'unknown'
-}
-
-function getReferenceTypeLabel(member: TastyMember, type: TastyTypeRef | undefined): string {
-  const semanticKind = getTastyMemberSemanticKind(member)
-  if (semanticKind === 'intrinsic' || semanticKind === 'reference' || semanticKind === 'raw') {
-    return type?.describe() ?? 'unknown'
-  }
-  return REFERENCE_TYPE_LABEL_ALIASES.get(semanticKind) ?? semanticKind
 }
