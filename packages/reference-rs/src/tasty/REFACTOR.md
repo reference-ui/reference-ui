@@ -12,7 +12,7 @@ killing duplication, and finding the natural seams.
 | 5   | Split resolver `type_ref`     | **Done** (`resolver/resolve.rs`, `instantiate.rs`, `evaluate.rs`) |
 | 6   | Split `extract/types`         | **Done** (`extract/types/mod.rs`, `lower_keywords.rs`, `lower_composites.rs`, `lower_references.rs`) |
 | 7   | Split generator/types         | **Done** (`types/mod.rs`, `emit_compounds.rs`, `emit_collections.rs`, `emit_leaves.rs`) |
-| 8   | Split extract/values          | Open   |
+| 8   | Split extract/values          | **Done** (`infer_objects.rs`, `infer_arrays.rs`, `infer_primitives.rs`, `values.rs`) |
 | 9   | Shared `typeref_util`         | **Done** (`shared/typeref_util.rs`) |
 | 10  | `crate::tasty::` imports      | **Done** |
 | 11  | TypeRef visitor               | Open   |
@@ -102,16 +102,18 @@ One giant `emit_type_ref` match plus two dozen small helpers. Split by concern:
 
 ---
 
-## 8. Break up `ast/extract/values.rs` (428 lines)
+## 8. Break up `ast/extract/values.rs` ✅ DONE
 
 The value inference logic is one long chain. Split:
 
 | Concern                                                                                                                                                                                                                            | New file                      |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
-| **object inference** — `infer_object_type`, `property_key_name`, `unquote_string_literal`                                                                                                                                          | `extract/infer_objects.rs`    |
+| **object inference** — `infer_object_type` (uses shared `property_key_name`)                                                                                                                                                        | `extract/infer_objects.rs`    |
 | **array inference** — `infer_array_type`, `infer_array_element_type`                                                                                                                                                               | `extract/infer_arrays.rs`     |
 | **primitive inference** — `infer_boolean_type_span`, `infer_numeric_type_span`, `infer_string_type_span`                                                                                                                           | `extract/infer_primitives.rs` |
-| **statement collection** — `collect_statement_value_bindings`, `collect_variable_declaration_value_bindings`, `infer_value_type`, `infer_value_type_with_const_context`, `infer_ts_as_expression`, `infer_ts_satisfies_expression` | stays in `extract/values.rs`  |
+| **statement collection** — `collect_statement_value_bindings`, `collect_variable_declaration_value_bindings`, `infer_value_type`, `infer_value_type_with_const_context`, `infer_ts_as_expression`, `infer_ts_satisfies_expression` | `extract/values.rs`           |
+
+**Implemented:** sibling modules under `extract/`; `infer_value_type_with_const_context` and the `as`/`satisfies` helpers are `pub(super)` on `values` for the infer modules. `slice_span` stays on `extract::mod`.
 
 ---
 
@@ -248,7 +250,7 @@ Do these in dependency order so each step is independently shippable:
 5. ~~**§5** — Split `resolver/type_ref.rs` → resolve / instantiate / evaluate~~ **done**
 6. ~~**§6** — Split `extract/types.rs`~~ **done**
 7. ~~**§7** — Split `generator/types.rs`~~ **done** (`types/mod.rs` + `emit_*` modules)
-8. **§8** — Split `extract/values.rs`
+8. ~~**§8** — Split `extract/values.rs`~~ **done** (`infer_*` + `values.rs`)
 9. ~~**§13** — Drop `parsed_file_view` clone boilerplate~~ **done**
 10. **§14** — Introduce `ExtractionContext`
 11. **§15** — Housekeeping
