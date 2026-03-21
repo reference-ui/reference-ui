@@ -4,7 +4,7 @@ use serde::Serialize;
 
 use crate::tasty::constants::libraries::USER_LIBRARY_NAME;
 
-use super::super::model::{TsSymbol, TsSymbolKind, TypeRef, TypeScriptBundle};
+use crate::tasty::model::{TsSymbol, TsSymbolKind, TypeRef, TypeScriptBundle};
 use super::types::{emit_jsdoc, emit_members, emit_optional_type_ref, emit_type_parameters};
 use super::util::{emit_array, emit_field, emit_object, indent_block, to_js_literal};
 
@@ -152,7 +152,7 @@ fn push_optional_string_field(
 
 fn push_optional_jsdoc_field(
     fields: &mut Vec<String>,
-    jsdoc: Option<&super::super::model::JsDoc>,
+    jsdoc: Option<&crate::tasty::model::JsDoc>,
 ) -> Result<(), String> {
     if let Some(jsdoc) = jsdoc {
         fields.push(emit_field("jsdoc", emit_jsdoc(jsdoc)?));

@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use super::super::super::model::{ExportMap, ScannerDiagnostic, TsFile, TsSymbol};
+use crate::tasty::model::{ExportMap, ScannerDiagnostic, TsFile, TsSymbol};
 
 #[derive(Debug, Clone)]
 pub(crate) struct ResolvedTypeScriptGraph {

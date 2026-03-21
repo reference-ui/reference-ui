@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use super::super::super::super::model::TypeScriptBundle;
+use crate::tasty::model::TypeScriptBundle;
 
 /// Deterministic hash for symbol IDs so the same id always gets the same export name.
 fn stable_hash_symbol_id(symbol_id: &str) -> u64 {

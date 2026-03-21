@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 mod export_names;
 mod manifest;
 
-use super::super::util::to_js_literal;
+use crate::tasty::generator::util::to_js_literal;
 
 #[cfg(test)]
 mod tests;

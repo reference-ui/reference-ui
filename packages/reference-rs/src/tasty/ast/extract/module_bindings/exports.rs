@@ -6,7 +6,7 @@ use oxc_ast::ast::{
 };
 use oxc_span::GetSpan;
 
-use super::super::super::model::{ImportBinding, SymbolShell};
+use crate::tasty::ast::model::{ImportBinding, SymbolShell};
 use super::super::symbols::{push_interface_shell, push_type_alias_shell};
 use super::imports::module_export_name_to_string;
 

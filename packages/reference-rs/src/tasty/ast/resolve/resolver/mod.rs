@@ -1,9 +1,11 @@
 use std::collections::BTreeMap;
 
-use super::super::model::ParsedFileAst;
+use crate::tasty::ast::model::ParsedFileAst;
 
 mod symbol;
-mod type_ref;
+mod resolve;
+mod instantiate;
+mod evaluate;
 
 pub(super) struct Resolver<'a> {
     symbol_index: &'a BTreeMap<(String, String), String>,

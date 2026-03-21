@@ -10,7 +10,7 @@ use self::modules::{
     emit_runtime_module, CHUNK_REGISTRY_MODULE_PATH, MANIFEST_DECLARATION_PATH,
     MANIFEST_MODULE_PATH, RUNTIME_DECLARATION_PATH, RUNTIME_MODULE_PATH,
 };
-use super::super::model::TypeScriptBundle;
+use crate::tasty::model::TypeScriptBundle;
 use super::symbols::emit_chunk_module;
 
 #[allow(dead_code)]

@@ -1,4 +1,4 @@
-use super::super::super::model::{
+use crate::tasty::model::{
     FnParam, TemplateLiteralPart, TsMember, TsTypeParameter, TupleElement, TypeRef,
 };
 
