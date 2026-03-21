@@ -3,6 +3,10 @@ import { describe, expect, it } from 'vitest'
 import {
   createTastyApi,
   dedupeTastyMembers,
+  formatTastyCallableSignature,
+  getTastyMemberSemanticKind,
+  getTastyTypeInlineVariants,
+  getTastyTypeSemanticKind,
 } from './index'
 
 const baseDir = new URL('../../tests/tasty/cases/', import.meta.url)
@@ -46,6 +50,9 @@ describe('tasty utilities', () => {
         description: undefined,
       },
     ])
+    expect(onClick?.getType() ? formatTastyCallableSignature(onClick.getType()!) : undefined).toBe(
+      '(event: MouseEvent) => void',
+    )
   })
 
   it('classifies constructor-like members without inventing missing signature data', async () => {
@@ -58,6 +65,38 @@ describe('tasty utilities', () => {
 
     expect(ctor?.getKind()).toBe('construct')
     expect(ctor?.getParameters()).toEqual([])
+  })
+
+  it('exposes neutral semantic kinds for members and types', async () => {
+    const api = createTastyApi({
+      manifestPath: manifestPath('jsdoc'),
+    })
+
+    const buttonProps = await api.loadSymbolByName('ButtonProps')
+    const size = buttonProps.getMembers().find(member => member.getName() === 'size')
+    const disabled = buttonProps.getMembers().find(member => member.getName() === 'disabled')
+
+    expect(size ? getTastyMemberSemanticKind(size) : undefined).toBe('string')
+    expect(disabled?.getType() ? getTastyTypeSemanticKind(disabled.getType()) : undefined).toBe('boolean')
+  })
+
+  it('collects inline variants for literal, boolean, and callable types', async () => {
+    const jsdocApi = createTastyApi({
+      manifestPath: manifestPath('jsdoc'),
+    })
+    const signaturesApi = createTastyApi({
+      manifestPath: manifestPath('signatures'),
+    })
+
+    const buttonProps = await jsdocApi.loadSymbolByName('ButtonProps')
+    const size = buttonProps.getMembers().find(member => member.getName() === 'size')
+    const disabled = buttonProps.getMembers().find(member => member.getName() === 'disabled')
+    const withCallback = await signaturesApi.loadSymbolByName('WithCallback')
+    const onClick = withCallback.getMembers().find(member => member.getName() === 'onClick')
+
+    expect(getTastyTypeInlineVariants(size?.getType())).toEqual(['sm', 'lg'])
+    expect(getTastyTypeInlineVariants(disabled?.getType())).toEqual(['true', 'false'])
+    expect(getTastyTypeInlineVariants(onClick?.getType())).toEqual(['(event: MouseEvent) => void'])
   })
 
   it('keeps utility helpers aligned with member and graph methods', async () => {

@@ -46,6 +46,13 @@ export {
   normalizeTastyInlineValue,
   parseTastyParamTag,
 } from './jsdoc'
+export {
+  getTastyLiteralSemanticKind,
+  getTastyMemberSemanticKind,
+  getTastyTypeSemanticKind,
+  type TastySemanticKind,
+} from './semantic'
+export { formatTastyCallableSignature, getTastyTypeInlineVariants } from './display'
 export { getTastyCallableParameters } from './callables'
 export { createTastyApi, createTastyApiFromManifest } from './internal/api-runtime'
 export { createTastyBrowserRuntime } from './internal/browser-runtime'
