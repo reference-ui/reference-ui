@@ -74,12 +74,12 @@ describe('sync/events', () => {
     expect(emit).toHaveBeenCalledWith('sync:failed', undefined)
   })
 
-  it('reference browser virtual failure emits sync:failed', async () => {
+  it('reference component copy failure emits sync:failed', async () => {
     const { initEvents } = await loadEventsModule()
     initEvents()
 
-    expect(onHandlers.has('reference:browser:virtual-failed')).toBe(true)
-    fireOn('reference:browser:virtual-failed', {
+    expect(onHandlers.has('reference:component:copy-failed')).toBe(true)
+    fireOn('reference:component:copy-failed', {
       message: 'copy exploded',
     })
 
@@ -105,7 +105,7 @@ describe('sync/events', () => {
     expect(emit).toHaveBeenCalledWith('run:panda:codegen', undefined)
   })
 
-  it('virtual:copy:complete triggers reference browser seeding', async () => {
+  it('virtual:copy:complete triggers reference component copy', async () => {
     const { initEvents } = await loadEventsModule()
     initEvents()
 
@@ -114,17 +114,17 @@ describe('sync/events', () => {
       virtualDir: '/workspace/app/.reference-ui/virtual',
     })
 
-    expect(emit).toHaveBeenCalledWith('run:reference:copy-browser', {
+    expect(emit).toHaveBeenCalledWith('run:reference:component:copy', {
       virtualDir: '/workspace/app/.reference-ui/virtual',
     })
   })
 
-  it('reference browser virtual ready promotes the full virtual pipeline to complete', async () => {
+  it('reference component copy completion promotes the full virtual pipeline to complete', async () => {
     const { initEvents } = await loadEventsModule()
     initEvents()
 
     emit.mockClear()
-    fireOn('reference:browser:virtual-ready')
+    fireOn('reference:component:copied')
 
     expect(emit).toHaveBeenCalledWith('virtual:complete', {})
   })
