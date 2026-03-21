@@ -11,6 +11,7 @@ export interface ReferenceRuntime {
 export interface ReferenceRuntimeData {
   symbol: TastySymbol
   members: TastyMember[]
+  warnings: string[]
 }
 
 export interface ReferenceDocumentState {
@@ -34,6 +35,7 @@ async function loadReferenceRuntimeData(
   return {
     symbol,
     members,
+    warnings: api.getWarnings(),
   }
 }
 
@@ -74,7 +76,7 @@ export function useReferenceDocument(
       .load(name)
       .then((data) => {
         if (!active) return
-        setDocument(createReferenceDocument(data.symbol, data.members))
+        setDocument(createReferenceDocument(data.symbol, data.members, data.warnings))
         setIsLoading(false)
       })
       .catch((error: unknown) => {
