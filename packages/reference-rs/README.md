@@ -11,7 +11,7 @@ the workspace.
 
 ## What This Package Exposes
 
-There are two main entrypoints.
+There are two package entrypoints, and within Tasty there are two common consumption styles.
 
 ### `@reference-ui/rust`
 
@@ -38,12 +38,18 @@ Use this when you want to:
 - load a generated Tasty manifest
 - resolve symbols by name or id
 - traverse extends and dependency relationships lazily
-- inspect emitted raw type metadata through a small wrapper API
+- inspect emitted metadata through wrapper APIs
+- compose higher-level app models from shared Tasty utilities
 
 Main entrypoints:
 
 - `createTastyApi()`
 - `TastyApi`
+- `dedupeTastyMembers()`
+- `getTastyMemberDefaultValue()`
+- `getTastyMemberId()`
+- `getTastyJsDocParamDescriptions()`
+- `getTastyCallableParameters()`
 - `TastySymbol`
 - `TastyMember`
 - `TastyTypeRef`
@@ -55,10 +61,16 @@ Main entrypoints:
 - `api.graph.flattenInterfaceMembers()`
 - `api.graph.collectUserOwnedReferences()`
 
+Common Tasty usage patterns:
+
+- wrapper-first: traverse `TastySymbol`, `TastyMember`, and `TastyTypeRef` directly
+- utility-first: compose app-specific models from shared member/type/JSDoc utilities
+
 ## Tasty In One Sentence
 
 Tasty turns a TypeScript workspace into Rust-owned metadata artifacts, then lets
-TypeScript consumers load that graph back lazily through a small runtime API.
+TypeScript consumers load that graph back lazily through wrapper APIs and shared
+utility helpers.
 
 At a high level:
 
@@ -67,8 +79,9 @@ At a high level:
 2. Rust emits a small manifest plus lazy chunk modules.
 3. `createTastyApi()` loads the manifest first.
 4. Symbols and related chunks are imported only when requested.
-5. Consumers work with `TastySymbol`, `TastyMember`, `TastyTypeRef`, and
-   `TastySymbolRef` wrappers rather than raw object blobs everywhere.
+5. Consumers either work directly with `TastySymbol`, `TastyMember`,
+   `TastyTypeRef`, and `TastySymbolRef`, or they compose higher-level models
+   from shared Tasty utilities.
 
 ## What Tasty Is For
 
@@ -89,7 +102,7 @@ Tasty is not trying to be:
 - an MCP framework
 
 Rust owns compilation-adjacent correctness.
-TypeScript owns runtime loading, traversal, and ergonomics.
+TypeScript owns runtime loading, traversal, ergonomics, and reusable consumer-facing utilities.
 
 ## Mental Model
 
@@ -184,7 +197,7 @@ const inherited = await api.graph.loadExtendsChain(symbol)
 
 ## Runtime Model
 
-The Tasty runtime is intentionally split into three layers.
+The Tasty runtime is intentionally split into four layers.
 
 ### 1. Loader / store layer
 
@@ -206,7 +219,7 @@ This owns:
 
 These wrappers are intentionally thin.
 They make the graph pleasant to use, but they are not AST nodes and they are not
-supposed to absorb every consumer-specific convenience.
+supposed to become arbitrary app-specific view models.
 
 ### 3. Graph operations layer
 
@@ -219,6 +232,20 @@ This hangs off `api.graph` and owns reusable traversals like:
 - `collectUserOwnedReferences()`
 
 This layer is graph logic, not presentation logic.
+
+### 4. Utility layer
+
+This layer owns reusable helpers built on top of the wrappers:
+
+- member deduping and stable ids
+- literal and union classification
+- tag extraction from types and defaults
+- JSDoc param parsing
+- signature formatting
+
+These utilities are intentionally generic enough to support docs, hover UIs,
+MCP output, or any other consumer that needs consistent shaping without a
+full app-specific model living inside Tasty.
 
 ## Runtime API
 
@@ -240,6 +267,7 @@ From there, consumers can:
 - resolve symbols
 - inspect wrappers
 - traverse the graph lazily
+- compose higher-level surfaces from shared utilities
 
 ### Core loader methods
 
@@ -264,6 +292,9 @@ It exposes:
 - `getName()`
 - `getKind()`
 - `getLibrary()`
+- `getDescription()`
+- `getJsDocTags()`
+- `getJsDocTag()`
 - `getRaw()`
 - `getMembers()`
 - `getTypeParameters()`
@@ -280,6 +311,9 @@ It exposes:
 - `isReadonly()`
 - `getKind()`
 - `getType()`
+- `getDescription()`
+- `getJsDocTags()`
+- `getJsDocTag()`
 - `getRaw()`
 
 ### `TastyTypeRef`
@@ -290,10 +324,14 @@ It exposes:
 - `getRaw()`
 - `isRaw()`
 - `getSummary()`
+- `getLiteralValue()`
 - `isLiteral()`
 - `isUnion()`
 - `isArray()`
 - `isReference()`
+- `getUnionTypes()`
+- `getParameters()`
+- `getReturnType()`
 - `getTypeArguments()`
 - `getReferencedSymbol()`
 - `describe()`
@@ -311,6 +349,51 @@ It exposes:
 - `isLoaded()`
 - `getIfLoaded()`
 - `load()`
+
+### Utility helpers
+
+Tasty also exports generic helpers for building app-facing models:
+
+- `dedupeTastyMembers()`
+- `getTastyMemberDefaultValue()`
+- `getTastyMemberId()`
+- `getTastyJsDocParamDescriptions()`
+- `getTastyCallableParameters()`
+- `parseTastyParamTag()`
+- `normalizeTastyInlineValue()`
+
+Example:
+
+```ts
+import {
+  createTastyApi,
+  dedupeTastyMembers,
+  getTastyCallableParameters,
+  getTastyJsDocParamDescriptions,
+  getTastyMemberDefaultValue,
+} from '@reference-ui/rust/tasty'
+
+const api = createTastyApi({
+  manifestPath: '/path/to/output/manifest.js',
+})
+
+const buttonProps = await api.loadSymbolByName('ButtonProps')
+const members = dedupeTastyMembers(await api.graph.flattenInterfaceMembers(buttonProps))
+const size = members.find((member) => member.getName() === 'size')
+
+if (size) {
+  console.log(getTastyMemberDefaultValue(size))
+  console.log(getTastyCallableParameters(size.getType()))
+  console.log(getTastyJsDocParamDescriptions(size))
+}
+```
+
+Current limitation:
+
+- property function types carry parameter metadata cleanly
+- method, call, and construct members do not always preserve full signature
+  metadata in the current artifact contract, so consumer adapters may need to
+  fall back to coarser display behavior for those cases
 
 ## Sync vs Async Rules
 
@@ -427,9 +510,12 @@ Load only the symbols and related chunks required by the current query.
 Wrappers should stay readable and useful, but not become a dumping ground for
 consumer-specific projection logic.
 
-### Consumer projections live outside the core runtime
+### Shared projections belong in Tasty
 
-Docs, MCP, hover builders, and other projections should build on top of Tasty.
+When multiple consumers need the same logic, it should live in Tasty as a
+reusable utility rather than being rebuilt in each app.
+
+The member/type/JSDoc helpers are the first example of that approach.
 
 ## Example
 

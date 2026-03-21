@@ -1,6 +1,13 @@
 export {
   createTastyApiFromManifest,
   createTastyBrowserRuntime,
+  dedupeTastyMembers,
+  getTastyCallableParameters,
+  getTastyJsDocParamDescriptions,
+  getTastyMemberDefaultValue,
+  getTastyMemberId,
+  normalizeTastyInlineValue,
+  parseTastyParamTag,
 } from './index'
 
 export type {
