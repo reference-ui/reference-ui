@@ -1,8 +1,7 @@
 import type { TastyMember } from './api-types'
-import { normalizeTastyInlineValue } from './jsdoc'
 
 export function getTastyMemberId(member: TastyMember): string {
-  return `${member.getKind()}:${member.getName()}`
+  return member.getId()
 }
 
 export function dedupeTastyMembers(members: TastyMember[]): TastyMember[] {
@@ -16,5 +15,5 @@ export function dedupeTastyMembers(members: TastyMember[]): TastyMember[] {
 }
 
 export function getTastyMemberDefaultValue(member: TastyMember): string | undefined {
-  return normalizeTastyInlineValue(member.getJsDocTag('default')?.getValue())
+  return member.getDefaultValue()
 }

@@ -1,9 +1,4 @@
 import {
-  dedupeTastyMembers,
-  getTastyCallableParameters,
-  getTastyJsDocParamDescriptions,
-  getTastyMemberDefaultValue,
-  getTastyMemberId,
   normalizeTastyInlineValue,
 } from '@reference-ui/rust/tasty'
 import type { TastyMember, TastySymbol, TastyTypeRef } from '@reference-ui/rust/tasty'
@@ -21,7 +16,7 @@ export function createReferenceDocument(
     typeParameters: symbol.getTypeParameters().map(param => param.name),
     extendsNames: symbol.getExtends().map(ref => ref.getName()),
     definition: symbol.getUnderlyingType()?.describe() ?? null,
-    members: dedupeTastyMembers(members).map(createReferenceMemberDocument),
+    members: members.map(createReferenceMemberDocument),
   }
 }
 
@@ -29,7 +24,7 @@ function createReferenceMemberDocument(member: TastyMember): ReferenceMemberDocu
   const type = member.getType()
 
   return {
-    id: getTastyMemberId(member),
+    id: member.getId(),
     name: member.getName(),
     kind: member.getKind(),
     typeLabel: getReferenceTypeLabel(member, type),
@@ -40,7 +35,7 @@ function createReferenceMemberDocument(member: TastyMember): ReferenceMemberDocu
 }
 
 function createReferenceTags(member: TastyMember, type: ReturnType<TastyMember['getType']>): ReferenceTag[] {
-  const defaultValue = getTastyMemberDefaultValue(member)
+  const defaultValue = member.getDefaultValue()
   const variants = getReferenceTypeVariants(type)
   const tags: ReferenceTag[] = []
 
@@ -58,14 +53,9 @@ function createReferenceTags(member: TastyMember, type: ReturnType<TastyMember['
 
 function createReferenceParams(
   member: TastyMember,
-  type: ReturnType<TastyMember['getType']>,
+  _type: ReturnType<TastyMember['getType']>,
 ): ReferenceParamDoc[] {
-  const descriptions = getTastyJsDocParamDescriptions(member)
-
-  return getTastyCallableParameters(type).map(param => ({
-    ...param,
-    description: descriptions.get(param.name),
-  }))
+  return member.getParameters()
 }
 
 function dedupeReferenceTags(tags: ReferenceTag[]): ReferenceTag[] {
@@ -152,11 +142,13 @@ function getReferenceTypeVariants(type: TastyTypeRef | undefined): string[] {
 }
 
 function formatReferenceSignature(type: TastyTypeRef): string {
-  const params = getTastyCallableParameters(type)
-    .map(param => {
-      const optional = param.optional ? '?' : ''
-      const typeLabel = param.type ?? 'unknown'
-      return `${param.name}${optional}: ${typeLabel}`
+  const params = type
+    .getParameters()
+    .map((param, index) => {
+      const optional = param.isOptional() ? '?' : ''
+      const typeLabel = param.getType()?.describe() ?? 'unknown'
+      const name = param.getName() ?? `arg${index + 1}`
+      return `${name}${optional}: ${typeLabel}`
     })
     .join(', ')
   const returnType = type.getReturnType()?.describe() ?? 'unknown'

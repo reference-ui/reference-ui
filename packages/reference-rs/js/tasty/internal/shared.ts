@@ -73,7 +73,7 @@ export function uniqueById<T>(values: T[], getId: (value: T) => string): T[] {
 
 export async function defaultArtifactImporter(artifactPath: string): Promise<unknown> {
   const specifier = await resolveArtifactSpecifier(artifactPath)
-  return import(withFreshFileSpecifier(specifier))
+  return import(/* @vite-ignore */ withFreshFileSpecifier(specifier))
 }
 
 export function normalizeModuleNamespace(value: unknown): ModuleNamespace {

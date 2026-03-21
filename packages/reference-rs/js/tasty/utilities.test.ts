@@ -3,9 +3,6 @@ import { describe, expect, it } from 'vitest'
 import {
   createTastyApi,
   dedupeTastyMembers,
-  getTastyCallableParameters,
-  getTastyJsDocParamDescriptions,
-  getTastyMemberDefaultValue,
 } from './index'
 
 const baseDir = new URL('../../tests/tasty/cases/', import.meta.url)
@@ -21,14 +18,14 @@ describe('tasty utilities', () => {
     })
 
     const buttonProps = await api.loadSymbolByName('ButtonProps')
-    const members = dedupeTastyMembers(await api.graph.flattenInterfaceMembers(buttonProps))
+    const members = await api.graph.getEffectiveMembers(buttonProps)
     const size = members.find(member => member.getName() === 'size')
     const disabled = members.find(member => member.getName() === 'disabled')
     const disabledType = disabled?.getType()
 
     expect(buttonProps.getDescription()).toBe('Props for a button.\n\nIncludes common sizing options.')
     expect(size?.getDescription()).toBe('Preferred size variant.')
-    expect(size ? getTastyMemberDefaultValue(size) : undefined).toBe('sm')
+    expect(size?.getDefaultValue()).toBe('sm')
     expect(disabledType?.describe()).toBe('boolean')
     expect(disabledType?.isUnion()).toBe(false)
   })
@@ -40,17 +37,15 @@ describe('tasty utilities', () => {
 
     const withCallback = await api.loadSymbolByName('WithCallback')
     const onClick = withCallback.getMembers().find(member => member.getName() === 'onClick')
-    const onClickType = onClick?.getType()
-    const paramDescriptions = onClick ? getTastyJsDocParamDescriptions(onClick) : new Map()
 
-    expect(onClickType ? getTastyCallableParameters(onClickType) : []).toEqual([
+    expect(onClick?.getParameters()).toEqual([
       {
         name: 'event',
         type: 'MouseEvent',
         optional: false,
+        description: undefined,
       },
     ])
-    expect(paramDescriptions.get('event')).toBeUndefined()
   })
 
   it('classifies constructor-like members without inventing missing signature data', async () => {
@@ -62,6 +57,18 @@ describe('tasty utilities', () => {
     const ctor = constructible.getMembers().find(member => member.getName() === '[new]')
 
     expect(ctor?.getKind()).toBe('construct')
-    expect(getTastyCallableParameters(ctor?.getType())).toEqual([])
+    expect(ctor?.getParameters()).toEqual([])
+  })
+
+  it('keeps utility helpers aligned with member and graph methods', async () => {
+    const api = createTastyApi({
+      manifestPath: manifestPath('external_libs'),
+    })
+
+    const buttonProps = await api.loadSymbolByName('ButtonProps')
+
+    expect(await api.graph.getEffectiveMembers(buttonProps)).toEqual(
+      dedupeTastyMembers(await api.graph.flattenInterfaceMembers(buttonProps)),
+    )
   })
 })

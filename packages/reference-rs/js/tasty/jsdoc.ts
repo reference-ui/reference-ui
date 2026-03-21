@@ -26,9 +26,8 @@ export function normalizeTastyInlineValue(value: string | undefined): string | u
 export function getTastyJsDocParamDescriptions(member: TastyMember): Map<string, string> {
   return new Map(
     member
-      .getJsDocTags()
-      .filter(tag => tag.getName() === 'param')
-      .map(tag => parseTastyParamTag(tag.getValue()))
-      .filter((entry): entry is [string, string] => entry != null),
+      .getParameters()
+      .filter((param): param is { name: string; description: string } => param.description != null)
+      .map((param) => [param.name, param.description]),
   )
 }
