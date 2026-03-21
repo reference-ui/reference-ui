@@ -6,7 +6,8 @@ import * as browser from './browser'
 import * as bridge from './bridge'
 
 export { browser, bridge }
-export { referenceTokens } from './browser'
+export { referenceBrowserTokenConfig } from './browser'
+export { copyReferenceBrowserToVirtual } from './bridge/copy-browser-virtual'
 
 export const Reference = {
   browser,

@@ -10,6 +10,8 @@ import { virtualDir, srcDir, testsDir, virt } from './helpers'
 describe('virtual – baseline', () => {
   it('creates .reference-ui/virtual with files matching include', () => {
     expect(existsSync(virtualDir)).toBe(true)
+    expect(existsSync(virt('_reference-component', 'component.tsx'))).toBe(true)
+    expect(existsSync(virt('_reference-component', 'primitives.ts'))).toBe(true)
     expect(existsSync(virt('src', 'App.tsx'))).toBe(true)
     expect(existsSync(virt('src', 'main.tsx'))).toBe(true)
     expect(existsSync(virt('tests', 'virtual', 'baseline.test.ts'))).toBe(true)

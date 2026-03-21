@@ -1,1 +1,1 @@
-export { referenceTokens, token } from './theme'
+export { referenceBrowserTokenConfig } from './theme'

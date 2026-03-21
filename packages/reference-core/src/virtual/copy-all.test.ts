@@ -3,12 +3,30 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 async function importCopyAllModule(options?: { virtualDirExists?: boolean }) {
   vi.resetModules()
 
-  const emit = vi.fn()
+  const virtualDir = '/workspace/app/.reference-ui/virtual'
+  const referenceBrowserPaths = [
+    `${virtualDir}/_reference-component/component.tsx`,
+    `${virtualDir}/_reference-component/primitives.ts`,
+  ]
+  const onceHandlers = new Map<string, (payload?: unknown) => void>()
+
+  const emit = vi.fn((event: string) => {
+    if (event === 'run:reference:copy-browser') {
+      for (const path of referenceBrowserPaths) {
+        emit('virtual:fs:change', { event: 'add', path })
+      }
+      onceHandlers.get('reference:browser:virtual-ready')?.()
+    }
+  })
+  const once = vi.fn((event: string, handler: (payload?: unknown) => void) => {
+    onceHandlers.set(event, handler)
+  })
   const debug = vi.fn()
   const mkdir = vi.fn(async () => {})
+  const rm = vi.fn(async () => {})
   const fg = vi.fn()
-  const copyToVirtual = vi.fn(async (file: string, _root: string, virtualDir: string) => {
-    return `${virtualDir}/${file.replace('/workspace/app/', '')}`
+  const copyToVirtual = vi.fn(async (file: string, _root: string, vdir: string) => {
+    return `${vdir}/${file.replace('/workspace/app/', '')}`
   })
 
   vi.doMock('node:fs', () => ({
@@ -16,25 +34,27 @@ async function importCopyAllModule(options?: { virtualDirExists?: boolean }) {
   }))
   vi.doMock('node:fs/promises', () => ({
     mkdir,
+    rm,
   }))
   vi.doMock('fast-glob', () => ({
     default: fg,
   }))
   vi.doMock('../lib/event-bus', () => ({
     emit,
+    once,
   }))
   vi.doMock('../lib/log', () => ({
     log: { debug, error: vi.fn(), info: vi.fn() },
   }))
   vi.doMock('../lib/paths', () => ({
-    getVirtualDirPath: () => '/workspace/app/.reference-ui/virtual',
+    getVirtualDirPath: () => virtualDir,
   }))
   vi.doMock('./copy', () => ({
     copyToVirtual,
   }))
 
   const mod = await import('./copy-all')
-  return { ...mod, emit, debug, mkdir, fg, copyToVirtual }
+  return { ...mod, emit, once, debug, mkdir, rm, fg, copyToVirtual }
 }
 
 afterEach(() => {
@@ -51,7 +71,7 @@ afterEach(() => {
 
 describe('virtual/copy-all', () => {
   it('creates the virtual directory when it is missing', async () => {
-    const { copyAll, mkdir, fg } = await importCopyAllModule({ virtualDirExists: false })
+    const { copyAll, mkdir, rm, fg } = await importCopyAllModule({ virtualDirExists: false })
     fg.mockResolvedValue([])
 
     await copyAll({
@@ -62,10 +82,29 @@ describe('virtual/copy-all', () => {
     expect(mkdir).toHaveBeenCalledWith('/workspace/app/.reference-ui/virtual', {
       recursive: true,
     })
+    expect(rm).not.toHaveBeenCalled()
+  })
+
+  it('clears the virtual directory before repopulating it', async () => {
+    const { copyAll, mkdir, rm, fg } = await importCopyAllModule({ virtualDirExists: true })
+    fg.mockResolvedValue([])
+
+    await copyAll({
+      sourceDir: '/workspace/app',
+      config: { include: ['src/**/*'], debug: false } as never,
+    })
+
+    expect(rm).toHaveBeenCalledWith('/workspace/app/.reference-ui/virtual', {
+      recursive: true,
+      force: true,
+    })
+    expect(mkdir).toHaveBeenCalledWith('/workspace/app/.reference-ui/virtual', {
+      recursive: true,
+    })
   })
 
   it('emits virtual:complete and skips globbing when include is empty', async () => {
-    const { copyAll, emit, fg, copyToVirtual } = await importCopyAllModule()
+    const { copyAll, emit, fg, copyToVirtual, once } = await importCopyAllModule()
 
     await copyAll({
       sourceDir: '/workspace/app',
@@ -74,7 +113,19 @@ describe('virtual/copy-all', () => {
 
     expect(fg).not.toHaveBeenCalled()
     expect(copyToVirtual).not.toHaveBeenCalled()
-    expect(emit).toHaveBeenCalledWith('virtual:complete', {})
+    expect(once).toHaveBeenCalled()
+    expect(emit).toHaveBeenNthCalledWith(1, 'run:reference:copy-browser', {
+      virtualDir: '/workspace/app/.reference-ui/virtual',
+    })
+    expect(emit).toHaveBeenNthCalledWith(2, 'virtual:fs:change', {
+      event: 'add',
+      path: '/workspace/app/.reference-ui/virtual/_reference-component/component.tsx',
+    })
+    expect(emit).toHaveBeenNthCalledWith(3, 'virtual:fs:change', {
+      event: 'add',
+      path: '/workspace/app/.reference-ui/virtual/_reference-component/primitives.ts',
+    })
+    expect(emit).toHaveBeenLastCalledWith('virtual:complete', {})
   })
 
   it('copies every matched file and emits virtual fs changes before completion', async () => {
@@ -99,11 +150,22 @@ describe('virtual/copy-all', () => {
       ignore: ['**/node_modules/**', '**/.reference-ui/**', '**/.git/**'],
     })
     expect(copyToVirtual).toHaveBeenCalledTimes(2)
-    expect(emit).toHaveBeenNthCalledWith(1, 'virtual:fs:change', {
+    expect(emit).toHaveBeenNthCalledWith(1, 'run:reference:copy-browser', {
+      virtualDir: '/workspace/app/.reference-ui/virtual',
+    })
+    expect(emit).toHaveBeenNthCalledWith(2, 'virtual:fs:change', {
+      event: 'add',
+      path: '/workspace/app/.reference-ui/virtual/_reference-component/component.tsx',
+    })
+    expect(emit).toHaveBeenNthCalledWith(3, 'virtual:fs:change', {
+      event: 'add',
+      path: '/workspace/app/.reference-ui/virtual/_reference-component/primitives.ts',
+    })
+    expect(emit).toHaveBeenNthCalledWith(4, 'virtual:fs:change', {
       event: 'add',
       path: '/workspace/app/.reference-ui/virtual/src/alpha.ts',
     })
-    expect(emit).toHaveBeenNthCalledWith(2, 'virtual:fs:change', {
+    expect(emit).toHaveBeenNthCalledWith(5, 'virtual:fs:change', {
       event: 'add',
       path: '/workspace/app/.reference-ui/virtual/src/beta.tsx',
     })

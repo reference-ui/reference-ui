@@ -15,8 +15,8 @@ import {
   extendUtilities,
   getPandaConfig,
   initPandaConfig,
+  referenceBrowserTokenConfig,
   resolveColorModeTokens,
-  referenceBrowserGlobalCss,
   rhythmGlobalCss,
   rhythmSpacingTokens,
   rhythmUtilities,
@@ -35,7 +35,8 @@ initPandaConfig(baseConfig)
 // tokens
 // ─────────────────────────────────────────────────────────────────────────
 
-const tokensFragments = {{ tokensValueExpression | raw }}
+const userTokensFragments = {{ tokensValueExpression | raw }}
+const tokensFragments = [referenceBrowserTokenConfig, ...userTokensFragments]
 const resolvedColorModeTokens = resolveColorModeTokens(tokensFragments)
 extendTokens(rhythmSpacingTokens)
 extendTokens(resolvedColorModeTokens.baseTokens)
@@ -77,7 +78,6 @@ extendPatterns([...patternExtensions, ...fontPatternExtensions])
 
 extendUtilities(rhythmUtilities)
 extendGlobalCss(rhythmGlobalCss)
-extendGlobalCss(referenceBrowserGlobalCss)
 
 // ─────────────────────────────────────────────────────────────────────────
 // export
