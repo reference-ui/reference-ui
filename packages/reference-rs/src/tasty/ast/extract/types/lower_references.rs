@@ -2,7 +2,7 @@ use oxc_ast::ast::Expression;
 use oxc_span::GetSpan;
 
 use crate::tasty::model::TypeRef;
-use crate::tasty::shared::typeref_util::reference_lookup_name;
+use crate::tasty::shared::type_ref_util::reference_lookup_name;
 
 use super::super::slice_span;
 use super::reference_source_module;

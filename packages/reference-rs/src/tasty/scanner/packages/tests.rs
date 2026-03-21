@@ -3,7 +3,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use super::{resolve_external_import, resolve_relative_import};
+use super::{resolve_external_import, resolve_relative_import, FileLookup};
 
 struct TempDir {
     path: PathBuf,
@@ -45,7 +45,13 @@ fn relative_import_prefers_declaration_candidates_for_runtime_entries() {
     let file_ids = BTreeSet::from(["src/button.d.ts".to_string(), "src/index.ts".to_string()]);
 
     let resolved =
-        resolve_relative_import(root.path(), "src/index.ts", "./button.js", &file_ids, false);
+        resolve_relative_import(
+            root.path(),
+            "src/index.ts",
+            "./button.js",
+            &file_ids,
+            FileLookup::Denied,
+        );
 
     assert_eq!(resolved.as_deref(), Some("src/button.d.ts"));
 }

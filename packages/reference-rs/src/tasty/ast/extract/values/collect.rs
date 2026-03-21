@@ -6,7 +6,7 @@ use oxc_ast::ast::{BindingPattern, Declaration, Statement, VariableDeclarationKi
 use super::infer_dispatch::infer_value_type_with_const_context;
 use super::super::ExtractionContext;
 
-pub(crate) fn collect_statement_value_bindings(
+pub(crate) fn value_bindings_from_statement(
     statement: &Statement<'_>,
     ctx: &ExtractionContext<'_>,
     value_bindings: &mut BTreeMap<String, TypeRef>,

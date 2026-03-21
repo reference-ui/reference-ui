@@ -1,3 +1,5 @@
+//! Per-file Oxc parse + statement walk that produces [`ParsedFileAst`](crate::tasty::ast::model::ParsedFileAst).
+
 use std::collections::BTreeMap;
 
 use oxc_allocator::Allocator;
@@ -5,8 +7,8 @@ use oxc_ast::ast::{Comment, Statement};
 use oxc_parser::Parser;
 use oxc_span::SourceType;
 
-use super::statements::{collect_statement_exports, collect_statement_import_bindings};
-use super::values::collect_statement_value_bindings;
+use super::statements::{exports_from_statement, import_bindings_from_statement};
+use super::values::value_bindings_from_statement;
 use super::ExtractionContext;
 use crate::tasty::ast::model::{ImportBinding, ParsedFileAst, SymbolShell};
 use crate::tasty::model::{ScannerDiagnostic, TypeRef};
@@ -78,7 +80,7 @@ impl FileBindings {
         statement: &Statement<'_>,
         comments: &[Comment],
     ) {
-        collect_statement_import_bindings(
+        import_bindings_from_statement(
             root_dir,
             scanned_file,
             statement,
@@ -92,8 +94,8 @@ impl FileBindings {
             module_specifier: &scanned_file.module_specifier,
             library: &scanned_file.library,
         };
-        collect_statement_value_bindings(statement, &value_ctx, &mut self.value_bindings);
-        collect_statement_exports(
+        value_bindings_from_statement(statement, &value_ctx, &mut self.value_bindings);
+        exports_from_statement(
             scanned_file,
             statement,
             comments,

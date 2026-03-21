@@ -1,7 +1,7 @@
 use super::Resolver;
 use crate::tasty::ast::model::SymbolShell;
 use crate::tasty::model::{TsSymbolKind, TypeRef};
-use crate::tasty::shared::typeref_util::{
+use crate::tasty::shared::type_ref_util::{
     collapse_union, literal_fragment, resolve_indexed_access, resolved_or_self,
     string_literal_type, type_extends,
 };

@@ -6,6 +6,25 @@ like it was _meant_ to be read.
 This is not a style guide. Style guides are for strangers. This is a love letter
 to code that already works — a plan for making it _sing_.
 
+### What’s already landed (as of this repo)
+
+| Item | |
+| ---- | -- |
+| **I.1** `type_ref_util` rename (`typeref_util` → `type_ref_util`, `shared/mod.rs`, all imports; `REFACTOR.md` paths) | ✅ |
+| **I.2** `push_*` → return `Vec` / builder (`generator/symbols.rs` + `JsObjectBuilder`; extract unchanged) | ✅ symbols |
+| **I.3** `collect_*` → `*_from_statement` (`exports_from_statement`, `import_bindings_from_statement`, `value_bindings_from_statement`) | ✅ |
+| **II** `DiscoveryContext` + slim `resolve_import_for_discovery` (`policy.rs`, `crawler.rs`) | ✅ |
+| **III** `JsObjectBuilder` in `generator/util.rs`; symbol emission uses `extend` + field vecs | ✅ symbols · ⏳ types |
+| **IV** `TastyError` | ⏳ not started |
+| **V** `//!` on listed scanner/extract/resolve/generator files (see §XI) | ✅ |
+| **VI** `emit_type_ref` = one-line delegations only | ⏳ deferred (split modules exist) |
+| **VII.1** `file_symbol_key` in `resolve/index.rs` | ✅ |
+| **VII.2** `normalize_comment_text` without extra `collect().join()` | ✅ |
+| **VII.3** `resolve_with_candidates` in `package_entry` | ⏳ |
+| **VII.4** `FileLookup` enum (`relative.rs`, re-export `packages.rs`) | ✅ |
+| **VIII** priority table | see column _Done_ below |
+| **X** order of operations | strikethrough / ✅ in §X below |
+
 ---
 
 ## The shape of what we have
@@ -27,26 +46,18 @@ already serves.
 
 ## I. Naming: the first kindness
 
-### 1. Heal the `typeref` split
+### 1. Heal the `typeref` split — **done**
 
 Two shared files live side by side with subtly different naming:
 
 ```
 shared/type_ref_map.rs    ← underscored
-shared/typeref_util.rs    ← smashed together
+shared/type_ref_util.rs   ← underscored (renamed from typeref_util)
 ```
 
-Pick one convention. `type_ref_map` wins — it mirrors the type it serves
-(`TypeRef`) and reads instantly. Rename:
+**Implemented:** `type_ref_util.rs`, `pub(crate) mod type_ref_util` in `shared/mod.rs`, all `use` paths, and `REFACTOR.md` references updated.
 
-```
-shared/typeref_util.rs  →  shared/type_ref_util.rs
-```
-
-Update the `mod` declaration in `shared/mod.rs` and all `use` paths. One find-
-and-replace. One commit.
-
-### 2. Name functions for what they _return_, not what they _do_
+### 2. Name functions for what they _return_, not what they _do_ — **done in `generator/symbols`**
 
 Several `push_*` helpers in `ast/extract` and `generator/symbols.rs` mutate a
 `&mut Vec` parameter. When a function pushes into a collection it was handed,
@@ -64,7 +75,9 @@ Returning the value and letting the caller `extend` makes callsites self-
 documenting and removes `&mut` aliasing noise. Apply everywhere one `push_*`
 function is the sole contributor to a local vec.
 
-### 3. Consistent `_from_*` / `_for_*` suffixes
+**Implemented for** `generator/symbols.rs` (metadata / interface / type-alias chunks return `Vec<String>` and merge into `JsObjectBuilder`). **`ast/extract`** still uses its own patterns where applicable.
+
+### 3. Consistent `_from_*` / `_for_*` suffixes — **done (statement trio)**
 
 The codebase already favors these well:
 
@@ -74,12 +87,12 @@ The codebase already favors these well:
 
 But a few functions break the rule:
 
-| Current                             | Proposed                         |
-| ----------------------------------- | -------------------------------- |
-| `members_from_signatures`           | keep (good)                      |
-| `collect_statement_exports`         | `exports_from_statement`         |
-| `collect_statement_import_bindings` | `import_bindings_from_statement` |
-| `collect_statement_value_bindings`  | `value_bindings_from_statement`  |
+| Current                             | Proposed                         | Done |
+| ----------------------------------- | -------------------------------- | ---- |
+| `members_from_signatures`           | keep (good)                      | —    |
+| `collect_statement_exports`         | `exports_from_statement`         | ✅   |
+| `collect_statement_import_bindings` | `import_bindings_from_statement` | ✅   |
+| `collect_statement_value_bindings`  | `value_bindings_from_statement`  | ✅   |
 
 The `collect_*` prefix was an early pattern. It implies iteration — fine when
 you're folding a list, misleading when you're inspecting one statement and
@@ -88,9 +101,9 @@ Let it win everywhere.
 
 ---
 
-## II. Signatures: the long parameter problem
+## II. Signatures: the long parameter problem — **done (`DiscoveryContext`)**
 
-### The offenders
+### The offenders (historical — `policy.rs`/`crawler.rs` now use `DiscoveryContext`)
 
 ```rust
 // policy.rs — 8 parameters
@@ -151,7 +164,7 @@ the same idea, applied one layer lower. Mirror it; don't reinvent it.
 
 ---
 
-## III. Generator: from string soup to structured emission
+## III. Generator: from string soup to structured emission — **done for symbols (`JsObjectBuilder`)**
 
 `generator/util.rs` builds JavaScript source with raw `String` concatenation:
 `emit_object`, `emit_array`, `emit_field`. It works. But every callsite builds a
@@ -201,9 +214,11 @@ JsBuilder::new()
 No more `push_*_fields` mutation. No more 4-parameter helper that exists only to
 append to someone else's vec. The builder _is_ the intermediate representation.
 
+**Implemented:** `JsObjectBuilder` in `generator/util.rs`; `generator/symbols.rs` migrated. **`generator/types/mod.rs`** still builds `Vec<String>` + `emit_object` the same way as before.
+
 ---
 
-## IV. Error handling: give the errors a home
+## IV. Error handling: give the errors a home — **not yet**
 
 Every fallible function returns `Result<T, String>`. That works — until you're
 debugging a production scan and the error says `"failed to read …"` with no
@@ -247,7 +262,7 @@ it came from without reading the call stack.
 
 ---
 
-## V. Module documentation: the missing `//!` headers
+## V. Module documentation: the missing `//!` headers — **done (targets below)**
 
 Some files have exquisite module-level docs:
 
@@ -262,25 +277,27 @@ Others — equally important — have nothing. The rule is simple:
 
 Priority targets (files with no module doc today):
 
-| File                                | Suggested header                                                                                |
-| ----------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `scanner/packages.rs`               | `//! External and relative import resolution dispatch.`                                         |
-| `scanner/packages/package_entry.rs` | `//! Package entrypoint resolution from node_modules layout and package.json exports.`          |
-| `scanner/workspace/crawler.rs`      | `//! Breadth-first import graph crawler that builds the reachable file set.`                    |
-| `scanner/workspace/policy.rs`       | `//! Discovery-phase import policy: which imports to follow and when.`                          |
-| `generator/symbols.rs`              | `//! JavaScript source emission for symbol descriptors and cross-references.`                   |
-| `ast/extract/pipeline.rs`           | `//! Per-file Oxc parse + statement walk that produces ParsedFileAst.`                          |
-| `ast/extract/statements/exports.rs` | `//! Export statement collection: named exports, default exports, and bare type declarations.`  |
-| `ast/extract/comments/leading.rs`   | `//! Leading comment extraction and normalization for JSDoc and block comments.`                |
-| `ast/resolve/index.rs`              | `//! Top-level resolve orchestration: symbol index → export index → resolved graph.`            |
-| `ast/resolve/resolver/resolve.rs`   | `//! TypeRef resolution pass: resolves import references and evaluates type-level expressions.` |
+| File                                | Suggested header                                                                                | Done |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------- | ---- |
+| `scanner/packages.rs`               | `//! External and relative import resolution dispatch.`                                         | ✅   |
+| `scanner/packages/package_entry.rs` | `//! Package entrypoint resolution from node_modules layout and package.json exports.`          | ✅   |
+| `scanner/packages/relative.rs`      | (relative resolution + `FileLookup`)                                                            | ✅   |
+| `scanner/workspace/crawler.rs`      | `//! Breadth-first import graph crawler that builds the reachable file set.`                    | ✅   |
+| `scanner/workspace/policy.rs`       | `//! Discovery-phase import policy: which imports to follow and when.`                          | ✅   |
+| `generator/symbols.rs`              | `//! JavaScript source emission for symbol descriptors and cross-references.`                   | ✅   |
+| `generator/util.rs`                 | `//!` emission helpers + `JsObjectBuilder`                                                     | ✅   |
+| `ast/extract/pipeline.rs`           | `//! Per-file Oxc parse + statement walk that produces ParsedFileAst.`                          | ✅   |
+| `ast/extract/statements/exports.rs` | `//! Export statement collection: named exports, default exports, and bare type declarations.`  | ✅   |
+| `ast/extract/comments/leading.rs`   | `//! Leading comment extraction and normalization for JSDoc and block comments.`                | ✅   |
+| `ast/resolve/index.rs`              | `//! Top-level resolve orchestration: symbol index → export index → resolved graph.`            | ✅   |
+| `ast/resolve/resolver/resolve.rs`   | `//! TypeRef resolution pass: resolves import references and evaluates type-level expressions.` | ✅   |
 
 One sentence per file. That's all it takes. A reader opening any file should know
 what room they're standing in before they read a single function.
 
 ---
 
-## VI. The `TypeRef` match: taming the giant
+## VI. The `TypeRef` match: taming the giant — **not done (still a fat match; submodules help)**
 
 `generator/types/mod.rs` — `emit_type_ref` — is a single `match` with 16 arms,
 each building a different JavaScript object. It's ~180 lines. It is correct. It
@@ -315,7 +332,7 @@ the one variant they care about.
 
 ## VII. Small elegances
 
-### 1. Replace `clone()` chains in index building
+### 1. Replace `clone()` chains in index building — **done (`file_symbol_key`)**
 
 `ast/resolve/index.rs` has patterns like:
 
@@ -335,7 +352,7 @@ fn file_symbol_key(file_id: &str, name: &str) -> (String, String) {
 Not for abstraction. For rhythm. The reader stops seeing `clone` noise and
 starts seeing intent.
 
-### 2. Let `normalize_comment_text` use iterators
+### 2. Let `normalize_comment_text` use iterators — **done**
 
 In `leading.rs`:
 
@@ -355,7 +372,7 @@ The `.collect::<Vec<_>>().join("\n")` allocates an intermediate vec. Use
 `itertools::join` or `fold` directly. Tiny savings, but it's the kind of care
 that signals this code was _polished_, not just correct.
 
-### 3. Unify `first_existing_candidate` patterns
+### 3. Unify `first_existing_candidate` patterns — **not done**
 
 `package_entry.rs` calls `first_existing_candidate` in three places with the
 same candidate-generation logic. Consider consolidating the candidate list
@@ -374,7 +391,7 @@ fn resolve_with_candidates(
 }
 ```
 
-### 4. Boolean parameters → enums
+### 4. Boolean parameters → enums — **done (`FileLookup`)**
 
 In `packages.rs`:
 
@@ -404,18 +421,18 @@ resolve_relative_import(root_dir, file_id, source, file_ids, FileLookup::Allowed
 These files are functional but would benefit most from the changes above,
 ranked by impact:
 
-| Priority | File                                | What to do                                                |
-| -------- | ----------------------------------- | --------------------------------------------------------- |
-| 1        | `scanner/workspace/policy.rs`       | Introduce `DiscoveryContext`, add `//!` header            |
-| 2        | `generator/symbols.rs`              | Introduce `JsBuilder`, eliminate `push_*_fields` mutation |
-| 3        | `generator/types/mod.rs`            | Factor remaining match arms into one-line delegations     |
-| 4        | `ast/extract/statements/exports.rs` | Rename `collect_*` → `_from_*`, add `//!` header          |
-| 5        | `ast/resolve/index.rs`              | Extract `file_symbol_key`, add `//!` header               |
-| 6        | `scanner/packages.rs`               | Boolean → enum for `allow_file_lookup`, add `//!` header  |
-| 7        | `scanner/workspace/crawler.rs`      | Adopt `DiscoveryContext` from policy, add `//!` header    |
-| 8        | `shared/typeref_util.rs`            | Rename file, add `//!` header                             |
-| 9        | `ast/extract/pipeline.rs`           | Add `//!` header                                          |
-| 10       | `ast/extract/comments/leading.rs`   | Iterator cleanup, add `//!` header                        |
+| Priority | File                                | What to do                                                | Done |
+| -------- | ----------------------------------- | --------------------------------------------------------- | ---- |
+| 1        | `scanner/workspace/policy.rs`       | Introduce `DiscoveryContext`, add `//!` header            | ✅   |
+| 2        | `generator/symbols.rs`              | Introduce `JsBuilder`, eliminate `push_*_fields` mutation | ✅   |
+| 3        | `generator/types/mod.rs`            | Factor remaining match arms into one-line delegations     | ⏳   |
+| 4        | `ast/extract/statements/exports.rs` | Rename `collect_*` → `_from_*`, add `//!` header          | ✅   |
+| 5        | `ast/resolve/index.rs`              | Extract `file_symbol_key`, add `//!` header               | ✅   |
+| 6        | `scanner/packages.rs`               | Boolean → enum for `allow_file_lookup`, add `//!` header  | ✅   |
+| 7        | `scanner/workspace/crawler.rs`      | Adopt `DiscoveryContext` from policy, add `//!` header    | ✅   |
+| 8        | `shared/type_ref_util.rs`            | Rename file (was `typeref_util`), add `//!` header            | ✅   |
+| 9        | `ast/extract/pipeline.rs`           | Add `//!` header                                          | ✅   |
+| 10       | `ast/extract/comments/leading.rs`   | Iterator cleanup, add `//!` header                        | ✅   |
 
 ---
 
@@ -442,31 +459,44 @@ Some things look like they could be "improved" but are exactly right:
 
 ## X. The order of operations
 
-1. **Add `//!` headers** to the 10 files listed above. One PR, zero risk. Merge
-   it fast so every future reader benefits immediately.
+1. ~~**Add `//!` headers** to the 10 files listed above.~~ Done (see §V table).
 
-2. **Rename `typeref_util.rs` → `type_ref_util.rs`**. Mechanical. Ship it.
+2. ~~**Rename `typeref_util.rs` → `type_ref_util.rs`**.~~ Done.
 
-3. **Introduce `DiscoveryContext`** in the scanner. This touches `policy.rs`,
-   `crawler.rs`, and call sites in `workspace.rs`. One focused PR.
+3. ~~**Introduce `DiscoveryContext`** in the scanner.~~ Done (`policy.rs`, `crawler.rs`).
 
-4. **Build `JsBuilder`** in `generator/util.rs`. Migrate `symbols.rs` first.
-   Then `types/mod.rs`. Each file can be its own commit.
+4. **Build `JsBuilder`** in `generator/util.rs`. ~~Migrate `symbols.rs` first.~~ Done.
+   **Then `types/mod.rs`.** Still open.
 
-5. **Rename `collect_*` → `_from_*`** in extract/statements. Coordinate with
-   any open branches.
+5. ~~**Rename `collect_*` → `_from_*`** in extract/statements.~~ Done.
 
-6. **Factor `emit_type_ref` arms** into per-variant helpers. The match becomes
-   the table of contents it was always trying to be.
+6. **Factor `emit_type_ref` arms** into per-variant helpers. Still open.
 
-7. **Introduce `TastyError`** at phase boundaries. Start with scanner. Expand
-   outward.
+7. **Introduce `TastyError`** at phase boundaries. Still open.
 
-8. **Boolean → enum** for `FileLookup` in scanner/packages. Small, satisfying,
-   standalone.
+8. ~~**Boolean → enum** for `FileLookup` in scanner/packages.~~ Done (`FileLookup` in `relative.rs`).
 
 ---
 
 _Code that is clear is code that invites contribution._
 _Code that is beautiful is code that resists decay._
 _This codebase is already good. Let's make it undeniable._
+
+---
+
+## XI. Implementation log (detail)
+
+Use the **“What’s already landed”** table at the top of this doc as the checklist. This section is the longer paper trail.
+
+| BEAUTIFY section | What changed in the tree |
+| ---------------- | ------------------------- |
+| **I.1** | `shared/type_ref_util.rs`, `REFACTOR.md` paths. |
+| **I.3** | `exports_from_statement`, `import_bindings_from_statement`, `value_bindings_from_statement` + `pipeline` wiring. |
+| **II** | `DiscoveryContext` in `policy.rs`; `crawler.rs` builds context per file. |
+| **III** | `JsObjectBuilder` in `generator/util.rs`; `symbols.rs` uses `extend` + `Vec` chunks instead of mutating a shared `Vec` via `push_*_fields`. |
+| **V** | `//!` on files listed in §V table (plus `relative.rs`, `util.rs`). |
+| **VII.1** | `file_symbol_key` in `ast/resolve/index.rs`. |
+| **VII.2** | `normalize_comment_text` in `leading.rs` (no `collect().join()`). |
+| **VII.4** | `FileLookup` in `packages/relative.rs`, `pub(crate) use` from `packages.rs`. |
+| **Tests** | `tasty/tests/scanner.rs` split (see REFACTOR §15). |
+| **Not done** | §IV `TastyError`; §VI thin `emit_type_ref` match; §VII.3 `resolve_with_candidates`; **`generator/types`** `JsBuilder` / one-line arms. |

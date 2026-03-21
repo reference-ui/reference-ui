@@ -1,6 +1,33 @@
+//! JavaScript object/array/string emission for artifact modules.
+
 use std::fmt::Write as _;
 
 use serde::Serialize;
+
+/// Intermediate representation for a single `{ ... }` object literal.
+pub(super) struct JsObjectBuilder {
+    pub(super) fields: Vec<String>,
+}
+
+impl JsObjectBuilder {
+    pub(super) fn new() -> Self {
+        Self { fields: Vec::new() }
+    }
+
+    pub(super) fn try_field(mut self, name: &str, value: Result<String, String>) -> Result<Self, String> {
+        self.fields.push(emit_field(name, value?));
+        Ok(self)
+    }
+
+    pub(super) fn extend(mut self, more: Vec<String>) -> Self {
+        self.fields.extend(more);
+        self
+    }
+
+    pub(super) fn build(self) -> String {
+        emit_object(self.fields)
+    }
+}
 
 pub(super) fn to_js_literal<T: Serialize + ?Sized>(value: &T) -> Result<String, String> {
     serde_json::to_string(value)

@@ -1,3 +1,5 @@
+//! Export statement collection: named exports, default exports, and bare type declarations.
+
 use std::collections::BTreeMap;
 
 use oxc_ast::ast::Statement;
@@ -13,7 +15,7 @@ use super::super::ExtractionContext;
 use crate::tasty::ast::model::{ImportBinding, SymbolShell};
 use crate::tasty::scanner::ScannedFile;
 
-pub(crate) fn collect_statement_exports(
+pub(crate) fn exports_from_statement(
     scanned_file: &ScannedFile,
     statement: &Statement<'_>,
     comments: &[oxc_ast::ast::Comment],

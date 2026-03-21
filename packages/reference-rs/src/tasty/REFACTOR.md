@@ -13,7 +13,7 @@ killing duplication, and finding the natural seams.
 | 6   | Split `extract/types`         | **Done** (`extract/types/mod.rs`, `lower_keywords.rs`, `lower_composites.rs`, `lower_references.rs`) |
 | 7   | Split generator/types         | **Done** (`types/mod.rs`, `emit_compounds.rs`, `emit_collections.rs`, `emit_leaves.rs`) |
 | 8   | Split extract/values          | **Done** (`infer_*.rs`, `values/mod.rs` + `collect`, `infer_dispatch`, `ts_assertions`) |
-| 9   | Shared `typeref_util`         | **Done** (`shared/typeref_util.rs`) |
+| 9   | Shared `type_ref_util`         | **Done** (`shared/type_ref_util.rs`) |
 | 10  | `crate::tasty::` imports      | **Done** |
 | 11  | TypeRef visitor               | **Done** (`shared/type_ref_map.rs` + hooks in `resolve.rs` / `instantiate.rs`) |
 | 12  | emitted vs generator          | **Done** (hybrid; see §12) |
@@ -29,7 +29,7 @@ There were two identical `collapse_union` implementations (`ast/extract/values.r
 and the old monolithic resolver). Both do the same thing: deduplicate a
 `Vec<TypeRef>` and return `None | Some(single) | Some(Union)`.
 
-**Implemented:** single implementation in `shared/typeref_util.rs`; call-sites
+**Implemented:** single implementation in `shared/type_ref_util.rs`; call-sites
 import from there.
 
 ---
@@ -39,14 +39,14 @@ import from there.
 Two copies existed (`ast/resolve/names.rs` and extract). Same split on
 `['.', '<']`.
 
-**Implemented:** canonical helper in `shared/typeref_util.rs`; extract imports it.
+**Implemented:** canonical helper in `shared/type_ref_util.rs`; extract imports it.
 
 ---
 
 ## 3. Deduplicate `property_key_name` ✅ DONE
 
 Members and values had divergent helpers; unified richer `Option<String>` logic
-in `shared/typeref_util.rs` with a fallback where needed for signatures.
+in `shared/type_ref_util.rs` with a fallback where needed for signatures.
 
 ---
 
@@ -67,7 +67,7 @@ Was one large file; split into three `impl Resolver` modules:
 | instantiate   | `resolver/instantiate.rs` |
 | evaluate      | `resolver/evaluate.rs`    |
 
-Literal helpers live in `shared/typeref_util.rs` (see §9). `resolver/mod.rs`
+Literal helpers live in `shared/type_ref_util.rs` (see §9). `resolver/mod.rs`
 holds the `Resolver` struct and constructor.
 
 ---
@@ -120,7 +120,7 @@ The value inference logic is one long chain. Split:
 
 ---
 
-## 9. Introduce a shared `typeref_util` module ✅ DONE
+## 9. Introduce a shared `type_ref_util` module ✅ DONE
 
 Helpers shared by extract and resolve:
 
@@ -131,8 +131,8 @@ Helpers shared by extract and resolve:
 - `resolved_or_self`
 - plus `property_key_name`, evaluation helpers (`resolve_indexed_access`, etc.)
 
-**Implemented:** `shared/typeref_util.rs`, wired from `shared/mod.rs` as
-`pub(crate) mod typeref_util`.
+**Implemented:** `shared/type_ref_util.rs`, wired from `shared/mod.rs` as
+`pub(crate) mod type_ref_util`.
 
 ---
 
@@ -227,7 +227,7 @@ structs exist for `TS` export only and are never constructed in Rust.
 
 Do these in dependency order so each step is independently shippable:
 
-1. ~~**§9** — Create `typeref_util`~~ **done** (`shared/typeref_util.rs`)
+1. ~~**§9** — Create `type_ref_util`~~ **done** (`shared/type_ref_util.rs`)
 2. ~~**§1–3** — Deduplicate `collapse_union`, `reference_lookup_name`, `property_key_name`~~ **done**
 3. ~~**§4** — Collapse literal inference pairs~~ **done**
 4. ~~**§10** — Switch to `crate::tasty::` imports everywhere~~ **done**
