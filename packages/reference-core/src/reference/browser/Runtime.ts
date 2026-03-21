@@ -72,7 +72,7 @@ export function useReferenceDocument(
     setErrorMessage(null)
     setDocument(null)
 
-    void runtime
+    runtime
       .load(name)
       .then((data) => {
         if (!active) return
