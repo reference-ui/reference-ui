@@ -24,11 +24,7 @@ pub(crate) fn parse_comment_metadata(comment: Option<LeadingComment>) -> Comment
     };
     let description_raw = Some(comment.normalized_text.clone());
     if !comment.is_jsdoc {
-        return CommentMetadata {
-            description: description_raw.clone(),
-            description_raw,
-            jsdoc: None,
-        };
+        return plain_comment_metadata(description_raw);
     }
 
     let jsdoc = parse_jsdoc(&comment.normalized_text);
@@ -38,6 +34,14 @@ pub(crate) fn parse_comment_metadata(comment: Option<LeadingComment>) -> Comment
         description,
         description_raw,
         jsdoc: Some(jsdoc),
+    }
+}
+
+fn plain_comment_metadata(description_raw: Option<String>) -> CommentMetadata {
+    CommentMetadata {
+        description: description_raw.clone(),
+        description_raw,
+        jsdoc: None,
     }
 }
 
@@ -52,32 +56,22 @@ fn parse_jsdoc(normalized_text: &str) -> JsDoc {
 impl JsDocParserState {
     fn handle_line(&mut self, raw_line: &str) {
         let line = raw_line.trim();
-        if let Some(tag_line) = line.strip_prefix('@') {
-            self.start_tag(tag_line);
-        } else if self.in_tags {
-            self.push_tag_line(line);
-        } else {
-            self.summary_lines.push(line.to_string());
+        match line.strip_prefix('@') {
+            Some(tag_line) => self.start_tag(tag_line),
+            None if self.in_tags => self.push_tag_line(line),
+            None => self.summary_lines.push(line.to_string()),
         }
     }
 
     fn start_tag(&mut self, tag_line: &str) {
-        push_completed_jsdoc_tag(
-            &mut self.current_tag_name,
-            &mut self.current_tag_lines,
-            &mut self.tags,
-        );
-
+        self.flush_open_tag();
         self.in_tags = true;
-        let mut parts = tag_line.splitn(2, char::is_whitespace);
-        let name = parts.next().unwrap_or("").trim();
-        let value = parts.next().unwrap_or("").trim();
 
+        let (name, value) = split_tag_header(tag_line);
         if !value.is_empty() {
-            self.current_tag_lines.push(value.to_string());
+            self.current_tag_lines.push(value);
         }
-
-        self.current_tag_name = (!name.is_empty()).then(|| name.to_string());
+        self.current_tag_name = (!name.is_empty()).then(|| name);
     }
 
     fn push_tag_line(&mut self, line: &str) {
@@ -86,18 +80,28 @@ impl JsDocParserState {
         }
     }
 
-    fn finish(mut self) -> JsDoc {
+    fn flush_open_tag(&mut self) {
         push_completed_jsdoc_tag(
             &mut self.current_tag_name,
             &mut self.current_tag_lines,
             &mut self.tags,
         );
+    }
 
+    fn finish(mut self) -> JsDoc {
+        self.flush_open_tag();
         JsDoc {
-            summary: normalize_jsdoc_summary(&self.summary_lines),
+            summary: non_empty_joined_lines(&self.summary_lines),
             tags: self.tags,
         }
     }
+}
+
+fn split_tag_header(tag_line: &str) -> (String, String) {
+    let mut parts = tag_line.splitn(2, char::is_whitespace);
+    let name = parts.next().unwrap_or("").trim().to_string();
+    let value = parts.next().unwrap_or("").trim().to_string();
+    (name, value)
 }
 
 fn push_completed_jsdoc_tag(
@@ -111,25 +115,12 @@ fn push_completed_jsdoc_tag(
 
     tags.push(JsDocTag {
         name,
-        value: normalize_jsdoc_tag_value(current_tag_lines),
+        value: non_empty_joined_lines(current_tag_lines),
     });
     current_tag_lines.clear();
 }
 
-fn normalize_jsdoc_summary(lines: &[String]) -> Option<String> {
-    let summary = lines.join("\n").trim().to_string();
-    if summary.is_empty() {
-        None
-    } else {
-        Some(summary)
-    }
-}
-
-fn normalize_jsdoc_tag_value(lines: &[String]) -> Option<String> {
-    let value = lines.join("\n").trim().to_string();
-    if value.is_empty() {
-        None
-    } else {
-        Some(value)
-    }
+fn non_empty_joined_lines(lines: &[String]) -> Option<String> {
+    let text = lines.join("\n").trim().to_string();
+    (!text.is_empty()).then_some(text)
 }

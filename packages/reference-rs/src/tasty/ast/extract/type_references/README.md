@@ -6,4 +6,7 @@ parameters, underlying types) for downstream resolution.
 ## Files
 
 - `mod.rs` — `collect_references_from_members` entry point
-- `walk.rs` — recursive walk of `TypeRef` (union, mapped, conditional, etc.)
+- `walk/` — recursive `TypeRef` walk
+  - `mod.rs` — `collect_type_ref_references`, shell type-parameter hook
+  - `variants.rs` — `match` on `TypeRef` variants
+  - `helpers.rs` — shared `walk_*` helpers (optional, slices, members, params, template parts)

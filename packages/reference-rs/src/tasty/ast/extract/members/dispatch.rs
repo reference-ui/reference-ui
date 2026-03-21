@@ -19,67 +19,88 @@ pub(crate) fn members_from_signatures(
     current_module_specifier: &str,
     current_library: &str,
 ) -> Vec<TsMember> {
-    let all_member_starts: Vec<u32> = signatures
-        .iter()
-        .map(|signature| signature.span().start)
-        .collect();
+    let env = MemberEnv {
+        source,
+        comments,
+        import_bindings,
+        module_specifier: current_module_specifier,
+        library: current_library,
+    };
+    let starts = signature_start_positions(signatures);
 
     signatures
         .iter()
         .map(|signature| {
-            let exclude = member_exclusion_starts(signature, &all_member_starts, container_start);
-
-            match signature {
-                TSSignature::TSPropertySignature(property) => property_signature_to_member(
-                    property,
-                    source,
-                    comments,
-                    exclude.as_deref(),
-                    import_bindings,
-                    current_module_specifier,
-                    current_library,
-                ),
-                TSSignature::TSMethodSignature(method) => method_signature_to_member(
-                    method,
-                    source,
-                    comments,
-                    exclude.as_deref(),
-                    import_bindings,
-                    current_module_specifier,
-                    current_library,
-                ),
-                TSSignature::TSCallSignatureDeclaration(call) => call_signature_to_member(
-                    call,
-                    source,
-                    comments,
-                    exclude.as_deref(),
-                    import_bindings,
-                    current_module_specifier,
-                    current_library,
-                ),
-                TSSignature::TSIndexSignature(index) => index_signature_to_member(
-                    index,
-                    source,
-                    comments,
-                    exclude.as_deref(),
-                    import_bindings,
-                    current_module_specifier,
-                    current_library,
-                ),
-                TSSignature::TSConstructSignatureDeclaration(decl) => {
-                    construct_signature_to_member(
-                        decl,
-                        source,
-                        comments,
-                        exclude.as_deref(),
-                        import_bindings,
-                        current_module_specifier,
-                        current_library,
-                    )
-                }
-            }
+            let exclude = member_exclusion_starts(signature, &starts, container_start);
+            env.convert_signature(signature, exclude.as_deref())
         })
         .collect()
+}
+
+struct MemberEnv<'a> {
+    source: &'a str,
+    comments: &'a [Comment],
+    import_bindings: &'a BTreeMap<String, ImportBinding>,
+    module_specifier: &'a str,
+    library: &'a str,
+}
+
+impl MemberEnv<'_> {
+    fn convert_signature(&self, signature: &TSSignature<'_>, exclude: Option<&[u32]>) -> TsMember {
+        use TSSignature as Sig;
+
+        match signature {
+            Sig::TSPropertySignature(property) => property_signature_to_member(
+                property,
+                self.source,
+                self.comments,
+                exclude,
+                self.import_bindings,
+                self.module_specifier,
+                self.library,
+            ),
+            Sig::TSMethodSignature(method) => method_signature_to_member(
+                method,
+                self.source,
+                self.comments,
+                exclude,
+                self.import_bindings,
+                self.module_specifier,
+                self.library,
+            ),
+            Sig::TSCallSignatureDeclaration(call) => call_signature_to_member(
+                call,
+                self.source,
+                self.comments,
+                exclude,
+                self.import_bindings,
+                self.module_specifier,
+                self.library,
+            ),
+            Sig::TSIndexSignature(index) => index_signature_to_member(
+                index,
+                self.source,
+                self.comments,
+                exclude,
+                self.import_bindings,
+                self.module_specifier,
+                self.library,
+            ),
+            Sig::TSConstructSignatureDeclaration(decl) => construct_signature_to_member(
+                decl,
+                self.source,
+                self.comments,
+                exclude,
+                self.import_bindings,
+                self.module_specifier,
+                self.library,
+            ),
+        }
+    }
+}
+
+fn signature_start_positions(signatures: &[TSSignature<'_>]) -> Vec<u32> {
+    signatures.iter().map(|s| s.span().start).collect()
 }
 
 fn member_exclusion_starts(
