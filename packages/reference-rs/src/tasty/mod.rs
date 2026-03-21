@@ -2,6 +2,10 @@
 //!
 //! This module owns the Rust-side scanner that turns user TypeScript source into
 //! a portable, self-contained metadata bundle for docs and MCP use cases.
+//!
+//! `emitted::*` and [`scan::scan_typescript_bundle`] are re-exported for embedders and
+//! tests; they are not referenced from this module tree, so `unused_imports` is
+//! suppressed on those lines only.
 
 mod ast;
 mod constants;
@@ -16,7 +20,9 @@ mod shared;
 #[cfg(test)]
 mod tests;
 
+#[allow(unused_imports)]
 pub use emitted::*;
 pub use request::ScanRequest;
 pub use scan::scan_and_emit_modules;
+#[allow(unused_imports)]
 pub use scan::scan_typescript_bundle;
