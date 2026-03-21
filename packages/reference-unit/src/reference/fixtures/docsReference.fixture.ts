@@ -34,6 +34,25 @@ export interface DocsReferenceButtonState {
   intent: DocsReferenceButtonIntent
 }
 
+export interface DocsReferenceControlBaseProps {
+  /**
+   * Stable id shared across composed controls.
+   */
+  controlId?: string
+}
+
+export interface DocsReferencePressableProps extends DocsReferenceControlBaseProps {
+  /**
+   * Accessibility role applied to the pressable surface.
+   */
+  interactionRole?: 'button' | 'menuitem'
+
+  /**
+   * Shared announcement label for assistive tech.
+   */
+  announceLabel?: string
+}
+
 export type DocsReferenceToneLabels = {
   [K in DocsReferenceButtonVariant as `tone-${K}`]: K
 }
@@ -49,6 +68,7 @@ export type DocsReferenceVariantMeta<T extends string> = T extends 'solid'
     }
 
 export type DocsReferenceButtonVariantMeta = DocsReferenceVariantMeta<DocsReferenceButtonVariant>
+export type DocsReferenceComposedButtonProps = DocsReferenceButtonProps & DocsReferencePressableProps
 
 /**
  * Public button props used to exercise the live reference table.
@@ -159,3 +179,22 @@ export interface DocsReferenceButtonProps {
 }
 
 export type DocsReferenceCurrentIntent = DocsReferenceButtonProps['currentIntent']
+
+/**
+ * Split button props used to exercise inherited member origin tracking.
+ */
+export interface DocsReferenceSplitButtonProps
+  extends DocsReferenceButtonProps,
+    DocsReferencePressableProps {
+  /**
+   * Whether the trailing action opens a menu.
+   */
+  hasMenu?: boolean
+
+  /**
+   * Size preset reapplied for split-button affordances.
+   *
+   * @default "lg"
+   */
+  size?: DocsReferenceButtonSize
+}

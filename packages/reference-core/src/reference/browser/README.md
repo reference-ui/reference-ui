@@ -40,6 +40,9 @@ The browser model now preserves and renders more of the `tasty` type graph:
 - object literal previews when the shape is directly available in the type IR
 - broader JSDoc rendering, including non-`@param` tags like `@returns`,
   `@deprecated`, `@see`, `@example`, and `@remarks`
+- inherited member origin tracking with per-row labels like
+  `from PressableProps`
+- cleaner intersection alias rendering in declared form
 - browser-level tests in `reference-unit` that mount the real React
   `Reference` component and assert on visible output
 
@@ -56,7 +59,7 @@ These should continue to improve inside this package:
 - preserving structured type nodes in the browser model
 - member summary quality
 - JSDoc display quality
-- inherited member presentation and origin labels
+- richer inherited member presentation beyond per-row origin labels
 - intersection, object-shape, and discriminated-union rendering
 - generic parameter display, constraints, and defaults
 
@@ -89,16 +92,15 @@ them honestly.
 
 This is the recommended sequence for the next passes:
 
-1. inherited members and origin tracking
-2. object-derived union/value resolution:
+1. object-derived union/value resolution:
    `keyof typeof ...`, `(typeof obj)[keyof typeof obj]`, `typeof arr[number]`
-3. template literal evaluation
-4. intersection rendering and safe merged previews
-5. discriminated union rendering
-6. generic display improvements
-7. selected utility types:
+2. template literal evaluation
+3. intersection rendering and safe merged previews
+4. discriminated union rendering
+5. generic display improvements
+6. selected utility types:
    `Pick`, `Omit`, `Partial`, `Required`, `Readonly`, maybe `Record`
-8. overload rendering if target libraries need it
+7. overload rendering if target libraries need it
 
 ## Testing Strategy
 

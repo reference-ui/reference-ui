@@ -55,6 +55,15 @@ import { Reference } from '@reference-ui/types'
 
 <Reference name="DocsReferenceButtonProps" />
 
+Inheritance works too, and inherited members can now carry their declaring
+origin in the browser:
+
+```tsx
+<Reference name="DocsReferenceSplitButtonProps" />
+```
+
+<Reference name="DocsReferenceSplitButtonProps" />
+
 Type aliases work too, but they render as a definition block instead of a members table:
 
 ```tsx
@@ -73,6 +82,7 @@ the richer cases the browser now handles:
 <Reference name="DocsReferenceButtonSpacing" />
 <Reference name="DocsReferenceSpacingPreview" />
 <Reference name="DocsReferenceToneLabels" />
+<Reference name="DocsReferenceComposedButtonProps" />
 <Reference name="DocsReferenceButtonVariantMeta" />
 <Reference name="DocsReferenceCurrentIntent" />
 ```
@@ -83,5 +93,6 @@ the richer cases the browser now handles:
 <Reference name="DocsReferenceButtonSpacing" />
 <Reference name="DocsReferenceSpacingPreview" />
 <Reference name="DocsReferenceToneLabels" />
+<Reference name="DocsReferenceComposedButtonProps" />
 <Reference name="DocsReferenceButtonVariantMeta" />
 <Reference name="DocsReferenceCurrentIntent" />

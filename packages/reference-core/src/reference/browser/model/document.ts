@@ -6,6 +6,7 @@ import { createReferenceJsDoc, createReferenceType, createReferenceTypeParameter
 export function createReferenceDocument(
   symbol: TastySymbol,
   members: TastyMember[],
+  extendsChain: TastySymbol[] = [],
   relatedSymbols: TastySymbol[] = [],
   warnings: string[] = [],
 ): ReferenceDocument {
@@ -13,6 +14,8 @@ export function createReferenceDocument(
   const extendsRefs = symbol.getExtends().map(createReferenceSymbolRef)
   const relatedTypes = getReferenceRelatedTypes(symbol.getRaw())
   const definitionType = createReferenceType(symbol.getUnderlyingType()) ?? null
+  const rootRef = createReferenceOwnedSymbolRef(symbol)
+  const memberOrigins = createReferenceMemberOrigins(symbol, extendsChain)
   const symbolLookup = new Map<string, TastySymbol>([
     [symbol.getId(), symbol],
     ...relatedSymbols.map((relatedSymbol) => [relatedSymbol.getId(), relatedSymbol] as const),
@@ -34,8 +37,54 @@ export function createReferenceDocument(
     types: relatedTypes,
     definition: definitionType ? formatReferenceType(definitionType) : symbol.getUnderlyingType()?.describe() ?? null,
     definitionType,
-    members: members.map((member) => createReferenceMemberDocument(member, symbolLookup)),
+    members: members.map((member) =>
+      createReferenceMemberDocument(member, symbolLookup, {
+        declaredBy: memberOrigins.get(member.getId()) ?? rootRef,
+        inheritedFrom: getReferenceMemberInheritedFrom(member, memberOrigins, symbol, rootRef),
+      }),
+    ),
   }
+}
+
+function createReferenceMemberOrigins(
+  rootSymbol: TastySymbol,
+  extendsChain: TastySymbol[],
+): Map<string, ReferenceSymbolRef> {
+  const origins = new Map<string, ReferenceSymbolRef>()
+
+  for (const currentSymbol of [...extendsChain, rootSymbol]) {
+    const ownerRef = createReferenceOwnedSymbolRef(currentSymbol)
+
+    for (const member of currentSymbol.getMembers()) {
+      origins.set(member.getId(), ownerRef)
+    }
+  }
+
+  return origins
+}
+
+function getReferenceMemberInheritedFrom(
+  member: TastyMember,
+  memberOrigins: Map<string, ReferenceSymbolRef>,
+  rootSymbol: TastySymbol,
+  rootRef: ReferenceSymbolRef,
+): ReferenceSymbolRef | undefined {
+  const declaredBy = memberOrigins.get(member.getId()) ?? rootRef
+  if (declaredBy.id === rootSymbol.getId()) return undefined
+  return declaredBy
+}
+
+function createReferenceOwnedSymbolRef(symbol: TastySymbol): ReferenceSymbolRef {
+  const ref: ReferenceSymbolRef = {
+    id: symbol.getId(),
+    name: symbol.getName(),
+    kind: symbol.getKind(),
+  }
+  const library = symbol.getLibrary()
+  if (library) {
+    ref.library = library
+  }
+  return ref
 }
 
 function createReferenceSymbolRef(ref: TastySymbolRef | RawTastySymbolRef): ReferenceSymbolRef {
@@ -51,7 +100,8 @@ function createReferenceSymbolRef(ref: TastySymbolRef | RawTastySymbolRef): Refe
   return {
     id: ref.id,
     name: ref.name,
-    library: ref.library,
+    kind: 'kind' in ref && typeof ref.kind === 'string' ? ref.kind : undefined,
+    library: typeof ref.library === 'string' ? ref.library : undefined,
   }
 }
 

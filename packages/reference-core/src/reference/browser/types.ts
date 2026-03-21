@@ -190,6 +190,8 @@ export interface ReferenceMemberDocument {
   kind: RawTastyMemberKind
   optional: boolean
   readonly: boolean
+  declaredBy: ReferenceSymbolRef
+  inheritedFrom?: ReferenceSymbolRef
   semanticKind: TastySemanticKind
   defaultValue?: string
   typeLabel: string

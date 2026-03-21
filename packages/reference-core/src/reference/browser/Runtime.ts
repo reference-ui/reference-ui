@@ -11,6 +11,7 @@ export interface ReferenceRuntime {
 export interface ReferenceRuntimeData {
   symbol: TastySymbol
   members: TastyMember[]
+  extendsChain: TastySymbol[]
   relatedSymbols: TastySymbol[]
   warnings: string[]
 }
@@ -32,11 +33,13 @@ async function loadReferenceRuntimeData(
   const api = await getReferenceApi(runtime)
   const symbol = await api.loadSymbolByName(name)
   const members = symbol.getKind() === 'interface' ? await api.graph.getEffectiveMembers(symbol) : []
+  const extendsChain = symbol.getKind() === 'interface' ? await api.graph.loadExtendsChain(symbol) : []
   const relatedSymbols = await loadReferenceRelatedSymbols(api, symbol)
 
   return {
     symbol,
     members,
+    extendsChain,
     relatedSymbols,
     warnings: api.getWarnings(),
   }
@@ -108,7 +111,15 @@ export function useReferenceDocument(
       .load(name)
       .then((data) => {
         if (!active) return
-        setDocument(createReferenceDocument(data.symbol, data.members, data.relatedSymbols, data.warnings))
+        setDocument(
+          createReferenceDocument(
+            data.symbol,
+            data.members,
+            data.extendsChain,
+            data.relatedSymbols,
+            data.warnings,
+          ),
+        )
         setIsLoading(false)
       })
       .catch((error: unknown) => {

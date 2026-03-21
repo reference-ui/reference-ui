@@ -1,4 +1,4 @@
-import { Div } from '@reference-ui/react'
+import { Div, Small } from '@reference-ui/react'
 import type { ReferenceMemberDocument } from '../types'
 import { MemberDescription } from './MemberDescription'
 import { MemberJsDoc } from './MemberJsDoc'
@@ -20,7 +20,12 @@ export function ReferenceMemberRow({ member }: { member: ReferenceMemberDocument
         borderBottomColor: 'reference.border',
       }}
     >
-      <MemberName name={member.name} />
+      <Div display="grid" gap="reference.xxs">
+        <MemberName name={member.name} />
+        {member.inheritedFrom ? (
+          <Small color="reference.muted">from {member.inheritedFrom.name}</Small>
+        ) : null}
+      </Div>
       <MemberType typeLabel={member.typeLabel} />
 
       <Div display="grid" gap="reference.md" minWidth="0">
