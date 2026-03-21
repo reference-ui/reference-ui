@@ -34,7 +34,7 @@ function writeTastyTypesFixture(coreDir: string, targetDir: string): void {
   mkdirSync(resolve(coreDir, 'src/entry'), { recursive: true })
   writeFileSync(
     resolve(coreDir, 'src/entry/types.ts'),
-    'export { Reference } from "../reference/browser/component"\n'
+    'export { Reference } from "../reference/browser/Reference"\n'
   )
 }
 

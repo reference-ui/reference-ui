@@ -323,4 +323,19 @@ describe('tasty runtime', () => {
 
     expect(results.map((result) => result.name)).toEqual(['ButtonProps', 'ButtonSchema'])
   })
+
+  it('exposes clean jsdoc and signature helpers for docs renderers', async () => {
+    const api = createTastyApi({
+      manifestPath: manifestPath('jsdoc'),
+    })
+
+    const buttonProps = await api.loadSymbolByName('ButtonProps')
+    const size = buttonProps.getMembers().find((member) => member.getName() === 'size')
+
+    expect(buttonProps.getDescription()).toBe('Props for a button.\n\nIncludes common sizing options.')
+    expect(buttonProps.getJsDocTags().map((tag) => tag.getName())).toEqual(['deprecated', 'remarks'])
+    expect(buttonProps.getJsDocTag('deprecated')?.getValue()).toBe('Use NewButtonProps instead.')
+    expect(size?.getDescription()).toBe('Preferred size variant.')
+    expect(size?.getJsDocTag('default')?.getValue()).toBe('"sm"')
+  })
 })

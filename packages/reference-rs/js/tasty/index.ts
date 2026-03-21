@@ -1,6 +1,7 @@
 import type {
   TastyFnParam as RawTastyFnParam,
   TastyInterfaceSymbol as RawTastyInterfaceSymbol,
+  TastyJsDocTag as RawTastyJsDocTag,
   TastyManifest as RawTastyManifest,
   TastyMember as RawTastyMember,
   TastySymbol as RawTastySymbol,
@@ -66,13 +67,28 @@ export interface TastyTypeRef {
   getRaw(): RawTastyTypeRef
   isRaw(): boolean
   getSummary(): string | undefined
+  getLiteralValue(): string | undefined
   isLiteral(): boolean
   isUnion(): boolean
   isArray(): boolean
   isReference(): boolean
+  getUnionTypes(): TastyTypeRef[]
+  getParameters(): TastyFnParam[]
+  getReturnType(): TastyTypeRef | undefined
   getTypeArguments(): TastyTypeRef[]
   getReferencedSymbol(): TastySymbolRef | undefined
   describe(): string
+}
+
+export interface TastyFnParam {
+  getName(): string | null
+  isOptional(): boolean
+  getType(): TastyTypeRef | undefined
+}
+
+export interface TastyJsDocTag {
+  getName(): string
+  getValue(): string | undefined
 }
 
 export interface TastyMember {
@@ -81,6 +97,9 @@ export interface TastyMember {
   isReadonly(): boolean
   getKind(): string
   getType(): TastyTypeRef | undefined
+  getDescription(): string | undefined
+  getJsDocTags(): TastyJsDocTag[]
+  getJsDocTag(name: string): TastyJsDocTag | undefined
   getRaw(): RawTastyMember
 }
 
@@ -99,6 +118,9 @@ export interface TastySymbol {
   getName(): string
   getKind(): TastySymbolKind
   getLibrary(): string | undefined
+  getDescription(): string | undefined
+  getJsDocTags(): TastyJsDocTag[]
+  getJsDocTag(name: string): TastyJsDocTag | undefined
   getRaw(): TastySymbolModel
   getMembers(): TastyMember[]
   getTypeParameters(): RawTastyTypeParameter[]
@@ -485,6 +507,18 @@ class TastySymbolImpl implements TastySymbol {
     return this.entry.library
   }
 
+  getDescription(): string | undefined {
+    return this.raw.description
+  }
+
+  getJsDocTags(): TastyJsDocTag[] {
+    return getJsDocTags(this.raw.jsdoc?.tags)
+  }
+
+  getJsDocTag(name: string): TastyJsDocTag | undefined {
+    return this.getJsDocTags().find((tag) => tag.getName() === name)
+  }
+
   getRaw(): TastySymbolModel {
     return this.raw
   }
@@ -575,8 +609,52 @@ class TastyMemberImpl implements TastyMember {
     return this.api.createTypeRef(this.raw.type)
   }
 
+  getDescription(): string | undefined {
+    return this.raw.description
+  }
+
+  getJsDocTags(): TastyJsDocTag[] {
+    return getJsDocTags(this.raw.jsdoc?.tags)
+  }
+
+  getJsDocTag(name: string): TastyJsDocTag | undefined {
+    return this.getJsDocTags().find((tag) => tag.getName() === name)
+  }
+
   getRaw(): RawTastyMember {
     return this.raw
+  }
+}
+
+class TastyFnParamImpl implements TastyFnParam {
+  constructor(
+    private readonly api: TastyApiRuntime,
+    private readonly raw: RawTastyFnParam
+  ) {}
+
+  getName(): string | null {
+    return this.raw.name
+  }
+
+  isOptional(): boolean {
+    return this.raw.optional
+  }
+
+  getType(): TastyTypeRef | undefined {
+    if (this.raw.typeRef == null) return undefined
+    return this.api.createTypeRef(this.raw.typeRef)
+  }
+}
+
+class TastyJsDocTagImpl implements TastyJsDocTag {
+  constructor(private readonly raw: RawTastyJsDocTag) {}
+
+  getName(): string {
+    return this.raw.name
+  }
+
+  getValue(): string | undefined {
+    return this.raw.value
   }
 }
 
@@ -603,6 +681,11 @@ class TastyTypeRefImpl implements TastyTypeRef {
     return this.raw.summary
   }
 
+  getLiteralValue(): string | undefined {
+    if (isTypeReference(this.raw) || this.raw.kind !== 'literal') return undefined
+    return this.raw.value
+  }
+
   isLiteral(): boolean {
     return !isTypeReference(this.raw) && this.raw.kind === 'literal'
   }
@@ -617,6 +700,23 @@ class TastyTypeRefImpl implements TastyTypeRef {
 
   isReference(): boolean {
     return isTypeReference(this.raw)
+  }
+
+  getUnionTypes(): TastyTypeRef[] {
+    if (isTypeReference(this.raw) || this.raw.kind !== 'union') return []
+    return this.raw.types.map((item) => this.api.createTypeRef(item))
+  }
+
+  getParameters(): TastyFnParam[] {
+    if (isTypeReference(this.raw)) return []
+    if (this.raw.kind !== 'function' && this.raw.kind !== 'constructor') return []
+    return this.raw.params.map((param) => new TastyFnParamImpl(this.api, param))
+  }
+
+  getReturnType(): TastyTypeRef | undefined {
+    if (isTypeReference(this.raw)) return undefined
+    if (this.raw.kind !== 'function' && this.raw.kind !== 'constructor') return undefined
+    return this.api.createTypeRef(this.raw.returnType)
   }
 
   getTypeArguments(): TastyTypeRef[] {
@@ -728,6 +828,10 @@ function extractChunkSymbol(moduleValue: ModuleNamespace, symbolId: string): Tas
   throw new Error(
     `Missing symbol export in Tasty chunk for id "${symbolId}". Expected a named export "${symbolId}" or a matching default export.`
   )
+}
+
+function getJsDocTags(tags: RawTastyJsDocTag[] | undefined): TastyJsDocTag[] {
+  return (tags ?? []).map((tag) => new TastyJsDocTagImpl(tag))
 }
 
 function normalizeModuleNamespace(value: unknown): ModuleNamespace {
