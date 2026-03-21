@@ -125,6 +125,15 @@ describe('Reference component', () => {
     expect(screen.queryByText('[tuple]')).not.toBeInTheDocument()
   })
 
+  it('renders mapped aliases with the full mapped expression', async () => {
+    await renderReference('DocsReferenceToneLabels')
+
+    expect(screen.getByText('DocsReferenceToneLabels')).toBeInTheDocument()
+    expect(screen.getByText('Type alias')).toBeInTheDocument()
+    expectVisibleText('{ [K in DocsReferenceButtonVariant as `tone-${K}`]: K }')
+    expect(screen.queryByText((content) => content === 'mapped')).not.toBeInTheDocument()
+  })
+
   it('renders template literal aliases with the full template expression', async () => {
     await renderReference('DocsReferenceToneKey')
 
@@ -140,6 +149,16 @@ describe('Reference component', () => {
     expect(screen.getByText('DocsReferenceSpacingPreview')).toBeInTheDocument()
     expect(screen.getByText('Type alias')).toBeInTheDocument()
     expectVisibleText('{ compact: 4; comfortable: 8; spacious: 12 }')
+  })
+
+  it('renders concrete conditional aliases in their declared form', async () => {
+    await renderReference('DocsReferenceButtonVariantMeta')
+
+    expect(screen.getByText('DocsReferenceButtonVariantMeta')).toBeInTheDocument()
+    expect(screen.getByText('Type alias')).toBeInTheDocument()
+    expectVisibleText(
+      'DocsReferenceVariantMeta<DocsReferenceButtonVariant>',
+    )
   })
 
   it('renders typeof aliases in their declared form when tasty has no resolved object shape', async () => {

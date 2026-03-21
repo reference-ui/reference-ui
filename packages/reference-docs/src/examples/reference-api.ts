@@ -17,6 +17,11 @@ export type DocsReferenceButtonSpacing = typeof docsReferenceTheme.spacing
 export type DocsReferenceButtonPadding = [inline: number, block: number]
 export type DocsReferenceButtonIntent = keyof typeof docsReferenceTheme.intents
 export type DocsReferenceToneKey = `tone-${DocsReferenceButtonVariant}`
+export type DocsReferenceSpacingPreview = {
+  compact: 4
+  comfortable: 8
+  spacious: 12
+}
 
 export interface DocsReferencePressEvent {
   pointerType: 'mouse' | 'touch' | 'keyboard'
@@ -42,6 +47,8 @@ export type DocsReferenceVariantMeta<T extends string> = T extends 'solid'
       emphasis: 'low'
       fill: false
     }
+
+export type DocsReferenceButtonVariantMeta = DocsReferenceVariantMeta<DocsReferenceButtonVariant>
 
 /**
  * Public button props used to exercise the live reference table.
@@ -108,9 +115,19 @@ export interface DocsReferenceButtonProps {
   toneLabels?: DocsReferenceToneLabels
 
   /**
+   * Generated tone key label.
+   */
+  toneKey?: DocsReferenceToneKey
+
+  /**
+   * Expanded object preview for spacing tokens.
+   */
+  spacingPreview?: DocsReferenceSpacingPreview
+
+  /**
    * Conditional metadata derived from the current variant.
    */
-  variantMeta?: DocsReferenceVariantMeta<DocsReferenceButtonVariant>
+  variantMeta?: DocsReferenceButtonVariantMeta
 
   /**
    * Called when the button is pressed.
@@ -125,6 +142,9 @@ export interface DocsReferenceButtonProps {
    *
    * @param icon - Icon name that would be rendered by default.
    * @param size - Resolved button size.
+   * @returns Rendered icon markup.
+   * @see icon
+   * @example renderIcon('plus', 'md')
    */
   renderIcon?: (icon: DocsReferenceIconName, size: DocsReferenceButtonSize) => string
 
@@ -132,6 +152,8 @@ export interface DocsReferenceButtonProps {
    * Optional formatter for the visible label.
    *
    * @param value - Current label text.
+   * @deprecated Prefer a direct render override.
+   * @remarks Useful for exercising non-param JSDoc tags in the browser.
    */
   formatLabel?: (value: string) => string
 }
