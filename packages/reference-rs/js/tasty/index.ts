@@ -54,5 +54,6 @@ export {
 } from './semantic'
 export { formatTastyCallableSignature, getTastyTypeInlineVariants } from './display'
 export { getTastyCallableParameters } from './callables'
+export { getTastyResolvedType } from './resolution'
 export { createTastyApi, createTastyApiFromManifest } from './internal/api-runtime'
 export { createTastyBrowserRuntime } from './internal/browser-runtime'

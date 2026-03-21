@@ -10,12 +10,16 @@ export const docsReferenceTheme = {
   },
 } as const
 
+export const docsReferenceSizeTokens = ['sm', 'md', 'lg'] as const
+
 export type DocsReferenceButtonVariant = 'solid' | 'ghost' | 'outline'
 export type DocsReferenceButtonSize = 'sm' | 'md' | 'lg'
 export type DocsReferenceIconName = 'plus' | 'minus' | 'chevron-down'
 export type DocsReferenceButtonSpacing = typeof docsReferenceTheme.spacing
 export type DocsReferenceButtonPadding = [inline: number, block: number]
 export type DocsReferenceButtonIntent = keyof typeof docsReferenceTheme.intents
+export type DocsReferenceResolvedSize = (typeof docsReferenceSizeTokens)[number]
+export type DocsReferenceResolvedTone = `tone-${(typeof docsReferenceSizeTokens)[number]}`
 export type DocsReferenceToneKey = `tone-${DocsReferenceButtonVariant}`
 export type DocsReferenceSpacingPreview = {
   compact: 4
@@ -157,6 +161,11 @@ export interface DocsReferenceButtonProps {
   currentIntent?: DocsReferenceButtonState['intent']
 
   /**
+   * Size token derived from a readonly tuple source.
+   */
+  resolvedSize?: DocsReferenceResolvedSize
+
+  /**
    * Labels keyed by the generated tone name.
    */
   toneLabels?: DocsReferenceToneLabels
@@ -165,6 +174,11 @@ export interface DocsReferenceButtonProps {
    * Generated tone key label.
    */
   toneKey?: DocsReferenceToneKey
+
+  /**
+   * Tone label derived from a readonly tuple source.
+   */
+  resolvedTone?: DocsReferenceResolvedTone
 
   /**
    * Expanded object preview for spacing tokens.

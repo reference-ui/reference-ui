@@ -178,6 +178,7 @@ pub enum TypeRef {
     IndexedAccess {
         object: Box<TypeRef>,
         index: Box<TypeRef>,
+        resolved: Option<Box<TypeRef>>,
     },
     /// Function type `(params) => returnType`: for callback properties etc.; params include name and type.
     Function {
@@ -195,10 +196,12 @@ pub enum TypeRef {
     TypeOperator {
         operator: TypeOperatorKind,
         target: Box<TypeRef>,
+        resolved: Option<Box<TypeRef>>,
     },
     /// Type query like `typeof themeConfig`; expression is preserved structurally.
     TypeQuery {
         expression: String,
+        resolved: Option<Box<TypeRef>>,
     },
     /// Conditional type `T extends U ? A : B`; preserved structurally without evaluation.
     Conditional {
@@ -219,6 +222,7 @@ pub enum TypeRef {
     /// Template literal type like `` `size-${"sm" | "lg"}` `` with alternating text/type parts.
     TemplateLiteral {
         parts: Vec<TemplateLiteralPart>,
+        resolved: Option<Box<TypeRef>>,
     },
     /// Raw source-preserved type expression.
     ///

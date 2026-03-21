@@ -287,6 +287,7 @@ function collectUserOwnedReferencesFromTypeRef(typeRef: RawTastyTypeRef, refs: R
     case 'indexed_access':
       collectUserOwnedReferencesFromTypeRef(typeRef.object, refs)
       collectUserOwnedReferencesFromTypeRef(typeRef.index, refs)
+      if (typeRef.resolved) collectUserOwnedReferencesFromTypeRef(typeRef.resolved, refs)
       return
     case 'function':
       for (const param of typeRef.params) {
@@ -306,6 +307,10 @@ function collectUserOwnedReferencesFromTypeRef(typeRef: RawTastyTypeRef, refs: R
       return
     case 'type_operator':
       collectUserOwnedReferencesFromTypeRef(typeRef.target, refs)
+      if (typeRef.resolved) collectUserOwnedReferencesFromTypeRef(typeRef.resolved, refs)
+      return
+    case 'type_query':
+      if (typeRef.resolved) collectUserOwnedReferencesFromTypeRef(typeRef.resolved, refs)
       return
     case 'conditional':
       collectUserOwnedReferencesFromTypeRef(typeRef.checkType, refs)
@@ -322,6 +327,7 @@ function collectUserOwnedReferencesFromTypeRef(typeRef: RawTastyTypeRef, refs: R
       for (const part of typeRef.parts) {
         if (part.kind === 'type') collectUserOwnedReferencesFromTypeRef(part.value, refs)
       }
+      if (typeRef.resolved) collectUserOwnedReferencesFromTypeRef(typeRef.resolved, refs)
       return
     default:
       return

@@ -95,9 +95,14 @@ fn collect_type_ref_references(type_ref: &TypeRef, references: &mut Vec<TypeRef>
         TypeRef::Array { element } => collect_type_ref_references(element, references),
         TypeRef::Tuple { elements } => collect_tuple_element_references(elements, references),
         TypeRef::Object { members } => collect_member_type_references(members, references),
-        TypeRef::IndexedAccess { object, index } => {
+        TypeRef::IndexedAccess {
+            object,
+            index,
+            resolved,
+        } => {
             collect_type_ref_references(object, references);
             collect_type_ref_references(index, references);
+            collect_optional_type_ref_references(resolved.as_deref(), references);
         }
         TypeRef::Function {
             params,
@@ -118,8 +123,15 @@ fn collect_type_ref_references(type_ref: &TypeRef, references: &mut Vec<TypeRef>
             collect_fn_params_references(params, references);
             collect_type_ref_references(return_type, references);
         }
-        TypeRef::TypeOperator { target, .. } => collect_type_ref_references(target, references),
-        TypeRef::TypeQuery { .. } => {}
+        TypeRef::TypeOperator {
+            target, resolved, ..
+        } => {
+            collect_type_ref_references(target, references);
+            collect_optional_type_ref_references(resolved.as_deref(), references);
+        }
+        TypeRef::TypeQuery { resolved, .. } => {
+            collect_optional_type_ref_references(resolved.as_deref(), references)
+        }
         TypeRef::Conditional {
             check_type,
             extends_type,
@@ -141,8 +153,9 @@ fn collect_type_ref_references(type_ref: &TypeRef, references: &mut Vec<TypeRef>
             collect_optional_type_ref_references(name_type.as_deref(), references);
             collect_optional_type_ref_references(value_type.as_deref(), references);
         }
-        TypeRef::TemplateLiteral { parts } => {
-            collect_template_literal_part_references(parts, references)
+        TypeRef::TemplateLiteral { parts, resolved } => {
+            collect_template_literal_part_references(parts, references);
+            collect_optional_type_ref_references(resolved.as_deref(), references)
         }
         _ => {}
     }

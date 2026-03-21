@@ -73,6 +73,9 @@ pub enum TastyStructuredTypeRef {
     IndexedAccess {
         object: Box<TastyTypeRef>,
         index: Box<TastyTypeRef>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        resolved: Option<Box<TastyTypeRef>>,
     },
     Function {
         params: Vec<TastyFnParam>,
@@ -89,9 +92,15 @@ pub enum TastyStructuredTypeRef {
     TypeOperator {
         operator: TastyTypeOperatorKind,
         target: Box<TastyTypeRef>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        resolved: Option<Box<TastyTypeRef>>,
     },
     TypeQuery {
         expression: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        resolved: Option<Box<TastyTypeRef>>,
     },
     Conditional {
         check_type: Box<TastyTypeRef>,
@@ -111,6 +120,9 @@ pub enum TastyStructuredTypeRef {
     },
     TemplateLiteral {
         parts: Vec<TastyTemplateLiteralPart>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        resolved: Option<Box<TastyTypeRef>>,
     },
     Raw {
         summary: String,

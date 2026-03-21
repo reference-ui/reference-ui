@@ -4,6 +4,7 @@ import {
   createTastyApi,
   dedupeTastyMembers,
   formatTastyCallableSignature,
+  getTastyResolvedType,
   getTastyMemberSemanticKind,
   getTastyTypeInlineVariants,
   getTastyTypeSemanticKind,
@@ -108,6 +109,25 @@ describe('tasty utilities', () => {
 
     expect(await api.graph.getEffectiveMembers(buttonProps)).toEqual(
       dedupeTastyMembers(await api.graph.flattenInterfaceMembers(buttonProps)),
+    )
+  })
+
+  it('surfaces resolved value-derived types without losing the declared wrapper shape', async () => {
+    const api = createTastyApi({
+      manifestPath: manifestPath('value_resolution'),
+    })
+
+    const intentKey = await api.loadSymbolByName('IntentKey')
+    const sizeValue = await api.loadSymbolByName('SizeValue')
+    const toneLabel = await api.loadSymbolByName('ToneLabel')
+
+    expect(intentKey.getUnderlyingType()?.describe()).toBe('keyof typeof intents')
+    expect(getTastyResolvedType(intentKey.getUnderlyingType())?.describe()).toBe(
+      "'primary' | 'danger'",
+    )
+    expect(sizeValue.getUnderlyingType()?.getResolved()?.describe()).toBe("'sm' | 'md' | 'lg'")
+    expect(getTastyResolvedType(toneLabel.getUnderlyingType())?.describe()).toBe(
+      "'tone-sm' | 'tone-md' | 'tone-lg'",
     )
   })
 })

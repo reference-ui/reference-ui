@@ -1,5 +1,6 @@
 import {
   formatTastyCallableSignature,
+  getTastyResolvedType,
   getTastyTypeInlineVariants,
   normalizeTastyInlineValue,
 } from '@reference-ui/rust/tasty'
@@ -139,6 +140,11 @@ function resolveReferenceSummaryType(
   symbolLookup: Map<string, TastySymbol>,
   visited = new Set<string>(),
 ): TastyTypeRef | undefined {
+  const resolvedType = getTastyResolvedType(type)
+  if (resolvedType && resolvedType !== type) {
+    return resolveReferenceSummaryType(resolvedType, symbolLookup, visited) ?? resolvedType
+  }
+
   if (type.getKind() === 'indexed_access') {
     const resolvedIndexedAccessType = resolveIndexedAccessType(type, symbolLookup, visited)
     if (resolvedIndexedAccessType) {

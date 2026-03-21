@@ -38,6 +38,9 @@ The browser model now preserves and renders more of the `tasty` type graph:
   `{ [K in DocsReferenceButtonVariant as \`tone-\${K}\`]: K }` and
   `T extends 'solid' ? ... : ...`
 - object literal previews when the shape is directly available in the type IR
+- value-derived resolution from `tasty` for exported `const` sources, including:
+  `keyof typeof ...`, `typeof arr[number]`, resolved `typeof` object previews,
+  and evaluated template literals built from those reduced unions
 - broader JSDoc rendering, including non-`@param` tags like `@returns`,
   `@deprecated`, `@see`, `@example`, and `@remarks`
 - inherited member origin tracking with per-row labels like
@@ -67,42 +70,27 @@ These should continue to improve inside this package:
 
 ### `tasty`-dependent wins
 
-These require richer emitted data rather than more formatting in the browser:
+These still require richer emitted data rather than more formatting in the
+browser:
 
-- `keyof typeof intents` -> `'primary' | 'danger'`
-- `(typeof intents)[keyof typeof intents]` -> resolved literal union
-- `typeof sizes[number]` -> `'sm' | 'md' | 'lg'`
-- `typeof docsReferenceTheme.spacing` -> object member preview derived from the
-  backing value
-- evaluated template-literal unions such as
-  `` `tone-${DocsReferenceButtonVariant}` `` -> `'tone-solid' | 'tone-ghost' | 'tone-outline'`
+- evaluated template-literal unions sourced from arbitrary type-level unions such
+  as `` `tone-${DocsReferenceButtonVariant}` `` -> `'tone-solid' | 'tone-ghost' |
+  'tone-outline'`
 - selective utility-type evaluation where the reduced result is materially more
   useful than the declared form
-
-For example:
-
-- `DocsReferenceCurrentIntent` can currently resolve to
-  `keyof typeof docsReferenceTheme.intents`
-- `DocsReferenceButtonSpacing` can currently resolve to
-  `typeof docsReferenceTheme.spacing`
-
-Those are useful intermediate forms, but the final literal/object expansions are
-not available unless `tasty` carries enough value-derived information to compute
-them honestly.
+- deeper merged previews for intersections and utility-expanded object aliases
 
 ## Next Implementation Order
 
 This is the recommended sequence for the next passes:
 
-1. object-derived union/value resolution:
-   `keyof typeof ...`, `(typeof obj)[keyof typeof obj]`, `typeof arr[number]`
-2. template literal evaluation
-3. intersection rendering and safe merged previews
-4. richer discriminated union rendering
-5. richer generic display improvements
-6. selected utility types:
+1. template literal evaluation beyond value-derived tuple/object sources
+2. intersection rendering and safe merged previews
+3. richer discriminated union rendering
+4. richer generic display improvements
+5. selected utility types:
    `Pick`, `Omit`, `Partial`, `Required`, `Readonly`, maybe `Record`
-7. overload rendering if target libraries need it
+6. overload rendering if target libraries need it
 
 ## Testing Strategy
 

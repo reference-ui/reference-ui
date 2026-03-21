@@ -244,6 +244,12 @@ export class TastyTypeRefImpl implements TastyTypeRef {
     return this.raw
   }
 
+  getResolved(): TastyTypeRef | undefined {
+    if (isTypeReference(this.raw)) return undefined
+    const resolved = getResolvedRawTypeRef(this.raw)
+    return resolved ? this.api.createTypeRef(resolved) : undefined
+  }
+
   isRaw(): boolean {
     return isRawStructuredTypeRef(this.raw)
   }
@@ -318,7 +324,7 @@ export class TastyTypeRefImpl implements TastyTypeRef {
       case 'intrinsic':
         return this.raw.name
       case 'literal':
-        return JSON.stringify(this.raw.value)
+        return formatLiteralValue(this.raw.value)
       case 'array':
         return `${this.api.createTypeRef(this.raw.element).describe()}[]`
       case 'union':
@@ -357,4 +363,27 @@ export class TastyTypeRefImpl implements TastyTypeRef {
 
 function createJsDocTags(tags: RawTastyJsDocTag[] | undefined): TastyJsDocTag[] {
   return (tags ?? []).map((tag) => new TastyJsDocTagImpl(tag))
+}
+
+function getResolvedRawTypeRef(raw: Exclude<RawTastyTypeRef, import('../api-types').RawTastyTypeReference>) {
+  switch (raw.kind) {
+    case 'indexed_access':
+    case 'type_operator':
+    case 'type_query':
+    case 'template_literal':
+      return raw.resolved
+    default:
+      return undefined
+  }
+}
+
+function formatLiteralValue(value: string): string {
+  const trimmed = value.trim()
+  if (trimmed.startsWith("'") || trimmed.startsWith('"') || trimmed.startsWith('`')) {
+    return trimmed
+  }
+  if (/^[+-]?\d+(\.\d+)?$/.test(trimmed) || trimmed === 'true' || trimmed === 'false') {
+    return trimmed
+  }
+  return JSON.stringify(trimmed)
 }

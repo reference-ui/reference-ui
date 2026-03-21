@@ -11,6 +11,7 @@ pub(crate) struct ParsedFileAst {
     pub(crate) library: String,
     pub(crate) source: String,
     pub(crate) import_bindings: BTreeMap<String, ImportBinding>,
+    pub(crate) value_bindings: BTreeMap<String, TypeRef>,
     pub(crate) export_bindings: BTreeMap<String, String>,
     pub(crate) exports: Vec<SymbolShell>,
 }
