@@ -10,18 +10,16 @@ pub(super) fn discover_file_ids(
     include: &[String],
 ) -> Result<Vec<String>, String> {
     let walker = build_glob_walker(root_dir, include)?;
-
-    let mut file_ids = BTreeSet::new();
-    for entry in walker {
-        let entry = entry.map_err(|err| format!("failed to walk scan root: {err}"))?;
-        if !is_supported_source_entry(&entry) {
-            continue;
-        }
-
-        file_ids.insert(normalized_file_id(root_dir, entry.path())?);
-    }
-
-    Ok(file_ids.into_iter().collect())
+    walker
+        .into_iter()
+        .try_fold(BTreeSet::new(), |mut file_ids, entry| {
+            let entry = entry.map_err(|err| format!("failed to walk scan root: {err}"))?;
+            if is_supported_source_entry(&entry) {
+                file_ids.insert(normalized_file_id(root_dir, entry.path())?);
+            }
+            Ok(file_ids)
+        })
+        .map(|file_ids| file_ids.into_iter().collect())
 }
 
 fn build_glob_walker(root_dir: &Path, include: &[String]) -> Result<globwalk::GlobWalker, String> {

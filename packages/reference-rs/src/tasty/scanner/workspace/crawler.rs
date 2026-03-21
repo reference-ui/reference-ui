@@ -23,8 +23,7 @@ impl<'a> Crawler<'a> {
         let mut pending = VecDeque::new();
 
         for file_id in entry_points {
-            discovered.insert(file_id.clone(), Self::discovered_user_file(&file_id));
-            pending.push_back(file_id);
+            Self::enqueue_entry_point(&mut discovered, &mut pending, file_id);
         }
 
         Self {
@@ -41,6 +40,15 @@ impl<'a> Crawler<'a> {
         }
 
         Ok(self.discovered)
+    }
+
+    fn enqueue_entry_point(
+        discovered: &mut BTreeMap<String, DiscoveredFile>,
+        pending: &mut VecDeque<String>,
+        file_id: String,
+    ) {
+        discovered.insert(file_id.clone(), Self::discovered_user_file(&file_id));
+        pending.push_back(file_id);
     }
 
     fn crawl_file(&mut self, file_id: &str) -> Result<(), String> {
@@ -90,18 +98,37 @@ impl<'a> Crawler<'a> {
         extract_module_specifiers(file_id, source)
             .into_iter()
             .filter_map(|source_module| {
-                resolve_import_for_discovery(
-                    self.root_dir,
+                self.resolve_import(
                     file_id,
                     &source_module,
                     known_file_ids,
-                    &self.user_file_ids,
                     is_user_file,
                     reexport_specifiers,
                     current_library,
                 )
             })
             .collect()
+    }
+
+    fn resolve_import(
+        &self,
+        file_id: &str,
+        source_module: &str,
+        known_file_ids: &BTreeSet<String>,
+        is_user_file: bool,
+        reexport_specifiers: &BTreeSet<String>,
+        current_library: &str,
+    ) -> Option<ResolvedModule> {
+        resolve_import_for_discovery(
+            self.root_dir,
+            file_id,
+            source_module,
+            known_file_ids,
+            &self.user_file_ids,
+            is_user_file,
+            reexport_specifiers,
+            current_library,
+        )
     }
 
     fn library_of(&self, file_id: &str) -> String {
@@ -111,12 +138,7 @@ impl<'a> Crawler<'a> {
             .unwrap_or_else(|| USER_LIBRARY_NAME.to_string())
     }
 
-    fn reexports_of(
-        &self,
-        is_user_file: bool,
-        file_id: &str,
-        source: &str,
-    ) -> BTreeSet<String> {
+    fn reexports_of(&self, is_user_file: bool, file_id: &str, source: &str) -> BTreeSet<String> {
         if !is_user_file {
             return BTreeSet::new();
         }

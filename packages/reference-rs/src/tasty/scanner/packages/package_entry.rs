@@ -22,12 +22,7 @@ pub(super) fn find_installed_declaration_provider(
         else {
             continue;
         };
-        let file_id = path_to_unix(&entry_path.strip_prefix(root_dir).ok()?.to_path_buf());
-        let resolved = ResolvedModule {
-            module_specifier: module_specifier_for_file_id(&file_id),
-            library: package_name_from_file_id(&file_id),
-            file_id,
-        };
+        let resolved = resolved_module_from_entry_path(root_dir, entry_path, None)?;
 
         if resolved.module_specifier == source_module {
             return Some(resolved);
@@ -54,14 +49,25 @@ pub(super) fn resolve_package_import_from_root(
     } else {
         resolve_package_root_entry(&package_dir, package_json.as_ref())
     }?;
+    resolved_module_from_entry_path(
+        root_dir,
+        entry_path,
+        Some(&source_module_for_package_path(package_name, subpath)),
+    )
+}
 
+fn resolved_module_from_entry_path(
+    root_dir: &Path,
+    entry_path: PathBuf,
+    module_specifier: Option<&str>,
+) -> Option<ResolvedModule> {
     let file_id = path_to_unix(&entry_path.strip_prefix(root_dir).ok()?.to_path_buf());
-    let library = package_name_from_file_id(&file_id);
-
     Some(ResolvedModule {
+        library: package_name_from_file_id(&file_id),
+        module_specifier: module_specifier
+            .map(str::to_string)
+            .unwrap_or_else(|| module_specifier_for_file_id(&file_id)),
         file_id,
-        module_specifier: source_module_for_package_path(package_name, subpath),
-        library,
     })
 }
 
