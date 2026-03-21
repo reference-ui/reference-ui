@@ -133,6 +133,17 @@ describe('Reference component', () => {
     expect(screen.getByText('"lg"')).toBeInTheDocument()
   })
 
+  it('renders generic interface headers with constraints and defaults', async () => {
+    await renderReference('DocsReferenceAsyncState')
+
+    expect(screen.getByText('DocsReferenceAsyncState')).toBeInTheDocument()
+    expect(screen.getByText('Interface')).toBeInTheDocument()
+    expectVisibleText('Generics: TData extends string = DocsReferenceButtonVariant')
+    expectVisibleText('status')
+    expectVisibleText('data')
+    expectVisibleText("'idle' | 'loading' | 'success'")
+  })
+
   it('renders tuple aliases with their element labels instead of placeholder text', async () => {
     await renderReference('DocsReferenceButtonPadding')
 
@@ -174,6 +185,16 @@ describe('Reference component', () => {
     expect(screen.getByText('DocsReferenceComposedButtonProps')).toBeInTheDocument()
     expect(screen.getByText('Type alias')).toBeInTheDocument()
     expectVisibleText('DocsReferenceButtonProps & DocsReferencePressableProps')
+  })
+
+  it('renders discriminated union aliases with their object branches', async () => {
+    await renderReference('DocsReferenceInteractiveElement')
+
+    expect(screen.getByText('DocsReferenceInteractiveElement')).toBeInTheDocument()
+    expect(screen.getByText('Type alias')).toBeInTheDocument()
+    expectVisibleText(
+      "{ kind: 'action'; onPress: () => void; disabled?: boolean } | { kind: 'link'; href: string; target?: '_self' | '_blank' }",
+    )
   })
 
   it('renders concrete conditional aliases in their declared form', async () => {

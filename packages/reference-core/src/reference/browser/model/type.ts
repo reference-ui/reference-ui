@@ -280,7 +280,7 @@ function formatReferenceTypeParameters(typeParameters: ReferenceTypeParameter[])
   return `<${typeParameters.map(formatReferenceTypeParameter).join(', ')}>`
 }
 
-function formatReferenceTypeParameter(param: ReferenceTypeParameter): string {
+export function formatReferenceTypeParameter(param: ReferenceTypeParameter): string {
   const constraint = param.constraint ? ` extends ${formatReferenceType(param.constraint)}` : ''
   const defaultValue = param.default ? ` = ${formatReferenceType(param.default)}` : ''
   return `${param.name}${constraint}${defaultValue}`

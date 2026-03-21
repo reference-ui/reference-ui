@@ -43,6 +43,8 @@ The browser model now preserves and renders more of the `tasty` type graph:
 - inherited member origin tracking with per-row labels like
   `from PressableProps`
 - cleaner intersection alias rendering in declared form
+- generic parameter display with constraints and defaults in document headers
+- discriminated union aliases rendered in declared object-union form
 - browser-level tests in `reference-unit` that mount the real React
   `Reference` component and assert on visible output
 
@@ -60,8 +62,8 @@ These should continue to improve inside this package:
 - member summary quality
 - JSDoc display quality
 - richer inherited member presentation beyond per-row origin labels
-- intersection, object-shape, and discriminated-union rendering
-- generic parameter display, constraints, and defaults
+- intersection, object-shape, and richer discriminated-union rendering
+- richer generic presentation beyond header-level constraints/defaults
 
 ### `tasty`-dependent wins
 
@@ -96,8 +98,8 @@ This is the recommended sequence for the next passes:
    `keyof typeof ...`, `(typeof obj)[keyof typeof obj]`, `typeof arr[number]`
 2. template literal evaluation
 3. intersection rendering and safe merged previews
-4. discriminated union rendering
-5. generic display improvements
+4. richer discriminated union rendering
+5. richer generic display improvements
 6. selected utility types:
    `Pick`, `Omit`, `Partial`, `Required`, `Readonly`, maybe `Record`
 7. overload rendering if target libraries need it

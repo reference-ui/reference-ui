@@ -53,9 +53,36 @@ export interface DocsReferencePressableProps extends DocsReferenceControlBasePro
   announceLabel?: string
 }
 
+/**
+ * Generic async state used to exercise constraints and defaults in the header.
+ */
+export interface DocsReferenceAsyncState<TData extends string = DocsReferenceButtonVariant> {
+  /**
+   * Current lifecycle marker for the async workflow.
+   */
+  status: 'idle' | 'loading' | 'success'
+
+  /**
+   * Last resolved payload when the state is successful.
+   */
+  data?: TData
+}
+
 export type DocsReferenceToneLabels = {
   [K in DocsReferenceButtonVariant as `tone-${K}`]: K
 }
+
+export type DocsReferenceInteractiveElement =
+  | {
+      kind: 'action'
+      onPress: () => void
+      disabled?: boolean
+    }
+  | {
+      kind: 'link'
+      href: string
+      target?: '_self' | '_blank'
+    }
 
 export type DocsReferenceVariantMeta<T extends string> = T extends 'solid'
   ? {

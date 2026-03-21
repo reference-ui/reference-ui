@@ -1,4 +1,5 @@
 import { Div, H2, P, Small } from '@reference-ui/react'
+import { formatReferenceTypeParameter } from '../model'
 import type { ReferenceDocument } from '../types'
 import { ReferenceMemberList } from './ReferenceMemberList'
 import { ReferenceTypeAliasDefinition } from './ReferenceTypeAliasDefinition'
@@ -15,8 +16,10 @@ export function ReferenceDocumentView({ document }: { document: ReferenceDocumen
           <Small color="reference.muted">{document.kindLabel}</Small>
         </Div>
         {document.description ? <P margin="0">{document.description}</P> : null}
-        {document.typeParameters.length > 0 ? (
-          <Small color="reference.muted">Generics: {document.typeParameters.join(', ')}</Small>
+        {document.typeParameterDetails.length > 0 ? (
+          <Small color="reference.muted">
+            Generics: {document.typeParameterDetails.map(formatReferenceTypeParameter).join(', ')}
+          </Small>
         ) : null}
         {document.extendsNames.length > 0 ? (
           <Small color="reference.muted">Extends: {document.extendsNames.join(', ')}</Small>
