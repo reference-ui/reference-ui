@@ -20,16 +20,18 @@ fn extract_module_specifiers_with(
 ) -> Vec<String> {
     let allocator = Allocator::default();
     let source_type = SourceType::from_path(file_id).unwrap_or_default();
-    let parse_result = Parser::new(&allocator, source, source_type).parse();
-    let mut modules = Vec::new();
+    let program = Parser::new(&allocator, source, source_type).parse().program;
+    let mut module_specifiers = Vec::new();
 
-    for statement in parse_result.program.body.iter() {
-        if let Some(module) = module_specifier_from_statement(statement, source, include_imports) {
-            modules.push(module);
+    for statement in &program.body {
+        if let Some(module_specifier) =
+            module_specifier_from_statement(statement, source, include_imports)
+        {
+            module_specifiers.push(module_specifier);
         }
     }
 
-    modules
+    module_specifiers
         .into_iter()
         .map(normalize_module_specifier)
         .collect()

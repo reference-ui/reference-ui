@@ -11,6 +11,10 @@ fn stable_hash_symbol_id(symbol_id: &str) -> u64 {
         .fold(FNV_OFFSET, |h, b| h.wrapping_mul(FNV_PRIME) ^ u64::from(b))
 }
 
+fn export_name_for_symbol_id(symbol_id: &str, hash_symbol_id: impl Fn(&str) -> u64) -> String {
+    format!("_{:016x}", hash_symbol_id(symbol_id))
+}
+
 pub(crate) fn build_symbol_export_names(
     bundle: &TypeScriptBundle,
 ) -> Result<BTreeMap<String, String>, String> {
@@ -28,7 +32,7 @@ where
     let mut symbol_ids_by_export_name = BTreeMap::new();
 
     for symbol_id in bundle.symbols.keys() {
-        let export_name = format!("_{:016x}", hash_symbol_id(symbol_id));
+        let export_name = export_name_for_symbol_id(symbol_id, &hash_symbol_id);
         ensure_unique_export_name(
             &mut symbol_ids_by_export_name,
             export_name.clone(),

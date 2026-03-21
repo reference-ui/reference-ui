@@ -17,7 +17,8 @@ pub(super) fn resolve_import_for_discovery(
     reexport_specifiers: &BTreeSet<String>,
     current_library: &str,
 ) -> Option<ResolvedModule> {
-    if source_module.starts_with('.') {
+    let is_relative_import = source_module.starts_with('.');
+    if is_relative_import {
         return resolve_relative_import_for_discovery(
             root_dir,
             current_file_id,
@@ -29,7 +30,9 @@ pub(super) fn resolve_import_for_discovery(
 
     // User files only pull external libraries into the graph when the user
     // re-exports them. Plain imports are not part of the public bridge.
-    if should_skip_user_external_import(is_user_file, reexport_specifiers, source_module) {
+    let should_skip_external_import =
+        should_skip_user_external_import(is_user_file, reexport_specifiers, source_module);
+    if should_skip_external_import {
         return None;
     }
 

@@ -121,11 +121,7 @@ pub(super) fn emit_ref_array(refs: Vec<SymbolRef>) -> Result<String, String> {
 }
 
 pub(super) fn emit_ref_object(reference: &SymbolRef) -> Result<String, String> {
-    Ok(emit_object(vec![
-        emit_field("id", to_js_literal(&reference.id)?),
-        emit_field("name", to_js_literal(&reference.name)?),
-        emit_field("library", to_js_literal(&reference.library)?),
-    ]))
+    Ok(emit_object(symbol_ref_fields(reference)?))
 }
 
 fn push_symbol_metadata_fields(
@@ -255,4 +251,12 @@ fn external_reference_descriptor(name: &str, source_module: Option<&str>) -> Sym
         name: name.to_string(),
         library: source_module.unwrap_or(USER_LIBRARY_NAME).to_string(),
     }
+}
+
+pub(super) fn symbol_ref_fields(reference: &SymbolRef) -> Result<Vec<String>, String> {
+    Ok(vec![
+        emit_field("id", to_js_literal(&reference.id)?),
+        emit_field("name", to_js_literal(&reference.name)?),
+        emit_field("library", to_js_literal(&reference.library)?),
+    ])
 }
