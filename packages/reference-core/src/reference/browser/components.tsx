@@ -1,5 +1,11 @@
 import * as React from 'react'
-import type { ReferenceDocument, ReferenceMemberDocument } from './types'
+import type {
+  ReferenceDocument,
+  ReferenceMemberDocument,
+  ReferenceMemberTypeSummary,
+  ReferenceParamDoc,
+  ReferenceValueOption,
+} from './types'
 import { Code, Div, H2, P, Small, Span } from '@reference-ui/react'
 
 interface ReferenceFrameProps {
@@ -14,11 +20,14 @@ interface ReferenceDocumentViewProps {
   document: ReferenceDocument
 }
 
-interface ReferenceTagListProps {
-  tags: ReferenceMemberDocument['tags']
+const MEMBER_GRID_COLUMNS = 'minmax(0, 13rem) minmax(0, 9rem) minmax(0, 1fr)'
+const REFERENCE_CODE_RESET_CSS = {
+  background: 'transparent',
+  color: 'inherit',
+  padding: '0',
+  borderRadius: '0',
+  boxShadow: 'none',
 }
-
-const MEMBER_GRID_COLUMNS = 'minmax(0, 12rem) minmax(0, 8rem) minmax(0, 1fr)'
 
 export function ReferenceFrame({ children }: ReferenceFrameProps) {
   return (
@@ -29,7 +38,8 @@ export function ReferenceFrame({ children }: ReferenceFrameProps) {
         borderWidth: '1px',
         borderStyle: 'solid',
         borderColor: 'reference.border',
-        padding: 'reference.lg',
+        borderRadius: '0.75rem',
+        padding: 'reference.xl',
       }}
     >
       {children}
@@ -51,7 +61,9 @@ export function ReferenceDocumentView({ document }: ReferenceDocumentViewProps) 
       <Div display="grid" gap="reference.sm">
         <Div display="flex" alignItems="center" gap="reference.sm" flexWrap="wrap">
           <H2 margin="0" fontSize="1rem" color="reference.foreground">
-            <Code fontFamily="reference.mono">{document.name}</Code>
+            <Code fontFamily="reference.mono" css={REFERENCE_CODE_RESET_CSS}>
+              {document.name}
+            </Code>
           </H2>
           <Small color="reference.muted">{document.kindLabel}</Small>
         </Div>
@@ -75,13 +87,20 @@ export function ReferenceDocumentView({ document }: ReferenceDocumentViewProps) 
 
 function ReferenceTypeAliasDefinition({ definition }: { definition: string | null }) {
   return (
-    <Div display="grid" gap="reference.sm">
+    <Div display="grid" gap="reference.sm" paddingTop="reference.sm">
       <Small color="reference.muted">Definition</Small>
       <Code
         display="block"
         fontFamily="reference.mono"
-        padding="reference.sm"
-        background="reference.subtleBackground"
+        css={{
+          padding: '0.875rem 1rem',
+          background: 'reference.primarySoftBackground',
+          borderWidth: '1px',
+          borderStyle: 'solid',
+          borderColor: 'reference.primarySoftBorder',
+          borderRadius: '0.75rem',
+          color: 'reference.primarySoftForeground',
+        }}
       >
         {definition ?? 'unknown'}
       </Code>
@@ -99,8 +118,14 @@ function ReferenceMemberList({ members }: { members: ReferenceMemberDocument[] }
   }
 
   return (
-    <Div>
-      {members.map(member => (
+    <Div
+      css={{
+        borderTopWidth: '1px',
+        borderTopStyle: 'solid',
+        borderTopColor: 'reference.border',
+      }}
+    >
+      {members.map((member) => (
         <ReferenceMemberRow key={member.id} member={member} />
       ))}
     </Div>
@@ -115,44 +140,65 @@ function ReferenceMemberRow({ member }: { member: ReferenceMemberDocument }) {
         gridTemplateColumns: MEMBER_GRID_COLUMNS,
         columnGap: '1rem',
         alignItems: 'start',
-        paddingBlock: '1rem',
-        borderTopWidth: '1px',
-        borderTopStyle: 'solid',
-        borderTopColor: 'reference.border',
+        paddingBlock: '1.25rem',
+        borderBottomWidth: '1px',
+        borderBottomStyle: 'solid',
+        borderBottomColor: 'reference.border',
       }}
     >
-      <Div>
-        <Code fontFamily="reference.mono">{member.name}</Code>
+      <Div paddingTop="reference.xs">
+        <Code fontFamily="reference.mono" css={REFERENCE_CODE_RESET_CSS}>
+          {member.name}
+        </Code>
       </Div>
 
-      <Div>
-        <Code fontFamily="reference.mono">{member.typeLabel}</Code>
+      <Div paddingTop="reference.xs">
+        <Code fontFamily="reference.mono" color="reference.muted" css={REFERENCE_CODE_RESET_CSS}>
+          {member.typeLabel}
+        </Code>
       </Div>
 
-      <Div display="grid" gap="reference.sm">
-        {member.tags.length > 0 ? <ReferenceTagList tags={member.tags} /> : null}
-        {member.description ? (
+      <Div display="grid" gap="reference.md">
+        {member.summary.memberTypeSummary ? (
+          <ReferenceMemberTypeSummaryView summary={member.summary.memberTypeSummary} />
+        ) : null}
+        {member.summary.description ? (
           <P margin="0" color="reference.foreground">
-            {member.description}
+            {member.summary.description}
           </P>
         ) : null}
-        {member.params.length > 0 ? <ReferenceParamList member={member} /> : null}
+        {member.summary.paramDocs.length > 0 ? (
+          <ReferenceParamList memberId={member.id} params={member.summary.paramDocs} />
+        ) : null}
       </Div>
     </Div>
   )
 }
 
-function ReferenceParamList({ member }: { member: ReferenceMemberDocument }) {
+function ReferenceParamList({ memberId, params }: { memberId: string; params: ReferenceParamDoc[] }) {
   return (
-    <Div display="grid" gap="reference.xs">
-      {member.params.map(param => (
-        <Div key={`${member.id}-${param.name}`} display="grid" gap="reference.xxs">
+    <Div
+      display="grid"
+      gap="reference.sm"
+      css={{
+        paddingTop: '0.875rem',
+        borderTopWidth: '1px',
+        borderTopStyle: 'solid',
+        borderTopColor: 'reference.border',
+      }}
+    >
+      {params.map(param => (
+        <Div key={`${memberId}-${param.name}`} display="grid" gap="reference.xxs">
           <Div display="flex" alignItems="center" gap="reference.xs" flexWrap="wrap">
             <Small color="reference.muted">Param</Small>
-            <Code fontFamily="reference.mono">{param.name}</Code>
+            <Code fontFamily="reference.mono" css={REFERENCE_CODE_RESET_CSS}>
+              {param.name}
+            </Code>
             {param.type ? (
               <Small color="reference.muted">
-                <Code fontFamily="reference.mono">{param.type}</Code>
+                <Code fontFamily="reference.mono" css={REFERENCE_CODE_RESET_CSS}>
+                  {param.type}
+                </Code>
               </Small>
             ) : null}
             {param.optional ? <Small color="reference.muted">optional</Small> : null}
@@ -168,28 +214,73 @@ function ReferenceParamList({ member }: { member: ReferenceMemberDocument }) {
   )
 }
 
-function ReferenceTagList({ tags }: ReferenceTagListProps) {
+function ReferenceMemberTypeSummaryView({ summary }: { summary: ReferenceMemberTypeSummary }) {
+  switch (summary.kind) {
+    case 'valueSet':
+      return <ReferenceValueSet options={summary.options} />
+    case 'callSignature':
+    case 'typeExpression':
+    case 'opaqueType':
+      return <ReferenceSummaryText text={summary.text} />
+    default:
+      return null
+  }
+}
+
+function ReferenceSummaryText({ text }: { text: string }) {
+  return (
+    <Span
+      css={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        minHeight: '2rem',
+        width: 'fit-content',
+        maxWidth: '100%',
+        paddingInline: '0.75rem',
+        borderWidth: '1px',
+        borderStyle: 'solid',
+        borderColor: 'reference.primarySoftBorder',
+        borderRadius: '0.5rem',
+        background: 'reference.primarySoftBackground',
+        color: 'reference.primarySoftForeground',
+      }}
+    >
+      <Code fontFamily="reference.mono" css={REFERENCE_CODE_RESET_CSS}>
+        {text}
+      </Code>
+    </Span>
+  )
+}
+
+function ReferenceValueSet({ options }: { options: ReferenceValueOption[] }) {
   return (
     <Div display="flex" gap="reference.sm" flexWrap="wrap">
-      {tags.map(tag => (
-        <Span
-          key={`${tag.highlighted ? 'highlighted' : 'default'}-${tag.label}`}
-          css={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            minHeight: '2rem',
-            paddingInline: '0.75rem',
-            borderWidth: '1px',
-            borderStyle: 'solid',
-            borderColor: tag.highlighted ? 'reference.foreground' : 'reference.border',
-            borderRadius: '0.375rem',
-            background: tag.highlighted ? 'reference.foreground' : 'reference.subtleBackground',
-            color: tag.highlighted ? 'reference.background' : 'reference.foreground',
-          }}
-        >
-          <Code fontFamily="reference.mono">{tag.label}</Code>
-        </Span>
+      {options.map(option => (
+        <ReferenceValueOptionPill key={`${option.isDefault ? 'default' : 'value'}-${option.label}`} option={option} />
       ))}
     </Div>
+  )
+}
+
+function ReferenceValueOptionPill({ option }: { option: ReferenceValueOption }) {
+  return (
+    <Span
+      css={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        minHeight: '2rem',
+        paddingInline: '0.75rem',
+        borderWidth: '1px',
+        borderStyle: 'solid',
+        borderColor: option.isDefault ? 'reference.primary' : 'reference.primarySoftBorder',
+        borderRadius: '9999px',
+        background: option.isDefault ? 'reference.primary' : 'reference.primarySoftBackground',
+        color: option.isDefault ? 'reference.primaryForeground' : 'reference.primarySoftForeground',
+      }}
+    >
+      <Code fontFamily="reference.mono" css={REFERENCE_CODE_RESET_CSS}>
+        {option.label}
+      </Code>
+    </Span>
   )
 }
