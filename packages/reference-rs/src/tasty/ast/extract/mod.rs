@@ -11,7 +11,7 @@ use std::collections::BTreeMap;
 use oxc_allocator::Allocator;
 use oxc_ast::ast::Statement;
 use oxc_parser::Parser;
-use oxc_span::{SourceType, Span};
+use oxc_span::{GetSpan, SourceType, Span};
 
 use crate::tasty::constants::libraries::USER_LIBRARY_NAME;
 
@@ -232,6 +232,7 @@ fn collect_user_type_shell(
             &scanned_file.module_specifier,
             &scanned_file.library,
             interface_decl,
+            interface_decl.span(),
             &scanned_file.source,
             comments,
             import_bindings,
@@ -243,6 +244,7 @@ fn collect_user_type_shell(
             &scanned_file.module_specifier,
             &scanned_file.library,
             type_alias,
+            type_alias.span(),
             &scanned_file.source,
             comments,
             import_bindings,

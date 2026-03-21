@@ -45,6 +45,9 @@ pub(super) fn leading_comment_for_span(
     if should_exclude_leading_comment(exclude_starts_between, first.span.end, node_start) {
         return None;
     }
+    if !is_contiguous_comment_gap(source, first.span.end as usize, node_start as usize) {
+        return None;
+    }
 
     let (block_start, is_jsdoc) = collect_leading_comment_block(source, &by_end, first);
     let block_end = first.span.end as usize;

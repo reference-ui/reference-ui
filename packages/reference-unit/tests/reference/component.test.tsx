@@ -22,6 +22,10 @@ function expectVisibleText(text: string | RegExp) {
   expect(screen.getAllByText(text).length).toBeGreaterThanOrEqual(1)
 }
 
+function expectTextAbsent(text: string | RegExp) {
+  expect(screen.queryByText(text)).not.toBeInTheDocument()
+}
+
 describe('Reference component', () => {
   it('loads symbol metadata from the generated Tasty manifest at runtime', async () => {
     await renderReference('ReferenceApiFixture')
@@ -109,6 +113,7 @@ describe('Reference component', () => {
     expect(screen.getByText('DocsReferenceCurrentIntent')).toBeInTheDocument()
     expect(screen.getByText('Type alias')).toBeInTheDocument()
     expect(screen.getByText("DocsReferenceButtonProps['currentIntent']")).toBeInTheDocument()
+    expectTextAbsent('Optional formatter for the visible label.')
   })
 
   it('renders keyof typeof aliases as resolved literal unions when tasty emits them', async () => {
@@ -163,6 +168,7 @@ describe('Reference component', () => {
     expect(screen.getByText('Type alias')).toBeInTheDocument()
     expectVisibleText('{ [K in DocsReferenceButtonVariant as `tone-${K}`]: K }')
     expect(screen.queryByText((content) => content === 'mapped')).not.toBeInTheDocument()
+    expectTextAbsent('Last resolved payload when the state is successful.')
   })
 
   it('renders template literal aliases with the full template expression', async () => {
@@ -196,6 +202,7 @@ describe('Reference component', () => {
     expect(screen.getByText('DocsReferenceComposedButtonProps')).toBeInTheDocument()
     expect(screen.getByText('Type alias')).toBeInTheDocument()
     expectVisibleText('DocsReferenceButtonProps & DocsReferencePressableProps')
+    expectTextAbsent('Last resolved payload when the state is successful.')
   })
 
   it('renders discriminated union aliases with their object branches', async () => {
@@ -206,6 +213,7 @@ describe('Reference component', () => {
     expectVisibleText(
       "{ kind: 'action'; onPress: () => void; disabled?: boolean } | { kind: 'link'; href: string; target?: '_self' | '_blank' }",
     )
+    expectTextAbsent('Last resolved payload when the state is successful.')
   })
 
   it('renders concrete conditional aliases in their declared form', async () => {
@@ -216,6 +224,7 @@ describe('Reference component', () => {
     expectVisibleText(
       'DocsReferenceVariantMeta<DocsReferenceButtonVariant>',
     )
+    expectTextAbsent('Last resolved payload when the state is successful.')
   })
 
   it('renders typeof aliases with resolved object previews when tasty emits them', async () => {
