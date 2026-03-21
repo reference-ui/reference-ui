@@ -48,6 +48,8 @@ export type DocsReferenceVariantMeta<T extends string> = T extends 'solid'
       fill: false
     }
 
+export type DocsReferenceButtonVariantMeta = DocsReferenceVariantMeta<DocsReferenceButtonVariant>
+
 /**
  * Public button props used to exercise the live reference table.
  *
@@ -125,7 +127,7 @@ export interface DocsReferenceButtonProps {
   /**
    * Conditional metadata derived from the current variant.
    */
-  variantMeta?: DocsReferenceVariantMeta<DocsReferenceButtonVariant>
+  variantMeta?: DocsReferenceButtonVariantMeta
 
   /**
    * Called when the button is pressed.
