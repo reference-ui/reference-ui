@@ -1,7 +1,7 @@
 import { getTastyMemberSemanticKind } from '@reference-ui/rust/tasty'
 import type { TastyMember, TastySymbol } from '@reference-ui/rust/tasty'
 import type { ReferenceMemberDocument, ReferenceSymbolRef } from '../types'
-import { createReferenceMemberSummary, shouldUseUnionDisplayTypeLabel } from './summary'
+import { createReferenceMemberSummary, getInlineUnionValueSetTypeLabel } from './summary'
 import { getReferenceTypeLabel } from './typeLabel'
 import { createReferenceJsDoc, createReferenceType } from './type'
 
@@ -14,9 +14,8 @@ export function createReferenceMemberDocument(
   },
 ): ReferenceMemberDocument {
   const type = member.getType()
-  const typeLabel = shouldUseUnionDisplayTypeLabel(member, type, symbolLookup)
-    ? 'Union'
-    : getReferenceTypeLabel(member, type)
+  const typeLabel =
+    getInlineUnionValueSetTypeLabel(member, type, symbolLookup) ?? getReferenceTypeLabel(member, type)
 
   return {
     id: member.getId(),
