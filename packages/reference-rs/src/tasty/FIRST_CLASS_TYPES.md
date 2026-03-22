@@ -131,8 +131,18 @@ internal type machinery.” The desired result is:
 1. keep the original alias definition visible and linkable
 2. derive a best-effort **object-like projected surface** for the props a user
    can actually write
-3. preserve provenance so rows can still be traced back to their source aliases
-   or interfaces when needed
+3. prioritize the **final object** a user or tool actually interacts with
+
+For the current intended consumers, that means the projected surface matters
+more than the derivation story:
+
+- docs tables care about the final rows
+- MCP generation cares about the final object schema
+- both mostly benefit from **effective fields**, not a full trace of how each
+  field was derived
+
+So provenance is a secondary concern. It may still be useful for debugging or
+future advanced tooling, but it should not drive the primary API shape.
 
 That implies an important contract distinction:
 
@@ -168,6 +178,17 @@ the practical docs goal is likely:
 That is the shape of usefulness we want: **bounded for the implementation,
 truthful to the underlying type graph, and rich enough for downstream tools to
 present coherently**.
+
+### Product priority
+
+For now, the product priority should be:
+
+1. **final projected object**
+2. **canonical definition + links**
+3. **derivation/provenance**, only where it helps correctness or debugging
+
+That means Tasty should optimize first for returning a trustworthy final object
+surface, not for narrating every transform that produced it.
 
 ---
 
@@ -292,8 +313,7 @@ Only after phases 1 and 2 are stable should Tasty attempt to surface
   instantiations where the source members are already known
 - treat the result as a **derived object-like projection**, not as a claim that
   the alias literally is an interface in the IR
-- carry provenance when projection is lossy or derived, for example “projected
-  from `Omit<ButtonProps, 'color'>`”
+- optimize for the **final projected object** that downstream tools need
 - return **no projection** for deep conditionals, unconstrained mapped types, or
   cases that would require open-ended evaluation
 
@@ -320,7 +340,9 @@ prefer “definition + links” over incorrect rows.
   intersections of projectable inputs, `Omit` / `Pick` with knowable key
   literals, generic alias instantiation, and recursive-boundary preservation for
   `Nested<P>`-style helpers
-- provenance metadata and emitted-contract support are still open
+- a real style-props-shaped case now exists in the fixture suite
+- projection metadata and richer emitted-contract support are still open, but
+  are secondary to the final-object surface
 
 ### Phase 4: Align the JS runtime API
 
@@ -332,8 +354,8 @@ runtime so consumers do not have to infer semantics from raw payloads.
 **Implementation target:**
 
 - keep `getUnderlyingType()` as the primary alias-definition accessor
-- add a dedicated alias-friendly surface such as projected members and/or a
-  canonical-symbol follow helper
+- add a dedicated alias-friendly surface for the **final projected object**
+  (today this starts with projected members)
 - keep `getMembers()` behavior explicit: either remain interface-only, or widen
   it deliberately with a documented projected-members story
 
@@ -356,6 +378,18 @@ runtime so consumers do not have to infer semantics from raw payloads.
   object-like projection API
 - `getMembers()` remains interface-only, so declared members and derived
   projection stay distinct
+
+### Focused next steps
+
+The most useful next steps are:
+
+1. add a more explicit **final projected object** runtime API on top of
+   `projectObjectLikeMembers()`
+2. pressure-test that API against more real style-prop and component-prop shapes
+3. decide what minimal recursive-structure signal downstream tools need beyond
+   flat members
+4. leave provenance as an internal/debug concern unless a concrete consumer
+   proves it needs to be public
 
 ### Phase 5: Adopt the contract downstream
 
