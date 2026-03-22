@@ -20,7 +20,7 @@ export const referenceBrowserTokenConfig = {
       },
       border: {
         value: '#d1d5db',
-        dark: '#374151',
+        dark: '{colors.gray.500}',
       },
       background: {
         value: '#ffffff',
