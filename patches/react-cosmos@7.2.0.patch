@@ -1,0 +1,12 @@
+diff --git a/dist/shared/findNextAvailablePort.js b/dist/shared/findNextAvailablePort.js
+index a39be860fa07e2fc6aceb5ddb10c9560cfe1791b..af664a781f65ff4829aabb95bea5850870a44dcd 100644
+--- a/dist/shared/findNextAvailablePort.js
++++ b/dist/shared/findNextAvailablePort.js
+@@ -24,6 +24,6 @@ export async function findNextAvailablePort(port, retries, retriesLeft = retries
+             socket.destroy();
+             resolve(port);
+         });
+-        socket.connect(port, '0.0.0.0');
++        socket.connect(port, '127.0.0.1');
+     });
+ }

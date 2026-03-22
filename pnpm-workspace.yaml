@@ -7,3 +7,6 @@ ignoredBuiltDependencies:
   - '@swc/core'
   - esbuild
   - nx
+
+patchedDependencies:
+  react-cosmos@7.2.0: patches/react-cosmos@7.2.0.patch
