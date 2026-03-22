@@ -43,4 +43,18 @@ describe('reference output', () => {
     expect(variantMember?.getType()?.describe()).toContain('solid')
     expect(variantMember?.getType()?.describe()).toContain('ghost')
   })
+
+  it('loads ReferenceSystemStyleObject after export type re-export from @reference-ui/react', async () => {
+    const ready = await waitForReferenceArtifacts()
+    expect(ready, 'reference manifest should be emitted by the reference worker').toBe(true)
+
+    const api = createTastyApi({
+      manifestPath: typesPackageManifestPath,
+    })
+    await api.ready()
+
+    const style = await api.loadSymbolByName('ReferenceSystemStyleObject')
+    expect(style.getName()).toBe('ReferenceSystemStyleObject')
+    expect(style.getKind()).toBe('typeAlias')
+  })
 })

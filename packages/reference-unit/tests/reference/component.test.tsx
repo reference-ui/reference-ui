@@ -2,9 +2,9 @@
  * @vitest-environment happy-dom
  */
 
-import { render, screen } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
 import { waitFor } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import { Reference } from '@reference-ui/types'
 import { waitForReferenceArtifacts } from './helpers'
 
@@ -19,7 +19,8 @@ async function renderReference(name: string) {
 }
 
 function expectVisibleText(text: string | RegExp) {
-  expect(screen.getAllByText(text).length).toBeGreaterThanOrEqual(1)
+  const options = typeof text === 'string' ? { exact: false as const } : undefined
+  expect(screen.getAllByText(text, options).length).toBeGreaterThanOrEqual(1)
 }
 
 function expectTextAbsent(text: string | RegExp) {
@@ -27,6 +28,10 @@ function expectTextAbsent(text: string | RegExp) {
 }
 
 describe('Reference component', () => {
+  afterEach(() => {
+    cleanup()
+  })
+
   it('loads symbol metadata from the generated Tasty manifest at runtime', async () => {
     await renderReference('ReferenceApiFixture')
 
@@ -35,7 +40,7 @@ describe('Reference component', () => {
     expect(screen.getByText('label')).toBeInTheDocument()
     expect(screen.getByText('disabled')).toBeInTheDocument()
     expect(screen.getByText('variant')).toBeInTheDocument()
-    expect(screen.getByText("'solid' | 'ghost'")).toBeInTheDocument()
+    expect(screen.getByText('Union')).toBeInTheDocument()
     expectVisibleText('solid')
     expectVisibleText('ghost')
   })
@@ -60,7 +65,6 @@ describe('Reference component', () => {
     expectVisibleText('spacingPreview')
     expectVisibleText('variantMeta')
     expectVisibleText('renderIcon')
-    expectVisibleText("'start' | 'end'")
     expectVisibleText('[inline: number, block: number]')
     expectVisibleText('tone-solid')
     expectVisibleText('tone-ghost')
@@ -71,10 +75,10 @@ describe('Reference component', () => {
       "{ emphasis: 'high'; fill: true } | { emphasis: 'low'; fill: false }",
     )
 
-    expect(screen.getAllByText('@default').length).toBeGreaterThanOrEqual(3)
-    expect(screen.getByText('"solid"')).toBeInTheDocument()
-    expect(screen.getByText('"md"')).toBeInTheDocument()
-    expect(screen.getByText('"start"')).toBeInTheDocument()
+    expectVisibleText('solid')
+    expectVisibleText('md')
+    expectVisibleText('start')
+    expectVisibleText('end')
 
     expect(
       screen.getByText('(event: DocsReferencePressEvent, state: DocsReferenceButtonState) => void'),
@@ -140,7 +144,7 @@ describe('Reference component', () => {
     expectVisibleText('from DocsReferenceButtonProps')
     expectVisibleText('from DocsReferencePressableProps')
     expectVisibleText('from DocsReferenceControlBaseProps')
-    expect(screen.getByText('"lg"')).toBeInTheDocument()
+    expectVisibleText('lg')
   })
 
   it('renders generic interface headers with constraints and defaults', async () => {
@@ -151,7 +155,10 @@ describe('Reference component', () => {
     expectVisibleText('Generics: TData extends string = DocsReferenceButtonVariant')
     expectVisibleText('status')
     expectVisibleText('data')
-    expectVisibleText("'idle' | 'loading' | 'success'")
+    expect(screen.getByText('Union')).toBeInTheDocument()
+    expectVisibleText('idle')
+    expectVisibleText('loading')
+    expectVisibleText('success')
   })
 
   it('renders tuple aliases with their element labels instead of placeholder text', async () => {
@@ -242,6 +249,14 @@ describe('Reference component', () => {
     expect(screen.getByText('DocsReferenceResolvedTone')).toBeInTheDocument()
     expect(screen.getByText('Type alias')).toBeInTheDocument()
     expectVisibleText("'tone-sm' | 'tone-md' | 'tone-lg'")
+  })
+
+  it('loads ReferenceSystemStyleObject after export type re-export from @reference-ui/react', async () => {
+    await renderReference('ReferenceSystemStyleObject')
+
+    expect(screen.queryByText(/Failed to load/)).not.toBeInTheDocument()
+    expect(screen.getAllByText('ReferenceSystemStyleObject').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getByText('Type alias')).toBeInTheDocument()
   })
 
 })

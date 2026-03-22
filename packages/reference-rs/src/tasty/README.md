@@ -61,6 +61,11 @@ pulled in when the user explicitly re-exports from a package, such as
 From there, Tasty follows imports within that same package, but it does not
 walk arbitrary dependency trees.
 
+For `export type { Name } from 'module'`, Tasty also emits a **synthetic
+type-alias shell** in the barrel file so `Name` appears in the manifest (same
+ergonomics as a local `type Name = …` re-export, without requiring one).
+Renames (`export type { A as B } from '…'`) are not expanded yet.
+
 ## Emitted Shape
 
 Tasty emits a manifest-first artifact set.

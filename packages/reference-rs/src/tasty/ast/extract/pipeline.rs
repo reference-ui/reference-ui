@@ -96,10 +96,12 @@ impl FileBindings {
         };
         value_bindings_from_statement(statement, &value_ctx, &mut self.value_bindings);
         exports_from_statement(
+            root_dir,
+            file_id_set,
             scanned_file,
             statement,
             comments,
-            &self.import_bindings,
+            &mut self.import_bindings,
             &mut self.export_bindings,
             &mut self.exports,
         );

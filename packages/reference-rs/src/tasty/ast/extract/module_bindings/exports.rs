@@ -102,7 +102,7 @@ impl<'a> ExportPass<'a> {
     }
 }
 
-fn record_named_reexports(
+pub(in crate::tasty::ast::extract) fn record_named_reexports(
     export_decl: &ExportNamedDeclaration<'_>,
     source: &str,
     export_bindings: &mut BTreeMap<String, String>,

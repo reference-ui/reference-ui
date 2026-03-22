@@ -1,6 +1,7 @@
 //! Export statement collection: named exports, default exports, and bare type declarations.
 
 use std::collections::BTreeMap;
+use std::path::Path;
 
 use oxc_ast::ast::Statement;
 use oxc_span::GetSpan;
@@ -8,7 +9,8 @@ use oxc_span::GetSpan;
 use crate::tasty::constants::libraries::USER_LIBRARY_NAME;
 
 use super::super::module_bindings::{
-    collect_default_export_declaration, collect_exported_declaration,
+    collect_default_export_declaration, collect_exported_declaration, collect_type_reexports_from_module,
+    record_named_reexports,
 };
 use super::super::symbols::{push_interface_shell, push_type_alias_shell};
 use super::super::ExtractionContext;
@@ -16,28 +18,34 @@ use crate::tasty::ast::model::{ImportBinding, SymbolShell};
 use crate::tasty::scanner::ScannedFile;
 
 pub(crate) fn exports_from_statement(
+    root_dir: &Path,
+    file_id_set: &std::collections::BTreeSet<String>,
     scanned_file: &ScannedFile,
     statement: &Statement<'_>,
     comments: &[oxc_ast::ast::Comment],
-    import_bindings: &BTreeMap<String, ImportBinding>,
+    import_bindings: &mut BTreeMap<String, ImportBinding>,
     export_bindings: &mut BTreeMap<String, String>,
     exports: &mut Vec<SymbolShell>,
 ) {
+    collect_named_export_statement(
+        root_dir,
+        file_id_set,
+        scanned_file,
+        statement,
+        comments,
+        import_bindings,
+        export_bindings,
+        exports,
+    );
+
     let ctx = ExtractionContext {
         source: &scanned_file.source,
         comments,
-        import_bindings,
+        import_bindings: &*import_bindings,
         module_specifier: &scanned_file.module_specifier,
         library: &scanned_file.library,
     };
 
-    collect_named_export_statement(
-        scanned_file,
-        &ctx,
-        statement,
-        export_bindings,
-        exports,
-    );
     collect_user_export_statement(
         scanned_file,
         &ctx,
@@ -49,9 +57,12 @@ pub(crate) fn exports_from_statement(
 }
 
 fn collect_named_export_statement(
+    root_dir: &Path,
+    file_id_set: &std::collections::BTreeSet<String>,
     scanned_file: &ScannedFile,
-    ctx: &ExtractionContext<'_>,
     statement: &Statement<'_>,
+    comments: &[oxc_ast::ast::Comment],
+    import_bindings: &mut BTreeMap<String, ImportBinding>,
     export_bindings: &mut BTreeMap<String, String>,
     exports: &mut Vec<SymbolShell>,
 ) {
@@ -59,9 +70,33 @@ fn collect_named_export_statement(
         return;
     };
 
+    if export_decl.declaration.is_none() {
+        record_named_reexports(export_decl, scanned_file.source.as_str(), export_bindings);
+        if export_decl.source.is_some() {
+            collect_type_reexports_from_module(
+                &scanned_file.file_id,
+                root_dir,
+                file_id_set,
+                scanned_file.source.as_str(),
+                export_decl,
+                import_bindings,
+                exports,
+            );
+        }
+        return;
+    }
+
+    let ctx = ExtractionContext {
+        source: &scanned_file.source,
+        comments,
+        import_bindings: &*import_bindings,
+        module_specifier: &scanned_file.module_specifier,
+        library: &scanned_file.library,
+    };
+
     collect_exported_declaration(
         &scanned_file.file_id,
-        ctx,
+        &ctx,
         export_decl,
         export_bindings,
         exports,
