@@ -1,4 +1,5 @@
 import { tokens } from '@reference-ui/system'
+import { fontStacks } from '../../theme/fontStacks.js'
 
 type ReferenceTokenConfig = Parameters<typeof tokens>[0]
 
@@ -63,13 +64,10 @@ export const referenceBrowserTokenConfig = {
   },
   fonts: {
     reference: {
-      mono: {
-        value:
-          'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace',
-      },
-      sans: {
-        value: '"Inter", ui-sans-serif, sans-serif',
-      },
+      /** Same stack as global `mono` + JetBrains `@font-face` in {@link ../../theme/fonts}. */
+      mono: { value: fontStacks.mono },
+      /** Same stack as global `sans` + Inter `@font-face` in {@link ../../theme/fonts}. */
+      sans: { value: fontStacks.sans },
     },
   },
 } as const satisfies ReferenceTokenConfig

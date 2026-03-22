@@ -12,8 +12,12 @@ export function MemberJsDoc({
   jsDoc: ReferenceJsDoc
   params: ReferenceParamDoc[]
 }) {
-  const tags = jsDoc.tags.filter((tag) => tag.name !== 'param')
-  if (params.length === 0 && tags.length === 0) return null
+  /** Defaults are shown on the type line (value chips); skip duplicate `@default` / `@param default`. */
+  const paramRows = params.filter((param) => param.name !== 'default')
+  const tags = jsDoc.tags.filter(
+    (tag) => tag.name !== 'param' && tag.name !== 'default',
+  )
+  if (paramRows.length === 0 && tags.length === 0) return null
 
   return (
     <Div
@@ -26,7 +30,7 @@ export function MemberJsDoc({
         borderTopColor: 'reference.border',
       }}
     >
-      {params.map((param) => (
+      {paramRows.map((param) => (
         <Div key={`${memberId}-${param.name}`} display="grid" gap="reference.xxs">
           <Div display="flex" alignItems="center" gap="reference.xs" flexWrap="wrap">
             <JsDocParamChip tagLabel="param" />
