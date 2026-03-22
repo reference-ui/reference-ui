@@ -1,6 +1,11 @@
-import type { ReferenceTokenConfig } from '../../../system/api'
+import { tokens } from '@reference-ui/system'
 
-/** Canonical for `@reference-ui/types`; `@reference-ui/lib` maintains a parallel copy under `src/Reference/theme/tokens.ts` for package-local edits. */
+type ReferenceTokenConfig = Parameters<typeof tokens>[0]
+
+/**
+ * Reference UI browser token palette for this package — **owned here** (mirror of
+ * `reference-core/src/reference/browser/theme/tokens.ts`). Edit this file; run `ref sync`.
+ */
 export const referenceBrowserTokenConfig = {
   colors: {
     reference: {
@@ -62,6 +67,11 @@ export const referenceBrowserTokenConfig = {
         value:
           'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace',
       },
+      sans: {
+        value: '"Inter", ui-sans-serif, sans-serif',
+      },
     },
   },
 } as const satisfies ReferenceTokenConfig
+
+tokens(referenceBrowserTokenConfig)
