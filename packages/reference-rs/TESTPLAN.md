@@ -54,7 +54,7 @@ No one needs to see the pipes. They need to trust that the food is safe.
 | **Rust unit tests**          | `cargo test`       | Scanner resolves imports correctly. Workspace crawl follows the right edges. Export-name collisions are rejected. `extract_ast` / `resolve_ast` in `tests/extract.rs` / `tests/resolve.rs`. `TypeRefMap` identity in `tests/type_ref_map*.rs`. Error-path scans in `error_paths.rs`. |
 | **Vitest integration tests** | `pnpm test:vitest` | The compiled napi-rs binary scans real TypeScript, emits artifact modules, and the JS runtime API exposes correct, navigable type metadata. |
 
-### Rust tests (`src/tasty/` + `ast/extract/comments/leading.rs` tests, ~46 tests)
+### Rust tests (`src/tasty/` + `ast/extract/comments/leading.rs` tests, ~47 tests)
 
 | File                                | Coverage                                                                        |
 | ----------------------------------- | ------------------------------------------------------------------------------- |
@@ -63,6 +63,7 @@ No one needs to see the pipes. They need to trust that the food is safe.
 | `tests/resolve.rs`                  | `resolve_ast`: cross-file `target_id` on imported types; same-file interface refs |
 | `tests/type_ref_map_identity.rs`    | `IdentityMap` for `TypeRefMap` / `map_type_ref` round-trip                       |
 | `tests/type_ref_map.rs`             | One union value exercising every `TypeRef` variant; identity preserves structure   |
+| `tests/type_ref_proptest.rs`        | `proptest`: random `TypeRef` trees → `map_type_ref` + `IdentityMap` is identity (64 cases) |
 | `tests/error_paths.rs`              | Parse diagnostics, missing import resolution, malformed `package.json`, circular type re-exports |
 | `ast/extract/comments/leading.rs`   | Leading-comment attachment: gap, statement between, merged `//`, JSDoc+`//`, empty `/** */` |
 | `scanner/packages/tests.rs`         | Relative imports; `exports` / deep subpaths; `split_package_specifier` (@scope); `main` fallback; `@types/` fallback; missing entrypoints (`None`); unix: symlinked `node_modules` + globwalk `src/**/*.ts` |
@@ -156,12 +157,13 @@ But not:
 These compositions are where AST code fails. The individual arms work. The
 nesting breaks.
 
-### Gap 6: No Rust-side property tests
+### Gap 6: ~~No Rust-side property tests~~ (TypeRef covered; import paths still open)
 
-Import resolution and type-ref mapping are pure functions on structured input.
-They're ideal candidates for proptest/quickcheck. A property test that generates
-random `TypeRef` trees and round-trips them through `map_type_ref` → identity
-mapper would catch structural corruption the way no hand-written case ever will.
+**TypeRef:** `tests/type_ref_proptest.rs` uses `proptest` + a recursive strategy
+over all `TypeRef` variants to assert `map_type_ref(&mut IdentityMap, t) == t`.
+
+Import resolution and path normalization are still good candidates for proptest
+(see §4.2).
 
 ---
 
@@ -422,6 +424,14 @@ TypeScript with Oxc, takes the top-level `interface` span, runs
 
 #### 4.1 TypeRef property tests with proptest
 
+**Done.** `src/tasty/tests/type_ref_proptest.rs` — dev-dependency `proptest`, recursive
+`type_ref_strategy()` (depth 4) covering every `TypeRef` variant including
+`Reference` (with nested `type_arguments`), `Object`/`Tuple`/`Function`/`Constructor`,
+`IndexedAccess`, `Conditional`, `Mapped`, `TemplateLiteral`, etc. The test runs
+64 cases per `cargo test` (see `ProptestConfig::with_cases(64)`).
+
+Sketch (actual file has full `prop_oneof!` arms):
+
 ```rust
 use proptest::prelude::*;
 
@@ -531,7 +541,7 @@ fn bench_scan_kitchen_sink(c: &mut Criterion) {
 | 7   | TypeRefMap identity test (§2.3)   | Low    | None                | Foundation for property tests                         |
 | 8   | Diagnostic Vitest coverage (§1.3) | Low    | New fixture         | Closes the error-reporting loop                       |
 | 9   | Nested TypeRef cases (§3.1)       | Medium | New fixture         | Catches composition bugs                              |
-| 10  | Property tests (§4.1–4.3)         | High   | New dep (proptest)  | Catches things humans never write                     |
+| 10  | Property tests (§4.1–4.3)         | Medium | proptest in use     | §4.1 TypeRef identity done; §4.2–4.3 still open        |
 | 11  | Perf baselines (§5.1)             | Low    | None                | Prevents silent perf regression                       |
 | 12  | Criterion benchmarks (§5.2)       | Medium | New dep (criterion) | Enables performance-driven work                       |
 
