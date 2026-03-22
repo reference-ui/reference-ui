@@ -6,12 +6,11 @@ export function ReferenceFrame({ children }: { children: React.ReactNode }) {
     <Div
       css={{
         color: 'reference.foreground',
-        background: 'reference.background',
         borderWidth: '1px',
         borderStyle: 'solid',
         borderColor: 'reference.border',
         borderRadius: '0.75rem',
-        padding: 'reference.xl',
+        padding: '3r',
       }}
     >
       {children}
