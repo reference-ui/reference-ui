@@ -14,7 +14,7 @@ export function MemberName({ name }: { name: string }) {
       fontFamily="reference.mono"
       fontWeight="550"
       fontSize="4.5r"
-      mb="2r"
+      //mb="1r"
     >
       {name}
     </Div>

@@ -26,6 +26,22 @@ export function createReferenceMemberSummary(
   }
 }
 
+/**
+ * Inline unions of literals (and similar enumerable branches) are summarized with value chips;
+ * the type line then shows "Union" instead of repeating every literal. Named types (`x: MyAlias`)
+ * stay as-is because their declared type is a reference, not a top-level union node.
+ */
+export function shouldUseUnionDisplayTypeLabel(
+  member: TastyMember,
+  type: TastyTypeRef | undefined,
+  symbolLookup: Map<string, TastySymbol>,
+): boolean {
+  if (!type?.isUnion()) return false
+  const resolvedType = resolveReferenceSummaryType(type, symbolLookup) ?? type
+  const valueOptions = createReferenceValueOptions(member, resolvedType)
+  return shouldUseReferenceValueSet(resolvedType, valueOptions)
+}
+
 function createReferenceMemberTypeSummary(
   member: TastyMember,
   type: TastyTypeRef | undefined,

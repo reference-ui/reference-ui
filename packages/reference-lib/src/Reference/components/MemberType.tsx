@@ -6,11 +6,13 @@ export function MemberType({ typeLabel }: { typeLabel: string }) {
     <Div
       //px="1.5r"
       py="0.5r"
-      color="gray.100"
+      color="blue.200"
       borderRadius="1r"
       display="inline-flex"
       width="fit-content"
-      fontFamily="reference.mono"
+      fontFamily="reference.sans"
+      fontWeight="550"
+      mb="2r"
     >
       {typeLabel}
     </Div>
