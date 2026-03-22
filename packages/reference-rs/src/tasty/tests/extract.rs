@@ -5,7 +5,7 @@ use std::path::PathBuf;
 
 use crate::tasty::ast::extract_ast;
 use crate::tasty::ast::model::ImportBindingKind;
-use crate::tasty::model::TypeRef;
+use crate::tasty::model::{TsSymbolKind, TypeRef};
 use crate::tasty::scanner::{ScannedFile, ScannedWorkspace};
 
 fn workspace(files: &[(&str, &str)]) -> ScannedWorkspace {
@@ -116,6 +116,24 @@ fn named_reexport_populates_export_bindings() {
     let ast = extract_ast(&scanned);
     let index = parsed_file(&ast, "src/index.ts");
     assert_eq!(index.export_bindings.get("X"), Some(&"X".to_string()));
+}
+
+#[test]
+fn export_type_from_module_adds_type_alias_shell() {
+    let scanned = workspace(&[
+        ("src/other.ts", "export type T = string;\n"),
+        ("src/index.ts", "export type { T } from './other';\n"),
+    ]);
+    let ast = extract_ast(&scanned);
+    let index = parsed_file(&ast, "src/index.ts");
+    let shell = index
+        .exports
+        .iter()
+        .find(|s| s.name == "T")
+        .expect("synthetic type-alias shell for export type { T } from");
+    assert_eq!(shell.kind, TsSymbolKind::TypeAlias);
+    assert!(shell.exported);
+    assert!(index.import_bindings.get("T").is_some());
 }
 
 #[test]

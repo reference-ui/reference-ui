@@ -5,6 +5,8 @@ declare module '@reference-ui/react' {
   export const Span: ComponentType<any>
   export function css(...args: any[]): any
   export function recipe(...args: any[]): any
+  /** Present in generated `.reference-ui/react`; stubbed so `tsc` passes before sync. */
+  export type ReferenceSystemStyleObject = any
 }
 
 declare module '@reference-ui/system' {
