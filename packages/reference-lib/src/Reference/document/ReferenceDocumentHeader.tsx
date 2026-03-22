@@ -9,13 +9,13 @@ type TitleRowProps = {
 /** Document symbol name and kind label (e.g. type alias, interface). */
 function ReferenceDocumentHeaderTitleRow({ name, kindLabel }: TitleRowProps) {
   return (
-    <Div display="flex" flexDir="column" gap="reference.sm" flexWrap="wrap">
+    <Div display="flex" flexDir="column" gap="reference.sm" flexWrap="wrap" mb="4r">
       <H2
         margin="0"
         color="reference.foreground"
         fontFamily="reference.sans"
         fontWeight="500"
-        fontSize="7r"
+        fontSize="8r"
       >
         {name}
       </H2>
@@ -38,7 +38,7 @@ type DescriptionProps = {
 /** Optional JSDoc / summary paragraph for the document. */
 function ReferenceDocumentHeaderDescription({ description }: DescriptionProps) {
   return (
-    <P margin="0" color="reference.foreground">
+    <P margin="0" color="reference.foreground" mb="4r">
       {description}
     </P>
   )
