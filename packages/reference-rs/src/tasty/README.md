@@ -66,6 +66,10 @@ type-alias shell** in the barrel file so `Name` appears in the manifest (same
 ergonomics as a local `type Name = …` re-export, without requiring one).
 Renames (`export type { A as B } from '…'`) are not expanded yet.
 
+For type aliases, constructed types (`Omit<…>`, intersections, re-exports), and the
+goal of treating **`type` as a first-class documentation symbol**, see
+[`FIRST_CLASS_TYPES.md`](./FIRST_CLASS_TYPES.md).
+
 ## Emitted Shape
 
 Tasty emits a manifest-first artifact set.
