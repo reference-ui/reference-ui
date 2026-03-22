@@ -1,38 +1,55 @@
 import * as React from 'react'
-import { Span } from '@reference-ui/react'
+import { Span, recipe, type RecipeVariantProps } from '@reference-ui/react'
 import { MonoText } from './MonoText.js'
 
-interface SummaryChipProps {
-  children: React.ReactNode
-  tone?: 'soft' | 'accent'
-  radius?: 'pill' | 'rounded'
-}
+const summaryChipRecipe = recipe({
+  base: {
+    fontSize: '4.5r',
+    display: 'inline-flex',
+    alignItems: 'center',
+    minHeight: '1.5rem',
+    width: 'fit-content',
+    maxWidth: '100%',
+    paddingInline: '0.2rem',
+    px: '1.5r',
+    py: '0.5r',
+  },
+  variants: {
+    tone: {
+      soft: {
+        bg: 'gray.900',
+        color: 'white',
+      },
+      accent: {
+        background: 'blue.950',
+        color: 'white',
+      },
+    },
+    radius: {
+      pill: { borderRadius: '9999px' },
+      rounded: { borderRadius: '1r' },
+    },
+  },
+  defaultVariants: {
+    tone: 'soft',
+    radius: 'rounded',
+  },
+})
+
+export type SummaryChipProps = React.ComponentPropsWithoutRef<typeof Span> &
+  RecipeVariantProps<typeof summaryChipRecipe>
 
 export function SummaryChip({
   children,
   tone = 'soft',
   radius = 'rounded',
+  className,
+  ...props
 }: SummaryChipProps) {
-  const isAccent = tone === 'accent'
-
   return (
     <Span
-      css={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        minHeight: '1.5rem',
-        width: 'fit-content',
-        maxWidth: '100%',
-        paddingInline: '0.2rem',
-        borderWidth: '1px',
-        borderStyle: 'solid',
-        borderColor: isAccent ? 'reference.primary' : 'reference.primarySoftBorder',
-        borderRadius: radius === 'pill' ? '9999px' : '0.5rem',
-        background: isAccent ? 'reference.primary' : 'reference.primarySoftBackground',
-        color: isAccent
-          ? 'reference.primaryForeground'
-          : 'reference.primarySoftForeground',
-      }}
+      className={summaryChipRecipe({ tone, radius }) + (className ? ` ${className}` : '')}
+      {...props}
     >
       <MonoText>{children}</MonoText>
     </Span>

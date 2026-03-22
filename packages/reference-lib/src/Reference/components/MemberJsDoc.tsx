@@ -1,7 +1,7 @@
 import { Div, P, Small } from '@reference-ui/react'
 import type { ReferenceJsDoc, ReferenceParamDoc } from '@reference-ui/types'
+import { JsDocParamChip } from './shared/JsDocParamChip.js'
 import { MonoText } from './shared/MonoText.js'
-import { SummaryChip } from './shared/SummaryChip.js'
 
 export function MemberJsDoc({
   memberId,
@@ -29,9 +29,7 @@ export function MemberJsDoc({
       {params.map((param) => (
         <Div key={`${memberId}-${param.name}`} display="grid" gap="reference.xxs">
           <Div display="flex" alignItems="center" gap="reference.xs" flexWrap="wrap">
-            <SummaryChip>
-              <MonoText>@param</MonoText>
-            </SummaryChip>
+            <JsDocParamChip tagLabel="param" />
             <MonoText>{param.name}</MonoText>
             {param.type ? (
               <Small color="reference.muted">
@@ -51,9 +49,7 @@ export function MemberJsDoc({
       {tags.map((tag, index) => (
         <Div key={`${memberId}-${tag.name}-${index}`} display="grid" gap="reference.xxs">
           <Div display="flex" alignItems="center" gap="reference.xs" flexWrap="wrap">
-            <SummaryChip>
-              <MonoText>@{tag.name}</MonoText>
-            </SummaryChip>
+            <JsDocParamChip tagLabel={tag.name} />
           </Div>
           {tag.value ? (
             <P margin="0" color="reference.muted">
