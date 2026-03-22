@@ -9,5 +9,11 @@ export type {
   ReferenceRuntime,
   ReferenceRuntimeData,
 } from './Runtime'
+export {
+  ReferenceRuntimeProvider,
+  useReferenceDocumentFromContext,
+  useReferenceRuntime,
+} from './ReferenceRuntimeContext'
+export { formatReferenceTypeParameter } from './model'
+export type * from './types'
 export { referenceBrowserTokenConfig } from './theme'
-export type { ReferenceProps } from './types'
