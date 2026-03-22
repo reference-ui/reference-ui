@@ -13,16 +13,19 @@ export function ReferenceDocumentView({ document }: { document: ReferenceDocumen
           <H2 margin="0" fontSize="1rem" color="reference.foreground">
             <MonoText>{document.name}</MonoText>
           </H2>
-          <Small color="reference.muted">{document.kindLabel}</Small>
+          <Small color="reference.foreground">{document.kindLabel}</Small>
         </Div>
         {document.description ? <P margin="0">{document.description}</P> : null}
         {document.typeParameterDetails.length > 0 ? (
-          <Small color="reference.muted">
-            Generics: {document.typeParameterDetails.map(formatReferenceTypeParameter).join(', ')}
+          <Small color="reference.foreground">
+            Generics:{' '}
+            {document.typeParameterDetails.map(formatReferenceTypeParameter).join(', ')}
           </Small>
         ) : null}
         {document.extendsNames.length > 0 ? (
-          <Small color="reference.muted">Extends: {document.extendsNames.join(', ')}</Small>
+          <Small color="reference.foreground">
+            Extends: {document.extendsNames.join(', ')}
+          </Small>
         ) : null}
       </Div>
 
