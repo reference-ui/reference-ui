@@ -1,20 +1,50 @@
 # Types as first-class citizens (roadmap)
 
-This note captures **where Tasty stands today** on **type aliases and constructed types** (`Omit<…>`, intersections, mapped types, etc.), **why doc consumers often see a useless “definition”**, and **what “first class” should mean** so Tasty stays useful for reference UIs—not just interface-shaped APIs.
+This note is about a simple goal: **when Tasty sees a TypeScript type, it should
+expose something useful through its API**.
 
-It complements the main [`README.md`](./README.md) (lowering, scan boundary). It is intentionally **aspirational**: full TypeScript semantics are out of scope; **bounded, explainable** behavior is the target.
+That does **not** mean pretending every type is an `interface`, and it does
+**not** mean implementing all of TypeScript. It means:
+
+- preserve the real type graph faithfully
+- follow aliases, references, and constructed types as far as we reasonably can
+- expose the **most useful explainable semantic surface** we can
+- degrade honestly when a shape is too dynamic or too deep to flatten
+
+In practice, that especially matters for **type aliases and constructed types**
+(`Omit<…>`, intersections, mapped types, re-exports, recursive helpers, etc.),
+because they often carry the same user-facing semantic shape as interfaces, but
+today they frequently degrade into weak or misleading output.
+
+It complements the main [`README.md`](./README.md) (lowering, scan boundary). It
+is intentionally **aspirational**: full TypeScript semantics are out of scope;
+**bounded, explainable usefulness** is the target.
 
 ---
 
 ## Why this matters
 
-In TypeScript, **`type` aliases are not a weaker `interface`**. They often carry the same *documentation surface* as interfaces:
+TypeScript APIs are often defined through **chains of aliases, utilities,
+intersections, re-exports, and recursive helpers**, not clean standalone
+interfaces.
+
+So the problem is bigger than “support `type` aliases better.” The real problem
+is:
+
+> how do we expose arbitrary TS type shapes in a way downstream tools can
+> actually use?
+
+In that world, **`type` aliases are not a weaker `interface`**. They often carry
+the same *usable surface* as interfaces:
 
 - aliases to object types, intersections, and utility instantiations (`Omit`, `Pick`, …)
 - re-exports from packages (`export type { Foo } from 'pkg'`)
 - conditional and mapped types that *behave* like fixed property bags for consumers
 
-Downstream (e.g. `@reference-ui/reference-core` and `@reference-ui/reference-lib`) can only show **members, resolved definitions, and links** if Tasty’s **emitted graph** exposes enough structure—not only for `interface`, but for **`type` and its RHS**.
+Downstream (e.g. `@reference-ui/reference-core` and `@reference-ui/reference-lib`)
+can only build useful experiences if Tasty’s **emitted graph** exposes enough
+structure. The job is not only to support `interface`, but to support
+**whatever type shape the user API is actually made of**.
 
 ---
 
@@ -52,15 +82,25 @@ So: **Tasty** owns whether the **graph + `TypeRef`** is rich enough; **downstrea
 
 ## What “first class” should mean
 
-**Goal:** For symbols that are **type aliases**, Tasty should still enable:
+**Goal:** For any symbol or type shape that enters the graph, Tasty should make
+it as useful as possible through a general-purpose semantic API.
+
+For type aliases especially, that means Tasty should still enable:
 
 1. **Identity** — stable id, name, library, export surface (already largely true).
 2. **Readable definition** — `TypeRef` (or source-backed snippet) that **does not collapse** to a bare self-name when the real RHS is known elsewhere in the graph.
 3. **Navigation** — `Reference` edges to **other symbols** (interfaces, type params, utility targets) where resolvable.
-4. **Structured surface (when meaningful)** — for RHS shapes that are **object-like** for consumers, optionally expose something **member-shaped**:
+4. **Structured surface (when meaningful)** — for RHS shapes that are
+   **object-like** for consumers, optionally expose something **member-shaped**:
    - either **resolved inline members** (best-effort),
    - or **explicit “expand / follow”** to an interface or alias symbol,
    - without pretending **full** TS assignability or conditional-type evaluation.
+
+More generally, every type should land in one of these useful outcomes:
+
+- **definition + links** — not flattenable, but still readable and navigable
+- **object-like projection** — flattenable enough to expose members coherently
+- **raw fallback** — preserved honestly when Tasty cannot safely claim more
 
 **Non-goals:**
 
@@ -69,48 +109,255 @@ So: **Tasty** owns whether the **graph + `TypeRef`** is rich enough; **downstrea
 
 ---
 
-## Concrete directions (implementation buckets)
+## Driving example: style props as one doc surface
 
-These are **ordered roughly by leverage**, not commitment.
+The motivating case here is `ReferenceSystemStyleObject`.
 
-### A. Canonical resolution for re-exported aliases
+In userland, this should ideally feel like **one interface-like set of style
+props** even though the source is assembled from multiple layers:
 
-When a barrel emits `export type { X } from 'pkg'`, resolve **`X`’s defining chunk** and either:
+- a **re-exported alias** from `@reference-ui/react`
+- an **intersection**:
+  `Omit<SystemStyleObject, 'font' | 'weight' | 'container' | 'r'> & ReferenceBoxPatternProps`
+- more aliases inside `ReferenceBoxPatternProps`
+- interfaces/property bags such as `SystemProperties`
+- recursive helper aliases such as `Nested<P>`
 
-- store **`target_id`** on the reference once known, or
-- emit a **thin stub** that **reuses** the remote symbol’s payload by id,
+For downstream consumers, the desired result is **not** “expose a maze of
+internal type machinery.” The desired result is:
 
-so the manifest’s **`X`** is not stuck with **`target_id: None`** and a circular **name-only** `TypeRef`.
+1. keep the original alias definition visible and linkable
+2. derive a best-effort **object-like projected surface** for the props a user
+   can actually write
+3. preserve provenance so rows can still be traced back to their source aliases
+   or interfaces when needed
 
-*Touches:* `reexport_type_alias.rs`, resolver/index, manifest emission.
+That implies an important contract distinction:
 
-### B. Richer `TypeRef` presentation without full evaluation
+- the **canonical type graph** should preserve aliases, references, utilities,
+  and recursion honestly
+- a **derived projection API** may flatten that graph into one object-like view
+  when the shape is bounded and explainable
 
-Ensure **utility and composite** nodes (`Omit`, `Pick`, `&`, `|`) **serialize** with **children** and **spelling** that round-trip to useful display and linking—even when we do not “evaluate” them.
+In other words, `ReferenceSystemStyleObject` should stay a **type alias** in the
+graph, but it may produce a **derived object-like member surface** through the
+API.
 
-*Touches:* `generator/types/`, `ast/extract/types/lower_*`, emitted type artifacts.
+### What the style-props projection likely needs
 
-### C. Bounded expansion to “member-like” rows
+To make this case work, the projection layer probably only needs a bounded set
+of operations:
 
-For aliases whose RHS **lowers** to **object / intersection / instantiation** of known utilities, optionally run a **projection** pass that produces **`TastyMember`-compatible** entries **or** explicit “pseudo-members” with provenance (e.g. “from `Omit` of …”).
+- **follow alias references** to their canonical symbol
+- **merge intersections** of object-like inputs
+- **apply `Omit` / `Pick`-style key filters** when both the source members and
+  filtered keys are knowable
+- **inline interface and object-literal members**
+- **preserve recursion boundaries** for helpers like `Nested<P>` instead of
+  trying to infinitely expand them
 
-*Touches:* `ast/resolve/`, `emitted/members.rs`, new optional pass—**must** stay bounded to avoid explosion.
+For `SystemStyleObject = Omit<Nested<SystemProperties & CssVarProperties>, 'base'>`,
+the practical docs goal is likely:
 
-### D. Runtime API alignment
+- expose the top-level style props from `SystemProperties` and `CssVarProperties`
+- record that selector/condition nesting exists
+- avoid infinitely expanding recursive selector branches
 
-Expose a **documentable surface** for type aliases:
+That is the shape of usefulness we want: **bounded for the implementation,
+truthful to the underlying type graph, and rich enough for downstream tools to
+present coherently**.
 
-- e.g. `getAliasDefinition(): TypeRef`, `getProjectedMembers(): … | undefined`, or **follow-to-canonical-symbol** helpers,
+---
 
-so **reference-core** can choose **definition + members** without special-casing only `interface`.
+## Implementation plan
 
-*Touches:* `js/tasty/internal/wrappers.ts`, `api-types.ts`, graph helpers.
+This section turns the roadmap into a **recommended delivery order**. The key
+idea is to land **identity + canonical definition** first, then improve
+**presentation**, and only then attempt **member projection**.
 
-### E. Downstream UI contract
+### Phase 0: Lock the contract with tests
 
-Once Tasty exposes (B)–(D), consumers can show **the same UX** as interfaces **when** projection exists, and **fallback** to **definition + links** when not.
+Before changing behavior, add tests that describe the intended contract for
+type aliases as semantic API objects.
 
-*Touches:* outside this crate; keep this doc’s **contract** section in sync when the API changes.
+**Ship in this phase:**
+
+- extraction test for `export type { T } from './other'` proving the synthetic
+  shell exists and carries an underlying `Reference`
+- resolve test proving that synthetic re-export aliases gain a **resolved**
+  `target_id` when the remote export is known
+- resolve test proving local aliases with generic instantiations still preserve
+  a readable `TypeRef` after resolution
+- artifact/runtime test coverage for how alias definitions are emitted and read
+
+**Why first:** right now the behavior is split across extraction, resolution,
+emission, and runtime wrappers. A test-first pass prevents “fixing” one layer
+while silently regressing another.
+
+**Exit criteria:**
+
+- failing tests exist for the specific alias behaviors we want to improve
+- test names describe the user-facing contract, not just internal implementation
+
+### Phase 1: Canonicalize re-exported alias identity
+
+Fix the highest-value failure first: `export type { X } from 'pkg'` should point
+at the **real declaration**, not remain a name-only reference with
+`target_id: None`.
+
+**Implementation target:**
+
+- keep the synthetic shell in the barrel so manifest discoverability stays the
+  same
+- make its `underlying: TypeRef::Reference` resolve to the remote symbol id via
+  existing import/export indexes
+- preserve `source_module` for display/debugging, but treat `target_id` as the
+  canonical navigation edge
+
+**Likely touch points:**
+
+- `ast/extract/module_bindings/reexport_type_alias.rs`
+- `ast/resolve/resolver/resolve.rs`
+- export/symbol index plumbing if the current resolver misses this case
+
+**Success criteria:**
+
+- a re-exported alias symbol is still indexed under the barrel name
+- its underlying reference resolves to the target symbol id
+- downstream consumers can follow the alias definition to the canonical symbol
+  without special heuristics
+
+### Phase 2: Make alias definitions reliably readable
+
+Once alias identity is stable, improve the **definition surface**. The goal is
+not full evaluation; it is a `TypeRef` tree that round-trips to useful API
+output.
+
+**Implementation target:**
+
+- preserve structural children for composites such as intersections, unions,
+  mapped types, indexed access, and utility-style references
+- keep unresolved or unsupported semantics explicit via `Raw { summary }`
+  instead of collapsing useful structure into opaque text
+- avoid self-referential displays when a better underlying tree is already in
+  the graph
+
+**Likely touch points:**
+
+- `ast/extract/types/`
+- `ast/extract/type_references/`
+- generator/emitted contract types if new shape is needed
+
+**Success criteria:**
+
+- `describe()`-style consumers can render alias definitions that are more useful
+  than a bare symbol name
+- references inside the alias RHS still preserve links where resolvable
+- no new requirement is introduced to “evaluate TypeScript” beyond bounded
+  structural lowering
+
+### Phase 3: Add bounded alias member projection
+
+Only after phases 1 and 2 are stable should Tasty attempt to surface
+**member-like rows** for aliases whose RHS is object-like enough to project.
+
+**Implementation target:**
+
+- project members for clearly bounded shapes:
+  object literals, intersections of object-like shapes, and selected utility
+  instantiations where the source members are already known
+- treat the result as a **derived object-like projection**, not as a claim that
+  the alias literally is an interface in the IR
+- carry provenance when projection is lossy or derived, for example “projected
+  from `Omit<ButtonProps, 'color'>`”
+- return **no projection** for deep conditionals, unconstrained mapped types, or
+  cases that would require open-ended evaluation
+
+**Hard rule:** projection must be optional and bounded. If the system is unsure,
+prefer “definition + links” over incorrect rows.
+
+**Likely touch points:**
+
+- `ast/resolve/`
+- member emission code
+- possibly a dedicated projection pass rather than overloading extraction
+
+**Success criteria:**
+
+- projected members are clearly marked as projected/derived in the contract
+- projection never replaces or mutates the original alias definition
+- unsupported shapes fail closed to `undefined` / no projection
+
+### Phase 4: Align the JS runtime API
+
+After the Rust artifact contract settles, expose alias-first APIs in the JS
+runtime so consumers do not have to infer semantics from raw payloads.
+
+**Implementation target:**
+
+- keep `getUnderlyingType()` as the primary alias-definition accessor
+- add a dedicated alias-friendly surface such as projected members and/or a
+  canonical-symbol follow helper
+- keep `getMembers()` behavior explicit: either remain interface-only, or widen
+  it deliberately with a documented projected-members story
+
+**Likely touch points:**
+
+- `packages/reference-rs/js/tasty/internal/wrappers.ts`
+- `packages/reference-rs/js/tasty/api-types.ts`
+- runtime graph helpers
+
+**Success criteria:**
+
+- consumers can render alias definition, links, and projected members through a
+  stable API
+- runtime behavior clearly distinguishes “declared members” from “projected
+  alias members”
+
+### Phase 5: Adopt the contract downstream
+
+Once the runtime exposes the right primitives, downstream tools can build
+useful presentations on top of them.
+
+**Implementation target:**
+
+- show **definition + links** for every alias
+- show **members** only when projection exists
+- use interface-like presentation where helpful, but with honest fallbacks for
+  non-projectable aliases
+
+**Success criteria:**
+
+- no alias page degrades to a meaningless self-name when the real definition is
+  available
+- aliases that are effectively object-shaped become explorable downstream
+- non-object aliases still produce useful output without pretending to have
+  interface semantics
+
+### Recommended order
+
+If this work is split across PRs, the safest sequence is:
+
+1. **tests + phase 1**
+2. **phase 2**
+3. **phase 4** for stable runtime accessors
+4. **phase 3** once the definition contract is proven
+5. **phase 5** in downstream consumers
+
+This order deliberately puts **projection after definition**. If we reverse it,
+we risk inventing member rows on top of weak alias identity and unreadable RHS
+trees.
+
+### Explicit deferrals
+
+These are important to keep the project bounded:
+
+- no attempt to implement full TypeScript conditional or mapped-type evaluation
+- no guarantee that every alias can produce projected members
+- no requirement that synthetic re-export shells duplicate full remote payloads
+  if canonical follow-by-id is sufficient
+- no downstream promise that aliases and interfaces are literally the same
+  internal thing; the goal is parity of usefulness, not false equivalence
 
 ---
 
@@ -129,4 +376,4 @@ Once Tasty exposes (B)–(D), consumers can show **the same UX** as interfaces *
 
 ## Summary
 
-Today, **interfaces** carry **members**; **type aliases** carry **`TypeRef` RHS** with **partial** resolution and **synthetic barrels** that optimize **indexing** over **full hydration**. Making Tasty **useful** for modern TS APIs means **treating type aliases as documentation objects**, not only **name entries**: **resolve** them to **canonical** definitions, **preserve** composite structure in **`TypeRef`**, and **optionally project** object-like RHS into **member-shaped** output—within **clear, bounded** rules.
+Today, **interfaces** carry **members**; **type aliases** carry **`TypeRef` RHS** with **partial** resolution and **synthetic barrels** that optimize **indexing** over **full hydration**. Making Tasty **useful** for modern TS APIs means **treating type aliases as first-class semantic API objects**, not only **name entries**: **resolve** them to **canonical** definitions, **preserve** composite structure in **`TypeRef`**, and **optionally project** object-like RHS into **member-shaped** output—within **clear, bounded** rules.
