@@ -140,3 +140,104 @@ fn normalize_comment_line(line: &str) -> String {
     }
     trimmed.to_string()
 }
+
+#[cfg(test)]
+mod tests {
+    use oxc_allocator::Allocator;
+    use oxc_ast::ast::Statement;
+    use oxc_parser::Parser;
+    use oxc_span::{GetSpan, SourceType, Span};
+
+    use super::leading_comment_for_span;
+    use super::super::parse_comment_metadata;
+
+    fn nth_top_level_interface_span(body: &[Statement<'_>], index: usize) -> Span {
+        let mut seen = 0usize;
+        for stmt in body {
+            let Statement::TSInterfaceDeclaration(decl) = stmt else {
+                continue;
+            };
+            if seen == index {
+                return decl.span();
+            }
+            seen += 1;
+        }
+        panic!("expected at least {} top-level interface(s)", index + 1);
+    }
+
+    fn metadata_for_nth_interface(source: &str, interface_index: usize) -> super::super::parse::CommentMetadata {
+        let allocator = Allocator::default();
+        let parsed = Parser::new(&allocator, source, SourceType::ts()).parse();
+        let span = nth_top_level_interface_span(&parsed.program.body, interface_index);
+        parse_comment_metadata(leading_comment_for_span(
+            source,
+            &parsed.program.comments,
+            span,
+            None,
+        ))
+    }
+
+    #[test]
+    fn no_gap_jsdoc_attaches_to_following_interface() {
+        let source = "/** doc */\ninterface X {}\n";
+        let meta = metadata_for_nth_interface(source, 0);
+        assert!(
+            meta
+                .description_raw
+                .as_deref()
+                .is_some_and(|t| t.contains("doc")),
+            "expected leading comment text, got {:?}",
+            meta.description_raw
+        );
+    }
+
+    #[test]
+    fn statement_between_blocks_jsdoc_from_reaching_interface() {
+        let source = "/** doc */\nconst y = 1;\ninterface X {}\n";
+        let meta = metadata_for_nth_interface(source, 0);
+        assert!(
+            meta.description_raw.is_none() && meta.description.is_none(),
+            "expected no attached comment on X, got {:?} / {:?}",
+            meta.description_raw,
+            meta.description
+        );
+    }
+
+    #[test]
+    fn consecutive_line_comments_merge_before_interface() {
+        let source = "// line 1\n// line 2\ninterface X {}\n";
+        let meta = metadata_for_nth_interface(source, 0);
+        let raw = meta
+            .description_raw
+            .as_deref()
+            .expect("merged line comments should yield description_raw");
+        assert!(raw.contains("line 1"), "raw={raw:?}");
+        assert!(raw.contains("line 2"), "raw={raw:?}");
+    }
+
+    #[test]
+    fn jsdoc_plus_plain_line_merged_and_parsed_as_jsdoc() {
+        let source = "/** jsdoc */\n// plain\ninterface X {}\n";
+        let meta = metadata_for_nth_interface(source, 0);
+        let raw = meta
+            .description_raw
+            .as_deref()
+            .expect("expected merged comment block");
+        assert!(raw.contains("jsdoc"), "raw={raw:?}");
+        assert!(raw.contains("plain"), "raw={raw:?}");
+        assert!(
+            meta.jsdoc.is_some(),
+            "block includes JSDoc; expected jsdoc metadata, got {:?}",
+            meta.jsdoc
+        );
+    }
+
+    #[test]
+    fn empty_jsdoc_block_yields_no_metadata() {
+        let source = "/** */\ninterface X {}\n";
+        let meta = metadata_for_nth_interface(source, 0);
+        assert!(meta.description_raw.is_none());
+        assert!(meta.description.is_none());
+        assert!(meta.jsdoc.is_none());
+    }
+}
