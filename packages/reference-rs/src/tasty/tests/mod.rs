@@ -3,4 +3,8 @@
 //! `tests/tasty/cases/*/bundle.test.ts` then load and assert on that output.
 
 mod error_paths;
+mod extract;
+mod resolve;
 mod scanner;
+mod type_ref_map_identity;
+mod type_ref_map;

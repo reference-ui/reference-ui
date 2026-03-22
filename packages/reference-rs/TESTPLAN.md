@@ -51,14 +51,16 @@ No one needs to see the pipes. They need to trust that the food is safe.
 
 | Tier                         | Runner             | What it proves                                                                                                                              |
 | ---------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Rust unit tests**          | `cargo test`       | Scanner resolves imports correctly. Workspace crawl follows the right edges. Export-name collisions are rejected. Error-path scans (parse, bad package, missing import, cycles) in `error_paths.rs`. |
+| **Rust unit tests**          | `cargo test`       | Scanner resolves imports correctly. Workspace crawl follows the right edges. Export-name collisions are rejected. `extract_ast` / `resolve_ast` unit tests in `tests/extract.rs` and `tests/resolve.rs`. Error-path scans in `error_paths.rs`. |
 | **Vitest integration tests** | `pnpm test:vitest` | The compiled napi-rs binary scans real TypeScript, emits artifact modules, and the JS runtime API exposes correct, navigable type metadata. |
 
-### Rust tests (6 test modules under `src/tasty/`, ~23 tests)
+### Rust tests (8 test modules under `src/tasty/`, ~34 tests)
 
 | File                                | Coverage                                                                        |
 | ----------------------------------- | ------------------------------------------------------------------------------- |
 | `tests/scanner.rs`                  | Smoke: external_libs and kitchen_sink fixtures scan without error               |
+| `tests/extract.rs`                  | Direct `extract_ast` tests: interfaces, extends, unions, re-exports, default export, `as const` values, JSDoc, nested types, import bindings |
+| `tests/resolve.rs`                  | `resolve_ast`: cross-file `target_id` on imported types; same-file interface refs |
 | `tests/error_paths.rs`              | Parse diagnostics, missing import resolution, malformed `package.json`, circular type re-exports |
 | `scanner/packages/tests.rs`         | Relative import resolution, package.json `exports` handling, `@types/` fallback |
 | `scanner/workspace/tests.rs`        | Re-export following, external-import skipping, same-library relative follows    |
@@ -103,12 +105,15 @@ test case). We have weak _vertical_ coverage (very few tests probe the pipeline
 stages independently). And we still have limited _negative_ coverage beyond Phase 1’s narrow error-path
 and parse-diagnostics checks.
 
-### Gap 1: No Rust-side unit tests for extract or resolve
+### Gap 1: No Rust-side unit tests for ~~extract~~ or ~~resolve~~
 
-The entire `ast/extract` and `ast/resolve` layers — ~3,000 lines of the most
-complex code in the project — have zero dedicated unit tests. Everything is
-tested indirectly through the Vitest integration layer. That works right up until
-a regression in `extract` is masked by a coincidental pass in `resolve`.
+**Extract:** Phase 2.1 adds `src/tasty/tests/extract.rs` — direct `extract_ast` tests
+on synthetic `ScannedWorkspace` inputs (extends, unions, re-exports, default export,
+value bindings, JSDoc, nested refs, import bindings).
+
+**Resolve:** Phase 2.2 adds `src/tasty/tests/resolve.rs` — `extract_ast` then
+`resolve_ast` on small multi-file workspaces (cross-file import → `target_id`,
+same-file `LocalA` / `LocalB` reference).
 
 ### Gap 2: Incomplete error-path coverage (Phase 1 is a start)
 
@@ -250,11 +255,15 @@ it('reports parse errors in diagnostics without crashing', async () => {
 
 ### Phase 2: Test the pipeline stages independently (medium effort)
 
-#### 2.1 Rust unit tests for `extract`
+#### 2.1 Rust unit tests for `extract` — **done**
 
 The extract layer takes a `ScannedFile` (just source text + file_id) and
 produces a `ParsedFileAst`. This is a pure function — no filesystem, no
 network, no side effects. Test it directly.
+
+**Implemented:** `src/tasty/tests/extract.rs` (`crate::tasty::ast::extract_ast` on
+in-memory `ScannedWorkspace`). Nested `Array<Map<string, number>>` uses `number`
+instead of a custom `Foo` alias so the assertion stays fully structural.
 
 ```rust
 #[test]
@@ -282,21 +291,30 @@ fn extracts_interface_with_optional_member() {
 
 Priority targets for extract tests:
 
-| Aspect                 | What to test                                                 |
-| ---------------------- | ------------------------------------------------------------ |
-| Interface with extends | `extends` vec is populated with correct `TypeRef::Reference` |
-| Type alias with union  | `underlying` is `TypeRef::Union` with correct branches       |
-| Re-export bindings     | `export { X } from './other'` populates `export_bindings`    |
-| Default export         | `export default interface` produces exported symbol          |
-| Value bindings         | `const x = { a: 1 } as const` populates `value_bindings`     |
-| JSDoc extraction       | Comment text, tags, raw text all populated                   |
-| Nested type refs       | `Array<Map<string, Foo>>` nests correctly                    |
-| Import bindings        | Named, default, namespace imports all recorded               |
+| Aspect                 | What to test                                                 | Covered |
+| ---------------------- | ------------------------------------------------------------ | ------- |
+| Interface with extends | `extends` vec is populated with correct `TypeRef::Reference` | ✓ |
+| Type alias with union  | `underlying` is `TypeRef::Union` with correct branches       | ✓ |
+| Re-export bindings     | `export { X } from './other'` populates `export_bindings`    | ✓ |
+| Default export         | `export default interface` produces exported symbol          | ✓ |
+| Value bindings         | `const x = { a: 1 } as const` populates `value_bindings`     | ✓ |
+| JSDoc extraction       | Comment text, tags, raw text all populated                   | ✓ summary / description |
+| Nested type refs       | `Array<Map<…>>` nests correctly                            | ✓ |
+| Import bindings        | Named, default, namespace imports all recorded               | ✓ |
 
-#### 2.2 Rust unit tests for `resolve`
+#### 2.2 Rust unit tests for `resolve` — **done**
 
 The resolve layer takes a `ParsedTypeScriptAst` and wires cross-file references.
-Test it with synthetic multi-file ASTs:
+
+**Implemented:** `src/tasty/tests/resolve.rs`. Tests build `ParsedTypeScriptAst` with
+`extract_ast` on an in-memory `ScannedWorkspace` (same pattern as §2.1) so bindings
+match real parser output, then call `resolve_ast`. Covers:
+
+- **Cross-file:** `src/a.ts` exports `Foo`; `src/b.ts` imports `Foo` and `Bar.f: Foo` →
+  `target_id == sym:src/a.ts#Foo`.
+- **Same file:** `LocalB.a: LocalA` → `target_id == sym:src/one.ts#LocalA`.
+
+Sketch (hand-built AST is optional; we use extract + resolve):
 
 ```rust
 #[test]
@@ -316,11 +334,20 @@ fn resolves_cross_file_import_reference() {
 }
 ```
 
-#### 2.3 Rust unit tests for the `TypeRefMap` identity round-trip
+#### 2.3 Rust unit tests for the `TypeRefMap` identity round-trip — **done**
 
 The `TypeRefMap` trait is the backbone of both `resolve` and `instantiate`. An
 identity mapper (every hook returns the input unchanged) should produce
 structurally identical output for any input `TypeRef`:
+
+**Implemented:** split across two modules under `tests/`:
+
+- **`tests/type_ref_map_identity.rs`** — `IdentityMap` implementing every
+  [`TypeRefMap`](../../src/tasty/shared/type_ref_map.rs) hook (including
+  re-walking `type_arguments` in `map_reference`, which `map_type_ref` does not
+  pre-map).
+- **`tests/type_ref_map.rs`** — hand-built `TypeRef` union touching all variants,
+  then `assert_eq!(input, map_type_ref(&mut IdentityMap, input.clone()))`.
 
 ```rust
 struct IdentityMap;
