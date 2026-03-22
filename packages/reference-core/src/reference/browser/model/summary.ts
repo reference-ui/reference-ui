@@ -27,19 +27,38 @@ export function createReferenceMemberSummary(
 }
 
 /**
- * Inline unions of literals (and similar enumerable branches) are summarized with value chips;
- * the type line then shows "Union" instead of repeating every literal. Named types (`x: MyAlias`)
- * stay as-is because their declared type is a reference, not a top-level union node.
+ * Inline unions summarized as value chips use a short type line: `Union`, or `Union | string`,
+ * `Union | object`, etc. when the union also widens to intrinsic `string` / `object`. Named types
+ * (`x: MyAlias`) stay as-is (declared type is a reference, not a top-level union).
  */
-export function shouldUseUnionDisplayTypeLabel(
+export function getInlineUnionValueSetTypeLabel(
   member: TastyMember,
   type: TastyTypeRef | undefined,
   symbolLookup: Map<string, TastySymbol>,
-): boolean {
-  if (!type?.isUnion()) return false
+): string | null {
+  if (!type?.isUnion()) return null
   const resolvedType = resolveReferenceSummaryType(type, symbolLookup) ?? type
   const valueOptions = createReferenceValueOptions(member, resolvedType)
-  return shouldUseReferenceValueSet(resolvedType, valueOptions)
+  if (!shouldUseReferenceValueSet(resolvedType, valueOptions)) return null
+  return formatUnionValueSetDisplayLabel(resolvedType)
+}
+
+function formatUnionValueSetDisplayLabel(type: TastyTypeRef): string {
+  const widenings = collectUnionIntrinsicWidenings(type)
+  if (widenings.length === 0) return 'Union'
+  return `Union | ${widenings.join(' | ')}`
+}
+
+/** Presents widenings in a stable order (not source order). */
+function collectUnionIntrinsicWidenings(type: TastyTypeRef): string[] {
+  if (!type.isUnion()) return []
+  const present = new Set<string>()
+  for (const branch of type.getUnionTypes()) {
+    if (isIntrinsicStringWidener(branch)) present.add('string')
+    if (isIntrinsicObjectWidener(branch)) present.add('object')
+  }
+  const order = ['string', 'object'] as const
+  return order.filter((name) => present.has(name))
 }
 
 function createReferenceMemberTypeSummary(
@@ -99,6 +118,7 @@ function createReferenceValueOptions(member: TastyMember, type: TastyTypeRef): R
   }
 
   for (const variant of variants) {
+    if (shouldOmitUnionIntrinsicWidenerChip(type, variant)) continue
     const key = normalizeReferenceValueOption(variant)
     if (optionsByKey.has(key)) continue
     optionsByKey.set(key, { label: variant })
@@ -134,9 +154,32 @@ function shouldUseReferenceValueSet(type: TastyTypeRef, options: ReferenceValueO
   if (options.length === 0) return false
   if (type.isLiteral()) return true
   if (type.isUnion()) {
-    return type.getUnionTypes().every(isReferenceInlineValueBranch)
+    return type.getUnionTypes().every(isReferenceUnionBranchForValueSet)
   }
   return options.some((option) => option.isDefault)
+}
+
+/** Literal unions plus intrinsic widen-any (`string`, `object`, …). */
+function isReferenceUnionBranchForValueSet(type: TastyTypeRef): boolean {
+  if (isReferenceInlineValueBranch(type)) return true
+  return isIntrinsicStringWidener(type) || isIntrinsicObjectWidener(type)
+}
+
+function isIntrinsicStringWidener(type: TastyTypeRef): boolean {
+  return type.getKind() === 'intrinsic' && type.describe() === 'string'
+}
+
+function isIntrinsicObjectWidener(type: TastyTypeRef): boolean {
+  return type.getKind() === 'intrinsic' && type.describe() === 'object'
+}
+
+/** `getTastyTypeInlineVariants` repeats intrinsic widen branches as labels; omit those chips (shown on the type line). */
+function shouldOmitUnionIntrinsicWidenerChip(type: TastyTypeRef, variant: string): boolean {
+  if (!type.isUnion()) return false
+  const branches = type.getUnionTypes()
+  if (branches.some(isIntrinsicStringWidener) && variant === 'string') return true
+  if (branches.some(isIntrinsicObjectWidener) && variant === 'object') return true
+  return false
 }
 
 function isReferenceInlineValueBranch(type: TastyTypeRef): boolean {
