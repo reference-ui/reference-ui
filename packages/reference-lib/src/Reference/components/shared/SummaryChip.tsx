@@ -18,8 +18,8 @@ const summaryChipRecipe = recipe({
   variants: {
     tone: {
       soft: {
-        bg: 'gray.900',
-        color: 'white',
+        bg: 'gray.800',
+        color: 'gray.200',
       },
       accent: {
         background: 'sky.100',

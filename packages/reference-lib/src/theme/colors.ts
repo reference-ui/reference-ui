@@ -1,6 +1,19 @@
 import { tokens } from '@reference-ui/system'
 
 export const colors = {
+  slate: {
+    50: { value: 'oklch(98.4% 0.003 247.858)' },
+    100: { value: 'oklch(96.8% 0.007 247.896)' },
+    200: { value: 'oklch(92.9% 0.013 255.508)' },
+    300: { value: 'oklch(86.9% 0.022 252.894)' },
+    400: { value: 'oklch(70.4% 0.04 256.788)' },
+    500: { value: 'oklch(55.4% 0.046 257.417)' },
+    600: { value: 'oklch(44.6% 0.043 257.281)' },
+    700: { value: 'oklch(37.2% 0.044 257.287)' },
+    800: { value: 'oklch(27.9% 0.041 260.031)' },
+    900: { value: 'oklch(20.8% 0.042 265.755)' },
+    950: { value: 'oklch(12.9% 0.042 264.695)' },
+  },
   gray: {
     50: { value: 'oklch(98.5% 0.002 247.839)' },
     100: { value: 'oklch(96.7% 0.003 264.542)' },

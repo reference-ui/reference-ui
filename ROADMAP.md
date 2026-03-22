@@ -11,6 +11,8 @@ Make pretty api tables (WIP)
 - make a rust module for mcp server generation
 
 
+## Reload when Tokens get updated + add tests
+
 ## Vite 1st class integration
 
 - **Goal:** One coherent client update per logical change — avoid HMR storms while `ref sync --watch` is still writing (Panda, packager, declarations). Buffer or defer Vite’s reaction until a defined **ready** signal (e.g. sync completion), then notify once.
