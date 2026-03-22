@@ -70,6 +70,34 @@ For type aliases, constructed types (`Omit<…>`, intersections, re-exports), an
 goal of treating **`type` as a first-class documentation symbol**, see
 [`FIRST_CLASS_TYPES.md`](./FIRST_CLASS_TYPES.md).
 
+## Object-Like Projection
+
+One important downstream use of Tasty is turning complex TypeScript aliases into
+a **final object-like surface** that other tools can consume.
+
+That matters for things like:
+
+- API docs tables
+- MCP schema or tool generation
+- any consumer that needs the **effective fields** a user can actually interact with
+
+The key idea is:
+
+- Tasty should preserve the **canonical type graph**
+- Tasty may also expose a **derived object-like projection** when a type can be
+  flattened in a bounded, explainable way
+
+That projection is not meant to explain every derivation step. Its main job is
+to expose the **final useful object**:
+
+- field names
+- field types
+- optional / readonly state
+- a bounded view of recursive object structure
+
+If a type cannot be projected safely, Tasty should fall back to the canonical
+definition and links instead of inventing a misleading object view.
+
 ## Emitted Shape
 
 Tasty emits a manifest-first artifact set.
