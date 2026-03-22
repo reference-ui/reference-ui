@@ -1,8 +1,10 @@
 /**
- * Rhythm spacing utilities: transform "2r" → calc(2 * var(--spacing-r)).
+ * Rhythm spacing utilities: map token values to multiples of R via
+ * `resolveRhythm` (e.g. "2r" → calc(2 * var(--spacing-r))).
  * Used by extendUtilities in the bundled extensions runtime.
  */
 
+import { rhythmBorderRadiusUtilities } from './border'
 import { resolveRhythm } from './helpers'
 
 type RhythmTransform = {
@@ -91,6 +93,8 @@ export const rhythmUtilities = {
   scrollPaddingInline: rhythmTransform('scrollPaddingInline'),
   scrollPaddingInlineStart: rhythmTransform('scrollPaddingInlineStart'),
   scrollPaddingInlineEnd: rhythmTransform('scrollPaddingInlineEnd'),
+
+  ...rhythmBorderRadiusUtilities,
 
   outlineOffset: rhythmTransform('outlineOffset'),
   borderSpacing: rhythmTransform('borderSpacing'),
