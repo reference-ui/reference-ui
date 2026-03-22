@@ -1,6 +1,7 @@
 import type { RawTastyTypeRef, RawTastyTypeReference, TastyMember, TastySymbol, TastyTypeRef } from '../api-types'
 import { dedupeTastyMembers } from '../members'
 import { getTastyResolvedType } from '../resolution'
+import { instantiateTypeAliasDefinition } from './object-projection-instantiation'
 import { isInterfaceSymbol, isTypeAliasSymbol, isTypeReference } from './shared'
 import type { TastyApiRuntime } from './api-runtime'
 
@@ -82,9 +83,20 @@ async function projectReferenceMembers(
   if (utilityProjection) return utilityProjection
 
   const manifestEntry = api.getManifestEntry(reference.id)
-  if (!manifestEntry) return undefined
+  if (!manifestEntry) {
+    return isTypeParameterReference(reference) ? [] : undefined
+  }
 
-  return projectSymbolMembers(api, await api.loadSymbolById(reference.id), context)
+  const symbol = await api.loadSymbolById(reference.id)
+  const raw = symbol.getRaw()
+  if (isTypeAliasSymbol(raw)) {
+    const instantiated = instantiateTypeAliasDefinition(raw, reference.typeArguments)
+    if (instantiated) {
+      return projectRawTypeMembers(api, instantiated, context)
+    }
+  }
+
+  return projectSymbolMembers(api, symbol, context)
 }
 
 async function projectUtilityReferenceMembers(
@@ -134,29 +146,7 @@ async function projectPickMembers(
 
 function collectProjectedKeys(typeRef: TastyTypeRef): Set<string> | undefined {
   const concrete = getTastyResolvedType(typeRef) ?? typeRef
-  const raw = concrete.getRaw()
-
-  if (isTypeReference(raw)) {
-    return undefined
-  }
-
-  switch (raw.kind) {
-    case 'literal': {
-      const key = normalizeLiteralKey(raw.value)
-      return key == null ? undefined : new Set([key])
-    }
-    case 'union': {
-      const keys = new Set<string>()
-      for (const item of raw.types) {
-        const itemKeys = collectProjectedKeysFromRaw(item)
-        if (!itemKeys) return undefined
-        for (const key of itemKeys) keys.add(key)
-      }
-      return keys
-    }
-    default:
-      return undefined
-  }
+  return collectProjectedKeysFromRaw(concrete.getRaw())
 }
 
 function collectProjectedKeysFromRaw(raw: RawTastyTypeRef): Set<string> | undefined {
@@ -193,4 +183,16 @@ function normalizeLiteralKey(value: string): string | undefined {
     (trimmed.startsWith('`') && trimmed.endsWith('`'))
 
   return quoted ? trimmed.slice(1, -1) : trimmed
+}
+
+function isTypeParameterReference(reference: RawTastyTypeReference): boolean {
+  return reference.id === reference.name && !reference.typeArguments?.length
+}
+
+async function projectRawTypeMembers(
+  api: TastyApiRuntime,
+  raw: RawTastyTypeRef,
+  context: ProjectionContext,
+): Promise<TastyMember[] | undefined> {
+  return projectTypeMembers(api, api.createTypeRef(raw), context)
 }

@@ -54,7 +54,7 @@ structure. The job is not only to support `interface`, but to support
 | --- | --- |
 | **Interfaces** | `SymbolShell` with `defined_members`, `extends`, stable ids; runtime exposes `getMembers()` for interface payloads. |
 | **Type aliases** | `SymbolShell` with `kind: TypeAlias`, **`underlying` `TypeRef`**, usually **no** `defined_members` (members live on interfaces). |
-| **Synthetic re-export** | `export type { Name } from 'module'` gets a **shell** in the barrel (`ast/extract/module_bindings/reexport_type_alias.rs`) so the name appears in the manifest. The underlying ref is often a **name reference** with **`target_id: None`** until resolution catches up—so the RHS may not serialize as the real declaration in the library file. |
+| **Named type re-export** | `export type { Name } from 'module'` records an **export binding** to the canonical symbol instead of synthesizing a second local alias shell. This avoids duplicate-name pollution in the manifest while still exposing the real symbol through the barrel export surface. |
 
 The JS runtime mirrors that: **`getMembers()` is interface-only** (`js/tasty/internal/wrappers.ts`). Type aliases are not treated as carrying a member list, even when the RHS is an object type.
 
@@ -67,8 +67,10 @@ This is **not** a single bug; it is **layered contracts**:
 1. **Extraction**  
    A type alias’s **RHS** is lowered to `TypeRef` (`ast/extract/types/`, `type_references/`). Deep or opaque nodes may stay **abstract** in IR.
 
-2. **Synthetic barrels**  
-   Re-export shells prioritize **discoverability** (name in manifest) over **fully hydrated RHS** from the remote module. The alias may look **self-referential** until linked to the **canonical symbol** in the target chunk.
+2. **Re-export surfaces**  
+   The export surface may differ from the defining file. Tasty needs to preserve
+   the **barrel/export path** without inventing duplicate local symbols or
+   losing the **canonical target** behind that export.
 
 3. **Resolution / instantiation**  
    Following `TypeRef::Reference` to a **loaded symbol**, and **instantiating** generics, is partial (`ast/resolve/`). Utility types like `Omit` are **not** guaranteed to expand to a flat property list in artifacts.
@@ -184,10 +186,10 @@ type aliases as semantic API objects.
 
 **Ship in this phase:**
 
-- extraction test for `export type { T } from './other'` proving the synthetic
-  shell exists and carries an underlying `Reference`
-- resolve test proving that synthetic re-export aliases gain a **resolved**
-  `target_id` when the remote export is known
+- extraction test for named `export type { T } from '...'` proving Tasty keeps a
+  canonical export surface without synthesizing duplicate local alias shells
+- resolve test proving local named type re-exports still point at the canonical
+  source symbol
 - resolve test proving local aliases with generic instantiations still preserve
   a readable `TypeRef` after resolution
 - artifact/runtime test coverage for how alias definitions are emitted and read
@@ -203,48 +205,47 @@ while silently regressing another.
 
 **Implemented so far:**
 
-- extraction coverage now asserts that synthetic `export type { T } from './other'`
-  shells carry an underlying `Reference`
-- resolve coverage now asserts that those synthetic alias shells resolve to the
-  remote symbol id
+- extraction coverage now asserts that named `export type` re-exports do **not**
+  synthesize duplicate local alias shells
+- resolve coverage now asserts that local named type re-exports keep only the
+  canonical source symbol in the resolved graph
 - JS runtime coverage now includes a focused projection test for alias
   references, intersections, and `Omit`
 
 ### Phase 1: Canonicalize re-exported alias identity
 
-**Status:** done for same-name `export type { X } from '...'`
+**Status:** done for canonical export identity
 
-Fix the highest-value failure first: `export type { X } from 'pkg'` should point
-at the **real declaration**, not remain a name-only reference with
-`target_id: None`.
+Fix the highest-value failure first: named `export type { X } from '...'`
+should point at the **real declaration** and should not create a second
+competing local symbol when the canonical one already exists elsewhere in the
+graph.
 
 **Implementation target:**
 
-- keep the synthetic shell in the barrel so manifest discoverability stays the
-  same
-- make its `underlying: TypeRef::Reference` resolve to the remote symbol id via
-  existing import/export indexes
-- preserve `source_module` for display/debugging, but treat `target_id` as the
-  canonical navigation edge
+- preserve the barrel/export surface through `export_bindings`
+- point that export surface at the canonical source symbol id via existing
+  import/export indexes
+- avoid synthesizing duplicate local type-alias shells for named re-exports
 
 **Likely touch points:**
 
-- `ast/extract/module_bindings/reexport_type_alias.rs`
-- `ast/resolve/resolver/resolve.rs`
+- `ast/extract/module_bindings/exports.rs`
+- `ast/resolve/index.rs`
 - export/symbol index plumbing if the current resolver misses this case
 
 **Success criteria:**
 
-- a re-exported alias symbol is still indexed under the barrel name
-- its underlying reference resolves to the target symbol id
+- the exported name still resolves through the barrel/module surface
+- the canonical symbol id remains the single source of truth
 - downstream consumers can follow the alias definition to the canonical symbol
-  without special heuristics
+  without special heuristics or duplicate-name disambiguation
 
 **Implemented so far:**
 
-- same-name synthetic type re-exports already keep the barrel shell while
-  resolving the underlying `Reference` to the canonical remote symbol id
-- this contract is now pinned by unit tests instead of being incidental behavior
+- named type re-exports now rely on export bindings plus canonical source
+  symbols instead of synthetic local alias shells
+- this contract is pinned by unit tests instead of being incidental behavior
 
 ### Phase 2: Make alias definitions reliably readable
 
@@ -316,10 +317,10 @@ prefer “definition + links” over incorrect rows.
 - the JS graph API now has an initial `projectObjectLikeMembers()` helper
 - current bounded support covers:
   interface flattening reuse, object-literal aliases, alias-following,
-  intersections of projectable inputs, and `Omit` / `Pick` with knowable key
-  literals
-- recursion boundaries, provenance metadata, and emitted-contract support are
-  still open
+  intersections of projectable inputs, `Omit` / `Pick` with knowable key
+  literals, generic alias instantiation, and recursive-boundary preservation for
+  `Nested<P>`-style helpers
+- provenance metadata and emitted-contract support are still open
 
 ### Phase 4: Align the JS runtime API
 
@@ -396,8 +397,8 @@ These are important to keep the project bounded:
 
 - no attempt to implement full TypeScript conditional or mapped-type evaluation
 - no guarantee that every alias can produce projected members
-- no requirement that synthetic re-export shells duplicate full remote payloads
-  if canonical follow-by-id is sufficient
+- no requirement that named re-exports synthesize duplicate local symbols if the
+  canonical export binding is sufficient
 - no downstream promise that aliases and interfaces are literally the same
   internal thing; the goal is parity of usefulness, not false equivalence
 
@@ -418,4 +419,4 @@ These are important to keep the project bounded:
 
 ## Summary
 
-Today, **interfaces** carry **members**; **type aliases** carry **`TypeRef` RHS** with **partial** resolution and **synthetic barrels** that optimize **indexing** over **full hydration**. Making Tasty **useful** for modern TS APIs means **treating type aliases as first-class semantic API objects**, not only **name entries**: **resolve** them to **canonical** definitions, **preserve** composite structure in **`TypeRef`**, and **optionally project** object-like RHS into **member-shaped** output—within **clear, bounded** rules.
+Today, **interfaces** carry **members**; **type aliases** carry **`TypeRef` RHS** with **partial** resolution. Named re-exports now resolve through the **canonical source symbol** instead of synthetic duplicate shells. Making Tasty **useful** for modern TS APIs means **treating type aliases as first-class semantic API objects**, not only **name entries**: **resolve** them to **canonical** definitions, **preserve** composite structure in **`TypeRef`**, and **optionally project** object-like RHS into **member-shaped** output—within **clear, bounded** rules.
