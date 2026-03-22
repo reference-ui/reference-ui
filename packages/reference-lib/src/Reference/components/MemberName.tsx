@@ -4,11 +4,16 @@ import { MonoText } from './shared/MonoText.js'
 export function MemberName({ name }: { name: string }) {
   return (
     <Div
-      p="1r"
-      backgroundColor="reference.subtleBackground"
+      px="1.5r"
+      py="0.5r"
+      backgroundColor="gray.800"
+      color="white"
       borderRadius="1r"
       display="inline-flex"
       width="fit-content"
+      fontFamily="reference.mono"
+      fontWeight="550"
+      mb="2r"
     >
       {name}
     </Div>

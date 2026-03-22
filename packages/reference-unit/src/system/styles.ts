@@ -19,6 +19,9 @@ tokens({
       dark: REFERENCE_UNIT_MODE_DARK_RGB,
     },
   },
+  radii: {
+    xl: { value: '0.75rem' },
+  },
 })
 
 globalCss({

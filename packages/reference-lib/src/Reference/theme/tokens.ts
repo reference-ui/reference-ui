@@ -36,7 +36,7 @@ export const referenceBrowserTokenConfig = {
       },
       primarySoftBackground: {
         value: '#eff6ff',
-        dark: '#1e3a8a',
+        dark: '{colors.blue.100}',
       },
       primarySoftBorder: {
         value: '#bfdbfe',
@@ -48,7 +48,7 @@ export const referenceBrowserTokenConfig = {
       },
       primarySoftForeground: {
         value: '#1e40af',
-        dark: '#93c5fd',
+        dark: '{colors.blue.900}',
       },
     },
   },
