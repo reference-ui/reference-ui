@@ -4,6 +4,7 @@ import type {
   ReferenceValueOption,
 } from '@reference-ui/types'
 import { SummaryChip } from './shared/SummaryChip.js'
+import { SummarySnippet } from './shared/SummarySnippet.js'
 
 export function MemberTypeSummary({ summary }: { summary?: ReferenceMemberTypeSummary }) {
   if (!summary) return null
@@ -14,7 +15,7 @@ export function MemberTypeSummary({ summary }: { summary?: ReferenceMemberTypeSu
     case 'callSignature':
     case 'typeExpression':
     case 'opaqueType':
-      return <SummaryChip>{summary.text}</SummaryChip>
+      return <SummarySnippet>{summary.text}</SummarySnippet>
     default:
       return null
   }
