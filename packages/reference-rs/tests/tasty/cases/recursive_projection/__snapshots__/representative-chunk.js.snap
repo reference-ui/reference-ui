@@ -1,0 +1,32 @@
+const symbol = {
+  id: "_s0",
+  name: "BaseStyleProps",
+  library: "user",
+  members:   [
+    {
+      name: "color",
+      optional: true,
+      readonly: false,
+      kind: "property",
+      type:   {
+        kind: "intrinsic",
+        name: "string"
+      }
+    },
+    {
+      name: "base",
+      optional: true,
+      readonly: false,
+      kind: "property",
+      type:   {
+        kind: "intrinsic",
+        name: "string"
+      }
+    }
+  ],
+  extends: [],
+  types: []
+};
+export { symbol as _s0 };
+export default symbol;
+
