@@ -23,39 +23,38 @@ export function MemberJsDoc({
       gap="reference.sm"
       position="relative"
       paddingTop="calc(0.875rem + 2px)"
-      css={{
-        _before: {
-          content: '""',
-          position: 'absolute',
-          insetInline: '0',
-          top: '0',
-          height: '2px',
-          color: 'gray.800',
-          backgroundImage:
-            'radial-gradient(ellipse 5px 2px at 6px 1px, currentColor 98%, transparent 100%)',
-          backgroundSize: '12px 2px',
-          backgroundRepeat: 'repeat-x',
-          backgroundPosition: 'left top',
-        },
-      }}
+      // css={{
+      //   _before: {
+      //     content: '""',
+      //     position: 'absolute',
+      //     insetInline: '0',
+      //     top: '0',
+      //     height: '2px',
+      //     color: 'gray.800',
+      //     backgroundImage:
+      //       'radial-gradient(ellipse 5px 2px at 6px 1px, currentColor 98%, transparent 100%)',
+      //     backgroundSize: '12px 2px',
+      //     backgroundRepeat: 'repeat-x',
+      //     backgroundPosition: 'left top',
+      //   },
+      // }}
     >
+      <Div mb="2r" height="1r" background="reference.foreground" width="6r" />
       {paramRows.map(param => (
         <Div key={`${memberId}-${param.name}`} display="grid" gap="reference.xxs">
-          <Div display="flex" alignItems="center" gap="reference.xs" flexWrap="wrap">
+          <Div display="flex" alignItems="center" flexWrap="wrap" gap="2r">
             <JsDocParamChip tagLabel="param" />
-            <MonoText>{param.name}</MonoText>
-            {param.type ? (
-              <Small color="reference.muted">
-                <MonoText>{param.type}</MonoText>
-              </Small>
-            ) : null}
+            <Div fontFamily="reference.mono" fontSize="4r" fontWeight="550">
+              {param.name}
+            </Div>
             {param.optional ? <Small color="reference.muted">optional</Small> : null}
+
+            {param.description && (
+              <P margin="0" color="gray.400">
+                {param.description}
+              </P>
+            )}
           </Div>
-          {param.description ? (
-            <P margin="0" color="reference.muted">
-              {param.description}
-            </P>
-          ) : null}
         </Div>
       ))}
 
@@ -63,12 +62,12 @@ export function MemberJsDoc({
         <Div key={`${memberId}-${tag.name}-${index}`} display="grid" gap="reference.xxs">
           <Div display="flex" alignItems="center" gap="reference.xs" flexWrap="wrap">
             <JsDocParamChip tagLabel={tag.name} />
+            {tag.value ? (
+              <P margin="0" color="reference.foreground">
+                {tag.value}
+              </P>
+            ) : null}
           </Div>
-          {tag.value ? (
-            <P margin="0" color="reference.muted">
-              {tag.value}
-            </P>
-          ) : null}
         </Div>
       ))}
     </Div>
