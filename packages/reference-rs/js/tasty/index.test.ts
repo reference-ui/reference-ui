@@ -298,6 +298,109 @@ describe('tasty runtime', () => {
     expect(dependencies.map((symbol) => symbol.getName()).sort()).toEqual(['Size', 'StyleProps'])
   })
 
+  it('projects object-like members for aliases, intersections, and Omit utilities', async () => {
+    const manifest = {
+      version: '2',
+      warnings: [],
+      symbolsByName: {
+        BaseProps: ['base'],
+        PatternProps: ['pattern'],
+        ProjectedProps: ['projected'],
+        PublicProjectedProps: ['publicProjected'],
+      },
+      symbolsById: {
+        base: { id: 'base', name: 'BaseProps', kind: 'interface', chunk: './chunks/base.js', library: 'user' },
+        pattern: { id: 'pattern', name: 'PatternProps', kind: 'typeAlias', chunk: './chunks/pattern.js', library: 'user' },
+        projected: { id: 'projected', name: 'ProjectedProps', kind: 'typeAlias', chunk: './chunks/projected.js', library: 'user' },
+        publicProjected: {
+          id: 'publicProjected',
+          name: 'PublicProjectedProps',
+          kind: 'typeAlias',
+          chunk: './chunks/public-projected.js',
+          library: 'user',
+        },
+      },
+    } as const
+
+    const chunks = {
+      './chunks/base.js': {
+        base: {
+          id: 'base',
+          name: 'BaseProps',
+          library: 'user',
+          members: [
+            { name: 'tone', optional: true, readonly: false, kind: 'property', type: { kind: 'intrinsic', name: 'string' } },
+            { name: 'size', optional: true, readonly: false, kind: 'property', type: { kind: 'intrinsic', name: 'number' } },
+            { name: 'color', optional: true, readonly: false, kind: 'property', type: { kind: 'intrinsic', name: 'string' } },
+          ],
+          extends: [],
+          types: [],
+        },
+      },
+      './chunks/pattern.js': {
+        pattern: {
+          id: 'pattern',
+          name: 'PatternProps',
+          library: 'user',
+          definition: {
+            kind: 'object',
+            members: [
+              { name: 'gap', optional: true, readonly: false, kind: 'property', type: { kind: 'intrinsic', name: 'string' } },
+            ],
+          },
+        },
+      },
+      './chunks/projected.js': {
+        projected: {
+          id: 'projected',
+          name: 'ProjectedProps',
+          library: 'user',
+          definition: {
+            kind: 'intersection',
+            types: [
+              {
+                id: 'Omit',
+                name: 'Omit',
+                library: 'typescript',
+                typeArguments: [
+                  { id: 'base', name: 'BaseProps', library: 'user' },
+                  {
+                    kind: 'union',
+                    types: [
+                      { kind: 'literal', value: "'color'" },
+                    ],
+                  },
+                ],
+              },
+              { id: 'pattern', name: 'PatternProps', library: 'user' },
+            ],
+          },
+        },
+      },
+      './chunks/public-projected.js': {
+        publicProjected: {
+          id: 'publicProjected',
+          name: 'PublicProjectedProps',
+          library: 'user',
+          definition: { id: 'projected', name: 'ProjectedProps', library: 'user' },
+        },
+      },
+    } as const
+
+    const api = createTastyApiFromManifest({
+      manifest,
+      importer: async (artifactPath) => chunks[artifactPath as keyof typeof chunks],
+    })
+
+    const projected = await api.loadSymbolByName('ProjectedProps')
+    const publicProjected = await api.loadSymbolByName('PublicProjectedProps')
+    const projectedMembers = await api.graph.projectObjectLikeMembers(projected)
+    const publicProjectedMembers = await api.graph.projectObjectLikeMembers(publicProjected)
+
+    expect(projectedMembers?.map((member) => member.getName())).toEqual(['tone', 'size', 'gap'])
+    expect(publicProjectedMembers?.map((member) => member.getName())).toEqual(['tone', 'size', 'gap'])
+  })
+
   it('exposes type-alias helpers over the emitted definition shape', async () => {
     const api = createTastyApi({
       manifestPath: manifestPath('default_params'),

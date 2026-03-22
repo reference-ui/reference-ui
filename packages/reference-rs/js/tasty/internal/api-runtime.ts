@@ -1,10 +1,12 @@
 import type {
   CreateTastyApiFromManifestOptions,
   RawTastyManifest,
+  RawTastyMember,
   RawTastySymbolIndexEntry,
   RawTastySymbolRef,
   RawTastyTypeRef,
   TastyApi,
+  TastyMember,
   TastyGraphApi,
   TastySymbol,
   TastySymbolRef,
@@ -27,7 +29,8 @@ import {
   type ModuleNamespace,
   type TastySymbolModel,
 } from './shared'
-import { TastySymbolImpl, TastySymbolRefImpl, TastyTypeRefImpl } from './wrappers'
+import { projectObjectLikeMembers } from './object-projection'
+import { TastyMemberImpl, TastySymbolImpl, TastySymbolRefImpl, TastyTypeRefImpl } from './wrappers'
 
 interface CreateTastyApiRuntimeOptions {
   manifestPath: string
@@ -86,6 +89,9 @@ export class TastyApiRuntime implements TastyApi {
       },
       getEffectiveMembers: async (symbol) => {
         return dedupeTastyMembers(await this.graph.flattenInterfaceMembers(symbol))
+      },
+      projectObjectLikeMembers: async (symbol) => {
+        return projectObjectLikeMembers(this, symbol)
       },
       collectUserOwnedReferences: async (symbol) => {
         const refs = collectUserOwnedReferencesFromSymbol(symbol.getRaw())
@@ -250,6 +256,10 @@ export class TastyApiRuntime implements TastyApi {
 
   createTypeRef(raw: RawTastyTypeRef): TastyTypeRef {
     return new TastyTypeRefImpl(this, raw)
+  }
+
+  createMember(raw: RawTastyMember): TastyMember {
+    return new TastyMemberImpl(this, raw)
   }
 
   private async loadRawSymbol(entry: RawTastySymbolIndexEntry): Promise<TastySymbolModel> {

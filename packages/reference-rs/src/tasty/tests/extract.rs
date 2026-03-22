@@ -134,6 +134,19 @@ fn export_type_from_module_adds_type_alias_shell() {
     assert_eq!(shell.kind, TsSymbolKind::TypeAlias);
     assert!(shell.exported);
     assert!(index.import_bindings.get("T").is_some());
+    match shell.underlying.as_ref().expect("synthetic alias underlying") {
+        TypeRef::Reference {
+            name,
+            target_id,
+            source_module,
+            ..
+        } => {
+            assert_eq!(name, "T");
+            assert!(target_id.is_none());
+            assert_eq!(source_module.as_deref(), Some("./other"));
+        }
+        other => panic!("expected underlying Reference, got {other:?}"),
+    }
 }
 
 #[test]

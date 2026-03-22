@@ -147,6 +147,7 @@ export interface TastyGraphApi {
   loadExtendsChain(symbol: TastySymbol): Promise<TastySymbol[]>
   flattenInterfaceMembers(symbol: TastySymbol): Promise<TastyMember[]>
   getEffectiveMembers(symbol: TastySymbol): Promise<TastyMember[]>
+  projectObjectLikeMembers(symbol: TastySymbol): Promise<TastyMember[] | undefined>
   collectUserOwnedReferences(symbol: TastySymbol): Promise<TastySymbolRef[]>
 }
 

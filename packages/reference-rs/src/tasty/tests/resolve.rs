@@ -102,3 +102,39 @@ fn resolves_same_file_interface_reference() {
         other => panic!("expected Reference to LocalA, got {other:?}"),
     }
 }
+
+#[test]
+fn resolves_synthetic_export_type_alias_to_remote_symbol() {
+    let scanned = workspace(&[
+        ("src/other.ts", "export type T = string;\n"),
+        ("src/index.ts", "export type { T } from './other';\n"),
+    ]);
+    let parsed = extract_ast(&scanned);
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let graph = resolve_ast(parsed);
+
+    let barrel_alias = graph
+        .symbols
+        .values()
+        .find(|s| s.name == "T" && s.file_id == "src/index.ts")
+        .expect("barrel type alias symbol");
+
+    let expected = symbol_id("src/other.ts", "T");
+    match barrel_alias
+        .underlying
+        .as_ref()
+        .expect("barrel alias should have underlying")
+    {
+        TypeRef::Reference {
+            name,
+            target_id,
+            source_module,
+            ..
+        } => {
+            assert_eq!(name, "T");
+            assert_eq!(target_id.as_ref(), Some(&expected));
+            assert_eq!(source_module.as_deref(), Some("./other"));
+        }
+        other => panic!("expected Reference to remote alias, got {other:?}"),
+    }
+}
