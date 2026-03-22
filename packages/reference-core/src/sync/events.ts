@@ -1,35 +1,36 @@
 import { emit, on, onceAll } from '../lib/event-bus'
-import { forWorker } from './events.utils'
-
-const SYNC_FAILED_EVENT = 'sync:failed'
+import { afterFirst, combineTrigger, emitOnAny, forWorker, onReady } from './events.utils'
 
 /**
  * Event wiring. Only on/emit/onceAll – pass payloads, no side effects.
  * watch:change → run:virtual:sync:file (single file), passing payload through.
  */
 export function initEvents(): void {
-  let packagerReady = false
-  let pandaCodegenCount = 0
-  let referenceCompleteCount = 0
-  let lastPackagerPandaCount = 0
-  let lastPackagerReferenceCount = 0
-
-  const maybeRunPackager = () => {
-    if (!packagerReady) return
-    if (pandaCodegenCount <= lastPackagerPandaCount) return
-    if (referenceCompleteCount <= lastPackagerReferenceCount) return
-
-    lastPackagerPandaCount = pandaCodegenCount
-    lastPackagerReferenceCount = referenceCompleteCount
-    emit('run:packager:bundle')
-  }
-
-  on('virtual:ready', () => {
+  onceAll(['virtual:ready', 'reference:ready'], () => {
     emit('run:virtual:copy:all')
+  })
+
+  on('virtual:copy:complete', ({ virtualDir }) => {
+    emit('run:reference:component:copy', { virtualDir })
+  })
+
+  on('reference:component:copied', () => {
+    emit('virtual:complete', {})
   })
 
   on('watch:change', (payload) => {
     emit('run:virtual:sync:file', payload)
+  })
+
+  afterFirst('virtual:complete', {
+    on: 'virtual:fs:change',
+    emit: 'run:system:config',
+  })
+
+  afterFirst('virtual:complete', {
+    on: 'virtual:fs:change',
+    emit: 'run:reference:build',
+    payload: {},
   })
 
   forWorker({
@@ -45,40 +46,27 @@ export function initEvents(): void {
     payload: {},
   })
 
-  onceAll(['system:config:complete', 'system:panda:ready'], () => {
-    emit('run:panda:codegen')
+  forWorker({
+    ready: 'system:panda:ready',
+    on: 'system:config:complete',
+    emit: 'run:panda:codegen',
   })
 
-  on('system:config:failed', () => {
-    emit(SYNC_FAILED_EVENT)
+  emitOnAny({
+    on: [
+      'system:config:failed',
+      'system:panda:codegen:failed',
+      'virtual:failed',
+      'reference:failed',
+      'reference:component:copy-failed',
+    ],
+    emit: 'sync:failed',
   })
 
-  on('system:panda:codegen:failed', () => {
-    emit(SYNC_FAILED_EVENT)
-  })
-
-  on('virtual:failed', () => {
-    emit(SYNC_FAILED_EVENT)
-  })
-
-  on('reference:failed', () => {
-    emit(SYNC_FAILED_EVENT)
-  })
-
-  on('packager:ready', () => {
-    packagerReady = true
-    maybeRunPackager()
-  })
-
-  on('system:panda:codegen', () => {
-    pandaCodegenCount += 1
-    maybeRunPackager()
-  })
-
-  on('reference:complete', () => {
-    referenceCompleteCount += 1
-    maybeRunPackager()
-  })
+  onReady('packager:ready', combineTrigger({
+    requires: ['system:panda:codegen', 'reference:complete'],
+    emit: 'run:packager:bundle',
+  }))
 
   /** Sync completes after packager-ts:complete. Packager emits packager-ts:complete when skipTypescript so this always fires. */
   on('packager-ts:complete', () => {

@@ -1,16 +1,20 @@
 import { test, expect } from '@playwright/test'
-import { readFile } from 'node:fs/promises'
-import { join } from 'node:path'
-import { pathToFileURL } from 'node:url'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { dirname, join } from 'node:path'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { colors } from '@reference-ui/lib/theme'
 import { addToConfig, getSandboxDir } from '../../environments/lib/config.js'
 import { runRefSync, waitForRefSyncReady } from '../../environments/lib/ref-sync.js'
+import { testRoutes } from '../../environments/base/routes.js'
 
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const PACKAGE_ROOT = join(__dirname, '..', '..', '..')
 const LAYER_TOKEN_VAR = '--colors-test-primary'
 const LAYER_NAME = 'reference-e2e'
 const RENAMED_LAYER_NAME = 'reference-e2e-renamed'
 const REACT_LAYER_PLACEHOLDER = '__REFERENCE_UI_LAYER_NAME__'
 const sandboxDir = getSandboxDir()
+const cssSnapshotDir = join(PACKAGE_ROOT, 'css_snapshot')
 const { tokensConfig } = await import(pathToFileURL(join(sandboxDir, 'tokens.ts')).href)
 
 function hexToRgb(hex: string): string {
@@ -26,6 +30,15 @@ async function enableLayersMode(): Promise<string> {
   return sandboxDir
 }
 
+async function snapshotLayerCss(name: string): Promise<string> {
+  const stylesPath = join(sandboxDir, '.reference-ui', 'react', 'styles.css')
+  const content = await readFile(stylesPath, 'utf-8')
+  await mkdir(cssSnapshotDir, { recursive: true })
+  const projectName = process.env.REF_TEST_PROJECT ?? 'unknown-project'
+  await writeFile(join(cssSnapshotDir, `${projectName}-${name}.css`), content, 'utf-8')
+  return content
+}
+
 test.describe.serial('layer', () => {
   test('addToConfig with layers only writes valid ui.config.ts', async () => {
     await addToConfig({ extends: '[]', layers: '[baseSystem]' })
@@ -39,8 +52,7 @@ test.describe.serial('layer', () => {
     // Lib is already synced by test:prepare; only sandbox needs sync after config change.
     await addToConfig({ extends: '[]', layers: '[baseSystem]' })
     await runRefSync(sandboxDir)
-    const stylesPath = join(sandboxDir, '.reference-ui', 'react', 'styles.css')
-    const content = await readFile(stylesPath, 'utf-8')
+    const content = await snapshotLayerCss('layer-styles')
     expect(content, 'styles.css should contain layer block from baseSystem').toContain(
       `@layer ${LAYER_NAME} {`
     )
@@ -60,7 +72,7 @@ test.describe.serial('layer', () => {
   test('primitives emit data-layer from config name and preserve other props', async ({ page }) => {
     test.setTimeout(60_000)
     await enableLayersMode()
-    await page.goto('/')
+    await page.goto(testRoutes.layers)
     const host = page.getByTestId('consumer-layer-host')
     await expect(host).toBeVisible()
     await expect(host).toHaveAttribute('data-layer', LAYER_NAME)
@@ -70,7 +82,7 @@ test.describe.serial('layer', () => {
   test('data-layer from config name scopes consumer tokens to primitives', async ({ page }) => {
     test.setTimeout(60_000)
     await enableLayersMode()
-    await page.goto('/')
+    await page.goto(testRoutes.layers)
     const outside = page.getByTestId('consumer-layer-outside')
     const host = page.getByTestId('consumer-layer-host')
 
@@ -88,7 +100,7 @@ test.describe.serial('layer', () => {
   test('data-layer resolves var() color for primitives in scope', async ({ page }) => {
     test.setTimeout(60_000)
     await enableLayersMode()
-    await page.goto('/')
+    await page.goto(testRoutes.layers)
     const inside = page.getByTestId('consumer-layer-text')
     await expect(inside).toBeVisible()
     const insideColor = await inside.evaluate((e) => getComputedStyle(e).color)
@@ -102,10 +114,29 @@ test.describe.serial('layer', () => {
     expect(outsideToken).toBe('')
   })
 
+  test.skip('data-layer preserves light and dark token values within the consumer layer scope', async ({ page }) => {
+    test.setTimeout(60_000)
+    await enableLayersMode()
+    await snapshotLayerCss('color-mode')
+    await page.goto(testRoutes.layers)
+
+    const lightTarget = page.getByTestId('consumer-layer-color-mode-light')
+    const darkTarget = page.getByTestId('consumer-layer-color-mode-dark')
+
+    await expect(lightTarget).toBeVisible()
+    await expect(darkTarget).toBeVisible()
+
+    const lightColor = await lightTarget.evaluate((e) => getComputedStyle(e).color)
+    const darkColor = await darkTarget.evaluate((e) => getComputedStyle(e).color)
+
+    expect(lightColor).toBe(hexToRgb(tokensConfig.colors.test.colorMode.value))
+    expect(darkColor).toBe(hexToRgb(tokensConfig.colors.test.colorMode.dark))
+  })
+
   test('primitive host scopes tokens to raw DOM descendants, but not outside DOM', async ({ page }) => {
     test.setTimeout(60_000)
     await enableLayersMode()
-    await page.goto('/')
+    await page.goto(testRoutes.layers)
 
     const outside = page.getByTestId('consumer-layer-outside')
     const rawChild = page.getByTestId('consumer-layer-raw-child')
@@ -125,7 +156,7 @@ test.describe.serial('layer', () => {
     test.setTimeout(60_000)
     await addToConfig({ extends: '[]', layers: '[baseSystem]' })
     await waitForRefSyncReady(sandboxDir, { timeout: 45_000 })
-    await page.goto('/')
+    await page.goto(testRoutes.layers)
     const inside = page.getByTestId('layers-test')
     await expect(inside).toBeVisible()
     // Consumer primitives have data-layer="reference-e2e"; upstream tokens are under [data-layer="reference-ui"].
@@ -150,6 +181,9 @@ test.describe.serial('layer', () => {
     const stylesPath = join(sandboxDir, '.reference-ui', 'react', 'styles.css')
     const reactBundlePath = join(sandboxDir, '.reference-ui', 'react', 'react.mjs')
     const stylesContent = await readFile(stylesPath, 'utf-8')
+    await mkdir(cssSnapshotDir, { recursive: true })
+    const projectName = process.env.REF_TEST_PROJECT ?? 'unknown-project'
+    await writeFile(join(cssSnapshotDir, `${projectName}-renamed-layer.css`), stylesContent, 'utf-8')
     const reactBundle = await readFile(reactBundlePath, 'utf-8')
 
     expect(stylesContent).toContain(`@layer ${RENAMED_LAYER_NAME} {`)

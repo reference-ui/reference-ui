@@ -1,5 +1,6 @@
 import { channelListeners } from './channel'
 import './dispatch'
+import { parseBusMessage } from './wire'
 import type { Events } from '../../../events'
 
 type EventHandler = (payload: unknown) => void | Promise<void>
@@ -24,8 +25,9 @@ export function on<K extends keyof Events>(
 export function on(event: string, handler: (payload: unknown) => void | Promise<void>): void
 export function on(event: string, handler: (payload: unknown) => void | Promise<void>) {
   const listener: WrappedListener = (msg: Event) => {
-    if ((msg as MessageEvent).data?.type === 'bus:event' && (msg as MessageEvent).data?.event === event) {
-      handler((msg as MessageEvent).data.payload)
+    const parsed = parseBusMessage((msg as MessageEvent).data)
+    if (parsed?.event === event) {
+      handler(parsed.payload)
     }
   }
   listener.originalHandler = handler
@@ -43,9 +45,10 @@ export function once<K extends keyof Events>(
 export function once(event: string, handler: (payload: unknown) => void | Promise<void>): void
 export function once(event: string, handler: (payload: unknown) => void | Promise<void>) {
   const listener: WrappedListener = (msg: Event) => {
-    if ((msg as MessageEvent).data?.type === 'bus:event' && (msg as MessageEvent).data?.event === event) {
+    const parsed = parseBusMessage((msg as MessageEvent).data)
+    if (parsed?.event === event) {
       channelListeners.get(event)?.delete(listener)
-      handler((msg as MessageEvent).data.payload)
+      handler(parsed.payload)
     }
   }
   listener.originalHandler = handler

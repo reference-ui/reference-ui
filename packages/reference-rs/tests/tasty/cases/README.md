@@ -16,6 +16,10 @@ So:
 - `unions_literals/` → union types, literal types, optional members.
 - `tsx/` → .tsx file scanning (interfaces and type aliases from TSX).
 - `default_params/` → type parameters with default (e.g. `T = string`).
+- `object_projection/` → bounded object-like projection for aliases, intersections, and `Omit` / `Pick`.
+- `package_reexports/` → canonical library symbols remain single-source-of-truth through package type re-exports.
+- `recursive_projection/` → generic alias instantiation plus recursive object-like projection boundaries.
+- `style_props_projection/` → domain-shaped `ReferenceSystemStyleObject`-style projection over `Nested`, `Omit`, and pattern props.
 - `unknown_complex/` → mapped and conditional types (structural, with nested unsupported pieces still emitted as Raw when needed).
 - `audit_alignment/` → audit-driven coverage for intentionally raw variants (`import()`, `infer`, `type predicate`, `this`) plus their surrounding structured shapes.
 

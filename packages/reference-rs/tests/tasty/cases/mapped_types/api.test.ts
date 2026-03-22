@@ -1,9 +1,15 @@
 import { describe, expect, it } from 'vitest'
 
-import { addCaseRuntimeSmokeTests, createCaseApi, findMember } from '../../api-test-helpers'
+import {
+  addCaseEmittedSnapshotTests,
+  addCaseRuntimeSmokeTests,
+  createCaseApi,
+  findMember,
+} from '../../api-test-helpers'
 
 describe('mapped_types tasty api', () => {
   addCaseRuntimeSmokeTests('mapped_types', 'OptionalTokens')
+  addCaseEmittedSnapshotTests('mapped_types')
 
   it('surfaces mapped types through alias and member wrappers', async () => {
     const api = createCaseApi('mapped_types')

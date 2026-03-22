@@ -92,6 +92,92 @@ describe('tasty runtime', () => {
     expect(runtime.getApi()).toBe(api)
   })
 
+  it('fails gracefully when the browser runtime module shape is malformed', async () => {
+    const runtime = createTastyBrowserRuntime({
+      loadRuntimeModule: async () => ({ notManifest: true }),
+    })
+
+    await expect(runtime.loadApi()).rejects.toThrow(
+      'Malformed Tasty browser runtime module. Expected manifest, manifestUrl, and importTastyArtifact exports.'
+    )
+  })
+
+  it('fails gracefully when the manifest module shape is malformed', async () => {
+    const api = createTastyApi({
+      manifestPath: '/tmp/tasty/manifest.js',
+      importer: async () => ({ default: { nope: true } }),
+    })
+
+    await expect(api.ready()).rejects.toThrow(
+      'Malformed Tasty manifest module. Expected a default or manifest export with version, warnings, symbolsByName, and symbolsById.'
+    )
+  })
+
+  it('rejects ambiguous bare-name lookup and supports scoped-name lookup', async () => {
+    const api = createTastyApiFromManifest({
+      manifest: {
+        version: '2',
+        warnings: ['Duplicate symbol name "Shared" matched 2 entries.'],
+        symbolsByName: {
+          Shared: ['_alpha', '_beta'],
+        },
+        symbolsById: {
+          _alpha: {
+            id: '_alpha',
+            name: 'Shared',
+            kind: 'interface',
+            chunk: './chunks/_alpha.js',
+            library: 'alpha-lib',
+          },
+          _beta: {
+            id: '_beta',
+            name: 'Shared',
+            kind: 'typeAlias',
+            chunk: './chunks/_beta.js',
+            library: 'beta-lib',
+          },
+        },
+      },
+      importer: async (artifactPath) => {
+        if (artifactPath.includes('_alpha')) {
+          return {
+            _alpha: {
+              id: '_alpha',
+              name: 'Shared',
+              library: 'alpha-lib',
+              members: [],
+              extends: [],
+              types: [],
+            },
+          }
+        }
+
+        if (artifactPath.includes('_beta')) {
+          return {
+            _beta: {
+              id: '_beta',
+              name: 'Shared',
+              library: 'beta-lib',
+              definition: { kind: 'intrinsic', name: 'string' },
+            },
+          }
+        }
+
+        throw new Error(`Unexpected artifact path: ${artifactPath}`)
+      },
+    })
+
+    await expect(api.loadSymbolByName('Shared')).rejects.toThrow('Ambiguous symbol name "Shared"')
+    expect(await api.findSymbolsByName('Shared')).toHaveLength(2)
+
+    const alpha = await api.loadSymbolByScopedName('alpha-lib', 'Shared')
+    const beta = await api.loadSymbolByScopedName('beta-lib', 'Shared')
+
+    expect(alpha.getId()).toBe('_alpha')
+    expect(beta.getId()).toBe('_beta')
+    expect(api.getWarnings()).toEqual(['Duplicate symbol name "Shared" matched 2 entries.'])
+  })
+
   it('keeps symbol wrapper identity stable across lookup paths', async () => {
     const api = createTastyApi({
       manifestPath: manifestPath('external_libs'),
@@ -137,6 +223,33 @@ describe('tasty runtime', () => {
     await expect(api.loadSymbolByName('ButtonProps')).resolves.toMatchObject({
       getName: expect.any(Function),
     })
+  })
+
+  it('fails gracefully when a chunk loads but does not export the requested symbol', async () => {
+    const api = createTastyApiFromManifest({
+      manifest: {
+        version: '2',
+        warnings: [],
+        symbolsByName: {
+          Broken: ['_broken'],
+        },
+        symbolsById: {
+          _broken: {
+            id: '_broken',
+            name: 'Broken',
+            kind: 'interface',
+            chunk: './chunks/_broken.js',
+            library: 'user',
+          },
+        },
+      },
+      manifestPath: '/tmp/tasty/manifest.js',
+      importer: async () => ({ default: { id: 'not-the-right-symbol', name: 'Broken' } }),
+    })
+
+    await expect(api.loadSymbolByName('Broken')).rejects.toThrow(
+      'Missing symbol export in Tasty chunk for id "_broken". Expected a named export "_broken" or a matching default export.'
+    )
   })
 
   it('retries browser runtime initialization after a transient failure', async () => {
@@ -185,6 +298,109 @@ describe('tasty runtime', () => {
     expect(dependencies.map((symbol) => symbol.getName()).sort()).toEqual(['Size', 'StyleProps'])
   })
 
+  it('projects object-like members for aliases, intersections, and Omit utilities', async () => {
+    const manifest = {
+      version: '2',
+      warnings: [],
+      symbolsByName: {
+        BaseProps: ['base'],
+        PatternProps: ['pattern'],
+        ProjectedProps: ['projected'],
+        PublicProjectedProps: ['publicProjected'],
+      },
+      symbolsById: {
+        base: { id: 'base', name: 'BaseProps', kind: 'interface', chunk: './chunks/base.js', library: 'user' },
+        pattern: { id: 'pattern', name: 'PatternProps', kind: 'typeAlias', chunk: './chunks/pattern.js', library: 'user' },
+        projected: { id: 'projected', name: 'ProjectedProps', kind: 'typeAlias', chunk: './chunks/projected.js', library: 'user' },
+        publicProjected: {
+          id: 'publicProjected',
+          name: 'PublicProjectedProps',
+          kind: 'typeAlias',
+          chunk: './chunks/public-projected.js',
+          library: 'user',
+        },
+      },
+    } as const
+
+    const chunks = {
+      './chunks/base.js': {
+        base: {
+          id: 'base',
+          name: 'BaseProps',
+          library: 'user',
+          members: [
+            { name: 'tone', optional: true, readonly: false, kind: 'property', type: { kind: 'intrinsic', name: 'string' } },
+            { name: 'size', optional: true, readonly: false, kind: 'property', type: { kind: 'intrinsic', name: 'number' } },
+            { name: 'color', optional: true, readonly: false, kind: 'property', type: { kind: 'intrinsic', name: 'string' } },
+          ],
+          extends: [],
+          types: [],
+        },
+      },
+      './chunks/pattern.js': {
+        pattern: {
+          id: 'pattern',
+          name: 'PatternProps',
+          library: 'user',
+          definition: {
+            kind: 'object',
+            members: [
+              { name: 'gap', optional: true, readonly: false, kind: 'property', type: { kind: 'intrinsic', name: 'string' } },
+            ],
+          },
+        },
+      },
+      './chunks/projected.js': {
+        projected: {
+          id: 'projected',
+          name: 'ProjectedProps',
+          library: 'user',
+          definition: {
+            kind: 'intersection',
+            types: [
+              {
+                id: 'Omit',
+                name: 'Omit',
+                library: 'typescript',
+                typeArguments: [
+                  { id: 'base', name: 'BaseProps', library: 'user' },
+                  {
+                    kind: 'union',
+                    types: [
+                      { kind: 'literal', value: "'color'" },
+                    ],
+                  },
+                ],
+              },
+              { id: 'pattern', name: 'PatternProps', library: 'user' },
+            ],
+          },
+        },
+      },
+      './chunks/public-projected.js': {
+        publicProjected: {
+          id: 'publicProjected',
+          name: 'PublicProjectedProps',
+          library: 'user',
+          definition: { id: 'projected', name: 'ProjectedProps', library: 'user' },
+        },
+      },
+    } as const
+
+    const api = createTastyApiFromManifest({
+      manifest,
+      importer: async (artifactPath) => chunks[artifactPath as keyof typeof chunks],
+    })
+
+    const projected = await api.loadSymbolByName('ProjectedProps')
+    const publicProjected = await api.loadSymbolByName('PublicProjectedProps')
+    const projectedMembers = await api.graph.projectObjectLikeMembers(projected)
+    const publicProjectedMembers = await api.graph.projectObjectLikeMembers(publicProjected)
+
+    expect(projectedMembers?.map((member) => member.getName())).toEqual(['tone', 'size', 'gap'])
+    expect(publicProjectedMembers?.map((member) => member.getName())).toEqual(['tone', 'size', 'gap'])
+  })
+
   it('exposes type-alias helpers over the emitted definition shape', async () => {
     const api = createTastyApi({
       manifestPath: manifestPath('default_params'),
@@ -209,5 +425,20 @@ describe('tasty runtime', () => {
     const results = await api.searchSymbols('button')
 
     expect(results.map((result) => result.name)).toEqual(['ButtonProps', 'ButtonSchema'])
+  })
+
+  it('exposes clean jsdoc and signature helpers for docs renderers', async () => {
+    const api = createTastyApi({
+      manifestPath: manifestPath('jsdoc'),
+    })
+
+    const buttonProps = await api.loadSymbolByName('ButtonProps')
+    const size = buttonProps.getMembers().find((member) => member.getName() === 'size')
+
+    expect(buttonProps.getDescription()).toBe('Props for a button.\n\nIncludes common sizing options.')
+    expect(buttonProps.getJsDocTags().map((tag) => tag.getName())).toEqual(['deprecated', 'remarks'])
+    expect(buttonProps.getJsDocTag('deprecated')?.getValue()).toBe('Use NewButtonProps instead.')
+    expect(size?.getDescription()).toBe('Preferred size variant.')
+    expect(size?.getJsDocTag('default')?.getValue()).toBe('"sm"')
   })
 })

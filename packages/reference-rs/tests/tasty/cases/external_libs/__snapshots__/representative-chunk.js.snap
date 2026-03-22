@@ -1,0 +1,125 @@
+const symbol = {
+  id: "_s0",
+  name: "AdvancedPseudos",
+  library: "csstype",
+  definition:   {
+    kind: "union",
+    types:   [
+      {
+        kind: "literal",
+        value: "\":-moz-any()\""
+      },
+      {
+        kind: "literal",
+        value: "\":-moz-dir\""
+      },
+      {
+        kind: "literal",
+        value: "\":-webkit-any()\""
+      },
+      {
+        kind: "literal",
+        value: "\"::cue\""
+      },
+      {
+        kind: "literal",
+        value: "\"::cue-region\""
+      },
+      {
+        kind: "literal",
+        value: "\"::highlight\""
+      },
+      {
+        kind: "literal",
+        value: "\"::part\""
+      },
+      {
+        kind: "literal",
+        value: "\"::picker\""
+      },
+      {
+        kind: "literal",
+        value: "\"::slotted\""
+      },
+      {
+        kind: "literal",
+        value: "\"::view-transition-group\""
+      },
+      {
+        kind: "literal",
+        value: "\"::view-transition-image-pair\""
+      },
+      {
+        kind: "literal",
+        value: "\"::view-transition-new\""
+      },
+      {
+        kind: "literal",
+        value: "\"::view-transition-old\""
+      },
+      {
+        kind: "literal",
+        value: "\":active-view-transition-type\""
+      },
+      {
+        kind: "literal",
+        value: "\":dir\""
+      },
+      {
+        kind: "literal",
+        value: "\":has\""
+      },
+      {
+        kind: "literal",
+        value: "\":host\""
+      },
+      {
+        kind: "literal",
+        value: "\":host-context\""
+      },
+      {
+        kind: "literal",
+        value: "\":is\""
+      },
+      {
+        kind: "literal",
+        value: "\":lang\""
+      },
+      {
+        kind: "literal",
+        value: "\":matches()\""
+      },
+      {
+        kind: "literal",
+        value: "\":not\""
+      },
+      {
+        kind: "literal",
+        value: "\":nth-child\""
+      },
+      {
+        kind: "literal",
+        value: "\":nth-last-child\""
+      },
+      {
+        kind: "literal",
+        value: "\":nth-last-of-type\""
+      },
+      {
+        kind: "literal",
+        value: "\":nth-of-type\""
+      },
+      {
+        kind: "literal",
+        value: "\":state\""
+      },
+      {
+        kind: "literal",
+        value: "\":where\""
+      }
+    ]
+  }
+};
+export { symbol as _s0 };
+export default symbol;
+

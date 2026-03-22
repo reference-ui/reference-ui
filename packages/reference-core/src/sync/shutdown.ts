@@ -1,5 +1,5 @@
 import { closeEventBus, on } from '../lib/event-bus'
-import { log } from '../lib/log'
+import { closeLogRelay, log } from '../lib/log'
 import { shutdown as shutdownPool } from '../lib/thread-pool'
 
 const LOG_SCOPE = 'sync:shutdown'
@@ -15,7 +15,7 @@ let initialized = false
 let shutdownPromise: Promise<number> | undefined
 
 function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms))
+  return new Promise(resolve => setTimeout(resolve, ms))
 }
 
 function readPid(payload: unknown): number | undefined {
@@ -119,6 +119,13 @@ export async function shutdownAndExit(code: number, reason: string): Promise<num
       clearTimeout(forceExitTimer)
 
       try {
+        closeLogRelay()
+      } catch (error) {
+        exitCode = exitCode === 0 ? 1 : exitCode
+        log.error('[sync] Failed to close log relay:', error)
+      }
+
+      try {
         closeEventBus()
       } catch (error) {
         exitCode = exitCode === 0 ? 1 : exitCode
@@ -128,7 +135,9 @@ export async function shutdownAndExit(code: number, reason: string): Promise<num
       process.exitCode = exitCode
     }
 
-    return exitCode
+    // Relying on exitCode alone can leave the process alive if any handle keeps
+    // the event loop open; `ref sync` must always terminate for execSync callers.
+    process.exit(exitCode)
   })()
 
   return shutdownPromise

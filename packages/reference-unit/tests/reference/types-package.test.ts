@@ -62,5 +62,9 @@ describe('@reference-ui/types package', () => {
     expect(manifestModule.default).toEqual(manifestModule.manifest)
     expect(fixture.getName()).toBe('ReferenceApiFixture')
     expect(fixture.getKind()).toBe('interface')
+
+    const systemStyle = await api.loadSymbolByName('ReferenceSystemStyleObject')
+    expect(systemStyle.getName()).toBe('ReferenceSystemStyleObject')
+    expect(systemStyle.getKind()).toBe('typeAlias')
   })
 })

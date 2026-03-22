@@ -29,15 +29,21 @@ export async function waitForRefSyncReady(
   const { timeout = 15_000, interval = 100 } = options ?? {}
   const logPath = join(sandboxDir, REF_SYNC_LOG)
   const deadline = Date.now() + timeout
-  const startedAt = Date.now()
+  let baselineCount = 0
+
+  try {
+    const initialContent = await readFile(logPath, 'utf-8')
+    baselineCount = initialContent.split(REF_SYNC_READY_MESSAGE).length - 1
+  } catch {
+    // log missing or unreadable
+  }
 
   while (Date.now() < deadline) {
     try {
-      const s = await stat(logPath)
-      if (s.mtimeMs >= startedAt) {
-        const content = await readFile(logPath, 'utf-8')
-        if (content.includes(REF_SYNC_READY_MESSAGE)) return
-      }
+      await stat(logPath)
+      const content = await readFile(logPath, 'utf-8')
+      const readyCount = content.split(REF_SYNC_READY_MESSAGE).length - 1
+      if (readyCount > baselineCount) return
     } catch {
       // log missing or unreadable
     }

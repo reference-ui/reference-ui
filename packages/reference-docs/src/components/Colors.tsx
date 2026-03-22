@@ -49,7 +49,7 @@ export function Colors({ palette, shade }: ColorsProps = {}) {
           <H3
             fontSize="xl"
             fontWeight="bold"
-            color="gray.900"
+            color="docsText"
             marginBottom="4"
             textTransform="capitalize"
           >

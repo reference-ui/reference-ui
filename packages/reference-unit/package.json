@@ -4,14 +4,18 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "ref sync && (ref sync --watch & vite)",
-    "build": "ref sync && vite build",
+    "build:fixture": "pnpm --filter @fixtures/extend-library run build && pnpm --filter @fixtures/layer-library run build",
+    "dev": "pnpm run build:fixture && ref sync && (ref sync --watch & vite)",
+    "build": "pnpm run build:fixture && ref sync && vite build",
     "preview": "vite preview",
-    "test": "pnpm run test:vitest && tsc --noEmit",
+    "test": "pnpm run build:fixture && pnpm run test:vitest && tsc --noEmit",
     "test:vitest": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "pnpm run build:fixture && vitest",
+    "test:watch-suite": "pnpm run build:fixture && REF_UNIT_ENABLE_WATCH_SETUP=1 REF_UNIT_INCLUDE_WATCH_TESTS=1 vitest run tests/watch/watch.test.ts"
   },
   "dependencies": {
+    "@fixtures/extend-library": "workspace:*",
+    "@fixtures/layer-library": "workspace:*",
     "@reference-ui/core": "workspace:*",
     "@reference-ui/lib": "workspace:*",
     "react": "^18.2.0",

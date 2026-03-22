@@ -203,6 +203,18 @@ src/tests/
 
 ---
 
+## Sync lifecycle scenarios (migrated from reference-unit)
+
+These scenarios were previously covered in `packages/reference-unit` and were removed for simplification. They should be reintroduced as e2e tests when the sandbox harness supports them:
+
+1. **Stale output readiness** — ref sync must not report ready (`[ref sync] ready` or equivalent) until current runtime packages (e.g. `.reference-ui/react/react.mjs`, `.reference-ui/system/system.mjs`) have been rewritten. If stale outputs exist and config or sources change, the ready signal should only fire after those outputs are updated. Tests can seed stale outputs, run sync/watch, and assert the final artifacts contain the fresh values, not the stale markers.
+
+2. **Interrupted sync recovery** — if `ref sync` is killed mid-run (e.g. after `panda.config.ts` exists but before `react/react.mjs`), a subsequent cold `ref sync` run should recover cleanly and produce valid final artifacts (react entry, styles.css, baseSystem.mjs). Tests can spawn sync, kill it at a known partial state, rerun sync, and assert on the final outputs.
+
+3. **Failure exit and process cleanup** — when sync fatally fails (e.g. due to an unreadable source file), it should exit with code 1 quickly and not leave a lingering detached process group. Tests can inject a failing condition (e.g. `chmod 0` on a source file), run sync, and assert exit code, timing, and that no orphan processes remain.
+
+---
+
 ## Open Questions
 
 - **Config location.** Should `ui.config.ts` live in the sandbox root (as in real apps) or under `src/`? If root, the virtual layer and watch patterns need to include it.

@@ -8,10 +8,19 @@ import './fonts'
 
 /** Reference-unit token color (single source of truth). */
 export const REFERENCE_UNIT_TOKEN_RGB = 'rgb(168, 85, 247)'
+export const REFERENCE_UNIT_MODE_LIGHT_RGB = 'rgb(219, 234, 254)'
+export const REFERENCE_UNIT_MODE_DARK_RGB = 'rgb(30, 41, 59)'
 
 tokens({
   colors: {
     referenceUnitToken: { value: REFERENCE_UNIT_TOKEN_RGB },
+    referenceUnitColorModeToken: {
+      value: REFERENCE_UNIT_MODE_LIGHT_RGB,
+      dark: REFERENCE_UNIT_MODE_DARK_RGB,
+    },
+  },
+  radii: {
+    xl: { value: '0.75rem' },
   },
 })
 

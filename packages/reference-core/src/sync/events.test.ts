@@ -2,14 +2,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 const emit = vi.fn()
 const onHandlers = new Map<string, Array<(payload?: unknown) => void>>()
-const onceAllHandlers = new Map<string, { events: string[]; handler: () => void }>()
-let onceAllCallCount = 0
 
 async function loadEventsModule() {
   vi.resetModules()
   onHandlers.clear()
-  onceAllHandlers.clear()
-  onceAllCallCount = 0
   emit.mockClear()
 
   vi.doMock('../lib/event-bus', () => ({
@@ -19,9 +15,7 @@ async function loadEventsModule() {
       handlers.push(handler)
       onHandlers.set(event, handlers)
     },
-    onceAll: (events: string[], handler: () => void) => {
-      onceAllHandlers.set(`onceAll:${onceAllCallCount++}`, { events, handler })
-    },
+    onceAll: () => {},
   }))
 
   const mod = await import('./events')
@@ -74,22 +68,66 @@ describe('sync/events', () => {
     expect(emit).toHaveBeenCalledWith('sync:failed', undefined)
   })
 
+  it('reference component copy failure emits sync:failed', async () => {
+    const { initEvents } = await loadEventsModule()
+    initEvents()
+
+    expect(onHandlers.has('reference:component:copy-failed')).toBe(true)
+    fireOn('reference:component:copy-failed', {
+      message: 'copy exploded',
+    })
+
+    expect(emit).toHaveBeenCalledWith('sync:failed', undefined)
+  })
+
   it('run:panda:codegen emitted only when system:config:complete and system:panda:ready both fired', async () => {
     const { initEvents } = await loadEventsModule()
     initEvents()
 
-    const pair = [...onceAllHandlers.entries()].find(
-      ([, v]) =>
-        v.events.length === 2 &&
-        v.events.includes('system:config:complete') &&
-        v.events.includes('system:panda:ready')
-    )
-    expect(pair).toBeDefined()
-    const [, { handler }] = pair!
+    fireOn('system:config:complete')
+    expect(emit).not.toHaveBeenCalledWith('run:panda:codegen', undefined)
 
     emit.mockClear()
-    handler()
+    fireOn('system:panda:ready')
+    expect(emit).toHaveBeenCalledWith('run:panda:codegen', undefined)
+  })
 
+  it('virtual:copy:complete triggers reference component copy', async () => {
+    const { initEvents } = await loadEventsModule()
+    initEvents()
+
+    emit.mockClear()
+    fireOn('virtual:copy:complete', {
+      virtualDir: '/workspace/app/.reference-ui/virtual',
+    })
+
+    expect(emit).toHaveBeenCalledWith('run:reference:component:copy', {
+      virtualDir: '/workspace/app/.reference-ui/virtual',
+    })
+  })
+
+  it('reference component copy completion promotes the full virtual pipeline to complete', async () => {
+    const { initEvents } = await loadEventsModule()
+    initEvents()
+
+    emit.mockClear()
+    fireOn('reference:component:copied')
+
+    expect(emit).toHaveBeenCalledWith('virtual:complete', {})
+  })
+
+  it('reruns panda codegen when config completes again after panda is ready', async () => {
+    const { initEvents } = await loadEventsModule()
+    initEvents()
+
+    fireOn('system:panda:ready')
+    emit.mockClear()
+
+    fireOn('system:config:complete')
+    expect(emit).toHaveBeenCalledWith('run:panda:codegen', undefined)
+
+    emit.mockClear()
+    fireOn('system:config:complete')
     expect(emit).toHaveBeenCalledWith('run:panda:codegen', undefined)
   })
 
@@ -121,6 +159,22 @@ describe('sync/events', () => {
 
     emit.mockClear()
     fireOn('reference:ready')
+    expect(emit).toHaveBeenCalledWith('run:reference:build', {})
+  })
+
+  it('virtual fs changes trigger config and reference rebuilds after initial startup completes', async () => {
+    const { initEvents } = await loadEventsModule()
+    initEvents()
+
+    fireOn('virtual:complete')
+    emit.mockClear()
+
+    fireOn('virtual:fs:change', {
+      event: 'change',
+      path: '/workspace/app/.reference-ui/virtual/src/button.tsx',
+    })
+
+    expect(emit).toHaveBeenCalledWith('run:system:config', undefined)
     expect(emit).toHaveBeenCalledWith('run:reference:build', {})
   })
 

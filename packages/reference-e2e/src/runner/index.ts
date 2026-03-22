@@ -45,20 +45,20 @@ export async function prepareProject(project: MatrixEntry): Promise<void> {
 }
 
 /** Run tests for default project. */
-export async function runQuick(): Promise<void> {
+export async function runQuick(args: string[] = []): Promise<void> {
   const project = getDefaultProject()
   await prepareProject(project)
-  await execa('pnpm', ['exec', 'playwright', 'test', '--project', project.name], {
+  await execa('pnpm', ['exec', 'playwright', 'test', ...args, '--project', project.name], {
     env: projectEnv(project),
     stdio: 'inherit',
   })
 }
 
 /** Run Playwright UI for default project. */
-export async function runUi(): Promise<void> {
+export async function runUi(args: string[] = []): Promise<void> {
   const project = getDefaultProject()
   await prepareProject(project)
-  await execa('playwright', ['test', '--ui', '--project', project.name], {
+  await execa('pnpm', ['exec', 'playwright', 'test', '--ui', ...args, '--project', project.name], {
     env: projectEnv(project),
     stdio: 'inherit',
   })

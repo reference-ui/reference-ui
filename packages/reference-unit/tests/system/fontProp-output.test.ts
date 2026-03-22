@@ -47,7 +47,7 @@ describe('font prop output (e2e)', () => {
     expect(hasVirtualSystemFile('fontProp.fixture.tsx')).toBe(true)
 
     const content = readVirtualSystemFile('fontProp.fixture.tsx')
-    expect(content).toContain('font="mono"')
+    expect(content).toContain('font="sans"')
     expect(content).toContain('weight="bold"')
   })
 
@@ -55,8 +55,8 @@ describe('font prop output (e2e)', () => {
     const css = readGeneratedFile('styled', 'styles.css')
     if (!css) return
 
-    expect(css).toContain('.ff_mono')
-    expect(css).toContain('.ls_-0\\.04em')
+    expect(css).toContain('.ff_sans')
+    expect(css).toContain('.ls_-0\\.01em')
     expect(css).toContain('.fw_700')
   })
 
@@ -76,10 +76,10 @@ describe('font prop output (e2e)', () => {
 
     expect(systemTypes).toContain('interface ReferenceFontRegistry {')
     expect(systemGeneratedTypes).toContain('interface ReferenceFontRegistry {')
-    expect(systemGeneratedTypes).toContain('"mono": {')
+    expect(systemGeneratedTypes).toContain('"sans": {')
     expect(reactTypes).toContain('interface ReferenceFontRegistry {')
     expect(reactTypes).toContain('ReferenceFontProps')
-    expect(reactGeneratedTypes).toContain('"mono": {')
+    expect(reactGeneratedTypes).toContain('"sans": {')
     expect(reactGeneratedTypes).toContain('"bold": true')
   }, 20_000)
 })

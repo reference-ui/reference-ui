@@ -1,3 +1,7 @@
+//! Scan-phase data structures. These feed `extract` and are distinct from
+//! [`crate::tasty::ast::model::ParsedFileAst`]: a `ScannedFile` is source + ids only;
+//! `ParsedFileAst` adds import/value/export bindings and symbol shells after parsing.
+
 use std::collections::BTreeSet;
 use std::path::PathBuf;
 
