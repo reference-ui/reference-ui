@@ -40,7 +40,7 @@ pub(super) fn strip_typescript_extension(path: &Path) -> PathBuf {
     PathBuf::from(strip_typescript_suffix(&unix))
 }
 
-pub(super) fn normalize_relative_path(path: &Path) -> PathBuf {
+pub(crate) fn normalize_relative_path(path: &Path) -> PathBuf {
     let mut normalized = PathBuf::new();
     for component in path.components() {
         match component {

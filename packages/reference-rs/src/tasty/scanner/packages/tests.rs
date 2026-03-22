@@ -1,46 +1,11 @@
 use std::collections::BTreeSet;
 use std::fs;
-use std::path::{Path, PathBuf};
-use std::time::{SystemTime, UNIX_EPOCH};
 
 use super::{resolve_external_import, resolve_relative_import, FileLookup};
 use crate::tasty::scanner::paths::split_package_specifier;
 #[cfg(unix)]
 use crate::tasty::scanner::workspace::scan_workspace;
-
-struct TempDir {
-    path: PathBuf,
-}
-
-impl TempDir {
-    fn new(prefix: &str) -> Self {
-        let unique = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .expect("time should move forward")
-            .as_nanos();
-        let path = std::env::temp_dir().join(format!("reference-ui-{prefix}-{unique}"));
-        fs::create_dir_all(&path).expect("temp dir should be created");
-        Self { path }
-    }
-
-    fn path(&self) -> &Path {
-        &self.path
-    }
-
-    fn write(&self, relative_path: &str, contents: &str) {
-        let path = self.path.join(relative_path);
-        if let Some(parent) = path.parent() {
-            fs::create_dir_all(parent).expect("parent dir should be created");
-        }
-        fs::write(path, contents).expect("fixture file should be written");
-    }
-}
-
-impl Drop for TempDir {
-    fn drop(&mut self) {
-        let _ = fs::remove_dir_all(&self.path);
-    }
-}
+use crate::tasty::tests::fixtures::TempDir;
 
 #[test]
 fn relative_import_prefers_declaration_candidates_for_runtime_entries() {

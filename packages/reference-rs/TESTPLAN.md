@@ -54,7 +54,7 @@ No one needs to see the pipes. They need to trust that the food is safe.
 | **Rust unit tests**          | `cargo test`       | Scanner resolves imports correctly. Workspace crawl follows the right edges. Export-name collisions are rejected. `extract_ast` / `resolve_ast` in `tests/extract.rs` / `tests/resolve.rs`. `TypeRefMap` identity in `tests/type_ref_map*.rs`. Error-path scans in `error_paths.rs`. |
 | **Vitest integration tests** | `pnpm test:vitest` | The compiled napi-rs binary scans real TypeScript, emits artifact modules, and the JS runtime API exposes correct, navigable type metadata. |
 
-### Rust tests (`src/tasty/` + `ast/extract/comments/leading.rs` tests, ~47 tests)
+### Rust tests (`src/tasty/` + `ast/extract/comments/leading.rs` tests, ~49 tests)
 
 | File                                | Coverage                                                                        |
 | ----------------------------------- | ------------------------------------------------------------------------------- |
@@ -64,6 +64,8 @@ No one needs to see the pipes. They need to trust that the food is safe.
 | `tests/type_ref_map_identity.rs`    | `IdentityMap` for `TypeRefMap` / `map_type_ref` round-trip                       |
 | `tests/type_ref_map.rs`             | One union value exercising every `TypeRef` variant; identity preserves structure   |
 | `tests/type_ref_proptest.rs`        | `proptest`: random `TypeRef` trees → `map_type_ref` + `IdentityMap` is identity (64 cases) |
+| `tests/import_path_proptest.rs`     | `proptest`: `normalize_relative_path` is idempotent on `[a-z/]{1,30}` (256 cases)   |
+| `tests/scanner_imports_proptest.rs` | `proptest`: `extract_module_specifiers("fuzz.ts", …)` never panics on random source (128 cases, length ≤ 4096) |
 | `tests/error_paths.rs`              | Parse diagnostics, missing import resolution, malformed `package.json`, circular type re-exports |
 | `ast/extract/comments/leading.rs`   | Leading-comment attachment: gap, statement between, merged `//`, JSDoc+`//`, empty `/** */` |
 | `scanner/packages/tests.rs`         | Relative imports; `exports` / deep subpaths; `split_package_specifier` (@scope); `main` fallback; `@types/` fallback; missing entrypoints (`None`); unix: symlinked `node_modules` + globwalk `src/**/*.ts` |
@@ -157,13 +159,13 @@ But not:
 These compositions are where AST code fails. The individual arms work. The
 nesting breaks.
 
-### Gap 6: ~~No Rust-side property tests~~ (TypeRef covered; import paths still open)
+### Gap 6: ~~No Rust-side property tests~~ (§4.1–4.3 covered)
 
-**TypeRef:** `tests/type_ref_proptest.rs` uses `proptest` + a recursive strategy
-over all `TypeRef` variants to assert `map_type_ref(&mut IdentityMap, t) == t`.
+**TypeRef:** `tests/type_ref_proptest.rs` — `map_type_ref` + `IdentityMap`.
 
-Import resolution and path normalization are still good candidates for proptest
-(see §4.2).
+**Paths:** `tests/import_path_proptest.rs` — `normalize_relative_path` idempotency.
+
+**Scanner:** `tests/scanner_imports_proptest.rs` — `extract_module_specifiers` on random strings (bounded length for CI).
 
 ---
 
@@ -463,6 +465,10 @@ proptest! {
 
 #### 4.2 Import-path property tests
 
+**Done.** `src/tasty/tests/import_path_proptest.rs`; `normalize_relative_path` is
+`pub(crate)` in `scanner/paths/mod.rs` and re-exported from `scanner/mod.rs` for
+documentation / test access.
+
 ```rust
 proptest! {
     #[test]
@@ -477,7 +483,11 @@ proptest! {
 
 #### 4.3 Scanner fuzz testing
 
-Feed `extract_module_specifiers` random strings to ensure it never panics:
+**Done.** `src/tasty/tests/scanner_imports_proptest.rs`. `extract_module_specifiers`
+is `pub(crate)` in `scanner/imports.rs` and re-exported from `scanner/mod.rs`.
+
+The test uses `"[\\s\\S]{0,4096}"` instead of unbounded `".*"` so case generation
+stays predictable in CI (128 cases).
 
 ```rust
 proptest! {
@@ -514,7 +524,17 @@ regressions immediately.
 
 #### 5.2 Criterion benchmarks (Rust)
 
-For the scanner and resolver hot paths:
+**Done.** `benches/scan_kitchen_sink.rs` benchmarks `scan_typescript_bundle` on the
+`kitchen_sink` fixture (same glob as `tests/scanner.rs`). Dev-dependency: `criterion`.
+
+The crate exposes `scan_typescript_bundle` / `ScanRequest` at the root for Rust
+embedders; `napi` / `napi-derive` are behind the default **`napi`** feature so
+`cargo bench --no-default-features` links without Node N-API symbols. Normal
+builds and `cargo test` keep default features.
+
+```bash
+cargo bench --bench scan_kitchen_sink --no-default-features
+```
 
 ```rust
 fn bench_scan_kitchen_sink(c: &mut Criterion) {
@@ -541,9 +561,9 @@ fn bench_scan_kitchen_sink(c: &mut Criterion) {
 | 7   | TypeRefMap identity test (§2.3)   | Low    | None                | Foundation for property tests                         |
 | 8   | Diagnostic Vitest coverage (§1.3) | Low    | New fixture         | Closes the error-reporting loop                       |
 | 9   | Nested TypeRef cases (§3.1)       | Medium | New fixture         | Catches composition bugs                              |
-| 10  | Property tests (§4.1–4.3)         | Medium | proptest in use     | §4.1 TypeRef identity done; §4.2–4.3 still open        |
+| 10  | Property tests (§4.1–4.3)         | Low    | proptest in use     | TypeRef, paths, `extract_module_specifiers` fuzz        |
 | 11  | Perf baselines (§5.1)             | Low    | None                | Prevents silent perf regression                       |
-| 12  | Criterion benchmarks (§5.2)       | Medium | New dep (criterion) | Enables performance-driven work                       |
+| 12  | Criterion benchmarks (§5.2)       | Low    | criterion dev-dep   | `scan_kitchen_sink` bench; run with `--no-default-features` |
 
 ---
 
@@ -551,11 +571,16 @@ fn bench_scan_kitchen_sink(c: &mut Criterion) {
 
 ### Extract the `TempDir` helper
 
-`scanner/packages/tests.rs` and `scanner/workspace/tests.rs` each define their
-own `TempDir` struct with identical code. Extract it to a shared test utility:
+**Done.** `src/tasty/tests/fixtures.rs` defines `pub(crate) struct TempDir` with
+`new` / `path` / `write` and `Drop` cleanup. `pub(crate) mod fixtures` is wired
+from `tests/mod.rs`. Consumers:
+
+- `scanner/packages/tests.rs`
+- `scanner/workspace/tests.rs`
+- `tests/error_paths.rs` (same helper, consolidated here too)
 
 ```rust
-// src/tasty/tests/fixtures.rs (or a test-support crate)
+// src/tasty/tests/fixtures.rs
 pub(crate) struct TempDir { ... }
 ```
 

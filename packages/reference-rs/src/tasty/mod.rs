@@ -23,6 +23,7 @@ mod tests;
 #[allow(unused_imports)]
 pub use emitted::*;
 pub use request::ScanRequest;
+#[cfg(feature = "napi")]
 pub use scan::scan_and_emit_modules;
 #[allow(unused_imports)]
 pub use scan::scan_typescript_bundle;
