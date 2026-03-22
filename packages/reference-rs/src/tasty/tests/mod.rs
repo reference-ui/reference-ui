@@ -8,3 +8,4 @@ mod resolve;
 mod scanner;
 mod type_ref_map_identity;
 mod type_ref_map;
+mod type_ref_proptest;
