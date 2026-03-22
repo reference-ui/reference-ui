@@ -1,8 +1,5 @@
-import {
-  useReferenceDocumentFromContext,
-  type ReferenceProps,
-} from '@reference-ui/types'
-import { ReferenceDocumentView } from './components/ReferenceDocumentView.js'
+import { useReferenceDocumentFromContext, type ReferenceProps } from '@reference-ui/types'
+import { ReferenceDocument } from './document/index.js'
 import { ReferenceFrame } from './components/ReferenceFrame.js'
 import {
   ReferenceEmptyState,
@@ -39,7 +36,7 @@ export function ReferenceView({ name }: ReferenceProps) {
 
   return (
     <ReferenceFrame>
-      <ReferenceDocumentView document={document} />
+      <ReferenceDocument document={document} />
     </ReferenceFrame>
   )
 }

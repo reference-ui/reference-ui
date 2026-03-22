@@ -6,4 +6,4 @@
  */
 export { baseSystem } from '@reference-ui/system/baseSystem'
 export { ColorModeDemo } from './components/ColorModeDemo.js'
-export { Reference, ReferenceView } from './Reference/index.js'
+export { Reference, ReferenceView, referenceBrowserTokenConfig } from './Reference/index.js'

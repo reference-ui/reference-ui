@@ -10,7 +10,7 @@ export function ReferenceDocumentView({ document }: { document: ReferenceDocumen
       <Div display="grid" gap="reference.sm">
         <Div display="flex" alignItems="center" gap="reference.sm" flexWrap="wrap">
           <H2 margin="0" fontSize="1rem" color="reference.foreground">
-            <Div fontFamily="reference.mono" fontSize="5r">
+            <Div fontFamily="reference.sans" fontSize="5r">
               {document.name}
             </Div>
           </H2>
