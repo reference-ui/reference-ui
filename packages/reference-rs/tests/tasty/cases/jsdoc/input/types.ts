@@ -20,6 +20,13 @@ export interface ButtonProps {
 
 export type ButtonSize = ButtonProps['size']
 
+/** Same literals as {@link ButtonProps} `size`, but via a named alias (type line should stay the alias name). */
+export type NamedButtonSize = 'sm' | 'lg'
+
+export interface ButtonPropsNamedSize {
+  size?: NamedButtonSize
+}
+
 /**
  * Create a button definition.
  * @returns A normalized button props object.
