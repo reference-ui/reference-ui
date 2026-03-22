@@ -3,7 +3,7 @@ use oxc_ast::ast::Statement;
 use oxc_parser::Parser;
 use oxc_span::{SourceType, Span};
 
-pub(super) fn extract_module_specifiers(file_id: &str, source: &str) -> Vec<String> {
+pub(crate) fn extract_module_specifiers(file_id: &str, source: &str) -> Vec<String> {
     extract_module_specifiers_with(file_id, source, true)
 }
 

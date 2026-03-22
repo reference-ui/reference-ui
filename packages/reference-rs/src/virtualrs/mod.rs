@@ -11,5 +11,7 @@ mod utils;
 #[cfg(test)]
 mod tests;
 
+#[cfg(any(test, feature = "napi"))]
 pub use css::rewrite_css_imports;
+#[cfg(any(test, feature = "napi"))]
 pub use cva::rewrite_cva_imports;

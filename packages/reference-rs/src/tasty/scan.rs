@@ -1,11 +1,14 @@
 use super::ast::{extract_ast, resolve_ast};
 use super::generator::build_typescript_bundle;
+#[cfg(feature = "napi")]
 use super::generator::emit_artifact_bundle;
 use super::model::TypeScriptBundle;
 use super::request::ScanRequest;
 use super::scanner::scan_workspace;
+#[cfg(feature = "napi")]
 use serde::Serialize;
 
+#[cfg(feature = "napi")]
 #[derive(Debug, Serialize)]
 struct EmittedModulesPayload {
     modules: std::collections::BTreeMap<String, String>,
@@ -21,6 +24,7 @@ pub fn scan_typescript_bundle(request: &ScanRequest) -> Result<TypeScriptBundle,
 }
 
 /// Scan and emit all Tasty artifact modules as a JSON payload for filesystem writing.
+#[cfg(feature = "napi")]
 pub fn scan_and_emit_modules(request: &ScanRequest) -> Result<String, String> {
     let bundle = scan_typescript_bundle(request)?;
     let artifact_bundle = emit_artifact_bundle(&bundle)?;
