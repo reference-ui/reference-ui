@@ -2,4 +2,5 @@
 //! compiled napi-rs runtime in Vitest globalSetup; Vitest tests under
 //! `tests/tasty/cases/*/bundle.test.ts` then load and assert on that output.
 
+mod error_paths;
 mod scanner;

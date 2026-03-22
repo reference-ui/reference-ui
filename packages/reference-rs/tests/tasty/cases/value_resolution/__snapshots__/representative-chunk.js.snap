@@ -1,0 +1,125 @@
+const symbol = {
+  id: "_s0",
+  name: "ConcreteVariantMeta",
+  library: "user",
+  definition:   {
+    kind: "conditional",
+    checkType:   {
+      id: "_s6",
+      name: "Variant",
+      library: "user"
+    },
+    extendsType:   {
+      kind: "literal",
+      value: "'solid'"
+    },
+    trueType:   {
+      kind: "object",
+      members:   [
+        {
+          name: "emphasis",
+          optional: false,
+          readonly: false,
+          kind: "property",
+          type:   {
+            kind: "literal",
+            value: "'high'"
+          }
+        },
+        {
+          name: "fill",
+          optional: false,
+          readonly: false,
+          kind: "property",
+          type:   {
+            kind: "literal",
+            value: "true"
+          }
+        }
+      ]
+    },
+    falseType:   {
+      kind: "object",
+      members:   [
+        {
+          name: "emphasis",
+          optional: false,
+          readonly: false,
+          kind: "property",
+          type:   {
+            kind: "literal",
+            value: "'low'"
+          }
+        },
+        {
+          name: "fill",
+          optional: false,
+          readonly: false,
+          kind: "property",
+          type:   {
+            kind: "literal",
+            value: "false"
+          }
+        }
+      ]
+    },
+    resolved:   {
+      kind: "union",
+      types:   [
+        {
+          kind: "object",
+          members:   [
+            {
+              name: "emphasis",
+              optional: false,
+              readonly: false,
+              kind: "property",
+              type:   {
+                kind: "literal",
+                value: "'high'"
+              }
+            },
+            {
+              name: "fill",
+              optional: false,
+              readonly: false,
+              kind: "property",
+              type:   {
+                kind: "literal",
+                value: "true"
+              }
+            }
+          ]
+        },
+        {
+          kind: "object",
+          members:   [
+            {
+              name: "emphasis",
+              optional: false,
+              readonly: false,
+              kind: "property",
+              type:   {
+                kind: "literal",
+                value: "'low'"
+              }
+            },
+            {
+              name: "fill",
+              optional: false,
+              readonly: false,
+              kind: "property",
+              type:   {
+                kind: "literal",
+                value: "false"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+};
+export { symbol as _s0 };
+export default symbol;
+

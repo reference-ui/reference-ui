@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { createCaseApi } from '../../api-test-helpers'
+import { addCaseEmittedSnapshotTests, createCaseApi } from '../../api-test-helpers'
 
 describe('duplicate_names tasty api', () => {
+  // No addCaseRuntimeSmokeTests: every exported symbol name here is duplicated or ambiguous for bare lookup.
+  addCaseEmittedSnapshotTests('duplicate_names')
+
   it('preserves duplicate-name matches and reports them as warnings', async () => {
     const api = createCaseApi('duplicate_names')
     const manifest = await api.loadManifest()

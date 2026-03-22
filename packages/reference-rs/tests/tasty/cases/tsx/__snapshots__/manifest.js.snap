@@ -1,0 +1,3 @@
+export const manifest = {"version":"2","warnings":[],"symbolsByName":{"ButtonProps":["_s0"],"ButtonVariant":["_s1"]},"symbolsById":{"_s1":{"id":"_s1","name":"ButtonVariant","kind":"typeAlias","chunk":"./chunks/_s1.js","library":"user"},"_s0":{"id":"_s0","name":"ButtonProps","kind":"interface","chunk":"./chunks/_s0.js","library":"user"}}};
+export default manifest;
+

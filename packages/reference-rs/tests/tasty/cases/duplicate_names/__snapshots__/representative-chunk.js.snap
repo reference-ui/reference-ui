@@ -1,0 +1,23 @@
+const symbol = {
+  id: "_s0",
+  name: "Shared",
+  library: "user",
+  definition:   {
+    kind: "object",
+    members:   [
+      {
+        name: "beta",
+        optional: false,
+        readonly: false,
+        kind: "property",
+        type:   {
+          kind: "intrinsic",
+          name: "number"
+        }
+      }
+    ]
+  }
+};
+export { symbol as _s0 };
+export default symbol;
+

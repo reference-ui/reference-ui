@@ -1,0 +1,43 @@
+const symbol = {
+  id: "_s0",
+  name: "AbstractMouseEventCtor",
+  library: "user",
+  description: "Abstract constructor type alias.",
+  descriptionRaw: "Abstract constructor type alias.",
+  jsdoc:   {
+    summary: "Abstract constructor type alias.",
+    tags: []
+  },
+  definition:   {
+    kind: "constructor",
+    abstract: true,
+    typeParameters:   [
+      {
+        name: "T",
+        default:   {
+          kind: "intrinsic",
+          name: "string"
+        }
+      }
+    ],
+    params:   [
+      {
+        name: "value",
+        optional: false,
+        typeRef:   {
+          id: "T",
+          name: "T",
+          library: "user"
+        }
+      }
+    ],
+    returnType:   {
+      id: "_s4",
+      name: "MouseEvent",
+      library: "user"
+    }
+  }
+};
+export { symbol as _s0 };
+export default symbol;
+

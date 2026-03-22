@@ -1,9 +1,15 @@
 import { describe, expect, it } from 'vitest'
 
-import { addCaseRuntimeSmokeTests, createCaseApi, findMember } from '../../api-test-helpers'
+import {
+  addCaseEmittedSnapshotTests,
+  addCaseRuntimeSmokeTests,
+  createCaseApi,
+  findMember,
+} from '../../api-test-helpers'
 
 describe('import_resolution tasty api', () => {
   addCaseRuntimeSmokeTests('import_resolution', 'UsesImportedTypes')
+  addCaseEmittedSnapshotTests('import_resolution')
 
   it('resolves default and namespace imports to user-owned symbols', async () => {
     const api = createCaseApi('import_resolution')

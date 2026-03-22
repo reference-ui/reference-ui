@@ -1,0 +1,49 @@
+const symbol = {
+  id: "_s0",
+  name: "SpacingScale",
+  library: "user",
+  description: "Type query alias using a qualified expression.",
+  descriptionRaw: "Type query alias using a qualified expression.",
+  jsdoc:   {
+    summary: "Type query alias using a qualified expression.",
+    tags: []
+  },
+  definition:   {
+    kind: "type_query",
+    expression: "tokens.spacing",
+    resolved:   {
+      kind: "object",
+      members:   [
+        {
+          name: "sm",
+          optional: false,
+          readonly: false,
+          kind: "property",
+          jsdoc:   {
+            tags: []
+          },
+          type:   {
+            kind: "intrinsic",
+            name: "number"
+          }
+        },
+        {
+          name: "lg",
+          optional: false,
+          readonly: false,
+          kind: "property",
+          jsdoc:   {
+            tags: []
+          },
+          type:   {
+            kind: "intrinsic",
+            name: "number"
+          }
+        }
+      ]
+    }
+  }
+};
+export { symbol as _s0 };
+export default symbol;
+

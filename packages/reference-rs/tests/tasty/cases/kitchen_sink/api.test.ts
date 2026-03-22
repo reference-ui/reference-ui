@@ -1,11 +1,17 @@
 import { describe, expect, it } from 'vitest'
 
-import { addCaseRuntimeSmokeTests, createCaseApi, findMember } from '../../api-test-helpers'
+import {
+  addCaseEmittedSnapshotTests,
+  addCaseRuntimeSmokeTests,
+  createCaseApi,
+  findMember,
+} from '../../api-test-helpers'
 
 const CASE = 'kitchen_sink'
 
 describe('kitchen_sink tasty api (reference-docs kitchen sink)', () => {
   addCaseRuntimeSmokeTests(CASE, 'DocsReferenceButtonProps')
+  addCaseEmittedSnapshotTests(CASE)
 
   it('indexes expected exported symbols from the manifest', async () => {
     const api = createCaseApi(CASE)

@@ -1,9 +1,15 @@
 import { describe, expect, it } from 'vitest'
 
-import { addCaseRuntimeSmokeTests, createCaseApi, findMember } from '../../api-test-helpers'
+import {
+  addCaseEmittedSnapshotTests,
+  addCaseRuntimeSmokeTests,
+  createCaseApi,
+  findMember,
+} from '../../api-test-helpers'
 
 describe('unions_literals tasty api', () => {
   addCaseRuntimeSmokeTests('unions_literals', 'Status')
+  addCaseEmittedSnapshotTests('unions_literals')
 
   it('surfaces union and literal structures plus optional members', async () => {
     const api = createCaseApi('unions_literals')

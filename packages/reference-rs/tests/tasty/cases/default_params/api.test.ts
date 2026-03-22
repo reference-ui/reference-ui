@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import { addCaseRuntimeSmokeTests, createCaseApi } from '../../api-test-helpers'
+import { addCaseEmittedSnapshotTests, addCaseRuntimeSmokeTests, createCaseApi } from '../../api-test-helpers'
 
 describe('default_params tasty api', () => {
   addCaseRuntimeSmokeTests('default_params', 'WithDefault')
+  addCaseEmittedSnapshotTests('default_params')
 
   it('surfaces defaulted type parameters and alias helpers', async () => {
     const api = createCaseApi('default_params')
