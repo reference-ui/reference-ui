@@ -11,7 +11,7 @@
     "build": "pnpm -r run build",
     "changeset": "changeset",
     "dev": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/lib run sync && concurrently --kill-others-on-fail -n core,docs -c blue,green \"pnpm --filter @reference-ui/core run dev\" \"pnpm --filter @reference-ui/reference-docs run dev\"",
-    "dev:lib": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/lib run sync && pnpm --filter @reference-ui/lib run cosmos",
+    "dev:lib": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/lib run sync && concurrently --kill-others-on-fail -n sync,cosmos -c cyan,magenta \"pnpm --filter @reference-ui/lib run dev\" \"pnpm --filter @reference-ui/lib run cosmos\"",
     "playwright:install": "pnpm --filter @reference-ui/reference-e2e exec playwright install chromium",
     "release:detect": "node ./scripts/release/detect.mjs",
     "release:publish": "node ./scripts/release/publish.mjs",
