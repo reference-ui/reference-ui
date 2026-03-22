@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises'
 import { basename, dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
-import { expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 import {
   createTastyApi,
@@ -135,6 +135,29 @@ export function createCaseApi(
   return createTastyApi({
     manifestPath: caseManifestPath(caseName),
     ...overrides,
+  })
+}
+
+/** Context for symbol-focused case tests: shared `TastyApi` and the smoke-test symbol name. */
+export type CaseSymbolContext = {
+  api: TastyApi
+  symbolName: string
+}
+
+/**
+ * Nests runtime smoke tests (`addCaseRuntimeSmokeTests`) and a pre-built `createCaseApi(caseName)`
+ * under `describe(\`${caseName}/${symbolName}\`)` so output groups by case + primary symbol.
+ * Keep {@link addCaseEmittedSnapshotTests} in the parent `describe` when present.
+ */
+export function describeCaseSymbol(
+  caseName: string,
+  symbolName: string,
+  fn: (ctx: CaseSymbolContext) => void
+): void {
+  describe(`${caseName}/${symbolName}`, () => {
+    addCaseRuntimeSmokeTests(caseName, symbolName)
+    const api = createCaseApi(caseName)
+    fn({ api, symbolName })
   })
 }
 
