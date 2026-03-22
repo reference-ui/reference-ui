@@ -23,6 +23,27 @@ export const referenceBrowserTokenConfig = {
         value: '#f9fafb',
         dark: '#1f2937',
       },
+      /** Accent chips (SummaryChip); must exist or Panda emits invalid raw `reference.primary` in CSS. */
+      primary: {
+        value: '#2563eb',
+        dark: '#60a5fa',
+      },
+      primarySoftBackground: {
+        value: '#eff6ff',
+        dark: '#1e3a8a',
+      },
+      primarySoftBorder: {
+        value: '#bfdbfe',
+        dark: '#1e40af',
+      },
+      primaryForeground: {
+        value: '#ffffff',
+        dark: '#0f172a',
+      },
+      primarySoftForeground: {
+        value: '#1e40af',
+        dark: '#93c5fd',
+      },
     },
   },
   spacing: {

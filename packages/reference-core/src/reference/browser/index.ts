@@ -1,10 +1,13 @@
-export { createReferenceComponent } from './component'
-export { createReferenceRuntime, useReferenceStatus } from './Runtime'
-export { Reference } from './Reference'
-export { referenceBrowserTokenConfig } from './theme'
+export { createReferenceComponent, Reference } from './Reference'
+export {
+  createDefaultReferenceRuntime,
+  createReferenceRuntime,
+  useReferenceDocument,
+} from './Runtime'
 export type {
-  LoadedReferenceState,
-  ReferenceMember,
-  ReferenceProps,
-  ReferenceStatus,
-} from './types'
+  ReferenceDocumentState,
+  ReferenceRuntime,
+  ReferenceRuntimeData,
+} from './Runtime'
+export { referenceBrowserTokenConfig } from './theme'
+export type { ReferenceProps } from './types'
