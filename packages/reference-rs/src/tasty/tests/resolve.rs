@@ -104,7 +104,7 @@ fn resolves_same_file_interface_reference() {
 }
 
 #[test]
-fn resolves_synthetic_export_type_alias_to_remote_symbol() {
+fn local_export_type_reexport_keeps_only_canonical_symbol() {
     let scanned = workspace(&[
         ("src/other.ts", "export type T = string;\n"),
         ("src/index.ts", "export type { T } from './other';\n"),
@@ -113,28 +113,13 @@ fn resolves_synthetic_export_type_alias_to_remote_symbol() {
     assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
     let graph = resolve_ast(parsed);
 
-    let barrel_alias = graph
+    let matching = graph
         .symbols
         .values()
-        .find(|s| s.name == "T" && s.file_id == "src/index.ts")
-        .expect("barrel type alias symbol");
+        .filter(|s| s.name == "T")
+        .collect::<Vec<_>>();
 
-    let expected = symbol_id("src/other.ts", "T");
-    match barrel_alias
-        .underlying
-        .as_ref()
-        .expect("barrel alias should have underlying")
-    {
-        TypeRef::Reference {
-            name,
-            target_id,
-            source_module,
-            ..
-        } => {
-            assert_eq!(name, "T");
-            assert_eq!(target_id.as_ref(), Some(&expected));
-            assert_eq!(source_module.as_deref(), Some("./other"));
-        }
-        other => panic!("expected Reference to remote alias, got {other:?}"),
-    }
+    assert_eq!(matching.len(), 1);
+    assert_eq!(matching[0].file_id, "src/other.ts");
+    assert_eq!(matching[0].id, symbol_id("src/other.ts", "T"));
 }
