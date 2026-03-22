@@ -40,6 +40,7 @@
     "dist",
     "native",
     "README.md",
+    "docs",
     "npm"
   ],
   "scripts": {
