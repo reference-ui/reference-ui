@@ -5,6 +5,7 @@ import { MonoText } from './MonoText.js'
 const summaryChipRecipe = recipe({
   base: {
     fontSize: '4.5r',
+    fontWeight: '550',
     display: 'inline-flex',
     alignItems: 'center',
     minHeight: '1.5rem',
@@ -21,8 +22,9 @@ const summaryChipRecipe = recipe({
         color: 'white',
       },
       accent: {
-        background: 'blue.950',
-        color: 'white',
+        background: 'sky.100',
+        borderStyle: 'solid',
+        color: 'sky.950',
       },
     },
     radius: {

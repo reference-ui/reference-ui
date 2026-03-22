@@ -58,9 +58,11 @@ export const referenceBrowserTokenConfig = {
   },
   fonts: {
     reference: {
+      /**
+       * Keep in sync with `@reference-ui/lib` `theme/fontStacks.ts` / JetBrains `mono` registration.
+       */
       mono: {
-        value:
-          'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace',
+        value: '"JetBrains Mono", ui-monospace, monospace',
       },
     },
   },

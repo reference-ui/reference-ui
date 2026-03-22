@@ -18,16 +18,17 @@ export function JsDocParamChip({ tagLabel, className }: JsDocParamChipProps) {
       gap="reference.xxs"
       fontFamily="reference.mono"
       fontSize="4r"
+      fontWeight="550"
       width="fit-content"
       maxWidth="100%"
       px="1.5r"
-      py="0.5r"
+      pr="2r"
       borderRadius="9999px"
-      borderWidth="1px"
-      borderStyle="solid"
-      borderColor="reference.primarySoftBorder"
-      background="reference.primarySoftBackground"
-      color="reference.primarySoftForeground"
+      //borderWidth="1px"
+      //borderStyle="solid"
+      //borderColor="blue.900"
+      background="gray.900"
+      color="blue.100"
       //className={className}
     >
       <AtSignIcon size="1rem" aria-hidden />
