@@ -23,11 +23,22 @@ export function MemberJsDoc({
     <Div
       display="grid"
       gap="reference.sm"
+      position="relative"
+      paddingTop="calc(0.875rem + 2px)"
       css={{
-        paddingTop: '0.875rem',
-        borderTopWidth: '1px',
-        borderTopStyle: 'solid',
-        borderTopColor: 'reference.border',
+        _before: {
+          content: '""',
+          position: 'absolute',
+          insetInline: '0',
+          top: '0',
+          height: '2px',
+          color: 'reference.border',
+          backgroundImage:
+            'radial-gradient(ellipse 5px 2px at 6px 1px, currentColor 98%, transparent 100%)',
+          backgroundSize: '12px 2px',
+          backgroundRepeat: 'repeat-x',
+          backgroundPosition: 'left top',
+        },
       }}
     >
       {paramRows.map((param) => (

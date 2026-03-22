@@ -4,7 +4,9 @@ import { ReferenceMemberRow } from './ReferenceMemberRow.js'
 
 export function ReferenceMemberList({ members }: { members: ReferenceMemberDocument[] }) {
   if (members.length === 0) {
-    return <Small color="reference.muted">No members were emitted for this interface.</Small>
+    return (
+      <Small color="reference.muted">No members were emitted for this interface.</Small>
+    )
   }
 
   return (
@@ -15,9 +17,10 @@ export function ReferenceMemberList({ members }: { members: ReferenceMemberDocum
         borderTopColor: 'reference.border',
       }}
     >
-      {members.map((member) => (
+      {members.map(member => (
         <ReferenceMemberRow key={member.id} member={member} />
       ))}
     </Div>
   )
 }
+;``
