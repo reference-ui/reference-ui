@@ -51,18 +51,21 @@ No one needs to see the pipes. They need to trust that the food is safe.
 
 | Tier                         | Runner             | What it proves                                                                                                                              |
 | ---------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Rust unit tests**          | `cargo test`       | Scanner resolves imports correctly. Workspace crawl follows the right edges. Export-name collisions are rejected. `extract_ast` / `resolve_ast` unit tests in `tests/extract.rs` and `tests/resolve.rs`. Error-path scans in `error_paths.rs`. |
+| **Rust unit tests**          | `cargo test`       | Scanner resolves imports correctly. Workspace crawl follows the right edges. Export-name collisions are rejected. `extract_ast` / `resolve_ast` in `tests/extract.rs` / `tests/resolve.rs`. `TypeRefMap` identity in `tests/type_ref_map*.rs`. Error-path scans in `error_paths.rs`. |
 | **Vitest integration tests** | `pnpm test:vitest` | The compiled napi-rs binary scans real TypeScript, emits artifact modules, and the JS runtime API exposes correct, navigable type metadata. |
 
-### Rust tests (8 test modules under `src/tasty/`, ~34 tests)
+### Rust tests (`src/tasty/` + `ast/extract/comments/leading.rs` tests, ~46 tests)
 
 | File                                | Coverage                                                                        |
 | ----------------------------------- | ------------------------------------------------------------------------------- |
 | `tests/scanner.rs`                  | Smoke: external_libs and kitchen_sink fixtures scan without error               |
 | `tests/extract.rs`                  | Direct `extract_ast` tests: interfaces, extends, unions, re-exports, default export, `as const` values, JSDoc, nested types, import bindings |
 | `tests/resolve.rs`                  | `resolve_ast`: cross-file `target_id` on imported types; same-file interface refs |
+| `tests/type_ref_map_identity.rs`    | `IdentityMap` for `TypeRefMap` / `map_type_ref` round-trip                       |
+| `tests/type_ref_map.rs`             | One union value exercising every `TypeRef` variant; identity preserves structure   |
 | `tests/error_paths.rs`              | Parse diagnostics, missing import resolution, malformed `package.json`, circular type re-exports |
-| `scanner/packages/tests.rs`         | Relative import resolution, package.json `exports` handling, `@types/` fallback |
+| `ast/extract/comments/leading.rs`   | Leading-comment attachment: gap, statement between, merged `//`, JSDoc+`//`, empty `/** */` |
+| `scanner/packages/tests.rs`         | Relative imports; `exports` / deep subpaths; `split_package_specifier` (@scope); `main` fallback; `@types/` fallback; missing entrypoints (`None`); unix: symlinked `node_modules` + globwalk `src/**/*.ts` |
 | `scanner/workspace/tests.rs`        | Re-export following, external-import skipping, same-library relative follows    |
 | `generator/bundle/modules/tests.rs` | Export-name hash collision detection                                            |
 
@@ -343,9 +346,8 @@ structurally identical output for any input `TypeRef`:
 **Implemented:** split across two modules under `tests/`:
 
 - **`tests/type_ref_map_identity.rs`** — `IdentityMap` implementing every
-  [`TypeRefMap`](../../src/tasty/shared/type_ref_map.rs) hook (including
-  re-walking `type_arguments` in `map_reference`, which `map_type_ref` does not
-  pre-map).
+  `TypeRefMap` hook in `shared/type_ref_map.rs` (including re-walking
+  `type_arguments` in `map_reference`, which `map_type_ref` does not pre-map).
 - **`tests/type_ref_map.rs`** — hand-built `TypeRef` union touching all variants,
   then `assert_eq!(input, map_type_ref(&mut IdentityMap, input.clone()))`.
 
@@ -386,8 +388,9 @@ through nested references.
 
 #### 3.2 Comment attachment edge cases
 
-Leading comment extraction (`leading.rs`) is one of the most fragile parts of
-the system. Add Rust unit tests for:
+**Done.** `#[cfg(test)]` in `src/tasty/ast/extract/comments/leading.rs` parses
+TypeScript with Oxc, takes the top-level `interface` span, runs
+`leading_comment_for_span` → `parse_comment_metadata`, and asserts:
 
 | Scenario          | Input                                      | Expected                                   |
 | ----------------- | ------------------------------------------ | ------------------------------------------ |
@@ -399,7 +402,7 @@ the system. Add Rust unit tests for:
 
 #### 3.3 Import resolution stress tests
 
-Extend `scanner/packages/tests.rs`:
+**Done.** Extended `src/tasty/scanner/packages/tests.rs`:
 
 | Scenario                       | What it tests                                          |
 | ------------------------------ | ------------------------------------------------------ |
@@ -408,6 +411,12 @@ Extend `scanner/packages/tests.rs`:
 | Package with only `main` field | Fallback when no `types` or `exports`                  |
 | Symlinked node_modules         | `follow_links(true)` in globwalk works                 |
 | Missing index file             | `resolve_package_root_entry` returns `None` gracefully |
+
+- **Scoped / subpath:** `split_package_specifier_handles_scoped_package_and_subpath`.
+- **Deep exports:** `deep-lib` with `"exports": { "./a/b/c": { "types": … } }`, assert `resolve_external_import(..., "deep-lib/a/b/c")`.
+- **Main only:** `main-only-lib` with only `"main": "./lib/index.js"` and `lib/index.d.ts` beside runtime entry.
+- **Missing entry:** package.json lists `types`/`main` paths that do not exist on disk → `resolve_external_import` is `None` (same failure mode as an unresolved root entry).
+- **Symlinks (unix):** `scan_workspace_discovers_symlinked_source_under_glob` exercises `GlobWalkerBuilder::follow_links(true)`; `external_import_resolves_scoped_package_via_symlinked_node_modules_path` resolves `@scope/pkg` through a symlink under `node_modules/@scope/`.
 
 ### Phase 4: Property tests and fuzzing (high effort, highest return)
 
