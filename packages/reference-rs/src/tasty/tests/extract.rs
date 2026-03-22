@@ -5,7 +5,7 @@ use std::path::PathBuf;
 
 use crate::tasty::ast::extract_ast;
 use crate::tasty::ast::model::ImportBindingKind;
-use crate::tasty::model::{TsSymbolKind, TypeRef};
+use crate::tasty::model::TypeRef;
 use crate::tasty::scanner::{ScannedFile, ScannedWorkspace};
 
 fn workspace(files: &[(&str, &str)]) -> ScannedWorkspace {
@@ -119,34 +119,27 @@ fn named_reexport_populates_export_bindings() {
 }
 
 #[test]
-fn export_type_from_module_adds_type_alias_shell() {
+fn export_type_from_package_does_not_add_local_type_alias_shell() {
+    let scanned = single_file("src/index.ts", "export type { T } from 'pkg';\n");
+    let ast = extract_ast(&scanned);
+    let index = parsed_file(&ast, "src/index.ts");
+    assert!(index.exports.iter().all(|s| s.name != "T"));
+    assert!(index.import_bindings.get("T").is_none());
+}
+
+#[test]
+fn export_type_from_local_module_skips_synthetic_type_alias_shell() {
     let scanned = workspace(&[
         ("src/other.ts", "export type T = string;\n"),
         ("src/index.ts", "export type { T } from './other';\n"),
     ]);
     let ast = extract_ast(&scanned);
     let index = parsed_file(&ast, "src/index.ts");
-    let shell = index
-        .exports
-        .iter()
-        .find(|s| s.name == "T")
-        .expect("synthetic type-alias shell for export type { T } from");
-    assert_eq!(shell.kind, TsSymbolKind::TypeAlias);
-    assert!(shell.exported);
-    assert!(index.import_bindings.get("T").is_some());
-    match shell.underlying.as_ref().expect("synthetic alias underlying") {
-        TypeRef::Reference {
-            name,
-            target_id,
-            source_module,
-            ..
-        } => {
-            assert_eq!(name, "T");
-            assert!(target_id.is_none());
-            assert_eq!(source_module.as_deref(), Some("./other"));
-        }
-        other => panic!("expected underlying Reference, got {other:?}"),
-    }
+    assert!(
+        index.exports.iter().all(|s| s.name != "T"),
+        "local same-project type re-exports should not synthesize duplicate alias shells"
+    );
+    assert!(index.import_bindings.get("T").is_none());
 }
 
 #[test]

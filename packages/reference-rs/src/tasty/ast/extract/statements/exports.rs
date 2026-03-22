@@ -9,8 +9,7 @@ use oxc_span::GetSpan;
 use crate::tasty::constants::libraries::USER_LIBRARY_NAME;
 
 use super::super::module_bindings::{
-    collect_default_export_declaration, collect_exported_declaration, collect_type_reexports_from_module,
-    record_named_reexports,
+    collect_default_export_declaration, collect_exported_declaration, record_named_reexports,
 };
 use super::super::symbols::{push_interface_shell, push_type_alias_shell};
 use super::super::ExtractionContext;
@@ -57,8 +56,8 @@ pub(crate) fn exports_from_statement(
 }
 
 fn collect_named_export_statement(
-    root_dir: &Path,
-    file_id_set: &std::collections::BTreeSet<String>,
+    _root_dir: &Path,
+    _file_id_set: &std::collections::BTreeSet<String>,
     scanned_file: &ScannedFile,
     statement: &Statement<'_>,
     comments: &[oxc_ast::ast::Comment],
@@ -72,17 +71,6 @@ fn collect_named_export_statement(
 
     if export_decl.declaration.is_none() {
         record_named_reexports(export_decl, scanned_file.source.as_str(), export_bindings);
-        if export_decl.source.is_some() {
-            collect_type_reexports_from_module(
-                &scanned_file.file_id,
-                root_dir,
-                file_id_set,
-                scanned_file.source.as_str(),
-                export_decl,
-                import_bindings,
-                exports,
-            );
-        }
         return;
     }
 

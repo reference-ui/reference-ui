@@ -177,6 +177,8 @@ idea is to land **identity + canonical definition** first, then improve
 
 ### Phase 0: Lock the contract with tests
 
+**Status:** in progress
+
 Before changing behavior, add tests that describe the intended contract for
 type aliases as semantic API objects.
 
@@ -199,7 +201,18 @@ while silently regressing another.
 - failing tests exist for the specific alias behaviors we want to improve
 - test names describe the user-facing contract, not just internal implementation
 
+**Implemented so far:**
+
+- extraction coverage now asserts that synthetic `export type { T } from './other'`
+  shells carry an underlying `Reference`
+- resolve coverage now asserts that those synthetic alias shells resolve to the
+  remote symbol id
+- JS runtime coverage now includes a focused projection test for alias
+  references, intersections, and `Omit`
+
 ### Phase 1: Canonicalize re-exported alias identity
+
+**Status:** done for same-name `export type { X } from '...'`
 
 Fix the highest-value failure first: `export type { X } from 'pkg'` should point
 at the **real declaration**, not remain a name-only reference with
@@ -227,7 +240,15 @@ at the **real declaration**, not remain a name-only reference with
 - downstream consumers can follow the alias definition to the canonical symbol
   without special heuristics
 
+**Implemented so far:**
+
+- same-name synthetic type re-exports already keep the barrel shell while
+  resolving the underlying `Reference` to the canonical remote symbol id
+- this contract is now pinned by unit tests instead of being incidental behavior
+
 ### Phase 2: Make alias definitions reliably readable
+
+**Status:** partially in place, still open
 
 Once alias identity is stable, improve the **definition surface**. The goal is
 not full evaluation; it is a `TypeRef` tree that round-trips to useful API
@@ -257,6 +278,8 @@ output.
   structural lowering
 
 ### Phase 3: Add bounded alias member projection
+
+**Status:** started in JS runtime prototype
 
 Only after phases 1 and 2 are stable should Tasty attempt to surface
 **member-like rows** for aliases whose RHS is object-like enough to project.
@@ -288,7 +311,19 @@ prefer “definition + links” over incorrect rows.
 - projection never replaces or mutates the original alias definition
 - unsupported shapes fail closed to `undefined` / no projection
 
+**Implemented so far:**
+
+- the JS graph API now has an initial `projectObjectLikeMembers()` helper
+- current bounded support covers:
+  interface flattening reuse, object-literal aliases, alias-following,
+  intersections of projectable inputs, and `Omit` / `Pick` with knowable key
+  literals
+- recursion boundaries, provenance metadata, and emitted-contract support are
+  still open
+
 ### Phase 4: Align the JS runtime API
+
+**Status:** started
 
 After the Rust artifact contract settles, expose alias-first APIs in the JS
 runtime so consumers do not have to infer semantics from raw payloads.
@@ -313,6 +348,13 @@ runtime so consumers do not have to infer semantics from raw payloads.
   stable API
 - runtime behavior clearly distinguishes “declared members” from “projected
   alias members”
+
+**Implemented so far:**
+
+- `graph.projectObjectLikeMembers(symbol)` now exists as the first dedicated
+  object-like projection API
+- `getMembers()` remains interface-only, so declared members and derived
+  projection stay distinct
 
 ### Phase 5: Adopt the contract downstream
 
