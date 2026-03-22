@@ -1,9 +1,15 @@
 import { describe, expect, it } from 'vitest'
 
-import { addCaseRuntimeSmokeTests, createCaseApi, findMember } from '../../api-test-helpers'
+import {
+  addCaseEmittedSnapshotTests,
+  addCaseRuntimeSmokeTests,
+  createCaseApi,
+  findMember,
+} from '../../api-test-helpers'
 
 describe('tsx tasty api', () => {
   addCaseRuntimeSmokeTests('tsx', 'ButtonProps')
+  addCaseEmittedSnapshotTests('tsx')
 
   it('loads symbols from tsx fixtures and preserves optional flags', async () => {
     const api = createCaseApi('tsx')

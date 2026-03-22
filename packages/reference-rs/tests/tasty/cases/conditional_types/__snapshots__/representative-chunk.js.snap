@@ -1,0 +1,43 @@
+const symbol = {
+  id: "_s0",
+  name: "IsString",
+  library: "user",
+  description: "Simple conditional alias.",
+  descriptionRaw: "Simple conditional alias.",
+  jsdoc:   {
+    summary: "Simple conditional alias.",
+    tags: []
+  },
+  typeParameters:   [
+    {
+      name: "T"
+    }
+  ],
+  definition:   {
+    kind: "conditional",
+    checkType:   {
+      id: "T",
+      name: "T",
+      library: "user"
+    },
+    extendsType:   {
+      kind: "intrinsic",
+      name: "string"
+    },
+    trueType:   {
+      kind: "literal",
+      value: "'yes'"
+    },
+    falseType:   {
+      kind: "literal",
+      value: "'no'"
+    },
+    resolved:   {
+      kind: "literal",
+      value: "'no'"
+    }
+  }
+};
+export { symbol as _s0 };
+export default symbol;
+

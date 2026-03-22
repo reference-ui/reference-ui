@@ -1,9 +1,15 @@
 import { describe, expect, it } from 'vitest'
 
-import { addCaseRuntimeSmokeTests, createCaseApi, findMember } from '../../api-test-helpers'
+import {
+  addCaseEmittedSnapshotTests,
+  addCaseRuntimeSmokeTests,
+  createCaseApi,
+  findMember,
+} from '../../api-test-helpers'
 
 describe('jsdoc tasty api', () => {
   addCaseRuntimeSmokeTests('jsdoc', 'ButtonProps')
+  addCaseEmittedSnapshotTests('jsdoc')
 
   it('keeps symbol and member jsdoc data on the raw contract', async () => {
     const api = createCaseApi('jsdoc')

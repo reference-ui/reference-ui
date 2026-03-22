@@ -51,22 +51,25 @@ No one needs to see the pipes. They need to trust that the food is safe.
 
 | Tier                         | Runner             | What it proves                                                                                                                              |
 | ---------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Rust unit tests**          | `cargo test`       | Scanner resolves imports correctly. Workspace crawl follows the right edges. Export-name collisions are rejected.                           |
+| **Rust unit tests**          | `cargo test`       | Scanner resolves imports correctly. Workspace crawl follows the right edges. Export-name collisions are rejected. Error-path scans (parse, bad package, missing import, cycles) in `error_paths.rs`. |
 | **Vitest integration tests** | `pnpm test:vitest` | The compiled napi-rs binary scans real TypeScript, emits artifact modules, and the JS runtime API exposes correct, navigable type metadata. |
 
-### Rust tests (5 test files, ~15 tests)
+### Rust tests (6 test modules under `src/tasty/`, ~23 tests)
 
 | File                                | Coverage                                                                        |
 | ----------------------------------- | ------------------------------------------------------------------------------- |
 | `tests/scanner.rs`                  | Smoke: external_libs and kitchen_sink fixtures scan without error               |
+| `tests/error_paths.rs`              | Parse diagnostics, missing import resolution, malformed `package.json`, circular type re-exports |
 | `scanner/packages/tests.rs`         | Relative import resolution, package.json `exports` handling, `@types/` fallback |
 | `scanner/workspace/tests.rs`        | Re-export following, external-import skipping, same-library relative follows    |
 | `generator/bundle/modules/tests.rs` | Export-name hash collision detection                                            |
 
-### Vitest tests (18 case folders, ~30 `it()` blocks + 17 × 2 shared smoke tests)
+### Vitest tests (19 case folders, including `parse_error`)
 
-Every case folder runs `addCaseRuntimeSmokeTests` (manifest-only load, identity
-stability) plus case-specific assertions on symbol shapes, member metadata,
+Most case folders run `addCaseRuntimeSmokeTests` (manifest-only load, identity
+stability) **or** case-specific setup (`duplicate_names` skips bare-name smoke tests),
+`addCaseEmittedSnapshotTests` (normalized manifest + representative chunk golden
+files), plus case-specific assertions on symbol shapes, member metadata,
 type-ref structures, JSDoc, and graph traversal.
 
 | Case                | What it exercises                                                                                                                                   |
@@ -81,6 +84,7 @@ type-ref structures, JSDoc, and graph traversal.
 | `jsdoc`             | Symbol and member JSDoc, tags, plain-comment fallback                                                                                               |
 | `kitchen_sink`      | Everything at once: mapped, conditional, template literal, tuple, indexed access, inheritance, callbacks, JSDoc, generics with constraints+defaults |
 | `mapped_types`      | Mapped type structure, modifiers, name types                                                                                                        |
+| `parse_error`       | Deliberately invalid TS + valid symbol; scanner diagnostics via `buildTasty`; emitted snapshots                                                      |
 | `signatures`        | readonly, optional, method/call/index/construct signatures, array/tuple/function/constructor types                                                  |
 | `template_literals` | Template literal parts, keyof interpolation                                                                                                         |
 | `tsx`               | `.tsx` file scanning, optional flags                                                                                                                |
@@ -96,8 +100,8 @@ type-ref structures, JSDoc, and graph traversal.
 
 We have excellent _horizontal_ coverage (every `TypeRef` variant has at least one
 test case). We have weak _vertical_ coverage (very few tests probe the pipeline
-stages independently). And we have almost no _negative_ coverage (what happens
-when things go wrong).
+stages independently). And we still have limited _negative_ coverage beyond Phase 1’s narrow error-path
+and parse-diagnostics checks.
 
 ### Gap 1: No Rust-side unit tests for extract or resolve
 
@@ -106,24 +110,20 @@ complex code in the project — have zero dedicated unit tests. Everything is
 tested indirectly through the Vitest integration layer. That works right up until
 a regression in `extract` is masked by a coincidental pass in `resolve`.
 
-### Gap 2: No error-path coverage
+### Gap 2: Incomplete error-path coverage (Phase 1 is a start)
 
-What happens when:
+Phase 1 adds Rust `error_paths` tests and a Vitest `parse_error` case for scanner
+diagnostics. Still untested or lightly tested:
 
-- A source file has a parse error?
-- A package.json has malformed JSON?
-- An import resolves to a file that doesn't exist on disk?
-- A circular re-export chain forms?
 - A type parameter references something that isn't in scope?
+- Broader `ScannerDiagnostic` surfaces (beyond the parse / resolution cases above)
 
-The `ScannerDiagnostic` system exists. Nothing tests it.
+### Gap 3: ~~No snapshot/golden-file tests for emitted JavaScript~~ (Phase 1: Vitest file snapshots)
 
-### Gap 3: No snapshot/golden-file tests for emitted JavaScript
-
-The generator writes JavaScript source strings. Nothing asserts on the exact
-string output. Every test loads the emitted module through `import()` and
-inspects the runtime shape. That's good for contract testing but bad for
-catching accidental whitespace, field-ordering, or syntax regressions.
+**Addressed in Phase 1:** `addCaseEmittedSnapshotTests` snapshots normalized
+`manifest.js` and one chunk per case (see §1.1). Remaining gap: no dedicated
+assertions for **exact** trivial formatting (normalization hides content-hash ids);
+Rust `insta` on emitted modules was intentionally not added.
 
 ### Gap 4: No performance regression detection
 
@@ -161,7 +161,11 @@ mapper would catch structural corruption the way no hand-written case ever will.
 
 ### Phase 1: Strengthen what we have (low effort, high return)
 
-#### 1.1 Add golden-file snapshot tests for emitted JS
+**Status: done.** Implemented on the Vitest side for snapshots and diagnostics;
+Rust-side error paths live in `src/tasty/tests/error_paths.rs` (TempDir fixtures,
+not a separate `error_cases/` tree).
+
+#### 1.1 Add golden-file snapshot tests for emitted JS — **done**
 
 For each existing case, snapshot the `output/manifest.js` and one representative
 `output/chunks/*.js` file. Use `insta` (Rust) or Vitest's `toMatchFileSnapshot`
@@ -171,7 +175,16 @@ moved.
 **Why now:** This catches silent regressions in the generator — field reordering,
 whitespace changes, missing commas — that the runtime API tests can't see.
 
-**Implementation:**
+**Implemented:** Vitest only (`addCaseEmittedSnapshotTests` in
+`tests/tasty/api-test-helpers.ts`, called from each case’s `api.test.ts`).
+Snapshots are stored under **`tests/tasty/cases/<case>/__snapshots__/`** (not
+under `output/`, because `globalSetup` deletes each case’s `output/` tree every
+run). Emitted content-hash ids are normalized to stable placeholders (`_s0`,
+`_s1`, … by symbol name order) so snapshots stay stable across runs; the
+“representative” chunk is the file for the first symbol when sorted by name
+(then id).
+
+**Original sketch (paths differ as above):**
 
 ```typescript
 // In each api.test.ts, add:
@@ -195,30 +208,43 @@ fn external_libs_emitted_output_matches_snapshot() {
 ```
 
 Pick one. Don't do both. The JS side is easier to maintain because it tests the
-actual napi output path.
+actual napi output path. **We picked Vitest.**
 
-#### 1.2 Add error-path tests (Rust-side)
+#### 1.2 Add error-path tests (Rust-side) — **done**
 
-Create `tests/tasty/cases/error_cases/` with deliberately broken inputs:
+Deliberately broken inputs are built in temp dirs in **`src/tasty/tests/error_paths.rs`**
+(same TempDir pattern as `scanner/workspace/tests.rs`).
 
-| Scenario                 | Input                                    | Expected                                          |
-| ------------------------ | ---------------------------------------- | ------------------------------------------------- |
-| `parse_error`            | `export interface { broken`              | `diagnostics` contains parse error, symbols empty |
-| `missing_import`         | `import { X } from './nonexistent'`      | Scan succeeds, `X` has no `target_id`             |
-| `malformed_package_json` | `node_modules/lib/package.json` = `{bad` | External resolution returns `None`, no panic      |
-| `circular_reexport`      | `a.ts → b.ts → a.ts`                     | Scan terminates, no infinite loop                 |
+| Scenario                 | Input                                    | Expected                                                                 |
+| ------------------------ | ---------------------------------------- | ------------------------------------------------------------------------ |
+| `parse_error`            | `export interface { broken`              | `diagnostics` contains parse error (message includes `parse reported`)   |
+| `missing_import`         | `import type { Missing } from './nonexistent'` on a member type | Scan succeeds; `Missing` reference has `target_id: None`                 |
+| `malformed_package_json` | `node_modules/bad-lib/package.json` = `{bad`, no index file | Scan succeeds; no symbols from `bad-lib`; no panic                       |
+| `circular_reexport`      | `a.ts` / `b.ts` circular type re-exports | Scan completes; both symbols present                                     |
 
-These should be Rust-side `#[test]` functions using the `TempDir` pattern already
-established in `scanner/workspace/tests.rs`.
+**Note:** The original table assumed `parse_error` leaves symbols empty; the
+implementation only asserts parse diagnostics (exports may still be extracted
+from a partial AST).
 
-#### 1.3 Add diagnostic coverage to Vitest
+#### 1.3 Add diagnostic coverage to Vitest — **done**
+
+**Implemented:** Case folder **`tests/tasty/cases/parse_error/`** (broken +
+valid inputs). The test uses **`buildTasty`** and asserts scanner diagnostics
+(including `parse reported`), not `loadManifest().diagnostics` — the runtime
+manifest contract does not carry scanner diagnostics.
 
 ```typescript
 it('reports parse errors in diagnostics without crashing', async () => {
-  // (Requires a new case folder with a deliberately broken .ts file)
-  const api = createCaseApi('parse_error')
-  const manifest = await api.loadManifest()
-  expect(manifest.diagnostics.length).toBeGreaterThan(0)
+  const built = await buildTasty({
+    rootDir: join(packageDir, 'tests', 'tasty'),
+    include: ['cases/parse_error/input/**/*.{ts,tsx}'],
+    outputDir: join(packageDir, 'tests', 'tasty', 'cases', 'parse_error', 'output'),
+  })
+  expect(
+    built.diagnostics.some(
+      (d) => d.source === 'scanner' && d.message.includes('parse reported'),
+    ),
+  ).toBe(true)
 })
 ```
 

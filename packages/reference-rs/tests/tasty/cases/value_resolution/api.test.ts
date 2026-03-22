@@ -1,9 +1,15 @@
 import { describe, expect, it } from 'vitest'
 
-import { addCaseRuntimeSmokeTests, createCaseApi, findMember } from '../../api-test-helpers'
+import {
+  addCaseEmittedSnapshotTests,
+  addCaseRuntimeSmokeTests,
+  createCaseApi,
+  findMember,
+} from '../../api-test-helpers'
 
 describe('value_resolution tasty api', () => {
   addCaseRuntimeSmokeTests('value_resolution', 'IntentKey')
+  addCaseEmittedSnapshotTests('value_resolution')
 
   it('emits additive resolved payloads for value-derived types', async () => {
     const api = createCaseApi('value_resolution')

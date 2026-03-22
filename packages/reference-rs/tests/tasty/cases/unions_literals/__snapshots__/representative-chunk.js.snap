@@ -1,0 +1,18 @@
+const symbol = {
+  id: "_s0",
+  name: "BigintAlias",
+  library: "user",
+  description: "Oxc coverage: intrinsic keywords we handle explicitly.",
+  descriptionRaw: "Oxc coverage: intrinsic keywords we handle explicitly.",
+  jsdoc:   {
+    summary: "Oxc coverage: intrinsic keywords we handle explicitly.",
+    tags: []
+  },
+  definition:   {
+    kind: "intrinsic",
+    name: "bigint"
+  }
+};
+export { symbol as _s0 };
+export default symbol;
+

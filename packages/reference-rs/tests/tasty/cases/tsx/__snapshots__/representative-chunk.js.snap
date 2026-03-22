@@ -1,0 +1,70 @@
+const symbol = {
+  id: "_s0",
+  name: "ButtonProps",
+  library: "user",
+  description: "TSX scenario: ensure .tsx files are scanned and interfaces/types are extracted.\nJSX in the file is irrelevant for the type scanner; we only care about exported types.\n/\n\n/** Props for a React-like button component (type-only; no JSX usage required).",
+  descriptionRaw: "TSX scenario: ensure .tsx files are scanned and interfaces/types are extracted.\nJSX in the file is irrelevant for the type scanner; we only care about exported types.\n/\n\n/** Props for a React-like button component (type-only; no JSX usage required).",
+  jsdoc:   {
+    summary: "TSX scenario: ensure .tsx files are scanned and interfaces/types are extracted.\nJSX in the file is irrelevant for the type scanner; we only care about exported types.\n/\n\n/** Props for a React-like button component (type-only; no JSX usage required).",
+    tags: []
+  },
+  members:   [
+    {
+      name: "label",
+      optional: false,
+      readonly: false,
+      kind: "property",
+      description: "Button label.",
+      descriptionRaw: "Button label.",
+      jsdoc:   {
+        summary: "Button label.",
+        tags: []
+      },
+      type:   {
+        kind: "intrinsic",
+        name: "string"
+      }
+    },
+    {
+      name: "onClick",
+      optional: true,
+      readonly: false,
+      kind: "property",
+      description: "Optional click handler.",
+      descriptionRaw: "Optional click handler.",
+      jsdoc:   {
+        summary: "Optional click handler.",
+        tags: []
+      },
+      type:   {
+        kind: "function",
+        params: [],
+        returnType:   {
+          kind: "intrinsic",
+          name: "void"
+        }
+      }
+    },
+    {
+      name: "disabled",
+      optional: true,
+      readonly: false,
+      kind: "property",
+      description: "Optional disabled state.",
+      descriptionRaw: "Optional disabled state.",
+      jsdoc:   {
+        summary: "Optional disabled state.",
+        tags: []
+      },
+      type:   {
+        kind: "intrinsic",
+        name: "boolean"
+      }
+    }
+  ],
+  extends: [],
+  types: []
+};
+export { symbol as _s0 };
+export default symbol;
+

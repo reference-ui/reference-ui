@@ -1,9 +1,15 @@
 import { describe, expect, it } from 'vitest'
 
-import { addCaseRuntimeSmokeTests, createCaseApi, findMember } from '../../api-test-helpers'
+import {
+  addCaseEmittedSnapshotTests,
+  addCaseRuntimeSmokeTests,
+  createCaseApi,
+  findMember,
+} from '../../api-test-helpers'
 
 describe('template_literals tasty api', () => {
   addCaseRuntimeSmokeTests('template_literals', 'SizeVariant')
+  addCaseEmittedSnapshotTests('template_literals')
 
   it('surfaces template literal parts through alias and member wrappers', async () => {
     const api = createCaseApi('template_literals')

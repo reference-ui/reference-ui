@@ -1,0 +1,31 @@
+const symbol = {
+  id: "_s0",
+  name: "DefaultConfig",
+  library: "user",
+  members:   [
+    {
+      name: "mode",
+      optional: false,
+      readonly: false,
+      kind: "property",
+      type:   {
+        kind: "union",
+        types:   [
+          {
+            kind: "literal",
+            value: "'light'"
+          },
+          {
+            kind: "literal",
+            value: "'dark'"
+          }
+        ]
+      }
+    }
+  ],
+  extends: [],
+  types: []
+};
+export { symbol as _s0 };
+export default symbol;
+
