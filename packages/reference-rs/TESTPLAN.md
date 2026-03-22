@@ -586,20 +586,20 @@ pub(crate) struct TempDir { ... }
 
 ### Standardize Vitest case helpers
 
-Every `api.test.ts` file uses the same pattern:
+**Partially done.** `tests/tasty/api-test-helpers.ts` exports `describeCaseSymbol` and
+`CaseSymbolContext` (`api` + `symbolName`). It wraps `describe(\`${caseName}/${symbolName}\`)`,
+`addCaseRuntimeSmokeTests`, and `createCaseApi(caseName)`. Keep
+`addCaseEmittedSnapshotTests(caseName)` in the parent `describe` when the case uses
+snapshots.
 
-```typescript
-const api = createCaseApi('case_name')
-const symbol = await api.loadSymbolByName('Name')
-```
-
-Consider adding a `describeCaseSymbol` helper that bundles the common setup:
+Example migrations: `cases/template_literals/api.test.ts`, `cases/type_queries/api.test.ts`.
+Other cases can adopt the helper incrementally.
 
 ```typescript
 function describeCaseSymbol(
   caseName: string,
   symbolName: string,
-  fn: (ctx: CaseContext) => void
+  fn: (ctx: CaseSymbolContext) => void
 ) {
   describe(`${caseName}/${symbolName}`, () => {
     addCaseRuntimeSmokeTests(caseName, symbolName)
