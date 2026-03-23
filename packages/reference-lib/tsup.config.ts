@@ -15,4 +15,5 @@ export default defineConfig({
   outExtension() {
     return { js: '.mjs' }
   },
+  external: ['@reference-ui/react'],
 })
