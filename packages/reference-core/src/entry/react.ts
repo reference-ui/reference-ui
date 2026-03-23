@@ -10,7 +10,14 @@ import type { ReferenceSystemStyleObject } from '../system/types'
 export * from '../system/primitives'
 export { css } from '@reference-ui/styled/css'
 export { cva, cva as recipe } from '@reference-ui/styled/css/cva'
-export type { RecipeVariantProps } from '@reference-ui/styled/css/cva'
+export type {
+  RecipeCreatorFn,
+  RecipeDefinition,
+  RecipeRuntimeFn,
+  RecipeSelection,
+  RecipeVariant,
+  RecipeVariantProps,
+} from '../types'
 export type { SystemStyleObject } from '@reference-ui/styled/types'
 export type {
   ReferenceFontName,
