@@ -26,8 +26,8 @@ describe('packager/ts/run', () => {
       .mockResolvedValueOnce(undefined)
     const queue = createDtsGenerationQueue(createPayload(false), { runGeneration })
 
-    void queue.run('packager-ts:complete')
-    void queue.run('packager-ts:complete')
+    const firstRequest = queue.run('packager-ts:complete')
+    const secondRequest = queue.run('packager-ts:complete')
     await Promise.resolve()
     await Promise.resolve()
 
@@ -38,6 +38,7 @@ describe('packager/ts/run', () => {
     await vi.waitFor(() => {
       expect(runGeneration).toHaveBeenCalledTimes(2)
     })
+    await Promise.all([firstRequest, secondRequest])
   })
 
   it('passes the requested completion event through to the generator', async () => {

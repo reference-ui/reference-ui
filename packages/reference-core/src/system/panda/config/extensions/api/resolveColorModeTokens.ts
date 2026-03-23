@@ -53,29 +53,48 @@ type NormalizedTokenParts = {
   themeNodes: Partial<ThemeTokenTree>
 }
 
+function getBaseLeafValue(node: ReferenceTokenLeaf): unknown {
+  const hasExplicitPair = node.light !== undefined && node.dark !== undefined
+  if (hasExplicitPair) return undefined
+  return node.value ?? node.light ?? node.dark
+}
+
+function getLeafThemeValue(node: ReferenceTokenLeaf, themeName: ThemeName): unknown {
+  if (themeName === 'light') {
+    if (node.light !== undefined) return node.light
+    if (node.value !== undefined && node.dark !== undefined) return node.value
+    return undefined
+  }
+  if (node.dark !== undefined) return node.dark
+  if (node.value !== undefined && node.light !== undefined) return node.value
+  return undefined
+}
+
+function createLeafThemeNodes(
+  node: ReferenceTokenLeaf,
+  tokenFields: Record<string, unknown>,
+): Partial<ThemeTokenTree> {
+  const themeNodes: Partial<ThemeTokenTree> = {}
+  const lightValue = getLeafThemeValue(node, 'light')
+  const darkValue = getLeafThemeValue(node, 'dark')
+
+  if (lightValue !== undefined) {
+    themeNodes.light = createThemeLeaf(tokenFields, lightValue)
+  }
+  if (darkValue !== undefined) {
+    themeNodes.dark = createThemeLeaf(tokenFields, darkValue)
+  }
+
+  return themeNodes
+}
+
 function normalizeLeafTokenNode(node: ReferenceTokenLeaf): NormalizedTokenParts {
   const tokenFields = stripModeOverrides(node)
-  const themeNodes: Partial<ThemeTokenTree> = {}
-  const hasExplicitPair = node.light !== undefined && node.dark !== undefined
-  const hasValue = node.value !== undefined
-  const baseValue = hasExplicitPair
-    ? undefined
-    : node.value ?? node.light ?? node.dark
+  const baseValue = getBaseLeafValue(node)
   const baseNode = baseValue !== undefined
     ? { ...tokenFields, value: baseValue }
     : {}
-
-  if (node.light !== undefined) {
-    themeNodes.light = createThemeLeaf(tokenFields, node.light)
-  } else if (hasValue && node.dark !== undefined) {
-    themeNodes.light = createThemeLeaf(tokenFields, node.value)
-  }
-
-  if (node.dark !== undefined) {
-    themeNodes.dark = createThemeLeaf(tokenFields, node.dark)
-  } else if (hasValue && node.light !== undefined) {
-    themeNodes.dark = createThemeLeaf(tokenFields, node.value)
-  }
+  const themeNodes = createLeafThemeNodes(node, tokenFields)
 
   return {
     baseNode,

@@ -20,8 +20,8 @@ describe('union display type label', () => {
     const buttonMembers = await api.graph.getDisplayMembers(buttonProps)
     const namedMembers = await api.graph.getDisplayMembers(buttonPropsNamedSize)
 
-    const buttonDoc = createReferenceDocument(buttonProps, buttonMembers, [], [], [])
-    const namedDoc = createReferenceDocument(buttonPropsNamedSize, namedMembers, [], [], [])
+    const buttonDoc = createReferenceDocument(buttonProps, buttonMembers)
+    const namedDoc = createReferenceDocument(buttonPropsNamedSize, namedMembers)
 
     expect(buttonDoc.members.find((m) => m.name === 'size')?.typeLabel).toBe('Union')
     expect(namedDoc.members.find((m) => m.name === 'size')?.typeLabel).toBe('NamedButtonSize')
@@ -31,7 +31,7 @@ describe('union display type label', () => {
     const api = createTastyApi({ manifestPath })
     const themeColorProp = await api.loadSymbolByName('ThemeColorProp')
     const themeMembers = await api.graph.getDisplayMembers(themeColorProp)
-    const themeDoc = createReferenceDocument(themeColorProp, themeMembers, [], [], [])
+    const themeDoc = createReferenceDocument(themeColorProp, themeMembers)
 
     const colorMember = themeDoc.members.find((m) => m.name === 'color')
     expect(colorMember?.typeLabel).toBe('Union | string')
@@ -49,7 +49,7 @@ describe('union display type label', () => {
     const api = createTastyApi({ manifestPath })
     const slotOrObject = await api.loadSymbolByName('SlotOrObjectProp')
     const members = await api.graph.getDisplayMembers(slotOrObject)
-    const doc = createReferenceDocument(slotOrObject, members, [], [], [])
+    const doc = createReferenceDocument(slotOrObject, members)
 
     const slotMember = doc.members.find((m) => m.name === 'slot')
     expect(slotMember?.typeLabel).toBe('Union | object')
@@ -63,7 +63,7 @@ describe('union display type label', () => {
     const api = createTastyApi({ manifestPath })
     const combo = await api.loadSymbolByName('WideningComboProp')
     const members = await api.graph.getDisplayMembers(combo)
-    const doc = createReferenceDocument(combo, members, [], [], [])
+    const doc = createReferenceDocument(combo, members)
 
     const modeMember = doc.members.find((m) => m.name === 'mode')
     expect(modeMember?.typeLabel).toBe('Union | string | object')

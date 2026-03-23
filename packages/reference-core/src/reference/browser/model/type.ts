@@ -18,8 +18,13 @@ import type {
   ReferenceTypeParameter,
 } from '../types'
 
+type RawTaggedTastyTypeRef = Exclude<RawTastyTypeRef, RawTastyTypeReference>
+type RawTaggedTastyTypeKind = RawTaggedTastyTypeRef['kind']
+type ReferenceTypeKind = ReferenceType['kind']
+type ReferenceTypeInput = TastyTypeRef | RawTastyTypeRef | undefined | null
+
 export function createReferenceType(
-  type: TastyTypeRef | RawTastyTypeRef | undefined | null,
+  type: ReferenceTypeInput,
 ): ReferenceType | undefined {
   if (!type) return undefined
 
@@ -30,135 +35,11 @@ export function createReferenceType(
       id: raw.id,
       name: raw.name,
       library: raw.library,
-      typeArguments: (raw.typeArguments ?? []).flatMap((item) => {
-        const typeRef = createReferenceType(item)
-        return typeRef ? [typeRef] : []
-      }),
+      typeArguments: mapReferenceTypes(raw.typeArguments ?? []),
     }
   }
 
-  switch (raw.kind) {
-    case 'intrinsic':
-      return {
-        kind: 'intrinsic',
-        name: raw.name,
-      }
-    case 'literal':
-      return {
-        kind: 'literal',
-        value: raw.value,
-      }
-    case 'object':
-      return {
-        kind: 'object',
-        members: raw.members.map(createReferenceInlineMember),
-      }
-    case 'union':
-      return {
-        kind: 'union',
-        types: raw.types.flatMap((item) => {
-          const typeRef = createReferenceType(item)
-          return typeRef ? [typeRef] : []
-        }),
-      }
-    case 'array': {
-      const element = createRequiredReferenceType(raw.element, 'array.element')
-      return {
-        kind: 'array',
-        element,
-      }
-    }
-    case 'tuple':
-      return {
-        kind: 'tuple',
-        elements: raw.elements.map(createReferenceTupleElement),
-      }
-    case 'intersection':
-      return {
-        kind: 'intersection',
-        types: raw.types.flatMap((item) => {
-          const typeRef = createReferenceType(item)
-          return typeRef ? [typeRef] : []
-        }),
-      }
-    case 'indexed_access': {
-      const object = createRequiredReferenceType(raw.object, 'indexed_access.object')
-      const index = createRequiredReferenceType(raw.index, 'indexed_access.index')
-      return {
-        kind: 'indexed_access',
-        object,
-        index,
-      }
-    }
-    case 'function': {
-      const returnType = createRequiredReferenceType(raw.returnType, 'function.returnType')
-      return {
-        kind: 'function',
-        params: raw.params.map(createReferenceCallableParameter),
-        returnType,
-      }
-    }
-    case 'constructor': {
-      const returnType = createRequiredReferenceType(raw.returnType, 'constructor.returnType')
-      return {
-        kind: 'constructor',
-        abstract: raw.abstract,
-        typeParameters: (raw.typeParameters ?? []).map(createReferenceTypeParameter),
-        params: raw.params.map(createReferenceCallableParameter),
-        returnType,
-      }
-    }
-    case 'type_operator': {
-      const target = createRequiredReferenceType(raw.target, 'type_operator.target')
-      return {
-        kind: 'type_operator',
-        operator: raw.operator,
-        target,
-      }
-    }
-    case 'type_query':
-      return {
-        kind: 'type_query',
-        expression: raw.expression,
-      }
-    case 'conditional': {
-      const checkType = createRequiredReferenceType(raw.checkType, 'conditional.checkType')
-      const extendsType = createRequiredReferenceType(raw.extendsType, 'conditional.extendsType')
-      const trueType = createRequiredReferenceType(raw.trueType, 'conditional.trueType')
-      const falseType = createRequiredReferenceType(raw.falseType, 'conditional.falseType')
-      return {
-        kind: 'conditional',
-        checkType,
-        extendsType,
-        trueType,
-        falseType,
-      }
-    }
-    case 'mapped': {
-      const sourceType = createRequiredReferenceType(raw.sourceType, 'mapped.sourceType')
-      return {
-        kind: 'mapped',
-        typeParam: raw.typeParam,
-        sourceType,
-        nameType: createReferenceType(raw.nameType),
-        optionalModifier: raw.optionalModifier,
-        readonlyModifier: raw.readonlyModifier,
-        valueType: createReferenceType(raw.valueType),
-      }
-    }
-    case 'template_literal':
-      return {
-        kind: 'template_literal',
-        parts: raw.parts.map(createReferenceTemplateLiteralPart),
-      }
-    case 'raw':
-      return {
-        kind: 'raw',
-        summary: raw.summary,
-      }
-    default:
-      return undefined
-  }
+  return rawReferenceTypeFactories[raw.kind](raw as never)
 }
 
 export function createReferenceTypeParameter(param: RawTastyTypeParameter): ReferenceTypeParameter {
@@ -170,55 +51,136 @@ export function createReferenceTypeParameter(param: RawTastyTypeParameter): Refe
 }
 
 export function formatReferenceType(type: ReferenceType): string {
-  switch (type.kind) {
-    case 'reference':
-      return type.typeArguments.length > 0
-        ? `${type.name}<${type.typeArguments.map(formatReferenceType).join(', ')}>`
-        : type.name
-    case 'intrinsic':
-      return type.name
-    case 'literal':
-      return formatReferenceLiteral(type.value)
-    case 'object':
-      return `{ ${type.members.map(formatReferenceInlineMember).join('; ')} }`
-    case 'union':
-      return type.types.map(formatReferenceType).join(' | ')
-    case 'array':
-      return `${formatReferenceType(type.element)}[]`
-    case 'tuple':
-      return `[${type.elements.map(formatReferenceTupleElement).join(', ')}]`
-    case 'intersection':
-      return type.types.map(formatReferenceType).join(' & ')
-    case 'indexed_access':
-      return `${formatReferenceType(type.object)}[${formatReferenceType(type.index)}]`
-    case 'function':
-      return `(${type.params.map(formatReferenceCallableParameter).join(', ')}) => ${formatReferenceType(type.returnType)}`
-    case 'constructor': {
-      const typeParameters = formatReferenceTypeParameters(type.typeParameters)
-      return `new ${typeParameters}(${type.params
-        .map(formatReferenceCallableParameter)
-        .join(', ')}) => ${formatReferenceType(type.returnType)}`
-    }
-    case 'type_operator':
-      return `${type.operator} ${formatReferenceType(type.target)}`
-    case 'type_query':
-      return `typeof ${type.expression}`
-    case 'conditional':
-      return `${formatReferenceType(type.checkType)} extends ${formatReferenceType(type.extendsType)} ? ${formatReferenceType(type.trueType)} : ${formatReferenceType(type.falseType)}`
-    case 'mapped': {
-      const readonlyModifier = formatMappedReadonlyModifier(type.readonlyModifier)
-      const nameClause = type.nameType ? ` as ${formatReferenceType(type.nameType)}` : ''
-      const optionalModifier = formatMappedOptionalModifier(type.optionalModifier)
-      const valueType = type.valueType ? formatReferenceType(type.valueType) : 'unknown'
-      return `{ ${readonlyModifier}[${type.typeParam} in ${formatReferenceType(type.sourceType)}${nameClause}]${optionalModifier}: ${valueType} }`
-    }
-    case 'template_literal':
-      return `\`${type.parts.map(formatReferenceTemplateLiteralPart).join('')}\``
-    case 'raw':
-      return type.summary
-    default:
-      return 'unknown'
-  }
+  return referenceTypeFormatters[type.kind](type as never)
+}
+
+const rawReferenceTypeFactories: {
+  [K in RawTaggedTastyTypeKind]: (raw: Extract<RawTaggedTastyTypeRef, { kind: K }>) => ReferenceType
+} = {
+  intrinsic: (raw) => ({
+    kind: 'intrinsic',
+    name: raw.name,
+  }),
+  literal: (raw) => ({
+    kind: 'literal',
+    value: raw.value,
+  }),
+  object: (raw) => ({
+    kind: 'object',
+    members: raw.members.map(createReferenceInlineMember),
+  }),
+  union: (raw) => ({
+    kind: 'union',
+    types: mapReferenceTypes(raw.types),
+  }),
+  array: (raw) => ({
+    kind: 'array',
+    element: createRequiredReferenceType(raw.element, 'array.element'),
+  }),
+  tuple: (raw) => ({
+    kind: 'tuple',
+    elements: raw.elements.map(createReferenceTupleElement),
+  }),
+  intersection: (raw) => ({
+    kind: 'intersection',
+    types: mapReferenceTypes(raw.types),
+  }),
+  indexed_access: (raw) => ({
+    kind: 'indexed_access',
+    object: createRequiredReferenceType(raw.object, 'indexed_access.object'),
+    index: createRequiredReferenceType(raw.index, 'indexed_access.index'),
+  }),
+  function: (raw) => ({
+    kind: 'function',
+    params: raw.params.map(createReferenceCallableParameter),
+    returnType: createRequiredReferenceType(raw.returnType, 'function.returnType'),
+  }),
+  constructor: (raw) => ({
+    kind: 'constructor',
+    abstract: raw.abstract,
+    typeParameters: (raw.typeParameters ?? []).map(createReferenceTypeParameter),
+    params: raw.params.map(createReferenceCallableParameter),
+    returnType: createRequiredReferenceType(raw.returnType, 'constructor.returnType'),
+  }),
+  type_operator: (raw) => ({
+    kind: 'type_operator',
+    operator: raw.operator,
+    target: createRequiredReferenceType(raw.target, 'type_operator.target'),
+  }),
+  type_query: (raw) => ({
+    kind: 'type_query',
+    expression: raw.expression,
+  }),
+  conditional: (raw) => ({
+    kind: 'conditional',
+    checkType: createRequiredReferenceType(raw.checkType, 'conditional.checkType'),
+    extendsType: createRequiredReferenceType(raw.extendsType, 'conditional.extendsType'),
+    trueType: createRequiredReferenceType(raw.trueType, 'conditional.trueType'),
+    falseType: createRequiredReferenceType(raw.falseType, 'conditional.falseType'),
+  }),
+  mapped: (raw) => ({
+    kind: 'mapped',
+    typeParam: raw.typeParam,
+    sourceType: createRequiredReferenceType(raw.sourceType, 'mapped.sourceType'),
+    nameType: createReferenceType(raw.nameType),
+    optionalModifier: raw.optionalModifier,
+    readonlyModifier: raw.readonlyModifier,
+    valueType: createReferenceType(raw.valueType),
+  }),
+  template_literal: (raw) => ({
+    kind: 'template_literal',
+    parts: raw.parts.map(createReferenceTemplateLiteralPart),
+  }),
+  raw: (raw) => ({
+    kind: 'raw',
+    summary: raw.summary,
+  }),
+}
+
+const referenceTypeFormatters: {
+  [K in ReferenceTypeKind]: (type: Extract<ReferenceType, { kind: K }>) => string
+} = {
+  reference: (type) => (
+    type.typeArguments.length > 0
+      ? `${type.name}<${type.typeArguments.map(formatReferenceType).join(', ')}>`
+      : type.name
+  ),
+  intrinsic: (type) => type.name,
+  literal: (type) => formatReferenceLiteral(type.value),
+  object: (type) => `{ ${type.members.map(formatReferenceInlineMember).join('; ')} }`,
+  union: (type) => type.types.map(formatReferenceType).join(' | '),
+  array: (type) => `${formatReferenceType(type.element)}[]`,
+  tuple: (type) => `[${type.elements.map(formatReferenceTupleElement).join(', ')}]`,
+  intersection: (type) => type.types.map(formatReferenceType).join(' & '),
+  indexed_access: (type) => `${formatReferenceType(type.object)}[${formatReferenceType(type.index)}]`,
+  function: (type) => `(${type.params.map(formatReferenceCallableParameter).join(', ')}) => ${formatReferenceType(type.returnType)}`,
+  constructor: (type) => {
+    const typeParameters = formatReferenceTypeParameters(type.typeParameters)
+    return `new ${typeParameters}(${type.params.map(formatReferenceCallableParameter).join(', ')}) => ${formatReferenceType(type.returnType)}`
+  },
+  type_operator: (type) => `${type.operator} ${formatReferenceType(type.target)}`,
+  type_query: (type) => `typeof ${type.expression}`,
+  conditional: (type) => (
+    `${formatReferenceType(type.checkType)} extends ${formatReferenceType(type.extendsType)} ? ${formatReferenceType(type.trueType)} : ${formatReferenceType(type.falseType)}`
+  ),
+  mapped: (type) => {
+    const readonlyModifier = formatMappedReadonlyModifier(type.readonlyModifier)
+    const nameClause = type.nameType ? ` as ${formatReferenceType(type.nameType)}` : ''
+    const optionalModifier = formatMappedOptionalModifier(type.optionalModifier)
+    const valueType = type.valueType ? formatReferenceType(type.valueType) : 'unknown'
+    return `{ ${readonlyModifier}[${type.typeParam} in ${formatReferenceType(type.sourceType)}${nameClause}]${optionalModifier}: ${valueType} }`
+  },
+  template_literal: (type) => `\`${type.parts.map(formatReferenceTemplateLiteralPart).join('')}\``,
+  raw: (type) => type.summary,
+}
+
+function mapReferenceTypes(
+  items: ReferenceTypeInput[],
+): ReferenceType[] {
+  return items.flatMap((item) => {
+    const typeRef = createReferenceType(item)
+    return typeRef ? [typeRef] : []
+  })
 }
 
 function formatReferenceLiteral(value: string): string {
@@ -356,7 +318,7 @@ export function createReferenceJsDoc(raw: {
 }
 
 function createRequiredReferenceType(
-  type: TastyTypeRef | RawTastyTypeRef | undefined | null,
+  type: ReferenceTypeInput,
   path: string,
 ): ReferenceType {
   const referenceType = createReferenceType(type ?? undefined)

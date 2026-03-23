@@ -69,42 +69,50 @@ function createReferenceMemberTypeSummary(
 ): ReferenceMemberTypeSummary | undefined {
   if (!type) return undefined
 
-  if (type.isCallable()) {
-    return {
-      kind: 'callSignature',
-      text: formatTastyCallableSignature(type),
-    }
-  }
+  const callableSummary = createCallableMemberTypeSummary(type)
+  if (callableSummary) return callableSummary
 
   const resolvedType = resolveReferenceSummaryType(type, symbolLookup) ?? type
-  const valueOptions = createReferenceValueOptions(member, resolvedType)
-  if (shouldUseReferenceValueSet(resolvedType, valueOptions)) {
-    return {
-      kind: 'valueSet',
-      options: valueOptions,
-    }
-  }
+  const valueSetSummary = createValueSetMemberTypeSummary(member, resolvedType)
+  if (valueSetSummary) return valueSetSummary
 
+  return createExpressionMemberTypeSummary(type, resolvedType, typeLabel)
+}
+
+function createCallableMemberTypeSummary(type: TastyTypeRef): ReferenceMemberTypeSummary | undefined {
+  if (!type.isCallable()) return undefined
+  return {
+    kind: 'callSignature',
+    text: formatTastyCallableSignature(type),
+  }
+}
+
+function createValueSetMemberTypeSummary(
+  member: TastyMember,
+  resolvedType: TastyTypeRef,
+): ReferenceMemberTypeSummary | undefined {
+  const valueOptions = createReferenceValueOptions(member, resolvedType)
+  if (!shouldUseReferenceValueSet(resolvedType, valueOptions)) return undefined
+  return {
+    kind: 'valueSet',
+    options: valueOptions,
+  }
+}
+
+function createExpressionMemberTypeSummary(
+  type: TastyTypeRef,
+  resolvedType: TastyTypeRef,
+  typeLabel: string,
+): ReferenceMemberTypeSummary | undefined {
   const resolvedReferenceType = createReferenceType(resolvedType)
   const expression = resolvedReferenceType ? formatReferenceType(resolvedReferenceType) : resolvedType.describe()
   if (!expression) return undefined
   if (expression === typeLabel && resolvedType === type) return undefined
-
   if (isReferenceTypeExpression(type)) {
-    return {
-      kind: 'typeExpression',
-      text: expression,
-    }
+    return { kind: 'typeExpression', text: expression }
   }
-
-  if (isOpaqueReferenceSummary(expression)) {
-    return {
-      kind: 'opaqueType',
-      text: expression,
-    }
-  }
-
-  return undefined
+  if (!isOpaqueReferenceSummary(expression)) return undefined
+  return { kind: 'opaqueType', text: expression }
 }
 
 function createReferenceValueOptions(member: TastyMember, type: TastyTypeRef): ReferenceValueOption[] {
@@ -218,33 +226,41 @@ function resolveReferenceSummaryType(
   symbolLookup: Map<string, TastySymbol>,
   visited = new Set<string>(),
 ): TastyTypeRef | undefined {
+  const nextType = getNextReferenceSummaryType(type, symbolLookup, visited)
+  if (!nextType || nextType === type) return type
+  return resolveReferenceSummaryType(nextType, symbolLookup, visited) ?? nextType
+}
+
+function getNextReferenceSummaryType(
+  type: TastyTypeRef,
+  symbolLookup: Map<string, TastySymbol>,
+  visited: Set<string>,
+): TastyTypeRef | undefined {
   const resolvedType = getTastyResolvedType(type)
-  if (resolvedType && resolvedType !== type) {
-    return resolveReferenceSummaryType(resolvedType, symbolLookup, visited) ?? resolvedType
-  }
-
+  if (resolvedType && resolvedType !== type) return resolvedType
   if (type.getKind() === 'indexed_access') {
-    const resolvedIndexedAccessType = resolveIndexedAccessType(type, symbolLookup, visited)
-    if (resolvedIndexedAccessType) {
-      return resolveReferenceSummaryType(resolvedIndexedAccessType, symbolLookup, visited)
-    }
+    return resolveIndexedAccessType(type, symbolLookup, visited) ?? type
   }
+  if (type.getKind() !== 'reference') return type
+  return resolveReferenceAliasType(type, symbolLookup, visited) ?? type
+}
 
-  if (type.getKind() !== 'reference') {
-    return type
-  }
-
+function resolveReferenceAliasType(
+  type: TastyTypeRef,
+  symbolLookup: Map<string, TastySymbol>,
+  visited: Set<string>,
+): TastyTypeRef | undefined {
   const symbolId = type.getReferencedSymbol()?.getId()
-  if (!symbolId || visited.has(symbolId)) return type
+  if (!symbolId || visited.has(symbolId)) return undefined
 
   const symbol = symbolLookup.get(symbolId)
-  if (!symbol || symbol.getKind() !== 'typeAlias') return type
+  if (!symbol || symbol.getKind() !== 'typeAlias') return undefined
 
   const underlyingType = symbol.getUnderlyingType()
-  if (!underlyingType) return type
+  if (!underlyingType) return undefined
 
   visited.add(symbolId)
-  return resolveReferenceSummaryType(underlyingType, symbolLookup, visited) ?? underlyingType
+  return underlyingType
 }
 
 function resolveIndexedAccessType(
