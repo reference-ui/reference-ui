@@ -5,60 +5,128 @@ const VIRTUAL_COMPLETE_EVENT = 'virtual:complete' as const
 const RUN_REFERENCE_BUILD_EVENT = 'run:reference:build' as const
 
 /**
- * Event wiring. Only on/emit/onceAll – pass payloads, no side effects.
+ * High-level sync orchestration.
+ *
+ * This file is intentionally declarative: it describes which completed stages
+ * unlock later work, without embedding worker-specific logic here.
+ *
+ * Broadly, sync flows through these phases:
+ *
+ * 1. Virtualize source files into `.reference-ui/virtual`
+ * 2. Build system config + Panda output from the virtual tree
+ * 3. Package the runtime libraries the reference build depends on
+ * 4. Generate runtime declarations for those packaged libraries
+ * 5. Build reference/Tasty output once those declarations exist
+ * 6. Package the final `@reference-ui/types` output after reference completes
+ * 7. Finish once TypeScript package generation is complete
+ *
  * watch:change → run:virtual:sync:file (single file), passing payload through.
  */
 export function initEvents(): void {
+  /**
+   * Bootstrap the virtual workspace only after the workers that depend on it
+   * have started and subscribed to their events.
+   */
   onceAll(['virtual:ready', 'reference:ready'], () => {
     emit('run:virtual:copy:all')
   })
 
+  /**
+   * The virtual tree is not considered ready until the reference browser
+   * component has been mirrored into it.
+   */
   on('virtual:copy:complete', ({ virtualDir }) => {
     emit('run:reference:component:copy', { virtualDir })
   })
 
+  /**
+   * `virtual:complete` is the barrier for downstream work: from this point on,
+   * config generation, Panda, and reference builds can operate on the
+   * synthesized workspace.
+   */
   on('reference:component:copied', () => {
     emit(VIRTUAL_COMPLETE_EVENT, {})
   })
 
+  /**
+   * Watch mode mutates the virtual tree first. Rebuild decisions are driven by
+   * the resulting `virtual:fs:change` events rather than by raw source changes.
+   */
   on('watch:change', (payload) => {
     emit('run:virtual:sync:file', payload)
   })
 
+  /**
+   * After initial startup, virtual changes refresh the config/Panda side so the
+   * generated styling surface stays aligned with mirrored sources.
+   */
   afterFirst(VIRTUAL_COMPLETE_EVENT, {
     on: 'virtual:fs:change',
     emit: 'run:system:config',
   })
 
+  /**
+   * Incremental reference rebuilds can fire directly from virtual changes.
+   * By the time watch mode reaches this path, the required packaged runtime and
+   * declaration surface already exists.
+   */
   afterFirst(VIRTUAL_COMPLETE_EVENT, {
     on: 'virtual:fs:change',
     emit: RUN_REFERENCE_BUILD_EVENT,
     payload: {},
   })
 
+  /**
+   * The first config build begins once the virtual workspace exists and the
+   * config worker is ready to consume it.
+   */
   forWorker({
     ready: 'system:config:ready',
     on: VIRTUAL_COMPLETE_EVENT,
     emit: 'run:system:config',
   })
 
+  /**
+   * Panda output depends on the current generated config, so it waits for the
+   * config pass for this virtual workspace as well as Panda worker readiness.
+   */
   forWorker({
     ready: 'system:panda:ready',
     on: 'system:config:complete',
     emit: 'run:panda:codegen',
   })
 
+  /**
+   * The reference build imports generated runtime packages such as
+   * `@reference-ui/react`, so those packages must exist before a clean
+   * reference build can resolve its downstream type surface.
+   */
   onReady('packager:ready', combineTrigger({
     requires: ['system:panda:codegen'],
     emit: 'run:packager:runtime:bundle',
   }))
 
+  /**
+   * Clean-build dependency:
+   *
+   * The reference build must wait for runtime declarations, not merely runtime
+   * package directories. Tasty resolves generated system types through packaged
+   * declaration surfaces such as `@reference-ui/react/react.d.mts`; if those
+   * declarations are missing, re-exported symbols like
+   * `ReferenceSystemStyleObject` disappear from the generated manifest.
+   *
+   * `packager-ts:runtime:complete` is therefore the barrier that makes clean
+   * downstream documentation of generated system types deterministic.
+   */
   onReady('reference:ready', combineTrigger({
     requires: [VIRTUAL_COMPLETE_EVENT, 'packager-ts:runtime:complete'],
     emit: RUN_REFERENCE_BUILD_EVENT,
     payload: {},
   }))
 
+  /**
+   * Any failure in the virtual/system/reference pipeline aborts the sync.
+   */
   emitOnAny({
     on: [
       'system:config:failed',
@@ -70,12 +138,20 @@ export function initEvents(): void {
     emit: 'sync:failed',
   })
 
+  /**
+   * The final package phase waits for reference output because
+   * `@reference-ui/types` includes the generated Tasty/runtime artifacts.
+   */
   onReady('packager:ready', combineTrigger({
     requires: ['reference:complete'],
     emit: 'run:packager:bundle',
   }))
 
-  /** Sync completes after packager-ts:complete. Packager emits packager-ts:complete when skipTypescript so this always fires. */
+  /**
+   * Sync completes once the TypeScript package surface is ready. When TypeScript
+   * generation is skipped, the packager emits `packager-ts:complete` itself so
+   * this completion edge still closes.
+   */
   on('packager-ts:complete', () => {
     emit('sync:complete')
   })
