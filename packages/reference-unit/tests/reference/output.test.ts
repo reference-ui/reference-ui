@@ -97,6 +97,26 @@ describe('reference output', () => {
     )
   })
 
+  it('flattens inherited display members when an interface extends a type alias', async () => {
+    const ready = await waitForReferenceArtifacts()
+    expect(ready, 'reference manifest should be emitted by the reference worker').toBe(
+      true
+    )
+
+    const api = createTastyApi({
+      manifestPath: typesPackageManifestPath,
+    })
+    await api.ready()
+
+    const symbol = await api.loadSymbolByName('DocsReferenceTypeExtendsProps')
+    const displayMembers = await symbol.getDisplayMembers()
+
+    expect(symbol.getKind()).toBe('interface')
+    expect(displayMembers.map(member => member.getName())).toEqual(
+      expect.arrayContaining(['label', 'size', 'tone', 'hasMenu'])
+    )
+  })
+
   it('still projects direct alias targets in the raw Tasty API', async () => {
     const ready = await waitForReferenceArtifacts()
     expect(ready, 'reference manifest should be emitted by the reference worker').toBe(

@@ -80,9 +80,10 @@ function ReferenceMemberRows({
 function ReferenceInheritedMemberSection({ group }: { group: InheritedMemberGroup }) {
   const [isExpanded, setIsExpanded] = useState(false)
   const isCollapsible = group.members.length > COLLAPSIBLE_INHERITED_SECTION_THRESHOLD
-  const visibleMembers = isCollapsible && !isExpanded
-    ? group.members.slice(0, COLLAPSED_INHERITED_SECTION_MEMBER_COUNT)
-    : group.members
+  const visibleMembers =
+    isCollapsible && !isExpanded
+      ? group.members.slice(0, COLLAPSED_INHERITED_SECTION_MEMBER_COUNT)
+      : group.members
   const hiddenMemberCount = group.members.length - visibleMembers.length
 
   return (
@@ -116,7 +117,7 @@ export function ReferenceMemberList({ members }: { members: ReferenceMemberDocum
   const { declaredMembers, inheritedGroups } = partitionMembers(members)
 
   return (
-    <Div display="grid" gap="reference.lg">
+    <Div display="grid" bg="blue.500" gap="reference.lg">
       {declaredMembers.length > 0 ? (
         <ReferenceMemberRows members={declaredMembers} />
       ) : null}

@@ -6,6 +6,7 @@ import { createReferenceJsDoc, createReferenceType, createReferenceTypeParameter
 
 interface CreateReferenceDocumentOptions {
   extendsChain?: TastySymbol[]
+  memberOrigins?: Map<string, TastySymbol>
   relatedSymbols?: TastySymbol[]
   warnings?: string[]
 }
@@ -17,6 +18,7 @@ export function createReferenceDocument(
 ): ReferenceDocument {
   const {
     extendsChain = [],
+    memberOrigins,
     relatedSymbols = [],
     warnings = [],
   } = options
@@ -27,7 +29,9 @@ export function createReferenceDocument(
   const definitionType = createReferenceType(getTastyResolvedType(underlyingType) ?? underlyingType) ?? null
   const definition = getReferenceDocumentDefinition(definitionType, underlyingType)
   const rootRef = createReferenceOwnedSymbolRef(symbol)
-  const memberOrigins = createReferenceMemberOrigins(symbol, extendsChain)
+  const normalizedMemberOrigins = memberOrigins
+    ? normalizeReferenceMemberOrigins(memberOrigins)
+    : createReferenceMemberOrigins(symbol, extendsChain)
   const symbolLookup = new Map<string, TastySymbol>([
     [symbol.getId(), symbol],
     ...relatedSymbols.map((relatedSymbol) => [relatedSymbol.getId(), relatedSymbol] as const),
@@ -51,8 +55,8 @@ export function createReferenceDocument(
     definitionType,
     members: members.map((member) =>
       createReferenceMemberDocument(member, symbolLookup, {
-        declaredBy: memberOrigins.get(member.getId()) ?? rootRef,
-        inheritedFrom: getReferenceMemberInheritedFrom(member, memberOrigins, symbol, rootRef),
+        declaredBy: normalizedMemberOrigins.get(member.getId()) ?? rootRef,
+        inheritedFrom: getReferenceMemberInheritedFrom(member, normalizedMemberOrigins, symbol, rootRef),
       }),
     ),
   }
@@ -85,6 +89,14 @@ function createReferenceMemberOrigins(
   }
 
   return origins
+}
+
+function normalizeReferenceMemberOrigins(
+  memberOrigins: Map<string, TastySymbol>,
+): Map<string, ReferenceSymbolRef> {
+  return new Map(
+    [...memberOrigins.entries()].map(([memberId, symbol]) => [memberId, createReferenceOwnedSymbolRef(symbol)]),
+  )
 }
 
 function getReferenceMemberInheritedFrom(
