@@ -1,6 +1,9 @@
 import { emit, on, onceAll } from '../lib/event-bus'
 import { afterFirst, combineTrigger, emitOnAny, forWorker, onReady } from './events.utils'
 
+const VIRTUAL_COMPLETE_EVENT = 'virtual:complete' as const
+const RUN_REFERENCE_BUILD_EVENT = 'run:reference:build' as const
+
 /**
  * Event wiring. Only on/emit/onceAll – pass payloads, no side effects.
  * watch:change → run:virtual:sync:file (single file), passing payload through.
@@ -15,35 +18,28 @@ export function initEvents(): void {
   })
 
   on('reference:component:copied', () => {
-    emit('virtual:complete', {})
+    emit(VIRTUAL_COMPLETE_EVENT, {})
   })
 
   on('watch:change', (payload) => {
     emit('run:virtual:sync:file', payload)
   })
 
-  afterFirst('virtual:complete', {
+  afterFirst(VIRTUAL_COMPLETE_EVENT, {
     on: 'virtual:fs:change',
     emit: 'run:system:config',
   })
 
-  afterFirst('virtual:complete', {
+  afterFirst(VIRTUAL_COMPLETE_EVENT, {
     on: 'virtual:fs:change',
-    emit: 'run:reference:build',
+    emit: RUN_REFERENCE_BUILD_EVENT,
     payload: {},
   })
 
   forWorker({
     ready: 'system:config:ready',
-    on: 'virtual:complete',
+    on: VIRTUAL_COMPLETE_EVENT,
     emit: 'run:system:config',
-  })
-
-  forWorker({
-    ready: 'reference:ready',
-    on: 'virtual:complete',
-    emit: 'run:reference:build',
-    payload: {},
   })
 
   forWorker({
@@ -51,6 +47,17 @@ export function initEvents(): void {
     on: 'system:config:complete',
     emit: 'run:panda:codegen',
   })
+
+  onReady('packager:ready', combineTrigger({
+    requires: ['system:panda:codegen'],
+    emit: 'run:packager:runtime:bundle',
+  }))
+
+  onReady('reference:ready', combineTrigger({
+    requires: [VIRTUAL_COMPLETE_EVENT, 'packager-ts:runtime:complete'],
+    emit: RUN_REFERENCE_BUILD_EVENT,
+    payload: {},
+  }))
 
   emitOnAny({
     on: [
@@ -64,7 +71,7 @@ export function initEvents(): void {
   })
 
   onReady('packager:ready', combineTrigger({
-    requires: ['system:panda:codegen', 'reference:complete'],
+    requires: ['reference:complete'],
     emit: 'run:packager:bundle',
   }))
 

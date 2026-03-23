@@ -110,9 +110,17 @@ export const TYPES_PACKAGE: PackageDefinition = {
   postprocess: ['rewriteTypesRuntimeImport'],
 }
 
-export const PACKAGES: PackageDefinition[] = [
+export const RUNTIME_PACKAGES: PackageDefinition[] = [
   REACT_PACKAGE,
   SYSTEM_PACKAGE,
-  TYPES_PACKAGE,
   STYLED_PACKAGE,
+]
+
+export const FINAL_PACKAGES: PackageDefinition[] = [
+  TYPES_PACKAGE,
+]
+
+export const PACKAGES: PackageDefinition[] = [
+  ...RUNTIME_PACKAGES,
+  ...FINAL_PACKAGES,
 ]

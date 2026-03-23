@@ -28,3 +28,6 @@ Make pretty api tables (WIP)
 - Figure out other areas where we can give better warns and errors.
 
 
+# Library
+
+## Add 'how to test' tests to MCP server. amazing stuff.

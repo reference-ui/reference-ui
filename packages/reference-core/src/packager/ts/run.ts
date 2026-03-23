@@ -3,14 +3,25 @@ import { log } from '../../lib/log'
 import { installPackagesTs } from './install'
 import type { TsPackagerWorkerPayload } from './types'
 
+type DtsCompletionEvent =
+  | 'packager-ts:runtime:complete'
+  | 'packager-ts:complete'
+
+const FINAL_DTS_COMPLETE_EVENT: DtsCompletionEvent = 'packager-ts:complete'
+const RUNTIME_DTS_COMPLETE_EVENT: DtsCompletionEvent = 'packager-ts:runtime:complete'
+
 interface DtsGenerationRuntimeOptions {
   bundlesReady: boolean
-  runGeneration?: (payload: TsPackagerWorkerPayload) => Promise<void>
+  runGeneration?: (
+    payload: TsPackagerWorkerPayload,
+    completionEvent?: DtsCompletionEvent
+  ) => Promise<void>
 }
 
 /** Generate .d.ts and write to outDir. Emits packager-ts:complete when done. */
 export async function runDtsGeneration(
-  payload: TsPackagerWorkerPayload
+  payload: TsPackagerWorkerPayload,
+  completionEvent: DtsCompletionEvent = FINAL_DTS_COMPLETE_EVENT
 ): Promise<void> {
   const { cwd, packages } = payload
 
@@ -18,7 +29,7 @@ export async function runDtsGeneration(
 
   try {
     await installPackagesTs(cwd, packages)
-    emit('packager-ts:complete', {})
+    emit(completionEvent, {})
     log.debug('packager:ts', 'Declarations ready')
   } catch (error) {
     log.error('[packager:ts] Failed', error)
@@ -34,6 +45,7 @@ export function createDtsGenerationRuntime(
   payload: TsPackagerWorkerPayload,
   options: DtsGenerationRuntimeOptions
 ): {
+  onPackagerRuntimeComplete: () => void
   onPackagerComplete: () => void
   runCatchUpIfNeeded: () => Promise<void>
 } {
@@ -41,7 +53,9 @@ export function createDtsGenerationRuntime(
   let currentRun: Promise<void> | null = null
   let rerunRequested = false
 
-  const runSerial = async (): Promise<void> => {
+  const runSerial = async (
+    completionEvent: DtsCompletionEvent
+  ): Promise<void> => {
     if (currentRun) {
       rerunRequested = true
       return currentRun
@@ -50,7 +64,7 @@ export function createDtsGenerationRuntime(
     currentRun = (async () => {
       do {
         rerunRequested = false
-        await runGeneration(payload).catch(() => {})
+        await runGeneration(payload, completionEvent).catch(() => {})
       } while (rerunRequested)
     })().finally(() => {
       currentRun = null
@@ -60,15 +74,18 @@ export function createDtsGenerationRuntime(
   }
 
   return {
+    onPackagerRuntimeComplete: () => {
+      void runSerial(RUNTIME_DTS_COMPLETE_EVENT)
+    },
     onPackagerComplete: () => {
-      void runSerial()
+      void runSerial(FINAL_DTS_COMPLETE_EVENT)
     },
     runCatchUpIfNeeded: async () => {
       // Catch-up only matters for long-lived/watch workers that may start after
       // runtime outputs already exist. For one-shot sync, waiting for the next
       // packager:complete avoids overlapping stale and current declaration runs.
       if (payload.watchMode && bundlesReady) {
-        await runSerial()
+        await runSerial(FINAL_DTS_COMPLETE_EVENT)
       }
     },
   }

@@ -29,6 +29,7 @@ export default async function runTsPackager(
     bundlesReady: hasAllBundleOutputs(payload.cwd, payload.packages),
   })
 
+  on('packager:runtime:complete', runtime.onPackagerRuntimeComplete)
   on('packager:complete', runtime.onPackagerComplete)
   await runtime.runCatchUpIfNeeded()
 

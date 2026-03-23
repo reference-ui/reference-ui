@@ -6,6 +6,7 @@ async function importWorkerModule() {
   const emit = vi.fn()
   const on = vi.fn()
   const onRunBundle = vi.fn()
+  const onRunRuntimeBundle = vi.fn()
 
   vi.doMock('../lib/event-bus', () => ({
     emit,
@@ -13,10 +14,11 @@ async function importWorkerModule() {
   }))
   vi.doMock('./run', () => ({
     onRunBundle,
+    onRunRuntimeBundle,
   }))
 
   const mod = await import('./worker')
-  return { ...mod, emit, on, onRunBundle }
+  return { ...mod, emit, on, onRunBundle, onRunRuntimeBundle }
 }
 
 afterEach(() => {
@@ -27,15 +29,20 @@ afterEach(() => {
 })
 
 describe('packager/worker', () => {
-  it('subscribes to run:packager:bundle and passes payload to onRunBundle', async () => {
-    const { default: runPackager, on, onRunBundle } = await importWorkerModule()
+  it('subscribes to runtime and final bundle triggers', async () => {
+    const { default: runPackager, on, onRunBundle, onRunRuntimeBundle } = await importWorkerModule()
     const payload = { cwd: '/workspace/app', skipTypescript: true }
 
     runPackager(payload)
 
+    expect(on).toHaveBeenCalledWith('run:packager:runtime:bundle', expect.any(Function))
     expect(on).toHaveBeenCalledWith('run:packager:bundle', expect.any(Function))
     const handler = on.mock.calls[0][1]
     handler()
+    expect(onRunRuntimeBundle).toHaveBeenCalledWith(payload)
+
+    const finalHandler = on.mock.calls[1][1]
+    finalHandler()
     expect(onRunBundle).toHaveBeenCalledWith(payload)
   })
 

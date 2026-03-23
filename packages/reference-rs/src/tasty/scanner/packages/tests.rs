@@ -85,6 +85,50 @@ fn external_import_falls_back_to_installed_types_provider() {
 }
 
 #[test]
+fn external_import_walks_parent_node_modules_dirs() {
+    let root = TempDir::new("scanner-packages-parent-node-modules");
+    root.write(
+        "node_modules/fancy-lib/package.json",
+        r#"{ "name": "fancy-lib", "types": "index.d.ts" }"#,
+    );
+    root.write(
+        "node_modules/fancy-lib/index.d.ts",
+        "export interface ButtonProps {}\n",
+    );
+    fs::create_dir_all(root.path().join(".reference-ui/virtual/src")).expect("mkdir virtual src");
+
+    let nested_root = root.path().join(".reference-ui/virtual");
+    let resolved = resolve_external_import(&nested_root, "fancy-lib")
+        .expect("parent node_modules package should resolve");
+
+    assert_eq!(resolved.file_id, "../../node_modules/fancy-lib/index.d.ts");
+    assert_eq!(resolved.module_specifier, "fancy-lib");
+    assert_eq!(resolved.library, "fancy-lib");
+}
+
+#[test]
+fn external_import_walks_parent_node_modules_for_types_provider() {
+    let root = TempDir::new("scanner-packages-parent-types-provider");
+    root.write(
+        "node_modules/@types/json-schema/package.json",
+        r#"{ "name": "@types/json-schema", "types": "index.d.ts" }"#,
+    );
+    root.write(
+        "node_modules/@types/json-schema/index.d.ts",
+        "export interface JSONSchema4 {}\n",
+    );
+    fs::create_dir_all(root.path().join(".reference-ui/virtual/src")).expect("mkdir virtual src");
+
+    let nested_root = root.path().join(".reference-ui/virtual");
+    let resolved = resolve_external_import(&nested_root, "json-schema")
+        .expect("parent node_modules types provider should resolve");
+
+    assert_eq!(resolved.file_id, "../../node_modules/@types/json-schema/index.d.ts");
+    assert_eq!(resolved.module_specifier, "json-schema");
+    assert_eq!(resolved.library, "json-schema");
+}
+
+#[test]
 fn split_package_specifier_handles_scoped_package_and_subpath() {
     assert_eq!(
         split_package_specifier("@acme/widgets"),

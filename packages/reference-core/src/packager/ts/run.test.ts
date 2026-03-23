@@ -66,4 +66,20 @@ describe('packager/ts/run', () => {
 
     expect(runGeneration).toHaveBeenCalledTimes(2)
   })
+
+  it('runs runtime declaration generation when runtime packages complete', async () => {
+    const runGeneration = vi.fn().mockResolvedValue(undefined)
+    const runtime = createDtsGenerationRuntime(createPayload(false), {
+      bundlesReady: false,
+      runGeneration,
+    })
+
+    runtime.onPackagerRuntimeComplete()
+    await Promise.resolve()
+
+    expect(runGeneration).toHaveBeenCalledWith(
+      expect.objectContaining({ cwd: '/workspace' }),
+      'packager-ts:runtime:complete'
+    )
+  })
 })

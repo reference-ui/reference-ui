@@ -4,7 +4,7 @@
  */
 import { emit, on } from '../lib/event-bus'
 import { KEEP_ALIVE } from '../lib/thread-pool'
-import { onRunBundle } from './run'
+import { onRunBundle, onRunRuntimeBundle } from './run'
 
 export interface PackagerWorkerPayload {
   cwd: string
@@ -15,6 +15,7 @@ export interface PackagerWorkerPayload {
 export default async function runPackager(
   payload: PackagerWorkerPayload
 ): Promise<never> {
+  on('run:packager:runtime:bundle', () => onRunRuntimeBundle(payload))
   on('run:packager:bundle', () => onRunBundle(payload))
   emit('packager:ready')
 
