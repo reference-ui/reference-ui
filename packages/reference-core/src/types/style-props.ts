@@ -2,13 +2,18 @@ import type { SystemStyleObject as StyledSystemStyleObject } from '../system/sty
 import type { ReferenceProps } from './props'
 
 /**
- * Public style authoring surface owned by `reference-ui`.
- * Composes the backend style object with `ReferenceProps` (font, container, `r`, …).
+ * Public style props for React primitives.
+ * Composes the raw Panda style object with `ReferenceProps` (font, container, `r`, …).
+ * Use for direct primitive props like <Div fontSize="lg" container="center" />
  */
-export type SystemStyleObject = Omit<
+export type StyleProps = Omit<
   StyledSystemStyleObject,
   'font' | 'weight' | 'container' | 'r'
 > &
   ReferenceProps
 
-
+/**
+ * Raw Panda SystemStyleObject.
+ * Use only with the `css()` prop: <Div css={{ padding: '4r', bg: 'blue.500' }} />
+ */
+export type { SystemStyleObject } from '../system/styled/types'

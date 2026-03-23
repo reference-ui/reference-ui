@@ -50,7 +50,7 @@ describe('Reference component', () => {
 
     expect(screen.getByText('DocsReferenceButtonProps')).toBeInTheDocument()
     expect(
-      screen.getByText(/Public button props used to exercise the live reference table\./),
+      screen.getByText(/Public button props used to exercise the live reference table\./)
     ).toBeInTheDocument()
 
     expectVisibleText('variant')
@@ -72,7 +72,7 @@ describe('Reference component', () => {
     expectVisibleText('{ [K in DocsReferenceButtonVariant as `tone-${K}`]: K }')
     expectVisibleText('{ compact: 4; comfortable: 8; spacious: 12 }')
     expectVisibleText(
-      "{ emphasis: 'high'; fill: true } | { emphasis: 'low'; fill: false }",
+      "{ emphasis: 'high'; fill: true } | { emphasis: 'low'; fill: false }"
     )
 
     expectVisibleText('solid')
@@ -81,10 +81,14 @@ describe('Reference component', () => {
     expectVisibleText('end')
 
     expect(
-      screen.getByText('(event: DocsReferencePressEvent, state: DocsReferenceButtonState) => void'),
+      screen.getByText(
+        '(event: DocsReferencePressEvent, state: DocsReferenceButtonState) => void'
+      )
     ).toBeInTheDocument()
     expect(
-      screen.getByText('(icon: DocsReferenceIconName, size: DocsReferenceButtonSize) => string'),
+      screen.getByText(
+        '(icon: DocsReferenceIconName, size: DocsReferenceButtonSize) => string'
+      )
     ).toBeInTheDocument()
     expect(screen.getByText('(value: string) => string')).toBeInTheDocument()
 
@@ -97,7 +101,7 @@ describe('Reference component', () => {
     expectVisibleText('@returns')
     expectVisibleText('Rendered icon markup.')
     expectVisibleText('@see')
-    expectVisibleText("@example")
+    expectVisibleText('@example')
     expectVisibleText("renderIcon('plus', 'md')")
     expectVisibleText('@deprecated')
     expectVisibleText('Prefer a direct render override.')
@@ -107,9 +111,11 @@ describe('Reference component', () => {
     expect(screen.getByText("DocsReferenceButtonState['intent']")).toBeInTheDocument()
     expectVisibleText('primary')
     expectVisibleText('danger')
-    expect(screen.queryByText((content) => content === 'mapped')).not.toBeInTheDocument()
+    expect(screen.queryByText(content => content === 'mapped')).not.toBeInTheDocument()
     expect(screen.queryByText('[tuple]')).not.toBeInTheDocument()
-    expect(screen.queryByText((content) => content === 'conditional')).not.toBeInTheDocument()
+    expect(
+      screen.queryByText(content => content === 'conditional')
+    ).not.toBeInTheDocument()
     expect(screen.queryByText('indexed')).not.toBeInTheDocument()
   })
 
@@ -189,7 +195,7 @@ describe('Reference component', () => {
     expect(screen.getByText('DocsReferenceToneLabels')).toBeInTheDocument()
     expect(screen.getByText('Type')).toBeInTheDocument()
     expectVisibleText('{ [K in DocsReferenceButtonVariant as `tone-${K}`]: K }')
-    expect(screen.queryByText((content) => content === 'mapped')).not.toBeInTheDocument()
+    expect(screen.queryByText(content => content === 'mapped')).not.toBeInTheDocument()
     expectTextAbsent('Last resolved payload when the state is successful.')
   })
 
@@ -237,7 +243,7 @@ describe('Reference component', () => {
     expect(screen.getByText('DocsReferenceInteractiveElement')).toBeInTheDocument()
     expect(screen.getByText('Type')).toBeInTheDocument()
     expectVisibleText(
-      "{ kind: 'action'; onPress: () => void; disabled?: boolean } | { kind: 'link'; href: string; target?: '_self' | '_blank' }",
+      "{ kind: 'action'; onPress: () => void; disabled?: boolean } | { kind: 'link'; href: string; target?: '_self' | '_blank' }"
     )
     expectTextAbsent('Last resolved payload when the state is successful.')
   })
@@ -248,7 +254,7 @@ describe('Reference component', () => {
     expect(screen.getByText('DocsReferenceButtonVariantMeta')).toBeInTheDocument()
     expect(screen.getByText('Type')).toBeInTheDocument()
     expectVisibleText(
-      "{ emphasis: 'high'; fill: true } | { emphasis: 'low'; fill: false }",
+      "{ emphasis: 'high'; fill: true } | { emphasis: 'low'; fill: false }"
     )
     expectTextAbsent('Last resolved payload when the state is successful.')
   })
@@ -283,15 +289,15 @@ describe('Reference component', () => {
     expectTextAbsent('disabled')
   })
 
-  it('loads ReferenceSystemStyleObject after export type re-export from @reference-ui/react', async () => {
-    await renderReference('ReferenceSystemStyleObject')
+  it('loads StyleProps after export type re-export from @reference-ui/react', async () => {
+    await renderReference('StyleProps')
 
     expect(screen.queryByText(/Failed to load/)).not.toBeInTheDocument()
-    expect(screen.getAllByText('ReferenceSystemStyleObject').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText('StyleProps').length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText('Type')).toBeInTheDocument()
-    expect(screen.getByText('Definition')).toBeInTheDocument()
-    expectVisibleText('SystemStyleObject')
-    expectTextAbsent('padding')
+    expectTextAbsent('Definition')
+    expectVisibleText('WebkitAppearance')
+    expectVisibleText('container')
+    expectVisibleText('padding')
   })
-
 })

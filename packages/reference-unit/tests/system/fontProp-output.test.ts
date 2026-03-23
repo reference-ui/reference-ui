@@ -62,23 +62,23 @@ describe('font prop output (e2e)', () => {
 
   it('emits generated system font registry types', async () => {
     const systemTypes = await waitForGeneratedFileContaining(
-      'interface ReferenceFontRegistry {',
+      'interface FontRegistry {',
       'system',
       'system.d.mts'
     )
     const systemGeneratedTypes = await waitForGeneratedFile('system', 'types.generated.d.mts')
     const reactTypes = await waitForGeneratedFileContaining(
-      'interface ReferenceFontRegistry {',
+      'interface FontRegistry {',
       'react',
       'react.d.mts'
     )
     const reactGeneratedTypes = await waitForGeneratedFile('react', 'types.generated.d.mts')
 
-    expect(systemTypes).toContain('interface ReferenceFontRegistry {')
-    expect(systemGeneratedTypes).toContain('interface ReferenceFontRegistry {')
+    expect(systemTypes).toContain('interface FontRegistry {')
+    expect(systemGeneratedTypes).toContain('interface FontRegistry {')
     expect(systemGeneratedTypes).toContain('"sans": {')
-    expect(reactTypes).toContain('interface ReferenceFontRegistry {')
-    expect(reactTypes).toContain('ReferenceFontProps')
+    expect(reactTypes).toContain('interface FontRegistry {')
+    expect(reactTypes).toContain('type FontProps = ScopedFontProps;')
     expect(reactGeneratedTypes).toContain('"sans": {')
     expect(reactGeneratedTypes).toContain('"bold": true')
   }, 20_000)

@@ -10,6 +10,8 @@ export interface FontTypeRegistry {
 }
 
 const FONT_REGISTRY_FILENAME = 'font-registry.json'
+const EMITTED_FONT_REGISTRY_INTERFACE = 'FontRegistry'
+const EMITTED_FONT_PROPS_ALIAS = 'FontProps'
 
 function writeFileAtomic(path: string, content: string): void {
   const tempPath = `${path}.tmp-${process.pid}-${Date.now()}`
@@ -37,7 +39,7 @@ export function buildFontTypeRegistry(fonts: FontDefinition[]): FontTypeRegistry
 
 export function renderFontRegistryInterface(registry: FontTypeRegistry): string {
   const lines = [
-    'interface ReferenceFontRegistry {',
+    `interface ${EMITTED_FONT_REGISTRY_INTERFACE} {`,
   ]
 
   for (const [fontName, weightNames] of Object.entries(registry)) {
@@ -126,18 +128,18 @@ function writeFontRegistryIntoTypes(typesPath: string, registry: FontTypeRegistr
   let content = readFileSync(typesPath, 'utf-8')
     .replace("import './types.generated.d.mts';\n", '')
     .replace(
-      /interface ReferenceFontRegistry \{\n\}/,
+      /interface (?:ReferenceFontRegistry|FontRegistry) \{\n\}/,
       renderFontRegistryInterface(registry)
     )
 
   if (Object.keys(registry).length > 0) {
     content = content
       .replace(
-        'type ReferenceFontProps = [ReferenceFontName] extends [never] ? ReferenceFallbackFontProps : ReferenceScopedFontProps;',
-        'type ReferenceFontProps = ReferenceScopedFontProps;'
+        /type (?:ReferenceFontProps|FontProps) = \[(?:ReferenceFontName|FontName)\] extends \[never\] \? (?:ReferenceFallbackFontProps|FallbackFontProps) : (?:ReferenceScopedFontProps|ScopedFontProps);/,
+        `type ${EMITTED_FONT_PROPS_ALIAS} = ScopedFontProps;`
       )
       .split(EMITTED_FONT_PROPS_SHAPE)
-      .join('ReferenceFontProps')
+      .join(EMITTED_FONT_PROPS_ALIAS)
   }
 
   writeFileAtomic(typesPath, content)

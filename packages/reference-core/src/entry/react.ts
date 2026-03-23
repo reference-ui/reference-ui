@@ -15,10 +15,9 @@ export type {
   SystemStyleObject,
 } from '../types'
 export type {
-  ReferenceFontName,
-  ReferenceFontProps,
-  ReferenceFontRegistry,
-  ReferenceFontWeightName,
-  ReferenceFontWeightValue,
-  ReferenceSystemStyleObject,
-} from '../system/types'
+  FontName,
+  FontProps,
+  FontWeightName,
+  FontWeightValue,
+  StyleProps,
+} from '../types'

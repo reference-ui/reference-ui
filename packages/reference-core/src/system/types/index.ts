@@ -1,15 +1,4 @@
-import type {
-  ColorModeProps,
-  ContainerProps,
-  FontName,
-  FontProps,
-  FontWeightName,
-  FontWeightValue,
-  ReferenceProps,
-  ResponsiveProps,
-  ScopedFontWeight,
-  SystemStyleObject as PublicSystemStyleObject,
-} from '../../types'
+import type { StyleProps } from '../../types'
 
 /**
  * Generated systems augment this registry with concrete font names and weights.
@@ -24,30 +13,4 @@ declare module '../../types/fontRegistry' {
   interface FontRegistry extends ReferenceFontRegistry {}
 }
 
-export type ReferenceFontName = FontName
-
-export type ReferenceFontWeightName<TFont extends ReferenceFontName> =
-  FontWeightName<TFont>
-
-export type ReferenceScopedFontWeight<TFont extends ReferenceFontName> =
-  ScopedFontWeight<TFont>
-
-export type ReferenceFontWeightValue<TFont extends ReferenceFontName> =
-  FontWeightValue<TFont>
-
-export type ReferenceFontProps = FontProps
-
-export type ReferenceContainerProps = ContainerProps
-
-/**
- * Theme scope for token resolution.
- * Supported on HTML primitives only and emitted as Panda's `data-panda-theme`
- * attribute, not through the Panda `box()` pattern / `ReferenceSystemStyleObject`.
- */
-export type ReferenceColorModeProps = ColorModeProps
-
-export type ReferenceResponsiveProps = ResponsiveProps
-
-export type ReferenceBoxPatternProps = ReferenceProps
-
-export type ReferenceSystemStyleObject = PublicSystemStyleObject
+export { StyleProps }

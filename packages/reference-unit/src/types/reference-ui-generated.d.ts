@@ -6,6 +6,7 @@ declare module '@reference-ui/react' {
   export function css(...args: any[]): any
   export function recipe(...args: any[]): any
   /** Present in generated `.reference-ui/react`; stubbed so `tsc` passes before sync. */
+  export type StyleProps = any
   export type ReferenceSystemStyleObject = any
 }
 
