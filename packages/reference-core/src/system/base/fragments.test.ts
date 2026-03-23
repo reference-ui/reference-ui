@@ -74,6 +74,10 @@ describe('system/base/fragments', () => {
       '@reference-ui/system': '/workspace/packages/reference-core/src/entry/system.ts',
       '@reference-ui/core/config': '/workspace/packages/reference-core/src/entry/system.ts',
       '@reference-ui/cli/config': '/workspace/packages/reference-core/src/entry/system.ts',
+      '@reference-ui/react': '/workspace/packages/reference-core/src/entry/react.ts',
+      '@reference-ui/styled/css': '/workspace/packages/reference-core/src/system/styled/css/index.js',
+      '@reference-ui/styled/jsx': '/workspace/packages/reference-core/src/system/styled/jsx/index.js',
+      '@reference-ui/styled/patterns/box': '/workspace/packages/reference-core/src/system/styled/patterns/box.js',
     })
   })
 
@@ -109,6 +113,10 @@ describe('system/base/fragments', () => {
         '@reference-ui/system': '/workspace/core/src/entry/system.ts',
         '@reference-ui/core/config': '/workspace/core/src/entry/system.ts',
         '@reference-ui/cli/config': '/workspace/core/src/entry/system.ts',
+        '@reference-ui/react': '/workspace/core/src/entry/react.ts',
+        '@reference-ui/styled/css': '/workspace/core/src/system/styled/css/index.js',
+        '@reference-ui/styled/jsx': '/workspace/core/src/system/styled/jsx/index.js',
+        '@reference-ui/styled/patterns/box': '/workspace/core/src/system/styled/patterns/box.js',
       },
     })
     expect(result).toEqual({
@@ -152,6 +160,10 @@ describe('system/base/fragments', () => {
         '@reference-ui/system': '/workspace/core/src/entry/system.ts',
         '@reference-ui/core/config': '/workspace/core/src/entry/system.ts',
         '@reference-ui/cli/config': '/workspace/core/src/entry/system.ts',
+        '@reference-ui/react': '/workspace/core/src/entry/react.ts',
+        '@reference-ui/styled/css': '/workspace/core/src/system/styled/css/index.js',
+        '@reference-ui/styled/jsx': '/workspace/core/src/system/styled/jsx/index.js',
+        '@reference-ui/styled/patterns/box': '/workspace/core/src/system/styled/patterns/box.js',
       },
       prebundledFragments: ['upstreamOne()', 'upstreamTwo()', 'localOne()', 'localTwo()'],
     })
