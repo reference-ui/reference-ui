@@ -20,12 +20,17 @@ describe('style_props_projection tasty api', () => {
     const styleProps = await api.loadSymbolByName('ReferenceSystemStyleObject')
     const publicStyleProps = await api.loadSymbolByName('PublicReferenceSystemStyleObject')
 
-    const systemMembers = await api.graph.projectObjectLikeMembers(systemStyle)
-    const styleMembers = await api.graph.projectObjectLikeMembers(styleProps)
-    const publicMembers = await api.graph.projectObjectLikeMembers(publicStyleProps)
+    const systemMembers = await systemStyle.getDisplayMembers()
+    const styleMembers = await styleProps.getDisplayMembers()
+    const publicMembers = await publicStyleProps.getDisplayMembers()
 
     expect(memberNames(systemMembers)).toEqual(['color', 'font', 'weight', 'container', '--accent', '[index]'])
     expect(memberNames(styleMembers)).toEqual(['color', '--accent', '[index]', 'container', 'r', 'font', 'weight'])
     expect(memberNames(publicMembers)).toEqual(['color', '--accent', '[index]', 'container', 'r', 'font', 'weight'])
+    expect(styleProps.getMembers()).toEqual([])
+    expect(publicStyleProps.getMembers()).toEqual([])
+    expect(styleProps.getUnderlyingType()?.describe()).toBe(
+      "Omit<SystemStyleObject, 'font' | 'weight' | 'container' | 'r'> & ReferenceBoxPatternProps",
+    )
   })
 })

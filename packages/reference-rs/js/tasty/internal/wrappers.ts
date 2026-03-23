@@ -70,6 +70,10 @@ export class TastySymbolImpl implements TastySymbol {
     return this.raw.members.map((member) => new TastyMemberImpl(this.api, member))
   }
 
+  async getDisplayMembers(): Promise<TastyMember[]> {
+    return this.api.graph.getDisplayMembers(this)
+  }
+
   getTypeParameters() {
     return this.raw.typeParameters ?? []
   }

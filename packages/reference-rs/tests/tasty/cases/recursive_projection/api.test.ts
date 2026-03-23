@@ -20,12 +20,14 @@ describe('recursive_projection tasty api', () => {
     const systemStyle = await api.loadSymbolByName('SystemStyleObject')
     const publicSystemStyle = await api.loadSymbolByName('PublicSystemStyleObject')
 
-    const nestedMembers = await api.graph.projectObjectLikeMembers(nested)
-    const systemStyleMembers = await api.graph.projectObjectLikeMembers(systemStyle)
-    const publicMembers = await api.graph.projectObjectLikeMembers(publicSystemStyle)
+    const nestedMembers = await nested.getDisplayMembers()
+    const systemStyleMembers = await systemStyle.getDisplayMembers()
+    const publicMembers = await publicSystemStyle.getDisplayMembers()
 
     expect(memberNames(nestedMembers)).toEqual(['[index]'])
     expect(memberNames(systemStyleMembers)).toEqual(['color', '--accent', '[index]', 'gap'])
     expect(memberNames(publicMembers)).toEqual(['color', '--accent', '[index]', 'gap'])
+    expect(systemStyle.getMembers()).toEqual([])
+    expect(publicSystemStyle.getMembers()).toEqual([])
   })
 })

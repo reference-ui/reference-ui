@@ -17,8 +17,8 @@ describe('union display type label', () => {
       api.loadSymbolByName('ButtonPropsNamedSize'),
     ])
 
-    const buttonMembers = await api.graph.getEffectiveMembers(buttonProps)
-    const namedMembers = await api.graph.getEffectiveMembers(buttonPropsNamedSize)
+    const buttonMembers = await api.graph.getDisplayMembers(buttonProps)
+    const namedMembers = await api.graph.getDisplayMembers(buttonPropsNamedSize)
 
     const buttonDoc = createReferenceDocument(buttonProps, buttonMembers, [], [], [])
     const namedDoc = createReferenceDocument(buttonPropsNamedSize, namedMembers, [], [], [])
@@ -30,7 +30,7 @@ describe('union display type label', () => {
   it('uses Union | string for literal ∪ string and lists literal chips only', async () => {
     const api = createTastyApi({ manifestPath })
     const themeColorProp = await api.loadSymbolByName('ThemeColorProp')
-    const themeMembers = await api.graph.getEffectiveMembers(themeColorProp)
+    const themeMembers = await api.graph.getDisplayMembers(themeColorProp)
     const themeDoc = createReferenceDocument(themeColorProp, themeMembers, [], [], [])
 
     const colorMember = themeDoc.members.find((m) => m.name === 'color')
@@ -48,7 +48,7 @@ describe('union display type label', () => {
   it('uses Union | object for literal ∪ object', async () => {
     const api = createTastyApi({ manifestPath })
     const slotOrObject = await api.loadSymbolByName('SlotOrObjectProp')
-    const members = await api.graph.getEffectiveMembers(slotOrObject)
+    const members = await api.graph.getDisplayMembers(slotOrObject)
     const doc = createReferenceDocument(slotOrObject, members, [], [], [])
 
     const slotMember = doc.members.find((m) => m.name === 'slot')
@@ -62,7 +62,7 @@ describe('union display type label', () => {
   it('uses Union | string | object when both widenings are present', async () => {
     const api = createTastyApi({ manifestPath })
     const combo = await api.loadSymbolByName('WideningComboProp')
-    const members = await api.graph.getEffectiveMembers(combo)
+    const members = await api.graph.getDisplayMembers(combo)
     const doc = createReferenceDocument(combo, members, [], [], [])
 
     const modeMember = doc.members.find((m) => m.name === 'mode')

@@ -122,6 +122,18 @@ describe('Reference component', () => {
     expectTextAbsent('Optional formatter for the visible label.')
   })
 
+  it('renders projected members for composed type aliases in the reference UI', async () => {
+    await renderReference('DocsReferenceComposedButtonProps')
+
+    expect(screen.getByText('DocsReferenceComposedButtonProps')).toBeInTheDocument()
+    expect(screen.getByText('Type alias')).toBeInTheDocument()
+    expectVisibleText('label')
+    expectVisibleText('variant')
+    expectVisibleText('controlId')
+    expectVisibleText('interactionRole')
+    expectVisibleText('announceLabel')
+  })
+
   it('renders keyof typeof aliases as resolved literal unions when tasty emits them', async () => {
     await renderReference('DocsReferenceButtonIntent')
 

@@ -33,7 +33,7 @@ Tasty **runtime** API (consumes emitted JS artifacts; generation still uses the 
 - `createTastyApi(options)` / `createTastyApiFromManifest(options)`
 - `createTastyBrowserRuntime` (see `./tasty/browser`)
 - Wrapper types: `TastySymbol`, `TastyMember`, `TastyTypeRef`, `TastySymbolRef`
-- Graph: `api.graph` — `resolveReference`, `loadImmediateDependencies`, `loadExtendsChain`, `flattenInterfaceMembers`, `getEffectiveMembers`, `collectUserOwnedReferences`
+- Graph: `api.graph` — `resolveReference`, `loadImmediateDependencies`, `loadExtendsChain`, `flattenInterfaceMembers`, `getDisplayMembers`, `projectObjectLikeMembers`, `collectUserOwnedReferences`
 - Utilities: `dedupeTastyMembers`, `getTastyMemberDefaultValue`, `getTastyMemberId`, JSDoc/callable helpers, display helpers, semantic helpers
 - Raw contract types: `RawTasty*` (re-exported from `js/tasty/generated/`)
 
@@ -113,7 +113,7 @@ const inherited = await api.graph.loadExtendsChain(symbol)
 
 1. **Loader / store** — manifest loading, chunk loading, caching, symbol lookup by name/id.
 2. **Wrappers** — thin `TastySymbol`, `TastyMember`, `TastyTypeRef`, `TastySymbolRef` (graph nodes, not arbitrary app view models).
-3. **Graph operations** — `api.graph`: traversals like `loadExtendsChain`, `flattenInterfaceMembers`, `collectUserOwnedReferences`.
+3. **Graph operations** — `api.graph`: traversals like `loadExtendsChain`, `flattenInterfaceMembers`, `getDisplayMembers`, `projectObjectLikeMembers`, `collectUserOwnedReferences`.
 4. **Utilities** — deduping, literals/unions, JSDoc param parsing, signature formatting, etc.
 
 ## `TastyApi` surface
@@ -136,7 +136,7 @@ After `createTastyApi({ manifestPath })` and `await api.ready()`:
 - `getId()`, `getName()`, `getKind()`, `getLibrary()`
 - `getDescription()`, `getJsDocTags()`, `getJsDocTag(name)`
 - `getRaw()`
-- `getMembers()`, `getTypeParameters()`, `getExtends()`, `getUnderlyingType()`
+- `getMembers()`, `getDisplayMembers()`, `getTypeParameters()`, `getExtends()`, `getUnderlyingType()`
 - `loadExtendsSymbols()`
 
 ### `TastyMember`
@@ -194,7 +194,7 @@ if (size) {
 ## Sync vs async
 
 - **Synchronous:** cheap local inspection on already-loaded data (e.g. `symbol.getMembers()`, `symbol.getExtends()`).
-- **Asynchronous:** anything that expands the graph or loads chunks (e.g. `symbol.loadExtendsSymbols()`, `api.graph.loadExtendsChain()`).
+- **Asynchronous:** anything that expands the graph or loads chunks (e.g. `symbol.loadExtendsSymbols()`, `symbol.getDisplayMembers()`, `api.graph.loadExtendsChain()`).
 
 ## Caching
 

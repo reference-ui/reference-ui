@@ -25,6 +25,8 @@ import {
   resolveArtifactSpecifier,
   uniqueById,
   wrapRuntimeError,
+  isInterfaceSymbol,
+  isTypeAliasSymbol,
   type ArtifactImporter,
   type ModuleNamespace,
   type TastySymbolModel,
@@ -87,8 +89,18 @@ export class TastyApiRuntime implements TastyApi {
         flattened.push(...symbol.getMembers())
         return flattened
       },
-      getEffectiveMembers: async (symbol) => {
-        return dedupeTastyMembers(await this.graph.flattenInterfaceMembers(symbol))
+      getDisplayMembers: async (symbol) => {
+        const raw = symbol.getRaw()
+
+        if (isInterfaceSymbol(raw)) {
+          return dedupeTastyMembers(await this.graph.flattenInterfaceMembers(symbol))
+        }
+
+        if (isTypeAliasSymbol(raw)) {
+          return (await this.graph.projectObjectLikeMembers(symbol)) ?? []
+        }
+
+        return []
       },
       projectObjectLikeMembers: async (symbol) => {
         return projectObjectLikeMembers(this, symbol)

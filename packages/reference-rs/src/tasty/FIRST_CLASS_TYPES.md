@@ -376,6 +376,10 @@ runtime so consumers do not have to infer semantics from raw payloads.
 
 - `graph.projectObjectLikeMembers(symbol)` now exists as the first dedicated
   object-like projection API
+- `graph.getDisplayMembers(symbol)` now centralizes the renderer-facing member
+  policy: effective interface members, projected alias members, or no members
+- `symbol.getDisplayMembers()` now exposes a consumer-facing member surface
+  through the main runtime wrapper surface by delegating to the graph policy
 - `getMembers()` remains interface-only, so declared members and derived
   projection stay distinct
 
@@ -383,12 +387,11 @@ runtime so consumers do not have to infer semantics from raw payloads.
 
 The most useful next steps are:
 
-1. add a more explicit **final projected object** runtime API on top of
-   `projectObjectLikeMembers()`
-2. pressure-test that API against more real style-prop and component-prop shapes
-3. decide what minimal recursive-structure signal downstream tools need beyond
+1. pressure-test `getDisplayMembers()` against more real style-prop and
+   component-prop shapes
+2. decide what minimal recursive-structure signal downstream tools need beyond
    flat members
-4. leave provenance as an internal/debug concern unless a concrete consumer
+3. leave provenance as an internal/debug concern unless a concrete consumer
    proves it needs to be public
 
 ### Phase 5: Adopt the contract downstream

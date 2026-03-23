@@ -135,6 +135,7 @@ export interface TastySymbol {
   getJsDocTag(name: string): TastyJsDocTag | undefined
   getRaw(): RawTastySymbol
   getMembers(): TastyMember[]
+  getDisplayMembers(): Promise<TastyMember[]>
   getTypeParameters(): RawTastyTypeParameter[]
   getExtends(): TastySymbolRef[]
   getUnderlyingType(): TastyTypeRef | undefined
@@ -146,7 +147,7 @@ export interface TastyGraphApi {
   loadImmediateDependencies(symbol: TastySymbol): Promise<TastySymbol[]>
   loadExtendsChain(symbol: TastySymbol): Promise<TastySymbol[]>
   flattenInterfaceMembers(symbol: TastySymbol): Promise<TastyMember[]>
-  getEffectiveMembers(symbol: TastySymbol): Promise<TastyMember[]>
+  getDisplayMembers(symbol: TastySymbol): Promise<TastyMember[]>
   projectObjectLikeMembers(symbol: TastySymbol): Promise<TastyMember[] | undefined>
   collectUserOwnedReferences(symbol: TastySymbol): Promise<TastySymbolRef[]>
 }

@@ -30,7 +30,12 @@ export function ReferenceDocumentView({ document }: { document: ReferenceDocumen
       </Div>
 
       {document.kind === 'typeAlias' ? (
-        <ReferenceTypeAliasDefinition definition={document.definition} />
+        <>
+          <ReferenceTypeAliasDefinition definition={document.definition} />
+          {document.members.length > 0 ? (
+            <ReferenceMemberList members={document.members} />
+          ) : null}
+        </>
       ) : (
         <ReferenceMemberList members={document.members} />
       )}
