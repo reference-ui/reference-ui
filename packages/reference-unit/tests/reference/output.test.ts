@@ -76,7 +76,7 @@ describe('reference output', () => {
     )
   })
 
-  it('keeps direct alias boundaries opaque in display-member projection', async () => {
+  it('still projects direct alias targets in the raw Tasty API', async () => {
     const ready = await waitForReferenceArtifacts()
     expect(ready, 'reference manifest should be emitted by the reference worker').toBe(true)
 
@@ -90,6 +90,6 @@ describe('reference output', () => {
 
     expect(alias.getKind()).toBe('typeAlias')
     expect(alias.getUnderlyingType()?.describe()).toBe('DocsReferencePinnedTarget')
-    expect(displayMembers).toEqual([])
+    expect(displayMembers.map((member) => member.getName())).toEqual(['label', 'disabled'])
   })
 })

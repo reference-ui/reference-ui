@@ -32,7 +32,7 @@ describe('object_projection tasty api', () => {
     expect(memberNames(objectAliasMembers)).toEqual(['radius'])
     expect(memberNames(projectedMembers)).toEqual(['tone', 'size', 'gap', 'display'])
     expect(memberNames(publicProjectedMembers)).toEqual(['tone', 'size', 'gap', 'display'])
-    expect(unprojectableMembers).toEqual([])
+    expect(memberNames(unprojectableMembers)).toEqual(['gap'])
     expect(projected.getMembers()).toEqual([])
     expect(publicProjected.getMembers()).toEqual([])
   })

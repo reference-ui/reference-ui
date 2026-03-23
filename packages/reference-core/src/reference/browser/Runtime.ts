@@ -32,7 +32,8 @@ async function loadReferenceRuntimeData(
 ): Promise<ReferenceRuntimeData> {
   const api = await getReferenceApi(runtime)
   const symbol = await api.loadSymbolByName(name)
-  const members = await api.graph.getDisplayMembers(symbol)
+  const projectedMembers = await api.graph.getDisplayMembers(symbol)
+  const members = shouldHideAliasProjection(symbol) ? [] : projectedMembers
   const extendsChain = symbol.getKind() === 'interface' ? await api.graph.loadExtendsChain(symbol) : []
   const relatedSymbols = await loadReferenceRelatedSymbols(api, symbol)
 
@@ -43,6 +44,11 @@ async function loadReferenceRuntimeData(
     relatedSymbols,
     warnings: api.getWarnings(),
   }
+}
+
+function shouldHideAliasProjection(symbol: TastySymbol): boolean {
+  if (symbol.getKind() !== 'typeAlias') return false
+  return symbol.getUnderlyingType()?.isReference() ?? false
 }
 
 async function loadReferenceRelatedSymbols(api: TastyApi, rootSymbol: TastySymbol): Promise<TastySymbol[]> {

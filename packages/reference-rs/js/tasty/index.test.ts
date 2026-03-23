@@ -302,7 +302,7 @@ describe('tasty runtime', () => {
     expect(dependencies.map((symbol) => symbol.getName()).sort()).toEqual(['Size', 'StyleProps'])
   })
 
-  it('keeps top-level alias boundaries opaque while still projecting object-like aliases', async () => {
+  it('projects object-like aliases while tolerating partially opaque intersection inputs', async () => {
     const manifest: RawTastyManifest = {
       version: '2',
       warnings: [],
@@ -456,13 +456,13 @@ describe('tasty runtime', () => {
 
     expect(projectedDisplayMembers.map((member) => member.getName())).toEqual(['tone', 'size', 'gap'])
     expect(partialProjectedDisplayMembers.map((member) => member.getName())).toEqual(['gap'])
-    expect(publicProjectedDisplayMembers).toEqual([])
+    expect(publicProjectedDisplayMembers.map((member) => member.getName())).toEqual(['tone', 'size', 'gap'])
     expect(projectedMembers?.map((member) => member.getName())).toEqual(['tone', 'size', 'gap'])
     expect(partialProjectedMembers?.map((member) => member.getName())).toEqual(['gap'])
-    expect(publicProjectedMembers).toBeUndefined()
+    expect(publicProjectedMembers?.map((member) => member.getName())).toEqual(['tone', 'size', 'gap'])
     expect(projectedMembersFromSymbol?.map((member) => member.getName())).toEqual(['tone', 'size', 'gap'])
     expect(partialProjectedMembersFromSymbol?.map((member) => member.getName())).toEqual(['gap'])
-    expect(publicProjectedMembersFromSymbol).toEqual([])
+    expect(publicProjectedMembersFromSymbol?.map((member) => member.getName())).toEqual(['tone', 'size', 'gap'])
     expect(projected.getMembers()).toEqual([])
     expect(partialProjected.getMembers()).toEqual([])
     expect(publicProjected.getMembers()).toEqual([])
