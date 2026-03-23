@@ -24,9 +24,10 @@ function hexToRgb(hex: string): string {
 }
 
 async function enableLayersMode(): Promise<string> {
-  await addToConfig({ extends: '[]', layers: '[baseSystem]' })
   const sandboxDir = getSandboxDir()
-  await waitForRefSyncReady(sandboxDir, { timeout: 45_000 })
+  const ready = waitForRefSyncReady(sandboxDir, { timeout: 45_000 })
+  await addToConfig({ extends: '[]', layers: '[baseSystem]' })
+  await ready
   return sandboxDir
 }
 
@@ -154,8 +155,9 @@ test.describe.serial('layer', () => {
 
   test('layers only – upstream theme token in CSS; consumer primitives use consumer scope', async ({ page }) => {
     test.setTimeout(60_000)
+    const ready = waitForRefSyncReady(sandboxDir, { timeout: 45_000 })
     await addToConfig({ extends: '[]', layers: '[baseSystem]' })
-    await waitForRefSyncReady(sandboxDir, { timeout: 45_000 })
+    await ready
     await page.goto(testRoutes.layers)
     const inside = page.getByTestId('layers-test')
     await expect(inside).toBeVisible()

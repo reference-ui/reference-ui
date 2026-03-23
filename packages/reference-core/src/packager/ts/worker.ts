@@ -25,8 +25,9 @@ export function hasAllBundleOutputs(
 export default async function runTsPackager(
   payload: TsPackagerWorkerPayload
 ): Promise<never> {
+  const runtimePackages = payload.packages.filter((pkg) => pkg.name !== '@reference-ui/types')
   const runtime = createDtsGenerationRuntime(payload, {
-    bundlesReady: hasAllBundleOutputs(payload.cwd, payload.packages),
+    bundlesReady: hasAllBundleOutputs(payload.cwd, runtimePackages),
   })
 
   on('packager:runtime:complete', runtime.onPackagerRuntimeComplete)

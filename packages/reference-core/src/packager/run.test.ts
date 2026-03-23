@@ -63,8 +63,8 @@ describe('packager/run', () => {
         expect.objectContaining({ name: 'system' }),
       ])
     )
-    expect(emit).toHaveBeenCalledTimes(1)
-    expect(emit).toHaveBeenCalledWith('packager:runtime:complete')
+    expect(emit).toHaveBeenNthCalledWith(1, 'packager:runtime:complete')
+    expect(emit).toHaveBeenNthCalledWith(2, 'packager-ts:runtime:complete', {})
   })
 
   it('installs packages and emits both completion events when skipTypescript is enabled', async () => {

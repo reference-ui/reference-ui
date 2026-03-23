@@ -11,6 +11,13 @@ Make pretty api tables (WIP)
 - make a rust module for mcp server generation
 
 
+## 1st class system to detect changes and state
+right now we have an internal event bus/ statemachine
+we are relying on console log to detect changes in state.
+this is.. not good :)
+
+
+
 ## Reload when Tokens get updated + add tests
 
 ## Vite 1st class integration

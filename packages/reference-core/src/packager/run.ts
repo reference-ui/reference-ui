@@ -23,8 +23,13 @@ async function runBundlePhase(
   log.debug('packager', `✅ ${packages.length} package(s) ready`)
 
   emit(completionEvent)
-  if (completionEvent === 'packager:complete' && skipTypescript) {
-    emit('packager-ts:complete', {})
+  if (skipTypescript) {
+    if (completionEvent === 'packager:runtime:complete') {
+      emit('packager-ts:runtime:complete', {})
+    }
+    if (completionEvent === 'packager:complete') {
+      emit('packager-ts:complete', {})
+    }
   }
 }
 

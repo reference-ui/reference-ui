@@ -10,6 +10,15 @@ type DtsCompletionEvent =
 const FINAL_DTS_COMPLETE_EVENT: DtsCompletionEvent = 'packager-ts:complete'
 const RUNTIME_DTS_COMPLETE_EVENT: DtsCompletionEvent = 'packager-ts:runtime:complete'
 
+function mergeCompletionEvent(
+  current: DtsCompletionEvent,
+  next: DtsCompletionEvent
+): DtsCompletionEvent {
+  return current === FINAL_DTS_COMPLETE_EVENT || next === FINAL_DTS_COMPLETE_EVENT
+    ? FINAL_DTS_COMPLETE_EVENT
+    : RUNTIME_DTS_COMPLETE_EVENT
+}
+
 interface DtsGenerationRuntimeOptions {
   bundlesReady: boolean
   runGeneration?: (
@@ -52,19 +61,27 @@ export function createDtsGenerationRuntime(
   const { bundlesReady, runGeneration = runDtsGeneration } = options
   let currentRun: Promise<void> | null = null
   let rerunRequested = false
+  let queuedCompletionEvent: DtsCompletionEvent | null = null
 
   const runSerial = async (
     completionEvent: DtsCompletionEvent
   ): Promise<void> => {
     if (currentRun) {
       rerunRequested = true
+      queuedCompletionEvent = queuedCompletionEvent === null
+        ? completionEvent
+        : mergeCompletionEvent(queuedCompletionEvent, completionEvent)
       return currentRun
     }
 
     currentRun = (async () => {
+      let nextCompletionEvent = completionEvent
+
       do {
         rerunRequested = false
-        await runGeneration(payload, completionEvent).catch(() => {})
+        queuedCompletionEvent = null
+        await runGeneration(payload, nextCompletionEvent).catch(() => {})
+        nextCompletionEvent = queuedCompletionEvent ?? nextCompletionEvent
       } while (rerunRequested)
     })().finally(() => {
       currentRun = null
@@ -81,11 +98,11 @@ export function createDtsGenerationRuntime(
       void runSerial(FINAL_DTS_COMPLETE_EVENT)
     },
     runCatchUpIfNeeded: async () => {
-      // Catch-up only matters for long-lived/watch workers that may start after
-      // runtime outputs already exist. For one-shot sync, waiting for the next
-      // packager:complete avoids overlapping stale and current declaration runs.
-      if (payload.watchMode && bundlesReady) {
-        await runSerial(FINAL_DTS_COMPLETE_EVENT)
+      // A long-lived worker can subscribe after the runtime bundle phase already
+      // completed. Catch up from runtime outputs so one-shot sync cannot deadlock
+      // waiting on a missed `packager:runtime:complete`.
+      if (bundlesReady) {
+        await runSerial(RUNTIME_DTS_COMPLETE_EVENT)
       }
     },
   }

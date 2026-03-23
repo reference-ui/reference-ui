@@ -15,7 +15,7 @@ function createPayload(watchMode: boolean): TsPackagerWorkerPayload {
 }
 
 describe('packager/ts/run', () => {
-  it('does not run catch-up generation for one-shot sync', async () => {
+  it('runs runtime catch-up generation for one-shot sync when runtime outputs already exist', async () => {
     const runGeneration = vi.fn().mockResolvedValue(undefined)
     const runtime = createDtsGenerationRuntime(createPayload(false), {
       bundlesReady: true,
@@ -24,7 +24,10 @@ describe('packager/ts/run', () => {
 
     await runtime.runCatchUpIfNeeded()
 
-    expect(runGeneration).not.toHaveBeenCalled()
+    expect(runGeneration).toHaveBeenCalledWith(
+      expect.objectContaining({ cwd: '/workspace' }),
+      'packager-ts:runtime:complete'
+    )
   })
 
   it('runs catch-up generation in watch mode when outputs already exist', async () => {
@@ -36,7 +39,10 @@ describe('packager/ts/run', () => {
 
     await runtime.runCatchUpIfNeeded()
 
-    expect(runGeneration).toHaveBeenCalledTimes(1)
+    expect(runGeneration).toHaveBeenCalledWith(
+      expect.objectContaining({ cwd: '/workspace' }),
+      'packager-ts:runtime:complete'
+    )
   })
 
   it('serializes overlapping packager:complete callbacks', async () => {
@@ -65,6 +71,39 @@ describe('packager/ts/run', () => {
     await Promise.resolve()
 
     expect(runGeneration).toHaveBeenCalledTimes(2)
+  })
+
+  it('upgrades an overlapping runtime pass to a final completion pass', async () => {
+    let resolveFirstRun: (() => void) | undefined
+    const firstRun = new Promise<void>((resolve) => {
+      resolveFirstRun = resolve
+    })
+    const runGeneration = vi.fn().mockReturnValueOnce(firstRun).mockResolvedValueOnce(undefined)
+    const runtime = createDtsGenerationRuntime(createPayload(false), {
+      bundlesReady: false,
+      runGeneration,
+    })
+
+    runtime.onPackagerRuntimeComplete()
+    runtime.onPackagerComplete()
+    await Promise.resolve()
+
+    expect(runGeneration).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({ cwd: '/workspace' }),
+      'packager-ts:runtime:complete'
+    )
+
+    resolveFirstRun?.()
+    await firstRun
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(runGeneration).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ cwd: '/workspace' }),
+      'packager-ts:complete'
+    )
   })
 
   it('runs runtime declaration generation when runtime packages complete', async () => {

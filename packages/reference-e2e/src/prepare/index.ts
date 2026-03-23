@@ -7,7 +7,7 @@
 
 import { mkdir, rm, writeFile, readdir, readFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
-import { join, dirname } from 'node:path'
+import { basename, join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { execa } from 'execa'
 
@@ -27,6 +27,65 @@ const EXTEND_FIXTURE_PATH = join(PACKAGE_ROOT, '..', '..', 'fixtures', 'extend-l
 const CORE_BIN = join(CORE_PATH, 'dist/cli/index.mjs')
 const LIB_BIN = join(LIB_PATH, 'dist/index.mjs')
 const WORKSPACE_ROOT = join(PACKAGE_ROOT, '..', '..')
+
+function logStep(message: string): void {
+  console.log(`[prepare] ${message}`)
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+async function getSandboxProcessIds(sandboxDir: string): Promise<number[]> {
+  try {
+    const { stdout } = await execa('lsof', ['-t', '+D', sandboxDir])
+    return [...new Set(
+      stdout
+        .split('\n')
+        .map((line) => Number.parseInt(line.trim(), 10))
+        .filter((pid) => Number.isInteger(pid))
+    )]
+  } catch (error) {
+    if (
+      error &&
+      typeof error === 'object' &&
+      'exitCode' in error &&
+      error.exitCode === 1
+    ) {
+      return []
+    }
+    throw error
+  }
+}
+
+async function stopSandboxProcesses(sandboxDir: string): Promise<void> {
+  const initialPids = await getSandboxProcessIds(sandboxDir)
+  if (initialPids.length === 0) return
+
+  logStep(`Stopping active sandbox processes for ${basename(sandboxDir)}`)
+  for (const pid of initialPids) {
+    try {
+      process.kill(pid, 'SIGTERM')
+    } catch {
+      // Process may have already exited.
+    }
+  }
+
+  await sleep(500)
+
+  const remainingPids = await getSandboxProcessIds(sandboxDir)
+  for (const pid of remainingPids) {
+    try {
+      process.kill(pid, 'SIGKILL')
+    } catch {
+      // Process may have already exited.
+    }
+  }
+
+  if (remainingPids.length > 0) {
+    await sleep(250)
+  }
+}
 
 function interpolateTemplate(
   value: unknown,
@@ -80,18 +139,37 @@ async function ensureWorkspaceReady(): Promise<void> {
   const needsLibBuild = !existsSync(LIB_BIN)
 
   if (needsFreshBuild || needsCoreBuild || needsLibBuild) {
-    await execa('pnpm', ['install'], { cwd: WORKSPACE_ROOT })
+    logStep('Installing workspace dependencies')
+    await execa('pnpm', ['install'], {
+      cwd: WORKSPACE_ROOT,
+      stdio: 'inherit',
+    })
   }
 
   if (needsFreshBuild || needsLibBuild) {
-    await execa('pnpm', ['run', 'build'], { cwd: LIB_PATH })
+    logStep('Building @reference-ui/lib')
+    await execa('pnpm', ['run', 'build'], {
+      cwd: LIB_PATH,
+      stdio: 'inherit',
+    })
   } else if (needsCoreBuild) {
-    await execa('pnpm', ['run', 'build'], { cwd: CORE_PATH })
+    logStep('Building @reference-ui/core')
+    await execa('pnpm', ['run', 'build'], {
+      cwd: CORE_PATH,
+      stdio: 'inherit',
+    })
   }
 
-  await execa('pnpm', ['exec', 'ref', 'sync'], { cwd: LIB_PATH, stdio: 'pipe' })
+  logStep('Syncing @reference-ui/lib')
+  await execa('pnpm', ['exec', 'ref', 'sync'], {
+    cwd: LIB_PATH,
+    stdio: 'inherit',
+  })
+  logStep('Syncing @fixtures/extend-library')
   await execa('pnpm', ['run', 'sync'], { cwd: EXTEND_FIXTURE_PATH, stdio: 'inherit' })
+  logStep('Building extend-library declarations')
   await execa('pnpm', ['exec', 'tsup'], { cwd: EXTEND_FIXTURE_PATH, stdio: 'inherit' })
+  logStep('Packaging extend-library')
   await execa('node', ['scripts/build-package.mjs'], {
     cwd: EXTEND_FIXTURE_PATH,
     stdio: 'inherit',
@@ -123,11 +201,15 @@ async function clearGeneratedTestArtifacts(): Promise<void> {
 async function prepareEntryFull(entry: MatrixEntry): Promise<void> {
   const sandboxDir = join(SANDBOX_ROOT, entry.name)
 
+  logStep(`Preparing sandbox ${entry.name}`)
   if (existsSync(sandboxDir)) {
+    await stopSandboxProcesses(sandboxDir)
+    logStep(`Removing existing sandbox ${entry.name}`)
     await rm(sandboxDir, { recursive: true, force: true })
   }
   await mkdir(sandboxDir, { recursive: true })
 
+  logStep(`Composing sandbox ${entry.name}`)
   await composeSandbox(entry, sandboxDir)
 
   const packageJson = await buildPackageJson(entry, sandboxDir)
@@ -136,10 +218,13 @@ async function prepareEntryFull(entry: MatrixEntry): Promise<void> {
     JSON.stringify(packageJson, null, 2)
   )
 
+  logStep(`Installing sandbox dependencies for ${entry.name}`)
   await execa('pnpm', ['install', '--ignore-workspace', '-C', sandboxDir], {
     cwd: WORKSPACE_ROOT,
   })
+  logStep(`Clearing generated artifacts for ${entry.name}`)
   await clearRefUiArtifacts(sandboxDir)
+  logStep(`Running ref sync for ${entry.name}`)
   await runSync(sandboxDir)
   console.log('  ✓', entry.name, '(full)')
 }
@@ -154,7 +239,9 @@ async function pruneStaleSandboxes(): Promise<void> {
   const entries = await readdir(SANDBOX_ROOT, { withFileTypes: true })
   for (const e of entries) {
     if (e.isDirectory() && !names.has(e.name)) {
-      await rm(join(SANDBOX_ROOT, e.name), { recursive: true, force: true })
+      const sandboxDir = join(SANDBOX_ROOT, e.name)
+      await stopSandboxProcesses(sandboxDir)
+      await rm(sandboxDir, { recursive: true, force: true })
       console.log('  pruned', e.name)
     }
   }
@@ -162,7 +249,9 @@ async function pruneStaleSandboxes(): Promise<void> {
 
 export async function prepare(): Promise<void> {
   await mkdir(SANDBOX_ROOT, { recursive: true })
+  logStep('Clearing generated test artifacts')
   await clearGeneratedTestArtifacts()
+  logStep('Ensuring workspace is ready')
   await ensureWorkspaceReady()
 
   const projectFilter = process.env.REF_TEST_PROJECT
