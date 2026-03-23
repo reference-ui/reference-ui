@@ -34,8 +34,6 @@ const externalInputs = [
   '../../packages/reference-lib/.reference-ui/react/package.json',
   '../../packages/reference-lib/.reference-ui/react/react.mjs',
   '../../packages/reference-lib/.reference-ui/react/styles.css',
-  '../../packages/reference-lib/.reference-ui/reference/package.json',
-  '../../packages/reference-lib/.reference-ui/reference/reference.mjs',
   '../../packages/reference-lib/.reference-ui/styled/package.json',
   '../../packages/reference-lib/.reference-ui/styled/styles.css',
   '../../packages/reference-lib/.reference-ui/system/package.json',
