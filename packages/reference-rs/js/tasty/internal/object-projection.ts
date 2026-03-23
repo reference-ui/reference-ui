@@ -12,30 +12,20 @@ interface ProjectionContext {
   depth: number
 }
 
-interface ProjectionOptions {
-  respectAliasBoundary: boolean
-}
-
 export async function projectObjectLikeMembers(
   api: TastyApiRuntime,
   symbol: TastySymbol,
 ): Promise<TastyMember[] | undefined> {
-  return projectSymbolMembers(
-    api,
-    symbol,
-    {
-      visitedSymbolIds: new Set<string>(),
-      depth: 0,
-    },
-    { respectAliasBoundary: true },
-  )
+  return projectSymbolMembers(api, symbol, {
+    visitedSymbolIds: new Set<string>(),
+    depth: 0,
+  })
 }
 
 async function projectSymbolMembers(
   api: TastyApiRuntime,
   symbol: TastySymbol,
   context: ProjectionContext,
-  options: ProjectionOptions,
 ): Promise<TastyMember[] | undefined> {
   if (context.depth > MAX_PROJECTION_DEPTH) return undefined
   if (context.visitedSymbolIds.has(symbol.getId())) return []
@@ -51,7 +41,7 @@ async function projectSymbolMembers(
   }
 
   if (isTypeAliasSymbol(raw)) {
-    return projectTypeMembers(api, symbol.getUnderlyingType(), nextContext, options)
+    return projectTypeMembers(api, symbol.getUnderlyingType(), nextContext)
   }
 
   return undefined
@@ -61,7 +51,6 @@ async function projectTypeMembers(
   api: TastyApiRuntime,
   typeRef: TastyTypeRef | undefined,
   context: ProjectionContext,
-  options: ProjectionOptions,
 ): Promise<TastyMember[] | undefined> {
   if (!typeRef || context.depth > MAX_PROJECTION_DEPTH) return undefined
 
@@ -69,7 +58,6 @@ async function projectTypeMembers(
   const raw = concrete.getRaw()
 
   if (isTypeReference(raw)) {
-    if (options.respectAliasBoundary) return undefined
     return projectReferenceMembers(api, raw, context)
   }
 
@@ -81,7 +69,6 @@ async function projectTypeMembers(
         api,
         api.createTypeRef(item),
         context,
-        { respectAliasBoundary: false },
       )))
       const projectableParts = parts.filter((part): part is TastyMember[] => part != null)
       if (projectableParts.length === 0) return undefined
@@ -114,7 +101,7 @@ async function projectReferenceMembers(
     }
   }
 
-  return projectSymbolMembers(api, symbol, context, { respectAliasBoundary: false })
+  return projectSymbolMembers(api, symbol, context)
 }
 
 async function projectUtilityReferenceMembers(
@@ -141,12 +128,7 @@ async function projectOmitMembers(
 ): Promise<TastyMember[] | undefined> {
   if (typeArguments.length !== 2) return undefined
 
-  const baseMembers = await projectTypeMembers(
-    api,
-    api.createTypeRef(typeArguments[0]!),
-    context,
-    { respectAliasBoundary: false },
-  )
+  const baseMembers = await projectTypeMembers(api, api.createTypeRef(typeArguments[0]!), context)
   const keys = collectProjectedKeys(api.createTypeRef(typeArguments[1]!))
   if (!baseMembers || !keys) return undefined
 
@@ -160,12 +142,7 @@ async function projectPickMembers(
 ): Promise<TastyMember[] | undefined> {
   if (typeArguments.length !== 2) return undefined
 
-  const baseMembers = await projectTypeMembers(
-    api,
-    api.createTypeRef(typeArguments[0]!),
-    context,
-    { respectAliasBoundary: false },
-  )
+  const baseMembers = await projectTypeMembers(api, api.createTypeRef(typeArguments[0]!), context)
   const keys = collectProjectedKeys(api.createTypeRef(typeArguments[1]!))
   if (!baseMembers || !keys) return undefined
 
@@ -222,5 +199,5 @@ async function projectRawTypeMembers(
   raw: RawTastyTypeRef,
   context: ProjectionContext,
 ): Promise<TastyMember[] | undefined> {
-  return projectTypeMembers(api, api.createTypeRef(raw), context, { respectAliasBoundary: false })
+  return projectTypeMembers(api, api.createTypeRef(raw), context)
 }
