@@ -27,7 +27,7 @@ export function createReferenceDocument(
     id: symbol.getId(),
     name: symbol.getName(),
     kind: symbol.getKind(),
-    kindLabel: symbol.getKind() === 'typeAlias' ? 'Type alias' : 'Interface',
+    kindLabel: symbol.getKind() === 'typeAlias' ? 'Type' : 'Interface',
     library: symbol.getLibrary(),
     warnings,
     description: symbol.getDescription(),

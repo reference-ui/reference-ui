@@ -114,11 +114,11 @@ describe('Reference component', () => {
   })
 
   it('renders type alias fixtures so resolution-focused scenarios are testable in isolation', async () => {
-    await renderReference('DocsReferenceCurrentIntent')
+    await renderReference('DocsReferenceSimpleType')
 
-    expect(screen.getByText('DocsReferenceCurrentIntent')).toBeInTheDocument()
-    expect(screen.getByText('Type alias')).toBeInTheDocument()
-    expectVisibleText("'primary' | 'danger'")
+    expect(screen.getByText('DocsReferenceSimpleType')).toBeInTheDocument()
+    expect(screen.getByText('Type')).toBeInTheDocument()
+    expectVisibleText("'a' | 'b'")
     expectTextAbsent('Optional formatter for the visible label.')
   })
 
@@ -126,19 +126,20 @@ describe('Reference component', () => {
     await renderReference('DocsReferenceComposedButtonProps')
 
     expect(screen.getByText('DocsReferenceComposedButtonProps')).toBeInTheDocument()
-    expect(screen.getByText('Type alias')).toBeInTheDocument()
+    expect(screen.getByText('Type')).toBeInTheDocument()
     expectVisibleText('label')
     expectVisibleText('variant')
     expectVisibleText('controlId')
     expectVisibleText('interactionRole')
     expectVisibleText('announceLabel')
+    expectTextAbsent('Definition')
   })
 
   it('renders keyof typeof aliases as resolved literal unions when tasty emits them', async () => {
     await renderReference('DocsReferenceButtonIntent')
 
     expect(screen.getByText('DocsReferenceButtonIntent')).toBeInTheDocument()
-    expect(screen.getByText('Type alias')).toBeInTheDocument()
+    expect(screen.getByText('Type')).toBeInTheDocument()
     expectVisibleText("'primary' | 'danger'")
   })
 
@@ -177,7 +178,7 @@ describe('Reference component', () => {
     await renderReference('DocsReferenceButtonPadding')
 
     expect(screen.getByText('DocsReferenceButtonPadding')).toBeInTheDocument()
-    expect(screen.getByText('Type alias')).toBeInTheDocument()
+    expect(screen.getByText('Type')).toBeInTheDocument()
     expectVisibleText('[inline: number, block: number]')
     expect(screen.queryByText('[tuple]')).not.toBeInTheDocument()
   })
@@ -186,7 +187,7 @@ describe('Reference component', () => {
     await renderReference('DocsReferenceToneLabels')
 
     expect(screen.getByText('DocsReferenceToneLabels')).toBeInTheDocument()
-    expect(screen.getByText('Type alias')).toBeInTheDocument()
+    expect(screen.getByText('Type')).toBeInTheDocument()
     expectVisibleText('{ [K in DocsReferenceButtonVariant as `tone-${K}`]: K }')
     expect(screen.queryByText((content) => content === 'mapped')).not.toBeInTheDocument()
     expectTextAbsent('Last resolved payload when the state is successful.')
@@ -196,7 +197,7 @@ describe('Reference component', () => {
     await renderReference('DocsReferenceToneKey')
 
     expect(screen.getByText('DocsReferenceToneKey')).toBeInTheDocument()
-    expect(screen.getByText('Type alias')).toBeInTheDocument()
+    expect(screen.getByText('Type')).toBeInTheDocument()
     expectVisibleText("'tone-solid' | 'tone-ghost' | 'tone-outline'")
   })
 
@@ -204,32 +205,37 @@ describe('Reference component', () => {
     await renderReference('DocsReferenceResolvedSize')
 
     expect(screen.getByText('DocsReferenceResolvedSize')).toBeInTheDocument()
-    expect(screen.getByText('Type alias')).toBeInTheDocument()
+    expect(screen.getByText('Type')).toBeInTheDocument()
     expectVisibleText("'sm' | 'md' | 'lg'")
   })
 
-  it('renders object aliases with their member previews', async () => {
+  it('renders object-like aliases as member tables when projection exists', async () => {
     await renderReference('DocsReferenceSpacingPreview')
 
     expect(screen.getByText('DocsReferenceSpacingPreview')).toBeInTheDocument()
-    expect(screen.getByText('Type alias')).toBeInTheDocument()
-    expectVisibleText('{ compact: 4; comfortable: 8; spacious: 12 }')
+    expect(screen.getByText('Type')).toBeInTheDocument()
+    expectVisibleText('compact')
+    expectVisibleText('comfortable')
+    expectVisibleText('spacious')
+    expectTextAbsent('Definition')
   })
 
-  it('renders intersection aliases with a readable composed expression', async () => {
+  it('renders intersection aliases as the final member surface when projection exists', async () => {
     await renderReference('DocsReferenceComposedButtonProps')
 
     expect(screen.getByText('DocsReferenceComposedButtonProps')).toBeInTheDocument()
-    expect(screen.getByText('Type alias')).toBeInTheDocument()
-    expectVisibleText('DocsReferenceButtonProps & DocsReferencePressableProps')
+    expect(screen.getByText('Type')).toBeInTheDocument()
+    expectVisibleText('label')
+    expectVisibleText('controlId')
     expectTextAbsent('Last resolved payload when the state is successful.')
+    expectTextAbsent('Definition')
   })
 
   it('renders discriminated union aliases with their object branches', async () => {
     await renderReference('DocsReferenceInteractiveElement')
 
     expect(screen.getByText('DocsReferenceInteractiveElement')).toBeInTheDocument()
-    expect(screen.getByText('Type alias')).toBeInTheDocument()
+    expect(screen.getByText('Type')).toBeInTheDocument()
     expectVisibleText(
       "{ kind: 'action'; onPress: () => void; disabled?: boolean } | { kind: 'link'; href: string; target?: '_self' | '_blank' }",
     )
@@ -240,27 +246,41 @@ describe('Reference component', () => {
     await renderReference('DocsReferenceButtonVariantMeta')
 
     expect(screen.getByText('DocsReferenceButtonVariantMeta')).toBeInTheDocument()
-    expect(screen.getByText('Type alias')).toBeInTheDocument()
+    expect(screen.getByText('Type')).toBeInTheDocument()
     expectVisibleText(
       "{ emphasis: 'high'; fill: true } | { emphasis: 'low'; fill: false }",
     )
     expectTextAbsent('Last resolved payload when the state is successful.')
   })
 
-  it('renders typeof aliases with resolved object previews when tasty emits them', async () => {
+  it('renders typeof aliases as member tables when the resolved shape is object-like', async () => {
     await renderReference('DocsReferenceButtonSpacing')
 
     expect(screen.getByText('DocsReferenceButtonSpacing')).toBeInTheDocument()
-    expect(screen.getByText('Type alias')).toBeInTheDocument()
-    expectVisibleText('{ readonly compact: 4; readonly comfortable: 8; readonly spacious: 12 }')
+    expect(screen.getByText('Type')).toBeInTheDocument()
+    expectVisibleText('compact')
+    expectVisibleText('comfortable')
+    expectVisibleText('spacious')
+    expectTextAbsent('Definition')
   })
 
   it('renders tuple-derived template literal aliases as resolved literal unions', async () => {
     await renderReference('DocsReferenceResolvedTone')
 
     expect(screen.getByText('DocsReferenceResolvedTone')).toBeInTheDocument()
-    expect(screen.getByText('Type alias')).toBeInTheDocument()
+    expect(screen.getByText('Type')).toBeInTheDocument()
     expectVisibleText("'tone-sm' | 'tone-md' | 'tone-lg'")
+  })
+
+  it('keeps direct alias boundaries definition-first instead of expanding the target members', async () => {
+    await renderReference('DocsReferencePinnedTargetAlias')
+
+    expect(screen.getByText('DocsReferencePinnedTargetAlias')).toBeInTheDocument()
+    expect(screen.getByText('Type')).toBeInTheDocument()
+    expectVisibleText('DocsReferencePinnedTarget')
+    expect(screen.getByText('Definition')).toBeInTheDocument()
+    expectTextAbsent('label')
+    expectTextAbsent('disabled')
   })
 
   it('loads ReferenceSystemStyleObject after export type re-export from @reference-ui/react', async () => {
@@ -268,7 +288,9 @@ describe('Reference component', () => {
 
     expect(screen.queryByText(/Failed to load/)).not.toBeInTheDocument()
     expect(screen.getAllByText('ReferenceSystemStyleObject').length).toBeGreaterThanOrEqual(1)
-    expect(screen.getByText('Type alias')).toBeInTheDocument()
+    expect(screen.getByText('Type')).toBeInTheDocument()
+    expectVisibleText('padding')
+    expectTextAbsent('Definition')
   })
 
 })
