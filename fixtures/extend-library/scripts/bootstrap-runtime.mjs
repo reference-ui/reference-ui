@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url'
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const bootstrapRoot = resolve(packageRoot, '..', '..', 'packages', 'reference-lib')
 const scopeDir = resolve(packageRoot, 'node_modules', '@reference-ui')
-const packageNames = ['react', 'reference', 'styled', 'system', 'types']
+const packageNames = ['react', 'styled', 'system', 'types']
 
 await mkdir(scopeDir, { recursive: true })
 
