@@ -5,17 +5,17 @@ import { ReferenceDocumentHeader } from './ReferenceDocumentHeader.js'
 import { ReferenceTypeAlias } from './ReferenceTypeAlias.js'
 
 /**
- * Document route: header + body by symbol kind (type alias vs members).
+ * Document route: header + type body or member table.
  */
 export function ReferenceDocument({ document }: { document: ReferenceDocumentData }) {
   return (
     <Div display="grid" gap="reference.lg">
       <ReferenceDocumentHeader document={document} />
-      {document.kind === 'typeAlias' ? (
-        <ReferenceTypeAlias definition={document.definition} />
-      ) : (
-        <ReferenceMemberList members={document.members} />
-      )}
+      {document.kind === 'typeAlias'
+        ? document.members.length > 0
+          ? <ReferenceMemberList members={document.members} />
+          : <ReferenceTypeAlias definition={document.definition} />
+        : <ReferenceMemberList members={document.members} />}
     </Div>
   )
 }

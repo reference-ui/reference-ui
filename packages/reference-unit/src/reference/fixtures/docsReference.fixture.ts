@@ -12,6 +12,7 @@ export const docsReferenceTheme = {
 
 export const docsReferenceSizeTokens = ['sm', 'md', 'lg'] as const
 
+export type DocsReferenceSimpleType = 'a' | 'b'
 export type DocsReferenceButtonVariant = 'solid' | 'ghost' | 'outline'
 export type DocsReferenceButtonSize = 'sm' | 'md' | 'lg'
 export type DocsReferenceIconName = 'plus' | 'minus' | 'chevron-down'
@@ -37,6 +38,13 @@ export interface DocsReferenceButtonState {
   loading: boolean
   intent: DocsReferenceButtonIntent
 }
+
+export interface DocsReferencePinnedTarget {
+  label: string
+  disabled?: boolean
+}
+
+export type DocsReferencePinnedTargetAlias = DocsReferencePinnedTarget
 
 export interface DocsReferenceControlBaseProps {
   /**

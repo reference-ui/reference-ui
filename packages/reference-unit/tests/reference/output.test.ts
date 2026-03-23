@@ -75,4 +75,21 @@ describe('reference output', () => {
       expect.arrayContaining(['label', 'variant', 'controlId', 'interactionRole', 'announceLabel']),
     )
   })
+
+  it('keeps direct alias boundaries opaque in display-member projection', async () => {
+    const ready = await waitForReferenceArtifacts()
+    expect(ready, 'reference manifest should be emitted by the reference worker').toBe(true)
+
+    const api = createTastyApi({
+      manifestPath: typesPackageManifestPath,
+    })
+    await api.ready()
+
+    const alias = await api.loadSymbolByName('DocsReferencePinnedTargetAlias')
+    const displayMembers = await alias.getDisplayMembers()
+
+    expect(alias.getKind()).toBe('typeAlias')
+    expect(alias.getUnderlyingType()?.describe()).toBe('DocsReferencePinnedTarget')
+    expect(displayMembers).toEqual([])
+  })
 })

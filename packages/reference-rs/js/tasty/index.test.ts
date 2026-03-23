@@ -302,19 +302,35 @@ describe('tasty runtime', () => {
     expect(dependencies.map((symbol) => symbol.getName()).sort()).toEqual(['Size', 'StyleProps'])
   })
 
-  it('exposes display members on symbols without widening declared members', async () => {
+  it('keeps top-level alias boundaries opaque while still projecting object-like aliases', async () => {
     const manifest: RawTastyManifest = {
       version: '2',
       warnings: [],
       symbolsByName: {
         BaseProps: ['base'],
         PatternProps: ['pattern'],
+        OpaqueMappedProps: ['opaqueMapped'],
+        PartialProjectedProps: ['partialProjected'],
         ProjectedProps: ['projected'],
         PublicProjectedProps: ['publicProjected'],
       },
       symbolsById: {
         base: { id: 'base', name: 'BaseProps', kind: 'interface', chunk: './chunks/base.js', library: 'user' },
         pattern: { id: 'pattern', name: 'PatternProps', kind: 'typeAlias', chunk: './chunks/pattern.js', library: 'user' },
+        opaqueMapped: {
+          id: 'opaqueMapped',
+          name: 'OpaqueMappedProps',
+          kind: 'typeAlias',
+          chunk: './chunks/opaque-mapped.js',
+          library: 'user',
+        },
+        partialProjected: {
+          id: 'partialProjected',
+          name: 'PartialProjectedProps',
+          kind: 'typeAlias',
+          chunk: './chunks/partial-projected.js',
+          library: 'user',
+        },
         projected: { id: 'projected', name: 'ProjectedProps', kind: 'typeAlias', chunk: './chunks/projected.js', library: 'user' },
         publicProjected: {
           id: 'publicProjected',
@@ -381,6 +397,35 @@ describe('tasty runtime', () => {
           },
         },
       },
+      './chunks/opaque-mapped.js': {
+        opaqueMapped: {
+          id: 'opaqueMapped',
+          name: 'OpaqueMappedProps',
+          library: 'user',
+          definition: {
+            kind: 'mapped',
+            typeParam: 'K',
+            sourceType: { kind: 'intrinsic', name: 'string' },
+            optionalModifier: 'preserve',
+            readonlyModifier: 'preserve',
+            valueType: { kind: 'intrinsic', name: 'string' },
+          },
+        },
+      },
+      './chunks/partial-projected.js': {
+        partialProjected: {
+          id: 'partialProjected',
+          name: 'PartialProjectedProps',
+          library: 'user',
+          definition: {
+            kind: 'intersection',
+            types: [
+              { id: 'pattern', name: 'PatternProps', library: 'user' },
+              { id: 'opaqueMapped', name: 'OpaqueMappedProps', library: 'user' },
+            ],
+          },
+        },
+      },
       './chunks/public-projected.js': {
         publicProjected: {
           id: 'publicProjected',
@@ -397,21 +442,29 @@ describe('tasty runtime', () => {
     })
 
     const projected = await api.loadSymbolByName('ProjectedProps')
+    const partialProjected = await api.loadSymbolByName('PartialProjectedProps')
     const publicProjected = await api.loadSymbolByName('PublicProjectedProps')
     const projectedDisplayMembers = await api.graph.getDisplayMembers(projected)
+    const partialProjectedDisplayMembers = await api.graph.getDisplayMembers(partialProjected)
     const publicProjectedDisplayMembers = await api.graph.getDisplayMembers(publicProjected)
     const projectedMembers = await api.graph.projectObjectLikeMembers(projected)
+    const partialProjectedMembers = await api.graph.projectObjectLikeMembers(partialProjected)
     const publicProjectedMembers = await api.graph.projectObjectLikeMembers(publicProjected)
     const projectedMembersFromSymbol = await projected.getDisplayMembers()
+    const partialProjectedMembersFromSymbol = await partialProjected.getDisplayMembers()
     const publicProjectedMembersFromSymbol = await publicProjected.getDisplayMembers()
 
     expect(projectedDisplayMembers.map((member) => member.getName())).toEqual(['tone', 'size', 'gap'])
-    expect(publicProjectedDisplayMembers.map((member) => member.getName())).toEqual(['tone', 'size', 'gap'])
+    expect(partialProjectedDisplayMembers.map((member) => member.getName())).toEqual(['gap'])
+    expect(publicProjectedDisplayMembers).toEqual([])
     expect(projectedMembers?.map((member) => member.getName())).toEqual(['tone', 'size', 'gap'])
-    expect(publicProjectedMembers?.map((member) => member.getName())).toEqual(['tone', 'size', 'gap'])
+    expect(partialProjectedMembers?.map((member) => member.getName())).toEqual(['gap'])
+    expect(publicProjectedMembers).toBeUndefined()
     expect(projectedMembersFromSymbol?.map((member) => member.getName())).toEqual(['tone', 'size', 'gap'])
-    expect(publicProjectedMembersFromSymbol?.map((member) => member.getName())).toEqual(['tone', 'size', 'gap'])
+    expect(partialProjectedMembersFromSymbol?.map((member) => member.getName())).toEqual(['gap'])
+    expect(publicProjectedMembersFromSymbol).toEqual([])
     expect(projected.getMembers()).toEqual([])
+    expect(partialProjected.getMembers()).toEqual([])
     expect(publicProjected.getMembers()).toEqual([])
   })
 
