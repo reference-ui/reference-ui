@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/test'
-import { MATRIX, getPort } from './src/matrix/index.js'
-import { loadConfig } from './src/config/index.js'
+import { MATRIX, getPort } from './src/matrix/index'
+import { loadConfig } from './src/config/index'
 
 const cfg = loadConfig()
 const projectName = cfg.defaultProject

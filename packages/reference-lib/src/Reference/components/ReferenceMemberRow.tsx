@@ -1,12 +1,18 @@
 import { Div, Small } from '@reference-ui/react'
 import type { ReferenceMemberDocument } from '@reference-ui/types'
-import { MemberDescription } from './MemberDescription.js'
-import { MemberJsDoc } from './MemberJsDoc.js'
-import { MemberName } from './MemberName.js'
-import { MemberType } from './MemberType.js'
-import { MemberTypeSummary } from './MemberTypeSummary.js'
+import { MemberDescription } from './MemberDescription'
+import { MemberJsDoc } from './MemberJsDoc'
+import { MemberName } from './MemberName'
+import { MemberType } from './MemberType'
+import { MemberTypeSummary } from './MemberTypeSummary'
 
-export function ReferenceMemberRow({ member }: { member: ReferenceMemberDocument }) {
+export function ReferenceMemberRow({
+  member,
+  showInheritedFrom = true,
+}: {
+  member: ReferenceMemberDocument
+  showInheritedFrom?: boolean
+}) {
   return (
     <Div
       css={{
@@ -22,7 +28,7 @@ export function ReferenceMemberRow({ member }: { member: ReferenceMemberDocument
     >
       <Div display="grid" gap="reference.xxs">
         <MemberName name={member.name} />
-        {member.inheritedFrom ? (
+        {showInheritedFrom && member.inheritedFrom ? (
           <Small color="reference.muted">from {member.inheritedFrom.name}</Small>
         ) : null}
       </Div>

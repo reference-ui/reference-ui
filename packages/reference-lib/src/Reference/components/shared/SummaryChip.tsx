@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Span, recipe, type RecipeVariantProps } from '@reference-ui/react'
-import { MonoText } from './MonoText.js'
+import { MonoText } from './MonoText'
 
 const summaryChipRecipe = recipe({
   base: {

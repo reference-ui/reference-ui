@@ -3,8 +3,8 @@ import type {
   ReferenceMemberTypeSummary,
   ReferenceValueOption,
 } from '@reference-ui/types'
-import { SummaryChip } from './shared/SummaryChip.js'
-import { SummarySnippet } from './shared/SummarySnippet.js'
+import { SummaryChip } from './shared/SummaryChip'
+import { SummarySnippet } from './shared/SummarySnippet'
 
 export function MemberTypeSummary({ summary }: { summary?: ReferenceMemberTypeSummary }) {
   if (!summary) return null

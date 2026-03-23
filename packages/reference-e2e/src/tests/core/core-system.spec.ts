@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
-import { getSandboxDir } from '../../environments/lib/config.js'
+import { getSandboxDir } from '../../environments/lib/config'
 
 test.describe('core-system', () => {
   test('ref sync produces expected artifacts', () => {

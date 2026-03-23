@@ -5,8 +5,8 @@
  * Run `ref sync` in extend-library before using.
  */
 export { baseSystem } from '@reference-ui/system/baseSystem'
-export { DemoComponent } from './components/DemoComponent.js'
-export { LightDarkDemo } from './components/LightDarkDemo.js'
+export { DemoComponent } from './components/DemoComponent'
+export { LightDarkDemo } from './components/LightDarkDemo'
 export {
   fixtureDemoBg,
   fixtureDemoText,
@@ -22,4 +22,4 @@ export {
   lightDarkDemoBgDarkRgb,
   lightDarkDemoTextLightRgb,
   lightDarkDemoTextDarkRgb,
-} from './tokens.js'
+} from './tokens'

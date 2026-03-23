@@ -3,9 +3,9 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { colors } from '@reference-ui/lib/theme'
-import { addToConfig, getSandboxDir } from '../../environments/lib/config.js'
-import { runRefSync, waitForRefSyncReady } from '../../environments/lib/ref-sync.js'
-import { testRoutes } from '../../environments/base/routes.js'
+import { addToConfig, getSandboxDir } from '../../environments/lib/config'
+import { runRefSync, waitForRefSyncReady } from '../../environments/lib/ref-sync'
+import { testRoutes } from '../../environments/base/routes'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const PACKAGE_ROOT = join(__dirname, '..', '..', '..')

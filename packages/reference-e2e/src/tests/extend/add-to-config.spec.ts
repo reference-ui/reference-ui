@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { getSandboxDir } from '../../environments/lib/config.js'
-import { testRoutes } from '../../environments/base/routes.js'
+import { getSandboxDir } from '../../environments/lib/config'
+import { testRoutes } from '../../environments/base/routes'
 
 function hexToRgb(hex: string): string {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)

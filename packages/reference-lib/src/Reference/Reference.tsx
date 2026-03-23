@@ -3,7 +3,7 @@ import {
   createDefaultReferenceRuntime,
   type ReferenceProps,
 } from '@reference-ui/types'
-import { ReferenceView } from './ReferenceView.js'
+import { ReferenceView } from './ReferenceView'
 
 const runtime = createDefaultReferenceRuntime()
 

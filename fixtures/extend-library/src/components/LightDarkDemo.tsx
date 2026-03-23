@@ -6,7 +6,7 @@ import {
   lightDarkDemoBgDark,
   lightDarkDemoTextLight,
   lightDarkDemoTextDark,
-} from '../tokens.js'
+} from '../tokens'
 
 tokens({
   colors: {

@@ -11,9 +11,9 @@ import { basename, join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { execa } from 'execa'
 
-import { MATRIX, getReactVersion, getViteVersion, getPort } from '../matrix/index.js'
-import type { MatrixEntry } from '../matrix/index.js'
-import { composeSandbox } from '../environments/manifest.js'
+import { MATRIX, getReactVersion, getViteVersion, getPort } from '../matrix/index'
+import type { MatrixEntry } from '../matrix/index'
+import { composeSandbox } from '../environments/manifest'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 

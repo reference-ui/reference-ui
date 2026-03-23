@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { getSandboxDir } from '../../environments/lib/config.js'
-import { testRoutes } from '../../environments/base/routes.js'
+import { getSandboxDir } from '../../environments/lib/config'
+import { testRoutes } from '../../environments/base/routes'
 
 const { tokensConfig } = await import(
   pathToFileURL(join(getSandboxDir(), 'tokens.ts')).href

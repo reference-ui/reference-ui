@@ -1,11 +1,11 @@
 import { useReferenceDocumentFromContext, type ReferenceProps } from '@reference-ui/types'
-import { ReferenceDocument } from './document/index.js'
-import { ReferenceFrame } from './components/ReferenceFrame.js'
+import { ReferenceDocument } from './document/index'
+import { ReferenceFrame } from './components/ReferenceFrame'
 import {
   ReferenceEmptyState,
   ReferenceErrorState,
   ReferenceLoadingState,
-} from './ReferenceStatus.js'
+} from './ReferenceStatus'
 
 export function ReferenceView({ name }: ReferenceProps) {
   const { document, errorMessage, isLoading } = useReferenceDocumentFromContext(name)

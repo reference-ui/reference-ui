@@ -1,1 +1,1 @@
-export { referenceBrowserTokenConfig } from './tokens.js'
+export { referenceBrowserTokenConfig } from './tokens'
