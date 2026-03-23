@@ -36,7 +36,7 @@ export default async function runTsPackager(
   }
 
   on('run:packager-ts', ({ completionEvent }) => {
-    void queue.run(completionEvent)
+    queue.run(completionEvent)
   })
 
   return KEEP_ALIVE

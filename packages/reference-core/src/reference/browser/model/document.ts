@@ -4,18 +4,28 @@ import type { ReferenceDocument, ReferenceSymbolRef } from '../types'
 import { createReferenceMemberDocument } from './member'
 import { createReferenceJsDoc, createReferenceType, createReferenceTypeParameter, formatReferenceType } from './type'
 
+interface CreateReferenceDocumentOptions {
+  extendsChain?: TastySymbol[]
+  relatedSymbols?: TastySymbol[]
+  warnings?: string[]
+}
+
 export function createReferenceDocument(
   symbol: TastySymbol,
   members: TastyMember[],
-  extendsChain: TastySymbol[] = [],
-  relatedSymbols: TastySymbol[] = [],
-  warnings: string[] = [],
+  options: CreateReferenceDocumentOptions = {},
 ): ReferenceDocument {
+  const {
+    extendsChain = [],
+    relatedSymbols = [],
+    warnings = [],
+  } = options
   const typeParameterDetails = symbol.getTypeParameters().map(createReferenceTypeParameter)
   const extendsRefs = symbol.getExtends().map(createReferenceSymbolRef)
   const relatedTypes = getReferenceRelatedTypes(symbol.getRaw())
   const underlyingType = symbol.getUnderlyingType()
   const definitionType = createReferenceType(getTastyResolvedType(underlyingType) ?? underlyingType) ?? null
+  const definition = getReferenceDocumentDefinition(definitionType, underlyingType)
   const rootRef = createReferenceOwnedSymbolRef(symbol)
   const memberOrigins = createReferenceMemberOrigins(symbol, extendsChain)
   const symbolLookup = new Map<string, TastySymbol>([
@@ -27,7 +37,7 @@ export function createReferenceDocument(
     id: symbol.getId(),
     name: symbol.getName(),
     kind: symbol.getKind(),
-    kindLabel: symbol.getKind() === 'typeAlias' ? 'Type' : 'Interface',
+    kindLabel: getReferenceDocumentKindLabel(symbol),
     library: symbol.getLibrary(),
     warnings,
     description: symbol.getDescription(),
@@ -37,7 +47,7 @@ export function createReferenceDocument(
     extendsNames: extendsRefs.map((ref) => ref.name),
     extends: extendsRefs,
     types: relatedTypes,
-    definition: definitionType ? formatReferenceType(definitionType) : underlyingType?.describe() ?? null,
+    definition,
     definitionType,
     members: members.map((member) =>
       createReferenceMemberDocument(member, symbolLookup, {
@@ -46,6 +56,18 @@ export function createReferenceDocument(
       }),
     ),
   }
+}
+
+function getReferenceDocumentKindLabel(symbol: TastySymbol): ReferenceDocument['kindLabel'] {
+  return symbol.getKind() === 'typeAlias' ? 'Type' : 'Interface'
+}
+
+function getReferenceDocumentDefinition(
+  definitionType: ReferenceDocument['definitionType'],
+  underlyingType: ReturnType<TastySymbol['getUnderlyingType']>,
+): ReferenceDocument['definition'] {
+  if (definitionType) return formatReferenceType(definitionType)
+  return underlyingType?.describe() ?? null
 }
 
 function createReferenceMemberOrigins(

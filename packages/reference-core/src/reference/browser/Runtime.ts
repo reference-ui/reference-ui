@@ -121,9 +121,11 @@ export function useReferenceDocument(
           createReferenceDocument(
             data.symbol,
             data.members,
-            data.extendsChain,
-            data.relatedSymbols,
-            data.warnings,
+            {
+              extendsChain: data.extendsChain,
+              relatedSymbols: data.relatedSymbols,
+              warnings: data.warnings,
+            },
           ),
         )
         setIsLoading(false)
