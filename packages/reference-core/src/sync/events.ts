@@ -107,6 +107,15 @@ export function initEvents(): void {
   }))
 
   /**
+   * Runtime bundle completion requests the declaration surface needed to unblock
+   * the reference build. The packager-ts coordinator owns how runtime vs final
+   * requests are scheduled; sync only records this dependency edge.
+   */
+  on('packager:runtime:complete', () => {
+    emit('packager-ts:runtime:requested', {})
+  })
+
+  /**
    * Clean-build dependency:
    *
    * The reference build must wait for runtime declarations, not merely runtime
@@ -146,6 +155,15 @@ export function initEvents(): void {
     requires: ['reference:complete'],
     emit: 'run:packager:bundle',
   }))
+
+  /**
+   * The final bundle completion requests the closing declaration pass that
+   * drives sync readiness. Packager-ts decides how this request interacts with
+   * any in-flight runtime pass; sync only records the top-level dependency.
+   */
+  on('packager:complete', () => {
+    emit('packager-ts:final:requested', {})
+  })
 
   /**
    * Sync completes once the TypeScript package surface is ready. When TypeScript

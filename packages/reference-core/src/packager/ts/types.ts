@@ -1,5 +1,9 @@
 import type { ReferenceUIConfig } from '../../config'
 
+export type TsPackagerCompletionEvent =
+  | 'packager-ts:runtime:complete'
+  | 'packager-ts:complete'
+
 export interface TsPackageInput {
   name: string
   sourceEntry: string
