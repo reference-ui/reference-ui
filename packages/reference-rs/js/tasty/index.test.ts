@@ -9,6 +9,7 @@ import {
   createTastyApiFromManifest,
   createTastyBrowserRuntime,
 } from './index'
+import type { RawTastyManifest } from './api-types'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const packageDir = join(__dirname, '..', '..')
@@ -279,10 +280,13 @@ describe('tasty runtime', () => {
     const buttonProps = await api.loadSymbolByName('ButtonProps')
     const extendsSymbols = await buttonProps.loadExtendsSymbols()
     const flattened = await api.graph.flattenInterfaceMembers(buttonProps)
+    const displayMembers = await api.graph.getDisplayMembers(buttonProps)
 
     expect(extendsSymbols.map((symbol) => symbol.getName())).toEqual(['StyleProps'])
     expect(flattened.map((member) => member.getName())).toContain('tone')
     expect(flattened.map((member) => member.getName())).toContain('size')
+    expect(displayMembers.map((member) => member.getName())).toContain('tone')
+    expect(displayMembers.map((member) => member.getName())).toContain('size')
   })
 
   it('collects only user-owned immediate dependencies', async () => {
@@ -298,8 +302,8 @@ describe('tasty runtime', () => {
     expect(dependencies.map((symbol) => symbol.getName()).sort()).toEqual(['Size', 'StyleProps'])
   })
 
-  it('projects object-like members for aliases, intersections, and Omit utilities', async () => {
-    const manifest = {
+  it('exposes display members on symbols without widening declared members', async () => {
+    const manifest: RawTastyManifest = {
       version: '2',
       warnings: [],
       symbolsByName: {
@@ -320,7 +324,7 @@ describe('tasty runtime', () => {
           library: 'user',
         },
       },
-    } as const
+    }
 
     const chunks = {
       './chunks/base.js': {
@@ -394,11 +398,21 @@ describe('tasty runtime', () => {
 
     const projected = await api.loadSymbolByName('ProjectedProps')
     const publicProjected = await api.loadSymbolByName('PublicProjectedProps')
+    const projectedDisplayMembers = await api.graph.getDisplayMembers(projected)
+    const publicProjectedDisplayMembers = await api.graph.getDisplayMembers(publicProjected)
     const projectedMembers = await api.graph.projectObjectLikeMembers(projected)
     const publicProjectedMembers = await api.graph.projectObjectLikeMembers(publicProjected)
+    const projectedMembersFromSymbol = await projected.getDisplayMembers()
+    const publicProjectedMembersFromSymbol = await publicProjected.getDisplayMembers()
 
+    expect(projectedDisplayMembers.map((member) => member.getName())).toEqual(['tone', 'size', 'gap'])
+    expect(publicProjectedDisplayMembers.map((member) => member.getName())).toEqual(['tone', 'size', 'gap'])
     expect(projectedMembers?.map((member) => member.getName())).toEqual(['tone', 'size', 'gap'])
     expect(publicProjectedMembers?.map((member) => member.getName())).toEqual(['tone', 'size', 'gap'])
+    expect(projectedMembersFromSymbol?.map((member) => member.getName())).toEqual(['tone', 'size', 'gap'])
+    expect(publicProjectedMembersFromSymbol?.map((member) => member.getName())).toEqual(['tone', 'size', 'gap'])
+    expect(projected.getMembers()).toEqual([])
+    expect(publicProjected.getMembers()).toEqual([])
   })
 
   it('exposes type-alias helpers over the emitted definition shape', async () => {

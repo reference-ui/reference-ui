@@ -32,7 +32,7 @@ async function loadReferenceRuntimeData(
 ): Promise<ReferenceRuntimeData> {
   const api = await getReferenceApi(runtime)
   const symbol = await api.loadSymbolByName(name)
-  const members = symbol.getKind() === 'interface' ? await api.graph.getEffectiveMembers(symbol) : []
+  const members = await api.graph.getDisplayMembers(symbol)
   const extendsChain = symbol.getKind() === 'interface' ? await api.graph.loadExtendsChain(symbol) : []
   const relatedSymbols = await loadReferenceRelatedSymbols(api, symbol)
 

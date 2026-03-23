@@ -23,7 +23,7 @@ describe('tasty utilities', () => {
     })
 
     const buttonProps = await api.loadSymbolByName('ButtonProps')
-    const members = await api.graph.getEffectiveMembers(buttonProps)
+    const members = await api.graph.getDisplayMembers(buttonProps)
     const size = members.find(member => member.getName() === 'size')
     const disabled = members.find(member => member.getName() === 'disabled')
     const disabledType = disabled?.getType()
@@ -107,7 +107,7 @@ describe('tasty utilities', () => {
 
     const buttonProps = await api.loadSymbolByName('ButtonProps')
 
-    expect(await api.graph.getEffectiveMembers(buttonProps)).toEqual(
+    expect(await api.graph.getDisplayMembers(buttonProps)).toEqual(
       dedupeTastyMembers(await api.graph.flattenInterfaceMembers(buttonProps)),
     )
   })

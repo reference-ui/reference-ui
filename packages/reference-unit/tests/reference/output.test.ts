@@ -57,4 +57,22 @@ describe('reference output', () => {
     expect(style.getName()).toBe('ReferenceSystemStyleObject')
     expect(style.getKind()).toBe('typeAlias')
   })
+
+  it('projects display members for composed type aliases in generated reference artifacts', async () => {
+    const ready = await waitForReferenceArtifacts()
+    expect(ready, 'reference manifest should be emitted by the reference worker').toBe(true)
+
+    const api = createTastyApi({
+      manifestPath: typesPackageManifestPath,
+    })
+    await api.ready()
+
+    const composed = await api.loadSymbolByName('DocsReferenceComposedButtonProps')
+    const displayMembers = await composed.getDisplayMembers()
+
+    expect(composed.getKind()).toBe('typeAlias')
+    expect(displayMembers.map((member) => member.getName())).toEqual(
+      expect.arrayContaining(['label', 'variant', 'controlId', 'interactionRole', 'announceLabel']),
+    )
+  })
 })
