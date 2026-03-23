@@ -12,8 +12,8 @@ export type {
   RecipeSelection,
   RecipeVariant,
   RecipeVariantProps,
+  SystemStyleObject,
 } from '../types'
-export type { SystemStyleObject } from '@reference-ui/styled/types'
 export type {
   ReferenceFontName,
   ReferenceFontProps,

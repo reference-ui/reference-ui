@@ -289,8 +289,9 @@ describe('Reference component', () => {
     expect(screen.queryByText(/Failed to load/)).not.toBeInTheDocument()
     expect(screen.getAllByText('ReferenceSystemStyleObject').length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText('Type')).toBeInTheDocument()
-    expectVisibleText('padding')
-    expectTextAbsent('Definition')
+    expect(screen.getByText('Definition')).toBeInTheDocument()
+    expectVisibleText('SystemStyleObject')
+    expectTextAbsent('padding')
   })
 
 })
