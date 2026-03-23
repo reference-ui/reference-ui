@@ -7,9 +7,9 @@ import { spawn } from 'node:child_process'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { execa } from 'execa'
-import { loadConfig } from '../config/index.js'
-import { MATRIX, getPort } from '../matrix/index.js'
-import type { MatrixEntry } from '../matrix/index.js'
+import { loadConfig } from '../config/index'
+import { MATRIX, getPort } from '../matrix/index'
+import type { MatrixEntry } from '../matrix/index'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const PACKAGE_ROOT = join(__dirname, '..', '..')

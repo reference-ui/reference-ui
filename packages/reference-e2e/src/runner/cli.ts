@@ -2,7 +2,7 @@
  * Runner CLI: quick | ui | dev
  */
 
-import { runQuick, runUi, startDev } from './index.js'
+import { runQuick, runUi, startDev } from './index'
 
 const cmd = process.argv[2] ?? 'quick'
 const playwrightArgs = process.argv.slice(3).filter((arg) => arg !== '--')

@@ -2,9 +2,9 @@ import { test, expect } from '@playwright/test'
 import { writeFile, appendFile } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { getSandboxDir } from '../../environments/lib/config.js'
-import { waitForRefSyncReady } from '../../environments/lib/ref-sync.js'
-import { testRoutes } from '../../environments/base/routes.js'
+import { getSandboxDir } from '../../environments/lib/config'
+import { waitForRefSyncReady } from '../../environments/lib/ref-sync'
+import { testRoutes } from '../../environments/base/routes'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const METRICS_PATH = join(__dirname, '..', '..', '..', '.watch-metrics.jsonl')

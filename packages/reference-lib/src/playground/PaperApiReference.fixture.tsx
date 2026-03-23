@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Reference } from '../Reference/index.js'
+import { Reference } from '../Reference/index'
 
 /**
  * Demo-only “Paper”-style props — mirrors a typical MUI-style API table (name / type / default / description).

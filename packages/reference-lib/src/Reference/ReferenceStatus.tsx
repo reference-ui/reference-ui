@@ -1,5 +1,5 @@
-import { ReferenceNotice } from './components/ReferenceNotice.js'
-import { MonoText } from './components/shared/MonoText.js'
+import { ReferenceNotice } from './components/ReferenceNotice'
+import { MonoText } from './components/shared/MonoText'
 
 export function ReferenceLoadingState({ name }: { name: string }) {
   return (

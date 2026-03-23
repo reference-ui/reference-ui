@@ -1,3 +1,3 @@
-import { Reference } from '../Reference/index.js'
+import { Reference } from '../Reference/index'
 
 export default <Reference name="StyleProps" />

@@ -1,5 +1,5 @@
 import { tokens } from '@reference-ui/system'
-import { fontStacks } from '../../theme/fontStacks.js'
+import { fontStacks } from '../../theme/fontStacks'
 
 type ReferenceTokenConfig = Parameters<typeof tokens>[0]
 

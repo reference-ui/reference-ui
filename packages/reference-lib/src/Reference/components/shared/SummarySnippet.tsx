@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Div } from '@reference-ui/react'
-import { MonoText } from './MonoText.js'
+import { MonoText } from './MonoText'
 
 const SNIPPET_CSS = {
   display: 'block',

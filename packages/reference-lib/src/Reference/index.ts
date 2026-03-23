@@ -1,3 +1,3 @@
-export { referenceBrowserTokenConfig } from './theme/index.js'
-export { Reference } from './Reference.js'
-export { ReferenceView } from './ReferenceView.js'
+export { referenceBrowserTokenConfig } from './theme/index'
+export { Reference } from './Reference'
+export { ReferenceView } from './ReferenceView'

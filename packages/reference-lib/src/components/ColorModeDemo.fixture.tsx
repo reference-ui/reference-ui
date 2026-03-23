@@ -1,3 +1,3 @@
-import { ColorModeDemo } from './ColorModeDemo.js'
+import { ColorModeDemo } from './ColorModeDemo'
 
 export default <ColorModeDemo />

@@ -2,7 +2,7 @@
  * Test matrix: React × Bundler. Each entry becomes a Playwright project.
  */
 
-import { loadConfig } from '../config/index.js'
+import { loadConfig } from '../config/index'
 
 export const MATRIX = [
   { name: 'react17-vite5', react: '17' as const, bundler: 'vite' as const, bundlerVersion: '5' as const },

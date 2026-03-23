@@ -1,3 +1,4 @@
-export { ReferenceDocument } from './ReferenceDocument.js'
-export { ReferenceDocumentHeader } from './ReferenceDocumentHeader.js'
-export { ReferenceTypeAlias } from './ReferenceTypeAlias.js'
+export { ReferenceDocument } from './ReferenceDocument'
+export { ReferenceDocumentHeader } from './ReferenceDocumentHeader'
+export { ReferenceInterface } from './ReferenceInterface'
+export { ReferenceType } from './ReferenceType'

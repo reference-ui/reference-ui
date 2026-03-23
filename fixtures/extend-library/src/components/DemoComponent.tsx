@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { css } from '@reference-ui/react'
 import { tokens } from '@reference-ui/system'
-import { fixtureDemoBg, fixtureDemoText, fixtureDemoAccent } from '../tokens.js'
+import { fixtureDemoBg, fixtureDemoText, fixtureDemoAccent } from '../tokens'
 
 tokens({
   colors: {

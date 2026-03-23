@@ -1,5 +1,5 @@
 import { Div } from '@reference-ui/react'
-import { AtSignIcon } from './AtSignIcon.js'
+import { AtSignIcon } from './AtSignIcon'
 
 export type JsDocParamChipProps = {
   /** Text after the @ (e.g. `param`, `returns`). */

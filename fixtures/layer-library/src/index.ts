@@ -5,8 +5,8 @@
  * Run `ref sync` in layer-library before using.
  */
 export { baseSystem } from '@reference-ui/system/baseSystem'
-export { LightDarkDemo } from './components/LightDarkDemo.js'
-export { LayerPrivateDemo } from './components/LayerPrivateDemo.js'
+export { LightDarkDemo } from './components/LightDarkDemo'
+export { LayerPrivateDemo } from './components/LayerPrivateDemo'
 export {
   lightDarkDemoBgLight,
   lightDarkDemoBgDark,
@@ -18,4 +18,4 @@ export {
   lightDarkDemoTextDarkRgb,
   layerPrivateAccent,
   layerPrivateAccentRgb,
-} from './tokens.js'
+} from './tokens'

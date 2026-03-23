@@ -1,4 +1,4 @@
-import { Reference } from '../Reference/index.js'
+import { Reference } from '../Reference/index'
 import { StyleProps } from '@reference-ui/react'
 
 export interface StylePropsExtends extends StyleProps {

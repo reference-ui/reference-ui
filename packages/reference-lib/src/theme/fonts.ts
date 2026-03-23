@@ -1,5 +1,5 @@
 import { font } from '@reference-ui/system'
-import { fontStacks } from './fontStacks.js'
+import { fontStacks } from './fontStacks'
 
 export const fonts = {
   sans: {

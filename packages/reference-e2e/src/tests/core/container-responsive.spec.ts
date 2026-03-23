@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { testRoutes } from '../../environments/base/routes.js'
+import { testRoutes } from '../../environments/base/routes'
 
 function hexToRgb(hex: string): string {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)

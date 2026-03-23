@@ -1,6 +1,110 @@
+import { useState, type CSSProperties } from 'react'
 import { Div, Small } from '@reference-ui/react'
-import type { ReferenceMemberDocument } from '@reference-ui/types'
-import { ReferenceMemberRow } from './ReferenceMemberRow.js'
+import type { ReferenceMemberDocument, ReferenceSymbolRef } from '@reference-ui/types'
+import { ReferenceMemberRow } from './ReferenceMemberRow'
+
+const COLLAPSIBLE_INHERITED_SECTION_THRESHOLD = 20
+const COLLAPSED_INHERITED_SECTION_MEMBER_COUNT = 10
+
+const memberListCss = {
+  borderTopWidth: '1px',
+  borderTopStyle: 'solid',
+  borderTopColor: 'reference.border',
+}
+
+const inheritedToggleButtonStyle: CSSProperties = {
+  appearance: 'none',
+  background: 'transparent',
+  border: 'none',
+  color: 'inherit',
+  cursor: 'pointer',
+  font: 'inherit',
+  padding: 0,
+  textAlign: 'left' as const,
+}
+
+type InheritedMemberGroup = {
+  origin: ReferenceSymbolRef
+  members: ReferenceMemberDocument[]
+}
+
+function partitionMembers(members: ReferenceMemberDocument[]) {
+  const declaredMembers: ReferenceMemberDocument[] = []
+  const inheritedGroupsById = new Map<string, InheritedMemberGroup>()
+
+  for (const member of members) {
+    if (!member.inheritedFrom) {
+      declaredMembers.push(member)
+      continue
+    }
+
+    const group = inheritedGroupsById.get(member.inheritedFrom.id)
+
+    if (group) {
+      group.members.push(member)
+      continue
+    }
+
+    inheritedGroupsById.set(member.inheritedFrom.id, {
+      origin: member.inheritedFrom,
+      members: [member],
+    })
+  }
+
+  return {
+    declaredMembers,
+    inheritedGroups: [...inheritedGroupsById.values()],
+  }
+}
+
+function ReferenceMemberRows({
+  members,
+  showInheritedFrom = true,
+}: {
+  members: ReferenceMemberDocument[]
+  showInheritedFrom?: boolean
+}) {
+  return (
+    <Div css={memberListCss}>
+      {members.map(member => (
+        <ReferenceMemberRow
+          key={member.id}
+          member={member}
+          showInheritedFrom={showInheritedFrom}
+        />
+      ))}
+    </Div>
+  )
+}
+
+function ReferenceInheritedMemberSection({ group }: { group: InheritedMemberGroup }) {
+  const [isExpanded, setIsExpanded] = useState(false)
+  const isCollapsible = group.members.length > COLLAPSIBLE_INHERITED_SECTION_THRESHOLD
+  const visibleMembers = isCollapsible && !isExpanded
+    ? group.members.slice(0, COLLAPSED_INHERITED_SECTION_MEMBER_COUNT)
+    : group.members
+  const hiddenMemberCount = group.members.length - visibleMembers.length
+
+  return (
+    <Div display="grid" gap="reference.sm">
+      <Small color="reference.muted">Inherited from {group.origin.name}</Small>
+      <ReferenceMemberRows members={visibleMembers} showInheritedFrom={false} />
+      {isCollapsible ? (
+        <Small color="reference.muted">
+          <button
+            type="button"
+            onClick={() => setIsExpanded(expanded => !expanded)}
+            style={inheritedToggleButtonStyle}
+          >
+            {isExpanded
+              ? 'Collapse inherited members'
+              : `Show ${hiddenMemberCount} more inherited members`}
+          </button>
+        </Small>
+      ) : null}
+    </Div>
+  )
+}
 
 export function ReferenceMemberList({ members }: { members: ReferenceMemberDocument[] }) {
   if (members.length === 0) {
@@ -9,18 +113,16 @@ export function ReferenceMemberList({ members }: { members: ReferenceMemberDocum
     )
   }
 
+  const { declaredMembers, inheritedGroups } = partitionMembers(members)
+
   return (
-    <Div
-      css={{
-        borderTopWidth: '1px',
-        borderTopStyle: 'solid',
-        borderTopColor: 'reference.border',
-      }}
-    >
-      {members.map(member => (
-        <ReferenceMemberRow key={member.id} member={member} />
+    <Div display="grid" gap="reference.lg">
+      {declaredMembers.length > 0 ? (
+        <ReferenceMemberRows members={declaredMembers} />
+      ) : null}
+      {inheritedGroups.map(group => (
+        <ReferenceInheritedMemberSection key={group.origin.id} group={group} />
       ))}
     </Div>
   )
 }
-;``

@@ -1,4 +1,4 @@
-import { Reference } from '../Reference/index.js'
+import { Reference } from '../Reference/index'
 
 /**
  * Simple literal-union type used to pin the definition-first "Type" surface.

@@ -1,4 +1,4 @@
-import { Reference } from '../Reference/index.js'
+import { Reference } from '../Reference/index'
 
 export const docsReferenceTheme = {
   spacing: {
