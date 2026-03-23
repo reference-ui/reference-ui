@@ -64,8 +64,9 @@ test.describe('sync-watch', () => {
     await expect(el).toBeVisible()
 
     const t0 = Date.now()
+    const ready = waitForRefSyncReady(sandboxDir, { timeout: 60_000 })
     await writeFile(syncWatchPath, buildSyncWatchContent(randomColor))
-    await waitForRefSyncReady(sandboxDir, { timeout: 60_000 })
+    await ready
 
     await expect
       .poll(
