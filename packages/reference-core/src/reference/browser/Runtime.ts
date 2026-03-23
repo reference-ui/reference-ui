@@ -12,6 +12,7 @@ export interface ReferenceRuntimeData {
   symbol: TastySymbol
   members: TastyMember[]
   extendsChain: TastySymbol[]
+  memberOrigins: Map<string, TastySymbol>
   relatedSymbols: TastySymbol[]
   warnings: string[]
 }
@@ -35,12 +36,16 @@ async function loadReferenceRuntimeData(
   const projectedMembers = await api.graph.getDisplayMembers(symbol)
   const members = shouldHideAliasProjection(symbol) ? [] : projectedMembers
   const extendsChain = symbol.getKind() === 'interface' ? await api.graph.loadExtendsChain(symbol) : []
+  const memberOrigins = symbol.getKind() === 'interface'
+    ? await loadReferenceMemberOrigins(symbol, extendsChain)
+    : new Map<string, TastySymbol>()
   const relatedSymbols = await loadReferenceRelatedSymbols(api, symbol)
 
   return {
     symbol,
     members,
     extendsChain,
+    memberOrigins,
     relatedSymbols,
     warnings: api.getWarnings(),
   }
@@ -78,6 +83,33 @@ async function loadReferenceRelatedSymbols(api: TastyApi, rootSymbol: TastySymbo
   }
 
   return relatedSymbols
+}
+
+async function getInheritedMemberSourceMembers(symbol: TastySymbol): Promise<TastyMember[]> {
+  if (symbol.getKind() === 'typeAlias') {
+    return symbol.getDisplayMembers()
+  }
+
+  return symbol.getMembers()
+}
+
+async function loadReferenceMemberOrigins(
+  rootSymbol: TastySymbol,
+  extendsChain: TastySymbol[],
+): Promise<Map<string, TastySymbol>> {
+  const origins = new Map<string, TastySymbol>()
+
+  for (const currentSymbol of [...extendsChain, rootSymbol]) {
+    const currentMembers = currentSymbol.getId() === rootSymbol.getId()
+      ? currentSymbol.getMembers()
+      : await getInheritedMemberSourceMembers(currentSymbol)
+
+    for (const member of currentMembers) {
+      origins.set(member.getId(), currentSymbol)
+    }
+  }
+
+  return origins
 }
 
 export function createReferenceRuntime(runtime: TastyBrowserRuntime): ReferenceRuntime {
@@ -123,6 +155,7 @@ export function useReferenceDocument(
             data.members,
             {
               extendsChain: data.extendsChain,
+              memberOrigins: data.memberOrigins,
               relatedSymbols: data.relatedSymbols,
               warnings: data.warnings,
             },

@@ -39,6 +39,14 @@ interface CreateTastyApiRuntimeOptions {
   importer: ArtifactImporter
 }
 
+async function getInheritedDisplayMembers(symbol: TastySymbol): Promise<TastyMember[]> {
+  if (symbol.getKind() === 'typeAlias') {
+    return symbol.getDisplayMembers()
+  }
+
+  return symbol.getMembers()
+}
+
 export class TastyApiRuntime implements TastyApi {
   private readonly manifestPath?: string
   private readonly importer: ArtifactImporter
@@ -85,7 +93,9 @@ export class TastyApiRuntime implements TastyApi {
       },
       flattenInterfaceMembers: async (symbol) => {
         const inherited = await this.graph.loadExtendsChain(symbol)
-        const flattened = inherited.flatMap((item) => item.getMembers())
+        const flattened = (await Promise.all(
+          inherited.map((item) => getInheritedDisplayMembers(item)),
+        )).flat()
         flattened.push(...symbol.getMembers())
         return flattened
       },

@@ -46,6 +46,63 @@ export interface DocsReferencePinnedTarget {
 
 export type DocsReferencePinnedTargetAlias = DocsReferencePinnedTarget
 
+export type DocsReferenceTypeBaseProps = {
+  /**
+   * Shared label inherited from a first-class type.
+   */
+  label: string
+
+  /**
+   * Shared size inherited from a first-class type.
+   */
+  size?: DocsReferenceButtonSize
+
+  /**
+   * Shared tone inherited from a first-class type.
+   */
+  tone?: DocsReferenceButtonVariant
+}
+
+export interface DocsReferenceTypeExtendsProps extends DocsReferenceTypeBaseProps {
+  /**
+   * Local flag declared by the extending interface.
+   */
+  hasMenu?: boolean
+}
+
+export type DocsReferenceLargeTypeBaseProps = {
+  tone?: DocsReferenceButtonVariant
+  size?: DocsReferenceButtonSize
+  prop01?: string
+  prop02?: string
+  prop03?: string
+  prop04?: string
+  prop05?: string
+  prop06?: string
+  prop07?: string
+  prop08?: string
+  prop09?: string
+  prop10?: string
+  prop11?: string
+  prop12?: string
+  prop13?: string
+  prop14?: string
+  prop15?: string
+  prop16?: string
+  prop17?: string
+  prop18?: string
+  prop19?: string
+  prop20?: string
+  prop21?: string
+}
+
+export interface DocsReferenceLargeTypeExtendsProps extends DocsReferenceLargeTypeBaseProps {
+  /**
+   * Local member that stays in the main section.
+   */
+  myCustomProps: string
+}
+
 export interface DocsReferenceControlBaseProps {
   /**
    * Stable id shared across composed controls.
