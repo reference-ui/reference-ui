@@ -1,67 +1,53 @@
-import type { ConditionalValue, SystemStyleObject } from '@reference-ui/styled/types'
-
-type StringKey<T> = Extract<keyof T, string>
+import type {
+  ColorModeProps,
+  ContainerProps,
+  FontName,
+  FontProps,
+  FontWeightName,
+  FontWeightValue,
+  ReferenceProps,
+  ResponsiveProps,
+  ScopedFontWeight,
+  SystemStyleObject as PublicSystemStyleObject,
+} from '../../types'
 
 /**
  * Generated systems augment this registry with concrete font names and weights.
- * The empty interface here keeps the source package generic until `ref sync`
- * writes the user-specific declaration augmentation.
+ * The empty interface here keeps the legacy `Reference*` surface augmentable,
+ * while the actual font type graph now flows through `src/types`.
  */
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface ReferenceFontRegistry {}
 
-export type ReferenceFontName = StringKey<ReferenceFontRegistry>
+declare module '../../types/fontRegistry' {
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+  interface FontRegistry extends ReferenceFontRegistry {}
+}
+
+export type ReferenceFontName = FontName
 
 export type ReferenceFontWeightName<TFont extends ReferenceFontName> =
-  StringKey<ReferenceFontRegistry[TFont]>
+  FontWeightName<TFont>
 
 export type ReferenceScopedFontWeight<TFont extends ReferenceFontName> =
-  `${TFont}.${ReferenceFontWeightName<TFont>}`
+  ScopedFontWeight<TFont>
 
 export type ReferenceFontWeightValue<TFont extends ReferenceFontName> =
-  | ReferenceFontWeightName<TFont>
-  | ReferenceScopedFontWeight<TFont>
+  FontWeightValue<TFont>
 
-type ReferenceScopedFontProps = {
-  [TFont in ReferenceFontName]: {
-    font?: ConditionalValue<TFont>
-    weight?: ConditionalValue<ReferenceFontWeightValue<TFont>>
-  }
-}[ReferenceFontName]
+export type ReferenceFontProps = FontProps
 
-type ReferenceFallbackFontProps = {
-  font?: ConditionalValue<string>
-  weight?: ConditionalValue<string>
-}
-
-export interface ReferenceContainerProps {
-  container?: ConditionalValue<string | boolean>
-}
+export type ReferenceContainerProps = ContainerProps
 
 /**
  * Theme scope for token resolution.
  * Supported on HTML primitives only and emitted as Panda's `data-panda-theme`
  * attribute, not through the Panda `box()` pattern / `ReferenceSystemStyleObject`.
  */
-export interface ReferenceColorModeProps {
-  colorMode?: ConditionalValue<string>
-}
+export type ReferenceColorModeProps = ColorModeProps
 
-export interface ReferenceResponsiveProps {
-  r?: ConditionalValue<Record<string | number, SystemStyleObject>>
-}
+export type ReferenceResponsiveProps = ResponsiveProps
 
-export type ReferenceFontProps = [ReferenceFontName] extends [never]
-  ? ReferenceFallbackFontProps
-  : ReferenceScopedFontProps
+export type ReferenceBoxPatternProps = ReferenceProps
 
-export type ReferenceBoxPatternProps =
-  & ReferenceContainerProps
-  & ReferenceResponsiveProps
-  & ReferenceFontProps
-
-export type ReferenceSystemStyleObject = Omit<
-  SystemStyleObject,
-  'font' | 'weight' | 'container' | 'r'
-> &
-  ReferenceBoxPatternProps
+export type ReferenceSystemStyleObject = PublicSystemStyleObject
