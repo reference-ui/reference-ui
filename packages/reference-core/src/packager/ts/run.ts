@@ -1,36 +1,21 @@
 import { emit } from '../../lib/event-bus'
 import { log } from '../../lib/log'
 import { installPackagesTs } from './install'
-import type { TsPackagerWorkerPayload } from './types'
+import type { TsPackagerCompletionEvent, TsPackagerWorkerPayload } from './types'
 
-type DtsCompletionEvent =
-  | 'packager-ts:runtime:complete'
-  | 'packager-ts:complete'
+const FINAL_DTS_COMPLETE_EVENT: TsPackagerCompletionEvent = 'packager-ts:complete'
 
-const FINAL_DTS_COMPLETE_EVENT: DtsCompletionEvent = 'packager-ts:complete'
-const RUNTIME_DTS_COMPLETE_EVENT: DtsCompletionEvent = 'packager-ts:runtime:complete'
-
-function mergeCompletionEvent(
-  current: DtsCompletionEvent,
-  next: DtsCompletionEvent
-): DtsCompletionEvent {
-  return current === FINAL_DTS_COMPLETE_EVENT || next === FINAL_DTS_COMPLETE_EVENT
-    ? FINAL_DTS_COMPLETE_EVENT
-    : RUNTIME_DTS_COMPLETE_EVENT
-}
-
-interface DtsGenerationRuntimeOptions {
-  bundlesReady: boolean
+interface DtsGenerationQueueOptions {
   runGeneration?: (
     payload: TsPackagerWorkerPayload,
-    completionEvent?: DtsCompletionEvent
+    completionEvent?: TsPackagerCompletionEvent
   ) => Promise<void>
 }
 
-/** Generate .d.ts and write to outDir. Emits packager-ts:complete when done. */
+/** Generate .d.ts and emit the requested completion event when done. */
 export async function runDtsGeneration(
   payload: TsPackagerWorkerPayload,
-  completionEvent: DtsCompletionEvent = FINAL_DTS_COMPLETE_EVENT
+  completionEvent: TsPackagerCompletionEvent = FINAL_DTS_COMPLETE_EVENT
 ): Promise<void> {
   const { cwd, packages } = payload
 
@@ -47,63 +32,30 @@ export async function runDtsGeneration(
 }
 
 /**
- * Create the packager-ts runtime callbacks.
- * Keeps declaration generation single-flight and coalesces overlapping reruns.
+ * Create a single-flight queue for declaration generation requests.
+ * Global orchestration decides which completion event should run next; this
+ * queue only ensures requests execute one at a time inside the worker.
  */
-export function createDtsGenerationRuntime(
+export function createDtsGenerationQueue(
   payload: TsPackagerWorkerPayload,
-  options: DtsGenerationRuntimeOptions
+  options: DtsGenerationQueueOptions = {}
 ): {
-  onPackagerRuntimeComplete: () => void
-  onPackagerComplete: () => void
-  runCatchUpIfNeeded: () => Promise<void>
+  run: (completionEvent: TsPackagerCompletionEvent) => Promise<void>
 } {
-  const { bundlesReady, runGeneration = runDtsGeneration } = options
-  let currentRun: Promise<void> | null = null
-  let rerunRequested = false
-  let queuedCompletionEvent: DtsCompletionEvent | null = null
+  const { runGeneration = runDtsGeneration } = options
+  let currentRun: Promise<void> = Promise.resolve()
 
-  const runSerial = async (
-    completionEvent: DtsCompletionEvent
+  const run = async (
+    completionEvent: TsPackagerCompletionEvent
   ): Promise<void> => {
-    if (currentRun) {
-      rerunRequested = true
-      queuedCompletionEvent = queuedCompletionEvent === null
-        ? completionEvent
-        : mergeCompletionEvent(queuedCompletionEvent, completionEvent)
-      return currentRun
-    }
-
-    currentRun = (async () => {
-      let nextCompletionEvent = completionEvent
-
-      do {
-        rerunRequested = false
-        queuedCompletionEvent = null
-        await runGeneration(payload, nextCompletionEvent).catch(() => {})
-        nextCompletionEvent = queuedCompletionEvent ?? nextCompletionEvent
-      } while (rerunRequested)
-    })().finally(() => {
-      currentRun = null
-    })
-
+    currentRun = currentRun
+      .catch(() => {})
+      .then(() => runGeneration(payload, completionEvent))
+      .catch(() => {})
     return currentRun
   }
 
   return {
-    onPackagerRuntimeComplete: () => {
-      void runSerial(RUNTIME_DTS_COMPLETE_EVENT)
-    },
-    onPackagerComplete: () => {
-      void runSerial(FINAL_DTS_COMPLETE_EVENT)
-    },
-    runCatchUpIfNeeded: async () => {
-      // A long-lived worker can subscribe after the runtime bundle phase already
-      // completed. Catch up from runtime outputs so one-shot sync cannot deadlock
-      // waiting on a missed `packager:runtime:complete`.
-      if (bundlesReady) {
-        await runSerial(RUNTIME_DTS_COMPLETE_EVENT)
-      }
-    },
+    run,
   }
 }
