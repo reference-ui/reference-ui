@@ -32,6 +32,27 @@ fn single_file(file_id: &str, source: &str) -> ScannedWorkspace {
     workspace(&[(file_id, source)])
 }
 
+fn single_library_file(
+    file_id: &str,
+    module_specifier: &str,
+    library: &str,
+    source: &str,
+) -> ScannedWorkspace {
+    let root_dir = PathBuf::from(".");
+    let mut file_ids = BTreeSet::new();
+    file_ids.insert(file_id.to_string());
+    ScannedWorkspace {
+        root_dir,
+        files: vec![ScannedFile {
+            file_id: file_id.to_string(),
+            module_specifier: module_specifier.to_string(),
+            library: library.to_string(),
+            source: source.to_string(),
+        }],
+        file_ids,
+    }
+}
+
 fn parsed_file<'a>(ast: &'a crate::tasty::ast::model::ParsedTypeScriptAst, file_id: &str) -> &'a crate::tasty::ast::model::ParsedFileAst {
     ast.files
         .iter()
@@ -140,6 +161,34 @@ fn export_type_from_local_module_skips_synthetic_type_alias_shell() {
         "local same-project type re-exports should not synthesize duplicate alias shells"
     );
     assert!(index.import_bindings.get("T").is_none());
+}
+
+#[test]
+fn library_export_list_materializes_local_type_closure() {
+    let scanned = single_library_file(
+        "node_modules/fancy-lib/index.d.mts",
+        "fancy-lib",
+        "fancy-lib",
+        "type Shared = { label: string }\n\
+         type ButtonProps = Shared & { size?: number }\n\
+         export { type ButtonProps }\n",
+    );
+    let ast = extract_ast(&scanned);
+    let file = parsed_file(&ast, "node_modules/fancy-lib/index.d.mts");
+
+    let shared = file
+        .exports
+        .iter()
+        .find(|shell| shell.name == "Shared")
+        .expect("local helper shell should be materialized");
+    let button_props = file
+        .exports
+        .iter()
+        .find(|shell| shell.name == "ButtonProps")
+        .expect("exported local type should be materialized");
+
+    assert!(!shared.exported);
+    assert!(button_props.exported);
 }
 
 #[test]

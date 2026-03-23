@@ -131,20 +131,21 @@ describe('sync/events', () => {
     expect(emit).toHaveBeenCalledWith('run:panda:codegen', undefined)
   })
 
-  it('virtual:complete triggers config and reference work immediately when both workers are ready', async () => {
+  it('virtual:complete triggers config work immediately but reference waits for runtime declarations', async () => {
     const { initEvents } = await loadEventsModule()
     initEvents()
 
     fireOn('system:config:ready')
     fireOn('reference:ready')
+    fireOn('packager:ready')
     emit.mockClear()
     fireOn('virtual:complete')
 
     expect(emit).toHaveBeenCalledWith('run:system:config', undefined)
-    expect(emit).toHaveBeenCalledWith('run:reference:build', {})
+    expect(emit).not.toHaveBeenCalledWith('run:reference:build', {})
   })
 
-  it('buffers config and reference work until the workers become ready', async () => {
+  it('buffers config work until ready and reference work until runtime declarations complete', async () => {
     const { initEvents } = await loadEventsModule()
     initEvents()
 
@@ -159,6 +160,11 @@ describe('sync/events', () => {
 
     emit.mockClear()
     fireOn('reference:ready')
+    expect(emit).not.toHaveBeenCalledWith('run:reference:build', {})
+
+    emit.mockClear()
+    fireOn('packager:ready')
+    fireOn('packager-ts:runtime:complete')
     expect(emit).toHaveBeenCalledWith('run:reference:build', {})
   })
 
@@ -178,7 +184,7 @@ describe('sync/events', () => {
     expect(emit).toHaveBeenCalledWith('run:reference:build', {})
   })
 
-  it('waits for both panda codegen and reference output before bundling packages', async () => {
+  it('waits for panda codegen before bundling runtime packages', async () => {
     const { initEvents } = await loadEventsModule()
     initEvents()
 
@@ -186,63 +192,62 @@ describe('sync/events', () => {
     emit.mockClear()
     fireOn('system:panda:codegen')
 
-    expect(emit).not.toHaveBeenCalledWith('run:packager:bundle', undefined)
-    fireOn('reference:complete', {
-      source: 'virtual',
-      manifestPath: '/tmp/types/manifest.js',
-      outputDir: '/tmp/types',
-    })
-
-    expect(emit).toHaveBeenCalledWith('run:packager:bundle', undefined)
+    expect(emit).toHaveBeenCalledWith('run:packager:runtime:bundle', undefined)
   })
 
-  it('emits packager work when both inputs already finished before packager becomes ready', async () => {
+  it('emits runtime packager work when panda already finished before packager becomes ready', async () => {
     const { initEvents } = await loadEventsModule()
     initEvents()
 
     emit.mockClear()
     fireOn('system:panda:codegen')
-    fireOn('reference:complete', {
-      source: 'virtual',
-      manifestPath: '/tmp/types/manifest.js',
-      outputDir: '/tmp/types',
-    })
 
-    expect(emit).not.toHaveBeenCalledWith('run:packager:bundle')
+    expect(emit).not.toHaveBeenCalledWith('run:packager:runtime:bundle')
     emit.mockClear()
     fireOn('packager:ready')
 
-    expect(emit).toHaveBeenCalledWith('run:packager:bundle', undefined)
+    expect(emit).toHaveBeenCalledWith('run:packager:runtime:bundle', undefined)
   })
 
-  it('runs packager once per matched panda/reference completion pair', async () => {
+  it('runs runtime packager once per fresh panda completion and final packager once per fresh reference completion', async () => {
     const { initEvents } = await loadEventsModule()
     initEvents()
 
     fireOn('packager:ready')
     emit.mockClear()
-
-    fireOn('reference:complete', {
-      source: 'virtual',
-      manifestPath: '/tmp/types/manifest.js',
-      outputDir: '/tmp/types',
-    })
-    expect(emit).not.toHaveBeenCalledWith('run:packager:bundle', undefined)
 
     fireOn('system:panda:codegen')
     expect(emit).toHaveBeenCalledTimes(1)
-    expect(emit).toHaveBeenCalledWith('run:packager:bundle', undefined)
+    expect(emit).toHaveBeenCalledWith('run:packager:runtime:bundle', undefined)
 
     emit.mockClear()
     fireOn('system:panda:codegen')
-    expect(emit).not.toHaveBeenCalledWith('run:packager:bundle', undefined)
+    expect(emit).toHaveBeenCalledWith('run:packager:runtime:bundle', undefined)
 
+    emit.mockClear()
     fireOn('reference:complete', {
       source: 'virtual',
       manifestPath: '/tmp/types/manifest.js',
       outputDir: '/tmp/types',
     })
     expect(emit).toHaveBeenCalledTimes(1)
+    expect(emit).toHaveBeenCalledWith('run:packager:bundle', undefined)
+  })
+
+  it('emits final packager work when reference output already exists before packager becomes ready', async () => {
+    const { initEvents } = await loadEventsModule()
+    initEvents()
+
+    emit.mockClear()
+    fireOn('reference:complete', {
+      source: 'virtual',
+      manifestPath: '/tmp/types/manifest.js',
+      outputDir: '/tmp/types',
+    })
+    expect(emit).not.toHaveBeenCalledWith('run:packager:bundle', undefined)
+
+    emit.mockClear()
+    fireOn('packager:ready')
     expect(emit).toHaveBeenCalledWith('run:packager:bundle', undefined)
   })
 })

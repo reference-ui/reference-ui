@@ -5,10 +5,10 @@ use std::path::{Path, PathBuf};
 use serde_json::Value;
 
 use crate::tasty::constants::scanner::{
-    NODE_MODULES_DIR, PACKAGE_INDEX_BASENAME, PACKAGE_JSON_FILENAME,
+    PACKAGE_INDEX_BASENAME, PACKAGE_JSON_FILENAME,
 };
 
-use super::node_modules::installed_package_dirs;
+use super::node_modules::{candidate_node_modules_dirs, installed_package_dirs};
 use super::package_json::{package_export_target, read_package_json};
 use super::relative::declaration_candidates;
 use crate::tasty::scanner::model::ResolvedModule;
@@ -41,23 +41,26 @@ pub(super) fn resolve_package_import_from_root(
     package_name: &str,
     subpath: Option<&str>,
 ) -> Option<ResolvedModule> {
-    let package_dir = root_dir.join(NODE_MODULES_DIR).join(package_name);
-    if !package_dir.is_dir() {
-        return None;
-    }
+    let module_specifier = source_module_for_package_path(package_name, subpath);
 
-    let package_json_path = package_dir.join(PACKAGE_JSON_FILENAME);
-    let package_json = read_package_json(&package_json_path);
-    let entry_path = if let Some(subpath) = subpath {
-        resolve_package_subpath(&package_dir, package_json.as_ref(), subpath)
-    } else {
-        resolve_package_root_entry(&package_dir, package_json.as_ref())
-    }?;
-    resolved_module_from_entry_path(
-        root_dir,
-        entry_path,
-        Some(&source_module_for_package_path(package_name, subpath)),
-    )
+    candidate_node_modules_dirs(root_dir)
+        .into_iter()
+        .find_map(|node_modules_dir| {
+            let package_dir = node_modules_dir.join(package_name);
+            if !package_dir.is_dir() {
+                return None;
+            }
+
+            let package_json_path = package_dir.join(PACKAGE_JSON_FILENAME);
+            let package_json = read_package_json(&package_json_path);
+            let entry_path = if let Some(subpath) = subpath {
+                resolve_package_subpath(&package_dir, package_json.as_ref(), subpath)
+            } else {
+                resolve_package_root_entry(&package_dir, package_json.as_ref())
+            }?;
+
+            resolved_module_from_entry_path(root_dir, entry_path, Some(&module_specifier))
+        })
 }
 
 fn resolved_module_from_entry_path(
@@ -65,7 +68,7 @@ fn resolved_module_from_entry_path(
     entry_path: PathBuf,
     module_specifier: Option<&str>,
 ) -> Option<ResolvedModule> {
-    let file_id = path_to_unix(&entry_path.strip_prefix(root_dir).ok()?.to_path_buf());
+    let file_id = relative_file_id(root_dir, &entry_path);
     Some(ResolvedModule {
         library: package_name_from_file_id(&file_id),
         module_specifier: module_specifier
@@ -73,6 +76,34 @@ fn resolved_module_from_entry_path(
             .unwrap_or_else(|| module_specifier_for_file_id(&file_id)),
         file_id,
     })
+}
+
+fn relative_file_id(root_dir: &Path, entry_path: &Path) -> String {
+    if let Ok(relative) = entry_path.strip_prefix(root_dir) {
+        return path_to_unix(relative);
+    }
+
+    let root_components = root_dir.components().collect::<Vec<_>>();
+    let entry_components = entry_path.components().collect::<Vec<_>>();
+    let common_len = root_components
+        .iter()
+        .zip(entry_components.iter())
+        .take_while(|(left, right)| left == right)
+        .count();
+
+    if common_len == 0 {
+        return path_to_unix(entry_path);
+    }
+
+    let mut relative = PathBuf::new();
+    for _ in common_len..root_components.len() {
+        relative.push("..");
+    }
+    for component in &entry_components[common_len..] {
+        relative.push(component.as_os_str());
+    }
+
+    path_to_unix(&relative)
 }
 
 fn resolve_package_root_entry(package_dir: &Path, package_json: Option<&Value>) -> Option<PathBuf> {
