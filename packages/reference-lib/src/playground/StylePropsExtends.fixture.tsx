@@ -1,7 +1,7 @@
 import { Reference } from '../Reference/index.js'
-import { SystemStyleObject } from '@reference-ui/react'
+import { StyleProps } from '@reference-ui/react'
 
-export interface StylePropsExtends extends SystemStyleObject {
+export interface StylePropsExtends extends StyleProps {
   myCustomProps: string
 }
 

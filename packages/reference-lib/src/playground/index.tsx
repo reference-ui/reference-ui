@@ -1,2 +1,2 @@
 /** Opt-in barrel: `ref sync` indexes these exports for {@link Reference} (see Tasty scan boundary). */
-export type { ReferenceSystemStyleObject } from '@reference-ui/react'
+export type { StyleProps } from '@reference-ui/react'

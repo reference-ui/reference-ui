@@ -14,7 +14,10 @@ describe('@reference-ui/types package', () => {
     const ready = await waitForTypesPackage()
     expect(ready, '@reference-ui/types should be emitted by packager').toBe(true)
     expect(existsSync(typesPackageDir), '.reference-ui/types should exist').toBe(true)
-    expect(existsSync(typesPackageJsonPath), '.reference-ui/types/package.json should exist').toBe(true)
+    expect(
+      existsSync(typesPackageJsonPath),
+      '.reference-ui/types/package.json should exist'
+    ).toBe(true)
 
     const pkg = JSON.parse(readFileSync(typesPackageJsonPath, 'utf-8'))
     expect(pkg).toMatchObject({
@@ -42,7 +45,10 @@ describe('@reference-ui/types package', () => {
     const ready = await waitForTypesPackage()
     expect(ready, '@reference-ui/types should be emitted by packager').toBe(true)
 
-    expect(existsSync(installedTypesPackageDir), 'node_modules/@reference-ui/types should exist').toBe(true)
+    expect(
+      existsSync(installedTypesPackageDir),
+      'node_modules/@reference-ui/types should exist'
+    ).toBe(true)
     expect(lstatSync(installedTypesPackageDir).isSymbolicLink()).toBe(true)
     expect(realpathSync(installedTypesPackageDir)).toBe(realpathSync(typesPackageDir))
   })
@@ -51,7 +57,9 @@ describe('@reference-ui/types package', () => {
     const ready = await waitForTypesPackage()
     expect(ready, '@reference-ui/types should be emitted by packager').toBe(true)
 
-    const manifestPath = realpathSync(join(installedTypesPackageDir, 'tasty', 'manifest.js'))
+    const manifestPath = realpathSync(
+      join(installedTypesPackageDir, 'tasty', 'manifest.js')
+    )
     const pkg = await import('@reference-ui/types')
     const manifestModule = await import('@reference-ui/types/manifest')
     const api = createTastyApi({ manifestPath })
@@ -63,8 +71,8 @@ describe('@reference-ui/types package', () => {
     expect(fixture.getName()).toBe('ReferenceApiFixture')
     expect(fixture.getKind()).toBe('interface')
 
-    const systemStyle = await api.loadSymbolByName('ReferenceSystemStyleObject')
-    expect(systemStyle.getName()).toBe('ReferenceSystemStyleObject')
+    const systemStyle = await api.loadSymbolByName('StyleProps')
+    expect(systemStyle.getName()).toBe('StyleProps')
     expect(systemStyle.getKind()).toBe('typeAlias')
   })
 })

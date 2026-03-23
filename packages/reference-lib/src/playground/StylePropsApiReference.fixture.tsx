@@ -1,3 +1,3 @@
 import { Reference } from '../Reference/index.js'
 
-export default <Reference name="ReferenceSystemStyleObject" />
+export default <Reference name="StyleProps" />
