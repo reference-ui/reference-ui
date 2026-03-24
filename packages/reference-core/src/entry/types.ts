@@ -23,6 +23,9 @@ export type {
 export type * from '../reference/browser/types'
 export type { BaseSystem } from '../types'
 export type {
+  CssFunction,
+  CssRawFunction,
+  CssStyles,
   FontName,
   FontProps,
   FontRegistry,
@@ -34,6 +37,7 @@ export type {
   ColorModeProps,
   ContainerProps,
   ResponsiveProps,
+  StrictColorProps,
 } from '../types'
 export type {
   RecipeCreatorFn,

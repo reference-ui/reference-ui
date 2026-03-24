@@ -5,4 +5,4 @@ export type {
   RecipeSelection,
   RecipeVariant,
   RecipeVariantProps,
-} from '../system/styled/types/recipe'
+} from '@reference-ui/styled/types/recipe'

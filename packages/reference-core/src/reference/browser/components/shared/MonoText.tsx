@@ -6,7 +6,7 @@ interface MonoTextProps {
   color?: string
 }
 
-const REFERENCE_CODE_RESET_CSS = {
+const REFERENCE_CODE_RESET_STYLE: React.CSSProperties = {
   background: 'transparent',
   color: 'inherit',
   padding: '0',
@@ -16,7 +16,7 @@ const REFERENCE_CODE_RESET_CSS = {
 
 export function MonoText({ children, color }: MonoTextProps) {
   return (
-    <Code fontFamily="reference.mono" color={color} css={REFERENCE_CODE_RESET_CSS}>
+    <Code fontFamily="reference.mono" color={color} style={REFERENCE_CODE_RESET_STYLE}>
       {children}
     </Code>
   )

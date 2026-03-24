@@ -25,7 +25,7 @@ export async function installPackagesTs(
 
   for (const pkg of packages) {
     const targetDir = getPackageDir(outDir, pkg.name)
-    await installPackageTs(cliDir, cliDirForBuild, targetDir, pkg)
+    await installPackageTs(cliDir, cliDirForBuild, cwd, targetDir, pkg)
   }
 
   const systemDir = getPackageDir(outDir, '@reference-ui/system')

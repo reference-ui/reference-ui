@@ -1,4 +1,4 @@
-import type { ConditionalValue } from '../system/styled/types'
+import type { ConditionalValue } from '@reference-ui/styled/types'
 
 /**
  * Values for style-related props: plain `T` or the backend’s conditional form
