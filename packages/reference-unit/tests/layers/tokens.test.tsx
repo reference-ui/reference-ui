@@ -45,7 +45,7 @@ function injectLayerLibCss(): void {
   const p = getLayerLibCssPath()
   if (!p)
     throw new Error(
-      `Layer library CSS not found. Tried: ${layerLibCssCandidates.join(', ')}`,
+      `Layer library CSS not found. Tried: ${layerLibCssCandidates.join(', ')}`
     )
   const style = document.createElement('style')
   style.setAttribute('data-layer-library', '')
@@ -61,16 +61,18 @@ beforeAll(() => {
 describe('layer-private token isolation', () => {
   it('consumer primitive does not resolve a guessed private layer token by name', () => {
     render(
+      // Not a ColorToken — we assert at runtime that guessed private names do not resolve.
+      // @ts-expect-error Token is intentionally invalid for this case (see test title).
       <Div data-testid="isolated-div" bg="layerPrivateAccent" padding="2r">
         No background expected
-      </Div>,
+      </Div>
     )
     const el = screen.getByTestId('isolated-div')
     expectNotResolvedRgb(
       el,
       'backgroundColor',
       layerPrivateAccentRgb,
-      'consumer primitive should not resolve guessed private layer token',
+      'consumer primitive should not resolve guessed private layer token'
     )
   })
 })
@@ -79,14 +81,19 @@ describe('layer-authored markup keeps access to private tokens', () => {
   it('layered component resolves its own private token when library CSS is loaded', () => {
     if (!getLayerLibCssPath()) {
       throw new Error(
-        `Layer library CSS not found. Tried: ${layerLibCssCandidates.join(', ')}`,
+        `Layer library CSS not found. Tried: ${layerLibCssCandidates.join(', ')}`
       )
     }
     injectLayerLibCss()
     render(<LayerPrivateDemo />)
 
     const el = screen.getByTestId('layer-private-demo')
-    expectResolvedRgb(el, 'backgroundColor', layerPrivateAccentRgb, 'layered component resolves its private token')
+    expectResolvedRgb(
+      el,
+      'backgroundColor',
+      layerPrivateAccentRgb,
+      'layered component resolves its private token'
+    )
   })
 })
 
@@ -95,20 +102,20 @@ describe('layered public tokens available to consumer primitives', () => {
     render(
       <Div data-testid="layers-bg-light" bg="lightDarkDemoBg" color="lightDarkDemoText">
         Light mode
-      </Div>,
+      </Div>
     )
     const el = screen.getByTestId('layers-bg-light')
     expectResolvedRgb(
       el,
       'backgroundColor',
       lightDarkDemoBgLightRgb,
-      'consumer primitive resolves layered public background token',
+      'consumer primitive resolves layered public background token'
     )
     expectResolvedRgb(
       el,
       'color',
       lightDarkDemoTextLightRgb,
-      'consumer primitive resolves layered public text token',
+      'consumer primitive resolves layered public text token'
     )
   })
 

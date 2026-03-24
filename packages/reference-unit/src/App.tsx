@@ -6,7 +6,7 @@ export default function App() {
     <Div padding="2rem">
       <h1>Reference UI - React First</h1>
       <Div marginTop="2rem">
-        <Div padding="10r" bg="green.500">
+        <Div padding="10r" bg="referenceUnitToken">
           Hello
         </Div>
       </Div>
