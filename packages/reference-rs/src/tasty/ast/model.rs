@@ -15,6 +15,8 @@ pub(crate) struct ParsedFileAst {
     pub(crate) import_bindings: BTreeMap<String, ImportBinding>,
     pub(crate) value_bindings: BTreeMap<String, TypeRef>,
     pub(crate) export_bindings: BTreeMap<String, String>,
+    /// For `export { X } from './m'`, maps the specifier local name → (target file id, symbol name in target).
+    pub(crate) reexport_target: BTreeMap<String, (String, String)>,
     pub(crate) exports: Vec<SymbolShell>,
 }
 

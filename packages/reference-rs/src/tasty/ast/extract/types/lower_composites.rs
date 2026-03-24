@@ -156,10 +156,120 @@ impl<'a> LoweringContext<'a> {
         &self,
         template: &oxc_ast::ast::TSTemplateLiteralType<'_>,
     ) -> TypeRef {
+        let parts = self.lower_template_literal_parts(template);
+        
+        // Try to resolve simple template literals with unions to actual unions
+        if let Some(resolved_union) = self.resolve_template_literal_to_union(&parts) {
+            return resolved_union;
+        }
+        
         TypeRef::TemplateLiteral {
-            parts: self.lower_template_literal_parts(template),
+            parts,
             resolved: None,
         }
+    }
+    
+    /// Try to resolve a template literal to a union when possible
+    /// For simple cases like `/${'users' | 'posts'}/${'list' | 'detail'}` -> `'/users/list' | '/users/detail' | '/posts/list' | '/posts/detail'`
+    fn resolve_template_literal_to_union(&self, parts: &[crate::tasty::model::TemplateLiteralPart]) -> Option<TypeRef> {
+        // Collect all the string parts and type parts
+        let mut string_parts = Vec::new();
+        let mut type_parts = Vec::new();
+        
+        for part in parts {
+            match part {
+                crate::tasty::model::TemplateLiteralPart::Text { value } => {
+                    string_parts.push(value.clone());
+                }
+                crate::tasty::model::TemplateLiteralPart::Type { value } => {
+                    type_parts.push(value.clone());
+                }
+            }
+        }
+        
+        // If we have no type parts, this is just a literal string
+        if type_parts.is_empty() {
+            return Some(TypeRef::Literal {
+                value: string_parts.join(""),
+            });
+        }
+        
+        // Try to resolve each type part to a union of literals
+        let mut resolved_type_parts = Vec::new();
+        for type_part in &type_parts {
+            if let TypeRef::Union { types } = type_part {
+                // Check if all union members are literals
+                let literal_strings: Vec<String> = types.iter()
+                    .filter_map(|t| {
+                        if let TypeRef::Literal { value } = t {
+                            Some(value.clone())
+                        } else {
+                            None
+                        }
+                    })
+                    .collect();
+                
+                // If all union members are string literals, we can use them
+                if literal_strings.len() == types.len() {
+                    resolved_type_parts.push(literal_strings);
+                } else {
+                    return None; // Can't resolve this complex case
+                }
+            } else if let TypeRef::Literal { value } = type_part {
+                resolved_type_parts.push(vec![value.clone()]);
+            } else {
+                return None; // Can't resolve this complex case
+            }
+        }
+        
+        // Generate all combinations
+        let first_combination = vec!["".to_string(); resolved_type_parts.len()];
+        let combinations = self.generate_template_combinations(&resolved_type_parts, &string_parts, first_combination);
+        
+        // Convert to union of literals
+        let union_types: Vec<TypeRef> = combinations
+            .into_iter()
+            .map(|combo| TypeRef::Literal { value: combo })
+            .collect();
+        
+        if union_types.len() == 1 {
+            Some(union_types.into_iter().next().unwrap())
+        } else {
+            Some(TypeRef::Union { types: union_types })
+        }
+    }
+    
+    fn generate_template_combinations(
+        &self,
+        resolved_type_parts: &[Vec<String>],
+        string_parts: &[String],
+        current_combinations: Vec<String>,
+    ) -> Vec<String> {
+        if resolved_type_parts.is_empty() {
+            return current_combinations;
+        }
+        
+        let mut new_combinations = Vec::new();
+        let (current_type_parts, remaining_type_parts) = resolved_type_parts.split_at(1);
+        let (current_string_part, remaining_string_parts) = string_parts.split_at(1);
+        
+        for combination in current_combinations {
+            for type_value in &current_type_parts[0] {
+                let new_combination = format!("{}{}{}", combination, type_value, current_string_part[0]);
+                if remaining_type_parts.is_empty() {
+                    new_combinations.push(new_combination);
+                } else {
+                    let sub_combinations = self.generate_template_combinations(
+                        remaining_type_parts,
+                        remaining_string_parts,
+                        vec![new_combination],
+                    );
+                    new_combinations.extend(sub_combinations);
+                }
+            }
+        }
+        
+        new_combinations
     }
 
     pub(super) fn lower_tuple_element(&self, element: &TSTupleElement<'_>) -> TupleElement {

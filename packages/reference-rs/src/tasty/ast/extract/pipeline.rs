@@ -64,6 +64,7 @@ fn extract_file(
         import_bindings: bindings.import_bindings,
         value_bindings: bindings.value_bindings,
         export_bindings: bindings.export_bindings,
+        reexport_target: bindings.reexport_target,
         exports: bindings.exports,
     }
 }
@@ -73,6 +74,7 @@ struct FileBindings {
     import_bindings: BTreeMap<String, ImportBinding>,
     value_bindings: BTreeMap<String, TypeRef>,
     export_bindings: BTreeMap<String, String>,
+    reexport_target: BTreeMap<String, (String, String)>,
     exports: Vec<SymbolShell>,
 }
 
@@ -108,6 +110,7 @@ impl FileBindings {
             comments,
             &mut self.import_bindings,
             &mut self.export_bindings,
+            &mut self.reexport_target,
             &mut self.exports,
         );
     }

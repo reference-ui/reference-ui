@@ -14,6 +14,7 @@ use super::super::module_bindings::{
 use super::super::symbols::{push_interface_shell, push_type_alias_shell};
 use super::super::ExtractionContext;
 use crate::tasty::ast::model::{ImportBinding, SymbolShell};
+use crate::tasty::model::{TsSymbolKind, TypeRef};
 use crate::tasty::scanner::ScannedFile;
 
 pub(crate) fn exports_from_statement(
@@ -24,6 +25,7 @@ pub(crate) fn exports_from_statement(
     comments: &[oxc_ast::ast::Comment],
     import_bindings: &mut BTreeMap<String, ImportBinding>,
     export_bindings: &mut BTreeMap<String, String>,
+    reexport_target: &mut BTreeMap<String, (String, String)>,
     exports: &mut Vec<SymbolShell>,
 ) {
     collect_named_export_statement(
@@ -34,8 +36,12 @@ pub(crate) fn exports_from_statement(
         comments,
         import_bindings,
         export_bindings,
+        reexport_target,
         exports,
     );
+
+    // Handle `export * as NS from './module'` (namespace re-exports)
+    collect_star_as_export(scanned_file, statement, export_bindings, exports);
 
     let ctx = ExtractionContext {
         source: &scanned_file.source,
@@ -56,13 +62,14 @@ pub(crate) fn exports_from_statement(
 }
 
 fn collect_named_export_statement(
-    _root_dir: &Path,
-    _file_id_set: &std::collections::BTreeSet<String>,
+    root_dir: &Path,
+    file_id_set: &std::collections::BTreeSet<String>,
     scanned_file: &ScannedFile,
     statement: &Statement<'_>,
     comments: &[oxc_ast::ast::Comment],
     import_bindings: &mut BTreeMap<String, ImportBinding>,
     export_bindings: &mut BTreeMap<String, String>,
+    reexport_target: &mut BTreeMap<String, (String, String)>,
     exports: &mut Vec<SymbolShell>,
 ) {
     let Statement::ExportNamedDeclaration(export_decl) = statement else {
@@ -70,7 +77,15 @@ fn collect_named_export_statement(
     };
 
     if export_decl.declaration.is_none() {
-        record_named_reexports(export_decl, scanned_file.source.as_str(), export_bindings, exports, &scanned_file.file_id);
+        record_named_reexports(
+            export_decl,
+            scanned_file.source.as_str(),
+            export_bindings,
+            reexport_target,
+            root_dir,
+            &scanned_file.file_id,
+            file_id_set,
+        );
         return;
     }
 
@@ -87,8 +102,58 @@ fn collect_named_export_statement(
         &ctx,
         export_decl,
         export_bindings,
+        reexport_target,
+        root_dir,
+        file_id_set,
         exports,
     );
+}
+
+fn collect_star_as_export(
+    scanned_file: &ScannedFile,
+    statement: &Statement<'_>,
+    export_bindings: &mut BTreeMap<String, String>,
+    exports: &mut Vec<SymbolShell>,
+) {
+    let Statement::ExportAllDeclaration(export_all) = statement else {
+        return;
+    };
+
+    // `export * as NS from './module'` — named namespace re-export
+    let Some(ref exported) = export_all.exported else {
+        // `export * from './module'` — bare star re-export, handled elsewhere
+        return;
+    };
+
+    let source_raw = &scanned_file.source
+        [export_all.source.span.start as usize..export_all.source.span.end as usize];
+    let source_module = source_raw.trim_matches('"').trim_matches('\'');
+    let name = match exported {
+        oxc_ast::ast::ModuleExportName::IdentifierName(id) => id.name.to_string(),
+        oxc_ast::ast::ModuleExportName::IdentifierReference(id) => id.name.to_string(),
+        oxc_ast::ast::ModuleExportName::StringLiteral(s) => s.value.to_string(),
+    };
+
+    // Register a synthetic type-alias symbol for the namespace
+    let symbol = SymbolShell {
+        id: format!("{}::{}", scanned_file.file_id, name),
+        name: name.clone(),
+        kind: TsSymbolKind::TypeAlias,
+        exported: true,
+        description: Some(format!("Namespace re-export from '{}'", source_module)),
+        description_raw: None,
+        jsdoc: None,
+        type_parameters: vec![],
+        defined_members: vec![],
+        extends: vec![],
+        underlying: Some(TypeRef::Raw {
+            summary: format!("namespace:{}", source_module),
+        }),
+        references: vec![],
+    };
+
+    exports.push(symbol);
+    export_bindings.insert(name.clone(), name.clone());
 }
 
 fn collect_user_export_statement(

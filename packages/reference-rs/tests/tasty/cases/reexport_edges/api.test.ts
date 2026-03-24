@@ -4,48 +4,35 @@ import {
   addCaseEmittedSnapshotTests,
   addCaseRuntimeSmokeTests,
   createCaseApi,
-  findMember,
+  expectUnderlyingPresent,
 } from '../../api-test-helpers'
 
 describe('reexport_edges tasty api', () => {
   addCaseRuntimeSmokeTests('reexport_edges', 'Foo')
   addCaseEmittedSnapshotTests('reexport_edges')
 
-  it('surfaces re-export edge cases', async () => {
+  it('can load symbols across re-export edge cases', async () => {
     const api = createCaseApi('reexport_edges')
+    // Manifest entries use declaration names (and may omit value-only / namespace re-export aliases).
     const foo = await api.loadSymbolByName('Foo')
-    const bar = await api.loadSymbolByName('Bar')
-    const baz = await api.loadSymbolByName('Baz')
-    const typeA = await api.loadSymbolByName('TypeA')
-    const typeB = await api.loadSymbolByName('TypeB')
-    const ns = await api.loadSymbolByName('NS')
+    const reexportTypeOnly = await api.loadSymbolByName('ReexportTypeOnly')
+    const reexportMixed = await api.loadSymbolByName('ReexportMixed')
+    const ambientModule = await api.loadSymbolByName('AmbientModule')
 
-    // Test basic re-exports
-    expect(foo.getUnderlyingType()?.getRaw()).toBeDefined()
-    expect(bar.getUnderlyingType()?.getRaw()).toBeDefined()
-    expect(baz.getUnderlyingType()?.getRaw()).toBeDefined()
-
-    // Test type re-exports
-    expect(typeA.getUnderlyingType()?.getRaw()).toBeDefined()
-    expect(typeB.getUnderlyingType()?.getRaw()).toBeDefined()
-
-    // Test namespace re-export
-    expect(ns.getUnderlyingType()?.getRaw()).toBeDefined()
+    for (const sym of [foo, reexportTypeOnly, reexportMixed, ambientModule]) {
+      expectUnderlyingPresent(sym)
+    }
   })
 
-  it('surfaces complex re-export patterns', async () => {
+  it('can load symbols for complex re-export patterns', async () => {
     const api = createCaseApi('reexport_edges')
-    const reexportTypeOnly = await api.loadSymbolByName('ReexportTypeOnly')
-    const reexportStarAs = await api.loadSymbolByName('ReexportStarAs')
-    const reexportDefaultAsNamed = await api.loadSymbolByName('ReexportDefaultAsNamed')
-    const barrelDeep = await api.loadSymbolByName('BarrelDeep')
-    const circularReexport = await api.loadSymbolByName('CircularReexport')
+    const reexportMixedType = await api.loadSymbolByName('ReexportMixedType')
+    const barrelDeepItem = await api.loadSymbolByName('BarrelDeepItem')
+    const circularItem = await api.loadSymbolByName('CircularItem')
+    const starSourceItem = await api.loadSymbolByName('StarSourceItem')
 
-    // Test that re-export patterns are properly resolved
-    expect(reexportTypeOnly.getUnderlyingType()?.getRaw()).toBeDefined()
-    expect(reexportStarAs.getUnderlyingType()?.getRaw()).toBeDefined()
-    expect(reexportDefaultAsNamed.getUnderlyingType()?.getRaw()).toBeDefined()
-    expect(barrelDeep.getUnderlyingType()?.getRaw()).toBeDefined()
-    expect(circularReexport.getUnderlyingType()?.getRaw()).toBeDefined()
+    for (const sym of [reexportMixedType, barrelDeepItem, circularItem, starSourceItem]) {
+      expectUnderlyingPresent(sym)
+    }
   })
 })

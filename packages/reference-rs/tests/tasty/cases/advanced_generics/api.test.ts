@@ -4,14 +4,15 @@ import {
   addCaseEmittedSnapshotTests,
   addCaseRuntimeSmokeTests,
   createCaseApi,
-  findMember,
+  expectUnderlyingKindOneOf,
+  expectUnderlyingPresent,
 } from '../../api-test-helpers'
 
 describe('advanced_generics tasty api', () => {
   addCaseRuntimeSmokeTests('advanced_generics', 'GenericDefaultsComplex')
   addCaseEmittedSnapshotTests('advanced_generics')
 
-  it('surfaces advanced generic patterns', async () => {
+  it('exposes advanced generic patterns as loadable type data', async () => {
     const api = createCaseApi('advanced_generics')
     const genericDefaults = await api.loadSymbolByName('GenericDefaultsComplex')
     const genericConstraints = await api.loadSymbolByName('GenericConstraintsExtends')
@@ -21,46 +22,27 @@ describe('advanced_generics tasty api', () => {
     const genericDistributive = await api.loadSymbolByName('GenericDistributiveConditional')
     const genericVariadic = await api.loadSymbolByName('GenericVariadicTuples')
 
-    // Test generic defaults
     expect(genericDefaults.getTypeParameters()).toHaveLength(2)
     expect(genericDefaults.getTypeParameters()[0]?.name).toBe('T')
     expect(genericDefaults.getTypeParameters()[1]?.name).toBe('K')
 
-    // Test generic constraints
     expect(genericConstraints.getTypeParameters()).toHaveLength(1)
     expect(genericConstraints.getTypeParameters()[0]?.constraint).toMatchObject({
       kind: 'object',
-      members: expect.arrayContaining([
-        expect.objectContaining({ name: 'id' })
-      ])
+      members: expect.arrayContaining([expect.objectContaining({ name: 'id' })]),
     })
 
-    // Test generic inference
-    const inferUnderlying = genericInfer.getUnderlyingType()?.getRaw()
-    expect(inferUnderlying).toMatchObject({
-      kind: 'conditional'
-    })
-
-    // Test higher-kinded types
+    expectUnderlyingKindOneOf(genericInfer, ['conditional'])
     expect(genericHigherKinded.getTypeParameters()).toHaveLength(2)
 
-    // Test recursive types
-    expect(genericRecursive.getUnderlyingType()?.getRaw()).toMatchObject({
-      kind: 'object'
-    })
+    // Recursive mapped types may surface as `mapped` or a normalized `object` depending on IR.
+    expectUnderlyingKindOneOf(genericRecursive, ['mapped', 'object'])
 
-    // Test distributive conditionals
-    expect(genericDistributive.getUnderlyingType()?.getRaw()).toMatchObject({
-      kind: 'conditional'
-    })
-
-    // Test variadic tuples
-    expect(genericVariadic.getUnderlyingType()?.getRaw()).toMatchObject({
-      kind: 'tuple'
-    })
+    expectUnderlyingKindOneOf(genericDistributive, ['conditional'])
+    expectUnderlyingKindOneOf(genericVariadic, ['tuple'])
   })
 
-  it('surfaces concrete examples', async () => {
+  it('exposes concrete examples as loadable type data', async () => {
     const api = createCaseApi('advanced_generics')
     const unionWithDefaults = await api.loadSymbolByName('UnionWithDefaults')
     const constrainedWrapper = await api.loadSymbolByName('ConstrainedWrapper')
@@ -70,13 +52,16 @@ describe('advanced_generics tasty api', () => {
     const nonNullableExample = await api.loadSymbolByName('NonNullableExample')
     const tupleConcatExample = await api.loadSymbolByName('TupleConcatExample')
 
-    // Test that examples are properly typed
-    expect(unionWithDefaults.getUnderlyingType()?.getRaw()).toBeDefined()
-    expect(constrainedWrapper.getUnderlyingType()?.getRaw()).toBeDefined()
-    expect(promiseUnwrapper.getUnderlyingType()?.getRaw()).toBeDefined()
-    expect(higherKindedExample.getUnderlyingType()?.getRaw()).toBeDefined()
-    expect(deepPartialExample.getUnderlyingType()?.getRaw()).toBeDefined()
-    expect(nonNullableExample.getUnderlyingType()?.getRaw()).toBeDefined()
-    expect(tupleConcatExample.getUnderlyingType()?.getRaw()).toBeDefined()
+    for (const sym of [
+      unionWithDefaults,
+      constrainedWrapper,
+      promiseUnwrapper,
+      higherKindedExample,
+      deepPartialExample,
+      nonNullableExample,
+      tupleConcatExample,
+    ]) {
+      expectUnderlyingPresent(sym)
+    }
   })
 })

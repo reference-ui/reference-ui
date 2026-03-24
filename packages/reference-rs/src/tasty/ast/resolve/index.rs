@@ -67,17 +67,15 @@ fn build_export_index(
     parsed_files
         .iter()
         .flat_map(|parsed| {
-            parsed
-                .export_bindings
-                .iter()
-                .filter_map(|(export_name, local_name)| {
-                    resolve_symbol_id(symbol_index, &parsed.file_id, local_name).map(|symbol_id| {
+            parsed.export_bindings.iter().filter_map(|(export_name, local_name)| {
+                resolve_symbol_id(symbol_index, &parsed.file_id, local_name, &parsed.reexport_target)
+                    .map(|symbol_id| {
                         (
                             file_symbol_key(&parsed.file_id, export_name),
-                            symbol_id.clone(),
+                            symbol_id,
                         )
                     })
-                })
+            })
         })
         .collect()
 }
@@ -97,7 +95,12 @@ fn resolve_file(
     export_index: &BTreeMap<(String, String), String>,
 ) -> (String, String, TsFile, ExportMap, Vec<TsSymbol>) {
     let ts_file = ts_file_from_parsed(&parsed);
-    let file_exports = build_file_exports(&parsed.file_id, &parsed.export_bindings, symbol_index);
+    let file_exports = build_file_exports(
+        &parsed.file_id,
+        &parsed.export_bindings,
+        &parsed.reexport_target,
+        symbol_index,
+    );
     let parsed_view = parsed.clone();
     let resolved_symbols = parsed
         .exports
@@ -125,28 +128,29 @@ fn ts_file_from_parsed(parsed: &ParsedFileAst) -> TsFile {
 fn build_file_exports(
     file_id: &str,
     export_bindings: &BTreeMap<String, String>,
+    reexport_target: &BTreeMap<String, (String, String)>,
     symbol_index: &BTreeMap<(String, String), String>,
 ) -> ExportMap {
     export_bindings
         .iter()
         .filter_map(|(export_name, local_name)| {
-            resolve_symbol_id(symbol_index, file_id, local_name)
-                .map(|symbol_id| (export_name.clone(), symbol_id.clone()))
+            resolve_symbol_id(symbol_index, file_id, local_name, reexport_target)
+                .map(|symbol_id| (export_name.clone(), symbol_id))
         })
         .collect()
 }
 
-fn resolve_symbol_id<'a>(
-    symbol_index: &'a BTreeMap<(String, String), String>,
+fn resolve_symbol_id(
+    symbol_index: &BTreeMap<(String, String), String>,
     file_id: &str,
     local_name: &str,
-) -> Option<&'a String> {
-    // Handle star exports: "*./module" pattern
-    if local_name.starts_with('*') {
-        // For star exports, we can't resolve to a specific symbol
-        // This should be handled at a higher level during symbol resolution
-        return None;
+    reexport_target: &BTreeMap<String, (String, String)>,
+) -> Option<String> {
+    if let Some(id) = symbol_index.get(&file_symbol_key(file_id, local_name)) {
+        return Some(id.clone());
     }
-    
-    symbol_index.get(&file_symbol_key(file_id, local_name))
+    let (target_file, remote_name) = reexport_target.get(local_name)?;
+    symbol_index
+        .get(&file_symbol_key(target_file, remote_name))
+        .cloned()
 }

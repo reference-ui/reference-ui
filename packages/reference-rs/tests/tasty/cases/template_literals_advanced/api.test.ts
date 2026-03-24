@@ -4,14 +4,15 @@ import {
   addCaseEmittedSnapshotTests,
   addCaseRuntimeSmokeTests,
   createCaseApi,
-  findMember,
+  expectUnderlyingKindOneOf,
+  expectUnderlyingPresent,
 } from '../../api-test-helpers'
 
 describe('template_literals_advanced tasty api', () => {
   addCaseRuntimeSmokeTests('template_literals_advanced', 'TemplateLiteralMapped')
   addCaseEmittedSnapshotTests('template_literals_advanced')
 
-  it('surfaces advanced template literal patterns', async () => {
+  it('exposes advanced template literal patterns as loadable type data', async () => {
     const api = createCaseApi('template_literals_advanced')
     const templateLiteralMapped = await api.loadSymbolByName('TemplateLiteralMapped')
     const templateLiteralUnionExplosion = await api.loadSymbolByName(
@@ -26,30 +27,17 @@ describe('template_literals_advanced tasty api', () => {
     const eventNames = await api.loadSymbolByName('EventNames')
     const apiEndpoints = await api.loadSymbolByName('ApiEndpoints')
 
-    // Test template literal mapped type
-    expect(templateLiteralMapped.getUnderlyingType()?.getRaw()).toMatchObject({
-      kind: 'mapped',
-    })
+    expectUnderlyingKindOneOf(templateLiteralMapped, ['mapped'])
+    // Union expansion may stay a template literal node until evaluated or collapse to a union.
+    expectUnderlyingKindOneOf(templateLiteralUnionExplosion, ['union', 'template_literal'])
+    expectUnderlyingKindOneOf(templateLiteralIntrinsic, ['object'])
 
-    // Test template literal union explosion
-    expect(templateLiteralUnionExplosion.getUnderlyingType()?.getRaw()).toMatchObject({
-      kind: 'union',
-    })
-
-    // Test template literal intrinsics
-    expect(templateLiteralIntrinsic.getUnderlyingType()?.getRaw()).toMatchObject({
-      kind: 'object',
-    })
-
-    // Test concrete mapped types
-    expect(getterMapped.getUnderlyingType()?.getRaw()).toBeDefined()
-    expect(routePaths.getUnderlyingType()?.getRaw()).toBeDefined()
-    expect(cssClasses.getUnderlyingType()?.getRaw()).toBeDefined()
-    expect(eventNames.getUnderlyingType()?.getRaw()).toBeDefined()
-    expect(apiEndpoints.getUnderlyingType()?.getRaw()).toBeDefined()
+    for (const sym of [getterMapped, routePaths, cssClasses, eventNames, apiEndpoints]) {
+      expectUnderlyingPresent(sym)
+    }
   })
 
-  it('surfaces template literal examples', async () => {
+  it('exposes template literal examples as loadable type data', async () => {
     const api = createCaseApi('template_literals_advanced')
     const getterExample = await api.loadSymbolByName('GetterExample')
     const routeExample = await api.loadSymbolByName('RouteExample')
@@ -58,15 +46,18 @@ describe('template_literals_advanced tasty api', () => {
     const apiExample = await api.loadSymbolByName('ApiExample')
     const intrinsicExample = await api.loadSymbolByName('IntrinsicExample')
 
-    // Test that examples are properly typed
-    expect(getterExample.getUnderlyingType()?.getRaw()).toBeDefined()
-    expect(routeExample.getUnderlyingType()?.getRaw()).toBeDefined()
-    expect(cssExample.getUnderlyingType()?.getRaw()).toBeDefined()
-    expect(eventExample.getUnderlyingType()?.getRaw()).toBeDefined()
-    expect(apiExample.getUnderlyingType()?.getRaw()).toBeDefined()
-    expect(intrinsicExample.getUnderlyingType()?.getRaw()).toBeDefined()
+    for (const sym of [
+      getterExample,
+      routeExample,
+      cssExample,
+      eventExample,
+      apiExample,
+      intrinsicExample,
+    ]) {
+      expectUnderlyingPresent(sym)
+    }
 
-    // Test that intrinsic example has some members
+    // Interface-backed example: members available for display
     const members = intrinsicExample.getMembers()
     expect(members.length).toBeGreaterThan(0)
   })

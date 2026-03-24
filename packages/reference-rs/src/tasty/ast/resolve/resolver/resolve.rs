@@ -7,7 +7,7 @@ use crate::tasty::model::{
     TemplateLiteralPart, TsTypeParameter, TupleElement, TypeOperatorKind, TypeRef,
 };
 use crate::tasty::shared::type_ref_map::{map_type_ref, TypeRefMap};
-use crate::tasty::shared::type_ref_util::reference_lookup_name;
+use crate::tasty::shared::type_ref_util::{reference_lookup_name, resolve_object_member_type};
 
 impl<'a> Resolver<'a> {
     pub(super) fn resolve_type_ref(&self, type_ref: TypeRef) -> TypeRef {
@@ -22,26 +22,16 @@ impl<'a> Resolver<'a> {
         source_module: Option<String>,
         type_arguments: Option<Vec<TypeRef>>,
     ) -> TypeRef {
-        let resolved_args = type_arguments.map(|args| self.resolve_type_refs(args));
-
-        if target_id.is_some() {
-            return TypeRef::Reference {
-                name,
-                target_id,
-                source_module,
-                type_arguments: resolved_args,
-            };
-        }
-
-        let resolved_target_id = self
-            .resolve_import_target_id(&name)
-            .or_else(|| self.resolve_local_target_id(&name));
-
+        let type_arguments = type_arguments.map(|args| self.resolve_type_refs(args));
+        let target_id = target_id.or_else(|| {
+            self.resolve_import_target_id(&name)
+                .or_else(|| self.resolve_local_target_id(&name))
+        });
         TypeRef::Reference {
             name,
-            target_id: resolved_target_id,
+            target_id,
             source_module,
-            type_arguments: resolved_args,
+            type_arguments,
         }
     }
 
@@ -78,8 +68,7 @@ impl<'a> Resolver<'a> {
         let mut current = self.parsed.value_bindings.get(first)?.clone();
 
         for segment in path {
-            current =
-                crate::tasty::shared::type_ref_util::resolve_object_member_type(&current, segment)?;
+            current = resolve_object_member_type(&current, segment)?;
         }
 
         Some(current)
@@ -125,6 +114,12 @@ impl TypeRefMap for ResolverTypeRefMap<'_, '_> {
         target: TypeRef,
         _resolved: Option<Box<TypeRef>>,
     ) -> TypeRef {
+        if operator == TypeOperatorKind::Readonly {
+            if let TypeRef::Tuple { elements } = target {
+                return tuple_with_readonly_elements(elements);
+            }
+        }
+
         let resolved = self
             .resolver
             .resolve_type_operator_result(operator, &target)
@@ -181,11 +176,13 @@ impl TypeRefMap for ResolverTypeRefMap<'_, '_> {
         parts: Vec<TemplateLiteralPart>,
         _resolved: Option<Box<TypeRef>>,
     ) -> TypeRef {
-        let resolved = self
-            .resolver
-            .resolve_template_literal_result(&parts)
-            .map(Box::new);
-        TypeRef::TemplateLiteral { parts, resolved }
+        if let Some(resolved) = self.resolver.resolve_template_literal_result(&parts) {
+            return resolved;
+        }
+        TypeRef::TemplateLiteral {
+            parts,
+            resolved: None,
+        }
     }
 
     fn map_type_parameter(&mut self, param: TsTypeParameter) -> TsTypeParameter {
@@ -197,5 +194,18 @@ impl TypeRefMap for ResolverTypeRefMap<'_, '_> {
             element: map_type_ref(self, element.element),
             ..element
         }
+    }
+}
+
+/// `readonly` over a tuple type → same tuple with each element marked `readonly` (matches extract).
+fn tuple_with_readonly_elements(elements: Vec<TupleElement>) -> TypeRef {
+    TypeRef::Tuple {
+        elements: elements
+            .into_iter()
+            .map(|element| TupleElement {
+                readonly: true,
+                ..element
+            })
+            .collect(),
     }
 }
