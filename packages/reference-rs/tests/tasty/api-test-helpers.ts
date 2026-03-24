@@ -12,6 +12,8 @@ import {
   type TastySymbol,
 } from '../../js/tasty/index'
 
+export type { CreateTastyApiOptions, TastyApi, TastyMember, TastySymbol } from '../../js/tasty/index'
+
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const packageDir = join(__dirname, '..', '..')
 

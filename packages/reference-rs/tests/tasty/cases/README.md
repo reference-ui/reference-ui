@@ -22,6 +22,8 @@ So:
 - `style_props_projection/` → domain-shaped `ReferenceSystemStyleObject`-style projection over `Nested`, `Omit`, and pattern props.
 - `unknown_complex/` → mapped and conditional types (structural, with nested unsupported pieces still emitted as Raw when needed).
 - `audit_alignment/` → audit-driven coverage for intentionally raw variants (`import()`, `infer`, `type predicate`, `this`) plus their surrounding structured shapes.
+- `interface_extends_utility` → `extends Omit<…>` heritage plus manifest-backed child `extends` chains.
+- `interface_extends_utilities` → broad built-in utility heritage: `Omit`, `Pick`, `Partial`, `Required`, `Record`, `Readonly`, multiple heritage clauses, nested `Omit<Pick<…>>`, union omit keys, and generic key parameters.
 
 Add a new case folder to add a new scenario. The test suite will automatically
 scan `input/` and write `output/manifest.js`, `output/chunks/*`, and

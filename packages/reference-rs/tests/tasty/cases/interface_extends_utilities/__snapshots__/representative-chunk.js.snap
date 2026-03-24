@@ -1,0 +1,34 @@
+const symbol = {
+  id: "_s0",
+  name: "AMulti",
+  library: "user",
+  description: "--- extends_multiple_utility ---",
+  descriptionRaw: "--- extends_multiple_utility ---",
+  members:   [
+    {
+      name: "x",
+      optional: false,
+      readonly: false,
+      kind: "property",
+      type:   {
+        kind: "intrinsic",
+        name: "string"
+      }
+    },
+    {
+      name: "y",
+      optional: false,
+      readonly: false,
+      kind: "property",
+      type:   {
+        kind: "intrinsic",
+        name: "number"
+      }
+    }
+  ],
+  extends: [],
+  types: []
+};
+export { symbol as _s0 };
+export default symbol;
+
