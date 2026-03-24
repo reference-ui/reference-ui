@@ -85,10 +85,20 @@ fn resolved_module_from_file_id(file_id: String) -> ResolvedModule {
 
 fn should_skip_user_external_import(
     is_user_file: bool,
-    reexport_specifiers: &BTreeSet<String>,
+    _reexport_specifiers: &BTreeSet<String>,
     source_module: &str,
 ) -> bool {
-    is_user_file && !reexport_specifiers.contains(source_module)
+    // For reference documentation, we want to resolve external types that are part of the public API
+    // The old logic was too restrictive - it prevented showing SystemStyleObject members
+    // Now we allow all external imports and filter at display time instead
+    
+    // Only skip if it's clearly a dev dependency or utility that's not part of the public API
+    let is_dev_dependency = source_module.starts_with("@types/") 
+        || source_module.starts_with("vitest")
+        || source_module.starts_with("@vitest")
+        || source_module.starts_with("test");
+    
+    is_user_file && is_dev_dependency
 }
 
 fn resolve_external_import_in_current_library(

@@ -163,7 +163,12 @@ fn collect_user_export_statement(
     export_bindings: &mut BTreeMap<String, String>,
     exports: &mut Vec<SymbolShell>,
 ) {
-    if scanned_file.library != USER_LIBRARY_NAME {
+    // Allow both user files and reference-ui styled packages for symbol extraction
+    let is_allowed_library = scanned_file.library == USER_LIBRARY_NAME 
+        || scanned_file.library.starts_with("@reference-ui/styled")
+        || scanned_file.library.starts_with("@reference-ui/");
+    
+    if !is_allowed_library {
         return;
     }
 
@@ -186,7 +191,12 @@ fn collect_user_type_shell(
     statement: &Statement<'_>,
     exports: &mut Vec<SymbolShell>,
 ) {
-    if scanned_file.library != USER_LIBRARY_NAME {
+    // Allow both user files and reference-ui styled packages for symbol extraction
+    let is_allowed_library = scanned_file.library == USER_LIBRARY_NAME 
+        || scanned_file.library.starts_with("@reference-ui/styled")
+        || scanned_file.library.starts_with("@reference-ui/");
+    
+    if !is_allowed_library {
         return;
     }
 

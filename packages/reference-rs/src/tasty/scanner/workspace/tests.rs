@@ -32,7 +32,7 @@ fn scan_workspace_follows_user_reexports_of_external_modules() {
 }
 
 #[test]
-fn scan_workspace_skips_user_external_imports_that_are_not_reexported() {
+fn scan_workspace_includes_user_external_imports_for_reference_docs() {
     let root = TempDir::new("scanner-workspace-import-only");
     root.write(
         "src/index.ts",
@@ -50,8 +50,11 @@ fn scan_workspace_skips_user_external_imports_that_are_not_reexported() {
     let workspace = scan_workspace(root.path(), &["src/**/*.ts".to_string()])
         .expect("workspace scan should succeed");
 
-    assert_eq!(workspace.files.len(), 1);
-    assert_eq!(workspace.files[0].file_id, "src/index.ts");
+    // With the new policy, external types are included for reference documentation
+    assert_eq!(workspace.files.len(), 2);
+    let file_ids: Vec<&str> = workspace.files.iter().map(|f| f.file_id.as_str()).collect();
+    assert!(file_ids.contains(&"src/index.ts"));
+    assert!(file_ids.contains(&"node_modules/external-lib/index.d.ts"));
 }
 
 #[test]
