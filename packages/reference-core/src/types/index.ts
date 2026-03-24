@@ -32,4 +32,9 @@ export type {
   RecipeVariantProps,
 } from './recipe'
 export type { StylePropValue } from './style-prop'
-export type { StyleProps, SystemStyleObject } from './style-props'
+export type {
+  BackendSystemStyleObject,
+  ReferenceSystemStyleObject,
+  StyleProps,
+  SystemStyleObject,
+} from './style-props'
