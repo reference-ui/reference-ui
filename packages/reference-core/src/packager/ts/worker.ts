@@ -12,28 +12,24 @@ export function hasAllBundleOutputs(
   packages: TsPackagerWorkerPayload['packages']
 ): boolean {
   const outDir = getOutDirPath(cwd)
-  return packages.length > 0 && packages.every((pkg) =>
-    existsSync(getRuntimeEntryPath(outDir, pkg.name, pkg.outFile))
+  return (
+    packages.length > 0 &&
+    packages.every(pkg => existsSync(getRuntimeEntryPath(outDir, pkg.name, pkg.outFile)))
   )
 }
 
 /**
  * Packager-ts worker – generates .d.ts from TypeScript source.
  * Global sync orchestration decides when runtime vs final declarations are
- * needed; the worker only exposes readiness, requests catch-up if runtime
- * bundle outputs already exist, and executes one requested pass at a time.
+ * needed; the worker only exposes readiness and executes one requested pass
+ * at a time.
  */
 export default async function runTsPackager(
   payload: TsPackagerWorkerPayload
 ): Promise<never> {
-  const runtimePackages = payload.packages.filter((pkg) => pkg.name !== '@reference-ui/types')
   const queue = createDtsGenerationQueue(payload)
 
   emit('packager-ts:ready', {})
-
-  if (hasAllBundleOutputs(payload.cwd, runtimePackages)) {
-    emit('packager-ts:runtime:requested', {})
-  }
 
   on('run:packager-ts', ({ completionEvent }) => {
     queue.run(completionEvent)

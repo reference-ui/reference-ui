@@ -7,17 +7,107 @@ function createPayload(watchMode: boolean): TsPackagerWorkerPayload {
     cwd: '/workspace',
     config: {} as never,
     packages: [
-      { name: '@reference-ui/react', sourceEntry: 'src/entry/react.ts', outFile: 'react.mjs' },
-      { name: '@reference-ui/system', sourceEntry: 'src/entry/system.ts', outFile: 'system.mjs' },
+      {
+        name: '@reference-ui/react',
+        sourceEntry: 'src/entry/react.ts',
+        outFile: 'react.mjs',
+      },
+      {
+        name: '@reference-ui/system',
+        sourceEntry: 'src/entry/system.ts',
+        outFile: 'system.mjs',
+      },
+      {
+        name: '@reference-ui/types',
+        sourceEntry: 'src/entry/types.ts',
+        outFile: 'types.mjs',
+      },
     ],
     watchMode,
   }
 }
 
 describe('packager/ts/run', () => {
+  it('limits runtime declaration generation to runtime packages', async () => {
+    const installPackagesTs = vi.fn().mockResolvedValue(undefined)
+    const emit = vi.fn()
+
+    vi.resetModules()
+    vi.doMock('./install', () => ({
+      installPackagesTs,
+    }))
+    vi.doMock('../../lib/event-bus', () => ({
+      emit,
+    }))
+    vi.doMock('../../lib/log', () => ({
+      log: {
+        debug: vi.fn(),
+        error: vi.fn(),
+      },
+    }))
+
+    const { runDtsGeneration } = await import('./run')
+    await runDtsGeneration(createPayload(false), 'packager-ts:runtime:complete')
+
+    expect(installPackagesTs).toHaveBeenCalledWith('/workspace', [
+      {
+        name: '@reference-ui/react',
+        sourceEntry: 'src/entry/react.ts',
+        outFile: 'react.mjs',
+      },
+      {
+        name: '@reference-ui/system',
+        sourceEntry: 'src/entry/system.ts',
+        outFile: 'system.mjs',
+      },
+    ])
+    expect(emit).toHaveBeenCalledWith('packager-ts:runtime:complete', {})
+  })
+
+  it('keeps final declaration generation on all packages', async () => {
+    const installPackagesTs = vi.fn().mockResolvedValue(undefined)
+    const emit = vi.fn()
+
+    vi.resetModules()
+    vi.doMock('./install', () => ({
+      installPackagesTs,
+    }))
+    vi.doMock('../../lib/event-bus', () => ({
+      emit,
+    }))
+    vi.doMock('../../lib/log', () => ({
+      log: {
+        debug: vi.fn(),
+        error: vi.fn(),
+      },
+    }))
+
+    const { runDtsGeneration } = await import('./run')
+    await runDtsGeneration(createPayload(false), 'packager-ts:complete')
+
+    expect(installPackagesTs).toHaveBeenCalledWith('/workspace', [
+      {
+        name: '@reference-ui/react',
+        sourceEntry: 'src/entry/react.ts',
+        outFile: 'react.mjs',
+      },
+      {
+        name: '@reference-ui/system',
+        sourceEntry: 'src/entry/system.ts',
+        outFile: 'system.mjs',
+      },
+      {
+        name: '@reference-ui/types',
+        sourceEntry: 'src/entry/types.ts',
+        outFile: 'types.mjs',
+      },
+    ])
+    expect(emit).toHaveBeenCalledWith('packager-ts:complete', {})
+  })
+
   it('serializes overlapping declaration runs', async () => {
     let resolveFirstRun: (() => void) | undefined
-    const firstRun = new Promise<void>((resolve) => {
+    const firstRun = new Promise<void>(resolve => {
       resolveFirstRun = resolve
     })
     const runGeneration = vi

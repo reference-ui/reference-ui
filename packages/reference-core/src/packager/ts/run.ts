@@ -5,6 +5,17 @@ import type { TsPackagerCompletionEvent, TsPackagerWorkerPayload } from './types
 
 const FINAL_DTS_COMPLETE_EVENT: TsPackagerCompletionEvent = 'packager-ts:complete'
 
+function getPackagesForRun(
+  payload: TsPackagerWorkerPayload,
+  completionEvent: TsPackagerCompletionEvent
+): TsPackagerWorkerPayload['packages'] {
+  if (completionEvent === 'packager-ts:runtime:complete') {
+    return payload.packages.filter(pkg => pkg.name !== '@reference-ui/types')
+  }
+
+  return payload.packages
+}
+
 interface DtsGenerationQueueOptions {
   runGeneration?: (
     payload: TsPackagerWorkerPayload,
@@ -17,7 +28,8 @@ export async function runDtsGeneration(
   payload: TsPackagerWorkerPayload,
   completionEvent: TsPackagerCompletionEvent = FINAL_DTS_COMPLETE_EVENT
 ): Promise<void> {
-  const { cwd, packages } = payload
+  const { cwd } = payload
+  const packages = getPackagesForRun(payload, completionEvent)
 
   log.debug('packager:ts', 'Generating TypeScript declarations...')
 
@@ -45,9 +57,7 @@ export function createDtsGenerationQueue(
   const { runGeneration = runDtsGeneration } = options
   let currentRun: Promise<void> = Promise.resolve()
 
-  const run = async (
-    completionEvent: TsPackagerCompletionEvent
-  ): Promise<void> => {
+  const run = async (completionEvent: TsPackagerCompletionEvent): Promise<void> => {
     currentRun = currentRun
       .catch(() => {})
       .then(() => runGeneration(payload, completionEvent))
