@@ -129,7 +129,7 @@ async function projectOmitMembers(
   if (typeArguments.length !== 2) return undefined
 
   const baseMembers = await projectTypeMembers(api, api.createTypeRef(typeArguments[0]!), context)
-  const keys = collectProjectedKeys(api.createTypeRef(typeArguments[1]!))
+  const keys = await collectProjectedKeys(api, api.createTypeRef(typeArguments[1]!), context)
   if (!baseMembers || !keys) return undefined
 
   return baseMembers.filter((member) => !keys.has(member.getName()))
@@ -143,20 +143,47 @@ async function projectPickMembers(
   if (typeArguments.length !== 2) return undefined
 
   const baseMembers = await projectTypeMembers(api, api.createTypeRef(typeArguments[0]!), context)
-  const keys = collectProjectedKeys(api.createTypeRef(typeArguments[1]!))
+  const keys = await collectProjectedKeys(api, api.createTypeRef(typeArguments[1]!), context)
   if (!baseMembers || !keys) return undefined
 
   return baseMembers.filter((member) => keys.has(member.getName()))
 }
 
-function collectProjectedKeys(typeRef: TastyTypeRef): Set<string> | undefined {
+async function collectProjectedKeys(
+  api: TastyApiRuntime,
+  typeRef: TastyTypeRef,
+  context: ProjectionContext,
+): Promise<Set<string> | undefined> {
   const concrete = getTastyResolvedType(typeRef) ?? typeRef
-  return collectProjectedKeysFromRaw(concrete.getRaw())
+  return collectProjectedKeysFromRaw(api, concrete.getRaw(), context)
 }
 
-function collectProjectedKeysFromRaw(raw: RawTastyTypeRef): Set<string> | undefined {
+async function collectProjectedKeysFromRaw(
+  api: TastyApiRuntime,
+  raw: RawTastyTypeRef,
+  context: ProjectionContext,
+): Promise<Set<string> | undefined> {
   if (isTypeReference(raw)) {
-    return undefined
+    if (context.depth > MAX_PROJECTION_DEPTH || context.visitedSymbolIds.has(raw.id)) {
+      return undefined
+    }
+
+    const manifestEntry = api.getManifestEntry(raw.id)
+    if (!manifestEntry) return undefined
+
+    const symbol = await api.loadSymbolById(raw.id)
+    const symbolRaw = symbol.getRaw()
+    if (!isTypeAliasSymbol(symbolRaw)) return undefined
+
+    const instantiated = instantiateTypeAliasDefinition(symbolRaw, raw.typeArguments)
+      ?? symbol.getUnderlyingType()?.getRaw()
+
+    if (!instantiated) return undefined
+
+    return collectProjectedKeysFromRaw(api, instantiated, {
+      visitedSymbolIds: new Set(context.visitedSymbolIds).add(raw.id),
+      depth: context.depth + 1,
+    })
   }
 
   switch (raw.kind) {
@@ -167,7 +194,7 @@ function collectProjectedKeysFromRaw(raw: RawTastyTypeRef): Set<string> | undefi
     case 'union': {
       const keys = new Set<string>()
       for (const item of raw.types) {
-        const itemKeys = collectProjectedKeysFromRaw(item)
+        const itemKeys = await collectProjectedKeysFromRaw(api, item, context)
         if (!itemKeys) return undefined
         for (const key of itemKeys) keys.add(key)
       }

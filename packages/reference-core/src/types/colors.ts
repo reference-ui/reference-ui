@@ -46,9 +46,48 @@ export const COLOR_PROP_KEYS = [
   'textDecorationColor',
   'textEmphasisColor',
   'textShadowColor',
-] as const
+] as const satisfies readonly ColorPropKeys[]
 
-export type ColorPropKeys = (typeof COLOR_PROP_KEYS)[number]
+// Keep this as an explicit union so the reference pipeline can project
+// `Omit<P, ColorPropKeys>` instead of collapsing it to `typeof CONST[number]`.
+export type ColorPropKeys =
+  | 'accentColor'
+  | 'backgroundColor'
+  | 'bg'
+  | 'bgColor'
+  | 'borderBlockColor'
+  | 'borderBlockEndColor'
+  | 'borderBlockStartColor'
+  | 'borderBottomColor'
+  | 'borderColor'
+  | 'borderEndColor'
+  | 'borderInlineColor'
+  | 'borderInlineEndColor'
+  | 'borderInlineStartColor'
+  | 'borderLeftColor'
+  | 'borderRightColor'
+  | 'borderStartColor'
+  | 'borderTopColor'
+  | 'borderXColor'
+  | 'borderYColor'
+  | 'boxShadowColor'
+  | 'caretColor'
+  | 'color'
+  | 'columnRuleColor'
+  | 'divideColor'
+  | 'fill'
+  | 'floodColor'
+  | 'focusRingColor'
+  | 'lightingColor'
+  | 'outlineColor'
+  | 'ringColor'
+  | 'scrollbarColor'
+  | 'shadowColor'
+  | 'stopColor'
+  | 'stroke'
+  | 'textDecorationColor'
+  | 'textEmphasisColor'
+  | 'textShadowColor'
 
 type ColorToken = UtilityValues['backgroundColor']
 
