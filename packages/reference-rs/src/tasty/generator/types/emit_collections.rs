@@ -50,7 +50,7 @@ fn emit_type_parameter(
     Ok(emit_object(fields))
 }
 
-pub(super) fn emit_type_ref_array(
+pub(crate) fn emit_type_ref_array(
     bundle: &TypeScriptBundle,
     types: &[TypeRef],
     export_names: &BTreeMap<String, String>,

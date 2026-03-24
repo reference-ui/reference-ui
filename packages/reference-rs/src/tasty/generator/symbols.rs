@@ -1,19 +1,20 @@
 //! JavaScript source emission for symbol descriptors and cross-references.
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
-use serde::Serialize;
-
-use super::types::{emit_jsdoc, emit_members, emit_optional_type_ref, emit_type_parameters};
+use super::types::{
+    emit_jsdoc, emit_members, emit_optional_type_ref, emit_type_parameters, emit_type_ref_array,
+};
 use super::util::{emit_array, emit_field, emit_object, indent_block, to_js_literal, JsObjectBuilder};
 use crate::tasty::constants::libraries::USER_LIBRARY_NAME;
 use crate::tasty::model::{TsSymbol, TsSymbolKind, TypeRef, TypeScriptBundle};
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct SymbolRef {
     pub(super) id: String,
     pub(super) name: String,
     pub(super) library: String,
+    pub(super) type_arguments: Option<Vec<TypeRef>>,
 }
 
 pub(super) fn emit_chunk_module(
@@ -90,33 +91,44 @@ pub(super) fn reference_descriptor(
         name,
         target_id,
         source_module,
-        type_arguments: _,
+        type_arguments,
     } = type_ref
     else {
         return None;
     };
 
     if let Some(target_id) = target_id {
-        return local_reference_descriptor(bundle, target_id, export_names);
+        return local_reference_descriptor(bundle, target_id, export_names, type_arguments.clone());
     }
 
     Some(external_reference_descriptor(
         name,
         source_module.as_deref(),
+        type_arguments.clone(),
     ))
 }
 
-pub(super) fn emit_ref_array(refs: Vec<SymbolRef>) -> Result<String, String> {
+pub(super) fn emit_ref_array(
+    bundle: &TypeScriptBundle,
+    refs: Vec<SymbolRef>,
+    export_names: &BTreeMap<String, String>,
+) -> Result<String, String> {
     let refs = refs
         .iter()
-        .map(|reference| emit_ref_object(reference).map(|value| indent_block(&value, 2)))
+        .map(|reference| {
+            emit_ref_object(bundle, reference, export_names).map(|value| indent_block(&value, 2))
+        })
         .collect::<Result<Vec<_>, _>>()?;
 
     Ok(emit_array(refs))
 }
 
-pub(super) fn emit_ref_object(reference: &SymbolRef) -> Result<String, String> {
-    Ok(emit_object(symbol_ref_fields(reference)?))
+pub(super) fn emit_ref_object(
+    bundle: &TypeScriptBundle,
+    reference: &SymbolRef,
+    export_names: &BTreeMap<String, String>,
+) -> Result<String, String> {
+    Ok(emit_object(symbol_ref_fields(bundle, reference, export_names)?))
 }
 
 fn symbol_metadata_fields(
@@ -180,15 +192,19 @@ fn interface_fields(
         ),
         emit_field(
             "extends",
-            emit_ref_array(reference_descriptors_from_type_refs(
+            emit_ref_array(
                 bundle,
-                &symbol.extends,
+                reference_descriptors_from_type_refs(bundle, &symbol.extends, export_names),
                 export_names,
-            ))?,
+            )?,
         ),
         emit_field(
             "types",
-            emit_ref_array(supporting_type_descriptors(bundle, symbol, export_names))?,
+            emit_ref_array(
+                bundle,
+                supporting_type_descriptors(bundle, symbol, export_names),
+                export_names,
+            )?,
         ),
     ])
 }
@@ -210,18 +226,24 @@ fn collect_reference_descriptors<'a>(
     export_names: &BTreeMap<String, String>,
     mut predicate: impl FnMut(&TypeRef) -> bool,
 ) -> Vec<SymbolRef> {
-    type_refs
+    let mut refs: Vec<SymbolRef> = type_refs
         .filter(|type_ref| predicate(type_ref))
         .filter_map(|type_ref| reference_descriptor(bundle, type_ref, export_names))
-        .collect::<BTreeSet<_>>()
-        .into_iter()
-        .collect()
+        .collect();
+    refs.sort_by(|a, b| {
+        a.id
+            .cmp(&b.id)
+            .then_with(|| a.name.cmp(&b.name))
+            .then_with(|| a.library.cmp(&b.library))
+    });
+    refs
 }
 
 fn local_reference_descriptor(
     bundle: &TypeScriptBundle,
     target_id: &str,
     export_names: &BTreeMap<String, String>,
+    type_arguments: Option<Vec<TypeRef>>,
 ) -> Option<SymbolRef> {
     let target_symbol = bundle.symbols.get(target_id)?;
 
@@ -229,21 +251,38 @@ fn local_reference_descriptor(
         id: export_names.get(target_id)?.clone(),
         name: target_symbol.name.clone(),
         library: target_symbol.library.clone(),
+        type_arguments,
     })
 }
 
-fn external_reference_descriptor(name: &str, source_module: Option<&str>) -> SymbolRef {
+fn external_reference_descriptor(
+    name: &str,
+    source_module: Option<&str>,
+    type_arguments: Option<Vec<TypeRef>>,
+) -> SymbolRef {
     SymbolRef {
         id: name.to_string(),
         name: name.to_string(),
         library: source_module.unwrap_or(USER_LIBRARY_NAME).to_string(),
+        type_arguments,
     }
 }
 
-pub(super) fn symbol_ref_fields(reference: &SymbolRef) -> Result<Vec<String>, String> {
-    Ok(vec![
+pub(super) fn symbol_ref_fields(
+    bundle: &TypeScriptBundle,
+    reference: &SymbolRef,
+    export_names: &BTreeMap<String, String>,
+) -> Result<Vec<String>, String> {
+    let mut fields = vec![
         emit_field("id", to_js_literal(&reference.id)?),
         emit_field("name", to_js_literal(&reference.name)?),
         emit_field("library", to_js_literal(&reference.library)?),
-    ])
+    ];
+    if let Some(args) = &reference.type_arguments {
+        fields.push(emit_field(
+            "typeArguments",
+            emit_type_ref_array(bundle, args, export_names)?,
+        ));
+    }
+    Ok(fields)
 }

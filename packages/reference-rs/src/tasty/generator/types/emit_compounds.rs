@@ -1,10 +1,10 @@
 use std::collections::BTreeMap;
 
-use crate::tasty::generator::symbols::{emit_ref_object, reference_descriptor, symbol_ref_fields};
+use crate::tasty::generator::symbols::{emit_ref_object, reference_descriptor};
 use crate::tasty::generator::util::{emit_field, emit_object, to_js_literal};
 use crate::tasty::model::{FnParam, TsTypeParameter, TypeRef, TypeScriptBundle};
 
-use super::emit_collections::{emit_fn_params, emit_type_parameters, emit_type_ref_array};
+use super::emit_collections::{emit_fn_params, emit_type_parameters};
 use super::{emit_optional_type_ref, emit_type_ref, push_optional_type_ref_field};
 
 pub(super) fn emit_reference_type_ref(
@@ -14,24 +14,16 @@ pub(super) fn emit_reference_type_ref(
 ) -> Result<String, String> {
     let reference = reference_descriptor(bundle, type_ref, export_names)
         .ok_or_else(|| "Failed to emit reference.".to_string())?;
-    emit_ref_object(&reference)
+    emit_ref_object(bundle, &reference, export_names)
 }
 
 pub(super) fn emit_reference_with_type_arguments(
     bundle: &TypeScriptBundle,
     type_ref: &TypeRef,
-    args: &[TypeRef],
+    _args: &[TypeRef],
     export_names: &BTreeMap<String, String>,
 ) -> Result<String, String> {
-    let reference = reference_descriptor(bundle, type_ref, export_names)
-        .ok_or_else(|| "Failed to emit reference.".to_string())?;
-    let mut fields = symbol_ref_fields(&reference)?;
-    fields.push(emit_field(
-        "typeArguments",
-        emit_type_ref_array(bundle, args, export_names)?,
-    ));
-
-    Ok(emit_object(fields))
+    emit_reference_type_ref(bundle, type_ref, export_names)
 }
 
 pub(super) fn emit_constructor_type_ref(

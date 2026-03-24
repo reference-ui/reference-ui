@@ -4,7 +4,7 @@ use oxc_span::{GetSpan, Span};
 use super::super::comments::{leading_comment_for_span, parse_comment_metadata};
 use super::super::members::members_from_signatures;
 use super::super::type_references::collect_references_from_members;
-use super::super::types::{expression_to_reference, type_parameters_from_oxc};
+use super::super::types::{interface_heritage_to_reference, type_parameters_from_oxc};
 use super::super::ExtractionContext;
 use crate::tasty::ast::model::SymbolShell;
 use crate::tasty::model::TsSymbolKind;
@@ -35,7 +35,7 @@ pub(crate) fn push_interface_shell<'a>(
     let extends = interface_decl
         .extends
         .iter()
-        .map(|heritage| expression_to_reference(&heritage.expression, ctx))
+        .map(|heritage| interface_heritage_to_reference(heritage, ctx))
         .collect::<Vec<_>>();
 
     let type_parameters =

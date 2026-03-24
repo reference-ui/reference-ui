@@ -121,6 +121,36 @@ async function projectUtilityReferenceMembers(
   }
 }
 
+/**
+ * `interface X extends Omit<...>` encodes generics on heritage (expression + type arguments).
+ * Project those utilities here so `flattenInterfaceMembers` does not need a manifest symbol for `Omit`/`Pick`.
+ */
+export async function projectMembersFromInterfaceExtends(
+  api: TastyApiRuntime,
+  symbol: TastySymbol,
+): Promise<TastyMember[]> {
+  const raw = symbol.getRaw()
+  if (!isInterfaceSymbol(raw)) return []
+
+  const context: ProjectionContext = {
+    visitedSymbolIds: new Set<string>([symbol.getId()]),
+    depth: 0,
+  }
+  const out: TastyMember[] = []
+  for (const ext of raw.extends) {
+    if (!ext.typeArguments?.length) continue
+    const ref: RawTastyTypeReference = {
+      id: ext.id,
+      name: ext.name,
+      library: ext.library,
+      typeArguments: ext.typeArguments,
+    }
+    const projected = await projectUtilityReferenceMembers(api, ref, context)
+    if (projected?.length) out.push(...projected)
+  }
+  return out
+}
+
 async function projectOmitMembers(
   api: TastyApiRuntime,
   typeArguments: RawTastyTypeRef[],

@@ -12,5 +12,9 @@ import type { SystemStyleObject } from './system-style-object'
  * `font` / `container` / `r`) and adds `ReferenceProps`.
  *
  * @example `<Div fontSize="lg" container="center" />`
+ *
+ * Declared as a `type` alias (not `interface`) so Tasty indexes it as `typeAlias` and the
+ * reference manifest does not try to resolve built-ins like `Omit` as named symbols.
  */
-export interface StyleProps extends Omit<SystemStyleObject, 'font' | 'weight' | 'container' | 'r'>, ReferenceProps {}
+export type StyleProps = Omit<SystemStyleObject, 'font' | 'weight' | 'container' | 'r'> &
+  ReferenceProps

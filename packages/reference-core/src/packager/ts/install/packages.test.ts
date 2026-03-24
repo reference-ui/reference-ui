@@ -85,6 +85,7 @@ describe('packager/ts/install/packages', () => {
       1,
       '/workspace/core',
       '/workspace/core-build',
+      '/workspace/app',
       resolve(outDir, 'react'),
       packages[0]
     )
@@ -92,6 +93,7 @@ describe('packager/ts/install/packages', () => {
       2,
       '/workspace/core',
       '/workspace/core-build',
+      '/workspace/app',
       resolve(outDir, 'system'),
       packages[1]
     )

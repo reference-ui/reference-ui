@@ -1,4 +1,4 @@
-use oxc_ast::ast::{Expression, TSType, TSTypeParameterDeclaration};
+use oxc_ast::ast::{TSType, TSTypeParameterDeclaration};
 
 use crate::tasty::constants::libraries::USER_LIBRARY_NAME;
 use crate::tasty::shared::type_ref_util::reference_lookup_name;
@@ -121,11 +121,11 @@ pub(super) fn type_to_ref(type_annotation: &TSType<'_>, ctx: &ExtractionContext<
     LoweringContext::new(ctx).lower_type(type_annotation)
 }
 
-pub(super) fn expression_to_reference(
-    expression: &Expression<'_>,
+pub(super) fn interface_heritage_to_reference(
+    heritage: &oxc_ast::ast::TSInterfaceHeritage<'_>,
     ctx: &ExtractionContext<'_>,
 ) -> TypeRef {
-    LoweringContext::new(ctx).lower_expression_reference(expression)
+    LoweringContext::new(ctx).lower_interface_heritage(heritage)
 }
 
 fn mapped_modifier_kind(
