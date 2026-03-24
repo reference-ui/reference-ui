@@ -24,6 +24,7 @@ So:
 - `audit_alignment/` → audit-driven coverage for intentionally raw variants (`import()`, `infer`, `type predicate`, `this`) plus their surrounding structured shapes.
 - `interface_extends_utility` → `extends Omit<…>` heritage plus manifest-backed child `extends` chains.
 - `interface_extends_utilities` → broad built-in utility heritage: `Omit`, `Pick`, `Partial`, `Required`, `Record`, `Readonly`, multiple heritage clauses, nested `Omit<Pick<…>>`, union omit keys, and generic key parameters.
+- `intersection_patterns` → `A & B`, override / last-write-wins, `Omit<…> & { … }`, long intersections, and generic `Merge<T, U> = Omit<T, keyof U> & U`.
 
 Add a new case folder to add a new scenario. The test suite will automatically
 scan `input/` and write `output/manifest.js`, `output/chunks/*`, and
