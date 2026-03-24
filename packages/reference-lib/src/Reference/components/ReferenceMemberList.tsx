@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from 'react'
+import { useState, type ComponentProps, type CSSProperties } from 'react'
 import { Div, Small } from '@reference-ui/react'
 import type { ReferenceMemberDocument, ReferenceSymbolRef } from '@reference-ui/types'
 import { ReferenceMemberRow } from './ReferenceMemberRow'
@@ -10,7 +10,7 @@ const memberListCss = {
   borderTopWidth: '1px',
   borderTopStyle: 'solid',
   borderTopColor: 'reference.border',
-}
+} as ComponentProps<typeof Div>['css']
 
 const inheritedToggleButtonStyle: CSSProperties = {
   appearance: 'none',

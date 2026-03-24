@@ -1,15 +1,20 @@
 import type * as React from 'react'
 import type { Tag } from '../system/primitives/tags'
 import type { ColorModeProps } from './props'
-import type { StrictColorProps } from './colors'
 import type { StyleProps } from './style-props'
 import type { SystemStyleObject } from './system-style-object'
 
 export type PrimitiveTag = Tag
 
 export interface PrimitiveCssProps {
-  css?: StrictColorProps<SystemStyleObject>
+  css?: SystemStyleObject
 }
+
+/**
+ * Public prop surface for a styled HTML primitive without polymorphic `as`.
+ * Useful for extendable style bags that can be spread directly onto primitives.
+ */
+export type HTMLStyledProps<T extends PrimitiveTag> = PrimitiveProps<T>
 
 type PrimitiveOwnProps = StyleProps & ColorModeProps & PrimitiveCssProps
 type PrimitiveNativeProps<T extends PrimitiveTag> = React.ComponentPropsWithoutRef<T>

@@ -91,11 +91,17 @@ export type ColorPropKeys =
 
 type ColorToken = UtilityValues['backgroundColor']
 
-type StrictColorValue = ColorToken | 'white' | 'black'
+type StrictColorValue =
+  | ColorToken
+  | 'white'
+  | 'black'
+  | 'inherit'
+  | 'currentColor'
+  | 'transparent'
 
 export type SafeColorProps = {
   // Zen names the symbolic poles; strict authored colors still allow tokens
-  // plus the two hard edge colors.
+  // plus the two hard edge colors and a few CSS reset/inheritance keywords.
   [K in Extract<keyof SystemProperties, ColorPropKeys>]?: StylePropValue<StrictColorValue>
 }
 

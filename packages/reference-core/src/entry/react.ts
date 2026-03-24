@@ -23,5 +23,6 @@ export type {
   FontProps,
   FontWeightName,
   FontWeightValue,
+  HTMLStyledProps,
   StyleProps,
 } from '../types'
