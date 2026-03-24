@@ -10,6 +10,9 @@ import type { PrimitiveComponent, PrimitiveElement, PrimitiveProps } from './typ
 export { TAGS as HTML_TAGS, type Tag as HtmlTag } from './tags'
 export type { PrimitiveComponent, PrimitiveElement, PrimitiveProps } from './types'
 
+/** Box pattern props missing from Panda `splitCssProps` (not in is-valid-prop user list). */
+const BOX_PATTERN_PROPS_FOR_STYLES = ['weight'] as const
+
 function splitPrimitiveProps<T extends Record<string, unknown>>(props: T) {
   const { className, children, colorMode, ...rest } = props as T & {
     className?: string
@@ -17,7 +20,21 @@ function splitPrimitiveProps<T extends Record<string, unknown>>(props: T) {
     colorMode?: unknown
   }
   const [styleProps, elementProps] = splitCssProps(rest)
-  return { className, children, colorMode, styleProps, elementProps }
+  const domProps: Record<string, unknown> = { ...elementProps }
+  const patternStyle: Record<string, unknown> = {}
+  for (const key of BOX_PATTERN_PROPS_FOR_STYLES) {
+    if (key in domProps) {
+      patternStyle[key] = domProps[key]
+      delete domProps[key]
+    }
+  }
+  return {
+    className,
+    children,
+    colorMode,
+    styleProps: { ...styleProps, ...patternStyle },
+    elementProps: domProps,
+  }
 }
 
 /** Replaced at packager time with the project's ui.config.name. */
