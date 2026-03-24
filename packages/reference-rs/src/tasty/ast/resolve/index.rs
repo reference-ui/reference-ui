@@ -141,5 +141,12 @@ fn resolve_symbol_id<'a>(
     file_id: &str,
     local_name: &str,
 ) -> Option<&'a String> {
+    // Handle star exports: "*./module" pattern
+    if local_name.starts_with('*') {
+        // For star exports, we can't resolve to a specific symbol
+        // This should be handled at a higher level during symbol resolution
+        return None;
+    }
+    
     symbol_index.get(&file_symbol_key(file_id, local_name))
 }

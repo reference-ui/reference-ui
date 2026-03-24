@@ -64,6 +64,7 @@ pub(super) fn emit_tuple_element(
     let mut fields = vec![
         emit_field("optional", to_js_literal(&element.optional)?),
         emit_field("rest", to_js_literal(&element.rest)?),
+        emit_field("readonly", to_js_literal(&element.readonly)?),
         emit_field(
             "element",
             emit_type_ref(bundle, &element.element, export_names)?,

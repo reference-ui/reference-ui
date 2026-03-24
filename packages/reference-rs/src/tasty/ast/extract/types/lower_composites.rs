@@ -51,6 +51,7 @@ impl<'a> LoweringContext<'a> {
                 label: Some(slice_span(self.ctx.source, named.label.span()).to_string()),
                 optional: named.optional,
                 rest: false,
+                readonly: false,
                 element: inner.element,
             }],
         }
@@ -83,13 +84,33 @@ impl<'a> LoweringContext<'a> {
         &self,
         operator: &oxc_ast::ast::TSTypeOperator<'_>,
     ) -> TypeRef {
+        let target_type = self.lower_type(&operator.type_annotation);
+        
+        // Special handling for readonly tuples - normalize to tuple with readonly elements
+        if matches!(operator.operator, oxc_ast::ast::TSTypeOperatorOperator::Readonly) {
+            if let TypeRef::Tuple { elements } = target_type {
+                // Convert readonly tuple to tuple with readonly elements
+                let readonly_elements = elements
+                    .into_iter()
+                    .map(|element| TupleElement {
+                        readonly: true,
+                        ..element
+                    })
+                    .collect();
+                
+                return TypeRef::Tuple {
+                    elements: readonly_elements,
+                };
+            }
+        }
+        
         TypeRef::TypeOperator {
             operator: match operator.operator {
                 oxc_ast::ast::TSTypeOperatorOperator::Keyof => TypeOperatorKind::Keyof,
                 oxc_ast::ast::TSTypeOperatorOperator::Readonly => TypeOperatorKind::Readonly,
                 oxc_ast::ast::TSTypeOperatorOperator::Unique => TypeOperatorKind::Unique,
             },
-            target: Box::new(self.lower_type(&operator.type_annotation)),
+            target: Box::new(target_type),
             resolved: None,
         }
     }
@@ -147,12 +168,14 @@ impl<'a> LoweringContext<'a> {
                 label: None,
                 optional: true,
                 rest: false,
+                readonly: false,
                 element: self.lower_type(&optional.type_annotation),
             },
             TSTupleElement::TSRestType(rest) => TupleElement {
                 label: None,
                 optional: false,
                 rest: true,
+                readonly: false,
                 element: self.lower_type(&rest.type_annotation),
             },
             TSTupleElement::TSNamedTupleMember(named) => {
@@ -162,6 +185,7 @@ impl<'a> LoweringContext<'a> {
                     label: Some(slice_span(self.ctx.source, named.label.span()).to_string()),
                     optional: named.optional,
                     rest: false,
+                    readonly: false,
                     element: lowered.element,
                 }
             }
@@ -169,6 +193,7 @@ impl<'a> LoweringContext<'a> {
                 label: None,
                 optional: false,
                 rest: false,
+                readonly: false,
                 element: self.lower_tuple_element_type(element),
             },
         }

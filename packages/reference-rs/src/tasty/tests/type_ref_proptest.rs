@@ -80,6 +80,7 @@ fn arb_tuple_element(inner: BoxedStrategy<TypeRef>) -> impl Strategy<Value = Tup
             label,
             optional,
             rest,
+            readonly: false,
             element,
         })
 }
