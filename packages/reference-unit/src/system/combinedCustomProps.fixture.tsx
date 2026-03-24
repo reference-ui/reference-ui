@@ -4,7 +4,7 @@ export function SourceCombinedCustomProps() {
   return (
     <Div
       font="sans"
-      weight="semibold"
+      weight="bold"
       container="card"
       r={{
         555: { padding: '2.25rem' },
