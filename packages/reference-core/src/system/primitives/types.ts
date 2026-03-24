@@ -1,9 +1,9 @@
 import type * as React from 'react'
 import type { SystemStyleObject } from '@reference-ui/styled/types'
-import type { ReferenceProps, ColorModeProps, StyleProps } from '../../types'
+import type { ReferenceProps, ColorModeProps, StrictColorProps, StyleProps } from '../../types'
 
 export interface PrimitiveCssProps {
-  css?: SystemStyleObject
+  css?: StrictColorProps<SystemStyleObject>
 }
 
 export type PrimitiveProps<T extends keyof React.JSX.IntrinsicElements> = Omit<

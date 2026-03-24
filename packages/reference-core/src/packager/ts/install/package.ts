@@ -33,6 +33,7 @@ function updatePackageTypes(packageDir: string, typesPath: string): void {
 export async function installPackageTs(
   cliDir: string,
   cliDirForBuild: string,
+  projectCwd: string,
   targetDir: string,
   pkg: TsPackageInput
 ): Promise<void> {
@@ -47,7 +48,7 @@ export async function installPackageTs(
   mkdirSync(targetDir, { recursive: true })
 
   const outDtsPath = join(targetDir, getDeclarationBasename(pkg.outFile))
-  await compileDeclarations(cliDirForBuild, pkg.sourceEntry, outDtsPath)
+  await compileDeclarations(cliDirForBuild, pkg.sourceEntry, outDtsPath, projectCwd)
   log.debug(PACKAGER_TS_LOG, `✓ Compiled ${pkg.name}`)
 
   const typesPath = `./${getDeclarationBasename(pkg.outFile)}`

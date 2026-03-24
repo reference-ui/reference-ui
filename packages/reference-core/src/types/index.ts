@@ -1,5 +1,15 @@
 export type { BaseSystem } from './BaseSystem'
 export type {
+  CssFunction,
+  CssRawFunction,
+  CssStyles,
+} from './css'
+export type {
+  ColorPropKeys,
+  SafeColorProps,
+  StrictColorProps,
+} from './colors'
+export type {
   FontName,
   FontProps,
   FontWeightName,
