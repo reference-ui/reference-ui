@@ -64,7 +64,7 @@ describe('packager/ts/run', () => {
     expect(emit).toHaveBeenCalledWith('packager-ts:runtime:complete', {})
   })
 
-  it('keeps final declaration generation on all packages', async () => {
+  it('limits final declaration generation to the types package', async () => {
     const installPackagesTs = vi.fn().mockResolvedValue(undefined)
     const emit = vi.fn()
 
@@ -86,16 +86,6 @@ describe('packager/ts/run', () => {
     await runDtsGeneration(createPayload(false), 'packager-ts:complete')
 
     expect(installPackagesTs).toHaveBeenCalledWith('/workspace', [
-      {
-        name: '@reference-ui/react',
-        sourceEntry: 'src/entry/react.ts',
-        outFile: 'react.mjs',
-      },
-      {
-        name: '@reference-ui/system',
-        sourceEntry: 'src/entry/system.ts',
-        outFile: 'system.mjs',
-      },
       {
         name: '@reference-ui/types',
         sourceEntry: 'src/entry/types.ts',

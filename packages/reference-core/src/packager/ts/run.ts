@@ -10,10 +10,12 @@ function getPackagesForRun(
   completionEvent: TsPackagerCompletionEvent
 ): TsPackagerWorkerPayload['packages'] {
   if (completionEvent === 'packager-ts:runtime:complete') {
-    return payload.packages.filter(pkg => pkg.name !== '@reference-ui/types')
+    return payload.packages.filter(
+      pkg => pkg.name === '@reference-ui/react' || pkg.name === '@reference-ui/system'
+    )
   }
 
-  return payload.packages
+  return payload.packages.filter(pkg => pkg.name === '@reference-ui/types')
 }
 
 interface DtsGenerationQueueOptions {
