@@ -1,0 +1,120 @@
+const symbol = {
+  id: "_s0",
+  name: "ApiConfig",
+  library: "user",
+  members:   [
+    {
+      name: "users",
+      optional: false,
+      readonly: false,
+      kind: "property",
+      type:   {
+        kind: "object",
+        members:   [
+          {
+            name: "get",
+            optional: false,
+            readonly: false,
+            kind: "property",
+            type:   {
+              kind: "function",
+              params: [],
+              returnType:   {
+                kind: "array",
+                element:   {
+                  id: "_s17",
+                  name: "User",
+                  library: "user"
+                }
+              }
+            }
+          },
+          {
+            name: "post",
+            optional: false,
+            readonly: false,
+            kind: "property",
+            type:   {
+              kind: "function",
+              params:   [
+                {
+                  name: "user",
+                  optional: false,
+                  typeRef:   {
+                    id: "_s17",
+                    name: "User",
+                    library: "user"
+                  }
+                }
+              ],
+              returnType:   {
+                id: "_s17",
+                name: "User",
+                library: "user"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      name: "posts",
+      optional: false,
+      readonly: false,
+      kind: "property",
+      type:   {
+        kind: "object",
+        members:   [
+          {
+            name: "get",
+            optional: false,
+            readonly: false,
+            kind: "property",
+            type:   {
+              kind: "function",
+              params: [],
+              returnType:   {
+                kind: "array",
+                element:   {
+                  id: "_s11",
+                  name: "Post",
+                  library: "user"
+                }
+              }
+            }
+          },
+          {
+            name: "post",
+            optional: false,
+            readonly: false,
+            kind: "property",
+            type:   {
+              kind: "function",
+              params:   [
+                {
+                  name: "post",
+                  optional: false,
+                  typeRef:   {
+                    id: "_s11",
+                    name: "Post",
+                    library: "user"
+                  }
+                }
+              ],
+              returnType:   {
+                id: "_s11",
+                name: "Post",
+                library: "user"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  extends: [],
+  types: []
+};
+export { symbol as _s0 };
+export default symbol;
+
