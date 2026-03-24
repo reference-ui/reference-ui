@@ -48,4 +48,8 @@ export type {
   RecipeVariantProps,
 } from '../types'
 export type { StylePropValue } from '../types'
-export type { SystemStyleObject } from '../types'
+export type {
+  BackendSystemStyleObject,
+  ReferenceSystemStyleObject,
+  SystemStyleObject,
+} from '../types'
