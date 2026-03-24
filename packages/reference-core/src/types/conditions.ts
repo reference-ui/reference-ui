@@ -27,24 +27,9 @@ type ViewportConditionKey =
   | 'lgTo2xl'
   | 'xlTo2xl'
 
-type MediaConditionKey =
-  | '_motionReduce'
-  | '_motionSafe'
-  | '_print'
-  | '_landscape'
-  | '_portrait'
-  | '_osDark'
-  | '_osLight'
-  | '_highContrast'
-  | '_lessContrast'
-  | '_moreContrast'
-  | '_noscript'
-  | '_invertedColors'
-
 type FilteredConditionKey =
   | 'base'
   | ViewportConditionKey
-  | MediaConditionKey
 
 export type StyleConditionKey = Exclude<
   keyof StyledConditions,
