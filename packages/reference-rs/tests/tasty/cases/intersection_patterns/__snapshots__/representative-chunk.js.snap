@@ -1,0 +1,24 @@
+const symbol = {
+  id: "_s0",
+  name: "A1",
+  library: "user",
+  description: "--- intersection_multiple ---",
+  descriptionRaw: "--- intersection_multiple ---",
+  members:   [
+    {
+      name: "a",
+      optional: false,
+      readonly: false,
+      kind: "property",
+      type:   {
+        kind: "intrinsic",
+        name: "string"
+      }
+    }
+  ],
+  extends: [],
+  types: []
+};
+export { symbol as _s0 };
+export default symbol;
+
