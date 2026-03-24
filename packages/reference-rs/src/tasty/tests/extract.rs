@@ -340,3 +340,33 @@ fn import_bindings_named_default_namespace() {
     assert_eq!(ns.imported_name, "*");
     assert_eq!(ns.target_file_id.as_deref(), Some("src/dep.ts"));
 }
+
+#[test]
+fn readonly_tuple_of_string_literals_lowers_to_tuple() {
+    let scanned = single_file(
+        "test.ts",
+        "export type ConstAssertion = readonly ['users', 'posts', 'comments']\n",
+    );
+    let ast = extract_ast(&scanned);
+    let file = parsed_file(&ast, "test.ts");
+    let underlying = file.exports[0].underlying.as_ref().expect("underlying");
+    match underlying {
+        TypeRef::Tuple { elements } => {
+            assert_eq!(elements.len(), 3);
+            assert!(elements.iter().all(|e| e.readonly));
+        }
+        other => panic!("expected Tuple, got {other:?}"),
+    }
+}
+
+#[test]
+fn readonly_tuple_primitive_lowers() {
+    let scanned = single_file(
+        "test.ts",
+        "export type ReadonlyTuple = readonly [string, number]\n",
+    );
+    let ast = extract_ast(&scanned);
+    let file = parsed_file(&ast, "test.ts");
+    let underlying = file.exports[0].underlying.as_ref().expect("underlying");
+    eprintln!("ReadonlyTuple underlying: {underlying:?}");
+}

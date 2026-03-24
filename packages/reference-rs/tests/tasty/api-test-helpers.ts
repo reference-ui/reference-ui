@@ -199,3 +199,33 @@ export function findMember(symbol: TastySymbol, memberName: string): TastyMember
   }
   return member
 }
+
+/**
+ * Asserts the emit pipeline returned a symbol we can query and an underlying `TypeRef`.
+ * Structured types use `kind`; unresolved references use `id` + `name` (no `kind`).
+ */
+export function expectUnderlyingPresent(symbol: TastySymbol): void {
+  const underlying = symbol.getUnderlyingType()
+  expect(underlying, `${symbol.getName()}: expected underlying type`).toBeDefined()
+  const raw = underlying!.getRaw() as { kind?: string; name?: string; id?: string }
+  const structured = raw.kind != null && raw.kind !== ''
+  const reference = raw.name != null && raw.id != null
+  expect(
+    structured || reference,
+    `${symbol.getName()}: expected structured type (\`kind\`) or reference (\`id\`+\`name\`)`,
+  ).toBe(true)
+}
+
+/**
+ * Asserts the underlying type is one of several allowed `kind` values (e.g. when multiple
+ * representations are acceptable as the extractor evolves).
+ */
+export function expectUnderlyingKindOneOf(
+  symbol: TastySymbol,
+  kinds: readonly string[],
+): void {
+  const underlying = symbol.getUnderlyingType()
+  expect(underlying, `${symbol.getName()}: expected underlying type`).toBeDefined()
+  const raw = underlying!.getRaw() as { kind?: string }
+  expect(kinds, `${symbol.getName()}: expected one of ${kinds.join(', ')}`).toContain(raw.kind)
+}

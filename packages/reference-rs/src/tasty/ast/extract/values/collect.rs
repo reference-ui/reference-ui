@@ -59,3 +59,10 @@ fn infer_value_type(
 ) -> Option<TypeRef> {
     infer_value_type_with_const_context(expression, ctx, false)
 }
+
+pub(crate) fn infer_initializer_value_type(
+    expression: &oxc_ast::ast::Expression<'_>,
+    ctx: &ExtractionContext<'_>,
+) -> Option<TypeRef> {
+    infer_value_type(expression, ctx)
+}

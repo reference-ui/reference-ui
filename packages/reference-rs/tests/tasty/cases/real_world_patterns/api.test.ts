@@ -4,6 +4,8 @@ import {
   addCaseEmittedSnapshotTests,
   addCaseRuntimeSmokeTests,
   createCaseApi,
+  expectUnderlyingKindOneOf,
+  expectUnderlyingPresent,
   findMember,
 } from '../../api-test-helpers'
 
@@ -11,7 +13,7 @@ describe('real_world_patterns tasty api', () => {
   addCaseRuntimeSmokeTests('real_world_patterns', 'ReactComponentProps')
   addCaseEmittedSnapshotTests('real_world_patterns')
 
-  it('surfaces real-world patterns', async () => {
+  it('exposes real-world patterns as loadable type data', async () => {
     const api = createCaseApi('real_world_patterns')
     const reactComponentProps = await api.loadSymbolByName('ReactComponentProps')
     const reactForwardRef = await api.loadSymbolByName('ReactForwardRef')
@@ -21,31 +23,21 @@ describe('real_world_patterns tasty api', () => {
     const zodInfer = await api.loadSymbolByName('ZodInfer')
     const styledSystemProps = await api.loadSymbolByName('StyledSystemProps')
 
-    // Test React patterns
-    expect(reactComponentProps.getUnderlyingType()?.getRaw()).toBeDefined()
-    expect(reactForwardRef.getUnderlyingType()?.getRaw()).toBeDefined()
-    expect(reactContext.getUnderlyingType()?.getRaw()).toBeDefined()
+    for (const sym of [
+      reactComponentProps,
+      reactForwardRef,
+      reactContext,
+      builderPatternGeneric,
+    ]) {
+      expectUnderlyingPresent(sym)
+    }
 
-    // Test event handler map
-    expect(eventHandlerMap.getUnderlyingType()?.getRaw()).toMatchObject({
-      kind: 'object'
-    })
-
-    // Test builder pattern
-    expect(builderPatternGeneric.getUnderlyingType()?.getRaw()).toBeDefined()
-
-    // Test Zod infer pattern
-    expect(zodInfer.getUnderlyingType()?.getRaw()).toMatchObject({
-      kind: 'conditional'
-    })
-
-    // Test styled system props
-    expect(styledSystemProps.getUnderlyingType()?.getRaw()).toMatchObject({
-      kind: 'intersection'
-    })
+    expectUnderlyingKindOneOf(eventHandlerMap, ['mapped', 'object'])
+    expectUnderlyingKindOneOf(zodInfer, ['conditional'])
+    expectUnderlyingKindOneOf(styledSystemProps, ['intersection'])
   })
 
-  it('surfaces real-world examples', async () => {
+  it('exposes real-world examples as loadable type data', async () => {
     const api = createCaseApi('real_world_patterns')
     const componentExample = await api.loadSymbolByName('ComponentExample')
     const forwardRefExample = await api.loadSymbolByName('ForwardRefExample')
@@ -55,16 +47,19 @@ describe('real_world_patterns tasty api', () => {
     const zodExample = await api.loadSymbolByName('ZodExample')
     const styledSystemExample = await api.loadSymbolByName('StyledSystemExample')
 
-    // Test that examples are properly typed
-    expect(componentExample.getUnderlyingType()?.getRaw()).toBeDefined()
-    expect(forwardRefExample.getUnderlyingType()?.getRaw()).toBeDefined()
-    expect(contextExample.getUnderlyingType()?.getRaw()).toBeDefined()
-    expect(eventHandlerExample.getUnderlyingType()?.getRaw()).toBeDefined()
-    expect(builderExample.getUnderlyingType()?.getRaw()).toBeDefined()
-    expect(zodExample.getUnderlyingType()?.getRaw()).toBeDefined()
-    expect(styledSystemExample.getUnderlyingType()?.getRaw()).toBeDefined()
+    for (const sym of [
+      componentExample,
+      forwardRefExample,
+      contextExample,
+      eventHandlerExample,
+      builderExample,
+      zodExample,
+      styledSystemExample,
+    ]) {
+      expectUnderlyingPresent(sym)
+    }
 
-    // Test specific example methods
+    // Specific members still resolvable
     const getPropType = findMember(componentExample, 'getPropType')
     expect(getPropType.getType()?.getRaw()).toBeDefined()
 

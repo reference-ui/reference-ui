@@ -1,12 +1,14 @@
 import type {
-  RawTastyMemberKind,
   RawTastyFnParam,
   RawTastyJsDocTag,
   RawTastyMember,
+  RawTastyStructuredTypeRef,
   RawTastySymbolIndexEntry,
   RawTastySymbolRef,
   RawTastyTypeRef,
+  RawTastyTypeReference,
   TastyCallableParameter,
+  RawTastyMemberKind,
   TastyFnParam,
   TastyJsDocTag,
   TastyMember,
@@ -66,8 +68,7 @@ export class TastySymbolImpl implements TastySymbol {
   }
 
   getMembers(): TastyMember[] {
-    if (!isInterfaceSymbol(this.raw)) return []
-    return this.raw.members.map((member) => new TastyMemberImpl(this.api, member))
+    return membersForSymbol(this.raw).map((member) => new TastyMemberImpl(this.api, member))
   }
 
   async getDisplayMembers(): Promise<TastyMember[]> {
@@ -84,8 +85,14 @@ export class TastySymbolImpl implements TastySymbol {
   }
 
   getUnderlyingType(): TastyTypeRef | undefined {
-    if (!isTypeAliasSymbol(this.raw) || this.raw.definition == null) return undefined
-    return this.api.createTypeRef(this.raw.definition)
+    if (isTypeAliasSymbol(this.raw)) {
+      if (this.raw.definition == null) return undefined
+      return this.api.createTypeRef(this.raw.definition)
+    }
+    if (isInterfaceSymbol(this.raw)) {
+      return this.api.createTypeRef({ kind: 'object', members: this.raw.members })
+    }
+    return undefined
   }
 
   async loadExtendsSymbols(): Promise<TastySymbol[]> {
@@ -247,7 +254,8 @@ export class TastyTypeRefImpl implements TastyTypeRef {
   ) {}
 
   getKind(): TastyTypeKind {
-    return isTypeReference(this.raw) ? 'reference' : this.raw.kind
+    const s = structured(this.raw)
+    return s ? s.kind : 'reference'
   }
 
   getRaw(): RawTastyTypeRef {
@@ -256,7 +264,7 @@ export class TastyTypeRefImpl implements TastyTypeRef {
 
   getResolved(): TastyTypeRef | undefined {
     if (isTypeReference(this.raw)) return undefined
-    const resolved = getResolvedRawTypeRef(this.raw)
+    const resolved = resolvedFieldFromStructured(this.raw)
     return resolved ? this.api.createTypeRef(resolved) : undefined
   }
 
@@ -265,25 +273,25 @@ export class TastyTypeRefImpl implements TastyTypeRef {
   }
 
   getSummary(): string | undefined {
-    if (!isRawStructuredTypeRef(this.raw)) return undefined
-    return this.raw.summary
+    const s = structured(this.raw)
+    return s?.kind === 'raw' ? s.summary : undefined
   }
 
   getLiteralValue(): string | undefined {
-    if (isTypeReference(this.raw) || this.raw.kind !== 'literal') return undefined
-    return this.raw.value
+    const s = structured(this.raw)
+    return s?.kind === 'literal' ? s.value : undefined
   }
 
   isLiteral(): boolean {
-    return !isTypeReference(this.raw) && this.raw.kind === 'literal'
+    return structured(this.raw)?.kind === 'literal'
   }
 
   isUnion(): boolean {
-    return !isTypeReference(this.raw) && this.raw.kind === 'union'
+    return structured(this.raw)?.kind === 'union'
   }
 
   isArray(): boolean {
-    return !isTypeReference(this.raw) && this.raw.kind === 'array'
+    return structured(this.raw)?.kind === 'array'
   }
 
   isReference(): boolean {
@@ -291,25 +299,26 @@ export class TastyTypeRefImpl implements TastyTypeRef {
   }
 
   isCallable(): boolean {
-    if (isTypeReference(this.raw)) return false
-    return this.raw.kind === 'function' || this.raw.kind === 'constructor'
+    const k = structured(this.raw)?.kind
+    return k === 'function' || k === 'constructor'
   }
 
   getUnionTypes(): TastyTypeRef[] {
-    if (isTypeReference(this.raw) || this.raw.kind !== 'union') return []
-    return this.raw.types.map((item) => this.api.createTypeRef(item))
+    const s = structured(this.raw)
+    if (s?.kind !== 'union') return []
+    return s.types.map((item) => this.api.createTypeRef(item))
   }
 
   getParameters(): TastyFnParam[] {
-    if (isTypeReference(this.raw)) return []
-    if (this.raw.kind !== 'function' && this.raw.kind !== 'constructor') return []
-    return this.raw.params.map((param) => new TastyFnParamImpl(this.api, param))
+    const s = structured(this.raw)
+    if (s?.kind !== 'function' && s?.kind !== 'constructor') return []
+    return s.params.map((param) => new TastyFnParamImpl(this.api, param))
   }
 
   getReturnType(): TastyTypeRef | undefined {
-    if (isTypeReference(this.raw)) return undefined
-    if (this.raw.kind !== 'function' && this.raw.kind !== 'constructor') return undefined
-    return this.api.createTypeRef(this.raw.returnType)
+    const s = structured(this.raw)
+    if (s?.kind !== 'function' && s?.kind !== 'constructor') return undefined
+    return this.api.createTypeRef(s.returnType)
   }
 
   getTypeArguments(): TastyTypeRef[] {
@@ -324,58 +333,32 @@ export class TastyTypeRefImpl implements TastyTypeRef {
 
   describe(): string {
     if (isTypeReference(this.raw)) {
-      if (!this.raw.typeArguments?.length) return this.raw.name
-      return `${this.raw.name}<${this.raw.typeArguments
-        .map((item) => this.api.createTypeRef(item).describe())
-        .join(', ')}>`
+      return describeTypeReference(this.api, this.raw)
     }
-
-    switch (this.raw.kind) {
-      case 'intrinsic':
-        return this.raw.name
-      case 'literal':
-        return formatLiteralValue(this.raw.value)
-      case 'array':
-        return `${this.api.createTypeRef(this.raw.element).describe()}[]`
-      case 'union':
-        return this.raw.types.map((item) => this.api.createTypeRef(item).describe()).join(' | ')
-      case 'intersection':
-        return this.raw.types.map((item) => this.api.createTypeRef(item).describe()).join(' & ')
-      case 'raw':
-        return this.raw.summary
-      case 'type_query':
-        return `typeof ${this.raw.expression}`
-      case 'template_literal':
-        return '`template literal`'
-      case 'object':
-        return '{ ... }'
-      case 'tuple':
-        return '[tuple]'
-      case 'indexed_access':
-        return `${this.api.createTypeRef(this.raw.object).describe()}[${this.api
-          .createTypeRef(this.raw.index)
-          .describe()}]`
-      case 'function':
-        return 'function'
-      case 'constructor':
-        return 'constructor'
-      case 'type_operator':
-        return `${this.raw.operator} ${this.api.createTypeRef(this.raw.target).describe()}`
-      case 'conditional':
-        return 'conditional'
-      case 'mapped':
-        return 'mapped'
-      default:
-        return 'unknown'
-    }
+    return describeStructured(this.api, this.raw)
   }
 }
 
-function createJsDocTags(tags: RawTastyJsDocTag[] | undefined): TastyJsDocTag[] {
-  return (tags ?? []).map((tag) => new TastyJsDocTagImpl(tag))
+function membersForSymbol(raw: TastySymbolModel): RawTastyMember[] {
+  if (isInterfaceSymbol(raw)) return raw.members
+  if (
+    isTypeAliasSymbol(raw) &&
+    raw.definition != null &&
+    !isTypeReference(raw.definition) &&
+    raw.definition.kind === 'object'
+  ) {
+    return raw.definition.members
+  }
+  return []
 }
 
-function getResolvedRawTypeRef(raw: Exclude<RawTastyTypeRef, import('../api-types').RawTastyTypeReference>) {
+function structured(raw: RawTastyTypeRef): RawTastyStructuredTypeRef | undefined {
+  return isTypeReference(raw) ? undefined : raw
+}
+
+function resolvedFieldFromStructured(
+  raw: RawTastyStructuredTypeRef,
+): RawTastyTypeRef | undefined {
   switch (raw.kind) {
     case 'indexed_access':
     case 'type_operator':
@@ -386,6 +369,55 @@ function getResolvedRawTypeRef(raw: Exclude<RawTastyTypeRef, import('../api-type
     default:
       return undefined
   }
+}
+
+function describeTypeReference(api: TastyApiRuntime, raw: RawTastyTypeReference): string {
+  if (!raw.typeArguments?.length) return raw.name
+  const args = raw.typeArguments.map((item) => api.createTypeRef(item).describe()).join(', ')
+  return `${raw.name}<${args}>`
+}
+
+function describeStructured(api: TastyApiRuntime, raw: RawTastyStructuredTypeRef): string {
+  switch (raw.kind) {
+    case 'intrinsic':
+      return raw.name
+    case 'literal':
+      return formatLiteralValue(raw.value)
+    case 'array':
+      return `${api.createTypeRef(raw.element).describe()}[]`
+    case 'union':
+      return raw.types.map((item) => api.createTypeRef(item).describe()).join(' | ')
+    case 'intersection':
+      return raw.types.map((item) => api.createTypeRef(item).describe()).join(' & ')
+    case 'raw':
+      return raw.summary
+    case 'type_query':
+      return `typeof ${raw.expression}`
+    case 'template_literal':
+      return '`template literal`'
+    case 'object':
+      return '{ ... }'
+    case 'tuple':
+      return '[tuple]'
+    case 'indexed_access':
+      return `${api.createTypeRef(raw.object).describe()}[${api.createTypeRef(raw.index).describe()}]`
+    case 'function':
+      return 'function'
+    case 'constructor':
+      return 'constructor'
+    case 'type_operator':
+      return `${raw.operator} ${api.createTypeRef(raw.target).describe()}`
+    case 'conditional':
+      return 'conditional'
+    case 'mapped':
+      return 'mapped'
+    default:
+      return 'unknown'
+  }
+}
+
+function createJsDocTags(tags: RawTastyJsDocTag[] | undefined): TastyJsDocTag[] {
+  return (tags ?? []).map((tag) => new TastyJsDocTagImpl(tag))
 }
 
 function formatLiteralValue(value: string): string {
