@@ -1,0 +1,31 @@
+const symbol = {
+  id: "_s0",
+  name: "ArrayToTuple",
+  library: "user",
+  description: "Array to tuple conversion",
+  descriptionRaw: "Array to tuple conversion",
+  typeParameters:   [
+    {
+      name: "T",
+      constraint:   {
+        kind: "type_operator",
+        operator: "readonly",
+        target:   {
+          kind: "array",
+          element:   {
+            kind: "intrinsic",
+            name: "unknown"
+          }
+        }
+      }
+    }
+  ],
+  definition:   {
+    id: "T",
+    name: "T",
+    library: "user"
+  }
+};
+export { symbol as _s0 };
+export default symbol;
+

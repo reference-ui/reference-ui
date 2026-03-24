@@ -1,0 +1,23 @@
+const symbol = {
+  id: "_s0",
+  name: "Action",
+  library: "user",
+  definition:   {
+    kind: "union",
+    types:   [
+      {
+        id: "_s17",
+        name: "UserAction",
+        library: "user"
+      },
+      {
+        id: "_s14",
+        name: "SystemAction",
+        library: "user"
+      }
+    ]
+  }
+};
+export { symbol as _s0 };
+export default symbol;
+

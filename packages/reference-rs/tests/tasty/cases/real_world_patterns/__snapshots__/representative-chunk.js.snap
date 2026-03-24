@@ -1,0 +1,221 @@
+const symbol = {
+  id: "_s0",
+  name: "BuilderExample",
+  library: "user",
+  description: "Builder pattern example",
+  descriptionRaw: "Builder pattern example",
+  definition:   {
+    kind: "object",
+    members:   [
+      {
+        name: "userBuilder",
+        optional: false,
+        readonly: false,
+        kind: "property",
+        type:   {
+          id: "_s1",
+          name: "BuilderPatternGeneric",
+          library: "user",
+          typeArguments:   [
+            {
+              kind: "object",
+              members:   [
+                {
+                  name: "name",
+                  optional: false,
+                  readonly: false,
+                  kind: "property",
+                  type:   {
+                    kind: "intrinsic",
+                    name: "string"
+                  }
+                },
+                {
+                  name: "age",
+                  optional: false,
+                  readonly: false,
+                  kind: "property",
+                  type:   {
+                    kind: "intrinsic",
+                    name: "number"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        name: "configBuilder",
+        optional: false,
+        readonly: false,
+        kind: "property",
+        type:   {
+          id: "_s1",
+          name: "BuilderPatternGeneric",
+          library: "user",
+          typeArguments:   [
+            {
+              kind: "object",
+              members:   [
+                {
+                  name: "api",
+                  optional: false,
+                  readonly: false,
+                  kind: "property",
+                  type:   {
+                    kind: "intrinsic",
+                    name: "string"
+                  }
+                },
+                {
+                  name: "timeout",
+                  optional: false,
+                  readonly: false,
+                  kind: "property",
+                  type:   {
+                    kind: "intrinsic",
+                    name: "number"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        name: "buildUser",
+        optional: false,
+        readonly: false,
+        kind: "property",
+        type:   {
+          kind: "function",
+          params:   [
+            {
+              name: "builder",
+              optional: false,
+              typeRef:   {
+                id: "_s1",
+                name: "BuilderPatternGeneric",
+                library: "user",
+                typeArguments:   [
+                  {
+                    kind: "object",
+                    members:   [
+                      {
+                        name: "name",
+                        optional: false,
+                        readonly: false,
+                        kind: "property",
+                        type:   {
+                          kind: "intrinsic",
+                          name: "string"
+                        }
+                      },
+                      {
+                        name: "age",
+                        optional: false,
+                        readonly: false,
+                        kind: "property",
+                        type:   {
+                          kind: "intrinsic",
+                          name: "number"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          returnType:   {
+            kind: "object",
+            members:   [
+              {
+                name: "name",
+                optional: false,
+                readonly: false,
+                kind: "property",
+                type:   {
+                  kind: "intrinsic",
+                  name: "string"
+                }
+              },
+              {
+                name: "age",
+                optional: false,
+                readonly: false,
+                kind: "property",
+                type:   {
+                  kind: "intrinsic",
+                  name: "number"
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        name: "mergeConfig",
+        optional: false,
+        readonly: false,
+        kind: "property",
+        type:   {
+          kind: "function",
+          params:   [
+            {
+              name: "builder",
+              optional: false,
+              typeRef:   {
+                id: "_s1",
+                name: "BuilderPatternGeneric",
+                library: "user",
+                typeArguments:   [
+                  {
+                    id: "T",
+                    name: "T",
+                    library: "user"
+                  }
+                ]
+              }
+            },
+            {
+              name: "other",
+              optional: false,
+              typeRef:   {
+                id: "U",
+                name: "U",
+                library: "user"
+              }
+            }
+          ],
+          returnType:   {
+            id: "_s1",
+            name: "BuilderPatternGeneric",
+            library: "user",
+            typeArguments:   [
+              {
+                kind: "intersection",
+                types:   [
+                  {
+                    id: "T",
+                    name: "T",
+                    library: "user"
+                  },
+                  {
+                    id: "U",
+                    name: "U",
+                    library: "user"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+};
+export { symbol as _s0 };
+export default symbol;
+
