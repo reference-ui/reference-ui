@@ -27,7 +27,7 @@ type ViewportConditionKey =
   | 'lgTo2xl'
   | 'xlTo2xl'
 
-type FilteredConditionKey =
+export type FilteredConditionKey =
   | 'base'
   | ViewportConditionKey
 

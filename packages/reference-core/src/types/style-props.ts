@@ -1,3 +1,4 @@
+import type { StrictColorProps } from './colors'
 import type { ReferenceProps } from './props'
 import type { SystemStyleObject } from './system-style-object'
 
@@ -6,5 +7,8 @@ import type { SystemStyleObject } from './system-style-object'
  * Composes the authored style object with `ReferenceProps` (font, container, `r`, ...).
  * Use for direct primitive props like <Div fontSize="lg" container="center" />
  */
-export type StyleProps = SystemStyleObject & ReferenceProps
-
+export type StyleProps = StrictColorProps<Omit<
+  SystemStyleObject,
+  'font' | 'weight' | 'container' | 'r'
+>> &
+  ReferenceProps
