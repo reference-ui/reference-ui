@@ -8,7 +8,7 @@ import { ReferenceType } from './ReferenceType'
  */
 export function ReferenceDocument({ document }: { document: ReferenceDocumentData }) {
   return (
-    <Div display="grid" gap="reference.lg" bg="gray.200">
+    <Div display="grid" gap="reference.lg">
       {document.kind === 'typeAlias' ? (
         <ReferenceType document={document} />
       ) : (
