@@ -1,18 +1,16 @@
+import type { SystemStyleObject as StyledSystemStyleObject } from '@reference-ui/styled/types'
 import type { AnySelector, Selectors } from '@reference-ui/styled/types/selectors'
-import type { CssVarProperties, SystemProperties } from '@reference-ui/styled/types/style-props'
-import type { StyleConditionKey } from './conditions'
-import type { StrictColorProps } from './colors'
+import type { FilteredConditionKey, StyleConditionKey } from './conditions'
 
-type SystemStyleProperties = StrictColorProps<
-  Omit<SystemProperties, 'font' | 'weight' | 'container' | 'r'>
-> & CssVarProperties
-
-type NestedStyleObject<P> = P & {
-  [K in Selectors]?: NestedStyleObject<P>
+type NarrowedSystemStyleObject = Omit<
+  StyledSystemStyleObject,
+  FilteredConditionKey
+> & {
+  [K in Selectors]?: NarrowedSystemStyleObject
 } & {
-  [K in AnySelector]?: NestedStyleObject<P>
+  [K in AnySelector]?: NarrowedSystemStyleObject
 } & {
-  [K in StyleConditionKey]?: NestedStyleObject<P>
+  [K in StyleConditionKey]?: NarrowedSystemStyleObject
 }
 
-export type SystemStyleObject = NestedStyleObject<SystemStyleProperties>
+export type SystemStyleObject = NarrowedSystemStyleObject
