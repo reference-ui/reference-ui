@@ -1,9 +1,11 @@
 import * as React from 'react'
 import { Code } from '@reference-ui/react'
 
+type MonoTextColor = React.ComponentProps<typeof Code>['color']
+
 interface MonoTextProps {
   children: React.ReactNode
-  color?: string
+  color?: MonoTextColor
 }
 
 const REFERENCE_CODE_RESET_STYLE: React.CSSProperties = {

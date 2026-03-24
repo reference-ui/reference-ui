@@ -28,7 +28,7 @@ function generatePrimitive(tag: string): string {
   const primitiveClass = `ref-${tag}`
 
   return [
-    `export const ${exportName} = React.forwardRef<PrimitiveElement<'${tag}'>, PrimitiveProps<'${tag}'>>(`,
+    `export const ${exportName}: PrimitiveComponent<'${tag}'> = React.forwardRef<PrimitiveElement<'${tag}'>, PrimitiveProps<'${tag}'>>(`,
     `(allProps, ref) => { `,
     `const typedProps = allProps as PrimitiveProps<'${tag}'> & Record<string, unknown>; `,
     `const { className, children, colorMode, styleProps, elementProps } = splitPrimitiveProps(typedProps); `,
@@ -58,10 +58,10 @@ function generateFile(tags: string[], generatorPath: string): string {
     "import { splitCssProps } from '@reference-ui/styled/jsx'",
     "import { box } from '@reference-ui/styled/patterns/box'",
     "import { joinClassName } from './utils'",
-    "import type { PrimitiveElement, PrimitiveProps } from './types'",
+    "import type { PrimitiveComponent, PrimitiveElement, PrimitiveProps } from './types'",
     '',
     "export { TAGS as HTML_TAGS, type Tag as HtmlTag } from './tags'",
-    "export type { PrimitiveElement, PrimitiveProps } from './types'",
+    "export type { PrimitiveComponent, PrimitiveElement, PrimitiveProps } from './types'",
     '',
     "function splitPrimitiveProps<T extends Record<string, unknown>>(props: T) {",
     "  const { className, children, colorMode, ...rest } = props as T & {",
