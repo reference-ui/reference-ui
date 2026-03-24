@@ -64,6 +64,38 @@ export function expectResolvedRgb(
   expect(raw, `${label} (${property})`).toBe(expected)
 }
 
+/**
+ * Assert numeric `font-weight` from getComputedStyle (e.g. 400, 700).
+ * happy-dom / browsers typically return string values like `"700"`.
+ */
+export function expectComputedFontWeight(
+  el: Element,
+  expected: number,
+  label: string,
+): void {
+  const raw = window.getComputedStyle(el).fontWeight
+  if (raw === '' || raw == null) {
+    throw new Error(`${label}: computed fontWeight is empty`)
+  }
+  const n = Number.parseInt(raw, 10)
+  if (Number.isNaN(n)) {
+    throw new Error(`${label}: could not parse fontWeight "${raw}"`)
+  }
+  expect(n, label).toBe(expected)
+}
+
+export function expectComputedFontFamilyIncludes(
+  el: Element,
+  substring: string,
+  label: string,
+): void {
+  const raw = window.getComputedStyle(el).fontFamily
+  if (raw === '' || raw == null) {
+    throw new Error(`${label}: computed fontFamily is empty`)
+  }
+  expect(raw.toLowerCase(), label).toContain(substring.toLowerCase())
+}
+
 export function expectNotResolvedRgb(
   el: Element,
   property: 'backgroundColor' | 'color',

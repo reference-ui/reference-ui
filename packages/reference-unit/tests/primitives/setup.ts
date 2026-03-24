@@ -97,3 +97,19 @@ export function injectDesignSystemCss(options?: InjectDesignSystemCssOptions): v
   style.textContent = css
   document.head.appendChild(style)
 }
+
+/**
+ * After `flattenCssCascadeLayersForTests`, Panda atomic rules lose their layer ordering.
+ * `.fw_700` can appear earlier in the sheet than `.fw_400`, so a node with both recipe + weight
+ * classes resolves to 400. Real browsers keep utilities/recipes in `@layer` order. For happy-dom
+ * computed-style tests only: re-emit numeric `fw_*` utilities in ascending order so heavier
+ * weights win when multiple `fw_*` classes are present.
+ */
+export function appendFontWeightAtomicTieBreakForTests(): void {
+  const weights = [100, 200, 300, 400, 500, 600, 700, 800, 900]
+  const css = weights.map((w) => `.fw_${w} { font-weight: ${w}; }`).join('\n')
+  const style = document.createElement('style')
+  style.setAttribute('data-test-injected', 'font-weight-tiebreak')
+  style.textContent = css
+  document.head.appendChild(style)
+}
