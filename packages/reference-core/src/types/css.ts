@@ -1,5 +1,5 @@
 import type { StrictColorProps } from './colors'
-import type { SystemStyleObject } from './style-props'
+import type { SystemStyleObject } from './system-style-object'
 
 export type CssStyles = StrictColorProps<SystemStyleObject> | undefined | null | false
 

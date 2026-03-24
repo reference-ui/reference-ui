@@ -1,6 +1,6 @@
 import type { FontProps } from './fonts'
 import type { StylePropValue } from './style-prop'
-import type { SystemStyleObject } from './style-props'
+import type { SystemStyleObject } from './system-style-object'
 
 /**
  * Theme scope for token resolution.

@@ -122,7 +122,7 @@ export function initEvents(): void {
    * package directories. Tasty resolves generated system types through packaged
    * declaration surfaces such as `@reference-ui/react/react.d.mts`; if those
    * declarations are missing, re-exported symbols like
-   * `ReferenceSystemStyleObject` disappear from the generated manifest.
+   * `SystemStyleObject` disappear from the generated manifest.
    *
    * `packager-ts:runtime:complete` is therefore the barrier that makes clean
    * downstream documentation of generated system types deterministic.

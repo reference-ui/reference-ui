@@ -36,6 +36,11 @@ export type {
 export type {
   ColorModeProps,
   ContainerProps,
+  PrimitiveComponent,
+  PrimitiveCssProps,
+  PrimitiveElement,
+  PrimitiveProps,
+  PrimitiveTag,
   ResponsiveProps,
   StrictColorProps,
 } from '../types'
@@ -48,8 +53,4 @@ export type {
   RecipeVariantProps,
 } from '../types'
 export type { StylePropValue } from '../types'
-export type {
-  BackendSystemStyleObject,
-  ReferenceSystemStyleObject,
-  SystemStyleObject,
-} from '../types'
+export type { SystemStyleObject } from '../types'

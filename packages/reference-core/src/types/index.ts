@@ -24,6 +24,13 @@ export type {
   ResponsiveProps,
 } from './props'
 export type {
+  PrimitiveComponent,
+  PrimitiveCssProps,
+  PrimitiveElement,
+  PrimitiveProps,
+  PrimitiveTag,
+} from './primitives'
+export type {
   RecipeCreatorFn,
   RecipeDefinition,
   RecipeRuntimeFn,
@@ -33,8 +40,6 @@ export type {
 } from './recipe'
 export type { StylePropValue } from './style-prop'
 export type {
-  BackendSystemStyleObject,
-  ReferenceSystemStyleObject,
   StyleProps,
-  SystemStyleObject,
 } from './style-props'
+export type { SystemStyleObject } from './system-style-object'
