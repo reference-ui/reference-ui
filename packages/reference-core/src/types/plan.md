@@ -24,6 +24,7 @@ That type should:
 - use generated token/value unions from the current system
 - use `csstype` for CSS property coverage
 - avoid leaking backend-owned style types directly into userland
+- be the only public authored style object name
 
 The key point is:
 
@@ -34,17 +35,25 @@ The key point is:
 
 ## Hard decisions
 
-### 1. `SystemStyleObject` must be ours
+### 1. There should be one public `SystemStyleObject`
 
 We should not re-export `SystemStyleObject` directly from the generated styled package and call that done.
 
-That keeps users coupled to the current backend shape.
+We also do not need a second public name like `ReferenceSystemStyleObject`.
+
+That creates two problems:
+
+- users stay coupled to the current backend shape
+- our own API becomes noisier than it needs to be
 
 Instead:
 
 - `SystemStyleObject` should be defined in `src/types`
-- backend types can still exist internally for bridge code
-- user-facing exports must point at the Reference UI type
+- `SystemStyleObject` should be the only public authored style object name
+- backend style object names can exist internally if bridge code needs them
+- user-facing exports should expose only `SystemStyleObject`
+- we should not import the styled `SystemStyleObject` and then tweak or wrap it
+- we should generate/assemble our own `SystemStyleObject` from smaller primitive inputs
 
 ### 2. Use `csstype`
 
@@ -61,7 +70,7 @@ So the plan is:
 - use `csstype` for raw CSS property names and base property value families
 - narrow those values using Reference UI token/value unions where appropriate
 
-### 3. Use generated token/value unions
+### 3. Use generated token/value unions as primitives, not the generated object model
 
 We already have generated style-system knowledge today.
 
@@ -74,10 +83,48 @@ That means we can use current generated unions such as:
 
 These should feed into the Reference UI type layer, but they should not define the public architecture by themselves.
 
+Concretely:
+
+- importing generated unions like `UtilityValues["color"]` is fine
+- importing generated condition keys is fine
+- importing generated selector helpers is fine
+- importing the generated `SystemStyleObject` is **not** the move
+
 In other words:
 
 - generated unions are inputs
+- generated style-object aliases are not the public contract
 - `SystemStyleObject` is the Reference UI contract built from those inputs
+- the generated styled `SystemStyleObject` should not be the starting point
+
+### 3.5. Panda's assembly pattern is useful, but we should only fork the parts we actually need to own
+
+After inspecting the generated styled declarations, the current Panda-shaped model is roughly:
+
+1. `ConditionalValue<V>`
+   - `V`
+   - `Array<V | null>`
+   - object keyed by generated `Conditions`
+
+2. `Nested<P>`
+   - property bag `P`
+   - selector nesting
+   - condition nesting
+
+3. `SystemStyleObject`
+   - `Omit<Nested<SystemProperties & CssVarProperties>, "base">`
+
+4. `SystemProperties`
+   - each property value built from generated token unions, CSS property families, css vars, and string escape hatches
+
+That structure is useful to study, but we should treat it as a reference implementation, not as the public type to import.
+
+Important:
+
+- we do **not** want to recreate all of `ConditionalValue`
+- we only want to take ownership of the public semantics that matter to Reference UI
+- the main thing we want to remove from the inherited public model is the viewport-breakpoint-default story
+- the rest of the current conditional machinery can be reused or mirrored where it is still useful
 
 ### 4. Container-query-first must shape the types
 
@@ -87,6 +134,12 @@ The public style object should reflect Reference UI's direction:
 - viewport-width breakpoints not treated as the long-term primary responsive model
 
 That means the future Reference UI conditional shape should be designed by us, not inherited accidentally from Panda.
+
+More specifically:
+
+- we should not inherit viewport breakpoints as the assumed default responsive model
+- we do not need to throw away the entire conditional object machinery to achieve that
+- we should preserve the useful generic nesting/condition behavior while changing the public default direction
 
 ---
 
@@ -105,7 +158,9 @@ The likely layering is:
 
 3. **Reference UI conditional wrapper**
    - our own `StylePropValue<T>`
-   - eventually container-query-first, Reference UI-owned
+   - initially reuses most of Panda's current conditional machinery
+   - removes viewport-default semantics from the public authored model
+   - eventually becomes container-query-first, Reference UI-owned
 
 4. **Reference UI style property map**
    - property-by-property overrides
@@ -116,9 +171,11 @@ The likely layering is:
 5. **Reference UI `SystemStyleObject`**
    - recursive/nested style object
    - selectors / conditions / nested blocks
-   - public contract for `css()` and authored style props
+   - the single public contract for `css()` and authored style props
 
 The important part is that `SystemStyleObject` is assembled by us from smaller pieces.
+
+No second public alias is needed.
 
 ---
 
@@ -132,14 +189,28 @@ That is too much coupling.
 
 We should replace it with a Reference UI-owned wrapper.
 
-Phase 1 can still be backend-compatible in behavior.
+Phase 1 can still be backend-compatible in most behavior.
 But the alias itself should belong to us.
+
+The goal is not to rewrite every part of the current conditional system.
+
+The goal is:
+
+- keep the useful generic conditional mechanics
+- stop making viewport breakpoint defaults the public authored assumption
+- leave room to make container-query-first semantics more explicit over time
 
 Later we can tighten it around container-query-first semantics.
 
 ### B. Own `SystemStyleObject`
 
-This should be a real type definition, not just a backend alias.
+This should be a real type definition, not a backend alias and not a renamed wrapper around a backend alias.
+
+More clearly:
+
+- do not import styled `SystemStyleObject`
+- do not `Omit<>` or otherwise patch the styled `SystemStyleObject` into our public one
+- do build our own `SystemStyleObject` from owned conditional/nesting structure plus generated primitive unions
 
 The shape will likely look like:
 
@@ -149,6 +220,8 @@ The shape will likely look like:
 - recursive nesting support
 
 This is the core of the work.
+
+It should be exported simply as `SystemStyleObject`.
 
 ### C. Own `StyleProps`
 
@@ -171,6 +244,8 @@ that is fine.
 
 But those types should be internal implementation details, not the public authored surface.
 
+If an internal alias is needed for a generated object shape during migration, keep it private to implementation files.
+
 ---
 
 ## Suggested file direction
@@ -181,33 +256,44 @@ Target:
 
 - define a Reference UI-owned conditional wrapper
 - stop making this a direct backend alias
+- start by reusing or mirroring the current generated conditional mechanics where useful
+- explicitly avoid baking viewport breakpoint defaults into the public authored contract
 
 ### `src/types/style-props.ts`
 
 Target:
 
-- define Reference UI-owned property map + `SystemStyleObject`
-- stop treating backend `SystemStyleObject` as the public source of truth
+- define the one public `SystemStyleObject`
+- do not import `SystemStyleObject` from styled types
+- do not start from styled `SystemStyleObject` and tweak it
+- generate our own object type from primitive pieces
+- import generated primitive inputs only as needed:
+  - token/value unions
+  - condition keys
+  - selector keys
+  - css-var key helpers if useful
+- keep any backend object alias private or remove it entirely
 
 ### `src/types/colors.ts`
 
 Target:
 
 - keep the color-narrowing idea
-- but source it from the Reference UI property layer instead of backend property ownership assumptions
+- source color values from generated primitive unions
+- narrow our owned property map rather than patching a backend-owned object type
 
 ### `src/types/css.ts`
 
 Target:
 
-- point `CssStyles` at the Reference UI-owned `SystemStyleObject`
+- point `CssStyles` at the owned `SystemStyleObject`
 - keep the runtime bridge hidden in implementation files
 
 ### `src/system/primitives/types.ts`
 
 Target:
 
-- consume the Reference UI-owned style object only
+- consume the owned `SystemStyleObject` only
 - no direct import from backend style types
 
 ---
@@ -221,6 +307,15 @@ The likely implementation pattern is:
 3. override specific property value domains with generated unions
 4. wrap those value domains in `StylePropValue<T>`
 5. make the result recursively nestable
+
+However, after inspecting the generated Panda-shaped output, we do not need to force this all in one jump.
+
+A cleaner migration is:
+
+1. first own the conditional wrapper and nesting structure we actually need
+2. first own the public `SystemStyleObject` name and export
+3. use generated primitive unions for token-aware property values
+4. then progressively replace backend-derived property coverage assumptions with `csstype`-driven coverage
 
 So for example:
 
@@ -254,28 +349,34 @@ This is about the authored type surface first.
 
 ## Migration order
 
-### Phase 1: Own the names
+### Phase 1: Own the names and structure
 
 - own `StylePropValue<T>`
 - own `SystemStyleObject`
+- remove `ReferenceSystemStyleObject` as a public concept
+- keep most of the current conditional/nesting mechanics
+- remove viewport-breakpoint-default semantics from the public contract
+- stop importing styled `SystemStyleObject` as the basis for the public type
 - keep backend compatibility under the hood
 
 ### Phase 2: Build the real property layer
 
-- introduce `csstype`
 - define a Reference UI property map
 - narrow important token-bearing properties using generated unions
+- stop patching a backend object alias
+- introduce `csstype` where it improves property ownership and coverage
 
 ### Phase 3: Align responsive/conditional semantics
 
 - shape conditional types around container-query-first behavior
-- stop treating backend breakpoint semantics as the public default
+- stop treating backend viewport breakpoint semantics as the public default
 
 ### Phase 4: Collapse bridge code
 
 - reduce backend alias usage
 - move runtime bridges into internal files only
 - make public exports fully Reference UI-owned
+- leave only one public style object name: `SystemStyleObject`
 
 ---
 
@@ -285,6 +386,8 @@ We know this is working when:
 
 - users import Reference UI types and never need backend style types
 - `SystemStyleObject` is authored in `reference-core`
+- `SystemStyleObject` is the only public authored style object name
+- `SystemStyleObject` is generated/assembled by us rather than imported and patched from styled types
 - `StylePropValue<T>` is authored in `reference-core`
 - token narrowing is expressed through Reference UI-owned types
 - the runtime can still use Panda today
@@ -304,9 +407,9 @@ The right move is:
 
 That means:
 
-- import `csstype`
 - use generated token/value unions as ingredients
 - define `SystemStyleObject` ourselves
 - keep Panda as the current implementation detail
+- introduce `csstype` as part of owning the property layer, not as a reason to keep importing Panda's object model
 
 That is the cleanest path to control.
