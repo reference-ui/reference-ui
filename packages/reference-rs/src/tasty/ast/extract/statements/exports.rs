@@ -70,7 +70,7 @@ fn collect_named_export_statement(
     };
 
     if export_decl.declaration.is_none() {
-        record_named_reexports(export_decl, scanned_file.source.as_str(), export_bindings);
+        record_named_reexports(export_decl, scanned_file.source.as_str(), export_bindings, exports, &scanned_file.file_id);
         return;
     }
 

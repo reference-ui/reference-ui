@@ -101,7 +101,8 @@ impl TypeRefMap for IdentityMap {
             label: element.label,
             optional: element.optional,
             rest: element.rest,
-            element: map_type_ref(self, element.element),
+            readonly: element.readonly,
+            element: element.element,
         }
     }
 }

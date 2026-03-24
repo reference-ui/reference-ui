@@ -52,5 +52,6 @@ pub struct TastyTupleElement {
     pub label: Option<String>,
     pub optional: bool,
     pub rest: bool,
+    pub readonly: bool,
     pub element: TastyTypeRef,
 }

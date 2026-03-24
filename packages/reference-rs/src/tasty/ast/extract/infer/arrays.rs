@@ -42,6 +42,7 @@ fn tuple_from_elements(element_types: Vec<TypeRef>) -> TypeRef {
                 label: None,
                 optional: false,
                 rest: false,
+                readonly: false,
                 element,
             })
             .collect(),

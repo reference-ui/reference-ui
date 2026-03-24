@@ -30,6 +30,7 @@ fn elaborate_type_ref() -> TypeRef {
                     label: Some("a".to_string()),
                     optional: false,
                     rest: false,
+                    readonly: false,
                     element: t.clone(),
                 }],
             },
