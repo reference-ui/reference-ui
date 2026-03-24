@@ -42,19 +42,20 @@ That means the event topology itself is not obviously exploding into loops durin
 
 The latest startup trace is materially better.
 
-Approximate startup timeline from the new log:
+Measured timings visible in the latest log:
 
-| Stage                       | Start        | End          | Duration                    |
-| --------------------------- | ------------ | ------------ | --------------------------- |
-| Virtual copy + config       | 23:25:00.199 | 23:25:00.354 | ~0.16s                      |
-| Panda startup + codegen/css | 23:25:00.696 | 23:25:01.089 | ~0.39s                      |
-| Runtime packaging           | 23:25:01.089 | 23:25:01.108 | ~0.02s                      |
-| Runtime DTS                 | 23:25:01.108 | ongoing      | still the main visible cost |
+| Stage                                         | Start        | End          | Duration  |
+| --------------------------------------------- | ------------ | ------------ | --------- |
+| Final package install (`@reference-ui/types`) | 23:30:05.766 | 23:30:05.767 | ~0.00s    |
+| Final DTS (`@reference-ui/types`)             | 23:30:05.767 | 23:30:12.243 | ~6.48s    |
+| Sync completion / shutdown begins             | 23:30:12.243 | 23:30:12.243 | immediate |
+| Watch bootstrap starts after sync completion  | 23:30:12.708 | 23:30:12.722 | ~0.01s    |
 
 What this confirms:
 
 - The duplicate warm-start `runtime -> runtime -> final` pattern is no longer visible in the current startup trace.
-- The non-DTS setup work is still comfortably sub-second.
+- The final DTS phase is now clearly isolated to `@reference-ui/types`, and that single remaining `tsup` run still costs about **6.5 seconds**.
+- `sync:complete` happens before the watch bootstrap logs, so the follow-on watch startup should not be confused with the declaration phase itself.
 - The next meaningful gains will come from reducing the cost of each remaining DTS phase, not from reworking the high-level sync bus.
 
 ## How much of this is `tsup`?
@@ -101,35 +102,18 @@ With the current DTS split, the intended steady-state startup is now:
 - runtime DTS for `@reference-ui/react` + `@reference-ui/system`
 - final DTS for `@reference-ui/types`
 
-That is much better than the previous `runtime + runtime + final` behavior, but it still leaves startup bound by a handful of expensive `tsup` invocations.
+The latest trace confirms that the final phase really is `types`-only in the current codepath. That is much better than the previous `runtime + runtime + final` behavior, but it still leaves startup bound by a handful of expensive `tsup` invocations.
 
 ## Are we thrashing events?
 
 ## High-level answer
 
 - **Not in the main sync graph.**
-- **Yes, in a narrower sense inside** `**packager-ts**` **request scheduling on warm startup.**
+- **The old startup trace showed duplicated declaration work caused by warm-start request scheduling.**
+- **The current codepath appears to have reduced that duplicate startup work, but declaration generation is still expensive.**
 
-## Why the main graph does not look like the problem
-
-From `sync/events.ts`:
-
-- `virtual:complete` triggers config once.
-- `system:config:complete` triggers Panda once per fresh completion.
-- `system:panda:codegen` triggers runtime packaging once per fresh completion.
-- `packager:runtime:complete` requests runtime DTS.
-- `reference:complete` triggers final packaging once per fresh completion.
-- `packager:complete` requests final DTS.
-
-This is not a feedback loop by itself.
-
-Also, the utilities in `sync/events.utils.ts` are intentionally count-based and one-way:
-
-- `forWorker(...)` = buffer until ready
-- `combineTrigger(...)` = one emit per fresh prerequisite set
-- `afterFirst(...)` = ignore incremental triggers before the initial barrier
-
-So the main orchestration is not the source of a storm on initial boot.
+That distinction matters because the fix is not “rewrite `sync/events.ts`.”  
+The immediate next fix is not “rewrite `sync/events.ts`.” It is “make the remaining DTS phases cheaper.”
 
 ## Where duplication really happens
 
@@ -226,10 +210,11 @@ That means the earlier “triple wave” explanation still describes the old tra
 The most accurate answer is:
 
 - **We are not broadly thrashing the sync event bus.**
-- **We are thrashing declaration work because request-level scheduling allows stale warm-start runtime requests to stack with fresh runtime requests.**
+- **The old startup trace showed duplicated declaration work caused by warm-start request scheduling.**
+- **The current codepath appears to have reduced that duplicate startup work, but declaration generation is still expensive.**
 
 That distinction matters because the fix is not “rewrite `sync/events.ts`.”  
-The fix is “make `packager-ts` phase scheduling generation-aware and avoid duplicate work.”
+The immediate next fix is not “rewrite `sync/events.ts`.” It is “make the remaining DTS phases cheaper.”
 
 ## Other repeated work seen in the log
 
@@ -244,11 +229,17 @@ They are not what turns startup into a 40+ second wait.
 
 ## Biggest bottlenecks, ranked
 
-## 1\. Remaining DTS passes are still expensive
+## 1\. The remaining DTS phases are still expensive even after the duplicate work reduction
 
 This is still the biggest problem by far.
 
-Even after removing duplicate passes, the remaining declaration phases are still slow enough to dominate the entire boot sequence.
+The major duplicate startup pattern has already been reduced:
+
+- the stale warm-start runtime DTS request was removed
+- runtime DTS no longer compiles `@reference-ui/types`
+- final DTS no longer rebuilds `@reference-ui/react` and `@reference-ui/system`
+
+What remains is still expensive enough to dominate the entire boot sequence, because the startup still has to pay for the remaining declaration phases.
 
 ## 2\. Per-package `npx tsup` spawning
 
@@ -263,7 +254,7 @@ Each package compile is a fresh process:
 
 Even with better event scheduling, the current model is still expensive because it serializes several independent `tsup` child processes.
 
-## 3\. Runtime/package phase handoff is now leaner, but not enough
+## 3\. Runtime/package phase handoff is leaner now, but the critical path is still DTS-bound
 
 The runtime barrier exists to unblock the reference build.
 
@@ -285,6 +276,8 @@ That does not appear to be the main startup blocker anymore, but generation-awar
 ## 1\. Replace per-package `tsup` invocations with a single multi-entry declaration build
 
 This is now the best next fix.
+
+The duplicate-phase cleanup work is already in place, so the next win is not another round of deduping the same startup path. The next win is reducing the cost of the DTS phases that still have to happen.
 
 Right now, each phase can still spawn separate `tsup` processes.
 A replacement should aim for:
