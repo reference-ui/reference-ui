@@ -32,7 +32,7 @@ export class TastySymbolImpl implements TastySymbol {
   constructor(
     private readonly api: TastyApiRuntime,
     private readonly entry: RawTastySymbolIndexEntry,
-    private readonly raw: TastySymbolModel,
+    private readonly raw: TastySymbolModel
   ) {}
 
   getId(): string {
@@ -60,7 +60,7 @@ export class TastySymbolImpl implements TastySymbol {
   }
 
   getJsDocTag(name: string): TastyJsDocTag | undefined {
-    return this.getJsDocTags().find((tag) => tag.getName() === name)
+    return this.getJsDocTags().find(tag => tag.getName() === name)
   }
 
   getRaw(): TastySymbolModel {
@@ -68,7 +68,7 @@ export class TastySymbolImpl implements TastySymbol {
   }
 
   getMembers(): TastyMember[] {
-    return membersForSymbol(this.raw).map((member) => new TastyMemberImpl(this.api, member))
+    return membersForSymbol(this.raw).map(member => new TastyMemberImpl(this.api, member))
   }
 
   async getDisplayMembers(): Promise<TastyMember[]> {
@@ -81,7 +81,7 @@ export class TastySymbolImpl implements TastySymbol {
 
   getExtends(): TastySymbolRef[] {
     if (!isInterfaceSymbol(this.raw)) return []
-    return this.raw.extends.map((ref) => this.api.createSymbolRef(ref))
+    return this.raw.extends.map(ref => this.api.createSymbolRef(ref))
   }
 
   getUnderlyingType(): TastyTypeRef | undefined {
@@ -109,7 +109,7 @@ export class TastySymbolImpl implements TastySymbol {
 export class TastySymbolRefImpl implements TastySymbolRef {
   constructor(
     private readonly api: TastyApiRuntime,
-    private readonly raw: RawTastySymbolRef,
+    private readonly raw: RawTastySymbolRef
   ) {}
 
   getId(): string {
@@ -144,7 +144,7 @@ export class TastySymbolRefImpl implements TastySymbolRef {
 export class TastyMemberImpl implements TastyMember {
   constructor(
     private readonly api: TastyApiRuntime,
-    private readonly raw: RawTastyMember,
+    private readonly raw: RawTastyMember
   ) {}
 
   getId(): string {
@@ -181,7 +181,7 @@ export class TastyMemberImpl implements TastyMember {
   }
 
   getJsDocTag(name: string): TastyJsDocTag | undefined {
-    return this.getJsDocTags().find((tag) => tag.getName() === name)
+    return this.getJsDocTags().find(tag => tag.getName() === name)
   }
 
   getDefaultValue(): string | undefined {
@@ -194,9 +194,9 @@ export class TastyMemberImpl implements TastyMember {
 
     const descriptions = new Map(
       this.getJsDocTags()
-        .filter((tag) => tag.getName() === 'param')
-        .map((tag) => parseTastyParamTag(tag.getValue()))
-        .filter((entry): entry is [string, string] => entry != null),
+        .filter(tag => tag.getName() === 'param')
+        .map(tag => parseTastyParamTag(tag.getValue()))
+        .filter((entry): entry is [string, string] => entry != null)
     )
 
     return type.getParameters().map((param, index) => {
@@ -218,7 +218,7 @@ export class TastyMemberImpl implements TastyMember {
 export class TastyFnParamImpl implements TastyFnParam {
   constructor(
     private readonly api: TastyApiRuntime,
-    private readonly raw: RawTastyFnParam,
+    private readonly raw: RawTastyFnParam
   ) {}
 
   getName(): string | null {
@@ -250,7 +250,7 @@ export class TastyJsDocTagImpl implements TastyJsDocTag {
 export class TastyTypeRefImpl implements TastyTypeRef {
   constructor(
     private readonly api: TastyApiRuntime,
-    private readonly raw: RawTastyTypeRef,
+    private readonly raw: RawTastyTypeRef
   ) {}
 
   getKind(): TastyTypeKind {
@@ -306,13 +306,13 @@ export class TastyTypeRefImpl implements TastyTypeRef {
   getUnionTypes(): TastyTypeRef[] {
     const s = structured(this.raw)
     if (s?.kind !== 'union') return []
-    return s.types.map((item) => this.api.createTypeRef(item))
+    return s.types.map(item => this.api.createTypeRef(item))
   }
 
   getParameters(): TastyFnParam[] {
     const s = structured(this.raw)
     if (s?.kind !== 'function' && s?.kind !== 'constructor') return []
-    return s.params.map((param) => new TastyFnParamImpl(this.api, param))
+    return s.params.map(param => new TastyFnParamImpl(this.api, param))
   }
 
   getReturnType(): TastyTypeRef | undefined {
@@ -323,7 +323,7 @@ export class TastyTypeRefImpl implements TastyTypeRef {
 
   getTypeArguments(): TastyTypeRef[] {
     if (!isTypeReference(this.raw) || !this.raw.typeArguments) return []
-    return this.raw.typeArguments.map((item) => this.api.createTypeRef(item))
+    return this.raw.typeArguments.map(item => this.api.createTypeRef(item))
   }
 
   getReferencedSymbol(): TastySymbolRef | undefined {
@@ -357,7 +357,7 @@ function structured(raw: RawTastyTypeRef): RawTastyStructuredTypeRef | undefined
 }
 
 function resolvedFieldFromStructured(
-  raw: RawTastyStructuredTypeRef,
+  raw: RawTastyStructuredTypeRef
 ): RawTastyTypeRef | undefined {
   switch (raw.kind) {
     case 'indexed_access':
@@ -373,11 +373,16 @@ function resolvedFieldFromStructured(
 
 function describeTypeReference(api: TastyApiRuntime, raw: RawTastyTypeReference): string {
   if (!raw.typeArguments?.length) return raw.name
-  const args = raw.typeArguments.map((item) => api.createTypeRef(item).describe()).join(', ')
+  const args = raw.typeArguments
+    .map(item => api.createTypeRef(item).describe())
+    .join(', ')
   return `${raw.name}<${args}>`
 }
 
-function describeStructured(api: TastyApiRuntime, raw: RawTastyStructuredTypeRef): string {
+function describeStructured(
+  api: TastyApiRuntime,
+  raw: RawTastyStructuredTypeRef
+): string {
   switch (raw.kind) {
     case 'intrinsic':
       return raw.name
@@ -386,9 +391,9 @@ function describeStructured(api: TastyApiRuntime, raw: RawTastyStructuredTypeRef
     case 'array':
       return `${api.createTypeRef(raw.element).describe()}[]`
     case 'union':
-      return raw.types.map((item) => api.createTypeRef(item).describe()).join(' | ')
+      return raw.types.map(item => api.createTypeRef(item).describe()).join(' | ')
     case 'intersection':
-      return raw.types.map((item) => api.createTypeRef(item).describe()).join(' & ')
+      return raw.types.map(item => api.createTypeRef(item).describe()).join(' & ')
     case 'raw':
       return raw.summary
     case 'type_query':
@@ -396,7 +401,7 @@ function describeStructured(api: TastyApiRuntime, raw: RawTastyStructuredTypeRef
     case 'template_literal':
       return '`template literal`'
     case 'object':
-      return '{ ... }'
+      return describeObjectMembers(api, raw)
     case 'tuple':
       return '[tuple]'
     case 'indexed_access':
@@ -417,7 +422,7 @@ function describeStructured(api: TastyApiRuntime, raw: RawTastyStructuredTypeRef
 }
 
 function createJsDocTags(tags: RawTastyJsDocTag[] | undefined): TastyJsDocTag[] {
-  return (tags ?? []).map((tag) => new TastyJsDocTagImpl(tag))
+  return (tags ?? []).map(tag => new TastyJsDocTagImpl(tag))
 }
 
 function formatLiteralValue(value: string): string {
@@ -429,4 +434,65 @@ function formatLiteralValue(value: string): string {
     return trimmed
   }
   return JSON.stringify(trimmed)
+}
+
+function describeObjectMembers(
+  api: TastyApiRuntime,
+  raw: RawTastyStructuredTypeRef & { kind: 'object' }
+): string {
+  if (!raw.members || raw.members.length === 0) {
+    return '{}'
+  }
+
+  // For simple generic objects (like { value: T }), keep the old behavior
+  if (shouldUseSimpleDescription(raw)) {
+    return '{ ... }'
+  }
+
+  const memberDescriptions = raw.members.map(member => {
+    const optional = member.optional ? '?' : ''
+    const readonly = member.readonly ? 'readonly ' : ''
+    const typeDescription = member.type
+      ? api.createTypeRef(member.type).describe()
+      : 'unknown'
+    return `${readonly}${member.name}${optional}: ${typeDescription}`
+  })
+
+  // For very large objects, truncate to avoid overly long descriptions
+  if (memberDescriptions.length > 10) {
+    const shown = memberDescriptions.slice(0, 8).join('; ')
+    const remaining = memberDescriptions.length - 8
+    return `{ ${shown}; ... +${remaining} more }`
+  }
+
+  return `{ ${memberDescriptions.join('; ')} }`
+}
+
+function shouldUseSimpleDescription(
+  raw: RawTastyStructuredTypeRef & { kind: 'object' }
+): boolean {
+  // Use simple description for objects with:
+  // 1. Just 1-2 members with simple type parameter names
+  // 2. No complex nested structures
+  if (raw.members.length <= 2) {
+    return raw.members.every(member => {
+      if (!member.type) return false
+
+      // Check if the type is a simple type parameter reference
+      if (isTypeReference(member.type)) {
+        const typeName = member.type.name
+        // Simple single-letter type parameters like T, U, V, K
+        return /^[A-Z]$/.test(typeName) && !member.type.typeArguments
+      }
+
+      // Check for simple intrinsic types like string, number, boolean
+      if (member.type.kind === 'intrinsic') {
+        return ['string', 'number', 'boolean', 'unknown'].includes(member.type.name)
+      }
+
+      return false
+    })
+  }
+
+  return false
 }
