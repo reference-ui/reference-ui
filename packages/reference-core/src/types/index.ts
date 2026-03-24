@@ -24,6 +24,7 @@ export type {
   ResponsiveProps,
 } from './props'
 export type {
+  HTMLStyledProps,
   PrimitiveComponent,
   PrimitiveCssProps,
   PrimitiveElement,

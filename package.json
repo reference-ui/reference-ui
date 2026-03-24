@@ -29,6 +29,7 @@
     "test:system": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/core run eslint:txt && concurrently --kill-others-on-fail -n core,unit -c blue,green \"pnpm --filter @reference-ui/core run test\" \"pnpm --filter @reference-ui/reference-unit run test\"",
     "test:e2e": "REF_TEST_FRESH=1 pnpm --filter @reference-ui/reference-e2e run test:quick",
     "test:e2e:dev": "pnpm --filter @reference-ui/lib run build && REF_TEST_PROJECT=react18-vite5 pnpm --filter @reference-ui/reference-e2e run test:dev",
+    "lib:typecheck": "pnpm --filter @reference-ui/lib run typecheck",
     "version-packages": "changeset version && pnpm install --lockfile-only"
   },
   "devDependencies": {

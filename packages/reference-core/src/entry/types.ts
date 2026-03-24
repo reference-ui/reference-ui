@@ -36,6 +36,7 @@ export type {
 export type {
   ColorModeProps,
   ContainerProps,
+  HTMLStyledProps,
   PrimitiveComponent,
   PrimitiveCssProps,
   PrimitiveElement,

@@ -1,13 +1,12 @@
-import type { StrictColorProps } from './colors'
 import type { SystemStyleObject } from './system-style-object'
 
-export type CssStyles = StrictColorProps<SystemStyleObject> | undefined | null | false
+export type CssStyles = SystemStyleObject | undefined | null | false
 
 export interface CssRawFunction {
-  (styles: CssStyles): StrictColorProps<SystemStyleObject>
-  (styles: CssStyles[]): StrictColorProps<SystemStyleObject>
-  (...styles: Array<CssStyles | CssStyles[]>): StrictColorProps<SystemStyleObject>
-  (styles: CssStyles): StrictColorProps<SystemStyleObject>
+  (styles: CssStyles): SystemStyleObject
+  (styles: CssStyles[]): SystemStyleObject
+  (...styles: Array<CssStyles | CssStyles[]>): SystemStyleObject
+  (styles: CssStyles): SystemStyleObject
 }
 
 export interface CssFunction {
