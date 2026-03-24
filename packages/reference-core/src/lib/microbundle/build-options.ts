@@ -23,6 +23,7 @@ export function buildMicroBundleOptions(
     treeShaking = true,
     mainFields = ['module', 'main'],
     conditions = ['import', 'node'],
+    tsconfigRaw,
   } = options
 
   return {
@@ -41,5 +42,6 @@ export function buildMicroBundleOptions(
     splitting: false,
     mainFields,
     conditions,
+    tsconfigRaw,
   }
 }

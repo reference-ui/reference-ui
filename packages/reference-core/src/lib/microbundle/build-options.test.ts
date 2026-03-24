@@ -72,4 +72,16 @@ describe('buildMicroBundleOptions', () => {
 
     expect(result.format).toBe('iife')
   })
+
+  it('forwards tsconfigRaw overrides', () => {
+    const result = buildMicroBundleOptions(ENTRY_PATH, {
+      tsconfigRaw: {
+        compilerOptions: {},
+      },
+    })
+
+    expect(result.tsconfigRaw).toEqual({
+      compilerOptions: {},
+    })
+  })
 })
