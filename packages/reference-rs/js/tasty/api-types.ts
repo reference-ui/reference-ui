@@ -157,6 +157,8 @@ export interface TastyApi {
   loadManifest(): Promise<RawTastyManifest>
   getManifest(): RawTastyManifest | undefined
   getWarnings(): string[]
+  /** True when the id refers to a chunk-backed symbol in the loaded manifest. */
+  hasManifestSymbol(id: string): boolean
   loadSymbolById(id: string): Promise<TastySymbol>
   loadSymbolByName(name: string): Promise<TastySymbol>
   findSymbolByName(name: string): Promise<TastySymbol | undefined>

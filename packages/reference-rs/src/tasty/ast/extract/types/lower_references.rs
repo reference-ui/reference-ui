@@ -1,4 +1,3 @@
-use oxc_ast::ast::Expression;
 use oxc_span::GetSpan;
 
 use crate::tasty::model::TypeRef;
@@ -51,14 +50,36 @@ impl<'a> LoweringContext<'a> {
         }
     }
 
-    pub(super) fn lower_expression_reference(&self, expression: &Expression<'_>) -> TypeRef {
-        let name = slice_span(self.ctx.source, expression.span()).to_string();
+    /// `TSInterfaceHeritage` splits `extends Foo<A, B>` into `expression` (`Foo`) and `type_arguments`.
+    /// Lower both so utility types like `Omit` retain their type arguments.
+    pub(super) fn lower_interface_heritage(
+        &self,
+        heritage: &oxc_ast::ast::TSInterfaceHeritage<'_>,
+    ) -> TypeRef {
+        let name = slice_span(self.ctx.source, heritage.expression.span()).to_string();
+        let lookup_name = reference_lookup_name(&name);
+        let type_arguments = heritage.type_arguments.as_ref().map(|instantiation| {
+            instantiation
+                .params
+                .iter()
+                .map(|argument| self.lower_type(argument))
+                .collect::<Vec<_>>()
+        });
 
+        if lookup_name == "Array" {
+            if let Some([element]) = type_arguments.as_deref() {
+                return TypeRef::Array {
+                    element: Box::new(element.clone()),
+                };
+            }
+        }
+
+        let source_module = self.reference_source_module(&name);
         TypeRef::Reference {
-            name: name.clone(),
+            name,
             target_id: None,
-            source_module: self.reference_source_module(&name),
-            type_arguments: None,
+            source_module,
+            type_arguments,
         }
     }
 

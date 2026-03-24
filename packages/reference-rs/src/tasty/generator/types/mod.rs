@@ -7,14 +7,15 @@ use std::collections::BTreeMap;
 use crate::tasty::generator::util::{emit_field, emit_object, indent_block, to_js_literal};
 use crate::tasty::model::TypeRef;
 
-use emit_collections::{emit_fn_params, emit_type_ref_array};
+use emit_collections::emit_fn_params;
+pub(super) use emit_collections::{emit_members, emit_type_parameters};
+pub(crate) use emit_collections::emit_type_ref_array;
 use emit_compounds::{
     emit_constructor_type_ref, emit_mapped_type_ref, emit_reference_type_ref,
     emit_reference_with_type_arguments,
 };
 use emit_leaves::{emit_template_literal_part, emit_tuple_element};
 
-pub(super) use emit_collections::{emit_members, emit_type_parameters};
 pub(super) use emit_leaves::emit_jsdoc;
 
 pub(super) fn emit_optional_type_ref(

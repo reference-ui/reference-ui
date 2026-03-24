@@ -99,6 +99,29 @@ fn interface_extends_yields_reference_type_refs() {
 }
 
 #[test]
+fn interface_extends_utility_preserves_type_arguments() {
+    let scanned = single_file(
+        "test.ts",
+        "export interface Base { a: string; drop: number }\nexport interface S extends Omit<Base, 'drop'> {}\n",
+    );
+    let ast = extract_ast(&scanned);
+    let file = parsed_file(&ast, "test.ts");
+    let shell = file.exports.iter().find(|s| s.name == "S").expect("S");
+    assert_eq!(shell.extends.len(), 1);
+    match &shell.extends[0] {
+        TypeRef::Reference {
+            name,
+            type_arguments: Some(args),
+            ..
+        } => {
+            assert_eq!(name, "Omit");
+            assert_eq!(args.len(), 2);
+        }
+        other => panic!("expected Reference with type args, got {other:?}"),
+    }
+}
+
+#[test]
 fn type_alias_union_underlying() {
     let scanned = single_file(
         "test.ts",

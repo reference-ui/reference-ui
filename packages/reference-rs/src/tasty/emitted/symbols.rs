@@ -3,13 +3,16 @@ use ts_rs::TS;
 
 use super::{TastyJsDoc, TastyMember, TastyTypeParameter, TastyTypeRef};
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, TS)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export_to = "js/tasty/generated/", rename_all = "camelCase")]
 pub struct TastySymbolRef {
     pub id: String,
     pub name: String,
     pub library: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub type_arguments: Option<Vec<TastyTypeRef>>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]

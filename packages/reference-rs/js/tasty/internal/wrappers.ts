@@ -89,7 +89,13 @@ export class TastySymbolImpl implements TastySymbol {
   }
 
   async loadExtendsSymbols(): Promise<TastySymbol[]> {
-    return Promise.all(this.getExtends().map((ref) => ref.load()))
+    await this.api.loadManifest()
+    const loaded: TastySymbol[] = []
+    for (const ref of this.getExtends()) {
+      if (!this.api.hasManifestSymbol(ref.getId())) continue
+      loaded.push(await ref.load())
+    }
+    return loaded
   }
 }
 

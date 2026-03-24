@@ -31,20 +31,12 @@ import {
   type ModuleNamespace,
   type TastySymbolModel,
 } from './shared'
-import { projectObjectLikeMembers } from './object-projection'
+import { projectMembersFromInterfaceExtends, projectObjectLikeMembers } from './object-projection'
 import { TastyMemberImpl, TastySymbolImpl, TastySymbolRefImpl, TastyTypeRefImpl } from './wrappers'
 
 interface CreateTastyApiRuntimeOptions {
   manifestPath: string
   importer: ArtifactImporter
-}
-
-async function getInheritedDisplayMembers(symbol: TastySymbol): Promise<TastyMember[]> {
-  if (symbol.getKind() === 'typeAlias') {
-    return symbol.getDisplayMembers()
-  }
-
-  return symbol.getMembers()
 }
 
 export class TastyApiRuntime implements TastyApi {
@@ -68,61 +60,83 @@ export class TastyApiRuntime implements TastyApi {
       this.manifestPath = options.manifestPath
     }
     this.graph = {
-      resolveReference: async (ref) => ref.load(),
-      loadImmediateDependencies: async (symbol) => {
-        const refs = await this.graph.collectUserOwnedReferences(symbol)
-        return Promise.all(refs.map((ref) => ref.load()))
-      },
-      loadExtendsChain: async (symbol) => {
-        const visited = new Set<string>()
-        const chain: TastySymbol[] = []
-
-        const visit = async (current: TastySymbol) => {
-          for (const ref of current.getExtends()) {
-            const id = ref.getId()
-            if (visited.has(id)) continue
-            visited.add(id)
-            const loaded = await ref.load()
-            chain.push(loaded)
-            await visit(loaded)
-          }
-        }
-
-        await visit(symbol)
-        return chain
-      },
-      flattenInterfaceMembers: async (symbol) => {
-        const inherited = await this.graph.loadExtendsChain(symbol)
-        const flattened = (await Promise.all(
-          inherited.map((item) => getInheritedDisplayMembers(item)),
-        )).flat()
-        flattened.push(...symbol.getMembers())
-        return flattened
-      },
-      getDisplayMembers: async (symbol) => {
-        const raw = symbol.getRaw()
-
-        if (isInterfaceSymbol(raw)) {
-          return dedupeTastyMembers(await this.graph.flattenInterfaceMembers(symbol))
-        }
-
-        if (isTypeAliasSymbol(raw)) {
-          return (await this.graph.projectObjectLikeMembers(symbol)) ?? []
-        }
-
-        return []
-      },
-      projectObjectLikeMembers: async (symbol) => {
-        return projectObjectLikeMembers(this, symbol)
-      },
-      collectUserOwnedReferences: async (symbol) => {
-        const refs = collectUserOwnedReferencesFromSymbol(symbol.getRaw())
-        return uniqueById(
-          refs.filter((ref) => ref.library === 'user').map((ref) => this.createSymbolRef(ref)),
-          (ref) => ref.getId(),
-        )
-      },
+      resolveReference: (ref) => this.graphResolveReference(ref),
+      loadImmediateDependencies: (symbol) => this.graphLoadImmediateDependencies(symbol),
+      loadExtendsChain: (symbol) => this.graphLoadExtendsChain(symbol),
+      flattenInterfaceMembers: (symbol) => this.graphFlattenInterfaceMembers(symbol),
+      getDisplayMembers: (symbol) => this.graphGetDisplayMembers(symbol),
+      projectObjectLikeMembers: (symbol) => this.graphProjectObjectLikeMembers(symbol),
+      collectUserOwnedReferences: (symbol) => this.graphCollectUserOwnedReferences(symbol),
     }
+  }
+
+  private async graphResolveReference(ref: TastySymbolRef): Promise<TastySymbol> {
+    await this.loadManifest()
+    const id = ref.getId()
+    if (!this.hasManifestSymbol(id)) {
+      throw new Error(
+        `Reference "${id}" is not backed by the manifest (built-in or external utility).`,
+      )
+    }
+    return ref.load()
+  }
+
+  private async graphLoadImmediateDependencies(symbol: TastySymbol): Promise<TastySymbol[]> {
+    await this.loadManifest()
+    const refs = await this.graph.collectUserOwnedReferences(symbol)
+    const manifestBacked = refs.filter((ref) => this.hasManifestSymbol(ref.getId()))
+    return Promise.all(manifestBacked.map((ref) => ref.load()))
+  }
+
+  /** Walk `extends` for symbols that exist in the manifest (skips utilities like `Omit` that have no chunk). */
+  private async graphLoadExtendsChain(symbol: TastySymbol): Promise<TastySymbol[]> {
+    await this.loadManifest()
+    const visited = new Set<string>()
+    const chain: TastySymbol[] = []
+
+    const visit = async (current: TastySymbol): Promise<void> => {
+      for (const ref of current.getExtends()) {
+        const id = ref.getId()
+        if (visited.has(id) || !this.hasManifestSymbol(id)) continue
+        visited.add(id)
+        const loaded = await ref.load()
+        chain.push(loaded)
+        await visit(loaded)
+      }
+    }
+
+    await visit(symbol)
+    return chain
+  }
+
+  private async graphFlattenInterfaceMembers(symbol: TastySymbol): Promise<TastyMember[]> {
+    const fromUtilities = await projectMembersFromInterfaceExtends(this, symbol)
+    const manifestParents = await this.graph.loadExtendsChain(symbol)
+    const fromParents = (await Promise.all(manifestParents.map((s) => s.getDisplayMembers()))).flat()
+    return [...fromParents, ...fromUtilities, ...symbol.getMembers()]
+  }
+
+  private async graphGetDisplayMembers(symbol: TastySymbol): Promise<TastyMember[]> {
+    const raw = symbol.getRaw()
+    if (isInterfaceSymbol(raw)) {
+      return dedupeTastyMembers(await this.graph.flattenInterfaceMembers(symbol))
+    }
+    if (isTypeAliasSymbol(raw)) {
+      return (await this.graph.projectObjectLikeMembers(symbol)) ?? []
+    }
+    return []
+  }
+
+  private graphProjectObjectLikeMembers(symbol: TastySymbol): ReturnType<typeof projectObjectLikeMembers> {
+    return projectObjectLikeMembers(this, symbol)
+  }
+
+  private async graphCollectUserOwnedReferences(symbol: TastySymbol): Promise<TastySymbolRef[]> {
+    const refs = collectUserOwnedReferencesFromSymbol(symbol.getRaw())
+    const userRefs = refs
+      .filter((ref) => ref.library === 'user')
+      .map((ref) => this.createSymbolRef(ref))
+    return uniqueById(userRefs, (ref) => ref.getId())
   }
 
   async ready(): Promise<void> {
@@ -161,6 +175,11 @@ export class TastyApiRuntime implements TastyApi {
 
   getWarnings(): string[] {
     return this.manifest?.warnings ?? []
+  }
+
+  /** True when `id` is a chunk-backed symbol in the loaded manifest (not e.g. an unresolved utility name). */
+  hasManifestSymbol(id: string): boolean {
+    return this.manifest?.symbolsById[id] != null
   }
 
   async loadSymbolById(id: string): Promise<TastySymbol> {
