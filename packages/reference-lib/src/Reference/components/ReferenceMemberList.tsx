@@ -117,7 +117,7 @@ export function ReferenceMemberList({ members }: { members: ReferenceMemberDocum
   const { declaredMembers, inheritedGroups } = partitionMembers(members)
 
   return (
-    <Div display="grid" bg="blue.500" gap="reference.lg">
+    <Div display="grid" gap="reference.lg">
       {declaredMembers.length > 0 ? (
         <ReferenceMemberRows members={declaredMembers} />
       ) : null}
