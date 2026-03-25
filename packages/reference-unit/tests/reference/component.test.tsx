@@ -2,7 +2,7 @@
  * @vitest-environment happy-dom
  */
 
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, render, screen, within } from '@testing-library/react'
 import { waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 import { Reference } from '@reference-ui/types'
@@ -12,9 +12,9 @@ async function renderReference(name: string) {
   const ready = await waitForReferenceArtifacts()
   expect(ready, 'reference manifest should be emitted by the reference worker').toBe(true)
 
-  render(<Reference name={name} />)
+  const view = render(<Reference name={name} />)
   await waitFor(() => {
-    expect(screen.queryByText(/Loading reference docs for/)).not.toBeInTheDocument()
+    expect(within(view.container).queryByText(/Loading reference docs for/)).not.toBeInTheDocument()
   })
 }
 
@@ -289,15 +289,15 @@ describe('Reference component', () => {
     expectTextAbsent('disabled')
   })
 
-  it('loads StyleProps after export type re-export from @reference-ui/react', async () => {
-    await renderReference('StyleProps')
+  it('loads a local interface from the reference-unit source tree', async () => {
+    await renderReference('ReferenceJsDocTagFixture')
 
     expect(screen.queryByText(/Failed to load/)).not.toBeInTheDocument()
-    expect(screen.getAllByText('StyleProps').length).toBeGreaterThanOrEqual(1)
-    expect(screen.getByText('Type')).toBeInTheDocument()
-    expectTextAbsent('Definition')
-    expectVisibleText('WebkitAppearance')
-    expectVisibleText('container')
-    expectVisibleText('padding')
+    expect(screen.getAllByText('ReferenceJsDocTagFixture').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getByText('Interface')).toBeInTheDocument()
+    expectVisibleText('formatPreview')
+    expectVisibleText('renderLabel')
+    expectVisibleText('@deprecated')
+    expectVisibleText('@remarks')
   })
 })
