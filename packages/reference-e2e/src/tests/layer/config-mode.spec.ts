@@ -4,7 +4,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { colors } from '@reference-ui/lib/theme'
 import { addToConfig, getSandboxDir } from '../../environments/lib/config'
-import { runRefSync, waitForRefSyncReady } from '../../environments/lib/ref-sync'
+import { runRefSync } from '../../environments/lib/ref-sync'
 import { testRoutes } from '../../environments/base/routes'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -25,9 +25,8 @@ function hexToRgb(hex: string): string {
 
 async function enableLayersMode(): Promise<string> {
   const sandboxDir = getSandboxDir()
-  const ready = waitForRefSyncReady(sandboxDir, { timeout: 45_000 })
   await addToConfig({ extends: '[]', layers: '[baseSystem]' })
-  await ready
+  await runRefSync(sandboxDir)
   return sandboxDir
 }
 
@@ -155,9 +154,8 @@ test.describe.serial('layer', () => {
 
   test('layers only – upstream theme token in CSS; consumer primitives use consumer scope', async ({ page }) => {
     test.setTimeout(60_000)
-    const ready = waitForRefSyncReady(sandboxDir, { timeout: 45_000 })
     await addToConfig({ extends: '[]', layers: '[baseSystem]' })
-    await ready
+    await runRefSync(sandboxDir)
     await page.goto(testRoutes.layers)
     const inside = page.getByTestId('layers-test')
     await expect(inside).toBeVisible()

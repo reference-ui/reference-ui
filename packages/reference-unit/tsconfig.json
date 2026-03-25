@@ -15,10 +15,10 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "paths": {
-      "@reference-ui/react": ["./.reference-ui/react/react.d.mts"],
+      "@reference-ui/react": ["./.reference-ui/react"],
       "@reference-ui/react/styles.css": ["./.reference-ui/react/styles.css"],
-      "@reference-ui/system": ["./.reference-ui/system/system.d.mts"],
-      "@reference-ui/system/baseSystem": ["./.reference-ui/system/baseSystem.d.mts"],
+      "@reference-ui/system": ["./.reference-ui/system"],
+      "@reference-ui/system/baseSystem": ["./.reference-ui/system/baseSystem.mjs"],
       "@reference-ui/styled": ["./.reference-ui/styled"],
       "@reference-ui/styled/*": ["./.reference-ui/styled/*"]
     },

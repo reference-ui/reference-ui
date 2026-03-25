@@ -2,6 +2,7 @@
  * Ref sync helpers for tests.
  */
 
+import { existsSync, readFileSync } from 'node:fs'
 import { readFile, stat } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -29,11 +30,14 @@ export async function waitForRefSyncReady(
   const { timeout = 15_000, interval = 100 } = options ?? {}
   const logPath = join(sandboxDir, REF_SYNC_LOG)
   const deadline = Date.now() + timeout
+  let baselineContent = ''
   let baselineCount = 0
 
   try {
-    const initialContent = await readFile(logPath, 'utf-8')
-    baselineCount = initialContent.split(REF_SYNC_READY_MESSAGE).length - 1
+    if (existsSync(logPath)) {
+      baselineContent = readFileSync(logPath, 'utf-8')
+      baselineCount = baselineContent.split(REF_SYNC_READY_MESSAGE).length - 1
+    }
   } catch {
     // log missing or unreadable
   }
@@ -42,6 +46,8 @@ export async function waitForRefSyncReady(
     try {
       await stat(logPath)
       const content = await readFile(logPath, 'utf-8')
+      const appendedContent = content.slice(baselineContent.length)
+      if (appendedContent.includes(REF_SYNC_READY_MESSAGE)) return
       const readyCount = content.split(REF_SYNC_READY_MESSAGE).length - 1
       if (readyCount > baselineCount) return
     } catch {
