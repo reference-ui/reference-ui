@@ -40,9 +40,9 @@ interface CreateTastyApiRuntimeOptions {
 }
 
 const PREFERRED_EXTERNAL_BARE_NAME_LIBRARIES = [
-  '@reference-ui/types',
   '@reference-ui/react',
   '@reference-ui/system',
+  '@reference-ui/types',
 ]
 
 export class TastyApiRuntime implements TastyApi {
