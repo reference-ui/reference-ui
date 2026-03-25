@@ -78,7 +78,10 @@ describe('font prop output (e2e)', () => {
     expect(systemGeneratedTypes).toContain('interface FontRegistry {')
     expect(systemGeneratedTypes).toContain('"sans": {')
     expect(reactTypes).toContain('interface FontRegistry {')
-    expect(reactTypes).toContain('type FontProps = ScopedFontProps;')
+    // Decl emit uses FallbackFontProps & conditional ScopedFontProps (see `src/types/fonts.ts`) so
+    // d.ts bundlers / tsdown do not collapse FontProps to `never` when the registry is empty.
+    expect(reactTypes).toMatch(/type FontProps = FallbackFontProps/)
+    expect(reactTypes).toContain('ScopedFontProps')
     expect(reactGeneratedTypes).toContain('"sans": {')
     expect(reactGeneratedTypes).toContain('"bold": true')
   }, 20_000)

@@ -1,9 +1,15 @@
-import { resolve } from 'node:path'
+import { existsSync } from 'node:fs'
+import { join, relative, resolve, sep } from 'node:path'
 import { type TastyApi, type TastySymbol } from '@reference-ui/rust/tasty'
 import { createTastyBuildSession, type TastyBuildDiagnostic } from '@reference-ui/rust/tasty/build'
-import { getVirtualDirPath } from '../../lib/paths'
+import { getOutDirPath, getVirtualDirPath } from '../../lib/paths'
 import type { ReferenceWorkerPayload } from './worker-types'
 import { getReferenceTastyDirPath } from './paths'
+
+/** Rust glob + include patterns use forward slashes. */
+function posixRelative(from: string, to: string): string {
+  return relative(from, to).split(sep).join('/')
+}
 
 export interface ReferenceTastyBuildState {
   sourceDir: string
@@ -31,11 +37,35 @@ export async function rebuildReferenceTastyBuild(
   const virtualDir = getVirtualDirPath(sourceDir)
   const outputDir = getReferenceTastyDirPath(sourceDir)
   const builtTasty = await tastyBuildSession.rebuild(sourceDir, {
-    rootDir: virtualDir,
-    include: payload.config.include,
+    ...buildTastyScanOptions(sourceDir, payload.config.include),
     outputDir,
   })
   return toReferenceTastyBuildState(sourceDir, builtTasty)
+}
+
+/**
+ * Scan under `.reference-ui/` only (not the package root) so the Rust glob
+ * walker does not traverse `node_modules` (`follow_links` can hit broken
+ * symlinks there).
+ *
+ * Panda's `style-props.d.ts` exports `SystemProperties`, which StrictColorProps /
+ * SystemStyleObject need for `P` when projecting StyleProps. We include that
+ * file alone to avoid duplicate symbol entries from scanning the full styled
+ * tree (react/types/user overlaps).
+ */
+function buildTastyScanOptions(sourceDir: string, configInclude: string[]): {
+  rootDir: string
+  include: string[]
+} {
+  const root = resolve(sourceDir)
+  const virtualDir = getVirtualDirPath(root)
+  const outDir = getOutDirPath(root)
+  const include = configInclude.map((pattern) => posixRelative(outDir, join(virtualDir, pattern)))
+  const stylePropsDts = join(outDir, 'styled', 'types', 'style-props.d.ts')
+  if (existsSync(stylePropsDts)) {
+    include.push(posixRelative(outDir, stylePropsDts))
+  }
+  return { rootDir: outDir, include }
 }
 
 export async function loadReferenceSymbol(

@@ -1,4 +1,7 @@
-import { useReferenceDocumentFromContext, type ReferenceProps } from '@reference-ui/types'
+import {
+  useReferenceDocumentFromContext,
+  type ReferenceComponentProps,
+} from '@reference-ui/types'
 import { ReferenceDocument } from './document/index'
 import { ReferenceFrame } from './components/ReferenceFrame'
 import {
@@ -7,7 +10,7 @@ import {
   ReferenceLoadingState,
 } from './ReferenceStatus'
 
-export function ReferenceView({ name }: ReferenceProps) {
+export function ReferenceView({ name }: ReferenceComponentProps) {
   const { document, errorMessage, isLoading } = useReferenceDocumentFromContext(name)
 
   if (isLoading) {

@@ -6,10 +6,10 @@ import {
   ReferenceLoadingState,
 } from './ReferenceStatus'
 import { createDefaultReferenceRuntime, useReferenceDocument, type ReferenceRuntime } from './Runtime'
-import type { ReferenceProps } from './types'
+import type { ReferenceComponentProps } from './types'
 
 export function createReferenceComponent(referenceRuntime: ReferenceRuntime) {
-  function Reference({ name }: ReferenceProps) {
+  function Reference({ name }: ReferenceComponentProps) {
     const { document, errorMessage, isLoading } = useReferenceDocument(referenceRuntime, name)
 
     if (isLoading) {
