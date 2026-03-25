@@ -1,0 +1,31 @@
+const symbol = {
+  id: "_s0",
+  name: "ContainerPropsCore",
+  library: "user",
+  members:   [
+    {
+      name: "container",
+      optional: true,
+      readonly: false,
+      kind: "property",
+      type:   {
+        kind: "union",
+        types:   [
+          {
+            kind: "intrinsic",
+            name: "string"
+          },
+          {
+            kind: "intrinsic",
+            name: "boolean"
+          }
+        ]
+      }
+    }
+  ],
+  extends: [],
+  types: []
+};
+export { symbol as _s0 };
+export default symbol;
+

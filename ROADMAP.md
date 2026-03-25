@@ -5,6 +5,12 @@
 Harden Tasty (done)
 Make pretty api tables (WIP)
 
+## Tasty: scan scope & deduping (move inward from Reference)
+
+Reference is meant to stay a **general-purpose** host for docs and API surfaces. Today some **pipeline glue** lives in `@reference-ui/core` instead: where to scan (e.g. `.reference-ui` roots, extra Panda `style-props.d.ts`), and hygiene like pruning broken `node_modules/@reference-ui/*` symlinks. Duplicate-symbol behavior is also split between manifest emission and runtime.
+
+**Goal:** Make **crawl policy, include sets, and deduping / disambiguation** first-class in **Tasty** (or a single documented config surface) so Reference does not own scanner internals long-term — less bleed-through, easier reuse outside this repo.
+
 
 
 ## MCP Server

@@ -5,7 +5,8 @@ import type {
   TastySemanticKind,
 } from '@reference-ui/rust/tasty'
 
-export interface ReferenceProps {
+/** Props for the `Reference` documentation component (`name` targets a symbol). */
+export interface ReferenceComponentProps {
   name: string
 }
 

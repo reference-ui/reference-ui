@@ -20,6 +20,7 @@ So:
 - `package_reexports/` → canonical library symbols remain single-source-of-truth through package type re-exports.
 - `recursive_projection/` → generic alias instantiation plus recursive object-like projection boundaries.
 - `style_props_projection/` → domain-shaped `ReferenceSystemStyleObject`-style projection over `Nested`, `Omit`, and pattern props.
+- `style_props_core_public/` → minimal mirror of `reference-core` `StyleProps` (`Omit<SystemStyleObject, …> & ReferenceProps`); regression if projection drops the `Omit` side and only shows `ReferenceProps` keys.
 - `unknown_complex/` → mapped and conditional types (structural, with nested unsupported pieces still emitted as Raw when needed).
 - `audit_alignment/` → audit-driven coverage for intentionally raw variants (`import()`, `infer`, `type predicate`, `this`) plus their surrounding structured shapes.
 - `interface_extends_utility` → `extends Omit<…>` heritage plus manifest-backed child `extends` chains.

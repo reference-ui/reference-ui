@@ -1,4 +1,13 @@
-import { mkdtempSync, lstatSync, mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
+import {
+  mkdtempSync,
+  lstatSync,
+  mkdirSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -212,6 +221,32 @@ describe('packager/install', () => {
     expect(
       lstatSync(resolve(workspaceDir, 'node_modules', '@reference-ui', 'system')).isSymbolicLink()
     ).toBe(true)
+  })
+
+  it('removes broken symlinks under node_modules/@reference-ui after install', async () => {
+    const workspaceDir = createTempDir()
+    const outDir = resolve(workspaceDir, '.generated-reference-ui')
+    const nodeModulesScope = resolve(workspaceDir, 'node_modules', '@reference-ui')
+    mkdirSync(nodeModulesScope, { recursive: true })
+    symlinkSync(
+      resolve(workspaceDir, '.reference-ui', 'removed-package'),
+      resolve(nodeModulesScope, 'reference'),
+    )
+
+    expect(lstatSync(resolve(nodeModulesScope, 'reference')).isSymbolicLink()).toBe(true)
+
+    const { installPackages } = await importInstallModule({
+      outDirPath: outDir,
+      bundleImpl: async ({ targetDir: dir, pkg }) => {
+        mkdirSync(dir, { recursive: true })
+        writeFileSync(resolve(dir, pkg.main?.replace('./', '') || 'index.js'), `// ${pkg.name}\n`)
+      },
+    })
+
+    await installPackages('/core', workspaceDir, [REACT_PACKAGE])
+
+    expect(() => lstatSync(resolve(nodeModulesScope, 'reference'))).toThrow()
+    expect(lstatSync(resolve(nodeModulesScope, 'react')).isSymbolicLink()).toBe(true)
   })
 
   it('links generated runtime packages like @reference-ui/types', async () => {
