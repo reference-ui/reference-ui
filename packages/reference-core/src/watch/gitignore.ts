@@ -7,7 +7,7 @@ function normalizeGlobPath(value: string): string {
   return value.replaceAll('\\', '/')
 }
 
-function toWatcherIgnoreGlobs(pattern: string, sourceDir: string, gitignoreDir: string): string[] {
+export function toWatcherIgnoreGlobs(pattern: string, watchRoot: string, gitignoreDir: string): string[] {
   const trimmed = pattern.trim()
   if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith('!')) {
     return []
@@ -21,9 +21,10 @@ function toWatcherIgnoreGlobs(pattern: string, sourceDir: string, gitignoreDir: 
     return []
   }
 
-  if (normalized.startsWith('/')) {
-    const absoluteTarget = resolve(gitignoreDir, normalized.slice(1))
-    const relativeTarget = normalizeGlobPath(relative(sourceDir, absoluteTarget))
+  if (normalized.startsWith('/') || normalized.includes('/')) {
+    const relativePattern = normalized.startsWith('/') ? normalized.slice(1) : normalized
+    const absoluteTarget = resolve(gitignoreDir, relativePattern)
+    const relativeTarget = normalizeGlobPath(relative(watchRoot, absoluteTarget))
     if (!relativeTarget || relativeTarget.startsWith('..')) {
       return []
     }
@@ -33,27 +34,21 @@ function toWatcherIgnoreGlobs(pattern: string, sourceDir: string, gitignoreDir: 
       : [relativeTarget, `${relativeTarget}/**`]
   }
 
-  if (!normalized.includes('/')) {
-    return directoryOnly
-      ? [`**/${normalized}/**`]
-      : [`**/${normalized}`, `**/${normalized}/**`]
-  }
-
   return directoryOnly
     ? [`**/${normalized}/**`]
     : [`**/${normalized}`, `**/${normalized}/**`]
 }
 
-function collectGitignoreWatchIgnores(sourceDir: string): string[] {
+function collectGitignoreWatchIgnores(watchRoot: string): string[] {
   const ignores = new Set<string>()
-  let currentDir = resolve(sourceDir)
+  let currentDir = resolve(watchRoot)
 
   while (true) {
     const gitignorePath = join(currentDir, '.gitignore')
     if (existsSync(gitignorePath)) {
       const gitignore = readFileSync(gitignorePath, 'utf-8')
       for (const line of gitignore.split(/\r?\n/)) {
-        for (const glob of toWatcherIgnoreGlobs(line, sourceDir, currentDir)) {
+        for (const glob of toWatcherIgnoreGlobs(line, watchRoot, currentDir)) {
           ignores.add(glob)
         }
       }
@@ -73,6 +68,6 @@ function collectGitignoreWatchIgnores(sourceDir: string): string[] {
   return [...ignores]
 }
 
-export function getWatchIgnoreGlobs(sourceDir: string): string[] {
-  return [...STATIC_WATCH_IGNORE, ...collectGitignoreWatchIgnores(sourceDir)]
+export function getWatchIgnoreGlobs(watchRoot: string): string[] {
+  return [...STATIC_WATCH_IGNORE, ...collectGitignoreWatchIgnores(watchRoot)]
 }
