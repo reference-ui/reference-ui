@@ -240,7 +240,7 @@ describe('tasty runtime', () => {
     await expect(api.loadSymbolByName('Shared')).rejects.toThrow('Ambiguous symbol name "Shared"')
   })
 
-  it('prefers @reference-ui/types for known external duplicate names', async () => {
+  it('prefers @reference-ui/react for known external duplicate names', async () => {
     const api = createTastyApiFromManifest({
       manifest: {
         version: '2',
@@ -312,9 +312,9 @@ describe('tasty runtime', () => {
 
     const styleProps = await api.loadSymbolByName('StyleProps')
 
-    expect(styleProps.getId()).toBe('_types')
+    expect(styleProps.getId()).toBe('_react')
     expect(api.getWarnings()).toEqual([
-      'Ambiguous symbol name "StyleProps" matched multiple external libraries. Using _types (@reference-ui/types); other matches: _react (@reference-ui/react), _system (@reference-ui/system). Use a scoped lookup to disambiguate.',
+      'Ambiguous symbol name "StyleProps" matched multiple external libraries. Using _react (@reference-ui/react); other matches: _system (@reference-ui/system), _types (@reference-ui/types). Use a scoped lookup to disambiguate.',
     ])
   })
 
