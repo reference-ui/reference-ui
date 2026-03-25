@@ -8,14 +8,14 @@
     "baseUrl": ".",
     "skipLibCheck": true,
     "paths": {
-      "@reference-ui/react": ["./.reference-ui/react/react.d.mts"],
+      "@reference-ui/react": ["./.reference-ui/react"],
       "@reference-ui/react/styles.css": ["./.reference-ui/react/styles.css"],
       "@reference-ui/styled": ["../reference-core/src/system/styled"],
       "@reference-ui/styled/jsx": ["../reference-core/src/system/styled/jsx/index"],
       "@reference-ui/styled/*": ["../reference-core/src/system/styled/*"],
-      "@reference-ui/system": ["./.reference-ui/system/system.d.mts"],
-      "@reference-ui/system/baseSystem": ["./.reference-ui/system/baseSystem.d.mts"],
-      "@reference-ui/types": ["./.reference-ui/types/types.d.mts"]
+      "@reference-ui/system": ["./.reference-ui/system"],
+      "@reference-ui/system/baseSystem": ["./.reference-ui/system/baseSystem.mjs"],
+      "@reference-ui/types": ["./.reference-ui/types"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.jsx"]
