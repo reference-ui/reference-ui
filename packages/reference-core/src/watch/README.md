@@ -76,17 +76,16 @@ The watch worker uses two filtering layers:
 
 1. watcher-level ignore:
    - `**/node_modules/**`
+   - `**/.reference-ui/**`
+   - `**/.git/**`
+   - positive patterns discovered from ancestor `.gitignore` files up to the repo root
 2. include matching:
    - `picomatch(config.include)` against the path relative to `sourceDir`
 
 Practical result:
 
 - files outside `ui.config.include` do not emit `watch:change`
-- `node_modules` changes are ignored before include matching
-
-The worker itself does not currently add extra ignore rules for `.reference-ui`
-or `.git`; in practice those should already fall outside the include surface for
-normal app source globs.
+- `node_modules`, `.reference-ui`, `.git`, and other gitignored paths are ignored before include matching
 
 ## Implementation Shape
 

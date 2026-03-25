@@ -8,6 +8,7 @@ import picomatch from 'picomatch'
 import { log } from '../lib/log'
 import { emit } from '../lib/event-bus'
 import { KEEP_ALIVE } from '../lib/thread-pool'
+import { getWatchIgnoreGlobs } from './gitignore'
 import type { WatchPayload } from './types'
 
 const EVENT_MAP = {
@@ -19,6 +20,7 @@ const EVENT_MAP = {
 export default async function runWatch(payload: WatchPayload): Promise<never> {
   const { sourceDir, config } = payload
   const { include } = config
+  const watchIgnore = getWatchIgnoreGlobs(sourceDir)
 
   log.debug('watch', `Starting - source: ${sourceDir} patterns: ${include.join(', ')}`)
 
@@ -39,7 +41,7 @@ export default async function runWatch(payload: WatchPayload): Promise<never> {
         emit('watch:change', { event: mapped, path: ev.path })
       }
     },
-    { ignore: ['**/node_modules/**'] }
+    { ignore: watchIgnore }
   )
 
   log.debug('watch', 'Ready - watching for changes')
