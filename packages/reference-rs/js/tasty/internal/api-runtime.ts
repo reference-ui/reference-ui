@@ -39,11 +39,18 @@ interface CreateTastyApiRuntimeOptions {
   importer: ArtifactImporter
 }
 
+const PREFERRED_EXTERNAL_BARE_NAME_LIBRARIES = [
+  '@reference-ui/types',
+  '@reference-ui/react',
+  '@reference-ui/system',
+]
+
 export class TastyApiRuntime implements TastyApi {
   private readonly manifestPath?: string
   private readonly importer: ArtifactImporter
   private manifestPromise: Promise<RawTastyManifest> | undefined
   private manifest: RawTastyManifest | undefined
+  private readonly runtimeWarnings = new Set<string>()
   private readonly chunkCache = new Map<string, Promise<ModuleNamespace>>()
   private readonly rawSymbolsById = new Map<string, TastySymbolModel>()
   private readonly symbolCache = new Map<string, TastySymbolImpl>()
@@ -174,7 +181,7 @@ export class TastyApiRuntime implements TastyApi {
   }
 
   getWarnings(): string[] {
-    return this.manifest?.warnings ?? []
+    return [...(this.manifest?.warnings ?? []), ...this.runtimeWarnings]
   }
 
   /** True when `id` is a chunk-backed symbol in the loaded manifest (not e.g. an unresolved utility name). */
@@ -210,7 +217,11 @@ export class TastyApiRuntime implements TastyApi {
     const matches = await this.findSymbolsByName(name)
     if (matches.length === 0) return undefined
     if (matches.length > 1) {
-      throw createAmbiguousSymbolNameError(name, matches)
+      const preferred = this.resolvePreferredBareNameMatch(name, matches)
+      if (!preferred) {
+        throw createAmbiguousSymbolNameError(name, matches)
+      }
+      return this.loadSymbolById(preferred.id)
     }
     return this.loadSymbolById(matches[0]!.id)
   }
@@ -249,6 +260,40 @@ export class TastyApiRuntime implements TastyApi {
       )
     }
     return this.loadSymbolById(matches[0]!.id)
+  }
+
+  private resolvePreferredBareNameMatch(
+    name: string,
+    matches: TastySymbolSearchResult[],
+  ): TastySymbolSearchResult | undefined {
+    if (matches.some((entry) => entry.library === 'user')) {
+      return undefined
+    }
+
+    const distinctLibraries = [...new Set(matches.map((entry) => entry.library))]
+    if (distinctLibraries.length <= 1) {
+      return undefined
+    }
+
+    let preferred = matches[0]
+    for (const library of PREFERRED_EXTERNAL_BARE_NAME_LIBRARIES) {
+      const libraryMatches = matches.filter((entry) => entry.library === library)
+      if (libraryMatches.length === 1) {
+        preferred = libraryMatches[0]
+        break
+      }
+      if (libraryMatches.length > 1) {
+        return undefined
+      }
+    }
+
+    this.runtimeWarnings.add(
+      `Ambiguous symbol name "${name}" matched multiple external libraries. Using ${preferred.id} (${preferred.library}); other matches: ${matches
+        .filter((entry) => entry.id !== preferred.id)
+        .map((entry) => `${entry.id} (${entry.library})`)
+        .join(', ')}. Use a scoped lookup to disambiguate.`,
+    )
+    return preferred
   }
 
   async prefetchChunk(path: string): Promise<void> {
