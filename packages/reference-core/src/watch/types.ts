@@ -1,5 +1,5 @@
 export interface WatchPayload {
-  sourceDir: string
+  projectRoot: string
   config: {
     include: string[]
   }

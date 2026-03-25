@@ -7,7 +7,7 @@ import type { SyncPayload } from '../sync/types'
 export function initWatch(payload: SyncPayload): void {
   if (!payload.options.watch) return
   workers.runWorker('watch', {
-    sourceDir: payload.cwd,
+    projectRoot: payload.cwd,
     config: payload.config,
   })
 }
