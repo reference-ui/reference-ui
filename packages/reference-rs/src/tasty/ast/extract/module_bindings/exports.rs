@@ -3,11 +3,11 @@ use std::path::Path;
 
 use oxc_ast::ast::{
     Declaration, ExportDefaultDeclaration, ExportDefaultDeclarationKind, ExportNamedDeclaration,
-    TSInterfaceDeclaration, TSTypeAliasDeclaration, VariableDeclarationKind,
+    TSInterfaceDeclaration, TSTypeAliasDeclaration,
 };
 use oxc_span::{GetSpan, Span};
 
-use super::super::symbols::{push_const_export_shell, push_interface_shell, push_type_alias_shell};
+use super::super::symbols::{push_interface_shell, push_type_alias_shell};
 use super::super::ExtractionContext;
 use super::imports::module_export_name_to_string;
 use crate::tasty::ast::model::SymbolShell;
@@ -45,18 +45,6 @@ pub(in crate::tasty::ast::extract) fn collect_exported_declaration(
         }
         Declaration::TSTypeAliasDeclaration(decl) => {
             pass.named_type_alias(decl, export_decl.span(), export_bindings, exports);
-        }
-        Declaration::VariableDeclaration(var_decl)
-            if var_decl.kind == VariableDeclarationKind::Const =>
-        {
-            push_const_export_shell(
-                file_id,
-                ctx,
-                var_decl,
-                export_decl.span(),
-                true,
-                exports,
-            );
         }
         _ => {}
     }

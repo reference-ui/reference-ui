@@ -1,7 +1,7 @@
 import { tokens } from '@reference-ui/system'
 import { fontStacks } from '../../theme/fontStacks'
 
-type ReferenceTokenConfig = Parameters<typeof tokens>[0]
+type ReferenceBrowserTokenConfig = Parameters<typeof tokens>[0]
 
 /**
  * Reference UI browser token palette for this package — **owned here** (mirror of
@@ -70,6 +70,6 @@ export const referenceBrowserTokenConfig = {
       sans: { value: fontStacks.sans },
     },
   },
-} as const satisfies ReferenceTokenConfig
+} as const satisfies ReferenceBrowserTokenConfig
 
 tokens(referenceBrowserTokenConfig)

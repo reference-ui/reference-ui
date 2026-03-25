@@ -114,7 +114,7 @@ describe('tasty runtime', () => {
     )
   })
 
-  it('rejects ambiguous bare-name lookup and supports scoped-name lookup', async () => {
+  it('auto-resolves ambiguous external bare-name lookup and supports scoped-name lookup', async () => {
     const api = createTastyApiFromManifest({
       manifest: {
         version: '2',
@@ -168,15 +168,154 @@ describe('tasty runtime', () => {
       },
     })
 
-    await expect(api.loadSymbolByName('Shared')).rejects.toThrow('Ambiguous symbol name "Shared"')
+    const shared = await api.loadSymbolByName('Shared')
     expect(await api.findSymbolsByName('Shared')).toHaveLength(2)
 
     const alpha = await api.loadSymbolByScopedName('alpha-lib', 'Shared')
     const beta = await api.loadSymbolByScopedName('beta-lib', 'Shared')
 
+    expect(shared.getId()).toBe('_alpha')
     expect(alpha.getId()).toBe('_alpha')
     expect(beta.getId()).toBe('_beta')
-    expect(api.getWarnings()).toEqual(['Duplicate symbol name "Shared" matched 2 entries.'])
+    expect(api.getWarnings()).toEqual([
+      'Duplicate symbol name "Shared" matched 2 entries.',
+      'Ambiguous symbol name "Shared" matched multiple external libraries. Using _alpha (alpha-lib); other matches: _beta (beta-lib). Use a scoped lookup to disambiguate.',
+    ])
+  })
+
+  it('still rejects ambiguous bare-name lookup when user symbols are involved', async () => {
+    const api = createTastyApiFromManifest({
+      manifest: {
+        version: '2',
+        warnings: ['Duplicate symbol name "Shared" matched 2 entries.'],
+        symbolsByName: {
+          Shared: ['_user', '_beta'],
+        },
+        symbolsById: {
+          _user: {
+            id: '_user',
+            name: 'Shared',
+            kind: 'interface',
+            chunk: './chunks/_user.js',
+            library: 'user',
+          },
+          _beta: {
+            id: '_beta',
+            name: 'Shared',
+            kind: 'typeAlias',
+            chunk: './chunks/_beta.js',
+            library: 'beta-lib',
+          },
+        },
+      },
+      importer: async (artifactPath) => {
+        if (artifactPath.includes('_user')) {
+          return {
+            _user: {
+              id: '_user',
+              name: 'Shared',
+              library: 'user',
+              members: [],
+              extends: [],
+              types: [],
+            },
+          }
+        }
+
+        if (artifactPath.includes('_beta')) {
+          return {
+            _beta: {
+              id: '_beta',
+              name: 'Shared',
+              library: 'beta-lib',
+              definition: { kind: 'intrinsic', name: 'string' },
+            },
+          }
+        }
+
+        throw new Error(`Unexpected artifact path: ${artifactPath}`)
+      },
+    })
+
+    await expect(api.loadSymbolByName('Shared')).rejects.toThrow('Ambiguous symbol name "Shared"')
+  })
+
+  it('prefers @reference-ui/types for known external duplicate names', async () => {
+    const api = createTastyApiFromManifest({
+      manifest: {
+        version: '2',
+        warnings: [],
+        symbolsByName: {
+          StyleProps: ['_react', '_system', '_types'],
+        },
+        symbolsById: {
+          _react: {
+            id: '_react',
+            name: 'StyleProps',
+            kind: 'typeAlias',
+            chunk: './chunks/_react.js',
+            library: '@reference-ui/react',
+          },
+          _system: {
+            id: '_system',
+            name: 'StyleProps',
+            kind: 'typeAlias',
+            chunk: './chunks/_system.js',
+            library: '@reference-ui/system',
+          },
+          _types: {
+            id: '_types',
+            name: 'StyleProps',
+            kind: 'typeAlias',
+            chunk: './chunks/_types.js',
+            library: '@reference-ui/types',
+          },
+        },
+      },
+      importer: async (artifactPath) => {
+        if (artifactPath.includes('_react')) {
+          return {
+            _react: {
+              id: '_react',
+              name: 'StyleProps',
+              library: '@reference-ui/react',
+              definition: { kind: 'intrinsic', name: 'string' },
+            },
+          }
+        }
+
+        if (artifactPath.includes('_system')) {
+          return {
+            _system: {
+              id: '_system',
+              name: 'StyleProps',
+              library: '@reference-ui/system',
+              definition: { kind: 'intrinsic', name: 'number' },
+            },
+          }
+        }
+
+        if (artifactPath.includes('_types')) {
+          return {
+            _types: {
+              id: '_types',
+              name: 'StyleProps',
+              library: '@reference-ui/types',
+              definition: { kind: 'intrinsic', name: 'boolean' },
+            },
+          }
+        }
+
+        throw new Error(`Unexpected artifact path: ${artifactPath}`)
+      },
+    })
+
+    const styleProps = await api.loadSymbolByName('StyleProps')
+
+    expect(styleProps.getId()).toBe('_types')
+    expect(api.getWarnings()).toEqual([
+      'Ambiguous symbol name "StyleProps" matched multiple external libraries. Using _types (@reference-ui/types); other matches: _react (@reference-ui/react), _system (@reference-ui/system). Use a scoped lookup to disambiguate.',
+    ])
   })
 
   it('keeps symbol wrapper identity stable across lookup paths', async () => {

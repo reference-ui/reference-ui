@@ -176,12 +176,13 @@ impl TypeRefMap for ResolverTypeRefMap<'_, '_> {
         parts: Vec<TemplateLiteralPart>,
         _resolved: Option<Box<TypeRef>>,
     ) -> TypeRef {
-        if let Some(resolved) = self.resolver.resolve_template_literal_result(&parts) {
-            return resolved;
-        }
+        let resolved = self
+            .resolver
+            .resolve_template_literal_result(&parts)
+            .map(Box::new);
         TypeRef::TemplateLiteral {
             parts,
-            resolved: None,
+            resolved,
         }
     }
 
