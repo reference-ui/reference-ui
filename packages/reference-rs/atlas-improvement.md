@@ -264,17 +264,17 @@ the assistant needs:
 ### Must-pass release checks
 
 - Every supported component result has a stable `Component.name` and
-	`Component.interface.{name,source}` mapping.
+  `Component.interface.{name,source}` mapping.
 - Every supported alias/re-export path preserves canonical component identity
-	while keeping the call-site alias visible in examples.
+  while keeping the call-site alias visible in examples.
 - Usage scoring is documented in code, isolated from the wire model, and backed
-	by direct unit tests for thresholds and custom-threshold behavior.
+  by direct unit tests for thresholds and custom-threshold behavior.
 - Dynamic prop expressions count prop usage without claiming unobserved literal
-	values.
+  values.
 - Co-usage (`usedWith`) is deterministic and reflects the components that really
-	appear alongside each other in the repo.
+  appear alongside each other in the repo.
 - Partial failures emit diagnostics rather than silently dropping components or
-	inventing type truth.
+  inventing type truth.
 
 ### Required Atlas case families before release
 
@@ -306,7 +306,7 @@ outputs above, not because each syntax shape is important on its own.
 - package default-export barrels
 - namespace imports through local barrel chains
 - more type-shape cases where interface mapping should stay reliable without
-	expanding Atlas into a full compiler
+  expanding Atlas into a full compiler
 
 ### Release gate 1: Basic truthfulness
 

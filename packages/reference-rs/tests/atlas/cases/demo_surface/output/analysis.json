@@ -72,9 +72,9 @@
         ],
         "usage": "common",
         "examples": [
+          "<AppCard title=\"Preferences\" padding=\"md\" status=\"default\" statusLabel=\"Saved\">\n        <Button variant=\"outline\" onClick={() => {}}>\n          Save Changes\n        </Button>\n        <Button variant=\"outline\" disabled>\n          Reset\n        </Button>\n      </AppCard>",
           "<AppCard title=\"Welcome\" padding=\"lg\">\n        <Button variant=\"solid\" onClick={() => {}}>\n          Get Started\n        </Button>\n        <Button variant=\"ghost\">Learn More</Button>\n      </AppCard>",
-          "<AppCard title=\"Features\" elevated padding=\"md\">\n        <Button variant=\"solid\" size=\"sm\" onClick={() => {}}>\n          View All Features\n        </Button>\n      </AppCard>",
-          "<AppCard title=\"Preferences\" padding=\"md\" status=\"default\" statusLabel=\"Saved\">\n        <Button variant=\"outline\" onClick={() => {}}>\n          Save Changes\n        </Button>\n        <Button variant=\"outline\" disabled>\n          Reset\n        </Button>\n      </AppCard>"
+          "<AppCard title=\"Features\" elevated padding=\"md\">\n        <Button variant=\"solid\" size=\"sm\" onClick={() => {}}>\n          View All Features\n        </Button>\n      </AppCard>"
         ],
         "usedWith": {
           "Button": "very common"
@@ -135,11 +135,11 @@
         ],
         "usage": "very common",
         "examples": [
+          "<Button variant=\"outline\" onClick={() => {}}>\n          Save Changes\n        </Button>",
+          "<Button variant=\"outline\" disabled>\n          Reset\n        </Button>",
           "<Button variant=\"solid\" onClick={() => {}}>\n          Get Started\n        </Button>",
           "<Button variant=\"ghost\">Learn More</Button>",
-          "<Button variant=\"solid\" size=\"sm\" onClick={() => {}}>\n          View All Features\n        </Button>",
-          "<Button variant=\"outline\" onClick={() => {}}>\n          Save Changes\n        </Button>",
-          "<Button variant=\"outline\" disabled>\n          Reset\n        </Button>"
+          "<Button variant=\"solid\" size=\"sm\" onClick={() => {}}>\n          View All Features\n        </Button>"
         ],
         "usedWith": {
           "AppCard": "very common",
@@ -262,9 +262,9 @@
           ],
           "usage": "common",
           "examples": [
-            "<AppCard title=\"Preferences\" padding=\"md\" status=\"default\" statusLabel=\"Saved\">\n        <Button variant=\"outline\" onClick={() => {}}>\n          Save Changes\n        </Button>\n        <Button variant=\"outline\" disabled>\n          Reset\n        </Button>\n      </AppCard>",
             "<AppCard title=\"Welcome\" padding=\"lg\">\n        <Button variant=\"solid\" onClick={() => {}}>\n          Get Started\n        </Button>\n        <Button variant=\"ghost\">Learn More</Button>\n      </AppCard>",
-            "<AppCard title=\"Features\" elevated padding=\"md\">\n        <Button variant=\"solid\" size=\"sm\" onClick={() => {}}>\n          View All Features\n        </Button>\n      </AppCard>"
+            "<AppCard title=\"Features\" elevated padding=\"md\">\n        <Button variant=\"solid\" size=\"sm\" onClick={() => {}}>\n          View All Features\n        </Button>\n      </AppCard>",
+            "<AppCard title=\"Preferences\" padding=\"md\" status=\"default\" statusLabel=\"Saved\">\n        <Button variant=\"outline\" onClick={() => {}}>\n          Save Changes\n        </Button>\n        <Button variant=\"outline\" disabled>\n          Reset\n        </Button>\n      </AppCard>"
           ],
           "usedWith": {
             "Button": "very common"
@@ -365,11 +365,11 @@
           ],
           "usage": "common",
           "examples": [
-            "<Button variant=\"outline\" onClick={() => {}}>\n          Save Changes\n        </Button>",
-            "<Button variant=\"outline\" disabled>\n          Reset\n        </Button>",
             "<Button variant=\"ghost\" onClick={() => {}}>\n        Edit Profile\n      </Button>",
             "<Button variant=\"solid\" onClick={() => {}}>\n          Get Started\n        </Button>",
-            "<Button variant=\"ghost\">Learn More</Button>"
+            "<Button variant=\"ghost\">Learn More</Button>",
+            "<Button variant=\"solid\" size=\"sm\" onClick={() => {}}>\n          View All Features\n        </Button>",
+            "<Button variant=\"outline\" onClick={() => {}}>\n          Save Changes\n        </Button>"
           ],
           "usedWith": {
             "AppCard": "very common",
