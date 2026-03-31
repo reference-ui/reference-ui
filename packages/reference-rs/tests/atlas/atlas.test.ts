@@ -1,16 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import path from 'node:path'
-import { analyze } from '../../js/atlas'
 import type { Usage } from '../../js/atlas/types'
-
-// The fixture project is a representative "real app":
-//   src/components/Button.tsx    — local wrapper around @fixtures/demo-ui Button
-//   src/components/AppCard.tsx   — local composition of demo-ui Card + Badge
-//   src/components/UserBadge.tsx — local wrapper around @fixtures/demo-ui Badge
-//   src/pages/HomePage.tsx       — uses Button (solid×2, ghost×1), AppCard (×2)
-//   src/pages/SettingsPage.tsx   — uses Button (outline×2, disabled×1), AppCard (×1)
-//   src/pages/ProfilePage.tsx    — uses Button (ghost×1), UserBadge (×2)
-const FIXTURE = path.resolve(__dirname, '../../../fixtures/atlas-project')
+import { getComponents } from './helpers'
 
 const USAGE_VALUES: Usage[] = ['very common', 'common', 'occasional', 'rare', 'unused']
 
@@ -18,7 +8,7 @@ const USAGE_VALUES: Usage[] = ['very common', 'common', 'occasional', 'rare', 'u
 
 describe('Component type shape', () => {
   it('returns an array of Component objects matching types.ts', async () => {
-    const components = await analyze(FIXTURE)
+    const components = await getComponents()
 
     expect(Array.isArray(components)).toBe(true)
     for (const c of components) {
@@ -33,7 +23,7 @@ describe('Component type shape', () => {
   })
 
   it('ComponentProp entries have the correct shape', async () => {
-    const components = await analyze(FIXTURE)
+    const components = await getComponents()
     const button = components.find(c => c.name === 'Button')!
 
     for (const prop of button.props) {
@@ -54,7 +44,7 @@ describe('Component type shape', () => {
 
 describe('local component indexing (default)', () => {
   it('indexes local components without any config', async () => {
-    const components = await analyze(FIXTURE)
+    const components = await getComponents()
     const names = components.map(c => c.name)
 
     expect(names).toContain('Button')
@@ -63,7 +53,7 @@ describe('local component indexing (default)', () => {
   })
 
   it('local component sources are paths, not package names', async () => {
-    const components = await analyze(FIXTURE)
+    const components = await getComponents()
 
     for (const c of components) {
       // local components should have a relative or absolute file path as source
@@ -72,7 +62,7 @@ describe('local component indexing (default)', () => {
   })
 
   it('does not index library components without explicit include', async () => {
-    const components = await analyze(FIXTURE)
+    const components = await getComponents()
     const libComponents = components.filter(c => c.source === '@fixtures/demo-ui')
 
     expect(libComponents).toHaveLength(0)
@@ -83,14 +73,14 @@ describe('local component indexing (default)', () => {
 
 describe('include', () => {
   it('indexes library components when included by package name', async () => {
-    const components = await analyze(FIXTURE, { include: ['@fixtures/demo-ui'] })
+    const components = await getComponents({ include: ['@fixtures/demo-ui'] })
     const sources = components.map(c => c.source)
 
     expect(sources).toContain('@fixtures/demo-ui')
   })
 
   it('includes all exported components from a package', async () => {
-    const components = await analyze(FIXTURE, { include: ['@fixtures/demo-ui'] })
+    const components = await getComponents({ include: ['@fixtures/demo-ui'] })
     const libNames = components
       .filter(c => c.source === '@fixtures/demo-ui')
       .map(c => c.name)
@@ -102,7 +92,7 @@ describe('include', () => {
   })
 
   it('scoped selector includes only the specified component from a package', async () => {
-    const components = await analyze(FIXTURE, {
+    const components = await getComponents({
       include: ['@fixtures/demo-ui:Button'],
     })
     const libComponents = components.filter(c => c.source === '@fixtures/demo-ui')
@@ -115,7 +105,7 @@ describe('include', () => {
   })
 
   it('glob path includes components from matching local directories', async () => {
-    const components = await analyze(FIXTURE, {
+    const components = await getComponents({
       include: ['src/components/**'],
     })
     // still returns local components — same as default but explicit
@@ -127,7 +117,7 @@ describe('include', () => {
 
 describe('exclude', () => {
   it('suppresses a library component by scoped selector', async () => {
-    const components = await analyze(FIXTURE, {
+    const components = await getComponents({
       include: ['@fixtures/demo-ui'],
       exclude: ['@fixtures/demo-ui:Badge'],
     })
@@ -139,7 +129,7 @@ describe('exclude', () => {
   })
 
   it('suppresses a local component by glob path', async () => {
-    const components = await analyze(FIXTURE, {
+    const components = await getComponents({
       exclude: ['src/components/UserBadge*'],
     })
 
@@ -147,7 +137,7 @@ describe('exclude', () => {
   })
 
   it('exclude does not affect other components from the same source', async () => {
-    const components = await analyze(FIXTURE, {
+    const components = await getComponents({
       include: ['@fixtures/demo-ui'],
       exclude: ['@fixtures/demo-ui:Badge'],
     })
@@ -165,7 +155,7 @@ describe('exclude', () => {
 
 describe('usage stats', () => {
   it('counts call sites (Button appears on all 3 pages → count 6)', async () => {
-    const components = await analyze(FIXTURE)
+    const components = await getComponents()
     const button = components.find(c => c.name === 'Button')!
 
     // 3 on HomePage + 2 on SettingsPage + 1 on ProfilePage
@@ -173,7 +163,7 @@ describe('usage stats', () => {
   })
 
   it('assigns higher usage to more-used components', async () => {
-    const components = await analyze(FIXTURE)
+    const components = await getComponents()
     const button = components.find(c => c.name === 'Button')!
     const userBadge = components.find(c => c.name === 'UserBadge')!
 
@@ -183,7 +173,7 @@ describe('usage stats', () => {
   })
 
   it('tracks prop usage counts', async () => {
-    const components = await analyze(FIXTURE)
+    const components = await getComponents()
     const button = components.find(c => c.name === 'Button')!
     const variantProp = button.props.find(p => p.name === 'variant')!
 
@@ -193,7 +183,7 @@ describe('usage stats', () => {
   })
 
   it('records value distribution for string-literal union props', async () => {
-    const components = await analyze(FIXTURE)
+    const components = await getComponents()
     const button = components.find(c => c.name === 'Button')!
     const variantProp = button.props.find(p => p.name === 'variant')!
 
@@ -205,7 +195,7 @@ describe('usage stats', () => {
   })
 
   it('marks optional props with lower usage than always-passed ones', async () => {
-    const components = await analyze(FIXTURE)
+    const components = await getComponents()
     const button = components.find(c => c.name === 'Button')!
 
     // variant always passed, loading never passed in fixture → loading should rank lower
@@ -221,7 +211,7 @@ describe('usage stats', () => {
 
 describe('interface mapping', () => {
   it('records the TypeScript interface name for local components', async () => {
-    const components = await analyze(FIXTURE)
+    const components = await getComponents()
     const button = components.find(c => c.name === 'Button')!
 
     // Local Button re-exports ButtonProps from @fixtures/demo-ui
@@ -229,7 +219,7 @@ describe('interface mapping', () => {
   })
 
   it('records the interface name for library components', async () => {
-    const components = await analyze(FIXTURE, { include: ['@fixtures/demo-ui'] })
+    const components = await getComponents({ include: ['@fixtures/demo-ui'] })
     const card = components.find(
       c => c.name === 'Card' && c.source === '@fixtures/demo-ui'
     )!
@@ -242,7 +232,7 @@ describe('interface mapping', () => {
 
 describe('wrapper detection', () => {
   it('local Button is indexed with a local source path', async () => {
-    const components = await analyze(FIXTURE, { include: ['@fixtures/demo-ui'] })
+    const components = await getComponents({ include: ['@fixtures/demo-ui'] })
     const localButton = components.find(
       c => c.name === 'Button' && c.source !== '@fixtures/demo-ui'
     )!
@@ -251,7 +241,7 @@ describe('wrapper detection', () => {
   })
 
   it('both local wrapper and library original are indexed when library is included', async () => {
-    const components = await analyze(FIXTURE, { include: ['@fixtures/demo-ui'] })
+    const components = await getComponents({ include: ['@fixtures/demo-ui'] })
     const buttons = components.filter(c => c.name === 'Button')
 
     // One from local path, one from @fixtures/demo-ui
@@ -265,7 +255,7 @@ describe('wrapper detection', () => {
 
 describe('examples', () => {
   it('call-site snippets are capped at 5', async () => {
-    const components = await analyze(FIXTURE)
+    const components = await getComponents()
     const button = components.find(c => c.name === 'Button')!
 
     if (button.examples) {
@@ -274,7 +264,7 @@ describe('examples', () => {
   })
 
   it('each example is a JSX element string, not a full file', async () => {
-    const components = await analyze(FIXTURE)
+    const components = await getComponents()
     const button = components.find(c => c.name === 'Button')!
 
     if (button.examples) {
@@ -288,7 +278,7 @@ describe('examples', () => {
   })
 
   it('examples are deduplicated by prop shape (no identical snippets)', async () => {
-    const components = await analyze(FIXTURE)
+    const components = await getComponents()
     const button = components.find(c => c.name === 'Button')!
 
     if (button.examples) {
@@ -302,7 +292,7 @@ describe('examples', () => {
 
 describe('usedWith', () => {
   it('usedWith values are valid Usage ratings', async () => {
-    const components = await analyze(FIXTURE)
+    const components = await getComponents()
 
     for (const c of components) {
       if (c.usedWith) {
@@ -314,7 +304,7 @@ describe('usedWith', () => {
   })
 
   it('Button and AppCard co-appear frequently (both on 2 pages)', async () => {
-    const components = await analyze(FIXTURE)
+    const components = await getComponents()
     const button = components.find(c => c.name === 'Button')!
 
     // AppCard should show up in Button's usedWith
