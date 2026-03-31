@@ -230,7 +230,9 @@ function resolveTypeNode(
   if (ts.isIntersectionTypeNode(node)) {
     return {
       props: dedupeProps(
-        node.types.flatMap(typeNode => resolveTypeNode(typeNode, file, context, seen).props)
+        node.types.flatMap(
+          typeNode => resolveTypeNode(typeNode, file, context, seen).props
+        )
       ),
     }
   }
@@ -271,7 +273,9 @@ function resolveInterfaceDeclaration(
 ): PropTemplate[] {
   const inherited =
     declaration.heritageClauses?.flatMap(clause =>
-      clause.types.flatMap(typeNode => resolveTypeNode(typeNode, file, context, seen).props)
+      clause.types.flatMap(
+        typeNode => resolveTypeNode(typeNode, file, context, seen).props
+      )
     ) ?? []
 
   return dedupeProps([
