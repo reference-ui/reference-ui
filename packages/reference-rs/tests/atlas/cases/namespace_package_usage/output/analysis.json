@@ -1,0 +1,74 @@
+{
+  "caseName": "namespace_package_usage",
+  "analyses": {
+    "default": [],
+    "withIncludes": {
+      "@fixtures/demo-ui": [
+        {
+          "name": "Badge",
+          "interface": {
+            "name": "BadgeProps",
+            "source": "@fixtures/demo-ui"
+          },
+          "source": "@fixtures/demo-ui",
+          "count": 1,
+          "props": [
+            {
+              "name": "children",
+              "count": 1,
+              "usage": "very common"
+            },
+            {
+              "name": "count",
+              "count": 1,
+              "usage": "very common",
+              "values": {
+                "1": "very common"
+              }
+            }
+          ],
+          "usage": "common",
+          "examples": [
+            "<DemoUi.Badge count={1}>Inbox</DemoUi.Badge>"
+          ],
+          "usedWith": {
+            "Button": "very common"
+          }
+        },
+        {
+          "name": "Button",
+          "interface": {
+            "name": "ButtonProps",
+            "source": "@fixtures/demo-ui"
+          },
+          "source": "@fixtures/demo-ui",
+          "count": 2,
+          "props": [
+            {
+              "name": "children",
+              "count": 2,
+              "usage": "very common"
+            },
+            {
+              "name": "variant",
+              "count": 2,
+              "usage": "very common",
+              "values": {
+                "ghost": "very common",
+                "solid": "very common"
+              }
+            }
+          ],
+          "usage": "very common",
+          "examples": [
+            "<DemoUi.Button variant=\"solid\">Launch</DemoUi.Button>",
+            "<DemoUi.Button variant=\"ghost\">Dismiss</DemoUi.Button>"
+          ],
+          "usedWith": {
+            "Badge": "very common"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -4,6 +4,24 @@
  */
 export type Usage = 'very common' | 'common' | 'occasional' | 'rare' | 'unused'
 
+export type AtlasDiagnosticCode =
+  | 'unresolved-props-type'
+  | 'unsupported-props-annotation'
+  | 'unresolved-include-package'
+
+export type AtlasDiagnostic = {
+  code: AtlasDiagnosticCode
+  message: string
+  source: string
+  componentName?: string
+  interfaceName?: string
+}
+
+export type AtlasAnalysisResult = {
+  components: Component[]
+  diagnostics: AtlasDiagnostic[]
+}
+
 /**
  * The TypeScript interface (or type alias) that describes a component's props,
  * paired with where that type is declared.

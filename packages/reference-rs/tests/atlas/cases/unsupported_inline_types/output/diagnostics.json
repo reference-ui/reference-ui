@@ -1,0 +1,16 @@
+{
+  "caseName": "unsupported_inline_types",
+  "diagnostics": [
+    {
+      "code": "unsupported-props-annotation",
+      "message": "Atlas found InlineBadge but only supports named props type references on the first parameter.",
+      "source": "/Users/ryn/Developer/reference-ui/packages/reference-rs/tests/atlas/cases/unsupported_inline_types/input/app/src/components/InlineBadge.tsx",
+      "componentName": "InlineBadge"
+    }
+  ],
+  "notes": [
+    "Atlas currently emits usage and interface mapping only.",
+    "Rich prop/member metadata is expected to be resolved by Tasty in an upper layer.",
+    "Use analyzeDetailed() when callers need both partial results and diagnostics."
+  ]
+}

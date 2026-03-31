@@ -1,5 +1,7 @@
-export { analyze } from './analyzer'
+export { analyze, analyzeDetailed } from './analyzer'
 export type {
+  AtlasAnalysisResult,
+  AtlasDiagnostic,
   Component,
   ComponentInterface,
   ComponentProp,

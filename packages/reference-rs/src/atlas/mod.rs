@@ -16,4 +16,5 @@ mod tests;
 
 pub use analyzer::AtlasAnalyzer;
 pub use config::AtlasConfig;
+#[allow(unused_imports)]
 pub use model::{Component, ComponentInterface, ComponentProp, Usage};
