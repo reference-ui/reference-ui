@@ -1,7 +1,10 @@
 import { existsSync } from 'node:fs'
 import { join, relative, resolve, sep } from 'node:path'
 import { type TastyApi, type TastySymbol } from '@reference-ui/rust/tasty'
-import { createTastyBuildSession, type TastyBuildDiagnostic } from '@reference-ui/rust/tasty/build'
+import {
+  createTastyBuildSession,
+  type TastyBuildDiagnostic,
+} from '@reference-ui/rust/tasty/build'
 import { getOutDirPath, getVirtualDirPath } from '../../lib/paths'
 import type { ReferenceWorkerPayload } from './worker-types'
 import { getReferenceTastyDirPath } from './paths'
@@ -23,7 +26,9 @@ export interface ReferenceTastyBuildState {
 
 const tastyBuildSession = createTastyBuildSession()
 
-export function getReferenceTastyBuild(sourceDir: string): ReferenceTastyBuildState | undefined {
+export function getReferenceTastyBuild(
+  sourceDir: string
+): ReferenceTastyBuildState | undefined {
   const resolvedSourceDir = resolve(sourceDir)
   const built = tastyBuildSession.get(resolvedSourceDir)
   if (!built) return undefined
@@ -34,7 +39,6 @@ export async function rebuildReferenceTastyBuild(
   payload: ReferenceWorkerPayload
 ): Promise<ReferenceTastyBuildState> {
   const sourceDir = resolve(payload.sourceDir)
-  const virtualDir = getVirtualDirPath(sourceDir)
   const outputDir = getReferenceTastyDirPath(sourceDir)
   const builtTasty = await tastyBuildSession.rebuild(sourceDir, {
     ...buildTastyScanOptions(sourceDir, payload.config.include),
@@ -53,14 +57,19 @@ export async function rebuildReferenceTastyBuild(
  * file alone to avoid duplicate symbol entries from scanning the full styled
  * tree (react/types/user overlaps).
  */
-function buildTastyScanOptions(sourceDir: string, configInclude: string[]): {
+function buildTastyScanOptions(
+  sourceDir: string,
+  configInclude: string[]
+): {
   rootDir: string
   include: string[]
 } {
   const root = resolve(sourceDir)
   const virtualDir = getVirtualDirPath(root)
   const outDir = getOutDirPath(root)
-  const include = configInclude.map((pattern) => posixRelative(outDir, join(virtualDir, pattern)))
+  const include = configInclude.map(pattern =>
+    posixRelative(outDir, join(virtualDir, pattern))
+  )
   const stylePropsDts = join(outDir, 'styled', 'types', 'style-props.d.ts')
   if (existsSync(stylePropsDts)) {
     include.push(posixRelative(outDir, stylePropsDts))
@@ -72,7 +81,9 @@ export async function loadReferenceSymbol(
   payload: ReferenceWorkerPayload,
   name: string
 ): Promise<{ state: ReferenceTastyBuildState; symbol: TastySymbol }> {
-  const state = (await maybeGetReadyTastyBuildState(payload)) ?? (await rebuildReferenceTastyBuild(payload))
+  const state =
+    (await maybeGetReadyTastyBuildState(payload)) ??
+    (await rebuildReferenceTastyBuild(payload))
   const symbol = await state.api.loadSymbolByName(name)
   return { state, symbol }
 }

@@ -3,8 +3,8 @@
   "diagnostics": [
     {
       "code": "unresolved-props-type",
-      "message": "Atlas found BrokenCard but could not resolve its props type MissingProps.",
-      "source": "/Users/ryn/Developer/reference-ui/packages/reference-rs/tests/atlas/cases/unresolved_props_type/input/app/src/components/BrokenCard.tsx",
+      "message": "Component BrokenCard references props type MissingProps which Atlas could not resolve.",
+      "source": "./components/BrokenCard.tsx",
       "componentName": "BrokenCard",
       "interfaceName": "MissingProps"
     }

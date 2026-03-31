@@ -5,7 +5,7 @@ mod virtualrs;
 mod atlas;
 
 pub use tasty::{scan_typescript_bundle, ScanRequest};
-pub use atlas::{AtlasAnalyzer, AtlasConfig};
+pub use atlas::{AtlasAnalysisResult, AtlasAnalyzer, AtlasConfig};
 
 #[cfg(feature = "napi")]
 use std::path::PathBuf;
@@ -17,6 +17,8 @@ use napi_derive::napi;
 
 #[cfg(feature = "napi")]
 use tasty::scan_and_emit_modules as do_scan_and_emit_modules;
+#[cfg(feature = "napi")]
+use atlas::AtlasAnalysisResult as NativeAtlasAnalysisResult;
 
 #[cfg(feature = "napi")]
 #[napi]
@@ -40,4 +42,20 @@ pub fn scan_and_emit_modules(root_dir: String, include: Vec<String>) -> Result<S
         include,
     };
     do_scan_and_emit_modules(&request).map_err(napi::Error::from_reason)
+}
+
+#[cfg(feature = "napi")]
+#[napi]
+pub fn analyze_atlas(root_dir: String, config_json: Option<String>) -> Result<String> {
+    let mut config = match config_json {
+        Some(raw) => serde_json::from_str::<atlas::AtlasConfig>(&raw)
+            .map_err(|err| napi::Error::from_reason(format!("Invalid Atlas config JSON: {err}")))?,
+        None => atlas::AtlasConfig::default(),
+    };
+    config.root_dir = root_dir.clone();
+
+    let mut analyzer = atlas::AtlasAnalyzer::new(config);
+    let result: NativeAtlasAnalysisResult = analyzer.analyze_detailed(&root_dir);
+    serde_json::to_string(&result)
+        .map_err(|err| napi::Error::from_reason(format!("Failed to serialize Atlas result: {err}")))
 }

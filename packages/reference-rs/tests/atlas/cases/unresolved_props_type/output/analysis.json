@@ -6,7 +6,7 @@
         "name": "BrokenCard",
         "interface": {
           "name": "MissingProps",
-          "source": "../types/missing"
+          "source": "./components/BrokenCard.tsx"
         },
         "source": "./components/BrokenCard.tsx",
         "count": 1,

@@ -16,6 +16,7 @@ const requiredExports = [
   'rewriteCssImports',
   'rewriteCvaImports',
   'scanAndEmitModules',
+  'analyzeAtlas',
 ]
 const nativeInputs = [
   join(packageDir, 'Cargo.toml'),
@@ -48,7 +49,7 @@ function nativeInputsChangedSinceBuild(): boolean {
 
   const binaryModifiedAtMs = statSync(binaryPath).mtimeMs
   const latestInputModifiedAtMs = Math.max(
-    ...nativeInputs.map((path) => latestModifiedAtMs(path)),
+    ...nativeInputs.map(path => latestModifiedAtMs(path))
   )
 
   return latestInputModifiedAtMs > binaryModifiedAtMs
@@ -61,7 +62,9 @@ if (existsSync(binaryPath)) {
     try {
       const require = createRequire(import.meta.url)
       const binding = require(binaryPath) as Record<string, unknown>
-      const hasRequiredExports = requiredExports.every((name) => typeof binding[name] === 'function')
+      const hasRequiredExports = requiredExports.every(
+        name => typeof binding[name] === 'function'
+      )
       const hasDeprecatedBundleExport = typeof binding.scanAndEmitBundle === 'function'
       if (hasRequiredExports && !hasDeprecatedBundleExport) {
         console.log(`Using existing native binary ${binaryPath}`)

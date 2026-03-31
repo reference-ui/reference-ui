@@ -10,7 +10,10 @@ import { createRequire } from 'node:module'
 import { dirname, join, parse, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { getVirtualNativeTriple, SUPPORTED_VIRTUAL_NATIVE_TARGETS } from '../shared/targets'
+import {
+  getVirtualNativeTriple,
+  SUPPORTED_VIRTUAL_NATIVE_TARGETS,
+} from '../shared/targets'
 
 const PACKAGE_JSON = 'package.json'
 const RUST_PACKAGE_NAME = '@reference-ui/rust'
@@ -21,6 +24,7 @@ export interface VirtualNativeBinding {
   rewriteCssImports: (sourceCode: string, relativePath: string) => string
   rewriteCvaImports: (sourceCode: string, relativePath: string) => string
   scanAndEmitModules: (rootDir: string, include: string[]) => string
+  analyzeAtlas: (rootDir: string, configJson?: string) => string
 }
 
 let _native: VirtualNativeBinding | null | undefined = undefined
@@ -58,7 +62,9 @@ export function resolveVirtualNativeBinaryPath(
   const triple = getVirtualNativeTriple(platform, arch)
   if (!triple) return null
 
-  return getVirtualNativeCandidates(packageDir, triple).find((path) => fileExists(path)) ?? null
+  return (
+    getVirtualNativeCandidates(packageDir, triple).find(path => fileExists(path)) ?? null
+  )
 }
 
 export function loadVirtualNative(): VirtualNativeBinding | null {

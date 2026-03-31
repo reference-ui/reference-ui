@@ -6,15 +6,20 @@
 
 mod analyzer;
 mod config;
+mod internal;
 mod model;
 mod output;
+mod parser;
+mod resolver;
 mod scanner;
-mod react;
+mod usage;
 
 #[cfg(test)]
 mod tests;
 
 pub use analyzer::AtlasAnalyzer;
 pub use config::AtlasConfig;
+#[allow(unused_imports)]
+pub use output::{AtlasAnalysisResult, AtlasDiagnostic, AtlasDiagnosticCode};
 #[allow(unused_imports)]
 pub use model::{Component, ComponentInterface, ComponentProp, Usage};
