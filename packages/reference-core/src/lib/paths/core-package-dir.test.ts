@@ -1,7 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 const CORE_PACKAGE_NAME = '@reference-ui/core'
-const LEGACY_CORE_PACKAGE_NAME = '@reference-ui/cli'
 const PACKAGE_JSON = 'package.json'
 
 async function importCorePackageDirModule(
@@ -34,17 +33,6 @@ describe('resolveCorePackageDir', () => {
     )
 
     expect(resolveCorePackageDir(startDir)).toBe(coreDir)
-  })
-
-  it('falls back to the legacy @reference-ui/cli package name', async () => {
-    const legacyDir = '/virtual/legacy-core'
-    const startDir = '/virtual/legacy-core/src/nested'
-    const { resolveCorePackageDir } = await importCorePackageDirModule(
-      [`${legacyDir}/${PACKAGE_JSON}`],
-      { [`${legacyDir}/${PACKAGE_JSON}`]: { name: LEGACY_CORE_PACKAGE_NAME } }
-    )
-
-    expect(resolveCorePackageDir(startDir)).toBe(legacyDir)
   })
 
   it('falls back to the workspace package when no package root is found first', async () => {

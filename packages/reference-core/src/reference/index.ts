@@ -1,22 +1,15 @@
 /**
- * Docs-oriented reference primitives.
- * This module starts with API table definitions and can later grow into
- * normalization, rendering adapters, and Tasty-backed extraction.
+ * Reference module surface.
+ * Exposes the browser renderer and the Tasty bridge layer.
  */
-import { API } from './api'
+import * as browser from './browser'
+import * as bridge from './bridge'
 
-export { defineReferenceTable } from './table'
-export { API }
-export { referenceTokens } from './tokens'
-export type {
-  ReferenceCell,
-  ReferenceCellValue,
-  ReferenceTable,
-  ReferenceTableColumn,
-  ReferenceTableRow,
-} from './types'
-export type { ReferenceApiProps } from './api'
+export { browser, bridge }
+export { referenceBrowserTokenConfig } from './browser'
+export { copyReferenceBrowserToVirtual } from './bridge/copy-browser-virtual'
 
 export const Reference = {
-  API,
+  browser,
+  bridge,
 } as const

@@ -1,9 +1,15 @@
 import { describe, expect, it } from 'vitest'
 
-import { addCaseRuntimeSmokeTests, createCaseApi, findMember } from '../../api-test-helpers'
+import {
+  addCaseEmittedSnapshotTests,
+  addCaseRuntimeSmokeTests,
+  createCaseApi,
+  findMember,
+} from '../../api-test-helpers'
 
 describe('unknown_complex tasty api', () => {
   addCaseRuntimeSmokeTests('unknown_complex', 'UserName')
+  addCaseEmittedSnapshotTests('unknown_complex')
 
   it('loads indexed access, mapped, conditional, and referenced generic forms', async () => {
     const api = createCaseApi('unknown_complex')

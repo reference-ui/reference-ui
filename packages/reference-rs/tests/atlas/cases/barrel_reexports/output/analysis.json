@@ -1,0 +1,63 @@
+{
+  "caseName": "barrel_reexports",
+  "analyses": {
+    "default": [
+      {
+        "name": "Button",
+        "interface": {
+          "name": "ButtonProps",
+          "source": "./components/Button.tsx"
+        },
+        "source": "./components/Button.tsx",
+        "count": 2,
+        "props": [
+          {
+            "name": "children",
+            "count": 2,
+            "usage": "very common"
+          }
+        ],
+        "usage": "very common",
+        "examples": [
+          "<Button>Open</Button>",
+          "<Button>Close</Button>"
+        ],
+        "usedWith": {
+          "UserBadge": "very common"
+        }
+      },
+      {
+        "name": "UserBadge",
+        "interface": {
+          "name": "UserBadgeProps",
+          "source": "./components/UserBadge.tsx"
+        },
+        "source": "./components/UserBadge.tsx",
+        "count": 1,
+        "props": [
+          {
+            "name": "children",
+            "count": 1,
+            "usage": "very common"
+          },
+          {
+            "name": "count",
+            "count": 1,
+            "usage": "very common",
+            "values": {
+              "3": "very common"
+            }
+          }
+        ],
+        "usage": "common",
+        "examples": [
+          "<UserBadge count={3}>Alerts</UserBadge>"
+        ],
+        "usedWith": {
+          "Button": "very common"
+        }
+      }
+    ],
+    "withIncludes": {}
+  }
+}

@@ -111,7 +111,10 @@ export async function addToConfig(additions: ConfigAdditions): Promise<void> {
     rest as Record<string, unknown>
   )
 
-  const content = buildConfigContent(merged, extendsExpr, layersExpr)
+  const content = [
+    `// e2e config write ${Date.now()}`,
+    buildConfigContent(merged, extendsExpr, layersExpr),
+  ].join('\n')
   const configPath = join(sandboxDir, 'ui.config.ts')
   await mkdir(dirname(configPath), { recursive: true })
   await writeFile(configPath, content)

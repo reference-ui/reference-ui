@@ -81,6 +81,10 @@ export const STYLED_PACKAGE: PackageDefinition = {
     './jsx': { types: './jsx/index.d.ts', import: './jsx/index.js' },
     './patterns': { types: './patterns/index.d.ts', import: './patterns/index.js' },
     './patterns/box': { types: './patterns/box.d.ts', import: './patterns/box.js' },
+    './tokens': { types: './tokens/index.d.ts', import: './tokens/index.js' },
+    './tokens/*': { types: './tokens/*.d.ts', import: './tokens/*.js' },
+    './types': { types: './types/index.d.ts', import: './types/index.d.ts' },
+    './types/*': { types: './types/*.d.ts', import: './types/*.d.ts' },
   },
 }
 
@@ -110,9 +114,17 @@ export const TYPES_PACKAGE: PackageDefinition = {
   postprocess: ['rewriteTypesRuntimeImport'],
 }
 
-export const PACKAGES: PackageDefinition[] = [
+export const RUNTIME_PACKAGES: PackageDefinition[] = [
   REACT_PACKAGE,
   SYSTEM_PACKAGE,
-  TYPES_PACKAGE,
   STYLED_PACKAGE,
+]
+
+export const FINAL_PACKAGES: PackageDefinition[] = [
+  TYPES_PACKAGE,
+]
+
+export const PACKAGES: PackageDefinition[] = [
+  ...RUNTIME_PACKAGES,
+  ...FINAL_PACKAGES,
 ]

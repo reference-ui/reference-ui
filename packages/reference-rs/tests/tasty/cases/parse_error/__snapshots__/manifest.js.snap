@@ -1,0 +1,3 @@
+export const manifest = {"version":"2","warnings":["cases/parse_error/input/broken.ts: parse reported 1 error(s)"],"symbolsByName":{"Ok":["_s0"]},"symbolsById":{"_s0":{"id":"_s0","name":"Ok","kind":"interface","chunk":"./chunks/_s0.js","library":"user"}}};
+export default manifest;
+

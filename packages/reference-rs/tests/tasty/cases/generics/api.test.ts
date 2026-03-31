@@ -1,9 +1,15 @@
 import { describe, expect, it } from 'vitest'
 
-import { addCaseRuntimeSmokeTests, createCaseApi, findMember } from '../../api-test-helpers'
+import {
+  addCaseEmittedSnapshotTests,
+  addCaseRuntimeSmokeTests,
+  createCaseApi,
+  findMember,
+} from '../../api-test-helpers'
 
 describe('generics tasty api', () => {
   addCaseRuntimeSmokeTests('generics', 'Box')
+  addCaseEmittedSnapshotTests('generics')
 
   it('surfaces generic parameters, type arguments, and alias definitions', async () => {
     const api = createCaseApi('generics')

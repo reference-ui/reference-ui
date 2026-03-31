@@ -31,12 +31,12 @@ describe('ref sync', () => {
     }
   })
 
-  it('keeps runtime styles.css in normal Panda form when layers mode is disabled', () => {
+  it('keeps runtime styles.css in layered form when reference-unit includes layers', () => {
     const stylesPath = join(refUiDir, 'styled', 'styles.css')
     if (!existsSync(stylesPath)) return
     const css = readFileSync(stylesPath, 'utf-8')
-    expect(css).not.toMatch(/@layer\s+reference-unit\s*\{/)
-    expect(css).not.toMatch(/\[data-layer="reference-unit"\]/)
+    expect(css).toMatch(/@layer\s+reference-unit\s*\{/)
+    expect(css).toMatch(/data-layer.*layer-library/)
     expect(css).toMatch(/^@layer\s+[^;\n]+;/)
   })
 

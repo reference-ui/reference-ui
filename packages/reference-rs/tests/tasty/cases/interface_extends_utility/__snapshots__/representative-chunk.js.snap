@@ -1,0 +1,28 @@
+const symbol = {
+  id: "_s0",
+  name: "ChildProps",
+  library: "user",
+  members:   [
+    {
+      name: "childOnly",
+      optional: true,
+      readonly: false,
+      kind: "property",
+      type:   {
+        kind: "intrinsic",
+        name: "number"
+      }
+    }
+  ],
+  extends:   [
+    {
+      id: "_s1",
+      name: "StyleProps",
+      library: "user"
+    }
+  ],
+  types: []
+};
+export { symbol as _s0 };
+export default symbol;
+

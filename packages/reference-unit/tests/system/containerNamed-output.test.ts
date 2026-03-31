@@ -19,5 +19,6 @@ describe('named container output (e2e)', () => {
 
     expect(css).toContain('@container shell (min-width: 777px)')
     expect(css).toContain('font-size: 1.125rem;')
+    expect(css).not.toMatch(/@container\s+true\s+\(/)
   })
 })

@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/test'
-import { MATRIX, getPort } from './src/matrix/index.js'
-import { loadConfig } from './src/config/index.js'
+import { MATRIX, getPort } from './src/matrix/index'
+import { loadConfig } from './src/config/index'
 
 const cfg = loadConfig()
 const projectName = cfg.defaultProject
@@ -22,6 +22,7 @@ export default defineConfig({
   use: {
     baseURL: `http://localhost:${port}`,
     trace: 'on-first-retry',
+    ...(process.env.REF_TEST_HEADED === '1' ? { headless: false } : {}),
   },
   projects: MATRIX.map((entry) => ({
     name: entry.name,

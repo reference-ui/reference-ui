@@ -28,7 +28,8 @@ async function importRunModule(options?: {
     installPackages,
   }))
   vi.doMock('./packages', () => ({
-    PACKAGES: options?.packages ?? [{ name: 'react' }, { name: 'system' }, { name: 'styled' }],
+    RUNTIME_PACKAGES: options?.packages ?? [{ name: 'react' }, { name: 'system' }, { name: 'styled' }],
+    FINAL_PACKAGES: [{ name: 'types' }],
   }))
 
   const mod = await import('./run')
@@ -46,6 +47,26 @@ afterEach(() => {
 })
 
 describe('packager/run', () => {
+  it('installs runtime packages and emits runtime completion', async () => {
+    const { runRuntimeBundle, emit, installPackages, resolveCorePackageDir } = await importRunModule({
+      cliDir: '/workspace/core',
+    })
+
+    await runRuntimeBundle({ cwd: '/workspace/app', skipTypescript: true })
+
+    expect(resolveCorePackageDir).toHaveBeenCalledWith('/workspace/app')
+    expect(installPackages).toHaveBeenCalledWith(
+      '/workspace/core',
+      '/workspace/app',
+      expect.arrayContaining([
+        expect.objectContaining({ name: 'react' }),
+        expect.objectContaining({ name: 'system' }),
+      ])
+    )
+    expect(emit).toHaveBeenNthCalledWith(1, 'packager:runtime:complete')
+    expect(emit).toHaveBeenNthCalledWith(2, 'packager-ts:runtime:complete', {})
+  })
+
   it('installs packages and emits both completion events when skipTypescript is enabled', async () => {
     const { runBundle, emit, installPackages, resolveCorePackageDir } = await importRunModule({
       cliDir: '/workspace/core',
@@ -58,8 +79,7 @@ describe('packager/run', () => {
       '/workspace/core',
       '/workspace/app',
       expect.arrayContaining([
-        expect.objectContaining({ name: 'react' }),
-        expect.objectContaining({ name: 'system' }),
+        expect.objectContaining({ name: 'types' }),
       ])
     )
     expect(emit).toHaveBeenNthCalledWith(1, 'packager:complete')
@@ -106,5 +126,13 @@ describe('packager/run', () => {
     await vi.waitFor(() => {
       expect(error).toHaveBeenCalledWith('[packager] Bundle failed:', expect.any(Error))
     })
+  })
+
+  it('logs an error when onRunRuntimeBundle is triggered without cwd', async () => {
+    const { onRunRuntimeBundle, error } = await importRunModule()
+
+    onRunRuntimeBundle({ cwd: '' })
+
+    expect(error).toHaveBeenCalledWith('[packager] run:packager:runtime:bundle: payload.cwd is undefined')
   })
 })

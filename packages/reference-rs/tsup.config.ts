@@ -6,6 +6,7 @@ export default defineConfig({
     tasty: 'js/tasty/index.ts',
     'tasty/browser': 'js/tasty/browser.ts',
     'tasty/build': 'js/tasty/build.ts',
+    atlas: 'js/atlas/index.ts',
   },
   format: ['esm'],
   dts: true,

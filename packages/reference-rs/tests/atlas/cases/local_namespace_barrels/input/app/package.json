@@ -1,0 +1,10 @@
+{
+  "name": "@fixtures/atlas-local-namespace-barrels-app",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "react": "*",
+    "@fixtures/demo-ui": "workspace:*"
+  }
+}

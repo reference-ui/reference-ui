@@ -1,0 +1,56 @@
+const symbol = {
+  id: "_s0",
+  name: "KeyValue",
+  library: "user",
+  description: "Interface with default type parameter.",
+  descriptionRaw: "Interface with default type parameter.",
+  jsdoc:   {
+    summary: "Interface with default type parameter.",
+    tags: []
+  },
+  typeParameters:   [
+    {
+      name: "K",
+      default:   {
+        kind: "intrinsic",
+        name: "string"
+      }
+    },
+    {
+      name: "V",
+      default:   {
+        kind: "intrinsic",
+        name: "unknown"
+      }
+    }
+  ],
+  members:   [
+    {
+      name: "key",
+      optional: false,
+      readonly: false,
+      kind: "property",
+      type:   {
+        id: "K",
+        name: "K",
+        library: "user"
+      }
+    },
+    {
+      name: "value",
+      optional: false,
+      readonly: false,
+      kind: "property",
+      type:   {
+        id: "V",
+        name: "V",
+        library: "user"
+      }
+    }
+  ],
+  extends: [],
+  types: []
+};
+export { symbol as _s0 };
+export default symbol;
+

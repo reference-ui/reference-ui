@@ -1,5 +1,6 @@
 import { inspect } from 'node:util'
 import { broadcastChannel } from './channel'
+import { parseBusMessage } from './wire'
 import { log } from '../../log'
 import { getConfig } from '../../../config/store'
 
@@ -39,9 +40,9 @@ export function initEventBus() {
   if (!getConfig()?.debug || isInitialized) return
 
   broadcastChannel.addEventListener('message', (msg: Event) => {
-    const data = (msg as MessageEvent).data
-    if (data?.type === 'bus:event') {
-      log.debug('bus', formatBusLog(`${data.event}`, data.payload))
+    const parsed = parseBusMessage((msg as MessageEvent).data)
+    if (parsed) {
+      log.debug('bus', formatBusLog(parsed.event, parsed.payload))
     }
   })
   isInitialized = true

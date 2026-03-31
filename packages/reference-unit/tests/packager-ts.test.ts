@@ -14,10 +14,10 @@ async function waitForTypeOutputs(maxMs = 45_000): Promise<void> {
   const start = Date.now()
   while (Date.now() - start < maxMs) {
     if (existsSync(reactDts) && existsSync(systemDts)) {
-      await new Promise((r) => setTimeout(r, 50))
+      await new Promise(r => setTimeout(r, 50))
       return
     }
-    await new Promise((r) => setTimeout(r, 100))
+    await new Promise(r => setTimeout(r, 100))
   }
   throw new Error(
     `packager-ts did not produce react.d.mts and system.d.mts within ${maxMs}ms`
@@ -61,7 +61,7 @@ describe('packager-ts (TypeScript generator)', () => {
   })
 
   describe('react declaration content', () => {
-    it('react.d.mts declares expected component exports (Div, Container, Button)', () => {
+    it('react.d.mts declares expected component exports (Div, Button, recipe)', () => {
       const path = join(refUiDir, 'react', 'react.d.mts')
       if (!existsSync(path)) {
         // Skip content check if types were skipped (e.g. skipTypescript in config)
@@ -69,8 +69,8 @@ describe('packager-ts (TypeScript generator)', () => {
       }
       const content = readFileSync(path, 'utf-8')
       expect(content, 'Div').toMatch(/\bDiv\b/)
-      expect(content, 'Container').toMatch(/\bContainer\b/)
       expect(content, 'Button').toMatch(/\bButton\b/)
+      expect(content, 'recipe').toMatch(/\brecipe\b/)
     })
   })
 })

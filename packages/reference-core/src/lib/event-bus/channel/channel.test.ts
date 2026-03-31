@@ -61,6 +61,16 @@ describe('event bus channel helpers', () => {
     peer.close()
   })
 
+  it('emit() also reaches same-thread listeners immediately', async () => {
+    const handler = vi.fn()
+    on('test:local-emit', handler)
+
+    emit('test:local-emit', { ok: true })
+
+    expect(handler).toHaveBeenCalledTimes(1)
+    expect(handler).toHaveBeenCalledWith({ ok: true })
+  })
+
   it('on() receives matching events from another channel instance', async () => {
     const payloadPromise = waitForValue<{ value: number }>((resolve) => {
       on('test:on', (payload) => resolve(payload as { value: number }))

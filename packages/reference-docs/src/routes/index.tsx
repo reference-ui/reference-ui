@@ -1,4 +1,5 @@
 import { createRootRoute, createRoute } from '@tanstack/react-router'
+import { Div } from '@reference-ui/react'
 import { DocLayout } from '../components/DocLayout'
 import { DocPage } from '../components/DocPage'
 import { slugToModule } from '../lib/docs'
@@ -10,7 +11,13 @@ const indexRoute = createRoute({
   path: '/',
   component: () => {
     const mod = slugToModule['intro']
-    if (!mod) return <div>Not found</div>
+    if (!mod) {
+      return (
+        <Div color="docsMuted" fontSize="md">
+          Not found
+        </Div>
+      )
+    }
     const Doc = mod.default
     return <Doc />
   },

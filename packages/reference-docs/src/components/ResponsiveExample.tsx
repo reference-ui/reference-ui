@@ -1,5 +1,16 @@
 import { Div, H2, H3, P } from '@reference-ui/react'
 
+/**
+ * Container-query demo: `r` breakpoint styles must use values Panda can emit inside
+ * `@container` blocks. Semantic color tokens (e.g. green.500) in `r` often do not
+ * resolve there — use hex (or css prop) so backgrounds visibly change when resizing.
+ */
+const rColorSteps = {
+  260: { padding: '4r', backgroundColor: '#16a34a' },
+  420: { padding: '6r', backgroundColor: '#2563eb' },
+  580: { padding: '8r', backgroundColor: '#7c3aed' },
+} as const
+
 const resizable = {
   border: '[2px solid #666]',
   padding: '4r',
@@ -13,17 +24,14 @@ const resizable = {
 export function ResponsiveExample() {
   return (
     <Div display="flex" flexDirection="column" gap="4r">
+      <P margin="0" color="gray.600" fontSize="sm">
+        Drag the lower-right corner of each box to resize. Backgrounds step up as the{' '}
+        <strong>container</strong> crosses each min-width breakpoint (narrow → green →
+        blue → purple).
+      </P>
+
       <Div container css={resizable}>
-        <Div
-          padding="2r"
-          backgroundColor="red.500"
-          color="gray.50"
-          r={{
-            300: { padding: '4r', backgroundColor: 'green.500' },
-            500: { padding: '6r', backgroundColor: 'blue.500' },
-            700: { padding: '8r', backgroundColor: 'purple.500' },
-          }}
-        >
+        <Div padding="2r" backgroundColor="#dc2626" color="#fafafa" r={rColorSteps}>
           <H3 marginBottom="0.5r">Responsive Div</H3>
           <P margin="0">Queries nearest ancestor container</P>
         </Div>
@@ -49,13 +57,9 @@ export function ResponsiveExample() {
           <Div
             container="sidebar"
             padding="2r"
-            backgroundColor="blue.500"
-            color="gray.50"
-            r={{
-              300: { padding: '4r', backgroundColor: 'green.500' },
-              500: { padding: '6r', backgroundColor: 'blue.500' },
-              700: { padding: '8r', backgroundColor: 'purple.500' },
-            }}
+            backgroundColor="#1e40af"
+            color="#fafafa"
+            r={rColorSteps}
           >
             <H3 marginBottom="0.5r">Sidebar</H3>
             <P margin="0">Queries &quot;sidebar&quot;</P>
@@ -74,13 +78,9 @@ export function ResponsiveExample() {
               <Div
                 container="card"
                 padding="2r"
-                backgroundColor="green.500"
-                color="gray.50"
-                r={{
-                  300: { padding: '4r', backgroundColor: 'green.500' },
-                  500: { padding: '6r', backgroundColor: 'blue.500' },
-                  700: { padding: '8r', backgroundColor: 'purple.500' },
-                }}
+                backgroundColor="#9a3412"
+                color="#fafafa"
+                r={rColorSteps}
               >
                 <H3 marginBottom="0.5r">Card</H3>
                 <P margin="0">Queries &quot;card&quot; across nested layers</P>

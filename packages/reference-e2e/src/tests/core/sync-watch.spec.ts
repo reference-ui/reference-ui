@@ -2,7 +2,9 @@ import { test, expect } from '@playwright/test'
 import { writeFile, appendFile } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { getSandboxDir } from '../../environments/lib/config.js'
+import { getSandboxDir } from '../../environments/lib/config'
+import { waitForRefSyncReady } from '../../environments/lib/ref-sync'
+import { testRoutes } from '../../environments/base/routes'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const METRICS_PATH = join(__dirname, '..', '..', '..', '.watch-metrics.jsonl')
@@ -57,12 +59,14 @@ test.describe('sync-watch', () => {
     const randomColor = randomHexColor()
     const expectedRgb = hexToRgb(randomColor)
 
-    await page.goto('/')
+    await page.goto(testRoutes.syncWatch)
     const el = page.getByTestId('sync-watch')
     await expect(el).toBeVisible()
 
     const t0 = Date.now()
+    const ready = waitForRefSyncReady(sandboxDir, { timeout: 60_000 })
     await writeFile(syncWatchPath, buildSyncWatchContent(randomColor))
+    await ready
 
     await expect
       .poll(

@@ -1,0 +1,14 @@
+const symbol = {
+  id: "_s0",
+  name: "AmbientModule",
+  library: "user",
+  description: "Type alias for ambient module usage",
+  descriptionRaw: "Type alias for ambient module usage",
+  definition:   {
+    kind: "raw",
+    summary: "import('ambient-module').AmbientModule"
+  }
+};
+export { symbol as _s0 };
+export default symbol;
+

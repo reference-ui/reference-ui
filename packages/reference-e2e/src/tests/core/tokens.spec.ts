@@ -1,7 +1,8 @@
 import { test, expect } from '@playwright/test'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { getSandboxDir } from '../../environments/lib/config.js'
+import { getSandboxDir } from '../../environments/lib/config'
+import { testRoutes } from '../../environments/base/routes'
 
 const { tokensConfig } = await import(
   pathToFileURL(join(getSandboxDir(), 'tokens.ts')).href
@@ -16,13 +17,13 @@ function hexToRgb(hex: string): string {
 
 test.describe('tokens', () => {
   test('TokensTest mounts', async ({ page }) => {
-    await page.goto('/')
+    await page.goto(testRoutes.tokens)
     const root = page.getByTestId('tokens-test')
     await expect(root).toBeVisible()
   })
 
   test('tokens() - primitive uses custom color from config', async ({ page }) => {
-    await page.goto('/')
+    await page.goto(testRoutes.tokens)
     const el = page.getByTestId('tokens-primitive')
     await expect(el).toBeVisible()
     const color = await el.evaluate((e) => getComputedStyle(e).color)
@@ -31,7 +32,7 @@ test.describe('tokens', () => {
   })
 
   test('tokens() - css() resolves custom color and bg from config', async ({ page }) => {
-    await page.goto('/')
+    await page.goto(testRoutes.tokens)
     const el = page.getByTestId('tokens-css')
     await expect(el).toBeVisible()
     const color = await el.evaluate((e) => getComputedStyle(e).color)

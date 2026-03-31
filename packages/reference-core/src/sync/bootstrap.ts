@@ -1,5 +1,6 @@
 import { loadUserConfig, setConfig, setCwd } from '../config'
 import { initEventBus } from '../lib/event-bus'
+import { initLogRelay } from '../lib/log'
 import { initPool } from '../lib/thread-pool'
 import workersManifest from '../../workers.json'
 import type { SyncOptions, SyncPayload } from './types'
@@ -25,6 +26,7 @@ export async function bootstrap(
       maxThreads: Object.keys(workersManifest).length,
     }
   )
+  initLogRelay()
   initEventBus()
   return { cwd, config, options: options ?? {} }
 }

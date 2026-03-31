@@ -2,7 +2,7 @@ import { resolve } from 'node:path'
 import { mkdirSync } from 'node:fs'
 import { log } from '../lib/log'
 import { getOutDirPath } from '../lib/paths'
-import { createSymlink } from '../lib/symlink'
+import { createSymlink, pruneBrokenSymlinksInDir } from '../lib/symlink'
 import { getConfig } from '../config'
 import { getPackageDir } from './layout'
 import { type PackageDefinition } from './package'
@@ -48,4 +48,6 @@ export async function installPackages(
   for (const pkg of packages) {
     await installPackage(coreDir, outDir, nodeModulesScope, pkg)
   }
+
+  pruneBrokenSymlinksInDir(nodeModulesScope)
 }

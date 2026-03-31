@@ -3,7 +3,8 @@ import type { VirtualEvents } from './virtual/events'
 import type { WatchEvents } from './watch/events'
 import type { SystemEvents } from './system/events'
 import type { PackagerEvents } from './packager/events'
-import type { ReferenceEvents } from './reference/events'
+import type { ReferenceEvents } from './reference/bridge/events'
+import type { LogEvents } from './lib/log/events'
 
 /**
  * Main event registry – maps event names to payload types.
@@ -15,4 +16,5 @@ export type Events = SyncEvents &
   WatchEvents &
   SystemEvents &
   PackagerEvents &
-  ReferenceEvents
+  ReferenceEvents &
+  LogEvents

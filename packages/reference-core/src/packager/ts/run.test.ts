@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createDtsGenerationRuntime } from './run'
+import { createDtsGenerationQueue } from './run'
 import type { TsPackagerWorkerPayload } from './types'
 
 function createPayload(watchMode: boolean): TsPackagerWorkerPayload {
@@ -7,63 +7,128 @@ function createPayload(watchMode: boolean): TsPackagerWorkerPayload {
     cwd: '/workspace',
     config: {} as never,
     packages: [
-      { name: '@reference-ui/react', sourceEntry: 'src/entry/react.ts', outFile: 'react.mjs' },
-      { name: '@reference-ui/system', sourceEntry: 'src/entry/system.ts', outFile: 'system.mjs' },
+      {
+        name: '@reference-ui/react',
+        sourceEntry: 'src/entry/react.ts',
+        outFile: 'react.mjs',
+      },
+      {
+        name: '@reference-ui/system',
+        sourceEntry: 'src/entry/system.ts',
+        outFile: 'system.mjs',
+      },
+      {
+        name: '@reference-ui/types',
+        sourceEntry: 'src/entry/types.ts',
+        outFile: 'types.mjs',
+      },
     ],
     watchMode,
   }
 }
 
 describe('packager/ts/run', () => {
-  it('does not run catch-up generation for one-shot sync', async () => {
-    const runGeneration = vi.fn().mockResolvedValue(undefined)
-    const runtime = createDtsGenerationRuntime(createPayload(false), {
-      bundlesReady: true,
-      runGeneration,
-    })
+  it('limits runtime declaration generation to runtime packages', async () => {
+    const installPackagesTs = vi.fn().mockResolvedValue(undefined)
+    const emit = vi.fn()
 
-    await runtime.runCatchUpIfNeeded()
+    vi.resetModules()
+    vi.doMock('./install', () => ({
+      installPackagesTs,
+    }))
+    vi.doMock('../../lib/event-bus', () => ({
+      emit,
+    }))
+    vi.doMock('../../lib/log', () => ({
+      log: {
+        debug: vi.fn(),
+        error: vi.fn(),
+      },
+    }))
 
-    expect(runGeneration).not.toHaveBeenCalled()
+    const { runDtsGeneration } = await import('./run')
+    await runDtsGeneration(createPayload(false), 'packager-ts:runtime:complete')
+
+    expect(installPackagesTs).toHaveBeenCalledWith('/workspace', [
+      {
+        name: '@reference-ui/react',
+        sourceEntry: 'src/entry/react.ts',
+        outFile: 'react.mjs',
+      },
+      {
+        name: '@reference-ui/system',
+        sourceEntry: 'src/entry/system.ts',
+        outFile: 'system.mjs',
+      },
+    ])
+    expect(emit).toHaveBeenCalledWith('packager-ts:runtime:complete', {})
   })
 
-  it('runs catch-up generation in watch mode when outputs already exist', async () => {
-    const runGeneration = vi.fn().mockResolvedValue(undefined)
-    const runtime = createDtsGenerationRuntime(createPayload(true), {
-      bundlesReady: true,
-      runGeneration,
-    })
+  it('limits final declaration generation to the types package', async () => {
+    const installPackagesTs = vi.fn().mockResolvedValue(undefined)
+    const emit = vi.fn()
 
-    await runtime.runCatchUpIfNeeded()
+    vi.resetModules()
+    vi.doMock('./install', () => ({
+      installPackagesTs,
+    }))
+    vi.doMock('../../lib/event-bus', () => ({
+      emit,
+    }))
+    vi.doMock('../../lib/log', () => ({
+      log: {
+        debug: vi.fn(),
+        error: vi.fn(),
+      },
+    }))
 
-    expect(runGeneration).toHaveBeenCalledTimes(1)
+    const { runDtsGeneration } = await import('./run')
+    await runDtsGeneration(createPayload(false), 'packager-ts:complete')
+
+    expect(installPackagesTs).toHaveBeenCalledWith('/workspace', [
+      {
+        name: '@reference-ui/types',
+        sourceEntry: 'src/entry/types.ts',
+        outFile: 'types.mjs',
+      },
+    ])
+    expect(emit).toHaveBeenCalledWith('packager-ts:complete', {})
   })
 
-  it('serializes overlapping packager:complete callbacks', async () => {
+  it('serializes overlapping declaration runs', async () => {
     let resolveFirstRun: (() => void) | undefined
-    const firstRun = new Promise<void>((resolve) => {
+    const firstRun = new Promise<void>(resolve => {
       resolveFirstRun = resolve
     })
     const runGeneration = vi
       .fn<(_: TsPackagerWorkerPayload) => Promise<void>>()
       .mockReturnValueOnce(firstRun)
       .mockResolvedValueOnce(undefined)
-    const runtime = createDtsGenerationRuntime(createPayload(false), {
-      bundlesReady: false,
-      runGeneration,
-    })
+    const queue = createDtsGenerationQueue(createPayload(false), { runGeneration })
 
-    runtime.onPackagerComplete()
-    runtime.onPackagerComplete()
+    const firstRequest = queue.run('packager-ts:complete')
+    const secondRequest = queue.run('packager-ts:complete')
+    await Promise.resolve()
     await Promise.resolve()
 
     expect(runGeneration).toHaveBeenCalledTimes(1)
 
     resolveFirstRun?.()
     await firstRun
-    await Promise.resolve()
-    await Promise.resolve()
+    await vi.waitFor(() => {
+      expect(runGeneration).toHaveBeenCalledTimes(2)
+    })
+    await Promise.all([firstRequest, secondRequest])
+  })
 
-    expect(runGeneration).toHaveBeenCalledTimes(2)
+  it('passes the requested completion event through to the generator', async () => {
+    const runGeneration = vi.fn().mockResolvedValue(undefined)
+    const queue = createDtsGenerationQueue(createPayload(false), { runGeneration })
+    await queue.run('packager-ts:runtime:complete')
+
+    expect(runGeneration).toHaveBeenCalledWith(
+      expect.objectContaining({ cwd: '/workspace' }),
+      'packager-ts:runtime:complete'
+    )
   })
 })

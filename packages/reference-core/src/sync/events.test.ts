@@ -2,14 +2,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 const emit = vi.fn()
 const onHandlers = new Map<string, Array<(payload?: unknown) => void>>()
-const onceAllHandlers = new Map<string, { events: string[]; handler: () => void }>()
-let onceAllCallCount = 0
 
 async function loadEventsModule() {
   vi.resetModules()
   onHandlers.clear()
-  onceAllHandlers.clear()
-  onceAllCallCount = 0
   emit.mockClear()
 
   vi.doMock('../lib/event-bus', () => ({
@@ -19,9 +15,7 @@ async function loadEventsModule() {
       handlers.push(handler)
       onHandlers.set(event, handlers)
     },
-    onceAll: (events: string[], handler: () => void) => {
-      onceAllHandlers.set(`onceAll:${onceAllCallCount++}`, { events, handler })
-    },
+    onceAll: () => {},
   }))
 
   const mod = await import('./events')
@@ -74,39 +68,84 @@ describe('sync/events', () => {
     expect(emit).toHaveBeenCalledWith('sync:failed', undefined)
   })
 
+  it('reference component copy failure emits sync:failed', async () => {
+    const { initEvents } = await loadEventsModule()
+    initEvents()
+
+    expect(onHandlers.has('reference:component:copy-failed')).toBe(true)
+    fireOn('reference:component:copy-failed', {
+      message: 'copy exploded',
+    })
+
+    expect(emit).toHaveBeenCalledWith('sync:failed', undefined)
+  })
+
   it('run:panda:codegen emitted only when system:config:complete and system:panda:ready both fired', async () => {
     const { initEvents } = await loadEventsModule()
     initEvents()
 
-    const pair = [...onceAllHandlers.entries()].find(
-      ([, v]) =>
-        v.events.length === 2 &&
-        v.events.includes('system:config:complete') &&
-        v.events.includes('system:panda:ready')
-    )
-    expect(pair).toBeDefined()
-    const [, { handler }] = pair!
+    fireOn('system:config:complete')
+    expect(emit).not.toHaveBeenCalledWith('run:panda:codegen', undefined)
 
     emit.mockClear()
-    handler()
-
+    fireOn('system:panda:ready')
     expect(emit).toHaveBeenCalledWith('run:panda:codegen', undefined)
   })
 
-  it('virtual:complete triggers config and reference work immediately when both workers are ready', async () => {
+  it('virtual:copy:complete triggers reference component copy', async () => {
+    const { initEvents } = await loadEventsModule()
+    initEvents()
+
+    emit.mockClear()
+    fireOn('virtual:copy:complete', {
+      virtualDir: '/workspace/app/.reference-ui/virtual',
+    })
+
+    expect(emit).toHaveBeenCalledWith('run:reference:component:copy', {
+      virtualDir: '/workspace/app/.reference-ui/virtual',
+    })
+  })
+
+  it('reference component copy completion promotes the full virtual pipeline to complete', async () => {
+    const { initEvents } = await loadEventsModule()
+    initEvents()
+
+    emit.mockClear()
+    fireOn('reference:component:copied')
+
+    expect(emit).toHaveBeenCalledWith('virtual:complete', {})
+  })
+
+  it('reruns panda codegen when config completes again after panda is ready', async () => {
+    const { initEvents } = await loadEventsModule()
+    initEvents()
+
+    fireOn('system:panda:ready')
+    emit.mockClear()
+
+    fireOn('system:config:complete')
+    expect(emit).toHaveBeenCalledWith('run:panda:codegen', undefined)
+
+    emit.mockClear()
+    fireOn('system:config:complete')
+    expect(emit).toHaveBeenCalledWith('run:panda:codegen', undefined)
+  })
+
+  it('virtual:complete triggers config work immediately but reference waits for runtime declarations', async () => {
     const { initEvents } = await loadEventsModule()
     initEvents()
 
     fireOn('system:config:ready')
     fireOn('reference:ready')
+    fireOn('packager:ready')
     emit.mockClear()
     fireOn('virtual:complete')
 
     expect(emit).toHaveBeenCalledWith('run:system:config', undefined)
-    expect(emit).toHaveBeenCalledWith('run:reference:build', {})
+    expect(emit).not.toHaveBeenCalledWith('run:reference:build', {})
   })
 
-  it('buffers config and reference work until the workers become ready', async () => {
+  it('buffers config work until ready and reference work until runtime declarations complete', async () => {
     const { initEvents } = await loadEventsModule()
     initEvents()
 
@@ -121,10 +160,31 @@ describe('sync/events', () => {
 
     emit.mockClear()
     fireOn('reference:ready')
+    expect(emit).not.toHaveBeenCalledWith('run:reference:build', {})
+
+    emit.mockClear()
+    fireOn('packager:ready')
+    fireOn('packager-ts:runtime:complete')
     expect(emit).toHaveBeenCalledWith('run:reference:build', {})
   })
 
-  it('waits for both panda codegen and reference output before bundling packages', async () => {
+  it('virtual fs changes trigger config and reference rebuilds after initial startup completes', async () => {
+    const { initEvents } = await loadEventsModule()
+    initEvents()
+
+    fireOn('virtual:complete')
+    emit.mockClear()
+
+    fireOn('virtual:fs:change', {
+      event: 'change',
+      path: '/workspace/app/.reference-ui/virtual/src/button.tsx',
+    })
+
+    expect(emit).toHaveBeenCalledWith('run:system:config', undefined)
+    expect(emit).toHaveBeenCalledWith('run:reference:build', {})
+  })
+
+  it('waits for panda codegen before bundling runtime packages', async () => {
     const { initEvents } = await loadEventsModule()
     initEvents()
 
@@ -132,63 +192,62 @@ describe('sync/events', () => {
     emit.mockClear()
     fireOn('system:panda:codegen')
 
-    expect(emit).not.toHaveBeenCalledWith('run:packager:bundle', undefined)
-    fireOn('reference:complete', {
-      source: 'virtual',
-      manifestPath: '/tmp/types/manifest.js',
-      outputDir: '/tmp/types',
-    })
-
-    expect(emit).toHaveBeenCalledWith('run:packager:bundle', undefined)
+    expect(emit).toHaveBeenCalledWith('run:packager:runtime:bundle', undefined)
   })
 
-  it('emits packager work when both inputs already finished before packager becomes ready', async () => {
+  it('emits runtime packager work when panda already finished before packager becomes ready', async () => {
     const { initEvents } = await loadEventsModule()
     initEvents()
 
     emit.mockClear()
     fireOn('system:panda:codegen')
-    fireOn('reference:complete', {
-      source: 'virtual',
-      manifestPath: '/tmp/types/manifest.js',
-      outputDir: '/tmp/types',
-    })
 
-    expect(emit).not.toHaveBeenCalledWith('run:packager:bundle')
+    expect(emit).not.toHaveBeenCalledWith('run:packager:runtime:bundle')
     emit.mockClear()
     fireOn('packager:ready')
 
-    expect(emit).toHaveBeenCalledWith('run:packager:bundle', undefined)
+    expect(emit).toHaveBeenCalledWith('run:packager:runtime:bundle', undefined)
   })
 
-  it('runs packager once per matched panda/reference completion pair', async () => {
+  it('runs runtime packager once per fresh panda completion and final packager once per fresh reference completion', async () => {
     const { initEvents } = await loadEventsModule()
     initEvents()
 
     fireOn('packager:ready')
     emit.mockClear()
-
-    fireOn('reference:complete', {
-      source: 'virtual',
-      manifestPath: '/tmp/types/manifest.js',
-      outputDir: '/tmp/types',
-    })
-    expect(emit).not.toHaveBeenCalledWith('run:packager:bundle', undefined)
 
     fireOn('system:panda:codegen')
     expect(emit).toHaveBeenCalledTimes(1)
-    expect(emit).toHaveBeenCalledWith('run:packager:bundle', undefined)
+    expect(emit).toHaveBeenCalledWith('run:packager:runtime:bundle', undefined)
 
     emit.mockClear()
     fireOn('system:panda:codegen')
-    expect(emit).not.toHaveBeenCalledWith('run:packager:bundle', undefined)
+    expect(emit).toHaveBeenCalledWith('run:packager:runtime:bundle', undefined)
 
+    emit.mockClear()
     fireOn('reference:complete', {
       source: 'virtual',
       manifestPath: '/tmp/types/manifest.js',
       outputDir: '/tmp/types',
     })
     expect(emit).toHaveBeenCalledTimes(1)
+    expect(emit).toHaveBeenCalledWith('run:packager:bundle', undefined)
+  })
+
+  it('emits final packager work when reference output already exists before packager becomes ready', async () => {
+    const { initEvents } = await loadEventsModule()
+    initEvents()
+
+    emit.mockClear()
+    fireOn('reference:complete', {
+      source: 'virtual',
+      manifestPath: '/tmp/types/manifest.js',
+      outputDir: '/tmp/types',
+    })
+    expect(emit).not.toHaveBeenCalledWith('run:packager:bundle', undefined)
+
+    emit.mockClear()
+    fireOn('packager:ready')
     expect(emit).toHaveBeenCalledWith('run:packager:bundle', undefined)
   })
 })

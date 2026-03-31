@@ -1,9 +1,9 @@
 import { Div } from '@reference-ui/react'
 
-export function SourceFontMono() {
+export function SourceFontSans() {
   return (
-    <Div font="mono" weight="bold">
-      Mono Bold Source Fixture
+    <Div font="sans" weight="bold">
+      Sans Bold Source Fixture
     </Div>
   )
 }

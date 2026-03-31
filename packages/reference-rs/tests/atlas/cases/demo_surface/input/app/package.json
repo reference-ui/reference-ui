@@ -1,0 +1,10 @@
+{
+  "name": "@fixtures/atlas-project",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@fixtures/demo-ui": "workspace:*",
+    "react": "*"
+  }
+}

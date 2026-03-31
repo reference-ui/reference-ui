@@ -1,0 +1,24 @@
+const symbol = {
+  id: "_s0",
+  name: "AbstractBaseForClass",
+  library: "user",
+  description: "--- class_extends_abstract ---",
+  descriptionRaw: "--- class_extends_abstract ---",
+  members:   [
+    {
+      name: "abstractMember",
+      optional: false,
+      readonly: false,
+      kind: "method",
+      type:   {
+        kind: "intrinsic",
+        name: "void"
+      }
+    }
+  ],
+  extends: [],
+  types: []
+};
+export { symbol as _s0 };
+export default symbol;
+

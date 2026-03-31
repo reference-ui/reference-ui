@@ -1,0 +1,7 @@
+{
+  "caseName": "unsupported_inline_types",
+  "analyses": {
+    "default": [],
+    "withIncludes": {}
+  }
+}

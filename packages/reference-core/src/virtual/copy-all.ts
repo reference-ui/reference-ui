@@ -1,4 +1,4 @@
-import { mkdir } from 'node:fs/promises'
+import { mkdir, rm } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { existsSync } from 'node:fs'
 import fg from 'fast-glob'
@@ -20,13 +20,15 @@ export async function copyAll(payload: {
 
   log.debug('virtual', 'Initializing', root, '→', virtualDir)
 
-  if (!existsSync(virtualDir)) {
-    await mkdir(virtualDir, { recursive: true })
+  if (existsSync(virtualDir)) {
+    await rm(virtualDir, { recursive: true, force: true })
   }
+
+  await mkdir(virtualDir, { recursive: true })
 
   if (!include.length) {
     log.debug('virtual', 'No include patterns - skipping')
-    emit('virtual:complete', {})
+    emit('virtual:copy:complete', { virtualDir })
     return
   }
 
@@ -44,5 +46,5 @@ export async function copyAll(payload: {
   }
 
   log.debug('virtual', 'Sync complete')
-  emit('virtual:complete', {})
+  emit('virtual:copy:complete', { virtualDir })
 }

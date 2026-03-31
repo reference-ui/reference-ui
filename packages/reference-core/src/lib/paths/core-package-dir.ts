@@ -3,7 +3,6 @@ import { resolve, dirname, parse } from 'node:path'
 
 const PACKAGE_JSON = 'package.json'
 const CORE_PACKAGE_NAME = '@reference-ui/core'
-const LEGACY_CORE_PACKAGE_NAME = '@reference-ui/cli'
 const WORKSPACE_MARKERS = ['pnpm-workspace.yaml', 'nx.json'] as const
 const WORKSPACE_CORE_PATH = ['packages', 'reference-core'] as const
 
@@ -26,12 +25,9 @@ function walkUpToPackage(startDir: string, packageName: string): string | null {
 
 /**
  * Resolve the @reference-ui/core package directory.
- * Falls back to the legacy @reference-ui/cli name during the rename transition.
  */
 export function resolveCorePackageDir(fromCwd: string = process.cwd()): string {
-  const coreDir =
-    walkUpToPackage(fromCwd, CORE_PACKAGE_NAME) ??
-    walkUpToPackage(fromCwd, LEGACY_CORE_PACKAGE_NAME)
+  const coreDir = walkUpToPackage(fromCwd, CORE_PACKAGE_NAME)
   if (coreDir) return coreDir
 
   // Fallback: monorepo workspace
@@ -49,7 +45,7 @@ export function resolveCorePackageDir(fromCwd: string = process.cwd()): string {
   }
 
   throw new Error(
-    '@reference-ui/core package directory could not be resolved (legacy @reference-ui/cli also checked).'
+    '@reference-ui/core package directory could not be resolved.'
   )
 }
 

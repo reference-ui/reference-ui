@@ -1,9 +1,15 @@
 import { describe, expect, it } from 'vitest'
 
-import { addCaseRuntimeSmokeTests, createCaseApi, findMember } from '../../api-test-helpers'
+import {
+  addCaseEmittedSnapshotTests,
+  addCaseRuntimeSmokeTests,
+  createCaseApi,
+  findMember,
+} from '../../api-test-helpers'
 
 describe('external_libs tasty api', () => {
   addCaseRuntimeSmokeTests('external_libs', 'ButtonProps')
+  addCaseEmittedSnapshotTests('external_libs')
 
   it('loads extends chains and user-owned dependencies', async () => {
     const api = createCaseApi('external_libs')

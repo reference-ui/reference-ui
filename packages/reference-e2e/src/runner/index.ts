@@ -7,9 +7,9 @@ import { spawn } from 'node:child_process'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { execa } from 'execa'
-import { loadConfig } from '../config/index.js'
-import { MATRIX, getPort } from '../matrix/index.js'
-import type { MatrixEntry } from '../matrix/index.js'
+import { loadConfig } from '../config/index'
+import { MATRIX, getPort } from '../matrix/index'
+import type { MatrixEntry } from '../matrix/index'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const PACKAGE_ROOT = join(__dirname, '..', '..')
@@ -45,20 +45,20 @@ export async function prepareProject(project: MatrixEntry): Promise<void> {
 }
 
 /** Run tests for default project. */
-export async function runQuick(): Promise<void> {
+export async function runQuick(args: string[] = []): Promise<void> {
   const project = getDefaultProject()
   await prepareProject(project)
-  await execa('pnpm', ['exec', 'playwright', 'test', '--project', project.name], {
+  await execa('pnpm', ['exec', 'playwright', 'test', ...args, '--project', project.name], {
     env: projectEnv(project),
     stdio: 'inherit',
   })
 }
 
 /** Run Playwright UI for default project. */
-export async function runUi(): Promise<void> {
+export async function runUi(args: string[] = []): Promise<void> {
   const project = getDefaultProject()
   await prepareProject(project)
-  await execa('playwright', ['test', '--ui', '--project', project.name], {
+  await execa('pnpm', ['exec', 'playwright', 'test', '--ui', ...args, '--project', project.name], {
     env: projectEnv(project),
     stdio: 'inherit',
   })

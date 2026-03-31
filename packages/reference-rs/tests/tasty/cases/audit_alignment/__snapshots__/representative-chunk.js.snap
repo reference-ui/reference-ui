@@ -1,0 +1,49 @@
+const symbol = {
+  id: "_s0",
+  name: "Flatten",
+  library: "user",
+  description: "Conditional types stay structural even when nested infer remains raw.",
+  descriptionRaw: "Conditional types stay structural even when nested infer remains raw.",
+  jsdoc:   {
+    summary: "Conditional types stay structural even when nested infer remains raw.",
+    tags: []
+  },
+  typeParameters:   [
+    {
+      name: "T"
+    }
+  ],
+  definition:   {
+    kind: "conditional",
+    checkType:   {
+      id: "T",
+      name: "T",
+      library: "user"
+    },
+    extendsType:   {
+      kind: "array",
+      element:   {
+        kind: "raw",
+        summary: "infer U"
+      }
+    },
+    trueType:   {
+      id: "U",
+      name: "U",
+      library: "user"
+    },
+    falseType:   {
+      id: "T",
+      name: "T",
+      library: "user"
+    },
+    resolved:   {
+      id: "T",
+      name: "T",
+      library: "user"
+    }
+  }
+};
+export { symbol as _s0 };
+export default symbol;
+

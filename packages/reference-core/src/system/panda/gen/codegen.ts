@@ -6,7 +6,7 @@ import { getConfig, getCwd } from '../../../config/store'
 import { getOutDirPath } from '../../../lib/paths'
 import { log } from '../../../lib/log'
 import { updateBaseSystemCss } from '../../base/create'
-import { applyLayerPostprocess } from '../../layers/applyLayerPostprocess'
+import { postprocessCss } from '../../css/postprocess'
 
 const WORKSPACE_MARKERS = ['pnpm-workspace.yaml', 'nx.json'] as const
 const CORE_PANDACSS_PATH = ['packages', 'reference-core', 'node_modules', '@pandacss'] as const
@@ -117,7 +117,7 @@ export async function runPandaCodegen(): Promise<void> {
 
   const config = getConfig()
   if (config && cwd) {
-    const layerCss = applyLayerPostprocess(outDir, config)
+    const layerCss = postprocessCss(outDir, config)
     if (layerCss) updateBaseSystemCss(cwd, layerCss)
   }
 }
@@ -146,7 +146,7 @@ export async function runPandaCss(): Promise<void> {
 
   const config = getConfig()
   if (config && cwd) {
-    const layerCss = applyLayerPostprocess(outDir, config)
+    const layerCss = postprocessCss(outDir, config)
     if (layerCss) updateBaseSystemCss(cwd, layerCss)
   }
 }

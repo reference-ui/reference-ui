@@ -1,22 +1,11 @@
-/**
- * Reference UI Configuration
- * 
- */
-
 import { defineConfig } from '@reference-ui/core'
-import { baseSystem } from '@reference-ui/lib'
-
-// ============================================================================
-// Configuration
-// ============================================================================
+import { baseSystem } from '@fixtures/extend-library'
+import { baseSystem as layerLibSystem } from '@fixtures/layer-library'
 
 export default defineConfig({
   name: 'reference-unit',
   extends: [baseSystem],
-  // Glob patterns for files to scan for Panda CSS extraction
-  include: [
-    'src/**/*.{ts,tsx,mdx}',
-  ],
-
+  layers: [layerLibSystem],
+  include: ['src/**/*.{ts,tsx,mdx}', 'tests/**/*.{ts,tsx,mdx}'],
   debug: true,
 })

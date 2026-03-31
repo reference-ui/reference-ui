@@ -1,19 +1,15 @@
 import { Div } from '@reference-ui/react'
+import { DemoComponent, LightDarkDemo } from '@fixtures/extend-library'
 
 /**
- * Uses a foundational token from @reference-ui/lib baseSystem via extends.
- * Token is on :root. Works when ui.config has extends: [baseSystem].
- * Uses var() so it also works when testing layers (token on data-layer).
+ * Renders real fixture-library components. The base environment extends the
+ * fixture baseSystem so downstream sandboxes exercise package-based extends.
  */
 export default function ExtendsTest() {
   return (
-    <Div>
-      <span
-        data-testid="extends-test"
-        style={{ color: 'var(--colors-teal-500)' }}
-      >
-        ExtendsTest: teal.500
-      </span>
+    <Div data-testid="extends-test" display="grid" gap="16px">
+      <DemoComponent />
+      <LightDarkDemo />
     </Div>
   )
 }

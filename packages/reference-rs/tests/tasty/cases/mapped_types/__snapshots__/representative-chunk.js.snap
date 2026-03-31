@@ -1,0 +1,47 @@
+const symbol = {
+  id: "_s0",
+  name: "OptionalTokens",
+  library: "user",
+  description: "Basic optional mapped type.",
+  descriptionRaw: "Basic optional mapped type.",
+  jsdoc:   {
+    summary: "Basic optional mapped type.",
+    tags: []
+  },
+  typeParameters:   [
+    {
+      name: "T"
+    }
+  ],
+  definition:   {
+    kind: "mapped",
+    typeParam: "K",
+    sourceType:   {
+      kind: "type_operator",
+      operator: "keyof",
+      target:   {
+        id: "T",
+        name: "T",
+        library: "user"
+      }
+    },
+    optionalModifier: "add",
+    readonlyModifier: "preserve",
+    valueType:   {
+      kind: "indexed_access",
+      object:   {
+        id: "T",
+        name: "T",
+        library: "user"
+      },
+      index:   {
+        id: "K",
+        name: "K",
+        library: "user"
+      }
+    }
+  }
+};
+export { symbol as _s0 };
+export default symbol;
+

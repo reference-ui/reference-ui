@@ -1,0 +1,56 @@
+const symbol = {
+  id: "_s0",
+  name: "SizeVariant",
+  library: "user",
+  description: "Template literal alias using a union interpolation.",
+  descriptionRaw: "Template literal alias using a union interpolation.",
+  jsdoc:   {
+    summary: "Template literal alias using a union interpolation.",
+    tags: []
+  },
+  definition:   {
+    kind: "template_literal",
+    parts:   [
+      {
+        kind: "text",
+        value: "size-"
+      },
+      {
+        kind: "type",
+        value:   {
+          kind: "union",
+          types:   [
+            {
+              kind: "literal",
+              value: "'sm'"
+            },
+            {
+              kind: "literal",
+              value: "'lg'"
+            }
+          ]
+        }
+      },
+      {
+        kind: "text",
+        value: ""
+      }
+    ],
+    resolved:   {
+      kind: "union",
+      types:   [
+        {
+          kind: "literal",
+          value: "'size-sm'"
+        },
+        {
+          kind: "literal",
+          value: "'size-lg'"
+        }
+      ]
+    }
+  }
+};
+export { symbol as _s0 };
+export default symbol;
+

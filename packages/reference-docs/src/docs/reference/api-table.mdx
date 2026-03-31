@@ -14,11 +14,30 @@ The `Reference` component renders API documentation from the generated Tasty man
 ## Define a public type
 
 ```ts
+/**
+ * Public button props used to exercise the live reference table.
+ */
 export interface DocsReferenceButtonProps {
+  /** Visible text shown inside the button. */
   label: string
+
+  /** Disables pointer and keyboard interaction. */
   disabled?: boolean
-  variant: 'solid' | 'ghost'
-  icon?: 'plus' | 'minus'
+
+  /**
+   * Visual treatment for the button shell.
+   *
+   * @default "solid"
+   */
+  variant?: DocsReferenceButtonVariant
+
+  /**
+   * Called when the button is pressed.
+   *
+   * @param event - Pointer event metadata from the trigger interaction.
+   * @param state - Snapshot of the button state at click time.
+   */
+  onPress?: (event: DocsReferencePressEvent, state: DocsReferenceButtonState) => void
 }
 ```
 
@@ -36,8 +55,58 @@ import { Reference } from '@reference-ui/types'
 
 <Reference name="DocsReferenceButtonProps" />
 
+Inheritance works too, and inherited members can now carry their declaring
+origin in the browser:
+
+```tsx
+<Reference name="DocsReferenceSplitButtonProps" />
+```
+
+<Reference name="DocsReferenceSplitButtonProps" />
+
+Generic interfaces now preserve constraints and defaults in the browser header:
+
+```tsx
+<Reference name="DocsReferenceAsyncState" />
+```
+
+<Reference name="DocsReferenceAsyncState" />
+
 Type aliases work too, but they render as a definition block instead of a members table:
 
 ```tsx
 <Reference name="DocsReferenceButtonVariant" />
 ```
+
+<Reference name="DocsReferenceButtonVariant" />
+
+More complex aliases are useful for seeing the current edges of the model and
+the richer cases the browser now handles:
+
+```tsx
+<Reference name="DocsReferenceButtonIntent" />
+<Reference name="DocsReferenceButtonPadding" />
+<Reference name="DocsReferenceResolvedSize" />
+<Reference name="DocsReferenceResolvedTone" />
+<Reference name="DocsReferenceToneKey" />
+<Reference name="DocsReferenceButtonSpacing" />
+<Reference name="DocsReferenceSpacingPreview" />
+<Reference name="DocsReferenceToneLabels" />
+<Reference name="DocsReferenceInteractiveElement" />
+<Reference name="DocsReferenceComposedButtonProps" />
+<Reference name="DocsReferenceButtonVariantMeta" />
+<Reference name="DocsReferenceCurrentIntent" />
+```
+
+<Reference name="DocsReferenceButtonIntent" />
+<Reference name="DocsReferenceButtonPadding" />
+<Reference name="DocsReferenceResolvedSize" />
+<Reference name="DocsReferenceResolvedTone" />
+<Reference name="DocsReferenceToneKey" />
+<Reference name="DocsReferenceButtonSpacing" />
+<Reference name="DocsReferenceSpacingPreview" />
+<Reference name="DocsReferenceToneLabels" />
+<Reference name="DocsReferenceInteractiveElement" />
+<Reference name="DocsReferenceComposedButtonProps" />
+<Reference name="DocsReferenceButtonVariantMeta" />
+<Reference name="DocsReferenceCurrentIntent" />

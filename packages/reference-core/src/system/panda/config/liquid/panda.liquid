@@ -10,10 +10,13 @@ import {
   extendKeyframes,
   extendPatterns,
   extendRecipes,
+  extendThemes,
   extendTokens,
   extendUtilities,
   getPandaConfig,
   initPandaConfig,
+  referenceBrowserTokenConfig,
+  resolveColorModeTokens,
   rhythmGlobalCss,
   rhythmSpacingTokens,
   rhythmUtilities,
@@ -32,9 +35,12 @@ initPandaConfig(baseConfig)
 // tokens
 // ─────────────────────────────────────────────────────────────────────────
 
-const tokensFragments = {{ tokensValueExpression | raw }}
+const userTokensFragments = {{ tokensValueExpression | raw }}
+const tokensFragments = [referenceBrowserTokenConfig, ...userTokensFragments]
+const resolvedColorModeTokens = resolveColorModeTokens(tokensFragments)
 extendTokens(rhythmSpacingTokens)
-extendTokens(tokensFragments)
+extendTokens(resolvedColorModeTokens.baseTokens)
+extendThemes(resolvedColorModeTokens.themes)
 
 // ─────────────────────────────────────────────────────────────────────────
 // keyframes

@@ -38,9 +38,9 @@
     "access": "public"
   },
   "dependencies": {
-    "@pandacss/dev": "^1.8.2",
-    "@pandacss/node": "^1.8.2",
-    "@pandacss/types": "^1.8.2",
+    "@pandacss/dev": "^1.9.0",
+    "@pandacss/node": "^1.9.0",
+    "@pandacss/types": "^1.9.0",
     "@parcel/watcher": "^2.5.6",
     "@reference-ui/rust": "workspace:*",
     "@rspress/mdx-rs": "^0.6.6",
@@ -51,7 +51,10 @@
     "picocolors": "^1.1.0",
     "picomatch": "^4.0.0",
     "piscina": "^5.1.4",
+    "postcss": "^8.5.8",
+    "postcss-selector-parser": "^7.1.1",
     "symlink-dir": "^9.0.0",
+    "tsdown": "^0.21.5",
     "tsup": "^8.4.0"
   },
   "devDependencies": {

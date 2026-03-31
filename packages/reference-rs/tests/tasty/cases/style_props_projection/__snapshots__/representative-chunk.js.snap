@@ -1,0 +1,39 @@
+const symbol = {
+  id: "_s0",
+  name: "ConditionalValue",
+  library: "user",
+  typeParameters:   [
+    {
+      name: "T"
+    }
+  ],
+  definition:   {
+    kind: "union",
+    types:   [
+      {
+        id: "T",
+        name: "T",
+        library: "user"
+      },
+      {
+        kind: "object",
+        members:   [
+          {
+            name: "[index]",
+            optional: false,
+            readonly: false,
+            kind: "index",
+            type:   {
+              id: "T",
+              name: "T",
+              library: "user"
+            }
+          }
+        ]
+      }
+    ]
+  }
+};
+export { symbol as _s0 };
+export default symbol;
+

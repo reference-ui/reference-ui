@@ -1,14 +1,21 @@
 import { broadcastChannel, channelListeners } from './channel'
+import { parseBusMessage, type BusEnvelope } from './wire'
 
 export function dispatchChannelMessage(message: Event): void {
-  const data = (message as MessageEvent).data
-  if (data?.type !== 'bus:event' || typeof data.event !== 'string') return
+  dispatchBusEnvelope((message as MessageEvent).data)
+}
 
-  const listeners = channelListeners.get(data.event)
+export function dispatchBusEnvelope(envelope: unknown): void {
+  const parsed = parseBusMessage(envelope)
+  if (!parsed) return
+
+  const listeners = channelListeners.get(parsed.event)
   if (!listeners?.size) return
 
   for (const listener of [...listeners]) {
-    listener(message)
+    listener({
+      data: envelope as BusEnvelope,
+    } as MessageEvent)
   }
 }
 

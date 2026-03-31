@@ -1,0 +1,47 @@
+const symbol = {
+  id: "_s0",
+  name: "OptionalKeys",
+  library: "user",
+  description: "Mapped type: all keys of T become optional. Partial<T> style.",
+  descriptionRaw: "Mapped type: all keys of T become optional. Partial<T> style.",
+  jsdoc:   {
+    summary: "Mapped type: all keys of T become optional. Partial<T> style.",
+    tags: []
+  },
+  typeParameters:   [
+    {
+      name: "T"
+    }
+  ],
+  definition:   {
+    kind: "mapped",
+    typeParam: "P",
+    sourceType:   {
+      kind: "type_operator",
+      operator: "keyof",
+      target:   {
+        id: "T",
+        name: "T",
+        library: "user"
+      }
+    },
+    optionalModifier: "add",
+    readonlyModifier: "preserve",
+    valueType:   {
+      kind: "indexed_access",
+      object:   {
+        id: "T",
+        name: "T",
+        library: "user"
+      },
+      index:   {
+        id: "P",
+        name: "P",
+        library: "user"
+      }
+    }
+  }
+};
+export { symbol as _s0 };
+export default symbol;
+

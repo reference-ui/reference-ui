@@ -7,7 +7,7 @@ import { initConfig } from '../system/panda/config/init'
 import { initWatch } from '../watch/init'
 import { initPackager, initTsPackager } from '../packager/init'
 import { initPanda } from '../system/panda/gen/init'
-import { initReference } from '../reference/init'
+import { initReference } from '../reference/bridge/init'
 import type { SyncOptions } from './types'
 
 export type { SyncOptions, SyncPayload } from './types'

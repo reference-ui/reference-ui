@@ -1,13 +1,20 @@
 import { describe, expect, it } from 'vitest'
 
-import { addCaseRuntimeSmokeTests, createCaseApi, findMember } from '../../api-test-helpers'
+import {
+  addCaseEmittedSnapshotTests,
+  addCaseRuntimeSmokeTests,
+  createCaseApi,
+  findMember,
+} from '../../api-test-helpers'
 
 describe('jsdoc tasty api', () => {
   addCaseRuntimeSmokeTests('jsdoc', 'ButtonProps')
+  addCaseEmittedSnapshotTests('jsdoc')
 
   it('keeps symbol and member jsdoc data on the raw contract', async () => {
     const api = createCaseApi('jsdoc')
     const buttonProps = await api.loadSymbolByName('ButtonProps')
+    const buttonSize = await api.loadSymbolByName('ButtonSize')
 
     const raw = buttonProps.getRaw() as {
       description?: string
@@ -36,5 +43,14 @@ describe('jsdoc tasty api', () => {
     expect(disabledRaw.description).toBe('Plain comment fallback.')
     expect(disabledRaw.descriptionRaw).toBe('Plain comment fallback.')
     expect(disabledRaw.jsdoc).toBeUndefined()
+
+    const buttonSizeRaw = buttonSize.getRaw() as {
+      description?: string
+      descriptionRaw?: string
+      jsdoc?: unknown
+    }
+    expect(buttonSizeRaw.description).toBeUndefined()
+    expect(buttonSizeRaw.descriptionRaw).toBeUndefined()
+    expect(buttonSizeRaw.jsdoc).toBeUndefined()
   })
 })

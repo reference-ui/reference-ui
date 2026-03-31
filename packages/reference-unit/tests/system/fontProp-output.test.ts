@@ -47,7 +47,7 @@ describe('font prop output (e2e)', () => {
     expect(hasVirtualSystemFile('fontProp.fixture.tsx')).toBe(true)
 
     const content = readVirtualSystemFile('fontProp.fixture.tsx')
-    expect(content).toContain('font="mono"')
+    expect(content).toContain('font="sans"')
     expect(content).toContain('weight="bold"')
   })
 
@@ -55,31 +55,34 @@ describe('font prop output (e2e)', () => {
     const css = readGeneratedFile('styled', 'styles.css')
     if (!css) return
 
-    expect(css).toContain('.ff_mono')
-    expect(css).toContain('.ls_-0\\.04em')
+    expect(css).toContain('.ff_sans')
+    expect(css).toContain('.ls_-0\\.01em')
     expect(css).toContain('.fw_700')
   })
 
   it('emits generated system font registry types', async () => {
     const systemTypes = await waitForGeneratedFileContaining(
-      'interface ReferenceFontRegistry {',
+      'interface FontRegistry {',
       'system',
       'system.d.mts'
     )
     const systemGeneratedTypes = await waitForGeneratedFile('system', 'types.generated.d.mts')
     const reactTypes = await waitForGeneratedFileContaining(
-      'interface ReferenceFontRegistry {',
+      'interface FontRegistry {',
       'react',
       'react.d.mts'
     )
     const reactGeneratedTypes = await waitForGeneratedFile('react', 'types.generated.d.mts')
 
-    expect(systemTypes).toContain('interface ReferenceFontRegistry {')
-    expect(systemGeneratedTypes).toContain('interface ReferenceFontRegistry {')
-    expect(systemGeneratedTypes).toContain('"mono": {')
-    expect(reactTypes).toContain('interface ReferenceFontRegistry {')
-    expect(reactTypes).toContain('ReferenceFontProps')
-    expect(reactGeneratedTypes).toContain('"mono": {')
+    expect(systemTypes).toContain('interface FontRegistry {')
+    expect(systemGeneratedTypes).toContain('interface FontRegistry {')
+    expect(systemGeneratedTypes).toContain('"sans": {')
+    expect(reactTypes).toContain('interface FontRegistry {')
+    // Decl emit uses FallbackFontProps & conditional ScopedFontProps (see `src/types/fonts.ts`) so
+    // d.ts bundlers / tsdown do not collapse FontProps to `never` when the registry is empty.
+    expect(reactTypes).toMatch(/type FontProps = FallbackFontProps/)
+    expect(reactTypes).toContain('ScopedFontProps')
+    expect(reactGeneratedTypes).toContain('"sans": {')
     expect(reactGeneratedTypes).toContain('"bold": true')
   }, 20_000)
 })

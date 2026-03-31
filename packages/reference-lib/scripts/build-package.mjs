@@ -9,6 +9,8 @@ const distDir = resolve(packageRoot, 'dist')
 const requiredFiles = [
   resolve(packageRoot, '.reference-ui/system/baseSystem.mjs'),
   resolve(packageRoot, '.reference-ui/system/baseSystem.d.mts'),
+  resolve(distDir, 'index.mjs'),
+  resolve(distDir, 'index.d.ts'),
 ]
 
 for (const filePath of requiredFiles) {
@@ -16,15 +18,3 @@ for (const filePath of requiredFiles) {
 }
 
 await mkdir(distDir, { recursive: true })
-
-await writeFile(
-  resolve(distDir, 'index.mjs'),
-  "export { baseSystem } from '../.reference-ui/system/baseSystem.mjs'\n",
-  'utf8'
-)
-
-await writeFile(
-  resolve(distDir, 'index.d.ts'),
-  "export { baseSystem } from '../.reference-ui/system/baseSystem.mjs'\n",
-  'utf8'
-)
