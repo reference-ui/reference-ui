@@ -23,7 +23,8 @@ describe('Component type shape', () => {
     expect(Array.isArray(components)).toBe(true)
     for (const c of components) {
       expect(typeof c.name).toBe('string')
-      expect(typeof c.interface).toBe('string')
+      expect(typeof c.interface.name).toBe('string')
+      expect(typeof c.interface.source).toBe('string')
       expect(typeof c.source).toBe('string')
       expect(typeof c.count).toBe('number')
       expect(Array.isArray(c.props)).toBe(true)
@@ -37,7 +38,6 @@ describe('Component type shape', () => {
 
     for (const prop of button.props) {
       expect(typeof prop.name).toBe('string')
-      expect(typeof prop.required).toBe('boolean')
       expect(typeof prop.count).toBe('number')
       expect(USAGE_VALUES).toContain(prop.usage)
 
@@ -225,7 +225,7 @@ describe('interface mapping', () => {
     const button = components.find(c => c.name === 'Button')!
 
     // Local Button re-exports ButtonProps from @fixtures/demo-ui
-    expect(button.interface).toBe('ButtonProps')
+    expect(button.interface.name).toBe('ButtonProps')
   })
 
   it('records the interface name for library components', async () => {
@@ -234,7 +234,7 @@ describe('interface mapping', () => {
       c => c.name === 'Card' && c.source === '@fixtures/demo-ui'
     )!
 
-    expect(card.interface).toBe('CardProps')
+    expect(card.interface.name).toBe('CardProps')
   })
 })
 
