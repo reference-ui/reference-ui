@@ -43,8 +43,8 @@
         ],
         "usage": "common",
         "examples": [
-          "<Button>Primary</Button>",
-          "<Button>Secondary</Button>"
+          "<Button>Secondary</Button>",
+          "<Button>Primary</Button>"
         ],
         "usedWith": {
           "Badge": "very common",
@@ -68,8 +68,8 @@
         ],
         "usage": "common",
         "examples": [
-          "<Card>\n        <Button>Primary</Button>\n      </Card>",
-          "<Card>\n        <Button>Secondary</Button>\n      </Card>"
+          "<Card>\n        <Button>Secondary</Button>\n      </Card>",
+          "<Card>\n        <Button>Primary</Button>\n      </Card>"
         ],
         "usedWith": {
           "Badge": "very common",

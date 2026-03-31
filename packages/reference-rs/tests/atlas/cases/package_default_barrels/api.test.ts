@@ -6,7 +6,12 @@ const CASE = 'package_default_barrels'
 
 describe('package_default_barrels atlas case', () => {
   it('tracks a package default export forwarded through the package entrypoint', async () => {
-    const button = await getComponent('Button', { include: ['@fixtures/default-barrel-ui'] }, '@fixtures/default-barrel-ui', CASE)
+    const button = await getComponent(
+      'Button',
+      { include: ['@fixtures/default-barrel-ui'] },
+      '@fixtures/default-barrel-ui',
+      CASE
+    )
 
     expect(button.count).toBe(3)
     expect(button.interface.name).toBe('ButtonProps')

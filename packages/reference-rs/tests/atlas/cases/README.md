@@ -65,7 +65,7 @@ Implementation-detail hardening cases still matter, but they are secondary to
 those outputs:
 
 - `wrapped_components/` — ensures helper forms like `memo(...)` and
-	`forwardRef(...)` do not break the core contract
+  `forwardRef(...)` do not break the core contract
 
 Recommended next hardening cases:
 
