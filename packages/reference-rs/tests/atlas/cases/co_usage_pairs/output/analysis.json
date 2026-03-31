@@ -1,0 +1,82 @@
+{
+  "caseName": "co_usage_pairs",
+  "analyses": {
+    "default": [
+      {
+        "name": "Badge",
+        "interface": {
+          "name": "BadgeProps",
+          "source": "./components/Badge.tsx"
+        },
+        "source": "./components/Badge.tsx",
+        "count": 1,
+        "props": [
+          {
+            "name": "children",
+            "count": 1,
+            "usage": "very common"
+          }
+        ],
+        "usage": "common",
+        "examples": [
+          "<Badge>Info</Badge>"
+        ],
+        "usedWith": {
+          "Button": "very common",
+          "Card": "very common"
+        }
+      },
+      {
+        "name": "Button",
+        "interface": {
+          "name": "ButtonProps",
+          "source": "./components/Button.tsx"
+        },
+        "source": "./components/Button.tsx",
+        "count": 2,
+        "props": [
+          {
+            "name": "children",
+            "count": 2,
+            "usage": "very common"
+          }
+        ],
+        "usage": "common",
+        "examples": [
+          "<Button>Primary</Button>",
+          "<Button>Secondary</Button>"
+        ],
+        "usedWith": {
+          "Badge": "very common",
+          "Card": "very common"
+        }
+      },
+      {
+        "name": "Card",
+        "interface": {
+          "name": "CardProps",
+          "source": "./components/Card.tsx"
+        },
+        "source": "./components/Card.tsx",
+        "count": 2,
+        "props": [
+          {
+            "name": "children",
+            "count": 2,
+            "usage": "very common"
+          }
+        ],
+        "usage": "common",
+        "examples": [
+          "<Card>\n        <Button>Primary</Button>\n      </Card>",
+          "<Card>\n        <Button>Secondary</Button>\n      </Card>"
+        ],
+        "usedWith": {
+          "Badge": "very common",
+          "Button": "very common"
+        }
+      }
+    ],
+    "withIncludes": {}
+  }
+}

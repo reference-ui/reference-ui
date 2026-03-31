@@ -13,6 +13,7 @@ mod parser;
 mod resolver;
 mod scanner;
 mod usage;
+mod usage_policy;
 
 #[cfg(test)]
 mod tests;

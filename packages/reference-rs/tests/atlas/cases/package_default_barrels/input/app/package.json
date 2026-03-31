@@ -1,0 +1,10 @@
+{
+  "name": "@fixtures/atlas-package-default-barrels-app",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "react": "*",
+    "@fixtures/default-barrel-ui": "workspace:*"
+  }
+}

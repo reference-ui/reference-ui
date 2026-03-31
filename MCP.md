@@ -27,6 +27,21 @@ The dependency is **one-directional**: Tasty has no knowledge of Atlas. Atlas us
 
 A **separate, specialized module** for React codebases. Tasty is type-centric; this module is **usage-centric**. Its job is to answer a different class of question: not "what type does this symbol have" but "how is this component actually used across this repo." Where it needs type info, it asks Tasty — but only about interfaces Atlas already knows about from its own analysis.
 
+### Declarative contract
+
+Atlas should stay focused on a small declarative layer for the assistant.
+The important outputs are:
+
+- which components are available in this repo
+- how often they are used
+- which props/interface each component maps to
+- which components are commonly used with that component
+
+That is the product surface. Internal declaration forms such as `memo(...)`,
+`forwardRef(...)`, default re-export chains, or local barrels matter only
+insofar as they must not break those outputs. They are implementation-hardening
+scenarios, not product features in their own right.
+
 ### What it adds
 
 ### 1. Canonical mapping: implementations ↔ contracts
@@ -132,9 +147,20 @@ When Atlas detects a wrapper relationship (via import trace during AST analysis)
 
 For cases where wrapper detection is ambiguous (name mismatch, indirect re-export), explicit source patterns in `include`/`exclude` serve as the escape hatch.
 
+This is a means to an end. The end result Atlas needs to provide is still the
+same: a reliable component inventory, reliable usage data, and reliable
+component-to-interface mapping.
+
 ### What Atlas emits per component
 
 For each tracked component (or concept group), the analyzer should produce a **usage profile**:
+
+At minimum, the MCP product should be able to answer four questions reliably:
+
+- what components are available?
+- how much are they used?
+- what interface/props contract does each map to?
+- what components commonly appear with them?
 
 **Frequency and distribution**
 
@@ -160,6 +186,10 @@ For each tracked component (or concept group), the analyzer should produce a **u
 
 - What components are commonly _co-located_ or _wrapping_ this one? (e.g. `Breadcrumbs` almost always appears inside `PageHeader` in this repo.)
 - Slot fill patterns if the component uses a children/slots API.
+
+These outputs are more important than exhaustively modeling every internal React
+helper pattern. If Atlas can preserve these answers across the declaration forms
+the repo actually uses, it is doing its job.
 
 ### Concrete example: breadcrumbs
 
