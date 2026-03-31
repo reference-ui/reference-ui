@@ -2,8 +2,10 @@
 
 mod tasty;
 mod virtualrs;
+mod atlas;
 
 pub use tasty::{scan_typescript_bundle, ScanRequest};
+pub use atlas::{AtlasAnalyzer, AtlasConfig};
 
 #[cfg(feature = "napi")]
 use std::path::PathBuf;
