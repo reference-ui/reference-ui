@@ -6,14 +6,14 @@ This document sketches a **Model Context Protocol** integration for Reference UI
 
 This document covers **two distinct Rust modules** that sometimes get conflated. They are not the same thing:
 
-|          | **Tasty**                                  | **Component Pattern Analyzer**       |
+|          | **Tasty**                                  | **Atlas**                            |
 | -------- | ------------------------------------------ | ------------------------------------ |
 | Purpose  | Type-centric IR for TS symbols and members | Frontend-centric usage analysis      |
 | Input    | TypeScript types and declarations          | React call sites across the repo     |
 | Output   | Lazy, chunk-backed IR for symbols/members  | Usage profiles, prop stats, clusters |
 | Audience | Type tools, MCP type queries               | Agent context, migration tooling     |
 
-Neither module depends on the other. They share a reason—Rust, AST walking, static analysis—but **not** an implementation. Tasty does not need to know about React components. The component analyzer does not need Tasty's symbol graph.
+The dependency is **one-directional**: Tasty has no knowledge of Atlas. Atlas uses Tasty in one specific, narrow way — once Atlas has identified which props interface belongs to a component, it hands that interface to Tasty for type resolution. Atlas drives the query; Tasty just answers it. Tasty never needs to know anything about React components, and this relationship does not need to change that.
 
 ---
 
@@ -23,9 +23,9 @@ Neither module depends on the other. They share a reason—Rust, AST walking, st
 
 ---
 
-## Component Pattern Analyzer
+## Atlas
 
-A **separate, specialized module** for React codebases. Tasty is type-centric; this module is **usage-centric**. It does not call into Tasty. Its job is to answer a different class of question: not "what type does this symbol have" but "how is this component actually used across this repo."
+A **separate, specialized module** for React codebases. Tasty is type-centric; this module is **usage-centric**. Its job is to answer a different class of question: not "what type does this symbol have" but "how is this component actually used across this repo." Where it needs type info, it asks Tasty — but only about interfaces Atlas already knows about from its own analysis.
 
 ### What it adds
 
@@ -89,22 +89,50 @@ import { BreadcrumbNav } from '~/components/BreadcrumbNav' // in-house wrapper
 
 An agent that conflates these will give wrong answers. The MCP must **distinguish sources**, track which import path each call site came from, and surface that provenance alongside the usage data.
 
-### Library precedence list (user-configurable)
+### Source configuration (`AtlasConfig`)
 
-Users provide an **ordered list of npm packages**. Order is precedence: a component from a library higher in the list is preferred over the same-concept component from a library lower down.
+**Local project files are always tracked.** Atlas indexes everything in the user's own codebase as first-class by default — no configuration required for the common case.
 
-```jsonc
-// .mcp/components.json  (example shape, not final)
-{
-  "libraries": ["@acme/design-system", "@acme/legacy-ui", "~/components"],
+Libraries are opt-in. The `include`/`exclude` fields accept **source patterns**: package names, file globs, or scoped component references.
+
+```ts
+type AtlasConfig = {
+  // package name, file glob, or scoped ref ("@acme/ui:Button")
+  include?: SourcePattern[]
+  exclude?: SourcePattern[]
 }
 ```
 
-When the analyzer finds a `Button` in both `@acme/design-system` and `@acme/legacy-ui`, it treats `@acme/design-system`'s as the preferred one and flags the others as lower-precedence alternatives. No per-concept wiring required—the list does the work.
+Examples:
 
-When no list is provided the analyzer still runs—it discovers all component sources, reports them grouped by import path, and surfaces the distribution as-is without any preference applied.
+```jsonc
+// track an entire design system library
+{ "include": ["@acme/design-system"] }
 
-### What the Rust analyzer emits per component
+// track a library but suppress a specific deprecated component
+{ "include": ["@acme/design-system"], "exclude": ["@acme/design-system:LegacyButton"] }
+
+// migration scenario: track both old and new, exclude specific packages from context
+{ "include": ["@acme/design-system", "@acme/legacy-ui"], "exclude": ["@acme/legacy-ui"] }
+```
+
+When `include` is empty, Atlas still runs — it discovers all component sources from local files, reports them grouped by import path, and surfaces the distribution as-is.
+
+**The 80% case:** most users never touch this config. It exists primarily for teams doing migrations or teams who want to document wrapper components against the libraries they wrap.
+
+### Component origin and wrapper detection
+
+Every tracked component has a `source` — either a package name (`"@acme/ui"`) or a local path. This is the primary signal for origin:
+
+- **Library component**: `source` resolves to a `node_modules` package
+- **User-local component**: `source` is a path inside the project
+- **Wrapper**: a user-local component that imports a library component internally
+
+When Atlas detects a wrapper relationship (via import trace during AST analysis), it records it as a **shadow**: `LocalButton → @acme/ui:Button`. The MCP surfaces the local wrapper as the preferred component and notes what it wraps, so agents produce imports against the user's own layer rather than bypassing it to the library directly.
+
+For cases where wrapper detection is ambiguous (name mismatch, indirect re-export), explicit source patterns in `include`/`exclude` serve as the escape hatch.
+
+### What Atlas emits per component
 
 For each tracked component (or concept group), the analyzer should produce a **usage profile**:
 
@@ -186,11 +214,11 @@ A compelling MCP for frontend work would let an assistant:
 
 - Exact **IR boundary** between Tasty exports and MCP type-query surface (what stays in Rust vs what's a thin TS MCP adapter).
 
-**Component Pattern Analyzer**
+**Atlas**
 
 - **Envelope** definition for example deduplication (AST hash? normalized prop object? type-aware similarity?).
 - **Prop shape clustering** algorithm—how similar do two call sites need to be to land in the same cluster? Jaccard on prop-name sets is a baseline; type-aware similarity is better but harder.
-- **Library list schema** finalization: file location, glob support for local paths, whether the list is per-workspace or per-package.
+- **Wrapper detection reliability**: at what point does heuristic import-trace detection need to fall back to explicit config? What's the threshold before we surface ambiguity to the user?
 - **Performance** and **incremental** updates when `ref sync` or file watchers fire.
 
 ---

@@ -23,7 +23,9 @@
       "@reference-ui/lib": ["packages/reference-lib/src/index.ts"],
       "@reference-ui/lib/theme": ["packages/reference-lib/src/theme/index.ts"],
       "@fixtures/extend-library": ["fixtures/extend-library/src/index.ts"],
-      "@fixtures/layer-library": ["fixtures/layer-library/src/index.ts"]
+      "@fixtures/layer-library": ["fixtures/layer-library/src/index.ts"],
+      "@fixtures/demo-ui": ["fixtures/demo-ui/src/index.ts"],
+      "@fixtures/atlas-project": ["fixtures/atlas-project/src"]
     }
   },
   "exclude": ["node_modules", "tmp"]
