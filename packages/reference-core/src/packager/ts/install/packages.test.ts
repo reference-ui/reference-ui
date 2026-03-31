@@ -25,7 +25,8 @@ async function importInstallPackagesTsModule(options: {
 
   vi.doMock('../../../lib/paths', () => ({
     resolveCorePackageDir: () => options.cliDir ?? '/workspace/core',
-    resolveCorePackageDirForBuild: () => options.cliDirForBuild ?? '/workspace/core-build',
+    resolveCorePackageDirForBuild: () =>
+      options.cliDirForBuild ?? '/workspace/core-build',
   }))
   vi.doMock('../../../lib/paths/out-dir', () => ({
     getOutDirPath: () => options.outDir,
