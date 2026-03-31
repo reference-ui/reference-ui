@@ -16,7 +16,8 @@ describe('Component shape', () => {
     expect(components.length).toBeGreaterThan(0)
     for (const c of components) {
       expect(typeof c.name, `${c.name}.name`).toBe('string')
-      expect(typeof c.interface, `${c.name}.interface`).toBe('string')
+      expect(typeof c.interface.name, `${c.name}.interface.name`).toBe('string')
+      expect(typeof c.interface.source, `${c.name}.interface.source`).toBe('string')
       expect(typeof c.source, `${c.name}.source`).toBe('string')
       expect(typeof c.count, `${c.name}.count`).toBe('number')
       expect(c.count, `${c.name}.count`).toBeGreaterThanOrEqual(0)
