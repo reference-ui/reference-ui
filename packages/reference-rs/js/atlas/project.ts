@@ -178,7 +178,13 @@ export function resolveProjectExport(
     return { file: target, exportedName: binding.localName }
   }
 
-  return resolveProjectExport(target.path, binding.source, binding.localName, filesByPath, seen)
+  return resolveProjectExport(
+    target.path,
+    binding.source,
+    binding.localName,
+    filesByPath,
+    seen
+  )
 }
 
 function resolvePackageRoot(rootDir: string, packageName: string): string {
@@ -377,6 +383,8 @@ function hasDefaultModifier(node: ts.Node): boolean {
   }
 
   return Boolean(
-    ts.getModifiers(node)?.some(modifier => modifier.kind === ts.SyntaxKind.DefaultKeyword)
+    ts
+      .getModifiers(node)
+      ?.some(modifier => modifier.kind === ts.SyntaxKind.DefaultKeyword)
   )
 }

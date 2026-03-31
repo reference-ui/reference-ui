@@ -237,7 +237,10 @@ function mapRelativeImportBinding(
         continue
       }
 
-      if (binding.importedName === '*' || resolvedExport.exportedName === state.component.name) {
+      if (
+        binding.importedName === '*' ||
+        resolvedExport.exportedName === state.component.name
+      ) {
         imports.set(localName, key)
         return
       }
@@ -269,7 +272,10 @@ function mapRelativeImportBinding(
       continue
     }
 
-    if (binding.importedName === 'default' || binding.importedName === state.component.name) {
+    if (
+      binding.importedName === 'default' ||
+      binding.importedName === state.component.name
+    ) {
       imports.set(localName, key)
     }
   }
@@ -326,7 +332,8 @@ function recordJsxUsage(
       continue
     }
 
-    const valueCounts = state.propValueCounts.get(attributeName) ?? new Map<string, number>()
+    const valueCounts =
+      state.propValueCounts.get(attributeName) ?? new Map<string, number>()
     valueCounts.set(literalValue, (valueCounts.get(literalValue) ?? 0) + 1)
     state.propValueCounts.set(attributeName, valueCounts)
   }

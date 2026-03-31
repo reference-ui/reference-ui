@@ -42,7 +42,12 @@ export function discoverLocalComponents(
             continue
           }
 
-          const template = createTemplateFromVariable(declaration, file, context, diagnostics)
+          const template = createTemplateFromVariable(
+            declaration,
+            file,
+            context,
+            diagnostics
+          )
           if (template) {
             components.push(template)
           }

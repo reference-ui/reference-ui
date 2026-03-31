@@ -10,7 +10,12 @@ import {
   createState,
   finalizeState,
 } from './usage'
-import type { AtlasAnalysisResult, AtlasConfig, AtlasDiagnostic, Component } from './types'
+import type {
+  AtlasAnalysisResult,
+  AtlasConfig,
+  AtlasDiagnostic,
+  Component,
+} from './types'
 
 /**
  * Analyze a project and return Atlas components only.
