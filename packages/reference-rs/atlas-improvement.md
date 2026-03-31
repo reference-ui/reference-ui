@@ -1,10 +1,26 @@
 # Atlas Improvement Plan
 
+## Status Update
+
+This document started as an honest gap analysis when Atlas was still mostly
+placeholder logic. That is no longer the current state.
+
+Atlas is now:
+
+- native-backed from Rust via the shared `.node` addon
+- exposed to JS through a thin wrapper in `js/atlas`
+- using Rust-owned result/config contracts generated to TypeScript
+- using Oxc-based parsing for Atlas module discovery and JSX usage collection
+- covered by case-based Atlas fixtures under `tests/atlas/cases`
+
+The remaining work is not "make Atlas real at all" anymore. The remaining work
+is to keep widening supported React/type patterns while preserving the thin
+Atlas boundary and keeping the implementation deterministic.
+
 ## Summary
 
-Atlas is not yet accomplishing the core goal it claims to accomplish.
-
-Today it does **not** perform real React or TypeScript analysis for Atlas-specific use cases. The crate has the right parser foundation available through Oxc, and the `tasty` pipeline already proves this repo can parse and lower TypeScript with Oxc, but Atlas itself is still mostly a placeholder.
+Atlas is now accomplishing the core goal at a focused level, but it is still
+not complete enough to treat every React pattern as supported.
 
 The immediate goal should not be to build a huge second TypeScript system inside Atlas. Atlas should stay small and focused:
 
@@ -19,34 +35,36 @@ That gives the MCP layer something trustworthy without making Atlas a giant para
 
 ### 1. Are we using Oxc for AST work?
 
-Partially, but not in Atlas itself yet.
+Yes.
 
 - `packages/reference-rs/Cargo.toml` includes `oxc_parser`, `oxc_ast`, `oxc_span`, `oxc_allocator`, `oxc_traverse`, and `oxc_semantic`.
 - The `tasty` module is clearly Oxc-based and already parses TypeScript in Rust.
-- Atlas-specific files are still placeholders:
-  - `src/atlas/scanner.rs`
-  - `src/atlas/react.rs`
-  - `src/atlas/output.rs`
-- `js/atlas/analyzer.ts` returns mocked data and explicitly says real scanning/analysis is still TODO.
+- Atlas-specific parsing and usage collection are now Oxc-backed in Rust.
+- The JS Atlas layer is now a thin wrapper over the native binding rather than a second implementation.
 
-Conclusion: the repo has an Oxc foundation, but Atlas is not yet using it to do the promised work.
+Conclusion: Atlas is now using Oxc for its current supported contract. The work left is about coverage depth, not whether it is using a real AST.
 
 ### 2. Do we understand React components and how they are used?
 
-Not yet in the implementation.
+Yes, for the supported patterns currently under test.
 
-The fixture model is good enough to express the problem:
+The current Atlas cases already cover:
 
 - local wrappers: `Button`, `UserBadge`
 - local composition: `AppCard`
 - library components: `Button`, `Card`, `Badge`, `Stack`
 - page-level JSX usage in `HomePage`, `SettingsPage`, and `ProfilePage`
+- aliased imports and renamed call sites
+- default exports and default imports
+- local barrel re-exports
+- namespace package usage
+- wrapper-style exports such as `memo(...)` and `forwardRef(...)`
 
-But Atlas does not currently discover these from source. The current results are hard-coded.
+Atlas now discovers these from source and aggregates real JSX call-site usage.
 
 ### 3. Do we understand which component belongs to which type?
 
-The intended contract is good, but the implementation is not real yet.
+Yes, for the supported forms Atlas resolves today.
 
 The right shape is already present in `ComponentInterface`:
 
@@ -59,13 +77,14 @@ That is the correct abstraction for the upper layers. It lets Atlas answer:
 - which props type does it accept?
 - where should richer metadata be resolved from?
 
-But today Atlas is not actually deriving this relationship from AST analysis.
+Atlas now derives this relationship from Rust/Oxc analysis and local/package resolution.
 
 ### 4. Can Atlas currently answer questions like "does this component have a `label` prop"?
 
-Not reliably.
+Partially and honestly.
 
-Right now it only returns mocked `props` arrays. For internal MCP usage, the trustworthy answer must come from one of these:
+Atlas now returns real prop inventories for the supported resolved interface/type
+shapes. For internal MCP usage, the trustworthy answer should still come from one of these:
 
 - Atlas resolves the full prop member list from the mapped interface, including inherited members
 - or Atlas returns a stable `ComponentInterface` reference and the upper layer resolves prop members through Tasty
@@ -76,21 +95,15 @@ The second option is cleaner and keeps Atlas smaller.
 
 ### Functional gaps
 
-- No real file scanning for Atlas include/exclude behavior
-- No real JSX traversal
-- No real React component discovery
-- No real component-to-interface mapping
-- No inherited prop resolution
-- No literal-union prop value extraction from real types
-- No real example extraction from JSX call sites
-- No real co-usage tracking from rendered trees/files
+- Wider wrapper and React helper coverage beyond the currently tested patterns
+- Better support for additional prop-type shapes without growing Atlas into a second full type engine
+- More explicit handling of dynamic JSX values so literal distributions stay honest
+- More adversarial cases around re-export chains, collisions, and package barrels
 
 ### Product gaps
 
-- Tests are green against mocked output, which creates false confidence
-- Atlas is exported in `package.json` as `./atlas`, but `tsup.config.ts` does not build an Atlas entrypoint
-- There is no evidence of a real JS-to-native Atlas bridge yet
-- Atlas docs are effectively absent compared to Tasty
+- Atlas still needs broader public-facing documentation on supported and unsupported patterns
+- The improvement plan needs to keep being updated as Atlas coverage expands so it stays truthful
 
 ### Contract gaps
 
@@ -101,7 +114,7 @@ The current contract says Atlas can surface `props` coverage and `ComponentInter
 - defaults and JSDoc are resolved
 - complex utility types are expanded
 
-That boundary must be explicit before this is release-ready, even for internal use.
+That boundary is clearer now than it was initially, but it still needs to stay explicit before this is release-ready for broader use.
 
 ## Recommended Direction
 
@@ -232,6 +245,68 @@ For internal use, release-ready does not mean "handles all TypeScript". It means
 - the upper layers can depend on the contract without brittle special cases
 
 That implies the following release gates.
+
+## Finite Release Checklist
+
+For Atlas, “good enough for release” should be a finite, testable checklist.
+The highest-priority axis is reliable component-to-interface mapping. The
+second is a documented, separable, tweakable usage policy.
+
+The product question is not “can Atlas recognize every internal React helper?”
+The product question is whether Atlas can reliably provide the declarative layer
+the assistant needs:
+
+- components available
+- component usage
+- interface/props mapping per component
+- common co-usage
+
+### Must-pass release checks
+
+- Every supported component result has a stable `Component.name` and
+	`Component.interface.{name,source}` mapping.
+- Every supported alias/re-export path preserves canonical component identity
+	while keeping the call-site alias visible in examples.
+- Usage scoring is documented in code, isolated from the wire model, and backed
+	by direct unit tests for thresholds and custom-threshold behavior.
+- Dynamic prop expressions count prop usage without claiming unobserved literal
+	values.
+- Co-usage (`usedWith`) is deterministic and reflects the components that really
+	appear alongside each other in the repo.
+- Partial failures emit diagnostics rather than silently dropping components or
+	inventing type truth.
+
+### Required Atlas case families before release
+
+- direct local component declarations
+- local wrappers over library components
+- local composition components
+- aliased imports and renamed call sites
+- default exports and default imports
+- local barrel re-exports
+- default export re-export alias chains
+- namespace package usage
+- package entrypoint barrel resolution
+- same-name local component collisions
+- dynamic JSX prop expressions
+- unresolved props-type diagnostics
+- unsupported inline props diagnostics
+
+These case families are release-bar cases because they defend the declarative
+outputs above, not because each syntax shape is important on its own.
+
+### Secondary hardening, not primary product surface
+
+- wrapper helpers like `memo(...)` and `forwardRef(...)`
+- deeper wrapper indirection where a helper returns a component
+- additional internal declaration forms that should preserve the same outputs
+
+### High-value next cases after the current release bar
+
+- package default-export barrels
+- namespace imports through local barrel chains
+- more type-shape cases where interface mapping should stay reliable without
+	expanding Atlas into a full compiler
 
 ### Release gate 1: Basic truthfulness
 

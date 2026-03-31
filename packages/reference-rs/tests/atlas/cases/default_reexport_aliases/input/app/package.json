@@ -1,0 +1,9 @@
+{
+  "name": "@fixtures/atlas-default-reexport-aliases-app",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "react": "*"
+  }
+}

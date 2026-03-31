@@ -208,6 +208,10 @@ pub fn resolve_named_component_export(
     module_path: &Path,
     export_name: &str,
 ) -> Option<(String, String)> {
+    if export_name == "default" {
+        return resolve_default_component_export(modules, module_path);
+    }
+
     let module = modules.get(module_path)?;
     if let Some(component) = module.components.get(export_name) {
         return Some((component.name.clone(), component.source_display.clone()));
@@ -225,23 +229,72 @@ pub fn resolve_default_component_export(
     module_path: &Path,
 ) -> Option<(String, String)> {
     let module = modules.get(module_path)?;
-    let name = module.default_component.as_ref()?;
-    let component = module.components.get(name)?;
-    Some((component.name.clone(), component.source_display.clone()))
+    if let Some(name) = module.default_component.as_ref() {
+        let component = module.components.get(name)?;
+        return Some((component.name.clone(), component.source_display.clone()));
+    }
+
+    if let Some(reexport) = module.named_component_reexports.get("default") {
+        if let Some(target_module) = resolve_relative_module(modules, module_path, &reexport.source) {
+            return resolve_named_component_export(modules, &target_module, &reexport.imported);
+        }
+    }
+
+    None
 }
 
 pub fn resolve_occurrence_key(
+    module: &ModuleInfo,
+    modules: &HashMap<PathBuf, ModuleInfo>,
     tag_name: &str,
     alias_map: &HashMap<String, String>,
     namespace_map: &HashMap<String, String>,
     states: &BTreeMap<String, UsageState>,
 ) -> Option<String> {
     if let Some((namespace, member)) = tag_name.split_once('.') {
-        let package_name = namespace_map.get(namespace)?;
-        let key = component_key(member, package_name);
-        return states.contains_key(&key).then_some(key);
+        let source = namespace_map.get(namespace)?;
+        let resolved = if source.starts_with('@') {
+            resolve_package_component_export(modules, source, member)
+        } else {
+            resolve_relative_module(modules, &module.path, source)
+                .and_then(|target_module| resolve_named_component_export(modules, &target_module, member))
+        };
+
+        if let Some((name, source)) = resolved {
+            let key = component_key(&name, &source);
+            return states.contains_key(&key).then_some(key);
+        }
+
+        let fallback_key = component_key(member, source);
+        return states.contains_key(&fallback_key).then_some(fallback_key);
     }
-    alias_map.get(tag_name).cloned()
+    if let Some(key) = alias_map.get(tag_name) {
+        return Some(key.clone());
+    }
+
+    let binding = module.imports.get(tag_name)?;
+    if binding.is_type || binding.kind == ImportKind::Namespace {
+        return None;
+    }
+
+    let resolved = if binding.source.starts_with('@') {
+        let export_name = binding.imported.as_deref().unwrap_or(&binding.local);
+        resolve_package_component_export(modules, &binding.source, export_name)
+    } else {
+        let target_module = resolve_relative_module(modules, &module.path, &binding.source)?;
+        match binding.kind {
+            ImportKind::Named => resolve_named_component_export(
+                modules,
+                &target_module,
+                binding.imported.as_deref().unwrap_or(&binding.local),
+            ),
+            ImportKind::Default => resolve_default_component_export(modules, &target_module),
+            ImportKind::Namespace => None,
+        }
+    }?;
+
+    let key = component_key(&resolved.0, &resolved.1);
+    states.contains_key(&key).then_some(key)
 }
 
 pub fn build_alias_map(
@@ -256,14 +309,9 @@ pub fn build_alias_map(
         }
 
         let key = if binding.source.starts_with('@') {
-            let imported = binding.imported.clone().unwrap_or_else(|| binding.local.clone());
-            let component_name = if imported == "default" {
-                binding.local.clone()
-            } else {
-                imported
-            };
-            let key = component_key(&component_name, &binding.source);
-            states.contains_key(&key).then_some(key)
+            let export_name = binding.imported.as_deref().unwrap_or(&binding.local);
+            resolve_package_component_export(modules, &binding.source, export_name)
+                .map(|(name, source)| component_key(&name, &source))
         } else if let Some(target_module) = resolve_relative_module(modules, &module.path, &binding.source) {
             match binding.kind {
                 ImportKind::Named => resolve_named_component_export(
@@ -287,6 +335,45 @@ pub fn build_alias_map(
         }
     }
     aliases
+}
+
+fn resolve_package_component_export(
+    modules: &HashMap<PathBuf, ModuleInfo>,
+    package_name: &str,
+    export_name: &str,
+) -> Option<(String, String)> {
+    let package_paths = modules
+        .iter()
+        .filter(|(_, module)| module.display_source == package_name)
+        .map(|(path, _)| path)
+        .collect::<Vec<_>>();
+
+    if let Some(index_path) = resolve_package_index(package_paths.into_iter()) {
+        let resolved = if export_name == "default" {
+            resolve_default_component_export(modules, &index_path)
+        } else {
+            resolve_named_component_export(modules, &index_path, export_name)
+        };
+
+        if resolved.is_some() {
+            return resolved;
+        }
+    }
+
+    modules.values().find_map(|module| {
+        if module.display_source != package_name {
+            return None;
+        }
+
+        if export_name == "default" {
+            return resolve_default_component_export(modules, &module.path);
+        }
+
+        module
+            .components
+            .get(export_name)
+            .map(|component| (component.name.clone(), component.source_display.clone()))
+    })
 }
 
 fn guess_interface_source(module: &ModuleInfo, type_name: &str) -> String {
