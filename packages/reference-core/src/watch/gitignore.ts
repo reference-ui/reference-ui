@@ -7,36 +7,63 @@ function normalizeGlobPath(value: string): string {
   return value.replaceAll('\\', '/')
 }
 
-export function toWatcherIgnoreGlobs(pattern: string, watchRoot: string, gitignoreDir: string): string[] {
+export function toWatcherIgnoreGlobs(
+  pattern: string,
+  watchRoot: string,
+  gitignoreDir: string
+): string[] {
   const trimmed = pattern.trim()
-  if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith('!')) {
+  if (shouldIgnorePattern(trimmed)) {
     return []
   }
 
   const directoryOnly = trimmed.endsWith('/')
-  const normalized = normalizeGlobPath(
-    (directoryOnly ? trimmed.slice(0, -1) : trimmed).replace(/^\.\/+/, ''),
-  )
+  const normalized = normalizePattern(trimmed, directoryOnly)
   if (!normalized) {
     return []
   }
 
-  if (normalized.startsWith('/') || normalized.includes('/')) {
-    const relativePattern = normalized.startsWith('/') ? normalized.slice(1) : normalized
-    const absoluteTarget = resolve(gitignoreDir, relativePattern)
-    const relativeTarget = normalizeGlobPath(relative(watchRoot, absoluteTarget))
-    if (!relativeTarget || relativeTarget.startsWith('..')) {
-      return []
-    }
+  if (isAnchoredPattern(normalized)) {
+    return toAnchoredWatchIgnoreGlobs(normalized, directoryOnly, watchRoot, gitignoreDir)
+  }
 
-    return directoryOnly
-      ? [`${relativeTarget}/**`]
-      : [relativeTarget, `${relativeTarget}/**`]
+  return toBasenameWatchIgnoreGlobs(normalized, directoryOnly)
+}
+
+function shouldIgnorePattern(pattern: string): boolean {
+  return !pattern || pattern.startsWith('#') || pattern.startsWith('!')
+}
+
+function normalizePattern(pattern: string, directoryOnly: boolean): string {
+  return normalizeGlobPath(
+    (directoryOnly ? pattern.slice(0, -1) : pattern).replace(/^\.\/+/, '')
+  )
+}
+
+function isAnchoredPattern(pattern: string): boolean {
+  return pattern.startsWith('/') || pattern.includes('/')
+}
+
+function toAnchoredWatchIgnoreGlobs(
+  pattern: string,
+  directoryOnly: boolean,
+  watchRoot: string,
+  gitignoreDir: string
+): string[] {
+  const relativePattern = pattern.startsWith('/') ? pattern.slice(1) : pattern
+  const absoluteTarget = resolve(gitignoreDir, relativePattern)
+  const relativeTarget = normalizeGlobPath(relative(watchRoot, absoluteTarget))
+  if (!relativeTarget || relativeTarget.startsWith('..')) {
+    return []
   }
 
   return directoryOnly
-    ? [`**/${normalized}/**`]
-    : [`**/${normalized}`, `**/${normalized}/**`]
+    ? [`${relativeTarget}/**`]
+    : [relativeTarget, `${relativeTarget}/**`]
+}
+
+function toBasenameWatchIgnoreGlobs(pattern: string, directoryOnly: boolean): string[] {
+  return directoryOnly ? [`**/${pattern}/**`] : [`**/${pattern}`, `**/${pattern}/**`]
 }
 
 function collectGitignoreWatchIgnores(watchRoot: string): string[] {

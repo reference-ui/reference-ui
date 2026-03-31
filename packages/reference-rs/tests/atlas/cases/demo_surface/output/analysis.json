@@ -14,12 +14,12 @@
           {
             "name": "children",
             "count": 3,
-            "usage": "common"
+            "usage": "very common"
           },
           {
             "name": "elevated",
             "count": 1,
-            "usage": "rare",
+            "usage": "common",
             "values": {
               "true": "very common"
             }
@@ -32,7 +32,7 @@
           {
             "name": "padding",
             "count": 3,
-            "usage": "common",
+            "usage": "very common",
             "values": {
               "lg": "common",
               "md": "very common",
@@ -43,7 +43,7 @@
           {
             "name": "status",
             "count": 1,
-            "usage": "rare",
+            "usage": "common",
             "values": {
               "default": "very common",
               "error": "unused",
@@ -54,7 +54,7 @@
           {
             "name": "statusLabel",
             "count": 1,
-            "usage": "rare",
+            "usage": "common",
             "values": {
               "Saved": "very common"
             }
@@ -62,7 +62,7 @@
           {
             "name": "title",
             "count": 3,
-            "usage": "common",
+            "usage": "very common",
             "values": {
               "Features": "common",
               "Preferences": "common",
@@ -72,9 +72,9 @@
         ],
         "usage": "common",
         "examples": [
+          "<AppCard title=\"Preferences\" padding=\"md\" status=\"default\" statusLabel=\"Saved\">\n        <Button variant=\"outline\" onClick={() => {}}>\n          Save Changes\n        </Button>\n        <Button variant=\"outline\" disabled>\n          Reset\n        </Button>\n      </AppCard>",
           "<AppCard title=\"Welcome\" padding=\"lg\">\n        <Button variant=\"solid\" onClick={() => {}}>\n          Get Started\n        </Button>\n        <Button variant=\"ghost\">Learn More</Button>\n      </AppCard>",
-          "<AppCard title=\"Features\" elevated padding=\"md\">\n        <Button variant=\"solid\" size=\"sm\" onClick={() => {}}>\n          View All Features\n        </Button>\n      </AppCard>",
-          "<AppCard title=\"Preferences\" padding=\"md\" status=\"default\" statusLabel=\"Saved\">\n        <Button variant=\"outline\" onClick={() => {}}>\n          Save Changes\n        </Button>\n        <Button variant=\"outline\" disabled>\n          Reset\n        </Button>\n      </AppCard>"
+          "<AppCard title=\"Features\" elevated padding=\"md\">\n        <Button variant=\"solid\" size=\"sm\" onClick={() => {}}>\n          View All Features\n        </Button>\n      </AppCard>"
         ],
         "usedWith": {
           "Button": "very common"
@@ -92,12 +92,12 @@
           {
             "name": "children",
             "count": 6,
-            "usage": "common"
+            "usage": "very common"
           },
           {
             "name": "disabled",
             "count": 1,
-            "usage": "rare",
+            "usage": "occasional",
             "values": {
               "true": "very common"
             }
@@ -110,12 +110,12 @@
           {
             "name": "onClick",
             "count": 4,
-            "usage": "common"
+            "usage": "very common"
           },
           {
             "name": "size",
             "count": 1,
-            "usage": "rare",
+            "usage": "occasional",
             "values": {
               "lg": "unused",
               "md": "unused",
@@ -125,7 +125,7 @@
           {
             "name": "variant",
             "count": 6,
-            "usage": "common",
+            "usage": "very common",
             "values": {
               "ghost": "common",
               "outline": "common",
@@ -135,15 +135,15 @@
         ],
         "usage": "very common",
         "examples": [
+          "<Button variant=\"outline\" onClick={() => {}}>\n          Save Changes\n        </Button>",
+          "<Button variant=\"outline\" disabled>\n          Reset\n        </Button>",
           "<Button variant=\"solid\" onClick={() => {}}>\n          Get Started\n        </Button>",
           "<Button variant=\"ghost\">Learn More</Button>",
-          "<Button variant=\"solid\" size=\"sm\" onClick={() => {}}>\n          View All Features\n        </Button>",
-          "<Button variant=\"ghost\" onClick={() => {}}>\n        Edit Profile\n      </Button>",
-          "<Button variant=\"outline\" onClick={() => {}}>\n          Save Changes\n        </Button>"
+          "<Button variant=\"solid\" size=\"sm\" onClick={() => {}}>\n          View All Features\n        </Button>"
         ],
         "usedWith": {
-          "AppCard": "common",
-          "UserBadge": "occasional"
+          "AppCard": "very common",
+          "UserBadge": "common"
         }
       },
       {
@@ -163,7 +163,7 @@
           {
             "name": "count",
             "count": 1,
-            "usage": "common",
+            "usage": "very common",
             "values": {
               "5": "very common"
             }
@@ -174,9 +174,9 @@
             "usage": "unused",
             "values": {
               "default": "unused",
+              "error": "unused",
               "success": "unused",
-              "warning": "unused",
-              "error": "unused"
+              "warning": "unused"
             }
           }
         ],
@@ -204,12 +204,12 @@
             {
               "name": "children",
               "count": 3,
-              "usage": "common"
+              "usage": "very common"
             },
             {
               "name": "elevated",
               "count": 1,
-              "usage": "rare",
+              "usage": "common",
               "values": {
                 "true": "very common"
               }
@@ -222,7 +222,7 @@
             {
               "name": "padding",
               "count": 3,
-              "usage": "common",
+              "usage": "very common",
               "values": {
                 "lg": "common",
                 "md": "very common",
@@ -233,7 +233,7 @@
             {
               "name": "status",
               "count": 1,
-              "usage": "rare",
+              "usage": "common",
               "values": {
                 "default": "very common",
                 "error": "unused",
@@ -244,7 +244,7 @@
             {
               "name": "statusLabel",
               "count": 1,
-              "usage": "rare",
+              "usage": "common",
               "values": {
                 "Saved": "very common"
               }
@@ -252,7 +252,7 @@
             {
               "name": "title",
               "count": 3,
-              "usage": "common",
+              "usage": "very common",
               "values": {
                 "Features": "common",
                 "Preferences": "common",
@@ -271,6 +271,43 @@
           }
         },
         {
+          "name": "Badge",
+          "interface": {
+            "name": "BadgeProps",
+            "source": "@fixtures/demo-ui"
+          },
+          "source": "@fixtures/demo-ui",
+          "count": 1,
+          "props": [
+            {
+              "name": "children",
+              "count": 0,
+              "usage": "unused"
+            },
+            {
+              "name": "count",
+              "count": 0,
+              "usage": "unused"
+            },
+            {
+              "name": "variant",
+              "count": 1,
+              "usage": "very common",
+              "values": {
+                "default": "very common",
+                "error": "unused",
+                "success": "unused",
+                "warning": "unused"
+              }
+            }
+          ],
+          "usage": "rare",
+          "examples": [
+            "<Badge variant=\"default\" {...props} />"
+          ],
+          "usedWith": {}
+        },
+        {
           "name": "Button",
           "interface": {
             "name": "ButtonProps",
@@ -282,12 +319,12 @@
             {
               "name": "children",
               "count": 6,
-              "usage": "common"
+              "usage": "very common"
             },
             {
               "name": "disabled",
               "count": 1,
-              "usage": "rare",
+              "usage": "occasional",
               "values": {
                 "true": "very common"
               }
@@ -300,12 +337,12 @@
             {
               "name": "onClick",
               "count": 4,
-              "usage": "common"
+              "usage": "very common"
             },
             {
               "name": "size",
               "count": 1,
-              "usage": "rare",
+              "usage": "occasional",
               "values": {
                 "lg": "unused",
                 "md": "unused",
@@ -315,7 +352,7 @@
             {
               "name": "variant",
               "count": 6,
-              "usage": "common",
+              "usage": "very common",
               "values": {
                 "ghost": "common",
                 "outline": "common",
@@ -332,91 +369,8 @@
             "<Button variant=\"outline\" onClick={() => {}}>\n          Save Changes\n        </Button>"
           ],
           "usedWith": {
-            "AppCard": "common",
-            "UserBadge": "occasional"
-          }
-        },
-        {
-          "name": "UserBadge",
-          "interface": {
-            "name": "BadgeProps",
-            "source": "@fixtures/demo-ui"
-          },
-          "source": "./components/UserBadge.tsx",
-          "count": 2,
-          "props": [
-            {
-              "name": "children",
-              "count": 2,
-              "usage": "very common"
-            },
-            {
-              "name": "count",
-              "count": 1,
-              "usage": "common",
-              "values": {
-                "5": "very common"
-              }
-            },
-            {
-              "name": "variant",
-              "count": 0,
-              "usage": "unused",
-              "values": {
-                "default": "unused",
-                "success": "unused",
-                "warning": "unused",
-                "error": "unused"
-              }
-            }
-          ],
-          "usage": "occasional",
-          "examples": [
-            "<UserBadge count={5}>Notifications</UserBadge>",
-            "<UserBadge>Status</UserBadge>"
-          ],
-          "usedWith": {
-            "Button": "very common"
-          }
-        },
-        {
-          "name": "Badge",
-          "interface": {
-            "name": "BadgeProps",
-            "source": "@fixtures/demo-ui"
-          },
-          "source": "@fixtures/demo-ui",
-          "count": 2,
-          "props": [
-            {
-              "name": "children",
-              "count": 1,
-              "usage": "common"
-            },
-            {
-              "name": "count",
-              "count": 0,
-              "usage": "unused"
-            },
-            {
-              "name": "variant",
-              "count": 2,
-              "usage": "very common",
-              "values": {
-                "default": "very common",
-                "error": "unused",
-                "success": "unused",
-                "warning": "unused"
-              }
-            }
-          ],
-          "usage": "occasional",
-          "examples": [
-            "<Badge variant={status}>{statusLabel ?? status}</Badge>",
-            "<Badge variant=\"default\" {...props} />"
-          ],
-          "usedWith": {
-            "Card": "very common"
+            "AppCard": "very common",
+            "UserBadge": "common"
           }
         },
         {
@@ -463,9 +417,9 @@
               "count": 0,
               "usage": "unused",
               "values": {
-                "solid": "unused",
+                "ghost": "unused",
                 "outline": "unused",
-                "ghost": "unused"
+                "solid": "unused"
               }
             }
           ],
@@ -487,7 +441,7 @@
             {
               "name": "children",
               "count": 1,
-              "usage": "common"
+              "usage": "very common"
             },
             {
               "name": "elevated",
@@ -497,32 +451,30 @@
             {
               "name": "footer",
               "count": 1,
-              "usage": "common"
+              "usage": "very common"
             },
             {
               "name": "padding",
               "count": 0,
               "usage": "unused",
               "values": {
-                "none": "unused",
-                "sm": "unused",
+                "lg": "unused",
                 "md": "unused",
-                "lg": "unused"
+                "none": "unused",
+                "sm": "unused"
               }
             },
             {
               "name": "title",
               "count": 1,
-              "usage": "common"
+              "usage": "very common"
             }
           ],
           "usage": "rare",
           "examples": [
             "<Card\n      title={title}\n      {...cardProps}\n      footer={\n        status ? <Badge variant={status}>{statusLabel ?? status}</Badge> : undefined\n      }\n    >\n      {children}\n    </Card>"
           ],
-          "usedWith": {
-            "Badge": "very common"
-          }
+          "usedWith": {}
         },
         {
           "name": "Stack",
@@ -538,9 +490,9 @@
               "count": 0,
               "usage": "unused",
               "values": {
-                "start": "unused",
                 "center": "unused",
                 "end": "unused",
+                "start": "unused",
                 "stretch": "unused"
               }
             },
@@ -567,6 +519,49 @@
           "usage": "unused",
           "examples": [],
           "usedWith": {}
+        },
+        {
+          "name": "UserBadge",
+          "interface": {
+            "name": "BadgeProps",
+            "source": "@fixtures/demo-ui"
+          },
+          "source": "./components/UserBadge.tsx",
+          "count": 2,
+          "props": [
+            {
+              "name": "children",
+              "count": 2,
+              "usage": "very common"
+            },
+            {
+              "name": "count",
+              "count": 1,
+              "usage": "very common",
+              "values": {
+                "5": "very common"
+              }
+            },
+            {
+              "name": "variant",
+              "count": 0,
+              "usage": "unused",
+              "values": {
+                "default": "unused",
+                "error": "unused",
+                "success": "unused",
+                "warning": "unused"
+              }
+            }
+          ],
+          "usage": "occasional",
+          "examples": [
+            "<UserBadge count={5}>Notifications</UserBadge>",
+            "<UserBadge>Status</UserBadge>"
+          ],
+          "usedWith": {
+            "Button": "very common"
+          }
         }
       ]
     }

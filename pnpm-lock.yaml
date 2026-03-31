@@ -41,6 +41,21 @@ importers:
         specifier: ~5.9.2
         version: 5.9.3
 
+  fixtures/atlas-project:
+    dependencies:
+      '@fixtures/demo-ui':
+        specifier: workspace:*
+        version: link:../demo-ui
+      react:
+        specifier: '*'
+        version: 19.2.4
+
+  fixtures/demo-ui:
+    dependencies:
+      react:
+        specifier: '*'
+        version: 19.2.4
+
   fixtures/extend-library:
     devDependencies:
       '@reference-ui/core':

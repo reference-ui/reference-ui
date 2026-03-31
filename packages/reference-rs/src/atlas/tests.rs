@@ -3,7 +3,7 @@ mod tests {
     use crate::atlas::config::AtlasConfig;
     use crate::atlas::model::{Component, ComponentInterface, ComponentProp, Usage};
     use crate::atlas::AtlasAnalyzer;
-    use std::collections::HashMap;
+    use std::collections::BTreeMap;
     use std::path::{Path, PathBuf};
 
     const DEMO_SURFACE_CASE: &str = "demo_surface";
@@ -130,10 +130,9 @@ mod tests {
         
         let mut analyzer = AtlasAnalyzer::new(config);
         let components = analyzer.analyze("/test");
-        
-        assert_eq!(components.len(), 1);
-        assert_eq!(components[0].name, "Button");
-        assert_eq!(components[0].source, "@fixtures/demo-ui");
+
+        assert!(components.iter().any(|component| component.name == "Button" && component.source == "@fixtures/demo-ui"));
+        assert!(components.iter().any(|component| component.name == "AppCard" && component.source.starts_with("./")));
     }
 
     #[test]
@@ -182,7 +181,7 @@ mod tests {
 
     #[test]
     fn test_component_prop_with_values() {
-        let mut values = HashMap::new();
+        let mut values = BTreeMap::new();
         values.insert("primary".to_string(), Usage::VeryCommon);
         values.insert("secondary".to_string(), Usage::Rare);
         
@@ -214,7 +213,7 @@ mod tests {
             source: "@fixtures/demo-ui".to_string(),
         };
         
-        let mut used_with = HashMap::new();
+        let mut used_with = BTreeMap::new();
         used_with.insert("Card".to_string(), Usage::Common);
         
         let component = Component {

@@ -1,6 +1,13 @@
-// Data model mirroring js/atlas/types.ts
+use std::collections::BTreeMap;
 
-#[derive(Debug, Clone)]
+use serde::{Deserialize, Serialize};
+use ts_rs::TS;
+
+// Data model mirrored to js/atlas/generated via ts-rs.
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export, export_to = "js/atlas/generated/", rename_all = "camelCase")]
 pub struct Component {
     pub name: String,
     pub interface: ComponentInterface,
@@ -9,29 +16,46 @@ pub struct Component {
     pub props: Vec<ComponentProp>,
     pub usage: Usage,
     pub examples: Vec<String>,
-    pub used_with: std::collections::HashMap<String, Usage>,
+    pub used_with: BTreeMap<String, Usage>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export, export_to = "js/atlas/generated/", rename_all = "camelCase")]
 pub struct ComponentInterface {
     pub name: String,
     pub source: String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export, export_to = "js/atlas/generated/", rename_all = "camelCase")]
 pub struct ComponentProp {
     pub name: String,
     pub count: u32,
     pub usage: Usage,
-    pub values: Option<std::collections::HashMap<String, Usage>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub values: Option<BTreeMap<String, Usage>>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export_to = "js/atlas/generated/")]
 pub enum Usage {
+    #[serde(rename = "very common")]
+    #[ts(rename = "very common")]
     VeryCommon,
+    #[serde(rename = "common")]
+    #[ts(rename = "common")]
     Common,
+    #[serde(rename = "occasional")]
+    #[ts(rename = "occasional")]
     Occasional,
+    #[serde(rename = "rare")]
+    #[ts(rename = "rare")]
     Rare,
+    #[serde(rename = "unused")]
+    #[ts(rename = "unused")]
     Unused,
 }
 

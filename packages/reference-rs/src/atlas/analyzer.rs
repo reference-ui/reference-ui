@@ -1,332 +1,204 @@
 use crate::atlas::config::AtlasConfig;
-use crate::atlas::model::{Component, ComponentInterface, ComponentProp, Usage};
-use crate::atlas::scanner::{Scanner, SourceFile};
-use crate::atlas::react::{ReactAnalyzer, DiscoveredComponent};
-use std::collections::HashMap;
+use crate::atlas::internal::{component_key, create_usage_state};
+use crate::atlas::model::Component;
+use crate::atlas::output::{AtlasAnalysisResult, AtlasDiagnostic, AtlasDiagnosticCode};
+use crate::atlas::parser::parse_modules;
+use crate::atlas::resolver::{
+    apply_excludes, build_component_template, collect_included_packages,
+    collect_referenced_packages, is_local_component_module, is_package_index_module,
+    resolve_package_index,
+};
+use crate::atlas::scanner::Scanner;
+use crate::atlas::usage::{collect_usage_for_module, finalize_components};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::path::{Path, PathBuf};
 
-/// Main Atlas analyzer
 pub struct AtlasAnalyzer {
     pub config: AtlasConfig,
     scanner: Scanner,
-    react_analyzer: ReactAnalyzer,
 }
 
 impl AtlasAnalyzer {
     pub fn new(config: AtlasConfig) -> Self {
         let scanner = Scanner::new(&config.root_dir);
-        let react_analyzer = ReactAnalyzer::new();
-        
-        Self {
-            config,
-            scanner,
-            react_analyzer,
-        }
+        Self { config, scanner }
     }
 
-    /// Analyze the project and return component information
-    pub fn analyze(&mut self, _project_path: &str) -> Vec<Component> {
-        let mut components = Vec::new();
-        
-        // 1. Discover source files
-        let files = match self.scanner.discover_files(&self.config) {
+    pub fn analyze(&mut self, project_path: &str) -> Vec<Component> {
+        self.analyze_detailed(project_path).components
+    }
+
+    pub fn analyze_detailed(&mut self, _project_path: &str) -> AtlasAnalysisResult {
+        let app_root = PathBuf::from(&self.config.root_dir);
+        let mut diagnostics = Vec::new();
+
+        let local_files = match self.scanner.discover_files(&self.config) {
             Ok(files) => files,
-            Err(e) => {
-                eprintln!("Error discovering files: {}", e);
-                return Vec::new();
-            }
+            Err(err) => return failed_result(&self.config.root_dir, &format!("Failed to discover Atlas files: {err}")),
         };
 
-        // 2. Parse files and discover React components
-        let parsed_files = match self.scanner.parse_files(&files) {
+        let local_sources = match self.scanner.parse_files(&local_files) {
             Ok(files) => files,
-            Err(e) => {
-                eprintln!("Error parsing files: {}", e);
-                return Vec::new();
-            }
+            Err(err) => return failed_result(&self.config.root_dir, &format!("Failed to parse Atlas files: {err}")),
         };
 
-        let mut discovered_components = Vec::new();
-        for source_file in parsed_files {
-            match self.react_analyzer.analyze_file(&source_file) {
-                Ok(mut file_components) => {
-                    discovered_components.append(&mut file_components);
+        let mut modules = parse_modules(&local_sources, Some(&app_root), None);
+        let referenced_packages = collect_referenced_packages(modules.values());
+        let include_packages = collect_included_packages(&self.config);
+        let packages_to_load = referenced_packages
+            .into_iter()
+            .chain(include_packages.keys().cloned())
+            .collect::<BTreeSet<_>>();
+
+        let mut package_indexes = HashMap::new();
+        for package_name in packages_to_load {
+            let Some(package_src) = self.resolve_package_src(&package_name) else {
+                if include_packages.contains_key(&package_name) {
+                    diagnostics.push(AtlasDiagnostic {
+                        code: AtlasDiagnosticCode::UnresolvedIncludePackage,
+                        message: format!("Could not resolve include package {package_name}"),
+                        source: package_name,
+                        component_name: None,
+                        interface_name: None,
+                    });
                 }
-                Err(e) => {
-                    eprintln!("Error analyzing {}: {}", source_file.path.display(), e);
+                continue;
+            };
+
+            let package_scanner = Scanner::new(package_src.to_string_lossy().as_ref());
+            let package_config = AtlasConfig {
+                root_dir: package_src.to_string_lossy().to_string(),
+                include: None,
+                exclude: Some(vec![
+                    "**/node_modules/**".to_string(),
+                    "**/dist/**".to_string(),
+                    "**/build/**".to_string(),
+                    "**/*.test.*".to_string(),
+                    "**/*.spec.*".to_string(),
+                ]),
+            };
+
+            let Ok(files) = package_scanner.discover_files(&package_config) else {
+                continue;
+            };
+            let Ok(source_files) = package_scanner.parse_files(&files) else {
+                continue;
+            };
+
+            let package_modules = parse_modules(&source_files, None, Some(&package_name));
+            if let Some(index_path) = resolve_package_index(package_modules.keys()) {
+                package_indexes.insert(package_name.clone(), index_path);
+            }
+            modules.extend(package_modules);
+        }
+
+        let mut tracked = BTreeMap::new();
+        for module in modules.values() {
+            if !is_local_component_module(module, &app_root) {
+                continue;
+            }
+
+            for component in module.components.values() {
+                if let Some(template) = build_component_template(
+                    component,
+                    module,
+                    &modules,
+                    &package_indexes,
+                    &mut diagnostics,
+                ) {
+                    tracked.insert(component_key(&template.name, &template.source), template);
                 }
             }
         }
 
-        // 3. Convert discovered components to Atlas components
-        for discovered in discovered_components {
-            let component = self.convert_to_component(discovered);
-            components.push(component);
-        }
+        for (package_name, selectors) in include_packages {
+            for module in modules.values() {
+                if module.display_source != package_name || is_package_index_module(&module.path) {
+                    continue;
+                }
 
-        // 4. Add library components based on include patterns
-        if let Some(includes) = &self.config.include {
-            for include in includes {
-                if include.starts_with('@') {
-                    // Handle library component includes - add all library components first
-                    if let Some(library_components) = self.get_library_components("@fixtures/demo-ui") {
-                        components.extend(library_components);
+                for component in module.components.values() {
+                    if !selectors.is_empty() && !selectors.contains(&component.name) {
+                        continue;
+                    }
+                    if let Some(template) = build_component_template(
+                        component,
+                        module,
+                        &modules,
+                        &package_indexes,
+                        &mut diagnostics,
+                    ) {
+                        tracked.insert(component_key(&template.name, &template.source), template);
                     }
                 }
             }
         }
 
-        // 5. Apply filtering and calculate usage statistics
-        components = self.apply_filters(components);
-        self.calculate_usage_stats(&mut components);
+        apply_excludes(&mut tracked, &self.config, &app_root);
 
-        components
-    }
+        let mut states = tracked
+            .into_values()
+            .map(create_usage_state)
+            .map(|state| (component_key(&state.component.name, &state.component.source), state))
+            .collect::<BTreeMap<_, _>>();
 
-    /// Convert a discovered component to an Atlas component
-    fn convert_to_component(&self, discovered: DiscoveredComponent) -> Component {
-        Component {
-            name: discovered.name,
-            interface: discovered.interface.unwrap_or_else(|| ComponentInterface {
-                name: "Unknown".to_string(),
-                source: discovered.source.clone(),
-            }),
-            source: discovered.source,
-            count: 1,
-            props: Vec::new(),
-            usage: Usage::Unused,
-            examples: Vec::new(),
-            used_with: HashMap::new(),
-        }
-    }
-
-    /// Get library components for a package by scanning its source files
-    fn get_library_components(&self, package: &str) -> Option<Vec<Component>> {
-        // Resolve package path - handle @scoped/package format
-        let package_path = self.resolve_package_path(package)?;
-        
-        // Create a scanner for the library package
-        let lib_scanner = Scanner::new(&package_path);
-        
-        // Create a temporary config for scanning the library
-        let lib_config = AtlasConfig {
-            root_dir: package_path.clone(),
-            include: None,
-            exclude: Some(vec![
-                "**/node_modules/**".to_string(),
-                "**/dist/**".to_string(),
-                "**/build/**".to_string(),
-                "**/*.test.*".to_string(),
-                "**/*.spec.*".to_string(),
-            ]),
-        };
-        
-        // Discover and parse library source files
-        let files = lib_scanner.discover_files(&lib_config).ok()?;
-        let parsed_files = lib_scanner.parse_files(&files).ok()?;
-        
-        // Analyze files to discover components
-        let mut components = Vec::new();
-        for source_file in parsed_files {
-            if let Ok(discovered) = self.react_analyzer.analyze_file(&source_file) {
-                for disc_component in discovered {
-                    // Only include exported components from libraries
-                    if disc_component.is_exported {
-                        let interface = disc_component
-                            .interface
-                            .map(|mut interface| {
-                                interface.source = package.to_string();
-                                interface
-                            })
-                            .unwrap_or_else(|| ComponentInterface {
-                                name: "Unknown".to_string(),
-                                source: package.to_string(),
-                            });
-
-                        let mut component = Component {
-                            name: disc_component.name,
-                            interface,
-                            source: package.to_string(),
-                            count: 1,
-                            props: Vec::new(),
-                            usage: Usage::Unused,
-                            examples: Vec::new(),
-                            used_with: HashMap::new(),
-                        };
-                        
-                        // Try to extract props from the interface if available
-                        if let Some(props) = self.extract_props_from_file(&source_file, &component.interface.name) {
-                            component.props = props;
-                        }
-                        
-                        components.push(component);
-                    }
-                }
+        for module in modules.values() {
+            if module.path.starts_with(&app_root) {
+                let snapshot = states.clone();
+                collect_usage_for_module(module, &modules, &snapshot, &mut states);
             }
         }
-        
-        if components.is_empty() {
-            None
-        } else {
-            Some(components)
+
+        AtlasAnalysisResult {
+            components: finalize_components(states),
+            diagnostics: normalize_diagnostics(diagnostics),
         }
     }
-    
-    /// Resolve a package name to its filesystem path
-    fn resolve_package_path(&self, package: &str) -> Option<String> {
-        let base_path = std::path::Path::new(&self.config.root_dir);
-        let package_name = package.trim_start_matches('@');
-        let fixture_name = package_name.trim_start_matches("fixtures/");
-        let workspace_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
 
-        let candidate_paths = [
-            base_path.join("..").join(fixture_name).join("src"),
-            base_path.join("..").join(package_name).join("src"),
-            base_path.join("../../fixtures").join(fixture_name).join("src"),
+    fn resolve_package_src(&self, package: &str) -> Option<PathBuf> {
+        let root = Path::new(&self.config.root_dir);
+        let fixture_name = package.rsplit('/').next()?;
+        let workspace_root = Path::new(env!("CARGO_MANIFEST_DIR"));
+        let candidates = [
+            root.join("..").join(fixture_name).join("src"),
+            root.join("..").join("..").join(fixture_name).join("src"),
             workspace_root.join("tests/atlas/cases/demo_surface/input").join(fixture_name).join("src"),
             workspace_root.join("fixtures").join(fixture_name).join("src"),
-            base_path.join("node_modules").join(package).join("src"),
-            base_path.join("node_modules").join(package),
-            base_path.join("..").join(package_name).join("src"),
+            root.join("node_modules").join(package).join("src"),
+            root.join("node_modules").join(package),
         ];
-
-        for candidate in candidate_paths {
-            if candidate.exists() {
-                return candidate.to_str().map(|s| s.to_string());
-            }
-        }
-
-        None
+        candidates.into_iter().find(|path| path.exists())
     }
-    
-    /// Extract props from a TypeScript interface definition
-    fn extract_props_from_file(&self, source_file: &SourceFile, interface_name: &str) -> Option<Vec<ComponentProp>> {
-        use regex::Regex;
-        
-        // Look for interface or type definition
-        let interface_pattern = format!(r"(?:interface|type)\s+{}\s*=?\s*\{{", interface_name);
-        let re = Regex::new(&interface_pattern).ok()?;
-        
-        if let Some(mat) = re.find(&source_file.content) {
-            let start = mat.end();
-            
-            // Find the closing brace - simple brace counting
-            let mut brace_count = 1;
-            let mut end = start;
-            let chars: Vec<char> = source_file.content[start..].chars().collect();
-            
-            for (i, ch) in chars.iter().enumerate() {
-                match ch {
-                    '{' => brace_count += 1,
-                    '}' => {
-                        brace_count -= 1;
-                        if brace_count == 0 {
-                            end = start + i;
-                            break;
-                        }
-                    }
-                    _ => {}
-                }
-            }
-            
-            if end > start {
-                let interface_body = &source_file.content[start..end];
-                return self.parse_interface_props(interface_body);
-            }
-        }
-        
-        None
-    }
-    
-    /// Parse props from interface body
-    fn parse_interface_props(&self, interface_body: &str) -> Option<Vec<ComponentProp>> {
-        use regex::Regex;
-        
-        let mut props = Vec::new();
-        
-        // Match prop definitions: propName?: type
-        let prop_pattern = Regex::new(r"(\w+)\??:\s*([^;,\n]+)").ok()?;
-        
-        for caps in prop_pattern.captures_iter(interface_body) {
-            let name = caps.get(1)?.as_str().to_string();
-            
-            props.push(ComponentProp {
-                name,
-                count: 1,
-                usage: Usage::Unused,
-                values: None,
-            });
-        }
-        
-        if props.is_empty() {
-            None
-        } else {
-            Some(props)
-        }
-    }
+}
 
-    /// Apply include/exclude filters to components
-    fn apply_filters(&self, mut components: Vec<Component>) -> Vec<Component> {
-        // Apply include patterns
-        if let Some(includes) = &self.config.include {
-            let mut filtered = Vec::new();
-            
-            for pattern in includes {
-                if pattern.starts_with('@') && !pattern.contains(':') {
-                    // Include all library components from this package
-                    let package = pattern;
-                    filtered.extend(components.iter().filter(|c| c.source == *package).cloned());
-                } else if pattern.contains(':') {
-                    // Scoped selector: @package:Component
-                    let parts: Vec<&str> = pattern.split(':').collect();
-                    if parts.len() == 2 {
-                        let package = parts[0];
-                        let name = parts[1];
-                        filtered.extend(components.iter().filter(|c| c.source == *package && c.name == *name).cloned());
-                    }
-                } else {
-                    // Local pattern - include all local components for now
-                    filtered.extend(components.iter().filter(|c| !c.source.starts_with('@')).cloned());
-                }
-            }
-            
-            components = filtered;
-        }
-
-        // Apply exclude patterns
-        if let Some(excludes) = &self.config.exclude {
-            components.retain(|component| {
-                !excludes.iter().any(|pattern| {
-                    if pattern.contains(':') {
-                        let parts: Vec<&str> = pattern.split(':').collect();
-                        if parts.len() == 2 {
-                            let package = parts[0];
-                            let name = parts[1];
-                            component.source == package && component.name == name
-                        } else {
-                            false
-                        }
-                    } else {
-                        // Simple pattern matching
-                        component.name.contains(pattern) || component.source.contains(pattern)
-                    }
-                })
-            });
-        }
-
-        components
+fn failed_result(root_dir: &str, message: &str) -> AtlasAnalysisResult {
+    AtlasAnalysisResult {
+        components: Vec::new(),
+        diagnostics: vec![AtlasDiagnostic {
+            code: AtlasDiagnosticCode::UnresolvedIncludePackage,
+            message: message.to_string(),
+            source: root_dir.to_string(),
+            component_name: None,
+            interface_name: None,
+        }],
     }
+}
 
-    /// Calculate usage statistics for components and props
-    fn calculate_usage_stats(&self, components: &mut [Component]) {
-        let total_usage: u32 = components.iter().map(|c| c.count).sum();
-        
-        for component in components.iter_mut() {
-            component.usage = Usage::from_count(component.count, total_usage);
-            
-            let prop_total: u32 = component.props.iter().map(|p| p.count).sum();
-            for prop in component.props.iter_mut() {
-                prop.usage = Usage::from_count(prop.count, prop_total);
-            }
-        }
-    }
+fn normalize_diagnostics(mut diagnostics: Vec<AtlasDiagnostic>) -> Vec<AtlasDiagnostic> {
+    diagnostics.sort_by(|left, right| {
+        let left_code = serde_json::to_string(&left.code).unwrap_or_default();
+        let right_code = serde_json::to_string(&right.code).unwrap_or_default();
+        left_code
+            .cmp(&right_code)
+            .then(left.source.cmp(&right.source))
+            .then(left.component_name.cmp(&right.component_name))
+            .then(left.interface_name.cmp(&right.interface_name))
+    });
+    diagnostics.dedup_by(|left, right| {
+        left.code == right.code
+            && left.source == right.source
+            && left.component_name == right.component_name
+            && left.interface_name == right.interface_name
+    });
+    diagnostics
 }

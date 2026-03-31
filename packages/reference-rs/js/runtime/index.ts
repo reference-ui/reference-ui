@@ -46,3 +46,15 @@ export function scanAndEmitModules(rootDir: string, include: string[]): string {
 
   return native.scanAndEmitModules(rootDir, include)
 }
+
+export function analyzeAtlas(rootDir: string, configJson?: string): string {
+  const native = getVirtualNative()
+  if (!native) {
+    throw new Error(
+      'Virtual native addon not available. Run `pnpm --filter @reference-ui/rust run build` first. ' +
+        'Supported platforms: darwin x64/arm64, linux x64, win32 x64.'
+    )
+  }
+
+  return native.analyzeAtlas(rootDir, configJson)
+}

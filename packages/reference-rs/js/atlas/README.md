@@ -1,6 +1,6 @@
 # Atlas JS API
 
-Atlas is the thin React-surface index for Reference UI.
+Atlas is the thin JS wrapper around the native Rust Atlas engine.
 
 It answers three questions:
 
@@ -8,8 +8,10 @@ It answers three questions:
 - which props type does each component map to?
 - how are those components and props actually used in JSX?
 
-Atlas deliberately does not try to be a full TypeScript evaluator. It is meant
-to stand on its own as a stable component-indexing and usage-analysis layer.
+All analysis logic lives in Rust and is exposed through the shared `.node`
+binding. The JS layer is intentionally limited to argument normalization,
+native invocation, and type re-exports.
+
 Higher layers may enrich `component.interface` later, but Atlas itself should
 already be trustworthy about component identity, source, props-type mapping,
 usage counts, examples, and diagnostics.
@@ -84,13 +86,10 @@ Current diagnostics include:
 
 ## Internal Structure
 
-The JS implementation is split by concern:
+The public JS surface is intentionally small:
 
-- `project.ts`: file loading, import collection, project/package context
-- `discovery.ts`: component discovery and high-level diagnostics
-- `resolution.ts`: type and prop resolution
-- `usage.ts`: JSX usage aggregation and usage ranking
-- `analyzer.ts`: orchestration and public entrypoints
+- `analyzer.ts`: normalize input paths and call the native binding
+- `types.ts`: re-export Rust-generated TypeScript types
+- `generated/*`: `ts-rs` output from Rust Atlas types
 
-That separation is intentional. Atlas should stay readable and auditable rather
-than growing into a single giant analyzer file.
+Rust owns the analysis internals and is split by concern under `src/atlas/`.

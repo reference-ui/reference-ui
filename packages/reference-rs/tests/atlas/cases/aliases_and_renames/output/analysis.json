@@ -70,6 +70,32 @@
     "withIncludes": {
       "@fixtures/demo-ui": [
         {
+          "name": "Badge",
+          "interface": {
+            "name": "BadgeProps",
+            "source": "@fixtures/demo-ui"
+          },
+          "source": "@fixtures/demo-ui",
+          "count": 1,
+          "props": [
+            {
+              "name": "children",
+              "count": 0,
+              "usage": "unused"
+            },
+            {
+              "name": "count",
+              "count": 0,
+              "usage": "unused"
+            }
+          ],
+          "usage": "common",
+          "examples": [
+            "<Badge variant=\"default\" {...props} />"
+          ],
+          "usedWith": {}
+        },
+        {
           "name": "Button",
           "interface": {
             "name": "ButtonProps",
@@ -103,6 +129,36 @@
           }
         },
         {
+          "name": "Button",
+          "interface": {
+            "name": "ButtonProps",
+            "source": "@fixtures/demo-ui"
+          },
+          "source": "@fixtures/demo-ui",
+          "count": 1,
+          "props": [
+            {
+              "name": "children",
+              "count": 0,
+              "usage": "unused"
+            },
+            {
+              "name": "variant",
+              "count": 0,
+              "usage": "unused",
+              "values": {
+                "ghost": "unused",
+                "solid": "unused"
+              }
+            }
+          ],
+          "usage": "common",
+          "examples": [
+            "<BaseButton size=\"md\" {...props} />"
+          ],
+          "usedWith": {}
+        },
+        {
           "name": "UserBadge",
           "interface": {
             "name": "BadgeProps",
@@ -132,62 +188,6 @@
           "usedWith": {
             "Button": "very common"
           }
-        },
-        {
-          "name": "Badge",
-          "interface": {
-            "name": "BadgeProps",
-            "source": "@fixtures/demo-ui"
-          },
-          "source": "@fixtures/demo-ui",
-          "count": 1,
-          "props": [
-            {
-              "name": "children",
-              "count": 0,
-              "usage": "unused"
-            },
-            {
-              "name": "count",
-              "count": 0,
-              "usage": "unused"
-            }
-          ],
-          "usage": "common",
-          "examples": [
-            "<Badge variant=\"default\" {...props} />"
-          ],
-          "usedWith": {}
-        },
-        {
-          "name": "Button",
-          "interface": {
-            "name": "ButtonProps",
-            "source": "@fixtures/demo-ui"
-          },
-          "source": "@fixtures/demo-ui",
-          "count": 1,
-          "props": [
-            {
-              "name": "children",
-              "count": 0,
-              "usage": "unused"
-            },
-            {
-              "name": "variant",
-              "count": 0,
-              "usage": "unused",
-              "values": {
-                "solid": "unused",
-                "ghost": "unused"
-              }
-            }
-          ],
-          "usage": "common",
-          "examples": [
-            "<BaseButton size=\"md\" {...props} />"
-          ],
-          "usedWith": {}
         }
       ]
     }

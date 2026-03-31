@@ -3,8 +3,8 @@
   "diagnostics": [
     {
       "code": "unsupported-props-annotation",
-      "message": "Atlas found InlineBadge but only supports named props type references on the first parameter.",
-      "source": "/Users/ryn/Developer/reference-ui/packages/reference-rs/tests/atlas/cases/unsupported_inline_types/input/app/src/components/InlineBadge.tsx",
+      "message": "Component InlineBadge uses an inline props type annotation that Atlas does not index.",
+      "source": "./components/InlineBadge.tsx",
       "componentName": "InlineBadge"
     }
   ],
