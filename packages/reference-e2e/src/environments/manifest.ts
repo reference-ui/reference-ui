@@ -7,22 +7,27 @@ import { existsSync } from 'node:fs'
 import { readFile, writeFile, mkdir } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import type { MatrixEntry } from '../matrix/index.js'
+import type { MatrixEntry } from '../matrix/index'
 
 /** Canonical list of files that make up a sandbox. Paths relative to sandbox root. */
 export const MANIFEST = [
   'main.tsx',
   'App.tsx',
+  'Router.tsx',
+  'routes.ts',
   'index.html',
+  'package.json',
   'tokens.ts',
   'tsconfig.json',
   'ui.config.ts',
   'vite.config.ts',
   'tests/TokensTest.tsx',
+  'tests/ColorModeTest.tsx',
   'tests/SyncWatch.tsx',
   'tests/ExtendsTest.tsx',
   'tests/LayersTest.tsx',
   'tests/StylePropsTest.tsx',
+  'tests/ResponsiveContainerTest.tsx',
 ] as const
 
 export type ManifestFile = (typeof MANIFEST)[number]

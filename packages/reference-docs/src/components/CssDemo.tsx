@@ -10,10 +10,10 @@ export function CssDemo() {
   const [isHovered, setIsHovered] = useState(false)
 
   return (
-    <Div background="teal.500" display="flex" flexDirection="column" gap="10r">
+    <Div bg="docsPageBg" display="flex" flexDirection="column" gap="10r">
       {/* Basic Usage */}
       <Div>
-        <Div fontSize="xl" fontWeight="700" mb="4r" color="gray.800">
+        <Div fontSize="xl" fontWeight="700" mb="4r" color="docsHeading">
           Basic CSS Styles
         </Div>
         <Div
@@ -21,13 +21,13 @@ export function CssDemo() {
           flexDirection="column"
           gap="6r"
           p="8r"
-          bg="gray.50"
+          bg="docsDemoMutedBg"
           borderRadius="xl"
           border="1px solid"
-          borderColor="gray.200"
+          borderColor="docsPanelBorder"
         >
           <div>
-            <Div fontSize="sm" fontWeight="600" mb="2r" color="gray.600">
+            <Div fontSize="sm" fontWeight="600" mb="2r" color="docsMuted">
               Simple box with css()
             </Div>
             <div
@@ -44,7 +44,7 @@ export function CssDemo() {
           </div>
 
           <div>
-            <Div fontSize="sm" fontWeight="600" mb="2r" color="gray.600">
+            <Div fontSize="sm" fontWeight="600" mb="2r" color="docsMuted">
               Using design tokens
             </Div>
             <div
@@ -63,14 +63,14 @@ export function CssDemo() {
           </div>
 
           <div>
-            <Div fontSize="sm" fontWeight="600" mb="2r" color="gray.600">
+            <Div fontSize="sm" fontWeight="600" mb="2r" color="docsMuted">
               Typography styles
             </Div>
             <div
               className={css({
                 fontSize: '2xl',
                 fontWeight: '700',
-                color: 'gray.900',
+                color: 'docsText',
                 letterSpacing: '-0.02em',
                 lineHeight: '1.2',
               })}
@@ -80,7 +80,7 @@ export function CssDemo() {
             <div
               className={css({
                 fontSize: 'sm',
-                color: 'gray.600',
+                color: 'docsMuted',
                 lineHeight: '1.6',
                 mt: '2r',
               })}
@@ -93,7 +93,7 @@ export function CssDemo() {
 
       {/* Responsive Styles */}
       <Div>
-        <Div fontSize="xl" fontWeight="700" mb="4r" color="gray.800">
+        <Div fontSize="xl" fontWeight="700" mb="4r" color="docsHeading">
           Responsive Styles
         </Div>
         <Div
@@ -101,13 +101,13 @@ export function CssDemo() {
           flexDirection="column"
           gap="6r"
           p="8r"
-          bg="gray.50"
+          bg="docsDemoMutedBg"
           borderRadius="xl"
           border="1px solid"
-          borderColor="gray.200"
+          borderColor="docsPanelBorder"
         >
           <div>
-            <Div fontSize="sm" fontWeight="600" mb="2r" color="gray.600">
+            <Div fontSize="sm" fontWeight="600" mb="2r" color="docsMuted">
               Responsive padding (resize browser)
             </Div>
             <div
@@ -124,7 +124,7 @@ export function CssDemo() {
           </div>
 
           <div>
-            <Div fontSize="sm" fontWeight="600" mb="2r" color="gray.600">
+            <Div fontSize="sm" fontWeight="600" mb="2r" color="docsMuted">
               Responsive layout
             </Div>
             <div
@@ -174,14 +174,14 @@ export function CssDemo() {
           </div>
 
           <div>
-            <Div fontSize="sm" fontWeight="600" mb="2r" color="gray.600">
+            <Div fontSize="sm" fontWeight="600" mb="2r" color="docsMuted">
               Responsive typography
             </Div>
             <div
               className={css({
                 fontSize: '4xl',
                 fontWeight: '700',
-                color: 'gray.900',
+                color: 'docsText',
               })}
             >
               Large Text
@@ -192,7 +192,7 @@ export function CssDemo() {
 
       {/* Pseudo States */}
       <Div>
-        <Div fontSize="xl" fontWeight="700" mb="4r" color="gray.800">
+        <Div fontSize="xl" fontWeight="700" mb="4r" color="docsHeading">
           Interactive States
         </Div>
         <Div
@@ -200,13 +200,13 @@ export function CssDemo() {
           flexDirection="column"
           gap="6r"
           p="8r"
-          bg="gray.50"
+          bg="docsDemoMutedBg"
           borderRadius="xl"
           border="1px solid"
-          borderColor="gray.200"
+          borderColor="docsPanelBorder"
         >
           <div>
-            <Div fontSize="sm" fontWeight="600" mb="2r" color="gray.600">
+            <Div fontSize="sm" fontWeight="600" mb="2r" color="docsMuted">
               Hover effects
             </Div>
             <button
@@ -234,7 +234,7 @@ export function CssDemo() {
           </div>
 
           <div>
-            <Div fontSize="sm" fontWeight="600" mb="2r" color="gray.600">
+            <Div fontSize="sm" fontWeight="600" mb="2r" color="docsMuted">
               Focus states
             </Div>
             <input
@@ -244,7 +244,7 @@ export function CssDemo() {
                 padding: '3r',
                 borderWidth: '2px',
                 borderStyle: 'solid',
-                borderColor: 'gray.300',
+                borderColor: 'docsPanelBorder',
                 borderRadius: 'md',
                 fontSize: 'md',
                 outline: 'none',
@@ -258,7 +258,7 @@ export function CssDemo() {
           </div>
 
           <div>
-            <Div fontSize="sm" fontWeight="600" mb="2r" color="gray.600">
+            <Div fontSize="sm" fontWeight="600" mb="2r" color="docsMuted">
               Conditional styling
             </Div>
             <button
@@ -286,7 +286,7 @@ export function CssDemo() {
 
       {/* Advanced Composition */}
       <Div>
-        <Div fontSize="xl" fontWeight="700" mb="4r" color="gray.800">
+        <Div fontSize="xl" fontWeight="700" mb="4r" color="docsHeading">
           Style Composition
         </Div>
         <Div
@@ -294,20 +294,20 @@ export function CssDemo() {
           flexDirection="column"
           gap="6r"
           p="8r"
-          bg="gray.50"
+          bg="docsDemoMutedBg"
           borderRadius="xl"
           border="1px solid"
-          borderColor="gray.200"
+          borderColor="docsPanelBorder"
         >
           <div>
-            <Div fontSize="sm" fontWeight="600" mb="2r" color="gray.600">
+            <Div fontSize="sm" fontWeight="600" mb="2r" color="docsMuted">
               Layering and shadows
             </Div>
             <div
               className={css({
                 position: 'relative',
                 padding: '6r',
-                bg: 'gray.50',
+                bg: 'docsDemoMutedBg',
                 borderRadius: 'xl',
                 boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
                 _before: {
@@ -323,17 +323,17 @@ export function CssDemo() {
                 },
               })}
             >
-              <Div fontSize="lg" fontWeight="700" color="gray.900">
+              <Div fontSize="lg" fontWeight="700" color="docsText">
                 Card with gradient backdrop
               </Div>
-              <Div fontSize="sm" color="gray.600" mt="2r">
+              <Div fontSize="sm" color="docsMuted" mt="2r">
                 Using pseudo-elements for layered effects
               </Div>
             </div>
           </div>
 
           <div>
-            <Div fontSize="sm" fontWeight="600" mb="2r" color="gray.600">
+            <Div fontSize="sm" fontWeight="600" mb="2r" color="docsMuted">
               Grid layout
             </Div>
             <div
@@ -362,7 +362,7 @@ export function CssDemo() {
           </div>
 
           <div>
-            <Div fontSize="sm" fontWeight="600" mb="2r" color="gray.600">
+            <Div fontSize="sm" fontWeight="600" mb="2r" color="docsMuted">
               Flexbox alignment
             </Div>
             <div

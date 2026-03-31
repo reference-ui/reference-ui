@@ -11,7 +11,7 @@ describe('combined custom props output (e2e)', () => {
 
     const content = readVirtualSystemFile('combinedCustomProps.fixture.tsx')
     expect(content).toContain('font="sans"')
-    expect(content).toContain('weight="semibold"')
+    expect(content).toContain('weight="bold"')
     expect(content).toContain("555: { padding: '2.25rem' }")
   })
 

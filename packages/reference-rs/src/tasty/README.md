@@ -45,9 +45,9 @@ The architecture split is simple:
 | `packages/reference-rs/js/tasty` | lazy runtime API built on top of emitted artifacts |
 
 If you are changing Tasty, the usual starting points are `model.rs` for the IR,
-`ast/resolve.rs` for type lowering and graph resolution, `scan.rs` for
-orchestration, `generator/esm.rs` for output shape, and `emitted.rs` for the
-generated contract.
+`ast/` for parsing and graph resolution, `scan.rs` for orchestration,
+`generator/` for emitted artifact shape, and `emitted.rs` for the generated
+contract.
 
 ## Scan Boundary
 
@@ -60,6 +60,43 @@ pulled in when the user explicitly re-exports from a package, such as
 `export type { X } from 'some-library'` or `export * from 'some-library'`.
 From there, Tasty follows imports within that same package, but it does not
 walk arbitrary dependency trees.
+
+For `export type { Name } from 'module'`, Tasty also emits a **synthetic
+type-alias shell** in the barrel file so `Name` appears in the manifest (same
+ergonomics as a local `type Name = …` re-export, without requiring one).
+Renames (`export type { A as B } from '…'`) are not expanded yet.
+
+For type aliases, constructed types (`Omit<…>`, intersections, re-exports), and the
+goal of treating **`type` as a first-class documentation symbol**, see
+[`FIRST_CLASS_TYPES.md`](./FIRST_CLASS_TYPES.md).
+
+## Object-Like Projection
+
+One important downstream use of Tasty is turning complex TypeScript aliases into
+a **final object-like surface** that other tools can consume.
+
+That matters for things like:
+
+- API docs tables
+- MCP schema or tool generation
+- any consumer that needs the **effective fields** a user can actually interact with
+
+The key idea is:
+
+- Tasty should preserve the **canonical type graph**
+- Tasty may also expose a **derived object-like projection** when a type can be
+  flattened in a bounded, explainable way
+
+That projection is not meant to explain every derivation step. Its main job is
+to expose the **final useful object**:
+
+- field names
+- field types
+- optional / readonly state
+- a bounded view of recursive object structure
+
+If a type cannot be projected safely, Tasty should fall back to the canonical
+definition and links instead of inventing a misleading object view.
 
 ## Emitted Shape
 
@@ -194,23 +231,34 @@ Example:
 | `TSNamedTupleMember` | `TupleElement { label, optional, rest: false, element }` | preserves tuple labels |
 | inherited `TSType` variants | `TupleElement { label: None, optional: false, rest: false, element }` | lowered via `type_to_ref` |
 
-### Why the remaining raw cases are acceptable
 
-For Tasty's current goal, the important thing is preserving graph shape:
-symbol identity, member shape, optionality, references, and the common
-structural forms that matter for docs and graph navigation.
+## On the nature of AST code
 
-For the remaining cases, exact source preservation is still enough for display,
-hover-ish presentation, and honest runtime inspection without pretending we
-have a full evaluator for the TypeScript type system.
+Before we talk about testing, we need to talk about the thing nobody says out
+loud:
 
-## Status And Testing
+**AST code is cursed. It will always be cursed. And that is fine.**
 
-The core Rust pipeline is in place: scanner, normalized IR, manifest and chunk
-emission, generated TS contract types, and fixture-driven tests. The JS runtime
-layer exists elsewhere and is also covered by runtime-facing tests.
+Here is why. An AST is a tree that represents every possible thing a human could
+write in a programming language. Every valid program. Every edge case. Every
+three-year-old syntax that nobody uses except one library author far far away who
+will absolutely file a bug if you handle it wrong.
 
-Coverage today includes generics, signatures, unions, literals, default type
-parameters, external library references, mapped types, conditional types,
-template literals, type queries, type operators, JSDoc handling, raw-versus-
-structural edge cases, TSX scanning, and mixed fixture scenarios.
+The code that walks an AST inherits the shape of the language it reads. If the
+language has 16 type expression variants, your match has 16 arms. If properties
+can be readonly, optional, computed, shorthand, or all four at once, you get a
+`match` arm for each combination. If comments can attach to the node before, the
+node after, or float between two statements — you write something ugly to decide
+which one wins.
+
+Every test case in `cases/` is a tiny TypeScript project. The inputs are
+readable TypeScript. The assertions are readable API calls. The cursed
+`match` arms on 16 `TypeRef` variants — those live behind the wall. If a
+variant is wrong, a test in `cases/` will tell you. If a test in `cases/`
+passes, you can ship.
+
+
+_Tests are not proof that the code works._
+_Tests are proof that you understood what "works" means._
+_Write the tests that describe the system you want,_
+_and the implementation will have no choice but to follow._

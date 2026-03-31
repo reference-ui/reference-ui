@@ -17,9 +17,9 @@ export async function bundleConfig(
 ): Promise<string> {
   return microBundle(configPath, {
     format: 'cjs',
-    external: options.external ?? [
-      'esbuild',
-      ...CONFIG_EXTERNALS,
-    ],
+    external: options.external ?? ['esbuild', ...CONFIG_EXTERNALS],
+    tsconfigRaw: {
+      compilerOptions: {},
+    },
   })
 }

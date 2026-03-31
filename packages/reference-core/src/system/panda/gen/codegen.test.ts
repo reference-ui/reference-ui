@@ -40,7 +40,7 @@ async function importCodegenModule(options: {
     if (cssgenThrow) throw cssgenThrow
   })
   const updateBaseSystemCss = vi.fn()
-  const applyLayerPostprocess = vi.fn(() => layerCss)
+  const postprocessCss = vi.fn(() => layerCss)
   const debug = vi.fn()
 
   vi.doMock('../../../config/store', () => ({
@@ -61,8 +61,8 @@ async function importCodegenModule(options: {
   vi.doMock('../../base/create', () => ({
     updateBaseSystemCss,
   }))
-  vi.doMock('../../layers/applyLayerPostprocess', () => ({
-    applyLayerPostprocess,
+  vi.doMock('../../css/postprocess', () => ({
+    postprocessCss,
   }))
 
   const mod = await import('./codegen')
@@ -72,7 +72,7 @@ async function importCodegenModule(options: {
     loadConfigAndCreateContext,
     pandaCssgen,
     updateBaseSystemCss,
-    applyLayerPostprocess,
+    postprocessCss,
     debug,
   }
 }
@@ -84,7 +84,7 @@ afterEach(() => {
   vi.doUnmock('../../../lib/log')
   vi.doUnmock('@pandacss/node')
   vi.doUnmock('../../base/create')
-  vi.doUnmock('../../layers/applyLayerPostprocess')
+  vi.doUnmock('../../css/postprocess')
   vi.restoreAllMocks()
   for (const dir of createdDirs.splice(0)) {
     rmSync(dir, { recursive: true, force: true })
@@ -107,8 +107,8 @@ describe('system/panda/gen/codegen', () => {
       cssgen: vi.fn(),
     }))
     vi.doMock('../../base/create', () => ({ updateBaseSystemCss: vi.fn() }))
-    vi.doMock('../../layers/applyLayerPostprocess', () => ({
-      applyLayerPostprocess: vi.fn(),
+    vi.doMock('../../css/postprocess', () => ({
+      postprocessCss: vi.fn(),
     }))
 
     const { runPandaCodegen } = await import('./codegen')
@@ -157,22 +157,22 @@ describe('system/panda/gen/codegen', () => {
     expect(pandaCssgen).toHaveBeenCalledWith({}, { cwd: outDir })
   })
 
-  it('runPandaCodegen calls updateBaseSystemCss when applyLayerPostprocess returns layerCss', async () => {
+  it('runPandaCodegen calls updateBaseSystemCss when postprocessCss returns portable css', async () => {
     const outDir = createTempDir()
     const configPath = join(outDir, 'panda.config.ts')
     writeFileSync(configPath, 'export default {}', 'utf-8')
     const layerCss = '@layer test { .x {} }'
 
-    const { runPandaCodegen, updateBaseSystemCss, applyLayerPostprocess } =
+    const { runPandaCodegen, updateBaseSystemCss, postprocessCss } =
       await importCodegenModule({ outDir, layerCss })
 
     await runPandaCodegen()
 
-    expect(applyLayerPostprocess).toHaveBeenCalledWith(outDir, { name: 'test' })
+    expect(postprocessCss).toHaveBeenCalledWith(outDir, { name: 'test' })
     expect(updateBaseSystemCss).toHaveBeenCalledWith(outDir, layerCss)
   })
 
-  it('runPandaCodegen does not call updateBaseSystemCss when applyLayerPostprocess returns empty', async () => {
+  it('runPandaCodegen does not call updateBaseSystemCss when postprocessCss returns empty', async () => {
     const outDir = createTempDir()
     const configPath = join(outDir, 'panda.config.ts')
     writeFileSync(configPath, 'export default {}', 'utf-8')
@@ -201,8 +201,8 @@ describe('system/panda/gen/codegen', () => {
       cssgen: vi.fn(),
     }))
     vi.doMock('../../base/create', () => ({ updateBaseSystemCss: vi.fn() }))
-    vi.doMock('../../layers/applyLayerPostprocess', () => ({
-      applyLayerPostprocess: vi.fn(),
+    vi.doMock('../../css/postprocess', () => ({
+      postprocessCss: vi.fn(),
     }))
 
     const { runPandaCss } = await import('./codegen')

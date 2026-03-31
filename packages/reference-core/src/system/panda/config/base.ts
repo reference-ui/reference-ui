@@ -19,11 +19,7 @@ export const baseConfig = {
   /** Relative to outDir: virtual/ = transformed sources, src/ = user src */
   include: ['virtual/**/*.{ts,tsx,js,jsx}', 'src/**/*.{ts,tsx,js,jsx}'],
 
-  exclude: [
-    '**/node_modules/**',
-    '**/*.test.*',
-    '**/*.spec.*',
-  ],
+  exclude: ['**/node_modules/**'],
 
   /** Output directly into the styled package (outDir/styled) */
   outdir: 'styled',

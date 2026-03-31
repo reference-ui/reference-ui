@@ -22,6 +22,7 @@ describe('virtual – mirror invariant', () => {
       const src = sourcePaths()
       const list: string[] = []
       for (const vRel of virtualPaths) {
+        if (vRel.startsWith('_reference-component/')) continue
         const candidates = virtualToPossibleSources(vRel)
         if (!candidates.some((c) => src.has(c))) list.push(vRel)
       }

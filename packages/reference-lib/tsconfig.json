@@ -4,7 +4,19 @@
     "target": "ES2020",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "baseUrl": "."
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "skipLibCheck": true,
+    "paths": {
+      "@reference-ui/react": ["./.reference-ui/react"],
+      "@reference-ui/react/styles.css": ["./.reference-ui/react/styles.css"],
+      "@reference-ui/styled": ["./.reference-ui/styled"],
+      "@reference-ui/styled/jsx": ["./.reference-ui/styled/jsx/index"],
+      "@reference-ui/styled/*": ["./.reference-ui/styled/*"],
+      "@reference-ui/system": ["./.reference-ui/system"],
+      "@reference-ui/system/baseSystem": ["./.reference-ui/system/baseSystem.mjs"],
+      "@reference-ui/types": ["./.reference-ui/types"]
+    }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"]
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.jsx"]
 }

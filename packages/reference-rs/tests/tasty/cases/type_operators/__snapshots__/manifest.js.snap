@@ -1,0 +1,3 @@
+export const manifest = {"version":"2","warnings":[],"symbolsByName":{"KeysOfUser":["_s0"],"ReadonlyUsers":["_s1"],"User":["_s2"],"WithOperators":["_s3"]},"symbolsById":{"_s3":{"id":"_s3","name":"WithOperators","kind":"interface","chunk":"./chunks/_s3.js","library":"user"},"_s0":{"id":"_s0","name":"KeysOfUser","kind":"typeAlias","chunk":"./chunks/_s0.js","library":"user"},"_s2":{"id":"_s2","name":"User","kind":"interface","chunk":"./chunks/_s2.js","library":"user"},"_s1":{"id":"_s1","name":"ReadonlyUsers","kind":"typeAlias","chunk":"./chunks/_s1.js","library":"user"}}};
+export default manifest;
+

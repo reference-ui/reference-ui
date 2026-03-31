@@ -22,8 +22,8 @@ beforeAll(() => {
 
 const hasDesignSystemCss = () => Boolean(getDesignSystemCssPath())
 
-const TEST_BG = 'rgb(0, 102, 204)'
-const TEST_COLOR = 'rgb(255, 255, 255)'
+const TEST_BG = 'reference.background'
+const TEST_COLOR = 'reference.foreground'
 
 describe('Div primitive', () => {
   it('renders as a div with children', () => {
@@ -84,11 +84,7 @@ describe('Div primitive', () => {
     if (!hasDesignSystemCss()) return
 
     render(
-      <Div
-        data-testid="div-tokens"
-        padding="md"
-        backgroundColor="brand.primary"
-      >
+      <Div data-testid="div-tokens" padding="md" backgroundColor="reference.primary">
         Tokens
       </Div>
     )

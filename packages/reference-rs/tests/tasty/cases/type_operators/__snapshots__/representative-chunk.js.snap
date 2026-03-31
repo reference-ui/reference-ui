@@ -1,0 +1,36 @@
+const symbol = {
+  id: "_s0",
+  name: "KeysOfUser",
+  library: "user",
+  description: "Type operator alias using keyof.",
+  descriptionRaw: "Type operator alias using keyof.",
+  jsdoc:   {
+    summary: "Type operator alias using keyof.",
+    tags: []
+  },
+  definition:   {
+    kind: "type_operator",
+    operator: "keyof",
+    target:   {
+      id: "_s2",
+      name: "User",
+      library: "user"
+    },
+    resolved:   {
+      kind: "union",
+      types:   [
+        {
+          kind: "literal",
+          value: "'id'"
+        },
+        {
+          kind: "literal",
+          value: "'name'"
+        }
+      ]
+    }
+  }
+};
+export { symbol as _s0 };
+export default symbol;
+

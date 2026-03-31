@@ -1,8 +1,9 @@
 import { font } from '@reference-ui/system'
+import { fontStacks } from './fontStacks'
 
 export const fonts = {
   sans: {
-    value: '"Inter", ui-sans-serif, sans-serif',
+    value: fontStacks.sans,
     fontFace: {
       src: 'url(https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7W0Q5nw.woff2) format("woff2")',
       fontWeight: '100 900',
@@ -46,7 +47,7 @@ export const fonts = {
     },
   },
   mono: {
-    value: '"JetBrains Mono", ui-monospace, monospace',
+    value: fontStacks.mono,
     fontFace: {
       src: 'url(https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbV2o-flEEny0FZhsfKu5WU4xD7OwGtT0rU.woff2) format("woff2")',
       fontWeight: '100 800',

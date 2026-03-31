@@ -1,9 +1,15 @@
 import { describe, expect, it } from 'vitest'
 
-import { addCaseRuntimeSmokeTests, createCaseApi, findMember } from '../../api-test-helpers'
+import {
+  addCaseEmittedSnapshotTests,
+  addCaseRuntimeSmokeTests,
+  createCaseApi,
+  findMember,
+} from '../../api-test-helpers'
 
 describe('conditional_types tasty api', () => {
   addCaseRuntimeSmokeTests('conditional_types', 'IsString')
+  addCaseEmittedSnapshotTests('conditional_types')
 
   it('loads conditional aliases and member types structurally', async () => {
     const api = createCaseApi('conditional_types')

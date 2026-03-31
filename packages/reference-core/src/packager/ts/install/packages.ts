@@ -1,11 +1,11 @@
 import { resolve } from 'node:path'
 import { mkdirSync } from 'node:fs'
-import {
-  resolveCorePackageDir,
-  resolveCorePackageDirForBuild,
-} from '../../../lib/paths'
+import { resolveCorePackageDir, resolveCorePackageDirForBuild } from '../../../lib/paths'
 import { getOutDirPath } from '../../../lib/paths/out-dir'
-import { writeGeneratedReactTypes, writeGeneratedSystemTypes } from '../../../system/types/generate'
+import {
+  writeGeneratedReactTypes,
+  writeGeneratedSystemTypes,
+} from '../../../system/types/generate'
 import { getPackageDir, getDeclarationBasename } from '../../layout'
 import { installPackageTs } from './package'
 import type { TsPackageInput } from '../types'
@@ -25,7 +25,7 @@ export async function installPackagesTs(
 
   for (const pkg of packages) {
     const targetDir = getPackageDir(outDir, pkg.name)
-    await installPackageTs(cliDir, cliDirForBuild, targetDir, pkg)
+    await installPackageTs({ cliDir, cliDirForBuild, projectCwd: cwd, targetDir }, pkg)
   }
 
   const systemDir = getPackageDir(outDir, '@reference-ui/system')

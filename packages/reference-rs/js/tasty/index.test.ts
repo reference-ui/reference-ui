@@ -9,6 +9,7 @@ import {
   createTastyApiFromManifest,
   createTastyBrowserRuntime,
 } from './index'
+import type { RawTastyManifest } from './api-types'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const packageDir = join(__dirname, '..', '..')
@@ -92,6 +93,231 @@ describe('tasty runtime', () => {
     expect(runtime.getApi()).toBe(api)
   })
 
+  it('fails gracefully when the browser runtime module shape is malformed', async () => {
+    const runtime = createTastyBrowserRuntime({
+      loadRuntimeModule: async () => ({ notManifest: true }),
+    })
+
+    await expect(runtime.loadApi()).rejects.toThrow(
+      'Malformed Tasty browser runtime module. Expected manifest, manifestUrl, and importTastyArtifact exports.'
+    )
+  })
+
+  it('fails gracefully when the manifest module shape is malformed', async () => {
+    const api = createTastyApi({
+      manifestPath: '/tmp/tasty/manifest.js',
+      importer: async () => ({ default: { nope: true } }),
+    })
+
+    await expect(api.ready()).rejects.toThrow(
+      'Malformed Tasty manifest module. Expected a default or manifest export with version, warnings, symbolsByName, and symbolsById.'
+    )
+  })
+
+  it('auto-resolves ambiguous external bare-name lookup and supports scoped-name lookup', async () => {
+    const api = createTastyApiFromManifest({
+      manifest: {
+        version: '2',
+        warnings: ['Duplicate symbol name "Shared" matched 2 entries.'],
+        symbolsByName: {
+          Shared: ['_alpha', '_beta'],
+        },
+        symbolsById: {
+          _alpha: {
+            id: '_alpha',
+            name: 'Shared',
+            kind: 'interface',
+            chunk: './chunks/_alpha.js',
+            library: 'alpha-lib',
+          },
+          _beta: {
+            id: '_beta',
+            name: 'Shared',
+            kind: 'typeAlias',
+            chunk: './chunks/_beta.js',
+            library: 'beta-lib',
+          },
+        },
+      },
+      importer: async (artifactPath) => {
+        if (artifactPath.includes('_alpha')) {
+          return {
+            _alpha: {
+              id: '_alpha',
+              name: 'Shared',
+              library: 'alpha-lib',
+              members: [],
+              extends: [],
+              types: [],
+            },
+          }
+        }
+
+        if (artifactPath.includes('_beta')) {
+          return {
+            _beta: {
+              id: '_beta',
+              name: 'Shared',
+              library: 'beta-lib',
+              definition: { kind: 'intrinsic', name: 'string' },
+            },
+          }
+        }
+
+        throw new Error(`Unexpected artifact path: ${artifactPath}`)
+      },
+    })
+
+    const shared = await api.loadSymbolByName('Shared')
+    expect(await api.findSymbolsByName('Shared')).toHaveLength(2)
+
+    const alpha = await api.loadSymbolByScopedName('alpha-lib', 'Shared')
+    const beta = await api.loadSymbolByScopedName('beta-lib', 'Shared')
+
+    expect(shared.getId()).toBe('_alpha')
+    expect(alpha.getId()).toBe('_alpha')
+    expect(beta.getId()).toBe('_beta')
+    expect(api.getWarnings()).toEqual([
+      'Duplicate symbol name "Shared" matched 2 entries.',
+      'Ambiguous symbol name "Shared" matched multiple external libraries. Using _alpha (alpha-lib); other matches: _beta (beta-lib). Use a scoped lookup to disambiguate.',
+    ])
+  })
+
+  it('still rejects ambiguous bare-name lookup when user symbols are involved', async () => {
+    const api = createTastyApiFromManifest({
+      manifest: {
+        version: '2',
+        warnings: ['Duplicate symbol name "Shared" matched 2 entries.'],
+        symbolsByName: {
+          Shared: ['_user', '_beta'],
+        },
+        symbolsById: {
+          _user: {
+            id: '_user',
+            name: 'Shared',
+            kind: 'interface',
+            chunk: './chunks/_user.js',
+            library: 'user',
+          },
+          _beta: {
+            id: '_beta',
+            name: 'Shared',
+            kind: 'typeAlias',
+            chunk: './chunks/_beta.js',
+            library: 'beta-lib',
+          },
+        },
+      },
+      importer: async (artifactPath) => {
+        if (artifactPath.includes('_user')) {
+          return {
+            _user: {
+              id: '_user',
+              name: 'Shared',
+              library: 'user',
+              members: [],
+              extends: [],
+              types: [],
+            },
+          }
+        }
+
+        if (artifactPath.includes('_beta')) {
+          return {
+            _beta: {
+              id: '_beta',
+              name: 'Shared',
+              library: 'beta-lib',
+              definition: { kind: 'intrinsic', name: 'string' },
+            },
+          }
+        }
+
+        throw new Error(`Unexpected artifact path: ${artifactPath}`)
+      },
+    })
+
+    await expect(api.loadSymbolByName('Shared')).rejects.toThrow('Ambiguous symbol name "Shared"')
+  })
+
+  it('prefers @reference-ui/react for known external duplicate names', async () => {
+    const api = createTastyApiFromManifest({
+      manifest: {
+        version: '2',
+        warnings: [],
+        symbolsByName: {
+          StyleProps: ['_react', '_system', '_types'],
+        },
+        symbolsById: {
+          _react: {
+            id: '_react',
+            name: 'StyleProps',
+            kind: 'typeAlias',
+            chunk: './chunks/_react.js',
+            library: '@reference-ui/react',
+          },
+          _system: {
+            id: '_system',
+            name: 'StyleProps',
+            kind: 'typeAlias',
+            chunk: './chunks/_system.js',
+            library: '@reference-ui/system',
+          },
+          _types: {
+            id: '_types',
+            name: 'StyleProps',
+            kind: 'typeAlias',
+            chunk: './chunks/_types.js',
+            library: '@reference-ui/types',
+          },
+        },
+      },
+      importer: async (artifactPath) => {
+        if (artifactPath.includes('_react')) {
+          return {
+            _react: {
+              id: '_react',
+              name: 'StyleProps',
+              library: '@reference-ui/react',
+              definition: { kind: 'intrinsic', name: 'string' },
+            },
+          }
+        }
+
+        if (artifactPath.includes('_system')) {
+          return {
+            _system: {
+              id: '_system',
+              name: 'StyleProps',
+              library: '@reference-ui/system',
+              definition: { kind: 'intrinsic', name: 'number' },
+            },
+          }
+        }
+
+        if (artifactPath.includes('_types')) {
+          return {
+            _types: {
+              id: '_types',
+              name: 'StyleProps',
+              library: '@reference-ui/types',
+              definition: { kind: 'intrinsic', name: 'boolean' },
+            },
+          }
+        }
+
+        throw new Error(`Unexpected artifact path: ${artifactPath}`)
+      },
+    })
+
+    const styleProps = await api.loadSymbolByName('StyleProps')
+
+    expect(styleProps.getId()).toBe('_react')
+    expect(api.getWarnings()).toEqual([
+      'Ambiguous symbol name "StyleProps" matched multiple external libraries. Using _react (@reference-ui/react); other matches: _system (@reference-ui/system), _types (@reference-ui/types). Use a scoped lookup to disambiguate.',
+    ])
+  })
+
   it('keeps symbol wrapper identity stable across lookup paths', async () => {
     const api = createTastyApi({
       manifestPath: manifestPath('external_libs'),
@@ -139,6 +365,33 @@ describe('tasty runtime', () => {
     })
   })
 
+  it('fails gracefully when a chunk loads but does not export the requested symbol', async () => {
+    const api = createTastyApiFromManifest({
+      manifest: {
+        version: '2',
+        warnings: [],
+        symbolsByName: {
+          Broken: ['_broken'],
+        },
+        symbolsById: {
+          _broken: {
+            id: '_broken',
+            name: 'Broken',
+            kind: 'interface',
+            chunk: './chunks/_broken.js',
+            library: 'user',
+          },
+        },
+      },
+      manifestPath: '/tmp/tasty/manifest.js',
+      importer: async () => ({ default: { id: 'not-the-right-symbol', name: 'Broken' } }),
+    })
+
+    await expect(api.loadSymbolByName('Broken')).rejects.toThrow(
+      'Missing symbol export in Tasty chunk for id "_broken". Expected a named export "_broken" or a matching default export.'
+    )
+  })
+
   it('retries browser runtime initialization after a transient failure', async () => {
     let failNextLoad = true
     const runtime = createTastyBrowserRuntime({
@@ -166,10 +419,13 @@ describe('tasty runtime', () => {
     const buttonProps = await api.loadSymbolByName('ButtonProps')
     const extendsSymbols = await buttonProps.loadExtendsSymbols()
     const flattened = await api.graph.flattenInterfaceMembers(buttonProps)
+    const displayMembers = await api.graph.getDisplayMembers(buttonProps)
 
     expect(extendsSymbols.map((symbol) => symbol.getName())).toEqual(['StyleProps'])
     expect(flattened.map((member) => member.getName())).toContain('tone')
     expect(flattened.map((member) => member.getName())).toContain('size')
+    expect(displayMembers.map((member) => member.getName())).toContain('tone')
+    expect(displayMembers.map((member) => member.getName())).toContain('size')
   })
 
   it('collects only user-owned immediate dependencies', async () => {
@@ -183,6 +439,172 @@ describe('tasty runtime', () => {
 
     expect(refs.map((ref) => ref.getName()).sort()).toEqual(['Size', 'StyleProps'])
     expect(dependencies.map((symbol) => symbol.getName()).sort()).toEqual(['Size', 'StyleProps'])
+  })
+
+  it('projects object-like aliases while tolerating partially opaque intersection inputs', async () => {
+    const manifest: RawTastyManifest = {
+      version: '2',
+      warnings: [],
+      symbolsByName: {
+        BaseProps: ['base'],
+        PatternProps: ['pattern'],
+        OpaqueMappedProps: ['opaqueMapped'],
+        PartialProjectedProps: ['partialProjected'],
+        ProjectedProps: ['projected'],
+        PublicProjectedProps: ['publicProjected'],
+      },
+      symbolsById: {
+        base: { id: 'base', name: 'BaseProps', kind: 'interface', chunk: './chunks/base.js', library: 'user' },
+        pattern: { id: 'pattern', name: 'PatternProps', kind: 'typeAlias', chunk: './chunks/pattern.js', library: 'user' },
+        opaqueMapped: {
+          id: 'opaqueMapped',
+          name: 'OpaqueMappedProps',
+          kind: 'typeAlias',
+          chunk: './chunks/opaque-mapped.js',
+          library: 'user',
+        },
+        partialProjected: {
+          id: 'partialProjected',
+          name: 'PartialProjectedProps',
+          kind: 'typeAlias',
+          chunk: './chunks/partial-projected.js',
+          library: 'user',
+        },
+        projected: { id: 'projected', name: 'ProjectedProps', kind: 'typeAlias', chunk: './chunks/projected.js', library: 'user' },
+        publicProjected: {
+          id: 'publicProjected',
+          name: 'PublicProjectedProps',
+          kind: 'typeAlias',
+          chunk: './chunks/public-projected.js',
+          library: 'user',
+        },
+      },
+    }
+
+    const chunks = {
+      './chunks/base.js': {
+        base: {
+          id: 'base',
+          name: 'BaseProps',
+          library: 'user',
+          members: [
+            { name: 'tone', optional: true, readonly: false, kind: 'property', type: { kind: 'intrinsic', name: 'string' } },
+            { name: 'size', optional: true, readonly: false, kind: 'property', type: { kind: 'intrinsic', name: 'number' } },
+            { name: 'color', optional: true, readonly: false, kind: 'property', type: { kind: 'intrinsic', name: 'string' } },
+          ],
+          extends: [],
+          types: [],
+        },
+      },
+      './chunks/pattern.js': {
+        pattern: {
+          id: 'pattern',
+          name: 'PatternProps',
+          library: 'user',
+          definition: {
+            kind: 'object',
+            members: [
+              { name: 'gap', optional: true, readonly: false, kind: 'property', type: { kind: 'intrinsic', name: 'string' } },
+            ],
+          },
+        },
+      },
+      './chunks/projected.js': {
+        projected: {
+          id: 'projected',
+          name: 'ProjectedProps',
+          library: 'user',
+          definition: {
+            kind: 'intersection',
+            types: [
+              {
+                id: 'Omit',
+                name: 'Omit',
+                library: 'typescript',
+                typeArguments: [
+                  { id: 'base', name: 'BaseProps', library: 'user' },
+                  {
+                    kind: 'union',
+                    types: [
+                      { kind: 'literal', value: "'color'" },
+                    ],
+                  },
+                ],
+              },
+              { id: 'pattern', name: 'PatternProps', library: 'user' },
+            ],
+          },
+        },
+      },
+      './chunks/opaque-mapped.js': {
+        opaqueMapped: {
+          id: 'opaqueMapped',
+          name: 'OpaqueMappedProps',
+          library: 'user',
+          definition: {
+            kind: 'mapped',
+            typeParam: 'K',
+            sourceType: { kind: 'intrinsic', name: 'string' },
+            optionalModifier: 'preserve',
+            readonlyModifier: 'preserve',
+            valueType: { kind: 'intrinsic', name: 'string' },
+          },
+        },
+      },
+      './chunks/partial-projected.js': {
+        partialProjected: {
+          id: 'partialProjected',
+          name: 'PartialProjectedProps',
+          library: 'user',
+          definition: {
+            kind: 'intersection',
+            types: [
+              { id: 'pattern', name: 'PatternProps', library: 'user' },
+              { id: 'opaqueMapped', name: 'OpaqueMappedProps', library: 'user' },
+            ],
+          },
+        },
+      },
+      './chunks/public-projected.js': {
+        publicProjected: {
+          id: 'publicProjected',
+          name: 'PublicProjectedProps',
+          library: 'user',
+          definition: { id: 'projected', name: 'ProjectedProps', library: 'user' },
+        },
+      },
+    } as const
+
+    const api = createTastyApiFromManifest({
+      manifest,
+      importer: async (artifactPath) => chunks[artifactPath as keyof typeof chunks],
+    })
+
+    const projected = await api.loadSymbolByName('ProjectedProps')
+    const partialProjected = await api.loadSymbolByName('PartialProjectedProps')
+    const publicProjected = await api.loadSymbolByName('PublicProjectedProps')
+    const projectedDisplayMembers = await api.graph.getDisplayMembers(projected)
+    const partialProjectedDisplayMembers = await api.graph.getDisplayMembers(partialProjected)
+    const publicProjectedDisplayMembers = await api.graph.getDisplayMembers(publicProjected)
+    const projectedMembers = await api.graph.projectObjectLikeMembers(projected)
+    const partialProjectedMembers = await api.graph.projectObjectLikeMembers(partialProjected)
+    const publicProjectedMembers = await api.graph.projectObjectLikeMembers(publicProjected)
+    const projectedMembersFromSymbol = await projected.getDisplayMembers()
+    const partialProjectedMembersFromSymbol = await partialProjected.getDisplayMembers()
+    const publicProjectedMembersFromSymbol = await publicProjected.getDisplayMembers()
+
+    expect(projectedDisplayMembers.map((member) => member.getName())).toEqual(['tone', 'size', 'gap'])
+    expect(partialProjectedDisplayMembers.map((member) => member.getName())).toEqual(['gap'])
+    expect(publicProjectedDisplayMembers.map((member) => member.getName())).toEqual(['tone', 'size', 'gap'])
+    expect(projectedMembers?.map((member) => member.getName())).toEqual(['tone', 'size', 'gap'])
+    expect(partialProjectedMembers?.map((member) => member.getName())).toEqual(['gap'])
+    expect(publicProjectedMembers?.map((member) => member.getName())).toEqual(['tone', 'size', 'gap'])
+    expect(projectedMembersFromSymbol?.map((member) => member.getName())).toEqual(['tone', 'size', 'gap'])
+    expect(partialProjectedMembersFromSymbol?.map((member) => member.getName())).toEqual(['gap'])
+    expect(publicProjectedMembersFromSymbol?.map((member) => member.getName())).toEqual(['tone', 'size', 'gap'])
+    expect(projected.getMembers()).toEqual([])
+    expect(partialProjected.getMembers()).toEqual([])
+    expect(publicProjected.getMembers()).toEqual([])
   })
 
   it('exposes type-alias helpers over the emitted definition shape', async () => {
@@ -209,5 +631,20 @@ describe('tasty runtime', () => {
     const results = await api.searchSymbols('button')
 
     expect(results.map((result) => result.name)).toEqual(['ButtonProps', 'ButtonSchema'])
+  })
+
+  it('exposes clean jsdoc and signature helpers for docs renderers', async () => {
+    const api = createTastyApi({
+      manifestPath: manifestPath('jsdoc'),
+    })
+
+    const buttonProps = await api.loadSymbolByName('ButtonProps')
+    const size = buttonProps.getMembers().find((member) => member.getName() === 'size')
+
+    expect(buttonProps.getDescription()).toBe('Props for a button.\n\nIncludes common sizing options.')
+    expect(buttonProps.getJsDocTags().map((tag) => tag.getName())).toEqual(['deprecated', 'remarks'])
+    expect(buttonProps.getJsDocTag('deprecated')?.getValue()).toBe('Use NewButtonProps instead.')
+    expect(size?.getDescription()).toBe('Preferred size variant.')
+    expect(size?.getJsDocTag('default')?.getValue()).toBe('"sm"')
   })
 })

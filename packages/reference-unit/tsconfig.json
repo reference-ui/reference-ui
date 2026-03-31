@@ -7,17 +7,27 @@
     "module": "ESNext",
     "skipLibCheck": true,
 
+    "baseUrl": ".",
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
+    "paths": {
+      "@reference-ui/react": ["./.reference-ui/react"],
+      "@reference-ui/react/styles.css": ["./.reference-ui/react/styles.css"],
+      "@reference-ui/styled": ["./.reference-ui/styled"],
+      "@reference-ui/styled/*": ["./.reference-ui/styled/*"],
+      "@reference-ui/system": ["./.reference-ui/system"],
+      "@reference-ui/system/baseSystem": ["./.reference-ui/system/baseSystem.mjs"],
+      "@reference-ui/types": ["./.reference-ui/types"]
+    },
 
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src", "tests"]
+  "include": ["src", "tests", "ui.config.ts"]
 }

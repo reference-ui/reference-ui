@@ -4,21 +4,38 @@ version = "0.1.0"
 edition = "2021"
 description = "Native transforms for reference-ui virtual module (Rust)"
 
+[features]
+default = ["napi"]
+napi = ["dep:napi", "dep:napi-derive"]
+
 [lib]
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-napi = { version = "2", features = ["napi8"] }
-napi-derive = "2"
+napi = { version = "2", features = ["napi8"], optional = true }
+napi-derive = { version = "2", optional = true }
 oxc_parser = "0.115"
 oxc_ast = "0.115"
 oxc_span = "0.115"
 oxc_allocator = "0.115"
+oxc_traverse = "0.115"
+oxc_semantic = "0.115"
 regex = "1.10"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
 globwalk = "0.9.1"
 ts-rs = "12.0.1"
+indexmap = "2.2.6"
+dashmap = "6.0.1"
+chrono = { version = "0.4", features = ["serde"] }
+
+[dev-dependencies]
+criterion = "0.5"
+proptest = "1"
+
+[[bench]]
+name = "scan_kitchen_sink"
+harness = false
 
 [build-dependencies]
 napi-build = "2"

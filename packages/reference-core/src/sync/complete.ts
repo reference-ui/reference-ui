@@ -1,4 +1,4 @@
-import { once } from '../lib/event-bus'
+import { on, once } from '../lib/event-bus'
 import type { SyncPayload } from './types'
 import { shutdownAndExit } from './shutdown'
 
@@ -42,13 +42,18 @@ export function initComplete(payload: SyncPayload): void {
   once('system:panda:codegen:failed', handleFailure)
   once('virtual:failed', handleFailure)
 
-  once('packager:complete', () => {
-    once('packager-ts:complete', () => {
-      if (!payload.options.watch) {
+  if (!payload.options.watch) {
+    once('packager:complete', () => {
+      once('packager-ts:complete', () => {
         void shutdownAndExit(0, 'sync:complete')
-      } else {
-        process.stdout.write(REF_SYNC_READY_MESSAGE)
-      }
+      })
+    })
+    return
+  }
+
+  on('packager:complete', () => {
+    once('packager-ts:complete', () => {
+      process.stdout.write(REF_SYNC_READY_MESSAGE)
     })
   })
 }

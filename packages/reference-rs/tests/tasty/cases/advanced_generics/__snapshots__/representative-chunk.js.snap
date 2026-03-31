@@ -1,0 +1,45 @@
+const symbol = {
+  id: "_s0",
+  name: "Box",
+  library: "user",
+  description: "Example using higher-kinded type simulation.",
+  descriptionRaw: "Example using higher-kinded type simulation.",
+  jsdoc:   {
+    summary: "Example using higher-kinded type simulation.",
+    tags: []
+  },
+  typeParameters:   [
+    {
+      name: "T"
+    }
+  ],
+  members:   [
+    {
+      name: "_",
+      optional: false,
+      readonly: false,
+      kind: "property",
+      type:   {
+        id: "T",
+        name: "T",
+        library: "user"
+      }
+    },
+    {
+      name: "output",
+      optional: false,
+      readonly: false,
+      kind: "property",
+      type:   {
+        id: "T",
+        name: "T",
+        library: "user"
+      }
+    }
+  ],
+  extends: [],
+  types: []
+};
+export { symbol as _s0 };
+export default symbol;
+

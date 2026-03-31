@@ -13,6 +13,7 @@
     "lib": ["es2020", "es2022"],
     "resolveJsonModule": true,
     "paths": {
+      "@reference-ui/react": ["./src/entry/react.ts"],
       "@reference-ui/styled": ["./src/system/styled"],
       "@reference-ui/styled/jsx": ["./src/system/styled/jsx/index"],
       "@reference-ui/styled/*": ["./src/system/styled/*"]

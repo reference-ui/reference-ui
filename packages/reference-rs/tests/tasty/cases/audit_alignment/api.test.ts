@@ -1,9 +1,15 @@
 import { describe, expect, it } from 'vitest'
 
-import { addCaseRuntimeSmokeTests, createCaseApi, findMember } from '../../api-test-helpers'
+import {
+  addCaseEmittedSnapshotTests,
+  addCaseRuntimeSmokeTests,
+  createCaseApi,
+  findMember,
+} from '../../api-test-helpers'
 
 describe('audit_alignment tasty api', () => {
   addCaseRuntimeSmokeTests('audit_alignment', 'RemoteWidget')
+  addCaseEmittedSnapshotTests('audit_alignment')
 
   it('preserves raw summaries and structural conditionals through the wrapper API', async () => {
     const api = createCaseApi('audit_alignment')

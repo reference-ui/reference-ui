@@ -34,12 +34,17 @@
     "./tasty/build": {
       "types": "./dist/tasty/build.d.ts",
       "import": "./dist/tasty/build.mjs"
+    },
+    "./atlas": {
+      "types": "./dist/atlas.d.ts",
+      "import": "./dist/atlas.mjs"
     }
   },
   "files": [
     "dist",
     "native",
     "README.md",
+    "docs",
     "npm"
   ],
   "scripts": {

@@ -1,0 +1,16 @@
+{
+  "caseName": "unsupported_inline_types",
+  "diagnostics": [
+    {
+      "code": "unsupported-props-annotation",
+      "message": "Component InlineBadge uses an inline props type annotation that Atlas does not index.",
+      "source": "./components/InlineBadge.tsx",
+      "componentName": "InlineBadge"
+    }
+  ],
+  "notes": [
+    "Atlas currently emits usage and interface mapping only.",
+    "Rich prop/member metadata is expected to be resolved by Tasty in an upper layer.",
+    "Use analyzeDetailed() when callers need both partial results and diagnostics."
+  ]
+}

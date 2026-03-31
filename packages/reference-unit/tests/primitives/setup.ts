@@ -37,20 +37,79 @@ export function getDesignSystemCss(): string | undefined {
 }
 
 /**
+ * happy-dom does not apply rules inside `@layer { … }`, so getComputedStyle stays
+ * empty for Panda output. For tests only: strip layer prelude statements and unwrap
+ * layer blocks so rules apply like a flat sheet (order preserved enough for tokens).
+ */
+export function flattenCssCascadeLayersForTests(css: string): string {
+  let out = css.replace(/@layer\s+[^;{]+;/g, '')
+  for (;;) {
+    const idx = out.indexOf('@layer')
+    if (idx === -1) break
+    const openBrace = out.indexOf('{', idx)
+    if (openBrace === -1) break
+    let depth = 0
+    let end = -1
+    for (let i = openBrace; i < out.length; i++) {
+      const c = out[i]
+      if (c === '{') depth++
+      else if (c === '}') {
+        depth--
+        if (depth === 0) {
+          end = i
+          break
+        }
+      }
+    }
+    if (end === -1) break
+    const inner = out.slice(openBrace + 1, end)
+    out = `${out.slice(0, idx)}\n${inner}\n${out.slice(end + 1)}`
+  }
+  return out
+}
+
+export type InjectDesignSystemCssOptions = {
+  /**
+   * Unwrap `@layer { … }` so happy-dom applies rules. Default false — leave off for
+   * spacing/recipes tests where layer order matters; use true for token paint tests
+   * (`tests/color-mode/*`, demo component tests).
+   */
+  flattenCascadeLayers?: boolean
+}
+
+/**
  * Inject the design system CSS into document.head.
  * Call once in beforeAll for tests that need computed styles.
- * Skips if CSS file is not found (e.g. ref sync didn't run or output path changed).
  */
-export function injectDesignSystemCss(): void {
+export function injectDesignSystemCss(options?: InjectDesignSystemCssOptions): void {
   const cssPath = getDesignSystemCssPath()
   if (!cssPath) {
     throw new Error(
       `Design system CSS not found. Tried: ${cssPaths.join(', ')}. Run "ref sync" (or use globalSetup) so .reference-ui exists.`
     )
   }
-  const css = readFileSync(cssPath, 'utf-8')
+  let css = readFileSync(cssPath, 'utf-8')
+  if (options?.flattenCascadeLayers === true) {
+    css = flattenCssCascadeLayersForTests(css)
+  }
   const style = document.createElement('style')
   style.setAttribute('data-test-injected', 'design-system')
+  style.textContent = css
+  document.head.appendChild(style)
+}
+
+/**
+ * After `flattenCssCascadeLayersForTests`, Panda atomic rules lose their layer ordering.
+ * `.fw_700` can appear earlier in the sheet than `.fw_400`, so a node with both recipe + weight
+ * classes resolves to 400. Real browsers keep utilities/recipes in `@layer` order. For happy-dom
+ * computed-style tests only: re-emit numeric `fw_*` utilities in ascending order so heavier
+ * weights win when multiple `fw_*` classes are present.
+ */
+export function appendFontWeightAtomicTieBreakForTests(): void {
+  const weights = [100, 200, 300, 400, 500, 600, 700, 800, 900]
+  const css = weights.map((w) => `.fw_${w} { font-weight: ${w}; }`).join('\n')
+  const style = document.createElement('style')
+  style.setAttribute('data-test-injected', 'font-weight-tiebreak')
   style.textContent = css
   document.head.appendChild(style)
 }

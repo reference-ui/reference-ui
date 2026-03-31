@@ -25,5 +25,6 @@ without depending directly on raw AST nodes.
 ## Files
 
 - `model.rs`: parser-adjacent internal model
-- `extract.rs`: Oxc parsing and declaration extraction
-- `resolve.rs`: cross-file symbol and reference resolution
+- `extract/`: Oxc parsing and declaration extraction
+- `resolve/`: cross-file symbol and reference resolution
+  with its own focused module docs

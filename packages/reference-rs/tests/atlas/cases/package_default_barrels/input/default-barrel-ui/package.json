@@ -1,0 +1,9 @@
+{
+  "name": "@fixtures/default-barrel-ui",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "react": "*"
+  }
+}

@@ -177,7 +177,7 @@ const DemoSection = ({
   children: React.ReactNode
 }) => (
   <Div>
-    <Div fontSize="md" fontWeight="600" color="gray.700" mb="3r" letterSpacing="-0.5px">
+    <Div fontSize="md" fontWeight="600" color="docsMuted" mb="3r" letterSpacing="-0.5px">
       {title}
     </Div>
     {children}
@@ -191,7 +191,7 @@ export function RecipeDemo() {
     <Div display="flex" flexDirection="column" gap="10r">
       {/* Demo using recipe() directly */}
       <Div>
-        <Div fontSize="xl" fontWeight="700" mb="4r" color="gray.800">
+        <Div fontSize="xl" fontWeight="700" mb="4r" color="docsHeading">
           Recipe Demo (docs - using recipe)
         </Div>
         <Div
@@ -199,10 +199,10 @@ export function RecipeDemo() {
           flexDirection="column"
           gap="8r"
           p="8r"
-          bg="gray.50"
+          bg="docsDemoMutedBg"
           borderRadius="xl"
           border="1px solid"
-          borderColor="gray.200"
+          borderColor="docsPanelBorder"
         >
           <DemoSection title="Visual Variants">
             <Div display="flex" gap="3r" flexWrap="wrap">
@@ -264,10 +264,10 @@ export function RecipeDemo() {
               gap="3r"
               alignItems="center"
               p="5r"
-              bg="white"
+              bg="docsDemoCard"
               borderRadius="lg"
               border="1px solid"
-              borderColor="gray.200"
+              borderColor="docsPanelBorder"
             >
               <button
                 className={buttonRecipe({
@@ -289,7 +289,7 @@ export function RecipeDemo() {
               >
                 Reset
               </button>
-              <Div fontSize="sm" color="gray.600" ml="2r">
+              <Div fontSize="sm" color="docsMuted" ml="2r">
                 Click the button to test interactivity
               </Div>
             </Div>

@@ -36,7 +36,7 @@ So the layers pipeline is a CSS post-process step in `system/panda/gen` and (for
 
 ## Implementation details
 
-- **Layer transform** lives under `src/system/layers/`. It reads raw Panda CSS and returns the layer-wrapped string plus the `[data-layer]` token block. Same semantics as the old reference-core `createLayerCss` (strip order declaration, wrap, extract and re-scope tokens).
+- **Portable stylesheet transform** lives under `src/system/css/transform/`. It reads raw Panda CSS and returns the portable stylesheet plus the `[data-layer]` token block. Same semantics as the old reference-core `createLayerCss` (strip order declaration, wrap, extract and re-scope tokens).
 - **baseSystem emission** in `src/system/base/create.ts` (or equivalent) must have access to the current system's generated CSS path and config name so it can call the layer transform and set `baseSystem.css`.
 - **Consumer CSS assembly** happens where the final `styles.css` (or equivalent) is written; that path must append `config.layers[].css` when present.
 - **Primitives** are generated with a placeholder for the layer name; at packager time the react bundle is patched with the project’s `config.name`, so every primitive emits `data-layer="<name>"` automatically.

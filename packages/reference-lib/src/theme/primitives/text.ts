@@ -1,5 +1,5 @@
 import { globalCss } from '@reference-ui/system'
-import { baseTypography } from './baseTypography.js'
+import { baseTypography } from './baseTypography'
 
 export const textPrimitiveStyles = {
   '.ref-blockquote': {

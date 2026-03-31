@@ -9,8 +9,8 @@ import { mkdir, rm } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { execa } from 'execa'
-import { MATRIX, getPort } from './index.js'
-import { loadConfig } from '../config/index.js'
+import { MATRIX, getPort } from './index'
+import { loadConfig } from '../config/index'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const BLOB_DIR = join(__dirname, '..', '..', 'blob-reports')

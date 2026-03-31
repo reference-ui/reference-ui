@@ -25,7 +25,8 @@ async function importInstallPackagesTsModule(options: {
 
   vi.doMock('../../../lib/paths', () => ({
     resolveCorePackageDir: () => options.cliDir ?? '/workspace/core',
-    resolveCorePackageDirForBuild: () => options.cliDirForBuild ?? '/workspace/core-build',
+    resolveCorePackageDirForBuild: () =>
+      options.cliDirForBuild ?? '/workspace/core-build',
   }))
   vi.doMock('../../../lib/paths/out-dir', () => ({
     getOutDirPath: () => options.outDir,
@@ -83,16 +84,22 @@ describe('packager/ts/install/packages', () => {
 
     expect(installPackageTs).toHaveBeenNthCalledWith(
       1,
-      '/workspace/core',
-      '/workspace/core-build',
-      resolve(outDir, 'react'),
+      {
+        cliDir: '/workspace/core',
+        cliDirForBuild: '/workspace/core-build',
+        projectCwd: '/workspace/app',
+        targetDir: resolve(outDir, 'react'),
+      },
       packages[0]
     )
     expect(installPackageTs).toHaveBeenNthCalledWith(
       2,
-      '/workspace/core',
-      '/workspace/core-build',
-      resolve(outDir, 'system'),
+      {
+        cliDir: '/workspace/core',
+        cliDirForBuild: '/workspace/core-build',
+        projectCwd: '/workspace/app',
+        targetDir: resolve(outDir, 'system'),
+      },
       packages[1]
     )
     expect(writeGeneratedSystemTypes).toHaveBeenCalledWith(

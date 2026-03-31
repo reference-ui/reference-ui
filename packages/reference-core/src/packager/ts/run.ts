@@ -1,24 +1,43 @@
 import { emit } from '../../lib/event-bus'
 import { log } from '../../lib/log'
 import { installPackagesTs } from './install'
-import type { TsPackagerWorkerPayload } from './types'
+import type { TsPackagerCompletionEvent, TsPackagerWorkerPayload } from './types'
 
-interface DtsGenerationRuntimeOptions {
-  bundlesReady: boolean
-  runGeneration?: (payload: TsPackagerWorkerPayload) => Promise<void>
+const FINAL_DTS_COMPLETE_EVENT: TsPackagerCompletionEvent = 'packager-ts:complete'
+
+function getPackagesForRun(
+  payload: TsPackagerWorkerPayload,
+  completionEvent: TsPackagerCompletionEvent
+): TsPackagerWorkerPayload['packages'] {
+  if (completionEvent === 'packager-ts:runtime:complete') {
+    return payload.packages.filter(
+      pkg => pkg.name === '@reference-ui/react' || pkg.name === '@reference-ui/system'
+    )
+  }
+
+  return payload.packages.filter(pkg => pkg.name === '@reference-ui/types')
 }
 
-/** Generate .d.ts and write to outDir. Emits packager-ts:complete when done. */
+interface DtsGenerationQueueOptions {
+  runGeneration?: (
+    payload: TsPackagerWorkerPayload,
+    completionEvent?: TsPackagerCompletionEvent
+  ) => Promise<void>
+}
+
+/** Generate .d.ts and emit the requested completion event when done. */
 export async function runDtsGeneration(
-  payload: TsPackagerWorkerPayload
+  payload: TsPackagerWorkerPayload,
+  completionEvent: TsPackagerCompletionEvent = FINAL_DTS_COMPLETE_EVENT
 ): Promise<void> {
-  const { cwd, packages } = payload
+  const { cwd } = payload
+  const packages = getPackagesForRun(payload, completionEvent)
 
   log.debug('packager:ts', 'Generating TypeScript declarations...')
 
   try {
     await installPackagesTs(cwd, packages)
-    emit('packager-ts:complete', {})
+    emit(completionEvent, {})
     log.debug('packager:ts', 'Declarations ready')
   } catch (error) {
     log.error('[packager:ts] Failed', error)
@@ -27,49 +46,28 @@ export async function runDtsGeneration(
 }
 
 /**
- * Create the packager-ts runtime callbacks.
- * Keeps declaration generation single-flight and coalesces overlapping reruns.
+ * Create a single-flight queue for declaration generation requests.
+ * Global orchestration decides which completion event should run next; this
+ * queue only ensures requests execute one at a time inside the worker.
  */
-export function createDtsGenerationRuntime(
+export function createDtsGenerationQueue(
   payload: TsPackagerWorkerPayload,
-  options: DtsGenerationRuntimeOptions
+  options: DtsGenerationQueueOptions = {}
 ): {
-  onPackagerComplete: () => void
-  runCatchUpIfNeeded: () => Promise<void>
+  run: (completionEvent: TsPackagerCompletionEvent) => Promise<void>
 } {
-  const { bundlesReady, runGeneration = runDtsGeneration } = options
-  let currentRun: Promise<void> | null = null
-  let rerunRequested = false
+  const { runGeneration = runDtsGeneration } = options
+  let currentRun: Promise<void> = Promise.resolve()
 
-  const runSerial = async (): Promise<void> => {
-    if (currentRun) {
-      rerunRequested = true
-      return currentRun
-    }
-
-    currentRun = (async () => {
-      do {
-        rerunRequested = false
-        await runGeneration(payload).catch(() => {})
-      } while (rerunRequested)
-    })().finally(() => {
-      currentRun = null
-    })
-
+  const run = async (completionEvent: TsPackagerCompletionEvent): Promise<void> => {
+    currentRun = currentRun
+      .catch(() => {})
+      .then(() => runGeneration(payload, completionEvent))
+      .catch(() => {})
     return currentRun
   }
 
   return {
-    onPackagerComplete: () => {
-      void runSerial()
-    },
-    runCatchUpIfNeeded: async () => {
-      // Catch-up only matters for long-lived/watch workers that may start after
-      // runtime outputs already exist. For one-shot sync, waiting for the next
-      // packager:complete avoids overlapping stale and current declaration runs.
-      if (payload.watchMode && bundlesReady) {
-        await runSerial()
-      }
-    },
+    run,
   }
 }

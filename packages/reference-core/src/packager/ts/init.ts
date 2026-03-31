@@ -1,10 +1,13 @@
 import { workers } from '../../lib/thread-pool'
 import { PACKAGES } from '../packages'
 import type { SyncPayload } from '../../sync/types'
+import { initPackagerTsOrchestrator } from './orchestrator'
+export { initPackagerTsOrchestrator } from './orchestrator'
 
 /**
  * Initialize packager-ts from main thread.
- * Starts worker that listens for packager:complete, generates .d.ts, emits packager-ts:complete.
+ * Starts worker that listens for explicit DTS run requests, generates .d.ts,
+ * and emits packager-ts completion events.
  */
 export function initTsPackager(payload: SyncPayload): void {
   if (payload.config.skipTypescript) return
@@ -16,6 +19,8 @@ export function initTsPackager(payload: SyncPayload): void {
   }))
 
   if (packages.length === 0) return
+
+  initPackagerTsOrchestrator()
 
   workers.runWorker('packager-ts', {
     cwd: payload.cwd,

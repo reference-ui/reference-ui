@@ -9,6 +9,7 @@ export const tokensConfig = {
     test: {
       primary: { value: '#2563eb' },
       muted: { value: '#94a3b8' },
+      colorMode: { value: '#dbeafe', dark: '#1e293b' },
     },
   },
   spacing: {

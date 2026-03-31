@@ -1,0 +1,82 @@
+{
+  "caseName": "wrapped_components",
+  "analyses": {
+    "default": [
+      {
+        "name": "FancyButton",
+        "interface": {
+          "name": "FancyButtonProps",
+          "source": "./components/FancyButton.tsx"
+        },
+        "source": "./components/FancyButton.tsx",
+        "count": 2,
+        "props": [
+          {
+            "name": "children",
+            "count": 2,
+            "usage": "very common"
+          },
+          {
+            "name": "disabled",
+            "count": 1,
+            "usage": "very common",
+            "values": {
+              "true": "very common"
+            }
+          },
+          {
+            "name": "variant",
+            "count": 2,
+            "usage": "very common",
+            "values": {
+              "ghost": "very common",
+              "solid": "very common"
+            }
+          }
+        ],
+        "usage": "very common",
+        "examples": [
+          "<CTAButton variant=\"solid\">Save</CTAButton>",
+          "<CTAButton variant=\"ghost\" disabled>\n        Cancel\n      </CTAButton>"
+        ],
+        "usedWith": {
+          "SearchInput": "very common"
+        }
+      },
+      {
+        "name": "SearchInput",
+        "interface": {
+          "name": "SearchInputProps",
+          "source": "./components/SearchInput.tsx"
+        },
+        "source": "./components/SearchInput.tsx",
+        "count": 2,
+        "props": [
+          {
+            "name": "children",
+            "count": 2,
+            "usage": "very common"
+          },
+          {
+            "name": "size",
+            "count": 2,
+            "usage": "very common",
+            "values": {
+              "md": "very common",
+              "sm": "very common"
+            }
+          }
+        ],
+        "usage": "very common",
+        "examples": [
+          "<SearchBox size=\"sm\">People</SearchBox>",
+          "<SearchBox size=\"md\">Teams</SearchBox>"
+        ],
+        "usedWith": {
+          "FancyButton": "very common"
+        }
+      }
+    ],
+    "withIncludes": {}
+  }
+}

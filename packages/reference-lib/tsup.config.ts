@@ -2,6 +2,7 @@ import { defineConfig } from 'tsup'
 
 export default defineConfig({
   entry: {
+    index: 'src/index.ts',
     'theme/index': 'src/theme/index.ts',
   },
   format: ['esm'],
@@ -14,4 +15,5 @@ export default defineConfig({
   outExtension() {
     return { js: '.mjs' }
   },
+  external: ['@reference-ui/react'],
 })

@@ -100,4 +100,25 @@ describe('packager/postprocess', () => {
     expect(output).toContain('import("./tasty/runtime.js")')
     expect(output).not.toContain('__REFERENCE_UI_TYPES_RUNTIME__')
   })
+
+  it('fails when the generated types bundle is missing the runtime placeholder', () => {
+    const targetDir = createTempDir()
+    writeFileSync(
+      resolve(targetDir, 'types.mjs'),
+      'const load = () => import("./not-the-runtime.js")\n'
+    )
+    const pkg: PackageDefinition = {
+      name: '@reference-ui/types',
+      version: '0.0.0-test',
+      description: 'types',
+      main: './types.mjs',
+      types: './types.d.mts',
+      exports: {},
+      postprocess: ['rewriteTypesRuntimeImport'],
+    }
+
+    expect(() => runPostprocess(targetDir, pkg, { layerName: 'unused' })).toThrow(
+      'Expected @reference-ui/types bundle to contain __REFERENCE_UI_TYPES_RUNTIME__ before postprocess'
+    )
+  })
 })

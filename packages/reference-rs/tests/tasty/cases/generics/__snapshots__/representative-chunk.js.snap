@@ -1,0 +1,35 @@
+const symbol = {
+  id: "_s0",
+  name: "Box",
+  library: "user",
+  description: "A generic box wrapping a value of type T.",
+  descriptionRaw: "A generic box wrapping a value of type T.",
+  jsdoc:   {
+    summary: "A generic box wrapping a value of type T.",
+    tags: []
+  },
+  typeParameters:   [
+    {
+      name: "T"
+    }
+  ],
+  definition:   {
+    kind: "object",
+    members:   [
+      {
+        name: "value",
+        optional: false,
+        readonly: false,
+        kind: "property",
+        type:   {
+          id: "T",
+          name: "T",
+          library: "user"
+        }
+      }
+    ]
+  }
+};
+export { symbol as _s0 };
+export default symbol;
+

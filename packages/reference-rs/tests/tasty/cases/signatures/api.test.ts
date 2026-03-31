@@ -1,9 +1,15 @@
 import { describe, expect, it } from 'vitest'
 
-import { addCaseRuntimeSmokeTests, createCaseApi, findMember } from '../../api-test-helpers'
+import {
+  addCaseEmittedSnapshotTests,
+  addCaseRuntimeSmokeTests,
+  createCaseApi,
+  findMember,
+} from '../../api-test-helpers'
 
 describe('signatures tasty api', () => {
   addCaseRuntimeSmokeTests('signatures', 'ReadonlyProps')
+  addCaseEmittedSnapshotTests('signatures')
 
   it('exposes signature member metadata through wrappers', async () => {
     const api = createCaseApi('signatures')
