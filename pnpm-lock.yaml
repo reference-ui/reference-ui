@@ -100,6 +100,9 @@ importers:
 
   packages/reference-core:
     dependencies:
+      '@modelcontextprotocol/sdk':
+        specifier: ^1.29.0
+        version: 1.29.0(zod@4.3.6)
       '@pandacss/dev':
         specifier: ^1.9.0
         version: 1.9.0(typescript@5.9.3)
@@ -154,6 +157,9 @@ importers:
       tsup:
         specifier: ^8.4.0
         version: 8.5.1(@swc/core@1.5.29(@swc/helpers@0.5.18))(postcss@8.5.8)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2)
+      zod:
+        specifier: ^4.3.6
+        version: 4.3.6
     devDependencies:
       '@eslint/js':
         specifier: ^10.0.1
@@ -342,6 +348,9 @@ importers:
         specifier: ^18.2.0
         version: 18.3.1(react@18.3.1)
     devDependencies:
+      '@modelcontextprotocol/sdk':
+        specifier: ^1.29.0
+        version: 1.29.0(zod@4.3.6)
       '@reference-ui/rust':
         specifier: workspace:*
         version: link:../reference-rs
@@ -1147,8 +1156,8 @@ packages:
     peerDependencies:
       rollup: '>=2'
 
-  '@modelcontextprotocol/sdk@1.26.0':
-    resolution: {integrity: sha512-Y5RmPncpiDtTXDbLKswIJzTqu2hyBKxTNsgKqKclDbhIgg1wgtf1fRuvxgTnRfcnxtvvgbIEcqUOzZrJ6iSReg==}
+  '@modelcontextprotocol/sdk@1.29.0':
+    resolution: {integrity: sha512-zo37mZA9hJWpULgkRpowewez1y6ML5GsXJPY8FI0tBBCd77HEvza4jDqRKOXgHNn867PVGCyTdzqpz0izu5ZjQ==}
     engines: {node: '>=18'}
     peerDependencies:
       '@cfworker/json-schema': ^4.1.1
@@ -6322,7 +6331,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@modelcontextprotocol/sdk@1.26.0(zod@4.3.6)':
+  '@modelcontextprotocol/sdk@1.29.0(zod@4.3.6)':
     dependencies:
       '@hono/node-server': 1.19.9(hono@4.12.1)
       ajv: 8.18.0
@@ -6861,7 +6870,7 @@ snapshots:
   '@pandacss/mcp@1.9.0(typescript@5.9.3)':
     dependencies:
       '@clack/prompts': 0.11.0
-      '@modelcontextprotocol/sdk': 1.26.0(zod@4.3.6)
+      '@modelcontextprotocol/sdk': 1.29.0(zod@4.3.6)
       '@pandacss/logger': 1.9.0
       '@pandacss/node': 1.9.0(typescript@5.9.3)
       '@pandacss/token-dictionary': 1.9.0

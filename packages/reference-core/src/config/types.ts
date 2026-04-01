@@ -5,6 +5,19 @@
 
 import type { BaseSystem } from '../types'
 
+export interface ReferenceUIMcpConfig {
+  /**
+   * Atlas include selectors used only for the MCP component inventory build.
+   * These do not affect virtual sync, Panda scan, or the design-system include surface.
+   */
+  include?: string[]
+
+  /**
+   * Atlas exclude selectors used only for the MCP component inventory build.
+   */
+  exclude?: string[]
+}
+
 export interface ReferenceUIConfig {
   /**
    * Glob patterns for files to scan for Panda CSS extraction.
@@ -58,6 +71,13 @@ export interface ReferenceUIConfig {
    * @default false
    */
   debug?: boolean
+
+  /**
+   * MCP-specific Atlas selectors.
+   * This surface is intentionally separate from the top-level `include`, which
+   * controls design-system source mirroring and Panda scan input.
+   */
+  mcp?: ReferenceUIMcpConfig
 
   /**
    * Skip TypeScript declaration generation (tsup).

@@ -37,13 +37,43 @@ function validateName(cfg: ConfigRecord): void {
   }
 }
 
-function validateBaseSystems(field: BaseSystemField, value: unknown): BaseSystem[] | undefined {
+function validatePatternList(field: string, value: unknown): string[] | undefined {
+  if (value == null) return undefined
+  if (!Array.isArray(value) || value.some(entry => typeof entry !== 'string')) {
+    throw ConfigValidationError.invalidMcp(
+      `'${field}' must be an array of string patterns.`
+    )
+  }
+  return value as string[]
+}
+
+function validateMcpConfig(cfg: ConfigRecord): void {
+  const raw = cfg.mcp
+  if (raw == null) return
+  if (typeof raw !== 'object' || Array.isArray(raw)) {
+    throw ConfigValidationError.invalidMcp(
+      'Expected an object with optional include/exclude arrays.'
+    )
+  }
+
+  const mcp = raw as ConfigRecord
+  validatePatternList('mcp.include', mcp.include)
+  validatePatternList('mcp.exclude', mcp.exclude)
+}
+
+function validateBaseSystems(
+  field: BaseSystemField,
+  value: unknown
+): BaseSystem[] | undefined {
   if (value == null) {
     return undefined
   }
 
   if (!Array.isArray(value)) {
-    throw ConfigValidationError.invalidBaseSystem(field, 'Expected an array of BaseSystem objects.')
+    throw ConfigValidationError.invalidBaseSystem(
+      field,
+      'Expected an array of BaseSystem objects.'
+    )
   }
 
   return value as BaseSystem[]
@@ -55,7 +85,10 @@ function assertBaseSystemObject(
   index: number
 ): void {
   if (!sys || typeof sys !== 'object') {
-    throw ConfigValidationError.invalidBaseSystem(field, `Entry ${index} must be an object.`)
+    throw ConfigValidationError.invalidBaseSystem(
+      field,
+      `Entry ${index} must be an object.`
+    )
   }
 }
 
@@ -65,7 +98,10 @@ function assertBaseSystemName(
   index: number
 ): void {
   if (typeof sys.name !== 'string' || sys.name.trim() === '') {
-    throw ConfigValidationError.invalidBaseSystem(field, `Entry ${index} must have a non-empty 'name'.`)
+    throw ConfigValidationError.invalidBaseSystem(
+      field,
+      `Entry ${index} must have a non-empty 'name'.`
+    )
   }
 }
 
@@ -127,6 +163,7 @@ export function validateConfig(raw: unknown): ReferenceUIConfig {
   const cfg = mustBeObject(raw)
   validateInclude(cfg)
   validateName(cfg)
+  validateMcpConfig(cfg)
   const extendsSystems = validateBaseSystems('extends', cfg.extends)
   const layers = validateBaseSystems('layers', cfg.layers)
   validateBaseSystemEntries('extends', extendsSystems, { requireFragment: true })

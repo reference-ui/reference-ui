@@ -137,7 +137,45 @@ describe('validateConfig', () => {
     })
 
     expect(config.extends).toEqual([{ name: 'base', fragment: FRAGMENT_CODE }])
-    expect(config.layers).toEqual([{ name: 'layered', fragment: FRAGMENT_CODE, css: LAYERS_CSS }])
+    expect(config.layers).toEqual([
+      { name: 'layered', fragment: FRAGMENT_CODE, css: LAYERS_CSS },
+    ])
     expect(info).not.toHaveBeenCalled()
+  })
+
+  it('accepts a dedicated mcp include/exclude config', () => {
+    const config = validateConfig({
+      name: SYSTEM_NAME,
+      include: DEFAULT_INCLUDE,
+      mcp: {
+        include: ['src/components/**/*.{ts,tsx}'],
+        exclude: ['src/components/internal/**'],
+      },
+    })
+
+    expect(config.mcp).toEqual({
+      include: ['src/components/**/*.{ts,tsx}'],
+      exclude: ['src/components/internal/**'],
+    })
+  })
+
+  it('rejects invalid mcp config shapes', () => {
+    expect(() =>
+      validateConfig({
+        name: SYSTEM_NAME,
+        include: DEFAULT_INCLUDE,
+        mcp: [] as never,
+      })
+    ).toThrowError(/field 'mcp' is invalid/i)
+
+    expect(() =>
+      validateConfig({
+        name: SYSTEM_NAME,
+        include: DEFAULT_INCLUDE,
+        mcp: {
+          include: [123],
+        } as never,
+      })
+    ).toThrowError(/mcp\.include/i)
   })
 })
