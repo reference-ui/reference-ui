@@ -8,7 +8,7 @@ const shutdownAndExit = vi.fn()
 function registerHandler(
   store: Map<string, Array<() => void>>,
   event: string,
-  handler: () => void,
+  handler: () => void
 ): void {
   const handlers = store.get(event) ?? []
   handlers.push(handler)
@@ -34,8 +34,10 @@ async function loadCompleteModule() {
   shutdownAndExit.mockReset()
 
   vi.doMock('../lib/event-bus', () => ({
-    on: (event: string, handler: () => void) => registerHandler(onHandlers, event, handler),
-    once: (event: string, handler: () => void) => registerHandler(onceHandlers, event, handler),
+    on: (event: string, handler: () => void) =>
+      registerHandler(onHandlers, event, handler),
+    once: (event: string, handler: () => void) =>
+      registerHandler(onceHandlers, event, handler),
   }))
 
   vi.doMock('./shutdown', () => ({
