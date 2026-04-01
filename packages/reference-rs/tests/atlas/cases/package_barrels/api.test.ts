@@ -9,8 +9,8 @@ describe('package_barrels atlas case', () => {
     const appButton = await getComponent('AppButton', undefined, undefined, CASE)
 
     expect(appButton.count).toBe(2)
-    expect(appButton.interface.name).toBe('ButtonProps')
-    expect(appButton.interface.source).toBe('@fixtures/barrel-ui')
+    expect(appButton.interface?.name).toBe('ButtonProps')
+    expect(appButton.interface?.source).toBe('@fixtures/barrel-ui')
   })
 
   it('can include the package component exported through the barrel', async () => {
@@ -21,7 +21,7 @@ describe('package_barrels atlas case', () => {
       CASE
     )
 
-    expect(packageButton.interface.name).toBe('ButtonProps')
+    expect(packageButton.interface?.name).toBe('ButtonProps')
   })
 
   it('does not include private package components outside the public barrel', async () => {

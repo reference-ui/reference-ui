@@ -15,8 +15,12 @@ export interface McpCommandOptions {
   host?: string
 }
 
-function getTransport(value?: string): McpTransport {
+export function resolveTransport(options?: McpCommandOptions): McpTransport {
+  const value = options?.transport
   if (!value) {
+    if (options?.port !== undefined || options?.host !== undefined) {
+      return 'http'
+    }
     return 'stdio'
   }
 
@@ -35,7 +39,7 @@ export async function mcpCommand(
   setConfig(config)
   setCwd(cwd)
 
-  const transport = getTransport(options?.transport)
+  const transport = resolveTransport(options)
 
   if (transport === 'stdio') {
     await runReferenceMcpServer({

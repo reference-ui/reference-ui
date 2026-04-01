@@ -135,16 +135,26 @@
         ],
         "usage": "very common",
         "examples": [
+          "<Button variant=\"ghost\" onClick={() => {}}>",
           "<Button variant=\"solid\" onClick={() => {}}>",
           "<Button variant=\"ghost\">",
           "<Button variant=\"solid\" size=\"sm\" onClick={() => {}}>",
-          "<Button variant=\"ghost\" onClick={() => {}}>",
           "<Button variant=\"outline\" onClick={() => {}}>"
         ],
         "usedWith": {
           "AppCard": "very common",
           "UserBadge": "common"
         }
+      },
+      {
+        "name": "ThemeToggle",
+        "interface": null,
+        "source": "./components/ThemeToggle.tsx",
+        "count": 0,
+        "props": [],
+        "usage": "unused",
+        "examples": [],
+        "usedWith": {}
       },
       {
         "name": "UserBadge",
@@ -521,6 +531,16 @@
               "usage": "unused"
             }
           ],
+          "usage": "unused",
+          "examples": [],
+          "usedWith": {}
+        },
+        {
+          "name": "ThemeToggle",
+          "interface": null,
+          "source": "./components/ThemeToggle.tsx",
+          "count": 0,
+          "props": [],
           "usage": "unused",
           "examples": [],
           "usedWith": {}
