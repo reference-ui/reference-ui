@@ -35,15 +35,19 @@ describe('mcp output wiring', () => {
     expect(artifact.components.length).toBeGreaterThan(0)
     expect(
       artifact.components.some(
-        (component) => component.name === 'Button' && component.source === './components/Button.tsx',
-      ),
+        component =>
+          component.name === 'Button' && component.source === './components/Button.tsx'
+      )
     ).toBe(true)
     expect(
       artifact.components.some(
-        (component) => component.name === 'AppCard' && component.source === './components/AppCard.tsx',
-      ),
+        component =>
+          component.name === 'AppCard' && component.source === './components/AppCard.tsx'
+      )
     ).toBe(true)
-    expect(artifact.components.some((component) => component.name === 'UserBadge')).toBe(false)
+    expect(artifact.components.some(component => component.name === 'UserBadge')).toBe(
+      false
+    )
 
     const listResult = await running!.client.callTool({
       name: 'list_components',
@@ -78,9 +82,11 @@ describe('mcp output wiring', () => {
 
     expect(appCardPayload?.name).toBe('AppCard')
     expect(appCardPayload?.interface?.name).toBe('AppCardProps')
-    expect(appCardPayload?.props.some(prop => prop.name === 'status' && prop.type === 'BadgeVariant')).toBe(
-      true
-    )
+    expect(
+      appCardPayload?.props.some(
+        prop => prop.name === 'status' && prop.type === 'BadgeVariant'
+      )
+    ).toBe(true)
 
     const examplesResult = await running!.client.callTool({
       name: 'get_component_examples',
@@ -93,7 +99,9 @@ describe('mcp output wiring', () => {
 
     expect(examplesPayload?.name).toBe('AppCard')
     expect(examplesPayload?.examples.length).toBeGreaterThan(0)
-    expect(examplesPayload?.examples.some(example => example.includes('Preferences'))).toBe(true)
+    expect(
+      examplesPayload?.examples.some(example => example.includes('Preferences'))
+    ).toBe(true)
 
     const patternsResult = await running!.client.callTool({
       name: 'get_common_patterns',
@@ -105,7 +113,9 @@ describe('mcp output wiring', () => {
     }>(patternsResult)
 
     expect(patternsPayload?.name).toBe('Button')
-    expect(patternsPayload?.patterns.some(pattern => pattern.name === 'AppCard')).toBe(true)
+    expect(patternsPayload?.patterns.some(pattern => pattern.name === 'AppCard')).toBe(
+      true
+    )
   })
 
   it('returns explicit MCP tool errors for unknown components', async () => {
