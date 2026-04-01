@@ -54,7 +54,10 @@ describe('loadReferenceDocument', () => {
 
     await loadReferenceDocument(api as never, 'ButtonProps', '@reference-ui/react')
 
-    expect(loadSymbolByScopedName).toHaveBeenCalledWith('@reference-ui/react', 'ButtonProps')
+    expect(loadSymbolByScopedName).toHaveBeenCalledWith(
+      '@reference-ui/react',
+      'ButtonProps'
+    )
     expect(api.loadSymbolByName).not.toHaveBeenCalled()
   })
 })

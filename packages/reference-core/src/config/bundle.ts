@@ -35,9 +35,7 @@ export async function bundleConfig(
   return microBundle(configPath, {
     format: 'esm',
     external: options.external ?? ['esbuild'],
-    alias: Object.fromEntries(
-      CONFIG_EXTERNALS.map(id => [id, defineConfigEntry])
-    ),
+    alias: Object.fromEntries(CONFIG_EXTERNALS.map(id => [id, defineConfigEntry])),
     tsconfigRaw: {
       compilerOptions: {},
     },

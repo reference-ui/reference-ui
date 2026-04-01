@@ -127,15 +127,15 @@ describe('joinMcpComponent', () => {
           readonly: false,
           declaredBy: { id: 'recipe-variant-props', name: 'RecipeVariantProps' },
           semanticKind: 'property' as never,
-            typeLabel: 'Union',
-            type: {
-              kind: 'union',
-              types: [
-                { kind: 'literal', value: '"sm"' },
-                { kind: 'literal', value: '"md"' },
-                { kind: 'literal', value: '"lg"' },
-              ],
-            },
+          typeLabel: 'Union',
+          type: {
+            kind: 'union',
+            types: [
+              { kind: 'literal', value: '"sm"' },
+              { kind: 'literal', value: '"md"' },
+              { kind: 'literal', value: '"lg"' },
+            ],
+          },
           jsDoc: {
             summary: 'Button size',
             tags: [],
