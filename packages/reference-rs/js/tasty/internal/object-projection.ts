@@ -71,7 +71,11 @@ async function projectTypeMembers(
     case 'object':
       return raw.members.map(member => api.createMember(member))
     case 'indexed_access': {
-      const parameterMembers = await projectParametersIndexedAccessMembers(api, raw, context)
+      const parameterMembers = await projectParametersIndexedAccessMembers(
+        api,
+        raw,
+        context
+      )
       if (parameterMembers) return parameterMembers
 
       if (raw.resolved) {
@@ -194,7 +198,9 @@ async function projectParametersIndexedAccessMembers(
   const [callableSource] = raw.object.typeArguments ?? []
   if (!callableSource) return undefined
 
-  const callable = getTastyResolvedType(api.createTypeRef(callableSource)) ?? api.createTypeRef(callableSource)
+  const callable =
+    getTastyResolvedType(api.createTypeRef(callableSource)) ??
+    api.createTypeRef(callableSource)
   if (!callable.isCallable()) return undefined
 
   const firstParameter = callable.getParameters()[0]?.getType()
