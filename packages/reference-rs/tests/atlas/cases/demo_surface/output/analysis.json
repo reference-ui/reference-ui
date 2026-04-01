@@ -135,11 +135,11 @@
         ],
         "usage": "very common",
         "examples": [
-          "<Button variant=\"ghost\" onClick={() => {}}>\n        Edit Profile\n      </Button>",
           "<Button variant=\"solid\" onClick={() => {}}>\n          Get Started\n        </Button>",
           "<Button variant=\"ghost\">Learn More</Button>",
           "<Button variant=\"solid\" size=\"sm\" onClick={() => {}}>\n          View All Features\n        </Button>",
-          "<Button variant=\"outline\" onClick={() => {}}>\n          Save Changes\n        </Button>"
+          "<Button variant=\"outline\" onClick={() => {}}>\n          Save Changes\n        </Button>",
+          "<Button variant=\"outline\" disabled>\n          Reset\n        </Button>"
         ],
         "usedWith": {
           "AppCard": "very common",
@@ -365,9 +365,9 @@
           ],
           "usage": "common",
           "examples": [
+            "<Button variant=\"ghost\" onClick={() => {}}>\n        Edit Profile\n      </Button>",
             "<Button variant=\"outline\" onClick={() => {}}>\n          Save Changes\n        </Button>",
             "<Button variant=\"outline\" disabled>\n          Reset\n        </Button>",
-            "<Button variant=\"ghost\" onClick={() => {}}>\n        Edit Profile\n      </Button>",
             "<Button variant=\"solid\" onClick={() => {}}>\n          Get Started\n        </Button>",
             "<Button variant=\"ghost\">Learn More</Button>"
           ],

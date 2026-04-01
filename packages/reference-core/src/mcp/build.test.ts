@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const analyzeDetailed = vi.fn()
 const createReferenceApi = vi.fn(() => ({}))
-const loadReferenceDocument = vi.fn(async () => null)
+const loadMcpReferenceData = vi.fn(async () => null)
 const writeMcpArtifact = vi.fn(async () => '/tmp/model.json')
 const getConfig = vi.fn()
 
@@ -20,7 +20,7 @@ vi.mock('../config', () => ({
 
 vi.mock('./reference', () => ({
   createReferenceApi,
-  loadReferenceDocument,
+  loadMcpReferenceData,
 }))
 
 vi.mock('./artifact', () => ({
@@ -75,10 +75,31 @@ describe('buildMcpArtifact', () => {
       include: ['src/components/**'],
       exclude: ['src/components/internal/**'],
     })
-    expect(loadReferenceDocument).toHaveBeenCalledWith(
+    expect(loadMcpReferenceData).toHaveBeenCalledWith(
       {},
       'ButtonProps',
       './src/components/Button.tsx'
+    )
+  })
+
+  it('separates MCP generation from artifact writing', async () => {
+    const { buildMcpArtifact, generateMcpArtifact } = await import('./build')
+
+    const generated = await generateMcpArtifact({ cwd: '/workspace/app', force: true })
+
+    expect(writeMcpArtifact).not.toHaveBeenCalled()
+
+    await buildMcpArtifact({ cwd: '/workspace/app', force: true })
+
+    expect(writeMcpArtifact).toHaveBeenCalledWith(
+      '/workspace/app',
+      expect.objectContaining({
+        schemaVersion: generated.schemaVersion,
+        workspaceRoot: generated.workspaceRoot,
+        manifestPath: generated.manifestPath,
+        diagnostics: generated.diagnostics,
+        components: generated.components,
+      })
     )
   })
 })

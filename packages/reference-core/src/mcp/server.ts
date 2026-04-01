@@ -232,6 +232,44 @@ async function closeHttpRequestSession(
   await Promise.allSettled([transport.close(), server.close()])
 }
 
+function handleUnsupportedMcpMethod(
+  req: IncomingMessage,
+  res: ServerResponse
+): boolean {
+  if (req.method === 'GET' || req.method === 'DELETE') {
+    res.statusCode = 405
+    res.setHeader('allow', 'POST')
+    res.end('Method Not Allowed')
+    return true
+  }
+
+  if (req.method !== 'POST') {
+    res.statusCode = 405
+    res.setHeader('allow', 'POST')
+    res.end('Method Not Allowed')
+    return true
+  }
+
+  return false
+}
+
+async function readMcpRequestBody(
+  req: IncomingMessage,
+  res: ServerResponse
+): Promise<unknown | null> {
+  try {
+    return await readJsonBody(req)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Invalid JSON body'
+    writeJsonResponse(res, 400, {
+      jsonrpc: '2.0',
+      error: { code: -32700, message },
+      id: null,
+    })
+    return null
+  }
+}
+
 export function createReferenceMcpHttpServer(
   options: RunReferenceMcpHttpServerOptions
 ): HttpServer {
@@ -245,31 +283,12 @@ export function createReferenceMcpHttpServer(
       return
     }
 
-    if (req.method === 'GET' || req.method === 'DELETE') {
-      res.statusCode = 405
-      res.setHeader('allow', 'POST')
-      res.end('Method Not Allowed')
+    if (handleUnsupportedMcpMethod(req, res)) {
       return
     }
 
-    if (req.method !== 'POST') {
-      res.statusCode = 405
-      res.setHeader('allow', 'POST')
-      res.end('Method Not Allowed')
-      return
-    }
-
-    let parsedBody: unknown
-
-    try {
-      parsedBody = await readJsonBody(req)
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Invalid JSON body'
-      writeJsonResponse(res, 400, {
-        jsonrpc: '2.0',
-        error: { code: -32700, message },
-        id: null,
-      })
+    const parsedBody = await readMcpRequestBody(req, res)
+    if (parsedBody == null) {
       return
     }
 
