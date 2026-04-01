@@ -27,13 +27,10 @@ async function main(): Promise<void> {
     .command('mcp')
     .description('Run the Reference UI MCP server')
     .option('--rebuild', 'Rebuild the MCP model before serving')
-    .option('--transport <transport>', 'Transport to use (stdio or http)', 'stdio')
-    .option('--host <host>', 'Host to bind when using HTTP transport', '127.0.0.1')
-    .option(
-      '--port <port>',
-      'Port to bind when using HTTP transport',
-      value => Number.parseInt(value, 10),
-      3697
+    .option('--transport <transport>', 'Transport to use (stdio or http)')
+    .option('--host <host>', 'Host to bind when using HTTP transport')
+    .option('--port <port>', 'Port to bind when using HTTP transport', value =>
+      Number.parseInt(value, 10)
     )
     .action(
       runCommand(options => mcpCommand(process.cwd(), options as McpCommandOptions))

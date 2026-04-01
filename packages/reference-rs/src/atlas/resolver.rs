@@ -103,8 +103,8 @@ pub fn build_component_template(
             &mut HashSet::new(),
         ) {
             Some(resolved) => (
-                resolved.name.clone(),
-                resolved.source.clone(),
+                Some(resolved.name.clone()),
+                Some(resolved.source.clone()),
                 Some(resolved),
             ),
             None => {
@@ -118,14 +118,14 @@ pub fn build_component_template(
                     component_name: Some(component.name.clone()),
                     interface_name: Some(type_name.clone()),
                 });
-                (type_name.clone(), guess_interface_source(module, type_name), None)
+                (
+                    Some(type_name.clone()),
+                    Some(guess_interface_source(module, type_name)),
+                    None,
+                )
             }
         },
-        crate::atlas::internal::PropsAnnotation::None => (
-            "UnknownProps".to_string(),
-            component.source_display.clone(),
-            None,
-        ),
+        crate::atlas::internal::PropsAnnotation::None => (None, None, None),
     };
 
     let props = resolved_type

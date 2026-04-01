@@ -3,4 +3,4 @@ import type { ComponentInterface } from "./ComponentInterface";
 import type { ComponentProp } from "./ComponentProp";
 import type { Usage } from "./Usage";
 
-export type Component = { name: string, interface: ComponentInterface, source: string, count: number, props: Array<ComponentProp>, usage: Usage, examples: Array<string>, usedWith: { [key in string]: Usage }, };
+export type Component = { name: string, interface: ComponentInterface | null, source: string, count: number, props: Array<ComponentProp>, usage: Usage, examples: Array<string>, usedWith: { [key in string]: Usage }, };

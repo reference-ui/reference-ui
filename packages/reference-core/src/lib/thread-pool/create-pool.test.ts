@@ -53,7 +53,11 @@ describe('createWorkerPool', () => {
     runPoolWorker.mockResolvedValue('done')
 
     await expect(pool.runWorker('watch', { task: true })).resolves.toBe('done')
-    expect(runPoolWorker).toHaveBeenCalledWith('/dist/watch/worker.mjs', { task: true })
+    expect(runPoolWorker).toHaveBeenCalledWith(
+      '/dist/watch/worker.mjs',
+      { task: true },
+      undefined
+    )
   })
 
   it('accepts an explicit worker path directly', async () => {
@@ -62,8 +66,30 @@ describe('createWorkerPool', () => {
 
     runPoolWorker.mockResolvedValue('done')
 
-    await expect(pool.runWorker('/abs/custom-worker.mjs', { task: true })).resolves.toBe('done')
-    expect(runPoolWorker).toHaveBeenCalledWith('/abs/custom-worker.mjs', { task: true })
+    await expect(pool.runWorker('/abs/custom-worker.mjs', { task: true })).resolves.toBe(
+      'done'
+    )
+    expect(runPoolWorker).toHaveBeenCalledWith(
+      '/abs/custom-worker.mjs',
+      { task: true },
+      undefined
+    )
+  })
+
+  it('passes pool options through to the worker runner', async () => {
+    const { createWorkerPool, runPoolWorker } = await importCreatePoolModule()
+    const pool = createWorkerPool({ mcp: 'ignored' })
+
+    runPoolWorker.mockResolvedValue('done')
+
+    await expect(
+      pool.runWorker('mcp', { task: true }, { poolName: 'mcp' })
+    ).resolves.toBe('done')
+    expect(runPoolWorker).toHaveBeenCalledWith(
+      '/dist/mcp/worker.mjs',
+      { task: true },
+      { poolName: 'mcp' }
+    )
   })
 
   it('logs worker failures instead of throwing from the wrapper', async () => {

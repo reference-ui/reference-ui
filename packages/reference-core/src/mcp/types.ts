@@ -37,6 +37,12 @@ export interface McpBuildArtifact {
   components: McpComponent[]
 }
 
+export interface McpPublicModel {
+  schemaVersion: 1
+  generatedAt: string
+  components: McpComponent[]
+}
+
 export interface McpListComponentsInput {
   query?: string
   source?: string

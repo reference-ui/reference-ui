@@ -11,7 +11,7 @@ import { z } from 'zod'
 import { log } from '../lib/log'
 import { loadOrBuildMcpArtifact } from './build'
 import { findComponent, getCommonPatterns, listComponents } from './queries'
-import type { McpBuildArtifact } from './types'
+import type { McpBuildArtifact, McpPublicModel } from './types'
 
 export interface CreateReferenceMcpServerOptions {
   cwd: string
@@ -64,6 +64,14 @@ function toErrorResult(message: string) {
   return {
     content: [{ type: 'text' as const, text: message }],
     isError: true,
+  }
+}
+
+function toPublicModel(artifact: McpBuildArtifact): McpPublicModel {
+  return {
+    schemaVersion: artifact.schemaVersion,
+    generatedAt: artifact.generatedAt,
+    components: artifact.components,
   }
 }
 
@@ -178,12 +186,13 @@ export function createReferenceMcpServer(
     },
     async uri => {
       const artifact = await state.load()
+      const model = toPublicModel(artifact)
       return {
         contents: [
           {
             uri: uri.href,
             mimeType: 'application/json',
-            text: JSON.stringify(artifact, null, 2),
+            text: JSON.stringify(model, null, 2),
           },
         ],
       }

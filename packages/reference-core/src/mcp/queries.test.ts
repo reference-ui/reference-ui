@@ -56,4 +56,37 @@ describe('mcp queries', () => {
       { name: 'Icon', usage: 'occasional' },
     ])
   })
+
+  it('surfaces a null interface name for components without props annotations', () => {
+    expect(
+      listComponents(
+        {
+          ...artifact,
+          components: [
+            ...artifact.components,
+            {
+              name: 'ThemeToggle',
+              source: './src/components/ThemeToggle.tsx',
+              count: 0,
+              usage: 'unused',
+              usedWith: {},
+              examples: ['<ThemeToggle />'],
+              interface: null,
+              props: [],
+            },
+          ],
+        },
+        { query: 'theme' }
+      )
+    ).toEqual([
+      {
+        name: 'ThemeToggle',
+        source: './src/components/ThemeToggle.tsx',
+        usage: 'unused',
+        count: 0,
+        interfaceName: null,
+        propCount: 0,
+      },
+    ])
+  })
 })

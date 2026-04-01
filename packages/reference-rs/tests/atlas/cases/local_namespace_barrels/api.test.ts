@@ -16,6 +16,6 @@ describe('local_namespace_barrels atlas case', () => {
   it('preserves interface mapping through the local namespace barrel', async () => {
     const button = await getComponent('Button', undefined, undefined, CASE)
 
-    expect(button.interface.name).toBe('ButtonProps')
+    expect(button.interface?.name).toBe('ButtonProps')
   })
 })

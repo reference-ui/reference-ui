@@ -45,6 +45,9 @@ describe('mcp server', () => {
     expect(modelJson?.mimeType).toBe('application/json')
     expect(modelJson?.text).toContain('"schemaVersion"')
     expect(modelJson?.text).toContain('"components"')
+    expect(modelJson?.text).not.toContain('"workspaceRoot"')
+    expect(modelJson?.text).not.toContain('"manifestPath"')
+    expect(modelJson?.text).not.toContain('"diagnostics"')
 
     const listComponentsResult = await running!.client.callTool({
       name: 'list_components',
