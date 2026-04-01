@@ -10,6 +10,8 @@ export const testsDir = join(pkgRoot, 'tests')
 
 export const virt = (...p: string[]) => join(virtualDir, ...p)
 
+const IGNORED_SOURCE_DIRS = new Set(['.reference-ui', 'node_modules'])
+
 /** Poll until condition is met or timeout. Returns true if condition met. */
 export async function waitFor(
   fn: () => boolean,
@@ -26,6 +28,10 @@ export async function waitFor(
 
 function* walkFiles(dir: string, base = dir): Generator<string> {
   for (const name of readdirSync(dir)) {
+    if (IGNORED_SOURCE_DIRS.has(name)) {
+      continue
+    }
+
     const path = join(dir, name)
     let stat
     try {
