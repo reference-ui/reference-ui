@@ -34,7 +34,11 @@ export async function buildMcpArtifact(
   const components = await Promise.all(
     atlas.components.map(async component => {
       const document = component.interface?.name
-        ? await loadReferenceDocument(api, component.interface.name)
+        ? await loadReferenceDocument(
+            api,
+            component.interface.name,
+            component.interface.source
+          )
         : null
       return joinMcpComponent(component, document)
     })

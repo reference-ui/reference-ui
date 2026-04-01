@@ -24,6 +24,7 @@ pub(crate) fn scan_workspace(
         DiscoveredFile {
             module_specifier,
             library,
+            ..
         },
     ) in discovered_files
     {

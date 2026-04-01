@@ -58,15 +58,19 @@ impl<'a> Crawler<'a> {
     fn crawl_file(&mut self, file_id: &str) -> Result<(), String> {
         let source = self.read_source(file_id)?;
         let known_file_ids = self.known_file_ids();
+        let discovered = self
+            .discovered
+            .get(file_id)
+            .expect("crawler should only visit discovered files");
         let is_user_file = self.is_user_file(file_id);
-        let current_library = self.library_of(file_id);
         let reexport_specifiers = self.reexports_of(is_user_file, file_id, &source);
 
         let ctx = DiscoveryContext {
             root_dir: self.root_dir,
             file_id,
-            current_library: current_library.as_str(),
             is_user_file,
+            current_library: &discovered.library,
+            external_depth: discovered.external_depth,
             known_file_ids: &known_file_ids,
             user_file_ids: &self.user_file_ids,
             reexport_specifiers: &reexport_specifiers,
@@ -104,13 +108,6 @@ impl<'a> Crawler<'a> {
             .collect()
     }
 
-    fn library_of(&self, file_id: &str) -> String {
-        self.discovered
-            .get(file_id)
-            .map(|file| file.library.clone())
-            .unwrap_or_else(|| USER_LIBRARY_NAME.to_string())
-    }
-
     fn reexports_of(&self, is_user_file: bool, file_id: &str, source: &str) -> BTreeSet<String> {
         if !is_user_file {
             return BTreeSet::new();
@@ -131,6 +128,7 @@ impl<'a> Crawler<'a> {
             DiscoveredFile {
                 module_specifier: resolved.module_specifier,
                 library: resolved.library,
+                external_depth: resolved.external_depth,
             },
         );
         self.pending.push_back(resolved.file_id);
@@ -140,6 +138,7 @@ impl<'a> Crawler<'a> {
         DiscoveredFile {
             module_specifier: module_specifier_for_file_id(file_id),
             library: USER_LIBRARY_NAME.to_string(),
+            external_depth: 0,
         }
     }
 }

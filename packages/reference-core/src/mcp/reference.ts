@@ -56,7 +56,7 @@ async function loadMemberOrigins(
   for (const current of [...extendsChain, rootSymbol]) {
     const members =
       current.getId() === rootSymbol.getId()
-        ? current.getMembers()
+        ? await current.getMembers()
         : await getInheritedSourceMembers(current)
 
     for (const member of members) {
@@ -71,14 +71,40 @@ export function createReferenceApi(manifestPath: string): TastyApi {
   return createTastyApi({ manifestPath })
 }
 
+function getScopedLibrary(source?: string): string | null {
+  if (!source) return null
+  if (source.startsWith('.')) return 'user'
+  if (source.startsWith('@')) return source
+  return null
+}
+
+async function loadReferenceSymbol(
+  api: TastyApi,
+  name: string,
+  source?: string
+): Promise<TastySymbol> {
+  const library = getScopedLibrary(source)
+
+  if (library) {
+    try {
+      return await api.loadSymbolByScopedName(library, name)
+    } catch {
+      // Fall back to bare-name lookup for manifests that do not carry the expected library key.
+    }
+  }
+
+  return api.loadSymbolByName(name)
+}
+
 export async function loadReferenceDocument(
   api: TastyApi,
-  name: string
+  name: string,
+  source?: string
 ): Promise<ReferenceDocument | null> {
   let symbol: TastySymbol
 
   try {
-    symbol = await api.loadSymbolByName(name)
+    symbol = await loadReferenceSymbol(api, name, source)
   } catch {
     return null
   }

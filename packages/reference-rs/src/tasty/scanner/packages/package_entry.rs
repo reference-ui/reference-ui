@@ -70,6 +70,7 @@ fn resolved_module_from_entry_path(
 ) -> Option<ResolvedModule> {
     let file_id = relative_file_id(root_dir, &entry_path);
     Some(ResolvedModule {
+        external_depth: 0,
         library: package_name_from_file_id(&file_id),
         module_specifier: module_specifier
             .map(str::to_string)

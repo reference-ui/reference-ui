@@ -21,6 +21,7 @@ mod tests {
     const LOCAL_NAMESPACE_BARRELS_CASE: &str = "local_namespace_barrels";
     const PACKAGE_DEFAULT_BARRELS_CASE: &str = "package_default_barrels";
     const CO_USAGE_PAIRS_CASE: &str = "co_usage_pairs";
+    const WRAPPED_COMPONENTS_CASE: &str = "wrapped_components";
 
     fn atlas_tests_dir() -> PathBuf {
         Path::new(env!("CARGO_MANIFEST_DIR")).join("tests").join("atlas")
@@ -80,6 +81,34 @@ mod tests {
         
         let analyzer = AtlasAnalyzer::new(config);
         assert_eq!(analyzer.config.root_dir, "/test");
+    }
+
+    #[test]
+    fn test_wrapped_components_preserve_props_from_wrapper_generics() {
+        let root_dir = case_app_root(WRAPPED_COMPONENTS_CASE);
+        let config = AtlasConfig {
+            root_dir,
+            include: None,
+            exclude: None,
+        };
+
+        let mut analyzer = AtlasAnalyzer::new(config);
+        let components = analyzer.analyze("");
+
+        let fancy_button = components
+            .iter()
+            .find(|component| component.name == "FancyButton")
+            .expect("expected FancyButton component");
+        let search_input = components
+            .iter()
+            .find(|component| component.name == "SearchInput")
+            .expect("expected SearchInput component");
+
+        assert_eq!(fancy_button.count, 2);
+        assert_eq!(fancy_button.interface.name, "FancyButtonProps");
+
+        assert_eq!(search_input.count, 2);
+        assert_eq!(search_input.interface.name, "SearchInputProps");
     }
 
     #[test]
