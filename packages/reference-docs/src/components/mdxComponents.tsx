@@ -15,6 +15,7 @@ import {
   Pre,
   Strong,
   Ul,
+  Div,
   css,
 } from '@reference-ui/react'
 
@@ -89,14 +90,32 @@ export const mdxComponents = {
     />
   ),
   h3: props => (
-    <H3 color="docsText" fontSize="5r" fontWeight="600" marginTop="6r" marginBottom="2r" {...props} />
+    <H3
+      color="docsText"
+      fontSize="5r"
+      fontWeight="600"
+      marginTop="6r"
+      marginBottom="2r"
+      {...props}
+    />
   ),
   p: props => (
-    <P color="docsText" fontSize="md" lineHeight="1.65" marginTop="0" marginBottom="4r" {...props} />
+    <P
+      color="docsText"
+      fontSize="md"
+      lineHeight="1.65"
+      marginTop="0"
+      marginBottom="4r"
+      {...props}
+    />
   ),
   a: MdxLink,
-  ul: props => <Ul marginTop="0" marginBottom="4r" paddingLeft="5r" color="docsText" {...props} />,
-  ol: props => <Ol marginTop="0" marginBottom="4r" paddingLeft="5r" color="docsText" {...props} />,
+  ul: props => (
+    <Ul marginTop="0" marginBottom="4r" paddingLeft="5r" color="docsText" {...props} />
+  ),
+  ol: props => (
+    <Ol marginTop="0" marginBottom="4r" paddingLeft="5r" color="docsText" {...props} />
+  ),
   li: props => <Li marginBottom="1r" lineHeight="1.6" {...props} />,
   strong: props => <Strong color="docsText" fontWeight="700" {...props} />,
   hr: props => <Hr borderColor="docsPanelBorder" marginY="8r" {...props} />,
@@ -145,7 +164,7 @@ export const mdxComponents = {
     )
   },
   pre: props => (
-    <Pre
+    <Div
       overflow="auto"
       padding="4r"
       marginTop="0"

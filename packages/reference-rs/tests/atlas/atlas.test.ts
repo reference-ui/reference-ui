@@ -277,6 +277,23 @@ describe('examples', () => {
     }
   })
 
+  it('examples capture only the mounting signature, not nested JSX children', async () => {
+    const components = await getComponents()
+    const appCard = components.find(c => c.name === 'AppCard')!
+    const button = components.find(c => c.name === 'Button')!
+
+    for (const ex of appCard.examples) {
+      expect(ex).toMatch(/<AppCard/)
+      expect(ex).not.toMatch(/<Button/)
+      expect(ex).not.toMatch(/<\/AppCard>/)
+    }
+
+    for (const ex of button.examples) {
+      expect(ex).toMatch(/<Button/)
+      expect(ex).not.toMatch(/<\/Button>/)
+    }
+  })
+
   it('examples are deduplicated by prop shape (no identical snippets)', async () => {
     const components = await getComponents()
     const button = components.find(c => c.name === 'Button')!

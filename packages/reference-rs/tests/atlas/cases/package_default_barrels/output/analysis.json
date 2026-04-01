@@ -28,7 +28,7 @@
         ],
         "usage": "very common",
         "examples": [
-          "<AppButton variant=\"solid\">Local Wrapper</AppButton>"
+          "<AppButton variant=\"solid\">"
         ],
         "usedWith": {}
       }
@@ -61,7 +61,7 @@
           ],
           "usage": "common",
           "examples": [
-            "<AppButton variant=\"solid\">Local Wrapper</AppButton>"
+            "<AppButton variant=\"solid\">"
           ],
           "usedWith": {
             "Button": "very common"
@@ -94,8 +94,8 @@
           "usage": "very common",
           "examples": [
             "<BaseButton {...props} />",
-            "<PackageButton variant=\"ghost\">Package Default</PackageButton>",
-            "<PackageButton variant=\"solid\">Package Default Two</PackageButton>"
+            "<PackageButton variant=\"ghost\">",
+            "<PackageButton variant=\"solid\">"
           ],
           "usedWith": {
             "AppButton": "very common"

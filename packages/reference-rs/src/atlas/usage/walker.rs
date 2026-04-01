@@ -373,7 +373,7 @@ fn collect_occurrences_from_jsx_element(
 ) {
     occurrences.push(JsxOccurrence {
         tag_name: jsx_name_to_string(&element.opening_element.name),
-        snippet: slice_span(source, element.span()).to_string(),
+        snippet: slice_span(source, element.opening_element.span()).trim().to_string(),
         attributes: element
             .opening_element
             .attributes
