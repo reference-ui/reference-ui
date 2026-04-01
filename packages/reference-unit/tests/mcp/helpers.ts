@@ -3,16 +3,19 @@ import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/
 import {
   execFileSync,
   spawn,
-  type ChildProcessWithoutNullStreams,
+  type ChildProcessByStdio,
 } from 'node:child_process'
 import { existsSync } from 'node:fs'
+import type { Readable } from 'node:stream'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+
+type McpServerProcess = ChildProcessByStdio<null, Readable, Readable>
 
 export interface RunningMcpClient {
   client: Client
   transport: StreamableHTTPClientTransport
-  process: ChildProcessWithoutNullStreams
+  process: McpServerProcess
   serverUrl: URL
 }
 
@@ -57,7 +60,7 @@ export function runRefSync(cwd: string): void {
 }
 
 export async function waitForServerReady(
-  process: ChildProcessWithoutNullStreams,
+  process: McpServerProcess,
   maxMs = 20_000
 ): Promise<string> {
   return new Promise((resolve, reject) => {
