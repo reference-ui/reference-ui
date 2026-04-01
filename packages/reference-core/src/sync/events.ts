@@ -151,16 +151,6 @@ export function initEvents(): void {
   )
 
   /**
-   * Watch-mode virtual changes invalidate the earlier Atlas result. Refresh it
-   * eagerly so the final MCP build can still reuse a warmed analysis.
-   */
-  afterFirst(VIRTUAL_COMPLETE_EVENT, {
-    on: VIRTUAL_FS_CHANGE_EVENT,
-    emit: 'run:mcp:prefetch:atlas',
-    payload: {},
-  })
-
-  /**
    * Any failure in the virtual/system/reference pipeline aborts the sync.
    */
   emitOnAny({

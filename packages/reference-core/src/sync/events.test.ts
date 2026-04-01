@@ -185,6 +185,18 @@ describe('sync/events', () => {
     expect(emit).toHaveBeenCalledWith('run:mcp:build', {})
   })
 
+  it('prefetches Atlas on initial virtual completion once MCP worker is ready', async () => {
+    const { initEvents } = await loadEventsModule()
+    initEvents()
+
+    fireOn('mcp:ready')
+    emit.mockClear()
+
+    fireOn('virtual:complete')
+
+    expect(emit).toHaveBeenCalledWith('run:mcp:prefetch:atlas', undefined)
+  })
+
   it('emits sync:complete from MCP completion', async () => {
     const { initEvents } = await loadEventsModule()
     initEvents()
@@ -198,6 +210,8 @@ describe('sync/events', () => {
     const { initEvents } = await loadEventsModule()
     initEvents()
 
+    fireOn('mcp:ready')
+
     fireOn('virtual:complete')
     emit.mockClear()
 
@@ -208,6 +222,8 @@ describe('sync/events', () => {
 
     expect(emit).toHaveBeenCalledWith('run:system:config', undefined)
     expect(emit).toHaveBeenCalledWith('run:reference:build', {})
+    expect(emit).not.toHaveBeenCalledWith('run:mcp:prefetch:atlas', {})
+    expect(emit).not.toHaveBeenCalledWith('run:mcp:prefetch:atlas', undefined)
   })
 
   it('waits for panda codegen before bundling runtime packages', async () => {
