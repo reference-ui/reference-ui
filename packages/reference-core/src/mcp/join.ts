@@ -69,7 +69,6 @@ export function joinMcpComponentWithReference(
       }),
       ...documentedOnlyProps,
     ],
-    warnings: reference?.warnings ?? [],
   }
 }
 
