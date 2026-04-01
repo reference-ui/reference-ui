@@ -5,20 +5,9 @@
  * Users export the config from ui.config.ts, and the CLI loads it via bundle-n-require.
  */
 
-export type { ReferenceUIConfig } from './types'
+export type { ReferenceUIConfig, ReferenceUIMcpConfig } from './types'
 export type { BaseSystem } from '../types'
 export { defineConfig } from './types'
-export {
-  setConfig,
-  setCwd,
-  getConfig,
-  getCwd,
-  getOutDir,
-  clearConfig,
-} from './store'
+export { setConfig, setCwd, getConfig, getCwd, getOutDir, clearConfig } from './store'
 export { loadUserConfig } from './load'
-export {
-  ConfigNotFoundError,
-  LoadConfigError,
-  ConfigValidationError,
-} from './errors'
+export { ConfigNotFoundError, LoadConfigError, ConfigValidationError } from './errors'

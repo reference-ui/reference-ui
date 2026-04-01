@@ -31,6 +31,30 @@ export default defineConfig({
 
 into a validated runtime object the rest of the pipeline can trust.
 
+## MCP-specific config
+
+The top-level `include` field controls design-system work:
+
+- virtual source mirroring
+- Panda scan input
+- reference build input
+
+The MCP layer has a separate config surface:
+
+```ts
+export default defineConfig({
+  name: 'my-system',
+  include: ['src/**/*.{ts,tsx}'],
+  mcp: {
+    include: ['src/**/*.{ts,tsx}', 'tests/mcp-fixtures/**/*.{ts,tsx}'],
+    exclude: ['tests/mcp-fixtures/ExcludedFixture.tsx'],
+  },
+})
+```
+
+`mcp.include` and `mcp.exclude` are passed directly to Atlas and do not change
+the normal design-system `include` behavior.
+
 ## Why config is bundled to CJS
 
 This module intentionally bundles user config to CommonJS before evaluation.

@@ -52,7 +52,7 @@ export function initEvents(): void {
    * Watch mode mutates the virtual tree first. Rebuild decisions are driven by
    * the resulting `virtual:fs:change` events rather than by raw source changes.
    */
-  on('watch:change', (payload) => {
+  on('watch:change', payload => {
     emit('run:virtual:sync:file', payload)
   })
 
@@ -101,10 +101,13 @@ export function initEvents(): void {
    * `@reference-ui/react`, so those packages must exist before a clean
    * reference build can resolve its downstream type surface.
    */
-  onReady('packager:ready', combineTrigger({
-    requires: ['system:panda:codegen'],
-    emit: 'run:packager:runtime:bundle',
-  }))
+  onReady(
+    'packager:ready',
+    combineTrigger({
+      requires: ['system:panda:codegen'],
+      emit: 'run:packager:runtime:bundle',
+    })
+  )
 
   /**
    * Runtime bundle completion requests the declaration surface needed to unblock
@@ -127,11 +130,14 @@ export function initEvents(): void {
    * `packager-ts:runtime:complete` is therefore the barrier that makes clean
    * downstream documentation of generated system types deterministic.
    */
-  onReady('reference:ready', combineTrigger({
-    requires: [VIRTUAL_COMPLETE_EVENT, 'packager-ts:runtime:complete'],
-    emit: RUN_REFERENCE_BUILD_EVENT,
-    payload: {},
-  }))
+  onReady(
+    'reference:ready',
+    combineTrigger({
+      requires: [VIRTUAL_COMPLETE_EVENT, 'packager-ts:runtime:complete'],
+      emit: RUN_REFERENCE_BUILD_EVENT,
+      payload: {},
+    })
+  )
 
   /**
    * Any failure in the virtual/system/reference pipeline aborts the sync.
@@ -142,6 +148,7 @@ export function initEvents(): void {
       'system:panda:codegen:failed',
       'virtual:failed',
       'reference:failed',
+      'mcp:failed',
       'reference:component:copy-failed',
     ],
     emit: 'sync:failed',
@@ -151,10 +158,13 @@ export function initEvents(): void {
    * The final package phase waits for reference output because
    * `@reference-ui/types` includes the generated Tasty/runtime artifacts.
    */
-  onReady('packager:ready', combineTrigger({
-    requires: ['reference:complete'],
-    emit: 'run:packager:bundle',
-  }))
+  onReady(
+    'packager:ready',
+    combineTrigger({
+      requires: ['reference:complete'],
+      emit: 'run:packager:bundle',
+    })
+  )
 
   /**
    * The final bundle completion requests the closing declaration pass that
@@ -166,11 +176,23 @@ export function initEvents(): void {
   })
 
   /**
-   * Sync completes once the TypeScript package surface is ready. When TypeScript
-   * generation is skipped, the packager emits `packager-ts:complete` itself so
-   * this completion edge still closes.
+   * MCP joins Atlas output with the generated type surface once both the
+   * reference build and final declarations have advanced for the current pass.
    */
-  on('packager-ts:complete', () => {
+  onReady(
+    'mcp:ready',
+    combineTrigger({
+      requires: ['reference:complete', 'packager-ts:complete'],
+      emit: 'run:mcp:build',
+      payload: {},
+    })
+  )
+
+  /**
+   * Sync completes only after the MCP model has been rebuilt for the latest
+   * generated type surface.
+   */
+  on('mcp:complete', () => {
     emit('sync:complete')
   })
 }

@@ -168,6 +168,32 @@ describe('sync/events', () => {
     expect(emit).toHaveBeenCalledWith('run:reference:build', {})
   })
 
+  it('starts MCP only after both reference output and final declarations are ready', async () => {
+    const { initEvents } = await loadEventsModule()
+    initEvents()
+
+    fireOn('mcp:ready')
+    fireOn('reference:complete', {
+      source: 'virtual',
+      manifestPath: '/tmp/types/manifest.js',
+      outputDir: '/tmp/types',
+    })
+    expect(emit).not.toHaveBeenCalledWith('run:mcp:build', {})
+
+    emit.mockClear()
+    fireOn('packager-ts:complete')
+    expect(emit).toHaveBeenCalledWith('run:mcp:build', {})
+  })
+
+  it('emits sync:complete from MCP completion', async () => {
+    const { initEvents } = await loadEventsModule()
+    initEvents()
+
+    fireOn('mcp:complete', { modelPath: '/tmp/model.json', componentCount: 12 })
+
+    expect(emit).toHaveBeenCalledWith('sync:complete', undefined)
+  })
+
   it('virtual fs changes trigger config and reference rebuilds after initial startup completes', async () => {
     const { initEvents } = await loadEventsModule()
     initEvents()
