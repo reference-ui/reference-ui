@@ -18,7 +18,6 @@ const artifact: McpBuildArtifact = {
       examples: ['<Button />'],
       interface: { name: 'ButtonProps', source: './src/components/Button.tsx' },
       props: [],
-      warnings: [],
     },
     {
       name: 'Card',
@@ -29,7 +28,6 @@ const artifact: McpBuildArtifact = {
       examples: ['<Card />'],
       interface: { name: 'CardProps', source: '@reference-ui/react' },
       props: [],
-      warnings: [],
     },
   ],
 }

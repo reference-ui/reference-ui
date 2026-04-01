@@ -81,7 +81,6 @@ describe('joinMcpComponent', () => {
       name: 'ButtonProps',
       source: './src/components/Button.tsx',
     })
-    expect(result.warnings).toEqual(['duplicate projection'])
     expect(result.props[0]).toMatchObject({
       name: 'variant',
       type: '"solid" | "ghost"',
@@ -106,7 +105,6 @@ describe('joinMcpComponent', () => {
       type: null,
       description: null,
     })
-    expect(result.warnings).toEqual([])
   })
 
   it('adds documented members when Atlas does not report prop names', () => {

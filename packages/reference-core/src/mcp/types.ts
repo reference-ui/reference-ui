@@ -26,7 +26,6 @@ export interface McpComponent {
   examples: string[]
   interface: McpComponentInterface | null
   props: McpComponentProp[]
-  warnings: string[]
 }
 
 export interface McpBuildArtifact {
