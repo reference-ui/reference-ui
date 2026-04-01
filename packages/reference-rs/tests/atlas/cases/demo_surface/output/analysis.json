@@ -427,9 +427,7 @@
             }
           ],
           "usage": "rare",
-          "examples": [
-            "<BaseButton size=\"md\" {...props} />"
-          ],
+          "examples": ["<BaseButton size=\"md\" {...props} />"],
           "usedWith": {}
         },
         {
