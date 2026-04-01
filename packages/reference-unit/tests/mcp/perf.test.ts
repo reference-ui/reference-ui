@@ -16,7 +16,13 @@ import {
 import { referenceUnitRoot, runRefSync } from './helpers'
 
 const referenceDocsRoot = resolve(referenceUnitRoot, '..', 'reference-docs')
-const manifestPath = join(referenceDocsRoot, '.reference-ui', 'types', 'tasty', 'manifest.js')
+const manifestPath = join(
+  referenceDocsRoot,
+  '.reference-ui',
+  'types',
+  'tasty',
+  'manifest.js'
+)
 
 describe('mcp generation performance', () => {
   beforeAll(() => {
@@ -77,13 +83,10 @@ describe('mcp generation performance', () => {
   it('reuses prefetched Atlas analysis so the final MCP build does less tail work', async () => {
     clearMcpAtlasCache(referenceDocsRoot)
 
-    const coldMs = await measureMedianMs(
-      async () => {
-        clearMcpAtlasCache(referenceDocsRoot)
-        await generateMcpArtifact({ cwd: referenceDocsRoot, force: true })
-      },
-      2
-    )
+    const coldMs = await measureMedianMs(async () => {
+      clearMcpAtlasCache(referenceDocsRoot)
+      await generateMcpArtifact({ cwd: referenceDocsRoot, force: true })
+    }, 2)
 
     const warmedMs = await measurePrefetchedTailMedianMs(referenceDocsRoot, 2)
 
@@ -143,7 +146,10 @@ async function measurePrefetchedTailMedianMs(
   return getMedianMs(times)
 }
 
-async function measureMedianMs<T>(fn: () => Promise<T>, iterations: number): Promise<number> {
+async function measureMedianMs<T>(
+  fn: () => Promise<T>,
+  iterations: number
+): Promise<number> {
   const times: number[] = []
 
   for (let index = 0; index < iterations; index += 1) {

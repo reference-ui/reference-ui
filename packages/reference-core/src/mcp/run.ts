@@ -16,9 +16,7 @@ export async function runMcpBuild(payload: McpWorkerPayload): Promise<void> {
   })
 }
 
-export async function runMcpAtlasPrefetch(
-  payload: McpWorkerPayload
-): Promise<void> {
+export async function runMcpAtlasPrefetch(payload: McpWorkerPayload): Promise<void> {
   await prefetchMcpAtlas({ cwd: payload.cwd, refresh: true })
 }
 

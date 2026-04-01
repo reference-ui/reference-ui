@@ -91,9 +91,7 @@ export function clearMcpAtlasCache(cwd?: string): void {
   mcpAtlasBuildCache.clear()
 }
 
-function loadMcpAtlas(
-  cwd: string
-): Promise<Awaited<ReturnType<typeof analyzeDetailed>>> {
+function loadMcpAtlas(cwd: string): Promise<Awaited<ReturnType<typeof analyzeDetailed>>> {
   return prefetchMcpAtlas({ cwd })
 }
 
