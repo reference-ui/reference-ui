@@ -220,6 +220,115 @@ The server should be dynamic in the literal sense:
 
 If the project changes, the MCP server should be able to rebuild that joined view from the latest Atlas analysis plus the latest generated type package.
 
+## Sync and event bus integration
+
+The MCP layer should hook into the existing sync event bus.
+
+The important lifecycle fact is:
+
+- Atlas can run once the reference Tasty bridge has finished building
+- MCP enrichment cannot finish until the generated `@reference-ui/types` surface is ready
+
+There are really two useful hook points in the current graph.
+
+### Rough post-bridge completion
+
+The existing rough event for "the reference Tasty bridge finished" is:
+
+- `reference:complete`
+
+That event is emitted by the reference bridge after `rebuildReferenceTastyBuild(...)` completes.
+So if the question is "do we already have an event after the Tasty bridge finishes?", the answer is yes: `reference:complete`.
+
+That makes it a valid event for work that only depends on finished Atlas-adjacent discovery inputs coming out of the reference side.
+
+### Final types-ready barrier
+
+The later event MCP enrichment depends on is:
+
+- `packager-ts:complete`
+
+That is the event that says the final generated TypeScript package surface exists.
+For MCP purposes, that is the point where the server can safely read `@reference-ui/types` and join it with Atlas output.
+
+So the intended flow is:
+
+1. sync builds the virtual workspace and generated runtime artifacts
+2. the reference bridge emits `reference:complete`
+3. packager emits the final types-ready barrier via `packager-ts:complete`
+4. MCP work starts from the point where both of those facts are true
+5. MCP runs Atlas, reads `@reference-ui/types`, and builds the joined component model
+6. MCP emits its own completion event
+
+Conceptually, the event edge should look like:
+
+```ts
+'reference:complete' + 'packager-ts:complete' -> 'run:mcp:build'
+'mcp:complete' -> 'sync:complete'
+```
+
+That ordering matters.
+
+If MCP output is part of what `ref sync` is supposed to produce, sync should not claim completion before the MCP join has been built.
+Listening to the types-ready event is correct, but leaving `sync:complete` unchanged would mean sync can finish before MCP artifacts are actually ready.
+
+## Why the hook belongs there
+
+The MCP server needs both sides of the join:
+
+- Atlas inventory
+- final generated type metadata
+
+Running only from `reference:complete` would still be too early for the enrichment side.
+At that point, the Tasty bridge output exists, but the final `@reference-ui/types` surface is not guaranteed to exist yet.
+
+Running only from `packager-ts:complete` is safer, but it hides the fact that MCP conceptually depends on the completed reference bridge output too.
+The clean model is that MCP sits after both:
+
+- `reference:complete`
+- `packager-ts:complete`
+
+By using those two facts, the MCP build can stay simple:
+
+- start once the reference bridge is complete and the final type package exists
+- run Atlas
+- enrich from generated types
+- emit the final MCP-ready model
+
+## Recommended MCP events
+
+The exact names can change, but the shape should stay explicit.
+
+Recommended additions:
+
+- `run:mcp:build`
+- `mcp:complete`
+- `mcp:failed`
+
+That keeps MCP aligned with the rest of the event graph:
+
+- sync emits work
+- MCP worker performs the join
+- MCP reports success or failure back onto the bus
+
+## Watch mode implication
+
+This same design works in watch mode.
+
+When a later sync pass regenerates `@reference-ui/types`, the next `packager-ts:complete` should trigger a fresh MCP rebuild.
+That gives the MCP server a stable rule:
+
+- whenever the final type surface is rebuilt, rebuild the joined MCP model too
+
+## Practical summary for sync
+
+For event-bus purposes, the intended ownership is:
+
+- sync owns the build graph
+- `packager-ts:complete` is the types-ready barrier
+- MCP owns the final Atlas plus generated-types join
+- sync should only be considered complete after MCP has finished if MCP output is part of the sync product
+
 ## Non-goals
 
 This design does not require:
