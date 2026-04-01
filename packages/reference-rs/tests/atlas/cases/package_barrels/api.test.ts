@@ -23,4 +23,15 @@ describe('package_barrels atlas case', () => {
 
     expect(packageButton.interface.name).toBe('ButtonProps')
   })
+
+  it('does not include private package components outside the public barrel', async () => {
+    await expect(
+      getComponent(
+        'PrivateChip',
+        { include: ['@fixtures/barrel-ui'] },
+        '@fixtures/barrel-ui',
+        CASE
+      )
+    ).rejects.toThrow('Component "PrivateChip"')
+  })
 })

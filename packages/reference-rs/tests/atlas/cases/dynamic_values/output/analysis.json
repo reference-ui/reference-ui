@@ -34,9 +34,9 @@
         ],
         "usage": "very common",
         "examples": [
-          "<Button variant=\"solid\">Static</Button>",
-          "<Button variant={variant}>Dynamic Variable</Button>",
-          "<Button variant={isPrimary ? 'ghost' : 'outline'} disabled={isDisabled}>\n        Dynamic Expression\n      </Button>"
+          "<Button variant=\"solid\">",
+          "<Button variant={variant}>",
+          "<Button variant={isPrimary ? 'ghost' : 'outline'} disabled={isDisabled}>"
         ],
         "usedWith": {}
       }

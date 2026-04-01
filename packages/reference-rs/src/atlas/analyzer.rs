@@ -5,7 +5,7 @@ use crate::atlas::output::{AtlasAnalysisResult, AtlasDiagnostic, AtlasDiagnostic
 use crate::atlas::parser::parse_modules;
 use crate::atlas::resolver::{
     apply_excludes, build_component_template, collect_included_packages,
-    collect_referenced_packages, is_local_component_module, is_package_index_module,
+    collect_public_package_components, collect_referenced_packages, is_local_component_module,
     resolve_package_index,
 };
 use crate::atlas::scanner::Scanner;
@@ -112,24 +112,34 @@ impl AtlasAnalyzer {
         }
 
         for (package_name, selectors) in include_packages {
-            for module in modules.values() {
-                if module.display_source != package_name || is_package_index_module(&module.path) {
+            let Some(index_path) = package_indexes.get(&package_name) else {
+                continue;
+            };
+
+            for public_component in collect_public_package_components(&modules, index_path) {
+                if !selectors.is_empty()
+                    && !selectors.contains(&public_component.export_name)
+                    && !selectors.contains(&public_component.component_name)
+                {
                     continue;
                 }
 
-                for component in module.components.values() {
-                    if !selectors.is_empty() && !selectors.contains(&component.name) {
-                        continue;
-                    }
-                    if let Some(template) = build_component_template(
-                        component,
-                        module,
-                        &modules,
-                        &package_indexes,
-                        &mut diagnostics,
-                    ) {
-                        tracked.insert(component_key(&template.name, &template.source), template);
-                    }
+                let Some(module) = modules.get(&public_component.module_path) else {
+                    continue;
+                };
+                let Some(component) = module.components.get(&public_component.component_name)
+                else {
+                    continue;
+                };
+
+                if let Some(template) = build_component_template(
+                    component,
+                    module,
+                    &modules,
+                    &package_indexes,
+                    &mut diagnostics,
+                ) {
+                    tracked.insert(component_key(&template.name, &template.source), template);
                 }
             }
         }

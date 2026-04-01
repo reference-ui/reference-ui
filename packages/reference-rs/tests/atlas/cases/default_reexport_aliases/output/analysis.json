@@ -28,8 +28,8 @@
         ],
         "usage": "very common",
         "examples": [
-          "<CTAButton variant=\"solid\">Create</CTAButton>",
-          "<CTAButton variant=\"ghost\">Cancel</CTAButton>"
+          "<CTAButton variant=\"solid\">",
+          "<CTAButton variant=\"ghost\">"
         ],
         "usedWith": {}
       }

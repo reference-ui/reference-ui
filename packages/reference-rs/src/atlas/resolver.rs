@@ -8,6 +8,12 @@ use regex::Regex;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
+pub struct PublicPackageComponent {
+    pub export_name: String,
+    pub component_name: String,
+    pub module_path: PathBuf,
+}
+
 pub fn collect_referenced_packages<'a, I>(modules: I) -> BTreeSet<String>
 where
     I: Iterator<Item = &'a ModuleInfo>,
@@ -45,7 +51,16 @@ pub fn resolve_package_index<'a, I>(paths: I) -> Option<PathBuf>
 where
     I: Iterator<Item = &'a PathBuf>,
 {
-    paths.into_iter().find(|path| is_package_index_module(path)).cloned()
+    paths
+        .into_iter()
+        .filter(|path| is_package_index_module(path))
+        .min_by(|left, right| {
+            left.components()
+                .count()
+                .cmp(&right.components().count())
+                .then_with(|| left.cmp(right))
+        })
+        .cloned()
 }
 
 pub fn is_local_component_module(module: &ModuleInfo, app_root: &Path) -> bool {
@@ -208,17 +223,81 @@ pub fn resolve_named_component_export(
     module_path: &Path,
     export_name: &str,
 ) -> Option<(String, String)> {
+    resolve_named_component_export_target(modules, module_path, export_name)
+        .map(|(_, name, source)| (name, source))
+}
+
+pub fn collect_public_package_components(
+    modules: &HashMap<PathBuf, ModuleInfo>,
+    index_path: &Path,
+) -> Vec<PublicPackageComponent> {
+    let Some(module) = modules.get(index_path) else {
+        return Vec::new();
+    };
+
+    let mut components = BTreeMap::new();
+
+    for component in module.components.values() {
+        components.insert(
+            component_key(&component.name, &component.source_display),
+            PublicPackageComponent {
+                export_name: component.name.clone(),
+                component_name: component.name.clone(),
+                module_path: index_path.to_path_buf(),
+            },
+        );
+    }
+
+    if let Some((module_path, component_name, source)) =
+        resolve_default_component_export_target(modules, index_path)
+    {
+        components
+            .entry(component_key(&component_name, &source))
+            .or_insert(PublicPackageComponent {
+                export_name: "default".to_string(),
+                component_name,
+                module_path,
+            });
+    }
+
+    for export_name in module.named_component_reexports.keys() {
+        if let Some((module_path, component_name, source)) =
+            resolve_named_component_export_target(modules, index_path, export_name)
+        {
+            components.insert(
+                component_key(&component_name, &source),
+                PublicPackageComponent {
+                    export_name: export_name.clone(),
+                    component_name,
+                    module_path,
+                },
+            );
+        }
+    }
+
+    components.into_values().collect()
+}
+
+fn resolve_named_component_export_target(
+    modules: &HashMap<PathBuf, ModuleInfo>,
+    module_path: &Path,
+    export_name: &str,
+) -> Option<(PathBuf, String, String)> {
     if export_name == "default" {
-        return resolve_default_component_export(modules, module_path);
+        return resolve_default_component_export_target(modules, module_path);
     }
 
     let module = modules.get(module_path)?;
     if let Some(component) = module.components.get(export_name) {
-        return Some((component.name.clone(), component.source_display.clone()));
+        return Some((
+            module.path.clone(),
+            component.name.clone(),
+            component.source_display.clone(),
+        ));
     }
     if let Some(reexport) = module.named_component_reexports.get(export_name) {
         if let Some(target_module) = resolve_relative_module(modules, module_path, &reexport.source) {
-            return resolve_named_component_export(modules, &target_module, &reexport.imported);
+            return resolve_named_component_export_target(modules, &target_module, &reexport.imported);
         }
     }
     None
@@ -228,15 +307,26 @@ pub fn resolve_default_component_export(
     modules: &HashMap<PathBuf, ModuleInfo>,
     module_path: &Path,
 ) -> Option<(String, String)> {
+    resolve_default_component_export_target(modules, module_path).map(|(_, name, source)| (name, source))
+}
+
+fn resolve_default_component_export_target(
+    modules: &HashMap<PathBuf, ModuleInfo>,
+    module_path: &Path,
+) -> Option<(PathBuf, String, String)> {
     let module = modules.get(module_path)?;
     if let Some(name) = module.default_component.as_ref() {
         let component = module.components.get(name)?;
-        return Some((component.name.clone(), component.source_display.clone()));
+        return Some((
+            module.path.clone(),
+            component.name.clone(),
+            component.source_display.clone(),
+        ));
     }
 
     if let Some(reexport) = module.named_component_reexports.get("default") {
         if let Some(target_module) = resolve_relative_module(modules, module_path, &reexport.source) {
-            return resolve_named_component_export(modules, &target_module, &reexport.imported);
+            return resolve_named_component_export_target(modules, &target_module, &reexport.imported);
         }
     }
 
@@ -533,7 +623,7 @@ fn resolve_relative_module(
 ) -> Option<PathBuf> {
     let base_dir = from_module.parent()?;
     let base = base_dir.join(specifier);
-    let candidates = [
+    let candidates = vec![
         base.clone(),
         base.with_extension("ts"),
         base.with_extension("tsx"),
@@ -544,10 +634,17 @@ fn resolve_relative_module(
         base.join("index.js"),
         base.join("index.jsx"),
     ];
+
     candidates
-        .into_iter()
-        .filter_map(normalize_existing_path)
-        .find(|candidate| modules.contains_key(candidate))
+        .iter()
+        .find(|candidate| modules.contains_key(*candidate))
+        .cloned()
+        .or_else(|| {
+            candidates
+                .into_iter()
+                .filter_map(normalize_existing_path)
+                .find(|candidate| modules.contains_key(candidate))
+        })
 }
 
 fn normalize_existing_path(path: PathBuf) -> Option<PathBuf> {
