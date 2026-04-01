@@ -12,6 +12,51 @@ Build and sync the design system. Uses workers and the event bus.
 
 Removes the output directory (`.reference-ui` by default, or `config.outDir`). Runs in the main thread only. Use before tests for a fresh state.
 
+### ref mcp
+
+Runs the Reference UI MCP server.
+
+- `ref mcp` starts the stdio server used by MCP clients such as VS Code.
+- `ref mcp --transport http` starts the HTTP server for local inspection and debugging.
+
+#### Standard VS Code setup
+
+For a released package, prefer invoking the installed CLI binary directly from `mcp.json` instead of shelling into `node dist/...` by hand.
+
+Typical product setup:
+
+```json
+{
+  "servers": {
+    "referenceUi": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@reference-ui/core", "mcp"]
+    }
+  }
+}
+```
+
+In this monorepo workspace we target the docs package directory explicitly so `ref mcp` runs with the correct `ui.config.ts` as its current working directory:
+
+```json
+{
+  "servers": {
+    "referenceUi": {
+      "type": "stdio",
+      "command": "pnpm",
+      "args": [
+        "--dir",
+        "${workspaceFolder}/packages/reference-docs",
+        "exec",
+        "ref",
+        "mcp"
+      ]
+    }
+  }
+}
+```
+
 ## Architecture
 
 Workers run in separate threads ([Piscina](https://github.com/piscinajs/piscina)); they communicate via **BroadcastChannel**. The main thread wires flow; workers map events to handlers.

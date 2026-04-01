@@ -17,7 +17,7 @@ export interface McpCommandOptions {
 
 function getTransport(value?: string): McpTransport {
   if (!value) {
-    return 'http'
+    return 'stdio'
   }
 
   if (value === 'http' || value === 'stdio') {
