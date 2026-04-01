@@ -1,7 +1,21 @@
 import type { TastyApi, TastyMember, TastySymbol } from '@reference-ui/rust/tasty'
-import { createTastyApi } from '@reference-ui/rust/tasty'
+import { createTastyApi, getTastyResolvedType } from '@reference-ui/rust/tasty'
 import { createReferenceDocument } from '../reference/browser/model'
 import type { ReferenceDocument } from '../reference/browser/types'
+
+export interface McpReferenceMemberData {
+  name: string
+  type: string | null
+  description: string | null
+  optional: boolean
+  readonly: boolean
+  defaultValue?: string
+}
+
+export interface McpReferenceData {
+  members: McpReferenceMemberData[]
+  warnings: string[]
+}
 
 function shouldHideAliasProjection(symbol: TastySymbol): boolean {
   if (symbol.getKind() !== 'typeAlias') return false
@@ -71,6 +85,20 @@ export function createReferenceApi(manifestPath: string): TastyApi {
   return createTastyApi({ manifestPath })
 }
 
+function toMcpReferenceMemberData(member: TastyMember): McpReferenceMemberData {
+  const type = member.getType()
+  const resolvedType = type ? getTastyResolvedType(type) ?? type : undefined
+
+  return {
+    name: member.getName(),
+    type: resolvedType?.describe() ?? null,
+    description: member.getDescription() ?? null,
+    optional: member.isOptional(),
+    readonly: member.isReadonly(),
+    defaultValue: member.getDefaultValue(),
+  }
+}
+
 function getScopedLibrary(source?: string): string | null {
   if (!source) return null
   if (source.startsWith('.')) return 'user'
@@ -126,4 +154,26 @@ export async function loadReferenceDocument(
     relatedSymbols,
     warnings,
   })
+}
+
+export async function loadMcpReferenceData(
+  api: TastyApi,
+  name: string,
+  source?: string
+): Promise<McpReferenceData | null> {
+  let symbol: TastySymbol
+
+  try {
+    symbol = await loadReferenceSymbol(api, name, source)
+  } catch {
+    return null
+  }
+
+  const projectedMembers = await api.graph.getDisplayMembers(symbol)
+  const members = shouldHideAliasProjection(symbol) ? [] : projectedMembers
+
+  return {
+    members: members.map(toMcpReferenceMemberData),
+    warnings: api.getWarnings(),
+  }
 }

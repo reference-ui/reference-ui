@@ -3,6 +3,7 @@ import { afterFirst, combineTrigger, emitOnAny, forWorker, onReady } from './eve
 
 const VIRTUAL_COMPLETE_EVENT = 'virtual:complete' as const
 const RUN_REFERENCE_BUILD_EVENT = 'run:reference:build' as const
+const VIRTUAL_FS_CHANGE_EVENT = 'virtual:fs:change' as const
 
 /**
  * High-level sync orchestration.
@@ -29,6 +30,16 @@ export function initEvents(): void {
    */
   onceAll(['virtual:ready', 'reference:ready'], () => {
     emit('run:virtual:copy:all')
+  })
+
+  /**
+   * Refresh the warmed Atlas result once the initial virtual barrier opens so
+   * the final MCP build uses a post-bootstrap analysis for the active sync.
+   */
+  forWorker({
+    ready: 'mcp:ready',
+    on: VIRTUAL_COMPLETE_EVENT,
+    emit: 'run:mcp:prefetch:atlas',
   })
 
   /**
@@ -61,7 +72,7 @@ export function initEvents(): void {
    * generated styling surface stays aligned with mirrored sources.
    */
   afterFirst(VIRTUAL_COMPLETE_EVENT, {
-    on: 'virtual:fs:change',
+    on: VIRTUAL_FS_CHANGE_EVENT,
     emit: 'run:system:config',
   })
 
@@ -71,7 +82,7 @@ export function initEvents(): void {
    * declaration surface already exists.
    */
   afterFirst(VIRTUAL_COMPLETE_EVENT, {
-    on: 'virtual:fs:change',
+    on: VIRTUAL_FS_CHANGE_EVENT,
     emit: RUN_REFERENCE_BUILD_EVENT,
     payload: {},
   })
@@ -138,6 +149,16 @@ export function initEvents(): void {
       payload: {},
     })
   )
+
+  /**
+   * Watch-mode virtual changes invalidate the earlier Atlas result. Refresh it
+   * eagerly so the final MCP build can still reuse a warmed analysis.
+   */
+  afterFirst(VIRTUAL_COMPLETE_EVENT, {
+    on: VIRTUAL_FS_CHANGE_EVENT,
+    emit: 'run:mcp:prefetch:atlas',
+    payload: {},
+  })
 
   /**
    * Any failure in the virtual/system/reference pipeline aborts the sync.
