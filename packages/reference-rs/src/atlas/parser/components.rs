@@ -2,10 +2,60 @@ use super::jsx::statements_contain_jsx;
 use super::utils::{reference_name, slice_span};
 use super::ModuleParseState;
 use crate::atlas::internal::{ComponentDecl, PropsAnnotation};
-use oxc_ast::ast::{Argument, BindingPattern, Expression, FormalParameter, Statement, TSType};
+use oxc_ast::ast::{
+    Argument, BindingPattern, CallExpression, Expression, FormalParameter, Statement, TSType,
+    TSTypeParameterInstantiation,
+};
 use oxc_span::GetSpan;
 use std::path::Path;
 
+fn apply_wrapper_props(
+    component: Option<ComponentDecl>,
+    wrapper_props: Option<PropsAnnotation>,
+) -> Option<ComponentDecl> {
+    component.map(|mut value| {
+        if matches!(value.props, PropsAnnotation::None) {
+            if let Some(props) = wrapper_props {
+                value.props = props;
+            }
+        }
+        value
+    })
+}
+
+fn parse_type_reference(source: &str, ts_type: &TSType<'_>) -> PropsAnnotation {
+    match ts_type {
+        TSType::TSTypeReference(reference) => {
+            PropsAnnotation::Named(reference_name(slice_span(source, reference.type_name.span())))
+        }
+        TSType::TSTypeLiteral(_) => PropsAnnotation::InlineObject,
+        _ => PropsAnnotation::None,
+    }
+}
+
+fn parse_wrapper_type_arguments(
+    type_arguments: Option<&TSTypeParameterInstantiation<'_>>,
+    source: &str,
+) -> Option<PropsAnnotation> {
+    let type_arguments = type_arguments?;
+    let props_type = type_arguments.params.iter().nth(1)?;
+    let props = parse_type_reference(source, props_type);
+    if matches!(props, PropsAnnotation::None) {
+        return None;
+    }
+    Some(props)
+}
+
+fn wrapper_props_from_call(call: &CallExpression<'_>, source: &str) -> Option<PropsAnnotation> {
+    parse_wrapper_type_arguments(call.type_arguments.as_deref(), source).or_else(|| {
+        match &call.callee {
+            Expression::TSInstantiationExpression(instantiated) => {
+                parse_wrapper_type_arguments(Some(instantiated.type_arguments.as_ref()), source)
+            }
+            _ => None,
+        }
+    })
+}
 pub(super) fn collect_variable_components<'a, I>(
     declarators: I,
     file_path: &Path,
@@ -123,25 +173,34 @@ pub(super) fn component_from_expression(
             app_relative_path,
             source,
         ),
-        Expression::TSInstantiationExpression(instantiated) => component_from_expression(
-            name,
-            &instantiated.expression,
-            file_path,
-            display_source,
-            app_relative_path,
-            source,
-        ),
-        Expression::CallExpression(call) => call.arguments.iter().find_map(|argument| match argument {
-            Argument::SpreadElement(_) => None,
-            _ => component_from_expression(
+        Expression::TSInstantiationExpression(instantiated) => apply_wrapper_props(
+            component_from_expression(
                 name,
-                argument.to_expression(),
+                &instantiated.expression,
                 file_path,
                 display_source,
                 app_relative_path,
                 source,
             ),
-        }),
+            parse_wrapper_type_arguments(Some(instantiated.type_arguments.as_ref()), source),
+        ),
+        Expression::CallExpression(call) => {
+            let wrapper_props = wrapper_props_from_call(call, source);
+            call.arguments.iter().find_map(|argument| match argument {
+                Argument::SpreadElement(_) => None,
+                _ => apply_wrapper_props(
+                    component_from_expression(
+                        name,
+                        argument.to_expression(),
+                        file_path,
+                        display_source,
+                        app_relative_path,
+                        source,
+                    ),
+                    wrapper_props.clone(),
+                ),
+            })
+        }
         _ => None,
     }
 }
@@ -200,13 +259,7 @@ fn parse_props_annotation(param: Option<&FormalParameter<'_>>, source: &str) -> 
     let Some(annotation) = param.type_annotation.as_ref() else {
         return PropsAnnotation::None;
     };
-    match &annotation.type_annotation {
-        TSType::TSTypeReference(reference) => {
-            PropsAnnotation::Named(reference_name(slice_span(source, reference.type_name.span())))
-        }
-        TSType::TSTypeLiteral(_) => PropsAnnotation::InlineObject,
-        _ => PropsAnnotation::None,
-    }
+    parse_type_reference(source, &annotation.type_annotation)
 }
 
 fn is_component_name(name: &str) -> bool {

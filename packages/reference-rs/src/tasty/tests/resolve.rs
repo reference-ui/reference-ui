@@ -8,7 +8,9 @@ use std::path::PathBuf;
 
 use crate::tasty::ast::{extract_ast, resolve_ast};
 use crate::tasty::model::TypeRef;
-use crate::tasty::scanner::{symbol_id, ScannedFile, ScannedWorkspace};
+use crate::tasty::scanner::{scan_workspace, symbol_id, ScannedFile, ScannedWorkspace};
+
+use super::fixtures::TempDir;
 
 fn workspace(files: &[(&str, &str)]) -> ScannedWorkspace {
     let root_dir = PathBuf::from(".");
@@ -122,4 +124,49 @@ fn local_export_type_reexport_keeps_only_canonical_symbol() {
     assert_eq!(matching.len(), 1);
     assert_eq!(matching[0].file_id, "src/other.ts");
     assert_eq!(matching[0].id, symbol_id("src/other.ts", "T"));
+}
+
+#[test]
+fn resolves_cross_library_external_import_reference() {
+    let root = TempDir::new("tasty-resolve-cross-library-external-import");
+    root.write(
+        "src/index.ts",
+        "export type { PrimitiveNativeProps } from '@reference-ui/react';\n",
+    );
+    root.write(
+        "node_modules/@reference-ui/react/package.json",
+        r#"{ "name": "@reference-ui/react", "types": "react.d.mts" }"#,
+    );
+    root.write(
+        "node_modules/@reference-ui/react/react.d.mts",
+        "import type { ComponentPropsWithoutRef } from 'react';\nexport type PrimitiveNativeProps<T> = ComponentPropsWithoutRef<T>;\n",
+    );
+    root.write(
+        "node_modules/react/package.json",
+        r#"{ "name": "react", "types": "index.d.ts" }"#,
+    );
+    root.write(
+        "node_modules/react/index.d.ts",
+        "export type ComponentPropsWithoutRef<T> = { disabled?: boolean };\n",
+    );
+
+    let scanned = scan_workspace(root.path(), &["src/**/*.ts".to_string()])
+        .expect("workspace scan should succeed");
+    let parsed = extract_ast(&scanned);
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let graph = resolve_ast(parsed);
+
+    let primitive_native_props = graph
+        .symbols
+        .values()
+        .find(|s| s.name == "PrimitiveNativeProps")
+        .expect("PrimitiveNativeProps symbol");
+
+    let Some(TypeRef::Reference { name, target_id, .. }) = primitive_native_props.underlying.as_ref() else {
+        panic!("expected underlying reference, got {:?}", primitive_native_props.underlying);
+    };
+
+    assert_eq!(name, "ComponentPropsWithoutRef");
+    let expected = symbol_id("node_modules/react/index.d.ts", "ComponentPropsWithoutRef");
+    assert_eq!(target_id.as_deref(), Some(expected.as_str()));
 }

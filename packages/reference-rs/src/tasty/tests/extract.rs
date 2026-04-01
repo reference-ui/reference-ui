@@ -258,6 +258,76 @@ fn const_object_as_const_populates_value_bindings() {
 }
 
 #[test]
+fn recipe_call_populates_value_bindings_with_variant_selection_function() {
+    let scanned = single_file(
+        "test.ts",
+        "import { recipe } from '@reference-ui/react'\nconst buttonRecipe = recipe({ variants: { visual: { solid: {}, ghost: {} }, size: { sm: {}, md: {} } } })\nexport {}\n",
+    );
+    let ast = extract_ast(&scanned);
+    let file = parsed_file(&ast, "test.ts");
+    let binding = file
+        .value_bindings
+        .get("buttonRecipe")
+        .expect("value binding for buttonRecipe");
+
+    match binding {
+        TypeRef::Function { params, .. } => {
+            let selection = params
+                .first()
+                .and_then(|param| param.type_ref.as_ref())
+                .expect("recipe selection parameter");
+            match selection {
+                TypeRef::Object { members } => {
+                    let visual = members.iter().find(|member| member.name == "visual");
+                    let size = members.iter().find(|member| member.name == "size");
+                    assert!(visual.is_some(), "expected visual member, got {members:?}");
+                    assert!(size.is_some(), "expected size member, got {members:?}");
+                }
+                other => panic!("expected object selection type, got {other:?}"),
+            }
+        }
+        other => panic!("expected function value binding, got {other:?}"),
+    }
+}
+
+#[test]
+fn cva_call_populates_value_bindings_with_variant_selection_function() {
+    let scanned = single_file(
+        "test.ts",
+        "import { cva } from 'src/system/css'\nconst buttonRecipe = cva({ variants: { visual: { solid: {}, ghost: {} }, size: { sm: {}, md: {} } } })\nexport {}\n",
+    );
+    let ast = extract_ast(&scanned);
+    let file = parsed_file(&ast, "test.ts");
+    let binding = file
+        .value_bindings
+        .get("buttonRecipe")
+        .expect("value binding for buttonRecipe");
+
+    match binding {
+        TypeRef::Function { params, .. } => {
+            let selection = params
+                .first()
+                .and_then(|param| param.type_ref.as_ref())
+                .expect("cva selection parameter");
+            match selection {
+                TypeRef::Object { members } => {
+                    assert!(
+                        members.iter().any(|member| member.name == "visual"),
+                        "expected visual member, got {members:?}"
+                    );
+                    assert!(
+                        members.iter().any(|member| member.name == "size"),
+                        "expected size member, got {members:?}"
+                    );
+                }
+                other => panic!("expected object selection type, got {other:?}"),
+            }
+        }
+        other => panic!("expected function value binding, got {other:?}"),
+    }
+}
+
+#[test]
 fn jsdoc_block_on_interface_is_parsed() {
     let scanned = single_file(
         "test.ts",

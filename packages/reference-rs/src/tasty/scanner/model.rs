@@ -24,6 +24,7 @@ pub(crate) struct ScannedWorkspace {
 pub(super) struct DiscoveredFile {
     pub(super) module_specifier: String,
     pub(super) library: String,
+    pub(super) external_depth: usize,
 }
 
 #[derive(Debug, Clone)]
@@ -31,4 +32,5 @@ pub(super) struct ResolvedModule {
     pub(super) file_id: String,
     pub(super) module_specifier: String,
     pub(super) library: String,
+    pub(super) external_depth: usize,
 }

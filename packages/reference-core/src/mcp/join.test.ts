@@ -108,4 +108,61 @@ describe('joinMcpComponent', () => {
     })
     expect(result.warnings).toEqual([])
   })
+
+  it('adds documented members when Atlas does not report prop names', () => {
+    const component = {
+      ...createComponent(),
+      props: [],
+    }
+
+    const result = joinMcpComponent(component, {
+      ...createDocument(),
+      members: [
+        createDocument().members[0]!,
+        {
+          id: 'size',
+          name: 'size',
+          kind: 'property',
+          optional: true,
+          readonly: false,
+          declaredBy: { id: 'recipe-variant-props', name: 'RecipeVariantProps' },
+          semanticKind: 'property' as never,
+            typeLabel: 'Union',
+            type: {
+              kind: 'union',
+              types: [
+                { kind: 'literal', value: '"sm"' },
+                { kind: 'literal', value: '"md"' },
+                { kind: 'literal', value: '"lg"' },
+              ],
+            },
+          jsDoc: {
+            summary: 'Button size',
+            tags: [],
+          },
+          summary: {
+            description: 'Controls the recipe size',
+            paramDocs: [],
+          },
+        },
+      ],
+    })
+
+    expect(result.props).toMatchObject([
+      {
+        name: 'variant',
+        count: 0,
+        usage: 'unused',
+        type: '"solid" | "ghost"',
+        description: 'Controls visual treatment',
+      },
+      {
+        name: 'size',
+        count: 0,
+        usage: 'unused',
+        type: '"sm" | "md" | "lg"',
+        description: 'Controls the recipe size',
+      },
+    ])
+  })
 })

@@ -13,8 +13,9 @@ use crate::tasty::scanner::paths::{
 pub(super) struct DiscoveryContext<'a> {
     pub(super) root_dir: &'a Path,
     pub(super) file_id: &'a str,
-    pub(super) current_library: &'a str,
     pub(super) is_user_file: bool,
+    pub(super) current_library: &'a str,
+    pub(super) external_depth: usize,
     pub(super) known_file_ids: &'a BTreeSet<String>,
     pub(super) user_file_ids: &'a BTreeSet<String>,
     pub(super) reexport_specifiers: &'a BTreeSet<String>,
@@ -37,18 +38,13 @@ pub(super) fn resolve_import_for_discovery(
         return None;
     }
 
-    // Once we are traversing inside an external package, stay inside that same
-    // package. This keeps discovery scoped to the declarations that back the
-    // symbols we already chose to bridge.
-    if !ctx.is_user_file {
-        return resolve_external_import_in_current_library(
-            ctx.root_dir,
-            source_module,
-            ctx.current_library,
-        );
-    }
+    let resolved = resolve_external_import(ctx.root_dir, source_module)?;
+    let external_depth = next_external_depth(ctx, &resolved.library)?;
 
-    resolve_external_import(ctx.root_dir, source_module)
+    Some(ResolvedModule {
+        external_depth,
+        ..resolved
+    })
 }
 
 fn resolve_relative_import_for_discovery(
@@ -72,15 +68,32 @@ fn resolve_relative_import_for_discovery(
         file_lookup,
     )?;
 
-    Some(resolved_module_from_file_id(file_id))
+    Some(resolved_module_from_file_id(file_id, ctx.external_depth))
 }
 
-fn resolved_module_from_file_id(file_id: String) -> ResolvedModule {
+fn resolved_module_from_file_id(file_id: String, external_depth: usize) -> ResolvedModule {
     ResolvedModule {
         module_specifier: module_specifier_for_file_id(&file_id),
         library: package_name_from_file_id(&file_id),
         file_id,
+        external_depth,
     }
+}
+
+fn next_external_depth(ctx: &DiscoveryContext<'_>, target_library: &str) -> Option<usize> {
+    if ctx.is_user_file {
+        return Some(1);
+    }
+
+    if target_library == ctx.current_library {
+        return Some(ctx.external_depth);
+    }
+
+    if ctx.external_depth < 2 {
+        return Some(ctx.external_depth + 1);
+    }
+
+    None
 }
 
 fn should_skip_user_external_import(
@@ -88,24 +101,13 @@ fn should_skip_user_external_import(
     _reexport_specifiers: &BTreeSet<String>,
     source_module: &str,
 ) -> bool {
-    // For reference documentation, we want to resolve external types that are part of the public API
-    // The old logic was too restrictive - it prevented showing SystemStyleObject members
-    // Now we allow all external imports and filter at display time instead
-    
-    // Only skip if it's clearly a dev dependency or utility that's not part of the public API
-    let is_dev_dependency = source_module.starts_with("@types/") 
+    // Reference docs should follow public external types, but development-only
+    // test helpers still do not belong in the scan graph.
+    let is_dev_dependency = source_module.starts_with("@types/")
         || source_module.starts_with("vitest")
         || source_module.starts_with("@vitest")
         || source_module.starts_with("test");
-    
+
     is_user_file && is_dev_dependency
 }
 
-fn resolve_external_import_in_current_library(
-    root_dir: &Path,
-    source_module: &str,
-    current_library: &str,
-) -> Option<ResolvedModule> {
-    let resolved = resolve_external_import(root_dir, source_module)?;
-    (resolved.library == current_library).then_some(resolved)
-}

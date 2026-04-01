@@ -1,10 +1,6 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'
-import {
-  execFileSync,
-  spawn,
-  type ChildProcessByStdio,
-} from 'node:child_process'
+import { execFileSync, spawn, type ChildProcessByStdio } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import type { Readable } from 'node:stream'
 import { dirname, join, resolve } from 'node:path'

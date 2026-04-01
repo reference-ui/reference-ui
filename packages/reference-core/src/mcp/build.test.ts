@@ -75,5 +75,10 @@ describe('buildMcpArtifact', () => {
       include: ['src/components/**'],
       exclude: ['src/components/internal/**'],
     })
+    expect(loadReferenceDocument).toHaveBeenCalledWith(
+      {},
+      'ButtonProps',
+      './src/components/Button.tsx'
+    )
   })
 })
