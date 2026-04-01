@@ -232,10 +232,7 @@ async function closeHttpRequestSession(
   await Promise.allSettled([transport.close(), server.close()])
 }
 
-function handleUnsupportedMcpMethod(
-  req: IncomingMessage,
-  res: ServerResponse
-): boolean {
+function handleUnsupportedMcpMethod(req: IncomingMessage, res: ServerResponse): boolean {
   if (req.method === 'GET' || req.method === 'DELETE') {
     res.statusCode = 405
     res.setHeader('allow', 'POST')

@@ -87,7 +87,7 @@ export function createReferenceApi(manifestPath: string): TastyApi {
 
 function toMcpReferenceMemberData(member: TastyMember): McpReferenceMemberData {
   const type = member.getType()
-  const resolvedType = type ? getTastyResolvedType(type) ?? type : undefined
+  const resolvedType = type ? (getTastyResolvedType(type) ?? type) : undefined
 
   return {
     name: member.getName(),
