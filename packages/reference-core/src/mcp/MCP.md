@@ -352,3 +352,100 @@ If we keep that boundary clean, the MCP stays simple:
 - Atlas provides inventory
 - generated reference types provide enrichment
 - MCP provides the final shape
+
+## Server implementation choice
+
+For Node in 2026, the recommended implementation stack is:
+
+- official `@modelcontextprotocol/sdk` as the MCP server/runtime layer
+- Zod for tool input validation and output shaping
+- MCP Inspector as the default debugging and development workflow
+
+That is the best fit for this project because the hard work is already in Atlas.
+The MCP layer here should stay thin:
+
+- declare a small set of tools
+- map tool inputs to Atlas and generated-types queries
+- return clean typed JSON
+
+This is not a case where we need framework-heavy abstraction.
+The official SDK is the boring, correct base.
+
+## Transport choice
+
+The recommended transport progression is:
+
+- first release: STDIO
+- later remote deployment: Streamable HTTP
+
+STDIO is the simplest and best default for local development and desktop-style integrations.
+Remote transport should be added only when the server genuinely needs remote hosting.
+
+## Recommended DX stack
+
+The intended developer-experience layering is:
+
+- official MCP SDK for protocol/runtime correctness
+- Zod for schemas and validation
+- MCP Inspector for development and debugging
+
+Fastify is only relevant if we also want a separate HTTP API beside MCP.
+It should not define the MCP architecture itself.
+
+## FastMCP position
+
+FastMCP may be useful as optional sugar for quick experimentation, but it should not be the architectural dependency for the shipping server.
+
+The recommendation here is:
+
+- ship on the official TypeScript SDK
+- treat FastMCP-style wrappers as optional, not foundational
+
+## Initial tool shape
+
+The first MCP tool set should stay small.
+
+Recommended starting tools:
+
+- `get_component`
+- `list_components`
+- `get_component_examples`
+- `get_common_patterns`
+
+Conceptually, the server should look like:
+
+```text
+atlas queries -> mcp tools -> typed results
+```
+
+That matches the architecture in the rest of this document.
+Atlas already sits on the declarative layer, so the MCP server should remain a thin query and shaping layer on top.
+
+## Future UI path
+
+If we later want richer in-chat UI, MCP Apps is the obvious extension point.
+
+That matters because Atlas-derived outputs could eventually support:
+
+- prop heatmaps
+- richer usage summaries
+- example pickers
+- lightweight component inspection UIs
+
+That is a later step, not a requirement for the first MCP server.
+
+## Practical recommendation
+
+For this project, the practical implementation choice is:
+
+- official TypeScript MCP SDK v1.x
+- Zod
+- MCP Inspector
+- STDIO first
+- Streamable HTTP later if needed
+
+The key architectural rule stays the same:
+
+- keep the MCP server thin
+- keep Atlas as the inventory and usage source
+- keep generated reference types as the enrichment source
