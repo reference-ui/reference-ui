@@ -1,4 +1,5 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
+import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'
 import { execFileSync, spawn, type ChildProcessByStdio } from 'node:child_process'
 import { existsSync } from 'node:fs'
@@ -13,6 +14,11 @@ export interface RunningMcpClient {
   transport: StreamableHTTPClientTransport
   process: McpServerProcess
   serverUrl: URL
+}
+
+export interface RunningMcpStdioClient {
+  client: Client
+  transport: StdioClientTransport
 }
 
 interface TextContentEntry {
@@ -162,6 +168,34 @@ export async function stopMcpClient(
 
     running.process.kill('SIGTERM')
   })
+}
+
+export async function startMcpStdioClient(cwd: string): Promise<RunningMcpStdioClient> {
+  ensureRefCoreCli()
+
+  const transport = new StdioClientTransport({
+    command: 'node',
+    args: [refCoreCliPath, 'mcp'],
+    cwd,
+    stderr: 'pipe',
+  })
+  const client = new Client(
+    { name: 'reference-unit-mcp-stdio-test', version: '0.0.0' },
+    { capabilities: {} }
+  )
+  await client.connect(transport)
+
+  return {
+    client,
+    transport,
+  }
+}
+
+export async function stopMcpStdioClient(
+  running: RunningMcpStdioClient | null | undefined
+): Promise<void> {
+  if (!running) return
+  await Promise.allSettled([running.transport.close(), running.client.close()])
 }
 
 export function findTextContent(result: unknown): string {

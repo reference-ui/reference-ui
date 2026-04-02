@@ -104,13 +104,26 @@ export async function generateMcpArtifactFromAtlas(input: {
   const api = createReferenceApi(manifestPath)
   const components = await Promise.all(
     atlas.components.map(async component => {
-      const reference = component.interface?.name
-        ? await loadMcpReferenceData(
+      let reference = null
+
+      if (component.interface?.name) {
+        try {
+          reference = await loadMcpReferenceData(
             api,
             component.interface.name,
             component.interface.source
           )
-        : null
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error)
+          throw new Error(
+            `MCP enrichment failed for interface "${component.interface.name}" (${component.interface.source}): ${message}`,
+            {
+              cause: error,
+            }
+          )
+        }
+      }
+
       return joinMcpComponentWithReference(component, reference)
     })
   )

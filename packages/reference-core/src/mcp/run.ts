@@ -8,7 +8,16 @@ export interface McpWorkerPayload {
 }
 
 export async function runMcpBuild(payload: McpWorkerPayload): Promise<void> {
+  const startedAt = Date.now()
   const artifact = await buildMcpArtifact({ cwd: payload.cwd, force: true })
+  const durationMs = Date.now() - startedAt
+
+  log.debug('mcp', 'MCP build completed', {
+    cwd: payload.cwd,
+    componentCount: artifact.components.length,
+    modelPath: getMcpModelPath(payload.cwd),
+    durationMs,
+  })
 
   emit('mcp:complete', {
     modelPath: getMcpModelPath(payload.cwd),

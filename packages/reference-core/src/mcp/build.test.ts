@@ -116,4 +116,15 @@ describe('buildMcpArtifact', () => {
     expect(analyzeDetailed).not.toHaveBeenCalled()
     expect(writeMcpArtifact).not.toHaveBeenCalled()
   })
+
+  it('fails clearly when generated type enrichment is malformed', async () => {
+    const { generateMcpArtifact } = await import('./build')
+    loadMcpReferenceData.mockRejectedValueOnce(new Error('Corrupt Tasty member payload'))
+
+    await expect(generateMcpArtifact({ cwd: '/workspace/app' })).rejects.toThrow(
+      'MCP enrichment failed for interface "ButtonProps" (./src/components/Button.tsx): Corrupt Tasty member payload'
+    )
+
+    expect(writeMcpArtifact).not.toHaveBeenCalled()
+  })
 })
