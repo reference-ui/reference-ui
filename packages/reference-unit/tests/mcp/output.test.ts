@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync, rmSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import {
   findTextContent,
@@ -18,7 +18,12 @@ let running: RunningMcpClient | null = null
 
 describe('mcp output wiring', () => {
   beforeAll(async () => {
+    rmSync(modelPath, { force: true })
+    expect(existsSync(modelPath)).toBe(false)
+
     runRefSync(fixtureRoot)
+    expect(existsSync(modelPath)).toBe(true)
+
     running = await startMcpClient(fixtureRoot, 3698)
   }, 30_000)
 
@@ -29,9 +34,11 @@ describe('mcp output wiring', () => {
 
   it('emits MCP output for included fixture-library components and excludes filtered ones', async () => {
     const artifact = JSON.parse(readFileSync(modelPath, 'utf8')) as {
+      schemaVersion: string
       components: Array<{ name: string; source: string }>
     }
 
+    expect(artifact.schemaVersion).toBeTruthy()
     expect(artifact.components.length).toBeGreaterThan(0)
     expect(
       artifact.components.some(
@@ -67,6 +74,20 @@ describe('mcp output wiring', () => {
     expect(buttonText).toContain('"name": "Button"')
     expect(buttonText).toContain('"source": "./components/Button.tsx"')
     expect(buttonText).toContain('"source": "@fixtures/demo-ui"')
+  })
+
+  it('rebuilds the MCP artifact from scratch on a cold ref sync', () => {
+    const artifact = JSON.parse(readFileSync(modelPath, 'utf8')) as {
+      components: Array<{ name: string; source: string }>
+    }
+
+    expect(existsSync(modelPath)).toBe(true)
+    expect(
+      artifact.components.some(
+        component =>
+          component.name === 'Button' && component.source === './components/Button.tsx'
+      )
+    ).toBe(true)
   })
 
   it('supports the remaining MCP tools with usable project-aware payloads', async () => {

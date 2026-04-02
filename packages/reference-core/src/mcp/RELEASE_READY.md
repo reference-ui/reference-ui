@@ -42,6 +42,12 @@ The highest-leverage hardening work already completed is meaningful:
 - focused MCP unit coverage exists for joining, queries, and command transport
 - integration coverage exists in `reference-unit` for HTTP startup and tool/
   resource output
+- explicit cold-sync smoke coverage now proves `ref sync` recreates
+  `.reference-ui/mcp/model.json` for a realistic fixture and includes known
+  components
+- VS Code integration guidance now avoids `pnpm`-spawn assumptions and uses a
+  `node` + CLI-path launch shape that survives editor hosts with a minimal
+  `PATH`
 - sync now waits for MCP completion in one-shot mode, while watch readiness is
   gated on `packager:complete` so MCP does not stall normal edit feedback
 - CLI transport selection is corrected so stdio remains the default but
@@ -78,8 +84,6 @@ duration itself rather than sync orchestration.
 
 ### Blockers before calling this externally polished
 
-- add one explicit cold-sync smoke test that asserts `.reference-ui/mcp/model.json`
-  is produced for a realistic fixture and contains at least one known component
 - add one failure-path test where generated type enrichment is missing or
   malformed and MCP returns a clear failure instead of an ambiguous stall
 - add one timing/debug log around MCP build start and end so future slowdowns
@@ -87,7 +91,6 @@ duration itself rather than sync orchestration.
 
 ### Important but not release-blocking
 
-- stronger top-level MCP usage docs for humans
 - broader stdio-only integration coverage
 - more varied Atlas fixtures for odd wrapper/re-export patterns as they appear
 - richer public resource views if we later want lighter-weight inventory-only
@@ -111,8 +114,6 @@ If more confidence is needed, these are the best next Atlas/MCP tests to add.
 
 ### MCP-side
 
-- cold build smoke: `ref sync` produces MCP output and the public resource omits
-  internal metadata
 - stdio integration test that exercises `ref mcp` without HTTP flags
 - failure-path test for missing generated manifest / broken type artifact
 - timing/assertion test that MCP completion happens after `packager-ts:complete`

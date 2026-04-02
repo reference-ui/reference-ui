@@ -1,4 +1,5 @@
 node_modules
 dist
 .reference-ui
+.mcp-fixture-workspace-trash
 .DS_Store

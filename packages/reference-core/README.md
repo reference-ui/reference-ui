@@ -21,41 +21,54 @@ Runs the Reference UI MCP server.
 
 #### Standard VS Code setup
 
-For a released package, prefer invoking the installed CLI binary directly from `mcp.json` instead of shelling into `node dist/...` by hand.
+For repo-local MCP clients that spawn a local process directly, prefer
+launching `node` with the built CLI path. Do not assume package-manager
+wrappers like `pnpm` are available on the editor host `PATH`.
 
-Typical product setup:
+For published consumer-facing setup, document the install/run flow separately.
+That may be simpler. The guidance here is the deterministic workspace-local
+integration path.
 
-```json
-{
-  "servers": {
-    "referenceUi": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "@reference-ui/core", "mcp"]
-    }
-  }
-}
-```
-
-In this monorepo workspace we target the docs package directory explicitly so `ref mcp` runs with the correct `ui.config.ts` as its current working directory:
+Typical workspace-installed setup:
 
 ```json
 {
   "servers": {
     "referenceUi": {
       "type": "stdio",
-      "command": "pnpm",
+      "command": "node",
       "args": [
-        "--dir",
-        "${workspaceFolder}/packages/reference-docs",
-        "exec",
-        "ref",
+        "${workspaceFolder}/node_modules/@reference-ui/core/dist/cli/index.mjs",
         "mcp"
       ]
     }
   }
 }
 ```
+
+If your MCP client supports `cwd`, set it to the project whose `ui.config.ts`
+should drive MCP output.
+
+In this monorepo workspace we target the docs package directory explicitly so
+the server runs with the correct `ui.config.ts` as its current working
+directory:
+
+```json
+{
+  "servers": {
+    "referenceUi": {
+      "type": "stdio",
+      "command": "node",
+      "cwd": "${workspaceFolder}/packages/reference-docs",
+      "args": ["${workspaceFolder}/packages/reference-core/dist/cli/index.mjs", "mcp"]
+    }
+  }
+}
+```
+
+`npx @reference-ui/core mcp` can still work for published-package setups, but
+it depends on the extension host being able to resolve `npx`. `node` plus the
+CLI path is the safer default for editor integrations.
 
 ## Architecture
 
@@ -102,7 +115,7 @@ import { copyAll } from './copy-all'
 
 export default async function runVirtual(payload: VirtualWorkerPayload): Promise<never> {
   const handler = () => {
-    copyAll(payload).catch((err) => console.error('[virtual] Copy failed:', err))
+    copyAll(payload).catch(err => console.error('[virtual] Copy failed:', err))
   }
 
   on('run:virtual:copy:all', handler)
