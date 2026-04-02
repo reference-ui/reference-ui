@@ -84,8 +84,9 @@ duration itself rather than sync orchestration.
 
 ### Blockers before calling this externally polished
 
-- add one failure-path test where generated type enrichment is missing or
-  malformed and MCP returns a clear failure instead of an ambiguous stall
+- add one failure-path test for malformed generated type artifacts during
+  enrichment; missing-manifest failure is now covered and already returns a
+  clear error
 - add one timing/debug log around MCP build start and end so future slowdowns
   can be attributed quickly without reading raw bus traces
 
@@ -115,7 +116,8 @@ If more confidence is needed, these are the best next Atlas/MCP tests to add.
 ### MCP-side
 
 - stdio integration test that exercises `ref mcp` without HTTP flags
-- failure-path test for missing generated manifest / broken type artifact
+- failure-path test for broken generated type artifacts beyond the now-covered
+  missing-manifest case
 - timing/assertion test that MCP completion happens after `packager-ts:complete`
   for the current pass, not from stale prior artifacts
 
