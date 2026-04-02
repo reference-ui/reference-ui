@@ -11,7 +11,7 @@ Core table rendering and Tasty hardening are done. Remaining items before this i
 
 ---
 
-## MCP Server _(final hardening)_
+## MCP Server _(final hardening)_ [DONE]
 
 The MCP server is at final stages. Remaining items:
 
