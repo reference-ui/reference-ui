@@ -5,9 +5,10 @@ const createReferenceApi = vi.fn(() => ({}))
 const loadMcpReferenceData = vi.fn(async () => null)
 const writeMcpArtifact = vi.fn(async () => '/tmp/model.json')
 const getConfig = vi.fn()
+const existsSync = vi.fn(() => true)
 
 vi.mock('node:fs', () => ({
-  existsSync: () => true,
+  existsSync,
 }))
 
 vi.mock('@reference-ui/rust/atlas', () => ({
@@ -40,6 +41,7 @@ vi.mock('./paths', async () => {
 describe('buildMcpArtifact', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    existsSync.mockReturnValue(true)
     getConfig.mockReturnValue({
       name: 'test-system',
       include: ['src/**/*.{ts,tsx}'],
@@ -101,5 +103,17 @@ describe('buildMcpArtifact', () => {
         components: generated.components,
       })
     )
+  })
+
+  it('fails clearly when the generated types manifest is missing', async () => {
+    const { generateMcpArtifact } = await import('./build')
+    existsSync.mockReturnValue(false)
+
+    await expect(generateMcpArtifact({ cwd: '/workspace/app' })).rejects.toThrow(
+      'MCP build requires generated types manifest at "/tmp/types/tasty/manifest.js". Run ref sync first.'
+    )
+
+    expect(analyzeDetailed).not.toHaveBeenCalled()
+    expect(writeMcpArtifact).not.toHaveBeenCalled()
   })
 })
