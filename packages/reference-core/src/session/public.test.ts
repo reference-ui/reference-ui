@@ -43,6 +43,22 @@ describe('getSyncSession – discovery', () => {
     expect(calls).toHaveLength(0)
   })
 
+  it('respects an explicit outDir option instead of walking up from cwd', async () => {
+    const customOutDir = join(rootDir, 'custom-out')
+    mkdirSync(customOutDir, { recursive: true })
+    writeManifest(customOutDir, { ...BASE_MANIFEST, buildState: 'idle' })
+
+    const session = getSyncSession({ cwd: rootDir, outDir: 'custom-out' })
+    const calls: unknown[] = []
+    session.onRefresh(e => calls.push(e))
+
+    writeManifest(customOutDir, { ...BASE_MANIFEST, buildState: 'ready' })
+    await new Promise(r => setTimeout(r, 200))
+
+    expect(calls.length).toBeGreaterThan(0)
+    session.dispose()
+  })
+
   it('returns a session object with onRefresh and dispose', () => {
     const session = getSyncSession({ cwd: rootDir })
     expect(typeof session.onRefresh).toBe('function')
@@ -137,6 +153,21 @@ describe('getSyncSession – onRefresh', () => {
 
     expect(calls).toHaveLength(0)
 
+    session.dispose()
+  })
+
+  it('fires onRefresh when getSyncSession is called before session.json exists (late-start)', async () => {
+    // outDir exists but session.json has not been written yet — simulates a
+    // bundler plugin that starts before ref sync creates the manifest.
+    const session = getSyncSession({ cwd: rootDir })
+    const calls: unknown[] = []
+    session.onRefresh(e => calls.push(e))
+
+    // Now ref sync "creates" the manifest with buildState=ready.
+    writeManifest(outDir, { ...BASE_MANIFEST, buildState: 'ready' })
+    await new Promise(r => setTimeout(r, 300))
+
+    expect(calls.length).toBeGreaterThan(0)
     session.dispose()
   })
 })

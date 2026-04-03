@@ -1,17 +1,22 @@
 import { watch as fsWatch, existsSync } from 'node:fs'
-import { resolve, join } from 'node:path'
+import { resolve, join, dirname } from 'node:path'
 import { readManifest, SESSION_FILE } from './files'
 import type { GetSyncSessionOptions, RefreshHandler, SyncSession } from './types'
 
 const DEFAULT_OUT_DIR = '.reference-ui'
 
 /**
- * Discover the `.reference-ui` output directory by walking up from `cwd`.
- * Returns the first ancestor directory that contains `session.json`, or falls
- * back to `cwd/.reference-ui` if none is found.
+ * Resolve the output directory to watch.
+ *
+ * - If `options.outDir` is supplied it is used directly (resolved relative to
+ *   `cwd` if relative), supporting projects that override the default outDir.
+ * - Otherwise walk up from `cwd` looking for a `.reference-ui/session.json`,
+ *   falling back to `cwd/.reference-ui` when none is found.
  */
-function findOutDir(cwd: string): string {
-  let dir = resolve(cwd)
+function findOutDir(options: GetSyncSessionOptions): string {
+  if (options.outDir) return resolve(options.cwd, options.outDir)
+
+  let dir = resolve(options.cwd)
   for (let i = 0; i < 10; i++) {
     const candidate = join(dir, DEFAULT_OUT_DIR)
     if (existsSync(join(candidate, SESSION_FILE))) {
@@ -21,14 +26,20 @@ function findOutDir(cwd: string): string {
     if (parent === dir) break
     dir = parent
   }
-  return join(resolve(cwd), DEFAULT_OUT_DIR)
+  return join(resolve(options.cwd), DEFAULT_OUT_DIR)
 }
 
 /**
  * Attach to the Reference sync session for the given project root.
  *
- * Watches `.reference-ui/session.json` for changes and fires `onRefresh`
- * handlers each time a logical build transitions to `ready`.
+ * Watches `.reference-ui/session.json` (or the path given by `options.outDir`)
+ * for changes and fires `onRefresh` handlers each time a logical build
+ * transitions to `ready`.
+ *
+ * If `session.json` does not exist yet when `getSyncSession` is called (e.g.
+ * the bundler plugin starts before `ref sync` has written the manifest), the
+ * watcher automatically promotes itself from a directory probe to a file
+ * watcher the moment the file appears — no polling required.
  *
  * ```ts
  * import { getSyncSession } from '@reference-ui/core'
@@ -40,7 +51,7 @@ function findOutDir(cwd: string): string {
  * ```
  */
 export function getSyncSession(options: GetSyncSessionOptions): SyncSession {
-  const outDir = findOutDir(options.cwd)
+  const outDir = findOutDir(options)
   const handlers = new Set<RefreshHandler>()
   let lastBuildState: string | null = null
   let watcher: ReturnType<typeof fsWatch> | null = null
@@ -64,18 +75,47 @@ export function getSyncSession(options: GetSyncSessionOptions): SyncSession {
     }
   }
 
-  function startWatching(): void {
-    const sessionFile = join(outDir, SESSION_FILE)
-    if (!existsSync(sessionFile)) return
+  function attachToFile(sessionFile: string): void {
     try {
-      watcher = fsWatch(sessionFile, () => {
+      const fw = fsWatch(sessionFile, { persistent: false }, () => {
         checkForRefresh()
       })
-      watcher.on('error', () => {
-        // Ignore watcher errors — the consumer can re-call getSyncSession.
+      fw.on('error', () => {
+        // Ignore — the consumer can re-call getSyncSession if the file is gone.
       })
+      watcher = fw
     } catch {
-      // File may disappear between the existsSync check and the watch call.
+      // File may have disappeared between the existsSync check and fsWatch call.
+    }
+  }
+
+  function startWatching(): void {
+    const sessionFile = join(outDir, SESSION_FILE)
+
+    if (existsSync(sessionFile)) {
+      attachToFile(sessionFile)
+      return
+    }
+
+    // session.json absent — watch the nearest existing ancestor directory so
+    // we can promote to a file watcher the moment the file is created.
+    const watchTarget = existsSync(outDir) ? outDir : dirname(outDir)
+    if (!existsSync(watchTarget)) return
+
+    try {
+      const probe = fsWatch(watchTarget, { persistent: false }, () => {
+        if (existsSync(sessionFile)) {
+          probe.close()
+          watcher = null
+          attachToFile(sessionFile)
+          // Catch the ready state that triggered the creation.
+          checkForRefresh()
+        }
+      })
+      probe.on('error', () => {})
+      watcher = probe
+    } catch {
+      // Ignore — outDir may vanish (e.g. after ref clean).
     }
   }
 

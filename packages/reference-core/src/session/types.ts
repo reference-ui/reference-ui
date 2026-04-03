@@ -36,4 +36,11 @@ export interface SyncSession {
 
 export interface GetSyncSessionOptions {
   cwd: string
+  /**
+   * Explicit path to the Reference UI output directory (absolute, or relative
+   * to `cwd`). When omitted, `getSyncSession` walks up from `cwd` looking for
+   * a `.reference-ui/session.json`. Set this when the project uses a custom
+   * `outDir` in its `reference-ui.config.*`.
+   */
+  outDir?: string
 }
