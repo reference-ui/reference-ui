@@ -23,7 +23,7 @@
     }
   },
   "scripts": {
-    "prebuild": "tsx src/system/build/primitives/index.ts && tsx src/system/build/styled/index.ts",
+    "prebuild": "tsx tsup/copy-reference-components.ts && tsx src/system/build/primitives/index.ts && tsx src/system/build/styled/index.ts",
     "build": "pnpm run build:native && tsup",
     "build:native": "pnpm --filter @reference-ui/rust run build",
     "prepack": "pnpm run build",
