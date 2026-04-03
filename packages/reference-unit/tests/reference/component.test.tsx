@@ -155,15 +155,12 @@ describe('Reference component', () => {
     expect(screen.getByText('DocsReferenceSplitButtonProps')).toBeInTheDocument()
     expect(screen.getByText('Interface')).toBeInTheDocument()
     expectVisibleText('Extends: DocsReferenceButtonProps, DocsReferencePressableProps')
-    expectVisibleText('label')
-    expectVisibleText('controlId')
-    expectVisibleText('interactionRole')
-    expectVisibleText('announceLabel')
+    // hasMenu is an own member — always visible
     expectVisibleText('hasMenu')
+    // Inherited sections are collapsed by default; verify the section headers are present
     expectVisibleText('from DocsReferenceButtonProps')
     expectVisibleText('from DocsReferencePressableProps')
     expectVisibleText('from DocsReferenceControlBaseProps')
-    expectVisibleText('lg')
   })
 
   it('renders generic interface headers with constraints and defaults', async () => {
