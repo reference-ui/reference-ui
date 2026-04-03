@@ -116,7 +116,10 @@ async function projectReferenceMembers(
     if (reference.name === 'P') {
       for (const library of SYSTEM_PROPERTIES_LOOKUP_LIBRARIES) {
         try {
-          const systemProperties = await api.findSymbolByScopedName(library, 'SystemProperties')
+          const systemProperties = await api.findSymbolByScopedName(
+            library,
+            'SystemProperties'
+          )
           if (systemProperties) {
             return systemProperties.getDisplayMembers()
           }
