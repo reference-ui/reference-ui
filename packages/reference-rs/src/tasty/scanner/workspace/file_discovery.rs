@@ -3,7 +3,7 @@ use std::path::Path;
 
 use globwalk::GlobWalkerBuilder;
 
-use crate::tasty::scanner::paths::path_to_unix;
+use crate::tasty::scanner::paths::{is_external_file_id, path_to_unix};
 
 pub(super) fn discover_file_ids(
     root_dir: &Path,
@@ -15,7 +15,10 @@ pub(super) fn discover_file_ids(
         .try_fold(BTreeSet::new(), |mut file_ids, entry| {
             let entry = entry.map_err(|err| format!("failed to walk scan root: {err}"))?;
             if is_supported_source_entry(&entry) {
-                file_ids.insert(normalized_file_id(root_dir, entry.path())?);
+                let file_id = normalized_file_id(root_dir, entry.path())?;
+                if !is_external_file_id(&file_id) {
+                    file_ids.insert(file_id);
+                }
             }
             Ok(file_ids)
         })
