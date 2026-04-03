@@ -1,7 +1,6 @@
 import { Div, P, Small } from '@reference-ui/react'
 import type { ReferenceJsDoc, ReferenceParamDoc } from '@reference-ui/types'
 import { JsDocParamChip } from './shared/JsDocParamChip'
-import { MonoText } from './shared/MonoText'
 
 export function MemberJsDoc({
   memberId,

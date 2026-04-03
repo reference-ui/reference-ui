@@ -6,13 +6,12 @@ import { AtSignIcon } from './AtSignIcon'
 export type JsDocParamChipProps = {
   /** Text after the @ (e.g. `param`, `returns`). */
   tagLabel: string
-  className?: string
 }
 
 /**
  * JSDoc tag chip: **@** icon + label in one pill-shaped container.
  */
-export function JsDocParamChip({ tagLabel, className }: JsDocParamChipProps) {
+export function JsDocParamChip({ tagLabel }: JsDocParamChipProps) {
   return (
     <Div
       display="inline-flex"

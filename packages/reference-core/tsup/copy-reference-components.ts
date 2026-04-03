@@ -112,52 +112,55 @@ const PRESERVE_FILES: Record<(typeof SYNC_DIRS)[number], string[]> = {
   document: [],
 }
 
-async function syncDir(syncDirName: (typeof SYNC_DIRS)[number]): Promise<void> {
-  const sourceDir = join(LIB_REFERENCE_DIR, syncDirName)
-  const targetDir = join(BROWSER_DIR, syncDirName)
-
-  // Snapshot files to preserve before wiping.
-  const preserve = PRESERVE_FILES[syncDirName]
+/** Snapshot and return the content of files that must survive a wipe. */
+async function snapshotPreserved(
+  targetDir: string,
+  filenames: string[],
+): Promise<Map<string, string>> {
   const preserved = new Map<string, string>()
-  for (const filename of preserve) {
-    const p = join(targetDir, filename)
+  for (const filename of filenames) {
     try {
-      preserved.set(filename, await readFile(p, 'utf8'))
+      preserved.set(filename, await readFile(join(targetDir, filename), 'utf8'))
     } catch {
       // File may not exist yet on first run — that's fine.
     }
   }
+  return preserved
+}
 
-  // Wipe the target dir so stale files don't accumulate.
+/** Write a single source file into the target directory with header + import rewrites. */
+async function copySingleFile(sourceFile: string, targetRelative: string): Promise<void> {
+  const sourceRelative = relative(LIB_REFERENCE_DIR, sourceFile)
+  const targetFile = join(BROWSER_DIR, targetRelative)
+  const raw = await readFile(sourceFile, 'utf8')
+  const rewritten = rewriteImports(raw, targetRelative)
+  await mkdir(dirname(targetFile), { recursive: true })
+  await writeFile(targetFile, buildHeader(sourceRelative) + rewritten, 'utf8')
+}
+
+async function syncDir(syncDirName: (typeof SYNC_DIRS)[number]): Promise<void> {
+  const sourceDir = join(LIB_REFERENCE_DIR, syncDirName)
+  const targetDir = join(BROWSER_DIR, syncDirName)
+  const preserveNames = PRESERVE_FILES[syncDirName]
+
+  const preserved = await snapshotPreserved(targetDir, preserveNames)
+
   await rm(targetDir, { recursive: true, force: true })
   await mkdir(targetDir, { recursive: true })
 
-  // Restore preserved files.
   for (const [filename, content] of preserved) {
     await writeFile(join(targetDir, filename), content, 'utf8')
   }
 
-  const sourceFiles = await walk(sourceDir)
-
-  for (const sourceFile of sourceFiles) {
+  for (const sourceFile of await walk(sourceDir)) {
     const ext = sourceFile.slice(sourceFile.lastIndexOf('.'))
     if (ext !== '.ts' && ext !== '.tsx') continue
 
-    const sourceRelative = relative(LIB_REFERENCE_DIR, sourceFile)
-    const targetFile = join(BROWSER_DIR, sourceRelative)
-
-    // Skip files owned by reference-core (they were preserved above).
-    const preservedForDir = PRESERVE_FILES[syncDirName]
     const filename = sourceFile.slice(sourceFile.lastIndexOf('/') + 1)
-    if (preservedForDir.includes(filename) && relative(sourceDir, sourceFile) === filename) continue
+    const isTopLevel = relative(sourceDir, sourceFile) === filename
+    if (isTopLevel && preserveNames.includes(filename)) continue
 
-    const raw = await readFile(sourceFile, 'utf8')
-    const targetRelative = relative(BROWSER_DIR, targetFile)
-    const rewritten = rewriteImports(raw, targetRelative)
-    const final = buildHeader(sourceRelative) + rewritten
-
-    await mkdir(dirname(targetFile), { recursive: true })
-    await writeFile(targetFile, final, 'utf8')
+    await copySingleFile(sourceFile, relative(LIB_REFERENCE_DIR, sourceFile))
   }
 }
 
