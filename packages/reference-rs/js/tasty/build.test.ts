@@ -195,31 +195,44 @@ describe('buildTasty', () => {
     }
   })
 
-  it('emits a duplicate-symbol warning when the same name appears across multiple scan roots', async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), 'reference-ui-tasty-multiroots-dedup-'))
+  /**
+   * Creates a temp workspace with two separate scan-root subdirectories, both
+   * exporting a symbol named `Shared`, and builds Tasty against both roots.
+   * Callers are responsible for deleting `tempRoot` in a finally block.
+   */
+  async function buildCrossRootSharedFixture(tempPrefix: string) {
+    const tempRoot = await mkdtemp(join(tmpdir(), tempPrefix))
     const rootDir = join(tempRoot, 'workspace')
     const outputDir = join(tempRoot, 'tasty-output')
 
+    await mkdir(join(rootDir, 'root-a'), { recursive: true })
+    await mkdir(join(rootDir, 'root-b'), { recursive: true })
+    await writeFile(
+      join(rootDir, 'root-a', 'shared.ts'),
+      'export interface Shared {\n  alpha: string\n}\n',
+      'utf-8'
+    )
+    await writeFile(
+      join(rootDir, 'root-b', 'shared.ts'),
+      'export type Shared = {\n  beta: number\n}\n',
+      'utf-8'
+    )
+
+    const built = await buildTasty({
+      rootDir,
+      include: ['root-a/**/*.{ts,tsx}', 'root-b/**/*.{ts,tsx}'],
+      outputDir,
+    })
+
+    return { tempRoot, built }
+  }
+
+  it('emits a duplicate-symbol warning when the same name appears across multiple scan roots', async () => {
+    const { tempRoot, built } = await buildCrossRootSharedFixture(
+      'reference-ui-tasty-multiroots-dedup-'
+    )
+
     try {
-      await mkdir(join(rootDir, 'root-a'), { recursive: true })
-      await mkdir(join(rootDir, 'root-b'), { recursive: true })
-      await writeFile(
-        join(rootDir, 'root-a', 'shared.ts'),
-        'export interface Shared {\n  alpha: string\n}\n',
-        'utf-8'
-      )
-      await writeFile(
-        join(rootDir, 'root-b', 'shared.ts'),
-        'export type Shared = {\n  beta: number\n}\n',
-        'utf-8'
-      )
-
-      const built = await buildTasty({
-        rootDir,
-        include: ['root-a/**/*.{ts,tsx}', 'root-b/**/*.{ts,tsx}'],
-        outputDir,
-      })
-
       expect(
         built.warnings.some((warning) => warning.includes('Duplicate symbol name "Shared"'))
       ).toBe(true)
@@ -234,30 +247,11 @@ describe('buildTasty', () => {
   })
 
   it('preserves all entries and rejects ambiguous bare-name lookup for cross-root duplicates', async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), 'reference-ui-tasty-multiroots-api-'))
-    const rootDir = join(tempRoot, 'workspace')
-    const outputDir = join(tempRoot, 'tasty-output')
+    const { tempRoot, built } = await buildCrossRootSharedFixture(
+      'reference-ui-tasty-multiroots-api-'
+    )
 
     try {
-      await mkdir(join(rootDir, 'root-a'), { recursive: true })
-      await mkdir(join(rootDir, 'root-b'), { recursive: true })
-      await writeFile(
-        join(rootDir, 'root-a', 'shared.ts'),
-        'export interface Shared {\n  alpha: string\n}\n',
-        'utf-8'
-      )
-      await writeFile(
-        join(rootDir, 'root-b', 'shared.ts'),
-        'export type Shared = {\n  beta: number\n}\n',
-        'utf-8'
-      )
-
-      const built = await buildTasty({
-        rootDir,
-        include: ['root-a/**/*.{ts,tsx}', 'root-b/**/*.{ts,tsx}'],
-        outputDir,
-      })
-
       const manifest = await built.api.loadManifest()
       const matches = await built.api.findSymbolsByName('Shared')
 
@@ -274,30 +268,11 @@ describe('buildTasty', () => {
   })
 
   it('resolves cross-root duplicate symbols by id after findSymbolsByName', async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), 'reference-ui-tasty-multiroots-byid-'))
-    const rootDir = join(tempRoot, 'workspace')
-    const outputDir = join(tempRoot, 'tasty-output')
+    const { tempRoot, built } = await buildCrossRootSharedFixture(
+      'reference-ui-tasty-multiroots-byid-'
+    )
 
     try {
-      await mkdir(join(rootDir, 'root-a'), { recursive: true })
-      await mkdir(join(rootDir, 'root-b'), { recursive: true })
-      await writeFile(
-        join(rootDir, 'root-a', 'shared.ts'),
-        'export interface Shared {\n  alpha: string\n}\n',
-        'utf-8'
-      )
-      await writeFile(
-        join(rootDir, 'root-b', 'shared.ts'),
-        'export type Shared = {\n  beta: number\n}\n',
-        'utf-8'
-      )
-
-      const built = await buildTasty({
-        rootDir,
-        include: ['root-a/**/*.{ts,tsx}', 'root-b/**/*.{ts,tsx}'],
-        outputDir,
-      })
-
       const matches = await built.api.findSymbolsByName('Shared')
       expect(matches).toHaveLength(2)
 
