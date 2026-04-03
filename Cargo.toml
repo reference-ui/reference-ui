@@ -1,0 +1,5 @@
+[workspace]
+members = [
+    "packages/reference-rs",
+]
+resolver = "2"
