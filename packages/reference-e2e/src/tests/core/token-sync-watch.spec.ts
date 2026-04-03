@@ -4,7 +4,6 @@ import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { existsSync } from 'node:fs'
 import { getSandboxDir } from '../../environments/lib/config'
-import { waitForRefSyncReady } from '../../environments/lib/ref-sync'
 import { testRoutes } from '../../environments/base/routes'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -60,6 +59,11 @@ test.describe('token-sync-watch', () => {
     // on :root (highest cascade priority). This bypasses Vite's stale module
     // cache for @reference-ui/react/styles.css and verifies that ref sync
     // correctly wrote the updated token value to the CSS output file.
+    //
+    // We poll this directly rather than using waitForRefSyncReady so that
+    // concurrent watch tests (e.g. sync-watch) cannot accidentally consume
+    // this test's ready signal and vice-versa — each poll reads the CSS file
+    // fresh from disk, giving an independent and unambiguous completion check.
     async function fetchCurrentColor(): Promise<string> {
       await page.goto(testRoutes.tokenSyncWatch)
       const el = page.getByTestId('token-sync-watch')
@@ -80,27 +84,18 @@ test.describe('token-sync-watch', () => {
       return el.evaluate((e) => getComputedStyle(e).color)
     }
 
-    // Write initial token file and wait for it to be picked up.
-    const ready0 = waitForRefSyncReady(sandboxDir, { timeout: 60_000 })
+    // Write initial token file and poll until ref sync has regenerated the CSS
+    // with colorA. No ready signal needed — fetchCurrentColor reads disk directly.
     await writeFile(tokenFilePath, buildTokensContent(colorA))
-    await ready0
-
-    // Poll with fresh page loads until Vite has served the updated CSS.
-    // ready0 means the packager has written the new CSS; Vite may need a moment
-    // to invalidate its module cache before a fresh request serves it.
     await expect
-      .poll(() => fetchCurrentColor(), { timeout: 30_000, intervals: [2_000] })
+      .poll(() => fetchCurrentColor(), { timeout: 60_000, intervals: [2_000] })
       .toBe(hexToRgb(colorA))
 
-    // Update the token value and wait for the rebuild.
+    // Update the token value and poll until colorB is reflected.
     const t0 = Date.now()
-    const ready1 = waitForRefSyncReady(sandboxDir, { timeout: 60_000 })
     await writeFile(tokenFilePath, buildTokensContent(colorB))
-    await ready1
-
-    // Poll with fresh page loads until colorB is reflected.
     await expect
-      .poll(() => fetchCurrentColor(), { timeout: 30_000, intervals: [2_000] })
+      .poll(() => fetchCurrentColor(), { timeout: 60_000, intervals: [2_000] })
       .toBe(hexToRgb(colorB))
 
     const timeToChangeMs = Date.now() - t0
