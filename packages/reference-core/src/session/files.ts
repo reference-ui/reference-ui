@@ -50,10 +50,10 @@ export function readManifest(outDir: string): SessionManifest | null {
   }
 }
 
-/** Direct (non-exclusive) lock write — used by tests and state.ts internals. */
+/** Atomically write `session.lock`. Used by tests and state.ts internals. */
 export function writeLock(outDir: string, lock: SessionLock): void {
   mkdirSync(outDir, { recursive: true })
-  writeFileSync(lockPath(outDir), JSON.stringify(lock, null, 2) + '\n', 'utf-8')
+  atomicWriteFile(lockPath(outDir), JSON.stringify(lock, null, 2) + '\n')
 }
 
 export function readLock(outDir: string): SessionLock | null {
