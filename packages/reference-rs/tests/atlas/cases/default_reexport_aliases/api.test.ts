@@ -9,7 +9,7 @@ describe('default_reexport_aliases atlas case', () => {
     const button = await getComponent('Button', undefined, undefined, CASE)
 
     expect(button.count).toBe(2)
-    expect(button.interface.name).toBe('ButtonProps')
+    expect(button.interface?.name).toBe('ButtonProps')
   })
 
   it('preserves the final call-site alias in examples', async () => {

@@ -9,7 +9,7 @@ describe('wrapped_components atlas case', () => {
     const fancyButton = await getComponent('FancyButton', undefined, undefined, CASE)
 
     expect(fancyButton.count).toBe(2)
-    expect(fancyButton.interface.name).toBe('FancyButtonProps')
+    expect(fancyButton.interface?.name).toBe('FancyButtonProps')
     expect(fancyButton.examples[0]).toMatch(/<CTAButton/)
   })
 
@@ -17,7 +17,7 @@ describe('wrapped_components atlas case', () => {
     const searchInput = await getComponent('SearchInput', undefined, undefined, CASE)
 
     expect(searchInput.count).toBe(2)
-    expect(searchInput.interface.name).toBe('SearchInputProps')
+    expect(searchInput.interface?.name).toBe('SearchInputProps')
     expect(searchInput.examples[0]).toMatch(/<SearchBox/)
   })
 })

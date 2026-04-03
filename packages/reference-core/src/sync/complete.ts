@@ -11,9 +11,13 @@ export const REF_SYNC_FAILED_MESSAGE = '[ref sync] failed\n'
 /**
  * Register the completion listener.
  *
- * We wait for `packager:complete` first, then for the subsequent
- * `packager-ts:complete`. This avoids treating a stale catch-up declaration pass
- * as readiness for the current sync run.
+ * In one-shot mode, we wait for `packager:complete` first, then for the
+ * subsequent `mcp:complete`. This avoids treating a stale catch-up declaration
+ * pass or stale MCP artifact as completion for the current sync run.
+ *
+ * In watch mode, readiness is tied to the packager output instead of MCP. The
+ * dev server and browser only depend on the packaged artifacts, and gating the
+ * ready signal on MCP causes unnecessary watch-mode stalls.
  *
  * We also listen to worker events directly instead of `sync:complete` because
  * `sync:complete` is emitted from the main thread, and BroadcastChannel does not
@@ -41,10 +45,11 @@ export function initComplete(payload: SyncPayload): void {
   once('system:config:failed', handleFailure)
   once('system:panda:codegen:failed', handleFailure)
   once('virtual:failed', handleFailure)
+  once('mcp:failed', handleFailure)
 
   if (!payload.options.watch) {
     once('packager:complete', () => {
-      once('packager-ts:complete', () => {
+      once('mcp:complete', () => {
         void shutdownAndExit(0, 'sync:complete')
       })
     })
@@ -52,8 +57,6 @@ export function initComplete(payload: SyncPayload): void {
   }
 
   on('packager:complete', () => {
-    once('packager-ts:complete', () => {
-      process.stdout.write(REF_SYNC_READY_MESSAGE)
-    })
+    process.stdout.write(REF_SYNC_READY_MESSAGE)
   })
 }

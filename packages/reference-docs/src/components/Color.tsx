@@ -15,7 +15,6 @@ export function Color({ name, value }: ColorProps) {
       border="1px solid"
       borderColor="docsPanelBorder"
       borderRadius="base"
-      backgroundColor="docsPanelBg"
     >
       <Div
         width="12r"

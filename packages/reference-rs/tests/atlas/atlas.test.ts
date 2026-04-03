@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import type { Usage } from '../../js/atlas/types'
-import { getComponents } from './helpers'
+import { getComponent, getComponents } from './helpers'
 
 const USAGE_VALUES: Usage[] = ['very common', 'common', 'occasional', 'rare', 'unused']
 
@@ -13,8 +13,10 @@ describe('Component type shape', () => {
     expect(Array.isArray(components)).toBe(true)
     for (const c of components) {
       expect(typeof c.name).toBe('string')
-      expect(typeof c.interface.name).toBe('string')
-      expect(typeof c.interface.source).toBe('string')
+      if (c.interface !== null) {
+        expect(typeof c.interface.name).toBe('string')
+        expect(typeof c.interface.source).toBe('string')
+      }
       expect(typeof c.source).toBe('string')
       expect(typeof c.count).toBe('number')
       expect(Array.isArray(c.props)).toBe(true)
@@ -215,7 +217,7 @@ describe('interface mapping', () => {
     const button = components.find(c => c.name === 'Button')!
 
     // Local Button re-exports ButtonProps from @fixtures/demo-ui
-    expect(button.interface.name).toBe('ButtonProps')
+    expect(button.interface?.name).toBe('ButtonProps')
   })
 
   it('records the interface name for library components', async () => {
@@ -224,7 +226,14 @@ describe('interface mapping', () => {
       c => c.name === 'Card' && c.source === '@fixtures/demo-ui'
     )!
 
-    expect(card.interface.name).toBe('CardProps')
+    expect(card.interface?.name).toBe('CardProps')
+  })
+
+  it('emits a null interface when a component has no props annotation', async () => {
+    const themeToggle = await getComponent('ThemeToggle')
+
+    expect(themeToggle.interface).toBeNull()
+    expect(themeToggle.props).toEqual([])
   })
 })
 
@@ -274,6 +283,23 @@ describe('examples', () => {
         // should not contain a full module — no import statements
         expect(ex).not.toMatch(/^import /)
       }
+    }
+  })
+
+  it('examples capture only the mounting signature, not nested JSX children', async () => {
+    const components = await getComponents()
+    const appCard = components.find(c => c.name === 'AppCard')!
+    const button = components.find(c => c.name === 'Button')!
+
+    for (const ex of appCard.examples) {
+      expect(ex).toMatch(/<AppCard/)
+      expect(ex).not.toMatch(/<Button/)
+      expect(ex).not.toMatch(/<\/AppCard>/)
+    }
+
+    for (const ex of button.examples) {
+      expect(ex).toMatch(/<Button/)
+      expect(ex).not.toMatch(/<\/Button>/)
     }
   })
 

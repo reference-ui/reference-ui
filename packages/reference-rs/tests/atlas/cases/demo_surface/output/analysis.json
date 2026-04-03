@@ -72,9 +72,9 @@
         ],
         "usage": "common",
         "examples": [
-          "<AppCard title=\"Preferences\" padding=\"md\" status=\"default\" statusLabel=\"Saved\">\n        <Button variant=\"outline\" onClick={() => {}}>\n          Save Changes\n        </Button>\n        <Button variant=\"outline\" disabled>\n          Reset\n        </Button>\n      </AppCard>",
-          "<AppCard title=\"Welcome\" padding=\"lg\">\n        <Button variant=\"solid\" onClick={() => {}}>\n          Get Started\n        </Button>\n        <Button variant=\"ghost\">Learn More</Button>\n      </AppCard>",
-          "<AppCard title=\"Features\" elevated padding=\"md\">\n        <Button variant=\"solid\" size=\"sm\" onClick={() => {}}>\n          View All Features\n        </Button>\n      </AppCard>"
+          "<AppCard title=\"Preferences\" padding=\"md\" status=\"default\" statusLabel=\"Saved\">",
+          "<AppCard title=\"Welcome\" padding=\"lg\">",
+          "<AppCard title=\"Features\" elevated padding=\"md\">"
         ],
         "usedWith": {
           "Button": "very common"
@@ -135,16 +135,26 @@
         ],
         "usage": "very common",
         "examples": [
-          "<Button variant=\"outline\" onClick={() => {}}>\n          Save Changes\n        </Button>",
-          "<Button variant=\"outline\" disabled>\n          Reset\n        </Button>",
-          "<Button variant=\"solid\" onClick={() => {}}>\n          Get Started\n        </Button>",
-          "<Button variant=\"ghost\">Learn More</Button>",
-          "<Button variant=\"solid\" size=\"sm\" onClick={() => {}}>\n          View All Features\n        </Button>"
+          "<Button variant=\"outline\" onClick={() => {}}>",
+          "<Button variant=\"outline\" disabled>",
+          "<Button variant=\"ghost\" onClick={() => {}}>",
+          "<Button variant=\"solid\" onClick={() => {}}>",
+          "<Button variant=\"ghost\">"
         ],
         "usedWith": {
           "AppCard": "very common",
           "UserBadge": "common"
         }
+      },
+      {
+        "name": "ThemeToggle",
+        "interface": null,
+        "source": "./components/ThemeToggle.tsx",
+        "count": 0,
+        "props": [],
+        "usage": "unused",
+        "examples": [],
+        "usedWith": {}
       },
       {
         "name": "UserBadge",
@@ -182,8 +192,8 @@
         ],
         "usage": "occasional",
         "examples": [
-          "<UserBadge count={5}>Notifications</UserBadge>",
-          "<UserBadge>Status</UserBadge>"
+          "<UserBadge count={5}>",
+          "<UserBadge>"
         ],
         "usedWith": {
           "Button": "very common"
@@ -262,9 +272,9 @@
           ],
           "usage": "common",
           "examples": [
-            "<AppCard title=\"Welcome\" padding=\"lg\">\n        <Button variant=\"solid\" onClick={() => {}}>\n          Get Started\n        </Button>\n        <Button variant=\"ghost\">Learn More</Button>\n      </AppCard>",
-            "<AppCard title=\"Features\" elevated padding=\"md\">\n        <Button variant=\"solid\" size=\"sm\" onClick={() => {}}>\n          View All Features\n        </Button>\n      </AppCard>",
-            "<AppCard title=\"Preferences\" padding=\"md\" status=\"default\" statusLabel=\"Saved\">\n        <Button variant=\"outline\" onClick={() => {}}>\n          Save Changes\n        </Button>\n        <Button variant=\"outline\" disabled>\n          Reset\n        </Button>\n      </AppCard>"
+            "<AppCard title=\"Welcome\" padding=\"lg\">",
+            "<AppCard title=\"Features\" elevated padding=\"md\">",
+            "<AppCard title=\"Preferences\" padding=\"md\" status=\"default\" statusLabel=\"Saved\">"
           ],
           "usedWith": {
             "Button": "very common"
@@ -303,7 +313,7 @@
           ],
           "usage": "occasional",
           "examples": [
-            "<Badge variant={status}>{statusLabel ?? status}</Badge>",
+            "<Badge variant={status}>",
             "<Badge variant=\"default\" {...props} />"
           ],
           "usedWith": {
@@ -365,11 +375,11 @@
           ],
           "usage": "common",
           "examples": [
-            "<Button variant=\"ghost\" onClick={() => {}}>\n        Edit Profile\n      </Button>",
-            "<Button variant=\"solid\" onClick={() => {}}>\n          Get Started\n        </Button>",
-            "<Button variant=\"ghost\">Learn More</Button>",
-            "<Button variant=\"solid\" size=\"sm\" onClick={() => {}}>\n          View All Features\n        </Button>",
-            "<Button variant=\"outline\" onClick={() => {}}>\n          Save Changes\n        </Button>"
+            "<Button variant=\"solid\" onClick={() => {}}>",
+            "<Button variant=\"ghost\">",
+            "<Button variant=\"solid\" size=\"sm\" onClick={() => {}}>",
+            "<Button variant=\"outline\" onClick={() => {}}>",
+            "<Button variant=\"outline\" disabled>"
           ],
           "usedWith": {
             "AppCard": "very common",
@@ -475,7 +485,7 @@
           ],
           "usage": "rare",
           "examples": [
-            "<Card\n      title={title}\n      {...cardProps}\n      footer={\n        status ? <Badge variant={status}>{statusLabel ?? status}</Badge> : undefined\n      }\n    >\n      {children}\n    </Card>"
+            "<Card\n      title={title}\n      {...cardProps}\n      footer={\n        status ? <Badge variant={status}>{statusLabel ?? status}</Badge> : undefined\n      }\n    >"
           ],
           "usedWith": {
             "Badge": "very common"
@@ -526,6 +536,16 @@
           "usedWith": {}
         },
         {
+          "name": "ThemeToggle",
+          "interface": null,
+          "source": "./components/ThemeToggle.tsx",
+          "count": 0,
+          "props": [],
+          "usage": "unused",
+          "examples": [],
+          "usedWith": {}
+        },
+        {
           "name": "UserBadge",
           "interface": {
             "name": "BadgeProps",
@@ -561,8 +581,8 @@
           ],
           "usage": "occasional",
           "examples": [
-            "<UserBadge count={5}>Notifications</UserBadge>",
-            "<UserBadge>Status</UserBadge>"
+            "<UserBadge count={5}>",
+            "<UserBadge>"
           ],
           "usedWith": {
             "Button": "very common"

@@ -1,137 +1,17 @@
-use crate::atlas::internal::{JsxAttribute, JsxOccurrence, ModuleInfo, UsageState};
-use crate::atlas::model::Component;
-use crate::atlas::resolver::{build_alias_map, resolve_occurrence_key};
-use crate::atlas::usage_policy::score_usage;
+use super::literals::{
+    export_default_expression, jsx_attribute_from_item, jsx_child_is_meaningful,
+    jsx_name_to_string, slice_span,
+};
+use crate::atlas::internal::{JsxOccurrence, ModuleInfo};
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
-    Argument, Expression, JSXAttributeItem, JSXAttributeName, JSXAttributeValue, JSXChild,
-    JSXElementName, JSXExpression, JSXMemberExpressionObject, Statement,
+    Argument, Expression, JSXAttributeItem, JSXAttributeValue, JSXChild, JSXExpression,
+    Statement,
 };
 use oxc_parser::Parser;
 use oxc_span::{GetSpan, SourceType};
-use std::collections::{BTreeMap, BTreeSet, HashMap};
-use std::path::PathBuf;
 
-pub fn collect_usage_for_module(
-    module: &ModuleInfo,
-    modules: &HashMap<PathBuf, ModuleInfo>,
-    state_snapshot: &BTreeMap<String, UsageState>,
-    states: &mut BTreeMap<String, UsageState>,
-) {
-    let alias_map = build_alias_map(module, modules, state_snapshot);
-    let namespace_map = module.namespace_imports.clone();
-    let mut seen_in_file = BTreeSet::new();
-
-    for occurrence in find_jsx_occurrences(module) {
-        let resolved_key = resolve_occurrence_key(module, modules, &occurrence.tag_name, &alias_map, &namespace_map, state_snapshot);
-        let Some(key) = resolved_key else {
-            continue;
-        };
-        let Some(state) = states.get_mut(&key) else {
-            continue;
-        };
-
-        state.component.count += 1;
-        if state.example_set.insert(occurrence.snippet.clone()) && state.component.examples.len() < 5 {
-            state.component.examples.push(occurrence.snippet.clone());
-        }
-        seen_in_file.insert(key.clone());
-
-        let mut explicit_names = BTreeSet::new();
-        for attribute in occurrence.attributes {
-            explicit_names.insert(attribute.name.clone());
-            if let Some(prop) = state.component.props.iter_mut().find(|prop| prop.name == attribute.name) {
-                prop.count += 1;
-            }
-            if let Some(value) = attribute.literal_value {
-                state
-                    .prop_value_counts
-                    .entry(attribute.name)
-                    .or_default()
-                    .entry(value)
-                    .and_modify(|count| *count += 1)
-                    .or_insert(1);
-            }
-        }
-
-        if occurrence.has_children && !explicit_names.contains("children") {
-            if let Some(prop) = state.component.props.iter_mut().find(|prop| prop.name == "children") {
-                prop.count += 1;
-            }
-        }
-    }
-
-    for key in &seen_in_file {
-        if let Some(state) = states.get_mut(key) {
-            state.file_presence_count += 1;
-        }
-    }
-
-    let seen_keys = seen_in_file.into_iter().collect::<Vec<_>>();
-    for left_key in &seen_keys {
-        let other_names = seen_keys
-            .iter()
-            .filter(|right_key| *right_key != left_key)
-            .filter_map(|right_key| state_snapshot.get(right_key).map(|state| state.component.name.clone()))
-            .collect::<Vec<_>>();
-        if let Some(state) = states.get_mut(left_key) {
-            for other_name in other_names {
-                state
-                    .used_with_counts
-                    .entry(other_name)
-                    .and_modify(|count| *count += 1)
-                    .or_insert(1);
-            }
-        }
-    }
-}
-
-pub fn finalize_components(states: BTreeMap<String, UsageState>) -> Vec<Component> {
-    let total_count = states.values().map(|state| state.component.count).sum::<u32>();
-    let mut components = Vec::new();
-
-    for (_, mut state) in states {
-        state.component.usage = score_usage(state.component.count, total_count);
-
-        for prop in &mut state.component.props {
-            prop.usage = score_usage(prop.count, state.component.count);
-
-            let mut values = BTreeMap::new();
-            if let Some(allowed) = state.prop_allowed_values.get(&prop.name) {
-                for value in allowed {
-                    let count = state
-                        .prop_value_counts
-                        .get(&prop.name)
-                        .and_then(|counts| counts.get(value))
-                        .copied()
-                        .unwrap_or(0);
-                    values.insert(value.clone(), score_usage(count, prop.count));
-                }
-            }
-
-            if let Some(observed) = state.prop_value_counts.get(&prop.name) {
-                for (value, count) in observed {
-                    values.insert(value.clone(), score_usage(*count, prop.count));
-                }
-            }
-
-            prop.values = (!values.is_empty()).then_some(values);
-        }
-
-        state.component.props.sort_by(|left, right| left.name.cmp(&right.name));
-        state.component.used_with = state
-            .used_with_counts
-            .into_iter()
-            .map(|(name, count)| (name, score_usage(count, state.file_presence_count)))
-            .collect();
-        components.push(state.component);
-    }
-
-    components.sort_by(|left, right| left.name.cmp(&right.name).then(left.source.cmp(&right.source)));
-    components
-}
-
-fn find_jsx_occurrences(module: &ModuleInfo) -> Vec<JsxOccurrence> {
+pub(super) fn find_jsx_occurrences(module: &ModuleInfo) -> Vec<JsxOccurrence> {
     let allocator = Allocator::default();
     let source_type = SourceType::from_path(&module.path).unwrap_or_else(|_| SourceType::tsx());
     let parsed = Parser::new(&allocator, &module.content, source_type).parse();
@@ -200,7 +80,7 @@ fn collect_occurrences_from_statement(
                     }
                     _ => {
                         if let Some(expression) = init.as_expression() {
-                        collect_occurrences_from_expression(expression, source, occurrences)
+                            collect_occurrences_from_expression(expression, source, occurrences)
                         }
                     }
                 }
@@ -308,7 +188,9 @@ fn collect_occurrences_from_expression(
     occurrences: &mut Vec<JsxOccurrence>,
 ) {
     match expression {
-        Expression::JSXElement(element) => collect_occurrences_from_jsx_element(element, source, occurrences),
+        Expression::JSXElement(element) => {
+            collect_occurrences_from_jsx_element(element, source, occurrences)
+        }
         Expression::JSXFragment(fragment) => {
             collect_occurrences_from_jsx_fragment(fragment, source, occurrences)
         }
@@ -437,16 +319,12 @@ fn collect_occurrences_from_jsx_attribute_item(
                     JSXAttributeValue::ExpressionContainer(container) => {
                         collect_occurrences_from_jsx_expression(&container.expression, source, occurrences)
                     }
-                    JSXAttributeValue::Element(element) => collect_occurrences_from_jsx_element(
-                        element,
-                        source,
-                        occurrences,
-                    ),
-                    JSXAttributeValue::Fragment(fragment) => collect_occurrences_from_jsx_fragment(
-                        fragment,
-                        source,
-                        occurrences,
-                    ),
+                    JSXAttributeValue::Element(element) => {
+                        collect_occurrences_from_jsx_element(element, source, occurrences)
+                    }
+                    JSXAttributeValue::Fragment(fragment) => {
+                        collect_occurrences_from_jsx_fragment(fragment, source, occurrences)
+                    }
                     JSXAttributeValue::StringLiteral(_) => {}
                 }
             }
@@ -495,7 +373,7 @@ fn collect_occurrences_from_jsx_element(
 ) {
     occurrences.push(JsxOccurrence {
         tag_name: jsx_name_to_string(&element.opening_element.name),
-        snippet: slice_span(source, element.span()).to_string(),
+        snippet: slice_span(source, element.opening_element.span()).trim().to_string(),
         attributes: element
             .opening_element
             .attributes
@@ -521,116 +399,4 @@ fn collect_occurrences_from_jsx_fragment(
     for child in &fragment.children {
         collect_occurrences_from_jsx_child(child, source, occurrences);
     }
-}
-
-fn jsx_attribute_from_item(attribute: &JSXAttributeItem<'_>, source: &str) -> Option<JsxAttribute> {
-    let JSXAttributeItem::Attribute(attribute) = attribute else {
-        return None;
-    };
-
-    Some(JsxAttribute {
-        name: jsx_attribute_name_to_string(&attribute.name),
-        literal_value: jsx_attribute_literal_value(attribute.value.as_ref(), source),
-    })
-}
-
-fn jsx_attribute_literal_value(
-    value: Option<&JSXAttributeValue<'_>>,
-    source: &str,
-) -> Option<String> {
-    match value {
-        None => Some("true".to_string()),
-        Some(JSXAttributeValue::StringLiteral(literal)) => Some(literal.value.to_string()),
-        Some(JSXAttributeValue::ExpressionContainer(container)) => {
-            jsx_expression_literal_value(&container.expression, source)
-        }
-        Some(JSXAttributeValue::Element(_)) | Some(JSXAttributeValue::Fragment(_)) => None,
-    }
-}
-
-fn jsx_expression_literal_value(expression: &JSXExpression<'_>, source: &str) -> Option<String> {
-    match expression {
-        JSXExpression::EmptyExpression(_) => None,
-        _ => expression_literal_value(expression.to_expression(), source),
-    }
-}
-
-fn expression_literal_value(expression: &Expression<'_>, source: &str) -> Option<String> {
-    match expression {
-        Expression::StringLiteral(literal) => Some(literal.value.to_string()),
-        Expression::BooleanLiteral(literal) => Some(literal.value.to_string()),
-        Expression::NumericLiteral(_) => Some(slice_span(source, expression.span()).trim().to_string()),
-        Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
-            Some(slice_span(source, template.span()).trim_matches('`').to_string())
-        }
-        Expression::ParenthesizedExpression(parenthesized) => {
-            expression_literal_value(&parenthesized.expression, source)
-        }
-        Expression::TSAsExpression(asserted) => expression_literal_value(&asserted.expression, source),
-        Expression::TSSatisfiesExpression(asserted) => {
-            expression_literal_value(&asserted.expression, source)
-        }
-        Expression::TSTypeAssertion(asserted) => {
-            expression_literal_value(&asserted.expression, source)
-        }
-        Expression::TSNonNullExpression(asserted) => {
-            expression_literal_value(&asserted.expression, source)
-        }
-        _ => None,
-    }
-}
-
-fn jsx_name_to_string(name: &JSXElementName<'_>) -> String {
-    match name {
-        JSXElementName::Identifier(identifier) => identifier.name.to_string(),
-        JSXElementName::IdentifierReference(identifier) => identifier.name.to_string(),
-        JSXElementName::NamespacedName(namespaced) => {
-            format!("{}:{}", namespaced.namespace.name, namespaced.name.name)
-        }
-        JSXElementName::MemberExpression(member) => {
-            format!("{}.{}", jsx_member_object_to_string(&member.object), member.property.name)
-        }
-        JSXElementName::ThisExpression(_) => "this".to_string(),
-    }
-}
-
-fn jsx_member_object_to_string(object: &JSXMemberExpressionObject<'_>) -> String {
-    match object {
-        JSXMemberExpressionObject::IdentifierReference(identifier) => identifier.name.to_string(),
-        JSXMemberExpressionObject::MemberExpression(member) => {
-            format!("{}.{}", jsx_member_object_to_string(&member.object), member.property.name)
-        }
-        JSXMemberExpressionObject::ThisExpression(_) => "this".to_string(),
-    }
-}
-
-fn jsx_attribute_name_to_string(name: &JSXAttributeName<'_>) -> String {
-    match name {
-        JSXAttributeName::Identifier(identifier) => identifier.name.to_string(),
-        JSXAttributeName::NamespacedName(namespaced) => {
-            format!("{}:{}", namespaced.namespace.name, namespaced.name.name)
-        }
-    }
-}
-
-fn jsx_child_is_meaningful(child: &JSXChild<'_>) -> bool {
-    match child {
-        JSXChild::Text(text) => !text.value.trim().is_empty(),
-        _ => true,
-    }
-}
-
-fn export_default_expression<'a>(
-    expression: &'a oxc_ast::ast::ExportDefaultDeclarationKind<'a>,
-) -> Option<&'a Expression<'a>> {
-    match expression {
-        oxc_ast::ast::ExportDefaultDeclarationKind::FunctionDeclaration(_) => None,
-        oxc_ast::ast::ExportDefaultDeclarationKind::ClassDeclaration(_) => None,
-        oxc_ast::ast::ExportDefaultDeclarationKind::TSInterfaceDeclaration(_) => None,
-        _ => Some(expression.to_expression()),
-    }
-}
-
-fn slice_span<'a>(source: &'a str, span: oxc_span::Span) -> &'a str {
-    &source[span.start as usize..span.end as usize]
 }

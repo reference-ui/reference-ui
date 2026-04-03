@@ -30,10 +30,13 @@ const DEMO_UI = '@fixtures/demo-ui'
 // ─── Shape ────────────────────────────────────────────────────────────────────
 
 describe('ComponentInterface shape', () => {
-  it('every component has a non-empty interface.name', async () => {
+  it('every resolved component interface has a non-empty name', async () => {
     const components = await getComponents()
 
     for (const c of components) {
+      if (c.interface === null) {
+        continue
+      }
       expect(
         c.interface.name.length,
         `${c.name}.interface.name should not be empty`
@@ -41,15 +44,25 @@ describe('ComponentInterface shape', () => {
     }
   })
 
-  it('every component has a non-empty interface.source', async () => {
+  it('every resolved component interface has a non-empty source', async () => {
     const components = await getComponents()
 
     for (const c of components) {
+      if (c.interface === null) {
+        continue
+      }
       expect(
         c.interface.source.length,
         `${c.name}.interface.source should not be empty`
       ).toBeGreaterThan(0)
     }
+  })
+
+  it('uses null when a component has no props annotation', async () => {
+    const themeToggle = await getComponent('ThemeToggle')
+
+    expect(themeToggle.interface).toBeNull()
+    expect(themeToggle.props).toEqual([])
   })
 })
 
@@ -61,25 +74,25 @@ describe('local component → interface', () => {
     // the library even though the component is local.
     const button = await getComponent('Button')
 
-    expect(button.interface.name).toBe('ButtonProps')
-    expect(button.interface.source).toBe(DEMO_UI)
+    expect(button.interface?.name).toBe('ButtonProps')
+    expect(button.interface?.source).toBe(DEMO_UI)
   })
 
   it('local composition AppCard: interface is AppCardProps declared locally', async () => {
     // AppCardProps is defined in the project itself as CardProps & { status?, statusLabel? }
     const appCard = await getComponent('AppCard')
 
-    expect(appCard.interface.name).toBe('AppCardProps')
+    expect(appCard.interface?.name).toBe('AppCardProps')
     // source should be the local file, not a package name
-    expect(appCard.interface.source).toMatch(/^[./]/)
+    expect(appCard.interface?.source).toMatch(/^[./]/)
   })
 
   it('thin wrapper UserBadge: interface is BadgeProps from @fixtures/demo-ui', async () => {
     // UserBadge accepts BadgeProps directly — the type lives in the library.
     const userBadge = await getComponent('UserBadge')
 
-    expect(userBadge.interface.name).toBe('BadgeProps')
-    expect(userBadge.interface.source).toBe(DEMO_UI)
+    expect(userBadge.interface?.name).toBe('BadgeProps')
+    expect(userBadge.interface?.source).toBe(DEMO_UI)
   })
 })
 
@@ -89,29 +102,29 @@ describe('library component → interface', () => {
   it('library Button: ButtonProps from @fixtures/demo-ui', async () => {
     const button = await getComponent('Button', { include: [DEMO_UI] }, DEMO_UI)
 
-    expect(button.interface.name).toBe('ButtonProps')
-    expect(button.interface.source).toBe(DEMO_UI)
+    expect(button.interface?.name).toBe('ButtonProps')
+    expect(button.interface?.source).toBe(DEMO_UI)
   })
 
   it('library Card: CardProps from @fixtures/demo-ui', async () => {
     const card = await getComponent('Card', { include: [DEMO_UI] }, DEMO_UI)
 
-    expect(card.interface.name).toBe('CardProps')
-    expect(card.interface.source).toBe(DEMO_UI)
+    expect(card.interface?.name).toBe('CardProps')
+    expect(card.interface?.source).toBe(DEMO_UI)
   })
 
   it('library Badge: BadgeProps from @fixtures/demo-ui', async () => {
     const badge = await getComponent('Badge', { include: [DEMO_UI] }, DEMO_UI)
 
-    expect(badge.interface.name).toBe('BadgeProps')
-    expect(badge.interface.source).toBe(DEMO_UI)
+    expect(badge.interface?.name).toBe('BadgeProps')
+    expect(badge.interface?.source).toBe(DEMO_UI)
   })
 
   it('library Stack: StackProps from @fixtures/demo-ui', async () => {
     const stack = await getComponent('Stack', { include: [DEMO_UI] }, DEMO_UI)
 
-    expect(stack.interface.name).toBe('StackProps')
-    expect(stack.interface.source).toBe(DEMO_UI)
+    expect(stack.interface?.name).toBe('StackProps')
+    expect(stack.interface?.source).toBe(DEMO_UI)
   })
 })
 
@@ -169,15 +182,15 @@ describe('interface source provenance', () => {
     const localButton = await getComponent('Button')
     const libButton = await getComponent('Button', { include: [DEMO_UI] }, DEMO_UI)
 
-    expect(localButton.interface.source).toBe(DEMO_UI)
-    expect(libButton.interface.source).toBe(DEMO_UI)
+    expect(localButton.interface?.source).toBe(DEMO_UI)
+    expect(libButton.interface?.source).toBe(DEMO_UI)
   })
 
   it('a type declared locally resolves to a file path, not a package name', async () => {
     const appCard = await getComponent('AppCard')
 
-    expect(appCard.interface.source).not.toBe(DEMO_UI)
-    expect(appCard.interface.source).toMatch(/^[./]/)
+    expect(appCard.interface?.source).not.toBe(DEMO_UI)
+    expect(appCard.interface?.source).toMatch(/^[./]/)
   })
 
   it('local wrapper and library original share the same ComponentInterface', async () => {
@@ -187,7 +200,7 @@ describe('interface source provenance', () => {
     const localButton = await getComponent('Button')
     const libButton = await getComponent('Button', { include: [DEMO_UI] }, DEMO_UI)
 
-    expect(localButton.interface.name).toBe(libButton.interface.name)
-    expect(localButton.interface.source).toBe(libButton.interface.source)
+    expect(localButton.interface?.name).toBe(libButton.interface?.name)
+    expect(localButton.interface?.source).toBe(libButton.interface?.source)
   })
 })

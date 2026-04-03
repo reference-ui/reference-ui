@@ -1,0 +1,1 @@
+export { PrivateChip } from '../PrivateChip'

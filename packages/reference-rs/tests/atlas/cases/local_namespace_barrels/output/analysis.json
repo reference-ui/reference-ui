@@ -54,8 +54,8 @@
         ],
         "usage": "very common",
         "examples": [
-          "<UI.Button variant=\"solid\">Create</UI.Button>",
-          "<UI.Button variant=\"ghost\">Cancel</UI.Button>"
+          "<UI.Button variant=\"solid\">",
+          "<UI.Button variant=\"ghost\">"
         ],
         "usedWith": {
           "UserBadge": "very common"
@@ -94,7 +94,7 @@
         ],
         "usage": "common",
         "examples": [
-          "<UI.UserBadge tone=\"info\">New</UI.UserBadge>"
+          "<UI.UserBadge tone=\"info\">"
         ],
         "usedWith": {
           "Button": "very common"

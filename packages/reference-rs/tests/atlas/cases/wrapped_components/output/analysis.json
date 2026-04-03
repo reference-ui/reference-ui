@@ -36,8 +36,8 @@
         ],
         "usage": "very common",
         "examples": [
-          "<CTAButton variant=\"solid\">Save</CTAButton>",
-          "<CTAButton variant=\"ghost\" disabled>\n        Cancel\n      </CTAButton>"
+          "<CTAButton variant=\"solid\">",
+          "<CTAButton variant=\"ghost\" disabled>"
         ],
         "usedWith": {
           "SearchInput": "very common"
@@ -69,8 +69,8 @@
         ],
         "usage": "very common",
         "examples": [
-          "<SearchBox size=\"sm\">People</SearchBox>",
-          "<SearchBox size=\"md\">Teams</SearchBox>"
+          "<SearchBox size=\"sm\">",
+          "<SearchBox size=\"md\">"
         ],
         "usedWith": {
           "FancyButton": "very common"

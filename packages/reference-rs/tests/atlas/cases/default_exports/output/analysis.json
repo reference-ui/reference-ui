@@ -28,8 +28,8 @@
         ],
         "usage": "very common",
         "examples": [
-          "<PrimaryButton variant=\"solid\">Create</PrimaryButton>",
-          "<PrimaryButton variant=\"ghost\">Cancel</PrimaryButton>"
+          "<PrimaryButton variant=\"solid\">",
+          "<PrimaryButton variant=\"ghost\">"
         ],
         "usedWith": {}
       }

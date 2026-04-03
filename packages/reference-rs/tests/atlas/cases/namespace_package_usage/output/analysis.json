@@ -29,7 +29,7 @@
           ],
           "usage": "common",
           "examples": [
-            "<DemoUi.Badge count={1}>Inbox</DemoUi.Badge>"
+            "<DemoUi.Badge count={1}>"
           ],
           "usedWith": {
             "Button": "very common"
@@ -61,8 +61,8 @@
           ],
           "usage": "very common",
           "examples": [
-            "<DemoUi.Button variant=\"solid\">Launch</DemoUi.Button>",
-            "<DemoUi.Button variant=\"ghost\">Dismiss</DemoUi.Button>"
+            "<DemoUi.Button variant=\"solid\">",
+            "<DemoUi.Button variant=\"ghost\">"
           ],
           "usedWith": {
             "Badge": "very common"

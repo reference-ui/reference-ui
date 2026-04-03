@@ -91,6 +91,92 @@ fn scan_workspace_follows_same_library_relative_imports_for_external_modules() {
 }
 
 #[test]
+fn scan_workspace_follows_cross_library_external_imports_from_external_modules() {
+    let root = TempDir::new("scanner-workspace-external-cross-library");
+    root.write(
+        "src/index.ts",
+        "export type { PrimitiveNativeProps } from '@reference-ui/react';\n",
+    );
+    root.write(
+        "node_modules/@reference-ui/react/package.json",
+        r#"{ "name": "@reference-ui/react", "types": "react.d.mts" }"#,
+    );
+    root.write(
+        "node_modules/@reference-ui/react/react.d.mts",
+        "import type { ComponentPropsWithoutRef } from 'react';\nexport type PrimitiveNativeProps<T> = ComponentPropsWithoutRef<T>;\n",
+    );
+    root.write(
+        "node_modules/react/package.json",
+        r#"{ "name": "react", "types": "index.d.ts" }"#,
+    );
+    root.write(
+        "node_modules/react/index.d.ts",
+        "export type ComponentPropsWithoutRef<T> = { disabled?: boolean };\n",
+    );
+
+    let workspace = scan_workspace(root.path(), &["src/**/*.ts".to_string()])
+        .expect("workspace scan should succeed");
+
+    assert!(workspace
+        .files
+        .iter()
+        .any(|file| file.file_id == "node_modules/@reference-ui/react/react.d.mts"));
+    assert!(workspace
+        .files
+        .iter()
+        .any(|file| file.file_id == "node_modules/react/index.d.ts"));
+}
+
+#[test]
+fn scan_workspace_limits_transitive_cross_library_external_imports() {
+    let root = TempDir::new("scanner-workspace-external-cross-library-depth-limit");
+    root.write(
+        "src/index.ts",
+        "export type { A } from 'alpha-lib';\n",
+    );
+    root.write(
+        "node_modules/alpha-lib/package.json",
+        r#"{ "name": "alpha-lib", "types": "index.d.ts" }"#,
+    );
+    root.write(
+        "node_modules/alpha-lib/index.d.ts",
+        "export type { B as A } from 'beta-lib';\n",
+    );
+    root.write(
+        "node_modules/beta-lib/package.json",
+        r#"{ "name": "beta-lib", "types": "index.d.ts" }"#,
+    );
+    root.write(
+        "node_modules/beta-lib/index.d.ts",
+        "export type { C as B } from 'gamma-lib';\n",
+    );
+    root.write(
+        "node_modules/gamma-lib/package.json",
+        r#"{ "name": "gamma-lib", "types": "index.d.ts" }"#,
+    );
+    root.write(
+        "node_modules/gamma-lib/index.d.ts",
+        "export interface C { label: string }\n",
+    );
+
+    let workspace = scan_workspace(root.path(), &["src/**/*.ts".to_string()])
+        .expect("workspace scan should succeed");
+
+    assert!(workspace
+        .files
+        .iter()
+        .any(|file| file.file_id == "node_modules/alpha-lib/index.d.ts"));
+    assert!(workspace
+        .files
+        .iter()
+        .any(|file| file.file_id == "node_modules/beta-lib/index.d.ts"));
+    assert!(!workspace
+        .files
+        .iter()
+        .any(|file| file.file_id == "node_modules/gamma-lib/index.d.ts"));
+}
+
+#[test]
 fn scan_workspace_follows_external_reexports_when_node_modules_is_above_root() {
     let root = TempDir::new("scanner-workspace-parent-node-modules");
     root.write(
