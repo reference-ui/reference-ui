@@ -1,3 +1,5 @@
+// This component is copied from reference-lib, do not modify here.
+// Source: packages/reference-lib/src/Reference/components/MemberDescription.tsx
 import { P } from '@reference-ui/react'
 
 export function MemberDescription({ description }: { description?: string }) {

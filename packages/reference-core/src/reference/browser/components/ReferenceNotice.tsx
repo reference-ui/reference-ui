@@ -1,3 +1,5 @@
+// This component is copied from reference-lib, do not modify here.
+// Source: packages/reference-lib/src/Reference/components/ReferenceNotice.tsx
 import type * as React from 'react'
 import { P } from '@reference-ui/react'
 
