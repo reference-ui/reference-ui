@@ -1,7 +1,6 @@
 // This component is copied from reference-lib, do not modify here.
 // Source: packages/reference-lib/src/Reference/components/MemberType.tsx
 import { Div } from '@reference-ui/react'
-import { MonoText } from './shared/MonoText'
 
 export function MemberType({ typeLabel }: { typeLabel: string }) {
   return (

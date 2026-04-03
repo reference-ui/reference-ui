@@ -6,7 +6,7 @@ interface MonoTextProps {
   color?: React.ComponentProps<typeof Code>['color']
 }
 
-const REFERENCE_CODE_RESET_CSS: any = {
+const REFERENCE_CODE_RESET_CSS = {
   background: 'transparent',
   color: 'inherit',
   padding: '0',

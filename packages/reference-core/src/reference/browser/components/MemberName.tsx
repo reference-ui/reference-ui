@@ -1,7 +1,6 @@
 // This component is copied from reference-lib, do not modify here.
 // Source: packages/reference-lib/src/Reference/components/MemberName.tsx
 import { Div } from '@reference-ui/react'
-import { MonoText } from './shared/MonoText'
 
 export function MemberName({ name }: { name: string }) {
   return (
