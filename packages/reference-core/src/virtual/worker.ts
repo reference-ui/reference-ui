@@ -1,6 +1,8 @@
 /**
  * Virtual worker – copies/transforms source files to .reference-ui/virtual for Panda scanning.
  * Transform is part of copy; emits virtual:fs:change per file (copy+transform one file).
+ * Emits virtual:fragment:change instead when the changed file imports from the system API,
+ * so sync can trigger a config-only rebuild rather than a full reference rebuild.
  * Listens: run:virtual:copy:all (full), run:virtual:sync:file (single file, from watch:change).
  */
 import { emit, on } from '../lib/event-bus'
@@ -9,6 +11,7 @@ import { resolve } from 'node:path'
 import { copyToVirtual, removeFromVirtual } from './copy'
 import { copyAll } from './copy-all'
 import { getVirtualPath } from './utils'
+import { isFragmentFile } from './fragment-detect'
 import { log } from '../lib/log'
 import { getVirtualDirPath } from '../lib/paths'
 import type { VirtualWorkerPayload } from './types'
@@ -40,8 +43,11 @@ export default async function runVirtual(payload: VirtualWorkerPayload): Promise
       } else {
         virtualPath = await copyToVirtual(sourcePath, root, virtualDir, { debug })
       }
-      emit('virtual:fs:change', { event: ev.event, path: virtualPath })
-      log.debug('virtual', 'Processed watch:change → virtual:fs:change', ev.event, virtualPath)
+      const changeEvent = (await isFragmentFile(sourcePath, ev.event))
+        ? 'virtual:fragment:change'
+        : 'virtual:fs:change'
+      emit(changeEvent, { event: ev.event, path: virtualPath })
+      log.debug('virtual', `Processed watch:change → ${changeEvent}`, ev.event, virtualPath)
     } catch (err) {
       log.error('[virtual] Failed to process', ev.event, sourcePath, err)
       emit('virtual:failed', {
