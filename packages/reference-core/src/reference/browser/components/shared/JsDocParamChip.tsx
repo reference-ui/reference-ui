@@ -26,7 +26,7 @@ export function JsDocParamChip({ tagLabel }: JsDocParamChipProps) {
       //borderWidth="1px"
       //borderStyle="solid"
       //borderColor="blue.900"
-      color="blue.300"
+      color="reference.primary"
       //className={className}
     >
       <Div mt="3px">
