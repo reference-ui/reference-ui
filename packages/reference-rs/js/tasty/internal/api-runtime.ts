@@ -40,6 +40,7 @@ interface CreateTastyApiRuntimeOptions {
 }
 
 const PREFERRED_EXTERNAL_BARE_NAME_LIBRARIES = [
+  '@reference-ui/styled',
   '@reference-ui/react',
   '@reference-ui/system',
   '@reference-ui/types',
@@ -262,22 +263,38 @@ export class TastyApiRuntime implements TastyApi {
     return this.loadSymbolById(matches[0]!.id)
   }
 
-  private resolvePreferredBareNameMatch(
+  resolvePreferredBareNameMatch(
     name: string,
     matches: TastySymbolSearchResult[],
   ): TastySymbolSearchResult | undefined {
-    if (matches.some((entry) => entry.library === 'user')) {
+    const userMatches = matches.filter((entry) => entry.library === 'user')
+    const externalMatches = matches.filter((entry) => entry.library !== 'user')
+
+    // Single user match alongside any external matches → prefer user.
+    // The user's project is the most specific source: generated types (e.g. Panda's
+    // SystemProperties) are placed in library "user" and include all theme tokens.
+    if (userMatches.length === 1) {
+      if (externalMatches.length > 0) {
+        this.runtimeWarnings.add(
+          `Ambiguous symbol name "${name}" matched user and external libraries. ` +
+            `Using user match ${userMatches[0]!.id}; external matches: ${externalMatches
+              .map((entry) => `${entry.id} (${entry.library})`)
+              .join(', ')}.`,
+        )
+      }
+      return userMatches[0]
+    }
+
+    // Multiple user matches → genuine collision, fall through to preferred-external logic.
+    // No user matches → same preferred-external logic.
+    const distinctLibraries = [...new Set(externalMatches.map((entry) => entry.library))]
+    if (distinctLibraries.length <= 1 && userMatches.length === 0) {
       return undefined
     }
 
-    const distinctLibraries = [...new Set(matches.map((entry) => entry.library))]
-    if (distinctLibraries.length <= 1) {
-      return undefined
-    }
-
-    let preferred = matches[0]
+    let preferred = externalMatches[0]
     for (const library of PREFERRED_EXTERNAL_BARE_NAME_LIBRARIES) {
-      const libraryMatches = matches.filter((entry) => entry.library === library)
+      const libraryMatches = externalMatches.filter((entry) => entry.library === library)
       if (libraryMatches.length === 1) {
         preferred = libraryMatches[0]
         break
@@ -287,9 +304,11 @@ export class TastyApiRuntime implements TastyApi {
       }
     }
 
+    if (!preferred) return undefined
+
     this.runtimeWarnings.add(
       `Ambiguous symbol name "${name}" matched multiple external libraries. Using ${preferred.id} (${preferred.library}); other matches: ${matches
-        .filter((entry) => entry.id !== preferred.id)
+        .filter((entry) => entry.id !== preferred!.id)
         .map((entry) => `${entry.id} (${entry.library})`)
         .join(', ')}. Use a scoped lookup to disambiguate.`,
     )

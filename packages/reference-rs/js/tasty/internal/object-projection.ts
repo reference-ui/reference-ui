@@ -106,16 +106,10 @@ async function projectReferenceMembers(
   if (utilityProjection) return utilityProjection
 
   if (isTypeParameterReference(reference)) {
-    // Handle specific type parameter mappings that we know should be resolved.
-    if (reference.name === 'P') {
-      try {
-        const systemProperties = await api.loadSymbolByName('SystemProperties')
-        return systemProperties.getDisplayMembers()
-      } catch {
-        return []
-      }
-    }
-    return []
+    // No manifest ID — best-effort name lookup, same path as normal unresolved references.
+    // This handles mapped types like SystemProperties<P> where P is a bare type parameter.
+    const symbol = await loadReferencedSymbol(api, reference)
+    return symbol ? projectSymbolMembers(api, symbol, context) : []
   }
 
   const symbol = await loadReferencedSymbol(api, reference)
@@ -152,6 +146,10 @@ async function loadReferencedSymbol(
   const matches = await api.findSymbolsByName(reference.name)
   if (matches.length === 1) {
     return api.loadSymbolById(matches[0]!.id)
+  }
+  if (matches.length > 1) {
+    const preferred = api.resolvePreferredBareNameMatch(reference.name, matches)
+    if (preferred) return api.loadSymbolById(preferred.id)
   }
 
   return undefined
