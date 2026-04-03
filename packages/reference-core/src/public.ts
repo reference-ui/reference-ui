@@ -6,3 +6,5 @@
 export { defineConfig } from './config'
 export type { ReferenceUIConfig } from './config'
 export type { BaseSystem } from './types'
+export { getSyncSession } from './session'
+export type { SyncSession, RefreshEvent, GetSyncSessionOptions } from './session'
