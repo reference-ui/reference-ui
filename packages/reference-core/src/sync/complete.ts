@@ -59,4 +59,13 @@ export function initComplete(payload: SyncPayload): void {
   on('packager:complete', () => {
     process.stdout.write(REF_SYNC_READY_MESSAGE)
   })
+
+  /**
+   * Fragment-only changes (tokens(), keyframes(), etc.) skip the reference
+   * build and packager entirely. Signal readiness as soon as Panda codegen
+   * completes so the watch-mode ready message is still emitted.
+   */
+  on('system:panda:codegen', () => {
+    process.stdout.write(REF_SYNC_READY_MESSAGE)
+  })
 }
