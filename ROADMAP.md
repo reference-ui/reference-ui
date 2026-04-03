@@ -38,7 +38,7 @@ First-class public release of `reference-core` (CLI + scanner + pipeline) as a s
 
 Duplicate-symbol behavior is currently untested and could regress silently.
 
-- [ ] Add tests covering dedup behaviour for duplicate symbols across multiple scan roots
+- [x] Add tests covering dedup behaviour for duplicate symbols across multiple scan roots
 
 > **Note:** symlink hygiene (`node_modules/@reference-ui/*` pruning) currently lives in `@reference-ui/core`. Worth revisiting if it causes observable scan issues, but not a priority action item right now.
 
