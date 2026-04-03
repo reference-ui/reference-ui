@@ -80,14 +80,14 @@ afterEach(() => {
   if (dir) rmSync(dir, { recursive: true, force: true })
 })
 
-describe('session/init – lock guard', () => {
+describe('session/init – lock guard (watch mode only)', () => {
   it('passes when no lock exists', async () => {
     dir = mkdtempSync(join(tmpdir(), 'ref-init-test-'))
     const { initSession } = await loadInitModule(dir)
     mockReadLock.mockReturnValue(null)
 
-    expect(() => initSession(createPayload(false))).not.toThrow()
-    expect(mockInitSessionState).toHaveBeenCalledWith(dir, 'one-shot')
+    expect(() => initSession(createPayload(true))).not.toThrow()
+    expect(mockInitSessionState).toHaveBeenCalledWith(dir, 'watch')
   })
 
   it('reclaims a stale lock without exiting', async () => {
@@ -96,11 +96,11 @@ describe('session/init – lock guard', () => {
     mockReadLock.mockReturnValue({ pid: 9999, startedAt: '2026-01-01T00:00:00.000Z' })
     mockIsLockStale.mockReturnValue(true)
 
-    expect(() => initSession(createPayload(false))).not.toThrow()
+    expect(() => initSession(createPayload(true))).not.toThrow()
     expect(mockInitSessionState).toHaveBeenCalled()
   })
 
-  it('exits when a live lock exists', async () => {
+  it('exits when a live watch lock exists', async () => {
     dir = mkdtempSync(join(tmpdir(), 'ref-init-test-'))
     const { initSession } = await loadInitModule(dir)
     mockReadLock.mockReturnValue({ pid: process.pid, startedAt: '2026-01-01T00:00:00.000Z' })
@@ -108,10 +108,20 @@ describe('session/init – lock guard', () => {
 
     const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {}) as never)
 
-    initSession(createPayload(false))
+    initSession(createPayload(true))
 
     expect(exitSpy).toHaveBeenCalledWith(1)
     exitSpy.mockRestore()
+  })
+
+  it('does not check lock in one-shot mode', async () => {
+    dir = mkdtempSync(join(tmpdir(), 'ref-init-test-'))
+    const { initSession } = await loadInitModule(dir)
+    // Even with a live lock present, one-shot should not call readLock.
+    mockReadLock.mockReturnValue({ pid: process.pid, startedAt: '2026-01-01T00:00:00.000Z' })
+
+    expect(() => initSession(createPayload(false))).not.toThrow()
+    expect(mockReadLock).not.toHaveBeenCalled()
   })
 })
 
