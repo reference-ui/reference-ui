@@ -51,7 +51,7 @@ export function MemberJsDoc({
             {param.optional ? <Small color="reference.muted">optional</Small> : null}
 
             {param.description && (
-              <P margin="0" color="gray.400">
+              <P margin="0" color="reference.muted">
                 {param.description}
               </P>
             )}

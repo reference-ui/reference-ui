@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Div } from '@reference-ui/react'
+import { Div, type SystemStyleObject } from '@reference-ui/react'
 import { MonoText } from './MonoText'
 
 const SNIPPET_CSS = {
@@ -18,7 +18,7 @@ const SNIPPET_CSS = {
   borderLeftWidth: '3px',
   borderLeftStyle: 'solid',
   borderLeftColor: 'gray.500',
-} as const
+} as unknown as SystemStyleObject
 
 /**
  * Block-style summary for signatures, type expressions, and other non-chip
@@ -29,7 +29,7 @@ export type SummarySnippetProps = React.ComponentPropsWithoutRef<typeof Div>
 export function SummarySnippet({ children, css, ...props }: SummarySnippetProps) {
   return (
     <Div css={{ ...SNIPPET_CSS, ...css }} {...props}>
-      <MonoText color="blue.200">{children}</MonoText>
+      <MonoText color={'blue.200' as React.ComponentProps<typeof MonoText>['color']}>{children}</MonoText>
     </Div>
   )
 }
