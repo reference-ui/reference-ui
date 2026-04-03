@@ -9,8 +9,7 @@ const mockInitSessionState = vi.fn()
 const mockTransitionSession = vi.fn()
 const mockTransitionBuild = vi.fn()
 const mockCleanupSession = vi.fn()
-const mockReadLock = vi.fn()
-const mockIsLockStale = vi.fn()
+const mockTryAcquireLock = vi.fn()
 
 function fireOn(event: string, payload?: unknown): void {
   for (const handler of onHandlers.get(event) ?? []) {
@@ -25,8 +24,7 @@ async function loadInitModule(outDir: string) {
   mockTransitionSession.mockReset()
   mockTransitionBuild.mockReset()
   mockCleanupSession.mockReset()
-  mockReadLock.mockReset()
-  mockIsLockStale.mockReset()
+  mockTryAcquireLock.mockReset()
 
   vi.doMock('../lib/event-bus', () => ({
     on: (event: string, handler: (payload?: unknown) => void) => {
@@ -48,8 +46,7 @@ async function loadInitModule(outDir: string) {
   }))
 
   vi.doMock('./files', () => ({
-    readLock: mockReadLock,
-    isLockStale: mockIsLockStale,
+    tryAcquireLock: mockTryAcquireLock,
   }))
 
   vi.doMock('../lib/log', () => ({
@@ -81,30 +78,28 @@ afterEach(() => {
 })
 
 describe('session/init – lock guard (watch mode only)', () => {
-  it('passes when no lock exists', async () => {
+  it('passes when tryAcquireLock returns acquired', async () => {
     dir = mkdtempSync(join(tmpdir(), 'ref-init-test-'))
     const { initSession } = await loadInitModule(dir)
-    mockReadLock.mockReturnValue(null)
+    mockTryAcquireLock.mockReturnValue('acquired')
 
     expect(() => initSession(createPayload(true))).not.toThrow()
     expect(mockInitSessionState).toHaveBeenCalledWith(dir, 'watch')
   })
 
-  it('reclaims a stale lock without exiting', async () => {
+  it('retries once and succeeds when first attempt returns stale', async () => {
     dir = mkdtempSync(join(tmpdir(), 'ref-init-test-'))
     const { initSession } = await loadInitModule(dir)
-    mockReadLock.mockReturnValue({ pid: 9999, startedAt: '2026-01-01T00:00:00.000Z' })
-    mockIsLockStale.mockReturnValue(true)
+    mockTryAcquireLock.mockReturnValueOnce('stale').mockReturnValueOnce('acquired')
 
     expect(() => initSession(createPayload(true))).not.toThrow()
-    expect(mockInitSessionState).toHaveBeenCalled()
+    expect(mockTryAcquireLock).toHaveBeenCalledTimes(2)
   })
 
-  it('exits when a live watch lock exists', async () => {
+  it('exits when tryAcquireLock returns contested', async () => {
     dir = mkdtempSync(join(tmpdir(), 'ref-init-test-'))
     const { initSession } = await loadInitModule(dir)
-    mockReadLock.mockReturnValue({ pid: process.pid, startedAt: '2026-01-01T00:00:00.000Z' })
-    mockIsLockStale.mockReturnValue(false)
+    mockTryAcquireLock.mockReturnValue('contested')
 
     const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {}) as never)
 
@@ -114,14 +109,12 @@ describe('session/init – lock guard (watch mode only)', () => {
     exitSpy.mockRestore()
   })
 
-  it('does not check lock in one-shot mode', async () => {
+  it('does not call tryAcquireLock in one-shot mode', async () => {
     dir = mkdtempSync(join(tmpdir(), 'ref-init-test-'))
     const { initSession } = await loadInitModule(dir)
-    // Even with a live lock present, one-shot should not call readLock.
-    mockReadLock.mockReturnValue({ pid: process.pid, startedAt: '2026-01-01T00:00:00.000Z' })
 
     expect(() => initSession(createPayload(false))).not.toThrow()
-    expect(mockReadLock).not.toHaveBeenCalled()
+    expect(mockTryAcquireLock).not.toHaveBeenCalled()
   })
 })
 
@@ -132,7 +125,7 @@ describe('session/init – one-shot mode event wiring', () => {
 
   it('transitions to running on virtual:complete', async () => {
     const { initSession } = await loadInitModule(dir)
-    mockReadLock.mockReturnValue(null)
+    mockTryAcquireLock.mockReturnValue('acquired')
     initSession(createPayload(false))
 
     fireOn('virtual:complete')
@@ -143,7 +136,7 @@ describe('session/init – one-shot mode event wiring', () => {
 
   it('transitions build to ready on packager:complete', async () => {
     const { initSession } = await loadInitModule(dir)
-    mockReadLock.mockReturnValue(null)
+    mockTryAcquireLock.mockReturnValue('acquired')
     initSession(createPayload(false))
 
     fireOn('packager:complete')
@@ -153,7 +146,7 @@ describe('session/init – one-shot mode event wiring', () => {
 
   it('marks build and session as failed on sync:failed', async () => {
     const { initSession } = await loadInitModule(dir)
-    mockReadLock.mockReturnValue(null)
+    mockTryAcquireLock.mockReturnValue('acquired')
     initSession(createPayload(false))
 
     fireOn('sync:failed')
@@ -164,7 +157,7 @@ describe('session/init – one-shot mode event wiring', () => {
 
   it('cleans up session on sync:complete in one-shot mode', async () => {
     const { initSession } = await loadInitModule(dir)
-    mockReadLock.mockReturnValue(null)
+    mockTryAcquireLock.mockReturnValue('acquired')
     initSession(createPayload(false))
 
     fireOn('sync:complete')
@@ -180,7 +173,7 @@ describe('session/init – watch mode event wiring', () => {
 
   it('transitions to watching on virtual:complete in watch mode', async () => {
     const { initSession } = await loadInitModule(dir)
-    mockReadLock.mockReturnValue(null)
+    mockTryAcquireLock.mockReturnValue('acquired')
     initSession(createPayload(true))
 
     fireOn('virtual:complete')
@@ -190,7 +183,7 @@ describe('session/init – watch mode event wiring', () => {
 
   it('queues build on watch:change', async () => {
     const { initSession } = await loadInitModule(dir)
-    mockReadLock.mockReturnValue(null)
+    mockTryAcquireLock.mockReturnValue('acquired')
     initSession(createPayload(true))
 
     fireOn('watch:change')
@@ -200,7 +193,7 @@ describe('session/init – watch mode event wiring', () => {
 
   it('resumes running on run:virtual:sync:file', async () => {
     const { initSession } = await loadInitModule(dir)
-    mockReadLock.mockReturnValue(null)
+    mockTryAcquireLock.mockReturnValue('acquired')
     initSession(createPayload(true))
 
     fireOn('run:virtual:sync:file')
@@ -210,7 +203,7 @@ describe('session/init – watch mode event wiring', () => {
 
   it('does not call cleanupSession on sync:complete in watch mode', async () => {
     const { initSession } = await loadInitModule(dir)
-    mockReadLock.mockReturnValue(null)
+    mockTryAcquireLock.mockReturnValue('acquired')
     initSession(createPayload(true))
 
     fireOn('sync:complete')

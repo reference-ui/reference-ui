@@ -7,7 +7,7 @@ import {
   transitionBuild,
   cleanupSession,
 } from './state'
-import { readLock, isLockStale } from './files'
+import { tryAcquireLock } from './files'
 import { log } from '../lib/log'
 
 const LOG_SCOPE = 'session'
@@ -15,33 +15,33 @@ const LOG_SCOPE = 'session'
 /**
  * Initialize the session module for a sync run.
  *
- * - In watch mode: acquires the session lock, failing fast if another live
- *   watch process already owns the outDir.
- * - In one-shot mode: skips the lock (one-shot runs are transient and may
- *   legitimately run alongside a watch process, e.g. to apply config changes).
+ * - In watch mode: acquires the session lock atomically (O_EXCL), failing fast
+ *   if another live watch process already owns the outDir.
+ * - In one-shot mode: skips the lock entirely — one-shot runs are transient and
+ *   may legitimately run alongside a watch process (e.g. to apply config changes).
  * - Writes the initial `session.json` manifest.
  * - Subscribes to sync pipeline events to keep manifest state current.
- * - Cleans up the lock on orderly exit.
+ * - Cleans up the lock on orderly exit (watch mode only).
  */
 export function initSession(payload: SyncPayload): void {
   const outDir = getOutDirPath(payload.cwd)
   const mode = payload.options.watch ? 'watch' : 'one-shot'
 
-  // Only enforce single-writer for watch mode. Two concurrent watch processes
-  // on the same outDir would stomp each other's outputs, so we fail fast.
-  // One-shot syncs are transient and safe to run alongside a watch process.
+  // Lock enforcement is watch-only (see doc comment above).
   if (payload.options.watch) {
-    const existingLock = readLock(outDir)
-    if (existingLock !== null) {
-      if (!isLockStale(existingLock)) {
-        log.error(
-          LOG_SCOPE,
-          `Another ref sync --watch process (pid ${existingLock.pid}) already owns ${outDir}. ` +
-            'Use a different outDir to run parallel watch sessions.'
-        )
-        process.exit(1)
-      }
-      log.debug(LOG_SCOPE, `Reclaiming stale watch lock from pid ${existingLock.pid}`)
+    const now = new Date().toISOString()
+    let result = tryAcquireLock(outDir, { pid: process.pid, startedAt: now })
+    // One retry after a stale lock has been removed.
+    if (result === 'stale') {
+      result = tryAcquireLock(outDir, { pid: process.pid, startedAt: now })
+    }
+    if (result === 'contested') {
+      log.error(
+        LOG_SCOPE,
+        `Another ref sync --watch process already owns ${outDir}. ` +
+          'Use a different outDir to run parallel watch sessions.'
+      )
+      process.exit(1)
     }
   }
 
@@ -75,7 +75,7 @@ export function initSession(payload: SyncPayload): void {
   })
 
   if (!payload.options.watch) {
-    // In one-shot mode, clean up the lock once the run is fully done.
+    // In one-shot mode, clean up once the run is fully done.
     on('sync:complete', () => {
       cleanupSession()
     })

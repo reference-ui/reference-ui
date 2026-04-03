@@ -25,7 +25,7 @@ afterEach(() => {
 })
 
 describe('session/state – init', () => {
-  it('writes session.json and session.lock on init', () => {
+  it('writes session.json and session.lock in watch mode', () => {
     initSessionState(dir, 'watch')
 
     const manifest = readManifest(dir)
@@ -38,6 +38,13 @@ describe('session/state – init', () => {
     expect(manifest?.buildState).toBe('idle')
     expect(lock).not.toBeNull()
     expect(lock?.pid).toBe(process.pid)
+  })
+
+  it('writes session.json but NOT session.lock in one-shot mode', () => {
+    initSessionState(dir, 'one-shot')
+
+    expect(readManifest(dir)).not.toBeNull()
+    expect(readLock(dir)).toBeNull()
   })
 
   it('sets startedAt and updatedAt to the same ISO string on init', () => {
@@ -92,11 +99,20 @@ describe('session/state – transitions', () => {
 })
 
 describe('session/state – cleanup', () => {
-  it('cleanupSession writes stopped state and removes lock', () => {
+  it('cleanupSession writes stopped state and removes lock in watch mode', () => {
     initSessionState(dir, 'watch')
     cleanupSession()
 
     expect(readManifest(dir)?.state).toBe('stopped')
+    expect(readLock(dir)).toBeNull()
+  })
+
+  it('cleanupSession writes stopped state but does not touch lock in one-shot mode', () => {
+    initSessionState(dir, 'one-shot')
+    cleanupSession()
+
+    expect(readManifest(dir)?.state).toBe('stopped')
+    // Lock was never written in one-shot mode — still absent.
     expect(readLock(dir)).toBeNull()
   })
 

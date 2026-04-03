@@ -15,7 +15,12 @@ export function initSessionState(outDir: string, mode: SessionMode): void {
     startedAt: now,
     updatedAt: now,
   }
-  writeLock(outDir, { pid: process.pid, startedAt: now })
+  // Lock is watch-only. One-shot syncs are transient and may legitimately
+  // run alongside a watch process — writing a lock would overwrite the watch
+  // process's lock and removing it on cleanup would leave the watch unguarded.
+  if (mode === 'watch') {
+    writeLock(outDir, { pid: process.pid, startedAt: now })
+  }
   writeManifest(outDir, currentManifest)
 }
 
@@ -31,13 +36,15 @@ export function transitionBuild(buildState: BuildState): void {
   writeManifest(currentOutDir, currentManifest)
 }
 
-/** Mark as stopped and remove the lock file. */
+/** Mark as stopped and, for watch sessions only, remove the lock file. */
 export function cleanupSession(): void {
   if (!currentOutDir) return
   if (currentManifest) {
     transitionSession('stopped')
   }
-  removeLock(currentOutDir)
+  if (currentManifest?.mode === 'watch') {
+    removeLock(currentOutDir)
+  }
 }
 
 export function getSessionManifest(): SessionManifest | null {

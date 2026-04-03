@@ -10,6 +10,7 @@ import {
   writeLock,
   readLock,
   removeLock,
+  tryAcquireLock,
   isProcessAlive,
   isLockStale,
 } from './files'
@@ -95,6 +96,38 @@ describe('session/files – lock', () => {
 
   it('removeLock is a no-op when lock does not exist', () => {
     expect(() => removeLock(dir)).not.toThrow()
+  })
+})
+
+describe('session/files – tryAcquireLock', () => {
+  it('returns acquired when no lock file exists', () => {
+    const lock: SessionLock = { pid: process.pid, startedAt: '2026-01-01T00:00:00.000Z' }
+    expect(tryAcquireLock(dir, lock)).toBe('acquired')
+    // Lock file was created.
+    expect(readLock(dir)).toEqual(lock)
+  })
+
+  it('returns contested when a live-process lock exists', () => {
+    const lock: SessionLock = { pid: process.pid, startedAt: '2026-01-01T00:00:00.000Z' }
+    writeLock(dir, lock)
+    expect(tryAcquireLock(dir, lock)).toBe('contested')
+  })
+
+  it('returns stale and removes the lock when the holder is dead', () => {
+    const deadLock: SessionLock = { pid: 2147483647, startedAt: '2026-01-01T00:00:00.000Z' }
+    writeLock(dir, deadLock)
+
+    const result = tryAcquireLock(dir, { pid: process.pid, startedAt: '2026-01-01T00:00:00.000Z' })
+    expect(result).toBe('stale')
+    // Stale lock file should have been removed so caller can retry.
+    expect(readLock(dir)).toBeNull()
+  })
+
+  it('acquired lock can be released and re-acquired', () => {
+    const lock: SessionLock = { pid: process.pid, startedAt: '2026-01-01T00:00:00.000Z' }
+    expect(tryAcquireLock(dir, lock)).toBe('acquired')
+    removeLock(dir)
+    expect(tryAcquireLock(dir, lock)).toBe('acquired')
   })
 })
 
