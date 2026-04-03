@@ -76,9 +76,10 @@ export function initComplete(payload: SyncPayload): void {
 
   /**
    * Fragment-only changes (tokens(), keyframes(), etc.) skip the reference
-   * build and go directly to panda codegen → packager runtime bundle.
-   * Emit ready once the runtime CSS package is on disk, so test consumers
-   * that do a fresh page load will see the updated token values.
+   * build and go through config → panda codegen → packager runtime bundle
+   * (runtime CSS + JS only — no reference/MCP pass).
+   * Emit ready once the runtime bundle is on disk so test consumers that do a
+   * fresh page load see the updated token values.
    * Guard on initialSyncComplete to avoid a premature signal during cold start.
    */
   on('packager:runtime:complete', () => {

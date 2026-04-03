@@ -43,7 +43,7 @@ export default async function runVirtual(payload: VirtualWorkerPayload): Promise
       } else {
         virtualPath = await copyToVirtual(sourcePath, root, virtualDir, { debug })
       }
-      const changeEvent = isFragmentFile(sourcePath, ev.event)
+      const changeEvent = (await isFragmentFile(sourcePath, ev.event))
         ? 'virtual:fragment:change'
         : 'virtual:fs:change'
       emit(changeEvent, { event: ev.event, path: virtualPath })
