@@ -67,8 +67,13 @@ describe('reference output', () => {
     await api.ready()
 
     const style = await api.loadSymbolByName('StyleProps')
+    const displayMembers = await style.getDisplayMembers()
     expect(style.getName()).toBe('StyleProps')
     expect(style.getKind()).toBe('typeAlias')
+    expect(displayMembers.length).toBeGreaterThan(100)
+    expect(displayMembers.map(member => member.getName())).toEqual(
+      expect.arrayContaining(['background', 'display', 'fontSize', 'margin', 'container', 'font', 'weight', 'r'])
+    )
   })
 
   it('projects display members for composed type aliases in generated reference artifacts', async () => {

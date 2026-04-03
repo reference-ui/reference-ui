@@ -12,6 +12,12 @@ import { isInterfaceSymbol, isTypeAliasSymbol, isTypeReference } from './shared'
 import type { TastyApiRuntime } from './api-runtime'
 
 const MAX_PROJECTION_DEPTH = 32
+const SYSTEM_PROPERTIES_LOOKUP_LIBRARIES = [
+  '@reference-ui/styled',
+  '@reference-ui/react',
+  '@reference-ui/system',
+  '@reference-ui/types',
+]
 
 interface ProjectionContext {
   visitedSymbolIds: Set<string>
@@ -108,6 +114,17 @@ async function projectReferenceMembers(
   if (isTypeParameterReference(reference)) {
     // Handle specific type parameter mappings that we know should be resolved.
     if (reference.name === 'P') {
+      for (const library of SYSTEM_PROPERTIES_LOOKUP_LIBRARIES) {
+        try {
+          const systemProperties = await api.findSymbolByScopedName(library, 'SystemProperties')
+          if (systemProperties) {
+            return systemProperties.getDisplayMembers()
+          }
+        } catch {
+          // Keep trying narrower library scopes before falling back to a bare lookup.
+        }
+      }
+
       try {
         const systemProperties = await api.loadSymbolByName('SystemProperties')
         return systemProperties.getDisplayMembers()

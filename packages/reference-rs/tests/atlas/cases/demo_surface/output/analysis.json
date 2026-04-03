@@ -72,9 +72,9 @@
         ],
         "usage": "common",
         "examples": [
-          "<AppCard title=\"Preferences\" padding=\"md\" status=\"default\" statusLabel=\"Saved\">",
           "<AppCard title=\"Welcome\" padding=\"lg\">",
-          "<AppCard title=\"Features\" elevated padding=\"md\">"
+          "<AppCard title=\"Features\" elevated padding=\"md\">",
+          "<AppCard title=\"Preferences\" padding=\"md\" status=\"default\" statusLabel=\"Saved\">"
         ],
         "usedWith": {
           "Button": "very common"
@@ -135,11 +135,11 @@
         ],
         "usage": "very common",
         "examples": [
-          "<Button variant=\"outline\" onClick={() => {}}>",
-          "<Button variant=\"outline\" disabled>",
-          "<Button variant=\"ghost\" onClick={() => {}}>",
           "<Button variant=\"solid\" onClick={() => {}}>",
-          "<Button variant=\"ghost\">"
+          "<Button variant=\"ghost\">",
+          "<Button variant=\"solid\" size=\"sm\" onClick={() => {}}>",
+          "<Button variant=\"ghost\" onClick={() => {}}>",
+          "<Button variant=\"outline\" onClick={() => {}}>"
         ],
         "usedWith": {
           "AppCard": "very common",
@@ -191,7 +191,10 @@
           }
         ],
         "usage": "occasional",
-        "examples": ["<UserBadge count={5}>", "<UserBadge>"],
+        "examples": [
+          "<UserBadge count={5}>",
+          "<UserBadge>"
+        ],
         "usedWith": {
           "Button": "very common"
         }
@@ -310,8 +313,8 @@
           ],
           "usage": "occasional",
           "examples": [
-            "<Badge variant={status}>",
-            "<Badge variant=\"default\" {...props} />"
+            "<Badge variant=\"default\" {...props} />",
+            "<Badge variant={status}>"
           ],
           "usedWith": {
             "Card": "very common"
@@ -434,7 +437,9 @@
             }
           ],
           "usage": "rare",
-          "examples": ["<BaseButton size=\"md\" {...props} />"],
+          "examples": [
+            "<BaseButton size=\"md\" {...props} />"
+          ],
           "usedWith": {}
         },
         {
@@ -575,7 +580,10 @@
             }
           ],
           "usage": "occasional",
-          "examples": ["<UserBadge count={5}>", "<UserBadge>"],
+          "examples": [
+            "<UserBadge count={5}>",
+            "<UserBadge>"
+          ],
           "usedWith": {
             "Button": "very common"
           }
