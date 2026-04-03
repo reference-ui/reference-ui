@@ -36,8 +36,8 @@
         ],
         "usage": "very common",
         "examples": [
-          "<SubmitButton variant=\"submit\">Save</SubmitButton>",
-          "<SubmitButton variant=\"reset\" disabled>\n        Reset\n      </SubmitButton>"
+          "<SubmitButton variant=\"submit\">",
+          "<SubmitButton variant=\"reset\" disabled>"
         ],
         "usedWith": {
           "Button": "very common"
@@ -69,7 +69,7 @@
         ],
         "usage": "common",
         "examples": [
-          "<HeroButton tone=\"hero\">Launch</HeroButton>"
+          "<HeroButton tone=\"hero\">"
         ],
         "usedWith": {
           "Button": "very common"

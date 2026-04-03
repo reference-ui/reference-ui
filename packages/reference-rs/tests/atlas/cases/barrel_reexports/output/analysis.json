@@ -19,8 +19,7 @@
         ],
         "usage": "very common",
         "examples": [
-          "<Button>Open</Button>",
-          "<Button>Close</Button>"
+          "<Button>"
         ],
         "usedWith": {
           "UserBadge": "very common"
@@ -51,7 +50,7 @@
         ],
         "usage": "common",
         "examples": [
-          "<UserBadge count={3}>Alerts</UserBadge>"
+          "<UserBadge count={3}>"
         ],
         "usedWith": {
           "Button": "very common"

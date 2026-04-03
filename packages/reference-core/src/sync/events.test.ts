@@ -168,9 +168,49 @@ describe('sync/events', () => {
     expect(emit).toHaveBeenCalledWith('run:reference:build', {})
   })
 
+  it('starts MCP only after both reference output and final declarations are ready', async () => {
+    const { initEvents } = await loadEventsModule()
+    initEvents()
+
+    fireOn('mcp:ready')
+    fireOn('reference:complete', {
+      source: 'virtual',
+      manifestPath: '/tmp/types/manifest.js',
+      outputDir: '/tmp/types',
+    })
+    expect(emit).not.toHaveBeenCalledWith('run:mcp:build', {})
+
+    emit.mockClear()
+    fireOn('packager-ts:complete')
+    expect(emit).toHaveBeenCalledWith('run:mcp:build', {})
+  })
+
+  it('prefetches Atlas on initial virtual completion once MCP worker is ready', async () => {
+    const { initEvents } = await loadEventsModule()
+    initEvents()
+
+    fireOn('mcp:ready')
+    emit.mockClear()
+
+    fireOn('virtual:complete')
+
+    expect(emit).toHaveBeenCalledWith('run:mcp:prefetch:atlas', undefined)
+  })
+
+  it('emits sync:complete from MCP completion', async () => {
+    const { initEvents } = await loadEventsModule()
+    initEvents()
+
+    fireOn('mcp:complete', { modelPath: '/tmp/model.json', componentCount: 12 })
+
+    expect(emit).toHaveBeenCalledWith('sync:complete', undefined)
+  })
+
   it('virtual fs changes trigger config and reference rebuilds after initial startup completes', async () => {
     const { initEvents } = await loadEventsModule()
     initEvents()
+
+    fireOn('mcp:ready')
 
     fireOn('virtual:complete')
     emit.mockClear()
@@ -182,6 +222,8 @@ describe('sync/events', () => {
 
     expect(emit).toHaveBeenCalledWith('run:system:config', undefined)
     expect(emit).toHaveBeenCalledWith('run:reference:build', {})
+    expect(emit).not.toHaveBeenCalledWith('run:mcp:prefetch:atlas', {})
+    expect(emit).not.toHaveBeenCalledWith('run:mcp:prefetch:atlas', undefined)
   })
 
   it('waits for panda codegen before bundling runtime packages', async () => {

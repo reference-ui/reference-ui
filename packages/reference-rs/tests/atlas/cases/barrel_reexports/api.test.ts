@@ -16,6 +16,6 @@ describe('barrel_reexports atlas case', () => {
   it('keeps the canonical component interface after a barrel hop', async () => {
     const button = await getComponent('Button', undefined, undefined, CASE)
 
-    expect(button.interface.name).toBe('ButtonProps')
+    expect(button.interface?.name).toBe('ButtonProps')
   })
 })

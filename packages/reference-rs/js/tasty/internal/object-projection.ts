@@ -70,6 +70,20 @@ async function projectTypeMembers(
   switch (raw.kind) {
     case 'object':
       return raw.members.map(member => api.createMember(member))
+    case 'indexed_access': {
+      const parameterMembers = await projectParametersIndexedAccessMembers(
+        api,
+        raw,
+        context
+      )
+      if (parameterMembers) return parameterMembers
+
+      if (raw.resolved) {
+        return projectTypeMembers(api, api.createTypeRef(raw.resolved), context)
+      }
+
+      return undefined
+    }
     case 'intersection': {
       const parts = await Promise.all(
         raw.types.map(item => projectTypeMembers(api, api.createTypeRef(item), context))
@@ -91,27 +105,22 @@ async function projectReferenceMembers(
   const utilityProjection = await projectUtilityReferenceMembers(api, reference, context)
   if (utilityProjection) return utilityProjection
 
-  const manifestEntry = api.getManifestEntry(reference.id)
-  if (!manifestEntry) {
-    // Special case: Handle unresolved type parameters that should be resolved to known types
-    if (isTypeParameterReference(reference)) {
-      // Handle specific type parameter mappings that we know should be resolved
-      if (reference.name === 'P') {
-        // Try to resolve to SystemProperties (common case for StyledSystemStyleObject)
-        try {
-          const systemProperties = await api.loadSymbolByName('SystemProperties')
-          return systemProperties.getDisplayMembers()
-        } catch {
-          // If SystemProperties is not found, return empty array
-          return []
-        }
+  if (isTypeParameterReference(reference)) {
+    // Handle specific type parameter mappings that we know should be resolved.
+    if (reference.name === 'P') {
+      try {
+        const systemProperties = await api.loadSymbolByName('SystemProperties')
+        return systemProperties.getDisplayMembers()
+      } catch {
+        return []
       }
-      return []
     }
-    return undefined
+    return []
   }
 
-  const symbol = await api.loadSymbolById(reference.id)
+  const symbol = await loadReferencedSymbol(api, reference)
+  if (!symbol) return undefined
+
   const raw = symbol.getRaw()
   if (isTypeAliasSymbol(raw)) {
     const instantiated = instantiateTypeAliasDefinition(raw, reference.typeArguments)
@@ -123,6 +132,31 @@ async function projectReferenceMembers(
   return projectSymbolMembers(api, symbol, context)
 }
 
+async function loadReferencedSymbol(
+  api: TastyApiRuntime,
+  reference: RawTastyTypeReference
+): Promise<TastySymbol | undefined> {
+  const manifestEntry = api.getManifestEntry(reference.id)
+  if (manifestEntry) {
+    return api.loadSymbolById(reference.id)
+  }
+
+  try {
+    const scoped = await api.findSymbolByScopedName(reference.library, reference.name)
+    if (scoped) return scoped
+  } catch {
+    // Fall through to a unique bare-name lookup when the emitted library points
+    // at a re-exporting package instead of the defining package.
+  }
+
+  const matches = await api.findSymbolsByName(reference.name)
+  if (matches.length === 1) {
+    return api.loadSymbolById(matches[0]!.id)
+  }
+
+  return undefined
+}
+
 async function projectUtilityReferenceMembers(
   api: TastyApiRuntime,
   reference: RawTastyTypeReference,
@@ -131,6 +165,8 @@ async function projectUtilityReferenceMembers(
   if (!reference.typeArguments?.length) return undefined
 
   switch (reference.name) {
+    case 'Pretty':
+      return projectPassthroughMembers(api, reference.typeArguments, context)
     case 'Omit':
       return projectOmitMembers(api, reference.typeArguments, context)
     case 'Pick':
@@ -138,6 +174,39 @@ async function projectUtilityReferenceMembers(
     default:
       return undefined
   }
+}
+
+async function projectPassthroughMembers(
+  api: TastyApiRuntime,
+  typeArguments: RawTastyTypeRef[],
+  context: ProjectionContext
+): Promise<TastyMember[] | undefined> {
+  const [first] = typeArguments
+  if (!first) return undefined
+  return projectTypeMembers(api, api.createTypeRef(first), context)
+}
+
+async function projectParametersIndexedAccessMembers(
+  api: TastyApiRuntime,
+  raw: Extract<RawTastyTypeRef, { kind: 'indexed_access' }>,
+  context: ProjectionContext
+): Promise<TastyMember[] | undefined> {
+  if (!isTypeReference(raw.object)) return undefined
+  if (raw.object.name !== 'Parameters') return undefined
+  if (raw.index.kind !== 'literal' || raw.index.value !== '0') return undefined
+
+  const [callableSource] = raw.object.typeArguments ?? []
+  if (!callableSource) return undefined
+
+  const callable =
+    getTastyResolvedType(api.createTypeRef(callableSource)) ??
+    api.createTypeRef(callableSource)
+  if (!callable.isCallable()) return undefined
+
+  const firstParameter = callable.getParameters()[0]?.getType()
+  if (!firstParameter) return undefined
+
+  return projectTypeMembers(api, firstParameter, context)
 }
 
 /**

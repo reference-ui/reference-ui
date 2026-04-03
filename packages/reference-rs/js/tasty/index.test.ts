@@ -23,12 +23,21 @@ function runtimePath(...segments: string[]) {
 }
 
 function toImportSpecifier(artifactPath: string): string {
-  return artifactPath.startsWith('file:') ? artifactPath : pathToFileURL(artifactPath).href
+  return artifactPath.startsWith('file:')
+    ? artifactPath
+    : pathToFileURL(artifactPath).href
 }
 
 describe('tasty runtime', () => {
   it('emits manifest-plus-chunks artifacts without bundle.js', () => {
-    const outputDir = join(packageDir, 'tests', 'tasty', 'cases', 'external_libs', 'output')
+    const outputDir = join(
+      packageDir,
+      'tests',
+      'tasty',
+      'cases',
+      'external_libs',
+      'output'
+    )
     const manifest = join(outputDir, 'manifest.js')
     const runtime = join(outputDir, 'runtime.js')
     const chunkRegistry = join(outputDir, 'chunk-registry.js')
@@ -50,7 +59,7 @@ describe('tasty runtime', () => {
     const loads: string[] = []
     const api = createTastyApi({
       manifestPath: manifestPath('external_libs'),
-      importer: async (artifactPath) => {
+      importer: async artifactPath => {
         loads.push(artifactPath)
         return import(toImportSpecifier(artifactPath))
       },
@@ -68,7 +77,7 @@ describe('tasty runtime', () => {
     const api = createTastyApiFromManifest({
       manifest: manifestModule.default,
       manifestPath: manifestPath('external_libs'),
-      importer: async (artifactPath) => {
+      importer: async artifactPath => {
         loads.push(artifactPath)
         return import(toImportSpecifier(artifactPath))
       },
@@ -76,14 +85,15 @@ describe('tasty runtime', () => {
 
     await api.loadSymbolByName('ButtonProps')
 
-    const chunkLoads = loads.filter((artifactPath) => artifactPath.includes('/chunks/'))
+    const chunkLoads = loads.filter(artifactPath => artifactPath.includes('/chunks/'))
     expect(chunkLoads).toHaveLength(1)
     expect(chunkLoads[0]?.endsWith('.js')).toBe(true)
   })
 
   it('creates a browser runtime from the generated runtime module', async () => {
     const runtime = createTastyBrowserRuntime({
-      loadRuntimeModule: async () => import(toImportSpecifier(runtimePath('external_libs'))),
+      loadRuntimeModule: async () =>
+        import(toImportSpecifier(runtimePath('external_libs'))),
     })
 
     const api = await runtime.loadApi()
@@ -139,7 +149,7 @@ describe('tasty runtime', () => {
           },
         },
       },
-      importer: async (artifactPath) => {
+      importer: async artifactPath => {
         if (artifactPath.includes('_alpha')) {
           return {
             _alpha: {
@@ -208,7 +218,7 @@ describe('tasty runtime', () => {
           },
         },
       },
-      importer: async (artifactPath) => {
+      importer: async artifactPath => {
         if (artifactPath.includes('_user')) {
           return {
             _user: {
@@ -237,7 +247,9 @@ describe('tasty runtime', () => {
       },
     })
 
-    await expect(api.loadSymbolByName('Shared')).rejects.toThrow('Ambiguous symbol name "Shared"')
+    await expect(api.loadSymbolByName('Shared')).rejects.toThrow(
+      'Ambiguous symbol name "Shared"'
+    )
   })
 
   it('prefers @reference-ui/react for known external duplicate names', async () => {
@@ -272,7 +284,7 @@ describe('tasty runtime', () => {
           },
         },
       },
-      importer: async (artifactPath) => {
+      importer: async artifactPath => {
         if (artifactPath.includes('_react')) {
           return {
             _react: {
@@ -333,7 +345,7 @@ describe('tasty runtime', () => {
     const loads: string[] = []
     const api = createTastyApi({
       manifestPath: manifestPath('external_libs'),
-      importer: async (artifactPath) => {
+      importer: async artifactPath => {
         loads.push(artifactPath)
         return import(toImportSpecifier(artifactPath))
       },
@@ -342,7 +354,7 @@ describe('tasty runtime', () => {
     await api.loadSymbolByName('ButtonProps')
     await api.loadSymbolByName('ButtonProps')
 
-    const chunkLoads = loads.filter((artifactPath) => artifactPath.includes('/chunks/'))
+    const chunkLoads = loads.filter(artifactPath => artifactPath.includes('/chunks/'))
     expect(chunkLoads).toHaveLength(1)
   })
 
@@ -350,7 +362,7 @@ describe('tasty runtime', () => {
     let failNextChunkLoad = true
     const api = createTastyApi({
       manifestPath: manifestPath('external_libs'),
-      importer: async (artifactPath) => {
+      importer: async artifactPath => {
         if (artifactPath.includes('/chunks/') && failNextChunkLoad) {
           failNextChunkLoad = false
           throw new Error('temporary chunk failure')
@@ -359,7 +371,9 @@ describe('tasty runtime', () => {
       },
     })
 
-    await expect(api.loadSymbolByName('ButtonProps')).rejects.toThrow('temporary chunk failure')
+    await expect(api.loadSymbolByName('ButtonProps')).rejects.toThrow(
+      'temporary chunk failure'
+    )
     await expect(api.loadSymbolByName('ButtonProps')).resolves.toMatchObject({
       getName: expect.any(Function),
     })
@@ -421,11 +435,11 @@ describe('tasty runtime', () => {
     const flattened = await api.graph.flattenInterfaceMembers(buttonProps)
     const displayMembers = await api.graph.getDisplayMembers(buttonProps)
 
-    expect(extendsSymbols.map((symbol) => symbol.getName())).toEqual(['StyleProps'])
-    expect(flattened.map((member) => member.getName())).toContain('tone')
-    expect(flattened.map((member) => member.getName())).toContain('size')
-    expect(displayMembers.map((member) => member.getName())).toContain('tone')
-    expect(displayMembers.map((member) => member.getName())).toContain('size')
+    expect(extendsSymbols.map(symbol => symbol.getName())).toEqual(['StyleProps'])
+    expect(flattened.map(member => member.getName())).toContain('tone')
+    expect(flattened.map(member => member.getName())).toContain('size')
+    expect(displayMembers.map(member => member.getName())).toContain('tone')
+    expect(displayMembers.map(member => member.getName())).toContain('size')
   })
 
   it('collects only user-owned immediate dependencies', async () => {
@@ -437,8 +451,11 @@ describe('tasty runtime', () => {
     const refs = await api.graph.collectUserOwnedReferences(buttonProps)
     const dependencies = await api.graph.loadImmediateDependencies(buttonProps)
 
-    expect(refs.map((ref) => ref.getName()).sort()).toEqual(['Size', 'StyleProps'])
-    expect(dependencies.map((symbol) => symbol.getName()).sort()).toEqual(['Size', 'StyleProps'])
+    expect(refs.map(ref => ref.getName()).sort()).toEqual(['Size', 'StyleProps'])
+    expect(dependencies.map(symbol => symbol.getName()).sort()).toEqual([
+      'Size',
+      'StyleProps',
+    ])
   })
 
   it('projects object-like aliases while tolerating partially opaque intersection inputs', async () => {
@@ -454,8 +471,20 @@ describe('tasty runtime', () => {
         PublicProjectedProps: ['publicProjected'],
       },
       symbolsById: {
-        base: { id: 'base', name: 'BaseProps', kind: 'interface', chunk: './chunks/base.js', library: 'user' },
-        pattern: { id: 'pattern', name: 'PatternProps', kind: 'typeAlias', chunk: './chunks/pattern.js', library: 'user' },
+        base: {
+          id: 'base',
+          name: 'BaseProps',
+          kind: 'interface',
+          chunk: './chunks/base.js',
+          library: 'user',
+        },
+        pattern: {
+          id: 'pattern',
+          name: 'PatternProps',
+          kind: 'typeAlias',
+          chunk: './chunks/pattern.js',
+          library: 'user',
+        },
         opaqueMapped: {
           id: 'opaqueMapped',
           name: 'OpaqueMappedProps',
@@ -470,7 +499,13 @@ describe('tasty runtime', () => {
           chunk: './chunks/partial-projected.js',
           library: 'user',
         },
-        projected: { id: 'projected', name: 'ProjectedProps', kind: 'typeAlias', chunk: './chunks/projected.js', library: 'user' },
+        projected: {
+          id: 'projected',
+          name: 'ProjectedProps',
+          kind: 'typeAlias',
+          chunk: './chunks/projected.js',
+          library: 'user',
+        },
         publicProjected: {
           id: 'publicProjected',
           name: 'PublicProjectedProps',
@@ -488,9 +523,27 @@ describe('tasty runtime', () => {
           name: 'BaseProps',
           library: 'user',
           members: [
-            { name: 'tone', optional: true, readonly: false, kind: 'property', type: { kind: 'intrinsic', name: 'string' } },
-            { name: 'size', optional: true, readonly: false, kind: 'property', type: { kind: 'intrinsic', name: 'number' } },
-            { name: 'color', optional: true, readonly: false, kind: 'property', type: { kind: 'intrinsic', name: 'string' } },
+            {
+              name: 'tone',
+              optional: true,
+              readonly: false,
+              kind: 'property',
+              type: { kind: 'intrinsic', name: 'string' },
+            },
+            {
+              name: 'size',
+              optional: true,
+              readonly: false,
+              kind: 'property',
+              type: { kind: 'intrinsic', name: 'number' },
+            },
+            {
+              name: 'color',
+              optional: true,
+              readonly: false,
+              kind: 'property',
+              type: { kind: 'intrinsic', name: 'string' },
+            },
           ],
           extends: [],
           types: [],
@@ -504,7 +557,13 @@ describe('tasty runtime', () => {
           definition: {
             kind: 'object',
             members: [
-              { name: 'gap', optional: true, readonly: false, kind: 'property', type: { kind: 'intrinsic', name: 'string' } },
+              {
+                name: 'gap',
+                optional: true,
+                readonly: false,
+                kind: 'property',
+                type: { kind: 'intrinsic', name: 'string' },
+              },
             ],
           },
         },
@@ -525,9 +584,7 @@ describe('tasty runtime', () => {
                   { id: 'base', name: 'BaseProps', library: 'user' },
                   {
                     kind: 'union',
-                    types: [
-                      { kind: 'literal', value: "'color'" },
-                    ],
+                    types: [{ kind: 'literal', value: "'color'" }],
                   },
                 ],
               },
@@ -577,34 +634,364 @@ describe('tasty runtime', () => {
 
     const api = createTastyApiFromManifest({
       manifest,
-      importer: async (artifactPath) => chunks[artifactPath as keyof typeof chunks],
+      importer: async artifactPath => chunks[artifactPath as keyof typeof chunks],
     })
 
     const projected = await api.loadSymbolByName('ProjectedProps')
     const partialProjected = await api.loadSymbolByName('PartialProjectedProps')
     const publicProjected = await api.loadSymbolByName('PublicProjectedProps')
     const projectedDisplayMembers = await api.graph.getDisplayMembers(projected)
-    const partialProjectedDisplayMembers = await api.graph.getDisplayMembers(partialProjected)
-    const publicProjectedDisplayMembers = await api.graph.getDisplayMembers(publicProjected)
+    const partialProjectedDisplayMembers =
+      await api.graph.getDisplayMembers(partialProjected)
+    const publicProjectedDisplayMembers =
+      await api.graph.getDisplayMembers(publicProjected)
     const projectedMembers = await api.graph.projectObjectLikeMembers(projected)
-    const partialProjectedMembers = await api.graph.projectObjectLikeMembers(partialProjected)
-    const publicProjectedMembers = await api.graph.projectObjectLikeMembers(publicProjected)
+    const partialProjectedMembers =
+      await api.graph.projectObjectLikeMembers(partialProjected)
+    const publicProjectedMembers =
+      await api.graph.projectObjectLikeMembers(publicProjected)
     const projectedMembersFromSymbol = await projected.getDisplayMembers()
     const partialProjectedMembersFromSymbol = await partialProjected.getDisplayMembers()
     const publicProjectedMembersFromSymbol = await publicProjected.getDisplayMembers()
 
-    expect(projectedDisplayMembers.map((member) => member.getName())).toEqual(['tone', 'size', 'gap'])
-    expect(partialProjectedDisplayMembers.map((member) => member.getName())).toEqual(['gap'])
-    expect(publicProjectedDisplayMembers.map((member) => member.getName())).toEqual(['tone', 'size', 'gap'])
-    expect(projectedMembers?.map((member) => member.getName())).toEqual(['tone', 'size', 'gap'])
-    expect(partialProjectedMembers?.map((member) => member.getName())).toEqual(['gap'])
-    expect(publicProjectedMembers?.map((member) => member.getName())).toEqual(['tone', 'size', 'gap'])
-    expect(projectedMembersFromSymbol?.map((member) => member.getName())).toEqual(['tone', 'size', 'gap'])
-    expect(partialProjectedMembersFromSymbol?.map((member) => member.getName())).toEqual(['gap'])
-    expect(publicProjectedMembersFromSymbol?.map((member) => member.getName())).toEqual(['tone', 'size', 'gap'])
+    expect(projectedDisplayMembers.map(member => member.getName())).toEqual([
+      'tone',
+      'size',
+      'gap',
+    ])
+    expect(partialProjectedDisplayMembers.map(member => member.getName())).toEqual([
+      'gap',
+    ])
+    expect(publicProjectedDisplayMembers.map(member => member.getName())).toEqual([
+      'tone',
+      'size',
+      'gap',
+    ])
+    expect(projectedMembers?.map(member => member.getName())).toEqual([
+      'tone',
+      'size',
+      'gap',
+    ])
+    expect(partialProjectedMembers?.map(member => member.getName())).toEqual(['gap'])
+    expect(publicProjectedMembers?.map(member => member.getName())).toEqual([
+      'tone',
+      'size',
+      'gap',
+    ])
+    expect(projectedMembersFromSymbol?.map(member => member.getName())).toEqual([
+      'tone',
+      'size',
+      'gap',
+    ])
+    expect(partialProjectedMembersFromSymbol?.map(member => member.getName())).toEqual([
+      'gap',
+    ])
+    expect(publicProjectedMembersFromSymbol?.map(member => member.getName())).toEqual([
+      'tone',
+      'size',
+      'gap',
+    ])
     expect(projected.getMembers()).toEqual([])
     expect(partialProjected.getMembers()).toEqual([])
     expect(publicProjected.getMembers()).toEqual([])
+  })
+
+  it('projects utility-based intersections when a utility type is referenced through a re-exporting library', async () => {
+    const manifest: RawTastyManifest = {
+      version: '2',
+      warnings: [],
+      symbolsByName: {
+        ButtonProps: ['button'],
+        'React.ComponentPropsWithoutRef': ['componentPropsWithoutRef'],
+        RecipeVariantProps: ['recipeVariantProps'],
+      },
+      symbolsById: {
+        button: {
+          id: 'button',
+          name: 'ButtonProps',
+          kind: 'typeAlias',
+          chunk: './chunks/button.js',
+          library: 'user',
+        },
+        componentPropsWithoutRef: {
+          id: 'componentPropsWithoutRef',
+          name: 'React.ComponentPropsWithoutRef',
+          kind: 'typeAlias',
+          chunk: './chunks/component-props-without-ref.js',
+          library: 'user',
+        },
+        recipeVariantProps: {
+          id: 'recipeVariantProps',
+          name: 'RecipeVariantProps',
+          kind: 'typeAlias',
+          chunk: './chunks/recipe-variant-props.js',
+          library: '@reference-ui/styled',
+        },
+      },
+    }
+
+    const chunks = {
+      './chunks/button.js': {
+        button: {
+          id: 'button',
+          name: 'ButtonProps',
+          library: 'user',
+          definition: {
+            kind: 'intersection',
+            types: [
+              {
+                id: 'React.ComponentPropsWithoutRef',
+                name: 'React.ComponentPropsWithoutRef',
+                library: 'user',
+                typeArguments: [{ kind: 'type_query', expression: 'ButtonPrimitive' }],
+              },
+              {
+                id: 'RecipeVariantProps',
+                name: 'RecipeVariantProps',
+                library: '@reference-ui/react',
+                typeArguments: [{ kind: 'type_query', expression: 'buttonRecipe' }],
+              },
+            ],
+          },
+        },
+      },
+      './chunks/component-props-without-ref.js': {
+        componentPropsWithoutRef: {
+          id: 'componentPropsWithoutRef',
+          name: 'React.ComponentPropsWithoutRef',
+          library: 'user',
+          definition: {
+            kind: 'object',
+            members: [
+              {
+                name: 'disabled',
+                optional: true,
+                readonly: false,
+                kind: 'property',
+                type: { kind: 'intrinsic', name: 'boolean' },
+              },
+              {
+                name: 'className',
+                optional: true,
+                readonly: false,
+                kind: 'property',
+                type: { kind: 'intrinsic', name: 'string' },
+              },
+            ],
+          },
+        },
+      },
+      './chunks/recipe-variant-props.js': {
+        recipeVariantProps: {
+          id: 'recipeVariantProps',
+          name: 'RecipeVariantProps',
+          library: '@reference-ui/styled',
+          definition: {
+            kind: 'object',
+            members: [
+              {
+                name: 'visual',
+                optional: true,
+                readonly: false,
+                kind: 'property',
+                type: { kind: 'intrinsic', name: 'string' },
+              },
+              {
+                name: 'size',
+                optional: true,
+                readonly: false,
+                kind: 'property',
+                type: { kind: 'intrinsic', name: 'string' },
+              },
+            ],
+          },
+        },
+      },
+    } as const
+
+    const api = createTastyApiFromManifest({
+      manifest,
+      importer: async artifactPath => chunks[artifactPath as keyof typeof chunks],
+    })
+
+    const buttonProps = await api.loadSymbolByName('ButtonProps')
+    const displayMembers = await api.graph.getDisplayMembers(buttonProps)
+
+    expect(displayMembers.map(member => member.getName())).toEqual([
+      'disabled',
+      'className',
+      'visual',
+      'size',
+    ])
+  })
+
+  it('projects Pretty<Parameters<typeof recipe>[0]> through resolved type-query call signatures', async () => {
+    const manifest: RawTastyManifest = {
+      version: '2',
+      warnings: [],
+      symbolsByName: {
+        ButtonProps: ['button'],
+        RecipeVariantProps: ['recipeVariantProps'],
+      },
+      symbolsById: {
+        button: {
+          id: 'button',
+          name: 'ButtonProps',
+          kind: 'typeAlias',
+          chunk: './chunks/button.js',
+          library: 'user',
+        },
+        recipeVariantProps: {
+          id: 'recipeVariantProps',
+          name: 'RecipeVariantProps',
+          kind: 'typeAlias',
+          chunk: './chunks/recipe-variant-props.js',
+          library: '@reference-ui/styled',
+        },
+      },
+    }
+
+    const chunks = {
+      './chunks/button.js': {
+        button: {
+          id: 'button',
+          name: 'ButtonProps',
+          library: 'user',
+          definition: {
+            id: 'RecipeVariantProps',
+            name: 'RecipeVariantProps',
+            library: '@reference-ui/react',
+            typeArguments: [
+              {
+                kind: 'type_query',
+                expression: 'buttonRecipe',
+                resolved: {
+                  kind: 'function',
+                  params: [
+                    {
+                      name: 'props',
+                      optional: true,
+                      typeRef: {
+                        kind: 'object',
+                        members: [
+                          {
+                            name: 'visual',
+                            optional: true,
+                            readonly: false,
+                            kind: 'property',
+                            type: {
+                              kind: 'union',
+                              types: [
+                                { kind: 'literal', value: "'solid'" },
+                                { kind: 'literal', value: "'ghost'" },
+                              ],
+                            },
+                          },
+                          {
+                            name: 'size',
+                            optional: true,
+                            readonly: false,
+                            kind: 'property',
+                            type: {
+                              kind: 'union',
+                              types: [
+                                { kind: 'literal', value: "'sm'" },
+                                { kind: 'literal', value: "'md'" },
+                              ],
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                  returnType: { kind: 'intrinsic', name: 'string' },
+                },
+              },
+            ],
+          },
+        },
+      },
+      './chunks/recipe-variant-props.js': {
+        recipeVariantProps: {
+          id: 'recipeVariantProps',
+          name: 'RecipeVariantProps',
+          library: '@reference-ui/styled',
+          definition: {
+            id: 'Pretty',
+            name: 'Pretty',
+            library: './system-types',
+            typeArguments: [
+              {
+                kind: 'indexed_access',
+                object: {
+                  id: 'Parameters',
+                  name: 'Parameters',
+                  library: '@reference-ui/styled/types/recipe',
+                  typeArguments: [
+                    {
+                      kind: 'type_query',
+                      expression: 'buttonRecipe',
+                      resolved: {
+                        kind: 'function',
+                        params: [
+                          {
+                            name: 'props',
+                            optional: true,
+                            typeRef: {
+                              kind: 'object',
+                              members: [
+                                {
+                                  name: 'visual',
+                                  optional: true,
+                                  readonly: false,
+                                  kind: 'property',
+                                  type: {
+                                    kind: 'union',
+                                    types: [
+                                      { kind: 'literal', value: "'solid'" },
+                                      { kind: 'literal', value: "'ghost'" },
+                                    ],
+                                  },
+                                },
+                                {
+                                  name: 'size',
+                                  optional: true,
+                                  readonly: false,
+                                  kind: 'property',
+                                  type: {
+                                    kind: 'union',
+                                    types: [
+                                      { kind: 'literal', value: "'sm'" },
+                                      { kind: 'literal', value: "'md'" },
+                                    ],
+                                  },
+                                },
+                              ],
+                            },
+                          },
+                        ],
+                        returnType: { kind: 'intrinsic', name: 'string' },
+                      },
+                    },
+                  ],
+                },
+                index: { kind: 'literal', value: '0' },
+              },
+            ],
+          },
+        },
+      },
+    } as const
+
+    const api = createTastyApiFromManifest({
+      manifest,
+      importer: async artifactPath => chunks[artifactPath as keyof typeof chunks],
+    })
+
+    const buttonProps = await api.loadSymbolByName('ButtonProps')
+    const displayMembers = await api.graph.getDisplayMembers(buttonProps)
+
+    expect(displayMembers.map(member => member.getName())).toEqual(['visual', 'size'])
   })
 
   it('exposes type-alias helpers over the emitted definition shape', async () => {
@@ -630,7 +1017,7 @@ describe('tasty runtime', () => {
 
     const results = await api.searchSymbols('button')
 
-    expect(results.map((result) => result.name)).toEqual(['ButtonProps', 'ButtonSchema'])
+    expect(results.map(result => result.name)).toEqual(['ButtonProps', 'ButtonSchema'])
   })
 
   it('exposes clean jsdoc and signature helpers for docs renderers', async () => {
@@ -639,11 +1026,18 @@ describe('tasty runtime', () => {
     })
 
     const buttonProps = await api.loadSymbolByName('ButtonProps')
-    const size = buttonProps.getMembers().find((member) => member.getName() === 'size')
+    const size = buttonProps.getMembers().find(member => member.getName() === 'size')
 
-    expect(buttonProps.getDescription()).toBe('Props for a button.\n\nIncludes common sizing options.')
-    expect(buttonProps.getJsDocTags().map((tag) => tag.getName())).toEqual(['deprecated', 'remarks'])
-    expect(buttonProps.getJsDocTag('deprecated')?.getValue()).toBe('Use NewButtonProps instead.')
+    expect(buttonProps.getDescription()).toBe(
+      'Props for a button.\n\nIncludes common sizing options.'
+    )
+    expect(buttonProps.getJsDocTags().map(tag => tag.getName())).toEqual([
+      'deprecated',
+      'remarks',
+    ])
+    expect(buttonProps.getJsDocTag('deprecated')?.getValue()).toBe(
+      'Use NewButtonProps instead.'
+    )
     expect(size?.getDescription()).toBe('Preferred size variant.')
     expect(size?.getJsDocTag('default')?.getValue()).toBe('"sm"')
   })

@@ -12,6 +12,64 @@ Build and sync the design system. Uses workers and the event bus.
 
 Removes the output directory (`.reference-ui` by default, or `config.outDir`). Runs in the main thread only. Use before tests for a fresh state.
 
+### ref mcp
+
+Runs the Reference UI MCP server.
+
+- `ref mcp` starts the stdio server used by MCP clients such as VS Code.
+- `ref mcp --transport http` starts the HTTP server for local inspection and debugging.
+
+#### Standard VS Code setup
+
+For repo-local MCP clients that spawn a local process directly, prefer
+launching `node` with the built CLI path. Do not assume package-manager
+wrappers like `pnpm` are available on the editor host `PATH`.
+
+For published consumer-facing setup, document the install/run flow separately.
+That may be simpler. The guidance here is the deterministic workspace-local
+integration path.
+
+Typical workspace-installed setup:
+
+```json
+{
+  "servers": {
+    "referenceUi": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "${workspaceFolder}/node_modules/@reference-ui/core/dist/cli/index.mjs",
+        "mcp"
+      ]
+    }
+  }
+}
+```
+
+If your MCP client supports `cwd`, set it to the project whose `ui.config.ts`
+should drive MCP output.
+
+In this monorepo workspace we target the docs package directory explicitly so
+the server runs with the correct `ui.config.ts` as its current working
+directory:
+
+```json
+{
+  "servers": {
+    "referenceUi": {
+      "type": "stdio",
+      "command": "node",
+      "cwd": "${workspaceFolder}/packages/reference-docs",
+      "args": ["${workspaceFolder}/packages/reference-core/dist/cli/index.mjs", "mcp"]
+    }
+  }
+}
+```
+
+`npx @reference-ui/core mcp` can still work for published-package setups, but
+it depends on the extension host being able to resolve `npx`. `node` plus the
+CLI path is the safer default for editor integrations.
+
 ## Architecture
 
 Workers run in separate threads ([Piscina](https://github.com/piscinajs/piscina)); they communicate via **BroadcastChannel**. The main thread wires flow; workers map events to handlers.
@@ -57,7 +115,7 @@ import { copyAll } from './copy-all'
 
 export default async function runVirtual(payload: VirtualWorkerPayload): Promise<never> {
   const handler = () => {
-    copyAll(payload).catch((err) => console.error('[virtual] Copy failed:', err))
+    copyAll(payload).catch(err => console.error('[virtual] Copy failed:', err))
   }
 
   on('run:virtual:copy:all', handler)

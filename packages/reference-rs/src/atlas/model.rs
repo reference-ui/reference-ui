@@ -23,7 +23,7 @@ pub const DEFAULT_USAGE_THRESHOLDS: UsageThresholds = UsageThresholds {
 #[ts(export, export_to = "js/atlas/generated/", rename_all = "camelCase")]
 pub struct Component {
     pub name: String,
-    pub interface: ComponentInterface,
+    pub interface: Option<ComponentInterface>,
     pub source: String,
     pub count: u32,
     pub props: Vec<ComponentProp>,

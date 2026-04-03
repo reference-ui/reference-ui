@@ -1,46 +1,90 @@
 # Release Roadmap
 
-## API Tables 
+---
 
-Harden Tasty (done)
-Make pretty api tables (WIP)
+## API Tables _(final hardening)_
 
-## Tasty: scan scope & deduping (move inward from Reference)
+Core table rendering and Tasty hardening are done. Remaining items before this is considered complete:
 
-Reference is meant to stay a **general-purpose** host for docs and API surfaces. Today some **pipeline glue** lives in `@reference-ui/core` instead: where to scan (e.g. `.reference-ui` roots, extra Panda `style-props.d.ts`), and hygiene like pruning broken `node_modules/@reference-ui/*` symlinks. Duplicate-symbol behavior is also split between manifest emission and runtime.
+- [ ] Represent extended interfaces better — collapsed/expandable inherited members, clear visual hierarchy
+- [ ] Test cases for extended interface rendering — cover flat, single-level extended, and multi-level extended shapes
 
-**Goal:** Make **crawl policy, include sets, and deduping / disambiguation** first-class in **Tasty** (or a single documented config surface) so Reference does not own scanner internals long-term — less bleed-through, easier reuse outside this repo.
+---
 
+## MCP Server _(final hardening)_ [DONE]
 
+The MCP server is at final stages. Remaining items:
 
-## MCP Server
-- make a rust module for mcp server generation
+- [ ] Final hardening pass — edge cases, error paths, unexpected input handling
+- [ ] Add 'how to test' integration tests — document and codify real usage flows so the server is verifiably correct end-to-end
+- [ ] Confirm Rust module boundaries — ensure the generated server module is self-contained and does not bleed into Reference internals
 
+---
 
-## 1st class system to detect changes and state
-right now we have an internal event bus/ statemachine
-we are relying on console log to detect changes in state.
-this is.. not good :)
+## Release: CLI / reference-core
 
+First-class public release of `reference-core` (CLI + scanner + pipeline) as a standalone consumable package.
 
+- [ ] Agree on public API surface — what is exported, what is internal
+- [ ] Semver tagging strategy — decide on 0.x vs 1.0 threshold and what constitutes a breaking change
+- [ ] Set up npm publish pipeline — CI step that gates publish on passing tests
+- [ ] Write a changelog / release notes for the initial cut
+- [ ] Smoke test suite — minimal integration test that can run in CI against a real project fixture before publish
+- [ ] Public-facing documentation — installation, basic usage, config reference
 
-## Reload when Tokens get updated + add tests
+---
 
-## Vite 1st class integration
+## Tasty: dedup correctness
 
-- **Goal:** One coherent client update per logical change — avoid HMR storms while `ref sync --watch` is still writing (Panda, packager, declarations). Buffer or defer Vite’s reaction until a defined **ready** signal (e.g. sync completion), then notify once.
-- **Why:** Today every intermediate artifact can trigger invalidation; dev UX flickers even when the pipeline is fine. This is orchestration, not a substitute for faster incremental sync later.
-- **Note:** `vite.config` aliases in reference-lib are a **stopgap** (stable resolution); the plugin should own “when to HMR” and can subsume or formalize those patterns.
+Duplicate-symbol behavior is currently untested and could regress silently.
 
-## Webpack integration
+- [ ] Add tests covering dedup behaviour for duplicate symbols across multiple scan roots
 
+> **Note:** symlink hygiene (`node_modules/@reference-ui/*` pruning) currently lives in `@reference-ui/core`. Worth revisiting if it causes observable scan issues, but not a priority action item right now.
+
+---
+
+## 1st Class State & Change Detection
+
+The internal event bus / state machine currently relies on `console.log` for observability. This needs to be a proper, structured system.
+
+- [ ] Replace `console.log`-based state observation with a typed event emitter or structured logger
+- [ ] Define explicit state transitions on the machine — make illegal states unrepresentable
+- [ ] Expose a debug/trace mode that can be toggled externally (env var or config flag)
+- [ ] Add tests that assert on state transitions, not log output
+
+---
+
+## Reload when Tokens get updated
+
+- [ ] Detect when token files change during `ref sync --watch` and trigger a targeted reload
+- [ ] Ensure reload does not cause a full HMR storm — only invalidate what depends on the changed tokens
+- [ ] Write tests: token update → reload → correct new values visible in consumer
+
+---
+
+## Vite Integration
+
+**Goal:** One coherent client update per logical change — avoid HMR storms while `ref sync --watch` is still writing (Panda, packager, declarations).
+
+- [ ] Implement a Vite plugin that buffers HMR notifications until a defined **ready** signal (e.g. sync completion event)
+- [ ] Remove or formalise the `vite.config` alias stopgap in `reference-lib` — the plugin should own resolution
+- [ ] Test: rapid successive writes should produce exactly one HMR notification, not N
+
+---
+
+## Webpack Integration
+
+- [ ] Implement equivalent of the Vite plugin for Webpack's watch/HMR pipeline
+- [ ] Define a shared abstraction (if possible) so bundler-specific plugins share the buffering logic
+- [ ] Basic integration test with a Webpack fixture project
+
+---
 
 ## Errors and Warnings
 
-- One obvious one: if components use tokens that don't technically exist yet (can catch people out)
-- Figure out other areas where we can give better warns and errors.
-
-
-# Library
-
-## Add 'how to test' tests to MCP server. amazing stuff.
+- [ ] Warn when a component references a token that does not exist in the resolved token set
+- [ ] Warn on circular dependencies in the scan graph
+- [ ] Error with a clear message when config is malformed (currently likely a raw exception)
+- [ ] Audit other silent failure points and add structured diagnostics throughout the pipeline
+- [ ] Centralise all user-facing messages — consistent format, severity levels, and actionable hints

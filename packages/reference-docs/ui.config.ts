@@ -8,4 +8,7 @@ export default defineConfig({
   normalizeCss: true,
   useDesignSystem: true,
   debug: true,
+  mcp: {
+    include: ['@reference-ui/lib'],
+  },
 })

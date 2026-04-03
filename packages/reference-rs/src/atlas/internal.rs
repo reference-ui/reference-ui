@@ -93,8 +93,8 @@ pub struct ResolvedType {
 pub struct ComponentTemplate {
     pub name: String,
     pub source: String,
-    pub interface_name: String,
-    pub interface_source: String,
+    pub interface_name: Option<String>,
+    pub interface_source: Option<String>,
     pub file_path: PathBuf,
     pub app_relative_path: Option<String>,
     pub props: Vec<PropTemplate>,
@@ -155,10 +155,9 @@ pub fn create_usage_state(template: ComponentTemplate) -> UsageState {
     UsageState {
         component: Component {
             name: template.name,
-            interface: ComponentInterface {
-                name: template.interface_name,
-                source: template.interface_source,
-            },
+            interface: template.interface_name.zip(template.interface_source).map(
+                |(name, source)| ComponentInterface { name, source },
+            ),
             source: template.source,
             count: 0,
             props,

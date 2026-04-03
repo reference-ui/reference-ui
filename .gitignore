@@ -16,6 +16,7 @@ cosmos-export
 .idea
 *.swp
 *.swo
+.verdent
 *~
 
 # Misc

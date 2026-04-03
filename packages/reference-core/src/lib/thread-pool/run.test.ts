@@ -105,6 +105,47 @@ describe('thread-pool/run', () => {
     expect(instances[0]?.run).toHaveBeenCalledWith({ task: 1 }, { filename: WORKER_PATH })
   })
 
+  it('creates and reuses a dedicated pool when poolName is provided', async () => {
+    const { initPool, runWorker, instances } = await importRunModule()
+    initPool(WORKER_DATA)
+
+    await expect(
+      runWorker(WORKER_PATH, { task: 'a' }, { poolName: 'mcp' })
+    ).resolves.toBeUndefined()
+
+    expect(instances).toHaveLength(2)
+    expect(instances[1]?.options).toMatchObject({
+      minThreads: 1,
+      maxThreads: 1,
+      idleTimeout: 30000,
+      workerData: WORKER_DATA,
+    })
+    expect(instances[1]?.run).toHaveBeenCalledWith(
+      { task: 'a' },
+      { filename: WORKER_PATH }
+    )
+
+    instances[1]?.run.mockResolvedValue('dedicated-2')
+    await expect(
+      runWorker(WORKER_PATH, { task: 'b' }, { poolName: 'mcp' })
+    ).resolves.toBe('dedicated-2')
+
+    expect(instances).toHaveLength(2)
+  })
+
+  it('destroys dedicated pools during shutdown()', async () => {
+    const { initPool, runWorker, shutdown, instances } = await importRunModule()
+    initPool(WORKER_DATA)
+
+    instances[1]?.run.mockResolvedValue('dedicated')
+    await runWorker(WORKER_PATH, { task: 'a' }, { poolName: 'mcp' })
+
+    await shutdown()
+
+    expect(instances[0]?.destroy).toHaveBeenCalledTimes(1)
+    expect(instances[1]?.destroy).toHaveBeenCalledTimes(1)
+  })
+
   it('can recover from a worker failure and run again', async () => {
     const { initPool, runWorker, instances } = await importRunModule()
     initPool(WORKER_DATA)
@@ -121,7 +162,9 @@ describe('thread-pool/run', () => {
     const { initPool, error, instances } = await importRunModule()
     initPool(WORKER_DATA)
 
-    const errorHandler = instances[0]?.on.mock.calls.find(([event]) => event === 'error')?.[1]
+    const errorHandler = instances[0]?.on.mock.calls.find(
+      ([event]) => event === 'error'
+    )?.[1]
     expect(typeof errorHandler).toBe('function')
 
     errorHandler?.(new Error('pool failed'))

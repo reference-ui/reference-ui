@@ -21,6 +21,7 @@ mod tests {
     const LOCAL_NAMESPACE_BARRELS_CASE: &str = "local_namespace_barrels";
     const PACKAGE_DEFAULT_BARRELS_CASE: &str = "package_default_barrels";
     const CO_USAGE_PAIRS_CASE: &str = "co_usage_pairs";
+    const WRAPPED_COMPONENTS_CASE: &str = "wrapped_components";
 
     fn atlas_tests_dir() -> PathBuf {
         Path::new(env!("CARGO_MANIFEST_DIR")).join("tests").join("atlas")
@@ -80,6 +81,40 @@ mod tests {
         
         let analyzer = AtlasAnalyzer::new(config);
         assert_eq!(analyzer.config.root_dir, "/test");
+    }
+
+    #[test]
+    fn test_wrapped_components_preserve_props_from_wrapper_generics() {
+        let root_dir = case_app_root(WRAPPED_COMPONENTS_CASE);
+        let config = AtlasConfig {
+            root_dir,
+            include: None,
+            exclude: None,
+        };
+
+        let mut analyzer = AtlasAnalyzer::new(config);
+        let components = analyzer.analyze("");
+
+        let fancy_button = components
+            .iter()
+            .find(|component| component.name == "FancyButton")
+            .expect("expected FancyButton component");
+        let search_input = components
+            .iter()
+            .find(|component| component.name == "SearchInput")
+            .expect("expected SearchInput component");
+
+        assert_eq!(fancy_button.count, 2);
+        assert_eq!(
+            fancy_button.interface.as_ref().map(|interface| interface.name.as_str()),
+            Some("FancyButtonProps")
+        );
+
+        assert_eq!(search_input.count, 2);
+        assert_eq!(
+            search_input.interface.as_ref().map(|interface| interface.name.as_str()),
+            Some("SearchInputProps")
+        );
     }
 
     #[test]
@@ -203,14 +238,23 @@ mod tests {
             .iter()
             .find(|component| component.name == "AppButton")
             .expect("expected AppButton component");
-        assert_eq!(app_button.interface.name, "ButtonProps");
-        assert_eq!(app_button.interface.source, "@fixtures/barrel-ui");
+        assert_eq!(
+            app_button.interface.as_ref().map(|interface| interface.name.as_str()),
+            Some("ButtonProps")
+        );
+        assert_eq!(
+            app_button.interface.as_ref().map(|interface| interface.source.as_str()),
+            Some("@fixtures/barrel-ui")
+        );
 
         let package_button = components
             .iter()
             .find(|component| component.name == "Button" && component.source == "@fixtures/barrel-ui")
             .expect("expected included package Button component");
-        assert_eq!(package_button.interface.name, "ButtonProps");
+        assert_eq!(
+            package_button.interface.as_ref().map(|interface| interface.name.as_str()),
+            Some("ButtonProps")
+        );
     }
 
     #[test]
@@ -231,7 +275,10 @@ mod tests {
             .expect("expected Button component");
 
         assert_eq!(button.count, 2);
-        assert_eq!(button.interface.name, "ButtonProps");
+        assert_eq!(
+            button.interface.as_ref().map(|interface| interface.name.as_str()),
+            Some("ButtonProps")
+        );
         assert!(button.examples.iter().any(|example| example.contains("<CTAButton")));
     }
 
@@ -257,7 +304,10 @@ mod tests {
             .expect("expected UserBadge component");
 
         assert_eq!(button.count, 2);
-        assert_eq!(button.interface.name, "ButtonProps");
+        assert_eq!(
+            button.interface.as_ref().map(|interface| interface.name.as_str()),
+            Some("ButtonProps")
+        );
         assert_eq!(badge.count, 1);
     }
 
@@ -283,8 +333,14 @@ mod tests {
             .expect("expected AppButton component");
 
         assert_eq!(package_button.count, 3);
-        assert_eq!(package_button.interface.name, "ButtonProps");
-        assert_eq!(app_button.interface.source, "@fixtures/default-barrel-ui");
+        assert_eq!(
+            package_button.interface.as_ref().map(|interface| interface.name.as_str()),
+            Some("ButtonProps")
+        );
+        assert_eq!(
+            app_button.interface.as_ref().map(|interface| interface.source.as_str()),
+            Some("@fixtures/default-barrel-ui")
+        );
     }
 
     #[test]
@@ -329,8 +385,8 @@ mod tests {
             create_usage_state(ComponentTemplate {
                 name: "Button".to_string(),
                 source: "@fixtures/default-barrel-ui".to_string(),
-                interface_name: "ButtonProps".to_string(),
-                interface_source: "@fixtures/default-barrel-ui".to_string(),
+                interface_name: Some("ButtonProps".to_string()),
+                interface_source: Some("@fixtures/default-barrel-ui".to_string()),
                 file_path: PathBuf::from("Button.tsx"),
                 app_relative_path: None,
                 props: Vec::new(),
@@ -384,8 +440,14 @@ mod tests {
         assert!(button.is_some());
         
         let button = button.unwrap();
-        assert_eq!(button.interface.name, "ButtonProps");
-        assert_eq!(button.interface.source, "@fixtures/demo-ui");
+        assert_eq!(
+            button.interface.as_ref().map(|interface| interface.name.as_str()),
+            Some("ButtonProps")
+        );
+        assert_eq!(
+            button.interface.as_ref().map(|interface| interface.source.as_str()),
+            Some("@fixtures/demo-ui")
+        );
         assert!(!button.props.is_empty());
         
         let variant_prop = button.props.iter().find(|p| p.name == "variant");
@@ -492,7 +554,7 @@ mod tests {
         
         let component = Component {
             name: "Button".to_string(),
-            interface,
+            interface: Some(interface),
             source: "@fixtures/demo-ui".to_string(),
             count: 10,
             props: vec![
@@ -522,6 +584,9 @@ mod tests {
         assert_eq!(component.props.len(), 2);
         assert_eq!(component.examples.len(), 2);
         assert_eq!(component.used_with.len(), 1);
-        assert_eq!(component.interface.name, "ButtonProps");
+        assert_eq!(
+            component.interface.as_ref().map(|interface| interface.name.as_str()),
+            Some("ButtonProps")
+        );
     }
 }
