@@ -4,6 +4,7 @@ import { afterFirst, combineTrigger, emitOnAny, forWorker, onReady } from './eve
 const VIRTUAL_COMPLETE_EVENT = 'virtual:complete' as const
 const RUN_REFERENCE_BUILD_EVENT = 'run:reference:build' as const
 const VIRTUAL_FS_CHANGE_EVENT = 'virtual:fs:change' as const
+const VIRTUAL_FRAGMENT_CHANGE_EVENT = 'virtual:fragment:change' as const
 
 /**
  * High-level sync orchestration.
@@ -85,6 +86,16 @@ export function initEvents(): void {
     on: VIRTUAL_FS_CHANGE_EVENT,
     emit: RUN_REFERENCE_BUILD_EVENT,
     payload: {},
+  })
+
+  /**
+   * Fragment file changes (files calling tokens(), keyframes(), etc.) only need
+   * a config + Panda pass — not a full reference rebuild. This avoids an
+   * unnecessary HMR storm when token values are the only thing that changed.
+   */
+  afterFirst(VIRTUAL_COMPLETE_EVENT, {
+    on: VIRTUAL_FRAGMENT_CHANGE_EVENT,
+    emit: 'run:system:config',
   })
 
   /**

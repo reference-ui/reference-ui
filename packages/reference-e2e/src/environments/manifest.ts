@@ -24,6 +24,7 @@ export const MANIFEST = [
   'tests/TokensTest.tsx',
   'tests/ColorModeTest.tsx',
   'tests/SyncWatch.tsx',
+  'tests/TokenSyncWatch.tsx',
   'tests/ExtendsTest.tsx',
   'tests/LayersTest.tsx',
   'tests/StylePropsTest.tsx',

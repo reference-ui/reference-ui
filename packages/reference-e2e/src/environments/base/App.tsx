@@ -1,6 +1,7 @@
 import TokensTest from './tests/TokensTest'
 import ColorModeTest from './tests/ColorModeTest'
 import SyncWatch from './tests/SyncWatch'
+import TokenSyncWatch from './tests/TokenSyncWatch'
 import ExtendsTest from './tests/ExtendsTest'
 import LayersTest from './tests/LayersTest'
 import StylePropsTest from './tests/StylePropsTest'
@@ -19,6 +20,9 @@ export default function App() {
       </Route>
       <Route path={testRoutes.syncWatch}>
         <SyncWatch />
+      </Route>
+      <Route path={testRoutes.tokenSyncWatch}>
+        <TokenSyncWatch />
       </Route>
       <Route path={testRoutes.extends}>
         <ExtendsTest />

@@ -56,7 +56,35 @@ export function initComplete(payload: SyncPayload): void {
     return
   }
 
+  /**
+   * Normal watch-mode rebuilds complete when the full packager bundle finishes.
+   * Also mark the cold-start as done so incremental fragment paths know they
+   * can start emitting ready signals.
+   */
+  let initialSyncComplete = false
+  let fragmentPending = false
+
+  on('virtual:fragment:change', () => {
+    fragmentPending = true
+  })
+
   on('packager:complete', () => {
+    initialSyncComplete = true
+    fragmentPending = false
+    process.stdout.write(REF_SYNC_READY_MESSAGE)
+  })
+
+  /**
+   * Fragment-only changes (tokens(), keyframes(), etc.) skip the reference
+   * build and go through config → panda codegen → packager runtime bundle
+   * (runtime CSS + JS only — no reference/MCP pass).
+   * Emit ready once the runtime bundle is on disk so test consumers that do a
+   * fresh page load see the updated token values.
+   * Guard on initialSyncComplete to avoid a premature signal during cold start.
+   */
+  on('packager:runtime:complete', () => {
+    if (!initialSyncComplete || !fragmentPending) return
+    fragmentPending = false
     process.stdout.write(REF_SYNC_READY_MESSAGE)
   })
 }
