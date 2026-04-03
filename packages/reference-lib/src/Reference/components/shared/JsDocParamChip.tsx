@@ -1,5 +1,4 @@
 import { Div } from '@reference-ui/react'
-import { AtSignIcon } from './AtSignIcon'
 
 export type JsDocParamChipProps = {
   /** Text after the @ (e.g. `param`, `returns`). */
@@ -7,31 +6,24 @@ export type JsDocParamChipProps = {
 }
 
 /**
- * JSDoc tag chip: **@** icon + label in one pill-shaped container.
+ * JSDoc tag chip: @tagLabel in one pill-shaped container.
+ * The `@` is rendered as a text character so it forms a single text node
+ * with the tag label, keeping accessible text queries (e.g. getByText('@param')) working.
  */
 export function JsDocParamChip({ tagLabel }: JsDocParamChipProps) {
   return (
     <Div
       display="inline-flex"
       alignItems="center"
-      gap="reference.xxs"
       fontFamily="reference.mono"
       fontSize="4r"
       fontWeight="550"
       width="fit-content"
       maxWidth="100%"
       borderRadius="9999px"
-      //borderWidth="1px"
-      //borderStyle="solid"
-      //borderColor="blue.900"
       color="reference.primary"
-      //className={className}
     >
-      <Div mt="3px">
-        <AtSignIcon size="1rem" aria-hidden />
-      </Div>
-
-      {tagLabel}
+      @{tagLabel}
     </Div>
   )
 }
