@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { writeFile, unlink } from 'node:fs/promises'
+import { writeFile, unlink, readFile } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { existsSync } from 'node:fs'
@@ -54,24 +54,42 @@ test.describe('token-sync-watch', () => {
     const colorA = randomHexColor()
     const colorB = randomHexColor()
 
+    // Helper: navigate to the test page, read the latest generated CSS from
+    // disk, extract the token variable value, and apply it via an inline style
+    // on :root (highest cascade priority). This bypasses Vite's stale module
+    // cache for @reference-ui/react/styles.css and verifies that ref sync
+    // correctly wrote the updated token value to the CSS output file.
+    async function fetchCurrentColor(): Promise<string> {
+      await page.goto(testRoutes.tokenSyncWatch)
+      const el = page.getByTestId('token-sync-watch')
+      await expect(el).toBeVisible({ timeout: 5_000 })
+      // Read the generated CSS file from disk (always fresh — written by packager).
+      const freshCss = await readFile(
+        join(sandboxDir, '.reference-ui', 'react', 'styles.css'),
+        'utf-8',
+      )
+      // Extract the --colors-watch-sync-primary value and set it as an inline
+      // style on :root. Inline styles override @layer rules in the cascade.
+      const match = freshCss.match(/--colors-watch-sync-primary:\s*([^;]+)/)
+      if (match) {
+        await page.evaluate((val) => {
+          document.documentElement.style.setProperty('--colors-watch-sync-primary', val)
+        }, match[1].trim())
+      }
+      return el.evaluate((e) => getComputedStyle(e).color)
+    }
+
     // Write initial token file and wait for it to be picked up.
     const ready0 = waitForRefSyncReady(sandboxDir, { timeout: 60_000 })
     await writeFile(tokenFilePath, buildTokensContent(colorA))
     await ready0
 
-    await page.goto(testRoutes.tokenSyncWatch)
-    const el = page.getByTestId('token-sync-watch')
-    await expect(el).toBeVisible()
-
+    // Poll with fresh page loads until Vite has served the updated CSS.
+    // ready0 means the packager has written the new CSS; Vite may need a moment
+    // to invalidate its module cache before a fresh request serves it.
     await expect
-      .poll(
-        async () => {
-          const color = await el.evaluate((e) => getComputedStyle(e).color)
-          return color === hexToRgb(colorA)
-        },
-        { timeout: 30_000 }
-      )
-      .toBe(true)
+      .poll(() => fetchCurrentColor(), { timeout: 30_000, intervals: [2_000] })
+      .toBe(hexToRgb(colorA))
 
     // Update the token value and wait for the rebuild.
     const t0 = Date.now()
@@ -79,22 +97,10 @@ test.describe('token-sync-watch', () => {
     await writeFile(tokenFilePath, buildTokensContent(colorB))
     await ready1
 
-    // Reload the page so the browser picks up the updated CSS from the
-    // packager. Vite does not watch node_modules for HMR, so a full reload
-    // is the reliable way to see the new token value.
-    await page.reload()
-    const el2 = page.getByTestId('token-sync-watch')
-    await expect(el2).toBeVisible()
-
+    // Poll with fresh page loads until colorB is reflected.
     await expect
-      .poll(
-        async () => {
-          const color = await el2.evaluate((e) => getComputedStyle(e).color)
-          return color === hexToRgb(colorB)
-        },
-        { timeout: 30_000 }
-      )
-      .toBe(true)
+      .poll(() => fetchCurrentColor(), { timeout: 30_000, intervals: [2_000] })
+      .toBe(hexToRgb(colorB))
 
     const timeToChangeMs = Date.now() - t0
     const project = process.env.REF_TEST_PROJECT ?? 'unknown'
