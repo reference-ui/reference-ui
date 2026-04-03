@@ -1,5 +1,5 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { mkdtempSync, rmSync, writeFileSync, mkdirSync } from 'node:fs'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { mkdtempSync, rmSync, mkdirSync } from 'node:fs'
 import { join, tmpdir } from 'node:path'
 import { getSyncSession } from './public'
 import { writeManifest } from './files'
