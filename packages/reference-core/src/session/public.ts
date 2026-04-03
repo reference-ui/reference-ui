@@ -1,5 +1,5 @@
 import { watch as fsWatch, existsSync } from 'node:fs'
-import { resolve, join, dirname } from 'node:path'
+import { resolve, join, dirname, basename } from 'node:path'
 import { readManifest, SESSION_FILE } from './files'
 import type { GetSyncSessionOptions, RefreshHandler, SyncSession } from './types'
 
@@ -32,14 +32,18 @@ function findOutDir(options: GetSyncSessionOptions): string {
 /**
  * Attach to the Reference sync session for the given project root.
  *
- * Watches `.reference-ui/session.json` (or the path given by `options.outDir`)
- * for changes and fires `onRefresh` handlers each time a logical build
- * transitions to `ready`.
+ * Watches the `.reference-ui` output directory (or the path given by
+ * `options.outDir`) for changes and fires `onRefresh` handlers each time a
+ * logical build transitions to `ready`.
  *
- * If `session.json` does not exist yet when `getSyncSession` is called (e.g.
- * the bundler plugin starts before `ref sync` has written the manifest), the
- * watcher automatically promotes itself from a directory probe to a file
- * watcher the moment the file appears — no polling required.
+ * The watcher targets the **directory**, not the file, so atomic rename-based
+ * writes (which replace the inode) are detected reliably on Linux/inotify as
+ * well as macOS/FSEvents.
+ *
+ * If `outDir` does not exist yet when `getSyncSession` is called (e.g. the
+ * bundler plugin starts before `ref sync` has created the output directory),
+ * the watcher automatically promotes itself once the directory appears — no
+ * polling required.
  *
  * ```ts
  * import { getSyncSession } from '@reference-ui/core'
@@ -75,47 +79,47 @@ export function getSyncSession(options: GetSyncSessionOptions): SyncSession {
     }
   }
 
-  function attachToFile(sessionFile: string): void {
+  /**
+   * Watch `outDir` for any change to `session.json`.
+   * Using a directory watcher (rather than a file watcher) ensures that
+   * atomic renames — which replace the inode — are still detected.
+   */
+  function watchOutDir(): void {
     try {
-      const fw = fsWatch(sessionFile, { persistent: false }, () => {
-        checkForRefresh()
+      const fw = fsWatch(outDir, { persistent: false }, (_, filename) => {
+        if (filename === SESSION_FILE) checkForRefresh()
       })
-      fw.on('error', () => {
-        // Ignore — the consumer can re-call getSyncSession if the file is gone.
-      })
+      fw.on('error', () => {})
       watcher = fw
     } catch {
-      // File may have disappeared between the existsSync check and fsWatch call.
+      // outDir may have been removed (e.g. ref clean); nothing to do.
     }
   }
 
   function startWatching(): void {
-    const sessionFile = join(outDir, SESSION_FILE)
-
-    if (existsSync(sessionFile)) {
-      attachToFile(sessionFile)
+    if (existsSync(outDir)) {
+      watchOutDir()
       return
     }
 
-    // session.json absent — watch the nearest existing ancestor directory so
-    // we can promote to a file watcher the moment the file is created.
-    const watchTarget = existsSync(outDir) ? outDir : dirname(outDir)
-    if (!existsSync(watchTarget)) return
+    // outDir absent — watch its parent so we can promote once it is created.
+    const parent = dirname(outDir)
+    const outDirName = basename(outDir)
+    if (!existsSync(parent)) return
 
     try {
-      const probe = fsWatch(watchTarget, { persistent: false }, () => {
-        if (existsSync(sessionFile)) {
+      const probe = fsWatch(parent, { persistent: false }, (_, filename) => {
+        if (filename === outDirName && existsSync(outDir)) {
           probe.close()
           watcher = null
-          attachToFile(sessionFile)
-          // Catch the ready state that triggered the creation.
+          watchOutDir()
           checkForRefresh()
         }
       })
       probe.on('error', () => {})
       watcher = probe
     } catch {
-      // Ignore — outDir may vanish (e.g. after ref clean).
+      // Ignore — parent may not be watchable.
     }
   }
 
