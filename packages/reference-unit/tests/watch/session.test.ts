@@ -12,6 +12,28 @@ const sessionFile = join(outDir, 'session.json')
 const lockFile = join(outDir, 'session.lock')
 
 /**
+ * Safe JSON parse helper — returns null if the file is absent or being written
+ * to mid-read (can happen on a busy CI machine).
+ */
+function readSession(): Record<string, unknown> | null {
+  if (!existsSync(sessionFile)) return null
+  try {
+    return JSON.parse(readFileSync(sessionFile, 'utf-8')) as Record<string, unknown>
+  } catch {
+    return null
+  }
+}
+
+function readLockFile(): Record<string, unknown> | null {
+  if (!existsSync(lockFile)) return null
+  try {
+    return JSON.parse(readFileSync(lockFile, 'utf-8')) as Record<string, unknown>
+  } catch {
+    return null
+  }
+}
+
+/**
  * These tests run only in watch mode (REF_UNIT_INCLUDE_WATCH_TESTS=1).
  * globalSetup starts ref sync --watch in the background and waits for the
  * first ready signal before any test runs.
@@ -23,20 +45,23 @@ describe('session – manifest shape in watch mode', () => {
   })
 
   it('mode is watch', () => {
-    const s = JSON.parse(readFileSync(sessionFile, 'utf-8'))
-    expect(s.mode).toBe('watch')
+    const s = readSession()
+    expect(s).not.toBeNull()
+    expect(s!.mode).toBe('watch')
   })
 
   it('state is watching while sync --watch is running', () => {
-    const s = JSON.parse(readFileSync(sessionFile, 'utf-8'))
-    expect(s.state).toBe('watching')
+    const s = readSession()
+    expect(s).not.toBeNull()
+    expect(s!.state).toBe('watching')
   })
 
   it('session.lock exists and holds the correct pid', () => {
     expect(existsSync(lockFile), 'lock file should be present while watch is running').toBe(true)
-    const lock = JSON.parse(readFileSync(lockFile, 'utf-8'))
-    expect(typeof lock.pid).toBe('number')
-    expect(lock.pid).toBeGreaterThan(0)
+    const lock = readLockFile()
+    expect(lock).not.toBeNull()
+    expect(typeof lock!.pid).toBe('number')
+    expect(lock!.pid as number).toBeGreaterThan(0)
   })
 })
 
