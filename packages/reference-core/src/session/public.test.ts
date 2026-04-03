@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { mkdtempSync, rmSync, mkdirSync } from 'node:fs'
-import { join, tmpdir } from 'node:path'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { getSyncSession } from './public'
 import { writeManifest } from './files'
 import type { SessionManifest } from './types'

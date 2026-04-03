@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { mkdtempSync, rmSync } from 'node:fs'
-import { join, tmpdir } from 'node:path'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import {
   initSessionState,
   transitionSession,
@@ -60,7 +61,7 @@ describe('session/state – transitions', () => {
 
     const manifest = readManifest(dir)
     expect(manifest?.state).toBe('watching')
-    expect(manifest?.updatedAt >= before).toBe(true)
+    expect(manifest!.updatedAt >= before).toBe(true)
   })
 
   it('transitionBuild updates buildState on disk', () => {

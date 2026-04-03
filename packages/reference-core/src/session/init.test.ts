@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mkdtempSync, rmSync } from 'node:fs'
-import { join, tmpdir } from 'node:path'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import type { SyncPayload } from '../sync/types'
 
 const onHandlers = new Map<string, Array<(payload?: unknown) => void>>()
