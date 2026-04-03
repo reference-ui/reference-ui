@@ -27,7 +27,9 @@
           }
         ],
         "usage": "very common",
-        "examples": ["<AppButton variant=\"solid\">"],
+        "examples": [
+          "<AppButton variant=\"solid\">"
+        ],
         "usedWith": {}
       }
     ],
@@ -58,7 +60,9 @@
             }
           ],
           "usage": "common",
-          "examples": ["<AppButton variant=\"solid\">"],
+          "examples": [
+            "<AppButton variant=\"solid\">"
+          ],
           "usedWith": {
             "Button": "very common"
           }
