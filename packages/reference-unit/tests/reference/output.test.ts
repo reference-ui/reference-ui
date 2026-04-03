@@ -72,7 +72,16 @@ describe('reference output', () => {
     expect(style.getKind()).toBe('typeAlias')
     expect(displayMembers.length).toBeGreaterThan(100)
     expect(displayMembers.map(member => member.getName())).toEqual(
-      expect.arrayContaining(['background', 'display', 'fontSize', 'margin', 'container', 'font', 'weight', 'r'])
+      expect.arrayContaining([
+        'background',
+        'display',
+        'fontSize',
+        'margin',
+        'container',
+        'font',
+        'weight',
+        'r',
+      ])
     )
   })
 
