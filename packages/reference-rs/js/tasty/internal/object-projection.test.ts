@@ -1,125 +1,62 @@
 import { describe, expect, it } from 'vitest'
 import { isTypeParameterReference } from './object-projection'
 
-describe('object-projection type parameter fix', () => {
-  describe('isTypeParameterReference function', () => {
-    it('should return true for type parameter "P"', () => {
-      const reference = {
-        id: 'P',
-        name: 'P',
-        library: '@reference-ui/react',
-        typeArguments: [],
-      }
-
-      expect(isTypeParameterReference(reference)).toBe(true)
+describe('object-projection type parameter detection', () => {
+  describe('isTypeParameterReference', () => {
+    it('returns true for a bare single-letter type parameter', () => {
+      expect(
+        isTypeParameterReference({ id: 'P', name: 'P', library: '@reference-ui/react', typeArguments: [] }),
+      ).toBe(true)
     })
 
-    it('should return true for other type parameters', () => {
-      const reference = {
-        id: 'T',
-        name: 'T',
-        library: '@reference-ui/react',
-        typeArguments: [],
+    it('returns true for any bare type parameter regardless of name', () => {
+      for (const name of ['T', 'TData', 'TKey', 'Props']) {
+        expect(
+          isTypeParameterReference({ id: name, name, library: '@reference-ui/react', typeArguments: [] }),
+        ).toBe(true)
       }
-
-      expect(isTypeParameterReference(reference)).toBe(true)
     })
 
-    it('should return false for type parameters with type arguments', () => {
-      const reference = {
-        id: 'P',
-        name: 'P',
-        library: '@reference-ui/react',
-        typeArguments: [{ kind: 'raw' as const, summary: 'string' }],
-      }
-
-      expect(isTypeParameterReference(reference)).toBe(false)
+    it('returns false when type arguments are present', () => {
+      expect(
+        isTypeParameterReference({
+          id: 'P',
+          name: 'P',
+          library: '@reference-ui/react',
+          typeArguments: [{ kind: 'raw' as const, summary: 'string' }],
+        }),
+      ).toBe(false)
     })
 
-    it('should return true for regular type references where id equals name', () => {
-      const reference = {
-        id: 'SomeType',
-        name: 'SomeType',
-        library: '@reference-ui/react',
-        typeArguments: [],
-      }
-
-      // This is actually correct behavior - if id === name and no type arguments,
-      // it's considered a type parameter by the function
-      expect(isTypeParameterReference(reference)).toBe(true)
-    })
-
-    it('should return false when id and name differ', () => {
-      const reference = {
-        id: '_abc123',
-        name: 'SomeType',
-        library: '@reference-ui/react',
-        typeArguments: [],
-      }
-
-      expect(isTypeParameterReference(reference)).toBe(false)
+    it('returns false when id and name differ (manifest symbol reference)', () => {
+      expect(
+        isTypeParameterReference({
+          id: '_abc123',
+          name: 'SomeType',
+          library: '@reference-ui/react',
+          typeArguments: [],
+        }),
+      ).toBe(false)
     })
   })
 
-  describe('type parameter resolution logic', () => {
-    it('should identify when to resolve "P" to SystemProperties', () => {
-      // This test verifies the logic we added to handle type parameter "P"
-      const reference = {
-        id: 'P',
-        name: 'P',
-        library: '@reference-ui/react',
-        typeArguments: [],
+  describe('generic type parameter routing', () => {
+    it('all type parameter references use the same loadReferencedSymbol path — P is not special', () => {
+      // isTypeParameterReference returns true for any bare param, not just 'P'.
+      // The projection layer routes ALL of them through loadReferencedSymbol, which
+      // uses generic ambiguity resolution (resolvePreferredBareNameMatch) rather than
+      // hard-coded type-name knowledge.
+      const params = [
+        { id: 'P', name: 'P' },
+        { id: 'T', name: 'T' },
+        { id: 'TData', name: 'TData' },
+        { id: 'StyleProps', name: 'StyleProps' },
+      ]
+      for (const { id, name } of params) {
+        expect(
+          isTypeParameterReference({ id, name, library: '@reference-ui/react', typeArguments: [] }),
+        ).toBe(true)
       }
-
-      // This is the condition that triggers our fix
-      const isTypeParameter = isTypeParameterReference(reference)
-      const isTargetParameter = reference.name === 'P'
-      const hasNoTypeArguments = !reference.typeArguments?.length
-
-      expect(isTypeParameter && isTargetParameter && hasNoTypeArguments).toBe(true)
-    })
-
-    it('should not trigger fix for other type parameters', () => {
-      const reference = {
-        id: 'T',
-        name: 'T',
-        library: '@reference-ui/react',
-        typeArguments: [],
-      }
-
-      const isTypeParameter = isTypeParameterReference(reference)
-      const isTargetParameter = reference.name === 'P'
-
-      expect(isTypeParameter && isTargetParameter).toBe(false)
-    })
-
-    it('should not trigger fix for regular types where id equals name but not "P"', () => {
-      const reference = {
-        id: 'SomeType',
-        name: 'SomeType',
-        library: '@reference-ui/react',
-        typeArguments: [],
-      }
-
-      const isTypeParameter = isTypeParameterReference(reference)
-      const isTargetParameter = reference.name === 'P'
-
-      // Even though it's a type parameter by the function's definition,
-      // it's not "P" so our fix won't trigger
-      expect(isTypeParameter && isTargetParameter).toBe(false)
-    })
-
-    it('should not trigger fix for regular types with different ids', () => {
-      const reference = {
-        id: '_abc123',
-        name: 'SomeType',
-        library: '@reference-ui/react',
-        typeArguments: [],
-      }
-
-      const isTypeParameter = isTypeParameterReference(reference)
-
-      expect(isTypeParameter).toBe(false)
     })
   })
 })

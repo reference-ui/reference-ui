@@ -1,3 +1,5 @@
+// This component is copied from reference-lib, do not modify here.
+// Source: packages/reference-lib/src/Reference/components/ReferenceMemberRow.tsx
 import { Div, Small } from '@reference-ui/react'
 import type { ReferenceMemberDocument } from '../types'
 import { MemberDescription } from './MemberDescription'
@@ -6,7 +8,13 @@ import { MemberName } from './MemberName'
 import { MemberType } from './MemberType'
 import { MemberTypeSummary } from './MemberTypeSummary'
 
-export function ReferenceMemberRow({ member }: { member: ReferenceMemberDocument }) {
+export function ReferenceMemberRow({
+  member,
+  showInheritedFrom = true,
+}: {
+  member: ReferenceMemberDocument
+  showInheritedFrom?: boolean
+}) {
   return (
     <Div
       css={{
@@ -22,7 +30,7 @@ export function ReferenceMemberRow({ member }: { member: ReferenceMemberDocument
     >
       <Div display="grid" gap="reference.xxs">
         <MemberName name={member.name} />
-        {member.inheritedFrom ? (
+        {showInheritedFrom && member.inheritedFrom ? (
           <Small color="reference.muted">from {member.inheritedFrom.name}</Small>
         ) : null}
       </Div>
@@ -31,7 +39,11 @@ export function ReferenceMemberRow({ member }: { member: ReferenceMemberDocument
       <Div display="grid" gap="reference.md" minWidth="0">
         <MemberTypeSummary summary={member.summary.memberTypeSummary} />
         <MemberDescription description={member.summary.description} />
-        <MemberJsDoc memberId={member.id} jsDoc={member.jsDoc} params={member.summary.paramDocs} />
+        <MemberJsDoc
+          memberId={member.id}
+          jsDoc={member.jsDoc}
+          params={member.summary.paramDocs}
+        />
       </Div>
     </Div>
   )

@@ -1,3 +1,5 @@
+// This component is copied from reference-lib, do not modify here.
+// Source: packages/reference-lib/src/Reference/components/shared/SummarySnippet.tsx
 import * as React from 'react'
 import { Div, type SystemStyleObject } from '@reference-ui/react'
 import { MonoText } from './MonoText'

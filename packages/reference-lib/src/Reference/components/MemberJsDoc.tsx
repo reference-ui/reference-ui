@@ -1,7 +1,6 @@
 import { Div, P, Small } from '@reference-ui/react'
 import type { ReferenceJsDoc, ReferenceParamDoc } from '@reference-ui/types'
 import { JsDocParamChip } from './shared/JsDocParamChip'
-import { MonoText } from './shared/MonoText'
 
 export function MemberJsDoc({
   memberId,
@@ -50,7 +49,7 @@ export function MemberJsDoc({
             {param.optional ? <Small color="reference.muted">optional</Small> : null}
 
             {param.description && (
-              <P margin="0" color="gray.400">
+              <P margin="0" color="reference.muted">
                 {param.description}
               </P>
             )}

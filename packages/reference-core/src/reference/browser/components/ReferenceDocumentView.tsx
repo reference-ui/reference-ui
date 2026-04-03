@@ -1,39 +1,15 @@
-import { Div, H2, P, Small } from '@reference-ui/react'
-import { formatReferenceTypeParameter } from '../model'
+// This component is copied from reference-lib, do not modify here.
+// Source: packages/reference-lib/src/Reference/components/ReferenceDocumentView.tsx
 import type { ReferenceDocument } from '../types'
-import { ReferenceMemberList } from './ReferenceMemberList'
-import { ReferenceTypeAliasDefinition } from './ReferenceTypeAliasDefinition'
-import { MonoText } from './shared/MonoText'
+import { Div } from '@reference-ui/react'
+import { ReferenceInterface, ReferenceType } from '../document/index'
 
 export function ReferenceDocumentView({ document }: { document: ReferenceDocument }) {
   return (
     <Div display="grid" gap="reference.lg">
-      <Div display="grid" gap="reference.sm">
-        <Div display="flex" alignItems="center" gap="reference.sm" flexWrap="wrap">
-          <H2 margin="0" fontSize="1rem" color="reference.foreground">
-            <MonoText>{document.name}</MonoText>
-          </H2>
-          <Small color="reference.foreground">{document.kindLabel}</Small>
-        </Div>
-        {document.description ? <P margin="0">{document.description}</P> : null}
-        {document.typeParameterDetails.length > 0 ? (
-          <Small color="reference.foreground">
-            Generics:{' '}
-            {document.typeParameterDetails.map(formatReferenceTypeParameter).join(', ')}
-          </Small>
-        ) : null}
-        {document.extendsNames.length > 0 ? (
-          <Small color="reference.foreground">
-            Extends: {document.extendsNames.join(', ')}
-          </Small>
-        ) : null}
-      </Div>
-
       {document.kind === 'typeAlias'
-        ? document.members.length > 0
-          ? <ReferenceMemberList members={document.members} />
-          : <ReferenceTypeAliasDefinition definition={document.definition} />
-        : <ReferenceMemberList members={document.members} />}
+        ? <ReferenceType document={document} />
+        : <ReferenceInterface document={document} />}
     </Div>
   )
 }

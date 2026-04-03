@@ -1,3 +1,5 @@
+// This component is copied from reference-lib, do not modify here.
+// Source: packages/reference-lib/src/Reference/components/shared/JsDocParamChip.tsx
 import { Div } from '@reference-ui/react'
 
 export type JsDocParamChipProps = {
