@@ -52,7 +52,8 @@ test.describe('token-sync-watch', () => {
     const tokenFilePath = join(sandboxDir, 'tests', 'token-watch-tokens.ts')
 
     const colorA = randomHexColor()
-    const colorB = randomHexColor()
+    let colorB = randomHexColor()
+    while (colorB === colorA) colorB = randomHexColor()
 
     // Helper: navigate to the test page, read the latest generated CSS from
     // disk, extract the token variable value, and apply it via an inline style
