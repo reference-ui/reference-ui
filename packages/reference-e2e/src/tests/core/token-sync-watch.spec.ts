@@ -79,13 +79,20 @@ test.describe('token-sync-watch', () => {
     await writeFile(tokenFilePath, buildTokensContent(colorB))
     await ready1
 
+    // Reload the page so the browser picks up the updated CSS from the
+    // packager. Vite does not watch node_modules for HMR, so a full reload
+    // is the reliable way to see the new token value.
+    await page.reload()
+    const el2 = page.getByTestId('token-sync-watch')
+    await expect(el2).toBeVisible()
+
     await expect
       .poll(
         async () => {
-          const color = await el.evaluate((e) => getComputedStyle(e).color)
+          const color = await el2.evaluate((e) => getComputedStyle(e).color)
           return color === hexToRgb(colorB)
         },
-        { timeout: 60_000 }
+        { timeout: 30_000 }
       )
       .toBe(true)
 
