@@ -2,7 +2,7 @@
 
 /**
  * Source of truth: packages/reference-lib/src/Reference/components/ReferenceMemberList.tsx
- * This file is mirrored into reference-core by scripts/copy-reference-api-component.mjs.
+ * This file is mirrored into reference-core by tools/copy-reference-api-component.mjs.
  * Edit the reference-lib source, not this copy.
  */
 import { useState, type ComponentProps, type CSSProperties } from 'react'

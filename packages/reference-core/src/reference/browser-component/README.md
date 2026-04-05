@@ -9,6 +9,6 @@ Source of truth:
 
 These files are copied by:
 
-- packages/reference-core/scripts/copy-reference-api-component.mjs
+- packages/reference-core/tools/copy-reference-api-component.mjs
 
 Do not edit files here directly. Edit the reference-lib source and re-run the copy script.

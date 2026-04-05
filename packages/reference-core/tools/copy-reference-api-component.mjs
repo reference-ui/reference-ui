@@ -21,7 +21,7 @@ Source of truth:
 
 These files are copied by:
 
-- packages/reference-core/scripts/copy-reference-api-component.mjs
+- packages/reference-core/tools/copy-reference-api-component.mjs
 
 Do not edit files here directly. Edit the reference-lib source and re-run the copy script.
 `
@@ -105,7 +105,7 @@ function addSourceComment(source, sourceOfTruth) {
     '',
     '/**',
     ` * Source of truth: ${sourceOfTruth}`,
-    ' * This file is mirrored into reference-core by scripts/copy-reference-api-component.mjs.',
+    ' * This file is mirrored into reference-core by tools/copy-reference-api-component.mjs.',
     ' * Edit the reference-lib source, not this copy.',
     ' */',
     '',
