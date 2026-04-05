@@ -3,6 +3,7 @@ import type {
   RawTastyTypeReference,
   TastyMember,
   TastySymbol,
+  TastyTypeParameterMemberProjector,
   TastyTypeRef,
 } from '../api-types'
 import { dedupeTastyMembers } from '../members'
@@ -12,25 +13,22 @@ import { isInterfaceSymbol, isTypeAliasSymbol, isTypeReference } from './shared'
 import type { TastyApiRuntime } from './api-runtime'
 
 const MAX_PROJECTION_DEPTH = 32
-const SYSTEM_PROPERTIES_LOOKUP_LIBRARIES = [
-  '@reference-ui/styled',
-  '@reference-ui/react',
-  '@reference-ui/system',
-  '@reference-ui/types',
-]
 
 interface ProjectionContext {
   visitedSymbolIds: Set<string>
   depth: number
+  projectTypeParameterMembers?: TastyTypeParameterMemberProjector
 }
 
 export async function projectObjectLikeMembers(
   api: TastyApiRuntime,
-  symbol: TastySymbol
+  symbol: TastySymbol,
+  projectTypeParameterMembers?: TastyTypeParameterMemberProjector
 ): Promise<TastyMember[] | undefined> {
   return projectSymbolMembers(api, symbol, {
     visitedSymbolIds: new Set<string>(),
     depth: 0,
+    projectTypeParameterMembers,
   })
 }
 
@@ -45,6 +43,7 @@ async function projectSymbolMembers(
   const nextContext: ProjectionContext = {
     visitedSymbolIds: new Set(context.visitedSymbolIds).add(symbol.getId()),
     depth: context.depth + 1,
+    projectTypeParameterMembers: context.projectTypeParameterMembers,
   }
 
   const raw = symbol.getRaw()
@@ -112,29 +111,8 @@ async function projectReferenceMembers(
   if (utilityProjection) return utilityProjection
 
   if (isTypeParameterReference(reference)) {
-    // Handle specific type parameter mappings that we know should be resolved.
-    if (reference.name === 'P') {
-      for (const library of SYSTEM_PROPERTIES_LOOKUP_LIBRARIES) {
-        try {
-          const systemProperties = await api.findSymbolByScopedName(
-            library,
-            'SystemProperties'
-          )
-          if (systemProperties) {
-            return systemProperties.getDisplayMembers()
-          }
-        } catch {
-          // Keep trying narrower library scopes before falling back to a bare lookup.
-        }
-      }
-
-      try {
-        const systemProperties = await api.loadSymbolByName('SystemProperties')
-        return systemProperties.getDisplayMembers()
-      } catch {
-        return []
-      }
-    }
+    const projected = await context.projectTypeParameterMembers?.({ api, reference })
+    if (projected) return projected
     return []
   }
 
@@ -213,7 +191,9 @@ async function projectParametersIndexedAccessMembers(
 ): Promise<TastyMember[] | undefined> {
   if (!isTypeReference(raw.object)) return undefined
   if (raw.object.name !== 'Parameters') return undefined
-  if (raw.index.kind !== 'literal' || raw.index.value !== '0') return undefined
+  if (!('kind' in raw.index) || raw.index.kind !== 'literal' || raw.index.value !== '0') {
+    return undefined
+  }
 
   const [callableSource] = raw.object.typeArguments ?? []
   if (!callableSource) return undefined
@@ -338,6 +318,7 @@ async function collectProjectedKeysFromRaw(
     return collectProjectedKeysFromRaw(api, instantiated, {
       visitedSymbolIds: new Set(context.visitedSymbolIds).add(raw.id),
       depth: context.depth + 1,
+      projectTypeParameterMembers: context.projectTypeParameterMembers,
     })
   }
 

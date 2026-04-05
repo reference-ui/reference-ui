@@ -2,6 +2,7 @@ import * as React from 'react'
 import type { TastyApi, TastyBrowserRuntime, TastyMember, TastySymbol } from '@reference-ui/rust/tasty'
 import { createTastyBrowserRuntime } from '@reference-ui/rust/tasty/browser'
 import { createReferenceDocument } from './model'
+import { getReferenceUiTastyBrowserApiOptions } from '../tasty/api'
 import type { ReferenceDocument } from './types'
 
 export interface ReferenceRuntime {
@@ -125,6 +126,7 @@ export function createReferenceRuntime(runtime: TastyBrowserRuntime): ReferenceR
 export function createDefaultReferenceRuntime(): ReferenceRuntime {
   const tastyBrowserRuntime = createTastyBrowserRuntime({
     loadRuntimeModule: () => import('__REFERENCE_UI_TYPES_RUNTIME__' as string),
+    apiOptions: getReferenceUiTastyBrowserApiOptions(),
   })
 
   return createReferenceRuntime(tastyBrowserRuntime)

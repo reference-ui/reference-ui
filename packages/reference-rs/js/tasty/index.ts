@@ -36,6 +36,7 @@ export type {
   TastySymbolKind,
   TastySymbolRef,
   TastySymbolSearchResult,
+  TastyTypeParameterMemberProjector,
   TastyTypeKind,
   TastyTypeRef,
 } from './api-types'
