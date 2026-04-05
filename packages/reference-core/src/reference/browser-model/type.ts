@@ -16,7 +16,7 @@ import type {
   ReferenceTupleElement,
   ReferenceType,
   ReferenceTypeParameter,
-} from '../types'
+} from '../browser/types'
 
 type RawTaggedTastyTypeRef = Exclude<RawTastyTypeRef, RawTastyTypeReference>
 type RawTaggedTastyTypeKind = RawTaggedTastyTypeRef['kind']

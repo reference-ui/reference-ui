@@ -1,6 +1,6 @@
 import { getTastyMemberSemanticKind } from '@reference-ui/rust/tasty'
 import type { TastyMember, TastySymbol } from '@reference-ui/rust/tasty'
-import type { ReferenceMemberDocument, ReferenceSymbolRef } from '../types'
+import type { ReferenceMemberDocument, ReferenceSymbolRef } from '../browser/types'
 import { createReferenceMemberSummary, getInlineUnionValueSetTypeLabel } from './summary'
 import { getReferenceTypeLabel } from './typeLabel'
 import { createReferenceJsDoc, createReferenceType } from './type'

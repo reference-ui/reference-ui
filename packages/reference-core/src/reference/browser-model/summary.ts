@@ -10,7 +10,7 @@ import type {
   ReferenceMemberTypeSummary,
   ReferenceParamDoc,
   ReferenceValueOption,
-} from '../types'
+} from '../browser/types'
 import { createReferenceType, formatReferenceType } from './type'
 
 export function createReferenceMemberSummary(

@@ -1,6 +1,17 @@
+// @ts-nocheck
+
+/**
+ * Source of truth: packages/reference-lib/src/Reference/components/MemberTypeSummary.tsx
+ * This file is mirrored into reference-core by scripts/copy-reference-api-component.mjs.
+ * Edit the reference-lib source, not this copy.
+ */
 import { Div } from '@reference-ui/react'
-import type { ReferenceMemberTypeSummary, ReferenceValueOption } from '../types'
+import type {
+  ReferenceMemberTypeSummary,
+  ReferenceValueOption,
+} from '../../browser/component-api'
 import { SummaryChip } from './shared/SummaryChip'
+import { SummarySnippet } from './shared/SummarySnippet'
 
 export function MemberTypeSummary({ summary }: { summary?: ReferenceMemberTypeSummary }) {
   if (!summary) return null
@@ -11,11 +22,7 @@ export function MemberTypeSummary({ summary }: { summary?: ReferenceMemberTypeSu
     case 'callSignature':
     case 'typeExpression':
     case 'opaqueType':
-      return (
-        <SummaryChip>
-          {summary.text}
-        </SummaryChip>
-      )
+      return <SummarySnippet>{summary.text}</SummarySnippet>
     default:
       return null
   }
@@ -24,11 +31,10 @@ export function MemberTypeSummary({ summary }: { summary?: ReferenceMemberTypeSu
 function ReferenceValueSet({ options }: { options: ReferenceValueOption[] }) {
   return (
     <Div display="flex" gap="reference.sm" flexWrap="wrap">
-      {options.map((option) => (
+      {options.map(option => (
         <SummaryChip
           key={`${option.isDefault ? 'default' : 'value'}-${option.label}`}
           tone={option.isDefault ? 'accent' : 'soft'}
-          radius="pill"
         >
           {option.label}
         </SummaryChip>

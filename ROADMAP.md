@@ -34,7 +34,7 @@ First-class public release of `reference-core` (CLI + scanner + pipeline) as a s
 
 ---
 
-## Tasty: dedup correctness
+## Tasty: dedup correctness [DONE]
 
 Duplicate-symbol behavior is currently untested and could regress silently.
 
@@ -44,7 +44,7 @@ Duplicate-symbol behavior is currently untested and could regress silently.
 
 ---
 
-## 1st Class State & Change Detection
+## 1st Class State & Change Detection [DONE]
 
 The internal event bus / state machine currently relies on `console.log` for observability. This needs to be a proper, structured system.
 
@@ -55,7 +55,7 @@ The internal event bus / state machine currently relies on `console.log` for obs
 
 ---
 
-## Reload when Tokens get updated
+## Reload when Tokens get updated [DONE]
 
 - [ ] Detect when token files change during `ref sync --watch` and trigger a targeted reload
 - [ ] Ensure reload does not cause a full HMR storm — only invalidate what depends on the changed tokens

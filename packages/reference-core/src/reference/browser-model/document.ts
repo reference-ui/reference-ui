@@ -1,6 +1,6 @@
 import { getTastyResolvedType } from '@reference-ui/rust/tasty'
 import type { RawTastySymbol, RawTastySymbolRef, TastyMember, TastySymbol, TastySymbolRef } from '@reference-ui/rust/tasty'
-import type { ReferenceDocument, ReferenceSymbolRef } from '../types'
+import type { ReferenceDocument, ReferenceSymbolRef } from '../browser/types'
 import { createReferenceMemberDocument } from './member'
 import { createReferenceJsDoc, createReferenceType, createReferenceTypeParameter, formatReferenceType } from './type'
 

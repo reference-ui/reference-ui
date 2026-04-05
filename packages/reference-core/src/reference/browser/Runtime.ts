@@ -1,7 +1,7 @@
 import * as React from 'react'
 import type { TastyApi, TastyBrowserRuntime, TastyMember, TastySymbol } from '@reference-ui/rust/tasty'
 import { createTastyBrowserRuntime } from '@reference-ui/rust/tasty/browser'
-import { createReferenceDocument } from './model'
+import { createReferenceDocument } from '../browser-model'
 import { getReferenceUiTastyBrowserApiOptions } from '../tasty/api'
 import type { ReferenceDocument } from './types'
 

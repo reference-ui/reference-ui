@@ -1,5 +1,13 @@
 # Reference API Table Model
 
+Source of truth for this model layer now lives under:
+
+- `src/reference/browser-model`
+
+This document is kept here temporarily because `browser/` still acts as the
+adapter-facing surface. The model implementation itself should not move back
+under the mirrored component tree.
+
 The API table model is deliberately small.
 
 Each member is rendered as one row with exactly 3 columns:
