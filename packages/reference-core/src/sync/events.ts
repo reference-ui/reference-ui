@@ -3,6 +3,7 @@ import { afterFirst, combineTrigger, emitOnAny, forWorker, onReady } from './eve
 
 const VIRTUAL_COMPLETE_EVENT = 'virtual:complete' as const
 const RUN_REFERENCE_BUILD_EVENT = 'run:reference:build' as const
+const RUN_SYSTEM_CONFIG_EVENT = 'run:system:config' as const
 const VIRTUAL_FS_CHANGE_EVENT = 'virtual:fs:change' as const
 const VIRTUAL_FRAGMENT_CHANGE_EVENT = 'virtual:fragment:change' as const
 
@@ -74,7 +75,7 @@ export function initEvents(): void {
    */
   afterFirst(VIRTUAL_COMPLETE_EVENT, {
     on: VIRTUAL_FS_CHANGE_EVENT,
-    emit: 'run:system:config',
+    emit: RUN_SYSTEM_CONFIG_EVENT,
   })
 
   /**
@@ -95,7 +96,7 @@ export function initEvents(): void {
    */
   afterFirst(VIRTUAL_COMPLETE_EVENT, {
     on: VIRTUAL_FRAGMENT_CHANGE_EVENT,
-    emit: 'run:system:config',
+    emit: RUN_SYSTEM_CONFIG_EVENT,
   })
 
   /**
@@ -105,7 +106,7 @@ export function initEvents(): void {
   forWorker({
     ready: 'system:config:ready',
     on: VIRTUAL_COMPLETE_EVENT,
-    emit: 'run:system:config',
+    emit: RUN_SYSTEM_CONFIG_EVENT,
   })
 
   /**

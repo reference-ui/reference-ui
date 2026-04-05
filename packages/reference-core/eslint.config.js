@@ -3,10 +3,10 @@ import tseslint from 'typescript-eslint'
 import sonarjs from 'eslint-plugin-sonarjs'
 
 export default [
-  { ignores: ['node_modules/**', 'dist/**', '**/*.config.ts', 'src/system/styled/**'] },
+  { ignores: ['node_modules/**', 'dist/**', '**/*.config.ts', 'src/system/styled/**', 'src/reference/browser-component/**'] },
   eslint.configs.recommended,
   {
-    files: ['bin/**/*.mjs'],
+    files: ['bin/**/*.mjs', 'scripts/**/*.mjs'],
     languageOptions: {
       globals: {
         console: 'readonly',

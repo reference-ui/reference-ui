@@ -5,7 +5,7 @@ import { createTastyApi } from '@reference-ui/rust/tasty'
 import { createReferenceDocument } from './document'
 
 const manifestPath = new URL(
-  '../../../../../reference-rs/tests/tasty/cases/jsdoc/output/manifest.js',
+  '../../../../reference-rs/tests/tasty/cases/jsdoc/output/manifest.js',
   import.meta.url,
 ).pathname
 
