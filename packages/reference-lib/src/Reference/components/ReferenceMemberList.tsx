@@ -88,7 +88,9 @@ function ReferenceInheritedMemberSection({ group }: { group: InheritedMemberGrou
 
   return (
     <Div display="grid" gap="reference.sm">
-      <Small color="reference.muted">Inherited from {group.origin.name}</Small>
+      <Small color="reference.muted">
+        Inherited from {group.origin.name} ({group.members.length})
+      </Small>
       <ReferenceMemberRows members={visibleMembers} showInheritedFrom={false} />
       {isCollapsible ? (
         <Small color="reference.muted">
@@ -119,7 +121,7 @@ export function ReferenceMemberList({ members }: { members: ReferenceMemberDocum
   return (
     <Div display="grid" gap="reference.lg">
       {declaredMembers.length > 0 ? (
-        <ReferenceMemberRows members={declaredMembers} />
+        <ReferenceMemberRows members={declaredMembers} showInheritedFrom={false} />
       ) : null}
       {inheritedGroups.map(group => (
         <ReferenceInheritedMemberSection key={group.origin.id} group={group} />
