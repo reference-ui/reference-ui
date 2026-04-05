@@ -36,6 +36,28 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
+function isRetryableRemoveError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false
+  if (!('code' in error)) return false
+  const code = String(error.code)
+  return code === 'ENOTEMPTY' || code === 'EBUSY' || code === 'EPERM'
+}
+
+async function removeDirWithRetries(path: string, attempts = 5): Promise<void> {
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      await rm(path, { recursive: true, force: true })
+      return
+    } catch (error) {
+      if (!isRetryableRemoveError(error) || attempt === attempts) {
+        throw error
+      }
+
+      await sleep(150 * attempt)
+    }
+  }
+}
+
 async function getSandboxProcessIds(sandboxDir: string): Promise<number[]> {
   try {
     const { stdout } = await execa('lsof', ['-t', '+D', sandboxDir])
@@ -205,7 +227,7 @@ async function prepareEntryFull(entry: MatrixEntry): Promise<void> {
   if (existsSync(sandboxDir)) {
     await stopSandboxProcesses(sandboxDir)
     logStep(`Removing existing sandbox ${entry.name}`)
-    await rm(sandboxDir, { recursive: true, force: true })
+    await removeDirWithRetries(sandboxDir)
   }
   await mkdir(sandboxDir, { recursive: true })
 
@@ -241,7 +263,7 @@ async function pruneStaleSandboxes(): Promise<void> {
     if (e.isDirectory() && !names.has(e.name)) {
       const sandboxDir = join(SANDBOX_ROOT, e.name)
       await stopSandboxProcesses(sandboxDir)
-      await rm(sandboxDir, { recursive: true, force: true })
+      await removeDirWithRetries(sandboxDir)
       console.log('  pruned', e.name)
     }
   }

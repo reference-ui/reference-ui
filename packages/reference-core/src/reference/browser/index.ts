@@ -14,6 +14,6 @@ export {
   useReferenceDocumentFromContext,
   useReferenceRuntime,
 } from './ReferenceRuntimeContext'
-export { formatReferenceTypeParameter } from './model'
+export { formatReferenceTypeParameter } from '../browser-model'
 export type * from './types'
 export { referenceBrowserTokenConfig } from './theme'

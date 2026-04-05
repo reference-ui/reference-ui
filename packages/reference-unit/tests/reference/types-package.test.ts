@@ -1,8 +1,8 @@
 import { existsSync, lstatSync, readFileSync, realpathSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { createTastyApi } from '@reference-ui/rust/tasty'
 import {
+  createReferenceTestApi,
   installedTypesPackageDir,
   typesPackageDir,
   typesPackageJsonPath,
@@ -62,7 +62,7 @@ describe('@reference-ui/types package', () => {
     )
     const pkg = await import('@reference-ui/types')
     const manifestModule = await import('@reference-ui/types/manifest')
-    const api = createTastyApi({ manifestPath })
+    const api = createReferenceTestApi(manifestPath)
     await api.ready()
     const fixture = await api.loadSymbolByName('ReferenceApiFixture')
 

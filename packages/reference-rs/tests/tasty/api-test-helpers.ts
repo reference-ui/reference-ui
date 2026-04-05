@@ -17,6 +17,44 @@ export type { CreateTastyApiOptions, TastyApi, TastyMember, TastySymbol } from '
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const packageDir = join(__dirname, '..', '..')
 
+const TEST_PREFERRED_EXTERNAL_LIBRARIES = [
+  '@reference-ui/react',
+  '@reference-ui/system',
+  '@reference-ui/types',
+]
+
+const TEST_SYSTEM_PROPERTIES_LIBRARIES = [
+  '@reference-ui/styled',
+  '@reference-ui/react',
+  '@reference-ui/system',
+  '@reference-ui/types',
+]
+
+async function projectTestTypeParameterMembers(
+  api: TastyApi,
+  name: string,
+): Promise<TastyMember[] | undefined> {
+  if (name !== 'P') return undefined
+
+  for (const library of TEST_SYSTEM_PROPERTIES_LIBRARIES) {
+    try {
+      const projectedSymbol = await api.findSymbolByScopedName(library, 'SystemProperties')
+      if (projectedSymbol) {
+        return projectedSymbol.getDisplayMembers()
+      }
+    } catch {
+      // Keep trying narrower library scopes before falling back to a bare lookup.
+    }
+  }
+
+  try {
+    const projectedSymbol = await api.loadSymbolByName('SystemProperties')
+    return projectedSymbol.getDisplayMembers()
+  } catch {
+    return undefined
+  }
+}
+
 /** Build a map from emitted 16-hex ids to stable placeholders (sorted by symbol name, then id). */
 function buildStableEmittedIdMap(manifestJs: string): Map<string, string> {
   const prefix = 'export const manifest = '
@@ -136,6 +174,11 @@ export function createCaseApi(
 ): TastyApi {
   return createTastyApi({
     manifestPath: caseManifestPath(caseName),
+    preferredExternalLibraries:
+      overrides.preferredExternalLibraries ?? TEST_PREFERRED_EXTERNAL_LIBRARIES,
+    projectTypeParameterMembers:
+      overrides.projectTypeParameterMembers ??
+      (({ api, reference }) => projectTestTypeParameterMembers(api, reference.name)),
     ...overrides,
   })
 }
