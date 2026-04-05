@@ -1,4 +1,5 @@
 import type {
+  CreateTastyApiOptions,
   CreateTastyApiFromManifestOptions,
   RawTastyManifest,
   RawTastyMember,
@@ -11,6 +12,7 @@ import type {
   TastySymbol,
   TastySymbolRef,
   TastySymbolSearchResult,
+  TastyTypeParameterMemberProjector,
   TastyTypeRef,
 } from '../api-types'
 import { dedupeTastyMembers } from '../members'
@@ -37,17 +39,15 @@ import { TastyMemberImpl, TastySymbolImpl, TastySymbolRefImpl, TastyTypeRefImpl 
 interface CreateTastyApiRuntimeOptions {
   manifestPath: string
   importer: ArtifactImporter
+  preferredExternalLibraries?: string[]
+  projectTypeParameterMembers?: TastyTypeParameterMemberProjector
 }
-
-const PREFERRED_EXTERNAL_BARE_NAME_LIBRARIES = [
-  '@reference-ui/react',
-  '@reference-ui/system',
-  '@reference-ui/types',
-]
 
 export class TastyApiRuntime implements TastyApi {
   private readonly manifestPath?: string
   private readonly importer: ArtifactImporter
+  private readonly preferredExternalLibraries: string[]
+  private readonly projectTypeParameterMembers?: TastyTypeParameterMemberProjector
   private manifestPromise: Promise<RawTastyManifest> | undefined
   private manifest: RawTastyManifest | undefined
   private readonly runtimeWarnings = new Set<string>()
@@ -59,6 +59,8 @@ export class TastyApiRuntime implements TastyApi {
 
   constructor(options: CreateTastyApiRuntimeOptions | CreateTastyApiFromManifestOptions) {
     this.importer = options.importer
+    this.preferredExternalLibraries = options.preferredExternalLibraries ?? []
+    this.projectTypeParameterMembers = options.projectTypeParameterMembers
     if ('manifest' in options) {
       this.manifest = options.manifest
       this.manifestPromise = Promise.resolve(options.manifest)
@@ -135,7 +137,7 @@ export class TastyApiRuntime implements TastyApi {
   }
 
   private graphProjectObjectLikeMembers(symbol: TastySymbol): ReturnType<typeof projectObjectLikeMembers> {
-    return projectObjectLikeMembers(this, symbol)
+    return projectObjectLikeMembers(this, symbol, this.projectTypeParameterMembers)
   }
 
   private async graphCollectUserOwnedReferences(symbol: TastySymbol): Promise<TastySymbolRef[]> {
@@ -275,25 +277,28 @@ export class TastyApiRuntime implements TastyApi {
       return undefined
     }
 
-    let preferred = matches[0]
-    for (const library of PREFERRED_EXTERNAL_BARE_NAME_LIBRARIES) {
+    if (this.preferredExternalLibraries.length === 0) {
+      return undefined
+    }
+
+    for (const library of this.preferredExternalLibraries) {
       const libraryMatches = matches.filter((entry) => entry.library === library)
       if (libraryMatches.length === 1) {
-        preferred = libraryMatches[0]
-        break
+        const preferred = libraryMatches[0]
+        this.runtimeWarnings.add(
+          `Ambiguous symbol name "${name}" matched multiple external libraries. Using ${preferred.id} (${preferred.library}); other matches: ${matches
+            .filter((entry) => entry.id !== preferred.id)
+            .map((entry) => `${entry.id} (${entry.library})`)
+            .join(', ')}. Use a scoped lookup to disambiguate.`,
+        )
+        return preferred
       }
       if (libraryMatches.length > 1) {
         return undefined
       }
     }
 
-    this.runtimeWarnings.add(
-      `Ambiguous symbol name "${name}" matched multiple external libraries. Using ${preferred.id} (${preferred.library}); other matches: ${matches
-        .filter((entry) => entry.id !== preferred.id)
-        .map((entry) => `${entry.id} (${entry.library})`)
-        .join(', ')}. Use a scoped lookup to disambiguate.`,
-    )
-    return preferred
+    return undefined
   }
 
   async prefetchChunk(path: string): Promise<void> {
@@ -379,10 +384,12 @@ export class TastyApiRuntime implements TastyApi {
   }
 }
 
-export function createTastyApi(options: { manifestPath: string; importer?: ArtifactImporter }): TastyApi {
+export function createTastyApi(options: CreateTastyApiOptions): TastyApi {
   return new TastyApiRuntime({
     manifestPath: options.manifestPath,
     importer: options.importer ?? defaultArtifactImporter,
+    preferredExternalLibraries: options.preferredExternalLibraries,
+    projectTypeParameterMembers: options.projectTypeParameterMembers,
   })
 }
 

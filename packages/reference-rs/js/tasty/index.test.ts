@@ -124,8 +124,9 @@ describe('tasty runtime', () => {
     )
   })
 
-  it('auto-resolves ambiguous external bare-name lookup and supports scoped-name lookup', async () => {
+  it('resolves ambiguous external bare-name lookup when caller preferences are configured', async () => {
     const api = createTastyApiFromManifest({
+      preferredExternalLibraries: ['alpha-lib'],
       manifest: {
         version: '2',
         warnings: ['Duplicate symbol name "Shared" matched 2 entries.'],
@@ -252,8 +253,9 @@ describe('tasty runtime', () => {
     )
   })
 
-  it('prefers @reference-ui/react for known external duplicate names', async () => {
+  it('prefers configured external libraries for known duplicate names', async () => {
     const api = createTastyApiFromManifest({
+      preferredExternalLibraries: ['@reference-ui/react', '@reference-ui/system'],
       manifest: {
         version: '2',
         warnings: [],
