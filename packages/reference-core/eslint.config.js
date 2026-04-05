@@ -6,7 +6,7 @@ export default [
   { ignores: ['node_modules/**', 'dist/**', '**/*.config.ts', 'src/system/styled/**', 'src/reference/browser-component/**'] },
   eslint.configs.recommended,
   {
-    files: ['bin/**/*.mjs', 'scripts/**/*.mjs'],
+    files: ['bin/**/*.mjs', 'tools/**/*.mjs'],
     languageOptions: {
       globals: {
         console: 'readonly',
