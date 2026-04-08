@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { postprocessCss } from './postprocess'
+import { createPortableResetStylesheet, createRuntimeResetStylesheet } from './reset'
 import { createPortableStylesheetFromContent } from './transform/createPortableStylesheetFromContent'
 
 const createdDirs: string[] = []
@@ -30,7 +31,7 @@ describe('system/css/postprocess', () => {
     ).toBeUndefined()
   })
 
-  it('returns portable css without rewriting the runtime stylesheet when no upstream css is configured', () => {
+  it('injects the controlled reset into raw runtime css and portable css when normalizeCss is enabled', () => {
     const outDir = createTempDir()
     const styledDir = resolve(outDir, 'styled')
     const stylesPath = resolve(styledDir, 'styles.css')
@@ -41,6 +42,32 @@ describe('system/css/postprocess', () => {
 
     const result = postprocessCss(outDir, {
       name: 'local-system',
+      normalizeCss: true,
+    } as never)
+
+    expect(result).toBe(
+      [
+        createPortableResetStylesheet('local-system'),
+        createPortableStylesheetFromContent(rawCss, 'local-system'),
+      ].join('\n\n'),
+    )
+    expect(readFileSync(stylesPath, 'utf-8')).toBe(
+      [createRuntimeResetStylesheet(), rawCss].join('\n\n'),
+    )
+  })
+
+  it('leaves raw runtime css untouched when normalizeCss is false and no upstream css is configured', () => {
+    const outDir = createTempDir()
+    const styledDir = resolve(outDir, 'styled')
+    const stylesPath = resolve(styledDir, 'styles.css')
+    const rawCss = '@layer base, tokens;\n@layer tokens { :where(:root,:host) { --color: red; } }'
+
+    mkdirSync(styledDir, { recursive: true })
+    writeFileSync(stylesPath, rawCss, 'utf-8')
+
+    const result = postprocessCss(outDir, {
+      name: 'local-system',
+      normalizeCss: false,
       extends: [],
       layers: [],
     } as never)
@@ -49,7 +76,7 @@ describe('system/css/postprocess', () => {
     expect(readFileSync(stylesPath, 'utf-8')).toBe(rawCss)
   })
 
-  it('rewrites styles.css when upstream extends or layers expose css', () => {
+  it('returns and writes the assembled stylesheet when upstream extends or layers expose css', () => {
     const outDir = createTempDir()
     const styledDir = resolve(outDir, 'styled')
     const stylesPath = resolve(styledDir, 'styles.css')
@@ -59,9 +86,13 @@ describe('system/css/postprocess', () => {
     mkdirSync(styledDir, { recursive: true })
     writeFileSync(stylesPath, rawCss, 'utf-8')
 
-    const localPortableStylesheet = createPortableStylesheetFromContent(rawCss, 'local-system')
+    const localPortableStylesheet = [
+      createPortableResetStylesheet('local-system'),
+      createPortableStylesheetFromContent(rawCss, 'local-system'),
+    ].join('\n\n')
     const result = postprocessCss(outDir, {
       name: 'local-system',
+      normalizeCss: true,
       extends: [
         { name: 'upstream-extend', css: '@layer upstream-extend { .extend { color: purple; } }' },
       ],
@@ -72,16 +103,16 @@ describe('system/css/postprocess', () => {
       ],
     } as never)
 
-    expect(result).toBe(localPortableStylesheet)
-    expect(readFileSync(stylesPath, 'utf-8')).toBe(
-      [
-        '@layer upstream-extend, upstream-one, upstream-three, local-system;',
-        localPortableStylesheet,
-        '@layer upstream-extend { .extend { color: purple; } }',
-        '@layer upstream-one { .one { color: blue; } }',
-        '@layer upstream-three { .three { color: green; } }',
-      ].join('\n\n'),
-    )
+    const assembledStylesheet = [
+      '@layer upstream-extend, upstream-one, upstream-three, local-system;',
+      localPortableStylesheet,
+      '@layer upstream-extend { .extend { color: purple; } }',
+      '@layer upstream-one { .one { color: blue; } }',
+      '@layer upstream-three { .three { color: green; } }',
+    ].join('\n\n')
+
+    expect(result).toBe(assembledStylesheet)
+    expect(readFileSync(stylesPath, 'utf-8')).toBe(assembledStylesheet)
   })
 
   it('produces identical result and file content on rerun with same inputs', () => {
@@ -96,6 +127,7 @@ describe('system/css/postprocess', () => {
 
     const config = {
       name: 'local-system',
+      normalizeCss: true,
       layers: [
         { name: 'upstream-one', css: '@layer upstream-one { .one { color: blue; } }' },
       ],

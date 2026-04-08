@@ -8,7 +8,6 @@ interface MonoTextProps {
 
 const REFERENCE_CODE_RESET_CSS: any = {
   background: 'transparent',
-  color: 'inherit',
   padding: '0',
   borderRadius: '0',
   boxShadow: 'none',
