@@ -2,6 +2,11 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { ReferenceUIConfig } from '../../config'
 import { renderAssembledStylesheet } from './render/stylesheet'
+import {
+  createPortableResetStylesheet,
+  createRuntimeResetStylesheet,
+  shouldInjectReset,
+} from './reset'
 import { createPortableStylesheetFromContent } from './transform/createPortableStylesheetFromContent'
 
 /** Default Panda CSS filename under outdir (e.g. outDir/styled/styles.css). */
@@ -22,6 +27,12 @@ export function postprocessCss(
 
   const raw = readFileSync(stylesPath, 'utf-8')
   const portableStylesheet = createPortableStylesheetFromContent(raw, config.name)
+  const portableWithReset = shouldInjectReset(config)
+    ? `${createPortableResetStylesheet(config.name)}\n\n${portableStylesheet}`
+    : portableStylesheet
+  const runtimeWithReset = shouldInjectReset(config)
+    ? `${createRuntimeResetStylesheet()}\n\n${raw}`
+    : raw
 
   const upstreamSystems = [...(config.extends ?? []), ...(config.layers ?? [])]
     .map((layer) => {
@@ -30,11 +41,14 @@ export function postprocessCss(
     })
     .filter((layer): layer is { name: string; css: string } => Boolean(layer))
   if (upstreamSystems.length === 0) {
-    return portableStylesheet
+    if (runtimeWithReset !== raw) {
+      writeFileSync(stylesPath, runtimeWithReset, 'utf-8')
+    }
+    return portableWithReset
   }
 
-  const finalCss = renderAssembledStylesheet(config.name, portableStylesheet, upstreamSystems)
+  const finalCss = renderAssembledStylesheet(config.name, portableWithReset, upstreamSystems)
 
   writeFileSync(stylesPath, finalCss, 'utf-8')
-  return portableStylesheet
+  return finalCss
 }

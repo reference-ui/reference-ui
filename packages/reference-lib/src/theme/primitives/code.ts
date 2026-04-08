@@ -6,7 +6,6 @@ export const codePrimitiveStyles = {
     ...baseTypography,
     fontFamily: 'mono',
     fontSize: '0.9em',
-    backgroundColor: 'gray.100',
     color: 'pink.600',
     paddingInline: '0.4em',
     paddingBlock: '0.15em',
