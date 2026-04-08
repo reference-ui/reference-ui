@@ -88,14 +88,20 @@ test.describe.serial('layer', () => {
       ).toBeGreaterThan(-1)
     })
 
-    test('primitives emit data-layer from config name and preserve other props', async ({
+    test('layer scope root emits config name and nested primitives avoid redundant attrs', async ({
       page,
     }) => {
       test.setTimeout(60_000)
       await page.goto(testRoutes.layers)
+      const scopeRoot = page.getByTestId('consumer-layer-scope-root')
       const host = page.getByTestId('consumer-layer-host')
+      const darkIsland = page.getByTestId('consumer-layer-dark-island')
+      await expect(scopeRoot).toBeVisible()
       await expect(host).toBeVisible()
-      await expect(host).toHaveAttribute('data-layer', LAYER_NAME)
+      await expect(darkIsland).toBeVisible()
+      await expect(scopeRoot).toHaveAttribute('data-layer', LAYER_NAME)
+      await expect(host).not.toHaveAttribute('data-layer', /.+/)
+      await expect(darkIsland).toHaveAttribute('data-layer', LAYER_NAME)
       await expect(host).toHaveAttribute('id', 'consumer-layer-id')
     })
 
@@ -181,7 +187,7 @@ test.describe.serial('layer', () => {
       await page.goto(testRoutes.layers)
       const inside = page.getByTestId('layers-test')
       await expect(inside).toBeVisible()
-      // Consumer primitives have data-layer="reference-e2e"; upstream tokens are under [data-layer="reference-ui"].
+      // Consumer scope is established by the nearest layer host; upstream tokens are under [data-layer="reference-ui"].
       // So consumer DOM does not see --colors-teal-500 (upstream). Assert upstream CSS is present via stylesheet.
       const outside = page.getByTestId('layers-outside')
       await expect(outside).toBeVisible()

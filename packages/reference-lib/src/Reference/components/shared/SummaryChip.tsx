@@ -4,7 +4,7 @@ import { MonoText } from './MonoText'
 
 const summaryChipRecipe = recipe({
   base: {
-    fontSize: '4.5r',
+    fontSize: '4r',
     fontWeight: '550',
     display: 'inline-flex',
     alignItems: 'center',

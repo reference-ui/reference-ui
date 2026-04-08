@@ -13,7 +13,7 @@ export default function LayersTest() {
       <span data-testid="consumer-layer-outside" style={{ color: 'var(--colors-test-primary)' }}>
         Outside primitive: var has no value
       </span>
-      <Div>
+      <Div data-testid="consumer-layer-scope-root">
         <Div
           data-testid="consumer-layer-host"
           id="consumer-layer-id"
@@ -36,14 +36,17 @@ export default function LayersTest() {
           >
             Consumer color mode token in default scope
           </Span>
-          <div data-panda-theme="dark">
+          <Div
+            data-testid="consumer-layer-dark-island"
+            colorMode="dark"
+          >
             <Span
               data-testid="consumer-layer-color-mode-dark"
               color="test.colorMode"
             >
               Consumer color mode token in dark scope
             </Span>
-          </div>
+          </Div>
         </Div>
         <Div data-testid="layers-outside">
           <Span

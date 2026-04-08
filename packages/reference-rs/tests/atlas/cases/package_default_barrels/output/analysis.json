@@ -93,9 +93,9 @@
           ],
           "usage": "very common",
           "examples": [
-            "<BaseButton {...props} />",
             "<PackageButton variant=\"ghost\">",
-            "<PackageButton variant=\"solid\">"
+            "<PackageButton variant=\"solid\">",
+            "<BaseButton {...props} />"
           ],
           "usedWith": {
             "AppButton": "very common"
