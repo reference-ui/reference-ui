@@ -63,18 +63,6 @@ function isGlobalCssCollector(functionName: string | undefined, name: string): b
   return functionName === 'globalCss' || name === 'globalCss'
 }
 
-function createCollectorRuntimeFunctionScript(options: {
-  functionName: string
-  globalKey: string
-  enabled: boolean
-}): string {
-  if (!options.enabled) {
-    return `const ${options.functionName} = () => {}`
-  }
-
-  return `const ${options.functionName} = (fragment) => { const c = globalThis['${options.globalKey}']; if (Array.isArray(c)) c.push(fragment) }`
-}
-
 export async function prepareBaseFragments(
   cwd: string,
   config: ReferenceUIConfig
