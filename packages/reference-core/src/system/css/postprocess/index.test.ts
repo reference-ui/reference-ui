@@ -2,9 +2,9 @@ import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
-import { PANDA_GLOBAL_CSS_FILENAME, postprocessCss } from './postprocess'
-import { createPortableResetStylesheet, createRuntimeResetStylesheet } from './reset'
-import { createPortableStylesheetFromContent } from './transform/createPortableStylesheetFromContent'
+import { PANDA_GLOBAL_CSS_FILENAME, postprocessCss } from './index'
+import { createPortableResetStylesheet, createRuntimeResetStylesheet } from '../reset'
+import { createPortableStylesheetFromContent } from '../transform/createPortableStylesheetFromContent'
 
 const createdDirs: string[] = []
 
@@ -87,6 +87,24 @@ describe('system/css/postprocess', () => {
 
     expect(result).toBe(createPortableStylesheetFromContent(demotedCss, 'local-system'))
     expect(readFileSync(stylesPath, 'utf-8')).toBe(demotedCss)
+  })
+
+  it('throws when Panda global.css no longer matches the combined styles.css base contract', () => {
+    const outDir = createTempDir()
+    const styledDir = resolve(outDir, 'styled')
+    const stylesPath = resolve(styledDir, 'styles.css')
+    const globalStylesPath = resolve(styledDir, PANDA_GLOBAL_CSS_FILENAME)
+
+    mkdirSync(styledDir, { recursive: true })
+    writeFileSync(stylesPath, '@layer base, tokens;\n@layer base { .x { color: blue; } }', 'utf-8')
+    writeFileSync(globalStylesPath, '@layer base { .x { color: red; } }', 'utf-8')
+
+    expect(() =>
+      postprocessCss(outDir, {
+        name: 'local-system',
+        normalizeCss: false,
+      } as never),
+    ).toThrow('Panda global.css contract changed: expected styles.css base layer to match global.css exactly')
   })
 
   it('leaves raw runtime css untouched when normalizeCss is false and no upstream css is configured', () => {
