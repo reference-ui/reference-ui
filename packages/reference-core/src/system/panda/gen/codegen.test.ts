@@ -62,6 +62,7 @@ async function importCodegenModule(options: {
     updateBaseSystemCss,
   }))
   vi.doMock('../../css/postprocess', () => ({
+    PANDA_GLOBAL_CSS_FILENAME: 'global.css',
     postprocessCss,
   }))
 
@@ -108,6 +109,7 @@ describe('system/panda/gen/codegen', () => {
     }))
     vi.doMock('../../base/create', () => ({ updateBaseSystemCss: vi.fn() }))
     vi.doMock('../../css/postprocess', () => ({
+      PANDA_GLOBAL_CSS_FILENAME: 'global.css',
       postprocessCss: vi.fn(),
     }))
 
@@ -155,6 +157,11 @@ describe('system/panda/gen/codegen', () => {
       configPath,
     })
     expect(pandaCssgen).toHaveBeenCalledWith({}, { cwd: outDir })
+    expect(pandaCssgen).toHaveBeenCalledWith({}, {
+      cwd: outDir,
+      type: 'global',
+      outfile: join(outDir, 'styled', 'global.css'),
+    })
   })
 
   it('runPandaCodegen calls updateBaseSystemCss when postprocessCss returns portable css', async () => {
@@ -202,6 +209,7 @@ describe('system/panda/gen/codegen', () => {
     }))
     vi.doMock('../../base/create', () => ({ updateBaseSystemCss: vi.fn() }))
     vi.doMock('../../css/postprocess', () => ({
+      PANDA_GLOBAL_CSS_FILENAME: 'global.css',
       postprocessCss: vi.fn(),
     }))
 
@@ -237,6 +245,12 @@ describe('system/panda/gen/codegen', () => {
 
     expect(pandaGenerate).not.toHaveBeenCalled()
     expect(loadConfigAndCreateContext).toHaveBeenCalled()
-    expect(pandaCssgen).toHaveBeenCalled()
+    expect(pandaCssgen).toHaveBeenCalledTimes(2)
+    expect(pandaCssgen).toHaveBeenNthCalledWith(1, {}, { cwd: outDir })
+    expect(pandaCssgen).toHaveBeenNthCalledWith(2, {}, {
+      cwd: outDir,
+      type: 'global',
+      outfile: join(outDir, 'styled', 'global.css'),
+    })
   })
 })

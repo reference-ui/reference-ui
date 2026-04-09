@@ -23,7 +23,6 @@ const summaryChipRecipe = recipe({
       },
       accent: {
         background: 'sky.100',
-        borderStyle: 'solid',
         color: 'sky.950',
       },
     },
@@ -37,6 +36,8 @@ const summaryChipRecipe = recipe({
     radius: 'rounded',
   },
 })
+
+
 
 export type SummaryChipProps = React.ComponentPropsWithoutRef<typeof Span> &
   RecipeVariantProps<typeof summaryChipRecipe>
@@ -53,7 +54,7 @@ export function SummaryChip({
       className={summaryChipRecipe({ tone, radius }) + (className ? ` ${className}` : '')}
       {...props}
     >
-      <MonoText>{children}</MonoText>
+      <MonoText color={tone === 'soft' ? 'gray.200' : 'sky.950'}>{children}</MonoText>
     </Span>
   )
 }

@@ -2,7 +2,7 @@ import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
-import { postprocessCss } from './postprocess'
+import { PANDA_GLOBAL_CSS_FILENAME, postprocessCss } from './postprocess'
 import { createPortableResetStylesheet, createRuntimeResetStylesheet } from './reset'
 import { createPortableStylesheetFromContent } from './transform/createPortableStylesheetFromContent'
 
@@ -54,6 +54,39 @@ describe('system/css/postprocess', () => {
     expect(readFileSync(stylesPath, 'utf-8')).toBe(
       [createRuntimeResetStylesheet(), rawCss].join('\n\n'),
     )
+  })
+
+  it('demotes Panda globalCss output into a lower-priority global layer before postprocessing', () => {
+    const outDir = createTempDir()
+    const styledDir = resolve(outDir, 'styled')
+    const stylesPath = resolve(styledDir, 'styles.css')
+    const globalStylesPath = resolve(styledDir, PANDA_GLOBAL_CSS_FILENAME)
+    const rawCss = [
+      '@layer base, tokens, utilities;',
+      '@layer base { .ref-code { color: hotpink; } }',
+      '@layer tokens { :where(:root,:host) { --color: red; } }',
+      '@layer utilities { .c_code { color: var(--color); } }',
+    ].join('\n')
+    const globalCss = '@layer base { .ref-code { color: hotpink; } }'
+
+    mkdirSync(styledDir, { recursive: true })
+    writeFileSync(stylesPath, rawCss, 'utf-8')
+    writeFileSync(globalStylesPath, globalCss, 'utf-8')
+
+    const result = postprocessCss(outDir, {
+      name: 'local-system',
+      normalizeCss: false,
+    } as never)
+
+    const demotedCss = [
+      '@layer global, base, tokens, utilities;',
+      '@layer global { .ref-code { color: hotpink; } }',
+      '@layer tokens { :where(:root,:host) { --color: red; } }',
+      '@layer utilities { .c_code { color: var(--color); } }',
+    ].join('\n')
+
+    expect(result).toBe(createPortableStylesheetFromContent(demotedCss, 'local-system'))
+    expect(readFileSync(stylesPath, 'utf-8')).toBe(demotedCss)
   })
 
   it('leaves raw runtime css untouched when normalizeCss is false and no upstream css is configured', () => {
