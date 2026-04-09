@@ -6,7 +6,7 @@ import { getConfig, getCwd } from '../../../config/store'
 import { getOutDirPath } from '../../../lib/paths'
 import { log } from '../../../lib/log'
 import { updateBaseSystemCss } from '../../base/create'
-import { postprocessCss } from '../../css/postprocess'
+import { PANDA_GLOBAL_CSS_FILENAME, postprocessCss } from '../../css/postprocess'
 
 const WORKSPACE_MARKERS = ['pnpm-workspace.yaml', 'nx.json'] as const
 const CORE_PANDACSS_PATH = ['packages', 'reference-core', 'node_modules', '@pandacss'] as const
@@ -113,6 +113,11 @@ export async function runPandaCodegen(): Promise<void> {
 
   const ctx = await loadConfigAndCreateContext({ config: { cwd: outDir }, configPath })
   await pandaCssgen(ctx, { cwd: outDir })
+  await pandaCssgen(ctx, {
+    cwd: outDir,
+    type: 'global',
+    outfile: join(outDir, 'styled', PANDA_GLOBAL_CSS_FILENAME),
+  })
   log.debug('panda', 'cssgen done', outDir)
 
   const config = getConfig()
@@ -142,6 +147,11 @@ export async function runPandaCss(): Promise<void> {
   log.debug('panda', 'cssgen')
   const ctx = await loadConfigAndCreateContext({ config: { cwd: outDir }, configPath })
   await pandaCssgen(ctx, { cwd: outDir })
+  await pandaCssgen(ctx, {
+    cwd: outDir,
+    type: 'global',
+    outfile: join(outDir, 'styled', PANDA_GLOBAL_CSS_FILENAME),
+  })
   log.debug('panda', 'cssgen done', outDir)
 
   const config = getConfig()

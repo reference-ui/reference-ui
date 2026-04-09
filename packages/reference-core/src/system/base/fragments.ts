@@ -1,7 +1,6 @@
 import type { ReferenceUIConfig } from '../../config'
 import type { BaseSystem } from '../../types'
 import {
-  bundleCollectorRuntime,
   bundleFragments,
   scanForFragments,
   type CollectorBundles,
@@ -60,6 +59,22 @@ export function getBaseCollectors() {
   ]
 }
 
+function isGlobalCssCollector(functionName: string | undefined, name: string): boolean {
+  return functionName === 'globalCss' || name === 'globalCss'
+}
+
+function createCollectorRuntimeFunctionScript(options: {
+  functionName: string
+  globalKey: string
+  enabled: boolean
+}): string {
+  if (!options.enabled) {
+    return `const ${options.functionName} = () => {}`
+  }
+
+  return `const ${options.functionName} = (fragment) => { const c = globalThis['${options.globalKey}']; if (Array.isArray(c)) c.push(fragment) }`
+}
+
 export async function prepareBaseFragments(
   cwd: string,
   config: ReferenceUIConfig
@@ -82,16 +97,45 @@ export async function createCollectorBundleFromBase(
 ): Promise<CollectorBundles> {
   const coreDir = resolveCorePackageDir(cwd)
   const internalPatternFiles = resolveInternalPatternFiles(coreDir)
-
-  return bundleCollectorRuntime({
+  const collectors = getBaseCollectors()
+  const internalPatternBundles = await bundleFragments({
     files: internalPatternFiles,
-    collectors: getBaseCollectors(),
     alias: getBaseFragmentBundleAlias(cwd),
-    prebundledFragments: [
-      ...prepared.upstreamFragments,
-      ...prepared.localFragmentBundles.map(({ bundle }) => bundle),
-    ],
   })
+
+  const collectorScripts = collectors.map((collector) => collector.toScript()).join('\n')
+  const globalCssCollector = collectors.find((collector) =>
+    isGlobalCssCollector(collector.config.targetFunction, collector.config.name)
+  )
+  const localRuntimeFunctions = collectors.map((collector) => collector.toRuntimeFunction()).join('\n')
+  const disableUpstreamGlobalCss = globalCssCollector
+    ? `globalThis['${globalCssCollector.config.globalKey}'] = undefined`
+    : ''
+  const restoreLocalGlobalCss = globalCssCollector
+    ? `globalThis['${globalCssCollector.config.globalKey}'] = []`
+    : ''
+  const values = collectors.map((collector) => ({
+    name: collector.config.name,
+    expression: collector.toGetter(),
+  }))
+
+  return {
+    collectorFragments: [
+      collectorScripts,
+      localRuntimeFunctions,
+      disableUpstreamGlobalCss,
+      ...prepared.upstreamFragments.map((bundle) => `;${bundle}`),
+      restoreLocalGlobalCss,
+      ...prepared.localFragmentBundles.map(({ bundle }) => `;${bundle}`),
+      ...internalPatternBundles.map(({ bundle }) => `;${bundle}`),
+    ]
+      .filter(Boolean)
+      .join('\n'),
+    values,
+    getValue(name: string) {
+      return values.find((value) => value.name === name)?.expression ?? '[]'
+    },
+  }
 }
 
 export function createPortableBaseFragmentBundle(prepared: PreparedBaseFragments): string {

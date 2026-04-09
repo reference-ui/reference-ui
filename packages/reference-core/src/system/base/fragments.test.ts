@@ -13,7 +13,6 @@ async function importFragmentsModule(options?: {
   const bundleFragments = vi.fn(async () =>
     options?.bundledFragments ?? [{ file: '/workspace/app/src/theme.ts', bundle: 'localOne()' }]
   )
-  const bundleCollectorRuntime = vi.fn(async () => options?.collectorBundle ?? { collectorFragments: 'bundledCollectors()' })
   const resolveCorePackageDir = vi.fn(() => options?.coreDir ?? '/workspace/core')
   const resolveInternalPatternFiles = vi.fn(() =>
     options?.internalPatternFiles ?? ['/workspace/core/src/system/panda/config/extensions/container/container.ts']
@@ -22,7 +21,6 @@ async function importFragmentsModule(options?: {
   vi.doMock('../../lib/fragments', () => ({
     scanForFragments,
     bundleFragments,
-    bundleCollectorRuntime,
   }))
   vi.doMock('../../lib/paths/core-package-dir', () => ({
     resolveCorePackageDir,
@@ -36,7 +34,6 @@ async function importFragmentsModule(options?: {
     ...mod,
     scanForFragments,
     bundleFragments,
-    bundleCollectorRuntime,
     resolveCorePackageDir,
     resolveInternalPatternFiles,
   }
@@ -128,17 +125,20 @@ describe('system/base/fragments', () => {
     })
   })
 
-  it('builds collector runtime with internal patterns and all prebundled fragments', async () => {
+  it('builds collector runtime that suppresses upstream globalCss and restores local globalCss', async () => {
     const {
       createCollectorBundleFromBase,
-      bundleCollectorRuntime,
+      bundleFragments,
       resolveInternalPatternFiles,
     } = await importFragmentsModule({
       internalPatternFiles: [
         '/workspace/core/src/system/panda/config/extensions/container/container.ts',
         '/workspace/core/src/system/panda/config/extensions/r/r.ts',
       ],
-      collectorBundle: { collectorFragments: 'collectorRuntime()' },
+      bundledFragments: [
+        { file: '/workspace/core/src/system/panda/config/extensions/container/container.ts', bundle: 'internalContainer()' },
+        { file: '/workspace/core/src/system/panda/config/extensions/r/r.ts', bundle: 'internalR()' },
+      ],
     })
 
     const result = await createCollectorBundleFromBase('/workspace/app', {
@@ -150,12 +150,11 @@ describe('system/base/fragments', () => {
     })
 
     expect(resolveInternalPatternFiles).toHaveBeenCalledWith('/workspace/core')
-    expect(bundleCollectorRuntime).toHaveBeenCalledWith({
+    expect(bundleFragments).toHaveBeenCalledWith({
       files: [
         '/workspace/core/src/system/panda/config/extensions/container/container.ts',
         '/workspace/core/src/system/panda/config/extensions/r/r.ts',
       ],
-      collectors: expect.any(Array),
       alias: {
         '@reference-ui/system': '/workspace/core/src/entry/system.ts',
         '@reference-ui/core/config': '/workspace/core/src/entry/system.ts',
@@ -165,9 +164,16 @@ describe('system/base/fragments', () => {
         '@reference-ui/styled/jsx': '/workspace/core/src/system/styled/jsx/index.js',
         '@reference-ui/styled/patterns/box': '/workspace/core/src/system/styled/patterns/box.js',
       },
-      prebundledFragments: ['upstreamOne()', 'upstreamTwo()', 'localOne()', 'localTwo()'],
     })
-    expect(result).toEqual({ collectorFragments: 'collectorRuntime()' })
+    expect(result.collectorFragments).toContain("globalThis['__refGlobalCssCollector'] = undefined")
+    expect(result.collectorFragments).toContain(';upstreamOne()')
+    expect(result.collectorFragments).toContain(';upstreamTwo()')
+    expect(result.collectorFragments).toContain("globalThis['__refGlobalCssCollector'] = []")
+    expect(result.collectorFragments).toContain(';localOne()')
+    expect(result.collectorFragments).toContain(';localTwo()')
+    expect(result.collectorFragments).toContain(';internalContainer()')
+    expect(result.collectorFragments).toContain(';internalR()')
+    expect(result.getValue('globalCss')).toContain("globalThis['__refGlobalCssCollector']")
   })
 
   it('creates a portable fragment bundle in stable upstream-then-local order', async () => {
