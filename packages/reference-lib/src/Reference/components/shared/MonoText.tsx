@@ -1,7 +1,7 @@
 import * as React from 'react'
-import { Code } from '@reference-ui/react'
+import { Code, StyleProps } from '@reference-ui/react'
 
-interface MonoTextProps {
+interface MonoTextProps extends StyleProps {
   children: React.ReactNode
   color?: React.ComponentProps<typeof Code>['color']
 }
@@ -13,9 +13,9 @@ const REFERENCE_CODE_RESET_CSS: any = {
   boxShadow: 'none',
 } as unknown as React.ComponentProps<typeof Code>['css']
 
-export function MonoText({ children, color = 'blue.200' }: MonoTextProps) {
+export function MonoText({ children, color = 'blue.200', ...styleProps }: MonoTextProps) {
   return (
-    <Code fontFamily="reference.mono" color={color} css={REFERENCE_CODE_RESET_CSS}>
+    <Code fontFamily="reference.mono" color={color} css={REFERENCE_CODE_RESET_CSS} {...styleProps}>
       {children}
     </Code>
   )
