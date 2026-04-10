@@ -135,11 +135,11 @@
         ],
         "usage": "very common",
         "examples": [
-          "<Button variant=\"ghost\" onClick={() => {}}>",
           "<Button variant=\"outline\" onClick={() => {}}>",
           "<Button variant=\"outline\" disabled>",
           "<Button variant=\"solid\" onClick={() => {}}>",
-          "<Button variant=\"ghost\">"
+          "<Button variant=\"ghost\">",
+          "<Button variant=\"solid\" size=\"sm\" onClick={() => {}}>"
         ],
         "usedWith": {
           "AppCard": "very common",

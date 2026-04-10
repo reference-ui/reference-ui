@@ -5,8 +5,9 @@
  * This file is mirrored into reference-core by tools/copy-reference-api-component.mjs.
  * Edit the reference-lib source, not this copy.
  */
-import { Div, H2, P, Small } from '@reference-ui/react'
+import { Div, H2, P } from '@reference-ui/react'
 import { formatReferenceTypeParameter, type ReferenceDocument } from '../../browser/component-api'
+import { MonoText } from '../components/shared/MonoText'
 
 type TitleRowProps = {
   name: string
@@ -60,9 +61,10 @@ function ReferenceDocumentHeaderGenericsLine({
   typeParameterDetails,
 }: GenericsLineProps) {
   return (
-    <Small color="reference.foreground">
-      Generics: {typeParameterDetails.map(formatReferenceTypeParameter).join(', ')}
-    </Small>
+    <Div color="reference.foreground">
+      <MonoText color="blue.200" mr="1r">Generics</MonoText>
+      {typeParameterDetails.map(formatReferenceTypeParameter).join(', ')}
+    </Div>
   )
 }
 
@@ -72,7 +74,12 @@ type ExtendsLineProps = {
 
 /** Renders base types / extends clause when present. */
 function ReferenceDocumentHeaderExtendsLine({ extendsNames }: ExtendsLineProps) {
-  return <Small color="reference.foreground">Extends: {extendsNames.join(', ')}</Small>
+  return (
+    <Div color="reference.foreground">
+      <MonoText color="blue.200" mr="1r">Extends</MonoText>
+      {extendsNames.join(', ')}
+    </Div>
+  )
 }
 
 export function ReferenceDocumentHeader({ document }: { document: ReferenceDocument }) {

@@ -9,14 +9,28 @@ import { useState, type ComponentProps, type CSSProperties } from 'react'
 import { Div, Small } from '@reference-ui/react'
 import type { ReferenceMemberDocument, ReferenceSymbolRef } from '../../browser/component-api'
 import { ReferenceMemberRow } from './ReferenceMemberRow'
+import { Divider } from './shared/Divider'
+import { MonoText } from './shared/MonoText'
 
 const COLLAPSIBLE_INHERITED_SECTION_THRESHOLD = 20
 const COLLAPSED_INHERITED_SECTION_MEMBER_COUNT = 10
 
-const memberListCss = {
+const memberRowsCss = {
+  '& > :last-child': {
+    borderBottomWidth: '0',
+  },
+} as ComponentProps<typeof Div>['css']
+
+const declaredMemberRowsCss = {
   borderTopWidth: '1px',
   borderTopStyle: 'solid',
   borderTopColor: 'reference.border',
+  ...memberRowsCss,
+} as ComponentProps<typeof Div>['css']
+
+const inheritedSectionCss = {
+  display: 'grid',
+  gap: 'reference.sm',
 } as ComponentProps<typeof Div>['css']
 
 const inheritedToggleButtonStyle: CSSProperties = {
@@ -66,18 +80,17 @@ function partitionMembers(members: ReferenceMemberDocument[]) {
 
 function ReferenceMemberRows({
   members,
-  showInheritedFrom = true,
+  css,
 }: {
   members: ReferenceMemberDocument[]
-  showInheritedFrom?: boolean
+  css?: ComponentProps<typeof Div>['css']
 }) {
   return (
-    <Div css={memberListCss}>
+    <Div css={css}>
       {members.map(member => (
         <ReferenceMemberRow
           key={member.id}
           member={member}
-          showInheritedFrom={showInheritedFrom}
         />
       ))}
     </Div>
@@ -94,23 +107,26 @@ function ReferenceInheritedMemberSection({ group }: { group: InheritedMemberGrou
   const hiddenMemberCount = group.members.length - visibleMembers.length
 
   return (
-    <Div display="grid" gap="reference.sm">
-      <Small color="reference.muted">
-        Inherited from {group.origin.name} ({group.members.length})
-      </Small>
-      <ReferenceMemberRows members={visibleMembers} showInheritedFrom={false} />
+    <Div css={inheritedSectionCss}>
+      <Divider marginBottom="reference.sm" />
+      <Div color="gray.100">
+        Inherited from <MonoText ml="1r"> {group.origin.name} ({group.members.length})</MonoText>
+      </Div>
+      
+
+      <ReferenceMemberRows members={visibleMembers} css={memberRowsCss} />
       {isCollapsible ? (
-        <Small color="reference.muted">
-          <button
-            type="button"
+        <Div color="gray.400" _hover={{color: 'gray.100'}}>
+          <Div
+            role="button"
             onClick={() => setIsExpanded(expanded => !expanded)}
             style={inheritedToggleButtonStyle}
           >
             {isExpanded
               ? 'Collapse inherited members'
               : `Show ${hiddenMemberCount} more inherited members`}
-          </button>
-        </Small>
+          </Div>
+        </Div>
       ) : null}
     </Div>
   )
@@ -128,7 +144,7 @@ export function ReferenceMemberList({ members }: { members: ReferenceMemberDocum
   return (
     <Div display="grid" gap="reference.lg">
       {declaredMembers.length > 0 ? (
-        <ReferenceMemberRows members={declaredMembers} showInheritedFrom={false} />
+        <ReferenceMemberRows members={declaredMembers} css={declaredMemberRowsCss} />
       ) : null}
       {inheritedGroups.map(group => (
         <ReferenceInheritedMemberSection key={group.origin.id} group={group} />

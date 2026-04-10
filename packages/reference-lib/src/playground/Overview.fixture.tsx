@@ -11,6 +11,8 @@ export default (
     boxShadow="lg"
     borderWidth="1px"
     borderColor="gray.200"
+    width="600px"
+    height="600px"
   >
     <Div display="flex" flexDirection="column" gap="2r">
       <Span fontSize="4xl" fontWeight="700" letterSpacing="tight" color="gray.950">
