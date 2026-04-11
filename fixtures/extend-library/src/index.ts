@@ -4,7 +4,7 @@
  *
  * Run `ref sync` in extend-library before using.
  */
-export { baseSystem } from '@reference-ui/system/baseSystem'
+export { baseSystem } from '../.reference-ui/system/baseSystem.mjs'
 export { DemoComponent } from './components/DemoComponent'
 export { LightDarkDemo } from './components/LightDarkDemo'
 export {

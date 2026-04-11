@@ -1,6 +1,7 @@
 /** High-level Vite plugin orchestration for Reference UI watch-mode refreshes. */
 
-import { getSyncSession, type SyncSession } from '../session'
+import { getSyncSession } from '../session'
+import { buildHotUpdatePayload } from './hot-updates'
 import { createManagedWriteBuffer } from './managed-writes'
 import { withManagedPackageExcludes } from './optimize'
 import { isManagedOutputFile } from './outputs'
@@ -8,9 +9,10 @@ import { resolveProjectPaths } from './project-paths'
 import { watchSyncSessionRefresh } from './sync-session'
 import type {
   ReferenceViteDevServer,
+  ReferenceViteHotUpdateContext,
   ReferenceViteOptions,
   ReferenceVitePlugin,
-  ReferenceViteProjectPaths,
+  ReferenceViteUserConfig,
 } from './types'
 
 export function referenceVite(options: ReferenceViteOptions = {}): ReferenceVitePlugin {
@@ -18,13 +20,12 @@ export function referenceVite(options: ReferenceViteOptions = {}): ReferenceVite
   const managedWrites = createManagedWriteBuffer()
   const getSession = options.internals?.getSyncSession ?? getSyncSession
   let server: ReferenceViteDevServer | null = null
-  let session: SyncSession | null = null
   let stopWatchingSessionRefresh: (() => void) | null = null
 
   return {
     name: 'reference-ui:vite',
 
-    config(userConfig: { optimizeDeps?: { exclude?: string[] } }): { optimizeDeps: { exclude: string[] } } {
+    config(userConfig: ReferenceViteUserConfig): { optimizeDeps: { exclude: string[] } } {
       return withManagedPackageExcludes(userConfig)
     },
 
@@ -32,13 +33,13 @@ export function referenceVite(options: ReferenceViteOptions = {}): ReferenceVite
       currentProjectPaths = resolveProjectPaths(config.root)
     },
 
-    configureServer(devServer: any) {
-      server = devServer as ReferenceViteDevServer
+    configureServer(devServer: ReferenceViteDevServer) {
+      server = devServer
       startWatchingSyncSessionRefresh()
       return stopWatchingViteSession
     },
 
-    handleHotUpdate(ctx: { file: string }) {
+    handleHotUpdate(ctx: ReferenceViteHotUpdateContext) {
       if (!isManagedOutputFile(ctx.file, currentProjectPaths.managedOutputRoots)) return
       managedWrites.remember(ctx.file)
       return []
@@ -48,21 +49,27 @@ export function referenceVite(options: ReferenceViteOptions = {}): ReferenceVite
   function startWatchingSyncSessionRefresh(): void {
     stopWatchingSessionRefresh?.()
 
-    const watcher = watchSyncSessionRefresh(getSession, currentProjectPaths, flushManagedWrites)
-    session = watcher.session
-    stopWatchingSessionRefresh = watcher.stop
+    stopWatchingSessionRefresh = watchSyncSessionRefresh(
+      getSession,
+      currentProjectPaths,
+      flushManagedWrites,
+    ).stop
   }
 
   function stopWatchingViteSession(): void {
     stopWatchingSessionRefresh?.()
     stopWatchingSessionRefresh = null
-    session = null
     server = null
     managedWrites.clear()
   }
 
   function flushManagedWrites(): void {
-    if (!server) return
-    managedWrites.flush(server)
+    const currentServer = server
+    if (!currentServer) return
+    managedWrites.flush((pendingFiles) => {
+      const payload = buildHotUpdatePayload(currentServer, pendingFiles)
+      if (!payload) return
+      currentServer.ws.send(payload)
+    })
   }
 }

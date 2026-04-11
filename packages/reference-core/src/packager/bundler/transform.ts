@@ -1,4 +1,5 @@
 import { build } from 'esbuild'
+import { writeFileAtomic } from '../../lib/fs/write-file-atomic'
 
 /**
  * Transform a TypeScript file to JavaScript
@@ -10,10 +11,9 @@ export async function transformTypeScriptFile(
   const finalDestPath = destPath.replace(/\.tsx?$/, match =>
     match === '.tsx' ? '.jsx' : '.js'
   )
-
-  await build({
+  const result = await build({
     entryPoints: [srcPath],
-    outfile: finalDestPath,
+    write: false,
     format: 'esm',
     platform: 'neutral',
     target: 'es2020',
@@ -23,4 +23,11 @@ export async function transformTypeScriptFile(
     sourcemap: false,
     logLevel: 'warning',
   })
+
+  const [outputFile] = result.outputFiles ?? []
+  if (!outputFile) {
+    throw new Error(`esbuild produced no output for ${srcPath}`)
+  }
+
+  writeFileAtomic(finalDestPath, outputFile.text, 'utf-8')
 }

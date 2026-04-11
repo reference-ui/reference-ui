@@ -1,5 +1,7 @@
 /** Shared constants for the Reference UI Vite integration. */
 
+export { DEFAULT_OUT_DIR, GENERATED_OUTPUT_ROOTS } from '../bundlers/constants'
+
 /**
  * Package ids that should stay out of Vite's dependency optimizer.
  *
@@ -23,13 +25,3 @@ export const MANAGED_PACKAGES = [
  * `virtual` so Vite ignores churn there until ref sync reports a logical ready
  * state.
  */
-export const GENERATED_OUTPUT_ROOTS = [
-  'react',
-  'system',
-  'styled',
-  'types',
-  'mcp',
-  'virtual',
-] as const
-
-export const DEFAULT_OUT_DIR = '.reference-ui'

@@ -54,6 +54,8 @@ test.describe('token-sync-watch', () => {
     let colorB = randomHexColor()
     while (colorB === colorA) colorB = randomHexColor()
 
+    await page.goto(testRoutes.tokenSyncWatch)
+
     // Helper: navigate to the test page, read the latest generated CSS from
     // disk, extract the token variable value, and apply it via an inline style
     // on :root (highest cascade priority). This bypasses Vite's stale module
@@ -65,7 +67,6 @@ test.describe('token-sync-watch', () => {
     // this test's ready signal and vice-versa — each poll reads the CSS file
     // fresh from disk, giving an independent and unambiguous completion check.
     async function fetchCurrentColor(): Promise<string> {
-      await page.goto(testRoutes.tokenSyncWatch)
       const el = page.getByTestId('token-sync-watch')
       await expect(el).toBeVisible({ timeout: 5_000 })
       // Read the generated CSS file from disk (always fresh — written by packager).

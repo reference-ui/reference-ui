@@ -1,32 +1,40 @@
 /** Internal type surface for the Reference UI Vite integration. */
 
-import type { GetSyncSessionOptions, SyncSession } from '../session'
+import type {
+  ReferenceBundlerOptions,
+  ReferenceProjectPaths,
+  ReferenceSyncSessionReader,
+} from '../bundlers/types'
 
-export type ReferenceViteSyncSessionReader = (options: GetSyncSessionOptions) => SyncSession
+export type ReferenceViteSyncSessionReader = ReferenceSyncSessionReader
 
-export interface ReferenceViteInternals {
-  getSyncSession?: ReferenceViteSyncSessionReader
+export type ReferenceViteInternals = NonNullable<ReferenceBundlerOptions['internals']>
+
+export type ReferenceViteOptions = ReferenceBundlerOptions
+
+export interface ReferenceViteUserConfig {
+  optimizeDeps?: { exclude?: string[] }
 }
 
-export interface ReferenceViteOptions {
-  internals?: ReferenceViteInternals
+export interface ReferenceViteResolvedConfig {
+  root: string
+}
+
+export interface ReferenceViteHotUpdateContext {
+  file: string
 }
 
 export interface ReferenceVitePlugin {
   name: string
-  config?: (userConfig: any) => {
+  config?: (userConfig: ReferenceViteUserConfig) => {
     optimizeDeps: { exclude: string[] }
   }
-  configResolved?: (config: any) => void
-  configureServer?: (devServer: any) => (() => void) | void
-  handleHotUpdate?: (ctx: any) => [] | void | Promise<[] | void>
+  configResolved?: (config: ReferenceViteResolvedConfig) => void
+  configureServer?: (devServer: ReferenceViteDevServer) => (() => void) | void
+  handleHotUpdate?: (ctx: ReferenceViteHotUpdateContext) => [] | void | Promise<[] | void>
 }
 
-export interface ReferenceViteProjectPaths {
-  projectRoot: string
-  outDir: string
-  managedOutputRoots: Set<string>
-}
+export type ReferenceViteProjectPaths = ReferenceProjectPaths
 
 export interface ReferenceViteUpdate {
   type: 'js-update' | 'css-update'
