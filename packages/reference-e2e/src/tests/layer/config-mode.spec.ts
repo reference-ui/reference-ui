@@ -6,6 +6,7 @@ import { colors } from '@reference-ui/lib/theme'
 import {
   addToConfig,
   getSandboxDir,
+  resetConfig,
   type ConfigAdditions,
 } from '../../environments/lib/config'
 import { runRefSync } from '../../environments/lib/ref-sync'
@@ -56,6 +57,13 @@ async function snapshotLayerCss(name: string): Promise<string> {
 }
 
 test.describe.serial('layer', () => {
+  test.afterAll(async () => {
+    await resetConfig()
+    await runRefSync(sandboxDir)
+    activeConfigKey = null
+    syncedConfigKey = null
+  })
+
   test('addToConfig with layers only writes valid ui.config.ts', async () => {
     await addToConfig(DEFAULT_LAYER_CONFIG)
     activeConfigKey = JSON.stringify(DEFAULT_LAYER_CONFIG)
@@ -67,6 +75,7 @@ test.describe.serial('layer', () => {
 
   test.describe('with default layer config', () => {
     test.beforeAll(async () => {
+      test.setTimeout(60_000)
       // Lib is already synced by test:prepare; only sandbox needs sync after config change.
       await applyLayerConfig(DEFAULT_LAYER_CONFIG)
     })

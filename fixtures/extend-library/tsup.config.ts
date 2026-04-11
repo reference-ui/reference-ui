@@ -4,6 +4,14 @@ export default defineConfig({
   entry: {
     index: 'src/index.ts',
   },
+  external: [
+    'react',
+    'react/jsx-runtime',
+    '@reference-ui/react',
+    '@reference-ui/react/*',
+    '@reference-ui/system',
+    '@reference-ui/system/*',
+  ],
   format: ['esm'],
   dts: true,
   splitting: false,

@@ -21,6 +21,7 @@ export const MANIFEST = [
   'tsconfig.json',
   'ui.config.ts',
   'vite.config.ts',
+  'webpack.config.cjs',
   'tests/TokensTest.tsx',
   'tests/ColorModeTest.tsx',
   'tests/SyncWatch.tsx',

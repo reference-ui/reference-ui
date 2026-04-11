@@ -23,8 +23,25 @@ function expectVisibleText(text: string | RegExp) {
   expect(screen.getAllByText(text, options).length).toBeGreaterThanOrEqual(1)
 }
 
+function expectVisibleTextContent(text: string | RegExp) {
+  const matcher = typeof text === 'string'
+    ? (content: string) => content.includes(text)
+    : (content: string) => text.test(content)
+
+  expect(
+    screen.getAllByText((_, element) => {
+      const content = normalizeVisibleText(element?.textContent ?? '')
+      return content.length > 0 && matcher(content)
+    }).length,
+  ).toBeGreaterThanOrEqual(1)
+}
+
 function expectTextAbsent(text: string | RegExp) {
   expect(screen.queryByText(text)).not.toBeInTheDocument()
+}
+
+function normalizeVisibleText(text: string): string {
+  return text.replace(/\s+/g, ' ').trim()
 }
 
 describe('Reference component', () => {
@@ -154,15 +171,15 @@ describe('Reference component', () => {
 
     expect(screen.getByText('DocsReferenceSplitButtonProps')).toBeInTheDocument()
     expect(screen.getByText('Interface')).toBeInTheDocument()
-    expectVisibleText('Extends: DocsReferenceButtonProps, DocsReferencePressableProps')
+    expectVisibleTextContent(/Extends\s*DocsReferenceButtonProps, DocsReferencePressableProps/)
     expectVisibleText('label')
     expectVisibleText('controlId')
     expectVisibleText('interactionRole')
     expectVisibleText('announceLabel')
     expectVisibleText('hasMenu')
-    expectVisibleText('from DocsReferenceButtonProps')
-    expectVisibleText('from DocsReferencePressableProps')
-    expectVisibleText('from DocsReferenceControlBaseProps')
+    expectVisibleTextContent(/Inherited from\s*DocsReferenceButtonProps\s*\(\d+\)/)
+    expectVisibleTextContent(/Inherited from\s*DocsReferencePressableProps\s*\(\d+\)/)
+    expectVisibleTextContent(/Inherited from\s*DocsReferenceControlBaseProps\s*\(\d+\)/)
     expectVisibleText('lg')
   })
 
@@ -171,7 +188,7 @@ describe('Reference component', () => {
 
     expect(screen.getByText('DocsReferenceAsyncState')).toBeInTheDocument()
     expect(screen.getByText('Interface')).toBeInTheDocument()
-    expectVisibleText('Generics: TData extends string = DocsReferenceButtonVariant')
+    expectVisibleTextContent(/Generics\s*TData extends string = DocsReferenceButtonVariant/)
     expectVisibleText('status')
     expectVisibleText('data')
     expect(screen.getByText('Union')).toBeInTheDocument()

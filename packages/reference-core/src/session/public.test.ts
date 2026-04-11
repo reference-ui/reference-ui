@@ -15,6 +15,16 @@ const BASE_MANIFEST: SessionManifest = {
   updatedAt: '2026-01-01T00:00:01.000Z',
 }
 
+async function waitForCallCount(calls: unknown[], expectedCount: number, timeout = 1_000): Promise<void> {
+  const deadline = Date.now() + timeout
+  while (Date.now() < deadline) {
+    if (calls.length >= expectedCount) return
+    await new Promise(r => setTimeout(r, 25))
+  }
+
+  throw new Error(`Timed out waiting for ${expectedCount} refresh call(s); saw ${calls.length}`)
+}
+
 let rootDir: string
 let outDir: string
 
@@ -87,8 +97,7 @@ describe('getSyncSession – onRefresh', () => {
     // Simulate a ref sync writing ready state.
     writeManifest(outDir, { ...BASE_MANIFEST, buildState: 'ready' })
 
-    // Give the fs.watch callback time to fire.
-    await new Promise(r => setTimeout(r, 200))
+    await waitForCallCount(calls, 1)
 
     expect(calls.length).toBeGreaterThan(0)
     expect((calls[0] as { changedOutputs: string[] }).changedOutputs).toEqual([])
@@ -104,7 +113,7 @@ describe('getSyncSession – onRefresh', () => {
     session.onRefresh(e => calls.push(e))
 
     writeManifest(outDir, { ...BASE_MANIFEST, buildState: 'ready' })
-    await new Promise(r => setTimeout(r, 200))
+    await waitForCallCount(calls, 1)
     const firstCount = calls.length
 
     // Second write with ready — should not fire again (same state).
@@ -125,7 +134,7 @@ describe('getSyncSession – onRefresh', () => {
 
     // First ready
     writeManifest(outDir, { ...BASE_MANIFEST, buildState: 'ready' })
-    await new Promise(r => setTimeout(r, 200))
+    await waitForCallCount(calls, 1)
 
     // Back to idle
     writeManifest(outDir, { ...BASE_MANIFEST, buildState: 'idle' })

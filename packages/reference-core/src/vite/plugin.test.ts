@@ -4,8 +4,9 @@ import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { GetSyncSessionOptions, RefreshEvent, SyncSession } from '../session'
+import type { RefreshEvent, SyncSession } from '../session'
 import { referenceVite } from './plugin'
+import type { ReferenceVitePlugin } from './types'
 
 describe('referenceUiVitePlugin', () => {
   afterEach(() => {
@@ -48,70 +49,30 @@ describe('referenceUiVitePlugin', () => {
     writeFileSync(join(cwd, '.reference-ui', 'react', 'react.mjs'), 'export {}\n')
 
     const sends: UpdateEvent[] = []
-    const dispose = vi.fn()
-    let refreshHandler: ((event: RefreshEvent) => void) | undefined
-
-    const session: SyncSession = {
-      onRefresh(handler) {
-        refreshHandler = handler
-        return () => {
-          if (refreshHandler === handler) {
-            refreshHandler = undefined
-          }
-        }
-      },
-      dispose,
-    }
+    const { dispose, emitRefresh, session } = createTestSession()
 
     const module = {
       url: '/@fs/react.mjs',
-      type: 'js',
+      type: 'js' as const,
     }
 
     const invalidateModule = vi.fn()
-
-    const plugin = referenceVite({
-      internals: {
-        getSyncSession: (_options: GetSyncSessionOptions) => session,
-      },
+    const { plugin, teardown } = setupManagedVitePlugin({
+      cwd,
+      invalidateModule,
+      module,
+      sends,
+      session,
     })
-    plugin.configResolved?.({ root: cwd } as never)
 
-    const teardown = plugin.configureServer?.({
-      ws: {
-        send(payload: UpdateEvent) {
-          sends.push(payload)
-        },
-      },
-      moduleGraph: {
-        getModulesByFile(file: string) {
-          if (file === `${cwd}/.reference-ui/react/react.mjs`) {
-            return new Set([module])
-          }
-          return undefined
-        },
-        invalidateModule,
-      },
-    } as never)
-
-    const firstUpdate = await plugin.handleHotUpdate?.({
-      file: `${cwd}/.reference-ui/react/react.mjs`,
-    } as never)
-    const secondUpdate = await plugin.handleHotUpdate?.({
-      file: `${cwd}/.reference-ui/styled/styles.css`,
-    } as never)
-    const thirdUpdate = await plugin.handleHotUpdate?.({
-      file: `${cwd}/.reference-ui/types/types.mjs`,
-    } as never)
+    const [firstUpdate, secondUpdate, thirdUpdate] = await triggerManagedOutputUpdates(plugin, cwd)
 
     expect(firstUpdate).toEqual([])
     expect(secondUpdate).toEqual([])
     expect(thirdUpdate).toEqual([])
     expect(sends).toEqual([])
 
-    if (refreshHandler) {
-      refreshHandler({ changedOutputs: [] })
-    }
+    emitRefresh()
 
     expect(sends).toEqual([
       {
@@ -128,9 +89,7 @@ describe('referenceUiVitePlugin', () => {
     ])
     expect(invalidateModule).toHaveBeenCalledTimes(1)
 
-    if (refreshHandler) {
-      refreshHandler({ changedOutputs: [] })
-    }
+    emitRefresh()
 
     expect(sends).toHaveLength(1)
 
@@ -147,4 +106,80 @@ interface UpdateEvent {
     acceptedPath: string
     timestamp: number
   }>
+}
+
+async function triggerManagedOutputUpdates(plugin: ReferenceVitePlugin, cwd: string) {
+  return Promise.all([
+    plugin.handleHotUpdate?.({
+      file: `${cwd}/.reference-ui/react/react.mjs`,
+    } as never),
+    plugin.handleHotUpdate?.({
+      file: `${cwd}/.reference-ui/styled/styles.css`,
+    } as never),
+    plugin.handleHotUpdate?.({
+      file: `${cwd}/.reference-ui/types/types.mjs`,
+    } as never),
+  ])
+}
+
+function setupManagedVitePlugin(options: {
+  cwd: string
+  invalidateModule: ReturnType<typeof vi.fn>
+  module: { url: string; type: 'js' }
+  sends: UpdateEvent[]
+  session: SyncSession
+}): { plugin: ReferenceVitePlugin; teardown: (() => void) | void } {
+  const plugin = referenceVite({
+    internals: {
+      getSyncSession: () => options.session,
+    },
+  })
+  plugin.configResolved?.({ root: options.cwd } as never)
+
+  return {
+    plugin,
+    teardown: plugin.configureServer?.({
+      ws: {
+        send(payload: UpdateEvent) {
+          options.sends.push(payload)
+        },
+      },
+      moduleGraph: {
+        getModulesByFile(file: string) {
+          if (file === `${options.cwd}/.reference-ui/react/react.mjs`) {
+            return new Set([options.module])
+          }
+          return undefined
+        },
+        invalidateModule: options.invalidateModule,
+      },
+    } as never),
+  }
+}
+
+function createTestSession(): {
+  dispose: ReturnType<typeof vi.fn>
+  emitRefresh(): void
+  session: SyncSession
+} {
+  const dispose = vi.fn()
+  let refreshHandler: ((event: RefreshEvent) => void) | undefined
+
+  return {
+    dispose,
+    emitRefresh(): void {
+      refreshHandler?.({ changedOutputs: [] })
+    },
+    session: {
+      onRefresh(handler) {
+        refreshHandler = handler
+        return () => {
+          if (refreshHandler === handler) {
+            refreshHandler = undefined
+          }
+        }
+      },
+      dispose,
+    },
+  }
 }

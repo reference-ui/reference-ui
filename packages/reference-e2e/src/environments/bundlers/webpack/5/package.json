@@ -1,0 +1,25 @@
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "webpack --config webpack.config.cjs"
+  },
+  "dependencies": {
+    "@fixtures/extend-library": "__REF_TEST_EXTEND_FIXTURE_PATH__",
+    "@reference-ui/core": "__REF_TEST_CORE_PATH__",
+    "@reference-ui/lib": "__REF_TEST_LIB_PATH__",
+    "react": "__REF_TEST_REACT_VERSION__",
+    "react-dom": "__REF_TEST_REACT_VERSION__",
+    "scheduler": "0.23.2"
+  },
+  "devDependencies": {
+    "css-loader": "7.1.2",
+    "html-webpack-plugin": "5.6.3",
+    "style-loader": "4.0.0",
+    "ts-loader": "9.5.2",
+    "typescript": "~5.9.3",
+    "webpack": "__REF_TEST_WEBPACK_VERSION__",
+    "webpack-cli": "6.0.1",
+    "webpack-dev-server": "__REF_TEST_WEBPACK_DEV_SERVER_VERSION__"
+  }
+}

@@ -11,7 +11,14 @@ import { basename, join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { execa } from 'execa'
 
-import { MATRIX, getReactVersion, getViteVersion, getPort } from '../matrix/index'
+import {
+  MATRIX,
+  getPort,
+  getReactVersion,
+  getViteVersion,
+  getWebpackDevServerVersion,
+  getWebpackVersion,
+} from '../matrix/index'
 import type { MatrixEntry } from '../matrix/index'
 import { composeSandbox } from '../environments/manifest'
 
@@ -133,6 +140,8 @@ function interpolateTemplate(
 async function buildPackageJson(entry: MatrixEntry, sandboxDir: string): Promise<object> {
   const reactVersion = getReactVersion(entry)
   const viteVersion = getViteVersion(entry)
+  const webpackVersion = getWebpackVersion(entry)
+  const webpackDevServerVersion = getWebpackDevServerVersion(entry)
   const rawTemplate = JSON.parse(
     await readFile(join(sandboxDir, 'package.json'), 'utf-8')
   ) as Record<string, unknown>
@@ -142,6 +151,8 @@ async function buildPackageJson(entry: MatrixEntry, sandboxDir: string): Promise
     __REF_TEST_LIB_PATH__: `link:${LIB_PATH}`,
     __REF_TEST_REACT_VERSION__: reactVersion,
     __REF_TEST_VITE_VERSION__: viteVersion,
+    __REF_TEST_WEBPACK_VERSION__: webpackVersion,
+    __REF_TEST_WEBPACK_DEV_SERVER_VERSION__: webpackDevServerVersion,
   }) as Record<string, unknown>
   const scripts = { ...(template.scripts as Record<string, string> | undefined) }
 
@@ -150,9 +161,19 @@ async function buildPackageJson(entry: MatrixEntry, sandboxDir: string): Promise
     name: `ref-test-sandbox-${entry.name}`,
     scripts: {
       ...scripts,
-      dev: `ref sync --watch >> ref-sync.log 2>&1 & vite --port ${getPort(entry)}`,
+      dev: getBundlerDevCommand(entry),
     },
   }
+}
+
+function getBundlerDevCommand(entry: MatrixEntry): string {
+  const port = getPort(entry)
+
+  if (entry.bundler === 'webpack') {
+    return `ref sync --watch >> ref-sync.log 2>&1 & webpack serve --config webpack.config.cjs --port ${port}`
+  }
+
+  return `ref sync --watch >> ref-sync.log 2>&1 & vite --port ${port}`
 }
 
 async function ensureWorkspaceReady(): Promise<void> {

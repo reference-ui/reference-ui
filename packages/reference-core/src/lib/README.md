@@ -10,6 +10,7 @@ wrapping.
 ## Modules
 
 - `event-bus`: cross-thread event transport built on `BroadcastChannel`
+- `fs`: small filesystem helpers such as atomic file writes for generated artifacts
 - `fragments`: generic fragment scanning, bundling, execution, and collection
 - `log`: internal console logger with debug gating from config
 - `microbundle`: small esbuild wrapper for in-memory bundling

@@ -1,6 +1,7 @@
-import { cpSync, existsSync, mkdirSync } from 'node:fs'
-import { dirname, resolve } from 'node:path'
+import { existsSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { bundleWithEsbuild } from './esbuild'
+import { copyFileAtomically } from './files'
 import { getEntryBasename } from '../layout'
 import type { BundleOptions } from './types'
 
@@ -23,6 +24,5 @@ export async function copyEntry(options: BundleOptions): Promise<void> {
     return
   }
 
-  mkdirSync(dirname(destPath), { recursive: true })
-  cpSync(entrySource, destPath)
+  copyFileAtomically(entrySource, destPath)
 }
