@@ -1,3 +1,5 @@
+/** Focused tests for the Reference UI Vite integration's package and HMR behavior. */
+
 import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
@@ -26,6 +28,18 @@ describe('referenceUiVitePlugin', () => {
         ],
       },
     })
+  })
+
+  it('treats generated non-package outputs like virtual as managed HMR roots', async () => {
+    const cwd = mkdtempSync(join(tmpdir(), 'ref-vite-plugin-'))
+    const plugin = referenceVite()
+    plugin.configResolved?.({ root: cwd } as never)
+
+    const result = await plugin.handleHotUpdate?.({
+      file: `${cwd}/.reference-ui/virtual/src/example.tsx`,
+    } as never)
+
+    expect(result).toEqual([])
   })
 
   it('coalesces rapid managed-output writes into one hot update after sync ready', async () => {

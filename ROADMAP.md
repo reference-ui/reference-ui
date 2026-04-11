@@ -2,7 +2,7 @@
 
 ---
 
-## API Tables _(final hardening)_
+## API Tables _(final hardening)_ [DONE]
 
 Core table rendering and Tasty hardening are done. Remaining items before this is considered complete:
 
@@ -20,17 +20,6 @@ The MCP server is at final stages. Remaining items:
 - [ ] Confirm Rust module boundaries — ensure the generated server module is self-contained and does not bleed into Reference internals
 
 ---
-
-## Release: CLI / reference-core
-
-First-class public release of `reference-core` (CLI + scanner + pipeline) as a standalone consumable package.
-
-- [ ] Agree on public API surface — what is exported, what is internal
-- [ ] Semver tagging strategy — decide on 0.x vs 1.0 threshold and what constitutes a breaking change
-- [ ] Set up npm publish pipeline — CI step that gates publish on passing tests
-- [ ] Write a changelog / release notes for the initial cut
-- [ ] Smoke test suite — minimal integration test that can run in CI against a real project fixture before publish
-- [ ] Public-facing documentation — installation, basic usage, config reference
 
 ---
 
@@ -63,7 +52,7 @@ The internal event bus / state machine currently relies on `console.log` for obs
 
 ---
 
-## Vite Integration
+## Vite Integration [DONE]
 
 **Goal:** One coherent client update per logical change — avoid HMR storms while `ref sync --watch` is still writing (Panda, packager, declarations).
 
@@ -88,3 +77,16 @@ The internal event bus / state machine currently relies on `console.log` for obs
 - [ ] Error with a clear message when config is malformed (currently likely a raw exception)
 - [ ] Audit other silent failure points and add structured diagnostics throughout the pipeline
 - [ ] Centralise all user-facing messages — consistent format, severity levels, and actionable hints
+
+
+
+## Release: CLI / reference-core
+
+First-class public release of `reference-core` (CLI + scanner + pipeline) as a standalone consumable package.
+
+- [ ] Agree on public API surface — what is exported, what is internal
+- [ ] Semver tagging strategy — decide on 0.x vs 1.0 threshold and what constitutes a breaking change
+- [ ] Set up npm publish pipeline — CI step that gates publish on passing tests
+- [ ] Write a changelog / release notes for the initial cut
+- [ ] Smoke test suite — minimal integration test that can run in CI against a real project fixture before publish
+- [ ] Public-facing documentation — installation, basic usage, config reference
