@@ -194,11 +194,11 @@ describe('tasty runtime', () => {
     ])
   })
 
-  it('still rejects ambiguous bare-name lookup when user symbols are involved', async () => {
+  it('prefers a unique user symbol over external bare-name matches', async () => {
     const api = createTastyApiFromManifest({
       manifest: {
         version: '2',
-        warnings: ['Duplicate symbol name "Shared" matched 2 entries.'],
+        warnings: [],
         symbolsByName: {
           Shared: ['_user', '_beta'],
         },
@@ -248,9 +248,18 @@ describe('tasty runtime', () => {
       },
     })
 
-    await expect(api.loadSymbolByName('Shared')).rejects.toThrow(
-      'Ambiguous symbol name "Shared"'
-    )
+    await expect(api.loadSymbolByName('Shared')).resolves.toMatchObject({
+      getId: expect.any(Function),
+      getLibrary: expect.any(Function),
+    })
+
+    const shared = await api.loadSymbolByName('Shared')
+    const beta = await api.loadSymbolByScopedName('beta-lib', 'Shared')
+
+    expect(shared.getId()).toBe('_user')
+    expect(shared.getLibrary()).toBe('user')
+    expect(beta.getId()).toBe('_beta')
+    expect(api.getWarnings()).toEqual([])
   })
 
   it('prefers configured external libraries for known duplicate names', async () => {
