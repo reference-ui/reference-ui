@@ -1,6 +1,7 @@
 import { getConfig } from '../../config/store'
 import { timestamp, warnRefSync } from './console-write'
 import { dispatchLogEntry } from './dispatch'
+import type { LogLevel } from './events'
 import { closeLogRelay, initLogRelay } from './relay'
 
 type LogFn = (...args: unknown[]) => void
@@ -32,6 +33,20 @@ log.error = (...args: unknown[]) => {
 log.debug = (module: string, ...args: unknown[]) => {
   if (!getConfig()?.debug) return
   dispatchLogEntry({ level: 'debug', module, args, timestamp: timestamp() })
+}
+
+export function emitLog(
+  level: Exclude<LogLevel, 'debug'>,
+  args: unknown[],
+  options: { module?: string; label?: string; badge?: string } = {}
+): void {
+  dispatchLogEntry({
+    level,
+    args,
+    module: options.module,
+    label: options.label,
+    badge: options.badge,
+  })
 }
 
 export { log, warnRefSync, initLogRelay, closeLogRelay }

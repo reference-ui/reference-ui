@@ -19,9 +19,24 @@ const STYLED_DIR = join(CORE_ROOT, 'src/system/styled')
 const PANDA_CONFIG_PATH = join(STYLED_DIR, 'panda.config.ts')
 const systemEntry = join(CORE_ROOT, 'src/entry/system.ts')
 
+async function runWithSuppressedPandaLogs<T>(run: () => Promise<T>): Promise<T> {
+  const originalLog = console.log
+  const originalInfo = console.info
+
+  console.log = () => {}
+  console.info = () => {}
+
+  try {
+    return await run()
+  } finally {
+    console.log = originalLog
+    console.info = originalInfo
+  }
+}
+
 async function runPandaCodegen(): Promise<void> {
   console.log('[build:styled] Running Panda codegen...')
-  await pandaGenerate({ cwd: STYLED_DIR }, PANDA_CONFIG_PATH)
+  await runWithSuppressedPandaLogs(() => pandaGenerate({ cwd: STYLED_DIR }, PANDA_CONFIG_PATH))
   console.log('[build:styled] Panda codegen complete')
 }
 
