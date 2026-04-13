@@ -2,7 +2,6 @@ import { test, expect } from '@playwright/test'
 import { writeFile, unlink, readFile } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { existsSync } from 'node:fs'
 import { getSandboxDir } from '../../environments/lib/config'
 import { testRoutes } from '../../environments/base/routes'
 
@@ -56,26 +55,16 @@ test.describe('token-sync-watch', () => {
 
     await page.goto(testRoutes.tokenSyncWatch)
 
-    // Helper: navigate to the test page, read the latest generated CSS from
-    // disk, extract the token variable value, and apply it via an inline style
-    // on :root (highest cascade priority). This bypasses Vite's stale module
-    // cache for @reference-ui/react/styles.css and verifies that ref sync
-    // correctly wrote the updated token value to the CSS output file.
-    //
-    // We poll this directly rather than using waitForRefSyncReady so that
-    // concurrent watch tests (e.g. sync-watch) cannot accidentally consume
-    // this test's ready signal and vice-versa — each poll reads the CSS file
-    // fresh from disk, giving an independent and unambiguous completion check.
+    // Read the latest generated CSS from disk, extract the token variable
+    // value, and apply it as an inline override on :root. This verifies the
+    // packager output directly without depending on console logs.
     async function fetchCurrentColor(): Promise<string> {
       const el = page.getByTestId('token-sync-watch')
       await expect(el).toBeVisible({ timeout: 5_000 })
-      // Read the generated CSS file from disk (always fresh — written by packager).
       const freshCss = await readFile(
         join(sandboxDir, '.reference-ui', 'react', 'styles.css'),
         'utf-8',
       )
-      // Extract the --colors-watch-sync-primary value and set it as an inline
-      // style on :root. Inline styles override @layer rules in the cascade.
       const match = freshCss.match(/--colors-watch-sync-primary:\s*([^;]+)/)
       if (match) {
         await page.evaluate((val) => {
@@ -85,14 +74,13 @@ test.describe('token-sync-watch', () => {
       return el.evaluate((e) => getComputedStyle(e).color)
     }
 
-    // Write initial token file and poll until ref sync has regenerated the CSS
-    // with colorA. No ready signal needed — fetchCurrentColor reads disk directly.
+    // Write initial token file and poll the generated CSS until the token value
+    // is reflected in output.
     await writeFile(tokenFilePath, buildTokensContent(colorA))
     await expect
       .poll(() => fetchCurrentColor(), { timeout: 60_000, intervals: [2_000] })
       .toBe(hexToRgb(colorA))
 
-    // Update the token value and poll until colorB is reflected.
     const t0 = Date.now()
     await writeFile(tokenFilePath, buildTokensContent(colorB))
     await expect

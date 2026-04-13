@@ -4,7 +4,7 @@ import { baseSystem } from '@fixtures/extend-library'
 export default defineConfig({
   name: 'reference-e2e',
   include: ['**/*.{ts,tsx}'],
-  debug: true,
+  debug: false,
   skipTypescript: true,
   extends: [baseSystem],
 })

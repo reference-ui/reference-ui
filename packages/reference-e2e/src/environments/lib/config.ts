@@ -13,7 +13,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const BASE_CONFIG = {
   name: 'reference-e2e',
   include: ['**/*.{ts,tsx}'] as const,
-  debug: true,
+  debug: false,
   skipTypescript: true,
 } as const
 
