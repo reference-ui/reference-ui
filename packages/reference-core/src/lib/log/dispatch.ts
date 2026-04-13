@@ -7,11 +7,15 @@ export function dispatchLogEntry(entry: {
   level: LogLevel
   args: unknown[]
   module?: string
+  label?: string
+  badge?: string
   timestamp?: string
 }): void {
   if (isMainThread) {
     writeLogEntry(entry.level, entry.args, {
       module: entry.module,
+      label: entry.label,
+      badge: entry.badge,
       timestamp: entry.timestamp,
     })
     return

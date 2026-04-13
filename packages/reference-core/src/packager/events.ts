@@ -1,5 +1,10 @@
 import type { TsPackagerCompletionEvent } from './ts/types'
 
+export interface PackagerBundleCompletePayload {
+  packageCount: number
+  durationMs: number
+}
+
 export type PackagerEvents = {
   // Triggers
 
@@ -23,7 +28,7 @@ export type PackagerEvents = {
   'packager-ts:ready': Record<string, never>
 
   /** Runtime bundle phase complete (react/system/styled written to outDir) */
-  'packager:runtime:complete': Record<string, never>
+  'packager:runtime:complete': PackagerBundleCompletePayload
 
   /** Runtime declarations are needed for the current bundle state */
   'packager-ts:runtime:requested': Record<string, never>
@@ -32,7 +37,7 @@ export type PackagerEvents = {
   'packager-ts:runtime:complete': Record<string, never>
 
   /** Bundle complete (packages written to outDir) */
-  'packager:complete': Record<string, never>
+  'packager:complete': PackagerBundleCompletePayload
 
   /** Final declarations are needed for the current bundle state */
   'packager-ts:final:requested': Record<string, never>

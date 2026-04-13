@@ -1,7 +1,7 @@
 import pc from 'picocolors'
 import { getConfig } from '../../config/store'
 import type { LogLevel } from './events'
-import { formatTransportArg } from './serialize-args'
+import { formatBrandPrefix, formatDimTag, normalizeLogArgs } from './presentation'
 
 export function timestamp(): string {
   const now = new Date()
@@ -12,44 +12,57 @@ export function timestamp(): string {
   return `${h}:${m}:${s}.${ms}`
 }
 
-function formatOriginPart(entry: {
-  source?: 'worker'
-  threadId?: number
-}): string | undefined {
-  if (entry.source !== 'worker' || typeof entry.threadId !== 'number') return undefined
-  return pc.dim(`[worker:${entry.threadId}]`)
-}
+function emitStandard(
+  level: Exclude<LogLevel, 'debug'>,
+  originArgs: unknown[],
+  args: unknown[],
+  options: { module?: string; label?: string; badge?: string }
+): void {
+  const normalized = normalizeLogArgs(args, options)
+  const prefix: unknown[] = [
+    formatBrandPrefix(level, {
+      badge: options.badge,
+    }),
+    ...originArgs,
+  ]
 
-/** Orange (256-color) for warnings; respects NO_COLOR via picocolors. */
-function warnOrange(text: string): string {
-  if (!pc.isColorSupported) return text
-  return `\x1b[38;5;208m${text}\x1b[39m`
-}
+  if (normalized.module) {
+    prefix.push(formatDimTag(normalized.module))
+  }
 
-function formatWarnLine(args: unknown[]): string {
-  return args
-    .map(arg => (typeof arg === 'string' ? arg : formatTransportArg(arg)))
-    .join(' ')
-}
+  if (normalized.label) {
+    prefix.push(formatDimTag(normalized.label))
+  }
 
-function emitWarn(originArgs: unknown[], args: unknown[]): void {
-  console.warn(...originArgs, warnOrange(`[ref sync] ${formatWarnLine(args)}`))
-}
+  if (level === 'error') {
+    console.error(...prefix, ...normalized.args)
+    return
+  }
 
-function emitError(originArgs: unknown[], args: unknown[]): void {
-  const colored = args.map(arg => (typeof arg === 'string' ? pc.red(arg) : arg))
-  console.error(pc.red('error'), ...originArgs, ...colored)
+  if (level === 'warn') {
+    console.warn(...prefix, ...normalized.args)
+    return
+  }
+
+  console.log(...prefix, ...normalized.args)
 }
 
 function emitDebug(
   originArgs: unknown[],
   args: unknown[],
-  options: { module?: string; timestamp?: string }
+  options: { module?: string; label?: string; badge?: string; timestamp?: string }
 ): void {
   if (!getConfig()?.debug) return
+  const normalized = normalizeLogArgs(args, { module: options.module, label: options.label })
   const timePart = pc.dim('[' + (options.timestamp ?? timestamp()) + ']')
-  const modulePart = pc.blue('[' + (options.module ?? 'log') + ']')
-  console.log(timePart, ...originArgs, modulePart, ...args)
+  const modulePart = pc.blue('[' + (normalized.module ?? 'log') + ']')
+  const prefix: unknown[] = [timePart, ...originArgs, modulePart]
+
+  if (normalized.label) {
+    prefix.push(formatDimTag(normalized.label))
+  }
+
+  console.log(...prefix, ...normalized.args)
 }
 
 export function writeLogEntry(
@@ -57,26 +70,27 @@ export function writeLogEntry(
   args: unknown[],
   options: {
     module?: string
+    label?: string
+    badge?: string
     source?: 'worker'
     threadId?: number
     timestamp?: string
   } = {}
 ): void {
-  const originPart = formatOriginPart(options)
-  const originArgs = originPart ? [originPart] : []
+  const originArgs: unknown[] = []
 
   if (level === 'log' || level === 'info') {
-    console.log(...originArgs, ...args)
+    emitStandard(level, originArgs, args, options)
     return
   }
 
   if (level === 'warn') {
-    emitWarn(originArgs, args)
+    emitStandard(level, originArgs, args, options)
     return
   }
 
   if (level === 'error') {
-    emitError(originArgs, args)
+    emitStandard(level, originArgs, args, options)
     return
   }
 
@@ -87,5 +101,5 @@ export function writeLogEntry(
 
 /** Same styling as `log.warn`, but no worker relay (no `[worker:N]` prefix). */
 export function warnRefSync(...args: unknown[]): void {
-  console.warn(warnOrange(`[ref sync] ${formatWarnLine(args)}`))
+  writeLogEntry('warn', args, { badge: 'ref', module: 'sync' })
 }

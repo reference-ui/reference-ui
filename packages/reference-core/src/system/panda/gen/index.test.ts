@@ -9,6 +9,12 @@ async function importGenModule(options?: {
   const emit = vi.fn()
   const debug = vi.fn()
   const error = vi.fn()
+  const getPandaErrorOutput = vi.fn((errorValue: unknown) =>
+    errorValue === options?.codegenFailure || errorValue === options?.cssFailure
+      ? 'captured panda output'
+      : undefined
+  )
+  const unwrapPandaError = vi.fn((errorValue: unknown) => errorValue)
   const runPandaCodegen = vi.fn(async () => {
     if (options?.codegenFailure) throw options.codegenFailure
   })
@@ -23,12 +29,23 @@ async function importGenModule(options?: {
     log: { debug, error },
   }))
   vi.doMock('./codegen', () => ({
+    getPandaErrorOutput,
     runPandaCodegen,
     runPandaCss,
+    unwrapPandaError,
   }))
 
   const mod = await import('./index')
-  return { ...mod, emit, debug, error, runPandaCodegen, runPandaCss }
+  return {
+    ...mod,
+    emit,
+    debug,
+    error,
+    getPandaErrorOutput,
+    runPandaCodegen,
+    runPandaCss,
+    unwrapPandaError,
+  }
 }
 
 afterEach(() => {
@@ -66,6 +83,7 @@ describe('system/panda/gen', () => {
         '[panda] codegen failed (continuing without system/styled). Virtual copy will still run.',
         'panda exploded'
       )
+      expect(error).toHaveBeenCalledWith('[panda] output:', 'captured panda output')
       expect(debug).toHaveBeenCalledWith('panda', 'stack: panda exploded')
       expect(emit).toHaveBeenCalledTimes(1)
       expect(emit).toHaveBeenCalledWith('system:panda:codegen:failed')

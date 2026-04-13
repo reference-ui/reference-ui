@@ -17,12 +17,14 @@ async function runBundlePhase(
 ): Promise<void> {
   const { cwd, skipTypescript } = payload
   const coreDir = resolveCorePackageDir(cwd)
+  const startedAt = Date.now()
 
   log.debug('packager', '📦 Packaging...')
   await installPackages(coreDir, cwd, packages)
   log.debug('packager', `✅ ${packages.length} package(s) ready`)
+  const durationMs = Date.now() - startedAt
 
-  emit(completionEvent)
+  emit(completionEvent, { packageCount: packages.length, durationMs })
   if (skipTypescript) {
     if (completionEvent === 'packager:runtime:complete') {
       emit('packager-ts:runtime:complete', {})

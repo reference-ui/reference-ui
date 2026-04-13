@@ -75,7 +75,7 @@ The internal event bus / state machine currently relies on `console.log` for obs
 - [x] make suyre all e2e tests pawss with debug: false in their ui.config
 
 
-## Beuatify the Console
+## Beautify the Console
 - [ ] Give nice status messgaes (minimal)
 - [ ] Warn when a component references a token that does not exist in the resolved token set
 - [ ] Warn on circular dependencies in the scan graph

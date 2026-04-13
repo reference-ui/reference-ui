@@ -10,7 +10,8 @@ async function importRunModule(options?: {
   const emit = vi.fn()
   const debug = vi.fn()
   const error = vi.fn()
-  const info = vi.fn()
+  const logReferenceBuilt = vi.fn()
+  const logReferenceWarning = vi.fn()
   const loadSymbolByName = vi.fn(async (name: string) => {
     if (options?.loadSymbolImpl) {
       return options.loadSymbolImpl(name)
@@ -54,8 +55,11 @@ async function importRunModule(options?: {
     log: {
       debug,
       error,
-      info,
     },
+  }))
+  vi.doMock('./bridge/logging', () => ({
+    logReferenceBuilt,
+    logReferenceWarning,
   }))
   vi.doMock('./bridge/tasty-build', () => ({
     rebuildReferenceTastyBuild,
@@ -67,7 +71,8 @@ async function importRunModule(options?: {
     emit,
     debug,
     error,
-    info,
+    logReferenceBuilt,
+    logReferenceWarning,
     loadSymbolByName,
     rebuildReferenceTastyBuild,
   }
@@ -77,13 +82,21 @@ afterEach(() => {
   vi.resetModules()
   vi.doUnmock('../lib/event-bus')
   vi.doUnmock('../lib/log')
+  vi.doUnmock('./bridge/logging')
   vi.doUnmock('./bridge/tasty-build')
   vi.restoreAllMocks()
 })
 
 describe('reference/bridge/run', () => {
   it('logs diagnostics and emits structured build details on success', async () => {
-    const { onRunBuild, emit, debug, info, loadSymbolByName } = await importRunModule()
+    const {
+      onRunBuild,
+      emit,
+      debug,
+      logReferenceBuilt,
+      logReferenceWarning,
+      loadSymbolByName,
+    } = await importRunModule()
 
     await onRunBuild(
       {
@@ -94,10 +107,8 @@ describe('reference/bridge/run', () => {
     )
 
     expect(loadSymbolByName).toHaveBeenCalledWith('ButtonProps')
-    expect(info).toHaveBeenCalledWith(
-      '[reference] warning:',
-      '/workspace/src/reference.ts: scanner warning'
-    )
+    expect(logReferenceWarning).toHaveBeenCalledWith('/workspace/src/reference.ts: scanner warning')
+    expect(logReferenceBuilt).toHaveBeenCalledTimes(1)
     expect(debug).toHaveBeenCalledWith(
       'reference',
       'Reference build completed',

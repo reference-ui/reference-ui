@@ -1,12 +1,16 @@
 import { on, once } from '../lib/event-bus'
+import { logPackagesBuilt } from '../packager/logging'
 import type { SyncPayload } from './types'
+import {
+  logSyncDone,
+  logSyncFailure,
+  logSyncReady,
+  markSyncCycleStart,
+  REF_SYNC_FAILED_MESSAGE,
+} from './logging'
 import { shutdownAndExit } from './shutdown'
 
-/** Message printed to stdout when ref sync finishes a build (watch mode). Test env scans for this. */
-export const REF_SYNC_READY_MESSAGE = '[ref sync] ready\n'
-
-/** Message printed to stderr when ref sync fails (config or Panda). */
-export const REF_SYNC_FAILED_MESSAGE = '[ref sync] failed\n'
+export { REF_SYNC_FAILED_MESSAGE }
 
 /**
  * Register the completion listener.
@@ -34,10 +38,10 @@ export function initComplete(payload: SyncPayload): void {
     if (failureHandled) return
     failureHandled = true
 
+    logSyncFailure(payload)
+
     if (!payload.options.watch) {
       void shutdownAndExit(1, 'sync:failed')
-    } else {
-      process.stderr.write(REF_SYNC_FAILED_MESSAGE)
     }
   }
 
@@ -47,9 +51,15 @@ export function initComplete(payload: SyncPayload): void {
   once('virtual:failed', handleFailure)
   once('mcp:failed', handleFailure)
 
+  on('packager:runtime:complete', ({ packageCount, durationMs }) => {
+    logPackagesBuilt(packageCount, durationMs)
+  })
+
   if (!payload.options.watch) {
-    once('packager:complete', () => {
+    once('packager:complete', ({ packageCount, durationMs }) => {
+      logPackagesBuilt(packageCount, durationMs)
       once('mcp:complete', () => {
+        logSyncDone()
         void shutdownAndExit(0, 'sync:complete')
       })
     })
@@ -68,10 +78,15 @@ export function initComplete(payload: SyncPayload): void {
     fragmentPending = true
   })
 
-  on('packager:complete', () => {
+  on('watch:change', () => {
+    markSyncCycleStart()
+  })
+
+  on('packager:complete', ({ packageCount, durationMs }) => {
+    logPackagesBuilt(packageCount, durationMs)
     initialSyncComplete = true
     fragmentPending = false
-    process.stdout.write(REF_SYNC_READY_MESSAGE)
+    logSyncReady()
   })
 
   /**
@@ -85,6 +100,6 @@ export function initComplete(payload: SyncPayload): void {
   on('packager:runtime:complete', () => {
     if (!initialSyncComplete || !fragmentPending) return
     fragmentPending = false
-    process.stdout.write(REF_SYNC_READY_MESSAGE)
+    logSyncReady()
   })
 }
