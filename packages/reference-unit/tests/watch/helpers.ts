@@ -2,16 +2,26 @@ import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { pkgRoot, waitFor } from '../virtual/helpers'
 
-const REF_SYNC_READY_MESSAGE = '[ref sync] ready'
-export const watchLogPath = join(pkgRoot, '.ref-sync-watch.log')
+const sessionPath = join(pkgRoot, '.reference-ui', 'session.json')
 
-function getReadyCount(): number {
-  if (!existsSync(watchLogPath)) return 0
-  const content = readFileSync(watchLogPath, 'utf-8')
-  return content.split(REF_SYNC_READY_MESSAGE).length - 1
+function getReadyMarker(): string | null {
+  if (!existsSync(sessionPath)) return null
+  try {
+    const session = JSON.parse(readFileSync(sessionPath, 'utf-8')) as {
+      buildState?: string
+      updatedAt?: string
+    }
+    if (session.buildState !== 'ready') return null
+    return session.updatedAt ?? null
+  } catch {
+    return null
+  }
 }
 
 export async function waitForNextWatchReady(timeoutMs = 15_000): Promise<boolean> {
-  const baselineCount = getReadyCount()
-  return waitFor(() => getReadyCount() > baselineCount, { timeoutMs, intervalMs: 100 })
+  const baselineMarker = getReadyMarker()
+  return waitFor(() => {
+    const nextMarker = getReadyMarker()
+    return nextMarker !== null && nextMarker !== baselineMarker
+  }, { timeoutMs, intervalMs: 100 })
 }

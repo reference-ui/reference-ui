@@ -62,16 +62,21 @@ The internal event bus / state machine currently relies on `console.log` for obs
 
 ---
 
-## Webpack Integration
+## Webpack Integration [DONE]
 
-- [ ] Implement equivalent of the Vite plugin for Webpack's watch/HMR pipeline
-- [ ] Define a shared abstraction (if possible) so bundler-specific plugins share the buffering logic
-- [ ] Basic integration test with a Webpack fixture project
+- [x] Implement equivalent of the Vite plugin for Webpack's watch/HMR pipeline
+- [x] Define a shared abstraction (if possible) so bundler-specific plugins share the buffering logic
+- [x] Basic integration test with a Webpack fixture project
 
 ---
 
-## Errors and Warnings
+## Reduce all dependency on console messages for testing, relying instead on the session api that the bundlers use (ready etc) [DONE]
+- [x] make sure all unit tests pass with debug: false in their ui.config
+- [x] make suyre all e2e tests pawss with debug: false in their ui.config
 
+
+## Beuatify the Console
+- [ ] Give nice status messgaes (minimal)
 - [ ] Warn when a component references a token that does not exist in the resolved token set
 - [ ] Warn on circular dependencies in the scan graph
 - [ ] Error with a clear message when config is malformed (currently likely a raw exception)

@@ -7,5 +7,5 @@ export default defineConfig({
   extends: [baseSystem],
   layers: [layerLibSystem],
   include: ['src/**/*.{ts,tsx,mdx}', 'tests/**/*.{ts,tsx,mdx}'],
-  debug: true,
+  debug: false,
 })
