@@ -17,7 +17,7 @@ const SNIPPET_CSS = {
   fontWeight: '550',
   lineHeight: '1.45',
   paddingInline: '2r',
-  paddingBlock: 'reference.sm',
+  paddingBlock: '2r',
   borderRadius: '1r',
   wordBreak: 'break-word',
   bg: 'gray.900',

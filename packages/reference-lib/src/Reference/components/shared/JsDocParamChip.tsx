@@ -15,7 +15,7 @@ export function JsDocParamChip({ tagLabel, className }: JsDocParamChipProps) {
     <Div
       display="inline-flex"
       alignItems="center"
-      gap="reference.xxs"
+      gap="0.5r"
       fontFamily="reference.mono"
       fontSize="4r"
       fontWeight="550"

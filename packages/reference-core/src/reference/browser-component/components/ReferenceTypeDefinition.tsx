@@ -10,7 +10,7 @@ import { SummarySnippet } from './shared/SummarySnippet'
 
 export function ReferenceTypeDefinition({ definition }: { definition: string | null }) {
   return (
-    <Div display="grid" gap="reference.sm" paddingTop="reference.sm">
+    <Div display="grid" gap="2r" paddingTop="2r">
       <Small color="reference.muted">Definition</Small>
       <SummarySnippet>{definition ?? 'unknown'}</SummarySnippet>
     </Div>
