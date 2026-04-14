@@ -6,6 +6,7 @@ import { colors } from '@reference-ui/lib/theme'
 import {
   addToConfig,
   getSandboxDir,
+  resetConfig,
   type ConfigAdditions,
 } from '../../environments/lib/config'
 import { runRefSync } from '../../environments/lib/ref-sync'
@@ -56,6 +57,13 @@ async function snapshotLayerCss(name: string): Promise<string> {
 }
 
 test.describe.serial('layer', () => {
+  test.afterAll(async () => {
+    await resetConfig()
+    await runRefSync(sandboxDir)
+    activeConfigKey = null
+    syncedConfigKey = null
+  })
+
   test('addToConfig with layers only writes valid ui.config.ts', async () => {
     await addToConfig(DEFAULT_LAYER_CONFIG)
     activeConfigKey = JSON.stringify(DEFAULT_LAYER_CONFIG)
@@ -67,6 +75,7 @@ test.describe.serial('layer', () => {
 
   test.describe('with default layer config', () => {
     test.beforeAll(async () => {
+      test.setTimeout(60_000)
       // Lib is already synced by test:prepare; only sandbox needs sync after config change.
       await applyLayerConfig(DEFAULT_LAYER_CONFIG)
     })
@@ -88,14 +97,20 @@ test.describe.serial('layer', () => {
       ).toBeGreaterThan(-1)
     })
 
-    test('primitives emit data-layer from config name and preserve other props', async ({
+    test('layer scope root emits config name and nested primitives avoid redundant attrs', async ({
       page,
     }) => {
       test.setTimeout(60_000)
       await page.goto(testRoutes.layers)
+      const scopeRoot = page.getByTestId('consumer-layer-scope-root')
       const host = page.getByTestId('consumer-layer-host')
+      const darkIsland = page.getByTestId('consumer-layer-dark-island')
+      await expect(scopeRoot).toBeVisible()
       await expect(host).toBeVisible()
-      await expect(host).toHaveAttribute('data-layer', LAYER_NAME)
+      await expect(darkIsland).toBeVisible()
+      await expect(scopeRoot).toHaveAttribute('data-layer', LAYER_NAME)
+      await expect(host).not.toHaveAttribute('data-layer', /.+/)
+      await expect(darkIsland).toHaveAttribute('data-layer', LAYER_NAME)
       await expect(host).toHaveAttribute('id', 'consumer-layer-id')
     })
 
@@ -181,7 +196,7 @@ test.describe.serial('layer', () => {
       await page.goto(testRoutes.layers)
       const inside = page.getByTestId('layers-test')
       await expect(inside).toBeVisible()
-      // Consumer primitives have data-layer="reference-e2e"; upstream tokens are under [data-layer="reference-ui"].
+      // Consumer scope is established by the nearest layer host; upstream tokens are under [data-layer="reference-ui"].
       // So consumer DOM does not see --colors-teal-500 (upstream). Assert upstream CSS is present via stylesheet.
       const outside = page.getByTestId('layers-outside')
       await expect(outside).toBeVisible()

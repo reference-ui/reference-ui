@@ -4,6 +4,8 @@ export interface LogEntryPayload {
   level: LogLevel
   args: unknown[]
   module?: string
+  label?: string
+  badge?: string
   timestamp?: string
   source: 'worker'
   threadId: number

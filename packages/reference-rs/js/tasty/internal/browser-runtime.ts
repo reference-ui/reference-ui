@@ -45,6 +45,7 @@ export class TastyBrowserRuntimeImpl implements TastyBrowserRuntime {
             manifest: runtimeModule.manifest,
             manifestPath: runtimeModule.manifestUrl,
             importer: runtimeModule.importTastyArtifact,
+            ...this.options.apiOptions,
           })
           await api.ready()
           this.api = api

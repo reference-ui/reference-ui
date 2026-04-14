@@ -203,3 +203,65 @@ fn scan_workspace_follows_external_reexports_when_node_modules_is_above_root() {
         .iter()
         .any(|file| file.file_id == "../../node_modules/external-lib/index.d.ts"));
 }
+
+#[test]
+fn scan_workspace_does_not_treat_globbed_node_modules_files_as_user_entry_points() {
+    let root = TempDir::new("scanner-workspace-skip-globbed-node-modules");
+    root.write(
+        "src/index.ts",
+        "import type { ButtonProps } from 'external-lib';\nexport interface Local {}\n",
+    );
+    root.write(
+        "node_modules/external-lib/package.json",
+        r#"{ "name": "external-lib", "types": "index.d.ts" }"#,
+    );
+    root.write(
+        "node_modules/external-lib/index.d.ts",
+        "export interface ButtonProps { label: string }\n",
+    );
+
+    let workspace = scan_workspace(root.path(), &["**/*.ts".to_string()])
+        .expect("workspace scan should succeed");
+
+    assert_eq!(workspace.files.len(), 2);
+    let external = workspace
+        .files
+        .iter()
+        .find(|file| file.file_id == "node_modules/external-lib/index.d.ts")
+        .expect("expected external-lib declaration file");
+    assert_eq!(external.library, "external-lib");
+}
+
+#[test]
+fn scan_workspace_ignores_stylesheet_imports_during_discovery() {
+    let root = TempDir::new("scanner-workspace-ignore-stylesheets");
+    root.write(
+        "src/index.ts",
+        "import './styles.css';\nexport type { ButtonProps } from 'external-lib';\n",
+    );
+    root.write("src/styles.css", ".button { color: red; }\n");
+    root.write(
+        "node_modules/external-lib/package.json",
+        r#"{ "name": "external-lib", "types": "index.d.ts" }"#,
+    );
+    root.write(
+        "node_modules/external-lib/index.d.ts",
+        "export interface ButtonProps { label: string }\n",
+    );
+
+    let workspace = scan_workspace(root.path(), &["src/**/*.ts".to_string()])
+        .expect("workspace scan should succeed");
+
+    assert!(workspace
+        .files
+        .iter()
+        .any(|file| file.file_id == "src/index.ts"));
+    assert!(workspace
+        .files
+        .iter()
+        .any(|file| file.file_id == "node_modules/external-lib/index.d.ts"));
+    assert!(!workspace
+        .files
+        .iter()
+        .any(|file| file.file_id == "src/styles.css"));
+}

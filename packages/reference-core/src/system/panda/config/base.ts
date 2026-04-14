@@ -11,7 +11,7 @@ import type { Config } from '@pandacss/dev'
 export const baseConfig = {
   presets: [],
   jsxFramework: 'react' as const,
-  preflight: true,
+  preflight: false,
   // Match the virtual rewrite target (`src/system/css`) so Panda extracts
   // css()/cva() usage from transformed user files.
   importMap: 'src/system',

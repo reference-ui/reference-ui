@@ -13,6 +13,8 @@ pub(super) fn extract_reexport_module_specifiers(file_id: &str, source: &str) ->
     extract_module_specifiers_with(file_id, source, false)
 }
 
+const IGNORED_ASSET_EXTENSIONS: [&str; 6] = [".css", ".scss", ".sass", ".less", ".pcss", ".styl"];
+
 fn extract_module_specifiers_with(
     file_id: &str,
     source: &str,
@@ -34,7 +36,14 @@ fn extract_module_specifiers_with(
     module_specifiers
         .into_iter()
         .map(normalize_module_specifier)
+        .filter(|module_specifier| should_follow_module_specifier(module_specifier))
         .collect()
+}
+
+fn should_follow_module_specifier(module_specifier: &str) -> bool {
+    !IGNORED_ASSET_EXTENSIONS
+        .iter()
+        .any(|extension| module_specifier.ends_with(extension))
 }
 
 fn module_specifier_from_statement(
@@ -63,4 +72,26 @@ fn normalize_module_specifier(value: String) -> String {
 
 fn slice_span(source: &str, span: Span) -> &str {
     &source[span.start as usize..span.end as usize]
+}
+
+#[cfg(test)]
+mod tests {
+    use super::extract_module_specifiers;
+
+    #[test]
+    fn extract_module_specifiers_ignores_stylesheet_imports() {
+        let source = r#"
+import './styles.css'
+import type { ButtonProps } from '@reference-ui/react'
+import tokens from './tokens.scss'
+export { Box } from './box'
+"#;
+
+        let module_specifiers = extract_module_specifiers("src/index.ts", source);
+
+        assert_eq!(
+            module_specifiers,
+            vec!["@reference-ui/react".to_string(), "./box".to_string()]
+        );
+    }
 }

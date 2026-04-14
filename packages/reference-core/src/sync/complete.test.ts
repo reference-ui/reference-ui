@@ -1,29 +1,35 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { SyncPayload } from './types'
 
-const onHandlers = new Map<string, Array<() => void>>()
-const onceHandlers = new Map<string, Array<() => void>>()
+const onHandlers = new Map<string, Array<(payload?: unknown) => void>>()
+const onceHandlers = new Map<string, Array<(payload?: unknown) => void>>()
 const shutdownAndExit = vi.fn()
+const logPackagesBuilt = vi.fn()
+const logSyncDone = vi.fn()
+const logSyncFailure = vi.fn()
+const logSyncReady = vi.fn()
+const markSyncCycleStart = vi.fn()
+const REF_SYNC_FAILED_MESSAGE = '[ref sync] failed\n'
 
 function registerHandler(
-  store: Map<string, Array<() => void>>,
+  store: Map<string, Array<(payload?: unknown) => void>>,
   event: string,
-  handler: () => void
+  handler: (payload?: unknown) => void
 ): void {
   const handlers = store.get(event) ?? []
   handlers.push(handler)
   store.set(event, handlers)
 }
 
-function fireEvent(event: string): void {
+function fireEvent(event: string, payload?: unknown): void {
   for (const handler of onHandlers.get(event) ?? []) {
-    handler()
+    handler(payload)
   }
 
   const handlers = onceHandlers.get(event) ?? []
   onceHandlers.delete(event)
   for (const handler of handlers) {
-    handler()
+    handler(payload)
   }
 }
 
@@ -32,12 +38,29 @@ async function loadCompleteModule() {
   onHandlers.clear()
   onceHandlers.clear()
   shutdownAndExit.mockReset()
+  logPackagesBuilt.mockReset()
+  logSyncDone.mockReset()
+  logSyncFailure.mockReset()
+  logSyncReady.mockReset()
+  markSyncCycleStart.mockReset()
 
   vi.doMock('../lib/event-bus', () => ({
-    on: (event: string, handler: () => void) =>
+    on: (event: string, handler: (payload?: unknown) => void) =>
       registerHandler(onHandlers, event, handler),
-    once: (event: string, handler: () => void) =>
+    once: (event: string, handler: (payload?: unknown) => void) =>
       registerHandler(onceHandlers, event, handler),
+  }))
+
+  vi.doMock('../packager/logging', () => ({
+    logPackagesBuilt,
+  }))
+
+  vi.doMock('./logging', () => ({
+    REF_SYNC_FAILED_MESSAGE,
+    logSyncDone,
+    logSyncFailure,
+    logSyncReady,
+    markSyncCycleStart,
   }))
 
   vi.doMock('./shutdown', () => ({
@@ -58,6 +81,8 @@ function createPayload(watch: boolean): SyncPayload {
 afterEach(() => {
   vi.resetModules()
   vi.doUnmock('../lib/event-bus')
+  vi.doUnmock('../packager/logging')
+  vi.doUnmock('./logging')
   vi.doUnmock('./shutdown')
   vi.restoreAllMocks()
 })
@@ -67,32 +92,36 @@ describe('sync/complete', () => {
     const { initComplete } = await loadCompleteModule()
     initComplete(createPayload(false))
 
-    fireEvent('packager:complete')
+    fireEvent('packager:complete', { packageCount: 1, durationMs: 20 })
+    expect(logPackagesBuilt).toHaveBeenCalledWith(1, 20)
     expect(shutdownAndExit).not.toHaveBeenCalled()
 
     fireEvent('mcp:complete')
+    expect(logSyncDone).toHaveBeenCalled()
     expect(shutdownAndExit).toHaveBeenCalledWith(0, 'sync:complete')
   })
 
-  it('writes ready as soon as packager completes in watch mode', async () => {
-    const stdoutWrite = vi.spyOn(process.stdout, 'write').mockImplementation(() => true)
-    const { initComplete, REF_SYNC_READY_MESSAGE } = await loadCompleteModule()
+  it('logs package completion before ready in watch mode', async () => {
+    const { initComplete } = await loadCompleteModule()
     initComplete(createPayload(true))
 
-    fireEvent('packager:complete')
+    fireEvent('packager:complete', { packageCount: 1, durationMs: 20 })
 
-    expect(stdoutWrite).toHaveBeenCalledWith(REF_SYNC_READY_MESSAGE)
+    expect(logPackagesBuilt).toHaveBeenCalledWith(1, 20)
+    expect(logPackagesBuilt.mock.invocationCallOrder[0]).toBeLessThan(
+      logSyncReady.mock.invocationCallOrder[0]
+    )
     expect(shutdownAndExit).not.toHaveBeenCalled()
   })
 
   it('prints a watch failure marker instead of exiting on MCP failure', async () => {
-    const stderrWrite = vi.spyOn(process.stderr, 'write').mockImplementation(() => true)
     const { initComplete, REF_SYNC_FAILED_MESSAGE } = await loadCompleteModule()
     initComplete(createPayload(true))
 
     fireEvent('mcp:failed')
 
-    expect(stderrWrite).toHaveBeenCalledWith(REF_SYNC_FAILED_MESSAGE)
+    expect(logSyncFailure).toHaveBeenCalled()
+    expect(REF_SYNC_FAILED_MESSAGE).toBe('[ref sync] failed\n')
     expect(shutdownAndExit).not.toHaveBeenCalled()
   })
 })

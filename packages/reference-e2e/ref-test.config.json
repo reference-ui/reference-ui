@@ -2,6 +2,6 @@
   "$schema": "./ref-test.config.schema.json",
   "defaultProject": "react18-vite5",
   "basePort": 19740,
-  "workers": 5,
-  "parallelSandboxes": false
+  "workers": 1,
+  "parallelSandboxes": true
 }

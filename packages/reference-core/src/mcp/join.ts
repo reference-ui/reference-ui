@@ -3,7 +3,7 @@ import type {
   ReferenceDocument,
   ReferenceMemberDocument,
 } from '../reference/browser/types'
-import { formatReferenceType } from '../reference/browser/model/type'
+import { formatReferenceType } from '../reference/browser-model/type'
 import type { McpReferenceData } from './reference'
 import type { McpComponent } from './types'
 

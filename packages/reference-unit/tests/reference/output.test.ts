@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { createTastyApi } from '@reference-ui/rust/tasty'
 import {
+  createReferenceTestApi,
   typesPackageDir,
   typesPackageManifestPath,
   typesTastyDir,
@@ -27,9 +27,7 @@ describe('reference output', () => {
       true
     )
 
-    const api = createTastyApi({
-      manifestPath: typesPackageManifestPath,
-    })
+    const api = createReferenceTestApi(typesPackageManifestPath)
 
     await api.ready()
 
@@ -61,14 +59,26 @@ describe('reference output', () => {
       true
     )
 
-    const api = createTastyApi({
-      manifestPath: typesPackageManifestPath,
-    })
+    const api = createReferenceTestApi(typesPackageManifestPath)
     await api.ready()
 
     const style = await api.loadSymbolByName('StyleProps')
+    const displayMembers = await style.getDisplayMembers()
     expect(style.getName()).toBe('StyleProps')
     expect(style.getKind()).toBe('typeAlias')
+    expect(displayMembers.length).toBeGreaterThan(100)
+    expect(displayMembers.map(member => member.getName())).toEqual(
+      expect.arrayContaining([
+        'background',
+        'display',
+        'fontSize',
+        'margin',
+        'container',
+        'font',
+        'weight',
+        'r',
+      ])
+    )
   })
 
   it('projects display members for composed type aliases in generated reference artifacts', async () => {
@@ -77,9 +87,7 @@ describe('reference output', () => {
       true
     )
 
-    const api = createTastyApi({
-      manifestPath: typesPackageManifestPath,
-    })
+    const api = createReferenceTestApi(typesPackageManifestPath)
     await api.ready()
 
     const composed = await api.loadSymbolByName('DocsReferenceComposedButtonProps')
@@ -103,9 +111,7 @@ describe('reference output', () => {
       true
     )
 
-    const api = createTastyApi({
-      manifestPath: typesPackageManifestPath,
-    })
+    const api = createReferenceTestApi(typesPackageManifestPath)
     await api.ready()
 
     const symbol = await api.loadSymbolByName('DocsReferenceTypeExtendsProps')
@@ -123,9 +129,7 @@ describe('reference output', () => {
       true
     )
 
-    const api = createTastyApi({
-      manifestPath: typesPackageManifestPath,
-    })
+    const api = createReferenceTestApi(typesPackageManifestPath)
     await api.ready()
 
     const alias = await api.loadSymbolByName('DocsReferencePinnedTargetAlias')

@@ -4,6 +4,7 @@ import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { pruneBrokenSymlinksInDir } from './index'
+import { prepareLinkPathForSymlink } from './prepare-link-path-for-symlink'
 
 const created: string[] = []
 afterEach(() => {
@@ -36,5 +37,37 @@ describe('pruneBrokenSymlinksInDir', () => {
 
     pruneBrokenSymlinksInDir(scope)
     expect(lstatSync(join(scope, 'ok')).isSymbolicLink()).toBe(true)
+  })
+})
+
+describe('prepareLinkPathForSymlink', () => {
+  it('returns false when linkPath already points at targetDir', () => {
+    const root = mkdtempSync(join(tmpdir(), 'ref-link-path-'))
+    created.push(root)
+    const scope = join(root, 'scope')
+    const targetDir = join(root, 'real')
+    const linkPath = join(scope, 'ok')
+    mkdirSync(scope, { recursive: true })
+    mkdirSync(targetDir, { recursive: true })
+    symlinkSync(targetDir, linkPath)
+
+    expect(prepareLinkPathForSymlink(linkPath, targetDir)).toBe(false)
+    expect(lstatSync(linkPath).isSymbolicLink()).toBe(true)
+  })
+
+  it('removes an existing mismatched symlink and returns true', () => {
+    const root = mkdtempSync(join(tmpdir(), 'ref-link-path-'))
+    created.push(root)
+    const scope = join(root, 'scope')
+    const targetDir = join(root, 'real')
+    const otherDir = join(root, 'other')
+    const linkPath = join(scope, 'ok')
+    mkdirSync(scope, { recursive: true })
+    mkdirSync(targetDir, { recursive: true })
+    mkdirSync(otherDir, { recursive: true })
+    symlinkSync(otherDir, linkPath)
+
+    expect(prepareLinkPathForSymlink(linkPath, targetDir)).toBe(true)
+    expect(() => lstatSync(linkPath)).toThrow()
   })
 })

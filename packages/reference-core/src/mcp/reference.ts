@@ -1,6 +1,7 @@
 import type { TastyApi, TastyMember, TastySymbol } from '@reference-ui/rust/tasty'
-import { createTastyApi, getTastyResolvedType } from '@reference-ui/rust/tasty'
-import { createReferenceDocument } from '../reference/browser/model'
+import { getTastyResolvedType } from '@reference-ui/rust/tasty'
+import { createReferenceDocument } from '../reference/browser-model'
+import { createReferenceUiTastyApi } from '../reference/tasty/api'
 import type { ReferenceDocument } from '../reference/browser/types'
 
 export interface McpReferenceMemberData {
@@ -82,7 +83,7 @@ async function loadMemberOrigins(
 }
 
 export function createReferenceApi(manifestPath: string): TastyApi {
-  return createTastyApi({ manifestPath })
+  return createReferenceUiTastyApi({ manifestPath })
 }
 
 function toMcpReferenceMemberData(member: TastyMember): McpReferenceMemberData {

@@ -1,5 +1,6 @@
-import { readFileSync, writeFileSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { writeFileAtomic } from '../../lib/fs/write-file-atomic'
 import { log } from '../../lib/log'
 import { getEntryBasename } from '../layout'
 import type { PackageDefinition } from '../package'
@@ -28,10 +29,10 @@ export function injectLayerName(
     const content = readFileSync(bundlePath, TEXT_ENCODING)
     if (!content.includes(LAYER_NAME_PLACEHOLDER)) return
 
-    writeFileSync(
+    writeFileAtomic(
       bundlePath,
       content.replaceAll(LAYER_NAME_PLACEHOLDER, context.layerName),
-      TEXT_ENCODING
+      TEXT_ENCODING,
     )
   } catch (error) {
     log.debug('packager', `Could not inject layer name into bundle: ${error}`)

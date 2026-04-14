@@ -1,4 +1,5 @@
 import type {
+  CreateTastyApiOptions,
   CreateTastyApiFromManifestOptions,
   RawTastyManifest,
   RawTastyMember,
@@ -11,54 +12,50 @@ import type {
   TastySymbol,
   TastySymbolRef,
   TastySymbolSearchResult,
+  TastyTypeParameterMemberProjector,
   TastyTypeRef,
 } from '../api-types'
 import { dedupeTastyMembers } from '../members'
 import {
   collectUserOwnedReferencesFromSymbol,
-  createAmbiguousSymbolNameError,
   defaultArtifactImporter,
-  extractChunkSymbol,
   extractManifest,
-  normalizeModuleNamespace,
-  resolveArtifactPath,
   resolveArtifactSpecifier,
   uniqueById,
   wrapRuntimeError,
   isInterfaceSymbol,
   isTypeAliasSymbol,
   type ArtifactImporter,
-  type ModuleNamespace,
-  type TastySymbolModel,
 } from './shared'
 import { projectMembersFromInterfaceExtends, projectObjectLikeMembers } from './object-projection'
-import { TastyMemberImpl, TastySymbolImpl, TastySymbolRefImpl, TastyTypeRefImpl } from './wrappers'
+import { TastyMemberImpl, TastySymbolRefImpl, TastyTypeRefImpl } from './wrappers'
+import { ChunkLoader } from './chunk-loader'
+import { SymbolResolver } from './symbol-resolver'
 
 interface CreateTastyApiRuntimeOptions {
   manifestPath: string
   importer: ArtifactImporter
+  preferredExternalLibraries?: string[]
+  projectTypeParameterMembers?: TastyTypeParameterMemberProjector
 }
-
-const PREFERRED_EXTERNAL_BARE_NAME_LIBRARIES = [
-  '@reference-ui/react',
-  '@reference-ui/system',
-  '@reference-ui/types',
-]
 
 export class TastyApiRuntime implements TastyApi {
   private readonly manifestPath?: string
   private readonly importer: ArtifactImporter
+  private readonly preferredExternalLibraries: string[]
+  private readonly projectTypeParameterMembers?: TastyTypeParameterMemberProjector
   private manifestPromise: Promise<RawTastyManifest> | undefined
   private manifest: RawTastyManifest | undefined
   private readonly runtimeWarnings = new Set<string>()
-  private readonly chunkCache = new Map<string, Promise<ModuleNamespace>>()
-  private readonly rawSymbolsById = new Map<string, TastySymbolModel>()
-  private readonly symbolCache = new Map<string, TastySymbolImpl>()
+  private readonly chunkLoader: ChunkLoader
+  private readonly symbolResolver: SymbolResolver
 
   public readonly graph: TastyGraphApi
 
   constructor(options: CreateTastyApiRuntimeOptions | CreateTastyApiFromManifestOptions) {
     this.importer = options.importer
+    this.preferredExternalLibraries = options.preferredExternalLibraries ?? []
+    this.projectTypeParameterMembers = options.projectTypeParameterMembers
     if ('manifest' in options) {
       this.manifest = options.manifest
       this.manifestPromise = Promise.resolve(options.manifest)
@@ -66,6 +63,22 @@ export class TastyApiRuntime implements TastyApi {
     } else {
       this.manifestPath = options.manifestPath
     }
+    this.chunkLoader = new ChunkLoader({
+      manifestPath: this.manifestPath,
+      importer: this.importer,
+      wrapChunkLoadError: (relativeChunkPath, resolvedChunkPath, error) =>
+        wrapRuntimeError(
+          `Failed to load Tasty chunk "${relativeChunkPath}" from "${resolvedChunkPath}".`,
+          error,
+        ),
+    })
+    this.symbolResolver = new SymbolResolver({
+      api: this,
+      chunkLoader: this.chunkLoader,
+      preferredExternalLibraries: this.preferredExternalLibraries,
+      runtimeWarnings: this.runtimeWarnings,
+      loadManifest: () => this.loadManifest(),
+    })
     this.graph = {
       resolveReference: (ref) => this.graphResolveReference(ref),
       loadImmediateDependencies: (symbol) => this.graphLoadImmediateDependencies(symbol),
@@ -135,7 +148,7 @@ export class TastyApiRuntime implements TastyApi {
   }
 
   private graphProjectObjectLikeMembers(symbol: TastySymbol): ReturnType<typeof projectObjectLikeMembers> {
-    return projectObjectLikeMembers(this, symbol)
+    return projectObjectLikeMembers(this, symbol, this.projectTypeParameterMembers)
   }
 
   private async graphCollectUserOwnedReferences(symbol: TastySymbol): Promise<TastySymbolRef[]> {
@@ -190,150 +203,55 @@ export class TastyApiRuntime implements TastyApi {
   }
 
   async loadSymbolById(id: string): Promise<TastySymbol> {
-    const cached = this.symbolCache.get(id)
-    if (cached) return cached
-
-    const manifest = await this.loadManifest()
-    const entry = manifest.symbolsById[id]
-    if (!entry) {
-      throw new Error(`Symbol id not found in manifest: ${id}`)
-    }
-
-    const raw = await this.loadRawSymbol(entry)
-    const created = new TastySymbolImpl(this, entry, raw)
-    this.symbolCache.set(id, created)
-    return created
+    return this.symbolResolver.loadSymbolById(id)
   }
 
   async loadSymbolByName(name: string): Promise<TastySymbol> {
-    const symbol = await this.findSymbolByName(name)
-    if (!symbol) {
-      throw new Error(`Symbol not found: ${name}`)
-    }
-    return symbol
+    return this.symbolResolver.loadSymbolByName(name)
   }
 
   async findSymbolByName(name: string): Promise<TastySymbol | undefined> {
-    const matches = await this.findSymbolsByName(name)
-    if (matches.length === 0) return undefined
-    if (matches.length > 1) {
-      const preferred = this.resolvePreferredBareNameMatch(name, matches)
-      if (!preferred) {
-        throw createAmbiguousSymbolNameError(name, matches)
-      }
-      return this.loadSymbolById(preferred.id)
-    }
-    return this.loadSymbolById(matches[0]!.id)
+    return this.symbolResolver.findSymbolByName(name)
   }
 
   async findSymbolsByName(name: string): Promise<TastySymbolSearchResult[]> {
-    const manifest = await this.loadManifest()
-    const ids = manifest.symbolsByName[name] ?? []
-    return ids
-      .map((id) => manifest.symbolsById[id])
-      .filter((entry): entry is RawTastySymbolIndexEntry => entry != null)
-      .map((entry) => ({
-        id: entry.id,
-        name: entry.name,
-        kind: entry.kind,
-        chunk: entry.chunk,
-        library: entry.library,
-      }))
+    return this.symbolResolver.findSymbolsByName(name)
   }
 
   async loadSymbolByScopedName(library: string, name: string): Promise<TastySymbol> {
-    const symbol = await this.findSymbolByScopedName(library, name)
-    if (!symbol) {
-      throw new Error(`Symbol not found for library "${library}": ${name}`)
-    }
-    return symbol
+    return this.symbolResolver.loadSymbolByScopedName(library, name)
   }
 
   async findSymbolByScopedName(library: string, name: string): Promise<TastySymbol | undefined> {
-    const matches = (await this.findSymbolsByName(name)).filter((entry) => entry.library === library)
-    if (matches.length === 0) return undefined
-    if (matches.length > 1) {
-      throw new Error(
-        `Ambiguous symbol name "${name}" within library "${library}". Matches: ${matches
-          .map((entry) => `${entry.id} (${entry.library})`)
-          .join(', ')}`,
-      )
-    }
-    return this.loadSymbolById(matches[0]!.id)
-  }
-
-  private resolvePreferredBareNameMatch(
-    name: string,
-    matches: TastySymbolSearchResult[],
-  ): TastySymbolSearchResult | undefined {
-    if (matches.some((entry) => entry.library === 'user')) {
-      return undefined
-    }
-
-    const distinctLibraries = [...new Set(matches.map((entry) => entry.library))]
-    if (distinctLibraries.length <= 1) {
-      return undefined
-    }
-
-    let preferred = matches[0]
-    for (const library of PREFERRED_EXTERNAL_BARE_NAME_LIBRARIES) {
-      const libraryMatches = matches.filter((entry) => entry.library === library)
-      if (libraryMatches.length === 1) {
-        preferred = libraryMatches[0]
-        break
-      }
-      if (libraryMatches.length > 1) {
-        return undefined
-      }
-    }
-
-    this.runtimeWarnings.add(
-      `Ambiguous symbol name "${name}" matched multiple external libraries. Using ${preferred.id} (${preferred.library}); other matches: ${matches
-        .filter((entry) => entry.id !== preferred.id)
-        .map((entry) => `${entry.id} (${entry.library})`)
-        .join(', ')}. Use a scoped lookup to disambiguate.`,
-    )
-    return preferred
+    return this.symbolResolver.findSymbolByScopedName(library, name)
   }
 
   async prefetchChunk(path: string): Promise<void> {
-    await this.loadChunk(path)
+    await this.chunkLoader.prefetchChunk(path)
   }
 
   async prefetchSymbolById(id: string): Promise<void> {
-    await this.loadSymbolById(id)
+    await this.symbolResolver.prefetchSymbolById(id)
   }
 
   async prefetchSymbolByName(name: string): Promise<void> {
-    await this.loadSymbolByName(name)
+    await this.symbolResolver.prefetchSymbolByName(name)
   }
 
   async searchSymbols(query: string): Promise<TastySymbolSearchResult[]> {
-    const manifest = await this.loadManifest()
-    const normalized = query.trim().toLowerCase()
-
-    return Object.values(manifest.symbolsById)
-      .filter((entry) => entry.name.toLowerCase().includes(normalized))
-      .sort((a, b) => a.name.localeCompare(b.name))
-      .map((entry) => ({
-        id: entry.id,
-        name: entry.name,
-        kind: entry.kind,
-        chunk: entry.chunk,
-        library: entry.library,
-      }))
+    return this.symbolResolver.searchSymbols(query)
   }
 
   isSymbolLoaded(id: string): boolean {
-    return this.rawSymbolsById.has(id)
+    return this.symbolResolver.isSymbolLoaded(id)
   }
 
   getLoadedSymbol(id: string): TastySymbol | undefined {
-    return this.symbolCache.get(id)
+    return this.symbolResolver.getLoadedSymbol(id)
   }
 
   getManifestEntry(id: string): RawTastySymbolIndexEntry | undefined {
-    return this.manifest?.symbolsById[id]
+    return this.symbolResolver.getManifestEntry(id, this.manifest)
   }
 
   createSymbolRef(raw: RawTastySymbolRef): TastySymbolRef {
@@ -347,42 +265,14 @@ export class TastyApiRuntime implements TastyApi {
   createMember(raw: RawTastyMember): TastyMember {
     return new TastyMemberImpl(this, raw)
   }
-
-  private async loadRawSymbol(entry: RawTastySymbolIndexEntry): Promise<TastySymbolModel> {
-    const cached = this.rawSymbolsById.get(entry.id)
-    if (cached) return cached
-
-    const moduleValue = await this.loadChunk(entry.chunk)
-    const symbol = extractChunkSymbol(moduleValue, entry.id)
-    this.rawSymbolsById.set(entry.id, symbol)
-    return symbol
-  }
-
-  private async loadChunk(relativeChunkPath: string): Promise<ModuleNamespace> {
-    const resolvedChunkPath = this.manifestPath
-      ? await resolveArtifactPath(this.manifestPath, relativeChunkPath)
-      : relativeChunkPath
-    let cached = this.chunkCache.get(resolvedChunkPath)
-    if (!cached) {
-      cached = this.importer(resolvedChunkPath)
-        .then((moduleValue) => normalizeModuleNamespace(moduleValue))
-        .catch((error: unknown) => {
-          this.chunkCache.delete(resolvedChunkPath)
-          throw wrapRuntimeError(
-            `Failed to load Tasty chunk "${relativeChunkPath}" from "${resolvedChunkPath}".`,
-            error,
-          )
-        })
-      this.chunkCache.set(resolvedChunkPath, cached)
-    }
-    return cached
-  }
 }
 
-export function createTastyApi(options: { manifestPath: string; importer?: ArtifactImporter }): TastyApi {
+export function createTastyApi(options: CreateTastyApiOptions): TastyApi {
   return new TastyApiRuntime({
     manifestPath: options.manifestPath,
     importer: options.importer ?? defaultArtifactImporter,
+    preferredExternalLibraries: options.preferredExternalLibraries,
+    projectTypeParameterMembers: options.projectTypeParameterMembers,
   })
 }
 

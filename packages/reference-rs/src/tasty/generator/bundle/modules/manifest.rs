@@ -120,6 +120,10 @@ fn should_warn_duplicate_symbol_name(
     }
 
     let has_user_symbol = libraries.iter().any(|library| *library == USER_LIBRARY_NAME);
+    let user_symbol_count = libraries
+        .iter()
+        .filter(|library| **library == USER_LIBRARY_NAME)
+        .count();
     let distinct_libraries = libraries
         .iter()
         .copied()
@@ -129,6 +133,10 @@ fn should_warn_duplicate_symbol_name(
     }
 
     if !has_user_symbol {
+        return false;
+    }
+
+    if user_symbol_count == 1 {
         return false;
     }
 
@@ -563,7 +571,7 @@ mod tests {
     }
 
     #[test]
-    fn keeps_user_collisions_warning() {
+    fn suppresses_unique_user_external_collisions_warning() {
         let symbols_by_id = BTreeMap::from([
             ("_a".to_string(), entry("_a", "Shared", USER_LIBRARY_NAME)),
             ("_b".to_string(), entry("_b", "Shared", "@reference-ui/system")),
@@ -595,7 +603,7 @@ mod tests {
         let export_name_map = symbol_ids_by_export_name(&[("_a", "user-symbol"), ("_b", "system-symbol")]);
         let symbol_ids = vec!["_a".to_string(), "_b".to_string()];
 
-        assert!(should_warn_duplicate_symbol_name(
+        assert!(!should_warn_duplicate_symbol_name(
             &symbol_ids,
             &symbols_by_id,
             &symbols,
