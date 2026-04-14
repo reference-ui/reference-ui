@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest'
+
+import { DEFAULT_OUT_DIR } from '../constants'
 import type { McpBuildArtifact } from './types'
 import { findComponent, getCommonPatterns, listComponents } from './queries'
 
@@ -6,7 +8,7 @@ const artifact: McpBuildArtifact = {
   schemaVersion: 1,
   generatedAt: '2026-04-01T00:00:00.000Z',
   workspaceRoot: '/workspace/app',
-  manifestPath: '/workspace/app/.reference-ui/types/tasty/manifest.js',
+  manifestPath: `/workspace/app/${DEFAULT_OUT_DIR}/types/tasty/manifest.js`,
   diagnostics: [],
   components: [
     {

@@ -3,6 +3,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { DEFAULT_OUT_DIR } from '../../../constants'
+
 const createdDirs: string[] = []
 
 function createTempDir(): string {
@@ -119,7 +121,7 @@ describe('system/panda/gen/codegen', () => {
 
   it('runPandaCodegen throws when panda.config.ts is absent', async () => {
     const workspaceDir = createTempDir()
-    const outDir = join(workspaceDir, '.reference-ui')
+    const outDir = join(workspaceDir, DEFAULT_OUT_DIR)
     const { runPandaCodegen } = await importCodegenModule({
       cwd: workspaceDir,
       outDir,
@@ -219,7 +221,7 @@ describe('system/panda/gen/codegen', () => {
 
   it('runPandaCss throws when panda.config.ts is absent', async () => {
     const workspaceDir = createTempDir()
-    const outDir = join(workspaceDir, '.reference-ui')
+    const outDir = join(workspaceDir, DEFAULT_OUT_DIR)
     const fs = await import('node:fs')
     fs.mkdirSync(outDir, { recursive: true })
 

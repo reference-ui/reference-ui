@@ -1,8 +1,4 @@
-/**
- * Default output directory for CLI artefacts.
- * Not user-configurable; used for virtual, generated config, etc.
- */
-export const DEFAULT_OUT_DIR = '.reference-ui'
+export { DEFAULT_OUT_DIR } from '../constants'
 
 /**
  * Package ids that are (1) left external when bundling user config and

@@ -3,6 +3,8 @@ import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { DEFAULT_OUT_DIR } from '../../../constants'
+
 const createdDirs: string[] = []
 
 function createTempDir(): string {
@@ -50,7 +52,7 @@ afterEach(() => {
 describe('system/panda/config/create', () => {
   it('writes panda.config.ts with rendered collector expressions and extensions import', async () => {
     const tempDir = createTempDir()
-    const outputPath = resolve(tempDir, '.reference-ui', 'panda.config.ts')
+    const outputPath = resolve(tempDir, DEFAULT_OUT_DIR, 'panda.config.ts')
 
     const { createPandaConfig } = await importCreateModule()
 
@@ -77,7 +79,7 @@ describe('system/panda/config/create', () => {
 
   it('renders a provided baseConfig override instead of the default base config', async () => {
     const tempDir = createTempDir()
-    const outputPath = resolve(tempDir, '.reference-ui', 'panda.config.ts')
+    const outputPath = resolve(tempDir, DEFAULT_OUT_DIR, 'panda.config.ts')
 
     const { createPandaConfig } = await importCreateModule('BASE={{ baseConfigLiteral }}')
 
@@ -104,7 +106,7 @@ describe('system/panda/config/create', () => {
 
   it('produces identical panda.config.ts on rerun with same inputs', async () => {
     const tempDir = createTempDir()
-    const outputPath = resolve(tempDir, '.reference-ui', 'panda.config.ts')
+    const outputPath = resolve(tempDir, DEFAULT_OUT_DIR, 'panda.config.ts')
     const { createPandaConfig } = await importCreateModule()
 
     const opts = {

@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { DEFAULT_OUT_DIR } from '../../../constants'
+
 async function importRunModule(options?: {
   cwd?: string
   config?: unknown
@@ -38,7 +40,7 @@ async function importRunModule(options?: {
     getConfig: () => options?.config ?? { name: 'test-system', include: ['src/**/*.{ts,tsx}'] },
   }))
   vi.doMock('../../../lib/paths', () => ({
-    getOutDirPath: () => options?.outDir ?? '/workspace/.reference-ui',
+    getOutDirPath: () => options?.outDir ?? `/workspace/${DEFAULT_OUT_DIR}`,
   }))
   vi.doMock('../../../lib/paths/core-package-dir', () => ({
     resolveCorePackageDir: () => options?.cliDir ?? '/workspace/core',
@@ -96,7 +98,7 @@ describe('system/panda/config/run', () => {
       mirrorPandaExtensionsBundle,
       createPandaConfig,
     } = await importRunModule({
-      outDir: '/workspace/app/.reference-ui',
+      outDir: `/workspace/app/${DEFAULT_OUT_DIR}`,
       cliDir: '/workspace/core',
     })
 
@@ -112,10 +114,10 @@ describe('system/panda/config/run', () => {
     )
     expect(mirrorPandaExtensionsBundle).toHaveBeenCalledWith(
       '/workspace/core/src/system/styled',
-      '/workspace/app/.reference-ui'
+      `/workspace/app/${DEFAULT_OUT_DIR}`
     )
     expect(createPandaConfig).toHaveBeenCalledWith({
-      outputPath: '/workspace/app/.reference-ui/panda.config.ts',
+      outputPath: `/workspace/app/${DEFAULT_OUT_DIR}/panda.config.ts`,
       collectorBundle: expect.objectContaining({
         collectorFragments: 'collectorFragments()',
       }),

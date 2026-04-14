@@ -20,6 +20,10 @@
     "./config": {
       "types": "./src/config/index.ts",
       "import": "./dist/cli/config.mjs"
+    },
+    "./constants": {
+      "types": "./src/constants.ts",
+      "import": "./dist/cli/constants.mjs"
     }
   },
   "scripts": {

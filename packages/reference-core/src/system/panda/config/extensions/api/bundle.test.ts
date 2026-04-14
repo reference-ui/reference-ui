@@ -3,6 +3,8 @@ import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { DEFAULT_OUT_DIR } from '../../../../../constants'
+
 const createdDirs: string[] = []
 
 function createTempDir(): string {
@@ -38,11 +40,11 @@ describe('system/panda/config/extensions/api/bundle', () => {
   it('computes bundle output paths under styled/extensions', async () => {
     const { getPandaExtensionsDir, getPandaExtensionsBundlePath } = await importBundleModule()
 
-    expect(getPandaExtensionsDir('/workspace/.reference-ui/styled')).toBe(
-      '/workspace/.reference-ui/styled/extensions'
+    expect(getPandaExtensionsDir(`/workspace/${DEFAULT_OUT_DIR}/styled`)).toBe(
+      `/workspace/${DEFAULT_OUT_DIR}/styled/extensions`
     )
-    expect(getPandaExtensionsBundlePath('/workspace/.reference-ui/styled')).toBe(
-      '/workspace/.reference-ui/styled/extensions/index.mjs'
+    expect(getPandaExtensionsBundlePath(`/workspace/${DEFAULT_OUT_DIR}/styled`)).toBe(
+      `/workspace/${DEFAULT_OUT_DIR}/styled/extensions/index.mjs`
     )
   })
 
@@ -67,7 +69,7 @@ describe('system/panda/config/extensions/api/bundle', () => {
   it('mirrors the extensions bundle into outDir/styled/extensions', async () => {
     const tempDir = createTempDir()
     const cliStyledDir = resolve(tempDir, 'core-styled')
-    const outDir = resolve(tempDir, '.reference-ui')
+    const outDir = resolve(tempDir, DEFAULT_OUT_DIR)
     const sourceExtensionsDir = resolve(cliStyledDir, 'extensions')
     const sourceBundlePath = resolve(sourceExtensionsDir, 'index.mjs')
 

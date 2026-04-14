@@ -1,7 +1,7 @@
 /** Resolve the current project root, outDir, and managed output roots for bundlers. */
 
 import { resolve } from 'node:path'
-import { DEFAULT_OUT_DIR } from './constants'
+import { DEFAULT_OUT_DIR } from '../constants'
 import { resolveManagedOutputRoots } from './outputs'
 import type { ReferenceProjectPaths } from './types'
 

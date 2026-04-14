@@ -2,6 +2,8 @@ import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+
+import { DEFAULT_OUT_DIR } from '../../constants'
 import type { PackageDefinition } from '../package'
 
 const createdDirs: string[] = []
@@ -69,7 +71,7 @@ describe('packager/bundler', () => {
   it('delegates bundled entries to esbuild and still writes package.json', async () => {
     const workspaceDir = createTempDir()
     const coreDir = resolve(workspaceDir, 'core')
-    const outDir = resolve(workspaceDir, '.reference-ui')
+    const outDir = resolve(workspaceDir, DEFAULT_OUT_DIR)
     const targetDir = resolve(outDir, 'system')
     const entryPath = 'src/entry/system.ts'
 
@@ -111,7 +113,7 @@ describe('packager/bundler', () => {
   it('copies package assets from outDir and writes metadata for non-bundled packages', async () => {
     const workspaceDir = createTempDir()
     const coreDir = resolve(workspaceDir, 'core')
-    const outDir = resolve(workspaceDir, '.reference-ui')
+    const outDir = resolve(workspaceDir, DEFAULT_OUT_DIR)
     const targetDir = resolve(outDir, 'react')
 
     mkdirSync(resolve(outDir, 'styled'), { recursive: true })
@@ -155,7 +157,7 @@ describe('packager/bundler', () => {
   it('bundles the @reference-ui/types entry while preserving generated Tasty artifacts', async () => {
     const workspaceDir = createTempDir()
     const coreDir = resolve(workspaceDir, 'core')
-    const outDir = resolve(workspaceDir, '.reference-ui')
+    const outDir = resolve(workspaceDir, DEFAULT_OUT_DIR)
     const targetDir = resolve(outDir, 'types')
 
     writeTastyTypesFixture(coreDir, targetDir)

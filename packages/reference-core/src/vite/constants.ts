@@ -1,6 +1,6 @@
 /** Shared constants for the Reference UI Vite integration. */
 
-export { DEFAULT_OUT_DIR, GENERATED_OUTPUT_ROOTS } from '../bundlers/constants'
+export { DEFAULT_OUT_DIR, GENERATED_OUTPUT_ROOTS } from '../constants'
 
 /**
  * Package ids that should stay out of Vite's dependency optimizer.
