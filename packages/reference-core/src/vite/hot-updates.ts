@@ -1,14 +1,10 @@
 /** Build one native Vite hot-update payload from a batch of generated file writes. */
 
-import type {
-  ReferenceViteDevServer,
-  ReferenceViteModule,
-  ReferenceViteUpdate,
-  ReferenceViteUpdatePayload,
-} from './types'
+import type { ModuleNode, ViteDevServer } from 'vite'
+import type { ReferenceViteUpdate, ReferenceViteUpdatePayload } from './types'
 
 export function buildHotUpdatePayload(
-  server: ReferenceViteDevServer,
+  server: ViteDevServer,
   pendingFiles: Set<string>
 ): ReferenceViteUpdatePayload | null {
   if (pendingFiles.size === 0) {
@@ -27,7 +23,7 @@ export function buildHotUpdatePayload(
 }
 
 function collectDistinctHotUpdates(
-  server: ReferenceViteDevServer,
+  server: ViteDevServer,
   pendingFiles: Set<string>
 ): ReferenceViteUpdate[] {
   const timestamp = Date.now()
@@ -39,7 +35,7 @@ function collectDistinctHotUpdates(
     if (!touchedModules) continue
 
     for (const module of touchedModules) {
-      server.moduleGraph.invalidateModule(module, new Set<ReferenceViteModule>(), timestamp, true)
+      server.moduleGraph.invalidateModule(module, new Set<ModuleNode>(), timestamp, true)
 
       const update = toHotUpdate(module, timestamp)
       if (!update) continue
@@ -55,7 +51,7 @@ function collectDistinctHotUpdates(
 }
 
 function toHotUpdate(
-  module: ReferenceViteModule,
+  module: ModuleNode,
   timestamp: number
 ): ReferenceViteUpdate | null {
   if (!module.url) {

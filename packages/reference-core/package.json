@@ -44,6 +44,14 @@
   "publishConfig": {
     "access": "public"
   },
+  "peerDependencies": {
+    "vite": "^5.2.0 || ^6.0.0 || ^7.0.0"
+  },
+  "peerDependenciesMeta": {
+    "vite": {
+      "optional": true
+    }
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@pandacss/dev": "^1.9.0",
@@ -76,6 +84,7 @@
     "tsx": "^4.21.0",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.56.1",
+    "vite": "^7.3.1",
     "vitest": "^4.0.18"
   }
 }
