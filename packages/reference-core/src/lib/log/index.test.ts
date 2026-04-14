@@ -41,7 +41,18 @@ describe('lib/log', () => {
 
     log.info('hello', { ok: true })
 
-    expect(consoleLog).toHaveBeenCalledWith('hello', { ok: true })
+    expect(consoleLog).toHaveBeenCalledTimes(1)
+    expect(consoleLog.mock.calls[0]?.slice(-2)).toEqual(['hello', { ok: true }])
+  })
+
+  it('promotes a leading module tag into branded output', async () => {
+    const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const { log } = await importLogModule({ isMainThread: true })
+
+    log.warn('[sync] waiting for runtime packages')
+
+    expect(consoleWarn).toHaveBeenCalledTimes(1)
+    expect(consoleWarn.mock.calls[0]?.at(-1)).toBe('waiting for runtime packages')
   })
 
   it('forwards worker logs through the event bus', async () => {
@@ -136,11 +147,7 @@ describe('lib/log', () => {
       expect(consoleError).toHaveBeenCalledTimes(1)
     })
 
-    expect(consoleError).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.stringContaining('[worker:3]'),
-      expect.any(String)
-    )
+    expect(consoleError.mock.calls[0]?.at(-1)).toBe('worker exploded')
 
     peer.close()
     closeLogRelay()

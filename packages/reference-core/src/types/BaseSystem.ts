@@ -6,6 +6,6 @@ export interface BaseSystem {
   name: string
   /** Bundled fragment IIFEs representing the full upstream config contribution. */
   fragment: string
-  /** Pre-compiled component CSS for layers mode. Scoped to @layer <name> + [data-layer] token block. */
+  /** Pre-compiled component CSS for layers mode, including any bundled upstream stylesheets. */
   css?: string
 }

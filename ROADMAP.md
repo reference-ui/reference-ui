@@ -2,7 +2,7 @@
 
 ---
 
-## API Tables _(final hardening)_
+## API Tables _(final hardening)_ [DONE]
 
 Core table rendering and Tasty hardening are done. Remaining items before this is considered complete:
 
@@ -21,20 +21,9 @@ The MCP server is at final stages. Remaining items:
 
 ---
 
-## Release: CLI / reference-core
-
-First-class public release of `reference-core` (CLI + scanner + pipeline) as a standalone consumable package.
-
-- [ ] Agree on public API surface — what is exported, what is internal
-- [ ] Semver tagging strategy — decide on 0.x vs 1.0 threshold and what constitutes a breaking change
-- [ ] Set up npm publish pipeline — CI step that gates publish on passing tests
-- [ ] Write a changelog / release notes for the initial cut
-- [ ] Smoke test suite — minimal integration test that can run in CI against a real project fixture before publish
-- [ ] Public-facing documentation — installation, basic usage, config reference
-
 ---
 
-## Tasty: dedup correctness
+## Tasty: dedup correctness [DONE]
 
 Duplicate-symbol behavior is currently untested and could regress silently.
 
@@ -44,7 +33,7 @@ Duplicate-symbol behavior is currently untested and could regress silently.
 
 ---
 
-## 1st Class State & Change Detection
+## 1st Class State & Change Detection [DONE]
 
 The internal event bus / state machine currently relies on `console.log` for observability. This needs to be a proper, structured system.
 
@@ -55,7 +44,7 @@ The internal event bus / state machine currently relies on `console.log` for obs
 
 ---
 
-## Reload when Tokens get updated
+## Reload when Tokens get updated [DONE]
 
 - [ ] Detect when token files change during `ref sync --watch` and trigger a targeted reload
 - [ ] Ensure reload does not cause a full HMR storm — only invalidate what depends on the changed tokens
@@ -63,7 +52,7 @@ The internal event bus / state machine currently relies on `console.log` for obs
 
 ---
 
-## Vite Integration
+## Vite Integration [DONE]
 
 **Goal:** One coherent client update per logical change — avoid HMR storms while `ref sync --watch` is still writing (Panda, packager, declarations).
 
@@ -73,18 +62,36 @@ The internal event bus / state machine currently relies on `console.log` for obs
 
 ---
 
-## Webpack Integration
+## Webpack Integration [DONE]
 
-- [ ] Implement equivalent of the Vite plugin for Webpack's watch/HMR pipeline
-- [ ] Define a shared abstraction (if possible) so bundler-specific plugins share the buffering logic
-- [ ] Basic integration test with a Webpack fixture project
+- [x] Implement equivalent of the Vite plugin for Webpack's watch/HMR pipeline
+- [x] Define a shared abstraction (if possible) so bundler-specific plugins share the buffering logic
+- [x] Basic integration test with a Webpack fixture project
 
 ---
 
-## Errors and Warnings
+## Reduce all dependency on console messages for testing, relying instead on the session api that the bundlers use (ready etc) [DONE]
+- [x] make sure all unit tests pass with debug: false in their ui.config
+- [x] make suyre all e2e tests pawss with debug: false in their ui.config
 
+
+## Beautify the Console
+- [ ] Give nice status messgaes (minimal)
 - [ ] Warn when a component references a token that does not exist in the resolved token set
 - [ ] Warn on circular dependencies in the scan graph
 - [ ] Error with a clear message when config is malformed (currently likely a raw exception)
 - [ ] Audit other silent failure points and add structured diagnostics throughout the pipeline
 - [ ] Centralise all user-facing messages — consistent format, severity levels, and actionable hints
+
+
+
+## Release: CLI / reference-core
+
+First-class public release of `reference-core` (CLI + scanner + pipeline) as a standalone consumable package.
+
+- [ ] Agree on public API surface — what is exported, what is internal
+- [ ] Semver tagging strategy — decide on 0.x vs 1.0 threshold and what constitutes a breaking change
+- [ ] Set up npm publish pipeline — CI step that gates publish on passing tests
+- [ ] Write a changelog / release notes for the initial cut
+- [ ] Smoke test suite — minimal integration test that can run in CI against a real project fixture before publish
+- [ ] Public-facing documentation — installation, basic usage, config reference

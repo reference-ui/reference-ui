@@ -1,5 +1,10 @@
 import { emit } from '../../../lib/event-bus'
-import { runPandaCodegen, runPandaCss } from './codegen'
+import {
+  getPandaErrorOutput,
+  runPandaCodegen,
+  runPandaCss,
+  unwrapPandaError,
+} from './codegen'
 import { log } from '../../../lib/log'
 
 export function onRunCodegen(): void {
@@ -9,20 +14,34 @@ export function onRunCodegen(): void {
       emit('system:panda:codegen')
     })
     .catch((err) => {
+      const pandaOutput = getPandaErrorOutput(err)
+      const cause = unwrapPandaError(err)
+
       log.error(
         '[panda] codegen failed (continuing without system/styled). Virtual copy will still run.',
-        err instanceof Error ? err.message : String(err)
+        cause instanceof Error ? cause.message : String(cause)
       )
-      if (err instanceof Error && err.stack) log.debug('panda', err.stack)
+      if (pandaOutput) {
+        log.error('[panda] output:', pandaOutput)
+      }
+      if (cause instanceof Error && cause.stack) log.debug('panda', cause.stack)
       emit('system:panda:codegen:failed')
     })
 }
 
 export function onRunCss(): void {
   runPandaCss()
-    .then(() => emit('system:panda:css'))
+    .then(() => {
+      emit('system:panda:css')
+    })
     .catch((err) => {
-      log.error('panda', 'onRunCss failed', err)
+      const pandaOutput = getPandaErrorOutput(err)
+      const cause = unwrapPandaError(err)
+
+      log.error('[panda] css failed:', cause instanceof Error ? cause.message : String(cause))
+      if (pandaOutput) {
+        log.error('[panda] output:', pandaOutput)
+      }
       throw err
     })
 }

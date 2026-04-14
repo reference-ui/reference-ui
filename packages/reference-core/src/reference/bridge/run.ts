@@ -4,6 +4,7 @@ import {
   createReferenceBuildReport,
   formatReferenceBuildDiagnostic,
 } from './build-report'
+import { logReferenceBuilt, logReferenceWarning } from './logging'
 import { rebuildReferenceTastyBuild } from './tasty-build'
 import type { ReferenceWorkerPayload } from './worker-types'
 
@@ -16,6 +17,7 @@ export async function onRunBuild(
   buildPayload: ReferenceBuildPayload
 ): Promise<void> {
   const { name } = buildPayload
+  const startedAt = Date.now()
 
   try {
     const state = await rebuildReferenceTastyBuild(workerPayload)
@@ -23,8 +25,10 @@ export async function onRunBuild(
     const report = createReferenceBuildReport(state)
 
     for (const diagnostic of report.diagnostics) {
-      log.info('[reference] warning:', formatReferenceBuildDiagnostic(diagnostic))
+      logReferenceWarning(formatReferenceBuildDiagnostic(diagnostic))
     }
+
+    logReferenceBuilt(Date.now() - startedAt)
 
     log.debug('reference', 'Reference build completed', {
       name,

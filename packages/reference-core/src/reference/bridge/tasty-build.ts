@@ -6,6 +6,7 @@ import {
   type TastyBuildDiagnostic,
 } from '@reference-ui/rust/tasty/build'
 import { getOutDirPath, getVirtualDirPath } from '../../lib/paths'
+import { createReferenceUiTastyApi } from '../tasty/api'
 import type { ReferenceWorkerPayload } from './worker-types'
 import { getReferenceTastyDirPath } from './paths'
 
@@ -114,6 +115,6 @@ function toReferenceTastyBuildState(
     manifestPath: builtTasty.manifestPath,
     warnings: builtTasty.warnings,
     diagnostics: builtTasty.diagnostics,
-    api: builtTasty.api,
+    api: createReferenceUiTastyApi({ manifestPath: builtTasty.manifestPath }),
   }
 }

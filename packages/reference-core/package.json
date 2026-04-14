@@ -23,12 +23,15 @@
     }
   },
   "scripts": {
-    "prebuild": "tsx src/system/build/primitives/index.ts && tsx src/system/build/styled/index.ts",
+    "copy:reference-api-component": "node tools/copy-reference-api-component.mjs",
+    "prebuild": "tsx src/system/build/primitives/index.ts && tsx src/system/build/styled/index.ts && pnpm run copy:reference-api-component",
     "build": "pnpm run build:native && tsup",
     "build:native": "pnpm --filter @reference-ui/rust run build",
     "prepack": "pnpm run build",
+    "predev": "pnpm run copy:reference-api-component",
     "dev": "tsup --watch",
     "sync": "node dist/cli/index.mjs sync",
+    "pretypecheck": "pnpm run copy:reference-api-component",
     "typecheck": "tsc --noEmit",
     "test": "pnpm run typecheck && vitest run",
     "test:watch": "vitest",

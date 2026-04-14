@@ -5,7 +5,7 @@ export function MemberDescription({ description }: { description?: string }) {
 
   return (
     <P margin="0" color="reference.foreground">
-      {description}
+      {description} 
     </P>
   )
 }

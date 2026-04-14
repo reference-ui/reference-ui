@@ -1,6 +1,7 @@
-import { watch as fsWatch, existsSync } from 'node:fs'
-import { resolve, join, dirname, basename } from 'node:path'
+import { existsSync } from 'node:fs'
+import { resolve, join } from 'node:path'
 import { readManifest, SESSION_FILE } from './files'
+import { createSessionWatcher } from './watch'
 import type { GetSyncSessionOptions, RefreshHandler, SyncSession } from './types'
 
 const DEFAULT_OUT_DIR = '.reference-ui'
@@ -58,7 +59,6 @@ export function getSyncSession(options: GetSyncSessionOptions): SyncSession {
   const outDir = findOutDir(options)
   const handlers = new Set<RefreshHandler>()
   let lastBuildState: string | null = null
-  let watcher: ReturnType<typeof fsWatch> | null = null
 
   function checkForRefresh(): void {
     const manifest = readManifest(outDir)
@@ -78,52 +78,8 @@ export function getSyncSession(options: GetSyncSessionOptions): SyncSession {
       lastBuildState = manifest.buildState
     }
   }
-
-  /**
-   * Watch `outDir` for any change to `session.json`.
-   * Using a directory watcher (rather than a file watcher) ensures that
-   * atomic renames — which replace the inode — are still detected.
-   */
-  function watchOutDir(): void {
-    try {
-      const fw = fsWatch(outDir, { persistent: false }, (_, filename) => {
-        if (filename === SESSION_FILE) checkForRefresh()
-      })
-      fw.on('error', () => {})
-      watcher = fw
-    } catch {
-      // outDir may have been removed (e.g. ref clean); nothing to do.
-    }
-  }
-
-  function startWatching(): void {
-    if (existsSync(outDir)) {
-      watchOutDir()
-      return
-    }
-
-    // outDir absent — watch its parent so we can promote once it is created.
-    const parent = dirname(outDir)
-    const outDirName = basename(outDir)
-    if (!existsSync(parent)) return
-
-    try {
-      const probe = fsWatch(parent, { persistent: false }, (_, filename) => {
-        if (filename === outDirName && existsSync(outDir)) {
-          probe.close()
-          watcher = null
-          watchOutDir()
-          checkForRefresh()
-        }
-      })
-      probe.on('error', () => {})
-      watcher = probe
-    } catch {
-      // Ignore — parent may not be watchable.
-    }
-  }
-
-  startWatching()
+  const watcher = createSessionWatcher(outDir, checkForRefresh)
+  watcher.restart()
 
   return {
     onRefresh(handler: RefreshHandler): () => void {
@@ -134,8 +90,7 @@ export function getSyncSession(options: GetSyncSessionOptions): SyncSession {
     },
 
     dispose(): void {
-      watcher?.close()
-      watcher = null
+      watcher.dispose()
       handlers.clear()
     },
   }

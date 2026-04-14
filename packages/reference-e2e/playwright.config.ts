@@ -12,10 +12,13 @@ const blobOutput = process.env.PLAYWRIGHT_BLOB_OUTPUT
 
 export default defineConfig({
   testDir: './src/tests',
-  fullyParallel: true,
+  fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: cfg.workers,
+  // Each project shares one sandbox and dev server, so cross-worker execution races on ui.config.ts
+  // and generated .reference-ui output. Cross-project parallelism is handled by the matrix runner,
+  // where each project gets its own sandbox and port.
+  workers: 1,
   reporter: blobOutput
     ? [['blob', { outputFile: blobOutput }]]
     : 'html',

@@ -9,6 +9,7 @@ import {
 } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import symlinkDir from 'symlink-dir'
+import { prepareLinkPathForSymlink } from './prepare-link-path-for-symlink'
 
 /** Remove a symlink or directory at path. Ignores ENOENT. */
 export function removeSymlinkOrDir(path: string): void {
@@ -29,12 +30,13 @@ export function removeSymlinkOrDir(path: string): void {
  * site.
  */
 export function createSymlink(targetDir: string, linkPath: string): void {
-  if (existsSync(linkPath)) rmSync(linkPath, { recursive: true, force: true })
   if (!existsSync(targetDir) || !statSync(targetDir).isDirectory()) {
     throw new Error(
       `Packager target ${targetDir} must be a directory (symlink-dir requires it on Windows)`
     )
   }
+
+  if (!prepareLinkPathForSymlink(linkPath, targetDir)) return
 
   symlinkDir.sync(targetDir, linkPath)
 }

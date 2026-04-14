@@ -2,12 +2,11 @@ import { globalCss } from '@reference-ui/system'
 import { baseTypography } from './baseTypography'
 
 export const codePrimitiveStyles = {
-  '.ref-code': {
+  'code': {
     ...baseTypography,
     fontFamily: 'mono',
     fontSize: '0.9em',
-    backgroundColor: 'gray.100',
-    color: 'pink.600',
+    color: 'red.600',
     paddingInline: '0.4em',
     paddingBlock: '0.15em',
     borderRadius: 'sm',

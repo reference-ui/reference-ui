@@ -10,6 +10,7 @@ import { initPanda } from '../system/panda/gen/init'
 import { initReference } from '../reference/bridge/init'
 import { initMcp } from '../mcp/init'
 import { initSession } from '../session'
+import { startSyncLogging } from './logging'
 import type { SyncOptions } from './types'
 
 export type { SyncOptions, SyncPayload } from './types'
@@ -18,6 +19,7 @@ export type { SyncOptions, SyncPayload } from './types'
 export async function syncCommand(cwd: string, options?: SyncOptions): Promise<void> {
   const payload = await bootstrap(cwd, options)
   initShutdown()
+  startSyncLogging()
   initEvents()
   initSession(payload)
   initComplete(payload)

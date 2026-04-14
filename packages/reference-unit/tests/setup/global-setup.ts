@@ -6,8 +6,8 @@ import { fileURLToPath } from 'node:url'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const pkgRoot = resolve(__dirname, '..', '..')
 const REF_SYNC_TIMEOUT_MS = 180_000
-const REF_SYNC_READY_MESSAGE = '[ref sync] ready'
 const WATCH_LOG_PATH = join(pkgRoot, '.ref-sync-watch.log')
+const SESSION_PATH = join(pkgRoot, '.reference-ui', 'session.json')
 const refCore = join(
   pkgRoot,
   'node_modules',
@@ -30,16 +30,25 @@ async function waitForOutputs(paths: string[], maxMs = 15_000): Promise<boolean>
   return false
 }
 
-async function waitForReadyCount(logPath: string, expectedCount: number, maxMs = 30_000): Promise<boolean> {
+function readSessionUpdatedAt(): string | null {
+  if (!existsSync(SESSION_PATH)) return null
+  try {
+    const session = JSON.parse(readFileSync(SESSION_PATH, 'utf-8')) as {
+      buildState?: string
+      updatedAt?: string
+    }
+    if (session.buildState !== 'ready') return null
+    return session.updatedAt ?? null
+  } catch {
+    return null
+  }
+}
+
+async function waitForReadyTransition(previousUpdatedAt: string | null, maxMs = 30_000): Promise<boolean> {
   const start = Date.now()
   while (Date.now() - start < maxMs) {
-    try {
-      const content = readFileSync(logPath, 'utf-8')
-      const count = content.split(REF_SYNC_READY_MESSAGE).length - 1
-      if (count >= expectedCount) return true
-    } catch {
-      // log may not exist yet
-    }
+    const updatedAt = readSessionUpdatedAt()
+    if (updatedAt && updatedAt !== previousUpdatedAt) return true
     await new Promise((r) => setTimeout(r, 100))
   }
   return false
@@ -80,6 +89,7 @@ export default async function globalSetup() {
 
   writeFileSync(WATCH_LOG_PATH, '')
   const logFd = openSync(WATCH_LOG_PATH, 'a')
+  const previousUpdatedAt = readSessionUpdatedAt()
   const appWatchProcess = spawn('node', [refCore, 'sync', '--watch', '--debug'], {
     cwd: pkgRoot,
     stdio: ['ignore', logFd, logFd],
@@ -88,10 +98,10 @@ export default async function globalSetup() {
   closeSync(logFd)
   appWatchProcess.unref()
 
-  const ready = await waitForReadyCount(WATCH_LOG_PATH, 1)
+  const ready = await waitForReadyTransition(previousUpdatedAt)
   if (!ready) {
     killProcessTree(appWatchProcess.pid)
-    throw new Error('ref sync --watch did not emit initial ready signal for reference-unit tests')
+    throw new Error('ref sync --watch did not reach a fresh ready state for reference-unit tests')
   }
 
   return () => {

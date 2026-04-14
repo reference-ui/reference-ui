@@ -53,12 +53,28 @@ export interface TastyCallableParameter {
 export interface CreateTastyApiOptions {
   manifestPath: string
   importer?: (artifactPath: string) => Promise<unknown>
+  /**
+   * Optional preference order for resolving ambiguous bare symbol name lookups.
+   */
+  preferredExternalLibraries?: string[]
+  /**
+   * Optional hook for projecting unresolved type-parameter references into object members.
+   */
+  projectTypeParameterMembers?: TastyTypeParameterMemberProjector
 }
 
 export interface CreateTastyApiFromManifestOptions {
   manifest: RawTastyManifest
   importer: (artifactPath: string) => Promise<unknown>
   manifestPath?: string
+  /**
+   * Optional preference order for resolving ambiguous bare symbol name lookups.
+   */
+  preferredExternalLibraries?: string[]
+  /**
+   * Optional hook for projecting unresolved type-parameter references into object members.
+   */
+  projectTypeParameterMembers?: TastyTypeParameterMemberProjector
 }
 
 export interface TastySymbolSearchResult {
@@ -152,6 +168,11 @@ export interface TastyGraphApi {
   collectUserOwnedReferences(symbol: TastySymbol): Promise<TastySymbolRef[]>
 }
 
+export type TastyTypeParameterMemberProjector = (input: {
+  api: TastyApi
+  reference: RawTastyTypeReference
+}) => Promise<TastyMember[] | undefined> | TastyMember[] | undefined
+
 export interface TastyApi {
   ready(): Promise<void>
   loadManifest(): Promise<RawTastyManifest>
@@ -182,6 +203,10 @@ export type TastyRuntimeModuleLoader = () => Promise<unknown>
 
 export interface CreateTastyBrowserRuntimeOptions {
   loadRuntimeModule: TastyRuntimeModuleLoader
+  apiOptions?: Pick<
+    CreateTastyApiFromManifestOptions,
+    'preferredExternalLibraries' | 'projectTypeParameterMembers'
+  >
 }
 
 export interface TastyBrowserRuntime {

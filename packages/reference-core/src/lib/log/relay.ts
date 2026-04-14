@@ -17,6 +17,8 @@ type WorkerLogFields = {
   level: LogLevel
   args: unknown[]
   module?: string
+  label?: string
+  badge?: string
   timestamp?: string
 }
 
@@ -49,6 +51,8 @@ function writeWorkerLogFallback(entry: WorkerLogFields, error: unknown): void {
   )
   writeLogEntry(entry.level, entry.args.map(formatTransportArg), {
     module: entry.module,
+    label: entry.label,
+    badge: entry.badge,
     source: 'worker',
     threadId,
     timestamp: entry.timestamp,
@@ -74,6 +78,8 @@ export function initLogRelay(): void {
 
     writeLogEntry(parsed.payload.level, parsed.payload.args, {
       module: parsed.payload.module,
+      label: parsed.payload.label,
+      badge: parsed.payload.badge,
       source: parsed.payload.source,
       threadId: parsed.payload.threadId,
       timestamp: parsed.payload.timestamp,

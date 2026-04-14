@@ -3,7 +3,7 @@
  * without overwriting other tests' changes. Base comes from the composed environment.
  */
 
-import { writeFile, mkdir } from 'node:fs/promises'
+import { readFile, writeFile, mkdir } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -13,7 +13,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const BASE_CONFIG = {
   name: 'reference-e2e',
   include: ['**/*.{ts,tsx}'] as const,
-  debug: true,
+  debug: false,
   skipTypescript: true,
 } as const
 
@@ -63,6 +63,7 @@ function deepMerge<T extends object>(base: T, additions: Partial<T>): T {
 }
 
 const DEFAULT_BASESYSTEM_PKG = '@reference-ui/lib'
+let initialSandboxConfigContent: string | null = null
 
 /** Collect identifiers from expression like '[baseSystem]' → ['baseSystem'] */
 function collectIdentifiers(expr: string): string[] {
@@ -98,12 +99,21 @@ function buildConfigContent(merged: Record<string, unknown>, extendsExpr?: strin
   return `${imports.join('\n')}\n\nexport default defineConfig(${configWithExtras})`
 }
 
+async function getInitialSandboxConfigContent(): Promise<string> {
+  if (initialSandboxConfigContent !== null) return initialSandboxConfigContent
+  const sandboxDir = getSandboxDir()
+  const configPath = join(sandboxDir, 'ui.config.ts')
+  initialSandboxConfigContent = await readFile(configPath, 'utf-8')
+  return initialSandboxConfigContent
+}
+
 /**
  * Add elements to the environment's base config and write to sandbox.
  * Merges additions onto base; never overwrites from other tests.
  */
 export async function addToConfig(additions: ConfigAdditions): Promise<void> {
   const sandboxDir = getSandboxDir()
+  await getInitialSandboxConfigContent()
   const { extends: extendsExpr = '[baseSystem]', layers: layersExpr, ...rest } = additions
 
   const merged = deepMerge(
@@ -118,4 +128,10 @@ export async function addToConfig(additions: ConfigAdditions): Promise<void> {
   const configPath = join(sandboxDir, 'ui.config.ts')
   await mkdir(dirname(configPath), { recursive: true })
   await writeFile(configPath, content)
+}
+
+export async function resetConfig(): Promise<void> {
+  const sandboxDir = getSandboxDir()
+  const configPath = join(sandboxDir, 'ui.config.ts')
+  await writeFile(configPath, await getInitialSandboxConfigContent())
 }

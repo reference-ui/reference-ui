@@ -1,8 +1,33 @@
-import { cpSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
-import { extname, resolve } from 'node:path'
+import { cpSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync } from 'node:fs'
+import { dirname, extname, resolve } from 'node:path'
+import { writeFileAtomic } from '../../lib/fs/write-file-atomic'
 import { transformTypeScriptFile } from './transform'
 
 const TEXT_ENCODING = 'utf-8'
+
+function cleanupTempFile(tempPath: string): void {
+  try {
+    rmSync(tempPath, { force: true })
+  } catch {
+    // Best-effort cleanup only.
+  }
+}
+
+function getTempPath(filePath: string): string {
+  return `${filePath}.tmp-${process.pid}-${Date.now()}`
+}
+
+export function copyFileAtomically(srcPath: string, destPath: string): void {
+  mkdirSync(dirname(destPath), { recursive: true })
+  const tempPath = getTempPath(destPath)
+  try {
+    cpSync(srcPath, tempPath)
+    renameSync(tempPath, destPath)
+  } catch (error) {
+    cleanupTempFile(tempPath)
+    throw error
+  }
+}
 
 function isMissingFileError(error: unknown): boolean {
   return (
@@ -34,7 +59,7 @@ export function writeIfChanged(filePath: string, newContent: string): boolean {
     }
   }
 
-  writeFileSync(filePath, newContent, TEXT_ENCODING)
+  writeFileAtomic(filePath, newContent, TEXT_ENCODING)
   return true
 }
 
@@ -47,7 +72,7 @@ export async function copyFileWithTransforms(srcPath: string, destPath: string):
     return
   }
 
-  cpSync(srcPath, destPath)
+  copyFileAtomically(srcPath, destPath)
 }
 
 /**

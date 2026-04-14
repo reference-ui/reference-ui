@@ -1,5 +1,6 @@
 import { join } from 'node:path'
 import { existsSync } from 'node:fs'
+import { createReferenceUiTastyApi } from '../../../reference-core/src/reference/tasty/api'
 import { pkgRoot, waitFor } from '../virtual/helpers'
 
 export const typesPackageDir = join(pkgRoot, '.reference-ui', 'types')
@@ -14,4 +15,8 @@ export async function waitForReferenceArtifacts(timeoutMs = 8000): Promise<boole
 
 export async function waitForTypesPackage(timeoutMs = 8000): Promise<boolean> {
   return waitFor(() => existsSync(typesPackageManifestPath) && existsSync(typesPackageJsonPath), { timeoutMs })
+}
+
+export function createReferenceTestApi(manifestPath = typesPackageManifestPath) {
+  return createReferenceUiTastyApi({ manifestPath })
 }

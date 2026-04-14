@@ -10,7 +10,7 @@
   "scripts": {
     "build": "pnpm -r run build",
     "changeset": "changeset",
-    "dev": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/lib run sync && concurrently --kill-others-on-fail -n core,docs -c blue,green \"pnpm --filter @reference-ui/core run dev\" \"pnpm --filter @reference-ui/reference-docs run dev\"",
+    "dev": "pnpm --filter @reference-ui/lib run build && concurrently --kill-others-on-fail -n core,docs -c blue,green \"pnpm --filter @reference-ui/core run dev\" \"pnpm --filter @reference-ui/reference-docs run dev\"",
     "dev:lib": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/lib run sync && concurrently --kill-others-on-fail -n sync,cosmos -c cyan,magenta \"pnpm --filter @reference-ui/lib run dev\" \"pnpm --filter @reference-ui/lib run cosmos\"",
     "playwright:install": "pnpm --filter @reference-ui/reference-e2e exec playwright install chromium",
     "release:detect": "node ./scripts/release/detect.mjs",
@@ -25,7 +25,7 @@
     "test:app": "nx run @reference-ui/reference-unit:test",
     "test:ci": "pnpm run test:ci:unit && pnpm run playwright:install && pnpm run test:ci:e2e",
     "test:ci:unit": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/core run eslint:txt && pnpm --filter @reference-ui/rust run test && pnpm --filter @reference-ui/core run test && pnpm --filter @reference-ui/reference-unit run test",
-    "test:ci:e2e": "pnpm --filter @reference-ui/lib run build && REF_TEST_FRESH=1 pnpm --filter @reference-ui/reference-e2e run test",
+    "test:ci:e2e": "pnpm --filter @reference-ui/lib run build && CI=1 REF_TEST_FRESH=1 pnpm --filter @reference-ui/reference-e2e run test",
     "test:system": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/core run eslint:txt && concurrently --kill-others-on-fail -n core,unit -c blue,green \"pnpm --filter @reference-ui/core run test\" \"pnpm --filter @reference-ui/reference-unit run test\"",
     "test:e2e": "REF_TEST_FRESH=1 pnpm --filter @reference-ui/reference-e2e run test:quick",
     "test:e2e:dev": "pnpm --filter @reference-ui/lib run build && REF_TEST_PROJECT=react18-vite5 pnpm --filter @reference-ui/reference-e2e run test:dev",

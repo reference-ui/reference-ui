@@ -11,7 +11,14 @@ import { basename, join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { execa } from 'execa'
 
-import { MATRIX, getReactVersion, getViteVersion, getPort } from '../matrix/index'
+import {
+  MATRIX,
+  getPort,
+  getReactVersion,
+  getViteVersion,
+  getWebpackDevServerVersion,
+  getWebpackVersion,
+} from '../matrix/index'
 import type { MatrixEntry } from '../matrix/index'
 import { composeSandbox } from '../environments/manifest'
 
@@ -34,6 +41,28 @@ function logStep(message: string): void {
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+function isRetryableRemoveError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false
+  if (!('code' in error)) return false
+  const code = String(error.code)
+  return code === 'ENOTEMPTY' || code === 'EBUSY' || code === 'EPERM'
+}
+
+async function removeDirWithRetries(path: string, attempts = 5): Promise<void> {
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      await rm(path, { recursive: true, force: true })
+      return
+    } catch (error) {
+      if (!isRetryableRemoveError(error) || attempt === attempts) {
+        throw error
+      }
+
+      await sleep(150 * attempt)
+    }
+  }
 }
 
 async function getSandboxProcessIds(sandboxDir: string): Promise<number[]> {
@@ -111,6 +140,8 @@ function interpolateTemplate(
 async function buildPackageJson(entry: MatrixEntry, sandboxDir: string): Promise<object> {
   const reactVersion = getReactVersion(entry)
   const viteVersion = getViteVersion(entry)
+  const webpackVersion = getWebpackVersion(entry)
+  const webpackDevServerVersion = getWebpackDevServerVersion(entry)
   const rawTemplate = JSON.parse(
     await readFile(join(sandboxDir, 'package.json'), 'utf-8')
   ) as Record<string, unknown>
@@ -120,6 +151,8 @@ async function buildPackageJson(entry: MatrixEntry, sandboxDir: string): Promise
     __REF_TEST_LIB_PATH__: `link:${LIB_PATH}`,
     __REF_TEST_REACT_VERSION__: reactVersion,
     __REF_TEST_VITE_VERSION__: viteVersion,
+    __REF_TEST_WEBPACK_VERSION__: webpackVersion,
+    __REF_TEST_WEBPACK_DEV_SERVER_VERSION__: webpackDevServerVersion,
   }) as Record<string, unknown>
   const scripts = { ...(template.scripts as Record<string, string> | undefined) }
 
@@ -128,9 +161,19 @@ async function buildPackageJson(entry: MatrixEntry, sandboxDir: string): Promise
     name: `ref-test-sandbox-${entry.name}`,
     scripts: {
       ...scripts,
-      dev: `ref sync --watch >> ref-sync.log 2>&1 & vite --port ${getPort(entry)}`,
+      dev: getBundlerDevCommand(entry),
     },
   }
+}
+
+function getBundlerDevCommand(entry: MatrixEntry): string {
+  const port = getPort(entry)
+
+  if (entry.bundler === 'webpack') {
+    return `ref sync --watch >> ref-sync.log 2>&1 & webpack serve --config webpack.config.cjs --port ${port}`
+  }
+
+  return `ref sync --watch >> ref-sync.log 2>&1 & vite --port ${port}`
 }
 
 async function ensureWorkspaceReady(): Promise<void> {
@@ -205,7 +248,7 @@ async function prepareEntryFull(entry: MatrixEntry): Promise<void> {
   if (existsSync(sandboxDir)) {
     await stopSandboxProcesses(sandboxDir)
     logStep(`Removing existing sandbox ${entry.name}`)
-    await rm(sandboxDir, { recursive: true, force: true })
+    await removeDirWithRetries(sandboxDir)
   }
   await mkdir(sandboxDir, { recursive: true })
 
@@ -241,7 +284,7 @@ async function pruneStaleSandboxes(): Promise<void> {
     if (e.isDirectory() && !names.has(e.name)) {
       const sandboxDir = join(SANDBOX_ROOT, e.name)
       await stopSandboxProcesses(sandboxDir)
-      await rm(sandboxDir, { recursive: true, force: true })
+      await removeDirWithRetries(sandboxDir)
       console.log('  pruned', e.name)
     }
   }

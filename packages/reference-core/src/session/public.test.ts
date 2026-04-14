@@ -15,6 +15,16 @@ const BASE_MANIFEST: SessionManifest = {
   updatedAt: '2026-01-01T00:00:01.000Z',
 }
 
+async function waitForCallCount(calls: unknown[], expectedCount: number, timeout = 1_000): Promise<void> {
+  const deadline = Date.now() + timeout
+  while (Date.now() < deadline) {
+    if (calls.length >= expectedCount) return
+    await new Promise(r => setTimeout(r, 25))
+  }
+
+  throw new Error(`Timed out waiting for ${expectedCount} refresh call(s); saw ${calls.length}`)
+}
+
 let rootDir: string
 let outDir: string
 
@@ -53,7 +63,7 @@ describe('getSyncSession – discovery', () => {
     session.onRefresh(e => calls.push(e))
 
     writeManifest(customOutDir, { ...BASE_MANIFEST, buildState: 'ready' })
-    await new Promise(r => setTimeout(r, 200))
+    await waitForCallCount(calls, 1)
 
     expect(calls.length).toBeGreaterThan(0)
     session.dispose()
@@ -87,8 +97,7 @@ describe('getSyncSession – onRefresh', () => {
     // Simulate a ref sync writing ready state.
     writeManifest(outDir, { ...BASE_MANIFEST, buildState: 'ready' })
 
-    // Give the fs.watch callback time to fire.
-    await new Promise(r => setTimeout(r, 200))
+    await waitForCallCount(calls, 1)
 
     expect(calls.length).toBeGreaterThan(0)
     expect((calls[0] as { changedOutputs: string[] }).changedOutputs).toEqual([])
@@ -104,12 +113,12 @@ describe('getSyncSession – onRefresh', () => {
     session.onRefresh(e => calls.push(e))
 
     writeManifest(outDir, { ...BASE_MANIFEST, buildState: 'ready' })
-    await new Promise(r => setTimeout(r, 200))
+    await waitForCallCount(calls, 1)
     const firstCount = calls.length
 
     // Second write with ready — should not fire again (same state).
     writeManifest(outDir, { ...BASE_MANIFEST, buildState: 'ready', updatedAt: '2026-01-01T01:00:00.000Z' })
-    await new Promise(r => setTimeout(r, 200))
+    await new Promise(r => setTimeout(r, 100))
 
     expect(calls.length).toBe(firstCount)
 
@@ -125,7 +134,7 @@ describe('getSyncSession – onRefresh', () => {
 
     // First ready
     writeManifest(outDir, { ...BASE_MANIFEST, buildState: 'ready' })
-    await new Promise(r => setTimeout(r, 200))
+    await waitForCallCount(calls, 1)
 
     // Back to idle
     writeManifest(outDir, { ...BASE_MANIFEST, buildState: 'idle' })
@@ -133,7 +142,7 @@ describe('getSyncSession – onRefresh', () => {
 
     // Second ready
     writeManifest(outDir, { ...BASE_MANIFEST, buildState: 'ready' })
-    await new Promise(r => setTimeout(r, 200))
+    await waitForCallCount(calls, 2)
 
     expect(calls.length).toBeGreaterThanOrEqual(2)
 
@@ -149,7 +158,7 @@ describe('getSyncSession – onRefresh', () => {
     unsub()
 
     writeManifest(outDir, { ...BASE_MANIFEST, buildState: 'ready' })
-    await new Promise(r => setTimeout(r, 200))
+    await new Promise(r => setTimeout(r, 100))
 
     expect(calls).toHaveLength(0)
 
@@ -165,7 +174,7 @@ describe('getSyncSession – onRefresh', () => {
 
     // Now ref sync "creates" the manifest with buildState=ready.
     writeManifest(outDir, { ...BASE_MANIFEST, buildState: 'ready' })
-    await new Promise(r => setTimeout(r, 300))
+    await waitForCallCount(calls, 1)
 
     expect(calls.length).toBeGreaterThan(0)
     session.dispose()
@@ -183,7 +192,7 @@ describe('getSyncSession – dispose', () => {
     session.dispose()
 
     writeManifest(outDir, { ...BASE_MANIFEST, buildState: 'ready' })
-    await new Promise(r => setTimeout(r, 200))
+    await new Promise(r => setTimeout(r, 100))
 
     expect(calls).toHaveLength(0)
   })
@@ -204,7 +213,7 @@ describe('getSyncSession – handler isolation', () => {
     session.onRefresh(e => good.push(e))
 
     writeManifest(outDir, { ...BASE_MANIFEST, buildState: 'ready' })
-    await new Promise(r => setTimeout(r, 200))
+    await waitForCallCount(good, 1)
 
     expect(good.length).toBeGreaterThan(0)
 

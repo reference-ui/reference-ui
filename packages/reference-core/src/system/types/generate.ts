@@ -1,7 +1,8 @@
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { writeFileAtomic } from '../../lib/fs/write-file-atomic'
 import { getOutDirPath } from '../../lib/paths'
 import { createFontCollector, type FontDefinition } from '../api/font'
 
@@ -12,12 +13,6 @@ export interface FontTypeRegistry {
 const FONT_REGISTRY_FILENAME = 'font-registry.json'
 const EMITTED_FONT_REGISTRY_INTERFACE = 'FontRegistry'
 const EMITTED_FONT_PROPS_ALIAS = 'FontProps'
-
-function writeFileAtomic(path: string, content: string): void {
-  const tempPath = `${path}.tmp-${process.pid}-${Date.now()}`
-  writeFileSync(tempPath, content, 'utf-8')
-  renameSync(tempPath, path)
-}
 
 export function buildFontTypeRegistry(fonts: FontDefinition[]): FontTypeRegistry {
   const registry = new Map<string, Set<string>>()
@@ -142,7 +137,7 @@ function writeFontRegistryIntoTypes(typesPath: string, registry: FontTypeRegistr
       .join(EMITTED_FONT_PROPS_ALIAS)
   }
 
-  writeFileAtomic(typesPath, content)
+  writeFileAtomic(typesPath, content, 'utf-8')
 }
 
 async function writeGeneratedPackageTypes(
@@ -156,7 +151,7 @@ async function writeGeneratedPackageTypes(
   const registry = readGeneratedFontRegistry(cwd)
   const generatedTypesPath = join(dirname(typesPath), 'types.generated.d.mts')
 
-  writeFileAtomic(generatedTypesPath, renderGeneratedFontRegistryFile(registry))
+  writeFileAtomic(generatedTypesPath, renderGeneratedFontRegistryFile(registry), 'utf-8')
   writeFontRegistryIntoTypes(typesPath, registry)
 }
 

@@ -6,7 +6,7 @@ import { getConfig, getCwd } from '../../../config/store'
 import { getOutDirPath } from '../../../lib/paths'
 import { log } from '../../../lib/log'
 import { updateBaseSystemCss } from '../../base/create'
-import { postprocessCss } from '../../css/postprocess'
+import { PANDA_GLOBAL_CSS_FILENAME, postprocessCss } from '../../css/postprocess'
 
 const WORKSPACE_MARKERS = ['pnpm-workspace.yaml', 'nx.json'] as const
 const CORE_PANDACSS_PATH = ['packages', 'reference-core', 'node_modules', '@pandacss'] as const
@@ -89,6 +89,60 @@ function ensurePandaResolvableFromOutDir(userCwd: string, outDir: string): void 
   ensurePandacssLink(outDir, corePandacss)
 }
 
+class PandaRunError extends Error {
+  readonly pandaOutput: string
+  readonly cause: unknown
+
+  constructor(cause: unknown, pandaOutput: string) {
+    const message = cause instanceof Error ? cause.message : String(cause)
+    super(message)
+    this.name = 'PandaRunError'
+    this.pandaOutput = pandaOutput
+    this.cause = cause
+  }
+}
+
+function getPandaErrorOutput(error: unknown): string | undefined {
+  return error instanceof PandaRunError && error.pandaOutput.length > 0
+    ? error.pandaOutput
+    : undefined
+}
+
+function unwrapPandaError(error: unknown): unknown {
+  return error instanceof PandaRunError ? error.cause : error
+}
+
+export { getPandaErrorOutput, unwrapPandaError }
+
+async function runWithSuppressedPandaLogs<T>(run: () => Promise<T>): Promise<T> {
+  const originalLog = console.log
+  const originalInfo = console.info
+  const originalWarn = console.warn
+  const captured: string[] = []
+
+  const capture = (...args: unknown[]) => {
+    captured.push(
+      args
+        .map(arg => (typeof arg === 'string' ? arg : String(arg)))
+        .join(' ')
+    )
+  }
+
+  console.log = capture
+  console.info = capture
+  console.warn = capture
+
+  try {
+    return await run()
+  } catch (error) {
+    throw new PandaRunError(error, captured.join('\n').trim())
+  } finally {
+    console.log = originalLog
+    console.info = originalInfo
+    console.warn = originalWarn
+  }
+}
+
 /**
  * Run Panda full pipeline via @pandacss/node.
  * Config lives in outDir; we ensure outDir can resolve @pandacss then call generate() and cssgen().
@@ -108,11 +162,18 @@ export async function runPandaCodegen(): Promise<void> {
   }
 
   log.debug('panda', 'codegen start', outDir)
-  await pandaGenerate({ cwd: outDir }, configPath)
+  await runWithSuppressedPandaLogs(() => pandaGenerate({ cwd: outDir }, configPath))
   log.debug('panda', 'codegen done', outDir)
 
   const ctx = await loadConfigAndCreateContext({ config: { cwd: outDir }, configPath })
-  await pandaCssgen(ctx, { cwd: outDir })
+  await runWithSuppressedPandaLogs(() => pandaCssgen(ctx, { cwd: outDir }))
+  await runWithSuppressedPandaLogs(() =>
+    pandaCssgen(ctx, {
+      cwd: outDir,
+      type: 'global',
+      outfile: join(outDir, 'styled', PANDA_GLOBAL_CSS_FILENAME),
+    })
+  )
   log.debug('panda', 'cssgen done', outDir)
 
   const config = getConfig()
@@ -141,7 +202,14 @@ export async function runPandaCss(): Promise<void> {
 
   log.debug('panda', 'cssgen')
   const ctx = await loadConfigAndCreateContext({ config: { cwd: outDir }, configPath })
-  await pandaCssgen(ctx, { cwd: outDir })
+  await runWithSuppressedPandaLogs(() => pandaCssgen(ctx, { cwd: outDir }))
+  await runWithSuppressedPandaLogs(() =>
+    pandaCssgen(ctx, {
+      cwd: outDir,
+      type: 'global',
+      outfile: join(outDir, 'styled', PANDA_GLOBAL_CSS_FILENAME),
+    })
+  )
   log.debug('panda', 'cssgen done', outDir)
 
   const config = getConfig()

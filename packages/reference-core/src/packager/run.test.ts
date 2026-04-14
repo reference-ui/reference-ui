@@ -63,7 +63,10 @@ describe('packager/run', () => {
         expect.objectContaining({ name: 'system' }),
       ])
     )
-    expect(emit).toHaveBeenNthCalledWith(1, 'packager:runtime:complete')
+    expect(emit).toHaveBeenNthCalledWith(1, 'packager:runtime:complete', {
+      packageCount: 3,
+      durationMs: expect.any(Number),
+    })
     expect(emit).toHaveBeenNthCalledWith(2, 'packager-ts:runtime:complete', {})
   })
 
@@ -82,7 +85,10 @@ describe('packager/run', () => {
         expect.objectContaining({ name: 'types' }),
       ])
     )
-    expect(emit).toHaveBeenNthCalledWith(1, 'packager:complete')
+    expect(emit).toHaveBeenNthCalledWith(1, 'packager:complete', {
+      packageCount: 1,
+      durationMs: expect.any(Number),
+    })
     expect(emit).toHaveBeenNthCalledWith(2, 'packager-ts:complete', {})
   })
 
@@ -92,7 +98,10 @@ describe('packager/run', () => {
     await runBundle({ cwd: '/workspace/app' })
 
     expect(emit).toHaveBeenCalledTimes(1)
-    expect(emit).toHaveBeenCalledWith('packager:complete')
+    expect(emit).toHaveBeenCalledWith('packager:complete', {
+      packageCount: 1,
+      durationMs: expect.any(Number),
+    })
   })
 
   it('propagates install failures without emitting completion', async () => {

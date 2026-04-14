@@ -6,8 +6,6 @@ export type {
 } from './css'
 export type {
   ColorPropKeys,
-  SafeColorProps,
-  StrictColorProps,
 } from './colors'
 export type {
   FontName,
@@ -20,7 +18,6 @@ export type { FontRegistry } from './fontRegistry'
 export type {
   ColorModeProps,
   ContainerProps,
-  ReferenceProps,
   ResponsiveProps,
 } from './props'
 export type {
