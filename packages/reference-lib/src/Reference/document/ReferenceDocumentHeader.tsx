@@ -13,7 +13,7 @@ function ReferenceDocumentHeaderTitleRow({ name, kindLabel }: TitleRowProps) {
     <Div display="flex" flexDir="column" gap="2r" flexWrap="wrap" mb="4r">
       <H2
         margin="0"
-        color="reference.foreground"
+        color="reference.text"
         fontFamily="reference.sans"
         fontWeight="500"
         fontSize="8r"
@@ -22,7 +22,7 @@ function ReferenceDocumentHeaderTitleRow({ name, kindLabel }: TitleRowProps) {
       </H2>
       <Div
         fontFamily="reference.mono"
-        color="reference.foreground"
+        color="reference.text"
         fontSize="4r"
         fontWeight="550"
       >
@@ -39,7 +39,7 @@ type DescriptionProps = {
 /** Optional JSDoc / summary paragraph for the document. */
 function ReferenceDocumentHeaderDescription({ description }: DescriptionProps) {
   return (
-    <P margin="0" color="reference.foreground" mb="4r">
+    <P margin="0" color="reference.text" mb="4r">
       {description}
     </P>
   )
@@ -54,7 +54,7 @@ function ReferenceDocumentHeaderGenericsLine({
   typeParameterDetails,
 }: GenericsLineProps) {
   return (
-    <Div color="reference.foreground">
+    <Div color="reference.text">
       <MonoText color="reference.highlight" mr="1r">Generics</MonoText>
       {typeParameterDetails.map(formatReferenceTypeParameter).join(', ')}
     </Div>
@@ -68,7 +68,7 @@ type ExtendsLineProps = {
 /** Renders base types / extends clause when present. */
 function ReferenceDocumentHeaderExtendsLine({ extendsNames }: ExtendsLineProps) {
   return (
-    <Div color="reference.foreground">
+    <Div color="reference.text">
       <MonoText color="reference.highlight" mr="1r">Extends</MonoText>
       {extendsNames.join(', ')}
     </Div>

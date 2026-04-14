@@ -109,7 +109,7 @@ function ReferenceInheritedMemberSection({ group }: { group: InheritedMemberGrou
 
       <ReferenceMemberRows members={visibleMembers} css={memberRowsCss} />
       {isCollapsible ? (
-        <Div color="gray.400" _hover={{color: 'gray.100'}}>
+        <Div color="reference.textLight" _hover={{ color: 'reference.text' }}>
           <Div
             role="button"
             onClick={() => setIsExpanded(expanded => !expanded)}
@@ -128,7 +128,7 @@ function ReferenceInheritedMemberSection({ group }: { group: InheritedMemberGrou
 export function ReferenceMemberList({ members }: { members: ReferenceMemberDocument[] }) {
   if (members.length === 0) {
     return (
-      <Small color="reference.muted">No members were emitted for this interface.</Small>
+      <Small color="reference.textLight">No members were emitted for this interface.</Small>
     )
   }
 

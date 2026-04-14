@@ -5,7 +5,7 @@ export function ReferenceFrame({ children }: { children: React.ReactNode }) {
   return (
     <Div
       css={{
-        color: 'reference.foreground',
+        color: 'reference.text',
       }}
     >
       {children}

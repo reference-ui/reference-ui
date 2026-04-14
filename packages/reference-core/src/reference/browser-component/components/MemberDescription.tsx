@@ -11,7 +11,7 @@ export function MemberDescription({ description }: { description?: string }) {
   if (!description) return null
 
   return (
-    <P margin="0" color="reference.foreground">
+    <P margin="0" color="reference.text">
       {description} 
     </P>
   )
