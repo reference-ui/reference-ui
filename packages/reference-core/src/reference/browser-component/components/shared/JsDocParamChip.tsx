@@ -39,7 +39,7 @@ export function JsDocParamChip({ tagLabel, className }: JsDocParamChipProps) {
         <AtSignIcon size="1rem" aria-hidden />
       </Div>
 
-      @{tagLabel}
+      {tagLabel}
     </Div>
   )
 }

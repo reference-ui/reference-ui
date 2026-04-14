@@ -22,17 +22,14 @@ export function JsDocParamChip({ tagLabel, className }: JsDocParamChipProps) {
       width="fit-content"
       maxWidth="100%"
       borderRadius="9999px"
-      //borderWidth="1px"
-      //borderStyle="solid"
-      //borderColor="blue.900"
       color="blue.300"
       className={className}
     >
-      <Div mt="3px">
+      <Div mt="3px" color="blue.300">
         <AtSignIcon size="1rem" aria-hidden />
       </Div>
 
-      @{tagLabel}
+      {tagLabel}
     </Div>
   )
 }
