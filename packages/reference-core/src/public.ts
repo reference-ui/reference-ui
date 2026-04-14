@@ -10,5 +10,7 @@ export { getSyncSession } from './session'
 export type { SyncSession, RefreshEvent, GetSyncSessionOptions } from './session'
 export { referenceVite } from './vite/plugin'
 export type { ReferenceViteOptions } from './vite/types'
+/** Alias for Vite’s `Plugin` — the return type of {@link referenceVite}. */
+export type { Plugin as ReferenceVitePlugin } from 'vite'
 export { referenceWebpack } from './webpack/plugin'
 export type { ReferenceWebpackOptions } from './webpack/types'
