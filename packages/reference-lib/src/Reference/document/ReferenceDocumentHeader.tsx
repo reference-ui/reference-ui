@@ -55,7 +55,7 @@ function ReferenceDocumentHeaderGenericsLine({
 }: GenericsLineProps) {
   return (
     <Div color="reference.foreground">
-      <MonoText color="blue.200" mr="1r">Generics</MonoText>
+      <MonoText color="reference.highlight" mr="1r">Generics</MonoText>
       {typeParameterDetails.map(formatReferenceTypeParameter).join(', ')}
     </Div>
   )
@@ -69,7 +69,7 @@ type ExtendsLineProps = {
 function ReferenceDocumentHeaderExtendsLine({ extendsNames }: ExtendsLineProps) {
   return (
     <Div color="reference.foreground">
-      <MonoText color="blue.200" mr="1r">Extends</MonoText>
+      <MonoText color="reference.highlight" mr="1r">Extends</MonoText>
       {extendsNames.join(', ')}
     </Div>
   )

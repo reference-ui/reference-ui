@@ -18,6 +18,14 @@ export const referenceBrowserTokenConfig = {
         value: '#4b5563',
         dark: '#9ca3af',
       },
+      codeBackground: {
+        value: '{colors.gray.100}',
+        dark: '{colors.gray.900}',
+      },
+      highlight: {
+        value: '{colors.blue.200}',
+        dark: '{colors.blue.200}',
+      },
       border: {
         value: '#d1d5db',
         dark: '{colors.gray.500}',
