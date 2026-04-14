@@ -1,6 +1,6 @@
 /**
  * @reference-ui/system entry
- * Build-time design system extension API (see system/fragments.md).
+ * Build-time design system extension API
  */
 
 export {
@@ -12,16 +12,5 @@ export {
   extendPattern,
 } from '../system/api'
 export { getRhythm } from '../system/panda/config/extensions/rhythm'
-export type {
-  CssFunction,
-  CssRawFunction,
-  CssStyles,
-  ReferenceProps,
-  ColorModeProps,
-  FontName,
-  FontProps,
-  FontWeightName,
-  FontWeightValue,
-  StrictColorProps,
-  StyleProps,
-} from '../types'
+/** Full design-system type surface (see `src/types/index.ts`). */
+export type * from '../types'
