@@ -24,10 +24,7 @@ import type {
   RecipeSelection,
   RecipeVariant,
   RecipeVariantProps,
-  ReferenceProps,
   ResponsiveProps,
-  SafeColorProps,
-  StrictColorProps,
   StyleProps,
   StylePropValue,
   SystemStyleObject,
@@ -66,12 +63,6 @@ describe('generated @reference-ui/react (design-system types)', () => {
     it('ColorPropKeys', () => {
       expectTypeOf<ColorPropKeys>().not.toEqualTypeOf<never>()
     })
-    it('SafeColorProps', () => {
-      expectTypeOf<SafeColorProps>().not.toEqualTypeOf<never>()
-    })
-    it('StrictColorProps<SystemStyleObject>', () => {
-      expectTypeOf<StrictColorProps<SystemStyleObject>>().not.toEqualTypeOf<never>()
-    })
     it('SystemStyleObject', () => {
       expectTypeOf<SystemStyleObject>().not.toEqualTypeOf<never>()
     })
@@ -86,9 +77,6 @@ describe('generated @reference-ui/react (design-system types)', () => {
     })
     it('ResponsiveProps', () => {
       expectTypeOf<ResponsiveProps>().not.toEqualTypeOf<never>()
-    })
-    it('ReferenceProps', () => {
-      expectTypeOf<ReferenceProps>().not.toEqualTypeOf<never>()
     })
     it('FontProps', () => {
       expectTypeOf<FontProps>().not.toEqualTypeOf<never>()
