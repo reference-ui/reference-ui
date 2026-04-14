@@ -46,18 +46,23 @@ export function MemberJsDoc({
       //   },
       // }}
     >
-      <Div mb="2r" height="1r" background="reference.foreground" width="6r" />
+      <Div mb="2r" height="1r" background="reference.text" width="6r" />
       {paramRows.map(param => (
         <Div key={`${memberId}-${param.name}`} display="grid" gap="0.5r">
           <Div display="flex" alignItems="center" flexWrap="wrap" gap="2r">
             <JsDocParamChip tagLabel="param" />
-            <Div fontFamily="reference.mono" fontSize="4r" fontWeight="550">
+            <Div
+              fontFamily="reference.mono"
+              fontSize="4r"
+              fontWeight="550"
+              color="reference.textLight"
+            >
               {param.name}
             </Div>
-            {param.optional ? <Small color="reference.muted">optional</Small> : null}
+            {param.optional ? <Small color="reference.textLight">optional</Small> : null}
 
             {param.description && (
-              <P margin="0" color="gray.400">
+              <P margin="0" color="reference.textLighter">
                 {param.description}
               </P>
             )}
@@ -70,7 +75,7 @@ export function MemberJsDoc({
           <Div display="flex" alignItems="center" gap="1r" flexWrap="wrap">
             <JsDocParamChip tagLabel={tag.name} />
             {tag.value ? (
-              <P margin="0" color="reference.foreground">
+              <P margin="0" color="reference.textLighter">
                 {tag.value}
               </P>
             ) : null}

@@ -14,7 +14,7 @@ export function MemberName({ name }: { name: string }) {
       //px="1.5r"
       py="0.5r"
       //backgroundColor="gray.800"
-      color="white"
+      color="reference.text"
       borderRadius="1r"
       display="inline-flex"
       width="fit-content"

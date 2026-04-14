@@ -23,34 +23,24 @@ export function MemberJsDoc({
       gap="2r"
       position="relative"
       paddingTop="calc(0.875rem + 2px)"
-      // css={{
-      //   _before: {
-      //     content: '""',
-      //     position: 'absolute',
-      //     insetInline: '0',
-      //     top: '0',
-      //     height: '2px',
-      //     color: 'gray.800',
-      //     backgroundImage:
-      //       'radial-gradient(ellipse 5px 2px at 6px 1px, currentColor 98%, transparent 100%)',
-      //     backgroundSize: '12px 2px',
-      //     backgroundRepeat: 'repeat-x',
-      //     backgroundPosition: 'left top',
-      //   },
-      // }}
     >
-      <Div mb="2r" height="1r" background="reference.foreground" width="6r" />
+      <Div mb="2r" height="1r" background="reference.text" width="6r" />
       {paramRows.map(param => (
         <Div key={`${memberId}-${param.name}`} display="grid" gap="0.5r">
           <Div display="flex" alignItems="center" flexWrap="wrap" gap="2r">
             <JsDocParamChip tagLabel="param" />
-            <Div fontFamily="reference.mono" fontSize="4r" fontWeight="550">
+            <Div
+              fontFamily="reference.mono"
+              fontSize="4r"
+              fontWeight="550"
+              color="reference.text"
+            >
               {param.name}
             </Div>
-            {param.optional ? <Small color="reference.muted">optional</Small> : null}
+            {param.optional ? <Small color="reference.textLight">optional</Small> : null}
 
             {param.description && (
-              <P margin="0" color="gray.400">
+              <P margin="0" color="reference.textLighter">
                 {param.description}
               </P>
             )}
@@ -63,7 +53,7 @@ export function MemberJsDoc({
           <Div display="flex" alignItems="center" gap="1r" flexWrap="wrap">
             <JsDocParamChip tagLabel={tag.name} />
             {tag.value ? (
-              <P margin="0" color="reference.foreground">
+              <P margin="0" color="reference.textLighter">
                 {tag.value}
               </P>
             ) : null}

@@ -29,7 +29,7 @@ export default function CosmosDecorator({ children }: { children: React.ReactNod
         borderBottomColor={dark ? 'gray.800' : 'gray.200'}
         bg={dark ? 'gray.900' : 'gray.100'}
       >
-        <Span fontSize="sm" color={dark ? 'gray.400' : 'gray.600'}>
+        <Span fontSize="sm" color="reference.textLight">
           Cosmos
         </Span>
         <Button

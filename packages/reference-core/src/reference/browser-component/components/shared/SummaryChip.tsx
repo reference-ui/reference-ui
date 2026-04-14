@@ -26,11 +26,11 @@ const summaryChipRecipe = recipe({
     tone: {
       soft: {
         bg: 'reference.codeBackground',
-        color: 'gray.200',
+        color: 'reference.textLight',
       },
       accent: {
-        background: 'sky.100',
-        color: 'sky.950',
+        background: 'reference.text',
+        color: 'reference.codeBackground',
       },
     },
     radius: {
@@ -61,7 +61,7 @@ export function SummaryChip({
       className={summaryChipRecipe({ tone, radius }) + (className ? ` ${className}` : '')}
       {...props}
     >
-      <MonoText color={tone === 'soft' ? 'gray.200' : 'sky.950'}>{children}</MonoText>
+      <MonoText color={tone === 'soft' ? 'reference.textLight' : 'reference.codeBackground'}>{children}</MonoText>
     </Span>
   )
 }

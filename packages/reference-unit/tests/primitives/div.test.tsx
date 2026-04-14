@@ -23,7 +23,7 @@ beforeAll(() => {
 const hasDesignSystemCss = () => Boolean(getDesignSystemCssPath())
 
 const TEST_BG = 'reference.background'
-const TEST_COLOR = 'reference.foreground'
+const TEST_COLOR = 'reference.text'
 
 describe('Div primitive', () => {
   it('renders as a div with children', () => {
