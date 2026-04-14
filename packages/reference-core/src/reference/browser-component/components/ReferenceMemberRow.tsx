@@ -27,12 +27,12 @@ export function ReferenceMemberRow({ member }: { member: ReferenceMemberDocument
         borderBottomColor: 'reference.border',
       }}
     >
-      <Div display="grid" gap="reference.xxs">
+      <Div display="grid" gap="0.5r">
         <MemberName name={member.name} />
       </Div>
       <MemberType typeLabel={member.typeLabel} />
 
-      <Div display="grid" gap="reference.md" minWidth="0">
+      <Div display="grid" gap="3r" minWidth="0">
         <MemberTypeSummary summary={member.summary.memberTypeSummary} />
         <MemberDescription description={member.summary.description} />
         <MemberJsDoc

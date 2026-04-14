@@ -22,44 +22,6 @@ export const referenceBrowserTokenConfig = {
         value: '#d1d5db',
         dark: '{colors.gray.500}',
       },
-      background: {
-        value: '#ffffff',
-        dark: '#111827',
-      },
-      subtleBackground: {
-        value: '#f9fafb',
-        dark: '#1f2937',
-      },
-      /** Accent chips (SummaryChip); must exist or Panda emits invalid raw `reference.primary` in CSS. */
-      primary: {
-        value: '#2563eb',
-        dark: '#60a5fa',
-      },
-      primarySoftBackground: {
-        value: '#eff6ff',
-        dark: '{colors.blue.100}',
-      },
-      primarySoftBorder: {
-        value: '#bfdbfe',
-        dark: '#1e40af',
-      },
-      primaryForeground: {
-        value: '#ffffff',
-        dark: '#0f172a',
-      },
-      primarySoftForeground: {
-        value: '#1e40af',
-        dark: '{colors.blue.900}',
-      },
-    },
-  },
-  spacing: {
-    reference: {
-      xxs: { value: '0.125rem' },
-      xs: { value: '0.25rem' },
-      sm: { value: '0.5rem' },
-      md: { value: '0.75rem' },
-      lg: { value: '1rem' },
     },
   },
   fonts: {

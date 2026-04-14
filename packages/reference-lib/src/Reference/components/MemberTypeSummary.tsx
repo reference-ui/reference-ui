@@ -23,7 +23,7 @@ export function MemberTypeSummary({ summary }: { summary?: ReferenceMemberTypeSu
 
 function ReferenceValueSet({ options }: { options: ReferenceValueOption[] }) {
   return (
-    <Div display="flex" gap="reference.sm" flexWrap="wrap">
+    <Div display="flex" gap="2r" flexWrap="wrap">
       {options.map(option => (
         <SummaryChip
           key={`${option.isDefault ? 'default' : 'value'}-${option.label}`}

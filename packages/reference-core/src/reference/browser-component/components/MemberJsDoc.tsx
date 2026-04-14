@@ -27,7 +27,7 @@ export function MemberJsDoc({
   return (
     <Div
       display="grid"
-      gap="reference.sm"
+      gap="2r"
       position="relative"
       paddingTop="calc(0.875rem + 2px)"
       // css={{
@@ -48,7 +48,7 @@ export function MemberJsDoc({
     >
       <Div mb="2r" height="1r" background="reference.foreground" width="6r" />
       {paramRows.map(param => (
-        <Div key={`${memberId}-${param.name}`} display="grid" gap="reference.xxs">
+        <Div key={`${memberId}-${param.name}`} display="grid" gap="0.5r">
           <Div display="flex" alignItems="center" flexWrap="wrap" gap="2r">
             <JsDocParamChip tagLabel="param" />
             <Div fontFamily="reference.mono" fontSize="4r" fontWeight="550">
@@ -66,8 +66,8 @@ export function MemberJsDoc({
       ))}
 
       {tags.map((tag, index) => (
-        <Div key={`${memberId}-${tag.name}-${index}`} display="grid" gap="reference.xxs">
-          <Div display="flex" alignItems="center" gap="reference.xs" flexWrap="wrap">
+        <Div key={`${memberId}-${tag.name}-${index}`} display="grid" gap="0.5r">
+          <Div display="flex" alignItems="center" gap="1r" flexWrap="wrap">
             <JsDocParamChip tagLabel={tag.name} />
             {tag.value ? (
               <P margin="0" color="reference.foreground">

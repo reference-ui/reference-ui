@@ -10,7 +10,7 @@ type TitleRowProps = {
 /** Document symbol name and kind label (e.g. type alias, interface). */
 function ReferenceDocumentHeaderTitleRow({ name, kindLabel }: TitleRowProps) {
   return (
-    <Div display="flex" flexDir="column" gap="reference.sm" flexWrap="wrap" mb="4r">
+    <Div display="flex" flexDir="column" gap="2r" flexWrap="wrap" mb="4r">
       <H2
         margin="0"
         color="reference.foreground"
@@ -77,7 +77,7 @@ function ReferenceDocumentHeaderExtendsLine({ extendsNames }: ExtendsLineProps) 
 
 export function ReferenceDocumentHeader({ document }: { document: ReferenceDocument }) {
   return (
-    <Div display="grid" gap="reference.sm">
+    <Div display="grid" gap="2r">
       <ReferenceDocumentHeaderTitleRow
         name={document.name}
         kindLabel={document.kindLabel}
