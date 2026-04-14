@@ -13,7 +13,7 @@ const REFERENCE_CODE_RESET_CSS: any = {
   boxShadow: 'none',
 } as unknown as React.ComponentProps<typeof Code>['css']
 
-export function MonoText({ children, color = 'blue.200', ...styleProps }: MonoTextProps) {
+export function MonoText({ children, color = 'reference.highlight', ...styleProps }: MonoTextProps) {
   return (
     <Code fontFamily="reference.mono" color={color} css={REFERENCE_CODE_RESET_CSS} {...styleProps}>
       {children}

@@ -6,7 +6,7 @@ export function MemberType({ typeLabel }: { typeLabel: string }) {
     <Div
       //px="1.5r"
       py="0.5r"
-      color="blue.300"
+      color="reference.highlight"
       borderRadius="1r"
       display="inline-flex"
       width="fit-content"

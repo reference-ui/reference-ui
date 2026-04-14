@@ -25,7 +25,7 @@ const summaryChipRecipe = recipe({
   variants: {
     tone: {
       soft: {
-        bg: 'gray.800',
+        bg: 'reference.codeBackground',
         color: 'gray.200',
       },
       accent: {

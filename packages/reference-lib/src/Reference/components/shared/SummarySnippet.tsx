@@ -13,8 +13,7 @@ const SNIPPET_CSS = {
   paddingBlock: '2r',
   borderRadius: '1r',
   wordBreak: 'break-word',
-  bg: 'gray.900',
-  color: 'reference.muted',
+  bg: 'reference.codeBackground',
   borderLeftWidth: '3px',
   borderLeftStyle: 'solid',
   borderLeftColor: 'gray.500',
@@ -29,7 +28,7 @@ export type SummarySnippetProps = React.ComponentPropsWithoutRef<typeof Div>
 export function SummarySnippet({ children, css, ...props }: SummarySnippetProps) {
   return (
     <Div css={{ ...SNIPPET_CSS, ...css }} {...props}>
-      <MonoText color="blue.200">{children}</MonoText>
+      <MonoText color="reference.highlight">{children}</MonoText>
     </Div>
   )
 }

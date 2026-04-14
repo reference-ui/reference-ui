@@ -29,10 +29,10 @@ export function JsDocParamChip({ tagLabel, className }: JsDocParamChipProps) {
       width="fit-content"
       maxWidth="100%"
       borderRadius="9999px"
-      color="blue.300"
+      color="reference.highlight"
       className={className}
     >
-      <Div mt="3px" color="blue.300">
+      <Div mt="3px" color="reference.highlight">
         <AtSignIcon size="1rem" aria-hidden />
       </Div>
 
