@@ -4,6 +4,7 @@ import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { DEFAULT_OUT_DIR } from '../constants'
 import type { RefreshEvent, SyncSession } from '../session'
 import { referenceVite } from './plugin'
 import type { ReferenceVitePlugin } from './types'
@@ -37,7 +38,7 @@ describe('referenceUiVitePlugin', () => {
     plugin.configResolved?.({ root: cwd } as never)
 
     const result = await plugin.handleHotUpdate?.({
-      file: `${cwd}/.reference-ui/virtual/src/example.tsx`,
+      file: `${cwd}/${DEFAULT_OUT_DIR}/virtual/src/example.tsx`,
     } as never)
 
     expect(result).toEqual([])
@@ -45,8 +46,8 @@ describe('referenceUiVitePlugin', () => {
 
   it('coalesces rapid managed-output writes into one hot update after sync ready', async () => {
     const cwd = mkdtempSync(join(tmpdir(), 'ref-vite-plugin-'))
-    mkdirSync(join(cwd, '.reference-ui', 'react'), { recursive: true })
-    writeFileSync(join(cwd, '.reference-ui', 'react', 'react.mjs'), 'export {}\n')
+    mkdirSync(join(cwd, DEFAULT_OUT_DIR, 'react'), { recursive: true })
+    writeFileSync(join(cwd, DEFAULT_OUT_DIR, 'react', 'react.mjs'), 'export {}\n')
 
     const sends: UpdateEvent[] = []
     const { dispose, emitRefresh, session } = createTestSession()
@@ -111,13 +112,13 @@ interface UpdateEvent {
 async function triggerManagedOutputUpdates(plugin: ReferenceVitePlugin, cwd: string) {
   return Promise.all([
     plugin.handleHotUpdate?.({
-      file: `${cwd}/.reference-ui/react/react.mjs`,
+      file: `${cwd}/${DEFAULT_OUT_DIR}/react/react.mjs`,
     } as never),
     plugin.handleHotUpdate?.({
-      file: `${cwd}/.reference-ui/styled/styles.css`,
+      file: `${cwd}/${DEFAULT_OUT_DIR}/styled/styles.css`,
     } as never),
     plugin.handleHotUpdate?.({
-      file: `${cwd}/.reference-ui/types/types.mjs`,
+      file: `${cwd}/${DEFAULT_OUT_DIR}/types/types.mjs`,
     } as never),
   ])
 }
@@ -146,7 +147,7 @@ function setupManagedVitePlugin(options: {
       },
       moduleGraph: {
         getModulesByFile(file: string) {
-          if (file === `${options.cwd}/.reference-ui/react/react.mjs`) {
+          if (file === `${options.cwd}/${DEFAULT_OUT_DIR}/react/react.mjs`) {
             return new Set([options.module])
           }
           return undefined

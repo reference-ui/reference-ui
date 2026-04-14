@@ -3,6 +3,8 @@ import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { DEFAULT_OUT_DIR } from '../constants'
+
 const createdDirs: string[] = []
 
 interface GeneratedWorkspaceFixture {
@@ -31,7 +33,7 @@ afterEach(() => {
 
 function createGeneratedWorkspaceFixture(): GeneratedWorkspaceFixture {
   const workspaceDir = createTempDir()
-  const outDir = resolve(workspaceDir, '.reference-ui')
+  const outDir = resolve(workspaceDir, DEFAULT_OUT_DIR)
   const scopeDir = resolve(workspaceDir, 'node_modules', '@reference-ui')
 
   mkdirSync(resolve(outDir, 'types', 'tasty'), { recursive: true })
@@ -58,7 +60,7 @@ function createGeneratedWorkspaceFixture(): GeneratedWorkspaceFixture {
 
 function mockCleanCommandDependencies(outDir: string): void {
   vi.doMock('../config', () => ({
-    loadUserConfig: async () => ({ outDir: '.reference-ui' }),
+    loadUserConfig: async () => ({ outDir: DEFAULT_OUT_DIR }),
     setConfig: vi.fn(),
   }))
   vi.doMock('../lib/paths', () => ({

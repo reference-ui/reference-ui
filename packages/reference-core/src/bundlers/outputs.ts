@@ -1,7 +1,7 @@
 /** Utilities for classifying generated `.reference-ui` output paths. */
 
 import { resolve } from 'node:path'
-import { GENERATED_OUTPUT_ROOTS } from './constants'
+import { GENERATED_OUTPUT_ROOTS } from '../constants'
 
 export function resolveManagedOutputRoots(outDir: string): Set<string> {
   return new Set(GENERATED_OUTPUT_ROOTS.map(name => toNormalizedPath(resolve(outDir, name))))

@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { DEFAULT_OUT_DIR } from '../constants'
+
+const FIXTURE_VIRTUAL = `/workspace/app/${DEFAULT_OUT_DIR}/virtual`
+
 const emit = vi.fn()
 const onHandlers = new Map<string, Array<(payload?: unknown) => void>>()
 
@@ -98,11 +102,11 @@ describe('sync/events', () => {
 
     emit.mockClear()
     fireOn('virtual:copy:complete', {
-      virtualDir: '/workspace/app/.reference-ui/virtual',
+      virtualDir: FIXTURE_VIRTUAL,
     })
 
     expect(emit).toHaveBeenCalledWith('run:reference:component:copy', {
-      virtualDir: '/workspace/app/.reference-ui/virtual',
+      virtualDir: FIXTURE_VIRTUAL,
     })
   })
 
@@ -217,7 +221,7 @@ describe('sync/events', () => {
 
     fireOn('virtual:fs:change', {
       event: 'change',
-      path: '/workspace/app/.reference-ui/virtual/src/button.tsx',
+      path: `${FIXTURE_VIRTUAL}/src/button.tsx`,
     })
 
     expect(emit).toHaveBeenCalledWith('run:system:config', undefined)

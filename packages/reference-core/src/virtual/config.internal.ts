@@ -2,6 +2,8 @@
  * Internal configuration constants for the virtual filesystem module.
  */
 
+import { SYNC_OUTPUT_DIR_GLOB } from '../constants'
+
 const TRANSFORM_EXTENSIONS_ENTRIES = [
   ['.mdx', '.jsx'],
   ['.js', '.js'],
@@ -21,5 +23,5 @@ export const TRANSFORMED_EXTENSIONS = [...new Set(TRANSFORM_EXTENSIONS.values())
 export const GLOB_CONFIG = {
   onlyFiles: true,
   absolute: true,
-  ignore: ['**/node_modules/**', '**/.reference-ui/**', '**/.git/**'],
+  ignore: ['**/node_modules/**', SYNC_OUTPUT_DIR_GLOB, '**/.git/**'],
 } as const

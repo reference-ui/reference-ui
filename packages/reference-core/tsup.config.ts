@@ -7,6 +7,7 @@ export default defineConfig({
     public: 'src/public.ts',
     index: 'src/index.ts',
     config: 'src/config/index.ts',
+    constants: 'src/constants.ts',
     ...workerEntries,
   },
   format: 'esm',

@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { mkdtempSync, rmSync, mkdirSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { DEFAULT_OUT_DIR } from '../constants'
 import { getSyncSession } from './public'
 import { writeManifest } from './files'
 import type { SessionManifest } from './types'
@@ -30,7 +31,7 @@ let outDir: string
 
 beforeEach(() => {
   rootDir = mkdtempSync(join(tmpdir(), 'ref-public-test-'))
-  outDir = join(rootDir, '.reference-ui')
+  outDir = join(rootDir, DEFAULT_OUT_DIR)
   mkdirSync(outDir, { recursive: true })
 })
 
@@ -39,7 +40,7 @@ afterEach(() => {
 })
 
 describe('getSyncSession – discovery', () => {
-  it('finds session.json when it is in cwd/.reference-ui', () => {
+  it('finds session.json when it is in cwd/default out dir', () => {
     writeManifest(outDir, { ...BASE_MANIFEST, buildState: 'ready' })
     const session = getSyncSession({ cwd: rootDir })
 

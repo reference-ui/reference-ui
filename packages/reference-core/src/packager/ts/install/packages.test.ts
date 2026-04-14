@@ -2,6 +2,8 @@ import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+
+import { DEFAULT_OUT_DIR } from '../../../constants'
 import type { TsPackageInput } from '../types'
 
 const createdDirs: string[] = []
@@ -59,7 +61,7 @@ afterEach(() => {
 describe('packager/ts/install/packages', () => {
   it('installs declaration packages into the expected target dirs and writes generated entry types', async () => {
     const workspaceDir = createTempDir()
-    const outDir = resolve(workspaceDir, '.reference-ui')
+    const outDir = resolve(workspaceDir, DEFAULT_OUT_DIR)
     const packages: TsPackageInput[] = [
       {
         name: '@reference-ui/react',

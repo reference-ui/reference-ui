@@ -1,5 +1,9 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 
+import { DEFAULT_OUT_DIR } from '../constants'
+
+const FIXTURE_MODEL = `/workspace/app/${DEFAULT_OUT_DIR}/mcp/model.json`
+
 const emit = vi.fn()
 const buildMcpArtifact = vi.fn()
 const logDebug = vi.fn()
@@ -38,11 +42,11 @@ describe('mcp/run', () => {
     expect(logDebug).toHaveBeenCalledWith('mcp', 'MCP build completed', {
       cwd: '/workspace/app',
       componentCount: 1,
-      modelPath: '/workspace/app/.reference-ui/mcp/model.json',
+      modelPath: FIXTURE_MODEL,
       durationMs: 27,
     })
     expect(emit).toHaveBeenCalledWith('mcp:complete', {
-      modelPath: '/workspace/app/.reference-ui/mcp/model.json',
+      modelPath: FIXTURE_MODEL,
       componentCount: 1,
     })
   })
