@@ -23,7 +23,7 @@ const SNIPPET_CSS = {
   bg: 'reference.codeBackground',
   borderLeftWidth: '3px',
   borderLeftStyle: 'solid',
-  borderLeftColor: 'gray.500',
+  borderLeftColor: 'reference.border',
 } as const
 
 /**
