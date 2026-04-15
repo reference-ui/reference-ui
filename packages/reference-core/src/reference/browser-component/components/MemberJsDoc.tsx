@@ -30,21 +30,6 @@ export function MemberJsDoc({
       gap="2r"
       position="relative"
       paddingTop="calc(0.875rem + 2px)"
-      // css={{
-      //   _before: {
-      //     content: '""',
-      //     position: 'absolute',
-      //     insetInline: '0',
-      //     top: '0',
-      //     height: '2px',
-      //     color: 'gray.800',
-      //     backgroundImage:
-      //       'radial-gradient(ellipse 5px 2px at 6px 1px, currentColor 98%, transparent 100%)',
-      //     backgroundSize: '12px 2px',
-      //     backgroundRepeat: 'repeat-x',
-      //     backgroundPosition: 'left top',
-      //   },
-      // }}
     >
       <Div mb="2r" height="1r" background="reference.text" width="6r" />
       {paramRows.map(param => (
@@ -55,7 +40,7 @@ export function MemberJsDoc({
               fontFamily="reference.mono"
               fontSize="4r"
               fontWeight="550"
-              color="reference.textLight"
+              color="reference.text"
             >
               {param.name}
             </Div>

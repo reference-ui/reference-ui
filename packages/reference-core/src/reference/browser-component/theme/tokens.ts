@@ -19,30 +19,30 @@ export const referenceBrowserTokenConfig = {
     reference: {
       /** Primary body / heading text (was `foreground`). */
       text: {
-        value: '#111827',
+        value: '{colors.gray.800}',
         dark: '#f9fafb',
       },
       /** Secondary text (was `muted`). */
       textLight: {
-        value: '{colors.gray.600}',
+        value: '{colors.gray.700}',
         dark: '{colors.gray.300}',
       },
       /** Tertiary / de-emphasized copy (one gray step lighter than {@link textLight}). */
       textLighter: {
-        value: '{colors.gray.500}',
+        value: '{colors.gray.600}',
         dark: '{colors.gray.400}',
       },
       codeBackground: {
-        value: '{colors.gray.100}',
+        value: '{colors.gray.200}',
         dark: '{colors.gray.900}',
       },
       highlight: {
-        value: '{colors.blue.600}',
+        value: '{colors.blue.800}',
         dark: '{colors.blue.200}',
       },
       border: {
-        value: '#d1d5db',
-        dark: '{colors.gray.600}',
+        value: '{colors.gray.300}',
+        dark: '{colors.gray.800}',
       },
     },
   },

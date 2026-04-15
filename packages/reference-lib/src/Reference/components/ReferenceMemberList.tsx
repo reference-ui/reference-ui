@@ -102,14 +102,14 @@ function ReferenceInheritedMemberSection({ group }: { group: InheritedMemberGrou
   return (
     <Div css={inheritedSectionCss}>
       <Divider marginBottom="2r" />
-      <Div color="gray.100">
+      <Div color="reference.textLighter">
         Inherited from <MonoText ml="1r"> {group.origin.name} ({group.members.length})</MonoText>
       </Div>
       
 
       <ReferenceMemberRows members={visibleMembers} css={memberRowsCss} />
       {isCollapsible ? (
-        <Div color="reference.textLight" _hover={{ color: 'reference.text' }}>
+        <Div color="reference.textLighter" _hover={{ color: 'reference.highlight' }}>
           <Div
             role="button"
             onClick={() => setIsExpanded(expanded => !expanded)}
