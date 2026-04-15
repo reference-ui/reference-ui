@@ -12,6 +12,12 @@
   "bin": {
     "ref": "./bin/ref.mjs"
   },
+  "files": [
+    "bin",
+    "dist",
+    "src",
+    "tools/copy-reference-api-component.mjs"
+  ],
   "exports": {
     ".": {
       "types": "./src/public.ts",
