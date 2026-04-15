@@ -8,6 +8,7 @@
     "url": "https://github.com/reference-ui/reference-ui"
   },
   "scripts": {
+    "prepare": "pnpm --filter @reference-ui/core run copy:reference-api-component",
     "build": "pnpm -r run build",
     "changeset": "changeset",
     "dev": "pnpm --filter @reference-ui/lib run build && concurrently --kill-others-on-fail -n core,docs -c blue,green \"pnpm --filter @reference-ui/core run dev\" \"pnpm --filter @reference-ui/reference-docs run dev\"",
