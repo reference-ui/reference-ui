@@ -12,10 +12,11 @@ async function importRunModule() {
 
   const debug = vi.fn()
   const error = vi.fn()
+  const info = vi.fn()
   const instances: MockPiscinaInstance[] = []
 
   vi.doMock('../log', () => ({
-    log: { debug, error },
+    log: { debug, error, info },
   }))
 
   vi.doMock('piscina', () => ({
@@ -33,7 +34,7 @@ async function importRunModule() {
   }))
 
   const mod = await import('./run')
-  return { ...mod, debug, error, instances }
+  return { ...mod, debug, error, info, instances }
 }
 
 const WORKER_DATA = {
@@ -172,25 +173,17 @@ describe('thread-pool/run', () => {
     expect(error).toHaveBeenCalledWith('[pool]', expect.any(Error))
   })
 
-  it('does not emit memory debug logs by default', async () => {
-    const { initPool, shutdown, debug, instances } = await importRunModule()
+  it('does not emit profiler memory logs by default', async () => {
+    const { initPool, shutdown, info, instances } = await importRunModule()
     initPool(WORKER_DATA)
 
-    expect(debug).not.toHaveBeenCalledWith(
-      'memory',
-      expect.any(String),
-      expect.anything()
-    )
+    vi.advanceTimersByTime(10_000)
+    expect(info).not.toHaveBeenCalled()
 
-    vi.advanceTimersByTime(3000)
-
-    const callCountBeforeShutdown = debug.mock.calls.length
     await shutdown()
 
     expect(instances[0]?.destroy).toHaveBeenCalledTimes(1)
-
-    vi.advanceTimersByTime(6000)
-    expect(debug.mock.calls.length).toBe(callCountBeforeShutdown)
+    expect(info).not.toHaveBeenCalled()
   })
 
   it('allows re-initialization after shutdown()', async () => {

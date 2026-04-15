@@ -4,11 +4,13 @@
  */
 import { log } from '../lib/log'
 import { emit } from '../lib/event-bus'
+import { startWorkerMemoryReporter } from '../lib/profiler'
 import { KEEP_ALIVE } from '../lib/thread-pool'
 import { getWatcherState, startWatcher } from './watcher'
 import type { WatchPayload } from './types'
 
 export default async function runWatch(payload: WatchPayload): Promise<never> {
+  startWorkerMemoryReporter('watch')
   const { projectRoot } = payload
   const { include, watchRoots } = getWatcherState(payload)
 
