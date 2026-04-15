@@ -134,6 +134,22 @@ describe('thread-pool/run', () => {
     expect(instances).toHaveLength(2)
   })
 
+  it('destroyDedicatedPool removes a named pool so the next runWorker recreates it', async () => {
+    const { initPool, runWorker, destroyDedicatedPool, instances } = await importRunModule()
+    initPool(WORKER_DATA)
+
+    instances[1]?.run.mockResolvedValue('first')
+    await runWorker(WORKER_PATH, { task: 'a' }, { poolName: 'mcp' })
+    expect(instances).toHaveLength(2)
+
+    await destroyDedicatedPool('mcp')
+    expect(instances[1]?.destroy).toHaveBeenCalledTimes(1)
+
+    instances[2]?.run.mockResolvedValue('second')
+    await runWorker(WORKER_PATH, { task: 'b' }, { poolName: 'mcp' })
+    expect(instances).toHaveLength(3)
+  })
+
   it('destroys dedicated pools during shutdown()', async () => {
     const { initPool, runWorker, shutdown, instances } = await importRunModule()
     initPool(WORKER_DATA)

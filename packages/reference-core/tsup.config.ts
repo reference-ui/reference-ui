@@ -1,5 +1,5 @@
 import { defineConfig } from 'tsup'
-import { workerEntries } from './src/lib/thread-pool'
+import { workerEntries } from './src/lib/thread-pool/worker-entries'
 import { copyLiquidTemplates } from './tools/tsup/liquid'
 
 export default defineConfig({

@@ -86,6 +86,18 @@ export async function runWorker(
   return activePool.run(payload, { filename: workerPath })
 }
 
+/**
+ * Tear down a named dedicated pool (e.g. `packager-ts`) so its worker thread and
+ * V8 isolate are released. Next {@link runWorker} with the same `poolName`
+ * creates a fresh pool.
+ */
+export async function destroyDedicatedPool(poolName: string): Promise<void> {
+  const existing = dedicatedPools.get(poolName)
+  if (!existing) return
+  await existing.destroy()
+  dedicatedPools.delete(poolName)
+}
+
 export async function shutdown() {
   for (const dedicatedPool of dedicatedPools.values()) {
     await dedicatedPool.destroy()
