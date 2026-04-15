@@ -1,5 +1,6 @@
 import { join, resolve } from 'node:path'
 import { writeFileSync, mkdirSync, existsSync, readFileSync } from 'node:fs'
+import { logProfilerSample } from '../../../lib/profiler'
 import { log } from '../../../lib/log'
 import { getDeclarationBasename } from '../../layout'
 import { compileDeclarations } from '../compile'
@@ -47,12 +48,14 @@ export async function installPackageTs(
   mkdirSync(options.targetDir, { recursive: true })
 
   const outDtsPath = join(options.targetDir, getDeclarationBasename(pkg.outFile))
+  logProfilerSample(`packager-ts:compile:before:${pkg.name}`)
   await compileDeclarations(
     options.cliDirForBuild,
     pkg.sourceEntry,
     outDtsPath,
     options.projectCwd
   )
+  logProfilerSample(`packager-ts:compile:after:${pkg.name}`)
   log.debug(PACKAGER_TS_LOG, `✓ Compiled ${pkg.name}`)
 
   const typesPath = `./${getDeclarationBasename(pkg.outFile)}`

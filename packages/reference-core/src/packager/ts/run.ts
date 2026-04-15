@@ -1,7 +1,12 @@
 import { emit } from '../../lib/event-bus'
 import { log } from '../../lib/log'
+import { logProfilerSample } from '../../lib/profiler'
 import { installPackagesTs } from './install'
 import type { TsPackagerCompletionEvent, TsPackagerWorkerPayload } from './types'
+
+function dtsPhaseLabel(completionEvent: TsPackagerCompletionEvent): 'runtime' | 'final' {
+  return completionEvent === 'packager-ts:runtime:complete' ? 'runtime' : 'final'
+}
 
 const FINAL_DTS_COMPLETE_EVENT: TsPackagerCompletionEvent = 'packager-ts:complete'
 
@@ -32,11 +37,14 @@ export async function runDtsGeneration(
 ): Promise<void> {
   const { cwd } = payload
   const packages = getPackagesForRun(payload, completionEvent)
+  const phase = dtsPhaseLabel(completionEvent)
 
   log.debug('packager:ts', 'Generating TypeScript declarations...')
 
   try {
+    logProfilerSample(`packager-ts:dts:${phase}:before`)
     await installPackagesTs(cwd, packages)
+    logProfilerSample(`packager-ts:dts:${phase}:after`)
     emit(completionEvent, {})
     log.debug('packager:ts', 'Declarations ready')
   } catch (error) {
