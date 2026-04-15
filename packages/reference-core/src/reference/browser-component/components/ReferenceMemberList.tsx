@@ -109,7 +109,7 @@ function ReferenceInheritedMemberSection({ group }: { group: InheritedMemberGrou
   return (
     <Div css={inheritedSectionCss}>
       <Divider marginBottom="2r" />
-      <Div color="text.lighter">
+      <Div color="reference.textLighter">
         Inherited from <MonoText ml="1r"> {group.origin.name} ({group.members.length})</MonoText>
       </Div>
       
