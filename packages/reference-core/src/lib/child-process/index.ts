@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process'
+import { threadId } from 'node:worker_threads'
 import { emit } from '../event-bus'
 import { log } from '../log'
 
@@ -20,6 +21,7 @@ export async function spawnMonitoredAsync(
 ): Promise<{ code: number | null; stdout: string; stderr: string }> {
   const { cwd, processName, logCategory = 'process' } = options
   const output = { stdout: '', stderr: '' }
+  const parentThreadId = threadId
 
   const child = spawn(command, args, {
     cwd,
@@ -29,7 +31,7 @@ export async function spawnMonitoredAsync(
 
   log.debug(logCategory, `[${processName}] spawned PID ${child.pid}`)
   if (typeof child.pid === 'number') {
-    emit(PROCESS_SPAWNED_EVENT, { pid: child.pid, processName })
+    emit(PROCESS_SPAWNED_EVENT, { pid: child.pid, processName, threadId: parentThreadId })
   }
 
   child.stdout?.on('data', (chunk) => {
@@ -45,6 +47,7 @@ export async function spawnMonitoredAsync(
         emit(PROCESS_EXIT_EVENT, {
           pid: child.pid,
           processName,
+          threadId: parentThreadId,
           code: exitCode,
           signal: signalCode,
         })

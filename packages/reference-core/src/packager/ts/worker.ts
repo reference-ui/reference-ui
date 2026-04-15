@@ -28,7 +28,7 @@ export function hasAllBundleOutputs(
 export default async function runTsPackager(
   payload: TsPackagerWorkerPayload
 ): Promise<never> {
-  startWorkerMemoryReporter('packager-ts')
+  startWorkerMemoryReporter('packager-ts', { logSampleLines: true })
   const queue = createDtsGenerationQueue(payload)
 
   emit('packager-ts:ready', {})

@@ -2,6 +2,17 @@ import { emit, on } from '../../lib/event-bus'
 
 type DtsPhase = 'runtime' | 'final'
 
+/** True once the packager-ts worker has emitted `packager-ts:ready` for the current pool. */
+let packagerTsWorkerReady = false
+
+/**
+ * Mark the DTS worker as gone (e.g. pool recycled) so we do not dispatch work
+ * until a new worker emits `packager-ts:ready`.
+ */
+export function markPackagerTsWorkerDisposed(): void {
+  packagerTsWorkerReady = false
+}
+
 /**
  * Coordinate packager-ts request levels on the main thread.
  *
@@ -10,7 +21,6 @@ type DtsPhase = 'runtime' | 'final'
  * startup while still exposing explicit events to the rest of the system.
  */
 export function initPackagerTsOrchestrator(): void {
-  let ready = false
   let runtimeRequestedCount = 0
   let finalRequestedCount = 0
   let runtimeCompletedCount = 0
@@ -24,7 +34,7 @@ export function initPackagerTsOrchestrator(): void {
       } = null
 
   const dispatchPendingRun = () => {
-    if (!ready || running !== null) return
+    if (!packagerTsWorkerReady || running !== null) return
 
     if (finalRequestedCount > finalCompletedCount) {
       running = {
@@ -51,7 +61,7 @@ export function initPackagerTsOrchestrator(): void {
   }
 
   on('packager-ts:ready', () => {
-    ready = true
+    packagerTsWorkerReady = true
     dispatchPendingRun()
   })
 
