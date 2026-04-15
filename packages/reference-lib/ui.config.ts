@@ -11,6 +11,6 @@ export default defineConfig({
   name: 'reference-ui',
   include: ['src/**/*.{ts,tsx}'],
   extends: [], // no upstream — reference-lib is the root
-  debug: false,
+  debug: true,
   
 })
