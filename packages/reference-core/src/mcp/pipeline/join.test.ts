@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Component } from '@reference-ui/rust/atlas'
-import type { ReferenceDocument } from '../reference/browser/types'
+import type { ReferenceDocument } from '../../reference/browser/types'
 import { joinMcpComponent } from './join'
 
 function createComponent(): Component {

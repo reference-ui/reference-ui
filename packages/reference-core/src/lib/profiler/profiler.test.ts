@@ -199,7 +199,9 @@ describe('profiler/main (flag off)', () => {
     vi.stubEnv(MEMORY_PROFILER_ENV, undefined)
     vi.resetModules()
     const { startMainMemoryProfiler, stopMainMemoryProfiler } = await import('./main')
-    startMainMemoryProfiler()
-    stopMainMemoryProfiler()
+    expect(() => {
+      startMainMemoryProfiler()
+      stopMainMemoryProfiler()
+    }).not.toThrow()
   })
 })

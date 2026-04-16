@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { DEFAULT_OUT_DIR } from '../constants'
+import { DEFAULT_OUT_DIR } from '../../constants'
 import type { McpBuildArtifact } from './types'
 import { findComponent, getCommonPatterns, listComponents } from './queries'
 

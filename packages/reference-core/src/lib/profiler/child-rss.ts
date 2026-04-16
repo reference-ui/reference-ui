@@ -12,10 +12,13 @@ let listenersAttached = false
  * Best-effort RSS for another process (POSIX). `ps` reports rss in **kilobytes** on macOS/Linux.
  * Returns `null` if the process vanished or the platform is unsupported.
  */
+/** POSIX `ps` — absolute path so the child binary is not resolved via user-writable PATH entries. */
+const PS_BIN = '/bin/ps'
+
 export function samplePidRssBytes(pid: number): number | null {
   if (process.platform === 'win32') return null
   try {
-    const out = execFileSync('ps', ['-o', 'rss=', '-p', String(pid)], {
+    const out = execFileSync(PS_BIN, ['-o', 'rss=', '-p', String(pid)], {
       encoding: 'utf8',
       maxBuffer: 64 * 1024,
       timeout: 200,

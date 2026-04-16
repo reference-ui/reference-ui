@@ -1,7 +1,6 @@
-import { emit } from '../lib/event-bus'
-import { log } from '../lib/log'
-import { getMcpModelPath } from './paths'
-import { buildMcpArtifact, prefetchMcpAtlas } from './build'
+import { emit } from '../../lib/event-bus'
+import { log } from '../../lib/log'
+import { spawnMcpBuildChild, spawnMcpPrefetchAtlasChild } from './child-process/process'
 
 export interface McpWorkerPayload {
   cwd: string
@@ -9,24 +8,28 @@ export interface McpWorkerPayload {
 
 export async function runMcpBuild(payload: McpWorkerPayload): Promise<void> {
   const startedAt = Date.now()
-  const artifact = await buildMcpArtifact({ cwd: payload.cwd, force: true })
+  const { modelPath, componentCount } = await spawnMcpBuildChild(payload.cwd)
   const durationMs = Date.now() - startedAt
 
   log.debug('mcp', 'MCP build completed', {
     cwd: payload.cwd,
-    componentCount: artifact.components.length,
-    modelPath: getMcpModelPath(payload.cwd),
+    componentCount,
+    modelPath,
     durationMs,
   })
 
   emit('mcp:complete', {
-    modelPath: getMcpModelPath(payload.cwd),
-    componentCount: artifact.components.length,
+    modelPath,
+    componentCount,
   })
 }
 
 export async function runMcpAtlasPrefetch(payload: McpWorkerPayload): Promise<void> {
-  await prefetchMcpAtlas({ cwd: payload.cwd, refresh: true })
+  try {
+    await spawnMcpPrefetchAtlasChild(payload.cwd)
+  } finally {
+    emit('mcp:prefetch:atlas:complete', {})
+  }
 }
 
 export function onRunMcpBuild(payload: McpWorkerPayload): void {

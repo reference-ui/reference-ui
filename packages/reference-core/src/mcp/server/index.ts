@@ -8,10 +8,10 @@ import {
   type ServerResponse,
 } from 'node:http'
 import { z } from 'zod'
-import { log } from '../lib/log'
-import { loadOrBuildMcpArtifact } from './build'
-import { findComponent, getCommonPatterns, listComponents } from './queries'
-import type { McpBuildArtifact, McpPublicModel } from './types'
+import { log } from '../../lib/log'
+import { loadOrBuildMcpArtifact } from '../pipeline/build'
+import { findComponent, getCommonPatterns, listComponents } from '../pipeline/queries'
+import type { McpBuildArtifact, McpPublicModel } from '../pipeline/types'
 
 export interface CreateReferenceMcpServerOptions {
   cwd: string

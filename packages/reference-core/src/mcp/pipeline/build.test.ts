@@ -15,7 +15,7 @@ vi.mock('@reference-ui/rust/atlas', () => ({
   analyzeDetailed,
 }))
 
-vi.mock('../config', () => ({
+vi.mock('../../config', () => ({
   getConfig,
 }))
 

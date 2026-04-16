@@ -29,12 +29,12 @@ function createPayload(watchMode: boolean): TsPackagerWorkerPayload {
 
 describe('packager/ts/run', () => {
   it('limits runtime declaration generation to runtime packages', async () => {
-    const installPackagesTs = vi.fn().mockResolvedValue(undefined)
+    const spawnPackagerTsDtsChild = vi.fn().mockResolvedValue(undefined)
     const emit = vi.fn()
 
     vi.resetModules()
-    vi.doMock('./install', () => ({
-      installPackagesTs,
+    vi.doMock('./child-process/process', () => ({
+      spawnPackagerTsDtsChild,
     }))
     vi.doMock('../../lib/event-bus', () => ({
       emit,
@@ -49,28 +49,20 @@ describe('packager/ts/run', () => {
     const { runDtsGeneration } = await import('./run')
     await runDtsGeneration(createPayload(false), 'packager-ts:runtime:complete')
 
-    expect(installPackagesTs).toHaveBeenCalledWith('/workspace', [
-      {
-        name: '@reference-ui/react',
-        sourceEntry: 'src/entry/react.ts',
-        outFile: 'react.mjs',
-      },
-      {
-        name: '@reference-ui/system',
-        sourceEntry: 'src/entry/system.ts',
-        outFile: 'system.mjs',
-      },
-    ])
+    expect(spawnPackagerTsDtsChild).toHaveBeenCalledWith(
+      expect.objectContaining({ cwd: '/workspace' }),
+      'packager-ts:runtime:complete'
+    )
     expect(emit).toHaveBeenCalledWith('packager-ts:runtime:complete', {})
   })
 
   it('limits final declaration generation to the types package', async () => {
-    const installPackagesTs = vi.fn().mockResolvedValue(undefined)
+    const spawnPackagerTsDtsChild = vi.fn().mockResolvedValue(undefined)
     const emit = vi.fn()
 
     vi.resetModules()
-    vi.doMock('./install', () => ({
-      installPackagesTs,
+    vi.doMock('./child-process/process', () => ({
+      spawnPackagerTsDtsChild,
     }))
     vi.doMock('../../lib/event-bus', () => ({
       emit,
@@ -85,13 +77,10 @@ describe('packager/ts/run', () => {
     const { runDtsGeneration } = await import('./run')
     await runDtsGeneration(createPayload(false), 'packager-ts:complete')
 
-    expect(installPackagesTs).toHaveBeenCalledWith('/workspace', [
-      {
-        name: '@reference-ui/types',
-        sourceEntry: 'src/entry/types.ts',
-        outFile: 'types.mjs',
-      },
-    ])
+    expect(spawnPackagerTsDtsChild).toHaveBeenCalledWith(
+      expect.objectContaining({ cwd: '/workspace' }),
+      'packager-ts:complete'
+    )
     expect(emit).toHaveBeenCalledWith('packager-ts:complete', {})
   })
 
