@@ -172,7 +172,7 @@ describe('sync/events', () => {
     expect(emit).toHaveBeenCalledWith('run:reference:build', {})
   })
 
-  it('starts MCP only after both reference output and final declarations are ready', async () => {
+  it('starts MCP build only after reference, final declarations, and Atlas prefetch', async () => {
     const { initEvents } = await loadEventsModule()
     initEvents()
 
@@ -186,17 +186,22 @@ describe('sync/events', () => {
 
     emit.mockClear()
     fireOn('packager-ts:complete')
+    expect(emit).toHaveBeenCalledWith('run:mcp:prefetch:atlas', undefined)
+    expect(emit).not.toHaveBeenCalledWith('run:mcp:build', {})
+
+    emit.mockClear()
+    fireOn('mcp:prefetch:atlas:complete')
     expect(emit).toHaveBeenCalledWith('run:mcp:build', {})
   })
 
-  it('prefetches Atlas on initial virtual completion once MCP worker is ready', async () => {
+  it('prefetches Atlas after final declarations once MCP worker is ready', async () => {
     const { initEvents } = await loadEventsModule()
     initEvents()
 
     fireOn('mcp:ready')
     emit.mockClear()
 
-    fireOn('virtual:complete')
+    fireOn('packager-ts:complete')
 
     expect(emit).toHaveBeenCalledWith('run:mcp:prefetch:atlas', undefined)
   })
@@ -215,8 +220,8 @@ describe('sync/events', () => {
     initEvents()
 
     fireOn('mcp:ready')
-
     fireOn('virtual:complete')
+    fireOn('packager-ts:complete')
     emit.mockClear()
 
     fireOn('virtual:fs:change', {

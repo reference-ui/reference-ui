@@ -2,8 +2,8 @@ import type { Component } from '@reference-ui/rust/atlas'
 import type {
   ReferenceDocument,
   ReferenceMemberDocument,
-} from '../reference/browser/types'
-import { formatReferenceType } from '../reference/browser-model/type'
+} from '../../reference/browser/types'
+import { formatReferenceType } from '../../reference/browser-model/type'
 import type { McpReferenceData } from './reference'
 import type { McpComponent } from './types'
 

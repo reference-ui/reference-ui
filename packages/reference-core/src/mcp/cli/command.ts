@@ -1,10 +1,10 @@
-import { loadUserConfig, setConfig, setCwd } from '../config'
+import { loadUserConfig, setConfig, setCwd } from '../../config'
 import {
   DEFAULT_REFERENCE_MCP_HOST,
   DEFAULT_REFERENCE_MCP_PORT,
   runReferenceMcpHttpServer,
   runReferenceMcpServer,
-} from './server'
+} from '../server'
 
 export type McpTransport = 'http' | 'stdio'
 

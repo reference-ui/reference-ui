@@ -35,12 +35,12 @@ export function initEvents(): void {
   })
 
   /**
-   * Refresh the warmed Atlas result once the initial virtual barrier opens so
-   * the final MCP build uses a post-bootstrap analysis for the active sync.
+   * Warm Atlas after final declarations so the MCP child never runs alongside the
+   * packager-ts DTS child (both are heavy RSS). Prefetch runs before `run:mcp:build`.
    */
   forWorker({
     ready: 'mcp:ready',
-    on: VIRTUAL_COMPLETE_EVENT,
+    on: 'packager-ts:complete',
     emit: 'run:mcp:prefetch:atlas',
   })
 
@@ -199,13 +199,17 @@ export function initEvents(): void {
   })
 
   /**
-   * MCP joins Atlas output with the generated type surface once both the
-   * reference build and final declarations have advanced for the current pass.
+   * MCP build runs only after reference output, final declarations, and Atlas
+   * prefetch (each in its own child) so MCP never overlaps packager-ts work.
    */
   onReady(
     'mcp:ready',
     combineTrigger({
-      requires: ['reference:complete', 'packager-ts:complete'],
+      requires: [
+        'reference:complete',
+        'packager-ts:complete',
+        'mcp:prefetch:atlas:complete',
+      ],
       emit: 'run:mcp:build',
       payload: {},
     })

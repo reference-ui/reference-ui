@@ -75,17 +75,22 @@ function formatMetricsPlain(s: MemorySnapshot): string {
   return `HEAP=${s.heapUsedMb}/${s.heapTotalMb}MiB EXT=${s.externalMb}MiB AB=${s.arrayBuffersMb}MiB`
 }
 
-function getHeapAndRssBytes(s: MemorySnapshot): { heap: number; rss: number } | null {
-  if (typeof s.rssBytes === 'number' && typeof s.heapUsedBytes === 'number') {
-    const rss = s.rssBytes
-    const heap = s.heapUsedBytes
-    if (!Number.isFinite(rss) || rss <= 0 || !Number.isFinite(heap) || heap < 0) return null
-    return { heap, rss }
-  }
-  const rss = Number.parseFloat(s.rssMb) * 1024 * 1024
-  const heap = Number.parseFloat(s.heapUsedMb) * 1024 * 1024
+function validatedHeapRssPair(rss: number, heap: number): { heap: number; rss: number } | null {
   if (!Number.isFinite(rss) || rss <= 0 || !Number.isFinite(heap) || heap < 0) return null
   return { heap, rss }
+}
+
+function heapRssPairFromMiBStrings(s: MemorySnapshot): { heap: number; rss: number } | null {
+  const rss = Number.parseFloat(s.rssMb) * 1024 * 1024
+  const heap = Number.parseFloat(s.heapUsedMb) * 1024 * 1024
+  return validatedHeapRssPair(rss, heap)
+}
+
+function getHeapAndRssBytes(s: MemorySnapshot): { heap: number; rss: number } | null {
+  if (typeof s.rssBytes === 'number' && typeof s.heapUsedBytes === 'number') {
+    return validatedHeapRssPair(s.rssBytes, s.heapUsedBytes)
+  }
+  return heapRssPairFromMiBStrings(s)
 }
 
 /**

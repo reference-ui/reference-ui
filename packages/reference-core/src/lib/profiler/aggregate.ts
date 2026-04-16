@@ -63,15 +63,7 @@ export type HeapSlice = {
   childRssBytes: number
 }
 
-/**
- * Latest snapshot: each slice is `heap / sum(heaps)` — **V8 isolate heaps only**, sums to 100%.
- * **Not RSS** (RSS is only on the sync-main `TOTAL_USAGE=` line). Isolates that haven’t posted yet are omitted.
- */
-export function getIsolateHeapPieSlices(): HeapSlice[] {
-  let total = 0
-  for (const v of byTid.values()) total += v.heapBytes
-  if (total <= 0) return []
-
+function buildHeapPieRows(total: number): HeapSlice[] {
   const rows: HeapSlice[] = []
   for (const [tid, v] of byTid) {
     rows.push({
@@ -84,7 +76,10 @@ export function getIsolateHeapPieSlices(): HeapSlice[] {
     })
   }
   rows.sort((a, b) => b.heapBytes - a.heapBytes)
+  return rows
+}
 
+function disambiguateWorkerLabels(rows: HeapSlice[]): void {
   const labelCount = new Map<string, number>()
   for (const r of rows) {
     labelCount.set(r.label, (labelCount.get(r.label) ?? 0) + 1)
@@ -94,16 +89,26 @@ export function getIsolateHeapPieSlices(): HeapSlice[] {
       r.displayLabel = `${r.label} (tid ${r.tid})`
     }
   }
+}
 
-  if (isMainThread) {
-    for (const r of rows) {
-      r.childRssBytes = sampleChildRssBytesForThread(r.tid)
-    }
-  } else {
-    for (const r of rows) {
-      r.childRssBytes = 0
-    }
+function attachChildRssToSlices(rows: HeapSlice[]): void {
+  for (const r of rows) {
+    r.childRssBytes = isMainThread ? sampleChildRssBytesForThread(r.tid) : 0
   }
+}
+
+/**
+ * Latest snapshot: each slice is `heap / sum(heaps)` — **V8 isolate heaps only**, sums to 100%.
+ * **Not RSS** (RSS is only on the sync-main `TOTAL_USAGE=` line). Isolates that haven’t posted yet are omitted.
+ */
+export function getIsolateHeapPieSlices(): HeapSlice[] {
+  let total = 0
+  for (const v of byTid.values()) total += v.heapBytes
+  if (total <= 0) return []
+
+  const rows = buildHeapPieRows(total)
+  disambiguateWorkerLabels(rows)
+  attachChildRssToSlices(rows)
   return rows
 }
 

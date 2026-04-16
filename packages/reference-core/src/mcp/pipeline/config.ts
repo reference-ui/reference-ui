@@ -1,5 +1,5 @@
 import type { AtlasConfig } from '@reference-ui/rust/atlas'
-import type { ReferenceUIConfig } from '../config'
+import type { ReferenceUIConfig } from '../../config'
 
 export function getAtlasMcpConfig(
   config: ReferenceUIConfig | undefined
