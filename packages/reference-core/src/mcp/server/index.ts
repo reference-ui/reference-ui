@@ -1,24 +1,29 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
+import { existsSync } from 'node:fs'
 import {
   createServer,
   type IncomingMessage,
   type Server as HttpServer,
   type ServerResponse,
 } from 'node:http'
+import { resolve } from 'node:path'
 import { z } from 'zod'
 import { log } from '../../lib/log'
-import { loadOrBuildMcpArtifact } from '../pipeline/build'
+import { readMcpArtifact } from '../pipeline/artifact'
+import { buildMcpArtifact } from '../pipeline/build'
+import { getMcpModelPath } from '../pipeline/paths'
 import { findComponent, getCommonPatterns, listComponents } from '../pipeline/queries'
 import type { McpBuildArtifact, McpPublicModel } from '../pipeline/types'
 
 export interface CreateReferenceMcpServerOptions {
   cwd: string
-  forceBuild?: boolean
+  modelState: McpModelState
 }
 
-export interface RunReferenceMcpHttpServerOptions extends CreateReferenceMcpServerOptions {
+export interface RunReferenceMcpHttpServerOptions {
+  cwd: string
   port?: number
   host?: string
 }
@@ -28,27 +33,54 @@ export const DEFAULT_REFERENCE_MCP_HOST = '127.0.0.1'
 export const DEFAULT_REFERENCE_MCP_PATH = '/mcp'
 export const REFERENCE_MCP_READY_PREFIX = '[ref mcp] ready'
 
-interface McpModelState {
-  load(force?: boolean): Promise<McpBuildArtifact>
+export interface McpModelState {
+  /** Load cached artifact if present, else build; may start a background refresh when cache exists. */
+  warmStart(): Promise<void>
+  /** Current best artifact (updates when a background refresh completes). */
+  load(): Promise<McpBuildArtifact>
 }
 
-function createModelState(options: CreateReferenceMcpServerOptions): McpModelState {
-  let inFlight: Promise<McpBuildArtifact> | null = null
+/**
+ * When `model.json` already exists, it is read immediately so tools stay responsive; a full
+ * rebuild runs once in the background and replaces the in-memory artifact when done. When no
+ * cache exists, the first build runs before the server accepts traffic.
+ */
+export function createMcpModelState(options: { cwd: string }): McpModelState {
+  const cwd = resolve(options.cwd)
+  let artifact: McpBuildArtifact | null = null
+  let bgRunning = false
+
+  function scheduleBackgroundRefresh(): void {
+    if (bgRunning) return
+    bgRunning = true
+    void buildMcpArtifact({ cwd })
+      .then(next => {
+        artifact = next
+      })
+      .catch(error => {
+        log.warn('[mcp] Background model refresh failed:', error)
+      })
+      .finally(() => {
+        bgRunning = false
+      })
+  }
 
   return {
-    async load(force = false): Promise<McpBuildArtifact> {
-      if (!force && inFlight) return inFlight
-
-      inFlight = loadOrBuildMcpArtifact({
-        cwd: options.cwd,
-        force: force || options.forceBuild,
-      })
-
-      try {
-        return await inFlight
-      } finally {
-        inFlight = null
+    async warmStart(): Promise<void> {
+      const modelPath = getMcpModelPath(cwd)
+      if (existsSync(modelPath)) {
+        artifact = await readMcpArtifact(cwd)
+        scheduleBackgroundRefresh()
+      } else {
+        artifact = await buildMcpArtifact({ cwd })
       }
+    },
+
+    async load(): Promise<McpBuildArtifact> {
+      if (!artifact) {
+        throw new Error('[mcp] Model is not ready')
+      }
+      return artifact
     },
   }
 }
@@ -78,7 +110,7 @@ function toPublicModel(artifact: McpBuildArtifact): McpPublicModel {
 export function createReferenceMcpServer(
   options: CreateReferenceMcpServerOptions
 ): McpServer {
-  const state = createModelState(options)
+  const state = options.modelState
   const server = new McpServer({
     name: 'reference-ui',
     title: 'Reference UI',
@@ -277,7 +309,7 @@ async function readMcpRequestBody(
 }
 
 export function createReferenceMcpHttpServer(
-  options: RunReferenceMcpHttpServerOptions
+  options: CreateReferenceMcpServerOptions
 ): HttpServer {
   return createServer(async (req, res) => {
     if (!matchesMcpPath(req)) {
@@ -327,10 +359,13 @@ export function createReferenceMcpHttpServer(
   })
 }
 
-export async function runReferenceMcpServer(
-  options: CreateReferenceMcpServerOptions
-): Promise<void> {
-  const server = createReferenceMcpServer(options)
+export async function runReferenceMcpServer(options: { cwd: string }): Promise<void> {
+  const modelState = createMcpModelState({ cwd: options.cwd })
+  await modelState.warmStart()
+  const server = createReferenceMcpServer({
+    cwd: options.cwd,
+    modelState,
+  })
   const transport = new StdioServerTransport()
   await server.connect(transport)
 }
@@ -338,9 +373,15 @@ export async function runReferenceMcpServer(
 export async function runReferenceMcpHttpServer(
   options: RunReferenceMcpHttpServerOptions
 ): Promise<void> {
+  const modelState = createMcpModelState({ cwd: options.cwd })
+  await modelState.warmStart()
+
   const host = options.host ?? DEFAULT_REFERENCE_MCP_HOST
   const port = options.port ?? DEFAULT_REFERENCE_MCP_PORT
-  const server = createReferenceMcpHttpServer(options)
+  const server = createReferenceMcpHttpServer({
+    cwd: options.cwd,
+    modelState,
+  })
 
   await new Promise<void>((resolve, reject) => {
     server.once('error', reject)
