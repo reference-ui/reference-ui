@@ -1,7 +1,6 @@
 import { subscribe } from '@parcel/watcher'
 import { existsSync } from 'node:fs'
 import { basename, dirname } from 'node:path'
-import { SESSION_FILE } from './files'
 
 type ParcelSubscription = Awaited<ReturnType<typeof subscribe>>
 
@@ -48,14 +47,16 @@ export function createSessionWatcher(
       const subscription = await subscribe(outDir, (error, events) => {
         if (error) return
 
-        for (const event of events) {
-          if (basename(event.path) !== SESSION_FILE) continue
-          onSessionChange()
-          return
-        }
+        if (events.length === 0) return
+
+        // Atomic tmp-file + rename writes do not report identical event paths on
+        // every platform. Reconcile on any directory change and let the manifest
+        // reader decide whether a logical ready transition occurred.
+        onSessionChange()
       })
 
       bindWatcher(subscription, generation)
+      onSessionChange()
     } catch {
       // outDir may have been removed (e.g. ref clean); nothing to do.
     }

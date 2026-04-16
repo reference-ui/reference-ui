@@ -13,6 +13,10 @@ import {
   profilerScopeColorKey,
 } from './memory'
 
+function stripAnsi(value: string): string {
+  return value.replace(/\u001b\[[0-9;]*m/g, '')
+}
+
 describe('profiler/env', () => {
   afterEach(() => {
     vi.unstubAllEnvs()
@@ -117,7 +121,7 @@ describe('profiler/memory', () => {
 
   it('formatProfilerLine: main full; workers full or compact', () => {
     const mib = 1024 * 1024
-    const mainLine = formatProfilerLine({
+    const mainLine = stripAnsi(formatProfilerLine({
       scope: 'sync-main',
       threadId: 0,
       mainThread: true,
@@ -128,7 +132,7 @@ describe('profiler/memory', () => {
       heapTotalMb: '50.0',
       externalMb: '2.0',
       arrayBuffersMb: '0.0',
-    })
+    }))
     expect(mainLine).toContain('TOTAL_USAGE=100.0MiB')
     expect(mainLine).toContain('OF_RSS≈40.0%')
     expect(mainLine).toContain('HEAP=40.0/50.0MiB')
@@ -136,7 +140,7 @@ describe('profiler/memory', () => {
     expect(mainLine).toContain('AB=0.0MiB')
     expect(mainLine).not.toContain('V8 isolate')
 
-    const workerFull = formatProfilerLine(
+    const workerFull = stripAnsi(formatProfilerLine(
       {
         scope: 'worker:virtual',
         threadId: 3,
@@ -150,11 +154,11 @@ describe('profiler/memory', () => {
         arrayBuffersMb: '0.0',
       },
       { compactWorkerLines: false },
-    )
+    ))
     expect(workerFull).toContain('ISOLATE_HEAP=')
     expect(workerFull).toContain('OF_RSS≈20.0%')
 
-    const workerCompact = formatProfilerLine(
+    const workerCompact = stripAnsi(formatProfilerLine(
       {
         scope: 'worker:virtual',
         threadId: 3,
@@ -168,7 +172,7 @@ describe('profiler/memory', () => {
         arrayBuffersMb: '0.0',
       },
       { compactWorkerLines: true },
-    )
+    ))
     expect(workerCompact).toContain('virtual')
     expect(workerCompact).toContain('tid=3')
     expect(workerCompact).toContain('HEAP=20.0/25.0MiB')
