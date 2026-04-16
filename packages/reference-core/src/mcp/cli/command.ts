@@ -9,7 +9,6 @@ import {
 export type McpTransport = 'http' | 'stdio'
 
 export interface McpCommandOptions {
-  rebuild?: boolean
   transport?: string
   port?: number
   host?: string
@@ -42,16 +41,12 @@ export async function mcpCommand(
   const transport = resolveTransport(options)
 
   if (transport === 'stdio') {
-    await runReferenceMcpServer({
-      cwd,
-      forceBuild: options?.rebuild,
-    })
+    await runReferenceMcpServer({ cwd })
     return
   }
 
   await runReferenceMcpHttpServer({
     cwd,
-    forceBuild: options?.rebuild,
     host: options?.host ?? DEFAULT_REFERENCE_MCP_HOST,
     port: options?.port ?? DEFAULT_REFERENCE_MCP_PORT,
   })

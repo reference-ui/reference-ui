@@ -26,7 +26,6 @@ async function main(): Promise<void> {
   program
     .command('mcp')
     .description('Run the Reference UI MCP server')
-    .option('--rebuild', 'Rebuild the MCP model before serving')
     .option('--transport <transport>', 'Transport to use (stdio or http)')
     .option('--host <host>', 'Host to bind when using HTTP transport')
     .option('--port <port>', 'Port to bind when using HTTP transport', value =>

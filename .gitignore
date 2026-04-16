@@ -13,7 +13,8 @@ storybook-static
 cosmos-export
 
 # IDE
-.cursor
+.cursor/*
+!.cursor/mcp.json
 .vscode
 .idea
 *.swp
