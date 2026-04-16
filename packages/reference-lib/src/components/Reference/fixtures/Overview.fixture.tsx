@@ -16,7 +16,7 @@ export default (
   >
     <Div display="flex" flexDirection="column" gap="2r">
       <Span fontSize="4xl" fontWeight="700" letterSpacing="tight" color="gray.950">
-        Reference Lib playground1
+        Reference Lib playground
       </Span>
       <Span fontSize="lg" color="gray.600" lineHeight="relaxed" maxWidth="36rem">
         Browse fixtures in the tree to preview components in isolation. This UI is powered

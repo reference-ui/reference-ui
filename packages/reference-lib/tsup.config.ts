@@ -3,7 +3,7 @@ import { defineConfig } from 'tsup'
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
-    'theme/index': 'src/theme/index.ts',
+    'theme/index': 'src/core/theme/index.ts',
   },
   format: ['esm'],
   dts: true,

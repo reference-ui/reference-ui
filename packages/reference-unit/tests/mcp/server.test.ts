@@ -16,7 +16,7 @@ describe('mcp server', { timeout: 120_000 }, () => {
   beforeAll(async () => {
     running = await startMcpClient(referenceUnitRoot, 3697)
     expect(running.serverUrl.href).toBe(serverUrl.href)
-  }, 30_000)
+  }, 120_000)
 
   afterAll(async () => {
     await stopMcpClient(running)

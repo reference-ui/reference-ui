@@ -1,5 +1,5 @@
 import { tokens } from '@reference-ui/system'
-import { fontStacks } from '../../theme/fontStacks'
+import { fontStacks } from '../../../core/theme/fontStacks'
 
 type ReferenceBrowserTokenConfig = Parameters<typeof tokens>[0]
 
@@ -41,9 +41,9 @@ export const referenceBrowserTokenConfig = {
   },
   fonts: {
     reference: {
-      /** Same stack as global `mono` + JetBrains `@font-face` in {@link ../../theme/fonts}. */
+      /** Same stack as global `mono` + JetBrains `@font-face` in {@link ../../../core/theme/fonts}. */
       mono: { value: fontStacks.mono },
-      /** Same stack as global `sans` + Inter `@font-face` in {@link ../../theme/fonts}. */
+      /** Same stack as global `sans` + Inter `@font-face` in {@link ../../../core/theme/fonts}. */
       sans: { value: fontStacks.sans },
     },
   },

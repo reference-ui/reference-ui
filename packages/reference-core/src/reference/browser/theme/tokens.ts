@@ -1,6 +1,6 @@
 import type { ReferenceTokenConfig } from '../../../system/api'
 
-/** Canonical for `@reference-ui/types`; `@reference-ui/lib` maintains a parallel copy under `src/Reference/theme/tokens.ts` for package-local edits. */
+/** Canonical for `@reference-ui/types`; `@reference-ui/lib` maintains a parallel copy under `src/components/Reference/theme/tokens.ts` for package-local edits. */
 export const referenceBrowserTokenConfig = {
   colors: {
     reference: {
