@@ -42,6 +42,10 @@ export function createSessionWatcher(
     watcher = subscription
   }
 
+  function reconcileCurrentState(): void {
+    onSessionChange()
+  }
+
   async function watchOutDir(generation: number): Promise<void> {
     try {
       const subscription = await subscribe(outDir, (error, events) => {
@@ -52,11 +56,14 @@ export function createSessionWatcher(
         // Atomic tmp-file + rename writes do not report identical event paths on
         // every platform. Reconcile on any directory change and let the manifest
         // reader decide whether a logical ready transition occurred.
-        onSessionChange()
+        reconcileCurrentState()
       })
 
       bindWatcher(subscription, generation)
-      onSessionChange()
+
+      // Subscribe is async. Reconcile once the watcher is actually attached so
+      // a ready manifest written during startup is not missed on CI/Linux.
+      reconcileCurrentState()
     } catch {
       // outDir may have been removed (e.g. ref clean); nothing to do.
     }
@@ -96,7 +103,10 @@ export function createSessionWatcher(
 
     if (existsSync(outDir)) {
       void watchOutDir(generation)
-      onSessionChange()
+
+      // Surface the current manifest state immediately when the outDir already
+      // exists instead of waiting for the next file-system event.
+      reconcileCurrentState()
       return
     }
 
