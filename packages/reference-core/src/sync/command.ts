@@ -8,7 +8,6 @@ import { initWatch } from '../watch/init'
 import { initPackager, initTsPackager } from '../packager/init'
 import { initPanda } from '../system/panda/gen/init'
 import { initReference } from '../reference/bridge/init'
-import { initMcp } from '../mcp/init'
 import { initSession } from '../session'
 import { startSyncLogging } from './logging'
 import type { SyncOptions } from './types'
@@ -26,7 +25,6 @@ export async function syncCommand(cwd: string, options?: SyncOptions): Promise<v
   initWatch(payload)
   initVirtual(payload)
   initReference(payload)
-  initMcp(payload)
   initConfig()
   initPanda()
   initPackager(payload)

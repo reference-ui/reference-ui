@@ -61,6 +61,15 @@ export function runRefSync(cwd: string): void {
   })
 }
 
+/**
+ * `ref sync` no longer writes the MCP artifact. The model is built when the MCP
+ * server first serves it — call this after connecting so tests that read
+ * `.reference-ui/mcp/model.json` see a file on disk.
+ */
+export async function warmMcpArtifact(client: Client): Promise<void> {
+  await client.readResource({ uri: 'reference-ui://component-model' })
+}
+
 export async function waitForServerReady(
   process: McpServerProcess,
   maxMs = 20_000
