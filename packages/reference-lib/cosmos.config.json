@@ -2,5 +2,5 @@
   "plugins": ["react-cosmos-plugin-vite"],
   "portRetries": 0,
   "rendererUrl": "http://localhost:5050",
-  "globalImports": ["./src/cosmos-shell.css", "@reference-ui/react/styles.css"]
+  "globalImports": ["./cosmos/cosmos-shell.css", "@reference-ui/react/styles.css"]
 }

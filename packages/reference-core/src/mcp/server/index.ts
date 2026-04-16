@@ -53,7 +53,7 @@ export function createMcpModelState(options: { cwd: string }): McpModelState {
   function scheduleBackgroundRefresh(): void {
     if (bgRunning) return
     bgRunning = true
-    void buildMcpArtifact({ cwd })
+    buildMcpArtifact({ cwd })
       .then(next => {
         artifact = next
       })

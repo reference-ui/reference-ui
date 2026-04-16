@@ -72,7 +72,8 @@ export async function warmMcpArtifact(client: Client): Promise<void> {
 
 export async function waitForServerReady(
   process: McpServerProcess,
-  maxMs = 20_000
+  /** First boot may run a full MCP artifact build before the HTTP server prints readiness. */
+  maxMs = 120_000
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     const startedAt = Date.now()
