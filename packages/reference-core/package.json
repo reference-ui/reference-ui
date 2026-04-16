@@ -10,7 +10,8 @@
   },
   "type": "module",
   "bin": {
-    "ref": "./bin/ref.mjs"
+    "ref": "./bin/ref.mjs",
+    "mcp": "./bin/mcp.mjs"
   },
   "files": [
     "bin",
