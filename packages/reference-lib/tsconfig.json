@@ -5,7 +5,6 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
-    "baseUrl": ".",
     "skipLibCheck": true,
     "paths": {
       "@reference-ui/react": ["./.reference-ui/react"],
