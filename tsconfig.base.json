@@ -13,7 +13,6 @@
     "lib": ["es2020", "dom"],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
-    "baseUrl": ".",
     "paths": {
       "@reference-ui/core": ["packages/reference-core/src/public.ts"],
       "@reference-ui/core/config": ["packages/reference-core/src/config/index.ts"],
