@@ -137,9 +137,9 @@
         "examples": [
           "<Button variant=\"outline\" onClick={() => {}}>",
           "<Button variant=\"outline\" disabled>",
-          "<Button variant=\"ghost\" onClick={() => {}}>",
           "<Button variant=\"solid\" onClick={() => {}}>",
-          "<Button variant=\"ghost\">"
+          "<Button variant=\"ghost\">",
+          "<Button variant=\"solid\" size=\"sm\" onClick={() => {}}>"
         ],
         "usedWith": {
           "AppCard": "very common",
@@ -272,9 +272,9 @@
           ],
           "usage": "common",
           "examples": [
-            "<AppCard title=\"Preferences\" padding=\"md\" status=\"default\" statusLabel=\"Saved\">",
             "<AppCard title=\"Welcome\" padding=\"lg\">",
-            "<AppCard title=\"Features\" elevated padding=\"md\">"
+            "<AppCard title=\"Features\" elevated padding=\"md\">",
+            "<AppCard title=\"Preferences\" padding=\"md\" status=\"default\" statusLabel=\"Saved\">"
           ],
           "usedWith": {
             "Button": "very common"
@@ -375,11 +375,11 @@
           ],
           "usage": "common",
           "examples": [
-            "<Button variant=\"ghost\" onClick={() => {}}>",
-            "<Button variant=\"outline\" onClick={() => {}}>",
-            "<Button variant=\"outline\" disabled>",
             "<Button variant=\"solid\" onClick={() => {}}>",
-            "<Button variant=\"ghost\">"
+            "<Button variant=\"ghost\">",
+            "<Button variant=\"solid\" size=\"sm\" onClick={() => {}}>",
+            "<Button variant=\"outline\" onClick={() => {}}>",
+            "<Button variant=\"outline\" disabled>"
           ],
           "usedWith": {
             "AppCard": "very common",

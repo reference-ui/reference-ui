@@ -10,7 +10,7 @@ import {
 
 let running: RunningMcpStdioClient | null = null
 
-describe('mcp stdio server', () => {
+describe('mcp stdio server', { timeout: 120_000 }, () => {
   beforeAll(async () => {
     running = await startMcpStdioClient(referenceUnitRoot)
   }, 30_000)

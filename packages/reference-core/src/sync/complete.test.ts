@@ -7,6 +7,7 @@ const shutdownAndExit = vi.fn()
 const logPackagesBuilt = vi.fn()
 const logSyncDone = vi.fn()
 const logSyncFailure = vi.fn()
+const logSyncMilestone = vi.fn()
 const logSyncReady = vi.fn()
 const markSyncCycleStart = vi.fn()
 const REF_SYNC_FAILED_MESSAGE = '[ref sync] failed\n'
@@ -41,6 +42,7 @@ async function loadCompleteModule() {
   logPackagesBuilt.mockReset()
   logSyncDone.mockReset()
   logSyncFailure.mockReset()
+  logSyncMilestone.mockReset()
   logSyncReady.mockReset()
   markSyncCycleStart.mockReset()
 
@@ -59,6 +61,7 @@ async function loadCompleteModule() {
     REF_SYNC_FAILED_MESSAGE,
     logSyncDone,
     logSyncFailure,
+    logSyncMilestone,
     logSyncReady,
     markSyncCycleStart,
   }))
@@ -88,7 +91,7 @@ afterEach(() => {
 })
 
 describe('sync/complete', () => {
-  it('waits for MCP completion before shutting down in one-shot mode', async () => {
+  it('shuts down after final library declarations in one-shot mode', async () => {
     const { initComplete } = await loadCompleteModule()
     initComplete(createPayload(false))
 
@@ -96,7 +99,10 @@ describe('sync/complete', () => {
     expect(logPackagesBuilt).toHaveBeenCalledWith(1, 20)
     expect(shutdownAndExit).not.toHaveBeenCalled()
 
-    fireEvent('mcp:complete')
+    fireEvent('packager-ts:complete')
+    expect(logSyncMilestone).toHaveBeenCalledWith(
+      'Generated library TypeScript declarations'
+    )
     expect(logSyncDone).toHaveBeenCalled()
     expect(shutdownAndExit).toHaveBeenCalledWith(0, 'sync:complete')
   })

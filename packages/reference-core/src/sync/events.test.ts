@@ -172,45 +172,12 @@ describe('sync/events', () => {
     expect(emit).toHaveBeenCalledWith('run:reference:build', {})
   })
 
-  it('starts MCP build only after reference, final declarations, and Atlas prefetch', async () => {
+  it('emits sync:complete when final TypeScript declarations finish', async () => {
     const { initEvents } = await loadEventsModule()
     initEvents()
-
-    fireOn('mcp:ready')
-    fireOn('reference:complete', {
-      source: 'virtual',
-      manifestPath: '/tmp/types/manifest.js',
-      outputDir: '/tmp/types',
-    })
-    expect(emit).not.toHaveBeenCalledWith('run:mcp:build', {})
 
     emit.mockClear()
     fireOn('packager-ts:complete')
-    expect(emit).toHaveBeenCalledWith('run:mcp:prefetch:atlas', undefined)
-    expect(emit).not.toHaveBeenCalledWith('run:mcp:build', {})
-
-    emit.mockClear()
-    fireOn('mcp:prefetch:atlas:complete')
-    expect(emit).toHaveBeenCalledWith('run:mcp:build', {})
-  })
-
-  it('prefetches Atlas after final declarations once MCP worker is ready', async () => {
-    const { initEvents } = await loadEventsModule()
-    initEvents()
-
-    fireOn('mcp:ready')
-    emit.mockClear()
-
-    fireOn('packager-ts:complete')
-
-    expect(emit).toHaveBeenCalledWith('run:mcp:prefetch:atlas', undefined)
-  })
-
-  it('emits sync:complete from MCP completion', async () => {
-    const { initEvents } = await loadEventsModule()
-    initEvents()
-
-    fireOn('mcp:complete', { modelPath: '/tmp/model.json', componentCount: 12 })
 
     expect(emit).toHaveBeenCalledWith('sync:complete', undefined)
   })
@@ -219,7 +186,6 @@ describe('sync/events', () => {
     const { initEvents } = await loadEventsModule()
     initEvents()
 
-    fireOn('mcp:ready')
     fireOn('virtual:complete')
     fireOn('packager-ts:complete')
     emit.mockClear()
@@ -231,8 +197,6 @@ describe('sync/events', () => {
 
     expect(emit).toHaveBeenCalledWith('run:system:config', undefined)
     expect(emit).toHaveBeenCalledWith('run:reference:build', {})
-    expect(emit).not.toHaveBeenCalledWith('run:mcp:prefetch:atlas', {})
-    expect(emit).not.toHaveBeenCalledWith('run:mcp:prefetch:atlas', undefined)
   })
 
   it('waits for panda codegen before bundling runtime packages', async () => {
