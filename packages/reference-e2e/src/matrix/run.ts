@@ -5,7 +5,7 @@
  * Uses blob reporter + merge so the final report includes all projects.
  */
 
-import { mkdir, rm } from 'node:fs/promises'
+import { mkdir, readFile, rm } from 'node:fs/promises'
 import { finished } from 'node:stream/promises'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -19,6 +19,28 @@ const BLOB_DIR = join(__dirname, '..', '..', 'blob-reports')
 /** Outside `test-results/`: Playwright clears that directory when each run starts, which would delete nested matrix logs between serial matrix projects. */
 const LOG_DIR = join(__dirname, '..', '..', 'matrix-logs')
 const REPORT_DIR = join(__dirname, '..', '..', 'playwright-report')
+
+/** Cap so huge Playwright traces do not blow up CI log size. */
+const MAX_FAILURE_LOG_CHARS = 400_000
+
+async function printFailureLog(projectName: string, logPath: string): Promise<void> {
+  const banner = `\n========== Playwright output: ${projectName} (${logPath}) ==========\n`
+  try {
+    let text = await readFile(logPath, 'utf8')
+    if (text.length > MAX_FAILURE_LOG_CHARS) {
+      const omitted = text.length - MAX_FAILURE_LOG_CHARS
+      text =
+        `… (${omitted.toLocaleString()} characters omitted from start)\n\n` +
+        text.slice(-MAX_FAILURE_LOG_CHARS)
+    }
+    console.error(banner + text)
+    if (!text.endsWith('\n')) console.error('')
+    console.error(`========== end ${projectName} ==========\n`)
+  } catch (err) {
+    console.error(banner)
+    console.error(`Could not read log file: ${err}`)
+  }
+}
 
 export async function run(): Promise<void> {
   await rm(BLOB_DIR, { recursive: true, force: true }).catch(() => {})
@@ -64,7 +86,8 @@ export async function run(): Promise<void> {
     if ((result.exitCode ?? 0) === 0) {
       console.log(`✓ ${entry.name} passed`)
     } else {
-      console.log(`✖ ${entry.name} failed (log: ${logPath})`)
+      console.log(`✖ ${entry.name} failed (full output below; also: ${logPath})`)
+      await printFailureLog(entry.name, logPath)
     }
 
     return { entry, exitCode: result.exitCode ?? 0, logPath }
