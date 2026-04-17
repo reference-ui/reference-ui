@@ -1,16 +1,14 @@
 import { on } from '../lib/event-bus'
 import { getOutDirPath } from '../lib/paths'
 import type { SyncPayload } from '../sync/types'
+import { initWatchReady } from '../sync/watch-ready'
+import { enforceWatchSessionLock } from './watch-lock'
 import {
   initSessionState,
   transitionSession,
   transitionBuild,
   cleanupSession,
 } from './state'
-import { tryAcquireLock } from './files'
-import { log } from '../lib/log'
-
-const LOG_SCOPE = 'session'
 
 /**
  * Initialize the session module for a sync run.
@@ -29,20 +27,7 @@ export function initSession(payload: SyncPayload): void {
 
   // Lock enforcement is watch-only (see doc comment above).
   if (payload.options.watch) {
-    const now = new Date().toISOString()
-    let result = tryAcquireLock(outDir, { pid: process.pid, startedAt: now })
-    // One retry after a stale lock has been removed.
-    if (result === 'stale') {
-      result = tryAcquireLock(outDir, { pid: process.pid, startedAt: now })
-    }
-    if (result === 'contested') {
-      log.error(
-        LOG_SCOPE,
-        `Another ref sync --watch process already owns ${outDir}. ` +
-          'Use a different outDir to run parallel watch sessions.'
-      )
-      process.exit(1)
-    }
+    enforceWatchSessionLock(outDir)
   }
 
   initSessionState(outDir, mode)
@@ -63,10 +48,18 @@ export function initSession(payload: SyncPayload): void {
     if (payload.options.watch) transitionBuild('running')
   })
 
-  // Packager completion is the safe-to-refresh point for bundlers.
-  on('packager:complete', () => {
-    transitionBuild('ready')
-  })
+  if (payload.options.watch) {
+    initWatchReady({
+      onReady: () => {
+        transitionBuild('ready')
+      },
+    })
+  } else {
+    // One-shot sync only finishes once the full package set exists.
+    on('packager:complete', () => {
+      transitionBuild('ready')
+    })
+  }
 
   // Any pipeline failure is reflected in the manifest.
   on('sync:failed', () => {
