@@ -201,6 +201,28 @@ describe('session/init – watch mode event wiring', () => {
     expect(mockTransitionBuild).toHaveBeenCalledWith('running')
   })
 
+  it('marks watch builds ready when the runtime bundle finishes', async () => {
+    const { initSession } = await loadInitModule(dir)
+    mockTryAcquireLock.mockReturnValue('acquired')
+    initSession(createPayload(true))
+
+    fireOn('packager:runtime:complete')
+
+    expect(mockTransitionBuild).toHaveBeenCalledWith('ready')
+  })
+
+  it('marks watch rebuilds ready after the runtime bundle', async () => {
+    const { initSession } = await loadInitModule(dir)
+    mockTryAcquireLock.mockReturnValue('acquired')
+    initSession(createPayload(true))
+
+    fireOn('watch:change')
+    fireOn('packager:runtime:complete')
+
+    expect(mockTransitionBuild).toHaveBeenCalledWith('queued')
+    expect(mockTransitionBuild).toHaveBeenCalledWith('ready')
+  })
+
   it('does not call cleanupSession on sync:complete in watch mode', async () => {
     const { initSession } = await loadInitModule(dir)
     mockTryAcquireLock.mockReturnValue('acquired')

@@ -34,6 +34,8 @@ interface ResourceTextEntry {
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
+export const MCP_TEST_REQUEST_TIMEOUT_MS = 120_000
+
 export const referenceUnitRoot = resolve(__dirname, '..', '..')
 export const refCoreCliPath = join(
   referenceUnitRoot,
@@ -193,7 +195,7 @@ export async function startMcpStdioClient(cwd: string): Promise<RunningMcpStdioC
     { name: 'reference-unit-mcp-stdio-test', version: '0.0.0' },
     { capabilities: {} }
   )
-  await client.connect(transport)
+  await client.connect(transport, { timeout: MCP_TEST_REQUEST_TIMEOUT_MS })
 
   return {
     client,

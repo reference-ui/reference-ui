@@ -111,13 +111,24 @@ describe('sync/complete', () => {
     const { initComplete } = await loadCompleteModule()
     initComplete(createPayload(true))
 
-    fireEvent('packager:complete', { packageCount: 1, durationMs: 20 })
+    fireEvent('packager:runtime:complete', { packageCount: 3, durationMs: 20 })
 
-    expect(logPackagesBuilt).toHaveBeenCalledWith(1, 20)
+    expect(logPackagesBuilt).toHaveBeenCalledWith(3, 20)
     expect(logPackagesBuilt.mock.invocationCallOrder[0]).toBeLessThan(
       logSyncReady.mock.invocationCallOrder[0]
     )
     expect(shutdownAndExit).not.toHaveBeenCalled()
+  })
+
+  it('marks watch rebuilds ready directly from the runtime bundle', async () => {
+    const { initComplete } = await loadCompleteModule()
+    initComplete(createPayload(true))
+
+    fireEvent('watch:change')
+    fireEvent('packager:runtime:complete', { packageCount: 3, durationMs: 12 })
+
+    expect(logSyncReady).toHaveBeenCalledTimes(1)
+    expect(markSyncCycleStart).toHaveBeenCalledTimes(1)
   })
 
   it('prints a watch failure marker instead of exiting on MCP failure', async () => {

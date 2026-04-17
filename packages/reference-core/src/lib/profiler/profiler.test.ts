@@ -14,8 +14,10 @@ import {
   profilerScopeColorKey,
 } from './memory'
 
+const ANSI_ESCAPE_SEQUENCE_RE = new RegExp(String.raw`\u001b\[[0-9;]*m`, 'g')
+
 function stripAnsi(value: string): string {
-  return value.replace(/\u001b\[[0-9;]*m/g, '')
+  return value.replace(ANSI_ESCAPE_SEQUENCE_RE, '')
 }
 
 function formatProfilerLineForAssertion(
