@@ -16,7 +16,8 @@ import { loadConfig } from '../config/index'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const BLOB_DIR = join(__dirname, '..', '..', 'blob-reports')
-const LOG_DIR = join(__dirname, '..', '..', 'test-results', 'matrix-logs')
+/** Outside `test-results/`: Playwright clears that directory when each run starts, which would delete nested matrix logs between serial matrix projects. */
+const LOG_DIR = join(__dirname, '..', '..', 'matrix-logs')
 const REPORT_DIR = join(__dirname, '..', '..', 'playwright-report')
 
 export async function run(): Promise<void> {
