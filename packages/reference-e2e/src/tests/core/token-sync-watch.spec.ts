@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 import { writeFile, unlink, readFile } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -19,6 +19,28 @@ function hexToRgb(hex: string): string {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
   if (!result) return ''
   return `rgb(${Number.parseInt(result[1], 16)}, ${Number.parseInt(result[2], 16)}, ${Number.parseInt(result[3], 16)})`
+}
+
+/**
+ * Webpack dev middleware can trigger a navigation/HMR while we read CSS from disk and
+ * apply overrides; `page.evaluate` then throws "Execution context was destroyed".
+ * Vite tends to be less disruptive here; webpack needs a settle + retry.
+ */
+async function withPageContextRetry<T>(page: Page, run: () => Promise<T>): Promise<T> {
+  const max = 12
+  for (let attempt = 0; attempt < max; attempt++) {
+    try {
+      return await run()
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e)
+      if (!msg.includes('Execution context was destroyed') || attempt === max - 1) {
+        throw e
+      }
+      await page.waitForLoadState('domcontentloaded')
+      await page.getByTestId('token-sync-watch').waitFor({ state: 'visible', timeout: 15_000 })
+    }
+  }
+  throw new Error('withPageContextRetry: unreachable')
 }
 
 function buildTokensContent(hexColor: string): string {
@@ -59,19 +81,23 @@ test.describe('token-sync-watch', () => {
     // value, and apply it as an inline override on :root. This verifies the
     // packager output directly without depending on console logs.
     async function fetchCurrentColor(): Promise<string> {
-      const el = page.getByTestId('token-sync-watch')
-      await expect(el).toBeVisible({ timeout: 5_000 })
+      await expect(page.getByTestId('token-sync-watch')).toBeVisible({ timeout: 5_000 })
       const freshCss = await readFile(
         join(sandboxDir, '.reference-ui', 'react', 'styles.css'),
         'utf-8',
       )
       const match = freshCss.match(/--colors-watch-sync-primary:\s*([^;]+)/)
       if (match) {
-        await page.evaluate((val) => {
-          document.documentElement.style.setProperty('--colors-watch-sync-primary', val)
-        }, match[1].trim())
+        const val = match[1].trim()
+        await withPageContextRetry(page, () =>
+          page.evaluate((v) => {
+            document.documentElement.style.setProperty('--colors-watch-sync-primary', v)
+          }, val),
+        )
       }
-      return el.evaluate((e) => getComputedStyle(e).color)
+      return withPageContextRetry(page, () =>
+        page.getByTestId('token-sync-watch').evaluate((e) => getComputedStyle(e).color),
+      )
     }
 
     // Write initial token file and poll the generated CSS until the token value
