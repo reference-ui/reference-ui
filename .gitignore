@@ -34,6 +34,7 @@ yarn-error.log*
 pnpm-debug.log*
 
 # Reference UI generated
+packages/reference-icons/src/generated/
 .complexity-temp
 reports/
 .eslint-result.txt

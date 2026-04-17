@@ -1,0 +1,43 @@
+{
+  "name": "@reference-ui/icons",
+  "version": "0.0.1",
+  "private": false,
+  "description": "Generated Material Symbols icons for Reference UI (outline/filled, weight 500)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/reference-ui/reference-ui",
+    "directory": "packages/reference-icons"
+  },
+  "type": "module",
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs"
+    }
+  },
+  "files": ["dist", "README.md"],
+  "scripts": {
+    "sync": "ref sync",
+    "icons:generate": "node scripts/generate-material-icons.mjs",
+    "build": "pnpm run icons:generate && node scripts/tsup-if-needed.mjs",
+    "typecheck": "pnpm run icons:generate && tsc --noEmit",
+    "prepack": "pnpm run build"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@material-symbols-svg/react": "^0.5.0",
+    "react": "^19.2.4"
+  },
+  "devDependencies": {
+    "@reference-ui/core": "workspace:*",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "tsup": "^8.5.1",
+    "typescript": "~5.9.3"
+  }
+}

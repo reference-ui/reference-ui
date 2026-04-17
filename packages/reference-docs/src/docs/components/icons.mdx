@@ -1,0 +1,34 @@
+---
+title: Icons
+section: Components
+order: 6
+slug: icons
+---
+
+import { LazyIconsShowcase } from '../../components/LazyIconsShowcase'
+import { P } from '@reference-ui/react'
+
+# Icons
+
+Reference UI ships **Material Symbols** as React components (outline and filled, weight 500), generated from [`@material-symbols-svg/react`](https://www.npmjs.com/package/@material-symbols-svg/react). Import icons from `@reference-ui/lib/icons` alongside the rest of the design system.
+
+```tsx
+import { SearchIcon, HomeIcon } from '@reference-ui/lib/icons'
+
+export function Example() {
+  return (
+    <>
+      <SearchIcon size={24} variant="outline" />
+      <HomeIcon size={24} variant="filled" />
+    </>
+  )
+}
+```
+
+Use the search field to find a glyph by component name. Toggle **Outline** and **Filled** to preview both variants.
+
+<LazyIconsShowcase />
+
+<P fontSize="sm" color="docsMuted" marginTop="6r" marginBottom="0">
+  With no search text, only a subset is shown so the page stays responsive—type to filter or find a specific icon among the full set.
+</P>

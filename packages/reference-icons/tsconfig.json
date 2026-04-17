@@ -1,0 +1,34 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@reference-ui/react": [
+        "./.reference-ui/react",
+        "../reference-lib/.reference-ui/react"
+      ],
+      "@reference-ui/react/styles.css": [
+        "./.reference-ui/react/styles.css",
+        "../reference-lib/.reference-ui/react/styles.css"
+      ],
+      "@reference-ui/styled": ["./.reference-ui/styled", "../reference-lib/.reference-ui/styled"],
+      "@reference-ui/styled/jsx": [
+        "./.reference-ui/styled/jsx/index",
+        "../reference-lib/.reference-ui/styled/jsx/index"
+      ],
+      "@reference-ui/styled/*": ["./.reference-ui/styled/*", "../reference-lib/.reference-ui/styled/*"],
+      "@reference-ui/system": ["./.reference-ui/system", "../reference-lib/.reference-ui/system"],
+      "@reference-ui/system/baseSystem": [
+        "./.reference-ui/system/baseSystem.mjs",
+        "../reference-lib/.reference-ui/system/baseSystem.mjs"
+      ],
+      "@reference-ui/types": ["./.reference-ui/types", "../reference-lib/.reference-ui/types"]
+    }
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "ui.config.ts"]
+}
