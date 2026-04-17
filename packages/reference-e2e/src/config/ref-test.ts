@@ -14,6 +14,8 @@ export interface RefTestConfig {
   basePort: number
   workers: number
   parallelSandboxes: boolean
+  /** True when `REF_TEST_CI=1` (root `test:ci:e2e`); serial matrix and other CI-oriented defaults. */
+  ciProfile: boolean
 }
 
 let _config: RefTestConfig | null = null
@@ -31,6 +33,7 @@ export function loadConfig(): RefTestConfig {
       process.env.REF_TEST_PARALLEL !== undefined
         ? process.env.REF_TEST_PARALLEL === '1'
         : raw.parallelSandboxes,
+    ciProfile: process.env.REF_TEST_CI === '1',
   }
   return _config
 }
