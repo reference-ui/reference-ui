@@ -7,6 +7,7 @@
     "jsx": "react-jsx",
     "skipLibCheck": true,
     "paths": {
+      "@reference-ui/icons": ["../reference-icons/src/index.ts"],
       "@reference-ui/react": ["./.reference-ui/react"],
       "@reference-ui/react/styles.css": ["./.reference-ui/react/styles.css"],
       "@reference-ui/styled": ["./.reference-ui/styled"],
