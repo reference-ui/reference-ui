@@ -109,9 +109,7 @@ async function main() {
   ]
   await writeFile(join(genDir, 'index.ts'), `${barrelHeader.join('\n')}${barrel.join('\n')}\n`, 'utf8')
 
-  console.error(
-    `Wrote ${exportNames.size} icon components under ${genDir} (barrel index.ts).`,
-  )
+  console.error(`reference-icons: ${exportNames.size} icons`)
 }
 
 await main()
