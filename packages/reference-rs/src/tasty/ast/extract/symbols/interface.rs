@@ -38,8 +38,7 @@ pub(crate) fn push_interface_shell<'a>(
         .map(|heritage| interface_heritage_to_reference(heritage, ctx))
         .collect::<Vec<_>>();
 
-    let type_parameters =
-        type_parameters_from_oxc(interface_decl.type_parameters.as_deref(), ctx);
+    let type_parameters = type_parameters_from_oxc(interface_decl.type_parameters.as_deref(), ctx);
 
     let references =
         collect_references_from_members(&defined_members, &extends, None, &type_parameters);

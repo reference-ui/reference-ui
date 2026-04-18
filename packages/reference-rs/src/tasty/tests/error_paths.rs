@@ -50,15 +50,17 @@ fn missing_relative_import_leaves_target_unresolved() {
         .iter()
         .find(|m| m.name == "x")
         .expect("member x");
-    let type_ref = member
-        .type_ref
-        .as_ref()
-        .expect("member should have a type");
+    let type_ref = member.type_ref.as_ref().expect("member should have a type");
 
     match type_ref {
-        TypeRef::Reference { name, target_id, .. } => {
+        TypeRef::Reference {
+            name, target_id, ..
+        } => {
             assert_eq!(name, "Missing");
-            assert!(target_id.is_none(), "unresolved import should have no target_id");
+            assert!(
+                target_id.is_none(),
+                "unresolved import should have no target_id"
+            );
         }
         other => panic!("expected Reference to Missing, got {other:?}"),
     }
@@ -67,10 +69,7 @@ fn missing_relative_import_leaves_target_unresolved() {
 #[test]
 fn malformed_package_json_does_not_panic_and_skips_unresolvable_package() {
     let root = TempDir::new("tasty-error-bad-package-json");
-    root.write(
-        "src/index.ts",
-        "export type { T } from 'bad-lib';\n",
-    );
+    root.write("src/index.ts", "export type { T } from 'bad-lib';\n");
     root.write("node_modules/bad-lib/package.json", "{bad");
 
     let bundle = scan_typescript_bundle(&ScanRequest {

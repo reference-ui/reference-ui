@@ -1,0 +1,51 @@
+//! Shared test fixtures for styletrace resolver and analysis tests.
+
+use std::fs;
+use std::path::{Path, PathBuf};
+use std::time::{SystemTime, UNIX_EPOCH};
+
+pub(super) struct ScratchDir {
+    path: PathBuf,
+}
+
+impl ScratchDir {
+    pub(super) fn new(name: &str) -> Self {
+        let stamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("expected current time")
+            .as_nanos();
+        let path = std::env::temp_dir().join(format!(
+            "reference-rs-styletrace-{name}-{}-{stamp}",
+            std::process::id()
+        ));
+        fs::create_dir_all(&path).expect("expected scratch dir to be created");
+        Self { path }
+    }
+
+    pub(super) fn write(&self, relative_path: &str, content: &str) {
+        let file_path = self.path.join(relative_path);
+        if let Some(parent) = file_path.parent() {
+            fs::create_dir_all(parent).expect("expected parent dir to be created");
+        }
+        fs::write(file_path, content).expect("expected fixture file to be written");
+    }
+
+    pub(super) fn root(&self) -> &Path {
+        &self.path
+    }
+}
+
+impl Drop for ScratchDir {
+    fn drop(&mut self) {
+        let _ = fs::remove_dir_all(&self.path);
+    }
+}
+
+pub(super) fn styletrace_case_input(case_name: &str) -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("tests")
+        .join("styletrace")
+        .join("cases")
+        .join(case_name)
+        .join("input")
+}

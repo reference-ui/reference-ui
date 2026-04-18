@@ -113,13 +113,19 @@ fn should_warn_duplicate_symbol_name(
 
     let libraries = symbol_ids
         .iter()
-        .filter_map(|symbol_id| symbols_by_id.get(symbol_id).map(|entry| entry.library.as_str()))
+        .filter_map(|symbol_id| {
+            symbols_by_id
+                .get(symbol_id)
+                .map(|entry| entry.library.as_str())
+        })
         .collect::<Vec<_>>();
     if libraries.len() <= 1 {
         return true;
     }
 
-    let has_user_symbol = libraries.iter().any(|library| *library == USER_LIBRARY_NAME);
+    let has_user_symbol = libraries
+        .iter()
+        .any(|library| *library == USER_LIBRARY_NAME);
     let user_symbol_count = libraries
         .iter()
         .filter(|library| **library == USER_LIBRARY_NAME)
@@ -140,11 +146,7 @@ fn should_warn_duplicate_symbol_name(
         return false;
     }
 
-    !all_duplicate_symbols_equivalent(
-        symbol_ids,
-        symbols,
-        symbol_ids_by_export_name,
-    )
+    !all_duplicate_symbols_equivalent(symbol_ids, symbols, symbol_ids_by_export_name)
 }
 
 fn all_duplicate_symbols_equivalent(
@@ -152,13 +154,11 @@ fn all_duplicate_symbols_equivalent(
     symbols: &BTreeMap<String, crate::tasty::model::TsSymbol>,
     symbol_ids_by_export_name: &BTreeMap<String, String>,
 ) -> bool {
-    let mut resolved_symbols = symbol_ids
-        .iter()
-        .map(|export_name| {
-            symbol_ids_by_export_name
-                .get(export_name)
-                .and_then(|symbol_id| symbols.get(symbol_id))
-        });
+    let mut resolved_symbols = symbol_ids.iter().map(|export_name| {
+        symbol_ids_by_export_name
+            .get(export_name)
+            .and_then(|symbol_id| symbols.get(symbol_id))
+    });
     let Some(first) = resolved_symbols.next().flatten() else {
         return false;
     };
@@ -270,10 +270,9 @@ fn type_ref_equivalent(
         (TypeRef::Tuple { elements: left }, TypeRef::Tuple { elements: right }) => {
             tuple_elements_equivalent(left, right)
         }
-        (
-            TypeRef::Intersection { types: left },
-            TypeRef::Intersection { types: right },
-        ) => type_refs_equivalent(left, right),
+        (TypeRef::Intersection { types: left }, TypeRef::Intersection { types: right }) => {
+            type_refs_equivalent(left, right)
+        }
         (TypeRef::Object { members: left }, TypeRef::Object { members: right }) => {
             members_equivalent(left, right)
         }
@@ -474,15 +473,20 @@ fn template_literal_parts_equivalent(
     use crate::tasty::model::TemplateLiteralPart;
 
     left.len() == right.len()
-        && left.iter().zip(right).all(|(left, right)| match (left, right) {
-            (TemplateLiteralPart::Text { value: left }, TemplateLiteralPart::Text { value: right }) => {
-                left == right
-            }
-            (TemplateLiteralPart::Type { value: left }, TemplateLiteralPart::Type { value: right }) => {
-                type_ref_equivalent(left, right)
-            }
-            _ => false,
-        })
+        && left
+            .iter()
+            .zip(right)
+            .all(|(left, right)| match (left, right) {
+                (
+                    TemplateLiteralPart::Text { value: left },
+                    TemplateLiteralPart::Text { value: right },
+                ) => left == right,
+                (
+                    TemplateLiteralPart::Type { value: left },
+                    TemplateLiteralPart::Type { value: right },
+                ) => type_ref_equivalent(left, right),
+                _ => false,
+            })
 }
 
 fn duplicate_symbol_matches(
@@ -555,9 +559,18 @@ mod tests {
     #[test]
     fn suppresses_cross_library_external_duplicates() {
         let symbols_by_id = BTreeMap::from([
-            ("_a".to_string(), entry("_a", "Shared", "@reference-ui/react")),
-            ("_b".to_string(), entry("_b", "Shared", "@reference-ui/system")),
-            ("_c".to_string(), entry("_c", "Shared", "@reference-ui/types")),
+            (
+                "_a".to_string(),
+                entry("_a", "Shared", "@reference-ui/react"),
+            ),
+            (
+                "_b".to_string(),
+                entry("_b", "Shared", "@reference-ui/system"),
+            ),
+            (
+                "_c".to_string(),
+                entry("_c", "Shared", "@reference-ui/types"),
+            ),
         ]);
         let symbols = BTreeMap::new();
         let symbol_ids = vec!["_a".to_string(), "_b".to_string(), "_c".to_string()];
@@ -574,7 +587,10 @@ mod tests {
     fn suppresses_unique_user_external_collisions_warning() {
         let symbols_by_id = BTreeMap::from([
             ("_a".to_string(), entry("_a", "Shared", USER_LIBRARY_NAME)),
-            ("_b".to_string(), entry("_b", "Shared", "@reference-ui/system")),
+            (
+                "_b".to_string(),
+                entry("_b", "Shared", "@reference-ui/system"),
+            ),
         ]);
         let symbols = BTreeMap::from([
             (
@@ -600,7 +616,8 @@ mod tests {
                 ),
             ),
         ]);
-        let export_name_map = symbol_ids_by_export_name(&[("_a", "user-symbol"), ("_b", "system-symbol")]);
+        let export_name_map =
+            symbol_ids_by_export_name(&[("_a", "user-symbol"), ("_b", "system-symbol")]);
         let symbol_ids = vec!["_a".to_string(), "_b".to_string()];
 
         assert!(!should_warn_duplicate_symbol_name(
@@ -648,7 +665,12 @@ mod tests {
         let symbols = BTreeMap::from([
             (
                 "user-symbol".to_string(),
-                symbol("user-symbol", "Shared", USER_LIBRARY_NAME, shared_definition.clone()),
+                symbol(
+                    "user-symbol",
+                    "Shared",
+                    USER_LIBRARY_NAME,
+                    shared_definition.clone(),
+                ),
             ),
             (
                 "styled-symbol".to_string(),

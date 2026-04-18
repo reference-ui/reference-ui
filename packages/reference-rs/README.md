@@ -58,6 +58,7 @@ Exports are defined in `package.json` and built from `tsup.config.ts`.
 | `@reference-ui/rust/tasty` | Tasty runtime (TypeScript). |
 | `@reference-ui/rust/tasty/browser` | Tasty browser-oriented entry. |
 | `@reference-ui/rust/tasty/build` | Tasty build helpers (emit + filesystem). |
+| `@reference-ui/rust/styletrace` | Styletrace wrapper analysis for discovering exported JSX names linked to Reference primitives through style props. |
 
 Additional **`exports`** entries will appear as new modules ship.
 

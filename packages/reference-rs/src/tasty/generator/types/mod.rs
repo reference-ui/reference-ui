@@ -8,8 +8,8 @@ use crate::tasty::generator::util::{emit_field, emit_object, indent_block, to_js
 use crate::tasty::model::TypeRef;
 
 use emit_collections::emit_fn_params;
-pub(super) use emit_collections::{emit_members, emit_type_parameters};
 pub(crate) use emit_collections::emit_type_ref_array;
+pub(super) use emit_collections::{emit_members, emit_type_parameters};
 use emit_compounds::{
     emit_constructor_type_ref, emit_mapped_type_ref, emit_reference_type_ref,
     emit_reference_with_type_arguments,

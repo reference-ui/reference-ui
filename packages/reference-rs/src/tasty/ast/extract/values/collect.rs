@@ -3,8 +3,8 @@ use std::collections::BTreeMap;
 use crate::tasty::model::TypeRef;
 use oxc_ast::ast::{BindingPattern, Declaration, Statement, VariableDeclarationKind};
 
-use super::infer_dispatch::infer_value_type_with_const_context;
 use super::super::ExtractionContext;
+use super::infer_dispatch::infer_value_type_with_const_context;
 
 pub(crate) fn value_bindings_from_statement(
     statement: &Statement<'_>,
@@ -12,11 +12,9 @@ pub(crate) fn value_bindings_from_statement(
     value_bindings: &mut BTreeMap<String, TypeRef>,
 ) {
     match statement {
-        Statement::VariableDeclaration(declaration) => collect_variable_declaration_value_bindings(
-            declaration,
-            ctx,
-            value_bindings,
-        ),
+        Statement::VariableDeclaration(declaration) => {
+            collect_variable_declaration_value_bindings(declaration, ctx, value_bindings)
+        }
         Statement::ExportNamedDeclaration(export_named) => {
             let Some(Declaration::VariableDeclaration(declaration)) =
                 export_named.declaration.as_ref()

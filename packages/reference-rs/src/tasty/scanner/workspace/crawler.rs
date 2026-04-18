@@ -97,11 +97,7 @@ impl<'a> Crawler<'a> {
         self.user_file_ids.contains(file_id)
     }
 
-    fn resolve_imports(
-        &self,
-        ctx: &DiscoveryContext<'_>,
-        source: &str,
-    ) -> Vec<ResolvedModule> {
+    fn resolve_imports(&self, ctx: &DiscoveryContext<'_>, source: &str) -> Vec<ResolvedModule> {
         extract_module_specifiers(ctx.file_id, source)
             .into_iter()
             .filter_map(|source_module| resolve_import_for_discovery(ctx, &source_module))

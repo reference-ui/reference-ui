@@ -53,7 +53,10 @@ fn single_library_file(
     }
 }
 
-fn parsed_file<'a>(ast: &'a crate::tasty::ast::model::ParsedTypeScriptAst, file_id: &str) -> &'a crate::tasty::ast::model::ParsedFileAst {
+fn parsed_file<'a>(
+    ast: &'a crate::tasty::ast::model::ParsedTypeScriptAst,
+    file_id: &str,
+) -> &'a crate::tasty::ast::model::ParsedFileAst {
     ast.files
         .iter()
         .find(|f| f.file_id == file_id)
@@ -62,10 +65,7 @@ fn parsed_file<'a>(ast: &'a crate::tasty::ast::model::ParsedTypeScriptAst, file_
 
 #[test]
 fn extracts_interface_with_optional_member() {
-    let scanned = single_file(
-        "test.ts",
-        "export interface Props { label?: string }\n",
-    );
+    let scanned = single_file("test.ts", "export interface Props { label?: string }\n");
     let ast = extract_ast(&scanned);
     let file = parsed_file(&ast, "test.ts");
     assert_eq!(file.exports.len(), 1);
@@ -86,7 +86,9 @@ fn interface_extends_yields_reference_type_refs() {
     let shell = &file.exports[0];
     assert_eq!(shell.extends.len(), 2);
     match &shell.extends[0] {
-        TypeRef::Reference { name, target_id, .. } => {
+        TypeRef::Reference {
+            name, target_id, ..
+        } => {
             assert_eq!(name, "Base");
             assert!(target_id.is_none());
         }
@@ -123,10 +125,7 @@ fn interface_extends_utility_preserves_type_arguments() {
 
 #[test]
 fn type_alias_union_underlying() {
-    let scanned = single_file(
-        "test.ts",
-        "export type U = string | number | boolean\n",
-    );
+    let scanned = single_file("test.ts", "export type U = string | number | boolean\n");
     let ast = extract_ast(&scanned);
     let file = parsed_file(&ast, "test.ts");
     let shell = &file.exports[0];
@@ -148,14 +147,8 @@ fn type_alias_union_underlying() {
 #[test]
 fn named_reexport_populates_export_bindings() {
     let scanned = workspace(&[
-        (
-            "src/other.ts",
-            "export interface X { x: number }\n",
-        ),
-        (
-            "src/index.ts",
-            "export { X } from './other'\n",
-        ),
+        ("src/other.ts", "export interface X { x: number }\n"),
+        ("src/index.ts", "export { X } from './other'\n"),
     ]);
     let ast = extract_ast(&scanned);
     let index = parsed_file(&ast, "src/index.ts");
@@ -236,10 +229,7 @@ fn default_export_interface_registers_binding_and_export() {
 
 #[test]
 fn const_object_as_const_populates_value_bindings() {
-    let scanned = single_file(
-        "test.ts",
-        "const cfg = { a: 1 } as const\nexport {}\n",
-    );
+    let scanned = single_file("test.ts", "const cfg = { a: 1 } as const\nexport {}\n");
     let ast = extract_ast(&scanned);
     let file = parsed_file(&ast, "test.ts");
     let binding = file
@@ -359,10 +349,7 @@ fn nested_array_map_reference_structure() {
     );
     let ast = extract_ast(&scanned);
     let file = parsed_file(&ast, "test.ts");
-    let underlying = file.exports[0]
-        .underlying
-        .as_ref()
-        .expect("underlying");
+    let underlying = file.exports[0].underlying.as_ref().expect("underlying");
     match underlying {
         TypeRef::Array { element } => match element.as_ref() {
             TypeRef::Reference {
@@ -403,7 +390,10 @@ fn import_bindings_named_default_namespace() {
     let default_binding = file.import_bindings.get("D").expect("default import");
     assert!(matches!(default_binding.kind, ImportBindingKind::Default));
     assert_eq!(default_binding.imported_name, "default");
-    assert_eq!(default_binding.target_file_id.as_deref(), Some("src/dep.ts"));
+    assert_eq!(
+        default_binding.target_file_id.as_deref(),
+        Some("src/dep.ts")
+    );
 
     let ns = file.import_bindings.get("DepNs").expect("namespace import");
     assert!(matches!(ns.kind, ImportBindingKind::Namespace));

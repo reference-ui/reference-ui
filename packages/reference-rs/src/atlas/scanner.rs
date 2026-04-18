@@ -64,12 +64,11 @@ impl Scanner {
     pub fn parse_file(&self, path: &Path) -> Result<SourceFile, String> {
         let content = std::fs::read_to_string(path)
             .map_err(|e| format!("Failed to read file {}: {}", path.display(), e))?;
-        
-        let source_type = SourceType::from_path(path)
-            .unwrap_or_else(|_| {
-                // Default to TypeScript if we can't determine the type
-                SourceType::tsx()
-            });
+
+        let source_type = SourceType::from_path(path).unwrap_or_else(|_| {
+            // Default to TypeScript if we can't determine the type
+            SourceType::tsx()
+        });
 
         Ok(SourceFile {
             path: path.to_path_buf(),
@@ -81,27 +80,34 @@ impl Scanner {
     /// Parse multiple files
     pub fn parse_files(&self, paths: &[PathBuf]) -> Result<Vec<SourceFile>, String> {
         let mut results = Vec::new();
-        
+
         for path in paths {
             match self.parse_file(path) {
                 Ok(file) => results.push(file),
                 Err(e) => return Err(e),
             }
         }
-        
+
         Ok(results)
     }
 
     /// Check if a file is a relevant source file
     fn is_source_file(&self, path: &Path) -> bool {
         if let Some(ext) = path.extension() {
-            matches!(ext.to_str(), Some("ts") | Some("tsx") | Some("js") | Some("jsx"))
+            matches!(
+                ext.to_str(),
+                Some("ts") | Some("tsx") | Some("js") | Some("jsx")
+            )
         } else {
             false
         }
     }
 
-    fn collect_matches(&self, files: &mut BTreeSet<PathBuf>, patterns: &[String]) -> Result<(), String> {
+    fn collect_matches(
+        &self,
+        files: &mut BTreeSet<PathBuf>,
+        patterns: &[String],
+    ) -> Result<(), String> {
         let matches = self.collect_glob_matches(patterns)?;
         for path in matches {
             files.insert(path);
@@ -137,35 +143,39 @@ mod tests {
     fn test_scanner_discovery() {
         let temp_dir = std::env::temp_dir();
         let root = temp_dir.join(format!("atlas_test_{}", std::process::id()));
-        
+
         // Clean up any existing directory
         if root.exists() {
             fs::remove_dir_all(&root).unwrap();
         }
-        
+
         // Create test directory
         std::fs::create_dir_all(&root).unwrap();
-        
+
         // Create test files
         fs::write(root.join("test.tsx"), "export const Test = () => null;").unwrap();
         fs::write(root.join("ignore.txt"), "not a source file").unwrap();
-        
+
         // Create subdirectory and file
         let subdir = root.join("subdir");
         fs::create_dir_all(&subdir).unwrap();
-        fs::write(subdir.join("component.ts"), "export function Component() {}").unwrap();
-        
+        fs::write(
+            subdir.join("component.ts"),
+            "export function Component() {}",
+        )
+        .unwrap();
+
         let scanner = Scanner::new(root.to_str().unwrap());
         let files = scanner.discover_files(&AtlasConfig::default()).unwrap();
-        
+
         // Debug: print what files were found
         println!("Found files: {:?}", files);
-        
+
         // Should find the TypeScript files
         assert!(files.len() >= 2);
         assert!(files.iter().any(|f| f.ends_with("test.tsx")));
         assert!(files.iter().any(|f| f.ends_with("component.ts")));
-        
+
         // Cleanup
         fs::remove_dir_all(&root).unwrap();
     }
@@ -174,31 +184,35 @@ mod tests {
     fn test_exclude_patterns() {
         let temp_dir = std::env::temp_dir();
         let root = temp_dir.join(format!("atlas_test_exclude_{}", std::process::id()));
-        
+
         // Clean up any existing directory
         if root.exists() {
             fs::remove_dir_all(&root).unwrap();
         }
-        
+
         // Create test directory
         std::fs::create_dir_all(&root).unwrap();
-        
+
         // Create test files
         fs::write(root.join("keep.tsx"), "export const Keep = () => null;").unwrap();
-        fs::write(root.join("exclude.tsx"), "export const Exclude = () => null;").unwrap();
-        
+        fs::write(
+            root.join("exclude.tsx"),
+            "export const Exclude = () => null;",
+        )
+        .unwrap();
+
         let scanner = Scanner::new(root.to_str().unwrap());
         let config = AtlasConfig {
             exclude: Some(vec!["**/exclude.tsx".to_string()]),
             ..Default::default()
         };
-        
+
         let files = scanner.discover_files(&config).unwrap();
         // Should only find the keep.tsx file
         assert!(files.len() >= 1);
         assert!(files.iter().any(|f| f.ends_with("keep.tsx")));
         assert!(!files.iter().any(|f| f.ends_with("exclude.tsx")));
-        
+
         // Cleanup
         fs::remove_dir_all(&root).unwrap();
     }
