@@ -2,13 +2,18 @@ import type { StyleProps } from '@reference-ui/react'
 import type * as React from 'react'
 
 export type IconVariant = 'outline' | 'filled'
+export type IconSizeValue = StyleProps['width']
 
 /**
- * Material symbol icon: SVG attributes, Reference `StyleProps` (token-safe colors, spacing, etc.),
- * plus `variant` and optional `size` (maps to width/height when those are unset).
+ * Material symbol icon: a Reference `Div` wrapper that exposes Reference
+ * `StyleProps`, plus `variant` and optional icon sizing props.
  */
 export type MaterialSymbolIconProps = StyleProps &
-  React.SVGProps<SVGSVGElement> & {
+  React.HTMLAttributes<HTMLDivElement> & {
     variant?: IconVariant
-    size?: number | string
+    size?: IconSizeValue
   }
+
+export type MaterialSymbolIconComponent = React.ForwardRefExoticComponent<
+  React.PropsWithoutRef<MaterialSymbolIconProps> & React.RefAttributes<HTMLDivElement>
+>
