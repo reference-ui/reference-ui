@@ -4,7 +4,10 @@ use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use crate::styletrace::resolver::{normalize_path, resolve_local_module_path, StyleTraceError};
+use crate::styletrace::resolver::{
+    normalize_path, prefer_workspace_source_module, resolve_local_module_path,
+    resolve_workspace_root, StyleTraceError,
+};
 use crate::tasty::resolve_external_import_path;
 
 const PRIMITIVE_TAGS_ENTRY: &str = "packages/reference-core/src/system/primitives/tags.ts";
@@ -119,10 +122,13 @@ pub(super) fn resolve_imported_module(
     }
 
     let resolution_root = current_module.parent().unwrap_or(current_module);
-    resolve_external_import_path(resolution_root, source).ok_or_else(|| {
+    let resolved = resolve_external_import_path(resolution_root, source).ok_or_else(|| {
         StyleTraceError::new(format!(
             "failed to resolve package module {source} from {}",
             current_module.display()
         ))
-    })
+    })?;
+
+    let workspace_root = resolve_workspace_root(current_module)?;
+    Ok(prefer_workspace_source_module(&resolved, &workspace_root))
 }

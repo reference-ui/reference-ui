@@ -8,7 +8,9 @@ use crate::tasty::resolve_external_import_path;
 
 use super::model::{BoundTypeExpr, ParsedModule, TypeDeclaration, TypeExpr};
 use super::parser::parse_module;
-use super::util::{normalize_path, resolve_local_module_path, StyleTraceError};
+use super::util::{
+    normalize_path, prefer_workspace_source_module, resolve_local_module_path, StyleTraceError,
+};
 
 const REFERENCE_STYLE_PROPS_ENTRY: &str = "packages/reference-core/src/types/style-props.ts";
 const REFERENCE_TYPES_INDEX_ENTRY: &str = "packages/reference-core/src/types/index.ts";
@@ -486,7 +488,7 @@ impl StyleTracer {
 
         let resolution_root = current_module.parent().unwrap_or(current_module);
         if let Some(resolved) = resolve_external_import_path(resolution_root, specifier) {
-            return Ok(resolved);
+            return Ok(prefer_workspace_source_module(&resolved, &self.workspace_root));
         }
 
         Err(StyleTraceError::new(format!(

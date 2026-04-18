@@ -216,6 +216,14 @@ fn collect_edges_from_expression(
             edges,
         ),
         Expression::CallExpression(call) => {
+            collect_edges_from_create_element_call(
+                call,
+                source,
+                imports,
+                primitive_names,
+                bindings,
+                edges,
+            );
             collect_edges_from_expression(
                 &call.callee,
                 source,
@@ -423,6 +431,39 @@ fn collect_edges_from_expression(
             edges,
         ),
         _ => {}
+    }
+}
+
+fn collect_edges_from_create_element_call(
+    call: &oxc_allocator::Box<'_, oxc_ast::ast::CallExpression<'_>>,
+    source: &str,
+    imports: &HashMap<String, TraceImport>,
+    primitive_names: &BTreeSet<String>,
+    bindings: &PropBindings,
+    edges: &mut Vec<ComponentEdge>,
+) {
+    if !is_react_create_element_call(call) {
+        return;
+    }
+
+    let Some(target_argument) = call.arguments.first() else {
+        return;
+    };
+
+    let Some(props_argument) = call.arguments.get(1) else {
+        return;
+    };
+
+    let Some(target) = create_element_target(target_argument, imports, primitive_names) else {
+        return;
+    };
+
+    if create_element_props_pass_style_props(props_argument, bindings) {
+        edges.push(ComponentEdge { target });
+    }
+
+    for child in call.arguments.iter().skip(2) {
+        collect_edges_from_argument(child, source, imports, primitive_names, bindings, edges);
     }
 }
 
@@ -640,6 +681,75 @@ fn jsx_target(
     }
 
     Some(EdgeTarget::Local(name))
+}
+
+fn create_element_target(
+    argument: &Argument<'_>,
+    imports: &HashMap<String, TraceImport>,
+    primitive_names: &BTreeSet<String>,
+) -> Option<EdgeTarget> {
+    match argument {
+        Argument::Identifier(identifier) => identifier_target(identifier.name.as_str(), imports, primitive_names),
+        _ => None,
+    }
+}
+
+fn identifier_target(
+    name: &str,
+    imports: &HashMap<String, TraceImport>,
+    primitive_names: &BTreeSet<String>,
+) -> Option<EdgeTarget> {
+    if !is_component_name(name) {
+        return None;
+    }
+
+    if let Some(import_binding) = imports.get(name) {
+        if import_binding.source == "@reference-ui/react"
+            && primitive_names.contains(&import_binding.imported_name)
+        {
+            return Some(EdgeTarget::Primitive(import_binding.imported_name.clone()));
+        }
+
+        return Some(EdgeTarget::Imported {
+            source: import_binding.source.clone(),
+            imported_name: import_binding.imported_name.clone(),
+        });
+    }
+
+    Some(EdgeTarget::Local(name.to_string()))
+}
+
+fn is_react_create_element_call(call: &oxc_allocator::Box<'_, oxc_ast::ast::CallExpression<'_>>) -> bool {
+    match &call.callee {
+        Expression::Identifier(identifier) => identifier.name == "createElement",
+        Expression::StaticMemberExpression(member) => {
+            matches!(&member.object, Expression::Identifier(identifier) if identifier.name == "React")
+                && member.property.name == "createElement"
+        }
+        _ => false,
+    }
+}
+
+fn create_element_props_pass_style_props(
+    argument: &Argument<'_>,
+    bindings: &PropBindings,
+) -> bool {
+    match argument {
+        Argument::NullLiteral(_) => false,
+        Argument::ObjectExpression(object) => object.properties.iter().any(|property| match property {
+            oxc_ast::ast::ObjectPropertyKind::ObjectProperty(property) => {
+                bindings.expression_reads_style_prop(&property.value)
+            }
+            oxc_ast::ast::ObjectPropertyKind::SpreadProperty(spread) => {
+                bindings.expression_reads_style_prop(&spread.argument)
+            }
+        }),
+        Argument::Identifier(identifier) => bindings.direct_style_bindings.contains(identifier.name.as_str())
+            || bindings.props_object_bindings.contains(identifier.name.as_str())
+            || bindings.spread_bindings.contains(identifier.name.as_str()),
+        Argument::SpreadElement(spread) => bindings.expression_reads_style_prop(&spread.argument),
+        _ => bindings.expression_reads_style_prop(argument.to_expression()),
+    }
 }
 
 fn jsx_attribute_passes_style_props(

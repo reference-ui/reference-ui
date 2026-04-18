@@ -29,7 +29,6 @@ export default defineConfig({
   entry: {
     index: 'src/index.ts',
     createIcon: 'src/createIcon.tsx',
-    styleProps: 'src/styleProps.ts',
     constants: 'src/constants.ts',
     'generated/index': 'src/generated/index.ts',
     ...iconGeneratedTsxEntries(),

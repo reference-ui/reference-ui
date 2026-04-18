@@ -85,6 +85,22 @@ describe('system/panda/config/styletrace', () => {
       .resolves.toEqual(['/workspace/app/tests/watch'])
   })
 
+  it('includes nested index barrels without widening to top-level helper trees', async () => {
+    setupMocks({
+      files: [
+        '/workspace/app/src/index.ts',
+        '/workspace/app/src/icons/index.ts',
+        '/workspace/app/src/icons/fixtures/IconsOverview.fixture.tsx',
+      ],
+    })
+
+    const { resolveStyletraceRoots } = await import('./styletrace')
+
+    await expect(resolveStyletraceRoots('/workspace/app', ['src/**/*.{ts,tsx}'])).resolves.toEqual([
+      '/workspace/app/src/icons',
+    ])
+  })
+
   it('returns an empty list when no include files match', async () => {
     const { trace } = setupMocks({ files: [] })
     const { traceIncludedJsxElements } = await import('./styletrace')

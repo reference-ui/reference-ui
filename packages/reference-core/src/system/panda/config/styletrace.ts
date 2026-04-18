@@ -1,10 +1,11 @@
-import { dirname, extname, resolve } from 'node:path'
+import { basename, dirname, extname, relative, resolve, sep } from 'node:path'
 import fg from 'fast-glob'
 import { trace } from '@reference-ui/rust/styletrace'
 import { SYNC_OUTPUT_DIR_GLOB } from '../../../constants'
 import { log } from '../../../lib/log'
 
 const STYLETRACE_SOURCE_EXTENSIONS = new Set(['.tsx', '.jsx'])
+const STYLETRACE_BARREL_EXTENSIONS = new Set(['.ts', '.js', '.mts'])
 
 const STYLETRACE_GLOB_CONFIG = {
   onlyFiles: true,
@@ -31,6 +32,21 @@ function collapseNestedRoots(roots: string[]): string[] {
   return collapsed
 }
 
+function isTraceableEntryFile(projectRoot: string, filePath: string): boolean {
+  const extension = extname(filePath)
+  if (STYLETRACE_SOURCE_EXTENSIONS.has(extension)) {
+    return true
+  }
+
+  if (!STYLETRACE_BARREL_EXTENSIONS.has(extension) || basename(filePath, extension) !== 'index') {
+    return false
+  }
+
+  const relativePath = relative(projectRoot, filePath)
+  const segments = relativePath.split(sep)
+  return segments.length > 2
+}
+
 export async function resolveStyletraceRoots(cwd: string, include: string[]): Promise<string[]> {
   if (include.length === 0) {
     return []
@@ -41,9 +57,7 @@ export async function resolveStyletraceRoots(cwd: string, include: string[]): Pr
     cwd: projectRoot,
     ...STYLETRACE_GLOB_CONFIG,
   })
-  const jsxBearingFiles = files.filter((filePath) =>
-    STYLETRACE_SOURCE_EXTENSIONS.has(extname(filePath))
-  )
+  const jsxBearingFiles = files.filter((filePath) => isTraceableEntryFile(projectRoot, filePath))
 
   if (jsxBearingFiles.length === 0) {
     return []

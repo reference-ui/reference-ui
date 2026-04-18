@@ -53,10 +53,13 @@ function emitIconFile(slug, outline, fill, componentName) {
   const mod = `@material-symbols-svg/react/icons/${slug}`
   const line1 = sp('import', '{', outline, ',', fill, '}', 'from', `'${mod}'`)
   const line2 = sp('import', '{', 'createIcon', '}', 'from', `'../createIcon'`)
-  const line3 = sp(
+  const line3 = sp('import', 'type', '{', 'MaterialSymbolIconComponent', '}', 'from', `'../types'`)
+  const line4 = sp(
     'export',
     'const',
     componentName,
+    ':',
+    'MaterialSymbolIconComponent',
     '=',
     'createIcon(',
     outline,
@@ -66,7 +69,7 @@ function emitIconFile(slug, outline, fill, componentName) {
     `'${componentName}'`,
     ')',
   )
-  return [line1, line2, line3].join('\n')
+  return [line1, line2, line3, line4].join('\n')
 }
 
 async function main() {

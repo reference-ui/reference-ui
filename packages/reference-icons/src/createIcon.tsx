@@ -1,45 +1,46 @@
 import * as React from 'react'
-import { resolveSvgPrimitiveClassName, splitPrimitiveStyleProps } from './styleProps'
-import type { MaterialSymbolIconProps } from './types'
+import { Div } from '@reference-ui/react'
+import type { MaterialSymbolIconComponent, MaterialSymbolIconProps } from './types'
 
 /**
- * Material glyph as the only `<svg>`: same class pipeline as the `Svg` primitive (`ref-svg` + box + css),
- * merged onto the Material component’s props (no wrapper element).
+ * Material glyph wrapped by a Reference `Div`, so the public JSX boundary is a
+ * Reference primitive while the incoming Material SVG stays an implementation detail.
  */
 export function createIcon(
   Outline: React.ElementType,
   Filled: React.ElementType,
   displayName: string,
-): React.ForwardRefExoticComponent<
-  React.PropsWithoutRef<MaterialSymbolIconProps> & React.RefAttributes<SVGSVGElement>
-> {
-  const Icon = React.forwardRef<SVGSVGElement, MaterialSymbolIconProps>(function MaterialIcon(
-    props,
+): MaterialSymbolIconComponent {
+  const Icon = React.forwardRef<HTMLDivElement, MaterialSymbolIconProps>(function MaterialIcon(
+    { variant = 'outline', size = '1em', ...rest },
     ref,
   ) {
-    const { variant = 'outline', size, width, height, ...rest } = props
-    const { className, children, colorMode, styleProps, elementProps } = splitPrimitiveStyleProps(
-      rest as Record<string, unknown>,
-    )
-    const mergedClassName = resolveSvgPrimitiveClassName(styleProps, className)
     const Svg = (variant === 'filled' ? Filled : Outline) as React.ComponentType<
       Record<string, unknown>
     >
-    const w = width ?? size
-    const h = height ?? size
-    const colorModeAttr =
-      colorMode != null && colorMode !== '' ? { 'data-panda-theme': String(colorMode) } : {}
+
     return (
-      <Svg
+      <Div
         ref={ref}
-        width={w}
-        height={h}
-        className={mergedClassName}
-        {...colorModeAttr}
-        {...elementProps}
+        display="inline-flex"
+        alignItems="center"
+        justifyContent="center"
+        lineHeight="0"
+        flexShrink="0"
+        width={size}
+        height={size}
+        {...rest}
       >
-        {children as React.ReactNode}
-      </Svg>
+        <Svg
+          width="100%"
+          height="100%"
+          fill="currentColor"
+          color="currentColor"
+          aria-hidden="true"
+          focusable="false"
+          style={{ display: 'block' }}
+        />
+      </Div>
     )
   })
   Icon.displayName = displayName
