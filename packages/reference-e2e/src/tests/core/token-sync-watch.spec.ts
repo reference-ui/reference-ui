@@ -3,6 +3,7 @@ import { writeFile, unlink, readFile } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { getSandboxDir } from '../../environments/lib/config'
+import { waitForRefSyncReady } from '../../environments/lib/ref-sync'
 import { testRoutes } from '../../environments/base/routes'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -100,41 +101,44 @@ test.describe('token-sync-watch', () => {
       )
     }
 
-    // Write initial token file and poll the generated CSS until the token value
-    // is reflected in output.
-    await writeFile(tokenFilePath, buildTokensContent(colorA))
-    await expect
-      .poll(() => fetchCurrentColor(), { timeout: 60_000, intervals: [2_000] })
-      .toBe(hexToRgb(colorA))
-
-    const t0 = Date.now()
-    await writeFile(tokenFilePath, buildTokensContent(colorB))
-    await expect
-      .poll(() => fetchCurrentColor(), { timeout: 60_000, intervals: [2_000] })
-      .toBe(hexToRgb(colorB))
-
-    const timeToChangeMs = Date.now() - t0
-    const project = process.env.REF_TEST_PROJECT ?? 'unknown'
-    const entry =
-      JSON.stringify({
-        timestamp: new Date().toISOString(),
-        timeToChangeMs,
-        project,
-        test: 'token-sync-watch',
-      }) + '\n'
     try {
-      const { appendFile } = await import('node:fs/promises')
-      await appendFile(METRICS_PATH, entry)
-    } catch {
-      // metrics file is optional
-    }
-    console.log(`[token-sync-watch] timeToChange: ${timeToChangeMs}ms (token edit → visible)`)
+      // Write initial token file and poll the generated CSS until the token value
+      // is reflected in output.
+      await writeFile(tokenFilePath, buildTokensContent(colorA))
+      await expect
+        .poll(() => fetchCurrentColor(), { timeout: 60_000, intervals: [2_000] })
+        .toBe(hexToRgb(colorA))
 
-    // Cleanup token file so it doesn't affect other runs.
-    try {
-      await unlink(tokenFilePath)
-    } catch {
-      // ignore if already removed
+      const t0 = Date.now()
+      await writeFile(tokenFilePath, buildTokensContent(colorB))
+      await expect
+        .poll(() => fetchCurrentColor(), { timeout: 60_000, intervals: [2_000] })
+        .toBe(hexToRgb(colorB))
+
+      const timeToChangeMs = Date.now() - t0
+      const project = process.env.REF_TEST_PROJECT ?? 'unknown'
+      const entry =
+        JSON.stringify({
+          timestamp: new Date().toISOString(),
+          timeToChangeMs,
+          project,
+          test: 'token-sync-watch',
+        }) + '\n'
+      try {
+        const { appendFile } = await import('node:fs/promises')
+        await appendFile(METRICS_PATH, entry)
+      } catch {
+        // metrics file is optional
+      }
+      console.log(`[token-sync-watch] timeToChange: ${timeToChangeMs}ms (token edit → visible)`)
+    } finally {
+      try {
+        const ready = waitForRefSyncReady(sandboxDir, { timeout: 60_000 })
+        await unlink(tokenFilePath)
+        await ready
+      } catch {
+        // ignore cleanup failures so the main assertion error remains visible
+      }
     }
   })
 })
