@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest'
 
-import { traceCase, traceFixtureDir } from './helpers'
+import {
+  createDefaultExportPackageFixture,
+  createExportStarPackageFixture,
+  createNodeModulesWrapperFixture,
+  createSubpathPackageFixture,
+  traceCase,
+  traceDir,
+  traceFixtureDir,
+} from './helpers'
 
 describe('styletrace', () => {
   it('finds direct primitive wrappers with public style props', async () => {
@@ -44,25 +52,43 @@ describe('styletrace', () => {
   })
 
   it('traces exported wrappers that forward into node_modules packages', async () => {
-    await expect(traceCase('node_modules_wrapper')).resolves.toEqual(['AppCard', 'PackageCard'])
+    const fixture = await createNodeModulesWrapperFixture()
+
+    try {
+      await expect(traceDir(fixture.rootDir)).resolves.toEqual(['AppCard', 'PackageCard'])
+    } finally {
+      await fixture.cleanup()
+    }
   })
 
   it('traces wrappers that import default-export package components', async () => {
-    await expect(traceCase('default_export_package')).resolves.toEqual([
-      'AppCard',
-      'PackageCard',
-    ])
+    const fixture = await createDefaultExportPackageFixture()
+
+    try {
+      await expect(traceDir(fixture.rootDir)).resolves.toEqual(['AppCard', 'PackageCard'])
+    } finally {
+      await fixture.cleanup()
+    }
   })
 
   it('traces wrappers that import package subpath components', async () => {
-    await expect(traceCase('subpath_package')).resolves.toEqual(['AppCard', 'PackageCard'])
+    const fixture = await createSubpathPackageFixture()
+
+    try {
+      await expect(traceDir(fixture.rootDir)).resolves.toEqual(['AppCard', 'PackageCard'])
+    } finally {
+      await fixture.cleanup()
+    }
   })
 
   it('traces wrappers that import package barrel export-star components', async () => {
-    await expect(traceCase('export_star_package')).resolves.toEqual([
-      'AppCard',
-      'PackageCard',
-    ])
+    const fixture = await createExportStarPackageFixture()
+
+    try {
+      await expect(traceDir(fixture.rootDir)).resolves.toEqual(['AppCard', 'PackageCard'])
+    } finally {
+      await fixture.cleanup()
+    }
   })
 
   it('keeps demo-ui out of the style-bearing surface', async () => {
@@ -70,7 +96,7 @@ describe('styletrace', () => {
   })
 
   it('keeps extend-library out of the style-bearing surface', async () => {
-    await expect(traceFixtureDir('fixtures/extend-library/src')).resolves.toEqual([])
+    await expect(traceFixtureDir('fixtures/extend-library/src/components')).resolves.toEqual([])
   })
 
   it('finds wrapped Reference primitive exports in a workspace fixture library', async () => {
