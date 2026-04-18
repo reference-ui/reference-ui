@@ -8,9 +8,9 @@ use crate::styletrace::resolver::{
 };
 
 use super::discovery::{
-    collect_reference_primitive_jsx_names, discover_source_files, resolve_relative_module,
+    collect_reference_primitive_jsx_names, discover_source_files, resolve_imported_module,
 };
-use super::model::{EdgeTarget, ExportTarget, TraceModule};
+use super::model::{EdgeTarget, ExportTarget, FactoryTarget, TraceComponent, TraceModule};
 use super::parser::parse_trace_module;
 
 pub fn trace_style_jsx_names(root_dir: &Path) -> Result<Vec<String>, StyleTraceError> {
@@ -33,23 +33,35 @@ pub fn trace_style_jsx_names(root_dir: &Path) -> Result<Vec<String>, StyleTraceE
         modules.insert(file_path, module);
     }
 
-    let mut analyzer = StyleTraceAnalyzer::new(modules, primitive_names);
+    let mut analyzer =
+        StyleTraceAnalyzer::new(modules, primitive_names, workspace_root, style_prop_names);
     analyzer.collect_exported_jsx_names()
 }
 
 struct StyleTraceAnalyzer {
     modules: BTreeMap<PathBuf, TraceModule>,
     primitive_names: BTreeSet<String>,
+    workspace_root: PathBuf,
+    style_prop_names: BTreeSet<String>,
     component_cache: HashMap<(PathBuf, String), bool>,
+    factory_cache: HashMap<(PathBuf, String), bool>,
     export_cache: HashMap<(PathBuf, String), bool>,
 }
 
 impl StyleTraceAnalyzer {
-    fn new(modules: BTreeMap<PathBuf, TraceModule>, primitive_names: BTreeSet<String>) -> Self {
+    fn new(
+        modules: BTreeMap<PathBuf, TraceModule>,
+        primitive_names: BTreeSet<String>,
+        workspace_root: PathBuf,
+        style_prop_names: BTreeSet<String>,
+    ) -> Self {
         Self {
             modules,
             primitive_names,
+            workspace_root,
+            style_prop_names,
             component_cache: HashMap::new(),
+            factory_cache: HashMap::new(),
             export_cache: HashMap::new(),
         }
     }
@@ -105,7 +117,22 @@ impl StyleTraceAnalyzer {
                 source,
                 imported_name,
             }) => self.import_target_is_traced(module_path, &source, &imported_name, stack)?,
-            None => false,
+            None => {
+                let export_all_sources = self
+                    .modules
+                    .get(module_path)
+                    .map(|module| module.export_all_sources.clone())
+                    .unwrap_or_default();
+
+                let mut traced = false;
+                for source in export_all_sources {
+                    if self.import_target_is_traced(module_path, &source, export_name, stack)? {
+                        traced = true;
+                        break;
+                    }
+                }
+                traced
+            }
         };
 
         stack.pop();
@@ -136,30 +163,107 @@ impl StyleTraceAnalyzer {
             .and_then(|module| module.components.get(component_name))
             .cloned();
 
+        let component_factory = self
+            .modules
+            .get(module_path)
+            .and_then(|module| module.component_factories.get(component_name))
+            .cloned();
+
         let result = match component {
-            Some(component) => {
-                if !component.exposes_style_props {
-                    false
-                } else {
-                    component.edges.iter().any(|edge| match &edge.target {
-                        EdgeTarget::Primitive(name) => self.primitive_names.contains(name),
-                        EdgeTarget::Local(local_name) => self
-                            .component_is_traced(module_path, local_name, stack)
-                            .unwrap_or(false),
-                        EdgeTarget::Imported {
-                            source,
-                            imported_name,
-                        } => self
-                            .import_target_is_traced(module_path, source, imported_name, stack)
-                            .unwrap_or(false),
-                    })
+            Some(component) => self.component_value_is_traced(module_path, &component, stack)?,
+            None => match component_factory {
+                Some(factory_target) => {
+                    self.factory_target_is_traced(module_path, &factory_target, stack)?
                 }
+                None => false,
+            },
+        };
+
+        stack.pop();
+        self.component_cache.insert(cache_key, result);
+        Ok(result)
+    }
+
+    fn component_value_is_traced(
+        &mut self,
+        module_path: &Path,
+        component: &TraceComponent,
+        stack: &mut Vec<String>,
+    ) -> Result<bool, StyleTraceError> {
+        if !component.exposes_style_props {
+            return Ok(false);
+        }
+
+        if component.uses_style_pipeline {
+            return Ok(true);
+        }
+
+        Ok(component.edges.iter().any(|edge| match &edge.target {
+            EdgeTarget::Primitive(name) => self.primitive_names.contains(name),
+            EdgeTarget::Local(local_name) => self
+                .component_is_traced(module_path, local_name, stack)
+                .unwrap_or(false),
+            EdgeTarget::Imported {
+                source,
+                imported_name,
+            } => self
+                .import_target_is_traced(module_path, source, imported_name, stack)
+                .unwrap_or(false),
+        }))
+    }
+
+    fn factory_target_is_traced(
+        &mut self,
+        module_path: &Path,
+        target: &FactoryTarget,
+        stack: &mut Vec<String>,
+    ) -> Result<bool, StyleTraceError> {
+        match target {
+            FactoryTarget::Local(factory_name) => {
+                self.factory_is_traced(module_path, factory_name, stack)
+            }
+            FactoryTarget::Imported {
+                source,
+                imported_name,
+            } => {
+                let resolved_module = resolve_imported_module(module_path, source)?;
+                self.ensure_module_loaded(&resolved_module)?;
+                self.factory_is_traced(&resolved_module, imported_name, stack)
+            }
+        }
+    }
+
+    fn factory_is_traced(
+        &mut self,
+        module_path: &Path,
+        factory_name: &str,
+        stack: &mut Vec<String>,
+    ) -> Result<bool, StyleTraceError> {
+        let cache_key = (module_path.to_path_buf(), factory_name.to_string());
+        if let Some(cached) = self.factory_cache.get(&cache_key) {
+            return Ok(*cached);
+        }
+
+        let stack_key = format!("factory:{}::{factory_name}", module_path.display());
+        if stack.contains(&stack_key) {
+            return Ok(false);
+        }
+        stack.push(stack_key);
+
+        let result = match self
+            .modules
+            .get(module_path)
+            .and_then(|module| module.factories.get(factory_name))
+            .cloned()
+        {
+            Some(factory) => {
+                self.component_value_is_traced(module_path, &factory.component, stack)?
             }
             None => false,
         };
 
         stack.pop();
-        self.component_cache.insert(cache_key, result);
+        self.factory_cache.insert(cache_key, result);
         Ok(result)
     }
 
@@ -174,11 +278,23 @@ impl StyleTraceAnalyzer {
             return Ok(self.primitive_names.contains(imported_name));
         }
 
-        if !source.starts_with('.') {
-            return Ok(false);
+        let resolved_module = resolve_imported_module(module_path, source)?;
+        self.ensure_module_loaded(&resolved_module)?;
+        self.export_is_traced(&resolved_module, imported_name, stack)
+    }
+
+    fn ensure_module_loaded(&mut self, module_path: &Path) -> Result<(), StyleTraceError> {
+        if self.modules.contains_key(module_path) {
+            return Ok(());
         }
 
-        let resolved_module = resolve_relative_module(module_path, source)?;
-        self.export_is_traced(&resolved_module, imported_name, stack)
+        let module = parse_trace_module(
+            module_path,
+            &self.workspace_root,
+            &self.style_prop_names,
+            &self.primitive_names,
+        )?;
+        self.modules.insert(module_path.to_path_buf(), module);
+        Ok(())
     }
 }

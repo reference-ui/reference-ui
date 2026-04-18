@@ -49,3 +49,11 @@ pub(super) fn styletrace_case_input(case_name: &str) -> PathBuf {
         .join(case_name)
         .join("input")
 }
+
+pub(super) fn workspace_fixture_dir(relative_path: &str) -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(|path| path.parent())
+        .expect("expected workspace root")
+        .join(relative_path)
+}

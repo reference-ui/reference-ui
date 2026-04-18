@@ -4,6 +4,8 @@ use std::collections::{BTreeSet, HashMap};
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use crate::tasty::resolve_external_import_path;
+
 use super::model::{BoundTypeExpr, ParsedModule, TypeDeclaration, TypeExpr};
 use super::parser::parse_module;
 use super::util::{normalize_path, resolve_local_module_path, StyleTraceError};
@@ -423,6 +425,13 @@ impl StyleTracer {
             return self.resolve_declaration(&imported_module, &reexport.imported_name);
         }
 
+        for source in &module.export_all_sources {
+            let imported_module = self.resolve_module_specifier(module_path, source)?;
+            if let Some(resolved) = self.resolve_declaration(&imported_module, name)? {
+                return Ok(Some(resolved));
+            }
+        }
+
         let Some(import_binding) = module.imports.get(name) else {
             return Ok(None);
         };
@@ -473,6 +482,11 @@ impl StyleTracer {
             if let Some(resolved) = resolve_local_module_path(&candidate) {
                 return Ok(resolved);
             }
+        }
+
+        let resolution_root = current_module.parent().unwrap_or(current_module);
+        if let Some(resolved) = resolve_external_import_path(resolution_root, specifier) {
+            return Ok(resolved);
         }
 
         Err(StyleTraceError::new(format!(

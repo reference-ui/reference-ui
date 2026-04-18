@@ -7,13 +7,31 @@ use oxc_ast::ast::Expression;
 #[derive(Clone)]
 pub(super) struct TraceModule {
     pub(super) components: HashMap<String, TraceComponent>,
+    pub(super) component_factories: HashMap<String, FactoryTarget>,
+    pub(super) factories: HashMap<String, TraceFactory>,
     pub(super) exports: HashMap<String, ExportTarget>,
+    pub(super) export_all_sources: Vec<String>,
+}
+
+#[derive(Clone)]
+pub(super) enum FactoryTarget {
+    Local(String),
+    Imported {
+        source: String,
+        imported_name: String,
+    },
+}
+
+#[derive(Clone)]
+pub(super) struct TraceFactory {
+    pub(super) component: TraceComponent,
 }
 
 #[derive(Clone)]
 pub(super) struct TraceImport {
     pub(super) source: String,
     pub(super) imported_name: String,
+    pub(super) is_namespace: bool,
 }
 
 #[derive(Clone)]
@@ -28,6 +46,7 @@ pub(super) enum ExportTarget {
 #[derive(Clone)]
 pub(super) struct TraceComponent {
     pub(super) exposes_style_props: bool,
+    pub(super) uses_style_pipeline: bool,
     pub(super) edges: Vec<ComponentEdge>,
 }
 

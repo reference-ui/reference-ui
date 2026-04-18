@@ -609,6 +609,23 @@ fn jsx_target(
         return None;
     }
 
+    if let Some((namespace, member)) = name.split_once('.') {
+        if let Some(import_binding) = imports.get(namespace) {
+            if import_binding.is_namespace {
+                if import_binding.source == "@reference-ui/react"
+                    && primitive_names.contains(member)
+                {
+                    return Some(EdgeTarget::Primitive(member.to_string()));
+                }
+
+                return Some(EdgeTarget::Imported {
+                    source: import_binding.source.clone(),
+                    imported_name: member.to_string(),
+                });
+            }
+        }
+    }
+
     if let Some(import_binding) = imports.get(&name) {
         if import_binding.source == "@reference-ui/react"
             && primitive_names.contains(&import_binding.imported_name)

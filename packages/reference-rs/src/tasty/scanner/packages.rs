@@ -6,7 +6,7 @@ mod package_json;
 mod relative;
 
 use std::collections::BTreeSet;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use self::package_entry::{find_installed_declaration_provider, resolve_package_import_from_root};
 use super::model::ResolvedModule;
@@ -62,6 +62,13 @@ pub(super) fn resolve_external_import(
 
     resolve_package_import_from_root(root_dir, &package_name, subpath.as_deref())
         .or_else(|| find_installed_declaration_provider(root_dir, source_module))
+}
+
+pub(crate) fn resolve_external_import_path(
+    root_dir: &Path,
+    source_module: &str,
+) -> Option<PathBuf> {
+    resolve_external_import(root_dir, source_module).map(|resolved| root_dir.join(resolved.file_id))
 }
 
 #[cfg(test)]

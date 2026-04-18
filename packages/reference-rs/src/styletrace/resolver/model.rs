@@ -8,6 +8,7 @@ pub(super) struct ParsedModule {
     pub(super) imports: HashMap<String, ImportBinding>,
     pub(super) declarations: HashMap<String, TypeDeclaration>,
     pub(super) reexports: HashMap<String, ImportBinding>,
+    pub(super) export_all_sources: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
