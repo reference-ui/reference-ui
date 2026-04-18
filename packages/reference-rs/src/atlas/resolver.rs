@@ -198,20 +198,43 @@ pub fn resolve_named_type(
     }
 
     if let Some(binding) = module.imports.get(type_name) {
-        let imported = binding.imported.clone().unwrap_or_else(|| type_name.to_string());
+        let imported = binding
+            .imported
+            .clone()
+            .unwrap_or_else(|| type_name.to_string());
         if binding.source.starts_with('@') {
-            return resolve_package_type(modules, package_indexes, &binding.source, &imported, visited)
-                .or_else(|| scan_source_type(modules, &binding.source, &imported));
+            return resolve_package_type(
+                modules,
+                package_indexes,
+                &binding.source,
+                &imported,
+                visited,
+            )
+            .or_else(|| scan_source_type(modules, &binding.source, &imported));
         }
-        if let Some(target_module) = resolve_relative_module(modules, module_path, &binding.source) {
-            return resolve_named_type_export(modules, package_indexes, &target_module, &imported, visited)
-                .or_else(|| scan_module_type(modules, &target_module, &imported));
+        if let Some(target_module) = resolve_relative_module(modules, module_path, &binding.source)
+        {
+            return resolve_named_type_export(
+                modules,
+                package_indexes,
+                &target_module,
+                &imported,
+                visited,
+            )
+            .or_else(|| scan_module_type(modules, &target_module, &imported));
         }
     }
 
     if let Some(reexport) = module.named_type_reexports.get(type_name) {
-        if let Some(target_module) = resolve_relative_module(modules, module_path, &reexport.source) {
-            return resolve_named_type_export(modules, package_indexes, &target_module, &reexport.imported, visited);
+        if let Some(target_module) = resolve_relative_module(modules, module_path, &reexport.source)
+        {
+            return resolve_named_type_export(
+                modules,
+                package_indexes,
+                &target_module,
+                &reexport.imported,
+                visited,
+            );
         }
     }
 
@@ -296,8 +319,13 @@ fn resolve_named_component_export_target(
         ));
     }
     if let Some(reexport) = module.named_component_reexports.get(export_name) {
-        if let Some(target_module) = resolve_relative_module(modules, module_path, &reexport.source) {
-            return resolve_named_component_export_target(modules, &target_module, &reexport.imported);
+        if let Some(target_module) = resolve_relative_module(modules, module_path, &reexport.source)
+        {
+            return resolve_named_component_export_target(
+                modules,
+                &target_module,
+                &reexport.imported,
+            );
         }
     }
     None
@@ -307,7 +335,8 @@ pub fn resolve_default_component_export(
     modules: &HashMap<PathBuf, ModuleInfo>,
     module_path: &Path,
 ) -> Option<(String, String)> {
-    resolve_default_component_export_target(modules, module_path).map(|(_, name, source)| (name, source))
+    resolve_default_component_export_target(modules, module_path)
+        .map(|(_, name, source)| (name, source))
 }
 
 fn resolve_default_component_export_target(
@@ -325,8 +354,13 @@ fn resolve_default_component_export_target(
     }
 
     if let Some(reexport) = module.named_component_reexports.get("default") {
-        if let Some(target_module) = resolve_relative_module(modules, module_path, &reexport.source) {
-            return resolve_named_component_export_target(modules, &target_module, &reexport.imported);
+        if let Some(target_module) = resolve_relative_module(modules, module_path, &reexport.source)
+        {
+            return resolve_named_component_export_target(
+                modules,
+                &target_module,
+                &reexport.imported,
+            );
         }
     }
 
@@ -346,8 +380,9 @@ pub fn resolve_occurrence_key(
         let resolved = if source.starts_with('@') {
             resolve_package_component_export(modules, source, member)
         } else {
-            resolve_relative_module(modules, &module.path, source)
-                .and_then(|target_module| resolve_named_component_export(modules, &target_module, member))
+            resolve_relative_module(modules, &module.path, source).and_then(|target_module| {
+                resolve_named_component_export(modules, &target_module, member)
+            })
         };
 
         if let Some((name, source)) = resolved {
@@ -402,7 +437,9 @@ pub fn build_alias_map(
             let export_name = binding.imported.as_deref().unwrap_or(&binding.local);
             resolve_package_component_export(modules, &binding.source, export_name)
                 .map(|(name, source)| component_key(&name, &source))
-        } else if let Some(target_module) = resolve_relative_module(modules, &module.path, &binding.source) {
+        } else if let Some(target_module) =
+            resolve_relative_module(modules, &module.path, &binding.source)
+        {
             match binding.kind {
                 ImportKind::Named => resolve_named_component_export(
                     modules,
@@ -487,8 +524,15 @@ fn resolve_named_type_export(
         return resolve_named_type(modules, package_indexes, module_path, export_name, visited);
     }
     if let Some(reexport) = module.named_type_reexports.get(export_name) {
-        if let Some(target_module) = resolve_relative_module(modules, module_path, &reexport.source) {
-            return resolve_named_type_export(modules, package_indexes, &target_module, &reexport.imported, visited);
+        if let Some(target_module) = resolve_relative_module(modules, module_path, &reexport.source)
+        {
+            return resolve_named_type_export(
+                modules,
+                package_indexes,
+                &target_module,
+                &reexport.imported,
+                visited,
+            );
         }
     }
     None
@@ -559,24 +603,35 @@ fn collect_props_from_expr(
     match expr {
         TypeExpr::Object(prop_defs) => {
             for prop in prop_defs {
-                props.entry(prop.name.clone()).or_insert_with(|| PropTemplate {
-                    name: prop.name.clone(),
-                    allowed_values: resolve_allowed_values(
-                        modules,
-                        package_indexes,
-                        module_path,
-                        &prop.value_type,
-                    ),
-                });
+                props
+                    .entry(prop.name.clone())
+                    .or_insert_with(|| PropTemplate {
+                        name: prop.name.clone(),
+                        allowed_values: resolve_allowed_values(
+                            modules,
+                            package_indexes,
+                            module_path,
+                            &prop.value_type,
+                        ),
+                    });
             }
         }
         TypeExpr::Intersection(parts) => {
             for part in parts {
-                collect_props_from_expr(modules, package_indexes, module_path, part, props, visited);
+                collect_props_from_expr(
+                    modules,
+                    package_indexes,
+                    module_path,
+                    part,
+                    props,
+                    visited,
+                );
             }
         }
         TypeExpr::Reference(name) => {
-            if let Some(resolved) = resolve_named_type(modules, package_indexes, module_path, name, visited) {
+            if let Some(resolved) =
+                resolve_named_type(modules, package_indexes, module_path, name, visited)
+            {
                 collect_props_from_expr(
                     modules,
                     package_indexes,
@@ -600,7 +655,13 @@ fn resolve_allowed_values(
     match value_type {
         PropValueType::UnionLiterals(values) => Some(values.clone()),
         PropValueType::Reference(name) => {
-            let resolved = resolve_named_type(modules, package_indexes, module_path, name, &mut HashSet::new())?;
+            let resolved = resolve_named_type(
+                modules,
+                package_indexes,
+                module_path,
+                name,
+                &mut HashSet::new(),
+            )?;
             match resolved.expr {
                 TypeExpr::UnionLiterals(values) => Some(values),
                 TypeExpr::Reference(inner) => resolve_allowed_values(
@@ -669,5 +730,7 @@ fn glob_match(pattern: &str, value: &str) -> bool {
         }
     }
     regex.push('$');
-    Regex::new(&regex).map(|re| re.is_match(value)).unwrap_or(false)
+    Regex::new(&regex)
+        .map(|re| re.is_match(value))
+        .unwrap_or(false)
 }

@@ -4,9 +4,7 @@ use std::path::{Path, PathBuf};
 
 use serde_json::Value;
 
-use crate::tasty::constants::scanner::{
-    PACKAGE_INDEX_BASENAME, PACKAGE_JSON_FILENAME,
-};
+use crate::tasty::constants::scanner::{PACKAGE_INDEX_BASENAME, PACKAGE_JSON_FILENAME};
 
 use super::node_modules::{candidate_node_modules_dirs, installed_package_dirs};
 use super::package_json::{package_export_target, read_package_json};

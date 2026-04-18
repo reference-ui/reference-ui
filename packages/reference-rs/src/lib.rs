@@ -1,11 +1,16 @@
 #![deny(clippy::all)]
 
+mod atlas;
+mod styletrace;
 mod tasty;
 mod virtualrs;
-mod atlas;
 
-pub use tasty::{scan_typescript_bundle, ScanRequest};
 pub use atlas::{AtlasAnalysisResult, AtlasAnalyzer, AtlasConfig};
+pub use styletrace::{
+    collect_reference_style_prop_names, collect_style_prop_names, trace_style_jsx_names,
+    StyleTraceError,
+};
+pub use tasty::{scan_typescript_bundle, ScanRequest};
 
 #[cfg(feature = "napi")]
 use std::path::PathBuf;
@@ -16,9 +21,9 @@ use napi::Result;
 use napi_derive::napi;
 
 #[cfg(feature = "napi")]
-use tasty::scan_and_emit_modules as do_scan_and_emit_modules;
-#[cfg(feature = "napi")]
 use atlas::AtlasAnalysisResult as NativeAtlasAnalysisResult;
+#[cfg(feature = "napi")]
+use tasty::scan_and_emit_modules as do_scan_and_emit_modules;
 
 #[cfg(feature = "napi")]
 #[napi]
@@ -58,4 +63,15 @@ pub fn analyze_atlas(root_dir: String, config_json: Option<String>) -> Result<St
     let result: NativeAtlasAnalysisResult = analyzer.analyze_detailed(&root_dir);
     serde_json::to_string(&result)
         .map_err(|err| napi::Error::from_reason(format!("Failed to serialize Atlas result: {err}")))
+}
+
+#[cfg(feature = "napi")]
+#[napi]
+pub fn analyze_styletrace(root_dir: String) -> Result<String> {
+    let normalized_root = PathBuf::from(&root_dir);
+    let result = trace_style_jsx_names(&normalized_root)
+        .map_err(|err| napi::Error::from_reason(format!("Styletrace analysis failed: {err}")))?;
+    serde_json::to_string(&result).map_err(|err| {
+        napi::Error::from_reason(format!("Failed to serialize styletrace result: {err}"))
+    })
 }

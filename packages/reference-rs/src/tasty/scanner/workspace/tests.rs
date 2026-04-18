@@ -130,10 +130,7 @@ fn scan_workspace_follows_cross_library_external_imports_from_external_modules()
 #[test]
 fn scan_workspace_limits_transitive_cross_library_external_imports() {
     let root = TempDir::new("scanner-workspace-external-cross-library-depth-limit");
-    root.write(
-        "src/index.ts",
-        "export type { A } from 'alpha-lib';\n",
-    );
+    root.write("src/index.ts", "export type { A } from 'alpha-lib';\n");
     root.write(
         "node_modules/alpha-lib/package.json",
         r#"{ "name": "alpha-lib", "types": "index.d.ts" }"#,
@@ -193,9 +190,10 @@ fn scan_workspace_follows_external_reexports_when_node_modules_is_above_root() {
     );
     fs::create_dir_all(root.path().join(".reference-ui/virtual/src")).expect("mkdir virtual src");
 
-    let workspace = scan_workspace(root.path().join(".reference-ui/virtual").as_path(), &[
-        "src/**/*.ts".to_string(),
-    ])
+    let workspace = scan_workspace(
+        root.path().join(".reference-ui/virtual").as_path(),
+        &["src/**/*.ts".to_string()],
+    )
     .expect("workspace scan should succeed");
 
     assert!(workspace

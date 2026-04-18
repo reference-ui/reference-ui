@@ -60,9 +60,7 @@ fn resolves_cross_file_import_reference() {
     let expected_foo = symbol_id("src/a.ts", "Foo");
     match type_ref {
         TypeRef::Reference {
-            name,
-            target_id,
-            ..
+            name, target_id, ..
         } => {
             assert_eq!(name, "Foo");
             assert_eq!(target_id.as_ref(), Some(&expected_foo));
@@ -94,9 +92,7 @@ fn resolves_same_file_interface_reference() {
     let expected = symbol_id("src/one.ts", "LocalA");
     match type_ref {
         TypeRef::Reference {
-            name,
-            target_id,
-            ..
+            name, target_id, ..
         } => {
             assert_eq!(name, "LocalA");
             assert_eq!(target_id.as_ref(), Some(&expected));
@@ -162,8 +158,14 @@ fn resolves_cross_library_external_import_reference() {
         .find(|s| s.name == "PrimitiveNativeProps")
         .expect("PrimitiveNativeProps symbol");
 
-    let Some(TypeRef::Reference { name, target_id, .. }) = primitive_native_props.underlying.as_ref() else {
-        panic!("expected underlying reference, got {:?}", primitive_native_props.underlying);
+    let Some(TypeRef::Reference {
+        name, target_id, ..
+    }) = primitive_native_props.underlying.as_ref()
+    else {
+        panic!(
+            "expected underlying reference, got {:?}",
+            primitive_native_props.underlying
+        );
     };
 
     assert_eq!(name, "ComponentPropsWithoutRef");

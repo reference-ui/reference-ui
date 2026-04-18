@@ -4,10 +4,10 @@ use oxc_span::GetSpan;
 use crate::tasty::model::{TupleElement, TypeRef};
 use crate::tasty::shared::type_ref_util::collapse_union;
 
-use super::objects::infer_object_type;
-use super::primitives::{infer_boolean_type_span, infer_numeric_type_span, infer_string_type_span};
 use super::super::values::{infer_ts_as_expression, infer_ts_satisfies_expression};
 use super::super::ExtractionContext;
+use super::objects::infer_object_type;
+use super::primitives::{infer_boolean_type_span, infer_numeric_type_span, infer_string_type_span};
 
 pub(crate) fn infer_array_type(
     array: &ArrayExpression<'_>,
@@ -66,8 +66,16 @@ fn infer_array_element_type(
     match element {
         El::SpreadElement(_) | El::Elision(_) => None,
         El::NullLiteral(_) => Some(null_type()),
-        El::BooleanLiteral(e) => Some(infer_boolean_type_span(ctx.source, e.span(), const_asserted)),
-        El::NumericLiteral(e) => Some(infer_numeric_type_span(ctx.source, e.span(), const_asserted)),
+        El::BooleanLiteral(e) => Some(infer_boolean_type_span(
+            ctx.source,
+            e.span(),
+            const_asserted,
+        )),
+        El::NumericLiteral(e) => Some(infer_numeric_type_span(
+            ctx.source,
+            e.span(),
+            const_asserted,
+        )),
         El::StringLiteral(e) => Some(infer_string_type_span(ctx.source, e.span(), const_asserted)),
         El::ObjectExpression(object) => infer_object_type(object, ctx, const_asserted),
         El::ArrayExpression(array) => infer_array_type(array, ctx, const_asserted),

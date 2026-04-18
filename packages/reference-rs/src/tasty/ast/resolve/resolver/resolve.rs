@@ -131,11 +131,7 @@ impl TypeRefMap for ResolverTypeRefMap<'_, '_> {
         }
     }
 
-    fn map_type_query(
-        &mut self,
-        expression: String,
-        _resolved: Option<Box<TypeRef>>,
-    ) -> TypeRef {
+    fn map_type_query(&mut self, expression: String, _resolved: Option<Box<TypeRef>>) -> TypeRef {
         TypeRef::TypeQuery {
             resolved: self
                 .resolver
@@ -155,12 +151,7 @@ impl TypeRefMap for ResolverTypeRefMap<'_, '_> {
     ) -> TypeRef {
         let resolved = self
             .resolver
-            .resolve_conditional_result(
-                &check_type,
-                &extends_type,
-                &true_type,
-                &false_type,
-            )
+            .resolve_conditional_result(&check_type, &extends_type, &true_type, &false_type)
             .map(Box::new);
         TypeRef::Conditional {
             check_type: Box::new(check_type),
@@ -180,10 +171,7 @@ impl TypeRefMap for ResolverTypeRefMap<'_, '_> {
             .resolver
             .resolve_template_literal_result(&parts)
             .map(Box::new);
-        TypeRef::TemplateLiteral {
-            parts,
-            resolved,
-        }
+        TypeRef::TemplateLiteral { parts, resolved }
     }
 
     fn map_type_parameter(&mut self, param: TsTypeParameter) -> TsTypeParameter {

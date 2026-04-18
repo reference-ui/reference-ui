@@ -17,6 +17,7 @@ const requiredExports = [
   'rewriteCvaImports',
   'scanAndEmitModules',
   'analyzeAtlas',
+  'analyzeStyletrace',
 ]
 const nativeInputs = [
   join(packageDir, 'Cargo.toml'),

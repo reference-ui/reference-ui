@@ -5,7 +5,9 @@ use std::collections::BTreeMap;
 use super::types::{
     emit_jsdoc, emit_members, emit_optional_type_ref, emit_type_parameters, emit_type_ref_array,
 };
-use super::util::{emit_array, emit_field, emit_object, indent_block, to_js_literal, JsObjectBuilder};
+use super::util::{
+    emit_array, emit_field, emit_object, indent_block, to_js_literal, JsObjectBuilder,
+};
 use crate::tasty::constants::libraries::USER_LIBRARY_NAME;
 use crate::tasty::model::{TsSymbol, TsSymbolKind, TypeRef, TypeScriptBundle};
 
@@ -128,7 +130,11 @@ pub(super) fn emit_ref_object(
     reference: &SymbolRef,
     export_names: &BTreeMap<String, String>,
 ) -> Result<String, String> {
-    Ok(emit_object(symbol_ref_fields(bundle, reference, export_names)?))
+    Ok(emit_object(symbol_ref_fields(
+        bundle,
+        reference,
+        export_names,
+    )?))
 }
 
 fn symbol_metadata_fields(
@@ -231,8 +237,7 @@ fn collect_reference_descriptors<'a>(
         .filter_map(|type_ref| reference_descriptor(bundle, type_ref, export_names))
         .collect();
     refs.sort_by(|a, b| {
-        a.id
-            .cmp(&b.id)
+        a.id.cmp(&b.id)
             .then_with(|| a.name.cmp(&b.name))
             .then_with(|| a.library.cmp(&b.library))
     });
