@@ -107,4 +107,15 @@ describe('font config helpers', () => {
       letterSpacing: '-0.01em',
     })
   })
+
+  it('preserves additional traced JSX names when font extensions are applied', () => {
+    initPandaConfig({})
+
+    extendPatterns(buildFontPatternExtensions(fonts), ['ToolbarIcon'])
+
+    const config = getPandaConfig()
+    const boxPattern = config.patterns?.extend?.box
+
+    expect(boxPattern?.jsx).toEqual([...PRIMITIVE_JSX_NAMES, 'ToolbarIcon'])
+  })
 })

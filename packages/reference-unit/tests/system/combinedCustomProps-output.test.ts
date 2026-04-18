@@ -20,7 +20,8 @@ describe('combined custom props output (e2e)', () => {
     if (!extensionsBundle) return
 
     expect(extensionsBundle).toContain('var PRIMITIVE_JSX_NAMES = TAGS.map(toJsxName);')
-    expect(extensionsBundle).toContain('jsx: [...PRIMITIVE_JSX_NAMES]')
+    expect(extensionsBundle).toContain('function resolvePandaJsxElements(additionalJsxElements) {')
+    expect(extensionsBundle).toContain('jsx: resolvePandaJsxElements(additionalJsxElements)')
   })
 
   it('extracts combined custom props from source-backed primitive usage', () => {

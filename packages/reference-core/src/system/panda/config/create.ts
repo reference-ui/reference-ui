@@ -16,6 +16,8 @@ export interface CreatePandaConfigOptions {
   baseConfig?: Record<string, unknown>
   /** Relative import path from panda.config.ts to the bundled extensions runtime. */
   extensionsImportPath: string
+  /** Additional JSX names discovered during sync. */
+  additionalJsxElements?: string[]
 }
 
 /**
@@ -29,6 +31,7 @@ export async function createPandaConfig(options: CreatePandaConfigOptions): Prom
     collectorBundle,
     baseConfig = defaultBaseConfig,
     extensionsImportPath,
+    additionalJsxElements = [],
   } = options
 
   const templates = loadTemplates()
@@ -37,6 +40,7 @@ export async function createPandaConfig(options: CreatePandaConfigOptions): Prom
   const fontValueExpression = collectorBundle.getValue('font')
   const globalCssValueExpression = collectorBundle.getValue('globalCss')
   const patternsValueExpression = collectorBundle.getValue('box-pattern')
+  const additionalJsxElementsLiteral = JSON.stringify(additionalJsxElements, null, 2)
 
   // Valid JS object literal for baseConfig (inserted raw in template)
   const baseConfigLiteral = JSON.stringify(baseConfig, null, 2)
@@ -50,6 +54,7 @@ export async function createPandaConfig(options: CreatePandaConfigOptions): Prom
     globalCssValueExpression,
     patternsValueExpression,
     extensionsImportPath,
+    additionalJsxElementsLiteral,
   })
 
   mkdirSync(dirname(outputPath), { recursive: true })

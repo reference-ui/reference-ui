@@ -1,7 +1,7 @@
 import type { Config } from '@pandacss/dev'
 import type { BoxPatternExtension } from '../../../../api/patterns'
+import { resolvePandaJsxElements } from '../../jsx-elements'
 import { deepMerge, getPandaConfig, toRecord, type RuntimeStore } from './runtime'
-import { PRIMITIVE_JSX_NAMES } from '../../../../primitives/tags'
 
 function getTransformBody(transform: BoxPatternExtension['transform']): string {
   const source = transform.toString()
@@ -15,7 +15,10 @@ function getTransformBody(transform: BoxPatternExtension['transform']): string {
   return source.slice(bodyStart + 1, bodyEnd).trim()
 }
 
-function createBoxTransform(extensions: BoxPatternExtension[]) {
+function createBoxTransform(
+  extensions: BoxPatternExtension[],
+  additionalJsxElements: string[]
+) {
   const properties = Object.assign(
     {},
     ...extensions.map((extension) => extension.properties)
@@ -56,20 +59,23 @@ function createBoxTransform(extensions: BoxPatternExtension[]) {
   ) => Record<string, unknown>
 
   return {
-    jsx: [...PRIMITIVE_JSX_NAMES],
+    jsx: resolvePandaJsxElements(additionalJsxElements),
     properties,
     blocklist,
     transform,
   }
 }
 
-export function extendPatterns(extensions: BoxPatternExtension[]): Partial<Config> {
+export function extendPatterns(
+  extensions: BoxPatternExtension[],
+  additionalJsxElements: string[] = []
+): Partial<Config> {
   if (extensions.length === 0) {
     return getPandaConfig()
   }
 
   const pandaConfig = getPandaConfig() as RuntimeStore
-  const boxPattern = createBoxTransform(extensions)
+  const boxPattern = createBoxTransform(extensions, additionalJsxElements)
 
   pandaConfig.patterns = deepMerge({}, toRecord(pandaConfig.patterns), {
     extend: {

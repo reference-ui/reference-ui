@@ -98,6 +98,21 @@ importers:
         specifier: ^4.0.18
         version: 4.0.18(@types/node@25.1.0)(happy-dom@15.11.7)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.2)
 
+  fixtures/styletrace-consumer:
+    dependencies:
+      '@fixtures/styletrace-library':
+        specifier: workspace:*
+        version: link:../styletrace-library
+      react:
+        specifier: '*'
+        version: 19.2.4
+
+  fixtures/styletrace-library:
+    dependencies:
+      react:
+        specifier: '*'
+        version: 19.2.4
+
   packages/reference-core:
     dependencies:
       '@modelcontextprotocol/sdk':
