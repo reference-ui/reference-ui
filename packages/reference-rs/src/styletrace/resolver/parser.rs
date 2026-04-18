@@ -33,6 +33,7 @@ pub(super) fn parse_module(path: &Path, source: &str) -> Result<ParsedModule, St
     let mut imports = HashMap::new();
     let mut declarations = HashMap::new();
     let mut reexports = HashMap::new();
+    let mut export_all_sources = Vec::new();
 
     for statement in &parsed.program.body {
         collect_statement(
@@ -41,6 +42,7 @@ pub(super) fn parse_module(path: &Path, source: &str) -> Result<ParsedModule, St
             &mut imports,
             &mut declarations,
             &mut reexports,
+            &mut export_all_sources,
         );
     }
 
@@ -48,6 +50,7 @@ pub(super) fn parse_module(path: &Path, source: &str) -> Result<ParsedModule, St
         imports,
         declarations,
         reexports,
+        export_all_sources,
     })
 }
 
@@ -57,6 +60,7 @@ fn collect_statement(
     imports: &mut HashMap<String, ImportBinding>,
     declarations: &mut HashMap<String, TypeDeclaration>,
     reexports: &mut HashMap<String, ImportBinding>,
+    export_all_sources: &mut Vec<String>,
 ) {
     match statement {
         Statement::ImportDeclaration(import_decl) => {
@@ -103,6 +107,9 @@ fn collect_statement(
         }
         Statement::ExportNamedDeclaration(export_decl) => {
             collect_export_declaration(export_decl, source, declarations, reexports);
+        }
+        Statement::ExportAllDeclaration(export_all) => {
+            export_all_sources.push(unquote(&string_from_span(source, export_all.source.span())))
         }
         _ => {}
     }

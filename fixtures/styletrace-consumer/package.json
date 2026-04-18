@@ -1,0 +1,10 @@
+{
+  "name": "@fixtures/styletrace-consumer",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@fixtures/styletrace-library": "workspace:*",
+    "react": "*"
+  }
+}

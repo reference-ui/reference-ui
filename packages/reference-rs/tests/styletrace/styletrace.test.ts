@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { traceCase } from './helpers'
+import { traceCase, traceFixtureDir } from './helpers'
 
 describe('styletrace', () => {
   it('finds direct primitive wrappers with public style props', async () => {
@@ -15,7 +15,78 @@ describe('styletrace', () => {
     await expect(traceCase('reexport_alias')).resolves.toEqual(['Panel'])
   })
 
+  it('traces export-star barrels', async () => {
+    await expect(traceCase('export_star_barrel')).resolves.toEqual(['Card'])
+  })
+
   it('ignores components that render primitives without exposing style props', async () => {
     await expect(traceCase('negative')).resolves.toEqual([])
+  })
+
+  it('traces wrappers that forward rest style props', async () => {
+    await expect(traceCase('rest_spread_wrapper')).resolves.toEqual(['Card'])
+  })
+
+  it('traces forwardRef wrappers with style-prop generics', async () => {
+    await expect(traceCase('forward_ref_wrapper')).resolves.toEqual(['Card'])
+  })
+
+  it('traces namespace import wrappers', async () => {
+    await expect(traceCase('namespace_import')).resolves.toEqual(['Card'])
+  })
+
+  it('traces components that use the Reference style pipeline without primitives', async () => {
+    await expect(traceCase('direct_style_pipeline')).resolves.toEqual(['Panel'])
+  })
+
+  it('traces factory-generated icons and wrappers', async () => {
+    await expect(traceCase('icon_factory')).resolves.toEqual(['StarIcon', 'ToolbarIcon'])
+  })
+
+  it('traces exported wrappers that forward into node_modules packages', async () => {
+    await expect(traceCase('node_modules_wrapper')).resolves.toEqual(['AppCard', 'PackageCard'])
+  })
+
+  it('traces wrappers that import default-export package components', async () => {
+    await expect(traceCase('default_export_package')).resolves.toEqual([
+      'AppCard',
+      'PackageCard',
+    ])
+  })
+
+  it('traces wrappers that import package subpath components', async () => {
+    await expect(traceCase('subpath_package')).resolves.toEqual(['AppCard', 'PackageCard'])
+  })
+
+  it('traces wrappers that import package barrel export-star components', async () => {
+    await expect(traceCase('export_star_package')).resolves.toEqual([
+      'AppCard',
+      'PackageCard',
+    ])
+  })
+
+  it('keeps demo-ui out of the style-bearing surface', async () => {
+    await expect(traceFixtureDir('fixtures/demo-ui/src')).resolves.toEqual([])
+  })
+
+  it('keeps extend-library out of the style-bearing surface', async () => {
+    await expect(traceFixtureDir('fixtures/extend-library/src')).resolves.toEqual([])
+  })
+
+  it('finds wrapped Reference primitive exports in a workspace fixture library', async () => {
+    await expect(traceFixtureDir('fixtures/styletrace-library/src')).resolves.toEqual([
+      'MyStyleComponent',
+    ])
+  })
+
+  it('traces wrapped Reference primitive exports through a fixture consumer import', async () => {
+    await expect(traceFixtureDir('fixtures/styletrace-consumer/src')).resolves.toEqual([
+      'ConsumerStyleComponent',
+      'MyStyleComponent',
+    ])
+  })
+
+  it('keeps atlas-project component wrappers out of the style-bearing surface', async () => {
+    await expect(traceFixtureDir('fixtures/atlas-project/src/components')).resolves.toEqual([])
   })
 })
