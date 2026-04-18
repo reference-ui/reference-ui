@@ -28,6 +28,7 @@ async function importCreateModule(template?: string) {
         'GLOBAL={{ globalCssValueExpression }}',
         'PATTERNS={{ patternsValueExpression }}',
         'EXTENSIONS={{ extensionsImportPath }}',
+        'JSX={{ additionalJsxElementsLiteral }}',
       ].join('\n'),
   }))
 
@@ -63,6 +64,7 @@ describe('system/panda/config/create', () => {
         getValue: (name: string) => `getValue:${name}`,
       } as never,
       extensionsImportPath: './styled/extensions/index.mjs',
+      additionalJsxElements: ['MyIcon', 'ShellCard'],
     })
 
     const output = readFileSync(outputPath, 'utf-8')
@@ -74,6 +76,7 @@ describe('system/panda/config/create', () => {
     expect(output).toContain('GLOBAL=getValue:globalCss')
     expect(output).toContain('PATTERNS=getValue:box-pattern')
     expect(output).toContain('EXTENSIONS=./styled/extensions/index.mjs')
+    expect(output).toContain('JSX=[\n  "MyIcon",\n  "ShellCard"\n]')
     expect(output).toContain('"outdir": "styled"')
   })
 

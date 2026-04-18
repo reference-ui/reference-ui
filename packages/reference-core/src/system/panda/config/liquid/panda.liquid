@@ -70,7 +70,8 @@ extendGlobalCss(globalCssFragments)
 // ─────────────────────────────────────────────────────────────────────────
 
 const patternExtensions = {{ patternsValueExpression | raw }}
-extendPatterns([...patternExtensions, ...fontPatternExtensions])
+const tracedJsxNames = {{ additionalJsxElementsLiteral | raw }}
+extendPatterns([...patternExtensions, ...fontPatternExtensions], tracedJsxNames)
 
 // ─────────────────────────────────────────────────────────────────────────
 // utilities
