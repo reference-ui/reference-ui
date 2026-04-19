@@ -59,19 +59,35 @@ export function getSyncSession(options: GetSyncSessionOptions): SyncSession {
   const outDir = findOutDir(options)
   const handlers = new Set<RefreshHandler>()
   let lastBuildState: string | null = null
+  let lastReadySignature: string | null = null
+
+  function getReadySignature(updatedAt: string, pid: number): string {
+    return `${pid}:${updatedAt}`
+  }
 
   function checkForRefresh(): void {
     const manifest = readManifest(outDir)
     if (!manifest) return
 
-    if (manifest.buildState === 'ready' && lastBuildState !== 'ready') {
+    if (manifest.buildState === 'ready') {
+      const readySignature = getReadySignature(manifest.updatedAt, manifest.pid)
+      if (readySignature === lastReadySignature) {
+        lastBuildState = 'ready'
+        return
+      }
+
+      const shouldEmit = lastBuildState !== 'ready' || readySignature !== lastReadySignature
       lastBuildState = 'ready'
-      const event = { changedOutputs: [] }
-      for (const handler of handlers) {
-        try {
-          handler(event)
-        } catch {
-          // Isolate handler errors so one bad plugin cannot block others.
+      lastReadySignature = readySignature
+
+      if (shouldEmit) {
+        const event = { changedOutputs: [] }
+        for (const handler of handlers) {
+          try {
+            handler(event)
+          } catch {
+            // Isolate handler errors so one bad plugin cannot block others.
+          }
         }
       }
     } else {
