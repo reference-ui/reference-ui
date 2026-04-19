@@ -226,7 +226,9 @@ impl StyleTraceAnalyzer {
                 source,
                 imported_name,
             } => {
-                let resolved_module = resolve_imported_module(module_path, source)?;
+                let Some(resolved_module) = resolve_imported_module(module_path, source)? else {
+                    return Ok(false);
+                };
                 self.ensure_module_loaded(&resolved_module)?;
                 self.factory_is_traced(&resolved_module, imported_name, stack)
             }
@@ -278,7 +280,9 @@ impl StyleTraceAnalyzer {
             return Ok(self.primitive_names.contains(imported_name));
         }
 
-        let resolved_module = resolve_imported_module(module_path, source)?;
+        let Some(resolved_module) = resolve_imported_module(module_path, source)? else {
+            return Ok(false);
+        };
         self.ensure_module_loaded(&resolved_module)?;
         self.export_is_traced(&resolved_module, imported_name, stack)
     }

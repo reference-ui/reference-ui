@@ -9,7 +9,8 @@ use crate::tasty::resolve_external_import_path;
 use super::model::{BoundTypeExpr, ParsedModule, TypeDeclaration, TypeExpr};
 use super::parser::parse_module;
 use super::util::{
-    normalize_path, prefer_workspace_source_module, resolve_local_module_path, StyleTraceError,
+    is_ignorable_module_specifier, normalize_path, prefer_workspace_source_module,
+    resolve_local_module_path, StyleTraceError,
 };
 
 const REFERENCE_STYLE_PROPS_ENTRY: &str = "packages/reference-core/src/types/style-props.ts";
@@ -423,12 +424,16 @@ impl StyleTracer {
         }
 
         if let Some(reexport) = module.reexports.get(name) {
-            let imported_module = self.resolve_module_specifier(module_path, &reexport.source)?;
+            let Some(imported_module) = self.resolve_module_specifier(module_path, &reexport.source)? else {
+                return Ok(None);
+            };
             return self.resolve_declaration(&imported_module, &reexport.imported_name);
         }
 
         for source in &module.export_all_sources {
-            let imported_module = self.resolve_module_specifier(module_path, source)?;
+            let Some(imported_module) = self.resolve_module_specifier(module_path, source)? else {
+                continue;
+            };
             if let Some(resolved) = self.resolve_declaration(&imported_module, name)? {
                 return Ok(Some(resolved));
             }
@@ -437,7 +442,9 @@ impl StyleTracer {
         let Some(import_binding) = module.imports.get(name) else {
             return Ok(None);
         };
-        let imported_module = self.resolve_module_specifier(module_path, &import_binding.source)?;
+        let Some(imported_module) = self.resolve_module_specifier(module_path, &import_binding.source)? else {
+            return Ok(None);
+        };
         self.resolve_declaration(&imported_module, &import_binding.imported_name)
     }
 
@@ -459,36 +466,40 @@ impl StyleTracer {
         &self,
         current_module: &Path,
         specifier: &str,
-    ) -> Result<PathBuf, StyleTraceError> {
+    ) -> Result<Option<PathBuf>, StyleTraceError> {
         if specifier == "@reference-ui/styled/types" {
-            return Ok(self
+            return Ok(Some(self
                 .workspace_root
                 .join(STYLED_TYPES_ROOT)
-                .join("system-types.d.ts"));
+                .join("system-types.d.ts")));
         }
 
         if let Some(rest) = specifier.strip_prefix("@reference-ui/styled/types/") {
-            return Ok(self
+            return Ok(Some(self
                 .workspace_root
                 .join(STYLED_TYPES_ROOT)
-                .join(format!("{rest}.d.ts")));
+                .join(format!("{rest}.d.ts"))));
         }
 
         if specifier == "@reference-ui/react" {
-            return Ok(self.workspace_root.join(REFERENCE_TYPES_INDEX_ENTRY));
+            return Ok(Some(self.workspace_root.join(REFERENCE_TYPES_INDEX_ENTRY)));
         }
 
         if specifier.starts_with('.') {
             let base = current_module.parent().unwrap_or(current_module);
             let candidate = normalize_path(&base.join(specifier));
             if let Some(resolved) = resolve_local_module_path(&candidate) {
-                return Ok(resolved);
+                return Ok(Some(resolved));
             }
+        }
+
+        if is_ignorable_module_specifier(specifier) {
+            return Ok(None);
         }
 
         let resolution_root = current_module.parent().unwrap_or(current_module);
         if let Some(resolved) = resolve_external_import_path(resolution_root, specifier) {
-            return Ok(prefer_workspace_source_module(&resolved, &self.workspace_root));
+            return Ok(Some(prefer_workspace_source_module(&resolved, &self.workspace_root)));
         }
 
         Err(StyleTraceError::new(format!(
