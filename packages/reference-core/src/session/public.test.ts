@@ -117,11 +117,29 @@ describe('getSyncSession – onRefresh', () => {
     await waitForCallCount(calls, 1)
     const firstCount = calls.length
 
-    // Second write with ready — should not fire again (same state).
-    writeManifest(outDir, { ...BASE_MANIFEST, buildState: 'ready', updatedAt: '2026-01-01T01:00:00.000Z' })
+    // Rewriting the same ready snapshot should not fire again.
+    writeManifest(outDir, { ...BASE_MANIFEST, buildState: 'ready' })
     await new Promise(r => setTimeout(r, 100))
 
     expect(calls.length).toBe(firstCount)
+
+    session.dispose()
+  })
+
+  it('fires again when a new ready snapshot is written', async () => {
+    writeManifest(outDir, { ...BASE_MANIFEST, buildState: 'idle' })
+
+    const session = getSyncSession({ cwd: rootDir })
+    const calls: unknown[] = []
+    session.onRefresh(e => calls.push(e))
+
+    writeManifest(outDir, { ...BASE_MANIFEST, buildState: 'ready' })
+    await waitForCallCount(calls, 1)
+
+    writeManifest(outDir, { ...BASE_MANIFEST, buildState: 'ready', updatedAt: '2026-01-01T01:00:00.000Z' })
+    await waitForCallCount(calls, 2)
+
+    expect(calls.length).toBeGreaterThanOrEqual(2)
 
     session.dispose()
   })
@@ -142,7 +160,7 @@ describe('getSyncSession – onRefresh', () => {
     await new Promise(r => setTimeout(r, 150))
 
     // Second ready
-    writeManifest(outDir, { ...BASE_MANIFEST, buildState: 'ready' })
+    writeManifest(outDir, { ...BASE_MANIFEST, buildState: 'ready', updatedAt: '2026-01-01T02:00:00.000Z' })
     await waitForCallCount(calls, 2)
 
     expect(calls.length).toBeGreaterThanOrEqual(2)
