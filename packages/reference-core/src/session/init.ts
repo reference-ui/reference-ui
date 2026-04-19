@@ -40,12 +40,16 @@ export function initSession(payload: SyncPayload): void {
 
   // Watch-mode cycle: a file change queues a new build.
   on('watch:change', () => {
-    if (payload.options.watch) transitionBuild('queued')
+    if (payload.options.watch) {
+      transitionBuild('queued')
+    }
   })
 
   // Virtual sync for a single file starts the running phase.
   on('run:virtual:sync:file', () => {
-    if (payload.options.watch) transitionBuild('running')
+    if (payload.options.watch) {
+      transitionBuild('running')
+    }
   })
 
   if (payload.options.watch) {

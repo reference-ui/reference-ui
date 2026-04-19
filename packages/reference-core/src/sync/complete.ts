@@ -22,9 +22,10 @@ export { REF_SYNC_FAILED_MESSAGE }
  * bundle finishes (before the final DTS pass). MCP is out of band: `ref mcp`
  * builds its own model when the editor starts that server.
  *
- * In watch mode, readiness is tied to the runtime surface becoming usable. The
- * dev server and browser can refresh once runtime packages are on disk;
- * TypeScript declarations, reference/Tasty output, and final
+ * In watch mode, readiness is tied to both generated CSS and the exported
+ * runtime package surface becoming usable. The dev server and browser can
+ * refresh once the stylesheet has been regenerated and the runtime package copy
+ * is on disk; TypeScript declarations, reference/Tasty output, and final
  * `@reference-ui/types` packaging continue in the background.
  *
  * We also listen to worker events directly instead of `sync:complete` because

@@ -3,10 +3,10 @@ import { BroadcastChannel } from 'node:worker_threads'
 
 const CHANNEL_NAME = 'reference-ui:events'
 
-async function importInitModule(debug: boolean) {
+async function importInitModule(debug: boolean, enableMessageLogging = true) {
   vi.resetModules()
-  vi.doMock('../../../config/store', () => ({
-    getConfig: () => ({ debug }),
+  vi.doMock('../config', () => ({
+    isEventBusMessageLoggingEnabled: () => debug && enableMessageLogging,
   }))
 
   const debugSpy = vi.fn()
@@ -27,7 +27,7 @@ async function importInitModule(debug: boolean) {
 afterEach(() => {
   vi.resetModules()
   vi.clearAllMocks()
-  vi.doUnmock('../../../config/store')
+  vi.doUnmock('../config')
   vi.doUnmock('../../log')
 })
 
@@ -85,6 +85,25 @@ describe('initEventBus', () => {
     peer.postMessage({
       type: 'bus:event',
       event: 'test:init:disabled',
+      payload: {},
+    })
+
+    await new Promise((resolve) => setTimeout(resolve, 25))
+
+    expect(debugSpy).not.toHaveBeenCalled()
+
+    peer.close()
+    broadcastChannel.close()
+  })
+
+  it('does nothing when local bus message logging is disabled', async () => {
+    const { initEventBus, broadcastChannel, debugSpy } = await importInitModule(true, false)
+    const peer = new BroadcastChannel(CHANNEL_NAME)
+
+    initEventBus()
+    peer.postMessage({
+      type: 'bus:event',
+      event: 'test:init:messages-disabled',
       payload: {},
     })
 

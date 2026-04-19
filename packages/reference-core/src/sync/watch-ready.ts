@@ -8,25 +8,36 @@ interface WatchReadyOptions {
 /**
  * Watch-mode readiness policy.
  *
- * Browser refreshes become safe once the runtime bundle is on disk. The later
- * runtime declaration pass, reference build, and final `@reference-ui/types`
- * packaging continue in the background.
+ * Browser refreshes become safe once both the generated stylesheet is on disk
+ * and the runtime package copy is complete. Consumers may import either the
+ * direct Panda output or the exported `@reference-ui/react/styles.css` copy, so
+ * watch readiness must wait for both surfaces in the current cycle.
  */
 export function initWatchReady({ onReady, onCycleStart }: WatchReadyOptions): void {
   let readyEmitted = false
+  let pandaCssReady = false
+  let runtimeBundleReady = false
 
-  const emitReady = () => {
-    if (readyEmitted) return
+  const emitReadyIfReady = () => {
+    if (!pandaCssReady || !runtimeBundleReady || readyEmitted) return
     readyEmitted = true
     onReady()
   }
 
   on('watch:change', () => {
     readyEmitted = false
+    pandaCssReady = false
+    runtimeBundleReady = false
     onCycleStart?.()
   })
 
+  on('system:panda:css', () => {
+    pandaCssReady = true
+    emitReadyIfReady()
+  })
+
   on('packager:runtime:complete', () => {
-    emitReady()
+    runtimeBundleReady = true
+    emitReadyIfReady()
   })
 }

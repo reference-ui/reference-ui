@@ -12,5 +12,4 @@ export default defineConfig({
   include: ['src/**/*.{ts,tsx}'],
   extends: [], // no upstream — reference-lib is the root
   debug: false,
-  
 })
