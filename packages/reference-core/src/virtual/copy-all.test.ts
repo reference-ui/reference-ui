@@ -5,32 +5,27 @@ import { DEFAULT_OUT_DIR, SYNC_OUTPUT_DIR_GLOB } from '../constants'
 const FIXTURE_APP = '/workspace/app'
 const FIXTURE_VIRTUAL = `${FIXTURE_APP}/${DEFAULT_OUT_DIR}/virtual`
 
-async function importCopyAllModule(options?: { virtualDirExists?: boolean }) {
+async function importCopyAllModule() {
   vi.resetModules()
 
   const virtualDir = FIXTURE_VIRTUAL
 
   const emit = vi.fn()
   const debug = vi.fn()
-  const mkdir = vi.fn(async () => {})
-  const rm = vi.fn(async () => {})
+  const resetDir = vi.fn(async () => {})
   const fg = vi.fn()
   const copyToVirtual = vi.fn(async (file: string, _root: string, vdir: string) => {
     return `${vdir}/${file.replace('/workspace/app/', '')}`
   })
 
-  vi.doMock('node:fs', () => ({
-    existsSync: () => options?.virtualDirExists ?? true,
-  }))
-  vi.doMock('node:fs/promises', () => ({
-    mkdir,
-    rm,
-  }))
   vi.doMock('fast-glob', () => ({
     default: fg,
   }))
   vi.doMock('../lib/event-bus', () => ({
     emit,
+  }))
+  vi.doMock('../lib/fs/reset-dir', () => ({
+    resetDir,
   }))
   vi.doMock('../lib/log', () => ({
     log: { debug, error: vi.fn(), info: vi.fn() },
@@ -43,15 +38,14 @@ async function importCopyAllModule(options?: { virtualDirExists?: boolean }) {
   }))
 
   const mod = await import('./copy-all')
-  return { ...mod, emit, debug, mkdir, rm, fg, copyToVirtual }
+  return { ...mod, emit, debug, resetDir, fg, copyToVirtual }
 }
 
 afterEach(() => {
   vi.resetModules()
-  vi.doUnmock('node:fs')
-  vi.doUnmock('node:fs/promises')
   vi.doUnmock('fast-glob')
   vi.doUnmock('../lib/event-bus')
+  vi.doUnmock('../lib/fs/reset-dir')
   vi.doUnmock('../lib/log')
   vi.doUnmock('../lib/paths')
   vi.doUnmock('./copy')
@@ -59,8 +53,8 @@ afterEach(() => {
 })
 
 describe('virtual/copy-all', () => {
-  it('creates the virtual directory when it is missing', async () => {
-    const { copyAll, mkdir, rm, fg } = await importCopyAllModule({ virtualDirExists: false })
+  it('resets the virtual directory before repopulating it', async () => {
+    const { copyAll, resetDir, fg } = await importCopyAllModule()
     fg.mockResolvedValue([])
 
     await copyAll({
@@ -68,28 +62,8 @@ describe('virtual/copy-all', () => {
       config: { include: ['src/**/*'], debug: false } as never,
     })
 
-    expect(mkdir).toHaveBeenCalledWith(FIXTURE_VIRTUAL, {
-      recursive: true,
-    })
-    expect(rm).not.toHaveBeenCalled()
-  })
-
-  it('clears the virtual directory before repopulating it', async () => {
-    const { copyAll, mkdir, rm, fg } = await importCopyAllModule({ virtualDirExists: true })
-    fg.mockResolvedValue([])
-
-    await copyAll({
-      sourceDir: '/workspace/app',
-      config: { include: ['src/**/*'], debug: false } as never,
-    })
-
-    expect(rm).toHaveBeenCalledWith(FIXTURE_VIRTUAL, {
-      recursive: true,
-      force: true,
-    })
-    expect(mkdir).toHaveBeenCalledWith(FIXTURE_VIRTUAL, {
-      recursive: true,
-    })
+    expect(resetDir).toHaveBeenCalledTimes(1)
+    expect(resetDir).toHaveBeenCalledWith(FIXTURE_VIRTUAL)
   })
 
   it('emits virtual:copy:complete and skips globbing when include is empty', async () => {
