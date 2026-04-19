@@ -35,6 +35,8 @@ Add a changeset when the branch changes something consumers would care about in 
 
 You usually do not need a changeset for private app-only or docs-only work.
 
+Never include fixture packages in changesets. Fixture libraries and apps under `fixtures/*` are internal test/support packages, not release targets.
+
 ### 2. Commit the changeset with the branch
 
 The changeset file should be committed along with the feature or fix.
@@ -106,6 +108,12 @@ Public packages in this repo:
 
 These private packages are ignored by Changesets:
 
+- `@fixtures/atlas-project`
+- `@fixtures/demo-ui`
+- `@fixtures/extend-library`
+- `@fixtures/layer-library`
+- `@fixtures/styletrace-consumer`
+- `@fixtures/styletrace-library`
 - `@reference-ui/reference-unit`
 - `@reference-ui/reference-docs`
 - `@reference-ui/reference-e2e`
@@ -124,6 +132,8 @@ Why:
 - package versions already differ across the repo
 
 So published packages can version independently when needed.
+
+`@reference-ui/icons` is its own package, but it is part of the same root Changesets and npm release flow.
 
 ## Recommended Validation Before Merge
 
