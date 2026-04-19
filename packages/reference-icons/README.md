@@ -1,7 +1,40 @@
 # @reference-ui/icons
 
-Material Symbols as Reference UI icon components (outline / filled, weight 500). The package entry is only `export * from './generated/index'`; implementation files under `src/` are not part of the public API. **`src/generated/` is gitignored**—run `pnpm run icons:generate` (or `pnpm run build`, which generates first) after clone or when upgrading `@material-symbols-svg/react`. Build output goes to `dist/` (gitignored); run `pnpm run build` before `pnpm pack` / publish. `build` skips `tsup` when a content fingerprint of `src/` plus `tsup.config.ts` / `tsconfig.json` / `package.json` matches the last successful build (see `scripts/tsup-if-needed.mjs`). Set `FORCE_REFERENCE_ICONS_TSUP=1` to always run `tsup`.
+Reference UI's Material Symbols package for React.
 
-## Sync & benchmarks
+It generates a thin icon wrapper layer over `@material-symbols-svg/react`, exposing one component per icon with:
 
-`ui.config.ts` drives `pnpm run sync` (`ref sync`) so you can benchmark the Reference pipeline on this package. That emits `.reference-ui/` here (gitignored at repo root). `tsconfig` resolves styled types from `./.reference-ui` first, then falls back to `reference-lib`’s output if you have not synced in this package yet.
+- `variant="outline" | "filled"`
+- `size` as a width/height shorthand
+- standard React DOM props on the outer inline wrapper
+
+## Install
+
+```sh
+pnpm add @reference-ui/icons
+```
+
+`react` is a peer dependency.
+
+## Usage
+
+```tsx
+import { SearchIcon, HomeIcon } from '@reference-ui/icons'
+
+export function Example() {
+	return (
+		<div style={{ display: 'flex', gap: 12 }}>
+			<SearchIcon size={20} aria-label="Search" />
+			<HomeIcon variant="filled" size="1.5rem" aria-label="Home" />
+		</div>
+	)
+}
+```
+
+## Development
+
+Generated sources live under `src/generated/` and are intentionally not committed. Rebuild them with `pnpm run icons:generate`, or run `pnpm run build` to generate and compile in one step.
+
+`build` skips `tsup` when the source fingerprint matches the last successful build. Set `FORCE_REFERENCE_ICONS_TSUP=1` to force a rebuild.
+
+For a local visual preview, run `pnpm dev` in this package and open the Vite page it prints. That preview is self-contained and intended only for package-level inspection.

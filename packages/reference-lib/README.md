@@ -6,7 +6,6 @@ Foundational design system package built on `@reference-ui/core`.
 
 - `@reference-ui/lib`: exports `baseSystem` for downstream `extends: [baseSystem]`
 - `@reference-ui/lib/theme`: exports the plain theme objects used to build that system
-- `@reference-ui/lib/icons`: exports generated Material Symbols components with `variant="outline" | "filled"`
 
 ## Usage
 
@@ -24,5 +23,4 @@ Run `ref sync` before Cosmos so `@reference-ui/react` exists. From the repo root
 ```ts
 import { baseSystem } from '@reference-ui/lib'
 import { colors, fonts } from '@reference-ui/lib/theme'
-import { SearchIcon } from '@reference-ui/lib/icons'
 ```

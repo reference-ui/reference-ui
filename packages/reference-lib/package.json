@@ -19,10 +19,6 @@
     "./theme": {
       "types": "./dist/theme/index.d.ts",
       "import": "./dist/theme/index.mjs"
-    },
-    "./icons": {
-      "types": "./dist/icons/index.d.ts",
-      "import": "./dist/icons/index.mjs"
     }
   },
   "files": [
@@ -33,9 +29,8 @@
   ],
   "scripts": {
     "sync": "ref sync",
-    "icons:generate": "pnpm --filter @reference-ui/icons run build && node scripts/generate-icons-barrel.mjs",
-    "typecheck": "pnpm --filter @reference-ui/core run build && pnpm run sync && pnpm run icons:generate && tsc --noEmit",
-    "build": "pnpm --filter @reference-ui/core run build && pnpm run sync && pnpm run icons:generate && tsup && node scripts/build-package.mjs",
+    "typecheck": "pnpm --filter @reference-ui/core run build && pnpm run sync && tsc --noEmit",
+    "build": "pnpm --filter @reference-ui/core run build && pnpm run sync && tsup && node scripts/build-package.mjs",
     "dev": "ref sync --watch",
     "prepack": "pnpm run build",
     "test": "vitest run",
@@ -48,7 +43,6 @@
   },
   "dependencies": {
     "@reference-ui/core": "workspace:*",
-    "@reference-ui/icons": "workspace:*",
     "react": "^19.2.4"
   },
   "devDependencies": {
