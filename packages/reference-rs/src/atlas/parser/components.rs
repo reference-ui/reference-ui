@@ -25,9 +25,10 @@ fn apply_wrapper_props(
 
 fn parse_type_reference(source: &str, ts_type: &TSType<'_>) -> PropsAnnotation {
     match ts_type {
-        TSType::TSTypeReference(reference) => {
-            PropsAnnotation::Named(reference_name(slice_span(source, reference.type_name.span())))
-        }
+        TSType::TSTypeReference(reference) => PropsAnnotation::Named(reference_name(slice_span(
+            source,
+            reference.type_name.span(),
+        ))),
         TSType::TSTypeLiteral(_) => PropsAnnotation::InlineObject,
         _ => PropsAnnotation::None,
     }
@@ -87,7 +88,9 @@ pub(super) fn collect_variable_components<'a, I>(
                 .local_components
                 .insert(component.name.clone(), component.clone());
             if export_all {
-                state.exported_components.insert(component.name.clone(), component);
+                state
+                    .exported_components
+                    .insert(component.name.clone(), component);
             }
         }
     }
@@ -121,9 +124,14 @@ pub(super) fn component_from_expression(
     source: &str,
 ) -> Option<ComponentDecl> {
     match expression {
-        Expression::ArrowFunctionExpression(arrow) => {
-            component_from_arrow(name, arrow, file_path, display_source, app_relative_path, source)
-        }
+        Expression::ArrowFunctionExpression(arrow) => component_from_arrow(
+            name,
+            arrow,
+            file_path,
+            display_source,
+            app_relative_path,
+            source,
+        ),
         Expression::FunctionExpression(function) => component_from_function_like(
             name,
             function.params.items.first(),

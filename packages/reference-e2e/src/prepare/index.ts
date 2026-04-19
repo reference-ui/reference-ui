@@ -10,7 +10,7 @@ import { existsSync } from 'node:fs'
 import { basename, join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { execa } from 'execa'
-
+import { GENERATED_PACKAGE_NAMES } from '@reference-ui/core/constants'
 import {
   MATRIX,
   getPort,
@@ -223,9 +223,17 @@ async function ensureWorkspaceReady(): Promise<void> {
 async function clearRefUiArtifacts(sandboxDir: string): Promise<void> {
   const refUiDir = join(sandboxDir, '.reference-ui')
   const scopeDir = join(sandboxDir, 'node_modules', '@reference-ui')
-  await rm(refUiDir, { recursive: true, force: true })
-  await rm(join(scopeDir, 'react'), { recursive: true, force: true })
-  await rm(join(scopeDir, 'system'), { recursive: true, force: true })
+
+  // Drop generated symlinks before removing `.reference-ui/`. If those links still
+  // point into the tree, recursive deletion can fail with ENOTEMPTY (rmdir) on some OSes.
+  for (const name of GENERATED_PACKAGE_NAMES) {
+    const p = join(scopeDir, name)
+    if (existsSync(p)) {
+      await removeDirWithRetries(p)
+    }
+  }
+
+  await removeDirWithRetries(refUiDir)
   await rm(join(sandboxDir, 'ref-sync.log'), { force: true })
 }
 

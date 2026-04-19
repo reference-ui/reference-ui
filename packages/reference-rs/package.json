@@ -38,6 +38,10 @@
     "./atlas": {
       "types": "./dist/atlas.d.ts",
       "import": "./dist/atlas.mjs"
+    },
+    "./styletrace": {
+      "types": "./dist/styletrace.d.ts",
+      "import": "./dist/styletrace.mjs"
     }
   },
   "files": [

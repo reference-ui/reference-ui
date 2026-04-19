@@ -32,9 +32,7 @@ fn convert_signature(
     use TSSignature as Sig;
 
     match signature {
-        Sig::TSPropertySignature(property) => {
-            property_signature_to_member(property, ctx, exclude)
-        }
+        Sig::TSPropertySignature(property) => property_signature_to_member(property, ctx, exclude),
         Sig::TSMethodSignature(method) => method_signature_to_member(method, ctx, exclude),
         Sig::TSCallSignatureDeclaration(call) => call_signature_to_member(call, ctx, exclude),
         Sig::TSIndexSignature(index) => index_signature_to_member(index, ctx, exclude),

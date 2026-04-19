@@ -1,7 +1,12 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
+import { SYNC_OUTPUT_DIR_GLOB } from '../constants'
 
-const STATIC_WATCH_IGNORE = ['**/node_modules/**', '**/.reference-ui/**', '**/.git/**']
+const STATIC_WATCH_IGNORE = [
+  '**/node_modules/**',
+  SYNC_OUTPUT_DIR_GLOB,
+  '**/.git/**',
+]
 
 function normalizeGlobPath(value: string): string {
   return value.replaceAll('\\', '/')

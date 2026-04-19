@@ -94,4 +94,26 @@ describe('extendPatterns()', () => {
       '@container (min-width: 480px)': { padding: '2' },
     })
   })
+
+  it('extends primitive JSX names with traced components deterministically', () => {
+    initPandaConfig({})
+
+    const extensions: BoxPatternExtension[] = [
+      {
+        properties: {
+          container: { type: 'string' },
+        },
+        transform() {
+          return {}
+        },
+      },
+    ]
+
+    extendPatterns(extensions, ['Div', 'MyIcon', 'ShellCard', 'MyIcon'])
+
+    const config = getPandaConfig()
+    const boxPattern = config.patterns?.extend?.box
+
+    expect(boxPattern?.jsx).toEqual([...PRIMITIVE_JSX_NAMES, 'MyIcon', 'ShellCard'])
+  })
 })

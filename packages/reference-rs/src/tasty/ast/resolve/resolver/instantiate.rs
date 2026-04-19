@@ -77,9 +77,8 @@ impl TypeRefMap for InstantiateTypeRefMap<'_> {
             name,
             target_id,
             source_module,
-            type_arguments: type_arguments.map(|args| {
-                args.into_iter().map(|t| map_type_ref(self, t)).collect()
-            }),
+            type_arguments: type_arguments
+                .map(|args| args.into_iter().map(|t| map_type_ref(self, t)).collect()),
         }
     }
 
@@ -109,11 +108,7 @@ impl TypeRefMap for InstantiateTypeRefMap<'_> {
         }
     }
 
-    fn map_type_query(
-        &mut self,
-        expression: String,
-        resolved: Option<Box<TypeRef>>,
-    ) -> TypeRef {
+    fn map_type_query(&mut self, expression: String, resolved: Option<Box<TypeRef>>) -> TypeRef {
         TypeRef::TypeQuery {
             expression,
             resolved,

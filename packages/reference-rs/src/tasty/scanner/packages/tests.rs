@@ -12,14 +12,13 @@ fn relative_import_prefers_declaration_candidates_for_runtime_entries() {
     let root = TempDir::new("scanner-packages-relative");
     let file_ids = BTreeSet::from(["src/button.d.ts".to_string(), "src/index.ts".to_string()]);
 
-    let resolved =
-        resolve_relative_import(
-            root.path(),
-            "src/index.ts",
-            "./button.js",
-            &file_ids,
-            FileLookup::Denied,
-        );
+    let resolved = resolve_relative_import(
+        root.path(),
+        "src/index.ts",
+        "./button.js",
+        &file_ids,
+        FileLookup::Denied,
+    );
 
     assert_eq!(resolved.as_deref(), Some("src/button.d.ts"));
 }
@@ -123,7 +122,10 @@ fn external_import_walks_parent_node_modules_for_types_provider() {
     let resolved = resolve_external_import(&nested_root, "json-schema")
         .expect("parent node_modules types provider should resolve");
 
-    assert_eq!(resolved.file_id, "../../node_modules/@types/json-schema/index.d.ts");
+    assert_eq!(
+        resolved.file_id,
+        "../../node_modules/@types/json-schema/index.d.ts"
+    );
     assert_eq!(resolved.module_specifier, "json-schema");
     assert_eq!(resolved.library, "json-schema");
 }
@@ -162,10 +164,7 @@ fn external_import_resolves_deep_exports_subpath() {
     );
 
     let resolved = resolve_external_import(root.path(), "deep-lib/a/b/c").expect("deep subpath");
-    assert_eq!(
-        resolved.file_id,
-        "node_modules/deep-lib/./types/deep.d.ts"
-    );
+    assert_eq!(resolved.file_id, "node_modules/deep-lib/./types/deep.d.ts");
     assert_eq!(resolved.module_specifier, "deep-lib/a/b/c");
     assert_eq!(resolved.library, "deep-lib");
 }
@@ -189,8 +188,8 @@ fn external_import_falls_back_to_main_when_no_types_or_exports() {
         "export interface MainOnly {}\n",
     );
 
-    let resolved =
-        resolve_external_import(root.path(), "main-only-lib").expect("main fallback should resolve");
+    let resolved = resolve_external_import(root.path(), "main-only-lib")
+        .expect("main fallback should resolve");
     assert_eq!(
         resolved.file_id,
         "node_modules/main-only-lib/./lib/index.d.ts"
@@ -231,12 +230,13 @@ fn scan_workspace_discovers_symlinked_source_under_glob() {
         .expect("workspace scan should succeed");
 
     assert!(
+        workspace.files.iter().any(|f| f.file_id == "src/linked.ts"),
+        "expected glob walk to follow symlink into src/: {:?}",
         workspace
             .files
             .iter()
-            .any(|f| f.file_id == "src/linked.ts"),
-        "expected glob walk to follow symlink into src/: {:?}",
-        workspace.files.iter().map(|f| &f.file_id).collect::<Vec<_>>()
+            .map(|f| &f.file_id)
+            .collect::<Vec<_>>()
     );
 }
 
@@ -259,9 +259,6 @@ fn external_import_resolves_scoped_package_via_symlinked_node_modules_path() {
     std::os::unix::fs::symlink(&real, &link).expect("symlink scoped package");
 
     let resolved = resolve_external_import(root.path(), "@scope/pkg").expect("scoped via symlink");
-    assert_eq!(
-        resolved.file_id,
-        "node_modules/@scope/pkg/index.d.ts"
-    );
+    assert_eq!(resolved.file_id, "node_modules/@scope/pkg/index.d.ts");
     assert_eq!(resolved.module_specifier, "@scope/pkg");
 }

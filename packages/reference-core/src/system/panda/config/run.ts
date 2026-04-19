@@ -1,3 +1,4 @@
+import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { getCwd } from '../../../config'
 import { getOutDirPath } from '../../../lib/paths'
@@ -7,6 +8,12 @@ import { createPandaConfig } from './create'
 import { getConfig } from '../../../config/store'
 import { log } from '../../../lib/log'
 import { createBaseArtifacts } from '../../base/create'
+import {
+  createResolvedJsxElementsArtifact,
+  getResolvedJsxElementsPath,
+  normalizeAdditionalJsxElements,
+} from './jsx-elements'
+import { traceIncludedJsxElements } from './styletrace'
 import {
   mirrorPandaExtensionsBundle,
   writePandaExtensionsBundle,
@@ -28,9 +35,18 @@ export async function runConfig(cwd: string): Promise<void> {
 
   const outDir = getOutDirPath(cwd)
   const outputPath = join(outDir, 'panda.config.ts')
+  const tracedJsxNames = normalizeAdditionalJsxElements(
+    await traceIncludedJsxElements(cwd, config.include)
+  )
   const cliDir = resolveCorePackageDir(cwd)
   const cliStyledDir = join(cliDir, 'src/system/styled')
   const { collectorBundle } = await createBaseArtifacts(cwd, config)
+  const jsxElementsOutputPath = getResolvedJsxElementsPath(cwd)
+  const jsxElementsArtifact = createResolvedJsxElementsArtifact(tracedJsxNames)
+
+  mkdirSync(join(outDir, 'system'), { recursive: true })
+  writeFileSync(jsxElementsOutputPath, JSON.stringify(jsxElementsArtifact, null, 2) + '\n', 'utf-8')
+  log.debug('config', 'Wrote resolved JSX elements', jsxElementsOutputPath)
 
   await writePandaExtensionsBundle(cliDir, cliStyledDir)
   mirrorPandaExtensionsBundle(cliStyledDir, outDir)
@@ -39,6 +55,7 @@ export async function runConfig(cwd: string): Promise<void> {
     outputPath,
     collectorBundle,
     extensionsImportPath: './styled/extensions/index.mjs',
+    additionalJsxElements: tracedJsxNames,
   })
 
   log.debug('config', 'Wrote panda.config', outputPath)

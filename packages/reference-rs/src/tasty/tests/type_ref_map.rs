@@ -110,9 +110,7 @@ fn elaborate_type_ref() -> TypeRef {
                     TemplateLiteralPart::Text {
                         value: "pre-".to_string(),
                     },
-                    TemplateLiteralPart::Type {
-                        value: t.clone(),
-                    },
+                    TemplateLiteralPart::Type { value: t.clone() },
                 ],
                 resolved: Some(Box::new(t.clone())),
             },

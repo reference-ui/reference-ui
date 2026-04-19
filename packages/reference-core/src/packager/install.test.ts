@@ -11,6 +11,8 @@ import {
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+
+import { DEFAULT_OUT_DIR } from '../constants'
 import type { PackageDefinition } from './package'
 
 const createdDirs: string[] = []
@@ -119,7 +121,7 @@ afterEach(() => {
 describe('packager/install', () => {
   it('injects config.name into the React bundle and links it into node_modules', async () => {
     const workspaceDir = createTempDir()
-    const outDir = resolve(workspaceDir, '.reference-ui')
+    const outDir = resolve(workspaceDir, DEFAULT_OUT_DIR)
     const nodeModulesScope = resolve(workspaceDir, 'node_modules', '@reference-ui')
     const targetDir = resolve(outDir, 'react')
     const linkPath = resolve(nodeModulesScope, 'react')
@@ -147,7 +149,7 @@ describe('packager/install', () => {
 
   it('does not mutate non-React package bundles', async () => {
     const workspaceDir = createTempDir()
-    const outDir = resolve(workspaceDir, '.reference-ui')
+    const outDir = resolve(workspaceDir, DEFAULT_OUT_DIR)
     const nodeModulesScope = resolve(workspaceDir, 'node_modules', '@reference-ui')
     const targetDir = resolve(outDir, 'system')
 
@@ -171,7 +173,7 @@ describe('packager/install', () => {
 
   it('is safe to rerun installPackage for the same package', async () => {
     const workspaceDir = createTempDir()
-    const outDir = resolve(workspaceDir, '.reference-ui')
+    const outDir = resolve(workspaceDir, DEFAULT_OUT_DIR)
     const nodeModulesScope = resolve(workspaceDir, 'node_modules', '@reference-ui')
     const targetDir = resolve(outDir, 'react')
     const linkPath = resolve(nodeModulesScope, 'react')
@@ -229,7 +231,7 @@ describe('packager/install', () => {
     const nodeModulesScope = resolve(workspaceDir, 'node_modules', '@reference-ui')
     mkdirSync(nodeModulesScope, { recursive: true })
     symlinkSync(
-      resolve(workspaceDir, '.reference-ui', 'removed-package'),
+      resolve(workspaceDir, DEFAULT_OUT_DIR, 'removed-package'),
       resolve(nodeModulesScope, 'reference'),
     )
 
@@ -251,7 +253,7 @@ describe('packager/install', () => {
 
   it('links generated runtime packages like @reference-ui/types', async () => {
     const workspaceDir = createTempDir()
-    const outDir = resolve(workspaceDir, '.reference-ui')
+    const outDir = resolve(workspaceDir, DEFAULT_OUT_DIR)
     const nodeModulesScope = resolve(workspaceDir, 'node_modules', '@reference-ui')
     const targetDir = resolve(outDir, 'types')
     const linkPath = resolve(nodeModulesScope, 'types')
@@ -278,7 +280,7 @@ describe('packager/install', () => {
 
   it('fails loudly when bundling fails before linking', async () => {
     const workspaceDir = createTempDir()
-    const outDir = resolve(workspaceDir, '.reference-ui')
+    const outDir = resolve(workspaceDir, DEFAULT_OUT_DIR)
     const nodeModulesScope = resolve(workspaceDir, 'node_modules', '@reference-ui')
 
     const { installPackage } = await importInstallModule({

@@ -47,13 +47,7 @@ pub(crate) fn exports_from_statement(
         library: &scanned_file.library,
     };
 
-    collect_user_export_statement(
-        scanned_file,
-        &ctx,
-        statement,
-        export_bindings,
-        exports,
-    );
+    collect_user_export_statement(scanned_file, &ctx, statement, export_bindings, exports);
     collect_user_type_shell(scanned_file, &ctx, statement, exports);
 }
 
@@ -113,10 +107,10 @@ fn collect_user_export_statement(
     exports: &mut Vec<SymbolShell>,
 ) {
     // Allow both user files and reference-ui styled packages for symbol extraction
-    let is_allowed_library = scanned_file.library == USER_LIBRARY_NAME 
+    let is_allowed_library = scanned_file.library == USER_LIBRARY_NAME
         || scanned_file.library.starts_with("@reference-ui/styled")
         || scanned_file.library.starts_with("@reference-ui/");
-    
+
     if !is_allowed_library {
         return;
     }
@@ -141,10 +135,10 @@ fn collect_user_type_shell(
     exports: &mut Vec<SymbolShell>,
 ) {
     // Allow both user files and reference-ui styled packages for symbol extraction
-    let is_allowed_library = scanned_file.library == USER_LIBRARY_NAME 
+    let is_allowed_library = scanned_file.library == USER_LIBRARY_NAME
         || scanned_file.library.starts_with("@reference-ui/styled")
         || scanned_file.library.starts_with("@reference-ui/");
-    
+
     if !is_allowed_library {
         return;
     }

@@ -108,10 +108,7 @@ pub fn map_type_ref<M: TypeRefMap + ?Sized>(mapper: &mut M, type_ref: TypeRef) -
             types: types.into_iter().map(|t| map_type_ref(mapper, t)).collect(),
         },
         TypeRef::Object { members } => TypeRef::Object {
-            members: members
-                .into_iter()
-                .map(|m| mapper.map_member(m))
-                .collect(),
+            members: members.into_iter().map(|m| mapper.map_member(m)).collect(),
         },
         TypeRef::IndexedAccess {
             object,
@@ -127,10 +124,7 @@ pub fn map_type_ref<M: TypeRefMap + ?Sized>(mapper: &mut M, type_ref: TypeRef) -
             params,
             return_type,
         } => TypeRef::Function {
-            params: params
-                .into_iter()
-                .map(|p| mapper.map_fn_param(p))
-                .collect(),
+            params: params.into_iter().map(|p| mapper.map_fn_param(p)).collect(),
             return_type: Box::new(map_type_ref(mapper, *return_type)),
         },
         TypeRef::Constructor {
@@ -144,10 +138,7 @@ pub fn map_type_ref<M: TypeRefMap + ?Sized>(mapper: &mut M, type_ref: TypeRef) -
                 .into_iter()
                 .map(|p| mapper.map_type_parameter(p))
                 .collect(),
-            params: params
-                .into_iter()
-                .map(|p| mapper.map_fn_param(p))
-                .collect(),
+            params: params.into_iter().map(|p| mapper.map_fn_param(p)).collect(),
             return_type: Box::new(map_type_ref(mapper, *return_type)),
         },
         TypeRef::TypeOperator {

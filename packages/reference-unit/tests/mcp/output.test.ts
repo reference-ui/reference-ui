@@ -8,6 +8,7 @@ import {
   runRefSync,
   startMcpClient,
   stopMcpClient,
+  warmMcpArtifact,
   type RunningMcpClient,
 } from './helpers'
 
@@ -16,16 +17,18 @@ const modelPath = join(fixtureRoot, '.reference-ui', 'mcp', 'model.json')
 
 let running: RunningMcpClient | null = null
 
-describe('mcp output wiring', () => {
+describe('mcp output wiring', { timeout: 120_000 }, () => {
   beforeAll(async () => {
     rmSync(modelPath, { force: true })
     expect(existsSync(modelPath)).toBe(false)
 
     runRefSync(fixtureRoot)
-    expect(existsSync(modelPath)).toBe(true)
+    expect(existsSync(modelPath)).toBe(false)
 
     running = await startMcpClient(fixtureRoot, 3698)
-  }, 30_000)
+    await warmMcpArtifact(running.client)
+    expect(existsSync(modelPath)).toBe(true)
+  }, 120_000)
 
   afterAll(async () => {
     await stopMcpClient(running)
@@ -76,7 +79,7 @@ describe('mcp output wiring', () => {
     expect(buttonText).toContain('"source": "@fixtures/demo-ui"')
   })
 
-  it('rebuilds the MCP artifact from scratch on a cold ref sync', () => {
+  it('persists the MCP artifact on disk after the server builds it', () => {
     const artifact = JSON.parse(readFileSync(modelPath, 'utf8')) as {
       components: Array<{ name: string; source: string }>
     }

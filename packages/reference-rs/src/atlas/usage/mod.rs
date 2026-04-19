@@ -37,7 +37,9 @@ pub fn collect_usage_for_module(
         };
 
         state.component.count += 1;
-        if state.example_set.insert(occurrence.snippet.clone()) && state.component.examples.len() < 5 {
+        if state.example_set.insert(occurrence.snippet.clone())
+            && state.component.examples.len() < 5
+        {
             state.component.examples.push(occurrence.snippet.clone());
         }
         seen_in_file.insert(key.clone());
@@ -106,7 +108,10 @@ pub fn collect_usage_for_module(
 }
 
 pub fn finalize_components(states: BTreeMap<String, UsageState>) -> Vec<Component> {
-    let total_count = states.values().map(|state| state.component.count).sum::<u32>();
+    let total_count = states
+        .values()
+        .map(|state| state.component.count)
+        .sum::<u32>();
     let mut components = Vec::new();
 
     for (_, mut state) in states {
@@ -137,7 +142,10 @@ pub fn finalize_components(states: BTreeMap<String, UsageState>) -> Vec<Componen
             prop.values = (!values.is_empty()).then_some(values);
         }
 
-        state.component.props.sort_by(|left, right| left.name.cmp(&right.name));
+        state
+            .component
+            .props
+            .sort_by(|left, right| left.name.cmp(&right.name));
         state.component.used_with = state
             .used_with_counts
             .into_iter()
@@ -146,6 +154,10 @@ pub fn finalize_components(states: BTreeMap<String, UsageState>) -> Vec<Componen
         components.push(state.component);
     }
 
-    components.sort_by(|left, right| left.name.cmp(&right.name).then(left.source.cmp(&right.source)));
+    components.sort_by(|left, right| {
+        left.name
+            .cmp(&right.name)
+            .then(left.source.cmp(&right.source))
+    });
     components
 }

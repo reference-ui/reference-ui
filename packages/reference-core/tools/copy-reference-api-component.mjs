@@ -5,8 +5,8 @@ import { fileURLToPath } from 'node:url'
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url))
 const CORE_DIR = join(SCRIPT_DIR, '..')
 const REPO_DIR = join(CORE_DIR, '..', '..')
-const SOURCE_DIR = join(REPO_DIR, 'packages', 'reference-lib', 'src', 'Reference')
-const FONT_STACKS_SOURCE = join(REPO_DIR, 'packages', 'reference-lib', 'src', 'theme', 'fontStacks.ts')
+const SOURCE_DIR = join(REPO_DIR, 'packages', 'reference-lib', 'src', 'components', 'Reference')
+const FONT_STACKS_SOURCE = join(REPO_DIR, 'packages', 'reference-lib', 'src', 'core', 'theme', 'fontStacks.ts')
 const TARGET_DIR = join(CORE_DIR, 'src', 'reference', 'browser-component')
 const TYPES_ADAPTER_FILE = join(CORE_DIR, 'src', 'reference', 'browser', 'component-api.ts')
 
@@ -16,12 +16,16 @@ This directory is a mirrored component tree.
 
 Source of truth:
 
-- packages/reference-lib/src/Reference
-- packages/reference-lib/src/theme/fontStacks.ts (for theme/fontStacks.ts)
+- packages/reference-lib/src/components/Reference
+- packages/reference-lib/src/core/theme/fontStacks.ts (for theme/fontStacks.ts)
 
 These files are copied by:
 
 - packages/reference-core/tools/copy-reference-api-component.mjs
+
+In the monorepo this directory is gitignored; the workspace root \`prepare\` script runs
+\`copy:reference-api-component\` after \`pnpm install\`, and \`prebuild\` / \`predev\` / \`pretypecheck\`
+also run the same copy.
 
 Do not edit files here directly. Edit the reference-lib source and re-run the copy script.
 `
@@ -54,7 +58,7 @@ async function listFiles(rootDir, relativeDir = '') {
     files.push({
       sourcePath: join(rootDir, nextRelative),
       relativePath: nextRelative,
-      sourceOfTruth: join('packages', 'reference-lib', 'src', 'Reference', nextRelative),
+      sourceOfTruth: join('packages', 'reference-lib', 'src', 'components', 'Reference', nextRelative),
     })
   }
 
@@ -79,7 +83,7 @@ function rewriteTypesImports(relativePath, source) {
 function rewriteThemeImports(relativePath, source) {
   if (relativePath !== 'theme/tokens.ts') return source
   return source.replace(
-    "import { fontStacks } from '../../theme/fontStacks'",
+    "import { fontStacks } from '../../../core/theme/fontStacks'",
     "import { fontStacks } from './fontStacks'",
   )
 }
@@ -147,7 +151,7 @@ async function main() {
     {
       sourcePath: FONT_STACKS_SOURCE,
       relativePath: 'theme/fontStacks.ts',
-      sourceOfTruth: 'packages/reference-lib/src/theme/fontStacks.ts',
+      sourceOfTruth: 'packages/reference-lib/src/core/theme/fontStacks.ts',
     },
   ]
 

@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { DEFAULT_OUT_DIR } from '../constants'
+
+const FIXTURE_APP = '/workspace/app'
+const FIXTURE_VIRTUAL = `${FIXTURE_APP}/${DEFAULT_OUT_DIR}/virtual`
+
 const onHandlers = new Map<string, (payload?: unknown) => unknown>()
 
 async function importWorkerModule() {
@@ -8,9 +13,9 @@ async function importWorkerModule() {
 
   const emit = vi.fn()
   const copyAll = vi.fn(async () => {})
-  const copyToVirtual = vi.fn(async () => '/workspace/app/.reference-ui/virtual/src/button.tsx')
+  const copyToVirtual = vi.fn(async () => `${FIXTURE_VIRTUAL}/src/button.tsx`)
   const removeFromVirtual = vi.fn(async () => {})
-  const getVirtualPath = vi.fn(() => '/workspace/app/.reference-ui/virtual/src/button.jsx')
+  const getVirtualPath = vi.fn(() => `${FIXTURE_VIRTUAL}/src/button.jsx`)
   const debug = vi.fn()
   const error = vi.fn()
 
@@ -37,7 +42,7 @@ async function importWorkerModule() {
     log: { debug, error, info: vi.fn() },
   }))
   vi.doMock('../lib/paths', () => ({
-    getVirtualDirPath: () => '/workspace/app/.reference-ui/virtual',
+    getVirtualDirPath: () => FIXTURE_VIRTUAL,
   }))
 
   const mod = await import('./worker')
@@ -98,12 +103,12 @@ describe('virtual/worker', () => {
     expect(copyToVirtual).toHaveBeenCalledWith(
       '/workspace/app/src/button.tsx',
       '/workspace/app',
-      '/workspace/app/.reference-ui/virtual',
+      FIXTURE_VIRTUAL,
       { debug: true }
     )
     expect(emit).toHaveBeenCalledWith('virtual:fs:change', {
       event: 'change',
-      path: '/workspace/app/.reference-ui/virtual/src/button.tsx',
+      path: `${FIXTURE_VIRTUAL}/src/button.tsx`,
     })
   })
 
@@ -124,16 +129,16 @@ describe('virtual/worker', () => {
     expect(getVirtualPath).toHaveBeenCalledWith(
       '/workspace/app/src/button.mdx',
       '/workspace/app',
-      '/workspace/app/.reference-ui/virtual'
+      FIXTURE_VIRTUAL
     )
     expect(removeFromVirtual).toHaveBeenCalledWith(
       '/workspace/app/src/button.mdx',
       '/workspace/app',
-      '/workspace/app/.reference-ui/virtual'
+      FIXTURE_VIRTUAL
     )
     expect(emit).toHaveBeenCalledWith('virtual:fs:change', {
       event: 'unlink',
-      path: '/workspace/app/.reference-ui/virtual/src/button.jsx',
+      path: `${FIXTURE_VIRTUAL}/src/button.jsx`,
     })
   })
 

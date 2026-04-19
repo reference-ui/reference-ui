@@ -10,8 +10,15 @@
   },
   "type": "module",
   "bin": {
-    "ref": "./bin/ref.mjs"
+    "ref": "./bin/ref.mjs",
+    "mcp": "./bin/mcp.mjs"
   },
+  "files": [
+    "bin",
+    "dist",
+    "src",
+    "tools/copy-reference-api-component.mjs"
+  ],
   "exports": {
     ".": {
       "types": "./src/public.ts",
@@ -20,6 +27,10 @@
     "./config": {
       "types": "./src/config/index.ts",
       "import": "./dist/cli/config.mjs"
+    },
+    "./constants": {
+      "types": "./src/constants.ts",
+      "import": "./dist/cli/constants.mjs"
     }
   },
   "scripts": {
@@ -39,6 +50,14 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "peerDependencies": {
+    "vite": "^5.2.0 || ^6.0.0 || ^7.0.0"
+  },
+  "peerDependenciesMeta": {
+    "vite": {
+      "optional": true
+    }
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
@@ -72,6 +91,7 @@
     "tsx": "^4.21.0",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.56.1",
+    "vite": "^7.3.1",
     "vitest": "^4.0.18"
   }
 }

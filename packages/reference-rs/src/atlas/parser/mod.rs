@@ -4,8 +4,8 @@ use crate::atlas::internal::{
 use crate::atlas::scanner::SourceFile;
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
-    Declaration, ExportDefaultDeclarationKind, ImportDeclarationSpecifier,
-    ImportOrExportKind, Statement,
+    Declaration, ExportDefaultDeclarationKind, ImportDeclarationSpecifier, ImportOrExportKind,
+    Statement,
 };
 use oxc_parser::Parser;
 use std::collections::HashMap;
@@ -122,7 +122,9 @@ fn collect_statement(
                 app_relative_path,
                 source,
             ) {
-                state.local_components.insert(component.name.clone(), component);
+                state
+                    .local_components
+                    .insert(component.name.clone(), component);
             }
         }
         Statement::VariableDeclaration(declaration) => collect_variable_components(
@@ -247,7 +249,9 @@ fn collect_export_named_declaration(
                     state
                         .local_components
                         .insert(component.name.clone(), component.clone());
-                    state.exported_components.insert(component.name.clone(), component);
+                    state
+                        .exported_components
+                        .insert(component.name.clone(), component);
                 }
             }
             Declaration::VariableDeclaration(declaration) => collect_variable_components(
@@ -295,7 +299,7 @@ fn collect_export_named_declaration(
             let reexport = ReExport {
                 source: source_module.clone(),
                 imported: local,
-            }; 
+            };
             if type_only {
                 state.named_type_reexports.insert(exported, reexport);
             } else {
@@ -311,7 +315,9 @@ fn collect_export_named_declaration(
         if let Some(component) = state.local_components.get(&local).cloned() {
             let mut exported_component = component;
             exported_component.name = exported.clone();
-            state.exported_components.insert(exported, exported_component);
+            state
+                .exported_components
+                .insert(exported, exported_component);
         }
     }
 }
@@ -353,7 +359,10 @@ fn collect_default_export(
         ExportDefaultDeclarationKind::Identifier(identifier) => {
             let name = identifier.name.to_string();
             if let Some(component) = state.local_components.get(&name).cloned() {
-                state.exported_components.entry(name.clone()).or_insert(component);
+                state
+                    .exported_components
+                    .entry(name.clone())
+                    .or_insert(component);
                 state.default_component = Some(name);
             }
         }

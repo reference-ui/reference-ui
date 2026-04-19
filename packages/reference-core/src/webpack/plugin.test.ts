@@ -2,6 +2,7 @@ import { mkdtempSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { DEFAULT_OUT_DIR } from '../constants'
 import type { RefreshEvent, SyncSession } from '../session'
 import { referenceWebpack } from './plugin'
 import type { ReferenceWebpackCompiler } from './types'
@@ -41,9 +42,9 @@ describe('referenceWebpack', () => {
     expect(compiler.options.module?.unsafeCache).toBe(false)
     expect(compiler.options.snapshot?.managedPaths).toEqual([])
     expect(typeof ignored).toBe('function')
-    expect(ignored?.(`${cwd}/.reference-ui/virtual/main.tsx`)).toBe(true)
-    expect(ignored?.(`${cwd}/.reference-ui/mcp/model.json`)).toBe(true)
-    expect(ignored?.(`${cwd}/.reference-ui/react/react.mjs`)).toBe(false)
+    expect(ignored?.(`${cwd}/${DEFAULT_OUT_DIR}/virtual/main.tsx`)).toBe(true)
+    expect(ignored?.(`${cwd}/${DEFAULT_OUT_DIR}/mcp/model.json`)).toBe(true)
+    expect(ignored?.(`${cwd}/${DEFAULT_OUT_DIR}/react/react.mjs`)).toBe(false)
     expect(ignored?.(`${cwd}/node_modules/@reference-ui/react/react.mjs`)).toBe(false)
     expect(ignored?.(`${cwd}/src/App.tsx`)).toBe(false)
   })
@@ -82,9 +83,9 @@ describe('referenceWebpack', () => {
     plugin.apply(compiler)
     await Promise.resolve()
 
-    managedOutputWrite?.(`${cwd}/.reference-ui/react/react.mjs`)
-    managedOutputWrite?.(`${cwd}/.reference-ui/styled/styles.css`)
-    managedOutputWrite?.(`${cwd}/.reference-ui/types/types.d.ts`)
+    managedOutputWrite?.(`${cwd}/${DEFAULT_OUT_DIR}/react/react.mjs`)
+    managedOutputWrite?.(`${cwd}/${DEFAULT_OUT_DIR}/styled/styles.css`)
+    managedOutputWrite?.(`${cwd}/${DEFAULT_OUT_DIR}/types/types.d.ts`)
 
     expect(invalidate).not.toHaveBeenCalled()
 

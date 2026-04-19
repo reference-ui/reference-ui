@@ -25,9 +25,10 @@ pub(crate) fn property_signature_to_member(
         property.span(),
         exclude_starts_between,
     ));
-    let type_ref = property.type_annotation.as_ref().map(|annotation| {
-        type_to_ref(&annotation.type_annotation, ctx)
-    });
+    let type_ref = property
+        .type_annotation
+        .as_ref()
+        .map(|annotation| type_to_ref(&annotation.type_annotation, ctx));
 
     TsMember {
         name,
@@ -54,9 +55,10 @@ pub(crate) fn method_signature_to_member(
         method.span(),
         exclude_starts_between,
     ));
-    let type_ref = method.return_type.as_ref().map(|annotation| {
-        type_to_ref(&annotation.type_annotation, ctx)
-    });
+    let type_ref = method
+        .return_type
+        .as_ref()
+        .map(|annotation| type_to_ref(&annotation.type_annotation, ctx));
 
     TsMember {
         name,
@@ -81,9 +83,10 @@ pub(crate) fn call_signature_to_member(
         call.span(),
         exclude_starts_between,
     ));
-    let type_ref = call.return_type.as_ref().map(|annotation| {
-        type_to_ref(&annotation.type_annotation, ctx)
-    });
+    let type_ref = call
+        .return_type
+        .as_ref()
+        .map(|annotation| type_to_ref(&annotation.type_annotation, ctx));
 
     TsMember {
         name: "[call]".to_string(),
@@ -108,9 +111,10 @@ pub(crate) fn construct_signature_to_member(
         decl.span(),
         exclude_starts_between,
     ));
-    let type_ref = decl.return_type.as_ref().map(|annotation| {
-        type_to_ref(&annotation.type_annotation, ctx)
-    });
+    let type_ref = decl
+        .return_type
+        .as_ref()
+        .map(|annotation| type_to_ref(&annotation.type_annotation, ctx));
 
     TsMember {
         name: "[new]".to_string(),
@@ -135,10 +139,7 @@ pub(crate) fn index_signature_to_member(
         index.span(),
         exclude_starts_between,
     ));
-    let type_ref = Some(type_to_ref(
-        &index.type_annotation.type_annotation,
-        ctx,
-    ));
+    let type_ref = Some(type_to_ref(&index.type_annotation.type_annotation, ctx));
 
     TsMember {
         name: "[index]".to_string(),

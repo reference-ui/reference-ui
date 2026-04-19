@@ -34,12 +34,22 @@ impl AtlasAnalyzer {
 
         let local_files = match self.scanner.discover_files(&self.config) {
             Ok(files) => files,
-            Err(err) => return failed_result(&self.config.root_dir, &format!("Failed to discover Atlas files: {err}")),
+            Err(err) => {
+                return failed_result(
+                    &self.config.root_dir,
+                    &format!("Failed to discover Atlas files: {err}"),
+                )
+            }
         };
 
         let local_sources = match self.scanner.parse_files(&local_files) {
             Ok(files) => files,
-            Err(err) => return failed_result(&self.config.root_dir, &format!("Failed to parse Atlas files: {err}")),
+            Err(err) => {
+                return failed_result(
+                    &self.config.root_dir,
+                    &format!("Failed to parse Atlas files: {err}"),
+                )
+            }
         };
 
         let mut modules = parse_modules(&local_sources, Some(&app_root), None);
@@ -149,7 +159,12 @@ impl AtlasAnalyzer {
         let mut states = tracked
             .into_values()
             .map(create_usage_state)
-            .map(|state| (component_key(&state.component.name, &state.component.source), state))
+            .map(|state| {
+                (
+                    component_key(&state.component.name, &state.component.source),
+                    state,
+                )
+            })
             .collect::<BTreeMap<_, _>>();
 
         for module in modules.values() {
@@ -172,8 +187,14 @@ impl AtlasAnalyzer {
         let candidates = [
             root.join("..").join(fixture_name).join("src"),
             root.join("..").join("..").join(fixture_name).join("src"),
-            workspace_root.join("tests/atlas/cases/demo_surface/input").join(fixture_name).join("src"),
-            workspace_root.join("fixtures").join(fixture_name).join("src"),
+            workspace_root
+                .join("tests/atlas/cases/demo_surface/input")
+                .join(fixture_name)
+                .join("src"),
+            workspace_root
+                .join("fixtures")
+                .join(fixture_name)
+                .join("src"),
             root.join("node_modules").join(package).join("src"),
             root.join("node_modules").join(package),
         ];

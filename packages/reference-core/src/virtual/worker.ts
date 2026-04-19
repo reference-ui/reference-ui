@@ -6,6 +6,7 @@
  * Listens: run:virtual:copy:all (full), run:virtual:sync:file (single file, from watch:change).
  */
 import { emit, on } from '../lib/event-bus'
+import { startWorkerMemoryReporter } from '../lib/profiler'
 import { KEEP_ALIVE } from '../lib/thread-pool'
 import { resolve } from 'node:path'
 import { copyToVirtual, removeFromVirtual } from './copy'
@@ -17,6 +18,7 @@ import { getVirtualDirPath } from '../lib/paths'
 import type { VirtualWorkerPayload } from './types'
 
 export default async function runVirtual(payload: VirtualWorkerPayload): Promise<never> {
+  startWorkerMemoryReporter('virtual')
   const { sourceDir, config } = payload
   const root = resolve(sourceDir)
   const virtualDir = getVirtualDirPath(root)

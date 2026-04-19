@@ -34,6 +34,8 @@ interface ResourceTextEntry {
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
+export const MCP_TEST_REQUEST_TIMEOUT_MS = 120_000
+
 export const referenceUnitRoot = resolve(__dirname, '..', '..')
 export const refCoreCliPath = join(
   referenceUnitRoot,
@@ -61,9 +63,19 @@ export function runRefSync(cwd: string): void {
   })
 }
 
+/**
+ * `ref sync` no longer writes the MCP artifact. The model is built when the MCP
+ * server first serves it — call this after connecting so tests that read
+ * `.reference-ui/mcp/model.json` see a file on disk.
+ */
+export async function warmMcpArtifact(client: Client): Promise<void> {
+  await client.readResource({ uri: 'reference-ui://component-model' })
+}
+
 export async function waitForServerReady(
   process: McpServerProcess,
-  maxMs = 20_000
+  /** First boot may run a full MCP artifact build before the HTTP server prints readiness. */
+  maxMs = 120_000
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     const startedAt = Date.now()
@@ -183,7 +195,7 @@ export async function startMcpStdioClient(cwd: string): Promise<RunningMcpStdioC
     { name: 'reference-unit-mcp-stdio-test', version: '0.0.0' },
     { capabilities: {} }
   )
-  await client.connect(transport)
+  await client.connect(transport, { timeout: MCP_TEST_REQUEST_TIMEOUT_MS })
 
   return {
     client,

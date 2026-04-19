@@ -3,6 +3,8 @@ import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { DEFAULT_OUT_DIR } from '../../constants'
+
 const createdDirs: string[] = []
 const BASE_SYSTEM_PREFIX = 'export const baseSystem = '
 
@@ -91,7 +93,7 @@ afterEach(() => {
 describe('system/base/create', () => {
   it('writes baseSystem artifacts with config name and portable fragment bundle', async () => {
     const workspaceDir = createTempDir()
-    const outDir = resolve(workspaceDir, '.reference-ui')
+    const outDir = resolve(workspaceDir, DEFAULT_OUT_DIR)
     const baseSystemPath = join(outDir, 'system', 'baseSystem.mjs')
     const baseSystemTypesPath = join(outDir, 'system', 'baseSystem.d.mts')
 
@@ -119,7 +121,7 @@ describe('system/base/create', () => {
 
   it('attaches css to baseSystem without corrupting existing fields', async () => {
     const workspaceDir = createTempDir()
-    const outDir = resolve(workspaceDir, '.reference-ui')
+    const outDir = resolve(workspaceDir, DEFAULT_OUT_DIR)
     const baseSystemPath = join(outDir, 'system', 'baseSystem.mjs')
 
     const { createBaseArtifacts, updateBaseSystemCss } = await importCreateModule({ outDir })
@@ -140,7 +142,7 @@ describe('system/base/create', () => {
 
   it('reruns deterministically for the same config and fragments', async () => {
     const workspaceDir = createTempDir()
-    const outDir = resolve(workspaceDir, '.reference-ui')
+    const outDir = resolve(workspaceDir, DEFAULT_OUT_DIR)
     const baseSystemPath = join(outDir, 'system', 'baseSystem.mjs')
     const baseSystemTypesPath = join(outDir, 'system', 'baseSystem.d.mts')
 
@@ -164,7 +166,7 @@ describe('system/base/create', () => {
 
   it('leaves malformed baseSystem files untouched when the expected export is missing', async () => {
     const workspaceDir = createTempDir()
-    const outDir = resolve(workspaceDir, '.reference-ui')
+    const outDir = resolve(workspaceDir, DEFAULT_OUT_DIR)
     const systemDir = join(outDir, 'system')
     const baseSystemPath = join(systemDir, 'baseSystem.mjs')
 
@@ -200,7 +202,7 @@ describe('system/base/create', () => {
 
     it('leaves file untouched when JSON is truncated', async () => {
       const workspaceDir = createTempDir()
-      const outDir = resolve(workspaceDir, '.reference-ui')
+      const outDir = resolve(workspaceDir, DEFAULT_OUT_DIR)
       const baseSystemPath = join(outDir, 'system', 'baseSystem.mjs')
       const content =
         '/** generated */\nexport const baseSystem = {"name":"x","fragment":"y'
@@ -215,7 +217,7 @@ describe('system/base/create', () => {
 
     it('leaves file untouched when there is trailing non-JSON garbage', async () => {
       const workspaceDir = createTempDir()
-      const outDir = resolve(workspaceDir, '.reference-ui')
+      const outDir = resolve(workspaceDir, DEFAULT_OUT_DIR)
       const baseSystemPath = join(outDir, 'system', 'baseSystem.mjs')
       const content =
         'export const baseSystem = {"name":"x","fragment":"y"} garbage\n'
@@ -230,7 +232,7 @@ describe('system/base/create', () => {
 
     it('leaves file untouched when payload is null', async () => {
       const workspaceDir = createTempDir()
-      const outDir = resolve(workspaceDir, '.reference-ui')
+      const outDir = resolve(workspaceDir, DEFAULT_OUT_DIR)
       const baseSystemPath = join(outDir, 'system', 'baseSystem.mjs')
       const content = 'export const baseSystem = null'
       await assertUnchanged({
@@ -244,7 +246,7 @@ describe('system/base/create', () => {
 
     it('leaves file untouched when payload is an array', async () => {
       const workspaceDir = createTempDir()
-      const outDir = resolve(workspaceDir, '.reference-ui')
+      const outDir = resolve(workspaceDir, DEFAULT_OUT_DIR)
       const baseSystemPath = join(outDir, 'system', 'baseSystem.mjs')
       const content = 'export const baseSystem = [{"name":"x","fragment":"y"}]'
       await assertUnchanged({
@@ -258,7 +260,7 @@ describe('system/base/create', () => {
 
     it('leaves file untouched when payload is missing required name or fragment', async () => {
       const workspaceDir = createTempDir()
-      const outDir = resolve(workspaceDir, '.reference-ui')
+      const outDir = resolve(workspaceDir, DEFAULT_OUT_DIR)
       const baseSystemPath = join(outDir, 'system', 'baseSystem.mjs')
       const content = 'export const baseSystem = {"name":"x"}'
       await assertUnchanged({
@@ -272,7 +274,7 @@ describe('system/base/create', () => {
 
     it('strips optional trailing semicolon and updates when valid', async () => {
       const workspaceDir = createTempDir()
-      const outDir = resolve(workspaceDir, '.reference-ui')
+      const outDir = resolve(workspaceDir, DEFAULT_OUT_DIR)
       const baseSystemPath = join(outDir, 'system', 'baseSystem.mjs')
       const { updateBaseSystemCss } = await importCreateModule({ outDir })
       const fs = await import('node:fs')

@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { TastyBuildDiagnostic } from '@reference-ui/rust/tasty/build'
 
+import { DEFAULT_OUT_DIR } from '../constants'
+
 async function importRunModule(options?: {
   rebuildImpl?: () => Promise<unknown>
   loadSymbolImpl?: (name: string) => Promise<{ getId(): string }>
@@ -37,9 +39,9 @@ async function importRunModule(options?: {
 
     return {
       sourceDir: '/workspace',
-      virtualDir: '/workspace/.reference-ui/virtual',
-      outputDir: '/workspace/.reference-ui/types/tasty',
-      manifestPath: '/workspace/.reference-ui/types/tasty/manifest.js',
+      virtualDir: `/workspace/${DEFAULT_OUT_DIR}/virtual`,
+      outputDir: `/workspace/${DEFAULT_OUT_DIR}/types/tasty`,
+      manifestPath: `/workspace/${DEFAULT_OUT_DIR}/types/tasty/manifest.js`,
       warnings: ['scanner warning'],
       diagnostics,
       api: {
@@ -123,8 +125,8 @@ describe('reference/bridge/run', () => {
       expect.objectContaining({
         name: 'ButtonProps',
         symbolId: 'symbol:ButtonProps',
-        manifestPath: '/workspace/.reference-ui/types/tasty/manifest.js',
-        outputDir: '/workspace/.reference-ui/types/tasty',
+        manifestPath: `/workspace/${DEFAULT_OUT_DIR}/types/tasty/manifest.js`,
+        outputDir: `/workspace/${DEFAULT_OUT_DIR}/types/tasty`,
         warningCount: 1,
         diagnosticCount: 1,
         diagnostics: [

@@ -24,11 +24,7 @@ pub(crate) fn infer_object_type(
         }
 
         let name = property_key_name(&property.key, ctx.source)?;
-        let value_type = infer_value_type_with_const_context(
-            &property.value,
-            ctx,
-            const_asserted,
-        )?;
+        let value_type = infer_value_type_with_const_context(&property.value, ctx, const_asserted)?;
 
         members.push(TsMember {
             name,

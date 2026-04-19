@@ -1,22 +1,9 @@
 import { emit } from '../../lib/event-bus'
 import { log } from '../../lib/log'
-import { installPackagesTs } from './install'
+import { spawnPackagerTsDtsChild } from './child-process/process'
 import type { TsPackagerCompletionEvent, TsPackagerWorkerPayload } from './types'
 
 const FINAL_DTS_COMPLETE_EVENT: TsPackagerCompletionEvent = 'packager-ts:complete'
-
-function getPackagesForRun(
-  payload: TsPackagerWorkerPayload,
-  completionEvent: TsPackagerCompletionEvent
-): TsPackagerWorkerPayload['packages'] {
-  if (completionEvent === 'packager-ts:runtime:complete') {
-    return payload.packages.filter(
-      pkg => pkg.name === '@reference-ui/react' || pkg.name === '@reference-ui/system'
-    )
-  }
-
-  return payload.packages.filter(pkg => pkg.name === '@reference-ui/types')
-}
 
 interface DtsGenerationQueueOptions {
   runGeneration?: (
@@ -30,13 +17,10 @@ export async function runDtsGeneration(
   payload: TsPackagerWorkerPayload,
   completionEvent: TsPackagerCompletionEvent = FINAL_DTS_COMPLETE_EVENT
 ): Promise<void> {
-  const { cwd } = payload
-  const packages = getPackagesForRun(payload, completionEvent)
-
   log.debug('packager:ts', 'Generating TypeScript declarations...')
 
   try {
-    await installPackagesTs(cwd, packages)
+    await spawnPackagerTsDtsChild(payload, completionEvent)
     emit(completionEvent, {})
     log.debug('packager:ts', 'Declarations ready')
   } catch (error) {

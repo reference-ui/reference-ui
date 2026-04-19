@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { DEFAULT_OUT_DIR } from '../constants'
+
+const FIXTURE_VIRTUAL = `/workspace/app/${DEFAULT_OUT_DIR}/virtual`
+
 const emit = vi.fn()
 const onHandlers = new Map<string, Array<(payload?: unknown) => void>>()
 
@@ -98,11 +102,11 @@ describe('sync/events', () => {
 
     emit.mockClear()
     fireOn('virtual:copy:complete', {
-      virtualDir: '/workspace/app/.reference-ui/virtual',
+      virtualDir: FIXTURE_VIRTUAL,
     })
 
     expect(emit).toHaveBeenCalledWith('run:reference:component:copy', {
-      virtualDir: '/workspace/app/.reference-ui/virtual',
+      virtualDir: FIXTURE_VIRTUAL,
     })
   })
 
@@ -168,40 +172,12 @@ describe('sync/events', () => {
     expect(emit).toHaveBeenCalledWith('run:reference:build', {})
   })
 
-  it('starts MCP only after both reference output and final declarations are ready', async () => {
+  it('emits sync:complete when final TypeScript declarations finish', async () => {
     const { initEvents } = await loadEventsModule()
     initEvents()
-
-    fireOn('mcp:ready')
-    fireOn('reference:complete', {
-      source: 'virtual',
-      manifestPath: '/tmp/types/manifest.js',
-      outputDir: '/tmp/types',
-    })
-    expect(emit).not.toHaveBeenCalledWith('run:mcp:build', {})
 
     emit.mockClear()
     fireOn('packager-ts:complete')
-    expect(emit).toHaveBeenCalledWith('run:mcp:build', {})
-  })
-
-  it('prefetches Atlas on initial virtual completion once MCP worker is ready', async () => {
-    const { initEvents } = await loadEventsModule()
-    initEvents()
-
-    fireOn('mcp:ready')
-    emit.mockClear()
-
-    fireOn('virtual:complete')
-
-    expect(emit).toHaveBeenCalledWith('run:mcp:prefetch:atlas', undefined)
-  })
-
-  it('emits sync:complete from MCP completion', async () => {
-    const { initEvents } = await loadEventsModule()
-    initEvents()
-
-    fireOn('mcp:complete', { modelPath: '/tmp/model.json', componentCount: 12 })
 
     expect(emit).toHaveBeenCalledWith('sync:complete', undefined)
   })
@@ -210,20 +186,17 @@ describe('sync/events', () => {
     const { initEvents } = await loadEventsModule()
     initEvents()
 
-    fireOn('mcp:ready')
-
     fireOn('virtual:complete')
+    fireOn('packager-ts:complete')
     emit.mockClear()
 
     fireOn('virtual:fs:change', {
       event: 'change',
-      path: '/workspace/app/.reference-ui/virtual/src/button.tsx',
+      path: `${FIXTURE_VIRTUAL}/src/button.tsx`,
     })
 
     expect(emit).toHaveBeenCalledWith('run:system:config', undefined)
     expect(emit).toHaveBeenCalledWith('run:reference:build', {})
-    expect(emit).not.toHaveBeenCalledWith('run:mcp:prefetch:atlas', {})
-    expect(emit).not.toHaveBeenCalledWith('run:mcp:prefetch:atlas', undefined)
   })
 
   it('waits for panda codegen before bundling runtime packages', async () => {
