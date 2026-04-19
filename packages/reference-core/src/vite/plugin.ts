@@ -45,7 +45,7 @@ export function referenceVite(options: ReferenceViteOptions = {}): Plugin {
     configureServer(devServer: ViteDevServer) {
       state.server = devServer
       attachSessionRefreshListener()
-      void attachManagedOutputListener().catch(() => {})
+      attachManagedOutputListener().catch(() => {})
 
       if (!state.teardownRegistered) {
         state.teardownRegistered = true

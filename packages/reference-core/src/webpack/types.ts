@@ -1,10 +1,8 @@
 /** Internal type surface for the Reference UI Webpack integration. */
 
 import type {
-  ManagedOutputSubscription,
   ManagedOutputWriteSubscriber,
   ReferenceBundlerOptions,
-  ReferenceProjectPaths,
   ReferenceSyncSessionReader,
 } from '../bundlers/types'
 
