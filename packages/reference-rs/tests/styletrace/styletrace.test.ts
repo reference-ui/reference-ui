@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   createDefaultExportPackageFixture,
   createExportStarPackageFixture,
+  createNodeBuiltinHelperFixture,
   createNodeModulesWrapperFixture,
   createSubpathPackageFixture,
   traceCase,
@@ -86,6 +87,16 @@ describe('styletrace', () => {
 
     try {
       await expect(traceDir(fixture.rootDir)).resolves.toEqual(['AppCard', 'PackageCard'])
+    } finally {
+      await fixture.cleanup()
+    }
+  })
+
+  it('ignores node builtin helper imports while tracing local wrappers', async () => {
+    const fixture = await createNodeBuiltinHelperFixture()
+
+    try {
+      await expect(traceDir(fixture.rootDir)).resolves.toEqual(['AppCard'])
     } finally {
       await fixture.cleanup()
     }

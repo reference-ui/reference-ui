@@ -165,6 +165,28 @@ export function PackageCard({ title, ...styleProps }: PackageCardProps) {
   })
 }
 
+export async function createNodeBuiltinHelperFixture(): Promise<RuntimeFixture> {
+  return createRuntimeFixture('node-builtin-helper', {
+    'index.tsx': `import { resolveLabel } from './helpers'
+import { Div, type StyleProps } from '@reference-ui/react'
+
+export interface AppCardProps extends StyleProps {
+  label?: string
+}
+
+export function AppCard({ label = 'Card', ...styleProps }: AppCardProps) {
+  return <Div data-label={resolveLabel(label)} {...styleProps} />
+}
+`,
+    'helpers.ts': `import { join } from 'node:path'
+
+export function resolveLabel(label: string) {
+  return join('ui', label)
+}
+`,
+  })
+}
+
 async function createRuntimeFixture(
   name: string,
   files: Record<string, string>,

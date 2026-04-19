@@ -5,7 +5,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use crate::styletrace::resolver::{
-    normalize_path, prefer_workspace_source_module, resolve_local_module_path,
+    is_ignorable_module_specifier, normalize_path, prefer_workspace_source_module, resolve_local_module_path,
     resolve_workspace_root, StyleTraceError,
 };
 use crate::tasty::resolve_external_import_path;
@@ -116,9 +116,13 @@ pub(super) fn resolve_relative_module(
 pub(super) fn resolve_imported_module(
     current_module: &Path,
     source: &str,
-) -> Result<PathBuf, StyleTraceError> {
+) -> Result<Option<PathBuf>, StyleTraceError> {
     if source.starts_with('.') {
-        return resolve_relative_module(current_module, source);
+        return resolve_relative_module(current_module, source).map(Some);
+    }
+
+    if is_ignorable_module_specifier(source) {
+        return Ok(None);
     }
 
     let resolution_root = current_module.parent().unwrap_or(current_module);
@@ -130,5 +134,5 @@ pub(super) fn resolve_imported_module(
     })?;
 
     let workspace_root = resolve_workspace_root(current_module)?;
-    Ok(prefer_workspace_source_module(&resolved, &workspace_root))
+    Ok(Some(prefer_workspace_source_module(&resolved, &workspace_root)))
 }

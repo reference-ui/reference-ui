@@ -54,6 +54,10 @@ pub(crate) fn normalize_path(path: &Path) -> PathBuf {
     normalized
 }
 
+pub(crate) fn is_ignorable_module_specifier(specifier: &str) -> bool {
+    specifier.starts_with("node:")
+}
+
 pub(crate) fn resolve_local_module_path(candidate: &Path) -> Option<PathBuf> {
     let direct_exts = ["", ".ts", ".tsx", ".d.ts", ".mts", ".d.mts"];
     for suffix in direct_exts {

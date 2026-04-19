@@ -136,6 +136,15 @@ fn traces_export_star_package_barrels() {
 }
 
 #[test]
+fn ignores_node_builtin_helper_imports_while_tracing_local_wrappers() {
+    let fixture = create_node_builtin_helper_fixture();
+    let names = trace_style_jsx_names(fixture.root())
+        .expect("expected node builtin helper case to trace");
+
+    assert_eq!(names, vec!["AppCard".to_string()]);
+}
+
+#[test]
 fn fixture_demo_ui_has_no_reference_style_bearing_exports() {
     let names = trace_style_jsx_names(&workspace_fixture_dir("fixtures/demo-ui/src"))
         .expect("expected demo-ui fixture to trace");
@@ -247,6 +256,19 @@ fn create_export_star_package_fixture() -> super::fixtures::ScratchDir {
     fixture.write(
         "input/node_modules/fixture-style-barrel/card.tsx",
         "import { Div, type StyleProps } from '@reference-ui/react'\n\nexport type PackageCardProps = StyleProps & {\n  title?: string\n}\n\nexport function PackageCard({ title, ...styleProps }: PackageCardProps) {\n  return <Div {...styleProps}>{title}</Div>\n}\n",
+    );
+    fixture
+}
+
+fn create_node_builtin_helper_fixture() -> super::fixtures::ScratchDir {
+    let fixture = workspace_scratch_dir("node-builtin-helper");
+    fixture.write(
+        "input/index.tsx",
+        "import { resolveLabel } from './helpers'\nimport { Div, type StyleProps } from '@reference-ui/react'\n\nexport interface AppCardProps extends StyleProps {\n  label?: string\n}\n\nexport function AppCard({ label = 'Card', ...styleProps }: AppCardProps) {\n  return <Div data-label={resolveLabel(label)} {...styleProps} />\n}\n",
+    );
+    fixture.write(
+        "input/helpers.ts",
+        "import { join } from 'node:path'\n\nexport function resolveLabel(label: string) {\n  return join('ui', label)\n}\n",
     );
     fixture
 }
