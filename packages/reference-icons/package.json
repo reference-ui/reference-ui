@@ -1,6 +1,6 @@
 {
   "name": "@reference-ui/icons",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": false,
   "description": "Generated Material Symbols React components for Reference UI.",
   "license": "MIT",
@@ -24,7 +24,11 @@
       "import": "./dist/index.mjs"
     }
   },
-  "files": ["dist", "README.md", "LICENSE"],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "clean": "rm -rf dist src/generated",
     "icons:generate": "node scripts/generate-material-icons.mjs",
