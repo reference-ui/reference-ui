@@ -31,6 +31,44 @@ This page smoke-tests the packaged `@reference-ui/icons` artifact consumed by `r
   <Code color="docsText">"@reference-ui/icons": "file:../reference-icons"</Code>
 </Pre>
 
+## Tokens, background, and `size`
+
+Material icons render with `fill="currentColor"`, so **`color` on a parent** (for example `green.500`) controls the glyph. **`size`** maps to **`width` and `height`** on the icon’s outer **`Div`**, so tokens (`5r`), **`rem`**, numbers, **`calc()`**, etc. behave like everywhere else. This app’s **`ui.config.ts` `include`** also lists **`../reference-icons/src`** so **`ref sync`** runs Panda on `@reference-ui/icons` sources (not only `dist`), and those dimensions extract correctly.
+
+<Div
+  marginBottom="8r"
+  padding="4r"
+  borderRadius="xl"
+  bg="green.100"
+  border="1px solid"
+  borderColor="green.200"
+>
+  <P fontSize="sm" color="green.800" marginTop="0" marginBottom="4r">
+    Same icon, three <Code>size</Code> forms, on a <Code>green.50</Code> surface with <Code>color=&quot;green.500&quot;</Code> on the row.
+  </P>
+  <Div display="flex" flexWrap="wrap" gap="6r" alignItems="flex-end" color="green.500">
+    {[
+      { caption: '24px from a number', size: 24, code: 'size={24}' },
+      { caption: '1.75rem', size: '1.75rem', code: 'size="1.75rem"' },
+      {
+        caption: 'Rhythm 5r shorthand',
+        size: '5r',
+        code: 'size="5r"',
+      },
+    ].map(row => (
+      <Div key={row.code} display="flex" flexDirection="column" alignItems="center" gap="2r" minWidth="10r">
+        <SearchIcon color="green.500" variant="filled" size="5r" ria-label={`Search icon ${row.caption}`} />
+        <Div fontSize="xs" color="green.700" textAlign="center">
+          {row.caption}
+        </Div>
+        <Code fontSize="xs" color="green.900" bg="green.100" paddingX="2r" paddingY="1r" borderRadius="md">
+          {row.code}
+        </Code>
+      </Div>
+    ))}
+  </Div>
+</Div>
+
 <Div display="grid" gridTemplateColumns="repeat(auto-fit, minmax(220px, 1fr))" gap="4r">
   {[
     ['SearchIcon', SearchIcon],

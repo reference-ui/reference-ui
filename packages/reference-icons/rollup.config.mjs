@@ -32,7 +32,9 @@ const external = id =>
   id === 'react-dom' ||
   id.startsWith('react-dom/') ||
   id === '@material-symbols-svg/react' ||
-  id.startsWith('@material-symbols-svg/react/')
+  id.startsWith('@material-symbols-svg/react/') ||
+  id === '@reference-ui/react' ||
+  id.startsWith('@reference-ui/react/')
 
 export default {
   input,
