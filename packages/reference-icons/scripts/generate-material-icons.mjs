@@ -61,6 +61,7 @@ function emitIconFile(slug, outline, fill, componentName) {
     ':',
     'MaterialSymbolIconComponent',
     '=',
+    '/*#__PURE__*/',
     'createIcon(',
     outline,
     ',',

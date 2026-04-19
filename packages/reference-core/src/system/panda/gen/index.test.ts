@@ -80,9 +80,9 @@ describe('system/panda/gen', () => {
 
     await vi.waitFor(() => {
       expect(error).toHaveBeenCalledWith(
-        '[panda] codegen failed (continuing without system/styled). Virtual copy will still run.',
-        'panda exploded'
+        '[panda] codegen failed (continuing without system/styled). Virtual copy will still run.'
       )
+      expect(error).toHaveBeenCalledWith('[panda] cause:', 'stack: panda exploded')
       expect(error).toHaveBeenCalledWith('[panda] output:', 'captured panda output')
       expect(debug).toHaveBeenCalledWith('panda', 'stack: panda exploded')
       expect(emit).toHaveBeenCalledTimes(1)
