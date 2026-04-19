@@ -1,18 +1,13 @@
 import * as React from 'react'
-import { Div } from '@reference-ui/react'
 import type { MaterialSymbolIconComponent, MaterialSymbolIconProps } from './types'
 
-/**
- * Material glyph wrapped by a Reference `Div`, so the public JSX boundary is a
- * Reference primitive while the incoming Material SVG stays an implementation detail.
- */
 export function createIcon(
   Outline: React.ElementType,
   Filled: React.ElementType,
   displayName: string,
 ): MaterialSymbolIconComponent {
-  const Icon = React.forwardRef<HTMLDivElement, MaterialSymbolIconProps>(function MaterialIcon(
-    { variant = 'outline', size = '1em', ...rest },
+  const Icon = React.forwardRef<HTMLSpanElement, MaterialSymbolIconProps>(function MaterialIcon(
+    { variant = 'outline', size = '1em', style, ...rest },
     ref,
   ) {
     const Svg = (variant === 'filled' ? Filled : Outline) as React.ComponentType<
@@ -20,16 +15,19 @@ export function createIcon(
     >
 
     return (
-      <Div
+      <span
         ref={ref}
-        display="inline-flex"
-        alignItems="center"
-        justifyContent="center"
-        lineHeight="0"
-        flexShrink="0"
-        width={size}
-        height={size}
         {...rest}
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          lineHeight: 0,
+          flexShrink: 0,
+          width: size,
+          height: size,
+          ...style,
+        }}
       >
         <Svg
           width="100%"
@@ -40,7 +38,7 @@ export function createIcon(
           focusable="false"
           style={{ display: 'block' }}
         />
-      </Div>
+      </span>
     )
   })
   Icon.displayName = displayName

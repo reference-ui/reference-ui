@@ -292,19 +292,19 @@ importers:
       '@material-symbols-svg/react':
         specifier: ^0.5.0
         version: 0.5.0(react@19.2.4)
-      react:
-        specifier: ^19.2.4
-        version: 19.2.4
     devDependencies:
-      '@reference-ui/core':
-        specifier: workspace:*
-        version: link:../reference-core
       '@types/react':
         specifier: ^19.2.14
         version: 19.2.14
       '@types/react-dom':
         specifier: ^19.2.3
         version: 19.2.3(@types/react@19.2.14)
+      react:
+        specifier: ^19.2.4
+        version: 19.2.4
+      react-dom:
+        specifier: ^19.2.4
+        version: 19.2.4(react@19.2.4)
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(@swc/core@1.5.29(@swc/helpers@0.5.18))(postcss@8.5.8)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2)

@@ -2,13 +2,19 @@
   "name": "@reference-ui/icons",
   "version": "0.0.1",
   "private": false,
-  "description": "Generated Material Symbols icons for Reference UI (outline/filled, weight 500)",
+  "description": "Generated Material Symbols React components for Reference UI.",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/reference-ui/reference-ui",
     "directory": "packages/reference-icons"
   },
+  "bugs": {
+    "url": "https://github.com/reference-ui/reference-ui/issues"
+  },
+  "homepage": "https://github.com/reference-ui/reference-ui/tree/main/packages/reference-icons#readme",
   "type": "module",
+  "packageManager": "pnpm@10.29.3",
   "main": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "sideEffects": false,
@@ -18,26 +24,34 @@
       "import": "./dist/index.mjs"
     }
   },
-  "files": ["dist", "README.md"],
+  "files": ["dist", "README.md", "LICENSE"],
   "scripts": {
-    "sync": "ref sync",
+    "clean": "rm -rf dist src/generated",
     "icons:generate": "node scripts/generate-material-icons.mjs",
     "build": "pnpm run icons:generate && node scripts/tsup-if-needed.mjs",
+    "dev": "pnpm run icons:generate && vite",
     "typecheck": "pnpm run icons:generate && tsc --noEmit",
+    "test": "pnpm run typecheck",
     "prepack": "pnpm run build"
   },
   "publishConfig": {
     "access": "public"
   },
   "dependencies": {
-    "@material-symbols-svg/react": "^0.5.0",
-    "react": "^19.2.4"
+    "@material-symbols-svg/react": "^0.5.0"
+  },
+  "peerDependencies": {
+    "react": ">=18"
   },
   "devDependencies": {
-    "@reference-ui/core": "workspace:*",
+    "@types/node": "^25.1.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.0.4",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
     "tsup": "^8.5.1",
-    "typescript": "~5.9.3"
+    "typescript": "~5.9.3",
+    "vite": "^7.1.12"
   }
 }

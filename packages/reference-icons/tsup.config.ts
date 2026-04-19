@@ -1,6 +1,6 @@
-import { existsSync, readdirSync } from 'node:fs'
-import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { existsSync, readdirSync } from 'fs'
+import { dirname, join } from 'path'
+import { fileURLToPath } from 'url'
 import { defineConfig } from 'tsup'
 
 const pkgRoot = dirname(fileURLToPath(import.meta.url))
@@ -18,8 +18,6 @@ function iconGeneratedTsxEntries(): Record<string, string> {
 }
 
 const external = [
-  '@reference-ui/react',
-  /^@reference-ui\/styled(\/.*)?$/,
   '@material-symbols-svg/react',
   'react',
   'react-dom',
