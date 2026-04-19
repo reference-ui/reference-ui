@@ -5,12 +5,80 @@ order: 6
 slug: icons
 ---
 
-import { P } from '@reference-ui/react'
+import { Code, Div, P, Pre } from '@reference-ui/react'
+import {
+  BoltIcon,
+  CodeIcon,
+  FavoriteIcon,
+  HomeIcon,
+  PaletteIcon,
+  SearchIcon,
+  SettingsIcon,
+  TerminalIcon,
+} from '@reference-ui/icons'
 
 # Icons
 
-The icon package is intentionally isolated from the rest of the monorepo right now. `reference-lib` and `reference-docs` are not consuming it during normal development or build flows.
+This page smoke-tests the packaged `@reference-ui/icons` artifact consumed by `reference-docs`.
 
-<P fontSize="sm" color="docsMuted" marginTop="6r" marginBottom="0">
-  This page is a placeholder until icon integration is re-enabled.
+<P fontSize="sm" color="docsMuted" marginTop="0" marginBottom="4r">
+  `reference-docs` installs the local `reference-icons` package through a `file:` dependency at the
+  package root, not a `workspace:*` dependency. That means docs still resolves the package through
+  its package metadata and built `dist` entrypoints, while keeping the setup simple.
 </P>
+
+<Pre margin="0 0 6r" padding="4r" bg="docsSidebarBg" borderRadius="lg" overflow="auto">
+  <Code color="docsText">"@reference-ui/icons": "file:../reference-icons"</Code>
+</Pre>
+
+<Div display="grid" gridTemplateColumns="repeat(auto-fit, minmax(220px, 1fr))" gap="4r">
+  {[
+    ['SearchIcon', SearchIcon],
+    ['HomeIcon', HomeIcon],
+    ['FavoriteIcon', FavoriteIcon],
+    ['SettingsIcon', SettingsIcon],
+    ['PaletteIcon', PaletteIcon],
+    ['BoltIcon', BoltIcon],
+    ['CodeIcon', CodeIcon],
+    ['TerminalIcon', TerminalIcon],
+  ].map(([name, Icon]) => (
+    <Div
+      key={name}
+      padding="4r"
+      border="1px solid"
+      borderColor="docsPanelBorder"
+      borderRadius="xl"
+      bg="docsSidebarBg"
+      display="flex"
+      flexDirection="column"
+      gap="3r"
+    >
+      <Div fontWeight="600" color="docsText">{name}</Div>
+      <Div display="flex" gap="3r" alignItems="center">
+        <Div
+          width="12r"
+          height="12r"
+          borderRadius="lg"
+          bg="docsPageBg"
+          display="grid"
+          placeItems="center"
+        >
+          <Icon variant="outline" size="2rem" aria-label={`${name} outline`} />
+        </Div>
+        <Div
+          width="12r"
+          height="12r"
+          borderRadius="lg"
+          bg="docsPageBg"
+          display="grid"
+          placeItems="center"
+        >
+          <Icon variant="filled" size="2rem" aria-label={`${name} filled`} />
+        </Div>
+      </Div>
+      <P fontSize="sm" color="docsMuted" margin="0">
+        outline / filled
+      </P>
+    </Div>
+  ))}
+</Div>
