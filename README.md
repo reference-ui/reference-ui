@@ -2,7 +2,7 @@
 
 Knowledge-first UI tooling and component infrastructure.
 
-This repository is an active monorepo, not a scaffold. It contains the Reference UI CLI, the first-party design system built on top of it, a docs site, a unit-level dogfood app, Rust/native bindings, and end-to-end coverage for generated outputs.
+This repository is an active monorepo. It contains the Reference UI CLI, the first-party design system built on top of it, a docs site, a unit-level dogfood app, Rust/native bindings, and end-to-end coverage for generated outputs.
 
 ## What lives here
 

@@ -11,13 +11,13 @@ export const referenceBrowserTokenConfig = {
       },
       /** Secondary text (was `muted`). */
       textLight: {
-        value: '{colors.gray.600}',
-        dark: '{colors.gray.300}',
+        value: 'oklch(44.6% 0.03 256.802)',
+        dark: 'oklch(87.2% 0.01 258.338)',
       },
       /** Tertiary / de-emphasized copy (one gray step lighter than {@link textLight}). */
       textLighter: {
-        value: '{colors.gray.500}',
-        dark: '{colors.gray.400}',
+        value: 'oklch(55.1% 0.027 264.364)',
+        dark: 'oklch(70.7% 0.022 261.325)',
       },
       border: {
         value: '#d1d5db',
