@@ -5,6 +5,6 @@
     "defaultProject": { "type": "string", "description": "Project for test:quick and test:ui" },
     "basePort": { "type": "number", "description": "Base port; each matrix entry gets basePort + index" },
     "workers": { "type": "number", "description": "Playwright workers per project" },
-    "parallelSandboxes": { "type": "boolean", "description": "Run matrix projects in parallel (REF_TEST_PARALLEL)" }
+    "parallelSandboxes": { "type": "boolean", "description": "Run matrix projects in parallel when true; override with env REF_TEST_PARALLEL=1|0. Root test:ci:e2e sets REF_TEST_PARALLEL=0 (serial). Root test:full:e2e sets REF_TEST_PARALLEL=1." }
   }
 }

@@ -12,26 +12,13 @@ export type ReferenceViteInternals = NonNullable<ReferenceBundlerOptions['intern
 
 export type ReferenceViteOptions = ReferenceBundlerOptions
 
+/** Subset of Vite user config read by {@link withManagedPackageExcludes}. */
 export interface ReferenceViteUserConfig {
   optimizeDeps?: { exclude?: string[] }
 }
 
 export interface ReferenceViteResolvedConfig {
   root: string
-}
-
-export interface ReferenceViteHotUpdateContext {
-  file: string
-}
-
-export interface ReferenceVitePlugin {
-  name: string
-  config?: (userConfig: ReferenceViteUserConfig) => {
-    optimizeDeps: { exclude: string[] }
-  }
-  configResolved?: (config: ReferenceViteResolvedConfig) => void
-  configureServer?: (devServer: ReferenceViteDevServer) => (() => void) | void
-  handleHotUpdate?: (ctx: ReferenceViteHotUpdateContext) => [] | void | Promise<[] | void>
 }
 
 export type ReferenceViteProjectPaths = ReferenceProjectPaths
@@ -46,24 +33,4 @@ export interface ReferenceViteUpdate {
 export interface ReferenceViteUpdatePayload {
   type: 'update'
   updates: ReferenceViteUpdate[]
-}
-
-export interface ReferenceViteModule {
-  url: string
-  type: 'js' | 'css' | 'asset'
-}
-
-export interface ReferenceViteDevServer {
-  ws: {
-    send(payload: ReferenceViteUpdatePayload): void
-  }
-  moduleGraph: {
-    getModulesByFile(file: string): Set<ReferenceViteModule> | undefined
-    invalidateModule(
-      module: ReferenceViteModule,
-      seen: Set<ReferenceViteModule>,
-      timestamp: number,
-      isHmr: boolean
-    ): void
-  }
 }

@@ -1,4 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+
+import { DEFAULT_OUT_DIR } from '../constants'
 import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
@@ -11,7 +13,7 @@ async function createWorkspace() {
   tempDirs.push(root)
 
   const sourceDir = join(root, 'src')
-  const virtualDir = join(root, '.reference-ui', 'virtual')
+  const virtualDir = join(root, DEFAULT_OUT_DIR, 'virtual')
 
   await mkdir(sourceDir, { recursive: true })
   await mkdir(virtualDir, { recursive: true })

@@ -21,7 +21,9 @@ const VIRTUAL_FRAGMENT_CHANGE_EVENT = 'virtual:fragment:change' as const
  * 4. Generate runtime declarations for those packaged libraries
  * 5. Build reference/Tasty output once those declarations exist
  * 6. Package the final `@reference-ui/types` output after reference completes
- * 7. Finish once TypeScript package generation is complete
+ * 7. Finish once TypeScript package generation is complete (`sync:complete`).
+ *    MCP (`ref mcp`) is separate: editors run the server in another process and it
+ *    builds/refreshes its own model via `loadOrBuildMcpArtifact`.
  *
  * watch:change → run:virtual:sync:file (single file), passing payload through.
  */
@@ -32,16 +34,6 @@ export function initEvents(): void {
    */
   onceAll(['virtual:ready', 'reference:ready'], () => {
     emit('run:virtual:copy:all')
-  })
-
-  /**
-   * Refresh the warmed Atlas result once the initial virtual barrier opens so
-   * the final MCP build uses a post-bootstrap analysis for the active sync.
-   */
-  forWorker({
-    ready: 'mcp:ready',
-    on: VIRTUAL_COMPLETE_EVENT,
-    emit: 'run:mcp:prefetch:atlas',
   })
 
   /**
@@ -199,23 +191,10 @@ export function initEvents(): void {
   })
 
   /**
-   * MCP joins Atlas output with the generated type surface once both the
-   * reference build and final declarations have advanced for the current pass.
+   * Sync completes after final TypeScript declarations. MCP is not part of `ref sync`;
+   * `ref mcp` loads or builds the component model in its own process.
    */
-  onReady(
-    'mcp:ready',
-    combineTrigger({
-      requires: ['reference:complete', 'packager-ts:complete'],
-      emit: 'run:mcp:build',
-      payload: {},
-    })
-  )
-
-  /**
-   * Sync completes only after the MCP model has been rebuilt for the latest
-   * generated type surface.
-   */
-  on('mcp:complete', () => {
+  on('packager-ts:complete', () => {
     emit('sync:complete')
   })
 }

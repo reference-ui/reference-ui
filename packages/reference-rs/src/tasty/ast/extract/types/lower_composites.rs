@@ -5,11 +5,11 @@ use oxc_span::{GetSpan, SourceType};
 
 use crate::tasty::model::{FnParam, TemplateLiteralPart, TupleElement, TypeOperatorKind, TypeRef};
 
-use crate::tasty::ast::extract::ExtractionContext;
 use super::super::members::members_from_signatures;
 use super::super::slice_span;
 use super::mapped_modifier_kind;
 use super::LoweringContext;
+use crate::tasty::ast::extract::ExtractionContext;
 
 impl<'a> LoweringContext<'a> {
     pub(super) fn lower_array_type(&self, array_type: &oxc_ast::ast::TSArrayType<'_>) -> TypeRef {
@@ -85,9 +85,12 @@ impl<'a> LoweringContext<'a> {
         operator: &oxc_ast::ast::TSTypeOperator<'_>,
     ) -> TypeRef {
         let target_type = self.lower_type(&operator.type_annotation);
-        
+
         // Special handling for readonly tuples - normalize to tuple with readonly elements
-        if matches!(operator.operator, oxc_ast::ast::TSTypeOperatorOperator::Readonly) {
+        if matches!(
+            operator.operator,
+            oxc_ast::ast::TSTypeOperatorOperator::Readonly
+        ) {
             if let TypeRef::Tuple { elements } = target_type {
                 // Convert readonly tuple to tuple with readonly elements
                 let readonly_elements = elements
@@ -97,13 +100,13 @@ impl<'a> LoweringContext<'a> {
                         ..element
                     })
                     .collect();
-                
+
                 return TypeRef::Tuple {
                     elements: readonly_elements,
                 };
             }
         }
-        
+
         TypeRef::TypeOperator {
             operator: match operator.operator {
                 oxc_ast::ast::TSTypeOperatorOperator::Keyof => TypeOperatorKind::Keyof,
@@ -159,15 +162,15 @@ impl<'a> LoweringContext<'a> {
         let parts = self.lower_template_literal_parts(template);
         let resolved = self.resolve_template_literal_to_union(&parts).map(Box::new);
 
-        TypeRef::TemplateLiteral {
-            parts,
-            resolved,
-        }
+        TypeRef::TemplateLiteral { parts, resolved }
     }
 
     /// Try to resolve a template literal to a union when possible
     /// For simple cases like `/${'users' | 'posts'}/${'list' | 'detail'}` -> `'/users/list' | '/users/detail' | '/posts/list' | '/posts/detail'`
-    fn resolve_template_literal_to_union(&self, parts: &[crate::tasty::model::TemplateLiteralPart]) -> Option<TypeRef> {
+    fn resolve_template_literal_to_union(
+        &self,
+        parts: &[crate::tasty::model::TemplateLiteralPart],
+    ) -> Option<TypeRef> {
         let mut variants = vec![String::new()];
 
         for part in parts {

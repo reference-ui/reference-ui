@@ -27,7 +27,11 @@ pub(super) fn jsx_name_to_string(name: &JSXElementName<'_>) -> String {
             format!("{}:{}", namespaced.namespace.name, namespaced.name.name)
         }
         JSXElementName::MemberExpression(member) => {
-            format!("{}.{}", jsx_member_object_to_string(&member.object), member.property.name)
+            format!(
+                "{}.{}",
+                jsx_member_object_to_string(&member.object),
+                member.property.name
+            )
         }
         JSXElementName::ThisExpression(_) => "this".to_string(),
     }
@@ -64,7 +68,10 @@ fn jsx_attribute_name_to_string(name: &JSXAttributeName<'_>) -> String {
     }
 }
 
-fn jsx_attribute_literal_value(value: Option<&JSXAttributeValue<'_>>, source: &str) -> Option<String> {
+fn jsx_attribute_literal_value(
+    value: Option<&JSXAttributeValue<'_>>,
+    source: &str,
+) -> Option<String> {
     match value {
         None => Some("true".to_string()),
         Some(JSXAttributeValue::StringLiteral(literal)) => Some(literal.value.to_string()),
@@ -86,14 +93,20 @@ fn expression_literal_value(expression: &Expression<'_>, source: &str) -> Option
     match expression {
         Expression::StringLiteral(literal) => Some(literal.value.to_string()),
         Expression::BooleanLiteral(literal) => Some(literal.value.to_string()),
-        Expression::NumericLiteral(_) => Some(slice_span(source, expression.span()).trim().to_string()),
-        Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
-            Some(slice_span(source, template.span()).trim_matches('`').to_string())
+        Expression::NumericLiteral(_) => {
+            Some(slice_span(source, expression.span()).trim().to_string())
         }
+        Expression::TemplateLiteral(template) if template.expressions.is_empty() => Some(
+            slice_span(source, template.span())
+                .trim_matches('`')
+                .to_string(),
+        ),
         Expression::ParenthesizedExpression(parenthesized) => {
             expression_literal_value(&parenthesized.expression, source)
         }
-        Expression::TSAsExpression(asserted) => expression_literal_value(&asserted.expression, source),
+        Expression::TSAsExpression(asserted) => {
+            expression_literal_value(&asserted.expression, source)
+        }
         Expression::TSSatisfiesExpression(asserted) => {
             expression_literal_value(&asserted.expression, source)
         }
@@ -111,7 +124,11 @@ fn jsx_member_object_to_string(object: &JSXMemberExpressionObject<'_>) -> String
     match object {
         JSXMemberExpressionObject::IdentifierReference(identifier) => identifier.name.to_string(),
         JSXMemberExpressionObject::MemberExpression(member) => {
-            format!("{}.{}", jsx_member_object_to_string(&member.object), member.property.name)
+            format!(
+                "{}.{}",
+                jsx_member_object_to_string(&member.object),
+                member.property.name
+            )
         }
         JSXMemberExpressionObject::ThisExpression(_) => "this".to_string(),
     }

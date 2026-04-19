@@ -1,3 +1,4 @@
+import { SYNC_OUTPUT_DIR_GLOB } from '../../../constants'
 import { bundleCollectorRuntime, scanForFragments } from '../../../lib/fragments'
 import { createPandaConfig } from '../../panda/config/create'
 import {
@@ -32,7 +33,7 @@ export async function getFragmentFiles(coreRoot: string): Promise<string[]> {
       '**/node_modules/**',
       '**/*.d.ts',
       '**/dist/**',
-      '**/.reference-ui/**',
+      SYNC_OUTPUT_DIR_GLOB,
       '**/*.test.ts',
       '**/*.test.tsx',
       '**/*.spec.ts',

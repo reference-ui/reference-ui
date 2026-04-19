@@ -14,7 +14,11 @@ impl JsObjectBuilder {
         Self { fields: Vec::new() }
     }
 
-    pub(super) fn try_field(mut self, name: &str, value: Result<String, String>) -> Result<Self, String> {
+    pub(super) fn try_field(
+        mut self,
+        name: &str,
+        value: Result<String, String>,
+    ) -> Result<Self, String> {
         self.fields.push(emit_field(name, value?));
         Ok(self)
     }
@@ -75,7 +79,8 @@ pub(super) fn emit_field(name: &str, value: String) -> String {
 
 pub(super) fn indent_block(value: &str, spaces: usize) -> String {
     let indent = " ".repeat(spaces);
-    let mut s = String::with_capacity(value.len() + value.lines().count().saturating_mul(spaces + 1));
+    let mut s =
+        String::with_capacity(value.len() + value.lines().count().saturating_mul(spaces + 1));
     for line in value.lines() {
         s.push_str(&indent);
         s.push_str(line);

@@ -22,11 +22,8 @@ impl TypeRefMap for IdentityMap {
             name,
             target_id,
             source_module,
-            type_arguments: type_arguments.map(|args| {
-                args.into_iter()
-                    .map(|t| map_type_ref(self, t))
-                    .collect()
-            }),
+            type_arguments: type_arguments
+                .map(|args| args.into_iter().map(|t| map_type_ref(self, t)).collect()),
         }
     }
 

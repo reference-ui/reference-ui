@@ -4,7 +4,9 @@ use std::collections::BTreeSet;
 use std::path::Path;
 
 use crate::tasty::scanner::model::ResolvedModule;
-use crate::tasty::scanner::packages::{resolve_external_import, resolve_relative_import, FileLookup};
+use crate::tasty::scanner::packages::{
+    resolve_external_import, resolve_relative_import, FileLookup,
+};
 use crate::tasty::scanner::paths::{
     is_external_file_id, module_specifier_for_file_id, package_name_from_file_id,
 };
@@ -110,4 +112,3 @@ fn should_skip_user_external_import(
 
     is_user_file && is_dev_dependency
 }
-

@@ -1,37 +1,11 @@
 import Piscina from 'piscina'
 import type { ReferenceUIConfig } from '../../config/types'
 import { log } from '../log'
-import { config } from './config'
+import { startMainMemoryProfiler, stopMainMemoryProfiler } from '../profiler'
 
 let pool: Piscina | undefined
 const dedicatedPools = new Map<string, Piscina>()
 let poolWorkerData: PoolWorkerData | undefined
-let memoryLogTimer: NodeJS.Timeout | undefined
-const memoryLogIntervalMs = 3000
-
-function formatMb(bytes: number): string {
-  return (bytes / 1024 / 1024).toFixed(1)
-}
-
-function logProcessMemory(reason: string): void {
-  if (!config.resourceUsageLogs) return
-
-  const mem = process.memoryUsage()
-  log.debug('memory', reason, {
-    rssMb: formatMb(mem.rss),
-    heapMb: formatMb(mem.heapUsed),
-    externalMb: formatMb(mem.external),
-  })
-}
-
-function initMemoryLogging(): void {
-  if (!config.resourceUsageLogs || memoryLogTimer) return
-
-  logProcessMemory('startup')
-  memoryLogTimer = setInterval(() => {
-    logProcessMemory('interval')
-  }, memoryLogIntervalMs)
-}
 
 export interface PoolWorkerData {
   config: ReferenceUIConfig
@@ -55,7 +29,7 @@ export function initPool(data: PoolWorkerData, options: PoolOptions = {}): void 
   if (pool) return
 
   poolWorkerData = data
-  initMemoryLogging()
+  startMainMemoryProfiler()
   const minThreads = options.minThreads ?? 2
   const maxThreads = options.maxThreads ?? 6
   pool = new Piscina({
@@ -112,6 +86,18 @@ export async function runWorker(
   return activePool.run(payload, { filename: workerPath })
 }
 
+/**
+ * Tear down a named dedicated pool (e.g. `packager-ts`) so its worker thread and
+ * V8 isolate are released. Next {@link runWorker} with the same `poolName`
+ * creates a fresh pool.
+ */
+export async function destroyDedicatedPool(poolName: string): Promise<void> {
+  const existing = dedicatedPools.get(poolName)
+  if (!existing) return
+  await existing.destroy()
+  dedicatedPools.delete(poolName)
+}
+
 export async function shutdown() {
   for (const dedicatedPool of dedicatedPools.values()) {
     await dedicatedPool.destroy()
@@ -124,10 +110,5 @@ export async function shutdown() {
   }
   poolWorkerData = undefined
 
-  if (memoryLogTimer) {
-    clearInterval(memoryLogTimer)
-    memoryLogTimer = undefined
-  }
-
-  logProcessMemory('shutdown')
+  stopMainMemoryProfiler()
 }

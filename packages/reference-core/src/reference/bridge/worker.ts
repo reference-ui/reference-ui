@@ -1,4 +1,5 @@
 import { emit, on } from '../../lib/event-bus'
+import { startWorkerMemoryReporter } from '../../lib/profiler'
 import { KEEP_ALIVE } from '../../lib/thread-pool'
 import { copyReferenceBrowserToVirtual } from './copy-browser-virtual'
 import { onRunBuild } from './run'
@@ -9,6 +10,7 @@ import type { ReferenceWorkerPayload } from './worker-types'
  * Keep worker.ts as simple event-to-function wiring.
  */
 export default async function runReference(payload: ReferenceWorkerPayload): Promise<never> {
+  startWorkerMemoryReporter('reference')
   on('run:reference:build', (buildPayload) => onRunBuild(payload, buildPayload))
   on('run:reference:component:copy', async ({ virtualDir }) => {
     try {

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { DEFAULT_OUT_DIR } from '../constants'
 import {
   getShortName,
   getPackageDir,
@@ -6,6 +7,8 @@ import {
   getDeclarationBasename,
   getRuntimeEntryPath,
 } from './layout'
+
+const OUT_DIR_RE = DEFAULT_OUT_DIR.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
 describe('packager/layout', () => {
   describe('getShortName', () => {
@@ -23,10 +26,16 @@ describe('packager/layout', () => {
 
   describe('getPackageDir', () => {
     it('resolves package output dir under outDir', () => {
-      const outDir = '/project/.reference-ui'
-      expect(getPackageDir(outDir, '@reference-ui/react')).toMatch(/\.reference-ui[/\\]react$/)
-      expect(getPackageDir(outDir, '@reference-ui/system')).toMatch(/\.reference-ui[/\\]system$/)
-      expect(getPackageDir(outDir, '@reference-ui/types')).toMatch(/\.reference-ui[/\\]types$/)
+      const outDir = `/project/${DEFAULT_OUT_DIR}`
+      expect(getPackageDir(outDir, '@reference-ui/react')).toMatch(
+        new RegExp(`${OUT_DIR_RE}[/\\\\]react$`),
+      )
+      expect(getPackageDir(outDir, '@reference-ui/system')).toMatch(
+        new RegExp(`${OUT_DIR_RE}[/\\\\]system$`),
+      )
+      expect(getPackageDir(outDir, '@reference-ui/types')).toMatch(
+        new RegExp(`${OUT_DIR_RE}[/\\\\]types$`),
+      )
     })
   })
 
@@ -54,9 +63,9 @@ describe('packager/layout', () => {
 
   describe('getRuntimeEntryPath', () => {
     it('returns full path to runtime entry under package dir', () => {
-      const outDir = '/project/.reference-ui'
+      const outDir = `/project/${DEFAULT_OUT_DIR}`
       expect(getRuntimeEntryPath(outDir, '@reference-ui/react', 'react.mjs')).toMatch(
-        /\.reference-ui[/\\]react[/\\]react\.mjs$/
+        new RegExp(`${OUT_DIR_RE}[/\\\\]react[/\\\\]react\\.mjs$`),
       )
     })
   })

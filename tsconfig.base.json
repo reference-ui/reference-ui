@@ -1,6 +1,7 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
+    "baseUrl": ".",
     "rootDir": ".",
     "sourceMap": true,
     "declaration": false,
@@ -13,15 +14,15 @@
     "lib": ["es2020", "dom"],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
-    "baseUrl": ".",
     "paths": {
       "@reference-ui/core": ["packages/reference-core/src/public.ts"],
       "@reference-ui/core/config": ["packages/reference-core/src/config/index.ts"],
+      "@reference-ui/core/constants": ["packages/reference-core/src/constants.ts"],
       "@reference-ui/cli": ["packages/reference-core/src/public.ts"],
       "@reference-ui/cli/config": ["packages/reference-core/src/config/index.ts"],
       "@reference-ui/gen": ["packages/reference-gen/src/index.ts"],
       "@reference-ui/lib": ["packages/reference-lib/src/index.ts"],
-      "@reference-ui/lib/theme": ["packages/reference-lib/src/theme/index.ts"],
+      "@reference-ui/lib/theme": ["packages/reference-lib/src/core/theme/index.ts"],
       "@fixtures/extend-library": ["fixtures/extend-library/src/index.ts"],
       "@fixtures/layer-library": ["fixtures/layer-library/src/index.ts"],
       "@fixtures/demo-ui": ["fixtures/demo-ui/src/index.ts"],

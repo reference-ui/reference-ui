@@ -1,9 +1,18 @@
 import { spawn } from 'node:child_process'
+import { threadId } from 'node:worker_threads'
 import { emit } from '../event-bus'
 import { log } from '../log'
 
 const PROCESS_SPAWNED_EVENT = 'process:spawned'
 const PROCESS_EXIT_EVENT = 'process:exit'
+
+export type SpawnMonitoredResult = {
+  code: number | null
+  /** Set when `code` is null — e.g. SIGINT/SIGTERM if the user stops sync or the parent shuts down. */
+  signal: NodeJS.Signals | null
+  stdout: string
+  stderr: string
+}
 
 /**
  * Spawn a child process and wait for it to complete.
@@ -17,9 +26,10 @@ export async function spawnMonitoredAsync(
     processName: string
     logCategory?: string
   }
-): Promise<{ code: number | null; stdout: string; stderr: string }> {
+): Promise<SpawnMonitoredResult> {
   const { cwd, processName, logCategory = 'process' } = options
   const output = { stdout: '', stderr: '' }
+  const parentThreadId = threadId
 
   const child = spawn(command, args, {
     cwd,
@@ -29,7 +39,7 @@ export async function spawnMonitoredAsync(
 
   log.debug(logCategory, `[${processName}] spawned PID ${child.pid}`)
   if (typeof child.pid === 'number') {
-    emit(PROCESS_SPAWNED_EVENT, { pid: child.pid, processName })
+    emit(PROCESS_SPAWNED_EVENT, { pid: child.pid, processName, threadId: parentThreadId })
   }
 
   child.stdout?.on('data', (chunk) => {
@@ -39,22 +49,42 @@ export async function spawnMonitoredAsync(
     output.stderr += chunk.toString()
   })
 
-  const code = await new Promise<number | null>((resolve, reject) => {
+  const { code, signal } = await new Promise<{
+    code: number | null
+    signal: NodeJS.Signals | null
+  }>((resolve, reject) => {
     child.on('exit', (exitCode, signalCode) => {
       if (typeof child.pid === 'number') {
         emit(PROCESS_EXIT_EVENT, {
           pid: child.pid,
           processName,
+          threadId: parentThreadId,
           code: exitCode,
           signal: signalCode,
         })
       }
-      resolve(exitCode)
+      resolve({ code: exitCode, signal: signalCode })
     })
     child.on('error', (err) =>
       reject(new Error(`Failed to spawn ${processName}: ${err.message}`))
     )
   })
 
-  return { code, stdout: output.stdout, stderr: output.stderr }
+  return { code, signal, stdout: output.stdout, stderr: output.stderr }
+}
+
+/** User-facing message when a monitored child did not exit normally (incl. signal kills). */
+export function formatSpawnMonitoredFailure(
+  processName: string,
+  result: Pick<SpawnMonitoredResult, 'code' | 'signal' | 'stderr' | 'stdout'>
+): string {
+  const hint = result.stderr.trim() || result.stdout.trim()
+  if (result.code === null) {
+    if (hint) return `${processName} failed: ${hint}`
+    return result.signal
+      ? `${processName} terminated by ${result.signal} (interrupted or sync shut down)`
+      : `${processName} exited without a status (interrupted or killed)`
+  }
+  if (hint) return `${processName} failed: ${hint}`
+  return `${processName} exited with code ${result.code}`
 }

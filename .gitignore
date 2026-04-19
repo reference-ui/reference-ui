@@ -1,5 +1,6 @@
 # Dependencies
 node_modules
+.pnpm-store
 research/
 # Build outputs
 dist
@@ -12,7 +13,8 @@ storybook-static
 cosmos-export
 
 # IDE
-.cursor
+.cursor/*
+!.cursor/mcp.json
 .vscode
 .idea
 *.swp
@@ -32,6 +34,7 @@ yarn-error.log*
 pnpm-debug.log*
 
 # Reference UI generated
+packages/reference-icons/src/generated/
 .complexity-temp
 reports/
 .eslint-result.txt
@@ -41,6 +44,7 @@ packages/.sandbox
 .reference-ui
 .ref
 packages/reference-core/src/system/styled
+packages/reference-core/src/reference/browser-component/
 packages/reference-unit/tests/fixtures/sync-readiness/src/generated/
 
 # Nx

@@ -5,20 +5,48 @@
  * Uses blob reporter + merge so the final report includes all projects.
  */
 
-import { mkdir, rm } from 'node:fs/promises'
+import { mkdir, readFile, rm } from 'node:fs/promises'
+import { finished } from 'node:stream/promises'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { createWriteStream } from 'node:fs'
 import { execa } from 'execa'
 import { MATRIX, getPort } from './index'
 import { loadConfig } from '../config/index'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const BLOB_DIR = join(__dirname, '..', '..', 'blob-reports')
+/** Outside `test-results/`: Playwright clears that directory when each run starts, which would delete nested matrix logs between serial matrix projects. */
+const LOG_DIR = join(__dirname, '..', '..', 'matrix-logs')
 const REPORT_DIR = join(__dirname, '..', '..', 'playwright-report')
+
+/** Cap so huge Playwright traces do not blow up CI log size. */
+const MAX_FAILURE_LOG_CHARS = 400_000
+
+async function printFailureLog(projectName: string, logPath: string): Promise<void> {
+  const banner = `\n========== Playwright output: ${projectName} (${logPath}) ==========\n`
+  try {
+    let text = await readFile(logPath, 'utf8')
+    if (text.length > MAX_FAILURE_LOG_CHARS) {
+      const omitted = text.length - MAX_FAILURE_LOG_CHARS
+      text =
+        `… (${omitted.toLocaleString()} characters omitted from start)\n\n` +
+        text.slice(-MAX_FAILURE_LOG_CHARS)
+    }
+    console.error(banner + text)
+    if (!text.endsWith('\n')) console.error('')
+    console.error(`========== end ${projectName} ==========\n`)
+  } catch (err) {
+    console.error(banner)
+    console.error(`Could not read log file: ${err}`)
+  }
+}
 
 export async function run(): Promise<void> {
   await rm(BLOB_DIR, { recursive: true, force: true }).catch(() => {})
+  await rm(LOG_DIR, { recursive: true, force: true }).catch(() => {})
   await mkdir(BLOB_DIR, { recursive: true })
+  await mkdir(LOG_DIR, { recursive: true })
 
   const cfg = loadConfig()
   const workersArg = ['--workers', String(cfg.workers)]
@@ -27,7 +55,9 @@ export async function run(): Promise<void> {
   async function runProject(entry: (typeof MATRIX)[number]) {
     console.log(`\n▶ ${entry.name}`)
     const blobPath = join(BLOB_DIR, `${entry.name}.zip`)
-    const result = await execa(
+    const logPath = join(LOG_DIR, `${entry.name}.log`)
+    const logStream = createWriteStream(logPath)
+    const subprocess = execa(
       'pnpm',
       [
         'exec',
@@ -44,10 +74,23 @@ export async function run(): Promise<void> {
           REF_TEST_PORT: String(getPort(entry)),
           PLAYWRIGHT_BLOB_OUTPUT: blobPath,
         },
-        stdio: 'inherit',
+        all: true,
+        reject: false,
       }
     )
-    return { entry, exitCode: result.exitCode ?? 0 }
+
+    subprocess.all?.pipe(logStream)
+    const result = await subprocess
+    await finished(logStream)
+
+    if ((result.exitCode ?? 0) === 0) {
+      console.log(`✓ ${entry.name} passed`)
+    } else {
+      console.log(`✖ ${entry.name} failed (full output below; also: ${logPath})`)
+      await printFailureLog(entry.name, logPath)
+    }
+
+    return { entry, exitCode: result.exitCode ?? 0, logPath }
   }
 
   if (parallel) {
@@ -60,6 +103,8 @@ export async function run(): Promise<void> {
       if (exitCode !== 0) process.exit(exitCode)
     }
   }
+
+  console.log(`\nProject logs written to ${LOG_DIR}`)
 
   console.log('\n📊 Merging reports...')
   await execa(

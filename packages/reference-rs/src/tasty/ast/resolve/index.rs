@@ -67,15 +67,18 @@ fn build_export_index(
     parsed_files
         .iter()
         .flat_map(|parsed| {
-            parsed.export_bindings.iter().filter_map(|(export_name, local_name)| {
-                resolve_symbol_id(symbol_index, &parsed.file_id, local_name, &parsed.reexport_target)
-                    .map(|symbol_id| {
-                        (
-                            file_symbol_key(&parsed.file_id, export_name),
-                            symbol_id,
-                        )
-                    })
-            })
+            parsed
+                .export_bindings
+                .iter()
+                .filter_map(|(export_name, local_name)| {
+                    resolve_symbol_id(
+                        symbol_index,
+                        &parsed.file_id,
+                        local_name,
+                        &parsed.reexport_target,
+                    )
+                    .map(|symbol_id| (file_symbol_key(&parsed.file_id, export_name), symbol_id))
+                })
         })
         .collect()
 }

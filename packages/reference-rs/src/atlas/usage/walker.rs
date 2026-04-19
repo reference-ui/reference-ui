@@ -5,8 +5,7 @@ use super::literals::{
 use crate::atlas::internal::{JsxOccurrence, ModuleInfo};
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
-    Argument, Expression, JSXAttributeItem, JSXAttributeValue, JSXChild, JSXExpression,
-    Statement,
+    Argument, Expression, JSXAttributeItem, JSXAttributeValue, JSXChild, JSXExpression, Statement,
 };
 use oxc_parser::Parser;
 use oxc_span::{GetSpan, SourceType};
@@ -58,7 +57,11 @@ fn collect_occurrences_from_statement(
             }
         }
         Statement::SwitchStatement(switch_statement) => {
-            collect_occurrences_from_expression(&switch_statement.discriminant, source, occurrences);
+            collect_occurrences_from_expression(
+                &switch_statement.discriminant,
+                source,
+                occurrences,
+            );
             for case in &switch_statement.cases {
                 if let Some(test) = &case.test {
                     collect_occurrences_from_expression(test, source, occurrences);
@@ -226,7 +229,11 @@ fn collect_occurrences_from_expression(
                         collect_occurrences_from_expression(&spread.argument, source, occurrences)
                     }
                     oxc_ast::ast::ArrayExpressionElement::Elision(_) => {}
-                    _ => collect_occurrences_from_expression(element.to_expression(), source, occurrences),
+                    _ => collect_occurrences_from_expression(
+                        element.to_expression(),
+                        source,
+                        occurrences,
+                    ),
                 }
             }
         }
@@ -317,7 +324,11 @@ fn collect_occurrences_from_jsx_attribute_item(
             if let Some(value) = &attribute.value {
                 match value {
                     JSXAttributeValue::ExpressionContainer(container) => {
-                        collect_occurrences_from_jsx_expression(&container.expression, source, occurrences)
+                        collect_occurrences_from_jsx_expression(
+                            &container.expression,
+                            source,
+                            occurrences,
+                        )
                     }
                     JSXAttributeValue::Element(element) => {
                         collect_occurrences_from_jsx_element(element, source, occurrences)
@@ -342,7 +353,9 @@ fn collect_occurrences_from_jsx_child(
 ) {
     match child {
         JSXChild::Text(_) => {}
-        JSXChild::Element(element) => collect_occurrences_from_jsx_element(element, source, occurrences),
+        JSXChild::Element(element) => {
+            collect_occurrences_from_jsx_element(element, source, occurrences)
+        }
         JSXChild::Fragment(fragment) => {
             collect_occurrences_from_jsx_fragment(fragment, source, occurrences)
         }
@@ -373,7 +386,9 @@ fn collect_occurrences_from_jsx_element(
 ) {
     occurrences.push(JsxOccurrence {
         tag_name: jsx_name_to_string(&element.opening_element.name),
-        snippet: slice_span(source, element.opening_element.span()).trim().to_string(),
+        snippet: slice_span(source, element.opening_element.span())
+            .trim()
+            .to_string(),
         attributes: element
             .opening_element
             .attributes

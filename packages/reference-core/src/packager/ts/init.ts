@@ -1,8 +1,44 @@
-import { workers } from '../../lib/thread-pool'
+import { on } from '../../lib/event-bus'
+import { log } from '../../lib/log'
+import { destroyDedicatedPool, workers } from '../../lib/thread-pool'
 import { PACKAGES } from '../packages'
 import type { SyncPayload } from '../../sync/types'
-import { initPackagerTsOrchestrator } from './orchestrator'
+import type { TsPackagerWorkerPayload } from './types'
+import {
+  initPackagerTsOrchestrator,
+  markPackagerTsWorkerDisposed,
+} from './orchestrator'
+
 export { initPackagerTsOrchestrator } from './orchestrator'
+
+const PACKAGER_TS_POOL = 'packager-ts'
+
+let recycleHookRegistered = false
+/** Serialize pool recycle so overlapping `packager-ts:complete` cannot double-destroy. */
+let recycleChain: Promise<void> = Promise.resolve()
+
+function startPackagerTsWorker(workerPayload: TsPackagerWorkerPayload): void {
+  workers.runWorker('packager-ts', workerPayload, { poolName: PACKAGER_TS_POOL })
+}
+
+/**
+ * After final declarations, tear down the dedicated packager-ts pool so the worker
+ * V8 isolate and tsdown/tsc caches are released; spawn a fresh worker for the next
+ * watch iteration. Cold sync skips this to avoid extra process churn.
+ */
+function enqueueRecyclePackagerTsPool(
+  workerPayload: TsPackagerWorkerPayload
+): void {
+  recycleChain = recycleChain.then(async () => {
+    try {
+      markPackagerTsWorkerDisposed()
+      await destroyDedicatedPool(PACKAGER_TS_POOL)
+      startPackagerTsWorker(workerPayload)
+    } catch (err) {
+      log.error('[packager-ts] Failed to recycle DTS worker pool', err)
+    }
+  })
+}
 
 /**
  * Initialize packager-ts from main thread.
@@ -20,12 +56,21 @@ export function initTsPackager(payload: SyncPayload): void {
 
   if (packages.length === 0) return
 
-  initPackagerTsOrchestrator()
-
-  workers.runWorker('packager-ts', {
+  const workerPayload: TsPackagerWorkerPayload = {
     cwd: payload.cwd,
     config: payload.config,
     packages,
     watchMode: payload.options.watch ?? false,
-  })
+  }
+
+  initPackagerTsOrchestrator()
+
+  if (workerPayload.watchMode && !recycleHookRegistered) {
+    recycleHookRegistered = true
+    on('packager-ts:complete', () => {
+      enqueueRecyclePackagerTsPool(workerPayload)
+    })
+  }
+
+  startPackagerTsWorker(workerPayload)
 }

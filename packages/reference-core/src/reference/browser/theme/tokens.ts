@@ -1,16 +1,23 @@
 import type { ReferenceTokenConfig } from '../../../system/api'
 
-/** Canonical for `@reference-ui/types`; `@reference-ui/lib` maintains a parallel copy under `src/Reference/theme/tokens.ts` for package-local edits. */
+/** Canonical for `@reference-ui/types`; `@reference-ui/lib` maintains a parallel copy under `src/components/Reference/theme/tokens.ts` for package-local edits. */
 export const referenceBrowserTokenConfig = {
   colors: {
     reference: {
-      foreground: {
+      /** Primary body / heading text (was `foreground`). */
+      text: {
         value: '#111827',
         dark: '#f9fafb',
       },
-      muted: {
-        value: '#4b5563',
-        dark: '#9ca3af',
+      /** Secondary text (was `muted`). */
+      textLight: {
+        value: 'oklch(44.6% 0.03 256.802)',
+        dark: 'oklch(87.2% 0.01 258.338)',
+      },
+      /** Tertiary / de-emphasized copy (one gray step lighter than {@link textLight}). */
+      textLighter: {
+        value: 'oklch(55.1% 0.027 264.364)',
+        dark: 'oklch(70.7% 0.022 261.325)',
       },
       border: {
         value: '#d1d5db',

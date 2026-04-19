@@ -3,8 +3,8 @@ use oxc_ast::ast::{TSType, TSTypeParameterDeclaration};
 use crate::tasty::constants::libraries::USER_LIBRARY_NAME;
 use crate::tasty::shared::type_ref_util::reference_lookup_name;
 
-use crate::tasty::ast::extract::ExtractionContext;
 use super::slice_span;
+use crate::tasty::ast::extract::ExtractionContext;
 use crate::tasty::model::{MappedModifierKind, TsTypeParameter, TypeRef};
 use oxc_span::GetSpan;
 

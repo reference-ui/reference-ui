@@ -148,8 +148,8 @@ mod tests {
     use oxc_parser::Parser;
     use oxc_span::{GetSpan, SourceType, Span};
 
-    use super::leading_comment_for_span;
     use super::super::parse_comment_metadata;
+    use super::leading_comment_for_span;
 
     fn nth_top_level_interface_span(body: &[Statement<'_>], index: usize) -> Span {
         let mut seen = 0usize;
@@ -165,7 +165,10 @@ mod tests {
         panic!("expected at least {} top-level interface(s)", index + 1);
     }
 
-    fn metadata_for_nth_interface(source: &str, interface_index: usize) -> super::super::parse::CommentMetadata {
+    fn metadata_for_nth_interface(
+        source: &str,
+        interface_index: usize,
+    ) -> super::super::parse::CommentMetadata {
         let allocator = Allocator::default();
         let parsed = Parser::new(&allocator, source, SourceType::ts()).parse();
         let span = nth_top_level_interface_span(&parsed.program.body, interface_index);
@@ -182,8 +185,7 @@ mod tests {
         let source = "/** doc */\ninterface X {}\n";
         let meta = metadata_for_nth_interface(source, 0);
         assert!(
-            meta
-                .description_raw
+            meta.description_raw
                 .as_deref()
                 .is_some_and(|t| t.contains("doc")),
             "expected leading comment text, got {:?}",

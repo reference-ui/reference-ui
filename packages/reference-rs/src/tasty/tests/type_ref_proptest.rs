@@ -14,7 +14,9 @@ use crate::tasty::shared::type_ref_map::map_type_ref;
 use super::type_ref_map_identity::IdentityMap;
 
 fn arb_short_string() -> BoxedStrategy<String> {
-    string_regex("[a-zA-Z0-9_]{0,24}").expect("short string regex").boxed()
+    string_regex("[a-zA-Z0-9_]{0,24}")
+        .expect("short string regex")
+        .boxed()
 }
 
 fn arb_member_kind() -> impl Strategy<Value = TsMemberKind> {
@@ -127,39 +129,34 @@ fn type_ref_strategy() -> impl Strategy<Value = TypeRef> {
             prop::collection::vec(inner.clone(), 1..4).prop_map(|types| TypeRef::Union { types }),
             prop::collection::vec(inner.clone(), 1..4)
                 .prop_map(|types| TypeRef::Intersection { types }),
-            inner
-                .clone()
-                .prop_map(|element| TypeRef::Array {
-                    element: Box::new(element),
-                }),
+            inner.clone().prop_map(|element| TypeRef::Array {
+                element: Box::new(element),
+            }),
             (
                 arb_short_string(),
                 prop::option::of(arb_short_string()),
                 prop::option::of(arb_short_string()),
                 prop::option::of(prop::collection::vec(inner.clone(), 0..3)),
             )
-                .prop_map(
-                    |(name, target_id, source_module, type_arguments)| TypeRef::Reference {
+                .prop_map(|(name, target_id, source_module, type_arguments)| {
+                    TypeRef::Reference {
                         name,
                         target_id,
                         source_module,
                         type_arguments,
-                    },
-                ),
+                    }
+                },),
             prop::collection::vec(arb_tuple_element(inner.clone()), 0..4)
                 .prop_map(|elements| TypeRef::Tuple { elements }),
             prop::collection::vec(arb_member(inner.clone()), 0..3)
                 .prop_map(|members| TypeRef::Object { members }),
-            (
-                inner.clone(),
-                inner.clone(),
-                optional_boxed(inner.clone()),
-            )
-                .prop_map(|(object, index, resolved)| TypeRef::IndexedAccess {
+            (inner.clone(), inner.clone(), optional_boxed(inner.clone()),).prop_map(
+                |(object, index, resolved)| TypeRef::IndexedAccess {
                     object: Box::new(object),
                     index: Box::new(index),
                     resolved,
-                }),
+                }
+            ),
             (
                 prop::collection::vec(arb_fn_param(inner.clone()), 0..3),
                 inner.clone(),
@@ -174,14 +171,14 @@ fn type_ref_strategy() -> impl Strategy<Value = TypeRef> {
                 prop::collection::vec(arb_fn_param(inner.clone()), 0..2),
                 inner.clone(),
             )
-                .prop_map(
-                    |(r#abstract, type_parameters, params, return_type)| TypeRef::Constructor {
+                .prop_map(|(r#abstract, type_parameters, params, return_type)| {
+                    TypeRef::Constructor {
                         r#abstract,
                         type_parameters,
                         params,
                         return_type: Box::new(return_type),
-                    },
-                ),
+                    }
+                },),
             (
                 arb_type_operator_kind(),
                 inner.clone(),

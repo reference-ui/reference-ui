@@ -1,9 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { DEFAULT_OUT_DIR, SYNC_OUTPUT_DIR_GLOB } from '../constants'
+
+const FIXTURE_APP = '/workspace/app'
+const FIXTURE_VIRTUAL = `${FIXTURE_APP}/${DEFAULT_OUT_DIR}/virtual`
+
 async function importCopyAllModule(options?: { virtualDirExists?: boolean }) {
   vi.resetModules()
 
-  const virtualDir = '/workspace/app/.reference-ui/virtual'
+  const virtualDir = FIXTURE_VIRTUAL
 
   const emit = vi.fn()
   const debug = vi.fn()
@@ -63,7 +68,7 @@ describe('virtual/copy-all', () => {
       config: { include: ['src/**/*'], debug: false } as never,
     })
 
-    expect(mkdir).toHaveBeenCalledWith('/workspace/app/.reference-ui/virtual', {
+    expect(mkdir).toHaveBeenCalledWith(FIXTURE_VIRTUAL, {
       recursive: true,
     })
     expect(rm).not.toHaveBeenCalled()
@@ -78,11 +83,11 @@ describe('virtual/copy-all', () => {
       config: { include: ['src/**/*'], debug: false } as never,
     })
 
-    expect(rm).toHaveBeenCalledWith('/workspace/app/.reference-ui/virtual', {
+    expect(rm).toHaveBeenCalledWith(FIXTURE_VIRTUAL, {
       recursive: true,
       force: true,
     })
-    expect(mkdir).toHaveBeenCalledWith('/workspace/app/.reference-ui/virtual', {
+    expect(mkdir).toHaveBeenCalledWith(FIXTURE_VIRTUAL, {
       recursive: true,
     })
   })
@@ -98,7 +103,7 @@ describe('virtual/copy-all', () => {
     expect(fg).not.toHaveBeenCalled()
     expect(copyToVirtual).not.toHaveBeenCalled()
     expect(emit).toHaveBeenLastCalledWith('virtual:copy:complete', {
-      virtualDir: '/workspace/app/.reference-ui/virtual',
+      virtualDir: FIXTURE_VIRTUAL,
     })
   })
 
@@ -121,19 +126,19 @@ describe('virtual/copy-all', () => {
       cwd: '/workspace/app',
       onlyFiles: true,
       absolute: true,
-      ignore: ['**/node_modules/**', '**/.reference-ui/**', '**/.git/**'],
+      ignore: ['**/node_modules/**', SYNC_OUTPUT_DIR_GLOB, '**/.git/**'],
     })
     expect(copyToVirtual).toHaveBeenCalledTimes(2)
     expect(emit).toHaveBeenNthCalledWith(1, 'virtual:fs:change', {
       event: 'add',
-      path: '/workspace/app/.reference-ui/virtual/src/alpha.ts',
+      path: `${FIXTURE_VIRTUAL}/src/alpha.ts`,
     })
     expect(emit).toHaveBeenNthCalledWith(2, 'virtual:fs:change', {
       event: 'add',
-      path: '/workspace/app/.reference-ui/virtual/src/beta.tsx',
+      path: `${FIXTURE_VIRTUAL}/src/beta.tsx`,
     })
     expect(emit).toHaveBeenLastCalledWith('virtual:copy:complete', {
-      virtualDir: '/workspace/app/.reference-ui/virtual',
+      virtualDir: FIXTURE_VIRTUAL,
     })
   })
 })

@@ -4,9 +4,28 @@ import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { DEFAULT_OUT_DIR } from '../constants'
 import type { RefreshEvent, SyncSession } from '../session'
 import { referenceVite } from './plugin'
-import type { ReferenceVitePlugin } from './types'
+import type { ReferenceViteUserConfig } from './types'
+
+/**
+ * Vite’s `Plugin` types hooks as `ObjectHook` (function or `{ handler }`). Our
+ * plugin only implements plain functions; cast for direct calls in tests.
+ */
+type TestableReferenceVitePlugin = {
+  name: string
+  config?: (userConfig: ReferenceViteUserConfig) => { optimizeDeps: { exclude: string[] } }
+  configResolved?: (config: { root: string }) => void
+  configureServer?: (devServer: unknown) => (() => void) | void
+  handleHotUpdate?: (ctx: { file: string }) => unknown
+}
+
+function testableReferenceVite(
+  ...args: Parameters<typeof referenceVite>
+): TestableReferenceVitePlugin {
+  return referenceVite(...args) as TestableReferenceVitePlugin
+}
 
 describe('referenceUiVitePlugin', () => {
   afterEach(() => {
@@ -15,10 +34,10 @@ describe('referenceUiVitePlugin', () => {
 
   it('merges managed packages into optimizeDeps.exclude', () => {
     const cwd = mkdtempSync(join(tmpdir(), 'ref-vite-plugin-'))
-    const plugin = referenceVite()
-    plugin.configResolved?.({ root: cwd } as never)
+    const plugin = testableReferenceVite()
+    plugin.configResolved?.({ root: cwd })
 
-    expect(plugin.config?.({ optimizeDeps: { exclude: ['react'] } } as never)).toEqual({
+    expect(plugin.config?.({ optimizeDeps: { exclude: ['react'] } })).toEqual({
       optimizeDeps: {
         exclude: [
           'react',
@@ -33,20 +52,20 @@ describe('referenceUiVitePlugin', () => {
 
   it('treats generated non-package outputs like virtual as managed HMR roots', async () => {
     const cwd = mkdtempSync(join(tmpdir(), 'ref-vite-plugin-'))
-    const plugin = referenceVite()
-    plugin.configResolved?.({ root: cwd } as never)
+    const plugin = testableReferenceVite()
+    plugin.configResolved?.({ root: cwd })
 
     const result = await plugin.handleHotUpdate?.({
-      file: `${cwd}/.reference-ui/virtual/src/example.tsx`,
-    } as never)
+      file: `${cwd}/${DEFAULT_OUT_DIR}/virtual/src/example.tsx`,
+    })
 
     expect(result).toEqual([])
   })
 
   it('coalesces rapid managed-output writes into one hot update after sync ready', async () => {
     const cwd = mkdtempSync(join(tmpdir(), 'ref-vite-plugin-'))
-    mkdirSync(join(cwd, '.reference-ui', 'react'), { recursive: true })
-    writeFileSync(join(cwd, '.reference-ui', 'react', 'react.mjs'), 'export {}\n')
+    mkdirSync(join(cwd, DEFAULT_OUT_DIR, 'react'), { recursive: true })
+    writeFileSync(join(cwd, DEFAULT_OUT_DIR, 'react', 'react.mjs'), 'export {}\n')
 
     const sends: UpdateEvent[] = []
     const { dispose, emitRefresh, session } = createTestSession()
@@ -108,16 +127,16 @@ interface UpdateEvent {
   }>
 }
 
-async function triggerManagedOutputUpdates(plugin: ReferenceVitePlugin, cwd: string) {
+async function triggerManagedOutputUpdates(plugin: TestableReferenceVitePlugin, cwd: string) {
   return Promise.all([
     plugin.handleHotUpdate?.({
-      file: `${cwd}/.reference-ui/react/react.mjs`,
+      file: `${cwd}/${DEFAULT_OUT_DIR}/react/react.mjs`,
     } as never),
     plugin.handleHotUpdate?.({
-      file: `${cwd}/.reference-ui/styled/styles.css`,
+      file: `${cwd}/${DEFAULT_OUT_DIR}/styled/styles.css`,
     } as never),
     plugin.handleHotUpdate?.({
-      file: `${cwd}/.reference-ui/types/types.mjs`,
+      file: `${cwd}/${DEFAULT_OUT_DIR}/types/types.mjs`,
     } as never),
   ])
 }
@@ -128,13 +147,13 @@ function setupManagedVitePlugin(options: {
   module: { url: string; type: 'js' }
   sends: UpdateEvent[]
   session: SyncSession
-}): { plugin: ReferenceVitePlugin; teardown: (() => void) | void } {
-  const plugin = referenceVite({
+}): { plugin: TestableReferenceVitePlugin; teardown: (() => void) | void } {
+  const plugin = testableReferenceVite({
     internals: {
       getSyncSession: () => options.session,
     },
   })
-  plugin.configResolved?.({ root: options.cwd } as never)
+  plugin.configResolved?.({ root: options.cwd })
 
   return {
     plugin,
@@ -146,14 +165,14 @@ function setupManagedVitePlugin(options: {
       },
       moduleGraph: {
         getModulesByFile(file: string) {
-          if (file === `${options.cwd}/.reference-ui/react/react.mjs`) {
+          if (file === `${options.cwd}/${DEFAULT_OUT_DIR}/react/react.mjs`) {
             return new Set([options.module])
           }
           return undefined
         },
         invalidateModule: options.invalidateModule,
       },
-    } as never),
+    }),
   }
 }
 

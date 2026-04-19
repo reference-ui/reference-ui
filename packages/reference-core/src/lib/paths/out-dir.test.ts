@@ -1,7 +1,8 @@
 import { describe, expect, it, vi, afterEach } from 'vitest'
 
+import { DEFAULT_OUT_DIR } from '../../constants'
+
 const PROJECT_CWD = '/Users/reference-ui/project'
-const DEFAULT_OUT_DIR = '.reference-ui'
 const CUSTOM_OUT_DIR = '.custom-out'
 
 async function importPathHelpers(outDir: string) {

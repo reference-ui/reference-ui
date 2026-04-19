@@ -155,9 +155,10 @@ pub fn create_usage_state(template: ComponentTemplate) -> UsageState {
     UsageState {
         component: Component {
             name: template.name,
-            interface: template.interface_name.zip(template.interface_source).map(
-                |(name, source)| ComponentInterface { name, source },
-            ),
+            interface: template
+                .interface_name
+                .zip(template.interface_source)
+                .map(|(name, source)| ComponentInterface { name, source }),
             source: template.source,
             count: 0,
             props,

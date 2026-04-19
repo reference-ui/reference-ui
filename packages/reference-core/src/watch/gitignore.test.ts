@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 
+import { DEFAULT_OUT_DIR, SYNC_OUTPUT_DIR_GLOB } from '../constants'
 import { getWatchIgnoreGlobs, toWatcherIgnoreGlobs } from './gitignore'
 
 function createTempWorkspace(): string {
@@ -41,7 +42,7 @@ describe('watch/gitignore', () => {
     mkdirSync(join(workspace, 'src', 'generated'), { recursive: true })
     writeFileSync(
       join(workspace, '.gitignore'),
-      ['dist/', '.reference-ui', '/src/generated/', '!src/generated/keep.ts'].join('\n'),
+      ['dist/', DEFAULT_OUT_DIR, '/src/generated/', '!src/generated/keep.ts'].join('\n'),
       'utf-8',
     )
 
@@ -50,11 +51,11 @@ describe('watch/gitignore', () => {
     expect(ignores).toEqual(
       expect.arrayContaining([
         '**/node_modules/**',
-        '**/.reference-ui/**',
+        SYNC_OUTPUT_DIR_GLOB,
         '**/.git/**',
         '**/dist/**',
-        '**/.reference-ui',
-        '**/.reference-ui/**',
+        `**/${DEFAULT_OUT_DIR}`,
+        SYNC_OUTPUT_DIR_GLOB,
         'generated/**',
       ]),
     )

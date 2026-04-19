@@ -6,6 +6,7 @@ import type { PackagerEvents } from './packager/events'
 import type { ReferenceEvents } from './reference/bridge/events'
 import type { LogEvents } from './lib/log/events'
 import type { McpEvents } from './mcp/events'
+import type { ProcessLifecycleEvents } from './lib/child-process/events'
 
 /**
  * Main event registry – maps event names to payload types.
@@ -19,4 +20,5 @@ export type Events = SyncEvents &
   PackagerEvents &
   ReferenceEvents &
   McpEvents &
-  LogEvents
+  LogEvents &
+  ProcessLifecycleEvents

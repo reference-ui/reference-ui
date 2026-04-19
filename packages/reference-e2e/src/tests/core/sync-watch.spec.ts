@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { writeFile, appendFile } from 'node:fs/promises'
+import { writeFile, appendFile, readFile } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { getSandboxDir } from '../../environments/lib/config'
@@ -55,38 +55,47 @@ test.describe('sync-watch', () => {
     test.setTimeout(90_000)
     const sandboxDir = getSandboxDir()
     const syncWatchPath = join(sandboxDir, 'tests', 'SyncWatch.tsx')
+    const originalContent = await readFile(syncWatchPath, 'utf-8')
 
     const randomColor = randomHexColor()
     const expectedRgb = hexToRgb(randomColor)
 
-    await page.goto(testRoutes.syncWatch)
-    const el = page.getByTestId('sync-watch')
-    await expect(el).toBeVisible()
+    try {
+      await page.goto(testRoutes.syncWatch)
+      const el = page.getByTestId('sync-watch')
+      await expect(el).toBeVisible()
 
-    const t0 = Date.now()
-    const ready = waitForRefSyncReady(sandboxDir, { timeout: 60_000 })
-    await writeFile(syncWatchPath, buildSyncWatchContent(randomColor))
-    await ready
+      const t0 = Date.now()
+      const ready = waitForRefSyncReady(sandboxDir, { timeout: 60_000 })
+      await writeFile(syncWatchPath, buildSyncWatchContent(randomColor))
+      await ready
 
-    await expect
-      .poll(
-        async () => {
-          const color = await el.evaluate((e) => getComputedStyle(e).color)
-          return color === expectedRgb
-        },
-        { timeout: 60_000 }
-      )
-      .toBe(true)
+      await expect
+        .poll(
+          async () => {
+            const color = await el.evaluate((e) => getComputedStyle(e).color)
+            return color === expectedRgb
+          },
+          { timeout: 60_000 }
+        )
+        .toBe(true)
 
-    const timeToChangeMs = Date.now() - t0
-    const project = process.env.REF_TEST_PROJECT ?? 'unknown'
-    const entry = JSON.stringify({
-      timestamp: new Date().toISOString(),
-      timeToChangeMs,
-      project,
-      test: 'sync-watch',
-    }) + '\n'
-    await appendFile(METRICS_PATH, entry)
-    console.log(`[sync-watch] timeToChange: ${timeToChangeMs}ms (file → visible)`)
+      const timeToChangeMs = Date.now() - t0
+      const project = process.env.REF_TEST_PROJECT ?? 'unknown'
+      const entry = JSON.stringify({
+        timestamp: new Date().toISOString(),
+        timeToChangeMs,
+        project,
+        test: 'sync-watch',
+      }) + '\n'
+      await appendFile(METRICS_PATH, entry)
+      console.log(`[sync-watch] timeToChange: ${timeToChangeMs}ms (file → visible)`)
+    } finally {
+      if (originalContent !== buildSyncWatchContent(randomColor)) {
+        const ready = waitForRefSyncReady(sandboxDir, { timeout: 60_000 })
+        await writeFile(syncWatchPath, originalContent)
+        await ready
+      }
+    }
   })
 })

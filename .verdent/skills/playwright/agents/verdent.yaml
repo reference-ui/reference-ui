@@ -1,6 +1,0 @@
-interface:
-  display_name: 'Playwright'
-  short_description: 'Automate real browsers from the terminal'
-  icon_dark: './assets/icon-dark.png'
-  icon_light: './assets/icon-light.png'
-  default_prompt: 'Automate browser interactions using Playwright.'

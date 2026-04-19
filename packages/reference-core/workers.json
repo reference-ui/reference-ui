@@ -6,5 +6,5 @@
   "panda": "src/system/workers/panda.ts",
   "packager": "src/packager/worker.ts",
   "packager-ts": "src/packager/ts/worker.ts",
-  "mcp": "src/mcp/worker.ts"
+  "mcp": "src/mcp/worker/worker.ts"
 }

@@ -24,7 +24,9 @@ mod tests {
     const WRAPPED_COMPONENTS_CASE: &str = "wrapped_components";
 
     fn atlas_tests_dir() -> PathBuf {
-        Path::new(env!("CARGO_MANIFEST_DIR")).join("tests").join("atlas")
+        Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("tests")
+            .join("atlas")
     }
 
     fn case_app_root(case_name: &str) -> String {
@@ -67,7 +69,10 @@ mod tests {
             occasional_min_ratio: 0.2,
         };
 
-        assert_eq!(Usage::from_count_with_thresholds(3, 4, &custom), Usage::VeryCommon);
+        assert_eq!(
+            Usage::from_count_with_thresholds(3, 4, &custom),
+            Usage::VeryCommon
+        );
         assert_eq!(score_usage(1, 10), Usage::Occasional);
     }
 
@@ -78,7 +83,7 @@ mod tests {
             include: Some(vec!["src/**".to_string()]),
             exclude: Some(vec!["node_modules/**".to_string()]),
         };
-        
+
         let analyzer = AtlasAnalyzer::new(config);
         assert_eq!(analyzer.config.root_dir, "/test");
     }
@@ -106,13 +111,19 @@ mod tests {
 
         assert_eq!(fancy_button.count, 2);
         assert_eq!(
-            fancy_button.interface.as_ref().map(|interface| interface.name.as_str()),
+            fancy_button
+                .interface
+                .as_ref()
+                .map(|interface| interface.name.as_str()),
             Some("FancyButtonProps")
         );
 
         assert_eq!(search_input.count, 2);
         assert_eq!(
-            search_input.interface.as_ref().map(|interface| interface.name.as_str()),
+            search_input
+                .interface
+                .as_ref()
+                .map(|interface| interface.name.as_str()),
             Some("SearchInputProps")
         );
     }
@@ -124,10 +135,10 @@ mod tests {
             include: None,
             exclude: None,
         };
-        
+
         let mut analyzer = AtlasAnalyzer::new(config);
         let components = analyzer.analyze("/nonexistent");
-        
+
         assert_eq!(components.len(), 0);
     }
 
@@ -153,9 +164,15 @@ mod tests {
         let mut analyzer = AtlasAnalyzer::new(config);
         let components = analyzer.analyze("");
 
-        assert!(components.iter().any(|c| c.name == "Button" && !c.source.starts_with('@')));
-        assert!(components.iter().any(|c| c.name == "AppCard" && !c.source.starts_with('@')));
-        assert!(components.iter().any(|c| c.name == "UserBadge" && !c.source.starts_with('@')));
+        assert!(components
+            .iter()
+            .any(|c| c.name == "Button" && !c.source.starts_with('@')));
+        assert!(components
+            .iter()
+            .any(|c| c.name == "AppCard" && !c.source.starts_with('@')));
+        assert!(components
+            .iter()
+            .any(|c| c.name == "UserBadge" && !c.source.starts_with('@')));
     }
 
     #[test]
@@ -218,8 +235,14 @@ mod tests {
             .collect::<Vec<_>>();
 
         assert_eq!(buttons.len(), 2);
-        assert!(buttons.iter().any(|component| component.source.ends_with("components/forms/Button.tsx") && component.count == 2));
-        assert!(buttons.iter().any(|component| component.source.ends_with("components/marketing/Button.tsx") && component.count == 1));
+        assert!(buttons.iter().any(|component| component
+            .source
+            .ends_with("components/forms/Button.tsx")
+            && component.count == 2));
+        assert!(buttons.iter().any(|component| component
+            .source
+            .ends_with("components/marketing/Button.tsx")
+            && component.count == 1));
     }
 
     #[test]
@@ -239,20 +262,31 @@ mod tests {
             .find(|component| component.name == "AppButton")
             .expect("expected AppButton component");
         assert_eq!(
-            app_button.interface.as_ref().map(|interface| interface.name.as_str()),
+            app_button
+                .interface
+                .as_ref()
+                .map(|interface| interface.name.as_str()),
             Some("ButtonProps")
         );
         assert_eq!(
-            app_button.interface.as_ref().map(|interface| interface.source.as_str()),
+            app_button
+                .interface
+                .as_ref()
+                .map(|interface| interface.source.as_str()),
             Some("@fixtures/barrel-ui")
         );
 
         let package_button = components
             .iter()
-            .find(|component| component.name == "Button" && component.source == "@fixtures/barrel-ui")
+            .find(|component| {
+                component.name == "Button" && component.source == "@fixtures/barrel-ui"
+            })
             .expect("expected included package Button component");
         assert_eq!(
-            package_button.interface.as_ref().map(|interface| interface.name.as_str()),
+            package_button
+                .interface
+                .as_ref()
+                .map(|interface| interface.name.as_str()),
             Some("ButtonProps")
         );
     }
@@ -276,10 +310,16 @@ mod tests {
 
         assert_eq!(button.count, 2);
         assert_eq!(
-            button.interface.as_ref().map(|interface| interface.name.as_str()),
+            button
+                .interface
+                .as_ref()
+                .map(|interface| interface.name.as_str()),
             Some("ButtonProps")
         );
-        assert!(button.examples.iter().any(|example| example.contains("<CTAButton")));
+        assert!(button
+            .examples
+            .iter()
+            .any(|example| example.contains("<CTAButton")));
     }
 
     #[test]
@@ -305,7 +345,10 @@ mod tests {
 
         assert_eq!(button.count, 2);
         assert_eq!(
-            button.interface.as_ref().map(|interface| interface.name.as_str()),
+            button
+                .interface
+                .as_ref()
+                .map(|interface| interface.name.as_str()),
             Some("ButtonProps")
         );
         assert_eq!(badge.count, 1);
@@ -325,7 +368,9 @@ mod tests {
 
         let package_button = components
             .iter()
-            .find(|component| component.name == "Button" && component.source == "@fixtures/default-barrel-ui")
+            .find(|component| {
+                component.name == "Button" && component.source == "@fixtures/default-barrel-ui"
+            })
             .expect("expected package Button component");
         let app_button = components
             .iter()
@@ -334,11 +379,17 @@ mod tests {
 
         assert_eq!(package_button.count, 3);
         assert_eq!(
-            package_button.interface.as_ref().map(|interface| interface.name.as_str()),
+            package_button
+                .interface
+                .as_ref()
+                .map(|interface| interface.name.as_str()),
             Some("ButtonProps")
         );
         assert_eq!(
-            app_button.interface.as_ref().map(|interface| interface.source.as_str()),
+            app_button
+                .interface
+                .as_ref()
+                .map(|interface| interface.source.as_str()),
             Some("@fixtures/default-barrel-ui")
         );
     }
@@ -430,26 +481,32 @@ mod tests {
             include: Some(vec!["@fixtures/demo-ui".to_string()]),
             exclude: None,
         };
-        
+
         let mut analyzer = AtlasAnalyzer::new(config);
         let components = analyzer.analyze("/test");
-        
+
         assert!(!components.is_empty());
-        
+
         let button = components.iter().find(|c| c.name == "Button");
         assert!(button.is_some());
-        
+
         let button = button.unwrap();
         assert_eq!(
-            button.interface.as_ref().map(|interface| interface.name.as_str()),
+            button
+                .interface
+                .as_ref()
+                .map(|interface| interface.name.as_str()),
             Some("ButtonProps")
         );
         assert_eq!(
-            button.interface.as_ref().map(|interface| interface.source.as_str()),
+            button
+                .interface
+                .as_ref()
+                .map(|interface| interface.source.as_str()),
             Some("@fixtures/demo-ui")
         );
         assert!(!button.props.is_empty());
-        
+
         let variant_prop = button.props.iter().find(|p| p.name == "variant");
         assert!(variant_prop.is_some());
         assert_eq!(variant_prop.unwrap().name, "variant");
@@ -463,12 +520,19 @@ mod tests {
             include: Some(vec!["@fixtures/demo-ui:Button".to_string()]),
             exclude: None,
         };
-        
+
         let mut analyzer = AtlasAnalyzer::new(config);
         let components = analyzer.analyze("/test");
 
-        assert!(components.iter().any(|component| component.name == "Button" && component.source == "@fixtures/demo-ui"));
-        assert!(components.iter().any(|component| component.name == "AppCard" && component.source.starts_with("./")));
+        assert!(
+            components
+                .iter()
+                .any(|component| component.name == "Button"
+                    && component.source == "@fixtures/demo-ui")
+        );
+        assert!(components
+            .iter()
+            .any(|component| component.name == "AppCard" && component.source.starts_with("./")));
     }
 
     #[test]
@@ -479,10 +543,10 @@ mod tests {
             include: Some(vec!["@fixtures/demo-ui".to_string()]),
             exclude: Some(vec!["@fixtures/demo-ui:Badge".to_string()]),
         };
-        
+
         let mut analyzer = AtlasAnalyzer::new(config);
         let components = analyzer.analyze("/test");
-        
+
         assert!(!components.is_empty());
         assert!(components.iter().any(|c| c.name == "Button"));
         assert!(components.iter().any(|c| c.name == "Card"));
@@ -495,7 +559,7 @@ mod tests {
             name: "TestProps".to_string(),
             source: "@test/package".to_string(),
         };
-        
+
         assert!(!interface.name.is_empty());
         assert!(!interface.source.is_empty());
     }
@@ -508,7 +572,7 @@ mod tests {
             usage: Usage::Common,
             values: None,
         };
-        
+
         assert_eq!(prop.name, "variant");
         assert_eq!(prop.count, 5);
         assert_eq!(prop.usage, Usage::Common);
@@ -520,14 +584,14 @@ mod tests {
         let mut values = BTreeMap::new();
         values.insert("primary".to_string(), Usage::VeryCommon);
         values.insert("secondary".to_string(), Usage::Rare);
-        
+
         let prop = ComponentProp {
             name: "variant".to_string(),
             count: 5,
             usage: Usage::Common,
             values: Some(values),
         };
-        
+
         assert!(prop.values.is_some());
         let values_map = prop.values.as_ref().unwrap();
         assert_eq!(values_map.len(), 2);
@@ -548,10 +612,10 @@ mod tests {
             name: "ButtonProps".to_string(),
             source: "@fixtures/demo-ui".to_string(),
         };
-        
+
         let mut used_with = BTreeMap::new();
         used_with.insert("Card".to_string(), Usage::Common);
-        
+
         let component = Component {
             name: "Button".to_string(),
             interface: Some(interface),
@@ -578,14 +642,17 @@ mod tests {
             ],
             used_with,
         };
-        
+
         assert_eq!(component.name, "Button");
         assert_eq!(component.count, 10);
         assert_eq!(component.props.len(), 2);
         assert_eq!(component.examples.len(), 2);
         assert_eq!(component.used_with.len(), 1);
         assert_eq!(
-            component.interface.as_ref().map(|interface| interface.name.as_str()),
+            component
+                .interface
+                .as_ref()
+                .map(|interface| interface.name.as_str()),
             Some("ButtonProps")
         );
     }

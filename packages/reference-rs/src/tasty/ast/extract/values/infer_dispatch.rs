@@ -7,8 +7,8 @@ use super::super::infer::{
     infer_array_type, infer_boolean_type_span, infer_numeric_type_span, infer_object_type,
     infer_string_type_span,
 };
-use super::ts_assertions::{infer_ts_as_expression, infer_ts_satisfies_expression};
 use super::super::ExtractionContext;
+use super::ts_assertions::{infer_ts_as_expression, infer_ts_satisfies_expression};
 use crate::tasty::model::{FnParam, JsDoc, TsMember, TsMemberKind, TypeRef};
 use crate::tasty::shared::type_ref_util::property_key_name;
 
@@ -39,9 +39,7 @@ pub(crate) fn infer_value_type_with_const_context(
         Expression::ObjectExpression(object) => {
             Some(infer_object_type(object, ctx, const_asserted)?)
         }
-        Expression::ArrayExpression(array) => {
-            Some(infer_array_type(array, ctx, const_asserted)?)
-        }
+        Expression::ArrayExpression(array) => Some(infer_array_type(array, ctx, const_asserted)?),
         Expression::TSAsExpression(assertion) => {
             infer_ts_as_expression(assertion, ctx, const_asserted)
         }
@@ -116,9 +114,14 @@ fn infer_recipe_selection_object(
         };
 
         let option_names = collect_object_property_names(options, ctx)?;
-        let variant_type = union_or_single(option_names.into_iter().map(|option| TypeRef::Literal {
-            value: format!("'{option}'"),
-        }).collect());
+        let variant_type = union_or_single(
+            option_names
+                .into_iter()
+                .map(|option| TypeRef::Literal {
+                    value: format!("'{option}'"),
+                })
+                .collect(),
+        );
 
         members.push(TsMember {
             name: variant_name,
@@ -143,22 +146,26 @@ fn find_object_property<'a>(
     name: &str,
     ctx: &ExtractionContext<'_>,
 ) -> Option<&'a ObjectExpression<'a>> {
-    object.properties.iter().find_map(|property| {
-        let ObjectPropertyKind::ObjectProperty(property) = property else {
-            return None;
-        };
-        if property.kind != PropertyKind::Init || property.computed || property.method {
-            return None;
-        }
-        if property_key_name(&property.key, ctx.source)?.as_str() != name {
-            return None;
-        }
+    object
+        .properties
+        .iter()
+        .find_map(|property| {
+            let ObjectPropertyKind::ObjectProperty(property) = property else {
+                return None;
+            };
+            if property.kind != PropertyKind::Init || property.computed || property.method {
+                return None;
+            }
+            if property_key_name(&property.key, ctx.source)?.as_str() != name {
+                return None;
+            }
 
-        match property.value.get_inner_expression() {
-            Expression::ObjectExpression(object) => Some(object),
-            _ => None,
-        }
-    }).map(|object| &**object)
+            match property.value.get_inner_expression() {
+                Expression::ObjectExpression(object) => Some(object),
+                _ => None,
+            }
+        })
+        .map(|object| &**object)
 }
 
 fn collect_object_property_names(

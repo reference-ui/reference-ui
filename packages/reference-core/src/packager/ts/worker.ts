@@ -1,5 +1,6 @@
 import { existsSync } from 'node:fs'
 import { emit, on } from '../../lib/event-bus'
+import { startWorkerMemoryReporter } from '../../lib/profiler'
 import { KEEP_ALIVE } from '../../lib/thread-pool'
 import { getOutDirPath } from '../../lib/paths/out-dir'
 import { getRuntimeEntryPath } from '../layout'
@@ -27,6 +28,7 @@ export function hasAllBundleOutputs(
 export default async function runTsPackager(
   payload: TsPackagerWorkerPayload
 ): Promise<never> {
+  startWorkerMemoryReporter('packager-ts', { logSampleLines: true })
   const queue = createDtsGenerationQueue(payload)
 
   emit('packager-ts:ready', {})

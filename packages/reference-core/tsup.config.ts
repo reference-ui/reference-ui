@@ -1,5 +1,5 @@
 import { defineConfig } from 'tsup'
-import { workerEntries } from './src/lib/thread-pool'
+import { workerEntries } from './src/lib/thread-pool/worker-entries'
 import { copyLiquidTemplates } from './tools/tsup/liquid'
 
 export default defineConfig({
@@ -7,6 +7,9 @@ export default defineConfig({
     public: 'src/public.ts',
     index: 'src/index.ts',
     config: 'src/config/index.ts',
+    constants: 'src/constants.ts',
+    'mcp-child': 'src/mcp/worker/child-process/entry.ts',
+    'packager-ts-child': 'src/packager/ts/child-process/entry.ts',
     ...workerEntries,
   },
   format: 'esm',

@@ -1,9 +1,9 @@
-import type { Plugin } from 'vite'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import mdx from '@mdx-js/rollup'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkMdxFrontmatter from 'remark-mdx-frontmatter'
+import { referenceVite } from '@reference-ui/core'
 
 export default defineConfig({
   plugins: [
@@ -14,11 +14,9 @@ export default defineConfig({
         remarkPlugins: [remarkFrontmatter, remarkMdxFrontmatter],
       }),
     },
+    referenceVite(),
     react({ include: /\.(mdx|js|jsx|ts|tsx)$/ }),
   ],
-  optimizeDeps: {
-    exclude: ['@reference-ui/react', '@reference-ui/system'],
-  },
   server: {
     port: 5174,
   },

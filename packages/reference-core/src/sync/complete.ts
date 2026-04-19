@@ -1,9 +1,11 @@
 import { on, once } from '../lib/event-bus'
 import { logPackagesBuilt } from '../packager/logging'
 import type { SyncPayload } from './types'
+import { initWatchReady } from './watch-ready'
 import {
   logSyncDone,
   logSyncFailure,
+  logSyncMilestone,
   logSyncReady,
   markSyncCycleStart,
   REF_SYNC_FAILED_MESSAGE,
@@ -15,13 +17,15 @@ export { REF_SYNC_FAILED_MESSAGE }
 /**
  * Register the completion listener.
  *
- * In one-shot mode, we wait for `packager:complete` first, then for the
- * subsequent `mcp:complete`. This avoids treating a stale catch-up declaration
- * pass or stale MCP artifact as completion for the current sync run.
+ * In one-shot mode, shutdown runs after final library declarations
+ * (`packager-ts:complete`). `packager:complete` is logged separately when the
+ * bundle finishes (before the final DTS pass). MCP is out of band: `ref mcp`
+ * builds its own model when the editor starts that server.
  *
- * In watch mode, readiness is tied to the packager output instead of MCP. The
- * dev server and browser only depend on the packaged artifacts, and gating the
- * ready signal on MCP causes unnecessary watch-mode stalls.
+ * In watch mode, readiness is tied to the runtime surface becoming usable. The
+ * dev server and browser can refresh once runtime packages are on disk;
+ * TypeScript declarations, reference/Tasty output, and final
+ * `@reference-ui/types` packaging continue in the background.
  *
  * We also listen to worker events directly instead of `sync:complete` because
  * `sync:complete` is emitted from the main thread, and BroadcastChannel does not
@@ -55,51 +59,31 @@ export function initComplete(payload: SyncPayload): void {
     logPackagesBuilt(packageCount, durationMs)
   })
 
+  on('packager-ts:runtime:complete', () => {
+    logSyncMilestone('Generated runtime TypeScript declarations')
+  })
+
+  on('packager-ts:complete', () => {
+    logSyncMilestone('Generated library TypeScript declarations')
+  })
+
   if (!payload.options.watch) {
-    once('packager:complete', ({ packageCount, durationMs }) => {
+    on('packager:complete', ({ packageCount, durationMs }) => {
       logPackagesBuilt(packageCount, durationMs)
-      once('mcp:complete', () => {
-        logSyncDone()
-        void shutdownAndExit(0, 'sync:complete')
-      })
+    })
+    once('packager-ts:complete', () => {
+      logSyncDone()
+      void shutdownAndExit(0, 'sync:complete')
     })
     return
   }
 
-  /**
-   * Normal watch-mode rebuilds complete when the full packager bundle finishes.
-   * Also mark the cold-start as done so incremental fragment paths know they
-   * can start emitting ready signals.
-   */
-  let initialSyncComplete = false
-  let fragmentPending = false
-
-  on('virtual:fragment:change', () => {
-    fragmentPending = true
-  })
-
-  on('watch:change', () => {
-    markSyncCycleStart()
-  })
-
   on('packager:complete', ({ packageCount, durationMs }) => {
     logPackagesBuilt(packageCount, durationMs)
-    initialSyncComplete = true
-    fragmentPending = false
-    logSyncReady()
   })
 
-  /**
-   * Fragment-only changes (tokens(), keyframes(), etc.) skip the reference
-   * build and go through config → panda codegen → packager runtime bundle
-   * (runtime CSS + JS only — no reference/MCP pass).
-   * Emit ready once the runtime bundle is on disk so test consumers that do a
-   * fresh page load see the updated token values.
-   * Guard on initialSyncComplete to avoid a premature signal during cold start.
-   */
-  on('packager:runtime:complete', () => {
-    if (!initialSyncComplete || !fragmentPending) return
-    fragmentPending = false
-    logSyncReady()
+  initWatchReady({
+    onCycleStart: markSyncCycleStart,
+    onReady: logSyncReady,
   })
 }

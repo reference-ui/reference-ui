@@ -6,19 +6,23 @@ pub(super) fn statements_contain_jsx(statements: &oxc_allocator::Vec<'_, Stateme
 
 fn statement_contains_jsx(statement: &Statement<'_>) -> bool {
     match statement {
-        Statement::ExpressionStatement(expression) => expression_contains_jsx(&expression.expression),
+        Statement::ExpressionStatement(expression) => {
+            expression_contains_jsx(&expression.expression)
+        }
         Statement::ReturnStatement(return_statement) => return_statement
             .argument
             .as_ref()
             .map(expression_contains_jsx)
             .unwrap_or(false),
-        Statement::VariableDeclaration(declaration) => declaration.declarations.iter().any(|declarator| {
-            declarator
-                .init
-                .as_ref()
-                .map(expression_contains_jsx)
-                .unwrap_or(false)
-        }),
+        Statement::VariableDeclaration(declaration) => {
+            declaration.declarations.iter().any(|declarator| {
+                declarator
+                    .init
+                    .as_ref()
+                    .map(expression_contains_jsx)
+                    .unwrap_or(false)
+            })
+        }
         Statement::BlockStatement(block) => block.body.iter().any(statement_contains_jsx),
         Statement::IfStatement(if_statement) => {
             expression_contains_jsx(&if_statement.test)
@@ -32,7 +36,10 @@ fn statement_contains_jsx(statement: &Statement<'_>) -> bool {
         Statement::SwitchStatement(switch_statement) => {
             expression_contains_jsx(&switch_statement.discriminant)
                 || switch_statement.cases.iter().any(|case| {
-                    case.test.as_ref().map(expression_contains_jsx).unwrap_or(false)
+                    case.test
+                        .as_ref()
+                        .map(expression_contains_jsx)
+                        .unwrap_or(false)
                         || case.consequent.iter().any(statement_contains_jsx)
                 })
         }
@@ -55,16 +62,20 @@ fn statement_contains_jsx(statement: &Statement<'_>) -> bool {
                 || statement_contains_jsx(&for_statement.body)
         }
         Statement::ForInStatement(for_statement) => {
-            expression_contains_jsx(&for_statement.right) || statement_contains_jsx(&for_statement.body)
+            expression_contains_jsx(&for_statement.right)
+                || statement_contains_jsx(&for_statement.body)
         }
         Statement::ForOfStatement(for_statement) => {
-            expression_contains_jsx(&for_statement.right) || statement_contains_jsx(&for_statement.body)
+            expression_contains_jsx(&for_statement.right)
+                || statement_contains_jsx(&for_statement.body)
         }
         Statement::WhileStatement(while_statement) => {
-            expression_contains_jsx(&while_statement.test) || statement_contains_jsx(&while_statement.body)
+            expression_contains_jsx(&while_statement.test)
+                || statement_contains_jsx(&while_statement.body)
         }
         Statement::DoWhileStatement(while_statement) => {
-            statement_contains_jsx(&while_statement.body) || expression_contains_jsx(&while_statement.test)
+            statement_contains_jsx(&while_statement.body)
+                || expression_contains_jsx(&while_statement.test)
         }
         Statement::TryStatement(try_statement) => {
             try_statement.block.body.iter().any(statement_contains_jsx)
@@ -113,7 +124,8 @@ fn expression_contains_jsx(expression: &Expression<'_>) -> bool {
             expression_contains_jsx(&parenthesized.expression)
         }
         Expression::CallExpression(call) => {
-            expression_contains_jsx(&call.callee) || call.arguments.iter().any(argument_contains_jsx)
+            expression_contains_jsx(&call.callee)
+                || call.arguments.iter().any(argument_contains_jsx)
         }
         Expression::ConditionalExpression(conditional) => {
             expression_contains_jsx(&conditional.test)
@@ -134,27 +146,35 @@ fn expression_contains_jsx(expression: &Expression<'_>) -> bool {
             oxc_ast::ast::ArrayExpressionElement::Elision(_) => false,
             _ => expression_contains_jsx(element.to_expression()),
         }),
-        Expression::ObjectExpression(object) => object.properties.iter().any(|property| match property {
-            oxc_ast::ast::ObjectPropertyKind::ObjectProperty(property) => {
-                expression_contains_jsx(&property.value)
-            }
-            oxc_ast::ast::ObjectPropertyKind::SpreadProperty(spread) => {
-                expression_contains_jsx(&spread.argument)
-            }
-        }),
+        Expression::ObjectExpression(object) => {
+            object.properties.iter().any(|property| match property {
+                oxc_ast::ast::ObjectPropertyKind::ObjectProperty(property) => {
+                    expression_contains_jsx(&property.value)
+                }
+                oxc_ast::ast::ObjectPropertyKind::SpreadProperty(spread) => {
+                    expression_contains_jsx(&spread.argument)
+                }
+            })
+        }
         Expression::SequenceExpression(sequence) => {
             sequence.expressions.iter().any(expression_contains_jsx)
         }
         Expression::UnaryExpression(unary) => expression_contains_jsx(&unary.argument),
-        Expression::AwaitExpression(await_expression) => expression_contains_jsx(&await_expression.argument),
-        Expression::ArrowFunctionExpression(arrow) => statements_contain_jsx(&arrow.body.statements),
+        Expression::AwaitExpression(await_expression) => {
+            expression_contains_jsx(&await_expression.argument)
+        }
+        Expression::ArrowFunctionExpression(arrow) => {
+            statements_contain_jsx(&arrow.body.statements)
+        }
         Expression::FunctionExpression(function) => function
             .body
             .as_ref()
             .map(|body| statements_contain_jsx(&body.statements))
             .unwrap_or(false),
         Expression::TSAsExpression(asserted) => expression_contains_jsx(&asserted.expression),
-        Expression::TSSatisfiesExpression(asserted) => expression_contains_jsx(&asserted.expression),
+        Expression::TSSatisfiesExpression(asserted) => {
+            expression_contains_jsx(&asserted.expression)
+        }
         Expression::TSTypeAssertion(asserted) => expression_contains_jsx(&asserted.expression),
         Expression::TSNonNullExpression(asserted) => expression_contains_jsx(&asserted.expression),
         Expression::TSInstantiationExpression(instantiated) => {

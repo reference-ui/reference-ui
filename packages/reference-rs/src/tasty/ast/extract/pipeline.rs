@@ -209,7 +209,8 @@ impl FileBindings {
 
             emitted.insert(shell.id.clone());
 
-            for referenced_local in local_references_in_file(shell, &scanned_file.module_specifier) {
+            for referenced_local in local_references_in_file(shell, &scanned_file.module_specifier)
+            {
                 if local_decls.contains_key(&referenced_local) {
                     pending.push(referenced_local);
                 }

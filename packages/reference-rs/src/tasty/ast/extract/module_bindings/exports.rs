@@ -7,12 +7,12 @@ use oxc_ast::ast::{
 };
 use oxc_span::{GetSpan, Span};
 
+use super::super::slice_span;
 use super::super::symbols::{push_interface_shell, push_type_alias_shell};
 use super::super::ExtractionContext;
 use super::imports::module_export_name_to_string;
 use crate::tasty::ast::model::SymbolShell;
 use crate::tasty::scanner::resolve_import;
-use super::super::slice_span;
 
 pub(in crate::tasty::ast::extract) fn collect_exported_declaration(
     file_id: &str,

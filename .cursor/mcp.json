@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "reference-ui": {
+      "command": "pnpm",
+      "args": [
+        "--filter",
+        "@reference-ui/lib",
+        "exec",
+        "node",
+        "../reference-core/bin/ref.mjs",
+        "mcp"
+      ],
+      "cwd": "${workspaceFolder}"
+    }
+  }
+}

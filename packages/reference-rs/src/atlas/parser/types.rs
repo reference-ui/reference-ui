@@ -10,7 +10,12 @@ pub(super) fn type_expr_from_interface(
     let mut parts = interface_decl
         .extends
         .iter()
-        .map(|heritage| TypeExpr::Reference(reference_name(slice_span(source, heritage.expression.span()))))
+        .map(|heritage| {
+            TypeExpr::Reference(reference_name(slice_span(
+                source,
+                heritage.expression.span(),
+            )))
+        })
         .collect::<Vec<_>>();
 
     let props = interface_decl
@@ -51,8 +56,8 @@ pub(super) fn type_expr_from_type(type_annotation: &TSType<'_>, source: &str) ->
                 .members
                 .iter()
                 .filter_map(|signature| match signature {
-                    TSSignature::TSPropertySignature(property) => property_key_name(&property.key, source)
-                        .map(|name| PropDef {
+                    TSSignature::TSPropertySignature(property) => {
+                        property_key_name(&property.key, source).map(|name| PropDef {
                             name,
                             value_type: property
                                 .type_annotation
@@ -61,7 +66,8 @@ pub(super) fn type_expr_from_type(type_annotation: &TSType<'_>, source: &str) ->
                                     prop_value_type_from_type(&annotation.type_annotation, source)
                                 })
                                 .unwrap_or(PropValueType::Unknown),
-                        }),
+                        })
+                    }
                     _ => None,
                 })
                 .collect(),
@@ -73,9 +79,10 @@ pub(super) fn type_expr_from_type(type_annotation: &TSType<'_>, source: &str) ->
                 .map(|nested| type_expr_from_type(nested, source))
                 .collect(),
         ),
-        TSType::TSTypeReference(reference) => {
-            TypeExpr::Reference(reference_name(slice_span(source, reference.type_name.span())))
-        }
+        TSType::TSTypeReference(reference) => TypeExpr::Reference(reference_name(slice_span(
+            source,
+            reference.type_name.span(),
+        ))),
         TSType::TSUnionType(union) => union_literals(union.types.iter().collect(), source)
             .map(TypeExpr::UnionLiterals)
             .unwrap_or(TypeExpr::Unknown),
@@ -91,9 +98,10 @@ pub(super) fn type_expr_from_type(type_annotation: &TSType<'_>, source: &str) ->
 
 fn prop_value_type_from_type(type_annotation: &TSType<'_>, source: &str) -> PropValueType {
     match type_annotation {
-        TSType::TSTypeReference(reference) => {
-            PropValueType::Reference(reference_name(slice_span(source, reference.type_name.span())))
-        }
+        TSType::TSTypeReference(reference) => PropValueType::Reference(reference_name(slice_span(
+            source,
+            reference.type_name.span(),
+        ))),
         TSType::TSUnionType(union) => union_literals(union.types.iter().collect(), source)
             .map(PropValueType::UnionLiterals)
             .unwrap_or(PropValueType::Unknown),

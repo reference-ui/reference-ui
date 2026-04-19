@@ -1,18 +1,18 @@
 import { existsSync } from 'node:fs'
 import { resolve, join } from 'node:path'
+import { DEFAULT_OUT_DIR } from '../constants'
 import { readManifest, SESSION_FILE } from './files'
 import { createSessionWatcher } from './watch'
 import type { GetSyncSessionOptions, RefreshHandler, SyncSession } from './types'
-
-const DEFAULT_OUT_DIR = '.reference-ui'
 
 /**
  * Resolve the output directory to watch.
  *
  * - If `options.outDir` is supplied it is used directly (resolved relative to
  *   `cwd` if relative), supporting projects that override the default outDir.
- * - Otherwise walk up from `cwd` looking for a `.reference-ui/session.json`,
- *   falling back to `cwd/.reference-ui` when none is found.
+ * - Otherwise walk up from `cwd` looking for `session.json` next to each ancestor
+ *   under the default sync output directory, falling back to that directory under
+ *   `cwd` when none is found.
  */
 function findOutDir(options: GetSyncSessionOptions): string {
   if (options.outDir) return resolve(options.cwd, options.outDir)
@@ -33,8 +33,8 @@ function findOutDir(options: GetSyncSessionOptions): string {
 /**
  * Attach to the Reference sync session for the given project root.
  *
- * Watches the `.reference-ui` output directory (or the path given by
- * `options.outDir`) for changes and fires `onRefresh` handlers each time a
+ * Watches the sync output directory (default: {@link DEFAULT_OUT_DIR}, or the
+ * path given by `options.outDir`) for changes and fires `onRefresh` handlers each time a
  * logical build transitions to `ready`.
  *
  * The watcher targets the **directory**, not the file, so atomic rename-based

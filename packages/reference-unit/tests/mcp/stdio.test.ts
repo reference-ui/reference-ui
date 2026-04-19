@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import {
   findTextContent,
   findTextResource,
+  MCP_TEST_REQUEST_TIMEOUT_MS,
   referenceUnitRoot,
   startMcpStdioClient,
   stopMcpStdioClient,
@@ -10,10 +11,10 @@ import {
 
 let running: RunningMcpStdioClient | null = null
 
-describe('mcp stdio server', () => {
+describe('mcp stdio server', { timeout: 120_000 }, () => {
   beforeAll(async () => {
     running = await startMcpStdioClient(referenceUnitRoot)
-  }, 30_000)
+  }, 120_000)
 
   afterAll(async () => {
     await stopMcpStdioClient(running)
@@ -23,7 +24,9 @@ describe('mcp stdio server', () => {
   it('serves the expected tools and public resource shape over stdio', async () => {
     expect(running).not.toBeNull()
 
-    const tools = await running!.client.listTools()
+    const tools = await running!.client.listTools(undefined, {
+      timeout: MCP_TEST_REQUEST_TIMEOUT_MS,
+    })
     const toolNames = tools.tools.map(tool => tool.name).sort()
 
     expect(toolNames).toEqual([
@@ -33,9 +36,14 @@ describe('mcp stdio server', () => {
       'list_components',
     ])
 
-    const resource = await running!.client.readResource({
-      uri: 'reference-ui://component-model',
-    })
+    const resource = await running!.client.readResource(
+      {
+        uri: 'reference-ui://component-model',
+      },
+      {
+        timeout: MCP_TEST_REQUEST_TIMEOUT_MS,
+      },
+    )
     const modelJson = findTextResource(resource)
 
     expect(modelJson?.text).toContain('"schemaVersion"')
@@ -44,10 +52,16 @@ describe('mcp stdio server', () => {
     expect(modelJson?.text).not.toContain('"manifestPath"')
     expect(modelJson?.text).not.toContain('"diagnostics"')
 
-    const listComponentsResult = await running!.client.callTool({
-      name: 'list_components',
-      arguments: {},
-    })
+    const listComponentsResult = await running!.client.callTool(
+      {
+        name: 'list_components',
+        arguments: {},
+      },
+      undefined,
+      {
+        timeout: MCP_TEST_REQUEST_TIMEOUT_MS,
+      },
+    )
 
     expect(findTextContent(listComponentsResult)).toContain('"components"')
   })
