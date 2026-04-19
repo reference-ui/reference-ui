@@ -1,5 +1,13 @@
 # @reference-ui/lib
 
+## 0.0.4
+
+### Patch Changes
+
+- 76c3ab5: Public pre-release
+- Updated dependencies [76c3ab5]
+  - @reference-ui/core@0.0.4
+
 ## 0.0.3
 
 ### Patch Changes
