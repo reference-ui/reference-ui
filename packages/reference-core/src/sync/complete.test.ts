@@ -111,6 +111,7 @@ describe('sync/complete', () => {
     const { initComplete } = await loadCompleteModule()
     initComplete(createPayload(true))
 
+    fireEvent('system:panda:css')
     fireEvent('packager:runtime:complete', { packageCount: 3, durationMs: 20 })
 
     expect(logPackagesBuilt).toHaveBeenCalledWith(3, 20)
@@ -120,11 +121,14 @@ describe('sync/complete', () => {
     expect(shutdownAndExit).not.toHaveBeenCalled()
   })
 
-  it('marks watch rebuilds ready directly from the runtime bundle', async () => {
+  it('marks watch rebuilds ready only after css and runtime packaging complete', async () => {
     const { initComplete } = await loadCompleteModule()
     initComplete(createPayload(true))
 
     fireEvent('watch:change')
+    fireEvent('system:panda:css')
+    expect(logSyncReady).not.toHaveBeenCalled()
+
     fireEvent('packager:runtime:complete', { packageCount: 3, durationMs: 12 })
 
     expect(logSyncReady).toHaveBeenCalledTimes(1)

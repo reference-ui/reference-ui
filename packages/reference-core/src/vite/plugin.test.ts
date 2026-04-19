@@ -18,6 +18,7 @@ type TestableReferenceVitePlugin = {
   config?: (userConfig: ReferenceViteUserConfig) => { optimizeDeps: { exclude: string[] } }
   configResolved?: (config: { root: string }) => void
   configureServer?: (devServer: unknown) => (() => void) | void
+  closeBundle?: () => void
   handleHotUpdate?: (ctx: { file: string }) => unknown
 }
 
@@ -79,10 +80,14 @@ describe('referenceUiVitePlugin', () => {
     const { plugin, teardown } = setupManagedVitePlugin({
       cwd,
       invalidateModule,
-      module,
+      modulesByFile: {
+        [`${cwd}/${DEFAULT_OUT_DIR}/react/react.mjs`]: new Set([module]),
+      },
       sends,
       session,
     })
+
+    await Promise.resolve()
 
     const [firstUpdate, secondUpdate, thirdUpdate] = await triggerManagedOutputUpdates(plugin, cwd)
 
@@ -111,6 +116,118 @@ describe('referenceUiVitePlugin', () => {
     emitRefresh()
 
     expect(sends).toHaveLength(1)
+
+    teardown?.()
+    expect(dispose).toHaveBeenCalledTimes(1)
+  })
+
+  it('defers project source-module HMR until sync ready', async () => {
+    const cwd = mkdtempSync(join(tmpdir(), 'ref-vite-plugin-'))
+    mkdirSync(join(cwd, 'src', 'cosmos'), { recursive: true })
+    writeFileSync(join(cwd, 'src', 'cosmos', 'HmrSmoke.fixture.tsx'), 'export default function Fixture() { return null }\n')
+
+    const sends: UpdateEvent[] = []
+    const { dispose, emitRefresh, session } = createTestSession()
+
+    const sourceModule = {
+      url: '/src/cosmos/HmrSmoke.fixture.tsx',
+      type: 'js' as const,
+    }
+
+    const invalidateModule = vi.fn()
+    const { plugin, teardown } = setupManagedVitePlugin({
+      cwd,
+      invalidateModule,
+      modulesByFile: {
+        [`${cwd}/src/cosmos/HmrSmoke.fixture.tsx`]: new Set([sourceModule]),
+      },
+      sends,
+      session,
+    })
+
+    await Promise.resolve()
+
+    const result = await plugin.handleHotUpdate?.({
+      file: `${cwd}/src/cosmos/HmrSmoke.fixture.tsx`,
+      modules: [sourceModule],
+    } as never)
+
+    expect(result).toEqual([])
+    expect(sends).toEqual([])
+
+    emitRefresh()
+
+    expect(sends).toEqual([
+      {
+        type: 'update',
+        updates: [
+          {
+            type: 'js-update',
+            path: '/src/cosmos/HmrSmoke.fixture.tsx',
+            acceptedPath: '/src/cosmos/HmrSmoke.fixture.tsx',
+            timestamp: expect.any(Number),
+          },
+        ],
+      },
+    ])
+    expect(invalidateModule).toHaveBeenCalledTimes(1)
+
+    teardown?.()
+    expect(dispose).toHaveBeenCalledTimes(1)
+  })
+
+  it('flushes subscribed managed css writes after sync ready even without Vite hot-update callbacks', async () => {
+    const cwd = mkdtempSync(join(tmpdir(), 'ref-vite-plugin-'))
+
+    const sends: UpdateEvent[] = []
+    const { dispose, emitRefresh, session } = createTestSession()
+
+    const cssModule = {
+      url: '/@fs/.reference-ui/react/styles.css',
+      type: 'css' as const,
+    }
+
+    const invalidateModule = vi.fn()
+    let managedOutputWrite: ((file: string) => void) | undefined
+
+    const { teardown } = setupManagedVitePlugin({
+      cwd,
+      invalidateModule,
+      modulesByFile: {
+        [`${cwd}/${DEFAULT_OUT_DIR}/react/styles.css`]: new Set([cssModule]),
+      },
+      sends,
+      session,
+      subscribeToManagedOutputWrites: async (_projectPaths, onWrite) => {
+        managedOutputWrite = onWrite
+        return {
+          unsubscribe() {},
+        }
+      },
+    })
+
+    await Promise.resolve()
+
+    managedOutputWrite?.(`${cwd}/${DEFAULT_OUT_DIR}/react/styles.css`)
+
+    expect(sends).toEqual([])
+
+    emitRefresh()
+
+    expect(sends).toEqual([
+      {
+        type: 'update',
+        updates: [
+          {
+            type: 'css-update',
+            path: '/@fs/.reference-ui/react/styles.css',
+            acceptedPath: '/@fs/.reference-ui/react/styles.css',
+            timestamp: expect.any(Number),
+          },
+        ],
+      },
+    ])
+    expect(invalidateModule).toHaveBeenCalledTimes(1)
 
     teardown?.()
     expect(dispose).toHaveBeenCalledTimes(1)
@@ -144,35 +261,47 @@ async function triggerManagedOutputUpdates(plugin: TestableReferenceVitePlugin, 
 function setupManagedVitePlugin(options: {
   cwd: string
   invalidateModule: ReturnType<typeof vi.fn>
-  module: { url: string; type: 'js' }
+  modulesByFile: Record<string, Set<{ url: string; type: 'js' | 'css' }>>
   sends: UpdateEvent[]
   session: SyncSession
+  subscribeToManagedOutputWrites?: (
+    projectPaths: { projectRoot: string; outDir: string; managedOutputRoots: Set<string> },
+    onWrite: (file: string) => void
+  ) => Promise<{ unsubscribe(): void }>
 }): { plugin: TestableReferenceVitePlugin; teardown: (() => void) | void } {
   const plugin = testableReferenceVite({
     internals: {
       getSyncSession: () => options.session,
+      subscribeToManagedOutputWrites: options.subscribeToManagedOutputWrites,
     },
   })
   plugin.configResolved?.({ root: options.cwd })
 
   return {
     plugin,
-    teardown: plugin.configureServer?.({
-      ws: {
-        send(payload: UpdateEvent) {
-          options.sends.push(payload)
-        },
-      },
-      moduleGraph: {
-        getModulesByFile(file: string) {
-          if (file === `${options.cwd}/${DEFAULT_OUT_DIR}/react/react.mjs`) {
-            return new Set([options.module])
-          }
-          return undefined
-        },
-        invalidateModule: options.invalidateModule,
-      },
+    teardown: (() => {
+      plugin.closeBundle?.()
     }),
+    ...(() => {
+      plugin.configureServer?.({
+        ws: {
+          send(payload: UpdateEvent) {
+            options.sends.push(payload)
+          },
+        },
+        moduleGraph: {
+          getModulesByFile(file: string) {
+            return options.modulesByFile[file]
+          },
+          invalidateModule: options.invalidateModule,
+        },
+        httpServer: {
+          once() {},
+        },
+      })
+
+      return {}
+    })(),
   }
 }
 

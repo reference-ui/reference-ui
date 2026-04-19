@@ -2,6 +2,7 @@
 
 import type {
   ManagedOutputSubscription,
+  ManagedOutputWriteSubscriber,
   ReferenceBundlerOptions,
   ReferenceProjectPaths,
   ReferenceSyncSessionReader,
@@ -10,10 +11,7 @@ import type {
 export type ReferenceWebpackSyncSessionReader = ReferenceSyncSessionReader
 
 export interface ReferenceWebpackInternals extends NonNullable<ReferenceBundlerOptions['internals']> {
-  subscribeToManagedOutputWrites?: (
-    projectPaths: ReferenceProjectPaths,
-    onWrite: (file: string) => void
-  ) => Promise<ManagedOutputSubscription>
+  subscribeToManagedOutputWrites?: ManagedOutputWriteSubscriber
 }
 
 export interface ReferenceWebpackOptions extends ReferenceBundlerOptions {
