@@ -64,61 +64,31 @@ describe('referenceUiVitePlugin', () => {
   })
 
   it('coalesces rapid managed-output writes into one hot update after sync ready', async () => {
-    const cwd = mkdtempSync(join(tmpdir(), 'ref-vite-plugin-'))
-    mkdirSync(join(cwd, DEFAULT_OUT_DIR, 'react'), { recursive: true })
-    writeFileSync(join(cwd, DEFAULT_OUT_DIR, 'react', 'react.mjs'), 'export {}\n')
-
-    const sends: UpdateEvent[] = []
-    const { dispose, emitRefresh, session } = createTestSession()
-
-    const module = {
-      url: '/@fs/react.mjs',
-      type: 'js' as const,
-    }
-
-    const invalidateModule = vi.fn()
-    const { plugin, teardown } = setupManagedVitePlugin({
-      cwd,
-      invalidateModule,
-      modulesByFile: {
-        [`${cwd}/${DEFAULT_OUT_DIR}/react/react.mjs`]: new Set([module]),
-      },
-      sends,
-      session,
-    })
+    const scenario = setupManagedRuntimeModuleScenario()
 
     await Promise.resolve()
 
-    const [firstUpdate, secondUpdate, thirdUpdate] = await triggerManagedOutputUpdates(plugin, cwd)
+    const [firstUpdate, secondUpdate, thirdUpdate] = await triggerManagedOutputUpdates(
+      scenario.plugin,
+      scenario.cwd,
+    )
 
     expect(firstUpdate).toEqual([])
     expect(secondUpdate).toEqual([])
     expect(thirdUpdate).toEqual([])
-    expect(sends).toEqual([])
+    expect(scenario.sends).toEqual([])
 
-    emitRefresh()
+    scenario.emitRefresh()
 
-    expect(sends).toEqual([
-      {
-        type: 'update',
-        updates: [
-          {
-            type: 'js-update',
-            path: '/@fs/react.mjs',
-            acceptedPath: '/@fs/react.mjs',
-            timestamp: expect.any(Number),
-          },
-        ],
-      },
-    ])
-    expect(invalidateModule).toHaveBeenCalledTimes(1)
+    expectManagedReactModuleUpdate(scenario.sends)
+    expect(scenario.invalidateModule).toHaveBeenCalledTimes(1)
 
-    emitRefresh()
+    scenario.emitRefresh()
 
-    expect(sends).toHaveLength(1)
+    expect(scenario.sends).toHaveLength(1)
 
-    teardown?.()
-    expect(dispose).toHaveBeenCalledTimes(1)
+    scenario.teardown?.()
+    expect(scenario.dispose).toHaveBeenCalledTimes(1)
   })
 
   it('defers project source-module HMR until sync ready', async () => {
@@ -330,4 +300,62 @@ function createTestSession(): {
       dispose,
     },
   }
+}
+
+function setupManagedRuntimeModuleScenario(): {
+  cwd: string
+  dispose: ReturnType<typeof vi.fn>
+  emitRefresh(): void
+  invalidateModule: ReturnType<typeof vi.fn>
+  plugin: TestableReferenceVitePlugin
+  sends: UpdateEvent[]
+  teardown: (() => void) | void
+} {
+  const cwd = mkdtempSync(join(tmpdir(), 'ref-vite-plugin-'))
+  mkdirSync(join(cwd, DEFAULT_OUT_DIR, 'react'), { recursive: true })
+  writeFileSync(join(cwd, DEFAULT_OUT_DIR, 'react', 'react.mjs'), 'export {}\n')
+
+  const sends: UpdateEvent[] = []
+  const { dispose, emitRefresh, session } = createTestSession()
+  const invalidateModule = vi.fn()
+  const module = {
+    url: '/@fs/react.mjs',
+    type: 'js' as const,
+  }
+
+  const { plugin, teardown } = setupManagedVitePlugin({
+    cwd,
+    invalidateModule,
+    modulesByFile: {
+      [`${cwd}/${DEFAULT_OUT_DIR}/react/react.mjs`]: new Set([module]),
+    },
+    sends,
+    session,
+  })
+
+  return {
+    cwd,
+    dispose,
+    emitRefresh,
+    invalidateModule,
+    plugin,
+    sends,
+    teardown,
+  }
+}
+
+function expectManagedReactModuleUpdate(sends: UpdateEvent[]): void {
+  expect(sends).toEqual([
+    {
+      type: 'update',
+      updates: [
+        {
+          type: 'js-update',
+          path: '/@fs/react.mjs',
+          acceptedPath: '/@fs/react.mjs',
+          timestamp: expect.any(Number),
+        },
+      ],
+    },
+  ])
 }
