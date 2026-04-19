@@ -1,5 +1,11 @@
 # @reference-ui/rust
 
+## 0.0.4
+
+### Patch Changes
+
+- 76c3ab5: Public pre-release
+
 ## 0.0.3
 
 ### Patch Changes
