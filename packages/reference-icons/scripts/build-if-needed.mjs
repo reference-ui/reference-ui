@@ -13,8 +13,25 @@ import { fileURLToPath } from 'node:url'
 const pkgRoot = join(dirname(fileURLToPath(import.meta.url)), '..')
 const distDir = join(pkgRoot, 'dist')
 const stampPath = join(distDir, '.reference-icons-src-fingerprint')
+const generatedIndexPath = join(pkgRoot, 'src', 'generated', 'index.ts')
+const jsxNamesPath = join(pkgRoot, 'src', 'jsx-names.ts')
 
-const extraRootFiles = ['rollup.config.mjs', 'tsconfig.json', 'tsconfig.build.json', 'package.json']
+const extraRootFiles = [
+  'rollup.config.mjs',
+  'tsconfig.json',
+  'tsconfig.build.json',
+  'package.json',
+  'scripts/generate-material-icons.mjs',
+]
+
+function ensureGeneratedSources() {
+  if (existsSync(generatedIndexPath) && existsSync(jsxNamesPath)) {
+    return
+  }
+
+  console.error('@reference-ui/icons: generated sources missing, running icons:generate...')
+  execSync('pnpm run icons:generate', { cwd: pkgRoot, stdio: 'inherit', env: process.env })
+}
 
 async function walkFiles(dir) {
   const out = []
@@ -50,6 +67,7 @@ async function fingerprint() {
 }
 
 async function main() {
+  ensureGeneratedSources()
   const current = await fingerprint()
   const force = process.env.FORCE_REFERENCE_ICONS_BUILD === '1'
 
