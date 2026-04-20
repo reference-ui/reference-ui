@@ -1,19 +1,15 @@
 /** Internal type surface for the Reference UI Webpack integration. */
 
 import type {
-  ManagedOutputSubscription,
+  ManagedOutputWriteSubscriber,
   ReferenceBundlerOptions,
-  ReferenceProjectPaths,
   ReferenceSyncSessionReader,
 } from '../bundlers/types'
 
 export type ReferenceWebpackSyncSessionReader = ReferenceSyncSessionReader
 
 export interface ReferenceWebpackInternals extends NonNullable<ReferenceBundlerOptions['internals']> {
-  subscribeToManagedOutputWrites?: (
-    projectPaths: ReferenceProjectPaths,
-    onWrite: (file: string) => void
-  ) => Promise<ManagedOutputSubscription>
+  subscribeToManagedOutputWrites?: ManagedOutputWriteSubscriber
 }
 
 export interface ReferenceWebpackOptions extends ReferenceBundlerOptions {

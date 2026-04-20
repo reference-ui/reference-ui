@@ -23,6 +23,7 @@ export interface ConfigAdditions {
   include?: string[]
   debug?: boolean
   skipTypescript?: boolean
+  jsxElements?: string[]
   /** Literal value for config.extends. e.g. '[baseSystem]' or '[]' */
   extends?: string
   /** Literal value for config.layers. e.g. '[baseSystem]' or '[]' */
@@ -62,7 +63,10 @@ function deepMerge<T extends object>(base: T, additions: Partial<T>): T {
   return result
 }
 
-const DEFAULT_BASESYSTEM_PKG = '@reference-ui/lib'
+const IDENTIFIER_IMPORTS: Record<string, { source: string; imported: string }> = {
+  baseSystem: { source: '@fixtures/extend-library', imported: 'baseSystem' },
+  layerBaseSystem: { source: '@fixtures/layer-library', imported: 'baseSystem' },
+}
 let initialSandboxConfigContent: string | null = null
 
 /** Collect identifiers from expression like '[baseSystem]' → ['baseSystem'] */
@@ -83,10 +87,13 @@ function buildConfigContent(merged: Record<string, unknown>, extendsExpr?: strin
   if (layersExpr) collectIdentifiers(layersExpr).forEach((id) => usedIds.add(id))
 
   for (const id of usedIds) {
-    if (id === 'baseSystem') {
-      imports.push(`import { baseSystem } from '${DEFAULT_BASESYSTEM_PKG}'`)
-      break
+    const spec = IDENTIFIER_IMPORTS[id]
+    if (!spec) continue
+    if (spec.imported === id) {
+      imports.push(`import { ${id} } from '${spec.source}'`)
+      continue
     }
+    imports.push(`import { ${spec.imported} as ${id} } from '${spec.source}'`)
   }
 
   const extras: string[] = []

@@ -1,12 +1,21 @@
 import * as React from 'react'
-import type { MaterialSymbolIconComponent, MaterialSymbolIconProps } from './types'
+import { Div } from '@reference-ui/react'
+import type {
+  MaterialSymbolIconComponent,
+  MaterialSymbolIconProps,
+  MaterialSymbolIconShellProps,
+} from './types'
+
+const IconShell = Div as unknown as React.ForwardRefExoticComponent<
+  React.PropsWithoutRef<MaterialSymbolIconShellProps> & React.RefAttributes<HTMLDivElement>
+>
 
 export function createIcon(
   Outline: React.ElementType,
   Filled: React.ElementType,
   displayName: string,
 ): MaterialSymbolIconComponent {
-  const Icon = React.forwardRef<HTMLSpanElement, MaterialSymbolIconProps>(function MaterialIcon(
+  const Icon = React.forwardRef<HTMLDivElement, MaterialSymbolIconProps>(function MaterialIcon(
     { variant = 'outline', size = '1em', style, ...rest },
     ref,
   ) {
@@ -15,19 +24,16 @@ export function createIcon(
     >
 
     return (
-      <span
+      <IconShell
         ref={ref}
+        display="inline-flex"
+        alignItems="center"
+        justifyContent="center"
+        lineHeight="0"
+        flexShrink="0"
+        size={size}
+        style={style}
         {...rest}
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          lineHeight: 0,
-          flexShrink: 0,
-          width: size,
-          height: size,
-          ...style,
-        }}
       >
         <Svg
           width="100%"
@@ -38,7 +44,7 @@ export function createIcon(
           focusable="false"
           style={{ display: 'block' }}
         />
-      </span>
+      </IconShell>
     )
   })
   Icon.displayName = displayName

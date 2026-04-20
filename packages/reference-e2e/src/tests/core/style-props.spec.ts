@@ -1,12 +1,6 @@
 import { test, expect } from '@playwright/test'
-import { join } from 'node:path'
-import { pathToFileURL } from 'node:url'
-import { getSandboxDir } from '../../environments/lib/config'
+import { tokensConfig } from '../../environments/base/tokens-config'
 import { testRoutes } from '../../environments/base/routes'
-
-const { tokensConfig } = await import(
-  pathToFileURL(join(getSandboxDir(), 'tokens.ts')).href
-)
 
 /** Hex to rgb string for comparing with getComputedStyle */
 function hexToRgb(hex: string): string {

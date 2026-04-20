@@ -5,12 +5,118 @@ order: 6
 slug: icons
 ---
 
-import { P } from '@reference-ui/react'
+import { Code, Div, P, Pre } from '@reference-ui/react'
+import {
+  BoltIcon,
+  CodeIcon,
+  FavoriteIcon,
+  HomeIcon,
+  PaletteIcon,
+  SearchIcon,
+  SettingsIcon,
+  TerminalIcon,
+} from '@reference-ui/icons'
 
 # Icons
 
-The icon package is intentionally isolated from the rest of the monorepo right now. `reference-lib` and `reference-docs` are not consuming it during normal development or build flows.
+This page smoke-tests the packaged `@reference-ui/icons` artifact consumed by `reference-docs`.
 
-<P fontSize="sm" color="docsMuted" marginTop="6r" marginBottom="0">
-  This page is a placeholder until icon integration is re-enabled.
+<P fontSize="sm" color="docsMuted" marginTop="0" marginBottom="4r">
+  `reference-docs` installs the local `reference-icons` package through a `file:` dependency at the
+  package root, not a `workspace:*` dependency. That means docs still resolves the package through
+  its package metadata and built `dist` entrypoints, while keeping the setup simple.
 </P>
+
+<Pre margin="0 0 6r" padding="4r" bg="docsSidebarBg" borderRadius="lg" overflow="auto">
+  <Code color="docsText">"@reference-ui/icons": "file:../reference-icons"</Code>
+</Pre>
+
+## Tokens, background, and `size`
+
+Material icons render with `fill="currentColor"`, so **`color` on a parent** (for example `green.500`) controls the glyph. **`size`** maps to **`width` and `height`** on the icon’s outer **`Div`**, so tokens (`5r`), **`rem`**, numbers, **`calc()`**, etc. behave like everywhere else. This app’s **`ui.config.ts` `include`** also lists **`../reference-icons/src`** so **`ref sync`** runs Panda on `@reference-ui/icons` sources (not only `dist`), and those dimensions extract correctly.
+
+<Div
+  marginBottom="8r"
+  padding="4r"
+  borderRadius="xl"
+  bg="green.100"
+  border="1px solid"
+  borderColor="green.200"
+>
+  <P fontSize="sm" color="green.800" marginTop="0" marginBottom="4r">
+    Same icon, three <Code>size</Code> forms, on a <Code>green.50</Code> surface with <Code>color=&quot;green.500&quot;</Code> on the row.
+  </P>
+  <Div display="flex" flexWrap="wrap" gap="6r" alignItems="flex-end" color="green.500">
+    {[
+      { caption: '24px from a number', size: 24, code: 'size={24}' },
+      { caption: '1.75rem', size: '1.75rem', code: 'size="1.75rem"' },
+      {
+        caption: 'Rhythm 5r shorthand',
+        size: '5r',
+        code: 'size="5r"',
+      },
+    ].map(row => (
+      <Div key={row.code} display="flex" flexDirection="column" alignItems="center" gap="2r" minWidth="10r">
+        <SearchIcon color="green.500" variant="filled" size="100r" ria-label={`Search icon ${row.caption}`} />
+        <Div fontSize="xs" color="green.700" textAlign="center">
+          {row.caption}
+        </Div>
+        <Code fontSize="xs" color="green.900" bg="green.100" paddingX="2r" paddingY="1r" borderRadius="md">
+          {row.code}
+        </Code>
+      </Div>
+    ))}
+  </Div>
+</Div>
+
+<Div display="grid" gridTemplateColumns="repeat(auto-fit, minmax(220px, 1fr))" gap="4r">
+  {[
+    ['SearchIcon', SearchIcon],
+    ['HomeIcon', HomeIcon],
+    ['FavoriteIcon', FavoriteIcon],
+    ['SettingsIcon', SettingsIcon],
+    ['PaletteIcon', PaletteIcon],
+    ['BoltIcon', BoltIcon],
+    ['CodeIcon', CodeIcon],
+    ['TerminalIcon', TerminalIcon],
+  ].map(([name, Icon]) => (
+    <Div
+      key={name}
+      padding="4r"
+      border="1px solid"
+      borderColor="docsPanelBorder"
+      borderRadius="xl"
+      bg="docsSidebarBg"
+      display="flex"
+      flexDirection="column"
+      gap="3r"
+    >
+      <Div fontWeight="600" color="docsText">{name}</Div>
+      <Div display="flex" gap="3r" alignItems="center">
+        <Div
+          width="12r"
+          height="12r"
+          borderRadius="lg"
+          bg="docsPageBg"
+          display="grid"
+          placeItems="center"
+        >
+          <Icon variant="outline" size="2rem" aria-label={`${name} outline`} />
+        </Div>
+        <Div
+          width="12r"
+          height="12r"
+          borderRadius="lg"
+          bg="docsPageBg"
+          display="grid"
+          placeItems="center"
+        >
+          <Icon variant="filled" size="2rem" aria-label={`${name} filled`} />
+        </Div>
+      </Div>
+      <P fontSize="sm" color="docsMuted" margin="0">
+        outline / filled
+      </P>
+    </Div>
+  ))}
+</Div>

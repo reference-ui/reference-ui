@@ -41,6 +41,12 @@ export interface ReferenceUIConfig {
   extends?: BaseSystem[]
 
   /**
+   * Explicit JSX element names to include in Panda/component discovery.
+   * Use this for generated component surfaces that static tracing cannot infer.
+   */
+  jsxElements?: string[]
+
+  /**
    * Include an upstream system's component CSS in an isolated cascade layer.
    * Components render correctly. Tokens do NOT land in your Panda config or TypeScript types.
    * Each entry must have a `css` field (run `ref sync` on the upstream package first).

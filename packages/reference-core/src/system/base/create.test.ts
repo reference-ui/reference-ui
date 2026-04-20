@@ -102,15 +102,17 @@ describe('system/base/create', () => {
     const result = await createBaseArtifacts(workspaceDir, {
       name: 'release-ready-system',
       include: ['src/**/*.{ts,tsx}'],
-    } as never)
+    } as never, ['IconShell', 'CardFrame'])
 
     expect(result.baseSystem).toEqual({
       name: 'release-ready-system',
       fragment: ';upstreamFragment()\n;localFragment()',
+      jsxElements: ['IconShell', 'CardFrame'],
     })
     expect(readBaseSystemFile(baseSystemPath).json).toEqual({
       name: 'release-ready-system',
       fragment: ';upstreamFragment()\n;localFragment()',
+      jsxElements: ['IconShell', 'CardFrame'],
     })
     expect(readFileSync(baseSystemTypesPath, 'utf-8')).toContain('export declare const baseSystem: BaseSystem')
     expect(writeGeneratedSystemFontTypes).toHaveBeenCalledWith(
@@ -129,13 +131,14 @@ describe('system/base/create', () => {
     await createBaseArtifacts(workspaceDir, {
       name: 'layered-system',
       include: ['src/**/*.{ts,tsx}'],
-    } as never)
+    } as never, ['IconShell'])
 
     updateBaseSystemCss(workspaceDir, '@layer layered-system { .x { color: red; } }')
 
     expect(readBaseSystemFile(baseSystemPath).json).toEqual({
       name: 'layered-system',
       fragment: ';upstreamFragment()\n;localFragment()',
+      jsxElements: ['IconShell'],
       css: '@layer layered-system { .x { color: red; } }',
     })
   })
@@ -152,11 +155,11 @@ describe('system/base/create', () => {
       include: ['src/**/*.{ts,tsx}'],
     } as never
 
-    await createBaseArtifacts(workspaceDir, config)
+    await createBaseArtifacts(workspaceDir, config, ['IconShell'])
     const firstBaseSystem = readFileSync(baseSystemPath, 'utf-8')
     const firstTypes = readFileSync(baseSystemTypesPath, 'utf-8')
 
-    await createBaseArtifacts(workspaceDir, config)
+    await createBaseArtifacts(workspaceDir, config, ['IconShell'])
     const secondBaseSystem = readFileSync(baseSystemPath, 'utf-8')
     const secondTypes = readFileSync(baseSystemTypesPath, 'utf-8')
 

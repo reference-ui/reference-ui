@@ -201,22 +201,28 @@ describe('session/init – watch mode event wiring', () => {
     expect(mockTransitionBuild).toHaveBeenCalledWith('running')
   })
 
-  it('marks watch builds ready when the runtime bundle finishes', async () => {
+  it('marks watch builds ready after Panda CSS and runtime packaging finish', async () => {
     const { initSession } = await loadInitModule(dir)
     mockTryAcquireLock.mockReturnValue('acquired')
     initSession(createPayload(true))
+
+    fireOn('system:panda:css')
+    expect(mockTransitionBuild).not.toHaveBeenCalledWith('ready')
 
     fireOn('packager:runtime:complete')
 
     expect(mockTransitionBuild).toHaveBeenCalledWith('ready')
   })
 
-  it('marks watch rebuilds ready after the runtime bundle', async () => {
+  it('marks watch rebuilds ready only after both watch outputs finish', async () => {
     const { initSession } = await loadInitModule(dir)
     mockTryAcquireLock.mockReturnValue('acquired')
     initSession(createPayload(true))
 
     fireOn('watch:change')
+    fireOn('system:panda:css')
+    expect(mockTransitionBuild).not.toHaveBeenCalledWith('ready')
+
     fireOn('packager:runtime:complete')
 
     expect(mockTransitionBuild).toHaveBeenCalledWith('queued')

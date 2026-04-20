@@ -7,6 +7,14 @@ import {
 } from './codegen'
 import { log } from '../../../lib/log'
 
+function formatSurfacedError(error: unknown): string {
+  if (error instanceof Error) {
+    return error.stack?.trim() || `${error.name}: ${error.message}`
+  }
+
+  return String(error)
+}
+
 export function onRunCodegen(): void {
   runPandaCodegen()
     .then(() => {
@@ -17,10 +25,8 @@ export function onRunCodegen(): void {
       const pandaOutput = getPandaErrorOutput(err)
       const cause = unwrapPandaError(err)
 
-      log.error(
-        '[panda] codegen failed (continuing without system/styled). Virtual copy will still run.',
-        cause instanceof Error ? cause.message : String(cause)
-      )
+      log.error('[panda] codegen failed (continuing without system/styled). Virtual copy will still run.')
+      log.error('[panda] cause:', formatSurfacedError(cause))
       if (pandaOutput) {
         log.error('[panda] output:', pandaOutput)
       }
@@ -38,7 +44,8 @@ export function onRunCss(): void {
       const pandaOutput = getPandaErrorOutput(err)
       const cause = unwrapPandaError(err)
 
-      log.error('[panda] css failed:', cause instanceof Error ? cause.message : String(cause))
+      log.error('[panda] css failed:')
+      log.error('[panda] cause:', formatSurfacedError(cause))
       if (pandaOutput) {
         log.error('[panda] output:', pandaOutput)
       }

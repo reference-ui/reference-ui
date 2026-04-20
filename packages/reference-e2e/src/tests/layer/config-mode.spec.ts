@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
-import { fileURLToPath, pathToFileURL } from 'node:url'
-import { colors } from '@reference-ui/lib/theme'
+import { fileURLToPath } from 'node:url'
+import { lightDarkDemoBgLight } from '@fixtures/layer-library'
+import { tokensConfig } from '../../environments/base/tokens-config'
 import {
   addToConfig,
   getSandboxDir,
@@ -20,8 +21,7 @@ const RENAMED_LAYER_NAME = 'reference-e2e-renamed'
 const REACT_LAYER_PLACEHOLDER = '__REFERENCE_UI_LAYER_NAME__'
 const sandboxDir = getSandboxDir()
 const cssSnapshotDir = join(PACKAGE_ROOT, 'css_snapshot')
-const { tokensConfig } = await import(pathToFileURL(join(sandboxDir, 'tokens.ts')).href)
-const DEFAULT_LAYER_CONFIG = { extends: '[]', layers: '[baseSystem]' } as const
+const DEFAULT_LAYER_CONFIG = { extends: '[]', layers: '[layerBaseSystem]' } as const
 
 let activeConfigKey: string | null = null
 let syncedConfigKey: string | null = null
@@ -69,8 +69,8 @@ test.describe.serial('layer', () => {
     activeConfigKey = JSON.stringify(DEFAULT_LAYER_CONFIG)
     syncedConfigKey = null
     const content = await readFile(join(sandboxDir, 'ui.config.ts'), 'utf-8')
-    expect(content).toContain('layers: [baseSystem]')
-    expect(content).toContain("import { baseSystem } from '@reference-ui/lib'")
+    expect(content).toContain('layers: [layerBaseSystem]')
+    expect(content).toContain("import { baseSystem as layerBaseSystem } from '@fixtures/layer-library'")
   })
 
   test.describe('with default layer config', () => {
@@ -201,9 +201,9 @@ test.describe.serial('layer', () => {
       const outside = page.getByTestId('layers-outside')
       await expect(outside).toBeVisible()
       const outsideColor = await outside.evaluate(e =>
-        getComputedStyle(e).getPropertyValue('--colors-teal-500').trim()
+        getComputedStyle(e).getPropertyValue('--colors-lightDarkDemoBg').trim()
       )
-      expect(outsideColor).not.toBe(colors.teal[500].value)
+      expect(outsideColor).not.toBe(lightDarkDemoBgLight)
     })
   })
 
@@ -212,7 +212,7 @@ test.describe.serial('layer', () => {
     await applyLayerConfig({
       name: RENAMED_LAYER_NAME,
       extends: '[]',
-      layers: '[baseSystem]',
+      layers: '[layerBaseSystem]',
     })
 
     const stylesPath = join(sandboxDir, '.reference-ui', 'react', 'styles.css')

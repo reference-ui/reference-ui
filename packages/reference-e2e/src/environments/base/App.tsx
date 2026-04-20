@@ -3,6 +3,7 @@ import ColorModeTest from './tests/ColorModeTest'
 import SyncWatch from './tests/SyncWatch'
 import TokenSyncWatch from './tests/TokenSyncWatch'
 import ExtendsTest from './tests/ExtendsTest'
+import JsxElementsTest from './tests/JsxElementsTest'
 import LayersTest from './tests/LayersTest'
 import StylePropsTest from './tests/StylePropsTest'
 import ResponsiveContainerTest from './tests/ResponsiveContainerTest'
@@ -26,6 +27,9 @@ export default function App() {
       </Route>
       <Route path={testRoutes.extends}>
         <ExtendsTest />
+      </Route>
+      <Route path={testRoutes.jsxElements}>
+        <JsxElementsTest />
       </Route>
       <Route path={testRoutes.layers}>
         <LayersTest />

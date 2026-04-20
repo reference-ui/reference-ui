@@ -6,11 +6,11 @@
  */
 
 import { defineConfig } from '@reference-ui/core'
+import { baseSystem as iconsBaseSystem } from '@reference-ui/icons/baseSystem'
 
 export default defineConfig({
   name: 'reference-ui',
   include: ['src/**/*.{ts,tsx}'],
-  extends: [], // no upstream — reference-lib is the root
+  extends: [iconsBaseSystem],
   debug: false,
-  
 })
