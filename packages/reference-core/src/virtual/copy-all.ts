@@ -1,7 +1,8 @@
-import { resolve } from 'node:path'
+import { join, relative, resolve } from 'node:path'
 import fg from 'fast-glob'
 import { emit } from '../lib/event-bus'
 import { resetDir } from '../lib/fs/reset-dir'
+import { publishStagedDir } from '../lib/fs/publish-staged-dir'
 import { log } from '../lib/log'
 import { getVirtualDirPath } from '../lib/paths'
 import { copyToVirtual } from './copy'
@@ -15,13 +16,15 @@ export async function copyAll(payload: {
   const { sourceDir, config } = payload
   const root = resolve(sourceDir)
   const virtualDir = getVirtualDirPath(root)
+  const stagingDir = `${virtualDir}.next`
   const { include, debug } = config
 
   log.debug('virtual', 'Initializing', root, '→', virtualDir)
 
-  await resetDir(virtualDir)
+  await resetDir(stagingDir)
 
   if (!include.length) {
+    await publishStagedDir(stagingDir, virtualDir)
     log.debug('virtual', 'No include patterns - skipping')
     emit('virtual:copy:complete', { virtualDir })
     return
@@ -36,10 +39,12 @@ export async function copyAll(payload: {
   log.debug('virtual', `Copying ${files.length} files`)
 
   for (const file of files) {
-    const virtualPath = await copyToVirtual(file, root, virtualDir, { debug })
+    const stagedPath = await copyToVirtual(file, root, stagingDir, { debug })
+    const virtualPath = join(virtualDir, relative(stagingDir, stagedPath))
     emit('virtual:fs:change', { event: 'add', path: virtualPath })
   }
 
+  await publishStagedDir(stagingDir, virtualDir)
   log.debug('virtual', 'Sync complete')
   emit('virtual:copy:complete', { virtualDir })
 }
