@@ -1,8 +1,8 @@
 import { inspect } from 'node:util'
 import { broadcastChannel } from './channel'
 import { parseBusMessage } from './wire'
+import { isEventBusMessageLoggingEnabled } from '../config'
 import { log } from '../../log'
-import { getConfig } from '../../../config/store'
 
 let isInitialized = false
 const ANSI_ORANGE = '\u001B[38;5;208m'
@@ -37,7 +37,7 @@ function formatBusLog(event: string, payload: unknown): string {
  * Initialize event bus with debug logging if enabled
  */
 export function initEventBus() {
-  if (!getConfig()?.debug || isInitialized) return
+  if (!isEventBusMessageLoggingEnabled() || isInitialized) return
 
   broadcastChannel.addEventListener('message', (msg: Event) => {
     const parsed = parseBusMessage((msg as MessageEvent).data)

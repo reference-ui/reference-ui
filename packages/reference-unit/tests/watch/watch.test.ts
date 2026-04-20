@@ -3,7 +3,7 @@ import { writeFile, rm } from 'node:fs/promises'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { pkgRoot, virt, waitFor } from '../virtual/helpers'
-import { waitForNextWatchReady } from './helpers'
+import { getWatchReadyMarker, waitForNextWatchReady } from './helpers'
 
 /**
  * Watch / dev server: ref sync --watch runs in background (global-setup).
@@ -16,10 +16,13 @@ const COLOR_B = 'rgb(99, 88, 77)'
 const WATCH_CSS_FILE = 'src/__e2e_watch_css__.tsx'
 const HEX_A = '#123456'
 const HEX_B = '#abcdef'
+const WATCH_DIV_COLOR_FILE = 'src/__e2e_watch_div_color__.tsx'
+const DIV_COLOR_A = 'red.600'
 const WATCH_TOKENS_FILE = 'src/__e2e_watch_tokens__.ts'
 const TOKEN_HEX_A = '#aabb11'
 const TOKEN_HEX_B = '#cc22dd'
 const STYLES_PATH = join(pkgRoot, '.reference-ui', 'styled', 'styles.css')
+const REACT_STYLES_PATH = join(pkgRoot, '.reference-ui', 'react', 'styles.css')
 const PANDA_CONFIG_PATH = join(pkgRoot, '.reference-ui', 'panda.config.ts')
 
 function makeContent(bg: string) {
@@ -34,6 +37,14 @@ function makeCssContent(color: string) {
   return `import { css } from '@reference-ui/react'
 export function WatchCssE2E() {
   return <div className={css({ color: '${color}' })}>watch css</div>
+}
+`
+}
+
+function makeDivColorContent(color: string) {
+  return `import { Div } from '@reference-ui/react'
+export function WatchDivColorE2E() {
+  return <Div data-testid="watch-div-color" color="${color}">watch div color</Div>
 }
 `
 }
@@ -54,6 +65,11 @@ describe('watch – dev server reactivity', () => {
     }
     try {
       await rm(join(pkgRoot, WATCH_CSS_FILE), { force: true })
+    } catch {
+      /* ignore */
+    }
+    try {
+      await rm(join(pkgRoot, WATCH_DIV_COLOR_FILE), { force: true })
     } catch {
       /* ignore */
     }
@@ -86,9 +102,10 @@ describe('watch – dev server reactivity', () => {
 
   it('watch mode rebuilds styled output after a watched css() edit', async () => {
     const srcPath = join(pkgRoot, WATCH_CSS_FILE)
+    const firstBaseline = getWatchReadyMarker()
     await writeFile(srcPath, makeCssContent(HEX_A))
 
-    const firstReady = await waitForNextWatchReady(20_000)
+    const firstReady = await waitForNextWatchReady(20_000, firstBaseline)
     expect(firstReady, 'watch mode should emit a fresh ready signal after the first css() file write').toBe(
       true
     )
@@ -99,9 +116,10 @@ describe('watch – dev server reactivity', () => {
     )
     expect(initialCss, 'styled/styles.css should include the first watched css() color').toBe(true)
 
+    const secondBaseline = getWatchReadyMarker()
     await writeFile(srcPath, makeCssContent(HEX_B))
 
-    const secondReady = await waitForNextWatchReady(20_000)
+    const secondReady = await waitForNextWatchReady(20_000, secondBaseline)
     expect(secondReady, 'watch mode should emit a fresh ready signal after updating the css() file').toBe(
       true
     )
@@ -113,11 +131,46 @@ describe('watch – dev server reactivity', () => {
     expect(updatedCss, 'styled/styles.css should update after the watched css() edit').toBe(true)
   }, 30_000)
 
+  it('watch mode marks ready only after a watched Div color prop edit reaches styles.css', async () => {
+    const srcPath = join(pkgRoot, WATCH_DIV_COLOR_FILE)
+    const baselineStyles = readFileSync(STYLES_PATH, 'utf-8')
+    const baselineReactStyles = readFileSync(REACT_STYLES_PATH, 'utf-8')
+    expect(
+      baselineStyles.includes(`color: ${DIV_COLOR_A};`),
+      'baseline styles.css should not already contain the Div color repro token'
+    ).toBe(false)
+    expect(
+      baselineReactStyles.includes(`color: ${DIV_COLOR_A};`),
+      'baseline react/styles.css should not already contain the Div color repro token'
+    ).toBe(false)
+
+    const firstBaseline = getWatchReadyMarker()
+    await writeFile(srcPath, makeDivColorContent(DIV_COLOR_A))
+
+    const firstReady = await waitForNextWatchReady(20_000, firstBaseline)
+    expect(
+      firstReady,
+      'watch mode should emit a fresh ready signal after writing the first Div color file'
+    ).toBe(true)
+
+    const initialStyles = readFileSync(STYLES_PATH, 'utf-8')
+    const initialReactStyles = readFileSync(REACT_STYLES_PATH, 'utf-8')
+    expect(
+      initialStyles.includes(`color: ${DIV_COLOR_A};`),
+      'styles.css should already contain the first Div color at the ready edge'
+    ).toBe(true)
+    expect(
+      initialReactStyles.includes(`color: ${DIV_COLOR_A};`),
+      'react/styles.css should already contain the first Div color at the ready edge'
+    ).toBe(true)
+  }, 30_000)
+
   it('watch mode rebuilds panda config after a token fragment file update', async () => {
     const srcPath = join(pkgRoot, WATCH_TOKENS_FILE)
+    const firstBaseline = getWatchReadyMarker()
     await writeFile(srcPath, makeTokensContent(TOKEN_HEX_A))
 
-    const firstReady = await waitForNextWatchReady(20_000)
+    const firstReady = await waitForNextWatchReady(20_000, firstBaseline)
     expect(firstReady, 'watch mode should emit a fresh ready signal after writing a token fragment file').toBe(
       true
     )
@@ -128,9 +181,10 @@ describe('watch – dev server reactivity', () => {
     )
     expect(initialConfig, 'panda.config.ts should include the first watched token color').toBe(true)
 
+    const secondBaseline = getWatchReadyMarker()
     await writeFile(srcPath, makeTokensContent(TOKEN_HEX_B))
 
-    const secondReady = await waitForNextWatchReady(20_000)
+    const secondReady = await waitForNextWatchReady(20_000, secondBaseline)
     expect(secondReady, 'watch mode should emit a fresh ready signal after updating the token file').toBe(
       true
     )

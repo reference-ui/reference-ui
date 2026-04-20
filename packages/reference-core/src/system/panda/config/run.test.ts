@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { PRIMITIVE_JSX_NAMES } from '../../primitives/tags'
+import { normalizeAdditionalJsxElements } from './jsx-elements'
 
 import { DEFAULT_OUT_DIR } from '../../../constants'
 
@@ -87,6 +88,7 @@ function setupRunModuleMocks(options?: RunModuleOptions) {
       baseSystem: {
         name: 'test-system',
         fragment: ';fragment()',
+        jsxElements: ['UpstreamButton', 'MyIcon', 'ShellCard'],
       },
     }
   })
@@ -167,6 +169,12 @@ describe('system/panda/config/run', () => {
     } = await importRunModule({
       outDir: `/workspace/app/${DEFAULT_OUT_DIR}`,
       cliDir: '/workspace/core',
+      config: {
+        name: 'test-system',
+        include: ['src/**/*.{ts,tsx}'],
+        jsxElements: ['ConfiguredIcon', 'Div'],
+        extends: [{ name: 'icons', fragment: ';icons()', jsxElements: ['UpstreamButton', 'Div'] }],
+      },
     })
 
     await runConfig('/workspace/app')
@@ -177,7 +185,9 @@ describe('system/panda/config/run', () => {
     expect(createBaseArtifacts).toHaveBeenCalledWith('/workspace/app', {
       name: 'test-system',
       include: ['src/**/*.{ts,tsx}'],
-    })
+      jsxElements: ['ConfiguredIcon', 'Div'],
+      extends: [{ name: 'icons', fragment: ';icons()', jsxElements: ['UpstreamButton', 'Div'] }],
+    }, ['ConfiguredIcon', 'MyIcon', 'ShellCard', 'UpstreamButton'])
     expect(writePandaExtensionsBundle).toHaveBeenCalledWith(
       '/workspace/core',
       '/workspace/core/src/system/styled'
@@ -194,8 +204,9 @@ describe('system/panda/config/run', () => {
       JSON.stringify(
         {
           primitives: PRIMITIVE_JSX_NAMES,
-          traced: ['MyIcon', 'ShellCard'],
-          merged: [...PRIMITIVE_JSX_NAMES, 'MyIcon', 'ShellCard'],
+          upstream: ['UpstreamButton'],
+          local: ['ConfiguredIcon', 'MyIcon', 'ShellCard'],
+          merged: [...PRIMITIVE_JSX_NAMES, 'ConfiguredIcon', 'MyIcon', 'ShellCard', 'UpstreamButton'],
         },
         null,
         2
@@ -208,7 +219,12 @@ describe('system/panda/config/run', () => {
         collectorFragments: 'collectorFragments()',
       }),
       extensionsImportPath: './styled/extensions/index.mjs',
-      additionalJsxElements: ['MyIcon', 'ShellCard'],
+      additionalJsxElements: normalizeAdditionalJsxElements([
+        'ConfiguredIcon',
+        'MyIcon',
+        'ShellCard',
+        'UpstreamButton',
+      ]),
     })
   })
 

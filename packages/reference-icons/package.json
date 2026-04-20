@@ -22,19 +22,28 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs"
+    },
+    "./baseSystem": {
+      "types": "./.reference-ui/system/baseSystem.d.mts",
+      "import": "./.reference-ui/system/baseSystem.mjs"
     }
   },
   "files": [
     "dist",
+    ".reference-ui/system/baseSystem.d.mts",
+    ".reference-ui/system/baseSystem.mjs",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
-    "clean": "rm -rf dist src/generated",
-    "icons:generate": "node scripts/generate-material-icons.mjs",
-    "build": "pnpm run icons:generate && node scripts/tsup-if-needed.mjs",
-    "dev": "pnpm run icons:generate && vite",
-    "typecheck": "pnpm run icons:generate && tsc --noEmit",
+    "sync": "pnpm run generate && ref sync",
+    "clean": "rm -rf dist src/generated src/jsx-names.ts",
+    "generate": "node scripts/generate.mjs",
+    "build": "node scripts/build.mjs",
+    "build:lib": "rollup -c",
+    "build:types": "tsc -p tsconfig.build.json",
+    "dev": "pnpm run generate && vite",
+    "typecheck": "pnpm run sync && tsc --noEmit",
     "test": "pnpm run typecheck",
     "prepack": "pnpm run build"
   },
@@ -45,16 +54,20 @@
     "@material-symbols-svg/react": "^0.5.0"
   },
   "peerDependencies": {
+    "@reference-ui/core": "*",
     "react": ">=18"
   },
   "devDependencies": {
+    "@reference-ui/core": "workspace:*",
+    "@rollup/plugin-node-resolve": "^16.0.3",
     "@types/node": "^25.1.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.0.4",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "tsup": "^8.5.1",
+    "rollup": "^4.52.4",
+    "rollup-plugin-esbuild": "^6.2.1",
     "typescript": "~5.9.3",
     "vite": "^7.1.12"
   }

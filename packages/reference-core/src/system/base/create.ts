@@ -12,10 +12,15 @@ import {
 } from './fragments'
 import type { BaseArtifacts } from './types'
 
-function createBaseSystem(config: ReferenceUIConfig, fragment: string): BaseSystem {
+function createBaseSystem(
+  config: ReferenceUIConfig,
+  fragment: string,
+  jsxElements: string[]
+): BaseSystem {
   return {
     name: config.name,
     fragment,
+    jsxElements,
   }
 }
 
@@ -93,13 +98,15 @@ export function updateBaseSystemCss(cwd: string, css: string): void {
  */
 export async function createBaseArtifacts(
   cwd: string,
-  config: ReferenceUIConfig
+  config: ReferenceUIConfig,
+  jsxElements: string[] = []
 ): Promise<BaseArtifacts> {
   const preparedFragments = await prepareBaseFragments(cwd, config)
   const collectorBundle = await createCollectorBundleFromBase(cwd, preparedFragments)
   const baseSystem = createBaseSystem(
     config,
-    createPortableBaseFragmentBundle(preparedFragments)
+    createPortableBaseFragmentBundle(preparedFragments),
+    jsxElements
   )
 
   writeBaseSystem(cwd, baseSystem)

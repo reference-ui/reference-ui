@@ -7,8 +7,8 @@
   },
   "dependencies": {
     "@fixtures/extend-library": "__REF_TEST_EXTEND_FIXTURE_PATH__",
+    "@fixtures/layer-library": "__REF_TEST_LAYER_FIXTURE_PATH__",
     "@reference-ui/core": "__REF_TEST_CORE_PATH__",
-    "@reference-ui/lib": "__REF_TEST_LIB_PATH__",
     "react": "__REF_TEST_REACT_VERSION__",
     "react-dom": "__REF_TEST_REACT_VERSION__"
   },

@@ -16,7 +16,7 @@ That proof now exists through direct tests covering:
 - `once()` single-fire cleanup behavior
 - `off()` removing one listener vs all listeners
 - `onceAll()` any-order coordination behavior
-- `initEventBus()` debug logging behavior
+- `initEventBus()` message logging behavior, including local opt-out switch
 - repeated `initEventBus()` calls not duplicating debug listeners
 
 `TEST_RELEASE_PLAN.md` calls out worker orchestration and failure propagation as

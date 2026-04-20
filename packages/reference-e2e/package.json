@@ -18,8 +18,8 @@
   "devDependencies": {
     "@playwright/test": "^1.48.0",
     "@fixtures/extend-library": "workspace:*",
+    "@fixtures/layer-library": "workspace:*",
     "@reference-ui/core": "workspace:*",
-    "@reference-ui/lib": "workspace:*",
     "tsx": "^4.19.0",
     "typescript": "~5.9.3"
   }

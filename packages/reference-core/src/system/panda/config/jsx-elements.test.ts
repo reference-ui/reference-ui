@@ -3,6 +3,7 @@ import { PRIMITIVE_JSX_NAMES } from '../../primitives/tags'
 import {
   createResolvedJsxElementsArtifact,
   getResolvedJsxElementsPath,
+  getUpstreamJsxElements,
   normalizeAdditionalJsxElements,
   resolvePandaJsxElements,
 } from './jsx-elements'
@@ -13,7 +14,16 @@ describe('system/panda/config/jsx-elements', () => {
       .toEqual(['MyIcon', 'ShellCard'])
   })
 
-  it('resolves Panda JSX names from primitives plus traced names', () => {
+  it('collects upstream jsx elements from extended base systems', () => {
+    expect(
+      getUpstreamJsxElements([
+        { name: 'icons', fragment: 'icons()', jsxElements: ['SearchIcon', 'HomeIcon', 'Div'] },
+        { name: 'lib', fragment: 'lib()', jsxElements: ['CardFrame', 'SearchIcon'] },
+      ])
+    ).toEqual(['CardFrame', 'HomeIcon', 'SearchIcon'])
+  })
+
+  it('resolves Panda JSX names from primitives plus upstream/local names', () => {
     expect(resolvePandaJsxElements(['MyIcon', 'ShellCard', 'Div'])).toEqual([
       ...PRIMITIVE_JSX_NAMES,
       'MyIcon',
@@ -22,10 +32,16 @@ describe('system/panda/config/jsx-elements', () => {
   })
 
   it('creates a stable artifact payload for system output', () => {
-    expect(createResolvedJsxElementsArtifact(['ShellCard', 'MyIcon', 'Div'])).toEqual({
+    expect(
+      createResolvedJsxElementsArtifact({
+        upstreamJsxElements: ['SearchIcon', 'HomeIcon', 'Div'],
+        localJsxElements: ['ShellCard', 'MyIcon', 'Div'],
+      })
+    ).toEqual({
       primitives: PRIMITIVE_JSX_NAMES,
-      traced: ['MyIcon', 'ShellCard'],
-      merged: [...PRIMITIVE_JSX_NAMES, 'MyIcon', 'ShellCard'],
+      upstream: ['HomeIcon', 'SearchIcon'],
+      local: ['MyIcon', 'ShellCard'],
+      merged: [...PRIMITIVE_JSX_NAMES, 'HomeIcon', 'MyIcon', 'SearchIcon', 'ShellCard'],
     })
   })
 

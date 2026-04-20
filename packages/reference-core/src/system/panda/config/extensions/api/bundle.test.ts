@@ -91,6 +91,7 @@ describe('system/panda/config/extensions/api/bundle', () => {
     expect(resolveInternalPatternFiles('/workspace/core')).toEqual([
       '/workspace/core/src/system/panda/config/extensions/container/container.ts',
       '/workspace/core/src/system/panda/config/extensions/r/r.ts',
+      '/workspace/core/src/system/panda/config/extensions/size/size.ts',
     ])
   })
 })

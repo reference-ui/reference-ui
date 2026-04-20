@@ -84,6 +84,9 @@ describe('generated @reference-ui/react (design-system types)', () => {
     it('StyleProps', () => {
       expectTypeOf<StyleProps>().not.toEqualTypeOf<never>()
     })
+    it('StyleProps includes size', () => {
+      expectTypeOf<StyleProps>().toMatchTypeOf<{ size?: unknown }>()
+    })
     it('StylePropValue<string>', () => {
       expectTypeOf<StylePropValue<string>>().not.toEqualTypeOf<never>()
     })
