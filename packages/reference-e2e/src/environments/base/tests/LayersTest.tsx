@@ -1,8 +1,8 @@
 import { Div, Span } from '@reference-ui/react'
 
 /**
- * Uses a foundational token from @reference-ui/lib baseSystem via layers mode.
- * When ui.config has layers: [baseSystem], upstream CSS is appended.
+ * Uses a foundational token from @fixtures/layer-library via layers mode.
+ * When ui.config has layers: [layerBaseSystem], upstream CSS is appended.
  * Primitives automatically get data-layer from ui.config.name (reference-e2e);
  * consumer tokens resolve under that scope. Non-primitive elements outside
  * any primitive have no data-layer and do not see the token.
@@ -51,9 +51,9 @@ export default function LayersTest() {
         <Div data-testid="layers-outside">
           <Span
             data-testid="layers-test"
-            color="var(--colors-teal-500)"
+            color="var(--colors-lightDarkDemoBg)"
           >
-            Upstream token (reference-ui) only in upstream layer CSS; consumer primitives use reference-e2e scope
+            Upstream token (layer-library) only in upstream layer CSS; consumer primitives use reference-e2e scope
           </Span>
         </Div>
       </Div>

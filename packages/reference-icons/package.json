@@ -36,14 +36,14 @@
     "LICENSE"
   ],
   "scripts": {
-    "sync": "ref sync && node scripts/build-if-needed.mjs",
-    "clean": "rm -rf dist src/generated",
-    "icons:generate": "node scripts/generate-material-icons.mjs",
-    "build": "pnpm run icons:generate && pnpm run sync && node scripts/build-package.mjs",
+    "sync": "pnpm run generate && ref sync",
+    "clean": "rm -rf dist src/generated src/jsx-names.ts",
+    "generate": "node scripts/generate.mjs",
+    "build": "node scripts/build.mjs",
     "build:lib": "rollup -c",
     "build:types": "tsc -p tsconfig.build.json",
-    "dev": "pnpm run icons:generate && vite",
-    "typecheck": "pnpm run icons:generate && pnpm run sync && tsc --noEmit",
+    "dev": "pnpm run generate && vite",
+    "typecheck": "pnpm run sync && tsc --noEmit",
     "test": "pnpm run typecheck",
     "prepack": "pnpm run build"
   },

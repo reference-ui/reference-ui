@@ -56,6 +56,15 @@ describe('ref sync', () => {
     expect(content).toMatch(/@layer\s+reference-unit/)
     // In JSON the css string has escaped quotes: [data-layer=\"reference-unit\"]
     expect(content).toMatch(/data-layer.*reference-unit/)
+    expect(content).toMatch(/"jsxElements":\s*\[[^\]]*"UnitMarker"/)
+  })
+
+  it('writes resolved jsx-elements metadata for configured custom JSX components', () => {
+    const jsxElementsPath = join(refUiDir, 'system', 'jsx-elements.json')
+    if (!existsSync(jsxElementsPath)) return
+    const content = readFileSync(jsxElementsPath, 'utf-8')
+    expect(content).toMatch(/"local":\s*\[[^\]]*"UnitMarker"/)
+    expect(content).toMatch(/"merged":\s*\[[\s\S]*"UnitMarker"/)
   })
 
   it('creates .reference-ui/virtual with copied source files', () => {

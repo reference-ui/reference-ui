@@ -1,9 +1,10 @@
-import { access, mkdir } from 'node:fs/promises'
+import { execSync } from 'node:child_process'
 import { constants } from 'node:fs'
-import { dirname, resolve } from 'node:path'
+import { access, mkdir } from 'node:fs/promises'
+import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+const packageRoot = join(dirname(fileURLToPath(import.meta.url)), '..')
 const distDir = resolve(packageRoot, 'dist')
 
 const requiredFiles = [
@@ -12,6 +13,14 @@ const requiredFiles = [
   resolve(distDir, 'index.mjs'),
   resolve(distDir, 'index.d.ts'),
 ]
+
+function run(command) {
+  execSync(command, { cwd: packageRoot, stdio: 'inherit', env: process.env })
+}
+
+run('pnpm run sync')
+run('pnpm run build:lib')
+run('pnpm run build:types')
 
 for (const filePath of requiredFiles) {
   await access(filePath, constants.F_OK)
