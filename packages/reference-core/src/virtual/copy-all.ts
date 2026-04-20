@@ -1,29 +1,11 @@
 import { resolve } from 'node:path'
 import fg from 'fast-glob'
 import { emit } from '../lib/event-bus'
-import { resetDir } from '../lib/fs/reset-dir'
-import { publishStagedDir } from '../lib/fs/publish-staged-dir'
 import { log } from '../lib/log'
 import { getVirtualDirPath } from '../lib/paths'
-import { copyToVirtual } from './copy'
 import { GLOB_CONFIG } from './config.internal'
-import { getVirtualStagingDir, toLiveVirtualPath } from './staging'
+import { createVirtualStagingArea } from './staging'
 import type { ReferenceUIConfig } from '../config'
-
-async function copyFileToStaging(payload: {
-  file: string
-  root: string
-  stagingDir: string
-  virtualDir: string
-  debug?: boolean
-}): Promise<void> {
-  const { file, root, stagingDir, virtualDir, debug } = payload
-  const stagedPath = await copyToVirtual(file, root, stagingDir, { debug })
-  emit('virtual:fs:change', {
-    event: 'add',
-    path: toLiveVirtualPath(stagingDir, virtualDir, stagedPath),
-  })
-}
 
 export async function copyAll(payload: {
   sourceDir: string
@@ -32,15 +14,15 @@ export async function copyAll(payload: {
   const { sourceDir, config } = payload
   const root = resolve(sourceDir)
   const virtualDir = getVirtualDirPath(root)
-  const stagingDir = getVirtualStagingDir(virtualDir)
+  const staging = createVirtualStagingArea(virtualDir)
   const { include, debug } = config
 
   log.debug('virtual', 'Initializing', root, '→', virtualDir)
 
-  await resetDir(stagingDir)
+  await staging.reset()
 
   if (!include.length) {
-    await publishStagedDir(stagingDir, virtualDir)
+    await staging.publish()
     log.debug('virtual', 'No include patterns - skipping')
     emit('virtual:copy:complete', { virtualDir })
     return
@@ -55,10 +37,10 @@ export async function copyAll(payload: {
   log.debug('virtual', `Copying ${files.length} files`)
 
   for (const file of files) {
-    await copyFileToStaging({ file, root, stagingDir, virtualDir, debug })
+    await staging.stageFile({ file, root, debug })
   }
 
-  await publishStagedDir(stagingDir, virtualDir)
+  await staging.publish()
   log.debug('virtual', 'Sync complete')
   emit('virtual:copy:complete', { virtualDir })
 }
