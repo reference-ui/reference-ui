@@ -30,6 +30,11 @@ const selfInputs = [
 const externalInputs = [
   '../../packages/reference-core/package.json',
   '../../packages/reference-core/dist/cli/index.mjs',
+  '../../packages/reference-icons/package.json',
+  '../../packages/reference-icons/ui.config.ts',
+  '../../packages/reference-icons/src/jsx-names.ts',
+  '../../packages/reference-icons/.reference-ui/system/baseSystem.mjs',
+  '../../packages/reference-icons/.reference-ui/system/baseSystem.d.mts',
   '../../packages/reference-lib/package.json',
   '../../packages/reference-lib/.reference-ui/react/package.json',
   '../../packages/reference-lib/.reference-ui/react/react.mjs',
