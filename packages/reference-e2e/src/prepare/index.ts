@@ -31,6 +31,7 @@ const LEGACY_CSS_SNAPSHOT_DIR = join(PACKAGE_ROOT, 'src', 'tests', 'layer', 'css
 const CORE_PATH = join(PACKAGE_ROOT, '..', 'reference-core')
 const LIB_PATH = join(PACKAGE_ROOT, '..', 'reference-lib')
 const EXTEND_FIXTURE_PATH = join(PACKAGE_ROOT, '..', '..', 'fixtures', 'extend-library')
+const LAYER_FIXTURE_PATH = join(PACKAGE_ROOT, '..', '..', 'fixtures', 'layer-library')
 const CORE_BIN = join(CORE_PATH, 'dist/cli/index.mjs')
 const LIB_BIN = join(LIB_PATH, 'dist/index.mjs')
 const WORKSPACE_ROOT = join(PACKAGE_ROOT, '..', '..')
@@ -148,7 +149,7 @@ async function buildPackageJson(entry: MatrixEntry, sandboxDir: string): Promise
   const template = interpolateTemplate(rawTemplate, {
     __REF_TEST_CORE_PATH__: `link:${CORE_PATH}`,
     __REF_TEST_EXTEND_FIXTURE_PATH__: `link:${EXTEND_FIXTURE_PATH}`,
-    __REF_TEST_LIB_PATH__: `link:${LIB_PATH}`,
+    __REF_TEST_LAYER_FIXTURE_PATH__: `link:${LAYER_FIXTURE_PATH}`,
     __REF_TEST_REACT_VERSION__: reactVersion,
     __REF_TEST_VITE_VERSION__: viteVersion,
     __REF_TEST_WEBPACK_VERSION__: webpackVersion,
@@ -215,6 +216,15 @@ async function ensureWorkspaceReady(): Promise<void> {
   logStep('Packaging extend-library')
   await execa('node', ['scripts/build-package.mjs'], {
     cwd: EXTEND_FIXTURE_PATH,
+    stdio: 'inherit',
+  })
+  logStep('Syncing @fixtures/layer-library')
+  await execa('pnpm', ['run', 'sync'], { cwd: LAYER_FIXTURE_PATH, stdio: 'inherit' })
+  logStep('Building layer-library declarations')
+  await execa('pnpm', ['exec', 'tsup'], { cwd: LAYER_FIXTURE_PATH, stdio: 'inherit' })
+  logStep('Packaging layer-library')
+  await execa('node', ['scripts/build-package.mjs'], {
+    cwd: LAYER_FIXTURE_PATH,
     stdio: 'inherit',
   })
 }

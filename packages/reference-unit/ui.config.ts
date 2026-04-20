@@ -6,6 +6,7 @@ export default defineConfig({
   name: 'reference-unit',
   extends: [baseSystem],
   layers: [layerLibSystem],
+  jsxElements: ['UnitMarker'],
   include: ['src/**/*.{ts,tsx,mdx}', 'tests/**/*.{ts,tsx,mdx}'],
   debug: false,
 })
