@@ -1,5 +1,11 @@
 # @reference-ui/icons
 
+## 0.0.4
+
+### Patch Changes
+
+- 7a4ed02: reference-icons public pre-release pipeline
+
 ## 0.0.3
 
 ### Patch Changes
