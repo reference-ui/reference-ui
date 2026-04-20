@@ -27,6 +27,7 @@ export const MANIFEST = [
   'tests/SyncWatch.tsx',
   'tests/TokenSyncWatch.tsx',
   'tests/ExtendsTest.tsx',
+  'tests/JsxElementsTest.tsx',
   'tests/LayersTest.tsx',
   'tests/StylePropsTest.tsx',
   'tests/ResponsiveContainerTest.tsx',
