@@ -2,18 +2,19 @@
 
 Small filesystem helpers that need a little more policy than a raw Node call.
 
-Right now this module owns atomic file writes for generated artifacts.
+Right now this module owns atomic file writes and staged directory publish steps
+for generated artifacts.
 
 ## What it owns
 
 - writing generated files through a temp path plus rename
+- publishing a fully-prepared directory into its live location
 - creating parent directories before the write
 - cleaning up temp files after a failed write attempt
 
 ## What it does not own
 
 - deciding whether a caller should rewrite a file at all
-- copy / move orchestration across trees
 - higher-level packaging or system-generation flow
 
 ## Why this exists
@@ -29,4 +30,12 @@ mid-write.
 
 That keeps the behavior documented, reusable, and testable instead of repeating
 ad hoc temp-file logic in feature modules.
+
+`publishStagedDir()` does the equivalent for directories:
+
+1. prepare the next tree in a sibling staging directory
+2. move the current live tree aside
+3. move the staged tree into the live path
+4. remove the previous tree after the new one is visible
+
  
