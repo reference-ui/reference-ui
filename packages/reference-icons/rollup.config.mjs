@@ -26,15 +26,18 @@ const input = {
   ...generatedEntries(),
 }
 
-const external = id =>
-  id === 'react' ||
-  id.startsWith('react/') ||
-  id === 'react-dom' ||
-  id.startsWith('react-dom/') ||
-  id === '@material-symbols-svg/react' ||
-  id.startsWith('@material-symbols-svg/react/') ||
-  id === '@reference-ui/react' ||
-  id.startsWith('@reference-ui/react/')
+const externalPackageRoots = [
+  'react',
+  'react-dom',
+  '@material-symbols-svg/react',
+  '@reference-ui/react',
+  '@reference-ui/system',
+]
+
+const isPackageRootOrSubpath = (id, packageRoot) =>
+  id === packageRoot || id.startsWith(`${packageRoot}/`)
+
+const external = id => externalPackageRoots.some(packageRoot => isPackageRootOrSubpath(id, packageRoot))
 
 export default {
   input,

@@ -57,6 +57,34 @@ describe('validateConfig', () => {
     ).toThrowError(/must have a non-empty 'name'/i)
   })
 
+  it('accepts top-level jsxElements as an explicit config escape hatch', () => {
+    const config = validateConfig({
+      name: SYSTEM_NAME,
+      include: DEFAULT_INCLUDE,
+      jsxElements: ['GeneratedIcon', 'CardFrame'],
+    })
+
+    expect(config.jsxElements).toEqual(['GeneratedIcon', 'CardFrame'])
+  })
+
+  it('rejects invalid top-level jsxElements shapes', () => {
+    expect(() =>
+      validateConfig({
+        name: SYSTEM_NAME,
+        include: DEFAULT_INCLUDE,
+        jsxElements: 'GeneratedIcon' as never,
+      })
+    ).toThrowError(/jsxElements/i)
+
+    expect(() =>
+      validateConfig({
+        name: SYSTEM_NAME,
+        include: DEFAULT_INCLUDE,
+        jsxElements: ['GeneratedIcon', 123] as never,
+      })
+    ).toThrowError(/jsxElements/i)
+  })
+
   it('rejects names with quotes or newlines', () => {
     expect(() =>
       validateConfig({
@@ -73,7 +101,7 @@ describe('validateConfig', () => {
     ).toThrowError(/safe for CSS @layer/i)
   })
 
-  it('requires extends to be an array of named systems with fragments', () => {
+  it('requires extends to be an array of named systems with synced payloads', () => {
     expect(() =>
       validateConfig({
         name: SYSTEM_NAME,
@@ -96,7 +124,23 @@ describe('validateConfig', () => {
         include: DEFAULT_INCLUDE,
         extends: [{ name: 'upstream' } as never],
       })
-    ).toThrowError(/must include a non-empty 'fragment'/i)
+    ).toThrowError(/must include synced system data/i)
+  })
+
+  it('accepts extends entries that only contribute css or jsx elements', () => {
+    const config = validateConfig({
+      name: SYSTEM_NAME,
+      include: DEFAULT_INCLUDE,
+      extends: [
+        { name: 'icons', fragment: '', jsxElements: ['HomeIcon'] },
+        { name: 'tokens', fragment: '', css: LAYERS_CSS },
+      ],
+    })
+
+    expect(config.extends).toEqual([
+      { name: 'icons', fragment: '', jsxElements: ['HomeIcon'] },
+      { name: 'tokens', fragment: '', css: LAYERS_CSS },
+    ])
   })
 
   it('requires layers to be an array of named systems', () => {
@@ -132,15 +176,33 @@ describe('validateConfig', () => {
     const config = validateConfig({
       name: SYSTEM_NAME,
       include: DEFAULT_INCLUDE,
-      extends: [{ name: 'base', fragment: FRAGMENT_CODE }],
-      layers: [{ name: 'layered', fragment: FRAGMENT_CODE, css: LAYERS_CSS }],
+      extends: [{ name: 'base', fragment: FRAGMENT_CODE, jsxElements: ['IconShell'] }],
+      layers: [{ name: 'layered', fragment: FRAGMENT_CODE, css: LAYERS_CSS, jsxElements: ['LayerCard'] }],
     })
 
-    expect(config.extends).toEqual([{ name: 'base', fragment: FRAGMENT_CODE }])
+    expect(config.extends).toEqual([{ name: 'base', fragment: FRAGMENT_CODE, jsxElements: ['IconShell'] }])
     expect(config.layers).toEqual([
-      { name: 'layered', fragment: FRAGMENT_CODE, css: LAYERS_CSS },
+      { name: 'layered', fragment: FRAGMENT_CODE, css: LAYERS_CSS, jsxElements: ['LayerCard'] },
     ])
     expect(info).not.toHaveBeenCalled()
+  })
+
+  it('rejects invalid base-system jsxElements shapes', () => {
+    expect(() =>
+      validateConfig({
+        name: SYSTEM_NAME,
+        include: DEFAULT_INCLUDE,
+        extends: [{ name: 'base', fragment: FRAGMENT_CODE, jsxElements: 'IconShell' } as never],
+      })
+    ).toThrowError(/jsxElements/i)
+
+    expect(() =>
+      validateConfig({
+        name: SYSTEM_NAME,
+        include: DEFAULT_INCLUDE,
+        layers: [{ name: 'layered', fragment: FRAGMENT_CODE, jsxElements: [123] } as never],
+      })
+    ).toThrowError(/jsxElements/i)
   })
 
   it('accepts a dedicated mcp include/exclude config', () => {

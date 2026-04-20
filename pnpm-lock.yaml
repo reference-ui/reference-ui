@@ -216,8 +216,8 @@ importers:
         specifier: workspace:*
         version: link:../reference-core
       '@reference-ui/icons':
-        specifier: file:../reference-icons
-        version: file:packages/reference-icons(@reference-ui/core@packages+reference-core)(react@18.3.1)
+        specifier: workspace:*
+        version: link:../reference-icons
       '@reference-ui/lib':
         specifier: workspace:*
         version: link:../reference-lib
@@ -343,8 +343,8 @@ importers:
         version: 19.2.4
     devDependencies:
       '@reference-ui/icons':
-        specifier: file:../reference-icons
-        version: file:packages/reference-icons(@reference-ui/core@packages+reference-core)(react@19.2.4)
+        specifier: workspace:*
+        version: link:../reference-icons
       '@types/react':
         specifier: ^19.2.14
         version: 19.2.14
@@ -1977,12 +1977,6 @@ packages:
 
   '@quansync/fs@1.0.0':
     resolution: {integrity: sha512-4TJ3DFtlf1L5LDMaM6CanJ/0lckGNtJcMjQ1NAV6zDmA0tEHKZtxNKin8EgPaVX1YzljbxckyT2tJrpQKAtngQ==}
-
-  '@reference-ui/icons@file:packages/reference-icons':
-    resolution: {directory: packages/reference-icons, type: directory}
-    peerDependencies:
-      '@reference-ui/core': '*'
-      react: '>=18'
 
   '@rolldown/binding-android-arm64@1.0.0-rc.11':
     resolution: {integrity: sha512-SJ+/g+xNnOh6NqYxD0V3uVN4W3VfnrGsC9/hoglicgTNfABFG9JjISvkkU0dNY84MNHLWyOgxP9v9Y9pX4S7+A==}
@@ -6423,10 +6417,6 @@ snapshots:
       globby: 11.1.0
       read-yaml-file: 1.1.0
 
-  '@material-symbols-svg/react@0.5.0(react@18.3.1)':
-    dependencies:
-      react: 18.3.1
-
   '@material-symbols-svg/react@0.5.0(react@19.2.4)':
     dependencies:
       react: 19.2.4
@@ -7187,18 +7177,6 @@ snapshots:
   '@quansync/fs@1.0.0':
     dependencies:
       quansync: 1.0.0
-
-  '@reference-ui/icons@file:packages/reference-icons(@reference-ui/core@packages+reference-core)(react@18.3.1)':
-    dependencies:
-      '@material-symbols-svg/react': 0.5.0(react@18.3.1)
-      '@reference-ui/core': link:packages/reference-core
-      react: 18.3.1
-
-  '@reference-ui/icons@file:packages/reference-icons(@reference-ui/core@packages+reference-core)(react@19.2.4)':
-    dependencies:
-      '@material-symbols-svg/react': 0.5.0(react@19.2.4)
-      '@reference-ui/core': link:packages/reference-core
-      react: 19.2.4
 
   '@rolldown/binding-android-arm64@1.0.0-rc.11':
     optional: true

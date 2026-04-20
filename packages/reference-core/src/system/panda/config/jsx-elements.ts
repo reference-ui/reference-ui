@@ -1,12 +1,12 @@
 import { join } from 'node:path'
+import type { BaseSystem } from '../../../types'
 import { getOutDirPath } from '../../../lib/paths'
 import { PRIMITIVE_JSX_NAMES } from '../../primitives/tags'
-import { ICON_COMPONENT_NAMES } from './icon-components'
 
 export interface ResolvedJsxElementsArtifact {
   primitives: string[]
-  icons: string[]
-  traced: string[]
+  upstream: string[]
+  local: string[]
   merged: string[]
 }
 
@@ -18,24 +18,31 @@ export function normalizeAdditionalJsxElements(names: string[]): string[] {
     .sort()
 }
 
+export function getUpstreamJsxElements(systems: BaseSystem[] | undefined): string[] {
+  return normalizeAdditionalJsxElements(
+    (systems ?? []).flatMap((system) => system.jsxElements ?? [])
+  )
+}
+
 export function resolvePandaJsxElements(additionalJsxElements: string[]): string[] {
-  return [
-    ...PRIMITIVE_JSX_NAMES,
-    ...ICON_COMPONENT_NAMES,
-    ...normalizeAdditionalJsxElements(additionalJsxElements),
-  ]
+  return [...PRIMITIVE_JSX_NAMES, ...normalizeAdditionalJsxElements(additionalJsxElements)]
 }
 
 export function createResolvedJsxElementsArtifact(
-  additionalJsxElements: string[]
+  options: {
+    upstreamJsxElements: string[]
+    localJsxElements: string[]
+  }
 ): ResolvedJsxElementsArtifact {
-  const traced = normalizeAdditionalJsxElements(additionalJsxElements)
+  const upstream = normalizeAdditionalJsxElements(options.upstreamJsxElements)
+  const local = normalizeAdditionalJsxElements(options.localJsxElements)
+  const merged = normalizeAdditionalJsxElements([...upstream, ...local])
 
   return {
     primitives: [...PRIMITIVE_JSX_NAMES],
-    icons: [...ICON_COMPONENT_NAMES],
-    traced,
-    merged: resolvePandaJsxElements(traced),
+    upstream,
+    local,
+    merged: resolvePandaJsxElements(merged),
   }
 }
 

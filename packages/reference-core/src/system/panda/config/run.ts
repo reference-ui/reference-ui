@@ -11,9 +11,9 @@ import { createBaseArtifacts } from '../../base/create'
 import {
   createResolvedJsxElementsArtifact,
   getResolvedJsxElementsPath,
+  getUpstreamJsxElements,
   normalizeAdditionalJsxElements,
 } from './jsx-elements'
-import { ICON_COMPONENT_NAMES } from './icon-components'
 import { traceIncludedJsxElements } from './styletrace'
 import {
   mirrorPandaExtensionsBundle,
@@ -36,17 +36,24 @@ export async function runConfig(cwd: string): Promise<void> {
 
   const outDir = getOutDirPath(cwd)
   const outputPath = join(outDir, 'panda.config.ts')
-  const tracedJsxNames = normalizeAdditionalJsxElements(
+  const configuredJsxElements = normalizeAdditionalJsxElements(config.jsxElements ?? [])
+  const tracedJsxElements = normalizeAdditionalJsxElements(
     await traceIncludedJsxElements(cwd, config.include)
   )
-  const additionalJsxElements = normalizeAdditionalJsxElements(
-    [...ICON_COMPONENT_NAMES, ...tracedJsxNames]
-  )
+  const localJsxElements = normalizeAdditionalJsxElements([
+    ...configuredJsxElements,
+    ...tracedJsxElements,
+  ])
+  const upstreamJsxElements = getUpstreamJsxElements(config.extends)
+  const additionalJsxElements = normalizeAdditionalJsxElements([...upstreamJsxElements, ...localJsxElements])
   const cliDir = resolveCorePackageDir(cwd)
   const cliStyledDir = join(cliDir, 'src/system/styled')
-  const { collectorBundle } = await createBaseArtifacts(cwd, config)
+  const { collectorBundle } = await createBaseArtifacts(cwd, config, additionalJsxElements)
   const jsxElementsOutputPath = getResolvedJsxElementsPath(cwd)
-  const jsxElementsArtifact = createResolvedJsxElementsArtifact(tracedJsxNames)
+  const jsxElementsArtifact = createResolvedJsxElementsArtifact({
+    upstreamJsxElements,
+    localJsxElements,
+  })
 
   mkdirSync(join(outDir, 'system'), { recursive: true })
   writeFileSync(jsxElementsOutputPath, JSON.stringify(jsxElementsArtifact, null, 2) + '\n', 'utf-8')
