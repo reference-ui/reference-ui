@@ -9,6 +9,25 @@ import { copyToVirtual } from './copy'
 import { GLOB_CONFIG } from './config.internal'
 import type { ReferenceUIConfig } from '../config'
 
+function toLiveVirtualPath(stagedDir: string, liveDir: string, stagedPath: string): string {
+  return join(liveDir, relative(stagedDir, stagedPath))
+}
+
+async function copyFileToStaging(payload: {
+  file: string
+  root: string
+  stagingDir: string
+  virtualDir: string
+  debug?: boolean
+}): Promise<void> {
+  const { file, root, stagingDir, virtualDir, debug } = payload
+  const stagedPath = await copyToVirtual(file, root, stagingDir, { debug })
+  emit('virtual:fs:change', {
+    event: 'add',
+    path: toLiveVirtualPath(stagingDir, virtualDir, stagedPath),
+  })
+}
+
 export async function copyAll(payload: {
   sourceDir: string
   config: ReferenceUIConfig
@@ -39,9 +58,7 @@ export async function copyAll(payload: {
   log.debug('virtual', `Copying ${files.length} files`)
 
   for (const file of files) {
-    const stagedPath = await copyToVirtual(file, root, stagingDir, { debug })
-    const virtualPath = join(virtualDir, relative(stagingDir, stagedPath))
-    emit('virtual:fs:change', { event: 'add', path: virtualPath })
+    await copyFileToStaging({ file, root, stagingDir, virtualDir, debug })
   }
 
   await publishStagedDir(stagingDir, virtualDir)
