@@ -1,5 +1,13 @@
 # @reference-ui/rust
 
+## 0.0.5
+
+### Patch Changes
+
+- 247580d: Fix Vite HMR: keep the sync-session watcher alive for the dev server (no teardown from `configureServer()`), so style and fixture updates apply without a manual refresh.
+
+  `@reference-ui/icons` is now published as its own package and has been optimized.
+
 ## 0.0.4
 
 ### Patch Changes
