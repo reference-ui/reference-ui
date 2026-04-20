@@ -44,5 +44,6 @@ export function resolveInternalPatternFiles(rootDir: string): string[] {
   return [
     join(rootDir, 'src/system/panda/config/extensions/container/container.ts'),
     join(rootDir, 'src/system/panda/config/extensions/r/r.ts'),
+    join(rootDir, 'src/system/panda/config/extensions/size/size.ts'),
   ]
 }

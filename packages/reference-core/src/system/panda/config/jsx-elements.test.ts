@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { PRIMITIVE_JSX_NAMES } from '../../primitives/tags'
+import { ICON_COMPONENT_NAMES } from './icon-components'
 import {
   createResolvedJsxElementsArtifact,
   getResolvedJsxElementsPath,
@@ -16,6 +17,7 @@ describe('system/panda/config/jsx-elements', () => {
   it('resolves Panda JSX names from primitives plus traced names', () => {
     expect(resolvePandaJsxElements(['MyIcon', 'ShellCard', 'Div'])).toEqual([
       ...PRIMITIVE_JSX_NAMES,
+      ...ICON_COMPONENT_NAMES,
       'MyIcon',
       'ShellCard',
     ])
@@ -24,8 +26,9 @@ describe('system/panda/config/jsx-elements', () => {
   it('creates a stable artifact payload for system output', () => {
     expect(createResolvedJsxElementsArtifact(['ShellCard', 'MyIcon', 'Div'])).toEqual({
       primitives: PRIMITIVE_JSX_NAMES,
+      icons: ICON_COMPONENT_NAMES,
       traced: ['MyIcon', 'ShellCard'],
-      merged: [...PRIMITIVE_JSX_NAMES, 'MyIcon', 'ShellCard'],
+      merged: [...PRIMITIVE_JSX_NAMES, ...ICON_COMPONENT_NAMES, 'MyIcon', 'ShellCard'],
     })
   })
 

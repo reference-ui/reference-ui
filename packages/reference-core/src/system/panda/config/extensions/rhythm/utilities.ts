@@ -6,6 +6,7 @@
 
 import { rhythmBorderRadiusUtilities } from './border'
 import { resolveRhythm } from './helpers'
+import { sizeStyles } from '../size/styles'
 
 type RhythmTransform = {
   property: string
@@ -19,9 +20,16 @@ const rhythmTransform = (property: string): RhythmTransform => ({
   transform: (value: unknown) => ({ [property]: resolveRhythm(value) }),
 })
 
+const rhythmSizeTransform: RhythmTransform = {
+  property: 'size',
+  values: 'spacing',
+  transform: (value: unknown) => sizeStyles(resolveRhythm(value)),
+}
+
 export const rhythmUtilities = {
   width: rhythmTransform('width'),
   height: rhythmTransform('height'),
+  size: rhythmSizeTransform,
 
   fontSize: rhythmTransform('fontSize'),
   lineHeight: rhythmTransform('lineHeight'),

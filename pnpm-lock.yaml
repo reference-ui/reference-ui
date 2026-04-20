@@ -342,6 +342,9 @@ importers:
         specifier: ^19.2.4
         version: 19.2.4
     devDependencies:
+      '@reference-ui/icons':
+        specifier: file:../reference-icons
+        version: file:packages/reference-icons(@reference-ui/core@packages+reference-core)(react@19.2.4)
       '@types/react':
         specifier: ^19.2.14
         version: 19.2.14
@@ -7190,6 +7193,12 @@ snapshots:
       '@material-symbols-svg/react': 0.5.0(react@18.3.1)
       '@reference-ui/core': link:packages/reference-core
       react: 18.3.1
+
+  '@reference-ui/icons@file:packages/reference-icons(@reference-ui/core@packages+reference-core)(react@19.2.4)':
+    dependencies:
+      '@material-symbols-svg/react': 0.5.0(react@19.2.4)
+      '@reference-ui/core': link:packages/reference-core
+      react: 19.2.4
 
   '@rolldown/binding-android-arm64@1.0.0-rc.11':
     optional: true

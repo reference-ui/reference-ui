@@ -1,6 +1,14 @@
 import * as React from 'react'
 import { Div } from '@reference-ui/react'
-import type { MaterialSymbolIconComponent, MaterialSymbolIconProps } from './types'
+import type {
+  MaterialSymbolIconComponent,
+  MaterialSymbolIconProps,
+  MaterialSymbolIconShellProps,
+} from './types'
+
+const IconShell = Div as unknown as React.ForwardRefExoticComponent<
+  React.PropsWithoutRef<MaterialSymbolIconShellProps> & React.RefAttributes<HTMLDivElement>
+>
 
 export function createIcon(
   Outline: React.ElementType,
@@ -16,15 +24,14 @@ export function createIcon(
     >
 
     return (
-      <Div
+      <IconShell
         ref={ref}
         display="inline-flex"
         alignItems="center"
         justifyContent="center"
         lineHeight="0"
         flexShrink="0"
-        width={size}
-        height={size}
+        size={size}
         style={style}
         {...rest}
       >
@@ -37,7 +44,7 @@ export function createIcon(
           focusable="false"
           style={{ display: 'block' }}
         />
-      </Div>
+      </IconShell>
     )
   })
   Icon.displayName = displayName
