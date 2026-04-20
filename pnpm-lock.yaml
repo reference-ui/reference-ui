@@ -215,9 +215,6 @@ importers:
       '@reference-ui/core':
         specifier: workspace:*
         version: link:../reference-core
-      '@reference-ui/icons':
-        specifier: workspace:*
-        version: link:../reference-icons
       '@reference-ui/lib':
         specifier: workspace:*
         version: link:../reference-lib
@@ -338,13 +335,13 @@ importers:
       '@reference-ui/core':
         specifier: workspace:*
         version: link:../reference-core
+      '@reference-ui/icons':
+        specifier: workspace:*
+        version: link:../reference-icons
       react:
         specifier: ^19.2.4
         version: 19.2.4
     devDependencies:
-      '@reference-ui/icons':
-        specifier: workspace:*
-        version: link:../reference-icons
       '@types/react':
         specifier: ^19.2.14
         version: 19.2.14

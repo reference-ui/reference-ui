@@ -19,6 +19,10 @@
     "./theme": {
       "types": "./dist/theme/index.d.ts",
       "import": "./dist/theme/index.mjs"
+    },
+    "./icons": {
+      "types": "./dist/icons.d.ts",
+      "import": "./dist/icons.mjs"
     }
   },
   "files": [
@@ -30,7 +34,7 @@
   "scripts": {
     "sync": "pnpm --filter @reference-ui/icons run sync && ref sync",
     "typecheck": "pnpm --filter @reference-ui/core run build && pnpm run sync && tsc --noEmit",
-    "build": "pnpm --filter @reference-ui/core run build && pnpm run sync && tsup && node scripts/build-package.mjs",
+    "build": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/icons run build && pnpm run sync && tsup && node scripts/build-package.mjs",
     "dev": "pnpm --filter @reference-ui/icons run sync && ref sync --watch",
     "prepack": "pnpm run build",
     "test": "vitest run",
@@ -43,10 +47,10 @@
   },
   "dependencies": {
     "@reference-ui/core": "workspace:*",
+    "@reference-ui/icons": "workspace:*",
     "react": "^19.2.4"
   },
   "devDependencies": {
-    "@reference-ui/icons": "workspace:*",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.7.0",
