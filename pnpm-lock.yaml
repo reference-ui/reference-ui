@@ -274,15 +274,15 @@ importers:
       '@fixtures/extend-library':
         specifier: workspace:*
         version: link:../../fixtures/extend-library
+      '@fixtures/layer-library':
+        specifier: workspace:*
+        version: link:../../fixtures/layer-library
       '@playwright/test':
         specifier: ^1.48.0
         version: 1.58.2
       '@reference-ui/core':
         specifier: workspace:*
         version: link:../reference-core
-      '@reference-ui/lib':
-        specifier: workspace:*
-        version: link:../reference-lib
       tsx:
         specifier: ^4.19.0
         version: 4.21.0
@@ -405,9 +405,6 @@ importers:
       '@reference-ui/core':
         specifier: workspace:*
         version: link:../reference-core
-      '@reference-ui/lib':
-        specifier: workspace:*
-        version: link:../reference-lib
       react:
         specifier: ^18.2.0
         version: 18.3.1
