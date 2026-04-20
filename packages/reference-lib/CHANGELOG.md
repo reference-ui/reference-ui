@@ -1,5 +1,12 @@
 # @reference-ui/lib
 
+## 0.0.6
+
+### Patch Changes
+
+- Updated dependencies [7a4ed02]
+  - @reference-ui/icons@0.0.4
+
 ## 0.0.5
 
 ### Patch Changes
