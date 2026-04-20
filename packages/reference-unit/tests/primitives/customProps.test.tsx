@@ -1,7 +1,7 @@
 /**
  * @vitest-environment happy-dom
  *
- * Tests for custom pattern props: font, weight, container, r
+ * Tests for custom props: font, weight, container, r, size
  * These props are defined in reference-core internal/props/ and extend the box pattern.
  */
 
@@ -20,7 +20,7 @@ beforeAll(() => {
 
 const hasDesignSystemCss = () => Boolean(getDesignSystemCssPath())
 
-describe('Custom props (font, weight, container, r)', () => {
+describe('Custom props (font, weight, container, r, size)', () => {
   describe('Font prop', () => {
     it('applies sans font preset - verifies className is set', () => {
       render(
@@ -145,6 +145,39 @@ describe('Custom props (font, weight, container, r)', () => {
       const wrapperStyle = window.getComputedStyle(wrapper)
       if (wrapperStyle.containerName) {
         expect(wrapperStyle.containerName).toBe('main')
+      }
+    })
+  })
+
+  describe('Size prop', () => {
+    it('expands size into width and height classes', () => {
+      render(
+        <Div data-testid="size-square" size="2r">
+          Square
+        </Div>
+      )
+
+      const el = screen.getByTestId('size-square')
+      expect(el).toBeInTheDocument()
+      expect(el.className).toContain('w_')
+      expect(el.className).toContain('h_')
+    })
+
+    it('applies equal width and height when design system CSS is present', () => {
+      if (!hasDesignSystemCss()) return
+
+      render(
+        <Div data-testid="size-square-css" size="2r">
+          Square CSS
+        </Div>
+      )
+
+      const el = screen.getByTestId('size-square-css')
+      const style = window.getComputedStyle(el)
+
+      if (style.width) {
+        expect(style.width).toBeTruthy()
+        expect(style.height).toBe(style.width)
       }
     })
   })

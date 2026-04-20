@@ -39,6 +39,7 @@
     "dev": "pnpm run icons:generate && vite",
     "typecheck": "pnpm run icons:generate && tsc --noEmit",
     "test": "pnpm run typecheck",
+    "test:icon-components": "pnpm run icons:generate && node scripts/check-icon-components.mjs",
     "prepack": "pnpm run build"
   },
   "publishConfig": {

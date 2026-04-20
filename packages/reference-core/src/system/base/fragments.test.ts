@@ -134,10 +134,12 @@ describe('system/base/fragments', () => {
       internalPatternFiles: [
         '/workspace/core/src/system/panda/config/extensions/container/container.ts',
         '/workspace/core/src/system/panda/config/extensions/r/r.ts',
+        '/workspace/core/src/system/panda/config/extensions/size/size.ts',
       ],
       bundledFragments: [
         { file: '/workspace/core/src/system/panda/config/extensions/container/container.ts', bundle: 'internalContainer()' },
         { file: '/workspace/core/src/system/panda/config/extensions/r/r.ts', bundle: 'internalR()' },
+        { file: '/workspace/core/src/system/panda/config/extensions/size/size.ts', bundle: 'internalSize()' },
       ],
     })
 
@@ -154,6 +156,7 @@ describe('system/base/fragments', () => {
       files: [
         '/workspace/core/src/system/panda/config/extensions/container/container.ts',
         '/workspace/core/src/system/panda/config/extensions/r/r.ts',
+        '/workspace/core/src/system/panda/config/extensions/size/size.ts',
       ],
       alias: {
         '@reference-ui/system': '/workspace/core/src/entry/system.ts',
@@ -173,6 +176,7 @@ describe('system/base/fragments', () => {
     expect(result.collectorFragments).toContain(';localTwo()')
     expect(result.collectorFragments).toContain(';internalContainer()')
     expect(result.collectorFragments).toContain(';internalR()')
+    expect(result.collectorFragments).toContain(';internalSize()')
     expect(result.getValue('globalCss')).toContain("globalThis['__refGlobalCssCollector']")
   })
 

@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { PRIMITIVE_JSX_NAMES } from '../../primitives/tags'
+import { ICON_COMPONENT_NAMES } from './icon-components'
+import { normalizeAdditionalJsxElements } from './jsx-elements'
 
 import { DEFAULT_OUT_DIR } from '../../../constants'
 
@@ -194,8 +196,9 @@ describe('system/panda/config/run', () => {
       JSON.stringify(
         {
           primitives: PRIMITIVE_JSX_NAMES,
+          icons: ICON_COMPONENT_NAMES,
           traced: ['MyIcon', 'ShellCard'],
-          merged: [...PRIMITIVE_JSX_NAMES, 'MyIcon', 'ShellCard'],
+          merged: [...PRIMITIVE_JSX_NAMES, ...ICON_COMPONENT_NAMES, 'MyIcon', 'ShellCard'],
         },
         null,
         2
@@ -208,7 +211,11 @@ describe('system/panda/config/run', () => {
         collectorFragments: 'collectorFragments()',
       }),
       extensionsImportPath: './styled/extensions/index.mjs',
-      additionalJsxElements: ['MyIcon', 'ShellCard'],
+      additionalJsxElements: normalizeAdditionalJsxElements([
+        ...ICON_COMPONENT_NAMES,
+        'MyIcon',
+        'ShellCard',
+      ]),
     })
   })
 
