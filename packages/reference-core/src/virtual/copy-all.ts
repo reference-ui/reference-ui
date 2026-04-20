@@ -1,4 +1,4 @@
-import { join, relative, resolve } from 'node:path'
+import { resolve } from 'node:path'
 import fg from 'fast-glob'
 import { emit } from '../lib/event-bus'
 import { resetDir } from '../lib/fs/reset-dir'
@@ -7,11 +7,8 @@ import { log } from '../lib/log'
 import { getVirtualDirPath } from '../lib/paths'
 import { copyToVirtual } from './copy'
 import { GLOB_CONFIG } from './config.internal'
+import { getVirtualStagingDir, toLiveVirtualPath } from './staging'
 import type { ReferenceUIConfig } from '../config'
-
-function toLiveVirtualPath(stagedDir: string, liveDir: string, stagedPath: string): string {
-  return join(liveDir, relative(stagedDir, stagedPath))
-}
 
 async function copyFileToStaging(payload: {
   file: string
@@ -35,7 +32,7 @@ export async function copyAll(payload: {
   const { sourceDir, config } = payload
   const root = resolve(sourceDir)
   const virtualDir = getVirtualDirPath(root)
-  const stagingDir = `${virtualDir}.next`
+  const stagingDir = getVirtualStagingDir(virtualDir)
   const { include, debug } = config
 
   log.debug('virtual', 'Initializing', root, '→', virtualDir)
