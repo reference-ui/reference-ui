@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
-import { fileURLToPath, pathToFileURL } from 'node:url'
+import { fileURLToPath } from 'node:url'
 import { lightDarkDemoBgLight } from '@fixtures/layer-library'
+import { tokensConfig } from '../../environments/base/tokens-config'
 import {
   addToConfig,
   getSandboxDir,
@@ -20,7 +21,6 @@ const RENAMED_LAYER_NAME = 'reference-e2e-renamed'
 const REACT_LAYER_PLACEHOLDER = '__REFERENCE_UI_LAYER_NAME__'
 const sandboxDir = getSandboxDir()
 const cssSnapshotDir = join(PACKAGE_ROOT, 'css_snapshot')
-const { tokensConfig } = await import(pathToFileURL(join(sandboxDir, 'tokens.ts')).href)
 const DEFAULT_LAYER_CONFIG = { extends: '[]', layers: '[layerBaseSystem]' } as const
 
 let activeConfigKey: string | null = null

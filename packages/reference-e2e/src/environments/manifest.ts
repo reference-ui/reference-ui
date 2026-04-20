@@ -17,6 +17,7 @@ export const MANIFEST = [
   'routes.ts',
   'index.html',
   'package.json',
+  'tokens-config.ts',
   'tokens.ts',
   'tsconfig.json',
   'ui.config.ts',

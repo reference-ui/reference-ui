@@ -2,9 +2,9 @@ import { test, expect } from '@playwright/test'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { addToConfig, getSandboxDir, resetConfig } from '../../environments/lib/config'
+import { tokensConfig } from '../../environments/base/tokens-config'
 import { runRefSync } from '../../environments/lib/ref-sync'
 import { testRoutes } from '../../environments/base/routes'
-import { tokensConfig } from '../../environments/base/tokens'
 
 function hexToRgb(hex: string): string {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
