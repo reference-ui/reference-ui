@@ -22,24 +22,29 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs"
+    },
+    "./baseSystem": {
+      "types": "./.reference-ui/system/baseSystem.d.mts",
+      "import": "./.reference-ui/system/baseSystem.mjs"
     }
   },
   "files": [
     "dist",
+    ".reference-ui/system/baseSystem.d.mts",
+    ".reference-ui/system/baseSystem.mjs",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
-    "sync": "ref sync",
+    "sync": "ref sync && node scripts/build-if-needed.mjs",
     "clean": "rm -rf dist src/generated",
     "icons:generate": "node scripts/generate-material-icons.mjs",
-    "build": "pnpm run icons:generate && node scripts/build-if-needed.mjs",
+    "build": "pnpm run icons:generate && pnpm run sync && node scripts/build-package.mjs",
     "build:lib": "rollup -c",
     "build:types": "tsc -p tsconfig.build.json",
     "dev": "pnpm run icons:generate && vite",
-    "typecheck": "pnpm run icons:generate && tsc --noEmit",
+    "typecheck": "pnpm run icons:generate && pnpm run sync && tsc --noEmit",
     "test": "pnpm run typecheck",
-    "test:icon-components": "pnpm run icons:generate && node scripts/check-icon-components.mjs",
     "prepack": "pnpm run build"
   },
   "publishConfig": {

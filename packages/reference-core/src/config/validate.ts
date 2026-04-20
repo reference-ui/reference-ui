@@ -10,6 +10,21 @@ type BaseSystemValidationOptions = {
   warnIfCssMissing?: boolean
 }
 
+function assertOptionalJsxElements(
+  field: BaseSystemField,
+  sys: BaseSystem,
+  index: number
+): void {
+  if (sys.jsxElements == null) return
+
+  if (!Array.isArray(sys.jsxElements) || sys.jsxElements.some((entry) => typeof entry !== 'string')) {
+    throw ConfigValidationError.invalidBaseSystem(
+      field,
+      `Entry ${index} (${sys.name}) must have 'jsxElements' as an array of strings.`
+    )
+  }
+}
+
 function mustBeObject(raw: unknown): ConfigRecord {
   const config = (raw as { default?: unknown })?.default ?? raw
   if (!config || typeof config !== 'object') {
@@ -45,6 +60,15 @@ function validatePatternList(field: string, value: unknown): string[] | undefine
     )
   }
   return value as string[]
+}
+
+function validateConfigJsxElements(cfg: ConfigRecord): void {
+  const jsxElements = cfg.jsxElements
+  if (jsxElements == null) return
+
+  if (!Array.isArray(jsxElements) || jsxElements.some((entry) => typeof entry !== 'string')) {
+    throw ConfigValidationError.invalidConfig('jsxElements', "'jsxElements' must be an array of strings.")
+  }
 }
 
 function validateMcpConfig(cfg: ConfigRecord): void {
@@ -113,10 +137,14 @@ function assertRequiredFragment(
 ): void {
   if (!requireFragment) return
 
-  if (typeof sys.fragment !== 'string' || sys.fragment.trim() === '') {
+  const hasFragment = typeof sys.fragment === 'string' && sys.fragment.trim() !== ''
+  const hasCss = typeof sys.css === 'string' && sys.css.trim() !== ''
+  const hasJsxElements = Array.isArray(sys.jsxElements) && sys.jsxElements.length > 0
+
+  if (!hasFragment && !hasCss && !hasJsxElements) {
     throw ConfigValidationError.invalidBaseSystem(
       field,
-      `Entry ${index} (${sys.name}) must include a non-empty 'fragment'. Run \`ref sync\` on the upstream package first.`
+      `Entry ${index} (${sys.name}) must include synced system data (fragment, css, or jsxElements). Run \`ref sync\` on the upstream package first.`
     )
   }
 }
@@ -138,6 +166,7 @@ function validateBaseSystemEntry(
   assertBaseSystemObject(field, sys, index)
   assertBaseSystemName(field, sys, index)
   assertRequiredFragment(field, sys, index, options.requireFragment ?? false)
+  assertOptionalJsxElements(field, sys, index)
   warnIfBaseSystemCssMissing(sys, options.warnIfCssMissing ?? false)
 }
 
@@ -163,6 +192,7 @@ export function validateConfig(raw: unknown): ReferenceUIConfig {
   const cfg = mustBeObject(raw)
   validateInclude(cfg)
   validateName(cfg)
+  validateConfigJsxElements(cfg)
   validateMcpConfig(cfg)
   const extendsSystems = validateBaseSystems('extends', cfg.extends)
   const layers = validateBaseSystems('layers', cfg.layers)

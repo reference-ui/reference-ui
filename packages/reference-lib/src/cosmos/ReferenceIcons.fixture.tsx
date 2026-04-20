@@ -32,7 +32,7 @@ export default function ReferenceIconsFixture() {
         borderColor="gray.800"
       >
         <Div display="flex" alignItems="center" justifyContent="center" borderRadius="lg" bg="gray.950" color="blue.300">
-          <HomeIcon size="12r" color="blue.900" />
+          <HomeIcon size="40r" color="blue.900" />
     
         </Div>
         <Div display="flex" alignItems="center" justifyContent="center" minHeight="10r" borderRadius="lg" bg="gray.950" color="green.300">

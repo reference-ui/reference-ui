@@ -10,7 +10,11 @@
     "declaration": true,
     "noEmit": true,
     "strict": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "paths": {
+      "@reference-ui/system": ["./.reference-ui/system"],
+      "@reference-ui/system/baseSystem": ["./.reference-ui/system/baseSystem.d.mts"]
+    }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "ui.config.ts"],
   "exclude": ["dist", "node_modules"]
