@@ -4,6 +4,7 @@ import { DEFAULT_OUT_DIR, SYNC_OUTPUT_DIR_GLOB } from '../constants'
 
 const FIXTURE_APP = '/workspace/app'
 const FIXTURE_VIRTUAL = `${FIXTURE_APP}/${DEFAULT_OUT_DIR}/virtual`
+const FIXTURE_STAGING = `${FIXTURE_VIRTUAL}.next`
 
 async function importCopyAllModule() {
   vi.resetModules()
@@ -12,11 +13,15 @@ async function importCopyAllModule() {
 
   const emit = vi.fn()
   const debug = vi.fn()
-  const resetDir = vi.fn(async () => {})
   const fg = vi.fn()
-  const copyToVirtual = vi.fn(async (file: string, _root: string, vdir: string) => {
-    return `${vdir}/${file.replace('/workspace/app/', '')}`
-  })
+  const staging = {
+    liveDir: virtualDir,
+    stagingDir: FIXTURE_STAGING,
+    reset: vi.fn(async () => {}),
+    stageFile: vi.fn(async () => {}),
+    publish: vi.fn(async () => {}),
+  }
+  const createVirtualStagingArea = vi.fn(() => staging)
 
   vi.doMock('fast-glob', () => ({
     default: fg,
@@ -24,37 +29,33 @@ async function importCopyAllModule() {
   vi.doMock('../lib/event-bus', () => ({
     emit,
   }))
-  vi.doMock('../lib/fs/reset-dir', () => ({
-    resetDir,
-  }))
   vi.doMock('../lib/log', () => ({
     log: { debug, error: vi.fn(), info: vi.fn() },
   }))
   vi.doMock('../lib/paths', () => ({
     getVirtualDirPath: () => virtualDir,
   }))
-  vi.doMock('./copy', () => ({
-    copyToVirtual,
+  vi.doMock('./staging', () => ({
+    createVirtualStagingArea,
   }))
 
   const mod = await import('./copy-all')
-  return { ...mod, emit, debug, resetDir, fg, copyToVirtual }
+  return { ...mod, emit, debug, fg, staging, createVirtualStagingArea }
 }
 
 afterEach(() => {
   vi.resetModules()
   vi.doUnmock('fast-glob')
   vi.doUnmock('../lib/event-bus')
-  vi.doUnmock('../lib/fs/reset-dir')
   vi.doUnmock('../lib/log')
   vi.doUnmock('../lib/paths')
-  vi.doUnmock('./copy')
+  vi.doUnmock('./staging')
   vi.restoreAllMocks()
 })
 
 describe('virtual/copy-all', () => {
-  it('resets the virtual directory before repopulating it', async () => {
-    const { copyAll, resetDir, fg } = await importCopyAllModule()
+  it('resets the staging directory before repopulating it', async () => {
+    const { copyAll, fg, staging } = await importCopyAllModule()
     fg.mockResolvedValue([])
 
     await copyAll({
@@ -62,12 +63,12 @@ describe('virtual/copy-all', () => {
       config: { include: ['src/**/*'], debug: false } as never,
     })
 
-    expect(resetDir).toHaveBeenCalledTimes(1)
-    expect(resetDir).toHaveBeenCalledWith(FIXTURE_VIRTUAL)
+    expect(staging.reset).toHaveBeenCalledTimes(1)
+    expect(staging.publish).toHaveBeenCalledTimes(1)
   })
 
   it('emits virtual:copy:complete and skips globbing when include is empty', async () => {
-    const { copyAll, emit, fg, copyToVirtual } = await importCopyAllModule()
+    const { copyAll, emit, fg, staging } = await importCopyAllModule()
 
     await copyAll({
       sourceDir: '/workspace/app',
@@ -75,14 +76,15 @@ describe('virtual/copy-all', () => {
     })
 
     expect(fg).not.toHaveBeenCalled()
-    expect(copyToVirtual).not.toHaveBeenCalled()
+    expect(staging.stageFile).not.toHaveBeenCalled()
+    expect(staging.publish).toHaveBeenCalledTimes(1)
     expect(emit).toHaveBeenLastCalledWith('virtual:copy:complete', {
       virtualDir: FIXTURE_VIRTUAL,
     })
   })
 
-  it('copies every matched file and emits virtual fs changes before completion', async () => {
-    const { copyAll, emit, fg, copyToVirtual } = await importCopyAllModule()
+  it('copies every matched file into staging and emits live virtual paths before completion', async () => {
+    const { copyAll, emit, fg, staging, createVirtualStagingArea } = await importCopyAllModule()
     fg.mockResolvedValue([
       '/workspace/app/src/alpha.ts',
       '/workspace/app/src/beta.tsx',
@@ -102,17 +104,19 @@ describe('virtual/copy-all', () => {
       absolute: true,
       ignore: ['**/node_modules/**', SYNC_OUTPUT_DIR_GLOB, '**/.git/**'],
     })
-    expect(copyToVirtual).toHaveBeenCalledTimes(2)
-    expect(emit).toHaveBeenNthCalledWith(1, 'virtual:fs:change', {
-      event: 'add',
-      path: `${FIXTURE_VIRTUAL}/src/alpha.ts`,
-    })
-    expect(emit).toHaveBeenNthCalledWith(2, 'virtual:fs:change', {
-      event: 'add',
-      path: `${FIXTURE_VIRTUAL}/src/beta.tsx`,
-    })
+    expect(createVirtualStagingArea).toHaveBeenCalledWith(FIXTURE_VIRTUAL)
+    expect(staging.stageFile).toHaveBeenCalledTimes(2)
+    expect(staging.stageFile).toHaveBeenNthCalledWith(
+      1,
+      { file: '/workspace/app/src/alpha.ts', root: '/workspace/app', debug: true },
+    )
+    expect(staging.stageFile).toHaveBeenNthCalledWith(
+      2,
+      { file: '/workspace/app/src/beta.tsx', root: '/workspace/app', debug: true },
+    )
     expect(emit).toHaveBeenLastCalledWith('virtual:copy:complete', {
       virtualDir: FIXTURE_VIRTUAL,
     })
+    expect(staging.publish).toHaveBeenCalledTimes(1)
   })
 })
