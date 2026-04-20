@@ -11,6 +11,8 @@ const requiredFiles = [
   resolve(packageRoot, '.reference-ui/system/baseSystem.d.mts'),
   resolve(distDir, 'index.mjs'),
   resolve(distDir, 'index.d.ts'),
+  resolve(distDir, 'icons.mjs'),
+  resolve(distDir, 'icons.d.ts'),
 ]
 
 for (const filePath of requiredFiles) {
