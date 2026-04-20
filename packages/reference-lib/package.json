@@ -28,10 +28,10 @@
     "README.md"
   ],
   "scripts": {
-    "sync": "ref sync",
+    "sync": "pnpm --filter @reference-ui/icons run sync && ref sync",
     "typecheck": "pnpm --filter @reference-ui/core run build && pnpm run sync && tsc --noEmit",
     "build": "pnpm --filter @reference-ui/core run build && pnpm run sync && tsup && node scripts/build-package.mjs",
-    "dev": "ref sync --watch",
+    "dev": "pnpm --filter @reference-ui/icons run sync && ref sync --watch",
     "prepack": "pnpm run build",
     "test": "vitest run",
     "test:watch": "vitest",
