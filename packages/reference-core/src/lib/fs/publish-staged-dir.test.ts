@@ -6,8 +6,8 @@ async function importPublishStagedDirModule(options?: {
 }) {
   vi.resetModules()
 
-  const rename = vi.fn(async (..._args: [string, string]) => {})
-  const rm = vi.fn(async (..._args: [string]) => {})
+  const rename = vi.fn<(...args: [string, string]) => Promise<void>>()
+  const rm = vi.fn<(...args: [string]) => Promise<void>>()
   const existing = new Set(options?.existingDirs ?? [])
   let renameCalls = 0
 
