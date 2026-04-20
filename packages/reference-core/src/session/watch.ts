@@ -4,6 +4,8 @@ import { basename, dirname } from 'node:path'
 
 type ParcelSubscription = Awaited<ReturnType<typeof subscribe>>
 
+const RECONCILE_SETTLE_MS = 10
+
 export interface SessionWatcher {
   restart(): void
   dispose(): void
@@ -21,6 +23,7 @@ export function createSessionWatcher(
   let watcher: ParcelSubscription | null = null
   let watchGeneration = 0
   let disposed = false
+  let reconcileTimer: ReturnType<typeof setTimeout> | null = null
 
   function stopWatcher(subscription: ParcelSubscription | null): void {
     if (!subscription) return
@@ -46,6 +49,20 @@ export function createSessionWatcher(
     onSessionChange()
   }
 
+  function clearScheduledReconcile(): void {
+    if (reconcileTimer === null) return
+    clearTimeout(reconcileTimer)
+    reconcileTimer = null
+  }
+
+  function scheduleReconcile(): void {
+    clearScheduledReconcile()
+    reconcileTimer = setTimeout(() => {
+      reconcileTimer = null
+      reconcileCurrentState()
+    }, RECONCILE_SETTLE_MS)
+  }
+
   async function watchOutDir(generation: number): Promise<void> {
     try {
       const subscription = await subscribe(outDir, (error, events) => {
@@ -53,10 +70,11 @@ export function createSessionWatcher(
 
         if (events.length === 0) return
 
-        // Atomic tmp-file + rename writes do not report identical event paths on
-        // every platform. Reconcile on any directory change and let the manifest
-        // reader decide whether a logical ready transition occurred.
-        reconcileCurrentState()
+        // Atomic tmp-file + rename writes can surface as a short burst of
+        // directory events. Reconcile at the trailing edge so the manifest
+        // reader sees the final renamed session.json instead of the previous
+        // snapshot that may still be live during the tmp-file event.
+        scheduleReconcile()
       })
 
       bindWatcher(subscription, generation)
@@ -98,6 +116,7 @@ export function createSessionWatcher(
     const previousWatcher = watcher
     watcher = null
     stopWatcher(previousWatcher)
+    clearScheduledReconcile()
     watchGeneration += 1
     const generation = watchGeneration
 
@@ -116,6 +135,7 @@ export function createSessionWatcher(
   function dispose(): void {
     disposed = true
     stopWatcher(watcher)
+    clearScheduledReconcile()
     watcher = null
   }
 

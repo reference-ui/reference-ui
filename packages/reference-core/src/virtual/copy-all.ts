@@ -1,11 +1,10 @@
 import { resolve } from 'node:path'
 import fg from 'fast-glob'
 import { emit } from '../lib/event-bus'
-import { resetDir } from '../lib/fs/reset-dir'
 import { log } from '../lib/log'
 import { getVirtualDirPath } from '../lib/paths'
-import { copyToVirtual } from './copy'
 import { GLOB_CONFIG } from './config.internal'
+import { createVirtualStagingArea } from './staging'
 import type { ReferenceUIConfig } from '../config'
 
 export async function copyAll(payload: {
@@ -15,13 +14,15 @@ export async function copyAll(payload: {
   const { sourceDir, config } = payload
   const root = resolve(sourceDir)
   const virtualDir = getVirtualDirPath(root)
+  const staging = createVirtualStagingArea(virtualDir)
   const { include, debug } = config
 
   log.debug('virtual', 'Initializing', root, '→', virtualDir)
 
-  await resetDir(virtualDir)
+  await staging.reset()
 
   if (!include.length) {
+    await staging.publish()
     log.debug('virtual', 'No include patterns - skipping')
     emit('virtual:copy:complete', { virtualDir })
     return
@@ -36,10 +37,10 @@ export async function copyAll(payload: {
   log.debug('virtual', `Copying ${files.length} files`)
 
   for (const file of files) {
-    const virtualPath = await copyToVirtual(file, root, virtualDir, { debug })
-    emit('virtual:fs:change', { event: 'add', path: virtualPath })
+    await staging.stageFile({ file, root, debug })
   }
 
+  await staging.publish()
   log.debug('virtual', 'Sync complete')
   emit('virtual:copy:complete', { virtualDir })
 }
