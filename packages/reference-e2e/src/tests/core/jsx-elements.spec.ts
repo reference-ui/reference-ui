@@ -12,6 +12,12 @@ function hexToRgb(hex: string): string {
   return `rgb(${Number.parseInt(result[1], 16)}, ${Number.parseInt(result[2], 16)}, ${Number.parseInt(result[3], 16)})`
 }
 
+function computedEquivalent(value: string): string {
+  const rem = /^([\d.]+)rem$/.exec(value)
+  if (rem) return `${Number.parseFloat(rem[1]) * 16}px`
+  return value
+}
+
 test.describe.serial('jsxElements', () => {
   test.afterAll(async () => {
     const sandboxDir = getSandboxDir()
@@ -46,7 +52,7 @@ test.describe.serial('jsxElements', () => {
     const borderRadius = await marker.evaluate((element) => getComputedStyle(element).borderRadius)
 
     expect(backgroundColor).toBe(hexToRgb(tokensConfig.colors.test.primary.value))
-    expect(padding).toBe(tokensConfig.spacing['test-md'].value)
-    expect(borderRadius).toBe(tokensConfig.radii['test-round'].value)
+    expect(padding).toBe(computedEquivalent(tokensConfig.spacing['test-md'].value))
+    expect(borderRadius).toBe(computedEquivalent(tokensConfig.radii['test-round'].value))
   })
 })
