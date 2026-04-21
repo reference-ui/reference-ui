@@ -52,7 +52,7 @@ describe('packager/run', () => {
       cliDir: '/workspace/core',
     })
 
-    await runRuntimeBundle({ cwd: '/workspace/app', skipTypescript: true })
+    await runRuntimeBundle({ cwd: '/workspace/app', installMode: 'build', skipTypescript: true })
 
     expect(resolveCorePackageDir).toHaveBeenCalledWith('/workspace/app')
     expect(installPackages).toHaveBeenCalledWith(
@@ -61,7 +61,8 @@ describe('packager/run', () => {
       expect.arrayContaining([
         expect.objectContaining({ name: 'react' }),
         expect.objectContaining({ name: 'system' }),
-      ])
+      ]),
+      'build'
     )
     expect(emit).toHaveBeenNthCalledWith(1, 'packager:runtime:complete', {
       packageCount: 3,
@@ -83,7 +84,8 @@ describe('packager/run', () => {
       '/workspace/app',
       expect.arrayContaining([
         expect.objectContaining({ name: 'types' }),
-      ])
+      ]),
+      'dev'
     )
     expect(emit).toHaveBeenNthCalledWith(1, 'packager:complete', {
       packageCount: 1,

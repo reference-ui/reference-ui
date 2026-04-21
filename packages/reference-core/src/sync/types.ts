@@ -1,6 +1,7 @@
 import type { ReferenceUIConfig } from '../config'
 
 export interface SyncOptions {
+  build?: boolean
   watch?: boolean
   debug?: boolean
 }

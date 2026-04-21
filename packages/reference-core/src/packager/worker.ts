@@ -5,10 +5,12 @@
 import { emit, on } from '../lib/event-bus'
 import { startWorkerMemoryReporter } from '../lib/profiler'
 import { KEEP_ALIVE } from '../lib/thread-pool'
+import type { InstallMode } from './install'
 import { onRunBundle, onRunRuntimeBundle } from './run'
 
 export interface PackagerWorkerPayload {
   cwd: string
+  installMode?: InstallMode
   watchMode?: boolean
   skipTypescript?: boolean
 }

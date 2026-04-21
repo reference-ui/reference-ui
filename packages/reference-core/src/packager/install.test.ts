@@ -136,7 +136,7 @@ describe('packager/install', () => {
     const outDir = resolve(workspaceDir, DEFAULT_OUT_DIR)
     const nodeModulesScope = resolve(workspaceDir, 'node_modules', '@reference-ui')
     const targetDir = resolve(outDir, 'react')
-    const linkPath = resolve(nodeModulesScope, 'react')
+    const installPath = resolve(nodeModulesScope, 'react')
 
     const { installPackage } = await importInstallModule({
       config: { name: 'brand-layer' },
@@ -155,8 +155,9 @@ describe('packager/install', () => {
     expect(readFileSync(resolve(targetDir, 'react.mjs'), 'utf-8')).not.toContain(
       '__REFERENCE_UI_LAYER_NAME__'
     )
-    expect(lstatSync(linkPath).isSymbolicLink()).toBe(true)
-    expect(realpathSync(linkPath)).toBe(realpathSync(targetDir))
+    expect(lstatSync(installPath).isSymbolicLink()).toBe(true)
+    expect(realpathSync(installPath)).toBe(realpathSync(targetDir))
+    expect(readFileSync(resolve(installPath, 'react.mjs'), 'utf-8')).toContain('brand-layer')
   })
 
   it('does not mutate non-React package bundles', async () => {
@@ -188,7 +189,7 @@ describe('packager/install', () => {
     const outDir = resolve(workspaceDir, DEFAULT_OUT_DIR)
     const nodeModulesScope = resolve(workspaceDir, 'node_modules', '@reference-ui')
     const targetDir = resolve(outDir, 'react')
-    const linkPath = resolve(nodeModulesScope, 'react')
+    const installPath = resolve(nodeModulesScope, 'react')
 
     const { installPackage } = await importInstallModule({
       config: { name: 'brand-layer' },
@@ -205,8 +206,67 @@ describe('packager/install', () => {
     await installPackage('/core', workspaceDir, outDir, nodeModulesScope, REACT_PACKAGE)
 
     expect(readFileSync(resolve(targetDir, 'react.mjs'), 'utf-8')).toContain('brand-layer')
-    expect(lstatSync(linkPath).isSymbolicLink()).toBe(true)
-    expect(realpathSync(linkPath)).toBe(realpathSync(targetDir))
+    expect(lstatSync(installPath).isSymbolicLink()).toBe(true)
+    expect(realpathSync(installPath)).toBe(realpathSync(targetDir))
+  })
+
+  it('replaces an existing copied package with a symlink in dev mode', async () => {
+    const workspaceDir = createTempDir()
+    const outDir = resolve(workspaceDir, DEFAULT_OUT_DIR)
+    const nodeModulesScope = resolve(workspaceDir, 'node_modules', '@reference-ui')
+    const targetDir = resolve(outDir, 'react')
+    const installPath = resolve(nodeModulesScope, 'react')
+
+    mkdirSync(installPath, { recursive: true })
+    writeFileSync(resolve(installPath, 'stale.txt'), 'stale copy\n')
+
+    const { installPackage } = await importInstallModule({
+      config: { name: 'brand-layer' },
+      bundleImpl: async ({ targetDir: dir, pkg }) => {
+        mkdirSync(dir, { recursive: true })
+        writeFileSync(
+          resolve(dir, pkg.main?.replace('./', '') || 'index.js'),
+          'export const layer = "__REFERENCE_UI_LAYER_NAME__"\n'
+        )
+      },
+    })
+
+    await installPackage('/core', workspaceDir, outDir, nodeModulesScope, REACT_PACKAGE)
+
+    expect(lstatSync(installPath).isSymbolicLink()).toBe(true)
+    expect(realpathSync(installPath)).toBe(realpathSync(targetDir))
+    expect(() => readFileSync(resolve(installPath, 'stale.txt'), 'utf-8')).toThrow()
+  })
+
+  it('copies packages into node_modules in build mode', async () => {
+    const workspaceDir = createTempDir()
+    const outDir = resolve(workspaceDir, DEFAULT_OUT_DIR)
+    const nodeModulesScope = resolve(workspaceDir, 'node_modules', '@reference-ui')
+    const targetDir = resolve(outDir, 'react')
+    const installPath = resolve(nodeModulesScope, 'react')
+    const previousTargetDir = resolve(outDir, 'previous-react')
+
+    mkdirSync(previousTargetDir, { recursive: true })
+    writeFileSync(resolve(previousTargetDir, 'react.mjs'), 'export const previous = true\n')
+    mkdirSync(nodeModulesScope, { recursive: true })
+    symlinkSync(previousTargetDir, installPath)
+
+    const { installPackage } = await importInstallModule({
+      config: { name: 'brand-layer' },
+      bundleImpl: async ({ targetDir: dir, pkg }) => {
+        mkdirSync(dir, { recursive: true })
+        writeFileSync(
+          resolve(dir, pkg.main?.replace('./', '') || 'index.js'),
+          'export const layer = "__REFERENCE_UI_LAYER_NAME__"\n'
+        )
+      },
+    })
+
+    await installPackage('/core', workspaceDir, outDir, nodeModulesScope, REACT_PACKAGE, 'build')
+
+    expect(lstatSync(installPath).isSymbolicLink()).toBe(false)
+    expect(readFileSync(resolve(installPath, 'react.mjs'), 'utf-8')).toContain('brand-layer')
+    expect(readFileSync(resolve(targetDir, 'react.mjs'), 'utf-8')).toContain('brand-layer')
   })
 
   it('installs packages into the configured outDir structure', async () => {
@@ -268,7 +328,7 @@ describe('packager/install', () => {
     const outDir = resolve(workspaceDir, DEFAULT_OUT_DIR)
     const nodeModulesScope = resolve(workspaceDir, 'node_modules', '@reference-ui')
     const targetDir = resolve(outDir, 'types')
-    const linkPath = resolve(nodeModulesScope, 'types')
+    const installPath = resolve(nodeModulesScope, 'types')
 
     const { installPackage } = await importInstallModule({
       bundleImpl: async ({ targetDir: dir, pkg }) => {
@@ -286,8 +346,8 @@ describe('packager/install', () => {
 
     expect(readFileSync(resolve(targetDir, 'types.mjs'), 'utf-8')).toContain('Reference')
     expect(readFileSync(resolve(targetDir, 'types.d.mts'), 'utf-8')).toContain('Reference')
-    expect(lstatSync(linkPath).isSymbolicLink()).toBe(true)
-    expect(realpathSync(linkPath)).toBe(realpathSync(targetDir))
+    expect(lstatSync(installPath).isSymbolicLink()).toBe(true)
+    expect(realpathSync(installPath)).toBe(realpathSync(targetDir))
   })
 
   it('fails loudly when bundling fails before linking', async () => {
