@@ -1,6 +1,6 @@
-import { execSync } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 import { constants } from 'node:fs'
-import { access } from 'node:fs/promises'
+import { access, rm } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -14,18 +14,17 @@ const requiredFiles = [
   resolve(distDir, 'index.d.ts'),
 ]
 
-function run(command) {
-  execSync(command, { cwd: packageRoot, stdio: 'inherit', env: process.env })
+function run(command, args) {
+  execFileSync(command, args, { cwd: packageRoot, stdio: 'inherit', env: process.env })
 }
 
-try {
-  await access(distDir, constants.F_OK)
-  process.exit(0)
-} catch {
-  run('pnpm run sync')
-  run('pnpm run build:lib')
-  run('pnpm run build:types')
-}
+await rm(distDir, { recursive: true, force: true })
+
+run(process.execPath, ['scripts/ensure-core-cli.mjs'])
+run(process.execPath, ['scripts/generate.mjs'])
+run('pnpm', ['exec', 'ref', 'build'])
+run('pnpm', ['exec', 'rollup', '-c'])
+run('pnpm', ['exec', 'tsc', '-p', 'tsconfig.build.json'])
 
 for (const filePath of requiredFiles) {
   await access(filePath, constants.F_OK)

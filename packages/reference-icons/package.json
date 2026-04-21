@@ -36,15 +36,8 @@
     "LICENSE"
   ],
   "scripts": {
-    "sync": "node scripts/sync.mjs",
-    "clean": "rm -rf dist src/generated src/jsx-names.ts",
-    "generate": "node scripts/generate.mjs",
+    "clean": "rm -rf dist src/generated src/jsx-names.ts .reference-ui",
     "build": "node scripts/build.mjs",
-    "build:lib": "rollup -c",
-    "build:types": "tsc -p tsconfig.build.json",
-    "dev": "pnpm run generate && vite",
-    "typecheck": "pnpm run sync && tsc --noEmit",
-    "test": "pnpm run typecheck",
     "prepack": "pnpm run build"
   },
   "publishConfig": {
@@ -62,13 +55,9 @@
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@types/node": "^25.1.0",
     "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^5.0.4",
     "react": "^19.2.4",
-    "react-dom": "^19.2.4",
     "rollup": "^4.52.4",
     "rollup-plugin-esbuild": "^6.2.1",
-    "typescript": "~5.9.3",
-    "vite": "^7.1.12"
+    "typescript": "~5.9.3"
   }
 }
