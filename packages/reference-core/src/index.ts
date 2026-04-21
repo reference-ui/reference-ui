@@ -6,6 +6,15 @@ import { cleanCommand } from './clean'
 import { syncCommand, type SyncOptions } from './sync'
 import { mcpCommand, type McpCommandOptions } from './mcp/cli/command'
 
+function runSync(options?: Partial<SyncOptions>) {
+  return runCommand(commandOptions =>
+    syncCommand(process.cwd(), {
+      ...(commandOptions as SyncOptions),
+      ...options,
+    })
+  )
+}
+
 async function main(): Promise<void> {
   const program = new Command()
 
@@ -17,7 +26,14 @@ async function main(): Promise<void> {
     .option('--build', 'Install generated packages as real node_modules copies')
     .option('-w, --watch', 'Watch for changes and rebuild')
     .option('-d, --debug', 'Enable debug logging')
-    .action(runCommand(options => syncCommand(process.cwd(), options as SyncOptions)))
+    .action(runSync())
+
+  program
+    .command('build')
+    .description('Shorthand for sync --build')
+    .option('-w, --watch', 'Watch for changes and rebuild')
+    .option('-d, --debug', 'Enable debug logging')
+    .action(runSync({ build: true }))
 
   program
     .command('clean')
