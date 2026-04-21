@@ -1,4 +1,4 @@
-import { mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises'
+import { mkdir, open, readFile, readdir, rm, unlink, writeFile } from 'node:fs/promises'
 import { dirname, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -9,6 +9,7 @@ const SOURCE_DIR = join(REPO_DIR, 'packages', 'reference-lib', 'src', 'component
 const FONT_STACKS_SOURCE = join(REPO_DIR, 'packages', 'reference-lib', 'src', 'core', 'theme', 'fontStacks.ts')
 const TARGET_DIR = join(CORE_DIR, 'src', 'reference', 'browser-component')
 const TYPES_ADAPTER_FILE = join(CORE_DIR, 'src', 'reference', 'browser', 'component-api.ts')
+const LOCK_FILE = join(CORE_DIR, '.copy-reference-api-component.lock')
 
 const GENERATED_README = `# Browser Component Mirror
 
@@ -144,26 +145,59 @@ async function writeMirroredFile(file) {
   await writeFile(targetPath, addSourceComment(rewritten, file.sourceOfTruth))
 }
 
-async function main() {
-  const sourceFiles = await listFiles(SOURCE_DIR)
-  /** @type {SourceFile[]} */
-  const extraFiles = [
-    {
-      sourcePath: FONT_STACKS_SOURCE,
-      relativePath: 'theme/fontStacks.ts',
-      sourceOfTruth: 'packages/reference-lib/src/core/theme/fontStacks.ts',
-    },
-  ]
+function delay(milliseconds) {
+  return new Promise(resolve => setTimeout(resolve, milliseconds))
+}
 
-  await rm(TARGET_DIR, { recursive: true, force: true })
-  await mkdir(TARGET_DIR, { recursive: true })
-  await writeFile(join(TARGET_DIR, 'README.md'), GENERATED_README)
+async function withLock(callback) {
+  const attempts = 120
 
-  for (const file of [...sourceFiles, ...extraFiles]) {
-    await writeMirroredFile(file)
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    let handle
+
+    try {
+      handle = await open(LOCK_FILE, 'wx')
+      try {
+        return await callback()
+      } finally {
+        await handle.close()
+        await unlink(LOCK_FILE).catch(() => {})
+      }
+    } catch (error) {
+      if (error && typeof error === 'object' && 'code' in error && error.code === 'EEXIST') {
+        await delay(100)
+        continue
+      }
+
+      throw error
+    }
   }
 
-  console.log(`Copied reference API component into ${TARGET_DIR}`)
+  throw new Error(`Timed out waiting for lock ${LOCK_FILE}`)
+}
+
+async function main() {
+  await withLock(async () => {
+    const sourceFiles = await listFiles(SOURCE_DIR)
+    /** @type {SourceFile[]} */
+    const extraFiles = [
+      {
+        sourcePath: FONT_STACKS_SOURCE,
+        relativePath: 'theme/fontStacks.ts',
+        sourceOfTruth: 'packages/reference-lib/src/core/theme/fontStacks.ts',
+      },
+    ]
+
+    await rm(TARGET_DIR, { recursive: true, force: true })
+    await mkdir(TARGET_DIR, { recursive: true })
+    await writeFile(join(TARGET_DIR, 'README.md'), GENERATED_README)
+
+    for (const file of [...sourceFiles, ...extraFiles]) {
+      await writeMirroredFile(file)
+    }
+
+    console.log(`Copied reference API component into ${TARGET_DIR}`)
+  })
 }
 
 main().catch(error => {
