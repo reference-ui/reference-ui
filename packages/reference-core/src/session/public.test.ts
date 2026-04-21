@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { mkdtempSync, rmSync, mkdirSync } from 'node:fs'
+import { mkdtempSync, rmSync, mkdirSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { DEFAULT_OUT_DIR } from '../constants'
@@ -24,6 +24,11 @@ async function waitForCallCount(calls: unknown[], expectedCount: number, timeout
   }
 
   throw new Error(`Timed out waiting for ${expectedCount} refresh call(s); saw ${calls.length}`)
+}
+
+async function forceWatcherReconcile(outDir: string): Promise<void> {
+  writeFileSync(join(outDir, 'reconcile.marker'), `${Date.now()}\n`)
+  await new Promise(r => setTimeout(r, 50))
 }
 
 let rootDir: string
@@ -160,8 +165,13 @@ describe('getSyncSession – onRefresh', () => {
     await waitForCallCount(calls, 1)
 
     // Back to idle
-    writeManifest(outDir, { ...BASE_MANIFEST, buildState: 'idle' })
-    await new Promise(r => setTimeout(r, 150))
+    writeManifest(outDir, { ...BASE_MANIFEST, buildState: 'idle', updatedAt: '2026-01-01T01:30:00.000Z' })
+
+    // The public API only emits on ready edges, so give the real directory
+    // watcher one extra event while the manifest is still idle. This avoids a
+    // CI-only race where the test advances before the watcher processes the
+    // reset state between two atomic session.json rewrites.
+    await forceWatcherReconcile(outDir)
 
     // Second ready
     writeManifest(outDir, { ...BASE_MANIFEST, buildState: 'ready', updatedAt: '2026-01-01T02:00:00.000Z' })

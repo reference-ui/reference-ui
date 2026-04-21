@@ -38,13 +38,17 @@ test.describe('extend', () => {
       await expect(eyebrow).toHaveText('Fixture library component')
       await expect(copy).toContainText('DemoComponent renders from @fixtures/extend-library.')
 
-      const bg = await demo.evaluate((e) => getComputedStyle(e).backgroundColor)
-      const color = await demo.evaluate((e) => getComputedStyle(e).color)
-      const accent = await eyebrow.evaluate((e) => getComputedStyle(e).color)
-
-      expect(bg).toBe(hexToRgb('#0f172a'))
-      expect(color).toBe(hexToRgb('#f8fafc'))
-      expect(accent).toBe(hexToRgb('#14b8a6'))
+      await expect
+        .poll(async () => ({
+          bg: await demo.evaluate((e) => getComputedStyle(e).backgroundColor),
+          color: await demo.evaluate((e) => getComputedStyle(e).color),
+          accent: await eyebrow.evaluate((e) => getComputedStyle(e).color),
+        }))
+        .toEqual({
+          bg: hexToRgb('#0f172a'),
+          color: hexToRgb('#f8fafc'),
+          accent: hexToRgb('#14b8a6'),
+        })
     })
 
     test('renders fixture LightDarkDemo variants from the extend library', async ({
@@ -61,11 +65,15 @@ test.describe('extend', () => {
       await expect(page.getByTestId('light-dark-demo-light-title')).toHaveText('Light mode')
       await expect(page.getByTestId('light-dark-demo-dark-title')).toHaveText('Dark mode')
 
-      const darkBg = await darkCard.evaluate((e) => getComputedStyle(e).backgroundColor)
-      const darkColor = await darkCard.evaluate((e) => getComputedStyle(e).color)
-
-      expect(darkBg).toBe(hexToRgb('#020617'))
-      expect(darkColor).toBe(hexToRgb('#f8fafc'))
+      await expect
+        .poll(async () => ({
+          bg: await darkCard.evaluate((e) => getComputedStyle(e).backgroundColor),
+          color: await darkCard.evaluate((e) => getComputedStyle(e).color),
+        }))
+        .toEqual({
+          bg: hexToRgb('#020617'),
+          color: hexToRgb('#f8fafc'),
+        })
     })
   })
 })
