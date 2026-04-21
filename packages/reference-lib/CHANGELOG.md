@@ -1,5 +1,14 @@
 # @reference-ui/lib
 
+## 0.0.11
+
+### Patch Changes
+
+- e360138: CI Release
+- Updated dependencies [e360138]
+  - @reference-ui/icons@0.0.9
+  - @reference-ui/core@0.0.9
+
 ## 0.0.10
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @reference-ui/rust
 
+## 0.0.9
+
+### Patch Changes
+
+- e360138: CI Release
+
 ## 0.0.8
 
 ### Patch Changes
