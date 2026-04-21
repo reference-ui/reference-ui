@@ -1,5 +1,11 @@
 # @reference-ui/rust
 
+## 0.0.10
+
+### Patch Changes
+
+- cb2befe: CI Release
+
 ## 0.0.9
 
 ### Patch Changes
