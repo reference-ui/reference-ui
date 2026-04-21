@@ -24,8 +24,8 @@
       "import": "./dist/index.mjs"
     },
     "./baseSystem": {
-      "types": "./.reference-ui/system/baseSystem.d.mts",
-      "import": "./.reference-ui/system/baseSystem.mjs"
+      "types": "./dist/baseSystem.d.ts",
+      "import": "./dist/baseSystem.mjs"
     }
   },
   "files": [
