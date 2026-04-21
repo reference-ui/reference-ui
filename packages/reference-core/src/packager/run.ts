@@ -7,6 +7,7 @@ import type { PackageDefinition } from './package'
 
 export interface RunBundlePayload {
   cwd: string
+  watchMode?: boolean
   skipTypescript?: boolean
 }
 
@@ -20,7 +21,7 @@ async function runBundlePhase(
   const startedAt = Date.now()
 
   log.debug('packager', '📦 Packaging...')
-  await installPackages(coreDir, cwd, packages)
+  await installPackages(coreDir, cwd, packages, { watchMode: payload.watchMode })
   log.debug('packager', `✅ ${packages.length} package(s) ready`)
   const durationMs = Date.now() - startedAt
 

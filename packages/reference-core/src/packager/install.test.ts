@@ -319,4 +319,51 @@ describe('packager/install', () => {
       'missing bundle output'
     )
   })
+
+  it('symlinks generated packages into node_modules in watch mode', async () => {
+    const workspaceDir = createTempDir()
+    const outDir = resolve(workspaceDir, DEFAULT_OUT_DIR)
+    const nodeModulesScope = resolve(workspaceDir, 'node_modules', '@reference-ui')
+    const targetDir = resolve(outDir, 'react')
+    const installPath = resolve(nodeModulesScope, 'react')
+
+    const { installPackage } = await importInstallModule({
+      bundleImpl: async ({ targetDir: dir, pkg }) => {
+        mkdirSync(dir, { recursive: true })
+        writeFileSync(resolve(dir, pkg.main?.replace('./', '') || 'index.js'), 'export const live = true\n')
+      },
+    })
+
+    await installPackage('/core', workspaceDir, outDir, nodeModulesScope, REACT_PACKAGE, {
+      watchMode: true,
+    })
+
+    expect(lstatSync(installPath).isSymbolicLink()).toBe(true)
+    expect(readFileSync(resolve(targetDir, 'react.mjs'), 'utf-8')).toContain('live')
+    expect(readFileSync(resolve(installPath, 'react.mjs'), 'utf-8')).toContain('live')
+  })
+
+  it('installs all generated packages as symlinks in watch mode', async () => {
+    const workspaceDir = createTempDir()
+    const outDir = resolve(workspaceDir, '.generated-reference-ui')
+
+    const { installPackages } = await importInstallModule({
+      outDirPath: outDir,
+      bundleImpl: async ({ targetDir: dir, pkg }) => {
+        mkdirSync(dir, { recursive: true })
+        writeFileSync(resolve(dir, pkg.main?.replace('./', '') || 'index.js'), `// ${pkg.name}\n`)
+      },
+    })
+
+    await installPackages('/core', workspaceDir, [REACT_PACKAGE, SYSTEM_PACKAGE], {
+      watchMode: true,
+    })
+
+    expect(
+      lstatSync(resolve(workspaceDir, 'node_modules', '@reference-ui', 'react')).isSymbolicLink()
+    ).toBe(true)
+    expect(
+      lstatSync(resolve(workspaceDir, 'node_modules', '@reference-ui', 'system')).isSymbolicLink()
+    ).toBe(true)
+  })
 })
