@@ -31,10 +31,6 @@ export function Example() {
 }
 ```
 
-## Development
+## Build
 
-Generated sources live under `src/generated/` and are intentionally not committed. Rebuild them with `pnpm run icons:generate`, or run `pnpm run build` to generate and compile in one step.
-
-`build` skips Rollup and declaration emit when the source fingerprint matches the last successful build. Set `FORCE_REFERENCE_ICONS_BUILD=1` to force a rebuild.
-
-For a local visual preview, run `pnpm dev` in this package and open the Vite page it prints. That preview is self-contained and intended only for package-level inspection.
+Generated sources live under `src/generated/` and are intentionally not committed. Run `pnpm run build` to regenerate icon sources, refresh the packaged base system, bundle the package, and emit declarations.

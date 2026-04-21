@@ -5,8 +5,7 @@
  */
 
 import { createRequire } from 'node:module'
-import { constants } from 'node:fs'
-import { access, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -93,22 +92,7 @@ function emitJsxNamesFile(componentNames) {
   ].join('\n')
 }
 
-async function hasGeneratedOutputs() {
-  try {
-    await access(join(genDir, 'index.ts'), constants.F_OK)
-    await access(jsxNamesPath, constants.F_OK)
-    const generatedFiles = await readdir(genDir)
-    return generatedFiles.length > 1
-  } catch {
-    return false
-  }
-}
-
 async function main() {
-  if (await hasGeneratedOutputs()) {
-    return
-  }
-
   const weight = await resolveConfiguredWeight()
   const outlineSuffix = `W${weight}`
   const fillSuffix = `FillW${weight}`
