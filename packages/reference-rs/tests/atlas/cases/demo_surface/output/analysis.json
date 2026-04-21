@@ -138,8 +138,8 @@
           "<Button variant=\"solid\" onClick={() => {}}>",
           "<Button variant=\"ghost\">",
           "<Button variant=\"solid\" size=\"sm\" onClick={() => {}}>",
-          "<Button variant=\"ghost\" onClick={() => {}}>",
-          "<Button variant=\"outline\" onClick={() => {}}>"
+          "<Button variant=\"outline\" onClick={() => {}}>",
+          "<Button variant=\"outline\" disabled>"
         ],
         "usedWith": {
           "AppCard": "very common",
@@ -375,9 +375,9 @@
           ],
           "usage": "common",
           "examples": [
+            "<Button variant=\"ghost\" onClick={() => {}}>",
             "<Button variant=\"outline\" onClick={() => {}}>",
             "<Button variant=\"outline\" disabled>",
-            "<Button variant=\"ghost\" onClick={() => {}}>",
             "<Button variant=\"solid\" onClick={() => {}}>",
             "<Button variant=\"ghost\">"
           ],
