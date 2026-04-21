@@ -1,5 +1,13 @@
 # @reference-ui/core
 
+## 0.0.9
+
+### Patch Changes
+
+- e360138: CI Release
+- Updated dependencies [e360138]
+  - @reference-ui/rust@0.0.9
+
 ## 0.0.8
 
 ### Patch Changes
