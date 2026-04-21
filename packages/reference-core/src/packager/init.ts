@@ -13,6 +13,7 @@ import type { SyncPayload } from '../sync/types'
 export function initPackager(payload: SyncPayload): void {
   workers.runWorker('packager', {
     cwd: payload.cwd,
+    installMode: payload.options?.build ? 'build' : 'dev',
     watchMode: payload.options?.watch,
     skipTypescript: payload.config?.skipTypescript,
   })

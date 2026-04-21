@@ -1,14 +1,23 @@
 import { createHash } from 'node:crypto'
-import { resolve } from 'node:path'
 import { mkdirSync } from 'node:fs'
-import { log } from '../lib/log'
-import { getOutDirPath } from '../lib/paths'
-import { createSymlink, pruneBrokenSymlinksInDir } from '../lib/symlink'
-import { getConfig } from '../config'
-import { getPackageDir } from './layout'
-import { type PackageDefinition } from './package'
-import { bundlePackage } from './bundler'
-import { runPostprocess } from './postprocess'
+import { resolve } from 'node:path'
+import { getConfig } from '../../config'
+import { log } from '../../lib/log'
+import { getOutDirPath } from '../../lib/paths'
+import { pruneBrokenSymlinksInDir } from '../../lib/symlink'
+import { bundlePackage } from '../bundler'
+import { getPackageDir } from '../layout'
+import { type PackageDefinition } from '../package'
+import { runPostprocess } from '../postprocess'
+import { installBuildPackage } from './build'
+import { installDevPackage } from './dev'
+
+export type InstallMode = 'dev' | 'build'
+
+const INSTALLERS: Record<InstallMode, (targetDir: string, installPath: string) => void> = {
+  build: installBuildPackage,
+  dev: installDevPackage,
+}
 
 /**
  * Give each generated package instance a stable, project-scoped version identity.
@@ -28,18 +37,19 @@ function createGeneratedPackageVersion(userProjectDir: string, pkg: PackageDefin
 }
 
 /**
- * Install a single package to outDir (e.g. .reference-ui/react/) and symlink into node_modules.
- * Builds package contents, runs any declared postprocess steps, then creates the symlink.
+ * Install a single package to outDir (e.g. .reference-ui/react/) and publish it
+ * into node_modules using the requested install mode.
  */
 export async function installPackage(
   coreDir: string,
   userProjectDir: string,
   outDir: string,
   nodeModulesScope: string,
-  pkg: PackageDefinition
+  pkg: PackageDefinition,
+  installMode: InstallMode = 'dev'
 ): Promise<void> {
   const targetDir = getPackageDir(outDir, pkg.name)
-  const linkPath = getPackageDir(nodeModulesScope, pkg.name)
+  const installPath = getPackageDir(nodeModulesScope, pkg.name)
   const installPkg = {
     ...pkg,
     version: createGeneratedPackageVersion(userProjectDir, pkg),
@@ -51,25 +61,26 @@ export async function installPackage(
   await bundlePackage({ coreDir, outDir, targetDir, pkg: installPkg })
   runPostprocess(targetDir, installPkg, { layerName: getConfig()?.name ?? '' })
 
-  createSymlink(targetDir, linkPath)
+  INSTALLERS[installMode](targetDir, installPath)
 
-  log.debug('packager', `✓ ${pkg.name} → ${linkPath}`)
+  log.debug('packager', `✓ ${pkg.name} → ${installPath}`)
 }
 
 /**
- * Install all packages to outDir (.reference-ui/) and symlink node_modules/@reference-ui/* → .reference-ui/*.
- * Enables module resolution for @reference-ui/react, @reference-ui/styled, @reference-ui/system.
+ * Install all packages to outDir (.reference-ui/) and publish them into
+ * node_modules/@reference-ui using the requested install mode.
  */
 export async function installPackages(
   coreDir: string,
   userProjectDir: string,
-  packages: PackageDefinition[]
+  packages: PackageDefinition[],
+  installMode: InstallMode = 'dev'
 ): Promise<void> {
   const outDir = getOutDirPath(userProjectDir)
   const nodeModulesScope = resolve(userProjectDir, 'node_modules', '@reference-ui')
 
   for (const pkg of packages) {
-    await installPackage(coreDir, userProjectDir, outDir, nodeModulesScope, pkg)
+    await installPackage(coreDir, userProjectDir, outDir, nodeModulesScope, pkg, installMode)
   }
 
   pruneBrokenSymlinksInDir(nodeModulesScope)
