@@ -208,3 +208,16 @@ My read is:
 - styletrace already behaves reasonably, but could be less noisy once the mirror bug is fixed
 
 If we want one concrete next change, I would start by fixing `copyReferenceBrowserToVirtual()` or the import layout it depends on, then add a test that asserts every local relative import inside `_reference-component` resolves after copy.
+
+---
+
+another trace:
+
+ref → sync Starting CLI
+ref → config skipping styletrace root after analysis failure Styletrace analysis failed: failed to resolve local module ../browser-component/ReferenceStatus from /Users/ryn/Developer/reference-ui/packages/reference-e2e/.sandbox/react18-webpack5/.reference-ui/virtual/_reference-component/ReferenceStatus.tsx
+ref → sync Built 3 package(s) in 0.04s
+ref → sync Generated runtime TypeScript declarations in 0.83s
+ref → sync Built reference in 0.21s
+ref → sync Built 1 package(s) in 0.06s
+ref → sync Generated library TypeScript declarations in 0.28s
+ref → sync Sync complete in 1.11s

@@ -41,7 +41,7 @@ describe('@reference-ui/types package', () => {
     })
   })
 
-  it('symlinks node_modules/@reference-ui/types to the generated package', async () => {
+  it('copies node_modules/@reference-ui/types as a real generated package directory', async () => {
     const ready = await waitForTypesPackage()
     expect(ready, '@reference-ui/types should be emitted by packager').toBe(true)
 
@@ -49,8 +49,17 @@ describe('@reference-ui/types package', () => {
       existsSync(installedTypesPackageDir),
       'node_modules/@reference-ui/types should exist'
     ).toBe(true)
-    expect(lstatSync(installedTypesPackageDir).isSymbolicLink()).toBe(true)
-    expect(realpathSync(installedTypesPackageDir)).toBe(realpathSync(typesPackageDir))
+
+    const installedStats = lstatSync(installedTypesPackageDir)
+    expect(installedStats.isDirectory()).toBe(true)
+    expect(installedStats.isSymbolicLink()).toBe(false)
+    expect(realpathSync(installedTypesPackageDir)).not.toBe(realpathSync(typesPackageDir))
+
+    const installedPkg = JSON.parse(
+      readFileSync(join(installedTypesPackageDir, 'package.json'), 'utf-8')
+    )
+    const generatedPkg = JSON.parse(readFileSync(typesPackageJsonPath, 'utf-8'))
+    expect(installedPkg).toEqual(generatedPkg)
   })
 
   it('resolves as a package, exports Reference, and still exposes manifest metadata', async () => {
