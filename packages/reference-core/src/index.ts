@@ -3,7 +3,7 @@ import { Command } from 'commander'
 import { log } from './lib/log'
 import { runCommand } from './lib/run'
 import { cleanCommand } from './clean'
-import { syncCommand, type SyncOptions } from './sync'
+import { runSync } from './sync'
 import { mcpCommand, type McpCommandOptions } from './mcp/cli/command'
 
 async function main(): Promise<void> {
@@ -14,9 +14,17 @@ async function main(): Promise<void> {
   program
     .command('sync', { isDefault: true })
     .description('Build and sync the design system')
+    .option('--build', 'Install generated packages as real node_modules copies')
     .option('-w, --watch', 'Watch for changes and rebuild')
     .option('-d, --debug', 'Enable debug logging')
-    .action(runCommand(options => syncCommand(process.cwd(), options as SyncOptions)))
+    .action(runSync())
+
+  program
+    .command('build')
+    .description('Shorthand for sync --build')
+    .option('-w, --watch', 'Watch for changes and rebuild')
+    .option('-d, --debug', 'Enable debug logging')
+    .action(runSync({ build: true }))
 
   program
     .command('clean')

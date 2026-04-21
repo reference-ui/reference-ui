@@ -1,6 +1,6 @@
 import { execSync } from 'node:child_process'
 import { constants } from 'node:fs'
-import { access, mkdir } from 'node:fs/promises'
+import { access } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -18,12 +18,15 @@ function run(command) {
   execSync(command, { cwd: packageRoot, stdio: 'inherit', env: process.env })
 }
 
-run('pnpm run sync')
-run('pnpm run build:lib')
-run('pnpm run build:types')
+try {
+  await access(distDir, constants.F_OK)
+  process.exit(0)
+} catch {
+  run('pnpm run sync')
+  run('pnpm run build:lib')
+  run('pnpm run build:types')
+}
 
 for (const filePath of requiredFiles) {
   await access(filePath, constants.F_OK)
 }
-
-await mkdir(distDir, { recursive: true })
