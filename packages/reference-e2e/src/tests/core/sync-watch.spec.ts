@@ -8,14 +8,8 @@ import { testRoutes } from '../../environments/base/routes'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const METRICS_PATH = join(__dirname, '..', '..', '..', '.watch-metrics.jsonl')
-
-/** Generate a random hex color that Panda has never seen (ensures codegen must run). */
-function randomHexColor(): string {
-  const r = Math.floor(Math.random() * 256)
-  const g = Math.floor(Math.random() * 256)
-  const b = Math.floor(Math.random() * 256)
-  return '#' + [r, g, b].map((x) => x.toString(16).padStart(2, '0')).join('')
-}
+const INITIAL_BACKGROUND = '#2563eb'
+const UPDATED_BACKGROUND = '#dc2626'
 
 /** Hex to rgb string for comparing with getComputedStyle */
 function hexToRgb(hex: string): string {
@@ -29,14 +23,20 @@ function buildSyncWatchContent(hexColor: string): string {
 
 /**
  * Slice for testing ref sync --watch: user updates css() style, expect it to appear.
- * Uses a random color so Panda codegen MUST run to extract it – proves watch works.
+ * The sync-watch spec edits this file to change the background from blue to red.
  */
 export default function SyncWatch() {
   return (
     <div
       data-testid="sync-watch"
       className={css({
-        color: '${hexColor}',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minWidth: '14rem',
+        minHeight: '6rem',
+        color: '#ffffff' as never,
+        backgroundColor: '${hexColor}' as never,
         padding: 'test-md',
         borderRadius: 'test-round',
       })}
@@ -57,23 +57,28 @@ test.describe('sync-watch', () => {
     const syncWatchPath = join(sandboxDir, 'tests', 'SyncWatch.tsx')
     const originalContent = await readFile(syncWatchPath, 'utf-8')
 
-    const randomColor = randomHexColor()
-    const expectedRgb = hexToRgb(randomColor)
+    const expectedRgb = hexToRgb(UPDATED_BACKGROUND)
 
     try {
       await page.goto(testRoutes.syncWatch)
       const el = page.getByTestId('sync-watch')
       await expect(el).toBeVisible()
+      await expect
+        .poll(
+          async () => el.evaluate((e) => getComputedStyle(e).backgroundColor),
+          { timeout: 15_000 }
+        )
+        .toBe(hexToRgb(INITIAL_BACKGROUND))
 
       const t0 = Date.now()
       const ready = waitForRefSyncReady(sandboxDir, { timeout: 60_000 })
-      await writeFile(syncWatchPath, buildSyncWatchContent(randomColor))
+      await writeFile(syncWatchPath, buildSyncWatchContent(UPDATED_BACKGROUND))
       await ready
 
       await expect
         .poll(
           async () => {
-            const color = await el.evaluate((e) => getComputedStyle(e).color)
+            const color = await el.evaluate((e) => getComputedStyle(e).backgroundColor)
             return color === expectedRgb
           },
           { timeout: 60_000 }
@@ -91,7 +96,7 @@ test.describe('sync-watch', () => {
       await appendFile(METRICS_PATH, entry)
       console.log(`[sync-watch] timeToChange: ${timeToChangeMs}ms (file → visible)`)
     } finally {
-      if (originalContent !== buildSyncWatchContent(randomColor)) {
+      if (originalContent !== buildSyncWatchContent(UPDATED_BACKGROUND)) {
         const ready = waitForRefSyncReady(sandboxDir, { timeout: 60_000 })
         await writeFile(syncWatchPath, originalContent)
         await ready

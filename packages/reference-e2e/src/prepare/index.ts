@@ -205,7 +205,7 @@ async function ensureWorkspaceReady(): Promise<void> {
   }
 
   logStep('Syncing @reference-ui/lib')
-  await execa('pnpm', ['exec', 'ref', 'sync'], {
+  await execa('pnpm', ['exec', 'ref', 'sync', '--build'], {
     cwd: LIB_PATH,
     stdio: 'inherit',
   })
@@ -248,7 +248,7 @@ async function clearRefUiArtifacts(sandboxDir: string): Promise<void> {
 }
 
 async function runSync(sandboxDir: string): Promise<void> {
-  await execa('pnpm', ['exec', 'ref', 'sync'], {
+  await execa('pnpm', ['exec', 'ref', 'sync', '--build'], {
     cwd: sandboxDir,
     stdio: 'inherit',
   })

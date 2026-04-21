@@ -104,12 +104,12 @@ describe('packager/run', () => {
     })
   })
 
-  it('passes watch install options only in watch mode', async () => {
+  it('passes explicit build install options when requested', async () => {
     const { runRuntimeBundle, installPackages } = await importRunModule({
       cliDir: '/workspace/core',
     })
 
-    await runRuntimeBundle({ cwd: '/workspace/app', watchMode: true })
+    await runRuntimeBundle({ cwd: '/workspace/app', installMode: 'build' })
 
     expect(installPackages).toHaveBeenCalledWith(
       '/workspace/core',
@@ -118,7 +118,25 @@ describe('packager/run', () => {
         expect.objectContaining({ name: 'react' }),
         expect.objectContaining({ name: 'system' }),
       ]),
-      { watchMode: true }
+      { mode: 'build' }
+    )
+  })
+
+  it('passes explicit dev install options when requested', async () => {
+    const { runRuntimeBundle, installPackages } = await importRunModule({
+      cliDir: '/workspace/core',
+    })
+
+    await runRuntimeBundle({ cwd: '/workspace/app', installMode: 'dev' })
+
+    expect(installPackages).toHaveBeenCalledWith(
+      '/workspace/core',
+      '/workspace/app',
+      expect.arrayContaining([
+        expect.objectContaining({ name: 'react' }),
+        expect.objectContaining({ name: 'system' }),
+      ]),
+      { mode: 'dev' }
     )
   })
 

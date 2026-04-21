@@ -3,6 +3,7 @@ import { Div } from '@reference-ui/react'
 import { DocLayout } from '../components/DocLayout'
 import { DocPage } from '../components/DocPage'
 import { slugToModule } from '../lib/docs'
+import { SyncWatchDebugPage } from './SyncWatchDebugPage'
 
 const rootRoute = createRootRoute({ component: DocLayout })
 
@@ -29,4 +30,10 @@ const docRoute = createRoute({
   component: DocPage,
 })
 
-export const routeTree = rootRoute.addChildren([indexRoute, docRoute])
+const syncWatchDebugRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/debug/sync-watch',
+  component: SyncWatchDebugPage,
+})
+
+export const routeTree = rootRoute.addChildren([indexRoute, docRoute, syncWatchDebugRoute])

@@ -52,7 +52,7 @@ export async function waitForRefSyncReady(
 
 /** Run ref sync (cold) in sandbox. Use when tests need to assert on file output after config change. */
 export async function runRefSync(sandboxDir: string): Promise<void> {
-  await execa('pnpm', ['exec', 'ref', 'sync'], {
+  await execa('pnpm', ['exec', 'ref', 'sync', '--build'], {
     cwd: sandboxDir,
     stdio: 'pipe',
     timeout: 45_000,
@@ -61,7 +61,7 @@ export async function runRefSync(sandboxDir: string): Promise<void> {
 
 /** Run ref sync on reference-lib so baseSystem.mjs has css for layers consumers. */
 export async function runRefSyncLib(): Promise<void> {
-  await execa('pnpm', ['exec', 'ref', 'sync'], {
+  await execa('pnpm', ['exec', 'ref', 'sync', '--build'], {
     cwd: LIB_PATH,
     stdio: 'pipe',
     timeout: 45_000,
