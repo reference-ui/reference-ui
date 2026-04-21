@@ -12,6 +12,7 @@
     "strict": true,
     "esModuleInterop": true,
     "paths": {
+      "@reference-ui/react": ["./.reference-ui/react"],
       "@reference-ui/system": ["./.reference-ui/system"],
       "@reference-ui/system/baseSystem": ["./.reference-ui/system/baseSystem.d.mts"]
     }
