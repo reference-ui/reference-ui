@@ -5,7 +5,8 @@
  */
 
 import { createRequire } from 'node:module'
-import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { constants } from 'node:fs'
+import { access, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -15,6 +16,7 @@ const require = createRequire(import.meta.url)
 const packageRoot = join(dirname(fileURLToPath(import.meta.url)), '..')
 const genDir = join(packageRoot, 'src/generated')
 const constantsPath = join(packageRoot, 'src/constants.ts')
+const jsxNamesPath = join(packageRoot, 'src/jsx-names.ts')
 
 const pkgJsonPath = require.resolve('@material-symbols-svg/react/package.json')
 const iconsDir = join(dirname(pkgJsonPath), 'dist/icons')
@@ -91,7 +93,22 @@ function emitJsxNamesFile(componentNames) {
   ].join('\n')
 }
 
+async function hasGeneratedOutputs() {
+  try {
+    await access(join(genDir, 'index.ts'), constants.F_OK)
+    await access(jsxNamesPath, constants.F_OK)
+    const generatedFiles = await readdir(genDir)
+    return generatedFiles.length > 1
+  } catch {
+    return false
+  }
+}
+
 async function main() {
+  if (await hasGeneratedOutputs()) {
+    return
+  }
+
   const weight = await resolveConfiguredWeight()
   const outlineSuffix = `W${weight}`
   const fillSuffix = `FillW${weight}`
@@ -134,7 +151,7 @@ async function main() {
 
   await writeFile(join(genDir, 'index.ts'), `${barrelHeader.join('\n')}${barrel.join('\n')}\n`, 'utf8')
   await writeFile(
-    join(packageRoot, 'src', 'jsx-names.ts'),
+    jsxNamesPath,
     emitJsxNamesFile([...exportNames.keys()].sort((a, b) => a.localeCompare(b))),
     'utf8'
   )
