@@ -104,6 +104,24 @@ describe('packager/run', () => {
     })
   })
 
+  it('passes watch install options only in watch mode', async () => {
+    const { runRuntimeBundle, installPackages } = await importRunModule({
+      cliDir: '/workspace/core',
+    })
+
+    await runRuntimeBundle({ cwd: '/workspace/app', watchMode: true })
+
+    expect(installPackages).toHaveBeenCalledWith(
+      '/workspace/core',
+      '/workspace/app',
+      expect.arrayContaining([
+        expect.objectContaining({ name: 'react' }),
+        expect.objectContaining({ name: 'system' }),
+      ]),
+      { watchMode: true }
+    )
+  })
+
   it('propagates install failures without emitting completion', async () => {
     const { runBundle, emit } = await importRunModule({
       installImpl: async () => {

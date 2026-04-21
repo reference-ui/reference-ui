@@ -21,7 +21,11 @@ async function runBundlePhase(
   const startedAt = Date.now()
 
   log.debug('packager', '📦 Packaging...')
-  await installPackages(coreDir, cwd, packages, { watchMode: payload.watchMode })
+  if (payload.watchMode) {
+    await installPackages(coreDir, cwd, packages, { watchMode: true })
+  } else {
+    await installPackages(coreDir, cwd, packages)
+  }
   log.debug('packager', `✅ ${packages.length} package(s) ready`)
   const durationMs = Date.now() - startedAt
 
