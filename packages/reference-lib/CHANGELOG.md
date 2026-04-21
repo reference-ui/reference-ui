@@ -1,5 +1,14 @@
 # @reference-ui/lib
 
+## 0.0.12
+
+### Patch Changes
+
+- cb2befe: CI Release
+- Updated dependencies [cb2befe]
+  - @reference-ui/core@0.0.10
+  - @reference-ui/icons@0.0.10
+
 ## 0.0.11
 
 ### Patch Changes
