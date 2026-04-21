@@ -1,5 +1,11 @@
 # @reference-ui/icons
 
+## 0.0.6
+
+### Patch Changes
+
+- ca635ef: package generated @reference-ui/react and @reference-ui/styled runtime files inside @reference-ui/icons so consumers do not need matching local .reference-ui packages for icon imports to resolve
+
 ## 0.0.5
 
 ### Patch Changes
