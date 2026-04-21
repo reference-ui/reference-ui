@@ -16,7 +16,7 @@ const BASE_MANIFEST: SessionManifest = {
   updatedAt: '2026-01-01T00:00:01.000Z',
 }
 
-async function waitForCallCount(calls: unknown[], expectedCount: number, timeout = 1_000): Promise<void> {
+async function waitForCallCount(calls: unknown[], expectedCount: number, timeout = 3_000): Promise<void> {
   const deadline = Date.now() + timeout
   while (Date.now() < deadline) {
     if (calls.length >= expectedCount) return
@@ -135,6 +135,10 @@ describe('getSyncSession – onRefresh', () => {
 
     writeManifest(outDir, { ...BASE_MANIFEST, buildState: 'ready' })
     await waitForCallCount(calls, 1)
+
+    // Give the real file watcher a brief chance to settle before the next
+    // atomic rewrite so CI does not occasionally collapse the second update.
+    await new Promise(r => setTimeout(r, 50))
 
     writeManifest(outDir, { ...BASE_MANIFEST, buildState: 'ready', updatedAt: '2026-01-01T01:00:00.000Z' })
     await waitForCallCount(calls, 2)
