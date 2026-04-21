@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "ref sync && (ref sync --watch & vite)",
-    "build": "node scripts/generate-primitives-docs.cjs && ref sync && vite build",
+    "dev": "ref clean && ref sync && (ref sync --watch & vite)",
+    "build": "node scripts/generate-primitives-docs.cjs && ref clean && ref sync && vite build",
     "build:pages": "pnpm build && cp dist/index.html dist/404.html",
     "preview": "vite preview",
     "generate:primitives": "node scripts/generate-primitives-docs.cjs"
