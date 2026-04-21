@@ -29,10 +29,10 @@ export default function ReferenceIconsFixture() {
         borderRadius="xl"
         bg="gray.900"
         borderWidth="1px"
-        borderColor="gray.800"
+        borderColor="gray.700"
       >
         <Div display="flex" alignItems="center" justifyContent="center" borderRadius="lg" bg="gray.950" color="blue.300">
-          <HomeIcon size="40r" color="blue.900" />
+          <HomeIcon size="40r" color="white" />
     
         </Div>
         <Div display="flex" alignItems="center" justifyContent="center" minHeight="10r" borderRadius="lg" bg="gray.950" color="green.300">
