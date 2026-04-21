@@ -323,6 +323,9 @@ importers:
       '@reference-ui/core':
         specifier: workspace:*
         version: link:../reference-core
+      '@reference-ui/icons':
+        specifier: 0.0.7
+        version: 0.0.7(@reference-ui/core@packages+reference-core)(react@19.2.4)
       react:
         specifier: ^19.2.4
         version: 19.2.4
@@ -1956,6 +1959,12 @@ packages:
 
   '@quansync/fs@1.0.0':
     resolution: {integrity: sha512-4TJ3DFtlf1L5LDMaM6CanJ/0lckGNtJcMjQ1NAV6zDmA0tEHKZtxNKin8EgPaVX1YzljbxckyT2tJrpQKAtngQ==}
+
+  '@reference-ui/icons@0.0.7':
+    resolution: {integrity: sha512-4kudjkpaLL6sWZlpqPj3tWb/LmfvGPE4Xbd/DAyzXMNq7RHkh3n3D5n0v6YxpyCx63GCWu0eiH6+Q1xNl28dXA==}
+    peerDependencies:
+      '@reference-ui/core': '*'
+      react: '>=18'
 
   '@rolldown/binding-android-arm64@1.0.0-rc.11':
     resolution: {integrity: sha512-SJ+/g+xNnOh6NqYxD0V3uVN4W3VfnrGsC9/hoglicgTNfABFG9JjISvkkU0dNY84MNHLWyOgxP9v9Y9pX4S7+A==}
@@ -7143,6 +7152,12 @@ snapshots:
   '@quansync/fs@1.0.0':
     dependencies:
       quansync: 1.0.0
+
+  '@reference-ui/icons@0.0.7(@reference-ui/core@packages+reference-core)(react@19.2.4)':
+    dependencies:
+      '@material-symbols-svg/react': 0.5.0(react@19.2.4)
+      '@reference-ui/core': link:packages/reference-core
+      react: 19.2.4
 
   '@rolldown/binding-android-arm64@1.0.0-rc.11':
     optional: true
