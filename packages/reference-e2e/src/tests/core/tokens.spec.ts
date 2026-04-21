@@ -20,18 +20,28 @@ test.describe('tokens', () => {
     await page.goto(testRoutes.tokens)
     const el = page.getByTestId('tokens-primitive')
     await expect(el).toBeVisible()
-    const color = await el.evaluate((e) => getComputedStyle(e).color)
     const expected = hexToRgb(tokensConfig.colors.test.primary.value)
-    expect(color).toBe(expected)
+
+    await expect
+      .poll(() => el.evaluate((e) => getComputedStyle(e).color))
+      .toBe(expected)
   })
 
   test('tokens() - css() resolves custom color and bg from config', async ({ page }) => {
     await page.goto(testRoutes.tokens)
     const el = page.getByTestId('tokens-css')
     await expect(el).toBeVisible()
-    const color = await el.evaluate((e) => getComputedStyle(e).color)
-    const bg = await el.evaluate((e) => getComputedStyle(e).backgroundColor)
-    expect(color).toBe(hexToRgb(tokensConfig.colors.test.primary.value))
-    expect(bg).toBe(hexToRgb(tokensConfig.colors.test.muted.value))
+
+    await expect
+      .poll(() =>
+        el.evaluate((e) => ({
+          color: getComputedStyle(e).color,
+          bg: getComputedStyle(e).backgroundColor,
+        }))
+      )
+      .toEqual({
+        color: hexToRgb(tokensConfig.colors.test.primary.value),
+        bg: hexToRgb(tokensConfig.colors.test.muted.value),
+      })
   })
 })
