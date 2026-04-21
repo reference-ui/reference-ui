@@ -12,6 +12,8 @@ const requiredFiles = [
   resolve(packageRoot, '.reference-ui/system/baseSystem.d.mts'),
   resolve(distDir, 'index.mjs'),
   resolve(distDir, 'index.d.ts'),
+  resolve(distDir, 'node_modules/@reference-ui/react/package.json'),
+  resolve(distDir, 'node_modules/@reference-ui/styled/package.json'),
 ]
 
 function run(command, args) {
@@ -25,6 +27,7 @@ run(process.execPath, ['scripts/generate.mjs'])
 run('pnpm', ['exec', 'ref', 'build'])
 run('pnpm', ['exec', 'rollup', '-c'])
 run('pnpm', ['exec', 'tsc', '-p', 'tsconfig.build.json'])
+run(process.execPath, ['scripts/materialize-runtime.mjs'])
 
 for (const filePath of requiredFiles) {
   await access(filePath, constants.F_OK)
