@@ -1,5 +1,14 @@
 # @reference-ui/lib
 
+## 0.0.10
+
+### Patch Changes
+
+- 6ea8726: Release reference-icons via reference-lib
+- Updated dependencies [6ea8726]
+  - @reference-ui/core@0.0.8
+  - @reference-ui/icons@0.0.8
+
 ## 0.0.9
 
 ### Patch Changes
