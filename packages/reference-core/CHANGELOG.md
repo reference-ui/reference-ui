@@ -1,5 +1,13 @@
 # @reference-ui/core
 
+## 0.0.7
+
+### Patch Changes
+
+- d5a0427: Test CI Release process
+- Updated dependencies [d5a0427]
+  - @reference-ui/rust@0.0.7
+
 ## 0.0.6
 
 ### Patch Changes
