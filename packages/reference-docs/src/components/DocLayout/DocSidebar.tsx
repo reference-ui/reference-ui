@@ -16,6 +16,8 @@ const navLinkActiveClass = css({
   fontWeight: '600',
 })
 
+const debugRoute = '/debug/sync-watch'
+
 function NavDocLink({ slug, title }: { slug: string; title: string }) {
   const pathname = useRouterState({ select: s => s.location.pathname })
   const isActive = slug === 'intro' ? pathname === '/' : pathname === `/${slug}`
@@ -33,6 +35,12 @@ function NavDocLink({ slug, title }: { slug: string; title: string }) {
 }
 
 export function DocSidebar() {
+  const pathname = useRouterState({ select: s => s.location.pathname })
+  const debugIsActive = pathname === debugRoute
+  const debugLinkClassName = [navLinkClass, debugIsActive ? navLinkActiveClass : '']
+    .filter(Boolean)
+    .join(' ')
+
   return (
     <Aside
       width="240px"
@@ -71,6 +79,22 @@ export function DocSidebar() {
             ))}
           </Div>
         ))}
+        <Div>
+          <Div
+            fontSize="0.6875rem"
+            fontWeight="600"
+            textTransform="uppercase"
+            letterSpacing="0.05em"
+            color="docsNavHeading"
+            marginTop="1rem"
+            marginBottom="0.5rem"
+          >
+            Debug
+          </Div>
+          <Link to={debugRoute} className={debugLinkClassName}>
+            Sync Watch Probe
+          </Link>
+        </Div>
       </Nav>
       <ThemeToggle />
     </Aside>

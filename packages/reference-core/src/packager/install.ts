@@ -1,21 +1,25 @@
 import { createHash } from 'node:crypto'
-import { cpSync, mkdirSync } from 'node:fs'
+import { mkdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { log } from '../lib/log'
 import { getOutDirPath } from '../lib/paths'
-import { createSymlink, pruneBrokenSymlinksInDir, removeSymlinkOrDir } from '../lib/symlink'
+import { pruneBrokenSymlinksInDir, removeSymlinkOrDir } from '../lib/symlink'
 import { getConfig } from '../config'
 import { getPackageDir } from './layout'
 import { type PackageDefinition } from './package'
 import { bundlePackage } from './bundler'
 import { runPostprocess } from './postprocess'
+import { installBuildPackage } from './install/build'
+import { installDevPackage } from './install/dev'
+
+export type InstallMode = 'dev' | 'build'
 
 export interface InstallPackageOptions {
   /**
-   * Watch mode keeps node_modules pointed at the generated outDir so downstream
-   * dev servers observe live package updates without waiting for a recopy.
+   * Install mode is explicit so dev/watch flows and build/test flows do not
+   * fight over whether node_modules should be symlinked or copied.
    */
-  watchMode?: boolean
+  mode?: InstallMode
 }
 
 
@@ -45,10 +49,10 @@ function createGeneratedPackageVersion(userProjectDir: string, pkg: PackageDefin
 /**
  * Install a single package to outDir (e.g. .reference-ui/react/) and publish it into node_modules.
  *
- * One-shot syncs publish a real directory copy so generated packages behave
- * like normal installed dependencies. Watch mode intentionally switches back to
- * symlinks so consumer bundlers and tsserver see file changes under
- * `.reference-ui/` immediately during `ref sync --watch`.
+ * Build mode publishes a real directory copy so generated packages behave like
+ * normal installed dependencies. Dev mode intentionally keeps node_modules
+ * symlinked to `.reference-ui/` so consumer bundlers and tsserver see live
+ * package updates immediately.
  */
 export async function installPackage(
   coreDir: string,
@@ -71,19 +75,21 @@ export async function installPackage(
   await bundlePackage({ coreDir, outDir, targetDir, pkg: installPkg })
   runPostprocess(targetDir, installPkg, { layerName: getConfig()?.name ?? '' })
 
+  const installMode = options?.mode ?? 'dev'
+
   // The install target may currently be either a copied directory (one-shot)
   // or a symlink from a previous watch session. Remove it first so the mode can
   // flip cleanly in either direction.
   removeSymlinkOrDir(installPath)
-  if (options?.watchMode) {
-    // Preserve a live link during watch mode: the generated package contents in
-    // `.reference-ui/` are the source of truth, and downstream dev servers need
-    // to observe those updates without waiting for node_modules to be recopied.
-    createSymlink(targetDir, installPath)
+  if (installMode === 'dev') {
+    // Preserve a live link during dev mode: the generated package contents in
+    // `.reference-ui/` are the source of truth, and downstream tooling needs to
+    // observe those updates without waiting for node_modules to be recopied.
+    installDevPackage(targetDir, installPath)
   } else {
-    // Outside watch mode we publish a real directory copy so generated packages
-    // are self-contained snapshots and not tied to the lifecycle of `.reference-ui/`.
-    cpSync(targetDir, installPath, { recursive: true })
+    // Build mode publishes a real directory copy so generated packages are
+    // self-contained snapshots and not tied to the lifecycle of `.reference-ui/`.
+    installBuildPackage(targetDir, installPath)
   }
 
   log.debug('packager', `✓ ${pkg.name} → ${installPath}`)
