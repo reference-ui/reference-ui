@@ -47,7 +47,7 @@
   },
   "dependencies": {
     "@reference-ui/core": "workspace:*",
-    "@reference-ui/icons": "workspace:*",
+    "@reference-ui/icons": "file:../reference-icons",
     "react": "^19.2.4"
   },
   "devDependencies": {
