@@ -48,6 +48,7 @@
   },
   "peerDependencies": {
     "@reference-ui/core": "*",
+    "@reference-ui/react": "file:.reference-ui/react",
     "react": ">=18"
   },
   "devDependencies": {
