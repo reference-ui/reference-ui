@@ -21,6 +21,7 @@ function generatedEntries() {
 
 const input = {
   index: 'src/index.ts',
+  baseSystem: 'src/baseSystem.ts',
   createIcon: 'src/createIcon.tsx',
   constants: 'src/constants.ts',
   ...generatedEntries(),
@@ -31,7 +32,6 @@ const externalPackageRoots = [
   'react-dom',
   '@material-symbols-svg/react',
   '@reference-ui/react',
-  '@reference-ui/system',
 ]
 
 const isPackageRootOrSubpath = (id, packageRoot) =>
