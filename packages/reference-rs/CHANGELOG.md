@@ -1,5 +1,11 @@
 # @reference-ui/rust
 
+## 0.0.8
+
+### Patch Changes
+
+- 6ea8726: Release reference-icons via reference-lib
+
 ## 0.0.7
 
 ### Patch Changes
