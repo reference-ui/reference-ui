@@ -3,6 +3,8 @@ packages:
   - fixtures/*
   - '!packages/old/**'
 
+linkWorkspacePackages: true
+
 ignoredBuiltDependencies:
   - '@parcel/watcher'
   - '@swc/core'
