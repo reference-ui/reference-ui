@@ -3,17 +3,8 @@ import { Command } from 'commander'
 import { log } from './lib/log'
 import { runCommand } from './lib/run'
 import { cleanCommand } from './clean'
-import { syncCommand, type SyncOptions } from './sync'
+import { runSync } from './sync'
 import { mcpCommand, type McpCommandOptions } from './mcp/cli/command'
-
-function runSync(options?: Partial<SyncOptions>) {
-  return runCommand(commandOptions =>
-    syncCommand(process.cwd(), {
-      ...(commandOptions as SyncOptions),
-      ...options,
-    })
-  )
-}
 
 async function main(): Promise<void> {
   const program = new Command()
