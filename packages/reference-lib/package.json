@@ -29,8 +29,8 @@
   ],
   "scripts": {
     "sync": "ref sync",
-    "typecheck": "pnpm --filter @reference-ui/core run build && pnpm run sync && tsc --noEmit",
-    "build": "pnpm --filter @reference-ui/core run build && pnpm run sync && tsup && node scripts/build-package.mjs",
+    "typecheck": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/icons run build && pnpm run sync && tsc --noEmit",
+    "build": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/icons run build && pnpm run sync && tsup && node scripts/build-package.mjs",
     "dev": "ref sync --watch",
     "prepack": "pnpm run build",
     "test": "vitest run",
