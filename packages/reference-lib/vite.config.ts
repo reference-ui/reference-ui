@@ -7,6 +7,7 @@ import { referenceVite } from '@reference-ui/core'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const coreDir = resolve(__dirname, '../reference-core')
 const reactRoot = resolve(__dirname, '.reference-ui/react')
+const systemRoot = resolve(__dirname, '.reference-ui/system')
 const styledRoot = resolve(__dirname, '.reference-ui/styled')
 const styledStylesCss = resolve(styledRoot, 'styles.css')
 const typesRoot = resolve(__dirname, '.reference-ui/types')
@@ -19,6 +20,7 @@ export default defineConfig({
       { find: '@reference-ui/react/styles.css', replacement: styledStylesCss },
       { find: '@reference-ui/styled/', replacement: `${styledRoot}/` },
       { find: '@reference-ui/styled', replacement: styledRoot },
+      { find: '@reference-ui/system/baseSystem', replacement: resolve(systemRoot, 'baseSystem.mjs') },
       { find: '@reference-ui/types/', replacement: `${typesRoot}/` },
       { find: '@reference-ui/types', replacement: resolve(typesRoot, 'types.mjs') },
       // reference-lib is a workspace-internal dev target: point system/react at the live
