@@ -1,5 +1,11 @@
 # @reference-ui/lib
 
+## 0.0.9
+
+### Patch Changes
+
+- 5286364: bundle generated @reference-ui/react and @reference-ui/styled runtimes into dist so published consumers can resolve reference-lib downstream
+
 ## 0.0.8
 
 ### Patch Changes
