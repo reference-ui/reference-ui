@@ -104,6 +104,42 @@ describe('packager/run', () => {
     })
   })
 
+  it('passes explicit build install options when requested', async () => {
+    const { runRuntimeBundle, installPackages } = await importRunModule({
+      cliDir: '/workspace/core',
+    })
+
+    await runRuntimeBundle({ cwd: '/workspace/app', installMode: 'build' })
+
+    expect(installPackages).toHaveBeenCalledWith(
+      '/workspace/core',
+      '/workspace/app',
+      expect.arrayContaining([
+        expect.objectContaining({ name: 'react' }),
+        expect.objectContaining({ name: 'system' }),
+      ]),
+      { mode: 'build' }
+    )
+  })
+
+  it('passes explicit dev install options when requested', async () => {
+    const { runRuntimeBundle, installPackages } = await importRunModule({
+      cliDir: '/workspace/core',
+    })
+
+    await runRuntimeBundle({ cwd: '/workspace/app', installMode: 'dev' })
+
+    expect(installPackages).toHaveBeenCalledWith(
+      '/workspace/core',
+      '/workspace/app',
+      expect.arrayContaining([
+        expect.objectContaining({ name: 'react' }),
+        expect.objectContaining({ name: 'system' }),
+      ]),
+      { mode: 'dev' }
+    )
+  })
+
   it('propagates install failures without emitting completion', async () => {
     const { runBundle, emit } = await importRunModule({
       installImpl: async () => {

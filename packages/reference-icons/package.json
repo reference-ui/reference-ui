@@ -24,8 +24,8 @@
       "import": "./dist/index.mjs"
     },
     "./baseSystem": {
-      "types": "./.reference-ui/system/baseSystem.d.mts",
-      "import": "./.reference-ui/system/baseSystem.mjs"
+      "types": "./dist/baseSystem.d.ts",
+      "import": "./dist/baseSystem.mjs"
     }
   },
   "files": [
@@ -36,7 +36,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "sync": "node scripts/ensure-core-cli.mjs && pnpm run generate && ref sync",
+    "sync": "node scripts/ensure-core-cli.mjs && pnpm run generate && ref sync && node scripts/materialize-base-system.mjs",
     "clean": "rm -rf dist src/generated src/jsx-names.ts",
     "generate": "node scripts/generate.mjs",
     "build": "node scripts/build.mjs",

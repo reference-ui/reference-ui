@@ -1,12 +1,13 @@
 import { log } from '../lib/log'
 import { emit } from '../lib/event-bus'
 import { resolveCorePackageDir } from '../lib/paths'
-import { installPackages } from './install'
+import { installPackages, type InstallMode } from './install'
 import { FINAL_PACKAGES, RUNTIME_PACKAGES } from './packages'
 import type { PackageDefinition } from './package'
 
 export interface RunBundlePayload {
   cwd: string
+  installMode?: InstallMode
   skipTypescript?: boolean
 }
 
@@ -20,7 +21,11 @@ async function runBundlePhase(
   const startedAt = Date.now()
 
   log.debug('packager', '📦 Packaging...')
-  await installPackages(coreDir, cwd, packages)
+  if (payload.installMode) {
+    await installPackages(coreDir, cwd, packages, { mode: payload.installMode })
+  } else {
+    await installPackages(coreDir, cwd, packages)
+  }
   log.debug('packager', `✅ ${packages.length} package(s) ready`)
   const durationMs = Date.now() - startedAt
 

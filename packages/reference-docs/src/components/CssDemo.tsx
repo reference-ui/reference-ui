@@ -13,7 +13,7 @@ export function CssDemo() {
     <Div bg="docsPageBg" display="flex" flexDirection="column" gap="10r">
       {/* Basic Usage */}
       <Div>
-        <Div fontSize="xl" fontWeight="700" mb="4r" color="docsHeading">
+        <Div bg="amber.900" fontSize="xl" fontWeight="700" mb="4r" color="docsHeading">
           Basic CSS Styles
         </Div>
         <Div

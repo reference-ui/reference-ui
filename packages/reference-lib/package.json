@@ -19,10 +19,6 @@
     "./theme": {
       "types": "./dist/theme/index.d.ts",
       "import": "./dist/theme/index.mjs"
-    },
-    "./icons": {
-      "types": "./dist/icons.d.ts",
-      "import": "./dist/icons.mjs"
     }
   },
   "files": [
@@ -32,10 +28,10 @@
     "README.md"
   ],
   "scripts": {
-    "sync": "pnpm --filter @reference-ui/icons run sync && ref sync",
+    "sync": "ref clean && ref sync",
     "typecheck": "pnpm --filter @reference-ui/core run build && pnpm run sync && tsc --noEmit",
-    "build": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/icons run build && pnpm run sync && tsup && node scripts/build-package.mjs",
-    "dev": "pnpm --filter @reference-ui/icons run sync && ref sync --watch",
+    "build": "pnpm --filter @reference-ui/core run build && pnpm run sync && tsup && node scripts/build-package.mjs",
+    "dev": "ref clean && ref sync --watch",
     "prepack": "pnpm run build",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -47,7 +43,6 @@
   },
   "dependencies": {
     "@reference-ui/core": "workspace:*",
-    "@reference-ui/icons": "workspace:*",
     "react": "^19.2.4"
   },
   "devDependencies": {
