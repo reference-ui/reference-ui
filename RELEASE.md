@@ -43,7 +43,7 @@ The changeset file should be committed along with the feature or fix.
 
 ### 3. Merge the branch to `main`
 
-After the branch lands on `main`, the release workflow runs after the `Test` workflow succeeds.
+After the branch lands on `main`, the release workflow runs immediately on that push.
 
 ### 4. GitHub Actions creates or updates the release PR
 
@@ -56,7 +56,7 @@ with:
 	version: pnpm version-packages
 ```
 
-So after changesets reach `main`, GitHub Actions is responsible for opening or updating the release PR.
+So after changesets reach `main`, GitHub Actions immediately opens or updates the release PR.
 
 ### 5. Merge the generated release PR
 
@@ -83,9 +83,9 @@ Once that PR is merged, the release workflow checks whether there are unpublishe
 So the normal sequence is:
 
 1. feature branch with changeset merges to `main`
-2. release PR is created
+2. release workflow runs on that merge and creates the release PR
 3. release PR is merged
-4. publish job runs
+4. release workflow runs again and the publish job runs
 
 ## Short Version
 
@@ -95,7 +95,7 @@ If your branch changes a published package:
 2. commit it on the branch
 3. merge the branch
 4. merge the generated release PR
-5. let Actions publish
+5. let Actions publish on the release PR merge to `main`
 
 ## What Gets Released
 
@@ -177,3 +177,5 @@ pnpm run release:publish
 `@reference-ui/rust` has one extra step: the workflow may compile native artifacts first, then publish them before the normal Changesets publish step.
 
 That detail matters operationally, but most developers do not need to think about it during normal release prep.
+
+For the current alpha workflow, release automation is intentionally not gated on the `Test` workflow succeeding. A merge to `main` is treated as release-ready.
