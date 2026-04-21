@@ -13,7 +13,7 @@ export function Color({ name, value }: ColorProps) {
       gap="3r"
       padding="2r"
       border="1px solid"
-      borderColor="docsPanelBorder"
+      borderColor="gray.100"
       borderRadius="base"
     >
       <Div
