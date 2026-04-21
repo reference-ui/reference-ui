@@ -2,6 +2,8 @@ import { mkdir, open, readFile, readdir, rm, unlink, writeFile } from 'node:fs/p
 import { dirname, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+const { setTimeout: delayTimeout } = globalThis
+
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url))
 const CORE_DIR = join(SCRIPT_DIR, '..')
 const REPO_DIR = join(CORE_DIR, '..', '..')
@@ -146,7 +148,7 @@ async function writeMirroredFile(file) {
 }
 
 function delay(milliseconds) {
-  return new Promise(resolve => setTimeout(resolve, milliseconds))
+  return new Promise(resolve => delayTimeout(resolve, milliseconds))
 }
 
 async function withLock(callback) {
