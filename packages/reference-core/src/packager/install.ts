@@ -3,12 +3,20 @@ import { cpSync, mkdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { log } from '../lib/log'
 import { getOutDirPath } from '../lib/paths'
-import { pruneBrokenSymlinksInDir, removeSymlinkOrDir } from '../lib/symlink'
+import { createSymlink, pruneBrokenSymlinksInDir, removeSymlinkOrDir } from '../lib/symlink'
 import { getConfig } from '../config'
 import { getPackageDir } from './layout'
 import { type PackageDefinition } from './package'
 import { bundlePackage } from './bundler'
 import { runPostprocess } from './postprocess'
+
+export interface InstallPackageOptions {
+  /**
+   * Watch mode keeps node_modules pointed at the generated outDir so downstream
+   * dev servers observe live package updates without waiting for a recopy.
+   */
+  watchMode?: boolean
+}
 
 
 /**
@@ -35,15 +43,20 @@ function createGeneratedPackageVersion(userProjectDir: string, pkg: PackageDefin
 }
 
 /**
- * Install a single package to outDir (e.g. .reference-ui/react/) and copy it into node_modules.
- * Builds package contents, runs any declared postprocess steps, then publishes a real directory copy.
+ * Install a single package to outDir (e.g. .reference-ui/react/) and publish it into node_modules.
+ *
+ * One-shot syncs publish a real directory copy so generated packages behave
+ * like normal installed dependencies. Watch mode intentionally switches back to
+ * symlinks so consumer bundlers and tsserver see file changes under
+ * `.reference-ui/` immediately during `ref sync --watch`.
  */
 export async function installPackage(
   coreDir: string,
   userProjectDir: string,
   outDir: string,
   nodeModulesScope: string,
-  pkg: PackageDefinition
+  pkg: PackageDefinition,
+  options?: InstallPackageOptions
 ): Promise<void> {
   const targetDir = getPackageDir(outDir, pkg.name)
   const installPath = getPackageDir(nodeModulesScope, pkg.name)
@@ -58,26 +71,39 @@ export async function installPackage(
   await bundlePackage({ coreDir, outDir, targetDir, pkg: installPkg })
   runPostprocess(targetDir, installPkg, { layerName: getConfig()?.name ?? '' })
 
+  // The install target may currently be either a copied directory (one-shot)
+  // or a symlink from a previous watch session. Remove it first so the mode can
+  // flip cleanly in either direction.
   removeSymlinkOrDir(installPath)
-  cpSync(targetDir, installPath, { recursive: true })
+  if (options?.watchMode) {
+    // Preserve a live link during watch mode: the generated package contents in
+    // `.reference-ui/` are the source of truth, and downstream dev servers need
+    // to observe those updates without waiting for node_modules to be recopied.
+    createSymlink(targetDir, installPath)
+  } else {
+    // Outside watch mode we publish a real directory copy so generated packages
+    // are self-contained snapshots and not tied to the lifecycle of `.reference-ui/`.
+    cpSync(targetDir, installPath, { recursive: true })
+  }
 
   log.debug('packager', `✓ ${pkg.name} → ${installPath}`)
 }
 
 /**
- * Install all packages to outDir (.reference-ui/) and copy node_modules/@reference-ui/* from it.
+ * Install all packages to outDir (.reference-ui/) and publish node_modules/@reference-ui/* from it.
  * Enables module resolution for @reference-ui/react, @reference-ui/styled, @reference-ui/system.
  */
 export async function installPackages(
   coreDir: string,
   userProjectDir: string,
-  packages: PackageDefinition[]
+  packages: PackageDefinition[],
+  options?: InstallPackageOptions
 ): Promise<void> {
   const outDir = getOutDirPath(userProjectDir)
   const nodeModulesScope = resolve(userProjectDir, 'node_modules', '@reference-ui')
 
   for (const pkg of packages) {
-    await installPackage(coreDir, userProjectDir, outDir, nodeModulesScope, pkg)
+    await installPackage(coreDir, userProjectDir, outDir, nodeModulesScope, pkg, options)
   }
 
   pruneBrokenSymlinksInDir(nodeModulesScope)
