@@ -4,6 +4,7 @@ packages:
   - '!packages/old/**'
 
 ignoredBuiltDependencies:
+  - '@parcel/watcher'
   - '@swc/core'
   - esbuild
   - nx
