@@ -21,6 +21,7 @@
       "@reference-ui/cli": ["packages/reference-core/src/public.ts"],
       "@reference-ui/cli/config": ["packages/reference-core/src/config/index.ts"],
       "@reference-ui/gen": ["packages/reference-gen/src/index.ts"],
+      "@reference-ui/icons": ["packages/reference-icons/src/index.ts"],
       "@reference-ui/lib": ["packages/reference-lib/src/index.ts"],
       "@reference-ui/lib/theme": ["packages/reference-lib/src/core/theme/index.ts"],
       "@fixtures/extend-library": ["fixtures/extend-library/src/index.ts"],
