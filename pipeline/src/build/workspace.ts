@@ -1,18 +1,17 @@
+/**
+ * Workspace discovery and process execution helpers for the pipeline.
+ *
+ * The rest of the pipeline intentionally depends on this module for package
+ * enumeration and child-process execution so those concerns stay consistent.
+ */
+
 import { execFileSync, spawn } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { registryPackageNames, workspacePackageRoots } from '../../config.js'
 import { failStep, finishStep, formatDuration, startStep, writeFailureOutput } from '../lib/log/index.js'
-
-export interface WorkspacePackage {
-  dependencies: Record<string, string>
-  dir: string
-  name: string
-  private: boolean
-  scripts: Record<string, string>
-  version: string
-}
+import type { WorkspacePackage } from './types.js'
 
 const buildDir = dirname(fileURLToPath(import.meta.url))
 

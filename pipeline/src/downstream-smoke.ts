@@ -1,3 +1,10 @@
+/**
+ * Containerized downstream smoke test for publish-style package tarballs.
+ *
+ * This script assembles built internal packages, installs them in a clean
+ * consumer, and proves the packaged boundary still works outside the workspace.
+ */
+
 import { dag } from '@dagger.io/dagger'
 import * as dagger from '@dagger.io/dagger'
 import { constants } from 'node:fs'

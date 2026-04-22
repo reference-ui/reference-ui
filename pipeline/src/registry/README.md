@@ -1,6 +1,21 @@
 # Registry Pipeline
 
-This folder is reserved for pipeline-local registry infrastructure.
+This folder holds the pipeline-local registry subsystem.
+
+## Module layout
+
+The registry code is split by responsibility:
+
+- `index.ts`: public facade exports for the rest of the pipeline
+- `paths.ts`: shared registry paths and constants
+- `types.ts`: manifest types and manifest version
+- `runtime.ts`: managed Verdaccio lifecycle
+- `package-prep.ts`: publish-time staging and `workspace:` rewriting
+- `pack.ts`: tarball packing plus manifest generation
+- `load.ts`: publish tarballs into Verdaccio and orchestrate stage flows
+- `manifest.ts`: manifest persistence and validation
+
+That split is intentional. This is one of the more critical parts of the local pipeline, so the goal is for each file to read like one concern instead of one long sequence of unrelated helpers.
 
 Its job is to provide a private, virtual npm-style registry that the pipeline can use for realistic package-consumption testing and release preparation.
 
@@ -12,6 +27,17 @@ The first concrete shape for that should be:
 - `pnpm pipeline:registry:stage:local` publishes those tarballs into the local registry
 
 That gives us an npm-compatible boundary immediately, without forcing release or testing to invent their own packaging path.
+
+## Local publish boundary
+
+The registry pack step now follows a publish-style staging flow:
+
+1. copy each package into a staging directory under `.pipeline/registry/staging/`
+2. rewrite `workspace:` specs to concrete versions before pack
+3. remove source-only fields like `private` for private fixture packages
+4. run `pnpm pack` from that staged directory
+
+That keeps the local registry behavior aligned with the real npm publish boundary for actual published packages.
 
 ## Why This Exists
 
