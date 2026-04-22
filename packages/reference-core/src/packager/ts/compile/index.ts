@@ -5,9 +5,9 @@ import {
   realpathSync,
   renameSync,
   rmSync,
+  writeFileSync,
 } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { dirname, join } from 'node:path'
+import { dirname, join, relative, resolve } from 'node:path'
 import { findDtsFile } from './find-dts'
 import { createTempTsconfig } from './create-temp-tsconfig'
 
@@ -15,6 +15,22 @@ function copyFileAtomic(sourcePath: string, targetPath: string): void {
   const tempPath = `${targetPath}.tmp-${process.pid}-${Date.now()}`
   copyFileSync(sourcePath, tempPath)
   renameSync(tempPath, targetPath)
+}
+
+function toModuleSpecifier(fromDir: string, targetPath: string): string {
+  const relativePath = relative(fromDir, targetPath).replaceAll('\\', '/')
+  const withoutExtension = relativePath.replace(/\.[cm]?[jt]sx?$/, '')
+  return withoutExtension.startsWith('.') ? withoutExtension : `./${withoutExtension}`
+}
+
+function writeCompileEntry(tempDir: string, sourceEntryPath: string): string {
+  const entryPath = join(tempDir, 'entry.ts')
+  writeFileSync(
+    entryPath,
+    `export * from ${JSON.stringify(toModuleSpecifier(tempDir, sourceEntryPath))}\n`,
+    'utf-8'
+  )
+  return entryPath
 }
 
 /**
@@ -34,12 +50,17 @@ export async function compileDeclarations(
   outDtsPath: string,
   projectCwd: string
 ): Promise<string> {
-  const tmpOut = realpathSync(mkdtempSync(join(tmpdir(), 'ref-ui-dts-')))
+  const packageDir = dirname(outDtsPath)
+  mkdirSync(packageDir, { recursive: true })
+
+  const tempDir = realpathSync(mkdtempSync(join(packageDir, '.ref-ui-dts-')))
+  const tmpOut = join(tempDir, 'out')
+  const entryPath = writeCompileEntry(tempDir, resolve(cliDir, entryFile))
   const tempTsconfigPath = createTempTsconfig({
-    cliDir,
     projectCwd,
-    tempDir: tmpOut,
+    tempDir,
   })
+  mkdirSync(tmpOut, { recursive: true })
 
   try {
     const { build } = await import('tsdown')
@@ -48,7 +69,7 @@ export async function compileDeclarations(
       await build({
         config: false,
         cwd: cliDir,
-        entry: [entryFile],
+        entry: [entryPath],
         outDir: tmpOut,
         clean: false,
         format: 'esm',
@@ -94,6 +115,6 @@ export async function compileDeclarations(
     copyFileAtomic(tmpDtsPath, outDtsPath)
     return outDtsPath
   } finally {
-    rmSync(tmpOut, { recursive: true, force: true })
+    rmSync(tempDir, { recursive: true, force: true })
   }
 }
