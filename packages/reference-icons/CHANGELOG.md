@@ -1,5 +1,11 @@
 # @reference-ui/icons
 
+## 0.0.11
+
+### Patch Changes
+
+- d08b470: CI
+
 ## 0.0.10
 
 ### Patch Changes
