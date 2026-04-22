@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { resolve, dirname, parse } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 const PACKAGE_JSON = 'package.json'
 const CORE_PACKAGE_NAME = '@reference-ui/core'
@@ -23,6 +24,10 @@ function walkUpToPackage(startDir: string, packageName: string): string | null {
   return null
 }
 
+function resolveCurrentModuleDir(): string {
+  return dirname(fileURLToPath(import.meta.url))
+}
+
 /**
  * Resolve the @reference-ui/core package directory.
  */
@@ -43,6 +48,12 @@ export function resolveCorePackageDir(fromCwd: string = process.cwd()): string {
     }
     dir = dirname(dir)
   }
+
+  const installedCoreDir = walkUpToPackage(
+    resolveCurrentModuleDir(),
+    CORE_PACKAGE_NAME
+  )
+  if (installedCoreDir) return installedCoreDir
 
   throw new Error(
     '@reference-ui/core package directory could not be resolved.'
