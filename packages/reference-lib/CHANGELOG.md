@@ -1,5 +1,12 @@
 # @reference-ui/lib
 
+## 0.0.15
+
+### Patch Changes
+
+- Updated dependencies [c621771]
+  - @reference-ui/core@0.0.12
+
 ## 0.0.14
 
 ### Patch Changes
