@@ -4,13 +4,20 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "downstream:smoke": "dagger run pnpm exec tsx src/downstream-smoke.ts",
+    "build": "pnpm exec tsx src/cli.ts build",
+    "registry:pack": "pnpm exec tsx src/cli.ts registry pack",
+    "registry:publish:local": "pnpm exec tsx src/cli.ts registry publish --registry http://127.0.0.1:4873",
+    "registry:start": "pnpm exec verdaccio --config ./src/registry/verdaccio/config.yaml --listen 127.0.0.1:4873",
     "setup:local": "bash ./setup/local.sh",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@dagger.io/dagger": "^0.20.6",
+    "commander": "^14.0.3",
+    "ora": "^9.4.0",
+    "picocolors": "^1.1.1",
     "tsx": "^4.21.0",
-    "typescript": "~5.9.3"
+    "typescript": "~5.9.3",
+    "verdaccio": "^6.1.6"
   }
 }

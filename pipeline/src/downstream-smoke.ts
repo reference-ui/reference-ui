@@ -1,7 +1,7 @@
 import { dag } from '@dagger.io/dagger'
 import * as dagger from '@dagger.io/dagger'
-import { access, readFile } from 'node:fs/promises'
 import { constants } from 'node:fs'
+import { access, readFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -11,6 +11,10 @@ const repoRoot = resolve(pipelineDir, '..')
 const repoPathInContainer = '/workspace'
 const packDirInContainer = '/packs'
 const consumerDirInContainer = '/consumer'
+
+function isDirectExecution(): boolean {
+  return process.argv[1] === fileURLToPath(import.meta.url)
+}
 
 const internalPackages = [
   {
@@ -177,7 +181,7 @@ function consumerSourceFile(): string {
   ].join('\n')
 }
 
-async function main(): Promise<void> {
+export async function runDownstreamSmoke(): Promise<void> {
   await assertBuiltOutputs()
 
   const packageInfos = await Promise.all(internalPackages.map(pkg => readPackageInfo(pkg.dir)))
@@ -215,4 +219,6 @@ async function main(): Promise<void> {
   }
 }
 
-await dagger.connection(main, { LogOutput: process.stderr })
+if (isDirectExecution()) {
+  await dagger.connection(runDownstreamSmoke, { LogOutput: process.stderr })
+}
