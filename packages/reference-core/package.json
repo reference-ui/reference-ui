@@ -17,6 +17,7 @@
     "bin",
     "dist",
     "src",
+    "tsconfig.json",
     "tools/copy-reference-api-component.mjs"
   ],
   "exports": {

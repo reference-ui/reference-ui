@@ -13,6 +13,7 @@ function createTempDir(): string {
 
 async function importCompileModule(options?: {
   buildImpl?: (config: Record<string, unknown>) => Promise<void>
+  diagnosticsResult?: string
 }) {
   vi.resetModules()
 
@@ -22,6 +23,11 @@ async function importCompileModule(options?: {
     writeFileSync(tsconfigPath, '{}', 'utf-8')
     return tsconfigPath
   })
+  const collectDeclarationDiagnostics = vi.fn(
+    options?.diagnosticsResult
+      ? vi.fn().mockResolvedValue(options.diagnosticsResult)
+      : vi.fn().mockResolvedValue('diagnostics: direct TypeScript diagnostic run exited cleanly and reported no errors.')
+  )
 
   vi.doMock('tsdown', () => ({
     build,
@@ -29,15 +35,19 @@ async function importCompileModule(options?: {
   vi.doMock('./create-temp-tsconfig', () => ({
     createTempTsconfig,
   }))
+  vi.doMock('./diagnostics', () => ({
+    collectDeclarationDiagnostics,
+  }))
 
   const mod = await import('./index')
-  return { ...mod, build, createTempTsconfig }
+  return { ...mod, build, createTempTsconfig, collectDeclarationDiagnostics }
 }
 
 afterEach(() => {
   vi.resetModules()
   vi.doUnmock('tsdown')
   vi.doUnmock('./create-temp-tsconfig')
+  vi.doUnmock('./diagnostics')
   vi.restoreAllMocks()
 
   for (const dir of createdDirs.splice(0)) {
@@ -76,10 +86,11 @@ describe('packager/ts/compile', () => {
     expect(readFileSync(outDtsPath, 'utf-8')).toBe('export type X = string\n')
     expect(build).toHaveBeenCalledTimes(1)
     expect(createTempTsconfig).toHaveBeenCalledWith({
+      cliDir,
       projectCwd,
       tempDir: dirname(tempOutDirForBuild),
     })
-    expect(entryForBuild).toBe(sourceEntryPath)
+    expect(entryForBuild).toBe(entryFile)
     expect(existsSync(dirname(tempOutDirForBuild))).toBe(false)
   })
 
@@ -93,15 +104,17 @@ describe('packager/ts/compile', () => {
     const outDtsPath = resolve(targetDir, 'react.d.mts')
     let tempOutDirForBuild = ''
 
-    const { compileDeclarations } = await importCompileModule({
+    const { compileDeclarations, collectDeclarationDiagnostics } = await importCompileModule({
       buildImpl: async config => {
         tempOutDirForBuild = config.outDir as string
       },
+      diagnosticsResult: 'diagnostics: TS2307 Cannot find module',
     })
 
     await expect(
       compileDeclarations(cliDir, 'src/entry/react.ts', outDtsPath, projectCwd)
-    ).rejects.toThrow(`tsdown did not produce .d.ts or .d.mts in ${tempOutDirForBuild}`)
+    ).rejects.toThrow(/diagnostics: TS2307 Cannot find module/)
+    expect(collectDeclarationDiagnostics).toHaveBeenCalledTimes(1)
     expect(existsSync(dirname(tempOutDirForBuild))).toBe(false)
   })
 
