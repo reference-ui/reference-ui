@@ -22,6 +22,7 @@ jobs:
       has_changesets: ${{ steps.changesets.outputs.hasChangesets }}
       should_publish: ${{ steps.detect.outputs.should_publish }}
       needs_rust: ${{ steps.detect.outputs.needs_rust }}
+      release_packages_json: ${{ steps.detect.outputs.release_packages_json }}
 
     steps:
       - name: Check out repository
@@ -55,7 +56,7 @@ jobs:
           # If present, use a dedicated token that is allowed to open/update release PRs.
           GITHUB_TOKEN: ${{ secrets.CHANGESETS_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
 
-      - name: Detect unpublished packages
+      - name: Detect release targets
         id: detect
         run: pnpm run release:detect
 

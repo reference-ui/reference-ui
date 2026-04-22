@@ -1,59 +1,17 @@
-import { existsSync, readdirSync, readFileSync } from 'node:fs'
-import { dirname, join, resolve } from 'node:path'
-import { execFileSync } from 'node:child_process'
-import { fileURLToPath } from 'node:url'
+import {
+  RUST_PACKAGE,
+  getReleaseTargetPackages,
+  isPublished,
+  run,
+  sortPackagesForPublish,
+} from './shared.mjs'
 
-const RUST_PACKAGE = '@reference-ui/rust'
-const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
-const packagesDir = join(repoRoot, 'packages')
-
-function readJson(path) {
-  return JSON.parse(readFileSync(path, 'utf8'))
-}
-
-function run(command, args, options = {}) {
-  execFileSync(command, args, {
-    cwd: repoRoot,
-    stdio: 'inherit',
-    env: process.env,
-    ...options,
-  })
-}
-
-function listPublicPackages() {
-  return readdirSync(packagesDir, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => join(packagesDir, entry.name, 'package.json'))
-    .filter((packageJsonPath) => existsSync(packageJsonPath))
-    .map((packageJsonPath) => {
-      const pkg = readJson(packageJsonPath)
-      return {
-        dir: dirname(packageJsonPath),
-        name: pkg.name,
-        private: pkg.private === true,
-        version: pkg.version,
-      }
-    })
-    .filter((pkg) => !pkg.private)
-}
-
-function isPublished(name, version) {
-  try {
-    const output = execFileSync('npm', ['view', `${name}@${version}`, 'version', '--json'], {
-      cwd: repoRoot,
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'pipe'],
-    }).trim()
-
-    return output.length > 0
-  } catch {
-    return false
-  }
-}
-
-const unpublishedPackages = listPublicPackages().filter((pkg) => !isPublished(pkg.name, pkg.version))
+const { releasePackages } = getReleaseTargetPackages()
+const unpublishedPackages = sortPackagesForPublish(
+  releasePackages.filter((pkg) => !isPublished(pkg.name, pkg.version))
+)
 if (unpublishedPackages.length === 0) {
-  console.log('No unpublished workspace packages found.')
+  console.log('No unpublished release-target packages found.')
   process.exit(0)
 }
 
@@ -62,5 +20,9 @@ if (unpublishedPackages.some((pkg) => pkg.name === RUST_PACKAGE)) {
   run('pnpm', ['--filter', RUST_PACKAGE, 'run', 'publish:native'])
 }
 
-console.log('Publishing workspace packages with Changesets')
-run('pnpm', ['exec', 'changeset', 'publish'])
+for (const pkg of unpublishedPackages) {
+  console.log(`Publishing ${pkg.name}@${pkg.version}`)
+  run('pnpm', ['publish', '--no-git-checks', '--access', 'public'], {
+    cwd: pkg.dir,
+  })
+}
