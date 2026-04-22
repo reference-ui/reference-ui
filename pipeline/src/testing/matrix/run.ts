@@ -13,9 +13,9 @@ import { createHash } from 'node:crypto'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { buildWorkspacePackages } from '../../build/index.js'
 import { readRegistryManifest } from '../../registry/manifest.js'
 import { defaultRegistryUrl } from '../../registry/paths.js'
-import { ensureLocalRegistryAndStagePublicPackages } from '../../registry/load.js'
 import { validateMatrixFixtures } from './validate.js'
 
 const matrixDir = dirname(fileURLToPath(import.meta.url))
@@ -134,9 +134,9 @@ export async function runMatrixBootstrapInDagger(): Promise<void> {
   console.log('1. Discovering matrix-enabled fixtures...')
   validateMatrixFixtures()
 
-  console.log('2. Ensuring the shared host Verdaccio registry is running and staged...')
+  console.log('2. Building changed workspace packages and staging the shared host Verdaccio registry...')
   console.log(`   Using the single pipeline registry at ${defaultRegistryUrl}.`)
-  await ensureLocalRegistryAndStagePublicPackages(defaultRegistryUrl)
+  await buildWorkspacePackages()
   const manifest = await readRegistryManifest()
 
   console.log('3. Reading install-test fixture source...')
