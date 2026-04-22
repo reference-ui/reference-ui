@@ -1,5 +1,14 @@
 # @reference-ui/lib
 
+## 0.0.16
+
+### Patch Changes
+
+- 2194d38: Fix pipeline
+- Updated dependencies [2194d38]
+  - @reference-ui/core@0.0.13
+  - @reference-ui/icons@0.0.13
+
 ## 0.0.15
 
 ### Patch Changes
