@@ -18,6 +18,7 @@ packages:
     access: $all
     publish: $all
     unpublish: $all
+    proxy: npmjs
 
 server:
   keepAliveTimeout: 60

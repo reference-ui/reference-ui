@@ -20,6 +20,8 @@ The main pipeline areas are:
 
 The registry subsystem is split into focused modules because it now owns a real publish-style staging boundary instead of a single monolithic helper file.
 
+The current E2E matrix migration plan lives in `pipeline/matrix.md`.
+
 ## Prerequisites
 
 - local setup completed via `pnpm setup:local` on macOS
@@ -93,7 +95,16 @@ Focused unit tests for extracted pure helpers can be run with:
 pnpm pipeline:test:pipeline
 ```
 
-Inside the pipeline package, that routes to Node's built-in test runner through `tsx` and currently covers the package preparation helpers used before `pnpm pack`.
+Inside the pipeline package, that routes to Node's built-in test runner through `tsx` and is reserved for pipeline code tests.
+
+Matrix bootstrap checks can be run with:
+
+```sh
+pnpm pipeline:test:matrix
+```
+
+That is the separate entrypoint for the pipeline-owned matrix flow. Right now it validates discovery of real matrix-enabled fixture packages, and later it can grow into the real matrix runner.
+It already executes through Dagger, reuses the single pipeline-managed Verdaccio registry by binding that shared host registry into the container graph, and runs the first `install-test` smoke scenario in a clean container rather than against host `node_modules`.
 
 Testing and release can then consume the same registry-hosted artifacts instead of rebuilding ad hoc.
 

@@ -29,6 +29,7 @@ const input = {
 const externalPackageRoots = [
   'react',
   'react-dom',
+  '@material-symbols-svg/react',
   '@reference-ui/react',
   '@reference-ui/system',
 ]
@@ -36,7 +37,39 @@ const externalPackageRoots = [
 const isPackageRootOrSubpath = (id, packageRoot) =>
   id === packageRoot || id.startsWith(`${packageRoot}/`)
 
-const external = id => externalPackageRoots.some(packageRoot => isPackageRootOrSubpath(id, packageRoot))
+function toPosixPath(value) {
+  return value.replaceAll('\\', '/')
+}
+
+function materialSymbolsSpecifierFromResolvedId(id) {
+  const normalizedId = toPosixPath(id)
+  const match = normalizedId.match(
+    /\/node_modules\/(?:\.pnpm\/[^/]+\/node_modules\/)?@material-symbols-svg\/react\/dist\/icons\/(.+)\.mjs$/,
+  )
+
+  if (!match) {
+    return null
+  }
+
+  return `@material-symbols-svg/react/icons/${match[1]}`
+}
+
+const external = id =>
+  externalPackageRoots.some(packageRoot => isPackageRootOrSubpath(id, packageRoot))
+  || materialSymbolsSpecifierFromResolvedId(id) !== null
+
+function forceExternalPackage(packageRoot) {
+  return {
+    name: `force-external:${packageRoot}`,
+    resolveId(source) {
+      if (isPackageRootOrSubpath(source, packageRoot)) {
+        return { id: source, external: true }
+      }
+
+      return null
+    },
+  }
+}
 
 export default {
   input,
@@ -47,8 +80,12 @@ export default {
     entryFileNames: '[name].mjs',
     preserveModules: true,
     preserveModulesRoot: 'src',
+    paths(id) {
+      return materialSymbolsSpecifierFromResolvedId(id) ?? id
+    },
   },
   plugins: [
+    forceExternalPackage('@material-symbols-svg/react'),
     resolve({ extensions: ['.mjs', '.js', '.ts', '.tsx'] }),
     esbuild({
       include: /\.[jt]sx?$/,
