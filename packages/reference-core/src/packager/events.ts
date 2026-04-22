@@ -36,6 +36,9 @@ export type PackagerEvents = {
   /** Runtime declarations are ready for packages needed by the reference build */
   'packager-ts:runtime:complete': Record<string, never>
 
+  /** Any declaration-generation failure in the packager-ts subsystem */
+  'packager-ts:failed': Record<string, never>
+
   /** Bundle complete (packages written to outDir) */
   'packager:complete': PackagerBundleCompletePayload
 
