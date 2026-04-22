@@ -15,6 +15,7 @@ export const localRegistryAuthToken = 'reference-ui-local'
 export const registryStateDir = resolve(pipelineStateDir, 'registry')
 export const tarballsDir = resolve(registryStateDir, 'tarballs')
 export const manifestPath = resolve(registryStateDir, 'manifest.json')
+export const loadedStatePath = resolve(registryStateDir, 'loaded-state.json')
 export const stagingDir = resolve(registryStateDir, 'staging')
 
 const registryModuleDir = dirname(fileURLToPath(import.meta.url))

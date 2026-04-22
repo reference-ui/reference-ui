@@ -7,13 +7,22 @@
  */
 
 import { execFileSync } from 'node:child_process'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { repoRoot, run } from '../build/workspace.js'
 import { logSkip } from '../lib/log/index.js'
 import { readRegistryManifest } from './manifest.js'
-import { defaultRegistryUrl, localRegistryAuthToken } from './paths.js'
+import { defaultRegistryUrl, loadedStatePath, localRegistryAuthToken } from './paths.js'
 import { packPublicPackages } from './pack.js'
 import { ensureManagedLocalRegistry, rebuildManagedLocalRegistry } from './runtime.js'
+
+interface LoadedRegistryStateEntry {
+  hash: string
+  loadedAt: string
+  version: string
+}
+
+type LoadedRegistryState = Record<string, LoadedRegistryStateEntry>
 
 function isPublishedToRegistry(name: string, version: string, registryUrl: string): boolean {
   try {
@@ -35,9 +44,44 @@ function registryAuthTokenOption(registryUrl: string): string {
   return `--//${url.host}${normalizedPath}:_authToken=${localRegistryAuthToken}`
 }
 
+async function readLoadedRegistryState(): Promise<LoadedRegistryState> {
+  try {
+    const contents = await readFile(loadedStatePath, 'utf8')
+    return JSON.parse(contents) as LoadedRegistryState
+  } catch {
+    return {}
+  }
+}
+
+async function writeLoadedRegistryState(state: LoadedRegistryState): Promise<void> {
+  await mkdir(resolve(loadedStatePath, '..'), { recursive: true })
+  await writeFile(loadedStatePath, `${JSON.stringify(state, null, 2)}\n`)
+}
+
+async function rebuildRegistryIfLoadedHashesChanged(registryUrl: string): Promise<void> {
+  const manifest = await readRegistryManifest()
+  const loadedState = await readLoadedRegistryState()
+
+  const requiresRebuild = manifest.packages.some((pkg) => {
+    const previous = loadedState[pkg.name]
+
+    return previous !== undefined
+      && previous.version === pkg.version
+      && previous.hash !== pkg.hash
+  })
+
+  if (!requiresRebuild) {
+    return
+  }
+
+  await rebuildManagedLocalRegistry(registryUrl)
+}
+
 export async function loadPackedTarballsIntoLocalRegistry(registryUrl: string = defaultRegistryUrl): Promise<void> {
   const manifest = await readRegistryManifest()
   const authTokenOption = registryAuthTokenOption(registryUrl)
+
+  await rebuildRegistryIfLoadedHashesChanged(registryUrl)
 
   for (const pkg of manifest.packages) {
     if (isPublishedToRegistry(pkg.name, pkg.version, registryUrl)) {
@@ -57,6 +101,19 @@ export async function loadPackedTarballsIntoLocalRegistry(registryUrl: string = 
       label: `Load ${pkg.name}@${pkg.version} into local registry`,
     })
   }
+
+  await writeLoadedRegistryState(
+    Object.fromEntries(
+      manifest.packages.map((pkg) => [
+        pkg.name,
+        {
+          hash: pkg.hash,
+          loadedAt: new Date().toISOString(),
+          version: pkg.version,
+        },
+      ]),
+    ),
+  )
 }
 
 export async function stagePublicPackages(registryUrl: string = defaultRegistryUrl): Promise<void> {
