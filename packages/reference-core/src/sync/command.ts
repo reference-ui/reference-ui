@@ -1,6 +1,7 @@
 import { bootstrap } from './bootstrap'
 import { initComplete } from './complete'
 import { initEvents } from './events'
+import { initGlobalSyncFailureBoundary } from './failure-boundary'
 import { initShutdown } from './shutdown'
 import { initVirtual } from '../virtual/init'
 import { initConfig } from '../system/panda/config/init'
@@ -18,6 +19,7 @@ export type { SyncOptions, SyncPayload } from './types'
 export async function syncCommand(cwd: string, options?: SyncOptions): Promise<void> {
   const payload = await bootstrap(cwd, options)
   initShutdown()
+  initGlobalSyncFailureBoundary()
   startSyncLogging()
   initEvents()
   initSession(payload)
