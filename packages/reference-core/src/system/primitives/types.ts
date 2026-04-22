@@ -20,7 +20,7 @@ export type {
 type PrimitiveOwnProps = StyleProps & ColorModeProps & PrimitivesCore.PrimitiveCssProps
 
 /** DOM props + style/colorMode/css for a given intrinsic tag (shared by all concrete *Component aliases). */
-export type PrimitivePropsBase<T extends keyof JSX.IntrinsicElements> = Omit<
+export type PrimitivePropsBase<T extends PrimitivesCore.PrimitiveTag> = Omit<
   React.ComponentPropsWithoutRef<T>,
   keyof PrimitiveOwnProps
 > &
@@ -331,7 +331,7 @@ export type WbrComponent = React.ForwardRefExoticComponent<
   PrimitivePropsBase<'wbr'> & React.RefAttributes<HTMLElement>
 >
 
-export type SimplifiedPrimitive<T extends keyof JSX.IntrinsicElements> =
+export type SimplifiedPrimitive<T extends PrimitivesCore.PrimitiveTag> =
   React.ForwardRefExoticComponent<
     Omit<React.ComponentPropsWithoutRef<T>, keyof PrimitiveOwnProps> &
       PrimitiveOwnProps &
