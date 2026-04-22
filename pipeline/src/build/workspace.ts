@@ -2,7 +2,7 @@ import { execFileSync, spawn } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { workspacePackageRoots } from '../../config.js'
+import { registryPackageNames, workspacePackageRoots } from '../../config.js'
 import { failStep, finishStep, formatDuration, startStep, writeFailureOutput } from '../lib/log/index.js'
 
 export interface WorkspacePackage {
@@ -155,6 +155,12 @@ export function listWorkspacePackages(): WorkspacePackage[] {
 
 export function listPublicWorkspacePackages(): WorkspacePackage[] {
   return listWorkspacePackages().filter((pkg) => !pkg.private)
+}
+
+export function listRegistryWorkspacePackages(): WorkspacePackage[] {
+  const registryNames = new Set<string>(registryPackageNames)
+
+  return listWorkspacePackages().filter((pkg) => registryNames.has(pkg.name))
 }
 
 export function sortPackagesForInternalDependencyOrder(

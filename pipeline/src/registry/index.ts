@@ -1,12 +1,13 @@
 import { execFileSync, spawn } from 'node:child_process'
 import { constants, openSync } from 'node:fs'
-import { access, mkdir, readFile, readdir, rm, unlink, writeFile } from 'node:fs/promises'
-import { dirname, relative, resolve } from 'node:path'
+import { access, cp, mkdir, readFile, readdir, rm, unlink, writeFile } from 'node:fs/promises'
+import { basename, dirname, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { computePackageBuildHashes } from '../build/cache.js'
 import { logSkip } from '../lib/log/index.js'
 import {
-  listPublicWorkspacePackages,
+  listRegistryWorkspacePackages,
+  listWorkspacePackages,
   pipelineStateDir,
   repoRoot,
   run,
@@ -19,6 +20,8 @@ export const defaultRegistryUrl = 'http://127.0.0.1:4873'
 const registryStateDir = resolve(pipelineStateDir, 'registry')
 const tarballsDir = resolve(registryStateDir, 'tarballs')
 const manifestPath = resolve(registryStateDir, 'manifest.json')
+const rewriteDir = resolve(registryStateDir, 'rewrite')
+const stagingDir = resolve(registryStateDir, 'staging')
 const registryDir = dirname(fileURLToPath(import.meta.url))
 const verdaccioRootDir = resolve(registryDir, 'verdaccio')
 const verdaccioStoreDir = resolve(registryDir, '.store')
@@ -49,7 +52,15 @@ interface RegistryManifest {
     defaultUrl: string
     kind: 'npm-compatible'
   }
-  version: 1
+  version: 2
+}
+
+interface PackageJsonLike {
+  dependencies?: Record<string, string>
+  devDependencies?: Record<string, string>
+  optionalDependencies?: Record<string, string>
+  peerDependencies?: Record<string, string>
+  private?: boolean
 }
 
 function sleep(milliseconds: number): Promise<void> {
@@ -253,7 +264,13 @@ async function writeManifest(manifest: RegistryManifest): Promise<void> {
 async function readPreviousRegistryManifest(): Promise<RegistryManifest | null> {
   try {
     const contents = await readFile(manifestPath, 'utf8')
-    return JSON.parse(contents) as RegistryManifest
+    const manifest = JSON.parse(contents) as { version?: number }
+
+    if (manifest.version !== 2) {
+      return null
+    }
+
+    return manifest as RegistryManifest
   } catch {
     return null
   }
@@ -280,6 +297,121 @@ async function pruneStaleTarballs(activeTarballPaths: ReadonlySet<string>): Prom
   }
 }
 
+async function pruneStalePreparedPackages(activePreparedPackagePaths: ReadonlySet<string>): Promise<void> {
+  try {
+    const preparedEntries = await readdir(stagingDir, { withFileTypes: true })
+
+    for (const entry of preparedEntries) {
+      if (!entry.isDirectory()) {
+        continue
+      }
+
+      const absolutePath = resolve(stagingDir, entry.name)
+      if (activePreparedPackagePaths.has(absolutePath)) {
+        continue
+      }
+
+      await rm(absolutePath, { force: true, recursive: true })
+    }
+  } catch {
+    // Ignore missing directories.
+  }
+}
+
+function stagedPackageDirPath(pkg: WorkspacePackage): string {
+  return resolve(stagingDir, basename(packedTarballName(pkg.name, pkg.version), '.tgz'))
+}
+
+function resolveWorkspaceProtocolVersion(
+  packageName: string,
+  dependencySpec: string,
+  workspacePackageVersions: ReadonlyMap<string, string>,
+): string {
+  if (!dependencySpec.startsWith('workspace:')) {
+    return dependencySpec
+  }
+
+  const workspaceVersion = workspacePackageVersions.get(packageName)
+  if (!workspaceVersion) {
+    throw new Error(`Cannot resolve workspace dependency ${packageName} for local registry packaging.`)
+  }
+
+  const workspaceRange = dependencySpec.slice('workspace:'.length)
+  if (workspaceRange === '' || workspaceRange === '*') {
+    return workspaceVersion
+  }
+
+  if (workspaceRange === '^' || workspaceRange === '~') {
+    return `${workspaceRange}${workspaceVersion}`
+  }
+
+  return workspaceRange
+}
+
+function rewriteWorkspaceProtocolDependencies(
+  dependencies: Record<string, string> | undefined,
+  workspacePackageVersions: ReadonlyMap<string, string>,
+): Record<string, string> | undefined {
+  if (!dependencies) {
+    return undefined
+  }
+
+  return Object.fromEntries(
+    Object.entries(dependencies).map(([packageName, dependencySpec]) => [
+      packageName,
+      resolveWorkspaceProtocolVersion(packageName, dependencySpec, workspacePackageVersions),
+    ]),
+  )
+}
+
+async function prepareWorkspacePackageForLocalRegistry(
+  pkg: WorkspacePackage,
+  workspacePackageVersions: ReadonlyMap<string, string>,
+): Promise<string> {
+  const preparedPackageDir = stagedPackageDirPath(pkg)
+  const preparedPackageJsonPath = resolve(preparedPackageDir, 'package.json')
+
+  await rm(preparedPackageDir, { force: true, recursive: true })
+  await mkdir(stagingDir, { recursive: true })
+
+  await cp(pkg.dir, preparedPackageDir, {
+    filter: (sourcePath) => {
+      const sourceName = basename(sourcePath)
+      return sourceName !== '.git' && sourceName !== 'node_modules'
+    },
+    recursive: true,
+  })
+
+  const preparedPackageJson = JSON.parse(
+    await readFile(preparedPackageJsonPath, 'utf8'),
+  ) as PackageJsonLike
+
+  if (pkg.private) {
+    delete preparedPackageJson.private
+  }
+
+  preparedPackageJson.dependencies = rewriteWorkspaceProtocolDependencies(
+    preparedPackageJson.dependencies,
+    workspacePackageVersions,
+  )
+  preparedPackageJson.devDependencies = rewriteWorkspaceProtocolDependencies(
+    preparedPackageJson.devDependencies,
+    workspacePackageVersions,
+  )
+  preparedPackageJson.optionalDependencies = rewriteWorkspaceProtocolDependencies(
+    preparedPackageJson.optionalDependencies,
+    workspacePackageVersions,
+  )
+  preparedPackageJson.peerDependencies = rewriteWorkspaceProtocolDependencies(
+    preparedPackageJson.peerDependencies,
+    workspacePackageVersions,
+  )
+
+  await writeFile(preparedPackageJsonPath, `${JSON.stringify(preparedPackageJson, null, 2)}\n`)
+
+  return preparedPackageDir
+}
+
 function registryAuthTokenOption(registryUrl: string): string {
   const url = new URL(registryUrl)
   const normalizedPath = url.pathname.endsWith('/') ? url.pathname : `${url.pathname}/`
@@ -287,8 +419,11 @@ function registryAuthTokenOption(registryUrl: string): string {
 }
 
 export async function packPublicPackages(): Promise<RegistryManifest> {
-  const publicPackages = sortPackagesForInternalDependencyOrder(listPublicWorkspacePackages())
+  const publicPackages = sortPackagesForInternalDependencyOrder(listRegistryWorkspacePackages())
   const publicPackageNames = new Set(publicPackages.map((pkg) => pkg.name))
+  const workspacePackageVersions = new Map(
+    listWorkspacePackages().map((workspacePkg) => [workspacePkg.name, workspacePkg.version]),
+  )
   const publicPackageHashes = computePackageBuildHashes(publicPackages)
   const previousManifest = await readPreviousRegistryManifest()
   const previousManifestByPackage = new Map(
@@ -299,6 +434,7 @@ export async function packPublicPackages(): Promise<RegistryManifest> {
 
   const manifestPackages: RegistryManifestPackage[] = []
   const activeTarballPaths = new Set<string>()
+  const activePreparedPackagePaths = new Set<string>()
 
   for (const pkg of publicPackages) {
     const packageHash = publicPackageHashes.get(pkg.name)
@@ -309,11 +445,15 @@ export async function packPublicPackages(): Promise<RegistryManifest> {
     const tarballFileName = packedTarballName(pkg.name, pkg.version)
     const tarballPath = resolve(tarballsDir, tarballFileName)
     const previousPackage = previousManifestByPackage.get(pkg.name)
+    const preparedPackageDir = stagedPackageDirPath(pkg)
 
     if (!(previousPackage?.hash === packageHash && previousPackage.tarballFileName === tarballFileName)) {
       await rm(tarballPath, { force: true })
 
-      await run('pnpm', ['--filter', pkg.name, 'pack', '--pack-destination', tarballsDir], {
+      await prepareWorkspacePackageForLocalRegistry(pkg, workspacePackageVersions)
+
+      await run('pnpm', ['pack', '--pack-destination', tarballsDir], {
+        cwd: preparedPackageDir,
         env: {
           npm_config_ignore_scripts: 'true',
         },
@@ -325,6 +465,7 @@ export async function packPublicPackages(): Promise<RegistryManifest> {
 
     await access(tarballPath, constants.F_OK)
     activeTarballPaths.add(tarballPath)
+    activePreparedPackagePaths.add(preparedPackageDir)
 
     manifestPackages.push({
       hash: packageHash,
@@ -338,6 +479,7 @@ export async function packPublicPackages(): Promise<RegistryManifest> {
   }
 
   await pruneStaleTarballs(activeTarballPaths)
+  await pruneStalePreparedPackages(activePreparedPackagePaths)
 
   const manifest: RegistryManifest = {
     generatedAt: new Date().toISOString(),
@@ -346,7 +488,7 @@ export async function packPublicPackages(): Promise<RegistryManifest> {
       defaultUrl: defaultRegistryUrl,
       kind: 'npm-compatible',
     },
-    version: 1,
+    version: 2,
   }
 
   await writeManifest(manifest)
@@ -356,10 +498,16 @@ export async function packPublicPackages(): Promise<RegistryManifest> {
 
 export async function readRegistryManifest(): Promise<RegistryManifest> {
   const contents = await readFile(manifestPath, 'utf8')
-  return JSON.parse(contents) as RegistryManifest
+  const manifest = JSON.parse(contents) as { version?: number }
+
+  if (manifest.version !== 2) {
+    throw new Error('Registry manifest is out of date. Re-run the registry pack step.')
+  }
+
+  return manifest as RegistryManifest
 }
 
-export async function publishPackedTarballs(registryUrl: string = defaultRegistryUrl): Promise<void> {
+export async function loadPackedTarballsIntoLocalRegistry(registryUrl: string = defaultRegistryUrl): Promise<void> {
   const manifest = await readRegistryManifest()
   const authTokenOption = registryAuthTokenOption(registryUrl)
 
@@ -378,14 +526,14 @@ export async function publishPackedTarballs(registryUrl: string = defaultRegistr
       'public',
       authTokenOption,
     ], {
-      label: `Publish ${pkg.name}@${pkg.version}`,
+      label: `Load ${pkg.name}@${pkg.version} into local registry`,
     })
   }
 }
 
 export async function stagePublicPackages(registryUrl: string = defaultRegistryUrl): Promise<void> {
   await packPublicPackages()
-  await publishPackedTarballs(registryUrl)
+  await loadPackedTarballsIntoLocalRegistry(registryUrl)
 }
 
 export async function rebuildLocalRegistryAndStagePublicPackages(

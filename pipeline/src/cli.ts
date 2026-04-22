@@ -5,7 +5,7 @@ import {
   defaultRegistryUrl,
   ensureManagedLocalRegistry,
   packPublicPackages,
-  publishPackedTarballs,
+  loadPackedTarballsIntoLocalRegistry,
   registryManifestPath,
 } from './registry/index.js'
 
@@ -24,7 +24,7 @@ Defaults:
   manifest: ${registryManifestPath()}
 
 Notes:
-  build reuses the managed local registry and only stages packages that are missing from it.
+  build reuses the managed local registry and only loads packages that are missing from it.
 `,
   )
 
@@ -48,10 +48,10 @@ const registryCommand = program
 
 registryCommand
   .command('pack')
-  .description('Pack the public workspace packages into publish-style tarballs and write the manifest')
+  .description('Pack the configured registry packages into tarballs and write the manifest')
   .action(async () => {
     const manifest = await packPublicPackages()
-    console.log(`Packed ${manifest.packages.length} public packages into ${registryManifestPath()}`)
+    console.log(`Packed ${manifest.packages.length} registry packages into ${registryManifestPath()}`)
   })
 
 registryCommand
@@ -63,11 +63,11 @@ registryCommand
   })
 
 registryCommand
-  .command('publish')
-  .description('Publish the packed tarballs from the manifest into the target registry')
+  .command('load')
+  .description('Load the packed tarballs from the manifest into the local registry')
   .option('--registry <url>', 'Registry URL', defaultRegistryUrl)
   .action(async (options: { registry: string }) => {
-    await publishPackedTarballs(options.registry)
+    await loadPackedTarballsIntoLocalRegistry(options.registry)
   })
 
 await program.parseAsync(process.argv)
