@@ -1,11 +1,30 @@
 import { writeFileSync } from 'node:fs'
-import { join, resolve } from 'node:path'
+import { join, relative, resolve } from 'node:path'
 import { getOutDirPath } from '../../../lib/paths/out-dir'
 
 export interface CreateTempTsconfigOptions {
-  cliDir: string
   projectCwd: string
   tempDir: string
+}
+
+function toConfigRelativePath(fromDir: string, targetPath: string): string {
+  const relativePath = relative(fromDir, targetPath).replaceAll('\\', '/')
+  return relativePath.startsWith('.') ? relativePath : `./${relativePath}`
+}
+
+function getCompilerOptions() {
+  return {
+    jsx: 'react-jsx',
+    noEmit: true,
+    strict: true,
+    skipLibCheck: true,
+    moduleResolution: 'bundler',
+    module: 'esnext',
+    allowSyntheticDefaultImports: true,
+    target: 'es2020',
+    lib: ['es2020', 'es2022'],
+    resolveJsonModule: true,
+  }
 }
 
 /**
@@ -22,7 +41,7 @@ export interface CreateTempTsconfigOptions {
  * the module paths that must point at the consumer's generated package.
  */
 export function createTempTsconfig(options: CreateTempTsconfigOptions): string {
-  const { cliDir, projectCwd, tempDir } = options
+  const { projectCwd, tempDir } = options
   const styledDir = resolve(getOutDirPath(projectCwd), 'styled')
   const tempTsconfigPath = join(tempDir, 'tsconfig.ref-ui-dts.json')
 
@@ -30,12 +49,12 @@ export function createTempTsconfig(options: CreateTempTsconfigOptions): string {
     tempTsconfigPath,
     JSON.stringify(
       {
-        extends: resolve(cliDir, 'tsconfig.json'),
         compilerOptions: {
+          ...getCompilerOptions(),
+          baseUrl: '.',
           paths: {
-            '@reference-ui/react': [resolve(cliDir, 'src/entry/react.ts')],
-            '@reference-ui/styled': [styledDir],
-            '@reference-ui/styled/*': [join(styledDir, '*')],
+            '@reference-ui/styled': [toConfigRelativePath(tempDir, styledDir)],
+            '@reference-ui/styled/*': [toConfigRelativePath(tempDir, join(styledDir, '*'))],
           },
           preserveValueImports: true,
           verbatimModuleSyntax: true,

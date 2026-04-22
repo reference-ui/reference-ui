@@ -1,9 +1,10 @@
-import { getVirtualNative } from './loader'
+import { getVirtualNative, getVirtualNativeUnavailableMessage } from './loader'
 
 export type { VirtualNativeBinding } from './loader'
 export {
   getVirtualNative,
   getVirtualNativeCandidates,
+  getVirtualNativeDiagnostics,
   getVirtualNativeTriple,
   loadVirtualNative,
   resolveReferenceRsPackageDir,
@@ -11,62 +12,41 @@ export {
   SUPPORTED_VIRTUAL_NATIVE_TARGETS,
 } from './loader'
 
-export function rewriteCssImports(sourceCode: string, relativePath: string): string {
+function requireVirtualNative(feature: string): VirtualNativeBinding {
   const native = getVirtualNative()
   if (!native) {
-    throw new Error(
-      'Virtual native addon not available. Run `pnpm --filter @reference-ui/rust run build` first. ' +
-        'Supported platforms: darwin x64/arm64, linux x64, win32 x64.'
-    )
+    throw new Error(getVirtualNativeUnavailableMessage(feature))
   }
+
+  return native
+}
+
+export function rewriteCssImports(sourceCode: string, relativePath: string): string {
+  const native = requireVirtualNative('rewrite CSS imports')
 
   return native.rewriteCssImports(sourceCode, relativePath)
 }
 
 export function rewriteCvaImports(sourceCode: string, relativePath: string): string {
-  const native = getVirtualNative()
-  if (!native) {
-    throw new Error(
-      'Virtual native addon not available. Run `pnpm --filter @reference-ui/rust run build` first. ' +
-        'Supported platforms: darwin x64/arm64, linux x64, win32 x64.'
-    )
-  }
+  const native = requireVirtualNative('rewrite CVA imports')
 
   return native.rewriteCvaImports(sourceCode, relativePath)
 }
 
 export function scanAndEmitModules(rootDir: string, include: string[]): string {
-  const native = getVirtualNative()
-  if (!native) {
-    throw new Error(
-      'Virtual native addon not available. Run `pnpm --filter @reference-ui/rust run build` first. ' +
-        'Supported platforms: darwin x64/arm64, linux x64, win32 x64.'
-    )
-  }
+  const native = requireVirtualNative('scan and emit modules')
 
   return native.scanAndEmitModules(rootDir, include)
 }
 
 export function analyzeAtlas(rootDir: string, configJson?: string): string {
-  const native = getVirtualNative()
-  if (!native) {
-    throw new Error(
-      'Virtual native addon not available. Run `pnpm --filter @reference-ui/rust run build` first. ' +
-        'Supported platforms: darwin x64/arm64, linux x64, win32 x64.'
-    )
-  }
+  const native = requireVirtualNative('analyze Atlas data')
 
   return native.analyzeAtlas(rootDir, configJson)
 }
 
 export function analyzeStyletrace(rootDir: string): string {
-  const native = getVirtualNative()
-  if (!native) {
-    throw new Error(
-      'Virtual native addon not available. Run `pnpm --filter @reference-ui/rust run build` first. ' +
-        'Supported platforms: darwin x64/arm64, linux x64, win32 x64.'
-    )
-  }
+  const native = requireVirtualNative('analyze Styletrace data')
 
   return native.analyzeStyletrace(rootDir)
 }
