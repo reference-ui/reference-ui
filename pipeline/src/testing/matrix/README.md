@@ -46,8 +46,18 @@ Today the repo does a lot of its own sandbox and matrix orchestration. Matrix te
 As this grows, this folder will likely contain:
 
 - matrix entry definitions
+- discovery of matrix-enabled fixture packages via `matrix.json`
 - shared container setup for bundlers
 - commands for running `reference-e2e` against each entry
 - artifact and log collection helpers
 
 This is one of the main testing directions for the pipeline.
+
+## Current Commands
+
+- `pnpm pipeline:test:pipeline`
+	- tests pipeline code only
+	- unit-level checks for helpers and workflow logic
+- `pnpm pipeline:test:matrix`
+	- tests matrix inputs and bootstrap wiring
+	- currently reuses the single pipeline-managed Verdaccio registry, binds that shared host registry into Dagger, installs a minimal consumer from the `install-test` fixture, and runs `ref sync` in a clean container

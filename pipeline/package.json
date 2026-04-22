@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "pnpm exec tsx src/cli.ts build",
-    "test:pipeline": "pnpm exec tsx --test src/**/*.test.ts",
+    "test:pipeline": "pnpm exec tsx --test",
+    "test:matrix": "pnpm exec tsx src/testing/matrix/run.ts",
     "registry:pack": "pnpm exec tsx src/cli.ts registry pack",
     "registry:load:local": "pnpm exec tsx src/cli.ts registry load --registry http://127.0.0.1:4873",
     "registry:start": "pnpm exec verdaccio --config ./src/registry/verdaccio/config.yaml --listen 127.0.0.1:4873",
