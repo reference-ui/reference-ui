@@ -6,6 +6,7 @@
  */
 
 import { computePackageBuildHashes, readBuildState, writeBuildState } from './cache.js'
+import { prepareAndWriteRustBuildRegistryArtifacts } from './rust/index.js'
 import { ensureLocalRegistryAndStagePublicPackages } from '../registry/index.js'
 import { logSkip } from '../lib/log/index.js'
 import {
@@ -51,6 +52,7 @@ export async function buildWorkspacePackages(): Promise<void> {
   }
 
   await writeBuildState(buildState)
+  await prepareAndWriteRustBuildRegistryArtifacts(buildTargets)
 
   await ensureLocalRegistryAndStagePublicPackages()
 }

@@ -14,3 +14,23 @@ export interface WorkspacePackage {
   scripts: Record<string, string>
   version: string
 }
+
+export interface BuildRegistryArtifactPackage {
+  hash: string
+  internalDependencies: string[]
+  name: string
+  sourceDir: string
+  tarballFileName: string
+  tarballPath: string
+  version: string
+}
+
+export interface BuildPackageJsonOverride {
+  optionalDependencies?: Record<string, string>
+}
+
+export interface BuildRegistryArtifacts {
+  generatedPackages: BuildRegistryArtifactPackage[]
+  packageHashAugmentations: Record<string, string>
+  preparedPackageJsonOverrides: Record<string, BuildPackageJsonOverride>
+}

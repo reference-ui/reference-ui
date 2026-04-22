@@ -10,6 +10,12 @@ import { constants } from 'node:fs'
 import { access, mkdir, readdir, rm } from 'node:fs/promises'
 import { relative, resolve } from 'node:path'
 import { computePackageBuildHashes } from '../build/cache.js'
+import {
+  applyPreparedRustPackageHash,
+  applyPreparedRustPackageOverride,
+  prepareAndWriteRustBuildRegistryArtifacts,
+  readPreparedRustBuildRegistryArtifacts,
+} from '../build/rust/index.js'
 import type { WorkspacePackage } from '../build/types.js'
 import {
   listRegistryWorkspacePackages,
@@ -60,7 +66,12 @@ async function pruneStaleTarballs(activeTarballPaths: ReadonlySet<string>): Prom
 
 export async function packPublicPackages(): Promise<RegistryManifest> {
   const publicPackages = sortPackagesForInternalDependencyOrder(listRegistryWorkspacePackages())
-  const publicPackageNames = new Set(publicPackages.map((pkg) => pkg.name))
+  await prepareAndWriteRustBuildRegistryArtifacts(publicPackages)
+  const rustBuildArtifacts = await readPreparedRustBuildRegistryArtifacts()
+  const publicPackageNames = new Set([
+    ...publicPackages.map((pkg) => pkg.name),
+    ...rustBuildArtifacts.generatedPackages.map((pkg) => pkg.name),
+  ])
   const workspacePackageVersions = new Map(
     listWorkspacePackages().map((workspacePkg) => [workspacePkg.name, workspacePkg.version]),
   )
@@ -81,16 +92,18 @@ export async function packPublicPackages(): Promise<RegistryManifest> {
     if (!packageHash) {
       throw new Error(`Missing registry hash for ${pkg.name}`)
     }
+    const effectivePackageHash = applyPreparedRustPackageHash(pkg.name, packageHash, rustBuildArtifacts)
 
     const tarballFileName = packedTarballName(pkg.name, pkg.version)
     const tarballPath = resolve(tarballsDir, tarballFileName)
     const previousPackage = previousManifestByPackage.get(pkg.name)
     const preparedPackageDir = stagedPackageDirPath(pkg)
 
-    if (!(previousPackage?.hash === packageHash && previousPackage.tarballFileName === tarballFileName)) {
+    if (!(previousPackage?.hash === effectivePackageHash && previousPackage.tarballFileName === tarballFileName)) {
       await rm(tarballPath, { force: true })
 
       await prepareWorkspacePackageForLocalRegistry(pkg, workspacePackageVersions)
+      await applyPreparedRustPackageOverride(pkg.name, preparedPackageDir, rustBuildArtifacts)
 
       await run('pnpm', ['pack', '--pack-destination', tarballsDir], {
         cwd: preparedPackageDir,
@@ -108,7 +121,7 @@ export async function packPublicPackages(): Promise<RegistryManifest> {
     activePreparedPackagePaths.add(preparedPackageDir)
 
     manifestPackages.push({
-      hash: packageHash,
+      hash: effectivePackageHash,
       internalDependencies: packageInternalDependencies(pkg, publicPackageNames),
       name: pkg.name,
       sourceDir: relative(repoRoot, pkg.dir),
@@ -116,6 +129,13 @@ export async function packPublicPackages(): Promise<RegistryManifest> {
       tarballPath: relative(repoRoot, tarballPath),
       version: pkg.version,
     })
+  }
+
+  for (const generatedPackage of rustBuildArtifacts.generatedPackages) {
+    const generatedTarballPath = resolve(repoRoot, generatedPackage.tarballPath)
+    await access(generatedTarballPath, constants.F_OK)
+    activeTarballPaths.add(generatedTarballPath)
+    manifestPackages.push(generatedPackage)
   }
 
   await pruneStaleTarballs(activeTarballPaths)
