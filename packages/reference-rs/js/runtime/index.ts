@@ -1,4 +1,5 @@
 import { getVirtualNative, getVirtualNativeUnavailableMessage } from './loader'
+import type { VirtualNativeBinding } from './loader'
 
 export type { VirtualNativeBinding } from './loader'
 export {
