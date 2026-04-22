@@ -1,4 +1,5 @@
 packages:
+  - pipeline
   - packages/*
   - fixtures/*
   - '!packages/old/**'

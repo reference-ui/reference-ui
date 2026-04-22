@@ -1,0 +1,16 @@
+{
+  "name": "@reference-ui/pipeline",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "downstream:smoke": "dagger run pnpm exec tsx src/downstream-smoke.ts",
+    "setup:local": "bash ./setup/local.sh",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@dagger.io/dagger": "^0.20.6",
+    "tsx": "^4.21.0",
+    "typescript": "~5.9.3"
+  }
+}
