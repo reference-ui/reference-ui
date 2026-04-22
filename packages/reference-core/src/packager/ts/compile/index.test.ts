@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { dirname, join, relative, resolve } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 const createdDirs: string[] = []
@@ -56,14 +56,12 @@ describe('packager/ts/compile', () => {
     writeFileSync(sourceEntryPath, 'export type X = string\n', 'utf-8')
     const outDtsPath = resolve(targetDir, 'react.d.mts')
     let tempOutDirForBuild = ''
-    let entryPathForBuild = ''
-    let entrySourceForBuild = ''
+    let entryForBuild = ''
 
     const { compileDeclarations, build, createTempTsconfig } = await importCompileModule({
       buildImpl: async config => {
         tempOutDirForBuild = config.outDir as string
-        entryPathForBuild = (config.entry as string[])[0]
-        entrySourceForBuild = readFileSync(entryPathForBuild, 'utf-8')
+        entryForBuild = (config.entry as string[])[0]
         writeFileSync(
           join(tempOutDirForBuild, 'react.d.mts'),
           'export type X = string\n',
@@ -81,12 +79,7 @@ describe('packager/ts/compile', () => {
       projectCwd,
       tempDir: dirname(tempOutDirForBuild),
     })
-    const expectedSpecifier = relative(dirname(entryPathForBuild), sourceEntryPath)
-      .replaceAll('\\', '/')
-      .replace(/\.[cm]?[jt]sx?$/, '')
-    expect(entrySourceForBuild).toBe(
-      `export * from ${JSON.stringify(expectedSpecifier.startsWith('.') ? expectedSpecifier : `./${expectedSpecifier}`)}\n`
-    )
+    expect(entryForBuild).toBe(sourceEntryPath)
     expect(existsSync(dirname(tempOutDirForBuild))).toBe(false)
   })
 
