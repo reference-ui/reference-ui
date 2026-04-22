@@ -1,13 +1,13 @@
 # Reference UI Dagger Pipeline
 
-This directory holds the first Dagger-based downstream smoke test for Reference UI.
+This directory holds the first Dagger-based pipeline entry points for Reference UI.
 
-The initial pipeline does not publish anything to the npm registry. Instead, it:
+The current pipeline can now do two separate things:
 
-- uses local package contents from this repository
-- packs publish-style tarballs for internal `@reference-ui/*` packages
-- installs those tarballs into a fresh consumer project inside a container
-- runs `ref sync` there to reproduce downstream packaging issues in isolation
+- drive the workspace build through a pipeline CLI entry point
+- stage publish-style package artifacts for a local npm-compatible registry
+
+Workspace package roots are configured centrally in `pipeline/config.ts`.
 
 ## Prerequisites
 
@@ -37,20 +37,45 @@ pnpm setup:local -- --dry-run
 
 ## Usage
 
-From the repository root:
+From the repository root, the main entry point is now:
 
 ```sh
-pnpm pipeline:downstream:smoke
+pnpm pipeline build
 ```
 
-Or from this directory:
+`pnpm build` remains as a short alias, but the intended primary interface is `pnpm pipeline <args>`.
+
+That routes through `pipeline/src/cli.ts`, builds the public publishable workspace packages, reuses the managed local Verdaccio registry, and stages those package artifacts into that registry automatically.
+
+For local testing cleanup:
 
 ```sh
-pnpm run downstream:smoke
+pnpm pipeline clean
 ```
+
+Right now that removes the managed local registry state and the cached build fingerprints.
+
+For the registry slice:
+
+```sh
+pnpm pipeline registry start
+```
+
+`pnpm pipeline registry start` is now mainly for inspection and debugging. The normal artifact path is `pnpm pipeline build`.
+
+That build flow:
+
+- builds the public release-target packages directly from the pipeline instead of recursively invoking the workspace root
+- uses the built outputs from that package build step
+- packs the public workspace packages into tarballs without re-running `prepack`
+- writes a manifest to `.pipeline/registry/manifest.json`
+- ensures the managed local Verdaccio registry is running at `http://127.0.0.1:4873`
+- publishes only the package versions that are missing from that local registry
+
+Testing and release can then consume the same registry-hosted artifacts instead of rebuilding ad hoc.
 
 ## Current scope
 
-This first pass assumes the repo already has current build outputs for the packed packages. It is intentionally focused on the downstream install and `ref sync` path first.
+This first pass assumes the repo already has current build outputs for the packed packages. The registry staging command intentionally reuses those outputs by packing with `--ignore-scripts` instead of rebuilding during the packaging step.
 
-The next step after this smoke path is to move the upstream package builds themselves fully inside the Dagger pipeline.
+The next step after this registry slice is to move the upstream package builds themselves fully inside the Dagger pipeline and bind the local registry into testing and release flows.

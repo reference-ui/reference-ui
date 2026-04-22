@@ -8,10 +8,11 @@
     "url": "https://github.com/reference-ui/reference-ui"
   },
   "scripts": {
-    "pipeline:downstream:smoke": "dagger run pnpm --dir pipeline exec tsx src/downstream-smoke.ts",
+    "pipeline": "pnpm --dir pipeline exec tsx src/cli.ts",
+    "build": "pnpm pipeline build",
+    "pipeline:registry:start": "pnpm pipeline registry start",
     "setup:local": "bash ./pipeline/setup/local.sh",
     "prepare": "pnpm --filter @reference-ui/core run copy:reference-api-component",
-    "build": "pnpm -r run build",
     "changeset": "changeset",
     "dev": "pnpm --filter @reference-ui/lib run build && concurrently --kill-others-on-fail -n core,docs -c blue,green \"pnpm --filter @reference-ui/core run dev\" \"pnpm --filter @reference-ui/reference-docs run dev\"",
     "dev:lib": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/lib run sync && concurrently --kill-others-on-fail -n sync,cosmos -c cyan,magenta \"pnpm --filter @reference-ui/lib run dev\" \"pnpm --filter @reference-ui/lib run cosmos\"",
