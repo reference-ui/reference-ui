@@ -29,7 +29,6 @@ const input = {
 const externalPackageRoots = [
   'react',
   'react-dom',
-  '@material-symbols-svg/react',
   '@reference-ui/react',
   '@reference-ui/system',
 ]
