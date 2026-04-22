@@ -1,5 +1,14 @@
 # @reference-ui/lib
 
+## 0.0.18
+
+### Patch Changes
+
+- bad3ae8: CI
+- Updated dependencies [bad3ae8]
+  - @reference-ui/core@0.0.15
+  - @reference-ui/icons@0.0.15
+
 ## 0.0.17
 
 ### Patch Changes

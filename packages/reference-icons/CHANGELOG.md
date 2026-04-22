@@ -1,5 +1,13 @@
 # @reference-ui/icons
 
+## 0.0.15
+
+### Patch Changes
+
+- bad3ae8: CI
+- Updated dependencies [bad3ae8]
+  - @reference-ui/core@0.0.15
+
 ## 0.0.14
 
 ### Patch Changes
