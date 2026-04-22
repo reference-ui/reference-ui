@@ -4,6 +4,8 @@ This folder is reserved for Dagger-owned testing orchestration.
 
 The goal is to let the pipeline manage the environment and execution model for tests while existing test packages continue to own the assertions themselves.
 
+The main consumer of that model is `packages/reference-e2e`, which should keep its Playwright tests but stop owning most of the environment setup logic.
+
 ## Current Testing Surface
 
 Today, testing behavior is split between:
@@ -19,6 +21,25 @@ Today, testing behavior is split between:
 	- Playwright test execution and artifact collection
 
 This is the area where we are currently doing the most hand-rolled environment orchestration.
+
+## Migration Direction For `reference-e2e`
+
+`reference-e2e` already has valuable browser tests.
+
+The problem is that it currently owns too much infrastructure.
+
+The direction here should be:
+
+- keep test files, helpers, fixtures, and assertions in `reference-e2e`
+- move sandbox and environment ownership into the Dagger pipeline
+- expose a bridging API that gives `reference-e2e` the operations it needs without making it own the infrastructure layer
+
+That bridge can eventually cover capabilities such as:
+
+- editing files inside a pipeline-owned sandbox
+- triggering sync/build steps
+- resetting test state
+- reading pipeline-owned outputs and artifacts
 
 ## Main Testing Categories
 
@@ -53,6 +74,7 @@ That split keeps the pipeline focused on reliability and reproducibility rather 
 - distribution testing
 	- should exercise publish-style package outputs against fake or local registry flows
 	- this is the natural evolution of the current downstream smoke direction in `pipeline/src/downstream-smoke.ts`
+	- this should primarily consume artifacts from `pipeline/src/registry/`
 - unit testing
 	- should run unit suites in explicit container environments rather than assuming the host or GitHub runner state
 	- this should absorb the current unit execution path from `.github/workflows/test.yml`
