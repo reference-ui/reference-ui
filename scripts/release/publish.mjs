@@ -17,10 +17,10 @@ if (unpublishedPackages.length === 0) {
 
 if (unpublishedPackages.some((pkg) => pkg.name === RUST_PACKAGE)) {
   console.log('Publishing native packages for @reference-ui/rust')
-  run('pnpm', ['--filter', RUST_PACKAGE, 'run', 'publish:native'])
+  run('pnpm', ['--filter', RUST_PACKAGE, 'run', 'publish:native', '--', '--publish-root'])
 }
 
-for (const pkg of unpublishedPackages) {
+for (const pkg of unpublishedPackages.filter((pkg) => pkg.name !== RUST_PACKAGE)) {
   console.log(`Publishing ${pkg.name}@${pkg.version}`)
   run('pnpm', ['publish', '--no-git-checks', '--access', 'public'], {
     cwd: pkg.dir,
