@@ -1,6 +1,6 @@
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
+import { dirname, join, relative, resolve } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 const createdDirs: string[] = []
@@ -51,14 +51,21 @@ describe('packager/ts/compile', () => {
     const projectCwd = createTempDir()
     const targetDir = createTempDir()
     const entryFile = 'src/entry/react.ts'
+    const sourceEntryPath = resolve(cliDir, entryFile)
+    mkdirSync(dirname(sourceEntryPath), { recursive: true })
+    writeFileSync(sourceEntryPath, 'export type X = string\n', 'utf-8')
     const outDtsPath = resolve(targetDir, 'react.d.mts')
-    let tempDirForBuild = ''
+    let tempOutDirForBuild = ''
+    let entryPathForBuild = ''
+    let entrySourceForBuild = ''
 
     const { compileDeclarations, build, createTempTsconfig } = await importCompileModule({
       buildImpl: async config => {
-        tempDirForBuild = config.outDir as string
+        tempOutDirForBuild = config.outDir as string
+        entryPathForBuild = (config.entry as string[])[0]
+        entrySourceForBuild = readFileSync(entryPathForBuild, 'utf-8')
         writeFileSync(
-          join(tempDirForBuild, 'react.d.mts'),
+          join(tempOutDirForBuild, 'react.d.mts'),
           'export type X = string\n',
           'utf-8'
         )
@@ -71,36 +78,47 @@ describe('packager/ts/compile', () => {
     expect(readFileSync(outDtsPath, 'utf-8')).toBe('export type X = string\n')
     expect(build).toHaveBeenCalledTimes(1)
     expect(createTempTsconfig).toHaveBeenCalledWith({
-      cliDir,
       projectCwd,
-      tempDir: tempDirForBuild,
+      tempDir: dirname(tempOutDirForBuild),
     })
-    expect(existsSync(tempDirForBuild)).toBe(false)
+    const expectedSpecifier = relative(dirname(entryPathForBuild), sourceEntryPath)
+      .replaceAll('\\', '/')
+      .replace(/\.[cm]?[jt]sx?$/, '')
+    expect(entrySourceForBuild).toBe(
+      `export * from ${JSON.stringify(expectedSpecifier.startsWith('.') ? expectedSpecifier : `./${expectedSpecifier}`)}\n`
+    )
+    expect(existsSync(dirname(tempOutDirForBuild))).toBe(false)
   })
 
   it('throws when tsdown does not emit a declaration file', async () => {
     const cliDir = createTempDir()
     const projectCwd = createTempDir()
     const targetDir = createTempDir()
+    const sourceEntryPath = resolve(cliDir, 'src/entry/react.ts')
+    mkdirSync(dirname(sourceEntryPath), { recursive: true })
+    writeFileSync(sourceEntryPath, 'export type X = string\n', 'utf-8')
     const outDtsPath = resolve(targetDir, 'react.d.mts')
-    let tempDirForBuild = ''
+    let tempOutDirForBuild = ''
 
     const { compileDeclarations } = await importCompileModule({
       buildImpl: async config => {
-        tempDirForBuild = config.outDir as string
+        tempOutDirForBuild = config.outDir as string
       },
     })
 
     await expect(
       compileDeclarations(cliDir, 'src/entry/react.ts', outDtsPath, projectCwd)
-    ).rejects.toThrow(`tsdown did not produce .d.ts or .d.mts in ${tempDirForBuild}`)
-    expect(existsSync(tempDirForBuild)).toBe(false)
+    ).rejects.toThrow(`tsdown did not produce .d.ts or .d.mts in ${tempOutDirForBuild}`)
+    expect(existsSync(dirname(tempOutDirForBuild))).toBe(false)
   })
 
   it('wraps tsdown build errors', async () => {
     const cliDir = createTempDir()
     const projectCwd = createTempDir()
     const targetDir = createTempDir()
+    const sourceEntryPath = resolve(cliDir, 'src/entry/react.ts')
+    mkdirSync(dirname(sourceEntryPath), { recursive: true })
+    writeFileSync(sourceEntryPath, 'export type X = string\n', 'utf-8')
     const outDtsPath = resolve(targetDir, 'react.d.mts')
 
     const { compileDeclarations } = await importCompileModule({
