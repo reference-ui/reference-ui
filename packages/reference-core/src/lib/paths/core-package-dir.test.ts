@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 const CORE_PACKAGE_NAME = '@reference-ui/core'
@@ -47,6 +48,20 @@ describe('resolveCorePackageDir', () => {
     )
 
     expect(resolveCorePackageDir(startDir)).toBe(workspaceCore)
+  })
+
+  it('falls back to the installed module package when cwd is a consumer app', async () => {
+    const startDir = '/virtual/consumer-app/src'
+    const installedPackageJson = fileURLToPath(
+      new URL('../../../package.json', import.meta.url)
+    )
+    const installedCoreDir = installedPackageJson.replace(/\/package\.json$/, '')
+    const { resolveCorePackageDir } = await importCorePackageDirModule(
+      [installedPackageJson],
+      { [installedPackageJson]: { name: CORE_PACKAGE_NAME } }
+    )
+
+    expect(resolveCorePackageDir(startDir)).toBe(installedCoreDir)
   })
 
   it('throws when neither package discovery path succeeds', async () => {
