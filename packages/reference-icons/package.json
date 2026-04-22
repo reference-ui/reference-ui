@@ -1,6 +1,6 @@
 {
   "name": "@reference-ui/icons",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "private": false,
   "description": "Generated Material Symbols React components for Reference UI.",
   "license": "MIT",
