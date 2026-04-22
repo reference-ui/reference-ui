@@ -8,6 +8,8 @@
     "url": "https://github.com/reference-ui/reference-ui"
   },
   "scripts": {
+    "pipeline:downstream:smoke": "dagger run pnpm --dir pipeline exec tsx src/downstream-smoke.ts",
+    "setup:local": "bash ./pipeline/setup/local.sh",
     "prepare": "pnpm --filter @reference-ui/core run copy:reference-api-component",
     "build": "pnpm -r run build",
     "changeset": "changeset",
