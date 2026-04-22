@@ -10,6 +10,10 @@ interface PackageJson {
   optionalDependencies?: Record<string, string>
 }
 
+interface PublishOptions {
+  publishRoot?: boolean
+}
+
 function readJson<T>(path: string): T {
   return JSON.parse(readFileSync(path, 'utf8')) as T
 }
@@ -34,6 +38,20 @@ function isPublished(name: string, version: string) {
   } catch {
     return false
   }
+}
+
+function shouldPublishRootPackage(): boolean {
+  return process.argv.includes('--publish-root')
+}
+
+function publishRootPackage(rootPkg: PackageJson) {
+  if (isPublished(rootPkg.name, rootPkg.version)) {
+    console.log(`Skipping already published package ${rootPkg.name}@${rootPkg.version}`)
+    return
+  }
+
+  console.log(`Publishing package ${rootPkg.name}@${rootPkg.version}`)
+  run('npm', ['publish', '--provenance', '--access', 'public'])
 }
 
 if (!existsSync(artifactsDir)) {
@@ -69,6 +87,10 @@ try {
 
     console.log(`Publishing native package ${pkg.name}@${pkg.version}`)
     run('npm', ['publish', '--provenance', '--access', 'public'], targetPackageDir)
+  }
+
+  if (shouldPublishRootPackage()) {
+    publishRootPackage(rootPkg)
   }
 } finally {
   writeFileSync(rootPackageJsonPath, rootPackageJsonRaw)

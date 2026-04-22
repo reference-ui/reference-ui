@@ -7,7 +7,7 @@ import {
   rmSync,
   writeFileSync,
 } from 'node:fs'
-import { dirname, join, relative, resolve } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 import { findDtsFile } from './find-dts'
 import { createTempTsconfig } from './create-temp-tsconfig'
 
@@ -15,22 +15,6 @@ function copyFileAtomic(sourcePath: string, targetPath: string): void {
   const tempPath = `${targetPath}.tmp-${process.pid}-${Date.now()}`
   copyFileSync(sourcePath, tempPath)
   renameSync(tempPath, targetPath)
-}
-
-function toModuleSpecifier(fromDir: string, targetPath: string): string {
-  const relativePath = relative(fromDir, targetPath).replaceAll('\\', '/')
-  const withoutExtension = relativePath.replace(/\.[cm]?[jt]sx?$/, '')
-  return withoutExtension.startsWith('.') ? withoutExtension : `./${withoutExtension}`
-}
-
-function writeCompileEntry(tempDir: string, sourceEntryPath: string): string {
-  const entryPath = join(tempDir, 'entry.ts')
-  writeFileSync(
-    entryPath,
-    `export * from ${JSON.stringify(toModuleSpecifier(tempDir, sourceEntryPath))}\n`,
-    'utf-8'
-  )
-  return entryPath
 }
 
 /**
@@ -55,7 +39,7 @@ export async function compileDeclarations(
 
   const tempDir = realpathSync(mkdtempSync(join(packageDir, '.ref-ui-dts-')))
   const tmpOut = join(tempDir, 'out')
-  const entryPath = writeCompileEntry(tempDir, resolve(cliDir, entryFile))
+  const sourceEntryPath = resolve(cliDir, entryFile)
   const tempTsconfigPath = createTempTsconfig({
     projectCwd,
     tempDir,
@@ -69,7 +53,7 @@ export async function compileDeclarations(
       await build({
         config: false,
         cwd: cliDir,
-        entry: [entryPath],
+        entry: [sourceEntryPath],
         outDir: tmpOut,
         clean: false,
         format: 'esm',
