@@ -1,3 +1,10 @@
+/**
+ * Shared terminal presentation helpers for the pipeline.
+ *
+ * The goal is intentionally modest: a consistent visual language for steps,
+ * skips, and failure output without making command modules own formatting.
+ */
+
 import type { Ora } from 'ora'
 import ora from 'ora'
 import pc from 'picocolors'

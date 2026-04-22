@@ -1,3 +1,10 @@
+/**
+ * Build orchestration for the registry-target workspace packages.
+ *
+ * This module only decides what to build and when to skip; it leaves process
+ * execution, package discovery, and registry staging to dedicated modules.
+ */
+
 import { computePackageBuildHashes, readBuildState, writeBuildState } from './cache.js'
 import { ensureLocalRegistryAndStagePublicPackages } from '../registry/index.js'
 import { logSkip } from '../lib/log/index.js'
@@ -5,8 +12,8 @@ import {
   listRegistryWorkspacePackages,
   run,
   sortPackagesForInternalDependencyOrder,
-  type WorkspacePackage,
 } from './workspace.js'
+import type { WorkspacePackage } from './types.js'
 
 export function listBuildTargetPackages(): WorkspacePackage[] {
   return sortPackagesForInternalDependencyOrder(

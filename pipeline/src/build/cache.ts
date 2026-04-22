@@ -1,9 +1,17 @@
+/**
+ * Build fingerprinting for pipeline-managed workspace packages.
+ *
+ * These hashes let the build step skip unchanged packages while still tracking
+ * internal dependency changes through a stable, git-backed input set.
+ */
+
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { existsSync, readFileSync } from 'node:fs'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { relative, resolve } from 'node:path'
-import { pipelineStateDir, repoRoot, type WorkspacePackage } from './workspace.js'
+import type { WorkspacePackage } from './types.js'
+import { pipelineStateDir, repoRoot } from './workspace.js'
 
 export interface BuildStateEntry {
   builtAt: string

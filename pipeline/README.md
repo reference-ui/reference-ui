@@ -9,6 +9,17 @@ The current pipeline can now do two separate things:
 
 Workspace package roots are configured centrally in `pipeline/config.ts`.
 
+## Structure
+
+The main pipeline areas are:
+
+- `src/build/`: workspace package discovery, hashing, and build orchestration
+- `src/registry/`: local Verdaccio lifecycle plus publish-style tarball staging
+- `src/clean/`: cleanup of pipeline-managed local state
+- `src/lib/`: small shared support modules such as terminal logging
+
+The registry subsystem is split into focused modules because it now owns a real publish-style staging boundary instead of a single monolithic helper file.
+
 ## Prerequisites
 
 - local setup completed via `pnpm setup:local` on macOS
@@ -73,6 +84,16 @@ That build flow:
 - loads only the package versions that are missing from that local registry
 
 The registry target set is configured explicitly in `pipeline/config.ts`. That includes the main `@reference-ui/*` packages and any fixture libraries we want available from the virtual registry.
+
+## Pipeline tests
+
+Focused unit tests for extracted pure helpers can be run with:
+
+```sh
+pnpm pipeline:test:pipeline
+```
+
+Inside the pipeline package, that routes to Node's built-in test runner through `tsx` and currently covers the package preparation helpers used before `pnpm pack`.
 
 Testing and release can then consume the same registry-hosted artifacts instead of rebuilding ad hoc.
 

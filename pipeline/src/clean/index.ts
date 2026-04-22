@@ -1,3 +1,9 @@
+/**
+ * Cleanup entrypoint for pipeline-managed local state.
+ *
+ * Today that means the build cache plus the managed Verdaccio registry state.
+ */
+
 import { rm } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { pipelineStateDir } from '../build/workspace.js'

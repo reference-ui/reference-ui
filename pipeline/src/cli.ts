@@ -1,3 +1,10 @@
+/**
+ * Public CLI surface for the pipeline package.
+ *
+ * The command tree stays intentionally small; the implementation details live in
+ * the subsystem modules so the CLI remains a thin routing layer.
+ */
+
 import { Command } from 'commander'
 import { buildWorkspacePackages } from './build/index.js'
 import { cleanPipeline } from './clean/index.js'
