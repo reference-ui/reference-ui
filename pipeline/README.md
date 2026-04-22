@@ -5,7 +5,7 @@ This directory holds the first Dagger-based pipeline entry points for Reference 
 The current pipeline can now do two separate things:
 
 - drive the workspace build through a pipeline CLI entry point
-- stage publish-style package artifacts for a local npm-compatible registry
+- stage package artifacts into a local npm-compatible registry
 
 Workspace package roots are configured centrally in `pipeline/config.ts`.
 
@@ -45,7 +45,7 @@ pnpm pipeline build
 
 `pnpm build` remains as a short alias, but the intended primary interface is `pnpm pipeline <args>`.
 
-That routes through `pipeline/src/cli.ts`, builds the public publishable workspace packages, reuses the managed local Verdaccio registry, and stages those package artifacts into that registry automatically.
+That routes through `pipeline/src/cli.ts`, builds the configured registry packages, reuses the managed local Verdaccio registry, and loads those package artifacts into that registry automatically.
 
 For local testing cleanup:
 
@@ -65,12 +65,14 @@ pnpm pipeline registry start
 
 That build flow:
 
-- builds the public release-target packages directly from the pipeline instead of recursively invoking the workspace root
+- builds the configured registry-target packages directly from the pipeline instead of recursively invoking the workspace root
 - uses the built outputs from that package build step
 - packs the public workspace packages into tarballs without re-running `prepack`
 - writes a manifest to `.pipeline/registry/manifest.json`
 - ensures the managed local Verdaccio registry is running at `http://127.0.0.1:4873`
-- publishes only the package versions that are missing from that local registry
+- loads only the package versions that are missing from that local registry
+
+The registry target set is configured explicitly in `pipeline/config.ts`. That includes the main `@reference-ui/*` packages and any fixture libraries we want available from the virtual registry.
 
 Testing and release can then consume the same registry-hosted artifacts instead of rebuilding ad hoc.
 

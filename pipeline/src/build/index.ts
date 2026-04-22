@@ -2,7 +2,7 @@ import { computePackageBuildHashes, readBuildState, writeBuildState } from './ca
 import { ensureLocalRegistryAndStagePublicPackages } from '../registry/index.js'
 import { logSkip } from '../lib/log/index.js'
 import {
-  listPublicWorkspacePackages,
+  listRegistryWorkspacePackages,
   run,
   sortPackagesForInternalDependencyOrder,
   type WorkspacePackage,
@@ -10,7 +10,7 @@ import {
 
 export function listBuildTargetPackages(): WorkspacePackage[] {
   return sortPackagesForInternalDependencyOrder(
-    listPublicWorkspacePackages().filter((pkg) => typeof pkg.scripts.build === 'string'),
+    listRegistryWorkspacePackages().filter((pkg) => typeof pkg.scripts.build === 'string'),
   )
 }
 

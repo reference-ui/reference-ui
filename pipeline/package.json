@@ -6,7 +6,7 @@
   "scripts": {
     "build": "pnpm exec tsx src/cli.ts build",
     "registry:pack": "pnpm exec tsx src/cli.ts registry pack",
-    "registry:publish:local": "pnpm exec tsx src/cli.ts registry publish --registry http://127.0.0.1:4873",
+    "registry:load:local": "pnpm exec tsx src/cli.ts registry load --registry http://127.0.0.1:4873",
     "registry:start": "pnpm exec verdaccio --config ./src/registry/verdaccio/config.yaml --listen 127.0.0.1:4873",
     "setup:local": "bash ./setup/local.sh",
     "typecheck": "tsc --noEmit"
