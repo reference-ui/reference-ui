@@ -14,6 +14,9 @@ import { releasePackageNames } from '../../config.js'
 import type { ReleasePlan, ReleasePlanPackage } from './types.js'
 import { defaultNpmAuthRegistryUrl, rustPackageName } from './types.js'
 
+export const pendingChangesetVersionMaterializationErrorMessage =
+  'Release planning found pending changesets, but the current release package versions are already published. Materialize the next release versions first, or run `pnpm release` to do it automatically.'
+
 function isPublishedOnNpm(name: string, version: string, registryUrl: string = defaultNpmAuthRegistryUrl): boolean {
   try {
     const output = execFileSync('npm', ['view', `${name}@${version}`, 'version', '--registry', registryUrl, '--json'], {
@@ -67,12 +70,14 @@ export async function getReleasePlan(): Promise<ReleasePlan> {
   }
 
   if (countPendingChangesetFiles() > 0) {
-    throw new Error(
-      'Release blocked: pending changesets exist, but the current release package versions are already published. Materialize the next release versions before running `pnpm release`.',
-    )
+    throw new Error(pendingChangesetVersionMaterializationErrorMessage)
   }
 
   return releasePlan
+}
+
+export function isPendingChangesetVersionMaterializationError(error: unknown): boolean {
+  return error instanceof Error && error.message === pendingChangesetVersionMaterializationErrorMessage
 }
 
 export function assertLocalReleasePlanSupported(
