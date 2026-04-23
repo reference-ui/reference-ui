@@ -9,16 +9,26 @@
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
-import { mkdir, readFile, rm } from 'node:fs/promises'
+import { copyFile, mkdir, readFile, rm } from 'node:fs/promises'
 import { join, relative, resolve } from 'node:path'
+import { dag, type Platform } from '@dagger.io/dagger'
+import * as dagger from '@dagger.io/dagger'
 
 import type {
   BuildPackageJsonOverride,
   BuildRegistryArtifactPackage,
 } from '../types.js'
 import { logSkip } from '../../lib/log/index.js'
+import { ensureContainerRuntime } from '../../lib/runtime/ensure-container-runtime.js'
 import { repoRoot, run } from '../workspace.js'
 import { rustGeneratedTarballsDir } from './state.js'
+import {
+  getRustTarget,
+  getVirtualNativeTriple,
+  getVirtualNativePackageName,
+  SUPPORTED_VIRTUAL_NATIVE_TARGETS,
+  type VirtualNativeTarget,
+} from '../../../../packages/reference-rs/js/shared/targets.js'
 
 export const REFERENCE_RUST_PACKAGE_NAME = '@reference-ui/rust'
 
@@ -44,6 +54,26 @@ interface RustTargetTarballPlan {
   strategy: RustTargetTarballStrategy
   tarballFileName: string
   tarballPath: string
+}
+
+const repoSourceExcludes = [
+  '.git',
+  '**/node_modules',
+  '**/.turbo',
+  '**/.pnpm-store',
+  '.pipeline',
+  'target',
+  'packages/reference-docs/dist',
+  'packages/reference-e2e/blob-reports',
+  'packages/reference-e2e/playwright-report',
+  'packages/reference-e2e/test-results',
+  'packages/reference-e2e/matrix-logs',
+  'pipeline/node_modules',
+] as const
+
+interface ReferenceRustTargetPackageValidationOptions {
+  rootVersion: string
+  targetPackages: readonly Pick<ReferenceRustTargetPackage, 'name' | 'version'>[]
 }
 
 function referenceRustArtifactsDir(packageDir: string): string {
@@ -106,6 +136,164 @@ function listReferenceRustTargetPackages(packageDir: string): ReferenceRustTarge
       }
     })
     .sort((left, right) => left.name.localeCompare(right.name))
+}
+
+function readReferenceRustRootVersion(packageDir: string): string {
+  return readJson<RustTargetPackageJson>(join(packageDir, 'package.json')).version
+}
+
+async function stageLocalReferenceRustBinaryIntoTargetPackage(
+  packageDir: string,
+  targetPackages: readonly ReferenceRustTargetPackage[],
+): Promise<void> {
+  const triple = getVirtualNativeTriple()
+
+  if (!triple) {
+    return
+  }
+
+  const targetPackageName = getVirtualNativePackageName(triple)
+  const targetPackage = targetPackages.find(pkg => pkg.name === targetPackageName)
+
+  if (!targetPackage) {
+    return
+  }
+
+  const localBinaryPath = resolve(packageDir, 'native', `virtual-native.${triple}.node`)
+  if (!existsSync(localBinaryPath)) {
+    return
+  }
+
+  await copyFile(localBinaryPath, resolve(targetPackage.dir, `virtual-native.${triple}.node`))
+}
+
+function repoSource() {
+  return dag.host().directory(repoRoot, {
+    exclude: [...repoSourceExcludes],
+  })
+}
+
+async function buildLinuxReferenceRustBinaryWithDagger(packageDir: string): Promise<void> {
+  const triple: VirtualNativeTarget = 'linux-x64-gnu'
+  const rustTarget = getRustTarget(triple)
+  const outputPathInContainer = `/workspace/packages/reference-rs/virtual-native.${triple}.node`
+  const outputPathOnHost = resolve(packageDir, `virtual-native.${triple}.node`)
+
+  const runBuild = async () => {
+    const pnpmStore = dag.cacheVolume('reference-ui-rust-linux-pnpm-store')
+    const cargoHome = dag.cacheVolume('reference-ui-rust-linux-cargo-home')
+    const rustupHome = dag.cacheVolume('reference-ui-rust-linux-rustup-home')
+    const cargoTarget = dag.cacheVolume('reference-ui-rust-linux-cargo-target')
+
+    const container = dag
+      .container({ platform: 'linux/amd64' as Platform })
+      .from('node:24-bookworm')
+      .withDirectory('/workspace', repoSource())
+      .withMountedCache('/pnpm/store', pnpmStore)
+      .withMountedCache('/root/.cargo', cargoHome)
+      .withMountedCache('/root/.rustup', rustupHome)
+      .withMountedCache('/workspace/packages/reference-rs/target', cargoTarget)
+      .withEnvVariable('CI', '1')
+      .withEnvVariable('NO_COLOR', '1')
+      .withEnvVariable('PNPM_STORE_DIR', '/pnpm/store')
+      .withWorkdir('/workspace')
+      .withExec(['apt-get', 'update'])
+      .withExec([
+        'apt-get',
+        'install',
+        '-y',
+        'build-essential',
+        'ca-certificates',
+        'curl',
+        'pkg-config',
+        'python3',
+      ])
+      .withExec(['corepack', 'enable'])
+      .withExec(['corepack', 'prepare', 'pnpm@10.29.3', '--activate'])
+      .withExec([
+        'bash',
+        '-lc',
+        'if [ ! -x /root/.cargo/bin/rustup ]; then curl https://sh.rustup.rs -sSf | sh -s -- -y --profile minimal; fi',
+      ])
+      .withExec([
+        'bash',
+        '-lc',
+        `export PATH=/root/.cargo/bin:$PATH && rustup target add ${rustTarget}`,
+      ])
+      .withExec([
+        'pnpm',
+        'install',
+        '--ignore-scripts',
+        '--no-frozen-lockfile',
+        '--filter',
+        '@reference-ui/rust...',
+      ])
+      .withExec([
+        'bash',
+        '-lc',
+        `export PATH=/root/.cargo/bin:$PATH && pnpm --filter @reference-ui/rust exec napi build --platform --release --target ${rustTarget}`,
+      ])
+
+    await container.file(outputPathInContainer).export(outputPathOnHost)
+  }
+
+  try {
+    dag.getGQLClient()
+    await runBuild()
+  } catch (error) {
+    if (!(error instanceof Error) || !error.message.includes('GraphQL client is not set')) {
+      throw error
+    }
+
+    ensureContainerRuntime()
+    await dagger.connection(runBuild, { LogOutput: process.stdout })
+  }
+}
+
+async function stageRequiredContainerBuiltReferenceRustBinaries(
+  packageDir: string,
+  targetPackages: readonly ReferenceRustTargetPackage[],
+  requiredTargets: readonly VirtualNativeTarget[],
+): Promise<void> {
+  if (!requiredTargets.includes('linux-x64-gnu')) {
+    return
+  }
+
+  const targetPackageName = getVirtualNativePackageName('linux-x64-gnu')
+  const targetPackage = targetPackages.find(pkg => pkg.name === targetPackageName)
+
+  if (!targetPackage || targetPackage.hasLocalBinary || isPublishedOnNpm(targetPackage.name, targetPackage.version)) {
+    return
+  }
+
+  await buildLinuxReferenceRustBinaryWithDagger(packageDir)
+  await copyFile(
+    resolve(packageDir, 'virtual-native.linux-x64-gnu.node'),
+    resolve(targetPackage.dir, 'virtual-native.linux-x64-gnu.node'),
+  )
+}
+
+export function getReferenceRustTargetPackageValidationErrors(
+  options: ReferenceRustTargetPackageValidationOptions,
+): string[] {
+  const targetPackagesByName = new Map(
+    options.targetPackages.map(targetPackage => [targetPackage.name, targetPackage]),
+  )
+
+  return SUPPORTED_VIRTUAL_NATIVE_TARGETS.flatMap((triple) => {
+    const expectedName = getVirtualNativePackageName(triple)
+    const targetPackage = targetPackagesByName.get(expectedName)
+
+    if (!targetPackage) {
+      return `Missing generated native package ${expectedName}@${options.rootVersion}.`
+    }
+
+    if (targetPackage.version !== options.rootVersion) {
+      return `Generated native package ${targetPackage.name}@${targetPackage.version} does not match @reference-ui/rust@${options.rootVersion}.`
+    }
+
+    return []
+  })
 }
 
 export function createReferenceRustPackageJsonOverride(
@@ -217,6 +405,7 @@ async function createGeneratedRustTargetPackage(
 
 async function ensureReferenceRustGeneratedPackages(
   packageDir: string,
+  requiredTargets: readonly VirtualNativeTarget[] = SUPPORTED_VIRTUAL_NATIVE_TARGETS,
 ): Promise<ReferenceRustTargetPackage[]> {
   // `create-npm-dirs` defines the target package layout we inspect below.
   await run('pnpm', ['run', 'create-npm-dirs'], {
@@ -237,14 +426,39 @@ async function ensureReferenceRustGeneratedPackages(
     })
   }
 
-  return listReferenceRustTargetPackages(packageDir)
+  const initialTargetPackages = listReferenceRustTargetPackages(packageDir)
+  await stageLocalReferenceRustBinaryIntoTargetPackage(packageDir, initialTargetPackages)
+  await stageRequiredContainerBuiltReferenceRustBinaries(packageDir, initialTargetPackages, requiredTargets)
+
+  const rootVersion = readReferenceRustRootVersion(packageDir)
+  const targetPackages = listReferenceRustTargetPackages(packageDir)
+  const validationErrors = getReferenceRustTargetPackageValidationErrors({
+    rootVersion,
+    targetPackages,
+  })
+
+  if (validationErrors.length > 0) {
+    throw new Error(
+      [
+        `Generated native package metadata for ${REFERENCE_RUST_PACKAGE_NAME}@${rootVersion} is incomplete or inconsistent.`,
+        ...validationErrors,
+      ].join(' '),
+    )
+  }
+
+  return targetPackages
 }
 
 export async function materializeReferenceRustTargetTarballs(
   packageDir: string,
+  requiredTargets: readonly VirtualNativeTarget[] = SUPPORTED_VIRTUAL_NATIVE_TARGETS,
 ): Promise<BuildRegistryArtifactPackage[]> {
-  const targetPackages = await ensureReferenceRustGeneratedPackages(packageDir)
+  const targetPackages = await ensureReferenceRustGeneratedPackages(packageDir, requiredTargets)
   const generatedPackages: BuildRegistryArtifactPackage[] = []
+  const requiredTargetPackageNames = new Set<string>(
+    requiredTargets.map(target => getVirtualNativePackageName(target)),
+  )
+  const skippedTargets: ReferenceRustTargetPackage[] = []
 
   await mkdir(rustGeneratedTarballsDir, { recursive: true })
 
@@ -253,10 +467,23 @@ export async function materializeReferenceRustTargetTarballs(
 
     // Local binaries win, cached remote tarballs are reused, and npm is the final fallback.
     if (!(await executeReferenceRustTargetTarballPlan(targetPackage, plan))) {
+      if (requiredTargetPackageNames.has(targetPackage.name)) {
+        skippedTargets.push(targetPackage)
+      }
       continue
     }
 
     generatedPackages.push(await createGeneratedRustTargetPackage(targetPackage, plan))
+  }
+
+  if (skippedTargets.length > 0) {
+    throw new Error(
+      [
+        `Failed to materialize required native packages for ${REFERENCE_RUST_PACKAGE_NAME}.`,
+        `Missing tarballs: ${skippedTargets.map(targetPackage => `${targetPackage.name}@${targetPackage.version}`).join(', ')}.`,
+        'Each native package must exist at the same version as @reference-ui/rust, either from a local binary, a cached tarball, or an already published npm package.',
+      ].join(' '),
+    )
   }
 
   return generatedPackages

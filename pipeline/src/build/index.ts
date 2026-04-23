@@ -9,12 +9,17 @@ import { computePackageBuildHashes, readBuildState, writeBuildState } from './ca
 import { ensureLocalRegistryAndStagePublicPackages } from '../registry/index.js'
 import { logSkip } from '../lib/log/index.js'
 import { registryPackageNames } from '../../config.js'
+import type { VirtualNativeTarget } from '../../../packages/reference-rs/js/shared/targets.js'
 import {
   listRegistryWorkspacePackages,
   run,
   sortPackagesForInternalDependencyOrder,
 } from './workspace.js'
 import type { WorkspacePackage } from './types.js'
+
+export interface BuildWorkspacePackageOptions {
+  requiredRustTargets?: readonly VirtualNativeTarget[]
+}
 
 export function listBuildTargetPackages(packageNames: readonly string[] = registryPackageNames): WorkspacePackage[] {
   return sortPackagesForInternalDependencyOrder(
@@ -57,7 +62,12 @@ export async function buildWorkspaceArtifacts(packageNames: readonly string[] = 
 export async function buildWorkspacePackages(
   registryUrl?: string,
   packageNames: readonly string[] = registryPackageNames,
+  options: BuildWorkspacePackageOptions = {},
 ): Promise<void> {
   await buildWorkspaceArtifacts(packageNames)
-  await ensureLocalRegistryAndStagePublicPackages(registryUrl, packageNames)
+  await ensureLocalRegistryAndStagePublicPackages(
+    registryUrl,
+    packageNames,
+    options.requiredRustTargets,
+  )
 }

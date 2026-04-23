@@ -11,6 +11,7 @@
 
 import type { WorkspacePackage } from '../types.js'
 import type { BuildRegistryArtifacts } from '../types.js'
+import type { VirtualNativeTarget } from '../../../../packages/reference-rs/js/shared/targets.js'
 import {
   applyPreparedRustPackageHash,
   applyPreparedRustPackageOverride,
@@ -25,8 +26,9 @@ import {
 
 export async function prepareReferenceRustRegistryArtifacts(
   packageDir: string,
+  requiredTargets?: readonly VirtualNativeTarget[],
 ): Promise<BuildRegistryArtifacts> {
-  const generatedPackages = await materializeReferenceRustTargetTarballs(packageDir)
+  const generatedPackages = await materializeReferenceRustTargetTarballs(packageDir, requiredTargets)
   const override = createReferenceRustPackageJsonOverride(
     generatedPackages.map(generatedPackage => ({
       name: generatedPackage.name,
@@ -56,6 +58,7 @@ export async function prepareReferenceRustRegistryArtifacts(
 
 export async function prepareAndWriteRustBuildRegistryArtifacts(
   buildTargets: readonly WorkspacePackage[],
+  requiredTargets?: readonly VirtualNativeTarget[],
 ): Promise<void> {
   const rustPackage = buildTargets.find(pkg => pkg.name === REFERENCE_RUST_PACKAGE_NAME)
 
@@ -64,7 +67,9 @@ export async function prepareAndWriteRustBuildRegistryArtifacts(
     return
   }
 
-  await writeRustBuildRegistryArtifacts(await prepareReferenceRustRegistryArtifacts(rustPackage.dir))
+  await writeRustBuildRegistryArtifacts(
+    await prepareReferenceRustRegistryArtifacts(rustPackage.dir, requiredTargets),
+  )
 }
 
 export async function readPreparedRustBuildRegistryArtifacts(): Promise<BuildRegistryArtifacts> {
