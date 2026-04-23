@@ -1,5 +1,16 @@
 # @reference-ui/lib
 
+## 0.0.26
+
+### Patch Changes
+
+- CI
+- bac2087: CI RELEASE
+- Updated dependencies
+- Updated dependencies [bac2087]
+  - @reference-ui/icons@0.0.23
+  - @reference-ui/core@0.0.23
+
 ## 0.0.25
 
 ### Patch Changes

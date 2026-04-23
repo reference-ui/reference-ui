@@ -1,5 +1,15 @@
 # @reference-ui/core
 
+## 0.0.23
+
+### Patch Changes
+
+- CI
+- bac2087: CI RELEASE
+- Updated dependencies
+- Updated dependencies [bac2087]
+  - @reference-ui/rust@0.0.22
+
 ## 0.0.22
 
 ### Patch Changes

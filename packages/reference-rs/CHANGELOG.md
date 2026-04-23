@@ -1,5 +1,12 @@
 # @reference-ui/rust
 
+## 0.0.22
+
+### Patch Changes
+
+- CI
+- bac2087: CI RELEASE
+
 ## 0.0.21
 
 ### Patch Changes
