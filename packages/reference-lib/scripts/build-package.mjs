@@ -15,8 +15,8 @@ const requiredFiles = [
 ]
 
 const packagedRuntimeFiles = [
-  resolve(distDir, 'node_modules/@reference-ui/react/package.json'),
-  resolve(distDir, 'node_modules/@reference-ui/styled/package.json'),
+  resolve(distDir, 'runtime/reference-ui/react/react.mjs'),
+  resolve(distDir, 'runtime/reference-ui/styled/css/index.js'),
 ]
 
 function run(command, args) {
