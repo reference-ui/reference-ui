@@ -20,7 +20,7 @@ export async function loadUserConfig(
   let raw: unknown
   try {
     const bundled = await bundleConfig(configPath)
-    raw = await evaluateConfig(bundled)
+    raw = await evaluateConfig(bundled, configPath)
   } catch (err) {
     throw new LoadConfigError(configPath, err)
   }
