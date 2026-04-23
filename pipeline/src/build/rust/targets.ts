@@ -76,6 +76,12 @@ interface ReferenceRustTargetPackageValidationOptions {
   targetPackages: readonly Pick<ReferenceRustTargetPackage, 'name' | 'version'>[]
 }
 
+interface ShouldBuildLinuxReferenceRustTargetWithDaggerOptions {
+  publishedOnNpm: boolean
+  requiredTargets: readonly VirtualNativeTarget[]
+  targetPackage: Pick<ReferenceRustTargetPackage, 'hasLocalBinary' | 'name'> | undefined
+}
+
 function referenceRustArtifactsDir(packageDir: string): string {
   return resolve(packageDir, 'artifacts')
 }
@@ -250,19 +256,51 @@ async function buildLinuxReferenceRustBinaryWithDagger(packageDir: string): Prom
   }
 }
 
+export function shouldBuildLinuxReferenceRustTargetWithDagger(
+  options: ShouldBuildLinuxReferenceRustTargetWithDaggerOptions,
+): boolean {
+  if (!options.requiredTargets.includes('linux-x64-gnu')) {
+    return false
+  }
+
+  if (!options.targetPackage) {
+    return false
+  }
+
+  if (options.targetPackage.name !== getVirtualNativePackageName('linux-x64-gnu')) {
+    return false
+  }
+
+  if (options.targetPackage.hasLocalBinary) {
+    return false
+  }
+
+  if (options.publishedOnNpm) {
+    return false
+  }
+
+  return true
+}
+
 async function stageRequiredContainerBuiltReferenceRustBinaries(
   packageDir: string,
   targetPackages: readonly ReferenceRustTargetPackage[],
   requiredTargets: readonly VirtualNativeTarget[],
 ): Promise<void> {
-  if (!requiredTargets.includes('linux-x64-gnu')) {
-    return
-  }
-
   const targetPackageName = getVirtualNativePackageName('linux-x64-gnu')
   const targetPackage = targetPackages.find(pkg => pkg.name === targetPackageName)
 
-  if (!targetPackage || targetPackage.hasLocalBinary || isPublishedOnNpm(targetPackage.name, targetPackage.version)) {
+  const publishedOnNpm = targetPackage ? isPublishedOnNpm(targetPackage.name, targetPackage.version) : false
+
+  if (!shouldBuildLinuxReferenceRustTargetWithDagger({
+    publishedOnNpm,
+    requiredTargets,
+    targetPackage,
+  })) {
+    return
+  }
+
+  if (!targetPackage) {
     return
   }
 

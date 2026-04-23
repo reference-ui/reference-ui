@@ -5,6 +5,7 @@ import {
   createReferenceRustPackageJsonOverride,
   getReferenceRustTargetPackageValidationErrors,
   resolveReferenceRustTargetTarballStrategy,
+  shouldBuildLinuxReferenceRustTargetWithDagger,
 } from './targets.js'
 
 describe('createReferenceRustPackageJsonOverride', () => {
@@ -110,6 +111,62 @@ describe('getReferenceRustTargetPackageValidationErrors', () => {
         'Generated native package @reference-ui/rust-darwin-x64@0.0.20 does not match @reference-ui/rust@0.0.21.',
         'Missing generated native package @reference-ui/rust-linux-x64-gnu@0.0.21.',
       ],
+    )
+  })
+})
+
+describe('shouldBuildLinuxReferenceRustTargetWithDagger', () => {
+  it('returns true when linux is required and no local or published linux package is available', () => {
+    assert.equal(
+      shouldBuildLinuxReferenceRustTargetWithDagger({
+        publishedOnNpm: false,
+        requiredTargets: ['linux-x64-gnu'],
+        targetPackage: {
+          hasLocalBinary: false,
+          name: '@reference-ui/rust-linux-x64-gnu',
+        },
+      }),
+      true,
+    )
+  })
+
+  it('returns false when linux is not required', () => {
+    assert.equal(
+      shouldBuildLinuxReferenceRustTargetWithDagger({
+        publishedOnNpm: false,
+        requiredTargets: ['darwin-x64'],
+        targetPackage: {
+          hasLocalBinary: false,
+          name: '@reference-ui/rust-linux-x64-gnu',
+        },
+      }),
+      false,
+    )
+  })
+
+  it('returns false when the linux target already has a local binary or published package', () => {
+    assert.equal(
+      shouldBuildLinuxReferenceRustTargetWithDagger({
+        publishedOnNpm: false,
+        requiredTargets: ['linux-x64-gnu'],
+        targetPackage: {
+          hasLocalBinary: true,
+          name: '@reference-ui/rust-linux-x64-gnu',
+        },
+      }),
+      false,
+    )
+
+    assert.equal(
+      shouldBuildLinuxReferenceRustTargetWithDagger({
+        publishedOnNpm: true,
+        requiredTargets: ['linux-x64-gnu'],
+        targetPackage: {
+          hasLocalBinary: false,
+          name: '@reference-ui/rust-linux-x64-gnu',
+        },
+      }),
+      false,
     )
   })
 })
