@@ -11,6 +11,7 @@ import { constants } from 'node:fs'
 import { access, readFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { consumerDirInContainer } from '../config.js'
 import { ensureContainerRuntime } from './lib/runtime/ensure-container-runtime.js'
 
 const pipelineDir = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -18,8 +19,6 @@ const repoRoot = resolve(pipelineDir, '..')
 
 const repoPathInContainer = '/workspace'
 const packDirInContainer = '/packs'
-const consumerDirInContainer = '/consumer'
-
 function isDirectExecution(): boolean {
   return process.argv[1] === fileURLToPath(import.meta.url)
 }

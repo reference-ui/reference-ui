@@ -10,6 +10,7 @@ import { spawn } from 'node:child_process'
 import { openSync } from 'node:fs'
 import { mkdir, readFile, rm, unlink, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
+import { managedRegistryHost, managedRegistryPort } from '../../config.js'
 import { repoRoot } from '../build/workspace.js'
 import {
   defaultRegistryUrl,
@@ -110,6 +111,7 @@ export async function stopManagedLocalRegistry(): Promise<void> {
 
 async function startManagedLocalRegistry(registryUrl: string = defaultRegistryUrl): Promise<void> {
   await mkdir(registryStateDir, { recursive: true })
+  const listenAddress = `${managedRegistryHost}:${managedRegistryPort}`
 
   const logFd = openSync(verdaccioLogPath, 'a')
   const child = spawn(
@@ -120,7 +122,7 @@ async function startManagedLocalRegistry(registryUrl: string = defaultRegistryUr
       '--config',
       verdaccioConfigPath,
       '--listen',
-      '127.0.0.1:4873',
+      listenAddress,
     ],
     {
       cwd: resolve(repoRoot, 'pipeline'),

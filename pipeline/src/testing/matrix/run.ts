@@ -13,19 +13,25 @@ import { createHash } from 'node:crypto'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import {
+  consumerDirInContainer,
+  defaultRegistryUrl,
+  managedRegistryHost,
+  managedRegistryPort,
+  managedRegistryServiceHost,
+  registryUrlInContainer,
+} from '../../../config.js'
 import { buildWorkspacePackages } from '../../build/index.js'
 import { ensureContainerRuntime } from '../../lib/runtime/ensure-container-runtime.js'
 import { readRegistryManifest } from '../../registry/manifest.js'
-import { defaultRegistryUrl } from '../../registry/paths.js'
+import { createMatrixConsumerPackageJson } from './transforms/package-json.js'
+import { createMatrixConsumerTsconfig } from './transforms/tsconfig.js'
 import { validateMatrixFixtures } from './validate.js'
 
 const matrixDir = dirname(fileURLToPath(import.meta.url))
 const pipelineDir = resolve(matrixDir, '..', '..', '..')
 const repoRoot = resolve(pipelineDir, '..')
 const matrixLogDir = resolve(repoRoot, '.pipeline', 'testing', 'matrix')
-
-const consumerDirInContainer = '/consumer'
-const registryUrlInContainer = 'http://registry:4873'
 
 interface FixtureSourceFiles {
   appSource: string
@@ -77,52 +83,9 @@ async function readInstallTestFixtureSource(): Promise<FixtureSourceFiles> {
   }
 }
 
-function consumerPackageJson(coreVersion: string): string {
-  return `${JSON.stringify(
-    {
-      name: 'reference-ui-matrix-install-test',
-      private: true,
-      type: 'module',
-      scripts: {
-        sync: 'ref sync',
-      },
-      dependencies: {
-        '@reference-ui/core': coreVersion,
-        react: '^19.2.0',
-        'react-dom': '^19.2.0',
-      },
-      devDependencies: {
-        '@types/react': '^19.2.2',
-        '@types/react-dom': '^19.2.2',
-        typescript: '~5.9.3',
-      },
-    },
-    null,
-    2,
-  )}\n`
-}
-
-function consumerTsconfig(): string {
-  return `${JSON.stringify(
-    {
-      compilerOptions: {
-        jsx: 'react-jsx',
-        module: 'esnext',
-        moduleResolution: 'bundler',
-        target: 'es2022',
-        strict: true,
-        skipLibCheck: true,
-      },
-      include: ['src/**/*', 'ui.config.ts'],
-    },
-    null,
-    2,
-  )}\n`
-}
-
 function hostRegistryService() {
-  return dag.host().service([{ backend: 4873 }], {
-    host: '127.0.0.1',
+  return dag.host().service([{ backend: managedRegistryPort }], {
+    host: managedRegistryHost,
   })
 }
 
@@ -143,9 +106,14 @@ export async function runMatrixBootstrapInDagger(): Promise<void> {
   console.log('3. Reading install-test fixture source...')
   const fixtureSource = await readInstallTestFixtureSource()
   const corePackage = manifest.packages.find((pkg) => pkg.name === '@reference-ui/core')
+  const libPackage = manifest.packages.find((pkg) => pkg.name === '@reference-ui/lib')
 
   if (!corePackage) {
     throw new Error('Expected @reference-ui/core to be present in the packed registry manifest.')
+  }
+
+  if (!libPackage) {
+    throw new Error('Expected @reference-ui/lib to be present in the packed registry manifest.')
   }
 
   const workspace = baseNodeContainer(registryManifestCacheKey(manifest))
@@ -154,7 +122,9 @@ export async function runMatrixBootstrapInDagger(): Promise<void> {
   let consumerWorkspace = workspace.withServiceBinding('registry', registry)
 
   console.log('4. Binding the shared host Verdaccio registry into the Dagger graph...')
-  console.log('   Verdaccio still lives on the host; Dagger is only forwarding it into the container graph as registry:4873.')
+  console.log(
+    `   Verdaccio still lives on the host; Dagger is only forwarding it into the container graph as ${managedRegistryServiceHost}:${managedRegistryPort}.`,
+  )
   console.log(`   Step logs will be written to ${matrixLogDir}.`)
 
   console.log('4.1 Checking registry connectivity from inside the container graph...')
@@ -172,9 +142,12 @@ export async function runMatrixBootstrapInDagger(): Promise<void> {
   const consumerBase = consumerWorkspace
     .withNewFile(
       `${consumerDirInContainer}/package.json`,
-      consumerPackageJson(corePackage.version),
+      createMatrixConsumerPackageJson({
+        coreVersion: corePackage.version,
+        libVersion: libPackage.version,
+      }),
     )
-    .withNewFile(`${consumerDirInContainer}/tsconfig.json`, consumerTsconfig())
+    .withNewFile(`${consumerDirInContainer}/tsconfig.json`, createMatrixConsumerTsconfig())
     .withNewFile(`${consumerDirInContainer}/ui.config.ts`, fixtureSource.configSource)
     .withNewFile(`${consumerDirInContainer}/src/App.tsx`, fixtureSource.appSource)
     .withNewFile(`${consumerDirInContainer}/src/index.ts`, fixtureSource.indexSource)
