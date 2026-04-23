@@ -77,6 +77,18 @@ importers:
         specifier: ^4.0.18
         version: 4.0.18(@opentelemetry/api@1.9.1)(@types/node@25.1.0)(happy-dom@15.11.7)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.2)
 
+  fixtures/install-test:
+    dependencies:
+      '@reference-ui/core':
+        specifier: workspace:*
+        version: link:../../packages/reference-core
+      '@reference-ui/lib':
+        specifier: workspace:*
+        version: link:../../packages/reference-lib
+      react:
+        specifier: '*'
+        version: 19.2.4
+
   fixtures/layer-library:
     devDependencies:
       '@reference-ui/core':
