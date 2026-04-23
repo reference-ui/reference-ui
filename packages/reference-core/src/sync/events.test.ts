@@ -84,6 +84,16 @@ describe('sync/events', () => {
     expect(emit).toHaveBeenCalledWith('sync:failed', undefined)
   })
 
+  it('packager-ts failure emits sync:failed', async () => {
+    const { initEvents } = await loadEventsModule()
+    initEvents()
+
+    expect(onHandlers.has('packager-ts:failed')).toBe(true)
+    fireOn('packager-ts:failed')
+
+    expect(emit).toHaveBeenCalledWith('sync:failed', undefined)
+  })
+
   it('run:panda:codegen emitted only when system:config:complete and system:panda:ready both fired', async () => {
     const { initEvents } = await loadEventsModule()
     initEvents()

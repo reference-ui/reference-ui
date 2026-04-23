@@ -15,6 +15,7 @@ export function buildMicroBundleOptions(
 ): esbuild.BuildOptions {
   const {
     external = DEFAULT_EXTERNALS,
+    packages,
     format = 'esm',
     platform = 'node',
     target = 'node18',
@@ -35,6 +36,7 @@ export function buildMicroBundleOptions(
     write: false,
     // Esbuild 0.27 requires external to be string[] (no RegExp)
     external: normalizeExternal(external),
+    packages,
     plugins: getPlugins(options),
     minify,
     keepNames,

@@ -1,0 +1,29 @@
+storage: ../.store/storage
+
+auth:
+  htpasswd:
+    file: ../.store/htpasswd
+
+uplinks:
+  npmjs:
+    url: https://registry.npmjs.org/
+
+packages:
+  '@reference-ui/*':
+    access: $all
+    publish: $all
+    unpublish: $all
+
+  '**':
+    access: $all
+    publish: $all
+    unpublish: $all
+    proxy: npmjs
+
+server:
+  keepAliveTimeout: 60
+
+log:
+  - type: stdout
+    format: pretty
+    level: http

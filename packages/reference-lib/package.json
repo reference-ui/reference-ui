@@ -28,9 +28,10 @@
     "README.md"
   ],
   "scripts": {
+    "build:deps": "node ../../scripts/pipeline/run-if-env-absent.mjs REF_PIPELINE_SKIP_DEPENDENCY_BUILDS \"pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/icons run build\"",
     "sync": "ref sync",
-    "typecheck": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/icons run build && pnpm run sync && tsc --noEmit",
-    "build": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/icons run build && pnpm run sync && tsup && node scripts/build-package.mjs",
+    "typecheck": "pnpm run build:deps && pnpm run sync && tsc --noEmit",
+    "build": "pnpm run build:deps && pnpm run sync && tsup && node scripts/build-package.mjs",
     "dev": "ref sync --watch",
     "prepack": "pnpm run build",
     "test": "vitest run",

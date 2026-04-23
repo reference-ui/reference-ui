@@ -1,5 +1,6 @@
 import * as React from 'react'
-import { Code, StyleProps } from '@reference-ui/react'
+import { Code } from '@reference-ui/react'
+import type { StyleProps } from '@reference-ui/react'
 
 interface MonoTextProps extends StyleProps {
   children: React.ReactNode

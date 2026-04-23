@@ -43,6 +43,8 @@ reports/
 packages/.sandbox
 .reference-ui
 .ref
+.pipeline
+pipeline/src/registry/.store
 packages/reference-core/src/system/styled
 packages/reference-core/src/reference/browser-component/
 packages/reference-unit/tests/fixtures/sync-readiness/src/generated/

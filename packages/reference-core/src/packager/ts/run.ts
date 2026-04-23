@@ -47,7 +47,9 @@ export function createDtsGenerationQueue(
     currentRun = currentRun
       .catch(() => {})
       .then(() => runGeneration(payload, completionEvent))
-      .catch(() => {})
+      .catch(() => {
+        emit('packager-ts:failed', {})
+      })
     return currentRun
   }
 
