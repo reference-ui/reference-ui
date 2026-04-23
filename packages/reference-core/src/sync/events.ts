@@ -162,6 +162,7 @@ export function initEvents(): void {
       'system:config:failed',
       'system:panda:codegen:failed',
       'virtual:failed',
+      'packager-ts:failed',
       'reference:failed',
       'mcp:failed',
       'reference:component:copy-failed',

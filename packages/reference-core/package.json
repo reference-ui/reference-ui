@@ -17,6 +17,7 @@
     "bin",
     "dist",
     "src",
+    "tsconfig.json",
     "tools/copy-reference-api-component.mjs"
   ],
   "exports": {
@@ -37,8 +38,8 @@
     "copy:reference-api-component": "node tools/copy-reference-api-component.mjs",
     "prebuild": "tsx src/system/build/primitives/index.ts && tsx src/system/build/styled/index.ts && pnpm run copy:reference-api-component",
     "build": "pnpm run build:native && tsup",
-    "build:native": "pnpm --filter @reference-ui/rust run build",
-    "prepack": "pnpm run build",
+    "build:native": "node ../../scripts/pipeline/run-if-env-absent.mjs REF_PIPELINE_SKIP_DEPENDENCY_BUILDS \"pnpm --filter @reference-ui/rust run build\"",
+    "prepack": "pnpm run copy:reference-api-component && pnpm run build",
     "predev": "pnpm run copy:reference-api-component",
     "dev": "tsup --watch",
     "sync": "node dist/cli/index.mjs sync",

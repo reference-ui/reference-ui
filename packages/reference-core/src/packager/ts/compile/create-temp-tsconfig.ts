@@ -3,6 +3,8 @@ import { join, relative, resolve } from 'node:path'
 import { getOutDirPath } from '../../../lib/paths/out-dir'
 
 export interface CreateTempTsconfigOptions {
+  cliDir: string
+  entryFile: string
   projectCwd: string
   tempDir: string
 }
@@ -15,7 +17,6 @@ function toConfigRelativePath(fromDir: string, targetPath: string): string {
 function getCompilerOptions() {
   return {
     jsx: 'react-jsx',
-    noEmit: true,
     strict: true,
     skipLibCheck: true,
     moduleResolution: 'bundler',
@@ -41,7 +42,7 @@ function getCompilerOptions() {
  * the module paths that must point at the consumer's generated package.
  */
 export function createTempTsconfig(options: CreateTempTsconfigOptions): string {
-  const { projectCwd, tempDir } = options
+  const { cliDir, entryFile, projectCwd, tempDir } = options
   const styledDir = resolve(getOutDirPath(projectCwd), 'styled')
   const tempTsconfigPath = join(tempDir, 'tsconfig.ref-ui-dts.json')
 
@@ -49,14 +50,17 @@ export function createTempTsconfig(options: CreateTempTsconfigOptions): string {
     tempTsconfigPath,
     JSON.stringify(
       {
+        files: [toConfigRelativePath(tempDir, resolve(cliDir, entryFile))],
+        include: [],
         compilerOptions: {
           ...getCompilerOptions(),
+          declaration: true,
+          emitDeclarationOnly: true,
           baseUrl: '.',
           paths: {
             '@reference-ui/styled': [toConfigRelativePath(tempDir, styledDir)],
             '@reference-ui/styled/*': [toConfigRelativePath(tempDir, join(styledDir, '*'))],
           },
-          preserveValueImports: true,
           verbatimModuleSyntax: true,
           isolatedModules: false,
         },

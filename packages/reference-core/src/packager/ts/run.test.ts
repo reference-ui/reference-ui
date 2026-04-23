@@ -120,4 +120,27 @@ describe('packager/ts/run', () => {
       'packager-ts:runtime:complete'
     )
   })
+
+  it('emits packager-ts:failed when declaration generation fails', async () => {
+    const emit = vi.fn()
+    const runGeneration = vi.fn().mockRejectedValue(new Error('boom'))
+
+    vi.resetModules()
+    vi.doMock('../../lib/event-bus', () => ({
+      emit,
+    }))
+    vi.doMock('../../lib/log', () => ({
+      log: {
+        debug: vi.fn(),
+        error: vi.fn(),
+      },
+    }))
+
+    const { createDtsGenerationQueue } = await import('./run')
+    const queue = createDtsGenerationQueue(createPayload(false), { runGeneration })
+
+    await queue.run('packager-ts:complete')
+
+    expect(emit).toHaveBeenCalledWith('packager-ts:failed', {})
+  })
 })

@@ -17,6 +17,7 @@ describe('buildMicroBundleOptions', () => {
       target: 'node18',
       write: false,
       external: DEFAULT_EXTERNALS,
+      packages: undefined,
       minify: false,
       keepNames: true,
       treeShaking: true,
@@ -33,6 +34,7 @@ describe('buildMicroBundleOptions', () => {
       platform: 'browser',
       target: ['es2020'],
       external: ['foo'],
+      packages: 'external',
       minify: true,
       keepNames: false,
       treeShaking: false,
@@ -48,6 +50,7 @@ describe('buildMicroBundleOptions', () => {
       platform: 'browser',
       target: ['es2020'],
       external: ['foo'],
+      packages: 'external',
       minify: true,
       keepNames: false,
       treeShaking: false,
@@ -55,6 +58,14 @@ describe('buildMicroBundleOptions', () => {
       conditions: ['browser'],
     })
     expect(result.plugins).toHaveLength(1)
+  })
+
+  it('forwards package externalization to esbuild', () => {
+    const result = buildMicroBundleOptions(ENTRY_PATH, {
+      packages: 'external',
+    })
+
+    expect(result.packages).toBe('external')
   })
 
   it('filters non-string externals out of the esbuild config', () => {
