@@ -11,6 +11,7 @@ import { dirname, join, parse, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import {
+  getVirtualNativePackageName,
   getVirtualNativeTriple,
   SUPPORTED_VIRTUAL_NATIVE_TARGETS,
   type VirtualNativeTarget,
@@ -21,10 +22,6 @@ const RUST_PACKAGE_NAME = '@reference-ui/rust'
 type RequireFn = ReturnType<typeof createRequire>
 
 export { getVirtualNativeTriple, SUPPORTED_VIRTUAL_NATIVE_TARGETS }
-
-function getTargetPackageName(triple: VirtualNativeTarget): string {
-  return `@reference-ui/rust-${triple}`
-}
 
 export interface VirtualNativeBinding {
   rewriteCssImports: (sourceCode: string, relativePath: string) => string
@@ -45,6 +42,8 @@ export interface VirtualNativeDiagnostics {
   platform: NodeJS.Platform
   arch: string
   triple: string | null
+  targetPackageDir: string | null
+  targetPackageName: string | null
   candidatePaths: string[]
   cause: string | null
 }
@@ -97,7 +96,7 @@ function resolveOptionalTargetPackageDir(
   requireImpl: RequireFn = getDefaultRequire()
 ): string | null {
   try {
-    const packageJsonPath = requireImpl.resolve(`${getTargetPackageName(triple)}/package.json`)
+    const packageJsonPath = requireImpl.resolve(`${getVirtualNativePackageName(triple)}/package.json`)
     return dirname(packageJsonPath)
   } catch {
     return null
@@ -159,6 +158,8 @@ export function loadVirtualNative(): VirtualNativeBinding | null {
         platform,
         arch,
         triple,
+        targetPackageDir: null,
+        targetPackageName: null,
         candidatePaths: [],
         cause: null,
       })
@@ -166,6 +167,8 @@ export function loadVirtualNative(): VirtualNativeBinding | null {
       return null
     }
 
+    const targetPackageDir = resolveOptionalTargetPackageDir(triple, requireImpl)
+    const targetPackageName = getVirtualNativePackageName(triple)
     const candidatePaths = getVirtualNativeCandidatePaths(packageDir, triple, requireImpl)
     const nodePath = candidatePaths.find(path => existsSync(path)) ?? null
     if (!nodePath) {
@@ -175,6 +178,8 @@ export function loadVirtualNative(): VirtualNativeBinding | null {
         platform,
         arch,
         triple,
+        targetPackageDir,
+        targetPackageName,
         candidatePaths,
         cause: null,
       })
@@ -189,6 +194,8 @@ export function loadVirtualNative(): VirtualNativeBinding | null {
       platform,
       arch,
       triple,
+      targetPackageDir,
+      targetPackageName,
       candidatePaths: [nodePath],
       cause: null,
     })
@@ -203,6 +210,8 @@ export function loadVirtualNative(): VirtualNativeBinding | null {
       platform,
       arch,
       triple,
+      targetPackageDir: null,
+      targetPackageName: triple ? getVirtualNativePackageName(triple) : null,
       candidatePaths: [],
       cause: error instanceof Error ? error.message : String(error),
     })
@@ -226,6 +235,8 @@ export function getVirtualNativeDiagnostics(): VirtualNativeDiagnostics {
       platform: process.platform,
       arch: process.arch,
       triple: getVirtualNativeTriple(process.platform, process.arch),
+      targetPackageDir: null,
+      targetPackageName: null,
       candidatePaths: [],
       cause: null,
     }
@@ -246,9 +257,24 @@ export function getVirtualNativeUnavailableMessage(feature: string): string {
       )
       break
     case 'binary-not-found':
+      if (diagnostics.targetPackageName) {
+        messageParts.push(`Expected optional target package: ${diagnostics.targetPackageName}.`)
+      }
+      if (diagnostics.targetPackageDir) {
+        messageParts.push(
+          `The platform package resolved to ${diagnostics.targetPackageDir}, but no native binary was present there or in the root @reference-ui/rust package.`
+        )
+      } else if (diagnostics.targetPackageName) {
+        messageParts.push(
+          `The platform package ${diagnostics.targetPackageName} was not installed alongside @reference-ui/rust.`
+        )
+      }
       messageParts.push(
         `No native binary was found for ${diagnostics.platform} ${diagnostics.arch}. Reinstall dependencies so your package manager can fetch the correct prebuilt binary.`
       )
+      if (diagnostics.candidatePaths.length > 0) {
+        messageParts.push(`Searched paths: ${diagnostics.candidatePaths.join(', ')}.`)
+      }
       break
     case 'package-dir-not-found':
       messageParts.push('The installed @reference-ui/rust package could not be resolved. Reinstall dependencies.')

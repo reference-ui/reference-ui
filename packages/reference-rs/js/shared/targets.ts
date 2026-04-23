@@ -9,6 +9,10 @@ export type VirtualNativeTarget = keyof typeof TARGET_TRIPLES
 
 export const SUPPORTED_VIRTUAL_NATIVE_TARGETS = Object.keys(TARGET_TRIPLES) as VirtualNativeTarget[]
 
+export function getVirtualNativePackageName(triple: VirtualNativeTarget): `@reference-ui/rust-${VirtualNativeTarget}` {
+  return `@reference-ui/rust-${triple}`
+}
+
 export function getVirtualNativeTriple(
   platform: NodeJS.Platform = process.platform,
   arch: string = process.arch

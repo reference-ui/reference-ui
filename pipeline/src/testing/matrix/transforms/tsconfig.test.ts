@@ -12,12 +12,14 @@ describe('createMatrixConsumerTsconfig', () => {
 
     assert.deepEqual(tsconfig.compilerOptions, {
       jsx: 'react-jsx',
+      lib: ['ES2022', 'DOM', 'DOM.Iterable'],
       module: 'esnext',
       moduleResolution: 'bundler',
+      types: [],
       target: 'es2022',
       strict: true,
       skipLibCheck: true,
     })
-    assert.deepEqual(tsconfig.include, ['src/**/*', 'ui.config.ts'])
+    assert.deepEqual(tsconfig.include, ['src/**/*', 'tests/**/*', 'ui.config.ts'])
   })
 })

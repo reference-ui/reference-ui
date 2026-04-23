@@ -60,5 +60,5 @@ This is one of the main testing directions for the pipeline.
 	- unit-level checks for helpers and workflow logic
 - `pnpm pipeline:test:matrix`
 	- tests matrix inputs and bootstrap wiring
-	- currently reuses the single pipeline-managed Verdaccio registry, binds that shared host registry into Dagger, installs a minimal consumer from the `install-test` fixture, and runs `ref sync` in a clean container
+	- currently reuses the single pipeline-managed Verdaccio registry, binds that shared host registry into Dagger, installs a minimal consumer from the `install-test` fixture, runs `ref sync`, and then runs the fixture's standard `pnpm test` command inside the clean container
 	- on macOS, it will start Colima automatically when the active Docker context is `colima` and the VM is not already running

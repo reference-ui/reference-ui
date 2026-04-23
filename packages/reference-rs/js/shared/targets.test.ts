@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
-import { getRustTarget, getVirtualNativeTriple, SUPPORTED_VIRTUAL_NATIVE_TARGETS, TARGET_TRIPLES } from './targets'
+import {
+  getRustTarget,
+  getVirtualNativePackageName,
+  getVirtualNativeTriple,
+  SUPPORTED_VIRTUAL_NATIVE_TARGETS,
+  TARGET_TRIPLES,
+} from './targets'
 
 describe('targets', () => {
   it('keeps supported runtime targets aligned with Rust targets', () => {
@@ -34,5 +40,10 @@ describe('targets', () => {
   it('returns the Rust target for a runtime triple', () => {
     expect(getRustTarget('darwin-arm64')).toBe('aarch64-apple-darwin')
     expect(getRustTarget('linux-x64-gnu')).toBe('x86_64-unknown-linux-gnu')
+  })
+
+  it('returns the npm package name for a runtime triple', () => {
+    expect(getVirtualNativePackageName('linux-x64-gnu')).toBe('@reference-ui/rust-linux-x64-gnu')
+    expect(getVirtualNativePackageName('darwin-arm64')).toBe('@reference-ui/rust-darwin-arm64')
   })
 })
