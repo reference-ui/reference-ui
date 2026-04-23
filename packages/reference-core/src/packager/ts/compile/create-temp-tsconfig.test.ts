@@ -27,21 +27,32 @@ describe('createTempTsconfig', () => {
     mkdirSync(tempDir, { recursive: true })
     mkdirSync(cliDir, { recursive: true })
 
-    const tempTsconfigPath = createTempTsconfig({ cliDir, projectCwd, tempDir })
+    const entryFile = 'src/entry/react.ts'
+    const tempTsconfigPath = createTempTsconfig({ cliDir, entryFile, projectCwd, tempDir })
     const config = JSON.parse(readFileSync(tempTsconfigPath, 'utf-8')) as {
       extends?: string
+      files?: string[]
+      include?: string[]
       compilerOptions: {
+        baseUrl?: string
         declaration?: boolean
         emitDeclarationOnly?: boolean
+        moduleResolution?: string
         noEmit?: boolean
         paths: Record<string, string[]>
         preserveValueImports?: boolean
       }
     }
 
-    expect(config.extends).toBe(resolve(cliDir, 'tsconfig.json'))
+    expect(config.extends).toBeUndefined()
+    expect(config.files).toEqual([
+      relative(tempDir, resolve(cliDir, entryFile)).replaceAll('\\', '/'),
+    ])
+    expect(config.include).toEqual([])
+    expect(config.compilerOptions.baseUrl).toBe('.')
     expect(config.compilerOptions.declaration).toBe(true)
     expect(config.compilerOptions.emitDeclarationOnly).toBe(true)
+    expect(config.compilerOptions.moduleResolution).toBe('bundler')
     expect(config.compilerOptions.noEmit).toBeUndefined()
     expect(config.compilerOptions.preserveValueImports).toBeUndefined()
     const styledDir = resolve(projectCwd, '.reference-ui/styled')
