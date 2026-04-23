@@ -14,6 +14,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { buildWorkspacePackages } from '../../build/index.js'
+import { ensureContainerRuntime } from '../../lib/runtime/ensure-container-runtime.js'
 import { readRegistryManifest } from '../../registry/manifest.js'
 import { defaultRegistryUrl } from '../../registry/paths.js'
 import { validateMatrixFixtures } from './validate.js'
@@ -214,5 +215,6 @@ export async function runMatrixBootstrapInDagger(): Promise<void> {
 }
 
 if (isDirectExecution()) {
-  await dagger.connection(runMatrixBootstrapInDagger, { LogOutput: process.stderr })
+  ensureContainerRuntime()
+  await dagger.connection(runMatrixBootstrapInDagger, { LogOutput: process.stdout })
 }
