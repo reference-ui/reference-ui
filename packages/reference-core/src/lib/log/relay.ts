@@ -24,7 +24,7 @@ type WorkerLogFields = {
 
 let isRelayInitialized = false
 let logChannel: ReturnType<typeof openBusChannel> | undefined
-let relayListener: ((msg: Event) => void) | undefined
+let relayListener: ((ev: Event) => void) | undefined
 
 function getLogChannel(): ReturnType<typeof openBusChannel> {
   if (logChannel) return logChannel
@@ -70,8 +70,8 @@ export function forwardWorkerLog(entry: WorkerLogFields): void {
 export function initLogRelay(): void {
   if (!isMainThread || isRelayInitialized) return
 
-  relayListener = (msg: Event) => {
-    const parsed = parseBusMessage((msg as MessageEvent).data)
+  relayListener = (ev: Event) => {
+    const parsed = parseBusMessage((ev as MessageEvent).data)
     if (!parsed || parsed.event !== LOG_ENTRY_EVENT) return
 
     if (!isLogEntryPayload(parsed.payload)) return
