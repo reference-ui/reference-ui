@@ -1,11 +1,8 @@
 import { createRequire } from 'node:module'
 import { dirname, join, resolve } from 'node:path'
 import {
-  copyFileSync,
-  existsSync,
   mkdirSync,
   mkdtempSync,
-  readdirSync,
   rmSync,
   writeFileSync,
 } from 'node:fs'
@@ -24,43 +21,11 @@ import { getPackageDir, getDeclarationBasename } from '../../layout'
 import type { TsPackageInput } from '../types'
 import { writeTsconfig } from '../tsconfig'
 
-function copyDeclarationDirectory(sourceDir: string, targetDir: string): void {
-  if (!existsSync(sourceDir)) {
-    return
-  }
-
-  mkdirSync(targetDir, { recursive: true })
-
-  for (const entry of readdirSync(sourceDir, { withFileTypes: true })) {
-    const sourcePath = join(sourceDir, entry.name)
-    const targetPath = join(targetDir, entry.name)
-
-    if (entry.isDirectory()) {
-      copyDeclarationDirectory(sourcePath, targetPath)
-      continue
-    }
-
-    if (entry.name.endsWith('.d.ts')) {
-      copyFileSync(sourcePath, targetPath)
-    }
-  }
-}
-
-function copyReactSupportDeclarations(cliDir: string, targetDir: string): void {
-  copyDeclarationDirectory(
-    resolve(cliDir, 'src/system/primitives'),
-    join(targetDir, 'system/primitives')
-  )
-  copyDeclarationDirectory(resolve(cliDir, 'src/types'), join(targetDir, 'types'))
-
-  const publicCssSourcePath = resolve(cliDir, 'src/system/css/public.d.ts')
-  const publicCssTargetPath = join(targetDir, 'system/css/public.d.ts')
-
-  if (existsSync(publicCssSourcePath)) {
-    mkdirSync(dirname(publicCssTargetPath), { recursive: true })
-    copyFileSync(publicCssSourcePath, publicCssTargetPath)
-  }
-}
+const REACT_SUPPORT_ENTRY_FILES = [
+  'src/system/primitives/index.tsx',
+  'src/system/css/public.ts',
+  'src/types/index.ts',
+] as const
 
 function resolveTsgoCli(projectCwd: string, cliDir: string): string {
   const require = createRequire(import.meta.url)
@@ -75,6 +40,14 @@ function getEntryModuleSpecifier(entryFile: string): string {
   return `./${entryFile.replace(/^src\//, '').replace(/\.[cm]?[jt]sx?$/, '')}`
 }
 
+function getDeclarationEntryFiles(pkg: TsPackageInput): string[] {
+  if (pkg.name === '@reference-ui/react') {
+    return [pkg.sourceEntry, ...REACT_SUPPORT_ENTRY_FILES]
+  }
+
+  return [pkg.sourceEntry]
+}
+
 async function installPackageTs(
   cliDir: string,
   projectCwd: string,
@@ -87,7 +60,7 @@ async function installPackageTs(
   const tempDir = mkdtempSync(join(targetDir, '.ref-ui-tsgo-'))
   const tsconfigPath = writeTsconfig({
     cliDir,
-    entryFile: pkg.sourceEntry,
+    entryFiles: getDeclarationEntryFiles(pkg),
     projectCwd,
     tempDir,
   })
@@ -113,10 +86,6 @@ async function installPackageTs(
       `export * from '${getEntryModuleSpecifier(pkg.sourceEntry)}'\n`,
       'utf-8'
     )
-
-    if (pkg.name === '@reference-ui/react') {
-      copyReactSupportDeclarations(cliDir, targetDir)
-    }
   } finally {
     rmSync(tempDir, { recursive: true, force: true })
   }
