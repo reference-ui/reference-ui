@@ -105,8 +105,12 @@ async function buildDeclarationsWithTsdown(options: {
       format: 'esm',
       target: 'es2020',
       tsconfig: tempTsconfigPath,
+      // rolldown-plugin-dts defaults `sideEffects: false`, which forces
+      // `treeshake.moduleSideEffects: false` and can drop DTS chunks, leaving a tiny
+      // entry stub. Keep the full declaration graph.
       dts: {
         resolver: 'tsc',
+        sideEffects: true,
       },
       deps: {
         neverBundle: [

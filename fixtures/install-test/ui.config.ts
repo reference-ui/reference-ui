@@ -5,5 +5,5 @@ export default defineConfig({
   name: 'install-test',
   include: ['src/**/*.{ts,tsx}'],
   extends: [baseSystem],
-  debug: false,
+  debug: true,
 })

@@ -78,7 +78,7 @@
     "postcss": "^8.5.8",
     "postcss-selector-parser": "^7.1.1",
     "symlink-dir": "^9.0.0",
-    "tsdown": "^0.21.5",
+    "tsdown": "^0.21.10",
     "tsup": "^8.4.0",
     "zod": "^4.3.6"
   },
