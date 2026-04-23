@@ -27,11 +27,10 @@ It is intentionally **boring infrastructure**: one compiler, standard declaratio
 | **`init.ts`** | Registers the packager-ts worker and orchestrator; optional pool recycle in watch mode after `packager-ts:complete`. |
 | **`orchestrator.ts`** | Serializes **runtime** vs **final** declaration passes; emits `run:packager-ts` with the right completion event. |
 | **`worker.ts`** | Thin worker: single-flight queue, listens for `run:packager-ts`. |
-| **`run.ts`** | Spawns the **child process**, then emits the completion event. |
-| **`child-process/`** | Short-lived Node process: heavy compiler RSS leaves with the child, not the worker isolate (`argv` carries a **small JSON** payload only—no full config—to avoid `E2BIG`). |
+| **`run.ts`** | Runs the declaration pass, then emits the completion event. |
 | **`execute-dts.ts`** | Chooses package subset per phase; calls `installPackagesTs`. |
-| **`install/`** | Per package: `compileDeclarations` → update `package.json` `types` / `exports['.'].types` → then `writeGeneratedSystemTypes` / `writeGeneratedReactTypes` for font registry augmentation. |
-| **`compile/`** | `create-temp-tsconfig.ts` writes the synthetic project; `diagnostics.ts` runs **`tsgo`** (TypeScript native preview) when resolvable, else **`typescript/lib/tsc`**. Emit is declaration-only; output is copied into the virtual package; **root barrel** is written at the canonical `types` path. |
+| **`install/`** | Per package: write a synthetic `tsconfig`, run **`tsgo`** as a subprocess into the virtual package directory, write the stable root barrel, then patch generated system/react types. |
+| **`tsconfig.ts`** | Writes the synthetic project used for declaration emit. |
 
 ---
 
@@ -48,7 +47,7 @@ So the temp config pins **`rootDir`** to core’s `src`, sets **`paths`** for `@
 
 ## Root declaration barrel (why it exists)
 
-`tsgo` / `tsc` emit declarations in a **tree** that mirrors sources (e.g. `entry/react.d.ts`, `system/primitives/…`, `types/…`). Published UX and `createBundleExports` expect a **single** `./react.d.mts` (or `.d.ts`) at the package root next to `react.mjs`.
+`tsgo` emits declarations in a **tree** that mirrors sources (e.g. `entry/react.d.ts`, `system/primitives/…`, `types/…`). Published UX and `createBundleExports` expect a **single** `./react.d.mts` (or `.d.ts`) at the package root next to `react.mjs`.
 
 After copying the graph, we write a tiny root module:
 
@@ -62,16 +61,15 @@ That way:
 
 ---
 
-## TypeScript 7 (`tsgo`) vs `tsc`
+## TypeScript 7 (`tsgo`)
 
-Resolution order in `compile/diagnostics.ts`: prefer **`@typescript/native-preview`**’s `tsgo` (CLI), then fall back to **`typescript`**’s `tsc`. Both are invoked as **subprocesses** with `--project` and `--outDir`; no requirement for a stable programmatic `typescript` API on the declaration path.
+Declaration emit is intentionally simple: write a synthetic `tsconfig`, resolve **`@typescript/native-preview`**’s `tsgo` CLI, and run it as a subprocess with `--project` and `--outDir`.
 
 ---
 
 ## Failure and performance notes
 
-- **Diagnostics** — If emit fails or the entry `.d.ts` is missing, a second subprocess run surfaces compiler output for errors.
-- **Memory** — Heavy work runs in a **child** so the worker thread’s heap does not retain the whole program graph for the rest of sync.
+- **Memory** — Heavy work runs in a subprocess so the worker thread’s heap does not retain the whole program graph for the rest of sync.
 - **Speed** — `tsgo` is expected to dominate wall time on large graphs; parallelization is a future lever; correctness and predictable layout come first.
 
 ---
@@ -85,7 +83,7 @@ Resolution order in `compile/diagnostics.ts`: prefer **`@typescript/native-previ
 | `packager/run.ts` | Emits `packager-ts:runtime:complete` / `packager-ts:complete` when skipping TS. |
 | `sync/events.ts` | DAG edges that wait on packager-ts barriers. |
 | `system/types/generate.ts` | Font registry + `types.generated.d.mts`; patches **split** `types/fontRegistry.d.mts` / `types/fonts.d.mts` when the declaration graph is multi-file. |
-| `workers.json` / `tsup.config.ts` | Worker entry `packager-ts`; CLI bundle **`packager-ts-child`**. |
+| `workers.json` / `tsup.config.ts` | Worker entry `packager-ts`. |
 
 ---
 
@@ -97,4 +95,4 @@ Prefer **one compiler**, **normal package layout**, and **explicit, testable ste
 
 ## If this folder is docs-only
 
-`packager/init.ts` re-exports `initTsPackager` from `./ts/init`. If you keep only this README under `packager/ts/`, restore the rest of the module (worker, compile, install, child process, tests) **or** temporarily remove that re-export until the implementation is back, or `ref sync` will fail to resolve `./ts/init`.
+`packager/init.ts` re-exports `initTsPackager` from `./ts/init`. If you keep only this README under `packager/ts/`, restore the module (worker, install, tsconfig, tests) **or** temporarily remove that re-export until the implementation is back, or `ref sync` will fail to resolve `./ts/init`.
