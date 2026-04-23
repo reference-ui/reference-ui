@@ -9,7 +9,6 @@ export default defineConfig({
     config: 'src/config/index.ts',
     constants: 'src/constants.ts',
     'mcp-child': 'src/mcp/worker/child-process/entry.ts',
-    'packager-ts-child': 'src/packager/ts/child-process/entry.ts',
     ...workerEntries,
   },
   format: 'esm',
