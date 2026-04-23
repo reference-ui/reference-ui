@@ -11,9 +11,11 @@
     "@fixtures/atlas-project",
     "@fixtures/demo-ui",
     "@fixtures/extend-library",
+    "@fixtures/install-test",
     "@fixtures/layer-library",
     "@fixtures/styletrace-consumer",
     "@fixtures/styletrace-library",
+    "@reference-ui/pipeline",
     "@reference-ui/reference-unit",
     "@reference-ui/reference-docs",
     "@reference-ui/reference-e2e"

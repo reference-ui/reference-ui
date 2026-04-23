@@ -6,7 +6,6 @@
  */
 
 export { ensureNpmAuth } from './auth.js'
-export { parseChangesetStatus, readChangesetStatus } from './changesets.js'
 export { runLocalRelease } from './local.js'
 export {
   assertLocalReleasePlanSupported,
@@ -19,11 +18,12 @@ export {
   rustPackageName,
 } from './types.js'
 export type {
-  ChangesetStatus,
-  ChangesetStatusRelease,
   ReleasePlan,
   ReleasePlanPackage,
   RunLocalReleaseOptions,
 } from './types.js'
-export { stageLocalReleaseArtifacts } from './stage.js'
-export { materializeReleaseVersions } from './version.js'
+export {
+  isReleaseManifestPackage,
+  publishReleaseTarballsToNpm,
+  sortReleaseManifestPackages,
+} from './publish.js'

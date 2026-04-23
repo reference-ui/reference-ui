@@ -6,10 +6,11 @@
  */
 
 import { execFileSync, spawn } from 'node:child_process'
-import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { homedir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { registryPackageNames, workspacePackageRoots } from '../../config.js'
+import { registryPackageNames, releasePackageNames, workspacePackageRoots } from '../../config.js'
 import { failStep, finishStep, formatDuration, startStep, writeFailureOutput } from '../lib/log/index.js'
 import type { WorkspacePackage } from './types.js'
 
@@ -17,10 +18,126 @@ const buildDir = dirname(fileURLToPath(import.meta.url))
 
 export const repoRoot = resolve(buildDir, '..', '..', '..')
 export const pipelineStateDir = resolve(repoRoot, '.pipeline')
+export const defaultNpmRegistryUrl = 'https://registry.npmjs.org'
+
+function loadRepoEnvFile(envFilePath: string = resolve(repoRoot, '.env'), env: NodeJS.ProcessEnv = process.env): void {
+  if (!existsSync(envFilePath)) {
+    return
+  }
+
+  const contents = readFileSync(envFilePath, 'utf8')
+
+  for (const rawLine of contents.split(/\r?\n/u)) {
+    const line = rawLine.trim()
+
+    if (line.length === 0 || line.startsWith('#')) {
+      continue
+    }
+
+    const separatorIndex = line.indexOf('=')
+
+    if (separatorIndex <= 0) {
+      continue
+    }
+
+    const key = line.slice(0, separatorIndex).trim()
+
+    if (!/^[A-Za-z_][A-Za-z0-9_]*$/u.test(key) || env[key] !== undefined) {
+      continue
+    }
+
+    let value = line.slice(separatorIndex + 1).trim()
+
+    if (
+      (value.startsWith('"') && value.endsWith('"'))
+      || (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1)
+    }
+
+    env[key] = value
+  }
+}
+
+function npmAuthConfigKey(registryUrl: string): string {
+  const url = new URL(registryUrl)
+  const normalizedPath = url.pathname.endsWith('/') ? url.pathname : `${url.pathname}/`
+
+  return `//${url.host}${normalizedPath}:_authToken`
+}
+
+function npmAuthUserConfigPath(registryUrl: string): string {
+  const url = new URL(registryUrl)
+  const safeRegistryName = `${url.host}${url.pathname}`.replace(/[^a-z0-9]+/giu, '-').replace(/^-|-$/gu, '') || 'registry'
+
+  return resolve(pipelineStateDir, 'npm', `${safeRegistryName}.npmrc`)
+}
+
+function sanitizeBaseNpmUserConfig(baseUserConfig: string, registryUrl: string): string {
+  if (baseUserConfig.length === 0) {
+    return ''
+  }
+
+  const authKey = npmAuthConfigKey(registryUrl)
+
+  return baseUserConfig
+    .split(/\r?\n/u)
+    .map((line) => line.trimEnd())
+    .filter((line) => line.length > 0)
+    .filter((line) => !line.startsWith(`${authKey}=`))
+    .filter((line) => line !== 'always-auth=true')
+    .join('\n')
+}
+
+function readBaseNpmUserConfig(env: NodeJS.ProcessEnv, generatedUserConfigPath: string): string {
+  const configuredUserConfigPath = env.NPM_CONFIG_USERCONFIG ?? env.npm_config_userconfig
+  const baseUserConfigPath = configuredUserConfigPath && configuredUserConfigPath !== generatedUserConfigPath
+    ? configuredUserConfigPath
+    : resolve(homedir(), '.npmrc')
+
+  if (!existsSync(baseUserConfigPath)) {
+    return ''
+  }
+
+  return readFileSync(baseUserConfigPath, 'utf8').trim()
+}
+
+export function createNpmCommandEnv(
+  registryUrl: string = defaultNpmRegistryUrl,
+  env: NodeJS.ProcessEnv = process.env,
+): NodeJS.ProcessEnv {
+  const token = env.NODE_AUTH_TOKEN ?? env.NPM_TOKEN
+
+  if (!token) {
+    return env
+  }
+
+  const userConfigPath = npmAuthUserConfigPath(registryUrl)
+  const baseUserConfig = sanitizeBaseNpmUserConfig(readBaseNpmUserConfig(env, userConfigPath), registryUrl)
+  const authConfig = `${npmAuthConfigKey(registryUrl)}=${token}`
+  const userConfigContents = [
+    baseUserConfig,
+    authConfig,
+  ].filter((entry) => entry.length > 0).join('\n') + '\n'
+
+  mkdirSync(dirname(userConfigPath), { recursive: true })
+  writeFileSync(userConfigPath, userConfigContents)
+
+  return {
+    ...env,
+    NODE_AUTH_TOKEN: token,
+    NPM_CONFIG_USERCONFIG: userConfigPath,
+    NPM_TOKEN: token,
+    npm_config_userconfig: userConfigPath,
+  }
+}
+
+loadRepoEnvFile()
 
 interface RunOptions {
   cwd?: string
   env?: NodeJS.ProcessEnv
+  interactive?: boolean
   label?: string
 }
 
@@ -56,7 +173,11 @@ function listConfiguredPackageJsonPaths(): string[] {
 
 export async function run(command: string, args: string[], options: RunOptions = {}): Promise<void> {
   const startedAt = Date.now()
-  const spinner = options.label ? startStep(options.label) : null
+  const spinner = options.label && !options.interactive ? startStep(options.label) : null
+
+  if (options.label && options.interactive) {
+    console.log(`${options.label}...`)
+  }
 
   await new Promise<void>((resolvePromise, rejectPromise) => {
     const child = spawn(command, args, {
@@ -65,7 +186,7 @@ export async function run(command: string, args: string[], options: RunOptions =
         ...process.env,
         ...options.env,
       },
-      stdio: ['ignore', 'pipe', 'pipe'],
+      stdio: options.interactive ? 'inherit' : ['ignore', 'pipe', 'pipe'],
     })
     let settled = false
 
@@ -81,21 +202,25 @@ export async function run(command: string, args: string[], options: RunOptions =
       handler()
     }
 
-    child.stdout?.on('data', (chunk: Buffer | string) => {
-      stdout += chunk.toString()
-    })
+    if (!options.interactive) {
+      child.stdout?.on('data', (chunk: Buffer | string) => {
+        stdout += chunk.toString()
+      })
 
-    child.stderr?.on('data', (chunk: Buffer | string) => {
-      stderr += chunk.toString()
-    })
+      child.stderr?.on('data', (chunk: Buffer | string) => {
+        stderr += chunk.toString()
+      })
+    }
 
     child.on('error', (error) => {
       settle(() => {
         if (spinner) {
           failStep(spinner, options.label ?? `${command} failed`)
         }
-        writeFailureOutput(stdout, 'stdout')
-        writeFailureOutput(stderr, 'stderr')
+        if (!options.interactive) {
+          writeFailureOutput(stdout, 'stdout')
+          writeFailureOutput(stderr, 'stderr')
+        }
         rejectPromise(error)
       })
     })
@@ -115,8 +240,10 @@ export async function run(command: string, args: string[], options: RunOptions =
         if (spinner) {
           failStep(spinner, options.label ?? `${command} failed`)
         }
-        writeFailureOutput(stdout, 'stdout')
-        writeFailureOutput(stderr, 'stderr')
+        if (!options.interactive) {
+          writeFailureOutput(stdout, 'stdout')
+          writeFailureOutput(stderr, 'stderr')
+        }
 
         if (signal) {
           rejectPromise(new Error(`Command terminated by signal ${signal}: ${command} ${args.join(' ')}`))
@@ -156,10 +283,20 @@ export function listPublicWorkspacePackages(): WorkspacePackage[] {
   return listWorkspacePackages().filter((pkg) => !pkg.private)
 }
 
-export function listRegistryWorkspacePackages(): WorkspacePackage[] {
-  const registryNames = new Set<string>(registryPackageNames)
+export function listNamedWorkspacePackages(packageNames: readonly string[]): WorkspacePackage[] {
+  const selectedNames = new Set<string>(packageNames)
+
+  return listWorkspacePackages().filter((pkg) => selectedNames.has(pkg.name))
+}
+
+export function listRegistryWorkspacePackages(packageNames: readonly string[] = registryPackageNames): WorkspacePackage[] {
+  const registryNames = new Set<string>(packageNames)
 
   return listWorkspacePackages().filter((pkg) => registryNames.has(pkg.name))
+}
+
+export function listReleaseWorkspacePackages(): WorkspacePackage[] {
+  return listNamedWorkspacePackages(releasePackageNames)
 }
 
 export function sortPackagesForInternalDependencyOrder(

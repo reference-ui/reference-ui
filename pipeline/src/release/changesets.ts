@@ -12,6 +12,14 @@ import { resolve } from 'node:path'
 import { repoRoot } from '../build/workspace.js'
 import type { ChangesetStatus, ChangesetStatusRelease } from './types.js'
 
+export class MissingChangesetReleaseIntentError extends Error {
+  constructor() {
+    super(
+      'Release blocked: packages changed without a changeset. Run `pnpm changeset` to add one, or `pnpm changeset add --empty` when no versioned release is needed.',
+    )
+  }
+}
+
 function readExecFileSyncStderr(error: unknown): string {
   if (!(error instanceof Error)) {
     return ''
@@ -34,9 +42,7 @@ function formatChangesetStatusReadError(error: unknown): Error {
   const stderr = readExecFileSyncStderr(error).trim()
 
   if (stderr.includes('Some packages have been changed but no changesets were found')) {
-    return new Error(
-      'Release blocked: packages changed without a changeset. Run `pnpm changeset` to add one, or `pnpm changeset add --empty` when no versioned release is needed.',
-    )
+    return new MissingChangesetReleaseIntentError()
   }
 
   if (stderr.length > 0) {
@@ -62,6 +68,14 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
 }
 
+function countChangesetEntries(value: unknown): number {
+  if (!Array.isArray(value)) {
+    return 0
+  }
+
+  return value.filter((entry) => typeof entry === 'string' || isRecord(entry)).length
+}
+
 export function parseChangesetStatus(rawStatus: unknown): ChangesetStatus {
   if (!isRecord(rawStatus)) {
     throw new Error('Changesets status output was not an object.')
@@ -70,7 +84,7 @@ export function parseChangesetStatus(rawStatus: unknown): ChangesetStatus {
   const rawReleases = Array.isArray(rawStatus.releases) ? rawStatus.releases : []
 
   return {
-    changesets: asStringArray(rawStatus.changesets),
+    changesets: Array.from({ length: countChangesetEntries(rawStatus.changesets) }, () => 'changeset'),
     releases: rawReleases.flatMap((release): ChangesetStatusRelease[] => {
       if (!isRecord(release) || typeof release.name !== 'string') {
         return []

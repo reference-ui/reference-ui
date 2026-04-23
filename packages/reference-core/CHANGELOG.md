@@ -1,5 +1,45 @@
 # @reference-ui/core
 
+## 0.0.22
+
+### Patch Changes
+
+- CI
+- Updated dependencies
+  - @reference-ui/rust@0.0.21
+
+## 0.0.21
+
+### Patch Changes
+
+- CI
+- Updated dependencies
+  - @reference-ui/rust@0.0.20
+
+## 0.0.20
+
+### Patch Changes
+
+- CI
+- Updated dependencies
+  - @reference-ui/rust@0.0.19
+
+## 0.0.19
+
+### Patch Changes
+
+- CI
+- Updated dependencies
+  - @reference-ui/rust@0.0.18
+
+## 0.0.18
+
+### Patch Changes
+
+- CI
+- Updated dependencies
+  - @reference-ui/rust@0.0.17
+
 ## 0.0.17
 
 ### Patch Changes

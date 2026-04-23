@@ -24,21 +24,15 @@ export interface ChangesetStatus {
 }
 
 export interface ReleasePlanPackage extends WorkspacePackage {
-  changesets: string[]
-  nextVersion: string
-  previousVersion?: string
-  releaseType?: string
+  published: boolean
 }
 
 export interface ReleasePlan {
-  changesetCount: number
   needsRust: boolean
   packages: ReleasePlanPackage[]
 }
 
 export interface RunLocalReleaseOptions {
   authRegistryUrl?: string
-  registryUrl?: string
   verifyNpmAuth?: boolean
-  versionPackages?: boolean
 }
