@@ -82,6 +82,14 @@ interface ShouldBuildLinuxReferenceRustTargetWithDaggerOptions {
   targetPackage: Pick<ReferenceRustTargetPackage, 'hasLocalBinary' | 'name'> | undefined
 }
 
+interface FindMissingRequiredReferenceRustTargetsOptions {
+  artifactTargets: readonly VirtualNativeTarget[]
+  cachedTarballTargets: readonly VirtualNativeTarget[]
+  locallyBuildableTargets: readonly VirtualNativeTarget[]
+  publishedTargets: readonly VirtualNativeTarget[]
+  requiredTargets: readonly VirtualNativeTarget[]
+}
+
 function referenceRustArtifactsDir(packageDir: string): string {
   return resolve(packageDir, 'artifacts')
 }
@@ -280,6 +288,61 @@ export function shouldBuildLinuxReferenceRustTargetWithDagger(
   }
 
   return true
+}
+
+export function getLocallyBuildableReferenceRustTargets(
+  hostTarget: VirtualNativeTarget | null = getVirtualNativeTriple(),
+): VirtualNativeTarget[] {
+  const targets = new Set<VirtualNativeTarget>(['linux-x64-gnu'])
+
+  if (hostTarget) {
+    targets.add(hostTarget)
+  }
+
+  return SUPPORTED_VIRTUAL_NATIVE_TARGETS.filter((target) => targets.has(target))
+}
+
+export function findMissingRequiredReferenceRustTargets(
+  options: FindMissingRequiredReferenceRustTargetsOptions,
+): VirtualNativeTarget[] {
+  const availableTargets = new Set<VirtualNativeTarget>([
+    ...options.locallyBuildableTargets,
+    ...options.artifactTargets,
+    ...options.cachedTarballTargets,
+    ...options.publishedTargets,
+  ])
+
+  return options.requiredTargets.filter((target) => !availableTargets.has(target))
+}
+
+function hasDownloadedReferenceRustArtifact(packageDir: string, target: VirtualNativeTarget): boolean {
+  return existsSync(
+    resolve(packageDir, 'artifacts', `bindings-${getRustTarget(target)}`, `virtual-native.${target}.node`),
+  )
+}
+
+export function getMissingLocalReleaseRustTargets(
+  packageDir: string,
+  requiredTargets: readonly VirtualNativeTarget[] = SUPPORTED_VIRTUAL_NATIVE_TARGETS,
+): VirtualNativeTarget[] {
+  const rootVersion = readReferenceRustRootVersion(packageDir)
+  const locallyBuildableTargets = getLocallyBuildableReferenceRustTargets()
+  const artifactTargets = requiredTargets.filter((target) => hasDownloadedReferenceRustArtifact(packageDir, target))
+  const cachedTarballTargets = requiredTargets.filter((target) => existsSync(
+    resolve(rustGeneratedTarballsDir, packedTarballName(getVirtualNativePackageName(target), rootVersion)),
+  ))
+  const publishedTargets = requiredTargets.filter((target) => isPublishedOnNpm(
+    getVirtualNativePackageName(target),
+    rootVersion,
+  ))
+
+  return findMissingRequiredReferenceRustTargets({
+    artifactTargets,
+    cachedTarballTargets,
+    locallyBuildableTargets,
+    publishedTargets,
+    requiredTargets,
+  })
 }
 
 async function stageRequiredContainerBuiltReferenceRustBinaries(

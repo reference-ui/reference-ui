@@ -1,9 +1,17 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
-import { resolveLocalReleasePlan } from './local.js'
+import { assertLocalRustReleaseSupported, resolveLocalReleasePlan } from './local.js'
 import { pendingChangesetVersionMaterializationErrorMessage } from './plan.js'
 import type { ReleasePlan } from './types.js'
+
+function releasePlan(overrides: Partial<ReleasePlan> = {}): ReleasePlan {
+  return {
+    needsRust: false,
+    packages: [],
+    ...overrides,
+  }
+}
 
 describe('resolveLocalReleasePlan', () => {
   it('materializes release versions when pending changesets have not been applied yet', async () => {
@@ -60,5 +68,42 @@ describe('resolveLocalReleasePlan', () => {
     )
 
     assert.equal(materializeCalls, 0)
+  })
+})
+
+describe('assertLocalRustReleaseSupported', () => {
+  it('allows non-rust release plans to continue', () => {
+    assert.doesNotThrow(() => {
+      assertLocalRustReleaseSupported(releasePlan(), {
+        getLocallyBuildableReferenceRustTargets: () => ['darwin-x64', 'linux-x64-gnu'],
+        getMissingLocalReleaseRustTargets: () => ['win32-x64-msvc'],
+      })
+    })
+  })
+
+  it('fails early with an actionable rust target error', () => {
+    assert.throws(
+      () => assertLocalRustReleaseSupported(
+        releasePlan({
+          needsRust: true,
+          packages: [
+            {
+              dependencies: {},
+              dir: '/repo/packages/reference-rs',
+              name: '@reference-ui/rust',
+              private: false,
+              published: false,
+              scripts: {},
+              version: '0.0.22',
+            },
+          ],
+        }),
+        {
+          getLocallyBuildableReferenceRustTargets: () => ['darwin-x64', 'linux-x64-gnu'],
+          getMissingLocalReleaseRustTargets: () => ['darwin-arm64', 'win32-x64-msvc'],
+        },
+      ),
+      /Missing native targets: darwin-arm64, win32-x64-msvc/,
+    )
   })
 })
