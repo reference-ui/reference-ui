@@ -1,4 +1,5 @@
 storage: ../.store/storage
+max_body_size: 64mb
 
 auth:
   htpasswd:
