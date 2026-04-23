@@ -1,6 +1,7 @@
 import { broadcastChannel, channelListeners } from './channel'
 import { parseBusMessage, type BusEnvelope } from './wire'
 
+/** Dispatches a bus envelope from a `message` event on `node:worker_threads` `BroadcastChannel`. */
 export function dispatchChannelMessage(message: Event): void {
   dispatchBusEnvelope((message as MessageEvent).data)
 }
