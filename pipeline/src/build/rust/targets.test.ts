@@ -3,7 +3,9 @@ import { describe, it } from 'node:test'
 
 import {
   createReferenceRustPackageJsonOverride,
+  findMissingRequiredReferenceRustTargets,
   getReferenceRustTargetPackageValidationErrors,
+  getLocallyBuildableReferenceRustTargets,
   resolveReferenceRustTargetTarballStrategy,
   shouldBuildLinuxReferenceRustTargetWithDagger,
 } from './targets.js'
@@ -77,6 +79,34 @@ describe('resolveReferenceRustTargetTarballStrategy', () => {
         tarballExists: false,
       }),
       'skip-target',
+    )
+  })
+})
+
+describe('getLocallyBuildableReferenceRustTargets', () => {
+  it('returns the host target plus linux when the host is supported', () => {
+    assert.deepEqual(
+      getLocallyBuildableReferenceRustTargets('darwin-x64'),
+      ['darwin-x64', 'linux-x64-gnu'],
+    )
+  })
+
+  it('returns only linux when the host target is unavailable', () => {
+    assert.deepEqual(getLocallyBuildableReferenceRustTargets(null), ['linux-x64-gnu'])
+  })
+})
+
+describe('findMissingRequiredReferenceRustTargets', () => {
+  it('returns only targets that are neither buildable nor otherwise available', () => {
+    assert.deepEqual(
+      findMissingRequiredReferenceRustTargets({
+        artifactTargets: ['darwin-arm64'],
+        cachedTarballTargets: [],
+        locallyBuildableTargets: ['darwin-x64', 'linux-x64-gnu'],
+        publishedTargets: [],
+        requiredTargets: ['darwin-x64', 'darwin-arm64', 'linux-x64-gnu', 'win32-x64-msvc'],
+      }),
+      ['win32-x64-msvc'],
     )
   })
 })
