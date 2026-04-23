@@ -1,58 +1,84 @@
 /**
  * Release planning helpers.
  *
- * This stage translates raw Changesets status into a release plan, validates
- * that the current local pipeline can service it, and formats it for CLI use.
+ * Release planning is based on the current workspace versions, not on
+ * materializing a new version during the release command. The release command
+ * publishes whichever configured release packages are currently unpublished.
  */
 
-import type { WorkspacePackage } from '../build/types.js'
-import {
-  listPublicWorkspacePackages,
-  listRegistryWorkspacePackages,
-  sortPackagesForInternalDependencyOrder,
-} from '../build/workspace.js'
-import { readChangesetStatus } from './changesets.js'
-import type { ChangesetStatus, ReleasePlan, ReleasePlanPackage } from './types.js'
-import { rustPackageName } from './types.js'
+import { execFileSync } from 'node:child_process'
+import { readdirSync } from 'node:fs'
+import { resolve } from 'node:path'
+import { createNpmCommandEnv, repoRoot, listReleaseWorkspacePackages, sortPackagesForInternalDependencyOrder } from '../build/workspace.js'
+import { releasePackageNames } from '../../config.js'
+import type { ReleasePlan, ReleasePlanPackage } from './types.js'
+import { defaultNpmAuthRegistryUrl, rustPackageName } from './types.js'
+
+function isPublishedOnNpm(name: string, version: string, registryUrl: string = defaultNpmAuthRegistryUrl): boolean {
+  try {
+    const output = execFileSync('npm', ['view', `${name}@${version}`, 'version', '--registry', registryUrl, '--json'], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+      env: createNpmCommandEnv(registryUrl),
+      stdio: ['ignore', 'pipe', 'pipe'],
+    }).trim()
+
+    return output.length > 0
+  } catch {
+    return false
+  }
+}
+
+function countPendingChangesetFiles(): number {
+  try {
+    const changesetDir = resolve(repoRoot, '.changeset')
+
+    return readdirSync(changesetDir, { withFileTypes: true }).filter(
+      (entry) => entry.isFile() && entry.name.endsWith('.md') && entry.name !== 'README.md',
+    ).length
+  } catch {
+    return 0
+  }
+}
 
 export function createReleasePlan(
-  status: ChangesetStatus,
-  workspacePackages: readonly WorkspacePackage[] = listPublicWorkspacePackages(),
+  releasePackages: readonly ReleasePlanPackage[] = sortPackagesForInternalDependencyOrder(
+    listReleaseWorkspacePackages()
+      .filter((pkg) => !isPublishedOnNpm(pkg.name, pkg.version))
+      .map((pkg) => ({
+        ...pkg,
+        published: false,
+      })),
+  ) as ReleasePlanPackage[],
 ): ReleasePlan {
-  const packageByName = new Map(workspacePackages.map((pkg) => [pkg.name, pkg]))
-
-  const releasePackages = status.releases.map((release): ReleasePlanPackage => {
-    const pkg = packageByName.get(release.name)
-    if (!pkg) {
-      throw new Error(`Changesets release target ${release.name} was not found in the public workspace package set.`)
-    }
-
-    return {
-      ...pkg,
-      changesets: release.changesets,
-      nextVersion: release.newVersion ?? pkg.version,
-      previousVersion: release.oldVersion,
-      releaseType: release.type,
-    }
-  })
-
-  const sortedPackages = sortPackagesForInternalDependencyOrder(releasePackages) as ReleasePlanPackage[]
+  const sortedReleasePackages = sortPackagesForInternalDependencyOrder(releasePackages) as ReleasePlanPackage[]
 
   return {
-    changesetCount: status.changesets.length,
-    needsRust: sortedPackages.some((pkg) => pkg.name === rustPackageName),
-    packages: sortedPackages,
+    needsRust: sortedReleasePackages.some((pkg) => pkg.name === rustPackageName),
+    packages: sortedReleasePackages,
   }
 }
 
 export async function getReleasePlan(): Promise<ReleasePlan> {
-  return createReleasePlan(await readChangesetStatus())
+  const releasePlan = createReleasePlan()
+
+  if (releasePlan.packages.length > 0) {
+    return releasePlan
+  }
+
+  if (countPendingChangesetFiles() > 0) {
+    throw new Error(
+      'Release blocked: pending changesets exist, but the current release package versions are already published. Materialize the next release versions before running `pnpm release`.',
+    )
+  }
+
+  return releasePlan
 }
 
 export function assertLocalReleasePlanSupported(
   releasePlan: ReleasePlan,
   supportedPackageNames: ReadonlySet<string> = new Set(
-    listRegistryWorkspacePackages().map((pkg) => pkg.name),
+    releasePackageNames,
   ),
 ): void {
   const unsupportedPackages = releasePlan.packages
@@ -71,20 +97,16 @@ export function assertLocalReleasePlanSupported(
 export function formatReleasePlan(releasePlan: ReleasePlan): string {
   if (releasePlan.packages.length === 0) {
     return [
-      'No pending Changesets releases found.',
-      `Changesets: ${releasePlan.changesetCount}`,
+      'No unpublished release packages found.',
       'Release packages: 0',
     ].join('\n')
   }
 
   return [
-    `Changesets: ${releasePlan.changesetCount}`,
+    'Release source: current workspace versions',
     `Release packages: ${releasePlan.packages.length}`,
     `Rust release required: ${releasePlan.needsRust ? 'yes' : 'no'}`,
     '',
-    ...releasePlan.packages.map((pkg) => {
-      const releaseType = pkg.releaseType ? ` (${pkg.releaseType})` : ''
-      return `- ${pkg.name} ${pkg.version} -> ${pkg.nextVersion}${releaseType}`
-    }),
+    ...releasePlan.packages.map((pkg) => `- ${pkg.name}@${pkg.version}`),
   ].join('\n')
 }

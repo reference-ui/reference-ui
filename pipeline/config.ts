@@ -20,3 +20,11 @@ export const registryPackageNames = [
 	'@fixtures/extend-library',
 	'@fixtures/layer-library',
 ] as const
+
+// Workspace packages that are actually published as part of a release.
+export const releasePackageNames = [
+	'@reference-ui/icons',
+	'@reference-ui/rust',
+	'@reference-ui/core',
+	'@reference-ui/lib',
+] as const

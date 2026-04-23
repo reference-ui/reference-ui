@@ -1,17 +1,18 @@
 /**
  * Local release orchestration.
  *
- * This stage wires together planning, auth checks, versioning, and artifact
- * staging into the developer-facing local release command.
+ * This stage wires together planning, auth checks, build/pack preparation, and
+ * public npm publication into the developer-facing release command.
  */
 
-import { defaultRegistryUrl } from '../registry/index.js'
+import { releasePackageNames } from '../../config.js'
+import { buildWorkspaceArtifacts } from '../build/index.js'
+import { packPublicPackages } from '../registry/index.js'
 import { ensureNpmAuth } from './auth.js'
 import { assertLocalReleasePlanSupported, formatReleasePlan, getReleasePlan } from './plan.js'
-import { stageLocalReleaseArtifacts } from './stage.js'
+import { publishReleaseTarballsToNpm } from './publish.js'
 import type { ReleasePlan, RunLocalReleaseOptions } from './types.js'
 import { defaultNpmAuthRegistryUrl } from './types.js'
-import { materializeReleaseVersions } from './version.js'
 
 export async function runLocalRelease(options: RunLocalReleaseOptions = {}): Promise<ReleasePlan> {
   const releasePlan = await getReleasePlan()
@@ -30,11 +31,10 @@ export async function runLocalRelease(options: RunLocalReleaseOptions = {}): Pro
   console.log(formatReleasePlan(releasePlan))
   console.log('')
 
-  if (options.versionPackages !== false) {
-    await materializeReleaseVersions()
-  }
-
-  await stageLocalReleaseArtifacts(options.registryUrl ?? defaultRegistryUrl)
+  await buildWorkspaceArtifacts(releasePackageNames)
+  await packPublicPackages(releasePackageNames)
+  await publishReleaseTarballsToNpm(options.authRegistryUrl ?? defaultNpmAuthRegistryUrl)
+  console.log(`\nPublished release artifacts to ${options.authRegistryUrl ?? defaultNpmAuthRegistryUrl}`)
 
   return releasePlan
 }

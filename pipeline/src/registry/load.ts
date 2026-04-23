@@ -9,6 +9,7 @@
 import { execFileSync } from 'node:child_process'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
+import { registryPackageNames } from '../../config.js'
 import { repoRoot, run } from '../build/workspace.js'
 import { logSkip } from '../lib/log/index.js'
 import { readRegistryManifest } from './manifest.js'
@@ -116,21 +117,26 @@ export async function loadPackedTarballsIntoLocalRegistry(registryUrl: string = 
   )
 }
 
-export async function stagePublicPackages(registryUrl: string = defaultRegistryUrl): Promise<void> {
-  await packPublicPackages()
+export async function stagePublicPackages(
+  registryUrl: string = defaultRegistryUrl,
+  packageNames: readonly string[] = registryPackageNames,
+): Promise<void> {
+  await packPublicPackages(packageNames)
   await loadPackedTarballsIntoLocalRegistry(registryUrl)
 }
 
 export async function rebuildLocalRegistryAndStagePublicPackages(
   registryUrl: string = defaultRegistryUrl,
+  packageNames: readonly string[] = registryPackageNames,
 ): Promise<void> {
   await rebuildManagedLocalRegistry(registryUrl)
-  await stagePublicPackages(registryUrl)
+  await stagePublicPackages(registryUrl, packageNames)
 }
 
 export async function ensureLocalRegistryAndStagePublicPackages(
   registryUrl: string = defaultRegistryUrl,
+  packageNames: readonly string[] = registryPackageNames,
 ): Promise<void> {
   await ensureManagedLocalRegistry(registryUrl)
-  await stagePublicPackages(registryUrl)
+  await stagePublicPackages(registryUrl, packageNames)
 }

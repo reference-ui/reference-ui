@@ -6,7 +6,7 @@
  */
 
 import { execFileSync } from 'node:child_process'
-import { repoRoot } from '../build/workspace.js'
+import { createNpmCommandEnv, repoRoot } from '../build/workspace.js'
 import { failStep, finishStep, startStep } from '../lib/log/index.js'
 import { defaultNpmAuthRegistryUrl } from './types.js'
 
@@ -17,7 +17,7 @@ export function ensureNpmAuth(authRegistryUrl: string = defaultNpmAuthRegistryUr
     const username = execFileSync('npm', ['whoami', '--registry', authRegistryUrl], {
       cwd: repoRoot,
       encoding: 'utf8',
-      env: process.env,
+      env: createNpmCommandEnv(authRegistryUrl),
       stdio: ['ignore', 'pipe', 'pipe'],
     }).trim()
 

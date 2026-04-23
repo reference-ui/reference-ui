@@ -14,6 +14,20 @@ interface PublishOptions {
   publishRoot?: boolean
 }
 
+function shouldPublishWithProvenance(env: NodeJS.ProcessEnv = process.env): boolean {
+  const value = env.REF_RELEASE_PROVENANCE ?? env.NPM_CONFIG_PROVENANCE ?? env.npm_config_provenance
+  return value === 'true' || value === '1'
+}
+
+function publishArgs(includeProvenance: boolean): string[] {
+  return [
+    'publish',
+    ...(includeProvenance ? ['--provenance'] : []),
+    '--access',
+    'public',
+  ]
+}
+
 function readJson<T>(path: string): T {
   return JSON.parse(readFileSync(path, 'utf8')) as T
 }
@@ -51,7 +65,7 @@ function publishRootPackage(rootPkg: PackageJson) {
   }
 
   console.log(`Publishing package ${rootPkg.name}@${rootPkg.version}`)
-  run('npm', ['publish', '--provenance', '--access', 'public'])
+  run('npm', publishArgs(shouldPublishWithProvenance()))
 }
 
 if (!existsSync(artifactsDir)) {
@@ -86,7 +100,7 @@ try {
     }
 
     console.log(`Publishing native package ${pkg.name}@${pkg.version}`)
-    run('npm', ['publish', '--provenance', '--access', 'public'], targetPackageDir)
+    run('npm', publishArgs(shouldPublishWithProvenance()), targetPackageDir)
   }
 
   if (shouldPublishRootPackage()) {

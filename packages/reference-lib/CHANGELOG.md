@@ -1,5 +1,50 @@
 # @reference-ui/lib
 
+## 0.0.25
+
+### Patch Changes
+
+- CI
+- Updated dependencies
+  - @reference-ui/icons@0.0.22
+  - @reference-ui/core@0.0.22
+
+## 0.0.24
+
+### Patch Changes
+
+- CI
+- Updated dependencies
+  - @reference-ui/icons@0.0.21
+  - @reference-ui/core@0.0.21
+
+## 0.0.23
+
+### Patch Changes
+
+- CI
+- Updated dependencies
+  - @reference-ui/icons@0.0.20
+  - @reference-ui/core@0.0.20
+
+## 0.0.22
+
+### Patch Changes
+
+- CI
+- Updated dependencies
+  - @reference-ui/icons@0.0.19
+  - @reference-ui/core@0.0.19
+
+## 0.0.21
+
+### Patch Changes
+
+- CI
+- Updated dependencies
+  - @reference-ui/core@0.0.18
+  - @reference-ui/icons@0.0.18
+
 ## 0.0.20
 
 ### Patch Changes

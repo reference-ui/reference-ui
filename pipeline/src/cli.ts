@@ -85,28 +85,22 @@ registryCommand
 
 const releaseCommand = program
   .command('release')
-  .description('Changesets-driven release planning and staging')
-  .option('--registry <url>', 'Local staging registry URL', defaultRegistryUrl)
-  .option('--auth-registry <url>', 'Registry URL used for npm whoami preflight', defaultNpmAuthRegistryUrl)
-  .option('--skip-version', 'Skip running pnpm version-packages before building', false)
+  .description('Publish the current release package tarballs to npm')
+  .option('--auth-registry <url>', 'Registry URL used for npm whoami and publish', defaultNpmAuthRegistryUrl)
   .option('--no-npm-auth-check', 'Skip the npm whoami preflight against the publish registry')
   .action(async (options: {
     authRegistry: string
     npmAuthCheck: boolean
-    registry: string
-    skipVersion: boolean
   }) => {
     await runLocalRelease({
       authRegistryUrl: options.authRegistry,
-      registryUrl: options.registry,
       verifyNpmAuth: options.npmAuthCheck,
-      versionPackages: !options.skipVersion,
     })
   })
 
 releaseCommand
   .command('plan')
-  .description('Show the pending local release plan derived from Changesets')
+  .description('Show the current unpublished release packages that would be published')
   .action(async () => {
     console.log(formatReleasePlan(await getReleasePlan()))
   })
