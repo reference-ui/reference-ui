@@ -11,6 +11,7 @@ import { constants } from 'node:fs'
 import { access, readFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { ensureContainerRuntime } from './lib/runtime/ensure-container-runtime.js'
 
 const pipelineDir = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const repoRoot = resolve(pipelineDir, '..')
@@ -227,5 +228,6 @@ export async function runDownstreamSmoke(): Promise<void> {
 }
 
 if (isDirectExecution()) {
-  await dagger.connection(runDownstreamSmoke, { LogOutput: process.stderr })
+  ensureContainerRuntime()
+  await dagger.connection(runDownstreamSmoke, { LogOutput: process.stdout })
 }
