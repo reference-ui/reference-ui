@@ -14,6 +14,7 @@ function createTempDir(): string {
 async function importCompileModule(options?: {
   buildImpl?: (config: Record<string, unknown>) => Promise<void>
   diagnosticsResult?: string
+  tscEmitImpl?: (options: { outDir: string }) => Promise<boolean>
 }) {
   vi.resetModules()
 
@@ -28,6 +29,9 @@ async function importCompileModule(options?: {
       ? vi.fn().mockResolvedValue(options.diagnosticsResult)
       : vi.fn().mockResolvedValue('diagnostics: direct TypeScript diagnostic run exited cleanly and reported no errors.')
   )
+  const emitDeclarationsWithTypescript = vi.fn(
+    options?.tscEmitImpl ?? vi.fn().mockResolvedValue(false)
+  )
 
   vi.doMock('tsdown', () => ({
     build,
@@ -37,10 +41,17 @@ async function importCompileModule(options?: {
   }))
   vi.doMock('./diagnostics', () => ({
     collectDeclarationDiagnostics,
+    emitDeclarationsWithTypescript,
   }))
 
   const mod = await import('./index')
-  return { ...mod, build, createTempTsconfig, collectDeclarationDiagnostics }
+  return {
+    ...mod,
+    build,
+    createTempTsconfig,
+    collectDeclarationDiagnostics,
+    emitDeclarationsWithTypescript,
+  }
 }
 
 afterEach(() => {
@@ -87,6 +98,7 @@ describe('packager/ts/compile', () => {
     expect(build).toHaveBeenCalledTimes(1)
     expect(createTempTsconfig).toHaveBeenCalledWith({
       cliDir,
+      entryFile,
       projectCwd,
       tempDir: dirname(tempOutDirForBuild),
     })
@@ -116,6 +128,38 @@ describe('packager/ts/compile', () => {
     ).rejects.toThrow(/diagnostics: TS2307 Cannot find module/)
     expect(collectDeclarationDiagnostics).toHaveBeenCalledTimes(1)
     expect(existsSync(dirname(tempOutDirForBuild))).toBe(false)
+  })
+
+  it('falls back to direct TypeScript declaration emission when tsdown emits only runtime output', async () => {
+    const cliDir = createTempDir()
+    const projectCwd = createTempDir()
+    const targetDir = createTempDir()
+    const sourceEntryPath = resolve(cliDir, 'src/entry/react.ts')
+    mkdirSync(dirname(sourceEntryPath), { recursive: true })
+    writeFileSync(sourceEntryPath, 'export type X = string\n', 'utf-8')
+    const outDtsPath = resolve(targetDir, 'react.d.mts')
+
+    const {
+      compileDeclarations,
+      collectDeclarationDiagnostics,
+      emitDeclarationsWithTypescript,
+    } = await importCompileModule({
+      buildImpl: async config => {
+        writeFileSync(join(config.outDir as string, 'react.mjs'), 'export {}\n', 'utf-8')
+      },
+      tscEmitImpl: async ({ outDir }) => {
+        mkdirSync(join(outDir, 'entry'), { recursive: true })
+        writeFileSync(join(outDir, 'entry', 'react.d.ts'), 'export type X = string\n', 'utf-8')
+        return true
+      },
+    })
+
+    const result = await compileDeclarations(cliDir, 'src/entry/react.ts', outDtsPath, projectCwd)
+
+    expect(result).toBe(outDtsPath)
+    expect(readFileSync(outDtsPath, 'utf-8')).toBe('export type X = string\n')
+    expect(emitDeclarationsWithTypescript).toHaveBeenCalledTimes(1)
+    expect(collectDeclarationDiagnostics).not.toHaveBeenCalled()
   })
 
   it('wraps tsdown build errors', async () => {

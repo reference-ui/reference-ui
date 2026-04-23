@@ -5,6 +5,7 @@ async function importLoaderModule(options?: {
   existingPaths?: string[]
   packageJson?: Record<string, unknown>
   requireImpl?: (path: string) => unknown
+  requireResolveImpl?: (path: string) => string
 }) {
   vi.resetModules()
 
@@ -27,6 +28,13 @@ async function importLoaderModule(options?: {
         analyzeStyletrace: vi.fn(),
       }))
   )
+  const requireResolve = vi.fn(
+    options?.requireResolveImpl ??
+      ((path: string) => {
+        throw new Error(`Cannot resolve ${path}`)
+      })
+  )
+  Object.assign(requireBinding, { resolve: requireResolve })
   const createRequire = vi.fn(() => requireBinding)
   const fileURLToPath = vi.fn(() => currentModulePath)
 
@@ -42,7 +50,15 @@ async function importLoaderModule(options?: {
   }))
 
   const mod = await import('./loader')
-  return { ...mod, createRequire, existsSync, fileURLToPath, readFileSync, requireBinding }
+  return {
+    ...mod,
+    createRequire,
+    existsSync,
+    fileURLToPath,
+    readFileSync,
+    requireBinding,
+    requireResolve,
+  }
 }
 
 afterEach(() => {
@@ -74,6 +90,27 @@ describe('loader', () => {
       '/workspace/packages/reference-rs/virtual-native.darwin-arm64.node',
       '/workspace/packages/reference-rs/dist/virtual-native.darwin-arm64.node',
     ])
+  })
+
+  it('also resolves binaries from the installed platform package when present', async () => {
+    const { resolveVirtualNativeBinaryPath } = await importLoaderModule({
+      requireResolveImpl: (path: string) => {
+        expect(path).toBe('@reference-ui/rust-linux-x64-gnu/package.json')
+        return '/workspace/app/node_modules/@reference-ui/rust-linux-x64-gnu/package.json'
+      },
+    })
+    const fileExists = vi.fn((path: string) => {
+      return (
+        path ===
+        '/workspace/app/node_modules/@reference-ui/rust-linux-x64-gnu/virtual-native.linux-x64-gnu.node'
+      )
+    })
+
+    expect(
+      resolveVirtualNativeBinaryPath('/workspace/app/node_modules/@reference-ui/rust', 'linux', 'x64', fileExists)
+    ).toBe(
+      '/workspace/app/node_modules/@reference-ui/rust-linux-x64-gnu/virtual-native.linux-x64-gnu.node'
+    )
   })
 
   it('returns null when no binary exists for a supported target', async () => {

@@ -11,6 +11,13 @@ interface DeclarationDiagnosticsOptions {
   projectCwd: string
 }
 
+interface DeclarationEmitOptions {
+  cliDir: string
+  projectCwd: string
+  tempTsconfigPath: string
+  outDir: string
+}
+
 const MAX_DIAGNOSTIC_OUTPUT_CHARS = 12000
 
 function toConfigRelativePath(fromDir: string, targetPath: string): string {
@@ -36,6 +43,37 @@ function resolveTypescriptCli(projectCwd: string, cliDir: string): string | null
   } catch {
     return null
   }
+}
+
+export async function emitDeclarationsWithTypescript(
+  options: DeclarationEmitOptions
+): Promise<boolean> {
+  const { cliDir, projectCwd, tempTsconfigPath, outDir } = options
+  const typescriptCliPath = resolveTypescriptCli(projectCwd, cliDir)
+
+  if (!typescriptCliPath) {
+    return false
+  }
+
+  const { code } = await spawnMonitoredAsync(
+    process.execPath,
+    [
+      typescriptCliPath,
+      '--pretty',
+      'false',
+      '--project',
+      tempTsconfigPath,
+      '--outDir',
+      outDir,
+    ],
+    {
+      cwd: cliDir,
+      processName: 'packager-ts-tsc-emit',
+      logCategory: 'packager:ts',
+    }
+  )
+
+  return code === 0
 }
 
 function writeDiagnosticsTsconfig(options: DeclarationDiagnosticsOptions): string {

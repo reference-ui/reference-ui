@@ -13,7 +13,10 @@ import {
 import { dirname, join, resolve } from 'node:path'
 import { findDtsFile } from './find-dts'
 import { createTempTsconfig } from './create-temp-tsconfig'
-import { collectDeclarationDiagnostics } from './diagnostics'
+import {
+  collectDeclarationDiagnostics,
+  emitDeclarationsWithTypescript,
+} from './diagnostics'
 import { getOutDirPath } from '../../../lib/paths/out-dir'
 
 function copyFileAtomic(sourcePath: string, targetPath: string): void {
@@ -108,6 +111,7 @@ export async function compileDeclarations(
   const styledDir = resolve(getOutDirPath(projectCwd), 'styled')
   const tempTsconfigPath = createTempTsconfig({
     cliDir,
+    entryFile,
     projectCwd,
     tempDir,
   })
@@ -157,7 +161,18 @@ export async function compileDeclarations(
       )
     }
 
-    const tmpDtsPath = findDtsFile(tmpOut)
+    const tsdownDtsPath = findDtsFile(tmpOut)
+    const tmpDtsPath =
+      tsdownDtsPath ??
+      ((await emitDeclarationsWithTypescript({
+        cliDir,
+        projectCwd,
+        tempTsconfigPath,
+        outDir: tmpOut,
+      }))
+        ? findDtsFile(tmpOut)
+        : null)
+
     if (!tmpDtsPath) {
       const diagnostics = await collectDeclarationDiagnostics({
         cliDir,

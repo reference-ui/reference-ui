@@ -13,12 +13,17 @@ import { fileURLToPath } from 'node:url'
 import {
   getVirtualNativeTriple,
   SUPPORTED_VIRTUAL_NATIVE_TARGETS,
+  type VirtualNativeTarget,
 } from '../shared/targets'
 
 const PACKAGE_JSON = 'package.json'
 const RUST_PACKAGE_NAME = '@reference-ui/rust'
 
 export { getVirtualNativeTriple, SUPPORTED_VIRTUAL_NATIVE_TARGETS }
+
+function getTargetPackageName(triple: VirtualNativeTarget): string {
+  return `@reference-ui/rust-${triple}`
+}
 
 export interface VirtualNativeBinding {
   rewriteCssImports: (sourceCode: string, relativePath: string) => string
@@ -83,18 +88,51 @@ export function getVirtualNativeCandidates(packageDir: string, triple: string): 
   ]
 }
 
+function resolveOptionalTargetPackageDir(
+  triple: VirtualNativeTarget,
+  requireImpl: NodeJS.Require = createRequire(import.meta.url)
+): string | null {
+  try {
+    const packageJsonPath = requireImpl.resolve(`${getTargetPackageName(triple)}/package.json`)
+    return dirname(packageJsonPath)
+  } catch {
+    return null
+  }
+}
+
+function getVirtualNativeSearchDirs(
+  packageDir: string,
+  triple: VirtualNativeTarget,
+  requireImpl: NodeJS.Require = createRequire(import.meta.url)
+): string[] {
+  const dirs = [packageDir]
+  const optionalTargetPackageDir = resolveOptionalTargetPackageDir(triple, requireImpl)
+
+  if (optionalTargetPackageDir && optionalTargetPackageDir !== packageDir) {
+    dirs.push(optionalTargetPackageDir)
+  }
+
+  return dirs
+}
+
 export function resolveVirtualNativeBinaryPath(
   packageDir: string,
   platform: NodeJS.Platform = process.platform,
   arch: string = process.arch,
-  fileExists: (path: string) => boolean = existsSync
+  fileExists: (path: string) => boolean = existsSync,
+  requireImpl: NodeJS.Require = createRequire(import.meta.url)
 ): string | null {
   const triple = getVirtualNativeTriple(platform, arch)
   if (!triple) return null
 
-  return (
-    getVirtualNativeCandidates(packageDir, triple).find(path => fileExists(path)) ?? null
-  )
+  for (const searchDir of getVirtualNativeSearchDirs(packageDir, triple, requireImpl)) {
+    const match = getVirtualNativeCandidates(searchDir, triple).find(path => fileExists(path))
+    if (match) {
+      return match
+    }
+  }
+
+  return null
 }
 
 export function loadVirtualNative(): VirtualNativeBinding | null {
@@ -105,8 +143,13 @@ export function loadVirtualNative(): VirtualNativeBinding | null {
   const triple = getVirtualNativeTriple(platform, arch)
 
   try {
+    const require = createRequire(import.meta.url)
     const packageDir = resolveReferenceRsPackageDir()
-    const candidatePaths = triple ? getVirtualNativeCandidates(packageDir, triple) : []
+    const candidatePaths = triple
+      ? getVirtualNativeSearchDirs(packageDir, triple, require).flatMap(searchDir =>
+          getVirtualNativeCandidates(searchDir, triple)
+        )
+      : []
     if (!triple) {
       setDiagnostics({
         status: 'unsupported-platform',
@@ -136,7 +179,6 @@ export function loadVirtualNative(): VirtualNativeBinding | null {
       return null
     }
 
-    const require = createRequire(import.meta.url)
     const binding = require(nodePath) as VirtualNativeBinding
     setDiagnostics({
       status: 'loaded',
