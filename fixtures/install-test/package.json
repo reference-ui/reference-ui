@@ -7,7 +7,8 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@reference-ui/core": "workspace:*"
+    "@reference-ui/core": "workspace:*",
+    "@reference-ui/lib": "workspace:*"
   },
   "peerDependencies": {
     "react": "*"

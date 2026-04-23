@@ -7,9 +7,9 @@
 
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { defaultRegistryUrl } from '../../config.js'
 import { pipelineStateDir } from '../build/workspace.js'
 
-export const defaultRegistryUrl = 'http://127.0.0.1:4873'
 export const localRegistryAuthToken = 'reference-ui-local'
 
 export const registryStateDir = resolve(pipelineStateDir, 'registry')
