@@ -16,10 +16,17 @@ import type {
   BuildPackageJsonOverride,
   BuildRegistryArtifactPackage,
 } from '../types.js'
+import { logSkip } from '../../lib/log/index.js'
 import { repoRoot, run } from '../workspace.js'
 import { rustGeneratedTarballsDir } from './state.js'
 
 export const REFERENCE_RUST_PACKAGE_NAME = '@reference-ui/rust'
+
+export type RustTargetTarballStrategy =
+  | 'pack-local-binary'
+  | 'reuse-cached-tarball'
+  | 'fetch-published-tarball'
+  | 'skip-target'
 
 interface ReferenceRustTargetPackage {
   dir: string
@@ -31,6 +38,12 @@ interface ReferenceRustTargetPackage {
 interface RustTargetPackageJson {
   name: string
   version: string
+}
+
+interface RustTargetTarballPlan {
+  strategy: RustTargetTarballStrategy
+  tarballFileName: string
+  tarballPath: string
 }
 
 function referenceRustArtifactsDir(packageDir: string): string {
@@ -109,9 +122,103 @@ export function createReferenceRustPackageJsonOverride(
   }
 }
 
+export function resolveReferenceRustTargetTarballStrategy(options: {
+  hasLocalBinary: boolean
+  publishedOnNpm: boolean
+  tarballExists: boolean
+}): RustTargetTarballStrategy {
+  if (options.hasLocalBinary) {
+    return 'pack-local-binary'
+  }
+
+  if (options.tarballExists) {
+    return 'reuse-cached-tarball'
+  }
+
+  if (options.publishedOnNpm) {
+    return 'fetch-published-tarball'
+  }
+
+  return 'skip-target'
+}
+
+function planReferenceRustTargetTarball(
+  targetPackage: ReferenceRustTargetPackage,
+): RustTargetTarballPlan {
+  const tarballFileName = packedTarballName(targetPackage.name, targetPackage.version)
+  const tarballPath = resolve(rustGeneratedTarballsDir, tarballFileName)
+  const tarballExists = existsSync(tarballPath)
+
+  return {
+    strategy: resolveReferenceRustTargetTarballStrategy({
+      hasLocalBinary: targetPackage.hasLocalBinary,
+      publishedOnNpm:
+        !targetPackage.hasLocalBinary && !tarballExists
+          ? isPublishedOnNpm(targetPackage.name, targetPackage.version)
+          : false,
+      tarballExists,
+    }),
+    tarballFileName,
+    tarballPath,
+  }
+}
+
+async function executeReferenceRustTargetTarballPlan(
+  targetPackage: ReferenceRustTargetPackage,
+  plan: RustTargetTarballPlan,
+): Promise<boolean> {
+  switch (plan.strategy) {
+    case 'pack-local-binary':
+      await rm(plan.tarballPath, { force: true })
+      await run('npm', ['pack', '--pack-destination', rustGeneratedTarballsDir], {
+        cwd: targetPackage.dir,
+        env: {
+          npm_config_ignore_scripts: 'true',
+        },
+        label: `Pack ${targetPackage.name}`,
+      })
+      return true
+
+    case 'reuse-cached-tarball':
+      logSkip(`Skipping fetch for ${targetPackage.name}; cached tarball present`)
+      return true
+
+    case 'fetch-published-tarball':
+      await run('npm', ['pack', `${targetPackage.name}@${targetPackage.version}`, '--pack-destination', rustGeneratedTarballsDir], {
+        cwd: repoRoot,
+        env: {
+          npm_config_ignore_scripts: 'true',
+        },
+        label: `Fetch ${targetPackage.name}`,
+      })
+      return true
+
+    case 'skip-target':
+      return false
+  }
+}
+
+async function createGeneratedRustTargetPackage(
+  targetPackage: ReferenceRustTargetPackage,
+  plan: RustTargetTarballPlan,
+): Promise<BuildRegistryArtifactPackage> {
+  const tarball = await readFile(plan.tarballPath)
+
+  return {
+    hash: hashTarballContents(tarball),
+    internalDependencies: [],
+    name: targetPackage.name,
+    sourceDir: relative(repoRoot, targetPackage.dir),
+    tarballFileName: plan.tarballFileName,
+    tarballPath: relative(repoRoot, plan.tarballPath),
+    version: targetPackage.version,
+  }
+}
+
 async function ensureReferenceRustGeneratedPackages(
   packageDir: string,
 ): Promise<ReferenceRustTargetPackage[]> {
+  // `create-npm-dirs` defines the target package layout we inspect below.
   await run('pnpm', ['run', 'create-npm-dirs'], {
     cwd: packageDir,
     env: {
@@ -142,40 +249,14 @@ export async function materializeReferenceRustTargetTarballs(
   await mkdir(rustGeneratedTarballsDir, { recursive: true })
 
   for (const targetPackage of targetPackages) {
-    const tarballFileName = packedTarballName(targetPackage.name, targetPackage.version)
-    const tarballPath = resolve(rustGeneratedTarballsDir, tarballFileName)
-    await rm(tarballPath, { force: true })
+    const plan = planReferenceRustTargetTarball(targetPackage)
 
-    if (targetPackage.hasLocalBinary) {
-      await run('npm', ['pack', '--pack-destination', rustGeneratedTarballsDir], {
-        cwd: targetPackage.dir,
-        env: {
-          npm_config_ignore_scripts: 'true',
-        },
-        label: `Pack ${targetPackage.name}`,
-      })
-    } else if (isPublishedOnNpm(targetPackage.name, targetPackage.version)) {
-      await run('npm', ['pack', `${targetPackage.name}@${targetPackage.version}`, '--pack-destination', rustGeneratedTarballsDir], {
-        cwd: repoRoot,
-        env: {
-          npm_config_ignore_scripts: 'true',
-        },
-        label: `Fetch ${targetPackage.name}`,
-      })
-    } else {
+    // Local binaries win, cached remote tarballs are reused, and npm is the final fallback.
+    if (!(await executeReferenceRustTargetTarballPlan(targetPackage, plan))) {
       continue
     }
 
-    const tarball = await readFile(tarballPath)
-    generatedPackages.push({
-      hash: hashTarballContents(tarball),
-      internalDependencies: [],
-      name: targetPackage.name,
-      sourceDir: relative(repoRoot, targetPackage.dir),
-      tarballFileName,
-      tarballPath: relative(repoRoot, tarballPath),
-      version: targetPackage.version,
-    })
+    generatedPackages.push(await createGeneratedRustTargetPackage(targetPackage, plan))
   }
 
   return generatedPackages
