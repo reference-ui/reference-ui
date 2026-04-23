@@ -23,6 +23,51 @@ import {
 const SYSTEM_CONFIG_COMPLETE_EVENT = 'system:config:complete'
 const SYSTEM_CONFIG_FAILED_EVENT = 'system:config:failed'
 
+type StoredConfig = NonNullable<ReturnType<typeof getConfig>>
+
+interface ResolvedJsxElements {
+  upstreamJsxElements: string[]
+  localJsxElements: string[]
+  additionalJsxElements: string[]
+}
+
+async function resolveAdditionalJsxElements(
+  cwd: string,
+  config: StoredConfig
+): Promise<ResolvedJsxElements> {
+  const configuredJsxElements = normalizeAdditionalJsxElements(config.jsxElements ?? [])
+  const tracedJsxElements = normalizeAdditionalJsxElements(
+    await traceIncludedJsxElements(cwd, config.include)
+  )
+  const localJsxElements = normalizeAdditionalJsxElements([
+    ...configuredJsxElements,
+    ...tracedJsxElements,
+  ])
+  const upstreamJsxElements = getUpstreamJsxElements(config.extends)
+
+  return {
+    upstreamJsxElements,
+    localJsxElements,
+    additionalJsxElements: normalizeAdditionalJsxElements([
+      ...upstreamJsxElements,
+      ...localJsxElements,
+    ]),
+  }
+}
+
+function writeResolvedJsxElements(
+  cwd: string,
+  outDir: string,
+  elements: Pick<ResolvedJsxElements, 'upstreamJsxElements' | 'localJsxElements'>
+): void {
+  const jsxElementsOutputPath = getResolvedJsxElementsPath(cwd)
+  const jsxElementsArtifact = createResolvedJsxElementsArtifact(elements)
+
+  mkdirSync(join(outDir, 'system'), { recursive: true })
+  writeFileSync(jsxElementsOutputPath, JSON.stringify(jsxElementsArtifact, null, 2) + '\n', 'utf-8')
+  log.debug('config', 'Wrote resolved JSX elements', jsxElementsOutputPath)
+}
+
 /**
  * Run config generation: prepare the portable base-system artefact,
  * then use its collector bundle to write panda.config.ts.
@@ -36,28 +81,12 @@ export async function runConfig(cwd: string): Promise<void> {
 
   const outDir = getOutDirPath(cwd)
   const outputPath = join(outDir, 'panda.config.ts')
-  const configuredJsxElements = normalizeAdditionalJsxElements(config.jsxElements ?? [])
-  const tracedJsxElements = normalizeAdditionalJsxElements(
-    await traceIncludedJsxElements(cwd, config.include)
-  )
-  const localJsxElements = normalizeAdditionalJsxElements([
-    ...configuredJsxElements,
-    ...tracedJsxElements,
-  ])
-  const upstreamJsxElements = getUpstreamJsxElements(config.extends)
-  const additionalJsxElements = normalizeAdditionalJsxElements([...upstreamJsxElements, ...localJsxElements])
+  const { upstreamJsxElements, localJsxElements, additionalJsxElements } =
+    await resolveAdditionalJsxElements(cwd, config)
   const cliDir = resolveCorePackageDir(cwd)
   const cliStyledDir = join(cliDir, 'src/system/styled')
   const { collectorBundle } = await createBaseArtifacts(cwd, config, additionalJsxElements)
-  const jsxElementsOutputPath = getResolvedJsxElementsPath(cwd)
-  const jsxElementsArtifact = createResolvedJsxElementsArtifact({
-    upstreamJsxElements,
-    localJsxElements,
-  })
-
-  mkdirSync(join(outDir, 'system'), { recursive: true })
-  writeFileSync(jsxElementsOutputPath, JSON.stringify(jsxElementsArtifact, null, 2) + '\n', 'utf-8')
-  log.debug('config', 'Wrote resolved JSX elements', jsxElementsOutputPath)
+  writeResolvedJsxElements(cwd, outDir, { upstreamJsxElements, localJsxElements })
 
   await writePandaExtensionsBundle(cliDir, cliStyledDir)
   mirrorPandaExtensionsBundle(cliStyledDir, outDir)

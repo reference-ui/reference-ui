@@ -14,6 +14,15 @@ import { installDevPackage } from './dev'
 
 export type InstallMode = 'dev' | 'build'
 
+interface InstallPackageOptions {
+  coreDir: string
+  userProjectDir: string
+  outDir: string
+  nodeModulesScope: string
+  pkg: PackageDefinition
+  installMode?: InstallMode
+}
+
 const INSTALLERS: Record<InstallMode, (targetDir: string, installPath: string) => void> = {
   build: installBuildPackage,
   dev: installDevPackage,
@@ -40,14 +49,8 @@ function createGeneratedPackageVersion(userProjectDir: string, pkg: PackageDefin
  * Install a single package to outDir (e.g. .reference-ui/react/) and publish it
  * into node_modules using the requested install mode.
  */
-export async function installPackage(
-  coreDir: string,
-  userProjectDir: string,
-  outDir: string,
-  nodeModulesScope: string,
-  pkg: PackageDefinition,
-  installMode: InstallMode = 'dev'
-): Promise<void> {
+export async function installPackage(options: InstallPackageOptions): Promise<void> {
+  const { coreDir, userProjectDir, outDir, nodeModulesScope, pkg, installMode = 'dev' } = options
   const targetDir = getPackageDir(outDir, pkg.name)
   const installPath = getPackageDir(nodeModulesScope, pkg.name)
   const installPkg = {
@@ -80,7 +83,14 @@ export async function installPackages(
   const nodeModulesScope = resolve(userProjectDir, 'node_modules', '@reference-ui')
 
   for (const pkg of packages) {
-    await installPackage(coreDir, userProjectDir, outDir, nodeModulesScope, pkg, installMode)
+    await installPackage({
+      coreDir,
+      userProjectDir,
+      outDir,
+      nodeModulesScope,
+      pkg,
+      installMode,
+    })
   }
 
   pruneBrokenSymlinksInDir(nodeModulesScope)

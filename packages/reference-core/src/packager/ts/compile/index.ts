@@ -86,6 +86,79 @@ function formatMissingDeclarationsError(options: {
   ].join('\n')
 }
 
+async function buildDeclarationsWithTsdown(options: {
+  cliDir: string
+  entryFile: string
+  tmpOut: string
+  tempTsconfigPath: string
+}): Promise<void> {
+  const { cliDir, entryFile, tmpOut, tempTsconfigPath } = options
+  const { build } = await import('tsdown')
+
+  try {
+    await build({
+      config: false,
+      cwd: cliDir,
+      entry: [entryFile],
+      outDir: tmpOut,
+      clean: false,
+      format: 'esm',
+      target: 'es2020',
+      tsconfig: tempTsconfigPath,
+      dts: {
+        resolver: 'tsc',
+      },
+      deps: {
+        neverBundle: [
+          'react',
+          'react-dom',
+          'react/jsx-runtime',
+          '@reference-ui/styled',
+          /^@reference-ui\/styled\/.*$/,
+        ],
+      },
+      outExtensions() {
+        return { js: '.mjs', dts: '.d.mts' }
+      },
+      report: false,
+      exports: false,
+      publint: false,
+      attw: false,
+      unused: false,
+      logLevel: 'silent',
+    })
+  } catch (error) {
+    throw new Error(
+      `tsdown build failed for ${entryFile}: ${error instanceof Error ? error.message : String(error)}`,
+      {
+        cause: error,
+      }
+    )
+  }
+}
+
+async function resolveDeclarationOutput(options: {
+  cliDir: string
+  projectCwd: string
+  tempTsconfigPath: string
+  tmpOut: string
+}): Promise<string | null> {
+  const { cliDir, projectCwd, tempTsconfigPath, tmpOut } = options
+  const tsdownDtsPath = findDtsFile(tmpOut)
+  if (tsdownDtsPath) {
+    return tsdownDtsPath
+  }
+
+  const emitted = await emitDeclarationsWithTypescript({
+    cliDir,
+    projectCwd,
+    tempTsconfigPath,
+    outDir: tmpOut,
+  })
+
+  return emitted ? findDtsFile(tmpOut) : null
+}
+
 /**
  * Compile TypeScript source to .d.mts declarations.
  * Spawns tsup, writes output to a temp dir, then copies the emitted declaration
@@ -118,60 +191,14 @@ export async function compileDeclarations(
   mkdirSync(tmpOut, { recursive: true })
 
   try {
-    const { build } = await import('tsdown')
+    await buildDeclarationsWithTsdown({ cliDir, entryFile, tmpOut, tempTsconfigPath })
 
-    try {
-      await build({
-        config: false,
-        cwd: cliDir,
-        entry: [entryFile],
-        outDir: tmpOut,
-        clean: false,
-        format: 'esm',
-        target: 'es2020',
-        tsconfig: tempTsconfigPath,
-        dts: {
-          resolver: 'tsc',
-        },
-        deps: {
-          neverBundle: [
-            'react',
-            'react-dom',
-            'react/jsx-runtime',
-            '@reference-ui/styled',
-            /^@reference-ui\/styled\/.*$/,
-          ],
-        },
-        outExtensions() {
-          return { js: '.mjs', dts: '.d.mts' }
-        },
-        report: false,
-        exports: false,
-        publint: false,
-        attw: false,
-        unused: false,
-        logLevel: 'silent',
-      })
-    } catch (error) {
-      throw new Error(
-        `tsdown build failed for ${entryFile}: ${error instanceof Error ? error.message : String(error)}`,
-        {
-          cause: error,
-        }
-      )
-    }
-
-    const tsdownDtsPath = findDtsFile(tmpOut)
-    const tmpDtsPath =
-      tsdownDtsPath ??
-      ((await emitDeclarationsWithTypescript({
-        cliDir,
-        projectCwd,
-        tempTsconfigPath,
-        outDir: tmpOut,
-      }))
-        ? findDtsFile(tmpOut)
-        : null)
+    const tmpDtsPath = await resolveDeclarationOutput({
+      cliDir,
+      projectCwd,
+      tempTsconfigPath,
+      tmpOut,
+    })
 
     if (!tmpDtsPath) {
       const diagnostics = await collectDeclarationDiagnostics({

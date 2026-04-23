@@ -33,6 +33,6 @@ describe('bundleConfig', () => {
 
     const bundled = await bundleConfig(configPath)
 
-    expect(bundled).toMatch(/from ['\"]nonexistent-package['\"]/)
+    expect(bundled).toMatch(/from ['"]nonexistent-package['"]/) 
   })
 })

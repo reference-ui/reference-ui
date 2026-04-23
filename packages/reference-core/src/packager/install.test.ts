@@ -149,7 +149,13 @@ describe('packager/install', () => {
       },
     })
 
-    await installPackage('/core', workspaceDir, outDir, nodeModulesScope, REACT_PACKAGE)
+    await installPackage({
+      coreDir: '/core',
+      userProjectDir: workspaceDir,
+      outDir,
+      nodeModulesScope,
+      pkg: REACT_PACKAGE,
+    })
 
     expect(readFileSync(resolve(targetDir, 'react.mjs'), 'utf-8')).toContain('brand-layer')
     expect(readFileSync(resolve(targetDir, 'react.mjs'), 'utf-8')).not.toContain(
@@ -177,7 +183,13 @@ describe('packager/install', () => {
       },
     })
 
-    await installPackage('/core', workspaceDir, outDir, nodeModulesScope, SYSTEM_PACKAGE)
+    await installPackage({
+      coreDir: '/core',
+      userProjectDir: workspaceDir,
+      outDir,
+      nodeModulesScope,
+      pkg: SYSTEM_PACKAGE,
+    })
 
     expect(readFileSync(resolve(targetDir, 'system.mjs'), 'utf-8')).toContain(
       '__REFERENCE_UI_LAYER_NAME__'
@@ -202,8 +214,20 @@ describe('packager/install', () => {
       },
     })
 
-    await installPackage('/core', workspaceDir, outDir, nodeModulesScope, REACT_PACKAGE)
-    await installPackage('/core', workspaceDir, outDir, nodeModulesScope, REACT_PACKAGE)
+    await installPackage({
+      coreDir: '/core',
+      userProjectDir: workspaceDir,
+      outDir,
+      nodeModulesScope,
+      pkg: REACT_PACKAGE,
+    })
+    await installPackage({
+      coreDir: '/core',
+      userProjectDir: workspaceDir,
+      outDir,
+      nodeModulesScope,
+      pkg: REACT_PACKAGE,
+    })
 
     expect(readFileSync(resolve(targetDir, 'react.mjs'), 'utf-8')).toContain('brand-layer')
     expect(lstatSync(installPath).isSymbolicLink()).toBe(true)
@@ -231,7 +255,13 @@ describe('packager/install', () => {
       },
     })
 
-    await installPackage('/core', workspaceDir, outDir, nodeModulesScope, REACT_PACKAGE)
+    await installPackage({
+      coreDir: '/core',
+      userProjectDir: workspaceDir,
+      outDir,
+      nodeModulesScope,
+      pkg: REACT_PACKAGE,
+    })
 
     expect(lstatSync(installPath).isSymbolicLink()).toBe(true)
     expect(realpathSync(installPath)).toBe(realpathSync(targetDir))
@@ -262,7 +292,14 @@ describe('packager/install', () => {
       },
     })
 
-    await installPackage('/core', workspaceDir, outDir, nodeModulesScope, REACT_PACKAGE, 'build')
+    await installPackage({
+      coreDir: '/core',
+      userProjectDir: workspaceDir,
+      outDir,
+      nodeModulesScope,
+      pkg: REACT_PACKAGE,
+      installMode: 'build',
+    })
 
     expect(lstatSync(installPath).isSymbolicLink()).toBe(false)
     expect(readFileSync(resolve(installPath, 'react.mjs'), 'utf-8')).toContain('brand-layer')
@@ -342,7 +379,13 @@ describe('packager/install', () => {
       },
     })
 
-    await installPackage('/core', workspaceDir, outDir, nodeModulesScope, TYPES_PACKAGE)
+    await installPackage({
+      coreDir: '/core',
+      userProjectDir: workspaceDir,
+      outDir,
+      nodeModulesScope,
+      pkg: TYPES_PACKAGE,
+    })
 
     expect(readFileSync(resolve(targetDir, 'types.mjs'), 'utf-8')).toContain('Reference')
     expect(readFileSync(resolve(targetDir, 'types.d.mts'), 'utf-8')).toContain('Reference')
@@ -362,7 +405,13 @@ describe('packager/install', () => {
     })
 
     await expect(
-      installPackage('/core', workspaceDir, outDir, nodeModulesScope, REACT_PACKAGE)
+      installPackage({
+        coreDir: '/core',
+        userProjectDir: workspaceDir,
+        outDir,
+        nodeModulesScope,
+        pkg: REACT_PACKAGE,
+      })
     ).rejects.toThrow(
       'missing bundle output'
     )
@@ -380,7 +429,13 @@ describe('packager/install', () => {
       },
     })
 
-    await installPackage('/core', workspaceDir, outDir, nodeModulesScope, REACT_PACKAGE)
+    await installPackage({
+      coreDir: '/core',
+      userProjectDir: workspaceDir,
+      outDir,
+      nodeModulesScope,
+      pkg: REACT_PACKAGE,
+    })
 
     expect(bundlePackage).toHaveBeenCalledWith({
       coreDir: '/core',
