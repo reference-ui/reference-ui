@@ -66,17 +66,37 @@ function listHashInputFiles(packageDir: string): string[] {
     .sort((left, right) => left.localeCompare(right))
 }
 
-function computeOwnPackageHash(pkg: WorkspacePackage): string {
-  const hashInputs = listHashInputFiles(pkg.dir)
-  const parts: (string | Buffer)[] = [pkg.name, pkg.version]
+export function hashPackageInputFiles(options: {
+  packageName: string
+  packageVersion: string
+  rootDir: string
+  hashInputs: readonly string[]
+}): string {
+  const { packageName, packageVersion, rootDir, hashInputs } = options
+  const parts: (string | Buffer)[] = [packageName, packageVersion]
 
   for (const relativePath of hashInputs) {
-    const absolutePath = resolve(repoRoot, relativePath)
+    const absolutePath = resolve(rootDir, relativePath)
     parts.push(relativePath)
-    parts.push(readFileSync(absolutePath))
+    if (existsSync(absolutePath)) {
+      parts.push('present')
+      parts.push(readFileSync(absolutePath))
+    } else {
+      parts.push('missing')
+    }
   }
 
   return hashContent(parts)
+}
+
+function computeOwnPackageHash(pkg: WorkspacePackage): string {
+  const hashInputs = listHashInputFiles(pkg.dir)
+  return hashPackageInputFiles({
+    packageName: pkg.name,
+    packageVersion: pkg.version,
+    rootDir: repoRoot,
+    hashInputs,
+  })
 }
 
 export function computePackageBuildHashes(
