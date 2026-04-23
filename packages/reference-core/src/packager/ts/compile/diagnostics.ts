@@ -107,7 +107,7 @@ function writeDiagnosticsTsconfig(options: DeclarationDiagnosticsOptions): strin
 export async function collectDeclarationDiagnostics(
   options: DeclarationDiagnosticsOptions
 ): Promise<string> {
-  const { cliDir, projectCwd, tempDir } = options
+  const { cliDir, projectCwd } = options
   const typescriptCliPath = resolveTypescriptCli(projectCwd, cliDir)
 
   if (!typescriptCliPath) {
