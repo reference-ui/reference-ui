@@ -15,6 +15,12 @@ import {
   loadPackedTarballsIntoLocalRegistry,
   registryManifestPath,
 } from './registry/index.js'
+import {
+  defaultNpmAuthRegistryUrl,
+  formatReleasePlan,
+  getReleasePlan,
+  runLocalRelease,
+} from './release/index.js'
 
 const program = new Command()
 
@@ -77,4 +83,37 @@ registryCommand
     await loadPackedTarballsIntoLocalRegistry(options.registry)
   })
 
-await program.parseAsync(process.argv)
+const releaseCommand = program
+  .command('release')
+  .description('Changesets-driven release planning and staging')
+  .option('--registry <url>', 'Local staging registry URL', defaultRegistryUrl)
+  .option('--auth-registry <url>', 'Registry URL used for npm whoami preflight', defaultNpmAuthRegistryUrl)
+  .option('--skip-version', 'Skip running pnpm version-packages before building', false)
+  .option('--no-npm-auth-check', 'Skip the npm whoami preflight against the publish registry')
+  .action(async (options: {
+    authRegistry: string
+    npmAuthCheck: boolean
+    registry: string
+    skipVersion: boolean
+  }) => {
+    await runLocalRelease({
+      authRegistryUrl: options.authRegistry,
+      registryUrl: options.registry,
+      verifyNpmAuth: options.npmAuthCheck,
+      versionPackages: !options.skipVersion,
+    })
+  })
+
+releaseCommand
+  .command('plan')
+  .description('Show the pending local release plan derived from Changesets')
+  .action(async () => {
+    console.log(formatReleasePlan(await getReleasePlan()))
+  })
+
+try {
+  await program.parseAsync(process.argv)
+} catch (error) {
+  console.error(error instanceof Error ? error.message : String(error))
+  process.exitCode = 1
+}

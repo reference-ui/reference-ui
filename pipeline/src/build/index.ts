@@ -21,7 +21,7 @@ export function listBuildTargetPackages(): WorkspacePackage[] {
   )
 }
 
-export async function buildWorkspacePackages(): Promise<void> {
+export async function buildWorkspacePackages(registryUrl?: string): Promise<void> {
   const buildTargets = listBuildTargetPackages()
   const buildHashes = computePackageBuildHashes(buildTargets)
   const buildState = await readBuildState()
@@ -52,5 +52,5 @@ export async function buildWorkspacePackages(): Promise<void> {
 
   await writeBuildState(buildState)
 
-  await ensureLocalRegistryAndStagePublicPackages()
+  await ensureLocalRegistryAndStagePublicPackages(registryUrl)
 }

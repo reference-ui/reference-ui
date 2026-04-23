@@ -16,6 +16,27 @@ The most important role of release is gatekeeping.
 
 `release/` should decide what is allowed to move from the pipeline-local registry to the real public registry.
 
+## Current Module Layout
+
+The first local release implementation is now split into stage-oriented modules:
+
+- `index.ts`
+	- public release entrypoint and orchestration surface for the CLI
+- `changesets.ts`
+	- reads and parses local Changesets status
+- `plan.ts`
+	- shapes dependency-ordered release plans and local support checks
+- `auth.ts`
+	- verifies npm authentication before local release mutation begins
+- `version.ts`
+	- materializes pending version bumps via Changesets
+- `stage.ts`
+	- rebuilds and stages release artifacts into the managed local Verdaccio registry
+- `local.ts`
+	- wires the stage modules into the developer-facing local release command
+- `types.ts`
+	- shared release types and constants used across the stage modules
+
 ## Current Release Surface
 
 Today, release behavior is split between workflow YAML and Node scripts:
