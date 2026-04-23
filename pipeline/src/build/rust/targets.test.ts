@@ -6,6 +6,7 @@ import {
   findMissingRequiredReferenceRustTargets,
   getReferenceRustTargetPackageValidationErrors,
   getLocallyBuildableReferenceRustTargets,
+  resolveLocalReferenceRustTargetBuildStrategy,
   resolveReferenceRustTargetTarballStrategy,
   shouldBuildLinuxReferenceRustTargetWithDagger,
 } from './targets.js'
@@ -84,15 +85,50 @@ describe('resolveReferenceRustTargetTarballStrategy', () => {
 })
 
 describe('getLocallyBuildableReferenceRustTargets', () => {
-  it('returns the host target plus linux when the host is supported', () => {
+  it('returns all release targets on macOS hosts', () => {
     assert.deepEqual(
-      getLocallyBuildableReferenceRustTargets('darwin-x64'),
-      ['darwin-x64', 'linux-x64-gnu'],
+      getLocallyBuildableReferenceRustTargets('darwin-x64', 'darwin'),
+      ['darwin-x64', 'darwin-arm64', 'linux-x64-gnu', 'win32-x64-msvc'],
     )
   })
 
-  it('returns only linux when the host target is unavailable', () => {
-    assert.deepEqual(getLocallyBuildableReferenceRustTargets(null), ['linux-x64-gnu'])
+  it('returns linux and windows when the host target is unavailable on non-darwin hosts', () => {
+    assert.deepEqual(getLocallyBuildableReferenceRustTargets(null, 'linux'), ['linux-x64-gnu', 'win32-x64-msvc'])
+  })
+})
+
+describe('resolveLocalReferenceRustTargetBuildStrategy', () => {
+  it('reuses the host binary for the active target', () => {
+    assert.equal(
+      resolveLocalReferenceRustTargetBuildStrategy({
+        hostPlatform: 'darwin',
+        hostTarget: 'darwin-x64',
+        target: 'darwin-x64',
+      }),
+      'reuse-host-binary',
+    )
+  })
+
+  it('uses local darwin cross compilation for the opposite macOS arch', () => {
+    assert.equal(
+      resolveLocalReferenceRustTargetBuildStrategy({
+        hostPlatform: 'darwin',
+        hostTarget: 'darwin-x64',
+        target: 'darwin-arm64',
+      }),
+      'build-darwin-cross-target',
+    )
+  })
+
+  it('uses napi cross compilation for the windows target', () => {
+    assert.equal(
+      resolveLocalReferenceRustTargetBuildStrategy({
+        hostPlatform: 'darwin',
+        hostTarget: 'darwin-x64',
+        target: 'win32-x64-msvc',
+      }),
+      'build-windows-cross-target',
+    )
   })
 })
 
@@ -100,13 +136,13 @@ describe('findMissingRequiredReferenceRustTargets', () => {
   it('returns only targets that are neither buildable nor otherwise available', () => {
     assert.deepEqual(
       findMissingRequiredReferenceRustTargets({
-        artifactTargets: ['darwin-arm64'],
+        artifactTargets: [],
         cachedTarballTargets: [],
-        locallyBuildableTargets: ['darwin-x64', 'linux-x64-gnu'],
+        locallyBuildableTargets: ['darwin-x64', 'darwin-arm64', 'linux-x64-gnu', 'win32-x64-msvc'],
         publishedTargets: [],
         requiredTargets: ['darwin-x64', 'darwin-arm64', 'linux-x64-gnu', 'win32-x64-msvc'],
       }),
-      ['win32-x64-msvc'],
+      [],
     )
   })
 })
