@@ -10,10 +10,7 @@ The main consumer of that model is `packages/reference-e2e`, which should keep i
 
 Today, testing behavior is split between:
 
-- `.github/workflows/test.yml`
-	- unit test job
-	- e2e test job
-	- rust/native setup repeated before both
+- root and package `pnpm` scripts (for example `pnpm run test:ci:unit`, `pnpm run test:ci:e2e`) run locally or in your CI
 - `packages/reference-e2e`
 	- matrix definitions
 	- sandbox composition and dependency installation
@@ -76,15 +73,15 @@ That split keeps the pipeline focused on reliability and reproducibility rather 
 	- this is the natural evolution of the current downstream smoke direction in `pipeline/src/downstream-smoke.ts`
 	- this should primarily consume artifacts from `pipeline/src/registry/`
 - unit testing
-	- should run unit suites in explicit container environments rather than assuming the host or GitHub runner state
-	- this should absorb the current unit execution path from `.github/workflows/test.yml`
+	- should run unit suites in explicit container environments rather than assuming the host or ad hoc runner state
+	- this should absorb the same commands your CI runs today (see root `package.json` and `pnpm pipeline`)
 
 ## Intended Outcome
 
 The outcome we want is:
 
 - fewer bespoke scripts for creating test environments
-- less duplicated setup across GitHub Actions jobs
+- less duplicated setup across CI job definitions
 - higher confidence that local test runs and CI test runs mean the same thing
 
 The testing pipeline should make the environment boring and predictable so the actual tests can stay focused on behavior.

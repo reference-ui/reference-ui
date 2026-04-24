@@ -9,14 +9,9 @@ The rough category split is:
 - `registry/` — private pipeline registry infrastructure for packaged artifacts
 - `testing/` — containerized testing flows, including matrix, distribution, and unit testing
 
-These categories are meant to absorb the responsibilities that are currently spread across:
+These categories are meant to absorb the responsibilities that used to be spread across GitHub Actions, ad hoc scripts, and package-local glue. In this repo, **GitHub Actions is limited to docs** (`.github/workflows/docs.yml`, which reuses `.github/workflows/rust-compile.yml` for Linux bindings used by the docs build). Everything else—build, test, release—should go through the pipeline.
 
-- `.github/workflows/test.yml`
-- `.github/workflows/release.yml`
-- `.github/workflows/rust-compile.yml`
-- `.github/workflows/docs.yml`
-- `scripts/release/*`
-- selected helper scripts such as `scripts/fixture-build-cache.mjs`
+Remaining helper scripts include things like `scripts/fixture-build-cache.mjs` and `scripts/pipeline/run-if-env-absent.mjs` where packages need small conditional wrappers.
 
 ## Why This Exists
 
@@ -33,10 +28,10 @@ That should give us a delivery path that is easier to reason about locally, more
 
 The rough direction is:
 
-- GitHub Actions becomes a thin trigger layer, if it remains at all
-- Dagger becomes the actual execution graph
-- local execution is the primary release path for now
-- CI, if retained, should call or observe the same pipeline definition rather than re-implementing it
+- GitHub Actions stays a thin layer for **docs publish** only
+- Dagger is the actual execution graph for build, test, and release
+- local execution matches the same pipeline commands your CI should run
+- CI outside GitHub should call the same pipeline definition rather than re-implementing it
 
 ## Expected Shape
 
@@ -59,20 +54,15 @@ Instead:
 At a high level, the current system maps into this layout like this:
 
 - `build/`
-	- native compilation now handled in `.github/workflows/rust-compile.yml`
-	- package build/setup steps now repeated in `.github/workflows/test.yml` and `.github/workflows/docs.yml`
-	- fixture/package build caching concerns now handled by `scripts/fixture-build-cache.mjs`
+	- native compilation for **docs** still uses `.github/workflows/rust-compile.yml` as a callable workflow from the docs workflow; full multi-target native builds for release belong in the pipeline / your CI
+	- fixture/package build caching concerns are handled by `scripts/fixture-build-cache.mjs`
 - `release/`
-	- release target detection now handled by `scripts/release/detect.mjs`
-	- publish ordering and npm publish behavior now handled by `scripts/release/publish.mjs`
-	- release orchestration now wired through `.github/workflows/release.yml`
+	- release planning, tarball staging, and npm publish live in `pipeline/src/release/` and are invoked via `pnpm pipeline release`
 - `registry/`
-	- the repo does not yet have a dedicated pipeline-local registry layer
-	- downstream/distribution validation currently has to work around that absence with direct local tarballs
-	- this is the missing shared layer between build, testing, and release
+	- pipeline-local registry for packed artifacts consumed by testing and release
 - `testing/`
-	- unit and e2e execution now triggered by `.github/workflows/test.yml`
+	- unit and e2e execution is owned by package scripts and `pipeline/src/testing/`; nothing in GitHub Actions runs the matrix anymore
 	- environment/matrix orchestration currently lives in `packages/reference-e2e`
 	- downstream/distribution install validation is beginning under `pipeline/src/downstream-smoke.ts`
 
-The intent is to move the execution logic into `pipeline/src`, not to keep duplicating it across scripts and workflow YAML.
+The intent is to keep execution logic in `pipeline/src` and package scripts, not in duplicated workflow YAML.
