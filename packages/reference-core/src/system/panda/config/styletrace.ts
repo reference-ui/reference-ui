@@ -2,6 +2,7 @@ import { basename, dirname, extname, relative, resolve, sep } from 'node:path'
 import fg from 'fast-glob'
 import { trace } from '@reference-ui/rust/styletrace'
 import { SYNC_OUTPUT_DIR_GLOB } from '../../../constants'
+import { resolveCorePackageDir } from '../../../lib/paths/core-package-dir'
 import { log } from '../../../lib/log'
 
 const STYLETRACE_SOURCE_EXTENSIONS = new Set(['.tsx', '.jsx'])
@@ -72,7 +73,11 @@ export async function traceIncludedJsxElements(cwd: string, include: string[]): 
     return []
   }
 
-  const results = await Promise.allSettled(roots.map(async (root) => ({ root, names: await trace(root) })))
+  const workspaceHint = resolveCorePackageDir(cwd)
+
+  const results = await Promise.allSettled(
+    roots.map(async (root) => ({ root, names: await trace(root, workspaceHint) }))
+  )
 
   const tracedNames: string[] = []
 
