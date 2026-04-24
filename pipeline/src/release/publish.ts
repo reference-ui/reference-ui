@@ -63,6 +63,34 @@ export function isReleaseManifestPackage(pkg: RegistryManifestPackage): boolean 
   return isDirectReleasePackage(pkg) || isGeneratedRustReleasePackage(pkg)
 }
 
+export function assertRustRootPublishIsSafe(
+  packages: readonly RegistryManifestPackage[],
+  registryUrl: string,
+  isPublished: (name: string, version: string, registryUrl: string) => boolean = isPublishedOnNpm,
+): void {
+  const rustRootPackage = packages.find(pkg => pkg.name === rustPackageName)
+  if (!rustRootPackage || isPublished(rustRootPackage.name, rustRootPackage.version, registryUrl)) {
+    return
+  }
+
+  const alreadyPublishedNativePackages = packages
+    .filter(isGeneratedRustReleasePackage)
+    .filter(pkg => isPublished(pkg.name, pkg.version, registryUrl))
+
+  if (alreadyPublishedNativePackages.length === 0) {
+    return
+  }
+
+  throw new Error(
+    [
+      `Refusing to publish ${rustRootPackage.name}@${rustRootPackage.version} because native target packages are already published for that version.`,
+      `Published native packages: ${alreadyPublishedNativePackages.map(pkg => `${pkg.name}@${pkg.version}`).join(', ')}.`,
+      'Publishing the root package now could mix new JS artifacts with older native binaries.',
+      'Cut a new version before retrying the release.',
+    ].join(' '),
+  )
+}
+
 function sortPackagesByInternalDependencies(packages: readonly RegistryManifestPackage[]): RegistryManifestPackage[] {
   const packageMap = new Map(packages.map((pkg) => [pkg.name, pkg]))
   const incomingCount = new Map(packages.map((pkg) => [pkg.name, 0]))
@@ -140,6 +168,8 @@ export async function publishReleaseTarballsToNpm(
   const manifest = await readRegistryManifest()
   const releasePackages = sortReleaseManifestPackages(manifest.packages)
   const includeProvenance = shouldPublishWithProvenance()
+
+  assertRustRootPublishIsSafe(releasePackages, registryUrl)
 
   for (const pkg of releasePackages) {
     if (isPublishedOnNpm(pkg.name, pkg.version, registryUrl)) {

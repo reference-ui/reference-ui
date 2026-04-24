@@ -24,6 +24,7 @@ type RequireFn = ReturnType<typeof createRequire>
 export { getVirtualNativeTriple, SUPPORTED_VIRTUAL_NATIVE_TARGETS }
 
 export interface VirtualNativeBinding {
+  getNativeCapabilities: () => string
   rewriteCssImports: (sourceCode: string, relativePath: string) => string
   rewriteCvaImports: (sourceCode: string, relativePath: string) => string
   scanAndEmitModules: (rootDir: string, include: string[]) => string
@@ -50,6 +51,46 @@ export interface VirtualNativeDiagnostics {
 
 let _native: VirtualNativeBinding | null | undefined = undefined
 let _diagnostics: VirtualNativeDiagnostics | undefined = undefined
+
+const REQUIRED_NATIVE_EXPORTS = [
+  'getNativeCapabilities',
+  'rewriteCssImports',
+  'rewriteCvaImports',
+  'scanAndEmitModules',
+  'analyzeAtlas',
+  'analyzeStyletrace',
+] as const
+
+export function getVirtualNativeCompatibilityError(binding: Record<string, unknown>): string | null {
+  const missingExports = REQUIRED_NATIVE_EXPORTS.filter(
+    name => typeof binding[name] !== 'function'
+  )
+
+  if (missingExports.length > 0) {
+    return `missing required native export(s): ${missingExports.join(', ')}`
+  }
+
+  let capabilities: unknown
+  try {
+    capabilities = JSON.parse((binding.getNativeCapabilities as () => string)())
+  } catch (error) {
+    return `failed to read native capabilities: ${error instanceof Error ? error.message : String(error)}`
+  }
+
+  if (
+    capabilities === null
+    || typeof capabilities !== 'object'
+    || (capabilities as { styletraceSyncRootHint?: unknown }).styletraceSyncRootHint !== true
+  ) {
+    return 'native binary does not advertise Styletrace sync-root hint support'
+  }
+
+  if (typeof binding.scanAndEmitBundle === 'function') {
+    return 'native binary still exposes deprecated scanAndEmitBundle'
+  }
+
+  return null
+}
 
 function isContributorCheckout(packageDir: string | null): boolean {
   return packageDir !== null && !packageDir.split(/[\\/]/).includes('node_modules')
@@ -187,7 +228,24 @@ export function loadVirtualNative(): VirtualNativeBinding | null {
       return null
     }
 
-    const binding = requireImpl(nodePath) as VirtualNativeBinding
+    const binding = requireImpl(nodePath) as Record<string, unknown>
+    const compatibilityError = getVirtualNativeCompatibilityError(binding)
+    if (compatibilityError) {
+      setDiagnostics({
+        status: 'load-failed',
+        packageDir,
+        platform,
+        arch,
+        triple,
+        targetPackageDir,
+        targetPackageName,
+        candidatePaths: [nodePath],
+        cause: `Incompatible native binary at ${nodePath}: ${compatibilityError}`,
+      })
+      _native = null
+      return null
+    }
+
     setDiagnostics({
       status: 'loaded',
       packageDir,
@@ -199,8 +257,8 @@ export function loadVirtualNative(): VirtualNativeBinding | null {
       candidatePaths: [nodePath],
       cause: null,
     })
-    _native = binding
-    return binding
+    _native = binding as unknown as VirtualNativeBinding
+    return _native
   } catch (error) {
     setDiagnostics({
       status: error instanceof Error && error.message.includes('package directory could not be resolved')
