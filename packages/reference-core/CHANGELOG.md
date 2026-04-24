@@ -1,5 +1,13 @@
 # @reference-ui/core
 
+## 0.0.28
+
+### Patch Changes
+
+- f301b4b: CI RELEASE
+- Updated dependencies [f301b4b]
+  - @reference-ui/rust@0.0.27
+
 ## 0.0.27
 
 ### Patch Changes
