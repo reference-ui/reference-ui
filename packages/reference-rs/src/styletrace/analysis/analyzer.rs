@@ -14,8 +14,15 @@ use super::model::{EdgeTarget, ExportTarget, FactoryTarget, TraceComponent, Trac
 use super::parser::parse_trace_module;
 
 pub fn trace_style_jsx_names(root_dir: &Path) -> Result<Vec<String>, StyleTraceError> {
+    trace_style_jsx_names_with_hint(root_dir, None)
+}
+
+pub fn trace_style_jsx_names_with_hint(
+    root_dir: &Path,
+    workspace_hint: Option<&Path>,
+) -> Result<Vec<String>, StyleTraceError> {
     let normalized_root = normalize_path(root_dir);
-    let workspace_root = resolve_workspace_root(&normalized_root)?;
+    let workspace_root = resolve_workspace_root(&normalized_root, workspace_hint)?;
     let style_prop_names = collect_reference_style_prop_names(&workspace_root)?
         .into_iter()
         .collect::<BTreeSet<_>>();
@@ -226,7 +233,9 @@ impl StyleTraceAnalyzer {
                 source,
                 imported_name,
             } => {
-                let Some(resolved_module) = resolve_imported_module(module_path, source)? else {
+                let Some(resolved_module) =
+                    resolve_imported_module(module_path, source, &self.workspace_root)?
+                else {
                     return Ok(false);
                 };
                 self.ensure_module_loaded(&resolved_module)?;
@@ -280,7 +289,9 @@ impl StyleTraceAnalyzer {
             return Ok(self.primitive_names.contains(imported_name));
         }
 
-        let Some(resolved_module) = resolve_imported_module(module_path, source)? else {
+        let Some(resolved_module) =
+            resolve_imported_module(module_path, source, &self.workspace_root)?
+        else {
             return Ok(false);
         };
         self.ensure_module_loaded(&resolved_module)?;

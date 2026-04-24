@@ -7,4 +7,4 @@ mod parser;
 mod util;
 mod walk;
 
-pub use analyzer::trace_style_jsx_names;
+pub use analyzer::{trace_style_jsx_names, trace_style_jsx_names_with_hint};

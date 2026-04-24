@@ -8,5 +8,5 @@ mod resolver;
 #[cfg(test)]
 mod tests;
 
-pub use analysis::trace_style_jsx_names;
+pub use analysis::{trace_style_jsx_names, trace_style_jsx_names_with_hint};
 pub use resolver::{collect_reference_style_prop_names, collect_style_prop_names, StyleTraceError};

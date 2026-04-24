@@ -6,8 +6,10 @@ import {
   createNodeBuiltinHelperFixture,
   createNodeModulesWrapperFixture,
   createSubpathPackageFixture,
+  createVendoredWorkspaceFixture,
   traceCase,
   traceDir,
+  traceDirWithHint,
   traceFixtureDir,
 } from './helpers'
 
@@ -97,6 +99,21 @@ describe('styletrace', () => {
 
     try {
       await expect(traceDir(fixture.rootDir)).resolves.toEqual(['AppCard'])
+    } finally {
+      await fixture.cleanup()
+    }
+  })
+
+  it('resolves vendored Reference workspaces only when the caller passes a workspace hint', async () => {
+    const fixture = await createVendoredWorkspaceFixture()
+
+    try {
+      await expect(traceDir(`${fixture.rootDir}/consumer-app/src`)).rejects.toThrow(
+        /could not resolve workspace root/i,
+      )
+      await expect(
+        traceDirWithHint(`${fixture.rootDir}/consumer-app/src`, fixture.workspaceHint),
+      ).resolves.toEqual(['AppCard'])
     } finally {
       await fixture.cleanup()
     }
