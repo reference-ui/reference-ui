@@ -1,28 +1,9 @@
-//! Shared path and error helpers for resolver and analyzer modules.
+//! Filesystem and module-specifier helpers shared across styletrace resolution.
+//!
+//! These helpers stay isolated from the resolver entrypoints so callers can depend on a small,
+//! stable surface while path normalization and source-preference rules evolve independently.
 
-use std::fmt::{Display, Formatter};
 use std::path::{Path, PathBuf};
-
-#[derive(Debug, Clone)]
-pub struct StyleTraceError {
-    message: String,
-}
-
-impl StyleTraceError {
-    pub(crate) fn new(message: impl Into<String>) -> Self {
-        Self {
-            message: message.into(),
-        }
-    }
-}
-
-impl Display for StyleTraceError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&self.message)
-    }
-}
-
-impl std::error::Error for StyleTraceError {}
 
 pub(crate) fn normalize_path(path: &Path) -> PathBuf {
     let mut normalized = PathBuf::new();
@@ -87,10 +68,7 @@ pub(crate) fn resolve_local_module_path(candidate: &Path) -> Option<PathBuf> {
     None
 }
 
-pub(crate) fn prefer_sync_root_source_module(
-    resolved_path: &Path,
-    sync_root: &Path,
-) -> PathBuf {
+pub(crate) fn prefer_sync_root_source_module(resolved_path: &Path, sync_root: &Path) -> PathBuf {
     let normalized = normalize_path(resolved_path);
     if !normalized.starts_with(sync_root) {
         return normalized;
@@ -114,7 +92,8 @@ pub(crate) fn prefer_sync_root_source_module(
         return normalized;
     }
 
-    let relative_dist_path = PathBuf::from_iter(components[dist_index + 1..].iter().map(String::as_str));
+    let relative_dist_path =
+        PathBuf::from_iter(components[dist_index + 1..].iter().map(String::as_str));
     let source_relative = strip_compiled_module_extension(&relative_dist_path);
     let source_candidate = package_root.join("src").join(source_relative);
 
