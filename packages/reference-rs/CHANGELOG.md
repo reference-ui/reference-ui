@@ -1,5 +1,11 @@
 # @reference-ui/rust
 
+## 0.0.28
+
+### Patch Changes
+
+- dfd3cf4: CI RELEASE
+
 ## 0.0.27
 
 ### Patch Changes

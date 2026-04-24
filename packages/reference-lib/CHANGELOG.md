@@ -1,5 +1,14 @@
 # @reference-ui/lib
 
+## 0.0.32
+
+### Patch Changes
+
+- dfd3cf4: CI RELEASE
+- Updated dependencies [dfd3cf4]
+  - @reference-ui/icons@0.0.29
+  - @reference-ui/core@0.0.29
+
 ## 0.0.31
 
 ### Patch Changes

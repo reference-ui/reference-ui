@@ -1,5 +1,13 @@
 # @reference-ui/icons
 
+## 0.0.29
+
+### Patch Changes
+
+- dfd3cf4: CI RELEASE
+- Updated dependencies [dfd3cf4]
+  - @reference-ui/core@0.0.29
+
 ## 0.0.28
 
 ### Patch Changes
