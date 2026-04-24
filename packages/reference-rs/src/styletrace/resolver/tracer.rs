@@ -6,11 +6,12 @@ use std::path::{Path, PathBuf};
 
 use crate::tasty::resolve_external_import_path;
 
+use super::error::StyleTraceError;
 use super::model::{BoundTypeExpr, ParsedModule, TypeDeclaration, TypeExpr};
 use super::parser::parse_module;
-use super::util::{
+use super::path::{
     is_ignorable_module_specifier, normalize_path, prefer_sync_root_source_module,
-    resolve_local_module_path, StyleTraceError,
+    resolve_local_module_path,
 };
 
 const REFERENCE_STYLE_PROPS_ENTRY_STEM: &str = ".reference-ui/react/types/style-props";
