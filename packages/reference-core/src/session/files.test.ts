@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
 import {
   sessionPath,
   lockPath,
@@ -42,11 +42,11 @@ afterEach(() => {
 
 describe('session/files – paths', () => {
   it('sessionPath returns session.json under outDir', () => {
-    expect(sessionPath('/a/b')).toBe('/a/b/session.json')
+    expect(sessionPath('/a/b')).toBe('/a/b/tmp/session.json')
   })
 
   it('lockPath returns session.lock under outDir', () => {
-    expect(lockPath('/a/b')).toBe('/a/b/session.lock')
+    expect(lockPath('/a/b')).toBe('/a/b/tmp/session.lock')
   })
 })
 
@@ -62,6 +62,7 @@ describe('session/files – manifest', () => {
   })
 
   it('readManifest returns null when file is malformed JSON', () => {
+    mkdirSync(dirname(sessionPath(dir)), { recursive: true })
     writeFileSync(sessionPath(dir), 'not-json', 'utf-8')
     expect(readManifest(dir)).toBeNull()
   })
@@ -84,6 +85,7 @@ describe('session/files – lock', () => {
   })
 
   it('readLock returns null when file is malformed JSON', () => {
+    mkdirSync(dirname(lockPath(dir)), { recursive: true })
     writeFileSync(lockPath(dir), '!!!', 'utf-8')
     expect(readLock(dir)).toBeNull()
   })

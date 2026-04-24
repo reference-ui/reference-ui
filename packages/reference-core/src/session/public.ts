@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs'
 import { resolve, join } from 'node:path'
 import { DEFAULT_OUT_DIR } from '../constants'
-import { readManifest, SESSION_FILE } from './files'
+import { readManifest, sessionPath } from './files'
 import { createSessionWatcher } from './watch'
 import type { GetSyncSessionOptions, RefreshHandler, SyncSession } from './types'
 
@@ -10,9 +10,9 @@ import type { GetSyncSessionOptions, RefreshHandler, SyncSession } from './types
  *
  * - If `options.outDir` is supplied it is used directly (resolved relative to
  *   `cwd` if relative), supporting projects that override the default outDir.
- * - Otherwise walk up from `cwd` looking for `session.json` next to each ancestor
- *   under the default sync output directory, falling back to that directory under
- *   `cwd` when none is found.
+ * - Otherwise walk up from `cwd` looking for the hidden session manifest under
+ *   each ancestor's default sync output directory, falling back to that directory
+ *   under `cwd` when none is found.
  */
 function findOutDir(options: GetSyncSessionOptions): string {
   if (options.outDir) return resolve(options.cwd, options.outDir)
@@ -20,7 +20,7 @@ function findOutDir(options: GetSyncSessionOptions): string {
   let dir = resolve(options.cwd)
   for (let i = 0; i < 10; i++) {
     const candidate = join(dir, DEFAULT_OUT_DIR)
-    if (existsSync(join(candidate, SESSION_FILE))) {
+    if (existsSync(sessionPath(candidate))) {
       return candidate
     }
     const parent = resolve(dir, '..')

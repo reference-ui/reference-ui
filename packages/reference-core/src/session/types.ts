@@ -4,7 +4,7 @@ export type BuildState = 'idle' | 'queued' | 'running' | 'ready' | 'failed'
 
 export type SessionMode = 'watch' | 'one-shot'
 
-/** Written to `.reference-ui/session.json` by `ref sync`. */
+/** Written to `.reference-ui/tmp/session.json` by `ref sync`. */
 export interface SessionManifest {
   pid: number
   mode: SessionMode
@@ -14,7 +14,7 @@ export interface SessionManifest {
   updatedAt: string
 }
 
-/** Written to `.reference-ui/session.lock` to prevent concurrent writers. */
+/** Written to `.reference-ui/tmp/session.lock` to prevent concurrent writers. */
 export interface SessionLock {
   pid: number
   startedAt: string
@@ -39,7 +39,7 @@ export interface GetSyncSessionOptions {
   /**
    * Explicit path to the Reference UI output directory (absolute, or relative
    * to `cwd`). When omitted, `getSyncSession` walks up from `cwd` looking for
-   * a `.reference-ui/session.json`. Set this when the project uses a custom
+  * a hidden session manifest under the output directory. Set this when the project uses a custom
    * `outDir` in its `reference-ui.config.*`.
    */
   outDir?: string

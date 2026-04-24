@@ -6,6 +6,7 @@ These functions answer questions like:
 
 - where is `ui.config.ts`?
 - what is the configured `outDir` on disk?
+- where is the hidden temp area under the project or outDir?
 - where is `outDir/virtual`?
 - where is the `@reference-ui/core` package root?
 - where is `dist/cli/...` for worker files?
@@ -14,6 +15,7 @@ These functions answer questions like:
 
 - config file candidate resolution
 - output directory path helpers
+- hidden temp-directory path helpers
 - workspace/package-root discovery
 - dist/cli path derivation
 
