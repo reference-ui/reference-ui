@@ -1,0 +1,8 @@
+---
+'@reference-ui/rust': patch
+'@reference-ui/core': patch
+'@reference-ui/icons': patch
+'@reference-ui/lib': patch
+---
+
+CI RELEASE
