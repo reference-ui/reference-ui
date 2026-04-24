@@ -5,9 +5,13 @@ import {
   createExportStarPackageFixture,
   createNodeBuiltinHelperFixture,
   createNodeModulesWrapperFixture,
+  createReactReexportFixture,
+  createSyncedWorkspaceFixture,
   createSubpathPackageFixture,
   traceCase,
   traceDir,
+  traceDirWithHint,
+  traceDirWithoutHint,
   traceFixtureDir,
 } from './helpers'
 
@@ -97,6 +101,29 @@ describe('styletrace', () => {
 
     try {
       await expect(traceDir(fixture.rootDir)).resolves.toEqual(['AppCard'])
+    } finally {
+      await fixture.cleanup()
+    }
+  })
+
+  it('traces local re-exports of @reference-ui/react', async () => {
+    const fixture = await createReactReexportFixture()
+
+    try {
+      await expect(traceDir(fixture.rootDir)).resolves.toEqual(['AppCard', 'Div'])
+    } finally {
+      await fixture.cleanup()
+    }
+  })
+
+  it('resolves synced workspaces from the nearest .reference-ui root and accepts explicit sync root hints', async () => {
+    const fixture = await createSyncedWorkspaceFixture()
+
+    try {
+      await expect(traceDirWithoutHint(`${fixture.rootDir}/consumer-app/src`)).resolves.toEqual(['AppCard'])
+      await expect(
+        traceDirWithHint(`${fixture.rootDir}/consumer-app/src`, fixture.syncRootHint),
+      ).resolves.toEqual(['AppCard'])
     } finally {
       await fixture.cleanup()
     }

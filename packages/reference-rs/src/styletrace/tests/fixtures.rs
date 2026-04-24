@@ -67,6 +67,10 @@ pub(super) fn workspace_root() -> PathBuf {
         .to_path_buf()
 }
 
+pub(super) fn workspace_sync_root() -> PathBuf {
+    workspace_root().join("packages").join("reference-lib")
+}
+
 pub(super) fn workspace_scratch_dir(name: &str) -> ScratchDir {
     let base_dir = workspace_root().join("target").join("styletrace-tests");
     fs::create_dir_all(&base_dir).expect("expected workspace scratch base dir");

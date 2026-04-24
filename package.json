@@ -21,7 +21,7 @@
     "playwright:install": "pnpm --filter @reference-ui/reference-e2e exec playwright install chromium",
     "release:detect": "node ./scripts/release/detect.mjs",
     "release:publish": "node ./scripts/release/publish.mjs",
-    "release": "changeset publish",
+    "release": "pnpm pipeline release",
     "test": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/reference-e2e run test",
     "test:quick": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/reference-e2e run test:quick",
     "test:lib": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/lib run test",

@@ -15,6 +15,12 @@ import {
   loadPackedTarballsIntoLocalRegistry,
   registryManifestPath,
 } from './registry/index.js'
+import {
+  defaultNpmAuthRegistryUrl,
+  formatReleasePlan,
+  getReleasePlan,
+  runLocalRelease,
+} from './release/index.js'
 
 const program = new Command()
 
@@ -77,4 +83,31 @@ registryCommand
     await loadPackedTarballsIntoLocalRegistry(options.registry)
   })
 
-await program.parseAsync(process.argv)
+const releaseCommand = program
+  .command('release')
+  .description('Publish the current release package tarballs to npm')
+  .option('--auth-registry <url>', 'Registry URL used for npm whoami and publish', defaultNpmAuthRegistryUrl)
+  .option('--no-npm-auth-check', 'Skip the npm whoami preflight against the publish registry')
+  .action(async (options: {
+    authRegistry: string
+    npmAuthCheck: boolean
+  }) => {
+    await runLocalRelease({
+      authRegistryUrl: options.authRegistry,
+      verifyNpmAuth: options.npmAuthCheck,
+    })
+  })
+
+releaseCommand
+  .command('plan')
+  .description('Show the current unpublished release packages that would be published')
+  .action(async () => {
+    console.log(formatReleasePlan(await getReleasePlan()))
+  })
+
+try {
+  await program.parseAsync(process.argv)
+} catch (error) {
+  console.error(error instanceof Error ? error.message : String(error))
+  process.exitCode = 1
+}

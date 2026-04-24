@@ -57,8 +57,8 @@ describe('createSessionWatcher', () => {
 
     const watcherCallback: ParcelCallback = callback
 
-    watcherCallback(null, [{ path: '/repo/.reference-ui/session.json.tmp' }])
-    watcherCallback(null, [{ path: '/repo/.reference-ui/session.json' }])
+    watcherCallback(null, [{ path: '/repo/.reference-ui/tmp/session.json.tmp' }])
+    watcherCallback(null, [{ path: '/repo/.reference-ui/tmp/session.json' }])
 
     expect(changes).toHaveLength(2)
 
@@ -93,7 +93,7 @@ describe('createSessionWatcher', () => {
 
     const watcherCallback: ParcelCallback = callback
 
-    watcherCallback(null, [{ path: '/repo/.reference-ui/session.json.tmp' }])
+    watcherCallback(null, [{ path: '/repo/.reference-ui/tmp/session.json.tmp' }])
     watcher.dispose()
 
     await vi.advanceTimersByTimeAsync(10)

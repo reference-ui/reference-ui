@@ -33,7 +33,7 @@ export function CssDemo() {
             <div
               className={css({
                 padding: '4r',
-                bg: 'blue.500',
+                bg: 'pink.500',
                 color: 'gray.50',
                 borderRadius: 'md',
                 fontWeight: '600',

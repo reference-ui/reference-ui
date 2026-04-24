@@ -18,8 +18,14 @@ export function validateMatrixFixtures(): void {
 
   const packageNames = matrixPackages.map((entry) => entry.workspacePackage.name)
 
-  if (!packageNames.includes('@fixtures/install-test')) {
-    throw new Error('Expected @fixtures/install-test to be discoverable as the first matrix-enabled fixture.')
+  if (!packageNames.includes('@matrix/install')) {
+    throw new Error('Expected @matrix/install to be discoverable as the first matrix-enabled matrix package.')
+  }
+
+  for (const entry of matrixPackages) {
+    if (!entry.workspacePackage.scripts.test) {
+      throw new Error(`Matrix fixture ${entry.workspacePackage.name} must define a \`test\` script.`)
+    }
   }
 
   console.log('Discovered matrix packages:')

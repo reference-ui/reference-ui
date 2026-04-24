@@ -46,8 +46,8 @@ export function analyzeAtlas(rootDir: string, configJson?: string): string {
   return native.analyzeAtlas(rootDir, configJson)
 }
 
-export function analyzeStyletrace(rootDir: string): string {
+export function analyzeStyletrace(rootDir: string, syncRootHint?: string): string {
   const native = requireVirtualNative('analyze Styletrace data')
 
-  return native.analyzeStyletrace(rootDir)
+  return native.analyzeStyletrace(rootDir, syncRootHint)
 }

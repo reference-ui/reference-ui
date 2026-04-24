@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { getVirtualNativePackageName, getVirtualNativeTriple } from '../shared/targets'
+
 async function importLoaderModule(options?: {
   currentModulePath?: string
   existingPaths?: string[]
@@ -139,8 +141,15 @@ describe('loader', () => {
     })
 
     const message = getVirtualNativeUnavailableMessage('rewrite CSS imports')
+    const triple = getVirtualNativeTriple(process.platform, process.arch)
+
+    expect(triple).not.toBeNull()
+    const packageName = getVirtualNativePackageName(triple!)
 
     expect(message).toContain('Prebuilt binaries for @reference-ui/rust should install automatically')
+    expect(message).toContain(`Expected optional target package: ${packageName}`)
+    expect(message).toContain(`The platform package ${packageName} was not installed alongside @reference-ui/rust`)
+    expect(message).toContain('Searched paths:')
     expect(message).toContain('Reinstall dependencies so your package manager can fetch the correct prebuilt binary')
     expect(message).not.toContain('pnpm --filter @reference-ui/rust run build')
   })

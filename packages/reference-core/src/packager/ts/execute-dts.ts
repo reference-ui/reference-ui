@@ -1,45 +1,38 @@
-import { logProfilerSample } from '../../lib/profiler'
-import { log } from '../../lib/log'
-import { installPackagesTs } from './install'
+import { installPackagesTs } from './install/packages'
 import type {
+  RunPackagerTsPayload,
   TsPackagerCompletionEvent,
-  TsPackagerDtsPayload,
-  TsPackagerWorkerPayload,
+  TsPackageInput,
 } from './types'
 
-function dtsPhaseLabel(completionEvent: TsPackagerCompletionEvent): 'runtime' | 'final' {
-  return completionEvent === 'packager-ts:runtime:complete' ? 'runtime' : 'final'
-}
-
-function getPackagesForRun(
-  payload: TsPackagerDtsPayload,
+export function getTsPackagesForCompletionEvent(
   completionEvent: TsPackagerCompletionEvent
-): TsPackagerWorkerPayload['packages'] {
+): TsPackageInput[] {
   if (completionEvent === 'packager-ts:runtime:complete') {
-    return payload.packages.filter(
-      pkg => pkg.name === '@reference-ui/react' || pkg.name === '@reference-ui/system'
-    )
+    return [
+      {
+        name: '@reference-ui/react',
+        sourceEntry: 'src/entry/react.ts',
+        outFile: 'react.mjs',
+      },
+      {
+        name: '@reference-ui/system',
+        sourceEntry: 'src/entry/system.ts',
+        outFile: 'system.mjs',
+      },
+    ]
   }
 
-  return payload.packages.filter(pkg => pkg.name === '@reference-ui/types')
+  return [
+    {
+      name: '@reference-ui/types',
+      sourceEntry: 'src/entry/types.ts',
+      outFile: 'types.mjs',
+    },
+  ]
 }
 
-/**
- * Heavy DTS work (install + generated types). Runs in the packager-ts **child** process
- * so the worker thread does not retain tsdown/tsc graph in its isolate.
- */
-export async function executePackagerTsDts(
-  payload: TsPackagerDtsPayload,
-  completionEvent: TsPackagerCompletionEvent
-): Promise<void> {
-  const { cwd } = payload
-  const packages = getPackagesForRun(payload, completionEvent)
-  const phase = dtsPhaseLabel(completionEvent)
-
-  log.debug('packager:ts', 'Generating TypeScript declarations...')
-
-  logProfilerSample(`packager-ts:dts:${phase}:before`)
-  await installPackagesTs(cwd, packages)
-  logProfilerSample(`packager-ts:dts:${phase}:after`)
-  log.debug('packager:ts', 'Declarations ready')
+export async function executeDts(payload: RunPackagerTsPayload): Promise<void> {
+  const packages = payload.packages ?? getTsPackagesForCompletionEvent(payload.completionEvent)
+  await installPackagesTs(payload.cwd, packages)
 }

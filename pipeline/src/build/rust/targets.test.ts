@@ -3,7 +3,12 @@ import { describe, it } from 'node:test'
 
 import {
   createReferenceRustPackageJsonOverride,
+  findMissingRequiredReferenceRustTargets,
+  getReferenceRustTargetPackageValidationErrors,
+  getLocallyBuildableReferenceRustTargets,
+  resolveLocalReferenceRustTargetBuildStrategy,
   resolveReferenceRustTargetTarballStrategy,
+  shouldBuildLinuxReferenceRustTargetWithDagger,
 } from './targets.js'
 
 describe('createReferenceRustPackageJsonOverride', () => {
@@ -75,6 +80,159 @@ describe('resolveReferenceRustTargetTarballStrategy', () => {
         tarballExists: false,
       }),
       'skip-target',
+    )
+  })
+})
+
+describe('getLocallyBuildableReferenceRustTargets', () => {
+  it('returns all release targets on macOS hosts', () => {
+    assert.deepEqual(
+      getLocallyBuildableReferenceRustTargets('darwin-x64', 'darwin'),
+      ['darwin-x64', 'darwin-arm64', 'linux-x64-gnu', 'win32-x64-msvc'],
+    )
+  })
+
+  it('returns linux and windows when the host target is unavailable on non-darwin hosts', () => {
+    assert.deepEqual(getLocallyBuildableReferenceRustTargets(null, 'linux'), ['linux-x64-gnu', 'win32-x64-msvc'])
+  })
+})
+
+describe('resolveLocalReferenceRustTargetBuildStrategy', () => {
+  it('reuses the host binary for the active target', () => {
+    assert.equal(
+      resolveLocalReferenceRustTargetBuildStrategy({
+        hostPlatform: 'darwin',
+        hostTarget: 'darwin-x64',
+        target: 'darwin-x64',
+      }),
+      'reuse-host-binary',
+    )
+  })
+
+  it('uses local darwin cross compilation for the opposite macOS arch', () => {
+    assert.equal(
+      resolveLocalReferenceRustTargetBuildStrategy({
+        hostPlatform: 'darwin',
+        hostTarget: 'darwin-x64',
+        target: 'darwin-arm64',
+      }),
+      'build-darwin-cross-target',
+    )
+  })
+
+  it('uses napi cross compilation for the windows target', () => {
+    assert.equal(
+      resolveLocalReferenceRustTargetBuildStrategy({
+        hostPlatform: 'darwin',
+        hostTarget: 'darwin-x64',
+        target: 'win32-x64-msvc',
+      }),
+      'build-windows-cross-target',
+    )
+  })
+})
+
+describe('findMissingRequiredReferenceRustTargets', () => {
+  it('returns only targets that are neither buildable nor otherwise available', () => {
+    assert.deepEqual(
+      findMissingRequiredReferenceRustTargets({
+        artifactTargets: [],
+        cachedTarballTargets: [],
+        locallyBuildableTargets: ['darwin-x64', 'darwin-arm64', 'linux-x64-gnu', 'win32-x64-msvc'],
+        publishedTargets: [],
+        requiredTargets: ['darwin-x64', 'darwin-arm64', 'linux-x64-gnu', 'win32-x64-msvc'],
+      }),
+      [],
+    )
+  })
+})
+
+describe('getReferenceRustTargetPackageValidationErrors', () => {
+  it('accepts a complete set of target packages aligned to the root version', () => {
+    assert.deepEqual(
+      getReferenceRustTargetPackageValidationErrors({
+        rootVersion: '0.0.21',
+        targetPackages: [
+          { name: '@reference-ui/rust-darwin-arm64', version: '0.0.21' },
+          { name: '@reference-ui/rust-darwin-x64', version: '0.0.21' },
+          { name: '@reference-ui/rust-linux-x64-gnu', version: '0.0.21' },
+          { name: '@reference-ui/rust-win32-x64-msvc', version: '0.0.21' },
+        ],
+      }),
+      [],
+    )
+  })
+
+  it('reports missing and mismatched target packages against the root version', () => {
+    assert.deepEqual(
+      getReferenceRustTargetPackageValidationErrors({
+        rootVersion: '0.0.21',
+        targetPackages: [
+          { name: '@reference-ui/rust-darwin-arm64', version: '0.0.21' },
+          { name: '@reference-ui/rust-darwin-x64', version: '0.0.20' },
+          { name: '@reference-ui/rust-win32-x64-msvc', version: '0.0.21' },
+        ],
+      }),
+      [
+        'Generated native package @reference-ui/rust-darwin-x64@0.0.20 does not match @reference-ui/rust@0.0.21.',
+        'Missing generated native package @reference-ui/rust-linux-x64-gnu@0.0.21.',
+      ],
+    )
+  })
+})
+
+describe('shouldBuildLinuxReferenceRustTargetWithDagger', () => {
+  it('returns true when linux is required and no local or published linux package is available', () => {
+    assert.equal(
+      shouldBuildLinuxReferenceRustTargetWithDagger({
+        publishedOnNpm: false,
+        requiredTargets: ['linux-x64-gnu'],
+        targetPackage: {
+          hasLocalBinary: false,
+          name: '@reference-ui/rust-linux-x64-gnu',
+        },
+      }),
+      true,
+    )
+  })
+
+  it('returns false when linux is not required', () => {
+    assert.equal(
+      shouldBuildLinuxReferenceRustTargetWithDagger({
+        publishedOnNpm: false,
+        requiredTargets: ['darwin-x64'],
+        targetPackage: {
+          hasLocalBinary: false,
+          name: '@reference-ui/rust-linux-x64-gnu',
+        },
+      }),
+      false,
+    )
+  })
+
+  it('returns false when the linux target already has a local binary or published package', () => {
+    assert.equal(
+      shouldBuildLinuxReferenceRustTargetWithDagger({
+        publishedOnNpm: false,
+        requiredTargets: ['linux-x64-gnu'],
+        targetPackage: {
+          hasLocalBinary: true,
+          name: '@reference-ui/rust-linux-x64-gnu',
+        },
+      }),
+      false,
+    )
+
+    assert.equal(
+      shouldBuildLinuxReferenceRustTargetWithDagger({
+        publishedOnNpm: true,
+        requiredTargets: ['linux-x64-gnu'],
+        targetPackage: {
+          hasLocalBinary: false,
+          name: '@reference-ui/rust-linux-x64-gnu',
+        },
+      }),
+      false,
     )
   })
 })

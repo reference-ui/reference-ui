@@ -1,6 +1,6 @@
 {
   "name": "@reference-ui/core",
-  "version": "0.0.17",
+  "version": "0.0.25",
   "private": false,
   "description": "Reference UI core",
   "repository": {
@@ -36,7 +36,7 @@
   },
   "scripts": {
     "copy:reference-api-component": "node tools/copy-reference-api-component.mjs",
-    "prebuild": "tsx src/system/build/primitives/index.ts && tsx src/system/build/styled/index.ts && pnpm run copy:reference-api-component",
+    "prebuild": "node tools/clean-dist.mjs && tsx src/system/build/primitives/index.ts && tsx src/system/build/styled/index.ts && pnpm run copy:reference-api-component",
     "build": "pnpm run build:native && tsup",
     "build:native": "node ../../scripts/pipeline/run-if-env-absent.mjs REF_PIPELINE_SKIP_DEPENDENCY_BUILDS \"pnpm --filter @reference-ui/rust run build\"",
     "prepack": "pnpm run copy:reference-api-component && pnpm run build",
@@ -66,6 +66,7 @@
     "@pandacss/node": "^1.9.0",
     "@pandacss/types": "^1.9.0",
     "@parcel/watcher": "^2.5.6",
+    "@typescript/native-preview": "7.0.0-dev.20260421.2",
     "@reference-ui/rust": "workspace:*",
     "@rspress/mdx-rs": "^0.6.6",
     "commander": "^14.0.3",
@@ -78,7 +79,7 @@
     "postcss": "^8.5.8",
     "postcss-selector-parser": "^7.1.1",
     "symlink-dir": "^9.0.0",
-    "tsdown": "^0.21.5",
+    "tsdown": "^0.21.10",
     "tsup": "^8.4.0",
     "zod": "^4.3.6"
   },

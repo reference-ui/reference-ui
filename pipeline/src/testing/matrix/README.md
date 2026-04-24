@@ -60,5 +60,7 @@ This is one of the main testing directions for the pipeline.
 	- unit-level checks for helpers and workflow logic
 - `pnpm pipeline:test:matrix`
 	- tests matrix inputs and bootstrap wiring
-	- currently reuses the single pipeline-managed Verdaccio registry, binds that shared host registry into Dagger, installs a minimal consumer from the `install-test` fixture, and runs `ref sync` in a clean container
+	- currently reuses the single pipeline-managed Verdaccio registry, binds that shared host registry into Dagger, installs a minimal consumer from the `matrix/install` package, runs `ref sync`, and then runs that package's standard `pnpm test` command inside the clean container
+	- when the required linux Rust target package is missing from local tarballs and public npm, the pipeline builds that native artifact inside Dagger, stages it into the generated npm target package, and loads that package into the local registry before the consumer install step
+	- this keeps matrix/testing self-contained: internal test installs should come from the pipeline registry, not from whatever happens to be published publicly
 	- on macOS, it will start Colima automatically when the active Docker context is `colima` and the VM is not already running

@@ -12,13 +12,15 @@ export function createMatrixConsumerTsconfig(): string {
     {
       compilerOptions: {
         jsx: 'react-jsx',
+        lib: ['ES2022', 'DOM', 'DOM.Iterable'],
         module: 'esnext',
         moduleResolution: 'bundler',
+        types: [],
         target: 'es2022',
         strict: true,
         skipLibCheck: true,
       },
-      include: ['src/**/*', 'ui.config.ts'],
+      include: ['src/**/*', 'tests/**/*', 'ui.config.ts'],
     },
     null,
     2,

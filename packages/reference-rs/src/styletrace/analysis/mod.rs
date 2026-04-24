@@ -1,10 +1,12 @@
 //! Directory-level wrapper tracing for public JSX components.
 
 mod analyzer;
-mod discovery;
+mod module_resolution;
 mod model;
 mod parser;
+mod primitive_metadata;
+mod source_files;
 mod util;
 mod walk;
 
-pub use analyzer::trace_style_jsx_names;
+pub use analyzer::{trace_style_jsx_names, trace_style_jsx_names_with_hint};

@@ -94,6 +94,11 @@ function getSystemGeneratedTypesPath(cwd: string): string {
   return join(getSystemTypesDir(cwd), 'types.generated.d.mts')
 }
 
+function getSiblingDeclarationPath(typesPath: string, basename: string): string | undefined {
+  const siblingDtsPath = join(dirname(typesPath), 'types', `${basename}.d.ts`)
+  return existsSync(siblingDtsPath) ? siblingDtsPath : undefined
+}
+
 export async function writeGeneratedSystemFontTypes(
   cwd: string,
   fragment: string
@@ -152,6 +157,16 @@ async function writeGeneratedPackageTypes(
   const generatedTypesPath = join(dirname(typesPath), 'types.generated.d.mts')
 
   writeFileAtomic(generatedTypesPath, renderGeneratedFontRegistryFile(registry), 'utf-8')
+
+  const splitFontRegistryPath = getSiblingDeclarationPath(typesPath, 'fontRegistry')
+  const splitFontsPath = getSiblingDeclarationPath(typesPath, 'fonts')
+
+  if (splitFontRegistryPath && splitFontsPath) {
+    writeFontRegistryIntoTypes(splitFontRegistryPath, registry)
+    writeFontRegistryIntoTypes(splitFontsPath, registry)
+    return
+  }
+
   writeFontRegistryIntoTypes(typesPath, registry)
 }
 

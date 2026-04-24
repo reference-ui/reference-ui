@@ -8,6 +8,7 @@ async function importPublishStagedDirModule(options?: {
 
   const rename = vi.fn<(...args: [string, string]) => Promise<void>>()
   const rm = vi.fn<(...args: [string]) => Promise<void>>()
+  const cp = vi.fn<(...args: [string, string]) => Promise<void>>()
   const existing = new Set(options?.existingDirs ?? [])
   let renameCalls = 0
 
@@ -24,16 +25,21 @@ async function importPublishStagedDirModule(options?: {
     existing.delete(dirPath)
   })
 
+  cp.mockImplementation(async (from: string, to: string) => {
+    existing.add(to)
+  })
+
   vi.doMock('node:fs', () => ({
     existsSync: (dirPath: string) => existing.has(dirPath),
   }))
   vi.doMock('node:fs/promises', () => ({
+    cp,
     rename,
     rm,
   }))
 
   const mod = await import('./publish-staged-dir')
-  return { ...mod, rename, rm }
+  return { ...mod, cp, existing, rename, rm }
 }
 
 afterEach(() => {
@@ -89,5 +95,53 @@ describe('publishStagedDir', () => {
     expect(rename).toHaveBeenNthCalledWith(2, stagedDir, liveDir)
     expect(rename).toHaveBeenNthCalledWith(3, previousDir, liveDir)
     expect(rm).not.toHaveBeenCalledWith(previousDir, { recursive: true, force: true })
+  })
+
+  it('falls back to copying when the live directory cannot be renamed across filesystems', async () => {
+    const stagedDir = '/tmp/virtual.next'
+    const liveDir = '/tmp/virtual'
+    const previousDir = '/tmp/virtual.prev'
+    const exdevError = Object.assign(new Error('cross-device link not permitted'), {
+      code: 'EXDEV',
+    })
+    const { publishStagedDir, cp, rename, rm } = await importPublishStagedDirModule({
+      existingDirs: [stagedDir, liveDir],
+    })
+
+    rename.mockRejectedValueOnce(exdevError)
+
+    await publishStagedDir(stagedDir, liveDir)
+
+    expect(rename).toHaveBeenCalledTimes(1)
+    expect(rename).toHaveBeenCalledWith(liveDir, previousDir)
+    expect(cp).toHaveBeenCalledWith(stagedDir, liveDir, { recursive: true })
+    expect(rm).toHaveBeenCalledWith(liveDir, { recursive: true, force: true })
+    expect(rm).toHaveBeenCalledWith(stagedDir, { recursive: true, force: true })
+  })
+
+  it('falls back to copying when the staged directory cannot be renamed across filesystems', async () => {
+    const stagedDir = '/tmp/virtual.next'
+    const liveDir = '/tmp/virtual'
+    const previousDir = '/tmp/virtual.prev'
+    const exdevError = Object.assign(new Error('cross-device link not permitted'), {
+      code: 'EXDEV',
+    })
+    const { publishStagedDir, cp, existing, rename, rm } = await importPublishStagedDirModule({
+      existingDirs: [stagedDir, liveDir],
+    })
+
+    rename.mockImplementationOnce(async (from: string, to: string) => {
+      existing.delete(from)
+      existing.add(to)
+    })
+    rename.mockRejectedValueOnce(exdevError)
+
+    await publishStagedDir(stagedDir, liveDir)
+
+    expect(rename).toHaveBeenNthCalledWith(1, liveDir, previousDir)
+    expect(rename).toHaveBeenNthCalledWith(2, stagedDir, liveDir)
+    expect(cp).toHaveBeenCalledWith(stagedDir, liveDir, { recursive: true })
+    expect(rm).toHaveBeenCalledWith(stagedDir, { recursive: true, force: true })
+    expect(rm).toHaveBeenCalledWith(previousDir, { recursive: true, force: true })
   })
 })

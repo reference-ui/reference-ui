@@ -12,10 +12,10 @@ import { resolve } from 'node:path'
 import { z } from 'zod'
 import { log } from '../../lib/log'
 import { readMcpArtifact } from '../pipeline/artifact'
-import { buildMcpArtifact } from '../pipeline/build'
 import { getMcpModelPath } from '../pipeline/paths'
 import { findComponent, getCommonPatterns, listComponents } from '../pipeline/queries'
 import type { McpBuildArtifact, McpPublicModel } from '../pipeline/types'
+import { spawnMcpBuildChild } from '../worker/child-process/process'
 
 export interface CreateReferenceMcpServerOptions {
   cwd: string
@@ -50,10 +50,15 @@ export function createMcpModelState(options: { cwd: string }): McpModelState {
   let artifact: McpBuildArtifact | null = null
   let bgRunning = false
 
+  async function buildArtifactInChild(): Promise<McpBuildArtifact> {
+    await spawnMcpBuildChild(cwd)
+    return readMcpArtifact(cwd)
+  }
+
   function scheduleBackgroundRefresh(): void {
     if (bgRunning) return
     bgRunning = true
-    buildMcpArtifact({ cwd })
+    buildArtifactInChild()
       .then(next => {
         artifact = next
       })
@@ -72,7 +77,7 @@ export function createMcpModelState(options: { cwd: string }): McpModelState {
         artifact = await readMcpArtifact(cwd)
         scheduleBackgroundRefresh()
       } else {
-        artifact = await buildMcpArtifact({ cwd })
+        artifact = await buildArtifactInChild()
       }
     },
 

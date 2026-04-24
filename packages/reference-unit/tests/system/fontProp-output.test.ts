@@ -61,27 +61,33 @@ describe('font prop output (e2e)', () => {
   })
 
   it('emits generated system font registry types', async () => {
-    const systemTypes = await waitForGeneratedFileContaining(
+    const systemFontRegistryTypes = await waitForGeneratedFileContaining(
       'interface FontRegistry {',
       'system',
-      'system.d.mts'
+      'types',
+      'fontRegistry.d.ts'
     )
     const systemGeneratedTypes = await waitForGeneratedFile('system', 'types.generated.d.mts')
-    const reactTypes = await waitForGeneratedFileContaining(
+    const reactFontRegistryTypes = await waitForGeneratedFileContaining(
       'interface FontRegistry {',
       'react',
-      'react.d.mts'
+      'types',
+      'fontRegistry.d.ts'
+    )
+    const reactFontTypes = await waitForGeneratedFileContaining(
+      'type FontProps = FallbackFontProps',
+      'react',
+      'types',
+      'fonts.d.ts'
     )
     const reactGeneratedTypes = await waitForGeneratedFile('react', 'types.generated.d.mts')
 
-    expect(systemTypes).toContain('interface FontRegistry {')
+    expect(systemFontRegistryTypes).toContain('interface FontRegistry {')
     expect(systemGeneratedTypes).toContain('interface FontRegistry {')
     expect(systemGeneratedTypes).toContain('"sans": {')
-    expect(reactTypes).toContain('interface FontRegistry {')
-    // Decl emit uses FallbackFontProps & conditional ScopedFontProps (see `src/types/fonts.ts`) so
-    // d.ts bundlers / tsdown do not collapse FontProps to `never` when the registry is empty.
-    expect(reactTypes).toMatch(/type FontProps = FallbackFontProps/)
-    expect(reactTypes).toContain('ScopedFontProps')
+    expect(reactFontRegistryTypes).toContain('interface FontRegistry {')
+    expect(reactFontTypes).toMatch(/type FontProps = FallbackFontProps/)
+    expect(reactFontTypes).toContain('ScopedFontProps')
     expect(reactGeneratedTypes).toContain('"sans": {')
     expect(reactGeneratedTypes).toContain('"bold": true')
   }, 20_000)
