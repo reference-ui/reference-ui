@@ -38,4 +38,10 @@ ad hoc temp-file logic in feature modules.
 3. move the staged tree into the live path
 4. remove the previous tree after the new one is visible
 
+When rename semantics are unavailable across the relevant filesystem boundary
+for a directory move, `publishStagedDir()` falls back to copying the staged
+tree into place. That fallback is not atomic, but it keeps repeated sync flows
+working in container/mount layouts where sibling directory renames can raise
+`EXDEV`.
+
  

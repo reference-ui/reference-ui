@@ -77,37 +77,6 @@ importers:
         specifier: ^4.0.18
         version: 4.0.18(@opentelemetry/api@1.9.1)(@types/node@25.1.0)(happy-dom@15.11.7)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.2)
 
-  fixtures/install-test:
-    dependencies:
-      '@reference-ui/core':
-        specifier: workspace:*
-        version: link:../../packages/reference-core
-      '@reference-ui/lib':
-        specifier: workspace:*
-        version: link:../../packages/reference-lib
-      react:
-        specifier: ^19.2.0
-        version: 19.2.4
-      react-dom:
-        specifier: ^19.2.0
-        version: 19.2.4(react@19.2.4)
-    devDependencies:
-      '@types/node':
-        specifier: ^25.1.0
-        version: 25.1.0
-      '@types/react':
-        specifier: ^19.2.2
-        version: 19.2.14
-      '@types/react-dom':
-        specifier: ^19.2.2
-        version: 19.2.3(@types/react@19.2.14)
-      typescript:
-        specifier: ~5.9.3
-        version: 5.9.3
-      vitest:
-        specifier: ^4.0.18
-        version: 4.0.18(@opentelemetry/api@1.9.1)(@types/node@25.1.0)(happy-dom@15.11.7)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.2)
-
   fixtures/layer-library:
     devDependencies:
       '@reference-ui/core':
@@ -143,6 +112,68 @@ importers:
       react:
         specifier: '*'
         version: 19.2.4
+
+  matrix/install:
+    dependencies:
+      '@reference-ui/core':
+        specifier: workspace:*
+        version: link:../../packages/reference-core
+      '@reference-ui/lib':
+        specifier: workspace:*
+        version: link:../../packages/reference-lib
+      react:
+        specifier: ^19.2.0
+        version: 19.2.4
+      react-dom:
+        specifier: ^19.2.0
+        version: 19.2.4(react@19.2.4)
+    devDependencies:
+      '@types/node':
+        specifier: ^25.1.0
+        version: 25.1.0
+      '@types/react':
+        specifier: ^19.2.2
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: ^19.2.2
+        version: 19.2.3(@types/react@19.2.14)
+      typescript:
+        specifier: ~5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.0.18
+        version: 4.0.18(@opentelemetry/api@1.9.1)(@types/node@25.1.0)(happy-dom@15.11.7)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.2)
+
+  matrix/typescript:
+    dependencies:
+      '@reference-ui/core':
+        specifier: workspace:*
+        version: link:../../packages/reference-core
+      '@reference-ui/lib':
+        specifier: workspace:*
+        version: link:../../packages/reference-lib
+      react:
+        specifier: ^19.2.0
+        version: 19.2.4
+      react-dom:
+        specifier: ^19.2.0
+        version: 19.2.4(react@19.2.4)
+    devDependencies:
+      '@types/node':
+        specifier: ^25.1.0
+        version: 25.1.0
+      '@types/react':
+        specifier: ^19.2.2
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: ^19.2.2
+        version: 19.2.3(@types/react@19.2.14)
+      typescript:
+        specifier: ~5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.0.18
+        version: 4.0.18(@opentelemetry/api@1.9.1)(@types/node@25.1.0)(happy-dom@15.11.7)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/reference-core:
     dependencies:

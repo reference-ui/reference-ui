@@ -1,5 +1,5 @@
 // Folders in the workspace that contain packages.
-export const workspacePackageRoots = ['packages', 'fixtures'] as const
+export const workspacePackageRoots = ['packages', 'fixtures', 'matrix'] as const
 
 // Managed local registry coordinates shared across registry and matrix flows.
 export const managedRegistryHost = '127.0.0.1' as const

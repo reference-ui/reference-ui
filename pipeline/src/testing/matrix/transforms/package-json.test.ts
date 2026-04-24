@@ -15,7 +15,7 @@ describe('createMatrixConsumerPackageJson', () => {
         typescript: '~5.9.3',
         vitest: '^4.0.18',
       },
-      name: '@fixtures/install-test',
+      name: '@matrix/install',
       private: true,
       scripts: {
         test: 'vitest run && tsc --noEmit',
@@ -46,7 +46,7 @@ describe('createMatrixConsumerPackageJson', () => {
       typescript: '~5.9.3',
       vitest: '^4.0.18',
     })
-    assert.equal(packageJson.name, '@fixtures/install-test')
+    assert.equal(packageJson.name, '@matrix/install')
     assert.equal(packageJson.private, true)
     assert.equal(packageJson.scripts.test, 'vitest run && tsc --noEmit')
   })

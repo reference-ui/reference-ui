@@ -6,9 +6,10 @@
  */
 
 import { existsSync, readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { relative, resolve } from 'node:path'
 import { listWorkspacePackages } from '../../build/workspace.js'
 import type { WorkspacePackage } from '../../build/types.js'
+import { repoRoot } from '../../build/workspace.js'
 
 export interface MatrixPackageConfig {
   matrix: true
@@ -20,8 +21,16 @@ export interface MatrixWorkspacePackage {
   workspacePackage: WorkspacePackage
 }
 
+const matrixRootDir = resolve(repoRoot, 'matrix')
+
 function matrixConfigPath(packageDir: string): string {
   return resolve(packageDir, 'matrix.json')
+}
+
+export function isMatrixWorkspacePackageDir(packageDir: string): boolean {
+  const relativePath = relative(matrixRootDir, packageDir)
+
+  return relativePath.length > 0 && !relativePath.startsWith('..') && relativePath !== '.'
 }
 
 export function readMatrixPackageConfig(packageDir: string): MatrixPackageConfig | null {
@@ -44,6 +53,10 @@ export function readMatrixPackageConfig(packageDir: string): MatrixPackageConfig
 export function listMatrixWorkspacePackages(): MatrixWorkspacePackage[] {
   return listWorkspacePackages()
     .flatMap((workspacePackage) => {
+      if (!isMatrixWorkspacePackageDir(workspacePackage.dir)) {
+        return []
+      }
+
       const config = readMatrixPackageConfig(workspacePackage.dir)
       if (!config) {
         return []
