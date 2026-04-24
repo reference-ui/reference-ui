@@ -30,6 +30,7 @@ export interface BuildPackageJsonOverride {
 }
 
 export interface BuildRegistryArtifacts {
+  cacheKey?: string
   generatedPackages: BuildRegistryArtifactPackage[]
   packageHashAugmentations: Record<string, string>
   preparedPackageJsonOverrides: Record<string, BuildPackageJsonOverride>
