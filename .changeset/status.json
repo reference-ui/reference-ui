@@ -1,0 +1,146 @@
+{
+  "changesets": [
+    {
+      "releases": [
+        {
+          "name": "@reference-ui/icons",
+          "type": "patch"
+        },
+        {
+          "name": "@reference-ui/core",
+          "type": "patch"
+        },
+        {
+          "name": "@reference-ui/lib",
+          "type": "patch"
+        },
+        {
+          "name": "@reference-ui/rust",
+          "type": "patch"
+        }
+      ],
+      "summary": "CI RELEASE",
+      "id": "stale-falcons-wear"
+    },
+    {
+      "releases": [
+        {
+          "name": "@reference-ui/icons",
+          "type": "patch"
+        },
+        {
+          "name": "@reference-ui/core",
+          "type": "patch"
+        },
+        {
+          "name": "@reference-ui/lib",
+          "type": "patch"
+        },
+        {
+          "name": "@reference-ui/rust",
+          "type": "patch"
+        }
+      ],
+      "summary": "CI RELEASE",
+      "id": "strict-wolves-doubt"
+    }
+  ],
+  "releases": [
+    {
+      "name": "@reference-ui/icons",
+      "type": "patch",
+      "oldVersion": "0.0.24",
+      "changesets": [
+        "stale-falcons-wear",
+        "strict-wolves-doubt"
+      ],
+      "newVersion": "0.0.25"
+    },
+    {
+      "name": "@reference-ui/core",
+      "type": "patch",
+      "oldVersion": "0.0.24",
+      "changesets": [
+        "stale-falcons-wear",
+        "strict-wolves-doubt"
+      ],
+      "newVersion": "0.0.25"
+    },
+    {
+      "name": "@reference-ui/lib",
+      "type": "patch",
+      "oldVersion": "0.0.27",
+      "changesets": [
+        "stale-falcons-wear",
+        "strict-wolves-doubt"
+      ],
+      "newVersion": "0.0.28"
+    },
+    {
+      "name": "@reference-ui/rust",
+      "type": "patch",
+      "oldVersion": "0.0.23",
+      "changesets": [
+        "stale-falcons-wear",
+        "strict-wolves-doubt"
+      ],
+      "newVersion": "0.0.24"
+    },
+    {
+      "name": "@fixtures/extend-library",
+      "type": "none",
+      "oldVersion": "0.0.0",
+      "changesets": [],
+      "newVersion": "0.0.0"
+    },
+    {
+      "name": "@fixtures/layer-library",
+      "type": "none",
+      "oldVersion": "0.0.0",
+      "changesets": [],
+      "newVersion": "0.0.0"
+    },
+    {
+      "name": "@matrix/install",
+      "type": "none",
+      "oldVersion": "0.0.1",
+      "changesets": [],
+      "newVersion": "0.0.1"
+    },
+    {
+      "name": "@matrix/mcp",
+      "type": "none",
+      "oldVersion": "0.0.1",
+      "changesets": [],
+      "newVersion": "0.0.1"
+    },
+    {
+      "name": "@matrix/typescript",
+      "type": "none",
+      "oldVersion": "0.0.1",
+      "changesets": [],
+      "newVersion": "0.0.1"
+    },
+    {
+      "name": "@reference-ui/reference-docs",
+      "type": "none",
+      "oldVersion": "0.0.0",
+      "changesets": [],
+      "newVersion": "0.0.0"
+    },
+    {
+      "name": "@reference-ui/reference-e2e",
+      "type": "none",
+      "oldVersion": "0.0.0",
+      "changesets": [],
+      "newVersion": "0.0.0"
+    },
+    {
+      "name": "@reference-ui/reference-unit",
+      "type": "none",
+      "oldVersion": "0.0.0",
+      "changesets": [],
+      "newVersion": "0.0.0"
+    }
+  ]
+}

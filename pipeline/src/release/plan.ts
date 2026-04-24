@@ -10,8 +10,11 @@ import { execFileSync } from 'node:child_process'
 import { readdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { createNpmCommandEnv, repoRoot, listReleaseWorkspacePackages, sortPackagesForInternalDependencyOrder } from '../build/workspace.js'
+import type { WorkspacePackage } from '../build/types.js'
 import { releasePackageNames } from '../../config.js'
+import { readChangesetStatus } from './changesets.js'
 import type { ReleasePlan, ReleasePlanPackage } from './types.js'
+import type { ChangesetStatus } from './types.js'
 import { defaultNpmAuthRegistryUrl, rustPackageName } from './types.js'
 
 export const pendingChangesetVersionMaterializationErrorMessage =
@@ -44,6 +47,27 @@ function countPendingChangesetFiles(): number {
   }
 }
 
+export function changesetsRequireVersionMaterialization(
+  changesetStatus: ChangesetStatus,
+  releasePackages: readonly Pick<WorkspacePackage, 'name' | 'version'>[] = listReleaseWorkspacePackages(),
+): boolean {
+  const currentReleaseVersions = new Map(releasePackages.map((pkg) => [pkg.name, pkg.version]))
+  const releasablePackageNames = new Set(releasePackageNames)
+
+  return changesetStatus.releases.some((release) => {
+    if (!releasablePackageNames.has(release.name as (typeof releasePackageNames)[number])) {
+      return false
+    }
+
+    if (!release.newVersion) {
+      return false
+    }
+
+    const currentVersion = currentReleaseVersions.get(release.name)
+    return currentVersion !== undefined && currentVersion !== release.newVersion
+  })
+}
+
 export function createReleasePlan(
   releasePackages: readonly ReleasePlanPackage[] = sortPackagesForInternalDependencyOrder(
     listReleaseWorkspacePackages()
@@ -63,7 +87,26 @@ export function createReleasePlan(
 }
 
 export async function getReleasePlan(): Promise<ReleasePlan> {
-  const releasePlan = createReleasePlan()
+  const releaseWorkspacePackages = listReleaseWorkspacePackages()
+
+  if (countPendingChangesetFiles() > 0) {
+    const changesetStatus = await readChangesetStatus()
+
+    if (changesetsRequireVersionMaterialization(changesetStatus, releaseWorkspacePackages)) {
+      throw new Error(pendingChangesetVersionMaterializationErrorMessage)
+    }
+  }
+
+  const releasePlan = createReleasePlan(
+    sortPackagesForInternalDependencyOrder(
+      releaseWorkspacePackages
+        .filter((pkg) => !isPublishedOnNpm(pkg.name, pkg.version))
+        .map((pkg) => ({
+          ...pkg,
+          published: false,
+        })),
+    ) as ReleasePlanPackage[],
+  )
 
   if (releasePlan.packages.length > 0) {
     return releasePlan
