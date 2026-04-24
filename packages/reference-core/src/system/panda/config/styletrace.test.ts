@@ -19,9 +19,6 @@ function setupMocks(options?: { files?: string[]; traceMap?: TraceMap }) {
   vi.doMock('@reference-ui/rust/styletrace', () => ({
     trace,
   }))
-  vi.doMock('../../../lib/paths/core-package-dir', () => ({
-    resolveCorePackageDir: vi.fn(() => '/workspace/packages/reference-core'),
-  }))
   vi.doMock('../../../lib/log', () => ({
     log: { warn },
   }))
@@ -33,7 +30,6 @@ afterEach(() => {
   vi.resetModules()
   vi.doUnmock('fast-glob')
   vi.doUnmock('@reference-ui/rust/styletrace')
-  vi.doUnmock('../../../lib/paths/core-package-dir')
   vi.doUnmock('../../../lib/log')
   vi.restoreAllMocks()
 })
@@ -71,8 +67,8 @@ describe('system/panda/config/styletrace', () => {
 
     await expect(traceIncludedJsxElements('/workspace/app', ['src/**/*.{ts,tsx}', 'tests/**/*.tsx']))
       .resolves.toEqual(['MyIcon', 'ShellCard', 'TestHarness'])
-    expect(trace).toHaveBeenCalledWith('/workspace/app/src', '/workspace/packages/reference-core')
-    expect(trace).toHaveBeenCalledWith('/workspace/app/tests', '/workspace/packages/reference-core')
+    expect(trace).toHaveBeenCalledWith('/workspace/app/src', '/workspace/app')
+    expect(trace).toHaveBeenCalledWith('/workspace/app/tests', '/workspace/app')
   })
 
   it('ignores non-JSX helper files when deriving trace roots', async () => {
@@ -129,8 +125,8 @@ describe('system/panda/config/styletrace', () => {
 
     await expect(traceIncludedJsxElements('/workspace/app', ['src/**/*.{ts,tsx}', 'tests/**/*.{ts,tsx}']))
       .resolves.toEqual(['AppShell'])
-    expect(trace).toHaveBeenCalledWith('/workspace/app/src', '/workspace/packages/reference-core')
-    expect(trace).toHaveBeenCalledWith('/workspace/app/tests/reference', '/workspace/packages/reference-core')
+    expect(trace).toHaveBeenCalledWith('/workspace/app/src', '/workspace/app')
+    expect(trace).toHaveBeenCalledWith('/workspace/app/tests/reference', '/workspace/app')
     expect(warn).toHaveBeenCalledWith(
       '[config] skipping styletrace root after analysis failure',
       'failed to resolve node:path'

@@ -9,43 +9,59 @@ use crate::tasty::resolve_external_import_path;
 use super::model::{BoundTypeExpr, ParsedModule, TypeDeclaration, TypeExpr};
 use super::parser::parse_module;
 use super::util::{
-    is_ignorable_module_specifier, normalize_path, prefer_workspace_source_module,
+    is_ignorable_module_specifier, normalize_path, prefer_sync_root_source_module,
     resolve_local_module_path, StyleTraceError,
 };
 
-const REFERENCE_STYLE_PROPS_ENTRY: &str = "packages/reference-core/src/types/style-props.ts";
-const REFERENCE_TYPES_INDEX_ENTRY: &str = "packages/reference-core/src/types/index.ts";
-const STYLED_TYPES_ROOT: &str = "packages/reference-core/src/system/styled/types";
+const REFERENCE_STYLE_PROPS_ENTRY_STEM: &str = ".reference-ui/react/types/style-props";
+const REFERENCE_REACT_ENTRY: &str = ".reference-ui/react/react.d.mts";
+const STYLED_TYPES_ROOT: &str = ".reference-ui/styled/types";
 
 pub fn collect_reference_style_prop_names(
-    workspace_root: &Path,
+    sync_root: &Path,
 ) -> Result<Vec<String>, StyleTraceError> {
+    let style_props_path = resolve_generated_declaration(sync_root, REFERENCE_STYLE_PROPS_ENTRY_STEM)?;
     collect_style_prop_names(
-        workspace_root,
-        &workspace_root.join(REFERENCE_STYLE_PROPS_ENTRY),
+        sync_root,
+        &style_props_path,
         "StyleProps",
     )
 }
 
+fn resolve_generated_declaration(sync_root: &Path, stem: &str) -> Result<PathBuf, StyleTraceError> {
+    for suffix in [".d.mts", ".d.ts"] {
+        let candidate = sync_root.join(format!("{stem}{suffix}"));
+        if candidate.is_file() {
+            return Ok(candidate);
+        }
+    }
+
+    Err(StyleTraceError::new(format!(
+        "failed to read {}.d.mts or {}.d.ts",
+        sync_root.join(stem).display(),
+        sync_root.join(stem).display()
+    )))
+}
+
 pub fn collect_style_prop_names(
-    workspace_root: &Path,
+    sync_root: &Path,
     entry_path: &Path,
     export_name: &str,
 ) -> Result<Vec<String>, StyleTraceError> {
-    let mut tracer = StyleTracer::new(workspace_root);
+    let mut tracer = StyleTracer::new(sync_root);
     let names = tracer.collect(entry_path, export_name)?;
     Ok(names.into_iter().collect())
 }
 
 struct StyleTracer {
-    workspace_root: PathBuf,
+    sync_root: PathBuf,
     module_cache: HashMap<PathBuf, ParsedModule>,
 }
 
 impl StyleTracer {
-    fn new(workspace_root: &Path) -> Self {
+    fn new(sync_root: &Path) -> Self {
         Self {
-            workspace_root: workspace_root.to_path_buf(),
+            sync_root: sync_root.to_path_buf(),
             module_cache: HashMap::new(),
         }
     }
@@ -469,20 +485,20 @@ impl StyleTracer {
     ) -> Result<Option<PathBuf>, StyleTraceError> {
         if specifier == "@reference-ui/styled/types" {
             return Ok(Some(self
-                .workspace_root
+                .sync_root
                 .join(STYLED_TYPES_ROOT)
                 .join("system-types.d.ts")));
         }
 
         if let Some(rest) = specifier.strip_prefix("@reference-ui/styled/types/") {
             return Ok(Some(self
-                .workspace_root
+                .sync_root
                 .join(STYLED_TYPES_ROOT)
                 .join(format!("{rest}.d.ts"))));
         }
 
         if specifier == "@reference-ui/react" {
-            return Ok(Some(self.workspace_root.join(REFERENCE_TYPES_INDEX_ENTRY)));
+            return Ok(Some(self.sync_root.join(REFERENCE_REACT_ENTRY)));
         }
 
         if specifier.starts_with('.') {
@@ -499,7 +515,7 @@ impl StyleTracer {
 
         let resolution_root = current_module.parent().unwrap_or(current_module);
         if let Some(resolved) = resolve_external_import_path(resolution_root, specifier) {
-            return Ok(Some(prefer_workspace_source_module(&resolved, &self.workspace_root)));
+            return Ok(Some(prefer_sync_root_source_module(&resolved, &self.sync_root)));
         }
 
         Err(StyleTraceError::new(format!(

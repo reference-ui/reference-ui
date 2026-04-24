@@ -1,12 +1,19 @@
 //! Wrapper-analysis coverage for traced JSX exports.
 
-use crate::styletrace::trace_style_jsx_names;
+use crate::styletrace::trace_style_jsx_names_with_hint;
 
-use super::fixtures::{styletrace_case_input, workspace_fixture_dir, workspace_scratch_dir};
+use super::fixtures::{
+    styletrace_case_input, workspace_fixture_dir, workspace_scratch_dir, workspace_sync_root,
+};
+
+fn trace_with_sync_root(root_dir: &std::path::Path) -> Result<Vec<String>, crate::styletrace::StyleTraceError> {
+    let sync_root = workspace_sync_root();
+    trace_style_jsx_names_with_hint(root_dir, Some(sync_root.as_path()))
+}
 
 #[test]
 fn traces_direct_wrapper_components() {
-    let names = trace_style_jsx_names(&styletrace_case_input("direct_wrapper"))
+    let names = trace_with_sync_root(&styletrace_case_input("direct_wrapper"))
         .expect("expected direct wrapper case to trace");
 
     assert_eq!(names, vec!["Card".to_string()]);
@@ -14,7 +21,7 @@ fn traces_direct_wrapper_components() {
 
 #[test]
 fn traces_wrapper_chains() {
-    let names = trace_style_jsx_names(&styletrace_case_input("wrapper_chain"))
+    let names = trace_with_sync_root(&styletrace_case_input("wrapper_chain"))
         .expect("expected wrapper chain case to trace");
 
     assert_eq!(names, vec!["Card".to_string(), "Surface".to_string()]);
@@ -22,7 +29,7 @@ fn traces_wrapper_chains() {
 
 #[test]
 fn traces_reexport_aliases_as_public_jsx_names() {
-    let names = trace_style_jsx_names(&styletrace_case_input("reexport_alias"))
+    let names = trace_with_sync_root(&styletrace_case_input("reexport_alias"))
         .expect("expected reexport alias case to trace");
 
     assert_eq!(names, vec!["Panel".to_string()]);
@@ -30,7 +37,7 @@ fn traces_reexport_aliases_as_public_jsx_names() {
 
 #[test]
 fn traces_export_star_barrels() {
-    let names = trace_style_jsx_names(&styletrace_case_input("export_star_barrel"))
+    let names = trace_with_sync_root(&styletrace_case_input("export_star_barrel"))
         .expect("expected export-star barrel case to trace");
 
     assert_eq!(names, vec!["Card".to_string()]);
@@ -38,7 +45,7 @@ fn traces_export_star_barrels() {
 
 #[test]
 fn excludes_components_without_public_style_props() {
-    let names = trace_style_jsx_names(&styletrace_case_input("negative"))
+    let names = trace_with_sync_root(&styletrace_case_input("negative"))
         .expect("expected negative case to trace");
 
     assert!(names.is_empty());
@@ -46,7 +53,7 @@ fn excludes_components_without_public_style_props() {
 
 #[test]
 fn traces_wrappers_that_forward_rest_style_props() {
-    let names = trace_style_jsx_names(&styletrace_case_input("rest_spread_wrapper"))
+    let names = trace_with_sync_root(&styletrace_case_input("rest_spread_wrapper"))
         .expect("expected rest-spread case to trace");
 
     assert_eq!(names, vec!["Card".to_string()]);
@@ -54,7 +61,7 @@ fn traces_wrappers_that_forward_rest_style_props() {
 
 #[test]
 fn traces_forward_ref_wrappers_with_style_prop_generics() {
-    let names = trace_style_jsx_names(&styletrace_case_input("forward_ref_wrapper"))
+    let names = trace_with_sync_root(&styletrace_case_input("forward_ref_wrapper"))
         .expect("expected forwardRef case to trace");
 
     assert_eq!(names, vec!["Card".to_string()]);
@@ -62,7 +69,7 @@ fn traces_forward_ref_wrappers_with_style_prop_generics() {
 
 #[test]
 fn traces_namespace_import_wrappers() {
-    let names = trace_style_jsx_names(&styletrace_case_input("namespace_import"))
+    let names = trace_with_sync_root(&styletrace_case_input("namespace_import"))
         .expect("expected namespace import case to trace");
 
     assert_eq!(names, vec!["Card".to_string()]);
@@ -70,7 +77,7 @@ fn traces_namespace_import_wrappers() {
 
 #[test]
 fn traces_components_that_use_the_reference_style_pipeline_without_primitives() {
-    let names = trace_style_jsx_names(&styletrace_case_input("direct_style_pipeline"))
+    let names = trace_with_sync_root(&styletrace_case_input("direct_style_pipeline"))
         .expect("expected direct style pipeline case to trace");
 
     assert_eq!(names, vec!["Panel".to_string()]);
@@ -78,7 +85,7 @@ fn traces_components_that_use_the_reference_style_pipeline_without_primitives() 
 
 #[test]
 fn traces_factory_generated_icons_and_wrappers() {
-    let names = trace_style_jsx_names(&styletrace_case_input("icon_factory"))
+    let names = trace_with_sync_root(&styletrace_case_input("icon_factory"))
         .expect("expected icon factory case to trace");
 
     assert_eq!(
@@ -90,7 +97,7 @@ fn traces_factory_generated_icons_and_wrappers() {
 #[test]
 fn traces_local_exports_that_forward_into_node_modules_wrappers() {
     let fixture = create_node_modules_wrapper_fixture();
-    let names = trace_style_jsx_names(fixture.root())
+    let names = trace_with_sync_root(fixture.root())
         .expect("expected node_modules wrapper case to trace");
 
     assert_eq!(
@@ -102,7 +109,7 @@ fn traces_local_exports_that_forward_into_node_modules_wrappers() {
 #[test]
 fn traces_default_export_wrappers_from_packages() {
     let fixture = create_default_export_package_fixture();
-    let names = trace_style_jsx_names(fixture.root())
+    let names = trace_with_sync_root(fixture.root())
         .expect("expected default-export package case to trace");
 
     assert_eq!(
@@ -114,7 +121,7 @@ fn traces_default_export_wrappers_from_packages() {
 #[test]
 fn traces_subpath_package_wrappers() {
     let fixture = create_subpath_package_fixture();
-    let names = trace_style_jsx_names(fixture.root())
+    let names = trace_with_sync_root(fixture.root())
         .expect("expected subpath package case to trace");
 
     assert_eq!(
@@ -126,7 +133,7 @@ fn traces_subpath_package_wrappers() {
 #[test]
 fn traces_export_star_package_barrels() {
     let fixture = create_export_star_package_fixture();
-    let names = trace_style_jsx_names(fixture.root())
+    let names = trace_with_sync_root(fixture.root())
         .expect("expected export-star package case to trace");
 
     assert_eq!(
@@ -138,7 +145,7 @@ fn traces_export_star_package_barrels() {
 #[test]
 fn ignores_node_builtin_helper_imports_while_tracing_local_wrappers() {
     let fixture = create_node_builtin_helper_fixture();
-    let names = trace_style_jsx_names(fixture.root())
+    let names = trace_with_sync_root(fixture.root())
         .expect("expected node builtin helper case to trace");
 
     assert_eq!(names, vec!["AppCard".to_string()]);
@@ -146,7 +153,7 @@ fn ignores_node_builtin_helper_imports_while_tracing_local_wrappers() {
 
 #[test]
 fn fixture_demo_ui_has_no_reference_style_bearing_exports() {
-    let names = trace_style_jsx_names(&workspace_fixture_dir("fixtures/demo-ui/src"))
+    let names = trace_with_sync_root(&workspace_fixture_dir("fixtures/demo-ui/src"))
         .expect("expected demo-ui fixture to trace");
 
     assert!(names.is_empty());
@@ -154,7 +161,7 @@ fn fixture_demo_ui_has_no_reference_style_bearing_exports() {
 
 #[test]
 fn fixture_extend_library_has_no_reference_style_bearing_exports() {
-    let names = trace_style_jsx_names(&workspace_fixture_dir("fixtures/extend-library/src/components"))
+    let names = trace_with_sync_root(&workspace_fixture_dir("fixtures/extend-library/src/components"))
         .expect("expected extend-library fixture to trace");
 
     assert!(names.is_empty());
@@ -162,7 +169,7 @@ fn fixture_extend_library_has_no_reference_style_bearing_exports() {
 
 #[test]
 fn fixture_styletrace_library_exports_wrapped_reference_components() {
-    let names = trace_style_jsx_names(&workspace_fixture_dir("fixtures/styletrace-library/src"))
+    let names = trace_with_sync_root(&workspace_fixture_dir("fixtures/styletrace-library/src"))
         .expect("expected styletrace-library fixture to trace");
 
     assert_eq!(names, vec!["MyStyleComponent".to_string()]);
@@ -170,7 +177,7 @@ fn fixture_styletrace_library_exports_wrapped_reference_components() {
 
 #[test]
 fn fixture_styletrace_consumer_traces_imported_wrapped_reference_components() {
-    let names = trace_style_jsx_names(&workspace_fixture_dir("fixtures/styletrace-consumer/src"))
+    let names = trace_with_sync_root(&workspace_fixture_dir("fixtures/styletrace-consumer/src"))
         .expect("expected styletrace-consumer fixture to trace");
 
     assert_eq!(
@@ -184,7 +191,7 @@ fn fixture_styletrace_consumer_traces_imported_wrapped_reference_components() {
 
 #[test]
 fn fixture_atlas_project_components_have_no_reference_style_bearing_exports() {
-    let names = trace_style_jsx_names(&workspace_fixture_dir(
+    let names = trace_with_sync_root(&workspace_fixture_dir(
         "fixtures/atlas-project/src/components",
     ))
     .expect("expected atlas-project fixture components to trace");

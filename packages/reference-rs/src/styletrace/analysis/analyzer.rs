@@ -4,14 +4,14 @@ use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
 use crate::styletrace::resolver::{
-    collect_reference_style_prop_names, normalize_path, resolve_workspace_root, StyleTraceError,
+    collect_reference_style_prop_names, normalize_path, resolve_sync_root, StyleTraceError,
 };
 
-use super::discovery::{
-    collect_reference_primitive_jsx_names, discover_source_files, resolve_imported_module,
-};
+use super::module_resolution::resolve_imported_module;
 use super::model::{EdgeTarget, ExportTarget, FactoryTarget, TraceComponent, TraceModule};
 use super::parser::parse_trace_module;
+use super::primitive_metadata::collect_reference_primitive_jsx_names;
+use super::source_files::discover_source_files;
 
 pub fn trace_style_jsx_names(root_dir: &Path) -> Result<Vec<String>, StyleTraceError> {
     trace_style_jsx_names_with_hint(root_dir, None)
@@ -19,21 +19,21 @@ pub fn trace_style_jsx_names(root_dir: &Path) -> Result<Vec<String>, StyleTraceE
 
 pub fn trace_style_jsx_names_with_hint(
     root_dir: &Path,
-    workspace_hint: Option<&Path>,
+    sync_root_hint: Option<&Path>,
 ) -> Result<Vec<String>, StyleTraceError> {
     let normalized_root = normalize_path(root_dir);
-    let workspace_root = resolve_workspace_root(&normalized_root, workspace_hint)?;
-    let style_prop_names = collect_reference_style_prop_names(&workspace_root)?
+    let sync_root = resolve_sync_root(&normalized_root, sync_root_hint)?;
+    let style_prop_names = collect_reference_style_prop_names(&sync_root)?
         .into_iter()
         .collect::<BTreeSet<_>>();
-    let primitive_names = collect_reference_primitive_jsx_names(&workspace_root)?;
+    let primitive_names = collect_reference_primitive_jsx_names(&sync_root)?;
 
     let source_files = discover_source_files(&normalized_root)?;
     let mut modules = BTreeMap::new();
     for file_path in source_files {
         let module = parse_trace_module(
             &file_path,
-            &workspace_root,
+            &sync_root,
             &style_prop_names,
             &primitive_names,
         )?;
@@ -41,14 +41,14 @@ pub fn trace_style_jsx_names_with_hint(
     }
 
     let mut analyzer =
-        StyleTraceAnalyzer::new(modules, primitive_names, workspace_root, style_prop_names);
+        StyleTraceAnalyzer::new(modules, primitive_names, sync_root, style_prop_names);
     analyzer.collect_exported_jsx_names()
 }
 
 struct StyleTraceAnalyzer {
     modules: BTreeMap<PathBuf, TraceModule>,
     primitive_names: BTreeSet<String>,
-    workspace_root: PathBuf,
+    sync_root: PathBuf,
     style_prop_names: BTreeSet<String>,
     component_cache: HashMap<(PathBuf, String), bool>,
     factory_cache: HashMap<(PathBuf, String), bool>,
@@ -59,13 +59,13 @@ impl StyleTraceAnalyzer {
     fn new(
         modules: BTreeMap<PathBuf, TraceModule>,
         primitive_names: BTreeSet<String>,
-        workspace_root: PathBuf,
+        sync_root: PathBuf,
         style_prop_names: BTreeSet<String>,
     ) -> Self {
         Self {
             modules,
             primitive_names,
-            workspace_root,
+            sync_root,
             style_prop_names,
             component_cache: HashMap::new(),
             factory_cache: HashMap::new(),
@@ -234,7 +234,7 @@ impl StyleTraceAnalyzer {
                 imported_name,
             } => {
                 let Some(resolved_module) =
-                    resolve_imported_module(module_path, source, &self.workspace_root)?
+                    resolve_imported_module(module_path, source, &self.sync_root)?
                 else {
                     return Ok(false);
                 };
@@ -290,7 +290,7 @@ impl StyleTraceAnalyzer {
         }
 
         let Some(resolved_module) =
-            resolve_imported_module(module_path, source, &self.workspace_root)?
+            resolve_imported_module(module_path, source, &self.sync_root)?
         else {
             return Ok(false);
         };
@@ -305,7 +305,7 @@ impl StyleTraceAnalyzer {
 
         let module = parse_trace_module(
             module_path,
-            &self.workspace_root,
+            &self.sync_root,
             &self.style_prop_names,
             &self.primitive_names,
         )?;
