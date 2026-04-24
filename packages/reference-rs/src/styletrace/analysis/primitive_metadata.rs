@@ -11,6 +11,8 @@ use std::path::{Path, PathBuf};
 use crate::styletrace::resolver::StyleTraceError;
 
 const PRIMITIVE_DECLARATIONS_ENTRY_STEM: &str = ".reference-ui/react/system/primitives/index";
+const WORKSPACE_ROOT_MARKERS: &[&str] = &["pnpm-workspace.yaml", "nx.json"];
+const WORKSPACE_PRIMITIVES_SOURCE: &str = "packages/reference-core/src/system/primitives/index.tsx";
 
 pub(super) fn collect_reference_primitive_jsx_names(
     sync_root: &Path,
@@ -38,9 +40,36 @@ fn resolve_primitive_declaration_path(sync_root: &Path) -> Result<PathBuf, Style
         }
     }
 
+    if let Some(workspace_root) = find_workspace_root(sync_root) {
+        let candidate = workspace_root.join(WORKSPACE_PRIMITIVES_SOURCE);
+        if candidate.is_file() {
+            return Ok(candidate);
+        }
+    }
+
     Err(StyleTraceError::new(
         "failed to read primitive declarations: no generated declaration file found",
     ))
+}
+
+fn find_workspace_root(start_path: &Path) -> Option<PathBuf> {
+    let mut current = if start_path.is_dir() {
+        Some(start_path)
+    } else {
+        start_path.parent()
+    };
+
+    while let Some(path) = current {
+        if WORKSPACE_ROOT_MARKERS
+            .iter()
+            .any(|marker| path.join(marker).is_file())
+        {
+            return Some(path.to_path_buf());
+        }
+        current = path.parent();
+    }
+
+    None
 }
 
 fn parse_declared_primitive_names(source: &str) -> BTreeSet<String> {
@@ -54,8 +83,11 @@ fn parse_declared_primitive_name(line: &str) -> Option<String> {
     let trimmed = line.trim();
     let declaration = trimmed
         .strip_prefix("declare const ")
-        .or_else(|| trimmed.strip_prefix("export declare const "))?;
-    let (name, _) = declaration.split_once(':')?;
+        .or_else(|| trimmed.strip_prefix("export declare const "))
+        .or_else(|| trimmed.strip_prefix("export const "))?;
+    let (name, _) = declaration
+        .split_once(':')
+        .or_else(|| declaration.split_once('='))?;
     let name = name.trim();
 
     let starts_with_component_name = name
