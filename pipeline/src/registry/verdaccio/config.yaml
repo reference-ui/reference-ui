@@ -8,6 +8,8 @@ auth:
 uplinks:
   npmjs:
     url: https://registry.npmjs.org/
+    maxage: 30d
+    cache: true
 
 packages:
   '@reference-ui/*':
