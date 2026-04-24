@@ -16,6 +16,7 @@
     "@fixtures/styletrace-library",
     "@matrix/install",
     "@matrix/typescript",
+    "@matrix/mcp",
     "@reference-ui/pipeline",
     "@reference-ui/reference-unit",
     "@reference-ui/reference-docs",
