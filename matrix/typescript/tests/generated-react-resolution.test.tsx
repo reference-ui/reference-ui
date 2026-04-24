@@ -1,6 +1,14 @@
 import type { ComponentProps } from 'react'
 import { describe, expect, expectTypeOf, it } from 'vitest'
 import { Div, type DivProps } from '@reference-ui/react'
+import {
+  getRhythm,
+  keyframes,
+  tokens,
+  type KeyframesConfig,
+  type ReferenceTokenConfig,
+  type TokenConfig,
+} from '@reference-ui/system'
 
 type DivComponentProps = ComponentProps<typeof Div>
 type DivColorProp = NonNullable<DivComponentProps['color']>
@@ -9,6 +17,10 @@ type DivBgProp = NonNullable<DivComponentProps['bg']>
 function expectDivColor(_value: DivColorProp): void {}
 
 function expectDivBg(_value: DivBgProp): void {}
+
+function expectTokenConfig(_value: ReferenceTokenConfig): void {}
+
+function expectKeyframesConfig(_value: KeyframesConfig): void {}
 
 describe('generated @reference-ui/react package', () => {
   it('resolves Div at runtime and in the TypeScript surface', () => {
@@ -67,5 +79,49 @@ describe('generated @reference-ui/react package', () => {
     void invalidComponentProps
     void invalidColorElement
     void invalidBgElement
+  })
+})
+
+describe('generated @reference-ui/system package', () => {
+  it('resolves token and keyframe APIs at runtime and in the TypeScript surface', () => {
+    const tokenConfig: TokenConfig = {
+      colors: {
+        brand: {
+          value: '#3366ff',
+        },
+      },
+      animations: {
+        pulse: {
+          value: 'pulse 240ms ease-in-out',
+        },
+      },
+      durations: {
+        quick: {
+          value: '240ms',
+        },
+      },
+    }
+
+    const keyframesConfig: KeyframesConfig = {
+      pulse: {
+        '0%': { opacity: '0.4' },
+        '100%': { opacity: '1' },
+      },
+    }
+
+    expect(typeof tokens).toBe('function')
+    expect(typeof keyframes).toBe('function')
+    expect(typeof getRhythm).toBe('function')
+
+    expect(() => tokens(tokenConfig)).not.toThrow()
+    expect(() => keyframes(keyframesConfig)).not.toThrow()
+    expect(getRhythm(2)).toBeTruthy()
+
+    expectTokenConfig(tokenConfig)
+    expectKeyframesConfig(keyframesConfig)
+
+    expectTypeOf(tokens).parameter(0).toMatchTypeOf<ReferenceTokenConfig>()
+    expectTypeOf(keyframes).parameter(0).toMatchTypeOf<KeyframesConfig>()
+    expectTypeOf(getRhythm).returns.toBeString()
   })
 })

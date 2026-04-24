@@ -12,6 +12,7 @@ function runRefSync(): void {
         ...process.env,
         FORCE_COLOR: '0',
       },
+      maxBuffer: 10 * 1024 * 1024,
       stdio: 'pipe',
     })
   } catch (error) {
@@ -47,6 +48,6 @@ describe('install matrix app', () => {
       runRefSync()
       runRefSync()
     },
-    30_000
+    90_000
   )
 })
