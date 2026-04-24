@@ -1,5 +1,15 @@
 # @reference-ui/core
 
+## 0.0.25
+
+### Patch Changes
+
+- 23659ea: CI RELEASE
+- 0ad4599: CI RELEASE
+- Updated dependencies [23659ea]
+- Updated dependencies [0ad4599]
+  - @reference-ui/rust@0.0.24
+
 ## 0.0.24
 
 ### Patch Changes

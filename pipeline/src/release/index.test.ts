@@ -4,9 +4,10 @@ import { describe, it } from 'node:test'
 import type { WorkspacePackage } from '../build/types.js'
 import {
   assertLocalReleasePlanSupported,
+  changesetsRequireVersionMaterialization,
   createReleasePlan,
   formatReleasePlan,
-} from './index.js'
+} from './plan.js'
 
 function workspacePackage(overrides: Partial<WorkspacePackage> & Pick<WorkspacePackage, 'dir' | 'name' | 'version'>): WorkspacePackage {
   return {
@@ -51,6 +52,84 @@ describe('createReleasePlan', () => {
         '@reference-ui/lib',
       ],
     )
+  })
+})
+
+describe('changesetsRequireVersionMaterialization', () => {
+  it('detects mixed stale release states when pending changesets want newer versions', () => {
+    const requiresMaterialization = changesetsRequireVersionMaterialization(
+      {
+        changesets: ['changeset'],
+        releases: [
+          {
+            changesets: ['changeset'],
+            name: '@reference-ui/lib',
+            newVersion: '0.0.28',
+            oldVersion: '0.0.27',
+            type: 'patch',
+          },
+          {
+            changesets: ['changeset'],
+            name: '@reference-ui/rust',
+            newVersion: '0.0.24',
+            oldVersion: '0.0.23',
+            type: 'patch',
+          },
+        ],
+      },
+      [
+        workspacePackage({
+          dir: '/repo/packages/reference-lib',
+          name: '@reference-ui/lib',
+          version: '0.0.28',
+        }),
+        workspacePackage({
+          dir: '/repo/packages/reference-rs',
+          name: '@reference-ui/rust',
+          version: '0.0.23',
+        }),
+      ],
+    )
+
+    assert.equal(requiresMaterialization, true)
+  })
+
+  it('does not require materialization once workspace versions already match pending releases', () => {
+    const requiresMaterialization = changesetsRequireVersionMaterialization(
+      {
+        changesets: ['changeset'],
+        releases: [
+          {
+            changesets: ['changeset'],
+            name: '@reference-ui/icons',
+            newVersion: '0.0.25',
+            oldVersion: '0.0.24',
+            type: 'patch',
+          },
+          {
+            changesets: ['changeset'],
+            name: '@reference-ui/rust',
+            newVersion: '0.0.24',
+            oldVersion: '0.0.23',
+            type: 'patch',
+          },
+        ],
+      },
+      [
+        workspacePackage({
+          dir: '/repo/packages/reference-icons',
+          name: '@reference-ui/icons',
+          version: '0.0.25',
+        }),
+        workspacePackage({
+          dir: '/repo/packages/reference-rs',
+          name: '@reference-ui/rust',
+          version: '0.0.24',
+        }),
+      ],
+    )
+
+    assert.equal(requiresMaterialization, false)
   })
 })
 
