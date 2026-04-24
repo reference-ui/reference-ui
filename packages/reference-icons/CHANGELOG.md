@@ -1,5 +1,13 @@
 # @reference-ui/icons
 
+## 0.0.24
+
+### Patch Changes
+
+- CI RELEASE
+- Updated dependencies
+  - @reference-ui/core@0.0.24
+
 ## 0.0.23
 
 ### Patch Changes
