@@ -12,12 +12,16 @@
 import type { WorkspacePackage } from '../types.js'
 import type { BuildRegistryArtifacts } from '../types.js'
 import type { VirtualNativeTarget } from '../../../../packages/reference-rs/js/shared/targets.js'
+import { computePackageBuildHashes } from '../cache.js'
+import { logSkip } from '../../lib/log/index.js'
 import {
   applyPreparedRustPackageHash,
   applyPreparedRustPackageOverride,
 } from './registry-overrides.js'
 import { createReferenceRustPackageJsonOverride, materializeReferenceRustTargetTarballs, REFERENCE_RUST_PACKAGE_NAME } from './targets.js'
 import {
+  canReuseRustBuildRegistryArtifacts,
+  createRustBuildRegistryArtifactsCacheKey,
   createRustBuildHashAugmentation,
   emptyRustBuildRegistryArtifacts,
   readRustBuildRegistryArtifacts,
@@ -67,8 +71,25 @@ export async function prepareAndWriteRustBuildRegistryArtifacts(
     return
   }
 
+  const rustPackageHash = computePackageBuildHashes(buildTargets).get(rustPackage.name)
+
+  if (!rustPackageHash) {
+    throw new Error(`Missing build hash for ${rustPackage.name}`)
+  }
+
+  const cacheKey = createRustBuildRegistryArtifactsCacheKey(rustPackageHash, requiredTargets)
+  const cachedArtifacts = await readRustBuildRegistryArtifacts()
+
+  if (canReuseRustBuildRegistryArtifacts(cachedArtifacts, cacheKey)) {
+    logSkip(`Skipping prepared Rust registry artifacts for ${rustPackage.name}; inputs unchanged`)
+    return
+  }
+
   await writeRustBuildRegistryArtifacts(
-    await prepareReferenceRustRegistryArtifacts(rustPackage.dir, requiredTargets),
+    {
+      ...(await prepareReferenceRustRegistryArtifacts(rustPackage.dir, requiredTargets)),
+      cacheKey,
+    },
   )
 }
 

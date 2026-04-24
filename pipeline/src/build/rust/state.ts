@@ -7,6 +7,7 @@
  */
 
 import { createHash } from 'node:crypto'
+import { existsSync } from 'node:fs'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
@@ -15,20 +16,43 @@ import type {
   BuildRegistryArtifacts,
   BuildRegistryArtifactPackage,
 } from '../types.js'
-import { pipelineStateDir } from '../workspace.js'
+import { repoRoot, pipelineStateDir } from '../workspace.js'
+import { SUPPORTED_VIRTUAL_NATIVE_TARGETS, type VirtualNativeTarget } from '../../../../packages/reference-rs/js/shared/targets.js'
 
-const rustBuildArtifactsVersion = 1 as const
+const rustBuildArtifactsVersion = 2 as const
 const rustBuildArtifactsDir = resolve(pipelineStateDir, 'build', 'rust')
 const rustBuildArtifactsPath = resolve(rustBuildArtifactsDir, 'registry-artifacts.json')
 
 export const rustGeneratedTarballsDir = resolve(rustBuildArtifactsDir, 'tarballs')
 
+function normalizeRequiredTargets(requiredTargets?: readonly VirtualNativeTarget[]): VirtualNativeTarget[] {
+  return [...(requiredTargets ?? SUPPORTED_VIRTUAL_NATIVE_TARGETS)].sort((left, right) => left.localeCompare(right))
+}
+
 export function emptyRustBuildRegistryArtifacts(): BuildRegistryArtifacts {
   return {
+    cacheKey: undefined,
     generatedPackages: [],
     packageHashAugmentations: {},
     preparedPackageJsonOverrides: {},
   }
+}
+
+export function createRustBuildRegistryArtifactsCacheKey(
+  packageHash: string,
+  requiredTargets?: readonly VirtualNativeTarget[],
+): string {
+  const hash = createHash('sha256')
+
+  hash.update(packageHash)
+  hash.update('\n')
+
+  for (const target of normalizeRequiredTargets(requiredTargets)) {
+    hash.update(target)
+    hash.update('\n')
+  }
+
+  return hash.digest('hex')
 }
 
 export function createRustBuildHashAugmentation(
@@ -58,10 +82,21 @@ export function createRustBuildHashAugmentation(
   return hash.digest('hex')
 }
 
+export function hasPreparedRustGeneratedTarballs(artifacts: BuildRegistryArtifacts): boolean {
+  return artifacts.generatedPackages.every((generatedPackage) => existsSync(resolve(repoRoot, generatedPackage.tarballPath)))
+}
+
+export function canReuseRustBuildRegistryArtifacts(
+  artifacts: BuildRegistryArtifacts,
+  cacheKey: string,
+): boolean {
+  return artifacts.cacheKey === cacheKey && hasPreparedRustGeneratedTarballs(artifacts)
+}
+
 export async function readRustBuildRegistryArtifacts(): Promise<BuildRegistryArtifacts> {
   try {
     const contents = await readFile(rustBuildArtifactsPath, 'utf8')
-    const artifacts = JSON.parse(contents) as { version?: number }
+    const artifacts = JSON.parse(contents) as BuildRegistryArtifacts & { version?: number }
 
     if (artifacts.version !== rustBuildArtifactsVersion) {
       return emptyRustBuildRegistryArtifacts()
