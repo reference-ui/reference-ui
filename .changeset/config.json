@@ -14,6 +14,10 @@
     "@fixtures/layer-library",
     "@fixtures/styletrace-consumer",
     "@fixtures/styletrace-library",
+    "@matrix/install",
+    "@matrix/typescript",
+    "@matrix/mcp",
+    "@reference-ui/pipeline",
     "@reference-ui/reference-unit",
     "@reference-ui/reference-docs",
     "@reference-ui/reference-e2e"

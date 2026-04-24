@@ -1,5 +1,55 @@
 # @reference-ui/rust
 
+## 0.0.24
+
+### Patch Changes
+
+- 23659ea: CI RELEASE
+- 0ad4599: CI RELEASE
+
+## 0.0.23
+
+### Patch Changes
+
+- CI RELEASE
+
+## 0.0.22
+
+### Patch Changes
+
+- CI
+- bac2087: CI RELEASE
+
+## 0.0.21
+
+### Patch Changes
+
+- CI
+
+## 0.0.20
+
+### Patch Changes
+
+- CI
+
+## 0.0.19
+
+### Patch Changes
+
+- CI
+
+## 0.0.18
+
+### Patch Changes
+
+- CI
+
+## 0.0.17
+
+### Patch Changes
+
+- CI
+
 ## 0.0.16
 
 ### Patch Changes

@@ -6,8 +6,8 @@ import { fileURLToPath } from 'node:url'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const pkgRoot = resolve(__dirname, '..', '..')
 const outDir = join(pkgRoot, '.reference-ui')
-const sessionFile = join(outDir, 'session.json')
-const lockFile = join(outDir, 'session.lock')
+const sessionFile = join(outDir, 'tmp', 'session.json')
+const lockFile = join(outDir, 'tmp', 'session.lock')
 
 /**
  * Reads and parses session.json. Returns null if absent or malformed.
@@ -26,7 +26,7 @@ function readSession(): Record<string, unknown> | null {
  * They verify that the session module wrote a well-formed manifest to disk.
  */
 describe('session – manifest shape after ref sync (one-shot)', () => {
-  it('session.json exists inside .reference-ui', () => {
+  it('session.json exists inside .reference-ui/tmp', () => {
     expect(existsSync(sessionFile), `expected ${sessionFile} to exist`).toBe(true)
   })
 

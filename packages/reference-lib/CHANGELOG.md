@@ -1,5 +1,81 @@
 # @reference-ui/lib
 
+## 0.0.28
+
+### Patch Changes
+
+- 23659ea: CI RELEASE
+- 0ad4599: CI RELEASE
+- Updated dependencies [23659ea]
+- Updated dependencies [0ad4599]
+  - @reference-ui/icons@0.0.25
+  - @reference-ui/core@0.0.25
+
+## 0.0.27
+
+### Patch Changes
+
+- CI RELEASE
+- Updated dependencies
+  - @reference-ui/icons@0.0.24
+  - @reference-ui/core@0.0.24
+
+## 0.0.26
+
+### Patch Changes
+
+- CI
+- bac2087: CI RELEASE
+- Updated dependencies
+- Updated dependencies [bac2087]
+  - @reference-ui/icons@0.0.23
+  - @reference-ui/core@0.0.23
+
+## 0.0.25
+
+### Patch Changes
+
+- CI
+- Updated dependencies
+  - @reference-ui/icons@0.0.22
+  - @reference-ui/core@0.0.22
+
+## 0.0.24
+
+### Patch Changes
+
+- CI
+- Updated dependencies
+  - @reference-ui/icons@0.0.21
+  - @reference-ui/core@0.0.21
+
+## 0.0.23
+
+### Patch Changes
+
+- CI
+- Updated dependencies
+  - @reference-ui/icons@0.0.20
+  - @reference-ui/core@0.0.20
+
+## 0.0.22
+
+### Patch Changes
+
+- CI
+- Updated dependencies
+  - @reference-ui/icons@0.0.19
+  - @reference-ui/core@0.0.19
+
+## 0.0.21
+
+### Patch Changes
+
+- CI
+- Updated dependencies
+  - @reference-ui/core@0.0.18
+  - @reference-ui/icons@0.0.18
+
 ## 0.0.20
 
 ### Patch Changes

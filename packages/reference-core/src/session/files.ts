@@ -11,17 +11,18 @@ import {
 } from 'node:fs'
 import { join } from 'node:path'
 import { randomBytes } from 'node:crypto'
+import { getOutDirTmpPath } from '../lib/paths'
 import type { SessionManifest, SessionLock } from './types'
 
 export const SESSION_FILE = 'session.json'
 export const LOCK_FILE = 'session.lock'
 
 export function sessionPath(outDir: string): string {
-  return join(outDir, SESSION_FILE)
+  return join(getOutDirTmpPath(outDir), SESSION_FILE)
 }
 
 export function lockPath(outDir: string): string {
-  return join(outDir, LOCK_FILE)
+  return join(getOutDirTmpPath(outDir), LOCK_FILE)
 }
 
 /**
@@ -36,7 +37,7 @@ function atomicWriteFile(filePath: string, content: string): void {
 }
 
 export function writeManifest(outDir: string, manifest: SessionManifest): void {
-  mkdirSync(outDir, { recursive: true })
+  mkdirSync(getOutDirTmpPath(outDir), { recursive: true })
   atomicWriteFile(sessionPath(outDir), JSON.stringify(manifest, null, 2) + '\n')
 }
 
@@ -52,7 +53,7 @@ export function readManifest(outDir: string): SessionManifest | null {
 
 /** Atomically write `session.lock`. Used by tests and state.ts internals. */
 export function writeLock(outDir: string, lock: SessionLock): void {
-  mkdirSync(outDir, { recursive: true })
+  mkdirSync(getOutDirTmpPath(outDir), { recursive: true })
   atomicWriteFile(lockPath(outDir), JSON.stringify(lock, null, 2) + '\n')
 }
 
@@ -85,7 +86,7 @@ export function removeLock(outDir: string): void {
  */
 export function tryAcquireLock(outDir: string, lock: SessionLock): 'acquired' | 'contested' | 'stale' {
   const path = lockPath(outDir)
-  mkdirSync(outDir, { recursive: true })
+  mkdirSync(getOutDirTmpPath(outDir), { recursive: true })
   const content = JSON.stringify(lock, null, 2) + '\n'
   try {
     // 'wx' = O_WRONLY | O_CREAT | O_EXCL — fails with EEXIST if the file already exists.

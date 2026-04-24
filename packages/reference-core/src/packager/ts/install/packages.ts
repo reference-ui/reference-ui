@@ -1,26 +1,96 @@
-import { resolve } from 'node:path'
-import { mkdirSync } from 'node:fs'
+import { createRequire } from 'node:module'
+import { dirname, join, resolve } from 'node:path'
+import {
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs'
 import { logProfilerSample } from '../../../lib/profiler'
-import { resolveCorePackageDir, resolveCorePackageDirForBuild } from '../../../lib/paths'
+import {
+  formatSpawnMonitoredFailure,
+  spawnMonitoredAsync,
+} from '../../../lib/child-process'
+import { resolveCorePackageDir } from '../../../lib/paths'
 import { getOutDirPath } from '../../../lib/paths/out-dir'
 import {
   writeGeneratedReactTypes,
   writeGeneratedSystemTypes,
 } from '../../../system/types/generate'
+import { REACT_DTS_INCLUDE } from '../../../constants'
 import { getPackageDir, getDeclarationBasename } from '../../layout'
-import { installPackageTs } from './package'
 import type { TsPackageInput } from '../types'
+import { writeTsconfig } from '../tsconfig'
 
-/**
- * Install types for all packages.
- * Compiles declarations and writes to outDir (e.g. .reference-ui/react/), then symlink exposes them.
- */
+function resolveTsgoCli(projectCwd: string, cliDir: string): string {
+  const require = createRequire(import.meta.url)
+  const packageJsonPath = require.resolve('@typescript/native-preview/package.json', {
+    paths: [projectCwd, cliDir],
+  })
+
+  return join(dirname(packageJsonPath), 'bin', 'tsgo.js')
+}
+
+function getEntryModuleSpecifier(entryFile: string): string {
+  return `./${entryFile.replace(/^src\//, '').replace(/\.[cm]?[jt]sx?$/, '')}`
+}
+
+function getDeclarationEntryFiles(pkg: TsPackageInput): string[] {
+  if (pkg.name === '@reference-ui/react') {
+    return [pkg.sourceEntry, ...REACT_DTS_INCLUDE]
+  }
+
+  return [pkg.sourceEntry]
+}
+
+async function installPackageTs(
+  cliDir: string,
+  projectCwd: string,
+  targetDir: string,
+  pkg: TsPackageInput
+): Promise<void> {
+  const tsgoCli = resolveTsgoCli(projectCwd, cliDir)
+  mkdirSync(targetDir, { recursive: true })
+
+  const tempDir = mkdtempSync(join(targetDir, '.ref-ui-tsgo-'))
+  const tsconfigPath = writeTsconfig({
+    cliDir,
+    entryFiles: getDeclarationEntryFiles(pkg),
+    projectCwd,
+    tempDir,
+  })
+
+  try {
+    const result = await spawnMonitoredAsync(
+      process.execPath,
+      [tsgoCli, '--project', tsconfigPath, '--outDir', targetDir],
+      {
+        cwd: cliDir,
+        processName: `packager-ts:${pkg.name}`,
+        logCategory: 'packager:ts',
+      }
+    )
+
+    if (result.code !== 0) {
+      throw new Error(formatSpawnMonitoredFailure(`tsgo (${pkg.name})`, result))
+    }
+
+    const rootTypesPath = join(targetDir, getDeclarationBasename(pkg.outFile))
+    writeFileSync(
+      rootTypesPath,
+      `export * from '${getEntryModuleSpecifier(pkg.sourceEntry)}'\n`,
+      'utf-8'
+    )
+  } finally {
+    rmSync(tempDir, { recursive: true, force: true })
+  }
+}
+
 export async function installPackagesTs(
   cwd: string,
   packages: TsPackageInput[]
 ): Promise<void> {
   const cliDir = resolveCorePackageDir(cwd)
-  const cliDirForBuild = resolveCorePackageDirForBuild(cwd)
   const outDir = getOutDirPath(cwd)
   mkdirSync(outDir, { recursive: true })
 
@@ -28,7 +98,7 @@ export async function installPackagesTs(
   for (const pkg of packages) {
     const targetDir = getPackageDir(outDir, pkg.name)
     logProfilerSample(`packager-ts:pkg:before:${pkg.name}`)
-    await installPackageTs({ cliDir, cliDirForBuild, projectCwd: cwd, targetDir }, pkg)
+    await installPackageTs(cliDir, cwd, targetDir, pkg)
     logProfilerSample(`packager-ts:pkg:after:${pkg.name}`)
   }
   logProfilerSample('packager-ts:packages:iterate:end')

@@ -72,7 +72,11 @@ export async function traceIncludedJsxElements(cwd: string, include: string[]): 
     return []
   }
 
-  const results = await Promise.allSettled(roots.map(async (root) => ({ root, names: await trace(root) })))
+  const syncRootHint = resolve(cwd)
+
+  const results = await Promise.allSettled(
+    roots.map(async (root) => ({ root, names: await trace(root, syncRootHint) }))
+  )
 
   const tracedNames: string[] = []
 

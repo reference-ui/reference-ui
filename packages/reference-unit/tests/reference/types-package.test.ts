@@ -70,9 +70,6 @@ describe('@reference-ui/types package', () => {
     expect(manifestModule.default).toEqual(manifestModule.manifest)
     expect(fixture.getName()).toBe('ReferenceApiFixture')
     expect(fixture.getKind()).toBe('interface')
-
-    const systemStyle = await api.loadSymbolByName('StyleProps')
-    expect(systemStyle.getName()).toBe('StyleProps')
-    expect(systemStyle.getKind()).toBe('typeAlias')
+    expect(await api.findSymbolByName('StyleProps')).toBeUndefined()
   })
 })

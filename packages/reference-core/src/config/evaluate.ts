@@ -1,6 +1,7 @@
-import { mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { getProjectTmpDirPath } from '../lib/paths'
 
 /**
  * Evaluate the bundled user config as an ESM module rooted beside the source config.
@@ -14,7 +15,9 @@ import { pathToFileURL } from 'node:url'
  * @returns The evaluated config object (raw, may have default export)
  */
 export async function evaluateConfig(bundledCode: string, configPath: string): Promise<unknown> {
-  const tempDir = await mkdtemp(join(dirname(configPath), '.reference-ui-config-eval-'))
+  const tempRoot = getProjectTmpDirPath(dirname(configPath))
+  await mkdir(tempRoot, { recursive: true })
+  const tempDir = await mkdtemp(join(tempRoot, 'config-eval-'))
   const tempFile = join(tempDir, 'config.bundle.mjs')
 
   await writeFile(tempFile, bundledCode, 'utf8')

@@ -27,9 +27,8 @@
 We do not guess from names alone and we do not maintain a second handwritten
 primitive registry inside `styletrace`.
 
-Instead, `styletrace` reads the primitive source of truth from
-`packages/reference-core/src/system/primitives/tags.ts` and derives the JSX
-component names the same way the runtime does.
+Instead, `styletrace` reads the primitive source of truth from the synced
+primitive declaration surface at `.reference-ui/react/system/primitives/index.d.mts`.
 
 That gives us the canonical primitive JSX surface such as `Div`, `Span`, `Svg`,
 and the rest of the generated primitive set. In other words, a component counts
@@ -38,12 +37,12 @@ surface, not merely because it happens to be PascalCase.
 
 ### How do we know what style props are?
 
-We treat the public `StyleProps` type in Reference Core as the source of truth.
+We treat the public synced `StyleProps` type as the source of truth.
 
-The resolver starts at
-`packages/reference-core/src/types/style-props.ts` and uses Oxc to expand that
-type surface through imports, re-exports, intersections, mapped types, indexed
-accesses, and a small set of utility wrappers used by the Reference type system.
+The resolver starts at `.reference-ui/react/types/style-props.d.mts` and uses
+Oxc to expand that type surface through imports, re-exports, intersections,
+mapped types, indexed accesses, and a small set of utility wrappers used by the
+Reference type system.
 
 The output of that pass is a concrete set of prop names such as `color`, `bg`,
 `fontSize`, `padding`, and the rest of the Reference style surface. This keeps

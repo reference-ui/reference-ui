@@ -477,9 +477,7 @@ fn factory_from_function_declaration(
         body.statements
             .iter()
             .filter_map(|statement| match statement {
-                Statement::VariableDeclaration(declaration) => {
-                    Some(declaration.declarations.iter())
-                }
+                Statement::VariableDeclaration(declaration) => Some(declaration.declarations.iter()),
                 _ => None,
             })
             .flatten(),
@@ -764,6 +762,8 @@ fn factory_target_from_expression(
     }
 }
 
+// This state machine stays local to parser.rs because it only exists to answer one parser-level
+// question: does a traced component actually drive the Reference style pipeline?
 #[derive(Default)]
 struct PipelineState {
     style_signals: BTreeSet<String>,
@@ -1008,7 +1008,8 @@ fn walk_pipeline_jsx_element(
                         ) && expression_uses_class_name_binding(
                             container.expression.to_expression(),
                             state,
-                        ) {
+                        )
+                        {
                             state.uses_style_pipeline = true;
                         }
                     }

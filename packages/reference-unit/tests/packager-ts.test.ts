@@ -61,16 +61,21 @@ describe('packager-ts (TypeScript generator)', () => {
   })
 
   describe('react declaration content', () => {
-    it('react.d.mts declares expected component exports (Div, Button, recipe)', () => {
-      const path = join(refUiDir, 'react', 'react.d.mts')
-      if (!existsSync(path)) {
-        // Skip content check if types were skipped (e.g. skipTypescript in config)
+    it('react.d.mts remains a stable root barrel for the emitted declaration graph', () => {
+      const rootPath = join(refUiDir, 'react', 'react.d.mts')
+      const entryPath = join(refUiDir, 'react', 'entry', 'react.d.ts')
+
+      if (!existsSync(rootPath) || !existsSync(entryPath)) {
         return
       }
-      const content = readFileSync(path, 'utf-8')
-      expect(content, 'Div').toMatch(/\bDiv\b/)
-      expect(content, 'Button').toMatch(/\bButton\b/)
-      expect(content, 'recipe').toMatch(/\brecipe\b/)
+
+      const rootContent = readFileSync(rootPath, 'utf-8')
+      const entryContent = readFileSync(entryPath, 'utf-8')
+
+      expect(rootContent).toBe("export * from './entry/react'\n")
+      expect(entryContent, 'system primitives').toMatch(/system\/primitives/)
+      expect(entryContent, 'recipe').toMatch(/\brecipe\b/)
+      expect(entryContent, 'types barrel').toMatch(/export type \* from '\.\.\/types'/)
     })
   })
 })

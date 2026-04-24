@@ -1,4 +1,5 @@
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 
@@ -7,16 +8,25 @@ import { trace } from '../../js/styletrace'
 const TESTS_STYLETRACE_DIR = fileURLToPath(new URL('.', import.meta.url))
 const REFERENCE_RS_DIR = path.resolve(TESTS_STYLETRACE_DIR, '..', '..')
 const WORKSPACE_ROOT = path.resolve(REFERENCE_RS_DIR, '..', '..')
+const DEFAULT_SYNC_ROOT = path.join(WORKSPACE_ROOT, 'packages', 'reference-lib')
 
 export function getCaseInputDir(caseName: string): string {
   return path.join(TESTS_STYLETRACE_DIR, 'cases', caseName, 'input')
 }
 
 export async function traceCase(caseName: string): Promise<string[]> {
-  return trace(getCaseInputDir(caseName))
+  return trace(getCaseInputDir(caseName), DEFAULT_SYNC_ROOT)
 }
 
 export async function traceDir(rootDir: string): Promise<string[]> {
+  return trace(rootDir, DEFAULT_SYNC_ROOT)
+}
+
+export async function traceDirWithHint(rootDir: string, syncRootHint: string): Promise<string[]> {
+  return trace(rootDir, syncRootHint)
+}
+
+export async function traceDirWithoutHint(rootDir: string): Promise<string[]> {
   return trace(rootDir)
 }
 
@@ -25,7 +35,7 @@ export function getWorkspaceFixtureDir(relativePath: string): string {
 }
 
 export async function traceFixtureDir(relativePath: string): Promise<string[]> {
-  return trace(getWorkspaceFixtureDir(relativePath))
+  return trace(getWorkspaceFixtureDir(relativePath), DEFAULT_SYNC_ROOT)
 }
 
 export interface RuntimeFixture {
@@ -187,6 +197,78 @@ export function resolveLabel(label: string) {
   })
 }
 
+export async function createSyncedWorkspaceFixture(): Promise<RuntimeFixture & { syncRootHint: string }> {
+  const scratchBaseDir = path.join(tmpdir(), 'reference-rs-styletrace-synced')
+  await mkdir(scratchBaseDir, { recursive: true })
+  const rootDir = await mkdtemp(path.join(scratchBaseDir, 'reference-rs-styletrace-synced-workspace-'))
+
+  const fixture = await writeRuntimeFixture(rootDir, {
+    'consumer-app/src/index.tsx': `import { Div } from '@reference-ui/react'
+
+export interface AppCardProps {
+  color?: string
+  title?: string
+}
+
+export function AppCard({ title, ...styleProps }: AppCardProps) {
+  return <Div {...styleProps}>{title}</Div>
+}
+`,
+    'consumer-app/.reference-ui/react/package.json': `{
+  "name": "@reference-ui/react",
+  "types": "./react.d.mts"
+}
+`,
+    'consumer-app/.reference-ui/react/react.d.mts': `export * from './entry/react'
+`,
+    'consumer-app/.reference-ui/react/entry/react.d.mts': `export { Div, type StyleProps } from '../types/index.d.mts'
+`,
+    'consumer-app/.reference-ui/react/types/index.d.mts': `export { Div } from '../system/primitives/index.d.mts'
+export type { StyleProps } from './style-props.d.mts'
+`,
+    'consumer-app/.reference-ui/react/types/style-props.d.mts': `export type StyleProps = {
+  color?: string
+}
+`,
+    'consumer-app/.reference-ui/react/system/primitives/index.d.mts': `declare const Div: (props: unknown) => unknown
+export { Div }
+`,
+    'consumer-app/.reference-ui/styled/package.json': `{
+  "name": "@reference-ui/styled",
+  "types": "./types/index.d.ts"
+}
+`,
+    'consumer-app/.reference-ui/styled/types/index.d.ts': `export type {} from './system-types'
+`,
+    'consumer-app/.reference-ui/styled/types/system-types.d.ts': `export interface CssVarProperties {}
+export type CssVarKeys = never
+`,
+  })
+
+  return {
+    ...fixture,
+    syncRootHint: path.join(rootDir, 'consumer-app'),
+  }
+}
+
+export async function createReactReexportFixture(): Promise<RuntimeFixture> {
+  return createRuntimeFixture('react-reexport', {
+    'index.tsx': `import { Div, type StyleProps } from './reference'
+
+export type AppCardProps = StyleProps & {
+  title?: string
+}
+
+export function AppCard({ title, ...styleProps }: AppCardProps) {
+  return <Div {...styleProps}>{title}</Div>
+}
+`,
+    'reference.ts': `export { Div } from '@reference-ui/react'
+export type { StyleProps } from '@reference-ui/react'
+`,
+  })
+}
+
 async function createRuntimeFixture(
   name: string,
   files: Record<string, string>,
@@ -194,6 +276,14 @@ async function createRuntimeFixture(
   const scratchBaseDir = path.join(WORKSPACE_ROOT, 'target', 'styletrace-js-tests')
   await mkdir(scratchBaseDir, { recursive: true })
   const rootDir = await mkdtemp(path.join(scratchBaseDir, `reference-rs-styletrace-${name}-`))
+
+  return writeRuntimeFixture(rootDir, files)
+}
+
+async function writeRuntimeFixture(
+  rootDir: string,
+  files: Record<string, string>,
+): Promise<RuntimeFixture> {
 
   for (const [relativePath, content] of Object.entries(files)) {
     const filePath = path.join(rootDir, relativePath)

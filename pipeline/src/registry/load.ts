@@ -9,6 +9,8 @@
 import { execFileSync } from 'node:child_process'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
+import type { VirtualNativeTarget } from '../../../packages/reference-rs/js/shared/targets.js'
+import { registryPackageNames } from '../../config.js'
 import { repoRoot, run } from '../build/workspace.js'
 import { logSkip } from '../lib/log/index.js'
 import { readRegistryManifest } from './manifest.js'
@@ -116,21 +118,29 @@ export async function loadPackedTarballsIntoLocalRegistry(registryUrl: string = 
   )
 }
 
-export async function stagePublicPackages(registryUrl: string = defaultRegistryUrl): Promise<void> {
-  await packPublicPackages()
+export async function stagePublicPackages(
+  registryUrl: string = defaultRegistryUrl,
+  packageNames: readonly string[] = registryPackageNames,
+  requiredRustTargets?: readonly VirtualNativeTarget[],
+): Promise<void> {
+  await packPublicPackages(packageNames, requiredRustTargets)
   await loadPackedTarballsIntoLocalRegistry(registryUrl)
 }
 
 export async function rebuildLocalRegistryAndStagePublicPackages(
   registryUrl: string = defaultRegistryUrl,
+  packageNames: readonly string[] = registryPackageNames,
+  requiredRustTargets?: readonly VirtualNativeTarget[],
 ): Promise<void> {
   await rebuildManagedLocalRegistry(registryUrl)
-  await stagePublicPackages(registryUrl)
+  await stagePublicPackages(registryUrl, packageNames, requiredRustTargets)
 }
 
 export async function ensureLocalRegistryAndStagePublicPackages(
   registryUrl: string = defaultRegistryUrl,
+  packageNames: readonly string[] = registryPackageNames,
+  requiredRustTargets?: readonly VirtualNativeTarget[],
 ): Promise<void> {
   await ensureManagedLocalRegistry(registryUrl)
-  await stagePublicPackages(registryUrl)
+  await stagePublicPackages(registryUrl, packageNames, requiredRustTargets)
 }

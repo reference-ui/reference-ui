@@ -6,7 +6,7 @@
  * registry on the same port.
  */
 
-import { spawn } from 'node:child_process'
+import { execFileSync, spawn } from 'node:child_process'
 import { openSync } from 'node:fs'
 import { mkdir, readFile, rm, unlink, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
@@ -71,6 +71,90 @@ function isProcessRunning(pid: number): boolean {
   } catch {
     return false
   }
+}
+
+export function parseListeningProcessPid(lsofOutput: string): number | null {
+  const lines = lsofOutput
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+
+  if (lines.length < 2) {
+    return null
+  }
+
+  const columns = lines[1]?.split(/\s+/)
+  const pid = Number.parseInt(columns?.[1] ?? '', 10)
+
+  return Number.isFinite(pid) ? pid : null
+}
+
+export function isAdoptableRegistryProcessCommand(command: string): boolean {
+  return /(^|\s|\/)verdaccio(\s|$)/i.test(command.trim())
+}
+
+function readListeningProcessPid(port: number): number | null {
+  try {
+    const output = execFileSync('lsof', ['-nP', `-iTCP:${port}`, '-sTCP:LISTEN'], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    })
+
+    return parseListeningProcessPid(output)
+  } catch {
+    return null
+  }
+}
+
+function readProcessCommand(pid: number): string {
+  try {
+    return execFileSync('ps', ['-p', `${pid}`, '-o', 'command='], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    }).trim()
+  } catch {
+    return ''
+  }
+}
+
+async function adoptExistingVerdaccioProcessIfPossible(): Promise<number | null> {
+  const listeningPid = readListeningProcessPid(managedRegistryPort)
+
+  if (!listeningPid || !isProcessRunning(listeningPid)) {
+    return null
+  }
+
+  const command = readProcessCommand(listeningPid)
+
+  if (!isAdoptableRegistryProcessCommand(command)) {
+    return null
+  }
+
+  await mkdir(registryStateDir, { recursive: true })
+  await writeFile(verdaccioPidPath, `${listeningPid}\n`)
+
+  return listeningPid
+}
+
+async function resolveManagedRegistryPid(registryAlreadyRunning: boolean): Promise<number | null> {
+  const managedPid = await readManagedRegistryPid()
+  const managedRegistryRunning = managedPid !== null && isProcessRunning(managedPid)
+
+  if (managedPid !== null && !managedRegistryRunning) {
+    await removeManagedRegistryPidFile()
+  }
+
+  if (!registryAlreadyRunning) {
+    return managedRegistryRunning ? managedPid : null
+  }
+
+  if (managedRegistryRunning) {
+    return managedPid
+  }
+
+  return adoptExistingVerdaccioProcessIfPossible()
 }
 
 async function removeManagedRegistryPidFile(): Promise<void> {
@@ -147,17 +231,13 @@ export async function ensureManagedLocalRegistry(registryUrl: string = defaultRe
   }
 
   const registryAlreadyRunning = await isRegistryAvailable(registryUrl)
-  const managedPid = await readManagedRegistryPid()
+  const managedPid = await resolveManagedRegistryPid(registryAlreadyRunning)
   const managedRegistryRunning = managedPid !== null && isProcessRunning(managedPid)
 
   if (registryAlreadyRunning && !managedRegistryRunning) {
     throw new Error(
       `A registry is already running at ${registryUrl}, but it is not managed by the pipeline. Stop that process or use the lower-level registry commands manually.`,
     )
-  }
-
-  if (managedPid !== null && !managedRegistryRunning) {
-    await removeManagedRegistryPidFile()
   }
 
   if (registryAlreadyRunning || managedRegistryRunning) {
@@ -173,7 +253,7 @@ export async function rebuildManagedLocalRegistry(registryUrl: string = defaultR
   }
 
   const registryAlreadyRunning = await isRegistryAvailable(registryUrl)
-  const managedPid = await readManagedRegistryPid()
+  const managedPid = await resolveManagedRegistryPid(registryAlreadyRunning)
   const managedRegistryRunning = managedPid !== null && isProcessRunning(managedPid)
 
   if (registryAlreadyRunning && !managedRegistryRunning) {

@@ -14,7 +14,7 @@ export interface SessionWatcher {
 /**
  * Keep the session watcher wiring isolated from the public API surface.
  * `public.ts` only cares about "start watching this outDir and notify me when
- * session.json changes"; the async Parcel subscription lifecycle lives here.
+ * the hidden session manifest changes"; the async Parcel subscription lifecycle lives here.
  */
 export function createSessionWatcher(
   outDir: string,

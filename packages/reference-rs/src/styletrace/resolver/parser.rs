@@ -15,7 +15,7 @@ use oxc_span::{GetSpan, SourceType};
 use super::model::{
     ImportBinding, InterfaceDecl, ParsedModule, TypeAliasDecl, TypeDeclaration, TypeExpr,
 };
-use super::util::StyleTraceError;
+use super::error::StyleTraceError;
 
 pub(super) fn parse_module(path: &Path, source: &str) -> Result<ParsedModule, StyleTraceError> {
     let allocator = Allocator::default();

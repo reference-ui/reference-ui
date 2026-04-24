@@ -60,6 +60,16 @@ ensure_command_line_tools() {
   exit 1
 }
 
+require_rustup() {
+  if command -v rustup >/dev/null 2>&1; then
+    return 0
+  fi
+
+  warn 'rustup is required for local rust builds and release packaging.'
+  warn 'Install Rust with rustup first, then rerun pnpm setup:local.'
+  exit 1
+}
+
 ensure_formula() {
   local formula="$1"
   local command_name="$2"
@@ -71,6 +81,18 @@ ensure_formula() {
 
   info "Installing $formula..."
   run_cmd brew install "$formula"
+}
+
+ensure_rust_target() {
+  local target="$1"
+
+  if rustup target list --installed | grep -qx "$target"; then
+    info "Rust target $target already installed."
+    return 0
+  fi
+
+  info "Installing Rust target $target..."
+  run_cmd rustup target add "$target"
 }
 
 ensure_colima_started() {
@@ -94,9 +116,12 @@ main() {
   info 'Bootstrapping local macOS pipeline dependencies.'
   require_brew
   ensure_command_line_tools
+  require_rustup
   ensure_formula dagger/tap/dagger dagger
   ensure_formula colima colima
   ensure_formula docker docker
+  ensure_rust_target aarch64-apple-darwin
+  ensure_rust_target x86_64-pc-windows-msvc
   ensure_colima_started
   info 'Local pipeline setup complete.'
 }

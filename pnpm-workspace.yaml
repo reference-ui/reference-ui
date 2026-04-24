@@ -2,6 +2,7 @@ packages:
   - pipeline
   - packages/*
   - fixtures/*
+  - matrix/*
   - '!packages/old/**'
 
 linkWorkspacePackages: true

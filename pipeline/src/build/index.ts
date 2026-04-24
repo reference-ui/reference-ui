@@ -8,6 +8,8 @@
 import { computePackageBuildHashes, readBuildState, writeBuildState } from './cache.js'
 import { ensureLocalRegistryAndStagePublicPackages } from '../registry/index.js'
 import { logSkip } from '../lib/log/index.js'
+import { registryPackageNames } from '../../config.js'
+import type { VirtualNativeTarget } from '../../../packages/reference-rs/js/shared/targets.js'
 import {
   listRegistryWorkspacePackages,
   run,
@@ -15,14 +17,18 @@ import {
 } from './workspace.js'
 import type { WorkspacePackage } from './types.js'
 
-export function listBuildTargetPackages(): WorkspacePackage[] {
+export interface BuildWorkspacePackageOptions {
+  requiredRustTargets?: readonly VirtualNativeTarget[]
+}
+
+export function listBuildTargetPackages(packageNames: readonly string[] = registryPackageNames): WorkspacePackage[] {
   return sortPackagesForInternalDependencyOrder(
-    listRegistryWorkspacePackages().filter((pkg) => typeof pkg.scripts.build === 'string'),
+    listRegistryWorkspacePackages(packageNames).filter((pkg) => typeof pkg.scripts.build === 'string'),
   )
 }
 
-export async function buildWorkspacePackages(): Promise<void> {
-  const buildTargets = listBuildTargetPackages()
+export async function buildWorkspaceArtifacts(packageNames: readonly string[] = registryPackageNames): Promise<void> {
+  const buildTargets = listBuildTargetPackages(packageNames)
   const buildHashes = computePackageBuildHashes(buildTargets)
   const buildState = await readBuildState()
 
@@ -51,6 +57,17 @@ export async function buildWorkspacePackages(): Promise<void> {
   }
 
   await writeBuildState(buildState)
+}
 
-  await ensureLocalRegistryAndStagePublicPackages()
+export async function buildWorkspacePackages(
+  registryUrl?: string,
+  packageNames: readonly string[] = registryPackageNames,
+  options: BuildWorkspacePackageOptions = {},
+): Promise<void> {
+  await buildWorkspaceArtifacts(packageNames)
+  await ensureLocalRegistryAndStagePublicPackages(
+    registryUrl,
+    packageNames,
+    options.requiredRustTargets,
+  )
 }

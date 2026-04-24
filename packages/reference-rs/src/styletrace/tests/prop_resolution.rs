@@ -1,10 +1,8 @@
 //! Resolver-focused unit coverage for styletrace type expansion.
 
-use std::path::Path;
-
 use crate::styletrace::{collect_reference_style_prop_names, collect_style_prop_names};
 
-use super::fixtures::ScratchDir;
+use super::fixtures::{workspace_sync_root, ScratchDir};
 
 #[test]
 fn resolves_omit_and_intersection_prop_names_from_local_modules() {
@@ -67,12 +65,9 @@ fn resolves_mapped_and_indexed_type_helpers() {
 
 #[test]
 fn loads_real_reference_core_style_props() {
-    let workspace_root = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .and_then(|path| path.parent())
-        .expect("expected workspace root");
+    let workspace_root = workspace_sync_root();
 
-    let names = collect_reference_style_prop_names(workspace_root)
+    let names = collect_reference_style_prop_names(workspace_root.as_path())
         .expect("expected reference-core style props to resolve");
 
     assert!(
