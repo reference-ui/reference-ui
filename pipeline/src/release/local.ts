@@ -100,7 +100,9 @@ export async function runLocalRelease(options: RunLocalReleaseOptions = {}): Pro
   console.log('')
 
   await buildWorkspaceArtifacts(releasePackageNames)
-  await packPublicPackages(releasePackageNames)
+  await packPublicPackages(releasePackageNames, {
+    forceBuildNativeTargets: releasePlan.needsRust,
+  })
   await publishReleaseTarballsToNpm(options.authRegistryUrl ?? defaultNpmAuthRegistryUrl)
   console.log(`\nPublished release artifacts to ${options.authRegistryUrl ?? defaultNpmAuthRegistryUrl}`)
 

@@ -9,7 +9,6 @@
 import { constants } from 'node:fs'
 import { access, mkdir, readdir, rm } from 'node:fs/promises'
 import { relative, resolve } from 'node:path'
-import type { VirtualNativeTarget } from '../../../packages/reference-rs/js/shared/targets.js'
 import { registryPackageNames } from '../../config.js'
 import { computePackageBuildHashes } from '../build/cache.js'
 import {
@@ -17,6 +16,7 @@ import {
   applyPreparedRustPackageOverride,
   prepareAndWriteRustBuildRegistryArtifacts,
   readPreparedRustBuildRegistryArtifacts,
+  type PrepareReferenceRustRegistryArtifactsOptions,
 } from '../build/rust/index.js'
 import type { WorkspacePackage } from '../build/types.js'
 import {
@@ -68,10 +68,10 @@ async function pruneStaleTarballs(activeTarballPaths: ReadonlySet<string>): Prom
 
 export async function packPublicPackages(
   packageNames: readonly string[] = registryPackageNames,
-  requiredRustTargets?: readonly VirtualNativeTarget[],
+  rustOptions: PrepareReferenceRustRegistryArtifactsOptions = {},
 ): Promise<RegistryManifest> {
   const publicPackages = sortPackagesForInternalDependencyOrder(listRegistryWorkspacePackages(packageNames))
-  await prepareAndWriteRustBuildRegistryArtifacts(publicPackages, requiredRustTargets)
+  await prepareAndWriteRustBuildRegistryArtifacts(publicPackages, rustOptions)
   const rustBuildArtifacts = await readPreparedRustBuildRegistryArtifacts()
   const publicPackageNames = new Set([
     ...publicPackages.map((pkg) => pkg.name),

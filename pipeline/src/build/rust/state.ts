@@ -41,10 +41,13 @@ export function emptyRustBuildRegistryArtifacts(): BuildRegistryArtifacts {
 export function createRustBuildRegistryArtifactsCacheKey(
   packageHash: string,
   requiredTargets?: readonly VirtualNativeTarget[],
+  forceBuildNativeTargets: boolean = false,
 ): string {
   const hash = createHash('sha256')
 
   hash.update(packageHash)
+  hash.update('\n')
+  hash.update(forceBuildNativeTargets ? 'force-build-native-targets' : 'allow-native-cache')
   hash.update('\n')
 
   for (const target of normalizeRequiredTargets(requiredTargets)) {
