@@ -1,412 +1,320 @@
-# NPM And Verdaccio Caching Plan
+# NPM And Verdaccio Plan
 
-## Why This Exists
+## Goal
 
-Matrix consumers already install from the pipeline-managed Verdaccio instance rather than talking to npm directly from inside each Dagger container.
+Use the pipeline-managed Verdaccio instance as the shared external package cache for matrix and downstream install flows, while keeping installs isolated and realistic.
 
-That is the right shape.
+This document answers the concrete questions behind that goal and turns them into a plan.
 
-The next problem is install latency for external dependencies such as `vite`, `vitest`, `react`, and their transitive trees.
+## Short Answer
 
-We want many isolated matrix runs, but we do not want each isolated run to pay the full cost of resolving and downloading the same public npm packages over and over.
+Yes, Verdaccio can be used as a reliable external package cache for this pipeline.
 
-## Current Reality
+But the reliable shape is specific:
 
-The current pipeline already has the first half of the desired architecture.
+- Verdaccio must be the only registry endpoint used by matrix consumers.
+- Verdaccio storage must persist across normal runs.
+- Verdaccio should be treated as a lazy caching proxy, not a full mirror.
+- The pipeline should tune Verdaccio's metadata cache policy deliberately.
+- The pipeline should separately optimize the container-side pnpm store.
 
-## Verdaccio Source Findings
+The key limitation is also specific:
 
-Looking at Verdaccio's actual implementation changes the recommendation in a few important ways.
+- Verdaccio cannot cache a package version before some client requests it.
 
-### 1. Metadata cache and tarball cache are separate
+So for unknown dependency trees, the first request for a previously unseen external package version still depends on npm being reachable.
+After that first request, Verdaccio can serve the cached result from local storage across later runs.
 
-Verdaccio does not treat npm proxying as one undifferentiated cache.
+## Questions And Answers
 
-It has two distinct cache layers:
+### 1. Can Verdaccio act as the shared external package cache for our matrix runs?
 
-- package metadata cache
-- tarball file cache
+Yes.
 
-The metadata side is freshness-checked via the uplink's `maxage` window.
+That is already the model Verdaccio implements.
 
-The tarball side is stored separately and reused when the file already exists locally.
+With a catch-all proxy rule, Verdaccio receives package requests from the consumer, proxies cache misses to npm, and stores the resulting metadata and tarballs locally.
 
-That means a repeated install can still cause metadata traffic even when tarballs are already cached.
+For this repo, that means the existing registry shape is fundamentally correct.
 
-### 2. Metadata cache is time-based and revalidated
+### 2. Do we need a custom middleware layer because we cannot know the dependency tree ahead of time?
 
-In Verdaccio's proxy implementation, uplinks default to `maxage: 2m`.
+No, not as the first or likely best solution.
 
-So by default, cached metadata is treated as fresh for only two minutes before Verdaccio rechecks the uplink.
+Verdaccio itself already is the middleware for unknown external dependencies.
 
-That matters for our pipeline because matrix consumers are generated fresh and many dependencies are expressed as semver ranges.
+That matters because the problem is not primarily request routing. The problem is cache durability, metadata TTL, and visibility into cache misses.
 
-Implication:
+Adding another bespoke middleware layer in front of Verdaccio would mostly risk reimplementing behavior Verdaccio already provides:
 
-- exact tarballs may already be cached locally
-- but metadata for ranges can still trigger periodic uplink revalidation
+- route unknown package requests
+- proxy them to npm
+- persist the results
+- serve later requests locally
 
-### 3. Tarballs are cached lazily, not proactively
+The better model is:
 
-Verdaccio does not prefetch tarballs just because an uplink exists.
+- all consumers talk only to Verdaccio
+- Verdaccio dynamically learns the dependency tree through real requests
+- the pipeline observes and preserves that cache over time
 
-The tarball is only written into local storage when a client actually requests it through Verdaccio.
+### 3. How does Verdaccio actually cache external packages?
 
-Implication:
+Verdaccio has two separate cache layers.
 
-- Verdaccio can absolutely become the shared cache for external dependencies
-- but only after at least one install or other tarball-fetching request has touched that exact package version
+#### Metadata cache
 
-So if we want predictable first-run performance across many isolated matrix jobs, a separate warmup step is still relevant.
+- package metadata is cached locally
+- metadata freshness is controlled by the uplink `maxage`
+- Verdaccio revalidates metadata after that freshness window passes
 
-### 4. Tarball caching is enabled by default for uplinks
+#### Tarball cache
 
-Verdaccio's uplink normalization sets `cache: true` by default when it is unspecified.
+- tarballs are stored locally on disk
+- tarball caching is enabled by default for uplinks
+- tarballs are cached lazily, only after a client requests them
 
-That is good news.
+This distinction matters because repeated installs may still cause metadata traffic even when tarballs are already cached.
 
-Our current pipeline config is already aligned with the behavior we want unless we explicitly disable uplink caching.
+### 4. Is the cache durable across restarts and separate runs?
 
-### 5. Cache state is durable on disk across restarts
+Yes, if we keep Verdaccio's storage directory.
 
-With the local filesystem storage plugin, package metadata is stored as package JSON files and tarballs are stored as files under the storage directory.
+Verdaccio stores metadata and tarballs on disk, not only in process memory.
 
-That means the Verdaccio cache is not ephemeral process memory.
+For this pipeline, the important consequence is:
 
-It persists across registry restarts and across normal pipeline runs as long as we do not remove the storage directory.
+- restarting Verdaccio is fine
+- deleting the storage directory is what destroys the external package cache
 
-### 6. There is no built-in prewarm or mirror sync mode for this use case
+### 5. Why can installs still feel slow even when Verdaccio is in front?
 
-From the code paths that matter here, Verdaccio behaves as an on-demand caching proxy.
+Because Verdaccio is only one layer in the install path.
 
-That is useful, but it also means our desired "populate the shared cache before the test fanout starts" behavior is not something Verdaccio appears to provide for us automatically.
+There are three separate costs:
 
-If we want prewarming, we will need to drive it from our pipeline.
+1. local package staging into Verdaccio
+2. external package metadata and tarball serving through Verdaccio
+3. consumer-side extraction and reuse inside the pnpm store
 
-### 1. Matrix consumers already install from Verdaccio
+So even if Verdaccio has the package, installs can still spend time on:
 
-The matrix runner does this:
+- metadata resolution for semver ranges
+- the first local pnpm-store population in a fresh container cache
+- large transitive trees for tooling packages
+- fresh generated consumers with no lockfile
 
-- builds and stages local workspace packages into the shared host Verdaccio registry
-- binds that host Verdaccio instance into the Dagger graph as `http://registry:4873`
-- runs `pnpm install --registry http://registry:4873` inside the container
+### 6. What is the biggest Verdaccio-specific issue in the current setup?
 
-So the container is already pointed at the private registry, not directly at `registry.npmjs.org`.
+The default metadata freshness policy is too short to leave implicit.
 
-### 2. Verdaccio is already configured as a proxy for external packages
+Verdaccio's default uplink `maxage` is 2 minutes.
 
-The current Verdaccio config already contains:
+That means repeated isolated installs can still revalidate metadata against npm frequently even when tarballs are already cached locally.
 
-- an uplink named `npmjs` pointing at `https://registry.npmjs.org/`
-- a catch-all package rule:
+This is not a reason to reject Verdaccio.
 
-```yaml
-'**':
-  access: $all
-  publish: $all
-  unpublish: $all
-  proxy: npmjs
-```
+It is a reason to configure Verdaccio intentionally for pipeline use.
 
-That means external packages are already supposed to flow like this:
+### 7. Can Verdaccio guarantee zero npm traffic for unknown dependency trees?
 
-1. container asks local Verdaccio for `vite`, `react`, `vitest`, etc.
-2. Verdaccio checks whether it already has the metadata and tarball content locally
-3. if not, Verdaccio fetches from npm once through the uplink
-4. Verdaccio stores that result in its own storage
-5. later requests can be served from Verdaccio storage instead of going back to npm
+No.
 
-### 3. Verdaccio storage is persistent on the host
+If a package version has never been requested before, Verdaccio must still go upstream on that first miss.
 
-The current config stores package data under:
+So Verdaccio gives us:
 
-- `pipeline/src/registry/.store/storage`
+- strong reuse for already-seen versions
+- durability across runs
+- better resilience when npm is flaky for previously seen versions
 
-That storage survives normal pipeline runs.
+It does not give us:
 
-It is only removed when we explicitly rebuild or clean the managed registry state.
+- omniscient prepopulation of unknown versions
+- a full mirror of npm without explicit separate mirroring work
 
-### 4. There is a second cache layer: the container pnpm store
+### 8. Should we add a warmup step?
 
-The matrix runner also mounts a Dagger cache volume at `/pnpm/store`.
+Maybe, but it is not the first answer.
 
-That cache is separate from Verdaccio.
+Warmup helps with first-hit latency, especially for known fixture dependency sets or highly repeated dependency graphs.
 
-- Verdaccio cache answers registry requests faster
-- pnpm store cache avoids re-downloading package tarballs into a fresh container filesystem
+But it does not solve the core unknown-tree problem by itself.
 
-These layers help different parts of the install path.
+The first answer is still:
 
-## Important Distinction
+- route everything through Verdaccio
+- preserve the cache
+- tune `maxage`
+- measure cache misses
 
-There are three different things happening during a matrix install:
+Warmup becomes useful after that baseline is in place.
 
-1. Local package staging
-2. Registry metadata and tarball serving
-3. Consumer-side package extraction into the pnpm store
+## Concrete Decisions
 
-Those three layers should not be conflated.
+### Decision 1. Verdaccio remains the single registry boundary
 
-### Local package staging
-
-This is our `@reference-ui/*` and selected fixture packages.
-
-We build them, pack them, and publish them into Verdaccio ourselves.
-
-### Registry metadata and tarball serving
-
-This is where Verdaccio helps with external packages.
-
-If a container asks for `vite@x`, Verdaccio can proxy that once and retain the result for later installs.
-
-### Consumer-side pnpm store reuse
-
-Even if Verdaccio already has `vite`, a fresh container may still need to populate its own `/pnpm/store` unless that store cache is reused.
-
-So a fast Verdaccio does not automatically mean `pnpm` prints large `reused` counts.
-
-It can still mean:
-
-- less public network traffic
-- fewer upstream registry round trips
-- more stable installs across many isolated tests
-
-## Why Installs Can Still Feel Slow
-
-Even with Verdaccio proxying enabled, installs can still spend time on:
-
-- metadata resolution for semver ranges like `^19.2.0`
-- first-time downloads into the container-side pnpm store
-- large transitive trees for dev tooling such as `vite` and `vitest`
-- fresh consumer package generation without a lockfile
-
-Right now the synthetic matrix consumer is generated from fixture package metadata and does not materialize a lockfile.
-
-That means `pnpm` is free to resolve ranges through registry metadata during install.
-
-Verdaccio can cache those metadata lookups and tarballs, but resolution work still exists.
-
-There is another specific Verdaccio detail here: the default metadata freshness window is short.
-
-So a busy matrix run can still see repeated metadata validation against npm even when the tarballs themselves are already sitting in Verdaccio storage.
-
-## What We Want
-
-We want one shared pipeline-local dependency source for external packages across many isolated matrix runs.
-
-More concretely:
-
-- every matrix container should talk only to the local Verdaccio instance
-- Verdaccio should fetch external packages from npm at most once per needed version
-- later matrix runs should reuse the cached external package content from Verdaccio storage
-- container-side pnpm caches should also be reused where practical, but that is a separate optimization layer
-
-## What Is Already Possible
-
-The good news is that the basic Verdaccio behavior we want is already possible with the current architecture.
-
-In principle, Verdaccio can already behave like the shared external dependency cache for all matrix containers.
-
-That suggests the next work is not inventing the concept from scratch.
-
-The next work is:
-
-- making the behavior explicit
-- deciding how durable we want the cache to be
-- deciding whether to proactively warm it
-- improving pnpm store reuse so that container installs benefit more visibly
-
-## Working Hypothesis
-
-The main remaining bottleneck is probably not that Verdaccio lacks proxy caching.
-
-The more likely bottlenecks are:
-
-- some runs still hitting npm because Verdaccio has not been warmed for those versions yet
-- some runs revalidating metadata because Verdaccio's default uplink `maxage` is only two minutes
-- pnpm store reuse being weaker or more volatile than expected across isolated matrix runs
-- semver resolution happening repeatedly because the generated consumer has no lockfile
-
-This should be validated with logs before deeper implementation work.
-
-## Proposed Direction
-
-Treat this as a two-layer optimization problem.
-
-### Layer A: Verdaccio as the shared external package cache
-
-Keep all matrix containers pointed exclusively at the pipeline Verdaccio.
-
-Then improve how we use Verdaccio:
-
-- confirm cache persistence across normal runs
-- increase uplink `maxage` from the default if we decide that lower npm revalidation traffic matters more than ultra-fresh metadata
-- avoid deleting the Verdaccio store except on explicit deep-clean flows
-- add observability so we can tell whether a request was a Verdaccio cache hit or an uplink fetch
-- consider proactive warmup for known external dependency versions
-
-### Layer B: pnpm store reuse inside Dagger
-
-Improve the consumer-side cache independently of Verdaccio.
-
-That likely means revisiting the Dagger cache key for `/pnpm/store` so it reflects the external dependency graph we expect to install, not only the local registry manifest.
-
-If the key churns whenever local package hashes change, we may be throwing away useful external package reuse.
-
-## Concrete Options
-
-### Option 1: Keep the current proxy model and add observability first
-
-This is the lowest-risk first step.
-
-Work:
-
-- document that Verdaccio is already the sole registry for matrix containers
-- add logging or metrics around Verdaccio uplink hits versus local hits
-- inspect Verdaccio storage growth after repeated matrix runs
-- verify whether repeated installs still contact npm for already-cached versions
-
-Pros:
-
-- minimal code churn
-- validates the real bottleneck before changing behavior
-
-Cons:
-
-- may not materially speed up installs until later steps land
-
-### Option 2: Add an explicit warmup phase for external dependencies
-
-Build a preflight step that discovers external dependencies needed by:
-
-- registry packages
-- matrix fixtures
-- generated consumers
-
-Then ask Verdaccio for those exact versions before the main matrix fanout begins.
-
-This is more relevant after reading Verdaccio's code because tarballs are cached lazily rather than proactively.
-
-Possible warmup shapes:
-
-- run a synthetic `pnpm install` against a warmup consumer
-- run `npm view` or `npm pack` through Verdaccio for exact versions
-- publish nothing, only force Verdaccio to cache upstream metadata and tarballs
-
-Pros:
-
-- first real matrix run after warmup becomes much more predictable
-- helps when many isolated jobs start concurrently
-
-Cons:
-
-- need clear rules for which versions to warm
-- semver ranges without lockfiles complicate deterministic prewarming
-
-### Option 3: Generate a lockfile for matrix consumers
-
-If we generate a lockfile for the synthetic consumer, `pnpm` can skip a large amount of range resolution work.
-
-That would make both Verdaccio and the pnpm store more effective.
-
-Pros:
-
-- more deterministic installs
-- fewer metadata-resolution surprises
-- gives Verdaccio warmup a concrete version set instead of open-ended semver ranges
-
-Cons:
-
-- more pipeline complexity
-- lockfile generation needs a stable ownership model
-
-### Option 4: Rework the Dagger pnpm-store cache key
-
-Today the cache key is derived from the staged local registry manifest.
-
-That is good for tying the store to local artifact changes, but it may be too coarse or too volatile for external dependency reuse.
-
-We may want a key composed from:
-
-- matrix fixture dependency shape
-- generated consumer package.json content
-- maybe local registry manifest versions for only the packages the consumer actually installs
-
-Pros:
-
-- improves reuse even when containers remain isolated
-- complements Verdaccio instead of replacing it
-
-Cons:
-
-- easy to get wrong and accidentally over-share stale state
-
-## Recommended Order
-
-The sensible order is:
-
-1. Measure the current Verdaccio proxy behavior.
-2. Raise Verdaccio uplink `maxage` intentionally instead of keeping the two-minute default by accident.
-3. Confirm whether external packages are already being served from the Verdaccio store on repeated runs.
-4. If Verdaccio caching works but installs are still noisy, improve pnpm store reuse.
-5. If first-hit latency is still too high, add a warmup phase.
-6. Consider consumer lockfile generation only if the first two layers are not enough.
-
-## Practical Notes For Implementation
-
-### Cache durability policy
-
-We should decide whether `pnpm pipeline clean` is meant to:
-
-- remove everything including external package cache
-- or preserve the Verdaccio uplink cache by default and reserve full cache destruction for a stronger clean command
-
-If external cache reuse is a first-class optimization, deleting it on routine cleanup may be too expensive.
-
-### Registry ownership policy
-
-We should keep one rule:
-
-- matrix containers talk to Verdaccio only
+All matrix consumers should continue to install only through the pipeline-managed Verdaccio instance.
 
 No container should fall back directly to npm.
 
-That keeps behavior observable and ensures all external dependency traffic can benefit from the same shared cache.
+### Decision 2. We will not build a bespoke pre-Verdaccio middleware layer
 
-### Version identity for external packages
+The dependency tree being unknown is not enough reason to add a new middleware layer.
 
-For external packages, version identity is enough.
+Verdaccio already handles unknown dependencies by design.
 
-If Verdaccio already has `vite@X`, `react@Y`, or `vitest@Z`, later runs should just reuse that stored artifact.
+If we later need more observability or special caching behavior, we should first prefer:
 
-That matches the goal and does not require any custom packaging logic for third-party packages.
+- Verdaccio configuration changes
+- pipeline-owned instrumentation
+- pipeline-owned warmup or cache policy steps
 
-## Suggested Near-Term Work Items
+before inventing a second registry-like layer.
 
-1. Add a short note to the registry docs that Verdaccio already proxies external npm packages through the `npmjs` uplink.
-2. Decide on an explicit uplink `maxage` for pipeline use instead of relying on Verdaccio's default two-minute metadata TTL.
-3. Add instrumentation to distinguish Verdaccio local hits from uplink fetches during matrix installs.
-4. Review whether the current Dagger `/pnpm/store` cache key is too tightly coupled to the full local registry manifest.
-5. Decide whether `clean` should preserve external dependency cache by default.
-6. Prototype a warmup step for the external dependency set used by `fixtures/install-test`.
+### Decision 3. Verdaccio storage should be treated as valuable cache state
 
-## Questions To Answer Before Coding
+Normal pipeline operation should preserve the Verdaccio storage that contains external package cache state.
 
-1. Do we want the Verdaccio external cache to survive across days, or only within one local development session?
-2. Should cache warmup be driven by fixture manifests only, or also by the dependency graphs of staged local packages?
-3. Is the bigger pain point upstream npm traffic, or the time spent repopulating `/pnpm/store` inside isolated containers?
-4. Do we want deterministic consumer lockfiles for matrix runs, or do we intentionally want fresh semver resolution as part of the test?
+If we want destructive cleanup, it should be explicit and clearly stronger than routine cleanup.
 
-## Bottom Line
+### Decision 4. We should set uplink `maxage` explicitly
 
-The architecture you want is already mostly present.
+We should not rely on Verdaccio's default 2-minute metadata TTL.
 
-Verdaccio is already acting as the shared npm-facing layer, and it is already configured to proxy public packages.
+For pipeline use, an explicit value such as `30d` is more aligned with repeated isolated installs and shared local cache reuse.
 
-The next step is to make that behavior measurable and durable, then decide whether the larger remaining win is:
+The exact value should be a policy choice, not an accident.
 
-- warming Verdaccio more aggressively
-- reusing the Dagger pnpm store more effectively
-- or stabilizing consumer resolution with lockfiles
+### Decision 5. Verdaccio cache and pnpm-store cache are separate concerns
 
-This should stay in `registry/` and `testing/matrix/` ownership, not become a bespoke package mirror outside the existing pipeline boundary.
+We should not judge Verdaccio only by pnpm's `reused` output.
+
+Verdaccio reduces upstream registry work.
+
+The pnpm store reduces consumer-side re-download and re-extraction work.
+
+Both matter. Neither replaces the other.
+
+## What This Means For The Pipeline
+
+### Current state
+
+The current pipeline already does the important routing step correctly:
+
+- matrix consumers install through Verdaccio, not directly through npm
+- Verdaccio is configured with a catch-all `proxy: npmjs`
+- Verdaccio storage is persisted on disk
+
+### Missing state
+
+What is still missing is operational clarity:
+
+- explicit metadata cache policy
+- explicit cleanup policy for external cache durability
+- visibility into cache hits versus upstream fetches during testing
+- separate tuning of the pnpm-store cache key
+
+## Implementation Plan
+
+### Phase 1. Make the current Verdaccio cache reliable on purpose
+
+Work:
+
+1. Set `uplinks.npmjs.maxage` explicitly in the Verdaccio config.
+2. Document that Verdaccio is the single registry boundary for matrix consumers.
+3. Confirm that routine cleanup does not destroy useful external cache state unless explicitly intended.
+
+Outcome:
+
+- Verdaccio becomes a deliberately configured shared external cache, not an accidental one.
+
+### Phase 2. Add observability
+
+Work:
+
+1. Capture whether matrix installs caused Verdaccio uplink traffic.
+2. Distinguish local-cache reuse from upstream fetches in logs or diagnostics.
+3. Inspect storage growth over repeated runs.
+
+Outcome:
+
+- we can measure whether Verdaccio is actually helping
+- we can see whether misses are mostly first-time unknown versions or repeated metadata revalidation
+- this observability remains testing-focused rather than a permanent production-style telemetry requirement
+
+### Phase 3. Improve consumer-side reuse separately
+
+Work:
+
+1. Revisit the Dagger `/pnpm/store` cache key.
+2. Make it reflect the actual generated consumer dependency shape more closely.
+3. Avoid tying all external dependency reuse to the entire local registry manifest if that proves too volatile.
+
+Outcome:
+
+- repeated isolated installs pay less consumer-side setup cost even when Verdaccio is already doing its job
+
+### Phase 4. Consider warmup for known hot paths
+
+Work:
+
+1. Identify repeated fixture dependency sets.
+2. Prime Verdaccio for known hot dependencies when that materially reduces first-hit latency.
+3. Do not depend on warmup as the only caching strategy.
+
+Outcome:
+
+- first-hit latency becomes more predictable for common test flows
+
+## Recommended Order
+
+1. Set an explicit Verdaccio `maxage`.
+2. Preserve the Verdaccio storage by default.
+3. Add testing-focused instrumentation for uplink fetches versus local reuse.
+4. Revisit the pnpm-store cache key.
+5. Add warmup only for repeated hot dependency sets if needed.
+6. Consider generated lockfiles later if range resolution remains too noisy.
+
+## Risks And Constraints
+
+### Risk 1. Unknown first-time versions still depend on npm
+
+This is inherent to the lazy proxy model.
+
+### Risk 2. Overly aggressive `maxage` can make metadata less fresh
+
+That is usually acceptable for a local test pipeline, but it is still a tradeoff.
+
+### Risk 3. Over-sharing the pnpm store can hide correctness issues
+
+The pnpm-store cache should be tuned carefully so it improves speed without causing stale or misleading installs.
+
+### Risk 4. Cleanup policy can destroy the external cache accidentally
+
+If cleanup wipes the Verdaccio storage too often, the whole shared external cache story becomes much weaker.
+
+## Final Answers
+
+### Can we use Verdaccio as an external package cache reliably?
+
+Yes.
+
+Reliable here means:
+
+- for already-seen external package versions, Verdaccio can serve them from local persisted storage across repeated runs and restarts
+- for previously unseen versions, the first request still depends on npm
+
+### Do we need custom middleware because the dependency tree is not known ahead of time?
+
+No.
+
+Verdaccio already is the middleware for unknown external dependency requests.
+
+### What should we actually do next?
+
+1. Configure Verdaccio intentionally for pipeline use.
+2. Preserve its storage by default.
+3. Measure cache misses and upstream fetches during testing.
+4. Optimize the pnpm-store layer separately.
+5. Add targeted warmup only if the data says first-hit latency is still a problem.
