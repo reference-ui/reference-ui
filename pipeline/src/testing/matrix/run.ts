@@ -73,6 +73,7 @@ function baseNodeContainer(pnpmStoreCacheKey: string) {
     .withEnvVariable('CI', '1')
     .withEnvVariable('NO_COLOR', '1')
     .withEnvVariable('npm_config_update_notifier', 'false')
+    .withEnvVariable('npm_config_registry', registryUrlInContainer)
     .withEnvVariable('PNPM_HOME', '/pnpm')
     .withEnvVariable('npm_config_store_dir', '/pnpm/store')
     .withMountedCache('/pnpm/store', pnpmStore)
