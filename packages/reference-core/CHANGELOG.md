@@ -1,5 +1,13 @@
 # @reference-ui/core
 
+## 0.0.26
+
+### Patch Changes
+
+- c42290a: CI RELEASE
+- Updated dependencies [c42290a]
+  - @reference-ui/rust@0.0.25
+
 ## 0.0.25
 
 ### Patch Changes
