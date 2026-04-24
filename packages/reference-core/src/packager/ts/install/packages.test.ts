@@ -24,6 +24,7 @@ async function importPackagesModule(options: {
 }) {
   vi.resetModules()
   let capturedTsconfigFiles: string[] = []
+  let capturedTsconfigContents: Record<string, unknown> | undefined
 
   const emitDeclarationTree = (sourceDir: string, outDir: string): void => {
     for (const entry of readdirSync(sourceDir, { withFileTypes: true })) {
@@ -58,7 +59,11 @@ async function importPackagesModule(options: {
     const outDirIndex = args.indexOf('--outDir')
     if (projectIndex >= 0) {
       const tsconfigPath = args[projectIndex + 1]
-      capturedTsconfigFiles = JSON.parse(readFileSync(tsconfigPath, 'utf-8')).files
+      const tsconfig = JSON.parse(readFileSync(tsconfigPath, 'utf-8')) as {
+        files: string[]
+      } & Record<string, unknown>
+      capturedTsconfigFiles = tsconfig.files
+      capturedTsconfigContents = tsconfig
     }
     if (outDirIndex >= 0) {
       emitDeclarationTree(resolve(options.cliDir, 'src'), args[outDirIndex + 1] ?? options.outDir)
@@ -91,6 +96,7 @@ async function importPackagesModule(options: {
   return {
     ...mod,
     getCapturedTsconfigFiles: () => capturedTsconfigFiles,
+    getCapturedTsconfigContents: () => capturedTsconfigContents,
     spawnMonitoredAsync,
     writeGeneratedSystemTypes,
     writeGeneratedReactTypes,
@@ -164,10 +170,13 @@ describe('packager/ts/install/packages', () => {
     ])
 
     expect(spawnMonitoredAsync).toHaveBeenCalledTimes(1)
-    expect(getCapturedTsconfigFiles()).toHaveLength(4)
+    expect(getCapturedTsconfigFiles()).toHaveLength(17)
     expect(getCapturedTsconfigFiles().some((file) => file.endsWith('/src/entry/react.ts'))).toBe(true)
     expect(
       getCapturedTsconfigFiles().some((file) => file.endsWith('/src/system/primitives/index.tsx'))
+    ).toBe(true)
+    expect(
+      getCapturedTsconfigFiles().some((file) => file.endsWith('/src/system/primitives/types.ts'))
     ).toBe(true)
     expect(getCapturedTsconfigFiles().some((file) => file.endsWith('/src/system/css/public.ts'))).toBe(
       true
@@ -175,6 +184,13 @@ describe('packager/ts/install/packages', () => {
     expect(getCapturedTsconfigFiles().some((file) => file.endsWith('/src/types/index.ts'))).toBe(
       true
     )
+    expect(getCapturedTsconfigFiles().some((file) => file.endsWith('/src/types/props.ts'))).toBe(true)
+    expect(getCapturedTsconfigFiles().some((file) => file.endsWith('/src/types/style-props.ts'))).toBe(
+      true
+    )
+    expect(
+      getCapturedTsconfigFiles().some((file) => file.endsWith('/src/types/system-style-object.ts'))
+    ).toBe(true)
     expect(
       readFileSync(resolve(outDir, 'react/react.d.mts'), 'utf-8')
     ).toBe("export * from './entry/react'\n")
@@ -197,5 +213,43 @@ describe('packager/ts/install/packages', () => {
       cliDir,
       resolve(outDir, 'system/system.d.mts')
     )
+  })
+
+  it('writes a synthetic tsconfig with an explicit catch-all path base for styled aliases', async () => {
+    const cliDir = createTempDir('reference-ui-core-cli-')
+    const outDir = createTempDir('reference-ui-core-out-')
+
+    mkdirSync(resolve(cliDir, 'src/entry'), { recursive: true })
+    writeFileSync(resolve(cliDir, 'src/entry/react.ts'), 'export {}\n', 'utf-8')
+
+    mkdirSync(resolve(cliDir, 'src/system/primitives'), { recursive: true })
+    writeFileSync(resolve(cliDir, 'src/system/primitives/index.tsx'), 'export const Div = "div"\n', 'utf-8')
+
+    mkdirSync(resolve(cliDir, 'src/system/css'), { recursive: true })
+    writeFileSync(resolve(cliDir, 'src/system/css/public.ts'), 'export const css = {}\n', 'utf-8')
+
+    mkdirSync(resolve(cliDir, 'src/types'), { recursive: true })
+    writeFileSync(resolve(cliDir, 'src/types/index.ts'), 'export type Example = true\n', 'utf-8')
+
+    const { getCapturedTsconfigContents, installPackagesTs } = await importPackagesModule({ cliDir, outDir })
+
+    await installPackagesTs(cliDir, [
+      {
+        name: '@reference-ui/react',
+        sourceEntry: 'src/entry/react.ts',
+        outFile: 'react.mjs',
+      },
+    ])
+
+    const tsconfig = getCapturedTsconfigContents() as {
+      compilerOptions?: {
+        paths?: Record<string, string[]>
+      }
+    }
+
+    expect(tsconfig).toBeTruthy()
+    expect(tsconfig.compilerOptions?.paths?.['*']).toEqual(['./*'])
+    expect(tsconfig.compilerOptions?.paths?.['@reference-ui/styled']).toHaveLength(1)
+    expect(tsconfig.compilerOptions?.paths?.['@reference-ui/styled/*']).toHaveLength(1)
   })
 })

@@ -28,6 +28,31 @@ export const GENERATED_OUTPUT_ROOTS = [
 export const DEFAULT_OUT_DIR = '.reference-ui'
 
 /**
+ * Explicit React DTS roots that we seed into the synthetic tsconfig.
+ *
+ * These keep packaged consumer declaration output stable when type-only imports
+ * are not discovered transitively by `tsgo`.
+ */
+export const REACT_DTS_INCLUDE = [
+  'src/system/primitives/index.tsx',
+  'src/system/primitives/types.ts',
+  'src/system/css/public.ts',
+  'src/types/index.ts',
+  'src/types/BaseSystem.ts',
+  'src/types/colors.ts',
+  'src/types/conditions.ts',
+  'src/types/css.ts',
+  'src/types/fontRegistry.ts',
+  'src/types/fonts.ts',
+  'src/types/primitives.ts',
+  'src/types/props.ts',
+  'src/types/recipe.ts',
+  'src/types/style-prop.ts',
+  'src/types/style-props.ts',
+  'src/types/system-style-object.ts',
+] as const
+
+/**
  * Picomatch-style glob for the sync output directory under any ancestor (watchers,
  * virtual copy, Panda fragment scan excludes).
  */

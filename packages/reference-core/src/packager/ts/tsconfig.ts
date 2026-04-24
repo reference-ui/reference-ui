@@ -42,6 +42,7 @@ export function writeTsconfig(options: WriteTsconfigOptions): string {
           declaration: true,
           emitDeclarationOnly: true,
           paths: {
+            '*': ['./*'],
             '@reference-ui/styled': [toConfigRelativePath(tempDir, styledDir)],
             '@reference-ui/styled/*': [toConfigRelativePath(tempDir, join(styledDir, '*'))],
           },
