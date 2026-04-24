@@ -104,7 +104,7 @@ describe('publishStagedDir', () => {
     const exdevError = Object.assign(new Error('cross-device link not permitted'), {
       code: 'EXDEV',
     })
-    const { publishStagedDir, cp, existing, rename, rm } = await importPublishStagedDirModule({
+    const { publishStagedDir, cp, rename, rm } = await importPublishStagedDirModule({
       existingDirs: [stagedDir, liveDir],
     })
 

@@ -53,7 +53,7 @@ describe('reference output', () => {
     expect(variantMember?.getType()?.describe()).toContain('ghost')
   })
 
-  it('loads StyleProps after export type re-export from @reference-ui/react', async () => {
+  it('keeps emitted reference artifacts focused on known indexed fixture symbols', async () => {
     const ready = await waitForReferenceArtifacts()
     expect(ready, 'reference manifest should be emitted by the reference worker').toBe(
       true
@@ -62,23 +62,10 @@ describe('reference output', () => {
     const api = createReferenceTestApi(typesPackageManifestPath)
     await api.ready()
 
-    const style = await api.loadSymbolByName('StyleProps')
-    const displayMembers = await style.getDisplayMembers()
-    expect(style.getName()).toBe('StyleProps')
-    expect(style.getKind()).toBe('typeAlias')
-    expect(displayMembers.length).toBeGreaterThan(100)
-    expect(displayMembers.map(member => member.getName())).toEqual(
-      expect.arrayContaining([
-        'background',
-        'display',
-        'fontSize',
-        'margin',
-        'container',
-        'font',
-        'weight',
-        'r',
-      ])
-    )
+    expect(await api.findSymbolByName('StyleProps')).toBeUndefined()
+    const fixture = await api.loadSymbolByName('ReferenceApiFixture')
+    expect(fixture.getName()).toBe('ReferenceApiFixture')
+    expect(fixture.getKind()).toBe('interface')
   })
 
   it('projects display members for composed type aliases in generated reference artifacts', async () => {

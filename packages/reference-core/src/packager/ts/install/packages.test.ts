@@ -117,40 +117,70 @@ afterEach(() => {
   }
 })
 
+function writeReactSupportFixture(cliDir: string): void {
+  mkdirSync(resolve(cliDir, 'src/entry'), { recursive: true })
+  writeFileSync(resolve(cliDir, 'src/entry/react.ts'), 'export {}\n', 'utf-8')
+
+  mkdirSync(resolve(cliDir, 'src/system/primitives/nested'), { recursive: true })
+  writeFileSync(
+    resolve(cliDir, 'src/system/primitives/index.tsx'),
+    "export { type Extra } from './nested/extra'\nexport const Div = 'div'\n",
+    'utf-8'
+  )
+  writeFileSync(
+    resolve(cliDir, 'src/system/primitives/nested/extra.ts'),
+    'export type Extra = true\n',
+    'utf-8'
+  )
+
+  mkdirSync(resolve(cliDir, 'src/types'), { recursive: true })
+  writeFileSync(
+    resolve(cliDir, 'src/types/index.ts'),
+    "export type { DivProps } from './props'\n",
+    'utf-8'
+  )
+  writeFileSync(
+    resolve(cliDir, 'src/types/props.ts'),
+    'export type DivProps = { children?: string }\n',
+    'utf-8'
+  )
+
+  mkdirSync(resolve(cliDir, 'src/system/css'), { recursive: true })
+  writeFileSync(resolve(cliDir, 'src/system/css/public.ts'), 'export const css = {}\n', 'utf-8')
+}
+
+function expectCapturedReactSupportTsconfigFiles(files: string[]): void {
+  expect(files).toHaveLength(17)
+  expect(files.some((file) => file.endsWith('/src/entry/react.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/system/primitives/index.tsx'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/system/primitives/types.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/system/css/public.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/types/index.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/types/props.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/types/style-props.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/types/system-style-object.ts'))).toBe(true)
+}
+
+function expectGeneratedReactSupportFiles(outDir: string): void {
+  expect(readFileSync(resolve(outDir, 'react/react.d.mts'), 'utf-8')).toBe(
+    "export * from './entry/react'\n"
+  )
+  expect(readFileSync(resolve(outDir, 'react/system/primitives/index.d.ts'), 'utf-8')).toContain(
+    'Div'
+  )
+  expect(
+    readFileSync(resolve(outDir, 'react/system/primitives/nested/extra.d.ts'), 'utf-8')
+  ).toContain('Extra')
+  expect(readFileSync(resolve(outDir, 'react/types/index.d.ts'), 'utf-8')).toContain('props')
+  expect(readFileSync(resolve(outDir, 'react/types/props.d.ts'), 'utf-8')).toContain('DivProps')
+  expect(readFileSync(resolve(outDir, 'react/system/css/public.d.ts'), 'utf-8')).toContain('css')
+}
+
 describe('packager/ts/install/packages', () => {
   it('emits react support declaration files from source roots into the generated package', async () => {
     const cliDir = createTempDir('reference-ui-core-cli-')
     const outDir = createTempDir('reference-ui-core-out-')
-
-    mkdirSync(resolve(cliDir, 'src/entry'), { recursive: true })
-    writeFileSync(resolve(cliDir, 'src/entry/react.ts'), 'export {}\n', 'utf-8')
-
-    mkdirSync(resolve(cliDir, 'src/system/primitives/nested'), { recursive: true })
-    writeFileSync(
-      resolve(cliDir, 'src/system/primitives/index.tsx'),
-      "export { type Extra } from './nested/extra'\nexport const Div = 'div'\n",
-      'utf-8'
-    )
-    writeFileSync(
-      resolve(cliDir, 'src/system/primitives/nested/extra.ts'),
-      'export type Extra = true\n',
-      'utf-8'
-    )
-
-    mkdirSync(resolve(cliDir, 'src/types'), { recursive: true })
-    writeFileSync(
-      resolve(cliDir, 'src/types/index.ts'),
-      "export type { DivProps } from './props'\n",
-      'utf-8'
-    )
-    writeFileSync(
-      resolve(cliDir, 'src/types/props.ts'),
-      'export type DivProps = { children?: string }\n',
-      'utf-8'
-    )
-
-    mkdirSync(resolve(cliDir, 'src/system/css'), { recursive: true })
-    writeFileSync(resolve(cliDir, 'src/system/css/public.ts'), 'export const css = {}\n', 'utf-8')
+    writeReactSupportFixture(cliDir)
 
     const {
       getCapturedTsconfigFiles,
@@ -170,41 +200,8 @@ describe('packager/ts/install/packages', () => {
     ])
 
     expect(spawnMonitoredAsync).toHaveBeenCalledTimes(1)
-    expect(getCapturedTsconfigFiles()).toHaveLength(17)
-    expect(getCapturedTsconfigFiles().some((file) => file.endsWith('/src/entry/react.ts'))).toBe(true)
-    expect(
-      getCapturedTsconfigFiles().some((file) => file.endsWith('/src/system/primitives/index.tsx'))
-    ).toBe(true)
-    expect(
-      getCapturedTsconfigFiles().some((file) => file.endsWith('/src/system/primitives/types.ts'))
-    ).toBe(true)
-    expect(getCapturedTsconfigFiles().some((file) => file.endsWith('/src/system/css/public.ts'))).toBe(
-      true
-    )
-    expect(getCapturedTsconfigFiles().some((file) => file.endsWith('/src/types/index.ts'))).toBe(
-      true
-    )
-    expect(getCapturedTsconfigFiles().some((file) => file.endsWith('/src/types/props.ts'))).toBe(true)
-    expect(getCapturedTsconfigFiles().some((file) => file.endsWith('/src/types/style-props.ts'))).toBe(
-      true
-    )
-    expect(
-      getCapturedTsconfigFiles().some((file) => file.endsWith('/src/types/system-style-object.ts'))
-    ).toBe(true)
-    expect(
-      readFileSync(resolve(outDir, 'react/react.d.mts'), 'utf-8')
-    ).toBe("export * from './entry/react'\n")
-    expect(
-      readFileSync(resolve(outDir, 'react/system/primitives/index.d.ts'), 'utf-8')
-    ).toContain('Div')
-    expect(
-      readFileSync(resolve(outDir, 'react/system/primitives/nested/extra.d.ts'), 'utf-8')
-    ).toContain('Extra')
-    expect(readFileSync(resolve(outDir, 'react/types/index.d.ts'), 'utf-8')).toContain('props')
-    expect(readFileSync(resolve(outDir, 'react/types/props.d.ts'), 'utf-8')).toContain('DivProps')
-    expect(
-      readFileSync(resolve(outDir, 'react/system/css/public.d.ts'), 'utf-8')
-    ).toContain('css')
+    expectCapturedReactSupportTsconfigFiles(getCapturedTsconfigFiles())
+    expectGeneratedReactSupportFiles(outDir)
     expect(writeGeneratedReactTypes).toHaveBeenCalledWith(
       cliDir,
       resolve(outDir, 'react/react.d.mts')

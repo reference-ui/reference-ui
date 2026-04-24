@@ -1,6 +1,8 @@
 import { emit, on } from '../../lib/event-bus'
 import type { TsPackagerCompletionEvent } from './types'
 
+const FINAL_COMPLETION_EVENT = 'packager-ts:complete'
+
 interface OrchestratorState {
   running: boolean
   pendingCompletionEvent?: TsPackagerCompletionEvent
@@ -11,11 +13,11 @@ const state: OrchestratorState = {
 }
 
 function queueCompletionEvent(completionEvent: TsPackagerCompletionEvent): void {
-  if (state.pendingCompletionEvent === 'packager-ts:complete') {
+  if (state.pendingCompletionEvent === FINAL_COMPLETION_EVENT) {
     return
   }
 
-  if (completionEvent === 'packager-ts:complete') {
+  if (completionEvent === FINAL_COMPLETION_EVENT) {
     state.pendingCompletionEvent = completionEvent
     flushQueue()
     return
@@ -56,12 +58,12 @@ export function initTsPackagerOrchestrator(): void {
     queueCompletionEvent('packager-ts:runtime:complete')
   })
   on('packager-ts:final:requested', () => {
-    queueCompletionEvent('packager-ts:complete')
+    queueCompletionEvent(FINAL_COMPLETION_EVENT)
   })
   on('packager-ts:runtime:complete', () => {
     markIdle()
   })
-  on('packager-ts:complete', () => {
+  on(FINAL_COMPLETION_EVENT, () => {
     markIdle()
   })
   on('packager-ts:failed', () => {

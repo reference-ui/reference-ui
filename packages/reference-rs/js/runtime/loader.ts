@@ -28,7 +28,7 @@ export interface VirtualNativeBinding {
   rewriteCvaImports: (sourceCode: string, relativePath: string) => string
   scanAndEmitModules: (rootDir: string, include: string[]) => string
   analyzeAtlas: (rootDir: string, configJson?: string) => string
-  analyzeStyletrace: (rootDir: string, workspaceHint?: string) => string
+  analyzeStyletrace: (rootDir: string, syncRootHint?: string) => string
 }
 
 export interface VirtualNativeDiagnostics {

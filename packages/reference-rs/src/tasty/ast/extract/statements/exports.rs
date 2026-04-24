@@ -14,7 +14,7 @@ use super::super::module_bindings::{
 use super::super::symbols::{push_interface_shell, push_type_alias_shell};
 use super::super::ExtractionContext;
 use crate::tasty::ast::model::{ImportBinding, SymbolShell};
-use crate::tasty::scanner::ScannedFile;
+use crate::tasty::scanner::{resolve_import, ScannedFile};
 
 pub(crate) fn exports_from_statement(
     root_dir: &Path,
@@ -25,6 +25,7 @@ pub(crate) fn exports_from_statement(
     import_bindings: &mut BTreeMap<String, ImportBinding>,
     export_bindings: &mut BTreeMap<String, String>,
     reexport_target: &mut BTreeMap<String, (String, String)>,
+    export_all_targets: &mut Vec<String>,
     exports: &mut Vec<SymbolShell>,
 ) {
     collect_named_export_statement(
@@ -37,6 +38,13 @@ pub(crate) fn exports_from_statement(
         export_bindings,
         reexport_target,
         exports,
+    );
+    collect_export_all_statement(
+        root_dir,
+        file_id_set,
+        scanned_file,
+        statement,
+        export_all_targets,
     );
 
     let ctx = ExtractionContext {
@@ -97,6 +105,30 @@ fn collect_named_export_statement(
         file_id_set,
         exports,
     );
+}
+
+fn collect_export_all_statement(
+    root_dir: &Path,
+    file_id_set: &std::collections::BTreeSet<String>,
+    scanned_file: &ScannedFile,
+    statement: &Statement<'_>,
+    export_all_targets: &mut Vec<String>,
+) {
+    let Statement::ExportAllDeclaration(export_all) = statement else {
+        return;
+    };
+
+    let source_module = export_all
+        .source
+        .value
+        .as_str()
+        .trim_matches('"')
+        .trim_matches('\'');
+    let Some(target_file_id) = resolve_import(root_dir, &scanned_file.file_id, source_module, file_id_set) else {
+        return;
+    };
+
+    export_all_targets.push(target_file_id);
 }
 
 fn collect_user_export_statement(

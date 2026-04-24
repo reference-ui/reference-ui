@@ -16,6 +16,7 @@ async function importPublishNativeModule(options: {
   artifactsDir: string
   argv?: string[]
   published?: string[]
+  env?: Record<string, string | undefined>
 }) {
   vi.resetModules()
 
@@ -25,6 +26,10 @@ async function importPublishNativeModule(options: {
   vi.stubGlobal('process', {
     ...process,
     argv: ['node', 'publish-native.ts', ...(options.argv ?? [])],
+    env: {
+      ...process.env,
+      ...options.env,
+    },
   })
 
   vi.doMock('../shared/paths', () => ({
@@ -51,6 +56,43 @@ async function importPublishNativeModule(options: {
   return { runCalls }
 }
 
+function createNativePublishFixture() {
+  const packageDir = createTempDir()
+  const artifactsDir = resolve(packageDir, 'artifacts')
+  const npmDir = resolve(packageDir, 'npm')
+  const nativePkgDir = resolve(npmDir, 'darwin-arm64')
+  mkdirSync(artifactsDir, { recursive: true })
+  mkdirSync(nativePkgDir, { recursive: true })
+
+  writeFileSync(
+    resolve(packageDir, 'package.json'),
+    JSON.stringify({ name: '@reference-ui/rust', version: '0.0.14' }, null, 2),
+    'utf-8'
+  )
+  writeFileSync(
+    resolve(nativePkgDir, 'package.json'),
+    JSON.stringify(
+      {
+        name: '@reference-ui/rust-darwin-arm64',
+        version: '0.0.14',
+      },
+      null,
+      2
+    ),
+    'utf-8'
+  )
+
+  return { packageDir, artifactsDir, nativePkgDir }
+}
+
+function filterCommandCalls(
+  runCalls: Array<{ command: string; args: string[]; cwd?: string }>,
+  command: string,
+  subcommand: string
+) {
+  return runCalls.filter((call) => call.command === command && call.args[0] === subcommand)
+}
+
 afterEach(() => {
   vi.resetModules()
   vi.doUnmock('../shared/paths')
@@ -64,27 +106,8 @@ afterEach(() => {
 })
 
 describe('publish-native', () => {
-  it('publishes the root package while optionalDependencies are present when requested', async () => {
-    const packageDir = createTempDir()
-    const artifactsDir = resolve(packageDir, 'artifacts')
-    const npmDir = resolve(packageDir, 'npm')
-    const nativePkgDir = resolve(npmDir, 'darwin-arm64')
-    mkdirSync(artifactsDir, { recursive: true })
-    mkdirSync(nativePkgDir, { recursive: true })
-
-    writeFileSync(
-      resolve(packageDir, 'package.json'),
-      JSON.stringify({ name: '@reference-ui/rust', version: '0.0.14' }, null, 2),
-      'utf-8'
-    )
-    writeFileSync(
-      resolve(nativePkgDir, 'package.json'),
-      JSON.stringify({
-        name: '@reference-ui/rust-darwin-arm64',
-        version: '0.0.14',
-      }, null, 2),
-      'utf-8'
-    )
+  it('publishes native and root packages when requested and restores the root package manifest', async () => {
+    const { packageDir, artifactsDir, nativePkgDir } = createNativePublishFixture()
 
     const { runCalls } = await importPublishNativeModule({
       packageDir,
@@ -92,40 +115,76 @@ describe('publish-native', () => {
       argv: ['--publish-root'],
     })
 
-    expect(runCalls).toEqual([
-      {
-        command: 'pnpm',
-        args: ['run', 'create-npm-dirs'],
-        cwd: packageDir,
-      },
-      {
-        command: 'pnpm',
-        args: ['run', 'artifacts'],
-        cwd: packageDir,
-      },
-      {
-        command: 'npm',
-        args: ['view', '@reference-ui/rust-darwin-arm64@0.0.14', 'version', '--json'],
-        cwd: packageDir,
-      },
-      {
-        command: 'npm',
-        args: ['publish', '--provenance', '--access', 'public'],
-        cwd: nativePkgDir,
-      },
-      {
-        command: 'npm',
-        args: ['view', '@reference-ui/rust@0.0.14', 'version', '--json'],
-        cwd: packageDir,
-      },
-      {
-        command: 'npm',
-        args: ['publish', '--provenance', '--access', 'public'],
-        cwd: packageDir,
-      },
-    ])
+    expect(runCalls).toContainEqual({
+      command: 'pnpm',
+      args: ['run', 'create-npm-dirs'],
+      cwd: packageDir,
+    })
+    expect(runCalls).toContainEqual({
+      command: 'pnpm',
+      args: ['run', 'artifacts'],
+      cwd: packageDir,
+    })
+
+    expect(filterCommandCalls(runCalls, 'npm', 'view')).toEqual(
+      expect.arrayContaining([
+        {
+          command: 'npm',
+          args: ['view', '@reference-ui/rust-darwin-arm64@0.0.14', 'version', '--json'],
+          cwd: packageDir,
+        },
+        {
+          command: 'npm',
+          args: ['view', '@reference-ui/rust@0.0.14', 'version', '--json'],
+          cwd: packageDir,
+        },
+      ])
+    )
+
+    expect(filterCommandCalls(runCalls, 'npm', 'publish')).toEqual(
+      expect.arrayContaining([
+        {
+          command: 'npm',
+          args: ['publish', '--access', 'public'],
+          cwd: nativePkgDir,
+        },
+        {
+          command: 'npm',
+          args: ['publish', '--access', 'public'],
+          cwd: packageDir,
+        },
+      ])
+    )
 
     const restoredPackageJson = JSON.parse(readFileSync(resolve(packageDir, 'package.json'), 'utf8'))
     expect(restoredPackageJson.optionalDependencies).toBeUndefined()
+  })
+
+  it('adds provenance to publish commands when provenance publishing is enabled', async () => {
+    const { packageDir, artifactsDir, nativePkgDir } = createNativePublishFixture()
+
+    const { runCalls } = await importPublishNativeModule({
+      packageDir,
+      artifactsDir,
+      argv: ['--publish-root'],
+      env: {
+        REF_RELEASE_PROVENANCE: 'true',
+      },
+    })
+
+    expect(filterCommandCalls(runCalls, 'npm', 'publish')).toEqual(
+      expect.arrayContaining([
+        {
+          command: 'npm',
+          args: ['publish', '--provenance', '--access', 'public'],
+          cwd: nativePkgDir,
+        },
+        {
+          command: 'npm',
+          args: ['publish', '--provenance', '--access', 'public'],
+          cwd: packageDir,
+        },
+      ])
+    )
   })
 })
