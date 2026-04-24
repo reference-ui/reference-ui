@@ -28,6 +28,15 @@ use tasty::scan_and_emit_modules as do_scan_and_emit_modules;
 
 #[cfg(feature = "napi")]
 #[napi]
+pub fn get_native_capabilities() -> Result<String> {
+    Ok(serde_json::json!({
+        "styletraceSyncRootHint": true
+    })
+    .to_string())
+}
+
+#[cfg(feature = "napi")]
+#[napi]
 pub fn rewrite_css_imports(source_code: String, relative_path: String) -> Result<String> {
     Ok(virtualrs::rewrite_css_imports(&source_code, &relative_path))
 }
