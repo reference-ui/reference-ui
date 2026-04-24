@@ -123,7 +123,7 @@ export async function stagePublicPackages(
   packageNames: readonly string[] = registryPackageNames,
   requiredRustTargets?: readonly VirtualNativeTarget[],
 ): Promise<void> {
-  await packPublicPackages(packageNames, requiredRustTargets)
+  await packPublicPackages(packageNames, { requiredTargets: requiredRustTargets })
   await loadPackedTarballsIntoLocalRegistry(registryUrl)
 }
 

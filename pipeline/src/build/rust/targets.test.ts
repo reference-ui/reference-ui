@@ -42,6 +42,7 @@ describe('resolveReferenceRustTargetTarballStrategy', () => {
   it('packs local binaries even when a cached tarball exists', () => {
     assert.equal(
       resolveReferenceRustTargetTarballStrategy({
+        allowRemoteFallback: true,
         hasLocalBinary: true,
         publishedOnNpm: true,
         tarballExists: true,
@@ -53,6 +54,7 @@ describe('resolveReferenceRustTargetTarballStrategy', () => {
   it('reuses a cached tarball when there is no local binary', () => {
     assert.equal(
       resolveReferenceRustTargetTarballStrategy({
+        allowRemoteFallback: true,
         hasLocalBinary: false,
         publishedOnNpm: true,
         tarballExists: true,
@@ -64,6 +66,7 @@ describe('resolveReferenceRustTargetTarballStrategy', () => {
   it('fetches from npm when no cache exists and the target is published', () => {
     assert.equal(
       resolveReferenceRustTargetTarballStrategy({
+        allowRemoteFallback: true,
         hasLocalBinary: false,
         publishedOnNpm: true,
         tarballExists: false,
@@ -75,9 +78,22 @@ describe('resolveReferenceRustTargetTarballStrategy', () => {
   it('skips the target when no binary, cache, or published package is available', () => {
     assert.equal(
       resolveReferenceRustTargetTarballStrategy({
+        allowRemoteFallback: true,
         hasLocalBinary: false,
         publishedOnNpm: false,
         tarballExists: false,
+      }),
+      'skip-target',
+    )
+  })
+
+  it('skips remote fallbacks when release requires freshly built native binaries', () => {
+    assert.equal(
+      resolveReferenceRustTargetTarballStrategy({
+        allowRemoteFallback: false,
+        hasLocalBinary: false,
+        publishedOnNpm: true,
+        tarballExists: true,
       }),
       'skip-target',
     )
@@ -185,6 +201,7 @@ describe('shouldBuildLinuxReferenceRustTargetWithDagger', () => {
   it('returns true when linux is required and no local or published linux package is available', () => {
     assert.equal(
       shouldBuildLinuxReferenceRustTargetWithDagger({
+        forceBuild: false,
         publishedOnNpm: false,
         requiredTargets: ['linux-x64-gnu'],
         targetPackage: {
@@ -199,6 +216,7 @@ describe('shouldBuildLinuxReferenceRustTargetWithDagger', () => {
   it('returns false when linux is not required', () => {
     assert.equal(
       shouldBuildLinuxReferenceRustTargetWithDagger({
+        forceBuild: false,
         publishedOnNpm: false,
         requiredTargets: ['darwin-x64'],
         targetPackage: {
@@ -213,6 +231,7 @@ describe('shouldBuildLinuxReferenceRustTargetWithDagger', () => {
   it('returns false when the linux target already has a local binary', () => {
     assert.equal(
       shouldBuildLinuxReferenceRustTargetWithDagger({
+        forceBuild: false,
         publishedOnNpm: false,
         requiredTargets: ['linux-x64-gnu'],
         targetPackage: {
@@ -224,9 +243,25 @@ describe('shouldBuildLinuxReferenceRustTargetWithDagger', () => {
     )
   })
 
+  it('rebuilds linux when release force-build is enabled even if a local binary exists', () => {
+    assert.equal(
+      shouldBuildLinuxReferenceRustTargetWithDagger({
+        forceBuild: true,
+        publishedOnNpm: false,
+        requiredTargets: ['linux-x64-gnu'],
+        targetPackage: {
+          hasLocalBinary: true,
+          name: '@reference-ui/rust-linux-x64-gnu',
+        },
+      }),
+      true,
+    )
+  })
+
   it('returns true when linux is required and only a published package exists', () => {
     assert.equal(
       shouldBuildLinuxReferenceRustTargetWithDagger({
+        forceBuild: false,
         publishedOnNpm: true,
         requiredTargets: ['linux-x64-gnu'],
         targetPackage: {
