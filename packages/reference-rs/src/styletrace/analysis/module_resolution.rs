@@ -14,15 +14,10 @@ use crate::tasty::resolve_external_import_path;
 pub(super) fn resolve_relative_module(
     current_module: &Path,
     source: &str,
-) -> Result<PathBuf, StyleTraceError> {
+) -> Result<Option<PathBuf>, StyleTraceError> {
     let base = current_module.parent().unwrap_or(current_module);
     let candidate = normalize_path(&base.join(source));
-    resolve_local_module_path(&candidate).ok_or_else(|| {
-        StyleTraceError::new(format!(
-            "failed to resolve local module {source} from {}",
-            current_module.display()
-        ))
-    })
+    Ok(resolve_local_module_path(&candidate))
 }
 
 pub(super) fn resolve_imported_module(
@@ -31,7 +26,7 @@ pub(super) fn resolve_imported_module(
     sync_root: &Path,
 ) -> Result<Option<PathBuf>, StyleTraceError> {
     if source.starts_with('.') {
-        return resolve_relative_module(current_module, source).map(Some);
+        return resolve_relative_module(current_module, source);
     }
 
     if is_ignorable_module_specifier(source) {
@@ -39,12 +34,9 @@ pub(super) fn resolve_imported_module(
     }
 
     let resolution_root = current_module.parent().unwrap_or(current_module);
-    let resolved = resolve_external_import_path(resolution_root, source).ok_or_else(|| {
-        StyleTraceError::new(format!(
-            "failed to resolve package module {source} from {}",
-            current_module.display()
-        ))
-    })?;
+    let Some(resolved) = resolve_external_import_path(resolution_root, source) else {
+        return Ok(None);
+    };
 
     Ok(Some(prefer_sync_root_source_module(&resolved, sync_root)))
 }

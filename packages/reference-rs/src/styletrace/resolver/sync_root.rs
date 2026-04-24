@@ -12,6 +12,12 @@ const SYNC_REACT_PACKAGE_ENTRY: &str = ".reference-ui/react/package.json";
 const SYNC_STYLED_PACKAGE_ENTRY: &str = ".reference-ui/styled/package.json";
 const STYLETRACE_SYNC_ROOT_ENV: &str = "REFERENCE_STYLETRACE_SYNC_ROOT";
 const STYLETRACE_WORKSPACE_ROOT_ENV: &str = "REFERENCE_STYLETRACE_WORKSPACE_ROOT";
+const STYLETRACE_PROJECT_ROOT_MARKERS: &[&str] = &[
+    "ui.config.ts",
+    "ui.config.mts",
+    "ui.config.js",
+    "package.json",
+];
 
 pub(crate) fn resolve_sync_root(
     start_path: &Path,
@@ -59,6 +65,9 @@ fn find_sync_root(start_path: &Path) -> Option<PathBuf> {
         if is_styletrace_sync_root(path) {
             return Some(canonicalize_existing_path(path));
         }
+        if is_styletrace_project_root(path) {
+            return Some(canonicalize_existing_path(path));
+        }
         current = path.parent();
     }
 
@@ -67,6 +76,12 @@ fn find_sync_root(start_path: &Path) -> Option<PathBuf> {
 
 fn is_styletrace_sync_root(path: &Path) -> bool {
     path.join(SYNC_REACT_PACKAGE_ENTRY).is_file() && path.join(SYNC_STYLED_PACKAGE_ENTRY).is_file()
+}
+
+fn is_styletrace_project_root(path: &Path) -> bool {
+    STYLETRACE_PROJECT_ROOT_MARKERS
+        .iter()
+        .any(|marker| path.join(marker).is_file())
 }
 
 fn canonicalize_existing_path(path: &Path) -> PathBuf {
@@ -109,6 +124,31 @@ mod tests {
         .expect("expected sync root to resolve from hint");
 
         assert_eq!(resolved, canonicalize_existing_path(&scratch.join("consumer-app")));
+
+        let _ = fs::remove_dir_all(&scratch);
+    }
+
+    #[test]
+    fn resolves_project_root_without_generated_sync_output() {
+        let stamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("expected current time")
+            .as_nanos();
+        let scratch = std::env::temp_dir().join(format!(
+            "reference-rs-sync-root-project-{}-{stamp}",
+            std::process::id()
+        ));
+
+        write_file(
+            &scratch,
+            "sandbox/package.json",
+            "{\n  \"name\": \"sandbox-app\"\n}\n",
+        );
+
+        let resolved = resolve_sync_root(&scratch.join("sandbox/src"), Some(&scratch.join("sandbox")))
+            .expect("expected project root to resolve without .reference-ui");
+
+        assert_eq!(resolved, canonicalize_existing_path(&scratch.join("sandbox")));
 
         let _ = fs::remove_dir_all(&scratch);
     }

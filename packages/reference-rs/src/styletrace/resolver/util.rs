@@ -34,6 +34,10 @@ pub(crate) fn normalize_path(path: &Path) -> PathBuf {
 
 pub(crate) fn is_ignorable_module_specifier(specifier: &str) -> bool {
     specifier.starts_with("node:")
+        || matches!(
+            specifier,
+            "react" | "react-dom" | "react/jsx-runtime" | "react/jsx-dev-runtime"
+        )
 }
 
 pub(crate) fn resolve_local_module_path(candidate: &Path) -> Option<PathBuf> {
