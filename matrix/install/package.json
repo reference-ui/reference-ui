@@ -1,5 +1,5 @@
 {
-  "name": "@fixtures/install-test",
+  "name": "@matrix/install",
   "version": "0.0.1",
   "private": true,
   "type": "module",

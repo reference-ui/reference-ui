@@ -13,6 +13,7 @@ This repository is an active monorepo. It contains the Reference UI CLI, the fir
 - `packages/reference-e2e` - Playwright-based matrix and quick-run system tests
 - `packages/reference-rs` - Rust/native bindings used by the platform
 - `fixtures/*` - consumer-style fixture projects used by unit and system tests
+- `matrix/` - top-level matrix scenario area for the next generation of install and TypeScript coverage
 
 ## Stack
 

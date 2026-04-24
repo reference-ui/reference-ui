@@ -1,4 +1,4 @@
-# @fixtures/install-test
+# @matrix/install
 
 ## 0.0.1
 

@@ -113,7 +113,7 @@ Yes.
 
 One of the first fixture scenarios should just be `smoke`.
 
-The first concrete package for that direction is `@fixtures/install-test`.
+The first concrete package for that direction is `@matrix/install`.
 
 Its job is not to test a rich UI surface.
 

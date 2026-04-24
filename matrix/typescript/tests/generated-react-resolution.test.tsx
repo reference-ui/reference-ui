@@ -13,11 +13,11 @@ function expectDivBg(_value: DivBgProp): void {}
 describe('generated @reference-ui/react package', () => {
   it('resolves Div at runtime and in the TypeScript surface', () => {
     const props: DivProps = {
-      children: 'Reference UI install test',
+      children: 'Reference UI TypeScript matrix',
     }
 
     expect(Div).toBeTruthy()
-    expect(props.children).toBe('Reference UI install test')
+    expect(props.children).toBe('Reference UI TypeScript matrix')
     expectTypeOf<DivProps>().toMatchTypeOf<DivComponentProps>()
   })
 
