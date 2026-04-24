@@ -39,24 +39,11 @@ The first local release implementation is now split into stage-oriented modules:
 
 ## Current Release Surface
 
-Today, release behavior is split between workflow YAML and Node scripts:
-
-- `.github/workflows/release.yml`
-	- creates or updates the changesets release PR
-	- decides whether publishing should happen
-	- coordinates rust artifact compilation before publish
-	- invokes package publishing
-- `scripts/release/detect.mjs`
-	- determines which packages are unpublished and whether rust artifacts are needed
-- `scripts/release/publish.mjs`
-	- publishes rust first when needed
-	- then publishes the remaining packages in dependency-safe order
-- `scripts/release/shared.mjs`
-	- package discovery, previous ref resolution, npm publication checks, publish ordering
+Release execution for npm is implemented in this folder and invoked via `pnpm pipeline release` (root alias: `pnpm release`). Changesets still author intent (`pnpm changeset`, `pnpm version-packages`); GitHub Actions no longer runs a release workflow in this repository.
 
 ## Intended Dagger Responsibility
 
-The `release/` area should become the place where release execution is actually defined.
+The `release/` area is where release execution is defined for the monorepo.
 
 That includes:
 

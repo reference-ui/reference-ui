@@ -76,7 +76,7 @@ export function assertLocalRustReleaseSupported(
       `Local release cannot publish ${REFERENCE_RUST_PACKAGE_NAME}@${rustPackage.version} from this machine yet.`,
       `Missing native targets: ${missingTargets.join(', ')}.`,
       `This local flow can currently materialize: ${locallyBuildableTargets.join(', ')}.`,
-      'Provide the missing target artifacts under packages/reference-rs/artifacts from the rust compile workflow, or run the release from a machine that can build the full target set.',
+      'Provide the missing target artifacts under packages/reference-rs/artifacts (for example from your release CI or pipeline), or run the release from a machine that can build the full target set.',
     ].join(' '),
   )
 }

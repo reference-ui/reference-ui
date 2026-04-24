@@ -1,17 +1,17 @@
 # Release Process
 
-This repo uses Changesets plus GitHub Actions for releases.
+This repo uses **Changesets** for version intent and changelogs, and the **Dagger pipeline** (`pnpm pipeline`, `pnpm release`) as the authority for building and publishing packages to npm.
+
+GitHub Actions in this repository only builds and deploys the documentation site to GitHub Pages (see `.github/workflows/docs.yml`). It does not run the test matrix or npm release.
 
 The developer-facing flow is:
 
 1. Run `pnpm changeset` on your branch.
 2. Commit the changeset with your code changes.
 3. Merge that branch to `main`.
-4. GitHub Actions creates or updates a release PR.
-5. Merge that generated release PR.
-6. GitHub Actions publishes the packages.
-
-That is the main workflow people should follow.
+4. Materialize versions (see below) so package versions and changelogs land in git—typically a dedicated branch/PR opened by a maintainer or your org’s CI.
+5. Merge that versioning change.
+6. Run the pipeline release against the resulting `main` (or your release branch) to publish to npm.
 
 ## Step By Step
 
@@ -43,49 +43,40 @@ The changeset file should be committed along with the feature or fix.
 
 ### 3. Merge the branch to `main`
 
-After the branch lands on `main`, the release workflow runs immediately on that push.
+After the branch lands on `main`, pending changeset files describe unreleased intent. Nothing publishes automatically from GitHub Actions.
 
-### 4. GitHub Actions creates or updates the release PR
+### 4. Materialize versions (release PR or equivalent)
 
-Yes, this is automated in this repo.
-
-The workflow in [.github/workflows/release.yml](/Users/ryn/Developer/reference-ui/.github/workflows/release.yml) has a step named `Create or update release PR` and uses `changesets/action@v1` with:
-
-```yaml
-with:
-	version: pnpm version-packages
-```
-
-So after changesets reach `main`, GitHub Actions immediately opens or updates the release PR.
-
-### 5. Merge the generated release PR
-
-That PR is where package versions and changelogs are actually written into git.
-
-The workflow uses:
+Apply pending changesets to bump versions and write changelogs:
 
 ```bash
 pnpm version-packages
 ```
 
-which runs:
+That runs:
 
 ```bash
 changeset version && pnpm install --lockfile-only
 ```
 
-### 6. Publish happens after the generated PR is merged
+Commit the result (often as a PR titled along the lines of “Version Packages”) and merge it when ready. Your team may automate opening that PR outside this repo’s Actions; what matters is that the version bump commit exists before publish.
 
-Yes, that is the intended flow here.
+### 5. Publish with the pipeline
 
-Once that PR is merged, the release workflow checks whether there are unpublished package versions. If there are no pending changesets left and unpublished versions exist, it runs the publish job.
+From a clean checkout at the release commit, with npm credentials configured for the public registry:
 
-So the normal sequence is:
+```bash
+pnpm install --frozen-lockfile
+pnpm release
+```
 
-1. feature branch with changeset merges to `main`
-2. release workflow runs on that merge and creates the release PR
-3. release PR is merged
-4. release workflow runs again and the publish job runs
+`pnpm release` is an alias for `pnpm pipeline release`. To inspect what would publish first:
+
+```bash
+pnpm pipeline release plan
+```
+
+The pipeline builds and packs release artifacts, then publishes them in dependency-safe order (including `@reference-ui/rust` when it is in the plan). See `pipeline/src/release/` for implementation details.
 
 ## Short Version
 
@@ -94,8 +85,8 @@ If your branch changes a published package:
 1. run `pnpm changeset`
 2. commit it on the branch
 3. merge the branch
-4. merge the generated release PR
-5. let Actions publish on the release PR merge to `main`
+4. merge a follow-up that runs `pnpm version-packages` (version + changelog commit)
+5. run `pnpm release` from the pipeline when you intend to publish
 
 ## What Gets Released
 
@@ -118,7 +109,7 @@ These private packages are ignored by Changesets:
 - `@reference-ui/reference-docs`
 - `@reference-ui/reference-e2e`
 
-That ignore list comes from [.changeset/config.json](/Users/ryn/Developer/reference-ui/.changeset/config.json).
+That ignore list comes from [.changeset/config.json](../.changeset/config.json).
 
 ## Are Packages Published In Lockstep?
 
@@ -135,9 +126,9 @@ So published packages can version independently when needed.
 
 `@reference-ui/icons` is its own package, but it is part of the same root Changesets and npm release flow.
 
-## Recommended Validation Before Merge
+## Recommended Validation Before Release
 
-Before merging a branch that adds changesets, the safest baseline is:
+Before publishing, run the checks your team relies on—for example:
 
 ```bash
 pnpm install --frozen-lockfile
@@ -150,32 +141,15 @@ For a broader pass:
 pnpm run test:full
 ```
 
+Pipeline-oriented checks (see `pipeline/` and root `package.json` `pipeline:*` scripts) should match what your CI runs.
+
 ## Important Commands
 
 - `pnpm changeset`
 - `pnpm version-packages`
-- `pnpm run release:detect`
-- `pnpm run release:publish`
+- `pnpm pipeline release plan`
+- `pnpm release` (same as `pnpm pipeline release`)
 
-## Manual Fallback
+## Notes On `@reference-ui/rust`
 
-Normally, do not publish manually.
-
-If you ever need to reproduce the release flow locally:
-
-```bash
-pnpm version-packages
-pnpm install --frozen-lockfile
-pnpm run test:ci:unit
-pnpm run release:publish
-```
-
-## Notes On Automation
-
-[scripts/release/detect.mjs](/Users/ryn/Developer/reference-ui/scripts/release/detect.mjs) checks which current package versions are not yet published on npm.
-
-`@reference-ui/rust` has one extra step: the workflow may compile native artifacts first, then publish them before the normal Changesets publish step.
-
-That detail matters operationally, but most developers do not need to think about it during normal release prep.
-
-For the current alpha workflow, release automation is intentionally not gated on the `Test` workflow succeeding. A merge to `main` is treated as release-ready.
+Publishing that package may require native artifacts for every supported target. The pipeline’s local release path explains what is missing if your machine cannot build them all; supply artifacts under `packages/reference-rs/artifacts` from your release build environment when needed.
