@@ -296,10 +296,6 @@ export function shouldBuildLinuxReferenceRustTargetWithDagger(
     return false
   }
 
-  if (options.publishedOnNpm) {
-    return false
-  }
-
   return true
 }
 
@@ -403,22 +399,14 @@ export function getMissingLocalReleaseRustTargets(
   packageDir: string,
   requiredTargets: readonly VirtualNativeTarget[] = SUPPORTED_VIRTUAL_NATIVE_TARGETS,
 ): VirtualNativeTarget[] {
-  const rootVersion = readReferenceRustRootVersion(packageDir)
   const locallyBuildableTargets = getLocallyBuildableReferenceRustTargets()
   const artifactTargets = requiredTargets.filter((target) => hasDownloadedReferenceRustArtifact(packageDir, target))
-  const cachedTarballTargets = requiredTargets.filter((target) => existsSync(
-    resolve(rustGeneratedTarballsDir, packedTarballName(getVirtualNativePackageName(target), rootVersion)),
-  ))
-  const publishedTargets = requiredTargets.filter((target) => isPublishedOnNpm(
-    getVirtualNativePackageName(target),
-    rootVersion,
-  ))
 
   return findMissingRequiredReferenceRustTargets({
     artifactTargets,
-    cachedTarballTargets,
+    cachedTarballTargets: [],
     locallyBuildableTargets,
-    publishedTargets,
+    publishedTargets: [],
     requiredTargets,
   })
 }

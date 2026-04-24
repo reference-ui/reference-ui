@@ -210,7 +210,7 @@ describe('shouldBuildLinuxReferenceRustTargetWithDagger', () => {
     )
   })
 
-  it('returns false when the linux target already has a local binary or published package', () => {
+  it('returns false when the linux target already has a local binary', () => {
     assert.equal(
       shouldBuildLinuxReferenceRustTargetWithDagger({
         publishedOnNpm: false,
@@ -222,7 +222,9 @@ describe('shouldBuildLinuxReferenceRustTargetWithDagger', () => {
       }),
       false,
     )
+  })
 
+  it('returns true when linux is required and only a published package exists', () => {
     assert.equal(
       shouldBuildLinuxReferenceRustTargetWithDagger({
         publishedOnNpm: true,
@@ -232,7 +234,7 @@ describe('shouldBuildLinuxReferenceRustTargetWithDagger', () => {
           name: '@reference-ui/rust-linux-x64-gnu',
         },
       }),
-      false,
+      true,
     )
   })
 })
