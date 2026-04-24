@@ -1,5 +1,14 @@
 # @reference-ui/lib
 
+## 0.0.29
+
+### Patch Changes
+
+- c42290a: CI RELEASE
+- Updated dependencies [c42290a]
+  - @reference-ui/core@0.0.26
+  - @reference-ui/icons@0.0.26
+
 ## 0.0.28
 
 ### Patch Changes

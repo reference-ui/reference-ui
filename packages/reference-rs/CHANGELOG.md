@@ -1,5 +1,11 @@
 # @reference-ui/rust
 
+## 0.0.25
+
+### Patch Changes
+
+- c42290a: CI RELEASE
+
 ## 0.0.24
 
 ### Patch Changes
