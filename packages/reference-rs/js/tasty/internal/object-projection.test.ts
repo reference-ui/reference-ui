@@ -10,7 +10,9 @@ describe('object-projection type parameter detection', () => {
         typeArguments: [],
       }
 
-    expect(isTypeParameterReference(reference)).toBe(true)
+    expect(
+      isTypeParameterReference(reference, { typeParameterNames: new Set(['P']) })
+    ).toBe(true)
   })
 
   it('returns true for other type parameters', () => {
@@ -21,7 +23,9 @@ describe('object-projection type parameter detection', () => {
         typeArguments: [],
       }
 
-    expect(isTypeParameterReference(reference)).toBe(true)
+    expect(
+      isTypeParameterReference(reference, { typeParameterNames: new Set(['T']) })
+    ).toBe(true)
   })
 
   it('returns false for type parameters with type arguments', () => {
@@ -32,10 +36,12 @@ describe('object-projection type parameter detection', () => {
         typeArguments: [{ kind: 'raw' as const, summary: 'string' }],
       }
 
-    expect(isTypeParameterReference(reference)).toBe(false)
+    expect(
+      isTypeParameterReference(reference, { typeParameterNames: new Set(['P']) })
+    ).toBe(false)
   })
 
-  it('returns true for regular type references where id equals name', () => {
+  it('returns false for regular type references where id equals name', () => {
       const reference = {
         id: 'SomeType',
         name: 'SomeType',
@@ -43,7 +49,9 @@ describe('object-projection type parameter detection', () => {
         typeArguments: [],
       }
 
-    expect(isTypeParameterReference(reference)).toBe(true)
+    expect(
+      isTypeParameterReference(reference, { typeParameterNames: new Set(['P']) })
+    ).toBe(false)
   })
 
   it('returns false when id and name differ', () => {
@@ -53,6 +61,8 @@ describe('object-projection type parameter detection', () => {
         library: '@reference-ui/react',
         typeArguments: [],
       }
-    expect(isTypeParameterReference(reference)).toBe(false)
+    expect(
+      isTypeParameterReference(reference, { typeParameterNames: new Set(['SomeType']) })
+    ).toBe(false)
   })
 })

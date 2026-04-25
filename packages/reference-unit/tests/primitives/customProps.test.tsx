@@ -194,7 +194,7 @@ describe('Custom props (font, weight, container, r, size)', () => {
             500: { padding: '1.5rem' },
           }}
           padding="1rem"
-          color="reference.text"
+          color="referenceUnitToken"
         >
           Combined Props
         </Div>

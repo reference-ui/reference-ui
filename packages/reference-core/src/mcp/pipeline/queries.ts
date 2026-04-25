@@ -265,6 +265,20 @@ function compactToken(token: McpToken): McpCompactToken {
   }
 }
 
+function createTokenMessage(input: McpGetTokensInput, total: number, compressed: boolean): string | undefined {
+  if (compressed) {
+    return 'Token output compressed to paths, categories, and raw values because the result set is large. Query a token path for descriptions and richer metadata.'
+  }
+
+  if (total !== 0) return undefined
+
+  if (input.category) {
+    return `No tokens found for category "${input.category}". Token categories are project data; style prop compatibility may mention categories that this project does not define.`
+  }
+
+  return 'No tokens matched this query.'
+}
+
 export function listTokens(
   artifact: McpBuildArtifact,
   input: McpGetTokensInput = {}
@@ -287,6 +301,7 @@ export function listTokens(
     })
   const total = tokens.length
   const compressed = total > TOKEN_COMPRESSION_THRESHOLD
+  const message = createTokenMessage(input, total, compressed)
 
   if (compressed) {
     tokens = tokens.map(compactToken)
@@ -299,17 +314,6 @@ export function listTokens(
     returned: tokens.length,
     compressed,
     ...(total === 0 ? { availableCategories } : {}),
-    ...(compressed
-      ? {
-          message:
-            'Token output compressed to paths, categories, and raw values because the result set is large. Query a token path for descriptions and richer metadata.',
-        }
-      : total === 0
-        ? {
-            message: category
-              ? `No tokens found for category "${input.category}". Token categories are project data; style prop compatibility may mention categories that this project does not define.`
-              : 'No tokens matched this query.',
-          }
-      : {}),
+    ...(message ? { message } : {}),
   }
 }

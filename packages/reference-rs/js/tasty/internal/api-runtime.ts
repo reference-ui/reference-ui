@@ -108,7 +108,7 @@ export class TastyApiRuntime implements TastyApi {
     return Promise.all(manifestBacked.map((ref) => ref.load()))
   }
 
-  /** Walk `extends` for symbols that exist in the manifest (skips utilities like `Omit` that have no chunk). */
+  /** Walk `extends` for symbols that resolve into the manifest (skips utilities like `Omit`). */
   private async graphLoadExtendsChain(symbol: TastySymbol): Promise<TastySymbol[]> {
     await this.loadManifest()
     const visited = new Set<string>()
@@ -116,10 +116,9 @@ export class TastyApiRuntime implements TastyApi {
 
     const visit = async (current: TastySymbol): Promise<void> => {
       for (const ref of current.getExtends()) {
-        const id = ref.getId()
-        if (visited.has(id) || !this.hasManifestSymbol(id)) continue
-        visited.add(id)
-        const loaded = await ref.load()
+        const loaded = await this.loadManifestSymbolRef(ref)
+        if (!loaded || visited.has(loaded.getId())) continue
+        visited.add(loaded.getId())
         chain.push(loaded)
         await visit(loaded)
       }
@@ -127,6 +126,25 @@ export class TastyApiRuntime implements TastyApi {
 
     await visit(symbol)
     return chain
+  }
+
+  private async loadManifestSymbolRef(ref: TastySymbolRef): Promise<TastySymbol | undefined> {
+    const id = ref.getId()
+    if (this.hasManifestSymbol(id)) return ref.load()
+
+    const library = ref.getLibrary()
+    if (library) {
+      try {
+        const scoped = await this.findSymbolByScopedName(library, ref.getName())
+        if (scoped) return scoped
+      } catch {
+        // Fall back to a unique bare-name match below.
+      }
+    }
+
+    const matches = await this.findSymbolsByName(ref.getName())
+    if (matches.length === 1) return this.loadSymbolById(matches[0]!.id)
+    return undefined
   }
 
   private async graphFlattenInterfaceMembers(symbol: TastySymbol): Promise<TastyMember[]> {

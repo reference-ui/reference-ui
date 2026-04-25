@@ -7,6 +7,14 @@ export const pkgRoot = resolve(__dirname, '..', '..')
 export const virtualDir = join(pkgRoot, '.reference-ui', 'virtual')
 export const srcDir = join(pkgRoot, 'src')
 export const testsDir = join(pkgRoot, 'tests')
+export const referenceBrowserSourceDir = resolve(
+  pkgRoot,
+  '..',
+  'reference-core',
+  'src',
+  'reference',
+  'browser'
+)
 
 export const virt = (...p: string[]) => join(virtualDir, ...p)
 
@@ -74,6 +82,12 @@ export function getVirtualPaths(): string[] {
     out.push(rel)
   }
   return out.sort((a, b) => a.localeCompare(b))
+}
+
+export function getReferenceBrowserSourcePaths(): string[] {
+  if (!existsSync(referenceBrowserSourceDir)) return []
+  return Array.from(walkFiles(referenceBrowserSourceDir, referenceBrowserSourceDir))
+    .sort((a, b) => a.localeCompare(b))
 }
 
 export function virtualToPossibleSources(virtualRel: string): string[] {

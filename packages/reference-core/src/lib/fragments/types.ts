@@ -1,3 +1,5 @@
+export const CONFIG_FRAGMENT_SOURCE_PROPERTY = '__refConfigFragmentSource'
+
 export interface FragmentCollectorConfig<TInput = unknown, TOutput = TInput> {
   name: string
   targetFunction?: string
