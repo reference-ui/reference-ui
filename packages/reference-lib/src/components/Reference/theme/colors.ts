@@ -1,4 +1,3 @@
-import { tokens } from '@reference-ui/system'
 
 export const colors = {
   slate: {
@@ -250,4 +249,3 @@ export const colors = {
   },
 } as const
 
-tokens({ colors })
