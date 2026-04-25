@@ -8,8 +8,8 @@ import { deepMerge } from './runtime'
  * - `dark` -> treat `dark` as the base token and emit a dark theme token
  * - `value + dark` -> treat `value` as the default/light token, emit an explicit light theme token, plus a dark override
  * - `value + light` -> treat `value` as the default/dark token, emit an explicit dark theme token, plus a light override
- * - `light + dark` -> emit explicit light and dark theme tokens, with no base token
- * - `value + light + dark` -> prefer the explicit `light + dark` pair and ignore `value`
+ * - `light + dark` -> treat `light` as the base token and emit explicit light and dark theme tokens
+ * - `value + light + dark` -> prefer the explicit `light + dark` pair and use `light` as the base token
  */
 type PandaTokenTree = Record<string, unknown>
 type ThemeName = 'light' | 'dark'
@@ -70,7 +70,7 @@ type NormalizedTokenParts = {
 
 function getBaseLeafValue(node: ReferenceTokenLeaf): unknown {
   const hasExplicitPair = node.light !== undefined && node.dark !== undefined
-  if (hasExplicitPair) return undefined
+  if (hasExplicitPair) return node.light
   return node.value ?? node.light ?? node.dark
 }
 
