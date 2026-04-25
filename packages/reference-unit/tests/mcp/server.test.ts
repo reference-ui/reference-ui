@@ -33,6 +33,9 @@ describe('mcp server', { timeout: 120_000 }, () => {
       'get_common_patterns',
       'get_component',
       'get_component_examples',
+      'get_component_props',
+      'get_style_props',
+      'get_tokens',
       'list_components',
     ])
 
@@ -48,6 +51,15 @@ describe('mcp server', { timeout: 120_000 }, () => {
     expect(modelJson?.text).not.toContain('"workspaceRoot"')
     expect(modelJson?.text).not.toContain('"manifestPath"')
     expect(modelJson?.text).not.toContain('"diagnostics"')
+    expect(modelJson?.text).not.toContain('"props"')
+
+    const gettingStarted = await running!.client.readResource({
+      uri: 'reference-ui://getting-started',
+    })
+    const gettingStartedText = findTextResource(gettingStarted)
+
+    expect(gettingStartedText?.mimeType).toBe('text/markdown')
+    expect(gettingStartedText?.text).toContain('Reference UI MCP')
 
     const listComponentsResult = await running!.client.callTool({
       name: 'list_components',

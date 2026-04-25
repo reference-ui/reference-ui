@@ -1,5 +1,7 @@
 import type { AtlasDiagnostic, Usage } from '@reference-ui/rust/atlas'
 
+export type McpComponentPropOrigin = 'observed' | 'documented'
+
 export interface McpComponentInterface {
   name: string
   source: string
@@ -15,6 +17,8 @@ export interface McpComponentProp {
   optional: boolean
   readonly: boolean
   defaultValue?: string
+  origin?: McpComponentPropOrigin
+  styleProp?: boolean
 }
 
 export interface McpComponent {
@@ -28,6 +32,15 @@ export interface McpComponent {
   props: McpComponentProp[]
 }
 
+export interface McpToken {
+  path: string
+  category: string
+  value?: unknown
+  light?: unknown
+  dark?: unknown
+  description?: string
+}
+
 export interface McpBuildArtifact {
   schemaVersion: 1
   generatedAt: string
@@ -35,12 +48,13 @@ export interface McpBuildArtifact {
   manifestPath: string
   diagnostics: AtlasDiagnostic[]
   components: McpComponent[]
+  tokens?: McpToken[]
 }
 
 export interface McpPublicModel {
   schemaVersion: 1
   generatedAt: string
-  components: McpComponent[]
+  components: McpComponentSummary[]
 }
 
 export interface McpListComponentsInput {
@@ -58,6 +72,39 @@ export interface McpGetCommonPatternsInput extends McpGetComponentInput {
   limit?: number
 }
 
+export interface McpGetComponentPropsInput extends McpGetComponentInput {
+  includeUnused?: boolean
+  includeStyleProps?: boolean
+  query?: string
+  limit?: number
+}
+
+export interface McpGetTokensInput {
+  category?: string
+  query?: string
+  limit?: number
+}
+
+export interface McpGetStylePropsInput {
+  query?: string
+  includeProps?: boolean
+}
+
+export interface McpComponentStylePropsSummary {
+  supported: boolean
+  observed: string[]
+  tool: 'get_style_props'
+  note: string
+}
+
+export interface McpPropSummary {
+  total: number
+  observed: number
+  documented: number
+  style: number
+  returned: number
+}
+
 export interface McpComponentSummary {
   name: string
   source: string
@@ -65,9 +112,24 @@ export interface McpComponentSummary {
   count: number
   interfaceName: string | null
   propCount: number
+  observedProps: string[]
+  styleProps: McpComponentStylePropsSummary
 }
 
 export interface McpCommonPattern {
   name: string
   usage: Usage
+}
+
+export interface McpComponentCompact {
+  name: string
+  source: string
+  count: number
+  usage: Usage
+  usedWith: Record<string, Usage>
+  examples: string[]
+  interface: McpComponentInterface | null
+  props: McpComponentProp[]
+  propSummary: McpPropSummary
+  styleProps: McpComponentStylePropsSummary
 }

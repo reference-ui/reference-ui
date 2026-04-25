@@ -9,6 +9,7 @@ import { createReferenceApi, loadMcpReferenceData } from './reference'
 import { readMcpArtifact, writeMcpArtifact } from './artifact'
 import { getMcpModelPath, getMcpTypesManifestPath } from './paths'
 import type { McpBuildArtifact } from './types'
+import { loadMcpTokens } from './tokens'
 
 const mcpAtlasBuildCache = new Map<
   string,
@@ -45,11 +46,13 @@ export async function generateMcpArtifact(
 
   log.debug('mcp', 'Building MCP model', { cwd, manifestPath })
 
+  const config = getConfig()
   const atlas = await loadMcpAtlas(cwd)
   return generateMcpArtifactFromAtlas({
     cwd,
     manifestPath,
     atlas,
+    tokens: await loadMcpTokensSafely(cwd, config),
   })
 }
 
@@ -99,8 +102,9 @@ export async function generateMcpArtifactFromAtlas(input: {
   cwd: string
   manifestPath: string
   atlas: Awaited<ReturnType<typeof analyzeDetailed>>
+  tokens?: McpBuildArtifact['tokens']
 }): Promise<McpBuildArtifact> {
-  const { cwd, manifestPath, atlas } = input
+  const { cwd, manifestPath, atlas, tokens = [] } = input
   const api = createReferenceApi(manifestPath)
   const components = await Promise.all(
     atlas.components.map(async component => {
@@ -139,9 +143,24 @@ export async function generateMcpArtifactFromAtlas(input: {
       if (left.name !== right.name) return left.name.localeCompare(right.name)
       return left.source.localeCompare(right.source)
     }),
+    tokens,
   }
 
   return artifact
+}
+
+async function loadMcpTokensSafely(
+  cwd: string,
+  config: ReturnType<typeof getConfig>
+): Promise<McpBuildArtifact['tokens']> {
+  if (!config) return []
+
+  try {
+    return await loadMcpTokens(cwd, config)
+  } catch (error) {
+    log.warn('[mcp] Token collection failed:', error)
+    return []
+  }
 }
 
 export async function loadOrBuildMcpArtifact(

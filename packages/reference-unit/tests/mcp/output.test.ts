@@ -101,13 +101,33 @@ describe('mcp output wiring', { timeout: 120_000 }, () => {
     const appCardPayload = parseTextJson<{
       name: string
       props: Array<{ name: string; type: string | null }>
+      propSummary: { total: number; returned: number }
       interface: { name: string; source: string } | null
     }>(appCard)
 
     expect(appCardPayload?.name).toBe('AppCard')
     expect(appCardPayload?.interface?.name).toBe('AppCardProps')
+    expect(appCardPayload?.propSummary.total).toBeGreaterThanOrEqual(
+      appCardPayload?.propSummary.returned ?? 0
+    )
     expect(
       appCardPayload?.props.some(
+        prop => prop.name === 'status' && prop.type === 'BadgeVariant'
+      )
+    ).toBe(true)
+
+    const appCardProps = await running!.client.callTool({
+      name: 'get_component_props',
+      arguments: { name: 'AppCard', source: './components/AppCard.tsx' },
+    })
+    const appCardPropsPayload = parseTextJson<{
+      name: string
+      props: Array<{ name: string; type: string | null }>
+    }>(appCardProps)
+
+    expect(appCardPropsPayload?.name).toBe('AppCard')
+    expect(
+      appCardPropsPayload?.props.some(
         prop => prop.name === 'status' && prop.type === 'BadgeVariant'
       )
     ).toBe(true)
@@ -140,6 +160,26 @@ describe('mcp output wiring', { timeout: 120_000 }, () => {
     expect(patternsPayload?.patterns.some(pattern => pattern.name === 'AppCard')).toBe(
       true
     )
+
+    const styleProps = await running!.client.callTool({
+      name: 'get_style_props',
+      arguments: { query: 'color' },
+    })
+    const stylePropsPayload = parseTextJson<{
+      categories: Array<{ name: string; tokenCategories: string[] }>
+    }>(styleProps)
+
+    expect(stylePropsPayload?.categories.some(category => category.name === 'color')).toBe(
+      true
+    )
+
+    const tokens = await running!.client.callTool({
+      name: 'get_tokens',
+      arguments: { limit: 10 },
+    })
+    const tokensPayload = parseTextJson<{ tokens: Array<{ path: string }> }>(tokens)
+
+    expect(Array.isArray(tokensPayload?.tokens)).toBe(true)
   })
 
   it('returns explicit MCP tool errors for unknown components', async () => {
