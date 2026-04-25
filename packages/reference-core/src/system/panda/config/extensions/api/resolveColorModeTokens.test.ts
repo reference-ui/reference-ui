@@ -31,6 +31,9 @@ describe('resolveColorModeTokens()', () => {
 
     expect(resolved.baseTokens).toEqual({
       colors: {
+        accent: {
+          value: '{colors.blue.700}',
+        },
         text: {
           value: '{colors.gray.950}',
           description: 'Primary text color',
@@ -82,7 +85,7 @@ describe('resolveColorModeTokens()', () => {
     })
   })
 
-  it('prefers the explicit light/dark pair over value and does not emit a base token', () => {
+  it('prefers the explicit light/dark pair over value and emits a light base token', () => {
     const resolved = resolveColorModeTokens([
       {
         colors: {
@@ -108,6 +111,13 @@ describe('resolveColorModeTokens()', () => {
 
     expect(resolved.baseTokens).toEqual({
       colors: {
+        accent: {
+          value: '{colors.blue.700}',
+        },
+        text: {
+          value: '{colors.gray.950}',
+          description: 'Explicit mode pair',
+        },
         icon: {
           value: '{colors.gray.700}',
         },
@@ -380,6 +390,14 @@ describe('resolveColorModeTokens()', () => {
         },
       },
     })
-    expect(resolved.baseTokens).toEqual({})
+    expect(resolved.baseTokens).toEqual({
+      design: {
+        text: {
+          base: { value: '{colors.gray.800}' },
+          light: { value: '{colors.gray.700}' },
+          lighter: { value: '{colors.gray.600}' },
+        },
+      },
+    })
   })
 })
