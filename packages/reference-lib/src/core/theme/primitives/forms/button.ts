@@ -1,5 +1,5 @@
 import { globalCss } from '@reference-ui/system'
-import { baseTypography, focusRing, formControlSize } from '../shared'
+import { baseTypography, focusRingStyles, formControlSize } from '../shared'
 
 export const buttonPrimitiveStyles = {
   '.ref-button': {
@@ -17,6 +17,7 @@ export const buttonPrimitiveStyles = {
     borderStyle: 'solid',
     borderColor: 'transparent',
     borderRadius: 'sm',
+    ...focusRingStyles,
     backgroundColor: '{colors.ui.button.background}',
     color: '{colors.ui.button.foreground}',
     fontSize: '3.5r',
@@ -25,14 +26,17 @@ export const buttonPrimitiveStyles = {
     whiteSpace: 'nowrap',
     cursor: 'pointer',
     userSelect: 'none',
-    transitionProperty: 'color, background-color, border-color, box-shadow, opacity',
-    transitionDuration: '150ms',
-    transitionTimingFunction: 'ease',
     _hover: {
       backgroundColor:
         'color-mix(in oklch, {colors.ui.button.background} 90%, transparent)',
     },
-    _focusVisible: focusRing,
+    _active: {
+      ...focusRingStyles._focusVisible,
+      outlineColor:
+        'color-mix(in oklch, var(--colors-ui-focus-ring) 61.8%, transparent)',
+      boxShadow:
+        '0 2px 0 color-mix(in oklch, var(--colors-ui-button-foreground) 61.8%, transparent)',
+    },
     _disabled: {
       pointerEvents: 'none',
       cursor: 'not-allowed',
