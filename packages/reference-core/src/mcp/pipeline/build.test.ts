@@ -119,7 +119,7 @@ describe('buildMcpArtifact', () => {
     existsSync.mockReturnValue(false)
 
     await expect(generateMcpArtifact({ cwd: '/workspace/app' })).rejects.toThrow(
-      'MCP build requires generated types manifest at "/tmp/types/tasty/manifest.js". Run ref sync first.'
+      'MCP build requires generated Reference UI artifacts at "/tmp/types/tasty/manifest.js". Run "pnpm exec ref sync" from the project root before starting the MCP server.'
     )
 
     expect(analyzeDetailed).not.toHaveBeenCalled()
