@@ -16,6 +16,11 @@ export const disclosurePrimitiveStyles = {
     ...baseTypography,
     cursor: 'pointer',
     fontWeight: '500',
+    paddingInlineStart: '1r',
+  },
+
+  '.ref-details[open] > .ref-summary': {
+    marginBottom: '3r',
   },
 
   '.ref-summary::marker': {

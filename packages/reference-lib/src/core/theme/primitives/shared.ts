@@ -19,8 +19,11 @@ export const focusRingStyles = {
   transitionDuration: '300ms',
   transitionTimingFunction: 'ease',
   _focusVisible: {
-    outlineColor: '{colors.ui.focus.ring}',
-    outlineOffset: '2px',
+    focusVisibleRing: 'outside',
+    focusRingColor: '{colors.ui.focus.ring}',
+    focusRingOffset: '2px',
+    focusRingWidth: '2px',
+    focusRingStyle: 'solid',
     boxShadow: 'none',
   },
 } as const
