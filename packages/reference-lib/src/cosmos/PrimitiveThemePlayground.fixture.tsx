@@ -190,12 +190,13 @@ return <Button>{tone}</Button>`}</Pre>
 
       <SectionCard title="Buttons">
         <Div display="flex" flexWrap="wrap" gap="3r" alignItems="center">
+          <Input defaultValue="Aligned input" width="12rem" />
           <Button type="button">Button</Button>
           <Button type="button" disabled>
             Disabled button
           </Button>
         </Div>
-      </SectionCard>
+      </SectionCard>  
 
       <SectionCard title="Forms">
         <Form

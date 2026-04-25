@@ -20,8 +20,7 @@ export const inputPrimitiveStyles = {
     transitionTimingFunction: 'ease',
     _focusVisible: {
       ...focusRing,
-      outlineOffset: '0px',
-      borderColor: 'transparent',
+      borderColor: '{colors.ui.field.border}',
     },
     _disabled: {
       cursor: 'not-allowed',
