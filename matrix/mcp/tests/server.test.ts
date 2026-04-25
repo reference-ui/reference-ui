@@ -41,6 +41,7 @@ describe('matrix MCP server', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
       'get_component_props',
       'get_style_props',
       'get_tokens',
+      'getting_started',
       'list_components',
     ])
   })

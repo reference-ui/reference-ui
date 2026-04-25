@@ -1,7 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import {
   createServer,
   type IncomingMessage,
@@ -11,6 +11,7 @@ import {
 import { resolve } from 'node:path'
 import { z } from 'zod'
 import { log } from '../../lib/log'
+import { resolveCorePackageDir } from '../../lib/paths/core-package-dir'
 import { readMcpArtifact } from '../pipeline/artifact'
 import { getMcpModelPath } from '../pipeline/paths'
 import {
@@ -41,27 +42,11 @@ export const DEFAULT_REFERENCE_MCP_PATH = '/mcp'
 export const REFERENCE_MCP_READY_PREFIX = '[ref mcp] ready'
 export const REFERENCE_MCP_GETTING_STARTED_URI = 'reference-ui://getting-started'
 
-const REFERENCE_UI_MCP_INSTRUCTIONS = [
-  'Reference UI MCP is a project-aware component, prop, style, and token reference.',
-  'Start with list_components to discover available components and observed prop usage.',
-  'Use get_component for a compact guide to one component. It intentionally omits large inherited StyleProps surfaces.',
-  'Use get_component_props only when you need the exhaustive prop/interface readout for one component.',
-  'Use get_style_props for the shared StyleProps/token category guide, and get_tokens for project token paths and descriptions. Large token results are compressed; query a token path for full details.',
-].join('\n')
+const REFERENCE_UI_START_GUIDE_FALLBACK = `# Reference UI Start Guide
 
-const REFERENCE_UI_GETTING_STARTED = `# Reference UI MCP
+Reference UI MCP is a project-aware component, prop, style, and token reference.
 
-Reference UI MCP helps assistants answer: what components are available in this project, and what can be passed to them?
-
-Recommended flow:
-
-1. Call \`list_components\` to find components and see observed prop usage.
-2. Call \`get_component\` for a compact component guide with examples and common props.
-3. Call \`get_component_props\` only when exhaustive prop details are needed.
-4. Call \`get_style_props\` for the shared StyleProps model instead of asking each component to repeat CSS props.
-5. Call \`get_tokens\` to inspect project token names, categories, values, and descriptions. Large token catalogs still list all tokens, but are compressed to paths and raw values; query a token path for descriptions.
-
-Style-bearing components may accept Reference UI StyleProps. Those props are Panda-style CSS props with token-aware values; color-bearing props are narrowed to project color tokens plus safe CSS keywords.
+Start with \`getting_started\`, then use \`list_components\`, \`get_component\`, \`get_component_examples\`, \`get_component_props\`, \`get_style_props\`, and \`get_tokens\` as needed.
 `
 
 export interface McpModelState {
@@ -143,10 +128,21 @@ function toPublicModel(artifact: McpBuildArtifact): McpPublicModel {
   }
 }
 
+function loadReferenceMcpStartGuide(cwd: string): string {
+  try {
+    const coreDir = resolveCorePackageDir(cwd)
+    return readFileSync(resolve(coreDir, 'src', 'mcp', 'START.mdx'), 'utf8')
+  } catch (error) {
+    log.warn('[mcp] Failed to load START.mdx; using fallback start guide.', error)
+    return REFERENCE_UI_START_GUIDE_FALLBACK
+  }
+}
+
 export function createReferenceMcpServer(
   options: CreateReferenceMcpServerOptions
 ): McpServer {
   const state = options.modelState
+  const startGuide = loadReferenceMcpStartGuide(options.cwd)
   const server = new McpServer({
     name: 'reference-ui',
     title: 'Reference UI',
@@ -154,8 +150,19 @@ export function createReferenceMcpServer(
     description:
       'Atlas- and generated-types-backed component inspection for Reference UI projects.',
   }, {
-    instructions: REFERENCE_UI_MCP_INSTRUCTIONS,
+    instructions: startGuide,
   })
+
+  server.registerTool(
+    'getting_started',
+    {
+      title: 'Getting Started',
+      description:
+        'Return the Reference UI start guide, including primitives, StyleProps, tokens, and recommended MCP workflow.',
+      inputSchema: {},
+    },
+    async () => toTextResult({ guide: startGuide })
+  )
 
   server.registerTool(
     'list_components',
@@ -323,7 +330,7 @@ export function createReferenceMcpServer(
         {
           uri: uri.href,
           mimeType: 'text/markdown',
-          text: REFERENCE_UI_GETTING_STARTED,
+          text: startGuide,
         },
       ],
     })
