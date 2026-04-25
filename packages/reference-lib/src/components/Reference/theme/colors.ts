@@ -248,12 +248,6 @@ export const colors = {
     900: { value: 'oklch(41% 0.159 10.272)' },
     950: { value: 'oklch(27.1% 0.105 12.094)' },
   },
-
-  text: {
-    primary: { light: 'gray.900', dark: 'white' },
-    secondary: { light: 'gray.700', dark: 'gray.300' },
-    disabled: { light: 'gray.500', dark: 'gray.500' },
-  },
 } as const
 
 tokens({ colors })
