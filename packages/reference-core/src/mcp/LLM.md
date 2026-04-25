@@ -22,7 +22,6 @@ The compact tools keep component discovery fast while preserving real usage data
 - `get_component`: compact component guide with examples and high-signal props.
 - `get_component_props`: exhaustive prop readout with filters for unused documented props, StyleProps, query, and limit.
 - `get_component_examples`: captured usage examples for one component.
-- `get_common_patterns`: components commonly used near another component.
 - `get_style_props`: shared StyleProps categories and token compatibility.
 - `get_tokens`: flattened project token catalog.
 

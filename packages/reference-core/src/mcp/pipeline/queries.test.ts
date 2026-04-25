@@ -5,7 +5,6 @@ import type { McpBuildArtifact } from './types'
 import {
   compactComponent,
   findComponent,
-  getCommonPatterns,
   getComponentProps,
   listComponents,
   listTokens,
@@ -101,13 +100,6 @@ describe('mcp queries', () => {
 
   it('finds a component by name', () => {
     expect(findComponent(artifact, { name: 'Card' })?.source).toBe('@reference-ui/react')
-  })
-
-  it('sorts common patterns by usage rank', () => {
-    expect(getCommonPatterns(artifact, { name: 'Button' })).toEqual([
-      { name: 'Stack', usage: 'common' },
-      { name: 'Icon', usage: 'occasional' },
-    ])
   })
 
   it('returns compact component props without inherited style prop noise', () => {

@@ -147,20 +147,6 @@ describe('mcp output wiring', { timeout: 120_000 }, () => {
       examplesPayload?.examples.some(example => example.includes('Preferences'))
     ).toBe(true)
 
-    const patternsResult = await running!.client.callTool({
-      name: 'get_common_patterns',
-      arguments: { name: 'Button', source: './components/Button.tsx' },
-    })
-    const patternsPayload = parseTextJson<{
-      name: string
-      patterns: Array<{ name: string; usage: string }>
-    }>(patternsResult)
-
-    expect(patternsPayload?.name).toBe('Button')
-    expect(patternsPayload?.patterns.some(pattern => pattern.name === 'AppCard')).toBe(
-      true
-    )
-
     const styleProps = await running!.client.callTool({
       name: 'get_style_props',
       arguments: { query: 'color' },

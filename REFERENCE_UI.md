@@ -315,7 +315,6 @@ So the MCP is **not** a static file checked into git for your app: it is **rebui
 | `list_components` | Search/filter list with optional `query`, `source`, `limit` (capped at 100). |
 | `get_component` | Full joined record for one component name (optional `source` disambiguation). |
 | `get_component_examples` | Examples from Atlas. |
-| `get_common_patterns` | `usedWith` neighborhood (limit capped at 50). |
 | `reference-ui://component-model` (resource) | Public JSON model (schema version, `generatedAt`, `components`—via `toPublicModel`). |
 
 Server version field is currently `0.0.3` in source; the description states Atlas + generated types backing.

@@ -410,7 +410,6 @@ Recommended starting tools:
 - `get_component`
 - `list_components`
 - `get_component_examples`
-- `get_common_patterns`
 
 Conceptually, the server should look like:
 

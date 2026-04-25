@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "sync": "pnpm exec ref sync",
-    "test": "vitest run && tsc --noEmit"
+    "test": "vitest run --no-file-parallelism && tsc --noEmit"
   },
   "exports": {
     ".": "./src/index.ts"
