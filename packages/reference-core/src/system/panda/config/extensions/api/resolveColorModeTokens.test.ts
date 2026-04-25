@@ -348,4 +348,38 @@ describe('resolveColorModeTokens()', () => {
       },
     })
   })
+
+  it('treats light/dark keys whose value is an object as nested groups, not mode slots (e.g. tier name `light`)', () => {
+    const resolved = resolveColorModeTokens([
+      {
+        design: {
+          text: {
+            base: { light: '{colors.gray.800}', dark: '{colors.gray.50}' },
+            light: { light: '{colors.gray.700}', dark: '{colors.gray.300}' },
+            lighter: { light: '{colors.gray.600}', dark: '{colors.gray.400}' },
+          },
+        },
+      },
+    ])
+
+    expect(resolved.themes.light?.tokens).toEqual({
+      design: {
+        text: {
+          base: { value: '{colors.gray.800}' },
+          light: { value: '{colors.gray.700}' },
+          lighter: { value: '{colors.gray.600}' },
+        },
+      },
+    })
+    expect(resolved.themes.dark?.tokens).toEqual({
+      design: {
+        text: {
+          base: { value: '{colors.gray.50}' },
+          light: { value: '{colors.gray.300}' },
+          lighter: { value: '{colors.gray.400}' },
+        },
+      },
+    })
+    expect(resolved.baseTokens).toEqual({})
+  })
 })
