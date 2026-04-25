@@ -1,14 +1,22 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+/**
+ * Shared test harness for the matrix MCP fixture.
+ *
+ * These tests intentionally start the published `@reference-ui/core` MCP bin
+ * through `npx --package=@reference-ui/core@latest mcp`, matching the command a
+ * downstream consumer should use. The helpers also prebuild the cached MCP
+ * artifact and provide small parsers/types for MCP text/resource responses.
+ */
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'
 import { spawn, type ChildProcessByStdio } from 'node:child_process'
 import { existsSync } from 'node:fs'
+import { createServer } from 'node:net'
 import { join } from 'node:path'
 import type { Readable } from 'node:stream'
 
 type McpServerProcess = ChildProcessByStdio<null, Readable, Readable>
 
-interface RunningMcpClient {
+export interface RunningMcpClient {
   client: Client
   process: McpServerProcess
   serverUrl: URL
@@ -20,13 +28,13 @@ interface TextContentEntry {
   text: string
 }
 
-interface ResourceTextEntry {
+export interface ResourceTextEntry {
   mimeType?: string
   text: string
   uri: string
 }
 
-interface ComponentSummary {
+export interface ComponentSummary {
   count: number
   interfaceName: string | null
   name: string
@@ -39,13 +47,31 @@ interface ComponentSummary {
   }
 }
 
-interface ComponentModel {
+export interface ComponentModel {
   components: ComponentSummary[]
   generatedAt: string
   schemaVersion: number
 }
 
-interface TokenReadout {
+export interface ComponentReadout {
+  interface: { name: string; source: string } | null
+  name: string
+  propSummary: {
+    documented: number
+    observed: number
+    returned: number
+    style: number
+    total: number
+  }
+  props: Array<{ name: string; origin?: string; styleProp?: boolean; type: string | null }>
+  source: string
+  styleProps: {
+    supported: boolean
+    tool: 'get_style_props'
+  }
+}
+
+export interface TokenReadout {
   tokens: Array<{
     category: string
     dark?: unknown
@@ -55,14 +81,19 @@ interface TokenReadout {
   }>
 }
 
-const MATRIX_MCP_PORT = 3797
-const MATRIX_MCP_TIMEOUT_MS = 120_000
+export const MATRIX_MCP_TIMEOUT_MS = 120_000
+export const MATRIX_MCP_NPX_COMMAND = [
+  'npx',
+  '--yes',
+  '--package=@reference-ui/core@latest',
+  'mcp',
+] as const
 
 function resolveInstalledMcpChildPath(cwd: string): string {
   return join(cwd, 'node_modules', '@reference-ui', 'core', 'dist', 'cli', 'mcp-child.mjs')
 }
 
-async function buildMcpArtifactCache(cwd: string): Promise<void> {
+export async function buildMcpArtifactCache(cwd: string): Promise<void> {
   const childScript = resolveInstalledMcpChildPath(cwd)
 
   if (!existsSync(childScript)) {
@@ -85,7 +116,7 @@ async function buildMcpArtifactCache(cwd: string): Promise<void> {
       stderr += chunk.toString('utf8')
     })
 
-    child.once('error', (error) => {
+    child.once('error', error => {
       reject(error)
     })
 
@@ -112,7 +143,7 @@ async function buildMcpArtifactCache(cwd: string): Promise<void> {
   })
 }
 
-function findTextContent(result: unknown): string {
+export function findTextContent(result: unknown): string {
   const content = (result as { content?: unknown }).content
   if (!Array.isArray(content)) {
     return ''
@@ -129,7 +160,7 @@ function findTextContent(result: unknown): string {
   return match?.text ?? ''
 }
 
-function findTextResource(result: unknown): ResourceTextEntry | null {
+export function findTextResource(result: unknown): ResourceTextEntry | null {
   const contents = (result as { contents?: unknown }).contents
   if (!Array.isArray(contents)) {
     return null
@@ -146,7 +177,7 @@ function findTextResource(result: unknown): ResourceTextEntry | null {
   )
 }
 
-function parseTextJson<T>(result: unknown): T {
+export function parseTextJson<T>(result: unknown): T {
   const text = findTextContent(result)
 
   if (!text) {
@@ -156,7 +187,10 @@ function parseTextJson<T>(result: unknown): T {
   return JSON.parse(text) as T
 }
 
-async function waitForServerReady(process: McpServerProcess, maxMs = MATRIX_MCP_TIMEOUT_MS): Promise<string> {
+async function waitForServerReady(
+  process: McpServerProcess,
+  maxMs = MATRIX_MCP_TIMEOUT_MS,
+): Promise<string> {
   return new Promise((resolve, reject) => {
     const startedAt = Date.now()
     let output = ''
@@ -198,16 +232,44 @@ async function waitForServerReady(process: McpServerProcess, maxMs = MATRIX_MCP_
   })
 }
 
-async function startMcpClient(cwd: string, port: number): Promise<RunningMcpClient> {
+async function getAvailablePort(): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const server = createServer()
+
+    server.once('error', reject)
+    server.listen(0, '127.0.0.1', () => {
+      const address = server.address()
+      if (typeof address !== 'object' || address === null) {
+        server.close(() => reject(new Error('Unable to allocate a TCP port for MCP tests.')))
+        return
+      }
+
+      const port = address.port
+      server.close(error => {
+        if (error) {
+          reject(error)
+          return
+        }
+        resolve(port)
+      })
+    })
+  })
+}
+
+export async function startMcpClient(
+  cwd: string,
+  port = 0,
+): Promise<RunningMcpClient> {
   const registry = process.env.npm_config_registry
 
   if (!registry) {
     throw new Error('npm_config_registry must be set so npx resolves @reference-ui/core from the staged matrix registry.')
   }
 
+  const resolvedPort = port === 0 ? await getAvailablePort() : port
   const childProcess = spawn(
-    'npx',
-    ['--yes', '--package=@reference-ui/core@latest', 'mcp', '--transport', 'http', '--port', String(port)],
+    MATRIX_MCP_NPX_COMMAND[0],
+    [...MATRIX_MCP_NPX_COMMAND.slice(1), '--transport', 'http', '--port', String(resolvedPort)],
     {
       cwd,
       env: {
@@ -217,12 +279,8 @@ async function startMcpClient(cwd: string, port: number): Promise<RunningMcpClie
       stdio: ['ignore', 'pipe', 'pipe'],
     },
   )
-  const serverUrl = new URL(`http://127.0.0.1:${port}/mcp`)
   const readyUrl = await waitForServerReady(childProcess)
-
-  if (readyUrl !== serverUrl.href) {
-    throw new Error(`Unexpected MCP ready URL: ${readyUrl}`)
-  }
+  const serverUrl = new URL(readyUrl)
 
   const transport = new StreamableHTTPClientTransport(serverUrl)
   const client = new Client(
@@ -239,7 +297,7 @@ async function startMcpClient(cwd: string, port: number): Promise<RunningMcpClie
   }
 }
 
-async function stopMcpClient(running: RunningMcpClient | null | undefined): Promise<void> {
+export async function stopMcpClient(running: RunningMcpClient | null | undefined): Promise<void> {
   if (!running) {
     return
   }
@@ -250,7 +308,7 @@ async function stopMcpClient(running: RunningMcpClient | null | undefined): Prom
     return
   }
 
-  await new Promise<void>((resolve) => {
+  await new Promise<void>(resolve => {
     const timeout = setTimeout(() => {
       if (running.process.exitCode === null && running.process.signalCode === null) {
         running.process.kill('SIGKILL')
@@ -266,104 +324,10 @@ async function stopMcpClient(running: RunningMcpClient | null | undefined): Prom
   })
 }
 
-let running: RunningMcpClient | null = null
-
-describe('matrix MCP package', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
-  beforeAll(async () => {
-    await buildMcpArtifactCache(process.cwd())
-    running = await startMcpClient(process.cwd(), MATRIX_MCP_PORT)
-    expect(running.serverUrl.href).toBe(`http://127.0.0.1:${MATRIX_MCP_PORT}/mcp`)
-  }, MATRIX_MCP_TIMEOUT_MS)
-
-  afterAll(async () => {
-    await stopMcpClient(running)
-    running = null
-  }, 10_000)
-
-  it('serves the published MCP server through npx and exposes the fixture components', async () => {
-    expect(process.env.npm_config_registry).toBeTruthy()
-    expect(running).not.toBeNull()
-
-    const tools = await running!.client.listTools()
-    const toolNames = tools.tools.map(tool => tool.name).sort()
-
-    expect(toolNames).toEqual([
-      'get_common_patterns',
-      'get_component',
-      'get_component_examples',
-      'get_component_props',
-      'get_style_props',
-      'get_tokens',
-      'list_components',
-    ])
-
-    const resource = await running!.client.readResource({
-      uri: 'reference-ui://component-model',
-    })
-    const modelJson = findTextResource(resource)
-    const model = modelJson ? (JSON.parse(modelJson.text) as ComponentModel) : null
-
-    expect(modelJson).not.toBeNull()
-    expect(modelJson?.mimeType).toBe('application/json')
-    expect(model?.schemaVersion).toBe(1)
-    expect(Array.isArray(model?.components)).toBe(true)
-    expect(typeof model?.generatedAt).toBe('string')
-    expect(modelJson?.text).not.toContain('workspaceRoot')
-    expect(modelJson?.text).not.toContain('manifestPath')
-    expect(modelJson?.text).not.toContain('diagnostics')
-    expect(modelJson?.text).not.toContain('"props"')
-
-    const gettingStarted = await running!.client.readResource({
-      uri: 'reference-ui://getting-started',
-    })
-    const gettingStartedText = findTextResource(gettingStarted)
-
-    expect(gettingStartedText?.mimeType).toBe('text/markdown')
-    expect(gettingStartedText?.text).toContain('Reference UI MCP')
-
-    const listComponentsResult = await running!.client.callTool({
-      name: 'list_components',
-      arguments: {
-        query: 'hero',
-      },
-    })
-    const listed = parseTextJson<{ components: ComponentSummary[] }>(listComponentsResult)
-
-    expect(Array.isArray(listed.components)).toBe(true)
-
-    const stylePropsResult = await running!.client.callTool({
-      name: 'get_style_props',
-      arguments: { query: 'color' },
-    })
-    const styleProps = parseTextJson<{
-      categories: Array<{ name: string; tokenCategories: string[] }>
-    }>(stylePropsResult)
-
-    expect(styleProps.categories).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          name: 'color',
-          tokenCategories: expect.arrayContaining(['colors']),
-        }),
-      ]),
-    )
-
-    const tokenResult = await running!.client.callTool({
-      name: 'get_tokens',
-      arguments: { category: 'colors' },
-    })
-    const tokenReadout = parseTextJson<TokenReadout>(tokenResult)
-
-    expect(tokenReadout.tokens).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          path: 'colors.text',
-          category: 'colors',
-          value: '#111111',
-          dark: '#f5f5f5',
-          description: 'Matrix primary text color',
-        }),
-      ]),
-    )
-  })
-})
+export async function startMatrixMcp(
+  cwd = process.cwd(),
+  port = 0,
+): Promise<RunningMcpClient> {
+  await buildMcpArtifactCache(cwd)
+  return startMcpClient(cwd, port)
+}

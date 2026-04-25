@@ -1,11 +1,9 @@
 import type {
   McpBuildArtifact,
-  McpCommonPattern,
   McpComponent,
   McpComponentCompact,
   McpComponentProp,
   McpComponentSummary,
-  McpGetCommonPatternsInput,
   McpGetComponentInput,
   McpGetComponentPropsInput,
   McpGetTokensInput,
@@ -198,21 +196,4 @@ export function listTokens(artifact: McpBuildArtifact, input: McpGetTokensInput 
       ].some(value => value.toLowerCase().includes(query))
     })
     .slice(0, limit)
-}
-
-export function getCommonPatterns(
-  artifact: McpBuildArtifact,
-  input: McpGetCommonPatternsInput
-): McpCommonPattern[] | null {
-  const component = findComponent(artifact, input)
-  if (!component) return null
-
-  return Object.entries(component.usedWith)
-    .map(([name, usage]) => ({ name, usage }))
-    .sort((left, right) => {
-      const usageDelta = rankUsage(left.usage) - rankUsage(right.usage)
-      if (usageDelta !== 0) return usageDelta
-      return left.name.localeCompare(right.name)
-    })
-    .slice(0, input.limit ?? 10)
 }

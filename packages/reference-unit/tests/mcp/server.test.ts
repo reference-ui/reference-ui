@@ -30,7 +30,6 @@ describe('mcp server', { timeout: 120_000 }, () => {
     const toolNames = tools.tools.map(tool => tool.name).sort()
 
     expect(toolNames).toEqual([
-      'get_common_patterns',
       'get_component',
       'get_component_examples',
       'get_component_props',

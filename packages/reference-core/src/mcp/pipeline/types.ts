@@ -68,10 +68,6 @@ export interface McpGetComponentInput {
   source?: string
 }
 
-export interface McpGetCommonPatternsInput extends McpGetComponentInput {
-  limit?: number
-}
-
 export interface McpGetComponentPropsInput extends McpGetComponentInput {
   includeUnused?: boolean
   includeStyleProps?: boolean
@@ -114,11 +110,6 @@ export interface McpComponentSummary {
   propCount: number
   observedProps: string[]
   styleProps: McpComponentStylePropsSummary
-}
-
-export interface McpCommonPattern {
-  name: string
-  usage: Usage
 }
 
 export interface McpComponentCompact {

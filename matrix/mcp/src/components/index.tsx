@@ -1,3 +1,5 @@
+import { A, Article, Div, H1, H2, Main, P, Section } from '@reference-ui/react'
+
 export interface PrimaryActionProps {
   href: string
   label: string
@@ -5,9 +7,9 @@ export interface PrimaryActionProps {
 
 export function PrimaryAction({ href, label }: PrimaryActionProps) {
   return (
-    <a data-slot="primary-action" href={href}>
+    <A data-slot="primary-action" href={href} color="text" fontWeight="bold">
       {label}
-    </a>
+    </A>
   )
 }
 
@@ -27,12 +29,14 @@ export function FeatureCard({
   title,
 }: FeatureCardProps) {
   return (
-    <article data-slot="feature-card">
-      <p>{eyebrow}</p>
-      <h2>{title}</h2>
-      <p>{summary}</p>
+    <Article data-slot="feature-card" p="card" borderWidth="1px" borderRadius="md">
+      <P color="text" fontSize="sm">
+        {eyebrow}
+      </P>
+      <H2 color="text">{title}</H2>
+      <P color="text">{summary}</P>
       <PrimaryAction href={actionHref} label={actionLabel} />
-    </article>
+    </Article>
   )
 }
 
@@ -45,17 +49,17 @@ export interface HeroBannerProps {
 
 export function HeroBanner({ body, ctaHref, ctaLabel, heading }: HeroBannerProps) {
   return (
-    <section data-slot="hero-banner">
-      <h1>{heading}</h1>
-      <p>{body}</p>
+    <Section data-slot="hero-banner" p="card" bg="text" color="white">
+      <H1>{heading}</H1>
+      <P>{body}</P>
       <PrimaryAction href={ctaHref} label={ctaLabel} />
-    </section>
+    </Section>
   )
 }
 
 export function ComponentShowcase() {
   return (
-    <main data-slot="component-showcase">
+    <Main data-slot="component-showcase" p="card">
       <HeroBanner
         heading="Reference UI MCP matrix"
         body="Published MCP smoke test."
@@ -69,6 +73,7 @@ export function ComponentShowcase() {
         actionHref="/mcp"
         actionLabel="Inspect"
       />
-    </main>
+      <Div data-slot="style-prop-sentinel" color="text" p="card" />
+    </Main>
   )
 }

@@ -16,7 +16,6 @@ import { getMcpModelPath } from '../pipeline/paths'
 import {
   compactComponent,
   findComponent,
-  getCommonPatterns,
   getComponentProps,
   listComponents,
   listTokens,
@@ -250,32 +249,6 @@ export function createReferenceMcpServer(
         name: component.name,
         source: component.source,
         examples: component.examples,
-      })
-    }
-  )
-
-  server.registerTool(
-    'get_common_patterns',
-    {
-      title: 'Get Common Patterns',
-      description: 'Show which components commonly appear with the requested component.',
-      inputSchema: {
-        name: z.string(),
-        source: z.string().optional(),
-        limit: z.number().int().positive().max(50).optional(),
-      },
-    },
-    async input => {
-      const artifact = await state.load()
-      const patterns = getCommonPatterns(artifact, input)
-      if (!patterns) {
-        return toErrorResult(`Component not found: ${input.name}`)
-      }
-
-      return toTextResult({
-        name: input.name,
-        source: input.source ?? null,
-        patterns,
       })
     }
   )
