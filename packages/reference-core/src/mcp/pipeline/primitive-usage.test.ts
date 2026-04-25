@@ -42,6 +42,10 @@ describe('collectReferenceUiPrimitiveUsage', () => {
 
     expect(observations.find(observation => observation.name === 'Code')).toMatchObject({
       count: 2,
+      examples: [
+        '<Code>src/App.tsx</Code>',
+        '<Code>ui.config.ts</Code>',
+      ],
       propCounts: { children: 2 },
     })
   })
@@ -66,6 +70,7 @@ describe('collectReferenceUiPrimitiveUsage', () => {
 
     expect(observations.find(observation => observation.name === 'Code')).toMatchObject({
       count: 1,
+      examples: ['<Code>src/App.tsx</Code>'],
       propCounts: { children: 1 },
     })
   })

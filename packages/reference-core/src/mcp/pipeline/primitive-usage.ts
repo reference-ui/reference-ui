@@ -130,6 +130,28 @@ function extractAttributeNames(attributeSource: string): string[] {
   return names
 }
 
+function createElementSnippet(
+  content: string,
+  tagName: string,
+  matchStart: number,
+  openingTag: string
+): string {
+  if (openingTag.endsWith('/>')) {
+    return openingTag.trim()
+  }
+
+  const closingTag = `</${tagName}>`
+  const closingStart = content.indexOf(closingTag, matchStart + openingTag.length)
+  if (closingStart === -1) {
+    return openingTag.trim()
+  }
+
+  return content
+    .slice(matchStart, closingStart + closingTag.length)
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 function observeTag(
   content: string,
   localName: string,
@@ -142,18 +164,19 @@ function observeTag(
   for (const match of content.matchAll(tagPattern)) {
     const fullMatch = match[0] ?? ''
     const attributes = match[1] ?? ''
+    const snippet = createElementSnippet(content, localName, match.index ?? 0, fullMatch)
     observation.count += 1
     seenInFile.add(primitiveName)
 
     if (observation.examples.length < 5) {
-      observation.examples.push(fullMatch.trim())
+      observation.examples.push(snippet)
     }
 
     for (const attributeName of extractAttributeNames(attributes)) {
       increment(observation.propCounts, attributeName)
     }
 
-    if (!fullMatch.endsWith('/>') && content.includes(`</${localName}>`)) {
+    if (snippet !== fullMatch.trim()) {
       increment(observation.propCounts, 'children')
     }
   }
@@ -213,18 +236,20 @@ function observeNamespaceTag(
   for (const match of content.matchAll(tagPattern)) {
     const fullMatch = match[0] ?? ''
     const attributes = match[1] ?? ''
+    const tagName = `${namespace}.${primitiveName}`
+    const snippet = createElementSnippet(content, tagName, match.index ?? 0, fullMatch)
     observation.count += 1
     seenInFile.add(primitiveName)
 
     if (observation.examples.length < 5) {
-      observation.examples.push(fullMatch.trim())
+      observation.examples.push(snippet)
     }
 
     for (const attributeName of extractAttributeNames(attributes)) {
       increment(observation.propCounts, attributeName)
     }
 
-    if (!fullMatch.endsWith('/>') && content.includes(`</${namespace}.${primitiveName}>`)) {
+    if (snippet !== fullMatch.trim()) {
       increment(observation.propCounts, 'children')
     }
   }

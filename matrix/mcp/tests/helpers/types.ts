@@ -71,7 +71,14 @@ export interface ComponentReadout {
     style: number
     total: number
   }
-  props: Array<{ name: string; origin?: string; styleProp?: boolean; type: string | null }>
+  props: Array<{
+    count: number
+    name: string
+    origin?: string
+    styleProp?: boolean
+    type: string | null
+    usage: string
+  }>
   source: string
   styleProps: {
     supported: boolean
