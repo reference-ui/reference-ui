@@ -169,7 +169,7 @@ export function createReferenceMcpServer(
     {
       title: 'List Components',
       description:
-        'List available components discovered in the current Reference UI project.',
+        'List components observed in the current project graph, including imported Reference UI primitives that are actually used in JSX.',
       inputSchema: {
         query: z.string().optional(),
         source: z.string().optional(),
@@ -186,7 +186,8 @@ export function createReferenceMcpServer(
     'get_component',
     {
       title: 'Get Component',
-      description: 'Return the enriched component model for a single component.',
+      description:
+        'Return the enriched model for one observed component or imported primitive used in this project.',
       inputSchema: {
         name: z.string(),
         source: z.string().optional(),
@@ -223,6 +224,7 @@ export function createReferenceMcpServer(
       if (!result) {
         return toErrorResult(`Component not found: ${input.name}`)
       }
+      const compact = compactComponent(result.component)
 
       return toTextResult({
         name: result.component.name,
@@ -230,10 +232,11 @@ export function createReferenceMcpServer(
         source: result.component.source,
         count: result.component.count,
         usage: result.component.usage,
+        usageSemantics: compact.usageSemantics,
         interface: result.component.interface,
         props: result.props,
         propSummary: result.propSummary,
-        styleProps: compactComponent(result.component).styleProps,
+        styleProps: compact.styleProps,
       })
     }
   )

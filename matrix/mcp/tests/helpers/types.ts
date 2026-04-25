@@ -37,6 +37,11 @@ export interface ComponentSummary {
   observedProps: string[]
   propCount: number
   source: string
+  usage: string
+  usageSemantics: {
+    count: string
+    usage: string
+  }
   styleProps: {
     supported: boolean
     tool: 'get_style_props'
@@ -52,6 +57,10 @@ export interface ComponentModel {
 export interface ComponentReadout {
   count: number
   usage: string
+  usageSemantics: {
+    count: string
+    usage: string
+  }
   interface: { name: string; source: string } | null
   kind: 'project' | 'primitive'
   name: string
