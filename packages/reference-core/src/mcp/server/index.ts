@@ -46,7 +46,7 @@ const REFERENCE_UI_MCP_INSTRUCTIONS = [
   'Start with list_components to discover available components and observed prop usage.',
   'Use get_component for a compact guide to one component. It intentionally omits large inherited StyleProps surfaces.',
   'Use get_component_props only when you need the exhaustive prop/interface readout for one component.',
-  'Use get_style_props for the shared StyleProps/token category guide, and get_tokens for project token paths and descriptions.',
+  'Use get_style_props for the shared StyleProps/token category guide, and get_tokens for project token paths and descriptions. Large token results are compressed; query a token path for full details.',
 ].join('\n')
 
 const REFERENCE_UI_GETTING_STARTED = `# Reference UI MCP
@@ -59,7 +59,7 @@ Recommended flow:
 2. Call \`get_component\` for a compact component guide with examples and common props.
 3. Call \`get_component_props\` only when exhaustive prop details are needed.
 4. Call \`get_style_props\` for the shared StyleProps model instead of asking each component to repeat CSS props.
-5. Call \`get_tokens\` to inspect project token names, categories, values, and descriptions.
+5. Call \`get_tokens\` to inspect project token names, categories, values, and descriptions. Large token catalogs still list all tokens, but are compressed to paths and raw values; query a token path for descriptions.
 
 Style-bearing components may accept Reference UI StyleProps. Those props are Panda-style CSS props with token-aware values; color-bearing props are narrowed to project color tokens plus safe CSS keywords.
 `
@@ -274,7 +274,7 @@ export function createReferenceMcpServer(
     {
       title: 'Get Tokens',
       description:
-        'Return project token paths, categories, values, and descriptions collected from Reference UI token fragments.',
+        'Return project token paths, categories, values, and descriptions collected from Reference UI token fragments. Large result sets are compressed; query a token path for details.',
       inputSchema: {
         category: z.string().optional(),
         query: z.string().optional(),
@@ -283,9 +283,7 @@ export function createReferenceMcpServer(
     },
     async input => {
       const artifact = await state.load()
-      return toTextResult({
-        tokens: listTokens(artifact, input),
-      })
+      return toTextResult({ ...listTokens(artifact, input) })
     }
   )
 

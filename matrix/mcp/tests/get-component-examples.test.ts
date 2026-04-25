@@ -1,8 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import {
+  connectSharedMatrixMcp,
   MATRIX_MCP_TIMEOUT_MS,
   parseTextJson,
-  startMatrixMcp,
   stopMcpClient,
   type RunningMcpClient,
 } from './helpers'
@@ -11,7 +11,7 @@ let running: RunningMcpClient | null = null
 
 describe('get_component_examples', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
   beforeAll(async () => {
-    running = await startMatrixMcp()
+    running = await connectSharedMatrixMcp()
   }, MATRIX_MCP_TIMEOUT_MS)
 
   afterAll(async () => {

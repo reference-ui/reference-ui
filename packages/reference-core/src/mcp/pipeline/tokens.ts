@@ -1,7 +1,14 @@
 import { join } from 'node:path'
+import { pathToFileURL } from 'node:url'
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import { randomBytes } from 'node:crypto'
 import type { ReferenceUIConfig } from '../../config'
-import { collectFragments } from '../../lib/fragments'
-import { getBaseFragmentBundleAlias, scanBaseFragmentFiles } from '../../system/base/fragments'
+import { bundleFragments } from '../../lib/fragments'
+import {
+  getBaseFragmentBundleAlias,
+  getUpstreamFragments,
+  scanBaseFragmentFiles,
+} from '../../system/base/fragments'
 import {
   createTokensCollector,
   type ReferenceTokenConfig,
@@ -9,6 +16,10 @@ import {
 } from '../../system/api/tokens'
 import { getMcpDirPath } from './paths'
 import type { McpToken } from './types'
+
+// The collector getter is emitted as JS source inside a temporary ESM bundle.
+// Store its value on a named global so the host process can read it after import().
+const MCP_TOKEN_FRAGMENTS_GLOBAL = '__refMcpTokenFragments'
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value)
@@ -66,17 +77,50 @@ export function flattenTokenFragments(fragments: ReferenceTokenConfig[]): McpTok
   return [...byPath.values()].sort((left, right) => left.path.localeCompare(right.path))
 }
 
+function createTempTokenCollectorPath(tempDir: string): string {
+  return join(tempDir, `tokens-${Date.now()}-${randomBytes(6).toString('hex')}.mjs`)
+}
+
+async function collectTokenFragmentsFromBundle(input: {
+  cwd: string
+  config: ReferenceUIConfig
+}): Promise<ReferenceTokenConfig[]> {
+  const { cwd, config } = input
+  const tempDir = join(getMcpDirPath(cwd), 'token-fragments')
+  const collector = createTokensCollector()
+  const files = scanBaseFragmentFiles(cwd, config)
+  const localBundles = await bundleFragments({
+    files,
+    alias: getBaseFragmentBundleAlias(cwd),
+  })
+  const upstreamFragments = getUpstreamFragments(config.extends)
+  const tempPath = createTempTokenCollectorPath(tempDir)
+  const script = [
+    collector.toScript(),
+    collector.toRuntimeFunction(),
+    ...upstreamFragments.map(fragment => `;${fragment}`),
+    ...localBundles.map(({ bundle }) => `;${bundle}`),
+    `globalThis['${MCP_TOKEN_FRAGMENTS_GLOBAL}'] = ${collector.toGetter()}`,
+  ].join('\n')
+
+  mkdirSync(tempDir, { recursive: true })
+
+  try {
+    writeFileSync(tempPath, script, 'utf-8')
+    await import(pathToFileURL(tempPath).href)
+    const fragments = (globalThis as Record<string, unknown>)[MCP_TOKEN_FRAGMENTS_GLOBAL]
+    return Array.isArray(fragments) ? (fragments as ReferenceTokenConfig[]) : []
+  } finally {
+    collector.cleanup()
+    delete (globalThis as Record<string, unknown>)[MCP_TOKEN_FRAGMENTS_GLOBAL]
+    rmSync(tempPath, { force: true })
+  }
+}
+
 export async function loadMcpTokens(
   cwd: string,
   config: ReferenceUIConfig
 ): Promise<McpToken[]> {
-  const files = scanBaseFragmentFiles(cwd, config)
-  const fragments = await collectFragments<ReferenceTokenConfig>({
-    files,
-    collector: createTokensCollector(),
-    tempDir: join(getMcpDirPath(cwd), 'token-fragments'),
-    alias: getBaseFragmentBundleAlias(cwd),
-  })
-
+  const fragments = await collectTokenFragmentsFromBundle({ cwd, config })
   return flattenTokenFragments(fragments)
 }

@@ -8,7 +8,7 @@ Reference UI MCP is a compact, project-aware reference for components, props, st
 2. Use `get_component` for a compact readout of one component: usage, examples, common props, co-usage, and whether StyleProps are supported.
 3. Use `get_component_props` only when you need the exhaustive prop/interface list for one component.
 4. Use `get_style_props` for the shared Reference UI StyleProps model instead of asking each component to repeat inherited CSS-style props.
-5. Use `get_tokens` to inspect project token paths, categories, values, light/dark overrides, and descriptions.
+5. Use `get_tokens` to inspect project token paths, categories, values, light/dark overrides, and descriptions. Large token catalogs are compressed by default; query a specific token path when you need descriptions.
 
 ## Why The Split Exists
 
@@ -31,4 +31,4 @@ Style-bearing components expose a `styleProps` marker in component responses. Wh
 
 ## Tokens
 
-`get_tokens` reports tokens collected from user token fragments. Token leaves preserve `value`, `light`, `dark`, and `description` when present.
+`get_tokens` reports tokens collected from user and extended-system token fragments. Token leaves preserve `value`, `light`, `dark`, and `description` when present. When the result set has more than 200 tokens, the response still returns every matching token but omits descriptions and includes a message telling clients to query a token path for richer details.

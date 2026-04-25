@@ -5,13 +5,14 @@
   "type": "module",
   "scripts": {
     "sync": "pnpm exec ref sync",
-    "test": "vitest run --no-file-parallelism && tsc --noEmit"
+    "test": "vitest run && tsc --noEmit"
   },
   "exports": {
     ".": "./src/index.ts"
   },
   "dependencies": {
     "@reference-ui/core": "workspace:*",
+    "@reference-ui/lib": "workspace:*",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
