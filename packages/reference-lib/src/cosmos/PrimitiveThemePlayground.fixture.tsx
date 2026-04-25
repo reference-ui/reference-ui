@@ -73,7 +73,6 @@ function SectionCard({ title, children }: { title: string; children: ReactNode }
       borderStyle="solid"
       borderColor="reference.border"
       borderRadius="lg"
-      bg="reference.codeBackground"
       padding="5r"
     >
       <Div
@@ -187,6 +186,15 @@ return <Button>{tone}</Button>`}</Pre>
               <Dd>The `.ref-*` selector that gives the primitive its visual baseline.</Dd>
             </Dl>
           </Div>
+        </Div>
+      </SectionCard>
+
+      <SectionCard title="Buttons">
+        <Div display="flex" flexWrap="wrap" gap="3r" alignItems="center">
+          <Button type="button">Button</Button>
+          <Button type="button" disabled>
+            Disabled button
+          </Button>
         </Div>
       </SectionCard>
 
