@@ -94,4 +94,18 @@ describe('get_tokens', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
       }),
     ])
   })
+
+  it('explains absent token categories', async () => {
+    const result = await running!.client.callTool({
+      name: 'get_tokens',
+      arguments: { category: 'breakpoints' },
+    })
+    const tokenReadout = parseTextJson<TokenReadout>(result)
+
+    expect(tokenReadout.tokens).toEqual([])
+    expect(tokenReadout.availableCategories).toEqual(
+      expect.arrayContaining(['colors', 'spacing']),
+    )
+    expect(tokenReadout.message).toContain('No tokens found for category "breakpoints"')
+  })
 })

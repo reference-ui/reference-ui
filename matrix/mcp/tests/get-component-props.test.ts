@@ -46,4 +46,22 @@ describe('get_component_props', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
 
     expect(props.props.map(prop => prop.name).sort()).toEqual(['ctaHref', 'ctaLabel'])
   })
+
+  it('returns non-style primitive props when StyleProps are excluded', async () => {
+    const result = await running!.client.callTool({
+      name: 'get_component_props',
+      arguments: { name: 'Div', includeStyleProps: false },
+    })
+    const props = parseTextJson<ComponentReadout>(result)
+
+    expect(props.kind).toBe('primitive')
+    expect(props.styleProps.supported).toBe(true)
+    expect(props.props).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: 'children', styleProp: false }),
+        expect.objectContaining({ name: 'className', styleProp: false }),
+      ]),
+    )
+    expect(props.props.every(prop => prop.styleProp !== true)).toBe(true)
+  })
 })

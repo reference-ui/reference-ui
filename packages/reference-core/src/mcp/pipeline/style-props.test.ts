@@ -16,4 +16,16 @@ describe('mcp style prop reference', () => {
     expect(reference.categories[0]).toHaveProperty('exampleProps')
     expect(reference.categories[0]).not.toHaveProperty('props')
   })
+
+  it('prefers exact prop matches for focused queries', () => {
+    const reference = getStylePropsReference({ query: 'r', includeProps: true })
+
+    expect(reference.matchedProp).toBe('r')
+    expect(reference.categories).toEqual([
+      expect.objectContaining({
+        name: 'reference-ui',
+        props: ['r'],
+      }),
+    ])
+  })
 })

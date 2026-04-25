@@ -13,6 +13,7 @@ import type {
   McpToken,
   McpTokenListResult,
 } from './types'
+import { findReferenceUiPrimitive, REFERENCE_UI_PRIMITIVES } from './primitives'
 
 const DEFAULT_LIMIT = 25
 const DEFAULT_PROP_PREVIEW_LIMIT = 8
@@ -82,6 +83,7 @@ export function summarizeComponent(component: McpComponent): McpComponentSummary
 
   return {
     name: component.name,
+    kind: component.kind ?? 'project',
     source: component.source,
     usage: component.usage,
     count: component.count,
@@ -99,8 +101,18 @@ export function listComponents(
   const query = input.query?.trim().toLowerCase()
   const source = input.source?.trim()
   const limit = input.limit ?? DEFAULT_LIMIT
+  const projectComponentNames = new Set(artifact.components.map(component => component.name))
+  const components = [
+    ...artifact.components.map(component => ({
+      ...component,
+      kind: component.kind ?? 'project' as const,
+    })),
+    ...REFERENCE_UI_PRIMITIVES.filter(primitive =>
+      source === '@reference-ui/react' || !projectComponentNames.has(primitive.name)
+    ),
+  ]
 
-  return artifact.components
+  return components
     .filter(component => {
       if (source && component.source !== source) return false
       if (!query) return true
@@ -119,11 +131,12 @@ export function findComponent(
 ): McpComponent | null {
   const matches = artifact.components.filter(component => component.name === input.name)
   if (input.source) {
-    return matches.find(component => component.source === input.source) ?? null
+    return matches.find(component => component.source === input.source)
+      ?? (input.source === '@reference-ui/react' ? findReferenceUiPrimitive(input.name) : null)
   }
 
   if (matches.length === 1) return matches[0] ?? null
-  if (matches.length === 0) return null
+  if (matches.length === 0) return findReferenceUiPrimitive(input.name)
 
   const exactLocal = matches.find(component => component.source.startsWith('.'))
   return exactLocal ?? matches[0] ?? null
@@ -138,6 +151,7 @@ export function compactComponent(component: McpComponent): McpComponentCompact {
 
   return {
     name: component.name,
+    kind: component.kind ?? 'project',
     source: component.source,
     count: component.count,
     usage: component.usage,
@@ -198,8 +212,10 @@ export function listTokens(
 ): McpTokenListResult {
   const query = input.query?.trim().toLowerCase()
   const category = input.category?.trim().toLowerCase()
+  const allTokens = artifact.tokens ?? []
+  const availableCategories = Array.from(new Set(allTokens.map(token => token.category))).sort()
 
-  let tokens = (artifact.tokens ?? [])
+  let tokens = allTokens
     .filter(token => {
       if (category && token.category.toLowerCase() !== category) return false
       if (!query) return true
@@ -223,11 +239,18 @@ export function listTokens(
     total,
     returned: tokens.length,
     compressed,
+    ...(total === 0 ? { availableCategories } : {}),
     ...(compressed
       ? {
           message:
             'Token output compressed to paths, categories, and raw values because the result set is large. Query a token path for descriptions and richer metadata.',
         }
+      : total === 0
+        ? {
+            message: category
+              ? `No tokens found for category "${input.category}". Token categories are project data; style prop compatibility may mention categories that this project does not define.`
+              : 'No tokens matched this query.',
+          }
       : {}),
   }
 }

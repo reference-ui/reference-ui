@@ -124,7 +124,7 @@ function toPublicModel(artifact: McpBuildArtifact): McpPublicModel {
   return {
     schemaVersion: artifact.schemaVersion,
     generatedAt: artifact.generatedAt,
-    components: listComponents(artifact, { limit: artifact.components.length }),
+    components: listComponents(artifact, { limit: 500 }),
   }
 }
 
@@ -226,6 +226,7 @@ export function createReferenceMcpServer(
 
       return toTextResult({
         name: result.component.name,
+        kind: result.component.kind ?? 'project',
         source: result.component.source,
         interface: result.component.interface,
         props: result.props,
@@ -254,6 +255,7 @@ export function createReferenceMcpServer(
 
       return toTextResult({
         name: component.name,
+        kind: component.kind ?? 'project',
         source: component.source,
         examples: component.examples,
       })
