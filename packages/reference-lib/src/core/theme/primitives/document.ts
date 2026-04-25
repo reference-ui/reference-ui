@@ -23,7 +23,7 @@ export const documentPrimitiveStyles = {
     borderWidth: '0',
     borderTopWidth: '1px',
     borderTopStyle: 'solid',
-    borderTopColor: 'var(--ui-border)',
+    borderTopColor: '{colors.ui.border}',
     marginBlock: '6r',
   },
 
@@ -33,16 +33,16 @@ export const documentPrimitiveStyles = {
     maxWidth: '36rem',
     borderWidth: '1px',
     borderStyle: 'solid',
-    borderColor: 'var(--ui-border)',
+    borderColor: '{colors.ui.border}',
     borderRadius: 'lg',
-    backgroundColor: 'var(--ui-background)',
-    color: 'var(--ui-foreground)',
+    backgroundColor: '{colors.ui.background}',
+    color: '{colors.ui.foreground}',
     padding: '6r',
   },
 
   '.ref-data, .ref-time': {
     ...baseTypography,
-    color: 'var(--ui-muted-foreground)',
+    color: '{colors.ui.mutedForeground}',
   },
 
   '.ref-ruby': {
@@ -51,7 +51,7 @@ export const documentPrimitiveStyles = {
 
   '.ref-rt, .ref-rp': {
     ...baseTypography,
-    color: 'var(--ui-muted-foreground)',
+    color: '{colors.ui.mutedForeground}',
     fontSize: '0.75em',
   },
 } as const

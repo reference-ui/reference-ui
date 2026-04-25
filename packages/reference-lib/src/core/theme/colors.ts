@@ -256,11 +256,6 @@ export const colors = {
     accent: { light: '{colors.red.700}', dark: '{colors.red.800}' },
     highlight: { light: '{colors.red.700}', dark: '{colors.amber.300}' },
   },
-
-  ui: {
-    primary: { value: '{colors.gray.50}' },
-    disabled: { value: '{colors.gray.500}' },
-  },
 } as const
 
 tokens({ colors })

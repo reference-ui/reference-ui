@@ -18,8 +18,8 @@ export const buttonPrimitiveStyles = {
     borderStyle: 'solid',
     borderColor: 'transparent',
     borderRadius: 'sm',
-    backgroundColor: 'var(--ui-primary)',
-    color: 'var(--ui-primary-foreground)',
+    backgroundColor: '{colors.ui.primary}',
+    color: '{colors.ui.primaryForeground}',
     fontSize: '3.5r',
     fontWeight: '500',
     lineHeight: '5r',
@@ -30,7 +30,8 @@ export const buttonPrimitiveStyles = {
     transitionDuration: '150ms',
     transitionTimingFunction: 'ease',
     _hover: {
-      backgroundColor: 'color-mix(in oklch, var(--ui-primary) 90%, transparent)',
+      backgroundColor:
+        'color-mix(in oklch, {colors.ui.primary} 90%, transparent)',
     },
     _focusVisible: focusRing,
     _disabled: {

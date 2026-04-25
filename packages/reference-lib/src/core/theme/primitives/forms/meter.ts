@@ -1,6 +1,8 @@
 import { globalCss } from '@reference-ui/system'
 import { trackBackground } from '../shared'
 
+const blue600 = '{colors.blue.600}'
+
 export const meterPrimitiveStyles = {
   '.ref-progress': {
     appearance: 'none',
@@ -12,7 +14,7 @@ export const meterPrimitiveStyles = {
     borderRadius: 'full',
     overflow: 'hidden',
     backgroundColor: trackBackground,
-    accentColor: 'var(--ui-foreground)',
+    accentColor: '{colors.ui.foreground}',
   },
 
   '.ref-progress::-webkit-progress-bar': {
@@ -21,12 +23,12 @@ export const meterPrimitiveStyles = {
   },
 
   '.ref-progress::-webkit-progress-value': {
-    backgroundColor: 'var(--ui-foreground)',
+    backgroundColor: '{colors.ui.foreground}',
     borderRadius: 'full',
   },
 
   '.ref-progress::-moz-progress-bar': {
-    backgroundColor: 'var(--ui-foreground)',
+    backgroundColor: '{colors.ui.foreground}',
     borderRadius: 'full',
   },
 
@@ -36,7 +38,7 @@ export const meterPrimitiveStyles = {
     display: 'block',
     width: '100%',
     height: '1.5r',
-    accentColor: 'var(--colors-blue-600)',
+    accentColor: blue600,
     borderWidth: '0',
     borderRadius: 'full',
     backgroundColor: trackBackground,
@@ -56,15 +58,15 @@ export const meterPrimitiveStyles = {
 
   '.ref-meter::-webkit-meter-optimum-value, .ref-meter::-webkit-meter-suboptimum-value, .ref-meter::-webkit-meter-even-less-good-value':
     {
-      background: 'var(--colors-blue-600)',
-      backgroundColor: 'var(--colors-blue-600)',
+      background: blue600,
+      backgroundColor: blue600,
       backgroundImage: 'none',
       borderRadius: 'full',
       boxShadow: 'none',
     },
 
   '.ref-meter::-moz-meter-bar': {
-    background: 'var(--colors-blue-600)',
+    background: blue600,
     borderRadius: 'full',
   },
 } as const

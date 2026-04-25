@@ -14,15 +14,16 @@ export const tablePrimitiveStyles = {
   '.ref-tfoot': {
     borderTopWidth: '1px',
     borderTopStyle: 'solid',
-    borderTopColor: 'var(--ui-border)',
-    backgroundColor: 'color-mix(in oklch, var(--ui-muted) 50%, transparent)',
+    borderTopColor: '{colors.ui.border}',
+    backgroundColor:
+      'color-mix(in oklch, {colors.ui.muted} 50%, transparent)',
     fontWeight: '500',
   },
 
   '.ref-thead .ref-tr': {
     borderBottomWidth: '1px',
     borderBottomStyle: 'solid',
-    borderBottomColor: 'var(--ui-border)',
+    borderBottomColor: '{colors.ui.border}',
   },
 
   '.ref-tbody .ref-tr:last-child': {
@@ -32,12 +33,13 @@ export const tablePrimitiveStyles = {
   '.ref-tr': {
     borderBottomWidth: '1px',
     borderBottomStyle: 'solid',
-    borderBottomColor: 'var(--ui-border)',
+    borderBottomColor: '{colors.ui.border}',
     transitionProperty: 'background-color',
     transitionDuration: '150ms',
     transitionTimingFunction: 'ease',
     _hover: {
-      backgroundColor: 'color-mix(in oklch, var(--ui-muted) 50%, transparent)',
+      backgroundColor:
+        'color-mix(in oklch, {colors.ui.muted} 50%, transparent)',
     },
   },
 
@@ -47,7 +49,7 @@ export const tablePrimitiveStyles = {
     paddingInline: '2r',
     textAlign: 'left',
     verticalAlign: 'middle',
-    color: 'var(--ui-foreground)',
+    color: '{colors.ui.foreground}',
     fontSize: '3.5r',
     fontWeight: '500',
     lineHeight: '5r',
@@ -58,7 +60,7 @@ export const tablePrimitiveStyles = {
     ...baseTypography,
     padding: '2r',
     verticalAlign: 'middle',
-    color: 'var(--ui-foreground)',
+    color: '{colors.ui.foreground}',
     fontSize: '3.5r',
     lineHeight: '5r',
     whiteSpace: 'nowrap',
@@ -67,7 +69,7 @@ export const tablePrimitiveStyles = {
   '.ref-caption': {
     ...baseTypography,
     marginTop: '4r',
-    color: 'var(--ui-muted-foreground)',
+    color: '{colors.ui.mutedForeground}',
     fontSize: '3.5r',
     lineHeight: '5r',
   },
