@@ -1,5 +1,12 @@
 export { base } from './base'
-export { baseTypography, blockText, focusRing, formControlSize, trackBackground } from './shared'
+export {
+	baseTypography,
+	blockText,
+	focusRing,
+	focusRingStyles,
+	formControlSize,
+	trackBackground,
+} from './shared'
 export { ui } from './tokens'
 export { disclosurePrimitiveStyles } from './disclosure'
 export { documentPrimitiveStyles } from './document'

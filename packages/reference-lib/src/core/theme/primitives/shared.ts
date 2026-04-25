@@ -11,11 +11,21 @@ export const blockText = {
   lineHeight: '1.6',
 } as const
 
-export const focusRing = {
-  outline: '2px solid {colors.ui.focus.ring}',
-  outlineOffset: '2px',
-  boxShadow: 'none',
+export const focusRingStyles = {
+  outline: '2px solid transparent',
+  outlineOffset: '4px',
+  transitionProperty:
+    'color, background-color, border-color, box-shadow, opacity, outline-color, outline-offset',
+  transitionDuration: '300ms',
+  transitionTimingFunction: 'ease',
+  _focusVisible: {
+    outlineColor: '{colors.ui.focus.ring}',
+    outlineOffset: '2px',
+    boxShadow: 'none',
+  },
 } as const
+
+export const focusRing = focusRingStyles._focusVisible
 
 export const trackBackground =
   'color-mix(in oklch, {colors.ui.progress.track.mixForeground} 12%, {colors.ui.progress.track.mixBackground})'

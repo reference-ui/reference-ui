@@ -1,5 +1,5 @@
 import { globalCss } from '@reference-ui/system'
-import { baseTypography, focusRing, formControlSize } from '../shared'
+import { baseTypography, focusRingStyles, formControlSize } from '../shared'
 
 export const inputPrimitiveStyles = {
   '.ref-input, .ref-select, .ref-textarea, .ref-output': {
@@ -11,15 +11,13 @@ export const inputPrimitiveStyles = {
     borderStyle: 'solid',
     borderColor: '{colors.ui.field.border}',
     borderRadius: 'sm',
+    ...focusRingStyles,
     backgroundColor: '{colors.ui.field.background}',
     color: '{colors.ui.field.foreground}',
     fontSize: '3.5r',
     lineHeight: '5r',
-    transitionProperty: 'color, background-color, border-color, box-shadow',
-    transitionDuration: '150ms',
-    transitionTimingFunction: 'ease',
     _focusVisible: {
-      ...focusRing,
+      ...focusRingStyles._focusVisible,
       borderColor: '{colors.ui.field.border}',
     },
     _disabled: {
@@ -29,13 +27,6 @@ export const inputPrimitiveStyles = {
     _placeholder: {
       color: '{colors.ui.field.placeholder}',
     },
-  },
-
-  '.ref-input[type="checkbox"], .ref-input[type="radio"]': {
-    width: '4r',
-    height: '4r',
-    padding: '0',
-    accentColor: '{colors.ui.field.controlAccent}',
   },
 
   '.ref-input[type="file"]': {

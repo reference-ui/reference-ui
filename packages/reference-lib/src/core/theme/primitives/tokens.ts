@@ -161,6 +161,7 @@ export const ui = {
   button: {
     background: { light: '{colors.gray.950}', dark: '{colors.gray.50}' },
     foreground: { light: '{colors.gray.50}', dark: '{colors.gray.950}' },
+    
   },
 
   progress: {
