@@ -9,7 +9,7 @@ export const formBasePrimitiveStyles = {
     minWidth: '0',
     borderWidth: '1px',
     borderStyle: 'solid',
-    borderColor: '{colors.ui.border}',
+    borderColor: '{colors.ui.fieldset.border}',
     borderRadius: 'md',
     padding: '4r',
     margin: '0',
@@ -38,7 +38,7 @@ export const formBasePrimitiveStyles = {
     height: '4r',
     padding: '0',
     borderRadius: 'sm',
-    accentColor: '{colors.ui.primary}',
+    accentColor: '{colors.ui.label.controlAccent}',
   },
 } as const
 

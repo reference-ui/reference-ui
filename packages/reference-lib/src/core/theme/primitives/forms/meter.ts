@@ -14,7 +14,7 @@ export const meterPrimitiveStyles = {
     borderRadius: 'full',
     overflow: 'hidden',
     backgroundColor: trackBackground,
-    accentColor: '{colors.ui.foreground}',
+    accentColor: '{colors.ui.progress.bar.foreground}',
   },
 
   '.ref-progress::-webkit-progress-bar': {
@@ -23,12 +23,12 @@ export const meterPrimitiveStyles = {
   },
 
   '.ref-progress::-webkit-progress-value': {
-    backgroundColor: '{colors.ui.foreground}',
+    backgroundColor: '{colors.ui.progress.bar.foreground}',
     borderRadius: 'full',
   },
 
   '.ref-progress::-moz-progress-bar': {
-    backgroundColor: '{colors.ui.foreground}',
+    backgroundColor: '{colors.ui.progress.bar.foreground}',
     borderRadius: 'full',
   },
 

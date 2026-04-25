@@ -9,11 +9,11 @@ export const blockText = {
 export const focusRing = {
   outline: 'none',
   boxShadow:
-    '0 0 0 3px color-mix(in oklch, {colors.ui.ring} 35%, transparent)',
+    '0 0 0 3px color-mix(in oklch, {colors.ui.focus.ring} 35%, transparent)',
 } as const
 
 export const trackBackground =
-  'color-mix(in oklch, {colors.ui.foreground} 12%, {colors.ui.background})'
+  'color-mix(in oklch, {colors.ui.progress.track.mixForeground} 12%, {colors.ui.progress.track.mixBackground})'
 
 export const formControlSize = {
   height: '8.5r',

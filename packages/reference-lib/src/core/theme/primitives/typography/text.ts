@@ -7,10 +7,10 @@ export const textPrimitiveStyles = {
     fontSize: '4.5r',
     fontStyle: 'italic',
     lineHeight: '1.6',
-    color: '{colors.ui.mutedForeground}',
+    color: '{colors.ui.blockquote.foreground}',
     borderLeftWidth: '4px',
     borderLeftStyle: 'solid',
-    borderLeftColor: '{colors.ui.quoteBorder}',
+    borderLeftColor: '{colors.ui.blockquote.border}',
     paddingLeft: '4r',
     marginLeft: '0',
     marginRight: '0',
@@ -20,7 +20,7 @@ export const textPrimitiveStyles = {
   '.ref-cite': {
     ...baseTypography,
     fontStyle: 'italic',
-    color: '{colors.ui.mutedForeground}',
+    color: '{colors.ui.cite.foreground}',
   },
   '.ref-p': {
     ...baseTypography,
@@ -31,7 +31,7 @@ export const textPrimitiveStyles = {
   },
   '.ref-small': {
     ...baseTypography,
-    color: '{colors.ui.mutedForeground}',
+    color: '{colors.ui.small.foreground}',
     fontSize: 'small',
     lineHeight: '1.4',
   },

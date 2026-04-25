@@ -14,16 +14,16 @@ export const tablePrimitiveStyles = {
   '.ref-tfoot': {
     borderTopWidth: '1px',
     borderTopStyle: 'solid',
-    borderTopColor: '{colors.ui.border}',
+    borderTopColor: '{colors.ui.table.border}',
     backgroundColor:
-      'color-mix(in oklch, {colors.ui.muted} 50%, transparent)',
+      'color-mix(in oklch, {colors.ui.table.footer.mutedBackground} 50%, transparent)',
     fontWeight: '500',
   },
 
   '.ref-thead .ref-tr': {
     borderBottomWidth: '1px',
     borderBottomStyle: 'solid',
-    borderBottomColor: '{colors.ui.border}',
+    borderBottomColor: '{colors.ui.table.border}',
   },
 
   '.ref-tbody .ref-tr:last-child': {
@@ -33,13 +33,13 @@ export const tablePrimitiveStyles = {
   '.ref-tr': {
     borderBottomWidth: '1px',
     borderBottomStyle: 'solid',
-    borderBottomColor: '{colors.ui.border}',
+    borderBottomColor: '{colors.ui.table.border}',
     transitionProperty: 'background-color',
     transitionDuration: '150ms',
     transitionTimingFunction: 'ease',
     _hover: {
       backgroundColor:
-        'color-mix(in oklch, {colors.ui.muted} 50%, transparent)',
+        'color-mix(in oklch, {colors.ui.table.row.mutedBackground} 50%, transparent)',
     },
   },
 
@@ -49,7 +49,7 @@ export const tablePrimitiveStyles = {
     paddingInline: '2r',
     textAlign: 'left',
     verticalAlign: 'middle',
-    color: '{colors.ui.foreground}',
+    color: '{colors.ui.table.cell.foreground}',
     fontSize: '3.5r',
     fontWeight: '500',
     lineHeight: '5r',
@@ -60,7 +60,7 @@ export const tablePrimitiveStyles = {
     ...baseTypography,
     padding: '2r',
     verticalAlign: 'middle',
-    color: '{colors.ui.foreground}',
+    color: '{colors.ui.table.cell.foreground}',
     fontSize: '3.5r',
     lineHeight: '5r',
     whiteSpace: 'nowrap',
@@ -69,7 +69,7 @@ export const tablePrimitiveStyles = {
   '.ref-caption': {
     ...baseTypography,
     marginTop: '4r',
-    color: '{colors.ui.mutedForeground}',
+    color: '{colors.ui.table.caption.foreground}',
     fontSize: '3.5r',
     lineHeight: '5r',
   },

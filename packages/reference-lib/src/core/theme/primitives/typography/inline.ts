@@ -4,18 +4,18 @@ import { baseTypography } from './baseTypography'
 export const inlinePrimitiveStyles = {
   '.ref-a': {
     ...baseTypography,
-    color: '{colors.ui.link}',
+    color: '{colors.ui.link.default}',
     textDecoration: 'underline',
     textUnderlineOffset: '0.15em',
     textDecorationThickness: '0.08em',
     _hover: {
-      color: '{colors.ui.linkHover}',
+      color: '{colors.ui.link.hover}',
     },
   },
   '.ref-abbr': {
     ...baseTypography,
     textDecoration: 'underline dotted',
-    textDecorationColor: '{colors.ui.mutedForeground}',
+    textDecorationColor: '{colors.ui.abbr.textDecoration}',
     textUnderlineOffset: '0.15em',
     cursor: 'help',
   },
@@ -25,12 +25,12 @@ export const inlinePrimitiveStyles = {
   },
   '.ref-del': {
     ...baseTypography,
-    color: '{colors.ui.mutedForeground}',
+    color: '{colors.ui.del.foreground}',
     textDecoration: 'line-through',
   },
   '.ref-dfn': {
     ...baseTypography,
-    color: '{colors.ui.mutedForeground}',
+    color: '{colors.ui.dfn.foreground}',
     fontStyle: 'italic',
   },
   '.ref-em': {
@@ -43,21 +43,21 @@ export const inlinePrimitiveStyles = {
   },
   '.ref-ins': {
     ...baseTypography,
-    color: '{colors.ui.foreground}',
+    color: '{colors.ui.ins.foreground}',
     textDecoration: 'underline',
-    textDecorationColor: '{colors.ui.link}',
+    textDecorationColor: '{colors.ui.ins.decoration}',
     textUnderlineOffset: '0.15em',
   },
   '.ref-mark': {
     ...baseTypography,
-    backgroundColor: '{colors.ui.mark}',
-    color: '{colors.ui.markForeground}',
+    backgroundColor: '{colors.ui.mark.background}',
+    color: '{colors.ui.mark.foreground}',
     paddingInline: '0.25em',
     borderRadius: 'sm',
   },
   '.ref-q': {
     ...baseTypography,
-    color: '{colors.ui.mutedForeground}',
+    color: '{colors.ui.q.foreground}',
     fontStyle: 'italic',
     _before: {
       content: '"\\201C"',
@@ -69,7 +69,7 @@ export const inlinePrimitiveStyles = {
   '.ref-s': {
     ...baseTypography,
     textDecoration: 'line-through',
-    color: '{colors.ui.mutedForeground}',
+    color: '{colors.ui.s.foreground}',
   },
   '.ref-strong': {
     ...baseTypography,
@@ -78,7 +78,7 @@ export const inlinePrimitiveStyles = {
   '.ref-u': {
     ...baseTypography,
     textDecoration: 'underline',
-    textDecorationColor: '{colors.ui.mutedForeground}',
+    textDecorationColor: '{colors.ui.u.textDecoration}',
     textUnderlineOffset: '0.15em',
     textDecorationThickness: '0.08em',
   },
@@ -87,7 +87,7 @@ export const inlinePrimitiveStyles = {
     fontFamily: 'serif',
     letterSpacing: 'normal',
     fontStyle: 'italic',
-    color: '{colors.ui.link}',
+    color: '{colors.ui.varTag.foreground}',
   },
 } as const
 
