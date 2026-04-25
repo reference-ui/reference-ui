@@ -10,6 +10,8 @@ import { readMcpArtifact, writeMcpArtifact } from './artifact'
 import { getMcpModelPath, getMcpTypesManifestPath } from './paths'
 import type { McpBuildArtifact } from './types'
 import { loadMcpTokens } from './tokens'
+import { collectReferenceUiPrimitiveUsage } from './primitive-usage'
+import { createObservedReferenceUiPrimitives } from './primitives'
 
 const mcpAtlasBuildCache = new Map<
   string,
@@ -53,6 +55,9 @@ export async function generateMcpArtifact(
     manifestPath,
     atlas,
     tokens: await loadMcpTokensSafely(cwd, config),
+    primitiveComponents: createObservedReferenceUiPrimitives(
+      await loadReferenceUiPrimitiveUsageSafely(cwd, config)
+    ),
   })
 }
 
@@ -103,8 +108,9 @@ export async function generateMcpArtifactFromAtlas(input: {
   manifestPath: string
   atlas: Awaited<ReturnType<typeof analyzeDetailed>>
   tokens?: McpBuildArtifact['tokens']
+  primitiveComponents?: McpBuildArtifact['components']
 }): Promise<McpBuildArtifact> {
-  const { cwd, manifestPath, atlas, tokens = [] } = input
+  const { cwd, manifestPath, atlas, tokens = [], primitiveComponents = [] } = input
   const api = createReferenceApi(manifestPath)
   const components = await Promise.all(
     atlas.components.map(async component => {
@@ -138,7 +144,7 @@ export async function generateMcpArtifactFromAtlas(input: {
     workspaceRoot: cwd,
     manifestPath,
     diagnostics: atlas.diagnostics,
-    components: components.sort((left, right) => {
+    components: [...components, ...primitiveComponents].sort((left, right) => {
       if (right.count !== left.count) return right.count - left.count
       if (left.name !== right.name) return left.name.localeCompare(right.name)
       return left.source.localeCompare(right.source)
@@ -147,6 +153,18 @@ export async function generateMcpArtifactFromAtlas(input: {
   }
 
   return artifact
+}
+
+async function loadReferenceUiPrimitiveUsageSafely(
+  cwd: string,
+  config: ReturnType<typeof getConfig>
+) {
+  try {
+    return await collectReferenceUiPrimitiveUsage(cwd, config)
+  } catch (error) {
+    log.warn('[mcp] Primitive usage collection failed:', error)
+    return []
+  }
 }
 
 async function loadMcpTokensSafely(

@@ -55,6 +55,7 @@ describe('get_component_props', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
     const props = parseTextJson<ComponentReadout>(result)
 
     expect(props.kind).toBe('primitive')
+    expect(props.count).toBeGreaterThan(0)
     expect(props.styleProps.supported).toBe(true)
     expect(props.props).toEqual(
       expect.arrayContaining([

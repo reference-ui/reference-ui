@@ -228,6 +228,8 @@ export function createReferenceMcpServer(
         name: result.component.name,
         kind: result.component.kind ?? 'project',
         source: result.component.source,
+        count: result.component.count,
+        usage: result.component.usage,
         interface: result.component.interface,
         props: result.props,
         propSummary: result.propSummary,
