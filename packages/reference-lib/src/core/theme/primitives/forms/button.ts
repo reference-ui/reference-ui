@@ -1,6 +1,5 @@
 import { globalCss } from '@reference-ui/system'
-import { baseTypography } from '../typography/baseTypography'
-import { focusRing, formControlSize } from '../shared'
+import { baseTypography, focusRing, formControlSize } from '../shared'
 
 export const buttonPrimitiveStyles = {
   '.ref-button': {

@@ -1,5 +1,5 @@
 import { globalCss } from '@reference-ui/system'
-import { baseTypography } from './baseTypography'
+import { baseTypography } from '../shared'
 
 export const inlinePrimitiveStyles = {
   '.ref-a': {

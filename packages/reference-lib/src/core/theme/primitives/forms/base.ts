@@ -1,5 +1,5 @@
 import { globalCss } from '@reference-ui/system'
-import { baseTypography } from '../typography/baseTypography'
+import { baseTypography } from '../shared'
 
 export const formBasePrimitiveStyles = {
   '.ref-fieldset': {

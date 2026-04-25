@@ -1,6 +1,5 @@
 import { globalCss } from '@reference-ui/system'
-import { baseTypography } from './typography/baseTypography'
-import { blockText } from './shared'
+import { baseTypography, blockText } from './shared'
 
 export const disclosurePrimitiveStyles = {
   '.ref-details': {
