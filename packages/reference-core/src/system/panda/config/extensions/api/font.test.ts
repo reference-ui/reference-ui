@@ -1,6 +1,11 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import type { FontDefinition } from '../../../../api/font'
-import { buildFontFaces, buildFontPatternExtensions, buildFontRecipes, buildFontTokens } from './font'
+import {
+  buildFontFaces,
+  buildFontPatternExtensions,
+  buildFontRecipes,
+  buildFontTokens,
+} from './font'
 import { extendPatterns } from './extendPatterns'
 import { getPandaConfig, initPandaConfig, PANDA_CONFIG_GLOBAL_KEY } from './runtime'
 import { PRIMITIVE_JSX_NAMES } from '../../../../primitives/tags'
@@ -34,8 +39,10 @@ describe('font config helpers', () => {
         sans: { value: '"Inter", ui-sans-serif, sans-serif' },
       },
       fontWeights: {
-        'sans.normal': { value: '400' },
-        'sans.bold': { value: '700' },
+        sans: {
+          normal: { value: '400' },
+          bold: { value: '700' },
+        },
       },
     })
   })
@@ -74,7 +81,9 @@ describe('font config helpers', () => {
 
     const config = getPandaConfig()
     const boxPattern = config.patterns?.extend?.box
-    const transform = boxPattern?.transform as ((props: Record<string, unknown>) => Record<string, unknown>) | undefined
+    const transform = boxPattern?.transform as
+      | ((props: Record<string, unknown>) => Record<string, unknown>)
+      | undefined
 
     expect(boxPattern?.jsx).toEqual(PRIMITIVE_JSX_NAMES)
     expect(boxPattern?.properties).toEqual({

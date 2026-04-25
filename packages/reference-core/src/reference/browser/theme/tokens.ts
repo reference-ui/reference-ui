@@ -66,7 +66,8 @@ export const referenceBrowserTokenConfig = {
   fonts: {
     reference: {
       /**
-       * Keep in sync with `@reference-ui/lib` `theme/fontStacks.ts` / JetBrains `mono` registration.
+       * Concrete fallback for reference-browser metadata, which can be used without
+       * a project-local `font('mono', ...)` registration.
        */
       mono: {
         value: '"JetBrains Mono", ui-monospace, monospace',

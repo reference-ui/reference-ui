@@ -5,7 +5,7 @@ export const headingPrimitiveStyles = {
   '.ref-h1': {
     ...baseTypography,
     fontSize: '9r',
-    fontWeight: 'bold',
+    fontWeight: 'sans.semibold',
     lineHeight: '15r',
     marginTop: '0',
     marginBottom: '3r',
@@ -13,7 +13,7 @@ export const headingPrimitiveStyles = {
   '.ref-h2': {
     ...baseTypography,
     fontSize: '6r',
-    fontWeight: 'bold',
+    fontWeight: 'sans.semibold',
     lineHeight: '10r',
     marginTop: '0',
     marginBottom: '3r',
@@ -21,7 +21,7 @@ export const headingPrimitiveStyles = {
   '.ref-h3': {
     ...baseTypography,
     fontSize: '5r',
-    fontWeight: 'bold',
+    fontWeight: 'sans.semibold',
     lineHeight: '10r',
     marginTop: '0',
     marginBottom: '3r',
@@ -29,7 +29,7 @@ export const headingPrimitiveStyles = {
   '.ref-h4': {
     ...baseTypography,
     fontSize: '4.5r',
-    fontWeight: 'bold',
+    fontWeight: 'sans.semibold',
     lineHeight: '8r',
     marginTop: '0',
     marginBottom: '3r',
@@ -45,7 +45,7 @@ export const headingPrimitiveStyles = {
   '.ref-h6': {
     ...baseTypography,
     fontSize: '3.5r',
-    fontWeight: '600',
+    fontWeight: 'sans.semibold',
     lineHeight: '8r',
     textTransform: 'uppercase',
     marginTop: '0',
