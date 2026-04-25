@@ -10,7 +10,7 @@ export const inlinePrimitiveStyles = {
   },
   '.ref-b': {
     ...baseTypography,
-    fontWeight: 'bold',
+    fontWeight: 'sans.bold',
   },
   '.ref-em': {
     ...baseTypography,
@@ -44,7 +44,7 @@ export const inlinePrimitiveStyles = {
   },
   '.ref-strong': {
     ...baseTypography,
-    fontWeight: 'bold',
+    fontWeight: 'sans.bold',
   },
   '.ref-u': {
     ...baseTypography,
