@@ -2,6 +2,8 @@
 
 Reference UI MCP exposes project-aware tools for components, props, style props, and tokens.
 
+Run `pnpm exec ref sync` once after install or package updates before starting MCP. The server reads generated Reference UI artifacts for project-aware queries.
+
 ## Tools
 
 - `getting_started`: short guide to Reference UI primitives, StyleProps, tokens, and the recommended MCP workflow.

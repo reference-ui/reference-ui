@@ -42,7 +42,7 @@ export async function generateMcpArtifact(
 
   if (!existsSync(manifestPath)) {
     throw new Error(
-      `MCP build requires generated types manifest at "${manifestPath}". Run ref sync first.`
+      `MCP build requires generated Reference UI artifacts at "${manifestPath}". Run "pnpm exec ref sync" from the project root before starting the MCP server.`
     )
   }
 

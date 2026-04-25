@@ -46,6 +46,8 @@ const REFERENCE_UI_START_GUIDE_FALLBACK = `# Reference UI Start Guide
 
 Reference UI MCP is a project-aware component, prop, style, and token reference.
 
+Run \`pnpm exec ref sync\` before starting MCP so generated Reference UI artifacts exist.
+
 Start with \`getting_started\`, then use \`list_components\`, \`get_component\`, \`get_component_examples\`, \`get_component_props\`, \`get_style_props\`, and \`get_tokens\` as needed.
 `
 
