@@ -1,5 +1,4 @@
 import { tokens } from '@reference-ui/system'
-import { colors } from './colors'
 
 type ReferenceBrowserTokenConfig = Parameters<typeof tokens>[0]
 
@@ -12,30 +11,30 @@ export const referenceBrowserTokenConfig = {
     reference: {
       /** Primary body / heading text (was `foreground`). */
       text: {
-        value: colors.gray[800].value,
-        dark: '#f9fafb',
+        value: '{colors.gray.800}',
+        dark: '{colors.gray.50}',
       },
       /** Secondary text (was `muted`). */
       textLight: {
-        value: colors.gray[700].value,
-        dark: colors.gray[300].value,
+        value: '{colors.gray.700}',
+        dark: '{colors.gray.300}',
       },
       /** Tertiary / de-emphasized copy (one gray step lighter than {@link textLight}). */
       textLighter: {
-        value: colors.gray[600].value,
-        dark: colors.gray[400].value,
+        value: '{colors.gray.600}',
+        dark: '{colors.gray.400}',
       },
       codeBackground: {
-        value: colors.gray[200].value,
-        dark: colors.gray[900].value,
+        value: '{colors.gray.200}',
+        dark: '{colors.gray.900}',
       },
       highlight: {
-        value: colors.blue[800].value,
-        dark: colors.blue[200].value,
+        value: '{colors.blue.800}',
+        dark: '{colors.blue.200}',
       },
       border: {
-        value: colors.gray[300].value,
-        dark: colors.gray[800].value,
+        value: '{colors.gray.300}',
+        dark: '{colors.gray.800}',
       },
     },
   },
