@@ -7,9 +7,7 @@ export {
   tokens,
   keyframes,
   font,
-  extendFont,
   globalCss,
-  extendPattern,
 } from '../system/api'
 export type {
   KeyframesConfig,

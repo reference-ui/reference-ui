@@ -83,7 +83,7 @@ This resolves the earlier architectural conflict:
 ### `packages/reference-core/src/system/font`
 
 Owns:
-- collecting `font()` or `extendFont()` definitions from user code
+- collecting `font()` definitions from user code
 - rendering tokens, fontface, recipe, and the font-pattern output
 - writing the pattern output to a file in outDir and returning that path as `fontPatternFile`
 - exposing a helper that returns `fontConfigFragments`, `fontPatternFile` (optional), and `definitionsCount`
@@ -92,8 +92,8 @@ Owns:
 
 Owns:
 - system pattern extensions
-- optional **additional pattern files** (paths to files that contain `extendPattern` calls; e.g. the font-generated file in outDir)
-- userspace `extendPattern()` extensions
+- optional **additional pattern files** (paths to files that contain internal `extendPattern` calls; e.g. the font-generated file in outDir)
+- internal `extendPattern()` extensions
 - final merge order and final box-pattern fragment generation
 
 Patterns has **no font-specific logic**. It accepts `additionalPatternFiles?: string[]` and runs the normal collector on those paths. Merge order: system → additional → user.
@@ -170,13 +170,6 @@ font('display', {
 })
 ```
 
-Compatibility alias:
-- `extendFont(...)` can remain available while the docs converge on `font(...)`
-
-Both names should be collectible during scanning while the migration is in progress.
-
----
-
 ## Testing
 
 For output verification, use:
@@ -200,5 +193,5 @@ Useful coverage for the font subsystem:
 2. Add a stable `getFontFragmentsForConfig()` helper in `font/index.ts`.
 3. Thread `fontConfigFragments` into `runConfig()` and `createPandaConfig()`.
 4. Thread `fontPatternFragments` into `patterns/` so that subsystem owns merge and final render.
-5. Keep `font()` as the preferred public API and retain `extendFont()` as compatibility where needed.
+5. Keep `font()` as the public API.
 6. Verify with `pnpm test:e2e`.

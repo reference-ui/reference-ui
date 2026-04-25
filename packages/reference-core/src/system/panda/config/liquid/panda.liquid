@@ -20,7 +20,7 @@ import {
   rhythmGlobalCss,
   rhythmSpacingTokens,
   rhythmUtilities,
-  warnOnTokenCollisions,
+  warnOnConfigCollisions,
 } from '{{ extensionsImportPath | raw }}'
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -38,7 +38,6 @@ initPandaConfig(baseConfig)
 
 const userTokensFragments = {{ tokensValueExpression | raw }}
 const tokensFragments = [...defaultTokenFragments, ...userTokensFragments]
-warnOnTokenCollisions(userTokensFragments)
 const resolvedColorModeTokens = resolveColorModeTokens(tokensFragments)
 extendTokens(rhythmSpacingTokens)
 extendTokens(resolvedColorModeTokens.baseTokens)
@@ -56,6 +55,11 @@ extendKeyframes(keyframesFragments)
 // ─────────────────────────────────────────────────────────────────────────
 
 const fontDefinitions = {{ fontValueExpression | raw }}
+warnOnConfigCollisions({
+  tokens: userTokensFragments,
+  keyframes: keyframesFragments,
+  fonts: fontDefinitions,
+})
 const fontTokens = buildFontTokens(fontDefinitions)
 const fontFaces = buildFontFaces(fontDefinitions)
 const fontRecipes = buildFontRecipes(fontDefinitions)

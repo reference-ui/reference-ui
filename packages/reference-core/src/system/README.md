@@ -72,7 +72,6 @@ Examples:
 - `font()`
 - `globalCss()`
 - `keyframes()`
-- `extendPattern()`
 
 ### `base/`
 
