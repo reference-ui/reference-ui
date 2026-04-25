@@ -7,10 +7,10 @@ export const textPrimitiveStyles = {
     fontSize: '4.5r',
     fontStyle: 'italic',
     lineHeight: '1.6',
-    color: 'gray.600',
+    color: 'text.secondary',
     borderLeftWidth: '4px',
     borderLeftStyle: 'solid',
-    borderLeftColor: 'gray.300',
+    borderLeftColor: 'text.secondary',
     paddingLeft: '1em',
     marginLeft: '0',
     marginRight: '0',
@@ -20,7 +20,7 @@ export const textPrimitiveStyles = {
   '.ref-cite': {
     ...baseTypography,
     fontStyle: 'italic',
-    color: 'gray.500',
+    color: 'text.secondary',
   },
   '.ref-p': {
     ...baseTypography,
@@ -31,6 +31,7 @@ export const textPrimitiveStyles = {
   },
   '.ref-small': {
     ...baseTypography,
+    color: 'text.secondary',
     fontSize: 'small',
     lineHeight: '1.4',
   },

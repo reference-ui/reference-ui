@@ -7,10 +7,22 @@ const { setTimeout: delayTimeout } = globalThis
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url))
 const CORE_DIR = join(SCRIPT_DIR, '..')
 const REPO_DIR = join(CORE_DIR, '..', '..')
-const SOURCE_DIR = join(REPO_DIR, 'packages', 'reference-lib', 'src', 'components', 'Reference')
-const FONT_STACKS_SOURCE = join(REPO_DIR, 'packages', 'reference-lib', 'src', 'core', 'theme', 'fontStacks.ts')
+const SOURCE_DIR = join(
+  REPO_DIR,
+  'packages',
+  'reference-lib',
+  'src',
+  'components',
+  'Reference'
+)
 const TARGET_DIR = join(CORE_DIR, 'src', 'reference', 'browser-component')
-const TYPES_ADAPTER_FILE = join(CORE_DIR, 'src', 'reference', 'browser', 'component-api.ts')
+const TYPES_ADAPTER_FILE = join(
+  CORE_DIR,
+  'src',
+  'reference',
+  'browser',
+  'component-api.ts'
+)
 const LOCK_FILE = join(CORE_DIR, '.copy-reference-api-component.lock')
 
 const GENERATED_README = `# Browser Component Mirror
@@ -20,7 +32,6 @@ This directory is a mirrored component tree.
 Source of truth:
 
 - packages/reference-lib/src/components/Reference
-- packages/reference-lib/src/core/theme/fontStacks.ts (for theme/fontStacks.ts)
 
 These files are copied by:
 
@@ -54,14 +65,21 @@ async function listFiles(rootDir, relativeDir = '') {
   for (const entry of entries) {
     const nextRelative = relativeDir ? join(relativeDir, entry.name) : entry.name
     if (entry.isDirectory()) {
-      files.push(...await listFiles(rootDir, nextRelative))
+      files.push(...(await listFiles(rootDir, nextRelative)))
       continue
     }
 
     files.push({
       sourcePath: join(rootDir, nextRelative),
       relativePath: nextRelative,
-      sourceOfTruth: join('packages', 'reference-lib', 'src', 'components', 'Reference', nextRelative),
+      sourceOfTruth: join(
+        'packages',
+        'reference-lib',
+        'src',
+        'components',
+        'Reference',
+        nextRelative
+      ),
     })
   }
 
@@ -81,22 +99,9 @@ function rewriteTypesImports(relativePath, source) {
 /**
  * @param {string} relativePath
  * @param {string} source
- * @returns {string}
- */
-function rewriteThemeImports(relativePath, source) {
-  if (relativePath !== 'theme/tokens.ts') return source
-  return source.replace(
-    "import { fontStacks } from '../../../core/theme/fontStacks'",
-    "import { fontStacks } from './fontStacks'",
-  )
-}
-
-/**
- * @param {string} relativePath
- * @param {string} source
  */
 function ensureNoTypesPackageImports(relativePath, source) {
-  if (source.includes("@reference-ui/types")) {
+  if (source.includes('@reference-ui/types')) {
     throw new Error(`Unhandled @reference-ui/types import rewrite in ${relativePath}`)
   }
 }
@@ -142,7 +147,7 @@ async function writeMirroredFile(file) {
   await mkdir(dirname(targetPath), { recursive: true })
 
   const original = await readFile(file.sourcePath, 'utf8')
-  const rewritten = rewriteThemeImports(file.relativePath, rewriteTypesImports(file.relativePath, original))
+  const rewritten = rewriteTypesImports(file.relativePath, original)
   ensureNoTypesPackageImports(file.relativePath, rewritten)
   await writeFile(targetPath, addSourceComment(rewritten, file.sourceOfTruth))
 }
@@ -166,7 +171,12 @@ async function withLock(callback) {
         await unlink(LOCK_FILE).catch(() => {})
       }
     } catch (error) {
-      if (error && typeof error === 'object' && 'code' in error && error.code === 'EEXIST') {
+      if (
+        error &&
+        typeof error === 'object' &&
+        'code' in error &&
+        error.code === 'EEXIST'
+      ) {
         await delay(100)
         continue
       }
@@ -181,20 +191,12 @@ async function withLock(callback) {
 async function main() {
   await withLock(async () => {
     const sourceFiles = await listFiles(SOURCE_DIR)
-    /** @type {SourceFile[]} */
-    const extraFiles = [
-      {
-        sourcePath: FONT_STACKS_SOURCE,
-        relativePath: 'theme/fontStacks.ts',
-        sourceOfTruth: 'packages/reference-lib/src/core/theme/fontStacks.ts',
-      },
-    ]
 
     await rm(TARGET_DIR, { recursive: true, force: true })
     await mkdir(TARGET_DIR, { recursive: true })
     await writeFile(join(TARGET_DIR, 'README.md'), GENERATED_README)
 
-    for (const file of [...sourceFiles, ...extraFiles]) {
+    for (const file of sourceFiles) {
       await writeMirroredFile(file)
     }
 

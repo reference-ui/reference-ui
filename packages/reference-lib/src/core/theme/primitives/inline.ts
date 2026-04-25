@@ -2,15 +2,36 @@ import { globalCss } from '@reference-ui/system'
 import { baseTypography } from './baseTypography'
 
 export const inlinePrimitiveStyles = {
+  '.ref-a': {
+    ...baseTypography,
+    color: 'text.link',
+    textDecoration: 'underline',
+    textUnderlineOffset: '0.15em',
+    textDecorationThickness: '0.08em',
+    _hover: {
+      color: 'text.highlight',
+    },
+  },
   '.ref-abbr': {
     ...baseTypography,
     textDecoration: 'underline dotted',
+    textDecorationColor: 'text.secondary',
     textUnderlineOffset: '0.15em',
     cursor: 'help',
   },
   '.ref-b': {
     ...baseTypography,
     fontWeight: 'sans.bold',
+  },
+  '.ref-del': {
+    ...baseTypography,
+    color: 'text.secondary',
+    textDecoration: 'line-through',
+  },
+  '.ref-dfn': {
+    ...baseTypography,
+    color: 'text.secondary',
+    fontStyle: 'italic',
   },
   '.ref-em': {
     ...baseTypography,
@@ -20,15 +41,23 @@ export const inlinePrimitiveStyles = {
     ...baseTypography,
     fontStyle: 'italic',
   },
+  '.ref-ins': {
+    ...baseTypography,
+    color: 'text.primary',
+    textDecoration: 'underline',
+    textDecorationColor: 'text.highlight',
+    textUnderlineOffset: '0.15em',
+  },
   '.ref-mark': {
     ...baseTypography,
-    backgroundColor: 'yellow.200',
-    color: 'gray.900',
+    backgroundColor: 'text.highlight',
+    color: 'white',
     paddingInline: '0.25em',
     borderRadius: 'sm',
   },
   '.ref-q': {
     ...baseTypography,
+    color: 'text.secondary',
     fontStyle: 'italic',
     _before: {
       content: '"\\201C"',
@@ -40,7 +69,7 @@ export const inlinePrimitiveStyles = {
   '.ref-s': {
     ...baseTypography,
     textDecoration: 'line-through',
-    opacity: '0.7',
+    color: 'text.secondary',
   },
   '.ref-strong': {
     ...baseTypography,
@@ -49,6 +78,7 @@ export const inlinePrimitiveStyles = {
   '.ref-u': {
     ...baseTypography,
     textDecoration: 'underline',
+    textDecorationColor: 'text.secondary',
     textUnderlineOffset: '0.15em',
     textDecorationThickness: '0.08em',
   },
@@ -57,7 +87,7 @@ export const inlinePrimitiveStyles = {
     fontFamily: 'serif',
     letterSpacing: 'normal',
     fontStyle: 'italic',
-    color: 'blue.600',
+    color: 'text.highlight',
   },
 } as const
 
