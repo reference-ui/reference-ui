@@ -30,7 +30,7 @@ export function LayerPrivateDemo() {
       data-testid="layer-private-demo"
       bg="layerPrivateAccent"
       padding="5r"
-      borderRadius="xl"
+      borderRadius="lg"
       display="flex"
       flexDirection="column"
       gap="2r"

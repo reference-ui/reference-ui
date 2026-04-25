@@ -6,7 +6,7 @@ export default (
     flexDirection="column"
     gap="5r"
     padding="6r"
-    borderRadius="2xl"
+    borderRadius="lg"
     bg="white"
     boxShadow="lg"
     borderWidth="1px"
@@ -35,7 +35,7 @@ export default (
     </Div>
     <Div
       padding="4r"
-      borderRadius="xl"
+      borderRadius="lg"
       bg="gray.50"
       borderWidth="1px"
       borderColor="gray.100"

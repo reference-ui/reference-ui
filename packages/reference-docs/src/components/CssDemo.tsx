@@ -22,7 +22,7 @@ export function CssDemo() {
           gap="6r"
           p="8r"
           bg="docsDemoMutedBg"
-          borderRadius="xl"
+          borderRadius="lg"
           border="1px solid"
           borderColor="docsPanelBorder"
         >
@@ -102,7 +102,7 @@ export function CssDemo() {
           gap="6r"
           p="8r"
           bg="docsDemoMutedBg"
-          borderRadius="xl"
+          borderRadius="lg"
           border="1px solid"
           borderColor="docsPanelBorder"
         >
@@ -201,7 +201,7 @@ export function CssDemo() {
           gap="6r"
           p="8r"
           bg="docsDemoMutedBg"
-          borderRadius="xl"
+          borderRadius="lg"
           border="1px solid"
           borderColor="docsPanelBorder"
         >
@@ -295,7 +295,7 @@ export function CssDemo() {
           gap="6r"
           p="8r"
           bg="docsDemoMutedBg"
-          borderRadius="xl"
+          borderRadius="lg"
           border="1px solid"
           borderColor="docsPanelBorder"
         >
@@ -308,7 +308,7 @@ export function CssDemo() {
                 position: 'relative',
                 padding: '6r',
                 bg: 'docsDemoMutedBg',
-                borderRadius: 'xl',
+                borderRadius: 'lg',
                 boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
                 _before: {
                   content: '""',
@@ -317,7 +317,7 @@ export function CssDemo() {
                   bg: 'gradient-to-br',
                   gradientFrom: 'blue.100',
                   gradientTo: 'purple.100',
-                  borderRadius: 'xl',
+                  borderRadius: 'lg',
                   opacity: '0.5',
                   zIndex: '-1',
                 },

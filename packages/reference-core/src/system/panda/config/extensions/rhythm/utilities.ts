@@ -104,6 +104,21 @@ export const rhythmUtilities = {
 
   ...rhythmBorderRadiusUtilities,
 
+  borderWidth: rhythmTransform('borderWidth'),
+  borderTopWidth: rhythmTransform('borderTopWidth'),
+  borderRightWidth: rhythmTransform('borderRightWidth'),
+  borderBottomWidth: rhythmTransform('borderBottomWidth'),
+  borderLeftWidth: rhythmTransform('borderLeftWidth'),
+  borderInlineWidth: rhythmTransform('borderInlineWidth'),
+  borderInlineStartWidth: rhythmTransform('borderInlineStartWidth'),
+  borderInlineEndWidth: rhythmTransform('borderInlineEndWidth'),
+  borderBlockWidth: rhythmTransform('borderBlockWidth'),
+  borderBlockStartWidth: rhythmTransform('borderBlockStartWidth'),
+  borderBlockEndWidth: rhythmTransform('borderBlockEndWidth'),
+
+  outlineWidth: rhythmTransform('outlineWidth'),
   outlineOffset: rhythmTransform('outlineOffset'),
+  textDecorationThickness: rhythmTransform('textDecorationThickness'),
+  textUnderlineOffset: rhythmTransform('textUnderlineOffset'),
   borderSpacing: rhythmTransform('borderSpacing'),
 }

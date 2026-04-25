@@ -14,12 +14,12 @@ export function Color({ name, value }: ColorProps) {
       padding="2r"
       border="1px solid"
       borderColor="docsPanelBorder"
-      borderRadius="base"
+      borderRadius="sm"
     >
       <Div
         width="12r"
         height="16r"
-        borderRadius="base"
+        borderRadius="sm"
         flexShrink="0"
         style={{ backgroundColor: value }}
       />

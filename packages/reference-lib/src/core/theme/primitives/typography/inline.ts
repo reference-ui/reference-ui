@@ -4,18 +4,18 @@ import { baseTypography } from './baseTypography'
 export const inlinePrimitiveStyles = {
   '.ref-a': {
     ...baseTypography,
-    color: 'text.link',
+    color: 'var(--ui-link)',
     textDecoration: 'underline',
     textUnderlineOffset: '0.15em',
     textDecorationThickness: '0.08em',
     _hover: {
-      color: 'text.highlight',
+      color: 'var(--ui-link-hover)',
     },
   },
   '.ref-abbr': {
     ...baseTypography,
     textDecoration: 'underline dotted',
-    textDecorationColor: 'text.secondary',
+    textDecorationColor: 'var(--ui-muted-foreground)',
     textUnderlineOffset: '0.15em',
     cursor: 'help',
   },
@@ -25,12 +25,12 @@ export const inlinePrimitiveStyles = {
   },
   '.ref-del': {
     ...baseTypography,
-    color: 'text.secondary',
+    color: 'var(--ui-muted-foreground)',
     textDecoration: 'line-through',
   },
   '.ref-dfn': {
     ...baseTypography,
-    color: 'text.secondary',
+    color: 'var(--ui-muted-foreground)',
     fontStyle: 'italic',
   },
   '.ref-em': {
@@ -43,21 +43,21 @@ export const inlinePrimitiveStyles = {
   },
   '.ref-ins': {
     ...baseTypography,
-    color: 'text.primary',
+    color: 'var(--ui-foreground)',
     textDecoration: 'underline',
-    textDecorationColor: 'text.highlight',
+    textDecorationColor: 'var(--ui-link)',
     textUnderlineOffset: '0.15em',
   },
   '.ref-mark': {
     ...baseTypography,
-    backgroundColor: 'text.highlight',
-    color: 'white',
+    backgroundColor: 'var(--ui-mark)',
+    color: 'var(--ui-mark-foreground)',
     paddingInline: '0.25em',
     borderRadius: 'sm',
   },
   '.ref-q': {
     ...baseTypography,
-    color: 'text.secondary',
+    color: 'var(--ui-muted-foreground)',
     fontStyle: 'italic',
     _before: {
       content: '"\\201C"',
@@ -69,7 +69,7 @@ export const inlinePrimitiveStyles = {
   '.ref-s': {
     ...baseTypography,
     textDecoration: 'line-through',
-    color: 'text.secondary',
+    color: 'var(--ui-muted-foreground)',
   },
   '.ref-strong': {
     ...baseTypography,
@@ -78,7 +78,7 @@ export const inlinePrimitiveStyles = {
   '.ref-u': {
     ...baseTypography,
     textDecoration: 'underline',
-    textDecorationColor: 'text.secondary',
+    textDecorationColor: 'var(--ui-muted-foreground)',
     textUnderlineOffset: '0.15em',
     textDecorationThickness: '0.08em',
   },
@@ -87,7 +87,7 @@ export const inlinePrimitiveStyles = {
     fontFamily: 'serif',
     letterSpacing: 'normal',
     fontStyle: 'italic',
-    color: 'text.highlight',
+    color: 'var(--ui-link)',
   },
 } as const
 

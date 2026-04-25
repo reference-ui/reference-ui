@@ -20,7 +20,7 @@ tokens({
     },
   },
   radii: {
-    xl: { value: '0.75rem' },
+    lg: { value: '1rem' },
   },
 })
 
