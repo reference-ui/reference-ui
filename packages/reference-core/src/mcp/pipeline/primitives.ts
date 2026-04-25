@@ -28,6 +28,8 @@ const COMMON_PRIMITIVES = [
   'Img',
 ] as const
 
+const STYLE_PROP_VALUE_STRING = 'StylePropValue<string>'
+
 function toPrimitiveName(tag: string): string {
   if (tag === 'object') return 'Obj'
   if (tag === 'var') return 'Var'
@@ -58,13 +60,19 @@ const PRIMITIVE_STYLE_PROPS = [
   primitiveProp('css', 'SystemStyleObject', 'Escape hatch for nested Panda style objects.', true),
   primitiveProp('container', 'boolean | string', 'Creates an inline-size container query context.', true),
   primitiveProp('r', 'Record<number, StyleProps>', 'Container-query responsive StyleProps keyed by container width.', true),
-  primitiveProp('display', 'StylePropValue<string>', 'CSS display style prop.', true),
+  primitiveProp('display', STYLE_PROP_VALUE_STRING, 'CSS display style prop.', true),
   primitiveProp('color', 'StylePropValue<ColorToken | string>', 'Token-aware text color style prop.', true),
-  primitiveProp('padding', 'StylePropValue<string>', 'Token-aware padding style prop.', true),
-  primitiveProp('gap', 'StylePropValue<string>', 'Token-aware gap style prop.', true),
-  primitiveProp('borderRadius', 'StylePropValue<string>', 'Token-aware border radius style prop.', true),
-  primitiveProp('fontSize', 'StylePropValue<string>', 'Token-aware font size style prop.', true),
+  primitiveProp('padding', STYLE_PROP_VALUE_STRING, 'Token-aware padding style prop.', true),
+  primitiveProp('gap', STYLE_PROP_VALUE_STRING, 'Token-aware gap style prop.', true),
+  primitiveProp('borderRadius', STYLE_PROP_VALUE_STRING, 'Token-aware border radius style prop.', true),
+  primitiveProp('fontSize', STYLE_PROP_VALUE_STRING, 'Token-aware font size style prop.', true),
 ]
+
+function toHtmlTagName(name: string): string {
+  if (name === 'Obj') return 'object'
+  if (name === 'Var') return 'var'
+  return name.toLowerCase()
+}
 
 function scoreUsage(count: number, total: number) {
   if (total === 0) return 'unused' as const
@@ -88,11 +96,7 @@ function clonePrimitive(component: McpComponent): McpComponent {
 }
 
 export function createReferenceUiPrimitive(name: string): McpComponent {
-  const tag = name === 'Obj'
-    ? 'object'
-    : name === 'Var'
-      ? 'var'
-      : name.toLowerCase()
+  const tag = toHtmlTagName(name)
 
   return {
     name,

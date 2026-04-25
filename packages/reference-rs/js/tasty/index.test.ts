@@ -475,6 +475,8 @@ describe('tasty runtime', () => {
       warnings: [],
       symbolsByName: {
         BaseProps: ['base'],
+        ImportedProjectedProps: ['importedProjected'],
+        NestedProjectedProps: ['nestedProjected'],
         PatternProps: ['pattern'],
         OpaqueMappedProps: ['opaqueMapped'],
         PartialProjectedProps: ['partialProjected'],
@@ -494,6 +496,20 @@ describe('tasty runtime', () => {
           name: 'PatternProps',
           kind: 'typeAlias',
           chunk: './chunks/pattern.js',
+          library: 'user',
+        },
+        importedProjected: {
+          id: 'importedProjected',
+          name: 'ImportedProjectedProps',
+          kind: 'typeAlias',
+          chunk: './chunks/imported-projected.js',
+          library: 'user',
+        },
+        nestedProjected: {
+          id: 'nestedProjected',
+          name: 'NestedProjectedProps',
+          kind: 'typeAlias',
+          chunk: './chunks/nested-projected.js',
           library: 'user',
         },
         opaqueMapped: {
@@ -579,6 +595,37 @@ describe('tasty runtime', () => {
           },
         },
       },
+      './chunks/imported-projected.js': {
+        importedProjected: {
+          id: 'importedProjected',
+          name: 'ImportedProjectedProps',
+          library: 'user',
+          definition: {
+            id: 'Omit',
+            name: 'Omit',
+            library: 'user',
+            typeArguments: [
+              { id: 'BaseProps', name: 'BaseProps', library: './base' },
+              { kind: 'literal', value: "'color'" },
+            ],
+          },
+        },
+      },
+      './chunks/nested-projected.js': {
+        nestedProjected: {
+          id: 'nestedProjected',
+          name: 'NestedProjectedProps',
+          library: 'user',
+          definition: {
+            id: 'Nested',
+            name: 'Nested',
+            library: './conditions',
+            typeArguments: [
+              { id: 'base', name: 'BaseProps', library: 'user' },
+            ],
+          },
+        },
+      },
       './chunks/projected.js': {
         projected: {
           id: 'projected',
@@ -649,9 +696,15 @@ describe('tasty runtime', () => {
     })
 
     const projected = await api.loadSymbolByName('ProjectedProps')
+    const importedProjected = await api.loadSymbolByName('ImportedProjectedProps')
+    const nestedProjected = await api.loadSymbolByName('NestedProjectedProps')
     const partialProjected = await api.loadSymbolByName('PartialProjectedProps')
     const publicProjected = await api.loadSymbolByName('PublicProjectedProps')
     const projectedDisplayMembers = await api.graph.getDisplayMembers(projected)
+    const importedProjectedDisplayMembers =
+      await api.graph.getDisplayMembers(importedProjected)
+    const nestedProjectedDisplayMembers =
+      await api.graph.getDisplayMembers(nestedProjected)
     const partialProjectedDisplayMembers =
       await api.graph.getDisplayMembers(partialProjected)
     const publicProjectedDisplayMembers =
@@ -669,6 +722,15 @@ describe('tasty runtime', () => {
       'tone',
       'size',
       'gap',
+    ])
+    expect(importedProjectedDisplayMembers.map(member => member.getName())).toEqual([
+      'tone',
+      'size',
+    ])
+    expect(nestedProjectedDisplayMembers.map(member => member.getName())).toEqual([
+      'tone',
+      'size',
+      'color',
     ])
     expect(partialProjectedDisplayMembers.map(member => member.getName())).toEqual([
       'gap',

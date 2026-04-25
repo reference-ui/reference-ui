@@ -53,7 +53,7 @@ describe('reference output', () => {
     expect(variantMember?.getType()?.describe()).toContain('ghost')
   })
 
-  it('keeps emitted reference artifacts focused on known indexed fixture symbols', async () => {
+  it('indexes public React StyleProps alongside local fixture symbols', async () => {
     const ready = await waitForReferenceArtifacts()
     expect(ready, 'reference manifest should be emitted by the reference worker').toBe(
       true
@@ -62,8 +62,21 @@ describe('reference output', () => {
     const api = createReferenceTestApi(typesPackageManifestPath)
     await api.ready()
 
-    expect(await api.findSymbolByName('StyleProps')).toBeUndefined()
+    const styleProps = await api.loadSymbolByName('StyleProps')
+    const extended = await api.loadSymbolByName('ReferenceStylePropsExtendsFixture')
     const fixture = await api.loadSymbolByName('ReferenceApiFixture')
+    const styleMembers = await styleProps.getDisplayMembers()
+    const extendedMembers = await extended.getDisplayMembers()
+    expect(styleProps.getName()).toBe('StyleProps')
+    expect(styleProps.getKind()).toBe('typeAlias')
+    expect(styleMembers.length).toBeGreaterThan(100)
+    expect(styleMembers.map(member => member.getName())).toEqual(
+      expect.arrayContaining(['WebkitAppearance', 'accentColor', 'container'])
+    )
+    expect(extendedMembers.length).toBeGreaterThan(100)
+    expect(extendedMembers.map(member => member.getName())).toEqual(
+      expect.arrayContaining(['WebkitAppearance', 'container', 'localTone'])
+    )
     expect(fixture.getName()).toBe('ReferenceApiFixture')
     expect(fixture.getKind()).toBe('interface')
   })

@@ -49,6 +49,7 @@ async function importCreateModule(options: {
     collectorFragments: 'collectorFragments()',
     getValue: vi.fn((name: string) => `get:${name}`),
   })
+  const collectLocalTokenFragmentsFromBase = vi.fn().mockResolvedValue([])
   const createPortableBaseFragmentBundle = vi.fn(() => options.fragmentBundle ?? ';upstreamFragment()\n;localFragment()')
 
   vi.doMock('../../lib/paths', () => ({
@@ -62,6 +63,7 @@ async function importCreateModule(options: {
   }))
   vi.doMock('./fragments', () => ({
     prepareBaseFragments,
+    collectLocalTokenFragmentsFromBase,
     createCollectorBundleFromBase,
     createPortableBaseFragmentBundle,
   }))
@@ -72,6 +74,7 @@ async function importCreateModule(options: {
     debug,
     writeGeneratedSystemFontTypes,
     prepareBaseFragments,
+    collectLocalTokenFragmentsFromBase,
     createCollectorBundleFromBase,
     createPortableBaseFragmentBundle,
   }

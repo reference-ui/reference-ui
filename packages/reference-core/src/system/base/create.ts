@@ -6,11 +6,13 @@ import { getOutDirPath } from '../../lib/paths'
 import { log } from '../../lib/log'
 import { writeGeneratedSystemFontTypes } from '../types/generate'
 import {
+  collectLocalTokenFragmentsFromBase,
   createCollectorBundleFromBase,
   createPortableBaseFragmentBundle,
   prepareBaseFragments,
 } from './fragments'
 import type { BaseArtifacts } from './types'
+import { warnOnTokenCollisions } from '../panda/config/diagnostics'
 
 function createBaseSystem(
   config: ReferenceUIConfig,
@@ -102,6 +104,7 @@ export async function createBaseArtifacts(
   jsxElements: string[] = []
 ): Promise<BaseArtifacts> {
   const preparedFragments = await prepareBaseFragments(cwd, config)
+  warnOnTokenCollisions(await collectLocalTokenFragmentsFromBase(cwd, preparedFragments))
   const collectorBundle = await createCollectorBundleFromBase(cwd, preparedFragments)
   const baseSystem = createBaseSystem(
     config,

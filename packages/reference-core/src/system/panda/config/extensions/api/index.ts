@@ -1,4 +1,9 @@
-export { deepMerge, getPandaConfig, initPandaConfig, PANDA_CONFIG_GLOBAL_KEY } from './runtime'
+export {
+  deepMerge,
+  getPandaConfig,
+  initPandaConfig,
+  PANDA_CONFIG_GLOBAL_KEY,
+} from './runtime'
 export {
   buildFontFaces,
   buildFontPatternExtensions,

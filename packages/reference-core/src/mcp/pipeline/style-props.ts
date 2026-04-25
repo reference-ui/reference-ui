@@ -219,6 +219,19 @@ export function isStylePropName(name: string): boolean {
   return STYLE_PROP_NAMES.has(name) || STYLE_PROP_PATTERNS.some(pattern => pattern.test(name))
 }
 
+function getCategoryProps(props: string[], query: string | undefined, hasExactPropMatch: boolean): string[] {
+  if (!query) return props
+  if (hasExactPropMatch) {
+    return props.filter(prop => prop.toLowerCase() === query)
+  }
+  return props.filter(prop => prop.toLowerCase().includes(query))
+}
+
+function categoryHasVisibleProps(category: { props?: string[]; exampleProps?: string[] }): boolean {
+  if ('props' in category) return (category.props ?? []).length > 0
+  return (category.exampleProps ?? []).length > 0
+}
+
 export function getStylePropsReference(input: McpGetStylePropsInput = {}) {
   const query = input.query?.trim().toLowerCase()
   const includeProps = input.includeProps ?? false
@@ -228,11 +241,7 @@ export function getStylePropsReference(input: McpGetStylePropsInput = {}) {
       )
     : false
   const categories = STYLE_PROP_CATEGORIES.map(category => {
-    const props = query && hasExactPropMatch
-      ? category.props.filter(prop => prop.toLowerCase() === query)
-      : query
-        ? category.props.filter(prop => prop.toLowerCase().includes(query))
-        : category.props
+    const props = getCategoryProps(category.props, query, hasExactPropMatch)
 
     return {
       name: category.name,
@@ -243,17 +252,13 @@ export function getStylePropsReference(input: McpGetStylePropsInput = {}) {
   }).filter(category => {
     if (!query) return true
     if (hasExactPropMatch) {
-      return 'props' in category
-        ? category.props.length > 0
-        : category.exampleProps.length > 0
+      return categoryHasVisibleProps(category)
     }
     return (
       category.name.includes(query) ||
       category.description.toLowerCase().includes(query) ||
       category.tokenCategories.some(token => token.toLowerCase().includes(query)) ||
-      ('props' in category
-        ? category.props.length > 0
-        : category.exampleProps.length > 0)
+      categoryHasVisibleProps(category)
     )
   })
 

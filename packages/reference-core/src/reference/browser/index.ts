@@ -16,4 +16,3 @@ export {
 } from './ReferenceRuntimeContext'
 export { formatReferenceTypeParameter } from '../browser-model'
 export type * from './types'
-export { referenceBrowserTokenConfig } from './theme'

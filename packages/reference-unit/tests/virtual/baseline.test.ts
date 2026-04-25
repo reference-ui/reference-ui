@@ -1,7 +1,14 @@
 import { describe, it, expect } from 'vitest'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { virtualDir, srcDir, testsDir, virt } from './helpers'
+import {
+  getReferenceBrowserSourcePaths,
+  getVirtualPaths,
+  virtualDir,
+  srcDir,
+  testsDir,
+  virt,
+} from './helpers'
 
 /**
  * Baseline: ref sync --watch runs in background (global-setup).
@@ -11,8 +18,8 @@ describe('virtual – baseline', () => {
   it('creates .reference-ui/virtual with files matching include', () => {
     expect(existsSync(virtualDir)).toBe(true)
     expect(existsSync(virt('_reference-component', 'Reference.tsx'))).toBe(true)
+    expect(existsSync(virt('_reference-component', 'Runtime.ts'))).toBe(true)
     expect(existsSync(virt('_reference-component', 'components', 'index.ts'))).toBe(true)
-    expect(existsSync(virt('_reference-component', 'theme', 'tokens.ts'))).toBe(true)
     expect(existsSync(virt('src', 'App.tsx'))).toBe(true)
     expect(existsSync(virt('src', 'main.tsx'))).toBe(true)
     expect(existsSync(virt('tests', 'virtual', 'baseline.test.ts'))).toBe(true)
@@ -24,6 +31,16 @@ describe('virtual – baseline', () => {
     const srcBaseline = readFileSync(join(testsDir, 'virtual', 'baseline.test.ts'), 'utf-8')
     const virtualBaseline = readFileSync(virt('tests', 'virtual', 'baseline.test.ts'), 'utf-8')
     expect(virtualBaseline).toBe(srcBaseline)
+  })
+
+  it('mirrors the current reference browser component files', () => {
+    const expected = getReferenceBrowserSourcePaths()
+    const actual = getVirtualPaths()
+      .filter(path => path.startsWith('_reference-component/'))
+      .map(path => path.slice('_reference-component/'.length))
+      .sort((a, b) => a.localeCompare(b))
+
+    expect(actual).toEqual(expected)
   })
 
   it('excludes node_modules and .reference-ui from virtual copy', () => {

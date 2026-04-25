@@ -62,6 +62,25 @@ describe('Reference component', () => {
     expectVisibleText('ghost')
   })
 
+  it('renders the generated public StyleProps symbol', async () => {
+    await renderReference('StyleProps')
+
+    expect(screen.queryByText(/Failed to load/)).not.toBeInTheDocument()
+    expect(screen.getByText('StyleProps')).toBeInTheDocument()
+    expect(screen.getByText('Type')).toBeInTheDocument()
+    expect(screen.getByText('WebkitAppearance')).toBeInTheDocument()
+    expect(screen.getByText('container')).toBeInTheDocument()
+  })
+
+  it('renders inherited StyleProps members for interfaces that extend StyleProps', async () => {
+    await renderReference('ReferenceStylePropsExtendsFixture')
+
+    expect(screen.queryByText(/Failed to load/)).not.toBeInTheDocument()
+    expect(screen.getByText('ReferenceStylePropsExtendsFixture')).toBeInTheDocument()
+    expect(screen.getByText('WebkitAppearance')).toBeInTheDocument()
+    expect(screen.getByText('localTone')).toBeInTheDocument()
+  })
+
   it('renders the richer docs reference fixture with defaults, callbacks, and derived types', async () => {
     await renderReference('DocsReferenceButtonProps')
 

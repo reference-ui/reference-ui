@@ -13,13 +13,14 @@ import {
   extendThemes,
   extendTokens,
   extendUtilities,
+  defaultTokenFragments,
   getPandaConfig,
   initPandaConfig,
-  referenceBrowserTokenConfig,
   resolveColorModeTokens,
   rhythmGlobalCss,
   rhythmSpacingTokens,
   rhythmUtilities,
+  warnOnTokenCollisions,
 } from '{{ extensionsImportPath | raw }}'
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -36,7 +37,8 @@ initPandaConfig(baseConfig)
 // ─────────────────────────────────────────────────────────────────────────
 
 const userTokensFragments = {{ tokensValueExpression | raw }}
-const tokensFragments = [referenceBrowserTokenConfig, ...userTokensFragments]
+const tokensFragments = [...defaultTokenFragments, ...userTokensFragments]
+warnOnTokenCollisions(userTokensFragments)
 const resolvedColorModeTokens = resolveColorModeTokens(tokensFragments)
 extendTokens(rhythmSpacingTokens)
 extendTokens(resolvedColorModeTokens.baseTokens)
