@@ -1,5 +1,15 @@
 import { TAGS } from '../../system/primitives/tags'
 import type { McpComponent, McpComponentProp } from './types'
+import { isStylePropName } from './style-props'
+
+export interface ReferenceUiPrimitiveObservation {
+  name: string
+  count: number
+  examples: string[]
+  filePresence: number
+  propCounts: Record<string, number>
+  usedWithCounts: Record<string, number>
+}
 
 const COMMON_PRIMITIVES = [
   'Div',
@@ -56,7 +66,28 @@ const PRIMITIVE_STYLE_PROPS = [
   primitiveProp('fontSize', 'StylePropValue<string>', 'Token-aware font size style prop.', true),
 ]
 
-function createPrimitive(name: string): McpComponent {
+function scoreUsage(count: number, total: number) {
+  if (total === 0) return 'unused' as const
+
+  const ratio = count / total
+  if (ratio >= 0.5) return 'very common' as const
+  if (ratio >= 0.2) return 'common' as const
+  if (ratio >= 0.1) return 'occasional' as const
+  if (ratio > 0) return 'rare' as const
+  return 'unused' as const
+}
+
+function clonePrimitive(component: McpComponent): McpComponent {
+  return {
+    ...component,
+    usedWith: { ...component.usedWith },
+    examples: [...component.examples],
+    interface: component.interface ? { ...component.interface } : null,
+    props: component.props.map(prop => ({ ...prop })),
+  }
+}
+
+export function createReferenceUiPrimitive(name: string): McpComponent {
   const tag = name === 'Obj'
     ? 'object'
     : name === 'Var'
@@ -88,14 +119,60 @@ function createPrimitive(name: string): McpComponent {
   }
 }
 
-const primitiveNames = TAGS.map(toPrimitiveName)
+export const REFERENCE_UI_PRIMITIVE_NAMES = TAGS.map(toPrimitiveName)
 const orderedPrimitiveNames = [
   ...COMMON_PRIMITIVES,
-  ...primitiveNames.filter(name => !COMMON_PRIMITIVES.includes(name as typeof COMMON_PRIMITIVES[number])),
+  ...REFERENCE_UI_PRIMITIVE_NAMES.filter(name => !COMMON_PRIMITIVES.includes(name as typeof COMMON_PRIMITIVES[number])),
 ]
 
-export const REFERENCE_UI_PRIMITIVES: McpComponent[] = orderedPrimitiveNames.map(createPrimitive)
+export const REFERENCE_UI_PRIMITIVES: McpComponent[] = orderedPrimitiveNames.map(createReferenceUiPrimitive)
 
 export function findReferenceUiPrimitive(name: string): McpComponent | null {
-  return REFERENCE_UI_PRIMITIVES.find(primitive => primitive.name === name) ?? null
+  const primitive = REFERENCE_UI_PRIMITIVES.find(primitive => primitive.name === name)
+  return primitive ? clonePrimitive(primitive) : null
+}
+
+export function createObservedReferenceUiPrimitives(
+  observations: ReferenceUiPrimitiveObservation[]
+): McpComponent[] {
+  const total = observations.reduce((sum, observation) => sum + observation.count, 0)
+
+  return observations.flatMap(observation => {
+    const primitive = findReferenceUiPrimitive(observation.name)
+    if (!primitive) return []
+
+    primitive.count = observation.count
+    primitive.usage = scoreUsage(observation.count, total)
+    primitive.examples = observation.examples.length > 0
+      ? observation.examples
+      : primitive.examples
+    primitive.usedWith = Object.fromEntries(
+      Object.entries(observation.usedWithCounts)
+        .map(([name, count]) => [name, scoreUsage(count, observation.filePresence)])
+    )
+
+    for (const [name, count] of Object.entries(observation.propCounts)) {
+      const existing = primitive.props.find(prop => prop.name === name)
+      if (existing) {
+        existing.count = count
+        existing.usage = scoreUsage(count, observation.count)
+        existing.origin = 'observed'
+        continue
+      }
+
+      primitive.props.push({
+        name,
+        count,
+        usage: scoreUsage(count, observation.count),
+        type: null,
+        description: null,
+        optional: true,
+        readonly: false,
+        origin: 'observed',
+        styleProp: isStylePropName(name),
+      })
+    }
+
+    return [primitive]
+  })
 }

@@ -50,6 +50,8 @@ export interface ComponentModel {
 }
 
 export interface ComponentReadout {
+  count: number
+  usage: string
   interface: { name: string; source: string } | null
   kind: 'project' | 'primitive'
   name: string

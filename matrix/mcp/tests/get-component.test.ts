@@ -54,11 +54,13 @@ describe('get_component', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
     expect(component).toEqual(
       expect.objectContaining({
         name: 'Div',
+        count: expect.any(Number),
         kind: 'primitive',
         source: '@reference-ui/react',
         interface: expect.objectContaining({ name: 'DivProps' }),
         styleProps: expect.objectContaining({ supported: true }),
       }),
     )
+    expect(component.count).toBeGreaterThan(0)
   })
 })
