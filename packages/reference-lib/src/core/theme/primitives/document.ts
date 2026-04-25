@@ -1,6 +1,5 @@
 import { globalCss } from '@reference-ui/system'
-import { baseTypography } from './typography/baseTypography'
-import { blockText } from './shared'
+import { baseTypography, blockText } from './shared'
 
 export const documentPrimitiveStyles = {
   '.ref-div, .ref-span, .ref-main, .ref-header, .ref-footer, .ref-section, .ref-article, .ref-aside, .ref-nav, .ref-search, .ref-form, .ref-address, .ref-hgroup':

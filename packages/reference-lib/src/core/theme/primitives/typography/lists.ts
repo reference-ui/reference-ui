@@ -1,6 +1,5 @@
 import { globalCss } from '@reference-ui/system'
-import { baseTypography } from './baseTypography'
-import { blockText } from '../shared'
+import { baseTypography, blockText } from '../shared'
 
 export const listPrimitiveStyles = {
   '.ref-ul, .ref-ol, .ref-menu': {

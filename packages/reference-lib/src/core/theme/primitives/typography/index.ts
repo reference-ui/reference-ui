@@ -1,4 +1,3 @@
-export { baseTypography } from './baseTypography'
 export { codePrimitiveStyles } from './code'
 export { headingPrimitiveStyles } from './headings'
 export { inlinePrimitiveStyles } from './inline'
