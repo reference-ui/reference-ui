@@ -57,7 +57,7 @@ export async function rebuildReferenceTastyBuild(
  * style-prop surface can be projected without scanning every generated type.
  * `styled/system-types` carries `SystemStyleObject` and `styled/style-props`
  * carries the large `SystemProperties` interface; the React files carry the
- * public `StyleProps` alias plus its Reference-specific additions.
+ * public `StyleProps` alias plus container/responsive additions.
  */
 function buildTastyScanOptions(
   sourceDir: string,
@@ -74,7 +74,6 @@ function buildTastyScanOptions(
   )
   includeExistingTastyRoot(include, outDir, 'styled/types/style-props.d.ts')
   includeExistingTastyRoot(include, outDir, 'styled/types/system-types.d.ts')
-  includeExistingTastyRoot(include, outDir, 'react/types/fonts.d.ts')
   includeExistingTastyRoot(include, outDir, 'react/types/props.d.ts')
   includeExistingTastyRoot(include, outDir, 'react/types/style-props.d.ts')
   return { rootDir: outDir, include }

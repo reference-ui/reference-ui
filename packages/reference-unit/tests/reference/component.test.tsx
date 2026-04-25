@@ -81,6 +81,15 @@ describe('Reference component', () => {
     expect(screen.getByText('localTone')).toBeInTheDocument()
   })
 
+  it('groups referenced type-alias members as inherited sections', async () => {
+    await renderReference('ReferenceStylePropsTypeExtendsFixture')
+
+    expect(screen.queryByText(/Failed to load/)).not.toBeInTheDocument()
+    expect(screen.getByText('ReferenceStylePropsTypeExtendsFixture')).toBeInTheDocument()
+    expectVisibleTextContent(/Inherited from\s*ReferenceStylePropsTypeBaseFixture\s*\(\d+\)/)
+    expect(screen.getByText('localTone')).toBeInTheDocument()
+  })
+
   it('renders the richer docs reference fixture with defaults, callbacks, and derived types', async () => {
     await renderReference('DocsReferenceButtonProps')
 

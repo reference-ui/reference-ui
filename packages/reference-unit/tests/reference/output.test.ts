@@ -64,9 +64,11 @@ describe('reference output', () => {
 
     const styleProps = await api.loadSymbolByName('StyleProps')
     const extended = await api.loadSymbolByName('ReferenceStylePropsExtendsFixture')
+    const extendedAlias = await api.loadSymbolByName('ReferenceStylePropsTypeExtendsFixture')
     const fixture = await api.loadSymbolByName('ReferenceApiFixture')
     const styleMembers = await styleProps.getDisplayMembers()
     const extendedMembers = await extended.getDisplayMembers()
+    const extendedAliasMembers = await extendedAlias.getDisplayMembers()
     expect(styleProps.getName()).toBe('StyleProps')
     expect(styleProps.getKind()).toBe('typeAlias')
     expect(styleMembers.length).toBeGreaterThan(100)
@@ -76,6 +78,10 @@ describe('reference output', () => {
     expect(extendedMembers.length).toBeGreaterThan(100)
     expect(extendedMembers.map(member => member.getName())).toEqual(
       expect.arrayContaining(['WebkitAppearance', 'container', 'localTone'])
+    )
+    expect(extendedAliasMembers.length).toBeGreaterThan(100)
+    expect(extendedAliasMembers.map(member => member.getName())).toEqual(
+      expect.arrayContaining(['WebkitAppearance', 'container', 'localFlag', 'localTone'])
     )
     expect(fixture.getName()).toBe('ReferenceApiFixture')
     expect(fixture.getKind()).toBe('interface')

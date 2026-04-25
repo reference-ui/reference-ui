@@ -1,5 +1,13 @@
 import * as React from 'react'
-import type { TastyApi, TastyBrowserRuntime, TastyMember, TastySymbol } from '@reference-ui/rust/tasty'
+import type {
+  RawTastyMember,
+  RawTastyTypeRef,
+  RawTastyTypeReference,
+  TastyApi,
+  TastyBrowserRuntime,
+  TastyMember,
+  TastySymbol,
+} from '@reference-ui/rust/tasty'
 import { createTastyBrowserRuntime } from '@reference-ui/rust/tasty/browser'
 import { createReferenceDocument } from '../browser-model'
 import { getReferenceUiTastyBrowserApiOptions } from '../tasty/api'
@@ -37,9 +45,7 @@ async function loadReferenceRuntimeData(
   const projectedMembers = await api.graph.getDisplayMembers(symbol)
   const members = shouldHideAliasProjection(symbol) ? [] : projectedMembers
   const extendsChain = symbol.getKind() === 'interface' ? await api.graph.loadExtendsChain(symbol) : []
-  const memberOrigins = symbol.getKind() === 'interface'
-    ? await loadReferenceMemberOrigins(symbol, extendsChain)
-    : new Map<string, TastySymbol>()
+  const memberOrigins = await loadReferenceMemberOrigins(api, symbol, extendsChain)
   const relatedSymbols = await loadReferenceRelatedSymbols(api, symbol)
 
   return {
@@ -95,9 +101,14 @@ async function getInheritedMemberSourceMembers(symbol: TastySymbol): Promise<Tas
 }
 
 async function loadReferenceMemberOrigins(
+  api: TastyApi,
   rootSymbol: TastySymbol,
   extendsChain: TastySymbol[],
 ): Promise<Map<string, TastySymbol>> {
+  if (rootSymbol.getKind() === 'typeAlias') {
+    return loadReferenceTypeAliasMemberOrigins(api, rootSymbol)
+  }
+
   const origins = new Map<string, TastySymbol>()
 
   for (const currentSymbol of [...extendsChain, rootSymbol]) {
@@ -111,6 +122,95 @@ async function loadReferenceMemberOrigins(
   }
 
   return origins
+}
+
+async function loadReferenceTypeAliasMemberOrigins(
+  api: TastyApi,
+  rootSymbol: TastySymbol,
+): Promise<Map<string, TastySymbol>> {
+  const origins = new Map<string, TastySymbol>()
+  await collectReferenceTypeAliasMemberOrigins(
+    api,
+    rootSymbol,
+    rootSymbol.getUnderlyingType()?.getRaw(),
+    origins,
+  )
+  return origins
+}
+
+async function collectReferenceTypeAliasMemberOrigins(
+  api: TastyApi,
+  rootSymbol: TastySymbol,
+  raw: RawTastyTypeRef | undefined,
+  origins: Map<string, TastySymbol>,
+): Promise<void> {
+  if (!raw) return
+
+  if (isRawTastyIntersection(raw)) {
+    await Promise.all(
+      raw.types.map(part =>
+        collectReferenceTypeAliasMemberOrigins(api, rootSymbol, part, origins)
+      )
+    )
+    return
+  }
+
+  if (isRawTastyTypeReference(raw)) {
+    const sourceSymbol = await resolveReferenceTypeSourceSymbol(api, raw)
+    if (!sourceSymbol || sourceSymbol.getId() === rootSymbol.getId()) return
+    await setReferenceProjectedMemberOrigins(sourceSymbol, sourceSymbol, origins)
+    return
+  }
+
+  if (raw.kind === 'object') {
+    for (const member of raw.members) {
+      origins.set(getRawTastyMemberId(member), rootSymbol)
+    }
+  }
+}
+
+async function setReferenceProjectedMemberOrigins(
+  sourceSymbol: TastySymbol,
+  originSymbol: TastySymbol,
+  origins: Map<string, TastySymbol>,
+): Promise<void> {
+  for (const member of await sourceSymbol.getDisplayMembers()) {
+    origins.set(member.getId(), originSymbol)
+  }
+}
+
+async function resolveReferenceTypeSourceSymbol(
+  api: TastyApi,
+  reference: RawTastyTypeReference,
+): Promise<TastySymbol | undefined> {
+  if (api.hasManifestSymbol(reference.id)) {
+    return api.loadSymbolById(reference.id)
+  }
+
+  try {
+    const scoped = await api.findSymbolByScopedName(reference.library, reference.name)
+    if (scoped) return scoped
+  } catch {
+    // The emitted library can point at a re-exporting module; try a unique bare match.
+  }
+
+  const matches = await api.findSymbolsByName(reference.name)
+  if (matches.length === 1) return api.loadSymbolById(matches[0]!.id)
+  return undefined
+}
+
+function isRawTastyIntersection(
+  raw: RawTastyTypeRef,
+): raw is Extract<RawTastyTypeRef, { kind: 'intersection' }> {
+  return 'kind' in raw && raw.kind === 'intersection'
+}
+
+function isRawTastyTypeReference(raw: RawTastyTypeRef): raw is RawTastyTypeReference {
+  return 'id' in raw && 'name' in raw && 'library' in raw
+}
+
+function getRawTastyMemberId(member: RawTastyMember): string {
+  return `${member.kind}:${member.name}`
 }
 
 export function createReferenceRuntime(runtime: TastyBrowserRuntime): ReferenceRuntime {
