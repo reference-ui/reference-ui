@@ -910,8 +910,7 @@ If `@reference-ui/rust` fails to load the native binary, any path that needs Atl
 | --- | --- |
 | Root overview | [README.md](./README.md) |
 | Core CLI and threading | [packages/reference-core/README.md](./packages/reference-core/README.md) |
-| MCP product architecture | [packages/reference-core/src/mcp/MCP.md](./packages/reference-core/src/mcp/MCP.md) |
-| MCP module layout | [packages/reference-core/src/mcp/README.md](./packages/reference-core/src/mcp/README.md) |
+| MCP tools | [packages/reference-core/src/mcp/README.md](./packages/reference-core/src/mcp/README.md) |
 | System overview | [packages/reference-core/src/system/README.md](./packages/reference-core/src/system/README.md) |
 | Event bus | [packages/reference-core/src/lib/event-bus/README.md](./packages/reference-core/src/lib/event-bus/README.md) |
 | Sync event graph (source) | [packages/reference-core/src/sync/events.ts](./packages/reference-core/src/sync/events.ts) |

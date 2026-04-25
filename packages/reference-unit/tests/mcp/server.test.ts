@@ -35,6 +35,7 @@ describe('mcp server', { timeout: 120_000 }, () => {
       'get_component_props',
       'get_style_props',
       'get_tokens',
+      'getting_started',
       'list_components',
     ])
 
@@ -58,7 +59,16 @@ describe('mcp server', { timeout: 120_000 }, () => {
     const gettingStartedText = findTextResource(gettingStarted)
 
     expect(gettingStartedText?.mimeType).toBe('text/markdown')
-    expect(gettingStartedText?.text).toContain('Reference UI MCP')
+    expect(gettingStartedText?.text).toContain('Reference UI Start Guide')
+
+    const gettingStartedTool = await running!.client.callTool({
+      name: 'getting_started',
+      arguments: {},
+    })
+    const gettingStartedToolText = findTextContent(gettingStartedTool)
+
+    expect(gettingStartedToolText).toContain('Reference UI Start Guide')
+    expect(gettingStartedToolText).toContain('@reference-ui/react')
 
     const listComponentsResult = await running!.client.callTool({
       name: 'list_components',

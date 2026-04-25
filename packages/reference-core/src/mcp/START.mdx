@@ -1,0 +1,72 @@
+# Reference UI Start Guide
+
+Reference UI is a component and design-system toolkit for generated primitives, token-aware styling, and inspectable component metadata.
+
+## Primitives
+
+Import primitives from `@reference-ui/react` and prefer them when building UI.
+
+```tsx
+import { A, Div, H1, P, Section } from '@reference-ui/react'
+```
+
+They behave like matching HTML elements and can accept Reference UI StyleProps when supported.
+
+## StyleProps
+
+StyleProps are camelCased, atomic CSS props on style-bearing primitives and primitive-like components.
+```tsx
+<Div padding="4" color="text" display="grid" gap="3">
+  <H1 fontSize="2xl">Hello</H1>
+  <P color="muted">Token-aware styles live on the component.</P>
+</Div>
+```
+
+Component tools do not repeat the full StyleProps surface. If a component includes a `styleProps` marker, call `get_style_props` for the shared guide and token mapping.
+
+## Spacing Units (r)
+
+Use rhythm spacing strings like `0.5r`, `1r`, `2r`, `4r`, `6r`, and `8r` for spacing, sizing, gaps, insets, scroll spacing, and similar layout props.
+
+```tsx
+<Div padding="4r" gap="2r" borderRadius="1r" />
+```
+
+Spacing `r` values are strings ending in `r`; responsive `r` is the object prop below.
+
+## Responsive Design
+
+Reference UI is container-query-first. Set base StyleProps, then use `r={{ ... }}` for min-width container overrides. Keys are container widths in `px`; values are StyleProps.
+
+```tsx
+<Div
+  container
+  padding="2r"
+  r={{
+    320: { padding: '3r' },
+    640: { padding: '4r', display: 'grid', gap: '2r' },
+  }}
+>
+  Container responsive
+</Div>
+```
+
+`container` creates an inline-size query context. Use `container` for anonymous queries, or `container="sidebar"` for named queries. A descendant querying a named ancestor should use the same `container` name with its `r` prop.
+
+```tsx
+<Div container="sidebar">
+  <Div container="sidebar" r={{ 400: { padding: '4r' } }}>
+    Named container query
+  </Div>
+</Div>
+```
+
+Do not default to viewport breakpoints like `base`, `md`, or `lg`; container queries are the primary responsive model.
+
+## Tokens
+
+Tokens come from local fragments and extended Reference UI systems. Call `get_tokens` for available token paths; query a specific path for descriptions and details.
+
+## MCP Workflow
+
+Start broad, then narrow: `list_components` for discovery, `get_component` for the usual guide, `get_component_examples` for JSX, and `get_component_props` only when you need the full interface. Use `get_style_props` and `get_tokens` for shared styling and token details.
