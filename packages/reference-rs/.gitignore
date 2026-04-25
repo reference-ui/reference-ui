@@ -14,3 +14,6 @@ tests/tasty/cases/**/output/
 
 # Generated Virtualfs test output
 tests/virtualfs/cases/**/output/
+
+# Generated Atlas test output
+tests/atlas/cases/**/output/
