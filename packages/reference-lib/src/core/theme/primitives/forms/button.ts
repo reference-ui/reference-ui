@@ -17,7 +17,7 @@ export const buttonPrimitiveStyles = {
     borderWidth: '1px',
     borderStyle: 'solid',
     borderColor: 'transparent',
-    borderRadius: 'md',
+    borderRadius: 'sm',
     backgroundColor: 'var(--ui-primary)',
     color: 'var(--ui-primary-foreground)',
     fontSize: '3.5r',

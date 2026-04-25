@@ -11,7 +11,7 @@ export const inputPrimitiveStyles = {
     borderWidth: '1px',
     borderStyle: 'solid',
     borderColor: 'var(--ui-input)',
-    borderRadius: 'md',
+    borderRadius: 'sm',
     backgroundColor: 'var(--ui-background)',
     color: 'var(--ui-foreground)',
     fontSize: '3.5r',
