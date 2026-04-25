@@ -10,7 +10,7 @@ import { describe, it, expect } from 'vitest'
 import { rhythmBorderRadiusUtilities } from '../../../reference-core/src/system/panda/config/extensions/rhythm/border'
 
 const twoR = 'calc(2 * var(--spacing-r))'
-const xlRadius = '0.75rem'
+const lgRadius = '1rem'
 
 type MockToken = ((path: string) => string | undefined) & {
   raw: (path: string) => undefined
@@ -23,7 +23,7 @@ type MockTransformArgs = {
 
 function mockArgs(raw: string): MockTransformArgs {
   const token = ((path: string) => {
-    if (path === 'radii.xl') return xlRadius
+    if (path === 'radii.lg') return lgRadius
     return undefined
   }) as MockToken
 
@@ -83,8 +83,8 @@ describe('rhythmUtilities border radius transforms', () => {
     expect(rhythmBorderRadiusUtilities.borderRadius.transform('8px', mockArgs('8px'))).toEqual({
       borderRadius: '8px',
     })
-    expect(rhythmBorderRadiusUtilities.borderRadius.transform('xl', mockArgs('xl'))).toEqual({
-      borderRadius: xlRadius,
+    expect(rhythmBorderRadiusUtilities.borderRadius.transform('lg', mockArgs('lg'))).toEqual({
+      borderRadius: lgRadius,
     })
     expect(
       rhythmBorderRadiusUtilities.borderTopRadius.transform(

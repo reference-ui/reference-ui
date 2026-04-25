@@ -254,7 +254,7 @@ export const colors = {
     secondary: { light: '{colors.gray.700}', dark: '{colors.gray.300}' },
     disabled: { light: '{colors.gray.500}', dark: '{colors.gray.500}' },
     link: { light: '{colors.red.700}', dark: '{colors.red.800}' },
-    highlight: { light: '{colors.red.700}', dark: '{colors.amber.600}' },
+    highlight: { light: '{colors.red.700}', dark: '{colors.amber.300}' },
   },
 
   ui: {

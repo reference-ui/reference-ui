@@ -39,7 +39,6 @@ import {
   Meter,
   Ol,
   Option,
-  Output,
   P,
   Pre,
   Progress,
@@ -200,36 +199,43 @@ return <Button>{tone}</Button>`}</Pre>
 
       <SectionCard title="Forms">
         <Form
-          display="grid"
-          gap="4r"
-          gridTemplateColumns="repeat(auto-fit, minmax(16rem, 1fr))"
+          display="flex"
+          flexDirection="column"
+          gap="5r"
           onSubmit={event => event.preventDefault()}
         >
-          <Field label="Text input">
-            <Input placeholder="Untitled primitive" />
-          </Field>
-          <Field label="Email input">
-            <Input type="email" defaultValue="hello@example.com" />
-          </Field>
-          <Field label="Select">
-            <Select defaultValue="button">
-              <Option value="button">Button</Option>
-              <Option value="input">Input</Option>
-              <Option value="table">Table</Option>
-            </Select>
-          </Field>
-          <Field label="Textarea">
-            <Textarea defaultValue="Theme notes for the next styling pass." rows={4} />
-          </Field>
-          <Field label="Progress">
-            <Progress value={68} max={100} />
-          </Field>
-          <Field label="Meter">
-            <Meter min={0} max={100} low={30} high={80} optimum={70} value={72} />
-          </Field>
+          <Div
+            display="grid"
+            gap="4r"
+            gridTemplateColumns="repeat(auto-fit, minmax(16rem, 1fr))"
+          >
+            <Field label="Text input">
+              <Input placeholder="Untitled primitive" />
+            </Field>
+            <Field label="Email input">
+              <Input type="email" defaultValue="hello@example.com" />
+            </Field>
+            <Field label="Select">
+              <Select defaultValue="button">
+                <Option value="button">Button</Option>
+                <Option value="input">Input</Option>
+                <Option value="table">Table</Option>
+              </Select>
+            </Field>
+            <Field label="Textarea">
+              <Textarea defaultValue="Theme notes for the next styling pass." rows={4} />
+            </Field>
+            <Field label="Progress">
+              <Progress value={68} max={100} />
+            </Field>
+            <Field label="Meter">
+              <Meter min={0} max={100} low={30} high={80} optimum={70} value={72} />
+            </Field>
+          </Div>
+
           <Fieldset>
             <Legend>Options</Legend>
-            <Div display="flex" flexDirection="column" gap="2r">
+            <Div display="grid" gap="2r">
               <Label>
                 <Input type="checkbox" defaultChecked /> Include state styles
               </Label>
@@ -241,12 +247,12 @@ return <Button>{tone}</Button>`}</Pre>
               </Label>
             </Div>
           </Fieldset>
-          <Div display="flex" alignItems="end" gap="3r">
-            <Button type="submit">Save theme pass</Button>
+
+          <Div display="flex" flexWrap="wrap" justifyContent="flex-end" gap="3r">
             <Button type="button" disabled>
               Disabled
             </Button>
-            <Output name="status">Idle</Output>
+            <Button type="submit">Save theme pass</Button>
           </Div>
         </Form>
       </SectionCard>

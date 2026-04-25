@@ -1,5 +1,6 @@
 export const baseTypography = {
   fontFamily: 'sans',
   letterSpacing: '-0.01em',
-  color: 'text.primary',
+  color: 'var(--ui-foreground)',
+  fontSize: '16px'
 } as const

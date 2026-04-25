@@ -2,7 +2,7 @@
  * @vitest-environment happy-dom
  *
  * Integration tests: rhythm border-radius utilities in the generated design system
- * (borderRadius="2r", pair shorthands), literal px, and radii tokens (e.g. xl).
+ * (borderRadius="2r", pair shorthands), literal px, and radii tokens (e.g. lg).
  * These assert the emitted classes and generated CSS rules, which is more robust
  * than parsing happy-dom radius values from `calc(...)`.
  */
@@ -63,17 +63,17 @@ describe('rhythm border radius (design system CSS)', () => {
     expect(s.borderBottomRightRadius).toBe('12px')
   })
 
-  it('borderRadius="xl" resolves through the radii token pipeline', () => {
+  it('borderRadius="lg" resolves through the radii token pipeline', () => {
     render(
-      <Div data-testid="xl" borderRadius="xl">
+      <Div data-testid="lg" borderRadius="lg">
         x
       </Div>,
     )
-    const el = screen.getByTestId('xl')
-    expect(el.className).toContain('bdr_xl')
+    const el = screen.getByTestId('lg')
+    expect(el.className).toContain('bdr_lg')
 
-    const rule = cssRule('bdr_xl')
-    expect(rule).toContain('border-radius: var(--radii-xl);')
+    const rule = cssRule('bdr_lg')
+    expect(rule).toContain('border-radius: var(--radii-lg);')
   })
 
   it('borderTopRadius="2r" emits both top corner declarations', () => {

@@ -32,6 +32,10 @@ describe('resolveRhythm', () => {
     expect(resolveRhythm('1rem')).toBe('1rem')
   })
 
+  it('passes through slash rhythm tokens for predefined token resolution', () => {
+    expect(resolveRhythm('1/5r')).toBe('1/5r')
+  })
+
   it('passes through numbers', () => {
     expect(resolveRhythm(4)).toBe(4)
   })
