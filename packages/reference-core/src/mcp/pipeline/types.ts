@@ -41,6 +41,16 @@ export interface McpToken {
   description?: string
 }
 
+export type McpCompactToken = Omit<McpToken, 'description'>
+
+export interface McpTokenListResult {
+  tokens: Array<McpToken | McpCompactToken>
+  total: number
+  returned: number
+  compressed: boolean
+  message?: string
+}
+
 export interface McpBuildArtifact {
   schemaVersion: 1
   generatedAt: string

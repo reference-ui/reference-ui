@@ -131,21 +131,60 @@ describe('mcp queries', () => {
   })
 
   it('lists tokens by category and query', () => {
-    expect(listTokens(artifact, { category: 'colors' })).toEqual([
-      {
-        path: 'colors.text',
-        category: 'colors',
-        value: '#111111',
-        description: 'Primary text color',
-      },
-    ])
-    expect(listTokens(artifact, { query: 'md' })).toEqual([
-      {
-        path: 'spacing.md',
-        category: 'spacing',
-        value: '1rem',
-      },
-    ])
+    expect(listTokens(artifact, { category: 'colors' })).toEqual({
+      tokens: [
+        {
+          path: 'colors.text',
+          category: 'colors',
+          value: '#111111',
+          description: 'Primary text color',
+        },
+      ],
+      total: 1,
+      returned: 1,
+      compressed: false,
+    })
+    expect(listTokens(artifact, { query: 'md' })).toEqual({
+      tokens: [
+        {
+          path: 'spacing.md',
+          category: 'spacing',
+          value: '1rem',
+        },
+      ],
+      total: 1,
+      returned: 1,
+      compressed: false,
+    })
+  })
+
+  it('compresses large token results without dropping token names', () => {
+    const tokens = Array.from({ length: 201 }, (_, index) => ({
+      path: `colors.gray.${index}`,
+      category: 'colors',
+      value: String(index),
+      description: `Gray ${index}`,
+    }))
+
+    expect(
+      listTokens({
+        ...artifact,
+        tokens,
+      })
+    ).toEqual({
+      tokens: tokens.map(token => ({
+        path: token.path,
+        category: token.category,
+        value: token.value,
+        light: undefined,
+        dark: undefined,
+      })),
+      total: 201,
+      returned: 201,
+      compressed: true,
+      message:
+        'Token output compressed to paths, categories, and raw values because the result set is large. Query a token path for descriptions and richer metadata.',
+    })
   })
 
   it('surfaces a null interface name for components without props annotations', () => {

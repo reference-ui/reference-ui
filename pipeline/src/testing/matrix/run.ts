@@ -107,6 +107,11 @@ async function readMatrixPackageSource(packageDir: string): Promise<FixtureSourc
     ...(existsSync(resolve(fixtureDir, 'src')) ? await readFixtureSourceTree(fixtureDir, 'src') : {}),
     ...(existsSync(resolve(fixtureDir, 'tests')) ? await readFixtureSourceTree(fixtureDir, 'tests') : {}),
   }
+  const vitestConfigPath = resolve(fixtureDir, 'vitest.config.ts')
+
+  if (existsSync(vitestConfigPath)) {
+    fixtureFiles['vitest.config.ts'] = await readFile(vitestConfigPath, 'utf8')
+  }
 
   const [packageJsonSource, configSource] = await Promise.all([
     readFile(resolve(fixtureDir, 'package.json'), 'utf8'),

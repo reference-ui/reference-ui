@@ -9,12 +9,15 @@ import type {
   McpGetTokensInput,
   McpListComponentsInput,
   McpPropSummary,
+  McpCompactToken,
+  McpToken,
+  McpTokenListResult,
 } from './types'
 
 const DEFAULT_LIMIT = 25
 const DEFAULT_PROP_PREVIEW_LIMIT = 8
 const DEFAULT_COMPONENT_PROP_LIMIT = 30
-const DEFAULT_TOKEN_LIMIT = 200
+const TOKEN_COMPRESSION_THRESHOLD = 200
 
 const USAGE_RANK: Record<string, number> = {
   'very common': 0,
@@ -179,12 +182,24 @@ export function getComponentProps(
   }
 }
 
-export function listTokens(artifact: McpBuildArtifact, input: McpGetTokensInput = {}) {
+function compactToken(token: McpToken): McpCompactToken {
+  return {
+    path: token.path,
+    category: token.category,
+    value: token.value,
+    light: token.light,
+    dark: token.dark,
+  }
+}
+
+export function listTokens(
+  artifact: McpBuildArtifact,
+  input: McpGetTokensInput = {}
+): McpTokenListResult {
   const query = input.query?.trim().toLowerCase()
   const category = input.category?.trim().toLowerCase()
-  const limit = input.limit ?? DEFAULT_TOKEN_LIMIT
 
-  return (artifact.tokens ?? [])
+  let tokens = (artifact.tokens ?? [])
     .filter(token => {
       if (category && token.category.toLowerCase() !== category) return false
       if (!query) return true
@@ -195,5 +210,24 @@ export function listTokens(artifact: McpBuildArtifact, input: McpGetTokensInput 
         typeof token.description === 'string' ? token.description : '',
       ].some(value => value.toLowerCase().includes(query))
     })
-    .slice(0, limit)
+  const total = tokens.length
+  const compressed = total > TOKEN_COMPRESSION_THRESHOLD
+
+  if (compressed) {
+    tokens = tokens.map(compactToken)
+  }
+  if (input.limit) tokens = tokens.slice(0, input.limit)
+
+  return {
+    tokens,
+    total,
+    returned: tokens.length,
+    compressed,
+    ...(compressed
+      ? {
+          message:
+            'Token output compressed to paths, categories, and raw values because the result set is large. Query a token path for descriptions and richer metadata.',
+        }
+      : {}),
+  }
 }
