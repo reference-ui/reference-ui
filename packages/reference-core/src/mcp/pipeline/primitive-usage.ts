@@ -70,6 +70,54 @@ function parseNamespaceImports(source: string): string[] {
   return namespaces
 }
 
+function parseNonReferenceImports(source: string): Set<string> {
+  const imports = new Set<string>()
+  const importPattern = /import\s*(?:type\s*)?(?:([\w$]+)\s*,\s*)?(?:\{([\s\S]*?)\})?\s*from\s*['"]([^'"]+)['"]/g
+
+  for (const match of source.matchAll(importPattern)) {
+    const sourcePath = match[3]
+    if (!sourcePath || sourcePath === REFERENCE_UI_REACT_IMPORT) continue
+
+    const defaultImport = match[1]
+    if (defaultImport) imports.add(defaultImport)
+
+    const specifiers = match[2] ?? ''
+    for (const specifier of specifiers.split(',')) {
+      const trimmed = specifier.trim()
+      if (!trimmed || trimmed.startsWith('type ')) continue
+
+      const [imported, local = imported] = trimmed
+        .replace(/^type\s+/, '')
+        .split(/\s+as\s+/)
+        .map(value => value.trim())
+
+      if (local) imports.add(local)
+    }
+  }
+
+  return imports
+}
+
+function parseLocalDeclarations(source: string): Set<string> {
+  const declarations = new Set<string>()
+  const declarationPattern = /(?:function|class|const|let|var)\s+([A-Z][\w$]*)\b/g
+
+  for (const match of source.matchAll(declarationPattern)) {
+    if (match[1]) declarations.add(match[1])
+  }
+
+  return declarations
+}
+
+function isShadowedPrimitiveName(
+  name: string,
+  imports: Map<string, string>,
+  nonReferenceImports: Set<string>,
+  localDeclarations: Set<string>
+): boolean {
+  return !imports.has(name) && (nonReferenceImports.has(name) || localDeclarations.has(name))
+}
+
 function extractAttributeNames(attributeSource: string): string[] {
   const names: string[] = []
   const attributePattern = /([A-Za-z_$][\w$:-]*)\s*(?:=|(?=[\s/>]))/g
@@ -108,6 +156,48 @@ function observeTag(
     if (!fullMatch.endsWith('/>') && content.includes(`</${localName}>`)) {
       increment(observation.propCounts, 'children')
     }
+  }
+}
+
+function observeImportedPrimitiveTags(
+  content: string,
+  imports: Map<string, string>,
+  seenInFile: Set<string>,
+  observations: Map<string, MutablePrimitiveObservation>
+): void {
+  for (const [localName, primitiveName] of imports) {
+    observeTag(
+      content,
+      localName,
+      primitiveName,
+      getOrCreateObservation(observations, primitiveName),
+      seenInFile
+    )
+  }
+}
+
+function observeFallbackPrimitiveTags(
+  content: string,
+  imports: Map<string, string>,
+  seenInFile: Set<string>,
+  observations: Map<string, MutablePrimitiveObservation>
+): void {
+  const nonReferenceImports = parseNonReferenceImports(content)
+  const localDeclarations = parseLocalDeclarations(content)
+
+  for (const primitiveName of REFERENCE_UI_PRIMITIVE_NAMES) {
+    if (imports.has(primitiveName)) continue
+    if (isShadowedPrimitiveName(primitiveName, imports, nonReferenceImports, localDeclarations)) {
+      continue
+    }
+
+    observeTag(
+      content,
+      primitiveName,
+      primitiveName,
+      getOrCreateObservation(observations, primitiveName),
+      seenInFile
+    )
   }
 }
 
@@ -178,15 +268,8 @@ export async function collectReferenceUiPrimitiveUsage(
     const namespaces = parseNamespaceImports(content)
     const seenInFile = new Set<string>()
 
-    for (const [localName, primitiveName] of imports) {
-      observeTag(
-        content,
-        localName,
-        primitiveName,
-        getOrCreateObservation(observations, primitiveName),
-        seenInFile
-      )
-    }
+    observeImportedPrimitiveTags(content, imports, seenInFile, observations)
+    observeFallbackPrimitiveTags(content, imports, seenInFile, observations)
 
     for (const namespace of namespaces) {
       for (const primitiveName of REFERENCE_UI_PRIMITIVE_NAMES) {
