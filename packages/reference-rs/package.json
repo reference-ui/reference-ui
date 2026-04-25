@@ -1,6 +1,6 @@
 {
   "name": "@reference-ui/rust",
-  "version": "0.0.30",
+  "version": "0.0.31",
   "private": false,
   "description": "Reference UI Rust and native bindings",
   "repository": {
