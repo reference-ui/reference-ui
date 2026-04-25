@@ -10,10 +10,10 @@ export const inputPrimitiveStyles = {
     width: '100%',
     borderWidth: '1px',
     borderStyle: 'solid',
-    borderColor: 'var(--ui-input)',
+    borderColor: '{colors.ui.input}',
     borderRadius: 'sm',
-    backgroundColor: 'var(--ui-background)',
-    color: 'var(--ui-foreground)',
+    backgroundColor: '{colors.ui.background}',
+    color: '{colors.ui.foreground}',
     fontSize: '3.5r',
     lineHeight: '5r',
     transitionProperty: 'color, background-color, border-color, box-shadow',
@@ -21,14 +21,14 @@ export const inputPrimitiveStyles = {
     transitionTimingFunction: 'ease',
     _focusVisible: {
       ...focusRing,
-      borderColor: 'var(--ui-ring)',
+      borderColor: '{colors.ui.ring}',
     },
     _disabled: {
       cursor: 'not-allowed',
       opacity: 0.5,
     },
     _placeholder: {
-      color: 'var(--ui-muted-foreground)',
+      color: '{colors.ui.mutedForeground}',
     },
   },
 
@@ -36,7 +36,7 @@ export const inputPrimitiveStyles = {
     width: '4r',
     height: '4r',
     padding: '0',
-    accentColor: 'var(--ui-primary)',
+    accentColor: '{colors.ui.primary}',
   },
 
   '.ref-input[type="file"]': {
@@ -57,8 +57,8 @@ export const inputPrimitiveStyles = {
 
   '.ref-datalist, .ref-optgroup, .ref-option': {
     ...baseTypography,
-    color: 'var(--ui-foreground)',
-    backgroundColor: 'var(--ui-background)',
+    color: '{colors.ui.foreground}',
+    backgroundColor: '{colors.ui.background}',
   },
 } as const
 

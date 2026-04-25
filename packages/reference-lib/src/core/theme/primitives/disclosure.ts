@@ -7,7 +7,7 @@ export const disclosurePrimitiveStyles = {
     ...blockText,
     borderWidth: '1px',
     borderStyle: 'solid',
-    borderColor: 'var(--ui-border)',
+    borderColor: '{colors.ui.border}',
     borderRadius: 'md',
     padding: '4r',
     marginBottom: '4r',

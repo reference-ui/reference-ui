@@ -27,11 +27,11 @@ export const listPrimitiveStyles = {
   },
 
   '.ref-ul ::marker, .ref-menu ::marker': {
-    color: 'var(--ui-muted-foreground)',
+    color: '{colors.ui.mutedForeground}',
   },
 
   '.ref-ol ::marker': {
-    color: 'var(--ui-muted-foreground)',
+    color: '{colors.ui.mutedForeground}',
     fontWeight: '500',
   },
 
@@ -49,7 +49,7 @@ export const listPrimitiveStyles = {
 
   '.ref-dd': {
     ...baseTypography,
-    color: 'var(--ui-muted-foreground)',
+    color: '{colors.ui.mutedForeground}',
     marginLeft: '0',
     marginTop: '1r',
   },

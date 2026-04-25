@@ -25,4 +25,4 @@ export const ui = {
   markForeground: { light: '{colors.blue.950}', dark: '{colors.blue.200}' },
 } as const
 
-tokens({ ui })
+tokens({ colors: { ui } })
