@@ -37,6 +37,7 @@ const pipelineDir = resolve(matrixDir, '..', '..', '..')
 const repoRoot = resolve(pipelineDir, '..')
 const matrixLogDir = resolve(repoRoot, '.pipeline', 'testing', 'matrix')
 const matrixNativeTarget: VirtualNativeTarget = 'linux-x64-gnu'
+const minimumMatrixDockerMemoryBytes = 4 * 1024 * 1024 * 1024
 
 interface FixtureSourceFiles {
   fixturePackageJson: MatrixFixturePackageJson
@@ -305,6 +306,9 @@ export async function runMatrixBootstrapInDagger(): Promise<void> {
 }
 
 if (isDirectExecution()) {
-  ensureContainerRuntime()
+  ensureContainerRuntime({
+    commandLabel: 'pnpm pipeline:test:matrix',
+    minimumDockerMemoryBytes: minimumMatrixDockerMemoryBytes,
+  })
   await dagger.connection(runMatrixBootstrapInDagger, { LogOutput: process.stdout })
 }
