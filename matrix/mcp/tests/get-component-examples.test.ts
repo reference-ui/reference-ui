@@ -33,4 +33,20 @@ describe('get_component_examples', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
       ]),
     )
   })
+
+  it('returns example usage for Reference UI primitives', async () => {
+    const result = await running!.client.callTool({
+      name: 'get_component_examples',
+      arguments: { name: 'Div' },
+    })
+    const payload = parseTextJson<{ examples: string[]; name: string; source: string }>(result)
+
+    expect(payload.name).toBe('Div')
+    expect(payload.source).toBe('@reference-ui/react')
+    expect(payload.examples).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining('<Div'),
+      ]),
+    )
+  })
 })

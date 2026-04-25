@@ -82,6 +82,7 @@ describe('mcp queries', () => {
     expect(listComponents(artifact, { query: 'but' })).toEqual([
       {
         name: 'Button',
+        kind: 'project',
         source: './src/components/Button.tsx',
         usage: 'very common',
         count: 8,
@@ -109,6 +110,7 @@ describe('mcp queries', () => {
     const compact = compactComponent(component!)
 
     expect(compact.props.map(prop => prop.name)).toEqual(['variant'])
+    expect(compact.kind).toBe('project')
     expect(compact.propSummary).toEqual({
       total: 2,
       observed: 1,
@@ -211,6 +213,7 @@ describe('mcp queries', () => {
     ).toEqual([
       {
         name: 'ThemeToggle',
+        kind: 'project',
         source: './src/components/ThemeToggle.tsx',
         usage: 'unused',
         count: 0,
@@ -225,5 +228,33 @@ describe('mcp queries', () => {
         },
       },
     ])
+  })
+
+  it('includes Reference UI primitives as component tool targets', () => {
+    const listed = listComponents({ ...artifact, components: [] }, { query: 'Div' })
+
+    expect(listed).toEqual([
+      expect.objectContaining({
+        name: 'Div',
+        kind: 'primitive',
+        source: '@reference-ui/react',
+        interfaceName: 'DivProps',
+        styleProps: expect.objectContaining({
+          supported: true,
+        }),
+      }),
+    ])
+
+    expect(findComponent(artifact, { name: 'Div' })).toEqual(
+      expect.objectContaining({
+        name: 'Div',
+        kind: 'primitive',
+      })
+    )
+    expect(getComponentProps(artifact, { name: 'Div', includeStyleProps: false })?.props).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: 'children', styleProp: false }),
+      ])
+    )
   })
 })

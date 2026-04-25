@@ -32,6 +32,7 @@ export interface ResourceTextEntry {
 export interface ComponentSummary {
   count: number
   interfaceName: string | null
+  kind: 'project' | 'primitive'
   name: string
   observedProps: string[]
   propCount: number
@@ -50,6 +51,7 @@ export interface ComponentModel {
 
 export interface ComponentReadout {
   interface: { name: string; source: string } | null
+  kind: 'project' | 'primitive'
   name: string
   propSummary: {
     documented: number
@@ -67,6 +69,7 @@ export interface ComponentReadout {
 }
 
 export interface TokenReadout {
+  availableCategories?: string[]
   compressed: boolean
   message?: string
   returned: number

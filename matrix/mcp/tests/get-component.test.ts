@@ -28,6 +28,7 @@ describe('get_component', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
     const component = parseTextJson<ComponentReadout>(result)
 
     expect(component.name).toBe('HeroBanner')
+    expect(component.kind).toBe('project')
     expect(component.interface?.name).toBe('HeroBannerProps')
     expect(component.propSummary).toMatchObject({
       total: 4,
@@ -41,5 +42,23 @@ describe('get_component', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
       ]),
     )
     expect(component.styleProps.tool).toBe('get_style_props')
+  })
+
+  it('returns Reference UI primitive guides', async () => {
+    const result = await running!.client.callTool({
+      name: 'get_component',
+      arguments: { name: 'Div' },
+    })
+    const component = parseTextJson<ComponentReadout>(result)
+
+    expect(component).toEqual(
+      expect.objectContaining({
+        name: 'Div',
+        kind: 'primitive',
+        source: '@reference-ui/react',
+        interface: expect.objectContaining({ name: 'DivProps' }),
+        styleProps: expect.objectContaining({ supported: true }),
+      }),
+    )
   })
 })

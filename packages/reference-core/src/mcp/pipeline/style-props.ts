@@ -222,10 +222,17 @@ export function isStylePropName(name: string): boolean {
 export function getStylePropsReference(input: McpGetStylePropsInput = {}) {
   const query = input.query?.trim().toLowerCase()
   const includeProps = input.includeProps ?? false
+  const hasExactPropMatch = query
+    ? STYLE_PROP_CATEGORIES.some(category =>
+        category.props.some(prop => prop.toLowerCase() === query)
+      )
+    : false
   const categories = STYLE_PROP_CATEGORIES.map(category => {
-    const props = query
-      ? category.props.filter(prop => prop.toLowerCase().includes(query))
-      : category.props
+    const props = query && hasExactPropMatch
+      ? category.props.filter(prop => prop.toLowerCase() === query)
+      : query
+        ? category.props.filter(prop => prop.toLowerCase().includes(query))
+        : category.props
 
     return {
       name: category.name,
@@ -235,6 +242,11 @@ export function getStylePropsReference(input: McpGetStylePropsInput = {}) {
     }
   }).filter(category => {
     if (!query) return true
+    if (hasExactPropMatch) {
+      return 'props' in category
+        ? category.props.length > 0
+        : category.exampleProps.length > 0
+    }
     return (
       category.name.includes(query) ||
       category.description.toLowerCase().includes(query) ||
@@ -251,8 +263,9 @@ export function getStylePropsReference(input: McpGetStylePropsInput = {}) {
     valueModel:
       'Most style props accept raw CSS values, token names from compatible categories, responsive objects, and conditional values. Color-bearing props are narrowed to color tokens plus safe CSS keywords.',
     tokenGuidance:
-      'Use get_tokens to inspect project token paths and descriptions. Token category compatibility is summarized per style prop category.',
+      'Use get_tokens to inspect project token paths and descriptions. Token category compatibility is summarized per style prop category, but a compatible category may be absent in the current project.',
     includeProps,
+    ...(hasExactPropMatch && query ? { matchedProp: query } : {}),
     categories,
   }
 }

@@ -1,6 +1,7 @@
 import type { AtlasDiagnostic, Usage } from '@reference-ui/rust/atlas'
 
 export type McpComponentPropOrigin = 'observed' | 'documented'
+export type McpComponentKind = 'project' | 'primitive'
 
 export interface McpComponentInterface {
   name: string
@@ -23,6 +24,7 @@ export interface McpComponentProp {
 
 export interface McpComponent {
   name: string
+  kind?: McpComponentKind
   source: string
   count: number
   usage: Usage
@@ -48,6 +50,7 @@ export interface McpTokenListResult {
   total: number
   returned: number
   compressed: boolean
+  availableCategories?: string[]
   message?: string
 }
 
@@ -113,6 +116,7 @@ export interface McpPropSummary {
 
 export interface McpComponentSummary {
   name: string
+  kind: McpComponentKind
   source: string
   usage: Usage
   count: number
@@ -124,6 +128,7 @@ export interface McpComponentSummary {
 
 export interface McpComponentCompact {
   name: string
+  kind: McpComponentKind
   source: string
   count: number
   usage: Usage

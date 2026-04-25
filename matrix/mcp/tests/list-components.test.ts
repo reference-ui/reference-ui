@@ -30,11 +30,30 @@ describe('list_components', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
     expect(listed.components).toEqual([
       expect.objectContaining({
         name: 'HeroBanner',
+        kind: 'project',
         source: './components/index.tsx',
         interfaceName: 'HeroBannerProps',
         observedProps: expect.arrayContaining(['body', 'ctaHref', 'ctaLabel', 'heading']),
         propCount: 4,
         styleProps: expect.objectContaining({ tool: 'get_style_props' }),
+      }),
+    ])
+  })
+
+  it('includes generated Reference UI primitives', async () => {
+    const result = await running!.client.callTool({
+      name: 'list_components',
+      arguments: { query: 'Div' },
+    })
+    const listed = parseTextJson<{ components: ComponentSummary[] }>(result)
+
+    expect(listed.components).toEqual([
+      expect.objectContaining({
+        name: 'Div',
+        kind: 'primitive',
+        source: '@reference-ui/react',
+        interfaceName: 'DivProps',
+        styleProps: expect.objectContaining({ supported: true }),
       }),
     ])
   })
