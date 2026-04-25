@@ -1,5 +1,5 @@
 import { globalCss } from '@reference-ui/system'
-import { baseTypography, blockText } from './shared'
+import { baseTypography, blockText, focusRingStyles } from './shared'
 
 export const disclosurePrimitiveStyles = {
   '.ref-details': {
@@ -14,6 +14,7 @@ export const disclosurePrimitiveStyles = {
 
   '.ref-summary': {
     ...baseTypography,
+    ...focusRingStyles,
     cursor: 'pointer',
     fontWeight: '500',
     paddingInlineStart: '1r',
