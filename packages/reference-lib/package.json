@@ -1,6 +1,6 @@
 {
   "name": "@reference-ui/lib",
-  "version": "0.0.33",
+  "version": "0.0.34",
   "private": false,
   "repository": {
     "type": "git",
@@ -44,7 +44,7 @@
   },
   "dependencies": {
     "@reference-ui/core": "workspace:*",
-    "@reference-ui/icons": "0.0.30",
+    "@reference-ui/icons": "0.0.31",
     "react": "^19.2.4"
   },
   "devDependencies": {

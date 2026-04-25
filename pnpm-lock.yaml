@@ -149,6 +149,9 @@ importers:
       '@reference-ui/core':
         specifier: workspace:*
         version: link:../../packages/reference-core
+      '@reference-ui/lib':
+        specifier: workspace:*
+        version: link:../../packages/reference-lib
       react:
         specifier: ^19.2.0
         version: 19.2.4
@@ -420,7 +423,7 @@ importers:
         specifier: workspace:*
         version: link:../reference-core
       '@reference-ui/icons':
-        specifier: 0.0.30
+        specifier: 0.0.31
         version: link:../reference-icons
       react:
         specifier: ^19.2.4
