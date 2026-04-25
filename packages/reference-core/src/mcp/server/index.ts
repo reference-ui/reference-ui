@@ -13,7 +13,15 @@ import { z } from 'zod'
 import { log } from '../../lib/log'
 import { readMcpArtifact } from '../pipeline/artifact'
 import { getMcpModelPath } from '../pipeline/paths'
-import { findComponent, getCommonPatterns, listComponents } from '../pipeline/queries'
+import {
+  compactComponent,
+  findComponent,
+  getCommonPatterns,
+  getComponentProps,
+  listComponents,
+  listTokens,
+} from '../pipeline/queries'
+import { getStylePropsReference } from '../pipeline/style-props'
 import type { McpBuildArtifact, McpPublicModel } from '../pipeline/types'
 import { spawnMcpBuildChild } from '../worker/child-process/process'
 
@@ -32,6 +40,30 @@ export const DEFAULT_REFERENCE_MCP_PORT = 3697
 export const DEFAULT_REFERENCE_MCP_HOST = '127.0.0.1'
 export const DEFAULT_REFERENCE_MCP_PATH = '/mcp'
 export const REFERENCE_MCP_READY_PREFIX = '[ref mcp] ready'
+export const REFERENCE_MCP_GETTING_STARTED_URI = 'reference-ui://getting-started'
+
+const REFERENCE_UI_MCP_INSTRUCTIONS = [
+  'Reference UI MCP is a project-aware component, prop, style, and token reference.',
+  'Start with list_components to discover available components and observed prop usage.',
+  'Use get_component for a compact guide to one component. It intentionally omits large inherited StyleProps surfaces.',
+  'Use get_component_props only when you need the exhaustive prop/interface readout for one component.',
+  'Use get_style_props for the shared StyleProps/token category guide, and get_tokens for project token paths and descriptions.',
+].join('\n')
+
+const REFERENCE_UI_GETTING_STARTED = `# Reference UI MCP
+
+Reference UI MCP helps assistants answer: what components are available in this project, and what can be passed to them?
+
+Recommended flow:
+
+1. Call \`list_components\` to find components and see observed prop usage.
+2. Call \`get_component\` for a compact component guide with examples and common props.
+3. Call \`get_component_props\` only when exhaustive prop details are needed.
+4. Call \`get_style_props\` for the shared StyleProps model instead of asking each component to repeat CSS props.
+5. Call \`get_tokens\` to inspect project token names, categories, values, and descriptions.
+
+Style-bearing components may accept Reference UI StyleProps. Those props are Panda-style CSS props with token-aware values; color-bearing props are narrowed to project color tokens plus safe CSS keywords.
+`
 
 export interface McpModelState {
   /** Load cached artifact if present, else build; may start a background refresh when cache exists. */
@@ -108,7 +140,7 @@ function toPublicModel(artifact: McpBuildArtifact): McpPublicModel {
   return {
     schemaVersion: artifact.schemaVersion,
     generatedAt: artifact.generatedAt,
-    components: artifact.components,
+    components: listComponents(artifact, { limit: artifact.components.length }),
   }
 }
 
@@ -122,6 +154,8 @@ export function createReferenceMcpServer(
     version: '0.0.3',
     description:
       'Atlas- and generated-types-backed component inspection for Reference UI projects.',
+  }, {
+    instructions: REFERENCE_UI_MCP_INSTRUCTIONS,
   })
 
   server.registerTool(
@@ -158,7 +192,40 @@ export function createReferenceMcpServer(
       if (!component) {
         return toErrorResult(`Component not found: ${input.name}`)
       }
-      return toTextResult({ ...component })
+      return toTextResult({ ...compactComponent(component) })
+    }
+  )
+
+  server.registerTool(
+    'get_component_props',
+    {
+      title: 'Get Component Props',
+      description:
+        'Return the full prop/interface readout for a component, with optional filters for style props and unused documented props.',
+      inputSchema: {
+        name: z.string(),
+        source: z.string().optional(),
+        includeUnused: z.boolean().optional(),
+        includeStyleProps: z.boolean().optional(),
+        query: z.string().optional(),
+        limit: z.number().int().positive().max(500).optional(),
+      },
+    },
+    async input => {
+      const artifact = await state.load()
+      const result = getComponentProps(artifact, input)
+      if (!result) {
+        return toErrorResult(`Component not found: ${input.name}`)
+      }
+
+      return toTextResult({
+        name: result.component.name,
+        source: result.component.source,
+        interface: result.component.interface,
+        props: result.props,
+        propSummary: result.propSummary,
+        styleProps: compactComponent(result.component).styleProps,
+      })
     }
   )
 
@@ -213,6 +280,42 @@ export function createReferenceMcpServer(
     }
   )
 
+  server.registerTool(
+    'get_style_props',
+    {
+      title: 'Get Style Props',
+      description:
+        'Return the shared Reference UI StyleProps guide and token category compatibility.',
+      inputSchema: {
+        query: z.string().optional(),
+        includeProps: z.boolean().optional(),
+      },
+    },
+    async input => {
+      return toTextResult(getStylePropsReference(input))
+    }
+  )
+
+  server.registerTool(
+    'get_tokens',
+    {
+      title: 'Get Tokens',
+      description:
+        'Return project token paths, categories, values, and descriptions collected from Reference UI token fragments.',
+      inputSchema: {
+        category: z.string().optional(),
+        query: z.string().optional(),
+        limit: z.number().int().positive().max(1000).optional(),
+      },
+    },
+    async input => {
+      const artifact = await state.load()
+      return toTextResult({
+        tokens: listTokens(artifact, input),
+      })
+    }
+  )
+
   server.registerResource(
     'component-model',
     'reference-ui://component-model',
@@ -234,6 +337,25 @@ export function createReferenceMcpServer(
         ],
       }
     }
+  )
+
+  server.registerResource(
+    'getting-started',
+    REFERENCE_MCP_GETTING_STARTED_URI,
+    {
+      title: 'Reference UI MCP Getting Started',
+      description: 'Short guide for using Reference UI MCP tools efficiently.',
+      mimeType: 'text/markdown',
+    },
+    async uri => ({
+      contents: [
+        {
+          uri: uri.href,
+          mimeType: 'text/markdown',
+          text: REFERENCE_UI_GETTING_STARTED,
+        },
+      ],
+    })
   )
 
   return server

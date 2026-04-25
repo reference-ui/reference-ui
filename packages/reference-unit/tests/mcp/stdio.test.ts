@@ -33,6 +33,9 @@ describe('mcp stdio server', { timeout: 120_000 }, () => {
       'get_common_patterns',
       'get_component',
       'get_component_examples',
+      'get_component_props',
+      'get_style_props',
+      'get_tokens',
       'list_components',
     ])
 
@@ -51,6 +54,7 @@ describe('mcp stdio server', { timeout: 120_000 }, () => {
     expect(modelJson?.text).not.toContain('"workspaceRoot"')
     expect(modelJson?.text).not.toContain('"manifestPath"')
     expect(modelJson?.text).not.toContain('"diagnostics"')
+    expect(modelJson?.text).not.toContain('"props"')
 
     const listComponentsResult = await running!.client.callTool(
       {

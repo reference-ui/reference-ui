@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const analyzeDetailed = vi.fn()
 const createReferenceApi = vi.fn(() => ({}))
 const loadMcpReferenceData = vi.fn(async () => null)
+const loadMcpTokens = vi.fn(async () => [])
 const writeMcpArtifact = vi.fn(async () => '/tmp/model.json')
 const getConfig = vi.fn()
 const existsSync = vi.fn(() => true)
@@ -22,6 +23,10 @@ vi.mock('../../config', () => ({
 vi.mock('./reference', () => ({
   createReferenceApi,
   loadMcpReferenceData,
+}))
+
+vi.mock('./tokens', () => ({
+  loadMcpTokens,
 }))
 
 vi.mock('./artifact', () => ({
@@ -81,6 +86,10 @@ describe('buildMcpArtifact', () => {
       {},
       'ButtonProps',
       './src/components/Button.tsx'
+    )
+    expect(loadMcpTokens).toHaveBeenCalledWith(
+      '/workspace/app',
+      expect.objectContaining({ name: 'test-system' })
     )
   })
 

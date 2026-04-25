@@ -2,7 +2,14 @@ import { describe, expect, it } from 'vitest'
 
 import { DEFAULT_OUT_DIR } from '../../constants'
 import type { McpBuildArtifact } from './types'
-import { findComponent, getCommonPatterns, listComponents } from './queries'
+import {
+  compactComponent,
+  findComponent,
+  getCommonPatterns,
+  getComponentProps,
+  listComponents,
+  listTokens,
+} from './queries'
 
 const artifact: McpBuildArtifact = {
   schemaVersion: 1,
@@ -19,7 +26,31 @@ const artifact: McpBuildArtifact = {
       usedWith: { Stack: 'common', Icon: 'occasional' },
       examples: ['<Button />'],
       interface: { name: 'ButtonProps', source: './src/components/Button.tsx' },
-      props: [],
+      props: [
+        {
+          name: 'variant',
+          count: 8,
+          usage: 'very common',
+          values: { solid: 'common' },
+          type: '"solid" | "ghost"',
+          description: 'Visual variant',
+          optional: false,
+          readonly: false,
+          origin: 'observed',
+          styleProp: false,
+        },
+        {
+          name: 'p',
+          count: 0,
+          usage: 'unused',
+          type: 'StylePropValue<string>',
+          description: null,
+          optional: true,
+          readonly: false,
+          origin: 'documented',
+          styleProp: true,
+        },
+      ],
     },
     {
       name: 'Card',
@@ -30,6 +61,19 @@ const artifact: McpBuildArtifact = {
       examples: ['<Card />'],
       interface: { name: 'CardProps', source: '@reference-ui/react' },
       props: [],
+    },
+  ],
+  tokens: [
+    {
+      path: 'colors.text',
+      category: 'colors',
+      value: '#111111',
+      description: 'Primary text color',
+    },
+    {
+      path: 'spacing.md',
+      category: 'spacing',
+      value: '1rem',
     },
   ],
 }
@@ -43,7 +87,14 @@ describe('mcp queries', () => {
         usage: 'very common',
         count: 8,
         interfaceName: 'ButtonProps',
-        propCount: 0,
+        propCount: 2,
+        observedProps: ['variant'],
+        styleProps: {
+          supported: true,
+          observed: [],
+          tool: 'get_style_props',
+          note: 'This component accepts Reference UI StyleProps. Use get_style_props for the shared style prop/token reference.',
+        },
       },
     ])
   })
@@ -56,6 +107,52 @@ describe('mcp queries', () => {
     expect(getCommonPatterns(artifact, { name: 'Button' })).toEqual([
       { name: 'Stack', usage: 'common' },
       { name: 'Icon', usage: 'occasional' },
+    ])
+  })
+
+  it('returns compact component props without inherited style prop noise', () => {
+    const component = findComponent(artifact, { name: 'Button' })
+    expect(component).not.toBeNull()
+
+    const compact = compactComponent(component!)
+
+    expect(compact.props.map(prop => prop.name)).toEqual(['variant'])
+    expect(compact.propSummary).toEqual({
+      total: 2,
+      observed: 1,
+      documented: 1,
+      style: 1,
+      returned: 1,
+    })
+    expect(compact.styleProps.supported).toBe(true)
+  })
+
+  it('returns full component props with filters', () => {
+    const full = getComponentProps(artifact, { name: 'Button' })
+    const withoutStyle = getComponentProps(artifact, {
+      name: 'Button',
+      includeStyleProps: false,
+    })
+
+    expect(full?.props.map(prop => prop.name)).toEqual(['variant', 'p'])
+    expect(withoutStyle?.props.map(prop => prop.name)).toEqual(['variant'])
+  })
+
+  it('lists tokens by category and query', () => {
+    expect(listTokens(artifact, { category: 'colors' })).toEqual([
+      {
+        path: 'colors.text',
+        category: 'colors',
+        value: '#111111',
+        description: 'Primary text color',
+      },
+    ])
+    expect(listTokens(artifact, { query: 'md' })).toEqual([
+      {
+        path: 'spacing.md',
+        category: 'spacing',
+        value: '1rem',
+      },
     ])
   })
 
@@ -88,6 +185,13 @@ describe('mcp queries', () => {
         count: 0,
         interfaceName: null,
         propCount: 0,
+        observedProps: [],
+        styleProps: {
+          supported: false,
+          observed: [],
+          tool: 'get_style_props',
+          note: 'No StyleProps surface was detected for this component.',
+        },
       },
     ])
   })

@@ -27,13 +27,32 @@ interface ResourceTextEntry {
 }
 
 interface ComponentSummary {
+  count: number
+  interfaceName: string | null
   name: string
+  observedProps: string[]
+  propCount: number
+  source: string
+  styleProps: {
+    supported: boolean
+    tool: 'get_style_props'
+  }
 }
 
 interface ComponentModel {
   components: ComponentSummary[]
   generatedAt: string
   schemaVersion: number
+}
+
+interface TokenReadout {
+  tokens: Array<{
+    category: string
+    dark?: unknown
+    description?: string
+    path: string
+    value?: unknown
+  }>
 }
 
 const MATRIX_MCP_PORT = 3797
@@ -272,6 +291,9 @@ describe('matrix MCP package', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
       'get_common_patterns',
       'get_component',
       'get_component_examples',
+      'get_component_props',
+      'get_style_props',
+      'get_tokens',
       'list_components',
     ])
 
@@ -289,6 +311,15 @@ describe('matrix MCP package', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
     expect(modelJson?.text).not.toContain('workspaceRoot')
     expect(modelJson?.text).not.toContain('manifestPath')
     expect(modelJson?.text).not.toContain('diagnostics')
+    expect(modelJson?.text).not.toContain('"props"')
+
+    const gettingStarted = await running!.client.readResource({
+      uri: 'reference-ui://getting-started',
+    })
+    const gettingStartedText = findTextResource(gettingStarted)
+
+    expect(gettingStartedText?.mimeType).toBe('text/markdown')
+    expect(gettingStartedText?.text).toContain('Reference UI MCP')
 
     const listComponentsResult = await running!.client.callTool({
       name: 'list_components',
@@ -299,5 +330,40 @@ describe('matrix MCP package', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
     const listed = parseTextJson<{ components: ComponentSummary[] }>(listComponentsResult)
 
     expect(Array.isArray(listed.components)).toBe(true)
+
+    const stylePropsResult = await running!.client.callTool({
+      name: 'get_style_props',
+      arguments: { query: 'color' },
+    })
+    const styleProps = parseTextJson<{
+      categories: Array<{ name: string; tokenCategories: string[] }>
+    }>(stylePropsResult)
+
+    expect(styleProps.categories).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: 'color',
+          tokenCategories: expect.arrayContaining(['colors']),
+        }),
+      ]),
+    )
+
+    const tokenResult = await running!.client.callTool({
+      name: 'get_tokens',
+      arguments: { category: 'colors' },
+    })
+    const tokenReadout = parseTextJson<TokenReadout>(tokenResult)
+
+    expect(tokenReadout.tokens).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          path: 'colors.text',
+          category: 'colors',
+          value: '#111111',
+          dark: '#f5f5f5',
+          description: 'Matrix primary text color',
+        }),
+      ]),
+    )
   })
 })
