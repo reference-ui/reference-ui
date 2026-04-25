@@ -10,7 +10,7 @@ export const mediaPrimitiveStyles = {
 
   '.ref-figcaption': {
     ...baseTypography,
-    color: '{colors.ui.mutedForeground}',
+    color: '{colors.ui.media.caption.foreground}',
     fontSize: '3.5r',
     lineHeight: '5r',
     marginTop: '2r',
@@ -36,7 +36,7 @@ export const mediaPrimitiveStyles = {
     maxWidth: '100%',
     borderWidth: '1px',
     borderStyle: 'solid',
-    borderColor: '{colors.ui.border}',
+    borderColor: '{colors.ui.media.embed.border}',
     borderRadius: 'md',
   },
 } as const

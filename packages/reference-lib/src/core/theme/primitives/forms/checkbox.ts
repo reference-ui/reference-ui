@@ -9,15 +9,15 @@ export const checkboxPrimitiveStyles = {
     borderWidth: '1px',
     borderStyle: 'solid',
     borderColor:
-      'color-mix(in oklch, {colors.ui.foreground} 28%, transparent)',
+      'color-mix(in oklch, {colors.ui.checkbox.unchecked.borderMix} 28%, transparent)',
     borderRadius: 'sm',
     backgroundColor: 'transparent',
     transitionProperty: 'background-color, border-color, box-shadow',
     transitionDuration: '150ms',
     transitionTimingFunction: 'ease',
     _checked: {
-      backgroundColor: '{colors.ui.foreground}',
-      borderColor: '{colors.ui.foreground}',
+      backgroundColor: '{colors.ui.checkbox.checked.fill}',
+      borderColor: '{colors.ui.checkbox.checked.fill}',
       _before: {
         opacity: 1,
       },
@@ -30,7 +30,7 @@ export const checkboxPrimitiveStyles = {
       borderBottomWidth: '2px',
       borderLeftStyle: 'solid',
       borderBottomStyle: 'solid',
-      borderColor: '{colors.ui.background}',
+      borderColor: '{colors.ui.checkbox.tick.stroke}',
       opacity: 0,
       transform: 'translateY(-1px) rotate(-45deg)',
     },
