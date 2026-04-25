@@ -174,7 +174,7 @@ export const ui = {
   },
 
   focus: {
-    ring: { light: '{colors.gray.400}', dark: '{colors.gray.500}' },
+    ring: { light: '{colors.gray.400}', dark: '{colors.gray.50}' },
   },
 
   table: {

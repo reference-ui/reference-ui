@@ -12,9 +12,9 @@ export const blockText = {
 } as const
 
 export const focusRing = {
-  outline: 'none',
-  boxShadow:
-    '0 0 0 3px color-mix(in oklch, {colors.ui.focus.ring} 35%, transparent)',
+  outline: '2px solid {colors.ui.focus.ring}',
+  outlineOffset: '2px',
+  boxShadow: 'none',
 } as const
 
 export const trackBackground =
