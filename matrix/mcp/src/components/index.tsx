@@ -1,4 +1,5 @@
-import { A, Article, Div, H1, H2, Main, P, Section } from '@reference-ui/react'
+import type { ReactNode } from 'react'
+import { A, Article, Code, Div, H1, H2, Main, P, Section } from '@reference-ui/react'
 
 export interface PrimaryActionProps {
   href: string
@@ -17,7 +18,7 @@ export interface FeatureCardProps {
   actionHref: string
   actionLabel: string
   eyebrow: string
-  summary: string
+  summary: ReactNode
   title: string
 }
 
@@ -69,7 +70,11 @@ export function ComponentShowcase() {
       <FeatureCard
         eyebrow="Guide"
         title="Inspect generated components"
-        summary="Verify the MCP inventory and relationships."
+        summary={
+          <>
+            Verify the <Code>src/App.tsx</Code> inventory and relationships.
+          </>
+        }
         actionHref="/mcp"
         actionLabel="Inspect"
       />

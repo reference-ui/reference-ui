@@ -106,6 +106,11 @@ export interface McpComponentStylePropsSummary {
   note: string
 }
 
+export interface McpUsageSemantics {
+  count: string
+  usage: string
+}
+
 export interface McpPropSummary {
   total: number
   observed: number
@@ -120,6 +125,7 @@ export interface McpComponentSummary {
   source: string
   usage: Usage
   count: number
+  usageSemantics: McpUsageSemantics
   interfaceName: string | null
   propCount: number
   observedProps: string[]
@@ -132,6 +138,7 @@ export interface McpComponentCompact {
   source: string
   count: number
   usage: Usage
+  usageSemantics: McpUsageSemantics
   usedWith: Record<string, Usage>
   examples: string[]
   interface: McpComponentInterface | null

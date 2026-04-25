@@ -56,6 +56,7 @@ describe('get_component_props', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
 
     expect(props.kind).toBe('primitive')
     expect(props.count).toBeGreaterThan(0)
+    expect(props.usageSemantics.count).toContain('JSX opening-element occurrences')
     expect(props.styleProps.supported).toBe(true)
     expect(props.props).toEqual(
       expect.arrayContaining([

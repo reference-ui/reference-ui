@@ -5,8 +5,8 @@ Reference UI MCP exposes project-aware tools for components, props, style props,
 ## Tools
 
 - `getting_started`: short guide to Reference UI primitives, StyleProps, tokens, and the recommended MCP workflow.
-- `list_components`: compact component discovery with usage, source, interface name, observed prop preview, and a StyleProps marker.
-- `get_component`: compact guide for one component, including examples, high-signal props, co-usage, and StyleProps support.
+- `list_components`: compact discovery for components observed in the project graph, including imported Reference UI primitives actually used in JSX.
+- `get_component`: compact guide for one observed component, including examples, high-signal props, co-usage, and StyleProps support.
 - `get_component_props`: full prop/interface readout for one component, with filters for unused props, StyleProps, query, and limit.
 - `get_component_examples`: captured JSX usage examples for one component.
 - `get_style_props`: shared Reference UI StyleProps guide and token category compatibility.

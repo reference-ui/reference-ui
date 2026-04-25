@@ -47,18 +47,21 @@ describe('get_component', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
   it('returns Reference UI primitive guides', async () => {
     const result = await running!.client.callTool({
       name: 'get_component',
-      arguments: { name: 'Div' },
+      arguments: { name: 'Code' },
     })
     const component = parseTextJson<ComponentReadout>(result)
 
     expect(component).toEqual(
       expect.objectContaining({
-        name: 'Div',
+        name: 'Code',
         count: expect.any(Number),
         kind: 'primitive',
         source: '@reference-ui/react',
-        interface: expect.objectContaining({ name: 'DivProps' }),
+        interface: expect.objectContaining({ name: 'CodeProps' }),
         styleProps: expect.objectContaining({ supported: true }),
+        usageSemantics: expect.objectContaining({
+          count: expect.stringContaining('JSX opening-element occurrences'),
+        }),
       }),
     )
     expect(component.count).toBeGreaterThan(0)

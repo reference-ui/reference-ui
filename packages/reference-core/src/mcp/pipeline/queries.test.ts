@@ -9,6 +9,13 @@ import {
   listComponents,
   listTokens,
 } from './queries'
+import { createObservedReferenceUiPrimitives } from './primitives'
+
+const EXPECTED_USAGE_SEMANTICS = {
+  count: 'Number of resolved JSX opening-element occurrences in the analyzed files.',
+  usage:
+    'Relative usage bucket derived from count using the same Reference UI usage thresholds across component tools.',
+}
 
 const artifact: McpBuildArtifact = {
   schemaVersion: 1,
@@ -86,6 +93,7 @@ describe('mcp queries', () => {
         source: './src/components/Button.tsx',
         usage: 'very common',
         count: 8,
+        usageSemantics: EXPECTED_USAGE_SEMANTICS,
         interfaceName: 'ButtonProps',
         propCount: 2,
         observedProps: ['variant'],
@@ -217,6 +225,7 @@ describe('mcp queries', () => {
         source: './src/components/ThemeToggle.tsx',
         usage: 'unused',
         count: 0,
+        usageSemantics: EXPECTED_USAGE_SEMANTICS,
         interfaceName: null,
         propCount: 0,
         observedProps: [],
@@ -230,31 +239,51 @@ describe('mcp queries', () => {
     ])
   })
 
-  it('includes Reference UI primitives as component tool targets', () => {
-    const listed = listComponents({ ...artifact, components: [] }, { query: 'Div' })
+  it('includes observed Reference UI primitives as component tool targets', () => {
+    const observedArtifact = {
+      ...artifact,
+      components: createObservedReferenceUiPrimitives([
+        {
+          name: 'Div',
+          count: 2,
+          examples: ['<Div />'],
+          filePresence: 1,
+          propCounts: { children: 1, p: 1 },
+          usedWithCounts: {},
+        },
+        {
+          name: 'Code',
+          count: 1,
+          examples: ['<Code>src/App.tsx</Code>'],
+          filePresence: 1,
+          propCounts: { children: 1 },
+          usedWithCounts: {},
+        },
+      ]),
+    }
+    const listed = listComponents(observedArtifact, { source: '@reference-ui/react', limit: 100 })
+    const names = listed.map(component => component.name)
 
-    expect(listed).toEqual([
+    expect(names.filter(name => name === 'Div')).toHaveLength(1)
+    expect(names.filter(name => name === 'Code')).toHaveLength(1)
+    expect(names).not.toContain('Main')
+
+    expect(findComponent(observedArtifact, { name: 'Div' })).toEqual(
       expect.objectContaining({
         name: 'Div',
         kind: 'primitive',
-        source: '@reference-ui/react',
-        interfaceName: 'DivProps',
-        styleProps: expect.objectContaining({
-          supported: true,
-        }),
-      }),
-    ])
-
-    expect(findComponent(artifact, { name: 'Div' })).toEqual(
-      expect.objectContaining({
-        name: 'Div',
-        kind: 'primitive',
+        count: 2,
       })
     )
-    expect(getComponentProps(artifact, { name: 'Div', includeStyleProps: false })?.props).toEqual(
+    expect(getComponentProps(observedArtifact, { name: 'Div', includeStyleProps: false })?.props).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ name: 'children', styleProp: false }),
       ])
     )
+  })
+
+  it('does not expose unused Reference UI primitives as static catalog entries', () => {
+    expect(listComponents({ ...artifact, components: [] }, { query: 'Div' })).toEqual([])
+    expect(findComponent({ ...artifact, components: [] }, { name: 'Div' })).toBeNull()
   })
 })

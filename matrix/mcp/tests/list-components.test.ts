@@ -40,23 +40,33 @@ describe('list_components', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
     ])
   })
 
-  it('includes generated Reference UI primitives', async () => {
+  it('includes only observed Reference UI primitives', async () => {
     const result = await running!.client.callTool({
       name: 'list_components',
-      arguments: { query: 'Div' },
+      arguments: { source: '@reference-ui/react', limit: 100 },
     })
     const listed = parseTextJson<{ components: ComponentSummary[] }>(result)
+    const names = listed.components.map(component => component.name)
 
-    expect(listed.components).toEqual([
+    expect(names.filter(name => name === 'Div')).toHaveLength(1)
+    expect(names.filter(name => name === 'Main')).toHaveLength(1)
+    expect(names.filter(name => name === 'P')).toHaveLength(1)
+    expect(names.filter(name => name === 'Code')).toHaveLength(1)
+    expect(names).not.toContain('Canvas')
+
+    const code = listed.components.find(component => component.name === 'Code')
+    expect(code).toEqual(
       expect.objectContaining({
-        name: 'Div',
         count: expect.any(Number),
         kind: 'primitive',
         source: '@reference-ui/react',
-        interfaceName: 'DivProps',
+        interfaceName: 'CodeProps',
         styleProps: expect.objectContaining({ supported: true }),
+        usageSemantics: expect.objectContaining({
+          count: expect.stringContaining('JSX opening-element occurrences'),
+        }),
       }),
-    ])
-    expect(listed.components[0]?.count).toBeGreaterThan(0)
+    )
+    expect(code?.count).toBeGreaterThan(0)
   })
 })
