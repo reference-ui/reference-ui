@@ -24,8 +24,23 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value)
 }
 
+/**
+ * Token leaves carry mode slots as `value` and/or `light` / `dark` with **scalar** (typically string) values.
+ * If `light` or `dark` is itself a plain object, that key is a **nested group** (e.g. a tier named `light`),
+ * not a light-theme color slot — the parent must be normalized as a group.
+ */
 function isReferenceTokenLeaf(value: unknown): value is ReferenceTokenLeaf {
-  return isPlainObject(value) && ('value' in value || 'light' in value || 'dark' in value)
+  if (!isPlainObject(value) || !('value' in value || 'light' in value || 'dark' in value)) {
+    return false
+  }
+  const { light, dark } = value
+  if (light !== undefined && isPlainObject(light)) {
+    return false
+  }
+  if (dark !== undefined && isPlainObject(dark)) {
+    return false
+  }
+  return true
 }
 
 function stripModeOverrides(token: ReferenceTokenLeaf): Record<string, unknown> {
