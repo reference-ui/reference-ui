@@ -1,9 +1,11 @@
 import { globalCss } from '@reference-ui/system'
-import { baseTypography } from '../shared'
+import { baseTypography, focusRingStyles } from '../shared'
 
 export const inlinePrimitiveStyles = {
   '.ref-a': {
     ...baseTypography,
+    ...focusRingStyles,
+    borderRadius: 'sm',
     color: '{colors.ui.link.default}',
     textDecoration: 'underline',
     textUnderlineOffset: '0.15em',

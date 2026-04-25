@@ -31,7 +31,7 @@ export const buttonPrimitiveStyles = {
         'color-mix(in oklch, {colors.ui.button.background} 90%, transparent)',
     },
     _active: {
-      ...focusRingStyles._focusVisible,
+      outlineOffset: '2px',
       outlineColor:
         'color-mix(in oklch, var(--colors-ui-focus-ring) 61.8%, transparent)',
       boxShadow:

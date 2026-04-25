@@ -16,7 +16,7 @@ export const radioPrimitiveStyles = {
     borderRadius: 'full',
     backgroundColor: '{colors.ui.radio.track.background}',
     transitionProperty:
-      'border-color, border-width, background-color, box-shadow, outline-color, outline-offset',
+      'border-color, background-color, box-shadow, outline-color, outline-offset',
     _checked: {
       backgroundColor: '{colors.ui.radio.checked.inner.background}',
       borderWidth: '0.95r',
