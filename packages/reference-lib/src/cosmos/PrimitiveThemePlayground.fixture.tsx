@@ -407,7 +407,7 @@ return <Button>{tone}</Button>`}</Pre>
       </SectionCard>
 
       <SectionCard title="Dialog">
-        <Dialog open>
+        <Dialog open tabIndex={-1} position="static" margin="0" width="100%" maxWidth="28rem">
           <H3>Primitive theme review</H3>
           <P>
             Dialog containers need surface, border, spacing, and readable typography before
