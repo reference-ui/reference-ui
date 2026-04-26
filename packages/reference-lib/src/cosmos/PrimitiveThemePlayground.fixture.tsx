@@ -229,9 +229,6 @@ return <Button>{tone}</Button>`}</Pre>
             <Field label="Progress">
               <Progress value={68} max={100} />
             </Field>
-            <Field label="Meter">
-              <Meter min={0} max={100} low={30} high={80} optimum={70} value={72} />
-            </Field>
           </Div>
 
           <Fieldset>
@@ -256,6 +253,24 @@ return <Button>{tone}</Button>`}</Pre>
             <Button type="submit">Save theme pass</Button>
           </Div>
         </Form>
+      </SectionCard>
+
+      <SectionCard title="Meters">
+        <Div
+          display="grid"
+          gap="4r"
+          gridTemplateColumns="repeat(auto-fit, minmax(16rem, 1fr))"
+        >
+          <Field label="Low">
+            <Meter min={0} max={100} low={33} high={66} optimum={80} value={20} />
+          </Field>
+          <Field label="Suboptimum">
+            <Meter min={0} max={100} low={33} high={66} optimum={80} value={50} />
+          </Field>
+          <Field label="Optimum">
+            <Meter min={0} max={100} low={33} high={66} optimum={80} value={84} />
+          </Field>
+        </Div>
       </SectionCard>
 
       <SectionCard title="Tables">

@@ -1,8 +1,6 @@
 import { globalCss } from '@reference-ui/system'
 import { trackBackground } from '../shared'
 
-const blue600 = '{colors.blue.600}'
-
 export const meterPrimitiveStyles = {
   '.ref-progress': {
     appearance: 'none',
@@ -38,7 +36,7 @@ export const meterPrimitiveStyles = {
     display: 'block',
     width: '100%',
     height: '1.5r',
-    accentColor: blue600,
+    accentColor: '{colors.ui.meter.optimum.foreground}',
     borderWidth: '0',
     borderRadius: 'full',
     backgroundColor: trackBackground,
@@ -56,17 +54,42 @@ export const meterPrimitiveStyles = {
     boxShadow: 'none',
   },
 
-  '.ref-meter::-webkit-meter-optimum-value, .ref-meter::-webkit-meter-suboptimum-value, .ref-meter::-webkit-meter-even-less-good-value':
-    {
-      background: blue600,
-      backgroundColor: blue600,
-      backgroundImage: 'none',
-      borderRadius: 'full',
-      boxShadow: 'none',
-    },
+  '.ref-meter::-webkit-meter-optimum-value': {
+    background: '{colors.ui.meter.optimum.foreground}',
+    backgroundColor: '{colors.ui.meter.optimum.foreground}',
+    backgroundImage: 'none',
+    borderRadius: 'full',
+    boxShadow: 'none',
+  },
 
-  '.ref-meter::-moz-meter-bar': {
-    background: blue600,
+  '.ref-meter::-webkit-meter-suboptimum-value': {
+    background: '{colors.ui.meter.suboptimum.foreground}',
+    backgroundColor: '{colors.ui.meter.suboptimum.foreground}',
+    backgroundImage: 'none',
+    borderRadius: 'full',
+    boxShadow: 'none',
+  },
+
+  '.ref-meter::-webkit-meter-even-less-good-value': {
+    background: '{colors.ui.meter.evenLessGood.foreground}',
+    backgroundColor: '{colors.ui.meter.evenLessGood.foreground}',
+    backgroundImage: 'none',
+    borderRadius: 'full',
+    boxShadow: 'none',
+  },
+
+  '.ref-meter:-moz-meter-optimum::-moz-meter-bar': {
+    background: '{colors.ui.meter.optimum.foreground}',
+    borderRadius: 'full',
+  },
+
+  '.ref-meter:-moz-meter-sub-optimum::-moz-meter-bar': {
+    background: '{colors.ui.meter.suboptimum.foreground}',
+    borderRadius: 'full',
+  },
+
+  '.ref-meter:-moz-meter-sub-sub-optimum::-moz-meter-bar': {
+    background: '{colors.ui.meter.evenLessGood.foreground}',
     borderRadius: 'full',
   },
 } as const
