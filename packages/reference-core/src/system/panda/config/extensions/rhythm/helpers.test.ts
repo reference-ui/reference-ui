@@ -2,30 +2,30 @@ import { describe, it, expect } from 'vitest'
 import { getRhythm, resolveRhythm } from './helpers'
 
 describe('getRhythm', () => {
-  it('returns var(--spacing-r) for 1', () => {
-    expect(getRhythm(1)).toBe('var(--spacing-r)')
+  it('returns var(--spacing-root) for 1', () => {
+    expect(getRhythm(1)).toBe('var(--spacing-root)')
   })
 
   it('returns calc for integer units', () => {
-    expect(getRhythm(2)).toBe('calc(2 * var(--spacing-r))')
+    expect(getRhythm(2)).toBe('calc(2 * var(--spacing-root))')
   })
 
   it('returns calc for fractional units', () => {
-    expect(getRhythm(0.5)).toBe('calc(0.5 * var(--spacing-r))')
+    expect(getRhythm(0.5)).toBe('calc(0.5 * var(--spacing-root))')
   })
 
   it('returns calc for fractional with denominator', () => {
-    expect(getRhythm(1, 3)).toBe('calc(var(--spacing-r) / 3)')
+    expect(getRhythm(1, 3)).toBe('calc(var(--spacing-root) / 3)')
   })
 
   it('returns calc for num/denom', () => {
-    expect(getRhythm(2, 3)).toBe('calc(2 * var(--spacing-r) / 3)')
+    expect(getRhythm(2, 3)).toBe('calc(2 * var(--spacing-root) / 3)')
   })
 })
 
 describe('resolveRhythm', () => {
   it('resolves "2r" to calc', () => {
-    expect(resolveRhythm('2r')).toBe('calc(2 * var(--spacing-r))')
+    expect(resolveRhythm('2r')).toBe('calc(2 * var(--spacing-root))')
   })
 
   it('passes through non-r strings', () => {

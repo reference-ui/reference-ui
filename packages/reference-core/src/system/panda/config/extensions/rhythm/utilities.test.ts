@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { rhythmUtilities } from './utilities'
 
-const pointTwoR = 'calc(0.2 * var(--spacing-r))'
+const pointTwoR = 'calc(0.2 * var(--spacing-root))'
 
 describe('rhythmUtilities border width transforms', () => {
   const borderWidthKeys = [
