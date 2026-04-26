@@ -1,5 +1,13 @@
 # @reference-ui/core
 
+## 0.0.39
+
+### Patch Changes
+
+- CI RELEASE
+- Updated dependencies
+  - @reference-ui/rust@0.0.38
+
 ## 0.0.38
 
 ### Patch Changes
