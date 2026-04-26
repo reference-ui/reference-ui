@@ -1,7 +1,7 @@
 export const baseTypography = {
   fontFamily: 'sans',
   letterSpacing: '-0.01em',
-  color: '{colors.ui.copy.foreground}',
+  color: '{colors.design.text.base}',
   fontSize: '4r',
 } as const
 

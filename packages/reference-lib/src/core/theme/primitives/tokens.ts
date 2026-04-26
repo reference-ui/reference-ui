@@ -5,12 +5,8 @@ import { tokens } from '@reference-ui/system'
  * Values intentionally repeat palette steps where semantics match but names stay local to each element.
  */
 export const ui = {
-  copy: {
-    foreground: { light: '{colors.design.text.base}', dark: '{colors.design.text.base}' },
-  },
-
   selection: {
-    background: { light: '{colors.gray.900}', dark: '{colors.gray.300}' },
+    background: { light: '{colors.gray.900}', dark: '{colors.gray.100}' },
     foreground: { light: '{colors.gray.50}', dark: '{colors.gray.800}' },
   },
 
