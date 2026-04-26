@@ -23,6 +23,9 @@ export const inputPrimitiveStyles = {
     color: '{colors.ui.field.foreground}',
     fontSize: '3.5r',
     lineHeight: '5r',
+    _hover: {
+      borderColor: '{colors.ui.field.borderHover}',
+    },
     _focusVisible: {
       ...focusRingStyles._focusVisible,
       borderColor: '{colors.ui.field.border}',
@@ -52,6 +55,9 @@ export const inputPrimitiveStyles = {
     lineHeight: '5r',
     paddingInline: '1r',
     cursor: 'pointer',
+    _hover: {
+      borderColor: '{colors.ui.field.borderHover}',
+    },
     _focusVisible: {
       ...focusRingStyles._focusVisible,
       borderColor: '{colors.ui.field.border}',

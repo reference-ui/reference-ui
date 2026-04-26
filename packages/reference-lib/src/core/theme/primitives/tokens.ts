@@ -130,7 +130,8 @@ export const ui = {
   },
 
   field: {
-    border: { light: '{colors.gray.200}', dark: '{colors.gray.700}' },
+    border: { light: '{colors.gray.300}', dark: '{colors.gray.700}' },
+    borderHover: { light: '{colors.gray.400}', dark: '{colors.gray.600}' },
     background: { light: 'oklch(100% 0 0)', dark: '{colors.gray.950}' },
     foreground: { light: '{colors.design.text.base}', dark: '{colors.design.text.base}' },
     focusRing: { light: '{colors.gray.400}', dark: '{colors.gray.500}' },
