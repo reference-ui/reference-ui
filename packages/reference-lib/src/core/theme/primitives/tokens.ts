@@ -153,7 +153,7 @@ export const ui = {
 
   radio: {
     track: {
-      background: { light: '{colors.gray.100}', dark: '{colors.gray.800}' },
+      background: { light: '{colors.gray.300}', dark: '{colors.gray.800}' },
     },
     checked: {
       inner: {

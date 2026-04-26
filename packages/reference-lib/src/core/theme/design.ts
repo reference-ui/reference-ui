@@ -17,9 +17,9 @@ export const design = {
 
   accent: {
     foreground: { light: '{colors.blue.600}', dark: '{colors.blue.300}' },
-    background: { light: '{colors.blue.50}', dark: '{colors.gray.950}' },
+    background: { light: '{colors.gray.100}', dark: '{colors.gray.950}' },
     hover: { light: '{colors.blue.800}', dark: '{colors.blue.300}' },
-    border: { light: '{colors.blue.100}', dark: '{colors.blue.950}' },
+    border: { light: '{colors.gray.300}', dark: '{colors.blue.950}' },
   },
 
   text: {

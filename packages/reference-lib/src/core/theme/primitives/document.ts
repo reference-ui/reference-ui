@@ -1,5 +1,5 @@
 import { globalCss } from '@reference-ui/system'
-import { baseTypography, blockText } from './shared'
+import { baseTypography, blockText, focusRingStyles } from './shared'
 
 export const documentPrimitiveStyles = {
   '.ref-div, .ref-span, .ref-main, .ref-header, .ref-footer, .ref-section, .ref-article, .ref-aside, .ref-nav, .ref-search, .ref-form, .ref-address, .ref-hgroup':
@@ -28,6 +28,7 @@ export const documentPrimitiveStyles = {
 
   '.ref-dialog': {
     ...blockText,
+    ...focusRingStyles,
     width: 'calc(100% - calc(8 * var(--spacing-root)))',
     maxWidth: '36rem',
     borderWidth: '1px',
