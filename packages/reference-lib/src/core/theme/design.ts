@@ -33,4 +33,4 @@ export const design = {
   },
 } as const
 
-tokens({ design })
+tokens({ colors: { design } })
