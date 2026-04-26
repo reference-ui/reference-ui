@@ -10,8 +10,8 @@ export const ui = {
   },
 
   selection: {
-    background: { light: '{colors.gray.300}', dark: '{colors.gray.300}' },
-    foreground: { light: '{colors.gray.950}', dark: '{colors.gray.800}' },
+    background: { light: '{colors.gray.900}', dark: '{colors.gray.300}' },
+    foreground: { light: '{colors.gray.50}', dark: '{colors.gray.800}' },
   },
 
   dialog: {
@@ -43,8 +43,9 @@ export const ui = {
 
   code: {
     inline: {
-      foreground: { light: '{colors.design.text.base}', dark: '{colors.design.text.base}' },
-      background: { light: '{colors.gray.100}', dark: '{colors.gray.900}' },
+      foreground: { light: '{colors.design.accent.foreground}', dark: '{colors.design.accent.foreground}' },
+      background: { light: '{colors.design.accent.background}', dark: '{colors.design.accent.background}' },
+      border: { light: '{colors.design.accent.border}', dark: '{colors.design.accent.border}' },
     },
   },
 
@@ -56,14 +57,14 @@ export const ui = {
   },
 
   pre: {
-    background: { light: '{colors.gray.100}', dark: '{colors.gray.900}' },
     foreground: { light: '{colors.design.text.base}', dark: '{colors.design.text.base}' },
-    border: { light: '{colors.gray.200}', dark: '{colors.gray.800}' },
+    background: { light: '{colors.gray.100}', dark: '{colors.gray.900}' },
+    border: { light: '{colors.design.accent.border}', dark: '{colors.gray.800}' },
   },
 
   samp: {
-    background: { light: '{colors.gray.100}', dark: '{colors.gray.800}' },
-    foreground: { light: '{colors.design.text.light}', dark: '{colors.design.text.light}' },
+    background: { light: '{colors.gray.200}', dark: '{colors.gray.800}' },
+    foreground: { light: '{colors.design.text.base}', dark: '{colors.design.text.light}' },
   },
 
   link: {

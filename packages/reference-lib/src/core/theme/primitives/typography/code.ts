@@ -11,6 +11,9 @@ export const codePrimitiveStyles = {
     paddingInline: '0.4em',
     paddingBlock: '0.15em',
     borderRadius: 'sm',
+    borderWidth: '1px',
+    borderStyle: 'solid',
+    borderColor: '{colors.ui.code.inline.border}',
   },
   '.ref-kbd': {
     ...baseTypography,
