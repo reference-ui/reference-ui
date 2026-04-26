@@ -423,7 +423,7 @@ importers:
         specifier: workspace:*
         version: link:../reference-core
       '@reference-ui/icons':
-        specifier: 0.0.35
+        specifier: 0.0.36
         version: link:../reference-icons
       react:
         specifier: ^19.2.4
