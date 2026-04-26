@@ -38,6 +38,28 @@ describe('resolveRhythm', () => {
 
   it('passes through non-r strings', () => {
     expect(resolveRhythm('1rem')).toBe('1rem')
+    expect(resolveRhythm('0.34rem')).toBe('0.34rem')
+    expect(resolveRhythm('12%')).toBe('12%')
+    expect(resolveRhythm('auto')).toBe('auto')
+  })
+
+  it('resolves whitespace-separated rhythm shorthands without clobbering other CSS units', () => {
+    expect(resolveRhythm('1r 2r')).toBe(
+      'var(--spacing-root) calc(2 * var(--spacing-root))',
+    )
+    expect(resolveRhythm('0.34rem 2r')).toBe(
+      '0.34rem calc(2 * var(--spacing-root))',
+    )
+    expect(resolveRhythm('1r 0.34rem 3r auto')).toBe(
+      'var(--spacing-root) 0.34rem calc(3 * var(--spacing-root)) auto',
+    )
+    expect(resolveRhythm('12% 1r')).toBe('12% var(--spacing-root)')
+  })
+
+  it('leaves complex grammar and function values untouched', () => {
+    expect(resolveRhythm('calc(0.34rem + 1r)')).toBe('calc(0.34rem + 1r)')
+    expect(resolveRhythm('min(0.34rem, 1r)')).toBe('min(0.34rem, 1r)')
+    expect(resolveRhythm('var(--space-2) 1r')).toBe('var(--space-2) 1r')
   })
 
   it('passes through invalid fraction rhythm strings', () => {
