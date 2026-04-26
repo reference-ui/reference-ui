@@ -31,11 +31,8 @@ export const buttonPrimitiveStyles = {
         'color-mix(in oklch, {colors.ui.button.background} 90%, transparent)',
     },
     _active: {
-      outlineOffset: '2px',
-      outlineColor:
-        'color-mix(in oklch, var(--colors-ui-focus-ring) 61.8%, transparent)',
       boxShadow:
-        '0 2px 0 color-mix(in oklch, var(--colors-ui-button-foreground) 61.8%, transparent)',
+        '0 0 0 4px color-mix(in oklch, var(--colors-ui-button-background) 15.2%, transparent)',
     },
     _disabled: {
       pointerEvents: 'none',
