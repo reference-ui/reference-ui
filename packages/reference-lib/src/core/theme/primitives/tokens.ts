@@ -6,7 +6,7 @@ import { tokens } from '@reference-ui/system'
  */
 export const ui = {
   copy: {
-    foreground: { light: '{colors.gray.950}', dark: '{colors.gray.50}' },
+    foreground: { light: '{colors.design.text.base}', dark: '{colors.design.text.base}' },
   },
 
   selection: {
@@ -16,7 +16,7 @@ export const ui = {
 
   dialog: {
     background: { light: 'oklch(100% 0 0)', dark: '{colors.gray.950}' },
-    foreground: { light: '{colors.gray.950}', dark: '{colors.gray.50}' },
+    foreground: { light: '{colors.design.text.base}', dark: '{colors.design.text.base}' },
     border: { light: '{colors.gray.200}', dark: '{colors.gray.800}' },
   },
 
@@ -25,45 +25,45 @@ export const ui = {
   },
 
   meta: {
-    foreground: { light: '{colors.gray.500}', dark: '{colors.gray.400}' },
+    foreground: { light: '{colors.design.text.light}', dark: '{colors.design.text.light}' },
   },
 
   blockquote: {
-    foreground: { light: '{colors.gray.500}', dark: '{colors.gray.400}' },
+    foreground: { light: '{colors.design.text.light}', dark: '{colors.design.text.light}' },
     border: { light: '{colors.gray.300}', dark: '{colors.gray.700}' },
   },
 
   cite: {
-    foreground: { light: '{colors.gray.500}', dark: '{colors.gray.400}' },
+    foreground: { light: '{colors.design.text.light}', dark: '{colors.design.text.light}' },
   },
 
   small: {
-    foreground: { light: '{colors.gray.500}', dark: '{colors.gray.400}' },
+    foreground: { light: '{colors.design.text.light}', dark: '{colors.design.text.light}' },
   },
 
   code: {
     inline: {
-      foreground: { light: '{colors.gray.950}', dark: '{colors.gray.50}' },
+      foreground: { light: '{colors.design.text.base}', dark: '{colors.design.text.base}' },
       background: { light: '{colors.gray.100}', dark: '{colors.gray.900}' },
     },
   },
 
   kbd: {
     background: { light: '{colors.gray.100}', dark: '{colors.gray.800}' },
-    foreground: { light: '{colors.gray.950}', dark: '{colors.gray.50}' },
+    foreground: { light: '{colors.design.text.base}', dark: '{colors.design.text.base}' },
     border: { light: '{colors.gray.200}', dark: '{colors.gray.800}' },
     shadowMix: { light: '{colors.gray.950}', dark: '{colors.gray.50}' },
   },
 
   pre: {
     background: { light: '{colors.gray.100}', dark: '{colors.gray.900}' },
-    foreground: { light: '{colors.gray.950}', dark: '{colors.gray.50}' },
+    foreground: { light: '{colors.design.text.base}', dark: '{colors.design.text.base}' },
     border: { light: '{colors.gray.200}', dark: '{colors.gray.800}' },
   },
 
   samp: {
     background: { light: '{colors.gray.100}', dark: '{colors.gray.800}' },
-    foreground: { light: '{colors.gray.500}', dark: '{colors.gray.400}' },
+    foreground: { light: '{colors.design.text.light}', dark: '{colors.design.text.light}' },
   },
 
   link: {
@@ -77,7 +77,7 @@ export const ui = {
   },
 
   ins: {
-    foreground: { light: '{colors.gray.950}', dark: '{colors.gray.50}' },
+    foreground: { light: '{colors.design.text.base}', dark: '{colors.design.text.base}' },
     decoration: { light: '{colors.blue.700}', dark: '{colors.blue.400}' },
   },
 
@@ -86,23 +86,23 @@ export const ui = {
   },
 
   del: {
-    foreground: { light: '{colors.gray.500}', dark: '{colors.gray.400}' },
+    foreground: { light: '{colors.design.text.light}', dark: '{colors.design.text.light}' },
   },
 
   dfn: {
-    foreground: { light: '{colors.gray.500}', dark: '{colors.gray.400}' },
+    foreground: { light: '{colors.design.text.light}', dark: '{colors.design.text.light}' },
   },
 
   q: {
-    foreground: { light: '{colors.gray.500}', dark: '{colors.gray.400}' },
+    foreground: { light: '{colors.design.text.light}', dark: '{colors.design.text.light}' },
   },
 
   s: {
-    foreground: { light: '{colors.gray.500}', dark: '{colors.gray.400}' },
+    foreground: { light: '{colors.design.text.light}', dark: '{colors.design.text.light}' },
   },
 
   u: {
-    textDecoration: { light: '{colors.gray.500}', dark: '{colors.gray.400}' },
+    textDecoration: { light: '{colors.design.text.light}', dark: '{colors.design.text.light}' },
   },
 
   varTag: {
@@ -111,11 +111,11 @@ export const ui = {
 
   list: {
     marker: {
-      foreground: { light: '{colors.gray.500}', dark: '{colors.gray.400}' },
+      foreground: { light: '{colors.design.text.light}', dark: '{colors.design.text.light}' },
     },
     definition: {
       description: {
-        foreground: { light: '{colors.gray.500}', dark: '{colors.gray.400}' },
+        foreground: { light: '{colors.design.text.light}', dark: '{colors.design.text.light}' },
       },
     },
   },
@@ -131,7 +131,7 @@ export const ui = {
   field: {
     border: { light: '{colors.gray.200}', dark: '{colors.gray.700}' },
     background: { light: 'oklch(100% 0 0)', dark: '{colors.gray.950}' },
-    foreground: { light: '{colors.gray.950}', dark: '{colors.gray.50}' },
+    foreground: { light: '{colors.design.text.base}', dark: '{colors.design.text.base}' },
     focusRing: { light: '{colors.gray.400}', dark: '{colors.gray.500}' },
     placeholder: { light: '{colors.gray.500}', dark: '{colors.gray.400}' },
     controlAccent: { light: '{colors.gray.950}', dark: '{colors.gray.50}' },
@@ -168,7 +168,7 @@ export const ui = {
     foreground: { light: '{colors.gray.50}', dark: '{colors.gray.950}' },
     disabled: {
       background: { light: '{colors.gray.200}', dark: '{colors.gray.800}' },
-      foreground: { light: '{colors.gray.500}', dark: '{colors.gray.400}' },
+      foreground: { light: '{colors.design.text.lighter}', dark: '{colors.design.text.lighter}' },
     },
   },
 
@@ -195,16 +195,16 @@ export const ui = {
       mutedBackground: { light: '{colors.gray.100}', dark: '{colors.gray.800}' },
     },
     cell: {
-      foreground: { light: '{colors.gray.950}', dark: '{colors.gray.50}' },
+      foreground: { light: '{colors.design.text.base}', dark: '{colors.design.text.base}' },
     },
     caption: {
-      foreground: { light: '{colors.gray.500}', dark: '{colors.gray.400}' },
+      foreground: { light: '{colors.design.text.light}', dark: '{colors.design.text.light}' },
     },
   },
 
   media: {
     caption: {
-      foreground: { light: '{colors.gray.500}', dark: '{colors.gray.400}' },
+      foreground: { light: '{colors.design.text.light}', dark: '{colors.design.text.light}' },
     },
     embed: {
       border: { light: '{colors.gray.200}', dark: '{colors.gray.800}' },
