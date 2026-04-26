@@ -41,19 +41,57 @@ function parseRhythmFraction(value: string): [number, number] | undefined {
   return [numerator, denominator]
 }
 
-/** Resolves rhythm strings like "2r" or "1/5r" to calc values, passthrough otherwise */
-export function resolveRhythm(value: unknown): string | number {
-  if (typeof value === 'string' && value.endsWith('r')) {
-    const rhythmValue = value.slice(0, -1)
-    const fraction = parseRhythmFraction(rhythmValue)
-    if (fraction) {
-      return getRhythm(fraction[0], fraction[1])
+function resolveSingleRhythmValue(value: string): string | undefined {
+  if (!value.endsWith('r')) {
+    return undefined
+  }
+
+  const rhythmValue = value.slice(0, -1)
+  const fraction = parseRhythmFraction(rhythmValue)
+  if (fraction) {
+    return getRhythm(fraction[0], fraction[1])
+  }
+
+  const n = Number(rhythmValue)
+  if (!Number.isNaN(n)) {
+    return getRhythm(n)
+  }
+
+  return undefined
+}
+
+function resolveRhythmShorthand(value: string): string | undefined {
+  if (!/\s/.test(value) || /[(),]/.test(value)) {
+    return undefined
+  }
+
+  const parts = value.trim().split(/\s+/)
+  if (parts.length < 2) {
+    return undefined
+  }
+
+  let didResolve = false
+  const resolvedParts = parts.map((part) => {
+    const resolved = resolveSingleRhythmValue(part)
+    if (resolved !== undefined) {
+      didResolve = true
+      return resolved
     }
 
-    const n = Number(rhythmValue)
-    if (!Number.isNaN(n)) {
-      return getRhythm(n)
+    return part
+  })
+
+  return didResolve ? resolvedParts.join(' ') : undefined
+}
+
+/** Resolves rhythm strings like "2r" or "1/5r" to calc values, passthrough otherwise */
+export function resolveRhythm(value: unknown): string | number {
+  if (typeof value === 'string') {
+    const resolved = resolveSingleRhythmValue(value) ?? resolveRhythmShorthand(value)
+    if (resolved !== undefined) {
+      return resolved
     }
   }
+
   return value as string | number
 }

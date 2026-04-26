@@ -46,6 +46,41 @@ describe('rhythmUtilities border width transforms', () => {
     })
   })
 
+  it('maps whitespace-separated rhythm shorthands token by token', () => {
+    expect(rhythmUtilities.padding.transform('1r 2r')).toEqual({
+      padding: 'var(--spacing-root) calc(2 * var(--spacing-root))',
+    })
+    expect(rhythmUtilities.padding.transform('0.34rem 2r')).toEqual({
+      padding: '0.34rem calc(2 * var(--spacing-root))',
+    })
+    expect(rhythmUtilities.padding.transform('1r 2r 3r 4r')).toEqual({
+      padding:
+        'var(--spacing-root) calc(2 * var(--spacing-root)) calc(3 * var(--spacing-root)) calc(4 * var(--spacing-root))',
+    })
+    expect(rhythmUtilities.margin.transform('1r auto')).toEqual({
+      margin: 'var(--spacing-root) auto',
+    })
+    expect(rhythmUtilities.margin.transform('1r 2r 3r 4r')).toEqual({
+      margin:
+        'var(--spacing-root) calc(2 * var(--spacing-root)) calc(3 * var(--spacing-root)) calc(4 * var(--spacing-root))',
+    })
+    expect(rhythmUtilities.gap.transform('1r 2r')).toEqual({
+      gap: 'var(--spacing-root) calc(2 * var(--spacing-root))',
+    })
+    expect(rhythmUtilities.borderSpacing.transform('1r 2r')).toEqual({
+      borderSpacing: 'var(--spacing-root) calc(2 * var(--spacing-root))',
+    })
+  })
+
+  it('leaves complex grammar alone when shorthand parsing would be ambiguous', () => {
+    expect(rhythmUtilities.padding.transform('calc(1r + 2px)')).toEqual({
+      padding: 'calc(1r + 2px)',
+    })
+    expect(rhythmUtilities.padding.transform('min(1r, 2rem)')).toEqual({
+      padding: 'min(1r, 2rem)',
+    })
+  })
+
   it('maps size through sizeStyles for fraction rhythm strings', () => {
     expect(rhythmUtilities.size.transform('1/5r')).toEqual({
       width: 'calc(var(--spacing-root) / 5)',

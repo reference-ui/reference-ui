@@ -30,6 +30,18 @@ describe('rhythm spacing utilities', () => {
     expect(el).toHaveTextContent('Rhythm test')
   })
 
+  it('mounts multi-value rhythm shorthands and preserves mixed CSS atoms', () => {
+    render(
+      <Div data-testid="rhythm-shorthand" padding="1r 2r" margin="1r auto">
+        Rhythm shorthand test
+      </Div>
+    )
+
+    const el = screen.getByTestId('rhythm-shorthand')
+    expect(el).toBeInTheDocument()
+    expect(el).toHaveTextContent('Rhythm shorthand test')
+  })
+
   it('applies rhythm padding when design system CSS is present', () => {
     if (!getDesignSystemCssPath()) return
 
@@ -43,6 +55,31 @@ describe('rhythm spacing utilities', () => {
     // 2r = calc(2 * var(--spacing-r)), with --spacing-r = 16px by default → 32px
     if (style.paddingTop) {
       expect(Number.parseFloat(style.paddingTop)).toBeGreaterThan(0)
+    }
+  })
+
+  it('applies multi-value rhythm shorthands when design system CSS is present', () => {
+    if (!getDesignSystemCssPath()) return
+
+    render(
+      <Div data-testid="rhythm-shorthand-css" padding="1r 2r">
+        Content
+      </Div>
+    )
+
+    const el = screen.getByTestId('rhythm-shorthand-css')
+    const style = window.getComputedStyle(el)
+
+    if (style.paddingTop) {
+      expect(Number.parseFloat(style.paddingTop)).toBeGreaterThan(0)
+    }
+    if (style.paddingRight) {
+      expect(Number.parseFloat(style.paddingRight)).toBeGreaterThan(0)
+    }
+    if (style.paddingTop && style.paddingRight) {
+      expect(Number.parseFloat(style.paddingRight)).toBeGreaterThan(
+        Number.parseFloat(style.paddingTop),
+      )
     }
   })
 })
