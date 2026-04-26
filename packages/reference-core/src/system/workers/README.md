@@ -1,6 +1,6 @@
 # System Workers
 
-Worker threads for the system pipeline. Each worker is a flat `on()` list wired to event handlers — no internal orchestration logic. Coordination happens in `sync/events.ts`.
+Worker threads for the system pipeline. Most workers are flat `on()` lists wired to event handlers, with high-level coordination in `sync/events.ts`. The Panda worker is the exception: it serializes its own runs because codegen/css jobs mutate one shared generated artifact set.
 
 Workers are registered in `workers.json` at the package root and bundled by tsup.
 
@@ -44,6 +44,8 @@ on('run:panda:css')      →  panda cssgen   →  emit('system:panda:css')
 ```
 
 Fast path: `run:panda:css` for watch-mode file changes (CSS only, no codegen).
+
+Internally the worker keeps only one Panda run in flight at a time, coalesces redundant watch triggers, and lets queued `run:panda:codegen` requests outrank queued CSS-only work.
 
 ---
 

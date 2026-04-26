@@ -65,6 +65,50 @@ function createContractError(message: string): Error {
   return new PandaCssContractError(`Panda global.css contract changed: ${message}`)
 }
 
+function requireLayerOrder(layerOrder: AtRule | undefined): AtRule {
+  if (layerOrder) return layerOrder
+  throw createContractError('expected a top-level @layer order declaration in styles.css')
+}
+
+function requireBaseLayer(baseLayer: AtRule | undefined, filename: 'global.css' | 'styles.css'): AtRule {
+  if (baseLayer) return baseLayer
+  throw createContractError(`expected a top-level @layer base block in ${filename}`)
+}
+
+function isAlreadyDemotedGlobalLayer(
+  rawGlobalLayer: AtRule | undefined,
+  layerOrder: AtRule,
+  globalBaseLayer: AtRule
+): boolean {
+  if (!rawGlobalLayer || !layerOrderIncludes(layerOrder, 'global')) return false
+
+  const normalizedRawGlobalAsBase = normalizeCssText(
+    rawGlobalLayer.clone({ params: 'base' }).toString(),
+  )
+
+  return normalizedRawGlobalAsBase === normalizeCssText(globalBaseLayer.toString())
+}
+
+function resolveRawBaseLayer(input: {
+  rawBaseLayer: AtRule | undefined
+  rawGlobalLayer: AtRule | undefined
+  layerOrder: AtRule
+  globalBaseLayer: AtRule
+  rawCss: string
+}): AtRule | string {
+  const { rawBaseLayer, rawGlobalLayer, layerOrder, globalBaseLayer, rawCss } = input
+
+  if (rawBaseLayer) return rawBaseLayer
+
+  // In watch mode, styles.css may already be the previously postprocessed artifact.
+  // Treat a matching top-level global layer as an idempotent no-op instead of a contract failure.
+  if (isAlreadyDemotedGlobalLayer(rawGlobalLayer, layerOrder, globalBaseLayer)) {
+    return rawCss
+  }
+
+  throw createContractError('expected a top-level @layer base block in styles.css')
+}
+
 /**
  * Move Panda's standalone global.css base layer into a dedicated lower-priority
  * "global" layer inside the combined styles.css artifact.
@@ -78,33 +122,18 @@ export function demotePandaGlobalCssLayer(rawCss: string, globalCss: string | un
 
   const rawRoot = postcss.parse(rawCss)
   const globalRoot = postcss.parse(trimmedGlobalCss)
-  const rawBaseLayer = findTopLevelLayerRule(rawRoot, 'base')
   const rawGlobalLayer = findTopLevelLayerRule(rawRoot, 'global')
-  const globalBaseLayer = findTopLevelLayerRule(globalRoot, 'base')
-  const layerOrder = findTopLevelLayerOrder(rawRoot)
+  const layerOrder = requireLayerOrder(findTopLevelLayerOrder(rawRoot))
+  const globalBaseLayer = requireBaseLayer(findTopLevelLayerRule(globalRoot, 'base'), 'global.css')
+  const rawBaseLayer = resolveRawBaseLayer({
+    rawBaseLayer: findTopLevelLayerRule(rawRoot, 'base'),
+    rawGlobalLayer,
+    layerOrder,
+    globalBaseLayer,
+    rawCss,
+  })
 
-  if (!layerOrder) {
-    throw createContractError('expected a top-level @layer order declaration in styles.css')
-  }
-
-  if (!globalBaseLayer) {
-    throw createContractError('expected a top-level @layer base block in global.css')
-  }
-
-  if (!rawBaseLayer) {
-    // In watch mode, styles.css may already be the previously postprocessed artifact.
-    // Treat a matching top-level global layer as an idempotent no-op instead of a contract failure.
-    if (rawGlobalLayer && layerOrderIncludes(layerOrder, 'global')) {
-      const normalizedRawGlobalAsBase = normalizeCssText(
-        rawGlobalLayer.clone({ params: 'base' }).toString(),
-      )
-      if (normalizedRawGlobalAsBase === normalizeCssText(globalBaseLayer.toString())) {
-        return rawCss
-      }
-    }
-
-    throw createContractError('expected a top-level @layer base block in styles.css')
-  }
+  if (typeof rawBaseLayer === 'string') return rawBaseLayer
 
   if (normalizeCssText(rawBaseLayer.toString()) !== normalizeCssText(globalBaseLayer.toString())) {
     throw createContractError('expected styles.css base layer to match global.css exactly')
