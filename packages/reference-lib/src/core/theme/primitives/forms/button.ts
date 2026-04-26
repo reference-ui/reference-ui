@@ -40,7 +40,8 @@ export const buttonPrimitiveStyles = {
     _disabled: {
       pointerEvents: 'none',
       cursor: 'not-allowed',
-      opacity: 0.5,
+      color: '{colors.ui.button.disabled.foreground}',
+      backgroundColor: '{colors.ui.button.disabled.background}',
     },
   },
 } as const
