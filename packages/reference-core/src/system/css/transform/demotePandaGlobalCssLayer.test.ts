@@ -24,6 +24,17 @@ describe('demotePandaGlobalCssLayer', () => {
     ].join('\n'))
   })
 
+  it('treats an already postprocessed global layer as an idempotent no-op', () => {
+    const rawCss = [
+      '@layer reset, global, base, tokens, utilities;',
+      '@layer global { .ref-code { color: red; } }',
+      '@layer tokens { :where(:root,:host) { --color: red; } }',
+    ].join('\n')
+    const globalCss = '@layer base{.ref-code{color:red;}}'
+
+    expect(demotePandaGlobalCssLayer(rawCss, globalCss)).toBe(rawCss)
+  })
+
   it('fails hard when the combined styles.css base layer no longer matches global.css', () => {
     const rawCss = '@layer base, tokens;\n@layer base { .ref-code { color: blue; } }'
     const globalCss = '@layer base { .ref-code { color: red; } }'
