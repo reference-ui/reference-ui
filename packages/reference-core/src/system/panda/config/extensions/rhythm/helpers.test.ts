@@ -28,12 +28,21 @@ describe('resolveRhythm', () => {
     expect(resolveRhythm('2r')).toBe('calc(2 * var(--spacing-root))')
   })
 
+  it('resolves "1/5r" to calc', () => {
+    expect(resolveRhythm('1/5r')).toBe('calc(var(--spacing-root) / 5)')
+  })
+
+  it('resolves signed fraction rhythm strings', () => {
+    expect(resolveRhythm('-2/3r')).toBe('calc(-2 * var(--spacing-root) / 3)')
+  })
+
   it('passes through non-r strings', () => {
     expect(resolveRhythm('1rem')).toBe('1rem')
   })
 
-  it('passes through slash rhythm tokens for predefined token resolution', () => {
-    expect(resolveRhythm('1/5r')).toBe('1/5r')
+  it('passes through invalid fraction rhythm strings', () => {
+    expect(resolveRhythm('1//5r')).toBe('1//5r')
+    expect(resolveRhythm('1/0r')).toBe('1/0r')
   })
 
   it('passes through numbers', () => {

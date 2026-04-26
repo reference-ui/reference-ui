@@ -9,7 +9,7 @@
 import { describe, it, expect } from 'vitest'
 import { rhythmBorderRadiusUtilities } from '../../../reference-core/src/system/panda/config/extensions/rhythm/border'
 
-const twoR = 'calc(2 * var(--spacing-r))'
+const twoR = 'calc(2 * var(--spacing-root))'
 const lgRadius = '1rem'
 
 type MockToken = ((path: string) => string | undefined) & {
@@ -45,7 +45,7 @@ describe('rhythmUtilities border radius transforms', () => {
     'borderEndEndRadius',
   ] as const
 
-  it('single-property utilities map 2r to calc(2 * var(--spacing-r)) on that property', () => {
+  it('single-property utilities map 2r to calc(2 * var(--spacing-root)) on that property', () => {
     for (const key of singleKeys) {
       const u = rhythmBorderRadiusUtilities[key]
       expect(u.transform('2r', mockArgs('2r')), key).toEqual({ [key]: twoR })
@@ -97,9 +97,9 @@ describe('rhythmUtilities border radius transforms', () => {
     })
   })
 
-  it('1r resolves to var(--spacing-r)', () => {
+  it('1r resolves to var(--spacing-root)', () => {
     expect(rhythmBorderRadiusUtilities.borderRadius.transform('1r', mockArgs('1r'))).toEqual({
-      borderRadius: 'var(--spacing-r)',
+      borderRadius: 'var(--spacing-root)',
     })
   })
 })

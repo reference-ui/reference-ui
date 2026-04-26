@@ -8,8 +8,8 @@ import { rhythmUtilities } from '../../../reference-core/src/system/panda/config
 describe('rhythmUtilities size transform', () => {
   it('maps rhythm units to equal width and height values', () => {
     expect(rhythmUtilities.size.transform('2r')).toEqual({
-      width: 'calc(2 * var(--spacing-r))',
-      height: 'calc(2 * var(--spacing-r))',
+      width: 'calc(2 * var(--spacing-root))',
+      height: 'calc(2 * var(--spacing-root))',
     })
   })
 

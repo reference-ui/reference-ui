@@ -36,4 +36,20 @@ describe('rhythmUtilities border width transforms', () => {
       textUnderlineOffset: pointTwoR,
     })
   })
+
+  it('maps fraction rhythm strings without predefined slash tokens', () => {
+    expect(rhythmUtilities.padding.transform('1/5r')).toEqual({
+      padding: 'calc(var(--spacing-root) / 5)',
+    })
+    expect(rhythmUtilities.margin.transform('-2/3r')).toEqual({
+      margin: 'calc(-2 * var(--spacing-root) / 3)',
+    })
+  })
+
+  it('maps size through sizeStyles for fraction rhythm strings', () => {
+    expect(rhythmUtilities.size.transform('1/5r')).toEqual({
+      width: 'calc(var(--spacing-root) / 5)',
+      height: 'calc(var(--spacing-root) / 5)',
+    })
+  })
 })

@@ -22,10 +22,35 @@ export function getRhythm(num: number, denom?: number): string {
   return `calc(${num} * var(--spacing-root))`
 }
 
-/** Resolves "2r" strings to rhythm calc values, passthrough otherwise */
+function parseRhythmFraction(value: string): [number, number] | undefined {
+  const slashIndex = value.indexOf('/')
+  if (slashIndex <= 0 || slashIndex !== value.lastIndexOf('/')) {
+    return undefined
+  }
+
+  const numerator = Number(value.slice(0, slashIndex))
+  const denominator = Number(value.slice(slashIndex + 1))
+  if (
+    !Number.isFinite(numerator) ||
+    !Number.isFinite(denominator) ||
+    denominator === 0
+  ) {
+    return undefined
+  }
+
+  return [numerator, denominator]
+}
+
+/** Resolves rhythm strings like "2r" or "1/5r" to calc values, passthrough otherwise */
 export function resolveRhythm(value: unknown): string | number {
   if (typeof value === 'string' && value.endsWith('r')) {
-    const n = Number(value.slice(0, -1))
+    const rhythmValue = value.slice(0, -1)
+    const fraction = parseRhythmFraction(rhythmValue)
+    if (fraction) {
+      return getRhythm(fraction[0], fraction[1])
+    }
+
+    const n = Number(rhythmValue)
     if (!Number.isNaN(n)) {
       return getRhythm(n)
     }
