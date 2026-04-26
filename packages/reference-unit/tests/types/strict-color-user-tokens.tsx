@@ -14,9 +14,9 @@ export function StrictColorUserTokenSamples() {
   return (
     <>
       {/* Registered in reference-unit `src/system/styles.ts` */}
-      <Div color="referenceUnitToken" bg="referenceUnitToken" />
+      <Div color="referenceUnitToken" bg="referenceUnitToken" background="referenceUnitToken" />
       {/* From extend-library fixture — merged into consumer ColorToken */}
-      <Div color="fixtureDemoText" bg="fixtureDemoBg" />
+      <Div color="fixtureDemoText" bg="fixtureDemoBg" background="fixtureDemoBg" />
     </>
   )
 }

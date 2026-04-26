@@ -13,10 +13,13 @@ import {
 type DivComponentProps = ComponentProps<typeof Div>
 type DivColorProp = NonNullable<DivComponentProps['color']>
 type DivBgProp = NonNullable<DivComponentProps['bg']>
+type DivBackgroundProp = NonNullable<DivComponentProps['background']>
 
 function expectDivColor(_value: DivColorProp): void {}
 
 function expectDivBg(_value: DivBgProp): void {}
+
+function expectDivBackground(_value: DivBackgroundProp): void {}
 
 function expectTokenConfig(_value: ReferenceTokenConfig): void {}
 
@@ -37,6 +40,7 @@ describe('generated @reference-ui/react package', () => {
     const tokenSafeProps: DivProps = {
       color: 'blue.400',
       bg: 'gray.300',
+      background: 'gray.300',
       p: '4',
       rounded: 'md',
     }
@@ -44,14 +48,16 @@ describe('generated @reference-ui/react package', () => {
     const tokenSafeComponentProps: DivComponentProps = {
       color: 'blue.400',
       bg: 'gray.300',
+      background: 'gray.300',
       p: '4',
       rounded: 'md',
     }
 
-    const validElement = <Div color="blue.400" bg="gray.300" p="4" rounded="md" />
+    const validElement = <Div color="blue.400" bg="gray.300" background="gray.300" p="4" rounded="md" />
 
     expectDivColor('blue.400')
     expectDivBg('gray.300')
+    expectDivBackground('gray.300')
 
     // @ts-expect-error primitive color props must not widen back to arbitrary strings
     const invalidDivProps: DivProps = { color: 'definitely-not-a-token' }
@@ -59,11 +65,17 @@ describe('generated @reference-ui/react package', () => {
     // @ts-expect-error runtime component props must preserve the same token narrowing
     const invalidComponentProps: DivComponentProps = { bg: 'not-a-bg-token' }
 
+    // @ts-expect-error runtime component props must preserve the same token narrowing
+    const invalidBackgroundComponentProps: DivComponentProps = { background: 'not-a-background-token' }
+
     // @ts-expect-error JSX consumer usage must reject arbitrary color strings
     const invalidColorElement = <Div color="definitely-not-a-token" />
 
     // @ts-expect-error JSX consumer usage must reject arbitrary background tokens
     const invalidBgElement = <Div bg="not-a-bg-token" />
+
+    // @ts-expect-error JSX consumer usage must reject arbitrary background tokens
+    const invalidBackgroundElement = <Div background="not-a-background-token" />
 
     // @ts-expect-error extracted color prop type must stay token-aware
     expectDivColor('definitely-not-a-token')
@@ -71,14 +83,19 @@ describe('generated @reference-ui/react package', () => {
     // @ts-expect-error extracted bg prop type must stay token-aware
     expectDivBg('not-a-bg-token')
 
+    // @ts-expect-error extracted background prop type must stay token-aware
+    expectDivBackground('not-a-background-token')
+
     expect(tokenSafeProps.color).toBe('blue.400')
     expect(tokenSafeComponentProps.bg).toBe('gray.300')
     expect(validElement).toBeTruthy()
     expectTypeOf<DivProps>().toMatchTypeOf<DivComponentProps>()
     void invalidDivProps
     void invalidComponentProps
+    void invalidBackgroundComponentProps
     void invalidColorElement
     void invalidBgElement
+    void invalidBackgroundElement
   })
 })
 
