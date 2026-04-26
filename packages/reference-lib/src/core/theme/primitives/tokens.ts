@@ -183,6 +183,18 @@ export const ui = {
     },
   },
 
+  meter: {
+    optimum: {
+      foreground: { light: '{colors.blue.600}', dark: '{colors.blue.400}' },
+    },
+    suboptimum: {
+      foreground: { light: '{colors.amber.500}', dark: '{colors.amber.400}' },
+    },
+    evenLessGood: {
+      foreground: { light: '{colors.red.600}', dark: '{colors.red.400}' },
+    },
+  },
+
   focus: {
     ring: { light: '{colors.gray.900}', dark: '{colors.gray.50}' },
   },
