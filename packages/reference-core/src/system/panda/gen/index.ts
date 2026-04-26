@@ -48,32 +48,30 @@ function logCssFailure(cause: unknown, pandaOutput: string | undefined): void {
   }
 }
 
-export function onRunCodegen(): void {
-  runPandaCodegen()
-    .then(() => {
-      emit('system:panda:css')
-      emit('system:panda:codegen')
-    })
-    .catch((err) => {
-      const pandaOutput = getPandaErrorOutput(err)
-      const cause = unwrapPandaError(err)
+export async function onRunCodegen(): Promise<void> {
+  try {
+    await runPandaCodegen()
+    emit('system:panda:css')
+    emit('system:panda:codegen')
+  } catch (err) {
+    const pandaOutput = getPandaErrorOutput(err)
+    const cause = unwrapPandaError(err)
 
-      logCodegenFailure(cause, pandaOutput)
-      if (cause instanceof Error && cause.stack) log.debug('panda', cause.stack)
-      emit('system:panda:codegen:failed')
-    })
+    logCodegenFailure(cause, pandaOutput)
+    if (cause instanceof Error && cause.stack) log.debug('panda', cause.stack)
+    emit('system:panda:codegen:failed')
+  }
 }
 
-export function onRunCss(): void {
-  runPandaCss()
-    .then(() => {
-      emit('system:panda:css')
-    })
-    .catch((err) => {
-      const pandaOutput = getPandaErrorOutput(err)
-      const cause = unwrapPandaError(err)
+export async function onRunCss(): Promise<void> {
+  try {
+    await runPandaCss()
+    emit('system:panda:css')
+  } catch (err) {
+    const pandaOutput = getPandaErrorOutput(err)
+    const cause = unwrapPandaError(err)
 
-      logCssFailure(cause, pandaOutput)
-      throw err
-    })
+    logCssFailure(cause, pandaOutput)
+    throw err
+  }
 }

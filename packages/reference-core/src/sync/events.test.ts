@@ -33,6 +33,7 @@ function fireOn(event: string, payload?: unknown): void {
 }
 
 afterEach(() => {
+  vi.useRealTimers()
   vi.resetModules()
   vi.doUnmock('../lib/event-bus')
   vi.restoreAllMocks()
@@ -192,7 +193,9 @@ describe('sync/events', () => {
     expect(emit).toHaveBeenCalledWith('sync:complete', undefined)
   })
 
-  it('virtual fs changes trigger config and reference rebuilds after initial startup completes', async () => {
+  it('virtual fs changes trigger config and reference rebuilds after the watch burst settles', async () => {
+    vi.useFakeTimers()
+
     const { initEvents } = await loadEventsModule()
     initEvents()
 
@@ -205,6 +208,69 @@ describe('sync/events', () => {
       path: `${FIXTURE_VIRTUAL}/src/button.tsx`,
     })
 
+    expect(emit).not.toHaveBeenCalledWith('run:system:config', undefined)
+    expect(emit).not.toHaveBeenCalledWith('run:reference:build', {})
+
+    await vi.advanceTimersByTimeAsync(50)
+
+    expect(emit).toHaveBeenCalledWith('run:system:config', undefined)
+    expect(emit).toHaveBeenCalledWith('run:reference:build', {})
+  })
+
+  it('fragment-only changes trigger one coalesced config rebuild without reference work', async () => {
+    vi.useFakeTimers()
+
+    const { initEvents } = await loadEventsModule()
+    initEvents()
+
+    fireOn('virtual:complete')
+    emit.mockClear()
+
+    fireOn('virtual:fragment:change', {
+      event: 'change',
+      path: `${FIXTURE_VIRTUAL}/src/theme/tokens.ts`,
+    })
+    fireOn('virtual:fragment:change', {
+      event: 'change',
+      path: `${FIXTURE_VIRTUAL}/src/theme/recipes.ts`,
+    })
+
+    await vi.advanceTimersByTimeAsync(50)
+
+    expect(emit).toHaveBeenCalledTimes(1)
+    expect(emit).toHaveBeenCalledWith('run:system:config', undefined)
+    expect(emit).not.toHaveBeenCalledWith('run:reference:build', {})
+  })
+
+  it('coalesces mixed virtual change bursts into one config rebuild and one reference rebuild', async () => {
+    vi.useFakeTimers()
+
+    const { initEvents } = await loadEventsModule()
+    initEvents()
+
+    fireOn('virtual:complete')
+    emit.mockClear()
+
+    fireOn('virtual:fragment:change', {
+      event: 'change',
+      path: `${FIXTURE_VIRTUAL}/src/theme/tokens.ts`,
+    })
+    await vi.advanceTimersByTimeAsync(25)
+    fireOn('virtual:fs:change', {
+      event: 'unlink',
+      path: `${FIXTURE_VIRTUAL}/src/components/Card.tsx`,
+    })
+    await vi.advanceTimersByTimeAsync(25)
+    fireOn('virtual:fs:change', {
+      event: 'add',
+      path: `${FIXTURE_VIRTUAL}/src/components/LegacyCard.tsx`,
+    })
+
+    expect(emit).not.toHaveBeenCalled()
+
+    await vi.advanceTimersByTimeAsync(50)
+
+    expect(emit).toHaveBeenCalledTimes(2)
     expect(emit).toHaveBeenCalledWith('run:system:config', undefined)
     expect(emit).toHaveBeenCalledWith('run:reference:build', {})
   })
