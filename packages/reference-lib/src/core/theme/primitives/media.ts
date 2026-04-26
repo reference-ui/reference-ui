@@ -23,7 +23,6 @@ export const mediaPrimitiveStyles = {
 
   '.ref-img, .ref-video, .ref-canvas': {
     height: 'auto',
-    borderRadius: 'md',
   },
 
   '.ref-audio': {

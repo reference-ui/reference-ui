@@ -1,5 +1,10 @@
 import { globalCss } from '@reference-ui/system'
-import { baseTypography, focusRingStyles, formControlSize } from '../shared'
+import {
+  baseTypography,
+  focusRingStyles,
+  formControlSize,
+  pressableActiveStyles,
+} from '../shared'
 
 export const buttonPrimitiveStyles = {
   '.ref-button': {
@@ -30,10 +35,7 @@ export const buttonPrimitiveStyles = {
       backgroundColor:
         'color-mix(in oklch, {colors.ui.button.background} 90%, transparent)',
     },
-    _active: {
-      boxShadow:
-        '0 0 0 4px color-mix(in oklch, var(--colors-ui-button-background) 15.2%, transparent)',
-    },
+    _active: pressableActiveStyles('var(--colors-ui-button-background)'),
     _disabled: {
       pointerEvents: 'none',
       cursor: 'not-allowed',

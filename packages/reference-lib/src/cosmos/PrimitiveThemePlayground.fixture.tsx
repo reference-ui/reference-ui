@@ -10,9 +10,12 @@ import {
   Caption,
   Cite,
   Code,
+  Data,
+  Datalist,
   Dd,
   Del,
   Details,
+  Dialog,
   Dfn,
   Div,
   Dl,
@@ -29,6 +32,7 @@ import {
   H5,
   H6,
   Hr,
+  Img,
   Input,
   Ins,
   Kbd,
@@ -38,11 +42,16 @@ import {
   Mark,
   Meter,
   Ol,
+  Optgroup,
   Option,
+  Output,
   P,
   Pre,
   Progress,
   Q,
+  Rp,
+  Rt,
+  Ruby,
   S,
   Samp,
   Select,
@@ -64,6 +73,27 @@ import {
   Ul,
   Var,
 } from '@reference-ui/react'
+
+const mediaPreviewMarkup = `
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">
+    <defs>
+      <linearGradient id="preview-gradient" x1="0" x2="1" y1="0" y2="1">
+        <stop offset="0%" stop-color="#0f766e" />
+        <stop offset="100%" stop-color="#164e63" />
+      </linearGradient>
+    </defs>
+    <rect width="320" height="180" rx="18" fill="url(#preview-gradient)" />
+    <circle cx="78" cy="72" r="30" fill="#99f6e4" fill-opacity="0.45" />
+    <circle cx="246" cy="56" r="24" fill="#67e8f9" fill-opacity="0.35" />
+    <path d="M40 138c28-32 54-48 78-48 18 0 35 8 53 25l16 15 23-25c11-12 24-18 40-18 22 0 44 14 66 41v34H40z" fill="#ecfeff" fill-opacity="0.68" />
+    <text x="40" y="42" fill="#ecfeff" font-family="ui-sans-serif, sans-serif" font-size="18" font-weight="700">Reference UI</text>
+    <text x="40" y="64" fill="#cffafe" font-family="ui-sans-serif, sans-serif" font-size="12">Primitive media preview</text>
+  </svg>
+`
+
+const mediaPreviewSrc = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
+  mediaPreviewMarkup,
+)}`
 
 function SectionCard({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -144,6 +174,38 @@ export default function PrimitiveThemePlaygroundFixture() {
         </P>
       </SectionCard>
 
+      <SectionCard title="Links And Meta">
+        <Div
+          display="grid"
+          gap="5r"
+          gridTemplateColumns="repeat(auto-fit, minmax(16rem, 1fr))"
+        >
+          <Div display="grid" gap="3r">
+            <H3>Anchors</H3>
+            <A href="#theme-audit">Jump to theme audit</A>
+            <A href="https://reference-ui.com/docs?view=primitives">
+              External documentation link with a longer label that wraps across lines
+            </A>
+            <A href="mailto:theme-lab@reference-ui.com">theme-lab@reference-ui.com</A>
+          </Div>
+          <Div display="grid" gap="3r">
+            <H3>Meta text</H3>
+            <P>
+              Build <Data value="1.4.2">1.4.2</Data> shipped at{' '}
+              <Time dateTime="2026-04-26T09:41">9:41 AM</Time>.
+            </P>
+            <P>
+              <Ruby>
+                参<Rp>(</Rp>
+                <Rt>theme</Rt>
+                <Rp>)</Rp>
+              </Ruby>{' '}
+              and meta primitives should sit comfortably in running copy.
+            </P>
+          </Div>
+        </Div>
+      </SectionCard>
+
       <SectionCard title="Code">
         <P>
           Inline code like <Code>buttonRecipe()</Code>, keyboard input like <Kbd>Cmd</Kbd>{' '}
@@ -218,13 +280,45 @@ return <Button>{tone}</Button>`}</Pre>
             </Field>
             <Field label="Select">
               <Select defaultValue="button">
-                <Option value="button">Button</Option>
-                <Option value="input">Input</Option>
-                <Option value="table">Table</Option>
+                <Optgroup label="Controls">
+                  <Option value="button">Button</Option>
+                  <Option value="input">Input</Option>
+                </Optgroup>
+                <Optgroup label="Display">
+                  <Option value="table">Table</Option>
+                </Optgroup>
               </Select>
             </Field>
             <Field label="Textarea">
               <Textarea defaultValue="Theme notes for the next styling pass." rows={4} />
+            </Field>
+            <Field label="Search input">
+              <Div display="grid" gap="2r">
+                <Input list="primitive-suggestions" type="search" defaultValue="Primitive" />
+                <Datalist id="primitive-suggestions">
+                  <Option value="Primitive theme" />
+                  <Option value="Dialog surface" />
+                  <Option value="Image surface" />
+                </Datalist>
+              </Div>
+            </Field>
+            <Field label="Date input">
+              <Input type="date" defaultValue="2026-04-26" />
+            </Field>
+            <Field label="Time input">
+              <Input type="time" defaultValue="09:41" />
+            </Field>
+            <Field label="Color input">
+              <Input type="color" defaultValue="#0f766e" width="5rem" padding="1r" />
+            </Field>
+            <Field label="File input">
+              <Input type="file" />
+            </Field>
+            <Field label="Range input">
+              <Div display="grid" gap="2r">
+                <Input type="range" min={0} max={100} defaultValue={68} />
+                <Output>Standalone slider surface</Output>
+              </Div>
             </Field>
             <Field label="Progress">
               <Progress value={68} max={100} />
@@ -310,6 +404,29 @@ return <Button>{tone}</Button>`}</Pre>
             </Tfoot>
           </Table>
         </Div>
+      </SectionCard>
+
+      <SectionCard title="Dialog">
+        <Dialog open>
+          <H3>Primitive theme review</H3>
+          <P>
+            Dialog containers need surface, border, spacing, and readable typography before
+            higher-level modal behavior exists.
+          </P>
+          <Div display="flex" justifyContent="flex-end" gap="3r" marginTop="4r">
+            <Button type="button" disabled>
+              Later
+            </Button>
+            <Button type="button">Apply review</Button>
+          </Div>
+        </Dialog>
+      </SectionCard>
+
+      <SectionCard title="Image">
+        <Figure margin="0" maxWidth="20rem">
+          <Img src={mediaPreviewSrc} alt="Abstract Reference UI preview artwork" />
+          <Figcaption>Image primitives should inherit sizing and radius defaults.</Figcaption>
+        </Figure>
       </SectionCard>
 
       <SectionCard title="Disclosure And Figure">

@@ -30,6 +30,16 @@ export const focusRingStyles = {
 
 export const focusRing = focusRingStyles._focusVisible
 
+export const thumbFocusRingStyles = {
+  boxShadow: '0 0 0 4px color-mix(in oklch, {colors.ui.focus.ring} 80%, transparent)',
+} as const
+
+export function pressableActiveStyles(background: string) {
+  return {
+    boxShadow: `0 0 0 4px color-mix(in oklch, ${background} 15.2%, transparent)`,
+  } as const
+}
+
 export const trackBackground =
   'color-mix(in oklch, {colors.ui.progress.track.mixForeground} 12%, {colors.ui.progress.track.mixBackground})'
 
