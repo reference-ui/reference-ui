@@ -1,6 +1,6 @@
 /**
  * Rhythm spacing utilities: map token values to multiples of R via
- * `resolveRhythm` (e.g. "2r" → calc(2 * var(--spacing-r))).
+ * `resolveRhythm` (e.g. "2r" -> calc(2 * var(--spacing-root))).
  * Used by extendUtilities in the bundled extensions runtime.
  */
 

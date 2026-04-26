@@ -1,9 +1,7 @@
 import { globalCss } from '@reference-ui/system'
 
 export const rootThemeVars = {
-  '--r-base': '16px',
-  '--r-density': '1',
-  '--spacing-r': 'calc(var(--r-base) * var(--r-density))',
+  '--spacing-root': '0.25rem',
 } as const
 
 export const bodyStyles = {

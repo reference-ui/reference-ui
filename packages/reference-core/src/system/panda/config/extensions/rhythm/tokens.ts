@@ -7,7 +7,7 @@ import { getRhythm } from './helpers'
 export const rhythmSpacingTokens = {
   spacing: {
     px: { value: '1px' },
-    r: { value: '0.25rem' },
+    r: { value: 'var(--spacing-root)' },
     '0.5r': { value: getRhythm(0.5) },
     '1/2r': { value: getRhythm(1, 2) },
     '1/3r': { value: getRhythm(1, 3) },

@@ -6,8 +6,6 @@ import type { Config } from '@pandacss/dev'
  */
 export const rhythmGlobalCss: NonNullable<Config['globalCss']> = {
   ':root': {
-    '--r-base': '16px',
-    '--r-density': '1',
-    '--spacing-r': 'calc(var(--r-base) * var(--r-density))',
+    '--spacing-root': '0.25rem',
   },
 }

@@ -28,7 +28,7 @@ export const documentPrimitiveStyles = {
 
   '.ref-dialog': {
     ...blockText,
-    width: 'calc(100% - calc(8 * var(--spacing-r)))',
+    width: 'calc(100% - calc(8 * var(--spacing-root)))',
     maxWidth: '36rem',
     borderWidth: '1px',
     borderStyle: 'solid',
