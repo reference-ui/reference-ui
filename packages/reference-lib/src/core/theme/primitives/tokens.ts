@@ -73,8 +73,8 @@ export const ui = {
   },
 
   mark: {
-    background: { light: '{colors.blue.200}', dark: '{colors.blue.950}' },
-    foreground: { light: '{colors.blue.950}', dark: '{colors.blue.200}' },
+    background: { light: '{colors.blue.200}', dark: '{colors.blue.900}' },
+    foreground: { light: '{colors.blue.950}', dark: '{colors.blue.100}' },
   },
 
   ins: {
