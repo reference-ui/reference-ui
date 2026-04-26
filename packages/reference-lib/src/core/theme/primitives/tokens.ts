@@ -161,7 +161,10 @@ export const ui = {
   button: {
     background: { light: '{colors.gray.950}', dark: '{colors.gray.50}' },
     foreground: { light: '{colors.gray.50}', dark: '{colors.gray.950}' },
-    
+    disabled: {
+      background: { light: '{colors.gray.200}', dark: '{colors.gray.800}' },
+      foreground: { light: '{colors.gray.500}', dark: '{colors.gray.400}' },
+    },
   },
 
   progress: {
