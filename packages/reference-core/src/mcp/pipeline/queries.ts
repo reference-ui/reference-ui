@@ -14,11 +14,14 @@ import type {
   McpTokenListResult,
   McpUsageSemantics,
 } from './types'
+import { findReferenceUiPrimitive } from './primitives'
 
 const DEFAULT_LIMIT = 25
 const DEFAULT_PROP_PREVIEW_LIMIT = 8
 const DEFAULT_COMPONENT_PROP_LIMIT = 30
 const TOKEN_COMPRESSION_THRESHOLD = 200
+const REFERENCE_UI_REACT_SOURCE = '@reference-ui/react'
+
 const USAGE_SEMANTICS: McpUsageSemantics = {
   count:
     'Number of resolved JSX opening-element occurrences in the analyzed files.',
@@ -94,6 +97,8 @@ function componentKey(component: Pick<McpComponent, 'name' | 'source'>): string 
 }
 
 function getCanonicalComponents(artifact: McpBuildArtifact): McpComponent[] {
+  // Merge duplicate component entries from the build artifact so all query
+  // helpers operate on one canonical view per name/source pair.
   const componentsByKey = new Map<string, McpComponent>()
 
   for (const component of artifact.components) {
@@ -107,6 +112,19 @@ function getCanonicalComponents(artifact: McpBuildArtifact): McpComponent[] {
   }
 
   return Array.from(componentsByKey.values())
+}
+
+function findCanonicalComponentMatches(
+  artifact: McpBuildArtifact,
+  name: string
+): McpComponent[] {
+  return getCanonicalComponents(artifact)
+    .filter(component => component.name === name)
+}
+
+function findReferenceUiComponentFallback(input: McpGetComponentInput): McpComponent | null {
+  if (input.source && input.source !== REFERENCE_UI_REACT_SOURCE) return null
+  return findReferenceUiPrimitive(input.name)
 }
 
 function summarizeProps(props: McpComponentProp[], returned: number): McpPropSummary {
@@ -187,14 +205,18 @@ export function findComponent(
   artifact: McpBuildArtifact,
   input: McpGetComponentInput
 ): McpComponent | null {
-  const matches = getCanonicalComponents(artifact)
-    .filter(component => component.name === input.name)
+  const matches = findCanonicalComponentMatches(artifact, input.name)
+
   if (input.source) {
-    return matches.find(component => component.source === input.source) ?? null
+    return matches.find(component => component.source === input.source)
+      ?? findReferenceUiComponentFallback(input)
   }
 
   if (matches.length === 1) return matches[0] ?? null
-  if (matches.length === 0) return null
+
+  // In empty or lightly-used projects, allow direct queries for packaged
+  // Reference UI primitives even when they have not been observed yet.
+  if (matches.length === 0) return findReferenceUiComponentFallback(input)
 
   const exactLocal = matches.find(component => component.source.startsWith('.'))
   return exactLocal ?? matches[0] ?? null
@@ -265,7 +287,11 @@ function compactToken(token: McpToken): McpCompactToken {
   }
 }
 
-function createTokenMessage(input: McpGetTokensInput, total: number, compressed: boolean): string | undefined {
+function createTokenMessage(
+  input: McpGetTokensInput,
+  total: number,
+  compressed: boolean
+): string | undefined {
   if (compressed) {
     return 'Token output compressed to paths, categories, and raw values because the result set is large. Query a token path for descriptions and richer metadata.'
   }
