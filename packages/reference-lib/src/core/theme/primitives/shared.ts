@@ -15,7 +15,7 @@ export const focusRingStyles = {
   outline: '2px solid transparent',
   outlineOffset: '4px',
   transitionProperty:
-    'color, background-color, border-color, box-shadow, opacity, outline-color, outline-offset',
+    'border-color, box-shadow, opacity, outline-color, outline-offset',
   transitionDuration: '300ms',
   transitionTimingFunction: 'ease',
   _focusVisible: {

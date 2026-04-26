@@ -9,6 +9,11 @@ export const ui = {
     foreground: { light: '{colors.gray.950}', dark: '{colors.gray.50}' },
   },
 
+  selection: {
+    background: { light: '{colors.gray.300}', dark: '{colors.gray.300}' },
+    foreground: { light: '{colors.gray.950}', dark: '{colors.gray.800}' },
+  },
+
   dialog: {
     background: { light: 'oklch(100% 0 0)', dark: '{colors.gray.950}' },
     foreground: { light: '{colors.gray.950}', dark: '{colors.gray.50}' },
@@ -178,7 +183,7 @@ export const ui = {
   },
 
   focus: {
-    ring: { light: '{colors.gray.400}', dark: '{colors.gray.50}' },
+    ring: { light: '{colors.gray.900}', dark: '{colors.gray.50}' },
   },
 
   table: {

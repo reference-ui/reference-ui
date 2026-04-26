@@ -6,6 +6,11 @@ export const base = {
     ...baseTypography,
   },
 
+  '[class^="ref-"]::selection, [class*=" ref-"]::selection': {
+    backgroundColor: '{colors.ui.selection.background}',
+    color: '{colors.ui.selection.foreground}',
+  },
+
 } as const
 
 globalCss(base)
