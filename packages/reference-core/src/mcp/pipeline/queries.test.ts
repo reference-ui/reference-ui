@@ -284,6 +284,22 @@ describe('mcp queries', () => {
 
   it('does not expose unused Reference UI primitives as static catalog entries', () => {
     expect(listComponents({ ...artifact, components: [] }, { query: 'Div' })).toEqual([])
-    expect(findComponent({ ...artifact, components: [] }, { name: 'Div' })).toBeNull()
+    expect(findComponent({ ...artifact, components: [] }, { name: 'Div' })).toEqual(
+      expect.objectContaining({
+        name: 'Div',
+        source: '@reference-ui/react',
+        kind: 'primitive',
+        count: 0,
+        usage: 'unused',
+      })
+    )
+    expect(getComponentProps(
+      { ...artifact, components: [] },
+      { name: 'Div', source: '@reference-ui/react', includeStyleProps: false }
+    )?.props).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: 'children', origin: 'documented', styleProp: false }),
+      ])
+    )
   })
 })
