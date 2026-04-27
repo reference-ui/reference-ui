@@ -3,8 +3,8 @@ import { describe, it } from 'node:test'
 
 import { registryManifestVersion, type RegistryManifest } from '../../../registry/types.js'
 import {
+  externalPnpmStoreCacheKey,
   matrixNodeModulesCacheKey,
-  registryManifestCacheKey,
   replaceWorkspaceProtocolVersions,
 } from './cache.js'
 import type { MatrixFixturePackageJson } from '../managed/package-json/index.js'
@@ -82,7 +82,7 @@ describe('matrix node_modules cache helpers', () => {
     )
   })
 
-  it('changes the pnpm store cache key when staged tarball hashes change', () => {
+  it('keeps the external pnpm store cache stable when staged tarball hashes change', () => {
     const baseline = createManifest()
     const changed = createManifest({
       packages: baseline.packages.map(pkg =>
@@ -90,7 +90,27 @@ describe('matrix node_modules cache helpers', () => {
       ),
     })
 
-    assert.notEqual(registryManifestCacheKey(baseline), registryManifestCacheKey(changed))
+    assert.equal(externalPnpmStoreCacheKey(), externalPnpmStoreCacheKey())
+    assert.equal(
+      externalPnpmStoreCacheKey('node:24-bookworm'),
+      externalPnpmStoreCacheKey('node:24-bookworm'),
+    )
+
+    const baselineNodeModules = matrixNodeModulesCacheKey({
+      coreVersion: '0.0.41',
+      fixturePackageJson: createFixturePackageJson(),
+      libVersion: '0.0.44',
+      manifest: baseline,
+    })
+
+    const changedNodeModules = matrixNodeModulesCacheKey({
+      coreVersion: '0.0.41',
+      fixturePackageJson: createFixturePackageJson(),
+      libVersion: '0.0.44',
+      manifest: changed,
+    })
+
+    assert.notEqual(baselineNodeModules, changedNodeModules)
   })
 
   it('reuses node_modules cache keys for identical install graphs', () => {

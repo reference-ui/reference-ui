@@ -3,6 +3,11 @@ import { describe, it } from 'node:test'
 
 import { createManagedMatrixPackageJson, createMatrixConsumerPackageJson, type MatrixFixturePackageJson } from './index.js'
 
+const internalTarballSpecifiers = {
+  '@reference-ui/core': 'file:.matrix-tarballs/reference-ui-core-0.0.16-corehash.tgz',
+  '@reference-ui/lib': 'file:.matrix-tarballs/reference-ui-lib-0.0.19-libhash.tgz',
+} as const
+
 describe('createManagedMatrixPackageJson', () => {
   it('generates only setup, test, and sync for matrix workspace packages', () => {
     const packageJson = JSON.parse(
@@ -57,7 +62,7 @@ describe('createManagedMatrixPackageJson', () => {
 })
 
 describe('createMatrixConsumerPackageJson', () => {
-  it('drops scripts for synthetic consumers and rewrites workspace dependencies to staged versions', () => {
+  it('drops scripts for synthetic consumers and rewrites workspace dependencies to staged tarball specs', () => {
     const fixturePackageJson: MatrixFixturePackageJson = {
       dependencies: {
         '@reference-ui/core': 'workspace:*',
@@ -81,9 +86,8 @@ describe('createMatrixConsumerPackageJson', () => {
 
     const packageJson = JSON.parse(
       createMatrixConsumerPackageJson({
-        coreVersion: '0.0.16',
         fixturePackageJson,
-        libVersion: '0.0.19',
+        internalTarballSpecifiers,
       }),
     ) as {
       dependencies: Record<string, string>
@@ -95,8 +99,8 @@ describe('createMatrixConsumerPackageJson', () => {
     }
 
     assert.deepEqual(packageJson.dependencies, {
-      '@reference-ui/core': '0.0.16',
-      '@reference-ui/lib': '0.0.19',
+      '@reference-ui/core': 'file:.matrix-tarballs/reference-ui-core-0.0.16-corehash.tgz',
+      '@reference-ui/lib': 'file:.matrix-tarballs/reference-ui-lib-0.0.19-libhash.tgz',
       react: '^19.2.0',
     })
     assert.deepEqual(packageJson.devDependencies, {
@@ -129,14 +133,41 @@ describe('createMatrixConsumerPackageJson', () => {
 
     const packageJson = JSON.parse(
       createMatrixConsumerPackageJson({
-        coreVersion: '0.0.16',
         fixturePackageJson,
-        libVersion: '0.0.19',
+        internalTarballSpecifiers,
       }),
     ) as {
       scripts?: Record<string, string>
     }
 
     assert.equal(packageJson.scripts, undefined)
+  })
+
+  it('rewrites any matching workspace dependency to its staged tarball spec', () => {
+    const fixturePackageJson: MatrixFixturePackageJson = {
+      dependencies: {
+        '@fixtures/extend-library': 'workspace:*',
+        react: '^19.2.0',
+      },
+      name: '@matrix/install',
+      private: true,
+      type: 'module',
+    }
+
+    const packageJson = JSON.parse(
+      createMatrixConsumerPackageJson({
+        fixturePackageJson,
+        internalTarballSpecifiers: {
+          '@fixtures/extend-library': 'file:.matrix-tarballs/fixtures-extend-library-0.0.0-abcd1234.tgz',
+        },
+      }),
+    ) as {
+      dependencies: Record<string, string>
+    }
+
+    assert.deepEqual(packageJson.dependencies, {
+      '@fixtures/extend-library': 'file:.matrix-tarballs/fixtures-extend-library-0.0.0-abcd1234.tgz',
+      react: '^19.2.0',
+    })
   })
 })

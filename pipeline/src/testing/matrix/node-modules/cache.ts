@@ -27,16 +27,24 @@ interface MatrixNodeModulesCacheKeyOptions {
   manifest: RegistryManifest
 }
 
+export function externalPnpmStoreCacheKey(containerImage: string = matrixNodeImage): string {
+  const digest = createHash('sha256')
+    .update(JSON.stringify({
+      containerImage,
+      packageManager: `pnpm@${matrixPnpmVersion}`,
+    }))
+    .digest('hex')
+    .slice(0, 16)
+
+  return `reference-ui-pipeline-pnpm-store-externals-${digest}`
+}
+
 export function registryManifestFingerprint(manifest: RegistryManifest): string {
   const fingerprint = manifest.packages
     .map(pkg => `${pkg.name}@${pkg.version}:${pkg.hash}`)
     .join('|')
 
   return createHash('sha256').update(fingerprint).digest('hex').slice(0, 16)
-}
-
-export function registryManifestCacheKey(manifest: RegistryManifest): string {
-  return `reference-ui-pipeline-pnpm-store-${registryManifestFingerprint(manifest)}`
 }
 
 export function replaceWorkspaceProtocolVersions(

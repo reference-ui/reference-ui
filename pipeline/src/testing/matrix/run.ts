@@ -10,15 +10,15 @@
 import { dag } from '@dagger.io/dagger'
 import * as dagger from '@dagger.io/dagger'
 import { existsSync } from 'node:fs'
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { availableParallelism } from 'node:os'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { getVirtualNativePackageName, type VirtualNativeTarget } from '../../../../packages/reference-rs/js/shared/targets.js'
 import {
+  externalPnpmStoreCacheKey,
   matrixNodeImage,
   matrixNodeModulesCacheKey,
-  registryManifestCacheKey,
 } from './node-modules/cache.js'
 import { createMatrixConsumerPackageJson, type MatrixFixturePackageJson } from './managed/package-json/index.js'
 import { createMatrixConsumerTsconfig } from './managed/tsconfig/index.js'
@@ -36,6 +36,7 @@ import type { MatrixWorkspacePackage } from './discovery/index.js'
 import { ensureContainerRuntime } from '../../lib/runtime/ensure-container-runtime.js'
 import { finishStep, formatDuration, setSkipLoggingMuted, startStep } from '../../lib/log/index.js'
 import { readRegistryManifest } from '../../registry/manifest.js'
+import type { RegistryManifestPackage } from '../../registry/types.js'
 import { listMatrixWorkspacePackages } from './discovery/index.js'
 import { validateMatrixFixtures } from './validate.js'
 
@@ -68,6 +69,13 @@ interface MatrixPackageExecutionContext {
   shouldStop: () => boolean
 }
 
+interface MatrixInternalTarballSpec {
+  absoluteTarballPath: string
+  packageName: string
+  specifier: string
+  stagedFileName: string
+}
+
 interface MatrixPackageRunResult {
   failed: boolean
   output: string
@@ -88,6 +96,7 @@ type TimedMatrixPackagePhase = Exclude<MatrixPackagePhase, 'queued' | 'aborted' 
 
 export interface MatrixRunOptions {
   commandLabel?: string
+  disableDaggerExecCache?: boolean
   packageNames?: readonly string[]
 }
 
@@ -95,6 +104,10 @@ const matrixConsumerSetupCommand = ['pnpm', 'exec', 'ref', 'sync'] as const
 const matrixConsumerVitestCommand = ['pnpm', 'exec', 'vitest', 'run'] as const
 const matrixConsumerPlaywrightCommand = ['pnpm', 'exec', 'playwright', 'test', 'e2e'] as const
 const matrixConsumerTypecheckCommand = ['pnpm', 'exec', 'tsc', '--noEmit'] as const
+
+function daggerExecOptions(options: MatrixRunOptions): { noCache?: boolean } | undefined {
+  return options.disableDaggerExecCache ? { noCache: true } : undefined
+}
 
 function readErrorOutput(value: unknown): string {
   if (typeof value === 'string') {
@@ -195,6 +208,7 @@ function createAbortedMatrixPackageResult(
 async function runMatrixPackageInDagger(
   packageRunContext: MatrixPackageRunContext,
   executionContext: MatrixPackageExecutionContext,
+  options: MatrixRunOptions,
 ): Promise<MatrixPackageRunResult> {
   const lines = [`\n${packageRunContext.displayName}`]
   const packageStartedAt = Date.now()
@@ -205,14 +219,21 @@ async function runMatrixPackageInDagger(
 
   logMatrixPackagePhase(packageRunContext, 'queued')
 
+  const internalTarballSpecs = resolveMatrixInternalTarballSpecs(
+    packageRunContext.source.fixturePackageJson,
+    executionContext.manifest.packages,
+  )
+
   const consumerPackageJsonSource = createMatrixConsumerPackageJson({
-    coreVersion: executionContext.coreVersion,
     fixturePackageJson: packageRunContext.source.fixturePackageJson,
-    libVersion: executionContext.libVersion,
+    internalTarballSpecifiers: Object.fromEntries(
+      internalTarballSpecs.map(spec => [spec.packageName, spec.specifier]),
+    ),
   })
   const generatedConsumerDir = await stageGeneratedConsumerFiles(
     packageRunContext,
     consumerPackageJsonSource,
+    internalTarballSpecs,
   )
   const containerImage = matrixContainerImage(packageRunContext.source)
 
@@ -227,7 +248,7 @@ async function runMatrixPackageInDagger(
   )
 
   const packageConsumerWorkspace = packageRunContext.source.hasPlaywrightTests
-    ? baseNodeContainer(registryManifestCacheKey(executionContext.manifest), containerImage)
+    ? baseNodeContainer(externalPnpmStoreCacheKey(containerImage), containerImage)
       .withServiceBinding('registry', executionContext.registry)
     : executionContext.consumerWorkspace
 
@@ -255,7 +276,7 @@ async function runMatrixPackageInDagger(
       'append-only',
       '--registry',
       registryUrlInContainer,
-    ])
+    ], daggerExecOptions(options))
     const installOutput = await installRunner.stdout()
     await writeMatrixPackageStageLog(packageRunContext, 'install', installOutput)
     const installDurationMs = Date.now() - installStageStartedAt
@@ -281,7 +302,7 @@ async function runMatrixPackageInDagger(
     activeTimedPhase = 'setup'
     activePhaseStartedAt = setupStageStartedAt
     logMatrixPackagePhase(packageRunContext, 'setup')
-    const setupRunner = installRunner.withExec([...matrixConsumerSetupCommand])
+    const setupRunner = installRunner.withExec([...matrixConsumerSetupCommand], daggerExecOptions(options))
     const setupOutput = await setupRunner.stdout()
     await writeMatrixPackageStageLog(packageRunContext, 'setup', setupOutput)
     const setupDurationMs = Date.now() - setupStageStartedAt
@@ -312,7 +333,7 @@ async function runMatrixPackageInDagger(
       const vitestStageStartedAt = Date.now()
       activeTimedPhase = 'test:vitest'
       activePhaseStartedAt = vitestStageStartedAt
-      const vitestRunner = testRunner.withExec([...matrixConsumerVitestCommand])
+      const vitestRunner = testRunner.withExec([...matrixConsumerVitestCommand], daggerExecOptions(options))
       const vitestOutput = await vitestRunner.stdout()
       const vitestDurationMs = Date.now() - vitestStageStartedAt
       phaseDurations['test:vitest'] = vitestDurationMs
@@ -339,7 +360,7 @@ async function runMatrixPackageInDagger(
       const playwrightStageStartedAt = Date.now()
       activeTimedPhase = 'test:playwright'
       activePhaseStartedAt = playwrightStageStartedAt
-      const playwrightRunner = testRunner.withExec([...matrixConsumerPlaywrightCommand])
+      const playwrightRunner = testRunner.withExec([...matrixConsumerPlaywrightCommand], daggerExecOptions(options))
       const playwrightOutput = await playwrightRunner.stdout()
       const playwrightDurationMs = Date.now() - playwrightStageStartedAt
       phaseDurations['test:playwright'] = playwrightDurationMs
@@ -365,7 +386,7 @@ async function runMatrixPackageInDagger(
     const typecheckStageStartedAt = Date.now()
     activeTimedPhase = 'test:typecheck'
     activePhaseStartedAt = typecheckStageStartedAt
-    const typecheckRunner = testRunner.withExec([...matrixConsumerTypecheckCommand])
+    const typecheckRunner = testRunner.withExec([...matrixConsumerTypecheckCommand], daggerExecOptions(options))
     const typecheckOutput = await typecheckRunner.stdout()
     const typecheckDurationMs = Date.now() - typecheckStageStartedAt
     phaseDurations['test:typecheck'] = typecheckDurationMs
@@ -488,20 +509,75 @@ function matrixFixtureSourceDirectory(packageDir: string) {
   })
 }
 
+function collectWorkspaceProtocolDependencyNames(
+  dependencies: Record<string, string> | undefined,
+): string[] {
+  if (!dependencies) {
+    return []
+  }
+
+  return Object.entries(dependencies)
+    .filter(([, version]) => version.startsWith('workspace:'))
+    .map(([packageName]) => packageName)
+}
+
+function createStagedTarballFileName(manifestPackage: RegistryManifestPackage): string {
+  const safePackageName = manifestPackage.name.replace(/^@/, '').replace(/\//g, '-')
+  return `${safePackageName}-${manifestPackage.version}-${manifestPackage.hash.slice(0, 8)}.tgz`
+}
+
+function resolveMatrixInternalTarballSpecs(
+  fixturePackageJson: MatrixFixturePackageJson,
+  manifestPackages: readonly RegistryManifestPackage[],
+): MatrixInternalTarballSpec[] {
+  const workspaceDependencyNames = new Set([
+    ...collectWorkspaceProtocolDependencyNames(fixturePackageJson.dependencies),
+    ...collectWorkspaceProtocolDependencyNames(fixturePackageJson.devDependencies),
+  ])
+  const manifestByPackageName = new Map(manifestPackages.map(pkg => [pkg.name, pkg]))
+
+  return Array.from(workspaceDependencyNames)
+    .map((packageName) => {
+      const manifestPackage = manifestByPackageName.get(packageName)
+
+      if (!manifestPackage) {
+        return undefined
+      }
+
+      const stagedFileName = createStagedTarballFileName(manifestPackage)
+
+      return {
+        absoluteTarballPath: resolve(repoRoot, manifestPackage.tarballPath),
+        packageName,
+        specifier: `file:.matrix-tarballs/${stagedFileName}`,
+        stagedFileName,
+      }
+    })
+    .filter((spec): spec is MatrixInternalTarballSpec => spec !== undefined)
+}
+
 async function stageGeneratedConsumerFiles(
   packageRunContext: MatrixPackageRunContext,
   packageJsonSource: string,
+  internalTarballSpecs: readonly MatrixInternalTarballSpec[],
 ): Promise<string> {
   const generatedDir = resolve(matrixLogDir, 'generated', packageRunContext.logPrefix)
+  const tarballDir = resolve(generatedDir, '.matrix-tarballs')
   await mkdir(generatedDir, { recursive: true })
+  await mkdir(tarballDir, { recursive: true })
   await writeFile(resolve(generatedDir, 'package.json'), packageJsonSource)
   await writeFile(resolve(generatedDir, 'tsconfig.json'), createMatrixConsumerTsconfig())
+  await Promise.all(
+    internalTarballSpecs.map(spec =>
+      copyFile(spec.absoluteTarballPath, resolve(tarballDir, spec.stagedFileName))),
+  )
+
   return generatedDir
 }
 
 function matrixGeneratedConsumerDirectory(generatedDir: string) {
   return dag.host().directory(generatedDir, {
-    include: ['package.json', 'tsconfig.json'],
+    include: ['package.json', 'tsconfig.json', '.matrix-tarballs', '.matrix-tarballs/**'],
   })
 }
 
@@ -598,15 +674,18 @@ export async function runMatrixBootstrapInDagger(options: MatrixRunOptions = {})
     throw new Error('Expected @reference-ui/lib to be present in the packed registry manifest.')
   }
 
-  const workspace = baseNodeContainer(registryManifestCacheKey(manifest))
+  const workspace = baseNodeContainer(externalPnpmStoreCacheKey())
   const registry = hostRegistryService()
 
   let consumerWorkspace = workspace.withServiceBinding('registry', registry)
 
   console.log(`Using host registry via ${managedRegistryServiceHost}:${managedRegistryPort}. Logs: ${matrixLogDir}`)
+  if (options.disableDaggerExecCache) {
+    console.log('Dagger exec-result caching disabled for this run.')
+  }
   const pingStageStartedAt = Date.now()
   const pingStep = startStep('Checking container registry connectivity')
-  const pingRunner = consumerWorkspace.withExec(['npm', 'ping', '--registry', registryUrlInContainer])
+  const pingRunner = consumerWorkspace.withExec(['npm', 'ping', '--registry', registryUrlInContainer], daggerExecOptions(options))
   const pingOutput = await pingRunner.stdout()
   await writeStageLog('publish-ping.log', pingOutput)
   finishStep(pingStep, `Checked container registry connectivity in ${formatDuration(Date.now() - pingStageStartedAt)}`)
@@ -644,7 +723,7 @@ export async function runMatrixBootstrapInDagger(options: MatrixRunOptions = {})
           return
         }
 
-        const result = await runMatrixPackageInDagger(matrixPackageContexts[packageIndex], executionContext)
+        const result = await runMatrixPackageInDagger(matrixPackageContexts[packageIndex], executionContext, options)
         process.stdout.write(result.output)
 
         if (result.failed) {
