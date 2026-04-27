@@ -66,33 +66,6 @@ function isPipelineManagedScript(command: string | undefined): boolean {
   return typeof command === 'string' && command.includes('src/cli.ts')
 }
 
-function resolveConsumerScript(
-  scripts: Record<string, string> | undefined,
-  scriptName: 'setup' | 'test',
-): string | undefined {
-  if (!scripts) {
-    return undefined
-  }
-
-  if (scriptName === 'setup') {
-    if (scripts.sync) {
-      return scripts.sync
-    }
-
-    if (scripts.setup && !isPipelineManagedScript(scripts.setup)) {
-      return scripts.setup
-    }
-
-    return 'pnpm exec ref sync'
-  }
-
-  if (scripts.test && !isPipelineManagedScript(scripts.test)) {
-    return scripts.test
-  }
-
-  return 'vitest run && tsc --noEmit'
-}
-
 function replaceWorkspaceProtocolVersions(
   dependencies: Record<string, string> | undefined,
   versionOverrides: Readonly<Record<string, string>>,
@@ -158,19 +131,11 @@ export function createMatrixConsumerPackageJson(
     '@reference-ui/core': options.coreVersion,
     '@reference-ui/lib': options.libVersion,
   }
-  const consumerTestScript = resolveConsumerScript(options.fixturePackageJson.scripts, 'test')
-  const consumerSetupScript = resolveConsumerScript(options.fixturePackageJson.scripts, 'setup')
 
   return `${JSON.stringify(
     {
       ...options.fixturePackageJson,
-      scripts: options.fixturePackageJson.scripts
-        ? {
-            setup: consumerSetupScript ?? 'pnpm exec ref sync',
-            test: consumerTestScript ?? 'vitest run && tsc --noEmit',
-            sync: consumerSetupScript ?? 'pnpm exec ref sync',
-          }
-        : undefined,
+      scripts: undefined,
       dependencies: replaceWorkspaceProtocolVersions(options.fixturePackageJson.dependencies, versionOverrides),
       devDependencies: replaceWorkspaceProtocolVersions(options.fixturePackageJson.devDependencies, versionOverrides),
     },
