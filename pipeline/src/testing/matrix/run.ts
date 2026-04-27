@@ -25,6 +25,7 @@ import { createMatrixConsumerTsconfig } from './managed/tsconfig/index.js'
 import {
   consumerDirInContainer,
   defaultRegistryUrl,
+  matrixConfig,
   managedRegistryHost,
   managedRegistryPort,
   managedRegistryServiceHost,
@@ -33,10 +34,10 @@ import {
 import { buildWorkspacePackages } from '../../build/index.js'
 import type { MatrixWorkspacePackage } from './discovery/index.js'
 import { ensureContainerRuntime } from '../../lib/runtime/ensure-container-runtime.js'
+import { finishStep, formatDuration, setSkipLoggingMuted, startStep } from '../../lib/log/index.js'
 import { readRegistryManifest } from '../../registry/manifest.js'
 import { listMatrixWorkspacePackages } from './discovery/index.js'
 import { validateMatrixFixtures } from './validate.js'
-import { finishStep, formatDuration, startStep } from '../../lib/log/index.js'
 
 const matrixDir = dirname(fileURLToPath(import.meta.url))
 const pipelineDir = resolve(matrixDir, '..', '..', '..')
@@ -114,13 +115,8 @@ function collectMatrixFailureDetails(error: unknown): string[] {
 }
 
 function resolveMatrixPackageConcurrency(totalPackages: number): number {
-  const override = Number(process.env.REF_PIPELINE_MATRIX_CONCURRENCY)
-
-  if (Number.isInteger(override) && override > 0) {
-    return Math.min(totalPackages, override)
-  }
-
-  return Math.min(totalPackages, Math.max(1, Math.min(2, availableParallelism())))
+  const configured = Math.max(1, matrixConfig.concurrency)
+  return Math.min(totalPackages, Math.max(1, Math.min(configured, availableParallelism())))
 }
 
 function appendOutputBlock(lines: string[], output: string): void {
@@ -408,19 +404,14 @@ export async function runMatrixBootstrapInDagger(options: MatrixRunOptions = {})
   console.log(`Using shared matrix registry at ${defaultRegistryUrl}.`)
   const buildStageStartedAt = Date.now()
   const buildStep = startStep('Preparing workspace packages and registry')
-  const previousQuietSkips = process.env.REF_PIPELINE_QUIET_SKIPS
 
   try {
-    process.env.REF_PIPELINE_QUIET_SKIPS = '1'
+    setSkipLoggingMuted(matrixConfig.quietPreparationSkips)
     await buildWorkspacePackages(undefined, undefined, {
       requiredRustTargets: [matrixNativeTarget],
     })
   } finally {
-    if (previousQuietSkips === undefined) {
-      delete process.env.REF_PIPELINE_QUIET_SKIPS
-    } else {
-      process.env.REF_PIPELINE_QUIET_SKIPS = previousQuietSkips
-    }
+    setSkipLoggingMuted(false)
   }
 
   finishStep(buildStep, `Prepared workspace packages and registry in ${formatDuration(Date.now() - buildStageStartedAt)}`)
@@ -504,7 +495,7 @@ export async function runMatrixTests(options: MatrixRunOptions = {}): Promise<vo
     minimumDockerMemoryBytes: minimumMatrixDockerMemoryBytes,
   })
 
-  if (process.env.REF_PIPELINE_MATRIX_DAGGER_TRACE === '1') {
+  if (matrixConfig.daggerTrace) {
     await dagger.connection(() => runMatrixBootstrapInDagger(options), { LogOutput: process.stdout })
     return
   }
