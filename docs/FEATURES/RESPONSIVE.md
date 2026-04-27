@@ -31,6 +31,134 @@ and be wired alongside the existing virtual transforms in:
 The purpose is to keep the transform fast, keep memory usage predictable, and avoid pulling in
 the `typescript` package for virtual rewrites.
 
+## Recovery Path
+
+This needs to be done in separate stages.
+
+Do not collapse them into one implementation pass.
+
+Do not use Cosmos behavior, Vite behavior, or runtime `css()` behavior as the first source of
+truth while the transform itself is still being proven.
+
+The ordering matters:
+
+1. Rust first
+2. then a small virtual-pipeline integration in `reference-core`
+3. then output verification in `reference-unit`
+
+The main point is to prove the transform in isolation before wiring it into the wider system.
+
+### Stage 1: Rust
+
+Stage 1 is the real implementation stage.
+
+Add one separate transform function in `virtualrs`:
+
+- `applyResponsiveStyles()`
+
+This should stay distinct from import-rewrite responsibilities.
+
+Expected role split:
+
+- `rewriteCvaImports()` handles import rewriting / alias normalization for `recipe` and `cva`
+- `rewriteCssImports()` or `transformCssFunctions()` handles import rewriting / alias normalization for `css`
+- `applyResponsiveStyles()` handles lowering `r` into raw `@container (...)` keys
+
+That means `applyResponsiveStyles()` should target the canonical call shapes after the earlier
+rewrite stages have already normalized the call sites.
+
+In practice that means it should operate on:
+
+- `css(...)`
+- `cva(...)`
+
+and not on arbitrary unrelated objects.
+
+Stage 1 should include serious Rust-side coverage before anything else moves forward.
+
+Required validation surface:
+
+- Rust unit tests in `packages/reference-rs/src/virtualrs/tests.rs`
+- virtualfs integration cases in `packages/reference-rs/tests/virtualfs/cases/`
+
+Suggested Stage 1 case coverage:
+
+- basic `css({ r: ... })`
+- aliased `css` import normalized first, then lowered
+- basic `cva({ base: { r: ... } })`
+- `recipe` alias normalized to `cva`, then lowered
+- multiple breakpoints in one `r` object
+- casts such as `as unknown as CssStyles`
+- nested style objects inside each breakpoint
+- unrelated `r` objects outside `css()` / `cva()` stay unchanged
+- explicit raw `@container (...)` keys stay unchanged
+- named raw `@container name (...)` keys stay unchanged
+- files with no `r` stay unchanged
+- type-only imports stay unchanged
+
+Stage 1 exit criteria:
+
+- the transform exists as a separate Rust function
+- it is proven by Rust unit tests
+- it is proven by virtualfs cases
+- no `reference-core` or runtime workaround is needed to explain the behavior
+
+### Stage 2: reference-core Integration
+
+Stage 2 should be intentionally small.
+
+At this stage, `reference-core` should only compose the already-proven Rust function into the
+virtual transform pipeline.
+
+That means:
+
+- keep import rewrite steps separate
+- call the new `applyResponsiveStyles()` as an additional transform stage
+- align it with the existing `rewriteCvaImports()` and CSS rewrite step so it sees the canonical call targets
+
+This stage should not introduce:
+
+- runtime `css()` lowering
+- Vite/plugin-specific transforms
+- Cosmos-specific handling
+- second-path fallback logic
+
+Stage 2 exit criteria:
+
+- `reference-core` applies the new Rust transform in virtual composition only
+- a focused transform regression test proves the order and output
+
+### Stage 3: reference-unit Verification
+
+Stage 3 is where the pipeline output gets checked from the consumer side.
+
+This stage should verify outputs, not redefine the architecture.
+
+Use `reference-unit` to verify:
+
+- the virtual file output contains raw `@container (...)` keys
+- the generated CSS contains the expected container-query blocks
+- the generated runtime class names for the transformed shape align with the emitted CSS
+
+This stage is useful for confirming the pipeline result, but it is not the place to invent a
+runtime fix if Stage 1 or Stage 2 is wrong.
+
+Stage 3 exit criteria:
+
+- the output seen by `reference-unit` matches the Rust/virtual transform expectations
+- no runtime-only patching is required
+
+## Guardrails
+
+To avoid repeating the same failure mode, keep these boundaries explicit:
+
+- The semantic source of truth remains the `r` feature itself.
+- The sugar-lowering source of truth is the Rust virtual transform layer.
+- The virtual pipeline is what Panda reads.
+- Panda CSS output is the artifact that should match the transformed shape.
+- Runtime wrappers are not the fix.
+- Vite/Cosmos-specific transforms are not the fix.
+
 ## Current Behavior
 
 The current `r` shape is:
@@ -245,6 +373,8 @@ If you need the responsive rule itself to know about a named container explicitl
 
 - Runtime-only expansion for `css({ r: ... })` is the wrong layer because static CSS emission
 	then falls out of sync with the runtime class string.
+- Vite- or Cosmos-specific transforms are also the wrong layer because they bypass the actual
+	virtual/Panda contract instead of fixing it.
 - A TypeScript-side virtual transform is also the wrong final shape for this repo because it adds
 	memory cost and duplicates work we already centralize in Rust.
 - The correct long-term model is: keep `r` semantics defined with the extension, but lower the
@@ -279,13 +409,17 @@ The next implementation pass should follow this shape:
 	`packages/reference-rs/src/virtualrs/r.rs`.
 2. Export and compose it through `packages/reference-rs/src/virtualrs/mod.rs` beside the existing
 	`css` and `cva` transforms.
-3. Keep a short comment near the JS-side `r` extension explaining that the `css({ r: ... })`
+3. Expose a separate `applyResponsiveStyles()` entry point instead of folding this into unrelated
+	import-rewrite responsibilities.
+4. Keep a short comment near the JS-side `r` extension explaining that the `css({ r: ... })`
 	form is lowered at the virtual layer, so the extension file remains the semantic home even though
 	the sugar expansion happens in Rust.
-4. Rewrite only `css()` calls imported from `@reference-ui/react`.
-5. Lower `r: { 420: { ... } }` to raw `"@container (min-width: 420px)": { ... }` object keys.
-6. Leave primitive / pattern `r` behavior unchanged.
-7. Keep named-container inference out of utility `r`; named utility cases should use explicit raw
+5. Align `applyResponsiveStyles()` with the earlier CSS / CVA rewrite stages so it targets the
+	canonical `css()` / `cva()` calls they normalize.
+6. Rewrite only the intended responsive style payloads within those canonical calls.
+7. Lower `r: { 420: { ... } }` to raw `"@container (min-width: 420px)": { ... }` object keys.
+8. Leave primitive / pattern `r` behavior unchanged.
+9. Keep named-container inference out of utility `r`; named utility cases should use explicit raw
 	`@container name (...)` syntax.
 
 ## Test Expectations
