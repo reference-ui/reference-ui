@@ -145,8 +145,8 @@ function writeReactSupportFixture(cliDir: string): void {
     'utf-8'
   )
 
-  mkdirSync(resolve(cliDir, 'src/system/css'), { recursive: true })
-  writeFileSync(resolve(cliDir, 'src/system/css/public.ts'), 'export const css = {}\n', 'utf-8')
+  mkdirSync(resolve(cliDir, 'src/system/runtime'), { recursive: true })
+  writeFileSync(resolve(cliDir, 'src/system/runtime/index.ts'), 'export const css = {}\n', 'utf-8')
 }
 
 function expectCapturedReactSupportTsconfigFiles(files: string[]): void {
@@ -154,7 +154,7 @@ function expectCapturedReactSupportTsconfigFiles(files: string[]): void {
   expect(files.some((file) => file.endsWith('/src/entry/react.ts'))).toBe(true)
   expect(files.some((file) => file.endsWith('/src/system/primitives/index.tsx'))).toBe(true)
   expect(files.some((file) => file.endsWith('/src/system/primitives/types.ts'))).toBe(true)
-  expect(files.some((file) => file.endsWith('/src/system/css/public.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/system/runtime/index.ts'))).toBe(true)
   expect(files.some((file) => file.endsWith('/src/types/index.ts'))).toBe(true)
   expect(files.some((file) => file.endsWith('/src/types/props.ts'))).toBe(true)
   expect(files.some((file) => file.endsWith('/src/types/style-props.ts'))).toBe(true)
@@ -173,7 +173,7 @@ function expectGeneratedReactSupportFiles(outDir: string): void {
   ).toContain('Extra')
   expect(readFileSync(resolve(outDir, 'react/types/index.d.ts'), 'utf-8')).toContain('props')
   expect(readFileSync(resolve(outDir, 'react/types/props.d.ts'), 'utf-8')).toContain('DivProps')
-  expect(readFileSync(resolve(outDir, 'react/system/css/public.d.ts'), 'utf-8')).toContain('css')
+  expect(readFileSync(resolve(outDir, 'react/system/runtime/index.d.ts'), 'utf-8')).toContain('css')
 }
 
 describe('packager/ts/install/packages', () => {
@@ -222,8 +222,8 @@ describe('packager/ts/install/packages', () => {
     mkdirSync(resolve(cliDir, 'src/system/primitives'), { recursive: true })
     writeFileSync(resolve(cliDir, 'src/system/primitives/index.tsx'), 'export const Div = "div"\n', 'utf-8')
 
-    mkdirSync(resolve(cliDir, 'src/system/css'), { recursive: true })
-    writeFileSync(resolve(cliDir, 'src/system/css/public.ts'), 'export const css = {}\n', 'utf-8')
+    mkdirSync(resolve(cliDir, 'src/system/runtime'), { recursive: true })
+    writeFileSync(resolve(cliDir, 'src/system/runtime/index.ts'), 'export const css = {}\n', 'utf-8')
 
     mkdirSync(resolve(cliDir, 'src/types'), { recursive: true })
     writeFileSync(resolve(cliDir, 'src/types/index.ts'), 'export type Example = true\n', 'utf-8')

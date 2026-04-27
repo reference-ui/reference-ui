@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createPortableResetStylesheet } from './reset'
 
-describe('system/css/reset', () => {
+describe('system/stylesheet/reset', () => {
   it('scopes the same reset for portable downstream stylesheets', () => {
     const stylesheet = createPortableResetStylesheet('local-system')
 

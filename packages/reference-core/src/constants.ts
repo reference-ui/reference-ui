@@ -36,7 +36,7 @@ export const DEFAULT_OUT_DIR = '.reference-ui'
 export const REACT_DTS_INCLUDE = [
   'src/system/primitives/index.tsx',
   'src/system/primitives/types.ts',
-  'src/system/css/public.ts',
+  'src/system/runtime/index.ts',
   'src/types/index.ts',
   'src/types/BaseSystem.ts',
   'src/types/colors.ts',

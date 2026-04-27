@@ -47,6 +47,15 @@ pub fn rewrite_cva_imports(source_code: String, relative_path: String) -> Result
     Ok(virtualrs::rewrite_cva_imports(&source_code, &relative_path))
 }
 
+#[cfg(feature = "napi")]
+#[napi]
+pub fn apply_responsive_styles(source_code: String, relative_path: String) -> Result<String> {
+    Ok(virtualrs::apply_responsive_styles(
+        &source_code,
+        &relative_path,
+    ))
+}
+
 /// Scan TypeScript under `root_dir` with the given include globs, then emit all Tasty ESM modules.
 /// Returns a JSON payload containing the generated module sources keyed by relative path.
 #[cfg(feature = "napi")]

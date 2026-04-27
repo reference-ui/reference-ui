@@ -32,11 +32,16 @@ afterEach(() => {
 
 describe('runtime index', () => {
   it('throws the loader-provided consumer message when the native addon is unavailable', async () => {
-    const { rewriteCssImports, getVirtualNativeUnavailableMessage } = await importRuntimeModule()
+    const { applyResponsiveStyles, rewriteCssImports, getVirtualNativeUnavailableMessage } = await importRuntimeModule()
 
     expect(() => rewriteCssImports('body {}', 'styles.css')).toThrow(
       'native unavailable for rewrite CSS imports'
     )
     expect(getVirtualNativeUnavailableMessage).toHaveBeenCalledWith('rewrite CSS imports')
+
+    expect(() => applyResponsiveStyles('body {}', 'styles.css')).toThrow(
+      'native unavailable for apply responsive styles'
+    )
+    expect(getVirtualNativeUnavailableMessage).toHaveBeenCalledWith('apply responsive styles')
   })
 })

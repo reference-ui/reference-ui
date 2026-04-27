@@ -34,6 +34,12 @@ export function rewriteCvaImports(sourceCode: string, relativePath: string): str
   return native.rewriteCvaImports(sourceCode, relativePath)
 }
 
+export function applyResponsiveStyles(sourceCode: string, relativePath: string): string {
+  const native = requireVirtualNative('apply responsive styles')
+
+  return native.applyResponsiveStyles(sourceCode, relativePath)
+}
+
 export function scanAndEmitModules(rootDir: string, include: string[]): string {
   const native = requireVirtualNative('scan and emit modules')
 

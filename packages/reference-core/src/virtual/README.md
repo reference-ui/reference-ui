@@ -90,9 +90,13 @@ The transform order is:
 1. MDX to JSX
 2. recipe/cva import rewrite
 3. css import rewrite
+4. responsive `r` lowering in canonical `css()` / `cva()` calls
 
 That ordering matters because MDX must first become JSX before the import
 rewriters operate on it.
+
+Responsive lowering runs after the import rewrites so the Rust pass only needs
+to target canonical `css()` and `cva()` call sites.
 
 ## Native Rewrite Dependency
 

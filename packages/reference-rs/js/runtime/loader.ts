@@ -1,6 +1,6 @@
 /**
  * Load the Rust native addon for virtual transforms.
- * Provides rewriteCssImports and rewriteCvaImports via NAPI.
+ * Provides rewriteCssImports, rewriteCvaImports, and applyResponsiveStyles via NAPI.
  *
  * Falls back to null if the native addon is unavailable (e.g. wrong platform,
  * not built, or load error). Callers should use JS fallback when native is null.
@@ -27,6 +27,7 @@ export interface VirtualNativeBinding {
   getNativeCapabilities: () => string
   rewriteCssImports: (sourceCode: string, relativePath: string) => string
   rewriteCvaImports: (sourceCode: string, relativePath: string) => string
+  applyResponsiveStyles: (sourceCode: string, relativePath: string) => string
   scanAndEmitModules: (rootDir: string, include: string[]) => string
   analyzeAtlas: (rootDir: string, configJson?: string) => string
   analyzeStyletrace: (rootDir: string, syncRootHint?: string) => string
@@ -56,6 +57,7 @@ const REQUIRED_NATIVE_EXPORTS = [
   'getNativeCapabilities',
   'rewriteCssImports',
   'rewriteCvaImports',
+  'applyResponsiveStyles',
   'scanAndEmitModules',
   'analyzeAtlas',
   'analyzeStyletrace',
