@@ -85,10 +85,12 @@ program
 program
   .command('test')
   .description('Run the Dagger-backed matrix test flow')
+  .option('--no-dagger-cache', 'Disable Dagger exec-result caching for this run')
   .option('--packages <names>', 'Comma-separated matrix package names, for example @matrix/typescript')
-  .action(async (options: { packages?: string }) => {
+  .action(async (options: { daggerCache: boolean; packages?: string }) => {
     await runMatrixTests({
       commandLabel: 'pnpm pipeline test',
+      disableDaggerExecCache: !options.daggerCache,
       packageNames: parsePackageOption(options.packages),
     })
   })

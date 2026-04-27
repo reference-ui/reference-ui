@@ -18,9 +18,8 @@ export interface MatrixFixturePackageJson {
 }
 
 interface MatrixConsumerPackageJsonOptions {
-  coreVersion: string
   fixturePackageJson: MatrixFixturePackageJson
-  libVersion: string
+  internalTarballSpecifiers?: Readonly<Record<string, string>>
 }
 
 interface ManagedMatrixPackageJsonOptions {
@@ -75,7 +74,7 @@ function isPipelineManagedScript(command: string | undefined): boolean {
 
 function replaceWorkspaceProtocolVersions(
   dependencies: Record<string, string> | undefined,
-  versionOverrides: Readonly<Record<string, string>>,
+  internalTarballSpecifiers: Readonly<Record<string, string>>,
 ): Record<string, string> | undefined {
   if (!dependencies) {
     return undefined
@@ -84,7 +83,7 @@ function replaceWorkspaceProtocolVersions(
   return Object.fromEntries(
     Object.entries(dependencies).map(([packageName, version]) => [
       packageName,
-      version.startsWith('workspace:') ? (versionOverrides[packageName] ?? version) : version,
+      version.startsWith('workspace:') ? (internalTarballSpecifiers[packageName] ?? version) : version,
     ]),
   )
 }
@@ -134,18 +133,19 @@ export function createManagedMatrixPackageJson(options: ManagedMatrixPackageJson
 export function createMatrixConsumerPackageJson(
   options: MatrixConsumerPackageJsonOptions,
 ): string {
-  const versionOverrides = {
-    '@reference-ui/core': options.coreVersion,
-    '@reference-ui/lib': options.libVersion,
-  }
-
   return `${JSON.stringify(
     {
       ...options.fixturePackageJson,
       ignoredBuiltDependencies: managedIgnoredBuiltDependencies,
       scripts: undefined,
-      dependencies: replaceWorkspaceProtocolVersions(options.fixturePackageJson.dependencies, versionOverrides),
-      devDependencies: replaceWorkspaceProtocolVersions(options.fixturePackageJson.devDependencies, versionOverrides),
+      dependencies: replaceWorkspaceProtocolVersions(
+        options.fixturePackageJson.dependencies,
+        options.internalTarballSpecifiers ?? {},
+      ),
+      devDependencies: replaceWorkspaceProtocolVersions(
+        options.fixturePackageJson.devDependencies,
+        options.internalTarballSpecifiers ?? {},
+      ),
     },
     null,
     2,
