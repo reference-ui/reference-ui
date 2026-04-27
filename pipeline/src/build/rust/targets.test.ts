@@ -6,6 +6,7 @@ import {
   findMissingRequiredReferenceRustTargets,
   getReferenceRustTargetPackageValidationErrors,
   getLocallyBuildableReferenceRustTargets,
+  hasCompatibleReferenceRustBinaryContents,
   resolveLocalReferenceRustTargetBuildStrategy,
   resolveReferenceRustTargetTarballStrategy,
   shouldBuildLinuxReferenceRustTargetWithDagger,
@@ -96,6 +97,47 @@ describe('resolveReferenceRustTargetTarballStrategy', () => {
         tarballExists: true,
       }),
       'skip-target',
+    )
+  })
+})
+
+describe('hasCompatibleReferenceRustBinaryContents', () => {
+  it('accepts binaries that advertise the full native API contract', () => {
+    assert.equal(
+      hasCompatibleReferenceRustBinaryContents(
+        Buffer.from(
+          [
+            'getNativeCapabilities',
+            'rewriteCssImports',
+            'rewriteCvaImports',
+            'applyResponsiveStyles',
+            'scanAndEmitModules',
+            'analyzeAtlas',
+            'analyzeStyletrace',
+            'styletraceSyncRootHint',
+          ].join('\0'),
+        ),
+      ),
+      true,
+    )
+  })
+
+  it('rejects binaries that are missing newer required exports', () => {
+    assert.equal(
+      hasCompatibleReferenceRustBinaryContents(
+        Buffer.from(
+          [
+            'getNativeCapabilities',
+            'rewriteCssImports',
+            'rewriteCvaImports',
+            'scanAndEmitModules',
+            'analyzeAtlas',
+            'analyzeStyletrace',
+            'styletraceSyncRootHint',
+          ].join('\0'),
+        ),
+      ),
+      false,
     )
   })
 })

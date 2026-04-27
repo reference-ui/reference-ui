@@ -111,6 +111,22 @@ describe('mcp queries', () => {
     expect(findComponent(artifact, { name: 'Card' })?.source).toBe('@reference-ui/react')
   })
 
+  it('falls back to documented Reference UI primitives on direct lookup when they were not observed', () => {
+    expect(findComponent(artifact, { name: 'Canvas' })).toEqual(
+      expect.objectContaining({
+        name: 'Canvas',
+        kind: 'primitive',
+        source: '@reference-ui/react',
+        count: 0,
+        usage: 'unused',
+        interface: expect.objectContaining({
+          name: 'CanvasProps',
+          source: '@reference-ui/react',
+        }),
+      })
+    )
+  })
+
   it('returns compact component props without inherited style prop noise', () => {
     const component = findComponent(artifact, { name: 'Button' })
     expect(component).not.toBeNull()

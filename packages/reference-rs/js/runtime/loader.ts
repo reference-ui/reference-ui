@@ -16,6 +16,7 @@ import {
   SUPPORTED_VIRTUAL_NATIVE_TARGETS,
   type VirtualNativeTarget,
 } from '../shared/targets'
+import { REQUIRED_VIRTUAL_NATIVE_EXPORTS } from '../shared/native-contract'
 
 const PACKAGE_JSON = 'package.json'
 const RUST_PACKAGE_NAME = '@reference-ui/rust'
@@ -53,18 +54,8 @@ export interface VirtualNativeDiagnostics {
 let _native: VirtualNativeBinding | null | undefined = undefined
 let _diagnostics: VirtualNativeDiagnostics | undefined = undefined
 
-const REQUIRED_NATIVE_EXPORTS = [
-  'getNativeCapabilities',
-  'rewriteCssImports',
-  'rewriteCvaImports',
-  'applyResponsiveStyles',
-  'scanAndEmitModules',
-  'analyzeAtlas',
-  'analyzeStyletrace',
-] as const
-
 export function getVirtualNativeCompatibilityError(binding: Record<string, unknown>): string | null {
-  const missingExports = REQUIRED_NATIVE_EXPORTS.filter(
+  const missingExports = REQUIRED_VIRTUAL_NATIVE_EXPORTS.filter(
     name => typeof binding[name] !== 'function'
   )
 
