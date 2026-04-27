@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { describe, it } from 'node:test'
 import { repoRoot } from '../../build/workspace.js'
-import { isMatrixWorkspacePackageDir, readMatrixPackageConfig } from './discovery.js'
+import { getMatrixPackageName, isMatrixWorkspacePackageDir, readMatrixPackageConfig } from './discovery.js'
 
 describe('readMatrixPackageConfig', () => {
   it('returns null when a package has no matrix.json', async () => {
@@ -21,14 +21,19 @@ describe('readMatrixPackageConfig', () => {
     const tempDir = await mkdtemp(join(tmpdir(), 'ref-pipeline-matrix-'))
 
     try {
-      await writeFile(join(tempDir, 'matrix.json'), '{"matrix":true}\n')
+      await writeFile(join(tempDir, 'matrix.json'), '{"matrix":true,"name":"typescript"}\n')
 
       assert.deepEqual(readMatrixPackageConfig(tempDir), {
         matrix: true,
+        name: 'typescript',
       })
     } finally {
       await rm(tempDir, { force: true, recursive: true })
     }
+  })
+
+  it('derives the managed matrix workspace package name from the matrix config name', () => {
+    assert.equal(getMatrixPackageName({ matrix: true, name: 'typescript' }), '@matrix/typescript')
   })
 })
 

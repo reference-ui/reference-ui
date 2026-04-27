@@ -1,6 +1,6 @@
 import type { ComponentProps } from 'react'
 import { describe, expect, expectTypeOf, it } from 'vitest'
-import { Div, type DivProps } from '@reference-ui/react'
+import { Div, css, type CssStyles, type DivProps } from '@reference-ui/react'
 import {
   getRhythm,
   keyframes,
@@ -20,6 +20,8 @@ function expectDivColor(_value: DivColorProp): void {}
 function expectDivBg(_value: DivBgProp): void {}
 
 function expectDivBackground(_value: DivBackgroundProp): void {}
+
+function expectCssStyles(_value: CssStyles): void {}
 
 function expectTokenConfig(_value: ReferenceTokenConfig): void {}
 
@@ -96,6 +98,33 @@ describe('generated @reference-ui/react package', () => {
     void invalidColorElement
     void invalidBgElement
     void invalidBackgroundElement
+  })
+
+  it('keeps css() token-aware in consumer space', () => {
+    const validStyles: CssStyles = {
+      bg: 'blue.400',
+      color: 'gray.50',
+      p: '4',
+      rounded: 'md',
+    }
+    const mergedClassName = css(validStyles, false, undefined, null, [{ display: 'flex' }])
+    const rawStyles = css.raw(validStyles, [{ display: 'flex' }])
+
+    const className = css(validStyles)
+
+    expect(className).toBeTruthy()
+    expect(mergedClassName).toBeTruthy()
+    expect(rawStyles).toEqual(expect.objectContaining({
+      background: 'blue.400',
+      borderRadius: 'md',
+      color: 'gray.50',
+      display: 'flex',
+      padding: '4',
+    }))
+    expectTypeOf(css).returns.toBeString()
+    expectTypeOf(css.raw).returns.toEqualTypeOf<CssStyles>()
+    expectCssStyles(validStyles)
+    expectCssStyles(rawStyles)
   })
 })
 

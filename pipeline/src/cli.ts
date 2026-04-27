@@ -21,6 +21,21 @@ import {
   getReleasePlan,
   runLocalRelease,
 } from './release/index.js'
+import { runMatrixTests } from './testing/matrix/run.js'
+import { setupMatrixPackages } from './testing/matrix/setup/index.js'
+
+function parsePackageOption(value: string | undefined): string[] | undefined {
+  if (!value) {
+    return undefined
+  }
+
+  const packageNames = value
+    .split(',')
+    .map(packageName => packageName.trim())
+    .filter(packageName => packageName.length > 0)
+
+  return packageNames.length > 0 ? packageNames : undefined
+}
 
 const program = new Command()
 
@@ -53,6 +68,29 @@ program
   .description('Clean pipeline-managed local state used for testing, including registry and build cache')
   .action(async () => {
     await cleanPipeline()
+  })
+
+program
+  .command('setup')
+  .description('Generate and optionally install the pipeline-managed matrix package files')
+  .option('--packages <names>', 'Comma-separated matrix package names, for example @matrix/typescript')
+  .option('--no-install', 'Skip the workspace pnpm install after syncing matrix package manifests')
+  .action(async (options: { install: boolean; packages?: string }) => {
+    await setupMatrixPackages({
+      install: options.install,
+      packageNames: parsePackageOption(options.packages),
+    })
+  })
+
+program
+  .command('test')
+  .description('Run the Dagger-backed matrix test flow')
+  .option('--packages <names>', 'Comma-separated matrix package names, for example @matrix/typescript')
+  .action(async (options: { packages?: string }) => {
+    await runMatrixTests({
+      commandLabel: 'pnpm pipeline test',
+      packageNames: parsePackageOption(options.packages),
+    })
   })
 
 const registryCommand = program

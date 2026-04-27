@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
-import { createMatrixConsumerTsconfig } from './tsconfig.js'
+import { createMatrixConsumerTsconfig } from './index.js'
 
 describe('createMatrixConsumerTsconfig', () => {
   it('returns the minimal downstream tsconfig used by the matrix consumer', () => {

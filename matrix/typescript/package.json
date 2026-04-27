@@ -4,8 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "sync": "pnpm exec ref sync",
-    "test": "vitest run && tsc --noEmit"
+    "setup": "pnpm --dir ../../pipeline exec tsx src/cli.ts setup --packages=@matrix/typescript",
+    "test": "pnpm --dir ../../pipeline exec tsx src/cli.ts test --packages=@matrix/typescript",
+    "sync": "pnpm exec ref sync"
   },
   "exports": {
     ".": "./src/index.ts"
