@@ -1,7 +1,7 @@
 /**
  * MCP server/client lifecycle helpers for matrix tests.
  *
- * Global setup starts the published `npx --package=@reference-ui/core@latest mcp`
+ * Global setup starts the installed MCP CLI from the synthetic consumer
  * server once. Test files then connect independent clients to the shared HTTP
  * endpoint so Vitest file parallelism can stay enabled.
  */
@@ -9,15 +9,20 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'
 import { spawn } from 'node:child_process'
 import { createServer } from 'node:net'
+import { join } from 'node:path'
 import type { Readable } from 'node:stream'
 import { buildMcpArtifactCache } from './artifact'
 import {
-  MATRIX_MCP_NPX_COMMAND,
+  MATRIX_MCP_INSTALLED_COMMAND,
   MATRIX_MCP_TIMEOUT_MS,
   type McpServerProcess,
   type RunningMcpClient,
   type RunningMcpServer,
 } from './types'
+
+function resolveInstalledMcpBinPath(cwd: string): string {
+  return join(cwd, 'node_modules', '@reference-ui', 'core', 'bin', 'mcp.mjs')
+}
 
 async function waitForServerReady(
   process: McpServerProcess,
@@ -95,13 +100,14 @@ export async function startMcpServer(
   const registry = process.env.npm_config_registry
 
   if (!registry) {
-    throw new Error('npm_config_registry must be set so npx resolves @reference-ui/core from the staged matrix registry.')
+    throw new Error('npm_config_registry must be set so the installed MCP CLI resolves staged registry dependencies correctly.')
   }
 
   const resolvedPort = port === 0 ? await getAvailablePort() : port
+  const installedMcpBinPath = resolveInstalledMcpBinPath(cwd)
   const childProcess = spawn(
-    MATRIX_MCP_NPX_COMMAND[0],
-    [...MATRIX_MCP_NPX_COMMAND.slice(1), '--transport', 'http', '--port', String(resolvedPort)],
+    process.execPath,
+    [installedMcpBinPath, ...MATRIX_MCP_INSTALLED_COMMAND.slice(1), '--transport', 'http', '--port', String(resolvedPort)],
     {
       cwd,
       detached: true,

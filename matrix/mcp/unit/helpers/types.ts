@@ -103,9 +103,6 @@ export interface TokenReadout {
 }
 
 export const MATRIX_MCP_TIMEOUT_MS = 120_000
-export const MATRIX_MCP_NPX_COMMAND = [
-  'npx',
-  '--yes',
-  '--package=@reference-ui/core@latest',
+export const MATRIX_MCP_INSTALLED_COMMAND = [
   'mcp',
 ] as const
