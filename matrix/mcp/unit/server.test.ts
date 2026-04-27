@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import {
   connectSharedMatrixMcp,
-  MATRIX_MCP_NPX_COMMAND,
+  MATRIX_MCP_INSTALLED_COMMAND,
   MATRIX_MCP_TIMEOUT_MS,
   stopMcpClient,
   type RunningMcpClient,
@@ -19,12 +19,9 @@ describe('matrix MCP server', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
     running = null
   }, 10_000)
 
-  it('starts the published MCP CLI through npx', async () => {
+  it('starts the installed MCP CLI from the consumer package', async () => {
     expect(process.env.npm_config_registry).toBeTruthy()
-    expect(MATRIX_MCP_NPX_COMMAND).toEqual([
-      'npx',
-      '--yes',
-      '--package=@reference-ui/core@latest',
+    expect(MATRIX_MCP_INSTALLED_COMMAND).toEqual([
       'mcp',
     ])
     expect(running?.serverUrl.hostname).toBe('127.0.0.1')

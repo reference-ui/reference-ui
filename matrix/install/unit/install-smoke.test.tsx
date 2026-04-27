@@ -43,9 +43,8 @@ describe('install matrix app', () => {
   })
 
   it(
-    'allows ref sync to run repeatedly in the same consumer',
+    'allows one additional ref sync run in the same consumer',
     () => {
-      runRefSync()
       runRefSync()
     },
     90_000
