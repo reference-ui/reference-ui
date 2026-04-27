@@ -10,8 +10,7 @@
 import { dag } from '@dagger.io/dagger'
 import * as dagger from '@dagger.io/dagger'
 import { createHash } from 'node:crypto'
-import { existsSync } from 'node:fs'
-import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { getVirtualNativePackageName, type VirtualNativeTarget } from '../../../../packages/reference-rs/js/shared/targets.js'
@@ -45,8 +44,6 @@ const minimumMatrixDockerMemoryBytes = 4 * 1024 * 1024 * 1024
 
 interface FixtureSourceFiles {
   fixturePackageJson: MatrixFixturePackageJson
-  fixtureFiles: Record<string, string>
-  configSource: string
 }
 
 interface MatrixPackageRunContext {
@@ -86,47 +83,35 @@ function baseNodeContainer(pnpmStoreCacheKey: string) {
     .withExec(['corepack', 'prepare', 'pnpm@10.29.3', '--activate'])
 }
 
-async function readFixtureSourceTree(rootDir: string, relativeDir = ''): Promise<Record<string, string>> {
-  const absoluteDir = resolve(rootDir, relativeDir)
-  const entries = await readdir(absoluteDir, { withFileTypes: true })
-  const files: Record<string, string> = {}
-
-  for (const entry of entries.sort((left, right) => left.name.localeCompare(right.name))) {
-    const entryRelativePath = relativeDir.length > 0 ? `${relativeDir}/${entry.name}` : entry.name
-
-    if (entry.isDirectory()) {
-      Object.assign(files, await readFixtureSourceTree(rootDir, entryRelativePath))
-      continue
-    }
-
-    files[entryRelativePath] = await readFile(resolve(rootDir, entryRelativePath), 'utf8')
-  }
-
-  return files
-}
-
 async function readMatrixPackageSource(packageDir: string): Promise<FixtureSourceFiles> {
-  const fixtureDir = packageDir
-  const fixtureFiles = {
-    ...(existsSync(resolve(fixtureDir, 'src')) ? await readFixtureSourceTree(fixtureDir, 'src') : {}),
-    ...(existsSync(resolve(fixtureDir, 'tests')) ? await readFixtureSourceTree(fixtureDir, 'tests') : {}),
-  }
-  const vitestConfigPath = resolve(fixtureDir, 'vitest.config.ts')
-
-  if (existsSync(vitestConfigPath)) {
-    fixtureFiles['vitest.config.ts'] = await readFile(vitestConfigPath, 'utf8')
-  }
-
-  const [packageJsonSource, configSource] = await Promise.all([
-    readFile(resolve(fixtureDir, 'package.json'), 'utf8'),
-    readFile(resolve(fixtureDir, 'ui.config.ts'), 'utf8'),
-  ])
+  const packageJsonSource = await readFile(resolve(packageDir, 'package.json'), 'utf8')
 
   return {
     fixturePackageJson: JSON.parse(packageJsonSource) as MatrixFixturePackageJson,
-    fixtureFiles,
-    configSource,
   }
+}
+
+function matrixFixtureSourceDirectory(packageDir: string) {
+  return dag.host().directory(packageDir, {
+    include: ['src', 'src/**', 'tests', 'tests/**', 'ui.config.ts', 'vitest.config.ts'],
+  })
+}
+
+async function stageGeneratedConsumerFiles(
+  packageRunContext: MatrixPackageRunContext,
+  packageJsonSource: string,
+): Promise<string> {
+  const generatedDir = resolve(matrixLogDir, 'generated', packageRunContext.logPrefix)
+  await mkdir(generatedDir, { recursive: true })
+  await writeFile(resolve(generatedDir, 'package.json'), packageJsonSource)
+  await writeFile(resolve(generatedDir, 'tsconfig.json'), createMatrixConsumerTsconfig())
+  return generatedDir
+}
+
+function matrixGeneratedConsumerDirectory(generatedDir: string) {
+  return dag.host().directory(generatedDir, {
+    include: ['package.json', 'tsconfig.json'],
+  })
 }
 
 function matrixPackageLogPrefix(packageName: string): string {
@@ -241,6 +226,16 @@ export async function runMatrixBootstrapInDagger(options: MatrixRunOptions = {})
   for (const packageRunContext of matrixPackageContexts) {
     console.log(`3. Reading ${packageRunContext.displayName} source...`)
 
+    const consumerPackageJsonSource = createMatrixConsumerPackageJson({
+      coreVersion: corePackage.version,
+      fixturePackageJson: packageRunContext.source.fixturePackageJson,
+      libVersion: libPackage.version,
+    })
+    const generatedConsumerDir = await stageGeneratedConsumerFiles(
+      packageRunContext,
+      consumerPackageJsonSource,
+    )
+
     const nodeModulesCache = dag.cacheVolume(
       matrixNodeModulesCacheKey({
         coreVersion: corePackage.version,
@@ -251,31 +246,22 @@ export async function runMatrixBootstrapInDagger(options: MatrixRunOptions = {})
     )
 
     const consumerBase = consumerWorkspace
-      .withNewFile(
-        `${consumerDirInContainer}/package.json`,
-        createMatrixConsumerPackageJson({
-          coreVersion: corePackage.version,
-          fixturePackageJson: packageRunContext.source.fixturePackageJson,
-          libVersion: libPackage.version,
-        }),
+      .withDirectory(
+        consumerDirInContainer,
+        matrixFixtureSourceDirectory(packageRunContext.workspacePackage.dir),
       )
-      .withNewFile(`${consumerDirInContainer}/tsconfig.json`, createMatrixConsumerTsconfig())
-      .withNewFile(`${consumerDirInContainer}/ui.config.ts`, packageRunContext.source.configSource)
+      .withDirectory(
+        consumerDirInContainer,
+        matrixGeneratedConsumerDirectory(generatedConsumerDir),
+      )
       .withMountedCache(`${consumerDirInContainer}/node_modules`, nodeModulesCache)
       .withWorkdir(consumerDirInContainer)
-
-    const consumerWithSource = Object.entries(packageRunContext.source.fixtureFiles)
-      .sort(([left], [right]) => left.localeCompare(right))
-      .reduce(
-        (container, [relativePath, contents]) => container.withNewFile(`${consumerDirInContainer}/${relativePath}`, contents),
-        consumerBase,
-      )
 
     console.log(`5. Installing ${packageRunContext.displayName} dependencies from Verdaccio...`)
     console.log(
       `   Output is buffered by the Dagger Node SDK and will be written to ${resolve(matrixLogDir, `${packageRunContext.logPrefix}-install.log`)}.`,
     )
-    const installRunner = consumerWithSource.withExec([
+    const installRunner = consumerBase.withExec([
       'pnpm',
       'install',
       '--reporter',
