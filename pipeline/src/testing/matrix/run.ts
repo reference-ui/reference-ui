@@ -9,12 +9,13 @@
 
 import { dag } from '@dagger.io/dagger'
 import * as dagger from '@dagger.io/dagger'
-import { createHash } from 'node:crypto'
+import { existsSync } from 'node:fs'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { getVirtualNativePackageName, type VirtualNativeTarget } from '../../../../packages/reference-rs/js/shared/targets.js'
 import {
+  matrixNodeImage,
   matrixNodeModulesCacheKey,
   registryManifestCacheKey,
 } from './node-modules/cache.js'
@@ -44,6 +45,8 @@ const minimumMatrixDockerMemoryBytes = 4 * 1024 * 1024 * 1024
 
 interface FixtureSourceFiles {
   fixturePackageJson: MatrixFixturePackageJson
+  hasPlaywrightTests: boolean
+  hasVitestTests: boolean
 }
 
 interface MatrixPackageRunContext {
@@ -60,27 +63,54 @@ export interface MatrixRunOptions {
 
 const matrixConsumerSetupCommand = ['pnpm', 'exec', 'ref', 'sync'] as const
 const matrixConsumerVitestCommand = ['pnpm', 'exec', 'vitest', 'run'] as const
+const matrixConsumerPlaywrightCommand = ['pnpm', 'exec', 'playwright', 'test', 'e2e'] as const
 const matrixConsumerTypecheckCommand = ['pnpm', 'exec', 'tsc', '--noEmit'] as const
 
 function isDirectExecution(): boolean {
   return process.argv[1] === fileURLToPath(import.meta.url)
 }
 
-function baseNodeContainer(pnpmStoreCacheKey: string) {
+function baseNodeContainer(pnpmStoreCacheKey: string, image: string = matrixNodeImage) {
   const pnpmStore = dag.cacheVolume(pnpmStoreCacheKey)
-
-  return dag
+  const container = dag
     .container()
-    .from('node:24-bookworm')
+    .from(image)
     .withEnvVariable('CI', '1')
-    .withEnvVariable('NO_COLOR', '1')
+    .withEnvVariable('FORCE_COLOR', '1')
     .withEnvVariable('npm_config_update_notifier', 'false')
-    .withEnvVariable('npm_config_registry', registryUrlInContainer)
     .withEnvVariable('PNPM_HOME', '/pnpm')
     .withEnvVariable('npm_config_store_dir', '/pnpm/store')
     .withMountedCache('/pnpm/store', pnpmStore)
     .withExec(['corepack', 'enable'])
-    .withExec(['corepack', 'prepare', 'pnpm@10.29.3', '--activate'])
+
+  if (image === matrixNodeImage) {
+    return container
+      .withExec(['corepack', 'prepare', 'pnpm@10.29.3', '--activate'])
+      .withEnvVariable('npm_config_registry', registryUrlInContainer)
+  }
+
+  return container
+    .withExec(['npm', 'install', '--global', '--force', `pnpm@10.29.3`])
+    .withEnvVariable('npm_config_registry', registryUrlInContainer)
+}
+
+function parsePinnedPlaywrightVersion(versionRange: string | undefined): string {
+  const match = versionRange?.match(/\d+\.\d+\.\d+/)
+
+  if (match) {
+    return match[0]
+  }
+
+  return '1.48.0'
+}
+
+function matrixContainerImage(source: FixtureSourceFiles): string {
+  if (!source.hasPlaywrightTests) {
+    return matrixNodeImage
+  }
+
+  const playwrightVersion = parsePinnedPlaywrightVersion(source.fixturePackageJson.devDependencies?.['@playwright/test'])
+  return `mcr.microsoft.com/playwright:v${playwrightVersion}-jammy`
 }
 
 async function readMatrixPackageSource(packageDir: string): Promise<FixtureSourceFiles> {
@@ -88,12 +118,26 @@ async function readMatrixPackageSource(packageDir: string): Promise<FixtureSourc
 
   return {
     fixturePackageJson: JSON.parse(packageJsonSource) as MatrixFixturePackageJson,
+    hasPlaywrightTests: existsSync(resolve(packageDir, 'e2e')),
+    hasVitestTests: existsSync(resolve(packageDir, 'tests')) || existsSync(resolve(packageDir, 'unit')),
   }
 }
 
 function matrixFixtureSourceDirectory(packageDir: string) {
   return dag.host().directory(packageDir, {
-    include: ['src', 'src/**', 'tests', 'tests/**', 'ui.config.ts', 'vitest.config.ts'],
+    include: [
+      'src',
+      'src/**',
+      'tests',
+      'tests/**',
+      'unit',
+      'unit/**',
+      'e2e',
+      'e2e/**',
+      'ui.config.ts',
+      'vitest.config.ts',
+      'playwright.config.ts',
+    ],
   })
 }
 
@@ -235,9 +279,11 @@ export async function runMatrixBootstrapInDagger(options: MatrixRunOptions = {})
       packageRunContext,
       consumerPackageJsonSource,
     )
+    const containerImage = matrixContainerImage(packageRunContext.source)
 
     const nodeModulesCache = dag.cacheVolume(
       matrixNodeModulesCacheKey({
+        containerImage,
         coreVersion: corePackage.version,
         fixturePackageJson: packageRunContext.source.fixturePackageJson,
         libVersion: libPackage.version,
@@ -245,7 +291,11 @@ export async function runMatrixBootstrapInDagger(options: MatrixRunOptions = {})
       }),
     )
 
-    const consumerBase = consumerWorkspace
+    const packageConsumerWorkspace = packageRunContext.source.hasPlaywrightTests
+      ? baseNodeContainer(registryManifestCacheKey(manifest), containerImage).withServiceBinding('registry', registry)
+      : consumerWorkspace
+
+    const consumerBase = packageConsumerWorkspace
       .withDirectory(
         consumerDirInContainer,
         matrixFixtureSourceDirectory(packageRunContext.workspacePackage.dir),
@@ -290,13 +340,33 @@ export async function runMatrixBootstrapInDagger(options: MatrixRunOptions = {})
       console.log(
         `   Output is buffered by the Dagger Node SDK and will be written to ${resolve(matrixLogDir, `${packageRunContext.logPrefix}-test.log`)}.`,
       )
-      const vitestRunner = setupRunner.withExec([...matrixConsumerVitestCommand])
-      const vitestOutput = await vitestRunner.stdout()
-      const typecheckRunner = vitestRunner.withExec([...matrixConsumerTypecheckCommand])
+      let testRunner = setupRunner
+      const testLogOutputs: string[] = []
+      const testConsoleOutputs: string[] = []
+
+      if (packageRunContext.source.hasVitestTests) {
+        const vitestRunner = testRunner.withExec([...matrixConsumerVitestCommand])
+        const vitestOutput = await vitestRunner.stdout()
+        testLogOutputs.push(vitestOutput)
+        testConsoleOutputs.push(vitestOutput)
+        testRunner = vitestRunner
+      }
+
+      if (packageRunContext.source.hasPlaywrightTests) {
+        const playwrightRunner = testRunner.withExec([...matrixConsumerPlaywrightCommand])
+        const playwrightOutput = await playwrightRunner.stdout()
+        testLogOutputs.push(playwrightOutput)
+        testConsoleOutputs.push(playwrightOutput)
+        testRunner = playwrightRunner
+      }
+
+      const typecheckRunner = testRunner.withExec([...matrixConsumerTypecheckCommand])
       const typecheckOutput = await typecheckRunner.stdout()
-      const testOutput = `${vitestOutput}${typecheckOutput}`
+      testLogOutputs.push(typecheckOutput)
+      testConsoleOutputs.push(typecheckOutput)
+      const testOutput = testLogOutputs.filter(output => output.length > 0).join('\n')
       await writeMatrixPackageStageLog(packageRunContext, 'test', testOutput)
-      process.stdout.write(testOutput)
+      process.stdout.write(testConsoleOutputs.filter(output => output.length > 0).join('\n'))
       console.log(`\nMatrix package ${packageRunContext.displayName} completed successfully inside Dagger.`)
     } catch (error) {
       await writeMatrixPackageStageLog(
@@ -319,7 +389,12 @@ export async function runMatrixTests(options: MatrixRunOptions = {}): Promise<vo
     minimumDockerMemoryBytes: minimumMatrixDockerMemoryBytes,
   })
 
-  await dagger.connection(() => runMatrixBootstrapInDagger(options), { LogOutput: process.stdout })
+  if (process.env.REF_PIPELINE_MATRIX_DAGGER_TRACE === '1') {
+    await dagger.connection(() => runMatrixBootstrapInDagger(options), { LogOutput: process.stdout })
+    return
+  }
+
+  await dagger.connection(() => runMatrixBootstrapInDagger(options))
 }
 
 if (isDirectExecution()) {

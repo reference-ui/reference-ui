@@ -4,6 +4,8 @@
 
 The matrix system should support compatibility testing across environment axes such as React and bundler versions without making the default developer loop slow or noisy.
 
+Related testing structure and runner planning lives in `pipeline/TESTS.md`.
+
 Two modes must exist:
 
 1. Targeted package testing
@@ -36,8 +38,8 @@ Full matrix coverage must be opt-in.
 
 Examples of explicit full coverage:
 
-- `pnpm pipeline test --matrix`
-- `pnpm pipeline test --packages=@matrix/typescript --matrix`
+- `pnpm pipeline test --full`
+- `pnpm pipeline test --packages=@matrix/typescript --full`
 
 The exact CLI flag can be finalized later, but the behavior should be:
 
@@ -172,6 +174,117 @@ Container consumer:
 
 This is already the cleaner boundary and should remain the foundation for matrix expansion.
 
+## Precursor Work Before Full Matrix Environments
+
+Before implementing full environment-matrix runners, we should standardize test execution and orchestration.
+
+This is a prerequisite, not optional cleanup.
+
+If we skip this and jump straight into React and bundler expansion, we will end up multiplying inconsistent runner behavior across more containers.
+
+### Standardize Test Runners
+
+We should explicitly support both:
+
+- Vitest
+- Playwright
+
+The matrix pipeline will likely need both.
+
+Vitest covers:
+
+- package-level runtime tests
+- type-level tests where the package already uses Vitest-driven assertions
+- smoke/integration checks inside a synthetic consumer
+
+Playwright covers:
+
+- browser-facing flows
+- real downstream runtime validation
+- bundler/browser behavior where a unit-level runner is not enough
+
+Before full environment expansion, we should define one clean execution contract for each runner type.
+
+Current contract:
+
+- Vitest-oriented packages keep their tests under `unit/`
+- Playwright-oriented packages keep their tests under `e2e/`
+- any package with `e2e/` runs on the pinned Playwright base image instead of the default Node image
+
+That means the planner should eventually be able to describe jobs such as:
+
+- run Vitest in this consumer
+- run Playwright in this consumer
+
+without encoding that decision as ad hoc command branching inside the Dagger runner.
+
+### Standardize Runner Materialization
+
+We should decide how a matrix package declares that it uses:
+
+- Vitest only
+- Playwright only
+- both Vitest and Playwright
+
+The first version does not need a full DSL for this, but pipeline should have a normalized internal model for test runner type before it gains a full compatibility matrix.
+
+### Parallel Container Orchestration
+
+Full matrix mode will be expensive.
+
+That means orchestration needs to be part of the design, not something added later.
+
+We should plan for:
+
+- parallel container execution
+- bounded concurrency
+- deterministic logs and artifact collection
+- clear per-job status reporting
+
+The current serial execution path is acceptable for the existing small matrix, but it is not the end state.
+
+When `pnpm pipeline test --full` exists, it should be understood as the heavy compatibility command and should be able to run multiple jobs concurrently.
+
+### TUI Direction
+
+We should plan a TUI for the heavier matrix flows.
+
+This matters because once we have:
+
+- multiple packages
+- multiple environments
+- parallel containers
+- Vitest and Playwright jobs
+
+plain streaming logs will become hard to follow.
+
+The TUI should eventually show:
+
+- planned jobs
+- running jobs
+- passed jobs
+- failed jobs
+- per-job runner type
+- per-job environment
+- links or paths to logs and artifacts
+
+This should be treated as orchestration UX, not as a separate afterthought.
+
+### Full Mode
+
+The heavy compatibility command should be modeled as:
+
+- `pnpm pipeline test --full`
+
+Semantically:
+
+- opt into full matrix expansion
+- opt into heavier orchestration behavior
+- opt into parallel execution where safe
+- run all configured test runners needed for the resolved jobs
+
+This is the command that should eventually feel like the full compatibility pipeline, not the cheap local package-test entrypoint.
+
 ## What Changes For Environment-Aware Runs
 
 To support React and bundler environments, the synthetic consumer generation will need environment materialization.
@@ -266,15 +379,27 @@ Phase 1:
 
 Phase 2:
 
+- standardize how matrix jobs represent Vitest and Playwright execution
+- standardize the internal runner model before environment expansion
+- define the future `--full` command semantics
+
+Phase 3:
+
 - add a planning module that resolves jobs for default mode vs full matrix mode
 - print the resolved plan before execution
 
-Phase 3:
+Phase 4:
+
+- add parallel orchestration with bounded concurrency
+- define log and artifact ownership for concurrent jobs
+- design the TUI around planned, running, passed, and failed jobs
+
+Phase 5:
 
 - add environment materialization for React and bundler versions in the synthetic consumer
 - execute one job per resolved environment
 
-Phase 4:
+Phase 6:
 
 - evaluate whether per-suite targeting is actually needed
 
@@ -293,6 +418,9 @@ The first version should be intentionally small:
 - `matrix.json` gets an optional `environments` object
 - targeted package tests run only one default environment
 - default React version is the latest React version declared by that package
+- Vitest and Playwright get standardized runner treatment before full matrix rollout
+- `pnpm pipeline test --full` becomes the explicit heavy compatibility command
+- orchestration and a TUI are part of the plan before large-scale matrix expansion
 - full matrix execution is explicit, never implicit
 - the planner owns expansion
 - the runner only executes concrete jobs

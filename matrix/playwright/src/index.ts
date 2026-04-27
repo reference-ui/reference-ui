@@ -1,0 +1,1 @@
+export const matrixPlaywrightMarker = 'reference-ui-matrix-playwright'

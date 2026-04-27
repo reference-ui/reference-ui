@@ -146,4 +146,34 @@ describe('matrix node_modules cache helpers', () => {
     assert.notEqual(baseline, differentDevDependency)
     assert.notEqual(baseline, differentPublishedVersion)
   })
+
+  it('splits node_modules cache keys when the container image changes', () => {
+    const manifest = createManifest()
+    const fixturePackageJson = createFixturePackageJson({
+      devDependencies: {
+        '@playwright/test': '1.48.0',
+        '@types/react': '^19.2.2',
+        typescript: '~5.9.3',
+        vitest: '^4.0.18',
+      },
+    })
+
+    const nodeImage = matrixNodeModulesCacheKey({
+      containerImage: 'node:24-bookworm',
+      coreVersion: '0.0.41',
+      fixturePackageJson,
+      libVersion: '0.0.44',
+      manifest,
+    })
+
+    const playwrightImage = matrixNodeModulesCacheKey({
+      containerImage: 'mcr.microsoft.com/playwright:v1.48.0-jammy',
+      coreVersion: '0.0.41',
+      fixturePackageJson,
+      libVersion: '0.0.44',
+      manifest,
+    })
+
+    assert.notEqual(nodeImage, playwrightImage)
+  })
 })
