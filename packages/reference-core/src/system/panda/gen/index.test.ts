@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { PandaCssContractError } from '../../css/transform/demotePandaGlobalCssLayer'
+import { PandaCssContractError } from '../../stylesheet/transform/demotePandaGlobalCssLayer'
 
 async function importGenModule(options?: {
   codegenFailure?: Error

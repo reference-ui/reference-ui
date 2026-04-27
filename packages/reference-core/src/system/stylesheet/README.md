@@ -1,4 +1,4 @@
-# system/css
+# system/stylesheet
 
 Owns the CSS-side postprocessing that turns Panda output into the portable,
 layer-safe stylesheet contract stored on `baseSystem.css` and written back into
@@ -40,6 +40,8 @@ So the module is no longer relying on raw brace matching or naive
 - `transform/createPortableStylesheetFromContent.ts` — main PostCSS-backed transform logic
 - `render/stylesheet.ts` — Liquid-backed rendering helpers
 - `templates/*.liquid` — output templates
+
+Runtime adapter seams now live under `src/system/runtime/`.
 
 ### Current Pipeline
 

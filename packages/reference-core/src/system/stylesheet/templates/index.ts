@@ -42,8 +42,8 @@ function getTemplatesDir(): string {
   for (const root of searchRoots) {
     for (const dir of ancestorDirs(root)) {
       const candidates = [
-        join(dir, 'packages/reference-core/src/system/css/templates'),
-        join(dir, 'src/system/css/templates'),
+        join(dir, 'packages/reference-core/src/system/stylesheet/templates'),
+        join(dir, 'src/system/stylesheet/templates'),
       ]
 
       for (const candidate of candidates) {
@@ -54,7 +54,7 @@ function getTemplatesDir(): string {
     }
   }
 
-  return join(process.cwd(), 'packages/reference-core/src/system/css/templates')
+  return join(process.cwd(), 'packages/reference-core/src/system/stylesheet/templates')
 }
 
 const templatesDir = getTemplatesDir()

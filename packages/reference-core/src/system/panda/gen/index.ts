@@ -6,7 +6,7 @@ import {
   unwrapPandaError,
 } from './codegen'
 import { log } from '../../../lib/log'
-import { isPandaCssContractError } from '../../css/transform/demotePandaGlobalCssLayer'
+import { isPandaCssContractError } from '../../stylesheet/transform/demotePandaGlobalCssLayer'
 
 function formatSurfacedError(error: unknown): string {
   if (error instanceof Error) {

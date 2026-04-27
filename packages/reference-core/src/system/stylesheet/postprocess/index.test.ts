@@ -20,7 +20,7 @@ afterEach(() => {
   }
 })
 
-describe('system/css/postprocess', () => {
+describe('system/stylesheet/postprocess', () => {
   it('returns undefined when styles.css does not exist', () => {
     const outDir = createTempDir()
 

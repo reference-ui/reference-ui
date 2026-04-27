@@ -32,7 +32,7 @@ afterEach(() => {
   }
 })
 
-describe('system/css/createPortableStylesheet', () => {
+describe('system/stylesheet/createPortableStylesheet', () => {
   it('logs and returns undefined when the stylesheet is missing', async () => {
     const tempDir = createTempDir()
     const missingPath = resolve(tempDir, 'styled', 'styles.css')

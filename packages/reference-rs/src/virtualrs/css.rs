@@ -26,7 +26,7 @@ pub fn rewrite_css_imports(source_code: &str, relative_path: &str) -> String {
         let Some(import_parts) = collect_import_parts(source_code, import, |imported, local| {
             if imported == CSS_BINDING {
                 ImportCollection::Matched {
-                    local_binding_to_normalize: None,
+                    local_binding_to_normalize: Some(local.to_string()),
                 }
             } else {
                 ImportCollection::Keep {
@@ -47,7 +47,10 @@ pub fn rewrite_css_imports(source_code: &str, relative_path: &str) -> String {
                     &import_parts.default_name,
                     &import_parts.remaining_parts,
                 ),
-                local_binding_to_normalize: None,
+                local_binding_to_normalize: import_parts
+                    .local_binding_to_normalize
+                    .filter(|local| local != CSS_BINDING),
+                canonical_call_name: Some(CSS_BINDING),
             },
         );
     }

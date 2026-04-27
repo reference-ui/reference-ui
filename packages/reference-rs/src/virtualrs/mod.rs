@@ -6,6 +6,7 @@
 mod constants;
 mod css;
 mod cva;
+mod responsive;
 mod utils;
 
 #[cfg(test)]
@@ -15,3 +16,5 @@ mod tests;
 pub use css::rewrite_css_imports;
 #[cfg(any(test, feature = "napi"))]
 pub use cva::rewrite_cva_imports;
+#[cfg(any(test, feature = "napi"))]
+pub use responsive::apply_responsive_styles;
