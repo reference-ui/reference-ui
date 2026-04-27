@@ -8,6 +8,7 @@
 - `r` can also be authored inside `css()` as syntactic sugar.
 - It supports named containers via the companion `container` prop.
 - Panda already supports raw `@container ...` rules.
+- Panda also exposes preset container-condition tokens such as `@/sm` and `@sidebar/sm`.
 - The intended long-term integration point for `css({ r: ... })` is the Rust virtual
 	transform layer, not a runtime wrapper and not a TypeScript-side transform.
 
@@ -19,6 +20,7 @@ For `css({ r: ... })`, the target solution is:
 - treat the `css()` form as syntactic sugar only
 - lower that sugar inside `packages/reference-rs/src/virtualrs`
 - let Panda consume normal raw `@container (...)` keys after lowering
+- use Panda as the execution engine, with virtual transforms acting only as normalization
 
 This means the next real implementation should live in a Rust-native transform such as:
 
@@ -259,6 +261,83 @@ Use the utility `r` when the authoring flow specifically wants `css({ ... })`.
 
 That split keeps the feature complete without pretending the two surfaces have the same context.
 
+## How This Reuses Panda
+
+Panda already gives us two relevant container-query authoring surfaces.
+
+### Panda Preset Container Conditions
+
+Panda can generate named condition keys from theme config, such as:
+
+```tsx
+css({
+	fontSize: {
+		'@/sm': 'md',
+		'@sidebar/md': 'lg',
+	},
+})
+```
+
+That surface is useful when the design system wants container sizes to be tokenized through
+`containerSizes` and `containerNames`.
+
+It is not a direct match for current `r` semantics, because `r` today is authored with literal
+numeric widths and, on the primitive side, can also combine with a sibling `container` prop.
+
+### Panda Arbitrary Container At-Rules
+
+Panda also accepts raw at-rules directly inside `css()`, for example:
+
+```tsx
+css({
+	'@container (min-width: 420px)': {
+		gridTemplateColumns: '1fr auto',
+	},
+})
+```
+
+This is the better fit for `css({ r: ... })` in this repo.
+
+Why:
+
+- it preserves the current numeric-breakpoint shape exactly
+- it matches what the primitive/pattern `r` already emits conceptually
+- it reuses Panda's real extraction and runtime path without adding a second CSS engine
+- it lets our custom work stay in virtual normalization instead of runtime interpretation
+
+So the job of our virtual transform is not to replace Panda's container API.
+
+The job is to take a Reference UI-specific authoring convenience:
+
+```tsx
+css({
+	r: {
+		420: { gridTemplateColumns: '1fr auto' },
+	},
+})
+```
+
+and normalize it into a Panda-native style object:
+
+```tsx
+css({
+	'@container (min-width: 420px)': {
+		gridTemplateColumns: '1fr auto',
+	},
+})
+```
+
+After that point, Panda should do all the normal work:
+
+- recognize the `@container` condition
+- generate the class name
+- emit the final CSS block
+
+That is the important boundary: custom transforms in `css()` should end in a shape Panda already
+understands.
+
+
+
 ## Why The Split Exists
 
 The pattern transform can inspect both `r` and `container`, so it can target named containers.
@@ -381,6 +460,8 @@ If you need the responsive rule itself to know about a named container explicitl
 	`css()` sugar in `virtualrs` before Panda extraction.
 - That approach uses Panda's existing container-query support instead of inventing a second CSS
 	execution path.
+- The custom virtual transform should stop at a Panda-native `@container ...` style object and let
+	Panda handle class generation and CSS emission from there.
 
 ## Rejected Attempts
 
@@ -535,6 +616,8 @@ lowering away entirely in the Rust virtual layer before Panda extraction.
 - Do not rely on a runtime wrapper as the fix.
 - Do not pull in the `typescript` package for this transform.
 - Do use Panda's raw container-query support as the emitted target.
+- Do treat virtual `css()` transforms as normalization into Panda-native style objects, not as a
+	parallel styling runtime.
 - Do keep the semantic explanation close to the `r` extension with a comment noting that the
 	`css()` sugar is lowered in the virtual layer.
 - Do give `css()` an owned public type shape for `r` so users do not need casts and nested values
