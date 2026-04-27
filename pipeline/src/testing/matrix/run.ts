@@ -29,10 +29,10 @@ import {
   registryUrlInContainer,
 } from '../../../config.js'
 import { buildWorkspacePackages } from '../../build/index.js'
-import type { MatrixWorkspacePackage } from './discovery.js'
+import type { MatrixWorkspacePackage } from './discovery/index.js'
 import { ensureContainerRuntime } from '../../lib/runtime/ensure-container-runtime.js'
 import { readRegistryManifest } from '../../registry/manifest.js'
-import { listMatrixWorkspacePackages } from './discovery.js'
+import { listMatrixWorkspacePackages } from './discovery/index.js'
 import { validateMatrixFixtures } from './validate.js'
 
 const matrixDir = dirname(fileURLToPath(import.meta.url))

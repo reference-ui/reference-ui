@@ -3,8 +3,8 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { describe, it } from 'node:test'
-import { repoRoot } from '../../build/workspace.js'
-import { getMatrixPackageName, isMatrixWorkspacePackageDir, readMatrixPackageConfig } from './discovery.js'
+import { repoRoot } from '../../../build/workspace.js'
+import { getMatrixPackageName, isMatrixWorkspacePackageDir, readMatrixPackageConfig } from './index.js'
 
 describe('readMatrixPackageConfig', () => {
   it('returns null when a package has no matrix.json', async () => {

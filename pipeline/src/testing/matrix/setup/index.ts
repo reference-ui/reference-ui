@@ -11,7 +11,7 @@ import { existsSync } from 'node:fs'
 import { readFile, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { repoRoot, run } from '../../../build/workspace.js'
-import { listMatrixPackageDefinitions } from '../discovery.js'
+import { listMatrixPackageDefinitions } from '../discovery/index.js'
 import { createManagedMatrixPackageJson, type MatrixFixturePackageJson } from '../managed/package-json/index.js'
 import { validateMatrixFixtures } from '../validate.js'
 
