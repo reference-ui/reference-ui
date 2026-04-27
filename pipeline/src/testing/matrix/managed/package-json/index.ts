@@ -44,6 +44,13 @@ const managedDevDependencies = {
   vitest: '^4.0.18',
 } as const
 
+const managedIgnoredBuiltDependencies = [
+  '@parcel/watcher',
+  '@swc/core',
+  'esbuild',
+  'nx',
+] as const
+
 function omitManagedDependencies(
   dependencies: Record<string, string> | undefined,
   managedNames: readonly string[],
@@ -136,6 +143,7 @@ export function createMatrixConsumerPackageJson(
   return `${JSON.stringify(
     {
       ...options.fixturePackageJson,
+      ignoredBuiltDependencies: managedIgnoredBuiltDependencies,
       scripts: undefined,
       dependencies: replaceWorkspaceProtocolVersions(options.fixturePackageJson.dependencies, versionOverrides),
       devDependencies: replaceWorkspaceProtocolVersions(options.fixturePackageJson.devDependencies, versionOverrides),

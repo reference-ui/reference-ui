@@ -71,6 +71,7 @@ describe('createMatrixConsumerPackageJson', () => {
     ) as {
       dependencies: Record<string, string>
       devDependencies: Record<string, string>
+      ignoredBuiltDependencies: string[]
       name: string
       private: boolean
       scripts?: Record<string, string>
@@ -86,6 +87,12 @@ describe('createMatrixConsumerPackageJson', () => {
       typescript: '~5.9.3',
       vitest: '^4.0.18',
     })
+    assert.deepEqual(packageJson.ignoredBuiltDependencies, [
+      '@parcel/watcher',
+      '@swc/core',
+      'esbuild',
+      'nx',
+    ])
     assert.equal(packageJson.name, '@matrix/install')
     assert.equal(packageJson.private, true)
     assert.equal(packageJson.scripts, undefined)
