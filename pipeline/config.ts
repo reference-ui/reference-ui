@@ -12,7 +12,7 @@ export const registryUrlInContainer = `http://${managedRegistryServiceHost}:${ma
 export const consumerDirInContainer = '/consumer' as const
 
 export const matrixConfig = {
-	concurrency: 6,
+	concurrency: 2,
 	daggerTrace: false,
 	quietPreparationSkips: true,
 } as const

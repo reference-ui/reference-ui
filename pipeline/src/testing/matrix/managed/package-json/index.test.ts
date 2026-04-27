@@ -34,8 +34,25 @@ describe('createManagedMatrixPackageJson', () => {
     assert.equal(packageJson.scripts.test, 'pnpm --dir ../../pipeline exec tsx src/cli.ts test --packages=@matrix/mcp')
     assert.equal(packageJson.scripts.sync, 'pnpm exec ref sync')
     assert.deepEqual(Object.keys(packageJson.scripts).sort(), ['setup', 'sync', 'test'])
-    assert.equal(packageJson.devDependencies['@playwright/test'], '1.48.0')
+    assert.equal(packageJson.devDependencies['@playwright/test'], undefined)
     assert.equal(packageJson.devDependencies['@modelcontextprotocol/sdk'], '^1.29.0')
+  })
+
+  it('preserves package-specific browser runners from the existing fixture package', () => {
+    const packageJson = JSON.parse(
+      createManagedMatrixPackageJson({
+        existingPackageJson: {
+          devDependencies: {
+            '@playwright/test': '1.48.0',
+          },
+        },
+        packageName: '@matrix/playwright',
+      }),
+    ) as {
+      devDependencies: Record<string, string>
+    }
+
+    assert.equal(packageJson.devDependencies['@playwright/test'], '1.48.0')
   })
 })
 
