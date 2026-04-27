@@ -11,6 +11,12 @@ export const registryUrlInContainer = `http://${managedRegistryServiceHost}:${ma
 // Synthetic downstream consumers are materialized under one shared workdir.
 export const consumerDirInContainer = '/consumer' as const
 
+export const matrixConfig = {
+	concurrency: 6,
+	daggerTrace: false,
+	quietPreparationSkips: true,
+} as const
+
 // Workspace packages that should be built and loaded into the local registry.
 export const registryPackageNames = [
 	'@reference-ui/icons',
