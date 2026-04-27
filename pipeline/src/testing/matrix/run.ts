@@ -16,6 +16,10 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { getVirtualNativePackageName, type VirtualNativeTarget } from '../../../../packages/reference-rs/js/shared/targets.js'
 import {
+  matrixNodeModulesCacheKey,
+  registryManifestCacheKey,
+} from './node-modules/cache.js'
+import {
   consumerDirInContainer,
   defaultRegistryUrl,
   managedRegistryHost,
@@ -54,15 +58,6 @@ interface MatrixPackageRunContext {
 
 function isDirectExecution(): boolean {
   return process.argv[1] === fileURLToPath(import.meta.url)
-}
-
-function registryManifestCacheKey(manifest: Awaited<ReturnType<typeof readRegistryManifest>>): string {
-  const fingerprint = manifest.packages
-    .map((pkg) => `${pkg.name}@${pkg.version}:${pkg.hash}`)
-    .join('|')
-
-  const digest = createHash('sha256').update(fingerprint).digest('hex').slice(0, 16)
-  return `reference-ui-pipeline-pnpm-store-${digest}`
 }
 
 function baseNodeContainer(pnpmStoreCacheKey: string) {
@@ -237,6 +232,15 @@ export async function runMatrixBootstrapInDagger(): Promise<void> {
   for (const packageRunContext of matrixPackageContexts) {
     console.log(`3. Reading ${packageRunContext.displayName} source...`)
 
+    const nodeModulesCache = dag.cacheVolume(
+      matrixNodeModulesCacheKey({
+        coreVersion: corePackage.version,
+        fixturePackageJson: packageRunContext.source.fixturePackageJson,
+        libVersion: libPackage.version,
+        manifest,
+      }),
+    )
+
     const consumerBase = consumerWorkspace
       .withNewFile(
         `${consumerDirInContainer}/package.json`,
@@ -248,6 +252,7 @@ export async function runMatrixBootstrapInDagger(): Promise<void> {
       )
       .withNewFile(`${consumerDirInContainer}/tsconfig.json`, createMatrixConsumerTsconfig())
       .withNewFile(`${consumerDirInContainer}/ui.config.ts`, packageRunContext.source.configSource)
+      .withMountedCache(`${consumerDirInContainer}/node_modules`, nodeModulesCache)
       .withWorkdir(consumerDirInContainer)
 
     const consumerWithSource = Object.entries(packageRunContext.source.fixtureFiles)
