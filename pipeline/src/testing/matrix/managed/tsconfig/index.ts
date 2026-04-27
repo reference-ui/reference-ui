@@ -1,10 +1,8 @@
 /**
- * Matrix consumer tsconfig generation.
+ * Managed tsconfig generation for matrix consumers.
  *
  * The synthetic matrix consumer only needs enough TypeScript configuration to
- * exercise `ref sync` against a realistic downstream app shape. Keeping the
- * generated `tsconfig.json` here makes that contract explicit next to the other
- * generated consumer files.
+ * exercise `ref sync` and compile the selected fixture as a downstream app.
  */
 
 export function createMatrixConsumerTsconfig(): string {

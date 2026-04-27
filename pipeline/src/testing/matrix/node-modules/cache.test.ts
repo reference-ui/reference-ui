@@ -7,7 +7,7 @@ import {
   registryManifestCacheKey,
   replaceWorkspaceProtocolVersions,
 } from './cache.js'
-import type { MatrixFixturePackageJson } from '../transforms/package-json.js'
+import type { MatrixFixturePackageJson } from '../managed/package-json/index.js'
 
 function createManifest(overrides?: Partial<RegistryManifest>): RegistryManifest {
   return {

@@ -9,7 +9,7 @@
 
 import { createHash } from 'node:crypto'
 import type { RegistryManifest } from '../../../registry/types.js'
-import type { MatrixFixturePackageJson } from '../transforms/package-json.js'
+import type { MatrixFixturePackageJson } from '../managed/package-json/index.js'
 
 export const matrixNodeImage = 'node:24-bookworm'
 export const matrixPnpmVersion = '10.29.3'

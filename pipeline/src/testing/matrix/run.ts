@@ -19,6 +19,8 @@ import {
   matrixNodeModulesCacheKey,
   registryManifestCacheKey,
 } from './node-modules/cache.js'
+import { createMatrixConsumerPackageJson, type MatrixFixturePackageJson } from './managed/package-json/index.js'
+import { createMatrixConsumerTsconfig } from './managed/tsconfig/index.js'
 import {
   consumerDirInContainer,
   defaultRegistryUrl,
@@ -32,8 +34,6 @@ import type { MatrixWorkspacePackage } from './discovery.js'
 import { ensureContainerRuntime } from '../../lib/runtime/ensure-container-runtime.js'
 import { readRegistryManifest } from '../../registry/manifest.js'
 import { listMatrixWorkspacePackages } from './discovery.js'
-import { createMatrixConsumerPackageJson, type MatrixFixturePackageJson } from './transforms/package-json.js'
-import { createMatrixConsumerTsconfig } from './transforms/tsconfig.js'
 import { validateMatrixFixtures } from './validate.js'
 
 const matrixDir = dirname(fileURLToPath(import.meta.url))
@@ -54,6 +54,11 @@ interface MatrixPackageRunContext {
   logPrefix: string
   source: FixtureSourceFiles
   workspacePackage: MatrixWorkspacePackage['workspacePackage']
+}
+
+export interface MatrixRunOptions {
+  commandLabel?: string
+  packageNames?: readonly string[]
 }
 
 function isDirectExecution(): boolean {
@@ -148,7 +153,7 @@ async function writeStageLog(fileName: string, output: string): Promise<void> {
 
 async function writeMatrixPackageStageLog(
   packageRunContext: MatrixPackageRunContext,
-  phase: 'install' | 'ref-sync' | 'test',
+  phase: 'install' | 'setup' | 'test',
   output: string,
 ): Promise<void> {
   await writeStageLog(`${packageRunContext.logPrefix}-${phase}.log`, output)
@@ -179,10 +184,10 @@ function assertMatrixRustTargetAvailable(
   )
 }
 
-export async function runMatrixBootstrapInDagger(): Promise<void> {
+export async function runMatrixBootstrapInDagger(options: MatrixRunOptions = {}): Promise<void> {
   console.log('1. Discovering matrix-enabled fixtures...')
   validateMatrixFixtures()
-  const matrixPackages = listMatrixWorkspacePackages()
+  const matrixPackages = listMatrixWorkspacePackages(options.packageNames)
 
   console.log('2. Building changed workspace packages and staging the shared host Verdaccio registry...')
   console.log(`   Using the single pipeline registry at ${defaultRegistryUrl}.`)
@@ -280,22 +285,22 @@ export async function runMatrixBootstrapInDagger(): Promise<void> {
       process.stdout.write(installOutput)
     }
 
-    console.log(`6. Running ref sync for ${packageRunContext.displayName} inside the clean consumer container...`)
+    console.log(`6. Running setup for ${packageRunContext.displayName} inside the clean consumer container...`)
     console.log(
-      `   Output is buffered by the Dagger Node SDK and will be written to ${resolve(matrixLogDir, `${packageRunContext.logPrefix}-ref-sync.log`)}.`,
+      `   Output is buffered by the Dagger Node SDK and will be written to ${resolve(matrixLogDir, `${packageRunContext.logPrefix}-setup.log`)}.`,
     )
-    const syncRunner = installRunner.withExec(['pnpm', 'exec', 'ref', 'sync'])
+    const setupRunner = installRunner.withExec(['pnpm', 'run', 'setup'])
 
     try {
-      const syncOutput = await syncRunner.stdout()
-      await writeMatrixPackageStageLog(packageRunContext, 'ref-sync', syncOutput)
-      process.stdout.write(syncOutput)
+      const setupOutput = await setupRunner.stdout()
+      await writeMatrixPackageStageLog(packageRunContext, 'setup', setupOutput)
+      process.stdout.write(setupOutput)
 
       console.log(`7. Running ${packageRunContext.displayName} test command inside the clean consumer container...`)
       console.log(
         `   Output is buffered by the Dagger Node SDK and will be written to ${resolve(matrixLogDir, `${packageRunContext.logPrefix}-test.log`)}.`,
       )
-      const testRunner = syncRunner.withExec(['pnpm', 'test'])
+      const testRunner = setupRunner.withExec(['pnpm', 'run', 'test'])
       const testOutput = await testRunner.stdout()
       await writeMatrixPackageStageLog(packageRunContext, 'test', testOutput)
       process.stdout.write(testOutput)
@@ -315,10 +320,15 @@ export async function runMatrixBootstrapInDagger(): Promise<void> {
   }
 }
 
-if (isDirectExecution()) {
+export async function runMatrixTests(options: MatrixRunOptions = {}): Promise<void> {
   ensureContainerRuntime({
-    commandLabel: 'pnpm pipeline:test:matrix',
+    commandLabel: options.commandLabel ?? 'pnpm pipeline test',
     minimumDockerMemoryBytes: minimumMatrixDockerMemoryBytes,
   })
-  await dagger.connection(runMatrixBootstrapInDagger, { LogOutput: process.stdout })
+
+  await dagger.connection(() => runMatrixBootstrapInDagger(options), { LogOutput: process.stdout })
+}
+
+if (isDirectExecution()) {
+  await runMatrixTests({ commandLabel: 'pnpm pipeline:test:matrix' })
 }
