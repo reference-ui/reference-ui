@@ -35,6 +35,7 @@ import { ensureContainerRuntime } from '../../lib/runtime/ensure-container-runti
 import { readRegistryManifest } from '../../registry/manifest.js'
 import { listMatrixWorkspacePackages } from './discovery/index.js'
 import { validateMatrixFixtures } from './validate.js'
+import { failStep, finishStep, formatDuration, startStep, writeFailureOutput } from '../../lib/log/index.js'
 
 const matrixDir = dirname(fileURLToPath(import.meta.url))
 const pipelineDir = resolve(matrixDir, '..', '..', '..')
@@ -66,17 +67,28 @@ const matrixConsumerVitestCommand = ['pnpm', 'exec', 'vitest', 'run'] as const
 const matrixConsumerPlaywrightCommand = ['pnpm', 'exec', 'playwright', 'test', 'e2e'] as const
 const matrixConsumerTypecheckCommand = ['pnpm', 'exec', 'tsc', '--noEmit'] as const
 
-function formatDuration(startedAt: number): string {
-  return `${((Date.now() - startedAt) / 1000).toFixed(1)}s`
+function readErrorOutput(value: unknown): string {
+  if (typeof value === 'string') {
+    return value
+  }
+
+  if (Buffer.isBuffer(value)) {
+    return value.toString('utf8')
+  }
+
+  return ''
 }
 
-function logStageStart(label: string): number {
-  process.stdout.write(`${label}... `)
-  return Date.now()
-}
+function writeMatrixFailureDetails(error: unknown): void {
+  if (!error || typeof error !== 'object') {
+    return
+  }
 
-function logStageDone(startedAt: number): void {
-  console.log(`done in ${formatDuration(startedAt)}`)
+  const stdout = readErrorOutput((error as { stdout?: unknown }).stdout)
+  const stderr = readErrorOutput((error as { stderr?: unknown }).stderr)
+
+  writeFailureOutput(stdout, 'matrix stdout')
+  writeFailureOutput(stderr, 'matrix stderr')
 }
 
 function isDirectExecution(): boolean {
@@ -236,7 +248,8 @@ export async function runMatrixBootstrapInDagger(options: MatrixRunOptions = {})
   const matrixPackages = listMatrixWorkspacePackages(options.packageNames)
 
   console.log(`Using shared matrix registry at ${defaultRegistryUrl}.`)
-  const buildStageStartedAt = logStageStart('Preparing workspace packages and registry')
+  const buildStageStartedAt = Date.now()
+  const buildStep = startStep('Preparing workspace packages and registry')
   const previousQuietSkips = process.env.REF_PIPELINE_QUIET_SKIPS
 
   try {
@@ -252,7 +265,7 @@ export async function runMatrixBootstrapInDagger(options: MatrixRunOptions = {})
     }
   }
 
-  logStageDone(buildStageStartedAt)
+  finishStep(buildStep, `Prepared workspace packages and registry in ${formatDuration(Date.now() - buildStageStartedAt)}`)
   const manifest = await readRegistryManifest()
   assertMatrixRustTargetAvailable(manifest)
   const corePackage = manifest.packages.find((pkg) => pkg.name === '@reference-ui/core')
@@ -272,11 +285,12 @@ export async function runMatrixBootstrapInDagger(options: MatrixRunOptions = {})
   let consumerWorkspace = workspace.withServiceBinding('registry', registry)
 
   console.log(`Using host registry via ${managedRegistryServiceHost}:${managedRegistryPort}. Logs: ${matrixLogDir}`)
-  const pingStageStartedAt = logStageStart('Checking container registry connectivity')
+  const pingStageStartedAt = Date.now()
+  const pingStep = startStep('Checking container registry connectivity')
   const pingRunner = consumerWorkspace.withExec(['npm', 'ping', '--registry', registryUrlInContainer])
   const pingOutput = await pingRunner.stdout()
   await writeStageLog('publish-ping.log', pingOutput)
-  logStageDone(pingStageStartedAt)
+  finishStep(pingStep, `Checked container registry connectivity in ${formatDuration(Date.now() - pingStageStartedAt)}`)
   consumerWorkspace = pingRunner
 
   const publishedPackageNames = manifest.packages.map((pkg) => `${pkg.name}@${pkg.version}`).join('\n')
@@ -326,7 +340,9 @@ export async function runMatrixBootstrapInDagger(options: MatrixRunOptions = {})
       .withMountedCache(`${consumerDirInContainer}/node_modules`, nodeModulesCache)
       .withWorkdir(consumerDirInContainer)
 
-    const installStageStartedAt = logStageStart('  Installing dependencies')
+    const packageStartedAt = Date.now()
+    const installStageStartedAt = Date.now()
+    const installStep = startStep(`${packageRunContext.displayName}: installing dependencies`)
     const installRunner = consumerBase.withExec([
       'pnpm',
       'install',
@@ -337,15 +353,16 @@ export async function runMatrixBootstrapInDagger(options: MatrixRunOptions = {})
     ])
     const installOutput = await installRunner.stdout()
     await writeMatrixPackageStageLog(packageRunContext, 'install', installOutput)
-    logStageDone(installStageStartedAt)
+    finishStep(installStep, `${packageRunContext.displayName}: installed dependencies in ${formatDuration(Date.now() - installStageStartedAt)}`)
 
-    const setupStageStartedAt = logStageStart('  Setting up container')
+    const setupStageStartedAt = Date.now()
+    const setupStep = startStep(`${packageRunContext.displayName}: setting up container`)
     const setupRunner = installRunner.withExec([...matrixConsumerSetupCommand])
 
     try {
       const setupOutput = await setupRunner.stdout()
       await writeMatrixPackageStageLog(packageRunContext, 'setup', setupOutput)
-      logStageDone(setupStageStartedAt)
+      finishStep(setupStep, `${packageRunContext.displayName}: set up container in ${formatDuration(Date.now() - setupStageStartedAt)}`)
 
       console.log('  Running tests')
       let testRunner = setupRunner
@@ -374,8 +391,10 @@ export async function runMatrixBootstrapInDagger(options: MatrixRunOptions = {})
       const testOutput = testLogOutputs.filter(output => output.length > 0).join('\n')
       await writeMatrixPackageStageLog(packageRunContext, 'test', testOutput)
       process.stdout.write(testConsoleOutputs.filter(output => output.length > 0).join('\n'))
-      console.log(`\n  Completed in ${formatDuration(installStageStartedAt)}`)
+      console.log(`\n  Completed in ${formatDuration(Date.now() - packageStartedAt)}`)
     } catch (error) {
+      failStep(setupStep, `${packageRunContext.displayName}: failed during setup/test execution`)
+      writeMatrixFailureDetails(error)
       await writeMatrixPackageStageLog(
         packageRunContext,
         'test',
