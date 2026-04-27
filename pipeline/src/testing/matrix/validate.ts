@@ -7,7 +7,7 @@
  */
 
 import { fileURLToPath } from 'node:url'
-import { listMatrixWorkspacePackages } from './discovery.js'
+import { listMatrixWorkspacePackages } from './discovery/index.js'
 
 export function validateMatrixFixtures(): void {
   const matrixPackages = listMatrixWorkspacePackages()

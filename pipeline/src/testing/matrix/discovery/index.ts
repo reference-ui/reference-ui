@@ -8,9 +8,9 @@
 
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { relative, resolve } from 'node:path'
-import { listWorkspacePackages } from '../../build/workspace.js'
-import type { WorkspacePackage } from '../../build/types.js'
-import { repoRoot } from '../../build/workspace.js'
+import { listWorkspacePackages } from '../../../build/workspace.js'
+import type { WorkspacePackage } from '../../../build/types.js'
+import { repoRoot } from '../../../build/workspace.js'
 
 export interface MatrixPackageConfig {
   matrix: true
