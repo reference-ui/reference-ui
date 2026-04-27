@@ -1,425 +1,298 @@
-# E2E Matrix Plan
+# Matrix Plan
 
-This document proposes a cleaner ownership model for the Playwright matrix.
+## Goal
 
-The core shift is:
+The matrix system should support compatibility testing across environment axes such as React and bundler versions without making the default developer loop slow or noisy.
 
-- fixture libraries stop being passive helper dependencies
-- fixture libraries become the scenario owners
-- the pipeline generates the temporary consumer project around each fixture
-- every matrix run installs real published-style packages into a clean container
+Two modes must exist:
 
-That gives us a matrix that behaves like a downstream user project instead of a workspace-shaped test harness.
+1. Targeted package testing
+2. Full compatibility matrix testing
 
-## Why Change It
+The default must stay cheap.
 
-Today, `packages/reference-e2e` owns too much environment construction.
+If a user runs `test` for a specific matrix package locally, pipeline should run that package in one default environment only.
 
-The current prep flow already does several jobs at once:
+It should not expand across every React and bundler combination unless the user explicitly asks for full matrix coverage.
 
-- composes a sandbox per React x bundler entry
-- writes package.json dynamically
-- installs dependencies into each sandbox
-- builds and syncs fixture libraries directly from the workspace
-- runs `ref sync` inside the sandbox before Playwright starts
+## Default Behavior
 
-That works, but it mixes three separate concerns into one package:
+Default behavior for targeted package testing:
 
-- Playwright assertions
-- scenario ownership
-- environment orchestration
+- `pnpm --dir ../../pipeline exec tsx src/cli.ts test --packages=@matrix/typescript`
+- runs one Dagger consumer job
+- uses the default environment
+- default React version is the latest React version declared in `matrix.json`
+- default bundler should be the package default when bundlers matter
 
-The result is that `reference-e2e` still behaves more like a bespoke integration harness than a real downstream consumer.
+This gives us a practical local workflow:
 
-## Proposed Model
+- matrix packages still exist locally with one workspace `node_modules`
+- editor types work
+- local `test` remains a thin entrypoint into pipeline
+- the actual container execution stays explicit and deterministic
 
-The new model is:
+Full matrix coverage must be opt-in.
 
-1. pipeline owns the matrix runtime
-2. fixture libraries own the UI or logic under test
-3. pipeline generates a temporary downstream app around each fixture
-4. Playwright runs against that generated app inside a clean Dagger container
+Examples of explicit full coverage:
 
-In practice, each test run becomes:
+- `pnpm pipeline test --matrix`
+- `pnpm pipeline test --packages=@matrix/typescript --matrix`
 
-- pick a fixture library
-- pick a matrix entry
-- generate a tiny consumer app on the fly
-- install real npm-style artifacts from the local registry
-- run `ref sync` and the bundler in a clean container
-- run Playwright assertions against the served app
+The exact CLI flag can be finalized later, but the behavior should be:
 
-That means the matrix itself becomes the downstream smoke test.
+- no matrix expansion by default
+- full environment expansion only when explicitly requested
 
-## Ownership Split
+## Config Shape
 
-The intended ownership boundary should be:
+The first schema extension should stay small.
 
-- `fixtures/*`
-  - own the scenario package
-  - own the UI or logic being exercised
-  - own any scenario-specific Playwright specs or exported helpers
-  - declare whether they participate in the matrix
-- `packages/reference-e2e`
-  - keeps the Playwright runner, helpers, and assertion utilities
-  - stops owning sandbox construction and ad hoc dependency installation
-- `pipeline/`
-  - owns matrix discovery
-  - owns generated consumer project creation
-  - owns container setup
-  - owns Verdaccio-backed installation flow
-  - owns artifact and log collection
-
-This keeps Playwright focused on behavior and moves environment orchestration into the pipeline where it belongs.
-
-## Fixture Contract
-
-Each fixture library should become a scenario package.
-
-Minimum shape:
-
-- `package.json`
-- `ui.config.ts` or config fragments the scenario needs
-- scenario source files
-- optional Playwright specs or test helpers
-- `matrix.json`
-
-Recommended first `matrix.json` shape:
+Example:
 
 ```json
 {
-  "matrix": true
+	"matrix": true,
+	"name": "typescript",
+	"environments": {
+		"react": ["18", "19"],
+		"bundler": ["vite@5"]
+	}
 }
 ```
 
-That is intentionally tiny.
+This is enough for v1.
 
-It answers one question only:
+Rules:
 
-- should this fixture participate in the generated downstream matrix?
+- `matrix` keeps the existing inclusion contract
+- `name` keeps the existing logical package identity
+- `environments` declares compatibility coverage, not default runtime behavior by itself
+- if `environments` is omitted, the package uses pipeline defaults
 
-We can extend the schema later if needed, for example with:
+## Environment Semantics
 
-- custom app entry template
-- bundler exclusions
-- React version exclusions
-- fixture-specific setup hooks
+`environments` should be interpreted as compatibility arrays.
 
-But phase one should keep the contract minimal.
+Initial supported axes:
 
-## First Scenario: `smoke`
+- `react`: string array like `17`, `18`, `19`
+- `bundler`: string array like `vite@5`, `webpack@5`
 
-Yes.
+This should remain intentionally conservative.
 
-One of the first fixture scenarios should just be `smoke`.
+We do not need arbitrary nested config or plugin-style matrix axes yet.
 
-The first concrete package for that direction is `@matrix/install`.
+## Planning Model
 
-Its job is not to test a rich UI surface.
+We should add a planning layer between discovery and execution.
 
-Its job is to prove the minimum downstream contract:
+Flow:
 
-- a generated consumer app can install the packaged modules
-- `ref sync` can run inside a clean container
-- the chosen bundler can start
-- Playwright can load the page and observe a minimal success condition
+1. Discover matrix packages
+2. Read `matrix.json`
+3. Resolve the requested execution mode
+4. Produce concrete jobs
+5. Execute jobs in Dagger
 
-That makes `smoke` the thinnest valid downstream scenario.
+The important design point is that `matrix.json` defines compatibility space, while the planner decides how much of that space to execute for a given command.
 
-It should use the smallest useful config:
+### Targeted Package Mode
 
-- minimal `ui.config.ts`
-- minimal app entry
-- minimal rendered component tree
-- no extra fixture complexity unless it is required to prove install plus boot plus render
+If the user selects specific packages and does not request matrix expansion:
 
-In other words, `smoke` becomes the matrix-native replacement for the current standalone downstream smoke idea.
+- create one job per selected package
+- use the default environment only
+- default React version is the latest declared package-supported React version
+- default bundler is the pipeline default for that package class
 
-The distinction is:
+Example:
 
-- old model: one special downstream smoke script outside the matrix
-- new model: `smoke` is just another fixture scenario, so it runs through the exact same generated-project and container pipeline as every other scenario
+- `@matrix/typescript`
+	- job: `react=19`, `bundler=vite@5` if that is the default bundler
 
-That is better because the simplest scenario now validates the same infrastructure path as the richer scenarios.
+### Full Matrix Mode
 
-### What `smoke` should prove
+If the user explicitly requests full matrix expansion:
 
-The first version should prove only the critical path:
+- expand the declared environment arrays into concrete jobs
+- run all compatible combinations for that package
 
-1. install `@reference-ui/core` and any other required packaged dependencies from the local registry
-2. install React and bundler dependencies for the selected matrix entry
-3. run `ref sync` successfully in the generated consumer app
-4. start the dev server successfully
-5. load the page in Playwright
-6. assert a minimal rendered marker and one generated output marker
+Example:
 
-Good examples of assertions:
-
-- the page renders known text such as `Reference UI smoke`
-- a generated `.reference-ui` output expected for the scenario exists
-- a basic style or token-driven value resolves correctly
-
-Bad examples for `smoke`:
-
-- lots of fixture-owned behavior
-- large scenario-specific token systems
-- complex component assertions that belong in richer fixtures
-
-### Why start with `smoke`
-
-`smoke` should be the first scenario migrated because it gives the cleanest signal.
-
-If `smoke` fails, the infrastructure is wrong.
-
-That usually means one of these is broken:
-
-- registry staging
-- generated consumer app creation
-- install flow
-- `ref sync`
-- bundler startup
-- container isolation assumptions
-
-That is exactly the failure surface we want to isolate before we layer richer fixture scenarios on top.
-
-## Generated Consumer Project
-
-The generated app should be temporary and disposable.
-
-Pipeline creates it on the fly for each fixture x matrix entry.
-
-The generator only needs to write the files that make the scenario runnable:
-
-- `package.json`
-- `tsconfig.json`
-- bundler config for the selected matrix entry
-- `index.html` when needed
-- app entry file
-- `ui.config.ts` bridge file if the fixture exports config fragments instead of a complete config
-
-The important point is that the fixture does not need to pretend to be a full hand-authored app anymore.
-
-The fixture owns the interesting behavior.
-
-The pipeline-owned generator owns the boring shell.
-
-## Artifact Model
-
-The matrix should consume the same artifact boundary we already started building for the local registry.
-
-That means the matrix installs:
-
-- packaged `@reference-ui/*` artifacts from the pipeline-managed local registry
-- packaged fixture libraries from the same local registry
-- React and bundler dependencies declared by the generated consumer app
-
-That gives us two important properties:
-
-1. the test environment sees publish-style package metadata, not workspace links
-2. fixture scenarios are exercised the same way a real downstream app would consume them
-
-This is the key reason the downstream smoke script becomes redundant over time.
-
-If every matrix project is already a real downstream install flow, then a separate downstream smoke script is just a thinner duplicate of the same guarantee.
-
-## Dagger Guarantees
-
-The matrix should lean hard on Dagger for environment guarantees.
-
-Each matrix container should start with:
-
-- a clean filesystem for the generated consumer project
-- no pre-existing `node_modules`
-- no Rust toolchain
-- no hidden workspace links
-- no dependency on host machine build outputs except the packed artifacts we explicitly mount or publish
-
-What the container is allowed to receive:
-
-- the generated consumer project files
-- the pipeline-managed registry endpoint or exported tarballs
-- the exact package artifacts we intend users to install
-- Playwright browser binaries and the minimal runtime needed to execute tests
-
-What the container should not rely on:
-
-- workspace-level installs
-- in-place fixture builds from the host repo
-- `link:` dependencies to local package paths
-- an ambient compiler toolchain that users would not have after `npm install`
-
-This is the most important guarantee in the whole plan.
-
-It forces the matrix to validate the real package boundary instead of silently depending on repo-local state.
-
-## Matrix Axes
-
-The first-class matrix should remain environment-oriented:
-
-- React version
-- bundler
-- bundler version when relevant
-
-Fixtures are not matrix axes.
-
-Fixtures are scenario inputs.
-
-So the runtime model becomes:
-
-- environment matrix: React x bundler
-- scenario set: every fixture with `matrix.json` set to `true`
-
-The effective execution grid is the cross product:
-
-- `environment entry x fixture scenario`
-
-That is clearer than treating fixture use cases as hidden setup baked into one shared sandbox.
-
-## Proposed Pipeline CLI Surface
-
-The pipeline should expose a small testing-oriented CLI surface for this flow.
-
-Illustrative shape only:
-
-```sh
-pnpm pipeline test matrix prepare
-pnpm pipeline test matrix run
-pnpm pipeline test matrix run --fixture @fixtures/extend-library
-pnpm pipeline test matrix run --project react19-vite5
+```json
+{
+	"environments": {
+		"react": ["17", "18", "19"],
+		"bundler": ["vite@5", "webpack@5"]
+	}
+}
 ```
 
-The underlying responsibilities would be:
+produces:
 
-- discover matrix-enabled fixtures
-- generate a consumer app for each selected fixture x matrix entry
-- ensure the local registry contains the required packages
-- run install, sync, dev server, and Playwright inside Dagger
-- collect logs, traces, screenshots, and HTML reports
+- `react=17, bundler=vite@5`
+- `react=17, bundler=webpack@5`
+- `react=18, bundler=vite@5`
+- `react=18, bundler=webpack@5`
+- `react=19, bundler=vite@5`
+- `react=19, bundler=webpack@5`
 
-`reference-e2e` should not own those orchestration steps anymore.
+## Default Environment Resolution
 
-## Runtime Flow
+We need a single place in pipeline that defines defaults.
 
-One concrete run should look like this:
+Initial defaults:
 
-1. pack and stage publish-style `@reference-ui/*` packages into the local registry
-2. pack and stage publish-style fixture libraries into the same registry
-3. select a matrix entry and fixture
-4. generate a temporary consumer project for that pair
-5. start a clean Dagger container
-6. point npm or pnpm at the local registry
-7. install dependencies for the generated consumer project
-8. run `ref sync`
-9. start the chosen bundler dev server
-10. run Playwright
-11. collect artifacts
+- React default: latest version declared in `matrix.json`
+- Bundler default: first package-supported bundler if present, otherwise pipeline fallback
 
-That flow is downstream-realistic and still keeps the fixture ergonomics high.
+Important rule:
 
-## React And Bundler Mirroring
+- `environments` declares what a package supports
+- defaults declare what we run when the user is not asking for exhaustive coverage
 
-Mirroring React and bundler packages into the local registry is a good optimization, but it should not be phase one.
+That means a package can support React `18` and `19`, but a normal local targeted test still only runs React `19` because that is the latest declared version. If a package declares `17`, `18`, and `19`, the default targeted run still uses only `19` unless the user opts into matrix expansion.
 
-Phase one goal:
+## Execution Contract
 
-- make the downstream package boundary real
-- keep matrix execution clean and reproducible
+Current execution direction should remain intact.
 
-Later optimization:
+Local matrix package:
 
-- pre-seed Verdaccio with the exact React and bundler versions used by the matrix
-- reduce external fetches during test runs
-- improve repeatability when offline or under flaky network conditions
+- `setup` routes into pipeline setup
+- `test` routes into pipeline test
+- `sync` remains `ref sync`
 
-That optimization fits naturally once the registry-backed matrix flow is already real.
+Container consumer:
 
-## What Happens To `downstream-smoke.ts`
+- package manifest is only install metadata
+- runner executes setup and test commands directly
+- runner does not depend on generated consumer `scripts.test`
 
-If this plan lands, `pipeline/src/downstream-smoke.ts` should stop being the long-term strategy.
+This is already the cleaner boundary and should remain the foundation for matrix expansion.
 
-Short term:
+## What Changes For Environment-Aware Runs
 
-- keep it as a narrow, fast sanity check while the matrix migration is incomplete
+To support React and bundler environments, the synthetic consumer generation will need environment materialization.
 
-Long term:
+That likely means:
 
-- retire it after the matrix installs real registry-backed artifacts in clean containers
+- dependency overrides for React and related packages
+- bundler-specific fixture dependencies when required
+- possible generated config differences for Vite vs Webpack consumers
 
-The direct replacement should be the `smoke` fixture scenario described above.
+This should not be implemented as string substitution on test commands alone.
 
-At that point, every E2E run already proves the same downstream-install property, but with stronger scenario coverage.
+The environment must be represented as structured data in the plan.
 
-## Migration Plan
+## Proposed Types
 
-### Phase 1: Make fixtures discoverable
+These names are illustrative, not final.
 
-- add `matrix.json` to each fixture scenario package
-- define a tiny schema with just `matrix: true`
-- add pipeline-side fixture discovery
+```ts
+interface MatrixPackageEnvironmentConfig {
+	react?: string[]
+	bundler?: string[]
+}
 
-### Phase 2: Move consumer generation into pipeline
+interface MatrixPackageConfig {
+	matrix: true
+	name: string
+	environments?: MatrixPackageEnvironmentConfig
+}
 
-- create a pipeline-owned generator for package.json and bundler config
-- stop generating full sandboxes inside `packages/reference-e2e`
-- keep `reference-e2e` test files intact
+interface MatrixResolvedEnvironment {
+	bundler?: string
+	react: string
+}
 
-### Phase 3: Switch fixture installation to registry-backed packages
+interface MatrixExecutionJob {
+	environment: MatrixResolvedEnvironment
+	packageName: string
+}
 
-- stop relying on `link:` dependencies for fixture libraries in the E2E prepare flow
-- install fixture packages from the local registry the same way we install real published packages
-- make the generated app declare normal dependencies only
+interface MatrixExecutionPlan {
+	jobs: MatrixExecutionJob[]
+	mode: 'default' | 'full'
+}
+```
 
-### Phase 4: Move matrix execution into Dagger
+## CLI Direction
 
-- one clean container per fixture x matrix entry
-- no shared host `node_modules`
-- no workspace-owned process lifecycle for the app under test
-- artifact collection owned by pipeline
+Current CLI:
 
-### Phase 5: Retire redundant local harness pieces
+- `pipeline test`
+- `pipeline test --packages=@matrix/typescript`
 
-- shrink `reference-e2e/src/prepare/index.ts`
-- remove environment construction from `reference-e2e`
-- deprecate `downstream-smoke.ts` once the matrix proves the same guarantees
+Planned behavior:
 
-## Non-Goals
+- `pipeline test`
+	- may continue to run the current default test set in default environments
+- `pipeline test --packages=@matrix/typescript`
+	- runs only the targeted package in the default environment
+- `pipeline test --matrix`
+	- runs matrix expansion for the default selected packages
+- `pipeline test --packages=@matrix/typescript --matrix`
+	- runs full matrix expansion for that package only
 
-This plan should not try to solve everything at once.
+The flag name can change, but the semantic contract should stay the same.
 
-Not phase one:
+## Why This Shape
 
-- mirroring the whole npm ecosystem into Verdaccio
-- inventing a broad fixture metadata schema up front
-- moving Playwright assertions out of `reference-e2e`
-- supporting every possible framework before the current React x bundler matrix is clean
+This plan avoids three common failure modes:
 
-The real win is the ownership shift and the clean downstream boundary.
+1. Slow local iteration because every targeted package test explodes into a full compatibility grid
+2. Hardcoded React and bundler logic in the runner instead of a planning layer
+3. Premature suite-level DSL complexity before we know we need per-suite targeting
 
-## Done When
+This is the smallest useful design that still leaves room for future refinement.
 
-We should consider this direction real when all of the following are true:
+## Future Extension
 
-1. a fixture library can opt into the matrix with `matrix.json`
-2. pipeline can generate a runnable consumer app for that fixture on the fly
-3. the generated app installs `@reference-ui/*` and fixture packages from the local registry, not workspace links
-4. each matrix run happens in a clean Dagger container with no ambient `node_modules` or Rust toolchain
-5. Playwright still owns assertions, but no longer owns most environment setup
-6. the downstream smoke script is no longer needed because the matrix already validates the downstream install boundary
+If later we need only some tests to run in some environments, we can extend the config with optional suite-level selection.
 
-## Recommendation
+That should be a later feature, not part of the first environment-aware matrix implementation.
 
-This is the right direction.
+But v1 should not require this.
 
-It simplifies the conceptual model:
+## Implementation Phases
 
-- fixtures own scenarios
-- pipeline owns environments
-- Playwright owns assertions
+Phase 1:
 
-And more importantly, it raises the quality bar:
+- extend `matrix.json` parsing to support optional `environments`
+- keep existing packages working unchanged
+- add planner types and default environment resolution
 
-- each E2E run becomes a real consumer install test
-- the container starts clean
-- the package boundary matches what users actually get
+Phase 2:
 
-That is a better foundation than continuing to grow the current sandbox-preparation layer inside `reference-e2e`.
+- add a planning module that resolves jobs for default mode vs full matrix mode
+- print the resolved plan before execution
+
+Phase 3:
+
+- add environment materialization for React and bundler versions in the synthetic consumer
+- execute one job per resolved environment
+
+Phase 4:
+
+- evaluate whether per-suite targeting is actually needed
+
+## Non-Goals For V1
+
+- arbitrary environment axes
+- automatic inference from test files
+- full matrix expansion by default
+- per-test selection rules
+- dynamic planner plugins
+
+## Summary
+
+The first version should be intentionally small:
+
+- `matrix.json` gets an optional `environments` object
+- targeted package tests run only one default environment
+- default React version is the latest React version declared by that package
+- full matrix execution is explicit, never implicit
+- the planner owns expansion
+- the runner only executes concrete jobs
