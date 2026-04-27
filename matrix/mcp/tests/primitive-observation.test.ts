@@ -128,7 +128,21 @@ describe('primitive observation', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
       arguments: { name: 'Canvas' },
     })
 
-    expect((detailResult as { isError?: boolean }).isError).toBe(true)
-    expect(findTextContent(detailResult)).toContain('Component not found: Canvas')
+    const detail = parseTextJson<ComponentReadout>(detailResult)
+
+    expect(detail).toEqual(
+      expect.objectContaining({
+        name: 'Canvas',
+        kind: 'primitive',
+        source: '@reference-ui/react',
+        count: 0,
+        usage: 'unused',
+        interface: expect.objectContaining({
+          name: 'CanvasProps',
+          source: '@reference-ui/react',
+        }),
+      }),
+    )
+    expect(detail.props.every(prop => prop.origin !== 'observed')).toBe(true)
   })
 })

@@ -29,6 +29,7 @@ import {
   SUPPORTED_VIRTUAL_NATIVE_TARGETS,
   type VirtualNativeTarget,
 } from '../../../../packages/reference-rs/js/shared/targets.js'
+import { REQUIRED_VIRTUAL_NATIVE_BINARY_MARKERS } from '../../../../packages/reference-rs/js/shared/native-contract.js'
 
 export const REFERENCE_RUST_PACKAGE_NAME = '@reference-ui/rust'
 
@@ -148,10 +149,38 @@ function readJson<T>(path: string): T {
   return JSON.parse(readFileSync(path, 'utf8')) as T
 }
 
-function hasLocalNativeBinary(targetDir: string): boolean {
-  return readdirSync(targetDir, { withFileTypes: true }).some(
-    entry => entry.isFile() && entry.name.endsWith('.node')
-  )
+function resolveReferenceRustTargetFromPackageName(packageName: string): VirtualNativeTarget | null {
+  return SUPPORTED_VIRTUAL_NATIVE_TARGETS.find(
+    target => getVirtualNativePackageName(target) === packageName,
+  ) ?? null
+}
+
+function resolveReferenceRustTargetBinaryPath(targetDir: string, target: VirtualNativeTarget): string {
+  return resolve(targetDir, `virtual-native.${target}.node`)
+}
+
+export function hasCompatibleReferenceRustBinaryContents(contents: Buffer): boolean {
+  return REQUIRED_VIRTUAL_NATIVE_BINARY_MARKERS.every(marker => contents.includes(Buffer.from(marker)))
+}
+
+function hasCompatibleReferenceRustBinaryFile(binaryPath: string): boolean {
+  if (!existsSync(binaryPath)) {
+    return false
+  }
+
+  return hasCompatibleReferenceRustBinaryContents(readFileSync(binaryPath))
+}
+
+function hasLocalNativeBinary(targetDir: string, packageName: string): boolean {
+  const target = resolveReferenceRustTargetFromPackageName(packageName)
+
+  if (!target) {
+    return readdirSync(targetDir, { withFileTypes: true }).some(
+      entry => entry.isFile() && entry.name.endsWith('.node')
+    )
+  }
+
+  return hasCompatibleReferenceRustBinaryFile(resolveReferenceRustTargetBinaryPath(targetDir, target))
 }
 
 function listReferenceRustTargetPackages(packageDir: string): ReferenceRustTargetPackage[] {
@@ -168,7 +197,7 @@ function listReferenceRustTargetPackages(packageDir: string): ReferenceRustTarge
 
       return {
         dir,
-        hasLocalBinary: hasLocalNativeBinary(dir),
+        hasLocalBinary: hasLocalNativeBinary(dir, packageJson.name),
         name: packageJson.name,
         version: packageJson.version,
       }
@@ -585,19 +614,42 @@ function planReferenceRustTargetTarball(
   const tarballFileName = packedTarballName(targetPackage.name, targetPackage.version)
   const tarballPath = resolve(rustGeneratedTarballsDir, tarballFileName)
   const tarballExists = existsSync(tarballPath)
+  const target = resolveReferenceRustTargetFromPackageName(targetPackage.name)
+  const hasCompatibleCachedTarball = tarballExists && target !== null
+    ? hasCompatibleReferenceRustTargetTarball(tarballPath, target)
+    : false
 
   return {
     strategy: resolveReferenceRustTargetTarballStrategy({
       allowRemoteFallback,
       hasLocalBinary: targetPackage.hasLocalBinary,
       publishedOnNpm:
-        !targetPackage.hasLocalBinary && !tarballExists
+        !targetPackage.hasLocalBinary && !hasCompatibleCachedTarball
           ? isPublishedOnNpm(targetPackage.name, targetPackage.version)
           : false,
-      tarballExists,
+      tarballExists: hasCompatibleCachedTarball,
     }),
     tarballFileName,
     tarballPath,
+  }
+}
+
+function hasCompatibleReferenceRustTargetTarball(
+  tarballPath: string,
+  target: VirtualNativeTarget,
+): boolean {
+  try {
+    const tarballContents = execFileSync(
+      'tar',
+      ['-xOf', tarballPath, `package/virtual-native.${target}.node`],
+      {
+        stdio: ['ignore', 'pipe', 'ignore'],
+      },
+    )
+
+    return hasCompatibleReferenceRustBinaryContents(tarballContents)
+  } catch {
+    return false
   }
 }
 
