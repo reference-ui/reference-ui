@@ -20,6 +20,6 @@ describe('createMatrixConsumerTsconfig', () => {
       strict: true,
       skipLibCheck: true,
     })
-    assert.deepEqual(tsconfig.include, ['src/**/*', 'tests/**/*', 'ui.config.ts'])
+    assert.deepEqual(tsconfig.include, ['src/**/*', 'tests/**/*', 'unit/**/*', 'component/**/*', 'ui.config.ts'])
   })
 })

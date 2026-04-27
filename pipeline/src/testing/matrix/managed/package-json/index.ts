@@ -36,7 +36,6 @@ const managedDependencies = {
 } as const
 
 const managedDevDependencies = {
-  '@playwright/test': '1.48.0',
   '@types/node': '^25.1.0',
   '@types/react': '^19.2.2',
   '@types/react-dom': '^19.2.2',
