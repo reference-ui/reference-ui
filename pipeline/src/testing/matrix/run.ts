@@ -11,6 +11,7 @@ import { dag } from '@dagger.io/dagger'
 import * as dagger from '@dagger.io/dagger'
 import { existsSync } from 'node:fs'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { availableParallelism } from 'node:os'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { getVirtualNativePackageName, type VirtualNativeTarget } from '../../../../packages/reference-rs/js/shared/targets.js'
@@ -35,7 +36,7 @@ import { ensureContainerRuntime } from '../../lib/runtime/ensure-container-runti
 import { readRegistryManifest } from '../../registry/manifest.js'
 import { listMatrixWorkspacePackages } from './discovery/index.js'
 import { validateMatrixFixtures } from './validate.js'
-import { failStep, finishStep, formatDuration, startStep, writeFailureOutput } from '../../lib/log/index.js'
+import { finishStep, formatDuration, startStep } from '../../lib/log/index.js'
 
 const matrixDir = dirname(fileURLToPath(import.meta.url))
 const pipelineDir = resolve(matrixDir, '..', '..', '..')
@@ -55,6 +56,19 @@ interface MatrixPackageRunContext {
   logPrefix: string
   source: FixtureSourceFiles
   workspacePackage: MatrixWorkspacePackage['workspacePackage']
+}
+
+interface MatrixPackageExecutionContext {
+  consumerWorkspace: ReturnType<typeof baseNodeContainer>
+  coreVersion: string
+  libVersion: string
+  manifest: Awaited<ReturnType<typeof readRegistryManifest>>
+  registry: ReturnType<typeof hostRegistryService>
+}
+
+interface MatrixPackageRunResult {
+  failed: boolean
+  output: string
 }
 
 export interface MatrixRunOptions {
@@ -79,16 +93,160 @@ function readErrorOutput(value: unknown): string {
   return ''
 }
 
-function writeMatrixFailureDetails(error: unknown): void {
+function collectMatrixFailureDetails(error: unknown): string[] {
   if (!error || typeof error !== 'object') {
+    return []
+  }
+
+  const stdout = readErrorOutput((error as { stdout?: unknown }).stdout).trim()
+  const stderr = readErrorOutput((error as { stderr?: unknown }).stderr).trim()
+  const sections: string[] = []
+
+  if (stdout.length > 0) {
+    sections.push(`  matrix stdout:\n${stdout}`)
+  }
+
+  if (stderr.length > 0) {
+    sections.push(`  matrix stderr:\n${stderr}`)
+  }
+
+  return sections
+}
+
+function resolveMatrixPackageConcurrency(totalPackages: number): number {
+  const override = Number(process.env.REF_PIPELINE_MATRIX_CONCURRENCY)
+
+  if (Number.isInteger(override) && override > 0) {
+    return Math.min(totalPackages, override)
+  }
+
+  return Math.min(totalPackages, Math.max(1, Math.min(2, availableParallelism())))
+}
+
+function appendOutputBlock(lines: string[], output: string): void {
+  const trimmed = output.trim()
+
+  if (trimmed.length === 0) {
     return
   }
 
-  const stdout = readErrorOutput((error as { stdout?: unknown }).stdout)
-  const stderr = readErrorOutput((error as { stderr?: unknown }).stderr)
+  lines.push('', trimmed)
+}
 
-  writeFailureOutput(stdout, 'matrix stdout')
-  writeFailureOutput(stderr, 'matrix stderr')
+async function runMatrixPackageInDagger(
+  packageRunContext: MatrixPackageRunContext,
+  executionContext: MatrixPackageExecutionContext,
+): Promise<MatrixPackageRunResult> {
+  const lines = [`\n${packageRunContext.displayName}`]
+  const packageStartedAt = Date.now()
+  let phase: 'install' | 'setup' | 'test' = 'install'
+
+  const consumerPackageJsonSource = createMatrixConsumerPackageJson({
+    coreVersion: executionContext.coreVersion,
+    fixturePackageJson: packageRunContext.source.fixturePackageJson,
+    libVersion: executionContext.libVersion,
+  })
+  const generatedConsumerDir = await stageGeneratedConsumerFiles(
+    packageRunContext,
+    consumerPackageJsonSource,
+  )
+  const containerImage = matrixContainerImage(packageRunContext.source)
+
+  const nodeModulesCache = dag.cacheVolume(
+    matrixNodeModulesCacheKey({
+      containerImage,
+      coreVersion: executionContext.coreVersion,
+      fixturePackageJson: packageRunContext.source.fixturePackageJson,
+      libVersion: executionContext.libVersion,
+      manifest: executionContext.manifest,
+    }),
+  )
+
+  const packageConsumerWorkspace = packageRunContext.source.hasPlaywrightTests
+    ? baseNodeContainer(registryManifestCacheKey(executionContext.manifest), containerImage)
+      .withServiceBinding('registry', executionContext.registry)
+    : executionContext.consumerWorkspace
+
+  const consumerBase = packageConsumerWorkspace
+    .withDirectory(
+      consumerDirInContainer,
+      matrixFixtureSourceDirectory(packageRunContext.workspacePackage.dir),
+    )
+    .withDirectory(
+      consumerDirInContainer,
+      matrixGeneratedConsumerDirectory(generatedConsumerDir),
+    )
+    .withMountedCache(`${consumerDirInContainer}/node_modules`, nodeModulesCache)
+    .withWorkdir(consumerDirInContainer)
+
+  try {
+    const installStageStartedAt = Date.now()
+    const installRunner = consumerBase.withExec([
+      'pnpm',
+      'install',
+      '--reporter',
+      'append-only',
+      '--registry',
+      registryUrlInContainer,
+    ])
+    const installOutput = await installRunner.stdout()
+    await writeMatrixPackageStageLog(packageRunContext, 'install', installOutput)
+    lines.push(`  Installed dependencies in ${formatDuration(Date.now() - installStageStartedAt)}`)
+
+    phase = 'setup'
+    const setupStageStartedAt = Date.now()
+    const setupRunner = installRunner.withExec([...matrixConsumerSetupCommand])
+    const setupOutput = await setupRunner.stdout()
+    await writeMatrixPackageStageLog(packageRunContext, 'setup', setupOutput)
+    lines.push(`  Ran ref sync in ${formatDuration(Date.now() - setupStageStartedAt)}`)
+
+    phase = 'test'
+    lines.push('  Running tests')
+    let testRunner = setupRunner
+    const testLogOutputs: string[] = []
+
+    if (packageRunContext.source.hasVitestTests) {
+      const vitestRunner = testRunner.withExec([...matrixConsumerVitestCommand])
+      const vitestOutput = await vitestRunner.stdout()
+      testLogOutputs.push(vitestOutput)
+      appendOutputBlock(lines, vitestOutput)
+      testRunner = vitestRunner
+    }
+
+    if (packageRunContext.source.hasPlaywrightTests) {
+      const playwrightRunner = testRunner.withExec([...matrixConsumerPlaywrightCommand])
+      const playwrightOutput = await playwrightRunner.stdout()
+      testLogOutputs.push(playwrightOutput)
+      appendOutputBlock(lines, playwrightOutput)
+      testRunner = playwrightRunner
+    }
+
+    const typecheckRunner = testRunner.withExec([...matrixConsumerTypecheckCommand])
+    const typecheckOutput = await typecheckRunner.stdout()
+    testLogOutputs.push(typecheckOutput)
+    const testOutput = testLogOutputs.filter(output => output.length > 0).join('\n')
+    await writeMatrixPackageStageLog(packageRunContext, 'test', testOutput)
+    lines.push('', `  Completed in ${formatDuration(Date.now() - packageStartedAt)}`)
+
+    return {
+      failed: false,
+      output: `${lines.join('\n')}\n`,
+    }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    await writeMatrixPackageStageLog(packageRunContext, phase, errorMessage)
+    lines.push(`  Failed during ${phase}. See ${resolve(matrixLogDir, `${packageRunContext.logPrefix}-${phase}.log`)}`)
+    lines.push(...collectMatrixFailureDetails(error))
+
+    if (errorMessage.trim().length > 0) {
+      lines.push(`  ${errorMessage}`)
+    }
+
+    return {
+      failed: true,
+      output: `${lines.join('\n')}\n`,
+    }
+  }
 }
 
 function isDirectExecution(): boolean {
@@ -300,113 +458,43 @@ export async function runMatrixBootstrapInDagger(options: MatrixRunOptions = {})
     matrixPackages.map(matrixPackage => createMatrixPackageRunContext(matrixPackage)),
   )
 
-  for (const packageRunContext of matrixPackageContexts) {
-    console.log(`\n${packageRunContext.displayName}`)
+  const packageConcurrency = resolveMatrixPackageConcurrency(matrixPackageContexts.length)
+  console.log(`Running up to ${packageConcurrency} matrix package(s) in parallel.`)
 
-    const consumerPackageJsonSource = createMatrixConsumerPackageJson({
-      coreVersion: corePackage.version,
-      fixturePackageJson: packageRunContext.source.fixturePackageJson,
-      libVersion: libPackage.version,
-    })
-    const generatedConsumerDir = await stageGeneratedConsumerFiles(
-      packageRunContext,
-      consumerPackageJsonSource,
-    )
-    const containerImage = matrixContainerImage(packageRunContext.source)
+  const executionContext: MatrixPackageExecutionContext = {
+    consumerWorkspace,
+    coreVersion: corePackage.version,
+    libVersion: libPackage.version,
+    manifest,
+    registry,
+  }
 
-    const nodeModulesCache = dag.cacheVolume(
-      matrixNodeModulesCacheKey({
-        containerImage,
-        coreVersion: corePackage.version,
-        fixturePackageJson: packageRunContext.source.fixturePackageJson,
-        libVersion: libPackage.version,
-        manifest,
-      }),
-    )
+  let nextPackageIndex = 0
+  let failed = false
 
-    const packageConsumerWorkspace = packageRunContext.source.hasPlaywrightTests
-      ? baseNodeContainer(registryManifestCacheKey(manifest), containerImage).withServiceBinding('registry', registry)
-      : consumerWorkspace
+  await Promise.all(
+    Array.from({ length: packageConcurrency }, async () => {
+      while (!failed) {
+        const packageIndex = nextPackageIndex
+        nextPackageIndex += 1
 
-    const consumerBase = packageConsumerWorkspace
-      .withDirectory(
-        consumerDirInContainer,
-        matrixFixtureSourceDirectory(packageRunContext.workspacePackage.dir),
-      )
-      .withDirectory(
-        consumerDirInContainer,
-        matrixGeneratedConsumerDirectory(generatedConsumerDir),
-      )
-      .withMountedCache(`${consumerDirInContainer}/node_modules`, nodeModulesCache)
-      .withWorkdir(consumerDirInContainer)
+        if (packageIndex >= matrixPackageContexts.length) {
+          return
+        }
 
-    const packageStartedAt = Date.now()
-    const installStageStartedAt = Date.now()
-    const installStep = startStep(`${packageRunContext.displayName}: installing dependencies`)
-    const installRunner = consumerBase.withExec([
-      'pnpm',
-      'install',
-      '--reporter',
-      'append-only',
-      '--registry',
-      registryUrlInContainer,
-    ])
-    const installOutput = await installRunner.stdout()
-    await writeMatrixPackageStageLog(packageRunContext, 'install', installOutput)
-    finishStep(installStep, `${packageRunContext.displayName}: installed dependencies in ${formatDuration(Date.now() - installStageStartedAt)}`)
+        const result = await runMatrixPackageInDagger(matrixPackageContexts[packageIndex], executionContext)
+        process.stdout.write(result.output)
 
-    const setupStageStartedAt = Date.now()
-    const setupStep = startStep(`${packageRunContext.displayName}: setting up container`)
-    const setupRunner = installRunner.withExec([...matrixConsumerSetupCommand])
-
-    try {
-      const setupOutput = await setupRunner.stdout()
-      await writeMatrixPackageStageLog(packageRunContext, 'setup', setupOutput)
-      finishStep(setupStep, `${packageRunContext.displayName}: set up container in ${formatDuration(Date.now() - setupStageStartedAt)}`)
-
-      console.log('  Running tests')
-      let testRunner = setupRunner
-      const testLogOutputs: string[] = []
-      const testConsoleOutputs: string[] = []
-
-      if (packageRunContext.source.hasVitestTests) {
-        const vitestRunner = testRunner.withExec([...matrixConsumerVitestCommand])
-        const vitestOutput = await vitestRunner.stdout()
-        testLogOutputs.push(vitestOutput)
-        testConsoleOutputs.push(vitestOutput)
-        testRunner = vitestRunner
+        if (result.failed) {
+          failed = true
+          return
+        }
       }
+    }),
+  )
 
-      if (packageRunContext.source.hasPlaywrightTests) {
-        const playwrightRunner = testRunner.withExec([...matrixConsumerPlaywrightCommand])
-        const playwrightOutput = await playwrightRunner.stdout()
-        testLogOutputs.push(playwrightOutput)
-        testConsoleOutputs.push(playwrightOutput)
-        testRunner = playwrightRunner
-      }
-
-      const typecheckRunner = testRunner.withExec([...matrixConsumerTypecheckCommand])
-      const typecheckOutput = await typecheckRunner.stdout()
-      testLogOutputs.push(typecheckOutput)
-      const testOutput = testLogOutputs.filter(output => output.length > 0).join('\n')
-      await writeMatrixPackageStageLog(packageRunContext, 'test', testOutput)
-      process.stdout.write(testConsoleOutputs.filter(output => output.length > 0).join('\n'))
-      console.log(`\n  Completed in ${formatDuration(Date.now() - packageStartedAt)}`)
-    } catch (error) {
-      failStep(setupStep, `${packageRunContext.displayName}: failed during setup/test execution`)
-      writeMatrixFailureDetails(error)
-      await writeMatrixPackageStageLog(
-        packageRunContext,
-        'test',
-        error instanceof Error ? error.message : String(error),
-      )
-      console.error(`  Failed. See ${resolve(matrixLogDir, `${packageRunContext.logPrefix}-test.log`)}`)
-      if (error instanceof Error) {
-        console.error(error.message)
-      }
-      process.exitCode = 1
-      return
-    }
+  if (failed) {
+    process.exitCode = 1
   }
 }
 
