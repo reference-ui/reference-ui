@@ -61,6 +61,10 @@ export interface MatrixRunOptions {
   packageNames?: readonly string[]
 }
 
+const matrixConsumerSetupCommand = ['pnpm', 'exec', 'ref', 'sync'] as const
+const matrixConsumerVitestCommand = ['pnpm', 'exec', 'vitest', 'run'] as const
+const matrixConsumerTypecheckCommand = ['pnpm', 'exec', 'tsc', '--noEmit'] as const
+
 function isDirectExecution(): boolean {
   return process.argv[1] === fileURLToPath(import.meta.url)
 }
@@ -289,7 +293,7 @@ export async function runMatrixBootstrapInDagger(options: MatrixRunOptions = {})
     console.log(
       `   Output is buffered by the Dagger Node SDK and will be written to ${resolve(matrixLogDir, `${packageRunContext.logPrefix}-setup.log`)}.`,
     )
-    const setupRunner = installRunner.withExec(['pnpm', 'run', 'setup'])
+    const setupRunner = installRunner.withExec([...matrixConsumerSetupCommand])
 
     try {
       const setupOutput = await setupRunner.stdout()
@@ -300,8 +304,11 @@ export async function runMatrixBootstrapInDagger(options: MatrixRunOptions = {})
       console.log(
         `   Output is buffered by the Dagger Node SDK and will be written to ${resolve(matrixLogDir, `${packageRunContext.logPrefix}-test.log`)}.`,
       )
-      const testRunner = setupRunner.withExec(['pnpm', 'run', 'test'])
-      const testOutput = await testRunner.stdout()
+      const vitestRunner = setupRunner.withExec([...matrixConsumerVitestCommand])
+      const vitestOutput = await vitestRunner.stdout()
+      const typecheckRunner = vitestRunner.withExec([...matrixConsumerTypecheckCommand])
+      const typecheckOutput = await typecheckRunner.stdout()
+      const testOutput = `${vitestOutput}${typecheckOutput}`
       await writeMatrixPackageStageLog(packageRunContext, 'test', testOutput)
       process.stdout.write(testOutput)
       console.log(`\nMatrix package ${packageRunContext.displayName} completed successfully inside Dagger.`)

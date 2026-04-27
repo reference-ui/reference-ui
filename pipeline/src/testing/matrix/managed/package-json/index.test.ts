@@ -39,7 +39,7 @@ describe('createManagedMatrixPackageJson', () => {
 })
 
 describe('createMatrixConsumerPackageJson', () => {
-  it('generates only setup, test, and sync for synthetic consumers', () => {
+  it('drops scripts for synthetic consumers and rewrites workspace dependencies to staged versions', () => {
     const fixturePackageJson: MatrixFixturePackageJson = {
       dependencies: {
         '@reference-ui/core': 'workspace:*',
@@ -71,7 +71,7 @@ describe('createMatrixConsumerPackageJson', () => {
       devDependencies: Record<string, string>
       name: string
       private: boolean
-      scripts: Record<string, string>
+      scripts?: Record<string, string>
     }
 
     assert.deepEqual(packageJson.dependencies, {
@@ -85,13 +85,10 @@ describe('createMatrixConsumerPackageJson', () => {
     })
     assert.equal(packageJson.name, '@matrix/install')
     assert.equal(packageJson.private, true)
-    assert.equal(packageJson.scripts.setup, 'pnpm exec ref sync')
-    assert.equal(packageJson.scripts.test, 'vitest run && tsc --noEmit')
-    assert.equal(packageJson.scripts.sync, 'pnpm exec ref sync')
-    assert.deepEqual(Object.keys(packageJson.scripts).sort(), ['setup', 'sync', 'test'])
+    assert.equal(packageJson.scripts, undefined)
   })
 
-  it('falls back to raw defaults when a fixture package is already pipeline-managed', () => {
+  it('drops scripts even when a fixture package is already pipeline-managed', () => {
     const fixturePackageJson: MatrixFixturePackageJson = {
       name: '@matrix/typescript',
       private: true,
@@ -110,12 +107,9 @@ describe('createMatrixConsumerPackageJson', () => {
         libVersion: '0.0.19',
       }),
     ) as {
-      scripts: Record<string, string>
+      scripts?: Record<string, string>
     }
 
-    assert.equal(packageJson.scripts.setup, 'pnpm exec ref sync')
-    assert.equal(packageJson.scripts.test, 'vitest run && tsc --noEmit')
-    assert.equal(packageJson.scripts.sync, 'pnpm exec ref sync')
-    assert.deepEqual(Object.keys(packageJson.scripts).sort(), ['setup', 'sync', 'test'])
+    assert.equal(packageJson.scripts, undefined)
   })
 })
