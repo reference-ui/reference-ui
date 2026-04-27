@@ -18,7 +18,7 @@ export function createMatrixConsumerTsconfig(): string {
         strict: true,
         skipLibCheck: true,
       },
-      include: ['src/**/*', 'tests/**/*', 'ui.config.ts'],
+      include: ['src/**/*', 'tests/**/*', 'unit/**/*', 'e2e/**/*', 'ui.config.ts'],
     },
     null,
     2,

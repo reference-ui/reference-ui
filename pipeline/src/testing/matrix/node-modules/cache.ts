@@ -20,6 +20,7 @@ interface ReplaceWorkspaceProtocolVersionsOptions {
 }
 
 interface MatrixNodeModulesCacheKeyOptions {
+  containerImage?: string
   coreVersion: string
   fixturePackageJson: MatrixFixturePackageJson
   libVersion: string
@@ -72,7 +73,7 @@ export function matrixNodeModulesCacheKey(options: MatrixNodeModulesCacheKeyOpti
         dependencies: options.fixturePackageJson.devDependencies,
         versionOverrides,
       }),
-      nodeImage: matrixNodeImage,
+      nodeImage: options.containerImage ?? matrixNodeImage,
       packageManager: `pnpm@${matrixPnpmVersion}`,
     },
     null,

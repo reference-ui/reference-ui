@@ -34,6 +34,7 @@ describe('createManagedMatrixPackageJson', () => {
     assert.equal(packageJson.scripts.test, 'pnpm --dir ../../pipeline exec tsx src/cli.ts test --packages=@matrix/mcp')
     assert.equal(packageJson.scripts.sync, 'pnpm exec ref sync')
     assert.deepEqual(Object.keys(packageJson.scripts).sort(), ['setup', 'sync', 'test'])
+    assert.equal(packageJson.devDependencies['@playwright/test'], '1.48.0')
     assert.equal(packageJson.devDependencies['@modelcontextprotocol/sdk'], '^1.29.0')
   })
 })
@@ -47,6 +48,7 @@ describe('createMatrixConsumerPackageJson', () => {
         react: '^19.2.0',
       },
       devDependencies: {
+        '@playwright/test': '1.48.0',
         typescript: '~5.9.3',
         vitest: '^4.0.18',
       },
@@ -80,6 +82,7 @@ describe('createMatrixConsumerPackageJson', () => {
       react: '^19.2.0',
     })
     assert.deepEqual(packageJson.devDependencies, {
+      '@playwright/test': '1.48.0',
       typescript: '~5.9.3',
       vitest: '^4.0.18',
     })

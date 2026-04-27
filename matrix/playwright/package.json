@@ -1,11 +1,11 @@
 {
-  "name": "@matrix/typescript",
+  "name": "@matrix/playwright",
   "version": "0.0.1",
   "private": true,
   "type": "module",
   "scripts": {
-    "setup": "pnpm --dir ../../pipeline exec tsx src/cli.ts setup --packages=@matrix/typescript",
-    "test": "pnpm --dir ../../pipeline exec tsx src/cli.ts test --packages=@matrix/typescript",
+    "setup": "pnpm --dir ../../pipeline exec tsx src/cli.ts setup --packages=@matrix/playwright",
+    "test": "pnpm --dir ../../pipeline exec tsx src/cli.ts test --packages=@matrix/playwright",
     "sync": "pnpm exec ref sync"
   },
   "exports": {
