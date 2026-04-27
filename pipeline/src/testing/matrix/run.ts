@@ -66,6 +66,19 @@ const matrixConsumerVitestCommand = ['pnpm', 'exec', 'vitest', 'run'] as const
 const matrixConsumerPlaywrightCommand = ['pnpm', 'exec', 'playwright', 'test', 'e2e'] as const
 const matrixConsumerTypecheckCommand = ['pnpm', 'exec', 'tsc', '--noEmit'] as const
 
+function formatDuration(startedAt: number): string {
+  return `${((Date.now() - startedAt) / 1000).toFixed(1)}s`
+}
+
+function logStageStart(label: string): number {
+  process.stdout.write(`${label}... `)
+  return Date.now()
+}
+
+function logStageDone(startedAt: number): void {
+  console.log(`done in ${formatDuration(startedAt)}`)
+}
+
 function isDirectExecution(): boolean {
   return process.argv[1] === fileURLToPath(import.meta.url)
 }
@@ -218,15 +231,28 @@ function assertMatrixRustTargetAvailable(
 }
 
 export async function runMatrixBootstrapInDagger(options: MatrixRunOptions = {}): Promise<void> {
-  console.log('1. Discovering matrix-enabled fixtures...')
+  console.log('Discovering matrix-enabled fixtures...')
   validateMatrixFixtures()
   const matrixPackages = listMatrixWorkspacePackages(options.packageNames)
 
-  console.log('2. Building changed workspace packages and staging the shared host Verdaccio registry...')
-  console.log(`   Using the single pipeline registry at ${defaultRegistryUrl}.`)
-  await buildWorkspacePackages(undefined, undefined, {
-    requiredRustTargets: [matrixNativeTarget],
-  })
+  console.log(`Using shared matrix registry at ${defaultRegistryUrl}.`)
+  const buildStageStartedAt = logStageStart('Preparing workspace packages and registry')
+  const previousQuietSkips = process.env.REF_PIPELINE_QUIET_SKIPS
+
+  try {
+    process.env.REF_PIPELINE_QUIET_SKIPS = '1'
+    await buildWorkspacePackages(undefined, undefined, {
+      requiredRustTargets: [matrixNativeTarget],
+    })
+  } finally {
+    if (previousQuietSkips === undefined) {
+      delete process.env.REF_PIPELINE_QUIET_SKIPS
+    } else {
+      process.env.REF_PIPELINE_QUIET_SKIPS = previousQuietSkips
+    }
+  }
+
+  logStageDone(buildStageStartedAt)
   const manifest = await readRegistryManifest()
   assertMatrixRustTargetAvailable(manifest)
   const corePackage = manifest.packages.find((pkg) => pkg.name === '@reference-ui/core')
@@ -245,19 +271,12 @@ export async function runMatrixBootstrapInDagger(options: MatrixRunOptions = {})
 
   let consumerWorkspace = workspace.withServiceBinding('registry', registry)
 
-  console.log('4. Binding the shared host Verdaccio registry into the Dagger graph...')
-  console.log(
-    `   Verdaccio still lives on the host; Dagger is only forwarding it into the container graph as ${managedRegistryServiceHost}:${managedRegistryPort}.`,
-  )
-  console.log(`   Step logs will be written to ${matrixLogDir}.`)
-
-  console.log('4.1 Checking registry connectivity from inside the container graph...')
+  console.log(`Using host registry via ${managedRegistryServiceHost}:${managedRegistryPort}. Logs: ${matrixLogDir}`)
+  const pingStageStartedAt = logStageStart('Checking container registry connectivity')
   const pingRunner = consumerWorkspace.withExec(['npm', 'ping', '--registry', registryUrlInContainer])
   const pingOutput = await pingRunner.stdout()
   await writeStageLog('publish-ping.log', pingOutput)
-  if (pingOutput.trim().length > 0) {
-    process.stdout.write(pingOutput)
-  }
+  logStageDone(pingStageStartedAt)
   consumerWorkspace = pingRunner
 
   const publishedPackageNames = manifest.packages.map((pkg) => `${pkg.name}@${pkg.version}`).join('\n')
@@ -268,7 +287,7 @@ export async function runMatrixBootstrapInDagger(options: MatrixRunOptions = {})
   )
 
   for (const packageRunContext of matrixPackageContexts) {
-    console.log(`3. Reading ${packageRunContext.displayName} source...`)
+    console.log(`\n${packageRunContext.displayName}`)
 
     const consumerPackageJsonSource = createMatrixConsumerPackageJson({
       coreVersion: corePackage.version,
@@ -307,10 +326,7 @@ export async function runMatrixBootstrapInDagger(options: MatrixRunOptions = {})
       .withMountedCache(`${consumerDirInContainer}/node_modules`, nodeModulesCache)
       .withWorkdir(consumerDirInContainer)
 
-    console.log(`5. Installing ${packageRunContext.displayName} dependencies from Verdaccio...`)
-    console.log(
-      `   Output is buffered by the Dagger Node SDK and will be written to ${resolve(matrixLogDir, `${packageRunContext.logPrefix}-install.log`)}.`,
-    )
+    const installStageStartedAt = logStageStart('  Installing dependencies')
     const installRunner = consumerBase.withExec([
       'pnpm',
       'install',
@@ -321,25 +337,17 @@ export async function runMatrixBootstrapInDagger(options: MatrixRunOptions = {})
     ])
     const installOutput = await installRunner.stdout()
     await writeMatrixPackageStageLog(packageRunContext, 'install', installOutput)
-    if (installOutput.trim().length > 0) {
-      process.stdout.write(installOutput)
-    }
+    logStageDone(installStageStartedAt)
 
-    console.log(`6. Running setup for ${packageRunContext.displayName} inside the clean consumer container...`)
-    console.log(
-      `   Output is buffered by the Dagger Node SDK and will be written to ${resolve(matrixLogDir, `${packageRunContext.logPrefix}-setup.log`)}.`,
-    )
+    const setupStageStartedAt = logStageStart('  Setting up container')
     const setupRunner = installRunner.withExec([...matrixConsumerSetupCommand])
 
     try {
       const setupOutput = await setupRunner.stdout()
       await writeMatrixPackageStageLog(packageRunContext, 'setup', setupOutput)
-      process.stdout.write(setupOutput)
+      logStageDone(setupStageStartedAt)
 
-      console.log(`7. Running ${packageRunContext.displayName} test command inside the clean consumer container...`)
-      console.log(
-        `   Output is buffered by the Dagger Node SDK and will be written to ${resolve(matrixLogDir, `${packageRunContext.logPrefix}-test.log`)}.`,
-      )
+      console.log('  Running tests')
       let testRunner = setupRunner
       const testLogOutputs: string[] = []
       const testConsoleOutputs: string[] = []
@@ -363,17 +371,17 @@ export async function runMatrixBootstrapInDagger(options: MatrixRunOptions = {})
       const typecheckRunner = testRunner.withExec([...matrixConsumerTypecheckCommand])
       const typecheckOutput = await typecheckRunner.stdout()
       testLogOutputs.push(typecheckOutput)
-      testConsoleOutputs.push(typecheckOutput)
       const testOutput = testLogOutputs.filter(output => output.length > 0).join('\n')
       await writeMatrixPackageStageLog(packageRunContext, 'test', testOutput)
       process.stdout.write(testConsoleOutputs.filter(output => output.length > 0).join('\n'))
-      console.log(`\nMatrix package ${packageRunContext.displayName} completed successfully inside Dagger.`)
+      console.log(`\n  Completed in ${formatDuration(installStageStartedAt)}`)
     } catch (error) {
       await writeMatrixPackageStageLog(
         packageRunContext,
         'test',
         error instanceof Error ? error.message : String(error),
       )
+      console.error(`  Failed. See ${resolve(matrixLogDir, `${packageRunContext.logPrefix}-test.log`)}`)
       if (error instanceof Error) {
         console.error(error.message)
       }

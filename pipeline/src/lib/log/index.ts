@@ -47,6 +47,10 @@ export function failStep(step: Ora, message: string): void {
 }
 
 export function logSkip(message: string): void {
+  if (process.env.REF_PIPELINE_QUIET_SKIPS === '1') {
+    return
+  }
+
   console.log(`${pc.blue('↷')} ${pc.dim(message)}`)
 }
 
