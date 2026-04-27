@@ -313,6 +313,88 @@ Suggested case coverage:
 The point of that test shape is to prove both semantic correctness and that the virtual Rust path
 is the only required lowering layer.
 
+## TypeScript Plan
+
+`css()` already has a strong public typing story overall, but `r` needs its own explicit plan.
+
+Today the primitive side already models `r` as a Reference UI-owned prop:
+
+- `ResponsiveProps['r'] = StylePropValue<Record<string | number, SystemStyleObject>>`
+
+That is the right shape conceptually. The missing part is the `css()` authoring surface.
+
+Right now `CssStyles` is just:
+
+```ts
+type CssStyles = SystemStyleObject | undefined | null | false
+```
+
+which is why examples often fall back to casts when authoring `css({ r: ... })`.
+
+### Intended Typing Shape
+
+The next implementation pass should introduce a public owned `css()` style-object type instead of
+trying to force `r` directly through the generated Panda object type.
+
+The intended shape is roughly:
+
+```ts
+type ResponsiveCssValue = Record<string | number, SystemStyleObject>
+
+type CssStyleObject = Omit<SystemStyleObject, 'r'> & {
+	r?: ResponsiveCssValue
+}
+
+type CssStyles = CssStyleObject | undefined | null | false
+```
+
+The important part is not the exact final file name, but the shape:
+
+- `css()` should accept `r` without casts
+- values inside `r[breakpoint]` should resolve as full `SystemStyleObject`
+- nested style keys inside each breakpoint should keep the same token/color narrowing as normal
+  `css()` objects
+
+### Why Use An Owned Alias
+
+We should not depend on a generated `UtilityValues["r"]` or another deeply derived Panda type as
+the public `css()` contract.
+
+Instead, use a Reference UI-owned alias just like primitives do for `StyleProps` / `ReferenceProps`.
+
+That avoids a few failure modes:
+
+- overlapping generated keys causing awkward intersections
+- recursive or widened types making editor hints unreadable
+- type collapse to `never` or overly broad `any`-like behavior when layering extra props onto
+  generated Panda types
+
+### Type Safety Goals
+
+The next pass should preserve these guarantees:
+
+- `css({ r: { 420: { padding: '4r' } } })` type-checks without `as unknown as CssStyles`
+- `padding`, `backgroundColor`, `gridTemplateColumns`, etc inside `r[420]` get the same completions
+  and token restrictions as top-level `css()` styles
+- invalid top-level `r` values still fail
+- invalid nested values inside `r[breakpoint]` still fail
+- the public type remains readable in editor hovers
+
+### Type Test Expectations
+
+The next implementation pass should add focused type coverage for `css()` + `r`, not just runtime/output coverage.
+
+Suggested checks:
+
+- `css({ r: { 420: { padding: '1rem' } } })` is accepted
+- nested token-safe color values inside `r` are accepted or rejected consistently with top-level `css()`
+- invalid nested property names inside `r` fail
+- invalid nested property values inside `r` fail
+- no cast is required in the Cosmos fixture or docs example
+
+The goal is to make `r` inside `css()` feel like a first-class typed authoring surface while still
+lowering away entirely in the Rust virtual layer before Panda extraction.
+
 ## Notes For The Next Pass
 
 - Do not introduce a second public concept such as a distinct `styledCss` surface.
@@ -321,6 +403,8 @@ is the only required lowering layer.
 - Do use Panda's raw container-query support as the emitted target.
 - Do keep the semantic explanation close to the `r` extension with a comment noting that the
 	`css()` sugar is lowered in the virtual layer.
+- Do give `css()` an owned public type shape for `r` so users do not need casts and nested values
+	inside `r` keep full style inference.
 
 ## Open Design Questions
 
