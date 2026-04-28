@@ -26,7 +26,7 @@ End-to-end **watch mode**: `--watch` with ref sync, updating tokens and primitiv
 - **From reference-e2e:** `sync-watch.spec.ts`, `token-sync-watch.spec.ts`, core sync lifecycle.
 - **Gaps / stretch:** assert ordering between token writes and style regen; multi-file edits in one watch tick; optional **ready-sentinel** alignment with packager completion (see `packages/reference-e2e/plan.md` Phase 3).
 
-### primitives
+### primitives [DONE]
 
 Style props on generated primitives, mount behaviour, and interaction with emitted design-system CSS.
 
@@ -37,14 +37,25 @@ Style props on generated primitives, mount behaviour, and interaction with emitt
 - **Initial contract:** fixture app plus browser assertions for primitive mount, style-prop computed styles, and `css` prop class composition across Vite and webpack.
 - **Next gaps:** port font/custom-prop cases that still rely on happy-dom flattening, then add screenshots only after the browser assertions stay stable.
 
-### css
+### css [DONE]
 
-The `css()` API: valid CSS output, correct selectors/conditions, and application in a real document.
+The raw `css()` API: valid CSS output, correct selectors/conditions, and application in a real document.
 
-- **From reference-unit:** `tests/system/globalCss.test.tsx`, keyframes, container output tests.
+- **Matrix package:** `matrix/css`.
+- **From reference-unit:** container output tests, size/css utility coverage, and source-backed `css()` fixtures.
 - **From reference-e2e:** layers/style paths via core tests.
+- **Initial contract:** fixture app plus browser assertions for raw `css()` class application, pseudo selectors, nested selectors, attribute selectors, named container-query behavior, and generated stylesheet mount/layer order across Vite and webpack.
 - **Gaps / stretch:** exhaustive conditional branches (pseudo, nesting edge cases); verify **stylesheet presence and order** in the browser, not only string snapshots on disk.
 - **snapshots:** visual regression baselines, a11y spot checks on key routes, or perf budgets—only if the team wants guardrails beyond correctness.
+
+### system [DONE]
+
+The `@reference-ui/system` authoring APIs: `tokens()`, `globalCss()`, `keyframes()`, and their generated runtime effects.
+
+- **Matrix package:** `matrix/system`.
+- **From reference-unit:** `tests/system/globalCss.test.tsx`, `tests/system/keyframes.test.tsx`, `tests/system/tokens.test.tsx`.
+- **From reference-e2e:** token-driven runtime coverage and stylesheet/layer presence via core tests.
+- **Initial contract:** fixture app plus browser assertions for token-backed primitive styling, document-level `globalCss()` custom properties, `body` resets, `keyframes()` animation naming, and generated stylesheet mount/layer order across Vite and webpack.
 
 ### recipe
 

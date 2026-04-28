@@ -4,16 +4,23 @@ import { Div } from '@reference-ui/react'
 import { Index, matrixPrimitivesMarker } from '../../src/index'
 
 describe('primitives matrix runtime', () => {
-  it('exposes the shared marker and fixture entrypoint', () => {
+  it('exports the matrix marker', () => {
     expect(matrixPrimitivesMarker).toBe('reference-ui-matrix-primitives')
+  })
 
+  it('renders the fixture entrypoint', () => {
     const element = Index()
 
     expect(element).toBeTruthy()
+  })
+
+  it('renders the expected root test id', () => {
+    const element = Index()
+
     expect(element.props['data-testid']).toBe('primitives-root')
   })
 
-  it('can resolve Reference UI runtime packages in Vitest', () => {
+  it('resolves Reference UI runtime packages in Vitest', () => {
     expect(Div).toBeTruthy()
   })
 })
