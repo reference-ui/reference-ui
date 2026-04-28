@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process'
 import type { ComponentProps } from 'react'
 import { describe, expect, expectTypeOf, it } from 'vitest'
 import { Div, css, type CssStyles, type DivProps } from '@reference-ui/react'
@@ -10,31 +11,73 @@ import {
   type TokenConfig,
 } from '@reference-ui/system'
 
+import { App } from '../src/App'
+
+// Type helpers used for expectTypeOf assertions throughout this file.
 type DivComponentProps = ComponentProps<typeof Div>
 type DivColorProp = NonNullable<DivComponentProps['color']>
 type DivBgProp = NonNullable<DivComponentProps['bg']>
 type DivBackgroundProp = NonNullable<DivComponentProps['background']>
 
 function expectDivColor(_value: DivColorProp): void {}
-
 function expectDivBg(_value: DivBgProp): void {}
-
 function expectDivBackground(_value: DivBackgroundProp): void {}
-
 function expectCssStyles(_value: CssStyles): void {}
-
 function expectTokenConfig(_value: ReferenceTokenConfig): void {}
-
 function expectKeyframesConfig(_value: KeyframesConfig): void {}
 
-describe('generated @reference-ui/react package', () => {
+// ─── install surface ─────────────────────────────────────────────────────────
+
+describe('distro – install surface', () => {
+  it('exposes the minimal downstream marker content', () => {
+    const element = App()
+
+    expect(element.type).toBe('main')
+    expect(element.props['data-testid']).toBe('distro-root')
+
+    const children = element.props.children as Array<{ props?: { children?: string } }>
+
+    expect(children[0]?.props?.children).toBe('Reference UI distro matrix')
+    expect(children[1]?.props?.children).toBe('This is the minimal matrix-enabled distro scenario.')
+  })
+
+  it(
+    'allows one additional ref sync run in the same consumer',
+    () => {
+      try {
+        execFileSync('pnpm', ['exec', 'ref', 'sync'], {
+          cwd: process.cwd(),
+          env: { ...process.env, FORCE_COLOR: '0' },
+          maxBuffer: 10 * 1024 * 1024,
+          stdio: 'pipe',
+        })
+      } catch (error) {
+        if (!(error instanceof Error) || !('stdout' in error) || !('stderr' in error)) {
+          throw error
+        }
+
+        const stdout = Buffer.isBuffer(error.stdout) ? error.stdout.toString('utf8') : String(error.stdout)
+        const stderr = Buffer.isBuffer(error.stderr) ? error.stderr.toString('utf8') : String(error.stderr)
+
+        throw new Error(
+          ['ref sync failed', '', 'stdout:', stdout.trim() || '(empty)', '', 'stderr:', stderr.trim() || '(empty)'].join('\n'),
+        )
+      }
+    },
+    90_000,
+  )
+})
+
+// ─── generated @reference-ui/react ───────────────────────────────────────────
+
+describe('distro – generated @reference-ui/react package', () => {
   it('resolves Div at runtime and in the TypeScript surface', () => {
     const props: DivProps = {
-      children: 'Reference UI TypeScript matrix',
+      children: 'Reference UI distro matrix',
     }
 
     expect(Div).toBeTruthy()
-    expect(props.children).toBe('Reference UI TypeScript matrix')
+    expect(props.children).toBe('Reference UI distro matrix')
     expectTypeOf<DivProps>().toMatchTypeOf<DivComponentProps>()
   })
 
@@ -128,7 +171,9 @@ describe('generated @reference-ui/react package', () => {
   })
 })
 
-describe('generated @reference-ui/system package', () => {
+// ─── generated @reference-ui/system ──────────────────────────────────────────
+
+describe('distro – generated @reference-ui/system package', () => {
   it('resolves token and keyframe APIs at runtime and in the TypeScript surface', () => {
     const tokenConfig: TokenConfig = {
       colors: {

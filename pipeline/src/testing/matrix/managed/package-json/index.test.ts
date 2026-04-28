@@ -74,11 +74,11 @@ describe('createMatrixConsumerPackageJson', () => {
         typescript: '~5.9.3',
         vitest: '^4.0.18',
       },
-      name: '@matrix/install',
+      name: '@matrix/distro',
       private: true,
       scripts: {
-        setup: 'pnpm --dir ../../pipeline exec tsx src/cli.ts setup --packages=@matrix/install',
-        test: 'pnpm --dir ../../pipeline exec tsx src/cli.ts test --packages=@matrix/install',
+        setup: 'pnpm --dir ../../pipeline exec tsx src/cli.ts setup --packages=@matrix/distro',
+        test: 'pnpm --dir ../../pipeline exec tsx src/cli.ts test --packages=@matrix/distro',
         sync: 'pnpm exec ref sync',
       },
       type: 'module',
@@ -114,18 +114,18 @@ describe('createMatrixConsumerPackageJson', () => {
       'esbuild',
       'nx',
     ])
-    assert.equal(packageJson.name, '@matrix/install')
+    assert.equal(packageJson.name, '@matrix/distro')
     assert.equal(packageJson.private, true)
     assert.equal(packageJson.scripts, undefined)
   })
 
   it('drops scripts even when a fixture package is already pipeline-managed', () => {
     const fixturePackageJson: MatrixFixturePackageJson = {
-      name: '@matrix/typescript',
+      name: '@matrix/distro',
       private: true,
       scripts: {
-        setup: 'pnpm --dir ../../pipeline exec tsx src/cli.ts setup --packages=@matrix/typescript',
-        test: 'pnpm --dir ../../pipeline exec tsx src/cli.ts test --packages=@matrix/typescript',
+        setup: 'pnpm --dir ../../pipeline exec tsx src/cli.ts setup --packages=@matrix/distro',
+        test: 'pnpm --dir ../../pipeline exec tsx src/cli.ts test --packages=@matrix/distro',
         sync: 'pnpm exec ref sync',
       },
       type: 'module',
@@ -149,7 +149,7 @@ describe('createMatrixConsumerPackageJson', () => {
         '@fixtures/extend-library': 'workspace:*',
         react: '^19.2.0',
       },
-      name: '@matrix/install',
+      name: '@matrix/distro',
       private: true,
       type: 'module',
     }
