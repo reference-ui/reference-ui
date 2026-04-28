@@ -5,7 +5,7 @@
  * public npm publication into the developer-facing release command.
  */
 
-import { releasePackageNames } from '../../config.js'
+import { RELEASE_PACKAGE_NAMES } from '../../config.js'
 import { buildWorkspaceArtifacts } from '../build/index.js'
 import { REFERENCE_RUST_PACKAGE_NAME, getLocallyBuildableReferenceRustTargets, getMissingLocalReleaseRustTargets } from '../build/rust/targets.js'
 import { packPublicPackages } from '../registry/index.js'
@@ -99,8 +99,8 @@ export async function runLocalRelease(options: RunLocalReleaseOptions = {}): Pro
   console.log(formatReleasePlan(releasePlan))
   console.log('')
 
-  await buildWorkspaceArtifacts(releasePackageNames)
-  await packPublicPackages(releasePackageNames, {
+  await buildWorkspaceArtifacts(RELEASE_PACKAGE_NAMES)
+  await packPublicPackages(RELEASE_PACKAGE_NAMES, {
     forceBuildNativeTargets: releasePlan.needsRust,
   })
   await publishReleaseTarballsToNpm(options.authRegistryUrl ?? defaultNpmAuthRegistryUrl)

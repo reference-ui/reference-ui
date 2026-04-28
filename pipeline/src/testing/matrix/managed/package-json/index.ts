@@ -6,6 +6,10 @@
  * - the synthetic consumer package.json generated inside Dagger
  */
 
+import type { MatrixPackageConfig } from '../../discovery/index.js'
+import { getManagedBundlerDevDependencies } from '../bundlers/index.js'
+import { getManagedReactProfile } from '../react/index.js'
+
 export interface MatrixFixturePackageJson {
   dependencies?: Record<string, string>
   devDependencies?: Record<string, string>
@@ -23,6 +27,7 @@ interface MatrixConsumerPackageJsonOptions {
 }
 
 interface ManagedMatrixPackageJsonOptions {
+  config: Pick<MatrixPackageConfig, 'bundlers' | 'react'>
   existingPackageJson?: Partial<MatrixFixturePackageJson>
   packageName: string
 }
@@ -30,14 +35,10 @@ interface ManagedMatrixPackageJsonOptions {
 const managedDependencies = {
   '@reference-ui/core': 'workspace:*',
   '@reference-ui/lib': 'workspace:*',
-  react: '^19.2.0',
-  'react-dom': '^19.2.0',
 } as const
 
 const managedDevDependencies = {
   '@types/node': '^25.1.0',
-  '@types/react': '^19.2.2',
-  '@types/react-dom': '^19.2.2',
   typescript: '~5.9.3',
   vitest: '^4.0.18',
 } as const
@@ -94,13 +95,15 @@ function replaceWorkspaceProtocolVersions(
 
 export function createManagedMatrixPackageJson(options: ManagedMatrixPackageJsonOptions): string {
   const existingPackageJson: Partial<MatrixFixturePackageJson> = options.existingPackageJson ?? {}
+  const reactProfile = getManagedReactProfile(options.config.react)
+  const bundlerDevDependencies = getManagedBundlerDevDependencies(options.config.bundlers)
   const extraDependencies = omitManagedDependencies(
     existingPackageJson.dependencies,
-    Object.keys(managedDependencies),
+    [...Object.keys(managedDependencies), ...Object.keys(reactProfile.dependencies)],
   )
   const extraDevDependencies = omitManagedDependencies(
     existingPackageJson.devDependencies,
-    Object.keys(managedDevDependencies),
+    [...Object.keys(managedDevDependencies), ...Object.keys(reactProfile.devDependencies), ...Object.keys(bundlerDevDependencies)],
   )
   const rawSetupCommand = existingPackageJson.scripts?.sync
     ?? (existingPackageJson.scripts?.setup && !isPipelineManagedScript(existingPackageJson.scripts.setup)
@@ -122,10 +125,13 @@ export function createManagedMatrixPackageJson(options: ManagedMatrixPackageJson
       exports: existingPackageJson.exports ?? { '.': './src/index.ts' },
       dependencies: {
         ...managedDependencies,
+        ...reactProfile.dependencies,
         ...extraDependencies,
       },
       devDependencies: {
         ...managedDevDependencies,
+        ...reactProfile.devDependencies,
+        ...bundlerDevDependencies,
         ...extraDevDependencies,
       },
     },

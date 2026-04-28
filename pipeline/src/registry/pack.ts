@@ -9,7 +9,7 @@
 import { constants } from 'node:fs'
 import { access, mkdir, readdir, rm } from 'node:fs/promises'
 import { relative, resolve } from 'node:path'
-import { registryPackageNames } from '../../config.js'
+import { REGISTRY_PACKAGE_NAMES } from '../../config.js'
 import { computePackageBuildHashes } from '../build/cache.js'
 import {
   applyPreparedRustPackageHash,
@@ -67,7 +67,7 @@ async function pruneStaleTarballs(activeTarballPaths: ReadonlySet<string>): Prom
 }
 
 export async function packPublicPackages(
-  packageNames: readonly string[] = registryPackageNames,
+  packageNames: readonly string[] = REGISTRY_PACKAGE_NAMES,
   rustOptions: PrepareReferenceRustRegistryArtifactsOptions = {},
 ): Promise<RegistryManifest> {
   const publicPackages = sortPackagesForInternalDependencyOrder(listRegistryWorkspacePackages(packageNames))

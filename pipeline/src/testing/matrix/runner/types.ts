@@ -45,25 +45,12 @@ export interface MatrixPackageRunResult {
   output: string
 }
 
-export type MatrixPackagePhase =
-  | 'queued'
-  | 'install'
-  | 'setup'
-  | 'test:vitest'
-  | 'test:playwright'
-  | 'test:typecheck'
-  | 'aborted'
-  | 'completed'
-  | 'failed'
-
-export type TimedMatrixPackagePhase = Exclude<MatrixPackagePhase, 'queued' | 'aborted' | 'completed' | 'failed'>
-
 export type MatrixPackageStageLogPhase = 'install' | 'setup' | 'test'
 
 export interface MatrixRunOptions {
   commandLabel?: string
-  disableDaggerExecCache?: boolean
   packageNames?: readonly string[]
+  trace?: boolean
 }
 
 export type { MatrixFixturePackageJson, MatrixWorkspacePackage, RegistryManifestPackage }

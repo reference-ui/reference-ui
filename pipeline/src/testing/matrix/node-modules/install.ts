@@ -1,10 +1,10 @@
 import { randomUUID } from 'node:crypto'
-import { consumerDirInContainer } from '../../../../config.js'
+import { CONSUMER_DIR_IN_CONTAINER } from '../../../../config.js'
 
 export const matrixInstallCacheKeyEnvVar = 'REFERENCE_UI_MATRIX_INSTALL_CACHE_KEY'
 export const matrixInstallCacheProbeEnvVar = 'REFERENCE_UI_DAGGER_UNCACHED_EXEC_PROBE'
-export const matrixInstallCacheMarkerPath = `${consumerDirInContainer}/node_modules/.reference-ui-install-cache-key`
-export const matrixNodeModulesStatePath = `${consumerDirInContainer}/node_modules/.modules.yaml`
+export const matrixInstallCacheMarkerPath = `${CONSUMER_DIR_IN_CONTAINER}/node_modules/.reference-ui-install-cache-key`
+export const matrixNodeModulesStatePath = `${CONSUMER_DIR_IN_CONTAINER}/node_modules/.modules.yaml`
 
 interface EnvVariableTarget<T> {
   withEnvVariable(name: string, value: string): T

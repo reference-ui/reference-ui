@@ -9,10 +9,10 @@
 import * as dagger from '@dagger.io/dagger'
 import { getVirtualNativePackageName } from '../../../../../packages/reference-rs/js/shared/targets.js'
 import {
-  defaultRegistryUrl,
-  managedRegistryPort,
-  managedRegistryServiceHost,
-  matrixConfig,
+  DEFAULT_REGISTRY_URL,
+  MANAGED_REGISTRY_PORT,
+  MANAGED_REGISTRY_SERVICE_HOST,
+  MATRIX_CONFIG,
 } from '../../../../config.js'
 import { buildWorkspacePackages } from '../../../build/index.js'
 import { ensureContainerRuntime, getDockerRuntimeInfo } from '../../../lib/runtime/ensure-container-runtime.js'
@@ -31,8 +31,8 @@ import { runMatrixPackageInDagger } from './package-runner.js'
 import { formatRuntimeMemory } from './reporting.js'
 import type { MatrixRunOptions } from './types.js'
 
-const minimumMatrixDockerCpuCount = matrixConfig.containerRuntime.cpu
-const minimumMatrixDockerMemoryBytes = matrixConfig.containerRuntime.memoryGiB * 1024 * 1024 * 1024
+const minimumMatrixDockerCpuCount = MATRIX_CONFIG.containerRuntime.cpu
+const minimumMatrixDockerMemoryBytes = MATRIX_CONFIG.containerRuntime.memoryGiB * 1024 * 1024 * 1024
 
 function assertMatrixRustTargetAvailable(
   manifest: Awaited<ReturnType<typeof readRegistryManifest>>,
@@ -87,12 +87,12 @@ export async function runMatrixBootstrapInDagger(options: MatrixRunOptions = {})
   validateMatrixFixtures()
   const matrixPackages = listMatrixWorkspacePackages(options.packageNames)
 
-  console.log(`Using shared matrix registry at ${defaultRegistryUrl}.`)
+  console.log(`Using shared matrix registry at ${DEFAULT_REGISTRY_URL}.`)
   const buildStageStartedAt = Date.now()
   console.log('Preparing workspace packages and registry...')
 
   try {
-    setSkipLoggingMuted(matrixConfig.quietPreparationSkips)
+    setSkipLoggingMuted(MATRIX_CONFIG.quietPreparationSkips)
     await buildWorkspacePackages(undefined, undefined, {
       requiredRustTargets: [matrixNativeTarget],
     })
@@ -119,18 +119,14 @@ export async function runMatrixBootstrapInDagger(options: MatrixRunOptions = {})
   const registry = hostRegistryService()
   let consumerWorkspace = workspace.withServiceBinding('registry', registry)
 
-  console.log(`Using host registry via ${managedRegistryServiceHost}:${managedRegistryPort}. Logs: ${matrixLogDir}`)
-  if (options.disableDaggerExecCache) {
-    console.log('Dagger exec-result caching disabled for this run.')
-  }
+  console.log(`Using host registry via ${MANAGED_REGISTRY_SERVICE_HOST}:${MANAGED_REGISTRY_PORT}. Logs: ${matrixLogDir}`)
 
   const pingStageStartedAt = Date.now()
   const pingStep = startStep('Checking container registry connectivity')
   const pingRunner = withDaggerExecCacheBuster(
     consumerWorkspace,
-    options,
     'matrix-registry-ping',
-  ).withExec(['npm', 'ping', '--registry', defaultRegistryUrl.replace('127.0.0.1', managedRegistryServiceHost)])
+  ).withExec(['npm', 'ping', '--registry', DEFAULT_REGISTRY_URL.replace('127.0.0.1', MANAGED_REGISTRY_SERVICE_HOST)])
   const pingOutput = await pingRunner.stdout()
   await writeStageLog('publish-ping.log', pingOutput)
   finishStep(pingStep, `Checked container registry connectivity in ${formatDuration(Date.now() - pingStageStartedAt)}`)
@@ -144,7 +140,7 @@ export async function runMatrixBootstrapInDagger(options: MatrixRunOptions = {})
   )
   const dockerRuntime = getDockerRuntimeInfo()
   const packageConcurrencyResolution = resolveMatrixPackageConcurrency({
-    configuredConcurrency: matrixConfig.concurrency,
+    configuredConcurrency: MATRIX_CONFIG.concurrency,
     runtimeCpuCount: dockerRuntime.cpuCount,
     totalPackages: matrixPackageContexts.length,
   })
@@ -210,7 +206,8 @@ export async function runMatrixTests(options: MatrixRunOptions = {}): Promise<vo
     minimumDockerMemoryBytes: minimumMatrixDockerMemoryBytes,
   })
 
-  if (matrixConfig.daggerTrace) {
+  if (options.trace) {
+    console.log('Dagger execution trace enabled (--trace).')
     await dagger.connection(() => runMatrixBootstrapInDagger(options), { LogOutput: process.stdout })
     return
   }

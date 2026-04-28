@@ -9,8 +9,8 @@ import { dag } from '@dagger.io/dagger'
 import * as dagger from '@dagger.io/dagger'
 import { resolve } from 'node:path'
 import {
-  consumerDirInContainer,
-  registryUrlInContainer,
+  CONSUMER_DIR_IN_CONTAINER,
+  REGISTRY_URL_IN_CONTAINER,
 } from '../../../../config.js'
 import { formatDuration } from '../../../lib/log/index.js'
 import { createMatrixInstallCommand, hasWarmMatrixInstallCache, matrixInstallCacheKeyEnvVar } from '../node-modules/install.js'
@@ -18,10 +18,6 @@ import {
   externalPnpmStoreCacheKey,
   matrixNodeModulesCacheKey,
 } from '../node-modules/cache.js'
-import {
-  formatRefSyncSetupMilestoneSummary,
-  parseRefSyncSetupMilestones,
-} from '../setup-metrics.js'
 import { baseNodeContainer, matrixContainerImage } from './container.js'
 import {
   matrixFixtureSourceDirectory,
@@ -33,16 +29,15 @@ import { withDaggerExecCacheBuster } from './exec.js'
 import { writeMatrixPackageStageLog } from './logs.js'
 import { matrixLogDir } from './paths.js'
 import {
+  announceMatrixPackageStart,
   appendOutputBlock,
   collectMatrixFailureDetails,
   createAbortedMatrixPackageResult,
-  formatPhaseTimingSummary,
-  logMatrixPackagePhase,
+  formatMatrixPackageHeading,
 } from './reporting.js'
 import {
   createMatrixRefSyncWatchCommand,
   matrixRefSyncPhasesEnvVar,
-  matrixRefSyncSupportDirectory,
   parseMatrixRefSyncWatchOutput,
   resolveMatrixRefSyncStrategy,
 } from './ref-sync.js'
@@ -52,7 +47,6 @@ import type {
   MatrixPackageRunContext,
   MatrixPackageRunResult,
   MatrixRunOptions,
-  TimedMatrixPackagePhase,
 } from './types.js'
 
 const matrixConsumerSetupCommand = ['pnpm', 'exec', 'ref', 'sync'] as const
@@ -65,14 +59,10 @@ export async function runMatrixPackageInDagger(
   executionContext: MatrixPackageExecutionContext,
   options: MatrixRunOptions,
 ): Promise<MatrixPackageRunResult> {
-  const lines = [`\n${packageRunContext.displayName}`]
-  const packageStartedAt = Date.now()
+  const lines = [`\n${formatMatrixPackageHeading(packageRunContext)}`]
   let phase: 'install' | 'setup' | 'test' = 'install'
-  const phaseDurations: Partial<Record<TimedMatrixPackagePhase, number>> = {}
-  let activeTimedPhase: TimedMatrixPackagePhase | undefined
-  let activePhaseStartedAt: number | undefined
 
-  logMatrixPackagePhase(packageRunContext, 'queued')
+  announceMatrixPackageStart(packageRunContext)
 
   const internalTarballSpecs = resolveMatrixInternalTarballSpecs(
     packageRunContext.source.fixturePackageJson,
@@ -100,21 +90,18 @@ export async function runMatrixPackageInDagger(
 
   const consumerBase = packageConsumerWorkspace
     .withDirectory(
-      consumerDirInContainer,
+      CONSUMER_DIR_IN_CONTAINER,
       matrixFixtureSourceDirectory(packageRunContext.workspacePackage.dir),
     )
     .withDirectory(
-      consumerDirInContainer,
+      CONSUMER_DIR_IN_CONTAINER,
       matrixGeneratedConsumerDirectory(generatedConsumerDir),
     )
-    .withMountedCache(`${consumerDirInContainer}/node_modules`, nodeModulesCache)
-    .withWorkdir(consumerDirInContainer)
+    .withMountedCache(`${CONSUMER_DIR_IN_CONTAINER}/node_modules`, nodeModulesCache)
+    .withWorkdir(CONSUMER_DIR_IN_CONTAINER)
 
   try {
     const installStageStartedAt = Date.now()
-    activeTimedPhase = 'install'
-    activePhaseStartedAt = installStageStartedAt
-    logMatrixPackagePhase(packageRunContext, 'install')
     const warmInstallCache = await hasWarmMatrixInstallCache(
       consumerBase,
       nodeModulesCacheKey,
@@ -129,105 +116,44 @@ export async function runMatrixPackageInDagger(
     } else {
       postInstallRunner = withDaggerExecCacheBuster(
         consumerBase.withEnvVariable(matrixInstallCacheKeyEnvVar, nodeModulesCacheKey),
-        options,
         `${packageRunContext.logPrefix}-install`,
-      ).withExec(createMatrixInstallCommand(registryUrlInContainer))
+      ).withExec(createMatrixInstallCommand(REGISTRY_URL_IN_CONTAINER))
       installOutput = await postInstallRunner.stdout()
     }
 
     await writeMatrixPackageStageLog(packageRunContext, 'install', installOutput)
-    const installDurationMs = Date.now() - installStageStartedAt
-    phaseDurations.install = installDurationMs
-    const installDuration = formatDuration(installDurationMs)
-    activeTimedPhase = undefined
-    activePhaseStartedAt = undefined
+    const installDuration = formatDuration(Date.now() - installStageStartedAt)
 
     if (warmInstallCache) {
-      logMatrixPackagePhase(packageRunContext, 'install', `cache hit (${installDuration})`)
       lines.push(`  Reused cached dependencies in ${installDuration}`)
     } else {
-      logMatrixPackagePhase(packageRunContext, 'install', `complete (${installDuration})`)
       lines.push(`  Installed dependencies in ${installDuration}`)
     }
 
     if (executionContext.shouldStop()) {
-      return createAbortedMatrixPackageResult(
-        packageRunContext,
-        lines,
-        phaseDurations,
-        packageStartedAt,
-        'setup',
-      )
+      return createAbortedMatrixPackageResult(lines, 'setup')
     }
 
     phase = 'setup'
     let testRunner = postInstallRunner
 
     if (refSyncStrategy.mode === 'full') {
-      const setupStageStartedAt = Date.now()
-      activeTimedPhase = 'setup'
-      activePhaseStartedAt = setupStageStartedAt
-      logMatrixPackagePhase(packageRunContext, 'setup')
       const setupRunner = withDaggerExecCacheBuster(
         postInstallRunner,
-        options,
         `${packageRunContext.logPrefix}-setup`,
       ).withExec([...matrixConsumerSetupCommand])
       const setupOutput = await setupRunner.stdout()
       await writeMatrixPackageStageLog(packageRunContext, 'setup', setupOutput)
-      const setupDurationMs = Date.now() - setupStageStartedAt
-      phaseDurations.setup = setupDurationMs
-      const setupDuration = formatDuration(setupDurationMs)
-      const setupMilestones = parseRefSyncSetupMilestones(setupOutput)
-      activeTimedPhase = undefined
-      activePhaseStartedAt = undefined
-      logMatrixPackagePhase(packageRunContext, 'setup', `complete (${setupDuration})`)
-
-      if (setupMilestones.length > 0) {
-        const setupMilestoneSummary = formatRefSyncSetupMilestoneSummary(setupMilestones)
-        const setupBottleneck = setupMilestones
-          .filter(milestone => milestone.summaryLabel !== 'sync-total')
-          .sort((left, right) => right.durationMs - left.durationMs)[0]
-
-        if (setupBottleneck) {
-          logMatrixPackagePhase(
-            packageRunContext,
-            'setup',
-            `bottleneck ${setupBottleneck.summaryLabel} (${formatDuration(setupBottleneck.durationMs)})`,
-          )
-        }
-
-        logMatrixPackagePhase(packageRunContext, 'setup', `milestones ${setupMilestoneSummary}`)
-        lines.push('  ref sync milestones:')
-
-        for (const milestone of setupMilestones) {
-          if (milestone.summaryLabel === 'sync-total') {
-            continue
-          }
-
-          lines.push(`    ${milestone.label}: ${formatDuration(milestone.durationMs)}`)
-        }
-      }
-
-      lines.push(`  Ran ref sync in ${setupDuration}`)
+      lines.push('  Prepared full ref sync runtime output.')
       testRunner = setupRunner
     } else {
-      activeTimedPhase = undefined
-      activePhaseStartedAt = undefined
       const setupMessage = 'Deferred full ref sync completion; runtime tests will start ref sync --watch and wait only for runtime-ready output.'
       await writeMatrixPackageStageLog(packageRunContext, 'setup', `${setupMessage}\n`)
-      logMatrixPackagePhase(packageRunContext, 'setup', 'watch-ready mode')
       lines.push(`  ${setupMessage}`)
     }
 
     if (executionContext.shouldStop()) {
-      return createAbortedMatrixPackageResult(
-        packageRunContext,
-        lines,
-        phaseDurations,
-        packageStartedAt,
-        'tests',
-      )
+      return createAbortedMatrixPackageResult(lines, 'tests')
     }
 
     phase = 'test'
@@ -256,7 +182,6 @@ export async function runMatrixPackageInDagger(
       if (watchPhases.length > 0) {
         const watchRunner = withDaggerExecCacheBuster(
           testRunner,
-          options,
           `${packageRunContext.logPrefix}-test-watch`,
         )
           .withEnvVariable(matrixRefSyncPhasesEnvVar, JSON.stringify(watchPhases))
@@ -265,21 +190,7 @@ export async function runMatrixPackageInDagger(
         const parsedWatchOutput = parseMatrixRefSyncWatchOutput(sharedWatchOutput)
 
         if (parsedWatchOutput.readyDurationMs !== null) {
-          phaseDurations.setup = parsedWatchOutput.readyDurationMs
-          const readyDuration = formatDuration(parsedWatchOutput.readyDurationMs)
-          logMatrixPackagePhase(packageRunContext, 'setup', `runtime-ready (${readyDuration})`)
-          lines.push(`  Reached ref sync watch-ready output in ${readyDuration}`)
-        }
-
-        for (const watchPhase of watchPhases) {
-          const phaseDurationMs = parsedWatchOutput.phaseDurations[watchPhase.phase]
-
-          if (phaseDurationMs !== undefined) {
-            phaseDurations[watchPhase.phase] = phaseDurationMs
-            logMatrixPackagePhase(packageRunContext, watchPhase.phase, `complete (${formatDuration(phaseDurationMs)})`)
-          } else {
-            logMatrixPackagePhase(packageRunContext, watchPhase.phase, 'complete')
-          }
+          lines.push('  Reached ref sync watch-ready output.')
         }
 
         appendOutputBlock(lines, parsedWatchOutput.cleanedOutput)
@@ -292,31 +203,18 @@ export async function runMatrixPackageInDagger(
       }
     } else {
       if (packageRunContext.source.hasVitestTests) {
-        logMatrixPackagePhase(packageRunContext, 'test:vitest')
-        const vitestStageStartedAt = Date.now()
-        activeTimedPhase = 'test:vitest'
-        activePhaseStartedAt = vitestStageStartedAt
         const vitestRunner = withDaggerExecCacheBuster(
           testRunner,
-          options,
           `${packageRunContext.logPrefix}-test-vitest`,
         ).withExec([...matrixConsumerVitestCommand])
         const vitestOutput = await vitestRunner.stdout()
-        const vitestDurationMs = Date.now() - vitestStageStartedAt
-        phaseDurations['test:vitest'] = vitestDurationMs
-        activeTimedPhase = undefined
-        activePhaseStartedAt = undefined
         testLogOutputs.push(vitestOutput)
         appendOutputBlock(lines, vitestOutput)
         testRunner = vitestRunner
-        logMatrixPackagePhase(packageRunContext, 'test:vitest', `complete (${formatDuration(vitestDurationMs)})`)
 
         if (executionContext.shouldStop()) {
           return createAbortedMatrixPackageResult(
-            packageRunContext,
             lines,
-            phaseDurations,
-            packageStartedAt,
             packageRunContext.source.hasPlaywrightTests
               ? 'test:playwright'
               : (refSyncStrategy.runTypecheck ? 'test:typecheck' : 'completion'),
@@ -325,31 +223,18 @@ export async function runMatrixPackageInDagger(
       }
 
       if (packageRunContext.source.hasPlaywrightTests) {
-        logMatrixPackagePhase(packageRunContext, 'test:playwright')
-        const playwrightStageStartedAt = Date.now()
-        activeTimedPhase = 'test:playwright'
-        activePhaseStartedAt = playwrightStageStartedAt
         const playwrightRunner = withDaggerExecCacheBuster(
           testRunner,
-          options,
           `${packageRunContext.logPrefix}-test-playwright`,
         ).withExec([...matrixConsumerPlaywrightCommand])
         const playwrightOutput = await playwrightRunner.stdout()
-        const playwrightDurationMs = Date.now() - playwrightStageStartedAt
-        phaseDurations['test:playwright'] = playwrightDurationMs
-        activeTimedPhase = undefined
-        activePhaseStartedAt = undefined
         testLogOutputs.push(playwrightOutput)
         appendOutputBlock(lines, playwrightOutput)
         testRunner = playwrightRunner
-        logMatrixPackagePhase(packageRunContext, 'test:playwright', `complete (${formatDuration(playwrightDurationMs)})`)
 
         if (executionContext.shouldStop()) {
           return createAbortedMatrixPackageResult(
-            packageRunContext,
             lines,
-            phaseDurations,
-            packageStartedAt,
             refSyncStrategy.runTypecheck ? 'test:typecheck' : 'completion',
           )
         }
@@ -357,43 +242,23 @@ export async function runMatrixPackageInDagger(
     }
 
     if (refSyncStrategy.runTypecheck) {
-      logMatrixPackagePhase(packageRunContext, 'test:typecheck')
-      const typecheckStageStartedAt = Date.now()
-      activeTimedPhase = 'test:typecheck'
-      activePhaseStartedAt = typecheckStageStartedAt
       const typecheckRunner = withDaggerExecCacheBuster(
         testRunner,
-        options,
         `${packageRunContext.logPrefix}-test-typecheck`,
       ).withExec([...matrixConsumerTypecheckCommand])
       const typecheckOutput = await typecheckRunner.stdout()
-      const typecheckDurationMs = Date.now() - typecheckStageStartedAt
-      phaseDurations['test:typecheck'] = typecheckDurationMs
-      activeTimedPhase = undefined
-      activePhaseStartedAt = undefined
       testLogOutputs.push(typecheckOutput)
-      logMatrixPackagePhase(packageRunContext, 'test:typecheck', `complete (${formatDuration(typecheckDurationMs)})`)
     }
 
     const testOutput = testLogOutputs.filter(output => output.length > 0).join('\n')
     await writeMatrixPackageStageLog(packageRunContext, 'test', testOutput)
-    const totalDurationMs = Date.now() - packageStartedAt
-    const totalDuration = formatDuration(totalDurationMs)
-    const timingSummary = formatPhaseTimingSummary(phaseDurations, totalDurationMs)
-    logMatrixPackagePhase(packageRunContext, 'completed', `(${totalDuration})`)
-    logMatrixPackagePhase(packageRunContext, 'completed', `timings ${timingSummary}`)
-    lines.push(`  Timings: ${timingSummary}`)
-    lines.push('', `  Completed in ${totalDuration}`)
+    lines.push('', '  Completed.')
 
     return {
       failed: false,
       output: `${lines.join('\n')}\n`,
     }
   } catch (error) {
-    if (activeTimedPhase && activePhaseStartedAt) {
-      phaseDurations[activeTimedPhase] = Date.now() - activePhaseStartedAt
-    }
-
     const errorMessage = error instanceof Error ? error.message : String(error)
     await writeMatrixPackageStageLog(packageRunContext, phase, errorMessage)
     lines.push(`  Failed during ${phase}. See ${resolve(matrixLogDir, `${packageRunContext.logPrefix}-${phase}.log`)}`)
@@ -402,11 +267,6 @@ export async function runMatrixPackageInDagger(
     if (errorMessage.trim().length > 0) {
       lines.push(`  ${errorMessage}`)
     }
-
-    const totalDurationMs = Date.now() - packageStartedAt
-    const timingSummary = formatPhaseTimingSummary(phaseDurations, totalDurationMs)
-    logMatrixPackagePhase(packageRunContext, 'failed', `during ${phase}; timings ${timingSummary}`)
-    lines.push(`  Timings so far: ${timingSummary}`)
 
     return {
       failed: true,

@@ -16,6 +16,8 @@ export type MatrixRefSyncMode = 'full' | 'watch-ready'
 
 export type MatrixBundlerStrategy = 'vite7'
 
+export type MatrixReactRuntime = 'react19'
+
 export interface MatrixPackageRefSyncConfig {
   mode: MatrixRefSyncMode
 }
@@ -24,6 +26,7 @@ export interface MatrixPackageConfig {
   name: string
   refSync: MatrixPackageRefSyncConfig
   bundlers: readonly MatrixBundlerStrategy[]
+  react: MatrixReactRuntime
   runTypecheck: boolean
 }
 
@@ -73,6 +76,7 @@ export function readMatrixPackageConfig(packageDir: string): MatrixPackageConfig
       mode?: unknown
     }
     bundlers?: unknown
+    react?: unknown
     runTypecheck?: unknown
   }
 
@@ -98,6 +102,10 @@ export function readMatrixPackageConfig(packageDir: string): MatrixPackageConfig
     }
   }
 
+  if (config.react !== 'react19') {
+    throw new Error(`Expected ${configPath} to declare react as "react19".`)
+  }
+
   if (config.runTypecheck !== undefined && typeof config.runTypecheck !== 'boolean') {
     throw new Error(`Expected ${configPath} to declare runTypecheck as a boolean when provided.`)
   }
@@ -108,6 +116,7 @@ export function readMatrixPackageConfig(packageDir: string): MatrixPackageConfig
       mode: config.refSync.mode,
     },
     bundlers: config.bundlers as MatrixBundlerStrategy[],
+    react: config.react,
     runTypecheck: config.runTypecheck ?? false,
   }
 }

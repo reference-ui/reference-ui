@@ -11,7 +11,7 @@ import { constants } from 'node:fs'
 import { access, readFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { consumerDirInContainer } from '../config.js'
+import { CONSUMER_DIR_IN_CONTAINER } from '../config.js'
 import { ensureContainerRuntime } from './lib/runtime/ensure-container-runtime.js'
 
 const pipelineDir = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -206,11 +206,11 @@ export async function runDownstreamSmoke(): Promise<void> {
   }
 
   const consumer = workspace
-    .withNewFile(`${consumerDirInContainer}/package.json`, consumerPackageJson(packageInfos))
-    .withNewFile(`${consumerDirInContainer}/tsconfig.json`, consumerTsconfig())
-    .withNewFile(`${consumerDirInContainer}/ui.config.ts`, consumerConfigSource())
-    .withNewFile(`${consumerDirInContainer}/src/index.tsx`, consumerSourceFile())
-    .withWorkdir(consumerDirInContainer)
+    .withNewFile(`${CONSUMER_DIR_IN_CONTAINER}/package.json`, consumerPackageJson(packageInfos))
+    .withNewFile(`${CONSUMER_DIR_IN_CONTAINER}/tsconfig.json`, consumerTsconfig())
+    .withNewFile(`${CONSUMER_DIR_IN_CONTAINER}/ui.config.ts`, consumerConfigSource())
+    .withNewFile(`${CONSUMER_DIR_IN_CONTAINER}/src/index.tsx`, consumerSourceFile())
+    .withWorkdir(CONSUMER_DIR_IN_CONTAINER)
     .withExec(['pnpm', 'install'])
 
   const syncRunner = consumer.withExec(['pnpm', 'exec', 'ref', 'sync'])

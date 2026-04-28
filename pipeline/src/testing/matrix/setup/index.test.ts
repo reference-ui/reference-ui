@@ -5,7 +5,13 @@ import { createManagedMatrixPackageJson } from '../managed/package-json/index.js
 
 describe('setupMatrixPackages package generation', () => {
   it('delegates package.json generation to the managed package-json module', () => {
-    const packageJson = JSON.parse(createManagedMatrixPackageJson({ packageName: '@matrix/distro' })) as {
+    const packageJson = JSON.parse(createManagedMatrixPackageJson({
+      config: {
+        bundlers: ['vite7'],
+        react: 'react19',
+      },
+      packageName: '@matrix/distro',
+    })) as {
       name: string
       scripts: Record<string, string>
     }

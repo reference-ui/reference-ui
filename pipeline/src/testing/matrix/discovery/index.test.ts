@@ -21,7 +21,7 @@ describe('readMatrixPackageConfig', () => {
     const tempDir = await mkdtemp(join(tmpdir(), 'ref-pipeline-matrix-'))
 
     try {
-      await writeFile(join(tempDir, 'matrix.json'), '{"name":"typescript","refSync":{"mode":"full"},"bundlers":["vite7"],"runTypecheck":true}\n')
+      await writeFile(join(tempDir, 'matrix.json'), '{"name":"typescript","refSync":{"mode":"full"},"bundlers":["vite7"],"react":"react19","runTypecheck":true}\n')
 
       assert.deepEqual(readMatrixPackageConfig(tempDir), {
         name: 'typescript',
@@ -29,6 +29,7 @@ describe('readMatrixPackageConfig', () => {
           mode: 'full',
         },
         bundlers: ['vite7'],
+        react: 'react19',
         runTypecheck: true,
       })
     } finally {
@@ -60,6 +61,21 @@ describe('readMatrixPackageConfig', () => {
       assert.throws(
         () => readMatrixPackageConfig(tempDir),
         /bundlers as a non-empty array/,
+      )
+    } finally {
+      await rm(tempDir, { force: true, recursive: true })
+    }
+  })
+
+  it('requires an explicit managed react runtime in matrix.json', async () => {
+    const tempDir = await mkdtemp(join(tmpdir(), 'ref-pipeline-matrix-'))
+
+    try {
+      await writeFile(join(tempDir, 'matrix.json'), '{"name":"typescript","refSync":{"mode":"full"},"bundlers":["vite7"]}\n')
+
+      assert.throws(
+        () => readMatrixPackageConfig(tempDir),
+        /react as "react19"/,
       )
     } finally {
       await rm(tempDir, { force: true, recursive: true })

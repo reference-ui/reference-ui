@@ -8,7 +8,7 @@
 import { computePackageBuildHashes, readBuildState, writeBuildState } from './cache.js'
 import { ensureLocalRegistryAndStagePublicPackages } from '../registry/index.js'
 import { logSkip, logWarning } from '../lib/log/index.js'
-import { registryPackageNames } from '../../config.js'
+import { REGISTRY_PACKAGE_NAMES } from '../../config.js'
 import type { VirtualNativeTarget } from '../../../packages/reference-rs/js/shared/targets.js'
 import {
   listRegistryWorkspacePackages,
@@ -23,13 +23,13 @@ export interface BuildWorkspacePackageOptions {
   requiredRustTargets?: readonly VirtualNativeTarget[]
 }
 
-export function listBuildTargetPackages(packageNames: readonly string[] = registryPackageNames): WorkspacePackage[] {
+export function listBuildTargetPackages(packageNames: readonly string[] = REGISTRY_PACKAGE_NAMES): WorkspacePackage[] {
   return sortPackagesForInternalDependencyOrder(
     listRegistryWorkspacePackages(packageNames).filter((pkg) => typeof pkg.scripts.build === 'string'),
   )
 }
 
-export async function buildWorkspaceArtifacts(packageNames: readonly string[] = registryPackageNames): Promise<void> {
+export async function buildWorkspaceArtifacts(packageNames: readonly string[] = REGISTRY_PACKAGE_NAMES): Promise<void> {
   const buildTargets = listBuildTargetPackages(packageNames)
   const buildHashes = computePackageBuildHashes(buildTargets)
   const buildState = await readBuildState()
@@ -69,7 +69,7 @@ export async function buildWorkspaceArtifacts(packageNames: readonly string[] = 
 
 export async function buildWorkspacePackages(
   registryUrl?: string,
-  packageNames: readonly string[] = registryPackageNames,
+  packageNames: readonly string[] = REGISTRY_PACKAGE_NAMES,
   options: BuildWorkspacePackageOptions = {},
 ): Promise<void> {
   await buildWorkspaceArtifacts(packageNames)
