@@ -82,145 +82,263 @@ function expectFontFamilyIncludes(fontFamily: string, fragment: string): void {
 }
 
 test.describe('primitives contract', () => {
-  test('renders the primitives fixture in a real browser', async ({ page }) => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/')
+  })
+
+  test('renders the primitives fixture root', async ({ page }) => {
     expect(Div).toBeTruthy()
     expect(matrixPrimitivesMarker).toBe('reference-ui-matrix-primitives')
 
-    await page.goto('/')
-
     await expect(page.getByTestId('primitives-root')).toBeVisible()
+  })
+
+  test('renders the primitives fixture heading', async ({ page }) => {
     await expect(page.getByRole('heading', { name: 'Reference UI Primitives matrix' })).toBeVisible()
+  })
+
+  test('renders the primitives fixture description', async ({ page }) => {
     await expect(page.getByText('Primitive mounting and style props are exercised against emitted design-system CSS.')).toBeVisible()
   })
 
-  test('applies primitive style props through emitted CSS', async ({ page }) => {
-    await page.goto('/')
-
+  test('primitive style props apply text color', async ({ page }) => {
     const element = page.getByTestId('primitive-style-props')
-    await expect(element).toBeVisible()
     const expectedTextDanger = await readCssVariable(element, primitiveMatrixColors.textDangerCssVariable)
-    const expectedSurfaceWarning = await readCssVariable(element, primitiveMatrixColors.surfaceWarningCssVariable)
-    const expectedBorderStrong = await readCssVariable(element, primitiveMatrixColors.borderStrongCssVariable)
-
-    const computed = await readComputedStyle(element, [
-      'background-color',
-      'border-color',
-      'border-radius',
-      'border-style',
-      'border-width',
-      'color',
-      'padding-top',
-    ])
+    const computed = await readComputedStyle(element, ['color'])
 
     expectColorValue(computed.color, expectedTextDanger)
+  })
+
+  test('primitive style props apply background color', async ({ page }) => {
+    const element = page.getByTestId('primitive-style-props')
+    const expectedSurfaceWarning = await readCssVariable(element, primitiveMatrixColors.surfaceWarningCssVariable)
+    const computed = await readComputedStyle(element, ['background-color'])
+
     expectColorValue(computed['background-color'], expectedSurfaceWarning)
+  })
+
+  test('primitive style props apply padding', async ({ page }) => {
+    const element = page.getByTestId('primitive-style-props')
+    const computed = await readComputedStyle(element, ['padding-top'])
+
     expect(computed['padding-top']).toBe('16px')
+  })
+
+  test('primitive style props apply border width', async ({ page }) => {
+    const element = page.getByTestId('primitive-style-props')
+    const computed = await readComputedStyle(element, ['border-width'])
+
     expect(computed['border-width']).toBe('2px')
+  })
+
+  test('primitive style props apply border style', async ({ page }) => {
+    const element = page.getByTestId('primitive-style-props')
+    const computed = await readComputedStyle(element, ['border-style'])
+
     expect(computed['border-style']).toBe('solid')
+  })
+
+  test('primitive style props apply border color', async ({ page }) => {
+    const element = page.getByTestId('primitive-style-props')
+    const expectedBorderStrong = await readCssVariable(element, primitiveMatrixColors.borderStrongCssVariable)
+    const computed = await readComputedStyle(element, ['border-color'])
+
     expectColorValue(computed['border-color'], expectedBorderStrong)
+  })
+
+  test('primitive style props apply border radius', async ({ page }) => {
+    const element = page.getByTestId('primitive-style-props')
+    const computed = await readComputedStyle(element, ['border-radius'])
+
     expect(computed['border-radius']).toBe('12px')
   })
 
-  test('applies inline border shorthands and radius values in computed styles', async ({ page }) => {
-    await page.goto('/')
-
+  test('inline border primitive applies border width', async ({ page }) => {
     const inlineBorder = page.getByTestId('primitive-inline-border')
-    await expect(inlineBorder).toBeVisible()
-    const expectedBorderSuccess = await readCssVariable(inlineBorder, primitiveMatrixColors.borderSuccessCssVariable)
-
-    const inlineStyles = await readComputedStyle(inlineBorder, [
-      'border-color',
-      'border-radius',
-      'border-style',
-      'border-width',
-    ])
+    const inlineStyles = await readComputedStyle(inlineBorder, ['border-width'])
 
     expect(inlineStyles['border-width']).toBe('3px')
+  })
+
+  test('inline border primitive applies border style', async ({ page }) => {
+    const inlineBorder = page.getByTestId('primitive-inline-border')
+    const inlineStyles = await readComputedStyle(inlineBorder, ['border-style'])
+
     expect(inlineStyles['border-style']).toBe('solid')
+  })
+
+  test('inline border primitive applies border color', async ({ page }) => {
+    const inlineBorder = page.getByTestId('primitive-inline-border')
+    const expectedBorderSuccess = await readCssVariable(inlineBorder, primitiveMatrixColors.borderSuccessCssVariable)
+    const inlineStyles = await readComputedStyle(inlineBorder, ['border-color'])
+
     expectColorValue(inlineStyles['border-color'], expectedBorderSuccess)
+  })
+
+  test('inline border primitive applies border radius', async ({ page }) => {
+    const inlineBorder = page.getByTestId('primitive-inline-border')
+    const inlineStyles = await readComputedStyle(inlineBorder, ['border-radius'])
+
     expect(inlineStyles['border-radius']).toBe('8px')
   })
 
-  test('composes the css prop into classes instead of leaking it to the DOM', async ({ page }) => {
-    await page.goto('/')
-
+  test('primitive css prop does not leak to the DOM', async ({ page }) => {
     const element = page.getByTestId('primitive-css-prop')
-    await expect(element).toBeVisible()
     await expect(element).not.toHaveAttribute('css', /.*/)
+  })
 
+  test('primitive css prop composes a reference-ui class', async ({ page }) => {
+    const element = page.getByTestId('primitive-css-prop')
     const className = await element.getAttribute('class')
-    expect(className).toContain('ref-div')
-    expect(className).not.toContain('[object Object]')
 
-    const computed = await readComputedStyle(element, ['left', 'padding-top', 'position', 'top'])
+    expect(className).toContain('ref-div')
+  })
+
+  test('primitive css prop does not stringify object values into class names', async ({ page }) => {
+    const element = page.getByTestId('primitive-css-prop')
+    const className = await element.getAttribute('class')
+
+    expect(className).not.toContain('[object Object]')
+  })
+
+  test('primitive css prop applies relative positioning', async ({ page }) => {
+    const element = page.getByTestId('primitive-css-prop')
+    const computed = await readComputedStyle(element, ['position'])
 
     expect(computed.position).toBe('relative')
+  })
+
+  test('primitive css prop applies top offset', async ({ page }) => {
+    const element = page.getByTestId('primitive-css-prop')
+    const computed = await readComputedStyle(element, ['top'])
+
     expect(computed.top).toBe('4px')
+  })
+
+  test('primitive css prop applies left offset', async ({ page }) => {
+    const element = page.getByTestId('primitive-css-prop')
+    const computed = await readComputedStyle(element, ['left'])
+
     expect(computed.left).toBe('8px')
+  })
+
+  test('primitive css prop preserves padding', async ({ page }) => {
+    const element = page.getByTestId('primitive-css-prop')
+    const computed = await readComputedStyle(element, ['padding-top'])
+
     expect(computed['padding-top']).toBe('8px')
   })
 
-  test('resolves font presets, font weights, and font-level letter spacing', async ({ page }) => {
-    await page.goto('/')
-
+  test('font preset resolves sans font family', async ({ page }) => {
     const sansDefault = page.getByTestId('primitive-font-sans')
-    const sansBold = page.getByTestId('primitive-font-bold')
-    const sansBoldToken = page.getByTestId('primitive-font-token')
-    await expect(sansDefault).toBeVisible()
-    await expect(sansBold).toBeVisible()
-    await expect(sansBoldToken).toBeVisible()
-
-    const defaultStyles = await readComputedStyle(sansDefault, ['font-family', 'font-weight', 'letter-spacing'])
-    const boldStyles = await readComputedStyle(sansBold, ['font-family', 'font-weight'])
-    const boldTokenStyles = await readComputedStyle(sansBoldToken, ['font-weight'])
+    const defaultStyles = await readComputedStyle(sansDefault, ['font-family'])
 
     expectFontFamilyIncludes(defaultStyles['font-family'], 'Inter')
+  })
+
+  test('font preset resolves regular weight', async ({ page }) => {
+    const sansDefault = page.getByTestId('primitive-font-sans')
+    const defaultStyles = await readComputedStyle(sansDefault, ['font-weight'])
+
     expect(defaultStyles['font-weight']).toBe('400')
+  })
+
+  test('font preset resolves negative letter spacing', async ({ page }) => {
+    const sansDefault = page.getByTestId('primitive-font-sans')
+    const defaultStyles = await readComputedStyle(sansDefault, ['letter-spacing'])
+
     expect(Number.parseFloat(defaultStyles['letter-spacing'])).toBeLessThan(0)
+  })
+
+  test('font preset keeps sans family under bold weight', async ({ page }) => {
+    const sansBold = page.getByTestId('primitive-font-bold')
+    const boldStyles = await readComputedStyle(sansBold, ['font-family'])
 
     expectFontFamilyIncludes(boldStyles['font-family'], 'Inter')
+  })
+
+  test('font preset resolves explicit bold weight', async ({ page }) => {
+    const sansBold = page.getByTestId('primitive-font-bold')
+    const boldStyles = await readComputedStyle(sansBold, ['font-weight'])
+
     expect(boldStyles['font-weight']).toBe('700')
+  })
+
+  test('font preset resolves token bold weight', async ({ page }) => {
+    const sansBoldToken = page.getByTestId('primitive-font-token')
+    const boldTokenStyles = await readComputedStyle(sansBoldToken, ['font-weight'])
+
     expect(boldTokenStyles['font-weight']).toBe('700')
   })
 
-  test('applies container semantics and container-query overrides in the browser', async ({ page }) => {
-    await page.goto('/')
-
+  test('anonymous container enables inline-size containment', async ({ page }) => {
     const anonymousContainer = page.getByTestId('primitive-container-anon')
-    const namedContainer = page.getByTestId('primitive-container-named')
-    const narrowResponsive = page.getByTestId('primitive-responsive-narrow')
-    const wideResponsive = page.getByTestId('primitive-responsive-wide')
-    await expect(anonymousContainer).toBeVisible()
-    await expect(namedContainer).toBeVisible()
-    await expect(narrowResponsive).toBeVisible()
-    await expect(wideResponsive).toBeVisible()
-
     const anonymousStyles = await readComputedStyle(anonymousContainer, ['container-type'])
-    const namedStyles = await readComputedStyle(namedContainer, ['container-name', 'container-type'])
-    const narrowStyles = await readComputedStyle(narrowResponsive, ['font-size', 'padding-top'])
-    const wideStyles = await readComputedStyle(wideResponsive, ['font-size', 'padding-top'])
 
     expect(anonymousStyles['container-type']).toBe('inline-size')
+  })
+
+  test('named container enables inline-size containment', async ({ page }) => {
+    const namedContainer = page.getByTestId('primitive-container-named')
+    const namedStyles = await readComputedStyle(namedContainer, ['container-type'])
+
     expect(namedStyles['container-type']).toBe('inline-size')
+  })
+
+  test('named container exposes the authored container name', async ({ page }) => {
+    const namedContainer = page.getByTestId('primitive-container-named')
+    const namedStyles = await readComputedStyle(namedContainer, ['container-name'])
+
     expect(namedStyles['container-name']).toBe('sidebar')
+  })
+
+  test('responsive primitive stays narrow below the container threshold for padding', async ({ page }) => {
+    const narrowResponsive = page.getByTestId('primitive-responsive-narrow')
+    const narrowStyles = await readComputedStyle(narrowResponsive, ['padding-top'])
 
     expect(narrowStyles['padding-top']).toBe('4px')
+  })
+
+  test('responsive primitive stays narrow below the container threshold for font size', async ({ page }) => {
+    const narrowResponsive = page.getByTestId('primitive-responsive-narrow')
+    const narrowStyles = await readComputedStyle(narrowResponsive, ['font-size'])
+
     expect(narrowStyles['font-size']).toBe('16px')
+  })
+
+  test('responsive primitive expands above the container threshold for padding', async ({ page }) => {
+    const wideResponsive = page.getByTestId('primitive-responsive-wide')
+    const wideStyles = await readComputedStyle(wideResponsive, ['padding-top'])
+
     expect(wideStyles['padding-top']).toBe('16px')
+  })
+
+  test('responsive primitive expands above the container threshold for font size', async ({ page }) => {
+    const wideResponsive = page.getByTestId('primitive-responsive-wide')
+    const wideStyles = await readComputedStyle(wideResponsive, ['font-size'])
+
     expect(wideStyles['font-size']).toBe('18px')
   })
 
-  test('expands the size prop into equal rendered dimensions', async ({ page }) => {
-    await page.goto('/')
-
+  test('size prop emits a width utility class', async ({ page }) => {
     const element = page.getByTestId('primitive-size-square')
-    await expect(element).toBeVisible()
-
     const className = await element.getAttribute('class')
+
     expect(className).toContain('w_')
+  })
+
+  test('size prop emits a height utility class', async ({ page }) => {
+    const element = page.getByTestId('primitive-size-square')
+    const className = await element.getAttribute('class')
+
     expect(className).toContain('h_')
+  })
+
+  test('size prop resolves equal rendered dimensions', async ({ page }) => {
+    const element = page.getByTestId('primitive-size-square')
 
     const computed = await readComputedStyle(element, ['height', 'width'])
+
     expect(computed.width).toBeTruthy()
     expect(computed.height).toBe(computed.width)
   })
