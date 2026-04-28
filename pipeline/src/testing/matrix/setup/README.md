@@ -11,6 +11,10 @@ Its job is to materialize the managed parts of each matrix fixture package and,
 optionally, install the workspace dependencies needed to work with those
 fixtures locally.
 
+Managed here means package manifests plus pipeline-owned runtime files like
+bundler config (`vite.config.ts`, `index.html`) and React browser entrypoints
+(`src/main.tsx`).
+
 For IDE-ready local usage, run setup with sync enabled so each selected matrix
 package also materializes its generated Reference UI output after install.
 

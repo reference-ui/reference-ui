@@ -4,9 +4,9 @@
 
 import { dag } from '@dagger.io/dagger'
 import {
-  managedRegistryHost,
-  managedRegistryPort,
-  registryUrlInContainer,
+  MANAGED_REGISTRY_HOST,
+  MANAGED_REGISTRY_PORT,
+  REGISTRY_URL_IN_CONTAINER,
 } from '../../../../config.js'
 import { matrixNodeImage } from '../node-modules/cache.js'
 import type { FixtureSourceFiles } from './types.js'
@@ -27,12 +27,12 @@ export function baseNodeContainer(pnpmStoreCacheKey: string, image: string = mat
   if (image === matrixNodeImage) {
     return container
       .withExec(['corepack', 'prepare', 'pnpm@10.29.3', '--activate'])
-      .withEnvVariable('npm_config_registry', registryUrlInContainer)
+      .withEnvVariable('npm_config_registry', REGISTRY_URL_IN_CONTAINER)
   }
 
   return container
     .withExec(['npm', 'install', '--global', '--force', 'pnpm@10.29.3'])
-    .withEnvVariable('npm_config_registry', registryUrlInContainer)
+    .withEnvVariable('npm_config_registry', REGISTRY_URL_IN_CONTAINER)
 }
 
 export function parsePinnedPlaywrightVersion(versionRange: string | undefined): string {
@@ -55,7 +55,7 @@ export function matrixContainerImage(source: FixtureSourceFiles): string {
 }
 
 export function hostRegistryService() {
-  return dag.host().service([{ backend: managedRegistryPort }], {
-    host: managedRegistryHost,
+  return dag.host().service([{ backend: MANAGED_REGISTRY_PORT }], {
+    host: MANAGED_REGISTRY_HOST,
   })
 }

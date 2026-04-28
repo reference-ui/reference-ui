@@ -8,14 +8,13 @@
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { MatrixPackageConfig, MatrixRefSyncMode } from '../discovery/index.js'
-import type { TimedMatrixPackagePhase } from './types.js'
 
 export interface MatrixRefSyncStrategy {
   mode: MatrixRefSyncMode
   runTypecheck: boolean
 }
 
-export type MatrixRefSyncWatchPhase = Extract<TimedMatrixPackagePhase, 'test:vitest' | 'test:playwright'>
+export type MatrixRefSyncWatchPhase = 'test:vitest' | 'test:playwright'
 
 export interface MatrixRefSyncWatchPhaseCommand {
   command: readonly string[]

@@ -10,7 +10,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 
 import { homedir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { registryPackageNames, releasePackageNames, workspacePackageRoots } from '../../config.js'
+import { REGISTRY_PACKAGE_NAMES, RELEASE_PACKAGE_NAMES, WORKSPACE_PACKAGE_ROOTS } from '../../config.js'
 import { failStep, finishStep, formatDuration, startStep, writeFailureOutput } from '../lib/log/index.js'
 import type { WorkspacePackage } from './types.js'
 
@@ -148,7 +148,7 @@ function readJson<T>(filePath: string): T {
 function listConfiguredPackageJsonPaths(): string[] {
   const packageJsonPaths = new Set<string>()
 
-  for (const packageRoot of workspacePackageRoots) {
+  for (const packageRoot of WORKSPACE_PACKAGE_ROOTS) {
     const absoluteRoot = resolve(repoRoot, packageRoot)
     if (!existsSync(absoluteRoot)) {
       continue
@@ -289,14 +289,14 @@ export function listNamedWorkspacePackages(packageNames: readonly string[]): Wor
   return listWorkspacePackages().filter((pkg) => selectedNames.has(pkg.name))
 }
 
-export function listRegistryWorkspacePackages(packageNames: readonly string[] = registryPackageNames): WorkspacePackage[] {
+export function listRegistryWorkspacePackages(packageNames: readonly string[] = REGISTRY_PACKAGE_NAMES): WorkspacePackage[] {
   const registryNames = new Set<string>(packageNames)
 
   return listWorkspacePackages().filter((pkg) => registryNames.has(pkg.name))
 }
 
 export function listReleaseWorkspacePackages(): WorkspacePackage[] {
-  return listNamedWorkspacePackages(releasePackageNames)
+  return listNamedWorkspacePackages(RELEASE_PACKAGE_NAMES)
 }
 
 export function sortPackagesForInternalDependencyOrder(

@@ -23,6 +23,7 @@ function createMatrixPackageConfig(
       mode,
     },
     bundlers: ['vite7'],
+    react: 'react19',
     runTypecheck,
   }
 }

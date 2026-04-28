@@ -1,21 +1,21 @@
 /**
  * Execution helpers for matrix Dagger containers.
  *
- * The runner mostly wants one policy here: when the user disables Dagger exec
- * result caching, every relevant exec gets a fresh cache-busting env value.
+ * Matrix test runs intentionally force fresh Dagger exec for install/setup/test
+ * commands. The useful reuse already comes from the pnpm store and warmed
+ * node_modules caches.
  */
 
 import { randomUUID } from 'node:crypto'
-import type { MatrixRunOptions } from './types.js'
+import { DISABLE_DAGGER_CACHE } from '../../../../config.js'
 
 const daggerExecCacheBusterEnvVar = 'REFERENCE_UI_DAGGER_EXEC_CACHE_BUSTER'
 
 export function withDaggerExecCacheBuster<T extends { withEnvVariable(name: string, value: string): T }>(
   target: T,
-  options: MatrixRunOptions,
   scope: string,
 ): T {
-  if (!options.disableDaggerExecCache) {
+  if (!DISABLE_DAGGER_CACHE) {
     return target
   }
 

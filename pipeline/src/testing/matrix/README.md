@@ -63,5 +63,6 @@ This is one of the main testing directions for the pipeline.
 	- currently reuses the single pipeline-managed Verdaccio registry, binds that shared host registry into Dagger, installs a minimal consumer from the `matrix/install` package, runs `ref sync`, and then runs that package's standard `pnpm test` command inside the clean container
 	- when the required linux Rust target package is missing from local tarballs and public npm, the pipeline builds that native artifact inside Dagger, stages it into the generated npm target package, and loads that package into the local registry before the consumer install step
 	- this keeps matrix/testing self-contained: internal test installs should come from the pipeline registry, not from whatever happens to be published publicly
+	- pass `--trace` to stream Dagger's execution trace when you want low-level execution profiling instead of the default higher-level matrix story
 	- on macOS, it will start Colima automatically when the active Docker context is `colima` and the VM is not already running
 	- on low-memory Docker or Colima setups, the command now fails fast before starting Dagger; `pnpm pipeline:test:matrix` expects at least 4 GiB of Docker VM memory because the containerized consumer install can otherwise be OOM-killed with exit code `137`

@@ -3,5 +3,6 @@
   "refSync": {
     "mode": "watch-ready"
   },
-  "bundlers": ["vite7"]
+  "bundlers": ["vite7"],
+  "react": "react19"
 }

@@ -8,7 +8,7 @@
 
 import { execFileSync } from 'node:child_process'
 import { resolve } from 'node:path'
-import { releasePackageNames } from '../../config.js'
+import { RELEASE_PACKAGE_NAMES } from '../../config.js'
 import { createNpmCommandEnv, repoRoot, run } from '../build/workspace.js'
 import { logSkip } from '../lib/log/index.js'
 import { readRegistryManifest } from '../registry/manifest.js'
@@ -56,7 +56,7 @@ function isGeneratedRustReleasePackage(pkg: RegistryManifestPackage): boolean {
 }
 
 function isDirectReleasePackage(pkg: RegistryManifestPackage): boolean {
-  return releasePackageNames.includes(pkg.name as (typeof releasePackageNames)[number])
+  return RELEASE_PACKAGE_NAMES.includes(pkg.name as (typeof RELEASE_PACKAGE_NAMES)[number])
 }
 
 export function isReleaseManifestPackage(pkg: RegistryManifestPackage): boolean {

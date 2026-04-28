@@ -12,6 +12,10 @@ describe('createManagedMatrixPackageJson', () => {
   it('generates only setup, test, and sync for matrix workspace packages', () => {
     const packageJson = JSON.parse(
       createManagedMatrixPackageJson({
+        config: {
+          bundlers: ['vite7'],
+          react: 'react19',
+        },
         existingPackageJson: {
           devDependencies: {
             '@modelcontextprotocol/sdk': '^1.29.0',
@@ -27,6 +31,7 @@ describe('createManagedMatrixPackageJson', () => {
         packageName: '@matrix/mcp',
       }),
     ) as {
+      dependencies: Record<string, string>
       devDependencies: Record<string, string>
       name: string
       scripts: Record<string, string>
@@ -39,6 +44,10 @@ describe('createManagedMatrixPackageJson', () => {
     assert.equal(packageJson.scripts.test, 'pnpm --dir ../../pipeline exec tsx src/cli.ts test --packages=@matrix/mcp')
     assert.equal(packageJson.scripts.sync, 'pnpm exec ref sync')
     assert.deepEqual(Object.keys(packageJson.scripts).sort(), ['setup', 'sync', 'test'])
+    assert.equal(packageJson.dependencies.react, '^19.2.0')
+    assert.equal(packageJson.dependencies['react-dom'], '^19.2.0')
+    assert.equal(packageJson.devDependencies['@vitejs/plugin-react'], '^4.7.0')
+    assert.equal(packageJson.devDependencies.vite, '^7.3.1')
     assert.equal(packageJson.devDependencies['@playwright/test'], undefined)
     assert.equal(packageJson.devDependencies['@modelcontextprotocol/sdk'], '^1.29.0')
   })
@@ -46,6 +55,10 @@ describe('createManagedMatrixPackageJson', () => {
   it('preserves package-specific browser runners from the existing fixture package', () => {
     const packageJson = JSON.parse(
       createManagedMatrixPackageJson({
+        config: {
+          bundlers: ['vite7'],
+          react: 'react19',
+        },
         existingPackageJson: {
           devDependencies: {
             '@playwright/test': '1.48.0',

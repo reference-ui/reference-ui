@@ -1,17 +1,12 @@
 /**
  * Formatting and presentation helpers for matrix package execution.
  *
- * The package runner emits rich timing and failure output; keeping that shaping
- * logic here lets the orchestration flow stay close to the execution steps.
+ * The runner should tell one clear story in the console: which environment is
+ * being prepared, what happened inside it, and where failures live.
  */
 
-import { formatDuration } from '../../../lib/log/index.js'
-import type {
-  MatrixPackagePhase,
-  MatrixPackageRunContext,
-  MatrixPackageRunResult,
-  TimedMatrixPackagePhase,
-} from './types.js'
+import pc from 'picocolors'
+import type { MatrixPackageRunContext, MatrixPackageRunResult } from './types.js'
 
 export function readErrorOutput(value: unknown): string {
   if (typeof value === 'string') {
@@ -55,13 +50,20 @@ export function appendOutputBlock(lines: string[], output: string): void {
   lines.push('', trimmed)
 }
 
-export function logMatrixPackagePhase(
-  packageRunContext: MatrixPackageRunContext,
-  phase: MatrixPackagePhase,
-  detail?: string,
-): void {
-  const suffix = detail ? ` ${detail}` : ''
-  console.log(`- ${packageRunContext.displayName}: ${phase}${suffix}`)
+export function describeMatrixEnvironment(packageRunContext: MatrixPackageRunContext): string {
+  const syncLabel = packageRunContext.config.refSync.mode === 'watch-ready' ? 'watch-ready' : 'full-sync'
+
+  return [packageRunContext.config.react, ...packageRunContext.config.bundlers, syncLabel].join(' + ')
+}
+
+export function announceMatrixPackageStart(packageRunContext: MatrixPackageRunContext): void {
+  console.log(
+    `${pc.cyan('◐')} ${pc.bold(packageRunContext.displayName)} ${pc.dim('setting up env')} ${pc.cyan(`(${describeMatrixEnvironment(packageRunContext)})`)}`,
+  )
+}
+
+export function formatMatrixPackageHeading(packageRunContext: MatrixPackageRunContext): string {
+  return `${pc.bold(packageRunContext.displayName)} ${pc.dim(`(${describeMatrixEnvironment(packageRunContext)})`)}`
 }
 
 export function formatRuntimeMemory(memoryBytes: number | null): string | null {
@@ -72,39 +74,11 @@ export function formatRuntimeMemory(memoryBytes: number | null): string | null {
   return `${(memoryBytes / (1024 ** 3)).toFixed(1)} GiB`
 }
 
-export function formatPhaseTimingSummary(
-  phaseDurations: Partial<Record<TimedMatrixPackagePhase, number>>,
-  totalDurationMs: number,
-): string {
-  const orderedPhases: readonly TimedMatrixPackagePhase[] = [
-    'install',
-    'setup',
-    'test:vitest',
-    'test:playwright',
-    'test:typecheck',
-  ]
-
-  const phaseParts = orderedPhases
-    .filter(phase => phaseDurations[phase] !== undefined)
-    .map(phase => `${phase}=${formatDuration(phaseDurations[phase] ?? 0)}`)
-
-  phaseParts.push(`total=${formatDuration(totalDurationMs)}`)
-  return phaseParts.join(', ')
-}
-
 export function createAbortedMatrixPackageResult(
-  packageRunContext: MatrixPackageRunContext,
   lines: string[],
-  phaseDurations: Partial<Record<TimedMatrixPackagePhase, number>>,
-  packageStartedAt: number,
   stageLabel: string,
 ): MatrixPackageRunResult {
-  const totalDurationMs = Date.now() - packageStartedAt
-  const timingSummary = formatPhaseTimingSummary(phaseDurations, totalDurationMs)
-
-  logMatrixPackagePhase(packageRunContext, 'aborted', `before ${stageLabel}; timings ${timingSummary}`)
   lines.push(`  Aborted before ${stageLabel} after another matrix package failed.`)
-  lines.push(`  Timings so far: ${timingSummary}`)
 
   return {
     failed: false,
