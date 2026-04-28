@@ -12,17 +12,17 @@ import type { MatrixPackageRunContext } from './types.js'
 function createPackageRunContext(): MatrixPackageRunContext {
   return {
     config: {
-      name: 'typescript',
+      name: 'distro',
       refSync: {
         mode: 'full',
       },
       runTypecheck: true,
     },
-    displayName: '@matrix/typescript',
-    logPrefix: 'matrix-typescript',
+    displayName: '@matrix/distro',
+    logPrefix: 'matrix-distro',
     source: {
       fixturePackageJson: {
-        name: '@matrix/typescript',
+        name: '@matrix/distro',
       },
       hasPlaywrightTests: false,
       hasVitestTests: true,
@@ -87,7 +87,7 @@ describe('matrix runner reporting helpers', () => {
     try {
       const result = createAbortedMatrixPackageResult(
         packageRunContext,
-        ['@matrix/typescript'],
+        ['@matrix/distro'],
         { install: 352 },
         1_000,
         'setup',

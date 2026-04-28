@@ -67,7 +67,7 @@ describe('matrix runner consumer helpers', () => {
           devDependencies: {
             '@reference-ui/lib': 'workspace:*',
           },
-          name: '@matrix/typescript',
+          name: '@matrix/distro',
           private: true,
           type: 'module',
           version: registryManifestVersion,
@@ -92,6 +92,6 @@ describe('matrix runner consumer helpers', () => {
   })
 
   it('formats package names for log prefixes', () => {
-    assert.equal(matrixPackageLogPrefix('@matrix/typescript'), 'matrix-typescript')
+    assert.equal(matrixPackageLogPrefix('@matrix/distro'), 'matrix-distro')
   })
 })

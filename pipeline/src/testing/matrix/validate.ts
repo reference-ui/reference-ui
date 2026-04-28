@@ -13,21 +13,16 @@ export function validateMatrixFixtures(): void {
   const matrixPackages = listMatrixWorkspacePackages()
 
   if (matrixPackages.length === 0) {
-    throw new Error('No matrix-enabled packages found. Add a matrix.json file with a name and refSync config inside the matrix/ directory.')
-  }
-
-  const packageNames = matrixPackages.map((entry) => entry.workspacePackage.name)
-
-  if (!packageNames.includes('@matrix/install')) {
-    throw new Error('Expected @matrix/install to be discoverable as the first matrix-enabled matrix package.')
+    throw new Error('No matrix packages found. Add a matrix.json with a name and refSync config inside the matrix/ directory.')
   }
 
   for (const entry of matrixPackages) {
     if (!entry.workspacePackage.scripts.test) {
-      throw new Error(`Matrix fixture ${entry.workspacePackage.name} must define a \`test\` script.`)
+      throw new Error(`Matrix package ${entry.workspacePackage.name} must define a \`test\` script.`)
     }
   }
 
+  const packageNames = matrixPackages.map((entry) => entry.workspacePackage.name)
   console.log('Discovered matrix packages:')
   for (const packageName of packageNames) {
     console.log(`- ${packageName}`)

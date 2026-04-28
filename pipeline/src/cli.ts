@@ -73,7 +73,7 @@ program
 program
   .command('setup')
   .description('Generate and optionally install the pipeline-managed matrix package files')
-  .option('--packages <names>', 'Comma-separated matrix package names, for example @matrix/typescript')
+  .option('--packages <names>', 'Comma-separated matrix package names, for example @matrix/distro')
   .option('--no-install', 'Skip the workspace pnpm install after syncing matrix package manifests')
   .action(async (options: { install: boolean; packages?: string }) => {
     await setupMatrixPackages({
@@ -86,7 +86,7 @@ program
   .command('test')
   .description('Run the Dagger-backed matrix test flow')
   .option('--no-dagger-cache', 'Disable Dagger exec-result caching for this run')
-  .option('--packages <names>', 'Comma-separated matrix package names, for example @matrix/typescript')
+  .option('--packages <names>', 'Comma-separated matrix package names, for example @matrix/distro')
   .action(async (options: { daggerCache: boolean; packages?: string }) => {
     await runMatrixTests({
       commandLabel: 'pnpm pipeline test',

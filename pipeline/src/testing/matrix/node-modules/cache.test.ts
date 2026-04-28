@@ -53,7 +53,7 @@ function createFixturePackageJson(overrides?: Partial<MatrixFixturePackageJson>)
       typescript: '~5.9.3',
       vitest: '^4.0.18',
     },
-    name: '@matrix/typescript',
+    name: '@matrix/distro',
     private: true,
     type: 'module',
     ...overrides,
@@ -138,14 +138,14 @@ describe('matrix node_modules cache helpers', () => {
 
     const left = matrixNodeModulesCacheKey({
       coreVersion: '0.0.41',
-      fixturePackageJson: createFixturePackageJson({ name: '@matrix/install' }),
+      fixturePackageJson: createFixturePackageJson({ name: '@matrix/distro' }),
       libVersion: '0.0.44',
       manifest,
     })
 
     const right = matrixNodeModulesCacheKey({
       coreVersion: '0.0.41',
-      fixturePackageJson: createFixturePackageJson({ name: '@matrix/typescript' }),
+      fixturePackageJson: createFixturePackageJson({ name: '@matrix/playwright' }),
       libVersion: '0.0.44',
       manifest,
     })

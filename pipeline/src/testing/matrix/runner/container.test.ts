@@ -7,7 +7,7 @@ function createFixtureSourceFiles(overrides?: Partial<FixtureSourceFiles>): Fixt
   return {
     fixturePackageJson: {
       devDependencies: {},
-      name: '@matrix/typescript',
+      name: '@matrix/distro',
     },
     hasPlaywrightTests: false,
     hasVitestTests: true,
