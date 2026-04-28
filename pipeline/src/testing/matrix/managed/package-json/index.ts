@@ -64,8 +64,12 @@ function omitManagedDependencies(
   return filteredEntries.length > 0 ? Object.fromEntries(filteredEntries) : undefined
 }
 
-function pipelineCliCommand(command: 'setup' | 'test', packageName: string): string {
-  return `pnpm --dir ../../pipeline exec tsx src/cli.ts ${command} --packages=${packageName}`
+function pipelineCliTestCommand(packageName: string): string {
+  return `pnpm --dir ../../pipeline exec tsx src/cli.ts test --packages=${packageName}`
+}
+
+function pipelineCliSetupCommand(packageName: string): string {
+  return `pnpm --dir ../../pipeline exec tsx src/cli.ts setup --packages=${packageName} --sync`
 }
 
 function isPipelineManagedScript(command: string | undefined): boolean {
@@ -111,8 +115,8 @@ export function createManagedMatrixPackageJson(options: ManagedMatrixPackageJson
       private: true,
       type: existingPackageJson.type ?? 'module',
       scripts: {
-        setup: pipelineCliCommand('setup', options.packageName),
-        test: pipelineCliCommand('test', options.packageName),
+        setup: pipelineCliSetupCommand(options.packageName),
+        test: pipelineCliTestCommand(options.packageName),
         sync: rawSetupCommand,
       },
       exports: existingPackageJson.exports ?? { '.': './src/index.ts' },
