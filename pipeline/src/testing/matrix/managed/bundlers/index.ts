@@ -4,6 +4,11 @@ import {
   createManagedVite7IndexHtmlSource,
   managedVite7DevDependencies,
 } from './vite7/index.js'
+import {
+  createManagedWebpack5ConfigSource,
+  createManagedWebpack5IndexHtmlSource,
+  managedWebpack5DevDependencies,
+} from './webpack5/index.js'
 
 export function getManagedBundlerDevDependencies(
   bundlers: readonly MatrixBundlerStrategy[],
@@ -13,6 +18,11 @@ export function getManagedBundlerDevDependencies(
   for (const bundler of bundlers) {
     if (bundler === 'vite7') {
       Object.assign(devDependencies, managedVite7DevDependencies)
+      continue
+    }
+
+    if (bundler === 'webpack5') {
+      Object.assign(devDependencies, managedWebpack5DevDependencies)
     }
   }
 
@@ -33,6 +43,15 @@ export function createManagedBundlerFiles(options: {
         title: options.title,
       })
       files['vite.config.ts'] = createManagedVite7ConfigSource()
+      continue
+    }
+
+    if (bundler === 'webpack5') {
+      files['index.html'] = createManagedWebpack5IndexHtmlSource({
+        reactRuntime: options.react,
+        title: options.title,
+      })
+      files['webpack.config.cjs'] = createManagedWebpack5ConfigSource()
     }
   }
 

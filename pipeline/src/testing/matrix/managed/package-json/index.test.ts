@@ -13,7 +13,7 @@ describe('createManagedMatrixPackageJson', () => {
     const packageJson = JSON.parse(
       createManagedMatrixPackageJson({
         config: {
-          bundlers: ['vite7'],
+          bundlers: ['vite7', 'webpack5'],
           react: 'react19',
         },
         existingPackageJson: {
@@ -48,6 +48,8 @@ describe('createManagedMatrixPackageJson', () => {
     assert.equal(packageJson.dependencies['react-dom'], '^19.2.0')
     assert.equal(packageJson.devDependencies['@vitejs/plugin-react'], '^4.7.0')
     assert.equal(packageJson.devDependencies.vite, '^7.3.1')
+    assert.equal(packageJson.devDependencies.webpack, '^5.98.0')
+    assert.equal(packageJson.devDependencies['webpack-dev-server'], '^5.2.0')
     assert.equal(packageJson.devDependencies['@playwright/test'], undefined)
     assert.equal(packageJson.devDependencies['@modelcontextprotocol/sdk'], '^1.29.0')
   })

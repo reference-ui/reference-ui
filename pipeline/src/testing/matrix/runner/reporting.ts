@@ -8,6 +8,35 @@
 import pc from 'picocolors'
 import type { MatrixPackageRunContext, MatrixPackageRunResult } from './types.js'
 
+export function normalizeCapturedOutput(output: string): string {
+  const lines = output
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .split('\n')
+
+  const normalizedLines: string[] = []
+  let previousWasBlank = false
+
+  for (const line of lines) {
+    const normalizedLine = line.replace(/\u001B\[[0-9;]*G/g, '').replace(/\s+$/g, '')
+    const isBlank = normalizedLine.trim().length === 0
+
+    if (isBlank) {
+      if (!previousWasBlank) {
+        normalizedLines.push('')
+      }
+
+      previousWasBlank = true
+      continue
+    }
+
+    normalizedLines.push(normalizedLine)
+    previousWasBlank = false
+  }
+
+  return normalizedLines.join('\n').trim()
+}
+
 export function readErrorOutput(value: unknown): string {
   if (typeof value === 'string') {
     return value
@@ -30,18 +59,18 @@ export function collectMatrixFailureDetails(error: unknown): string[] {
   const sections: string[] = []
 
   if (stdout.length > 0) {
-    sections.push(`  matrix stdout:\n${stdout}`)
+    sections.push(`  matrix stdout:\n${normalizeCapturedOutput(stdout)}`)
   }
 
   if (stderr.length > 0) {
-    sections.push(`  matrix stderr:\n${stderr}`)
+    sections.push(`  matrix stderr:\n${normalizeCapturedOutput(stderr)}`)
   }
 
   return sections
 }
 
 export function appendOutputBlock(lines: string[], output: string): void {
-  const trimmed = output.trim()
+  const trimmed = normalizeCapturedOutput(output)
 
   if (trimmed.length === 0) {
     return
