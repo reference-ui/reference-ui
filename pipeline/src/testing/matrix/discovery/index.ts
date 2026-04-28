@@ -14,6 +14,8 @@ import { repoRoot } from '../../../build/workspace.js'
 
 export type MatrixRefSyncMode = 'full' | 'watch-ready'
 
+export type MatrixBundlerStrategy = 'vite7'
+
 export interface MatrixPackageRefSyncConfig {
   mode: MatrixRefSyncMode
 }
@@ -21,6 +23,7 @@ export interface MatrixPackageRefSyncConfig {
 export interface MatrixPackageConfig {
   name: string
   refSync: MatrixPackageRefSyncConfig
+  bundlers: readonly MatrixBundlerStrategy[]
   runTypecheck: boolean
 }
 
@@ -69,6 +72,7 @@ export function readMatrixPackageConfig(packageDir: string): MatrixPackageConfig
     refSync?: {
       mode?: unknown
     }
+    bundlers?: unknown
     runTypecheck?: unknown
   }
 
@@ -82,6 +86,18 @@ export function readMatrixPackageConfig(packageDir: string): MatrixPackageConfig
     )
   }
 
+  if (!Array.isArray(config.bundlers) || config.bundlers.length === 0) {
+    throw new Error(`Expected ${configPath} to declare bundlers as a non-empty array.`)
+  }
+
+  for (const bundler of config.bundlers) {
+    if (bundler !== 'vite7') {
+      throw new Error(
+        `Expected ${configPath} to declare bundlers as an array of known strategies ("vite7"). Got: ${String(bundler)}`,
+      )
+    }
+  }
+
   if (config.runTypecheck !== undefined && typeof config.runTypecheck !== 'boolean') {
     throw new Error(`Expected ${configPath} to declare runTypecheck as a boolean when provided.`)
   }
@@ -91,6 +107,7 @@ export function readMatrixPackageConfig(packageDir: string): MatrixPackageConfig
     refSync: {
       mode: config.refSync.mode,
     },
+    bundlers: config.bundlers as MatrixBundlerStrategy[],
     runTypecheck: config.runTypecheck ?? false,
   }
 }

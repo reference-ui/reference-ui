@@ -72,7 +72,7 @@ export function ComponentShowcase() {
         title="Inspect generated components"
         summary={
           <>
-            Verify the <Code>src/App.tsx</Code> inventory and relationships.
+            Verify the <Code>src/Index.tsx</Code> inventory and relationships.
           </>
         }
         actionHref="/mcp"

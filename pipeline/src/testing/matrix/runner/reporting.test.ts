@@ -16,6 +16,7 @@ function createPackageRunContext(): MatrixPackageRunContext {
       refSync: {
         mode: 'full',
       },
+      bundlers: ['vite7'],
       runTypecheck: true,
     },
     displayName: '@matrix/distro',

@@ -11,7 +11,7 @@ import {
   type TokenConfig,
 } from '@reference-ui/system'
 
-import { App } from '../src/App'
+import { Index } from '../../src/Index'
 
 // Type helpers used for expectTypeOf assertions throughout this file.
 type DivComponentProps = ComponentProps<typeof Div>
@@ -30,7 +30,7 @@ function expectKeyframesConfig(_value: KeyframesConfig): void {}
 
 describe('distro – install surface', () => {
   it('exposes the minimal downstream marker content', () => {
-    const element = App()
+    const element = Index()
 
     expect(element.type).toBe('main')
     expect(element.props['data-testid']).toBe('distro-root')

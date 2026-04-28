@@ -2,5 +2,6 @@
   "name": "mcp",
   "refSync": {
     "mode": "full"
-  }
+  },
+  "bundlers": ["vite7"]
 }

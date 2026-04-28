@@ -111,7 +111,7 @@ describe('primitive observation', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
         ]),
       }),
     )
-    expect(examples.examples.join('\n')).toContain('src/App.tsx')
+    expect(examples.examples.join('\n')).toContain('src/Index.tsx')
   })
 
   it('does not expose unused primitives as components', async () => {
