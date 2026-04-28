@@ -69,9 +69,12 @@ export function matrixNodeModulesCacheKey(options: MatrixNodeModulesCacheKeyOpti
   }
 
   // This graph intentionally excludes fixture source files so code edits do not
-  // force a full reinstall when the dependency set is unchanged.
+  // force a full reinstall when the dependency set is unchanged. The fixture
+  // name remains part of the key so concurrently running consumers never share
+  // the same writable node_modules volume.
   const installGraph = JSON.stringify(
     {
+      fixtureName: options.fixturePackageJson.name,
       manifestFingerprint: registryManifestFingerprint(options.manifest),
       dependencies: replaceWorkspaceProtocolVersions({
         dependencies: options.fixturePackageJson.dependencies,

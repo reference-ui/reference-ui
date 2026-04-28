@@ -2,12 +2,20 @@ import { spawnSync } from 'node:child_process'
 
 interface ContainerRuntimeOptions {
   commandLabel?: string
+  minimumDockerCpuCount?: number
   minimumDockerMemoryBytes?: number
 }
 
 interface ColimaStatus {
   display_name?: string
+  cpu?: number
   memory?: number
+}
+
+export interface DockerRuntimeInfo {
+  context: string | null
+  cpuCount: number | null
+  memoryBytes: number | null
 }
 
 function isMacOs(): boolean {
@@ -50,13 +58,92 @@ function getDockerMemoryBytes(): number | null {
   return Number.isFinite(value) ? value : null
 }
 
+function getDockerCpuCount(): number | null {
+  const result = runCommand('docker', ['info', '--format', '{{json .NCPU}}'])
+
+  if (result.status !== 0) {
+    return null
+  }
+
+  const value = Number.parseInt(result.stdout.trim(), 10)
+  return Number.isFinite(value) ? value : null
+}
+
+export function getDockerRuntimeInfo(): DockerRuntimeInfo {
+  return {
+    context: getDockerContext(),
+    cpuCount: getDockerCpuCount(),
+    memoryBytes: getDockerMemoryBytes(),
+  }
+}
+
 function formatGiB(bytes: number): string {
   return `${(bytes / (1024 ** 3)).toFixed(1)} GiB`
+}
+
+function formatCpuCount(cpuCount: number): string {
+  return `${cpuCount} CPU${cpuCount === 1 ? '' : 's'}`
+}
+
+function formatRequiredDockerResources(options: ContainerRuntimeOptions): string {
+  const parts: string[] = []
+
+  if (options.minimumDockerCpuCount) {
+    parts.push(formatCpuCount(options.minimumDockerCpuCount))
+  }
+
+  if (options.minimumDockerMemoryBytes) {
+    parts.push(formatGiB(options.minimumDockerMemoryBytes))
+  }
+
+  return parts.join(' and ')
+}
+
+function formatDetectedDockerResources(runtime: DockerRuntimeInfo): string {
+  const parts: string[] = []
+
+  if (runtime.cpuCount !== null) {
+    parts.push(formatCpuCount(runtime.cpuCount))
+  }
+
+  if (runtime.memoryBytes !== null) {
+    parts.push(formatGiB(runtime.memoryBytes))
+  }
+
+  return parts.length === 0 ? 'unknown resources' : parts.join(' and ')
+}
+
+function needsMoreDockerCpu(options: ContainerRuntimeOptions, cpuCount: number | null): boolean {
+  return Boolean(options.minimumDockerCpuCount && cpuCount !== null && cpuCount < options.minimumDockerCpuCount)
+}
+
+function needsMoreDockerMemory(options: ContainerRuntimeOptions, memoryBytes: number | null): boolean {
+  return Boolean(
+    options.minimumDockerMemoryBytes &&
+    memoryBytes !== null &&
+    memoryBytes < options.minimumDockerMemoryBytes
+  )
+}
+
+function needsMoreDockerResources(options: ContainerRuntimeOptions, runtime: DockerRuntimeInfo): boolean {
+  return needsMoreDockerCpu(options, runtime.cpuCount) || needsMoreDockerMemory(options, runtime.memoryBytes)
 }
 
 function requiredColimaMemoryGiB(minimumDockerMemoryBytes: number): string {
   const gib = minimumDockerMemoryBytes / (1024 ** 3)
   return Number.isInteger(gib) ? String(gib) : gib.toFixed(1)
+}
+
+function getDesiredColimaStartOptions(options: ContainerRuntimeOptions): {
+  cpuCount?: number
+  memoryGiB?: string
+} {
+  return {
+    cpuCount: options.minimumDockerCpuCount,
+    memoryGiB: options.minimumDockerMemoryBytes
+      ? requiredColimaMemoryGiB(options.minimumDockerMemoryBytes)
+      : undefined,
+  }
 }
 
 function getColimaStatus(): ColimaStatus | null {
@@ -73,6 +160,25 @@ function getColimaStatus(): ColimaStatus | null {
   }
 }
 
+function colimaStatusSatisfiesRequirements(
+  options: ContainerRuntimeOptions,
+  colimaStatus: ColimaStatus | null,
+): boolean {
+  if (!colimaStatus) {
+    return false
+  }
+
+  const cpuSatisfied =
+    !options.minimumDockerCpuCount ||
+    (typeof colimaStatus.cpu === 'number' && colimaStatus.cpu >= options.minimumDockerCpuCount)
+
+  const memorySatisfied =
+    !options.minimumDockerMemoryBytes ||
+    (typeof colimaStatus.memory === 'number' && colimaStatus.memory >= options.minimumDockerMemoryBytes)
+
+  return cpuSatisfied && memorySatisfied
+}
+
 function stopColima(): void {
   const result = spawnSync('colima', ['stop'], {
     encoding: 'utf8',
@@ -84,11 +190,15 @@ function stopColima(): void {
   }
 }
 
-function startColima(memoryGiB?: string): void {
+function startColima(options: { cpuCount?: number; memoryGiB?: string } = {}): void {
   const args = ['start']
 
-  if (memoryGiB) {
-    args.push('--memory', memoryGiB)
+  if (options.cpuCount) {
+    args.push('--cpu', String(options.cpuCount))
+  }
+
+  if (options.memoryGiB) {
+    args.push('--memory', options.memoryGiB)
   }
 
   const result = spawnSync('colima', args, {
@@ -97,77 +207,80 @@ function startColima(memoryGiB?: string): void {
   })
 
   if (result.status !== 0) {
-    const retryCommand = memoryGiB ? `colima start --memory ${memoryGiB}` : 'colima start'
+    const retryArgs = args.slice(1).join(' ')
+    const retryCommand = retryArgs.length > 0 ? `colima start ${retryArgs}` : 'colima start'
     throw new Error(`Failed to start Colima automatically. Run \`${retryCommand}\` and retry.`)
   }
 }
 
-function ensureColimaMemory(options: ContainerRuntimeOptions, dockerMemoryBytes: number): void {
-  if (!options.minimumDockerMemoryBytes) {
-    return
-  }
-
-  if (dockerMemoryBytes >= options.minimumDockerMemoryBytes) {
+function ensureColimaResources(options: ContainerRuntimeOptions, runtime: DockerRuntimeInfo): void {
+  if (!needsMoreDockerResources(options, runtime)) {
     return
   }
 
   const commandLabel = options.commandLabel ?? 'this Dagger pipeline command'
-  const currentMemory = formatGiB(dockerMemoryBytes)
-  const requiredMemory = formatGiB(options.minimumDockerMemoryBytes)
-  const targetMemoryGiB = requiredColimaMemoryGiB(options.minimumDockerMemoryBytes)
+  const requiredResources = formatRequiredDockerResources(options)
+  const detectedResources = formatDetectedDockerResources(runtime)
+  const desiredColimaStartOptions = getDesiredColimaStartOptions(options)
+  const desiredArgs = [
+    desiredColimaStartOptions.cpuCount ? `--cpu ${desiredColimaStartOptions.cpuCount}` : null,
+    desiredColimaStartOptions.memoryGiB ? `--memory ${desiredColimaStartOptions.memoryGiB}` : null,
+  ].filter((value): value is string => value !== null)
+  const desiredArgText = desiredArgs.join(' ')
 
   console.log(
-    `${commandLabel} requires at least ${requiredMemory} of Docker VM memory, but Colima currently exposes ${currentMemory}. Restarting Colima with --memory ${targetMemoryGiB}...`
+    `${commandLabel} requires at least ${requiredResources}, but Colima currently exposes ${detectedResources}. Restarting Colima with ${desiredArgText}...`
   )
 
   stopColima()
-  startColima(targetMemoryGiB)
+  startColima(desiredColimaStartOptions)
 
   if (!dockerReachable()) {
     throw new Error('Colima restarted, but Docker is still unreachable. Check `docker version` and retry.')
   }
 
-  const restartedMemoryBytes = getDockerMemoryBytes()
-  if (restartedMemoryBytes !== null && restartedMemoryBytes >= options.minimumDockerMemoryBytes) {
+  const restartedColimaStatus = getColimaStatus()
+  if (colimaStatusSatisfiesRequirements(options, restartedColimaStatus)) {
     return
   }
 
-  const detectedMemory = restartedMemoryBytes === null ? 'an unknown amount' : formatGiB(restartedMemoryBytes)
+  const restartedRuntime = getDockerRuntimeInfo()
+  if (!needsMoreDockerResources(options, restartedRuntime)) {
+    return
+  }
+
+  const manualCommand = `colima stop && colima start ${desiredArgText}`
   throw new Error(
-    `${commandLabel} requires at least ${requiredMemory} of Docker VM memory, but Colima still reports ${detectedMemory} after restart. Run \`colima stop && colima start --memory ${targetMemoryGiB}\` manually and retry.`
+    `${commandLabel} requires at least ${requiredResources}, but Colima still reports ${formatDetectedDockerResources(restartedRuntime)} after restart. Run \`${manualCommand}\` manually and retry.`
   )
 }
 
-function assertDockerMemory(options: ContainerRuntimeOptions): void {
-  if (!options.minimumDockerMemoryBytes) {
+function assertDockerResources(options: ContainerRuntimeOptions): void {
+  if (!options.minimumDockerCpuCount && !options.minimumDockerMemoryBytes) {
     return
   }
 
-  const dockerMemoryBytes = getDockerMemoryBytes()
-  if (dockerMemoryBytes === null || dockerMemoryBytes >= options.minimumDockerMemoryBytes) {
+  const runtime = getDockerRuntimeInfo()
+  if (!needsMoreDockerResources(options, runtime)) {
     return
   }
 
   const commandLabel = options.commandLabel ?? 'this Dagger pipeline command'
-  const currentMemory = formatGiB(dockerMemoryBytes)
-  const requiredMemory = formatGiB(options.minimumDockerMemoryBytes)
-  const dockerContext = getDockerContext()
+  const requiredResources = formatRequiredDockerResources(options)
+  const dockerContext = runtime.context
 
   if (isMacOs() && dockerContext === 'colima' && commandAvailable('colima')) {
     const colimaStatus = getColimaStatus()
-    const colimaMemoryBytes = colimaStatus?.memory
-
-    if (typeof colimaMemoryBytes === 'number') {
-      ensureColimaMemory(options, colimaMemoryBytes)
-      return
-    }
-
-    ensureColimaMemory(options, dockerMemoryBytes)
+    ensureColimaResources(options, {
+      context: dockerContext,
+      cpuCount: colimaStatus?.cpu ?? runtime.cpuCount,
+      memoryBytes: colimaStatus?.memory ?? runtime.memoryBytes,
+    })
     return
   }
 
   throw new Error(
-    `${commandLabel} requires at least ${requiredMemory} of Docker memory, but Docker currently reports ${currentMemory}. Increase the Docker backend memory allocation and retry.`
+    `${commandLabel} requires at least ${requiredResources}, but Docker currently reports ${formatDetectedDockerResources(runtime)}. Increase the Docker backend CPU or memory allocation and retry.`
   )
 }
 
@@ -186,7 +299,7 @@ export function ensureContainerRuntime(options: ContainerRuntimeOptions = {}): v
   }
 
   if (dockerReachable()) {
-    assertDockerMemory(options)
+    assertDockerResources(options)
     return
   }
 
@@ -205,16 +318,16 @@ export function ensureContainerRuntime(options: ContainerRuntimeOptions = {}): v
     if (!dockerReachable()) {
       throw new Error('Colima reports running, but Docker is still unreachable. Check `docker version` and your Docker context.')
     }
-    assertDockerMemory(options)
+    assertDockerResources(options)
     return
   }
 
   console.log('Docker context is `colima` but the VM is not running. Starting Colima...')
-  startColima()
+  startColima(getDesiredColimaStartOptions(options))
 
   if (!dockerReachable()) {
     throw new Error('Colima started, but Docker is still unreachable. Check `docker version` and retry.')
   }
 
-  assertDockerMemory(options)
+  assertDockerResources(options)
 }

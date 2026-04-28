@@ -133,6 +133,26 @@ describe('matrix node_modules cache helpers', () => {
     assert.equal(left, right)
   })
 
+  it('splits node_modules cache keys for different fixtures with the same install graph', () => {
+    const manifest = createManifest()
+
+    const left = matrixNodeModulesCacheKey({
+      coreVersion: '0.0.41',
+      fixturePackageJson: createFixturePackageJson({ name: '@matrix/install' }),
+      libVersion: '0.0.44',
+      manifest,
+    })
+
+    const right = matrixNodeModulesCacheKey({
+      coreVersion: '0.0.41',
+      fixturePackageJson: createFixturePackageJson({ name: '@matrix/typescript' }),
+      libVersion: '0.0.44',
+      manifest,
+    })
+
+    assert.notEqual(left, right)
+  })
+
   it('splits node_modules cache keys when the matrix dependency graph changes', () => {
     const manifest = createManifest()
     const baseline = matrixNodeModulesCacheKey({
