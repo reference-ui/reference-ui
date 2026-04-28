@@ -1,4 +1,8 @@
 {
   "matrix": true,
-  "name": "typescript"
+  "name": "typescript",
+  "refSync": {
+    "mode": "full"
+  },
+  "runTypecheck": true
 }

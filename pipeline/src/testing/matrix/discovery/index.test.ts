@@ -21,19 +21,38 @@ describe('readMatrixPackageConfig', () => {
     const tempDir = await mkdtemp(join(tmpdir(), 'ref-pipeline-matrix-'))
 
     try {
-      await writeFile(join(tempDir, 'matrix.json'), '{"matrix":true,"name":"typescript"}\n')
+      await writeFile(join(tempDir, 'matrix.json'), '{"matrix":true,"name":"typescript","refSync":{"mode":"full"},"runTypecheck":true}\n')
 
       assert.deepEqual(readMatrixPackageConfig(tempDir), {
         matrix: true,
         name: 'typescript',
+        refSync: {
+          mode: 'full',
+        },
+        runTypecheck: true,
       })
     } finally {
       await rm(tempDir, { force: true, recursive: true })
     }
   })
 
+  it('requires an explicit refSync mode in matrix.json', async () => {
+    const tempDir = await mkdtemp(join(tmpdir(), 'ref-pipeline-matrix-'))
+
+    try {
+      await writeFile(join(tempDir, 'matrix.json'), '{"matrix":true,"name":"typescript"}\n')
+
+      assert.throws(
+        () => readMatrixPackageConfig(tempDir),
+        /refSync\.mode as "full" or "watch-ready"/,
+      )
+    } finally {
+      await rm(tempDir, { force: true, recursive: true })
+    }
+  })
+
   it('derives the managed matrix workspace package name from the matrix config name', () => {
-    assert.equal(getMatrixPackageName({ matrix: true, name: 'typescript' }), '@matrix/typescript')
+    assert.equal(getMatrixPackageName({ name: 'typescript' }), '@matrix/typescript')
   })
 })
 

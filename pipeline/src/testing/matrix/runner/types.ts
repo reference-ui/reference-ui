@@ -17,6 +17,7 @@ export interface FixtureSourceFiles {
 }
 
 export interface MatrixPackageRunContext {
+  config: MatrixWorkspacePackage['config']
   displayName: string
   logPrefix: string
   source: FixtureSourceFiles

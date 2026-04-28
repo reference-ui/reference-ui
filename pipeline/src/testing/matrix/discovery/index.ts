@@ -12,9 +12,17 @@ import { listWorkspacePackages } from '../../../build/workspace.js'
 import type { WorkspacePackage } from '../../../build/types.js'
 import { repoRoot } from '../../../build/workspace.js'
 
+export type MatrixRefSyncMode = 'full' | 'watch-ready'
+
+export interface MatrixPackageRefSyncConfig {
+  mode: MatrixRefSyncMode
+}
+
 export interface MatrixPackageConfig {
   matrix: true
   name: string
+  refSync: MatrixPackageRefSyncConfig
+  runTypecheck: boolean
 }
 
 export interface MatrixPackageDefinition {
@@ -36,7 +44,7 @@ function matrixConfigPath(packageDir: string): string {
   return resolve(packageDir, 'matrix.json')
 }
 
-export function getMatrixPackageName(config: MatrixPackageConfig): string {
+export function getMatrixPackageName(config: Pick<MatrixPackageConfig, 'name'>): string {
   return `@matrix/${config.name}`
 }
 
@@ -57,7 +65,15 @@ export function readMatrixPackageConfig(packageDir: string): MatrixPackageConfig
     return null
   }
 
-  const config = JSON.parse(readFileSync(configPath, 'utf8')) as { matrix?: unknown; name?: unknown }
+  const config = JSON.parse(readFileSync(configPath, 'utf8')) as {
+    matrix?: unknown
+    name?: unknown
+    refSync?: {
+      mode?: unknown
+    }
+    runTypecheck?: unknown
+  }
+
   if (config.matrix !== true) {
     return null
   }
@@ -66,9 +82,23 @@ export function readMatrixPackageConfig(packageDir: string): MatrixPackageConfig
     throw new Error(`Expected ${configPath} to declare a non-empty string matrix name.`)
   }
 
+  if (config.refSync?.mode !== 'full' && config.refSync?.mode !== 'watch-ready') {
+    throw new Error(
+      `Expected ${configPath} to declare refSync.mode as "full" or "watch-ready".`,
+    )
+  }
+
+  if (config.runTypecheck !== undefined && typeof config.runTypecheck !== 'boolean') {
+    throw new Error(`Expected ${configPath} to declare runTypecheck as a boolean when provided.`)
+  }
+
   return {
     matrix: true,
     name: config.name,
+    refSync: {
+      mode: config.refSync.mode,
+    },
+    runTypecheck: config.runTypecheck ?? false,
   }
 }
 

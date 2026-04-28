@@ -1,4 +1,7 @@
 {
   "matrix": true,
-  "name": "install"
+  "name": "install",
+  "refSync": {
+    "mode": "full"
+  }
 }
