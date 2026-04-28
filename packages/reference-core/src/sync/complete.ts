@@ -56,6 +56,18 @@ export function initComplete(payload: SyncPayload): void {
   once('virtual:failed', handleFailure)
   once('mcp:failed', handleFailure)
 
+  on('virtual:complete', () => {
+    logSyncMilestone('Prepared virtual workspace')
+  })
+
+  on('system:config:complete', () => {
+    logSyncMilestone('Generated system config')
+  })
+
+  on('system:panda:codegen', () => {
+    logSyncMilestone('Generated Panda output')
+  })
+
   on('packager:runtime:complete', ({ packageCount, durationMs }) => {
     logPackagesBuilt(packageCount, durationMs)
   })

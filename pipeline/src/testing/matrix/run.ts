@@ -9,9 +9,9 @@
 
 import { dag } from '@dagger.io/dagger'
 import * as dagger from '@dagger.io/dagger'
+import { randomUUID } from 'node:crypto'
 import { existsSync } from 'node:fs'
 import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises'
-import { availableParallelism } from 'node:os'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { getVirtualNativePackageName, type VirtualNativeTarget } from '../../../../packages/reference-rs/js/shared/targets.js'
@@ -20,8 +20,13 @@ import {
   matrixNodeImage,
   matrixNodeModulesCacheKey,
 } from './node-modules/cache.js'
+import {
+  formatRefSyncSetupMilestoneSummary,
+  parseRefSyncSetupMilestones,
+} from './setup-metrics.js'
 import { createMatrixConsumerPackageJson, type MatrixFixturePackageJson } from './managed/package-json/index.js'
 import { createMatrixConsumerTsconfig } from './managed/tsconfig/index.js'
+import { resolveMatrixPackageConcurrency } from './concurrency.js'
 import {
   consumerDirInContainer,
   defaultRegistryUrl,
@@ -33,7 +38,7 @@ import {
 } from '../../../config.js'
 import { buildWorkspacePackages } from '../../build/index.js'
 import type { MatrixWorkspacePackage } from './discovery/index.js'
-import { ensureContainerRuntime } from '../../lib/runtime/ensure-container-runtime.js'
+import { ensureContainerRuntime, getDockerRuntimeInfo } from '../../lib/runtime/ensure-container-runtime.js'
 import { finishStep, formatDuration, setSkipLoggingMuted, startStep } from '../../lib/log/index.js'
 import { readRegistryManifest } from '../../registry/manifest.js'
 import type { RegistryManifestPackage } from '../../registry/types.js'
@@ -45,7 +50,8 @@ const pipelineDir = resolve(matrixDir, '..', '..', '..')
 const repoRoot = resolve(pipelineDir, '..')
 const matrixLogDir = resolve(repoRoot, '.pipeline', 'testing', 'matrix')
 const matrixNativeTarget: VirtualNativeTarget = 'linux-x64-gnu'
-const minimumMatrixDockerMemoryBytes = 4 * 1024 * 1024 * 1024
+const minimumMatrixDockerCpuCount = matrixConfig.containerRuntime.cpu
+const minimumMatrixDockerMemoryBytes = matrixConfig.containerRuntime.memoryGiB * 1024 * 1024 * 1024
 
 interface FixtureSourceFiles {
   fixturePackageJson: MatrixFixturePackageJson
@@ -104,9 +110,18 @@ const matrixConsumerSetupCommand = ['pnpm', 'exec', 'ref', 'sync'] as const
 const matrixConsumerVitestCommand = ['pnpm', 'exec', 'vitest', 'run'] as const
 const matrixConsumerPlaywrightCommand = ['pnpm', 'exec', 'playwright', 'test', 'e2e'] as const
 const matrixConsumerTypecheckCommand = ['pnpm', 'exec', 'tsc', '--noEmit'] as const
+const daggerExecCacheBusterEnvVar = 'REFERENCE_UI_DAGGER_EXEC_CACHE_BUSTER'
 
-function daggerExecOptions(options: MatrixRunOptions): { noCache?: boolean } | undefined {
-  return options.disableDaggerExecCache ? { noCache: true } : undefined
+function withDaggerExecCacheBuster<T extends { withEnvVariable(name: string, value: string): T }>(
+  target: T,
+  options: MatrixRunOptions,
+  scope: string,
+): T {
+  if (!options.disableDaggerExecCache) {
+    return target
+  }
+
+  return target.withEnvVariable(daggerExecCacheBusterEnvVar, `${scope}-${randomUUID()}`)
 }
 
 function readErrorOutput(value: unknown): string {
@@ -141,11 +156,6 @@ function collectMatrixFailureDetails(error: unknown): string[] {
   return sections
 }
 
-function resolveMatrixPackageConcurrency(totalPackages: number): number {
-  const configured = Math.max(1, matrixConfig.concurrency)
-  return Math.min(totalPackages, Math.max(1, Math.min(configured, availableParallelism())))
-}
-
 function appendOutputBlock(lines: string[], output: string): void {
   const trimmed = output.trim()
 
@@ -163,6 +173,14 @@ function logMatrixPackagePhase(
 ): void {
   const suffix = detail ? ` ${detail}` : ''
   console.log(`- ${packageRunContext.displayName}: ${phase}${suffix}`)
+}
+
+function formatRuntimeMemory(memoryBytes: number | null): string | null {
+  if (memoryBytes === null) {
+    return null
+  }
+
+  return `${(memoryBytes / (1024 ** 3)).toFixed(1)} GiB`
 }
 
 function formatPhaseTimingSummary(
@@ -269,14 +287,18 @@ async function runMatrixPackageInDagger(
     activeTimedPhase = 'install'
     activePhaseStartedAt = installStageStartedAt
     logMatrixPackagePhase(packageRunContext, 'install')
-    const installRunner = consumerBase.withExec([
+    const installRunner = withDaggerExecCacheBuster(
+      consumerBase,
+      options,
+      `${packageRunContext.logPrefix}-install`,
+    ).withExec([
       'pnpm',
       'install',
       '--reporter',
       'append-only',
       '--registry',
       registryUrlInContainer,
-    ], daggerExecOptions(options))
+    ])
     const installOutput = await installRunner.stdout()
     await writeMatrixPackageStageLog(packageRunContext, 'install', installOutput)
     const installDurationMs = Date.now() - installStageStartedAt
@@ -302,15 +324,45 @@ async function runMatrixPackageInDagger(
     activeTimedPhase = 'setup'
     activePhaseStartedAt = setupStageStartedAt
     logMatrixPackagePhase(packageRunContext, 'setup')
-    const setupRunner = installRunner.withExec([...matrixConsumerSetupCommand], daggerExecOptions(options))
+    const setupRunner = withDaggerExecCacheBuster(
+      installRunner,
+      options,
+      `${packageRunContext.logPrefix}-setup`,
+    ).withExec([...matrixConsumerSetupCommand])
     const setupOutput = await setupRunner.stdout()
     await writeMatrixPackageStageLog(packageRunContext, 'setup', setupOutput)
     const setupDurationMs = Date.now() - setupStageStartedAt
     phaseDurations.setup = setupDurationMs
     const setupDuration = formatDuration(setupDurationMs)
+    const setupMilestones = parseRefSyncSetupMilestones(setupOutput)
     activeTimedPhase = undefined
     activePhaseStartedAt = undefined
     logMatrixPackagePhase(packageRunContext, 'setup', `complete (${setupDuration})`)
+    if (setupMilestones.length > 0) {
+      const setupMilestoneSummary = formatRefSyncSetupMilestoneSummary(setupMilestones)
+      const setupBottleneck = setupMilestones
+        .filter(milestone => milestone.summaryLabel !== 'sync-total')
+        .sort((left, right) => right.durationMs - left.durationMs)[0]
+
+      if (setupBottleneck) {
+        logMatrixPackagePhase(
+          packageRunContext,
+          'setup',
+          `bottleneck ${setupBottleneck.summaryLabel} (${formatDuration(setupBottleneck.durationMs)})`,
+        )
+      }
+
+      logMatrixPackagePhase(packageRunContext, 'setup', `milestones ${setupMilestoneSummary}`)
+      lines.push('  ref sync milestones:')
+
+      for (const milestone of setupMilestones) {
+        if (milestone.summaryLabel === 'sync-total') {
+          continue
+        }
+
+        lines.push(`    ${milestone.label}: ${formatDuration(milestone.durationMs)}`)
+      }
+    }
     lines.push(`  Ran ref sync in ${setupDuration}`)
 
     if (executionContext.shouldStop()) {
@@ -333,7 +385,11 @@ async function runMatrixPackageInDagger(
       const vitestStageStartedAt = Date.now()
       activeTimedPhase = 'test:vitest'
       activePhaseStartedAt = vitestStageStartedAt
-      const vitestRunner = testRunner.withExec([...matrixConsumerVitestCommand], daggerExecOptions(options))
+      const vitestRunner = withDaggerExecCacheBuster(
+        testRunner,
+        options,
+        `${packageRunContext.logPrefix}-test-vitest`,
+      ).withExec([...matrixConsumerVitestCommand])
       const vitestOutput = await vitestRunner.stdout()
       const vitestDurationMs = Date.now() - vitestStageStartedAt
       phaseDurations['test:vitest'] = vitestDurationMs
@@ -360,7 +416,11 @@ async function runMatrixPackageInDagger(
       const playwrightStageStartedAt = Date.now()
       activeTimedPhase = 'test:playwright'
       activePhaseStartedAt = playwrightStageStartedAt
-      const playwrightRunner = testRunner.withExec([...matrixConsumerPlaywrightCommand], daggerExecOptions(options))
+      const playwrightRunner = withDaggerExecCacheBuster(
+        testRunner,
+        options,
+        `${packageRunContext.logPrefix}-test-playwright`,
+      ).withExec([...matrixConsumerPlaywrightCommand])
       const playwrightOutput = await playwrightRunner.stdout()
       const playwrightDurationMs = Date.now() - playwrightStageStartedAt
       phaseDurations['test:playwright'] = playwrightDurationMs
@@ -386,7 +446,11 @@ async function runMatrixPackageInDagger(
     const typecheckStageStartedAt = Date.now()
     activeTimedPhase = 'test:typecheck'
     activePhaseStartedAt = typecheckStageStartedAt
-    const typecheckRunner = testRunner.withExec([...matrixConsumerTypecheckCommand], daggerExecOptions(options))
+    const typecheckRunner = withDaggerExecCacheBuster(
+      testRunner,
+      options,
+      `${packageRunContext.logPrefix}-test-typecheck`,
+    ).withExec([...matrixConsumerTypecheckCommand])
     const typecheckOutput = await typecheckRunner.stdout()
     const typecheckDurationMs = Date.now() - typecheckStageStartedAt
     phaseDurations['test:typecheck'] = typecheckDurationMs
@@ -685,7 +749,11 @@ export async function runMatrixBootstrapInDagger(options: MatrixRunOptions = {})
   }
   const pingStageStartedAt = Date.now()
   const pingStep = startStep('Checking container registry connectivity')
-  const pingRunner = consumerWorkspace.withExec(['npm', 'ping', '--registry', registryUrlInContainer], daggerExecOptions(options))
+  const pingRunner = withDaggerExecCacheBuster(
+    consumerWorkspace,
+    options,
+    'matrix-registry-ping',
+  ).withExec(['npm', 'ping', '--registry', registryUrlInContainer])
   const pingOutput = await pingRunner.stdout()
   await writeStageLog('publish-ping.log', pingOutput)
   finishStep(pingStep, `Checked container registry connectivity in ${formatDuration(Date.now() - pingStageStartedAt)}`)
@@ -698,8 +766,36 @@ export async function runMatrixBootstrapInDagger(options: MatrixRunOptions = {})
     matrixPackages.map(matrixPackage => createMatrixPackageRunContext(matrixPackage)),
   )
 
-  const packageConcurrency = resolveMatrixPackageConcurrency(matrixPackageContexts.length)
-  console.log(`Running up to ${packageConcurrency} matrix package(s) in parallel.`)
+  const dockerRuntime = getDockerRuntimeInfo()
+  const packageConcurrencyResolution = resolveMatrixPackageConcurrency({
+    configuredConcurrency: matrixConfig.concurrency,
+    runtimeCpuCount: dockerRuntime.cpuCount,
+    totalPackages: matrixPackageContexts.length,
+  })
+  const packageConcurrency = packageConcurrencyResolution.concurrency
+  const runtimeDetails = [
+    dockerRuntime.cpuCount === null ? null : `${dockerRuntime.cpuCount} CPU(s)`,
+    formatRuntimeMemory(dockerRuntime.memoryBytes),
+  ].filter((part): part is string => part !== null)
+
+  if (runtimeDetails.length > 0) {
+    const contextLabel = dockerRuntime.context ? ` (${dockerRuntime.context})` : ''
+    console.log(`Docker runtime${contextLabel} exposes ${runtimeDetails.join(', ')}.`)
+  }
+
+  if (dockerRuntime.cpuCount !== null && packageConcurrency < Math.min(matrixPackageContexts.length, packageConcurrencyResolution.configuredConcurrency, packageConcurrencyResolution.hostParallelism)) {
+    console.log(
+      `Capping matrix concurrency to ${packageConcurrency} because Docker only exposes ${dockerRuntime.cpuCount} CPU(s). Increase the Docker VM CPUs if you want to run more setup-heavy matrix packages at once.`
+    )
+  }
+
+  if (matrixPackageContexts.length < packageConcurrencyResolution.configuredConcurrency) {
+    console.log(
+      `Running ${packageConcurrency} matrix package(s) in parallel (${matrixPackageContexts.length} selected, configured ${packageConcurrencyResolution.configuredConcurrency}).`
+    )
+  } else {
+    console.log(`Running up to ${packageConcurrency} matrix package(s) in parallel.`)
+  }
 
   const executionContext: MatrixPackageExecutionContext = {
     consumerWorkspace,
@@ -742,6 +838,7 @@ export async function runMatrixBootstrapInDagger(options: MatrixRunOptions = {})
 export async function runMatrixTests(options: MatrixRunOptions = {}): Promise<void> {
   ensureContainerRuntime({
     commandLabel: options.commandLabel ?? 'pnpm pipeline test',
+    minimumDockerCpuCount: minimumMatrixDockerCpuCount,
     minimumDockerMemoryBytes: minimumMatrixDockerMemoryBytes,
   })
 
