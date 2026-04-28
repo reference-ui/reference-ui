@@ -18,6 +18,13 @@
 
 The headings below are the **planned matrix packages / concern areas** (each runnable in its own containerised matrix environment). Descriptions say what the suite proves; migration notes point back to today’s `reference-unit` / `reference-e2e` coverage.
 
+## Current status
+
+- **Done and established:** `watch`, `primitives`, `css`, and `system` are already running as first-class matrix packages.
+- **Implemented and migrated into matrix packages:** `recipe`, `spacing`, `responsive`, `color-mode`, `session`, `tokens`, and `virtual` now exist as dedicated matrix packages with focused tests instead of one large catch-all surface.
+- **Validated so far:** repo-level `pnpm pipeline test` is green, `@matrix/system` passes through the pipeline runner, and `@matrix/tokens` unit coverage is green after fixing the generated-output assertion slice.
+- **Still remaining before these are fully settled:** run the new browser-first packages through their full matrix flow, fix any package-local runner issues that surface, and then widen coverage into the noted stretch cases rather than marking them done prematurely.
+
 ### watch [DONE]
 
 End-to-end **watch mode**: `--watch` with ref sync, updating tokens and primitive styles, `css()` and `recipe()` invalidation, and session/watch coordination.
@@ -57,56 +64,78 @@ The `@reference-ui/system` authoring APIs: `tokens()`, `globalCss()`, `keyframes
 - **From reference-e2e:** token-driven runtime coverage and stylesheet/layer presence via core tests.
 - **Initial contract:** fixture app plus browser assertions for token-backed primitive styling, document-level `globalCss()` custom properties, `body` resets, `keyframes()` animation naming, and generated stylesheet mount/layer order across Vite and webpack.
 
-### recipe
+### recipe [MIGRATED]
 
 The `recipe()` API: variants, compound styles, and stable class/application behaviour.
 
+- **Matrix package:** `matrix/recipe`.
 - **From reference-unit:** virtual recipes / system fixtures where present.
+- **Current contract:** runtime assertions plus browser checks for stable class generation, base padding/radius, default solid branch colors, outline branch colors, large size variant, and a compound `outline + pink` override across Vite and webpack.
 - **Playwright-first:** “fairly exhaustive” variant matrix in the browser; optional screenshot matrix per variant.
+- **Remaining:** broaden the variant matrix beyond the current representative branches, port any missing virtual recipe fixtures, and only then decide whether screenshots/a11y add signal.
 - **snapshots:** visual regression baselines, a11y spot checks on key routes, or perf budgets—only if the team wants guardrails beyond correctness.
 
-### spacing
+### spacing [MIGRATED]
 
 Rhythm props (`4r`, etc.) and the **size** custom prop—behaviour that is easy to mistype in unit mocks.
 
+- **Matrix package:** `matrix/spacing`.
 - **From reference-unit:** `tests/system/rhythm*.test.*`, `tests/system/size*.test.*`, container output helpers.
+- **Current contract:** runtime checks plus browser assertions for `padding="2r"`, mixed rhythm shorthand side preservation, `borderRadius="1r"`, and `size` keeping width and height in lockstep across Vite and webpack.
 - **Playwright-first:** harden with real layout/computed spacing; responsive spacing if product-critical.
+- **Remaining:** add any missing rhythm edge cases from the old unit suite and decide whether responsive spacing belongs here or should stay concentrated in `responsive`.
 
-### responsive
+### responsive [MIGRATED]
 
 Responsive design across `css()`, `recipe()`, and the **`r` prop** on primitives—full-system behaviour, not just token resolution.
 
+- **Matrix package:** `matrix/responsive`.
 - **From reference-e2e:** `container-responsive.spec.ts`, responsive container tests in base fixtures.
+- **Current contract:** runtime checks plus browser assertions for narrow/wide primitive `r` props, named-container `css()` branches, and `recipe()` container-query branches across Vite and webpack.
 - **Gaps / stretch:** viewport matrix (width/height); verify **media query** branches actually apply in the browser.
+- **Remaining:** add viewport-driven media-query cases on top of the current container-focused coverage and port any missing responsive fixture permutations from the old e2e suite.
 
-### color-mode
+### color-mode [MIGRATED]
 
 Light/dark (and any extended modes): tokens and primitives resolve correctly with theme switches.
 
+- **Matrix package:** `matrix/color-mode`.
 - **From reference-unit:** `tests/color-mode/`, extends/layers colour demos with `data-panda-theme` / `colorMode`.
 - **From reference-e2e:** `color-mode.spec.ts`, `ColorModeTest` routes.
+- **Current contract:** runtime checks plus browser assertions for root light/dark scopes, nested dark islands inside light scopes, explicit preview overrides, and nearest-scope cascade behaviour across Vite and webpack.
 - **Playwright-first:** real theme toggling without stripping `@layer` (unit tests sometimes flatten layers for happy-dom).
+- **Remaining:** expand beyond the current scoped-token cases if extended modes or more complex app-shell theme toggling need first-class coverage.
 
-### session
+### session [MIGRATED]
 
 Session API: manifest, lifecycle, and isolation—keep tests **self-contained** and aligned with `session` implementation.
 
+- **Matrix package:** `matrix/session`.
 - **From reference-unit:** `tests/session/session-manifest.test.ts`.
+- **Current contract:** unit assertions for `session.json` existence, JSON validity, required fields, positive PID, `one-shot` mode, stopped/ready terminal state, ISO timestamps, timestamp ordering, and cleanup of `session.lock`.
 - **Gaps / stretch:** read `session` source for additional edge cases (errors, idempotency, multi-consumer assumptions).
+- **Remaining:** add source-driven edge cases rather than broadening this into browser coverage that does not help the lifecycle contract.
 
-### tokens
+### tokens [MIGRATED]
 
 Token generation, sync, and fragment behaviour—mostly **file and pipeline** concerns.
 
+- **Matrix package:** `matrix/tokens`.
 - **From reference-unit:** `tests/tokens/fragment-sync.test.ts`, `tests/layers/tokens.test.tsx`, extends tokens.
 - **From reference-e2e:** `tokens.spec.ts`, token sync watch.
+- **Current contract:** unit assertions for generated `panda.config.ts`, emitted CSS variable names, and stale-token cleanup plus browser assertions for token-backed primitive and `css()` consumption across Vite and webpack.
 - **Vitest is often enough**; add Playwright only when proving tokens **through the full dev server + CSS variables in DOM**.
+- **Status note:** the tokens unit suite is currently green after aligning the generated CSS-variable assertion with the emitted kebab-case output.
+- **Remaining:** add fragment-specific migration cases and watch-path follow-up only if they are still not covered well enough by `watch` plus the new static output assertions.
 
-### virtual
+### virtual [MIGRATED]
 
 Virtual file system and mirroring: transforms, baseline, and integration with the reference pipeline.
 
+- **Matrix package:** `matrix/virtual`.
 - **From reference-unit:** `tests/virtual/*` (transform, mirror, baseline).
+- **Current contract:** unit assertions for baseline copy behaviour, source-to-virtual mirror invariants, `_reference-component` mirroring, exclusion rules, `css()`/`recipe()` transform rewrites, and MDX-to-JSX materialization.
+- **Remaining:** run the package repeatedly through the full setup/test flow and tighten any timing-sensitive mirror assertions if the containerised environment exposes flakes.
 
 ---
 
