@@ -29,8 +29,8 @@ export async function readMatrixPackageSource(packageDir: string): Promise<Fixtu
 
   return {
     fixturePackageJson: JSON.parse(packageJsonSource) as MatrixFixturePackageJson,
-    hasPlaywrightTests: existsSync(resolve(packageDir, 'e2e')),
-    hasVitestTests: existsSync(resolve(packageDir, 'tests')) || existsSync(resolve(packageDir, 'unit')),
+    hasPlaywrightTests: existsSync(resolve(packageDir, 'tests', 'e2e')),
+    hasVitestTests: existsSync(resolve(packageDir, 'tests')),
   }
 }
 
@@ -41,11 +41,9 @@ export function matrixFixtureSourceDirectory(packageDir: string) {
       'src/**',
       'tests',
       'tests/**',
-      'unit',
-      'unit/**',
-      'e2e',
-      'e2e/**',
+      'index.html',
       'ui.config.ts',
+      'vite.config.ts',
       'vitest.config.ts',
       'playwright.config.ts',
     ],

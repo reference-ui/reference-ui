@@ -1,6 +1,6 @@
 import { ComponentShowcase, FeatureCard, HeroBanner, PrimaryAction } from './components'
 
-export function App() {
+export function Index() {
   return (
     <>
       <ComponentShowcase />

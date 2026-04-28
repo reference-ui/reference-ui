@@ -21,13 +21,14 @@ describe('readMatrixPackageConfig', () => {
     const tempDir = await mkdtemp(join(tmpdir(), 'ref-pipeline-matrix-'))
 
     try {
-      await writeFile(join(tempDir, 'matrix.json'), '{"name":"typescript","refSync":{"mode":"full"},"runTypecheck":true}\n')
+      await writeFile(join(tempDir, 'matrix.json'), '{"name":"typescript","refSync":{"mode":"full"},"bundlers":["vite7"],"runTypecheck":true}\n')
 
       assert.deepEqual(readMatrixPackageConfig(tempDir), {
         name: 'typescript',
         refSync: {
           mode: 'full',
         },
+        bundlers: ['vite7'],
         runTypecheck: true,
       })
     } finally {
@@ -50,6 +51,21 @@ describe('readMatrixPackageConfig', () => {
     }
   })
 
+  it('requires at least one explicit bundler in matrix.json', async () => {
+    const tempDir = await mkdtemp(join(tmpdir(), 'ref-pipeline-matrix-'))
+
+    try {
+      await writeFile(join(tempDir, 'matrix.json'), '{"name":"typescript","refSync":{"mode":"full"},"bundlers":[]}\n')
+
+      assert.throws(
+        () => readMatrixPackageConfig(tempDir),
+        /bundlers as a non-empty array/,
+      )
+    } finally {
+      await rm(tempDir, { force: true, recursive: true })
+    }
+  })
+
   it('derives the managed matrix workspace package name from the matrix config name', () => {
     assert.equal(getMatrixPackageName({ name: 'typescript' }), '@matrix/typescript')
   })
@@ -57,8 +73,8 @@ describe('readMatrixPackageConfig', () => {
 
 describe('isMatrixWorkspacePackageDir', () => {
   it('returns true only for workspace packages under the top-level matrix directory', () => {
-    assert.equal(isMatrixWorkspacePackageDir(resolve(repoRoot, 'matrix', 'install')), true)
-    assert.equal(isMatrixWorkspacePackageDir(resolve(repoRoot, 'matrix', 'typescript')), true)
+    assert.equal(isMatrixWorkspacePackageDir(resolve(repoRoot, 'matrix', 'distro')), true)
+    assert.equal(isMatrixWorkspacePackageDir(resolve(repoRoot, 'matrix', 'playwright')), true)
     assert.equal(isMatrixWorkspacePackageDir(resolve(repoRoot, 'fixtures', 'extend-library')), false)
     assert.equal(isMatrixWorkspacePackageDir(resolve(repoRoot, 'packages', 'reference-core')), false)
   })

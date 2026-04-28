@@ -34,7 +34,11 @@ interface ObserveTagInput {
 
 const REFERENCE_UI_REACT_IMPORT = '@reference-ui/react'
 const DEFAULT_INCLUDE = ['src/**/*.{ts,tsx,js,jsx}']
-const DEFAULT_EXCLUDE = ['**/node_modules/**', '.reference-ui/**', 'tests/**']
+const DEFAULT_EXCLUDE = [
+  '**/node_modules/**',
+  '.reference-ui/**',
+  'tests/**',
+]
 const primitiveNameSet = new Set(REFERENCE_UI_PRIMITIVE_NAMES)
 
 function increment(map: Map<string, number>, key: string, amount = 1): void {

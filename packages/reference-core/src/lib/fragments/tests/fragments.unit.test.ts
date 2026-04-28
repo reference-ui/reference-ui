@@ -266,4 +266,5 @@ describe('scanForFragments', () => {
     expect(names).toContain(WITH_CONSTANTS_FILE)
     expect(names).toContain('setup.ts')
   })
+
 })

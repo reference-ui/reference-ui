@@ -22,6 +22,7 @@ function createMatrixPackageConfig(
     refSync: {
       mode,
     },
+    bundlers: ['vite7'],
     runTypecheck,
   }
 }
