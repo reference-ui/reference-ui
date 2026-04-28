@@ -1,5 +1,4 @@
 {
-  "matrix": true,
   "name": "typescript",
   "refSync": {
     "mode": "full"

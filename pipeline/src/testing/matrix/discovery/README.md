@@ -23,7 +23,6 @@ Keeping that logic separate makes it easier to evolve `matrix.json` over time wi
 
 Today a package participates in the matrix when its `matrix.json` declares:
 
-- `matrix: true`
 - `name: string`
 - `refSync.mode: "full" | "watch-ready"`
 

@@ -12,7 +12,6 @@ import type { MatrixPackageRunContext } from './types.js'
 function createPackageRunContext(): MatrixPackageRunContext {
   return {
     config: {
-      matrix: true,
       name: 'typescript',
       refSync: {
         mode: 'full',

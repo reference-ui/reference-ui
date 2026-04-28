@@ -21,10 +21,9 @@ describe('readMatrixPackageConfig', () => {
     const tempDir = await mkdtemp(join(tmpdir(), 'ref-pipeline-matrix-'))
 
     try {
-      await writeFile(join(tempDir, 'matrix.json'), '{"matrix":true,"name":"typescript","refSync":{"mode":"full"},"runTypecheck":true}\n')
+      await writeFile(join(tempDir, 'matrix.json'), '{"name":"typescript","refSync":{"mode":"full"},"runTypecheck":true}\n')
 
       assert.deepEqual(readMatrixPackageConfig(tempDir), {
-        matrix: true,
         name: 'typescript',
         refSync: {
           mode: 'full',
@@ -40,7 +39,7 @@ describe('readMatrixPackageConfig', () => {
     const tempDir = await mkdtemp(join(tmpdir(), 'ref-pipeline-matrix-'))
 
     try {
-      await writeFile(join(tempDir, 'matrix.json'), '{"matrix":true,"name":"typescript"}\n')
+      await writeFile(join(tempDir, 'matrix.json'), '{"name":"typescript"}\n')
 
       assert.throws(
         () => readMatrixPackageConfig(tempDir),
