@@ -10,6 +10,7 @@
   "scripts": {
     "pipeline": "pnpm --dir pipeline exec tsx src/cli.ts",
     "build": "pnpm pipeline build",
+    "matrix:setup": "pnpm pipeline setup --sync",
     "pipeline:test:pipeline": "pnpm --dir pipeline run test:pipeline",
     "pipeline:test:matrix": "pnpm --dir pipeline run test:matrix",
     "pipeline:registry:start": "pnpm pipeline registry start",

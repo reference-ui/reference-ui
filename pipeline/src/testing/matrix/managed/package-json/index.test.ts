@@ -35,7 +35,7 @@ describe('createManagedMatrixPackageJson', () => {
 
     assert.equal(packageJson.name, '@matrix/mcp')
     assert.equal(packageJson.version, '0.0.7')
-    assert.equal(packageJson.scripts.setup, 'pnpm --dir ../../pipeline exec tsx src/cli.ts setup --packages=@matrix/mcp')
+    assert.equal(packageJson.scripts.setup, 'pnpm --dir ../../pipeline exec tsx src/cli.ts setup --packages=@matrix/mcp --sync')
     assert.equal(packageJson.scripts.test, 'pnpm --dir ../../pipeline exec tsx src/cli.ts test --packages=@matrix/mcp')
     assert.equal(packageJson.scripts.sync, 'pnpm exec ref sync')
     assert.deepEqual(Object.keys(packageJson.scripts).sort(), ['setup', 'sync', 'test'])
@@ -77,7 +77,7 @@ describe('createMatrixConsumerPackageJson', () => {
       name: '@matrix/distro',
       private: true,
       scripts: {
-        setup: 'pnpm --dir ../../pipeline exec tsx src/cli.ts setup --packages=@matrix/distro',
+        setup: 'pnpm --dir ../../pipeline exec tsx src/cli.ts setup --packages=@matrix/distro --sync',
         test: 'pnpm --dir ../../pipeline exec tsx src/cli.ts test --packages=@matrix/distro',
         sync: 'pnpm exec ref sync',
       },
@@ -124,7 +124,7 @@ describe('createMatrixConsumerPackageJson', () => {
       name: '@matrix/distro',
       private: true,
       scripts: {
-        setup: 'pnpm --dir ../../pipeline exec tsx src/cli.ts setup --packages=@matrix/distro',
+        setup: 'pnpm --dir ../../pipeline exec tsx src/cli.ts setup --packages=@matrix/distro --sync',
         test: 'pnpm --dir ../../pipeline exec tsx src/cli.ts test --packages=@matrix/distro',
         sync: 'pnpm exec ref sync',
       },

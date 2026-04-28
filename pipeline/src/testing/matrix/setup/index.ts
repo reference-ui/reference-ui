@@ -18,6 +18,7 @@ import { validateMatrixFixtures } from '../validate.js'
 export interface MatrixSetupOptions {
   install?: boolean
   packageNames?: readonly string[]
+  sync?: boolean
 }
 
 async function readExistingPackageJson(packageDir: string): Promise<MatrixFixturePackageJson | undefined> {
@@ -55,4 +56,16 @@ export async function setupMatrixPackages(options: MatrixSetupOptions = {}): Pro
     interactive: true,
     label: 'Installing workspace dependencies for matrix packages',
   })
+
+  if (!options.sync) {
+    return
+  }
+
+  for (const definition of definitions) {
+    await run('pnpm', ['run', 'sync'], {
+      cwd: definition.dir,
+      interactive: true,
+      label: `Running ref sync for ${definition.packageName}`,
+    })
+  }
 }

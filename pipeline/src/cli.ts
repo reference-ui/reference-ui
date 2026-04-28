@@ -75,10 +75,12 @@ program
   .description('Generate and optionally install the pipeline-managed matrix package files')
   .option('--packages <names>', 'Comma-separated matrix package names, for example @matrix/distro')
   .option('--no-install', 'Skip the workspace pnpm install after syncing matrix package manifests')
-  .action(async (options: { install: boolean; packages?: string }) => {
+  .option('--sync', 'Run each selected matrix package sync script after install')
+  .action(async (options: { install: boolean; packages?: string; sync?: boolean }) => {
     await setupMatrixPackages({
       install: options.install,
       packageNames: parsePackageOption(options.packages),
+      sync: options.sync,
     })
   })
 

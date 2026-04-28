@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "setup": "pnpm --dir ../../pipeline exec tsx src/cli.ts setup --packages=@matrix/distro",
+    "setup": "pnpm --dir ../../pipeline exec tsx src/cli.ts setup --packages=@matrix/distro --sync",
     "test": "pnpm --dir ../../pipeline exec tsx src/cli.ts test --packages=@matrix/distro",
     "sync": "pnpm exec ref sync"
   },

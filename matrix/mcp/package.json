@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "setup": "pnpm --dir ../../pipeline exec tsx src/cli.ts setup --packages=@matrix/mcp",
+    "setup": "pnpm --dir ../../pipeline exec tsx src/cli.ts setup --packages=@matrix/mcp --sync",
     "test": "pnpm --dir ../../pipeline exec tsx src/cli.ts test --packages=@matrix/mcp",
     "sync": "pnpm exec ref sync"
   },
@@ -18,11 +18,11 @@
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
-    "@modelcontextprotocol/sdk": "^1.29.0",
     "@types/node": "^25.1.0",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
     "typescript": "~5.9.3",
-    "vitest": "^4.0.18"
+    "vitest": "^4.0.18",
+    "@modelcontextprotocol/sdk": "^1.29.0"
   }
 }

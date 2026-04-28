@@ -11,7 +11,7 @@ describe('setupMatrixPackages package generation', () => {
     }
 
     assert.equal(packageJson.name, '@matrix/distro')
-    assert.equal(packageJson.scripts.setup, 'pnpm --dir ../../pipeline exec tsx src/cli.ts setup --packages=@matrix/distro')
+    assert.equal(packageJson.scripts.setup, 'pnpm --dir ../../pipeline exec tsx src/cli.ts setup --packages=@matrix/distro --sync')
     assert.deepEqual(Object.keys(packageJson.scripts).sort(), ['setup', 'sync', 'test'])
   })
 })
