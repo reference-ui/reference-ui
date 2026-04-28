@@ -95,6 +95,7 @@ export async function runMatrixBootstrapInDagger(options: MatrixRunOptions = {})
     setSkipLoggingMuted(MATRIX_CONFIG.quietPreparationSkips)
     await buildWorkspacePackages(undefined, undefined, {
       requiredRustTargets: [matrixNativeTarget],
+      trace: options.trace,
     })
   } finally {
     setSkipLoggingMuted(false)

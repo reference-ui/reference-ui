@@ -21,6 +21,7 @@ const temporarilyFreshBuildPackageNames = new Set(['@reference-ui/core'])
 
 export interface BuildWorkspacePackageOptions {
   requiredRustTargets?: readonly VirtualNativeTarget[]
+  trace?: boolean
 }
 
 export function listBuildTargetPackages(packageNames: readonly string[] = REGISTRY_PACKAGE_NAMES): WorkspacePackage[] {
@@ -29,7 +30,10 @@ export function listBuildTargetPackages(packageNames: readonly string[] = REGIST
   )
 }
 
-export async function buildWorkspaceArtifacts(packageNames: readonly string[] = REGISTRY_PACKAGE_NAMES): Promise<void> {
+export async function buildWorkspaceArtifacts(
+  packageNames: readonly string[] = REGISTRY_PACKAGE_NAMES,
+  options: Pick<BuildWorkspacePackageOptions, 'trace'> = {},
+): Promise<void> {
   const buildTargets = listBuildTargetPackages(packageNames)
   const buildHashes = computePackageBuildHashes(buildTargets)
   const buildState = await readBuildState()
@@ -55,6 +59,7 @@ export async function buildWorkspaceArtifacts(packageNames: readonly string[] = 
       env: {
         REF_PIPELINE_SKIP_DEPENDENCY_BUILDS: '1',
       },
+      interactive: options.trace,
       label: `Build ${pkg.name}`,
     })
 
@@ -72,7 +77,7 @@ export async function buildWorkspacePackages(
   packageNames: readonly string[] = REGISTRY_PACKAGE_NAMES,
   options: BuildWorkspacePackageOptions = {},
 ): Promise<void> {
-  await buildWorkspaceArtifacts(packageNames)
+  await buildWorkspaceArtifacts(packageNames, { trace: options.trace })
   await ensureLocalRegistryAndStagePublicPackages(
     registryUrl,
     packageNames,
