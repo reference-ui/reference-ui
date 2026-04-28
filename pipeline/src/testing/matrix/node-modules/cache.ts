@@ -41,7 +41,7 @@ export function externalPnpmStoreCacheKey(containerImage: string = matrixNodeIma
 
 export function registryManifestFingerprint(manifest: RegistryManifest): string {
   const fingerprint = manifest.packages
-    .map(pkg => `${pkg.name}@${pkg.version}:${pkg.hash}`)
+    .map(pkg => `${pkg.name}@${pkg.version}:${pkg.artifactHash ?? pkg.hash}`)
     .join('|')
 
   return createHash('sha256').update(fingerprint).digest('hex').slice(0, 16)

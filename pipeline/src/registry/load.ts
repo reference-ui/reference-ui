@@ -19,6 +19,7 @@ import { packPublicPackages } from './pack.js'
 import { ensureManagedLocalRegistry, rebuildManagedLocalRegistry } from './runtime.js'
 
 interface LoadedRegistryStateEntry {
+  artifactHash?: string
   hash: string
   loadedAt: string
   version: string
@@ -27,9 +28,14 @@ interface LoadedRegistryStateEntry {
 type LoadedRegistryState = Record<string, LoadedRegistryStateEntry>
 
 interface RegistryManifestLikePackage {
+  artifactHash?: string
   hash: string
   name: string
   version: string
+}
+
+function registryArtifactIdentity(pkg: RegistryManifestLikePackage | LoadedRegistryStateEntry): string {
+  return pkg.artifactHash ?? pkg.hash
 }
 
 function isPublishedToRegistry(name: string, version: string, registryUrl: string): boolean {
@@ -54,7 +60,7 @@ export function canSkipRegistryPublishFromState(
   return !registryRebuilt
     && previous !== undefined
     && previous.version === pkg.version
-    && previous.hash === pkg.hash
+    && registryArtifactIdentity(previous) === registryArtifactIdentity(pkg)
 }
 
 function registryAuthTokenOption(registryUrl: string): string {
@@ -86,7 +92,7 @@ async function rebuildRegistryIfLoadedHashesChanged(registryUrl: string): Promis
 
     return previous !== undefined
       && previous.version === pkg.version
-      && previous.hash !== pkg.hash
+      && registryArtifactIdentity(previous) !== registryArtifactIdentity(pkg)
   })
 
   if (!requiresRebuild) {
@@ -133,6 +139,7 @@ export async function loadPackedTarballsIntoLocalRegistry(registryUrl: string = 
       manifest.packages.map((pkg) => [
         pkg.name,
         {
+          artifactHash: pkg.artifactHash,
           hash: pkg.hash,
           loadedAt: new Date().toISOString(),
           version: pkg.version,
