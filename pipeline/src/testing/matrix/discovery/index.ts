@@ -2,8 +2,8 @@
  * Discovery for matrix-enabled workspace packages.
  *
  * The inclusion contract is intentionally tiny: a package participates in the
- * pipeline matrix only when it has a `matrix.json` file with `matrix: true` and
- * a stable logical name used by pipeline-managed scripts and filtering.
+ * pipeline matrix only when it has a `matrix.json` file inside the top-level
+ * `matrix/` directory with a stable logical name and explicit refSync config.
  */
 
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
@@ -19,7 +19,6 @@ export interface MatrixPackageRefSyncConfig {
 }
 
 export interface MatrixPackageConfig {
-  matrix: true
   name: string
   refSync: MatrixPackageRefSyncConfig
   runTypecheck: boolean
@@ -66,16 +65,11 @@ export function readMatrixPackageConfig(packageDir: string): MatrixPackageConfig
   }
 
   const config = JSON.parse(readFileSync(configPath, 'utf8')) as {
-    matrix?: unknown
     name?: unknown
     refSync?: {
       mode?: unknown
     }
     runTypecheck?: unknown
-  }
-
-  if (config.matrix !== true) {
-    return null
   }
 
   if (typeof config.name !== 'string' || config.name.trim().length === 0) {
@@ -93,7 +87,6 @@ export function readMatrixPackageConfig(packageDir: string): MatrixPackageConfig
   }
 
   return {
-    matrix: true,
     name: config.name,
     refSync: {
       mode: config.refSync.mode,

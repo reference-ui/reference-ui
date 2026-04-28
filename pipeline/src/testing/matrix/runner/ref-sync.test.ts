@@ -18,7 +18,6 @@ function createMatrixPackageConfig(
   runTypecheck = false,
 ): MatrixPackageConfig {
   return {
-    matrix: true,
     name,
     refSync: {
       mode,

@@ -13,7 +13,7 @@ export function validateMatrixFixtures(): void {
   const matrixPackages = listMatrixWorkspacePackages()
 
   if (matrixPackages.length === 0) {
-    throw new Error('No matrix-enabled packages found. Add a matrix.json file with {"matrix": true}.')
+    throw new Error('No matrix-enabled packages found. Add a matrix.json file with a name and refSync config inside the matrix/ directory.')
   }
 
   const packageNames = matrixPackages.map((entry) => entry.workspacePackage.name)
