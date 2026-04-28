@@ -14,6 +14,10 @@ import type { MatrixWorkspacePackage } from '../discovery/index.js'
 import { createMatrixConsumerPackageJson, type MatrixFixturePackageJson } from '../managed/package-json/index.js'
 import { createMatrixConsumerTsconfig } from '../managed/tsconfig/index.js'
 import { matrixLogDir, repoRoot } from './paths.js'
+import {
+  matrixRefSyncSupportDirectory,
+  matrixRefSyncSupportScripts,
+} from './ref-sync.js'
 import type {
   FixtureSourceFiles,
   MatrixInternalTarballSpec,
@@ -101,6 +105,7 @@ export async function stageGeneratedConsumerFiles(
 ): Promise<string> {
   const generatedDir = resolve(matrixLogDir, 'generated', packageRunContext.logPrefix)
   const tarballDir = resolve(generatedDir, '.matrix-tarballs')
+  const refSyncSupportDir = resolve(generatedDir, matrixRefSyncSupportDirectory)
   const packageJsonSource = createMatrixConsumerPackageJson({
     fixturePackageJson: packageRunContext.source.fixturePackageJson,
     internalTarballSpecifiers: Object.fromEntries(
@@ -110,11 +115,16 @@ export async function stageGeneratedConsumerFiles(
 
   await mkdir(generatedDir, { recursive: true })
   await mkdir(tarballDir, { recursive: true })
+  await mkdir(refSyncSupportDir, { recursive: true })
   await writeFile(resolve(generatedDir, 'package.json'), packageJsonSource)
   await writeFile(resolve(generatedDir, 'tsconfig.json'), createMatrixConsumerTsconfig())
   await Promise.all(
-    internalTarballSpecs.map(spec =>
-      copyFile(spec.absoluteTarballPath, resolve(tarballDir, spec.stagedFileName))),
+    [
+      ...internalTarballSpecs.map(spec =>
+        copyFile(spec.absoluteTarballPath, resolve(tarballDir, spec.stagedFileName))),
+      ...matrixRefSyncSupportScripts.map(script =>
+        copyFile(script.sourceFilePath, resolve(generatedDir, script.outputRelativePath))),
+    ],
   )
 
   return generatedDir
@@ -122,7 +132,14 @@ export async function stageGeneratedConsumerFiles(
 
 export function matrixGeneratedConsumerDirectory(generatedDir: string) {
   return dag.host().directory(generatedDir, {
-    include: ['package.json', 'tsconfig.json', '.matrix-tarballs', '.matrix-tarballs/**'],
+    include: [
+      'package.json',
+      'tsconfig.json',
+      '.matrix-support',
+      '.matrix-support/**',
+      '.matrix-tarballs',
+      '.matrix-tarballs/**',
+    ],
   })
 }
 
@@ -134,6 +151,7 @@ export async function createMatrixPackageRunContext(
   matrixPackage: MatrixWorkspacePackage,
 ): Promise<MatrixPackageRunContext> {
   return {
+    config: matrixPackage.config,
     displayName: matrixPackage.workspacePackage.name,
     logPrefix: matrixPackageLogPrefix(matrixPackage.workspacePackage.name),
     source: await readMatrixPackageSource(matrixPackage.workspacePackage.dir),

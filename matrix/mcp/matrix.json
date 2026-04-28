@@ -1,4 +1,7 @@
 {
   "matrix": true,
-  "name": "mcp"
+  "name": "mcp",
+  "refSync": {
+    "mode": "full"
+  }
 }

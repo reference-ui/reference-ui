@@ -1,4 +1,7 @@
 {
   "matrix": true,
-  "name": "playwright"
+  "name": "playwright",
+  "refSync": {
+    "mode": "watch-ready"
+  }
 }

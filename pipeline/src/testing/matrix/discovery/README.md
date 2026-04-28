@@ -25,6 +25,11 @@ Today a package participates in the matrix when its `matrix.json` declares:
 
 - `matrix: true`
 - `name: string`
+- `refSync.mode: "full" | "watch-ready"`
+
+It may also declare:
+
+- `runTypecheck: boolean`
 
 This is intentionally small.
 

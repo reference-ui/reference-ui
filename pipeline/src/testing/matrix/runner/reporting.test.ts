@@ -11,6 +11,14 @@ import type { MatrixPackageRunContext } from './types.js'
 
 function createPackageRunContext(): MatrixPackageRunContext {
   return {
+    config: {
+      matrix: true,
+      name: 'typescript',
+      refSync: {
+        mode: 'full',
+      },
+      runTypecheck: true,
+    },
     displayName: '@matrix/typescript',
     logPrefix: 'matrix-typescript',
     source: {
@@ -21,10 +29,12 @@ function createPackageRunContext(): MatrixPackageRunContext {
       hasVitestTests: true,
     },
     workspacePackage: {
+      dependencies: {},
       dir: '/tmp/matrix-typescript',
       name: '@matrix/typescript',
-      packageJsonPath: '/tmp/matrix-typescript/package.json',
+      private: true,
       scripts: {},
+      version: '0.0.0-test',
     },
   }
 }
