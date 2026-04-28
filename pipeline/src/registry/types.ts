@@ -8,6 +8,7 @@
 export const registryManifestVersion = 2 as const
 
 export interface RegistryManifestPackage {
+  artifactHash?: string
   hash: string
   internalDependencies: string[]
   name: string

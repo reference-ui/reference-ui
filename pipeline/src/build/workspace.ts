@@ -271,6 +271,7 @@ export function listWorkspacePackages(): WorkspacePackage[] {
         dependencies: pkg.dependencies ?? {},
         dir: dirname(packageJsonPath),
         name: pkg.name,
+        packageJson: pkg,
         private: pkg.private === true,
         scripts: pkg.scripts ?? {},
         version: pkg.version,

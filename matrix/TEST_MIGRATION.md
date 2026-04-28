@@ -1,12 +1,4 @@
-# watch
 
-Matrix package for **dev/watch workflows**: `ref sync --watch`, token and style regeneration, and runtime behaviour while sources change.
-
-**Container:** runs in the matrix runner’s isolated environment like other matrix packages (install → `ref sync` → tests).
-
-**Plugins:** consumer apps must use the Reference Vite plugin (`referenceVite()`) for Vite and the Reference webpack plugin where webpack is in scope—same as production apps.
-
----
 
 ## Unified suites (reference-unit + reference-e2e)
 
@@ -26,7 +18,7 @@ Matrix package for **dev/watch workflows**: `ref sync --watch`, token and style 
 
 The headings below are the **planned matrix packages / concern areas** (each runnable in its own containerised matrix environment). Descriptions say what the suite proves; migration notes point back to today’s `reference-unit` / `reference-e2e` coverage.
 
-### watch
+### watch [DONE]
 
 End-to-end **watch mode**: `--watch` with ref sync, updating tokens and primitive styles, `css()` and `recipe()` invalidation, and session/watch coordination.
 - **Bundler parity:** same assertions under Vite and webpack for style injection and HMR/watch (matrix axis already in e2e).
@@ -38,9 +30,12 @@ End-to-end **watch mode**: `--watch` with ref sync, updating tokens and primitiv
 
 Style props on generated primitives, mount behaviour, and interaction with emitted design-system CSS.
 
+- **Matrix package:** `matrix/primitives`.
 - **From reference-unit:** `tests/primitives/` (Div, custom props, computed style hooks where happy-dom allows).
 - **From reference-e2e:** `style-props.spec.ts`, `jsx-elements.spec.ts`, parts of `core-system.spec.ts`.
 - **Playwright-first:** real computed styles and cascade; extend with **visual regression** (screenshots) for high-value primitives if flakes are controlled.
+- **Initial contract:** fixture app plus browser assertions for primitive mount, style-prop computed styles, and `css` prop class composition across Vite and webpack.
+- **Next gaps:** port font/custom-prop cases that still rely on happy-dom flattening, then add screenshots only after the browser assertions stay stable.
 
 ### css
 

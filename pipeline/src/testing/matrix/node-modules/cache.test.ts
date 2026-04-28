@@ -14,6 +14,7 @@ function createManifest(overrides?: Partial<RegistryManifest>): RegistryManifest
     generatedAt: '2026-04-27T18:00:00.000Z',
     packages: [
       {
+        artifactHash: 'core-artifact-a',
         hash: 'core-hash-a',
         internalDependencies: [],
         name: '@reference-ui/core',
@@ -23,6 +24,7 @@ function createManifest(overrides?: Partial<RegistryManifest>): RegistryManifest
         version: '0.0.41',
       },
       {
+        artifactHash: 'lib-artifact-a',
         hash: 'lib-hash-a',
         internalDependencies: ['@reference-ui/core'],
         name: '@reference-ui/lib',
@@ -86,7 +88,9 @@ describe('matrix node_modules cache helpers', () => {
     const baseline = createManifest()
     const changed = createManifest({
       packages: baseline.packages.map(pkg =>
-        pkg.name === '@reference-ui/lib' ? { ...pkg, hash: 'lib-hash-b' } : pkg,
+        pkg.name === '@reference-ui/lib'
+          ? { ...pkg, artifactHash: 'lib-artifact-b', hash: 'lib-hash-a' }
+          : pkg,
       ),
     })
 
@@ -95,6 +99,33 @@ describe('matrix node_modules cache helpers', () => {
       externalPnpmStoreCacheKey('node:24-bookworm'),
       externalPnpmStoreCacheKey('node:24-bookworm'),
     )
+
+    const baselineNodeModules = matrixNodeModulesCacheKey({
+      coreVersion: '0.0.41',
+      fixturePackageJson: createFixturePackageJson(),
+      libVersion: '0.0.44',
+      manifest: baseline,
+    })
+
+    const changedNodeModules = matrixNodeModulesCacheKey({
+      coreVersion: '0.0.41',
+      fixturePackageJson: createFixturePackageJson(),
+      libVersion: '0.0.44',
+      manifest: changed,
+    })
+
+    assert.notEqual(baselineNodeModules, changedNodeModules)
+  })
+
+  it('splits node_modules cache keys when the registry artifact changes without a source hash change', () => {
+    const baseline = createManifest()
+    const changed = createManifest({
+      packages: baseline.packages.map(pkg =>
+        pkg.name === '@reference-ui/lib'
+          ? { ...pkg, artifactHash: 'lib-artifact-b' }
+          : pkg,
+      ),
+    })
 
     const baselineNodeModules = matrixNodeModulesCacheKey({
       coreVersion: '0.0.41',
