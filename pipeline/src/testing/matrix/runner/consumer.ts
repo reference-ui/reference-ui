@@ -44,6 +44,7 @@ export function matrixFixtureSourceDirectory(packageDir: string) {
       'index.html',
       'ui.config.ts',
       'vite.config.ts',
+      'webpack.config.cjs',
       'vitest.config.ts',
       'playwright.config.ts',
     ],

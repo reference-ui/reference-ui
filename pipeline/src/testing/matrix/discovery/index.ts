@@ -14,7 +14,7 @@ import { repoRoot } from '../../../build/workspace.js'
 
 export type MatrixRefSyncMode = 'full' | 'watch-ready'
 
-export type MatrixBundlerStrategy = 'vite7'
+export type MatrixBundlerStrategy = 'vite7' | 'webpack5'
 
 export type MatrixReactRuntime = 'react19'
 
@@ -44,6 +44,11 @@ export interface MatrixWorkspacePackage {
 }
 
 const matrixRootDir = resolve(repoRoot, 'matrix')
+const knownMatrixBundlerStrategies: readonly MatrixBundlerStrategy[] = ['vite7', 'webpack5']
+
+function isKnownMatrixBundlerStrategy(value: unknown): value is MatrixBundlerStrategy {
+  return knownMatrixBundlerStrategies.includes(value as MatrixBundlerStrategy)
+}
 
 function matrixConfigPath(packageDir: string): string {
   return resolve(packageDir, 'matrix.json')
@@ -95,9 +100,9 @@ export function readMatrixPackageConfig(packageDir: string): MatrixPackageConfig
   }
 
   for (const bundler of config.bundlers) {
-    if (bundler !== 'vite7') {
+    if (!isKnownMatrixBundlerStrategy(bundler)) {
       throw new Error(
-        `Expected ${configPath} to declare bundlers as an array of known strategies ("vite7"). Got: ${String(bundler)}`,
+        `Expected ${configPath} to declare bundlers as an array of known strategies ("vite7", "webpack5"). Got: ${String(bundler)}`,
       )
     }
   }

@@ -6,6 +6,7 @@ import {
   collectMatrixFailureDetails,
   createAbortedMatrixPackageResult,
   formatRuntimeMemory,
+  normalizeCapturedOutput,
 } from './reporting.js'
 import type { MatrixPackageRunContext } from './types.js'
 
@@ -69,6 +70,13 @@ describe('matrix runner reporting helpers', () => {
     appendOutputBlock(lines, 'hello\nworld\n')
 
     assert.deepEqual(lines, ['heading', '', 'hello\nworld'])
+  })
+
+  it('normalizes carriage-return-heavy captured output', () => {
+    assert.equal(
+      normalizeCapturedOutput('line 1\rprogress\r\n\r\nline 2\n\n\nline 3\n'),
+      'line 1\nprogress\n\nline 2\n\nline 3',
+    )
   })
 
   it('creates an aborted package result without extra timing noise', () => {

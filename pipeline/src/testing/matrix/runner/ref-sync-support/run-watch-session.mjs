@@ -174,6 +174,13 @@ async function runPhaseWhileWatchAlive(phase, watchProcess) {
 const phases = parsePhases()
 await mkdir(dirname(watchLogPath), { recursive: true })
 const watchLogStream = createWriteStream(watchLogPath, { flags: 'w' })
+watchLogStream.on('error', (error) => {
+  if (error && typeof error === 'object' && 'code' in error && error.code === 'ERR_STREAM_WRITE_AFTER_END') {
+    return
+  }
+
+  throw error
+})
 const watchProcess = spawnCommand(watchCommand)
 watchProcess.stdout?.pipe(watchLogStream)
 watchProcess.stderr?.pipe(watchLogStream)
@@ -194,5 +201,7 @@ try {
   }
 } finally {
   await stopWatchProcess(watchProcess)
+  watchProcess.stdout?.unpipe(watchLogStream)
+  watchProcess.stderr?.unpipe(watchLogStream)
   await new Promise(resolvePromise => watchLogStream.end(resolvePromise))
 }
