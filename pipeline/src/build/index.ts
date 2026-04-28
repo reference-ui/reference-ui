@@ -7,7 +7,7 @@
 
 import { computePackageBuildHashes, readBuildState, writeBuildState } from './cache.js'
 import { ensureLocalRegistryAndStagePublicPackages } from '../registry/index.js'
-import { logSkip } from '../lib/log/index.js'
+import { logSkip, logWarning } from '../lib/log/index.js'
 import { registryPackageNames } from '../../config.js'
 import type { VirtualNativeTarget } from '../../../packages/reference-rs/js/shared/targets.js'
 import {
@@ -16,6 +16,8 @@ import {
   sortPackagesForInternalDependencyOrder,
 } from './workspace.js'
 import type { WorkspacePackage } from './types.js'
+
+const temporarilyFreshBuildPackageNames = new Set(['@reference-ui/core'])
 
 export interface BuildWorkspacePackageOptions {
   requiredRustTargets?: readonly VirtualNativeTarget[]
@@ -38,9 +40,15 @@ export async function buildWorkspaceArtifacts(packageNames: readonly string[] = 
       throw new Error(`Missing build hash for ${pkg.name}`)
     }
 
-    if (buildState[pkg.name]?.hash === packageHash) {
+    const shouldForceFreshBuild = temporarilyFreshBuildPackageNames.has(pkg.name)
+
+    if (!shouldForceFreshBuild && buildState[pkg.name]?.hash === packageHash) {
       logSkip(`Skipping ${pkg.name}; build hash unchanged`)
       continue
+    }
+
+    if (shouldForceFreshBuild) {
+      logWarning(`Temporary: building ${pkg.name} fresh for baseline measurements`)
     }
 
     await run('pnpm', ['--filter', pkg.name, 'run', 'build'], {

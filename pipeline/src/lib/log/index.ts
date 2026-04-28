@@ -23,6 +23,10 @@ function failureText(message: string): string {
   return pc.bold(pc.red(message))
 }
 
+function warningText(message: string): string {
+  return pc.bold(pc.yellow(message))
+}
+
 export function formatDuration(milliseconds: number): string {
   if (milliseconds < 1_000) {
     return `${milliseconds}ms`
@@ -54,6 +58,10 @@ export function logSkip(message: string): void {
   }
 
   console.log(`${pc.blue('↷')} ${pc.dim(message)}`)
+}
+
+export function logWarning(message: string): void {
+  console.log(`${pc.yellow('!')} ${warningText(message)}`)
 }
 
 export function setSkipLoggingMuted(value: boolean): void {
