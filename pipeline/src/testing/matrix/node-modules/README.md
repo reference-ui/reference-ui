@@ -8,6 +8,7 @@ The goal is to keep matrix entries isolated at the dependency-graph level withou
 
 - helpers for computing the shared pnpm store cache key
 - helpers for computing the per-install-graph `node_modules` cache key
+- helpers for probing and populating warm fixture-local `node_modules` caches
 - unit tests for cache invalidation behavior
 
 ## Isolation Model
@@ -35,4 +36,5 @@ Keeping this in its own module makes it easier to reason about:
 ## Tests
 
 - `pnpm --dir pipeline exec tsx --test src/testing/matrix/node-modules/cache.test.ts`
+- `pnpm --dir pipeline exec tsx --test src/testing/matrix/node-modules/install.test.ts`
 - `pnpm --dir pipeline exec tsc --noEmit`
