@@ -22,6 +22,7 @@ export interface ApplyTransformsResult {
  * 1. MDX → JSX (if .mdx file)
  * 2. Rewrite cva/recipe imports from @reference-ui/react
  * 3. Rewrite css imports from @reference-ui/react
+ * 4. Lower responsive `r` sugar in canonical css()/cva() calls
  */
 export async function applyTransforms(
   options: ApplyTransformsOptions
@@ -44,8 +45,12 @@ export async function applyTransforms(
   if (['.js', '.jsx', '.ts', '.tsx'].includes(finalExt) && transformedContent.includes(CORE_PACKAGE)) {
     const { rewriteCvaImports } = await import('./rewrite-cva-imports')
     const { rewriteCssImports } = await import('./rewrite-css-imports')
+    const { applyResponsiveStyles } = await import('./apply-responsive-styles')
     const before = transformedContent
-    transformedContent = rewriteCssImports(rewriteCvaImports(transformedContent, relativePath), relativePath)
+    transformedContent = applyResponsiveStyles(
+      rewriteCssImports(rewriteCvaImports(transformedContent, relativePath), relativePath),
+      relativePath,
+    )
     if (transformedContent !== before) wasTransformed = true
   }
 
@@ -59,3 +64,4 @@ export async function applyTransforms(
 export { mdxToJsx } from './mdx-to-jsx'
 export { rewriteCvaImports } from './rewrite-cva-imports'
 export { rewriteCssImports } from './rewrite-css-imports'
+export { applyResponsiveStyles } from './apply-responsive-styles'

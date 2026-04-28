@@ -9,6 +9,8 @@ import type { Ora } from 'ora'
 import ora from 'ora'
 import pc from 'picocolors'
 
+let skipLoggingMuted = false
+
 function stepText(message: string): string {
   return pc.bold(pc.blue(message))
 }
@@ -47,7 +49,15 @@ export function failStep(step: Ora, message: string): void {
 }
 
 export function logSkip(message: string): void {
+  if (skipLoggingMuted) {
+    return
+  }
+
   console.log(`${pc.blue('↷')} ${pc.dim(message)}`)
+}
+
+export function setSkipLoggingMuted(value: boolean): void {
+  skipLoggingMuted = value
 }
 
 export function writeFailureOutput(output: string, label: string): void {

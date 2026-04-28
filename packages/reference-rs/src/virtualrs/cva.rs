@@ -50,6 +50,7 @@ pub fn rewrite_cva_imports(source_code: &str, relative_path: &str) -> String {
                 local_binding_to_normalize: import_parts
                     .local_binding_to_normalize
                     .filter(|local| local != "cva"),
+                canonical_call_name: Some("cva"),
             },
         );
     }

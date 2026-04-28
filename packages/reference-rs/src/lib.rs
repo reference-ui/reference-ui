@@ -28,6 +28,15 @@ use tasty::scan_and_emit_modules as do_scan_and_emit_modules;
 
 #[cfg(feature = "napi")]
 #[napi]
+pub fn get_native_capabilities() -> Result<String> {
+    Ok(serde_json::json!({
+        "styletraceSyncRootHint": true
+    })
+    .to_string())
+}
+
+#[cfg(feature = "napi")]
+#[napi]
 pub fn rewrite_css_imports(source_code: String, relative_path: String) -> Result<String> {
     Ok(virtualrs::rewrite_css_imports(&source_code, &relative_path))
 }
@@ -36,6 +45,15 @@ pub fn rewrite_css_imports(source_code: String, relative_path: String) -> Result
 #[napi]
 pub fn rewrite_cva_imports(source_code: String, relative_path: String) -> Result<String> {
     Ok(virtualrs::rewrite_cva_imports(&source_code, &relative_path))
+}
+
+#[cfg(feature = "napi")]
+#[napi]
+pub fn apply_responsive_styles(source_code: String, relative_path: String) -> Result<String> {
+    Ok(virtualrs::apply_responsive_styles(
+        &source_code,
+        &relative_path,
+    ))
 }
 
 /// Scan TypeScript under `root_dir` with the given include globs, then emit all Tasty ESM modules.

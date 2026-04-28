@@ -26,6 +26,12 @@ interface LoadedRegistryStateEntry {
 
 type LoadedRegistryState = Record<string, LoadedRegistryStateEntry>
 
+interface RegistryManifestLikePackage {
+  hash: string
+  name: string
+  version: string
+}
+
 function isPublishedToRegistry(name: string, version: string, registryUrl: string): boolean {
   try {
     const output = execFileSync('npm', ['view', `${name}@${version}`, 'version', '--registry', registryUrl, '--json'], {
@@ -38,6 +44,17 @@ function isPublishedToRegistry(name: string, version: string, registryUrl: strin
   } catch {
     return false
   }
+}
+
+export function canSkipRegistryPublishFromState(
+  pkg: RegistryManifestLikePackage,
+  previous: LoadedRegistryStateEntry | undefined,
+  registryRebuilt: boolean,
+): boolean {
+  return !registryRebuilt
+    && previous !== undefined
+    && previous.version === pkg.version
+    && previous.hash === pkg.hash
 }
 
 function registryAuthTokenOption(registryUrl: string): string {
@@ -60,7 +77,7 @@ async function writeLoadedRegistryState(state: LoadedRegistryState): Promise<voi
   await writeFile(loadedStatePath, `${JSON.stringify(state, null, 2)}\n`)
 }
 
-async function rebuildRegistryIfLoadedHashesChanged(registryUrl: string): Promise<void> {
+async function rebuildRegistryIfLoadedHashesChanged(registryUrl: string): Promise<boolean> {
   const manifest = await readRegistryManifest()
   const loadedState = await readLoadedRegistryState()
 
@@ -73,20 +90,27 @@ async function rebuildRegistryIfLoadedHashesChanged(registryUrl: string): Promis
   })
 
   if (!requiresRebuild) {
-    return
+    return false
   }
 
   await rebuildManagedLocalRegistry(registryUrl)
+  return true
 }
 
 export async function loadPackedTarballsIntoLocalRegistry(registryUrl: string = defaultRegistryUrl): Promise<void> {
   const manifest = await readRegistryManifest()
   const authTokenOption = registryAuthTokenOption(registryUrl)
+  const loadedState = await readLoadedRegistryState()
 
-  await rebuildRegistryIfLoadedHashesChanged(registryUrl)
+  const registryRebuilt = await rebuildRegistryIfLoadedHashesChanged(registryUrl)
 
   for (const pkg of manifest.packages) {
-    if (isPublishedToRegistry(pkg.name, pkg.version, registryUrl)) {
+    if (canSkipRegistryPublishFromState(pkg, loadedState[pkg.name], registryRebuilt)) {
+      logSkip(`Skipping ${pkg.name}@${pkg.version}; already present in ${registryUrl}`)
+      continue
+    }
+
+    if (!registryRebuilt && isPublishedToRegistry(pkg.name, pkg.version, registryUrl)) {
       logSkip(`Skipping ${pkg.name}@${pkg.version}; already present in ${registryUrl}`)
       continue
     }
@@ -123,7 +147,7 @@ export async function stagePublicPackages(
   packageNames: readonly string[] = registryPackageNames,
   requiredRustTargets?: readonly VirtualNativeTarget[],
 ): Promise<void> {
-  await packPublicPackages(packageNames, requiredRustTargets)
+  await packPublicPackages(packageNames, { requiredTargets: requiredRustTargets })
   await loadPackedTarballsIntoLocalRegistry(registryUrl)
 }
 

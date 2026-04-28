@@ -10,6 +10,7 @@ import type { StylePropValue } from './style-prop'
  */
 export const COLOR_PROP_KEYS = [
   'accentColor',
+  'background',
   'backgroundColor',
   'bg',
   'bgColor',
@@ -52,6 +53,7 @@ export const COLOR_PROP_KEYS = [
 // `Omit<P, ColorPropKeys>` instead of collapsing it to `typeof CONST[number]`.
 export type ColorPropKeys =
   | 'accentColor'
+  | 'background'
   | 'backgroundColor'
   | 'bg'
   | 'bgColor'

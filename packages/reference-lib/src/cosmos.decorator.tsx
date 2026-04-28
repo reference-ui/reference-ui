@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { Button, Div, Span } from '@reference-ui/react'
+import '@reference-ui/react/styles.css'
 
 export default function CosmosDecorator({ children }: { children: React.ReactNode }) {
   const [dark, setDark] = React.useState(true)
@@ -43,7 +44,7 @@ export default function CosmosDecorator({ children }: { children: React.ReactNod
           borderWidth="1px"
           borderStyle="solid"
           borderColor={dark ? 'gray.700' : 'gray.300'}
-          onClick={() => setDark((d) => !d)}
+          onClick={() => setDark(d => !d)}
         >
           {dark ? 'Light' : 'Dark'}
         </Button>

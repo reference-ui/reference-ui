@@ -5,9 +5,10 @@ import type { BoxPatternExtension } from '../../../../api/patterns'
 type TokenFragment = Record<string, unknown>
 type RecipeConfig = Record<string, unknown>
 type FontPreset = Record<string, string>
+type FontWeightTokenTree = Record<string, Record<string, { value: string }>>
 
 function getPrimaryFontFace(fontFace: FontDefinition['fontFace']): FontFaceRule {
-  return Array.isArray(fontFace) ? fontFace[0] ?? { src: '' } : fontFace
+  return Array.isArray(fontFace) ? (fontFace[0] ?? { src: '' }) : fontFace
 }
 
 function getDefaultFontWeight(font: FontDefinition): string {
@@ -74,24 +75,26 @@ export function buildFontTokens(fonts: FontDefinition[]): TokenFragment {
     return {}
   }
 
+  const fontWeights: FontWeightTokenTree = {}
+  for (const font of fonts) {
+    const scopedWeights = fontWeights[font.name] ?? {}
+    for (const [weightName, weightValue] of Object.entries(font.weights)) {
+      scopedWeights[weightName] = { value: weightValue }
+    }
+    fontWeights[font.name] = scopedWeights
+  }
+
   return {
-    fonts: Object.fromEntries(
-      fonts.map((font) => [font.name, { value: font.value }])
-    ),
-    fontWeights: Object.fromEntries(
-      fonts.flatMap((font) =>
-        Object.entries(font.weights).map(([weightName, weightValue]) => [
-          `${font.name}.${weightName}`,
-          { value: weightValue },
-        ])
-      )
-    ),
+    fonts: Object.fromEntries(fonts.map(font => [font.name, { value: font.value }])),
+    fontWeights,
   }
 }
 
-export function buildFontFaces(fonts: FontDefinition[]): NonNullable<Config['globalFontface']> {
+export function buildFontFaces(
+  fonts: FontDefinition[]
+): NonNullable<Config['globalFontface']> {
   return Object.fromEntries(
-    fonts.flatMap((font) => {
+    fonts.flatMap(font => {
       const fontFace = getPrimaryFontFace(font.fontFace)
 
       if (!fontFace.src) {
@@ -126,24 +129,22 @@ export function buildFontRecipes(fonts: FontDefinition[]): RecipeConfig {
     fontStyle: {
       className: 'r_font',
       variants: {
-        font: Object.fromEntries(
-          fonts.map((font) => [font.name, getFontPreset(font)])
-        ),
+        font: Object.fromEntries(fonts.map(font => [font.name, getFontPreset(font)])),
       },
     },
   }
 }
 
-export function buildFontPatternExtensions(fonts: FontDefinition[]): BoxPatternExtension[] {
+export function buildFontPatternExtensions(
+  fonts: FontDefinition[]
+): BoxPatternExtension[] {
   if (fonts.length === 0) {
     return []
   }
 
-  const presets = Object.fromEntries(
-    fonts.map((font) => [font.name, getFontPreset(font)])
-  )
+  const presets = Object.fromEntries(fonts.map(font => [font.name, getFontPreset(font)]))
   const weightTokens = Object.fromEntries(
-    fonts.flatMap((font) =>
+    fonts.flatMap(font =>
       Object.entries(font.weights).map(([weightName, weightValue]) => [
         `${font.name}.${weightName}`,
         weightValue,

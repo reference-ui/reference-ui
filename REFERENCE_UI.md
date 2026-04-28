@@ -315,7 +315,6 @@ So the MCP is **not** a static file checked into git for your app: it is **rebui
 | `list_components` | Search/filter list with optional `query`, `source`, `limit` (capped at 100). |
 | `get_component` | Full joined record for one component name (optional `source` disambiguation). |
 | `get_component_examples` | Examples from Atlas. |
-| `get_common_patterns` | `usedWith` neighborhood (limit capped at 50). |
 | `reference-ui://component-model` (resource) | Public JSON model (schema version, `generatedAt`, `components`—via `toPublicModel`). |
 
 Server version field is currently `0.0.3` in source; the description states Atlas + generated types backing.
@@ -911,8 +910,7 @@ If `@reference-ui/rust` fails to load the native binary, any path that needs Atl
 | --- | --- |
 | Root overview | [README.md](./README.md) |
 | Core CLI and threading | [packages/reference-core/README.md](./packages/reference-core/README.md) |
-| MCP product architecture | [packages/reference-core/src/mcp/MCP.md](./packages/reference-core/src/mcp/MCP.md) |
-| MCP module layout | [packages/reference-core/src/mcp/README.md](./packages/reference-core/src/mcp/README.md) |
+| MCP tools | [packages/reference-core/src/mcp/README.md](./packages/reference-core/src/mcp/README.md) |
 | System overview | [packages/reference-core/src/system/README.md](./packages/reference-core/src/system/README.md) |
 | Event bus | [packages/reference-core/src/lib/event-bus/README.md](./packages/reference-core/src/lib/event-bus/README.md) |
 | Sync event graph (source) | [packages/reference-core/src/sync/events.ts](./packages/reference-core/src/sync/events.ts) |

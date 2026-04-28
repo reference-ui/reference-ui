@@ -31,6 +31,9 @@ describe('resolveColorModeTokens()', () => {
 
     expect(resolved.baseTokens).toEqual({
       colors: {
+        accent: {
+          value: '{colors.blue.700}',
+        },
         text: {
           value: '{colors.gray.950}',
           description: 'Primary text color',
@@ -82,7 +85,7 @@ describe('resolveColorModeTokens()', () => {
     })
   })
 
-  it('prefers the explicit light/dark pair over value and does not emit a base token', () => {
+  it('prefers the explicit light/dark pair over value and emits a light base token', () => {
     const resolved = resolveColorModeTokens([
       {
         colors: {
@@ -108,6 +111,13 @@ describe('resolveColorModeTokens()', () => {
 
     expect(resolved.baseTokens).toEqual({
       colors: {
+        accent: {
+          value: '{colors.blue.700}',
+        },
+        text: {
+          value: '{colors.gray.950}',
+          description: 'Explicit mode pair',
+        },
         icon: {
           value: '{colors.gray.700}',
         },
@@ -344,6 +354,48 @@ describe('resolveColorModeTokens()', () => {
               value: '{colors.gray.50}',
             },
           },
+        },
+      },
+    })
+  })
+
+  it('treats light/dark keys whose value is an object as nested groups, not mode slots (e.g. tier name `light`)', () => {
+    const resolved = resolveColorModeTokens([
+      {
+        design: {
+          text: {
+            base: { light: '{colors.gray.800}', dark: '{colors.gray.50}' },
+            light: { light: '{colors.gray.700}', dark: '{colors.gray.300}' },
+            lighter: { light: '{colors.gray.600}', dark: '{colors.gray.400}' },
+          },
+        },
+      },
+    ])
+
+    expect(resolved.themes.light?.tokens).toEqual({
+      design: {
+        text: {
+          base: { value: '{colors.gray.800}' },
+          light: { value: '{colors.gray.700}' },
+          lighter: { value: '{colors.gray.600}' },
+        },
+      },
+    })
+    expect(resolved.themes.dark?.tokens).toEqual({
+      design: {
+        text: {
+          base: { value: '{colors.gray.50}' },
+          light: { value: '{colors.gray.300}' },
+          lighter: { value: '{colors.gray.400}' },
+        },
+      },
+    })
+    expect(resolved.baseTokens).toEqual({
+      design: {
+        text: {
+          base: { value: '{colors.gray.800}' },
+          light: { value: '{colors.gray.700}' },
+          lighter: { value: '{colors.gray.600}' },
         },
       },
     })

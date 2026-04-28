@@ -1,7 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import {
   createServer,
   type IncomingMessage,
@@ -11,9 +11,17 @@ import {
 import { resolve } from 'node:path'
 import { z } from 'zod'
 import { log } from '../../lib/log'
+import { resolveCorePackageDir } from '../../lib/paths/core-package-dir'
 import { readMcpArtifact } from '../pipeline/artifact'
 import { getMcpModelPath } from '../pipeline/paths'
-import { findComponent, getCommonPatterns, listComponents } from '../pipeline/queries'
+import {
+  compactComponent,
+  findComponent,
+  getComponentProps,
+  listComponents,
+  listTokens,
+} from '../pipeline/queries'
+import { getStylePropsReference } from '../pipeline/style-props'
 import type { McpBuildArtifact, McpPublicModel } from '../pipeline/types'
 import { spawnMcpBuildChild } from '../worker/child-process/process'
 
@@ -32,6 +40,16 @@ export const DEFAULT_REFERENCE_MCP_PORT = 3697
 export const DEFAULT_REFERENCE_MCP_HOST = '127.0.0.1'
 export const DEFAULT_REFERENCE_MCP_PATH = '/mcp'
 export const REFERENCE_MCP_READY_PREFIX = '[ref mcp] ready'
+export const REFERENCE_MCP_GETTING_STARTED_URI = 'reference-ui://getting-started'
+
+const REFERENCE_UI_START_GUIDE_FALLBACK = `# Reference UI Start Guide
+
+Reference UI MCP is a project-aware component, prop, style, and token reference.
+
+Run \`pnpm exec ref sync\` before starting MCP so generated Reference UI artifacts exist.
+
+Start with \`getting_started\`, then use \`list_components\`, \`get_component\`, \`get_component_examples\`, \`get_component_props\`, \`get_style_props\`, and \`get_tokens\` as needed.
+`
 
 export interface McpModelState {
   /** Load cached artifact if present, else build; may start a background refresh when cache exists. */
@@ -108,7 +126,17 @@ function toPublicModel(artifact: McpBuildArtifact): McpPublicModel {
   return {
     schemaVersion: artifact.schemaVersion,
     generatedAt: artifact.generatedAt,
-    components: artifact.components,
+    components: listComponents(artifact, { limit: 500 }),
+  }
+}
+
+function loadReferenceMcpStartGuide(cwd: string): string {
+  try {
+    const coreDir = resolveCorePackageDir(cwd)
+    return readFileSync(resolve(coreDir, 'src', 'mcp', 'START.mdx'), 'utf8')
+  } catch (error) {
+    log.warn('[mcp] Failed to load START.mdx; using fallback start guide.', error)
+    return REFERENCE_UI_START_GUIDE_FALLBACK
   }
 }
 
@@ -116,20 +144,34 @@ export function createReferenceMcpServer(
   options: CreateReferenceMcpServerOptions
 ): McpServer {
   const state = options.modelState
+  const startGuide = loadReferenceMcpStartGuide(options.cwd)
   const server = new McpServer({
     name: 'reference-ui',
     title: 'Reference UI',
     version: '0.0.3',
     description:
       'Atlas- and generated-types-backed component inspection for Reference UI projects.',
+  }, {
+    instructions: startGuide,
   })
+
+  server.registerTool(
+    'getting_started',
+    {
+      title: 'Getting Started',
+      description:
+        'Return the Reference UI start guide, including primitives, StyleProps, tokens, and recommended MCP workflow.',
+      inputSchema: {},
+    },
+    async () => toTextResult({ guide: startGuide })
+  )
 
   server.registerTool(
     'list_components',
     {
       title: 'List Components',
       description:
-        'List available components discovered in the current Reference UI project.',
+        'List components observed in the current project graph, including imported Reference UI primitives that are actually used in JSX.',
       inputSchema: {
         query: z.string().optional(),
         source: z.string().optional(),
@@ -146,7 +188,8 @@ export function createReferenceMcpServer(
     'get_component',
     {
       title: 'Get Component',
-      description: 'Return the enriched component model for a single component.',
+      description:
+        'Return the enriched model for one observed component or imported primitive used in this project.',
       inputSchema: {
         name: z.string(),
         source: z.string().optional(),
@@ -158,7 +201,45 @@ export function createReferenceMcpServer(
       if (!component) {
         return toErrorResult(`Component not found: ${input.name}`)
       }
-      return toTextResult({ ...component })
+      return toTextResult({ ...compactComponent(component) })
+    }
+  )
+
+  server.registerTool(
+    'get_component_props',
+    {
+      title: 'Get Component Props',
+      description:
+        'Return the full prop/interface readout for a component, with optional filters for style props and unused documented props.',
+      inputSchema: {
+        name: z.string(),
+        source: z.string().optional(),
+        includeUnused: z.boolean().optional(),
+        includeStyleProps: z.boolean().optional(),
+        query: z.string().optional(),
+        limit: z.number().int().positive().max(500).optional(),
+      },
+    },
+    async input => {
+      const artifact = await state.load()
+      const result = getComponentProps(artifact, input)
+      if (!result) {
+        return toErrorResult(`Component not found: ${input.name}`)
+      }
+      const compact = compactComponent(result.component)
+
+      return toTextResult({
+        name: result.component.name,
+        kind: result.component.kind ?? 'project',
+        source: result.component.source,
+        count: result.component.count,
+        usage: result.component.usage,
+        usageSemantics: compact.usageSemantics,
+        interface: result.component.interface,
+        props: result.props,
+        propSummary: result.propSummary,
+        styleProps: compact.styleProps,
+      })
     }
   )
 
@@ -181,6 +262,7 @@ export function createReferenceMcpServer(
 
       return toTextResult({
         name: component.name,
+        kind: component.kind ?? 'project',
         source: component.source,
         examples: component.examples,
       })
@@ -188,28 +270,36 @@ export function createReferenceMcpServer(
   )
 
   server.registerTool(
-    'get_common_patterns',
+    'get_style_props',
     {
-      title: 'Get Common Patterns',
-      description: 'Show which components commonly appear with the requested component.',
+      title: 'Get Style Props',
+      description:
+        'Return the shared Reference UI StyleProps guide and token category compatibility.',
       inputSchema: {
-        name: z.string(),
-        source: z.string().optional(),
-        limit: z.number().int().positive().max(50).optional(),
+        query: z.string().optional(),
+        includeProps: z.boolean().optional(),
+      },
+    },
+    async input => {
+      return toTextResult(getStylePropsReference(input))
+    }
+  )
+
+  server.registerTool(
+    'get_tokens',
+    {
+      title: 'Get Tokens',
+      description:
+        'Return project token paths, categories, values, and descriptions collected from Reference UI token fragments. Large result sets are compressed; query a token path for details.',
+      inputSchema: {
+        category: z.string().optional(),
+        query: z.string().optional(),
+        limit: z.number().int().positive().max(1000).optional(),
       },
     },
     async input => {
       const artifact = await state.load()
-      const patterns = getCommonPatterns(artifact, input)
-      if (!patterns) {
-        return toErrorResult(`Component not found: ${input.name}`)
-      }
-
-      return toTextResult({
-        name: input.name,
-        source: input.source ?? null,
-        patterns,
-      })
+      return toTextResult({ ...listTokens(artifact, input) })
     }
   )
 
@@ -234,6 +324,25 @@ export function createReferenceMcpServer(
         ],
       }
     }
+  )
+
+  server.registerResource(
+    'getting-started',
+    REFERENCE_MCP_GETTING_STARTED_URI,
+    {
+      title: 'Reference UI MCP Getting Started',
+      description: 'Short guide for using Reference UI MCP tools efficiently.',
+      mimeType: 'text/markdown',
+    },
+    async uri => ({
+      contents: [
+        {
+          uri: uri.href,
+          mimeType: 'text/markdown',
+          text: startGuide,
+        },
+      ],
+    })
   )
 
   return server

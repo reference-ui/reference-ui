@@ -11,6 +11,10 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { Div } from '@reference-ui/react'
 import { injectDesignSystemCss, getDesignSystemCssPath } from './setup'
+import {
+  REFERENCE_UNIT_MODE_LIGHT_RGB,
+  REFERENCE_UNIT_TOKEN_RGB,
+} from '../../src/system/styles'
 
 beforeAll(() => {
   try {
@@ -22,8 +26,8 @@ beforeAll(() => {
 
 const hasDesignSystemCss = () => Boolean(getDesignSystemCssPath())
 
-const TEST_BG = 'reference.background'
-const TEST_COLOR = 'reference.text'
+const TEST_BG = 'referenceUnitToken'
+const TEST_COLOR = 'referenceUnitColorModeToken'
 
 describe('Div primitive', () => {
   it('renders as a div with children', () => {
@@ -75,8 +79,8 @@ describe('Div primitive', () => {
     // The core scaffold Div spreads props to DOM; the full box-based Div emits utility classes. Assert only when applied.
     if (style.paddingTop) {
       expect(style.paddingTop).toBe('16px')
-      expect(style.backgroundColor).toBe(TEST_BG)
-      expect(style.color).toBe(TEST_COLOR)
+      expect(style.backgroundColor).toBe(REFERENCE_UNIT_TOKEN_RGB)
+      expect(style.color).toBe(REFERENCE_UNIT_MODE_LIGHT_RGB)
     }
   })
 
@@ -84,7 +88,7 @@ describe('Div primitive', () => {
     if (!hasDesignSystemCss()) return
 
     render(
-      <Div data-testid="div-tokens" padding="md" backgroundColor="reference.primary">
+      <Div data-testid="div-tokens" padding="md" backgroundColor="referenceUnitToken">
         Tokens
       </Div>
     )
@@ -92,7 +96,7 @@ describe('Div primitive', () => {
     const style = window.getComputedStyle(el)
     if (style.paddingTop) {
       expect(style.paddingTop).toBe('16px')
-      expect(style.backgroundColor).toBe(TEST_BG)
+      expect(style.backgroundColor).toBe(REFERENCE_UNIT_TOKEN_RGB)
     }
   })
 

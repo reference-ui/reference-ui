@@ -63,7 +63,7 @@ async function importCodegenModule(options: {
   vi.doMock('../../base/create', () => ({
     updateBaseSystemCss,
   }))
-  vi.doMock('../../css/postprocess', () => ({
+  vi.doMock('../../stylesheet/postprocess', () => ({
     PANDA_GLOBAL_CSS_FILENAME: 'global.css',
     postprocessCss,
   }))
@@ -87,7 +87,7 @@ afterEach(() => {
   vi.doUnmock('../../../lib/log')
   vi.doUnmock('@pandacss/node')
   vi.doUnmock('../../base/create')
-  vi.doUnmock('../../css/postprocess')
+  vi.doUnmock('../../stylesheet/postprocess')
   vi.restoreAllMocks()
   for (const dir of createdDirs.splice(0)) {
     rmSync(dir, { recursive: true, force: true })
@@ -110,7 +110,7 @@ describe('system/panda/gen/codegen', () => {
       cssgen: vi.fn(),
     }))
     vi.doMock('../../base/create', () => ({ updateBaseSystemCss: vi.fn() }))
-    vi.doMock('../../css/postprocess', () => ({
+    vi.doMock('../../stylesheet/postprocess', () => ({
       PANDA_GLOBAL_CSS_FILENAME: 'global.css',
       postprocessCss: vi.fn(),
     }))
@@ -210,7 +210,7 @@ describe('system/panda/gen/codegen', () => {
       cssgen: vi.fn(),
     }))
     vi.doMock('../../base/create', () => ({ updateBaseSystemCss: vi.fn() }))
-    vi.doMock('../../css/postprocess', () => ({
+    vi.doMock('../../stylesheet/postprocess', () => ({
       PANDA_GLOBAL_CSS_FILENAME: 'global.css',
       postprocessCss: vi.fn(),
     }))

@@ -1,0 +1,52 @@
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import {
+  connectSharedMatrixMcp,
+  MATRIX_MCP_TIMEOUT_MS,
+  parseTextJson,
+  stopMcpClient,
+  type RunningMcpClient,
+} from './helpers'
+
+let running: RunningMcpClient | null = null
+
+describe('get_component_examples', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
+  beforeAll(async () => {
+    running = await connectSharedMatrixMcp()
+  }, MATRIX_MCP_TIMEOUT_MS)
+
+  afterAll(async () => {
+    await stopMcpClient(running)
+    running = null
+  }, 10_000)
+
+  it('returns captured usage examples for one component', async () => {
+    const result = await running!.client.callTool({
+      name: 'get_component_examples',
+      arguments: { name: 'HeroBanner' },
+    })
+    const payload = parseTextJson<{ examples: string[]; name: string; source: string }>(result)
+
+    expect(payload.name).toBe('HeroBanner')
+    expect(payload.examples).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining('<HeroBanner'),
+      ]),
+    )
+  })
+
+  it('returns example usage for Reference UI primitives', async () => {
+    const result = await running!.client.callTool({
+      name: 'get_component_examples',
+      arguments: { name: 'Div' },
+    })
+    const payload = parseTextJson<{ examples: string[]; name: string; source: string }>(result)
+
+    expect(payload.name).toBe('Div')
+    expect(payload.source).toBe('@reference-ui/react')
+    expect(payload.examples).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining('<Div'),
+      ]),
+    )
+  })
+})

@@ -3,6 +3,7 @@ import { existsSync, readdirSync, statSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import { join } from 'node:path'
 
+import { getVirtualNativeCompatibilityError } from '../runtime/loader'
 import { packageDir } from '../shared/paths'
 import { getRustTarget, getVirtualNativeTriple } from '../shared/targets'
 
@@ -12,13 +13,6 @@ if (!triple) {
 }
 
 const binaryPath = join(packageDir, 'native', `virtual-native.${triple}.node`)
-const requiredExports = [
-  'rewriteCssImports',
-  'rewriteCvaImports',
-  'scanAndEmitModules',
-  'analyzeAtlas',
-  'analyzeStyletrace',
-]
 const nativeInputs = [
   join(packageDir, 'Cargo.toml'),
   join(packageDir, 'Cargo.lock'),
@@ -63,16 +57,13 @@ if (existsSync(binaryPath)) {
     try {
       const require = createRequire(import.meta.url)
       const binding = require(binaryPath) as Record<string, unknown>
-      const hasRequiredExports = requiredExports.every(
-        name => typeof binding[name] === 'function'
-      )
-      const hasDeprecatedBundleExport = typeof binding.scanAndEmitBundle === 'function'
-      if (hasRequiredExports && !hasDeprecatedBundleExport) {
+      const compatibilityError = getVirtualNativeCompatibilityError(binding)
+      if (!compatibilityError) {
         console.log(`Using existing native binary ${binaryPath}`)
         process.exit(0)
       }
 
-      console.log(`Rebuilding stale native binary ${binaryPath}`)
+      console.log(`Rebuilding stale native binary ${binaryPath}: ${compatibilityError}`)
     } catch {
       console.log(`Rebuilding unloadable native binary ${binaryPath}`)
     }

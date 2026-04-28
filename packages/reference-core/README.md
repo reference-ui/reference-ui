@@ -21,26 +21,16 @@ Runs the Reference UI MCP server.
 
 #### Standard VS Code setup
 
-For repo-local MCP clients that spawn a local process directly, prefer
-launching `node` with the built CLI path. Do not assume package-manager
-wrappers like `pnpm` are available on the editor host `PATH`.
-
-For published consumer-facing setup, document the install/run flow separately.
-That may be simpler. The guidance here is the deterministic workspace-local
-integration path.
-
-Typical workspace-installed setup:
+Prefer the published `npx` form for MCP clients:
 
 ```json
 {
   "servers": {
     "referenceUi": {
       "type": "stdio",
-      "command": "node",
-      "args": [
-        "${workspaceFolder}/node_modules/@reference-ui/core/dist/cli/index.mjs",
-        "mcp"
-      ]
+      "command": "npx",
+      "cwd": "${workspaceFolder}",
+      "args": ["-y", "--package", "@reference-ui/core", "mcp"]
     }
   }
 }
@@ -49,9 +39,8 @@ Typical workspace-installed setup:
 If your MCP client supports `cwd`, set it to the project whose `ui.config.ts`
 should drive MCP output.
 
-In this monorepo workspace we target the docs package directory explicitly so
-the server runs with the correct `ui.config.ts` as its current working
-directory:
+For repo-local development, the direct built CLI path is a deterministic
+fallback:
 
 ```json
 {
@@ -65,10 +54,6 @@ directory:
   }
 }
 ```
-
-`npx @reference-ui/core mcp` can still work for published-package setups, but
-it depends on the extension host being able to resolve `npx`. `node` plus the
-CLI path is the safer default for editor integrations.
 
 ## Architecture
 

@@ -3,6 +3,7 @@ import { describe, it } from 'node:test'
 
 import type { RegistryManifestPackage } from '../registry/types.js'
 import {
+  assertRustRootPublishIsSafe,
   isReleaseManifestPackage,
   publishArgsForTarball,
   shouldPublishWithProvenance,
@@ -117,6 +118,59 @@ describe('sortReleaseManifestPackages', () => {
         '@reference-ui/lib',
       ],
     )
+  })
+})
+
+describe('assertRustRootPublishIsSafe', () => {
+  it('refuses to publish a new rust root when native packages already exist at that version', () => {
+    assert.throws(
+      () => assertRustRootPublishIsSafe(
+        [
+          manifestPackage({
+            name: '@reference-ui/rust-darwin-arm64',
+            sourceDir: 'packages/reference-rs/npm/darwin-arm64',
+            tarballFileName: 'rust-darwin-arm64.tgz',
+            tarballPath: '.pipeline/registry/tarballs/rust-darwin-arm64.tgz',
+            version: '0.0.26',
+          }),
+          manifestPackage({
+            name: '@reference-ui/rust',
+            sourceDir: 'packages/reference-rs',
+            tarballFileName: 'rust.tgz',
+            tarballPath: '.pipeline/registry/tarballs/rust.tgz',
+            version: '0.0.26',
+          }),
+        ],
+        'https://registry.npmjs.org',
+        (name) => name === '@reference-ui/rust-darwin-arm64',
+      ),
+      /could mix new JS artifacts with older native binaries/,
+    )
+  })
+
+  it('allows continuing when the rust root was already published', () => {
+    assert.doesNotThrow(() => {
+      assertRustRootPublishIsSafe(
+        [
+          manifestPackage({
+            name: '@reference-ui/rust-darwin-arm64',
+            sourceDir: 'packages/reference-rs/npm/darwin-arm64',
+            tarballFileName: 'rust-darwin-arm64.tgz',
+            tarballPath: '.pipeline/registry/tarballs/rust-darwin-arm64.tgz',
+            version: '0.0.26',
+          }),
+          manifestPackage({
+            name: '@reference-ui/rust',
+            sourceDir: 'packages/reference-rs',
+            tarballFileName: 'rust.tgz',
+            tarballPath: '.pipeline/registry/tarballs/rust.tgz',
+            version: '0.0.26',
+          }),
+        ],
+        'https://registry.npmjs.org',
+        (name) => name === '@reference-ui/rust' || name === '@reference-ui/rust-darwin-arm64',
+      )
+    })
   })
 })
 

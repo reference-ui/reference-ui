@@ -1,5 +1,133 @@
 # @reference-ui/core
 
+## 0.0.41
+
+### Patch Changes
+
+- CI RELEASE
+- Updated dependencies
+  - @reference-ui/rust@0.0.40
+
+## 0.0.40
+
+### Patch Changes
+
+- CI RELEASE
+- Updated dependencies
+  - @reference-ui/rust@0.0.39
+
+## 0.0.39
+
+### Patch Changes
+
+- CI RELEASE
+- Updated dependencies
+  - @reference-ui/rust@0.0.38
+
+## 0.0.38
+
+### Patch Changes
+
+- CI RELEASE
+- Updated dependencies
+  - @reference-ui/rust@0.0.37
+
+## 0.0.37
+
+### Patch Changes
+
+- CI RELEASE
+- Updated dependencies
+  - @reference-ui/rust@0.0.36
+
+## 0.0.36
+
+### Patch Changes
+
+- CI RELEASE
+- Updated dependencies
+  - @reference-ui/rust@0.0.35
+
+## 0.0.35
+
+### Patch Changes
+
+- CI
+- Updated dependencies
+  - @reference-ui/rust@0.0.34
+
+## 0.0.34
+
+### Patch Changes
+
+- CI RELEASE
+- Updated dependencies
+  - @reference-ui/rust@0.0.33
+
+## 0.0.33
+
+### Patch Changes
+
+- CI RELEASE
+- Updated dependencies
+  - @reference-ui/rust@0.0.32
+
+## 0.0.32
+
+### Patch Changes
+
+- CI RELEASE
+- Updated dependencies
+  - @reference-ui/rust@0.0.31
+
+## 0.0.31
+
+### Patch Changes
+
+- CI RELEASE
+- Updated dependencies
+  - @reference-ui/rust@0.0.30
+
+## 0.0.30
+
+### Patch Changes
+
+- 79a460e: CI RELEASE
+- Updated dependencies [79a460e]
+  - @reference-ui/rust@0.0.29
+
+## 0.0.29
+
+### Patch Changes
+
+- dfd3cf4: CI RELEASE
+- Updated dependencies [dfd3cf4]
+  - @reference-ui/rust@0.0.28
+
+## 0.0.28
+
+### Patch Changes
+
+- f301b4b: CI RELEASE
+- Updated dependencies [f301b4b]
+  - @reference-ui/rust@0.0.27
+
+## 0.0.27
+
+### Patch Changes
+
+- 5e66c6e: RELEASE CI
+- Updated dependencies [5e66c6e]
+  - @reference-ui/rust@0.0.26
+
+## 0.0.26
+
+### Patch Changes
+
+- c42290a: CI RELEASE
+- Updated dependencies [c42290a]
+  - @reference-ui/rust@0.0.25
+
 ## 0.0.25
 
 ### Patch Changes

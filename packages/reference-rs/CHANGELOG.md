@@ -1,5 +1,101 @@
 # @reference-ui/rust
 
+## 0.0.40
+
+### Patch Changes
+
+- CI RELEASE
+
+## 0.0.39
+
+### Patch Changes
+
+- CI RELEASE
+
+## 0.0.38
+
+### Patch Changes
+
+- CI RELEASE
+
+## 0.0.37
+
+### Patch Changes
+
+- CI RELEASE
+
+## 0.0.36
+
+### Patch Changes
+
+- CI RELEASE
+
+## 0.0.35
+
+### Patch Changes
+
+- CI RELEASE
+
+## 0.0.34
+
+### Patch Changes
+
+- CI
+
+## 0.0.33
+
+### Patch Changes
+
+- CI RELEASE
+
+## 0.0.32
+
+### Patch Changes
+
+- CI RELEASE
+
+## 0.0.31
+
+### Patch Changes
+
+- CI RELEASE
+
+## 0.0.30
+
+### Patch Changes
+
+- CI RELEASE
+
+## 0.0.29
+
+### Patch Changes
+
+- 79a460e: CI RELEASE
+
+## 0.0.28
+
+### Patch Changes
+
+- dfd3cf4: CI RELEASE
+
+## 0.0.27
+
+### Patch Changes
+
+- f301b4b: CI RELEASE
+
+## 0.0.26
+
+### Patch Changes
+
+- 5e66c6e: RELEASE CI
+
+## 0.0.25
+
+### Patch Changes
+
+- c42290a: CI RELEASE
+
 ## 0.0.24
 
 ### Patch Changes

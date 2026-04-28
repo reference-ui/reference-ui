@@ -58,16 +58,16 @@ describe('font() with font collector', () => {
   })
 })
 
-describe('extendFont() - E2E', () => {
-  it('collects font definitions from user files through the compatibility alias', async () => {
+describe('font() - E2E', () => {
+  it('collects font definitions from user files', async () => {
     mkdirSync(fixtureDir, { recursive: true })
 
     writeFileSync(
       join(fixtureDir, 'my-fonts.ts'),
       `
-      import { extendFont } from '../font'
+      import { font } from '../font'
 
-      extendFont('sans', {
+      font('sans', {
         value: '"Inter", ui-sans-serif, sans-serif',
         fontFace: {
           src: 'url(/fonts/inter.woff2) format("woff2")',

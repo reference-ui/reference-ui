@@ -19,7 +19,7 @@ import type {
 import { repoRoot, pipelineStateDir } from '../workspace.js'
 import { SUPPORTED_VIRTUAL_NATIVE_TARGETS, type VirtualNativeTarget } from '../../../../packages/reference-rs/js/shared/targets.js'
 
-const rustBuildArtifactsVersion = 2 as const
+const rustBuildArtifactsVersion = 3 as const
 const rustBuildArtifactsDir = resolve(pipelineStateDir, 'build', 'rust')
 const rustBuildArtifactsPath = resolve(rustBuildArtifactsDir, 'registry-artifacts.json')
 
@@ -41,10 +41,13 @@ export function emptyRustBuildRegistryArtifacts(): BuildRegistryArtifacts {
 export function createRustBuildRegistryArtifactsCacheKey(
   packageHash: string,
   requiredTargets?: readonly VirtualNativeTarget[],
+  forceBuildNativeTargets: boolean = false,
 ): string {
   const hash = createHash('sha256')
 
   hash.update(packageHash)
+  hash.update('\n')
+  hash.update(forceBuildNativeTargets ? 'force-build-native-targets' : 'allow-native-cache')
   hash.update('\n')
 
   for (const target of normalizeRequiredTargets(requiredTargets)) {

@@ -14,6 +14,8 @@ import type {
   FragmentBundle,
 } from './types'
 
+const CURRENT_FRAGMENT_SOURCE_GLOBAL_KEY = '__refCurrentFragmentSource'
+
 // ---------------------------------------------------------------------------
 // Bundle-only: returns portable IIFE strings, does not execute
 // ---------------------------------------------------------------------------
@@ -48,11 +50,13 @@ export async function bundleCollectorRuntime(
         })
       : []
   const bundles = [
-    ...prebundledFragments.map((bundle) => `;${bundle}`),
-    ...localBundles.map(({ bundle }) => `;${bundle}`),
+    ...prebundledFragments.map(bundle =>
+      wrapBundleWithSource(bundle, 'upstream system fragment')
+    ),
+    ...localBundles.map(({ file, bundle }) => wrapBundleWithSource(bundle, file)),
   ].join('\n')
 
-  const values = collectors.map((collector) => ({
+  const values = collectors.map(collector => ({
     name: collector.config.name,
     expression: collector.toGetter(),
   }))
@@ -60,7 +64,7 @@ export async function bundleCollectorRuntime(
   return {
     collectorFragments: [
       collectors
-        .flatMap((collector) => [collector.toScript(), collector.toRuntimeFunction()])
+        .flatMap(collector => [collector.toScript(), collector.toRuntimeFunction()])
         .join('\n'),
       bundles,
     ]
@@ -68,7 +72,7 @@ export async function bundleCollectorRuntime(
       .join('\n'),
     values,
     getValue(name: string) {
-      return values.find((value) => value.name === name)?.expression ?? '[]'
+      return values.find(value => value.name === name)?.expression ?? '[]'
     },
   }
 }
@@ -138,7 +142,9 @@ async function runPlanner(
 
   const files = scanForFragments({
     include,
-    ...(importFrom ? { importFrom } : { functionNames: collectors.map(c => c.config.targetFunction ?? c.config.name) }),
+    ...(importFrom
+      ? { importFrom }
+      : { functionNames: collectors.map(c => c.config.targetFunction ?? c.config.name) }),
     cwd,
   })
 
@@ -173,6 +179,14 @@ async function runPlanner(
 
 function uniqueTmpPath(dir: string): string {
   return join(dir, `frag-${Date.now()}-${randomBytes(6).toString('hex')}.mjs`)
+}
+
+function wrapBundleWithSource(bundle: string, source: string): string {
+  return [
+    `;globalThis['${CURRENT_FRAGMENT_SOURCE_GLOBAL_KEY}'] = ${JSON.stringify(source)}`,
+    `;${bundle}`,
+    `;globalThis['${CURRENT_FRAGMENT_SOURCE_GLOBAL_KEY}'] = undefined`,
+  ].join('\n')
 }
 
 function initAll(collectors: CollectorForPlanner[]): void {

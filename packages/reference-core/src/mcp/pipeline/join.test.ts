@@ -88,11 +88,14 @@ describe('joinMcpComponent', () => {
       defaultValue: 'solid',
       optional: false,
       readonly: false,
+      origin: 'observed',
+      styleProp: false,
     })
     expect(result.props[1]).toMatchObject({
       name: 'loading',
       type: null,
       description: null,
+      origin: 'observed',
     })
   })
 
@@ -160,6 +163,8 @@ describe('joinMcpComponent', () => {
         usage: 'unused',
         type: '"sm" | "md" | "lg"',
         description: 'Controls the recipe size',
+        origin: 'documented',
+        styleProp: false,
       },
     ])
   })

@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { PandaCssContractError } from '../../stylesheet/transform/demotePandaGlobalCssLayer'
 
 async function importGenModule(options?: {
   codegenFailure?: Error
@@ -80,12 +81,37 @@ describe('system/panda/gen', () => {
 
     await vi.waitFor(() => {
       expect(error).toHaveBeenCalledWith(
-        '[panda] codegen failed (continuing without system/styled). Virtual copy will still run.'
+        '[panda] codegen failed before CSS postprocess completed (continuing without system/styled). Virtual copy will still run.'
       )
       expect(error).toHaveBeenCalledWith('[panda] cause:', 'stack: panda exploded')
       expect(error).toHaveBeenCalledWith('[panda] output:', 'captured panda output')
       expect(debug).toHaveBeenCalledWith('panda', 'stack: panda exploded')
       expect(emit).toHaveBeenCalledTimes(1)
+      expect(emit).toHaveBeenCalledWith('system:panda:codegen:failed')
+    })
+  })
+
+  it('onRunCodegen distinguishes CSS contract failures from real codegen failures', async () => {
+    const { onRunCodegen, emit, error } = await importGenModule({
+      codegenFailure: Object.assign(
+        new PandaCssContractError('Panda global.css contract changed: expected a top-level @layer base block in styles.css'),
+        {
+          stack:
+            'PandaCssContractError: Panda global.css contract changed: expected a top-level @layer base block in styles.css',
+        },
+      ),
+    })
+
+    onRunCodegen()
+
+    await vi.waitFor(() => {
+      expect(error).toHaveBeenCalledWith(
+        '[panda] css postprocess failed after codegen. This is not the recoverable watch-artifact mismatch; the Panda CSS contract likely changed. Continuing without system/styled. Virtual copy will still run.',
+      )
+      expect(error).toHaveBeenCalledWith(
+        '[panda] cause:',
+        'PandaCssContractError: Panda global.css contract changed: expected a top-level @layer base block in styles.css',
+      )
       expect(emit).toHaveBeenCalledWith('system:panda:codegen:failed')
     })
   })

@@ -95,6 +95,14 @@ describe('sync/complete', () => {
     const { initComplete } = await loadCompleteModule()
     initComplete(createPayload(false))
 
+    fireEvent('virtual:complete')
+    fireEvent('system:config:complete')
+    fireEvent('system:panda:codegen')
+
+    expect(logSyncMilestone).toHaveBeenNthCalledWith(1, 'Prepared virtual workspace')
+    expect(logSyncMilestone).toHaveBeenNthCalledWith(2, 'Generated system config')
+    expect(logSyncMilestone).toHaveBeenNthCalledWith(3, 'Generated Panda output')
+
     fireEvent('packager:complete', { packageCount: 1, durationMs: 20 })
     expect(logPackagesBuilt).toHaveBeenCalledWith(1, 20)
     expect(shutdownAndExit).not.toHaveBeenCalled()

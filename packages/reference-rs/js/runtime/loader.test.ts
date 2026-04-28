@@ -23,8 +23,10 @@ async function importLoaderModule(options?: {
   const requireBinding = vi.fn(
     options?.requireImpl ??
       (() => ({
+        getNativeCapabilities: vi.fn(() => JSON.stringify({ styletraceSyncRootHint: true })),
         rewriteCssImports: vi.fn(),
         rewriteCvaImports: vi.fn(),
+        applyResponsiveStyles: vi.fn(),
         scanAndEmitModules: vi.fn(),
         analyzeAtlas: vi.fn(),
         analyzeStyletrace: vi.fn(),
@@ -132,6 +134,44 @@ describe('loader', () => {
       resolveVirtualNativeBinaryPath('/workspace/packages/reference-rs', 'win32', 'x64', fileExists)
     ).toBe('/workspace/packages/reference-rs/native/virtual-native.win32-x64-msvc.node')
     expect(fileExists).toHaveBeenCalledTimes(1)
+  })
+
+  it('rejects stale binaries that do not advertise required capabilities', async () => {
+    const triple = getVirtualNativeTriple(process.platform, process.arch)
+    expect(triple).not.toBeNull()
+
+    const {
+      getVirtualNativeCompatibilityError,
+      getVirtualNativeDiagnostics,
+      loadVirtualNative,
+    } = await importLoaderModule({
+      existingPaths: [
+        '/workspace/packages/reference-rs/package.json',
+        `/workspace/packages/reference-rs/native/virtual-native.${triple}.node`,
+      ],
+      requireImpl: () => ({
+        rewriteCssImports: vi.fn(),
+        rewriteCvaImports: vi.fn(),
+        applyResponsiveStyles: vi.fn(),
+        scanAndEmitModules: vi.fn(),
+        analyzeAtlas: vi.fn(),
+        analyzeStyletrace: vi.fn(),
+      }),
+    })
+
+    expect(
+      getVirtualNativeCompatibilityError({
+        rewriteCssImports: vi.fn(),
+        rewriteCvaImports: vi.fn(),
+        applyResponsiveStyles: vi.fn(),
+        scanAndEmitModules: vi.fn(),
+        analyzeAtlas: vi.fn(),
+        analyzeStyletrace: vi.fn(),
+      })
+    ).toContain('getNativeCapabilities')
+    expect(loadVirtualNative()).toBeNull()
+    expect(getVirtualNativeDiagnostics().status).toBe('load-failed')
+    expect(getVirtualNativeDiagnostics().cause).toContain('Incompatible native binary')
   })
 
   it('returns a consumer-safe missing-binary message without monorepo pnpm guidance', async () => {
