@@ -5,6 +5,7 @@ import { registryManifestVersion, type RegistryManifest, type RegistryManifestPa
 import {
   externalPnpmStoreCacheKey,
   matrixNodeModulesCacheKey,
+  matrixSharedNodeModulesCacheKey,
   replaceWorkspaceProtocolVersions,
 } from './cache.js'
 import type { MatrixFixturePackageJson } from '../managed/package-json/index.js'
@@ -189,6 +190,26 @@ describe('matrix node_modules cache helpers', () => {
     })
 
     assert.notEqual(left, right)
+  })
+
+  it('reuses shared node_modules cache keys for different fixtures with the same install graph', () => {
+    const manifest = createManifest()
+
+    const left = matrixSharedNodeModulesCacheKey({
+      coreVersion: '0.0.41',
+      fixturePackageJson: createFixturePackageJson({ name: '@matrix/distro' }),
+      internalPackages: selectInternalPackages(manifest),
+      libVersion: '0.0.44',
+    })
+
+    const right = matrixSharedNodeModulesCacheKey({
+      coreVersion: '0.0.41',
+      fixturePackageJson: createFixturePackageJson({ name: '@matrix/playwright' }),
+      internalPackages: selectInternalPackages(manifest),
+      libVersion: '0.0.44',
+    })
+
+    assert.equal(left, right)
   })
 
   it('splits node_modules cache keys when the matrix dependency graph changes', () => {
