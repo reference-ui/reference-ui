@@ -62,9 +62,13 @@ beforeAll(async () => {
 describe('css selectors matrix emitted output', () => {
   it('computes runtime class tokens for the selector probes', () => {
     expect(cssSelectorsMatrixClasses.descendantSelector).toBeTruthy()
+    expect(cssSelectorsMatrixClasses.descendantSelectorInline).toBeTruthy()
     expect(cssSelectorsMatrixClasses.hoverSelector).toBeTruthy()
+    expect(cssSelectorsMatrixClasses.hoverSelectorInline).toBeTruthy()
+    expect(cssSelectorsMatrixClasses.topLevelConstantControl).toBeTruthy()
     expect(cssSelectorsMatrixClasses.selfAttribute).toBeTruthy()
     expect(cssSelectorsMatrixClasses.selfAttributeHover).toBeTruthy()
+    expect(cssSelectorsMatrixClasses.selfAttributeHoverInline).toBeTruthy()
     expect(cssSelectorsMatrixClasses.selfAttributeQuoted).toBeTruthy()
     expect(cssSelectorsMatrixClasses.selfAttributeState).toBeTruthy()
   })
@@ -90,6 +94,16 @@ describe('css selectors matrix emitted output', () => {
     expect(borderStyleSelectors.length).toBeGreaterThan(0)
   })
 
+  it('emits top-level declarations that use imported constants', () => {
+    const selectors = collectRuleSelectors(
+      (selector, declarations) =>
+        selector.includes('bd-t-w_6px')
+        && (declarations.get('border-top-width') ?? []).includes(cssSelectorsMatrixConstants.selfAttributeHoverBorderTopWidth),
+    )
+
+    expect(selectors.length).toBeGreaterThan(0)
+  })
+
   it('tracks whether the descendant selector control branch emits', () => {
     const selectors = collectRuleSelectors(
       (selector, declarations) =>
@@ -100,6 +114,16 @@ describe('css selectors matrix emitted output', () => {
     expect(selectors).toMatchInlineSnapshot(`[]`)
   })
 
+  it('emits the descendant selector when the nested value is an inline literal', () => {
+    const selectors = collectRuleSelectors(
+      (selector, declarations) =>
+        selector.includes('[data-slot=inner]')
+        && (declarations.get('margin-top') ?? []).includes('13px'),
+    )
+
+    expect(selectors.length).toBeGreaterThan(0)
+  })
+
   it('tracks whether the plain hover selector control branch emits', () => {
     const selectors = collectRuleSelectors(
       (selector, declarations) =>
@@ -108,6 +132,16 @@ describe('css selectors matrix emitted output', () => {
     )
 
     expect(selectors).toMatchInlineSnapshot(`[]`)
+  })
+
+  it('emits the plain hover selector when the nested value is an inline literal', () => {
+    const selectors = collectRuleSelectors(
+      (selector, declarations) =>
+        selector.includes(':hover')
+        && (declarations.get('text-decoration') ?? []).includes('line-through'),
+    )
+
+    expect(selectors.length).toBeGreaterThan(0)
   })
 
   it('tracks whether a self attribute selector emits', () => {
@@ -130,6 +164,17 @@ describe('css selectors matrix emitted output', () => {
     )
 
     expect(selectors).toMatchInlineSnapshot(`[]`)
+  })
+
+  it('emits a self attribute plus hover selector when the nested value is an inline literal', () => {
+    const selectors = collectRuleSelectors(
+      (selector, declarations) =>
+        selector.includes('[data-component=card]')
+        && selector.includes(':hover')
+        && (declarations.get('border-top-width') ?? []).includes('9px'),
+    )
+
+    expect(selectors.length).toBeGreaterThan(0)
   })
 
   it('tracks whether a quoted self attribute selector emits', () => {
