@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
 import { Index, matrixResponsiveMarker } from '../../src/index'
-import { responsiveCardRecipe, responsiveMatrixClasses } from '../../src/styles'
+import {
+  responsiveCardRecipe,
+  responsiveMatrixClasses,
+  responsiveViewportConstants,
+  responsiveViewportRecipe,
+} from '../../src/styles'
 
 describe('responsive matrix runtime', () => {
   it('exports the matrix marker', () => {
@@ -12,8 +17,24 @@ describe('responsive matrix runtime', () => {
     expect(responsiveMatrixClasses.sidebarCss).toBeTruthy()
   })
 
+  it('exports the viewport css() responsive class', () => {
+    expect(responsiveMatrixClasses.viewportCss).toBeTruthy()
+  })
+
   it('returns a stable recipe class', () => {
     expect(responsiveCardRecipe()).toBe(responsiveCardRecipe())
+  })
+
+  it('returns a stable viewport recipe class', () => {
+    expect(responsiveViewportRecipe()).toBe(responsiveViewportRecipe())
+  })
+
+  it('exports the viewport width breakpoint', () => {
+    expect(responsiveViewportConstants.cssBreakpointWidth).toBe(800)
+  })
+
+  it('exports the viewport height breakpoint', () => {
+    expect(responsiveViewportConstants.recipeBreakpointHeight).toBe(700)
   })
 
   it('renders the fixture entrypoint', () => {

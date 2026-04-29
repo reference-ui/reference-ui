@@ -33,4 +33,11 @@ describe('tokens output', () => {
 
     expect(source).not.toContain('e2e-watch-token')
   })
+
+  it('does not keep stale watch-only CSS variables in clean sync artifacts', () => {
+    const source = readFileSync(stylesPath, 'utf-8')
+
+    expect(source).not.toContain('e2e-watch-token')
+    expect(source).not.toContain('--colors-e2e-watch-token')
+  })
 })

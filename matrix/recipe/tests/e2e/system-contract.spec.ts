@@ -103,6 +103,13 @@ test.describe('recipe contract', () => {
     expect(computed.color).toBe(hexToRgb('#ffffff'))
   })
 
+  test('default recipe branch applies the default small size font', async ({ page }) => {
+    const element = page.getByTestId('recipe-default')
+    const computed = await readComputedStyle(element, ['font-size'])
+
+    expect(computed['font-size']).toBe('14px')
+  })
+
   test('large size variant increases the font size', async ({ page }) => {
     const element = page.getByTestId('recipe-solid-large')
     const computed = await readComputedStyle(element, ['font-size'])
@@ -136,5 +143,12 @@ test.describe('recipe contract', () => {
     const computed = await readComputedStyle(element, ['color'])
 
     expect(computed.color).toBe(hexToRgb('#be185d'))
+  })
+
+  test('compound variant overrides the outline branch border color', async ({ page }) => {
+    const element = page.getByTestId('recipe-outline-pink')
+    const computed = await readComputedStyle(element, ['border-top-color'])
+
+    expect(computed['border-top-color']).toBe(hexToRgb('#ec4899'))
   })
 })

@@ -18,12 +18,28 @@ export function Index() {
         Rhythm shorthand
       </Div>
 
+      <Div data-testid="spacing-padding-bottom-override" padding="1r 2r" paddingBottom="4r">
+        Rhythm bottom override
+      </Div>
+
+      <Div data-testid="spacing-margin-left-override" margin="2r" marginLeft="3r">
+        Rhythm left override
+      </Div>
+
       <Div data-testid="spacing-radius" borderRadius="1r" borderWidth="1px" borderStyle="solid">
         Rhythm radius
       </Div>
 
       <Div data-testid="spacing-size-box" className={spacingMatrixClasses.sizeBox}>
         Size box
+      </Div>
+
+      <Div data-testid="spacing-size-width-override" size="2r" width="3r">
+        Size width override
+      </Div>
+
+      <Div data-testid="spacing-size-height-override" size="2r" height="4r">
+        Size height override
       </Div>
     </Main>
   )

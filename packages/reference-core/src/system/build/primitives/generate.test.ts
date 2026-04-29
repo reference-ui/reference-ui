@@ -61,7 +61,7 @@ describe('system/build/primitives/generate', () => {
     expect(out).toContain("primitiveClass = 'ref-div'")
     expect(out).toContain("primitiveClass = 'ref-span'")
     expect(out).toContain('const inheritsLayerScope = React.useContext(LayerScopeContext);')
-    expect(out).toContain("const shouldEmitDataLayer = RESOLVED_DATA_LAYER_NAME != null && RESOLVED_DATA_LAYER_NAME !== '' && (!inheritsLayerScope || hasExplicitColorMode);")
+    expect(out).toContain("const shouldEmitDataLayer = RESOLVED_DATA_LAYER_NAME != null && RESOLVED_DATA_LAYER_NAME !== '' && (!inheritsLayerScope || hasExplicitColorMode || inheritedColorMode == null);")
     expect(out).toContain(
       "export const Div = React.forwardRef<PrimitiveElement<'div'>, PrimitiveProps<'div'>>("
     )

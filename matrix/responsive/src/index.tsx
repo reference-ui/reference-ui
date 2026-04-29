@@ -1,6 +1,10 @@
 import { Div, H1, Main, P } from '@reference-ui/react'
 
-import { responsiveCardRecipe, responsiveMatrixClasses } from './styles'
+import {
+  responsiveCardRecipe,
+  responsiveMatrixClasses,
+  responsiveViewportRecipe,
+} from './styles'
 
 export const matrixResponsiveMarker = 'reference-ui-matrix-responsive'
 
@@ -48,6 +52,14 @@ export function Index() {
             Recipe wide
           </Div>
         </Div>
+      </Div>
+
+      <Div data-testid="responsive-viewport-css-target" className={responsiveMatrixClasses.viewportCss}>
+        Viewport CSS
+      </Div>
+
+      <Div data-testid="responsive-viewport-recipe-target" className={responsiveViewportRecipe()}>
+        Viewport recipe
       </Div>
     </Main>
   )

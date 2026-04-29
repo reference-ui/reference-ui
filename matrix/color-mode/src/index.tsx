@@ -1,14 +1,55 @@
-import { Div, H1, Main, P } from '@reference-ui/react'
+import { useState } from 'react'
+import { Button, Div, H1, Main, P } from '@reference-ui/react'
 
 import { colorModeMatrixConstants } from './styles'
 
 export const matrixColorModeMarker = 'reference-ui-matrix-color-mode'
 
+function LiveColorModeControls() {
+  const [rootTheme, setRootTheme] = useState<'light' | 'dark'>('light')
+  const [nestedTheme, setNestedTheme] = useState<'light' | 'dark'>('light')
+
+  return (
+    <>
+      <div data-testid="color-mode-live-root-scope" data-panda-theme={rootTheme}>
+        <Button data-testid="color-mode-toggle-root-theme" onClick={() => setRootTheme(rootTheme === 'light' ? 'dark' : 'light')}>
+          Toggle root theme
+        </Button>
+        <Div data-testid="color-mode-live-root-token" color={colorModeMatrixConstants.tokenName}>
+          Live root token
+        </Div>
+      </div>
+
+      <div data-testid="color-mode-live-nested-host" data-panda-theme="light">
+        <Button
+          data-testid="color-mode-toggle-nested-theme"
+          onClick={() => setNestedTheme(nestedTheme === 'light' ? 'dark' : 'light')}
+        >
+          Toggle nested theme
+        </Button>
+        <Div data-testid="color-mode-live-nested-host-token" color={colorModeMatrixConstants.tokenName}>
+          Live nested host token
+        </Div>
+        <Div data-testid="color-mode-live-nested-scope" colorMode={nestedTheme}>
+          <Div data-testid="color-mode-live-nested-token" color={colorModeMatrixConstants.tokenName}>
+            Live nested token
+          </Div>
+        </Div>
+      </div>
+    </>
+  )
+}
+
 export function Index() {
+
   return (
     <Main data-testid="color-mode-root" p="4" gap="4">
       <H1>Reference UI color-mode matrix</H1>
       <P>Color-mode tokens are exercised through real `data-panda-theme` and `colorMode` behaviour.</P>
+
+      <Div data-testid="color-mode-default-token" color={colorModeMatrixConstants.tokenName}>
+        Default light token
+      </Div>
 
       <div data-testid="color-mode-light-scope" data-panda-theme="light">
         <Div data-testid="color-mode-outer-light" color={colorModeMatrixConstants.tokenName}>
@@ -49,6 +90,8 @@ export function Index() {
           </Div>
         </Div>
       </div>
+
+      <LiveColorModeControls />
     </Main>
   )
 }

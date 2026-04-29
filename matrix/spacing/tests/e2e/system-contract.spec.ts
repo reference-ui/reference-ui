@@ -61,6 +61,20 @@ test.describe('spacing contract', () => {
     expect(computed['padding-right']).toBe('8px')
   })
 
+  test('explicit paddingBottom overrides the shorthand bottom value', async ({ page }) => {
+    const element = page.getByTestId('spacing-padding-bottom-override')
+    const computed = await readComputedStyle(element, ['padding-bottom'])
+
+    expect(computed['padding-bottom']).toBe('16px')
+  })
+
+  test('explicit marginLeft overrides the shorthand left value', async ({ page }) => {
+    const element = page.getByTestId('spacing-margin-left-override')
+    const computed = await readComputedStyle(element, ['margin-left'])
+
+    expect(computed['margin-left']).toBe('12px')
+  })
+
   test('borderRadius="1r" resolves to 4px', async ({ page }) => {
     const element = page.getByTestId('spacing-radius')
     const computed = await readComputedStyle(element, ['border-radius'])
@@ -74,5 +88,21 @@ test.describe('spacing contract', () => {
 
     expect(computed.width).toBe('8px')
     expect(computed.height).toBe('8px')
+  })
+
+  test('explicit width overrides the width side of size', async ({ page }) => {
+    const element = page.getByTestId('spacing-size-width-override')
+    const computed = await readComputedStyle(element, ['width', 'height'])
+
+    expect(computed.width).toBe('12px')
+    expect(computed.height).toBe('8px')
+  })
+
+  test('explicit height overrides the height side of size', async ({ page }) => {
+    const element = page.getByTestId('spacing-size-height-override')
+    const computed = await readComputedStyle(element, ['width', 'height'])
+
+    expect(computed.width).toBe('8px')
+    expect(computed.height).toBe('16px')
   })
 })

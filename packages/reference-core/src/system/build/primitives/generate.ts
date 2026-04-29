@@ -41,7 +41,7 @@ function generatePrimitive(tag: string): string {
     `const boxClass = box(boxProps as Parameters<typeof box>[0]); `,
     `const cssClass = cssProp ? css(cssProp as Parameters<typeof css>[0]) : undefined; `,
     `const classes = joinClassName(primitiveClass, boxClass, cssClass, className); `,
-    `const shouldEmitDataLayer = RESOLVED_DATA_LAYER_NAME != null && RESOLVED_DATA_LAYER_NAME !== '' && (!inheritsLayerScope || hasExplicitColorMode); `,
+    `const shouldEmitDataLayer = RESOLVED_DATA_LAYER_NAME != null && RESOLVED_DATA_LAYER_NAME !== '' && (!inheritsLayerScope || hasExplicitColorMode || inheritedColorMode == null); `,
     `const dataLayerAttr = shouldEmitDataLayer ? { 'data-layer': RESOLVED_DATA_LAYER_NAME } : {}; `,
     `const colorModeAttr = resolvedColorMode != null && resolvedColorMode !== '' ? { 'data-panda-theme': resolvedColorMode } : {}; `,
     `const providesLayerScope = inheritsLayerScope || shouldEmitDataLayer; `,

@@ -46,6 +46,13 @@ test.describe('color-mode contract', () => {
     await expect(page.getByRole('heading', { name: 'Reference UI color-mode matrix' })).toBeVisible()
   })
 
+  test('no explicit color-mode override resolves light-mode tokens by default', async ({ page }) => {
+    const element = page.getByTestId('color-mode-default-token')
+    const computed = await readComputedStyle(element, ['color'])
+
+    expect(computed.color).toBe(hexToRgb(colorModeMatrixConstants.lightValue))
+  })
+
   test('nested dark colorMode creates a dark island inside a light scope', async ({ page }) => {
     const outer = page.getByTestId('color-mode-outer-light')
     const inner = page.getByTestId('color-mode-inner-dark')
@@ -84,5 +91,50 @@ test.describe('color-mode contract', () => {
 
     expect(lightChildColor.color).toBe(hexToRgb(colorModeMatrixConstants.lightValue))
     expect(darkChildColor.color).toBe(hexToRgb(colorModeMatrixConstants.darkValue))
+  })
+
+  test('toggling the root theme updates descendant token resolution', async ({ page }) => {
+    const rootToken = page.getByTestId('color-mode-live-root-token')
+    const toggle = page.getByTestId('color-mode-toggle-root-theme')
+
+    const initial = await readComputedStyle(rootToken, ['color'])
+    expect(initial.color).toBe(hexToRgb(colorModeMatrixConstants.lightValue))
+
+    await toggle.click()
+
+    await expect
+      .poll(async () => {
+        const toggled = await readComputedStyle(rootToken, ['color'])
+        return toggled.color
+      })
+      .toBe(hexToRgb(colorModeMatrixConstants.darkValue))
+  })
+
+  test('toggling a nested colorMode updates the nearest nested scope without changing the light host', async ({ page }) => {
+    const hostToken = page.getByTestId('color-mode-live-nested-host-token')
+    const nestedToken = page.getByTestId('color-mode-live-nested-token')
+    const toggle = page.getByTestId('color-mode-toggle-nested-theme')
+
+    const initialHost = await readComputedStyle(hostToken, ['color'])
+    const initialNested = await readComputedStyle(nestedToken, ['color'])
+
+    expect(initialHost.color).toBe(hexToRgb(colorModeMatrixConstants.lightValue))
+    expect(initialNested.color).toBe(hexToRgb(colorModeMatrixConstants.lightValue))
+
+    await toggle.click()
+
+    await expect
+      .poll(async () => {
+        const toggledHost = await readComputedStyle(hostToken, ['color'])
+        return toggledHost.color
+      })
+      .toBe(hexToRgb(colorModeMatrixConstants.lightValue))
+
+    await expect
+      .poll(async () => {
+        const toggledNested = await readComputedStyle(nestedToken, ['color'])
+        return toggledNested.color
+      })
+      .toBe(hexToRgb(colorModeMatrixConstants.darkValue))
   })
 })
