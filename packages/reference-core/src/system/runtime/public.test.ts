@@ -21,6 +21,25 @@ vi.mock('@reference-ui/styled/css/cva', () => ({
 import { css } from '.'
 
 describe('system/runtime css runtime lowering', () => {
+  it('preserves arbitrary same-element selectors when delegating css()', () => {
+    const styles = {
+      borderWidth: '2px',
+      '&[data-component=card]:hover': {
+        borderTopWidth: '6px',
+      },
+    } as unknown as CssStyles
+
+    const className = css(styles)
+
+    expect(className).toBe('generated-class')
+    expect(styledCssMock).toHaveBeenCalledWith({
+      borderWidth: '2px',
+      '&[data-component=card]:hover': {
+        borderTopWidth: '6px',
+      },
+    })
+  })
+
   it('lowers responsive r sugar before delegating css()', () => {
     const className = css({
       display: 'grid',
