@@ -137,6 +137,33 @@ test.describe('css contract', () => {
     expect(computed['border-top-width']).toBe('1px')
   })
 
+  test('combined selector keeps the open nested child on the baseline branch before hover', async ({ page }) => {
+    const child = page.getByTestId('css-compound-open-child')
+    const computed = await readComputedStyle(child, ['padding-left'])
+
+    expect(computed['padding-left']).toBe(cssMatrixConstants.compoundSelectorBasePaddingLeft)
+  })
+
+  test('combined selector applies the nested child rule when the open host child is hovered', async ({ page }) => {
+    const child = page.getByTestId('css-compound-open-child')
+
+    await child.hover()
+
+    const computed = await readComputedStyle(child, ['padding-left'])
+
+    expect(computed['padding-left']).toBe(cssMatrixConstants.compoundSelectorActivePaddingLeft)
+  })
+
+  test('combined selector does not apply the nested child hover rule for the closed host', async ({ page }) => {
+    const child = page.getByTestId('css-compound-closed-child')
+
+    await child.hover()
+
+    const computed = await readComputedStyle(child, ['padding-left'])
+
+    expect(computed['padding-left']).toBe(cssMatrixConstants.compoundSelectorBasePaddingLeft)
+  })
+
   test('css() lowers named container query padding for the narrow shell', async ({ page }) => {
     const narrowProbe = page.getByTestId('css-container-probe-narrow')
     const narrowStyles = await readComputedStyle(narrowProbe, ['padding-top'])

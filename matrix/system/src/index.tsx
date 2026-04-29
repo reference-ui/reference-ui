@@ -18,6 +18,10 @@ export function Index() {
         System token background
       </Div>
 
+      <Div data-testid="system-font-probe" font={systemMatrixConstants.fontName} weight={systemMatrixConstants.fontWeight}>
+        System font probe
+      </Div>
+
       <Div data-testid="system-animated" style={{ animation: `${systemMatrixConstants.animationName} 1s ease` }}>
         System animated
       </Div>
