@@ -62,4 +62,4 @@ describe('virtual mirror invariant', () => {
     const missing = getMissing()
     expect(completed, `Missing files in virtual output: ${missing.join(', ')}`).toBe(true)
   })
-}
+})
