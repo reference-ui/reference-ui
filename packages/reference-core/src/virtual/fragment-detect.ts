@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises'
 
 /**
  * Import specifiers that identify a file as a fragment file.
- * Mirrors the importFrom list in system/base/fragments.ts.
+ * Mirrors the importFrom list in system/base/fragments/index.ts.
  */
 const FRAGMENT_IMPORT_SPECIFIERS = [
   '@reference-ui/system',

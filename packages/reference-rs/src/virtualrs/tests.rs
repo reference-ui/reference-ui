@@ -56,7 +56,7 @@ fn rewrites_recipe_alias_to_cva_and_normalizes_calls() {
 
     assert_eq!(
         rewritten,
-        "import { cva } from 'src/system/runtime';\nimport { Box } from '@reference-ui/react';\n\nconst x = cva({});\n"
+        "import { cva } from 'src/system/css';\nimport { Box } from '@reference-ui/react';\n\nconst x = cva({});\n"
     );
 }
 
@@ -69,7 +69,7 @@ fn rewrites_aliased_cva_import_to_canonical_cva_call() {
 
     assert_eq!(
         rewritten,
-        "import { cva } from 'src/system/runtime';\nimport { Box } from '@reference-ui/react';\n\nconst x = cva({});\n"
+        "import { cva } from 'src/system/css';\nimport { Box } from '@reference-ui/react';\n\nconst x = cva({});\n"
     );
 }
 
@@ -94,7 +94,7 @@ fn rewrites_only_the_first_matching_runtime_import() {
     assert_eq!(
         rewritten,
         concat!(
-            "import { cva } from 'src/system/runtime';\n",
+            "import { cva } from 'src/system/css';\n",
             "\n",
             "import { recipe as buttonRecipe } from '@reference-ui/react';\n",
             "const card = cva({});\n",
@@ -168,7 +168,7 @@ fn lowers_responsive_cva_base_after_recipe_normalization() {
     assert_eq!(
         rewritten,
         concat!(
-            "import { cva } from 'src/system/runtime';\n",
+            "import { cva } from 'src/system/css';\n",
             "\n",
             "const x = cva({ base: { '@container (min-width: 480px)': { padding: '4' } } });\n",
         )
