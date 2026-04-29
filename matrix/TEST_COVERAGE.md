@@ -99,6 +99,8 @@ Those are real product surfaces, not just implementation details.
 - Media-query branches should be asserted in a real browser, not only container-query branches.
 - [DONE] `matrix/css` asserts that `&:hover` pseudo selectors apply in a real browser.
 - [DONE] `matrix/css` asserts that nested descendant selectors apply in a real browser.
+- [DONE] `matrix/css` parses generated `react/styles.css` with PostCSS so emitted stylesheet syntax has to be valid.
+- [DONE] `matrix/css` rejects suspicious placeholder/control fragments and empty standard declarations in generated `react/styles.css`.
 - [DONE] Investigated self attribute selectors like `&[data-state="open"]` on `css()` classes, plus same-element nested `&:hover` under that branch; current emitted CSS did not include those branches, so this remains a `reference-core` / Panda selector-emission gap rather than a supported single-consumer expectation.
 - [DONE] Investigated ancestor-attribute + descendant-hover selector composition on one emitted rule; the current selector-key contract does not support text on both sides of `&`, so that specific parent/child composition remains a `reference-core` selector-composition gap rather than a single-consumer matrix expectation.
 - Stylesheet presence, order, and dedupe after rebuilds should be asserted in the browser.
@@ -144,6 +146,8 @@ Those are real product surfaces, not just implementation details.
 
 - [DONE] `matrix/recipe` asserts that the default recipe branch applies the default small-size font.
 - [DONE] `matrix/recipe` asserts that the `outline` + `pink` compound variant overrides border color as well as background and text.
+- [DONE] `matrix/recipe` parses generated `react/styles.css` with PostCSS so emitted stylesheet syntax has to be valid.
+- [DONE] `matrix/recipe` rejects suspicious placeholder/control fragments and empty standard declarations in generated `react/styles.css`.
 - A larger variant matrix: defaults, non-default branches, boolean-style branches, and cross-axis combinations beyond the current representative cases.
 - Broaden compound variant precedence beyond the current background/text/border representative override.
 - Responsive/container-query recipe branches should be verified across more than one branch shape.
@@ -303,6 +307,8 @@ These categories should also be treated as first-class coverage areas.
 - [DONE] `matrix/distro` asserts the generated system package exports `./baseSystem` with import and types entries.
 - [DONE] `matrix/distro` asserts the generated React declaration barrel re-exports the generated entry module.
 - [DONE] `matrix/distro` asserts the generated system declaration barrel re-exports the generated entry module.
+- [DONE] `matrix/distro` parses generated `react/styles.css` with PostCSS so emitted stylesheet syntax has to be valid.
+- [DONE] `matrix/distro` rejects suspicious placeholder/control fragments like `[object Object]`, `undefined`, `NaN`, null bytes, and replacement characters in generated `react/styles.css`.
 - Broaden the generated package surface checks beyond `Div`, `css`, `tokens`, and `keyframes`.
 - Cover idempotent reruns after source deletions/renames, not only a second happy-path sync.
 - Fold `ref clean` into this ownership so clean -> sync -> import works predictably.
