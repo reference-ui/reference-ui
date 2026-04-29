@@ -13,11 +13,23 @@ import {
   REGISTRY_URL_IN_CONTAINER,
 } from '../../../../config.js'
 import { formatDuration } from '../../../lib/log/index.js'
-import { createMatrixInstallCommand, hasWarmMatrixInstallCache, matrixInstallCacheKeyEnvVar } from '../node-modules/install.js'
+import {
+  createHydrateMatrixInstallCacheFromSharedCommand,
+  createMatrixInstallCommand,
+  createPopulateSharedMatrixInstallCacheCommand,
+  hasWarmMatrixInstallCache,
+  hasWarmSharedMatrixInstallCache,
+} from '../node-modules/install.js'
 import {
   externalPnpmStoreCacheKey,
   matrixNodeModulesCacheKey,
+  matrixSharedNodeModulesCacheKey,
 } from '../node-modules/cache.js'
+import {
+  MATRIX_INSTALL_CACHE_KEY_ENV_VAR,
+  MATRIX_SHARED_INSTALL_CACHE_KEY_ENV_VAR,
+  MATRIX_SHARED_NODE_MODULES_ROOT_PATH,
+} from '../node-modules/constants.js'
 import { baseNodeContainer, matrixContainerImage } from './container.js'
 import {
   matrixFixtureSourceDirectory,
@@ -84,7 +96,17 @@ export async function runMatrixPackageInDagger(
     ),
     libVersion: executionContext.libVersion,
   })
+  const sharedNodeModulesCacheKey = matrixSharedNodeModulesCacheKey({
+    containerImage,
+    coreVersion: executionContext.coreVersion,
+    fixturePackageJson: packageRunContext.source.fixturePackageJson,
+    internalPackages: executionContext.manifest.packages.filter(pkg =>
+      internalTarballSpecs.some(spec => spec.packageName === pkg.name),
+    ),
+    libVersion: executionContext.libVersion,
+  })
   const nodeModulesCache = dag.cacheVolume(nodeModulesCacheKey)
+  const sharedNodeModulesCache = dag.cacheVolume(sharedNodeModulesCacheKey)
 
   const packageConsumerWorkspace = packageRunContext.source.hasPlaywrightTests
     ? baseNodeContainer(externalPnpmStoreCacheKey(containerImage), containerImage)
@@ -101,6 +123,7 @@ export async function runMatrixPackageInDagger(
       matrixGeneratedConsumerDirectory(generatedConsumerDir),
     )
     .withMountedCache(`${CONSUMER_DIR_IN_CONTAINER}/node_modules`, nodeModulesCache)
+    .withMountedCache(MATRIX_SHARED_NODE_MODULES_ROOT_PATH, sharedNodeModulesCache)
     .withWorkdir(CONSUMER_DIR_IN_CONTAINER)
 
   try {
@@ -117,11 +140,34 @@ export async function runMatrixPackageInDagger(
       installOutput = `Reused cached node_modules volume for ${nodeModulesCacheKey}; skipped pnpm install.\n`
       postInstallRunner = consumerBase
     } else {
-      postInstallRunner = withDaggerExecCacheBuster(
-        consumerBase.withEnvVariable(matrixInstallCacheKeyEnvVar, nodeModulesCacheKey),
-        `${packageRunContext.logPrefix}-install`,
-      ).withExec(createMatrixInstallCommand(REGISTRY_URL_IN_CONTAINER))
-      installOutput = await postInstallRunner.stdout()
+      const warmSharedInstallCache = await hasWarmSharedMatrixInstallCache(
+        consumerBase,
+        sharedNodeModulesCacheKey,
+        packageRunContext.logPrefix,
+      )
+
+      if (warmSharedInstallCache) {
+        postInstallRunner = withDaggerExecCacheBuster(
+          consumerBase
+            .withEnvVariable(MATRIX_INSTALL_CACHE_KEY_ENV_VAR, nodeModulesCacheKey)
+            .withEnvVariable(MATRIX_SHARED_INSTALL_CACHE_KEY_ENV_VAR, sharedNodeModulesCacheKey),
+          `${packageRunContext.logPrefix}-install-hydrate`,
+        ).withExec(createHydrateMatrixInstallCacheFromSharedCommand())
+        installOutput = await postInstallRunner.stdout()
+      } else {
+        const installRunner = withDaggerExecCacheBuster(
+          consumerBase
+            .withEnvVariable(MATRIX_INSTALL_CACHE_KEY_ENV_VAR, nodeModulesCacheKey)
+            .withEnvVariable(MATRIX_SHARED_INSTALL_CACHE_KEY_ENV_VAR, sharedNodeModulesCacheKey),
+          `${packageRunContext.logPrefix}-install`,
+        ).withExec(createMatrixInstallCommand(REGISTRY_URL_IN_CONTAINER))
+        installOutput = await installRunner.stdout()
+        await withDaggerExecCacheBuster(
+          installRunner.withEnvVariable(MATRIX_SHARED_INSTALL_CACHE_KEY_ENV_VAR, sharedNodeModulesCacheKey),
+          `${packageRunContext.logPrefix}-install-populate-shared`,
+        ).withExec(createPopulateSharedMatrixInstallCacheCommand())
+        postInstallRunner = installRunner
+      }
     }
 
     await writeMatrixPackageStageLog(packageRunContext, 'install', installOutput)
@@ -129,6 +175,8 @@ export async function runMatrixPackageInDagger(
 
     if (warmInstallCache) {
       lines.push(`  Reused cached dependencies in ${installDuration}`)
+    } else if (installOutput.trim() === 'hydrated') {
+      lines.push(`  Hydrated cached dependencies in ${installDuration}`)
     } else {
       lines.push(`  Installed dependencies in ${installDuration}`)
     }

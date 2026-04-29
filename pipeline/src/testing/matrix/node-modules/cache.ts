@@ -27,6 +27,40 @@ interface MatrixNodeModulesCacheKeyOptions {
   libVersion: string
 }
 
+function createMatrixInstallGraph(
+  options: MatrixNodeModulesCacheKeyOptions,
+  fixtureName: string | null,
+): string {
+  const versionOverrides = {
+    '@reference-ui/core': options.coreVersion,
+    '@reference-ui/lib': options.libVersion,
+  }
+
+  return JSON.stringify(
+    {
+      fixtureName,
+      manifestFingerprint: registryManifestFingerprint(options.internalPackages),
+      dependencies: replaceWorkspaceProtocolVersions({
+        dependencies: options.fixturePackageJson.dependencies,
+        versionOverrides,
+      }),
+      devDependencies: replaceWorkspaceProtocolVersions({
+        dependencies: options.fixturePackageJson.devDependencies,
+        versionOverrides,
+      }),
+      nodeImage: options.containerImage ?? matrixNodeImage,
+      packageManager: `pnpm@${matrixPnpmVersion}`,
+    },
+    null,
+    2,
+  )
+}
+
+function createMatrixNodeModulesCacheKey(prefix: string, installGraph: string): string {
+  const digest = createHash('sha256').update(installGraph).digest('hex').slice(0, 16)
+  return `${prefix}-${digest}`
+}
+
 export function externalPnpmStoreCacheKey(containerImage: string = matrixNodeImage): string {
   const digest = createHash('sha256')
     .update(JSON.stringify({
@@ -65,35 +99,20 @@ export function replaceWorkspaceProtocolVersions(
   )
 }
 
-export function matrixNodeModulesCacheKey(options: MatrixNodeModulesCacheKeyOptions): string {
-  const versionOverrides = {
-    '@reference-ui/core': options.coreVersion,
-    '@reference-ui/lib': options.libVersion,
-  }
+export function matrixSharedNodeModulesCacheKey(options: MatrixNodeModulesCacheKeyOptions): string {
+  return createMatrixNodeModulesCacheKey(
+    'reference-ui-pipeline-matrix-node-modules-shared',
+    createMatrixInstallGraph(options, null),
+  )
+}
 
+export function matrixNodeModulesCacheKey(options: MatrixNodeModulesCacheKeyOptions): string {
   // This graph intentionally excludes fixture source files so code edits do not
   // force a full reinstall when the dependency set is unchanged. The fixture
   // name remains part of the key so concurrently running consumers never share
   // the same writable node_modules volume.
-  const installGraph = JSON.stringify(
-    {
-      fixtureName: options.fixturePackageJson.name,
-      manifestFingerprint: registryManifestFingerprint(options.internalPackages),
-      dependencies: replaceWorkspaceProtocolVersions({
-        dependencies: options.fixturePackageJson.dependencies,
-        versionOverrides,
-      }),
-      devDependencies: replaceWorkspaceProtocolVersions({
-        dependencies: options.fixturePackageJson.devDependencies,
-        versionOverrides,
-      }),
-      nodeImage: options.containerImage ?? matrixNodeImage,
-      packageManager: `pnpm@${matrixPnpmVersion}`,
-    },
-    null,
-    2,
+  return createMatrixNodeModulesCacheKey(
+    'reference-ui-pipeline-matrix-node-modules',
+    createMatrixInstallGraph(options, options.fixturePackageJson.name),
   )
-
-  const digest = createHash('sha256').update(installGraph).digest('hex').slice(0, 16)
-  return `reference-ui-pipeline-matrix-node-modules-${digest}`
 }
