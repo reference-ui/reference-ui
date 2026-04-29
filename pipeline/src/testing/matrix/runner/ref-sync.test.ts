@@ -33,14 +33,17 @@ describe('matrix runner ref sync helpers', () => {
     assert.deepEqual(resolveMatrixRefSyncStrategy(createMatrixPackageConfig('install', 'full')), {
       mode: 'full',
       runTypecheck: false,
+      waitFor: 'ready',
     })
     assert.deepEqual(resolveMatrixRefSyncStrategy(createMatrixPackageConfig('mcp', 'full')), {
       mode: 'full',
       runTypecheck: false,
+      waitFor: 'ready',
     })
     assert.deepEqual(resolveMatrixRefSyncStrategy(createMatrixPackageConfig('typescript', 'full', true)), {
       mode: 'full',
       runTypecheck: true,
+      waitFor: 'ready',
     })
   })
 
@@ -48,6 +51,15 @@ describe('matrix runner ref sync helpers', () => {
     assert.deepEqual(resolveMatrixRefSyncStrategy(createMatrixPackageConfig('playwright', 'watch-ready')), {
       mode: 'watch-ready',
       runTypecheck: false,
+      waitFor: 'ready',
+    })
+  })
+
+  it('uses watch-full sync when matrix.json opts into full initial watch completion', () => {
+    assert.deepEqual(resolveMatrixRefSyncStrategy(createMatrixPackageConfig('watch', 'watch-full')), {
+      mode: 'watch-full',
+      runTypecheck: false,
+      waitFor: 'complete',
     })
   })
 
@@ -60,7 +72,7 @@ describe('matrix runner ref sync helpers', () => {
   it('parses shared watch timing markers and strips them from command output', () => {
     assert.deepEqual(
       parseMatrixRefSyncWatchOutput([
-        '[matrix ref sync] ready-duration-ms=2310',
+        '[matrix ref sync] wait-duration-ms=2310',
         '',
         ' RUN  v4.1.5 /consumer',
         '[matrix ref sync] phase=test:vitest duration-ms=381',
@@ -73,7 +85,7 @@ describe('matrix runner ref sync helpers', () => {
           'test:playwright': 1174,
           'test:vitest': 381,
         },
-        readyDurationMs: 2310,
+        waitDurationMs: 2310,
       },
     )
   })

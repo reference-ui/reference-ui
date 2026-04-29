@@ -8,7 +8,7 @@
  */
 
 import { createHash } from 'node:crypto'
-import type { RegistryManifest } from '../../../registry/types.js'
+import type { RegistryManifestPackage } from '../../../registry/types.js'
 import type { MatrixFixturePackageJson } from '../managed/package-json/index.js'
 
 export const matrixNodeImage = 'node:24-bookworm'
@@ -23,8 +23,8 @@ interface MatrixNodeModulesCacheKeyOptions {
   containerImage?: string
   coreVersion: string
   fixturePackageJson: MatrixFixturePackageJson
+  internalPackages: readonly Pick<RegistryManifestPackage, 'artifactHash' | 'hash' | 'name' | 'version'>[]
   libVersion: string
-  manifest: RegistryManifest
 }
 
 export function externalPnpmStoreCacheKey(containerImage: string = matrixNodeImage): string {
@@ -39,9 +39,12 @@ export function externalPnpmStoreCacheKey(containerImage: string = matrixNodeIma
   return `reference-ui-pipeline-pnpm-store-externals-${digest}`
 }
 
-export function registryManifestFingerprint(manifest: RegistryManifest): string {
-  const fingerprint = manifest.packages
+export function registryManifestFingerprint(
+  packages: readonly Pick<RegistryManifestPackage, 'artifactHash' | 'hash' | 'name' | 'version'>[],
+): string {
+  const fingerprint = packages
     .map(pkg => `${pkg.name}@${pkg.version}:${pkg.artifactHash ?? pkg.hash}`)
+    .sort((left, right) => left.localeCompare(right))
     .join('|')
 
   return createHash('sha256').update(fingerprint).digest('hex').slice(0, 16)
@@ -75,7 +78,7 @@ export function matrixNodeModulesCacheKey(options: MatrixNodeModulesCacheKeyOpti
   const installGraph = JSON.stringify(
     {
       fixtureName: options.fixturePackageJson.name,
-      manifestFingerprint: registryManifestFingerprint(options.manifest),
+      manifestFingerprint: registryManifestFingerprint(options.internalPackages),
       dependencies: replaceWorkspaceProtocolVersions({
         dependencies: options.fixturePackageJson.dependencies,
         versionOverrides,

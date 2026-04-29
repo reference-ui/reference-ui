@@ -12,6 +12,7 @@ import type { MatrixPackageConfig, MatrixRefSyncMode } from '../discovery/index.
 export interface MatrixRefSyncStrategy {
   mode: MatrixRefSyncMode
   runTypecheck: boolean
+  waitFor: 'ready' | 'complete'
 }
 
 export type MatrixRefSyncWatchPhase = 'test:vitest' | 'test:playwright'
@@ -24,7 +25,7 @@ export interface MatrixRefSyncWatchPhaseCommand {
 export interface ParsedMatrixRefSyncWatchOutput {
   cleanedOutput: string
   phaseDurations: Partial<Record<MatrixRefSyncWatchPhase, number>>
-  readyDurationMs: number | null
+  waitDurationMs: number | null
 }
 
 export interface MatrixRefSyncSupportScript {
@@ -34,10 +35,11 @@ export interface MatrixRefSyncSupportScript {
 
 export const matrixRefSyncSupportDirectory = '.matrix-support/ref-sync'
 export const matrixRefSyncPhasesEnvVar = 'REFERENCE_UI_MATRIX_REF_SYNC_PHASES_JSON'
+export const matrixRefSyncWaitForEnvVar = 'REFERENCE_UI_MATRIX_REF_SYNC_WAIT_FOR'
 export const matrixRefSyncWaitReadyScriptRelativePath = `${matrixRefSyncSupportDirectory}/wait-ready.mjs`
 export const matrixRefSyncWatchSessionScriptRelativePath = `${matrixRefSyncSupportDirectory}/run-watch-session.mjs`
 
-const matrixRefSyncReadyDurationPattern = /^\[matrix ref sync\] ready-duration-ms=(\d+)$/
+const matrixRefSyncWaitDurationPattern = /^\[matrix ref sync\] wait-duration-ms=(\d+)$/
 const matrixRefSyncPhaseDurationPattern = /^\[matrix ref sync\] phase=(test:vitest|test:playwright) duration-ms=(\d+)$/
 const matrixRefSyncSourceDirectory = resolve(dirname(fileURLToPath(import.meta.url)), 'ref-sync-support')
 
@@ -58,6 +60,7 @@ export function resolveMatrixRefSyncStrategy(
   return {
     mode: config.refSync.mode,
     runTypecheck: config.runTypecheck,
+    waitFor: config.refSync.mode === 'watch-full' ? 'complete' : 'ready',
   }
 }
 
@@ -68,14 +71,14 @@ export function createMatrixRefSyncWatchCommand(): string[] {
 export function parseMatrixRefSyncWatchOutput(output: string): ParsedMatrixRefSyncWatchOutput {
   const cleanedLines: string[] = []
   const phaseDurations: Partial<Record<MatrixRefSyncWatchPhase, number>> = {}
-  let readyDurationMs: number | null = null
+  let waitDurationMs: number | null = null
 
   for (const rawLine of output.split(/\r?\n/)) {
     const trimmedLine = rawLine.trim()
-    const readyMatch = trimmedLine.match(matrixRefSyncReadyDurationPattern)
+    const waitMatch = trimmedLine.match(matrixRefSyncWaitDurationPattern)
 
-    if (readyMatch) {
-      readyDurationMs = Number.parseInt(readyMatch[1], 10)
+    if (waitMatch) {
+      waitDurationMs = Number.parseInt(waitMatch[1], 10)
       continue
     }
 
@@ -92,6 +95,6 @@ export function parseMatrixRefSyncWatchOutput(output: string): ParsedMatrixRefSy
   return {
     cleanedOutput: cleanedLines.join('\n').trim(),
     phaseDurations,
-    readyDurationMs,
+    waitDurationMs,
   }
 }
