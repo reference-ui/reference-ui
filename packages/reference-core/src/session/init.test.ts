@@ -8,6 +8,7 @@ const onHandlers = new Map<string, Array<(payload?: unknown) => void>>()
 const mockInitSessionState = vi.fn()
 const mockTransitionSession = vi.fn()
 const mockTransitionBuild = vi.fn()
+const mockMarkBuildComplete = vi.fn()
 const mockCleanupSession = vi.fn()
 const mockTryAcquireLock = vi.fn()
 
@@ -23,6 +24,7 @@ async function loadInitModule(outDir: string) {
   mockInitSessionState.mockReset()
   mockTransitionSession.mockReset()
   mockTransitionBuild.mockReset()
+  mockMarkBuildComplete.mockReset()
   mockCleanupSession.mockReset()
   mockTryAcquireLock.mockReset()
 
@@ -42,6 +44,7 @@ async function loadInitModule(outDir: string) {
     initSessionState: mockInitSessionState,
     transitionSession: mockTransitionSession,
     transitionBuild: mockTransitionBuild,
+    markBuildComplete: mockMarkBuildComplete,
     cleanupSession: mockCleanupSession,
   }))
 
@@ -237,5 +240,15 @@ describe('session/init – watch mode event wiring', () => {
     fireOn('sync:complete')
 
     expect(mockCleanupSession).not.toHaveBeenCalled()
+  })
+
+  it('records watch cycle completion on sync:complete in watch mode', async () => {
+    const { initSession } = await loadInitModule(dir)
+    mockTryAcquireLock.mockReturnValue('acquired')
+    initSession(createPayload(true))
+
+    fireOn('sync:complete')
+
+    expect(mockMarkBuildComplete).toHaveBeenCalled()
   })
 })

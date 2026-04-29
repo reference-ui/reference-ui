@@ -12,6 +12,7 @@ export interface SessionManifest {
   buildState: BuildState
   startedAt: string
   updatedAt: string
+  completedAt?: string | null
 }
 
 /** Written to `.reference-ui/tmp/session.lock` to prevent concurrent writers. */

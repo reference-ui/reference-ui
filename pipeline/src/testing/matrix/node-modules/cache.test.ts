@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
-import { registryManifestVersion, type RegistryManifest } from '../../../registry/types.js'
+import { registryManifestVersion, type RegistryManifest, type RegistryManifestPackage } from '../../../registry/types.js'
 import {
   externalPnpmStoreCacheKey,
   matrixNodeModulesCacheKey,
@@ -41,6 +41,13 @@ function createManifest(overrides?: Partial<RegistryManifest>): RegistryManifest
     version: registryManifestVersion,
     ...overrides,
   }
+}
+
+function selectInternalPackages(
+  manifest: RegistryManifest,
+  packageNames: readonly string[] = ['@reference-ui/core', '@reference-ui/lib'],
+): RegistryManifestPackage[] {
+  return manifest.packages.filter(pkg => packageNames.includes(pkg.name))
 }
 
 function createFixturePackageJson(overrides?: Partial<MatrixFixturePackageJson>): MatrixFixturePackageJson {
@@ -103,15 +110,15 @@ describe('matrix node_modules cache helpers', () => {
     const baselineNodeModules = matrixNodeModulesCacheKey({
       coreVersion: '0.0.41',
       fixturePackageJson: createFixturePackageJson(),
+      internalPackages: selectInternalPackages(baseline),
       libVersion: '0.0.44',
-      manifest: baseline,
     })
 
     const changedNodeModules = matrixNodeModulesCacheKey({
       coreVersion: '0.0.41',
       fixturePackageJson: createFixturePackageJson(),
+      internalPackages: selectInternalPackages(changed),
       libVersion: '0.0.44',
-      manifest: changed,
     })
 
     assert.notEqual(baselineNodeModules, changedNodeModules)
@@ -130,15 +137,15 @@ describe('matrix node_modules cache helpers', () => {
     const baselineNodeModules = matrixNodeModulesCacheKey({
       coreVersion: '0.0.41',
       fixturePackageJson: createFixturePackageJson(),
+      internalPackages: selectInternalPackages(baseline),
       libVersion: '0.0.44',
-      manifest: baseline,
     })
 
     const changedNodeModules = matrixNodeModulesCacheKey({
       coreVersion: '0.0.41',
       fixturePackageJson: createFixturePackageJson(),
+      internalPackages: selectInternalPackages(changed),
       libVersion: '0.0.44',
-      manifest: changed,
     })
 
     assert.notEqual(baselineNodeModules, changedNodeModules)
@@ -151,14 +158,14 @@ describe('matrix node_modules cache helpers', () => {
     const left = matrixNodeModulesCacheKey({
       coreVersion: '0.0.41',
       fixturePackageJson,
+      internalPackages: selectInternalPackages(manifest),
       libVersion: '0.0.44',
-      manifest,
     })
     const right = matrixNodeModulesCacheKey({
       coreVersion: '0.0.41',
       fixturePackageJson: createFixturePackageJson(),
+      internalPackages: selectInternalPackages(createManifest()),
       libVersion: '0.0.44',
-      manifest: createManifest(),
     })
 
     assert.equal(left, right)
@@ -170,15 +177,15 @@ describe('matrix node_modules cache helpers', () => {
     const left = matrixNodeModulesCacheKey({
       coreVersion: '0.0.41',
       fixturePackageJson: createFixturePackageJson({ name: '@matrix/distro' }),
+      internalPackages: selectInternalPackages(manifest),
       libVersion: '0.0.44',
-      manifest,
     })
 
     const right = matrixNodeModulesCacheKey({
       coreVersion: '0.0.41',
       fixturePackageJson: createFixturePackageJson({ name: '@matrix/playwright' }),
+      internalPackages: selectInternalPackages(manifest),
       libVersion: '0.0.44',
-      manifest,
     })
 
     assert.notEqual(left, right)
@@ -189,8 +196,8 @@ describe('matrix node_modules cache helpers', () => {
     const baseline = matrixNodeModulesCacheKey({
       coreVersion: '0.0.41',
       fixturePackageJson: createFixturePackageJson(),
+      internalPackages: selectInternalPackages(manifest),
       libVersion: '0.0.44',
-      manifest,
     })
 
     const differentDevDependency = matrixNodeModulesCacheKey({
@@ -203,15 +210,15 @@ describe('matrix node_modules cache helpers', () => {
           vitest: '^4.0.18',
         },
       }),
+      internalPackages: selectInternalPackages(manifest),
       libVersion: '0.0.44',
-      manifest,
     })
 
     const differentPublishedVersion = matrixNodeModulesCacheKey({
       coreVersion: '0.0.42',
       fixturePackageJson: createFixturePackageJson(),
+      internalPackages: selectInternalPackages(manifest),
       libVersion: '0.0.44',
-      manifest,
     })
 
     assert.notEqual(baseline, differentDevDependency)
@@ -233,18 +240,59 @@ describe('matrix node_modules cache helpers', () => {
       containerImage: 'node:24-bookworm',
       coreVersion: '0.0.41',
       fixturePackageJson,
+      internalPackages: selectInternalPackages(manifest),
       libVersion: '0.0.44',
-      manifest,
     })
 
     const playwrightImage = matrixNodeModulesCacheKey({
       containerImage: 'mcr.microsoft.com/playwright:v1.48.0-jammy',
       coreVersion: '0.0.41',
       fixturePackageJson,
+      internalPackages: selectInternalPackages(manifest),
       libVersion: '0.0.44',
-      manifest,
     })
 
     assert.notEqual(nodeImage, playwrightImage)
+  })
+
+  it('keeps node_modules cache keys stable when unrelated registry packages change', () => {
+    const baseline = createManifest({
+      packages: [
+        ...createManifest().packages,
+        {
+          artifactHash: 'icons-artifact-a',
+          hash: 'icons-hash-a',
+          internalDependencies: [],
+          name: '@reference-ui/icons',
+          sourceDir: '/tmp/icons',
+          tarballFileName: 'reference-ui-icons-0.0.41.tgz',
+          tarballPath: '/tmp/icons.tgz',
+          version: '0.0.41',
+        },
+      ],
+    })
+    const changed = createManifest({
+      packages: baseline.packages.map(pkg =>
+        pkg.name === '@reference-ui/icons'
+          ? { ...pkg, artifactHash: 'icons-artifact-b' }
+          : pkg,
+      ),
+    })
+
+    const baselineNodeModules = matrixNodeModulesCacheKey({
+      coreVersion: '0.0.41',
+      fixturePackageJson: createFixturePackageJson(),
+      internalPackages: selectInternalPackages(baseline),
+      libVersion: '0.0.44',
+    })
+
+    const changedNodeModules = matrixNodeModulesCacheKey({
+      coreVersion: '0.0.41',
+      fixturePackageJson: createFixturePackageJson(),
+      internalPackages: selectInternalPackages(changed),
+      libVersion: '0.0.44',
+    })
+
+    assert.equal(baselineNodeModules, changedNodeModules)
   })
 })

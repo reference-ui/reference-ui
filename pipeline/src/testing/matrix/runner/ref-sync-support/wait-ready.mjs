@@ -1,10 +1,10 @@
 /**
  * Runtime helper staged into generated matrix consumers.
  *
- * This script waits for `ref sync --watch` to reach the runtime-ready boundary
- * that browser and runtime-focused tests can safely execute against. It fails
- * fast when the watch session reports a failed build instead of waiting for the
- * full timeout.
+ * This script waits for `ref sync --watch` to reach either the runtime-ready
+ * boundary or the first fully completed sync cycle, depending on
+ * `REFERENCE_UI_MATRIX_REF_SYNC_WAIT_FOR`. It fails fast when the watch session
+ * reports a failed build instead of waiting for the full timeout.
  */
 
 import { existsSync } from 'node:fs'
@@ -47,6 +47,7 @@ const sessionPath = resolve(
   process.cwd(),
   process.env.REFERENCE_UI_MATRIX_REF_SYNC_SESSION_PATH ?? '.reference-ui/tmp/session.json',
 )
+const waitFor = process.env.REFERENCE_UI_MATRIX_REF_SYNC_WAIT_FOR === 'complete' ? 'complete' : 'ready'
 const timeoutMs = readPositiveIntEnv('REFERENCE_UI_MATRIX_REF_SYNC_READY_TIMEOUT_MS', 30_000)
 const pollMs = readPositiveIntEnv('REFERENCE_UI_MATRIX_REF_SYNC_READY_POLL_MS', 50)
 const startedAt = Date.now()
@@ -63,7 +64,11 @@ while (Date.now() - startedAt <= timeoutMs) {
         continue
       }
 
-      if (manifest.buildState === 'ready') {
+      if (waitFor === 'ready' && manifest.buildState === 'ready') {
+        process.exit(0)
+      }
+
+      if (waitFor === 'complete' && typeof manifest.completedAt === 'string' && manifest.completedAt.length > 0) {
         process.exit(0)
       }
 

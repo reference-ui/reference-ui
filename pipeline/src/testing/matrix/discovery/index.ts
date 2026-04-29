@@ -12,7 +12,7 @@ import { listWorkspacePackages } from '../../../build/workspace.js'
 import type { WorkspacePackage } from '../../../build/types.js'
 import { repoRoot } from '../../../build/workspace.js'
 
-export type MatrixRefSyncMode = 'full' | 'watch-ready'
+export type MatrixRefSyncMode = 'full' | 'watch-ready' | 'watch-full'
 
 const knownMatrixBundlerStrategies = ['vite7', 'webpack5'] as const
 export type MatrixBundlerStrategy = typeof knownMatrixBundlerStrategies[number]
@@ -143,9 +143,13 @@ export function readMatrixPackageConfig(packageDir: string): MatrixPackageConfig
     throw new Error(`Expected ${configPath} to declare a non-empty string matrix name.`)
   }
 
-  if (config.refSync?.mode !== 'full' && config.refSync?.mode !== 'watch-ready') {
+  if (
+    config.refSync?.mode !== 'full'
+    && config.refSync?.mode !== 'watch-ready'
+    && config.refSync?.mode !== 'watch-full'
+  ) {
     throw new Error(
-      `Expected ${configPath} to declare refSync.mode as "full" or "watch-ready".`,
+      `Expected ${configPath} to declare refSync.mode as "full", "watch-ready", or "watch-full".`,
     )
   }
 

@@ -80,7 +80,9 @@ export function appendOutputBlock(lines: string[], output: string): void {
 }
 
 export function describeMatrixEnvironment(packageRunContext: MatrixPackageRunContext): string {
-  const syncLabel = packageRunContext.config.refSync.mode === 'watch-ready' ? 'watch-ready' : 'full-sync'
+  const syncLabel = packageRunContext.config.refSync.mode === 'full'
+    ? 'full-sync'
+    : packageRunContext.config.refSync.mode
 
   return [packageRunContext.config.react, ...packageRunContext.effectiveBundlers, syncLabel].join(' + ')
 }

@@ -52,7 +52,7 @@ describe('readMatrixPackageConfig', () => {
 
       assert.throws(
         () => readMatrixPackageConfig(tempDir),
-        /refSync\.mode as "full" or "watch-ready"/,
+        /refSync\.mode as "full", "watch-ready", or "watch-full"/,
       )
     } finally {
       await rm(tempDir, { force: true, recursive: true })
