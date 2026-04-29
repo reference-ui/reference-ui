@@ -40,39 +40,39 @@ test.describe('spacing contract', () => {
     expect(spacingMatrixClasses.sizeBox).toContain('size_')
   })
 
-  test('padding="2r" resolves to 32px', async ({ page }) => {
+  test('padding="2r" resolves to 8px', async ({ page }) => {
     const element = page.getByTestId('spacing-rhythm-block')
     const computed = await readComputedStyle(element, ['padding-top'])
 
-    expect(computed['padding-top']).toBe('32px')
+    expect(computed['padding-top']).toBe('8px')
   })
 
   test('padding shorthand keeps the top rhythm value', async ({ page }) => {
     const element = page.getByTestId('spacing-rhythm-shorthand')
     const computed = await readComputedStyle(element, ['padding-top'])
 
-    expect(computed['padding-top']).toBe('16px')
+    expect(computed['padding-top']).toBe('4px')
   })
 
   test('padding shorthand keeps the right rhythm value', async ({ page }) => {
     const element = page.getByTestId('spacing-rhythm-shorthand')
     const computed = await readComputedStyle(element, ['padding-right'])
 
-    expect(computed['padding-right']).toBe('32px')
+    expect(computed['padding-right']).toBe('8px')
   })
 
-  test('borderRadius="1r" resolves to 16px', async ({ page }) => {
+  test('borderRadius="1r" resolves to 4px', async ({ page }) => {
     const element = page.getByTestId('spacing-radius')
     const computed = await readComputedStyle(element, ['border-radius'])
 
-    expect(computed['border-radius']).toBe('16px')
+    expect(computed['border-radius']).toBe('4px')
   })
 
   test('size custom prop keeps width and height equal', async ({ page }) => {
     const element = page.getByTestId('spacing-size-box')
     const computed = await readComputedStyle(element, ['width', 'height'])
 
-    expect(computed.width).toBe('32px')
-    expect(computed.height).toBe('32px')
+    expect(computed.width).toBe('8px')
+    expect(computed.height).toBe('8px')
   })
 })

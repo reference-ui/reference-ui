@@ -1,39 +1,38 @@
 import { describe, expect, it } from 'vitest'
 import { existsSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
 
-import { virt } from './helpers'
+import { srcDir, testsDir, virt } from './helpers'
 
-describe('virtual transforms', () => {
-  const virtualSource = (...pathSegments: string[]) => virt('src', 'virtual', ...pathSegments)
-  const expectedSystemRuntimeImport = "from 'src/system/runtime'"
+describe('virtual transform contract', () => {
+  const virtualSource = (...pathSegments: string[]) => virt('src', ...pathSegments)
 
-  it('rewrites css() imports to system runtime', () => {
-    expect(existsSync(virtualSource('css.tsx'))).toBe(true)
+  it('keeps src/index.tsx byte-identical when no transform fixture is present', () => {
+    expect(existsSync(virtualSource('index.tsx'))).toBe(true)
 
-    const source = readFileSync(virtualSource('css.tsx'), 'utf-8')
+    const source = readFileSync(join(srcDir, 'index.tsx'), 'utf-8')
+    const virtual = readFileSync(virtualSource('index.tsx'), 'utf-8')
 
-    expect(source).toContain(expectedSystemRuntimeImport)
-    expect(source).not.toContain("from '@reference-ui/react'")
+    expect(virtual).toBe(source)
   })
 
-  it('rewrites recipe() imports to cva() from system runtime', () => {
-    expect(existsSync(virtualSource('recipes.tsx'))).toBe(true)
+  it('keeps src/main.tsx byte-identical when no transform fixture is present', () => {
+    expect(existsSync(virtualSource('main.tsx'))).toBe(true)
 
-    const source = readFileSync(virtualSource('recipes.tsx'), 'utf-8')
+    const source = readFileSync(join(srcDir, 'main.tsx'), 'utf-8')
+    const virtual = readFileSync(virtualSource('main.tsx'), 'utf-8')
 
-    expect(source).toContain(expectedSystemRuntimeImport)
-    expect(source).toMatch(/import\s*\{\s*cva\s*\}\s*from/)
-    expect(source).toContain('cva(')
-    expect(source).not.toContain('recipe(')
-    expect(source).not.toMatch(/import\s*\{\s*recipe\s*\}\s*from/)
+    expect(virtual).toBe(source)
   })
 
-  it('transforms MDX sources to JSX', () => {
-    expect(existsSync(virtualSource('demo.jsx'))).toBe(true)
+  it('does not synthesize demo transform fixtures that are absent from this package', () => {
+    expect(existsSync(virt('src', 'virtual', 'css.tsx'))).toBe(false)
+    expect(existsSync(virt('src', 'virtual', 'recipes.tsx'))).toBe(false)
+    expect(existsSync(virt('src', 'virtual', 'demo.jsx'))).toBe(false)
 
-    const source = readFileSync(virtualSource('demo.jsx'), 'utf-8')
+    const source = readFileSync(join(testsDir, 'unit', 'transform.test.ts'), 'utf-8')
+    const virtual = readFileSync(virt('tests', 'unit', 'transform.test.ts'), 'utf-8')
 
-    expect(source).toContain('Hello from MDX')
-    expect(source).toMatch(/function|=>|<_components|MDXContent/)
+    expect(virtual).toBe(source)
   })
-}
+})

@@ -3,13 +3,25 @@ import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 import {
-  getReferenceBrowserSourcePaths,
   getVirtualPaths,
   srcDir,
   testsDir,
   virt,
   virtualDir,
 } from './helpers'
+
+const expectedReferenceBrowserFiles = [
+  'component-api.ts',
+  'components/index.ts',
+  'index.ts',
+  'MODEL.md',
+  'README.md',
+  'Reference.tsx',
+  'ReferenceRuntimeContext.tsx',
+  'ReferenceStatus.tsx',
+  'Runtime.ts',
+  'types.ts',
+]
 
 describe('virtual baseline', () => {
   it('creates .reference-ui/virtual with files matching include', () => {
@@ -31,13 +43,12 @@ describe('virtual baseline', () => {
   })
 
   it('mirrors the current reference browser component files', () => {
-    const expected = getReferenceBrowserSourcePaths()
     const actual = getVirtualPaths()
       .filter((path) => path.startsWith('_reference-component/'))
       .map((path) => path.slice('_reference-component/'.length))
       .sort((left, right) => left.localeCompare(right))
 
-    expect(actual).toEqual(expected)
+    expect(actual).toEqual(expectedReferenceBrowserFiles)
   })
 
   it('excludes node_modules and .reference-ui from virtual copy', () => {
@@ -49,4 +60,4 @@ describe('virtual baseline', () => {
     expect(existsSync(join(virtualDir, 'ui.config.ts'))).toBe(false)
     expect(existsSync(join(virtualDir, 'vite.config.ts'))).toBe(false)
   })
-}
+})
