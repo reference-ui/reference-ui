@@ -18,18 +18,18 @@ async function importFragmentsModule(options?: {
     options?.internalPatternFiles ?? ['/workspace/core/src/system/panda/config/extensions/container/container.ts']
   )
 
-  vi.doMock('../../lib/fragments', () => ({
+  vi.doMock('../../../lib/fragments', () => ({
     scanForFragments,
     bundleFragments,
   }))
-  vi.doMock('../../lib/paths/core-package-dir', () => ({
+  vi.doMock('../../../lib/paths/core-package-dir', () => ({
     resolveCorePackageDir,
   }))
-  vi.doMock('../panda/config/extensions/api/bundle', () => ({
+  vi.doMock('../../panda/config/extensions/api/bundle', () => ({
     resolveInternalPatternFiles,
   }))
 
-  const mod = await import('./fragments')
+  const mod = await import('./index')
   return {
     ...mod,
     scanForFragments,
@@ -41,9 +41,9 @@ async function importFragmentsModule(options?: {
 
 afterEach(() => {
   vi.resetModules()
-  vi.doUnmock('../../lib/fragments')
-  vi.doUnmock('../../lib/paths/core-package-dir')
-  vi.doUnmock('../panda/config/extensions/api/bundle')
+  vi.doUnmock('../../../lib/fragments')
+  vi.doUnmock('../../../lib/paths/core-package-dir')
+  vi.doUnmock('../../panda/config/extensions/api/bundle')
   vi.restoreAllMocks()
 })
 
@@ -62,17 +62,19 @@ describe('system/base/fragments', () => {
     expect(getUpstreamFragments(undefined)).toEqual([])
   })
 
-  it('maps config import aliases to the system entry', async () => {
-    const { getBaseFragmentBundleAlias } = await importFragmentsModule({
+  it('maps bootstrap fragment imports back to core source entries', async () => {
+    await importFragmentsModule({
       coreDir: '/workspace/packages/reference-core',
     })
+    const { getBaseFragmentBootstrapImportMap } = await import('./bootstrap-import-map')
 
-    expect(getBaseFragmentBundleAlias('/workspace/app')).toEqual({
+    expect(getBaseFragmentBootstrapImportMap('/workspace/app')).toEqual({
       '@reference-ui/system': '/workspace/packages/reference-core/src/entry/system.ts',
       '@reference-ui/core/config': '/workspace/packages/reference-core/src/entry/system.ts',
       '@reference-ui/cli/config': '/workspace/packages/reference-core/src/entry/system.ts',
       '@reference-ui/react': '/workspace/packages/reference-core/src/entry/react.ts',
       '@reference-ui/styled/css': '/workspace/packages/reference-core/src/system/styled/css/index.js',
+      '@reference-ui/styled/css/cva': '/workspace/packages/reference-core/src/system/styled/css/cva.js',
       '@reference-ui/styled/jsx': '/workspace/packages/reference-core/src/system/styled/jsx/index.js',
       '@reference-ui/styled/patterns/box': '/workspace/packages/reference-core/src/system/styled/patterns/box.js',
     })
@@ -112,6 +114,7 @@ describe('system/base/fragments', () => {
         '@reference-ui/cli/config': '/workspace/core/src/entry/system.ts',
         '@reference-ui/react': '/workspace/core/src/entry/react.ts',
         '@reference-ui/styled/css': '/workspace/core/src/system/styled/css/index.js',
+        '@reference-ui/styled/css/cva': '/workspace/core/src/system/styled/css/cva.js',
         '@reference-ui/styled/jsx': '/workspace/core/src/system/styled/jsx/index.js',
         '@reference-ui/styled/patterns/box': '/workspace/core/src/system/styled/patterns/box.js',
       },
@@ -164,6 +167,7 @@ describe('system/base/fragments', () => {
         '@reference-ui/cli/config': '/workspace/core/src/entry/system.ts',
         '@reference-ui/react': '/workspace/core/src/entry/react.ts',
         '@reference-ui/styled/css': '/workspace/core/src/system/styled/css/index.js',
+        '@reference-ui/styled/css/cva': '/workspace/core/src/system/styled/css/cva.js',
         '@reference-ui/styled/jsx': '/workspace/core/src/system/styled/jsx/index.js',
         '@reference-ui/styled/patterns/box': '/workspace/core/src/system/styled/patterns/box.js',
       },

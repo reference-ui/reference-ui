@@ -3,7 +3,7 @@ use oxc_ast::ast::{
 };
 use regex::Regex;
 
-use super::constants::{CORE_PACKAGE, STYLED_SYSTEM_PATH};
+use super::constants::CORE_PACKAGE;
 
 pub struct RewritePlan {
     pub start: usize,
@@ -105,12 +105,13 @@ where
 
 pub fn render_rewritten_imports(
     rewritten_binding: &str,
+    rewritten_import_path: &str,
     default_name: &Option<String>,
     remaining_parts: &[String],
 ) -> String {
     let primary_line = format!(
         "import {{ {} }} from '{}';\n",
-        rewritten_binding, STYLED_SYSTEM_PATH
+        rewritten_binding, rewritten_import_path
     );
     let secondary_line = render_core_import(default_name, remaining_parts);
     primary_line + &secondary_line

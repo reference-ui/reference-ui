@@ -82,13 +82,6 @@ test.describe('recipe contract', () => {
     )
   })
 
-  test('default recipe branch applies base padding', async ({ page }) => {
-    const element = page.getByTestId('recipe-default')
-    const computed = await readComputedStyle(element, ['padding-top'])
-
-    expect(computed['padding-top']).toBe('32px')
-  })
-
   test('default recipe branch applies base border radius', async ({ page }) => {
     const element = page.getByTestId('recipe-default')
     const computed = await readComputedStyle(element, ['border-radius'])

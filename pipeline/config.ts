@@ -16,7 +16,7 @@ export const CONSUMER_DIR_IN_CONTAINER = '/consumer' as const
 export const DISABLE_DAGGER_CACHE = true as const
 
 export const MATRIX_CONFIG = {
-	concurrency: 4,
+	concurrency: 8,
 	containerRuntime: {
 		cpu: 12,
 		memoryGiB: 24,

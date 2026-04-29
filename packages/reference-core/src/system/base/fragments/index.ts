@@ -2,24 +2,25 @@ import { randomBytes } from 'node:crypto'
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import type { ReferenceUIConfig } from '../../config'
-import type { BaseSystem } from '../../types'
+import type { ReferenceUIConfig } from '../../../config'
+import type { BaseSystem } from '../../../types'
 import {
   bundleFragments,
   scanForFragments,
   type CollectorBundles,
   type CollectorRuntimeAdapter,
   type FragmentBundle,
-} from '../../lib/fragments'
-import { getOutDirPath } from '../../lib/paths'
-import { resolveCorePackageDir } from '../../lib/paths/core-package-dir'
-import { createKeyframesCollector } from '../api/keyframes'
-import { createTokensCollector } from '../api/tokens'
-import { createFontCollector } from '../api/font'
-import { createGlobalCssCollector } from '../api/globalCss'
-import { createBoxPatternCollector } from '../api/patterns'
-import { resolveInternalPatternFiles } from '../panda/config/extensions/api/bundle'
-import type { PreparedBaseFragments } from './types'
+} from '../../../lib/fragments'
+import { getOutDirPath } from '../../../lib/paths'
+import { resolveCorePackageDir } from '../../../lib/paths/core-package-dir'
+import { createKeyframesCollector } from '../../api/keyframes'
+import { createTokensCollector } from '../../api/tokens'
+import { createFontCollector } from '../../api/font'
+import { createGlobalCssCollector } from '../../api/globalCss'
+import { createBoxPatternCollector } from '../../api/patterns'
+import { resolveInternalPatternFiles } from '../../panda/config/extensions/api/bundle'
+import type { PreparedBaseFragments } from '../types'
+import { getBaseFragmentBootstrapImportMap } from './bootstrap-import-map'
 
 // Fragment bundles are plain IIFEs. This global tells collector calls which
 // source file is currently executing so diagnostics can point back to filenames.
@@ -50,23 +51,6 @@ export function scanBaseFragmentFiles(cwd: string, config: ReferenceUIConfig): s
   })
 }
 
-export function getBaseFragmentBundleAlias(cwd: string): Record<string, string> {
-  const coreDir = resolveCorePackageDir(cwd)
-  const systemEntry = `${coreDir}/src/entry/system.ts`
-  const reactEntry = `${coreDir}/src/entry/react.ts`
-  const styledDir = `${coreDir}/src/system/styled`
-
-  return {
-    '@reference-ui/system': systemEntry,
-    '@reference-ui/core/config': systemEntry,
-    '@reference-ui/cli/config': systemEntry,
-    '@reference-ui/react': reactEntry,
-    '@reference-ui/styled/css': `${styledDir}/css/index.js`,
-    '@reference-ui/styled/jsx': `${styledDir}/jsx/index.js`,
-    '@reference-ui/styled/patterns/box': `${styledDir}/patterns/box.js`,
-  }
-}
-
 export function getBaseCollectors() {
   return [
     createTokensCollector(),
@@ -94,7 +78,7 @@ export async function prepareBaseFragments(
   const fragmentFiles = scanBaseFragmentFiles(cwd, config)
   const localFragmentBundles = await bundleFragments({
     files: fragmentFiles,
-    alias: getBaseFragmentBundleAlias(cwd),
+    alias: getBaseFragmentBootstrapImportMap(cwd),
   })
 
   return {
@@ -128,7 +112,7 @@ async function bundleInternalPatterns(cwd: string): Promise<FragmentBundle[]> {
   const coreDir = resolveCorePackageDir(cwd)
   return bundleFragments({
     files: resolveInternalPatternFiles(coreDir),
-    alias: getBaseFragmentBundleAlias(cwd),
+    alias: getBaseFragmentBootstrapImportMap(cwd),
   })
 }
 

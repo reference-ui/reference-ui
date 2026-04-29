@@ -4,8 +4,8 @@ import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { randomBytes } from 'node:crypto'
 import type { ReferenceUIConfig } from '../../config'
 import { bundleFragments } from '../../lib/fragments'
+import { getBaseFragmentBootstrapImportMap } from '../../system/base/fragments/bootstrap-import-map'
 import {
-  getBaseFragmentBundleAlias,
   getUpstreamFragments,
   scanBaseFragmentFiles,
 } from '../../system/base/fragments'
@@ -91,7 +91,7 @@ async function collectTokenFragmentsFromBundle(input: {
   const files = scanBaseFragmentFiles(cwd, config)
   const localBundles = await bundleFragments({
     files,
-    alias: getBaseFragmentBundleAlias(cwd),
+    alias: getBaseFragmentBootstrapImportMap(cwd),
   })
   const upstreamFragments = getUpstreamFragments(config.extends)
   const tempPath = createTempTokenCollectorPath(tempDir)
