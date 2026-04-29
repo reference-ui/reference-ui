@@ -10,6 +10,7 @@
 import { existsSync, readdirSync } from 'node:fs'
 import { readFile, rm, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
+import { buildWorkspaceArtifacts } from '../../../build/index.js'
 import { repoRoot, run } from '../../../build/workspace.js'
 import {
   getPreferredLocalMatrixBundlers,
@@ -152,6 +153,8 @@ export async function setupMatrixPackages(options: MatrixSetupOptions = {}): Pro
   if (!options.sync) {
     return
   }
+
+  await buildWorkspaceArtifacts()
 
   for (const definition of definitions) {
     await run('pnpm', ['run', 'sync'], {

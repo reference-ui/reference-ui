@@ -91,7 +91,11 @@ export type ColorPropKeys =
   | 'textEmphasisColor'
   | 'textShadowColor'
 
-type ColorToken = UtilityValues['backgroundColor']
+type PreferredColorUtilityKey = Extract<'backgroundColor' | 'color', keyof UtilityValues>
+
+type ColorToken = PreferredColorUtilityKey extends never
+  ? never
+  : UtilityValues[PreferredColorUtilityKey]
 
 type StrictColorValue =
   | ColorToken

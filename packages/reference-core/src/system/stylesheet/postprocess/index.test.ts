@@ -127,6 +127,31 @@ describe('system/stylesheet/postprocess', () => {
     expect(readFileSync(stylesPath, 'utf-8')).toBe(rawCss)
   })
 
+  it('preserves same-element attribute and hover utility selectors through postprocess', () => {
+    const outDir = createTempDir()
+    const styledDir = resolve(outDir, 'styled')
+    const stylesPath = resolve(styledDir, 'styles.css')
+    const rawCss = [
+      '@layer base, tokens, utilities;',
+      '@layer tokens { :where(:root,:host) { --colors-demo: red; } }',
+      '@layer utilities { .\\[\\&\\[data-component\\=card\\]\\:hover\\]\\:bd-t-w_6px[data-component=card]:hover { border-top-width: 6px; } }',
+    ].join('\n')
+
+    mkdirSync(styledDir, { recursive: true })
+    writeFileSync(stylesPath, rawCss, 'utf-8')
+
+    const result = postprocessCss(outDir, {
+      name: 'local-system',
+      normalizeCss: false,
+      extends: [],
+      layers: [],
+    } as never)
+
+    expect(readFileSync(stylesPath, 'utf-8')).toContain('[data-component=card]:hover')
+    expect(result).toContain('[data-component=card]:hover')
+    expect(result).toContain('border-top-width: 6px;')
+  })
+
   it('returns and writes the assembled stylesheet when upstream extends or layers expose css', () => {
     const outDir = createTempDir()
     const styledDir = resolve(outDir, 'styled')
