@@ -14,9 +14,11 @@ import { repoRoot } from '../../../build/workspace.js'
 
 export type MatrixRefSyncMode = 'full' | 'watch-ready'
 
-export type MatrixBundlerStrategy = 'vite7' | 'webpack5'
+const knownMatrixBundlerStrategies = ['vite7', 'webpack5'] as const
+export type MatrixBundlerStrategy = typeof knownMatrixBundlerStrategies[number]
 
-export type MatrixReactRuntime = 'react19'
+const knownMatrixReactRuntimes = ['react19'] as const
+export type MatrixReactRuntime = typeof knownMatrixReactRuntimes[number]
 
 export interface MatrixPackageRefSyncConfig {
   mode: MatrixRefSyncMode
@@ -44,10 +46,62 @@ export interface MatrixWorkspacePackage {
 }
 
 const matrixRootDir = resolve(repoRoot, 'matrix')
-const knownMatrixBundlerStrategies: readonly MatrixBundlerStrategy[] = ['vite7', 'webpack5']
+
+function parseTrailingMajor(value: string): number {
+  const match = value.match(/(\d+)$/)
+  return match ? Number.parseInt(match[1], 10) : Number.NEGATIVE_INFINITY
+}
+
+function sortByTrailingMajor<T extends string>(values: readonly T[]): T[] {
+  return [...values].sort((left, right) => parseTrailingMajor(right) - parseTrailingMajor(left))
+}
+
+export function getSupportedMatrixBundlerStrategies(): readonly MatrixBundlerStrategy[] {
+  return knownMatrixBundlerStrategies
+}
+
+export function getSupportedMatrixReactRuntimes(): readonly MatrixReactRuntime[] {
+  return knownMatrixReactRuntimes
+}
+
+export function getLatestMatrixBundlerStrategyForPrefix(
+  prefix: string,
+  candidates: readonly MatrixBundlerStrategy[] = knownMatrixBundlerStrategies,
+): MatrixBundlerStrategy | null {
+  const matching = candidates.filter(bundler => bundler.startsWith(prefix))
+  return sortByTrailingMajor(matching)[0] ?? null
+}
+
+export function getPreferredLocalMatrixBundlers(
+  candidates: readonly MatrixBundlerStrategy[] = knownMatrixBundlerStrategies,
+): readonly MatrixBundlerStrategy[] {
+  const latestViteBundler = getLatestMatrixBundlerStrategyForPrefix('vite', candidates)
+
+  if (latestViteBundler) {
+    return [latestViteBundler]
+  }
+
+  return candidates[0] ? [candidates[0]] : []
+}
+
+export function getLatestMatrixReactRuntime(
+  candidates: readonly MatrixReactRuntime[] = knownMatrixReactRuntimes,
+): MatrixReactRuntime {
+  const latest = sortByTrailingMajor(candidates)[0]
+
+  if (!latest) {
+    throw new Error('Expected at least one supported matrix React runtime.')
+  }
+
+  return latest
+}
 
 function isKnownMatrixBundlerStrategy(value: unknown): value is MatrixBundlerStrategy {
   return knownMatrixBundlerStrategies.includes(value as MatrixBundlerStrategy)
+}
+
+function isKnownMatrixReactRuntime(value: unknown): value is MatrixReactRuntime {
+  return knownMatrixReactRuntimes.includes(value as MatrixReactRuntime)
 }
 
 function matrixConfigPath(packageDir: string): string {
@@ -107,8 +161,10 @@ export function readMatrixPackageConfig(packageDir: string): MatrixPackageConfig
     }
   }
 
-  if (config.react !== 'react19') {
-    throw new Error(`Expected ${configPath} to declare react as "react19".`)
+  if (!isKnownMatrixReactRuntime(config.react)) {
+    throw new Error(
+      `Expected ${configPath} to declare react as one of ${knownMatrixReactRuntimes.map(runtime => `"${runtime}"`).join(', ')}.`,
+    )
   }
 
   if (config.runTypecheck !== undefined && typeof config.runTypecheck !== 'boolean') {

@@ -1,0 +1,23 @@
+{
+  "//": {{ generatedNotice }},
+  "name": {{ name }},
+  "version": {{ version }},
+  "private": {{ privateValue }},
+  "type": {{ type }},
+  "scripts": {
+    {%- for script in scripts %}
+    {{ script.key }}: {{ script.value }}{% unless forloop.last %},{% endunless %}
+    {%- endfor %}
+  },
+  "exports": {{ exportsValue }},
+  "dependencies": {
+    {%- for dependency in dependencies %}
+    {{ dependency.key }}: {{ dependency.value }}{% unless forloop.last %},{% endunless %}
+    {%- endfor %}
+  },
+  "devDependencies": {
+    {%- for dependency in devDependencies %}
+    {{ dependency.key }}: {{ dependency.value }}{% unless forloop.last %},{% endunless %}
+    {%- endfor %}
+  }
+}

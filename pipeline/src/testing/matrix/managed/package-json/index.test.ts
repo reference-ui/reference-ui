@@ -48,10 +48,11 @@ describe('createManagedMatrixPackageJson', () => {
     assert.equal(packageJson.dependencies['react-dom'], '^19.2.0')
     assert.equal(packageJson.devDependencies['@vitejs/plugin-react'], '^4.7.0')
     assert.equal(packageJson.devDependencies.vite, '^7.3.1')
-    assert.equal(packageJson.devDependencies.webpack, '^5.98.0')
-    assert.equal(packageJson.devDependencies['webpack-dev-server'], '^5.2.0')
+    assert.equal(packageJson.devDependencies.webpack, undefined)
+    assert.equal(packageJson.devDependencies['webpack-dev-server'], undefined)
     assert.equal(packageJson.devDependencies['@playwright/test'], undefined)
     assert.equal(packageJson.devDependencies['@modelcontextprotocol/sdk'], '^1.29.0')
+    assert.equal(packageJson['//'], 'This file is generated and managed by pipeline.')
   })
 
   it('preserves package-specific browser runners from the existing fixture package', () => {
@@ -101,6 +102,7 @@ describe('createMatrixConsumerPackageJson', () => {
 
     const packageJson = JSON.parse(
       createMatrixConsumerPackageJson({
+        bundlers: ['webpack5'],
         fixturePackageJson,
         internalTarballSpecifiers,
       }),
@@ -120,8 +122,15 @@ describe('createMatrixConsumerPackageJson', () => {
     })
     assert.deepEqual(packageJson.devDependencies, {
       '@playwright/test': '1.48.0',
+      'css-loader': '^7.1.2',
       typescript: '~5.9.3',
       vitest: '^4.0.18',
+      'html-webpack-plugin': '^5.6.3',
+      'style-loader': '^4.0.0',
+      'ts-loader': '^9.5.2',
+      webpack: '^5.98.0',
+      'webpack-cli': '^6.0.1',
+      'webpack-dev-server': '^5.2.0',
     })
     assert.deepEqual(packageJson.ignoredBuiltDependencies, [
       '@parcel/watcher',
@@ -148,6 +157,7 @@ describe('createMatrixConsumerPackageJson', () => {
 
     const packageJson = JSON.parse(
       createMatrixConsumerPackageJson({
+        bundlers: ['vite7'],
         fixturePackageJson,
         internalTarballSpecifiers,
       }),
@@ -171,6 +181,7 @@ describe('createMatrixConsumerPackageJson', () => {
 
     const packageJson = JSON.parse(
       createMatrixConsumerPackageJson({
+        bundlers: ['vite7'],
         fixturePackageJson,
         internalTarballSpecifiers: {
           '@fixtures/extend-library': 'file:.matrix-tarballs/fixtures-extend-library-0.0.0-abcd1234.tgz',

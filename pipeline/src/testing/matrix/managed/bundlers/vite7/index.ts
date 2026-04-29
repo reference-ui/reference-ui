@@ -1,5 +1,6 @@
 import type { MatrixReactRuntime } from '../../../discovery/index.js'
 import { getManagedReactProfile } from '../../react/index.js'
+import { managedGeneratedNotice, renderManagedTemplate } from '../../template.js'
 
 export const managedVite7DevDependencies = {
   '@vitejs/plugin-react': '^4.7.0',
@@ -12,42 +13,15 @@ export function createManagedVite7IndexHtmlSource(options: {
 }): string {
   const reactProfile = getManagedReactProfile(options.reactRuntime)
 
-  return [
-    '<!doctype html>',
-    '<html lang="en">',
-    '  <head>',
-    '    <meta charset="UTF-8" />',
-    '    <meta name="viewport" content="width=device-width, initial-scale=1.0" />',
-    `    <title>${options.title}</title>`,
-    '  </head>',
-    '  <body>',
-    `    <div id="${reactProfile.mountElementId}"></div>`,
-    '    <script type="module" src="/src/main.tsx"></script>',
-    '  </body>',
-    '</html>',
-    '',
-  ].join('\n')
+  return renderManagedTemplate(new URL('./templates/index.html.liquid', import.meta.url), {
+    generatedNotice: managedGeneratedNotice,
+    mountElementId: reactProfile.mountElementId,
+    title: options.title,
+  })
 }
 
 export function createManagedVite7ConfigSource(): string {
-  return [
-    "import { referenceVite } from '@reference-ui/core'",
-    "import react from '@vitejs/plugin-react'",
-    "import { defineConfig } from 'vite'",
-    '',
-    'export default defineConfig({',
-    '  plugins: [',
-    '    react(),',
-    '    referenceVite(),',
-    '    {',
-    "      name: 'reference-ui:matrix-vite-entry',",
-    '      transformIndexHtml(html) {',
-    "        if (html.includes('/src/main.tsx')) return html",
-    "        return html.replace('</body>', '    <script type=\"module\" src=\"/src/main.tsx\"></script>\\n  </body>')",
-    '      },',
-    '    },',
-    '  ],',
-    '})',
-    '',
-  ].join('\n')
+  return renderManagedTemplate(new URL('./templates/vite.config.ts.liquid', import.meta.url), {
+    generatedNotice: managedGeneratedNotice,
+  })
 }

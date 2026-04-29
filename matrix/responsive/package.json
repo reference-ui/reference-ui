@@ -1,4 +1,5 @@
 {
+  "//": "This file is generated and managed by pipeline.",
   "name": "@matrix/responsive",
   "version": "0.0.1",
   "private": true,
@@ -8,9 +9,7 @@
     "test": "pnpm --dir ../../pipeline exec tsx src/cli.ts test --packages=@matrix/responsive",
     "sync": "pnpm exec ref sync"
   },
-  "exports": {
-    ".": "./src/index.tsx"
-  },
+  "exports": {".":"./src/index.tsx"},
   "dependencies": {
     "@reference-ui/core": "workspace:*",
     "@reference-ui/lib": "workspace:*",
@@ -26,13 +25,13 @@
     "@types/react-dom": "^19.2.2",
     "@vitejs/plugin-react": "^4.7.0",
     "vite": "^7.3.1",
+    "@playwright/test": "1.48.0",
     "css-loader": "^7.1.2",
     "html-webpack-plugin": "^5.6.3",
     "style-loader": "^4.0.0",
     "ts-loader": "^9.5.2",
     "webpack": "^5.98.0",
     "webpack-cli": "^6.0.1",
-    "webpack-dev-server": "^5.2.0",
-    "@playwright/test": "1.48.0"
+    "webpack-dev-server": "^5.2.0"
   }
 }

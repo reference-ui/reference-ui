@@ -1,4 +1,5 @@
 import type { MatrixReactRuntime } from '../../discovery/index.js'
+import { managedGeneratedNotice, renderManagedTemplate } from '../template.js'
 
 interface ManagedReactProfile {
   dependencies: Record<string, string>
@@ -30,17 +31,9 @@ export function createManagedReactMainSource(options: {
 }): string {
   const reactProfile = getManagedReactProfile(options.runtime)
 
-  return [
-    "import React from 'react'",
-    "import ReactDOM from 'react-dom/client'",
-    "import '@reference-ui/react/styles.css'",
-    `import { Index } from '${options.entryImportPath}'`,
-    '',
-    `ReactDOM.createRoot(document.getElementById('${reactProfile.mountElementId}')!).render(`,
-    '  <React.StrictMode>',
-    '    <Index />',
-    '  </React.StrictMode>,',
-    ')',
-    '',
-  ].join('\n')
+  return renderManagedTemplate(new URL('./templates/main.tsx.liquid', import.meta.url), {
+    entryImportPath: options.entryImportPath,
+    generatedNotice: managedGeneratedNotice,
+    mountElementId: reactProfile.mountElementId,
+  })
 }

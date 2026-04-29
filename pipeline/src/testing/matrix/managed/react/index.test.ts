@@ -24,6 +24,9 @@ describe('managed react runtime', () => {
         runtime: 'react19',
       }),
       [
+        '/*',
+        ' * This file is generated and managed by pipeline.',
+        ' */',
         "import React from 'react'",
         "import ReactDOM from 'react-dom/client'",
         "import '@reference-ui/react/styles.css'",

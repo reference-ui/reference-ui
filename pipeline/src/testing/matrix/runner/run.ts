@@ -137,7 +137,7 @@ export async function runMatrixBootstrapInDagger(options: MatrixRunOptions = {})
   await writeStageLog('publish.log', `${publishedPackageNames}\n`)
 
   const matrixPackageContexts = await Promise.all(
-    matrixPackages.map(matrixPackage => createMatrixPackageRunContext(matrixPackage)),
+    matrixPackages.map(matrixPackage => createMatrixPackageRunContext(matrixPackage, { full: options.full })),
   )
   const dockerRuntime = getDockerRuntimeInfo()
   const packageConcurrencyResolution = resolveMatrixPackageConcurrency({

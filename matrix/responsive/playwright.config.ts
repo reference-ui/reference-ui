@@ -1,3 +1,6 @@
+/*
+ * This file is generated and managed by pipeline.
+ */
 import { defineConfig } from '@playwright/test'
 
 export default defineConfig({
@@ -15,13 +18,7 @@ export default defineConfig({
       use: {
         baseURL: 'http://127.0.0.1:4173',
       },
-    },
-    {
-      name: 'webpack5',
-      use: {
-        baseURL: 'http://127.0.0.1:4174',
-      },
-    },
+    }
   ],
   webServer: [
     {
@@ -29,12 +26,6 @@ export default defineConfig({
       url: 'http://127.0.0.1:4173',
       reuseExistingServer: false,
       timeout: 120_000,
-    },
-    {
-      command: 'pnpm exec webpack serve --config webpack.config.cjs --host 127.0.0.1 --port 4174',
-      url: 'http://127.0.0.1:4174',
-      reuseExistingServer: false,
-      timeout: 120_000,
-    },
+    }
   ],
 })

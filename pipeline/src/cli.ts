@@ -87,11 +87,13 @@ program
 program
   .command('test')
   .description('Run the Dagger-backed matrix test flow')
+  .option('--full', 'Run the full compatibility matrix across every configured bundler')
   .option('--packages <names>', 'Comma-separated matrix package names, for example @matrix/distro')
   .option('--trace', 'Stream the Dagger execution trace for this run')
-  .action(async (options: { packages?: string; trace?: boolean }) => {
+  .action(async (options: { full?: boolean; packages?: string; trace?: boolean }) => {
     await runMatrixTests({
       commandLabel: 'pnpm pipeline test',
+      full: options.full,
       packageNames: parsePackageOption(options.packages),
       trace: options.trace,
     })

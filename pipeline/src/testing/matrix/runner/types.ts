@@ -7,18 +7,20 @@
 
 import type * as dagger from '@dagger.io/dagger'
 import type { RegistryManifest, RegistryManifestPackage } from '../../../registry/types.js'
-import type { MatrixWorkspacePackage } from '../discovery/index.js'
+import type { MatrixBundlerStrategy, MatrixWorkspacePackage } from '../discovery/index.js'
 import type { MatrixFixturePackageJson } from '../managed/package-json/index.js'
 
 export interface FixtureSourceFiles {
   fixturePackageJson: MatrixFixturePackageJson
   hasPlaywrightTests: boolean
+  hasVitestGlobalSetup: boolean
   hasVitestTests: boolean
 }
 
 export interface MatrixPackageRunContext {
   config: MatrixWorkspacePackage['config']
   displayName: string
+  effectiveBundlers: readonly MatrixBundlerStrategy[]
   logPrefix: string
   source: FixtureSourceFiles
   workspacePackage: MatrixWorkspacePackage['workspacePackage']
@@ -49,6 +51,7 @@ export type MatrixPackageStageLogPhase = 'install' | 'setup' | 'test'
 
 export interface MatrixRunOptions {
   commandLabel?: string
+  full?: boolean
   packageNames?: readonly string[]
   trace?: boolean
 }

@@ -6,7 +6,7 @@
   "scripts": {
     "build": "pnpm exec tsx src/cli.ts build",
     "test:pipeline": "pnpm exec tsx --test",
-    "test:matrix": "pnpm exec tsx src/cli.ts test",
+    "test:matrix": "pnpm exec tsx src/cli.ts test --full",
     "setup:matrix": "pnpm exec tsx src/cli.ts setup",
     "registry:pack": "pnpm exec tsx src/cli.ts registry pack",
     "registry:load:local": "pnpm exec tsx src/cli.ts registry load --registry http://127.0.0.1:4873",
@@ -17,6 +17,7 @@
   "devDependencies": {
     "@dagger.io/dagger": "^0.20.6",
     "commander": "^14.0.3",
+    "liquidjs": "^10.24.0",
     "ora": "^9.4.0",
     "picocolors": "^1.1.1",
     "tsx": "^4.21.0",
