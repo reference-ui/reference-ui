@@ -80,6 +80,33 @@ test.describe('css contract', () => {
     expect(computed['border-top-style']).toBe('solid')
   })
 
+  test('css() keeps the non-card attribute branch on the baseline border width before hover', async ({ page }) => {
+    const element = page.getByTestId('css-component-panel')
+    const computed = await readComputedStyle(element, ['border-top-width'])
+
+    expect(computed['border-top-width']).toBe(cssMatrixConstants.componentHoverBaseBorderTopWidth)
+  })
+
+  test.fixme('css() applies the [data-component=card]:hover selector for the matching element', async ({ page }) => {
+    const element = page.getByTestId('css-component-card')
+
+    await element.hover()
+
+    const computed = await readComputedStyle(element, ['border-top-width'])
+
+    expect(computed['border-top-width']).toBe(cssMatrixConstants.componentHoverActiveBorderTopWidth)
+  })
+
+  test('css() keeps the non-matching attribute branch on the baseline border width when hovered', async ({ page }) => {
+    const element = page.getByTestId('css-component-panel')
+
+    await element.hover()
+
+    const computed = await readComputedStyle(element, ['border-top-width'])
+
+    expect(computed['border-top-width']).toBe(cssMatrixConstants.componentHoverBaseBorderTopWidth)
+  })
+
   test('css() keeps hoverable text undecorated before hover', async ({ page }) => {
     const element = page.getByTestId('css-hoverable')
     const computed = await readComputedStyle(element, ['text-decoration-line'])
