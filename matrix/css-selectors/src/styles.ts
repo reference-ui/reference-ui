@@ -7,11 +7,29 @@ export const descendantSelectorClass = css({
   },
 })
 
+export const descendantSelectorInlineClass = css({
+  '& [data-slot=inner]': {
+    marginTop: '13px',
+  },
+})
+
 export const hoverSelectorClass = css({
   textDecoration: 'none',
   '&:hover': {
     textDecoration: cssSelectorsMatrixConstants.hoverTextDecoration,
   },
+})
+
+export const hoverSelectorInlineClass = css({
+  textDecoration: 'none',
+  '&:hover': {
+    textDecoration: 'line-through',
+  },
+})
+
+export const topLevelConstantControlClass = css({
+  borderTopWidth: cssSelectorsMatrixConstants.selfAttributeHoverBorderTopWidth,
+  borderStyle: 'solid',
 })
 
 export const selfAttributeSelectorClass = css({
@@ -25,6 +43,13 @@ export const selfAttributeHoverSelectorClass = css({
   borderStyle: 'solid',
   '&[data-component=card]:hover': {
     borderTopWidth: cssSelectorsMatrixConstants.selfAttributeHoverBorderTopWidth,
+  },
+})
+
+export const selfAttributeHoverInlineClass = css({
+  borderStyle: 'solid',
+  '&[data-component=card]:hover': {
+    borderTopWidth: '9px',
   },
 })
 
@@ -44,9 +69,13 @@ export const selfAttributeStateSelectorClass = css({
 
 export const cssSelectorsMatrixClasses = {
   descendantSelector: descendantSelectorClass,
+  descendantSelectorInline: descendantSelectorInlineClass,
   hoverSelector: hoverSelectorClass,
+  hoverSelectorInline: hoverSelectorInlineClass,
+  topLevelConstantControl: topLevelConstantControlClass,
   selfAttribute: selfAttributeSelectorClass,
   selfAttributeHover: selfAttributeHoverSelectorClass,
+  selfAttributeHoverInline: selfAttributeHoverInlineClass,
   selfAttributeQuoted: selfAttributeQuotedSelectorClass,
   selfAttributeState: selfAttributeStateSelectorClass,
 } as const
