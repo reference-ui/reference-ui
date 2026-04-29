@@ -10,9 +10,16 @@ import { existsSync } from 'node:fs'
 import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import type { RegistryManifestPackage } from '../../../registry/types.js'
-import type { MatrixWorkspacePackage } from '../discovery/index.js'
+import {
+  getLatestMatrixBundlerStrategyForPrefix,
+  type MatrixBundlerStrategy,
+  type MatrixWorkspacePackage,
+} from '../discovery/index.js'
+import { createManagedBundlerFiles } from '../managed/bundlers/index.js'
 import { createMatrixConsumerPackageJson, type MatrixFixturePackageJson } from '../managed/package-json/index.js'
+import { createManagedPlaywrightConfigSource } from '../managed/playwright/index.js'
 import { createMatrixConsumerTsconfig } from '../managed/tsconfig/index.js'
+import { createManagedVitestConfigSource } from '../managed/vitest/index.js'
 import { matrixLogDir, repoRoot } from './paths.js'
 import {
   matrixRefSyncSupportDirectory,
@@ -30,6 +37,7 @@ export async function readMatrixPackageSource(packageDir: string): Promise<Fixtu
   return {
     fixturePackageJson: JSON.parse(packageJsonSource) as MatrixFixturePackageJson,
     hasPlaywrightTests: existsSync(resolve(packageDir, 'tests', 'e2e')),
+    hasVitestGlobalSetup: existsSync(resolve(packageDir, 'tests', 'unit', 'global-setup.ts')),
     hasVitestTests: existsSync(resolve(packageDir, 'tests')),
   }
 }
@@ -106,10 +114,16 @@ export async function stageGeneratedConsumerFiles(
   const tarballDir = resolve(generatedDir, '.matrix-tarballs')
   const refSyncSupportDir = resolve(generatedDir, matrixRefSyncSupportDirectory)
   const packageJsonSource = createMatrixConsumerPackageJson({
+    bundlers: packageRunContext.effectiveBundlers,
     fixturePackageJson: packageRunContext.source.fixturePackageJson,
     internalTarballSpecifiers: Object.fromEntries(
       internalTarballSpecs.map(spec => [spec.packageName, spec.specifier]),
     ),
+  })
+  const managedBundlerFiles = createManagedBundlerFiles({
+    bundlers: packageRunContext.effectiveBundlers,
+    react: packageRunContext.config.react,
+    title: `Reference UI ${packageRunContext.config.name} matrix`,
   })
 
   await mkdir(generatedDir, { recursive: true })
@@ -117,6 +131,17 @@ export async function stageGeneratedConsumerFiles(
   await mkdir(refSyncSupportDir, { recursive: true })
   await writeFile(resolve(generatedDir, 'package.json'), packageJsonSource)
   await writeFile(resolve(generatedDir, 'tsconfig.json'), createMatrixConsumerTsconfig())
+  await Promise.all(
+    Object.entries({
+      ...managedBundlerFiles,
+      'playwright.config.ts': createManagedPlaywrightConfigSource(packageRunContext.effectiveBundlers),
+      'vitest.config.ts': createManagedVitestConfigSource({
+        globalSetupPath: packageRunContext.source.hasVitestGlobalSetup
+          ? './tests/unit/global-setup.ts'
+          : null,
+      }),
+    }).map(([relativePath, source]) => writeFile(resolve(generatedDir, relativePath), source)),
+  )
   await Promise.all(
     [
       ...internalTarballSpecs.map(spec =>
@@ -132,8 +157,13 @@ export async function stageGeneratedConsumerFiles(
 export function matrixGeneratedConsumerDirectory(generatedDir: string) {
   return dag.host().directory(generatedDir, {
     include: [
+      'index.html',
       'package.json',
+      'playwright.config.ts',
       'tsconfig.json',
+      'vite.config.ts',
+      'vitest.config.ts',
+      'webpack.config.cjs',
       '.matrix-support',
       '.matrix-support/**',
       '.matrix-tarballs',
@@ -146,12 +176,31 @@ export function matrixPackageLogPrefix(packageName: string): string {
   return packageName.replace(/^@/, '').replace(/\//g, '-')
 }
 
+export function resolveEffectiveBundlers(
+  matrixPackage: MatrixWorkspacePackage,
+  options: { full?: boolean } = {},
+): readonly MatrixBundlerStrategy[] {
+  if (options.full) {
+    return matrixPackage.config.bundlers
+  }
+
+  const latestViteBundler = getLatestMatrixBundlerStrategyForPrefix('vite', matrixPackage.config.bundlers)
+
+  if (latestViteBundler) {
+    return [latestViteBundler]
+  }
+
+  return [matrixPackage.config.bundlers[0]]
+}
+
 export async function createMatrixPackageRunContext(
   matrixPackage: MatrixWorkspacePackage,
+  options: { full?: boolean } = {},
 ): Promise<MatrixPackageRunContext> {
   return {
     config: matrixPackage.config,
     displayName: matrixPackage.workspacePackage.name,
+    effectiveBundlers: resolveEffectiveBundlers(matrixPackage, options),
     logPrefix: matrixPackageLogPrefix(matrixPackage.workspacePackage.name),
     source: await readMatrixPackageSource(matrixPackage.workspacePackage.dir),
     workspacePackage: matrixPackage.workspacePackage,

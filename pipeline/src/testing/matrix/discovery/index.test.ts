@@ -4,7 +4,14 @@ import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { describe, it } from 'node:test'
 import { repoRoot } from '../../../build/workspace.js'
-import { getMatrixPackageName, isMatrixWorkspacePackageDir, readMatrixPackageConfig } from './index.js'
+import {
+  getLatestMatrixBundlerStrategyForPrefix,
+  getLatestMatrixReactRuntime,
+  getMatrixPackageName,
+  getPreferredLocalMatrixBundlers,
+  isMatrixWorkspacePackageDir,
+  readMatrixPackageConfig,
+} from './index.js'
 
 describe('readMatrixPackageConfig', () => {
   it('returns null when a package has no matrix.json', async () => {
@@ -75,7 +82,7 @@ describe('readMatrixPackageConfig', () => {
 
       assert.throws(
         () => readMatrixPackageConfig(tempDir),
-        /react as "react19"/,
+        /react as one of "react19"/,
       )
     } finally {
       await rm(tempDir, { force: true, recursive: true })
@@ -99,6 +106,20 @@ describe('readMatrixPackageConfig', () => {
     } finally {
       await rm(tempDir, { force: true, recursive: true })
     }
+  })
+
+  it('selects the latest Vite bundler from supported candidates', () => {
+    assert.equal(getLatestMatrixBundlerStrategyForPrefix('vite', ['vite7', 'webpack5']), 'vite7')
+    assert.equal(getLatestMatrixBundlerStrategyForPrefix('vite', ['webpack5']), null)
+  })
+
+  it('selects the latest supported React runtime from metadata', () => {
+    assert.equal(getLatestMatrixReactRuntime(), 'react19')
+  })
+
+  it('prefers the latest Vite bundler for local matrix setup', () => {
+    assert.deepEqual(getPreferredLocalMatrixBundlers(['vite7', 'webpack5']), ['vite7'])
+    assert.deepEqual(getPreferredLocalMatrixBundlers(['webpack5']), ['webpack5'])
   })
 })
 

@@ -22,6 +22,7 @@ function createPackageRunContext(): MatrixPackageRunContext {
       runTypecheck: true,
     },
     displayName: '@matrix/distro',
+    effectiveBundlers: ['vite7'],
     logPrefix: 'matrix-distro',
     source: {
       fixturePackageJson: {
@@ -49,6 +50,13 @@ describe('matrix runner reporting helpers', () => {
 
   it('describes the managed matrix environment succinctly', () => {
     assert.equal(describeMatrixEnvironment(createPackageRunContext()), 'react19 + vite7 + full-sync')
+  })
+
+  it('describes the active bundler selection instead of every supported bundler', () => {
+    const packageRunContext = createPackageRunContext()
+    packageRunContext.config.bundlers = ['vite7', 'webpack5']
+
+    assert.equal(describeMatrixEnvironment(packageRunContext), 'react19 + vite7 + full-sync')
   })
 
   it('collects stdout and stderr failure sections', () => {

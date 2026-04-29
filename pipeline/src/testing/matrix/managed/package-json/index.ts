@@ -7,8 +7,14 @@
  */
 
 import type { MatrixPackageConfig } from '../../discovery/index.js'
+import { getPreferredLocalMatrixBundlers } from '../../discovery/index.js'
 import { getManagedBundlerDevDependencies } from '../bundlers/index.js'
 import { getManagedReactProfile } from '../react/index.js'
+import {
+  createTemplateEntries,
+  managedGeneratedNotice,
+  renderManagedTemplate,
+} from '../template.js'
 
 export interface MatrixFixturePackageJson {
   dependencies?: Record<string, string>
@@ -22,6 +28,7 @@ export interface MatrixFixturePackageJson {
 }
 
 interface MatrixConsumerPackageJsonOptions {
+  bundlers: readonly MatrixPackageConfig['bundlers'][number][]
   fixturePackageJson: MatrixFixturePackageJson
   internalTarballSpecifiers?: Readonly<Record<string, string>>
 }
@@ -96,7 +103,9 @@ function replaceWorkspaceProtocolVersions(
 export function createManagedMatrixPackageJson(options: ManagedMatrixPackageJsonOptions): string {
   const existingPackageJson: Partial<MatrixFixturePackageJson> = options.existingPackageJson ?? {}
   const reactProfile = getManagedReactProfile(options.config.react)
-  const bundlerDevDependencies = getManagedBundlerDevDependencies(options.config.bundlers)
+  const bundlerDevDependencies = getManagedBundlerDevDependencies(
+    getPreferredLocalMatrixBundlers(options.config.bundlers),
+  )
   const extraDependencies = omitManagedDependencies(
     existingPackageJson.dependencies,
     [...Object.keys(managedDependencies), ...Object.keys(reactProfile.dependencies)],
@@ -111,53 +120,56 @@ export function createManagedMatrixPackageJson(options: ManagedMatrixPackageJson
       : undefined)
     ?? 'pnpm exec ref sync'
 
-  return `${JSON.stringify(
-    {
-      name: options.packageName,
-      version: existingPackageJson.version ?? '0.0.1',
-      private: true,
-      type: existingPackageJson.type ?? 'module',
-      scripts: {
-        setup: pipelineCliSetupCommand(options.packageName),
-        test: pipelineCliTestCommand(options.packageName),
-        sync: rawSetupCommand,
-      },
-      exports: existingPackageJson.exports ?? { '.': './src/index.ts' },
-      dependencies: {
-        ...managedDependencies,
-        ...reactProfile.dependencies,
-        ...extraDependencies,
-      },
-      devDependencies: {
-        ...managedDevDependencies,
-        ...reactProfile.devDependencies,
-        ...bundlerDevDependencies,
-        ...extraDevDependencies,
-      },
-    },
-    null,
-    2,
-  )}\n`
+  return renderManagedTemplate(new URL('./templates/fixture-package.json.liquid', import.meta.url), {
+    dependencies: createTemplateEntries({
+      ...managedDependencies,
+      ...reactProfile.dependencies,
+      ...extraDependencies,
+    }),
+    devDependencies: createTemplateEntries({
+      ...managedDevDependencies,
+      ...reactProfile.devDependencies,
+      ...bundlerDevDependencies,
+      ...extraDevDependencies,
+    }),
+    exportsValue: JSON.stringify(existingPackageJson.exports ?? { '.': './src/index.ts' }),
+    generatedNotice: JSON.stringify(managedGeneratedNotice),
+    name: JSON.stringify(options.packageName),
+    privateValue: 'true',
+    scripts: createTemplateEntries({
+      setup: pipelineCliSetupCommand(options.packageName),
+      test: pipelineCliTestCommand(options.packageName),
+      sync: rawSetupCommand,
+    }),
+    type: JSON.stringify(existingPackageJson.type ?? 'module'),
+    version: JSON.stringify(existingPackageJson.version ?? '0.0.1'),
+  })
 }
 
 export function createMatrixConsumerPackageJson(
   options: MatrixConsumerPackageJsonOptions,
 ): string {
-  return `${JSON.stringify(
-    {
-      ...options.fixturePackageJson,
-      ignoredBuiltDependencies: managedIgnoredBuiltDependencies,
-      scripts: undefined,
-      dependencies: replaceWorkspaceProtocolVersions(
+  return renderManagedTemplate(new URL('./templates/consumer-package.json.liquid', import.meta.url), {
+    dependencies: createTemplateEntries(
+      replaceWorkspaceProtocolVersions(
         options.fixturePackageJson.dependencies,
         options.internalTarballSpecifiers ?? {},
       ),
-      devDependencies: replaceWorkspaceProtocolVersions(
+    ),
+    devDependencies: createTemplateEntries({
+      ...replaceWorkspaceProtocolVersions(
         options.fixturePackageJson.devDependencies,
         options.internalTarballSpecifiers ?? {},
       ),
-    },
-    null,
-    2,
-  )}\n`
+      ...getManagedBundlerDevDependencies(options.bundlers),
+    }),
+    generatedNotice: JSON.stringify(managedGeneratedNotice),
+    ignoredBuiltDependencies: createTemplateEntries(
+      Object.fromEntries(managedIgnoredBuiltDependencies.map((dependency, index) => [String(index), dependency])),
+    ),
+    name: JSON.stringify(options.fixturePackageJson.name),
+    privateValue: JSON.stringify(options.fixturePackageJson.private ?? true),
+    type: JSON.stringify(options.fixturePackageJson.type ?? 'module'),
+    version: JSON.stringify(options.fixturePackageJson.version ?? '0.0.1'),
+  })
 }

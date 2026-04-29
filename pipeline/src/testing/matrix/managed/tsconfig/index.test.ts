@@ -6,10 +6,12 @@ import { createMatrixConsumerTsconfig } from './index.js'
 describe('createMatrixConsumerTsconfig', () => {
   it('returns the minimal downstream tsconfig used by the matrix consumer', () => {
     const tsconfig = JSON.parse(createMatrixConsumerTsconfig()) as {
+      '//': string
       compilerOptions: Record<string, string | boolean>
       include: string[]
     }
 
+    assert.equal(tsconfig['//'], 'This file is generated and managed by pipeline.')
     assert.deepEqual(tsconfig.compilerOptions, {
       jsx: 'react-jsx',
       lib: ['ES2022', 'DOM', 'DOM.Iterable'],

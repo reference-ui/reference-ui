@@ -5,6 +5,7 @@ import {
   collectWorkspaceProtocolDependencyNames,
   createStagedTarballFileName,
   matrixPackageLogPrefix,
+  resolveEffectiveBundlers,
   resolveMatrixInternalTarballSpecs,
 } from './consumer.js'
 
@@ -93,5 +94,53 @@ describe('matrix runner consumer helpers', () => {
 
   it('formats package names for log prefixes', () => {
     assert.equal(matrixPackageLogPrefix('@matrix/distro'), 'matrix-distro')
+  })
+
+  it('defaults non-full matrix runs to the latest supported bundler', () => {
+    assert.deepEqual(
+      resolveEffectiveBundlers({
+        config: {
+          name: 'system',
+          refSync: { mode: 'watch-ready' },
+          bundlers: ['vite7', 'webpack5'],
+          react: 'react19',
+          runTypecheck: false,
+        },
+        configPath: '/tmp/matrix/system/matrix.json',
+        workspacePackage: {
+          dependencies: {},
+          dir: '/tmp/matrix/system',
+          name: '@matrix/system',
+          private: true,
+          scripts: {},
+          version: '0.0.0-test',
+        },
+      }, {}),
+      ['vite7'],
+    )
+  })
+
+  it('keeps every configured bundler for explicit full matrix runs', () => {
+    assert.deepEqual(
+      resolveEffectiveBundlers({
+        config: {
+          name: 'system',
+          refSync: { mode: 'watch-ready' },
+          bundlers: ['vite7', 'webpack5'],
+          react: 'react19',
+          runTypecheck: false,
+        },
+        configPath: '/tmp/matrix/system/matrix.json',
+        workspacePackage: {
+          dependencies: {},
+          dir: '/tmp/matrix/system',
+          name: '@matrix/system',
+          private: true,
+          scripts: {},
+          version: '0.0.0-test',
+        },
+      }, { full: true }),
+      ['vite7', 'webpack5'],
+    )
   })
 })

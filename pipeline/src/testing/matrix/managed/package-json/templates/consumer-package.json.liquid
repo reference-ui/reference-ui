@@ -1,0 +1,22 @@
+{
+  "//": {{ generatedNotice }},
+  "name": {{ name }},
+  "version": {{ version }},
+  "private": {{ privateValue }},
+  "type": {{ type }},
+  "ignoredBuiltDependencies": [
+    {%- for dependency in ignoredBuiltDependencies %}
+    {{ dependency.value }}{% unless forloop.last %},{% endunless %}
+    {%- endfor %}
+  ],
+  "dependencies": {
+    {%- for dependency in dependencies %}
+    {{ dependency.key }}: {{ dependency.value }}{% unless forloop.last %},{% endunless %}
+    {%- endfor %}
+  },
+  "devDependencies": {
+    {%- for dependency in devDependencies %}
+    {{ dependency.key }}: {{ dependency.value }}{% unless forloop.last %},{% endunless %}
+    {%- endfor %}
+  }
+}
