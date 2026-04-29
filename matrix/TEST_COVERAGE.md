@@ -97,7 +97,10 @@ Those are real product surfaces, not just implementation details.
 **Additional coverage still needed**
 
 - Media-query branches should be asserted in a real browser, not only container-query branches.
-- More selector combinations should be covered together: pseudo + nested + attribute selectors on the same rule shape.
+- [DONE] `matrix/css` asserts that `&:hover` pseudo selectors apply in a real browser.
+- [DONE] `matrix/css` asserts that nested descendant selectors apply in a real browser.
+- [DONE] Investigated self attribute selectors like `&[data-state="open"]` on `css()` classes, plus same-element nested `&:hover` under that branch; current emitted CSS did not include those branches, so this remains a `reference-core` / Panda selector-emission gap rather than a supported single-consumer expectation.
+- [DONE] Investigated ancestor-attribute + descendant-hover selector composition on one emitted rule; the current selector-key contract does not support text on both sides of `&`, so that specific parent/child composition remains a `reference-core` selector-composition gap rather than a single-consumer matrix expectation.
 - Stylesheet presence, order, and dedupe after rebuilds should be asserted in the browser.
 - CSS output removal should be covered when a condition or selector branch disappears.
 

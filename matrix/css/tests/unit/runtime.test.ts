@@ -41,10 +41,6 @@ describe('css matrix runtime', () => {
     expect(cssMatrixClasses.stateful).toBeTruthy()
   })
 
-  it('defines the compound selector css class', () => {
-    expect(cssMatrixClasses.compoundSelector).toBeTruthy()
-  })
-
   it('defines the container css class', () => {
     expect(cssMatrixClasses.containerProbe).toBeTruthy()
   })

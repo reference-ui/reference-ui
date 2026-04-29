@@ -35,18 +35,6 @@ export function Index() {
         Open state css()
       </Div>
 
-      <Div data-testid="css-compound-closed" data-state="closed">
-        <Div data-slot="inner" data-testid="css-compound-closed-child" className={cssMatrixClasses.compoundSelector}>
-          Closed compound child
-        </Div>
-      </Div>
-
-      <Div data-testid="css-compound-open" data-state="open">
-        <Div data-slot="inner" data-testid="css-compound-open-child" className={cssMatrixClasses.compoundSelector}>
-          Open compound child
-        </Div>
-      </Div>
-
       <Div
         data-testid="css-container-shell-narrow"
         style={{ containerName: 'sidebar', containerType: 'inline-size', width: '320px' }}

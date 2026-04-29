@@ -19,12 +19,6 @@ export const cssMatrixClasses = {
       marginTop: '12px',
     },
   }),
-  compoundSelector: css({
-    paddingLeft: cssMatrixConstants.compoundSelectorBasePaddingLeft,
-    '[data-state="open"] &:hover': {
-      paddingLeft: cssMatrixConstants.compoundSelectorActivePaddingLeft,
-    },
-  }),
   positioned: css({
     position: 'relative',
     top: '4px',
