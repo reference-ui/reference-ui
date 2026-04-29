@@ -5,9 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 patchedDependencies:
-  '@pandacss/parser@1.10.0':
-    hash: eeea3c60af666bc342a06df604612192096b76ef4611769594bb2f0f63ac1895
-    path: patches/@pandacss__parser@1.10.0.patch
+  react-cosmos@7.2.0:
+    hash: 7d4940f155cd8942f33f3193a10d62fe2a94bcd32eab5e1ecddd7256da0026c0
+    path: patches/react-cosmos@7.2.0.patch
 
 importers:
 
@@ -1208,10 +1208,10 @@ importers:
         version: 4.7.0(vite@7.3.1(@types/node@25.1.0)(lightningcss@1.32.0)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.2))
       react-cosmos:
         specifier: ^7.2.0
-        version: 7.2.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 7.2.0(patch_hash=7d4940f155cd8942f33f3193a10d62fe2a94bcd32eab5e1ecddd7256da0026c0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react-cosmos-plugin-vite:
         specifier: ^7.2.0
-        version: 7.2.0(react-cosmos@7.2.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@7.3.1(@types/node@25.1.0)(lightningcss@1.32.0)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.2))
+        version: 7.2.0(react-cosmos@7.2.0(patch_hash=7d4940f155cd8942f33f3193a10d62fe2a94bcd32eab5e1ecddd7256da0026c0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@7.3.1(@types/node@25.1.0)(lightningcss@1.32.0)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.2))
       react-dom:
         specifier: ^19.2.4
         version: 19.2.4(react@19.2.4)
@@ -1297,6 +1297,24 @@ importers:
       vite:
         specifier: ^6.0.0
         version: 6.4.1(@types/node@25.1.0)(lightningcss@1.32.0)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.2)
+      vitest:
+        specifier: ^4.0.18
+        version: 4.0.18(@opentelemetry/api@1.9.1)(@types/node@25.1.0)(happy-dom@15.11.7)(lightningcss@1.32.0)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.2)
+
+  panda-playground:
+    devDependencies:
+      '@pandacss/dev':
+        specifier: ^1.10.0
+        version: 1.10.0(typescript@5.9.3)
+      '@types/node':
+        specifier: ^25.1.0
+        version: 25.1.0
+      postcss:
+        specifier: ^8.5.8
+        version: 8.5.8
+      typescript:
+        specifier: ~5.9.3
+        version: 5.9.3
       vitest:
         specifier: ^4.0.18
         version: 4.0.18(@opentelemetry/api@1.9.1)(@types/node@25.1.0)(happy-dom@15.11.7)(lightningcss@1.32.0)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.2)
@@ -10397,7 +10415,7 @@ snapshots:
       '@pandacss/core': 1.10.0
       '@pandacss/generator': 1.10.0
       '@pandacss/logger': 1.10.0
-      '@pandacss/parser': 1.10.0(patch_hash=eeea3c60af666bc342a06df604612192096b76ef4611769594bb2f0f63ac1895)(typescript@5.9.3)
+      '@pandacss/parser': 1.10.0(typescript@5.9.3)
       '@pandacss/plugin-lightningcss': 1.10.0
       '@pandacss/plugin-svelte': 1.10.0
       '@pandacss/plugin-vue': 1.10.0
@@ -10429,7 +10447,7 @@ snapshots:
       - jsdom
       - typescript
 
-  '@pandacss/parser@1.10.0(patch_hash=eeea3c60af666bc342a06df604612192096b76ef4611769594bb2f0f63ac1895)(typescript@5.9.3)':
+  '@pandacss/parser@1.10.0(typescript@5.9.3)':
     dependencies:
       '@pandacss/config': 1.10.0
       '@pandacss/core': 1.10.0
@@ -14930,11 +14948,11 @@ snapshots:
       react-cosmos-renderer: 7.2.0(react@19.2.4)
       react-dom: 19.2.4(react@19.2.4)
 
-  react-cosmos-plugin-vite@7.2.0(react-cosmos@7.2.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@7.3.1(@types/node@25.1.0)(lightningcss@1.32.0)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.2)):
+  react-cosmos-plugin-vite@7.2.0(react-cosmos@7.2.0(patch_hash=7d4940f155cd8942f33f3193a10d62fe2a94bcd32eab5e1ecddd7256da0026c0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@7.3.1(@types/node@25.1.0)(lightningcss@1.32.0)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.2)):
     dependencies:
       parse5: 7.3.0
       react: 19.2.4
-      react-cosmos: 7.2.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      react-cosmos: 7.2.0(patch_hash=7d4940f155cd8942f33f3193a10d62fe2a94bcd32eab5e1ecddd7256da0026c0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react-cosmos-core: 7.2.0(react@19.2.4)
       react-cosmos-dom: 7.2.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react-dom: 19.2.4(react@19.2.4)
@@ -14953,7 +14971,7 @@ snapshots:
       react-cosmos-core: 7.2.0(react@19.2.4)
       react-dom: 19.2.4(react@19.2.4)
 
-  react-cosmos@7.2.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+  react-cosmos@7.2.0(patch_hash=7d4940f155cd8942f33f3193a10d62fe2a94bcd32eab5e1ecddd7256da0026c0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       '@skidding/launch-editor': 2.2.3
       chokidar: 3.6.0
@@ -16157,7 +16175,7 @@ snapshots:
       esbuild: 0.27.3
       fdir: 6.5.0(picomatch@4.0.3)
       picomatch: 4.0.3
-      postcss: 8.5.6
+      postcss: 8.5.8
       rollup: 4.57.1
       tinyglobby: 0.2.15
     optionalDependencies:
