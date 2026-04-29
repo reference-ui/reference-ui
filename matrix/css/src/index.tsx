@@ -13,6 +13,14 @@ export function Index() {
         CSS card
       </Div>
 
+      <Div data-testid="css-component-card" className={cssMatrixClasses.componentHoverable} data-component="card">
+        Component card css()
+      </Div>
+
+      <Div data-testid="css-component-panel" className={cssMatrixClasses.componentHoverable} data-component="panel">
+        Component panel css()
+      </Div>
+
       <Div data-testid="css-positioned" className={cssMatrixClasses.positioned}>
         Positioned css()
       </Div>

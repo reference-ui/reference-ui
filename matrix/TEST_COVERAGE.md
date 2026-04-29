@@ -101,6 +101,7 @@ Those are real product surfaces, not just implementation details.
 - [DONE] `matrix/css` asserts that nested descendant selectors apply in a real browser.
 - [DONE] `matrix/css` parses generated `react/styles.css` with PostCSS so emitted stylesheet syntax has to be valid.
 - [DONE] `matrix/css` rejects suspicious placeholder/control fragments and empty standard declarations in generated `react/styles.css`.
+- [DONE] Investigated same-element `&[data-component="card"]:hover` and the docs-shaped `&[data-component=card]:hover`; Vitest/PostCSS now confirms the runtime class token is computed but no matching selector branch is emitted into `react/styles.css`, so this remains a `reference-core` / Panda selector-emission gap rather than a Playwright-only issue.
 - [DONE] Investigated self attribute selectors like `&[data-state="open"]` on `css()` classes, plus same-element nested `&:hover` under that branch; current emitted CSS did not include those branches, so this remains a `reference-core` / Panda selector-emission gap rather than a supported single-consumer expectation.
 - [DONE] Investigated ancestor-attribute + descendant-hover selector composition on one emitted rule; the current selector-key contract does not support text on both sides of `&`, so that specific parent/child composition remains a `reference-core` selector-composition gap rather than a single-consumer matrix expectation.
 - Stylesheet presence, order, and dedupe after rebuilds should be asserted in the browser.

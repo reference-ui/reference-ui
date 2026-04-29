@@ -8,6 +8,13 @@ export const cssMatrixClasses = {
     borderWidth: '2px',
     borderStyle: 'solid',
   }),
+  componentHoverable: css({
+    borderWidth: cssMatrixConstants.componentHoverBaseBorderTopWidth,
+    borderStyle: 'solid',
+    '&[data-component=card]:hover': {
+      borderTopWidth: cssMatrixConstants.componentHoverActiveBorderTopWidth,
+    },
+  }),
   hoverable: css({
     textDecoration: 'none',
     '&:hover': {
