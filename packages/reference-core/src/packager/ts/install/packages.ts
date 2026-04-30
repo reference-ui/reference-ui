@@ -1,6 +1,8 @@
 import { createRequire } from 'node:module'
 import { dirname, join, resolve } from 'node:path'
 import {
+  cpSync,
+  existsSync,
   mkdirSync,
   mkdtempSync,
   rmSync,
@@ -43,6 +45,19 @@ function getDeclarationEntryFiles(pkg: TsPackageInput): string[] {
   return [pkg.sourceEntry]
 }
 
+function snapshotStyledDir(projectCwd: string, tempDir: string): string {
+  const liveStyledDir = resolve(getOutDirPath(projectCwd), 'styled')
+  const snapshotDir = join(tempDir, 'styled')
+
+  if (existsSync(liveStyledDir)) {
+    cpSync(liveStyledDir, snapshotDir, { recursive: true })
+  } else {
+    mkdirSync(snapshotDir, { recursive: true })
+  }
+
+  return snapshotDir
+}
+
 async function installPackageTs(
   cliDir: string,
   projectCwd: string,
@@ -53,10 +68,12 @@ async function installPackageTs(
   mkdirSync(targetDir, { recursive: true })
 
   const tempDir = mkdtempSync(join(targetDir, '.ref-ui-tsgo-'))
+  const styledDir = snapshotStyledDir(projectCwd, tempDir)
   const tsconfigPath = writeTsconfig({
     cliDir,
     entryFiles: getDeclarationEntryFiles(pkg),
     projectCwd,
+    styledDir,
     tempDir,
   })
 

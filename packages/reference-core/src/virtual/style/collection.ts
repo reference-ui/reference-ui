@@ -1,12 +1,12 @@
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { dirname, extname, join, relative } from 'node:path'
-import { DEFAULT_EXTERNALS, microBundle } from '../lib/microbundle'
-import { scanForFragments } from '../lib/fragments/scanner'
-import { log } from '../lib/log'
-import { applyTransforms } from './transforms'
+import { DEFAULT_EXTERNALS, microBundle } from '../../lib/microbundle'
+import { scanForFragments } from '../../lib/fragments/scanner'
+import { log } from '../../lib/log'
+import { applyTransforms } from '../transforms'
 
 const REFERENCE_UI_IMPORT = '@reference-ui/react'
-const REFERENCE_UI_ARTIFACT_DIR = '__reference__ui'
+const VIRTUAL_STYLE_COLLECTION_DIR = '__reference__ui'
 const STYLE_CALL_PATTERN = /\b(?:css|recipe|cva)\s*\(/
 const SUPPORTED_SOURCE_EXTENSIONS = new Set(['.js', '.jsx', '.ts', '.tsx'])
 const STYLE_BUNDLE_EXTERNALS = [
@@ -35,7 +35,7 @@ function toArtifactPath(root: string, virtualDir: string, sourcePath: string): s
   const relativePath = relative(root, sourcePath)
   const extension = extname(relativePath)
   const withoutExtension = relativePath.slice(0, -extension.length)
-  return join(virtualDir, REFERENCE_UI_ARTIFACT_DIR, `${withoutExtension}.js`)
+  return join(virtualDir, VIRTUAL_STYLE_COLLECTION_DIR, `${withoutExtension}.js`)
 }
 
 async function listStyleSourceFiles(root: string, include: string[]): Promise<string[]> {
@@ -59,13 +59,20 @@ async function bundleStyleSource(sourcePath: string): Promise<string> {
   })
 }
 
-export async function writeReferenceUiVirtualArtifacts(options: {
+/**
+ * Build the reserved virtual style collection that Panda scans directly.
+ *
+ * Each collected module preserves raw `css()` / `recipe()` authoring surfaces
+ * while inlining local constants through microbundle, then passes through the
+ * standard virtual transform pipeline before being written under `__reference__ui`.
+ */
+export async function syncVirtualStyleCollection(options: {
   root: string
   virtualDir: string
   include: string[]
 }): Promise<string[]> {
   const { root, virtualDir, include } = options
-  const artifactRoot = join(virtualDir, REFERENCE_UI_ARTIFACT_DIR)
+  const artifactRoot = join(virtualDir, VIRTUAL_STYLE_COLLECTION_DIR)
 
   await rm(artifactRoot, { recursive: true, force: true })
 
@@ -88,8 +95,8 @@ export async function writeReferenceUiVirtualArtifacts(options: {
     writtenPaths.push(artifactPath)
   }
 
-  log.debug('virtual', 'Generated Reference UI raw style artifacts', writtenPaths.length)
+  log.debug('virtual', 'Synced virtual style collection', writtenPaths.length)
   return writtenPaths
 }
 
-export { REFERENCE_UI_ARTIFACT_DIR }
+export { VIRTUAL_STYLE_COLLECTION_DIR }

@@ -7,7 +7,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import fg from 'fast-glob'
 import { resolveCorePackageDir } from '../../lib/paths'
-import { copyToVirtual } from '../../virtual/copy'
+import { copyToVirtual } from '../../virtual/fs/copy'
 
 const REFERENCE_BROWSER_VIRTUAL_DIR = '_reference-component'
 const MODULE_DIR = dirname(fileURLToPath(import.meta.url))

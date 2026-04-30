@@ -1,6 +1,11 @@
 const CSS_CALL_PATTERN = /(^|[^.$\w])(css)(\s*\()/gm
 const CVA_CALL_PATTERN = /(^|[^.$\w])(cva)(\s*\()/gm
 
+/**
+ * Hide Panda-visible style calls outside the reserved style collection by
+ * renaming direct `css()` / `cva()` call sites and binding local aliases.
+ */
+
 function insertAfterImports(sourceCode: string, insertBlock: string): string {
   const importPattern = /^import\s.+?;?$/gm
   let lastMatchIndex = -1

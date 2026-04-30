@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { DEFAULT_OUT_DIR } from '../constants'
+import { DEFAULT_OUT_DIR } from '../../constants'
 import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
@@ -28,10 +28,10 @@ async function importCopyModule() {
   const debug = vi.fn()
   const error = vi.fn()
 
-  vi.doMock('./transform', () => ({
+  vi.doMock('../transform', () => ({
     transformFile,
   }))
-  vi.doMock('../lib/log', () => ({
+  vi.doMock('../../lib/log', () => ({
     log: { debug, error, info: vi.fn() },
   }))
 
@@ -41,8 +41,8 @@ async function importCopyModule() {
 
 afterEach(async () => {
   vi.resetModules()
-  vi.doUnmock('./transform')
-  vi.doUnmock('../lib/log')
+  vi.doUnmock('../transform')
+  vi.doUnmock('../../lib/log')
   vi.restoreAllMocks()
 
   await Promise.all(
@@ -52,7 +52,7 @@ afterEach(async () => {
   )
 })
 
-describe('virtual/copy', () => {
+describe('virtual/fs/copy', () => {
   it('copies non-transform files byte-for-byte', async () => {
     const { sourceDir, virtualDir } = await createWorkspace()
     const sourcePath = join(sourceDir, 'plain.txt')

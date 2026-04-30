@@ -1,12 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { DEFAULT_OUT_DIR, SYNC_OUTPUT_DIR_GLOB } from '../constants'
+import { DEFAULT_OUT_DIR, SYNC_OUTPUT_DIR_GLOB } from '../../constants'
 
 const FIXTURE_APP = '/workspace/app'
 const FIXTURE_VIRTUAL = `${FIXTURE_APP}/${DEFAULT_OUT_DIR}/virtual`
 const FIXTURE_STAGING = `${FIXTURE_VIRTUAL}.next`
 
-async function importCopyAllModule() {
+async function importSyncSnapshotModule() {
   vi.resetModules()
 
   const virtualDir = FIXTURE_VIRTUAL
@@ -22,28 +22,28 @@ async function importCopyAllModule() {
     publish: vi.fn(async () => {}),
   }
   const createVirtualStagingArea = vi.fn(() => staging)
-  const writeReferenceUiVirtualArtifacts = vi.fn(async () => [])
+  const syncVirtualStyleCollection = vi.fn(async () => [])
 
   vi.doMock('fast-glob', () => ({
     default: fg,
   }))
-  vi.doMock('../lib/event-bus', () => ({
+  vi.doMock('../../lib/event-bus', () => ({
     emit,
   }))
-  vi.doMock('../lib/log', () => ({
+  vi.doMock('../../lib/log', () => ({
     log: { debug, error: vi.fn(), info: vi.fn() },
   }))
-  vi.doMock('../lib/paths', () => ({
+  vi.doMock('../../lib/paths', () => ({
     getVirtualDirPath: () => virtualDir,
   }))
   vi.doMock('./staging', () => ({
     createVirtualStagingArea,
   }))
-  vi.doMock('./reference-ui-artifacts', () => ({
-    writeReferenceUiVirtualArtifacts,
+  vi.doMock('../style/collection', () => ({
+    syncVirtualStyleCollection,
   }))
 
-  const mod = await import('./copy-all')
+  const mod = await import('./sync-snapshot')
   return {
     ...mod,
     emit,
@@ -51,33 +51,33 @@ async function importCopyAllModule() {
     fg,
     staging,
     createVirtualStagingArea,
-    writeReferenceUiVirtualArtifacts,
+    syncVirtualStyleCollection,
   }
 }
 
 afterEach(() => {
   vi.resetModules()
   vi.doUnmock('fast-glob')
-  vi.doUnmock('../lib/event-bus')
-  vi.doUnmock('../lib/log')
-  vi.doUnmock('../lib/paths')
+  vi.doUnmock('../../lib/event-bus')
+  vi.doUnmock('../../lib/log')
+  vi.doUnmock('../../lib/paths')
   vi.doUnmock('./staging')
-  vi.doUnmock('./reference-ui-artifacts')
+  vi.doUnmock('../style/collection')
   vi.restoreAllMocks()
 })
 
-describe('virtual/copy-all', () => {
+describe('virtual/fs/sync-snapshot', () => {
   it('resets the staging directory before repopulating it', async () => {
-    const { copyAll, fg, staging, writeReferenceUiVirtualArtifacts } = await importCopyAllModule()
+    const { syncVirtualSnapshot, fg, staging, syncVirtualStyleCollection } = await importSyncSnapshotModule()
     fg.mockResolvedValue([])
 
-    await copyAll({
+    await syncVirtualSnapshot({
       sourceDir: '/workspace/app',
       config: { include: ['src/**/*'], debug: false } as never,
     })
 
     expect(staging.reset).toHaveBeenCalledTimes(1)
-    expect(writeReferenceUiVirtualArtifacts).toHaveBeenCalledWith({
+    expect(syncVirtualStyleCollection).toHaveBeenCalledWith({
       root: '/workspace/app',
       virtualDir: FIXTURE_STAGING,
       include: ['src/**/*'],
@@ -86,16 +86,16 @@ describe('virtual/copy-all', () => {
   })
 
   it('emits virtual:copy:complete and skips globbing when include is empty', async () => {
-    const { copyAll, emit, fg, staging, writeReferenceUiVirtualArtifacts } = await importCopyAllModule()
+    const { syncVirtualSnapshot, emit, fg, staging, syncVirtualStyleCollection } = await importSyncSnapshotModule()
 
-    await copyAll({
+    await syncVirtualSnapshot({
       sourceDir: '/workspace/app',
       config: { include: [], debug: false } as never,
     })
 
     expect(fg).not.toHaveBeenCalled()
     expect(staging.stageFile).not.toHaveBeenCalled()
-    expect(writeReferenceUiVirtualArtifacts).not.toHaveBeenCalled()
+    expect(syncVirtualStyleCollection).not.toHaveBeenCalled()
     expect(staging.publish).toHaveBeenCalledTimes(1)
     expect(emit).toHaveBeenLastCalledWith('virtual:copy:complete', {
       virtualDir: FIXTURE_VIRTUAL,
@@ -104,19 +104,19 @@ describe('virtual/copy-all', () => {
 
   it('copies every matched file into staging and emits live virtual paths before completion', async () => {
     const {
-      copyAll,
+      syncVirtualSnapshot,
       emit,
       fg,
       staging,
       createVirtualStagingArea,
-      writeReferenceUiVirtualArtifacts,
-    } = await importCopyAllModule()
+      syncVirtualStyleCollection,
+    } = await importSyncSnapshotModule()
     fg.mockResolvedValue([
       '/workspace/app/src/alpha.ts',
       '/workspace/app/src/beta.tsx',
     ])
 
-    await copyAll({
+    await syncVirtualSnapshot({
       sourceDir: '/workspace/app',
       config: {
         include: ['src/**/*.{ts,tsx}'],
@@ -140,7 +140,7 @@ describe('virtual/copy-all', () => {
       2,
       { file: '/workspace/app/src/beta.tsx', root: '/workspace/app', debug: true },
     )
-    expect(writeReferenceUiVirtualArtifacts).toHaveBeenCalledWith({
+    expect(syncVirtualStyleCollection).toHaveBeenCalledWith({
       root: '/workspace/app',
       virtualDir: FIXTURE_STAGING,
       include: ['src/**/*.{ts,tsx}'],

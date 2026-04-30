@@ -1,7 +1,7 @@
 import { join, relative } from 'node:path'
-import { emit } from '../lib/event-bus'
-import { resetDir } from '../lib/fs/reset-dir'
-import { publishStagedDir } from '../lib/fs/publish-staged-dir'
+import { emit } from '../../lib/event-bus'
+import { resetDir } from '../../lib/fs/reset-dir'
+import { publishStagedDir } from '../../lib/fs/publish-staged-dir'
 import { copyToVirtual } from './copy'
 
 const VIRTUAL_STAGING_SUFFIX = '.next'
@@ -35,8 +35,8 @@ export function toLiveVirtualPath(
 }
 
 /**
- * A full virtual refresh is built in isolation, then published into the live
- * directory once the staged snapshot is complete.
+ * Snapshot staging keeps a full refresh isolated until every staged file and
+ * collected style module is ready to publish in one swap.
  */
 export function createVirtualStagingArea(virtualDir: string): VirtualStagingArea {
   const stagingDir = getVirtualStagingDir(virtualDir)

@@ -2,12 +2,12 @@ import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { afterEach, describe, expect, it } from 'vitest'
-import { copyAll } from './copy-all'
+import { syncVirtualSnapshot } from './sync-snapshot'
 
 const createdDirs: string[] = []
 
 function createTempDir(): string {
-  const dir = mkdtempSync(join(tmpdir(), 'reference-ui-copy-all-integration-'))
+  const dir = mkdtempSync(join(tmpdir(), 'reference-ui-sync-snapshot-integration-'))
   createdDirs.push(dir)
   return dir
 }
@@ -18,7 +18,7 @@ afterEach(() => {
   }
 })
 
-describe('virtual/copy-all integration', () => {
+describe('virtual/fs/sync-snapshot integration', () => {
   it('writes neutralized user virtual files and Panda-visible transformed __reference__ui bundles', async () => {
     const root = createTempDir()
     const srcDir = join(root, 'src')
@@ -39,7 +39,7 @@ describe('virtual/copy-all integration', () => {
       ].join('\n') + '\n'
     )
 
-    await copyAll({
+    await syncVirtualSnapshot({
       sourceDir: root,
       config: {
         include: ['src/**/*.{ts,tsx}'],
