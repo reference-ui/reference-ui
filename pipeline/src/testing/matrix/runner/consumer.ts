@@ -21,7 +21,7 @@ import { createManagedPlaywrightConfigSource } from '../managed/playwright/index
 import { createMatrixConsumerTsconfig } from '../managed/tsconfig/index.js'
 import { createManagedVitestConfigSource } from '../managed/vitest/index.js'
 import { hasMatrixPlaywrightTests, hasMatrixVitestTests } from '../test-presence.js'
-import { matrixLogDir, repoRoot } from './paths.js'
+import { matrixConsumerArtifactsDir, repoRoot } from './paths.js'
 import {
   matrixRefSyncSupportDirectory,
   matrixRefSyncSupportScripts,
@@ -111,7 +111,7 @@ export async function stageGeneratedConsumerFiles(
   packageRunContext: MatrixPackageRunContext,
   internalTarballSpecs: readonly MatrixInternalTarballSpec[],
 ): Promise<string> {
-  const generatedDir = resolve(matrixLogDir, 'generated', packageRunContext.logPrefix)
+  const generatedDir = resolve(matrixConsumerArtifactsDir, packageRunContext.logPrefix)
   const tarballDir = resolve(generatedDir, '.matrix-tarballs')
   const refSyncSupportDir = resolve(generatedDir, matrixRefSyncSupportDirectory)
   const packageJsonSource = createMatrixConsumerPackageJson({

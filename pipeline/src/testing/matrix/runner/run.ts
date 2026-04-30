@@ -25,7 +25,7 @@ import { validateMatrixFixtures } from '../validate.js'
 import { baseNodeContainer, hostRegistryService } from './container.js'
 import { createMatrixPackageRunContext } from './consumer.js'
 import { withDaggerExecCacheBuster } from './exec.js'
-import { writeStageLog } from './logs.js'
+import { resetMatrixConsumerArtifactsDir, writeStageLog } from './logs.js'
 import { matrixLogDir, matrixNativeTarget } from './paths.js'
 import { runMatrixPackageInDagger } from './package-runner.js'
 import { formatRuntimeMemory } from './reporting.js'
@@ -84,6 +84,7 @@ function logMatrixConcurrency(
 
 export async function runMatrixBootstrapInDagger(options: MatrixRunOptions = {}): Promise<void> {
   console.log('Discovering matrix-enabled fixtures...')
+  await resetMatrixConsumerArtifactsDir()
   validateMatrixFixtures()
   const matrixPackages = listMatrixWorkspacePackages(options.packageNames)
 
