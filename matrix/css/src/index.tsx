@@ -60,6 +60,10 @@ export function Index() {
           Wide container probe
         </Div>
       </Div>
+
+      <Div data-testid="css-viewport-probe" className={cssMatrixClasses.viewportProbe}>
+        Viewport probe css()
+      </Div>
     </Main>
   )
 }

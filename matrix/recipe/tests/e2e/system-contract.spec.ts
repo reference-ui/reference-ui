@@ -80,6 +80,9 @@ test.describe('recipe contract', () => {
     expect(recipeMatrixButton({ visual: 'outline', tone: 'pink', size: 'lg' })).toBe(
       recipeMatrixButton({ visual: 'outline', tone: 'pink', size: 'lg' }),
     )
+    expect(recipeMatrixButton({ visual: 'outline', tone: 'pink', size: 'lg', capsule: 'true' })).toBe(
+      recipeMatrixButton({ visual: 'outline', tone: 'pink', size: 'lg', capsule: 'true' }),
+    )
   })
 
   test('default recipe branch applies base border radius', async ({ page }) => {
@@ -147,6 +150,46 @@ test.describe('recipe contract', () => {
 
   test('compound variant overrides the outline branch border color', async ({ page }) => {
     const element = page.getByTestId('recipe-outline-pink')
+    const computed = await readComputedStyle(element, ['border-top-color'])
+
+    expect(computed['border-top-color']).toBe(hexToRgb('#ec4899'))
+  })
+
+  test('boolean-style capsule branch rounds the recipe into a pill shape', async ({ page }) => {
+    const element = page.getByTestId('recipe-outline-pink-capsule')
+    const computed = await readComputedStyle(element, ['border-radius', 'text-transform', 'letter-spacing'])
+
+    expect(computed['border-radius']).toBe(recipeMatrixConstants.capsuleRadius)
+    expect(computed['text-transform']).toBe('uppercase')
+    expect(Number.parseFloat(computed['letter-spacing'])).toBeCloseTo(
+      Number.parseFloat(recipeMatrixConstants.capsuleSpacing) * 18,
+      2,
+    )
+  })
+
+  test('cross-axis outline pink capsule branch keeps the large-size font', async ({ page }) => {
+    const element = page.getByTestId('recipe-outline-pink-capsule')
+    const computed = await readComputedStyle(element, ['font-size'])
+
+    expect(computed['font-size']).toBe('18px')
+  })
+
+  test('cross-axis outline pink capsule branch keeps the compound background override', async ({ page }) => {
+    const element = page.getByTestId('recipe-outline-pink-capsule')
+    const computed = await readComputedStyle(element, ['background-color'])
+
+    expect(computed['background-color']).toBe(hexToRgb('#fce7f3'))
+  })
+
+  test('cross-axis outline pink capsule branch keeps the compound text color override', async ({ page }) => {
+    const element = page.getByTestId('recipe-outline-pink-capsule')
+    const computed = await readComputedStyle(element, ['color'])
+
+    expect(computed.color).toBe(hexToRgb('#be185d'))
+  })
+
+  test('cross-axis outline pink capsule branch keeps the compound border override', async ({ page }) => {
+    const element = page.getByTestId('recipe-outline-pink-capsule')
     const computed = await readComputedStyle(element, ['border-top-color'])
 
     expect(computed['border-top-color']).toBe(hexToRgb('#ec4899'))

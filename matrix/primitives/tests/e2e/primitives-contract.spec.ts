@@ -342,4 +342,24 @@ test.describe('primitives contract', () => {
     expect(computed.width).toBeTruthy()
     expect(computed.height).toBe(computed.width)
   })
+
+  test('combined custom props keep font family, weight, and size together below the responsive threshold', async ({ page }) => {
+    const element = page.getByTestId('primitive-combined-custom-props-narrow')
+    const computed = await readComputedStyle(element, ['font-family', 'font-weight', 'font-size', 'width', 'height'])
+
+    expectFontFamilyIncludes(computed['font-family'], 'Inter')
+    expect(computed['font-weight']).toBe('700')
+    expect(computed['font-size']).toBe('16px')
+    expect(computed.width).toBe('8px')
+    expect(computed.height).toBe('8px')
+  })
+
+  test('combined custom props activate the responsive branch without losing size above the threshold', async ({ page }) => {
+    const element = page.getByTestId('primitive-combined-custom-props-wide')
+    const computed = await readComputedStyle(element, ['font-size', 'width', 'height'])
+
+    expect(computed['font-size']).toBe('18px')
+    expect(computed.width).toBe('8px')
+    expect(computed.height).toBe('8px')
+  })
 })

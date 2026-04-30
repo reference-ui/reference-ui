@@ -3,6 +3,8 @@ import { Div, H1, Main, P } from '@reference-ui/react'
 import {
   responsiveCardRecipe,
   responsiveMatrixClasses,
+  responsiveSharedRecipe,
+  responsiveViewportConstants,
   responsiveViewportRecipe,
 } from './styles'
 
@@ -60,6 +62,58 @@ export function Index() {
 
       <Div data-testid="responsive-viewport-recipe-target" className={responsiveViewportRecipe()}>
         Viewport recipe
+      </Div>
+
+      <Div container="mixed" data-testid="responsive-mixed-shell-narrow" style={{ width: '220px' }}>
+        <Div data-testid="responsive-mixed-target-narrow" className={responsiveMatrixClasses.mixedCss}>
+          Mixed narrow
+        </Div>
+      </Div>
+
+      <Div container="mixed" data-testid="responsive-mixed-shell-wide" style={{ width: '320px' }}>
+        <Div data-testid="responsive-mixed-target-wide" className={responsiveMatrixClasses.mixedCss}>
+          Mixed wide
+        </Div>
+      </Div>
+
+      <Div container data-testid="responsive-shared-shell-narrow" style={{ width: '320px' }}>
+        <Div
+          data-testid="responsive-shared-primitive-narrow"
+          r={{
+            [responsiveViewportConstants.sharedContainerBreakpoint]: {
+              padding: responsiveViewportConstants.sharedPrimitivePadding,
+              backgroundColor: responsiveViewportConstants.sharedPrimitiveBackground,
+            },
+          }}
+        >
+          Shared primitive narrow
+        </Div>
+        <Div data-testid="responsive-shared-css-narrow" className={responsiveMatrixClasses.sharedCss}>
+          Shared css narrow
+        </Div>
+        <Div data-testid="responsive-shared-recipe-narrow" className={responsiveSharedRecipe()}>
+          Shared recipe narrow
+        </Div>
+      </Div>
+
+      <Div container data-testid="responsive-shared-shell-wide" style={{ width: '420px' }}>
+        <Div
+          data-testid="responsive-shared-primitive-wide"
+          r={{
+            [responsiveViewportConstants.sharedContainerBreakpoint]: {
+              padding: responsiveViewportConstants.sharedPrimitivePadding,
+              backgroundColor: responsiveViewportConstants.sharedPrimitiveBackground,
+            },
+          }}
+        >
+          Shared primitive wide
+        </Div>
+        <Div data-testid="responsive-shared-css-wide" className={responsiveMatrixClasses.sharedCss}>
+          Shared css wide
+        </Div>
+        <Div data-testid="responsive-shared-recipe-wide" className={responsiveSharedRecipe()}>
+          Shared recipe wide
+        </Div>
       </Div>
     </Main>
   )

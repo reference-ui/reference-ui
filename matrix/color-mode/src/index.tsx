@@ -8,6 +8,8 @@ export const matrixColorModeMarker = 'reference-ui-matrix-color-mode'
 function LiveColorModeControls() {
   const [rootTheme, setRootTheme] = useState<'light' | 'dark'>('light')
   const [nestedTheme, setNestedTheme] = useState<'light' | 'dark'>('light')
+  const [leftIslandTheme, setLeftIslandTheme] = useState<'light' | 'dark'>('light')
+  const [rightIslandTheme, setRightIslandTheme] = useState<'light' | 'dark'>('dark')
 
   return (
     <>
@@ -33,6 +35,31 @@ function LiveColorModeControls() {
         <Div data-testid="color-mode-live-nested-scope" colorMode={nestedTheme}>
           <Div data-testid="color-mode-live-nested-token" color={colorModeMatrixConstants.tokenName}>
             Live nested token
+          </Div>
+        </Div>
+      </div>
+
+      <div data-testid="color-mode-live-multi-host" data-panda-theme="light">
+        <Button
+          data-testid="color-mode-swap-multi-islands"
+          onClick={() => {
+            setLeftIslandTheme(leftIslandTheme === 'light' ? 'dark' : 'light')
+            setRightIslandTheme(rightIslandTheme === 'light' ? 'dark' : 'light')
+          }}
+        >
+          Swap multi-island themes
+        </Button>
+        <Div data-testid="color-mode-live-multi-host-token" color={colorModeMatrixConstants.tokenName}>
+          Live multi host token
+        </Div>
+        <Div data-testid="color-mode-live-multi-left-scope" colorMode={leftIslandTheme}>
+          <Div data-testid="color-mode-live-multi-left-token" color={colorModeMatrixConstants.tokenName}>
+            Live multi left token
+          </Div>
+        </Div>
+        <Div data-testid="color-mode-live-multi-right-scope" colorMode={rightIslandTheme}>
+          <Div data-testid="color-mode-live-multi-right-token" color={colorModeMatrixConstants.tokenName}>
+            Live multi right token
           </Div>
         </Div>
       </div>

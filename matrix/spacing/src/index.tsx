@@ -22,8 +22,16 @@ export function Index() {
         Rhythm bottom override
       </Div>
 
+      <Div data-testid="spacing-padding-right-override" padding="1r 2r 3r 4r" paddingRight="5r">
+        Rhythm right override
+      </Div>
+
       <Div data-testid="spacing-margin-left-override" margin="2r" marginLeft="3r">
         Rhythm left override
+      </Div>
+
+      <Div data-testid="spacing-margin-top-override" margin="1r 2r 3r 4r" marginTop="6r">
+        Rhythm top override
       </Div>
 
       <Div data-testid="spacing-radius" borderRadius="1r" borderWidth="1px" borderStyle="solid">

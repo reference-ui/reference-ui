@@ -130,4 +130,26 @@ describe('session public API', () => {
     expect(activeCalls).toHaveLength(1)
     session.dispose()
   })
+
+  it('disposes idempotently and ignores later ready manifests after cleanup', async () => {
+    writeManifest({ buildState: 'idle' })
+
+    const session = getSyncSession(createOptions())
+    const calls: unknown[] = []
+
+    session.onRefresh((event) => calls.push(event))
+
+    expect(() => {
+      session.dispose()
+      session.dispose()
+    }).not.toThrow()
+
+    writeManifest({
+      buildState: 'ready',
+      updatedAt: '2026-01-01T00:00:02.000Z',
+    })
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
+    expect(calls).toHaveLength(0)
+  })
 })

@@ -77,7 +77,7 @@ Those are real product surfaces, not just implementation details.
 
 **Additional coverage still needed**
 
-- Finish porting the font and custom-prop cases that used happy-dom shortcuts in the old unit suite.
+- [DONE] `matrix/primitives` ports the old happy-dom custom-props coverage into a browser contract, proving `font`, `weight`, `size`, and `r` can coexist on one primitive without losing the responsive branch.
 - Add a broader representative set of primitive prop families so coverage is not overly concentrated on spacing and color.
 - Assert primitive + `css` prop class composition stays stable after rebuilds, not only on first boot.
 - Keep JSX element/custom element integration coverage focused on one consumer, not layered inheritance.
@@ -96,7 +96,7 @@ Those are real product surfaces, not just implementation details.
 
 **Additional coverage still needed**
 
-- Media-query branches should be asserted in a real browser, not only container-query branches.
+- [DONE] `matrix/css` asserts viewport media-query branches in a real browser by keeping a `css()` probe on its base branch below the viewport threshold and activating it above the breakpoint.
 - [DONE] `matrix/css` asserts that `&:hover` pseudo selectors apply in a real browser.
 - [DONE] `matrix/css` asserts that nested descendant selectors apply in a real browser.
 - [DONE] `matrix/css` parses generated `react/styles.css` with PostCSS so emitted stylesheet syntax has to be valid.
@@ -128,7 +128,7 @@ Those are real product surfaces, not just implementation details.
 - [DONE] `matrix/system` asserts that `font()` maps the named weight onto a primitive in a real browser.
 - [DONE] `matrix/system` asserts that the mounted stylesheet contains the authored `@font-face` rule.
 - [DONE] `matrix/system` asserts that the mounted stylesheet contains the CSS contributed by `font()`.
-- Assert `globalCss()`, primitives, and recipes together so ordering bugs show up in a real sheet.
+- [DONE] `matrix/system` asserts that `globalCss()`, a recipe class, and primitive utilities compose on the same element with the expected cascade-layer order.
 - [DONE] `matrix/system` asserts that `keyframes()` exposes the authored animation name on an actual animated element.
 - [DONE] `matrix/system` asserts that the mounted stylesheet contains the authored `@keyframes` name.
 
@@ -149,7 +149,7 @@ Those are real product surfaces, not just implementation details.
 - [DONE] `matrix/recipe` asserts that the `outline` + `pink` compound variant overrides border color as well as background and text.
 - [DONE] `matrix/recipe` parses generated `react/styles.css` with PostCSS so emitted stylesheet syntax has to be valid.
 - [DONE] `matrix/recipe` rejects suspicious placeholder/control fragments and empty standard declarations in generated `react/styles.css`.
-- A larger variant matrix: defaults, non-default branches, boolean-style branches, and cross-axis combinations beyond the current representative cases.
+- [DONE] `matrix/recipe` expands the variant matrix beyond the representative cases with a boolean-style `capsule` branch and an `outline` + `pink` + `lg` + `capsule` cross-axis combination in the browser.
 - Broaden compound variant precedence beyond the current background/text/border representative override.
 - Responsive/container-query recipe branches should be verified across more than one branch shape.
 - Class stability should be asserted across rebuilds so recipe hashing/regeneration regressions are caught.
@@ -174,7 +174,7 @@ Those are real product surfaces, not just implementation details.
 - [DONE] `matrix/spacing` asserts that explicit `width` overrides the width side of `size` while the height side still comes from rhythm.
 - [DONE] `matrix/spacing` asserts that explicit `height` overrides the height side of `size` while the width side still comes from rhythm.
 - Port the remaining rhythm transform edge cases from the old unit suite.
-- Broaden shorthand + side-specific override precedence beyond the current representative padding and margin cases.
+- [DONE] `matrix/spacing` broadens shorthand override coverage with four-value `paddingRight` and `marginTop` precedence cases, while checking the untouched opposite side still keeps the shorthand value.
 - Cover rebuild cleanup when `size` is removed, plus any remaining multi-dimension interaction cases beyond the current width/height overrides.
 - Decide deliberately whether responsive rhythm values belong here or remain concentrated under `responsive`.
 
@@ -197,7 +197,7 @@ Those are real product surfaces, not just implementation details.
 - [DONE] `matrix/responsive` asserts that `css()` matches the viewport-width media-query branch above the threshold.
 - [DONE] `matrix/responsive` asserts that `recipe()` keeps the base branch below the viewport-height threshold.
 - [DONE] `matrix/responsive` asserts that `recipe()` matches the viewport-height media-query branch above the threshold.
-- Cover mixed viewport + container logic on the same element.
+- [DONE] `matrix/responsive` asserts that one `css()` class applies container-query and viewport media-query branches together on the same element.
 - Assert base-to-breakpoint ordering so fallback branches do not accidentally win.
 - Cover responsive behaviour across `css()`, `recipe()`, and primitive `r` props in the same scenario.
 
@@ -217,7 +217,7 @@ Those are real product surfaces, not just implementation details.
 - [DONE] `matrix/color-mode` asserts that no explicit override resolves light-mode tokens by default.
 - [DONE] `matrix/color-mode` asserts that a live root `data-panda-theme` toggle updates descendant token resolution in the browser.
 - [DONE] `matrix/color-mode` asserts that a live nested `colorMode` toggle updates the nearest nested scope without changing the light host.
-- Assert nearest-scope resolution when multiple theme islands update during the same session.
+- [DONE] `matrix/color-mode` asserts that multiple live theme islands can update in the same session while each descendant still follows its nearest explicit scope.
 - Keep this focused on single-consumer theme scopes, not layered theme composition.
 
 ### session
@@ -237,7 +237,7 @@ Those are real product surfaces, not just implementation details.
 - [DONE] `matrix/session` asserts multiple observers receive the same ready transition.
 - [DONE] `matrix/session` asserts unsubscribe isolation without muting remaining observers.
 - Stale/contested `session.lock` recovery should still be covered at the package level.
-- Idempotent cleanup/dispose behaviour should be asserted explicitly.
+- [DONE] `matrix/session` asserts `dispose()` is idempotent and suppresses later ready-manifest refreshes after cleanup.
 - Watch-session race edges should stay tightly scoped to a single consumer workspace.
 
 ### tokens

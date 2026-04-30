@@ -11,6 +11,8 @@ export const recipeMatrixConstants = {
   compoundBackground: 'recipeMatrixCompoundBackground',
   compoundForeground: 'recipeMatrixCompoundForeground',
   compoundBorder: 'recipeMatrixCompoundBorder',
+  capsuleRadius: '9999px',
+  capsuleSpacing: '0.08em',
 } as const
 
 tokens({
@@ -57,6 +59,14 @@ const recipeMatrixButtonDefinition = {
         fontSize: '18px',
       },
     },
+    capsule: {
+      false: {},
+      true: {
+        borderRadius: recipeMatrixConstants.capsuleRadius,
+        textTransform: 'uppercase',
+        letterSpacing: recipeMatrixConstants.capsuleSpacing,
+      },
+    },
   },
   compoundVariants: [
     {
@@ -73,6 +83,7 @@ const recipeMatrixButtonDefinition = {
     visual: 'solid',
     tone: 'teal',
     size: 'sm',
+    capsule: 'false',
   },
 } as const
 

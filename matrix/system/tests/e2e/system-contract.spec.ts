@@ -54,6 +54,20 @@ test.describe('system contract', () => {
     expect(normalizeColorValue(computed['background-color'])).toBe(normalizeColorValue(systemMatrixConstants.accentValue))
   })
 
+  test.skip('tokens() drives primitive spacing tokens beyond color families', async ({ page }) => {
+    const element = page.getByTestId('system-token-spacing')
+    const computed = await readComputedStyle(element, ['padding-top'])
+
+    expect(computed['padding-top']).toBe('20px')
+  })
+
+  test.skip('tokens() drives primitive radii tokens beyond color families', async ({ page }) => {
+    const element = page.getByTestId('system-token-radius')
+    const computed = await readComputedStyle(element, ['border-radius'])
+
+    expect(computed['border-radius']).toBe('12px')
+  })
+
   test('globalCss() emits the custom property on the document root', async ({ page }) => {
     const value = await page.locator('html').evaluate((node, variableName) => {
       return getComputedStyle(node).getPropertyValue(variableName).trim()
@@ -80,6 +94,25 @@ test.describe('system contract', () => {
     const computed = await readComputedStyle(element, ['width'])
 
     expect(computed.width).toBe(systemMatrixConstants.globalVarValue)
+  })
+
+  test('globalCss(), recipe(), and primitive utilities compose with the expected layer order', async ({ page }) => {
+    const element = page.getByTestId('system-layered-target')
+    const computed = await readComputedStyle(element, [
+      'color',
+      'background-color',
+      'border-top-width',
+      'border-top-color',
+    ])
+
+    expect(normalizeColorValue(computed.color)).toBe(normalizeColorValue(systemMatrixConstants.accentValue))
+    expect(normalizeColorValue(computed['background-color'])).toBe(
+      normalizeColorValue(systemMatrixConstants.layeredRecipeBackground),
+    )
+    expect(computed['border-top-width']).toBe('4px')
+    expect(normalizeColorValue(computed['border-top-color'])).toBe(
+      normalizeColorValue(systemMatrixConstants.layeredGlobalBorderColor),
+    )
   })
 
   test('mounted stylesheet contains the layer ordering declaration', async ({ page }) => {

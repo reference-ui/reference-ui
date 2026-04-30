@@ -90,6 +90,40 @@ export function Index() {
           Wide responsive primitive
         </Div>
       </Div>
+
+      <Div data-testid="primitive-combined-custom-props-narrow-shell" container="card" width="320px">
+        <Div
+          data-testid="primitive-combined-custom-props-narrow"
+          font="sans"
+          weight="sans.bold"
+          size="2r"
+          fontSize="1rem"
+          r={{
+            400: {
+              fontSize: '1.125rem',
+            },
+          }}
+        >
+          Narrow combined custom props primitive
+        </Div>
+      </Div>
+
+      <Div data-testid="primitive-combined-custom-props-wide-shell" container="card" width="480px">
+        <Div
+          data-testid="primitive-combined-custom-props-wide"
+          font="sans"
+          weight="sans.bold"
+          size="2r"
+          fontSize="1rem"
+          r={{
+            400: {
+              fontSize: '1.125rem',
+            },
+          }}
+        >
+          Wide combined custom props primitive
+        </Div>
+      </Div>
     </Main>
   )
 }

@@ -68,11 +68,27 @@ test.describe('spacing contract', () => {
     expect(computed['padding-bottom']).toBe('16px')
   })
 
+  test('explicit paddingRight overrides the four-value shorthand right value without changing the left side', async ({ page }) => {
+    const element = page.getByTestId('spacing-padding-right-override')
+    const computed = await readComputedStyle(element, ['padding-right', 'padding-left'])
+
+    expect(computed['padding-right']).toBe('20px')
+    expect(computed['padding-left']).toBe('16px')
+  })
+
   test('explicit marginLeft overrides the shorthand left value', async ({ page }) => {
     const element = page.getByTestId('spacing-margin-left-override')
     const computed = await readComputedStyle(element, ['margin-left'])
 
     expect(computed['margin-left']).toBe('12px')
+  })
+
+  test('explicit marginTop overrides the four-value shorthand top value without changing the bottom side', async ({ page }) => {
+    const element = page.getByTestId('spacing-margin-top-override')
+    const computed = await readComputedStyle(element, ['margin-top', 'margin-bottom'])
+
+    expect(computed['margin-top']).toBe('24px')
+    expect(computed['margin-bottom']).toBe('12px')
   })
 
   test('borderRadius="1r" resolves to 4px', async ({ page }) => {

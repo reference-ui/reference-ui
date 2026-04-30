@@ -50,6 +50,17 @@ export const containerProbeClass = css({
   },
 })
 
+export const viewportProbeClass = css({
+  paddingTop: '0px',
+  backgroundColor: 'transparent',
+  color: 'transparent',
+  '@media (min-width: 840px)': {
+    paddingTop: cssMatrixConstants.viewportProbePadding,
+    backgroundColor: cssMatrixConstants.viewportProbeBackground,
+    color: cssMatrixConstants.viewportProbeForeground,
+  },
+})
+
 export const cssMatrixClasses = {
   card: cardClass,
   componentHoverable: componentHoverableClass,
@@ -58,4 +69,5 @@ export const cssMatrixClasses = {
   positioned: positionedClass,
   stateful: statefulClass,
   containerProbe: containerProbeClass,
+  viewportProbe: viewportProbeClass,
 } as const
