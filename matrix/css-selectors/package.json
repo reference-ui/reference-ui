@@ -20,6 +20,7 @@
     "@types/node": "^25.1.0",
     "typescript": "~5.9.3",
     "vitest": "^4.0.18",
+    "@playwright/test": "1.48.0",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
     "@vitejs/plugin-react": "^4.7.0",

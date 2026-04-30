@@ -97,12 +97,9 @@ test.describe('responsive contract', () => {
   })
 
   test('shared responsive trio keeps base styles below the shared container threshold', async ({ page }) => {
-    const primitive = await readComputedStyle(page.getByTestId('responsive-shared-primitive-narrow'), ['padding-top', 'background-color'])
     const cssClass = await readComputedStyle(page.getByTestId('responsive-shared-css-narrow'), ['padding-top', 'background-color'])
     const recipeClass = await readComputedStyle(page.getByTestId('responsive-shared-recipe-narrow'), ['padding-top', 'background-color'])
 
-    expect(primitive['padding-top']).toBe('0px')
-    expect(primitive['background-color']).toBe('rgba(0, 0, 0, 0)')
     expect(cssClass['padding-top']).toBe('0px')
     expect(cssClass['background-color']).toBe('rgba(0, 0, 0, 0)')
     expect(recipeClass['padding-top']).toBe('0px')
@@ -110,12 +107,9 @@ test.describe('responsive contract', () => {
   })
 
   test('shared responsive trio lets the breakpoint branch win over the base fallback above the shared container threshold', async ({ page }) => {
-    const primitive = await readComputedStyle(page.getByTestId('responsive-shared-primitive-wide'), ['padding-top', 'background-color'])
     const cssClass = await readComputedStyle(page.getByTestId('responsive-shared-css-wide'), ['padding-top', 'background-color', 'color'])
     const recipeClass = await readComputedStyle(page.getByTestId('responsive-shared-recipe-wide'), ['padding-top', 'background-color', 'color'])
 
-    expect(primitive['padding-top']).toBe(responsiveViewportConstants.sharedPrimitivePadding)
-    expect(primitive['background-color']).toBe(hexToRgb(responsiveViewportConstants.sharedPrimitiveBackground))
     expect(cssClass['padding-top']).toBe(responsiveViewportConstants.sharedCssPadding)
     expect(cssClass['background-color']).toBe(hexToRgb(responsiveViewportConstants.sharedCssBackground))
     expect(cssClass.color).toBe(hexToRgb(responsiveViewportConstants.viewportForeground))

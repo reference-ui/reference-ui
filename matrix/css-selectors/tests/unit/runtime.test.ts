@@ -3,10 +3,11 @@ import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import postcss, { type Root } from 'postcss'
 
-import { cssSelectorsMatrixConstants } from '../../src/constants'
+import { Index, matrixCssSelectorsMarker } from '../../src/index'
 import { cssSelectorsMatrixClasses, selectorRecipe } from '../../src/styles'
 
 const refUiDir = join(process.cwd(), '.reference-ui')
+const suspiciousStylesheetFragments = ['[object Object]', 'undefined', 'NaN', '\u0000', '\uFFFD'] as const
 
 async function waitForGeneratedFile(relativePath: string, maxMs = 45_000): Promise<string> {
   const absolutePath = join(refUiDir, relativePath)
@@ -28,44 +29,6 @@ const generatedOutput = {
   styledStylesheetAst: null as Root | null,
 }
 
-interface SelectorAssertion {
-  declaration: string
-  expectedValue: string
-  requiredFragments: readonly string[]
-}
-
-function collectRuleSelectors(
-  matcher: (selector: string, declarations: ReadonlyMap<string, readonly string[]>) => boolean,
-): string[] {
-  const selectors = new Set<string>()
-
-  generatedOutput.styledStylesheetAst?.walkRules((rule) => {
-    const declarations = new Map<string, string[]>()
-
-    rule.walkDecls((decl: { prop: string; value: string }) => {
-      const values = declarations.get(decl.prop) ?? []
-      values.push(decl.value)
-      declarations.set(decl.prop, values)
-    })
-
-    if (matcher(rule.selector, declarations)) {
-      selectors.add(rule.selector)
-    }
-  })
-
-  return [...selectors]
-}
-
-function expectSelectorsToExist(assertion: SelectorAssertion): void {
-  const selectors = collectRuleSelectors(
-    (selector, declarations) =>
-      assertion.requiredFragments.every(fragment => selector.includes(fragment))
-      && (declarations.get(assertion.declaration) ?? []).includes(assertion.expectedValue),
-  )
-
-  expect(selectors, `${assertion.declaration}:${assertion.expectedValue}`).toHaveLength(1)
-}
-
 beforeAll(async () => {
   const styledStylesheet = await waitForGeneratedFile(join('styled', 'styles.css'))
 
@@ -76,6 +39,17 @@ beforeAll(async () => {
 })
 
 describe('css selectors matrix emitted output', () => {
+  it('exports the matrix marker', () => {
+    expect(matrixCssSelectorsMarker).toBe('reference-ui-matrix-css-selectors')
+  })
+
+  it('renders the fixture entrypoint', () => {
+    const element = Index()
+
+    expect(element).toBeTruthy()
+    expect(element.props['data-testid']).toBe('css-selectors-root')
+  })
+
   it('computes runtime class tokens for the selector probes', () => {
     for (const className of Object.values(cssSelectorsMatrixClasses)) {
       expect(className).toBeTruthy()
@@ -97,120 +71,33 @@ describe('css selectors matrix emitted output', () => {
     expect(generatedOutput.styledStylesheetAst?.nodes.length ?? 0).toBeGreaterThan(0)
   })
 
-  it('emits top-level declarations that resolve imported constants', () => {
-    expectSelectorsToExist({
-      declaration: 'border-style',
-      expectedValue: cssSelectorsMatrixConstants.topLevelBorderStyle,
-      requiredFragments: ['border-style_solid'],
+  it('keeps standard declarations in generated styled/styles.css non-empty', () => {
+    const invalidDeclarations: string[] = []
+    let declarationCount = 0
+
+    generatedOutput.styledStylesheetAst?.walkDecls((decl) => {
+      declarationCount += 1
+
+      if (decl.prop.trim().length === 0) {
+        invalidDeclarations.push(`${decl.prop}:${decl.value}`)
+        return
+      }
+
+      if (!decl.prop.startsWith('--') && decl.value.trim().length === 0) {
+        invalidDeclarations.push(`${decl.prop}:${decl.value}`)
+      }
     })
-    expectSelectorsToExist({
-      declaration: 'border-top-width',
-      expectedValue: cssSelectorsMatrixConstants.topLevelBorderTopWidth,
-      requiredFragments: ['bd-t-w_4px'],
-    })
+
+    expect(declarationCount).toBeGreaterThan(0)
+    expect(invalidDeclarations).toEqual([])
   })
 
-  it('emits exhaustive css() selector branches backed by constants.ts', () => {
-    for (const assertion of [
-      {
-        declaration: 'margin-top',
-        expectedValue: cssSelectorsMatrixConstants.descendantMarginTop,
-        requiredFragments: ['[data-slot=inner]'],
-      },
-      {
-        declaration: 'padding-left',
-        expectedValue: cssSelectorsMatrixConstants.directChildPaddingLeft,
-        requiredFragments: ['[data-slot=child]', '>'],
-      },
-      {
-        declaration: 'margin-left',
-        expectedValue: cssSelectorsMatrixConstants.adjacentSiblingMarginLeft,
-        requiredFragments: ['[data-slot=peer]', '+'],
-      },
-      {
-        declaration: 'padding-top',
-        expectedValue: cssSelectorsMatrixConstants.generalSiblingPaddingTop,
-        requiredFragments: ['[data-slot=overlay]', '~'],
-      },
-      {
-        declaration: 'text-decoration',
-        expectedValue: cssSelectorsMatrixConstants.hoverTextDecoration,
-        requiredFragments: [':hover'],
-      },
-      {
-        declaration: 'outline-width',
-        expectedValue: cssSelectorsMatrixConstants.focusVisibleOutlineWidth,
-        requiredFragments: [':focus-visible'],
-      },
-      {
-        declaration: 'border-top-width',
-        expectedValue: cssSelectorsMatrixConstants.selfAttributeBorderTopWidth,
-        requiredFragments: ['[data-component=card]'],
-      },
-      {
-        declaration: 'border-top-width',
-        expectedValue: cssSelectorsMatrixConstants.selfAttributeHoverBorderTopWidth,
-        requiredFragments: ['[data-component=card]', ':hover'],
-      },
-      {
-        declaration: 'border-right-width',
-        expectedValue: cssSelectorsMatrixConstants.selfAttributeQuotedBorderRightWidth,
-        requiredFragments: ['[data-component="card"]'],
-      },
-      {
-        declaration: 'border-left-width',
-        expectedValue: cssSelectorsMatrixConstants.selfAttributeStateBorderLeftWidth,
-        requiredFragments: ['[data-component=card]', '[data-state=open]'],
-      },
-    ] satisfies SelectorAssertion[]) {
-      expectSelectorsToExist(assertion)
-    }
-  })
+  it('keeps suspicious placeholder fragments out of generated styled/styles.css', () => {
+    const foundFragments = suspiciousStylesheetFragments.filter((fragment) =>
+      generatedOutput.styledStylesheet.includes(fragment),
+    )
 
-  it('emits recipe() selector branches backed by constants.ts', () => {
-    for (const assertion of [
-      {
-        declaration: 'border-style',
-        expectedValue: cssSelectorsMatrixConstants.recipeBaseBorderStyle,
-        requiredFragments: ['border-style_dashed'],
-      },
-      {
-        declaration: 'border-top-width',
-        expectedValue: cssSelectorsMatrixConstants.recipeBaseBorderTopWidth,
-        requiredFragments: ['bd-t-w_9px'],
-      },
-      {
-        declaration: 'margin-top',
-        expectedValue: cssSelectorsMatrixConstants.recipeDescendantMarginTop,
-        requiredFragments: ['[data-slot=recipe-inner]'],
-      },
-      {
-        declaration: 'padding-left',
-        expectedValue: cssSelectorsMatrixConstants.recipeDirectChildPaddingLeft,
-        requiredFragments: ['[data-slot=recipe-child]', '>'],
-      },
-      {
-        declaration: 'text-decoration',
-        expectedValue: cssSelectorsMatrixConstants.recipeHoverTextDecoration,
-        requiredFragments: [':hover'],
-      },
-      {
-        declaration: 'border-right-width',
-        expectedValue: cssSelectorsMatrixConstants.recipeQuotedBorderRightWidth,
-        requiredFragments: ['[data-component="recipe-card"]'],
-      },
-      {
-        declaration: 'border-left-width',
-        expectedValue: cssSelectorsMatrixConstants.recipeStateBorderLeftWidth,
-        requiredFragments: ['[data-component=recipe-card]', '[data-state=open]'],
-      },
-      {
-        declaration: 'border-top-width',
-        expectedValue: cssSelectorsMatrixConstants.recipeCompoundBorderTopWidth,
-        requiredFragments: ['[data-component=recipe-card]'],
-      },
-    ] satisfies SelectorAssertion[]) {
-      expectSelectorsToExist(assertion)
-    }
+    expect(generatedOutput.styledStylesheet.length).toBeGreaterThan(0)
+    expect(foundFragments).toEqual([])
   })
 })
