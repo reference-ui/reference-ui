@@ -6,10 +6,12 @@ async function importTransformsModule() {
   const rewriteCvaImports = vi.fn((source: string) => `${source}\n// cva`)
   const rewriteCssImports = vi.fn((source: string) => `${source}\n// css`)
   const applyResponsiveStyles = vi.fn((source: string) => `${source}\n// responsive`)
+  const neutralizeStyleCalls = vi.fn((source: string) => `${source}\n// neutralized`)
 
   vi.doMock('./rewrite-cva-imports', () => ({ rewriteCvaImports }))
   vi.doMock('./rewrite-css-imports', () => ({ rewriteCssImports }))
   vi.doMock('./apply-responsive-styles', () => ({ applyResponsiveStyles }))
+  vi.doMock('./neutralize-style-calls', () => ({ neutralizeStyleCalls }))
 
   const mod = await import('./index')
 
@@ -18,6 +20,7 @@ async function importTransformsModule() {
     rewriteCvaImports,
     rewriteCssImports,
     applyResponsiveStyles,
+    neutralizeStyleCalls,
   }
 }
 
@@ -26,6 +29,7 @@ afterEach(() => {
   vi.doUnmock('./rewrite-cva-imports')
   vi.doUnmock('./rewrite-css-imports')
   vi.doUnmock('./apply-responsive-styles')
+  vi.doUnmock('./neutralize-style-calls')
   vi.restoreAllMocks()
 })
 
@@ -36,6 +40,7 @@ describe('virtual/transforms', () => {
       rewriteCvaImports,
       rewriteCssImports,
       applyResponsiveStyles,
+      neutralizeStyleCalls,
     } = await importTransformsModule()
 
     const result = await applyTransforms({
@@ -56,6 +61,30 @@ describe('virtual/transforms', () => {
       "import { css, recipe } from '@reference-ui/react'\nconst x = recipe({})\n\n// cva\n// css",
       'src/card.tsx',
     )
+    expect(neutralizeStyleCalls).toHaveBeenCalledWith(
+      "import { css, recipe } from '@reference-ui/react'\nconst x = recipe({})\n\n// cva\n// css\n// responsive",
+    )
+    expect(result).toEqual({
+      content:
+        "import { css, recipe } from '@reference-ui/react'\nconst x = recipe({})\n\n// cva\n// css\n// responsive\n// neutralized",
+      extension: undefined,
+      transformed: true,
+    })
+  })
+
+  it('skips neutralization for reserved __reference__ui artifacts', async () => {
+    const {
+      applyTransforms,
+      neutralizeStyleCalls,
+    } = await importTransformsModule()
+
+    const result = await applyTransforms({
+      sourcePath: '/workspace/app/.reference-ui/virtual/__reference__ui/src/styles.js',
+      relativePath: '__reference__ui/src/styles.js',
+      content: "import { css, recipe } from '@reference-ui/react'\nconst x = recipe({})\n",
+    })
+
+    expect(neutralizeStyleCalls).not.toHaveBeenCalled()
     expect(result).toEqual({
       content:
         "import { css, recipe } from '@reference-ui/react'\nconst x = recipe({})\n\n// cva\n// css\n// responsive",

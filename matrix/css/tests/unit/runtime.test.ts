@@ -164,7 +164,7 @@ describe('css matrix runtime', () => {
     expect(selectors.length).toBeGreaterThan(0)
   })
 
-  it('does not emit the [data-component=card]:hover selector branch into generated react/styles.css yet', () => {
+  it('emits the [data-component=card]:hover selector branch into generated react/styles.css', () => {
     const selectors = collectRuleSelectors((selector) => selector.includes('[data-component=card]'))
     const activeBorderSelectors = collectRuleSelectors(
       (selector, declarations) =>
@@ -174,7 +174,11 @@ describe('css matrix runtime', () => {
         ),
     )
 
-    expect(selectors).toEqual([])
-    expect(activeBorderSelectors).toEqual([])
+    expect(selectors).toEqual([
+      '.\\[\\&\\[data-component\\=card\\]\\:hover\\]\\:bd-t-w_6px[data-component=card]:hover',
+    ])
+    expect(activeBorderSelectors).toEqual([
+      '.\\[\\&\\[data-component\\=card\\]\\:hover\\]\\:bd-t-w_6px[data-component=card]:hover',
+    ])
   })
 })

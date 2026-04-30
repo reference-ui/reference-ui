@@ -22,6 +22,7 @@ import { createManagedMatrixPackageJson, type MatrixFixturePackageJson } from '.
 import { createManagedPlaywrightConfigSource } from '../managed/playwright/index.js'
 import { createManagedReactMainSource } from '../managed/react/index.js'
 import { createManagedVitestConfigSource } from '../managed/vitest/index.js'
+import { hasMatrixPlaywrightTests, hasMatrixVitestTests } from '../test-presence.js'
 import { validateMatrixFixtures } from '../validate.js'
 
 export interface MatrixSetupOptions {
@@ -57,14 +58,6 @@ function resolveManagedReactEntryImportPath(packageDir: string): string {
   }
 
   return './index'
-}
-
-function hasMatrixVitestTests(packageDir: string): boolean {
-  return existsSync(resolve(packageDir, 'tests', 'unit'))
-}
-
-function hasMatrixPlaywrightTests(packageDir: string): boolean {
-  return existsSync(resolve(packageDir, 'tests', 'e2e'))
 }
 
 function hasMatrixVitestGlobalSetup(packageDir: string): boolean {
