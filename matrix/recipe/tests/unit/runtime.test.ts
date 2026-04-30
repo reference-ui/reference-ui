@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import postcss, { type Root } from 'postcss'
 
 import { Index, matrixRecipeMarker } from '../../src/index'
-import { recipeMatrixButton } from '../../src/styles'
+import { recipeMatrixButton, recipeMatrixConstants, recipeMatrixResponsiveCard } from '../../src/styles'
 
 const refUiDir = join(process.cwd(), '.reference-ui')
 const suspiciousStylesheetFragments = ['[object Object]', 'undefined', 'NaN', '\u0000', '\uFFFD'] as const
@@ -38,6 +38,29 @@ beforeAll(async () => {
   })
 })
 
+function stylesheetHasAtRuleDeclaration(
+  name: string,
+  paramFragment: string,
+  prop: string,
+  value: string,
+): boolean {
+  let found = false
+
+  generatedOutput.reactStylesheetAst?.walkAtRules(name, (atRule) => {
+    if (!atRule.params.includes(paramFragment) || found) {
+      return
+    }
+
+    atRule.walkDecls(prop, (decl) => {
+      if (decl.value.includes(value)) {
+        found = true
+      }
+    })
+  })
+
+  return found
+}
+
 describe('recipe matrix runtime', () => {
   it('exports the matrix marker', () => {
     expect(matrixRecipeMarker).toBe('reference-ui-matrix-recipe')
@@ -45,6 +68,7 @@ describe('recipe matrix runtime', () => {
 
   it('returns stable classes for repeated calls', () => {
     expect(recipeMatrixButton()).toBe(recipeMatrixButton())
+    expect(recipeMatrixResponsiveCard({ tone: 'alert' })).toBe(recipeMatrixResponsiveCard({ tone: 'alert' }))
   })
 
   it('renders the fixture entrypoint', () => {
@@ -92,5 +116,27 @@ describe('recipe matrix runtime', () => {
 
     expect(generatedOutput.reactStylesheet.length).toBeGreaterThan(0)
     expect(foundFragments).toEqual([])
+  })
+
+  it('emits the viewport media branch for recipe() responsive output', () => {
+    expect(
+      stylesheetHasAtRuleDeclaration(
+        'media',
+        `min-width: ${recipeMatrixConstants.responsiveViewportBreakpoint}px`,
+        'padding-top',
+        recipeMatrixConstants.responsiveViewportPadding,
+      ),
+    ).toBe(true)
+  })
+
+  it('emits the container-query branch for recipe() variant output', () => {
+    expect(
+      stylesheetHasAtRuleDeclaration(
+        'container',
+        `min-width: ${recipeMatrixConstants.responsiveContainerBreakpoint}px`,
+        'border-top-width',
+        recipeMatrixConstants.responsiveContainerBorderWidth,
+      ),
+    ).toBe(true)
   })
 })

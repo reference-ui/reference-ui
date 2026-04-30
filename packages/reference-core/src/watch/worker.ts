@@ -23,9 +23,9 @@ export default async function runWatch(payload: WatchPayload): Promise<never> {
     onError: (error) => {
       log.error('[watch] Watcher error:', error)
     },
-    onChange: ({ event, path, relativePath }) => {
+    onChange: ({ event, path, relativePath, requiresFullResync }) => {
       log.debug('watch', `${event}: ${relativePath}`)
-      emit('watch:change', { event, path })
+      emit('watch:change', { event, path, requiresFullResync })
     },
   })
 

@@ -64,7 +64,7 @@ export const responsiveMatrixClasses = {
     backgroundColor: 'transparent',
     color: 'transparent',
     r: {
-      [responsiveViewportConstants.sharedContainerBreakpoint]: {
+      360: {
         paddingTop: responsiveViewportConstants.sharedCssPadding,
         backgroundColor: responsiveViewportConstants.sharedCssBackground,
         color: responsiveViewportConstants.viewportForeground,
@@ -105,7 +105,7 @@ export const responsiveSharedRecipe = recipe({
     backgroundColor: 'transparent',
     color: 'transparent',
     r: {
-      [responsiveViewportConstants.sharedContainerBreakpoint]: {
+      360: {
         paddingTop: responsiveViewportConstants.sharedRecipePadding,
         backgroundColor: responsiveViewportConstants.sharedRecipeBackground,
         color: responsiveViewportConstants.viewportForeground,

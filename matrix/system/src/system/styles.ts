@@ -1,10 +1,13 @@
-import { recipe } from '@reference-ui/react'
+import { css, recipe } from '@reference-ui/react'
 import { font, globalCss, keyframes, tokens } from '@reference-ui/system'
 
 export const systemMatrixConstants = {
   accentToken: 'systemMatrixAccent',
   accentValue: 'rgb(37, 99, 235)',
   animationName: 'systemMatrixFadeIn',
+  colorModeToken: 'systemMatrixColorModeToken',
+  colorModeDarkValue: 'rgb(30, 41, 59)',
+  colorModeLightValue: 'rgb(219, 234, 254)',
   fontDisplay: 'swap',
   fontFaceFamily: 'Inter',
   fontLetterSpacingValue: '-0.01em',
@@ -27,6 +30,10 @@ export const systemMatrixConstants = {
 tokens({
   colors: {
     [systemMatrixConstants.accentToken]: { value: systemMatrixConstants.accentValue },
+    [systemMatrixConstants.colorModeToken]: {
+      value: systemMatrixConstants.colorModeLightValue,
+      dark: systemMatrixConstants.colorModeDarkValue,
+    },
   },
   spacing: {
     [systemMatrixConstants.spacingToken]: { value: systemMatrixConstants.spacingValue },
@@ -85,4 +92,11 @@ export const systemLayeredRecipe = recipe({
     color: systemMatrixConstants.layeredRecipeColor,
     backgroundColor: systemMatrixConstants.layeredRecipeBackground,
   },
+})
+
+export const systemTokenCssClass = css({
+  color: systemMatrixConstants.accentToken,
+  backgroundColor: systemMatrixConstants.colorModeToken,
+  padding: systemMatrixConstants.spacingToken,
+  borderRadius: systemMatrixConstants.radiusToken,
 })

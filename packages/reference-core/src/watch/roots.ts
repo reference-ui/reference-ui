@@ -53,12 +53,14 @@ function collapseNestedRoots(roots: string[]): string[] {
   return collapsed
 }
 
-export function deriveWatchRoots(projectRoot: string, include: string[]): string[] {
+export function deriveWatchRoots(projectRoot: string, include: string[], extraPaths: string[] = []): string[] {
   const resolvedProjectRoot = resolve(projectRoot)
   const prefixes = include.map(extractStaticPrefix)
-  if (prefixes.length === 0 || prefixes.some((prefix) => prefix == null)) {
-    return [resolvedProjectRoot]
-  }
+  const includeRoots = prefixes.length === 0 || prefixes.some((prefix) => prefix == null)
+    ? [resolvedProjectRoot]
+    : prefixes.map((prefix) => coerceWatchableRoot(resolvedProjectRoot, prefix!))
 
-  return collapseNestedRoots(prefixes.map((prefix) => coerceWatchableRoot(resolvedProjectRoot, prefix!)))
+  const extraRoots = extraPaths.map((extraPath) => coerceWatchableRoot(resolvedProjectRoot, extraPath))
+
+  return collapseNestedRoots([...includeRoots, ...extraRoots])
 }

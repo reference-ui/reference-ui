@@ -1,6 +1,10 @@
 import { Div, H1, Main, P } from '@reference-ui/react'
 
+import { primitiveCssPropFixture } from './primitiveCssPropFixture'
+
 export const matrixPrimitivesMarker = 'reference-ui-matrix-primitives'
+
+const PrimitiveJsxMarker = Div
 
 export function Index() {
   return (
@@ -10,6 +14,15 @@ export function Index() {
       <Div data-testid="primitive-basic" p="3">
         Basic primitive
       </Div>
+      <PrimitiveJsxMarker
+        data-testid="primitive-jsx-element"
+        backgroundColor="yellow.100"
+        color="red.600"
+        padding="0.75rem"
+        borderRadius="999px"
+      >
+        Local custom JSX element styled via ui.config.jsxElements
+      </PrimitiveJsxMarker>
       <Div
         data-testid="primitive-style-props"
         color="red.600"
@@ -32,15 +45,47 @@ export function Index() {
         Inline border primitive
       </Div>
       <Div
-        data-testid="primitive-css-prop"
-        padding="0.5rem"
-        css={{
-          position: 'relative',
-          top: '4px',
-          left: '8px',
-        }}
+        data-testid="primitive-inline-color"
+        color="#dc2626"
+        backgroundColor="#fef3c7"
+        padding="0.75rem"
       >
-        CSS prop primitive
+        Inline color primitive
+      </Div>
+      <Div
+        data-testid="primitive-border-shorthand-hex"
+        border="1px solid #123"
+        padding="0.5rem"
+      >
+        Border shorthand primitive
+      </Div>
+      <Div
+        data-testid="primitive-mixed-values"
+        backgroundColor="yellow.100"
+        borderRadius="12px"
+        borderWidth="2px"
+        borderStyle="solid"
+        borderColor="#7c3aed"
+        padding="0.5rem"
+      >
+        Mixed token and inline primitive
+      </Div>
+      <Div
+        data-testid="primitive-layout-props"
+        display="inline-block"
+        maxWidth="320px"
+        overflow="hidden"
+        whiteSpace="nowrap"
+      >
+        Layout prop primitive
+      </Div>
+      <Div
+        data-testid="primitive-css-prop"
+        data-rebuild-marker={primitiveCssPropFixture.rebuildMarker}
+        padding="0.5rem"
+        css={primitiveCssPropFixture.styles}
+      >
+        {primitiveCssPropFixture.label}
       </Div>
       <Div data-testid="primitive-font-sans" font="sans">
         Sans primitive

@@ -8,6 +8,9 @@ export function initWatch(payload: SyncPayload): void {
   if (!payload.options.watch) return
   workers.runWorker('watch', {
     projectRoot: payload.cwd,
-    config: payload.config,
+    config: {
+      include: payload.config.include,
+      dependencyPaths: payload.configDependencyPaths ?? [],
+    },
   })
 }

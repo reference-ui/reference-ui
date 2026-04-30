@@ -1,8 +1,16 @@
-import { expect, test, type Locator } from '@playwright/test'
+import { execFileSync } from 'node:child_process'
+import { readFileSync, writeFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 import { Div } from '@reference-ui/react'
 
 import { primitiveMatrixColors } from '../../src/colors'
 import { matrixPrimitivesMarker } from '../../src/index'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const packageRoot = join(__dirname, '..', '..')
+const primitiveCssPropFixtureSourcePath = join(packageRoot, 'src', 'primitiveCssPropFixture.ts')
 
 async function readComputedStyle(
   locator: Locator,
@@ -81,6 +89,58 @@ function expectFontFamilyIncludes(fontFamily: string, fragment: string): void {
   expect(fontFamily.toLowerCase()).toContain(fragment.toLowerCase())
 }
 
+function hexToRgb(hex: string): string {
+  const match = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+
+  if (!match) {
+    throw new Error(`Invalid hex color: ${hex}`)
+  }
+
+  return `rgb(${Number.parseInt(match[1], 16)}, ${Number.parseInt(match[2], 16)}, ${Number.parseInt(match[3], 16)})`
+}
+
+function runRefSync(): void {
+  try {
+    execFileSync('pnpm', ['exec', 'ref', 'sync'], {
+      cwd: packageRoot,
+      env: { ...process.env, FORCE_COLOR: '0' },
+      maxBuffer: 10 * 1024 * 1024,
+      stdio: 'pipe',
+    })
+  } catch (error) {
+    if (!(error instanceof Error) || !('stdout' in error) || !('stderr' in error)) {
+      throw error
+    }
+
+    const stdout = Buffer.isBuffer(error.stdout) ? error.stdout.toString('utf8') : String(error.stdout)
+    const stderr = Buffer.isBuffer(error.stderr) ? error.stderr.toString('utf8') : String(error.stderr)
+
+    throw new Error(
+      ['ref sync failed', '', 'stdout:', stdout.trim() || '(empty)', '', 'stderr:', stderr.trim() || '(empty)'].join('\n'),
+    )
+  }
+}
+
+async function reloadPrimitivesApp(page: Page): Promise<void> {
+  for (let attempt = 0; attempt < 8; attempt++) {
+    try {
+      await page.goto('/', { waitUntil: 'domcontentloaded' })
+      await expect(page.getByTestId('primitives-root')).toBeVisible({ timeout: 15_000 })
+      return
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      const shouldRetry =
+        message.includes('ERR_ABORTED')
+        || message.includes('frame was detached')
+        || message.includes('interrupted by another navigation')
+
+      if (!shouldRetry || attempt === 7) {
+        throw error
+      }
+    }
+  }
+}
+
 test.describe('primitives contract', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
@@ -99,6 +159,25 @@ test.describe('primitives contract', () => {
 
   test('renders the primitives fixture description', async ({ page }) => {
     await expect(page.getByText('Primitive mounting and style props are exercised against emitted design-system CSS.')).toBeVisible()
+  })
+
+  test('ui.config.jsxElements styles one local custom JSX consumer', async ({ page }) => {
+    const element = page.getByTestId('primitive-jsx-element')
+
+    await expect(element).toBeVisible()
+    await expect(element).toContainText('Local custom JSX element styled via ui.config.jsxElements')
+  })
+
+  test('ui.config.jsxElements resolves style props on the local custom JSX consumer', async ({ page }) => {
+    const element = page.getByTestId('primitive-jsx-element')
+    const expectedSurfaceWarning = await readCssVariable(element, primitiveMatrixColors.surfaceWarningCssVariable)
+    const expectedTextDanger = await readCssVariable(element, primitiveMatrixColors.textDangerCssVariable)
+    const computed = await readComputedStyle(element, ['background-color', 'color', 'padding-top', 'border-radius'])
+
+    expectColorValue(computed['background-color'], expectedSurfaceWarning)
+    expectColorValue(computed.color, expectedTextDanger)
+    expect(computed['padding-top']).toBe('12px')
+    expect(computed['border-radius']).toBe('999px')
   })
 
   test('primitive style props apply text color', async ({ page }) => {
@@ -180,6 +259,58 @@ test.describe('primitives contract', () => {
     const inlineStyles = await readComputedStyle(inlineBorder, ['border-radius'])
 
     expect(inlineStyles['border-radius']).toBe('8px')
+  })
+
+  test('inline color primitive applies direct hex text color', async ({ page }) => {
+    const element = page.getByTestId('primitive-inline-color')
+    const computed = await readComputedStyle(element, ['color'])
+
+    expect(computed.color).toBe(hexToRgb('#dc2626'))
+  })
+
+  test('inline color primitive applies direct hex background color', async ({ page }) => {
+    const element = page.getByTestId('primitive-inline-color')
+    const computed = await readComputedStyle(element, ['background-color'])
+
+    expect(computed['background-color']).toBe(hexToRgb('#fef3c7'))
+  })
+
+  test('inline color primitive preserves authored padding', async ({ page }) => {
+    const element = page.getByTestId('primitive-inline-color')
+    const computed = await readComputedStyle(element, ['padding-top'])
+
+    expect(computed['padding-top']).toBe('12px')
+  })
+
+  test('border shorthand primitive expands shorthand hex to the rendered border color', async ({ page }) => {
+    const element = page.getByTestId('primitive-border-shorthand-hex')
+    const computed = await readComputedStyle(element, ['border-width', 'border-style', 'border-color'])
+
+    expect(computed['border-width']).toBe('1px')
+    expect(computed['border-style']).toBe('solid')
+    expect(computed['border-color']).toBe(hexToRgb('#112233'))
+  })
+
+  test('mixed primitive keeps token background alongside inline border values', async ({ page }) => {
+    const element = page.getByTestId('primitive-mixed-values')
+    const expectedSurfaceWarning = await readCssVariable(element, primitiveMatrixColors.surfaceWarningCssVariable)
+    const computed = await readComputedStyle(element, ['background-color', 'border-width', 'border-color', 'border-radius', 'padding-top'])
+
+    expectColorValue(computed['background-color'], expectedSurfaceWarning)
+    expect(computed['border-width']).toBe('2px')
+    expect(computed['border-color']).toBe(hexToRgb('#7c3aed'))
+    expect(computed['border-radius']).toBe('12px')
+    expect(computed['padding-top']).toBe('8px')
+  })
+
+  test('layout primitive covers display and overflow prop families in the browser', async ({ page }) => {
+    const element = page.getByTestId('primitive-layout-props')
+    const computed = await readComputedStyle(element, ['display', 'max-width', 'overflow', 'white-space'])
+
+    expect(computed.display).toBe('inline-block')
+    expect(computed['max-width']).toBe('320px')
+    expect(computed.overflow).toBe('hidden')
+    expect(computed['white-space']).toBe('nowrap')
   })
 
   test('primitive css prop does not leak to the DOM', async ({ page }) => {
@@ -361,5 +492,58 @@ test.describe('primitives contract', () => {
     expect(computed['font-size']).toBe('18px')
     expect(computed.width).toBe('8px')
     expect(computed.height).toBe('8px')
+  })
+
+  test('primitive plus css prop class composition stays stable after ref sync rebuilds', async ({ page }) => {
+    test.setTimeout(120_000)
+
+    const originalSource = readFileSync(primitiveCssPropFixtureSourcePath, 'utf-8')
+    const updatedSource = originalSource
+      .replace("label: 'CSS prop primitive'", "label: 'CSS prop primitive after ref sync'")
+      .replace("rebuildMarker: 'stable-v1'", "rebuildMarker: 'stable-v2'")
+
+    expect(updatedSource).not.toBe(originalSource)
+
+    const element = page.getByTestId('primitive-css-prop')
+    const originalClassName = await element.getAttribute('class')
+
+    expect(originalClassName).toContain('ref-div')
+    expect(originalClassName).not.toContain('[object Object]')
+
+    try {
+      writeFileSync(primitiveCssPropFixtureSourcePath, updatedSource)
+      runRefSync()
+
+      await expect
+        .poll(
+          async () => {
+            await reloadPrimitivesApp(page)
+
+            const updatedElement = page.getByTestId('primitive-css-prop')
+            const computed = await readComputedStyle(updatedElement, ['position', 'top', 'left'])
+
+            return {
+              className: await updatedElement.getAttribute('class'),
+              marker: await updatedElement.getAttribute('data-rebuild-marker'),
+              position: computed.position,
+              text: await updatedElement.textContent(),
+              top: computed.top,
+              left: computed.left,
+            }
+          },
+          { timeout: 60_000 },
+        )
+        .toEqual({
+          className: originalClassName,
+          marker: 'stable-v2',
+          position: 'relative',
+          text: 'CSS prop primitive after ref sync',
+          top: '4px',
+          left: '8px',
+        })
+    } finally {
+      writeFileSync(primitiveCssPropFixtureSourcePath, originalSource)
+      runRefSync()
+    }
   })
 })

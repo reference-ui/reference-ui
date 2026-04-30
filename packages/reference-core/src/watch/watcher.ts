@@ -1,5 +1,5 @@
 import { subscribe } from '@parcel/watcher'
-import { relative } from 'node:path'
+import { relative, resolve } from 'node:path'
 import picomatch from 'picomatch'
 
 import { getWatchIgnoreGlobs } from './gitignore'
@@ -16,6 +16,7 @@ export interface WatchChange {
   event: FileEvent
   path: string
   relativePath: string
+  requiresFullResync: boolean
 }
 
 export interface WatchCallbacks {
@@ -23,18 +24,22 @@ export interface WatchCallbacks {
   onChange(change: WatchChange): void
 }
 
-export function getWatcherState(payload: WatchPayload): { include: string[]; watchRoots: string[] } {
+export function getWatcherState(payload: WatchPayload): { include: string[]; dependencyPaths: string[]; watchRoots: string[] } {
   const { projectRoot, config } = payload
+  const dependencyPaths = Array.from(new Set((config.dependencyPaths ?? []).map((path) => resolve(projectRoot, path))))
+
   return {
     include: config.include,
-    watchRoots: deriveWatchRoots(projectRoot, config.include),
+    dependencyPaths,
+    watchRoots: deriveWatchRoots(projectRoot, config.include, dependencyPaths),
   }
 }
 
 export async function startWatcher(payload: WatchPayload, callbacks: WatchCallbacks): Promise<void> {
   const { projectRoot } = payload
-  const { include, watchRoots } = getWatcherState(payload)
+  const { include, dependencyPaths, watchRoots } = getWatcherState(payload)
   const isMatch = picomatch(include)
+  const dependencyPathSet = new Set(dependencyPaths)
 
   await Promise.all(
     watchRoots.map(async (watchRoot) =>
@@ -48,12 +53,14 @@ export async function startWatcher(payload: WatchPayload, callbacks: WatchCallba
 
           for (const ev of events) {
             const relativePath = relative(projectRoot, ev.path)
-            if (!isMatch(relativePath)) continue
+            const resolvedPath = resolve(ev.path)
+            if (!isMatch(relativePath) && !dependencyPathSet.has(resolvedPath)) continue
 
             callbacks.onChange({
               event: EVENT_MAP[ev.type as keyof typeof EVENT_MAP],
               path: ev.path,
               relativePath,
+              requiresFullResync: dependencyPathSet.has(resolvedPath),
             })
           }
         },

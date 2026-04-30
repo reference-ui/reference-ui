@@ -1,8 +1,16 @@
+import { execFileSync } from 'node:child_process'
+import { readFileSync, writeFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { expect, test, type Locator, type Page } from '@playwright/test'
 
 import { cssMatrixConstants } from '../../src/constants'
 import { matrixCssMarker } from '../../src/index'
 import { cssMatrixClasses } from '../../src/styles'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const packageRoot = join(__dirname, '..', '..')
+const stylesSourcePath = join(packageRoot, 'src', 'styles.ts')
 
 async function readComputedStyle(
   locator: Locator,
@@ -40,6 +48,72 @@ async function gotoAtViewport(
 ): Promise<void> {
   await page.setViewportSize(viewport)
   await page.goto('/')
+}
+
+function runRefSync(): void {
+  try {
+    execFileSync('pnpm', ['exec', 'ref', 'sync'], {
+      cwd: packageRoot,
+      env: { ...process.env, FORCE_COLOR: '0' },
+      maxBuffer: 10 * 1024 * 1024,
+      stdio: 'pipe',
+    })
+  } catch (error) {
+    if (!(error instanceof Error) || !('stdout' in error) || !('stderr' in error)) {
+      throw error
+    }
+
+    const stdout = Buffer.isBuffer(error.stdout) ? error.stdout.toString('utf8') : String(error.stdout)
+    const stderr = Buffer.isBuffer(error.stderr) ? error.stderr.toString('utf8') : String(error.stderr)
+
+    throw new Error(
+      ['ref sync failed', '', 'stdout:', stdout.trim() || '(empty)', '', 'stderr:', stderr.trim() || '(empty)'].join('\n'),
+    )
+  }
+}
+
+async function reloadCssApp(page: Page): Promise<void> {
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    try {
+      await page.goto('/', { waitUntil: 'domcontentloaded' })
+      await expect(page.getByTestId('css-root')).toBeVisible({ timeout: 15_000 })
+      return
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      const shouldRetry =
+        message.includes('ERR_ABORTED')
+        || message.includes('frame was detached')
+        || message.includes('interrupted by another navigation')
+
+      if (!shouldRetry || attempt === 7) {
+        throw error
+      }
+    }
+  }
+}
+
+async function readMountedStylesheetSummary(
+  page: Page,
+  values: { originalBorderRadius: string; replacementBorderRadius: string },
+): Promise<{
+  styleTagCount: number
+  layerOrderCount: number
+  originalBorderRadiusCount: number
+  replacementBorderRadiusCount: number
+}> {
+  return page.evaluate(({ originalBorderRadius, replacementBorderRadius }) => {
+    const styleTexts = Array.from(document.querySelectorAll('style')).map((element) => element.textContent ?? '')
+    const joined = styleTexts.join('\n')
+    const countMatches = (pattern: string) => [...joined.matchAll(new RegExp(pattern, 'g'))].length
+
+    return {
+      styleTagCount: styleTexts.length,
+      layerOrderCount: styleTexts.filter((text) =>
+        text.includes('@layer reset, global, base, tokens, recipes, utilities;')).length,
+      originalBorderRadiusCount: countMatches(`border-radius\\s*:\\s*${originalBorderRadius}`),
+      replacementBorderRadiusCount: countMatches(`border-radius\\s*:\\s*${replacementBorderRadius}`),
+    }
+  }, values)
 }
 
 test.describe('css contract', () => {
@@ -263,5 +337,77 @@ test.describe('css contract', () => {
     })
 
     expect(hasDeclaration).toBe(true)
+  })
+
+  test('rebuild keeps stylesheet presence and order stable while replacing stale css() declarations in the browser', async ({ page }) => {
+    test.setTimeout(120_000)
+
+    const originalSource = readFileSync(stylesSourcePath, 'utf-8')
+    const originalCardSource = [
+      'export const cardClass = css({',
+      "  padding: '1rem',",
+      "  borderRadius: '12px',",
+      "  borderWidth: '2px',",
+      "  borderStyle: 'solid',",
+      '})',
+    ].join('\n')
+    const replacementBorderRadius = '23px'
+    const replacementCardSource = [
+      'export const cardClass = css({',
+      "  padding: '1rem',",
+      `  borderRadius: '${replacementBorderRadius}',`,
+      "  borderWidth: '2px',",
+      "  borderStyle: 'solid',",
+      '})',
+    ].join('\n')
+    const updatedSource = originalSource.replace(originalCardSource, replacementCardSource)
+    const initialSummary = await readMountedStylesheetSummary(page, {
+      originalBorderRadius: '12px',
+      replacementBorderRadius,
+    })
+
+    expect(originalSource).toContain(originalCardSource)
+    expect(updatedSource).not.toBe(originalSource)
+    expect(initialSummary.styleTagCount).toBeGreaterThan(0)
+    expect(initialSummary.layerOrderCount).toBeGreaterThan(0)
+    expect(initialSummary.originalBorderRadiusCount).toBe(1)
+    expect(initialSummary.replacementBorderRadiusCount).toBe(0)
+
+    try {
+      writeFileSync(stylesSourcePath, updatedSource)
+      runRefSync()
+
+      await expect
+        .poll(
+          async () => {
+            await reloadCssApp(page)
+
+            const computed = await readComputedStyle(page.getByTestId('css-card'), ['border-radius'])
+            const summary = await readMountedStylesheetSummary(page, {
+              originalBorderRadius: '12px',
+              replacementBorderRadius,
+            })
+
+            return {
+              borderRadius: computed['border-radius'],
+              styleTagCount: summary.styleTagCount,
+              layerOrderCount: summary.layerOrderCount,
+              originalBorderRadiusCount: summary.originalBorderRadiusCount,
+              replacementBorderRadiusCount: summary.replacementBorderRadiusCount,
+            }
+          },
+          { timeout: 60_000 },
+        )
+        .toEqual({
+          borderRadius: replacementBorderRadius,
+          styleTagCount: initialSummary.styleTagCount,
+          layerOrderCount: initialSummary.layerOrderCount,
+          originalBorderRadiusCount: 0,
+          replacementBorderRadiusCount: 1,
+        })
+    } finally {
+      writeFileSync(stylesSourcePath, originalSource)
+      runRefSync()
+    }
   })
 })

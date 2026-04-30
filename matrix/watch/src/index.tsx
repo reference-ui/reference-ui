@@ -19,6 +19,9 @@ export function Index() {
       <Div data-testid="watch-token" color="watch-sync.primary" p="2">
         watch token
       </Div>
+      <Div data-testid="watch-config-token" color="watch-config-imported.primary" p="2">
+        watch config token
+      </Div>
       <div data-testid="watch-recipe" className={watchRecipe({ tone: 'solid' })}>
         watch recipe
       </div>

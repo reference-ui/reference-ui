@@ -1,4 +1,5 @@
 import { resolve } from 'node:path'
+import { getConfig } from '../config/store'
 import { emit } from '../lib/event-bus'
 import { log } from '../lib/log'
 import { getVirtualDirPath } from '../lib/paths'
@@ -27,6 +28,7 @@ interface VirtualRunContext {
   root: string
   virtualDir: string
   debug: boolean
+  include: string[]
 }
 
 function toMessage(error: unknown): string {
@@ -34,10 +36,12 @@ function toMessage(error: unknown): string {
 }
 
 function resolveVirtualRunContext(payload: VirtualWorkerPayload): VirtualRunContext {
-  const { sourceDir, config } = payload
+  const { sourceDir } = payload
+  const config = getConfig() ?? payload.config
   const root = resolve(sourceDir)
 
   return {
+    include: config.include,
     root,
     virtualDir: getVirtualDirPath(root),
     debug: config.debug ?? false,
@@ -82,7 +86,10 @@ async function emitVirtualChange(
  * Run the cold-start or explicit full snapshot sync path.
  */
 export async function runVirtualCopyAll(payload: VirtualWorkerPayload): Promise<void> {
-  await syncVirtualSnapshot(payload)
+  await syncVirtualSnapshot({
+    sourceDir: payload.sourceDir,
+    config: getConfig() ?? payload.config,
+  })
 }
 
 /**
@@ -98,7 +105,7 @@ export async function runVirtualSyncFile(
   await syncVirtualStyleCollection({
     root: context.root,
     virtualDir: context.virtualDir,
-    include: workerPayload.config.include,
+    include: context.include,
   })
 
   await emitVirtualChange(event.path, event, virtualPath)

@@ -1,6 +1,6 @@
 import * as esbuild from 'esbuild'
 import { buildMicroBundleOptions } from './build-options'
-import type { MicroBundleOptions } from './types'
+import type { MicroBundleOptions, MicroBundleResult } from './types'
 
 /**
  * Micro-bundle an entry file with esbuild and return the output as a string.
@@ -14,8 +14,19 @@ export async function microBundle(
   entryPath: string,
   options: MicroBundleOptions = {}
 ): Promise<string> {
+  const result = await microBundleWithResult(entryPath, options)
+  return result.code
+}
+
+export async function microBundleWithResult(
+  entryPath: string,
+  options: MicroBundleOptions = {}
+): Promise<MicroBundleResult> {
   const buildOpts = buildMicroBundleOptions(entryPath, options)
   const result = await esbuild.build(buildOpts)
   const output = result.outputFiles?.[0]
-  return output?.text ?? ''
+  return {
+    code: output?.text ?? '',
+    metafile: result.metafile,
+  }
 }
