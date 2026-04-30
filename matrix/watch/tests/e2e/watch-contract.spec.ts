@@ -4,6 +4,11 @@ import { readFile, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import {
+  watchConfigImportedTokenValue,
+  watchConfigImportedTokenVariable,
+} from '../../src/watch-config-base-system'
+
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const packageRoot = join(__dirname, '..', '..')
 const sessionPath = join(packageRoot, '.reference-ui', 'tmp', 'session.json')
@@ -14,6 +19,7 @@ const cssFilePath = join(packageRoot, 'src', 'watch', 'css.ts')
 const primitiveFilePath = join(packageRoot, 'src', 'watch', 'primitive.ts')
 const recipeFilePath = join(packageRoot, 'src', 'watch', 'recipe.ts')
 const tokensFilePath = join(packageRoot, 'src', 'watch', 'tokens.ts')
+const configBaseSystemFilePath = join(packageRoot, 'src', 'watch-config-base-system.ts')
 
 function randomHexColor(excluded: ReadonlySet<string>): string {
   while (true) {
@@ -300,6 +306,46 @@ test.describe('watch contract', () => {
         writeFile(tokensFilePath, originalTokens),
       ])
 
+      await waitForNextWatchReady(60_000, restoreBaseline).catch(() => {})
+    }
+  })
+
+  test('ref sync --watch refreshes token output when an imported ui.config dependency changes', async ({ page }) => {
+    test.setTimeout(180_000)
+
+    const originalConfigBaseSystemSource = await readFile(configBaseSystemFilePath, 'utf-8')
+    const updatedTokenValue = randomHexColor(new Set([watchConfigImportedTokenValue]))
+    const updatedConfigBaseSystemSource = originalConfigBaseSystemSource.replace(
+      watchConfigImportedTokenValue,
+      updatedTokenValue,
+    )
+
+    expect(updatedConfigBaseSystemSource).not.toBe(originalConfigBaseSystemSource)
+
+    try {
+      await page.goto('/')
+      await expect(page.getByTestId('watch-root')).toBeVisible({ timeout: 60_000 })
+      await expectComputedStyle(page, 'watch-config-token', 'color', hexToRgb(watchConfigImportedTokenValue))
+
+      const baselineMarker = getReadyMarker()
+      await writeFile(configBaseSystemFilePath, updatedConfigBaseSystemSource)
+      await waitForNextWatchReady(60_000, baselineMarker)
+      await reloadWatchApp(page)
+
+      expectFileToContain(
+        reactStylesPath,
+        watchConfigImportedTokenVariable,
+        'react/styles.css should keep the imported config token variable after a config dependency edit',
+      )
+      expectFileToContain(
+        reactStylesPath,
+        updatedTokenValue,
+        'react/styles.css should contain the imported config token value after a config dependency edit',
+      )
+      await expectComputedStyle(page, 'watch-config-token', 'color', hexToRgb(updatedTokenValue))
+    } finally {
+      const restoreBaseline = getReadyMarker()
+      await writeFile(configBaseSystemFilePath, originalConfigBaseSystemSource)
       await waitForNextWatchReady(60_000, restoreBaseline).catch(() => {})
     }
   })

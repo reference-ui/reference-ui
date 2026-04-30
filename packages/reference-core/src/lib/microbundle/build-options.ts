@@ -25,6 +25,7 @@ export function buildMicroBundleOptions(
     mainFields = ['module', 'main'],
     conditions = ['import', 'node'],
     tsconfigRaw,
+    metafile = false,
   } = options
 
   return {
@@ -44,6 +45,7 @@ export function buildMicroBundleOptions(
     splitting: false,
     mainFields,
     conditions,
+    metafile,
     tsconfigRaw,
   }
 }

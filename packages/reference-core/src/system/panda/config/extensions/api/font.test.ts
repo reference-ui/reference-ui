@@ -28,6 +28,24 @@ const fonts: FontDefinition[] = [
   },
 ]
 
+const fontsWithMultipleFontFaces: FontDefinition[] = [
+  {
+    ...fonts[0],
+    fontFace: [
+      {
+        src: 'url(/fonts/inter.woff2) format("woff2")',
+        fontWeight: '200 900',
+        fontStyle: 'normal',
+      },
+      {
+        src: 'url(/fonts/inter-italic.woff2) format("woff2")',
+        fontWeight: '200 900',
+        fontStyle: 'italic',
+      },
+    ],
+  },
+]
+
 afterEach(() => {
   delete (globalThis as Record<string, unknown>)[PANDA_CONFIG_GLOBAL_KEY]
 })
@@ -54,6 +72,25 @@ describe('font config helpers', () => {
         fontDisplay: 'swap',
         fontWeight: '200 900',
       },
+    })
+  })
+
+  it('preserves every authored font-face entry for one family', () => {
+    expect(buildFontFaces(fontsWithMultipleFontFaces)).toEqual({
+      Inter: [
+        {
+          src: 'url(/fonts/inter.woff2) format("woff2")',
+          fontDisplay: 'swap',
+          fontWeight: '200 900',
+          fontStyle: 'normal',
+        },
+        {
+          src: 'url(/fonts/inter-italic.woff2) format("woff2")',
+          fontDisplay: 'swap',
+          fontWeight: '200 900',
+          fontStyle: 'italic',
+        },
+      ],
     })
   })
 

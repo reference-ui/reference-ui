@@ -1,4 +1,4 @@
-export function Index() {
+export function App() {
   return (
     <main data-testid="distro-root">
       <h1>Reference UI distro matrix</h1>

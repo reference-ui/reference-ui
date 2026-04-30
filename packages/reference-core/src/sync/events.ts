@@ -1,4 +1,6 @@
+import { getConfig, getCwd, loadUserConfigWithDependencies, setConfig, setCwd } from '../config'
 import { emit, on, onceAll } from '../lib/event-bus'
+import { log } from '../lib/log'
 import { combineTrigger, emitOnAny, forWorker, onReady } from './events.utils'
 
 const VIRTUAL_COMPLETE_EVENT = 'virtual:complete' as const
@@ -7,6 +9,24 @@ const RUN_SYSTEM_CONFIG_EVENT = 'run:system:config' as const
 const VIRTUAL_FS_CHANGE_EVENT = 'virtual:fs:change' as const
 const VIRTUAL_FRAGMENT_CHANGE_EVENT = 'virtual:fragment:change' as const
 const WATCH_REBUILD_SETTLE_MS = 50
+
+async function refreshWatchConfig(): Promise<void> {
+  const cwd = getCwd()
+
+  if (!cwd) {
+    throw new Error('refreshWatchConfig: getCwd() is undefined')
+  }
+
+  const previousConfig = getConfig()
+  const { config } = await loadUserConfigWithDependencies(cwd)
+
+  if (previousConfig?.debug) {
+    config.debug = true
+  }
+
+  setCwd(cwd)
+  setConfig(config)
+}
 
 function initWatchBurstRebuilds(): void {
   let ready = false
@@ -102,6 +122,18 @@ export function initEvents(): void {
    * the resulting `virtual:fs:change` events rather than by raw source changes.
    */
   on('watch:change', payload => {
+    if (payload.requiresFullResync) {
+      void refreshWatchConfig()
+        .then(() => {
+          emit('run:virtual:copy:all')
+        })
+        .catch((error) => {
+          log.error('[sync] Failed to refresh config after watch change', error)
+          emit('system:config:failed')
+        })
+      return
+    }
+
     emit('run:virtual:sync:file', payload)
   })
 

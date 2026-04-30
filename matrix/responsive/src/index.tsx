@@ -7,6 +7,7 @@ import {
   responsiveViewportConstants,
   responsiveViewportRecipe,
 } from './styles'
+import { ResponsiveOutputFixtures } from './output-fixtures'
 
 export const matrixResponsiveMarker = 'reference-ui-matrix-responsive'
 
@@ -80,7 +81,7 @@ export function Index() {
         <Div
           data-testid="responsive-shared-primitive-narrow"
           r={{
-            [responsiveViewportConstants.sharedContainerBreakpoint]: {
+            360: {
               padding: responsiveViewportConstants.sharedPrimitivePadding,
               backgroundColor: responsiveViewportConstants.sharedPrimitiveBackground,
             },
@@ -100,7 +101,7 @@ export function Index() {
         <Div
           data-testid="responsive-shared-primitive-wide"
           r={{
-            [responsiveViewportConstants.sharedContainerBreakpoint]: {
+            360: {
               padding: responsiveViewportConstants.sharedPrimitivePadding,
               backgroundColor: responsiveViewportConstants.sharedPrimitiveBackground,
             },
@@ -115,6 +116,8 @@ export function Index() {
           Shared recipe wide
         </Div>
       </Div>
+
+      <ResponsiveOutputFixtures />
     </Main>
   )
 }

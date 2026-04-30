@@ -7,8 +7,8 @@ type RecipeConfig = Record<string, unknown>
 type FontPreset = Record<string, string>
 type FontWeightTokenTree = Record<string, Record<string, { value: string }>>
 
-function getPrimaryFontFace(fontFace: FontDefinition['fontFace']): FontFaceRule {
-  return Array.isArray(fontFace) ? (fontFace[0] ?? { src: '' }) : fontFace
+function getFontFaceRules(fontFace: FontDefinition['fontFace']): FontFaceRule[] {
+  return Array.isArray(fontFace) ? fontFace : [fontFace]
 }
 
 function getDefaultFontWeight(font: FontDefinition): string {
@@ -95,27 +95,22 @@ export function buildFontFaces(
 ): NonNullable<Config['globalFontface']> {
   return Object.fromEntries(
     fonts.flatMap(font => {
-      const fontFace = getPrimaryFontFace(font.fontFace)
+      const fontFaceRules = getFontFaceRules(font.fontFace)
+        .filter(fontFace => Boolean(fontFace.src))
+        .map(fontFace => ({
+          src: fontFace.src,
+          fontDisplay: fontFace.fontDisplay ?? 'swap',
+          ...(fontFace.fontWeight ? { fontWeight: fontFace.fontWeight } : {}),
+          ...(fontFace.fontStyle ? { fontStyle: fontFace.fontStyle } : {}),
+          ...(fontFace.sizeAdjust ? { sizeAdjust: fontFace.sizeAdjust } : {}),
+          ...(fontFace.descentOverride ? { descentOverride: fontFace.descentOverride } : {}),
+        }))
 
-      if (!fontFace.src) {
+      if (fontFaceRules.length === 0) {
         return []
       }
 
-      return [
-        [
-          parseFontFamilyName(font.value),
-          {
-            src: fontFace.src,
-            fontDisplay: fontFace.fontDisplay ?? 'swap',
-            ...(fontFace.fontWeight ? { fontWeight: fontFace.fontWeight } : {}),
-            ...(fontFace.fontStyle ? { fontStyle: fontFace.fontStyle } : {}),
-            ...(fontFace.sizeAdjust ? { sizeAdjust: fontFace.sizeAdjust } : {}),
-            ...(fontFace.descentOverride
-              ? { descentOverride: fontFace.descentOverride }
-              : {}),
-          },
-        ],
-      ]
+      return [[parseFontFamilyName(font.value), fontFaceRules.length === 1 ? fontFaceRules[0] : fontFaceRules]]
     })
   ) as NonNullable<Config['globalFontface']>
 }

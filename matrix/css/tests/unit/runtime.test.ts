@@ -1,5 +1,6 @@
+import { execFileSync } from 'node:child_process'
 import { beforeAll, describe, expect, it } from 'vitest'
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import postcss, { type Root } from 'postcss'
 
@@ -8,6 +9,7 @@ import { matrixCssMarker, Index } from '../../src/index'
 import { cssMatrixClasses } from '../../src/styles'
 
 const refUiDir = join(process.cwd(), '.reference-ui')
+const stylesSourcePath = join(process.cwd(), 'src', 'styles.ts')
 const suspiciousStylesheetFragments = ['[object Object]', 'undefined', 'NaN', '\u0000', '\uFFFD'] as const
 
 async function waitForGeneratedFile(relativePath: string, maxMs = 45_000): Promise<string> {
@@ -30,12 +32,13 @@ const generatedOutput = {
   reactStylesheetAst: null as Root | null,
 }
 
-function collectRuleSelectors(
+function collectRuleSelectorsFromAst(
+  reactStylesheetAst: Root | null,
   matcher: (selector: string, declarations: ReadonlyMap<string, readonly string[]>) => boolean,
 ): string[] {
   const selectors = new Set<string>()
 
-  generatedOutput.reactStylesheetAst?.walkRules((rule) => {
+  reactStylesheetAst?.walkRules((rule) => {
     const declarations = new Map<string, string[]>()
 
     rule.walkDecls((decl: { prop: string; value: string }) => {
@@ -50,6 +53,48 @@ function collectRuleSelectors(
   })
 
   return [...selectors]
+}
+
+function collectRuleSelectors(
+  matcher: (selector: string, declarations: ReadonlyMap<string, readonly string[]>) => boolean,
+): string[] {
+  return collectRuleSelectorsFromAst(generatedOutput.reactStylesheetAst, matcher)
+}
+
+function collectHoverUnderlineSelectors(reactStylesheetAst: Root | null): string[] {
+  return collectRuleSelectorsFromAst(
+    reactStylesheetAst,
+    (selector, declarations) =>
+      selector.includes(':hover') && (declarations.get('text-decoration') ?? []).includes('underline'),
+  )
+}
+
+function parseReactStylesheet(source: string): Root {
+  return postcss.parse(source, {
+    from: join(refUiDir, 'react', 'styles.css'),
+  })
+}
+
+function runRefSync(): void {
+  try {
+    execFileSync('pnpm', ['exec', 'ref', 'sync'], {
+      cwd: process.cwd(),
+      env: { ...process.env, FORCE_COLOR: '0' },
+      maxBuffer: 10 * 1024 * 1024,
+      stdio: 'pipe',
+    })
+  } catch (error) {
+    if (!(error instanceof Error) || !('stdout' in error) || !('stderr' in error)) {
+      throw error
+    }
+
+    const stdout = Buffer.isBuffer(error.stdout) ? error.stdout.toString('utf8') : String(error.stdout)
+    const stderr = Buffer.isBuffer(error.stderr) ? error.stderr.toString('utf8') : String(error.stderr)
+
+    throw new Error(
+      ['ref sync failed', '', 'stdout:', stdout.trim() || '(empty)', '', 'stderr:', stderr.trim() || '(empty)'].join('\n'),
+    )
+  }
 }
 
 beforeAll(async () => {
@@ -181,4 +226,50 @@ describe('css matrix runtime', () => {
       '.\\[\\&\\[data-component\\=card\\]\\:hover\\]\\:bd-t-w_6px[data-component=card]:hover',
     ])
   })
+
+  it(
+    'removes the hover selector branch from generated react/styles.css after ref sync when the source branch disappears',
+    async () => {
+      const originalSource = readFileSync(stylesSourcePath, 'utf-8')
+      const hoverBranchSource = [
+        'export const hoverableClass = css({',
+        "  textDecoration: 'none',",
+        "  '&:hover': {",
+        "    textDecoration: 'underline',",
+        '  },',
+        '})',
+      ].join('\n')
+      const baseOnlySource = [
+        'export const hoverableClass = css({',
+        "  textDecoration: 'none',",
+        '})',
+      ].join('\n')
+      const initialSelectors = collectHoverUnderlineSelectors(generatedOutput.reactStylesheetAst)
+
+      expect(originalSource).toContain(hoverBranchSource)
+      expect(initialSelectors).toHaveLength(1)
+
+      const updatedSource = originalSource.replace(hoverBranchSource, baseOnlySource)
+      expect(updatedSource).not.toBe(originalSource)
+
+      try {
+        writeFileSync(stylesSourcePath, updatedSource)
+        runRefSync()
+
+        const updatedStylesheet = await waitForGeneratedFile(join('react', 'styles.css'))
+        const updatedSelectors = collectHoverUnderlineSelectors(parseReactStylesheet(updatedStylesheet))
+
+        expect(updatedSelectors).toEqual([])
+      } finally {
+        writeFileSync(stylesSourcePath, originalSource)
+        runRefSync()
+      }
+
+      const restoredStylesheet = await waitForGeneratedFile(join('react', 'styles.css'))
+      const restoredSelectors = collectHoverUnderlineSelectors(parseReactStylesheet(restoredStylesheet))
+
+      expect(restoredSelectors).toEqual(initialSelectors)
+    },
+    120_000,
+  )
 })

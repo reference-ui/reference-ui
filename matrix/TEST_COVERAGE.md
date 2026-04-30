@@ -58,7 +58,8 @@ Those are real product surfaces, not just implementation details.
 
 - Ready should only report after the latest generated runtime artifacts are fresh, not while `react.mjs`, `system.mjs`, CSS, or declarations are stale.
 - Multiple source edits in one watch window should coalesce correctly without skipping a rebuild edge.
-- `ui.config` changes and config-import changes should be covered explicitly in watch mode for a single consumer.
+- Direct `ui.config` edits should still be covered explicitly in watch mode for a single consumer.
+- [DONE] `matrix/watch` edits an imported `ui.config` dependency during `ref sync --watch` and asserts token output refreshes in generated CSS and the running app.
 - Interrupted watch/sync recovery and fatal failure cleanup should be locked in, including no orphan process state.
 
 ### primitives
@@ -78,9 +79,9 @@ Those are real product surfaces, not just implementation details.
 **Additional coverage still needed**
 
 - [DONE] `matrix/primitives` ports the old happy-dom custom-props coverage into a browser contract, proving `font`, `weight`, `size`, and `r` can coexist on one primitive without losing the responsive branch.
-- Add a broader representative set of primitive prop families so coverage is not overly concentrated on spacing and color.
-- Assert primitive + `css` prop class composition stays stable after rebuilds, not only on first boot.
-- Keep JSX element/custom element integration coverage focused on one consumer, not layered inheritance.
+- [DONE] `matrix/primitives` broadens primitive browser and generated-output coverage beyond spacing and design-token colors with inline hex colors, shorthand border parsing, mixed token-plus-inline styling, and layout prop families.
+- [DONE] `matrix/primitives` mutates a source-only rebuild marker, reruns `ref sync`, and proves primitive + `css` prop class composition plus computed positioning stay stable after rebuilds while the generated stylesheet stays stable and the mirrored virtual source updates.
+- [DONE] `matrix/primitives` keeps JSX element integration focused on one local consumer alias, asserting `ui.config.jsxElements` applies primitive style props in the browser.
 
 ### css
 
@@ -104,8 +105,8 @@ Those are real product surfaces, not just implementation details.
 - [DONE] Investigated same-element `&[data-component="card"]:hover` and the docs-shaped `&[data-component=card]:hover`; Vitest/PostCSS now confirms the runtime class token is computed but no matching selector branch is emitted into `react/styles.css`, so this remains a `reference-core` / Panda selector-emission gap rather than a Playwright-only issue.
 - [DONE] Investigated self attribute selectors like `&[data-state="open"]` on `css()` classes, plus same-element nested `&:hover` under that branch; current emitted CSS did not include those branches, so this remains a `reference-core` / Panda selector-emission gap rather than a supported single-consumer expectation.
 - [DONE] Investigated ancestor-attribute + descendant-hover selector composition on one emitted rule; the current selector-key contract does not support text on both sides of `&`, so that specific parent/child composition remains a `reference-core` selector-composition gap rather than a single-consumer matrix expectation.
-- Stylesheet presence, order, and dedupe after rebuilds should be asserted in the browser.
-- CSS output removal should be covered when a condition or selector branch disappears.
+- [DONE] `matrix/css` mutates a `css()` card declaration, reruns `ref sync`, reloads the app in the browser, and asserts the rebuilt stylesheet keeps one mounted style tag, preserves the layer-order declaration, drops the stale `border-radius: 12px` rule, and mounts the replacement rule exactly once.
+- [DONE] `matrix/css` reruns `ref sync` after removing a `css()` hover selector branch from `src/styles.ts`, confirms the stale rule disappears from generated `react/styles.css`, then restores the branch and confirms the selector returns.
 
 ### system
 
@@ -123,7 +124,13 @@ Those are real product surfaces, not just implementation details.
 
 **Additional coverage still needed**
 
-- Expand beyond the current representative token cases into a wider spread of token families, not just the most obvious color path.
+- [DONE] `matrix/system` asserts that `tokens()` applies a custom spacing token to a primitive in a real browser.
+- [DONE] `matrix/system` asserts that `tokens()` applies a custom radius token to a primitive in a real browser.
+- [DONE] `matrix/system` asserts that a color-mode token from `tokens()` applies the light value by default and the dark value inside a `data-panda-theme="dark"` scope in a real browser.
+- [DONE] `matrix/system` asserts that `colorMode="light"` creates an explicit light preview for a `tokens()` color-mode token inside a dark host in a real browser.
+- [DONE] `matrix/system` asserts that descendants follow the nearest explicit light scope for a `tokens()` color-mode token inside a dark host in a real browser.
+- [DONE] `matrix/system` asserts that `css()` consumes custom token color, background, spacing, and radius families from `tokens()` in a real browser.
+- [DONE] `matrix/system` asserts that `css()` respects explicit light previews and nearest light scopes for color-mode token backgrounds while preserving custom spacing and radius token resolution in a real browser.
 - [DONE] `matrix/system` asserts that `font()` applies the named family to a primitive in a real browser.
 - [DONE] `matrix/system` asserts that `font()` maps the named weight onto a primitive in a real browser.
 - [DONE] `matrix/system` asserts that the mounted stylesheet contains the authored `@font-face` rule.
@@ -131,6 +138,29 @@ Those are real product surfaces, not just implementation details.
 - [DONE] `matrix/system` asserts that `globalCss()`, a recipe class, and primitive utilities compose on the same element with the expected cascade-layer order.
 - [DONE] `matrix/system` asserts that `keyframes()` exposes the authored animation name on an actual animated element.
 - [DONE] `matrix/system` asserts that the mounted stylesheet contains the authored `@keyframes` name.
+
+### font
+
+**Existing in `reference-unit`**
+
+- `tests/primitives/fontComputedStyle.test.tsx`
+- `tests/system/fontProp-output.test.ts`
+- `tests/system/fontSystem.test.tsx`
+- `tests/types/core-types-smoke.test.ts`
+
+**Existing in `reference-e2e`**
+
+- no dedicated old font-only browser surface; font runtime coverage was folded into broader core-system routes
+
+**Additional coverage still needed**
+
+- [DONE] `matrix/font` mirrors the `reference-lib` multi-font registration shape with local `sans`, `serif`, and `mono` definitions collected through repeated `font()` calls.
+- [DONE] `matrix/font` parses generated `react/styles.css` with PostCSS so basic `font()` output has to remain valid CSS.
+- [DONE] `matrix/font` asserts generated CSS emits `@font-face` rules, authored font utilities, and advanced font-face fields such as `size-adjust` and `descent-override`.
+- [DONE] `matrix/font` covers multi-rule `fontFace: []` registration and asserts one emitted `@font-face` rule exists for each authored source entry.
+- [DONE] `matrix/font` asserts generated `@reference-ui/react` font types expose `FontProps`, `FontRegistry`, `FontName`, and `FontWeightName` for the authored registry.
+- [DONE] `matrix/font` asserts named font families, font-level CSS contributions, and named or compound weight mappings apply to primitives in a real browser.
+- Plain `ref sync` after renaming a local font definition and local consumer usage still leaves the removed font utility selector and old `FontRegistry` entry beside the replacement one; rebuild cleanup remains a confirmed `reference-core` gap.
 
 ### recipe
 
@@ -150,9 +180,9 @@ Those are real product surfaces, not just implementation details.
 - [DONE] `matrix/recipe` parses generated `react/styles.css` with PostCSS so emitted stylesheet syntax has to be valid.
 - [DONE] `matrix/recipe` rejects suspicious placeholder/control fragments and empty standard declarations in generated `react/styles.css`.
 - [DONE] `matrix/recipe` expands the variant matrix beyond the representative cases with a boolean-style `capsule` branch and an `outline` + `pink` + `lg` + `capsule` cross-axis combination in the browser.
-- Broaden compound variant precedence beyond the current background/text/border representative override.
-- Responsive/container-query recipe branches should be verified across more than one branch shape.
-- Class stability should be asserted across rebuilds so recipe hashing/regeneration regressions are caught.
+- [DONE] `matrix/recipe` broadens compound variant precedence by asserting the `outline` + `pink` compound branch overrides the outline branch font weight, and that the override survives the `lg` + `capsule` cross-axis combination in the browser.
+- [DONE] `matrix/recipe` now verifies responsive recipe branches across more than one branch shape by asserting a variant-scoped viewport media-query branch, a base-level container-query branch, and their coexistence on the same recipe class.
+- [DONE] `matrix/recipe` asserts class stability across rebuilds by keeping recipe class tokens stable through an unrelated source-only rebuild, then proving only the affected outline font-weight token regenerates after a recipe contract change while compound and responsive recipe classes stay stable.
 
 ### spacing
 
@@ -198,8 +228,9 @@ Those are real product surfaces, not just implementation details.
 - [DONE] `matrix/responsive` asserts that `recipe()` keeps the base branch below the viewport-height threshold.
 - [DONE] `matrix/responsive` asserts that `recipe()` matches the viewport-height media-query branch above the threshold.
 - [DONE] `matrix/responsive` asserts that one `css()` class applies container-query and viewport media-query branches together on the same element.
-- Assert base-to-breakpoint ordering so fallback branches do not accidentally win.
-- Cover responsive behaviour across `css()`, `recipe()`, and primitive `r` props in the same scenario.
+- [DONE] `matrix/responsive` asserts base-to-breakpoint ordering so fallback branches do not accidentally win.
+- [DONE] `matrix/responsive` covers responsive behaviour across `css()`, `recipe()`, and primitive `r` props in the same scenario.
+- [DONE] `matrix/responsive` asserts emitted `react/styles.css` covers anonymous, named, nested, shared, and mixed responsive rules without malformed `@container true` output.
 
 ### color-mode
 
@@ -257,10 +288,10 @@ Those are real product surfaces, not just implementation details.
 
 - [DONE] `matrix/tokens` asserts that clean sync artifacts do not keep stale watch-only token names in `panda.config.ts`.
 - [DONE] `matrix/tokens` asserts that clean sync artifacts do not keep stale watch-only CSS variables in generated `styles.css`.
-- Fragment rename/delete and stale CSS-variable cleanup need explicit migration coverage.
-- Token removals should be asserted in both generated files and live DOM consumption.
-- Config-import changes that affect tokens should be covered in watch mode.
-- Generated token types should stay connected to runtime token output; that belongs to the combined `tokens` + `distro` story.
+- [DONE] `matrix/tokens` reruns `ref sync` after a temporary token fragment rename/delete and asserts the stale token name and CSS variable disappear from generated artifacts.
+- [DONE] `matrix/tokens` reruns `ref sync` after renaming the fixture's source tokens and asserts both generated output and live DOM consumption move to the replacement values without leaving the removed token names behind.
+- [DONE] `matrix/watch` covers config-import changes that affect tokens by editing an imported `ui.config` dependency and asserting the token update reaches generated CSS and the running app.
+- [DONE] `matrix/distro` keeps generated token types aligned with runtime token output by syncing a temporary token fragment and typechecking a consumer probe against the emitted CSS.
 
 ### virtual
 
@@ -310,9 +341,16 @@ These categories should also be treated as first-class coverage areas.
 - [DONE] `matrix/distro` asserts the generated system declaration barrel re-exports the generated entry module.
 - [DONE] `matrix/distro` parses generated `react/styles.css` with PostCSS so emitted stylesheet syntax has to be valid.
 - [DONE] `matrix/distro` rejects suspicious placeholder/control fragments like `[object Object]`, `undefined`, `NaN`, null bytes, and replacement characters in generated `react/styles.css`.
-- Broaden the generated package surface checks beyond `Div`, `css`, `tokens`, and `keyframes`.
-- Cover idempotent reruns after source deletions/renames, not only a second happy-path sync.
-- Fold `ref clean` into this ownership so clean -> sync -> import works predictably.
+- [DONE] `matrix/distro` broadens generated package surface checks beyond `Div`, `css`, `tokens`, and `keyframes`.
+- [DONE] `matrix/distro` covers idempotent reruns after source deletions/renames, not only a second happy-path sync.
+- [DONE] `matrix/distro` folds `ref clean` into this ownership so clean -> sync -> import works predictably.
+- [DONE] `matrix/distro` keeps `.reference-ui/virtual/src` in exact sync with the included consumer source tree, so distro now owns the old virtual mirror invariant instead of leaving it behind in `reference-unit`.
+- [DONE] `matrix/distro` asserts generated `system/baseSystem` remains portable for downstream consumers by checking emitted layer CSS and merged JSX element metadata.
+- [DONE] `matrix/distro` asserts emitted `system/jsx-elements.json` preserves primitive, upstream, and merged JSX element inventories for downstream tooling.
+- [DONE] `matrix/distro` seeds stale generated runtime artifacts and asserts a cold `ref sync` rewrites them before downstream imports reuse the generated packages.
+- [DONE] `matrix/distro` kills a fresh cold `ref sync` after `panda.config.ts` appears and asserts the next cold sync recovers to valid runtime artifacts.
+- [DONE] `matrix/distro` syncs a temporary token fragment and typechecks a consumer probe so generated token unions stay aligned with emitted runtime token CSS.
+- Watch-mode stale-output readiness is still tracked as explicit future work in a skipped distro test until a single-consumer ready sentinel exists.
 
 ### config
 
@@ -364,13 +402,16 @@ Reference docs generation and the browser `Reference` surface are part of `@refe
 
 - `packages/reference-unit/tests/reference/output.test.ts`
 - `packages/reference-unit/tests/reference/component.test.tsx`
+- `matrix/reference/tests/unit/reference-output.test.ts`
+- `matrix/reference/tests/e2e/reference-contract.spec.ts`
 
 **Coverage to add**
 
-- Matrix/sandbox coverage for generated Tasty artifacts in a real consumer setup.
-- Browser rendering for complex alias/interface fixtures should remain locked, not only raw manifest output.
-- Rebuild behaviour after source symbol changes should be covered.
-- Missing-symbol and stale-artifact failure behaviour should be explicit.
+- [DONE] `matrix/reference` asserts that a real consumer sync emits `.reference-ui/types/tasty/manifest.js`, the generated `@reference-ui/types` package surface, and queryable symbols such as `ReferenceApiFixture`, `StyleProps`, and composed alias fixtures.
+- [DONE] `matrix/reference` renders `DocsReferenceButtonProps`, `DocsReferenceComposedButtonProps`, and `DocsReferencePinnedTargetAlias` through the browser `Reference` surface so complex interface and alias behaviour stays locked beyond raw manifest checks.
+- [DONE] `matrix/reference` reruns `ref sync` after renaming a local source symbol fixture and confirms the new symbol appears while the old symbol drops out of generated reference artifacts.
+- [DONE] `matrix/reference` shows a readable browser failure state for missing symbols requested through `Reference`.
+- Stale-artifact failure behaviour should still be made explicit.
 
 ### mcp
 

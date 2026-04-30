@@ -109,7 +109,7 @@ test.describe('responsive contract', () => {
     expect(recipeClass['background-color']).toBe('rgba(0, 0, 0, 0)')
   })
 
-  test.skip('shared responsive trio lets the breakpoint branch win above the shared container threshold', async ({ page }) => {
+  test('shared responsive trio lets the breakpoint branch win over the base fallback above the shared container threshold', async ({ page }) => {
     const primitive = await readComputedStyle(page.getByTestId('responsive-shared-primitive-wide'), ['padding-top', 'background-color'])
     const cssClass = await readComputedStyle(page.getByTestId('responsive-shared-css-wide'), ['padding-top', 'background-color', 'color'])
     const recipeClass = await readComputedStyle(page.getByTestId('responsive-shared-recipe-wide'), ['padding-top', 'background-color', 'color'])
