@@ -1,6 +1,6 @@
 import type { Output } from '@rspress/mdx-rs'
 import { compile } from '@rspress/mdx-rs'
-import { log, warnRefSync } from '../../lib/log'
+import { log, warnRefSync } from '../../../lib/log'
 
 function hasNonEmptyFrontmatterObject(frontmatterJson: string): boolean {
   try {

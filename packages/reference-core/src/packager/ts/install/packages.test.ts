@@ -1,4 +1,5 @@
 import {
+  existsSync,
   readdirSync,
   mkdtempSync,
   mkdirSync,
@@ -25,6 +26,8 @@ async function importPackagesModule(options: {
   vi.resetModules()
   let capturedTsconfigFiles: string[] = []
   let capturedTsconfigContents: Record<string, unknown> | undefined
+  let capturedStyledAliasPath: string | undefined
+  let capturedStyledSnapshotCsstype: string | undefined
 
   const emitDeclarationTree = (sourceDir: string, outDir: string): void => {
     for (const entry of readdirSync(sourceDir, { withFileTypes: true })) {
@@ -61,9 +64,21 @@ async function importPackagesModule(options: {
       const tsconfigPath = args[projectIndex + 1]
       const tsconfig = JSON.parse(readFileSync(tsconfigPath, 'utf-8')) as {
         files: string[]
+        compilerOptions?: {
+          paths?: Record<string, string[]>
+        }
       } & Record<string, unknown>
       capturedTsconfigFiles = tsconfig.files
       capturedTsconfigContents = tsconfig
+
+      const styledAliasPath = tsconfig.compilerOptions?.paths?.['@reference-ui/styled']?.[0]
+      if (styledAliasPath) {
+        capturedStyledAliasPath = resolve(dirname(tsconfigPath), styledAliasPath)
+        const csstypePath = resolve(capturedStyledAliasPath, 'types/csstype.d.ts')
+        if (existsSync(csstypePath)) {
+          capturedStyledSnapshotCsstype = readFileSync(csstypePath, 'utf-8')
+        }
+      }
     }
     if (outDirIndex >= 0) {
       emitDeclarationTree(resolve(options.cliDir, 'src'), args[outDirIndex + 1] ?? options.outDir)
@@ -97,6 +112,8 @@ async function importPackagesModule(options: {
     ...mod,
     getCapturedTsconfigFiles: () => capturedTsconfigFiles,
     getCapturedTsconfigContents: () => capturedTsconfigContents,
+    getCapturedStyledAliasPath: () => capturedStyledAliasPath,
+    getCapturedStyledSnapshotCsstype: () => capturedStyledSnapshotCsstype,
     spawnMonitoredAsync,
     writeGeneratedSystemTypes,
     writeGeneratedReactTypes,
@@ -248,5 +265,38 @@ describe('packager/ts/install/packages', () => {
     expect(tsconfig.compilerOptions?.paths?.['*']).toEqual(['./*'])
     expect(tsconfig.compilerOptions?.paths?.['@reference-ui/styled']).toHaveLength(1)
     expect(tsconfig.compilerOptions?.paths?.['@reference-ui/styled/*']).toHaveLength(1)
+  })
+
+  it('snapshots the styled declaration tree into the tsgo temp workspace', async () => {
+    const cliDir = createTempDir('reference-ui-core-cli-')
+    const outDir = createTempDir('reference-ui-core-out-')
+
+    mkdirSync(resolve(cliDir, 'src/entry'), { recursive: true })
+    writeFileSync(resolve(cliDir, 'src/entry/system.ts'), 'export {}\n', 'utf-8')
+
+    mkdirSync(resolve(outDir, 'styled', 'types'), { recursive: true })
+    writeFileSync(
+      resolve(outDir, 'styled', 'types', 'csstype.d.ts'),
+      '/** styled snapshot */\nexport type StyledSnapshot = true\n',
+      'utf-8'
+    )
+
+    const {
+      getCapturedStyledAliasPath,
+      getCapturedStyledSnapshotCsstype,
+      installPackagesTs,
+    } = await importPackagesModule({ cliDir, outDir })
+
+    await installPackagesTs(cliDir, [
+      {
+        name: '@reference-ui/system',
+        sourceEntry: 'src/entry/system.ts',
+        outFile: 'system.mjs',
+      },
+    ])
+
+    expect(getCapturedStyledAliasPath()).toBeTruthy()
+    expect(getCapturedStyledAliasPath()).not.toBe(resolve(outDir, 'styled'))
+    expect(getCapturedStyledSnapshotCsstype()).toContain('StyledSnapshot = true')
   })
 })

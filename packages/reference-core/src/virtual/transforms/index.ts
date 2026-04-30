@@ -3,6 +3,13 @@ import { extname } from 'node:path'
 const CORE_PACKAGE = '@reference-ui/react'
 const REFERENCE_UI_ARTIFACT_PREFIX = '__reference__ui/'
 
+/**
+ * Virtual transform orchestration.
+ *
+ * This file owns the ordered pipeline and leaves the atomic rewrite/lowering
+ * steps to the sibling transform modules in their own folders.
+ */
+
 export interface ApplyTransformsOptions {
   sourcePath: string
   relativePath: string
@@ -44,8 +51,8 @@ export async function applyTransforms(
 
   const finalExt = newExtension || ext
   if (['.js', '.jsx', '.ts', '.tsx'].includes(finalExt) && transformedContent.includes(CORE_PACKAGE)) {
-    const { rewriteCvaImports } = await import('./rewrite-cva-imports')
-    const { rewriteCssImports } = await import('./rewrite-css-imports')
+    const { rewriteCvaImports } = await import('./cva-imports')
+    const { rewriteCssImports } = await import('./css-imports')
     const { applyResponsiveStyles } = await import('./apply-responsive-styles')
     const { neutralizeStyleCalls } = await import('./neutralize-style-calls')
     const before = transformedContent
@@ -67,7 +74,7 @@ export async function applyTransforms(
 }
 
 export { mdxToJsx } from './mdx-to-jsx'
-export { rewriteCvaImports } from './rewrite-cva-imports'
-export { rewriteCssImports } from './rewrite-css-imports'
+export { rewriteCvaImports } from './cva-imports'
+export { rewriteCssImports } from './css-imports'
 export { applyResponsiveStyles } from './apply-responsive-styles'
 export { neutralizeStyleCalls } from './neutralize-style-calls'

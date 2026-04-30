@@ -12,7 +12,7 @@ describe('rewriteCssImports', () => {
       "import { css } from 'src/system/runtime';\nconst card = css({});\n"
     )
 
-    const { rewriteCssImports } = await import('./rewrite-css-imports')
+    const { rewriteCssImports } = await import('./index')
 
     expect(rewriteCssImports('source', 'src/card.tsx')).toBe(
       "import { css } from 'src/system/css';\nconst card = css({});\n"
@@ -25,7 +25,7 @@ describe('rewriteCssImports', () => {
       "import { css } from 'src/system/css';\nconst card = css({});\n"
     )
 
-    const { rewriteCssImports } = await import('./rewrite-css-imports')
+    const { rewriteCssImports } = await import('./index')
 
     expect(rewriteCssImports('source', 'src/card.tsx')).toBe(
       "import { css } from 'src/system/css';\nconst card = css({});\n"

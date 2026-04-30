@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { neutralizeStyleCalls } from './neutralize-style-calls'
+import { neutralizeStyleCalls } from './index'
 
 describe('neutralizeStyleCalls', () => {
   it('renames direct css and cva calls while preserving runtime aliases', () => {

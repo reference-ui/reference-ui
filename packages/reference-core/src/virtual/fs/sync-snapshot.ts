@@ -1,14 +1,21 @@
 import { resolve } from 'node:path'
 import fg from 'fast-glob'
-import { emit } from '../lib/event-bus'
-import { log } from '../lib/log'
-import { getVirtualDirPath } from '../lib/paths'
-import { GLOB_CONFIG } from './config.internal'
-import { writeReferenceUiVirtualArtifacts } from './reference-ui-artifacts'
+import { emit } from '../../lib/event-bus'
+import { log } from '../../lib/log'
+import { getVirtualDirPath } from '../../lib/paths'
+import { GLOB_CONFIG } from '../config.internal'
+import { syncVirtualStyleCollection } from '../style/collection'
 import { createVirtualStagingArea } from './staging'
-import type { ReferenceUIConfig } from '../config'
+import type { ReferenceUIConfig } from '../../config'
 
-export async function copyAll(payload: {
+/**
+ * Build and publish a full virtual snapshot.
+ *
+ * This is the cold-start/full-refresh path. It stages the source-shaped mirror,
+ * then adds the reserved Panda-visible style collection, and publishes the
+ * completed snapshot into the live virtual directory in one swap.
+ */
+export async function syncVirtualSnapshot(payload: {
   sourceDir: string
   config: ReferenceUIConfig
 }): Promise<void> {
@@ -41,7 +48,7 @@ export async function copyAll(payload: {
     await staging.stageFile({ file, root, debug })
   }
 
-  await writeReferenceUiVirtualArtifacts({
+  await syncVirtualStyleCollection({
     root,
     virtualDir: staging.stagingDir,
     include,

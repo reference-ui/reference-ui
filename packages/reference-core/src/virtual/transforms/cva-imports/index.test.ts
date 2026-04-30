@@ -12,7 +12,7 @@ describe('rewriteCvaImports', () => {
       "import { cva } from 'src/system/runtime';\nconst button = cva({});\n"
     )
 
-    const { rewriteCvaImports } = await import('./rewrite-cva-imports')
+    const { rewriteCvaImports } = await import('./index')
 
     expect(rewriteCvaImports('source', 'src/button.tsx')).toBe(
       "import { cva } from 'src/system/css';\nconst button = cva({});\n"
@@ -25,7 +25,7 @@ describe('rewriteCvaImports', () => {
       "import { cva } from 'src/system/css';\nconst button = cva({});\n"
     )
 
-    const { rewriteCvaImports } = await import('./rewrite-cva-imports')
+    const { rewriteCvaImports } = await import('./index')
 
     expect(rewriteCvaImports('source', 'src/button.tsx')).toBe(
       "import { cva } from 'src/system/css';\nconst button = cva({});\n"

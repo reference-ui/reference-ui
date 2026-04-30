@@ -10,13 +10,13 @@ async function importStagingModule() {
     return `${stagingDir}/${file.replace('/workspace/app/', '')}`
   })
 
-  vi.doMock('../lib/event-bus', () => ({
+  vi.doMock('../../lib/event-bus', () => ({
     emit,
   }))
-  vi.doMock('../lib/fs/reset-dir', () => ({
+  vi.doMock('../../lib/fs/reset-dir', () => ({
     resetDir,
   }))
-  vi.doMock('../lib/fs/publish-staged-dir', () => ({
+  vi.doMock('../../lib/fs/publish-staged-dir', () => ({
     publishStagedDir,
   }))
   vi.doMock('./copy', () => ({
@@ -29,14 +29,14 @@ async function importStagingModule() {
 
 afterEach(() => {
   vi.resetModules()
-  vi.doUnmock('../lib/event-bus')
-  vi.doUnmock('../lib/fs/reset-dir')
-  vi.doUnmock('../lib/fs/publish-staged-dir')
+  vi.doUnmock('../../lib/event-bus')
+  vi.doUnmock('../../lib/fs/reset-dir')
+  vi.doUnmock('../../lib/fs/publish-staged-dir')
   vi.doUnmock('./copy')
   vi.restoreAllMocks()
 })
 
-describe('virtual/staging', () => {
+describe('virtual/fs/staging', () => {
   it('builds the staging dir as a sibling of the live dir', async () => {
     const { getVirtualStagingDir, createVirtualStagingArea } = await importStagingModule()
 

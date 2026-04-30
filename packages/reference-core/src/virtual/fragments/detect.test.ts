@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { isFragmentFile } from './fragment-detect'
+import { isFragmentFile } from './detect'
 
 const fixtureDir = join(import.meta.dirname, '__fixtures__-fragment-detect')
 

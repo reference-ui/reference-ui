@@ -1,16 +1,19 @@
 import { mkdir, copyFile, writeFile, readFile } from 'node:fs/promises'
 import { dirname, join, relative, extname } from 'node:path'
 import { createReadStream, existsSync } from 'node:fs'
-import { transformFile } from './transform'
-import { log } from '../lib/log'
-import { TRANSFORMED_EXTENSIONS, isTransformExtension } from './config.internal'
+import { transformFile } from '../transform'
+import { log } from '../../lib/log'
+import { TRANSFORMED_EXTENSIONS, isTransformExtension } from '../config.internal'
 
 const TRANSFORM_MARKERS = ['@reference-ui/react'] as const
 const MAX_MARKER_LENGTH = Math.max(...TRANSFORM_MARKERS.map((m) => m.length))
 
 /**
- * Copy a file to the virtual directory, applying transforms if needed.
- * Transform is part of the copy operation – no separate events.
+ * File-level virtual filesystem helpers.
+ *
+ * `copyToVirtual()` is the single-file entrypoint used by watch mode and the
+ * staging snapshot builder. It decides whether a source file can be copied as-is
+ * or needs the transform pipeline first.
  * @returns The absolute path of the file written in the virtual dir
  */
 export async function copyToVirtual(

@@ -8,8 +8,8 @@ async function importTransformsModule() {
   const applyResponsiveStyles = vi.fn((source: string) => `${source}\n// responsive`)
   const neutralizeStyleCalls = vi.fn((source: string) => `${source}\n// neutralized`)
 
-  vi.doMock('./rewrite-cva-imports', () => ({ rewriteCvaImports }))
-  vi.doMock('./rewrite-css-imports', () => ({ rewriteCssImports }))
+  vi.doMock('./cva-imports', () => ({ rewriteCvaImports }))
+  vi.doMock('./css-imports', () => ({ rewriteCssImports }))
   vi.doMock('./apply-responsive-styles', () => ({ applyResponsiveStyles }))
   vi.doMock('./neutralize-style-calls', () => ({ neutralizeStyleCalls }))
 
@@ -26,8 +26,8 @@ async function importTransformsModule() {
 
 afterEach(() => {
   vi.resetModules()
-  vi.doUnmock('./rewrite-cva-imports')
-  vi.doUnmock('./rewrite-css-imports')
+  vi.doUnmock('./cva-imports')
+  vi.doUnmock('./css-imports')
   vi.doUnmock('./apply-responsive-styles')
   vi.doUnmock('./neutralize-style-calls')
   vi.restoreAllMocks()

@@ -22,30 +22,30 @@ async function importArtifactsModule(scannedFiles: string[], bundled = '// bundl
   }))
   const debug = vi.fn()
 
-  vi.doMock('../lib/fragments/scanner', () => ({
+  vi.doMock('../../lib/fragments/scanner', () => ({
     scanForFragments,
   }))
-  vi.doMock('../lib/microbundle', () => ({
+  vi.doMock('../../lib/microbundle', () => ({
     DEFAULT_EXTERNALS: ['@pandacss/dev'],
     microBundle,
   }))
-  vi.doMock('../lib/log', () => ({
+  vi.doMock('../../lib/log', () => ({
     log: { debug, error: vi.fn(), info: vi.fn() },
   }))
-  vi.doMock('./transforms', () => ({
+  vi.doMock('../transforms', () => ({
     applyTransforms,
   }))
 
-  const mod = await import('./reference-ui-artifacts')
+  const mod = await import('./collection')
   return { ...mod, scanForFragments, microBundle, applyTransforms, debug }
 }
 
 afterEach(() => {
   vi.resetModules()
-  vi.doUnmock('../lib/fragments/scanner')
-  vi.doUnmock('../lib/microbundle')
-  vi.doUnmock('../lib/log')
-  vi.doUnmock('./transforms')
+  vi.doUnmock('../../lib/fragments/scanner')
+  vi.doUnmock('../../lib/microbundle')
+  vi.doUnmock('../../lib/log')
+  vi.doUnmock('../transforms')
   vi.restoreAllMocks()
 
   for (const dir of createdDirs.splice(0)) {
@@ -53,7 +53,7 @@ afterEach(() => {
   }
 })
 
-describe('virtual/reference-ui-artifacts', () => {
+describe('virtual/style/collection', () => {
   it('writes bundled raw style modules under virtual/__reference__ui and skips non-style files', async () => {
     const root = createTempDir()
     const virtualDir = join(root, '.reference-ui', 'virtual')
@@ -66,10 +66,10 @@ describe('virtual/reference-ui-artifacts', () => {
     writeFileSync(styleFile, "import { css } from '@reference-ui/react'\nexport const x = css({ color: 'red' })\n")
     writeFileSync(otherFile, "import { Button } from '@reference-ui/react'\nexport const x = Button\n")
 
-    const { writeReferenceUiVirtualArtifacts, scanForFragments, microBundle, applyTransforms } =
+    const { syncVirtualStyleCollection, scanForFragments, microBundle, applyTransforms } =
       await importArtifactsModule([styleFile, otherFile], "import { css } from '@reference-ui/react'\nconst x = css({ color: 'red' })\n")
 
-    const written = await writeReferenceUiVirtualArtifacts({
+    const written = await syncVirtualStyleCollection({
       root,
       virtualDir,
       include: ['src/**/*.{ts,tsx}'],

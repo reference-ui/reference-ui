@@ -6,6 +6,7 @@ export interface WriteTsconfigOptions {
   cliDir: string
   entryFiles: string[]
   projectCwd: string
+  styledDir?: string
   tempDir: string
 }
 
@@ -15,8 +16,8 @@ function toConfigRelativePath(fromDir: string, targetPath: string): string {
 }
 
 export function writeTsconfig(options: WriteTsconfigOptions): string {
-  const { cliDir, entryFiles, projectCwd, tempDir } = options
-  const styledDir = resolve(getOutDirPath(projectCwd), 'styled')
+  const { cliDir, entryFiles, projectCwd, styledDir: explicitStyledDir, tempDir } = options
+  const styledDir = explicitStyledDir ?? resolve(getOutDirPath(projectCwd), 'styled')
   const srcDir = resolve(cliDir, 'src')
   const tsconfigPath = join(tempDir, 'tsconfig.ref-ui-dts.json')
 
