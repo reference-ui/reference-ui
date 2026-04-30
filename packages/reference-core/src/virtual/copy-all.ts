@@ -4,6 +4,7 @@ import { emit } from '../lib/event-bus'
 import { log } from '../lib/log'
 import { getVirtualDirPath } from '../lib/paths'
 import { GLOB_CONFIG } from './config.internal'
+import { writeReferenceUiVirtualArtifacts } from './reference-ui-artifacts'
 import { createVirtualStagingArea } from './staging'
 import type { ReferenceUIConfig } from '../config'
 
@@ -39,6 +40,12 @@ export async function copyAll(payload: {
   for (const file of files) {
     await staging.stageFile({ file, root, debug })
   }
+
+  await writeReferenceUiVirtualArtifacts({
+    root,
+    virtualDir: staging.stagingDir,
+    include,
+  })
 
   await staging.publish()
   log.debug('virtual', 'Sync complete')

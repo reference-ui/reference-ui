@@ -13,6 +13,7 @@ import { copyToVirtual, removeFromVirtual } from './copy'
 import { copyAll } from './copy-all'
 import { getVirtualPath } from './utils'
 import { isFragmentFile } from './fragment-detect'
+import { writeReferenceUiVirtualArtifacts } from './reference-ui-artifacts'
 import { log } from '../lib/log'
 import { getVirtualDirPath } from '../lib/paths'
 import type { VirtualWorkerPayload } from './types'
@@ -45,6 +46,11 @@ export default async function runVirtual(payload: VirtualWorkerPayload): Promise
       } else {
         virtualPath = await copyToVirtual(sourcePath, root, virtualDir, { debug })
       }
+      await writeReferenceUiVirtualArtifacts({
+        root,
+        virtualDir,
+        include: config.include,
+      })
       const changeEvent = (await isFragmentFile(sourcePath, ev.event))
         ? 'virtual:fragment:change'
         : 'virtual:fs:change'

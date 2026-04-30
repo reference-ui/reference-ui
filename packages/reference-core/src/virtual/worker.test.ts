@@ -18,6 +18,7 @@ async function importWorkerModule() {
   const getVirtualPath = vi.fn(() => `${FIXTURE_VIRTUAL}/src/button.jsx`)
   const debug = vi.fn()
   const error = vi.fn()
+  const writeReferenceUiVirtualArtifacts = vi.fn(async () => [])
 
   vi.doMock('../lib/event-bus', () => ({
     emit,
@@ -38,6 +39,9 @@ async function importWorkerModule() {
   vi.doMock('./utils', () => ({
     getVirtualPath,
   }))
+  vi.doMock('./reference-ui-artifacts', () => ({
+    writeReferenceUiVirtualArtifacts,
+  }))
   vi.doMock('../lib/log', () => ({
     log: { debug, error, info: vi.fn() },
   }))
@@ -53,6 +57,7 @@ async function importWorkerModule() {
     copyToVirtual,
     removeFromVirtual,
     getVirtualPath,
+    writeReferenceUiVirtualArtifacts,
     debug,
     error,
   }
@@ -66,6 +71,7 @@ afterEach(() => {
   vi.doUnmock('./copy')
   vi.doUnmock('./copy-all')
   vi.doUnmock('./utils')
+  vi.doUnmock('./reference-ui-artifacts')
   vi.doUnmock('../lib/log')
   vi.doUnmock('../lib/paths')
   vi.restoreAllMocks()
@@ -87,7 +93,7 @@ describe('virtual/worker', () => {
   })
 
   it('copies changed files and emits virtual:fs:change', async () => {
-    const { default: runVirtual, emit, copyToVirtual } = await importWorkerModule()
+    const { default: runVirtual, emit, copyToVirtual, writeReferenceUiVirtualArtifacts } = await importWorkerModule()
 
     await runVirtual({
       sourceDir: '/workspace/app',
@@ -106,6 +112,11 @@ describe('virtual/worker', () => {
       FIXTURE_VIRTUAL,
       { debug: true }
     )
+    expect(writeReferenceUiVirtualArtifacts).toHaveBeenCalledWith({
+      root: '/workspace/app',
+      virtualDir: FIXTURE_VIRTUAL,
+      include: ['src/**/*'],
+    })
     expect(emit).toHaveBeenCalledWith('virtual:fs:change', {
       event: 'change',
       path: `${FIXTURE_VIRTUAL}/src/button.tsx`,
@@ -113,7 +124,13 @@ describe('virtual/worker', () => {
   })
 
   it('removes deleted files and emits the source-shaped virtual path', async () => {
-    const { default: runVirtual, emit, removeFromVirtual, getVirtualPath } = await importWorkerModule()
+    const {
+      default: runVirtual,
+      emit,
+      removeFromVirtual,
+      getVirtualPath,
+      writeReferenceUiVirtualArtifacts,
+    } = await importWorkerModule()
 
     await runVirtual({
       sourceDir: '/workspace/app',
@@ -136,6 +153,11 @@ describe('virtual/worker', () => {
       '/workspace/app',
       FIXTURE_VIRTUAL
     )
+    expect(writeReferenceUiVirtualArtifacts).toHaveBeenCalledWith({
+      root: '/workspace/app',
+      virtualDir: FIXTURE_VIRTUAL,
+      include: ['src/**/*'],
+    })
     expect(emit).toHaveBeenCalledWith('virtual:fs:change', {
       event: 'unlink',
       path: `${FIXTURE_VIRTUAL}/src/button.jsx`,

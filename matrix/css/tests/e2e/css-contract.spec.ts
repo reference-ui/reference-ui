@@ -208,12 +208,13 @@ test.describe('css contract', () => {
     expect(hasLayerOrder).toBe(true)
   })
 
-  test('generated stylesheets include the configured layer block', async ({ page }) => {
-    const hasLayerBlock = await page.evaluate((layerName) => {
+  test('generated stylesheets include the mounted utility layer block', async ({ page }) => {
+    const hasLayerBlock = await page.evaluate(() => {
       return Array.from(document.querySelectorAll('style')).some((element) => {
-        return (element.textContent ?? '').includes(`@layer ${layerName} {`)
+        const text = element.textContent ?? ''
+        return text.includes('@layer utilities{') || text.includes('@layer utilities {')
       })
-    }, cssMatrixConstants.layerName)
+    })
 
     expect(hasLayerBlock).toBe(true)
   })

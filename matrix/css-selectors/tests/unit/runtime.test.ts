@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import postcss, { type Root } from 'postcss'
 
 import { cssSelectorsMatrixConstants } from '../../src/constants'
-import { cssSelectorsMatrixClasses } from '../../src/styles'
+import { cssSelectorsMatrixClasses, selectorRecipe } from '../../src/styles'
 
 const refUiDir = join(process.cwd(), '.reference-ui')
 
@@ -26,6 +26,12 @@ async function waitForGeneratedFile(relativePath: string, maxMs = 45_000): Promi
 const generatedOutput = {
   styledStylesheet: '',
   styledStylesheetAst: null as Root | null,
+}
+
+interface SelectorAssertion {
+  declaration: string
+  expectedValue: string
+  requiredFragments: readonly string[]
 }
 
 function collectRuleSelectors(
@@ -50,6 +56,16 @@ function collectRuleSelectors(
   return [...selectors]
 }
 
+function expectSelectorsToExist(assertion: SelectorAssertion): void {
+  const selectors = collectRuleSelectors(
+    (selector, declarations) =>
+      assertion.requiredFragments.every(fragment => selector.includes(fragment))
+      && (declarations.get(assertion.declaration) ?? []).includes(assertion.expectedValue),
+  )
+
+  expect(selectors, `${assertion.declaration}:${assertion.expectedValue}`).toHaveLength(1)
+}
+
 beforeAll(async () => {
   const styledStylesheet = await waitForGeneratedFile(join('styled', 'styles.css'))
 
@@ -61,16 +77,19 @@ beforeAll(async () => {
 
 describe('css selectors matrix emitted output', () => {
   it('computes runtime class tokens for the selector probes', () => {
-    expect(cssSelectorsMatrixClasses.descendantSelector).toBeTruthy()
-    expect(cssSelectorsMatrixClasses.descendantSelectorInline).toBeTruthy()
-    expect(cssSelectorsMatrixClasses.hoverSelector).toBeTruthy()
-    expect(cssSelectorsMatrixClasses.hoverSelectorInline).toBeTruthy()
-    expect(cssSelectorsMatrixClasses.topLevelConstantControl).toBeTruthy()
-    expect(cssSelectorsMatrixClasses.selfAttribute).toBeTruthy()
-    expect(cssSelectorsMatrixClasses.selfAttributeHover).toBeTruthy()
-    expect(cssSelectorsMatrixClasses.selfAttributeHoverInline).toBeTruthy()
-    expect(cssSelectorsMatrixClasses.selfAttributeQuoted).toBeTruthy()
-    expect(cssSelectorsMatrixClasses.selfAttributeState).toBeTruthy()
+    for (const className of Object.values(cssSelectorsMatrixClasses)) {
+      expect(className).toBeTruthy()
+    }
+  })
+
+  it('computes stable runtime classes for recipe variants', () => {
+    expect(selectorRecipe()).toBe(selectorRecipe())
+    expect(selectorRecipe({ tone: 'interactive' })).toBe(selectorRecipe({ tone: 'interactive' }))
+    expect(selectorRecipe({ tone: 'quiet' })).toBe(selectorRecipe({ tone: 'quiet' }))
+    expect(selectorRecipe({ state: 'open' })).toBe(selectorRecipe({ state: 'open' }))
+    expect(selectorRecipe({ tone: 'interactive', emphasis: 'strong' })).toBe(
+      selectorRecipe({ tone: 'interactive', emphasis: 'strong' }),
+    )
   })
 
   it('parses generated styled/styles.css without syntax errors', () => {
@@ -78,123 +97,120 @@ describe('css selectors matrix emitted output', () => {
     expect(generatedOutput.styledStylesheetAst?.nodes.length ?? 0).toBeGreaterThan(0)
   })
 
-  it('emits top-level utility declarations from the selector probes', () => {
-    const textDecorationSelectors = collectRuleSelectors(
-      (selector, declarations) =>
-        selector.includes('.td_none')
-        && (declarations.get('text-decoration') ?? []).includes('none'),
-    )
-    const borderStyleSelectors = collectRuleSelectors(
-      (selector, declarations) =>
-        selector.includes('.border-style_solid')
-        && (declarations.get('border-style') ?? []).includes('solid'),
-    )
-
-    expect(textDecorationSelectors.length).toBeGreaterThan(0)
-    expect(borderStyleSelectors.length).toBeGreaterThan(0)
+  it('emits top-level declarations that resolve imported constants', () => {
+    expectSelectorsToExist({
+      declaration: 'border-style',
+      expectedValue: cssSelectorsMatrixConstants.topLevelBorderStyle,
+      requiredFragments: ['border-style_solid'],
+    })
+    expectSelectorsToExist({
+      declaration: 'border-top-width',
+      expectedValue: cssSelectorsMatrixConstants.topLevelBorderTopWidth,
+      requiredFragments: ['bd-t-w_4px'],
+    })
   })
 
-  it('emits top-level declarations that use imported constants', () => {
-    const selectors = collectRuleSelectors(
-      (selector, declarations) =>
-        selector.includes('bd-t-w_6px')
-        && (declarations.get('border-top-width') ?? []).includes(cssSelectorsMatrixConstants.selfAttributeHoverBorderTopWidth),
-    )
-
-    expect(selectors.length).toBeGreaterThan(0)
+  it('emits exhaustive css() selector branches backed by constants.ts', () => {
+    for (const assertion of [
+      {
+        declaration: 'margin-top',
+        expectedValue: cssSelectorsMatrixConstants.descendantMarginTop,
+        requiredFragments: ['[data-slot=inner]'],
+      },
+      {
+        declaration: 'padding-left',
+        expectedValue: cssSelectorsMatrixConstants.directChildPaddingLeft,
+        requiredFragments: ['[data-slot=child]', '>'],
+      },
+      {
+        declaration: 'margin-left',
+        expectedValue: cssSelectorsMatrixConstants.adjacentSiblingMarginLeft,
+        requiredFragments: ['[data-slot=peer]', '+'],
+      },
+      {
+        declaration: 'padding-top',
+        expectedValue: cssSelectorsMatrixConstants.generalSiblingPaddingTop,
+        requiredFragments: ['[data-slot=overlay]', '~'],
+      },
+      {
+        declaration: 'text-decoration',
+        expectedValue: cssSelectorsMatrixConstants.hoverTextDecoration,
+        requiredFragments: [':hover'],
+      },
+      {
+        declaration: 'outline-width',
+        expectedValue: cssSelectorsMatrixConstants.focusVisibleOutlineWidth,
+        requiredFragments: [':focus-visible'],
+      },
+      {
+        declaration: 'border-top-width',
+        expectedValue: cssSelectorsMatrixConstants.selfAttributeBorderTopWidth,
+        requiredFragments: ['[data-component=card]'],
+      },
+      {
+        declaration: 'border-top-width',
+        expectedValue: cssSelectorsMatrixConstants.selfAttributeHoverBorderTopWidth,
+        requiredFragments: ['[data-component=card]', ':hover'],
+      },
+      {
+        declaration: 'border-right-width',
+        expectedValue: cssSelectorsMatrixConstants.selfAttributeQuotedBorderRightWidth,
+        requiredFragments: ['[data-component="card"]'],
+      },
+      {
+        declaration: 'border-left-width',
+        expectedValue: cssSelectorsMatrixConstants.selfAttributeStateBorderLeftWidth,
+        requiredFragments: ['[data-component=card]', '[data-state=open]'],
+      },
+    ] satisfies SelectorAssertion[]) {
+      expectSelectorsToExist(assertion)
+    }
   })
 
-  it('tracks whether the descendant selector control branch emits', () => {
-    const selectors = collectRuleSelectors(
-      (selector, declarations) =>
-        selector.includes('[data-slot=inner]')
-        && (declarations.get('margin-top') ?? []).includes(cssSelectorsMatrixConstants.descendantMarginTop),
-    )
-
-    expect(selectors).toMatchInlineSnapshot(`[]`)
-  })
-
-  it('emits the descendant selector when the nested value is an inline literal', () => {
-    const selectors = collectRuleSelectors(
-      (selector, declarations) =>
-        selector.includes('[data-slot=inner]')
-        && (declarations.get('margin-top') ?? []).includes('13px'),
-    )
-
-    expect(selectors.length).toBeGreaterThan(0)
-  })
-
-  it('tracks whether the plain hover selector control branch emits', () => {
-    const selectors = collectRuleSelectors(
-      (selector, declarations) =>
-        selector.includes(':hover')
-        && (declarations.get('text-decoration') ?? []).includes(cssSelectorsMatrixConstants.hoverTextDecoration),
-    )
-
-    expect(selectors).toMatchInlineSnapshot(`[]`)
-  })
-
-  it('emits the plain hover selector when the nested value is an inline literal', () => {
-    const selectors = collectRuleSelectors(
-      (selector, declarations) =>
-        selector.includes(':hover')
-        && (declarations.get('text-decoration') ?? []).includes('line-through'),
-    )
-
-    expect(selectors.length).toBeGreaterThan(0)
-  })
-
-  it('tracks whether a self attribute selector emits', () => {
-    const selectors = collectRuleSelectors(
-      (selector, declarations) =>
-        selector.includes('[data-component=card]')
-        && !selector.includes(':hover')
-        && (declarations.get('border-top-width') ?? []).includes(cssSelectorsMatrixConstants.selfAttributeBorderTopWidth),
-    )
-
-    expect(selectors).toMatchInlineSnapshot(`[]`)
-  })
-
-  it('tracks whether a self attribute plus hover selector emits', () => {
-    const selectors = collectRuleSelectors(
-      (selector, declarations) =>
-        selector.includes('[data-component=card]')
-        && selector.includes(':hover')
-        && (declarations.get('border-top-width') ?? []).includes(cssSelectorsMatrixConstants.selfAttributeHoverBorderTopWidth),
-    )
-
-    expect(selectors).toMatchInlineSnapshot(`[]`)
-  })
-
-  it('emits a self attribute plus hover selector when the nested value is an inline literal', () => {
-    const selectors = collectRuleSelectors(
-      (selector, declarations) =>
-        selector.includes('[data-component=card]')
-        && selector.includes(':hover')
-        && (declarations.get('border-top-width') ?? []).includes('9px'),
-    )
-
-    expect(selectors.length).toBeGreaterThan(0)
-  })
-
-  it('tracks whether a quoted self attribute selector emits', () => {
-    const selectors = collectRuleSelectors(
-      (selector, declarations) =>
-        selector.includes('[data-component="card"]')
-        && (declarations.get('border-right-width') ?? []).includes(cssSelectorsMatrixConstants.selfAttributeQuotedBorderRightWidth),
-    )
-
-    expect(selectors).toMatchInlineSnapshot(`[]`)
-  })
-
-  it('tracks whether a compound self attribute selector emits', () => {
-    const selectors = collectRuleSelectors(
-      (selector, declarations) =>
-        selector.includes('[data-component=card]')
-        && selector.includes('[data-state=open]')
-        && (declarations.get('border-left-width') ?? []).includes(cssSelectorsMatrixConstants.selfAttributeStateBorderLeftWidth),
-    )
-
-    expect(selectors).toMatchInlineSnapshot(`[]`)
+  it('emits recipe() selector branches backed by constants.ts', () => {
+    for (const assertion of [
+      {
+        declaration: 'border-style',
+        expectedValue: cssSelectorsMatrixConstants.recipeBaseBorderStyle,
+        requiredFragments: ['border-style_dashed'],
+      },
+      {
+        declaration: 'border-top-width',
+        expectedValue: cssSelectorsMatrixConstants.recipeBaseBorderTopWidth,
+        requiredFragments: ['bd-t-w_9px'],
+      },
+      {
+        declaration: 'margin-top',
+        expectedValue: cssSelectorsMatrixConstants.recipeDescendantMarginTop,
+        requiredFragments: ['[data-slot=recipe-inner]'],
+      },
+      {
+        declaration: 'padding-left',
+        expectedValue: cssSelectorsMatrixConstants.recipeDirectChildPaddingLeft,
+        requiredFragments: ['[data-slot=recipe-child]', '>'],
+      },
+      {
+        declaration: 'text-decoration',
+        expectedValue: cssSelectorsMatrixConstants.recipeHoverTextDecoration,
+        requiredFragments: [':hover'],
+      },
+      {
+        declaration: 'border-right-width',
+        expectedValue: cssSelectorsMatrixConstants.recipeQuotedBorderRightWidth,
+        requiredFragments: ['[data-component="recipe-card"]'],
+      },
+      {
+        declaration: 'border-left-width',
+        expectedValue: cssSelectorsMatrixConstants.recipeStateBorderLeftWidth,
+        requiredFragments: ['[data-component=recipe-card]', '[data-state=open]'],
+      },
+      {
+        declaration: 'border-top-width',
+        expectedValue: cssSelectorsMatrixConstants.recipeCompoundBorderTopWidth,
+        requiredFragments: ['[data-component=recipe-card]'],
+      },
+    ] satisfies SelectorAssertion[]) {
+      expectSelectorsToExist(assertion)
+    }
   })
 })

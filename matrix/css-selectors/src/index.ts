@@ -1,2 +1,2 @@
 export { cssSelectorsMatrixConstants } from './constants'
-export { cssSelectorsMatrixClasses } from './styles'
+export { cssSelectorsMatrixClasses, selectorRecipe } from './styles'

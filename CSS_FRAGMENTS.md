@@ -66,10 +66,17 @@ In practical terms:
 
 1. Author code can still use normal Reference UI `css()` and `recipe()` authoring patterns.
 2. During virtual-file generation, Reference UI analyzes those calls.
-3. Reference UI rewrites or materializes them into a Panda-friendly static form.
+3. Reference UI rewrites or materializes them into Panda-friendly static modules inside the virtual tree.
 4. Panda extracts from that coerced representation.
 5. Runtime output still matches the extracted classes because Panda remains the emitter for the final atomic CSS contract.
 
+Those generated modules should live under a reserved subtree in the Panda-visible virtual root, for example:
+
+- `.reference-ui/virtual/__reference__ui/css/*`
+- `.reference-ui/virtual/__reference__ui/recipes/*`
+
+That keeps the coercion boundary inside the same synthetic project Panda already scans, instead of introducing a second discovery path Panda would need to know about.
+s
 ## Design Principle
 
 The question for Panda should be:
@@ -108,13 +115,15 @@ During virtual generation, detect `css()` and `recipe()`/`cva()` calls and rewri
 
 This is the smallest conceptual change and fits the current virtual-file architecture.
 
-### 2. Fragment-like intermediate artifacts
+### 2. Fragment-like intermediate artifacts in virtual
 
 Instead of asking Panda to read original authored modules directly, emit small generated modules or microbundle-like fragments that contain only:
 
 - the stable static object payload
 - the minimum imports Panda needs
 - a predictable structure for extraction
+
+In this repo, that should mean writing those generated modules into `.reference-ui/virtual/__reference__ui/` so they are part of the same virtual workspace Panda already scans.
 
 This mirrors patterns we already use elsewhere in config/build flows.
 
@@ -134,6 +143,13 @@ This is likely the most robust long-term option if we want deterministic behavio
 Start with lightweight virtual rewrites for the known unstable cases, then grow into an OXC-backed coercion pass as needed.
 
 This is the most pragmatic rollout path.
+
+The first version should prefer filesystem placement over config indirection:
+
+- combine `css()` payloads into generated virtual modules under `__reference__ui/css`
+- combine `recipe()`/`cva()` payloads into generated virtual modules under `__reference__ui/recipes`
+- let Panda discover those modules through its existing `virtual/**/*` include globs
+- avoid a separate non-virtual fragment registry if the goal is Panda extraction
 
 ## Scope
 
@@ -207,8 +223,9 @@ Owning the coercion boundary is a reasonable response to that reality.
 1. Treat `matrix/css-selectors` as the minimum contract fixture for `css()` nested-selector coercion.
 2. Add equivalent fixtures for `recipe()` and `cva()` cross-file constant cases.
 3. Implement the smallest virtual rewrite that normalizes known-bad patterns.
-4. Preserve Panda debug artifacts for both local and matrix consumer runs.
-5. Expand toward OXC-backed coercion if lightweight rewrites are not sufficient.
+4. Write the combined `css()` and `recipe()` fragment modules into `.reference-ui/virtual/__reference__ui/` so local and consumer runs feed Panda the same synthetic inputs.
+5. Preserve Panda debug artifacts for both local and matrix consumer runs.
+6. Expand toward OXC-backed coercion if lightweight rewrites are not sufficient.
 
 ## Related Paths
 

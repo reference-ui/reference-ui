@@ -20,6 +20,7 @@ import { createMatrixConsumerPackageJson, type MatrixFixturePackageJson } from '
 import { createManagedPlaywrightConfigSource } from '../managed/playwright/index.js'
 import { createMatrixConsumerTsconfig } from '../managed/tsconfig/index.js'
 import { createManagedVitestConfigSource } from '../managed/vitest/index.js'
+import { hasMatrixPlaywrightTests, hasMatrixVitestTests } from '../test-presence.js'
 import { matrixLogDir, repoRoot } from './paths.js'
 import {
   matrixRefSyncSupportDirectory,
@@ -36,9 +37,9 @@ export async function readMatrixPackageSource(packageDir: string): Promise<Fixtu
 
   return {
     fixturePackageJson: JSON.parse(packageJsonSource) as MatrixFixturePackageJson,
-    hasPlaywrightTests: existsSync(resolve(packageDir, 'tests', 'e2e')),
+    hasPlaywrightTests: hasMatrixPlaywrightTests(packageDir),
     hasVitestGlobalSetup: existsSync(resolve(packageDir, 'tests', 'unit', 'global-setup.ts')),
-    hasVitestTests: existsSync(resolve(packageDir, 'tests')),
+    hasVitestTests: hasMatrixVitestTests(packageDir),
   }
 }
 

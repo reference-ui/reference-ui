@@ -1,6 +1,7 @@
 import { extname } from 'node:path'
 
 const CORE_PACKAGE = '@reference-ui/react'
+const REFERENCE_UI_ARTIFACT_PREFIX = '__reference__ui/'
 
 export interface ApplyTransformsOptions {
   sourcePath: string
@@ -46,11 +47,15 @@ export async function applyTransforms(
     const { rewriteCvaImports } = await import('./rewrite-cva-imports')
     const { rewriteCssImports } = await import('./rewrite-css-imports')
     const { applyResponsiveStyles } = await import('./apply-responsive-styles')
+    const { neutralizeStyleCalls } = await import('./neutralize-style-calls')
     const before = transformedContent
     transformedContent = applyResponsiveStyles(
       rewriteCssImports(rewriteCvaImports(transformedContent, relativePath), relativePath),
       relativePath,
     )
+    if (!relativePath.startsWith(REFERENCE_UI_ARTIFACT_PREFIX)) {
+      transformedContent = neutralizeStyleCalls(transformedContent)
+    }
     if (transformedContent !== before) wasTransformed = true
   }
 
@@ -65,3 +70,4 @@ export { mdxToJsx } from './mdx-to-jsx'
 export { rewriteCvaImports } from './rewrite-cva-imports'
 export { rewriteCssImports } from './rewrite-css-imports'
 export { applyResponsiveStyles } from './apply-responsive-styles'
+export { neutralizeStyleCalls } from './neutralize-style-calls'
