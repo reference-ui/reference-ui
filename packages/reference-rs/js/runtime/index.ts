@@ -34,6 +34,18 @@ export function rewriteCvaImports(sourceCode: string, relativePath: string): str
   return native.rewriteCvaImports(sourceCode, relativePath)
 }
 
+export function replaceFunctionName(
+  sourceCode: string,
+  relativePath: string,
+  fromName: string,
+  toName: string,
+  importFrom?: string,
+): string {
+  const native = requireVirtualNative('replace function names')
+
+  return native.replaceFunctionName(sourceCode, relativePath, fromName, toName, importFrom)
+}
+
 export function applyResponsiveStyles(sourceCode: string, relativePath: string): string {
   const native = requireVirtualNative('apply responsive styles')
 

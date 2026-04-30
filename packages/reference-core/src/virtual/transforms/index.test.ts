@@ -63,6 +63,7 @@ describe('virtual/transforms', () => {
     )
     expect(neutralizeStyleCalls).toHaveBeenCalledWith(
       "import { css, recipe } from '@reference-ui/react'\nconst x = recipe({})\n\n// cva\n// css\n// responsive",
+      'src/card.tsx',
     )
     expect(result).toEqual({
       content:

@@ -1,4 +1,6 @@
-use super::{apply_responsive_styles, rewrite_css_imports, rewrite_cva_imports};
+use super::{
+    apply_responsive_styles, replace_function_name, rewrite_css_imports, rewrite_cva_imports,
+};
 
 const VIRTUAL_PATH: &str = "src/virtualrs/example.tsx";
 
@@ -38,6 +40,116 @@ fn rewrites_aliased_css_import_to_canonical_css_call() {
         rewritten,
         "import { css } from 'src/system/runtime';\nimport { Box } from '@reference-ui/react';\n\nconst x = css({});\n"
     );
+}
+
+#[test]
+fn replaces_direct_function_calls_without_touching_member_calls_or_refs() {
+    let source = concat!(
+        "const card = css({ color: 'red.500' });\n",
+        "const keepRef = css;\n",
+        "const nested = theme.css({ color: 'blue.500' });\n",
+    );
+
+    let rewritten = replace_function_name(source, VIRTUAL_PATH, "css", "__reference_ui_css", None);
+
+    assert_eq!(
+        rewritten,
+        concat!(
+            "const card = __reference_ui_css({ color: 'red.500' });\n",
+            "const keepRef = css;\n",
+            "const nested = theme.css({ color: 'blue.500' });\n",
+        )
+    );
+}
+
+#[test]
+fn replaces_multiple_direct_calls_in_one_file() {
+    let source = concat!(
+        "const button = cva({});\n",
+        "const card = cva({ base: { color: 'red.500' } });\n",
+    );
+
+    let rewritten = replace_function_name(source, VIRTUAL_PATH, "cva", "__reference_ui_cva", None);
+
+    assert_eq!(
+        rewritten,
+        concat!(
+            "const button = __reference_ui_cva({});\n",
+            "const card = __reference_ui_cva({ base: { color: 'red.500' } });\n",
+        )
+    );
+}
+
+#[test]
+fn replaces_matching_import_binding_and_direct_calls_when_import_from_is_provided() {
+    let source = concat!(
+        "import { css, cva } from 'src/system/css';\n",
+        "const card = css({ color: 'red.500' });\n",
+        "const keep_ref = css;\n",
+        "const button = cva({});\n",
+    );
+
+    let rewritten = replace_function_name(
+        source,
+        VIRTUAL_PATH,
+        "css",
+        "__reference_ui_css",
+        Some("src/system/css"),
+    );
+
+    assert_eq!(
+        rewritten,
+        concat!(
+            "import { css, cva } from 'src/system/css';\n",
+            "const __reference_ui_css = css;\n",
+            "const card = __reference_ui_css({ color: 'red.500' });\n",
+            "const keep_ref = css;\n",
+            "const button = cva({});\n",
+        )
+    );
+}
+
+#[test]
+fn leaves_calls_unchanged_when_import_from_does_not_match() {
+    let source = concat!(
+        "import { css } from '@reference-ui/react';\n",
+        "const card = css({ color: 'red.500' });\n",
+    );
+
+    let rewritten = replace_function_name(
+        source,
+        VIRTUAL_PATH,
+        "css",
+        "__reference_ui_css",
+        Some("src/system/css"),
+    );
+
+    assert_eq!(
+        rewritten,
+        concat!(
+            "import { css } from '@reference-ui/react';\n",
+            "const card = css({ color: 'red.500' });\n",
+        )
+    );
+}
+
+#[test]
+fn does_not_insert_alias_when_no_direct_calls_match_import_binding() {
+    let source = concat!(
+        "import { css } from 'src/system/css';\n",
+        "const keep_ref = css;\n",
+        "const nested = theme.css({ color: 'blue.500' });\n",
+    );
+
+    let rewritten = replace_function_name(
+        source,
+        VIRTUAL_PATH,
+        "css",
+        "__reference_ui_css",
+        Some("src/system/css"),
+    );
+
+    assert_eq!(rewritten, source);
 }
 
 #[test]

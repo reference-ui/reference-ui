@@ -115,6 +115,7 @@ describe('hasCompatibleReferenceRustBinaryContents', () => {
             'analyzeAtlas',
             'analyzeStyletrace',
             'styletraceSyncRootHint',
+            'replaceFunctionNameImportFrom',
           ].join('\0'),
         ),
       ),

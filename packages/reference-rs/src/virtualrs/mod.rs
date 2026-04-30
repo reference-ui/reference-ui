@@ -6,6 +6,7 @@
 mod constants;
 mod css;
 mod cva;
+mod replace_function_name;
 mod responsive;
 mod utils;
 
@@ -16,5 +17,7 @@ mod tests;
 pub use css::rewrite_css_imports;
 #[cfg(any(test, feature = "napi"))]
 pub use cva::rewrite_cva_imports;
+#[cfg(any(test, feature = "napi"))]
+pub use replace_function_name::replace_function_name;
 #[cfg(any(test, feature = "napi"))]
 pub use responsive::apply_responsive_styles;
