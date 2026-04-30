@@ -15,4 +15,5 @@ export const matrixDir = resolve(runnerDir, '..')
 export const pipelineDir = resolve(runnerDir, '..', '..', '..', '..')
 export const repoRoot = resolve(pipelineDir, '..')
 export const matrixLogDir = resolve(repoRoot, '.pipeline', 'testing', 'matrix')
+export const matrixConsumerArtifactsDir = resolve(matrixLogDir, 'artifacts')
 export const matrixNativeTarget: VirtualNativeTarget = 'linux-x64-gnu'
