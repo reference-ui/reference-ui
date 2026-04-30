@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
-import { createReferenceUiTastyApi } from '../../../../packages/reference-core/src/reference/tasty/api'
+import { pathToFileURL } from 'node:url'
 
 const packageRoot = process.cwd()
 
@@ -42,7 +42,19 @@ export async function waitForTypesPackage(timeoutMs = 8_000): Promise<boolean> {
   )
 }
 
-export function createReferenceTestApi(manifestPath = typesPackageManifestPath) {
+export async function createReferenceTestApi(manifestPath = typesPackageManifestPath) {
+  const coreTastyApiPath = join(
+    packageRoot,
+    'node_modules',
+    '@reference-ui',
+    'core',
+    'src',
+    'reference',
+    'tasty',
+    'api.ts',
+  )
+  const { createReferenceUiTastyApi } = await import(pathToFileURL(coreTastyApiPath).href)
+
   return createReferenceUiTastyApi({ manifestPath })
 }
 

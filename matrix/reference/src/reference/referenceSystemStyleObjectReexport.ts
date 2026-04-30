@@ -6,7 +6,7 @@ import type { StyleProps } from '@reference-ui/react'
 
 export type { StyleProps } from '@reference-ui/react'
 
-export interface ReferenceStylePropsExtendsFixture extends StyleProps {
+export type ReferenceStylePropsExtendsFixture = StyleProps & {
   localTone?: 'soft' | 'strong'
 }
 

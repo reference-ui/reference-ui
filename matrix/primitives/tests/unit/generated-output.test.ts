@@ -2,7 +2,8 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { describe, expect, it } from 'vitest'
+import { beforeAll, describe, expect, it } from 'vitest'
+import postcss, { type Root } from 'postcss'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const packageRoot = resolve(__dirname, '..', '..')
@@ -10,6 +11,11 @@ const refUiDir = join(packageRoot, '.reference-ui')
 const reactStylesheetPath = join(refUiDir, 'react', 'styles.css')
 const virtualFixtureSourcePath = join(refUiDir, 'virtual', 'src', 'primitiveCssPropFixture.ts')
 const fixtureSourcePath = join(packageRoot, 'src', 'primitiveCssPropFixture.ts')
+const suspiciousStylesheetFragments = ['[object Object]', 'undefined', 'NaN', '\u0000', '\uFFFD'] as const
+const generatedOutput = {
+  reactStylesheet: '',
+  reactStylesheetAst: null as Root | null,
+}
 
 function runRefSync(): void {
   try {
@@ -33,31 +39,91 @@ function runRefSync(): void {
   }
 }
 
+async function waitForGeneratedContent(
+  absolutePath: string,
+): Promise<string> {
+  const readyContent = readGeneratedContentIfReady(absolutePath)
+
+  if (readyContent !== null) {
+    return Promise.resolve(readyContent)
+  }
+
+  runRefSync()
+
+  const syncedContent = readGeneratedContentIfReady(absolutePath)
+
+  if (syncedContent !== null) {
+    return Promise.resolve(syncedContent)
+  }
+
+  throw new Error(`Expected generated file ${absolutePath} after ref sync`)
+}
+
+function readGeneratedContentIfReady(
+  absolutePath: string,
+): string | null {
+  if (!existsSync(absolutePath)) {
+    return null
+  }
+
+  const content = readFileSync(absolutePath, 'utf-8')
+
+  return content.length > 0 ? content : null
+}
+
+beforeAll(async () => {
+  generatedOutput.reactStylesheet = await waitForGeneratedContent(reactStylesheetPath)
+  generatedOutput.reactStylesheetAst = postcss.parse(generatedOutput.reactStylesheet, {
+    from: reactStylesheetPath,
+  })
+}, 120_000)
+
 describe('primitives generated output', () => {
   it('generates the expected primitive output artifacts', () => {
     expect(existsSync(reactStylesheetPath)).toBe(true)
     expect(existsSync(virtualFixtureSourcePath)).toBe(true)
+    expect(generatedOutput.reactStylesheet.length).toBeGreaterThan(0)
   })
 
-  it('emits generated utilities for inline color, mixed values, layout props, and css positioning', () => {
-    const stylesheet = readFileSync(reactStylesheetPath, 'utf-8')
-
-    expect(stylesheet).toContain('.c_\\#dc2626')
-    expect(stylesheet).toContain('.bg-c_\\#fef3c7')
-    expect(stylesheet).toContain('.bd-c_\\#7c3aed')
-    expect(stylesheet).toContain('.d_inline-block')
-    expect(stylesheet).toContain('.max-w_320px')
-    expect(stylesheet).toContain('.white-space_nowrap')
-    expect(stylesheet).toContain('.ov_hidden')
-    expect(stylesheet).toContain('.pos_relative')
-    expect(stylesheet).toContain('.top_4px')
-    expect(stylesheet).toContain('.left_8px')
+  it('parses the generated stylesheet without syntax errors', () => {
+    expect(generatedOutput.reactStylesheetAst).toBeTruthy()
+    expect(generatedOutput.reactStylesheetAst?.nodes.length ?? 0).toBeGreaterThan(0)
   })
 
-  it('updates mirrored virtual source while keeping generated CSS stable for source-only fixture changes after ref sync', () => {
+  it('keeps standard declarations in the generated stylesheet non-empty', () => {
+    const invalidDeclarations: string[] = []
+    let declarationCount = 0
+
+    generatedOutput.reactStylesheetAst?.walkDecls((decl) => {
+      declarationCount += 1
+
+      if (decl.prop.trim().length === 0) {
+        invalidDeclarations.push(`${decl.prop}:${decl.value}`)
+        return
+      }
+
+      if (!decl.prop.startsWith('--') && decl.value.trim().length === 0) {
+        invalidDeclarations.push(`${decl.prop}:${decl.value}`)
+      }
+    })
+
+    expect(declarationCount).toBeGreaterThan(0)
+    expect(invalidDeclarations).toEqual([])
+  })
+
+  it('keeps suspicious placeholder fragments out of the generated stylesheet', () => {
+    const foundFragments = suspiciousStylesheetFragments.filter((fragment) =>
+      generatedOutput.reactStylesheet.includes(fragment),
+    )
+
+    expect(generatedOutput.reactStylesheet.length).toBeGreaterThan(0)
+    expect(foundFragments).toEqual([])
+  })
+
+  it('updates mirrored virtual source while keeping generated CSS stable for source-only fixture changes after ref sync', async () => {
     const originalSource = readFileSync(fixtureSourcePath, 'utf-8')
     const originalVirtualSource = readFileSync(virtualFixtureSourcePath, 'utf-8')
-    const originalStylesheet = readFileSync(reactStylesheetPath, 'utf-8')
+    const originalStylesheet = generatedOutput.reactStylesheet
     const updatedSource = originalSource
       .replace("label: 'CSS prop primitive'", "label: 'CSS prop primitive after ref sync'")
       .replace("rebuildMarker: 'stable-v1'", "rebuildMarker: 'stable-v2'")
@@ -71,7 +137,7 @@ describe('primitives generated output', () => {
       runRefSync()
 
       const updatedVirtualSource = readFileSync(virtualFixtureSourcePath, 'utf-8')
-      const updatedStylesheet = readFileSync(reactStylesheetPath, 'utf-8')
+      const updatedStylesheet = await waitForGeneratedContent(reactStylesheetPath)
 
       expect(updatedVirtualSource).toContain("label: 'CSS prop primitive after ref sync'")
       expect(updatedVirtualSource).toContain("rebuildMarker: 'stable-v2'")

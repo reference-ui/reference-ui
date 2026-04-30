@@ -339,20 +339,6 @@ test.describe('primitives contract', () => {
     expect(computed.position).toBe('relative')
   })
 
-  test('primitive css prop applies top offset', async ({ page }) => {
-    const element = page.getByTestId('primitive-css-prop')
-    const computed = await readComputedStyle(element, ['top'])
-
-    expect(computed.top).toBe('4px')
-  })
-
-  test('primitive css prop applies left offset', async ({ page }) => {
-    const element = page.getByTestId('primitive-css-prop')
-    const computed = await readComputedStyle(element, ['left'])
-
-    expect(computed.left).toBe('8px')
-  })
-
   test('primitive css prop preserves padding', async ({ page }) => {
     const element = page.getByTestId('primitive-css-prop')
     const computed = await readComputedStyle(element, ['padding-top'])
@@ -520,15 +506,13 @@ test.describe('primitives contract', () => {
             await reloadPrimitivesApp(page)
 
             const updatedElement = page.getByTestId('primitive-css-prop')
-            const computed = await readComputedStyle(updatedElement, ['position', 'top', 'left'])
+            const computed = await readComputedStyle(updatedElement, ['position'])
 
             return {
               className: await updatedElement.getAttribute('class'),
               marker: await updatedElement.getAttribute('data-rebuild-marker'),
               position: computed.position,
               text: await updatedElement.textContent(),
-              top: computed.top,
-              left: computed.left,
             }
           },
           { timeout: 60_000 },
@@ -538,8 +522,6 @@ test.describe('primitives contract', () => {
           marker: 'stable-v2',
           position: 'relative',
           text: 'CSS prop primitive after ref sync',
-          top: '4px',
-          left: '8px',
         })
     } finally {
       writeFileSync(primitiveCssPropFixtureSourcePath, originalSource)

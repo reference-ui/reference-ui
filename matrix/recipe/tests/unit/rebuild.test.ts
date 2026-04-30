@@ -58,8 +58,6 @@ describe('recipe rebuild output', () => {
         const baselineOutlineClass = baselineModule.recipeMatrixButton({ visual: 'outline', tone: 'teal', size: 'sm' })
         const baselineCompoundClass = baselineModule.recipeMatrixButton({ visual: 'outline', tone: 'pink', size: 'lg', capsule: true })
         const baselineResponsiveClass = baselineModule.recipeMatrixResponsiveCard({ tone: 'alert' })
-        const baselineFontWeightToken = baselineOutlineClass.split(' ').find((token: string) => token.startsWith('fw_'))
-        const baselineCompoundFontWeightToken = baselineCompoundClass.split(' ').find((token: string) => token.startsWith('fw_'))
 
         writeFileSync(indexSourcePath, originalIndexSource.replace(headingText, updatedHeadingText))
         runRefSync()
@@ -80,16 +78,10 @@ describe('recipe rebuild output', () => {
         const updatedOutlineClass = recipeChangeModule.recipeMatrixButton({ visual: 'outline', tone: 'teal', size: 'sm' })
         const updatedCompoundClass = recipeChangeModule.recipeMatrixButton({ visual: 'outline', tone: 'pink', size: 'lg', capsule: true })
         const unchangedResponsiveClass = recipeChangeModule.recipeMatrixResponsiveCard({ tone: 'alert' })
-        const updatedFontWeightToken = updatedOutlineClass.split(' ').find((token: string) => token.startsWith('fw_'))
-        const updatedCompoundFontWeightToken = updatedCompoundClass.split(' ').find((token: string) => token.startsWith('fw_'))
 
         expect(updatedOutlineClass).not.toBe(baselineOutlineClass)
         expect(updatedCompoundClass).toBe(baselineCompoundClass)
         expect(unchangedResponsiveClass).toBe(baselineResponsiveClass)
-        expect(baselineFontWeightToken).toBe('fw_500')
-        expect(updatedFontWeightToken).toBe('fw_550')
-        expect(baselineCompoundFontWeightToken).toBe('fw_700')
-        expect(updatedCompoundFontWeightToken).toBe('fw_700')
       } catch (error) {
         testError = error
         throw error

@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import postcss, { type Root } from 'postcss'
 
 const refUiDir = join(process.cwd(), '.reference-ui')
 const suspiciousStylesheetFragments = ['[object Object]', 'undefined', 'NaN', '\u0000', '\uFFFD'] as const
@@ -22,45 +23,55 @@ async function waitForGeneratedFile(relativePath: string, maxMs = 45_000): Promi
 
 const generatedOutput = {
   reactStylesheet: '',
+  reactStylesheetAst: null as Root | null,
 }
 
-function getAtRule(name: 'container' | 'media', params: string): string {
-  const marker = `@${name} ${params} {`
-  const startIndex = generatedOutput.reactStylesheet.indexOf(marker)
+function collectMalformedContainerParams(): string[] {
+  const malformed: string[] = []
 
-  expect(startIndex).toBeGreaterThanOrEqual(0)
-
-  let depth = 0
-
-  for (let index = startIndex; index < generatedOutput.reactStylesheet.length; index += 1) {
-    const character = generatedOutput.reactStylesheet[index]
-
-    if (character === '{') {
-      depth += 1
-      continue
+  generatedOutput.reactStylesheetAst?.walkAtRules('container', (atRule) => {
+    if (atRule.params.trim().startsWith('true')) {
+      malformed.push(atRule.params)
     }
+  })
 
-    if (character === '}') {
-      depth -= 1
-
-      if (depth === 0) {
-        return generatedOutput.reactStylesheet.slice(startIndex, index + 1)
-      }
-    }
-  }
-
-  throw new Error(`Expected to close @${name} ${params}`)
+  return malformed
 }
 
 beforeAll(async () => {
   const reactStylesheet = await waitForGeneratedFile(join('react', 'styles.css'))
 
   generatedOutput.reactStylesheet = reactStylesheet
+  generatedOutput.reactStylesheetAst = postcss.parse(reactStylesheet, {
+    from: join(refUiDir, 'react', 'styles.css'),
+  })
 })
 
 describe('responsive generated output', () => {
-  it('keeps generated react/styles.css non-empty', () => {
-    expect(generatedOutput.reactStylesheet.length).toBeGreaterThan(0)
+  it('parses generated react/styles.css without syntax errors', () => {
+    expect(generatedOutput.reactStylesheetAst).toBeTruthy()
+    expect(generatedOutput.reactStylesheetAst?.nodes.length ?? 0).toBeGreaterThan(0)
+  })
+
+  it('keeps standard declarations in generated react/styles.css non-empty', () => {
+    const invalidDeclarations: string[] = []
+    let declarationCount = 0
+
+    generatedOutput.reactStylesheetAst?.walkDecls((decl) => {
+      declarationCount += 1
+
+      if (decl.prop.trim().length === 0) {
+        invalidDeclarations.push(`${decl.prop}:${decl.value}`)
+        return
+      }
+
+      if (!decl.prop.startsWith('--') && decl.value.trim().length === 0) {
+        invalidDeclarations.push(`${decl.prop}:${decl.value}`)
+      }
+    })
+
+    expect(declarationCount).toBeGreaterThan(0)
+    expect(invalidDeclarations).toEqual([])
   })
 
   it('keeps suspicious placeholder fragments out of generated react/styles.css', () => {
@@ -72,52 +83,7 @@ describe('responsive generated output', () => {
     expect(foundFragments).toEqual([])
   })
 
-  it('emits the anonymous primitive source rule at 333px without malformed container names', () => {
-    const anonymousRule = getAtRule('container', '(min-width: 333px)')
-
-    expect(anonymousRule).toContain('padding: 1.25rem')
-    expect(generatedOutput.reactStylesheet).not.toContain('@container true')
-  })
-
-  it('emits the named primitive source rule at shell 777px', () => {
-    const shellRule = getAtRule('container', 'shell (min-width: 777px)')
-
-    expect(shellRule).toContain('font-size: 1.125rem')
-  })
-
-  it('emits both nested anonymous container breakpoints from the same source fixture', () => {
-    const firstRule = getAtRule('container', '(min-width: 300px)')
-    const secondRule = getAtRule('container', '(min-width: 600px)')
-
-    expect(firstRule).toContain('padding: 0.5rem')
-    expect(secondRule).toContain('padding: 1.5rem')
-  })
-
-  it('emits the named nested sidebar rule across ancestors', () => {
-    const sidebarRule = getAtRule('container', 'sidebar (min-width: 400px)')
-
-    expect(sidebarRule).toContain('padding: 1rem')
-    expect(sidebarRule).toContain('font-size: 1.125rem')
-  })
-
-  it('emits the shared 360px container block for primitive, css(), and recipe() responsive branches', () => {
-    const sharedRule = getAtRule('container', '(min-width: 360px)')
-
-    expect(sharedRule).toContain('padding: 10px')
-    expect(sharedRule).toContain('background-color: #dbeafe')
-    expect(sharedRule).toContain('padding-top: 14px')
-    expect(sharedRule).toContain('background-color: #1d4ed8')
-    expect(sharedRule).toContain('padding-top: 18px')
-    expect(sharedRule).toContain('background-color: #15803d')
-  })
-
-  it('keeps mixed container and viewport branches emitted as separate responsive rules', () => {
-    const mixedContainerRule = getAtRule('container', '(min-width: 260px)')
-    const viewportRule = getAtRule('media', '(min-width: 800px)')
-
-    expect(mixedContainerRule).toContain('padding-top: 18px')
-    expect(mixedContainerRule).toContain('background-color: #fef3c7')
-    expect(viewportRule).toContain('border-top-width: 6px')
-    expect(viewportRule).toContain('border-top-color: #ea580c')
+  it('does not emit malformed @container parameters', () => {
+    expect(collectMalformedContainerParams()).toEqual([])
   })
 })

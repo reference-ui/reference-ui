@@ -20,6 +20,8 @@ import {
 } from './helpers'
 
 describe.sequential('reference output', () => {
+  const getMemberName = (member: { getName(): string }) => member.getName()
+
   it(
     'emits Tasty artifacts and loads local plus projected symbols',
     async () => {
@@ -32,7 +34,7 @@ describe.sequential('reference output', () => {
         true,
       )
 
-      const api = createReferenceTestApi()
+      const api = await createReferenceTestApi()
       await api.ready()
 
       const fixture = await api.loadSymbolByName('ReferenceApiFixture')
@@ -41,17 +43,17 @@ describe.sequential('reference output', () => {
       const pinnedAlias = await api.loadSymbolByName('DocsReferencePinnedTargetAlias')
 
       expect(fixture.getKind()).toBe('interface')
-      expect(fixture.getMembers().map((member) => member.getName())).toEqual([
+      expect(fixture.getMembers().map(getMemberName)).toEqual([
         'label',
         'disabled',
         'variant',
       ])
       expect(styleProps.getKind()).toBe('typeAlias')
-      expect((await styleProps.getDisplayMembers()).map((member) => member.getName())).toEqual(
+      expect((await styleProps.getDisplayMembers()).map(getMemberName)).toEqual(
         expect.arrayContaining(['accentColor', 'container']),
       )
       expect(composed.getKind()).toBe('typeAlias')
-      expect((await composed.getDisplayMembers()).map((member) => member.getName())).toEqual(
+      expect((await composed.getDisplayMembers()).map(getMemberName)).toEqual(
         expect.arrayContaining([
           'label',
           'variant',
@@ -139,7 +141,7 @@ describe.sequential('reference output', () => {
         writeFileSync(fixturePath, originalSource)
         runRefCommand('sync')
 
-        let api = createReferenceTestApi()
+        let api = await createReferenceTestApi()
         await api.ready()
 
         const original = await api.loadSymbolByName('ReferenceRebuildOriginalFixture')
@@ -148,7 +150,7 @@ describe.sequential('reference output', () => {
         writeFileSync(fixturePath, renamedSource)
         runRefCommand('sync')
 
-        api = createReferenceTestApi()
+        api = await createReferenceTestApi()
         await api.ready()
 
         const renamed = await api.loadSymbolByName('ReferenceRebuildRenamedFixture')

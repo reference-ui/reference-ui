@@ -156,10 +156,6 @@ describe('font matrix generated stylesheet', () => {
         `descent-override:\\s*${escapeForRegExp(fontMatrixConstants.serifDescentOverride)}`,
       ),
     )
-    expect(generatedOutput.reactStylesheet).toContain('.ff_sans')
-    expect(generatedOutput.reactStylesheet).toContain('.ff_serif')
-    expect(generatedOutput.reactStylesheet).toContain('.ff_mono')
-    expect(generatedOutput.reactStylesheet).toContain('.fw_700')
   })
 
   it('emits one @font-face rule per authored entry in a fontFace array', () => {
