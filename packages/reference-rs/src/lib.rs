@@ -30,7 +30,8 @@ use tasty::scan_and_emit_modules as do_scan_and_emit_modules;
 #[napi]
 pub fn get_native_capabilities() -> Result<String> {
     Ok(serde_json::json!({
-        "styletraceSyncRootHint": true
+        "styletraceSyncRootHint": true,
+        "replaceFunctionNameImportFrom": true
     })
     .to_string())
 }
@@ -45,6 +46,24 @@ pub fn rewrite_css_imports(source_code: String, relative_path: String) -> Result
 #[napi]
 pub fn rewrite_cva_imports(source_code: String, relative_path: String) -> Result<String> {
     Ok(virtualrs::rewrite_cva_imports(&source_code, &relative_path))
+}
+
+#[cfg(feature = "napi")]
+#[napi]
+pub fn replace_function_name(
+    source_code: String,
+    relative_path: String,
+    from_name: String,
+    to_name: String,
+    import_from: Option<String>,
+) -> Result<String> {
+    Ok(virtualrs::replace_function_name(
+        &source_code,
+        &relative_path,
+        &from_name,
+        &to_name,
+        import_from.as_deref(),
+    ))
 }
 
 #[cfg(feature = "napi")]

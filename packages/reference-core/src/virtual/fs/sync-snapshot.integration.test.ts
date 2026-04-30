@@ -58,6 +58,8 @@ describe('virtual/fs/sync-snapshot integration', () => {
 
     expect(virtualSource).toContain("import { css } from 'src/system/css';")
     expect(virtualSource).toContain("import { cva } from 'src/system/css';")
+    expect(virtualSource).toContain('const __reference_ui_css = css;')
+    expect(virtualSource).toContain('const __reference_ui_cva = cva;')
     expect(virtualSource).toContain('__reference_ui_css({')
     expect(virtualSource).toContain('__reference_ui_cva({')
 

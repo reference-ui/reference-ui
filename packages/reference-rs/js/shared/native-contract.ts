@@ -2,6 +2,7 @@ export const REQUIRED_VIRTUAL_NATIVE_EXPORTS = [
   'getNativeCapabilities',
   'rewriteCssImports',
   'rewriteCvaImports',
+  'replaceFunctionName',
   'applyResponsiveStyles',
   'scanAndEmitModules',
   'analyzeAtlas',
@@ -10,6 +11,7 @@ export const REQUIRED_VIRTUAL_NATIVE_EXPORTS = [
 
 export const REQUIRED_VIRTUAL_NATIVE_CAPABILITY_MARKERS = [
   'styletraceSyncRootHint',
+  'replaceFunctionNameImportFrom',
 ] as const
 
 export const REQUIRED_VIRTUAL_NATIVE_BINARY_MARKERS = [

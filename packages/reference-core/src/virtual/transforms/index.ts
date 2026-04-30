@@ -61,7 +61,7 @@ export async function applyTransforms(
       relativePath,
     )
     if (!relativePath.startsWith(REFERENCE_UI_ARTIFACT_PREFIX)) {
-      transformedContent = neutralizeStyleCalls(transformedContent)
+      transformedContent = neutralizeStyleCalls(transformedContent, relativePath)
     }
     if (transformedContent !== before) wasTransformed = true
   }

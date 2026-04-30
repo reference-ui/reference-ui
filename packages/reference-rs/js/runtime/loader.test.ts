@@ -23,9 +23,13 @@ async function importLoaderModule(options?: {
   const requireBinding = vi.fn(
     options?.requireImpl ??
       (() => ({
-        getNativeCapabilities: vi.fn(() => JSON.stringify({ styletraceSyncRootHint: true })),
+        getNativeCapabilities: vi.fn(() => JSON.stringify({
+          styletraceSyncRootHint: true,
+          replaceFunctionNameImportFrom: true,
+        })),
         rewriteCssImports: vi.fn(),
         rewriteCvaImports: vi.fn(),
+        replaceFunctionName: vi.fn(),
         applyResponsiveStyles: vi.fn(),
         scanAndEmitModules: vi.fn(),
         analyzeAtlas: vi.fn(),
@@ -152,6 +156,7 @@ describe('loader', () => {
       requireImpl: () => ({
         rewriteCssImports: vi.fn(),
         rewriteCvaImports: vi.fn(),
+        replaceFunctionName: vi.fn(),
         applyResponsiveStyles: vi.fn(),
         scanAndEmitModules: vi.fn(),
         analyzeAtlas: vi.fn(),
@@ -163,6 +168,7 @@ describe('loader', () => {
       getVirtualNativeCompatibilityError({
         rewriteCssImports: vi.fn(),
         rewriteCvaImports: vi.fn(),
+        replaceFunctionName: vi.fn(),
         applyResponsiveStyles: vi.fn(),
         scanAndEmitModules: vi.fn(),
         analyzeAtlas: vi.fn(),

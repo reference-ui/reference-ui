@@ -13,3 +13,6 @@ virtual rewrite API end to end.
 These tests are intentionally lighter than the Rust unit suite. They verify that
 the JavaScript runtime is successfully loading and calling the native addon with
 real fixture input.
+
+`case.json` may also include API-specific fields such as `fromName` and `toName`
+for the generic `replaceFunctionName` transform.
