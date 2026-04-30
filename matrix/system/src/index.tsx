@@ -1,6 +1,6 @@
 import { Div, H1, Main, P } from '@reference-ui/react'
 import './system/styles'
-import { systemMatrixConstants } from './system/styles'
+import { systemLayeredRecipe, systemMatrixConstants } from './system/styles'
 
 export const matrixSystemMarker = 'reference-ui-matrix-system'
 
@@ -18,6 +18,14 @@ export function Index() {
         System token background
       </Div>
 
+      <Div data-testid="system-token-spacing" padding={systemMatrixConstants.spacingToken}>
+        System token spacing
+      </Div>
+
+      <Div data-testid="system-token-radius" borderRadius={systemMatrixConstants.radiusToken} borderWidth="1px" borderStyle="solid">
+        System token radius
+      </Div>
+
       <Div data-testid="system-font-probe" font={systemMatrixConstants.fontName} weight={systemMatrixConstants.fontWeight}>
         System font probe
       </Div>
@@ -28,6 +36,14 @@ export function Index() {
 
       <Div data-testid="system-global-var-probe" style={{ width: `var(${systemMatrixConstants.globalVarName})` }}>
         System global var probe
+      </Div>
+
+      <Div
+        data-testid="system-layered-target"
+        className={systemLayeredRecipe()}
+        color={systemMatrixConstants.accentToken}
+      >
+        System layered target
       </Div>
     </Main>
   )

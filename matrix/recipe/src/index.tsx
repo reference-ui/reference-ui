@@ -37,6 +37,14 @@ export function Index() {
       >
         Outline pink compound branch
       </button>
+
+      <button
+        type="button"
+        data-testid="recipe-outline-pink-capsule"
+        className={recipeMatrixButton({ visual: 'outline', tone: 'pink', size: 'lg', capsule: 'true' })}
+      >
+        Outline pink capsule compound branch
+      </button>
     </Main>
   )
 }

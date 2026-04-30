@@ -137,4 +137,42 @@ test.describe('color-mode contract', () => {
       })
       .toBe(hexToRgb(colorModeMatrixConstants.darkValue))
   })
+
+  test('multiple theme islands update in the same session while each descendant follows its nearest scope', async ({ page }) => {
+    const hostToken = page.getByTestId('color-mode-live-multi-host-token')
+    const leftToken = page.getByTestId('color-mode-live-multi-left-token')
+    const rightToken = page.getByTestId('color-mode-live-multi-right-token')
+    const swap = page.getByTestId('color-mode-swap-multi-islands')
+
+    const initialHost = await readComputedStyle(hostToken, ['color'])
+    const initialLeft = await readComputedStyle(leftToken, ['color'])
+    const initialRight = await readComputedStyle(rightToken, ['color'])
+
+    expect(initialHost.color).toBe(hexToRgb(colorModeMatrixConstants.lightValue))
+    expect(initialLeft.color).toBe(hexToRgb(colorModeMatrixConstants.lightValue))
+    expect(initialRight.color).toBe(hexToRgb(colorModeMatrixConstants.darkValue))
+
+    await swap.click()
+
+    await expect
+      .poll(async () => {
+        const toggledHost = await readComputedStyle(hostToken, ['color'])
+        return toggledHost.color
+      })
+      .toBe(hexToRgb(colorModeMatrixConstants.lightValue))
+
+    await expect
+      .poll(async () => {
+        const toggledLeft = await readComputedStyle(leftToken, ['color'])
+        return toggledLeft.color
+      })
+      .toBe(hexToRgb(colorModeMatrixConstants.darkValue))
+
+    await expect
+      .poll(async () => {
+        const toggledRight = await readComputedStyle(rightToken, ['color'])
+        return toggledRight.color
+      })
+      .toBe(hexToRgb(colorModeMatrixConstants.lightValue))
+  })
 })

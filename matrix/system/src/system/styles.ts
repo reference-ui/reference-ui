@@ -1,3 +1,4 @@
+import { recipe } from '@reference-ui/react'
 import { font, globalCss, keyframes, tokens } from '@reference-ui/system'
 
 export const systemMatrixConstants = {
@@ -13,11 +14,25 @@ export const systemMatrixConstants = {
   globalVarName: '--system-matrix-global-var',
   globalVarValue: '42px',
   layerName: 'system',
+  layeredGlobalBorderColor: 'rgb(185, 28, 28)',
+  layeredGlobalColor: 'rgb(220, 38, 38)',
+  layeredRecipeBackground: 'rgb(254, 240, 138)',
+  layeredRecipeColor: 'rgb(22, 101, 52)',
+  radiusToken: 'system-matrix-radius',
+  radiusValue: '0.75rem',
+  spacingToken: 'system-matrix-spacing',
+  spacingValue: '1.25rem',
 } as const
 
 tokens({
   colors: {
     [systemMatrixConstants.accentToken]: { value: systemMatrixConstants.accentValue },
+  },
+  spacing: {
+    [systemMatrixConstants.spacingToken]: { value: systemMatrixConstants.spacingValue },
+  },
+  radii: {
+    [systemMatrixConstants.radiusToken]: { value: systemMatrixConstants.radiusValue },
   },
 })
 
@@ -44,6 +59,12 @@ globalCss({
   body: {
     margin: '0',
   },
+  '[data-testid="system-layered-target"]': {
+    color: systemMatrixConstants.layeredGlobalColor,
+    borderTopStyle: 'solid',
+    borderTopWidth: '4px',
+    borderTopColor: systemMatrixConstants.layeredGlobalBorderColor,
+  },
 })
 
 keyframes({
@@ -56,5 +77,12 @@ keyframes({
       opacity: '1',
       transform: 'translateY(0px)',
     },
+  },
+})
+
+export const systemLayeredRecipe = recipe({
+  base: {
+    color: systemMatrixConstants.layeredRecipeColor,
+    backgroundColor: systemMatrixConstants.layeredRecipeBackground,
   },
 })

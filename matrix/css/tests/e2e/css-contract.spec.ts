@@ -1,4 +1,4 @@
-import { expect, test, type Locator } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 
 import { cssMatrixConstants } from '../../src/constants'
 import { matrixCssMarker } from '../../src/index'
@@ -32,6 +32,14 @@ function expectColorValue(actual: string, expected: string): void {
   const normalizedExpected = normalizeColorValue(expected)
 
   expect(normalizedActual).toBe(normalizedExpected)
+}
+
+async function gotoAtViewport(
+  page: Page,
+  viewport: { width: number; height: number },
+): Promise<void> {
+  await page.setViewportSize(viewport)
+  await page.goto('/')
 }
 
 test.describe('css contract', () => {
@@ -190,6 +198,33 @@ test.describe('css contract', () => {
     const wideStyles = await readComputedStyle(wideProbe, ['font-size'])
 
     expect(wideStyles['font-size']).toBe('18px')
+  })
+
+  test('css() keeps the viewport media-query probe on its base branch below the viewport threshold', async ({ page }) => {
+    await gotoAtViewport(page, {
+      width: cssMatrixConstants.viewportBreakpointWidth - 80,
+      height: 900,
+    })
+
+    const probe = page.getByTestId('css-viewport-probe')
+    const computed = await readComputedStyle(probe, ['padding-top', 'background-color'])
+
+    expect(computed['padding-top']).toBe('0px')
+    expect(computed['background-color']).toBe('rgba(0, 0, 0, 0)')
+  })
+
+  test('css() applies the viewport media-query branch above the viewport threshold', async ({ page }) => {
+    await gotoAtViewport(page, {
+      width: cssMatrixConstants.viewportBreakpointWidth + 120,
+      height: 900,
+    })
+
+    const probe = page.getByTestId('css-viewport-probe')
+    const computed = await readComputedStyle(probe, ['padding-top', 'background-color', 'color'])
+
+    expect(computed['padding-top']).toBe(cssMatrixConstants.viewportProbePadding)
+    expectColorValue(computed['background-color'], cssMatrixConstants.viewportProbeBackground)
+    expectColorValue(computed.color, cssMatrixConstants.viewportProbeForeground)
   })
 
   test('generated stylesheets mount in the document', async ({ page }) => {
