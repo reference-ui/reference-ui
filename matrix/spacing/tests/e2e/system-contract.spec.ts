@@ -98,6 +98,69 @@ test.describe('spacing contract', () => {
     expect(computed['border-radius']).toBe('4px')
   })
 
+  test('borderRadius="2r" resolves to 8px', async ({ page }) => {
+    const element = page.getByTestId('spacing-radius-2r')
+    const computed = await readComputedStyle(element, ['border-radius'])
+
+    expect(computed['border-radius']).toBe('8px')
+  })
+
+  test('borderRadius="12px" preserves literal radii in the browser', async ({ page }) => {
+    const element = page.getByTestId('spacing-radius-literal')
+    const computed = await readComputedStyle(element, [
+      'border-top-left-radius',
+      'border-top-right-radius',
+      'border-bottom-left-radius',
+      'border-bottom-right-radius',
+    ])
+
+    expect(computed['border-top-left-radius']).toBe('12px')
+    expect(computed['border-top-right-radius']).toBe('12px')
+    expect(computed['border-bottom-left-radius']).toBe('12px')
+    expect(computed['border-bottom-right-radius']).toBe('12px')
+  })
+
+  test('borderRadius="lg" resolves through the radii token pipeline', async ({ page }) => {
+    const element = page.getByTestId('spacing-radius-token')
+    const computed = await readComputedStyle(element, ['border-radius'])
+
+    expect(computed['border-radius']).toBe('8px')
+  })
+
+  test('physical border radius pair shorthands resolve to both addressed corners', async ({ page }) => {
+    const topPair = page.getByTestId('spacing-radius-top-pair')
+    const bottomPair = page.getByTestId('spacing-radius-bottom-pair')
+    const leftPair = page.getByTestId('spacing-radius-left-pair')
+    const rightPair = page.getByTestId('spacing-radius-right-pair')
+
+    const topComputed = await readComputedStyle(topPair, ['border-top-left-radius', 'border-top-right-radius'])
+    const bottomComputed = await readComputedStyle(bottomPair, ['border-bottom-left-radius', 'border-bottom-right-radius'])
+    const leftComputed = await readComputedStyle(leftPair, ['border-top-left-radius', 'border-bottom-left-radius'])
+    const rightComputed = await readComputedStyle(rightPair, ['border-top-right-radius', 'border-bottom-right-radius'])
+
+    expect(topComputed['border-top-left-radius']).toBe('8px')
+    expect(topComputed['border-top-right-radius']).toBe('8px')
+    expect(bottomComputed['border-bottom-left-radius']).toBe('8px')
+    expect(bottomComputed['border-bottom-right-radius']).toBe('8px')
+    expect(leftComputed['border-top-left-radius']).toBe('8px')
+    expect(leftComputed['border-bottom-left-radius']).toBe('8px')
+    expect(rightComputed['border-top-right-radius']).toBe('8px')
+    expect(rightComputed['border-bottom-right-radius']).toBe('8px')
+  })
+
+  test('logical border radius pair shorthands resolve to the expected corners in LTR', async ({ page }) => {
+    const startPair = page.getByTestId('spacing-radius-start-pair')
+    const endPair = page.getByTestId('spacing-radius-end-pair')
+
+    const startComputed = await readComputedStyle(startPair, ['border-top-left-radius', 'border-bottom-left-radius'])
+    const endComputed = await readComputedStyle(endPair, ['border-top-right-radius', 'border-bottom-right-radius'])
+
+    expect(startComputed['border-top-left-radius']).toBe('8px')
+    expect(startComputed['border-bottom-left-radius']).toBe('8px')
+    expect(endComputed['border-top-right-radius']).toBe('8px')
+    expect(endComputed['border-bottom-right-radius']).toBe('8px')
+  })
+
   test('size custom prop keeps width and height equal', async ({ page }) => {
     const element = page.getByTestId('spacing-size-box')
     const computed = await readComputedStyle(element, ['width', 'height'])

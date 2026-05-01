@@ -12,14 +12,17 @@ const refUiDir = join(pkgRoot, '.reference-ui')
  * This suite verifies the expected design system outputs exist.
  */
 describe('ref sync', () => {
-  it('creates .reference-ui/react with package.json and react.mjs', () => {
+  // MIGRATED: Covered by matrix/distro/tests/unit/generated-output.test.ts and
+  // matrix/distro/tests/unit/distro.test.tsx.
+  it.skip('creates .reference-ui/react with package.json and react.mjs', () => {
     const reactDir = join(refUiDir, 'react')
     expect(existsSync(reactDir), '.reference-ui/react should exist').toBe(true)
     expect(existsSync(join(reactDir, 'package.json')), 'react package.json').toBe(true)
     expect(existsSync(join(reactDir, 'react.mjs')), 'react.mjs entry').toBe(true)
   })
 
-  it('creates .reference-ui/styled with package.json (css/patterns when Panda succeeds)', () => {
+  // MIGRATED: Covered by matrix/distro/tests/unit/distro.test.tsx.
+  it.skip('creates .reference-ui/styled with package.json (css/patterns when Panda succeeds)', () => {
     const styledDir = join(refUiDir, 'styled')
     expect(existsSync(styledDir), '.reference-ui/styled should exist').toBe(true)
     expect(existsSync(join(styledDir, 'package.json')), 'styled package.json').toBe(true)
@@ -31,6 +34,9 @@ describe('ref sync', () => {
     }
   })
 
+  // TODO(reference-unit/layers): Matrix distro now locks the generic styled
+  // layer prelude, but this reference-unit case still uniquely covers the
+  // layer-library composition specific to the extends x layers fixture setup.
   it('keeps runtime styles.css in layered form when reference-unit includes layers', () => {
     const stylesPath = join(refUiDir, 'styled', 'styles.css')
     if (!existsSync(stylesPath)) return
@@ -40,7 +46,9 @@ describe('ref sync', () => {
     expect(css).toMatch(/^@layer\s+[^;\n]+;/)
   })
 
-  it('creates .reference-ui/system with package.json and system.mjs', () => {
+  // MIGRATED: Covered by matrix/distro/tests/unit/generated-output.test.ts and
+  // matrix/distro/tests/unit/distro.test.tsx.
+  it.skip('creates .reference-ui/system with package.json and system.mjs', () => {
     const systemDir = join(refUiDir, 'system')
     expect(existsSync(systemDir), '.reference-ui/system should exist').toBe(true)
     expect(existsSync(join(systemDir, 'package.json')), 'system package.json').toBe(true)
@@ -48,7 +56,8 @@ describe('ref sync', () => {
     expect(existsSync(join(systemDir, 'baseSystem.mjs')), 'system/baseSystem.mjs entry').toBe(true)
   })
 
-  it('emits baseSystem.mjs with portable css for layers consumers', () => {
+  // MIGRATED: Covered by matrix/distro/tests/unit/distro.test.tsx.
+  it.skip('emits baseSystem.mjs with portable css for layers consumers', () => {
     const basePath = join(refUiDir, 'system', 'baseSystem.mjs')
     if (!existsSync(basePath)) return
     const content = readFileSync(basePath, 'utf-8')
@@ -59,7 +68,8 @@ describe('ref sync', () => {
     expect(content).toMatch(/"jsxElements":\s*\[[^\]]*"UnitMarker"/)
   })
 
-  it('writes resolved jsx-elements metadata for configured custom JSX components', () => {
+  // MIGRATED: Covered by matrix/distro/tests/unit/distro.test.tsx.
+  it.skip('writes resolved jsx-elements metadata for configured custom JSX components', () => {
     const jsxElementsPath = join(refUiDir, 'system', 'jsx-elements.json')
     if (!existsSync(jsxElementsPath)) return
     const content = readFileSync(jsxElementsPath, 'utf-8')
@@ -67,7 +77,8 @@ describe('ref sync', () => {
     expect(content).toMatch(/"merged":\s*\[[\s\S]*"UnitMarker"/)
   })
 
-  it('creates .reference-ui/virtual with copied source files', () => {
+  // MIGRATED: Covered by matrix/distro/tests/unit/distro.test.tsx.
+  it.skip('creates .reference-ui/virtual with copied source files', () => {
     const virtualDir = join(refUiDir, 'virtual')
     expect(existsSync(virtualDir), '.reference-ui/virtual should exist').toBe(true)
 

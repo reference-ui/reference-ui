@@ -59,6 +59,7 @@ Those are real product surfaces, not just implementation details.
 - Ready should only report after the latest generated runtime artifacts are fresh, not while `react.mjs`, `system.mjs`, CSS, or declarations are stale.
 - Multiple source edits in one watch window should coalesce correctly without skipping a rebuild edge.
 - Direct `ui.config` edits should still be covered explicitly in watch mode for a single consumer.
+- [DONE] `matrix/watch` asserts that token fragment add/update/remove refreshes `panda.config.ts`, not only generated CSS and live browser consumption.
 - [DONE] `matrix/watch` edits an imported `ui.config` dependency during `ref sync --watch` and asserts token output refreshes in generated CSS and the running app.
 - Interrupted watch/sync recovery and fatal failure cleanup should be locked in, including no orphan process state.
 
@@ -203,6 +204,11 @@ Those are real product surfaces, not just implementation details.
 - [DONE] `matrix/spacing` asserts that explicit `marginLeft` overrides the shorthand rhythm left value in the browser.
 - [DONE] `matrix/spacing` asserts that explicit `width` overrides the width side of `size` while the height side still comes from rhythm.
 - [DONE] `matrix/spacing` asserts that explicit `height` overrides the height side of `size` while the width side still comes from rhythm.
+- [DONE] `matrix/spacing` asserts the generated styled declaration surface keeps `size` on both the `box` pattern types and the emitted `style-props` utility types.
+- [DONE] `matrix/spacing` asserts that `borderRadius="2r"` resolves to the rhythm radius in a real browser.
+- [DONE] `matrix/spacing` asserts that literal `borderRadius="12px"` survives the runtime path unchanged in a real browser.
+- [DONE] `matrix/spacing` asserts that built-in radii tokens like `borderRadius="lg"` resolve in a real browser.
+- [DONE] `matrix/spacing` asserts that physical and logical border-radius pair shorthands apply both addressed corners in the browser.
 - Port the remaining rhythm transform edge cases from the old unit suite.
 - [DONE] `matrix/spacing` broadens shorthand override coverage with four-value `paddingRight` and `marginTop` precedence cases, while checking the untouched opposite side still keeps the shorthand value.
 - Cover rebuild cleanup when `size` is removed, plus any remaining multi-dimension interaction cases beyond the current width/height overrides.
@@ -347,6 +353,8 @@ These categories should also be treated as first-class coverage areas.
 - [DONE] `matrix/distro` keeps `.reference-ui/virtual/src` in exact sync with the included consumer source tree, so distro now owns the old virtual mirror invariant instead of leaving it behind in `reference-unit`.
 - [DONE] `matrix/distro` asserts generated `system/baseSystem` remains portable for downstream consumers by checking emitted layer CSS and merged JSX element metadata.
 - [DONE] `matrix/distro` asserts emitted `system/jsx-elements.json` preserves primitive, upstream, and merged JSX element inventories for downstream tooling.
+- [DONE] `matrix/distro` asserts the generated styled package keeps its public package metadata and `./patterns` export when Panda output is present.
+- [DONE] `matrix/distro` asserts generated `styled/styles.css` preserves a top-level layer prelude and the consumer-namespaced layer block.
 - [DONE] `matrix/distro` seeds stale generated runtime artifacts and asserts a cold `ref sync` rewrites them before downstream imports reuse the generated packages.
 - [DONE] `matrix/distro` kills a fresh cold `ref sync` after `panda.config.ts` appears and asserts the next cold sync recovers to valid runtime artifacts.
 - [DONE] `matrix/distro` syncs a temporary token fragment and typechecks a consumer probe so generated token unions stay aligned with emitted runtime token CSS.
@@ -408,7 +416,10 @@ Reference docs generation and the browser `Reference` surface are part of `@refe
 **Coverage to add**
 
 - [DONE] `matrix/reference` asserts that a real consumer sync emits `.reference-ui/types/tasty/manifest.js`, the generated `@reference-ui/types` package surface, and queryable symbols such as `ReferenceApiFixture`, `StyleProps`, and composed alias fixtures.
-- [DONE] `matrix/reference` renders `DocsReferenceButtonProps`, `DocsReferenceComposedButtonProps`, and `DocsReferencePinnedTargetAlias` through the browser `Reference` surface so complex interface and alias behaviour stays locked beyond raw manifest checks.
+- [DONE] `matrix/reference` keeps indexed-access aliases, StyleProps-extending fixtures, interface-from-type flattening, and direct alias projection readable through the raw Tasty API.
+- [DONE] `matrix/reference` renders `ReferenceApiFixture`, `StyleProps`, StyleProps-extending fixtures, `DocsReferenceButtonProps`, `DocsReferenceComposedButtonProps`, `DocsReferencePinnedTargetAlias`, standalone and derived literal-union aliases, mapped/object-like aliases, discriminated unions, inherited-origin interface pages, and generic interface headers through the browser `Reference` surface so manifest-backed interface and alias behaviour stays locked beyond raw manifest checks.
+- [DONE] `matrix/reference` keeps the rich `DocsReferenceButtonProps` page locked with defaults, callback signatures, JSDoc tags, derived alias surfaces, and placeholder filtering in a real browser.
+- [DONE] `matrix/reference` keeps tuple alias labels, concrete conditional alias resolution, object-like `typeof` alias projection, and a JSDoc-tagged local interface page locked in the browser.
 - [DONE] `matrix/reference` reruns `ref sync` after renaming a local source symbol fixture and confirms the new symbol appears while the old symbol drops out of generated reference artifacts.
 - [DONE] `matrix/reference` shows a readable browser failure state for missing symbols requested through `Reference`.
 - Stale-artifact failure behaviour should still be made explicit.
