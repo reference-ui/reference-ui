@@ -6,9 +6,8 @@ import {
 } from './customProps-output.helpers'
 
 describe('named nested container output', () => {
-  // TODO(matrix/responsive): Add one generated-output assertion that this
-  // nested named fixture is mirrored into virtual output, then retire this smoke.
-  it('copies the nested named container fixture into virtual output', () => {
+  // MIGRATED: Covered by matrix/responsive/tests/unit/generated-output.test.ts.
+  it.skip('copies the nested named container fixture into virtual output', () => {
     expect(hasVirtualSystemFile('containerNamedNested.fixture.tsx')).toBe(true)
 
     const content = readVirtualSystemFile('containerNamedNested.fixture.tsx')

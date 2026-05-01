@@ -24,6 +24,10 @@ async function waitForGeneratedFile(relativePath: string, maxMs = 45_000): Promi
 const generatedOutput = {
   reactStylesheet: '',
   reactStylesheetAst: null as Root | null,
+  virtualAnonymousFixture: '',
+  virtualNamedFixture: '',
+  virtualNestedFixture: '',
+  virtualNamedNestedFixture: '',
 }
 
 function collectMalformedContainerParams(): string[] {
@@ -39,15 +43,50 @@ function collectMalformedContainerParams(): string[] {
 }
 
 beforeAll(async () => {
-  const reactStylesheet = await waitForGeneratedFile(join('react', 'styles.css'))
+  const [
+    reactStylesheet,
+    virtualAnonymousFixture,
+    virtualNamedFixture,
+    virtualNestedFixture,
+    virtualNamedNestedFixture,
+  ] = await Promise.all([
+    waitForGeneratedFile(join('react', 'styles.css')),
+    waitForGeneratedFile(join('virtual', 'src', 'system', 'containerAnonymous.fixture.tsx')),
+    waitForGeneratedFile(join('virtual', 'src', 'system', 'containerNamed.fixture.tsx')),
+    waitForGeneratedFile(join('virtual', 'src', 'system', 'containerNested.fixture.tsx')),
+    waitForGeneratedFile(join('virtual', 'src', 'system', 'containerNamedNested.fixture.tsx')),
+  ])
 
   generatedOutput.reactStylesheet = reactStylesheet
+  generatedOutput.virtualAnonymousFixture = virtualAnonymousFixture
+  generatedOutput.virtualNamedFixture = virtualNamedFixture
+  generatedOutput.virtualNestedFixture = virtualNestedFixture
+  generatedOutput.virtualNamedNestedFixture = virtualNamedNestedFixture
   generatedOutput.reactStylesheetAst = postcss.parse(reactStylesheet, {
     from: join(refUiDir, 'react', 'styles.css'),
   })
 })
 
 describe('responsive generated output', () => {
+  it('mirrors the anonymous container fixture into virtual output', () => {
+    expect(generatedOutput.virtualAnonymousFixture).toContain("333: { padding: '1.25rem' }")
+  })
+
+  it('mirrors the named container fixture into virtual output', () => {
+    expect(generatedOutput.virtualNamedFixture).toContain('container="shell"')
+  })
+
+  it('mirrors the nested anonymous container fixture into virtual output', () => {
+    expect(generatedOutput.virtualNestedFixture).toContain('<Div container>')
+    expect(generatedOutput.virtualNestedFixture).toContain('300: { padding:')
+    expect(generatedOutput.virtualNestedFixture).toContain('600: { padding:')
+  })
+
+  it('mirrors the nested named container fixture into virtual output', () => {
+    expect(generatedOutput.virtualNamedNestedFixture).toContain('container="sidebar"')
+    expect(generatedOutput.virtualNamedNestedFixture).toContain('400: { padding:')
+  })
+
   it('parses generated react/styles.css without syntax errors', () => {
     expect(generatedOutput.reactStylesheetAst).toBeTruthy()
     expect(generatedOutput.reactStylesheetAst?.nodes.length ?? 0).toBeGreaterThan(0)
