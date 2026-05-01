@@ -161,6 +161,18 @@ test.describe('primitives contract', () => {
     await expect(page.getByText('Primitive mounting and style props are exercised against emitted design-system CSS.')).toBeVisible()
   })
 
+  test('primitive base render keeps native div semantics and layer identity', async ({ page }) => {
+    const element = page.getByTestId('primitive-basic')
+
+    await expect(element).toBeVisible()
+    await expect(element).toContainText('Basic primitive')
+    await expect(element).toHaveAttribute('data-layer', 'primitives')
+
+    const tagName = await element.evaluate((node: Element) => node.tagName)
+
+    expect(tagName).toBe('DIV')
+  })
+
   test('ui.config.jsxElements styles one local custom JSX consumer', async ({ page }) => {
     const element = page.getByTestId('primitive-jsx-element')
 

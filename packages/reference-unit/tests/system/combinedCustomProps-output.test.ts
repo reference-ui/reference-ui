@@ -6,9 +6,8 @@ import {
 } from './customProps-output.helpers'
 
 describe('combined custom props output (e2e)', () => {
-  // TODO(matrix/primitives): Add one generated-output assertion that this
-  // source-backed fixture is mirrored into virtual output, then retire this smoke.
-  it('copies the source-backed combined custom props fixture into virtual output', () => {
+  // MIGRATED: Covered by matrix/primitives/tests/unit/generated-output.test.ts.
+  it.skip('copies the source-backed combined custom props fixture into virtual output', () => {
     expect(hasVirtualSystemFile('combinedCustomProps.fixture.tsx')).toBe(true)
 
     const content = readVirtualSystemFile('combinedCustomProps.fixture.tsx')
@@ -17,9 +16,8 @@ describe('combined custom props output (e2e)', () => {
     expect(content).toContain("555: { padding: '2.25rem' }")
   })
 
-  // TODO(matrix/primitives): No matrix test currently inspects the generated
-  // pattern extension bundle for primitive JSX name wiring.
-  it('keeps primitive jsx names in the generated pattern extension bundle', () => {
+  // MIGRATED: Covered by matrix/primitives/tests/unit/generated-output.test.ts.
+  it.skip('keeps primitive jsx names in the generated pattern extension bundle', () => {
     const extensionsBundle = readGeneratedFile('styled', 'extensions', 'index.mjs')
     if (!extensionsBundle) return
 

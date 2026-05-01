@@ -81,6 +81,8 @@ Those are real product surfaces, not just implementation details.
 
 - [DONE] `matrix/primitives` ports the old happy-dom custom-props coverage into a browser contract, proving `font`, `weight`, `size`, and `r` can coexist on one primitive without losing the responsive branch.
 - [DONE] `matrix/primitives` broadens primitive browser and generated-output coverage beyond spacing and design-token colors with inline hex colors, shorthand border parsing, mixed token-plus-inline styling, and layout prop families.
+- [DONE] `matrix/primitives` keeps the base primitive runtime honest in the browser by asserting a plain `Div` renders with its text content, native `DIV` tag semantics, and the automatic `data-layer` identity from `ui.config.name`.
+- [DONE] `matrix/primitives` keeps the generated-output path honest for combined custom props by asserting a source-backed fixture is mirrored into `.reference-ui/virtual/src/system` and that the emitted styled extensions bundle preserves primitive JSX name wiring.
 - [DONE] `matrix/primitives` mutates a source-only rebuild marker, reruns `ref sync`, and proves primitive + `css` prop class composition plus computed positioning stay stable after rebuilds while the generated stylesheet stays stable and the mirrored virtual source updates.
 - [DONE] `matrix/primitives` keeps JSX element integration focused on one local consumer alias, asserting `ui.config.jsxElements` applies primitive style props in the browser.
 

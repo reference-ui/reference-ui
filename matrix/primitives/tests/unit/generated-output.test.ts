@@ -9,10 +9,19 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const packageRoot = resolve(__dirname, '..', '..')
 const refUiDir = join(packageRoot, '.reference-ui')
 const reactStylesheetPath = join(refUiDir, 'react', 'styles.css')
+const combinedCustomPropsVirtualFixturePath = join(
+  refUiDir,
+  'virtual',
+  'src',
+  'system',
+  'combinedCustomProps.fixture.tsx',
+)
+const extensionsBundlePath = join(refUiDir, 'styled', 'extensions', 'index.mjs')
 const virtualFixtureSourcePath = join(refUiDir, 'virtual', 'src', 'primitiveCssPropFixture.ts')
 const fixtureSourcePath = join(packageRoot, 'src', 'primitiveCssPropFixture.ts')
 const suspiciousStylesheetFragments = ['[object Object]', 'undefined', 'NaN', '\u0000', '\uFFFD'] as const
 const generatedOutput = {
+  extensionsBundle: '',
   reactStylesheet: '',
   reactStylesheetAst: null as Root | null,
 }
@@ -72,7 +81,13 @@ function readGeneratedContentIfReady(
 }
 
 beforeAll(async () => {
-  generatedOutput.reactStylesheet = await waitForGeneratedContent(reactStylesheetPath)
+  const [reactStylesheet, extensionsBundle] = await Promise.all([
+    waitForGeneratedContent(reactStylesheetPath),
+    waitForGeneratedContent(extensionsBundlePath),
+  ])
+
+  generatedOutput.reactStylesheet = reactStylesheet
+  generatedOutput.extensionsBundle = extensionsBundle
   generatedOutput.reactStylesheetAst = postcss.parse(generatedOutput.reactStylesheet, {
     from: reactStylesheetPath,
   })
@@ -81,8 +96,24 @@ beforeAll(async () => {
 describe('primitives generated output', () => {
   it('generates the expected primitive output artifacts', () => {
     expect(existsSync(reactStylesheetPath)).toBe(true)
+    expect(existsSync(combinedCustomPropsVirtualFixturePath)).toBe(true)
+    expect(existsSync(extensionsBundlePath)).toBe(true)
     expect(existsSync(virtualFixtureSourcePath)).toBe(true)
     expect(generatedOutput.reactStylesheet.length).toBeGreaterThan(0)
+  })
+
+  it('mirrors the combined custom props source fixture into virtual output', () => {
+    const mirroredFixture = readFileSync(combinedCustomPropsVirtualFixturePath, 'utf-8')
+
+    expect(mirroredFixture).toContain('font="sans"')
+    expect(mirroredFixture).toContain('weight="bold"')
+    expect(mirroredFixture).toContain("555: { padding: '2.25rem' }")
+  })
+
+  it('keeps primitive JSX names in the generated pattern extension bundle', () => {
+    expect(generatedOutput.extensionsBundle).toContain('var PRIMITIVE_JSX_NAMES = TAGS.map(toJsxName);')
+    expect(generatedOutput.extensionsBundle).toContain('function resolvePandaJsxElements(additionalJsxElements) {')
+    expect(generatedOutput.extensionsBundle).toContain('jsx: resolvePandaJsxElements(additionalJsxElements)')
   })
 
   it('parses the generated stylesheet without syntax errors', () => {
