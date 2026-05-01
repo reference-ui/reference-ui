@@ -64,20 +64,23 @@ const generatedOutput = {
   reactStylesheet: '',
   reactStylesheetAst: null as Root | null,
   systemGeneratedTypes: '',
+  virtualFontFixture: '',
 }
 
 beforeAll(async () => {
-  const [reactStylesheet, reactFontRegistryTypes, reactGeneratedTypes, systemGeneratedTypes] = await Promise.all([
+  const [reactStylesheet, reactFontRegistryTypes, reactGeneratedTypes, systemGeneratedTypes, virtualFontFixture] = await Promise.all([
     waitForGeneratedFile(join('react', 'styles.css')),
     waitForGeneratedFile(join('react', 'types', 'fontRegistry.d.ts')),
     waitForGeneratedFile(join('react', 'types.generated.d.mts')),
     waitForGeneratedFile(join('system', 'types.generated.d.mts')),
+    waitForGeneratedFile(join('virtual', 'src', 'system', 'fontProp.fixture.tsx')),
   ])
 
   generatedOutput.reactStylesheet = reactStylesheet
   generatedOutput.reactFontRegistryTypes = reactFontRegistryTypes
   generatedOutput.reactGeneratedTypes = reactGeneratedTypes
   generatedOutput.systemGeneratedTypes = systemGeneratedTypes
+  generatedOutput.virtualFontFixture = virtualFontFixture
   generatedOutput.reactStylesheetAst = parseReactStylesheet(reactStylesheet)
 })
 
@@ -100,6 +103,11 @@ describe('font matrix runtime', () => {
 })
 
 describe('font matrix generated stylesheet', () => {
+  it('mirrors the source-backed font prop fixture into virtual output', () => {
+    expect(generatedOutput.virtualFontFixture).toContain('font="sans"')
+    expect(generatedOutput.virtualFontFixture).toContain('weight="bold"')
+  })
+
   it('parses generated react/styles.css without syntax errors', () => {
     expect(generatedOutput.reactStylesheetAst).toBeTruthy()
     expect(generatedOutput.reactStylesheetAst?.nodes.length ?? 0).toBeGreaterThan(0)

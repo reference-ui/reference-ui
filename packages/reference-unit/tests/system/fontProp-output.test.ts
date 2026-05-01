@@ -43,9 +43,8 @@ async function waitForGeneratedFileContaining(
 }
 
 describe('font prop output (e2e)', () => {
-  // TODO(matrix/font): Add one generated-output assertion that this source-backed
-  // font fixture is mirrored into virtual output, then retire this smoke.
-  it('copies the source-backed font prop fixture into virtual output', () => {
+  // MIGRATED: Covered by matrix/font/tests/unit/runtime.test.ts.
+  it.skip('copies the source-backed font prop fixture into virtual output', () => {
     expect(hasVirtualSystemFile('fontProp.fixture.tsx')).toBe(true)
 
     const content = readVirtualSystemFile('fontProp.fixture.tsx')

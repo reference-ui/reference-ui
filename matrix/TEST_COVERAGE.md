@@ -158,6 +158,7 @@ Those are real product surfaces, not just implementation details.
 **Additional coverage still needed**
 
 - [DONE] `matrix/font` mirrors the `reference-lib` multi-font registration shape with local `sans`, `serif`, and `mono` definitions collected through repeated `font()` calls.
+- [DONE] `matrix/font` mirrors a source-backed font prop fixture into `.reference-ui/virtual/src/system` so the generated virtual-output path stays owned in the matrix consumer.
 - [DONE] `matrix/font` parses generated `react/styles.css` with PostCSS so basic `font()` output has to remain valid CSS.
 - [DONE] `matrix/font` asserts generated CSS emits `@font-face` rules, authored font utilities, and advanced font-face fields such as `size-adjust` and `descent-override`.
 - [DONE] `matrix/font` covers multi-rule `fontFace: []` registration and asserts one emitted `@font-face` rule exists for each authored source entry.
@@ -238,6 +239,7 @@ Those are real product surfaces, not just implementation details.
 - [DONE] `matrix/responsive` asserts that one `css()` class applies container-query and viewport media-query branches together on the same element.
 - [DONE] `matrix/responsive` asserts base-to-breakpoint ordering so fallback branches do not accidentally win.
 - [DONE] `matrix/responsive` covers responsive behaviour across `css()`, `recipe()`, and primitive `r` props in the same scenario.
+- [DONE] `matrix/responsive` mirrors the anonymous, named, nested anonymous, and nested named container source fixtures into `.reference-ui/virtual/src/system` so the consumer virtual-output path stays owned alongside emitted responsive CSS.
 - [DONE] `matrix/responsive` asserts emitted `react/styles.css` covers anonymous, named, nested, shared, and mixed responsive rules without malformed `@container true` output.
 
 ### color-mode
