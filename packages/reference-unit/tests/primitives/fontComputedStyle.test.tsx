@@ -25,7 +25,9 @@ beforeAll(() => {
 })
 
 describe('font + weight (computed styles)', () => {
-  it('resolves sans preset to Inter stack and default recipe weight 400', () => {
+  // MIGRATED: Covered by matrix/primitives/tests/e2e/primitives-contract.spec.ts
+  // and matrix/font/tests/e2e/font-contract.spec.ts.
+  it.skip('resolves sans preset to Inter stack and default recipe weight 400', () => {
     render(
       <Div data-testid="sans-default" font="sans">
         Text
@@ -37,7 +39,9 @@ describe('font + weight (computed styles)', () => {
     expectComputedFontWeight(el, 400, 'default sans recipe uses weight 400')
   })
 
-  it('resolves weight shorthand bold to 700', () => {
+  // MIGRATED: Covered by matrix/primitives/tests/e2e/primitives-contract.spec.ts
+  // and matrix/font/tests/e2e/font-contract.spec.ts.
+  it.skip('resolves weight shorthand bold to 700', () => {
     render(
       <Div data-testid="sans-bold" font="sans" weight="bold">
         Text
@@ -49,7 +53,9 @@ describe('font + weight (computed styles)', () => {
     expectComputedFontFamilyIncludes(el, 'Inter', 'font stack unchanged with weight')
   })
 
-  it('resolves compound token sans.bold to 700', () => {
+  // MIGRATED: Covered by matrix/primitives/tests/e2e/primitives-contract.spec.ts
+  // and matrix/font/tests/e2e/font-contract.spec.ts.
+  it.skip('resolves compound token sans.bold to 700', () => {
     render(
       <Div data-testid="sans-bold-token" font="sans" weight="sans.bold">
         Text
@@ -60,7 +66,9 @@ describe('font + weight (computed styles)', () => {
     expectComputedFontWeight(el, 700, 'weight="sans.bold" should map to 700')
   })
 
-  it('applies font-level css letterSpacing from font()', () => {
+  // MIGRATED: Covered by matrix/primitives/tests/e2e/primitives-contract.spec.ts
+  // and matrix/font/tests/e2e/font-contract.spec.ts.
+  it.skip('applies font-level css letterSpacing from font()', () => {
     render(
       <Div data-testid="sans-ls" font="sans">
         Text

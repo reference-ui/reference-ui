@@ -8,12 +8,14 @@ function hexToRgb(hex: string): string {
 }
 
 test.describe('container + r (responsive container queries)', () => {
+  // MIGRATED: Covered by matrix/responsive/tests/e2e/system-contract.spec.ts.
   test('ResponsiveContainerTest mounts', async ({ page }) => {
     await page.goto(testRoutes.responsiveContainer)
     const root = page.getByTestId('responsive-container-test')
     await expect(root).toBeVisible()
   })
 
+  // MIGRATED: Covered by matrix/responsive/tests/e2e/system-contract.spec.ts.
   test('anonymous: inner `r` applies when nearest container is wide enough', async ({
     page,
   }) => {
@@ -38,6 +40,7 @@ test.describe('container + r (responsive container queries)', () => {
     expect(wideBg).toBe(hexToRgb('#dbeafe'))
   })
 
+  // MIGRATED: Covered by matrix/responsive/tests/e2e/system-contract.spec.ts.
   test('named sidebar: `r` queries container named sidebar', async ({ page }) => {
     await page.goto(testRoutes.responsiveContainer)
     const shell = page.getByTestId('sidebar-shell')
@@ -60,6 +63,7 @@ test.describe('container + r (responsive container queries)', () => {
     expect(widePad).toBe('12px')
   })
 
+  // MIGRATED: Covered by matrix/responsive/tests/e2e/system-contract.spec.ts.
   test('named card: `r` matches across nested wrappers', async ({ page }) => {
     await page.goto(testRoutes.responsiveContainer)
     const shell = page.getByTestId('card-shell')
@@ -82,6 +86,7 @@ test.describe('container + r (responsive container queries)', () => {
     expect(widePad).toBe('12px')
   })
 
+  // MIGRATED: Covered by matrix/responsive/tests/e2e/system-contract.spec.ts.
   test('named sidebar and card are independent (each uses its own container width)', async ({
     page,
   }) => {

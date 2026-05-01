@@ -29,7 +29,8 @@ beforeAll(() => {
 })
 
 describe('user-space tokens (referenceUnitToken)', () => {
-  it('mounts a Div with bg set to referenceUnitToken and renders', () => {
+  // MIGRATED: Covered by matrix/system/tests/e2e/system-contract.spec.ts.
+  it.skip('mounts a Div with bg set to referenceUnitToken and renders', () => {
     render(
       <Div data-testid="div-token" bg="referenceUnitToken">
         User token
@@ -41,7 +42,8 @@ describe('user-space tokens (referenceUnitToken)', () => {
     expect(el).toHaveTextContent('User token')
   })
 
-  it('applies referenceUnitToken as background when design system CSS is present', () => {
+  // MIGRATED: Covered by matrix/system/tests/e2e/system-contract.spec.ts.
+  it.skip('applies referenceUnitToken as background when design system CSS is present', () => {
     if (!getDesignSystemCssPath()) return
 
     render(
@@ -56,7 +58,8 @@ describe('user-space tokens (referenceUnitToken)', () => {
     }
   })
 
-  it('emits color-mode token CSS for the normal reference-unit system', () => {
+  // MIGRATED: Covered by matrix/system/tests/e2e/system-contract.spec.ts.
+  it.skip('emits color-mode token CSS for the normal reference-unit system', () => {
     const css = getDesignSystemCss()
     if (!css) return
 
@@ -67,7 +70,8 @@ describe('user-space tokens (referenceUnitToken)', () => {
     )
   })
 
-  it('applies the dark-mode token value inside a dark panda theme scope', () => {
+  // MIGRATED: Covered by matrix/system/tests/e2e/system-contract.spec.ts.
+  it.skip('applies the dark-mode token value inside a dark panda theme scope', () => {
     if (!getDesignSystemCssPath()) return
 
     render(

@@ -35,6 +35,8 @@ beforeAll(() => {
 })
 
 describe('rhythm border radius (design system CSS)', () => {
+  // TODO(matrix/spacing): Matrix spacing covers browser radius resolution, but not
+  // yet this generated class-and-rule assertion for borderRadius="2r".
   it('borderRadius="2r" emits the rhythm border radius class and calc rule', () => {
     render(
       <Div data-testid="r2-all" borderRadius="2r">
@@ -48,6 +50,8 @@ describe('rhythm border radius (design system CSS)', () => {
     expect(rule).toContain('border-radius: calc(2 * var(--spacing-root));')
   })
 
+  // TODO(matrix/spacing): Add an explicit literal border-radius browser case,
+  // then retire this local integration test.
   it('borderRadius="12px" still works as a normal literal radius prop', () => {
     render(
       <Div data-testid="px12" borderRadius="12px">
@@ -63,6 +67,8 @@ describe('rhythm border radius (design system CSS)', () => {
     expect(s.borderBottomRightRadius).toBe('12px')
   })
 
+  // TODO(matrix/spacing): Add an explicit built-in radii token browser case,
+  // then retire this local integration test.
   it('borderRadius="lg" resolves through the radii token pipeline', () => {
     render(
       <Div data-testid="lg" borderRadius="lg">
@@ -76,6 +82,8 @@ describe('rhythm border radius (design system CSS)', () => {
     expect(rule).toContain('border-radius: var(--radii-lg);')
   })
 
+  // TODO(matrix/spacing): Add browser coverage for pair shorthand top-corner
+  // rhythm radius emission, then retire this local integration test.
   it('borderTopRadius="2r" emits both top corner declarations', () => {
     render(
       <Div data-testid="top-pair" borderTopRadius="2r">
@@ -90,6 +98,8 @@ describe('rhythm border radius (design system CSS)', () => {
     expect(rule).toContain('border-top-right-radius: calc(2 * var(--spacing-root));')
   })
 
+  // TODO(matrix/spacing): Add browser coverage for pair shorthand bottom-corner
+  // rhythm radius emission, then retire this local integration test.
   it('borderBottomRadius="2r" emits both bottom corner declarations', () => {
     render(
       <Div data-testid="bottom-pair" borderBottomRadius="2r">
@@ -104,6 +114,8 @@ describe('rhythm border radius (design system CSS)', () => {
     expect(rule).toContain('border-bottom-right-radius: calc(2 * var(--spacing-root));')
   })
 
+  // TODO(matrix/spacing): Add browser coverage for pair shorthand left-corner
+  // rhythm radius emission, then retire this local integration test.
   it('borderLeftRadius="2r" emits both left corner declarations', () => {
     render(
       <Div data-testid="left-pair" borderLeftRadius="2r">
@@ -118,6 +130,8 @@ describe('rhythm border radius (design system CSS)', () => {
     expect(rule).toContain('border-bottom-left-radius: calc(2 * var(--spacing-root));')
   })
 
+  // TODO(matrix/spacing): Add browser coverage for pair shorthand right-corner
+  // rhythm radius emission, then retire this local integration test.
   it('borderRightRadius="2r" emits both right corner declarations', () => {
     render(
       <Div data-testid="right-pair" borderRightRadius="2r">
@@ -132,6 +146,8 @@ describe('rhythm border radius (design system CSS)', () => {
     expect(rule).toContain('border-bottom-right-radius: calc(2 * var(--spacing-root));')
   })
 
+  // TODO(matrix/spacing): Add browser coverage for logical pair shorthand rhythm
+  // radius emission, then retire this local integration test.
   it('borderStartRadius and borderEndRadius emit both logical corner declarations', () => {
     render(
       <Div data-testid="start-pair" borderStartRadius="2r">

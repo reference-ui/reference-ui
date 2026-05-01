@@ -10,7 +10,8 @@ import {
 } from './helpers'
 
 describe('@reference-ui/types package', () => {
-  it('creates the generated package with a runtime entry plus manifest subpath exports', async () => {
+  // MIGRATED: Covered by matrix/reference/tests/unit/reference-output.test.ts.
+  it.skip('creates the generated package with a runtime entry plus manifest subpath exports', async () => {
     const ready = await waitForTypesPackage()
     expect(ready, '@reference-ui/types should be emitted by packager').toBe(true)
     expect(existsSync(typesPackageDir), '.reference-ui/types should exist').toBe(true)
@@ -41,7 +42,8 @@ describe('@reference-ui/types package', () => {
     })
   })
 
-  it('symlinks node_modules/@reference-ui/types to the generated package', async () => {
+  // MIGRATED: Covered by matrix/reference/tests/unit/reference-output.test.ts.
+  it.skip('symlinks node_modules/@reference-ui/types to the generated package', async () => {
     const ready = await waitForTypesPackage()
     expect(ready, '@reference-ui/types should be emitted by packager').toBe(true)
 
@@ -53,7 +55,8 @@ describe('@reference-ui/types package', () => {
     expect(realpathSync(installedTypesPackageDir)).toBe(realpathSync(typesPackageDir))
   })
 
-  it('resolves as a package, exports Reference, and still exposes manifest metadata', async () => {
+  // MIGRATED: Covered by matrix/reference/tests/unit/reference-output.test.ts.
+  it.skip('resolves as a package, exports Reference, and still exposes manifest metadata', async () => {
     const ready = await waitForTypesPackage()
     expect(ready, '@reference-ui/types should be emitted by packager').toBe(true)
 
