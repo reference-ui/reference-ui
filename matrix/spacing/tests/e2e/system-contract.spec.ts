@@ -22,6 +22,17 @@ async function readComputedStyle(
   }, properties)
 }
 
+async function resolveBorderRadiusToken(locator: Locator, tokenName: string): Promise<string> {
+  return locator.evaluate((node: Element, name: string) => {
+    const probe = document.createElement('div')
+    probe.style.borderRadius = `var(${name})`
+    node.appendChild(probe)
+    const value = getComputedStyle(probe).borderRadius
+    probe.remove()
+    return value
+  }, tokenName)
+}
+
 test.describe('spacing contract', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
@@ -123,8 +134,10 @@ test.describe('spacing contract', () => {
   test('borderRadius="lg" resolves through the radii token pipeline', async ({ page }) => {
     const element = page.getByTestId('spacing-radius-token')
     const computed = await readComputedStyle(element, ['border-radius'])
+    const expectedRadius = await resolveBorderRadiusToken(element, '--radii-lg')
 
-    expect(computed['border-radius']).toBe('8px')
+    expect(expectedRadius).not.toBe('0px')
+    expect(computed['border-radius']).toBe(expectedRadius)
   })
 
   test('physical border radius pair shorthands resolve to both addressed corners', async ({ page }) => {
