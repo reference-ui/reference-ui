@@ -38,6 +38,42 @@ export function Index() {
         Rhythm radius
       </Div>
 
+      <Div data-testid="spacing-radius-2r" borderRadius="2r" borderWidth="1px" borderStyle="solid">
+        Rhythm radius 2r
+      </Div>
+
+      <Div data-testid="spacing-radius-literal" borderRadius="12px" borderWidth="1px" borderStyle="solid">
+        Literal radius
+      </Div>
+
+      <Div data-testid="spacing-radius-token" borderRadius="lg" borderWidth="1px" borderStyle="solid">
+        Token radius
+      </Div>
+
+      <Div data-testid="spacing-radius-top-pair" borderTopRadius="2r" borderWidth="1px" borderStyle="solid">
+        Top pair radius
+      </Div>
+
+      <Div data-testid="spacing-radius-bottom-pair" borderBottomRadius="2r" borderWidth="1px" borderStyle="solid">
+        Bottom pair radius
+      </Div>
+
+      <Div data-testid="spacing-radius-left-pair" borderLeftRadius="2r" borderWidth="1px" borderStyle="solid">
+        Left pair radius
+      </Div>
+
+      <Div data-testid="spacing-radius-right-pair" borderRightRadius="2r" borderWidth="1px" borderStyle="solid">
+        Right pair radius
+      </Div>
+
+      <Div data-testid="spacing-radius-start-pair" borderStartRadius="2r" borderWidth="1px" borderStyle="solid">
+        Start pair radius
+      </Div>
+
+      <Div data-testid="spacing-radius-end-pair" borderEndRadius="2r" borderWidth="1px" borderStyle="solid">
+        End pair radius
+      </Div>
+
       <Div data-testid="spacing-size-box" className={spacingMatrixClasses.sizeBox}>
         Size box
       </Div>

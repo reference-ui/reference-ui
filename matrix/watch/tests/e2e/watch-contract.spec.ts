@@ -12,6 +12,7 @@ import {
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const packageRoot = join(__dirname, '..', '..')
 const sessionPath = join(packageRoot, '.reference-ui', 'tmp', 'session.json')
+const pandaConfigPath = join(packageRoot, '.reference-ui', 'panda.config.ts')
 const styledStylesPath = join(packageRoot, '.reference-ui', 'styled', 'styles.css')
 const reactStylesPath = join(packageRoot, '.reference-ui', 'react', 'styles.css')
 const virtualRecipeFilePath = join(packageRoot, '.reference-ui', 'virtual', 'src', 'watch', 'recipe.ts')
@@ -430,6 +431,11 @@ test.describe('watch contract', () => {
         'react/styles.css should contain the fragment token variable after the fragment file is added',
       )
       expectFileToContain(
+        pandaConfigPath,
+        fragmentTokenValue,
+        'panda.config.ts should contain the fragment token value after the fragment file is added',
+      )
+      expectFileToContain(
         reactStylesPath,
         fragmentTokenValue,
         'react/styles.css should contain the fragment token value after the fragment file is added',
@@ -450,6 +456,11 @@ test.describe('watch contract', () => {
         reactStylesPath,
         watchFragmentTokenVariable,
         'react/styles.css should remove the fragment token variable after the fragment file is deleted',
+      )
+      expectFileToExclude(
+        pandaConfigPath,
+        fragmentTokenValue,
+        'panda.config.ts should remove the fragment token value after the fragment file is deleted',
       )
 
       await expect

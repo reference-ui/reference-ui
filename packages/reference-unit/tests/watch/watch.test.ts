@@ -170,9 +170,8 @@ describe('watch – dev server reactivity', () => {
     ).toBe(true)
   }, 30_000)
 
-  // TODO(matrix/watch): Matrix watch covers fragment token discovery/removal in
-  // react/styles.css and the browser, but not panda.config.ts refresh for this update path.
-  it('watch mode rebuilds panda config after a token fragment file update', async () => {
+  // MIGRATED: Covered by matrix/watch/tests/e2e/watch-contract.spec.ts.
+  it.skip('watch mode rebuilds panda config after a token fragment file update', async () => {
     const srcPath = join(pkgRoot, WATCH_TOKENS_FILE)
     const firstBaseline = getWatchReadyMarker()
     await writeFile(srcPath, makeTokensContent(TOKEN_HEX_A))

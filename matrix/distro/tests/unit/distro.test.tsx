@@ -31,6 +31,9 @@ const refUiDir = join(pkgRoot, '.reference-ui')
 const pandaConfigPath = join(refUiDir, 'panda.config.ts')
 const reactStylesPath = join(refUiDir, 'react', 'styles.css')
 const reactRuntimePath = join(refUiDir, 'react', 'react.mjs')
+const styledDir = join(refUiDir, 'styled')
+const styledPackageJsonPath = join(styledDir, 'package.json')
+const styledStylesPath = join(styledDir, 'styles.css')
 const systemRuntimePath = join(refUiDir, 'system', 'system.mjs')
 const baseSystemPath = join(refUiDir, 'system', 'baseSystem.mjs')
 const srcDir = join(pkgRoot, 'src')
@@ -238,6 +241,40 @@ describe('distro – install surface', () => {
 
     expect(children[0]?.props?.children).toBe('Reference UI distro matrix')
     expect(children[1]?.props?.children).toBe('This is the minimal matrix-enabled distro scenario.')
+  })
+
+  it('creates the generated styled package with package metadata and Panda pattern exports', () => {
+    expect(existsSync(styledDir), '.reference-ui/styled should exist').toBe(true)
+    expect(existsSync(styledPackageJsonPath), 'styled package.json').toBe(true)
+
+    const styledPackage = JSON.parse(readFileSync(styledPackageJsonPath, 'utf8')) as {
+      exports?: Record<string, unknown>
+    }
+
+    expect(styledPackage.exports).toMatchObject({
+      '.': {
+        import: './css/index.js',
+        types: './css/index.d.ts',
+      },
+      './patterns': {
+        import: './patterns/index.js',
+        types: './patterns/index.d.ts',
+      },
+    })
+
+    if (existsSync(join(styledDir, 'css'))) {
+      expect(existsSync(join(styledDir, 'patterns')), 'styled/patterns when css exists').toBe(true)
+    }
+  })
+
+  it('keeps generated styled/styles.css in a layered distro form', () => {
+    expect(existsSync(styledStylesPath), 'styled/styles.css').toBe(true)
+
+    const css = readFileSync(styledStylesPath, 'utf8')
+
+    expect(css).toMatch(/^@layer\s+reference-ui,\s*distro;/)
+    expect(css).toMatch(/@layer\s+distro\s*\{/)
+    expect(css).toContain('@layer reset, global, base, tokens, recipes, utilities;')
   })
 
   it(

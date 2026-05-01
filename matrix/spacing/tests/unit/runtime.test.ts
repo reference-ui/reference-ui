@@ -1,7 +1,17 @@
+import { existsSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 import { Index, matrixSpacingMarker } from '../../src/index'
 import { spacingMatrixClasses } from '../../src/styles'
+
+function readGeneratedStyledFile(...parts: string[]) {
+  const filePath = join(process.cwd(), '.reference-ui', 'styled', ...parts)
+
+  expect(existsSync(filePath), `${parts.join('/')} should exist in generated styled output`).toBe(true)
+
+  return readFileSync(filePath, 'utf-8')
+}
 
 describe('spacing matrix runtime', () => {
   it('exports the matrix marker', () => {
@@ -10,6 +20,18 @@ describe('spacing matrix runtime', () => {
 
   it('exports the size utility class', () => {
     expect(spacingMatrixClasses.sizeBox).toContain('size_')
+  })
+
+  it('emits size on the generated box pattern type surface', () => {
+    const boxTypes = readGeneratedStyledFile('patterns', 'box.d.ts')
+
+    expect(boxTypes).toMatch(/\bsize\?:/)
+  })
+
+  it('emits size on the generated style-props utility surface', () => {
+    const stylePropTypes = readGeneratedStyledFile('types', 'style-props.d.ts')
+
+    expect(stylePropTypes).toContain('UtilityValues["size"]')
   })
 
   it('renders the fixture entrypoint', () => {

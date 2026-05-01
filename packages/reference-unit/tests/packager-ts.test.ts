@@ -33,26 +33,30 @@ describe('packager-ts (TypeScript generator)', () => {
     await waitForTypeOutputs()
   })
   describe('declaration outputs', () => {
-    it('emits .reference-ui/react/react.d.mts', () => {
+    // MIGRATED: Covered by matrix/distro/tests/unit/generated-output.test.ts.
+    it.skip('emits .reference-ui/react/react.d.mts', () => {
       const path = join(refUiDir, 'react', 'react.d.mts')
       expect(existsSync(path), `${path} should exist`).toBe(true)
     })
 
-    it('emits .reference-ui/system/system.d.mts', () => {
+    // MIGRATED: Covered by matrix/distro/tests/unit/generated-output.test.ts.
+    it.skip('emits .reference-ui/system/system.d.mts', () => {
       const path = join(refUiDir, 'system', 'system.d.mts')
       expect(existsSync(path), `${path} should exist`).toBe(true)
     })
   })
 
   describe('package.json types field', () => {
-    it('react package.json has types pointing to react.d.mts', () => {
+    // MIGRATED: Covered by matrix/distro/tests/unit/generated-output.test.ts.
+    it.skip('react package.json has types pointing to react.d.mts', () => {
       const pkgPath = join(refUiDir, 'react', 'package.json')
       expect(existsSync(pkgPath), 'react package.json').toBe(true)
       const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'))
       expect(pkg.types).toBe('./react.d.mts')
     })
 
-    it('system package.json has types pointing to system.d.mts', () => {
+    // MIGRATED: Covered by matrix/distro/tests/unit/generated-output.test.ts.
+    it.skip('system package.json has types pointing to system.d.mts', () => {
       const pkgPath = join(refUiDir, 'system', 'package.json')
       expect(existsSync(pkgPath), 'system package.json').toBe(true)
       const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'))
@@ -61,7 +65,8 @@ describe('packager-ts (TypeScript generator)', () => {
   })
 
   describe('react declaration content', () => {
-    it('react.d.mts remains a stable root barrel for the emitted declaration graph', () => {
+    // MIGRATED: Covered by matrix/distro/tests/unit/generated-output.test.ts.
+    it.skip('react.d.mts remains a stable root barrel for the emitted declaration graph', () => {
       const rootPath = join(refUiDir, 'react', 'react.d.mts')
       const entryPath = join(refUiDir, 'react', 'entry', 'react.d.ts')
 
