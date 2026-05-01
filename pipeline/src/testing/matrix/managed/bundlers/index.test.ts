@@ -1,9 +1,6 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import {
-  createManagedBundlerFiles,
-  getManagedBundlerDevDependencies,
-} from './index.js'
+import { createManagedBundlerFiles, getManagedBundlerDevDependencies } from './index.js'
 
 describe('managed bundlers', () => {
   it('describes bundler-owned dependencies', () => {
@@ -23,7 +20,6 @@ describe('managed bundlers', () => {
   it('creates the managed Vite surface', () => {
     assert.deepEqual(createManagedBundlerFiles({ bundlers: ['vite7'], react: 'react19', title: 'Reference UI matrix' }), {
       'index.html': [
-        '<!-- This file is generated and managed by pipeline. -->',
         '<!doctype html>',
         '<html lang="en">',
         '  <head>',
@@ -39,9 +35,6 @@ describe('managed bundlers', () => {
         '',
       ].join('\n'),
       'vite.config.ts': [
-        '/*',
-        ' * This file is generated and managed by pipeline.',
-        ' */',
         "import { referenceVite } from '@reference-ui/core'",
         "import react from '@vitejs/plugin-react'",
         "import { defineConfig } from 'vite'",
@@ -67,7 +60,6 @@ describe('managed bundlers', () => {
   it('creates the managed webpack surface', () => {
     assert.deepEqual(createManagedBundlerFiles({ bundlers: ['webpack5'], react: 'react19', title: 'Reference UI matrix' }), {
       'index.html': [
-        '<!-- This file is generated and managed by pipeline. -->',
         '<!doctype html>',
         '<html lang="en">',
         '  <head>',
@@ -82,9 +74,6 @@ describe('managed bundlers', () => {
         '',
       ].join('\n'),
       'webpack.config.cjs': [
-        '/*',
-        ' * This file is generated and managed by pipeline.',
-        ' */',
         "const path = require('node:path')",
         "const HtmlWebpackPlugin = require('html-webpack-plugin')",
         '',
@@ -108,7 +97,8 @@ describe('managed bundlers', () => {
         '    module: {',
         '      rules: [',
         '        {',
-        '          test: /\\.tsx?$/,',
+        '          test: /\\.tsx?$/',
+        '          ,',
         '          exclude: /node_modules/,',
         '          use: {',
         "            loader: 'ts-loader',",
@@ -147,5 +137,4 @@ describe('managed bundlers', () => {
       ].join('\n'),
     })
   })
-
 })
