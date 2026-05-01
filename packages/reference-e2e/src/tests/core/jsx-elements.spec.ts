@@ -25,6 +25,7 @@ test.describe.serial('jsxElements', () => {
     await runRefSync(sandboxDir)
   })
 
+  // MIGRATED: Covered by matrix/primitives/tests/e2e/primitives-contract.spec.ts.
   test('config escape hatch styles a local custom JSX component', async ({ page }) => {
     const sandboxDir = getSandboxDir()
 

@@ -30,6 +30,8 @@ const TEST_BG = 'referenceUnitToken'
 const TEST_COLOR = 'referenceUnitColorModeToken'
 
 describe('Div primitive', () => {
+  // TODO(matrix/primitives): No matrix case currently asserts the base Div renders
+  // as a div with children; keep this local runtime smoke for now.
   it('renders as a div with children', () => {
     render(<Div data-testid="div-basic">Hello</Div>)
     const el = screen.getByTestId('div-basic')
@@ -37,6 +39,8 @@ describe('Div primitive', () => {
     expect(el).toHaveTextContent('Hello')
   })
 
+  // TODO(matrix/primitives): Add an explicit data-layer assertion in
+  // matrix/primitives/tests/e2e/primitives-contract.spec.ts, then retire this case.
   it('sets data-layer from ui.config.name (automatic layer identity)', () => {
     render(<Div data-testid="div-layer">Content</Div>)
     const el = screen.getByTestId('div-layer')
@@ -44,7 +48,8 @@ describe('Div primitive', () => {
     expect(el.getAttribute('data-layer')).toBe('reference-unit')
   })
 
-  it('accepts style props and renders in the document', () => {
+  // MIGRATED: Covered by matrix/primitives/tests/e2e/primitives-contract.spec.ts.
+  it.skip('accepts style props and renders in the document', () => {
     render(
       <Div
         data-testid="div-styled"
@@ -61,7 +66,8 @@ describe('Div primitive', () => {
     // When using reference-core Div (or the legacy CLI package with full box pattern), className will be set from Panda utilities
   })
 
-  it('resolves computed styles when design system CSS is injected', () => {
+  // MIGRATED: Covered by matrix/primitives/tests/e2e/primitives-contract.spec.ts.
+  it.skip('resolves computed styles when design system CSS is injected', () => {
     if (!hasDesignSystemCss()) return
 
     render(
@@ -84,7 +90,9 @@ describe('Div primitive', () => {
     }
   })
 
-  it('applies token-based style props when design system CSS is present', () => {
+  // MIGRATED: Covered by matrix/primitives/tests/e2e/primitives-contract.spec.ts
+  // and matrix/system/tests/e2e/system-contract.spec.ts.
+  it.skip('applies token-based style props when design system CSS is present', () => {
     if (!hasDesignSystemCss()) return
 
     render(
@@ -100,7 +108,8 @@ describe('Div primitive', () => {
     }
   })
 
-  it('composes the css prop into classes instead of leaking it to the DOM', () => {
+  // MIGRATED: Covered by matrix/primitives/tests/e2e/primitives-contract.spec.ts.
+  it.skip('composes the css prop into classes instead of leaking it to the DOM', () => {
     render(
       <Div
         data-testid="div-css-prop"

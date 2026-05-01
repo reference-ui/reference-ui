@@ -23,6 +23,8 @@ beforeAll(() => {
 })
 
 describe('font subsystem', () => {
+  // TODO(matrix/font): Matrix font tests cover generated font types and mounted
+  // stylesheet behavior, but they do not inspect panda.config.ts helper wiring.
   it('injects generated font config fragments into panda.config.ts', () => {
     if (!existsSync(pandaConfigPath)) return
 
@@ -34,7 +36,9 @@ describe('font subsystem', () => {
     expect(content).toContain('buildFontPatternExtensions(fontDefinitions)')
   })
 
-  it('emits @font-face rules in generated CSS', () => {
+  // MIGRATED: Covered by matrix/font/tests/unit/runtime.test.ts
+  // and matrix/font/tests/e2e/font-contract.spec.ts.
+  it.skip('emits @font-face rules in generated CSS', () => {
     const css = getDesignSystemCss()
     if (!css) return
 

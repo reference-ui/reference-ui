@@ -6,6 +6,8 @@ import {
 } from './customProps-output.helpers'
 
 describe('named container output (e2e)', () => {
+  // TODO(matrix/responsive): Add one generated-output assertion that this
+  // source-backed fixture is mirrored into virtual output, then retire this smoke.
   it('copies the source-backed named container fixture into virtual output', () => {
     expect(hasVirtualSystemFile('containerNamed.fixture.tsx')).toBe(true)
 
@@ -13,7 +15,9 @@ describe('named container output (e2e)', () => {
     expect(content).toContain('container="shell"')
   })
 
-  it('extracts named container query styles from source-backed primitive usage', () => {
+  // MIGRATED: Covered by matrix/responsive/tests/e2e/system-contract.spec.ts
+  // and matrix/responsive/tests/unit/generated-output.test.ts.
+  it.skip('extracts named container query styles from source-backed primitive usage', () => {
     const css = readGeneratedFile('styled', 'styles.css')
     if (!css) return
 

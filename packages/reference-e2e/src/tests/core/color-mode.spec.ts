@@ -9,12 +9,14 @@ function hexToRgb(hex: string): string {
 }
 
 test.describe('color mode', () => {
+  // MIGRATED: Covered by matrix/color-mode/tests/e2e/system-contract.spec.ts.
   test('ColorModeTest mounts', async ({ page }) => {
     await page.goto(testRoutes.colorMode)
     const root = page.getByTestId('color-mode-test')
     await expect(root).toBeVisible()
   })
 
+  // MIGRATED: Covered by matrix/color-mode/tests/e2e/system-contract.spec.ts.
   test('nested dark colorMode creates a dark island inside a light scope', async ({ page }) => {
     await page.goto(testRoutes.colorMode)
     const outer = page.getByTestId('tokens-mode-outer-light')
@@ -29,6 +31,7 @@ test.describe('color mode', () => {
     expect(innerColor).toBe(hexToRgb(tokensConfig.colors.test.colorMode.dark))
   })
 
+  // MIGRATED: Covered by matrix/color-mode/tests/e2e/system-contract.spec.ts.
   test('explicit light preview creates a light island inside a dark scope', async ({ page }) => {
     await page.goto(testRoutes.colorMode)
     const darkPreview = page.getByTestId('tokens-docs-preview-dark')
@@ -43,6 +46,7 @@ test.describe('color mode', () => {
     expect(lightPreviewColor).toBe(hexToRgb(tokensConfig.colors.test.colorMode.value))
   })
 
+  // MIGRATED: Covered by matrix/color-mode/tests/e2e/system-contract.spec.ts.
   test('dark preview creates a dark island inside a light scope', async ({ page }) => {
     await page.goto(testRoutes.colorMode)
     const lightHost = page.getByTestId('tokens-docs-light-host-token')
@@ -57,6 +61,7 @@ test.describe('color mode', () => {
     expect(darkIslandColor).toBe(hexToRgb(tokensConfig.colors.test.colorMode.dark))
   })
 
+  // MIGRATED: Covered by matrix/color-mode/tests/e2e/system-contract.spec.ts.
   test('descendants follow the nearest explicit light or dark scope', async ({ page }) => {
     await page.goto(testRoutes.colorMode)
     const lightChild = page.getByTestId('tokens-cascade-light-child')

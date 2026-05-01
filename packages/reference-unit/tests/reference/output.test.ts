@@ -9,7 +9,8 @@ import {
 } from './helpers'
 
 describe('reference output', () => {
-  it('emits Tasty artifacts under .reference-ui/types/tasty', async () => {
+  // MIGRATED: Covered by matrix/reference/tests/unit/reference-output.test.ts.
+  it.skip('emits Tasty artifacts under .reference-ui/types/tasty', async () => {
     const ready = await waitForReferenceArtifacts()
     expect(ready, 'reference manifest should be emitted by the reference worker').toBe(
       true
@@ -21,6 +22,8 @@ describe('reference output', () => {
     )
   })
 
+  // TODO(matrix/reference): matrix/reference loads local symbols, but it does
+  // not yet lock the raw indexed-access shape for ReferenceApiVariant.
   it('loads known symbols from the reference-unit source fixture', async () => {
     const ready = await waitForReferenceArtifacts()
     expect(ready, 'reference manifest should be emitted by the reference worker').toBe(
@@ -53,6 +56,8 @@ describe('reference output', () => {
     expect(variantMember?.getType()?.describe()).toContain('ghost')
   })
 
+  // TODO(matrix/reference): matrix/reference covers StyleProps loading, but not
+  // yet this broader inherited member surface across the extends fixtures.
   it('indexes public React StyleProps alongside local fixture symbols', async () => {
     const ready = await waitForReferenceArtifacts()
     expect(ready, 'reference manifest should be emitted by the reference worker').toBe(
@@ -87,7 +92,8 @@ describe('reference output', () => {
     expect(fixture.getKind()).toBe('interface')
   })
 
-  it('projects display members for composed type aliases in generated reference artifacts', async () => {
+  // MIGRATED: Covered by matrix/reference/tests/unit/reference-output.test.ts.
+  it.skip('projects display members for composed type aliases in generated reference artifacts', async () => {
     const ready = await waitForReferenceArtifacts()
     expect(ready, 'reference manifest should be emitted by the reference worker').toBe(
       true
@@ -111,6 +117,8 @@ describe('reference output', () => {
     )
   })
 
+  // TODO(matrix/reference): Add unit coverage for flattening display members
+  // when an interface extends a type alias.
   it('flattens inherited display members when an interface extends a type alias', async () => {
     const ready = await waitForReferenceArtifacts()
     expect(ready, 'reference manifest should be emitted by the reference worker').toBe(
@@ -129,6 +137,8 @@ describe('reference output', () => {
     )
   })
 
+  // TODO(matrix/reference): matrix/reference locks the direct alias target, but
+  // not yet the raw-API display member projection for that alias.
   it('still projects direct alias targets in the raw Tasty API', async () => {
     const ready = await waitForReferenceArtifacts()
     expect(ready, 'reference manifest should be emitted by the reference worker').toBe(

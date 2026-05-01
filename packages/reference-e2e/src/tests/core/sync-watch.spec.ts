@@ -49,6 +49,7 @@ export default function SyncWatch() {
 }
 
 test.describe('sync-watch', () => {
+  // MIGRATED: Covered by matrix/watch/tests/e2e/watch-contract.spec.ts.
   test('ref sync --watch picks up css() style change and it appears on screen', async ({
     page,
   }) => {

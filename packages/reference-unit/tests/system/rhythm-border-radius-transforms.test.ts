@@ -45,6 +45,8 @@ describe('rhythmUtilities border radius transforms', () => {
     'borderEndEndRadius',
   ] as const
 
+  // TODO(matrix/spacing): Keep this local until matrix adds direct transform-level
+  // coverage for rhythm border-radius utilities.
   it('single-property utilities map 2r to calc(2 * var(--spacing-root)) on that property', () => {
     for (const key of singleKeys) {
       const u = rhythmBorderRadiusUtilities[key]
@@ -52,6 +54,8 @@ describe('rhythmUtilities border radius transforms', () => {
     }
   })
 
+  // TODO(matrix/spacing): Keep this local until matrix adds direct transform-level
+  // coverage for pair shorthand border-radius utilities.
   it('pair shorthands set both corners to the same resolved rhythm value', () => {
     expect(rhythmBorderRadiusUtilities.borderTopRadius.transform('2r', mockArgs('2r'))).toEqual({
       borderTopLeftRadius: twoR,
@@ -79,6 +83,8 @@ describe('rhythmUtilities border radius transforms', () => {
     })
   })
 
+  // TODO(matrix/spacing): Keep this local until matrix adds direct transform-level
+  // coverage for literal passthrough and radii-token resolution.
   it('passes through literal CSS values and resolves radii tokens', () => {
     expect(rhythmBorderRadiusUtilities.borderRadius.transform('8px', mockArgs('8px'))).toEqual({
       borderRadius: '8px',
@@ -97,6 +103,8 @@ describe('rhythmUtilities border radius transforms', () => {
     })
   })
 
+  // TODO(matrix/spacing): Keep this local until matrix adds direct transform-level
+  // coverage for the 1r edge case.
   it('1r resolves to var(--spacing-root)', () => {
     expect(rhythmBorderRadiusUtilities.borderRadius.transform('1r', mockArgs('1r'))).toEqual({
       borderRadius: 'var(--spacing-root)',

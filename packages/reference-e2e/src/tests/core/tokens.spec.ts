@@ -10,12 +10,14 @@ function hexToRgb(hex: string): string {
 }
 
 test.describe('tokens', () => {
+  // MIGRATED: Covered by matrix/tokens/tests/e2e/system-contract.spec.ts.
   test('TokensTest mounts', async ({ page }) => {
     await page.goto(testRoutes.tokens)
     const root = page.getByTestId('tokens-test')
     await expect(root).toBeVisible()
   })
 
+  // MIGRATED: Covered by matrix/tokens/tests/e2e/system-contract.spec.ts.
   test('tokens() - primitive uses custom color from config', async ({ page }) => {
     await page.goto(testRoutes.tokens)
     const el = page.getByTestId('tokens-primitive')
@@ -27,6 +29,7 @@ test.describe('tokens', () => {
       .toBe(expected)
   })
 
+  // MIGRATED: Covered by matrix/tokens/tests/e2e/system-contract.spec.ts.
   test('tokens() - css() resolves custom color and bg from config', async ({ page }) => {
     await page.goto(testRoutes.tokens)
     const el = page.getByTestId('tokens-css')

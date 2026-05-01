@@ -20,7 +20,8 @@ beforeAll(() => {
 })
 
 describe('keyframes() API', () => {
-  it('emits @keyframes fadeIn in design system CSS', () => {
+  // MIGRATED: Covered by matrix/system/tests/e2e/system-contract.spec.ts.
+  it.skip('emits @keyframes fadeIn in design system CSS', () => {
     const css = getDesignSystemCss()
     if (!css) return
 
@@ -29,7 +30,8 @@ describe('keyframes() API', () => {
     expect(css).toMatch(/fadeIn[\s\S]*?opacity:\s*1/)
   })
 
-  it('mounts a Div with animation and renders', () => {
+  // MIGRATED: Covered by matrix/system/tests/e2e/system-contract.spec.ts.
+  it.skip('mounts a Div with animation and renders', () => {
     render(
       <Div data-testid="div-animate" animation="fadeIn 1s ease">
         Animated

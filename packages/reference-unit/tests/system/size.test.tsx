@@ -16,7 +16,8 @@ beforeAll(() => {
 })
 
 describe('size utility surface', () => {
-  it('css({ size }) emits the generated size utility class', () => {
+  // MIGRATED: Covered by matrix/spacing/tests/e2e/system-contract.spec.ts.
+  it.skip('css({ size }) emits the generated size utility class', () => {
     const className = css({ size: '2r' })
 
     render(
@@ -29,7 +30,8 @@ describe('size utility surface', () => {
     expect(el.className).toContain('size_')
   })
 
-  it('css({ size }) applies equal width and height when CSS is present', () => {
+  // MIGRATED: Covered by matrix/spacing/tests/e2e/system-contract.spec.ts.
+  it.skip('css({ size }) applies equal width and height when CSS is present', () => {
     if (!getDesignSystemCssPath()) return
 
     render(

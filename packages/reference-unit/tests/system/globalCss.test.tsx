@@ -18,7 +18,8 @@ beforeAll(() => {
 })
 
 describe('globalCss() API', () => {
-  it('emits :root with --ref-unit-test-var in design system CSS', () => {
+  // MIGRATED: Covered by matrix/system/tests/e2e/system-contract.spec.ts.
+  it.skip('emits :root with --ref-unit-test-var in design system CSS', () => {
     const css = getDesignSystemCss()
     if (!css) return
 
