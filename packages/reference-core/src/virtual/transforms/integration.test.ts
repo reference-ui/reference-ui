@@ -6,6 +6,54 @@ import { microBundle } from '../../lib/microbundle'
 import { applyTransforms } from './index'
 
 const createdDirs: string[] = []
+const SOURCE_IMPORT = "import { css, recipe } from '@reference-ui/react'"
+const CONSTANTS_IMPORT = "import { constants } from './constants'"
+const SYSTEM_CVA_IMPORT = "import { cva } from 'src/system/css';"
+const SYSTEM_CSS_IMPORT = "import { css } from 'src/system/css';"
+
+function writeTransformFixture(srcDir: string): { stylesPath: string } {
+  const constantsPath = join(srcDir, 'constants.ts')
+  const stylesPath = join(srcDir, 'styles.ts')
+
+  writeFileSync(constantsPath, "export const constants = { nested: '12px' } as const\n")
+  writeFileSync(
+    stylesPath,
+    [
+      SOURCE_IMPORT,
+      CONSTANTS_IMPORT,
+      'export const card = css({',
+      "  '& [data-slot=inner]': { marginTop: constants.nested },",
+      '})',
+      'export const button = recipe({',
+      '  base: { color: \'red\' },',
+      '})',
+    ].join('\n') + '\n'
+  )
+
+  return { stylesPath }
+}
+
+async function readFileText(filePath: string): Promise<string> {
+  return import('node:fs/promises').then(fs => fs.readFile(filePath, 'utf-8'))
+}
+
+function expectNeutralizedSource(content: string): void {
+  expect(content).toContain(SYSTEM_CVA_IMPORT)
+  expect(content).toContain(SYSTEM_CSS_IMPORT)
+  expect(content).toContain('const __reference_ui_css = css;')
+  expect(content).toContain('const __reference_ui_cva = cva;')
+  expect(content).toContain('__reference_ui_css({')
+  expect(content).toContain('__reference_ui_cva({')
+}
+
+function expectArtifactTransform(content: string): void {
+  expect(content).toContain(SYSTEM_CVA_IMPORT)
+  expect(content).toContain(SYSTEM_CSS_IMPORT)
+  expect(content).not.toContain('__reference_ui_css')
+  expect(content).not.toContain('__reference_ui_cva')
+  expect(content).toContain('css({')
+  expect(content).toContain('cva({')
+}
 
 function createTempDir(): string {
   const dir = mkdtempSync(join(tmpdir(), 'reference-ui-transform-integration-'))
@@ -25,37 +73,15 @@ describe('virtual transforms integration', () => {
     const srcDir = join(root, 'src')
     mkdirSync(srcDir, { recursive: true })
 
-    const constantsPath = join(srcDir, 'constants.ts')
-    const stylesPath = join(srcDir, 'styles.ts')
-
-    writeFileSync(constantsPath, "export const constants = { nested: '12px' } as const\n")
-    writeFileSync(
-      stylesPath,
-      [
-        "import { css, recipe } from '@reference-ui/react'",
-        "import { constants } from './constants'",
-        'export const card = css({',
-        "  '& [data-slot=inner]': { marginTop: constants.nested },",
-        '})',
-        'export const button = recipe({',
-        '  base: { color: \'red\' },',
-        '})',
-      ].join('\n') + '\n'
-    )
-
-    const sourceContent = await import('node:fs/promises').then(fs => fs.readFile(stylesPath, 'utf-8'))
+    const { stylesPath } = writeTransformFixture(srcDir)
+    const sourceContent = await readFileText(stylesPath)
     const transformedSource = await applyTransforms({
       sourcePath: stylesPath,
       relativePath: 'src/styles.ts',
       content: sourceContent,
     })
 
-    expect(transformedSource.content).toContain("import { cva } from 'src/system/css';")
-    expect(transformedSource.content).toContain("import { css } from 'src/system/css';")
-    expect(transformedSource.content).toContain('const __reference_ui_css = css;')
-    expect(transformedSource.content).toContain('const __reference_ui_cva = cva;')
-    expect(transformedSource.content).toContain('__reference_ui_css({')
-    expect(transformedSource.content).toContain('__reference_ui_cva({')
+    expectNeutralizedSource(transformedSource.content)
 
     const bundled = await microBundle(stylesPath, {
       format: 'esm',
@@ -68,11 +94,6 @@ describe('virtual transforms integration', () => {
       content: bundled,
     })
 
-    expect(transformedBundle.content).toContain("import { cva } from 'src/system/css';")
-    expect(transformedBundle.content).toContain("import { css } from 'src/system/css';")
-    expect(transformedBundle.content).not.toContain('__reference_ui_css')
-    expect(transformedBundle.content).not.toContain('__reference_ui_cva')
-    expect(transformedBundle.content).toContain('css({')
-    expect(transformedBundle.content).toContain('cva({')
+    expectArtifactTransform(transformedBundle.content)
   })
 })

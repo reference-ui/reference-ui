@@ -1,16 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { neutralizeStyleCalls } from './index'
 
+type ReplaceFunctionNameNative = typeof import('@reference-ui/rust')['replaceFunctionName']
+
 const { replaceFunctionNameNative } = vi.hoisted(() => ({
-  replaceFunctionNameNative: vi.fn<
-    (
-      sourceCode: string,
-      relativePath: string,
-      fromName: string,
-      toName: string,
-      importFrom?: string,
-    ) => string
-  >(),
+  replaceFunctionNameNative: vi.fn<ReplaceFunctionNameNative>(),
 }))
 
 vi.mock('@reference-ui/rust', () => ({

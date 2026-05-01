@@ -5,6 +5,42 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { syncVirtualSnapshot } from './sync-snapshot'
 
 const createdDirs: string[] = []
+const SOURCE_IMPORT = "import { css, recipe } from '@reference-ui/react'"
+const CONSTANTS_IMPORT = "import { constants } from './constants'"
+const VIRTUAL_IMPORT = "import { css } from 'src/system/css';"
+const VIRTUAL_CVA_IMPORT = "import { cva } from 'src/system/css';"
+
+function writeSourceFixture(srcDir: string): void {
+  writeFileSync(join(srcDir, 'constants.ts'), "export const constants = { nested: '12px' } as const\n")
+  writeFileSync(
+    join(srcDir, 'styles.ts'),
+    [
+      SOURCE_IMPORT,
+      CONSTANTS_IMPORT,
+      'export const card = css({',
+      "  '& [data-slot=inner]': { marginTop: constants.nested },",
+      '})',
+      'export const button = recipe({',
+      '  base: { color: \'red\' },',
+      '})',
+    ].join('\n') + '\n'
+  )
+}
+
+function expectVirtualSource(source: string): void {
+  expect(source).toContain(VIRTUAL_IMPORT)
+  expect(source).toContain(VIRTUAL_CVA_IMPORT)
+  expect(source).toContain('const __reference_ui_css = css;')
+  expect(source).toContain('const __reference_ui_cva = cva;')
+  expect(source).toContain('__reference_ui_css({')
+  expect(source).toContain('__reference_ui_cva({')
+}
+
+function expectArtifactBundle(artifact: string): void {
+  expect(artifact).toContain(VIRTUAL_IMPORT)
+  expect(artifact).toContain('css({')
+  expect(artifact).not.toContain('__reference_ui_css')
+}
 
 function createTempDir(): string {
   const dir = mkdtempSync(join(tmpdir(), 'reference-ui-sync-snapshot-integration-'))
@@ -24,20 +60,7 @@ describe('virtual/fs/sync-snapshot integration', () => {
     const srcDir = join(root, 'src')
     mkdirSync(srcDir, { recursive: true })
 
-    writeFileSync(join(srcDir, 'constants.ts'), "export const constants = { nested: '12px' } as const\n")
-    writeFileSync(
-      join(srcDir, 'styles.ts'),
-      [
-        "import { css, recipe } from '@reference-ui/react'",
-        "import { constants } from './constants'",
-        'export const card = css({',
-        "  '& [data-slot=inner]': { marginTop: constants.nested },",
-        '})',
-        'export const button = recipe({',
-        '  base: { color: \'red\' },',
-        '})',
-      ].join('\n') + '\n'
-    )
+    writeSourceFixture(srcDir)
 
     await syncVirtualSnapshot({
       sourceDir: root,
@@ -56,15 +79,7 @@ describe('virtual/fs/sync-snapshot integration', () => {
     const virtualSource = readFileSync(virtualSourcePath, 'utf-8')
     const artifact = readFileSync(artifactPath, 'utf-8')
 
-    expect(virtualSource).toContain("import { css } from 'src/system/css';")
-    expect(virtualSource).toContain("import { cva } from 'src/system/css';")
-    expect(virtualSource).toContain('const __reference_ui_css = css;')
-    expect(virtualSource).toContain('const __reference_ui_cva = cva;')
-    expect(virtualSource).toContain('__reference_ui_css({')
-    expect(virtualSource).toContain('__reference_ui_cva({')
-
-    expect(artifact).toContain("import { css } from 'src/system/css';")
-    expect(artifact).toContain('css({')
-    expect(artifact).not.toContain('__reference_ui_css')
+    expectVirtualSource(virtualSource)
+    expectArtifactBundle(artifact)
   })
 })

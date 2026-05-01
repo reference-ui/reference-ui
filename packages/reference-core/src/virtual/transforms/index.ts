@@ -23,6 +23,48 @@ export interface ApplyTransformsResult {
   transformed: boolean
 }
 
+function shouldTransformJavaScript(ext: string, content: string): boolean {
+  return ['.js', '.jsx', '.ts', '.tsx'].includes(ext) && content.includes(CORE_PACKAGE)
+}
+
+async function maybeTransformMdx(
+  content: string,
+  extension: string,
+  relativePath: string,
+): Promise<{ content: string; extension: string; transformed: boolean }> {
+  if (extension !== '.mdx') {
+    return { content, extension, transformed: false }
+  }
+
+  const { mdxToJsx } = await import('./mdx-to-jsx')
+  return {
+    content: await mdxToJsx(content, relativePath),
+    extension: '.jsx',
+    transformed: true,
+  }
+}
+
+async function applyCorePackageTransforms(
+  content: string,
+  relativePath: string,
+): Promise<string> {
+  const { rewriteCvaImports } = await import('./cva-imports')
+  const { rewriteCssImports } = await import('./css-imports')
+  const { applyResponsiveStyles } = await import('./apply-responsive-styles')
+  const { neutralizeStyleCalls } = await import('./neutralize-style-calls')
+
+  const rewritten = applyResponsiveStyles(
+    rewriteCssImports(rewriteCvaImports(content, relativePath), relativePath),
+    relativePath,
+  )
+
+  if (relativePath.startsWith(REFERENCE_UI_ARTIFACT_PREFIX)) {
+    return rewritten
+  }
+
+  return neutralizeStyleCalls(rewritten, relativePath)
+}
+
 /**
  * Apply all transforms to a file in the correct order.
  *
@@ -36,39 +78,23 @@ export async function applyTransforms(
   options: ApplyTransformsOptions
 ): Promise<ApplyTransformsResult> {
   const { sourcePath, relativePath, content } = options
-  const ext = extname(sourcePath)
+  const sourceExtension = extname(sourcePath)
+  const mdxResult = await maybeTransformMdx(content, sourceExtension, relativePath)
+  let transformedContent = mdxResult.content
+  const finalExtension = mdxResult.extension
+  let wasTransformed = mdxResult.transformed
 
-  let transformedContent = content
-  let newExtension: string | undefined
-  let wasTransformed = false
-
-  if (ext === '.mdx') {
-    const { mdxToJsx } = await import('./mdx-to-jsx')
-    transformedContent = await mdxToJsx(transformedContent, relativePath)
-    newExtension = '.jsx'
-    wasTransformed = true
-  }
-
-  const finalExt = newExtension || ext
-  if (['.js', '.jsx', '.ts', '.tsx'].includes(finalExt) && transformedContent.includes(CORE_PACKAGE)) {
-    const { rewriteCvaImports } = await import('./cva-imports')
-    const { rewriteCssImports } = await import('./css-imports')
-    const { applyResponsiveStyles } = await import('./apply-responsive-styles')
-    const { neutralizeStyleCalls } = await import('./neutralize-style-calls')
+  if (shouldTransformJavaScript(finalExtension, transformedContent)) {
     const before = transformedContent
-    transformedContent = applyResponsiveStyles(
-      rewriteCssImports(rewriteCvaImports(transformedContent, relativePath), relativePath),
-      relativePath,
-    )
-    if (!relativePath.startsWith(REFERENCE_UI_ARTIFACT_PREFIX)) {
-      transformedContent = neutralizeStyleCalls(transformedContent, relativePath)
+    transformedContent = await applyCorePackageTransforms(transformedContent, relativePath)
+    if (transformedContent !== before) {
+      wasTransformed = true
     }
-    if (transformedContent !== before) wasTransformed = true
   }
 
   return {
     content: transformedContent,
-    extension: newExtension,
+    extension: finalExtension === sourceExtension ? undefined : finalExtension,
     transformed: wasTransformed,
   }
 }

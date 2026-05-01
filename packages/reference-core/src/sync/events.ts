@@ -123,7 +123,7 @@ export function initEvents(): void {
    */
   on('watch:change', payload => {
     if (payload.requiresFullResync) {
-      void refreshWatchConfig()
+      refreshWatchConfig()
         .then(() => {
           emit('run:virtual:copy:all')
         })

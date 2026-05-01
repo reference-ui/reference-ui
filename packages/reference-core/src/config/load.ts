@@ -29,7 +29,7 @@ export async function loadUserConfigWithDependencies(
   }
 
   let raw: unknown
-  let dependencyPaths: string[] = [configPath]
+  let dependencyPaths: string[]
   try {
     const bundled = await bundleConfigWithDependencies(configPath)
     dependencyPaths = bundled.dependencyPaths
