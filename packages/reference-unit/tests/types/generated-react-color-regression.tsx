@@ -4,6 +4,10 @@
  * This exercises the same consumer surface as the install-test matrix fixture:
  * `DivProps`, `ComponentProps<typeof Div>`, extracted prop types, and direct JSX.
  *
+ * MIGRATED: Covered by matrix/distro/tests/unit/distro.test.tsx, which now
+ * typechecks the same generated React prop surface plus a custom generated token
+ * contract after ref sync.
+ *
  * If generated package types widen color-bearing props back to `string`, the
  * `@ts-expect-error` assertions below become unused and `tsc --noEmit` fails.
  */
