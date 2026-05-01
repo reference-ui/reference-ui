@@ -1,4 +1,4 @@
-import { microBundle, microBundleWithResult } from '../lib/microbundle'
+import { microBundleWithResult } from '../lib/microbundle'
 import { CONFIG_EXTERNALS } from './constants'
 import { existsSync, realpathSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
