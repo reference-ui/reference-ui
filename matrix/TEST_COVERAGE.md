@@ -208,11 +208,12 @@ Those are real product surfaces, not just implementation details.
 - [DONE] `matrix/spacing` asserts that explicit `width` overrides the width side of `size` while the height side still comes from rhythm.
 - [DONE] `matrix/spacing` asserts that explicit `height` overrides the height side of `size` while the width side still comes from rhythm.
 - [DONE] `matrix/spacing` asserts the generated styled declaration surface keeps `size` on both the `box` pattern types and the emitted `style-props` utility types.
+- [DONE] `matrix/spacing` asserts the direct rhythm `size` transform path still maps rhythm units and literal CSS values to equal width and height outputs.
 - [DONE] `matrix/spacing` asserts that `borderRadius="2r"` resolves to the rhythm radius in a real browser.
 - [DONE] `matrix/spacing` asserts that literal `borderRadius="12px"` survives the runtime path unchanged in a real browser.
 - [DONE] `matrix/spacing` asserts that built-in radii tokens like `borderRadius="lg"` resolve in a real browser.
 - [DONE] `matrix/spacing` asserts that physical and logical border-radius pair shorthands apply both addressed corners in the browser.
-- Port the remaining rhythm transform edge cases from the old unit suite.
+- Port the remaining direct rhythm border-radius transform edge cases from the old unit suite.
 - [DONE] `matrix/spacing` broadens shorthand override coverage with four-value `paddingRight` and `marginTop` precedence cases, while checking the untouched opposite side still keeps the shorthand value.
 - Cover rebuild cleanup when `size` is removed, plus any remaining multi-dimension interaction cases beyond the current width/height overrides.
 - Decide deliberately whether responsive rhythm values belong here or remain concentrated under `responsive`.
