@@ -5,6 +5,9 @@
  *
  * `pnpm run test` ends with `tsc --noEmit`; if these assignments fail, the suite fails.
  *
+ * TODO(matrix/distro): Add a compile-time probe for inherited consumer token names
+ * that come from extends/baseSystem and fixture libraries, then retire this file.
+ *
  * Palette scale steps (`blue.300`, …) are covered in `strict-color-palette-tokens.ts`.
  */
 import { Div } from '@reference-ui/react'
