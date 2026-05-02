@@ -189,24 +189,38 @@ export function readMatrixPackageConfig(packageDir: string): MatrixPackageConfig
 export function listMatrixPackageDefinitions(packageNames?: readonly string[]): MatrixPackageDefinition[] {
   const selectedNames = packageNames ? new Set(packageNames.map(normalizeSelectedMatrixPackageName)) : null
 
+  const collectDefinitions = (dir: string): MatrixPackageDefinition | null => {
+    const config = readMatrixPackageConfig(dir)
+
+    if (!config) {
+      return null
+    }
+
+    return {
+      config,
+      configPath: matrixConfigPath(dir),
+      dir,
+      packageName: getMatrixPackageName(config),
+    }
+  }
+
   const definitions = readdirSync(matrixRootDir, { withFileTypes: true })
     .filter(entry => entry.isDirectory())
-    .map((entry) => {
+    .flatMap((entry) => {
       const dir = resolve(matrixRootDir, entry.name)
-      const config = readMatrixPackageConfig(dir)
+      const definition = collectDefinitions(dir)
 
-      if (!config) {
-        return null
+      if (definition) {
+        return [definition]
       }
 
-      return {
-        config,
-        configPath: matrixConfigPath(dir),
-        dir,
-        packageName: getMatrixPackageName(config),
-      }
+      // No matrix.json at this level — treat the directory as a group container
+      // and scan one level deeper (e.g. matrix/chain/T1, matrix/chain/T2).
+      return readdirSync(dir, { withFileTypes: true })
+        .filter(subEntry => subEntry.isDirectory())
+        .map(subEntry => collectDefinitions(resolve(dir, subEntry.name)))
+        .filter((d): d is MatrixPackageDefinition => d !== null)
     })
-    .filter((definition): definition is MatrixPackageDefinition => definition !== null)
     .filter(definition => selectedNames ? selectedNames.has(definition.packageName) : true)
     .sort((left, right) => left.packageName.localeCompare(right.packageName))
 

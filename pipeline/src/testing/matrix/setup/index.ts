@@ -109,6 +109,7 @@ export async function setupMatrixPackages(options: MatrixSetupOptions = {}): Pro
     const generatedPackageJson = createManagedMatrixPackageJson({
       config: definition.config,
       existingPackageJson,
+      packageDir: definition.dir,
       packageName: definition.packageName,
     })
     const managedFiles = createManagedMatrixFixtureFiles(definition)

@@ -159,12 +159,28 @@ function listConfiguredPackageJsonPaths(): string[] {
         continue
       }
 
-      const packageJsonPath = join(absoluteRoot, entry.name, 'package.json')
-      if (!existsSync(packageJsonPath)) {
+      const childDir = join(absoluteRoot, entry.name)
+      const packageJsonPath = join(childDir, 'package.json')
+
+      if (existsSync(packageJsonPath)) {
+        packageJsonPaths.add(packageJsonPath)
         continue
       }
 
-      packageJsonPaths.add(packageJsonPath)
+      // For the matrix root, support one level of grouping (e.g. matrix/chain/T1).
+      // A first-level directory without a package.json acts as a group container.
+      if (packageRoot === 'matrix') {
+        for (const subEntry of readdirSync(childDir, { withFileTypes: true })) {
+          if (!subEntry.isDirectory()) {
+            continue
+          }
+
+          const subPackageJsonPath = join(childDir, subEntry.name, 'package.json')
+          if (existsSync(subPackageJsonPath)) {
+            packageJsonPaths.add(subPackageJsonPath)
+          }
+        }
+      }
     }
   }
 

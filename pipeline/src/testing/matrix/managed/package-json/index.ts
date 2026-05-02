@@ -6,8 +6,10 @@
  * - the synthetic consumer package.json generated inside Dagger
  */
 
+import { relative, resolve } from 'node:path'
 import type { MatrixPackageConfig } from '../../discovery/index.js'
 import { getPreferredLocalMatrixBundlers } from '../../discovery/index.js'
+import { repoRoot } from '../../../../build/workspace.js'
 import { getManagedBundlerDevDependencies } from '../bundlers/index.js'
 import { getManagedReactProfile } from '../react/index.js'
 import {
@@ -36,6 +38,7 @@ interface MatrixConsumerPackageJsonOptions {
 interface ManagedMatrixPackageJsonOptions {
   config: Pick<MatrixPackageConfig, 'bundlers' | 'react'>
   existingPackageJson?: Partial<MatrixFixturePackageJson>
+  packageDir?: string
   packageName: string
 }
 
@@ -72,12 +75,16 @@ function omitManagedDependencies(
   return filteredEntries.length > 0 ? Object.fromEntries(filteredEntries) : undefined
 }
 
-function pipelineCliTestCommand(packageName: string): string {
-  return `pnpm --dir ../../pipeline exec tsx src/cli.ts test --packages=${packageName}`
+function pipelineRelDir(packageDir: string): string {
+  return relative(packageDir, resolve(repoRoot, 'pipeline'))
 }
 
-function pipelineCliSetupCommand(packageName: string): string {
-  return `pnpm --dir ../../pipeline exec tsx src/cli.ts setup --packages=${packageName} --sync`
+function pipelineCliTestCommand(packageName: string, pipelineRel: string): string {
+  return `pnpm --dir ${pipelineRel} exec tsx src/cli.ts test --packages=${packageName}`
+}
+
+function pipelineCliSetupCommand(packageName: string, pipelineRel: string): string {
+  return `pnpm --dir ${pipelineRel} exec tsx src/cli.ts setup --packages=${packageName} --sync`
 }
 
 function isPipelineManagedScript(command: string | undefined): boolean {
@@ -120,6 +127,8 @@ export function createManagedMatrixPackageJson(options: ManagedMatrixPackageJson
       : undefined)
     ?? 'pnpm exec ref sync'
 
+  const pipelineRel = options.packageDir ? pipelineRelDir(options.packageDir) : '../../pipeline'
+
   return renderManagedTemplate(new URL('./templates/fixture-package.json.liquid', import.meta.url), {
     dependencies: createTemplateEntries({
       ...managedDependencies,
@@ -137,8 +146,8 @@ export function createManagedMatrixPackageJson(options: ManagedMatrixPackageJson
     name: JSON.stringify(options.packageName),
     privateValue: 'true',
     scripts: createTemplateEntries({
-      setup: pipelineCliSetupCommand(options.packageName),
-      test: pipelineCliTestCommand(options.packageName),
+      setup: pipelineCliSetupCommand(options.packageName, pipelineRel),
+      test: pipelineCliTestCommand(options.packageName, pipelineRel),
       sync: rawSetupCommand,
     }),
     type: JSON.stringify(existingPackageJson.type ?? 'module'),
