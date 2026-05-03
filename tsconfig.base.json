@@ -25,7 +25,12 @@
       "@reference-ui/lib": ["packages/reference-lib/src/index.ts"],
       "@reference-ui/lib/theme": ["packages/reference-lib/src/core/theme/index.ts"],
       "@fixtures/extend-library": ["fixtures/extend-library/src/index.ts"],
+      "@fixtures/extend-library-2": ["fixtures/extend-library-2/src/index.ts"],
+      "@fixtures/meta-extend-library": ["fixtures/meta-extend-library/src/index.ts"],
+      "@fixtures/meta-extend-library-2": ["fixtures/meta-extend-library-2/src/index.ts"],
+      "@fixtures/meta-extend-library-sibling": ["fixtures/meta-extend-library-sibling/src/index.ts"],
       "@fixtures/layer-library": ["fixtures/layer-library/src/index.ts"],
+      "@fixtures/layer-library-2": ["fixtures/layer-library-2/src/index.ts"],
       "@fixtures/demo-ui": ["fixtures/demo-ui/src/index.ts"],
       "@fixtures/atlas-project": ["fixtures/atlas-project/src"]
     }

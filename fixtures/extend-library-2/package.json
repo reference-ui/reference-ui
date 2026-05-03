@@ -1,0 +1,40 @@
+{
+  "name": "@fixtures/extend-library-2",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs"
+    }
+  },
+  "files": [
+    "dist",
+    ".reference-ui/system/baseSystem.d.mts",
+    ".reference-ui/system/baseSystem.mjs",
+    "README.md"
+  ],
+  "scripts": {
+    "sync": "node scripts/bootstrap-runtime.mjs && ref sync",
+    "build": "node ../../scripts/fixture-build-cache.mjs",
+    "build:full": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/lib run sync && pnpm run sync && tsup && node scripts/build-package.mjs",
+    "dev": "node scripts/bootstrap-runtime.mjs && ref sync --watch",
+    "prepack": "pnpm run build",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "peerDependencies": {
+    "react": ">=17 <20"
+  },
+  "devDependencies": {
+    "@reference-ui/core": "workspace:*",
+    "@types/react": "^18.2.0",
+    "react": "^18.2.0",
+    "tsup": "^8.5.1",
+    "typescript": "~5.9.3",
+    "vitest": "^4.0.18"
+  }
+}

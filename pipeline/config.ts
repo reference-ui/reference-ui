@@ -31,7 +31,12 @@ export const REGISTRY_PACKAGE_NAMES = [
 	'@reference-ui/core',
 	'@reference-ui/lib',
 	'@fixtures/extend-library',
+	'@fixtures/extend-library-2',
+	'@fixtures/meta-extend-library',
+	'@fixtures/meta-extend-library-2',
+	'@fixtures/meta-extend-library-sibling',
 	'@fixtures/layer-library',
+	'@fixtures/layer-library-2',
 ] as const
 
 // Workspace packages that are actually published as part of a release.
