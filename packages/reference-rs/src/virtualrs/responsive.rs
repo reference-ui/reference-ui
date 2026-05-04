@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
     Argument, ArrayExpression, ArrayExpressionElement, CallExpression, Expression, ObjectExpression,
@@ -7,13 +9,23 @@ use oxc_ast_visit::{walk, Visit};
 use oxc_parser::Parser;
 use oxc_span::{GetSpan, SourceType, Span};
 
-pub fn apply_responsive_styles(source_code: &str, relative_path: &str) -> String {
+/// Lower `r: { ... }` sugar inside `css()` and `cva()` calls to raw
+/// `@container (min-width: Npx)` keys. The optional `breakpoints` table
+/// resolves named keys (e.g. `md`) to a width string. Numeric keys are
+/// always accepted; unknown named keys are left untouched (the upstream
+/// caller is responsible for surfacing a build-time error).
+pub fn apply_responsive_styles(
+    source_code: &str,
+    relative_path: &str,
+    breakpoints: &HashMap<String, String>,
+) -> String {
     let allocator = Allocator::default();
     let source_type = SourceType::from_path(relative_path).unwrap_or_default();
     let parse_result = Parser::new(&allocator, source_code, source_type).parse();
 
     let mut collector = ResponsiveCollector {
         source_code,
+        breakpoints,
         replacements: Vec::new(),
     };
 
@@ -24,6 +36,7 @@ pub fn apply_responsive_styles(source_code: &str, relative_path: &str) -> String
 
 struct ResponsiveCollector<'a> {
     source_code: &'a str,
+    breakpoints: &'a HashMap<String, String>,
     replacements: Vec<TextReplacement>,
 }
 
@@ -47,8 +60,8 @@ impl<'a> Visit<'a> for ResponsiveCollector<'a> {
         };
 
         let rewritten = match callee_name {
-            "css" => rewrite_style_object(config, self.source_code),
-            "cva" => rewrite_cva_config_object(config, self.source_code),
+            "css" => rewrite_style_object(config, self.source_code, self.breakpoints),
+            "cva" => rewrite_cva_config_object(config, self.source_code, self.breakpoints),
             _ => None,
         };
 
@@ -83,7 +96,11 @@ fn find_object_argument<'a>(call: &'a CallExpression<'a>) -> Option<&'a ObjectEx
     })
 }
 
-fn rewrite_cva_config_object(object: &ObjectExpression<'_>, source_code: &str) -> Option<String> {
+fn rewrite_cva_config_object(
+    object: &ObjectExpression<'_>,
+    source_code: &str,
+    breakpoints: &HashMap<String, String>,
+) -> Option<String> {
     let object_source = slice_span(source_code, object.span);
     let mut replacements = Vec::new();
 
@@ -101,11 +118,11 @@ fn rewrite_cva_config_object(object: &ObjectExpression<'_>, source_code: &str) -
 
         let rewritten = match name.as_str() {
             "base" => object_expression(property.value.get_inner_expression())
-                .and_then(|styles| rewrite_style_object(styles, source_code)),
+                .and_then(|styles| rewrite_style_object(styles, source_code, breakpoints)),
             "variants" => object_expression(property.value.get_inner_expression())
-                .and_then(|variants| rewrite_variants_object(variants, source_code)),
+                .and_then(|variants| rewrite_variants_object(variants, source_code, breakpoints)),
             "compoundVariants" => array_expression(property.value.get_inner_expression())
-                .and_then(|variants| rewrite_compound_variants_array(variants, source_code)),
+                .and_then(|variants| rewrite_compound_variants_array(variants, source_code, breakpoints)),
             _ => None,
         };
 
@@ -122,7 +139,11 @@ fn rewrite_cva_config_object(object: &ObjectExpression<'_>, source_code: &str) -
     }
 }
 
-fn rewrite_variants_object(object: &ObjectExpression<'_>, source_code: &str) -> Option<String> {
+fn rewrite_variants_object(
+    object: &ObjectExpression<'_>,
+    source_code: &str,
+    breakpoints: &HashMap<String, String>,
+) -> Option<String> {
     let object_source = slice_span(source_code, object.span);
     let mut replacements = Vec::new();
 
@@ -138,7 +159,7 @@ fn rewrite_variants_object(object: &ObjectExpression<'_>, source_code: &str) -> 
             continue;
         };
 
-        if let Some(rewritten) = rewrite_variant_options_object(options, source_code) {
+        if let Some(rewritten) = rewrite_variant_options_object(options, source_code, breakpoints) {
             replacements.push(relative_replacement(object.span, options.span, rewritten));
         }
     }
@@ -153,6 +174,7 @@ fn rewrite_variants_object(object: &ObjectExpression<'_>, source_code: &str) -> 
 fn rewrite_variant_options_object(
     object: &ObjectExpression<'_>,
     source_code: &str,
+    breakpoints: &HashMap<String, String>,
 ) -> Option<String> {
     let object_source = slice_span(source_code, object.span);
     let mut replacements = Vec::new();
@@ -169,7 +191,7 @@ fn rewrite_variant_options_object(
             continue;
         };
 
-        if let Some(rewritten) = rewrite_style_object(styles, source_code) {
+        if let Some(rewritten) = rewrite_style_object(styles, source_code, breakpoints) {
             replacements.push(relative_replacement(object.span, styles.span, rewritten));
         }
     }
@@ -184,6 +206,7 @@ fn rewrite_variant_options_object(
 fn rewrite_compound_variants_array(
     array: &ArrayExpression<'_>,
     source_code: &str,
+    breakpoints: &HashMap<String, String>,
 ) -> Option<String> {
     let array_source = slice_span(source_code, array.span);
     let mut replacements = Vec::new();
@@ -193,7 +216,7 @@ fn rewrite_compound_variants_array(
             continue;
         };
 
-        if let Some(rewritten) = rewrite_compound_variant_object(object, source_code) {
+        if let Some(rewritten) = rewrite_compound_variant_object(object, source_code, breakpoints) {
             replacements.push(relative_replacement(array.span, object.span, rewritten));
         }
     }
@@ -208,6 +231,7 @@ fn rewrite_compound_variants_array(
 fn rewrite_compound_variant_object(
     object: &ObjectExpression<'_>,
     source_code: &str,
+    breakpoints: &HashMap<String, String>,
 ) -> Option<String> {
     let object_source = slice_span(source_code, object.span);
     let mut replacements = Vec::new();
@@ -231,7 +255,7 @@ fn rewrite_compound_variant_object(
             continue;
         };
 
-        if let Some(rewritten) = rewrite_style_object(styles, source_code) {
+        if let Some(rewritten) = rewrite_style_object(styles, source_code, breakpoints) {
             replacements.push(relative_replacement(object.span, styles.span, rewritten));
         }
     }
@@ -243,7 +267,11 @@ fn rewrite_compound_variant_object(
     }
 }
 
-fn rewrite_style_object(object: &ObjectExpression<'_>, source_code: &str) -> Option<String> {
+fn rewrite_style_object(
+    object: &ObjectExpression<'_>,
+    source_code: &str,
+    breakpoints: &HashMap<String, String>,
+) -> Option<String> {
     let object_source = slice_span(source_code, object.span);
     let mut replacements = Vec::new();
 
@@ -260,7 +288,7 @@ fn rewrite_style_object(object: &ObjectExpression<'_>, source_code: &str) -> Opt
         };
 
         if name == "r" {
-            if let Some(rewritten) = rewrite_responsive_property(property, source_code) {
+            if let Some(rewritten) = rewrite_responsive_property(property, source_code, breakpoints) {
                 replacements.push(relative_replacement(object.span, property.span, rewritten));
             }
             continue;
@@ -270,7 +298,7 @@ fn rewrite_style_object(object: &ObjectExpression<'_>, source_code: &str) -> Opt
             continue;
         };
 
-        if let Some(rewritten) = rewrite_style_object(nested, source_code) {
+        if let Some(rewritten) = rewrite_style_object(nested, source_code, breakpoints) {
             replacements.push(relative_replacement(object.span, nested.span, rewritten));
         }
     }
@@ -282,14 +310,18 @@ fn rewrite_style_object(object: &ObjectExpression<'_>, source_code: &str) -> Opt
     }
 }
 
-fn rewrite_responsive_property(property: &ObjectProperty<'_>, source_code: &str) -> Option<String> {
-    let Expression::ObjectExpression(breakpoints) = property.value.get_inner_expression() else {
+fn rewrite_responsive_property(
+    property: &ObjectProperty<'_>,
+    source_code: &str,
+    breakpoints: &HashMap<String, String>,
+) -> Option<String> {
+    let Expression::ObjectExpression(entries) = property.value.get_inner_expression() else {
         return None;
     };
 
     let property_indent = line_indent(source_code, property.span.start as usize);
     let breakpoint_separator = if property_contains_newline(property, source_code)
-        || breakpoints.properties.len() > 1
+        || entries.properties.len() > 1
     {
         format!(",\n{}", property_indent)
     } else {
@@ -298,7 +330,7 @@ fn rewrite_responsive_property(property: &ObjectProperty<'_>, source_code: &str)
 
     let mut lowered = Vec::new();
 
-    for breakpoint in breakpoints.properties.iter() {
+    for breakpoint in entries.properties.iter() {
         let Some(property) = breakpoint.as_object_property() else {
             return None;
         };
@@ -309,7 +341,7 @@ fn rewrite_responsive_property(property: &ObjectProperty<'_>, source_code: &str)
         let Some(width_key) = property_key_name(&property.key, source_code) else {
             return None;
         };
-        let Some(width) = normalize_breakpoint_width(&width_key) else {
+        let Some(width) = normalize_breakpoint_width(&width_key, breakpoints) else {
             return None;
         };
 
@@ -317,7 +349,7 @@ fn rewrite_responsive_property(property: &ObjectProperty<'_>, source_code: &str)
             return None;
         };
 
-        let rewritten_styles = rewrite_style_object(styles, source_code)
+        let rewritten_styles = rewrite_style_object(styles, source_code, breakpoints)
             .unwrap_or_else(|| slice_span(source_code, styles.span).to_string());
 
         lowered.push(format!(
@@ -373,13 +405,20 @@ fn property_contains_newline(property: &ObjectProperty<'_>, source_code: &str) -
     slice_span(source_code, property.span).contains('\n')
 }
 
-fn normalize_breakpoint_width(value: &str) -> Option<&str> {
+fn normalize_breakpoint_width<'a>(
+    value: &'a str,
+    breakpoints: &'a HashMap<String, String>,
+) -> Option<String> {
     let trimmed = value.trim();
     if trimmed.is_empty() {
         return None;
     }
 
-    trimmed.parse::<f64>().ok().map(|_| trimmed)
+    if trimmed.parse::<f64>().is_ok() {
+        return Some(trimmed.to_string());
+    }
+
+    breakpoints.get(trimmed).map(|width| width.clone())
 }
 
 fn relative_replacement(container_span: Span, target_span: Span, replacement: String) -> TextReplacement {

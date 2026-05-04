@@ -4,6 +4,10 @@ import { emit } from '../../lib/event-bus'
 import { log } from '../../lib/log'
 import { getVirtualDirPath } from '../../lib/paths'
 import { GLOB_CONFIG } from '../config.internal'
+import {
+  invalidateBreakpointsCache,
+  resolveBreakpointsForProject,
+} from '../breakpoints/resolve'
 import { syncVirtualStyleCollection } from '../style/collection'
 import { createVirtualStagingArea } from './staging'
 import type { ReferenceUIConfig } from '../../config'
@@ -44,14 +48,20 @@ export async function syncVirtualSnapshot(payload: {
 
   log.debug('virtual', `Copying ${files.length} files`)
 
+  // Snapshot syncs are an authoritative full refresh — invalidate the cache
+  // so freshly added/removed breakpoints take effect immediately.
+  invalidateBreakpointsCache(root)
+  const breakpoints = await resolveBreakpointsForProject(root, include)
+
   for (const file of files) {
-    await staging.stageFile({ file, root, debug })
+    await staging.stageFile({ file, root, debug, breakpoints })
   }
 
   await syncVirtualStyleCollection({
     root,
     virtualDir: staging.stagingDir,
     include,
+    breakpoints,
   })
 
   await staging.publish()

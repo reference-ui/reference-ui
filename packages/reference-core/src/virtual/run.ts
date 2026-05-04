@@ -3,6 +3,10 @@ import { getConfig } from '../config/store'
 import { emit } from '../lib/event-bus'
 import { log } from '../lib/log'
 import { getVirtualDirPath } from '../lib/paths'
+import {
+  invalidateBreakpointsCache,
+  resolveBreakpointsForProject,
+} from './breakpoints/resolve'
 import { copyToVirtual, removeFromVirtual } from './fs/copy'
 import { syncVirtualSnapshot } from './fs/sync-snapshot'
 import { isFragmentFile } from './fragments/detect'
@@ -61,8 +65,16 @@ async function syncVirtualFile(
     return virtualPath
   }
 
+  // Token fragment changes can mutate the breakpoint table — evict cache.
+  if (await isFragmentFile(sourcePath, event.event)) {
+    invalidateBreakpointsCache(context.root)
+  }
+
+  const breakpoints = await resolveBreakpointsForProject(context.root, context.include)
+
   return copyToVirtual(sourcePath, context.root, context.virtualDir, {
     debug: context.debug,
+    breakpoints,
   })
 }
 
@@ -102,10 +114,13 @@ export async function runVirtualSyncFile(
   const context = resolveVirtualRunContext(workerPayload)
   const virtualPath = await syncVirtualFile(workerPayload, event, context)
 
+  const breakpoints = await resolveBreakpointsForProject(context.root, context.include)
+
   await syncVirtualStyleCollection({
     root: context.root,
     virtualDir: context.virtualDir,
     include: context.include,
+    breakpoints,
   })
 
   await emitVirtualChange(event.path, event, virtualPath)

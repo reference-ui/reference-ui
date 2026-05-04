@@ -20,9 +20,9 @@ export async function copyToVirtual(
   sourcePath: string,
   sourceDir: string,
   virtualDir: string,
-  options: { debug?: boolean } = {}
+  options: { debug?: boolean; breakpoints?: Record<string, string> } = {}
 ): Promise<string> {
-  const { debug } = options
+  const { debug, breakpoints } = options
 
   const relativePath = relative(sourceDir, sourcePath)
   let destPath = join(virtualDir, relativePath)
@@ -49,6 +49,7 @@ export async function copyToVirtual(
     content,
     sourceDir,
     debug,
+    breakpoints,
   })
 
   if (result.extension) {

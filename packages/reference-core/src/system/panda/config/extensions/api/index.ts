@@ -22,3 +22,5 @@ export {
   resolveColorModeTokens,
   type ResolvedColorModeTokens,
 } from './resolveColorModeTokens'
+export { createRExtension } from '../r/createRExtension'
+export { extractBreakpointTable } from './extractBreakpointTable'

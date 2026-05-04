@@ -46,10 +46,19 @@ export function replaceFunctionName(
   return native.replaceFunctionName(sourceCode, relativePath, fromName, toName, importFrom)
 }
 
-export function applyResponsiveStyles(sourceCode: string, relativePath: string): string {
+export function applyResponsiveStyles(
+  sourceCode: string,
+  relativePath: string,
+  breakpoints?: Record<string, string>,
+): string {
   const native = requireVirtualNative('apply responsive styles')
 
-  return native.applyResponsiveStyles(sourceCode, relativePath)
+  const breakpointsJson =
+    breakpoints && Object.keys(breakpoints).length > 0
+      ? JSON.stringify(breakpoints)
+      : undefined
+
+  return native.applyResponsiveStyles(sourceCode, relativePath, breakpointsJson)
 }
 
 export function scanAndEmitModules(rootDir: string, include: string[]): string {

@@ -1,8 +1,21 @@
+use std::collections::HashMap;
+
 use super::{
     apply_responsive_styles, replace_function_name, rewrite_css_imports, rewrite_cva_imports,
 };
 
 const VIRTUAL_PATH: &str = "src/virtualrs/example.tsx";
+
+fn no_breakpoints() -> HashMap<String, String> {
+    HashMap::new()
+}
+
+fn breakpoints(entries: &[(&str, &str)]) -> HashMap<String, String> {
+    entries
+        .iter()
+        .map(|(name, width)| ((*name).to_string(), (*width).to_string()))
+        .collect()
+}
 
 #[test]
 fn rewrites_css_import_and_preserves_other_bindings() {
@@ -231,7 +244,7 @@ fn lowers_responsive_css_styles() {
         "});\n",
     );
 
-    let rewritten = apply_responsive_styles(source, VIRTUAL_PATH);
+    let rewritten = apply_responsive_styles(source, VIRTUAL_PATH, &no_breakpoints());
 
     assert_eq!(
         rewritten,
@@ -256,7 +269,7 @@ fn lowers_responsive_css_after_import_normalization() {
         "const x = sx({ r: { 420: { padding: '3' } } } as unknown as CssStyles);\n",
     );
 
-    let rewritten = apply_responsive_styles(&rewrite_css_imports(source, VIRTUAL_PATH), VIRTUAL_PATH);
+    let rewritten = apply_responsive_styles(&rewrite_css_imports(source, VIRTUAL_PATH), VIRTUAL_PATH, &no_breakpoints());
 
     assert_eq!(
         rewritten,
@@ -275,7 +288,7 @@ fn lowers_responsive_cva_base_after_recipe_normalization() {
         "const x = cardRecipe({ base: { r: { 480: { padding: '4' } } } });\n",
     );
 
-    let rewritten = apply_responsive_styles(&rewrite_cva_imports(source, VIRTUAL_PATH), VIRTUAL_PATH);
+    let rewritten = apply_responsive_styles(&rewrite_cva_imports(source, VIRTUAL_PATH), VIRTUAL_PATH, &no_breakpoints());
 
     assert_eq!(
         rewritten,
@@ -303,7 +316,7 @@ fn lowers_responsive_cva_variants_and_compound_variants() {
         "});\n",
     );
 
-    let rewritten = apply_responsive_styles(source, VIRTUAL_PATH);
+    let rewritten = apply_responsive_styles(source, VIRTUAL_PATH, &no_breakpoints());
 
     assert_eq!(
         rewritten,
@@ -330,7 +343,7 @@ fn leaves_unrelated_r_objects_unchanged() {
         "const y = cssVar({ r: { 560: { padding: '4' } } });\n",
     );
 
-    assert_eq!(apply_responsive_styles(source, VIRTUAL_PATH), source);
+    assert_eq!(apply_responsive_styles(source, VIRTUAL_PATH, &no_breakpoints()), source);
 }
 
 #[test]
@@ -340,7 +353,7 @@ fn leaves_existing_container_rules_unchanged() {
         "const x = css({ '@container sidebar (min-width: 420px)': { padding: '3' } });\n",
     );
 
-    assert_eq!(apply_responsive_styles(source, VIRTUAL_PATH), source);
+    assert_eq!(apply_responsive_styles(source, VIRTUAL_PATH, &no_breakpoints()), source);
 }
 
 #[test]
@@ -359,7 +372,7 @@ fn lowers_multiple_calls_in_one_file_and_preserves_untargeted_sections() {
         "const config = { r: { 900: { padding: '9' } } };\n",
     );
 
-    let rewritten = apply_responsive_styles(source, VIRTUAL_PATH);
+    let rewritten = apply_responsive_styles(source, VIRTUAL_PATH, &no_breakpoints());
 
     assert_eq!(
         rewritten,
@@ -386,7 +399,7 @@ fn leaves_dynamic_responsive_payloads_unchanged() {
         "const styles = css({ color: 'red.500', r: responsiveStyles });\n",
     );
 
-    assert_eq!(apply_responsive_styles(source, VIRTUAL_PATH), source);
+    assert_eq!(apply_responsive_styles(source, VIRTUAL_PATH, &no_breakpoints()), source);
 }
 
 #[test]
@@ -400,7 +413,7 @@ fn lowers_cast_compound_variant_entries() {
         "});\n",
     );
 
-    let rewritten = apply_responsive_styles(source, VIRTUAL_PATH);
+    let rewritten = apply_responsive_styles(source, VIRTUAL_PATH, &no_breakpoints());
 
     assert_eq!(
         rewritten,
@@ -410,6 +423,92 @@ fn lowers_cast_compound_variant_entries() {
             "  compoundVariants: [\n",
             "    ({ size: 'md', css: { '@container (min-width: 840px)': { padding: '6' } } }) as const,\n",
             "  ],\n",
+            "});\n",
+        )
+    );
+}
+
+#[test]
+fn lowers_named_breakpoint_keys_using_breakpoint_table() {
+    let source = concat!(
+        "import { css } from 'src/system/runtime';\n",
+        "const x = css({ r: { md: { padding: '4' } } });\n",
+    );
+
+    let table = breakpoints(&[("sm", "640"), ("md", "768"), ("lg", "1024")]);
+    let rewritten = apply_responsive_styles(source, VIRTUAL_PATH, &table);
+
+    assert_eq!(
+        rewritten,
+        concat!(
+            "import { css } from 'src/system/runtime';\n",
+            "const x = css({ '@container (min-width: 768px)': { padding: '4' } });\n",
+        )
+    );
+}
+
+#[test]
+fn lowers_mixed_named_and_numeric_breakpoint_keys() {
+    let source = concat!(
+        "import { css } from 'src/system/runtime';\n",
+        "const x = css({\n",
+        "  r: {\n",
+        "    320: { padding: '2' },\n",
+        "    md: { padding: '3' },\n",
+        "    xl: { padding: '4' },\n",
+        "  },\n",
+        "});\n",
+    );
+
+    let table = breakpoints(&[("md", "768"), ("xl", "1280")]);
+    let rewritten = apply_responsive_styles(source, VIRTUAL_PATH, &table);
+
+    assert_eq!(
+        rewritten,
+        concat!(
+            "import { css } from 'src/system/runtime';\n",
+            "const x = css({\n",
+            "  '@container (min-width: 320px)': { padding: '2' },\n",
+            "  '@container (min-width: 768px)': { padding: '3' },\n",
+            "  '@container (min-width: 1280px)': { padding: '4' },\n",
+            "});\n",
+        )
+    );
+}
+
+#[test]
+fn leaves_unknown_named_breakpoint_keys_unchanged() {
+    let source = concat!(
+        "import { css } from 'src/system/runtime';\n",
+        "const x = css({ r: { md: { padding: '4' } } });\n",
+    );
+
+    // Empty table - `md` is unknown, transform should bail (leave source as-is).
+    let rewritten = apply_responsive_styles(source, VIRTUAL_PATH, &no_breakpoints());
+
+    assert_eq!(rewritten, source);
+}
+
+#[test]
+fn lowers_named_breakpoint_keys_in_cva_variants() {
+    let source = concat!(
+        "import { cva } from 'src/system/runtime';\n",
+        "const button = cva({\n",
+        "  base: { r: { md: { padding: '3' } } },\n",
+        "  variants: { size: { lg: { r: { xl: { padding: '5' } } } } },\n",
+        "});\n",
+    );
+
+    let table = breakpoints(&[("md", "768"), ("xl", "1280")]);
+    let rewritten = apply_responsive_styles(source, VIRTUAL_PATH, &table);
+
+    assert_eq!(
+        rewritten,
+        concat!(
+            "import { cva } from 'src/system/runtime';\n",
+            "const button = cva({\n",
+            "  base: { '@container (min-width: 768px)': { padding: '3' } },\n",
+            "  variants: { size: { lg: { '@container (min-width: 1280px)': { padding: '5' } } } },\n",
             "});\n",
         )
     );

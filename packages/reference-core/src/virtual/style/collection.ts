@@ -70,8 +70,9 @@ export async function syncVirtualStyleCollection(options: {
   root: string
   virtualDir: string
   include: string[]
+  breakpoints?: Record<string, string>
 }): Promise<string[]> {
-  const { root, virtualDir, include } = options
+  const { root, virtualDir, include, breakpoints } = options
   const artifactRoot = join(virtualDir, VIRTUAL_STYLE_COLLECTION_DIR)
 
   await rm(artifactRoot, { recursive: true, force: true })
@@ -89,6 +90,7 @@ export async function syncVirtualStyleCollection(options: {
       sourcePath: artifactPath,
       relativePath: relative(virtualDir, artifactPath),
       content: bundled,
+      breakpoints,
     })
     await mkdir(dirname(artifactPath), { recursive: true })
     await writeFile(artifactPath, transformed.content, 'utf-8')

@@ -7,7 +7,7 @@ import type { TransformOptions, TransformResult } from './types'
  * Applies all necessary transforms to make files work with Panda CSS.
  */
 export async function transformFile(options: TransformOptions): Promise<TransformResult> {
-  const { sourcePath, content, debug, sourceDir } = options
+  const { sourcePath, content, debug, sourceDir, breakpoints } = options
 
   const relativePath = sourceDir ? relative(sourceDir, sourcePath) : sourcePath
 
@@ -16,6 +16,7 @@ export async function transformFile(options: TransformOptions): Promise<Transfor
     relativePath,
     content,
     debug,
+    breakpoints,
   })
 
   return result

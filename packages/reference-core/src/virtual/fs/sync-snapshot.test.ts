@@ -23,6 +23,8 @@ async function importSyncSnapshotModule() {
   }
   const createVirtualStagingArea = vi.fn(() => staging)
   const syncVirtualStyleCollection = vi.fn(async () => [])
+  const resolveBreakpointsForProject = vi.fn(async () => ({}))
+  const invalidateBreakpointsCache = vi.fn()
 
   vi.doMock('fast-glob', () => ({
     default: fg,
@@ -42,6 +44,10 @@ async function importSyncSnapshotModule() {
   vi.doMock('../style/collection', () => ({
     syncVirtualStyleCollection,
   }))
+  vi.doMock('../breakpoints/resolve', () => ({
+    resolveBreakpointsForProject,
+    invalidateBreakpointsCache,
+  }))
 
   const mod = await import('./sync-snapshot')
   return {
@@ -52,6 +58,8 @@ async function importSyncSnapshotModule() {
     staging,
     createVirtualStagingArea,
     syncVirtualStyleCollection,
+    resolveBreakpointsForProject,
+    invalidateBreakpointsCache,
   }
 }
 
@@ -63,6 +71,7 @@ afterEach(() => {
   vi.doUnmock('../../lib/paths')
   vi.doUnmock('./staging')
   vi.doUnmock('../style/collection')
+  vi.doUnmock('../breakpoints/resolve')
   vi.restoreAllMocks()
 })
 
@@ -81,6 +90,7 @@ describe('virtual/fs/sync-snapshot', () => {
       root: '/workspace/app',
       virtualDir: FIXTURE_STAGING,
       include: ['src/**/*'],
+      breakpoints: {},
     })
     expect(staging.publish).toHaveBeenCalledTimes(1)
   })
@@ -134,16 +144,17 @@ describe('virtual/fs/sync-snapshot', () => {
     expect(staging.stageFile).toHaveBeenCalledTimes(2)
     expect(staging.stageFile).toHaveBeenNthCalledWith(
       1,
-      { file: '/workspace/app/src/alpha.ts', root: '/workspace/app', debug: true },
+      { file: '/workspace/app/src/alpha.ts', root: '/workspace/app', debug: true, breakpoints: {} },
     )
     expect(staging.stageFile).toHaveBeenNthCalledWith(
       2,
-      { file: '/workspace/app/src/beta.tsx', root: '/workspace/app', debug: true },
+      { file: '/workspace/app/src/beta.tsx', root: '/workspace/app', debug: true, breakpoints: {} },
     )
     expect(syncVirtualStyleCollection).toHaveBeenCalledWith({
       root: '/workspace/app',
       virtualDir: FIXTURE_STAGING,
       include: ['src/**/*.{ts,tsx}'],
+      breakpoints: {},
     })
     expect(emit).toHaveBeenLastCalledWith('virtual:copy:complete', {
       virtualDir: FIXTURE_VIRTUAL,
