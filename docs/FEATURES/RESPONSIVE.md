@@ -623,9 +623,169 @@ lowering away entirely in the Rust virtual layer before Panda extraction.
 - Do give `css()` an owned public type shape for `r` so users do not need casts and nested values
 	inside `r` keep full style inference.
 
+## Breakpoint Presets (Decision)
+
+We will **not** add a dedicated `breakpoints()` fragment collector. Breakpoints
+are tokens, and the existing `tokens()` collector is the right authoring
+surface. Inventing a parallel fragment type for them would create a second
+authoring concept for something that already fits cleanly under the token
+model.
+
+Instead, the plan is to **reuse Panda's native `breakpoints` token category**
+and wire it into the `r` prop, so authors can use named breakpoints as keys:
+
+```tsx
+<Box
+	r={{
+		md: { padding: '2' },
+		xl: { padding: '4' },
+	}}
+/>
+```
+
+### How That Maps
+
+- Authors define breakpoints through the existing `tokens()` collector:
+
+	```ts
+	tokens({
+		breakpoints: {
+			sm: { value: '640px' },
+			md: { value: '768px' },
+			lg: { value: '1024px' },
+			xl: { value: '1280px' },
+		},
+	})
+	```
+
+- Panda already accepts a `breakpoints` token category and surfaces those keys
+	on the generated styled system today (`sm` / `md` / `lg` / `xl` / `2xl` from
+	Panda's defaults). The styled system already exposes these as
+	`BreakpointToken` and `breakpoint-{name}` size tokens.
+- The `r` prop transform should resolve named keys against the resolved
+	breakpoint token table at build time, then emit the same
+	`@container (min-width: Npx)` rule it already emits for numeric keys.
+- Numeric inline keys (`r={{ 320: { ... } }}`) remain valid as the canonical
+	low-level form. Named keys are sugar that resolve to the underlying width.
+
+### Why This Shape
+
+- One authoring concept for tokens (`tokens()`), no new fragment type.
+- Reuses Panda's existing `breakpoints` category instead of inventing a third
+	parallel concept.
+- Keeps the responsive surface container-first: a named breakpoint is just an
+	alias for a width, not a viewport media query.
+- Stays compatible with the current `r` semantics — the transform output is
+	still `@container (min-width: Npx)`.
+
+### Boundaries
+
+- Resolution happens at build time inside the `r` transform (and inside the
+	Rust `applyResponsiveStyles()` lowering for `css({ r: ... })`). It is not a
+	runtime lookup.
+- Unknown names should be a build-time error from the transform, not a
+	silently dropped style.
+- Named keys for `r` must come from the `breakpoints` token category
+	specifically. They should not be aliased to arbitrary other token
+	categories (sizes, spacing, etc).
+- Named keys must not change the meaning of `r` from container queries to
+	viewport media queries. They are a width alias only.
+- The utility `r` inside `css()` follows the same rules — same name table,
+	same lowering target. The Rust transform must therefore have access to the
+	resolved breakpoint table during virtual lowering.
+
+### Resolved Decisions
+
+**Mixing named and numeric keys in the same `r` is allowed.**
+
+```tsx
+<Box
+	r={{
+		320: { padding: '2' },   // numeric (canonical)
+		md:  { padding: '3' },   // named, resolved at build time
+		xl:  { padding: '4' },
+	}}
+/>
+```
+
+There is no reason to forbid mixing — both forms lower to the same
+`@container (min-width: Npx)` output. The transform resolves named keys
+against the breakpoint token table, leaves numeric keys untouched, and emits
+the merged result.
+
+**`hideBelow` / `hideFrom` are out of scope for this feature.**
+
+For context: `hideBelow` and `hideFrom` are Panda-native style props that take
+a breakpoint token name (e.g. `hideBelow="md"`) and emit a viewport media
+query that toggles `display: none`. They are viewport-based, not container-based.
+
+We are not changing them as part of this work. The `r` prop is the
+container-query responsive surface; `hideBelow` / `hideFrom` are whatever
+Panda already gives us. Keeping them separate avoids inventing a unified
+"breakpoint" concept that has to mean both viewport and container at once.
+
+**Defaults: scrub Panda's built-in viewport breakpoints.**
+
+Reference UI does not ship a Panda preset, so Panda's default
+`sm`/`md`/`lg`/`xl`/`2xl` viewport breakpoint set should not silently appear
+in user configs. The intended behavior is:
+
+- the breakpoint token table is empty by default
+- `tokens({ breakpoints: { ... } })` is the only way to populate it
+- whatever the user authors is the full set; there is no implicit merge with
+	a Panda default
+- if no breakpoints are defined, `r` only accepts numeric keys, and named
+	keys are a build-time error
+
+This keeps a single source of truth: the user's `tokens({ breakpoints })`
+fragment is the responsive vocabulary, full stop.
+
+## Per-Prop Responsive Notation Is Not Supported
+
+Panda CSS itself supports per-prop responsive object notation, e.g.:
+
+```tsx
+// NOT supported in Reference UI
+<Div gap={{ base: 2, md: 3, xl: 4 }} />
+```
+
+Reference UI deliberately does **not** allow this shape on style props.
+
+This is enforced at the type level, not by runtime stripping. Concretely:
+
+- `packages/reference-core/src/types/conditions.ts` defines
+	`FilteredConditionKey`, which excludes `base`, every viewport breakpoint
+	(`sm`, `md`, `lg`, `xl`, `2xl`), every `*Only` / `*Down` variant, and the
+	`smToMd` / `mdToLg` / `lgToXl` / etc range keys.
+- `StyleConditionKey` is computed as `Exclude<keyof StyledConditions, FilteredConditionKey>`.
+- `StylePropValue<T>` in `packages/reference-core/src/types/style-prop.ts`
+	only accepts an object indexed by `StyleConditionKey`.
+
+The net effect: viewport breakpoint keys cannot appear as keys of a per-prop
+object value. Authors that try `<Div gap={{ md: 3 }} />` get a type error.
+
+The supported responsive surface remains:
+
+- `r` on primitives / box patterns (container queries with numeric widths)
+- `r` inside `css()` (utility sugar, lowered to `@container` rules)
+- explicit raw `@container ...` keys inside `css()`
+
+Per-prop viewport-breakpoint notation is intentionally not part of the public
+contract because:
+
+- the responsive story is container-first, not viewport-first
+- mixing per-prop responsive objects with `r` would create two competing
+	authoring models for the same problem
+- viewport breakpoint defaults are explicitly removed from the public model
+	(see `packages/reference-core/src/types/plan.md`)
+
+If a future iteration ever exposes named viewport conditions, that should be a
+distinct, opt-in surface — not a quiet relaxation of `StyleConditionKey`.
+
 ## Open Design Questions
 
 - Should the utility `r` eventually grow a richer value shape that can carry an explicit container name?
 - Should named-container utility support exist as `css({ r: { ... } })`, or should named cases stay explicit with raw `@container name (...)` blocks?
 - Is numeric inline width still the canonical form, with any future preset support layered on top?
+- Should breakpoint presets ever be reachable from `r`, or stay scoped to `hideBelow` / `hideFrom` style utilities only?
 
