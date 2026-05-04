@@ -100,7 +100,7 @@ Compiler question: what is the policy when the same upstream appears in both buc
 
 ---
 
-### T11: Several extends + several layers (full mix)
+### T9: Several extends + several layers (full mix)
 
 Compiler question: does final assembly preserve the real config model: `extends...`, then `layers...`, then the local system layer?
 
@@ -113,7 +113,7 @@ Compiler question: does final assembly preserve the real config model: `extends.
 
 ---
 
-### T12: Chain + layer at the app
+### T10: Chain + layer at the app
 
 Compiler question: can transitive extend composition and app-level layering coexist without leaking layered tokens into user space?
 
@@ -125,7 +125,7 @@ Compiler question: can transitive extend composition and app-level layering coex
 
 ---
 
-### T16: Parallel chains (two independent extend-chains into the app)
+### T11: Parallel chains (two independent extend-chains into the app)
 
 Compiler question: does the compiler handle multiple transitive upstream paths at the same boundary?
 
@@ -137,7 +137,7 @@ Compiler question: does the compiler handle multiple transitive upstream paths a
 
 ---
 
-### T17: Diamond base, mixed branch composition (layer vs extend into user space)
+### T12: Diamond base, mixed branch composition (layer vs extend into user space)
 
 Shared base `A`; both `B` and `C` are built against `A`; the app adopts `B` via `layer` and `C` via `extend`.
 
@@ -150,7 +150,7 @@ Compiler question: can sibling branches built against the same base be adopted i
 
 ---
 
-### T18: Parallel chains + shared layer
+### T13: Parallel chains + shared layer
 
 Compiler question: does the compiler compose multiple transitive upstreams plus an app-layered library in the same build?
 
@@ -166,9 +166,9 @@ Compiler question: does the compiler compose multiple transitive upstreams plus 
 
 These are useful naming shortcuts, but they are not separate heavy-fixture requirements once the core proof set is green.
 
-### T9: One extend + several layers
+### T14: One extend + several layers
 
-Coverage note: reduced form of T11.
+Coverage note: reduced form of T9.
 
 ```
   Library A ──▶ extend ──┐
@@ -178,9 +178,9 @@ Coverage note: reduced form of T11.
 
 ---
 
-### T10: Several extends + one layer
+### T15: Several extends + one layer
 
-Coverage note: reduced form of T11.
+Coverage note: reduced form of T9.
 
 ```
   Library A ──▶ extend ──┐
@@ -190,7 +190,7 @@ Coverage note: reduced form of T11.
 
 ---
 
-### T13: Diamond + one layered library
+### T16: Diamond + one layered library
 
 Coverage note: composition of T7 plus an extra T2-style layer input. Good as a follow-up, not a first proof.
 
@@ -202,9 +202,9 @@ Coverage note: composition of T7 plus an extra T2-style layer input. Good as a f
 
 ---
 
-### T14: Chain beside another extend + layer
+### T17: Chain beside another extend + layer
 
-Coverage note: composition of T6 plus T3/T12. Treat as a superset scenario.
+Coverage note: composition of T6 plus T3/T10. Treat as a superset scenario.
 
 ```
   Library A ──▶ extend ──▶ Library B ──▶ extend ──┐
@@ -214,9 +214,9 @@ Coverage note: composition of T6 plus T3/T12. Treat as a superset scenario.
 
 ---
 
-### T15: Extend, layer, extend (three different libraries)
+### T18: Extend, layer, extend (three different libraries)
 
-Coverage note: graph shape only. At one config boundary this is still represented as `extends: [A, C]` and `layers: [B]`, so T11 owns the real ordering guarantee.
+Coverage note: graph shape only. At one config boundary this is still represented as `extends: [A, C]` and `layers: [B]`, so T9 owns the real ordering guarantee.
 
 ```
   Library A ──▶ extend ──┐
@@ -248,11 +248,11 @@ Coverage note: graph shape only. At one config boundary this is still represente
 1. T1 / T2 sanity: extend adopts tokens/types; layer does not.
 2. T3 hybrid: both modes at one boundary.
 3. T6 chain: transitive extend through a published outer library.
-4. T11 full mix: real bucketed multi-input assembly.
-5. T12 chain + layer: transitive extend plus layered CSS in the same app.
-6. T16 parallel chains: multiple transitive upstream paths at once.
-7. T17 diamond mixed: shared base with asymmetric app adoption modes.
-8. T18 parallel chains + shared layer: composition of the hardest chain cases.
+4. T9 full mix: real bucketed multi-input assembly.
+5. T10 chain + layer: transitive extend plus layered CSS in the same app.
+6. T11 parallel chains: multiple transitive upstream paths at once.
+7. T12 diamond mixed: shared base with asymmetric app adoption modes.
+8. T13 parallel chains + shared layer: composition of the hardest chain cases.
 9. DOM/runtime checks where needed: `data-layer`, token visibility, and actual component rendering.
 
 **Claim bar**
@@ -271,11 +271,11 @@ We can reasonably say "we have a chainable design system compiler" once all of t
 
 1. T3
 2. T6
-3. T11
-4. T12
-5. T16
-6. T17
-7. T18
+3. T9
+4. T10
+5. T11
+6. T12
+7. T13
 8. T7
 9. T8
 

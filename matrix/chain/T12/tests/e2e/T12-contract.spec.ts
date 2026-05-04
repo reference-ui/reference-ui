@@ -1,10 +1,10 @@
 import { expect, test } from '@playwright/test'
 
 const metaExtendBgRgb = 'rgb(49, 46, 129)'
+const metaSiblingBgRgb = 'rgb(124, 45, 18)'
 const fixtureDemoAccentRgb = 'rgb(20, 184, 166)'
-const layerPrivateAccentRgb = 'rgb(99, 102, 241)'
 
-test.describe('T12 — chain + layer at the app', () => {
+test.describe('T12 — diamond base, mixed branch composition', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
   })
@@ -13,24 +13,26 @@ test.describe('T12 — chain + layer at the app', () => {
     await expect(page.getByTestId('chain-t12-root')).toBeVisible()
   })
 
-  test('extend-chain MetaExtendDemo resolves both local and transitive tokens', async ({ page }) => {
+  test('extend-side branch (sibling) contributes both local and shared-base tokens', async ({ page }) => {
+    await expect(page.getByTestId('meta-sibling-demo')).toBeVisible()
+
+    const bg = await page.getByTestId('meta-sibling-demo').evaluate(
+      el => getComputedStyle(el).getPropertyValue('background-color'),
+    )
+    expect(bg.trim()).toBe(metaSiblingBgRgb)
+
+    const eyebrow = await page.getByTestId('meta-sibling-demo-eyebrow').evaluate(
+      el => getComputedStyle(el).getPropertyValue('color'),
+    )
+    expect(eyebrow.trim()).toBe(fixtureDemoAccentRgb)
+  })
+
+  test('layer-side branch component still renders inside its own scope', async ({ page }) => {
     await expect(page.getByTestId('meta-extend-demo')).toBeVisible()
 
     const bg = await page.getByTestId('meta-extend-demo').evaluate(
       el => getComputedStyle(el).getPropertyValue('background-color'),
     )
     expect(bg.trim()).toBe(metaExtendBgRgb)
-
-    const eyebrow = await page.getByTestId('meta-extend-demo-eyebrow').evaluate(
-      el => getComputedStyle(el).getPropertyValue('color'),
-    )
-    expect(eyebrow.trim()).toBe(fixtureDemoAccentRgb)
-  })
-
-  test('layered LayerPrivateDemo resolves only inside its own layer scope', async ({ page }) => {
-    const bg = await page.getByTestId('layer-private-demo').evaluate(
-      el => getComputedStyle(el).getPropertyValue('background-color'),
-    )
-    expect(bg.trim()).toBe(layerPrivateAccentRgb)
   })
 })

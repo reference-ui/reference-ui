@@ -15,10 +15,8 @@
     "@reference-ui/lib": "workspace:*",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "@fixtures/extend-library": "workspace:*",
-    "@fixtures/extend-library-2": "workspace:*",
-    "@fixtures/layer-library": "workspace:*",
-    "@fixtures/layer-library-2": "workspace:*",
+    "@fixtures/meta-extend-library": "workspace:*",
+    "@fixtures/meta-extend-library-2": "workspace:*",
     "scheduler": "^0.27.0"
   },
   "devDependencies": {

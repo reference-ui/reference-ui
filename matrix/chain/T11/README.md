@@ -1,7 +1,7 @@
-# matrix/chain/T11 — Full mix
-
-Two `extends` + two `layers`. Asserts bucket ordering at runtime:
+# matrix/chain/T11 — Parallel chains
 
 ```
-@layer extend-library, extend-library-2, layer-library, layer-library-2, chain-t11;
+extend-library    ──▶ extend ──▶ meta-extend-library    ──▶ extend ──┐
+                                                                      ├──▶ User space
+extend-library-2  ──▶ extend ──▶ meta-extend-library-2  ──▶ extend ──┘
 ```

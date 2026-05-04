@@ -1,8 +1,0 @@
-{
-  "name": "chain-t18",
-  "refSync": {
-    "mode": "watch-ready"
-  },
-  "bundlers": ["vite7"],
-  "react": "react19"
-}

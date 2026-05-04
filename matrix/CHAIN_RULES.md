@@ -96,7 +96,7 @@ When we say the compiler is "chainable", the real statement is:
 - the resulting package can publish a new `baseSystem`
 - downstream consumers can continue composing from there
 
-This is why T6, T12, T16, T17, and T18 matter so much.
+This is why T6, T10, T11, T12, and T13 matter so much.
 
 ---
 
@@ -152,7 +152,7 @@ and the upstream CSS ordering contract becomes `A`, `C`, then `B`, followed by t
 4. Primitives must emit `data-layer="<consumer-name>"` for the current project automatically.
 5. Upstream portable CSS must remain self-contained enough to be appended without re-running upstream config generation.
 
-This is the core contract behind T2, T3, T12, T17, and T18.
+This is the core contract behind T2, T3, T10, T12, and T13.
 
 ---
 
@@ -176,7 +176,7 @@ So for diamond shapes, the safe current wording is:
 - composition is the goal
 - automatic deduplication is not yet a guaranteed rule
 
-That means T7 and T17 are high-value tests precisely because they force us to decide whether duplicate shared-base CSS or duplicate shared-base fragment contribution is acceptable, normalized, or rejected.
+That means T7 and T12 are high-value tests precisely because they force us to decide whether duplicate shared-base CSS or duplicate shared-base fragment contribution is acceptable, normalized, or rejected.
 
 ---
 
@@ -260,11 +260,11 @@ If we lock down those seven rules and then prove the priority topologies from `C
 
 - T3 proves the two-bucket boundary contract.
 - T6 proves transitive extend through a published outer package.
-- T11 proves bucket ordering and mixed assembly.
-- T12 proves extend-chain plus app-layer coexistence.
-- T16 proves multiple transitive paths at one boundary.
-- T17 proves asymmetric sibling adoption modes on a shared base.
-- T18 proves the hardest mixed composition story.
+- T9 proves bucket ordering and mixed assembly.
+- T10 proves extend-chain plus app-layer coexistence.
+- T11 proves multiple transitive paths at one boundary.
+- T12 proves asymmetric sibling adoption modes on a shared base.
+- T13 proves the hardest mixed composition story.
 - T8 forces a policy decision instead of hiding it.
 
 ---
