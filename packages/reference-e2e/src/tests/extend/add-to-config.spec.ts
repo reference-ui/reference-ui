@@ -18,7 +18,7 @@ test.describe('extend', () => {
       const content = await readFile(configPath, 'utf-8')
 
       expect(content).toContain("import { defineConfig } from '@reference-ui/core'")
-      expect(content).toContain("import { baseSystem } from '@fixtures/extend-library'")
+      expect(content).toContain("import { baseSystem } from '@fixtures/extend-library/baseSystem'")
       expect(content).toContain('defineConfig(')
       expect(content).toContain('reference-e2e')
       expect(content).toContain('extends: [baseSystem]')

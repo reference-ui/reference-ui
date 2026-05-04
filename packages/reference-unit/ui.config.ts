@@ -1,5 +1,5 @@
 import { defineConfig } from '@reference-ui/core'
-import { baseSystem } from '@fixtures/extend-library'
+import { baseSystem } from '@fixtures/extend-library/baseSystem'
 import { baseSystem as layerLibSystem } from '@fixtures/layer-library'
 
 export default defineConfig({

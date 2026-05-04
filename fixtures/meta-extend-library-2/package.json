@@ -9,6 +9,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs"
+    },
+    "./baseSystem": {
+      "types": "./.reference-ui/system/baseSystem.d.mts",
+      "import": "./.reference-ui/system/baseSystem.mjs"
     }
   },
   "files": [

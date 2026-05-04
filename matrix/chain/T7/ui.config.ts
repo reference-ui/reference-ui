@@ -1,6 +1,6 @@
 import { defineConfig } from '@reference-ui/core'
-import { baseSystem as metaExtend } from '@fixtures/meta-extend-library'
-import { baseSystem as metaExtendSibling } from '@fixtures/meta-extend-library-sibling'
+import { baseSystem as metaExtend } from '@fixtures/meta-extend-library/baseSystem'
+import { baseSystem as metaExtendSibling } from '@fixtures/meta-extend-library-sibling/baseSystem'
 
 /**
  * T7 — Diamond. App extends two libraries that both extend the same base.

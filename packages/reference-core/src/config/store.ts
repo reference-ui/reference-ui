@@ -65,7 +65,7 @@ export function getCwd(): string | undefined {
 }
 
 export function getOutDir(): string {
-  return getConfig()?.outDir ?? DEFAULT_OUT_DIR
+  return DEFAULT_OUT_DIR
 }
 
 export function clearConfig(): void {

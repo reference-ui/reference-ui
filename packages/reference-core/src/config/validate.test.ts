@@ -85,6 +85,46 @@ describe('validateConfig', () => {
     ).toThrowError(/jsxElements/i)
   })
 
+  it('accepts known strict-token categories', () => {
+    const config = validateConfig({
+      name: SYSTEM_NAME,
+      include: DEFAULT_INCLUDE,
+      strict: ['colors', 'radii'],
+    })
+
+    expect(config.strict).toEqual(['colors', 'radii'])
+  })
+
+  it('accepts an empty strict array as opting out of all categories', () => {
+    const config = validateConfig({
+      name: SYSTEM_NAME,
+      include: DEFAULT_INCLUDE,
+      strict: [],
+    })
+
+    expect(config.strict).toEqual([])
+  })
+
+  it('rejects strict when not an array', () => {
+    expect(() =>
+      validateConfig({
+        name: SYSTEM_NAME,
+        include: DEFAULT_INCLUDE,
+        strict: 'colors' as never,
+      })
+    ).toThrowError(/strict/i)
+  })
+
+  it('rejects unknown strict-token categories', () => {
+    expect(() =>
+      validateConfig({
+        name: SYSTEM_NAME,
+        include: DEFAULT_INCLUDE,
+        strict: ['shadows'] as never,
+      })
+    ).toThrowError(/strict/i)
+  })
+
   it('rejects names with quotes or newlines', () => {
     expect(() =>
       validateConfig({

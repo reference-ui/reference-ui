@@ -46,6 +46,7 @@ export const REACT_DTS_INCLUDE = [
   'src/types/fonts.ts',
   'src/types/primitives.ts',
   'src/types/props.ts',
+  'src/types/radii.ts',
   'src/types/recipe.ts',
   'src/types/style-prop.ts',
   'src/types/style-props.ts',

@@ -1,5 +1,5 @@
 import { defineConfig } from '@reference-ui/core'
-import { baseSystem } from '@fixtures/meta-extend-library'
+import { baseSystem } from '@fixtures/meta-extend-library/baseSystem'
 
 /**
  * T6 — Chain. App extends only B; B already extends A.

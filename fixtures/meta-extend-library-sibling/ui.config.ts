@@ -1,5 +1,5 @@
 import { defineConfig } from '@reference-ui/core'
-import { baseSystem as extendLibrary } from '@fixtures/extend-library'
+import { baseSystem as extendLibrary } from '@fixtures/extend-library/baseSystem'
 
 /**
  * Sibling meta library that also extends `@fixtures/extend-library`.

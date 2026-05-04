@@ -6,7 +6,14 @@ export type {
 } from './css'
 export type {
   ColorPropKeys,
+  SafeColorProps,
+  StrictColorProps,
 } from './colors'
+export type {
+  RadiiPropKeys,
+  SafeRadiiProps,
+  StrictRadiiProps,
+} from './radii'
 export type {
   FontName,
   FontProps,

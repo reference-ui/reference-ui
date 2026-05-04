@@ -1,5 +1,5 @@
 import { defineConfig } from '@reference-ui/core'
-import { baseSystem } from '@fixtures/extend-library'
+import { baseSystem } from '@fixtures/extend-library/baseSystem'
 
 /**
  * T8 — Same library extended and layered.

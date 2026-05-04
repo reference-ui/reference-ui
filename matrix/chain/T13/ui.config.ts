@@ -1,6 +1,6 @@
 import { defineConfig } from '@reference-ui/core'
-import { baseSystem as chain1 } from '@fixtures/meta-extend-library'
-import { baseSystem as chain2 } from '@fixtures/meta-extend-library-2'
+import { baseSystem as chain1 } from '@fixtures/meta-extend-library/baseSystem'
+import { baseSystem as chain2 } from '@fixtures/meta-extend-library-2/baseSystem'
 import { baseSystem as layerW } from '@fixtures/layer-library'
 
 /**

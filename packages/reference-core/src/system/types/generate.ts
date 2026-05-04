@@ -5,6 +5,7 @@ import { pathToFileURL } from 'node:url'
 import { writeFileAtomic } from '../../lib/fs/write-file-atomic'
 import { getOutDirPath } from '../../lib/paths'
 import { createFontCollector, type FontDefinition } from '../api/font'
+import { writeStrictSystemStyleObject } from './strict'
 
 export interface FontTypeRegistry {
   [fontName: string]: string[]
@@ -152,6 +153,8 @@ async function writeGeneratedPackageTypes(
   if (!existsSync(typesPath)) {
     return
   }
+
+  writeStrictSystemStyleObject(typesPath)
 
   const registry = readGeneratedFontRegistry(cwd)
   const generatedTypesPath = join(dirname(typesPath), 'types.generated.d.mts')

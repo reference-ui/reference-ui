@@ -1,6 +1,6 @@
 import { defineConfig } from '@reference-ui/core'
-import { baseSystem as branchB } from '@fixtures/meta-extend-library'
-import { baseSystem as branchC } from '@fixtures/meta-extend-library-sibling'
+import { baseSystem as branchB } from '@fixtures/meta-extend-library/baseSystem'
+import { baseSystem as branchC } from '@fixtures/meta-extend-library-sibling/baseSystem'
 
 /**
  * T12 — Diamond base, mixed branch composition.

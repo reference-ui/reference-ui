@@ -167,13 +167,14 @@ function writeReactSupportFixture(cliDir: string): void {
 }
 
 function expectCapturedReactSupportTsconfigFiles(files: string[]): void {
-  expect(files).toHaveLength(17)
+  expect(files).toHaveLength(18)
   expect(files.some((file) => file.endsWith('/src/entry/react.ts'))).toBe(true)
   expect(files.some((file) => file.endsWith('/src/system/primitives/index.tsx'))).toBe(true)
   expect(files.some((file) => file.endsWith('/src/system/primitives/types.ts'))).toBe(true)
   expect(files.some((file) => file.endsWith('/src/system/runtime/index.ts'))).toBe(true)
   expect(files.some((file) => file.endsWith('/src/types/index.ts'))).toBe(true)
   expect(files.some((file) => file.endsWith('/src/types/props.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/types/radii.ts'))).toBe(true)
   expect(files.some((file) => file.endsWith('/src/types/style-props.ts'))).toBe(true)
   expect(files.some((file) => file.endsWith('/src/types/system-style-object.ts'))).toBe(true)
 }

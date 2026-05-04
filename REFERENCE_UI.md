@@ -70,9 +70,8 @@ This is the “knowledge-first” story: the **same** tokens and types you impor
 | `extends` | Optional `BaseSystem[]` — upstream **token/fragment** systems merged **before** your own (portable `baseSystem` from other packages). |
 | `layers` | Optional `BaseSystem[]` — upstream **component CSS** in an isolated cascade **layer**; **tokens from upstream do not** merge into your Panda config or TS types. |
 | `jsxElements` | Extra JSX tag names for discovery when static tracing cannot infer them (e.g. generated surfaces). |
-| `outDir` | Output root (default `.reference-ui`). |
+| `strict` | Optional `('colors' \| 'radii' \| 'spacing')[]` — restrict the matching style props to design-token values (plus per-category escape hatches). Omit to leave props open. |
 | `normalizeCss` | Toggle normalize CSS reset (default `true`). |
-| `useDesignSystem` | Opt into the built-in design system pieces (default `true`). |
 | `debug` | Verbose logging. |
 | `mcp` | **Separate** from `include`: `mcp.include` / `mcp.exclude` are **only** for Atlas when building the MCP model—so you can point inventory at app code without changing Panda’s scan. |
 | `skipTypescript` | Skip tsup declaration emit in test-only scenarios. |
@@ -91,7 +90,7 @@ This is the “knowledge-first” story: the **same** tokens and types you impor
 | Command | Role |
 | --- | --- |
 | `ref` / `ref sync` (default) | Full sync: virtual tree → system config → Panda → packager → reference (Tasty) → final types package. Uses workers and the event bus. |
-| `ref clean` | Deletes the output directory (`outDir`); **main thread only**; use before tests for a cold state. |
+| `ref clean` | Deletes the output directory (`.reference-ui`); **main thread only**; use before tests for a cold state. |
 | `ref mcp` | Starts the MCP server: **stdio** (editors) or **HTTP** (`--transport http`) for debugging. Runs in the **CLI process**; the heavy MCP artifact build can use a **child process** (see below). |
 
 Editor integration: prefer `node` + the built CLI path; do not assume `pnpm` exists on the host `PATH` for MCP spawns. Examples live in [packages/reference-core/README.md](./packages/reference-core/README.md).

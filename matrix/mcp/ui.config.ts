@@ -1,6 +1,6 @@
 import { defineConfig } from '@reference-ui/core'
 import { baseSystem } from '@reference-ui/lib'
-import { baseSystem as extendLibrary } from '@fixtures/extend-library'
+import { baseSystem as extendLibrary } from '@fixtures/extend-library/baseSystem'
 
 export default defineConfig({
   name: 'mcp',

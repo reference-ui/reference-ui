@@ -1,5 +1,5 @@
 import { defineConfig } from '@reference-ui/core'
-import { baseSystem } from '@fixtures/extend-library'
+import { baseSystem } from '@fixtures/extend-library/baseSystem'
 
 export default defineConfig({
   name: 'reference-e2e',
