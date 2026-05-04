@@ -1,6 +1,9 @@
 # matrix/chain/T6 — Chain (transitive extend)
 
-**Topology:** `Library A ──▶ extend ──▶ Library B ──▶ extend ──▶ User space`
+**Topology:**
+```
+  Library A ──▶ extend ──▶ Library B ──▶ extend ──▶ User space
+```
 
 The app depends only on the outer published package
 (`@fixtures/meta-extend-library`). That package already extends

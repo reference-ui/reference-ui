@@ -18,11 +18,11 @@ treating it as the last release gate for the chainable design-system compiler.
 | T6  | Chain — app extends meta which extends base | 5/5 | ✅ |
 | T7  | Diamond — two metas sharing one base, both extended | 5/5 | ✅ |
 | T8  | Same library appears in `extends` AND `layers` | 4/4 | ✅ |
-| T11 | Full mix — 2 extends + 2 layers; prelude order asserted | 6/6 | ✅ |
-| T12 | Extend chain + app-level layered library | 3/3 | ✅ |
-| T16 | Parallel extend chains | 3/3 | ✅ |
-| T17 | Diamond base, mixed branches (one layered, one extended) | 3/3 | ✅ |
-| T18 | Parallel extend chains + shared app-level layer | 4/4 | ✅ |
+| T9 | Full mix — 2 extends + 2 layers; prelude order asserted | 6/6 | ✅ |
+| T10 | Extend chain + app-level layered library | 3/3 | ✅ |
+| T11 | Parallel extend chains | 3/3 | ✅ |
+| T12 | Diamond base, mixed branches (one layered, one extended) | 3/3 | ✅ |
+| T13 | Parallel extend chains + shared app-level layer | 4/4 | ✅ |
 
 **Total:** 33 e2e tests / 11 entries / 0 framework patches.
 
@@ -59,7 +59,7 @@ generated runtime.
 
 ### 2.3 New chain matrix entries
 
-`matrix/chain/{T6,T7,T8,T11,T12,T16,T17,T18}/` each scaffolded with:
+`matrix/chain/{T6,T7,T8,T9,T10,T11,T12,T13}/` each scaffolded with:
 - `package.json` (managed by pipeline; deps preserved by `createManagedMatrixPackageJson`)
 - `matrix.json` (`bundlers: ["vite7"]`, `react: "react19"`)
 - `tsconfig.json`
@@ -81,7 +81,7 @@ A library adopted via `layers: [...]` emits its tokens under
 build time, so they self-scope and "just work" when adopted via `layers`.
 
 Components that compile with a plain `<div>` + `css({...})` do **not** self-scope.
-T17 was the only entry that mixed a plain-DOM component (`MetaExtendDemo`) with
+T12 was the only entry that mixed a plain-DOM component (`MetaExtendDemo`) with
 layer-mode adoption, and it required an explicit wrapper at the adoption site:
 
 ```tsx
@@ -90,7 +90,7 @@ layer-mode adoption, and it required an explicit wrapper at the adoption site:
 </div>
 ```
 
-T8/T11/T12/T18 all adopt layered libraries without any wrapper because they only
+T8/T9/T10/T13 all adopt layered libraries without any wrapper because they only
 use `LayerPrivateDemo` (built on `Div`), which self-scopes. **This is correct
 behavior, not a bug** — it's the documented adoption contract — but it is a sharp
 edge for end users. See §4.1 below.
@@ -107,11 +107,11 @@ Recorded in repo memory: `/memories/repo/matrix-chain-layered-token-scope.md`.
 | Transitive extend (meta → base → consumer) | T6 (`metaExtendBg` local + `fixtureDemoAccent` from base) |
 | Diamond extend (shared base only contributes once) | T7 (both branches see `fixtureDemoAccent`) |
 | Allow-and-duplicate when same lib is in both buckets | T8 (`@layer extend-library` count ≥ 1) |
-| Bucket order: `extends... → layers... → local` | T11 (asserts `CSSLayerStatementRule.nameList` ordering) |
-| Layered tokens do NOT leak into app's Panda token namespace | T12 (LayerPrivateDemo resolves only inside its layer scope) |
-| Parallel extend chains compose at one boundary | T16 |
-| Diamond base with mixed branch modes | T17 |
-| Hardest case (parallel chains + shared app-level layer) | T18 |
+| Bucket order: `extends... → layers... → local` | T9 (asserts `CSSLayerStatementRule.nameList` ordering) |
+| Layered tokens do NOT leak into app's Panda token namespace | T10 (LayerPrivateDemo resolves only inside its layer scope) |
+| Parallel extend chains compose at one boundary | T11 |
+| Diamond base with mixed branch modes | T12 |
+| Hardest case (parallel chains + shared app-level layer) | T13 |
 
 ### 3.3 Build & pipeline observations
 
@@ -132,7 +132,7 @@ Recorded in repo memory: `/memories/repo/matrix-chain-layered-token-scope.md`.
 
 ### 4.1 Reduce the layered-DOM sharp edge (priority: high)
 
-The T17 finding is correct compiler behavior but it's a footgun for library
+The T12 finding is correct compiler behavior but it's a footgun for library
 authors who write components against plain DOM rather than Reference primitives.
 
 Options, ordered by user-facing improvement:
@@ -169,9 +169,9 @@ chain), T5 (parallel layers, no chain), and any deeper-than-2 chain (e.g.
 
 Estimated work: each entry mirrors T6/T7 — ~1 fixture library + 1 matrix entry.
 
-### 4.4 Tighten the prelude-order assertion in T11 (priority: low)
+### 4.4 Tighten the prelude-order assertion in T9 (priority: low)
 
-T11's bucket-order test relies on `CSSLayerStatementRule.nameList` (modern
+T9's bucket-order test relies on `CSSLayerStatementRule.nameList` (modern
 browsers OK, but it's an ergonomic dependency). A more portable fallback would be
 to parse `cssText` with a `@layer ([^;{]+);` regex. Currently passes on the
 project's pinned Playwright/Chromium, but worth hardening before extending the
@@ -221,6 +221,6 @@ authors have a single canonical pattern to copy:
 ## 6. Files of record
 
 - New fixtures: `fixtures/{meta-extend-library,meta-extend-library-sibling,extend-library-2,meta-extend-library-2,layer-library-2}/`
-- New chain entries: `matrix/chain/{T6,T7,T8,T11,T12,T16,T17,T18}/`
+- New chain entries: `matrix/chain/{T6,T7,T8,T9,T10,T11,T12,T13}/`
 - Updated configs: `tsconfig.base.json`, `.changeset/config.json`, `pipeline/config.ts`
 - Repo memory: `/memories/repo/matrix-chain-layered-token-scope.md`

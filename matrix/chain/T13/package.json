@@ -1,12 +1,12 @@
 {
   "//": "This file is generated and managed by pipeline.",
-  "name": "@matrix/chain-t12",
+  "name": "@matrix/chain-t13",
   "version": "0.0.1",
   "private": true,
   "type": "module",
   "scripts": {
-    "setup": "pnpm --dir ../../../pipeline exec tsx src/cli.ts setup --packages=@matrix/chain-t12 --sync",
-    "test": "pnpm --dir ../../../pipeline exec tsx src/cli.ts test --packages=@matrix/chain-t12",
+    "setup": "pnpm --dir ../../../pipeline exec tsx src/cli.ts setup --packages=@matrix/chain-t13 --sync",
+    "test": "pnpm --dir ../../../pipeline exec tsx src/cli.ts test --packages=@matrix/chain-t13",
     "sync": "pnpm exec ref sync"
   },
   "exports": {".":"./src/index.tsx"},
@@ -15,8 +15,9 @@
     "@reference-ui/lib": "workspace:*",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "@fixtures/layer-library": "workspace:*",
     "@fixtures/meta-extend-library": "workspace:*",
-    "@fixtures/meta-extend-library-sibling": "workspace:*",
+    "@fixtures/meta-extend-library-2": "workspace:*",
     "scheduler": "^0.27.0"
   },
   "devDependencies": {

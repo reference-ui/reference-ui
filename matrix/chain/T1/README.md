@@ -1,6 +1,9 @@
 # matrix/chain/T1 — Extend one library
 
-**Topology:** `Library A ──▶ extend ──▶ User space`
+**Topology:**
+```
+  Library A ──▶ extend ──▶ User space
+```
 
 **Chain topology:** T1 (core proof set)
 

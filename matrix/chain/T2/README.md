@@ -1,6 +1,9 @@
 # matrix/chain/T2 — Layer one library
 
-**Topology:** `Library A ──▶ layer ──▶ User space`
+**Topology:**
+```
+  Library A ──▶ layer  ──▶ User space
+```
 
 **Chain topology:** T2 (core proof set)
 
