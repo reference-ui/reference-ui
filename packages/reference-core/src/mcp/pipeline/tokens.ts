@@ -47,8 +47,24 @@ function toMcpToken(path: string[], leaf: ReferenceTokenLeaf): McpToken {
   return token
 }
 
+// Token subtrees keyed by `_private` are scoped to the package that defines
+// them. They MUST be stripped from upstream fragments before reaching the
+// MCP surface (the consumer is downstream of the upstream system that owns
+// them), but they remain visible for fragments authored by the local
+// package (the MCP server is part of that package's own toolchain).
+const PRIVATE_TOKEN_KEY = '_private'
+
+const FRAGMENT_SOURCE_PROPERTY = '__refConfigFragmentSource'
+const UPSTREAM_FRAGMENT_SOURCE = 'upstream system fragment'
+
+function isUpstreamFragment(fragment: ReferenceTokenConfig): boolean {
+  const source = (fragment as Record<string, unknown>)[FRAGMENT_SOURCE_PROPERTY]
+  return source === UPSTREAM_FRAGMENT_SOURCE
+}
+
 function flattenTokenNode(
   node: ReferenceTokenConfig | ReferenceTokenLeaf,
+  options: { stripPrivate: boolean },
   path: string[] = [],
   out: McpToken[] = []
 ): McpToken[] {
@@ -58,8 +74,9 @@ function flattenTokenNode(
   }
 
   for (const [key, value] of Object.entries(node)) {
+    if (options.stripPrivate && key === PRIVATE_TOKEN_KEY) continue
     if (!isPlainObject(value)) continue
-    flattenTokenNode(value as ReferenceTokenConfig | ReferenceTokenLeaf, [...path, key], out)
+    flattenTokenNode(value as ReferenceTokenConfig | ReferenceTokenLeaf, options, [...path, key], out)
   }
 
   return out
@@ -69,7 +86,8 @@ export function flattenTokenFragments(fragments: ReferenceTokenConfig[]): McpTok
   const byPath = new Map<string, McpToken>()
 
   for (const fragment of fragments) {
-    for (const token of flattenTokenNode(fragment)) {
+    const stripPrivate = isUpstreamFragment(fragment)
+    for (const token of flattenTokenNode(fragment, { stripPrivate })) {
       byPath.set(token.path, token)
     }
   }

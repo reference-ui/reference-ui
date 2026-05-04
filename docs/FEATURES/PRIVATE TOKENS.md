@@ -1,19 +1,19 @@
 # Private Tokens
 
-## Research Summary
+## Status
 
-- `tokens()` currently acts as a plain fragment collector.
-- The token collector does not contain any `_private` handling.
-- Token merge and color-mode resolution code also do not treat `_private` as special.
-- A repo-wide source search found no implemented `_private` token behavior.
+Implemented.
 
-## Current Behavior
-
-Today, a shape like this is just ordinary token data:
+Token subtrees authored under a `_private` key resolve normally inside the
+package that defines them, are stripped from any downstream consumer that
+pulls the package in via `extends`, and are stripped from the MCP token
+surface only when they reach it through an upstream system fragment. The
+package that owns the tokens still sees them in its own MCP server.
 
 ```ts
 tokens({
     colors: {
+        brand: { value: '#0066cc' },
         _private: {
             secretBrand: { value: '#123456' },
         },
@@ -21,42 +21,69 @@ tokens({
 })
 ```
 
-There is currently no privacy boundary attached to `_private`.
+## Behavior
 
-That means any `_private` subtree would be collected, merged, and treated like any other token branch unless a later build step explicitly strips it.
+- **Local resolution.** Inside the owning package, `_private` tokens are
+  collected like any other token branch. Recipes, patterns, and `css()` calls
+  in that package can reference them (e.g. `color: '_private.secretBrand'`)
+  and Panda generates CSS rules and custom properties for them.
+- **Downstream invisibility.** When another package pulls a base system in
+  via `extends: [...]`, the upstream fragment is executed inside the
+  downstream Panda config. Token fragments tagged as upstream have their
+  `_private` subtrees stripped before they are merged, so the downstream
+  config never knows the private tokens existed. Downstream user code cannot
+  author against them and Panda will not generate CSS rules for downstream
+  references to private token paths.
+- **MCP visibility, scoped to ownership.** The MCP `get_tokens` tool
+  flattens token fragments into the model artifact via `flattenTokenNode`.
+  `_private` subtrees are skipped only for fragments tagged as upstream
+  system fragments; fragments authored by the package itself keep their
+  `_private` paths. The MCP surface therefore mirrors the language-level
+  scope: a package sees its own private tokens, downstream packages do not
+  see the upstream's private tokens.
+- **Type surface.** Because Panda only sees public tokens in the downstream
+  config, generated `Tokens["colors"]` (and similar) unions exclude
+  `_private` paths. Downstream TypeScript will reject references to private
+  token names at the type level.
 
-## What This Means
+## Boundaries
 
-The desired feature is not implemented yet.
+- The privacy boundary lives at the **panda config merge** step (for
+  downstream consumers) and at the **MCP token projection** step (for
+  upstream-tagged fragments reaching the MCP server). It is enforced
+  regardless of token category — `_private` is a recognized authoring
+  keyword anywhere in the token tree.
+- The literal source of an extending package's exported `baseSystem.fragment`
+  still contains the original `_private` subtree as JS source text. The
+  privacy boundary is enforced when that fragment is executed inside another
+  panda config; it is not a redaction of secrets from distributed source.
+  Treat private tokens as a coupling/visibility boundary, not as a secret
+  store.
 
-If we want private tokens that are available inside the current package but not exposed to downstream systems extending `baseSystem`, the privacy rule must exist at build output boundaries, not just in authoring syntax.
+## Implementation Notes
 
-## Likely Implementation Boundary
-
-This probably needs explicit filtering in the places that produce public artifacts, for example:
-
-- portable `baseSystem.fragment` output
-- generated public token types
-- generated public token maps
-- MCP token listing and token inspection surfaces
-- any layer-extension path that consumes upstream base systems
-
-## Recommendation
-
-Treat `_private` as a design proposal, not a current convention.
-
-If we adopt it, define one rule clearly:
-
-- `_private` tokens are authorable in local user code
-- `_private` tokens resolve normally inside that package during generation
-- `_private` tokens are stripped from exported base-system artifacts and downstream extension surfaces
-
-Without that final stripping step, the feature is only naming, not privacy.
-
-## Open Design Questions
-
-- Should `_private` be allowed at every token category level, or only in specific categories like `colors`?
-- Should private tokens still be queryable by local tooling such as MCP when running inside the owning package?
-- Do recipe and pattern outputs get to reference `_private` tokens after export, or must those references be resolved away during build?
-- Should `_private` be erased entirely from public types, or should it remain present but inaccessible?
+- Upstream-vs-local detection is driven by the existing
+  `__refConfigFragmentSource` marker that the fragment runtime attaches to
+  each pushed fragment. Fragments tagged `'upstream system fragment'` are
+  routed through a `_private` strip before normalization.
+- Local fragments preserve `_private` keys so the owning package can resolve
+  them through the normal Panda token flow.
+- Coverage:
+  - `packages/reference-core/src/system/panda/config/extensions/api/resolveColorModeTokens.test.ts`
+    asserts that local `_private` is preserved and upstream `_private` is
+    stripped (including nested categories).
+  - `packages/reference-core/src/mcp/pipeline/tokens.test.ts` asserts that
+    `_private` is dropped from the MCP projection for upstream fragments
+    and preserved for local fragments.
+  - `matrix/mcp/tests/unit/get-tokens.test.ts` asserts the same against a
+    real MCP server: the matrix consumer extends `@fixtures/extend-library`
+    and never sees its `_private` subtree, while its own local `_private`
+    token remains MCP-visible.
+  - `matrix/chain/T1` adds runtime assertions that:
+    1. The base library's component renders its private swatch with the
+       private color (the rule + `--colors-_private-brand` variable both
+       ship from the upstream library's portable CSS).
+    2. The downstream consumer's own attempt to author against
+       `_private.brand` does not receive a generated style — Panda has
+       no rule for the unknown token reference.
 

@@ -400,4 +400,123 @@ describe('resolveColorModeTokens()', () => {
       },
     })
   })
+
+  describe('private tokens', () => {
+    const UPSTREAM_SOURCE = 'upstream system fragment'
+    const FRAGMENT_SOURCE_PROPERTY = '__refConfigFragmentSource'
+
+    function withSource<T extends object>(value: T, source: string): T {
+      Object.defineProperty(value, FRAGMENT_SOURCE_PROPERTY, {
+        configurable: true,
+        enumerable: false,
+        value: source,
+      })
+      return value
+    }
+
+    it('preserves _private tokens from local fragments', () => {
+      const localFragment = withSource(
+        {
+          colors: {
+            brand: { value: '#0066cc' },
+            _private: {
+              internalAccent: { value: '#FF00FF' },
+            },
+          },
+        },
+        'src/tokens.ts',
+      )
+
+      const resolved = resolveColorModeTokens([localFragment])
+
+      expect(resolved.baseTokens).toEqual({
+        colors: {
+          brand: { value: '#0066cc' },
+          _private: {
+            internalAccent: { value: '#FF00FF' },
+          },
+        },
+      })
+    })
+
+    it('strips _private tokens from upstream system fragments', () => {
+      const upstreamFragment = withSource(
+        {
+          colors: {
+            brand: { value: '#0066cc' },
+            _private: {
+              internalAccent: { value: '#FF00FF' },
+            },
+          },
+        },
+        UPSTREAM_SOURCE,
+      )
+
+      const resolved = resolveColorModeTokens([upstreamFragment])
+
+      expect(resolved.baseTokens).toEqual({
+        colors: {
+          brand: { value: '#0066cc' },
+        },
+      })
+    })
+
+    it('strips deeply nested _private subtrees from upstream fragments', () => {
+      const upstreamFragment = withSource(
+        {
+          colors: {
+            brand: {
+              primary: { value: '#0066cc' },
+              _private: {
+                hovered: { value: '#003366' },
+              },
+            },
+          },
+          spacing: {
+            _private: {
+              gutter: { value: '0.5rem' },
+            },
+          },
+        },
+        UPSTREAM_SOURCE,
+      )
+
+      const resolved = resolveColorModeTokens([upstreamFragment])
+
+      expect(resolved.baseTokens).toEqual({
+        colors: {
+          brand: {
+            primary: { value: '#0066cc' },
+          },
+        },
+      })
+    })
+
+    it('keeps local _private alongside upstream fragments where _private is stripped', () => {
+      const upstreamFragment = withSource(
+        {
+          colors: {
+            _private: { secret: { value: '#000000' } },
+          },
+        },
+        UPSTREAM_SOURCE,
+      )
+      const localFragment = withSource(
+        {
+          colors: {
+            _private: { local: { value: '#FFFFFF' } },
+          },
+        },
+        'src/local.ts',
+      )
+
+      const resolved = resolveColorModeTokens([upstreamFragment, localFragment])
+
+      expect(resolved.baseTokens).toEqual({
+        colors: {
+          _private: { local: { value: '#FFFFFF' } },
+        },
+      })
+    })
+  })
 })

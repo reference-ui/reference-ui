@@ -1,5 +1,14 @@
 import type { ReferenceTokenConfig, ReferenceTokenLeaf } from '../../../../api/tokens'
+import { CONFIG_FRAGMENT_SOURCE_PROPERTY } from '../../../../../lib/fragments/types'
 import { deepMerge } from './runtime'
+
+/**
+ * Token subtrees keyed by `_private` are scoped to the package that defines
+ * them. They resolve normally inside that package, but are stripped before
+ * any downstream consumer can see them via `extends`.
+ */
+const PRIVATE_TOKEN_KEY = '_private'
+const UPSTREAM_FRAGMENT_SOURCE = 'upstream system fragment'
 
 /**
  * Token mode truth table:
@@ -164,6 +173,30 @@ function normalizeTokenNode(node: ReferenceTokenConfig | ReferenceTokenLeaf): No
   return normalizeObjectTokenNode(node)
 }
 
+function isUpstreamFragment(fragment: ReferenceTokenConfig): boolean {
+  if (fragment === null || typeof fragment !== 'object') return false
+  const source = (fragment as Record<string, unknown>)[CONFIG_FRAGMENT_SOURCE_PROPERTY]
+  return source === UPSTREAM_FRAGMENT_SOURCE
+}
+
+function stripPrivateTokensDeep(node: Record<string, unknown>): Record<string, unknown> {
+  const result: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(node)) {
+    if (key === PRIVATE_TOKEN_KEY) continue
+    if (isPlainObject(value)) {
+      result[key] = stripPrivateTokensDeep(value)
+    } else {
+      result[key] = value
+    }
+  }
+  return result
+}
+
+function applyPrivateScope(fragment: ReferenceTokenConfig): ReferenceTokenConfig {
+  if (!isUpstreamFragment(fragment)) return fragment
+  return stripPrivateTokensDeep(fragment) as ReferenceTokenConfig
+}
+
 export function resolveColorModeTokens(
   fragments: ReferenceTokenConfig[]
 ): ResolvedColorModeTokens {
@@ -172,7 +205,8 @@ export function resolveColorModeTokens(
     themes: {},
   }
 
-  for (const fragment of fragments) {
+  for (const rawFragment of fragments) {
+    const fragment = applyPrivateScope(rawFragment)
     const { baseNode, themeNodes } = normalizeTokenNode(fragment)
 
     resolved.baseTokens = deepMerge({}, resolved.baseTokens, baseNode)
