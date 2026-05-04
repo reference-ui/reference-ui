@@ -5,6 +5,9 @@
  * Today `StrictColorValue` is derived from `UtilityValues['backgroundColor']`; if the
  * synced `.reference-ui/styled` preset does not list scale steps in `tokens.d.ts`, this
  * errors — remove `@ts-expect-error` once `StrictColorValue` matches generated tokens.
+ *
+ * TODO(matrix/distro): Matrix distro proves token-safe palette values on DivProps and
+ * css(), but it does not yet assert StyleProps['color'] parity for palette scale tokens.
  */
 import type { StyleProps } from '@reference-ui/react'
 

@@ -25,7 +25,9 @@ export interface CreatePandaConfigOptions {
  * The generated file initialises collectors, exposes runtime fragment functions,
  * runs the bundled fragment IIFEs, then reads the collected token values into defineConfig().
  */
-export async function createPandaConfig(options: CreatePandaConfigOptions): Promise<void> {
+export async function createPandaConfig(
+  options: CreatePandaConfigOptions
+): Promise<void> {
   const {
     outputPath,
     collectorBundle,

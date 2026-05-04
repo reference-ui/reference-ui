@@ -5,9 +5,9 @@ import { virt } from './helpers'
 /**
  * E2E: verify virtual transforms for src/virtual/ demo files (recipes.tsx, css.tsx, demo.mdx).
  *
- * Expected behavior (see packages/reference-core/src/cli/virtual and reference-docs virtual output):
- * - css: import { css } from '@reference-ui/react' → import { css } from '../../../src/system/css'
- * - recipe: import { recipe } → import { cva } from '../../../src/system/css', recipe( → cva(
+ * Expected behavior (see packages/reference-core/src/cli/virtual and current virtual output):
+ * - css: import { css } from '@reference-ui/react' → import { css } from 'src/system/css'
+ * - recipe: import { recipe } → import { cva } from 'src/system/css', recipe( → cva(
  *
  * ref sync --watch (global-setup) populates .reference-ui/virtual.
  * These tests FAIL when transforms are not applied (raw copy instead of transformed).
@@ -15,23 +15,28 @@ import { virt } from './helpers'
 describe('virtual – transforms (e2e)', () => {
   const virtualSrc = (...p: string[]) => virt('src', 'virtual', ...p)
 
-  // Virtual files use fixed path; Panda (cwd=core) resolves src/system/css from core
+  // Virtual files use fixed path; current transforms rewrite styling helpers to src/system/css.
   const EXPECTED_SYSTEM_CSS_IMPORT = "from 'src/system/css'"
 
+  // TODO(matrix/virtual): Matrix virtual currently asserts the absence of demo
+  // transform fixtures in its own package, not the rewrite behavior for this package's
+  // css transform fixture.
   it('rewrites css import to styled-system path (src/virtual/css.tsx)', () => {
     expect(existsSync(virtualSrc('css.tsx'))).toBe(true)
     const c = readFileSync(virtualSrc('css.tsx'), 'utf-8')
 
-    // Transformed: css must be imported from system/css (see reference-docs CssDemo.tsx)
+    // Transformed: css must be imported from src/system/css.
     expect(c).toContain(EXPECTED_SYSTEM_CSS_IMPORT)
     expect(c).not.toContain("from '@reference-ui/react'")
   })
 
+  // TODO(matrix/virtual): Matrix virtual currently asserts the absence of demo
+  // transform fixtures in its own package, not the recipe-to-cva rewrite for this fixture.
   it('rewrites recipe imports to cva from styled-system path (src/virtual/recipes.tsx)', () => {
     expect(existsSync(virtualSrc('recipes.tsx'))).toBe(true)
     const c = readFileSync(virtualSrc('recipes.tsx'), 'utf-8')
 
-    // Transformed: cva from system/css, recipe( → cva( (see reference-docs RecipeDemo.tsx)
+    // Transformed: cva from src/system/css, recipe( → cva(.
     expect(c).toContain(EXPECTED_SYSTEM_CSS_IMPORT)
     expect(c).toMatch(/import\s*\{\s*cva\s*\}\s*from/)
     expect(c).toContain('cva(')
@@ -39,6 +44,8 @@ describe('virtual – transforms (e2e)', () => {
     expect(c).not.toMatch(/import\s*\{\s*recipe\s*\}\s*from/)
   })
 
+  // TODO(matrix/virtual): Matrix coverage does not yet keep an MDX materialization
+  // fixture like this package's demo.mdx rewrite.
   it('transforms MDX to JSX (src/virtual/demo.mdx → demo.jsx in virtual)', () => {
     expect(existsSync(virtualSrc('demo.jsx'))).toBe(true)
     const c = readFileSync(virtualSrc('demo.jsx'), 'utf-8')

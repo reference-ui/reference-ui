@@ -2,6 +2,7 @@ export interface WatchPayload {
   projectRoot: string
   config: {
     include: string[]
+    dependencyPaths?: string[]
   }
 }
 

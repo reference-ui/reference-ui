@@ -3,7 +3,7 @@ use oxc_ast::ast::Statement;
 use oxc_parser::Parser;
 use oxc_span::SourceType;
 
-use super::constants::CVA_BINDINGS;
+use super::constants::{CVA_BINDINGS, CVA_IMPORT_PATH};
 use super::utils::{
     apply_rewrite, collect_import_parts, is_core_runtime_import, render_named_import,
     render_rewritten_imports, ImportCollection, RewritePlan,
@@ -44,12 +44,14 @@ pub fn rewrite_cva_imports(source_code: &str, relative_path: &str) -> String {
                 end: import.span.end as usize,
                 replacement: render_rewritten_imports(
                     "cva",
+                    CVA_IMPORT_PATH,
                     &import_parts.default_name,
                     &import_parts.remaining_parts,
                 ),
                 local_binding_to_normalize: import_parts
                     .local_binding_to_normalize
                     .filter(|local| local != "cva"),
+                canonical_call_name: Some("cva"),
             },
         );
     }

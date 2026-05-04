@@ -10,6 +10,8 @@ export interface TransformOptions {
   content: string
   sourceDir?: string
   debug?: boolean
+  /** Forwarded to the Rust responsive-styles pass for inline named breakpoints. */
+  breakpoints?: Record<string, string>
 }
 
 export interface TransformResult {

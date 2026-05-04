@@ -11,6 +11,10 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { Div } from '@reference-ui/react'
 import { injectDesignSystemCss, getDesignSystemCssPath } from './setup'
+import {
+  REFERENCE_UNIT_MODE_LIGHT_RGB,
+  REFERENCE_UNIT_TOKEN_RGB,
+} from '../../src/system/styles'
 
 beforeAll(() => {
   try {
@@ -22,25 +26,28 @@ beforeAll(() => {
 
 const hasDesignSystemCss = () => Boolean(getDesignSystemCssPath())
 
-const TEST_BG = 'reference.background'
-const TEST_COLOR = 'reference.text'
+const TEST_BG = 'referenceUnitToken'
+const TEST_COLOR = 'referenceUnitColorModeToken'
 
 describe('Div primitive', () => {
-  it('renders as a div with children', () => {
+  // MIGRATED: Covered by matrix/primitives/tests/e2e/primitives-contract.spec.ts.
+  it.skip('renders as a div with children', () => {
     render(<Div data-testid="div-basic">Hello</Div>)
     const el = screen.getByTestId('div-basic')
     expect(el.tagName).toBe('DIV')
     expect(el).toHaveTextContent('Hello')
   })
 
-  it('sets data-layer from ui.config.name (automatic layer identity)', () => {
+  // MIGRATED: Covered by matrix/primitives/tests/e2e/primitives-contract.spec.ts.
+  it.skip('sets data-layer from ui.config.name (automatic layer identity)', () => {
     render(<Div data-testid="div-layer">Content</Div>)
     const el = screen.getByTestId('div-layer')
     // Primitives get data-layer from the project config name at packager time.
     expect(el.getAttribute('data-layer')).toBe('reference-unit')
   })
 
-  it('accepts style props and renders in the document', () => {
+  // MIGRATED: Covered by matrix/primitives/tests/e2e/primitives-contract.spec.ts.
+  it.skip('accepts style props and renders in the document', () => {
     render(
       <Div
         data-testid="div-styled"
@@ -57,7 +64,8 @@ describe('Div primitive', () => {
     // When using reference-core Div (or the legacy CLI package with full box pattern), className will be set from Panda utilities
   })
 
-  it('resolves computed styles when design system CSS is injected', () => {
+  // MIGRATED: Covered by matrix/primitives/tests/e2e/primitives-contract.spec.ts.
+  it.skip('resolves computed styles when design system CSS is injected', () => {
     if (!hasDesignSystemCss()) return
 
     render(
@@ -75,16 +83,18 @@ describe('Div primitive', () => {
     // The core scaffold Div spreads props to DOM; the full box-based Div emits utility classes. Assert only when applied.
     if (style.paddingTop) {
       expect(style.paddingTop).toBe('16px')
-      expect(style.backgroundColor).toBe(TEST_BG)
-      expect(style.color).toBe(TEST_COLOR)
+      expect(style.backgroundColor).toBe(REFERENCE_UNIT_TOKEN_RGB)
+      expect(style.color).toBe(REFERENCE_UNIT_MODE_LIGHT_RGB)
     }
   })
 
-  it('applies token-based style props when design system CSS is present', () => {
+  // MIGRATED: Covered by matrix/primitives/tests/e2e/primitives-contract.spec.ts
+  // and matrix/system/tests/e2e/system-contract.spec.ts.
+  it.skip('applies token-based style props when design system CSS is present', () => {
     if (!hasDesignSystemCss()) return
 
     render(
-      <Div data-testid="div-tokens" padding="md" backgroundColor="reference.primary">
+      <Div data-testid="div-tokens" padding="md" backgroundColor="referenceUnitToken">
         Tokens
       </Div>
     )
@@ -92,11 +102,12 @@ describe('Div primitive', () => {
     const style = window.getComputedStyle(el)
     if (style.paddingTop) {
       expect(style.paddingTop).toBe('16px')
-      expect(style.backgroundColor).toBe(TEST_BG)
+      expect(style.backgroundColor).toBe(REFERENCE_UNIT_TOKEN_RGB)
     }
   })
 
-  it('composes the css prop into classes instead of leaking it to the DOM', () => {
+  // MIGRATED: Covered by matrix/primitives/tests/e2e/primitives-contract.spec.ts.
+  it.skip('composes the css prop into classes instead of leaking it to the DOM', () => {
     render(
       <Div
         data-testid="div-css-prop"

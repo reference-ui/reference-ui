@@ -34,6 +34,8 @@ beforeAll(() => {
 })
 
 describe('consumer token resolution in light mode', () => {
+  // TODO(matrix/color-mode): Add extended-library token resolution coverage to
+  // matrix/color-mode/tests/e2e/system-contract.spec.ts, then retire this case.
   it('consumer primitives resolve extended library color-mode tokens in light mode', () => {
     render(
       <Div data-testid="ext" bg="lightDarkDemoBg" color="lightDarkDemoText">
@@ -55,6 +57,8 @@ describe('consumer token resolution in light mode', () => {
     )
   })
 
+  // TODO(matrix/color-mode): Add layered public token resolution coverage to
+  // matrix/color-mode/tests/e2e/system-contract.spec.ts, then retire this case.
   it('consumer primitives resolve layered public color-mode tokens in light mode', () => {
     render(
       <Div data-testid="layer" bg="lightDarkDemoBg" color="lightDarkDemoText">
@@ -76,7 +80,8 @@ describe('consumer token resolution in light mode', () => {
     )
   })
 
-  it('consumer primitives resolve root color-mode tokens in light mode', () => {
+  // MIGRATED: Covered by matrix/color-mode/tests/e2e/system-contract.spec.ts.
+  it.skip('consumer primitives resolve root color-mode tokens in light mode', () => {
     render(
       <Div data-testid="root" color="referenceUnitColorModeToken">
         r
@@ -93,6 +98,8 @@ describe('consumer token resolution in light mode', () => {
 })
 
 describe('ancestor theme wrappers', () => {
+  // TODO(matrix/color-mode): Add extended-library dark-scope token resolution coverage to
+  // matrix/color-mode/tests/e2e/system-contract.spec.ts, then retire this case.
   it('ancestor theme wrapper flips extended library tokens to dark', () => {
     render(
       <div data-panda-theme="dark">
@@ -116,6 +123,8 @@ describe('ancestor theme wrappers', () => {
     )
   })
 
+  // TODO(matrix/color-mode): Add layered public dark-scope token resolution coverage to
+  // matrix/color-mode/tests/e2e/system-contract.spec.ts, then retire this case.
   it('ancestor theme wrapper flips layered public tokens to dark', () => {
     render(
       <div data-panda-theme="dark">
@@ -139,7 +148,8 @@ describe('ancestor theme wrappers', () => {
     )
   })
 
-  it('ancestor theme wrapper flips root color-mode tokens to dark', () => {
+  // MIGRATED: Covered by matrix/color-mode/tests/e2e/system-contract.spec.ts.
+  it.skip('ancestor theme wrapper flips root color-mode tokens to dark', () => {
     render(
       <div data-panda-theme="dark">
         <Div data-testid="root-wrap" color="referenceUnitColorModeToken">
@@ -156,6 +166,9 @@ describe('ancestor theme wrappers', () => {
     )
   })
 
+  // TODO(matrix/color-mode): Add typography utility composition coverage alongside
+  // color-mode root tokens to matrix/color-mode/tests/e2e/system-contract.spec.ts,
+  // then retire this case.
   it('ancestor dark theme preserves large typography utility props on consumer primitives', () => {
     render(
       <div data-panda-theme="dark">
@@ -188,7 +201,8 @@ describe('ancestor theme wrappers', () => {
 })
 
 describe('authored host scopes', () => {
-  it('nested dark colorMode creates a dark island inside a light theme scope', () => {
+  // MIGRATED: Covered by matrix/color-mode/tests/e2e/system-contract.spec.ts.
+  it.skip('nested dark colorMode creates a dark island inside a light theme scope', () => {
     render(
       <div data-panda-theme="light">
         <Div data-testid="outer-light-token" color="referenceUnitColorModeToken">
@@ -218,7 +232,8 @@ describe('authored host scopes', () => {
     )
   })
 
-  it('docs-style explicit light preview should create a light island inside a dark theme scope', () => {
+  // MIGRATED: Covered by matrix/color-mode/tests/e2e/system-contract.spec.ts.
+  it.skip('docs-style explicit light preview should create a light island inside a dark theme scope', () => {
     render(
       <div data-panda-theme="dark">
         <Div
@@ -252,7 +267,8 @@ describe('authored host scopes', () => {
     )
   })
 
-  it('docs-style dark preview should create a dark island inside a light theme scope', () => {
+  // MIGRATED: Covered by matrix/color-mode/tests/e2e/system-contract.spec.ts.
+  it.skip('docs-style dark preview should create a dark island inside a light theme scope', () => {
     render(
       <div data-panda-theme="light">
         <Div data-testid="docs-preview-light-host-token" color="referenceUnitColorModeToken">
@@ -284,7 +300,8 @@ describe('authored host scopes', () => {
 })
 
 describe('descendant cascade', () => {
-  it('nested descendants follow the nearest explicit light or dark scope', () => {
+  // MIGRATED: Covered by matrix/color-mode/tests/e2e/system-contract.spec.ts.
+  it.skip('nested descendants follow the nearest explicit light or dark scope', () => {
     render(
       <div data-panda-theme="dark">
         <Div data-testid="cascade-light-scope" colorMode="light">
@@ -314,6 +331,8 @@ describe('descendant cascade', () => {
     )
   })
 
+  // TODO(matrix/color-mode): Add extended-library descendant cascade coverage to
+  // matrix/color-mode/tests/e2e/system-contract.spec.ts, then retire this case.
   it('extended public tokens cascade to descendants inside explicit light and dark scopes', () => {
     render(
       <div data-panda-theme="dark">
@@ -356,6 +375,8 @@ describe('descendant cascade', () => {
     )
   })
 
+  // TODO(matrix/color-mode): Add layered public descendant cascade coverage to
+  // matrix/color-mode/tests/e2e/system-contract.spec.ts, then retire this case.
   it('layered public tokens cascade to descendants inside explicit light and dark scopes', () => {
     render(
       <div data-panda-theme="dark">
@@ -398,7 +419,8 @@ describe('descendant cascade', () => {
     )
   })
 
-  it('sibling light and dark descendant islands stay independent under one dark ancestor', () => {
+  // MIGRATED: Covered by matrix/color-mode/tests/e2e/system-contract.spec.ts.
+  it.skip('sibling light and dark descendant islands stay independent under one dark ancestor', () => {
     render(
       <div data-panda-theme="dark">
         <Div data-testid="sibling-light-scope" colorMode="light">
@@ -430,6 +452,9 @@ describe('descendant cascade', () => {
 })
 
 describe('authored host scopes with utility props', () => {
+  // TODO(matrix/color-mode): Add extended-library typography utility composition
+  // coverage to matrix/color-mode/tests/e2e/system-contract.spec.ts, then retire
+  // this case.
   it('node-level dark mode preserves large typography utility props with extended tokens', () => {
     render(
       <Div

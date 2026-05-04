@@ -1,0 +1,13 @@
+{
+  "//": {{ generatedNotice }},
+  "compilerOptions": {
+    {%- for option in compilerOptions %}
+    {{ option.key }}: {{ option.value }}{% unless forloop.last %},{% endunless %}
+    {%- endfor %}
+  },
+  "include": [
+    {%- for entry in include %}
+    {{ entry }}{% unless forloop.last %},{% endunless %}
+    {%- endfor %}
+  ]
+}

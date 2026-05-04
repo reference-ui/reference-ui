@@ -35,4 +35,17 @@ describe('microBundle', () => {
 
     await expect(microBundle(ENTRY_PATH)).rejects.toThrow('esbuild exploded')
   })
+
+  it('returns metafile data when requested via microBundleWithResult', async () => {
+    buildMock.mockResolvedValue({
+      metafile: { inputs: { 'entry.ts': { bytes: 1, imports: [] } }, outputs: {} },
+      outputFiles: [{ text: 'export const x = 1' }],
+    })
+
+    const { microBundleWithResult } = await import('./microbundle')
+    await expect(microBundleWithResult(ENTRY_PATH, { metafile: true })).resolves.toEqual({
+      code: 'export const x = 1',
+      metafile: { inputs: { 'entry.ts': { bytes: 1, imports: [] } }, outputs: {} },
+    })
+  })
 })

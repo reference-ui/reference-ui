@@ -26,15 +26,18 @@ function readSession(): Record<string, unknown> | null {
  * They verify that the session module wrote a well-formed manifest to disk.
  */
 describe('session – manifest shape after ref sync (one-shot)', () => {
-  it('session.json exists inside .reference-ui/tmp', () => {
+  // MIGRATED: Covered by matrix/session/tests/unit/session-manifest.test.ts.
+  it.skip('session.json exists inside .reference-ui/tmp', () => {
     expect(existsSync(sessionFile), `expected ${sessionFile} to exist`).toBe(true)
   })
 
-  it('session.json is valid JSON', () => {
+  // MIGRATED: Covered by matrix/session/tests/unit/session-manifest.test.ts.
+  it.skip('session.json is valid JSON', () => {
     expect(readSession()).not.toBeNull()
   })
 
-  it('session.json has all required fields', () => {
+  // MIGRATED: Covered by matrix/session/tests/unit/session-manifest.test.ts.
+  it.skip('session.json has all required fields', () => {
     const s = readSession()!
     expect(s).toHaveProperty('pid')
     expect(s).toHaveProperty('mode')
@@ -44,40 +47,47 @@ describe('session – manifest shape after ref sync (one-shot)', () => {
     expect(s).toHaveProperty('updatedAt')
   })
 
-  it('pid is a positive integer', () => {
+  // MIGRATED: Covered by matrix/session/tests/unit/session-manifest.test.ts.
+  it.skip('pid is a positive integer', () => {
     const s = readSession()!
     expect(typeof s.pid).toBe('number')
     expect(s.pid as number).toBeGreaterThan(0)
     expect(Number.isInteger(s.pid)).toBe(true)
   })
 
-  it('mode is one-shot for a non-watch sync run', () => {
+  // MIGRATED: Covered by matrix/session/tests/unit/session-manifest.test.ts.
+  it.skip('mode is one-shot for a non-watch sync run', () => {
     expect(readSession()!.mode).toBe('one-shot')
   })
 
-  it('state is stopped after a completed one-shot sync', () => {
+  // MIGRATED: Covered by matrix/session/tests/unit/session-manifest.test.ts.
+  it.skip('state is stopped after a completed one-shot sync', () => {
     expect(readSession()!.state).toBe('stopped')
   })
 
-  it('buildState is ready after a completed one-shot sync', () => {
+  // MIGRATED: Covered by matrix/session/tests/unit/session-manifest.test.ts.
+  it.skip('buildState is ready after a completed one-shot sync', () => {
     expect(readSession()!.buildState).toBe('ready')
   })
 
-  it('startedAt and updatedAt are ISO 8601 strings', () => {
+  // MIGRATED: Covered by matrix/session/tests/unit/session-manifest.test.ts.
+  it.skip('startedAt and updatedAt are ISO 8601 strings', () => {
     const s = readSession()!
     const iso = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
     expect(String(s.startedAt)).toMatch(iso)
     expect(String(s.updatedAt)).toMatch(iso)
   })
 
-  it('updatedAt is at or after startedAt', () => {
+  // MIGRATED: Covered by matrix/session/tests/unit/session-manifest.test.ts.
+  it.skip('updatedAt is at or after startedAt', () => {
     const s = readSession()!
     expect(String(s.updatedAt) >= String(s.startedAt)).toBe(true)
   })
 })
 
 describe('session – lock file after ref sync (one-shot)', () => {
-  it('session.lock is removed after a completed one-shot sync', () => {
+  // MIGRATED: Covered by matrix/session/tests/unit/session-manifest.test.ts.
+  it.skip('session.lock is removed after a completed one-shot sync', () => {
     // One-shot cleanupSession() should remove the lock.
     expect(existsSync(lockFile), `lock file should be cleaned up after one-shot sync`).toBe(false)
   })

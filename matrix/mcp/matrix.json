@@ -1,3 +1,8 @@
 {
-  "matrix": true
+  "name": "mcp",
+  "refSync": {
+    "mode": "full"
+  },
+  "bundlers": ["vite7"],
+  "react": "react19"
 }

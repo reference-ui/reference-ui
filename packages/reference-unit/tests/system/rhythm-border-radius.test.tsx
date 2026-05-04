@@ -2,7 +2,7 @@
  * @vitest-environment happy-dom
  *
  * Integration tests: rhythm border-radius utilities in the generated design system
- * (borderRadius="2r", pair shorthands), literal px, and radii tokens (e.g. xl).
+ * (borderRadius="2r", pair shorthands), literal px, and radii tokens (e.g. lg).
  * These assert the emitted classes and generated CSS rules, which is more robust
  * than parsing happy-dom radius values from `calc(...)`.
  */
@@ -35,7 +35,8 @@ beforeAll(() => {
 })
 
 describe('rhythm border radius (design system CSS)', () => {
-  it('borderRadius="2r" emits the rhythm border radius class and calc rule', () => {
+  // MIGRATED: Covered by matrix/spacing/tests/e2e/system-contract.spec.ts.
+  it.skip('borderRadius="2r" emits the rhythm border radius class and calc rule', () => {
     render(
       <Div data-testid="r2-all" borderRadius="2r">
         x
@@ -45,10 +46,11 @@ describe('rhythm border radius (design system CSS)', () => {
     expect(el.className).toContain('bdr_2r')
 
     const rule = cssRule('bdr_2r')
-    expect(rule).toContain('border-radius: calc(2 * var(--spacing-r));')
+    expect(rule).toContain('border-radius: calc(2 * var(--spacing-root));')
   })
 
-  it('borderRadius="12px" still works as a normal literal radius prop', () => {
+  // MIGRATED: Covered by matrix/spacing/tests/e2e/system-contract.spec.ts.
+  it.skip('borderRadius="12px" still works as a normal literal radius prop', () => {
     render(
       <Div data-testid="px12" borderRadius="12px">
         x
@@ -63,20 +65,22 @@ describe('rhythm border radius (design system CSS)', () => {
     expect(s.borderBottomRightRadius).toBe('12px')
   })
 
-  it('borderRadius="xl" resolves through the radii token pipeline', () => {
+  // MIGRATED: Covered by matrix/spacing/tests/e2e/system-contract.spec.ts.
+  it.skip('borderRadius="lg" resolves through the radii token pipeline', () => {
     render(
-      <Div data-testid="xl" borderRadius="xl">
+      <Div data-testid="lg" borderRadius="lg">
         x
       </Div>,
     )
-    const el = screen.getByTestId('xl')
-    expect(el.className).toContain('bdr_xl')
+    const el = screen.getByTestId('lg')
+    expect(el.className).toContain('bdr_lg')
 
-    const rule = cssRule('bdr_xl')
-    expect(rule).toContain('border-radius: var(--radii-xl);')
+    const rule = cssRule('bdr_lg')
+    expect(rule).toContain('border-radius: var(--radii-lg);')
   })
 
-  it('borderTopRadius="2r" emits both top corner declarations', () => {
+  // MIGRATED: Covered by matrix/spacing/tests/e2e/system-contract.spec.ts.
+  it.skip('borderTopRadius="2r" emits both top corner declarations', () => {
     render(
       <Div data-testid="top-pair" borderTopRadius="2r">
         x
@@ -86,11 +90,12 @@ describe('rhythm border radius (design system CSS)', () => {
     expect(el.className).toContain('bdr-t_2r')
 
     const rule = cssRule('bdr-t_2r')
-    expect(rule).toContain('border-top-left-radius: calc(2 * var(--spacing-r));')
-    expect(rule).toContain('border-top-right-radius: calc(2 * var(--spacing-r));')
+    expect(rule).toContain('border-top-left-radius: calc(2 * var(--spacing-root));')
+    expect(rule).toContain('border-top-right-radius: calc(2 * var(--spacing-root));')
   })
 
-  it('borderBottomRadius="2r" emits both bottom corner declarations', () => {
+  // MIGRATED: Covered by matrix/spacing/tests/e2e/system-contract.spec.ts.
+  it.skip('borderBottomRadius="2r" emits both bottom corner declarations', () => {
     render(
       <Div data-testid="bottom-pair" borderBottomRadius="2r">
         x
@@ -100,11 +105,12 @@ describe('rhythm border radius (design system CSS)', () => {
     expect(el.className).toContain('bdr-b_2r')
 
     const rule = cssRule('bdr-b_2r')
-    expect(rule).toContain('border-bottom-left-radius: calc(2 * var(--spacing-r));')
-    expect(rule).toContain('border-bottom-right-radius: calc(2 * var(--spacing-r));')
+    expect(rule).toContain('border-bottom-left-radius: calc(2 * var(--spacing-root));')
+    expect(rule).toContain('border-bottom-right-radius: calc(2 * var(--spacing-root));')
   })
 
-  it('borderLeftRadius="2r" emits both left corner declarations', () => {
+  // MIGRATED: Covered by matrix/spacing/tests/e2e/system-contract.spec.ts.
+  it.skip('borderLeftRadius="2r" emits both left corner declarations', () => {
     render(
       <Div data-testid="left-pair" borderLeftRadius="2r">
         x
@@ -114,11 +120,12 @@ describe('rhythm border radius (design system CSS)', () => {
     expect(el.className).toContain('bdr-l_2r')
 
     const rule = cssRule('bdr-l_2r')
-    expect(rule).toContain('border-top-left-radius: calc(2 * var(--spacing-r));')
-    expect(rule).toContain('border-bottom-left-radius: calc(2 * var(--spacing-r));')
+    expect(rule).toContain('border-top-left-radius: calc(2 * var(--spacing-root));')
+    expect(rule).toContain('border-bottom-left-radius: calc(2 * var(--spacing-root));')
   })
 
-  it('borderRightRadius="2r" emits both right corner declarations', () => {
+  // MIGRATED: Covered by matrix/spacing/tests/e2e/system-contract.spec.ts.
+  it.skip('borderRightRadius="2r" emits both right corner declarations', () => {
     render(
       <Div data-testid="right-pair" borderRightRadius="2r">
         x
@@ -128,11 +135,12 @@ describe('rhythm border radius (design system CSS)', () => {
     expect(el.className).toContain('bdr-r_2r')
 
     const rule = cssRule('bdr-r_2r')
-    expect(rule).toContain('border-top-right-radius: calc(2 * var(--spacing-r));')
-    expect(rule).toContain('border-bottom-right-radius: calc(2 * var(--spacing-r));')
+    expect(rule).toContain('border-top-right-radius: calc(2 * var(--spacing-root));')
+    expect(rule).toContain('border-bottom-right-radius: calc(2 * var(--spacing-root));')
   })
 
-  it('borderStartRadius and borderEndRadius emit both logical corner declarations', () => {
+  // MIGRATED: Covered by matrix/spacing/tests/e2e/system-contract.spec.ts.
+  it.skip('borderStartRadius and borderEndRadius emit both logical corner declarations', () => {
     render(
       <Div data-testid="start-pair" borderStartRadius="2r">
         x
@@ -148,14 +156,14 @@ describe('rhythm border radius (design system CSS)', () => {
     expect(startEl.className).toContain('bdr-s_2r')
 
     const startRule = cssRule('bdr-s_2r')
-    expect(startRule).toContain('border-start-start-radius: calc(2 * var(--spacing-r));')
-    expect(startRule).toContain('border-end-start-radius: calc(2 * var(--spacing-r));')
+    expect(startRule).toContain('border-start-start-radius: calc(2 * var(--spacing-root));')
+    expect(startRule).toContain('border-end-start-radius: calc(2 * var(--spacing-root));')
 
     const endEl = screen.getByTestId('end-pair')
     expect(endEl.className).toContain('bdr-e_2r')
 
     const endRule = cssRule('bdr-e_2r')
-    expect(endRule).toContain('border-start-end-radius: calc(2 * var(--spacing-r));')
-    expect(endRule).toContain('border-end-end-radius: calc(2 * var(--spacing-r));')
+    expect(endRule).toContain('border-start-end-radius: calc(2 * var(--spacing-root));')
+    expect(endRule).toContain('border-end-end-radius: calc(2 * var(--spacing-root));')
   })
 })

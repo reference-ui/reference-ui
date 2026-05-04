@@ -43,7 +43,8 @@ async function waitForGeneratedFileContaining(
 }
 
 describe('font prop output (e2e)', () => {
-  it('copies the source-backed font prop fixture into virtual output', () => {
+  // MIGRATED: Covered by matrix/font/tests/unit/runtime.test.ts.
+  it.skip('copies the source-backed font prop fixture into virtual output', () => {
     expect(hasVirtualSystemFile('fontProp.fixture.tsx')).toBe(true)
 
     const content = readVirtualSystemFile('fontProp.fixture.tsx')
@@ -51,7 +52,9 @@ describe('font prop output (e2e)', () => {
     expect(content).toContain('weight="bold"')
   })
 
-  it('extracts font custom props from source-backed primitive usage', () => {
+  // MIGRATED: Covered by matrix/font/tests/e2e/font-contract.spec.ts
+  // and matrix/font/tests/unit/runtime.test.ts.
+  it.skip('extracts font custom props from source-backed primitive usage', () => {
     const css = readGeneratedFile('styled', 'styles.css')
     if (!css) return
 
@@ -60,7 +63,8 @@ describe('font prop output (e2e)', () => {
     expect(css).toContain('.fw_700')
   })
 
-  it('emits generated system font registry types', async () => {
+  // MIGRATED: Covered by matrix/font/tests/unit/runtime.test.ts.
+  it.skip('emits generated system font registry types', async () => {
     const systemFontRegistryTypes = await waitForGeneratedFileContaining(
       'interface FontRegistry {',
       'system',

@@ -1,0 +1,35 @@
+/*
+ * {{ generatedNotice }}
+ */
+import { defineConfig } from '@playwright/test'
+
+export default defineConfig({
+  reporter: 'line',
+  testDir: './tests/e2e',
+  timeout: 180_000,
+  workers: 1,
+  fullyParallel: false,
+  use: {
+    headless: true,
+  },
+  projects: [
+    {%- for project in projects %}
+    {
+      name: '{{ project.name }}',
+      use: {
+        baseURL: '{{ project.baseURL }}',
+      },
+    }{%- unless forloop.last %},{% endunless %}
+    {%- endfor %}
+  ],
+  webServer: [
+    {%- for server in webServers %}
+    {
+      command: '{{ server.command }}',
+      url: '{{ server.url }}',
+      reuseExistingServer: false,
+      timeout: 120_000,
+    }{%- unless forloop.last %},{% endunless %}
+    {%- endfor %}
+  ],
+})

@@ -49,7 +49,8 @@ describe('Reference component', () => {
     cleanup()
   })
 
-  it('loads symbol metadata from the generated Tasty manifest at runtime', async () => {
+  // MIGRATED: Covered by matrix/reference/tests/e2e/reference-contract.spec.ts.
+  it.skip('loads symbol metadata from the generated Tasty manifest at runtime', async () => {
     await renderReference('ReferenceApiFixture')
 
     expect(screen.getByText('Interface')).toBeInTheDocument()
@@ -62,7 +63,39 @@ describe('Reference component', () => {
     expectVisibleText('ghost')
   })
 
-  it('renders the richer docs reference fixture with defaults, callbacks, and derived types', async () => {
+  // MIGRATED: Covered by matrix/reference/tests/e2e/reference-contract.spec.ts.
+  it.skip('renders the generated public StyleProps symbol', async () => {
+    await renderReference('StyleProps')
+
+    expect(screen.queryByText(/Failed to load/)).not.toBeInTheDocument()
+    expect(screen.getByText('StyleProps')).toBeInTheDocument()
+    expect(screen.getByText('Type')).toBeInTheDocument()
+    expect(screen.getByText('WebkitAppearance')).toBeInTheDocument()
+    expect(screen.getByText('container')).toBeInTheDocument()
+  })
+
+  // MIGRATED: Covered by matrix/reference/tests/e2e/reference-contract.spec.ts.
+  it.skip('renders inherited StyleProps members for interfaces that extend StyleProps', async () => {
+    await renderReference('ReferenceStylePropsExtendsFixture')
+
+    expect(screen.queryByText(/Failed to load/)).not.toBeInTheDocument()
+    expect(screen.getByText('ReferenceStylePropsExtendsFixture')).toBeInTheDocument()
+    expect(screen.getByText('WebkitAppearance')).toBeInTheDocument()
+    expect(screen.getByText('localTone')).toBeInTheDocument()
+  })
+
+  // MIGRATED: Covered by matrix/reference/tests/e2e/reference-contract.spec.ts.
+  it.skip('groups referenced type-alias members as inherited sections', async () => {
+    await renderReference('ReferenceStylePropsTypeExtendsFixture')
+
+    expect(screen.queryByText(/Failed to load/)).not.toBeInTheDocument()
+    expect(screen.getByText('ReferenceStylePropsTypeExtendsFixture')).toBeInTheDocument()
+    expectVisibleTextContent(/Inherited from\s*ReferenceStylePropsTypeBaseFixture\s*\(\d+\)/)
+    expect(screen.getByText('localTone')).toBeInTheDocument()
+  })
+
+  // MIGRATED: Covered by matrix/reference/tests/e2e/reference-contract.spec.ts.
+  it.skip('renders the richer docs reference fixture with defaults, callbacks, and derived types', async () => {
     await renderReference('DocsReferenceButtonProps')
 
     expect(screen.getByText('DocsReferenceButtonProps')).toBeInTheDocument()
@@ -136,7 +169,8 @@ describe('Reference component', () => {
     expect(screen.queryByText('indexed')).not.toBeInTheDocument()
   })
 
-  it('renders type alias fixtures so resolution-focused scenarios are testable in isolation', async () => {
+  // MIGRATED: Covered by matrix/reference/tests/e2e/reference-contract.spec.ts.
+  it.skip('renders type alias fixtures so resolution-focused scenarios are testable in isolation', async () => {
     await renderReference('DocsReferenceSimpleType')
 
     expect(screen.getByText('DocsReferenceSimpleType')).toBeInTheDocument()
@@ -145,7 +179,8 @@ describe('Reference component', () => {
     expectTextAbsent('Optional formatter for the visible label.')
   })
 
-  it('renders projected members for composed type aliases in the reference UI', async () => {
+  // MIGRATED: Covered by matrix/reference/tests/e2e/reference-contract.spec.ts.
+  it.skip('renders projected members for composed type aliases in the reference UI', async () => {
     await renderReference('DocsReferenceComposedButtonProps')
 
     expect(screen.getByText('DocsReferenceComposedButtonProps')).toBeInTheDocument()
@@ -158,7 +193,8 @@ describe('Reference component', () => {
     expectTextAbsent('Definition')
   })
 
-  it('renders keyof typeof aliases as resolved literal unions when tasty emits them', async () => {
+  // MIGRATED: Covered by matrix/reference/tests/e2e/reference-contract.spec.ts.
+  it.skip('renders keyof typeof aliases as resolved literal unions when tasty emits them', async () => {
     await renderReference('DocsReferenceButtonIntent')
 
     expect(screen.getByText('DocsReferenceButtonIntent')).toBeInTheDocument()
@@ -166,7 +202,8 @@ describe('Reference component', () => {
     expectVisibleText("'primary' | 'danger'")
   })
 
-  it('renders inherited members with origin labels', async () => {
+  // MIGRATED: Covered by matrix/reference/tests/e2e/reference-contract.spec.ts.
+  it.skip('renders inherited members with origin labels', async () => {
     await renderReference('DocsReferenceSplitButtonProps')
 
     expect(screen.getByText('DocsReferenceSplitButtonProps')).toBeInTheDocument()
@@ -183,7 +220,8 @@ describe('Reference component', () => {
     expectVisibleText('lg')
   })
 
-  it('renders generic interface headers with constraints and defaults', async () => {
+  // MIGRATED: Covered by matrix/reference/tests/e2e/reference-contract.spec.ts.
+  it.skip('renders generic interface headers with constraints and defaults', async () => {
     await renderReference('DocsReferenceAsyncState')
 
     expect(screen.getByText('DocsReferenceAsyncState')).toBeInTheDocument()
@@ -197,7 +235,8 @@ describe('Reference component', () => {
     expectVisibleText('success')
   })
 
-  it('renders tuple aliases with their element labels instead of placeholder text', async () => {
+  // MIGRATED: Covered by matrix/reference/tests/e2e/reference-contract.spec.ts.
+  it.skip('renders tuple aliases with their element labels instead of placeholder text', async () => {
     await renderReference('DocsReferenceButtonPadding')
 
     expect(screen.getByText('DocsReferenceButtonPadding')).toBeInTheDocument()
@@ -206,7 +245,8 @@ describe('Reference component', () => {
     expect(screen.queryByText('[tuple]')).not.toBeInTheDocument()
   })
 
-  it('renders mapped aliases with the full mapped expression', async () => {
+  // MIGRATED: Covered by matrix/reference/tests/e2e/reference-contract.spec.ts.
+  it.skip('renders mapped aliases with the full mapped expression', async () => {
     await renderReference('DocsReferenceToneLabels')
 
     expect(screen.getByText('DocsReferenceToneLabels')).toBeInTheDocument()
@@ -216,7 +256,8 @@ describe('Reference component', () => {
     expectTextAbsent('Last resolved payload when the state is successful.')
   })
 
-  it('renders template literal aliases as resolved literal unions when tasty emits them', async () => {
+  // MIGRATED: Covered by matrix/reference/tests/e2e/reference-contract.spec.ts.
+  it.skip('renders template literal aliases as resolved literal unions when tasty emits them', async () => {
     await renderReference('DocsReferenceToneKey')
 
     expect(screen.getByText('DocsReferenceToneKey')).toBeInTheDocument()
@@ -224,7 +265,8 @@ describe('Reference component', () => {
     expectVisibleText("'tone-solid' | 'tone-ghost' | 'tone-outline'")
   })
 
-  it('renders tuple-derived indexed access aliases as resolved literal unions', async () => {
+  // MIGRATED: Covered by matrix/reference/tests/e2e/reference-contract.spec.ts.
+  it.skip('renders tuple-derived indexed access aliases as resolved literal unions', async () => {
     await renderReference('DocsReferenceResolvedSize')
 
     expect(screen.getByText('DocsReferenceResolvedSize')).toBeInTheDocument()
@@ -232,7 +274,8 @@ describe('Reference component', () => {
     expectVisibleText("'sm' | 'md' | 'lg'")
   })
 
-  it('renders object-like aliases as member tables when projection exists', async () => {
+  // MIGRATED: Covered by matrix/reference/tests/e2e/reference-contract.spec.ts.
+  it.skip('renders object-like aliases as member tables when projection exists', async () => {
     await renderReference('DocsReferenceSpacingPreview')
 
     expect(screen.getByText('DocsReferenceSpacingPreview')).toBeInTheDocument()
@@ -243,7 +286,8 @@ describe('Reference component', () => {
     expectTextAbsent('Definition')
   })
 
-  it('renders intersection aliases as the final member surface when projection exists', async () => {
+  // MIGRATED: Covered by matrix/reference/tests/e2e/reference-contract.spec.ts.
+  it.skip('renders intersection aliases as the final member surface when projection exists', async () => {
     await renderReference('DocsReferenceComposedButtonProps')
 
     expect(screen.getByText('DocsReferenceComposedButtonProps')).toBeInTheDocument()
@@ -254,7 +298,8 @@ describe('Reference component', () => {
     expectTextAbsent('Definition')
   })
 
-  it('renders discriminated union aliases with their object branches', async () => {
+  // MIGRATED: Covered by matrix/reference/tests/e2e/reference-contract.spec.ts.
+  it.skip('renders discriminated union aliases with their object branches', async () => {
     await renderReference('DocsReferenceInteractiveElement')
 
     expect(screen.getByText('DocsReferenceInteractiveElement')).toBeInTheDocument()
@@ -265,7 +310,8 @@ describe('Reference component', () => {
     expectTextAbsent('Last resolved payload when the state is successful.')
   })
 
-  it('renders concrete conditional aliases as resolved unions when tasty emits them', async () => {
+  // MIGRATED: Covered by matrix/reference/tests/e2e/reference-contract.spec.ts.
+  it.skip('renders concrete conditional aliases as resolved unions when tasty emits them', async () => {
     await renderReference('DocsReferenceButtonVariantMeta')
 
     expect(screen.getByText('DocsReferenceButtonVariantMeta')).toBeInTheDocument()
@@ -276,7 +322,8 @@ describe('Reference component', () => {
     expectTextAbsent('Last resolved payload when the state is successful.')
   })
 
-  it('renders typeof aliases as member tables when the resolved shape is object-like', async () => {
+  // MIGRATED: Covered by matrix/reference/tests/e2e/reference-contract.spec.ts.
+  it.skip('renders typeof aliases as member tables when the resolved shape is object-like', async () => {
     await renderReference('DocsReferenceButtonSpacing')
 
     expect(screen.getByText('DocsReferenceButtonSpacing')).toBeInTheDocument()
@@ -287,7 +334,8 @@ describe('Reference component', () => {
     expectTextAbsent('Definition')
   })
 
-  it('renders tuple-derived template literal aliases as resolved literal unions', async () => {
+  // MIGRATED: Covered by matrix/reference/tests/e2e/reference-contract.spec.ts.
+  it.skip('renders tuple-derived template literal aliases as resolved literal unions', async () => {
     await renderReference('DocsReferenceResolvedTone')
 
     expect(screen.getByText('DocsReferenceResolvedTone')).toBeInTheDocument()
@@ -295,7 +343,8 @@ describe('Reference component', () => {
     expectVisibleText("'tone-sm' | 'tone-md' | 'tone-lg'")
   })
 
-  it('keeps direct alias boundaries definition-first instead of expanding the target members', async () => {
+  // MIGRATED: Covered by matrix/reference/tests/e2e/reference-contract.spec.ts.
+  it.skip('keeps direct alias boundaries definition-first instead of expanding the target members', async () => {
     await renderReference('DocsReferencePinnedTargetAlias')
 
     expect(screen.getByText('DocsReferencePinnedTargetAlias')).toBeInTheDocument()
@@ -306,7 +355,8 @@ describe('Reference component', () => {
     expectTextAbsent('disabled')
   })
 
-  it('loads a local interface from the reference-unit source tree', async () => {
+  // MIGRATED: Covered by matrix/reference/tests/e2e/reference-contract.spec.ts.
+  it.skip('loads a local interface from the reference-unit source tree', async () => {
     await renderReference('ReferenceJsDocTagFixture')
 
     expect(screen.queryByText(/Failed to load/)).not.toBeInTheDocument()

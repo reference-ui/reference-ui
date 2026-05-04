@@ -15,7 +15,8 @@ import {
  * watch:change → run:virtual:sync:file removes files from virtual on unlink.
  */
 describe('virtual – mirror invariant', () => {
-  it('virtual has no orphan files (every virtual file has a source counterpart)', async () => {
+  // MIGRATED: Covered by matrix/virtual/tests/unit/mirror.test.ts.
+  it.skip('virtual has no orphan files (every virtual file has a source counterpart)', async () => {
     const sourcePaths = () => new Set(getSourcePaths())
     const getOrphans = () => {
       const virtualPaths = getVirtualPaths()
@@ -23,6 +24,7 @@ describe('virtual – mirror invariant', () => {
       const list: string[] = []
       for (const vRel of virtualPaths) {
         if (vRel.startsWith('_reference-component/')) continue
+        if (vRel.startsWith('__reference__ui/')) continue
         const candidates = virtualToPossibleSources(vRel)
         if (!candidates.some((c) => src.has(c))) list.push(vRel)
       }
@@ -34,7 +36,9 @@ describe('virtual – mirror invariant', () => {
     expect(ok, `Orphan files in virtual (no source): ${orphans.join(', ')}`).toBe(true)
   })
 
-  it('virtual has all source files (no missing)', async () => {
+  // MIGRATED: Covered by matrix/virtual/tests/unit/mirror.test.ts and
+  // matrix/distro/tests/unit/distro.test.tsx.
+  it.skip('virtual has all source files (no missing)', async () => {
     const getMissing = () => {
       const sourcePaths = getSourcePaths()
       const list: string[] = []

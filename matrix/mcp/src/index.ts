@@ -1,4 +1,4 @@
-export { App } from './App'
+export { Index } from './Index'
 export {
   ComponentShowcase,
   FeatureCard,

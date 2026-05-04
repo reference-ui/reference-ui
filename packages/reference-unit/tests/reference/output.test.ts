@@ -9,7 +9,8 @@ import {
 } from './helpers'
 
 describe('reference output', () => {
-  it('emits Tasty artifacts under .reference-ui/types/tasty', async () => {
+  // MIGRATED: Covered by matrix/reference/tests/unit/reference-output.test.ts.
+  it.skip('emits Tasty artifacts under .reference-ui/types/tasty', async () => {
     const ready = await waitForReferenceArtifacts()
     expect(ready, 'reference manifest should be emitted by the reference worker').toBe(
       true
@@ -21,7 +22,8 @@ describe('reference output', () => {
     )
   })
 
-  it('loads known symbols from the reference-unit source fixture', async () => {
+  // MIGRATED: Covered by matrix/reference/tests/unit/reference-output.test.ts.
+  it.skip('loads known symbols from the reference-unit source fixture', async () => {
     const ready = await waitForReferenceArtifacts()
     expect(ready, 'reference manifest should be emitted by the reference worker').toBe(
       true
@@ -53,7 +55,8 @@ describe('reference output', () => {
     expect(variantMember?.getType()?.describe()).toContain('ghost')
   })
 
-  it('keeps emitted reference artifacts focused on known indexed fixture symbols', async () => {
+  // MIGRATED: Covered by matrix/reference/tests/unit/reference-output.test.ts.
+  it.skip('indexes public React StyleProps alongside local fixture symbols', async () => {
     const ready = await waitForReferenceArtifacts()
     expect(ready, 'reference manifest should be emitted by the reference worker').toBe(
       true
@@ -62,13 +65,33 @@ describe('reference output', () => {
     const api = createReferenceTestApi(typesPackageManifestPath)
     await api.ready()
 
-    expect(await api.findSymbolByName('StyleProps')).toBeUndefined()
+    const styleProps = await api.loadSymbolByName('StyleProps')
+    const extended = await api.loadSymbolByName('ReferenceStylePropsExtendsFixture')
+    const extendedAlias = await api.loadSymbolByName('ReferenceStylePropsTypeExtendsFixture')
     const fixture = await api.loadSymbolByName('ReferenceApiFixture')
+    const styleMembers = await styleProps.getDisplayMembers()
+    const extendedMembers = await extended.getDisplayMembers()
+    const extendedAliasMembers = await extendedAlias.getDisplayMembers()
+    expect(styleProps.getName()).toBe('StyleProps')
+    expect(styleProps.getKind()).toBe('typeAlias')
+    expect(styleMembers.length).toBeGreaterThan(100)
+    expect(styleMembers.map(member => member.getName())).toEqual(
+      expect.arrayContaining(['WebkitAppearance', 'accentColor', 'container'])
+    )
+    expect(extendedMembers.length).toBeGreaterThan(100)
+    expect(extendedMembers.map(member => member.getName())).toEqual(
+      expect.arrayContaining(['WebkitAppearance', 'container', 'localTone'])
+    )
+    expect(extendedAliasMembers.length).toBeGreaterThan(100)
+    expect(extendedAliasMembers.map(member => member.getName())).toEqual(
+      expect.arrayContaining(['WebkitAppearance', 'container', 'localFlag', 'localTone'])
+    )
     expect(fixture.getName()).toBe('ReferenceApiFixture')
     expect(fixture.getKind()).toBe('interface')
   })
 
-  it('projects display members for composed type aliases in generated reference artifacts', async () => {
+  // MIGRATED: Covered by matrix/reference/tests/unit/reference-output.test.ts.
+  it.skip('projects display members for composed type aliases in generated reference artifacts', async () => {
     const ready = await waitForReferenceArtifacts()
     expect(ready, 'reference manifest should be emitted by the reference worker').toBe(
       true
@@ -92,7 +115,8 @@ describe('reference output', () => {
     )
   })
 
-  it('flattens inherited display members when an interface extends a type alias', async () => {
+  // MIGRATED: Covered by matrix/reference/tests/unit/reference-output.test.ts.
+  it.skip('flattens inherited display members when an interface extends a type alias', async () => {
     const ready = await waitForReferenceArtifacts()
     expect(ready, 'reference manifest should be emitted by the reference worker').toBe(
       true
@@ -110,7 +134,8 @@ describe('reference output', () => {
     )
   })
 
-  it('still projects direct alias targets in the raw Tasty API', async () => {
+  // MIGRATED: Covered by matrix/reference/tests/unit/reference-output.test.ts.
+  it.skip('still projects direct alias targets in the raw Tasty API', async () => {
     const ready = await waitForReferenceArtifacts()
     expect(ready, 'reference manifest should be emitted by the reference worker').toBe(
       true

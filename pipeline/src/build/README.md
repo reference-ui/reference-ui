@@ -15,18 +15,14 @@ This area should become the source of truth for package builds instead of relyin
 
 ## Current Inputs To Replace Or Absorb
 
-Today, build responsibilities are spread across several places:
+Build responsibilities still touch a few surfaces outside pure Dagger:
 
-- `.github/workflows/test.yml`
-	- installs dependencies
-	- compiles the rust native binary before tests
-- `.github/workflows/rust-compile.yml`
-	- runs cross-target native compilation for release artifacts
-- `.github/workflows/docs.yml`
-	- compiles rust artifacts needed by docs builds
-	- stages native artifacts before building the docs site
+- `.github/workflows/rust-compile.yml` (called only from `.github/workflows/docs.yml`)
+	- compiles Linux native artifacts used when building the docs site on GitHub Actions
 - `scripts/fixture-build-cache.mjs`
 	- caches and short-circuits fixture package builds based on file hashes
+
+Package builds, test-time native builds, and release-time multi-target native work should converge on the pipeline and your primary CI, not on per-workflow YAML copies.
 
 ## Intended Dagger Responsibility
 

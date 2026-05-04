@@ -17,12 +17,14 @@ function computedEquivalent(value: string): string {
 }
 
 test.describe('style-props', () => {
+  // MIGRATED: Covered by matrix/primitives/tests/e2e/primitives-contract.spec.ts.
   test('StylePropsTest mounts', async ({ page }) => {
     await page.goto(testRoutes.styleProps)
     const root = page.getByTestId('style-props-test')
     await expect(root).toBeVisible()
   })
 
+  // MIGRATED: Covered by matrix/primitives/tests/e2e/primitives-contract.spec.ts.
   test('Div renders custom tokens: color, bg, padding, radii, border', async ({
     page,
   }) => {
@@ -45,6 +47,7 @@ test.describe('style-props', () => {
     expect(borderColor).toBe(hexToRgb(tokensConfig.colors.test.primary.value))
   })
 
+  // MIGRATED: Covered by matrix/primitives/tests/e2e/primitives-contract.spec.ts.
   test('Div renders inline colors (hex on the fly)', async ({ page }) => {
     await page.goto(testRoutes.styleProps)
     const el = page.getByTestId('style-props-inline-color')
@@ -57,6 +60,7 @@ test.describe('style-props', () => {
     expect(bg).toBe(hexToRgb('#fef3c7'))
   })
 
+  // MIGRATED: Covered by matrix/primitives/tests/e2e/primitives-contract.spec.ts.
   test('Div renders inline border 1px solid #123', async ({ page }) => {
     await page.goto(testRoutes.styleProps)
     const el = page.getByTestId('style-props-border-shorthand-hex')
@@ -71,6 +75,7 @@ test.describe('style-props', () => {
     expect(borderColor).toBe(hexToRgb('#112233')) // #123 → #112233
   })
 
+  // MIGRATED: Covered by matrix/primitives/tests/e2e/primitives-contract.spec.ts.
   test('Div renders inline border shorthand and radius', async ({ page }) => {
     await page.goto(testRoutes.styleProps)
     const el = page.getByTestId('style-props-inline-border')
@@ -87,6 +92,7 @@ test.describe('style-props', () => {
     expect(borderRadius).toBe('8px')
   })
 
+  // MIGRATED: Covered by matrix/primitives/tests/e2e/primitives-contract.spec.ts.
   test('Div renders mixed tokens and inline values', async ({ page }) => {
     await page.goto(testRoutes.styleProps)
     const el = page.getByTestId('style-props-mixed')

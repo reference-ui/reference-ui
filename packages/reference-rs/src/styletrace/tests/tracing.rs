@@ -4,9 +4,12 @@ use crate::styletrace::trace_style_jsx_names_with_hint;
 
 use super::fixtures::{
     styletrace_case_input, workspace_fixture_dir, workspace_scratch_dir, workspace_sync_root,
+    ScratchDir,
 };
 
-fn trace_with_sync_root(root_dir: &std::path::Path) -> Result<Vec<String>, crate::styletrace::StyleTraceError> {
+fn trace_with_sync_root(
+    root_dir: &std::path::Path,
+) -> Result<Vec<String>, crate::styletrace::StyleTraceError> {
     let sync_root = workspace_sync_root();
     trace_style_jsx_names_with_hint(root_dir, Some(sync_root.as_path()))
 }
@@ -97,8 +100,8 @@ fn traces_factory_generated_icons_and_wrappers() {
 #[test]
 fn traces_local_exports_that_forward_into_node_modules_wrappers() {
     let fixture = create_node_modules_wrapper_fixture();
-    let names = trace_with_sync_root(fixture.root())
-        .expect("expected node_modules wrapper case to trace");
+    let names =
+        trace_with_sync_root(fixture.root()).expect("expected node_modules wrapper case to trace");
 
     assert_eq!(
         names,
@@ -121,8 +124,8 @@ fn traces_default_export_wrappers_from_packages() {
 #[test]
 fn traces_subpath_package_wrappers() {
     let fixture = create_subpath_package_fixture();
-    let names = trace_with_sync_root(fixture.root())
-        .expect("expected subpath package case to trace");
+    let names =
+        trace_with_sync_root(fixture.root()).expect("expected subpath package case to trace");
 
     assert_eq!(
         names,
@@ -133,8 +136,8 @@ fn traces_subpath_package_wrappers() {
 #[test]
 fn traces_export_star_package_barrels() {
     let fixture = create_export_star_package_fixture();
-    let names = trace_with_sync_root(fixture.root())
-        .expect("expected export-star package case to trace");
+    let names =
+        trace_with_sync_root(fixture.root()).expect("expected export-star package case to trace");
 
     assert_eq!(
         names,
@@ -145,8 +148,8 @@ fn traces_export_star_package_barrels() {
 #[test]
 fn ignores_node_builtin_helper_imports_while_tracing_local_wrappers() {
     let fixture = create_node_builtin_helper_fixture();
-    let names = trace_with_sync_root(fixture.root())
-        .expect("expected node builtin helper case to trace");
+    let names =
+        trace_with_sync_root(fixture.root()).expect("expected node builtin helper case to trace");
 
     assert_eq!(names, vec!["AppCard".to_string()]);
 }
@@ -161,8 +164,10 @@ fn fixture_demo_ui_has_no_reference_style_bearing_exports() {
 
 #[test]
 fn fixture_extend_library_has_no_reference_style_bearing_exports() {
-    let names = trace_with_sync_root(&workspace_fixture_dir("fixtures/extend-library/src/components"))
-        .expect("expected extend-library fixture to trace");
+    let names = trace_with_sync_root(&workspace_fixture_dir(
+        "fixtures/extend-library/src/components",
+    ))
+    .expect("expected extend-library fixture to trace");
 
     assert!(names.is_empty());
 }
@@ -195,6 +200,25 @@ fn fixture_atlas_project_components_have_no_reference_style_bearing_exports() {
         "fixtures/atlas-project/src/components",
     ))
     .expect("expected atlas-project fixture components to trace");
+
+    assert!(names.is_empty());
+}
+
+#[test]
+fn clean_consumer_sync_root_without_generated_metadata_traces_no_names() {
+    let fixture = ScratchDir::new("clean-consumer-sync-root");
+    fixture.write(
+        "consumer-app/ui.config.ts",
+        "export default { include: ['src/**/*.{ts,tsx}'] }\n",
+    );
+    fixture.write(
+        "consumer-app/src/index.tsx",
+        "import { Div, type StyleProps } from '@reference-ui/react'\n\nexport interface AppCardProps extends StyleProps {\n  color?: string\n}\n\nexport function AppCard(props: AppCardProps) {\n  return <Div {...props} />\n}\n",
+    );
+
+    let sync_root = fixture.root().join("consumer-app");
+    let names = trace_style_jsx_names_with_hint(&sync_root.join("src"), Some(&sync_root))
+        .expect("expected clean consumer bootstrap to skip missing generated metadata");
 
     assert!(names.is_empty());
 }

@@ -1,6 +1,11 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import type { FontDefinition } from '../../../../api/font'
-import { buildFontFaces, buildFontPatternExtensions, buildFontRecipes, buildFontTokens } from './font'
+import {
+  buildFontFaces,
+  buildFontPatternExtensions,
+  buildFontRecipes,
+  buildFontTokens,
+} from './font'
 import { extendPatterns } from './extendPatterns'
 import { getPandaConfig, initPandaConfig, PANDA_CONFIG_GLOBAL_KEY } from './runtime'
 import { PRIMITIVE_JSX_NAMES } from '../../../../primitives/tags'
@@ -23,6 +28,24 @@ const fonts: FontDefinition[] = [
   },
 ]
 
+const fontsWithMultipleFontFaces: FontDefinition[] = [
+  {
+    ...fonts[0],
+    fontFace: [
+      {
+        src: 'url(/fonts/inter.woff2) format("woff2")',
+        fontWeight: '200 900',
+        fontStyle: 'normal',
+      },
+      {
+        src: 'url(/fonts/inter-italic.woff2) format("woff2")',
+        fontWeight: '200 900',
+        fontStyle: 'italic',
+      },
+    ],
+  },
+]
+
 afterEach(() => {
   delete (globalThis as Record<string, unknown>)[PANDA_CONFIG_GLOBAL_KEY]
 })
@@ -34,8 +57,10 @@ describe('font config helpers', () => {
         sans: { value: '"Inter", ui-sans-serif, sans-serif' },
       },
       fontWeights: {
-        'sans.normal': { value: '400' },
-        'sans.bold': { value: '700' },
+        sans: {
+          normal: { value: '400' },
+          bold: { value: '700' },
+        },
       },
     })
   })
@@ -47,6 +72,25 @@ describe('font config helpers', () => {
         fontDisplay: 'swap',
         fontWeight: '200 900',
       },
+    })
+  })
+
+  it('preserves every authored font-face entry for one family', () => {
+    expect(buildFontFaces(fontsWithMultipleFontFaces)).toEqual({
+      Inter: [
+        {
+          src: 'url(/fonts/inter.woff2) format("woff2")',
+          fontDisplay: 'swap',
+          fontWeight: '200 900',
+          fontStyle: 'normal',
+        },
+        {
+          src: 'url(/fonts/inter-italic.woff2) format("woff2")',
+          fontDisplay: 'swap',
+          fontWeight: '200 900',
+          fontStyle: 'italic',
+        },
+      ],
     })
   })
 
@@ -74,7 +118,9 @@ describe('font config helpers', () => {
 
     const config = getPandaConfig()
     const boxPattern = config.patterns?.extend?.box
-    const transform = boxPattern?.transform as ((props: Record<string, unknown>) => Record<string, unknown>) | undefined
+    const transform = boxPattern?.transform as
+      | ((props: Record<string, unknown>) => Record<string, unknown>)
+      | undefined
 
     expect(boxPattern?.jsx).toEqual(PRIMITIVE_JSX_NAMES)
     expect(boxPattern?.properties).toEqual({

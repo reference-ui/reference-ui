@@ -13,7 +13,6 @@ export {
 export { keyframes, createKeyframesCollector, type KeyframesConfig } from './keyframes'
 export {
   font,
-  extendFont,
   createFontCollector,
   type FontDefinition,
   type FontOptions,
@@ -26,7 +25,6 @@ export {
   type GlobalCssConfig,
 } from './globalCss'
 export {
-  extendPattern,
   createBoxPatternCollector,
   type BoxPatternExtension,
   type BoxPatternProperty,

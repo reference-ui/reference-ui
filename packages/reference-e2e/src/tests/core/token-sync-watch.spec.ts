@@ -65,6 +65,7 @@ tokens({
 }
 
 test.describe('token-sync-watch', () => {
+  // MIGRATED: Covered by matrix/watch/tests/e2e/watch-contract.spec.ts.
   test('ref sync --watch picks up tokens() file change and new value appears on screen', async ({
     page,
   }) => {

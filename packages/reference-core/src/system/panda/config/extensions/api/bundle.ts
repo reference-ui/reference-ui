@@ -41,9 +41,11 @@ export function mirrorPandaExtensionsBundle(
 }
 
 export function resolveInternalPatternFiles(rootDir: string): string[] {
+  // Note: extensions/r/r.ts is intentionally excluded — its `r` extension
+  // requires the resolved breakpoint table and is registered via the
+  // generated panda.config.ts template (see createRExtension factory).
   return [
     join(rootDir, 'src/system/panda/config/extensions/container/container.ts'),
-    join(rootDir, 'src/system/panda/config/extensions/r/r.ts'),
     join(rootDir, 'src/system/panda/config/extensions/size/size.ts'),
   ]
 }

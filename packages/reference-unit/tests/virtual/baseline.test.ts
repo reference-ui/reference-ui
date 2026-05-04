@@ -1,18 +1,27 @@
 import { describe, it, expect } from 'vitest'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { virtualDir, srcDir, testsDir, virt } from './helpers'
+import {
+  getReferenceBrowserSourcePaths,
+  getVirtualPaths,
+  virtualDir,
+  srcDir,
+  testsDir,
+  virt,
+} from './helpers'
 
 /**
  * Baseline: ref sync --watch runs in background (global-setup).
  * Virtual dir exists with expected structure and exclusions.
  */
 describe('virtual – baseline', () => {
+  // TODO(matrix/virtual): Matrix virtual covers the generic baseline contract,
+  // but not this package-specific included file set and byte-for-byte App/main/test copies.
   it('creates .reference-ui/virtual with files matching include', () => {
     expect(existsSync(virtualDir)).toBe(true)
     expect(existsSync(virt('_reference-component', 'Reference.tsx'))).toBe(true)
+    expect(existsSync(virt('_reference-component', 'Runtime.ts'))).toBe(true)
     expect(existsSync(virt('_reference-component', 'components', 'index.ts'))).toBe(true)
-    expect(existsSync(virt('_reference-component', 'theme', 'tokens.ts'))).toBe(true)
     expect(existsSync(virt('src', 'App.tsx'))).toBe(true)
     expect(existsSync(virt('src', 'main.tsx'))).toBe(true)
     expect(existsSync(virt('tests', 'virtual', 'baseline.test.ts'))).toBe(true)
@@ -26,12 +35,25 @@ describe('virtual – baseline', () => {
     expect(virtualBaseline).toBe(srcBaseline)
   })
 
-  it('excludes node_modules and .reference-ui from virtual copy', () => {
+  // MIGRATED: Covered by matrix/virtual/tests/unit/baseline.test.ts.
+  it.skip('mirrors the current reference browser component files', () => {
+    const expected = getReferenceBrowserSourcePaths()
+    const actual = getVirtualPaths()
+      .filter(path => path.startsWith('_reference-component/'))
+      .map(path => path.slice('_reference-component/'.length))
+      .sort((a, b) => a.localeCompare(b))
+
+    expect(actual).toEqual(expected)
+  })
+
+  // MIGRATED: Covered by matrix/virtual/tests/unit/baseline.test.ts.
+  it.skip('excludes node_modules and .reference-ui from virtual copy', () => {
     expect(existsSync(join(virtualDir, 'node_modules'))).toBe(false)
     expect(existsSync(join(virtualDir, '.reference-ui', 'cache'))).toBe(false)
   })
 
-  it('does not copy files outside include patterns', () => {
+  // MIGRATED: Covered by matrix/virtual/tests/unit/baseline.test.ts.
+  it.skip('does not copy files outside include patterns', () => {
     expect(existsSync(join(virtualDir, 'ui.config.ts'))).toBe(false)
     expect(existsSync(join(virtualDir, 'vite.config.ts'))).toBe(false)
   })

@@ -40,22 +40,30 @@ function readLockFile(): Record<string, unknown> | null {
  */
 
 describe('session – manifest shape in watch mode', () => {
+  // TODO(matrix/watch): Matrix session covers synthetic public-API behavior, but
+  // no matrix test currently locks live watch-mode manifest existence in this consumer.
   it('session.json exists', () => {
     expect(existsSync(sessionFile)).toBe(true)
   })
 
+  // TODO(matrix/watch): No matrix test currently asserts live watch-mode manifest
+  // mode metadata for this consumer.
   it('mode is watch', () => {
     const s = readSession()
     expect(s).not.toBeNull()
     expect(s!.mode).toBe('watch')
   })
 
+  // TODO(matrix/watch): No matrix test currently asserts live watch-mode state
+  // metadata while sync --watch is actively running.
   it('state is watching while sync --watch is running', () => {
     const s = readSession()
     expect(s).not.toBeNull()
     expect(s!.state).toBe('watching')
   })
 
+  // TODO(matrix/watch): No matrix test currently asserts the live watch lock file
+  // presence and pid metadata for this consumer.
   it('session.lock exists and holds the correct pid', () => {
     expect(existsSync(lockFile), 'lock file should be present while watch is running').toBe(true)
     const lock = readLockFile()
@@ -66,6 +74,8 @@ describe('session – manifest shape in watch mode', () => {
 })
 
 describe('session – getSyncSession onRefresh fires on watch cycle', () => {
+  // TODO(matrix/watch): matrix/session covers observer behavior with synthetic
+  // manifests, but not a natural live watch rebuild in this consumer workspace.
   it('onRefresh callback is invoked after a watch rebuild completes', async () => {
     const session = getSyncSession({ cwd: pkgRoot })
     const calls: unknown[] = []

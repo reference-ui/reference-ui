@@ -24,17 +24,26 @@ const WORKSPACE_STYLED_TYPES_SOURCE_ROOT: &str = "packages/reference-core/src/sy
 pub fn collect_reference_style_prop_names(
     sync_root: &Path,
 ) -> Result<Vec<String>, StyleTraceError> {
-    let style_props_path = resolve_reference_style_props_path(sync_root)?;
-    collect_style_prop_names(
-        sync_root,
-        &style_props_path,
-        "StyleProps",
-    )
+    let Some(style_props_path) = resolve_reference_style_props_path(sync_root)? else {
+        return Ok(Vec::new());
+    };
+    collect_style_prop_names(sync_root, &style_props_path, "StyleProps")
 }
 
-fn resolve_reference_style_props_path(sync_root: &Path) -> Result<PathBuf, StyleTraceError> {
-    resolve_generated_declaration(sync_root, REFERENCE_STYLE_PROPS_ENTRY_STEM)
-        .or_else(|_| resolve_workspace_reference_core_path(sync_root, WORKSPACE_STYLE_PROPS_SOURCE))
+fn resolve_reference_style_props_path(
+    sync_root: &Path,
+) -> Result<Option<PathBuf>, StyleTraceError> {
+    if let Ok(path) = resolve_generated_declaration(sync_root, REFERENCE_STYLE_PROPS_ENTRY_STEM) {
+        return Ok(Some(path));
+    }
+
+    if let Some(path) =
+        resolve_workspace_reference_core_path(sync_root, WORKSPACE_STYLE_PROPS_SOURCE)?
+    {
+        return Ok(Some(path));
+    }
+
+    Ok(None)
 }
 
 fn resolve_generated_declaration(sync_root: &Path, stem: &str) -> Result<PathBuf, StyleTraceError> {
@@ -55,16 +64,14 @@ fn resolve_generated_declaration(sync_root: &Path, stem: &str) -> Result<PathBuf
 fn resolve_workspace_reference_core_path(
     sync_root: &Path,
     relative_path: &str,
-) -> Result<PathBuf, StyleTraceError> {
-    let workspace_root = find_workspace_root(sync_root).ok_or_else(|| {
-        StyleTraceError::new(format!(
-            "failed to locate workspace root for {}",
-            sync_root.display()
-        ))
-    })?;
+) -> Result<Option<PathBuf>, StyleTraceError> {
+    let Some(workspace_root) = find_workspace_root(sync_root) else {
+        return Ok(None);
+    };
+
     let candidate = workspace_root.join(relative_path);
     if candidate.is_file() {
-        return Ok(candidate);
+        return Ok(Some(candidate));
     }
 
     Err(StyleTraceError::new(format!(
@@ -490,7 +497,9 @@ impl StyleTracer {
         }
 
         if let Some(reexport) = module.reexports.get(name) {
-            let Some(imported_module) = self.resolve_module_specifier(module_path, &reexport.source)? else {
+            let Some(imported_module) =
+                self.resolve_module_specifier(module_path, &reexport.source)?
+            else {
                 return Ok(None);
             };
             return self.resolve_declaration(&imported_module, &reexport.imported_name);
@@ -508,7 +517,9 @@ impl StyleTracer {
         let Some(import_binding) = module.imports.get(name) else {
             return Ok(None);
         };
-        let Some(imported_module) = self.resolve_module_specifier(module_path, &import_binding.source)? else {
+        let Some(imported_module) =
+            self.resolve_module_specifier(module_path, &import_binding.source)?
+        else {
             return Ok(None);
         };
         self.resolve_declaration(&imported_module, &import_binding.imported_name)
@@ -536,7 +547,10 @@ impl StyleTracer {
         if specifier == "@reference-ui/styled/types" {
             if let Some(path) = self.resolve_reference_support_module(
                 current_module,
-                &self.sync_root.join(STYLED_TYPES_ROOT).join("system-types.d.ts"),
+                &self
+                    .sync_root
+                    .join(STYLED_TYPES_ROOT)
+                    .join("system-types.d.ts"),
                 WORKSPACE_STYLED_TYPES_SOURCE_ROOT,
                 "system-types.d.ts",
                 specifier,
@@ -548,7 +562,10 @@ impl StyleTracer {
         if let Some(rest) = specifier.strip_prefix("@reference-ui/styled/types/") {
             if let Some(path) = self.resolve_reference_support_module(
                 current_module,
-                &self.sync_root.join(STYLED_TYPES_ROOT).join(format!("{rest}.d.ts")),
+                &self
+                    .sync_root
+                    .join(STYLED_TYPES_ROOT)
+                    .join(format!("{rest}.d.ts")),
                 WORKSPACE_STYLED_TYPES_SOURCE_ROOT,
                 &format!("{rest}.d.ts"),
                 specifier,
@@ -583,7 +600,10 @@ impl StyleTracer {
 
         let resolution_root = current_module.parent().unwrap_or(current_module);
         if let Some(resolved) = resolve_external_import_path(resolution_root, specifier) {
-            return Ok(Some(prefer_sync_root_source_module(&resolved, &self.sync_root)));
+            return Ok(Some(prefer_sync_root_source_module(
+                &resolved,
+                &self.sync_root,
+            )));
         }
 
         Err(StyleTraceError::new(format!(
@@ -615,7 +635,10 @@ impl StyleTracer {
 
         let resolution_root = current_module.parent().unwrap_or(current_module);
         if let Some(resolved) = resolve_external_import_path(resolution_root, specifier) {
-            return Ok(Some(prefer_sync_root_source_module(&resolved, &self.sync_root)));
+            return Ok(Some(prefer_sync_root_source_module(
+                &resolved,
+                &self.sync_root,
+            )));
         }
 
         Ok(None)

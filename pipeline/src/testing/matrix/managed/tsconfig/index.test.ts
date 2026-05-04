@@ -1,0 +1,27 @@
+import assert from 'node:assert/strict'
+import { describe, it } from 'node:test'
+
+import { createMatrixConsumerTsconfig } from './index.js'
+
+describe('createMatrixConsumerTsconfig', () => {
+  it('returns the minimal downstream tsconfig used by the matrix consumer', () => {
+    const tsconfig = JSON.parse(createMatrixConsumerTsconfig()) as {
+      '//': string
+      compilerOptions: Record<string, string | boolean>
+      include: string[]
+    }
+
+    assert.equal(tsconfig['//'], 'This file is generated and managed by pipeline.')
+    assert.deepEqual(tsconfig.compilerOptions, {
+      jsx: 'react-jsx',
+      lib: ['ES2022', 'DOM', 'DOM.Iterable'],
+      module: 'esnext',
+      moduleResolution: 'bundler',
+      types: [],
+      target: 'es2022',
+      strict: true,
+      skipLibCheck: true,
+    })
+    assert.deepEqual(tsconfig.include, ['src/**/*', 'tests/**/*', 'unit/**/*', 'component/**/*', 'ui.config.ts'])
+  })
+})

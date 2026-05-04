@@ -53,10 +53,11 @@ export async function rebuildReferenceTastyBuild(
  * walker does not traverse `node_modules` (`follow_links` can hit broken
  * symlinks there).
  *
- * Panda's `style-props.d.ts` exports `SystemProperties`, which StrictColorProps /
- * SystemStyleObject need for `P` when projecting StyleProps. We include that
- * file alone to avoid duplicate symbol entries from scanning the full styled
- * tree (react/types/user overlaps).
+ * A small generated declaration set is added explicitly so the Reference UI
+ * style-prop surface can be projected without scanning every generated type.
+ * `styled/system-types` carries `SystemStyleObject` and `styled/style-props`
+ * carries the large `SystemProperties` interface; the React files carry the
+ * public `StyleProps` alias plus container/responsive additions.
  */
 function buildTastyScanOptions(
   sourceDir: string,
@@ -71,11 +72,22 @@ function buildTastyScanOptions(
   const include = configInclude.map(pattern =>
     posixRelative(outDir, join(virtualDir, pattern))
   )
-  const stylePropsDts = join(outDir, 'styled', 'types', 'style-props.d.ts')
-  if (existsSync(stylePropsDts)) {
-    include.push(posixRelative(outDir, stylePropsDts))
-  }
+  includeExistingTastyRoot(include, outDir, 'styled/types/style-props.d.ts')
+  includeExistingTastyRoot(include, outDir, 'styled/types/system-types.d.ts')
+  includeExistingTastyRoot(include, outDir, 'react/types/props.d.ts')
+  includeExistingTastyRoot(include, outDir, 'react/types/style-props.d.ts')
   return { rootDir: outDir, include }
+}
+
+function includeExistingTastyRoot(
+  include: string[],
+  outDir: string,
+  relativePath: string
+): void {
+  const filePath = join(outDir, relativePath)
+  if (existsSync(filePath)) {
+    include.push(posixRelative(outDir, filePath))
+  }
 }
 
 export async function loadReferenceSymbol(

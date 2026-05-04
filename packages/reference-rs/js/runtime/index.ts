@@ -34,6 +34,33 @@ export function rewriteCvaImports(sourceCode: string, relativePath: string): str
   return native.rewriteCvaImports(sourceCode, relativePath)
 }
 
+export function replaceFunctionName(
+  sourceCode: string,
+  relativePath: string,
+  fromName: string,
+  toName: string,
+  importFrom?: string,
+): string {
+  const native = requireVirtualNative('replace function names')
+
+  return native.replaceFunctionName(sourceCode, relativePath, fromName, toName, importFrom)
+}
+
+export function applyResponsiveStyles(
+  sourceCode: string,
+  relativePath: string,
+  breakpoints?: Record<string, string>,
+): string {
+  const native = requireVirtualNative('apply responsive styles')
+
+  const breakpointsJson =
+    breakpoints && Object.keys(breakpoints).length > 0
+      ? JSON.stringify(breakpoints)
+      : undefined
+
+  return native.applyResponsiveStyles(sourceCode, relativePath, breakpointsJson)
+}
+
 export function scanAndEmitModules(rootDir: string, include: string[]): string {
   const native = requireVirtualNative('scan and emit modules')
 

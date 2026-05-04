@@ -80,6 +80,8 @@ describe('watch – dev server reactivity', () => {
     }
   })
 
+  // TODO(matrix/watch): Matrix watch covers ready-aligned css/primitive/recipe/token
+  // edits, but it does not yet assert live virtual copy updates for this ad hoc source file.
   it('virtual copy updates when source file content changes (Div bg color)', async () => {
     const srcPath = join(pkgRoot, WATCH_E2E_FILE)
     await writeFile(srcPath, makeContent(COLOR_A))
@@ -100,7 +102,8 @@ describe('watch – dev server reactivity', () => {
     expect(updated, 'virtual copy should update to new bg color after edit').toBe(true)
   })
 
-  it('watch mode rebuilds styled output after a watched css() edit', async () => {
+  // MIGRATED: Covered by matrix/watch/tests/e2e/watch-contract.spec.ts.
+  it.skip('watch mode rebuilds styled output after a watched css() edit', async () => {
     const srcPath = join(pkgRoot, WATCH_CSS_FILE)
     const firstBaseline = getWatchReadyMarker()
     await writeFile(srcPath, makeCssContent(HEX_A))
@@ -131,6 +134,8 @@ describe('watch – dev server reactivity', () => {
     expect(updatedCss, 'styled/styles.css should update after the watched css() edit').toBe(true)
   }, 30_000)
 
+  // TODO(matrix/watch): Matrix watch exercises the primitive edit path in the browser,
+  // but it does not yet lock both styled/styles.css and react/styles.css at the ready edge.
   it('watch mode marks ready only after a watched Div color prop edit reaches styles.css', async () => {
     const srcPath = join(pkgRoot, WATCH_DIV_COLOR_FILE)
     const baselineStyles = readFileSync(STYLES_PATH, 'utf-8')
@@ -165,7 +170,8 @@ describe('watch – dev server reactivity', () => {
     ).toBe(true)
   }, 30_000)
 
-  it('watch mode rebuilds panda config after a token fragment file update', async () => {
+  // MIGRATED: Covered by matrix/watch/tests/e2e/watch-contract.spec.ts.
+  it.skip('watch mode rebuilds panda config after a token fragment file update', async () => {
     const srcPath = join(pkgRoot, WATCH_TOKENS_FILE)
     const firstBaseline = getWatchReadyMarker()
     await writeFile(srcPath, makeTokensContent(TOKEN_HEX_A))

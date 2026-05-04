@@ -9,6 +9,7 @@ export interface SyncOptions {
 export interface SyncPayload {
   cwd: string
   config: ReferenceUIConfig
+  configDependencyPaths?: string[]
   options: SyncOptions
 }
 

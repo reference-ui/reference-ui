@@ -24,6 +24,11 @@ const { fn, collector } = createFragmentFunction<ReferenceTokenConfig>({
  * Register design tokens with Panda CSS.
  * Called from fragment files; collected at config generation time and merged into panda.config.
  *
+ * Token subtrees keyed by `_private` are scoped to the package that defines them:
+ * they resolve normally inside the owning package (recipes, patterns, css() calls),
+ * but are stripped from any downstream consumer that pulls in the package via
+ * `extends`, and are hidden from the MCP token surface.
+ *
  * @example
  * ```ts
  * tokens({
@@ -31,6 +36,9 @@ const { fn, collector } = createFragmentFunction<ReferenceTokenConfig>({
  *     text: { value: '#111111', dark: '#f5f5f5' },
  *     icon: { light: '#222222', dark: '#f5f5f5' },
  *     brand: { primary: { value: '#0066cc' }, secondary: { value: '#ff6600' } },
+ *     _private: {
+ *       internalAccent: { value: '#FF00FF' }, // not visible to downstream extenders
+ *     },
  *   },
  *   spacing: { sm: { value: '0.5rem' }, md: { value: '1rem' } },
  * })

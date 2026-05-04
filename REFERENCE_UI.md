@@ -315,7 +315,6 @@ So the MCP is **not** a static file checked into git for your app: it is **rebui
 | `list_components` | Search/filter list with optional `query`, `source`, `limit` (capped at 100). |
 | `get_component` | Full joined record for one component name (optional `source` disambiguation). |
 | `get_component_examples` | Examples from Atlas. |
-| `get_common_patterns` | `usedWith` neighborhood (limit capped at 50). |
 | `reference-ui://component-model` (resource) | Public JSON model (schema version, `generatedAt`, `components`—via `toPublicModel`). |
 
 Server version field is currently `0.0.3` in source; the description states Atlas + generated types backing.
@@ -390,8 +389,8 @@ Implementation: [pipeline/src/testing/matrix/run.ts](./pipeline/src/testing/matr
 2. **Build** and stage workspace packages with `buildWorkspacePackages` — may require **`linux-x64-gnu`** native artifacts; if the registry manifest lacks the matching per-target package at the same version as `@reference-ui/rust`, the runner **throws** with an explicit message (host-side staging must have produced the Linux `.node` tarball first).
 3. **Read** the **shared** host Verdaccio manifest; fingerprint it for a **Dagger pnpm store cache** key so repeated runs reuse dependency downloads.
 4. **Node container** — e.g. `node:24-bookworm`, pnpm from Corepack, env vars for `CI`, registry URL inside the graph.
-5. **Service binding** — Verdaccio runs on the **host**; Dagger **forwards** it as a service (`dag.host().service(…)`) at `managedRegistryHost:managedRegistryPort` so the container uses **`npm_config_registry`** / `pnpm install --registry` consistently with the same manifest the host published.
-6. For each matrix package: write `/consumer` (see `consumerDirInContainer` in [pipeline/config.ts](./pipeline/config.ts)) `package.json` (synthesized from the fixture + pinned `@reference-ui/core` and `@reference-ui/lib` versions), `tsconfig`, `ui.config.ts`, and fixture `src`/`tests` files; **`pnpm install` from the registry**; run **`pnpm exec ref sync`**; then **`pnpm test`**.
+5. **Service binding** — Verdaccio runs on the **host**; Dagger **forwards** it as a service (`dag.host().service(…)`) at `MANAGED_REGISTRY_HOST:MANAGED_REGISTRY_PORT` so the container uses **`npm_config_registry`** / `pnpm install --registry` consistently with the same manifest the host published.
+6. For each matrix package: write `/consumer` (see `CONSUMER_DIR_IN_CONTAINER` in [pipeline/config.ts](./pipeline/config.ts)) `package.json` (synthesized from the fixture + pinned `@reference-ui/core` and `@reference-ui/lib` versions), `tsconfig`, `ui.config.ts`, and fixture `src`/`tests` files; **`pnpm install` from the registry**; run **`pnpm exec ref sync`**; then **`pnpm test`**.
 7. **Logs** land under **`.pipeline/testing/matrix/`** with per-package, per-stage filenames (`-install.log`, `-ref-sync.log`, `-test.log`).
 
 **macOS:** if Docker uses Colima, `ensureContainerRuntime` can start the VM when needed (see the matrix README).
@@ -911,8 +910,7 @@ If `@reference-ui/rust` fails to load the native binary, any path that needs Atl
 | --- | --- |
 | Root overview | [README.md](./README.md) |
 | Core CLI and threading | [packages/reference-core/README.md](./packages/reference-core/README.md) |
-| MCP product architecture | [packages/reference-core/src/mcp/MCP.md](./packages/reference-core/src/mcp/MCP.md) |
-| MCP module layout | [packages/reference-core/src/mcp/README.md](./packages/reference-core/src/mcp/README.md) |
+| MCP tools | [packages/reference-core/src/mcp/README.md](./packages/reference-core/src/mcp/README.md) |
 | System overview | [packages/reference-core/src/system/README.md](./packages/reference-core/src/system/README.md) |
 | Event bus | [packages/reference-core/src/lib/event-bus/README.md](./packages/reference-core/src/lib/event-bus/README.md) |
 | Sync event graph (source) | [packages/reference-core/src/sync/events.ts](./packages/reference-core/src/sync/events.ts) |

@@ -9,6 +9,9 @@ import { createReferenceApi, loadMcpReferenceData } from './reference'
 import { readMcpArtifact, writeMcpArtifact } from './artifact'
 import { getMcpModelPath, getMcpTypesManifestPath } from './paths'
 import type { McpBuildArtifact } from './types'
+import { loadMcpTokens } from './tokens'
+import { collectReferenceUiPrimitiveUsage } from './primitive-usage'
+import { createObservedReferenceUiPrimitives } from './primitives'
 
 const mcpAtlasBuildCache = new Map<
   string,
@@ -39,17 +42,22 @@ export async function generateMcpArtifact(
 
   if (!existsSync(manifestPath)) {
     throw new Error(
-      `MCP build requires generated types manifest at "${manifestPath}". Run ref sync first.`
+      `MCP build requires generated Reference UI artifacts at "${manifestPath}". Run "pnpm exec ref sync" from the project root before starting the MCP server.`
     )
   }
 
   log.debug('mcp', 'Building MCP model', { cwd, manifestPath })
 
+  const config = getConfig()
   const atlas = await loadMcpAtlas(cwd)
   return generateMcpArtifactFromAtlas({
     cwd,
     manifestPath,
     atlas,
+    tokens: await loadMcpTokensSafely(cwd, config),
+    primitiveComponents: createObservedReferenceUiPrimitives(
+      await loadReferenceUiPrimitiveUsageSafely(cwd, config)
+    ),
   })
 }
 
@@ -99,8 +107,10 @@ export async function generateMcpArtifactFromAtlas(input: {
   cwd: string
   manifestPath: string
   atlas: Awaited<ReturnType<typeof analyzeDetailed>>
+  tokens?: McpBuildArtifact['tokens']
+  primitiveComponents?: McpBuildArtifact['components']
 }): Promise<McpBuildArtifact> {
-  const { cwd, manifestPath, atlas } = input
+  const { cwd, manifestPath, atlas, tokens = [], primitiveComponents = [] } = input
   const api = createReferenceApi(manifestPath)
   const components = await Promise.all(
     atlas.components.map(async component => {
@@ -134,14 +144,41 @@ export async function generateMcpArtifactFromAtlas(input: {
     workspaceRoot: cwd,
     manifestPath,
     diagnostics: atlas.diagnostics,
-    components: components.sort((left, right) => {
+    components: [...components, ...primitiveComponents].sort((left, right) => {
       if (right.count !== left.count) return right.count - left.count
       if (left.name !== right.name) return left.name.localeCompare(right.name)
       return left.source.localeCompare(right.source)
     }),
+    tokens,
   }
 
   return artifact
+}
+
+async function loadReferenceUiPrimitiveUsageSafely(
+  cwd: string,
+  config: ReturnType<typeof getConfig>
+) {
+  try {
+    return await collectReferenceUiPrimitiveUsage(cwd, config)
+  } catch (error) {
+    log.warn('[mcp] Primitive usage collection failed:', error)
+    return []
+  }
+}
+
+async function loadMcpTokensSafely(
+  cwd: string,
+  config: ReturnType<typeof getConfig>
+): Promise<McpBuildArtifact['tokens']> {
+  if (!config) return []
+
+  try {
+    return await loadMcpTokens(cwd, config)
+  } catch (error) {
+    log.warn('[mcp] Token collection failed:', error)
+    return []
+  }
 }
 
 export async function loadOrBuildMcpArtifact(

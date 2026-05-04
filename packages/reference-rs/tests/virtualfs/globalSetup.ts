@@ -1,20 +1,25 @@
-import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { performance } from 'node:perf_hooks'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
 import {
+  applyResponsiveStyles,
   getVirtualNative,
+  replaceFunctionName,
   resolveReferenceRsPackageDir,
   rewriteCssImports,
   rewriteCvaImports,
 } from '../../js/runtime/index'
 
 type VirtualCaseConfig = {
-  api: 'rewriteCssImports' | 'rewriteCvaImports'
+  api: 'rewriteCssImports' | 'rewriteCvaImports' | 'replaceFunctionName' | 'applyResponsiveStyles'
+  fromName?: string
+  importFrom?: string
   relativePath: string
   inputFile?: string
   outputFile?: string
+  toName?: string
 }
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
@@ -25,6 +30,19 @@ function runCase(config: VirtualCaseConfig, sourceCode: string): string {
       return rewriteCssImports(sourceCode, config.relativePath)
     case 'rewriteCvaImports':
       return rewriteCvaImports(sourceCode, config.relativePath)
+    case 'replaceFunctionName':
+      if (!config.fromName || !config.toName) {
+        throw new Error('replaceFunctionName cases require fromName and toName in case.json')
+      }
+      return replaceFunctionName(
+        sourceCode,
+        config.relativePath,
+        config.fromName,
+        config.toName,
+        config.importFrom,
+      )
+    case 'applyResponsiveStyles':
+      return applyResponsiveStyles(sourceCode, config.relativePath)
   }
 }
 
@@ -50,8 +68,14 @@ export default async function setupVirtualfs() {
 
   for (const caseName of caseFolders) {
     const caseDir = join(casesDir, caseName)
+    const caseConfigPath = join(caseDir, 'case.json')
+
+    if (!existsSync(caseConfigPath)) {
+      continue
+    }
+
     const config = JSON.parse(
-      readFileSync(join(caseDir, 'case.json'), 'utf-8')
+      readFileSync(caseConfigPath, 'utf-8')
     ) as VirtualCaseConfig
     const inputFile = config.inputFile ?? 'input.tsx'
     const outputFile = config.outputFile ?? 'result.tsx'

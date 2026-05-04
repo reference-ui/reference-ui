@@ -103,6 +103,12 @@ Matrix bootstrap checks can be run with:
 pnpm pipeline:test:matrix
 ```
 
+Add `--trace` when you want the raw Dagger execution trace:
+
+```sh
+pnpm pipeline test --trace
+```
+
 That is the separate entrypoint for the pipeline-owned matrix flow. Right now it validates discovery of real matrix-enabled fixture packages, and later it can grow into the real matrix runner.
 It already executes through Dagger, reuses the single pipeline-managed Verdaccio registry by binding that shared host registry into the container graph, and runs the first `matrix/install` smoke scenario in a clean container rather than against host `node_modules`.
 On macOS, Dagger-backed entrypoints now check Docker reachability first and automatically start Colima when the active Docker context is `colima` but the VM is not running.

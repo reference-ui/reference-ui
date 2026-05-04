@@ -1,0 +1,7 @@
+{
+  "api": "replaceFunctionName",
+  "relativePath": "src/virtualrs/example.tsx",
+  "fromName": "cva",
+  "importFrom": "src/system/css",
+  "toName": "__reference_ui_cva"
+}

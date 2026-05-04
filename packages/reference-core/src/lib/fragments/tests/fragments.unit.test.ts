@@ -82,9 +82,9 @@ describe('createFragmentCollector', () => {
     })
 
     expect(c.toScript()).toBe("globalThis['__refTokensCollector'] = []")
-    expect(c.toRuntimeFunction()).toBe(
-      "const tokens = (fragment) => { const c = globalThis['__refTokensCollector']; if (Array.isArray(c)) c.push(fragment) }"
-    )
+    expect(c.toRuntimeFunction()).toContain("globalThis['__refTokensCollector']")
+    expect(c.toRuntimeFunction()).toContain('__refCurrentFragmentSource')
+    expect(c.toRuntimeFunction()).toContain('__refConfigFragmentSource')
     expect(c.toGetter()).toContain("globalThis['__refTokensCollector']")
     expect(c.toGetter()).toContain('fragments.map(')
   })
@@ -115,7 +115,7 @@ describe('createFragmentCollector with transform', () => {
 
     const fontCollector = createFragmentCollector<FontDef, TokenConfig>({
       name: 'fonts',
-      transform: (font) => ({
+      transform: font => ({
         theme: {
           tokens: {
             fonts: {
@@ -148,9 +148,12 @@ describe('createFragmentCollector with transform', () => {
       variants?: Record<string, unknown>
     }
 
-    const recipeCollector = createFragmentCollector<RecipeDef, { theme: { recipes: Record<string, RecipeDef> } }>({
+    const recipeCollector = createFragmentCollector<
+      RecipeDef,
+      { theme: { recipes: Record<string, RecipeDef> } }
+    >({
       name: 'recipe',
-      transform: (recipe) => ({
+      transform: recipe => ({
         theme: {
           recipes: {
             [recipe.name]: recipe,
@@ -179,7 +182,7 @@ describe('createFragmentCollector with transform', () => {
   it('transform receives correct input type', () => {
     const c = createFragmentCollector<number, string>({
       name: 'stringify',
-      transform: (num) => {
+      transform: num => {
         // TypeScript should infer num as number
         return `value: ${num}`
       },
@@ -263,4 +266,5 @@ describe('scanForFragments', () => {
     expect(names).toContain(WITH_CONSTANTS_FILE)
     expect(names).toContain('setup.ts')
   })
+
 })

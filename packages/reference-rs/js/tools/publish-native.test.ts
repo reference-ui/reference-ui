@@ -160,6 +160,24 @@ describe('publish-native', () => {
     expect(restoredPackageJson.optionalDependencies).toBeUndefined()
   })
 
+  it('refuses to publish the root package when a same-version native target is already published', async () => {
+    const { packageDir, artifactsDir } = createNativePublishFixture()
+
+    await expect(
+      importPublishNativeModule({
+        packageDir,
+        artifactsDir,
+        argv: ['--publish-root'],
+        published: ['@reference-ui/rust-darwin-arm64@0.0.14'],
+      })
+    ).rejects.toThrow(
+      'Refusing to publish @reference-ui/rust@0.0.14 because native target packages are already published for that version.'
+    )
+
+    const restoredPackageJson = JSON.parse(readFileSync(resolve(packageDir, 'package.json'), 'utf8'))
+    expect(restoredPackageJson.optionalDependencies).toBeUndefined()
+  })
+
   it('adds provenance to publish commands when provenance publishing is enabled', async () => {
     const { packageDir, artifactsDir, nativePkgDir } = createNativePublishFixture()
 

@@ -6,7 +6,8 @@ import {
 } from './customProps-output.helpers'
 
 describe('nested container + multi-breakpoint r output (e2e)', () => {
-  it('copies the nested container fixture into virtual output', () => {
+  // MIGRATED: Covered by matrix/responsive/tests/unit/generated-output.test.ts.
+  it.skip('copies the nested container fixture into virtual output', () => {
     expect(hasVirtualSystemFile('containerNested.fixture.tsx')).toBe(true)
 
     const content = readVirtualSystemFile('containerNested.fixture.tsx')
@@ -15,7 +16,9 @@ describe('nested container + multi-breakpoint r output (e2e)', () => {
     expect(content).toContain('600: { padding:')
   })
 
-  it('emits multiple anonymous @container rules for inner r breakpoints', () => {
+  // MIGRATED: Covered by matrix/responsive/tests/e2e/system-contract.spec.ts
+  // and matrix/responsive/tests/unit/generated-output.test.ts.
+  it.skip('emits multiple anonymous @container rules for inner r breakpoints', () => {
     const css = readGeneratedFile('styled', 'styles.css')
     if (!css) return
 

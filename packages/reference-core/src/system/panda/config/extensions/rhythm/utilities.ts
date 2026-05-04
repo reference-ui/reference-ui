@@ -1,6 +1,6 @@
 /**
  * Rhythm spacing utilities: map token values to multiples of R via
- * `resolveRhythm` (e.g. "2r" → calc(2 * var(--spacing-r))).
+ * `resolveRhythm` (e.g. "2r" -> calc(2 * var(--spacing-root))).
  * Used by extendUtilities in the bundled extensions runtime.
  */
 
@@ -104,6 +104,21 @@ export const rhythmUtilities = {
 
   ...rhythmBorderRadiusUtilities,
 
+  borderWidth: rhythmTransform('borderWidth'),
+  borderTopWidth: rhythmTransform('borderTopWidth'),
+  borderRightWidth: rhythmTransform('borderRightWidth'),
+  borderBottomWidth: rhythmTransform('borderBottomWidth'),
+  borderLeftWidth: rhythmTransform('borderLeftWidth'),
+  borderInlineWidth: rhythmTransform('borderInlineWidth'),
+  borderInlineStartWidth: rhythmTransform('borderInlineStartWidth'),
+  borderInlineEndWidth: rhythmTransform('borderInlineEndWidth'),
+  borderBlockWidth: rhythmTransform('borderBlockWidth'),
+  borderBlockStartWidth: rhythmTransform('borderBlockStartWidth'),
+  borderBlockEndWidth: rhythmTransform('borderBlockEndWidth'),
+
+  outlineWidth: rhythmTransform('outlineWidth'),
   outlineOffset: rhythmTransform('outlineOffset'),
+  textDecorationThickness: rhythmTransform('textDecorationThickness'),
+  textUnderlineOffset: rhythmTransform('textUnderlineOffset'),
   borderSpacing: rhythmTransform('borderSpacing'),
 }

@@ -7,6 +7,7 @@ import {
   initSessionState,
   transitionSession,
   transitionBuild,
+  markBuildComplete,
   cleanupSession,
 } from './state'
 
@@ -75,6 +76,10 @@ export function initSession(payload: SyncPayload): void {
     // In one-shot mode, clean up once the run is fully done.
     on('sync:complete', () => {
       cleanupSession()
+    })
+  } else {
+    on('sync:complete', () => {
+      markBuildComplete()
     })
   }
 }

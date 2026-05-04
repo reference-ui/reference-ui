@@ -3,13 +3,14 @@ use oxc_ast::ast::{
 };
 use regex::Regex;
 
-use super::constants::{CORE_PACKAGE, STYLED_SYSTEM_PATH};
+use super::constants::CORE_PACKAGE;
 
 pub struct RewritePlan {
     pub start: usize,
     pub end: usize,
     pub replacement: String,
     pub local_binding_to_normalize: Option<String>,
+    pub canonical_call_name: Option<&'static str>,
 }
 
 pub enum ImportCollection {
@@ -35,8 +36,11 @@ pub fn apply_rewrite(source_code: &str, plan: RewritePlan) -> String {
         &source_code[plan.end..]
     );
 
-    if let Some(local_binding) = plan.local_binding_to_normalize {
-        rewritten = normalize_cva_calls(&rewritten, &local_binding);
+    if let (Some(local_binding), Some(canonical_call_name)) = (
+        plan.local_binding_to_normalize,
+        plan.canonical_call_name,
+    ) {
+        rewritten = normalize_bound_calls(&rewritten, &local_binding, canonical_call_name);
     }
 
     rewritten
@@ -101,12 +105,13 @@ where
 
 pub fn render_rewritten_imports(
     rewritten_binding: &str,
+    rewritten_import_path: &str,
     default_name: &Option<String>,
     remaining_parts: &[String],
 ) -> String {
     let primary_line = format!(
         "import {{ {} }} from '{}';\n",
-        rewritten_binding, STYLED_SYSTEM_PATH
+        rewritten_binding, rewritten_import_path
     );
     let secondary_line = render_core_import(default_name, remaining_parts);
     primary_line + &secondary_line
@@ -165,11 +170,11 @@ fn local_name(spec: &ImportSpecifier, source_code: &str) -> String {
     source_code[span.start as usize..span.end as usize].to_string()
 }
 
-fn normalize_cva_calls(source_code: &str, local_binding: &str) -> String {
+fn normalize_bound_calls(source_code: &str, local_binding: &str, canonical_name: &str) -> String {
     let pattern = regex::escape(local_binding) + r"\(";
     let Ok(re) = Regex::new(&pattern) else {
         return source_code.to_string();
     };
 
-    re.replace_all(source_code, "cva(").to_string()
+    re.replace_all(source_code, format!("{}(", canonical_name)).to_string()
 }

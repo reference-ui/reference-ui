@@ -6,7 +6,8 @@ import {
 } from './customProps-output.helpers'
 
 describe('combined custom props output (e2e)', () => {
-  it('copies the source-backed combined custom props fixture into virtual output', () => {
+  // MIGRATED: Covered by matrix/primitives/tests/unit/generated-output.test.ts.
+  it.skip('copies the source-backed combined custom props fixture into virtual output', () => {
     expect(hasVirtualSystemFile('combinedCustomProps.fixture.tsx')).toBe(true)
 
     const content = readVirtualSystemFile('combinedCustomProps.fixture.tsx')
@@ -15,7 +16,8 @@ describe('combined custom props output (e2e)', () => {
     expect(content).toContain("555: { padding: '2.25rem' }")
   })
 
-  it('keeps primitive jsx names in the generated pattern extension bundle', () => {
+  // MIGRATED: Covered by matrix/primitives/tests/unit/generated-output.test.ts.
+  it.skip('keeps primitive jsx names in the generated pattern extension bundle', () => {
     const extensionsBundle = readGeneratedFile('styled', 'extensions', 'index.mjs')
     if (!extensionsBundle) return
 
@@ -24,7 +26,8 @@ describe('combined custom props output (e2e)', () => {
     expect(extensionsBundle).toContain('jsx: resolvePandaJsxElements(additionalJsxElements)')
   })
 
-  it('extracts combined custom props from source-backed primitive usage', () => {
+  // MIGRATED: Covered by matrix/primitives/tests/e2e/primitives-contract.spec.ts.
+  it.skip('extracts combined custom props from source-backed primitive usage', () => {
     const css = readGeneratedFile('styled', 'styles.css')
     if (!css) return
 
