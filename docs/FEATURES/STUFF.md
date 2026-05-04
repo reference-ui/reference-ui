@@ -1,13 +1,4 @@
-1. Granular / Smart Strict Tokens (strictTokens: 'loose' or 'recommended')
 
-Automatically allows all common non-token CSS values without forcing [] escape hatches:
-inherit, unset, initial, none, auto
-transparent
-100%, 0, 0px, fit-content, min-content, max-content
-Common keywords (block, flex, none, absolute, etc.)
-
-Still strictly enforces tokens for design decisions (colors, spacing, sizes, etc.)
-Optional fully strict mode + user-configurable extra allowed values
 
 2. First-Class Style Fragments & Composition
 
