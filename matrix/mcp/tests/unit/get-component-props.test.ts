@@ -3,6 +3,7 @@ import {
   connectSharedMatrixMcp,
   MATRIX_MCP_TIMEOUT_MS,
   parseTextJson,
+  saveResponse,
   stopMcpClient,
   type ComponentReadout,
   type RunningMcpClient,
@@ -25,6 +26,7 @@ describe('get_component_props', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
       name: 'get_component_props',
       arguments: { name: 'HeroBanner', includeStyleProps: false },
     })
+    saveResponse('get_component_props', 'HeroBanner-no-style-props', result)
     const props = parseTextJson<ComponentReadout>(result)
 
     expect(props.name).toBe('HeroBanner')
@@ -42,6 +44,7 @@ describe('get_component_props', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
       name: 'get_component_props',
       arguments: { name: 'HeroBanner', query: 'cta' },
     })
+    saveResponse('get_component_props', 'HeroBanner-query-cta', result)
     const props = parseTextJson<ComponentReadout>(result)
 
     expect(props.props.map(prop => prop.name).sort()).toEqual(['ctaHref', 'ctaLabel'])
@@ -52,6 +55,7 @@ describe('get_component_props', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
       name: 'get_component_props',
       arguments: { name: 'Div', includeStyleProps: false },
     })
+    saveResponse('get_component_props', 'Div-no-style-props', result)
     const props = parseTextJson<ComponentReadout>(result)
 
     expect(props.kind).toBe('primitive')

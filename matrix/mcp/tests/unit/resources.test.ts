@@ -4,6 +4,7 @@ import {
   findTextResource,
   MATRIX_MCP_TIMEOUT_MS,
   parseTextJson,
+  saveResponse,
   stopMcpClient,
   type ComponentModel,
   type RunningMcpClient,
@@ -25,6 +26,7 @@ describe('matrix MCP resources', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
     const resource = await running!.client.readResource({
       uri: 'reference-ui://component-model',
     })
+    saveResponse('resources', 'component-model', resource)
     const modelJson = findTextResource(resource)
     const model = modelJson ? (JSON.parse(modelJson.text) as ComponentModel) : null
 
@@ -51,6 +53,7 @@ describe('matrix MCP resources', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
     const resource = await running!.client.readResource({
       uri: 'reference-ui://getting-started',
     })
+    saveResponse('resources', 'getting-started', resource)
     const gettingStarted = findTextResource(resource)
 
     expect(gettingStarted?.mimeType).toBe('text/markdown')
@@ -63,6 +66,7 @@ describe('matrix MCP resources', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
       name: 'getting_started',
       arguments: {},
     })
+    saveResponse('getting_started', 'default', result)
     const payload = parseTextJson<{ guide: string }>(result)
 
     expect(payload.guide).toContain('Reference UI Start Guide')

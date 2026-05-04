@@ -4,6 +4,7 @@ import {
   findTextContent,
   MATRIX_MCP_TIMEOUT_MS,
   parseTextJson,
+  saveResponse,
   stopMcpClient,
   type ComponentReadout,
   type ComponentSummary,
@@ -43,6 +44,7 @@ describe('primitive observation', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
       name: 'list_components',
       arguments: { query: 'Code' },
     })
+    saveResponse('list_components', 'query-Code', listedResult)
     const listed = parseTextJson<{ components: ComponentSummary[] }>(listedResult)
 
     expect(listed.components).toHaveLength(1)
@@ -81,6 +83,7 @@ describe('primitive observation', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
       name: 'get_component_props',
       arguments: { name: 'Code', includeStyleProps: false },
     })
+    saveResponse('get_component_props', 'Code-no-style-props', propsResult)
     const props = parseTextJson<ComponentReadout>(propsResult)
 
     expect(props.count).toBe(1)
@@ -100,6 +103,7 @@ describe('primitive observation', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
       name: 'get_component_examples',
       arguments: { name: 'Code' },
     })
+    saveResponse('get_component_examples', 'Code', examplesResult)
     const examples = parseTextJson<{ examples: string[]; name: string; source: string }>(examplesResult)
 
     expect(examples).toEqual(
@@ -119,6 +123,7 @@ describe('primitive observation', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
       name: 'list_components',
       arguments: { query: 'Canvas' },
     })
+    saveResponse('list_components', 'query-Canvas', listedResult)
     const listed = parseTextJson<{ components: ComponentSummary[] }>(listedResult)
 
     expect(listed.components).toEqual([])
@@ -127,7 +132,7 @@ describe('primitive observation', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
       name: 'get_component',
       arguments: { name: 'Canvas' },
     })
-
+    saveResponse('get_component', 'Canvas', detailResult)
     const detail = parseTextJson<ComponentReadout>(detailResult)
 
     expect(detail).toEqual(

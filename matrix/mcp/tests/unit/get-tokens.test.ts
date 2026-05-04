@@ -3,6 +3,7 @@ import {
   connectSharedMatrixMcp,
   MATRIX_MCP_TIMEOUT_MS,
   parseTextJson,
+  saveResponse,
   stopMcpClient,
   type RunningMcpClient,
   type TokenReadout,
@@ -25,6 +26,7 @@ describe('get_tokens', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
       name: 'get_tokens',
       arguments: {},
     })
+    saveResponse('get_tokens', 'default', result)
     const tokenReadout = parseTextJson<TokenReadout>(result)
 
     expect(tokenReadout.compressed).toBe(true)
@@ -48,6 +50,7 @@ describe('get_tokens', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
       name: 'get_tokens',
       arguments: { query: 'colors.text' },
     })
+    saveResponse('get_tokens', 'query-colors.text', result)
     const tokenReadout = parseTextJson<TokenReadout>(result)
 
     expect(tokenReadout.tokens).toEqual(
@@ -68,6 +71,7 @@ describe('get_tokens', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
       name: 'get_tokens',
       arguments: { query: 'gray.100' },
     })
+    saveResponse('get_tokens', 'query-gray.100', result)
     const tokenReadout = parseTextJson<TokenReadout>(result)
 
     expect(tokenReadout.tokens).toEqual(
@@ -85,6 +89,7 @@ describe('get_tokens', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
       name: 'get_tokens',
       arguments: { query: 'card' },
     })
+    saveResponse('get_tokens', 'query-card', result)
     const tokenReadout = parseTextJson<TokenReadout>(result)
 
     expect(tokenReadout.tokens).toEqual([
@@ -100,6 +105,7 @@ describe('get_tokens', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
       name: 'get_tokens',
       arguments: { category: 'breakpoints' },
     })
+    saveResponse('get_tokens', 'category-breakpoints', result)
     const tokenReadout = parseTextJson<TokenReadout>(result)
 
     expect(tokenReadout.tokens).toEqual([])
@@ -123,6 +129,7 @@ describe('get_tokens', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
         name: 'get_tokens',
         arguments: { query: 'fixtureDemo' },
       })
+      saveResponse('get_tokens', 'query-fixtureDemo', result)
       const tokenReadout = parseTextJson<TokenReadout>(result)
 
       expect(tokenReadout.tokens.map(token => token.path)).toEqual(
@@ -152,6 +159,7 @@ describe('get_tokens', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
         name: 'get_tokens',
         arguments: { query: 'brand' },
       })
+      saveResponse('get_tokens', 'query-brand', result)
       const tokenReadout = parseTextJson<TokenReadout>(result)
 
       expect(
@@ -164,6 +172,7 @@ describe('get_tokens', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
         name: 'get_tokens',
         arguments: { query: '_private' },
       })
+      saveResponse('get_tokens', 'query-_private', result)
       const tokenReadout = parseTextJson<TokenReadout>(result)
       const upstreamPrivatePaths = tokenReadout.tokens
         .map(token => token.path)
@@ -186,6 +195,7 @@ describe('get_tokens', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
         name: 'get_tokens',
         arguments: { query: 'matrixSecret' },
       })
+      saveResponse('get_tokens', 'query-matrixSecret', result)
       const tokenReadout = parseTextJson<TokenReadout>(result)
 
       expect(tokenReadout.tokens).toEqual(

@@ -3,6 +3,7 @@ import {
   connectSharedMatrixMcp,
   MATRIX_MCP_TIMEOUT_MS,
   parseTextJson,
+  saveResponse,
   stopMcpClient,
   type RunningMcpClient,
 } from './helpers'
@@ -24,6 +25,7 @@ describe('get_component_examples', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
       name: 'get_component_examples',
       arguments: { name: 'HeroBanner' },
     })
+    saveResponse('get_component_examples', 'HeroBanner', result)
     const payload = parseTextJson<{ examples: string[]; name: string; source: string }>(result)
 
     expect(payload.name).toBe('HeroBanner')
@@ -39,6 +41,7 @@ describe('get_component_examples', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
       name: 'get_component_examples',
       arguments: { name: 'Div' },
     })
+    saveResponse('get_component_examples', 'Div', result)
     const payload = parseTextJson<{ examples: string[]; name: string; source: string }>(result)
 
     expect(payload.name).toBe('Div')
