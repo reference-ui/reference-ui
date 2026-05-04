@@ -14,6 +14,7 @@ export interface VirtualStagingArea {
     file: string
     root: string
     debug?: boolean
+    breakpoints?: Record<string, string>
   }): Promise<void>
   publish(): Promise<void>
 }
@@ -53,9 +54,10 @@ export function createVirtualStagingArea(virtualDir: string): VirtualStagingArea
       file: string
       root: string
       debug?: boolean
+      breakpoints?: Record<string, string>
     }): Promise<void> {
-      const { file, root, debug } = payload
-      const stagedPath = await copyToVirtual(file, root, stagingDir, { debug })
+      const { file, root, debug, breakpoints } = payload
+      const stagedPath = await copyToVirtual(file, root, stagingDir, { debug, breakpoints })
       emit('virtual:fs:change', {
         event: 'add',
         path: toLiveVirtualPath(stagingDir, virtualDir, stagedPath),

@@ -15,6 +15,13 @@ export interface ApplyTransformsOptions {
   relativePath: string
   content: string
   debug?: boolean
+  /**
+   * Optional breakpoint name → pixel-width lookup table forwarded to the Rust
+   * `applyResponsiveStyles` pass so inline `css({ md: ... })` named keys can
+   * be lowered into container queries. The JSX `r` prop path resolves names
+   * separately via `createRExtension()` in the generated panda.config.
+   */
+  breakpoints?: Record<string, string>
 }
 
 export interface ApplyTransformsResult {
@@ -47,6 +54,7 @@ async function maybeTransformMdx(
 async function applyCorePackageTransforms(
   content: string,
   relativePath: string,
+  breakpoints?: Record<string, string>,
 ): Promise<string> {
   const { rewriteCvaImports } = await import('./cva-imports')
   const { rewriteCssImports } = await import('./css-imports')
@@ -56,6 +64,7 @@ async function applyCorePackageTransforms(
   const rewritten = applyResponsiveStyles(
     rewriteCssImports(rewriteCvaImports(content, relativePath), relativePath),
     relativePath,
+    breakpoints,
   )
 
   if (relativePath.startsWith(REFERENCE_UI_ARTIFACT_PREFIX)) {
@@ -77,7 +86,7 @@ async function applyCorePackageTransforms(
 export async function applyTransforms(
   options: ApplyTransformsOptions
 ): Promise<ApplyTransformsResult> {
-  const { sourcePath, relativePath, content } = options
+  const { sourcePath, relativePath, content, breakpoints } = options
   const sourceExtension = extname(sourcePath)
   const mdxResult = await maybeTransformMdx(content, sourceExtension, relativePath)
   let transformedContent = mdxResult.content
@@ -86,7 +95,11 @@ export async function applyTransforms(
 
   if (shouldTransformJavaScript(finalExtension, transformedContent)) {
     const before = transformedContent
-    transformedContent = await applyCorePackageTransforms(transformedContent, relativePath)
+    transformedContent = await applyCorePackageTransforms(
+      transformedContent,
+      relativePath,
+      breakpoints,
+    )
     if (transformedContent !== before) {
       wasTransformed = true
     }

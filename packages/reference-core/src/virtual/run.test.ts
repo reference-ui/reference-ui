@@ -17,6 +17,8 @@ async function importRunModule(options?: {
   const getVirtualPath = vi.fn(() => `${FIXTURE_VIRTUAL}/src/button.jsx`)
   const syncVirtualStyleCollection = vi.fn(async () => [])
   const isFragmentFile = vi.fn(async () => options?.isFragmentFile ?? false)
+  const resolveBreakpointsForProject = vi.fn(async () => ({}))
+  const invalidateBreakpointsCache = vi.fn()
   const debug = vi.fn()
   const error = vi.fn()
 
@@ -39,6 +41,10 @@ async function importRunModule(options?: {
   vi.doMock('./fragments/detect', () => ({
     isFragmentFile,
   }))
+  vi.doMock('./breakpoints/resolve', () => ({
+    resolveBreakpointsForProject,
+    invalidateBreakpointsCache,
+  }))
   vi.doMock('../lib/log', () => ({
     log: { debug, error, info: vi.fn() },
   }))
@@ -56,6 +62,8 @@ async function importRunModule(options?: {
     getVirtualPath,
     syncVirtualStyleCollection,
     isFragmentFile,
+    resolveBreakpointsForProject,
+    invalidateBreakpointsCache,
     debug,
     error,
   }
@@ -69,6 +77,7 @@ afterEach(() => {
   vi.doUnmock('./utils')
   vi.doUnmock('./style/collection')
   vi.doUnmock('./fragments/detect')
+  vi.doUnmock('./breakpoints/resolve')
   vi.doUnmock('../lib/log')
   vi.doUnmock('../lib/paths')
   vi.restoreAllMocks()
@@ -106,12 +115,13 @@ describe('virtual/run', () => {
       '/workspace/app/src/button.tsx',
       '/workspace/app',
       FIXTURE_VIRTUAL,
-      { debug: true },
+      { debug: true, breakpoints: {} },
     )
     expect(syncVirtualStyleCollection).toHaveBeenCalledWith({
       root: '/workspace/app',
       virtualDir: FIXTURE_VIRTUAL,
       include: ['src/**/*'],
+      breakpoints: {},
     })
     expect(isFragmentFile).toHaveBeenCalledWith('/workspace/app/src/button.tsx', 'change')
     expect(emit).toHaveBeenCalledWith('virtual:fs:change', {
@@ -174,6 +184,7 @@ describe('virtual/run', () => {
       root: '/workspace/app',
       virtualDir: FIXTURE_VIRTUAL,
       include: ['src/**/*'],
+      breakpoints: {},
     })
     expect(emit).toHaveBeenCalledWith('virtual:fs:change', {
       event: 'unlink',

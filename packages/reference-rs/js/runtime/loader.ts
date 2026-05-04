@@ -38,7 +38,11 @@ export interface VirtualNativeBinding {
     toName: string,
     importFrom?: string,
   ) => string
-  applyResponsiveStyles: (sourceCode: string, relativePath: string) => string
+  applyResponsiveStyles: (
+    sourceCode: string,
+    relativePath: string,
+    breakpointsJson?: string,
+  ) => string
   scanAndEmitModules: (rootDir: string, include: string[]) => string
   analyzeAtlas: (rootDir: string, configJson?: string) => string
   analyzeStyletrace: (rootDir: string, syncRootHint?: string) => string
