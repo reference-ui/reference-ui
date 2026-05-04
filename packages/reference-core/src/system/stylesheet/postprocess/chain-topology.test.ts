@@ -55,8 +55,8 @@ describe('collectUpstreamSystems — bucketed ordering', () => {
     const config: Partial<ReferenceUIConfig> = {
       name: 'local',
       extends: [
-        { name: 'lib-a', css: '@layer lib-a { .a { color: red; } }' },
-        { name: 'lib-b', css: '@layer lib-b { .b { color: blue; } }' },
+        { name: 'lib-a', fragment: '', css: '@layer lib-a { .a { color: red; } }' },
+        { name: 'lib-b', fragment: '', css: '@layer lib-b { .b { color: blue; } }' },
       ],
     }
     const result = collectUpstreamSystems(config as never)
@@ -67,8 +67,8 @@ describe('collectUpstreamSystems — bucketed ordering', () => {
     const config: Partial<ReferenceUIConfig> = {
       name: 'local',
       layers: [
-        { name: 'lib-c', css: '@layer lib-c { .c { color: green; } }' },
-        { name: 'lib-d', css: '@layer lib-d { .d { color: yellow; } }' },
+        { name: 'lib-c', fragment: '', css: '@layer lib-c { .c { color: green; } }' },
+        { name: 'lib-d', fragment: '', css: '@layer lib-d { .d { color: yellow; } }' },
       ],
     }
     const result = collectUpstreamSystems(config as never)
@@ -80,12 +80,12 @@ describe('collectUpstreamSystems — bucketed ordering', () => {
     const config: Partial<ReferenceUIConfig> = {
       name: 'local',
       extends: [
-        { name: 'extend-a', css: '@layer extend-a { .a { color: red; } }' },
-        { name: 'extend-b', css: '@layer extend-b { .b { color: blue; } }' },
+        { name: 'extend-a', fragment: '', css: '@layer extend-a { .a { color: red; } }' },
+        { name: 'extend-b', fragment: '', css: '@layer extend-b { .b { color: blue; } }' },
       ],
       layers: [
-        { name: 'layer-c', css: '@layer layer-c { .c { color: green; } }' },
-        { name: 'layer-d', css: '@layer layer-d { .d { color: yellow; } }' },
+        { name: 'layer-c', fragment: '', css: '@layer layer-c { .c { color: green; } }' },
+        { name: 'layer-d', fragment: '', css: '@layer layer-d { .d { color: yellow; } }' },
       ],
     }
     const result = collectUpstreamSystems(config as never)
@@ -96,9 +96,9 @@ describe('collectUpstreamSystems — bucketed ordering', () => {
     const config: Partial<ReferenceUIConfig> = {
       name: 'local',
       extends: [
-        { name: 'lib-a', css: '@layer lib-a { .a { color: red; } }' },
-        { name: 'lib-no-css' },
-        { name: 'lib-empty', css: '   ' },
+        { name: 'lib-a', fragment: '', css: '@layer lib-a { .a { color: red; } }' },
+        { name: 'lib-no-css', fragment: '' },
+        { name: 'lib-empty', fragment: '', css: '   ' },
       ],
     }
     const result = collectUpstreamSystems(config as never)
@@ -115,8 +115,8 @@ describe('collectUpstreamSystems — bucketed ordering', () => {
     const sharedCss = '@layer shared { .x { color: hotpink; } }'
     const config: Partial<ReferenceUIConfig> = {
       name: 'local',
-      extends: [{ name: 'shared-lib', css: sharedCss }],
-      layers: [{ name: 'shared-lib', css: sharedCss }],
+      extends: [{ name: 'shared-lib', fragment: '', css: sharedCss }],
+      layers: [{ name: 'shared-lib', fragment: '', css: sharedCss }],
     }
     const result = collectUpstreamSystems(config as never)
     // Both appear — current policy is allow/duplicate, not reject/dedupe.
