@@ -13,6 +13,7 @@
   "dependencies": {
     "@reference-ui/core": "workspace:*",
     "@reference-ui/lib": "workspace:*",
+    "@fixtures/extend-library": "workspace:*",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
