@@ -3,6 +3,7 @@ import {
   connectSharedMatrixMcp,
   MATRIX_MCP_INSTALLED_COMMAND,
   MATRIX_MCP_TIMEOUT_MS,
+  saveResponse,
   stopMcpClient,
   type RunningMcpClient,
 } from './helpers'
@@ -30,6 +31,7 @@ describe('matrix MCP server', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
 
   it('exposes the expected MCP tools', async () => {
     const tools = await running!.client.listTools()
+    saveResponse('list_tools', 'default', tools)
     const toolNames = tools.tools.map(tool => tool.name).sort()
 
     expect(toolNames).toEqual([

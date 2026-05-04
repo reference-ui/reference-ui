@@ -3,6 +3,7 @@ import {
   connectSharedMatrixMcp,
   MATRIX_MCP_TIMEOUT_MS,
   parseTextJson,
+  saveResponse,
   stopMcpClient,
   type ComponentReadout,
   type RunningMcpClient,
@@ -25,6 +26,7 @@ describe('get_component', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
       name: 'get_component',
       arguments: { name: 'HeroBanner' },
     })
+    saveResponse('get_component', 'HeroBanner', result)
     const component = parseTextJson<ComponentReadout>(result)
 
     expect(component.name).toBe('HeroBanner')
@@ -49,6 +51,7 @@ describe('get_component', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
       name: 'get_component',
       arguments: { name: 'Code' },
     })
+    saveResponse('get_component', 'Code', result)
     const component = parseTextJson<ComponentReadout>(result)
 
     expect(component).toEqual(

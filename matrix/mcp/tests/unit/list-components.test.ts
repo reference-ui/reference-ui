@@ -3,6 +3,7 @@ import {
   connectSharedMatrixMcp,
   MATRIX_MCP_TIMEOUT_MS,
   parseTextJson,
+  saveResponse,
   stopMcpClient,
   type ComponentSummary,
   type RunningMcpClient,
@@ -25,6 +26,7 @@ describe('list_components', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
       name: 'list_components',
       arguments: { query: 'hero' },
     })
+    saveResponse('list_components', 'query-hero', result)
     const listed = parseTextJson<{ components: ComponentSummary[] }>(result)
 
     expect(listed.components).toEqual([
@@ -45,6 +47,7 @@ describe('list_components', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
       name: 'list_components',
       arguments: { source: '@reference-ui/react', limit: 100 },
     })
+    saveResponse('list_components', 'source-reference-ui-react', result)
     const listed = parseTextJson<{ components: ComponentSummary[] }>(result)
     const names = listed.components.map(component => component.name)
 

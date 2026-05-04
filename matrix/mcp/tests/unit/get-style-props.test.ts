@@ -3,6 +3,7 @@ import {
   connectSharedMatrixMcp,
   MATRIX_MCP_TIMEOUT_MS,
   parseTextJson,
+  saveResponse,
   stopMcpClient,
   type RunningMcpClient,
 } from './helpers'
@@ -24,6 +25,7 @@ describe('get_style_props', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
       name: 'get_style_props',
       arguments: { query: 'color' },
     })
+    saveResponse('get_style_props', 'query-color', result)
     const styleProps = parseTextJson<{
       categories: Array<{ name: string; tokenCategories: string[] }>
       description: string
@@ -47,6 +49,7 @@ describe('get_style_props', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
       name: 'get_style_props',
       arguments: { query: 'r', includeProps: true },
     })
+    saveResponse('get_style_props', 'query-r-include-props', result)
     const styleProps = parseTextJson<{
       categories: Array<{ name: string; props: string[] }>
       matchedProp?: string
