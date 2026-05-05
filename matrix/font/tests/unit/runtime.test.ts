@@ -70,7 +70,7 @@ const generatedOutput = {
 beforeAll(async () => {
   const [reactStylesheet, reactFontRegistryTypes, reactGeneratedTypes, systemGeneratedTypes, virtualFontFixture] = await Promise.all([
     waitForGeneratedFile(join('react', 'styles.css')),
-    waitForGeneratedFile(join('react', 'types', 'fontRegistry.d.ts')),
+    waitForGeneratedFile(join('react', 'types', 'public', 'fontRegistry.d.ts')),
     waitForGeneratedFile(join('react', 'types.generated.d.mts')),
     waitForGeneratedFile(join('system', 'types.generated.d.mts')),
     waitForGeneratedFile(join('virtual', 'src', 'system', 'fontProp.fixture.tsx')),
