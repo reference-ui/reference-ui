@@ -48,7 +48,13 @@ const sessionPath = resolve(
   process.env.REFERENCE_UI_MATRIX_REF_SYNC_SESSION_PATH ?? '.reference-ui/tmp/session.json',
 )
 const waitFor = process.env.REFERENCE_UI_MATRIX_REF_SYNC_WAIT_FOR === 'complete' ? 'complete' : 'ready'
-const timeoutMs = readPositiveIntEnv('REFERENCE_UI_MATRIX_REF_SYNC_READY_TIMEOUT_MS', 30_000)
+// `ready` only requires the runtime-ready boundary (typically <30s). `complete`
+// must wait for the full sync cycle including the final TypeScript declaration
+// pass for `@reference-ui/types`, which can comfortably exceed 30s on cold
+// container caches; default the timeout higher so the helper does not race
+// healthy long sync runs.
+const defaultTimeoutMs = waitFor === 'complete' ? 120_000 : 30_000
+const timeoutMs = readPositiveIntEnv('REFERENCE_UI_MATRIX_REF_SYNC_READY_TIMEOUT_MS', defaultTimeoutMs)
 const pollMs = readPositiveIntEnv('REFERENCE_UI_MATRIX_REF_SYNC_READY_POLL_MS', 50)
 const startedAt = Date.now()
 let lastManifestSource = ''
