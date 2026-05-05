@@ -1,5 +1,11 @@
 # @reference-ui/rust
 
+## 0.0.42
+
+### Patch Changes
+
+- 701579d: CI RELEASE
+
 ## 0.0.41
 
 ### Patch Changes
