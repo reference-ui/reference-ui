@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { buildFontTypeRegistry, renderGeneratedFontRegistryFile } from './generate'
-import type { FontDefinition } from '../api/font'
+import { buildFontTypeRegistry, renderGeneratedFontRegistryFile } from './fonts'
+import type { FontDefinition } from '../../system/api/font'
 
 describe('system font types generation', () => {
   it('builds a merged registry from collected font definitions', () => {

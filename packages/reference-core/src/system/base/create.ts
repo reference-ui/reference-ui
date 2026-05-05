@@ -4,7 +4,7 @@ import type { ReferenceUIConfig } from '../../config'
 import type { BaseSystem } from '../../types'
 import { getOutDirPath } from '../../lib/paths'
 import { log } from '../../lib/log'
-import { writeGeneratedSystemFontTypes } from '../types/generate'
+import { writeGeneratedSystemFontTypes } from '../../types/generators/fonts'
 import {
   collectLocalTokenFragmentsFromBase,
   createCollectorBundleFromBase,

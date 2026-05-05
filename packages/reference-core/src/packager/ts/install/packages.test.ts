@@ -102,7 +102,7 @@ async function importPackagesModule(options: {
   vi.doMock('../../../lib/profiler', () => ({
     logProfilerSample: vi.fn(),
   }))
-  vi.doMock('../../../system/types/generate', () => ({
+  vi.doMock('../../../types/generators/generate', () => ({
     writeGeneratedSystemTypes,
     writeGeneratedReactTypes,
   }))
@@ -126,7 +126,7 @@ afterEach(() => {
   vi.doUnmock('../../../lib/paths')
   vi.doUnmock('../../../lib/paths/out-dir')
   vi.doUnmock('../../../lib/profiler')
-  vi.doUnmock('../../../system/types/generate')
+  vi.doUnmock('../../../types/generators/generate')
   vi.restoreAllMocks()
 
   for (const dir of createdDirs.splice(0)) {
@@ -150,14 +150,19 @@ function writeReactSupportFixture(cliDir: string): void {
     'utf-8'
   )
 
-  mkdirSync(resolve(cliDir, 'src/types'), { recursive: true })
+  mkdirSync(resolve(cliDir, 'src/types/public'), { recursive: true })
   writeFileSync(
     resolve(cliDir, 'src/types/index.ts'),
+    "export type * from './public'\n",
+    'utf-8'
+  )
+  writeFileSync(
+    resolve(cliDir, 'src/types/public/index.ts'),
     "export type { DivProps } from './props'\n",
     'utf-8'
   )
   writeFileSync(
-    resolve(cliDir, 'src/types/props.ts'),
+    resolve(cliDir, 'src/types/public/props.ts'),
     'export type DivProps = { children?: string }\n',
     'utf-8'
   )
@@ -167,16 +172,19 @@ function writeReactSupportFixture(cliDir: string): void {
 }
 
 function expectCapturedReactSupportTsconfigFiles(files: string[]): void {
-  expect(files).toHaveLength(18)
+  expect(files).toHaveLength(21)
   expect(files.some((file) => file.endsWith('/src/entry/react.ts'))).toBe(true)
   expect(files.some((file) => file.endsWith('/src/system/primitives/index.tsx'))).toBe(true)
   expect(files.some((file) => file.endsWith('/src/system/primitives/types.ts'))).toBe(true)
   expect(files.some((file) => file.endsWith('/src/system/runtime/index.ts'))).toBe(true)
   expect(files.some((file) => file.endsWith('/src/types/index.ts'))).toBe(true)
-  expect(files.some((file) => file.endsWith('/src/types/props.ts'))).toBe(true)
-  expect(files.some((file) => file.endsWith('/src/types/radii.ts'))).toBe(true)
-  expect(files.some((file) => file.endsWith('/src/types/style-props.ts'))).toBe(true)
-  expect(files.some((file) => file.endsWith('/src/types/system-style-object.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/types/public/index.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/types/public/props.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/types/public/radii.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/types/public/strict-colors.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/types/public/strict-radii.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/types/public/style-props.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/types/public/system-style-object.ts'))).toBe(true)
 }
 
 function expectGeneratedReactSupportFiles(outDir: string): void {
@@ -189,19 +197,23 @@ function expectGeneratedReactSupportFiles(outDir: string): void {
   expect(
     readFileSync(resolve(outDir, 'react/system/primitives/nested/extra.d.ts'), 'utf-8')
   ).toContain('Extra')
-  expect(readFileSync(resolve(outDir, 'react/types/index.d.ts'), 'utf-8')).toContain('props')
-  expect(readFileSync(resolve(outDir, 'react/types/props.d.ts'), 'utf-8')).toContain('DivProps')
+  expect(readFileSync(resolve(outDir, 'react/types/index.d.ts'), 'utf-8')).toContain('./public')
+  expect(readFileSync(resolve(outDir, 'react/types/public/index.d.ts'), 'utf-8')).toContain('DivProps')
+  expect(readFileSync(resolve(outDir, 'react/types/public/props.d.ts'), 'utf-8')).toContain('DivProps')
   expect(readFileSync(resolve(outDir, 'react/system/runtime/index.d.ts'), 'utf-8')).toContain('css')
 }
 
 function expectCapturedSystemSupportTsconfigFiles(files: string[]): void {
-  expect(files).toHaveLength(15)
+  expect(files).toHaveLength(18)
   expect(files.some((file) => file.endsWith('/src/entry/system.ts'))).toBe(true)
   expect(files.some((file) => file.endsWith('/src/types/index.ts'))).toBe(true)
-  expect(files.some((file) => file.endsWith('/src/types/colors.ts'))).toBe(true)
-  expect(files.some((file) => file.endsWith('/src/types/radii.ts'))).toBe(true)
-  expect(files.some((file) => file.endsWith('/src/types/style-props.ts'))).toBe(true)
-  expect(files.some((file) => file.endsWith('/src/types/system-style-object.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/types/public/index.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/types/public/colors.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/types/public/radii.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/types/public/strict-colors.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/types/public/strict-radii.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/types/public/style-props.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/types/public/system-style-object.ts'))).toBe(true)
 }
 
 describe('packager/ts/install/packages', () => {
@@ -253,8 +265,9 @@ describe('packager/ts/install/packages', () => {
     mkdirSync(resolve(cliDir, 'src/system/runtime'), { recursive: true })
     writeFileSync(resolve(cliDir, 'src/system/runtime/index.ts'), 'export const css = {}\n', 'utf-8')
 
-    mkdirSync(resolve(cliDir, 'src/types'), { recursive: true })
+    mkdirSync(resolve(cliDir, 'src/types/public'), { recursive: true })
     writeFileSync(resolve(cliDir, 'src/types/index.ts'), 'export type Example = true\n', 'utf-8')
+    writeFileSync(resolve(cliDir, 'src/types/public/index.ts'), 'export type Example = true\n', 'utf-8')
 
     const { getCapturedTsconfigContents, installPackagesTs } = await importPackagesModule({ cliDir, outDir })
 
@@ -322,21 +335,24 @@ describe('packager/ts/install/packages', () => {
       'utf-8'
     )
 
-    mkdirSync(resolve(cliDir, 'src/types'), { recursive: true })
-    writeFileSync(resolve(cliDir, 'src/types/index.ts'), "export type { SystemStyleObject } from './system-style-object'\n", 'utf-8')
-    writeFileSync(resolve(cliDir, 'src/types/system-style-object.ts'), 'export type SystemStyleObject = { color?: string }\n', 'utf-8')
-    writeFileSync(resolve(cliDir, 'src/types/colors.ts'), 'export type StrictColorProps<T> = T\n', 'utf-8')
-    writeFileSync(resolve(cliDir, 'src/types/radii.ts'), 'export type StrictRadiiProps<T> = T\n', 'utf-8')
-    writeFileSync(resolve(cliDir, 'src/types/style-props.ts'), 'export type StyleProps = {}\n', 'utf-8')
-    writeFileSync(resolve(cliDir, 'src/types/BaseSystem.ts'), 'export type BaseSystem = {}\n', 'utf-8')
-    writeFileSync(resolve(cliDir, 'src/types/conditions.ts'), 'export type StyleConditionKey = never\n', 'utf-8')
-    writeFileSync(resolve(cliDir, 'src/types/css.ts'), 'export type CssStyles = {}\n', 'utf-8')
-    writeFileSync(resolve(cliDir, 'src/types/fontRegistry.ts'), 'export interface FontRegistry {}\n', 'utf-8')
-    writeFileSync(resolve(cliDir, 'src/types/fonts.ts'), 'export type FontName = never\n', 'utf-8')
-    writeFileSync(resolve(cliDir, 'src/types/primitives.ts'), 'export type PrimitiveProps = {}\n', 'utf-8')
-    writeFileSync(resolve(cliDir, 'src/types/props.ts'), 'export type ColorModeProps = {}\n', 'utf-8')
-    writeFileSync(resolve(cliDir, 'src/types/recipe.ts'), 'export type RecipeDefinition = {}\n', 'utf-8')
-    writeFileSync(resolve(cliDir, 'src/types/style-prop.ts'), 'export type StylePropValue<T> = T\n', 'utf-8')
+    mkdirSync(resolve(cliDir, 'src/types/public'), { recursive: true })
+    writeFileSync(resolve(cliDir, 'src/types/index.ts'), "export type * from './public'\n", 'utf-8')
+    writeFileSync(resolve(cliDir, 'src/types/public/index.ts'), "export type { SystemStyleObject } from './system-style-object'\n", 'utf-8')
+    writeFileSync(resolve(cliDir, 'src/types/public/system-style-object.ts'), 'export type SystemStyleObject = { color?: string }\n', 'utf-8')
+    writeFileSync(resolve(cliDir, 'src/types/public/colors.ts'), 'export type StrictColorProps<T> = T\n', 'utf-8')
+    writeFileSync(resolve(cliDir, 'src/types/public/radii.ts'), 'export type StrictRadiiProps<T> = T\n', 'utf-8')
+    writeFileSync(resolve(cliDir, 'src/types/public/strict-colors.ts'), 'export type StrictColorProps<T> = T\n', 'utf-8')
+    writeFileSync(resolve(cliDir, 'src/types/public/strict-radii.ts'), 'export type StrictRadiiProps<T> = T\n', 'utf-8')
+    writeFileSync(resolve(cliDir, 'src/types/public/style-props.ts'), 'export type StyleProps = {}\n', 'utf-8')
+    writeFileSync(resolve(cliDir, 'src/types/public/BaseSystem.ts'), 'export type BaseSystem = {}\n', 'utf-8')
+    writeFileSync(resolve(cliDir, 'src/types/public/conditions.ts'), 'export type StyleConditionKey = never\n', 'utf-8')
+    writeFileSync(resolve(cliDir, 'src/types/public/css.ts'), 'export type CssStyles = {}\n', 'utf-8')
+    writeFileSync(resolve(cliDir, 'src/types/public/fontRegistry.ts'), 'export interface FontRegistry {}\n', 'utf-8')
+    writeFileSync(resolve(cliDir, 'src/types/public/fonts.ts'), 'export type FontName = never\n', 'utf-8')
+    writeFileSync(resolve(cliDir, 'src/types/public/primitives.ts'), 'export type PrimitiveProps = {}\n', 'utf-8')
+    writeFileSync(resolve(cliDir, 'src/types/public/props.ts'), 'export type ColorModeProps = {}\n', 'utf-8')
+    writeFileSync(resolve(cliDir, 'src/types/public/recipe.ts'), 'export type RecipeDefinition = {}\n', 'utf-8')
+    writeFileSync(resolve(cliDir, 'src/types/public/style-prop.ts'), 'export type StylePropValue<T> = T\n', 'utf-8')
 
     const { getCapturedTsconfigFiles, installPackagesTs } = await importPackagesModule({ cliDir, outDir })
 

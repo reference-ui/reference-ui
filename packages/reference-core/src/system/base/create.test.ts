@@ -58,7 +58,7 @@ async function importCreateModule(options: {
   vi.doMock('../../lib/log', () => ({
     log: { debug },
   }))
-  vi.doMock('../types/generate', () => ({
+  vi.doMock('../../types/generators/fonts', () => ({
     writeGeneratedSystemFontTypes,
   }))
   vi.doMock('./fragments', () => ({
@@ -84,7 +84,7 @@ afterEach(() => {
   vi.resetModules()
   vi.doUnmock('../../lib/paths')
   vi.doUnmock('../../lib/log')
-  vi.doUnmock('../types/generate')
+  vi.doUnmock('../../types/generators/fonts')
   vi.doUnmock('./fragments')
   vi.restoreAllMocks()
 

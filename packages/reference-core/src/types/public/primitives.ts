@@ -1,5 +1,5 @@
 import type * as React from 'react'
-import type { Tag } from '../system/primitives/tags'
+import type { Tag } from '../../system/primitives/tags'
 import type { ColorModeProps } from './props'
 import type { StyleProps } from './style-props'
 import type { SystemStyleObject } from './system-style-object'

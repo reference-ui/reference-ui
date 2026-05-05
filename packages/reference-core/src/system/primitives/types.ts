@@ -5,9 +5,9 @@
 /// <reference lib="dom" />
 
 import type * as React from 'react'
-import type { StyleProps } from '../../types/style-props'
-import type { ColorModeProps } from '../../types/props'
-import type * as PrimitivesCore from '../../types/primitives'
+import type { StyleProps } from '../../types/public/style-props'
+import type { ColorModeProps } from '../../types/public/props'
+import type * as PrimitivesCore from '../../types/public/primitives'
 
 export type {
   PrimitiveComponent,
@@ -15,7 +15,7 @@ export type {
   PrimitiveElement,
   PrimitiveProps,
   PrimitiveTag,
-} from '../../types/primitives'
+} from '../../types/public/primitives'
 
 type PrimitiveOwnProps = StyleProps & ColorModeProps & PrimitivesCore.PrimitiveCssProps
 

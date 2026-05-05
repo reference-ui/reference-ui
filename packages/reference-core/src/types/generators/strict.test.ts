@@ -14,14 +14,14 @@ describe('strict-token system-style-object codegen', () => {
 
   it('wraps with StrictColorProps when colors is active', () => {
     const out = renderSystemStyleObjectDts(['colors'])
-    expect(out).toContain("import type { StrictColorProps } from './colors';")
+    expect(out).toContain("import type { StrictColorProps } from './strict-colors';")
     expect(out).toContain('export type SystemStyleObject = StrictColorProps<StyledSystemStyleObject>;')
   })
 
   it('composes multiple wrappers in declaration order', () => {
     const out = renderSystemStyleObjectDts(['colors', 'radii'])
-    expect(out).toContain("import type { StrictColorProps } from './colors';")
-    expect(out).toContain("import type { StrictRadiiProps } from './radii';")
+    expect(out).toContain("import type { StrictColorProps } from './strict-colors';")
+    expect(out).toContain("import type { StrictRadiiProps } from './strict-radii';")
     expect(out).toContain(
       'export type SystemStyleObject = StrictRadiiProps<StrictColorProps<StyledSystemStyleObject>>;'
     )

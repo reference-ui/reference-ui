@@ -1,4 +1,4 @@
-import { COLOR_PROP_KEYS } from '../../types/colors'
+import { COLOR_PROP_KEYS } from '../../types/public/colors'
 import type { McpGetStylePropsInput } from './types'
 
 interface StylePropCategory {

@@ -59,7 +59,7 @@ void colorReject3
 const radiiOk: SystemStyleObject = {
   borderRadius: 'md',
   borderTopLeftRadius: 'lg',
-  rounded: 'xl',
+  rounded: 'full',
   roundedTopRight: 'sm',
 }
 void radiiOk

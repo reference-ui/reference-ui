@@ -18,7 +18,7 @@ import { getOutDirPath } from '../../../lib/paths/out-dir'
 import {
   writeGeneratedReactTypes,
   writeGeneratedSystemTypes,
-} from '../../../system/types/generate'
+} from '../../../types/generators/generate'
 import { REACT_DTS_INCLUDE, SYSTEM_DTS_INCLUDE } from '../../../constants'
 import { getPackageDir, getDeclarationBasename } from '../../layout'
 import type { TsPackageInput } from '../types'

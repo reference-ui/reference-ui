@@ -1,15 +1,13 @@
 /**
- * Strict-token type codegen.
+ * Strict-token system-style-object codegen.
  *
- * Rewrites the consumer's emitted `types/system-style-object.d.ts` so that the
- * `SystemStyleObject` alias is wrapped with the strict-token utilities the
- * consumer opted into via `ui.config.ts` (`strict: ['colors', 'radii']`).
- *
- * Pattern mirrors `writeFontRegistryIntoTypes` in `./generate.ts` — we look for
- * the sibling `system-style-object.d.ts` next to the package's root types file
- * and replace its body in-place.
+ * Renders the canonical `system-style-object.d.ts` for a generated package
+ * based on the consumer's `ui.config.ts` `strict` array. The packager calls
+ * `writeStrictSystemStyleObject(typesPath)` after `tsgo` emits, but the file
+ * content is computed deterministically from config — this generator does NOT
+ * read or pattern-match the emitted output to decide what to write.
  */
-import { existsSync, readFileSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { writeFileAtomic } from '../../lib/fs/write-file-atomic'
 import { getConfig } from '../../config/store'
@@ -18,33 +16,32 @@ import type { StrictTokenCategory } from '../../config/types'
 const STRICT_WRAPPER_BY_CATEGORY: Record<StrictTokenCategory, string | null> = {
   colors: 'StrictColorProps',
   radii: 'StrictRadiiProps',
-  // Spacing strict mode is reserved in the public config but the codegen has
-  // no wrapper for it yet — entries are accepted and ignored.
   spacing: null,
 }
 
 const SOURCE_MODULE_BY_CATEGORY: Record<StrictTokenCategory, string | null> = {
-  colors: './colors',
-  radii: './radii',
+  colors: './strict-colors',
+  radii: './strict-radii',
   spacing: null,
 }
 
 const SYSTEM_STYLE_OBJECT_BASENAME = 'system-style-object.d.ts'
 
-function getSystemStyleObjectDtsPath(typesPath: string): string | undefined {
-  const candidate = join(dirname(typesPath), 'types', SYSTEM_STYLE_OBJECT_BASENAME)
-  return existsSync(candidate) ? candidate : undefined
+function getSystemStyleObjectDtsPath(typesPath: string): string {
+  return join(dirname(typesPath), 'types', 'public', SYSTEM_STYLE_OBJECT_BASENAME)
 }
 
 function selectActiveCategories(strict: readonly StrictTokenCategory[]): StrictTokenCategory[] {
   const seen = new Set<StrictTokenCategory>()
   const result: StrictTokenCategory[] = []
+
   for (const category of strict) {
     if (seen.has(category)) continue
     if (STRICT_WRAPPER_BY_CATEGORY[category] == null) continue
     seen.add(category)
     result.push(category)
   }
+
   return result
 }
 
@@ -60,7 +57,9 @@ export function renderSystemStyleObjectDts(
   for (const category of active) {
     const wrapper = STRICT_WRAPPER_BY_CATEGORY[category]
     const source = SOURCE_MODULE_BY_CATEGORY[category]
+
     if (!wrapper || !source) continue
+
     importLines.push(`import type { ${wrapper} } from '${source}';`)
   }
 
@@ -81,20 +80,18 @@ export function renderSystemStyleObjectDts(
   ].join('\n')
 }
 
-/**
- * Rewrite the system-style-object declaration sibling to `typesPath` so that
- * `SystemStyleObject` reflects the consumer's `strict` configuration. No-op
- * when the file is not present (older layouts that bundle into a single
- * `.d.mts` are left untouched).
- */
 export function writeStrictSystemStyleObject(typesPath: string): void {
   const dtsPath = getSystemStyleObjectDtsPath(typesPath)
-  if (!dtsPath) return
-
   const config = getConfig()
   const strict = config?.strict ?? []
   const next = renderSystemStyleObjectDts(strict)
-  const current = readFileSync(dtsPath, 'utf-8')
+
+  let current: string | undefined
+  try {
+    current = readFileSync(dtsPath, 'utf-8')
+  } catch {
+    current = undefined
+  }
 
   if (current === next) return
 
