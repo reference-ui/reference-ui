@@ -3,19 +3,32 @@ import { spawnSync } from 'node:child_process'
 interface ContainerRuntimeOptions {
   commandLabel?: string
   minimumDockerCpuCount?: number
+  minimumDockerDiskFreeBytes?: number
   minimumDockerMemoryBytes?: number
 }
 
 interface ColimaStatus {
   display_name?: string
   cpu?: number
+  disk?: number
   memory?: number
 }
 
 export interface DockerRuntimeInfo {
   context: string | null
   cpuCount: number | null
+  diskFreeBytes: number | null
+  diskTotalBytes: number | null
+  diskUsedBytes: number | null
   memoryBytes: number | null
+}
+
+interface DockerSystemDfRow {
+  Active?: string
+  Reclaimable?: string
+  Size?: string
+  TotalCount?: string
+  Type?: string
 }
 
 function isMacOs(): boolean {
@@ -69,10 +82,111 @@ function getDockerCpuCount(): number | null {
   return Number.isFinite(value) ? value : null
 }
 
+function getColimaDiskBytes(): number | null {
+  const colimaStatus = getColimaStatus()
+
+  if (!colimaStatus || typeof colimaStatus.disk !== 'number' || !Number.isFinite(colimaStatus.disk)) {
+    return null
+  }
+
+  return colimaStatus.disk
+}
+
+export function parseDockerSizeToBytes(size: string): number | null {
+  const trimmedSize = size.trim()
+
+  if (trimmedSize === '0B') {
+    return 0
+  }
+
+  const match = trimmedSize.match(/^(\d+(?:\.\d+)?)([KMGTPE]?B)$/i)
+
+  if (!match) {
+    return null
+  }
+
+  const value = Number.parseFloat(match[1])
+
+  if (!Number.isFinite(value)) {
+    return null
+  }
+
+  const unit = match[2].toUpperCase()
+  const exponentByUnit: Record<string, number> = {
+    B: 0,
+    KB: 1,
+    MB: 2,
+    GB: 3,
+    TB: 4,
+    PB: 5,
+    EB: 6,
+  }
+  const exponent = exponentByUnit[unit]
+
+  if (exponent === undefined) {
+    return null
+  }
+
+  return Math.round(value * (1000 ** exponent))
+}
+
+export function parseDockerSystemDfUsageBytes(output: string): number | null {
+  const lines = output
+    .split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(line => line.length > 0)
+
+  if (lines.length === 0) {
+    return null
+  }
+
+  let totalBytes = 0
+
+  for (const line of lines) {
+    let row: DockerSystemDfRow
+
+    try {
+      row = JSON.parse(line) as DockerSystemDfRow
+    } catch {
+      return null
+    }
+
+    const sizeBytes = typeof row.Size === 'string' ? parseDockerSizeToBytes(row.Size) : null
+
+    if (sizeBytes === null) {
+      return null
+    }
+
+    totalBytes += sizeBytes
+  }
+
+  return totalBytes
+}
+
+function getDockerDiskUsageBytes(): number | null {
+  const result = runCommand('docker', ['system', 'df', '--format', '{{json .}}'])
+
+  if (result.status !== 0) {
+    return null
+  }
+
+  return parseDockerSystemDfUsageBytes(result.stdout)
+}
+
 export function getDockerRuntimeInfo(): DockerRuntimeInfo {
+  const context = getDockerContext()
+  const diskTotalBytes = context === 'colima' ? getColimaDiskBytes() : null
+  const diskUsedBytes = getDockerDiskUsageBytes()
+
   return {
-    context: getDockerContext(),
+    context,
     cpuCount: getDockerCpuCount(),
+    diskFreeBytes:
+      diskTotalBytes !== null && diskUsedBytes !== null
+        ? Math.max(0, diskTotalBytes - diskUsedBytes)
+        : null,
+    diskTotalBytes,
+    diskUsedBytes,
     memoryBytes: getDockerMemoryBytes(),
   }
 }
@@ -96,6 +210,10 @@ function formatRequiredDockerResources(options: ContainerRuntimeOptions): string
     parts.push(formatGiB(options.minimumDockerMemoryBytes))
   }
 
+  if (options.minimumDockerDiskFreeBytes) {
+    parts.push(`${formatGiB(options.minimumDockerDiskFreeBytes)} free disk`)
+  }
+
   return parts.join(' and ')
 }
 
@@ -110,6 +228,10 @@ function formatDetectedDockerResources(runtime: DockerRuntimeInfo): string {
     parts.push(formatGiB(runtime.memoryBytes))
   }
 
+  if (runtime.diskFreeBytes !== null) {
+    parts.push(`${formatGiB(runtime.diskFreeBytes)} free disk`)
+  }
+
   return parts.length === 0 ? 'unknown resources' : parts.join(' and ')
 }
 
@@ -122,6 +244,14 @@ function needsMoreDockerMemory(options: ContainerRuntimeOptions, memoryBytes: nu
     options.minimumDockerMemoryBytes &&
     memoryBytes !== null &&
     memoryBytes < options.minimumDockerMemoryBytes
+  )
+}
+
+function needsMoreDockerDiskFreeSpace(options: ContainerRuntimeOptions, runtime: DockerRuntimeInfo): boolean {
+  return Boolean(
+    options.minimumDockerDiskFreeBytes &&
+    runtime.diskFreeBytes !== null &&
+    runtime.diskFreeBytes < options.minimumDockerDiskFreeBytes
   )
 }
 
@@ -257,12 +387,37 @@ function ensureColimaResources(options: ContainerRuntimeOptions, runtime: Docker
 
 function assertDockerResources(options: ContainerRuntimeOptions): void {
   if (!options.minimumDockerCpuCount && !options.minimumDockerMemoryBytes) {
-    return
+    if (!options.minimumDockerDiskFreeBytes) {
+      return
+    }
   }
 
   const runtime = getDockerRuntimeInfo()
-  if (!needsMoreDockerResources(options, runtime)) {
+  const lacksCpuOrMemory = needsMoreDockerResources(options, runtime)
+  const lacksDiskFreeSpace = needsMoreDockerDiskFreeSpace(options, runtime)
+
+  if (!lacksCpuOrMemory && !lacksDiskFreeSpace) {
     return
+  }
+
+  if (lacksDiskFreeSpace) {
+    const commandLabel = options.commandLabel ?? 'this Dagger pipeline command'
+    const requiredResources = formatRequiredDockerResources(options)
+    const dockerContext = runtime.context
+
+    if (isMacOs() && dockerContext === 'colima' && commandAvailable('colima')) {
+      const freeDisk = runtime.diskFreeBytes === null ? 'unknown free disk' : formatGiB(runtime.diskFreeBytes)
+      const usedDisk = runtime.diskUsedBytes === null ? 'unknown used disk' : formatGiB(runtime.diskUsedBytes)
+      const totalDisk = runtime.diskTotalBytes === null ? 'unknown total disk' : formatGiB(runtime.diskTotalBytes)
+
+      throw new Error(
+        `${commandLabel} requires at least ${requiredResources}, but Colima currently has ${freeDisk} free (${usedDisk} used of ${totalDisk} total). Run \`pnpm pipeline clean\` to clear pipeline and Dagger caches, or reclaim Docker disk / restart Colima with a larger disk via \`colima stop && colima start --disk 160\`, then retry.`
+      )
+    }
+
+    throw new Error(
+      `${commandLabel} requires at least ${requiredResources}, but Docker currently reports ${formatDetectedDockerResources(runtime)}. Reclaim Docker disk space and retry.`
+    )
   }
 
   const commandLabel = options.commandLabel ?? 'this Dagger pipeline command'
@@ -271,9 +426,16 @@ function assertDockerResources(options: ContainerRuntimeOptions): void {
 
   if (isMacOs() && dockerContext === 'colima' && commandAvailable('colima')) {
     const colimaStatus = getColimaStatus()
+    const diskTotalBytes = colimaStatus?.disk ?? runtime.diskTotalBytes
     ensureColimaResources(options, {
       context: dockerContext,
       cpuCount: colimaStatus?.cpu ?? runtime.cpuCount,
+      diskFreeBytes:
+        diskTotalBytes !== null && runtime.diskUsedBytes !== null
+          ? Math.max(0, diskTotalBytes - runtime.diskUsedBytes)
+          : runtime.diskFreeBytes,
+      diskTotalBytes,
+      diskUsedBytes: runtime.diskUsedBytes,
       memoryBytes: colimaStatus?.memory ?? runtime.memoryBytes,
     })
     return

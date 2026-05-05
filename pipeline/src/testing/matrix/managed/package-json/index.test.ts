@@ -31,6 +31,7 @@ describe('createManagedMatrixPackageJson', () => {
         packageName: '@matrix/mcp',
       }),
     ) as {
+      '//': string
       dependencies: Record<string, string>
       devDependencies: Record<string, string>
       name: string

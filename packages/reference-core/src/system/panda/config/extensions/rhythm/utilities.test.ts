@@ -87,4 +87,18 @@ describe('rhythmUtilities border width transforms', () => {
       height: 'calc(var(--spacing-root) / 5)',
     })
   })
+
+  it('maps size units to equal width and height values', () => {
+    expect(rhythmUtilities.size.transform('2r')).toEqual({
+      width: 'calc(2 * var(--spacing-root))',
+      height: 'calc(2 * var(--spacing-root))',
+    })
+  })
+
+  it('passes through literal CSS values for size width and height', () => {
+    expect(rhythmUtilities.size.transform('3rem')).toEqual({
+      width: '3rem',
+      height: '3rem',
+    })
+  })
 })

@@ -1,5 +1,6 @@
 import type { UtilityValues } from '@reference-ui/styled/types/prop-type'
 import type { SystemProperties } from '@reference-ui/styled/types/style-props'
+import type { Tokens } from '@reference-ui/styled/tokens'
 import type { StylePropValue } from './style-prop'
 
 /**
@@ -93,9 +94,7 @@ export type ColorPropKeys =
 
 type PreferredColorUtilityKey = Extract<'backgroundColor' | 'color', keyof UtilityValues>
 
-type ColorToken = PreferredColorUtilityKey extends never
-  ? never
-  : UtilityValues[PreferredColorUtilityKey]
+type ColorToken = PreferredColorUtilityKey extends never ? never : Tokens['colors']
 
 type StrictColorValue =
   | ColorToken

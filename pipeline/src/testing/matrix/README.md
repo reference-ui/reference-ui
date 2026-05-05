@@ -66,3 +66,4 @@ This is one of the main testing directions for the pipeline.
 	- pass `--trace` to stream Dagger's execution trace when you want low-level execution profiling instead of the default higher-level matrix story
 	- on macOS, it will start Colima automatically when the active Docker context is `colima` and the VM is not already running
 	- on low-memory Docker or Colima setups, the command now fails fast before starting Dagger; `pnpm pipeline:test:matrix` expects at least 4 GiB of Docker VM memory because the containerized consumer install can otherwise be OOM-killed with exit code `137`
+	- on low-disk Colima setups, the command now fails fast before starting Dagger; `pnpm pipeline test` expects at least 20 GiB of free Docker disk so the matrix install fanout does not fail later with `ENOSPC`

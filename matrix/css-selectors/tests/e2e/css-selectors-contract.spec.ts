@@ -1,4 +1,4 @@
-import { expect, test, type Locator } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 
 import { cssSelectorsMatrixConstants } from '../../src/constants'
 import { matrixCssSelectorsMarker } from '../../src/index'
@@ -20,6 +20,20 @@ async function readComputedStyle(
       }),
     )
   }, properties)
+}
+
+async function tabUntilFocused(page: Page, locator: Locator, maxTabs = 4): Promise<void> {
+  await page.getByTestId('css-selectors-root').click({ position: { x: 1, y: 1 } })
+
+  for (let tabCount = 0; tabCount < maxTabs; tabCount += 1) {
+    await page.keyboard.press('Tab')
+
+    if (await locator.evaluate(node => node === document.activeElement)) {
+      return
+    }
+  }
+
+  throw new Error(`Expected locator to receive focus within ${maxTabs} Tab key presses.`)
 }
 
 test.describe('css selectors contract', () => {
@@ -71,9 +85,8 @@ test.describe('css selectors contract', () => {
   })
 
   test('focus-visible selector applies the authored outline width and style', async ({ page }) => {
-    await page.keyboard.press('Tab')
-
     const element = page.getByTestId('css-selectors-focus-visible-target')
+    await tabUntilFocused(page, element)
     await expect(element).toBeFocused()
 
     const computed = await readComputedStyle(element, ['outline-style', 'outline-width'])

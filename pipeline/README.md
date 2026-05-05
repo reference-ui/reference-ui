@@ -66,7 +66,7 @@ For local testing cleanup:
 pnpm pipeline clean
 ```
 
-Right now that removes the managed local registry state and the cached build fingerprints.
+Right now that removes the managed local registry state, the cached build fingerprints, and any long-lived local Dagger engine cache container plus its attached volume.
 
 For the registry slice:
 
@@ -112,6 +112,7 @@ pnpm pipeline test --trace
 That is the separate entrypoint for the pipeline-owned matrix flow. Right now it validates discovery of real matrix-enabled fixture packages, and later it can grow into the real matrix runner.
 It already executes through Dagger, reuses the single pipeline-managed Verdaccio registry by binding that shared host registry into the container graph, and runs the first `matrix/install` smoke scenario in a clean container rather than against host `node_modules`.
 On macOS, Dagger-backed entrypoints now check Docker reachability first and automatically start Colima when the active Docker context is `colima` but the VM is not running.
+Matrix runs also fail fast when Colima does not have enough free Docker disk left for the containerized install fanout, with remediation that points at `pnpm pipeline clean` or a larger Colima disk.
 
 Testing and release can then consume the same registry-hosted artifacts instead of rebuilding ad hoc.
 

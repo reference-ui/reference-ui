@@ -32,6 +32,7 @@ import { formatRuntimeMemory } from './reporting.js'
 import type { MatrixRunOptions } from './types.js'
 
 const minimumMatrixDockerCpuCount = MATRIX_CONFIG.containerRuntime.cpu
+const minimumMatrixDockerDiskFreeBytes = MATRIX_CONFIG.containerRuntime.diskFreeGiB * 1024 * 1024 * 1024
 const minimumMatrixDockerMemoryBytes = MATRIX_CONFIG.containerRuntime.memoryGiB * 1024 * 1024 * 1024
 
 function assertMatrixRustTargetAvailable(
@@ -204,6 +205,7 @@ export async function runMatrixTests(options: MatrixRunOptions = {}): Promise<vo
   ensureContainerRuntime({
     commandLabel: options.commandLabel ?? 'pnpm pipeline test',
     minimumDockerCpuCount: minimumMatrixDockerCpuCount,
+    minimumDockerDiskFreeBytes: minimumMatrixDockerDiskFreeBytes,
     minimumDockerMemoryBytes: minimumMatrixDockerMemoryBytes,
   })
 

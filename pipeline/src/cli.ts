@@ -65,7 +65,7 @@ program
 
 program
   .command('clean')
-  .description('Clean pipeline-managed local state used for testing, including registry and build cache')
+  .description('Clean pipeline-managed local state used for testing, including registry, build cache, and Dagger engine cache')
   .action(async () => {
     await cleanPipeline()
   })

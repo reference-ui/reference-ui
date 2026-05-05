@@ -107,8 +107,8 @@ export function computePackageBuildHashes(
 
   for (const pkg of packages) {
     const ownHash = computeOwnPackageHash(pkg)
-    const dependencyHashes = Object.keys(pkg.dependencies)
-      .filter((dependencyName) => packageNames.has(dependencyName))
+    const allDependencyNames = collectAllInternalDependencyNames(pkg, packageNames)
+    const dependencyHashes = allDependencyNames
       .sort((left, right) => left.localeCompare(right))
       .flatMap((dependencyName) => [dependencyName, hashes.get(dependencyName) ?? ''])
 
@@ -116,6 +116,30 @@ export function computePackageBuildHashes(
   }
 
   return hashes
+}
+
+function collectAllInternalDependencyNames(
+  pkg: WorkspacePackage,
+  packageNames: ReadonlySet<string>,
+): string[] {
+  const seen = new Set<string>()
+  const sources: ReadonlyArray<Record<string, string> | undefined> = [
+    pkg.dependencies,
+    pkg.packageJson?.devDependencies as Record<string, string> | undefined,
+    pkg.packageJson?.peerDependencies as Record<string, string> | undefined,
+    pkg.packageJson?.optionalDependencies as Record<string, string> | undefined,
+  ]
+
+  for (const source of sources) {
+    if (!source) continue
+    for (const name of Object.keys(source)) {
+      if (packageNames.has(name)) {
+        seen.add(name)
+      }
+    }
+  }
+
+  return [...seen]
 }
 
 export async function readBuildState(): Promise<BuildState> {

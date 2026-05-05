@@ -19,6 +19,7 @@ export const MATRIX_CONFIG = {
 	concurrency: 8,
 	containerRuntime: {
 		cpu: 12,
+		diskFreeGiB: 20,
 		memoryGiB: 24,
 	},
 	quietPreparationSkips: true,

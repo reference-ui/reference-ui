@@ -4,6 +4,7 @@ import { join } from 'node:path'
 import { collectFragments } from '../../lib/fragments'
 import { scanForFragments } from '../../lib/fragments/scanner'
 import { createTokensCollector } from '../../system/api/tokens'
+import { getBaseFragmentBootstrapImportMap } from '../../system/base/fragments/bootstrap-import-map'
 import {
   extractBreakpointTable,
   type BreakpointTokenFragment,
@@ -47,6 +48,7 @@ async function compute(root: string, include: string[]): Promise<Record<string, 
       files,
       collector: createTokensCollector(),
       tempDir,
+      alias: getBaseFragmentBootstrapImportMap(root),
     })) as BreakpointTokenFragment[]
     return extractBreakpointTable(fragments)
   } finally {

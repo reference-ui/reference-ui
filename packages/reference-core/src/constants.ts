@@ -54,6 +54,31 @@ export const REACT_DTS_INCLUDE = [
 ] as const
 
 /**
+ * Explicit system DTS roots that we seed into the synthetic tsconfig.
+ *
+ * The system package re-exports the authored style types via its entry, and the
+ * strict-token rewrite owns files under `types/`. Keeping this list explicit
+ * avoids depending on whatever transitive declaration graph `tsgo` happens to
+ * preserve for type-only star re-exports.
+ */
+export const SYSTEM_DTS_INCLUDE = [
+  'src/types/index.ts',
+  'src/types/BaseSystem.ts',
+  'src/types/colors.ts',
+  'src/types/conditions.ts',
+  'src/types/css.ts',
+  'src/types/fontRegistry.ts',
+  'src/types/fonts.ts',
+  'src/types/primitives.ts',
+  'src/types/props.ts',
+  'src/types/radii.ts',
+  'src/types/recipe.ts',
+  'src/types/style-prop.ts',
+  'src/types/style-props.ts',
+  'src/types/system-style-object.ts',
+] as const
+
+/**
  * Picomatch-style glob for the sync output directory under any ancestor (watchers,
  * virtual copy, Panda fragment scan excludes).
  */

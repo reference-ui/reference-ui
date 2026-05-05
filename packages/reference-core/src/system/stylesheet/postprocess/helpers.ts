@@ -7,6 +7,7 @@ import {
   shouldInjectReset,
 } from '../reset'
 import { demotePandaGlobalCssLayer } from '../transform/demotePandaGlobalCssLayer'
+import { dropUnresolvedPrivateTokenDeclarations } from '../transform/dropUnresolvedPrivateTokenDeclarations'
 import { createPortableStylesheetFromContent } from '../transform/createPortableStylesheetFromContent'
 
 export interface PandaCssArtifacts {
@@ -43,7 +44,13 @@ export function createLocalPostprocessedStylesheets(
   artifacts: PandaCssArtifacts,
 ): UserSpaceAndDownstreamCss {
   // Normalize Panda's local output so user-space and downstream CSS share the same layer contract.
-  const localCss = demotePandaGlobalCssLayer(artifacts.rawCss, artifacts.globalCss)
+  const demotedCss = demotePandaGlobalCssLayer(artifacts.rawCss, artifacts.globalCss)
+
+  // Strip declarations that reference upstream `_private.*` tokens not in
+  // this consumer's config. Panda emits the literal token name as the value,
+  // producing invalid CSS that collides with — and shadows — the
+  // upstream-resolved class of the same hash when layered.
+  const localCss = dropUnresolvedPrivateTokenDeclarations(demotedCss)
 
   // Downstream CSS must be self-contained so other systems can append it as an upstream layer.
   const downstreamStylesheet = createPortableStylesheetFromContent(localCss, config.name)

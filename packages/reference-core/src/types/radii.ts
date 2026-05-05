@@ -1,5 +1,6 @@
 import type { UtilityValues } from '@reference-ui/styled/types/prop-type'
 import type { SystemProperties } from '@reference-ui/styled/types/style-props'
+import type { Tokens } from '@reference-ui/styled/tokens'
 import type { StylePropValue } from './style-prop'
 
 /**
@@ -49,7 +50,7 @@ type PreferredRadiusUtilityKey = Extract<'borderRadius', keyof UtilityValues>
 
 type RadiusToken = PreferredRadiusUtilityKey extends never
   ? never
-  : UtilityValues[PreferredRadiusUtilityKey]
+  : Tokens['radii']
 
 type StrictRadiusValue =
   | RadiusToken

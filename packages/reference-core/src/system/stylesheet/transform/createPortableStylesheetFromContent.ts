@@ -195,10 +195,11 @@ export function createPortableStylesheetFromContent(
 ): string {
   const root = postcss.parse(css)
   const tokensLayer = findTokensLayer(root)
-  const { rootTokenDeclarations, themeTokenBlocks, preservedContent } = parseTokensLayer(
-    tokensLayer,
-    layerName
-  )
+  const {
+    rootTokenDeclarations,
+    themeTokenBlocks,
+    preservedContent,
+  } = parseTokensLayer(tokensLayer, layerName)
   const strippedContent = removeOriginalTokensLayer(root)
   const baseContent = preservedContent
     ? `${strippedContent}\n\n@layer tokens {\n${preservedContent}\n}`

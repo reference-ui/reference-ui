@@ -317,6 +317,12 @@ export function listTokens(
   let tokens = allTokens
     .filter(token => {
       if (category && token.category.toLowerCase() !== category) return false
+      // Hide `_private` token subtrees from default listings. They remain
+      // discoverable when explicitly queried (by path or name fragment) so a
+      // package's own MCP surface can still surface its locally-authored
+      // private tokens, but they don't pollute the broad readout that an
+      // assistant uses to understand the design system at a glance.
+      if (!query && token.path.split('.').includes('_private')) return false
       if (!query) return true
 
       return [

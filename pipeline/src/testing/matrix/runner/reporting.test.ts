@@ -29,6 +29,7 @@ function createPackageRunContext(): MatrixPackageRunContext {
         name: '@matrix/distro',
       },
       hasPlaywrightTests: false,
+      hasVitestGlobalSetup: false,
       hasVitestTests: true,
     },
     workspacePackage: {

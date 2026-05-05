@@ -71,7 +71,7 @@ describe('matrix runner consumer helpers', () => {
           name: '@matrix/distro',
           private: true,
           type: 'module',
-          version: registryManifestVersion,
+          version: '0.0.0-test',
         },
         manifestPackages,
       ),

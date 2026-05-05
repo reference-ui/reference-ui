@@ -10,6 +10,7 @@ function createFixtureSourceFiles(overrides?: Partial<FixtureSourceFiles>): Fixt
       name: '@matrix/distro',
     },
     hasPlaywrightTests: false,
+    hasVitestGlobalSetup: false,
     hasVitestTests: true,
     ...overrides,
   }

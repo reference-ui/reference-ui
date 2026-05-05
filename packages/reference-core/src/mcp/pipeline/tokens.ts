@@ -55,7 +55,16 @@ function toMcpToken(path: string[], leaf: ReferenceTokenLeaf): McpToken {
 const PRIVATE_TOKEN_KEY = '_private'
 
 const FRAGMENT_SOURCE_PROPERTY = '__refConfigFragmentSource'
+const CURRENT_FRAGMENT_SOURCE_GLOBAL_KEY = '__refCurrentFragmentSource'
 const UPSTREAM_FRAGMENT_SOURCE = 'upstream system fragment'
+
+function wrapBundleWithSource(bundle: string, source: string): string {
+  return [
+    `;globalThis['${CURRENT_FRAGMENT_SOURCE_GLOBAL_KEY}'] = ${JSON.stringify(source)}`,
+    `;${bundle}`,
+    `;globalThis['${CURRENT_FRAGMENT_SOURCE_GLOBAL_KEY}'] = undefined`,
+  ].join('\n')
+}
 
 function isUpstreamFragment(fragment: ReferenceTokenConfig): boolean {
   const source = (fragment as Record<string, unknown>)[FRAGMENT_SOURCE_PROPERTY]
@@ -116,8 +125,10 @@ async function collectTokenFragmentsFromBundle(input: {
   const script = [
     collector.toScript(),
     collector.toRuntimeFunction(),
-    ...upstreamFragments.map(fragment => `;${fragment}`),
-    ...localBundles.map(({ bundle }) => `;${bundle}`),
+    ...upstreamFragments.map(fragment =>
+      wrapBundleWithSource(fragment, UPSTREAM_FRAGMENT_SOURCE),
+    ),
+    ...localBundles.map(({ file, bundle }) => wrapBundleWithSource(bundle, file)),
     `globalThis['${MCP_TOKEN_FRAGMENTS_GLOBAL}'] = ${collector.toGetter()}`,
   ].join('\n')
 
