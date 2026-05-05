@@ -9,7 +9,9 @@
     "test": "pnpm --dir ../../pipeline exec tsx src/cli.ts test --packages=@matrix/primitives",
     "sync": "pnpm exec ref sync"
   },
-  "exports": {".":"./src/index.tsx"},
+  "exports": {
+    ".": "./src/index.tsx"
+  },
   "dependencies": {
     "@reference-ui/core": "workspace:*",
     "@reference-ui/lib": "workspace:*",

@@ -1,5 +1,13 @@
 # @reference-ui/core
 
+## 0.0.42
+
+### Patch Changes
+
+- 01be976: CI RELEASE
+- Updated dependencies [01be976]
+  - @reference-ui/rust@0.0.41
+
 ## 0.0.41
 
 ### Patch Changes
