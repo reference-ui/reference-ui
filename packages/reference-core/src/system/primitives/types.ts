@@ -213,6 +213,7 @@ export type NavComponent = React.ForwardRefExoticComponent<
 export type ObjectComponent = React.ForwardRefExoticComponent<
   PrimitivePropsBase<'object'> & React.RefAttributes<HTMLObjectElement>
 >
+export type ObjComponent = ObjectComponent
 export type OlComponent = React.ForwardRefExoticComponent<
   PrimitivePropsBase<'ol'> & React.RefAttributes<HTMLOListElement>
 >
@@ -314,6 +315,9 @@ export type TrComponent = React.ForwardRefExoticComponent<
 >
 export type TrackComponent = React.ForwardRefExoticComponent<
   PrimitivePropsBase<'track'> & React.RefAttributes<HTMLTrackElement>
+>
+export type TextareaComponent = React.ForwardRefExoticComponent<
+  PrimitivePropsBase<'textarea'> & React.RefAttributes<HTMLTextAreaElement>
 >
 export type UComponent = React.ForwardRefExoticComponent<
   PrimitivePropsBase<'u'> & React.RefAttributes<HTMLElement>

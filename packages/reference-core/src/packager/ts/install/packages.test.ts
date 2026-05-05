@@ -286,7 +286,7 @@ describe('packager/ts/install/packages', () => {
     }
 
     expect(tsconfig).toBeTruthy()
-    expect(tsconfig.compilerOptions?.paths?.['*']).toEqual(['./*'])
+    expect(tsconfig.compilerOptions?.paths?.['*']).toBeUndefined()
     expect(tsconfig.compilerOptions?.paths?.['@reference-ui/styled']).toHaveLength(1)
     expect(tsconfig.compilerOptions?.paths?.['@reference-ui/styled/*']).toHaveLength(1)
   })
