@@ -88,10 +88,6 @@ const repoSourceExcludes = [
   '.pipeline',
   'target',
   'packages/reference-docs/dist',
-  'packages/reference-e2e/blob-reports',
-  'packages/reference-e2e/playwright-report',
-  'packages/reference-e2e/test-results',
-  'packages/reference-e2e/matrix-logs',
   'pipeline/node_modules',
 ] as const
 

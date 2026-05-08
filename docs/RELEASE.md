@@ -105,9 +105,7 @@ These private packages are ignored by Changesets:
 - `@fixtures/layer-library`
 - `@fixtures/styletrace-consumer`
 - `@fixtures/styletrace-library`
-- `@reference-ui/reference-unit`
 - `@reference-ui/reference-docs`
-- `@reference-ui/reference-e2e`
 
 That ignore list comes from [.changeset/config.json](../.changeset/config.json).
 

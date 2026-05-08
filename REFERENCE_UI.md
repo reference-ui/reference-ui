@@ -25,8 +25,6 @@ The “**AI era**” angle is not marketing fluff: the stack is designed so that
 | `packages/reference-core` | `ref` CLI, `ref sync` orchestration, virtual FS, event bus, system workers, packager, Vite/Webpack integration, MCP implementation. |
 | `packages/reference-lib` | First-party design system built on the generated surface (dogfood for the product). |
 | `packages/reference-docs` | Vite docs site; often used as the `cwd` for MCP in this repo so `ui.config.ts` matches the site. |
-| `packages/reference-unit` | Local app for validating generated runtime behavior. |
-| `packages/reference-e2e` | Playwright tests; **what** is tested per matrix entry (Dagger owns **where** it runs for matrix flows). |
 | `packages/reference-rs` | **`@reference-ui/rust`** — Rust crate `reference-virtual-native`, napi-rs `.node` binary `virtual-native`, Oxc-based **Atlas / Tasty / Styletrace / virtualrs**; see **§25** (and **§12–§16** for how core uses it). |
 | `packages/reference-icons` | Icon package (decoupled / release-focused; see its README). |
 | `fixtures/*` | Consumer-style fixtures, including `extend-library` and `layer-library` for composition tests. |
@@ -394,7 +392,7 @@ Implementation: [pipeline/src/testing/matrix/run.ts](./pipeline/src/testing/matr
 
 **macOS:** if Docker uses Colima, `ensureContainerRuntime` can start the VM when needed (see the matrix README).
 
-**Separation of concerns** — Dagger handles **isolation, caching, and registry plumbing**; Playwright and assertion logic remain in **`reference-e2e`** for true browser scenarios (matrix README calls this out explicitly). This bootstrap is **package-install + CLI + project tests in Linux**, which catches a different class of issues than in-repo workspace tests alone.
+**Separation of concerns** — Dagger handles **isolation, caching, and registry plumbing**; browser assertions live in **`matrix/*`** packages (for example `@matrix/playwright`) and run inside the matrix container. This bootstrap is **package-install + CLI + project tests in Linux**, which catches a different class of issues than in-repo workspace tests alone.
 
 ---
 
@@ -404,8 +402,7 @@ Implementation: [pipeline/src/testing/matrix/run.ts](./pipeline/src/testing/matr
 | --- | --- |
 | `packages/reference-core` unit tests (Vitest) | Event bus, path helpers, sync helpers, many pure modules. |
 | `packages/reference-rs` (Rust + Vitest) | Parser and emitter semantics, Tasty case suites, Styletrace, Atlas. |
-| `reference-e2e` | Browser-level regressions, Playwright. |
-| `reference-unit` | App-shaped dogfood. |
+| `matrix/*` (Vitest / Playwright in Dagger) | Browser and install-shaped regressions per `matrix.json` scenarios. |
 | Pipeline unit tests | `pnpm pipeline:test:pipeline` for registry and graph helpers. |
 | Matrix (Dagger) | Packaged **install** + **`ref sync`** in clean Linux + project tests. |
 

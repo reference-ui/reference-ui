@@ -49,8 +49,6 @@
     "@matrix/virtual",
     "@matrix/watch",
     "@reference-ui/pipeline",
-    "@reference-ui/reference-unit",
-    "@reference-ui/reference-docs",
-    "@reference-ui/reference-e2e"
+    "@reference-ui/reference-docs"
   ]
 }

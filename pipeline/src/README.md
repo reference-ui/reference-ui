@@ -61,8 +61,7 @@ At a high level, the current system maps into this layout like this:
 - `registry/`
 	- pipeline-local registry for packed artifacts consumed by testing and release
 - `testing/`
-	- unit and e2e execution is owned by package scripts and `pipeline/src/testing/`; nothing in GitHub Actions runs the matrix anymore
-	- environment/matrix orchestration currently lives in `packages/reference-e2e`
-	- downstream/distribution install validation is beginning under `pipeline/src/downstream-smoke.ts`
+	- Dagger-backed matrix runs live in `pipeline/src/testing/matrix/` (`pnpm pipeline test`)
+	- matrix fixtures and package-local tests live under `matrix/*`
 
 The intent is to keep execution logic in `pipeline/src` and package scripts, not in duplicated workflow YAML.

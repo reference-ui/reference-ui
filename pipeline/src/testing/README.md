@@ -65,12 +65,10 @@ That split keeps the pipeline focused on reliability and reproducibility rather 
 ## How The Testing Categories Map
 
 - matrix testing
-	- should absorb the current React x bundler environment matrix from `packages/reference-e2e`
-	- Dagger owns the containerized environment combinations
-	- `reference-e2e` keeps owning the actual Playwright tests
+	- React × bundler scenarios are declared per `matrix/*/matrix.json` and executed in containers by the matrix runner
+	- browser assertions live in matrix packages (for example `@matrix/playwright`) alongside Vitest coverage
 - distribution testing
 	- should exercise publish-style package outputs against fake or local registry flows
-	- this is the natural evolution of the current downstream smoke direction in `pipeline/src/downstream-smoke.ts`
 	- this should primarily consume artifacts from `pipeline/src/registry/`
 - unit testing
 	- should run unit suites in explicit container environments rather than assuming the host or ad hoc runner state

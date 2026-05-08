@@ -41,7 +41,6 @@ packages/reference-icons/src/generated/
 reports/
 .eslint-result.txt
 .reference
-.sandbox-reference-e2e
 packages/.sandbox
 .reference-ui
 .ref
@@ -49,7 +48,6 @@ packages/.sandbox
 pipeline/src/registry/.store
 packages/reference-core/src/system/styled
 packages/reference-core/src/reference/browser-component/
-packages/reference-unit/tests/fixtures/sync-readiness/src/generated/
 
 # Nx
 .nx

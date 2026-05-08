@@ -1,7 +1,0 @@
-.sandbox
-blob-reports
-playwright-report
-test-results
-matrix-logs
-.watch-metrics.jsonl
-css_snapshot
