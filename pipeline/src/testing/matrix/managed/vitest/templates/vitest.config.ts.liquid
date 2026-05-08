@@ -1,0 +1,13 @@
+/*
+ * {{ generatedNotice }}
+ */
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    {%- if globalSetupPath %}
+    globalSetup: ['{{ globalSetupPath }}'],
+    {%- endif %}
+    include: ['tests/unit/**/*.test.{ts,tsx}'],
+  },
+})

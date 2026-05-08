@@ -6,17 +6,20 @@
  * into Verdaccio.
  */
 
+import { execFileSync } from 'node:child_process'
 import { constants } from 'node:fs'
+import { readFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
 import { access, mkdir, readdir, rm } from 'node:fs/promises'
 import { relative, resolve } from 'node:path'
-import type { VirtualNativeTarget } from '../../../packages/reference-rs/js/shared/targets.js'
-import { registryPackageNames } from '../../config.js'
+import { REGISTRY_PACKAGE_NAMES } from '../../config.js'
 import { computePackageBuildHashes } from '../build/cache.js'
 import {
   applyPreparedRustPackageHash,
   applyPreparedRustPackageOverride,
   prepareAndWriteRustBuildRegistryArtifacts,
   readPreparedRustBuildRegistryArtifacts,
+  type PrepareReferenceRustRegistryArtifactsOptions,
 } from '../build/rust/index.js'
 import type { WorkspacePackage } from '../build/types.js'
 import {
@@ -29,6 +32,7 @@ import {
 import { logSkip } from '../lib/log/index.js'
 import { readPreviousRegistryManifest, writeRegistryManifest } from './manifest.js'
 import {
+  collectDeclaredPackagedPaths,
   prepareWorkspacePackageForLocalRegistry,
   pruneStalePreparedPackages,
   stagedPackageDirPath,
@@ -43,6 +47,41 @@ function packageInternalDependencies(
   return Object.keys(pkg.dependencies)
     .filter((dependencyName) => packageNames.has(dependencyName))
     .sort((a, b) => a.localeCompare(b))
+}
+
+function readTarballEntries(tarballPath: string): string[] {
+  const output = execFileSync('tar', ['-tf', tarballPath], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  }).trim()
+
+  if (output.length === 0) {
+    return []
+  }
+
+  return output.split('\n').filter((entry) => entry.length > 0)
+}
+
+function normalizeTarEntry(entry: string): string {
+  return entry.replace(/^package\//, '').replace(/\/$/, '')
+}
+
+function computeTarballArtifactHash(tarballPath: string): string {
+  return createHash('sha256').update(readFileSync(tarballPath)).digest('hex')
+}
+
+export function tarballContainsDeclaredPackagedPaths(
+  tarballEntries: readonly string[],
+  declaredPaths: readonly string[],
+): boolean {
+  const normalizedEntries = tarballEntries.map(normalizeTarEntry)
+
+  return declaredPaths.every((declaredPath) => {
+    const normalizedPath = declaredPath.replace(/^\.\//, '').replace(/\/$/, '')
+
+    return normalizedEntries.some((entry) => entry === normalizedPath || entry.startsWith(`${normalizedPath}/`))
+  })
 }
 
 async function pruneStaleTarballs(activeTarballPaths: ReadonlySet<string>): Promise<void> {
@@ -67,11 +106,11 @@ async function pruneStaleTarballs(activeTarballPaths: ReadonlySet<string>): Prom
 }
 
 export async function packPublicPackages(
-  packageNames: readonly string[] = registryPackageNames,
-  requiredRustTargets?: readonly VirtualNativeTarget[],
+  packageNames: readonly string[] = REGISTRY_PACKAGE_NAMES,
+  rustOptions: PrepareReferenceRustRegistryArtifactsOptions = {},
 ): Promise<RegistryManifest> {
   const publicPackages = sortPackagesForInternalDependencyOrder(listRegistryWorkspacePackages(packageNames))
-  await prepareAndWriteRustBuildRegistryArtifacts(publicPackages, requiredRustTargets)
+  await prepareAndWriteRustBuildRegistryArtifacts(publicPackages, rustOptions)
   const rustBuildArtifacts = await readPreparedRustBuildRegistryArtifacts()
   const publicPackageNames = new Set([
     ...publicPackages.map((pkg) => pkg.name),
@@ -103,8 +142,12 @@ export async function packPublicPackages(
     const tarballPath = resolve(tarballsDir, tarballFileName)
     const previousPackage = previousManifestByPackage.get(pkg.name)
     const preparedPackageDir = stagedPackageDirPath(pkg)
+    const declaredPackagedPaths = collectDeclaredPackagedPaths(pkg.packageJson ?? {})
+    const canReuseExistingTarball = previousPackage?.hash === effectivePackageHash
+      && previousPackage.tarballFileName === tarballFileName
+      && tarballContainsDeclaredPackagedPaths(readTarballEntries(tarballPath), declaredPackagedPaths)
 
-    if (!(previousPackage?.hash === effectivePackageHash && previousPackage.tarballFileName === tarballFileName)) {
+    if (!canReuseExistingTarball) {
       await rm(tarballPath, { force: true })
 
       await prepareWorkspacePackageForLocalRegistry(pkg, workspacePackageVersions)
@@ -122,10 +165,18 @@ export async function packPublicPackages(
     }
 
     await access(tarballPath, constants.F_OK)
+
+    if (!tarballContainsDeclaredPackagedPaths(readTarballEntries(tarballPath), declaredPackagedPaths)) {
+      throw new Error(`Packed tarball for ${pkg.name} is missing declared packaged outputs.`)
+    }
+
+    const artifactHash = computeTarballArtifactHash(tarballPath)
+
     activeTarballPaths.add(tarballPath)
     activePreparedPackagePaths.add(preparedPackageDir)
 
     manifestPackages.push({
+      artifactHash,
       hash: effectivePackageHash,
       internalDependencies: packageInternalDependencies(pkg, publicPackageNames),
       name: pkg.name,
@@ -140,7 +191,10 @@ export async function packPublicPackages(
     const generatedTarballPath = resolve(repoRoot, generatedPackage.tarballPath)
     await access(generatedTarballPath, constants.F_OK)
     activeTarballPaths.add(generatedTarballPath)
-    manifestPackages.push(generatedPackage)
+    manifestPackages.push({
+      ...generatedPackage,
+      artifactHash: computeTarballArtifactHash(generatedTarballPath),
+    })
   }
 
   await pruneStaleTarballs(activeTarballPaths)

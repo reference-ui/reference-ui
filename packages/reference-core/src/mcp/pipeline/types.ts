@@ -1,5 +1,8 @@
 import type { AtlasDiagnostic, Usage } from '@reference-ui/rust/atlas'
 
+export type McpComponentPropOrigin = 'observed' | 'documented'
+export type McpComponentKind = 'project' | 'primitive'
+
 export interface McpComponentInterface {
   name: string
   source: string
@@ -15,10 +18,13 @@ export interface McpComponentProp {
   optional: boolean
   readonly: boolean
   defaultValue?: string
+  origin?: McpComponentPropOrigin
+  styleProp?: boolean
 }
 
 export interface McpComponent {
   name: string
+  kind?: McpComponentKind
   source: string
   count: number
   usage: Usage
@@ -28,6 +34,26 @@ export interface McpComponent {
   props: McpComponentProp[]
 }
 
+export interface McpToken {
+  path: string
+  category: string
+  value?: unknown
+  light?: unknown
+  dark?: unknown
+  description?: string
+}
+
+export type McpCompactToken = Omit<McpToken, 'description'>
+
+export interface McpTokenListResult {
+  tokens: Array<McpToken | McpCompactToken>
+  total: number
+  returned: number
+  compressed: boolean
+  availableCategories?: string[]
+  message?: string
+}
+
 export interface McpBuildArtifact {
   schemaVersion: 1
   generatedAt: string
@@ -35,12 +61,13 @@ export interface McpBuildArtifact {
   manifestPath: string
   diagnostics: AtlasDiagnostic[]
   components: McpComponent[]
+  tokens?: McpToken[]
 }
 
 export interface McpPublicModel {
   schemaVersion: 1
   generatedAt: string
-  components: McpComponent[]
+  components: McpComponentSummary[]
 }
 
 export interface McpListComponentsInput {
@@ -54,20 +81,68 @@ export interface McpGetComponentInput {
   source?: string
 }
 
-export interface McpGetCommonPatternsInput extends McpGetComponentInput {
+export interface McpGetComponentPropsInput extends McpGetComponentInput {
+  includeUnused?: boolean
+  includeStyleProps?: boolean
+  query?: string
   limit?: number
+}
+
+export interface McpGetTokensInput {
+  category?: string
+  query?: string
+  limit?: number
+}
+
+export interface McpGetStylePropsInput {
+  query?: string
+  includeProps?: boolean
+}
+
+export interface McpComponentStylePropsSummary {
+  supported: boolean
+  observed: string[]
+  tool: 'get_style_props'
+  note: string
+}
+
+export interface McpUsageSemantics {
+  count: string
+  usage: string
+}
+
+export interface McpPropSummary {
+  total: number
+  observed: number
+  documented: number
+  style: number
+  returned: number
 }
 
 export interface McpComponentSummary {
   name: string
+  kind: McpComponentKind
   source: string
   usage: Usage
   count: number
+  usageSemantics: McpUsageSemantics
   interfaceName: string | null
   propCount: number
+  observedProps: string[]
+  styleProps: McpComponentStylePropsSummary
 }
 
-export interface McpCommonPattern {
+export interface McpComponentCompact {
   name: string
+  kind: McpComponentKind
+  source: string
+  count: number
   usage: Usage
+  usageSemantics: McpUsageSemantics
+  usedWith: Record<string, Usage>
+  examples: string[]
+  interface: McpComponentInterface | null
+  props: McpComponentProp[]
+  propSummary: McpPropSummary
+  styleProps: McpComponentStylePropsSummary
 }

@@ -18,6 +18,7 @@ interface ProjectionContext {
   visitedSymbolIds: Set<string>
   depth: number
   projectTypeParameterMembers?: TastyTypeParameterMemberProjector
+  typeParameterNames?: Set<string>
 }
 
 export async function projectObjectLikeMembers(
@@ -44,6 +45,7 @@ async function projectSymbolMembers(
     visitedSymbolIds: new Set(context.visitedSymbolIds).add(symbol.getId()),
     depth: context.depth + 1,
     projectTypeParameterMembers: context.projectTypeParameterMembers,
+    typeParameterNames: context.typeParameterNames,
   }
 
   const raw = symbol.getRaw()
@@ -52,7 +54,11 @@ async function projectSymbolMembers(
   }
 
   if (isTypeAliasSymbol(raw)) {
-    return projectTypeMembers(api, symbol.getUnderlyingType(), nextContext)
+    return projectTypeMembers(
+      api,
+      symbol.getUnderlyingType(),
+      withTypeParameterNames(nextContext, raw.typeParameters?.map(param => param.name))
+    )
   }
 
   return undefined
@@ -107,27 +113,43 @@ async function projectReferenceMembers(
   reference: RawTastyTypeReference,
   context: ProjectionContext
 ): Promise<TastyMember[] | undefined> {
+  const symbol = await loadReferencedSymbol(api, reference)
+  if (symbol) {
+    const raw = symbol.getRaw()
+    if (isTypeAliasSymbol(raw)) {
+      const instantiated = instantiateTypeAliasDefinition(raw, reference.typeArguments)
+      if (instantiated) {
+        return projectRawTypeMembers(api, instantiated, context)
+      }
+    }
+
+    return projectSymbolMembers(api, symbol, context)
+  }
+
   const utilityProjection = await projectUtilityReferenceMembers(api, reference, context)
   if (utilityProjection) return utilityProjection
 
-  if (isTypeParameterReference(reference)) {
+  if (isTypeParameterReference(reference, context)) {
     const projected = await context.projectTypeParameterMembers?.({ api, reference })
     if (projected) return projected
     return []
   }
 
-  const symbol = await loadReferencedSymbol(api, reference)
-  if (!symbol) return undefined
+  return undefined
+}
 
-  const raw = symbol.getRaw()
-  if (isTypeAliasSymbol(raw)) {
-    const instantiated = instantiateTypeAliasDefinition(raw, reference.typeArguments)
-    if (instantiated) {
-      return projectRawTypeMembers(api, instantiated, context)
-    }
+function withTypeParameterNames(
+  context: ProjectionContext,
+  names: string[] | undefined
+): ProjectionContext {
+  if (!names?.length) return context
+  return {
+    ...context,
+    typeParameterNames: new Set([
+      ...(context.typeParameterNames ?? []),
+      ...names,
+    ]),
   }
-
-  return projectSymbolMembers(api, symbol, context)
 }
 
 async function loadReferencedSymbol(
@@ -164,6 +186,7 @@ async function projectUtilityReferenceMembers(
 
   switch (reference.name) {
     case 'Pretty':
+    case 'Nested':
       return projectPassthroughMembers(api, reference.typeArguments, context)
     case 'Omit':
       return projectOmitMembers(api, reference.typeArguments, context)
@@ -353,8 +376,15 @@ function normalizeLiteralKey(value: string): string | undefined {
   return quoted ? trimmed.slice(1, -1) : trimmed
 }
 
-export function isTypeParameterReference(reference: RawTastyTypeReference): boolean {
-  return reference.id === reference.name && !reference.typeArguments?.length
+export function isTypeParameterReference(
+  reference: RawTastyTypeReference,
+  context: Pick<ProjectionContext, 'typeParameterNames'>
+): boolean {
+  return (
+    reference.id === reference.name &&
+    !reference.typeArguments?.length &&
+    context.typeParameterNames?.has(reference.name) === true
+  )
 }
 
 async function projectRawTypeMembers(

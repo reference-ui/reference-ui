@@ -28,11 +28,16 @@ import {
   writeRustBuildRegistryArtifacts,
 } from './state.js'
 
+export interface PrepareReferenceRustRegistryArtifactsOptions {
+  forceBuildNativeTargets?: boolean
+  requiredTargets?: readonly VirtualNativeTarget[]
+}
+
 export async function prepareReferenceRustRegistryArtifacts(
   packageDir: string,
-  requiredTargets?: readonly VirtualNativeTarget[],
+  options: PrepareReferenceRustRegistryArtifactsOptions = {},
 ): Promise<BuildRegistryArtifacts> {
-  const generatedPackages = await materializeReferenceRustTargetTarballs(packageDir, requiredTargets)
+  const generatedPackages = await materializeReferenceRustTargetTarballs(packageDir, options)
   const override = createReferenceRustPackageJsonOverride(
     generatedPackages.map(generatedPackage => ({
       name: generatedPackage.name,
@@ -62,7 +67,7 @@ export async function prepareReferenceRustRegistryArtifacts(
 
 export async function prepareAndWriteRustBuildRegistryArtifacts(
   buildTargets: readonly WorkspacePackage[],
-  requiredTargets?: readonly VirtualNativeTarget[],
+  options: PrepareReferenceRustRegistryArtifactsOptions = {},
 ): Promise<void> {
   const rustPackage = buildTargets.find(pkg => pkg.name === REFERENCE_RUST_PACKAGE_NAME)
 
@@ -77,7 +82,11 @@ export async function prepareAndWriteRustBuildRegistryArtifacts(
     throw new Error(`Missing build hash for ${rustPackage.name}`)
   }
 
-  const cacheKey = createRustBuildRegistryArtifactsCacheKey(rustPackageHash, requiredTargets)
+  const cacheKey = createRustBuildRegistryArtifactsCacheKey(
+    rustPackageHash,
+    options.requiredTargets,
+    options.forceBuildNativeTargets,
+  )
   const cachedArtifacts = await readRustBuildRegistryArtifacts()
 
   if (canReuseRustBuildRegistryArtifacts(cachedArtifacts, cacheKey)) {
@@ -87,7 +96,7 @@ export async function prepareAndWriteRustBuildRegistryArtifacts(
 
   await writeRustBuildRegistryArtifacts(
     {
-      ...(await prepareReferenceRustRegistryArtifacts(rustPackage.dir, requiredTargets)),
+      ...(await prepareReferenceRustRegistryArtifacts(rustPackage.dir, options)),
       cacheKey,
     },
   )

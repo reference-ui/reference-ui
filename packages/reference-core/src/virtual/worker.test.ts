@@ -1,10 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { DEFAULT_OUT_DIR } from '../constants'
-
-const FIXTURE_APP = '/workspace/app'
-const FIXTURE_VIRTUAL = `${FIXTURE_APP}/${DEFAULT_OUT_DIR}/virtual`
-
 const onHandlers = new Map<string, (payload?: unknown) => unknown>()
 
 async function importWorkerModule() {
@@ -12,12 +7,8 @@ async function importWorkerModule() {
   onHandlers.clear()
 
   const emit = vi.fn()
-  const copyAll = vi.fn(async () => {})
-  const copyToVirtual = vi.fn(async () => `${FIXTURE_VIRTUAL}/src/button.tsx`)
-  const removeFromVirtual = vi.fn(async () => {})
-  const getVirtualPath = vi.fn(() => `${FIXTURE_VIRTUAL}/src/button.jsx`)
-  const debug = vi.fn()
-  const error = vi.fn()
+  const onRunVirtualCopyAll = vi.fn()
+  const onRunVirtualSyncFile = vi.fn(async () => {})
 
   vi.doMock('../lib/event-bus', () => ({
     emit,
@@ -28,33 +19,17 @@ async function importWorkerModule() {
   vi.doMock('../lib/thread-pool', () => ({
     KEEP_ALIVE: 'keep-alive',
   }))
-  vi.doMock('./copy', () => ({
-    copyToVirtual,
-    removeFromVirtual,
-  }))
-  vi.doMock('./copy-all', () => ({
-    copyAll,
-  }))
-  vi.doMock('./utils', () => ({
-    getVirtualPath,
-  }))
-  vi.doMock('../lib/log', () => ({
-    log: { debug, error, info: vi.fn() },
-  }))
-  vi.doMock('../lib/paths', () => ({
-    getVirtualDirPath: () => FIXTURE_VIRTUAL,
+  vi.doMock('./run', () => ({
+    onRunVirtualCopyAll,
+    onRunVirtualSyncFile,
   }))
 
   const mod = await import('./worker')
   return {
     ...mod,
     emit,
-    copyAll,
-    copyToVirtual,
-    removeFromVirtual,
-    getVirtualPath,
-    debug,
-    error,
+    onRunVirtualCopyAll,
+    onRunVirtualSyncFile,
   }
 }
 
@@ -63,11 +38,7 @@ afterEach(() => {
   onHandlers.clear()
   vi.doUnmock('../lib/event-bus')
   vi.doUnmock('../lib/thread-pool')
-  vi.doUnmock('./copy')
-  vi.doUnmock('./copy-all')
-  vi.doUnmock('./utils')
-  vi.doUnmock('../lib/log')
-  vi.doUnmock('../lib/paths')
+  vi.doUnmock('./run')
   vi.restoreAllMocks()
 })
 
@@ -86,109 +57,35 @@ describe('virtual/worker', () => {
     expect(emit).toHaveBeenCalledWith('virtual:ready')
   })
 
-  it('copies changed files and emits virtual:fs:change', async () => {
-    const { default: runVirtual, emit, copyToVirtual } = await importWorkerModule()
-
-    await runVirtual({
+  it('delegates copy-all events to virtual/run', async () => {
+    const { default: runVirtual, onRunVirtualCopyAll } = await importWorkerModule()
+    const payload = {
       sourceDir: '/workspace/app',
       config: { include: ['src/**/*'], debug: true } as never,
-    })
-    emit.mockClear()
+    }
 
-    await onHandlers.get('run:virtual:sync:file')?.({
-      event: 'change',
-      path: '/workspace/app/src/button.tsx',
-    })
-
-    expect(copyToVirtual).toHaveBeenCalledWith(
-      '/workspace/app/src/button.tsx',
-      '/workspace/app',
-      FIXTURE_VIRTUAL,
-      { debug: true }
-    )
-    expect(emit).toHaveBeenCalledWith('virtual:fs:change', {
-      event: 'change',
-      path: `${FIXTURE_VIRTUAL}/src/button.tsx`,
-    })
-  })
-
-  it('removes deleted files and emits the source-shaped virtual path', async () => {
-    const { default: runVirtual, emit, removeFromVirtual, getVirtualPath } = await importWorkerModule()
-
-    await runVirtual({
-      sourceDir: '/workspace/app',
-      config: { include: ['src/**/*'], debug: false } as never,
-    })
-    emit.mockClear()
-
-    await onHandlers.get('run:virtual:sync:file')?.({
-      event: 'unlink',
-      path: '/workspace/app/src/button.mdx',
-    })
-
-    expect(getVirtualPath).toHaveBeenCalledWith(
-      '/workspace/app/src/button.mdx',
-      '/workspace/app',
-      FIXTURE_VIRTUAL
-    )
-    expect(removeFromVirtual).toHaveBeenCalledWith(
-      '/workspace/app/src/button.mdx',
-      '/workspace/app',
-      FIXTURE_VIRTUAL
-    )
-    expect(emit).toHaveBeenCalledWith('virtual:fs:change', {
-      event: 'unlink',
-      path: `${FIXTURE_VIRTUAL}/src/button.jsx`,
-    })
-  })
-
-  it('emits virtual:failed when the initial copy fails', async () => {
-    const { default: runVirtual, emit, copyAll, error } = await importWorkerModule()
-    copyAll.mockRejectedValue(new Error('copy exploded'))
-
-    await runVirtual({
-      sourceDir: '/workspace/app',
-      config: { include: ['src/**/*'], debug: false } as never,
-    })
-    emit.mockClear()
+    await runVirtual(payload)
 
     onHandlers.get('run:virtual:copy:all')?.()
 
-    await vi.waitFor(() => {
-      expect(error).toHaveBeenCalledWith('[virtual] Copy failed:', expect.any(Error))
-      expect(emit).toHaveBeenCalledWith('virtual:failed', {
-        operation: 'copy:all',
-        message: 'copy exploded',
-      })
-    })
+    expect(onRunVirtualCopyAll).toHaveBeenCalledWith(payload)
   })
 
-  it('emits virtual:failed when a watch sync fails', async () => {
-    const { default: runVirtual, emit, copyToVirtual, error } = await importWorkerModule()
-    copyToVirtual.mockRejectedValue(new Error('rewrite exploded'))
-
-    await runVirtual({
+  it('delegates watch events to virtual/run', async () => {
+    const { default: runVirtual, onRunVirtualSyncFile } = await importWorkerModule()
+    const payload = {
       sourceDir: '/workspace/app',
       config: { include: ['src/**/*'], debug: false } as never,
-    })
-    emit.mockClear()
-
-    await onHandlers.get('run:virtual:sync:file')?.({
-      event: 'add',
+    }
+    const event = {
+      event: 'change',
       path: '/workspace/app/src/button.tsx',
-    })
+    }
 
-    expect(error).toHaveBeenCalledWith(
-      '[virtual] Failed to process',
-      'add',
-      '/workspace/app/src/button.tsx',
-      expect.any(Error)
-    )
-    expect(emit).toHaveBeenCalledWith('virtual:failed', {
-      operation: 'sync:file',
-      event: 'add',
-      path: '/workspace/app/src/button.tsx',
-      message: 'rewrite exploded',
-    })
+    await runVirtual(payload)
+
+    await onHandlers.get('run:virtual:sync:file')?.(event)
+
+    expect(onRunVirtualSyncFile).toHaveBeenCalledWith(payload, event)
   })
 })

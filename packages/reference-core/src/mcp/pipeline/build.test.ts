@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const analyzeDetailed = vi.fn()
 const createReferenceApi = vi.fn(() => ({}))
 const loadMcpReferenceData = vi.fn(async () => null)
+const loadMcpTokens = vi.fn(async () => [])
 const writeMcpArtifact = vi.fn(async () => '/tmp/model.json')
 const getConfig = vi.fn()
 const existsSync = vi.fn(() => true)
@@ -22,6 +23,10 @@ vi.mock('../../config', () => ({
 vi.mock('./reference', () => ({
   createReferenceApi,
   loadMcpReferenceData,
+}))
+
+vi.mock('./tokens', () => ({
+  loadMcpTokens,
 }))
 
 vi.mock('./artifact', () => ({
@@ -82,6 +87,10 @@ describe('buildMcpArtifact', () => {
       'ButtonProps',
       './src/components/Button.tsx'
     )
+    expect(loadMcpTokens).toHaveBeenCalledWith(
+      '/workspace/app',
+      expect.objectContaining({ name: 'test-system' })
+    )
   })
 
   it('separates MCP generation from artifact writing', async () => {
@@ -110,7 +119,7 @@ describe('buildMcpArtifact', () => {
     existsSync.mockReturnValue(false)
 
     await expect(generateMcpArtifact({ cwd: '/workspace/app' })).rejects.toThrow(
-      'MCP build requires generated types manifest at "/tmp/types/tasty/manifest.js". Run ref sync first.'
+      'MCP build requires generated Reference UI artifacts at "/tmp/types/tasty/manifest.js". Run "pnpm exec ref sync" from the project root before starting the MCP server.'
     )
 
     expect(analyzeDetailed).not.toHaveBeenCalled()

@@ -6,6 +6,7 @@ import {
   initSessionState,
   transitionSession,
   transitionBuild,
+  markBuildComplete,
   cleanupSession,
   getSessionManifest,
   resetSessionState,
@@ -36,6 +37,7 @@ describe('session/state – init', () => {
     expect(manifest?.mode).toBe('watch')
     expect(manifest?.state).toBe('starting')
     expect(manifest?.buildState).toBe('idle')
+    expect(manifest?.completedAt).toBeNull()
     expect(lock).not.toBeNull()
     expect(lock?.pid).toBe(process.pid)
   })
@@ -75,9 +77,31 @@ describe('session/state – transitions', () => {
     initSessionState(dir, 'watch')
     transitionBuild('running')
     expect(readManifest(dir)?.buildState).toBe('running')
+    expect(readManifest(dir)?.completedAt).toBeNull()
 
     transitionBuild('ready')
     expect(readManifest(dir)?.buildState).toBe('ready')
+    expect(readManifest(dir)?.completedAt).toBeNull()
+  })
+
+  it('markBuildComplete records cycle completion without changing buildState', () => {
+    initSessionState(dir, 'watch')
+    transitionBuild('ready')
+
+    markBuildComplete()
+
+    expect(readManifest(dir)?.buildState).toBe('ready')
+    expect(typeof readManifest(dir)?.completedAt).toBe('string')
+  })
+
+  it('clears completedAt when a new build starts', () => {
+    initSessionState(dir, 'watch')
+    transitionBuild('ready')
+    markBuildComplete()
+
+    transitionBuild('queued')
+
+    expect(readManifest(dir)?.completedAt).toBeNull()
   })
 
   it('transitionSession is a no-op before init', () => {

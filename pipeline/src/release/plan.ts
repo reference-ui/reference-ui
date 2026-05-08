@@ -11,7 +11,7 @@ import { readdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { createNpmCommandEnv, repoRoot, listReleaseWorkspacePackages, sortPackagesForInternalDependencyOrder } from '../build/workspace.js'
 import type { WorkspacePackage } from '../build/types.js'
-import { releasePackageNames } from '../../config.js'
+import { RELEASE_PACKAGE_NAMES } from '../../config.js'
 import { readChangesetStatus } from './changesets.js'
 import type { ReleasePlan, ReleasePlanPackage } from './types.js'
 import type { ChangesetStatus } from './types.js'
@@ -52,10 +52,10 @@ export function changesetsRequireVersionMaterialization(
   releasePackages: readonly Pick<WorkspacePackage, 'name' | 'version'>[] = listReleaseWorkspacePackages(),
 ): boolean {
   const currentReleaseVersions = new Map(releasePackages.map((pkg) => [pkg.name, pkg.version]))
-  const releasablePackageNames = new Set(releasePackageNames)
+  const releasablePackageNames = new Set(RELEASE_PACKAGE_NAMES)
 
   return changesetStatus.releases.some((release) => {
-    if (!releasablePackageNames.has(release.name as (typeof releasePackageNames)[number])) {
+    if (!releasablePackageNames.has(release.name as (typeof RELEASE_PACKAGE_NAMES)[number])) {
       return false
     }
 
@@ -126,7 +126,7 @@ export function isPendingChangesetVersionMaterializationError(error: unknown): b
 export function assertLocalReleasePlanSupported(
   releasePlan: ReleasePlan,
   supportedPackageNames: ReadonlySet<string> = new Set(
-    releasePackageNames,
+    RELEASE_PACKAGE_NAMES,
   ),
 ): void {
   const unsupportedPackages = releasePlan.packages

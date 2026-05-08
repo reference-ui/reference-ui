@@ -17,6 +17,16 @@ The virtual pipeline is responsible for:
   shape
 - keeping the mirror in sync on watch-mode add/change/unlink events
 
+## Module Layout
+
+The implementation is organized by responsibility:
+
+- `fs/` owns the source-shaped mirror, full snapshot staging, and publish swap
+- `fragments/` classifies watch changes that only need config/Panda rebuilds
+- `style/` owns the reserved Panda-visible style collection under `__reference__ui`
+- `transforms/` owns the per-file transform pipeline and the individual transform modules
+- root-level files keep worker/event wiring and shared virtual helpers close to the orchestration entrypoints
+
 ## Why It Exists
 
 Reference UI wants user code to author against `@reference-ui/react`, but Panda
@@ -42,14 +52,16 @@ For a normal project, virtual writes into:
     ...
 ```
 
+
 The mirror preserves the source-relative directory structure, with one important
 extension change:
 
 - `.mdx` source files become `.jsx` in virtual output
 
-## Full Copy Flow
+## Full Snapshot Flow
 
-On cold start, `copyAll()`:
+
+On cold start, `syncVirtualSnapshot()`:
 
 1. resolves the project root and virtual output dir
 2. expands `config.include` with `fast-glob`
@@ -90,9 +102,13 @@ The transform order is:
 1. MDX to JSX
 2. recipe/cva import rewrite
 3. css import rewrite
+4. responsive `r` lowering in canonical `css()` / `cva()` calls
 
 That ordering matters because MDX must first become JSX before the import
 rewriters operate on it.
+
+Responsive lowering runs after the import rewrites so the Rust pass only needs
+to target canonical `css()` and `cva()` call sites.
 
 ## Native Rewrite Dependency
 
@@ -167,7 +183,7 @@ The strongest current confidence is downstream:
 
 Direct `reference-core` coverage now pins down:
 
-- `copyAll()` include handling and completion behavior
+- `syncVirtualSnapshot()` include handling and completion behavior
 - `copyToVirtual()` copy-vs-transform selection
 - transformed-extension cleanup during unlink
 - native loader target resolution and missing-binary behavior

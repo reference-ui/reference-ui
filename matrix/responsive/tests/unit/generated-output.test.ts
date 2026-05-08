@@ -1,0 +1,128 @@
+import { beforeAll, describe, expect, it } from 'vitest'
+import { existsSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import postcss, { type Root } from 'postcss'
+
+const refUiDir = join(process.cwd(), '.reference-ui')
+const suspiciousStylesheetFragments = ['[object Object]', 'undefined', 'NaN', '\u0000', '\uFFFD'] as const
+
+async function waitForGeneratedFile(relativePath: string, maxMs = 45_000): Promise<string> {
+  const absolutePath = join(refUiDir, relativePath)
+  const startedAt = Date.now()
+
+  while (Date.now() - startedAt < maxMs) {
+    if (existsSync(absolutePath)) {
+      return readFileSync(absolutePath, 'utf-8')
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 100))
+  }
+
+  throw new Error(`Expected generated file ${relativePath} within ${maxMs}ms`)
+}
+
+const generatedOutput = {
+  reactStylesheet: '',
+  reactStylesheetAst: null as Root | null,
+  virtualAnonymousFixture: '',
+  virtualNamedFixture: '',
+  virtualNestedFixture: '',
+  virtualNamedNestedFixture: '',
+}
+
+function collectMalformedContainerParams(): string[] {
+  const malformed: string[] = []
+
+  generatedOutput.reactStylesheetAst?.walkAtRules('container', (atRule) => {
+    if (atRule.params.trim().startsWith('true')) {
+      malformed.push(atRule.params)
+    }
+  })
+
+  return malformed
+}
+
+beforeAll(async () => {
+  const [
+    reactStylesheet,
+    virtualAnonymousFixture,
+    virtualNamedFixture,
+    virtualNestedFixture,
+    virtualNamedNestedFixture,
+  ] = await Promise.all([
+    waitForGeneratedFile(join('react', 'styles.css')),
+    waitForGeneratedFile(join('virtual', 'src', 'system', 'containerAnonymous.fixture.tsx')),
+    waitForGeneratedFile(join('virtual', 'src', 'system', 'containerNamed.fixture.tsx')),
+    waitForGeneratedFile(join('virtual', 'src', 'system', 'containerNested.fixture.tsx')),
+    waitForGeneratedFile(join('virtual', 'src', 'system', 'containerNamedNested.fixture.tsx')),
+  ])
+
+  generatedOutput.reactStylesheet = reactStylesheet
+  generatedOutput.virtualAnonymousFixture = virtualAnonymousFixture
+  generatedOutput.virtualNamedFixture = virtualNamedFixture
+  generatedOutput.virtualNestedFixture = virtualNestedFixture
+  generatedOutput.virtualNamedNestedFixture = virtualNamedNestedFixture
+  generatedOutput.reactStylesheetAst = postcss.parse(reactStylesheet, {
+    from: join(refUiDir, 'react', 'styles.css'),
+  })
+})
+
+describe('responsive generated output', () => {
+  it('mirrors the anonymous container fixture into virtual output', () => {
+    expect(generatedOutput.virtualAnonymousFixture).toContain("333: { padding: '1.25rem' }")
+  })
+
+  it('mirrors the named container fixture into virtual output', () => {
+    expect(generatedOutput.virtualNamedFixture).toContain('container="shell"')
+  })
+
+  it('mirrors the nested anonymous container fixture into virtual output', () => {
+    expect(generatedOutput.virtualNestedFixture).toContain('<Div container>')
+    expect(generatedOutput.virtualNestedFixture).toContain('300: { padding:')
+    expect(generatedOutput.virtualNestedFixture).toContain('600: { padding:')
+  })
+
+  it('mirrors the nested named container fixture into virtual output', () => {
+    expect(generatedOutput.virtualNamedNestedFixture).toContain('container="sidebar"')
+    expect(generatedOutput.virtualNamedNestedFixture).toContain('400: { padding:')
+  })
+
+  it('parses generated react/styles.css without syntax errors', () => {
+    expect(generatedOutput.reactStylesheetAst).toBeTruthy()
+    expect(generatedOutput.reactStylesheetAst?.nodes.length ?? 0).toBeGreaterThan(0)
+  })
+
+  it('keeps standard declarations in generated react/styles.css non-empty', () => {
+    const invalidDeclarations: string[] = []
+    let declarationCount = 0
+
+    generatedOutput.reactStylesheetAst?.walkDecls((decl) => {
+      declarationCount += 1
+
+      if (decl.prop.trim().length === 0) {
+        invalidDeclarations.push(`${decl.prop}:${decl.value}`)
+        return
+      }
+
+      if (!decl.prop.startsWith('--') && decl.value.trim().length === 0) {
+        invalidDeclarations.push(`${decl.prop}:${decl.value}`)
+      }
+    })
+
+    expect(declarationCount).toBeGreaterThan(0)
+    expect(invalidDeclarations).toEqual([])
+  })
+
+  it('keeps suspicious placeholder fragments out of generated react/styles.css', () => {
+    const foundFragments = suspiciousStylesheetFragments.filter((fragment) =>
+      generatedOutput.reactStylesheet.includes(fragment),
+    )
+
+    expect(generatedOutput.reactStylesheet.length).toBeGreaterThan(0)
+    expect(foundFragments).toEqual([])
+  })
+
+  it('does not emit malformed @container parameters', () => {
+    expect(collectMalformedContainerParams()).toEqual([])
+  })
+})

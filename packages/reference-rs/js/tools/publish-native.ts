@@ -58,6 +58,25 @@ function shouldPublishRootPackage(): boolean {
   return process.argv.includes('--publish-root')
 }
 
+function assertRootPublishIsSafe(
+  rootPkg: PackageJson,
+  alreadyPublishedNativePackages: readonly PackageJson[],
+) {
+  if (alreadyPublishedNativePackages.length === 0) {
+    return
+  }
+
+  const publishedNames = alreadyPublishedNativePackages.map((pkg) => `${pkg.name}@${pkg.version}`).join(', ')
+  throw new Error(
+    [
+      `Refusing to publish ${rootPkg.name}@${rootPkg.version} because native target packages are already published for that version.`,
+      `Published native packages: ${publishedNames}.`,
+      'Publishing the root package now could mix new JS artifacts with older native binaries.',
+      'Cut a new version before retrying the release.',
+    ].join(' '),
+  )
+}
+
 function publishRootPackage(rootPkg: PackageJson) {
   if (isPublished(rootPkg.name, rootPkg.version)) {
     console.log(`Skipping already published package ${rootPkg.name}@${rootPkg.version}`)
@@ -93,8 +112,16 @@ rootPkg.optionalDependencies = Object.fromEntries(targetPackages.map(({ pkg }) =
 writeFileSync(rootPackageJsonPath, `${JSON.stringify(rootPkg, null, 2)}\n`)
 
 try {
+  const alreadyPublishedNativePackages = targetPackages
+    .filter(({ pkg }) => isPublished(pkg.name, pkg.version))
+    .map(({ pkg }) => pkg)
+
+  if (shouldPublishRootPackage()) {
+    assertRootPublishIsSafe(rootPkg, alreadyPublishedNativePackages)
+  }
+
   for (const { dir: targetPackageDir, pkg } of targetPackages) {
-    if (isPublished(pkg.name, pkg.version)) {
+    if (alreadyPublishedNativePackages.some((publishedPkg) => publishedPkg.name === pkg.name)) {
       console.log(`Skipping already published native package ${pkg.name}@${pkg.version}`)
       continue
     }

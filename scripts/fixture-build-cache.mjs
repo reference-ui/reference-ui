@@ -29,7 +29,7 @@ const selfInputs = [
 
 const externalInputs = [
   '../../packages/reference-core/package.json',
-  '../../packages/reference-core/dist/cli/index.mjs',
+  '../../packages/reference-core/dist/cli',
   '../../packages/reference-icons/package.json',
   '../../packages/reference-icons/ui.config.ts',
   '../../packages/reference-icons/src/jsx-names.ts',

@@ -5,6 +5,18 @@
 
 import type { BaseSystem } from '../types'
 
+/**
+ * Token categories that can be strictly enforced via {@link ReferenceUIConfig.strict}.
+ *
+ * - `colors` — restricts color-bearing props to color tokens (plus `white`,
+ *   `black`, `inherit`, `currentColor`, `transparent`).
+ * - `radii` — restricts border-radius props to radius tokens (plus `none`,
+ *   `inherit`, `initial`, `revert`).
+ * - `spacing` — restricts margin/padding/gap props to spacing tokens (plus
+ *   `0`, `auto`, `inherit`, `initial`, `revert`).
+ */
+export type StrictTokenCategory = 'colors' | 'radii' | 'spacing'
+
 export interface ReferenceUIMcpConfig {
   /**
    * Atlas include selectors used only for the MCP component inventory build.
@@ -54,23 +66,22 @@ export interface ReferenceUIConfig {
   layers?: BaseSystem[]
 
   /**
-   * Output directory for CLI artefacts (virtual, generated config, etc).
-   * Virtual dir is written to outDir/virtual.
-   * @default '.reference-ui'
+   * Token categories whose style props are restricted to design-token values
+   * (plus a small set of category-specific escape hatches).
+   *
+   * Omit to leave all props open. Pass an empty array to opt out of every
+   * category, including the default `colors` strictness.
+   *
+   * @example
+   * strict: ['colors', 'radii']
    */
-  outDir?: string
+  strict?: StrictTokenCategory[]
 
   /**
    * Enable normalize CSS reset.
    * @default true
    */
   normalizeCss?: boolean
-
-  /**
-   * Use reference-ui design system components and tokens.
-   * @default true
-   */
-  useDesignSystem?: boolean
 
   /**
    * Enable debug logging.

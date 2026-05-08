@@ -1,7 +1,7 @@
 export { colors } from './colors'
+export { design } from './design'
 export { fonts } from './fonts'
 export { bodyStyles, rootThemeVars } from './global'
 export { radii } from './radii'
-export { spacing } from './spacing'
 export * from './animations/index'
 export * from './primitives/index'

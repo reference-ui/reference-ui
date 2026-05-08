@@ -10,7 +10,7 @@ import { execFileSync, spawn } from 'node:child_process'
 import { openSync } from 'node:fs'
 import { mkdir, readFile, rm, unlink, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
-import { managedRegistryHost, managedRegistryPort } from '../../config.js'
+import { MANAGED_REGISTRY_HOST, MANAGED_REGISTRY_PORT } from '../../config.js'
 import { repoRoot } from '../build/workspace.js'
 import {
   defaultRegistryUrl,
@@ -120,7 +120,7 @@ function readProcessCommand(pid: number): string {
 }
 
 async function adoptExistingVerdaccioProcessIfPossible(): Promise<number | null> {
-  const listeningPid = readListeningProcessPid(managedRegistryPort)
+  const listeningPid = readListeningProcessPid(MANAGED_REGISTRY_PORT)
 
   if (!listeningPid || !isProcessRunning(listeningPid)) {
     return null
@@ -195,7 +195,7 @@ export async function stopManagedLocalRegistry(): Promise<void> {
 
 async function startManagedLocalRegistry(registryUrl: string = defaultRegistryUrl): Promise<void> {
   await mkdir(registryStateDir, { recursive: true })
-  const listenAddress = `${managedRegistryHost}:${managedRegistryPort}`
+  const listenAddress = `${MANAGED_REGISTRY_HOST}:${MANAGED_REGISTRY_PORT}`
 
   const logFd = openSync(verdaccioLogPath, 'a')
   const child = spawn(

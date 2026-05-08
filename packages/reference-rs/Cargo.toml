@@ -16,6 +16,7 @@ napi = { version = "2", features = ["napi8"], optional = true }
 napi-derive = { version = "2", optional = true }
 oxc_parser = "0.115"
 oxc_ast = "0.115"
+oxc_ast_visit = "0.115"
 oxc_span = "0.115"
 oxc_allocator = "0.115"
 oxc_traverse = "0.115"

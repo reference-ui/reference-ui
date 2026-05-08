@@ -17,7 +17,9 @@ const WORKSPACE_PRIMITIVES_SOURCE: &str = "packages/reference-core/src/system/pr
 pub(super) fn collect_reference_primitive_jsx_names(
     sync_root: &Path,
 ) -> Result<BTreeSet<String>, StyleTraceError> {
-    let declaration_path = resolve_primitive_declaration_path(sync_root)?;
+    let Some(declaration_path) = resolve_primitive_declaration_path(sync_root)? else {
+        return Ok(BTreeSet::new());
+    };
     let source = fs::read_to_string(declaration_path).map_err(|error| {
         StyleTraceError::new(format!("failed to read primitive declarations: {error}"))
     })?;
@@ -32,24 +34,24 @@ pub(super) fn collect_reference_primitive_jsx_names(
     Ok(names)
 }
 
-fn resolve_primitive_declaration_path(sync_root: &Path) -> Result<PathBuf, StyleTraceError> {
+fn resolve_primitive_declaration_path(
+    sync_root: &Path,
+) -> Result<Option<PathBuf>, StyleTraceError> {
     for suffix in [".d.mts", ".d.ts"] {
         let candidate = sync_root.join(format!("{PRIMITIVE_DECLARATIONS_ENTRY_STEM}{suffix}"));
         if candidate.is_file() {
-            return Ok(candidate);
+            return Ok(Some(candidate));
         }
     }
 
     if let Some(workspace_root) = find_workspace_root(sync_root) {
         let candidate = workspace_root.join(WORKSPACE_PRIMITIVES_SOURCE);
         if candidate.is_file() {
-            return Ok(candidate);
+            return Ok(Some(candidate));
         }
     }
 
-    Err(StyleTraceError::new(
-        "failed to read primitive declarations: no generated declaration file found",
-    ))
+    Ok(None)
 }
 
 fn find_workspace_root(start_path: &Path) -> Option<PathBuf> {

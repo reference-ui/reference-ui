@@ -1,35 +1,14 @@
 /**
- * Responsive container query prop (r) for the box pattern.
+ * Responsive container query prop (`r`) for the box pattern.
+ *
+ * Unlike sibling pattern files (container, size), the `r` extension is NOT
+ * registered via a top-level `extendPattern()` side-effect. Its transform
+ * needs the user's resolved breakpoint table baked into the function body
+ * (closures don't survive `transform.toString()` rebuilding inside
+ * `extendPatterns()`). The factory `createRExtension(breakpoints)` is invoked
+ * from the generated `panda.config.ts` template after `tokens({ breakpoints })`
+ * fragments have been resolved.
  */
 
-import { extendPattern } from '../../../../api/patterns'
-
-export interface ResponsiveProp {
-  r?: {
-    [breakpoint: number]: Record<string, unknown>
-  }
-}
-
-extendPattern({
-  properties: {
-    r: { type: 'object' },
-  },
-  transform(props: Record<string, unknown>) {
-    const { r, container } = props
-
-    if (!r) return {}
-
-    const containerName =
-      typeof container === 'string' && container.length > 0 ? container : undefined
-    const prefix = containerName
-      ? `@container ${containerName} (min-width:`
-      : '@container (min-width:'
-
-    return Object.fromEntries(
-      Object.entries(r as Record<string, unknown>).map(([bp, styles]) => [
-        `${prefix} ${bp}px)`,
-        styles,
-      ])
-    )
-  },
-})
+export type { ResponsiveProp } from './createRExtension'
+export { createRExtension } from './createRExtension'

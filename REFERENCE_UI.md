@@ -25,8 +25,6 @@ The “**AI era**” angle is not marketing fluff: the stack is designed so that
 | `packages/reference-core` | `ref` CLI, `ref sync` orchestration, virtual FS, event bus, system workers, packager, Vite/Webpack integration, MCP implementation. |
 | `packages/reference-lib` | First-party design system built on the generated surface (dogfood for the product). |
 | `packages/reference-docs` | Vite docs site; often used as the `cwd` for MCP in this repo so `ui.config.ts` matches the site. |
-| `packages/reference-unit` | Local app for validating generated runtime behavior. |
-| `packages/reference-e2e` | Playwright tests; **what** is tested per matrix entry (Dagger owns **where** it runs for matrix flows). |
 | `packages/reference-rs` | **`@reference-ui/rust`** — Rust crate `reference-virtual-native`, napi-rs `.node` binary `virtual-native`, Oxc-based **Atlas / Tasty / Styletrace / virtualrs**; see **§25** (and **§12–§16** for how core uses it). |
 | `packages/reference-icons` | Icon package (decoupled / release-focused; see its README). |
 | `fixtures/*` | Consumer-style fixtures, including `extend-library` and `layer-library` for composition tests. |
@@ -70,9 +68,8 @@ This is the “knowledge-first” story: the **same** tokens and types you impor
 | `extends` | Optional `BaseSystem[]` — upstream **token/fragment** systems merged **before** your own (portable `baseSystem` from other packages). |
 | `layers` | Optional `BaseSystem[]` — upstream **component CSS** in an isolated cascade **layer**; **tokens from upstream do not** merge into your Panda config or TS types. |
 | `jsxElements` | Extra JSX tag names for discovery when static tracing cannot infer them (e.g. generated surfaces). |
-| `outDir` | Output root (default `.reference-ui`). |
+| `strict` | Optional `('colors' \| 'radii' \| 'spacing')[]` — restrict the matching style props to design-token values (plus per-category escape hatches). Omit to leave props open. |
 | `normalizeCss` | Toggle normalize CSS reset (default `true`). |
-| `useDesignSystem` | Opt into the built-in design system pieces (default `true`). |
 | `debug` | Verbose logging. |
 | `mcp` | **Separate** from `include`: `mcp.include` / `mcp.exclude` are **only** for Atlas when building the MCP model—so you can point inventory at app code without changing Panda’s scan. |
 | `skipTypescript` | Skip tsup declaration emit in test-only scenarios. |
@@ -91,7 +88,7 @@ This is the “knowledge-first” story: the **same** tokens and types you impor
 | Command | Role |
 | --- | --- |
 | `ref` / `ref sync` (default) | Full sync: virtual tree → system config → Panda → packager → reference (Tasty) → final types package. Uses workers and the event bus. |
-| `ref clean` | Deletes the output directory (`outDir`); **main thread only**; use before tests for a cold state. |
+| `ref clean` | Deletes the output directory (`.reference-ui`); **main thread only**; use before tests for a cold state. |
 | `ref mcp` | Starts the MCP server: **stdio** (editors) or **HTTP** (`--transport http`) for debugging. Runs in the **CLI process**; the heavy MCP artifact build can use a **child process** (see below). |
 
 Editor integration: prefer `node` + the built CLI path; do not assume `pnpm` exists on the host `PATH` for MCP spawns. Examples live in [packages/reference-core/README.md](./packages/reference-core/README.md).
@@ -315,7 +312,6 @@ So the MCP is **not** a static file checked into git for your app: it is **rebui
 | `list_components` | Search/filter list with optional `query`, `source`, `limit` (capped at 100). |
 | `get_component` | Full joined record for one component name (optional `source` disambiguation). |
 | `get_component_examples` | Examples from Atlas. |
-| `get_common_patterns` | `usedWith` neighborhood (limit capped at 50). |
 | `reference-ui://component-model` (resource) | Public JSON model (schema version, `generatedAt`, `components`—via `toPublicModel`). |
 
 Server version field is currently `0.0.3` in source; the description states Atlas + generated types backing.
@@ -390,13 +386,13 @@ Implementation: [pipeline/src/testing/matrix/run.ts](./pipeline/src/testing/matr
 2. **Build** and stage workspace packages with `buildWorkspacePackages` — may require **`linux-x64-gnu`** native artifacts; if the registry manifest lacks the matching per-target package at the same version as `@reference-ui/rust`, the runner **throws** with an explicit message (host-side staging must have produced the Linux `.node` tarball first).
 3. **Read** the **shared** host Verdaccio manifest; fingerprint it for a **Dagger pnpm store cache** key so repeated runs reuse dependency downloads.
 4. **Node container** — e.g. `node:24-bookworm`, pnpm from Corepack, env vars for `CI`, registry URL inside the graph.
-5. **Service binding** — Verdaccio runs on the **host**; Dagger **forwards** it as a service (`dag.host().service(…)`) at `managedRegistryHost:managedRegistryPort` so the container uses **`npm_config_registry`** / `pnpm install --registry` consistently with the same manifest the host published.
-6. For each matrix package: write `/consumer` (see `consumerDirInContainer` in [pipeline/config.ts](./pipeline/config.ts)) `package.json` (synthesized from the fixture + pinned `@reference-ui/core` and `@reference-ui/lib` versions), `tsconfig`, `ui.config.ts`, and fixture `src`/`tests` files; **`pnpm install` from the registry**; run **`pnpm exec ref sync`**; then **`pnpm test`**.
+5. **Service binding** — Verdaccio runs on the **host**; Dagger **forwards** it as a service (`dag.host().service(…)`) at `MANAGED_REGISTRY_HOST:MANAGED_REGISTRY_PORT` so the container uses **`npm_config_registry`** / `pnpm install --registry` consistently with the same manifest the host published.
+6. For each matrix package: write `/consumer` (see `CONSUMER_DIR_IN_CONTAINER` in [pipeline/config.ts](./pipeline/config.ts)) `package.json` (synthesized from the fixture + pinned `@reference-ui/core` and `@reference-ui/lib` versions), `tsconfig`, `ui.config.ts`, and fixture `src`/`tests` files; **`pnpm install` from the registry**; run **`pnpm exec ref sync`**; then **`pnpm test`**.
 7. **Logs** land under **`.pipeline/testing/matrix/`** with per-package, per-stage filenames (`-install.log`, `-ref-sync.log`, `-test.log`).
 
 **macOS:** if Docker uses Colima, `ensureContainerRuntime` can start the VM when needed (see the matrix README).
 
-**Separation of concerns** — Dagger handles **isolation, caching, and registry plumbing**; Playwright and assertion logic remain in **`reference-e2e`** for true browser scenarios (matrix README calls this out explicitly). This bootstrap is **package-install + CLI + project tests in Linux**, which catches a different class of issues than in-repo workspace tests alone.
+**Separation of concerns** — Dagger handles **isolation, caching, and registry plumbing**; browser assertions live in **`matrix/*`** packages (for example `@matrix/playwright`) and run inside the matrix container. This bootstrap is **package-install + CLI + project tests in Linux**, which catches a different class of issues than in-repo workspace tests alone.
 
 ---
 
@@ -406,8 +402,7 @@ Implementation: [pipeline/src/testing/matrix/run.ts](./pipeline/src/testing/matr
 | --- | --- |
 | `packages/reference-core` unit tests (Vitest) | Event bus, path helpers, sync helpers, many pure modules. |
 | `packages/reference-rs` (Rust + Vitest) | Parser and emitter semantics, Tasty case suites, Styletrace, Atlas. |
-| `reference-e2e` | Browser-level regressions, Playwright. |
-| `reference-unit` | App-shaped dogfood. |
+| `matrix/*` (Vitest / Playwright in Dagger) | Browser and install-shaped regressions per `matrix.json` scenarios. |
 | Pipeline unit tests | `pnpm pipeline:test:pipeline` for registry and graph helpers. |
 | Matrix (Dagger) | Packaged **install** + **`ref sync`** in clean Linux + project tests. |
 
@@ -911,8 +906,7 @@ If `@reference-ui/rust` fails to load the native binary, any path that needs Atl
 | --- | --- |
 | Root overview | [README.md](./README.md) |
 | Core CLI and threading | [packages/reference-core/README.md](./packages/reference-core/README.md) |
-| MCP product architecture | [packages/reference-core/src/mcp/MCP.md](./packages/reference-core/src/mcp/MCP.md) |
-| MCP module layout | [packages/reference-core/src/mcp/README.md](./packages/reference-core/src/mcp/README.md) |
+| MCP tools | [packages/reference-core/src/mcp/README.md](./packages/reference-core/src/mcp/README.md) |
 | System overview | [packages/reference-core/src/system/README.md](./packages/reference-core/src/system/README.md) |
 | Event bus | [packages/reference-core/src/lib/event-bus/README.md](./packages/reference-core/src/lib/event-bus/README.md) |
 | Sync event graph (source) | [packages/reference-core/src/sync/events.ts](./packages/reference-core/src/sync/events.ts) |

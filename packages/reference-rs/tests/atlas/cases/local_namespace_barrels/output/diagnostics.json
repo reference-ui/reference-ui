@@ -1,9 +1,0 @@
-{
-  "caseName": "local_namespace_barrels",
-  "diagnostics": [],
-  "notes": [
-    "Atlas currently emits usage and interface mapping only.",
-    "Rich prop/member metadata is expected to be resolved by Tasty in an upper layer.",
-    "Use analyzeDetailed() when callers need both partial results and diagnostics."
-  ]
-}

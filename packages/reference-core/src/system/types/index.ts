@@ -1,4 +1,4 @@
-import type { StyleProps } from '../../types'
+export type { StyleProps, SystemStyleObject } from '../../types'
 
 /**
  * Generated systems augment this registry with concrete font names and weights.
@@ -8,9 +8,7 @@ import type { StyleProps } from '../../types'
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface ReferenceFontRegistry {}
 
-declare module '../../types/fontRegistry' {
+declare module '../../types/public/fontRegistry' {
   // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   interface FontRegistry extends ReferenceFontRegistry {}
 }
-
-export { StyleProps }

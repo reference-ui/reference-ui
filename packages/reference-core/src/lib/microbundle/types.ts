@@ -1,5 +1,10 @@
 import type * as esbuild from 'esbuild'
 
+export interface MicroBundleResult {
+  code: string
+  metafile?: esbuild.Metafile
+}
+
 export interface MicroBundleOptions {
   /** Modules to leave as require/import (not bundled). Defaults to heavy build-tool deps. */
   external?: string[]
@@ -16,4 +21,5 @@ export interface MicroBundleOptions {
   mainFields?: string[]
   conditions?: string[]
   tsconfigRaw?: esbuild.TsconfigRaw
+  metafile?: boolean
 }

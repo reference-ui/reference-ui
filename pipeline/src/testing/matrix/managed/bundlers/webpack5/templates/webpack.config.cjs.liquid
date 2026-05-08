@@ -1,0 +1,61 @@
+/*
+ * {{ generatedNotice }}
+ */
+const path = require('node:path')
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+
+module.exports = async () => {
+  const { referenceWebpack } = await import('@reference-ui/core')
+
+  return {
+    mode: 'development',
+    devtool: 'eval-cheap-module-source-map',
+    entry: path.resolve(__dirname, 'src/main.tsx'),
+    output: {
+      path: path.resolve(__dirname, 'dist'),
+      filename: 'bundle.js',
+      clean: true,
+      publicPath: '/',
+    },
+    resolve: {
+      extensions: ['.tsx', '.ts', '.jsx', '.js'],
+      symlinks: true,
+    },
+    module: {
+      rules: [
+        {
+          test: /\.tsx?$/,
+          exclude: /node_modules/,
+          use: {
+            loader: 'ts-loader',
+            options: {
+              transpileOnly: true,
+            },
+          },
+        },
+        {
+          test: /\.css$/,
+          use: ['style-loader', 'css-loader'],
+        },
+      ],
+    },
+    plugins: [
+      new HtmlWebpackPlugin({
+        template: path.resolve(__dirname, 'index.html'),
+      }),
+      referenceWebpack(),
+    ],
+    devServer: {
+      port: 4173,
+      hot: true,
+      liveReload: true,
+      historyApiFallback: true,
+      static: {
+        directory: __dirname,
+      },
+      client: {
+        overlay: true,
+      },
+    },
+  }
+}

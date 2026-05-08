@@ -31,6 +31,9 @@ describe('resolveColorModeTokens()', () => {
 
     expect(resolved.baseTokens).toEqual({
       colors: {
+        accent: {
+          value: '{colors.blue.700}',
+        },
         text: {
           value: '{colors.gray.950}',
           description: 'Primary text color',
@@ -82,7 +85,7 @@ describe('resolveColorModeTokens()', () => {
     })
   })
 
-  it('prefers the explicit light/dark pair over value and does not emit a base token', () => {
+  it('prefers the explicit light/dark pair over value and emits a light base token', () => {
     const resolved = resolveColorModeTokens([
       {
         colors: {
@@ -108,6 +111,13 @@ describe('resolveColorModeTokens()', () => {
 
     expect(resolved.baseTokens).toEqual({
       colors: {
+        accent: {
+          value: '{colors.blue.700}',
+        },
+        text: {
+          value: '{colors.gray.950}',
+          description: 'Explicit mode pair',
+        },
         icon: {
           value: '{colors.gray.700}',
         },
@@ -346,6 +356,167 @@ describe('resolveColorModeTokens()', () => {
           },
         },
       },
+    })
+  })
+
+  it('treats light/dark keys whose value is an object as nested groups, not mode slots (e.g. tier name `light`)', () => {
+    const resolved = resolveColorModeTokens([
+      {
+        design: {
+          text: {
+            base: { light: '{colors.gray.800}', dark: '{colors.gray.50}' },
+            light: { light: '{colors.gray.700}', dark: '{colors.gray.300}' },
+            lighter: { light: '{colors.gray.600}', dark: '{colors.gray.400}' },
+          },
+        },
+      },
+    ])
+
+    expect(resolved.themes.light?.tokens).toEqual({
+      design: {
+        text: {
+          base: { value: '{colors.gray.800}' },
+          light: { value: '{colors.gray.700}' },
+          lighter: { value: '{colors.gray.600}' },
+        },
+      },
+    })
+    expect(resolved.themes.dark?.tokens).toEqual({
+      design: {
+        text: {
+          base: { value: '{colors.gray.50}' },
+          light: { value: '{colors.gray.300}' },
+          lighter: { value: '{colors.gray.400}' },
+        },
+      },
+    })
+    expect(resolved.baseTokens).toEqual({
+      design: {
+        text: {
+          base: { value: '{colors.gray.800}' },
+          light: { value: '{colors.gray.700}' },
+          lighter: { value: '{colors.gray.600}' },
+        },
+      },
+    })
+  })
+
+  describe('private tokens', () => {
+    const UPSTREAM_SOURCE = 'upstream system fragment'
+    const FRAGMENT_SOURCE_PROPERTY = '__refConfigFragmentSource'
+
+    function withSource<T extends object>(value: T, source: string): T {
+      Object.defineProperty(value, FRAGMENT_SOURCE_PROPERTY, {
+        configurable: true,
+        enumerable: false,
+        value: source,
+      })
+      return value
+    }
+
+    it('preserves _private tokens from local fragments', () => {
+      const localFragment = withSource(
+        {
+          colors: {
+            brand: { value: '#0066cc' },
+            _private: {
+              internalAccent: { value: '#FF00FF' },
+            },
+          },
+        },
+        'src/tokens.ts',
+      )
+
+      const resolved = resolveColorModeTokens([localFragment])
+
+      expect(resolved.baseTokens).toEqual({
+        colors: {
+          brand: { value: '#0066cc' },
+          _private: {
+            internalAccent: { value: '#FF00FF' },
+          },
+        },
+      })
+    })
+
+    it('strips _private tokens from upstream system fragments', () => {
+      const upstreamFragment = withSource(
+        {
+          colors: {
+            brand: { value: '#0066cc' },
+            _private: {
+              internalAccent: { value: '#FF00FF' },
+            },
+          },
+        },
+        UPSTREAM_SOURCE,
+      )
+
+      const resolved = resolveColorModeTokens([upstreamFragment])
+
+      expect(resolved.baseTokens).toEqual({
+        colors: {
+          brand: { value: '#0066cc' },
+        },
+      })
+    })
+
+    it('strips deeply nested _private subtrees from upstream fragments', () => {
+      const upstreamFragment = withSource(
+        {
+          colors: {
+            brand: {
+              primary: { value: '#0066cc' },
+              _private: {
+                hovered: { value: '#003366' },
+              },
+            },
+          },
+          spacing: {
+            _private: {
+              gutter: { value: '0.5rem' },
+            },
+          },
+        },
+        UPSTREAM_SOURCE,
+      )
+
+      const resolved = resolveColorModeTokens([upstreamFragment])
+
+      expect(resolved.baseTokens).toEqual({
+        colors: {
+          brand: {
+            primary: { value: '#0066cc' },
+          },
+        },
+      })
+    })
+
+    it('keeps local _private alongside upstream fragments where _private is stripped', () => {
+      const upstreamFragment = withSource(
+        {
+          colors: {
+            _private: { secret: { value: '#000000' } },
+          },
+        },
+        UPSTREAM_SOURCE,
+      )
+      const localFragment = withSource(
+        {
+          colors: {
+            _private: { local: { value: '#FFFFFF' } },
+          },
+        },
+        'src/local.ts',
+      )
+
+      const resolved = resolveColorModeTokens([upstreamFragment, localFragment])
+
+      expect(resolved.baseTokens).toEqual({
+        colors: {
+          _private: { local: { value: '#FFFFFF' } },
+        },
+      })
     })
   })
 })

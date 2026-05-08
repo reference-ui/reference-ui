@@ -63,6 +63,13 @@ describe('createRustBuildRegistryArtifactsCacheKey', () => {
       ]),
     )
   })
+
+  it('separates force-built native artifacts from cache-eligible artifacts', () => {
+    assert.notEqual(
+      createRustBuildRegistryArtifactsCacheKey('rust-hash', undefined, false),
+      createRustBuildRegistryArtifactsCacheKey('rust-hash', undefined, true),
+    )
+  })
 })
 
 describe('canReuseRustBuildRegistryArtifacts', () => {

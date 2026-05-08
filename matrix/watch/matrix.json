@@ -1,0 +1,8 @@
+{
+  "name": "watch",
+  "refSync": {
+    "mode": "watch-full"
+  },
+  "bundlers": ["vite7", "webpack5"],
+  "react": "react19"
+}

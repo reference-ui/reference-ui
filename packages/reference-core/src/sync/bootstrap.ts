@@ -1,4 +1,4 @@
-import { loadUserConfig, setConfig, setCwd } from '../config'
+import { loadUserConfigWithDependencies, setConfig, setCwd } from '../config'
 import { initEventBus } from '../lib/event-bus'
 import { initLogRelay } from '../lib/log'
 import { initPool } from '../lib/thread-pool'
@@ -13,7 +13,7 @@ export async function bootstrap(
   cwd: string,
   options?: SyncOptions
 ): Promise<SyncPayload> {
-  const config = await loadUserConfig(cwd)
+  const { config, dependencyPaths } = await loadUserConfigWithDependencies(cwd)
   if (options?.debug) {
     config.debug = true
   }
@@ -28,5 +28,5 @@ export async function bootstrap(
   )
   initLogRelay()
   initEventBus()
-  return { cwd, config, options: options ?? {} }
+  return { cwd, config, configDependencyPaths: dependencyPaths, options: options ?? {} }
 }

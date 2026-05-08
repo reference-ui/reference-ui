@@ -200,7 +200,7 @@ export function RecipeDemo() {
           gap="8r"
           p="8r"
           bg="docsDemoMutedBg"
-          borderRadius="xl"
+          borderRadius="lg"
           border="1px solid"
           borderColor="docsPanelBorder"
         >

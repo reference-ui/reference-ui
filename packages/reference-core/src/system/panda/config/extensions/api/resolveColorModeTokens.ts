@@ -1,5 +1,14 @@
 import type { ReferenceTokenConfig, ReferenceTokenLeaf } from '../../../../api/tokens'
+import { CONFIG_FRAGMENT_SOURCE_PROPERTY } from '../../../../../lib/fragments/types'
 import { deepMerge } from './runtime'
+
+/**
+ * Token subtrees keyed by `_private` are scoped to the package that defines
+ * them. They resolve normally inside that package, but are stripped before
+ * any downstream consumer can see them via `extends`.
+ */
+const PRIVATE_TOKEN_KEY = '_private'
+const UPSTREAM_FRAGMENT_SOURCE = 'upstream system fragment'
 
 /**
  * Token mode truth table:
@@ -8,8 +17,8 @@ import { deepMerge } from './runtime'
  * - `dark` -> treat `dark` as the base token and emit a dark theme token
  * - `value + dark` -> treat `value` as the default/light token, emit an explicit light theme token, plus a dark override
  * - `value + light` -> treat `value` as the default/dark token, emit an explicit dark theme token, plus a light override
- * - `light + dark` -> emit explicit light and dark theme tokens, with no base token
- * - `value + light + dark` -> prefer the explicit `light + dark` pair and ignore `value`
+ * - `light + dark` -> treat `light` as the base token and emit explicit light and dark theme tokens
+ * - `value + light + dark` -> prefer the explicit `light + dark` pair and use `light` as the base token
  */
 type PandaTokenTree = Record<string, unknown>
 type ThemeName = 'light' | 'dark'
@@ -24,8 +33,23 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value)
 }
 
+/**
+ * Token leaves carry mode slots as `value` and/or `light` / `dark` with **scalar** (typically string) values.
+ * If `light` or `dark` is itself a plain object, that key is a **nested group** (e.g. a tier named `light`),
+ * not a light-theme color slot — the parent must be normalized as a group.
+ */
 function isReferenceTokenLeaf(value: unknown): value is ReferenceTokenLeaf {
-  return isPlainObject(value) && ('value' in value || 'light' in value || 'dark' in value)
+  if (!isPlainObject(value) || !('value' in value || 'light' in value || 'dark' in value)) {
+    return false
+  }
+  const { light, dark } = value
+  if (light !== undefined && isPlainObject(light)) {
+    return false
+  }
+  if (dark !== undefined && isPlainObject(dark)) {
+    return false
+  }
+  return true
 }
 
 function stripModeOverrides(token: ReferenceTokenLeaf): Record<string, unknown> {
@@ -55,7 +79,7 @@ type NormalizedTokenParts = {
 
 function getBaseLeafValue(node: ReferenceTokenLeaf): unknown {
   const hasExplicitPair = node.light !== undefined && node.dark !== undefined
-  if (hasExplicitPair) return undefined
+  if (hasExplicitPair) return node.light
   return node.value ?? node.light ?? node.dark
 }
 
@@ -149,6 +173,30 @@ function normalizeTokenNode(node: ReferenceTokenConfig | ReferenceTokenLeaf): No
   return normalizeObjectTokenNode(node)
 }
 
+function isUpstreamFragment(fragment: ReferenceTokenConfig): boolean {
+  if (fragment === null || typeof fragment !== 'object') return false
+  const source = (fragment as Record<string, unknown>)[CONFIG_FRAGMENT_SOURCE_PROPERTY]
+  return source === UPSTREAM_FRAGMENT_SOURCE
+}
+
+function stripPrivateTokensDeep(node: Record<string, unknown>): Record<string, unknown> {
+  const result: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(node)) {
+    if (key === PRIVATE_TOKEN_KEY) continue
+    if (isPlainObject(value)) {
+      result[key] = stripPrivateTokensDeep(value)
+    } else {
+      result[key] = value
+    }
+  }
+  return result
+}
+
+function applyPrivateScope(fragment: ReferenceTokenConfig): ReferenceTokenConfig {
+  if (!isUpstreamFragment(fragment)) return fragment
+  return stripPrivateTokensDeep(fragment) as ReferenceTokenConfig
+}
+
 export function resolveColorModeTokens(
   fragments: ReferenceTokenConfig[]
 ): ResolvedColorModeTokens {
@@ -157,7 +205,8 @@ export function resolveColorModeTokens(
     themes: {},
   }
 
-  for (const fragment of fragments) {
+  for (const rawFragment of fragments) {
+    const fragment = applyPrivateScope(rawFragment)
     const { baseNode, themeNodes } = normalizeTokenNode(fragment)
 
     resolved.baseTokens = deepMerge({}, resolved.baseTokens, baseNode)

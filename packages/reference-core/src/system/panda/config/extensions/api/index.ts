@@ -1,4 +1,9 @@
-export { deepMerge, getPandaConfig, initPandaConfig, PANDA_CONFIG_GLOBAL_KEY } from './runtime'
+export {
+  deepMerge,
+  getPandaConfig,
+  initPandaConfig,
+  PANDA_CONFIG_GLOBAL_KEY,
+} from './runtime'
 export {
   buildFontFaces,
   buildFontPatternExtensions,
@@ -17,3 +22,5 @@ export {
   resolveColorModeTokens,
   type ResolvedColorModeTokens,
 } from './resolveColorModeTokens'
+export { createRExtension } from '../r/createRExtension'
+export { extractBreakpointTable } from './extractBreakpointTable'

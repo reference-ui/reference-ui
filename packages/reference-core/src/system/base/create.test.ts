@@ -49,6 +49,7 @@ async function importCreateModule(options: {
     collectorFragments: 'collectorFragments()',
     getValue: vi.fn((name: string) => `get:${name}`),
   })
+  const collectLocalTokenFragmentsFromBase = vi.fn().mockResolvedValue([])
   const createPortableBaseFragmentBundle = vi.fn(() => options.fragmentBundle ?? ';upstreamFragment()\n;localFragment()')
 
   vi.doMock('../../lib/paths', () => ({
@@ -57,11 +58,12 @@ async function importCreateModule(options: {
   vi.doMock('../../lib/log', () => ({
     log: { debug },
   }))
-  vi.doMock('../types/generate', () => ({
+  vi.doMock('../../types/generators/fonts', () => ({
     writeGeneratedSystemFontTypes,
   }))
   vi.doMock('./fragments', () => ({
     prepareBaseFragments,
+    collectLocalTokenFragmentsFromBase,
     createCollectorBundleFromBase,
     createPortableBaseFragmentBundle,
   }))
@@ -72,6 +74,7 @@ async function importCreateModule(options: {
     debug,
     writeGeneratedSystemFontTypes,
     prepareBaseFragments,
+    collectLocalTokenFragmentsFromBase,
     createCollectorBundleFromBase,
     createPortableBaseFragmentBundle,
   }
@@ -81,7 +84,7 @@ afterEach(() => {
   vi.resetModules()
   vi.doUnmock('../../lib/paths')
   vi.doUnmock('../../lib/log')
-  vi.doUnmock('../types/generate')
+  vi.doUnmock('../../types/generators/fonts')
   vi.doUnmock('./fragments')
   vi.restoreAllMocks()
 

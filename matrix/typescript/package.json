@@ -1,11 +1,13 @@
 {
+  "//": "This file is generated and managed by pipeline.",
   "name": "@matrix/typescript",
   "version": "0.0.1",
   "private": true,
   "type": "module",
   "scripts": {
-    "sync": "pnpm exec ref sync",
-    "test": "vitest run && tsc --noEmit"
+    "setup": "pnpm --dir ../../pipeline exec tsx src/cli.ts setup --packages=@matrix/typescript --sync",
+    "test": "pnpm --dir ../../pipeline exec tsx src/cli.ts test --packages=@matrix/typescript",
+    "sync": "pnpm exec ref sync"
   },
   "exports": {
     ".": "./src/index.ts"
@@ -18,9 +20,12 @@
   },
   "devDependencies": {
     "@types/node": "^25.1.0",
+    "typescript": "~5.9.3",
+    "vitest": "^4.0.18",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
-    "typescript": "~5.9.3",
-    "vitest": "^4.0.18"
+    "@vitejs/plugin-react": "^4.7.0",
+    "vite": "^7.3.1",
+    "postcss": "^8.5.8"
   }
 }

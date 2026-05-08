@@ -1,4 +1,4 @@
-import type { ReferenceUIConfig } from './types'
+import type { ReferenceUIConfig, StrictTokenCategory } from './types'
 import type { BaseSystem } from '../types'
 import { ConfigValidationError } from './errors'
 import { log } from '../lib/log'
@@ -68,6 +68,29 @@ function validateConfigJsxElements(cfg: ConfigRecord): void {
 
   if (!Array.isArray(jsxElements) || jsxElements.some((entry) => typeof entry !== 'string')) {
     throw ConfigValidationError.invalidConfig('jsxElements', "'jsxElements' must be an array of strings.")
+  }
+}
+
+const STRICT_CATEGORIES: readonly StrictTokenCategory[] = ['colors', 'radii', 'spacing']
+
+function validateStrict(cfg: ConfigRecord): void {
+  const strict = cfg.strict
+  if (strict == null) return
+
+  if (!Array.isArray(strict)) {
+    throw ConfigValidationError.invalidConfig(
+      'strict',
+      `'strict' must be an array of token categories (${STRICT_CATEGORIES.join(', ')}).`
+    )
+  }
+
+  for (const entry of strict) {
+    if (typeof entry !== 'string' || !STRICT_CATEGORIES.includes(entry as StrictTokenCategory)) {
+      throw ConfigValidationError.invalidConfig(
+        'strict',
+        `Unknown strict token category '${String(entry)}'. Allowed: ${STRICT_CATEGORIES.join(', ')}.`
+      )
+    }
   }
 }
 
@@ -193,6 +216,7 @@ export function validateConfig(raw: unknown): ReferenceUIConfig {
   validateInclude(cfg)
   validateName(cfg)
   validateConfigJsxElements(cfg)
+  validateStrict(cfg)
   validateMcpConfig(cfg)
   const extendsSystems = validateBaseSystems('extends', cfg.extends)
   const layers = validateBaseSystems('layers', cfg.layers)

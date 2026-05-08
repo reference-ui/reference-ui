@@ -91,4 +91,15 @@ describe('watch/roots', () => {
       deriveWatchRoots(workspace, ['src/**/*.{ts,tsx}', '**/*.*', 'docs/**/*.mdx'])
     ).toEqual([workspace])
   })
+
+  it('adds explicit config dependency files as additional watch roots', () => {
+    const workspace = createTempWorkspace()
+    rootsToDelete.push(workspace)
+    mkdirSync(join(workspace, 'src'), { recursive: true })
+    writeFileSync(join(workspace, 'ui.config.ts'), 'export default {}\n', 'utf-8')
+
+    expect(deriveWatchRoots(workspace, ['src/**/*.{ts,tsx}'], [join(workspace, 'ui.config.ts')])).toEqual([
+      workspace,
+    ])
+  })
 })

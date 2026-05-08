@@ -1,7 +1,16 @@
 import assert from 'node:assert/strict'
+import { existsSync } from 'node:fs'
+import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { resolve } from 'node:path'
 import { describe, it } from 'node:test'
 import type { WorkspacePackage } from '../build/types.js'
-import { preparePackageJsonForLocalRegistry, resolveWorkspaceProtocolVersion } from './package-prep.js'
+import {
+  collectDeclaredPackagedPaths,
+  ensurePreparedPackageIncludesDeclaredOutputs,
+  preparePackageJsonForLocalRegistry,
+  resolveWorkspaceProtocolVersion,
+} from './package-prep.js'
 
 describe('resolveWorkspaceProtocolVersion', () => {
   it('rewrites workspace:* to the concrete workspace version', () => {
@@ -29,6 +38,7 @@ describe('preparePackageJsonForLocalRegistry', () => {
     dependencies: {},
     dir: '/tmp/fixture',
     name: '@fixtures/extend-library',
+    packageJson: {},
     private: true,
     scripts: {},
     version: '0.0.0',
@@ -74,5 +84,54 @@ describe('preparePackageJsonForLocalRegistry', () => {
     assert.deepEqual(prepared.peerDependencies, {
       react: '>=18',
     })
+  })
+
+  it('collects declared packaged paths from files, main, types, and exports', () => {
+    assert.deepEqual(
+      collectDeclaredPackagedPaths({
+        exports: {
+          '.': {
+            import: './dist/index.mjs',
+            types: './dist/index.d.ts',
+          },
+          './theme': './dist/theme/index.mjs',
+        },
+        files: ['dist', 'README.md'],
+        main: './dist/index.mjs',
+        types: './dist/index.d.ts',
+      }),
+      ['dist', 'dist/index.d.ts', 'dist/index.mjs', 'dist/theme/index.mjs', 'README.md'],
+    )
+  })
+
+  it('copies declared packaged outputs into the prepared directory when the initial staged copy missed them', async () => {
+    const root = await mkdtemp(resolve(tmpdir(), 'reference-ui-package-prep-'))
+    const sourceDir = resolve(root, 'source')
+    const preparedDir = resolve(root, 'prepared')
+
+    try {
+      await mkdir(resolve(sourceDir, 'dist'), { recursive: true })
+      await mkdir(preparedDir, { recursive: true })
+      await writeFile(resolve(sourceDir, 'dist', 'index.mjs'), 'export const value = 1\n')
+      await writeFile(resolve(sourceDir, 'dist', 'index.d.ts'), 'export declare const value: number\n')
+
+      await ensurePreparedPackageIncludesDeclaredOutputs(sourceDir, preparedDir, {
+        exports: {
+          '.': {
+            import: './dist/index.mjs',
+            types: './dist/index.d.ts',
+          },
+        },
+        files: ['dist'],
+        main: './dist/index.mjs',
+        types: './dist/index.d.ts',
+      })
+
+      assert.equal(existsSync(resolve(preparedDir, 'dist')), true)
+      assert.equal(existsSync(resolve(preparedDir, 'dist', 'index.mjs')), true)
+      assert.equal(existsSync(resolve(preparedDir, 'dist', 'index.d.ts')), true)
+    } finally {
+      await rm(root, { force: true, recursive: true })
+    }
   })
 })

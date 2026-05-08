@@ -1,4 +1,8 @@
-import type { FragmentCollector, FragmentCollectorConfig } from './types'
+import {
+  CONFIG_FRAGMENT_SOURCE_PROPERTY,
+  type FragmentCollector,
+  type FragmentCollectorConfig,
+} from './types'
 
 /**
  * Create a fragment collector that can capture fragments from user code.
@@ -30,6 +34,8 @@ function defaultGlobalKey(name: string, targetFunction?: string): string {
   return `__ref${cap}Collector`
 }
 
+const CURRENT_FRAGMENT_SOURCE_GLOBAL_KEY = '__refCurrentFragmentSource'
+
 export function createFragmentCollector<TInput = unknown, TOutput = TInput>(
   config: FragmentCollectorConfig<TInput, TOutput>
 ): FragmentCollector<TInput, TOutput> {
@@ -48,6 +54,16 @@ export function createFragmentCollector<TInput = unknown, TOutput = TInput>(
   function collect(fragment: TInput): void {
     const collector = (globalThis as Record<string, unknown>)[globalKey]
     if (Array.isArray(collector)) {
+      const source = (globalThis as Record<string, unknown>)[
+        CURRENT_FRAGMENT_SOURCE_GLOBAL_KEY
+      ]
+      if (typeof source === 'string' && fragment !== null && typeof fragment === 'object') {
+        Object.defineProperty(fragment, CONFIG_FRAGMENT_SOURCE_PROPERTY, {
+          configurable: true,
+          enumerable: false,
+          value: source,
+        })
+      }
       collector.push(fragment)
     }
   }
@@ -98,7 +114,7 @@ export function createFragmentCollector<TInput = unknown, TOutput = TInput>(
    */
   function toRuntimeFunction(): string {
     const functionName = targetFunction ?? name
-    return `const ${functionName} = (fragment) => { const c = globalThis['${globalKey}']; if (Array.isArray(c)) c.push(fragment) }`
+    return `const ${functionName} = (fragment) => { const c = globalThis['${globalKey}']; if (Array.isArray(c)) { const s = globalThis['${CURRENT_FRAGMENT_SOURCE_GLOBAL_KEY}']; if (typeof s === 'string' && fragment !== null && typeof fragment === 'object') Object.defineProperty(fragment, ${JSON.stringify(CONFIG_FRAGMENT_SOURCE_PROPERTY)}, { configurable: true, enumerable: false, value: s }); c.push(fragment) } }`
   }
 
   /**

@@ -284,7 +284,7 @@ fn recipe_call_populates_value_bindings_with_variant_selection_function() {
 fn cva_call_populates_value_bindings_with_variant_selection_function() {
     let scanned = single_file(
         "test.ts",
-        "import { cva } from 'src/system/css'\nconst buttonRecipe = cva({ variants: { visual: { solid: {}, ghost: {} }, size: { sm: {}, md: {} } } })\nexport {}\n",
+        "import { cva } from 'src/system/runtime'\nconst buttonRecipe = cva({ variants: { visual: { solid: {}, ghost: {} }, size: { sm: {}, md: {} } } })\nexport {}\n",
     );
     let ast = extract_ast(&scanned);
     let file = parsed_file(&ast, "test.ts");

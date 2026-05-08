@@ -6,7 +6,7 @@ import { getConfig, getCwd } from '../../../config/store'
 import { getOutDirPath } from '../../../lib/paths'
 import { log } from '../../../lib/log'
 import { updateBaseSystemCss } from '../../base/create'
-import { PANDA_GLOBAL_CSS_FILENAME, postprocessCss } from '../../css/postprocess'
+import { PANDA_GLOBAL_CSS_FILENAME, postprocessCss } from '../../stylesheet/postprocess'
 
 const WORKSPACE_MARKERS = ['pnpm-workspace.yaml', 'nx.json'] as const
 const CORE_PANDACSS_PATH = ['packages', 'reference-core', 'node_modules', '@pandacss'] as const

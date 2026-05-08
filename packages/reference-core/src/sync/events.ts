@@ -1,11 +1,75 @@
+import { getConfig, getCwd, loadUserConfigWithDependencies, setConfig, setCwd } from '../config'
 import { emit, on, onceAll } from '../lib/event-bus'
-import { afterFirst, combineTrigger, emitOnAny, forWorker, onReady } from './events.utils'
+import { log } from '../lib/log'
+import { combineTrigger, emitOnAny, forWorker, onReady } from './events.utils'
 
 const VIRTUAL_COMPLETE_EVENT = 'virtual:complete' as const
 const RUN_REFERENCE_BUILD_EVENT = 'run:reference:build' as const
 const RUN_SYSTEM_CONFIG_EVENT = 'run:system:config' as const
 const VIRTUAL_FS_CHANGE_EVENT = 'virtual:fs:change' as const
 const VIRTUAL_FRAGMENT_CHANGE_EVENT = 'virtual:fragment:change' as const
+const WATCH_REBUILD_SETTLE_MS = 50
+
+async function refreshWatchConfig(): Promise<void> {
+  const cwd = getCwd()
+
+  if (!cwd) {
+    throw new Error('refreshWatchConfig: getCwd() is undefined')
+  }
+
+  const previousConfig = getConfig()
+  const { config } = await loadUserConfigWithDependencies(cwd)
+
+  if (previousConfig?.debug) {
+    config.debug = true
+  }
+
+  setCwd(cwd)
+  setConfig(config)
+}
+
+function initWatchBurstRebuilds(): void {
+  let ready = false
+  let pendingReferenceBuild = false
+  let rebuildTimer: ReturnType<typeof setTimeout> | null = null
+
+  const clearScheduledRebuild = () => {
+    if (rebuildTimer === null) return
+    clearTimeout(rebuildTimer)
+    rebuildTimer = null
+  }
+
+  const flushRebuild = () => {
+    rebuildTimer = null
+    emit(RUN_SYSTEM_CONFIG_EVENT)
+    if (pendingReferenceBuild) {
+      emit(RUN_REFERENCE_BUILD_EVENT, {})
+    }
+    pendingReferenceBuild = false
+  }
+
+  const scheduleRebuild = (needsReferenceBuild: boolean) => {
+    if (!ready) return
+
+    pendingReferenceBuild ||= needsReferenceBuild
+    clearScheduledRebuild()
+    rebuildTimer = setTimeout(flushRebuild, WATCH_REBUILD_SETTLE_MS)
+  }
+
+  on(VIRTUAL_COMPLETE_EVENT, () => {
+    ready = true
+  })
+
+  // Git checkouts and large refactors can emit a burst of per-file virtual
+  // updates that briefly describe a mixed A/B project state. Batch the
+  // downstream rebuilds so Panda/reference run against the settled snapshot.
+  on(VIRTUAL_FS_CHANGE_EVENT, () => {
+    scheduleRebuild(true)
+  })
+  on(VIRTUAL_FRAGMENT_CHANGE_EVENT, () => {
+    scheduleRebuild(false)
+  })
+}
 
 /**
  * High-level sync orchestration.
@@ -58,38 +122,22 @@ export function initEvents(): void {
    * the resulting `virtual:fs:change` events rather than by raw source changes.
    */
   on('watch:change', payload => {
+    if (payload.requiresFullResync) {
+      refreshWatchConfig()
+        .then(() => {
+          emit('run:virtual:copy:all')
+        })
+        .catch((error) => {
+          log.error('[sync] Failed to refresh config after watch change', error)
+          emit('system:config:failed')
+        })
+      return
+    }
+
     emit('run:virtual:sync:file', payload)
   })
 
-  /**
-   * After initial startup, virtual changes refresh the config/Panda side so the
-   * generated styling surface stays aligned with mirrored sources.
-   */
-  afterFirst(VIRTUAL_COMPLETE_EVENT, {
-    on: VIRTUAL_FS_CHANGE_EVENT,
-    emit: RUN_SYSTEM_CONFIG_EVENT,
-  })
-
-  /**
-   * Incremental reference rebuilds can fire directly from virtual changes.
-   * By the time watch mode reaches this path, the required packaged runtime and
-   * declaration surface already exists.
-   */
-  afterFirst(VIRTUAL_COMPLETE_EVENT, {
-    on: VIRTUAL_FS_CHANGE_EVENT,
-    emit: RUN_REFERENCE_BUILD_EVENT,
-    payload: {},
-  })
-
-  /**
-   * Fragment file changes (files calling tokens(), keyframes(), etc.) only need
-   * a config + Panda pass — not a full reference rebuild. This avoids an
-   * unnecessary HMR storm when token values are the only thing that changed.
-   */
-  afterFirst(VIRTUAL_COMPLETE_EVENT, {
-    on: VIRTUAL_FRAGMENT_CHANGE_EVENT,
-    emit: RUN_SYSTEM_CONFIG_EVENT,
-  })
+  initWatchBurstRebuilds()
 
   /**
    * The first config build begins once the virtual workspace exists and the

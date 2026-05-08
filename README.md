@@ -2,18 +2,16 @@
 
 Knowledge-first UI tooling and component infrastructure.
 
-This repository is an active monorepo. It contains the Reference UI CLI, the first-party design system built on top of it, a docs site, a unit-level dogfood app, Rust/native bindings, and end-to-end coverage for generated outputs.
+This repository is an active monorepo. It contains the Reference UI CLI, the first-party design system built on top of it, a docs site, Rust/native bindings, and pipeline-driven matrix coverage for generated outputs.
 
 ## What lives here
 
 - `packages/reference-core` - the `ref` CLI, sync pipeline, config/runtime generation, and MCP entrypoints
 - `packages/reference-lib` - the first-party React design system package built on `@reference-ui/core`
-- `packages/reference-unit` - a local app used to validate generated runtime behavior and fixture composition
 - `packages/reference-docs` - the Vite-based documentation site driven by the same sync pipeline
-- `packages/reference-e2e` - Playwright-based matrix and quick-run system tests
 - `packages/reference-rs` - Rust/native bindings used by the platform
 - `fixtures/*` - consumer-style fixture projects used by unit and system tests
-- `matrix/` - top-level matrix scenario area for the next generation of install and TypeScript coverage
+- `matrix/` - scenario packages (Vitest, Playwright, install stories) exercised by the Dagger pipeline
 
 ## Stack
 
@@ -39,10 +37,10 @@ Common root commands:
 pnpm dev           # core + docs
 pnpm dev:lib       # core sync watch + React Cosmos for the library
 pnpm build         # build all workspace packages
-pnpm test          # core build + end-to-end coverage
+pnpm test          # core build + full matrix (Dagger)
 pnpm test:lib      # core build + library tests
 pnpm test:core     # reference-core tests
-pnpm test:app      # reference-unit tests
+pnpm test:e2e      # matrix tests (default bundler slice)
 pnpm test:rust     # Rust/native tests
 ```
 

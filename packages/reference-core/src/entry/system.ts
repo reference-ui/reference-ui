@@ -7,9 +7,7 @@ export {
   tokens,
   keyframes,
   font,
-  extendFont,
   globalCss,
-  extendPattern,
 } from '../system/api'
 export type {
   KeyframesConfig,
@@ -17,5 +15,6 @@ export type {
   TokenConfig,
 } from '../system/api'
 export { getRhythm } from '../system/panda/config/extensions/rhythm'
+export type { StyleProps, SystemStyleObject } from '../types'
 /** Full design-system type surface (see `src/types/index.ts`). */
 export type * from '../types'

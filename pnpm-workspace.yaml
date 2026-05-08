@@ -3,6 +3,8 @@ packages:
   - packages/*
   - fixtures/*
   - matrix/*
+  - matrix/*/*
+  - panda-playground
   - '!packages/old/**'
 
 linkWorkspacePackages: true

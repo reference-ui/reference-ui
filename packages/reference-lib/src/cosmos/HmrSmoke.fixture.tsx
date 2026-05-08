@@ -10,7 +10,7 @@ export default function HmrSmokeFixture() {
       <Div fontSize="lg" fontWeight="600" marginBottom="2r">
         HMR smoke
       </Div>
-      <Div color="red.400">
+      <Div color="red.200">
         Change this sentence or the styles above, then save to verify hot reload...blah
       </Div>
     </Div>

@@ -1,3 +1,3 @@
-export { microBundle } from './microbundle'
-export type { MicroBundleOptions } from './types'
+export { microBundle, microBundleWithResult } from './microbundle'
+export type { MicroBundleOptions, MicroBundleResult } from './types'
 export { DEFAULT_EXTERNALS } from './externals'

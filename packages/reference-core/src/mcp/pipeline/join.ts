@@ -6,6 +6,7 @@ import type {
 import { formatReferenceType } from '../../reference/browser-model/type'
 import type { McpReferenceData } from './reference'
 import type { McpComponent } from './types'
+import { isStylePropName } from './style-props'
 
 function getPropType(member: ReferenceMemberDocument | undefined): string | null {
   if (!member) return null
@@ -23,6 +24,8 @@ function toProjectedProp(member: McpReferenceData['members'][number]) {
     optional: member.optional,
     readonly: member.readonly,
     defaultValue: member.defaultValue,
+    origin: 'documented' as const,
+    styleProp: isStylePropName(member.name),
   }
 }
 
@@ -65,6 +68,8 @@ export function joinMcpComponentWithReference(
           optional: member?.optional ?? false,
           readonly: member?.readonly ?? false,
           defaultValue: member?.defaultValue,
+          origin: 'observed' as const,
+          styleProp: isStylePropName(prop.name),
         }
       }),
       ...documentedOnlyProps,

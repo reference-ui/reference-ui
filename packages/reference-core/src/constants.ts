@@ -36,20 +36,52 @@ export const DEFAULT_OUT_DIR = '.reference-ui'
 export const REACT_DTS_INCLUDE = [
   'src/system/primitives/index.tsx',
   'src/system/primitives/types.ts',
-  'src/system/css/public.ts',
+  'src/system/runtime/index.ts',
   'src/types/index.ts',
-  'src/types/BaseSystem.ts',
-  'src/types/colors.ts',
-  'src/types/conditions.ts',
-  'src/types/css.ts',
-  'src/types/fontRegistry.ts',
-  'src/types/fonts.ts',
-  'src/types/primitives.ts',
-  'src/types/props.ts',
-  'src/types/recipe.ts',
-  'src/types/style-prop.ts',
-  'src/types/style-props.ts',
-  'src/types/system-style-object.ts',
+  'src/types/public/index.ts',
+  'src/types/public/BaseSystem.ts',
+  'src/types/public/colors.ts',
+  'src/types/public/conditions.ts',
+  'src/types/public/css.ts',
+  'src/types/public/fontRegistry.ts',
+  'src/types/public/fonts.ts',
+  'src/types/public/primitives.ts',
+  'src/types/public/props.ts',
+  'src/types/public/radii.ts',
+  'src/types/public/recipe.ts',
+  'src/types/public/strict-colors.ts',
+  'src/types/public/strict-radii.ts',
+  'src/types/public/style-prop.ts',
+  'src/types/public/style-props.ts',
+  'src/types/public/system-style-object.ts',
+] as const
+
+/**
+ * Explicit system DTS roots that we seed into the synthetic tsconfig.
+ *
+ * The system package re-exports the authored style types via its entry, and the
+ * strict-token rewrite owns files under `types/`. Keeping this list explicit
+ * avoids depending on whatever transitive declaration graph `tsgo` happens to
+ * preserve for type-only star re-exports.
+ */
+export const SYSTEM_DTS_INCLUDE = [
+  'src/types/index.ts',
+  'src/types/public/index.ts',
+  'src/types/public/BaseSystem.ts',
+  'src/types/public/colors.ts',
+  'src/types/public/conditions.ts',
+  'src/types/public/css.ts',
+  'src/types/public/fontRegistry.ts',
+  'src/types/public/fonts.ts',
+  'src/types/public/primitives.ts',
+  'src/types/public/props.ts',
+  'src/types/public/radii.ts',
+  'src/types/public/recipe.ts',
+  'src/types/public/strict-colors.ts',
+  'src/types/public/strict-radii.ts',
+  'src/types/public/style-prop.ts',
+  'src/types/public/style-props.ts',
+  'src/types/public/system-style-object.ts',
 ] as const
 
 /**

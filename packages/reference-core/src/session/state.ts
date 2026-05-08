@@ -14,6 +14,7 @@ export function initSessionState(outDir: string, mode: SessionMode): void {
     buildState: 'idle',
     startedAt: now,
     updatedAt: now,
+    completedAt: null,
   }
   // Lock is watch-only. One-shot syncs are transient and may legitimately
   // run alongside a watch process — writing a lock would overwrite the watch
@@ -32,7 +33,21 @@ export function transitionSession(state: SessionState): void {
 
 export function transitionBuild(buildState: BuildState): void {
   if (!currentManifest || !currentOutDir) return
-  currentManifest = { ...currentManifest, buildState, updatedAt: new Date().toISOString() }
+  currentManifest = {
+    ...currentManifest,
+    buildState,
+    updatedAt: new Date().toISOString(),
+    completedAt: buildState === 'ready' ? currentManifest.completedAt ?? null : null,
+  }
+  writeManifest(currentOutDir, currentManifest)
+}
+
+export function markBuildComplete(): void {
+  if (!currentManifest || !currentOutDir) return
+  currentManifest = {
+    ...currentManifest,
+    completedAt: new Date().toISOString(),
+  }
   writeManifest(currentOutDir, currentManifest)
 }
 

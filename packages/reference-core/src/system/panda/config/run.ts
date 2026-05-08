@@ -19,6 +19,7 @@ import {
   mirrorPandaExtensionsBundle,
   writePandaExtensionsBundle,
 } from './extensions/api/bundle'
+import { CONFIG_DIAGNOSTIC_WARN_GLOBAL_KEY } from './diagnostics/types'
 
 const SYSTEM_CONFIG_COMPLETE_EVENT = 'system:config:complete'
 const SYSTEM_CONFIG_FAILED_EVENT = 'system:config:failed'
@@ -74,6 +75,9 @@ function writeResolvedJsxElements(
  */
 export async function runConfig(cwd: string): Promise<void> {
   log.debug('config', 'runConfig started', { cwd })
+  ;(globalThis as Record<string, unknown>)[CONFIG_DIAGNOSTIC_WARN_GLOBAL_KEY] = (
+    message: unknown
+  ) => log.warn(message)
   const config = getConfig()
   if (!config) {
     throw new Error('runConfig: getConfig() is undefined')

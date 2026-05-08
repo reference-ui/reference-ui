@@ -18,8 +18,7 @@ const { fn, collector } = createFragmentFunction<GlobalCssConfig>({
  * ```ts
  * globalCss({
  *   ':root': {
- *     '--r-base': '16px',
- *     '--spacing-r': 'calc(var(--r-base) * var(--r-density))',
+ *     '--spacing-root': '0.25rem',
  *   },
  *   body: {
  *     fontFamily: 'sans',

@@ -1,6 +1,8 @@
 import { createRequire } from 'node:module'
 import { dirname, join, resolve } from 'node:path'
 import {
+  cpSync,
+  existsSync,
   mkdirSync,
   mkdtempSync,
   rmSync,
@@ -16,8 +18,8 @@ import { getOutDirPath } from '../../../lib/paths/out-dir'
 import {
   writeGeneratedReactTypes,
   writeGeneratedSystemTypes,
-} from '../../../system/types/generate'
-import { REACT_DTS_INCLUDE } from '../../../constants'
+} from '../../../types/generators/generate'
+import { REACT_DTS_INCLUDE, SYSTEM_DTS_INCLUDE } from '../../../constants'
 import { getPackageDir, getDeclarationBasename } from '../../layout'
 import type { TsPackageInput } from '../types'
 import { writeTsconfig } from '../tsconfig'
@@ -40,7 +42,24 @@ function getDeclarationEntryFiles(pkg: TsPackageInput): string[] {
     return [pkg.sourceEntry, ...REACT_DTS_INCLUDE]
   }
 
+  if (pkg.name === '@reference-ui/system') {
+    return [pkg.sourceEntry, ...SYSTEM_DTS_INCLUDE]
+  }
+
   return [pkg.sourceEntry]
+}
+
+function snapshotStyledDir(projectCwd: string, tempDir: string): string {
+  const liveStyledDir = resolve(getOutDirPath(projectCwd), 'styled')
+  const snapshotDir = join(tempDir, 'styled')
+
+  if (existsSync(liveStyledDir)) {
+    cpSync(liveStyledDir, snapshotDir, { recursive: true })
+  } else {
+    mkdirSync(snapshotDir, { recursive: true })
+  }
+
+  return snapshotDir
 }
 
 async function installPackageTs(
@@ -53,10 +72,12 @@ async function installPackageTs(
   mkdirSync(targetDir, { recursive: true })
 
   const tempDir = mkdtempSync(join(targetDir, '.ref-ui-tsgo-'))
+  const styledDir = snapshotStyledDir(projectCwd, tempDir)
   const tsconfigPath = writeTsconfig({
     cliDir,
     entryFiles: getDeclarationEntryFiles(pkg),
     projectCwd,
+    styledDir,
     tempDir,
   })
 

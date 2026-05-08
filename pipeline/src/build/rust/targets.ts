@@ -14,14 +14,24 @@ import { join, relative, resolve } from 'node:path'
 import { dag, type Platform } from '@dagger.io/dagger'
 import * as dagger from '@dagger.io/dagger'
 
-import type {
-  BuildPackageJsonOverride,
-  BuildRegistryArtifactPackage,
-} from '../types.js'
+import type { BuildRegistryArtifactPackage } from '../types.js'
 import { logSkip } from '../../lib/log/index.js'
 import { ensureContainerRuntime } from '../../lib/runtime/ensure-container-runtime.js'
 import { repoRoot, run } from '../workspace.js'
 import { rustGeneratedTarballsDir } from './state.js'
+import {
+  hasCompatibleReferenceRustBinaryContents,
+  isReferenceRustBinaryCompatible,
+} from './compatibility.js'
+import { getReferenceRustTargetPackageValidationErrors } from './package-metadata.js'
+import {
+  findMissingRequiredReferenceRustTargets,
+  getLocallyBuildableReferenceRustTargets,
+  resolveLocalReferenceRustTargetBuildStrategy,
+  resolveReferenceRustTargetTarballStrategy,
+  shouldBuildLinuxReferenceRustTargetWithDagger,
+  type RustTargetTarballStrategy,
+} from './planning.js'
 import {
   getRustTarget,
   getVirtualNativeTriple,
@@ -32,18 +42,25 @@ import {
 
 export const REFERENCE_RUST_PACKAGE_NAME = '@reference-ui/rust'
 
-export type RustTargetTarballStrategy =
-  | 'pack-local-binary'
-  | 'reuse-cached-tarball'
-  | 'fetch-published-tarball'
-  | 'skip-target'
-
-export type LocalReferenceRustTargetBuildStrategy =
-  | 'reuse-host-binary'
-  | 'build-darwin-cross-target'
-  | 'build-windows-cross-target'
-  | 'build-linux-with-dagger'
-  | 'unavailable'
+export {
+  hasCompatibleReferenceRustBinaryContents,
+  isReferenceRustBinaryCompatible,
+} from './compatibility.js'
+export {
+  createReferenceRustPackageJsonOverride,
+  getReferenceRustTargetPackageValidationErrors,
+} from './package-metadata.js'
+export {
+  findMissingRequiredReferenceRustTargets,
+  getLocallyBuildableReferenceRustTargets,
+  resolveLocalReferenceRustTargetBuildStrategy,
+  resolveReferenceRustTargetTarballStrategy,
+  shouldBuildLinuxReferenceRustTargetWithDagger,
+} from './planning.js'
+export type {
+  LocalReferenceRustTargetBuildStrategy,
+  RustTargetTarballStrategy,
+} from './planning.js'
 
 interface ReferenceRustTargetPackage {
   dir: string
@@ -71,36 +88,17 @@ const repoSourceExcludes = [
   '.pipeline',
   'target',
   'packages/reference-docs/dist',
-  'packages/reference-e2e/blob-reports',
-  'packages/reference-e2e/playwright-report',
-  'packages/reference-e2e/test-results',
-  'packages/reference-e2e/matrix-logs',
   'pipeline/node_modules',
 ] as const
 
-interface ReferenceRustTargetPackageValidationOptions {
-  rootVersion: string
-  targetPackages: readonly Pick<ReferenceRustTargetPackage, 'name' | 'version'>[]
-}
-
-interface ShouldBuildLinuxReferenceRustTargetWithDaggerOptions {
-  publishedOnNpm: boolean
-  requiredTargets: readonly VirtualNativeTarget[]
-  targetPackage: Pick<ReferenceRustTargetPackage, 'hasLocalBinary' | 'name'> | undefined
-}
-
-interface FindMissingRequiredReferenceRustTargetsOptions {
-  artifactTargets: readonly VirtualNativeTarget[]
-  cachedTarballTargets: readonly VirtualNativeTarget[]
-  locallyBuildableTargets: readonly VirtualNativeTarget[]
-  publishedTargets: readonly VirtualNativeTarget[]
+interface EnsureReferenceRustGeneratedPackagesOptions {
+  forceBuildNativeTargets?: boolean
   requiredTargets: readonly VirtualNativeTarget[]
 }
 
-interface ResolveLocalReferenceRustTargetBuildStrategyOptions {
-  hostPlatform?: NodeJS.Platform
-  hostTarget?: VirtualNativeTarget | null
-  target: VirtualNativeTarget
+interface MaterializeReferenceRustTargetTarballsOptions {
+  forceBuildNativeTargets?: boolean
+  requiredTargets?: readonly VirtualNativeTarget[]
 }
 
 function referenceRustArtifactsDir(packageDir: string): string {
@@ -137,10 +135,31 @@ function readJson<T>(path: string): T {
   return JSON.parse(readFileSync(path, 'utf8')) as T
 }
 
-function hasLocalNativeBinary(targetDir: string): boolean {
-  return readdirSync(targetDir, { withFileTypes: true }).some(
-    entry => entry.isFile() && entry.name.endsWith('.node')
-  )
+function resolveReferenceRustTargetFromPackageName(packageName: string): VirtualNativeTarget | null {
+  return SUPPORTED_VIRTUAL_NATIVE_TARGETS.find(
+    target => getVirtualNativePackageName(target) === packageName,
+  ) ?? null
+}
+
+function resolveReferenceRustTargetBinaryPath(targetDir: string, target: VirtualNativeTarget): string {
+  return resolve(targetDir, `virtual-native.${target}.node`)
+}
+
+function hasLocalNativeBinary(targetDir: string, packageName: string): boolean {
+  const target = resolveReferenceRustTargetFromPackageName(packageName)
+
+  if (!target) {
+    return readdirSync(targetDir, { withFileTypes: true }).some(
+      entry => entry.isFile() && entry.name.endsWith('.node')
+    )
+  }
+
+  const binaryPath = resolveReferenceRustTargetBinaryPath(targetDir, target)
+
+  return isReferenceRustBinaryCompatible({
+    binaryPath,
+    target,
+  })
 }
 
 function listReferenceRustTargetPackages(packageDir: string): ReferenceRustTargetPackage[] {
@@ -157,7 +176,7 @@ function listReferenceRustTargetPackages(packageDir: string): ReferenceRustTarge
 
       return {
         dir,
-        hasLocalBinary: hasLocalNativeBinary(dir),
+        hasLocalBinary: hasLocalNativeBinary(dir, packageJson.name),
         name: packageJson.name,
         version: packageJson.version,
       }
@@ -192,6 +211,27 @@ async function stageLocalReferenceRustBinaryIntoTargetPackage(
   }
 
   await copyFile(localBinaryPath, resolve(targetPackage.dir, `virtual-native.${triple}.node`))
+}
+
+async function removeReferenceRustTargetPackageBinaries(
+  targetPackages: readonly ReferenceRustTargetPackage[],
+  requiredTargets: readonly VirtualNativeTarget[],
+): Promise<void> {
+  const requiredTargetPackageNames = new Set<string>(
+    requiredTargets.map((target) => getVirtualNativePackageName(target)),
+  )
+
+  for (const targetPackage of targetPackages) {
+    if (!requiredTargetPackageNames.has(targetPackage.name)) {
+      continue
+    }
+
+    for (const entry of readdirSync(targetPackage.dir, { withFileTypes: true })) {
+      if (entry.isFile() && entry.name.endsWith('.node')) {
+        await rm(resolve(targetPackage.dir, entry.name), { force: true })
+      }
+    }
+  }
 }
 
 function repoSource() {
@@ -277,86 +317,6 @@ async function buildLinuxReferenceRustBinaryWithDagger(packageDir: string): Prom
   }
 }
 
-export function shouldBuildLinuxReferenceRustTargetWithDagger(
-  options: ShouldBuildLinuxReferenceRustTargetWithDaggerOptions,
-): boolean {
-  if (!options.requiredTargets.includes('linux-x64-gnu')) {
-    return false
-  }
-
-  if (!options.targetPackage) {
-    return false
-  }
-
-  if (options.targetPackage.name !== getVirtualNativePackageName('linux-x64-gnu')) {
-    return false
-  }
-
-  if (options.targetPackage.hasLocalBinary) {
-    return false
-  }
-
-  if (options.publishedOnNpm) {
-    return false
-  }
-
-  return true
-}
-
-export function resolveLocalReferenceRustTargetBuildStrategy(
-  options: ResolveLocalReferenceRustTargetBuildStrategyOptions,
-): LocalReferenceRustTargetBuildStrategy {
-  const hostPlatform = options.hostPlatform ?? process.platform
-  const hostTarget = options.hostTarget ?? getVirtualNativeTriple(hostPlatform, process.arch)
-
-  if (hostTarget && options.target === hostTarget) {
-    return 'reuse-host-binary'
-  }
-
-  if (options.target === 'linux-x64-gnu') {
-    return 'build-linux-with-dagger'
-  }
-
-  if (options.target === 'win32-x64-msvc') {
-    return 'build-windows-cross-target'
-  }
-
-  if (
-    hostPlatform === 'darwin'
-    && (options.target === 'darwin-x64' || options.target === 'darwin-arm64')
-  ) {
-    return 'build-darwin-cross-target'
-  }
-
-  return 'unavailable'
-}
-
-export function getLocallyBuildableReferenceRustTargets(
-  hostTarget: VirtualNativeTarget | null = getVirtualNativeTriple(),
-  hostPlatform: NodeJS.Platform = process.platform,
-): VirtualNativeTarget[] {
-  return SUPPORTED_VIRTUAL_NATIVE_TARGETS.filter(
-    (target) => resolveLocalReferenceRustTargetBuildStrategy({
-      hostPlatform,
-      hostTarget,
-      target,
-    }) !== 'unavailable',
-  )
-}
-
-export function findMissingRequiredReferenceRustTargets(
-  options: FindMissingRequiredReferenceRustTargetsOptions,
-): VirtualNativeTarget[] {
-  const availableTargets = new Set<VirtualNativeTarget>([
-    ...options.locallyBuildableTargets,
-    ...options.artifactTargets,
-    ...options.cachedTarballTargets,
-    ...options.publishedTargets,
-  ])
-
-  return options.requiredTargets.filter((target) => !availableTargets.has(target))
-}
-
 function hasDownloadedReferenceRustArtifact(packageDir: string, target: VirtualNativeTarget): boolean {
   return existsSync(
     resolve(packageDir, 'artifacts', `bindings-${getRustTarget(target)}`, `virtual-native.${target}.node`),
@@ -369,6 +329,22 @@ async function ensureReferenceRustTargetInstalled(target: VirtualNativeTarget): 
   })
 }
 
+function referenceRustBuiltBinaryPath(packageDir: string, target: VirtualNativeTarget): string {
+  return resolve(packageDir, `virtual-native.${target}.node`)
+}
+
+function referenceRustCargoTargetDir(packageDir: string, target: VirtualNativeTarget): string {
+  return resolve(packageDir, 'target', getRustTarget(target))
+}
+
+async function removeReferenceRustBuiltBinaryOutputs(
+  packageDir: string,
+  target: VirtualNativeTarget,
+): Promise<void> {
+  await rm(referenceRustBuiltBinaryPath(packageDir, target), { force: true })
+  await rm(referenceRustCargoTargetDir(packageDir, target), { recursive: true, force: true })
+}
+
 async function buildReferenceRustBinaryWithNapi(
   packageDir: string,
   target: VirtualNativeTarget,
@@ -377,15 +353,38 @@ async function buildReferenceRustBinaryWithNapi(
   await ensureReferenceRustTargetInstalled(target)
 
   const args = ['exec', 'napi', 'build', '--platform', '--release', '--target', getRustTarget(target)]
+  const builtBinaryPath = referenceRustBuiltBinaryPath(packageDir, target)
 
   if (crossCompile) {
     args.push('--cross-compile')
   }
 
-  await run('pnpm', args, {
+  const buildLabel = `${crossCompile ? 'Cross-build' : 'Build'} @reference-ui/rust ${target}`
+
+  const runBuild = () => run('pnpm', args, {
     cwd: packageDir,
-    label: `${crossCompile ? 'Cross-build' : 'Build'} @reference-ui/rust ${target}`,
+    label: buildLabel,
   })
+
+  const isBuiltBinaryCompatible = () => isReferenceRustBinaryCompatible({
+    binaryPath: builtBinaryPath,
+    target,
+  })
+
+  await runBuild()
+
+  if (isBuiltBinaryCompatible()) {
+    return
+  }
+
+  await removeReferenceRustBuiltBinaryOutputs(packageDir, target)
+  await runBuild()
+
+  if (!isBuiltBinaryCompatible()) {
+    throw new Error(
+      `Built ${REFERENCE_RUST_PACKAGE_NAME} ${target} binary is incompatible with the current native contract after a clean rebuild.`,
+    )
+  }
 }
 
 async function stageBuiltReferenceRustBinaryIntoTargetPackage(
@@ -394,7 +393,7 @@ async function stageBuiltReferenceRustBinaryIntoTargetPackage(
   target: VirtualNativeTarget,
 ): Promise<void> {
   await copyFile(
-    resolve(packageDir, `virtual-native.${target}.node`),
+    referenceRustBuiltBinaryPath(packageDir, target),
     resolve(targetPackage.dir, `virtual-native.${target}.node`),
   )
 }
@@ -403,22 +402,14 @@ export function getMissingLocalReleaseRustTargets(
   packageDir: string,
   requiredTargets: readonly VirtualNativeTarget[] = SUPPORTED_VIRTUAL_NATIVE_TARGETS,
 ): VirtualNativeTarget[] {
-  const rootVersion = readReferenceRustRootVersion(packageDir)
   const locallyBuildableTargets = getLocallyBuildableReferenceRustTargets()
   const artifactTargets = requiredTargets.filter((target) => hasDownloadedReferenceRustArtifact(packageDir, target))
-  const cachedTarballTargets = requiredTargets.filter((target) => existsSync(
-    resolve(rustGeneratedTarballsDir, packedTarballName(getVirtualNativePackageName(target), rootVersion)),
-  ))
-  const publishedTargets = requiredTargets.filter((target) => isPublishedOnNpm(
-    getVirtualNativePackageName(target),
-    rootVersion,
-  ))
 
   return findMissingRequiredReferenceRustTargets({
     artifactTargets,
-    cachedTarballTargets,
+    cachedTarballTargets: [],
     locallyBuildableTargets,
-    publishedTargets,
+    publishedTargets: [],
     requiredTargets,
   })
 }
@@ -427,6 +418,7 @@ async function stageRequiredContainerBuiltReferenceRustBinaries(
   packageDir: string,
   targetPackages: readonly ReferenceRustTargetPackage[],
   requiredTargets: readonly VirtualNativeTarget[],
+  forceBuild: boolean,
 ): Promise<void> {
   const targetPackageName = getVirtualNativePackageName('linux-x64-gnu')
   const targetPackage = targetPackages.find(pkg => pkg.name === targetPackageName)
@@ -434,6 +426,7 @@ async function stageRequiredContainerBuiltReferenceRustBinaries(
   const publishedOnNpm = targetPackage ? isPublishedOnNpm(targetPackage.name, targetPackage.version) : false
 
   if (!shouldBuildLinuxReferenceRustTargetWithDagger({
+    forceBuild,
     publishedOnNpm,
     requiredTargets,
     targetPackage,
@@ -456,13 +449,14 @@ async function stageRequiredLocallyBuiltReferenceRustBinaries(
   packageDir: string,
   targetPackages: readonly ReferenceRustTargetPackage[],
   requiredTargets: readonly VirtualNativeTarget[],
+  forceBuild: boolean,
 ): Promise<void> {
   const requiredTargetPackageNames = new Set<string>(
     requiredTargets.map((target) => getVirtualNativePackageName(target)),
   )
 
   for (const targetPackage of targetPackages) {
-    if (targetPackage.hasLocalBinary || !requiredTargetPackageNames.has(targetPackage.name)) {
+    if ((!forceBuild && targetPackage.hasLocalBinary) || !requiredTargetPackageNames.has(targetPackage.name)) {
       continue
     }
 
@@ -475,6 +469,7 @@ async function stageRequiredLocallyBuiltReferenceRustBinaries(
     }
 
     switch (resolveLocalReferenceRustTargetBuildStrategy({ target })) {
+      case 'reuse-host-binary':
       case 'build-darwin-cross-target':
         await buildReferenceRustBinaryWithNapi(packageDir, target)
         await stageBuiltReferenceRustBinaryIntoTargetPackage(packageDir, targetPackage, target)
@@ -485,7 +480,6 @@ async function stageRequiredLocallyBuiltReferenceRustBinaries(
         await stageBuiltReferenceRustBinaryIntoTargetPackage(packageDir, targetPackage, target)
         break
 
-      case 'reuse-host-binary':
       case 'build-linux-with-dagger':
       case 'unavailable':
         break
@@ -493,81 +487,49 @@ async function stageRequiredLocallyBuiltReferenceRustBinaries(
   }
 }
 
-export function getReferenceRustTargetPackageValidationErrors(
-  options: ReferenceRustTargetPackageValidationOptions,
-): string[] {
-  const targetPackagesByName = new Map(
-    options.targetPackages.map(targetPackage => [targetPackage.name, targetPackage]),
-  )
-
-  return SUPPORTED_VIRTUAL_NATIVE_TARGETS.flatMap((triple) => {
-    const expectedName = getVirtualNativePackageName(triple)
-    const targetPackage = targetPackagesByName.get(expectedName)
-
-    if (!targetPackage) {
-      return `Missing generated native package ${expectedName}@${options.rootVersion}.`
-    }
-
-    if (targetPackage.version !== options.rootVersion) {
-      return `Generated native package ${targetPackage.name}@${targetPackage.version} does not match @reference-ui/rust@${options.rootVersion}.`
-    }
-
-    return []
-  })
-}
-
-export function createReferenceRustPackageJsonOverride(
-  targetPackages: readonly Pick<ReferenceRustTargetPackage, 'name' | 'version'>[],
-): BuildPackageJsonOverride | undefined {
-  if (targetPackages.length === 0) {
-    return undefined
-  }
-
-  return {
-    optionalDependencies: Object.fromEntries(
-      targetPackages.map(targetPackage => [targetPackage.name, targetPackage.version]),
-    ),
-  }
-}
-
-export function resolveReferenceRustTargetTarballStrategy(options: {
-  hasLocalBinary: boolean
-  publishedOnNpm: boolean
-  tarballExists: boolean
-}): RustTargetTarballStrategy {
-  if (options.hasLocalBinary) {
-    return 'pack-local-binary'
-  }
-
-  if (options.tarballExists) {
-    return 'reuse-cached-tarball'
-  }
-
-  if (options.publishedOnNpm) {
-    return 'fetch-published-tarball'
-  }
-
-  return 'skip-target'
-}
-
 function planReferenceRustTargetTarball(
   targetPackage: ReferenceRustTargetPackage,
+  allowRemoteFallback: boolean,
 ): RustTargetTarballPlan {
   const tarballFileName = packedTarballName(targetPackage.name, targetPackage.version)
   const tarballPath = resolve(rustGeneratedTarballsDir, tarballFileName)
   const tarballExists = existsSync(tarballPath)
+  const target = resolveReferenceRustTargetFromPackageName(targetPackage.name)
+  const hasCompatibleCachedTarball = tarballExists && target !== null
+    ? hasCompatibleReferenceRustTargetTarball(tarballPath, target)
+    : false
 
   return {
     strategy: resolveReferenceRustTargetTarballStrategy({
+      allowRemoteFallback,
       hasLocalBinary: targetPackage.hasLocalBinary,
       publishedOnNpm:
-        !targetPackage.hasLocalBinary && !tarballExists
+        !targetPackage.hasLocalBinary && !hasCompatibleCachedTarball
           ? isPublishedOnNpm(targetPackage.name, targetPackage.version)
           : false,
-      tarballExists,
+      tarballExists: hasCompatibleCachedTarball,
     }),
     tarballFileName,
     tarballPath,
+  }
+}
+
+function hasCompatibleReferenceRustTargetTarball(
+  tarballPath: string,
+  target: VirtualNativeTarget,
+): boolean {
+  try {
+    const tarballContents = execFileSync(
+      'tar',
+      ['-xOf', tarballPath, `package/virtual-native.${target}.node`],
+      {
+        stdio: ['ignore', 'pipe', 'ignore'],
+      },
+    )
+
+    return hasCompatibleReferenceRustBinaryContents(tarballContents)
+  } catch {
+    return false
   }
 }
 
@@ -625,8 +587,10 @@ async function createGeneratedRustTargetPackage(
 
 async function ensureReferenceRustGeneratedPackages(
   packageDir: string,
-  requiredTargets: readonly VirtualNativeTarget[] = SUPPORTED_VIRTUAL_NATIVE_TARGETS,
+  options: EnsureReferenceRustGeneratedPackagesOptions,
 ): Promise<ReferenceRustTargetPackage[]> {
+  const { forceBuildNativeTargets = false, requiredTargets } = options
+
   // `create-npm-dirs` defines the target package layout we inspect below.
   await run('pnpm', ['run', 'create-npm-dirs'], {
     cwd: packageDir,
@@ -635,6 +599,13 @@ async function ensureReferenceRustGeneratedPackages(
     },
     label: 'Prepare @reference-ui/rust npm target dirs',
   })
+
+  if (forceBuildNativeTargets) {
+    await removeReferenceRustTargetPackageBinaries(
+      listReferenceRustTargetPackages(packageDir),
+      requiredTargets,
+    )
+  }
 
   if (existsSync(referenceRustArtifactsDir(packageDir))) {
     await run('pnpm', ['run', 'artifacts'], {
@@ -647,11 +618,23 @@ async function ensureReferenceRustGeneratedPackages(
   }
 
   const initialTargetPackages = listReferenceRustTargetPackages(packageDir)
-  await stageLocalReferenceRustBinaryIntoTargetPackage(packageDir, initialTargetPackages)
+  if (!forceBuildNativeTargets) {
+    await stageLocalReferenceRustBinaryIntoTargetPackage(packageDir, initialTargetPackages)
+  }
   const targetPackagesAfterHostStaging = listReferenceRustTargetPackages(packageDir)
-  await stageRequiredLocallyBuiltReferenceRustBinaries(packageDir, targetPackagesAfterHostStaging, requiredTargets)
+  await stageRequiredLocallyBuiltReferenceRustBinaries(
+    packageDir,
+    targetPackagesAfterHostStaging,
+    requiredTargets,
+    forceBuildNativeTargets,
+  )
   const targetPackagesAfterLocalBuilds = listReferenceRustTargetPackages(packageDir)
-  await stageRequiredContainerBuiltReferenceRustBinaries(packageDir, targetPackagesAfterLocalBuilds, requiredTargets)
+  await stageRequiredContainerBuiltReferenceRustBinaries(
+    packageDir,
+    targetPackagesAfterLocalBuilds,
+    requiredTargets,
+    forceBuildNativeTargets,
+  )
 
   const rootVersion = readReferenceRustRootVersion(packageDir)
   const targetPackages = listReferenceRustTargetPackages(packageDir)
@@ -674,9 +657,14 @@ async function ensureReferenceRustGeneratedPackages(
 
 export async function materializeReferenceRustTargetTarballs(
   packageDir: string,
-  requiredTargets: readonly VirtualNativeTarget[] = SUPPORTED_VIRTUAL_NATIVE_TARGETS,
+  options: MaterializeReferenceRustTargetTarballsOptions = {},
 ): Promise<BuildRegistryArtifactPackage[]> {
-  const targetPackages = await ensureReferenceRustGeneratedPackages(packageDir, requiredTargets)
+  const requiredTargets = options.requiredTargets ?? SUPPORTED_VIRTUAL_NATIVE_TARGETS
+  const forceBuildNativeTargets = options.forceBuildNativeTargets ?? false
+  const targetPackages = await ensureReferenceRustGeneratedPackages(packageDir, {
+    forceBuildNativeTargets,
+    requiredTargets,
+  })
   const generatedPackages: BuildRegistryArtifactPackage[] = []
   const requiredTargetPackageNames = new Set<string>(
     requiredTargets.map(target => getVirtualNativePackageName(target)),
@@ -686,9 +674,9 @@ export async function materializeReferenceRustTargetTarballs(
   await mkdir(rustGeneratedTarballsDir, { recursive: true })
 
   for (const targetPackage of targetPackages) {
-    const plan = planReferenceRustTargetTarball(targetPackage)
+    const plan = planReferenceRustTargetTarball(targetPackage, !forceBuildNativeTargets)
 
-    // Local binaries win, cached remote tarballs are reused, and npm is the final fallback.
+    // Release builds force fresh local binaries; non-release registry staging can reuse remote tarballs.
     if (!(await executeReferenceRustTargetTarballPlan(targetPackage, plan))) {
       if (requiredTargetPackageNames.has(targetPackage.name)) {
         skippedTargets.push(targetPackage)
@@ -704,7 +692,9 @@ export async function materializeReferenceRustTargetTarballs(
       [
         `Failed to materialize required native packages for ${REFERENCE_RUST_PACKAGE_NAME}.`,
         `Missing tarballs: ${skippedTargets.map(targetPackage => `${targetPackage.name}@${targetPackage.version}`).join(', ')}.`,
-        'Each native package must exist at the same version as @reference-ui/rust, either from a local binary, a cached tarball, or an already published npm package.',
+        forceBuildNativeTargets
+          ? 'Each native package must be built or staged as a local binary during the release.'
+          : 'Each native package must exist at the same version as @reference-ui/rust, either from a local binary, a cached tarball, or an already published npm package.',
       ].join(' '),
     )
   }

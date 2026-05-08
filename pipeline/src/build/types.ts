@@ -10,6 +10,7 @@ export interface WorkspacePackage {
   dependencies: Record<string, string>
   dir: string
   name: string
+  packageJson?: Record<string, unknown>
   private: boolean
   scripts: Record<string, string>
   version: string
