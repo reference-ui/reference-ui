@@ -103,3 +103,32 @@ fn parse_declared_primitive_name(line: &str) -> Option<String> {
 
     Some(name.to_string())
 }
+
+#[cfg(test)]
+mod path_constant_tests {
+    //! Pin the workspace-fallback path constant used by primitive metadata to
+    //! a real file. If the primitives entry moves, this test fails loudly so
+    //! the constant stays in sync rather than degrading silently at runtime.
+
+    use super::WORKSPACE_PRIMITIVES_SOURCE;
+    use std::path::PathBuf;
+
+    fn workspace_root() -> PathBuf {
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("..")
+            .join("..")
+            .canonicalize()
+            .expect("expected workspace root to canonicalize")
+    }
+
+    #[test]
+    fn workspace_primitives_source_points_to_real_file() {
+        let path = workspace_root().join(WORKSPACE_PRIMITIVES_SOURCE);
+        assert!(
+            path.is_file(),
+            "WORKSPACE_PRIMITIVES_SOURCE points to {} which does not exist; update the constant in primitive_metadata.rs to match the new location of the primitives entry",
+            path.display()
+        );
+    }
+}
+

@@ -18,7 +18,7 @@ const REFERENCE_STYLE_PROPS_ENTRY_STEM: &str = ".reference-ui/react/types/style-
 const REFERENCE_REACT_ENTRY: &str = ".reference-ui/react/react.d.mts";
 const STYLED_TYPES_ROOT: &str = ".reference-ui/styled/types";
 const WORKSPACE_ROOT_MARKERS: &[&str] = &["pnpm-workspace.yaml", "nx.json"];
-const WORKSPACE_STYLE_PROPS_SOURCE: &str = "packages/reference-core/src/types/style-props.ts";
+const WORKSPACE_STYLE_PROPS_SOURCE: &str = "packages/reference-core/src/types/public/style-props.ts";
 const WORKSPACE_STYLED_TYPES_SOURCE_ROOT: &str = "packages/reference-core/src/system/styled/types";
 
 pub fn collect_reference_style_prop_names(
@@ -662,4 +662,58 @@ fn bind_type_params(
         );
     }
     env
+}
+
+#[cfg(test)]
+mod path_constant_tests {
+    //! Pin the workspace-fallback path constants used by the styletrace
+    //! resolver to real files. If a Reference UI file moves or is renamed,
+    //! these tests fail loudly so the constants stay in sync rather than
+    //! degrading silently into the "failed to read ..." warning at runtime.
+
+    use super::{WORKSPACE_STYLE_PROPS_SOURCE, WORKSPACE_STYLED_TYPES_SOURCE_ROOT};
+    use std::path::PathBuf;
+
+    fn workspace_root() -> PathBuf {
+        // CARGO_MANIFEST_DIR == packages/reference-rs; workspace root is two up.
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("..")
+            .join("..")
+            .canonicalize()
+            .expect("expected workspace root to canonicalize")
+    }
+
+    #[test]
+    fn workspace_style_props_source_points_to_real_file() {
+        let path = workspace_root().join(WORKSPACE_STYLE_PROPS_SOURCE);
+        assert!(
+            path.is_file(),
+            "WORKSPACE_STYLE_PROPS_SOURCE points to {} which does not exist; update the constant in tracer.rs to match the new location of the StyleProps source",
+            path.display()
+        );
+    }
+
+    #[test]
+    fn workspace_styled_types_source_root_points_to_real_dir() {
+        let path = workspace_root().join(WORKSPACE_STYLED_TYPES_SOURCE_ROOT);
+        assert!(
+            path.is_dir(),
+            "WORKSPACE_STYLED_TYPES_SOURCE_ROOT points to {} which does not exist; update the constant in tracer.rs to match the new location of the styled types source root",
+            path.display()
+        );
+    }
+
+    #[test]
+    fn workspace_styled_system_types_decl_exists() {
+        // The resolver expects `system-types.d.ts` under the styled types root
+        // when falling back to the workspace source.
+        let path = workspace_root()
+            .join(WORKSPACE_STYLED_TYPES_SOURCE_ROOT)
+            .join("system-types.d.ts");
+        assert!(
+            path.is_file(),
+            "expected styled system-types declaration at {}; update the constant in tracer.rs if the file moved",
+            path.display()
+        );
+    }
 }
