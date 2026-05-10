@@ -14,12 +14,15 @@ use super::path::{
     resolve_local_module_path,
 };
 
-const REFERENCE_STYLE_PROPS_ENTRY_STEM: &str = ".reference-ui/react/types/style-props";
+const REFERENCE_STYLE_PROPS_ENTRY_STEMS: &[&str] = &[
+    // Current packager-ts layout (post type-graph reorg): types nested under `public/`.
+    ".reference-ui/react/types/public/style-props",
+    // Legacy flat layout retained as a fallback so older `@reference-ui/core`
+    // tarballs still resolve cleanly during incremental upgrades.
+    ".reference-ui/react/types/style-props",
+];
 const REFERENCE_REACT_ENTRY: &str = ".reference-ui/react/react.d.mts";
 const STYLED_TYPES_ROOT: &str = ".reference-ui/styled/types";
-const WORKSPACE_ROOT_MARKERS: &[&str] = &["pnpm-workspace.yaml", "nx.json"];
-const WORKSPACE_STYLE_PROPS_SOURCE: &str = "packages/reference-core/src/types/public/style-props.ts";
-const WORKSPACE_STYLED_TYPES_SOURCE_ROOT: &str = "packages/reference-core/src/system/styled/types";
 
 pub fn collect_reference_style_prop_names(
     sync_root: &Path,
@@ -33,14 +36,16 @@ pub fn collect_reference_style_prop_names(
 fn resolve_reference_style_props_path(
     sync_root: &Path,
 ) -> Result<Option<PathBuf>, StyleTraceError> {
-    if let Ok(path) = resolve_generated_declaration(sync_root, REFERENCE_STYLE_PROPS_ENTRY_STEM) {
-        return Ok(Some(path));
-    }
-
-    if let Some(path) =
-        resolve_workspace_reference_core_path(sync_root, WORKSPACE_STYLE_PROPS_SOURCE)?
-    {
-        return Ok(Some(path));
+    // Production contract: the StyleProps declaration is always emitted under
+    // the consumer's synced `.reference-ui/` tree by the packager. We do not
+    // walk up looking for workspace source files — that would silently couple
+    // the resolver to whatever development tree it happens to be invoked from.
+    // If no generated declaration is present, the consumer hasn't run `ref
+    // sync` yet and there is nothing to trace.
+    for stem in REFERENCE_STYLE_PROPS_ENTRY_STEMS {
+        if let Ok(path) = resolve_generated_declaration(sync_root, stem) {
+            return Ok(Some(path));
+        }
     }
 
     Ok(None)
@@ -59,45 +64,6 @@ fn resolve_generated_declaration(sync_root: &Path, stem: &str) -> Result<PathBuf
         sync_root.join(stem).display(),
         sync_root.join(stem).display()
     )))
-}
-
-fn resolve_workspace_reference_core_path(
-    sync_root: &Path,
-    relative_path: &str,
-) -> Result<Option<PathBuf>, StyleTraceError> {
-    let Some(workspace_root) = find_workspace_root(sync_root) else {
-        return Ok(None);
-    };
-
-    let candidate = workspace_root.join(relative_path);
-    if candidate.is_file() {
-        return Ok(Some(candidate));
-    }
-
-    Err(StyleTraceError::new(format!(
-        "failed to read {}",
-        candidate.display()
-    )))
-}
-
-fn find_workspace_root(start_path: &Path) -> Option<PathBuf> {
-    let mut current = if start_path.is_dir() {
-        Some(start_path)
-    } else {
-        start_path.parent()
-    };
-
-    while let Some(path) = current {
-        if WORKSPACE_ROOT_MARKERS
-            .iter()
-            .any(|marker| path.join(marker).is_file())
-        {
-            return Some(path.to_path_buf());
-        }
-        current = path.parent();
-    }
-
-    None
 }
 
 pub fn collect_style_prop_names(
@@ -551,8 +517,6 @@ impl StyleTracer {
                     .sync_root
                     .join(STYLED_TYPES_ROOT)
                     .join("system-types.d.ts"),
-                WORKSPACE_STYLED_TYPES_SOURCE_ROOT,
-                "system-types.d.ts",
                 specifier,
             )? {
                 return Ok(Some(path));
@@ -566,8 +530,6 @@ impl StyleTracer {
                     .sync_root
                     .join(STYLED_TYPES_ROOT)
                     .join(format!("{rest}.d.ts")),
-                WORKSPACE_STYLED_TYPES_SOURCE_ROOT,
-                &format!("{rest}.d.ts"),
                 specifier,
             )? {
                 return Ok(Some(path));
@@ -578,8 +540,6 @@ impl StyleTracer {
             if let Ok(path) = self.resolve_reference_support_module(
                 current_module,
                 &self.sync_root.join(REFERENCE_REACT_ENTRY),
-                "packages/reference-core/src/entry",
-                "react.ts",
                 specifier,
             ) {
                 return Ok(path);
@@ -612,25 +572,23 @@ impl StyleTracer {
         )))
     }
 
+    /// Resolve a `@reference-ui/*` support module to either:
+    ///   1. the generated declaration emitted under the consumer's `.reference-ui/`
+    ///      sync output (preferred), or
+    ///   2. the package as installed in `node_modules` (production fallback).
+    ///
+    /// We deliberately do not walk up looking for workspace source files — this
+    /// resolver runs in arbitrary consumer apps and must behave the same
+    /// regardless of whether it happens to be invoked inside the reference-ui
+    /// dev workspace.
     fn resolve_reference_support_module(
         &self,
         current_module: &Path,
         generated_path: &Path,
-        workspace_relative_dir: &str,
-        workspace_file_name: &str,
         specifier: &str,
     ) -> Result<Option<PathBuf>, StyleTraceError> {
         if generated_path.is_file() {
             return Ok(Some(generated_path.to_path_buf()));
-        }
-
-        if let Some(workspace_root) = find_workspace_root(&self.sync_root) {
-            let workspace_candidate = workspace_root
-                .join(workspace_relative_dir)
-                .join(workspace_file_name);
-            if workspace_candidate.is_file() {
-                return Ok(Some(workspace_candidate));
-            }
         }
 
         let resolution_root = current_module.parent().unwrap_or(current_module);
@@ -662,58 +620,4 @@ fn bind_type_params(
         );
     }
     env
-}
-
-#[cfg(test)]
-mod path_constant_tests {
-    //! Pin the workspace-fallback path constants used by the styletrace
-    //! resolver to real files. If a Reference UI file moves or is renamed,
-    //! these tests fail loudly so the constants stay in sync rather than
-    //! degrading silently into the "failed to read ..." warning at runtime.
-
-    use super::{WORKSPACE_STYLE_PROPS_SOURCE, WORKSPACE_STYLED_TYPES_SOURCE_ROOT};
-    use std::path::PathBuf;
-
-    fn workspace_root() -> PathBuf {
-        // CARGO_MANIFEST_DIR == packages/reference-rs; workspace root is two up.
-        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("..")
-            .join("..")
-            .canonicalize()
-            .expect("expected workspace root to canonicalize")
-    }
-
-    #[test]
-    fn workspace_style_props_source_points_to_real_file() {
-        let path = workspace_root().join(WORKSPACE_STYLE_PROPS_SOURCE);
-        assert!(
-            path.is_file(),
-            "WORKSPACE_STYLE_PROPS_SOURCE points to {} which does not exist; update the constant in tracer.rs to match the new location of the StyleProps source",
-            path.display()
-        );
-    }
-
-    #[test]
-    fn workspace_styled_types_source_root_points_to_real_dir() {
-        let path = workspace_root().join(WORKSPACE_STYLED_TYPES_SOURCE_ROOT);
-        assert!(
-            path.is_dir(),
-            "WORKSPACE_STYLED_TYPES_SOURCE_ROOT points to {} which does not exist; update the constant in tracer.rs to match the new location of the styled types source root",
-            path.display()
-        );
-    }
-
-    #[test]
-    fn workspace_styled_system_types_decl_exists() {
-        // The resolver expects `system-types.d.ts` under the styled types root
-        // when falling back to the workspace source.
-        let path = workspace_root()
-            .join(WORKSPACE_STYLED_TYPES_SOURCE_ROOT)
-            .join("system-types.d.ts");
-        assert!(
-            path.is_file(),
-            "expected styled system-types declaration at {}; update the constant in tracer.rs if the file moved",
-            path.display()
-        );
-    }
 }

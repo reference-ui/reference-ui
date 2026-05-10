@@ -1,5 +1,6 @@
 import { createRequire } from 'node:module'
-import { existsSync, readdirSync, statSync } from 'node:fs'
+import { createHash } from 'node:crypto'
+import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import { join } from 'node:path'
 
@@ -13,6 +14,7 @@ if (!triple) {
 }
 
 const binaryPath = join(packageDir, 'native', `virtual-native.${triple}.node`)
+const buildStampPath = join(packageDir, 'native', `virtual-native.${triple}.inputs.sha256`)
 const nativeInputs = [
   join(packageDir, 'Cargo.toml'),
   join(packageDir, 'Cargo.lock'),
@@ -20,39 +22,66 @@ const nativeInputs = [
   join(packageDir, 'src'),
 ]
 
-function latestModifiedAtMs(path: string): number {
-  if (!existsSync(path)) {
-    return 0
+/**
+ * Hash the rust input tree by file *content*. Mtime-based comparison is
+ * unreliable in practice: editors, file syncs, and tooling can write files
+ * with preserved or older timestamps, which would fool a mtime check into
+ * skipping a needed rebuild and silently shipping a stale .node binary.
+ */
+function hashNativeInputs(): string {
+  const hash = createHash('sha256')
+
+  function visit(path: string): void {
+    if (!existsSync(path)) {
+      hash.update(`missing:${path}\n`)
+      return
+    }
+
+    const stats = statSync(path)
+    if (!stats.isDirectory()) {
+      hash.update(`file:${path}:${stats.size}\n`)
+      hash.update(readFileSync(path))
+      return
+    }
+
+    const entries = readdirSync(path, { withFileTypes: true })
+      .map((entry) => entry.name)
+      .sort()
+
+    for (const name of entries) {
+      visit(join(path, name))
+    }
   }
 
-  const stats = statSync(path)
-  if (!stats.isDirectory()) {
-    return stats.mtimeMs
+  for (const input of nativeInputs) {
+    visit(input)
   }
 
-  let latest = stats.mtimeMs
-  for (const entry of readdirSync(path, { withFileTypes: true })) {
-    latest = Math.max(latest, latestModifiedAtMs(join(path, entry.name)))
-  }
-  return latest
+  return hash.digest('hex')
 }
 
-function nativeInputsChangedSinceBuild(): boolean {
-  if (!existsSync(binaryPath)) {
-    return true
+function readBuildStamp(): string | null {
+  if (!existsSync(buildStampPath)) {
+    return null
   }
 
-  const binaryModifiedAtMs = statSync(binaryPath).mtimeMs
-  const latestInputModifiedAtMs = Math.max(
-    ...nativeInputs.map(path => latestModifiedAtMs(path))
-  )
-
-  return latestInputModifiedAtMs > binaryModifiedAtMs
+  try {
+    return readFileSync(buildStampPath, 'utf8').trim()
+  } catch {
+    return null
+  }
 }
+
+function writeBuildStamp(stamp: string): void {
+  writeFileSync(buildStampPath, `${stamp}\n`)
+}
+
+const currentInputsHash = hashNativeInputs()
 
 if (existsSync(binaryPath)) {
-  if (nativeInputsChangedSinceBuild()) {
-    console.log(`Rebuilding stale native binary ${binaryPath}`)
+  const recordedInputsHash = readBuildStamp()
+  if (recordedInputsHash !== currentInputsHash) {
+    console.log(`Rebuilding stale native binary ${binaryPath}: rust inputs changed`)
   } else {
     try {
       const require = createRequire(import.meta.url)
@@ -78,3 +107,5 @@ execFileSync('pnpm', ['run', 'build:native', '--', '--target', target], {
   stdio: 'inherit',
   env: process.env,
 })
+
+writeBuildStamp(currentInputsHash)
