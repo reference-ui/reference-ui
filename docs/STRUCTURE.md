@@ -360,7 +360,7 @@ packages/reference-core/
 ### For Contributors
 
 1. Add/modify styled system definitions
-2. Run `pnpm build` (runs all microbundles)
+2. Run `pnpm pipeline build` (runs all microbundles)
 3. Test generated output
 4. Commit both source and generated files
 

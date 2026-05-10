@@ -37,9 +37,8 @@ These files are copied by:
 
 - packages/reference-core/tools/copy-reference-api-component.mjs
 
-In the monorepo this directory is gitignored; the workspace root \`prepare\` script runs
-\`copy:reference-api-component\` after \`pnpm install\`, and \`prebuild\` / \`predev\` / \`pretypecheck\`
-also run the same copy.
+In the monorepo this directory is gitignored; the package's \`prepare\` script runs
+this copy after \`pnpm install\`, and \`prebuild\` runs it again before each build.
 
 Do not edit files here directly. Edit the reference-lib source and re-run the copy script.
 `

@@ -50,13 +50,7 @@ After the branch lands on `main`, pending changeset files describe unreleased in
 Apply pending changesets to bump versions and write changelogs:
 
 ```bash
-pnpm version-packages
-```
-
-That runs:
-
-```bash
-changeset version && pnpm install --lockfile-only
+pnpm changeset version && pnpm install --lockfile-only
 ```
 
 Commit the result (often as a PR titled along the lines of “Version Packages”) and merge it when ready. Your team may automate opening that PR outside this repo’s Actions; what matters is that the version bump commit exists before publish.
@@ -85,7 +79,7 @@ If your branch changes a published package:
 1. run `pnpm changeset`
 2. commit it on the branch
 3. merge the branch
-4. merge a follow-up that runs `pnpm version-packages` (version + changelog commit)
+4. merge a follow-up that runs `pnpm changeset version && pnpm install --lockfile-only` (version + changelog commit)
 5. run `pnpm release` from the pipeline when you intend to publish
 
 ## What Gets Released
@@ -126,25 +120,19 @@ So published packages can version independently when needed.
 
 ## Recommended Validation Before Release
 
-Before publishing, run the checks your team relies on—for example:
+Before publishing, run the checks your team relies on. The pipeline is the authority:
 
 ```bash
 pnpm install --frozen-lockfile
-pnpm run test:ci:unit
+pnpm pipeline test
 ```
 
-For a broader pass:
-
-```bash
-pnpm run test:full
-```
-
-Pipeline-oriented checks (see `pipeline/` and root `package.json` `pipeline:*` scripts) should match what your CI runs.
+See `pipeline/` for the available pipeline commands.
 
 ## Important Commands
 
 - `pnpm changeset`
-- `pnpm version-packages`
+- `pnpm changeset version && pnpm install --lockfile-only`
 - `pnpm pipeline release plan`
 - `pnpm release` (same as `pnpm pipeline release`)
 

@@ -32,7 +32,7 @@ The “**AI era**” angle is not marketing fluff: the stack is designed so that
 | `pipeline/` | Dagger graph, **Verdaccio** staging, pack → load → test flows, **matrix** bootstrap. |
 | `docs/` | **reference-core story** — [STRUCTURE.md](./docs/STRUCTURE.md) (three layers, API table, microbundle pattern); [Architecture.md](./docs/Architecture.md) (file map); also `CORE.md`, `LAYERS.md`, `SIZE.md`, `RELEASE.md`, etc. **§23–§24** in this file fold both in with current paths. |
 
-Root scripts (`pnpm dev`, `pnpm build`, `pnpm test`, `pnpm test:rust`, …) tie these together; see the root [README.md](./README.md).
+Root scripts (`pnpm pipeline`, `pnpm release`, `pnpm changeset`, `pnpm setup:local`) tie these together; see the root [README.md](./README.md).
 
 ---
 
@@ -365,10 +365,10 @@ Files: `packages/reference-core/src/reference/browser/` (e.g. `Reference.tsx`, `
 
 **Typical local flow**
 
-1. `pnpm build` (through the pipeline) produces built workspace artifacts.
-2. `pnpm pipeline:registry:pack` (or the repo’s equivalent) materializes **publish-shaped** tarballs.
-3. `pnpm pipeline:registry:start` runs Verdaccio.
-4. `pnpm pipeline:registry:stage:local` loads those tarballs into the local registry with a **manifest** describing names, versions, paths, and hashes.
+1. `pnpm pipeline build` produces built workspace artifacts.
+2. `pnpm pipeline registry pack` (or the repo’s equivalent) materializes **publish-shaped** tarballs.
+3. `pnpm pipeline registry start` runs Verdaccio.
+4. `pnpm pipeline registry stage local` loads those tarballs into the local registry with a **manifest** describing names, versions, paths, and hashes.
 
 **Why:** staging copies packages to `.pipeline/registry/staging/`, rewrites **`workspace:`** to concrete versions, strips `private` where needed, and runs `pnpm pack`—matching **real npm** behavior as closely as practical. Downstream test installs pull from the **same** artifact set release would promote.
 
@@ -403,7 +403,7 @@ Implementation: [pipeline/src/testing/matrix/run.ts](./pipeline/src/testing/matr
 | `packages/reference-core` unit tests (Vitest) | Event bus, path helpers, sync helpers, many pure modules. |
 | `packages/reference-rs` (Rust + Vitest) | Parser and emitter semantics, Tasty case suites, Styletrace, Atlas. |
 | `matrix/*` (Vitest / Playwright in Dagger) | Browser and install-shaped regressions per `matrix.json` scenarios. |
-| Pipeline unit tests | `pnpm pipeline:test:pipeline` for registry and graph helpers. |
+| Pipeline unit tests | `pnpm --dir pipeline run test:pipeline` for registry and graph helpers. |
 | Matrix (Dagger) | Packaged **install** + **`ref sync`** in clean Linux + project tests. |
 
 ---
@@ -873,7 +873,7 @@ These **`#[napi]`** functions are what Node actually calls (names are the Rust A
 | `pnpm --filter @reference-ui/rust run build` | `ensure-native` + `build:js` (compile addon if needed, then tsup). |
 | `pnpm --filter @reference-ui/rust run ensure-native` | Ensure `.node` exists for dev (see `js/tools/ensure-native.ts`). |
 | `build:native` / `napi build` | Produce `native/*.node` for the selected platform. |
-| `cargo test` + `vitest run` | `pnpm run test` runs both. |
+| `cargo test` + `vitest run` | `pnpm --filter @reference-ui/rust run test` runs both. |
 
 **Benchmarks:** `[[bench]]` in `Cargo.toml` (e.g. `scan_kitchen_sink`).
 
