@@ -12,7 +12,6 @@ import {
   Li,
   Ol,
   P,
-  Pre,
   Strong,
   Ul,
   Div,
@@ -68,7 +67,6 @@ export const mdxComponents = {
     <H1
       color="docsText"
       fontSize="8r"
-      fontWeight="700"
       letterSpacing="-0.02em"
       lineHeight="1.15"
       marginTop="0"
@@ -163,7 +161,7 @@ export const mdxComponents = {
       </Code>
     )
   },
-  pre: props => (
+  pre: ({ children }) => (
     <Div
       overflow="auto"
       padding="4r"
@@ -176,7 +174,8 @@ export const mdxComponents = {
       borderRadius="lg"
       fontSize="sm"
       lineHeight="1.5"
-      {...props}
-    />
+    >
+      {children}
+    </Div>
   ),
 } satisfies MDXComponents

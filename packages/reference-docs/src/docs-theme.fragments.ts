@@ -1,8 +1,11 @@
 import { tokens } from '@reference-ui/system'
 
+/**
+ * Docs-only semantic colors (dark mode via Panda `dark` keys).
+ * Collected by `ref sync` from ui.config `include` patterns.
+ */
 tokens({
   colors: {
-    mySpecialToken: { value: 'red' },
     docsPageBg: {
       value: '{colors.gray.50}',
       dark: '{colors.gray.950}',

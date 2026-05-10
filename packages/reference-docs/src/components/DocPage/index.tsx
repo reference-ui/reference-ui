@@ -1,6 +1,6 @@
 import { useParams } from '@tanstack/react-router'
 import { Div } from '@reference-ui/react'
-import { slugToModule } from '../../lib/docs'
+import { slugToModule } from '../../docs-registry'
 
 export function DocPage() {
   const { slug } = useParams({ strict: false })

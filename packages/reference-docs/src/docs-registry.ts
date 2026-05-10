@@ -1,10 +1,12 @@
+/// <reference types="vite/client" />
+
 import React from 'react'
 
-/** All docs with frontmatter — each MDX exports { default, frontmatter } */
+/** All MDX pages with frontmatter — each exports { default, frontmatter } */
 const docModules = import.meta.glob<{
   default: React.ComponentType
   frontmatter: { title: string; section: string; order: number; slug: string }
-}>('../docs/**/*.mdx', { eager: true })
+}>('./content/**/*.mdx', { eager: true })
 
 export type DocMeta = {
   title: string
@@ -30,6 +32,4 @@ export const docsBySection = docs.reduce(
 )
 
 /** Slug → module for route resolution */
-export const slugToModule = Object.fromEntries(
-  docs.map(d => [d.slug, docModules[d.path]])
-)
+export const slugToModule = Object.fromEntries(docs.map(d => [d.slug, docModules[d.path]]))

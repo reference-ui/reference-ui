@@ -1,7 +1,7 @@
 import { Outlet } from '@tanstack/react-router'
 import { MDXProvider } from '@mdx-js/react'
 import { Div, Main } from '@reference-ui/react'
-import { useDocsTheme } from '../../context/DocsThemeContext'
+import { useDocsTheme } from '../../shared/providers/DocsThemeContext'
 import { mdxComponents } from '../mdxComponents'
 import { DocSidebar } from './DocSidebar'
 

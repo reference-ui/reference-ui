@@ -2,9 +2,9 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { RouterProvider } from '@tanstack/react-router'
 import { ErrorBoundary } from './components/ErrorBoundary'
-import { DocsThemeProvider } from './context/DocsThemeContext'
+import { DocsThemeProvider } from './shared/providers/DocsThemeContext'
 import { router } from './router'
-import './tokens'
+import './docs-theme.fragments'
 import '@reference-ui/react/styles.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

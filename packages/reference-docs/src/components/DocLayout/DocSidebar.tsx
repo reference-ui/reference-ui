@@ -1,6 +1,6 @@
 import { Link, useRouterState } from '@tanstack/react-router'
-import { Aside, Div, H2, Nav, Span, css } from '@reference-ui/react'
-import { docsBySection } from '../../lib/docs'
+import { Aside, Div, H2, Nav, css } from '@reference-ui/react'
+import { docsBySection } from '../../docs-registry'
 import { ThemeToggle } from '../ThemeToggle'
 
 const navLinkClass = css({

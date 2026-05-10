@@ -1,5 +1,5 @@
 import { Div, Span, css } from '@reference-ui/react'
-import { useDocsTheme } from '../context/DocsThemeContext'
+import { useDocsTheme } from '../shared/providers/DocsThemeContext'
 
 const segment = ({ active }: { active: boolean }) =>
   css({
