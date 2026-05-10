@@ -115,10 +115,10 @@ Recorded in repo memory: `/memories/repo/matrix-chain-layered-token-scope.md`.
 
 ### 3.3 Build & pipeline observations
 
-- `fixture-build-cache.mjs` correctly hashes inputs across the new fixtures;
-  on miss runs `pnpm run build:full` (build core → sync reference-lib → build
-  upstream fixtures (if any) → run own sync → tsup → build-package).
-  All 5 new fixtures built clean on first attempt.
+- The pipeline's input-hash cache (`buildWorkspaceArtifacts`) correctly skips
+  unchanged fixtures and rebuilds the rest end-to-end (build core → sync
+  reference-lib → build upstream fixtures (if any) → run own sync → tsup →
+  build-package). All 5 new fixtures built clean on first attempt.
 - `pipeline setup --sync` regenerates managed files (`index.html`, `vite.config.ts`,
   `vitest.config.ts`, `playwright.config.ts`, `src/main.tsx`) and re-renders
   `package.json` while preserving deps. It rebuilds upstream fixture artifacts as

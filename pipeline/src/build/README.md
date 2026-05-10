@@ -19,8 +19,6 @@ Build responsibilities still touch a few surfaces outside pure Dagger:
 
 - `.github/workflows/rust-compile.yml` (called only from `.github/workflows/docs.yml`)
 	- compiles Linux native artifacts used when building the docs site on GitHub Actions
-- `scripts/fixture-build-cache.mjs`
-	- caches and short-circuits fixture package builds based on file hashes
 
 Package builds, test-time native builds, and release-time multi-target native work should converge on the pipeline and your primary CI, not on per-workflow YAML copies.
 

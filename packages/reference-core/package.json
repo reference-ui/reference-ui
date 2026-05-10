@@ -38,7 +38,7 @@
     "prepare": "node tools/copy-reference-api-component.mjs",
     "prebuild": "node tools/clean-dist.mjs && tsx src/system/build/primitives/index.ts && tsx src/system/build/styled/index.ts && node tools/copy-reference-api-component.mjs",
     "build": "pnpm run build:native && tsup",
-    "build:native": "node ../../scripts/pipeline/run-if-env-absent.mjs REF_PIPELINE_SKIP_DEPENDENCY_BUILDS \"pnpm --filter @reference-ui/rust run build\"",
+    "build:native": "node ../../pipeline/scripts/run-if-env-absent.mjs REF_PIPELINE_SKIP_DEPENDENCY_BUILDS \"pnpm --filter @reference-ui/rust run build\"",
     "prepack": "pnpm run build",
     "dev": "tsup --watch",
     "sync": "node dist/cli/index.mjs sync",

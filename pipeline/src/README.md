@@ -11,7 +11,7 @@ The rough category split is:
 
 These categories are meant to absorb the responsibilities that used to be spread across GitHub Actions, ad hoc scripts, and package-local glue. In this repo, **GitHub Actions is limited to docs** (`.github/workflows/docs.yml`, which reuses `.github/workflows/rust-compile.yml` for Linux bindings used by the docs build). Everything else—build, test, release—should go through the pipeline.
 
-Remaining helper scripts include things like `scripts/fixture-build-cache.mjs` and `scripts/pipeline/run-if-env-absent.mjs` where packages need small conditional wrappers.
+Remaining helper scripts include things like `pipeline/scripts/run-if-env-absent.mjs` where packages need small conditional wrappers.
 
 ## Why This Exists
 
@@ -55,7 +55,7 @@ At a high level, the current system maps into this layout like this:
 
 - `build/`
 	- native compilation for **docs** still uses `.github/workflows/rust-compile.yml` as a callable workflow from the docs workflow; full multi-target native builds for release belong in the pipeline / your CI
-	- fixture/package build caching concerns are handled by `scripts/fixture-build-cache.mjs`
+	- fixture/package build caching is handled inside the pipeline by `buildWorkspaceArtifacts` (input-hash skip in `pipeline/src/build/`)
 - `release/`
 	- release planning, tarball staging, and npm publish live in `pipeline/src/release/` and are invoked via `pnpm pipeline release`
 - `registry/`
