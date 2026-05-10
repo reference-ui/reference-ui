@@ -35,10 +35,11 @@ function isMacOs(): boolean {
   return process.platform === 'darwin'
 }
 
-function runCommand(command: string, args: string[]) {
+function runCommand(command: string, args: string[], options: { timeoutMs?: number } = {}) {
   return spawnSync(command, args, {
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
+    timeout: options.timeoutMs,
   })
 }
 
@@ -57,7 +58,29 @@ function getDockerContext(): string | null {
 }
 
 function dockerReachable(): boolean {
-  return runCommand('docker', ['version']).status === 0
+  return runCommand('docker', ['version'], { timeoutMs: 5_000 }).status === 0
+}
+
+function dockerDaemonReady(): boolean {
+  // `docker info` performs a real daemon round-trip and is what downstream
+  // pipeline calls (Dagger, `docker system df`, etc.) immediately rely on.
+  return runCommand('docker', ['info'], { timeoutMs: 5_000 }).status === 0
+}
+
+function waitForDockerDaemon(timeoutMs = 60_000): boolean {
+  const deadline = Date.now() + timeoutMs
+  while (Date.now() < deadline) {
+    if (dockerDaemonReady()) {
+      return true
+    }
+    // Brief blocking wait between polls; spawnSync already paces us when the
+    // call times out, so this is only meaningful for fast failures.
+    const sleepResult = spawnSync('sh', ['-lc', 'sleep 1'])
+    if (sleepResult.status !== 0) {
+      break
+    }
+  }
+  return dockerDaemonReady()
 }
 
 function getDockerMemoryBytes(): number | null {
@@ -365,8 +388,8 @@ function ensureColimaResources(options: ContainerRuntimeOptions, runtime: Docker
   stopColima()
   startColima(desiredColimaStartOptions)
 
-  if (!dockerReachable()) {
-    throw new Error('Colima restarted, but Docker is still unreachable. Check `docker version` and retry.')
+  if (!waitForDockerDaemon()) {
+    throw new Error('Colima restarted, but the Docker daemon did not become ready. Check `docker info` and retry.')
   }
 
   const restartedColimaStatus = getColimaStatus()
@@ -477,8 +500,8 @@ export function ensureContainerRuntime(options: ContainerRuntimeOptions = {}): v
   }
 
   if (colimaRunning()) {
-    if (!dockerReachable()) {
-      throw new Error('Colima reports running, but Docker is still unreachable. Check `docker version` and your Docker context.')
+    if (!waitForDockerDaemon()) {
+      throw new Error('Colima reports running, but the Docker daemon did not become ready. Check `docker info` and your Docker context.')
     }
     assertDockerResources(options)
     return
@@ -487,8 +510,8 @@ export function ensureContainerRuntime(options: ContainerRuntimeOptions = {}): v
   console.log('Docker context is `colima` but the VM is not running. Starting Colima...')
   startColima(getDesiredColimaStartOptions(options))
 
-  if (!dockerReachable()) {
-    throw new Error('Colima started, but Docker is still unreachable. Check `docker version` and retry.')
+  if (!waitForDockerDaemon()) {
+    throw new Error('Colima started, but the Docker daemon did not become ready. Check `docker info` and retry.')
   }
 
   assertDockerResources(options)
