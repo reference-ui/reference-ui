@@ -21,6 +21,7 @@ import {
   getReleasePlan,
   runLocalRelease,
 } from './release/index.js'
+import { runDevDocs, runDevLib } from './dev/index.js'
 import { runMatrixTests } from './testing/matrix/run.js'
 import { setupMatrixPackages } from './testing/matrix/setup/index.js'
 
@@ -61,6 +62,26 @@ program
   .description('Build the public workspace packages and stage them into the managed local registry')
   .action(async () => {
     await buildWorkspacePackages()
+  })
+
+const devCommand = program.command('dev').description(
+  'Prepare release packages with pipeline build caching, then run a focused dev server (skips fixture libraries)',
+)
+
+devCommand
+  .command('docs')
+  .description('Build @reference-ui/icons, rust, core, lib as needed, then start the docs Vite dev server')
+  .option('--trace', 'Stream subprocess output while building dependencies')
+  .action(async (options: { trace?: boolean }) => {
+    await runDevDocs({ trace: options.trace })
+  })
+
+devCommand
+  .command('lib')
+  .description('Build @reference-ui/icons, rust, core, lib as needed, then start react-cosmos for reference-lib')
+  .option('--trace', 'Stream subprocess output while building dependencies')
+  .action(async (options: { trace?: boolean }) => {
+    await runDevLib({ trace: options.trace })
   })
 
 program
