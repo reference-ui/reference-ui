@@ -1,7 +1,8 @@
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, extname, join, relative } from 'node:path'
 import { DEFAULT_EXTERNALS, microBundle } from '../../lib/microbundle'
 import { scanForFragments } from '../../lib/fragments/scanner'
+import { resetDir } from '../../lib/fs/reset-dir'
 import { log } from '../../lib/log'
 import { applyTransforms } from '../transforms'
 
@@ -75,7 +76,10 @@ export async function syncVirtualStyleCollection(options: {
   const { root, virtualDir, include, breakpoints } = options
   const artifactRoot = join(virtualDir, VIRTUAL_STYLE_COLLECTION_DIR)
 
-  await rm(artifactRoot, { recursive: true, force: true })
+  // Use resetDir (not raw rm) so the watcher race that surfaces as ENOTEMPTY/
+  // EBUSY mid-traversal gets a bounded retry. Without this, ref sync --watch
+  // can fail under rapid change bursts (see matrix/watch).
+  await resetDir(artifactRoot)
 
   const sourceFiles = await listStyleSourceFiles(root, include)
   if (sourceFiles.length === 0) {
