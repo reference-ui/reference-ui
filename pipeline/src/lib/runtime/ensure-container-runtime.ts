@@ -5,6 +5,15 @@ interface ContainerRuntimeOptions {
   minimumDockerCpuCount?: number
   minimumDockerDiskFreeBytes?: number
   minimumDockerMemoryBytes?: number
+  /**
+   * When false, only ensures Docker responds (`docker version`). Skips CPU /
+   * memory / disk assertions and Colima resize restarts (those paths can take a
+   * long time). Use for workflows that only need a running daemon (e.g. Dagger
+   * dev helpers); keep true for matrix-sized gates.
+   *
+   * @default true
+   */
+  verifyDockerResources?: boolean
 }
 
 interface ColimaStatus {
@@ -484,7 +493,9 @@ export function ensureContainerRuntime(options: ContainerRuntimeOptions = {}): v
   }
 
   if (dockerReachable()) {
-    assertDockerResources(options)
+    if (options.verifyDockerResources !== false) {
+      assertDockerResources(options)
+    }
     return
   }
 
@@ -503,16 +514,22 @@ export function ensureContainerRuntime(options: ContainerRuntimeOptions = {}): v
     if (!waitForDockerDaemon()) {
       throw new Error('Colima reports running, but the Docker daemon did not become ready. Check `docker info` and your Docker context.')
     }
-    assertDockerResources(options)
+    if (options.verifyDockerResources !== false) {
+      assertDockerResources(options)
+    }
     return
   }
 
   console.log('Docker context is `colima` but the VM is not running. Starting Colima...')
-  startColima(getDesiredColimaStartOptions(options))
+  const colimaStartOptions =
+    options.verifyDockerResources === false ? {} : getDesiredColimaStartOptions(options)
+  startColima(colimaStartOptions)
 
   if (!waitForDockerDaemon()) {
     throw new Error('Colima started, but the Docker daemon did not become ready. Check `docker info` and retry.')
   }
 
-  assertDockerResources(options)
+  if (options.verifyDockerResources !== false) {
+    assertDockerResources(options)
+  }
 }

@@ -65,21 +65,21 @@ program
   })
 
 const devCommand = program.command('dev').description(
-  'Prepare release packages with pipeline build caching, then run a focused dev server (skips fixture libraries)',
+  'Load release packages into Verdaccio, npm-ping from Dagger, copy package sources into .pipeline/dev with tarball deps, pnpm install, run dev',
 )
 
 devCommand
   .command('docs')
-  .description('Build @reference-ui/icons, rust, core, lib as needed, then start the docs Vite dev server')
-  .option('--trace', 'Stream subprocess output while building dependencies')
+  .description('reference-docs → .pipeline/dev/reference-docs, then pnpm run dev (Vite)')
+  .option('--trace', 'Print Dagger engine log output during connect')
   .action(async (options: { trace?: boolean }) => {
     await runDevDocs({ trace: options.trace })
   })
 
 devCommand
   .command('lib')
-  .description('Build @reference-ui/icons, rust, core, lib as needed, then start react-cosmos for reference-lib')
-  .option('--trace', 'Stream subprocess output while building dependencies')
+  .description('reference-lib → .pipeline/dev/reference-lib, then pnpm run cosmos')
+  .option('--trace', 'Print Dagger engine log output during connect')
   .action(async (options: { trace?: boolean }) => {
     await runDevLib({ trace: options.trace })
   })

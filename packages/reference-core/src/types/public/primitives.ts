@@ -1,3 +1,5 @@
+/// <reference lib="dom" />
+
 import type * as React from 'react'
 import type { Tag } from '../../system/primitives/tags'
 import type { ColorModeProps } from './props'
@@ -24,8 +26,23 @@ export type PrimitiveProps<T extends PrimitiveTag> = Omit<
   keyof PrimitiveOwnProps
 > & PrimitiveOwnProps
 
+/**
+ * React's `JSX.IntrinsicElements` types `caption` and `menu` with the generic
+ * `HTMLElement` ref instead of the actual `HTMLTableCaptionElement` and
+ * `HTMLMenuElement`. That mismatch breaks `forwardRef<PrimitiveElement<T>, …>`
+ * when assigned to the curated `*Component` aliases (which use the correct
+ * specific element types). Override the affected tags here so the runtime
+ * primitives type-check against their real DOM element.
+ */
+interface PrimitiveElementOverrides {
+  caption: HTMLTableCaptionElement
+  menu: HTMLMenuElement
+}
+
 export type PrimitiveElement<T extends PrimitiveTag> =
-  React.ComponentRef<T>
+  T extends keyof PrimitiveElementOverrides
+    ? PrimitiveElementOverrides[T]
+    : React.ComponentRef<T>
 
 export type PrimitiveComponent<T extends PrimitiveTag> =
   React.ForwardRefExoticComponent<
