@@ -1,4 +1,5 @@
 import { defineConfig, type PluginOption } from 'vite'
+import contentCollections from '@content-collections/vite'
 import react from '@vitejs/plugin-react'
 import mdx from '@mdx-js/rollup'
 import remarkFrontmatter from 'remark-frontmatter'
@@ -13,12 +14,13 @@ export default defineConfig(async ({ command }) => {
         remarkPlugins: [remarkFrontmatter, remarkMdxFrontmatter],
       }),
     },
+    contentCollections(),
     react({ include: /\.(mdx|js|jsx|ts|tsx)$/ }),
   ]
 
   if (command === 'serve') {
     const { referenceVite } = await import('@reference-ui/core')
-    plugins.splice(1, 0, referenceVite())
+    plugins.splice(2, 0, referenceVite())
   }
 
   return {

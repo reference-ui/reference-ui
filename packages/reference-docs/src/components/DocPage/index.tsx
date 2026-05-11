@@ -1,17 +1,16 @@
 import { useParams } from '@tanstack/react-router'
 import { Div } from '@reference-ui/react'
-import { slugToModule } from '../../docs-registry'
+import { slugToModule } from '../../collections/runtime'
 
 export function DocPage() {
   const { slug } = useParams({ strict: false })
-  const mod = slugToModule[slug as string]
-  if (!mod) {
+  const Doc = slugToModule[slug as string]
+  if (!Doc) {
     return (
       <Div color="docsMuted" fontSize="md">
         Not found
       </Div>
     )
   }
-  const Doc = mod.default
   return <Doc />
 }

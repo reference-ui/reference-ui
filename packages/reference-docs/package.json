@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "ref sync && (ref sync --watch & vite)",
-    "build": "ref sync && vite build",
+    "dev": "content-collections build && ref sync && concurrently --kill-others-on-fail \"content-collections watch\" \"ref sync --watch\" \"vite\"",
+    "build": "content-collections build && ref sync && vite build",
     "build:pages": "pnpm build && cp dist/index.html dist/404.html",
     "preview": "vite preview"
   },
@@ -17,6 +17,9 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
+    "@content-collections/cli": "^0.1.9",
+    "@content-collections/core": "^0.15.0",
+    "@content-collections/vite": "^0.3.0",
     "@mdx-js/react": "^3.1.0",
     "@mdx-js/rollup": "^3.1.0",
     "@types/mdx": "^2.0.13",
@@ -27,6 +30,7 @@
     "remark-frontmatter": "^5.0.0",
     "remark-mdx-frontmatter": "^5.2.0",
     "typescript": "~5.9.3",
-    "vite": "^7.3.1"
+    "vite": "^7.3.1",
+    "zod": "^4.3.6"
   }
 }

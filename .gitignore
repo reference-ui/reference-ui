@@ -45,6 +45,7 @@ packages/.sandbox
 .reference-ui
 .ref
 .pipeline
+.content-collections
 pipeline/src/registry/.store
 packages/reference-core/src/system/styled
 packages/reference-core/src/reference/browser-component/
