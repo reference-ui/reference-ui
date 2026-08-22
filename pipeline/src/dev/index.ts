@@ -10,7 +10,7 @@ import { DEFAULT_REGISTRY_URL, REGISTRY_URL_IN_CONTAINER, RELEASE_PACKAGE_NAMES 
 import { buildWorkspacePackages } from '../build/index.js'
 import { run } from '../build/workspace.js'
 import { ensureContainerRuntime } from '../lib/runtime/ensure-container-runtime.js'
-import { materializeRegistryBackedDevWorkspace } from './materialize.js'
+import { markDevWorkspaceInstallComplete, materializeRegistryBackedDevWorkspace } from './materialize.js'
 import { baseNodeContainer, hostRegistryService } from '../testing/matrix/runner/container.js'
 import { externalPnpmStoreCacheKey, matrixNodeImage } from '../testing/matrix/node-modules/cache.js'
 
@@ -38,15 +38,20 @@ async function runPipelineDevDocsInner(trace?: boolean): Promise<void> {
   await runRegistryServicePreflight()
 
   logPhase('Writing .pipeline/dev/reference-docs from packages/reference-docs (workspace deps replaced with packed tarballs)')
-  const { workdir } = await materializeRegistryBackedDevWorkspace({
+  const { installState, workdir } = await materializeRegistryBackedDevWorkspace({
     relativePackageDir: 'packages/reference-docs',
     slug: 'reference-docs',
   })
 
-  await run('pnpm', ['install', '--reporter', 'append-only', '--registry', DEFAULT_REGISTRY_URL], {
-    cwd: workdir,
-    label: `pnpm install --registry ${DEFAULT_REGISTRY_URL}`,
-  })
+  if (installState.installRequired) {
+    await run('pnpm', ['install', '--reporter', 'append-only', '--registry', DEFAULT_REGISTRY_URL], {
+      cwd: workdir,
+      label: `pnpm install --registry ${DEFAULT_REGISTRY_URL}`,
+    })
+    await markDevWorkspaceInstallComplete(workdir, installState.installInputsHash)
+  } else {
+    logPhase('Skipping pnpm install in .pipeline/dev/reference-docs; install inputs unchanged')
+  }
 
   await run('pnpm', ['run', 'dev'], {
     cwd: workdir,
@@ -61,15 +66,20 @@ async function runPipelineDevLibInner(trace?: boolean): Promise<void> {
   await runRegistryServicePreflight()
 
   logPhase('Writing .pipeline/dev/reference-lib from packages/reference-lib (workspace deps replaced with packed tarballs)')
-  const { workdir } = await materializeRegistryBackedDevWorkspace({
+  const { installState, workdir } = await materializeRegistryBackedDevWorkspace({
     relativePackageDir: 'packages/reference-lib',
     slug: 'reference-lib',
   })
 
-  await run('pnpm', ['install', '--reporter', 'append-only', '--registry', DEFAULT_REGISTRY_URL], {
-    cwd: workdir,
-    label: `pnpm install --registry ${DEFAULT_REGISTRY_URL}`,
-  })
+  if (installState.installRequired) {
+    await run('pnpm', ['install', '--reporter', 'append-only', '--registry', DEFAULT_REGISTRY_URL], {
+      cwd: workdir,
+      label: `pnpm install --registry ${DEFAULT_REGISTRY_URL}`,
+    })
+    await markDevWorkspaceInstallComplete(workdir, installState.installInputsHash)
+  } else {
+    logPhase('Skipping pnpm install in .pipeline/dev/reference-lib; install inputs unchanged')
+  }
 
   await run('pnpm', ['run', 'cosmos'], {
     cwd: workdir,

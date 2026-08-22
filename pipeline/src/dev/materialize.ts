@@ -2,8 +2,14 @@
  * Materialize a registry-backed dev workspace: package sources plus a consumer
  * package.json where workspace:* deps are rewritten to local packed tarballs,
  * matching the matrix consumer boundary (real install graphs, tree-shaking).
+ *
+ * Unlike matrix runs, the dev materialization intentionally preserves selected
+ * generated caches between runs so docs/lib dev loops do not re-install or
+ * re-generate everything from scratch.
  */
 
+import { createHash } from 'node:crypto'
+import { existsSync } from 'node:fs'
 import { copyFile, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { DEFAULT_REGISTRY_URL } from '../../config.js'
@@ -16,6 +22,47 @@ import { createMatrixConsumerPackageJson } from '../testing/matrix/managed/packa
 import type { MatrixFixturePackageJson } from '../testing/matrix/managed/package-json/index.js'
 
 const excludedTopLevelNames = new Set(['node_modules', 'dist', '.git', '.turbo'])
+const preservedDevWorkspaceEntries = new Set([
+  '.content-collections',
+  '.pipeline-dev-install-state.json',
+  '.reference-ui',
+  'node_modules',
+  'pnpm-lock.yaml',
+])
+const devInstallStateFileName = '.pipeline-dev-install-state.json'
+
+function hashContent(parts: readonly (string | Buffer)[]): string {
+  const hash = createHash('sha256')
+
+  for (const part of parts) {
+    hash.update(part)
+    hash.update('\n')
+  }
+
+  return hash.digest('hex')
+}
+
+async function removePath(targetPath: string): Promise<void> {
+  await rm(targetPath, {
+    force: true,
+    maxRetries: 10,
+    recursive: true,
+    retryDelay: 100,
+  })
+}
+
+async function resetDevWorkspace(workdir: string): Promise<void> {
+  await mkdir(workdir, { recursive: true })
+  const entries = await readdir(workdir, { withFileTypes: true })
+
+  for (const entry of entries) {
+    if (preservedDevWorkspaceEntries.has(entry.name)) {
+      continue
+    }
+
+    await removePath(join(workdir, entry.name))
+  }
+}
 
 async function copyPackageSources(srcDir: string, destDir: string): Promise<void> {
   await mkdir(destDir, { recursive: true })
@@ -109,14 +156,65 @@ function rewriteRefBinInvocations(scripts: Record<string, string>): Record<strin
   return next
 }
 
+interface DevWorkspaceInstallStateFile {
+  installInputsHash: string
+}
+
+async function readDevWorkspaceInstallState(
+  installStatePath: string,
+): Promise<DevWorkspaceInstallStateFile | null> {
+  try {
+    const raw = await readFile(installStatePath, 'utf8')
+    const parsed = JSON.parse(raw) as Partial<DevWorkspaceInstallStateFile>
+
+    if (typeof parsed.installInputsHash !== 'string' || parsed.installInputsHash.length === 0) {
+      return null
+    }
+
+    return { installInputsHash: parsed.installInputsHash }
+  } catch {
+    return null
+  }
+}
+
+function computeDevInstallInputsHash(parts: {
+  npmrcContents: string
+  packageJsonContents: string
+  workspaceYamlContents: string
+}): string {
+  return hashContent([
+    parts.packageJsonContents,
+    parts.workspaceYamlContents,
+    parts.npmrcContents,
+  ])
+}
+
 export interface MaterializeRegistryBackedDevWorkspaceOptions {
   relativePackageDir: string
   slug: string
 }
 
+export interface MaterializeRegistryBackedDevWorkspaceResult {
+  installState: {
+    installInputsHash: string
+    installRequired: boolean
+  }
+  workdir: string
+}
+
+export async function markDevWorkspaceInstallComplete(
+  workdir: string,
+  installInputsHash: string,
+): Promise<void> {
+  await writeFile(
+    join(workdir, devInstallStateFileName),
+    `${JSON.stringify({ installInputsHash }, null, 2)}\n`,
+  )
+}
+
 export async function materializeRegistryBackedDevWorkspace(
   options: MaterializeRegistryBackedDevWorkspaceOptions,
-): Promise<{ workdir: string }> {
+): Promise<MaterializeRegistryBackedDevWorkspaceResult> {
   const packageDir = resolve(repoRoot, options.relativePackageDir)
   const packageJsonPath = join(packageDir, 'package.json')
   const fixturePackageJson = JSON.parse(await readFile(packageJsonPath, 'utf8')) as MatrixFixturePackageJson
@@ -125,8 +223,7 @@ export async function materializeRegistryBackedDevWorkspace(
   const internalTarballSpecs = resolveMatrixInternalTarballSpecs(fixturePackageJson, manifest.packages)
 
   const workdir = resolve(repoRoot, '.pipeline', 'dev', options.slug)
-  await rm(workdir, { recursive: true, force: true })
-  await mkdir(workdir, { recursive: true })
+  await resetDevWorkspace(workdir)
 
   await copyPackageSources(packageDir, workdir)
   await rewriteTsconfig(workdir)
@@ -143,26 +240,41 @@ export async function materializeRegistryBackedDevWorkspace(
   })
 
   const mergedPackageJson = mergeFixtureIntoConsumerPackageJson(fixturePackageJson, consumerPackageJsonSource)
+  const workspaceYamlContents = 'packages: []\n'
+  const npmrcContents = [
+    `registry=${DEFAULT_REGISTRY_URL}`,
+    'ignore-workspace=true',
+    'link-workspace-packages=false',
+    '',
+  ].join('\n')
+  const installInputsHash = computeDevInstallInputsHash({
+    npmrcContents,
+    packageJsonContents: mergedPackageJson,
+    workspaceYamlContents,
+  })
+  const installStatePath = join(workdir, devInstallStateFileName)
+  const previousInstallState = await readDevWorkspaceInstallState(installStatePath)
+  const installRequired = !existsSync(join(workdir, 'node_modules'))
+    || previousInstallState?.installInputsHash !== installInputsHash
+
   await writeFile(join(workdir, 'package.json'), mergedPackageJson)
 
   // Isolate this directory from the surrounding pnpm workspace. Without this,
   // pnpm walks up to the repo's pnpm-workspace.yaml, refuses to install into a
   // non-member directory, and downstream `pnpm exec ref` resolves nothing.
-  await writeFile(join(workdir, 'pnpm-workspace.yaml'), 'packages: []\n')
-  await writeFile(
-    join(workdir, '.npmrc'),
-    [
-      `registry=${DEFAULT_REGISTRY_URL}`,
-      'ignore-workspace=true',
-      'link-workspace-packages=false',
-      '',
-    ].join('\n'),
-  )
+  await writeFile(join(workdir, 'pnpm-workspace.yaml'), workspaceYamlContents)
+  await writeFile(join(workdir, '.npmrc'), npmrcContents)
 
   await Promise.all(
     internalTarballSpecs.map(spec =>
       copyFile(spec.absoluteTarballPath, join(tarballDir, spec.stagedFileName))),
   )
 
-  return { workdir }
+  return {
+    installState: {
+      installInputsHash,
+      installRequired,
+    },
+    workdir,
+  }
 }
