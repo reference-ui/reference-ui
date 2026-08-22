@@ -7,13 +7,13 @@ packages:
   - panda-playground
   - '!packages/old/**'
 
-linkWorkspacePackages: true
-
 ignoredBuiltDependencies:
   - '@parcel/watcher'
   - '@swc/core'
   - esbuild
   - nx
+
+linkWorkspacePackages: true
 
 patchedDependencies:
   react-cosmos@7.2.0: patches/react-cosmos@7.2.0.patch

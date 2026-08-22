@@ -50,7 +50,7 @@ const managedDependencies = {
 const managedDevDependencies = {
   '@types/node': '^25.1.0',
   typescript: '~5.9.3',
-  vitest: '^4.0.18',
+  vitest: '^4.1.0',
 } as const
 
 const managedIgnoredBuiltDependencies = [
@@ -113,13 +113,14 @@ export function createManagedMatrixPackageJson(options: ManagedMatrixPackageJson
   const bundlerDevDependencies = getManagedBundlerDevDependencies(
     getPreferredLocalMatrixBundlers(options.config.bundlers),
   )
+  const allBundlerDevDependencies = getManagedBundlerDevDependencies(options.config.bundlers)
   const extraDependencies = omitManagedDependencies(
     existingPackageJson.dependencies,
     [...Object.keys(managedDependencies), ...Object.keys(reactProfile.dependencies)],
   )
   const extraDevDependencies = omitManagedDependencies(
     existingPackageJson.devDependencies,
-    [...Object.keys(managedDevDependencies), ...Object.keys(reactProfile.devDependencies), ...Object.keys(bundlerDevDependencies)],
+    [...Object.keys(managedDevDependencies), ...Object.keys(reactProfile.devDependencies), ...Object.keys(allBundlerDevDependencies)],
   )
   const rawSetupCommand = existingPackageJson.scripts?.sync
     ?? (existingPackageJson.scripts?.setup && !isPipelineManagedScript(existingPackageJson.scripts.setup)

@@ -27,10 +27,82 @@ const preservedDevWorkspaceEntries = new Set([
   '.pipeline-dev-install-state.json',
   '.reference-ui',
   'node_modules',
-  'patches',
   'pnpm-lock.yaml',
 ])
 const devInstallStateFileName = '.pipeline-dev-install-state.json'
+
+export function parseWorkspacePatchedDependencies(yamlText: string): Record<string, string> {
+  const result: Record<string, string> = {}
+  const lines = yamlText.split('\n')
+  let inPatchedDependencies = false
+
+  for (const line of lines) {
+    const trimmed = line.trim()
+    if (!trimmed || trimmed.startsWith('#')) {
+      continue
+    }
+
+    if (/^patchedDependencies\s*:/u.test(line)) {
+      inPatchedDependencies = true
+      continue
+    }
+
+    if (inPatchedDependencies) {
+      if (/^[^\s]/.test(line)) {
+        break
+      }
+
+      const match = trimmed.match(/^['"]?([^'":\s]+(?:@[^'":\s]+)?)['"]?\s*:\s*['"]?([^'"]+)['"]?$/u)
+      if (match) {
+        result[match[1]] = match[2]
+      }
+    }
+  }
+
+  return result
+}
+
+export function getPackageNameFromPatchKey(patchKey: string): string {
+  const lastAtIndex = patchKey.lastIndexOf('@')
+  if (lastAtIndex > 0) {
+    return patchKey.slice(0, lastAtIndex)
+  }
+  return patchKey
+}
+
+export function getApplicablePatches(
+  allPatches: Record<string, string>,
+  fixturePackageJson: MatrixFixturePackageJson,
+): Record<string, string> {
+  const dependencies = {
+    ...fixturePackageJson.dependencies,
+    ...fixturePackageJson.devDependencies,
+  }
+
+  const applicable: Record<string, string> = {}
+  for (const [patchKey, patchPath] of Object.entries(allPatches)) {
+    const pkgName = getPackageNameFromPatchKey(patchKey)
+    if (pkgName in dependencies) {
+      applicable[patchKey] = patchPath
+    }
+  }
+
+  return applicable
+}
+
+export async function readRootPatchedDependencies(): Promise<Record<string, string>> {
+  const rootWorkspaceYamlPath = resolve(repoRoot, 'pnpm-workspace.yaml')
+  if (!existsSync(rootWorkspaceYamlPath)) {
+    return {}
+  }
+
+  try {
+    const contents = await readFile(rootWorkspaceYamlPath, 'utf8')
+    return parseWorkspacePatchedDependencies(contents)
+  } catch {
+    return {}
+  }
+}
 
 function hashContent(parts: readonly (string | Buffer)[]): string {
   const hash = createHash('sha256')
@@ -241,11 +313,19 @@ export async function materializeRegistryBackedDevWorkspace(
   })
 
   const mergedPackageJson = mergeFixtureIntoConsumerPackageJson(fixturePackageJson, consumerPackageJsonSource)
-  const repoPatchesDir = resolve(repoRoot, 'patches')
-  const patchesExist = existsSync(repoPatchesDir)
-  if (patchesExist) {
-    const destPatchesDir = join(workdir, 'patches')
-    await copyPackageSources(repoPatchesDir, destPatchesDir)
+  const rootPatches = await readRootPatchedDependencies()
+  const applicablePatches = getApplicablePatches(rootPatches, fixturePackageJson)
+  const applicablePatchEntries = Object.entries(applicablePatches)
+
+  if (applicablePatchEntries.length > 0) {
+    for (const [, relativePatchPath] of applicablePatchEntries) {
+      const srcPatchFile = resolve(repoRoot, relativePatchPath)
+      const destPatchFile = join(workdir, relativePatchPath)
+      if (existsSync(srcPatchFile)) {
+        await mkdir(join(destPatchFile, '..'), { recursive: true })
+        await copyFile(srcPatchFile, destPatchFile)
+      }
+    }
   }
 
   const workspaceYamlContents = [
@@ -256,14 +336,14 @@ export async function materializeRegistryBackedDevWorkspace(
     '  - \'@swc/core\'',
     '  - esbuild',
     '  - nx',
-    '',
-    ...(patchesExist
+    ...(applicablePatchEntries.length > 0
       ? [
-          'patchedDependencies:',
-          '  react-cosmos@7.2.0: patches/react-cosmos@7.2.0.patch',
           '',
+          'patchedDependencies:',
+          ...applicablePatchEntries.map(([key, value]) => `  ${key}: ${value}`),
         ]
       : []),
+    '',
   ].join('\n')
   const npmrcContents = [
     `registry=${DEFAULT_REGISTRY_URL}`,

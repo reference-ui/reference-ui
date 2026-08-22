@@ -4,10 +4,10 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import '@reference-ui/react/styles.css'
-import { App } from './App'
+import { Index } from './index'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <App />
+    <Index />
   </React.StrictMode>,
 )

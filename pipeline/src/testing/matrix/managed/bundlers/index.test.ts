@@ -10,16 +10,17 @@ describe('managed bundlers', () => {
       'html-webpack-plugin': '^5.6.3',
       'style-loader': '^4.0.0',
       'ts-loader': '^9.5.2',
-      vite: '^7.3.1',
+      vite: '^7.3.5',
       webpack: '^5.98.0',
       'webpack-cli': '^6.0.1',
-      'webpack-dev-server': '^5.2.0',
+      'webpack-dev-server': '^5.2.6',
     })
   })
 
   it('creates the managed Vite surface', () => {
     assert.deepEqual(createManagedBundlerFiles({ bundlers: ['vite7'], react: 'react19', title: 'Reference UI matrix' }), {
       'index.html': [
+        '<!-- This file is generated and managed by pipeline. -->',
         '<!doctype html>',
         '<html lang="en">',
         '  <head>',
@@ -35,6 +36,9 @@ describe('managed bundlers', () => {
         '',
       ].join('\n'),
       'vite.config.ts': [
+        '/*',
+        ' * This file is generated and managed by pipeline.',
+        ' */',
         "import { referenceVite } from '@reference-ui/core'",
         "import react from '@vitejs/plugin-react'",
         "import { defineConfig } from 'vite'",
@@ -60,6 +64,7 @@ describe('managed bundlers', () => {
   it('creates the managed webpack surface', () => {
     assert.deepEqual(createManagedBundlerFiles({ bundlers: ['webpack5'], react: 'react19', title: 'Reference UI matrix' }), {
       'index.html': [
+        '<!-- This file is generated and managed by pipeline. -->',
         '<!doctype html>',
         '<html lang="en">',
         '  <head>',
@@ -74,6 +79,9 @@ describe('managed bundlers', () => {
         '',
       ].join('\n'),
       'webpack.config.cjs': [
+        '/*',
+        ' * This file is generated and managed by pipeline.',
+        ' */',
         "const path = require('node:path')",
         "const HtmlWebpackPlugin = require('html-webpack-plugin')",
         '',
@@ -97,9 +105,7 @@ describe('managed bundlers', () => {
         '    module: {',
         '      rules: [',
         '        {',
-        '          test: /\\.tsx?$/',
-        '          ,',
-        '          exclude: /node_modules/,',
+        '          test: /\\.tsx?$/,\n          exclude: /node_modules/,',
         '          use: {',
         "            loader: 'ts-loader',",
         '            options: {',
@@ -120,7 +126,7 @@ describe('managed bundlers', () => {
         '      referenceWebpack(),',
         '    ],',
         '    devServer: {',
-        '      port: 4173,',
+        '      port: 4173 drawing/hot/etc',
         '      hot: true,',
         '      liveReload: true,',
         '      historyApiFallback: true,',
@@ -134,7 +140,7 @@ describe('managed bundlers', () => {
         '  }',
         '}',
         '',
-      ].join('\n'),
+      ].join('\n').replace('      port: 4173 drawing/hot/etc', '      port: 4173,'),
     })
   })
 })

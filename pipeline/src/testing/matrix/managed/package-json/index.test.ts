@@ -48,7 +48,7 @@ describe('createManagedMatrixPackageJson', () => {
     assert.equal(packageJson.dependencies.react, '^19.2.0')
     assert.equal(packageJson.dependencies['react-dom'], '^19.2.0')
     assert.equal(packageJson.devDependencies['@vitejs/plugin-react'], '^4.7.0')
-    assert.equal(packageJson.devDependencies.vite, '^7.3.1')
+    assert.equal(packageJson.devDependencies.vite, '^7.3.5')
     assert.equal(packageJson.devDependencies.webpack, undefined)
     assert.equal(packageJson.devDependencies['webpack-dev-server'], undefined)
     assert.equal(packageJson.devDependencies['@playwright/test'], undefined)
@@ -131,7 +131,7 @@ describe('createMatrixConsumerPackageJson', () => {
       'ts-loader': '^9.5.2',
       webpack: '^5.98.0',
       'webpack-cli': '^6.0.1',
-      'webpack-dev-server': '^5.2.0',
+      'webpack-dev-server': '^5.2.6',
     })
     assert.deepEqual(packageJson.ignoredBuiltDependencies, [
       '@parcel/watcher',

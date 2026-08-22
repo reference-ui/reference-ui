@@ -15,11 +15,11 @@ import {
   getVirtualNativeTriple,
   SUPPORTED_VIRTUAL_NATIVE_TARGETS,
   type VirtualNativeTarget,
-} from '../shared/targets'
+} from '../shared/targets.js'
 import {
   REQUIRED_VIRTUAL_NATIVE_CAPABILITY_MARKERS,
   REQUIRED_VIRTUAL_NATIVE_EXPORTS,
-} from '../shared/native-contract'
+} from '../shared/native-contract.js'
 
 const PACKAGE_JSON = 'package.json'
 const RUST_PACKAGE_NAME = '@reference-ui/rust'
@@ -70,7 +70,7 @@ let _diagnostics: VirtualNativeDiagnostics | undefined = undefined
 
 export function getVirtualNativeCompatibilityError(binding: Record<string, unknown>): string | null {
   const missingExports = REQUIRED_VIRTUAL_NATIVE_EXPORTS.filter(
-    name => typeof binding[name] !== 'function'
+    (name: string) => typeof binding[name] !== 'function'
   )
 
   if (missingExports.length > 0) {
@@ -89,7 +89,7 @@ export function getVirtualNativeCompatibilityError(binding: Record<string, unkno
   }
 
   const missingCapabilityMarkers = REQUIRED_VIRTUAL_NATIVE_CAPABILITY_MARKERS.filter(
-    marker => (capabilities as Record<string, unknown>)[marker] !== true
+    (marker: string) => (capabilities as Record<string, unknown>)[marker] !== true
   )
 
   if (missingCapabilityMarkers.length > 0) {
