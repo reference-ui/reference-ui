@@ -14,7 +14,7 @@ export default defineConfig({
     '@fixtures/extend-library-2',
   ],
   format: ['esm'],
-  dts: true,
+  dts: false,
   splitting: false,
   sourcemap: false,
   clean: true,

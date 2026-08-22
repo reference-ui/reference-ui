@@ -10,7 +10,7 @@ export default defineConfig({
     styletrace: 'js/styletrace/index.ts',
   },
   format: ['esm'],
-  dts: true,
+  dts: false,
   splitting: false,
   sourcemap: false,
   clean: true,

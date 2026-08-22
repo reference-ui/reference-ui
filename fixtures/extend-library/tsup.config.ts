@@ -13,7 +13,7 @@ export default defineConfig({
     '@reference-ui/system/*',
   ],
   format: ['esm'],
-  dts: true,
+  dts: false,
   splitting: false,
   sourcemap: false,
   clean: true,

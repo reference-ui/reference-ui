@@ -2,7 +2,7 @@ import * as React from 'react'
 import { Code } from '@reference-ui/react'
 import type { StyleProps } from '@reference-ui/react'
 
-interface MonoTextProps extends StyleProps {
+type MonoTextProps = StyleProps & {
   children: React.ReactNode
   color?: React.ComponentProps<typeof Code>['color']
 }

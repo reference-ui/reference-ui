@@ -4,7 +4,7 @@
  *
  * Run `ref sync` in reference-lib before using.
  */
-export { baseSystem } from '@reference-ui/system/baseSystem'
+export { baseSystem } from '../.reference-ui/system/baseSystem.mjs'
 export { Reference, ReferenceView, referenceBrowserTokenConfig } from './components/Reference/index'
 export { AbcIcon } from '@reference-ui/icons'
 export { AccessibilityIcon } from '@reference-ui/icons'

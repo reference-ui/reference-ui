@@ -13,7 +13,6 @@
       "@reference-ui/styled/jsx": ["./.reference-ui/styled/jsx/index"],
       "@reference-ui/styled/*": ["./.reference-ui/styled/*"],
       "@reference-ui/system": ["./.reference-ui/system"],
-      "@reference-ui/system/baseSystem": ["./.reference-ui/system/baseSystem.mjs"],
       "@reference-ui/types": ["./.reference-ui/types"]
     }
   },

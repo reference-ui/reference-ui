@@ -146,14 +146,14 @@ function instantiateReference(
 function instantiateMember(member: RawTastyMember, substitutions: TypeSubstitutions): RawTastyMember {
   return {
     ...member,
-    type: member.type ? instantiateTypeRef(member.type, substitutions) : undefined,
+    type: member.type ? instantiateTypeRef(member.type, substitutions) : member.type,
   }
 }
 
 function instantiateFnParam(param: RawTastyFnParam, substitutions: TypeSubstitutions): RawTastyFnParam {
   return {
     ...param,
-    typeRef: param.typeRef ? instantiateTypeRef(param.typeRef, substitutions) : undefined,
+    typeRef: param.typeRef ? instantiateTypeRef(param.typeRef, substitutions) : param.typeRef,
   }
 }
 
@@ -163,7 +163,7 @@ function instantiateTypeParameter(
 ): RawTastyTypeParameter {
   return {
     ...parameter,
-    constraint: parameter.constraint ? instantiateTypeRef(parameter.constraint, substitutions) : undefined,
-    default: parameter.default ? instantiateTypeRef(parameter.default, substitutions) : undefined,
+    constraint: parameter.constraint ? instantiateTypeRef(parameter.constraint, substitutions) : parameter.constraint,
+    default: parameter.default ? instantiateTypeRef(parameter.default, substitutions) : parameter.default,
   }
 }

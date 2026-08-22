@@ -88,7 +88,7 @@ describe('createMatrixConsumerPackageJson', () => {
       },
       devDependencies: {
         '@playwright/test': '1.48.0',
-        typescript: '~5.9.3',
+        typescript: '~7.0.2',
         vitest: '^4.0.18',
       },
       name: '@matrix/distro',
@@ -124,7 +124,7 @@ describe('createMatrixConsumerPackageJson', () => {
     assert.deepEqual(packageJson.devDependencies, {
       '@playwright/test': '1.48.0',
       'css-loader': '^7.1.2',
-      typescript: '~5.9.3',
+      typescript: '~7.0.2',
       vitest: '^4.0.18',
       'html-webpack-plugin': '^5.6.3',
       'style-loader': '^4.0.0',

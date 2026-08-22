@@ -5,7 +5,12 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
-    "baseUrl": "."
+    "paths": {
+      "@reference-ui/styled": ["./.reference-ui/styled"],
+      "@reference-ui/styled/*": ["./.reference-ui/styled/*"],
+      "@reference-ui/system": ["./.reference-ui/system"],
+      "@reference-ui/system/*": ["./.reference-ui/system/*"]
+    }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"]
 }

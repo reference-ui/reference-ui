@@ -54,7 +54,7 @@
   "scripts": {
     "artifacts": "pnpm exec napi artifacts --output-dir artifacts",
     "build": "pnpm run ensure-native && pnpm run build:js",
-    "build:js": "tsup",
+    "build:js": "tsup && tsc -p tsconfig.build.json && node ./js/tools/create-dts-entrypoints.mjs",
     "build:native": "pnpm exec napi build --platform --release --output-dir native --no-js",
     "create-npm-dirs": "pnpm exec napi create-npm-dirs",
     "ensure-native": "pnpm exec tsx ./js/tools/ensure-native.ts",
@@ -74,7 +74,7 @@
     "@napi-rs/cli": "^3.5.1",
     "tsup": "^8.5.1",
     "tsx": "^4.21.0",
-    "typescript": "~5.9.3",
+    "typescript": "~7.0.2",
     "vitest": "^4.1.0"
   }
 }

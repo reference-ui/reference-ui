@@ -23,7 +23,7 @@
   ],
   "scripts": {
     "sync": "node scripts/bootstrap-runtime.mjs && ref sync",
-    "build": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/lib run sync && pnpm run sync && tsup && node scripts/build-package.mjs",
+    "build": "pnpm --filter @reference-ui/core run build && pnpm --filter @reference-ui/lib run sync && pnpm run sync && tsup && tsc -p tsconfig.build.json && node scripts/build-package.mjs",
     "dev": "node scripts/bootstrap-runtime.mjs && ref sync --watch",
     "prepack": "pnpm run build",
     "test": "vitest run",
@@ -37,7 +37,7 @@
     "@types/react": "^18.2.0",
     "react": "^18.2.0",
     "tsup": "^8.5.1",
-    "typescript": "~5.9.3",
+    "typescript": "~7.0.2",
     "vitest": "^4.1.0"
   }
 }

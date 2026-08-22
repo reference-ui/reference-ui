@@ -67,7 +67,7 @@ describe('getApplicablePatches', () => {
       },
       devDependencies: {
         vite: '^7.3.1',
-        typescript: '~5.9.3',
+        typescript: '~7.0.2',
       },
     }
 

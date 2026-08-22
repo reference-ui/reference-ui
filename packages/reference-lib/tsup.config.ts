@@ -13,7 +13,7 @@ export default defineConfig({
     'theme/index': 'src/core/theme/index.ts',
   },
   format: ['esm'],
-  dts: true,
+  dts: false,
   splitting: false,
   sourcemap: false,
   clean: true,

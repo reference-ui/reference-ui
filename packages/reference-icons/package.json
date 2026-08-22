@@ -58,6 +58,6 @@
     "react": "^19.2.4",
     "rollup": "^4.59.0",
     "rollup-plugin-esbuild": "^6.2.1",
-    "typescript": "~5.9.3"
+    "typescript": "~7.0.2"
   }
 }

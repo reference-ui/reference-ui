@@ -60,7 +60,7 @@ function createFixturePackageJson(overrides?: Partial<MatrixFixturePackageJson>)
     },
     devDependencies: {
       '@types/react': '^19.2.2',
-      typescript: '~5.9.3',
+      typescript: '~7.0.2',
       vitest: '^4.0.18',
     },
     name: '@matrix/distro',
@@ -227,7 +227,7 @@ describe('matrix node_modules cache helpers', () => {
         devDependencies: {
           '@modelcontextprotocol/sdk': '^1.29.0',
           '@types/react': '^19.2.2',
-          typescript: '~5.9.3',
+          typescript: '~7.0.2',
           vitest: '^4.0.18',
         },
       }),
@@ -252,7 +252,7 @@ describe('matrix node_modules cache helpers', () => {
       devDependencies: {
         '@playwright/test': '1.48.0',
         '@types/react': '^19.2.2',
-        typescript: '~5.9.3',
+        typescript: '~7.0.2',
         vitest: '^4.0.18',
       },
     })

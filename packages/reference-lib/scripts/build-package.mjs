@@ -12,6 +12,7 @@ const requiredFiles = [
   resolve(packageRoot, '.reference-ui/system/baseSystem.d.mts'),
   resolve(distDir, 'index.mjs'),
   resolve(distDir, 'index.d.ts'),
+  resolve(distDir, 'theme/index.d.ts'),
 ]
 
 const packagedRuntimeFiles = [
@@ -22,6 +23,13 @@ const packagedRuntimeFiles = [
 function run(command, args) {
   execFileSync(command, args, { cwd: packageRoot, stdio: 'inherit', env: process.env })
 }
+
+await mkdir(resolve(distDir, 'theme'), { recursive: true })
+await writeFile(
+  resolve(distDir, 'theme/index.d.ts'),
+  `export * from '../core/theme/index'\nexport { default } from '../core/theme/index'\n`,
+  'utf8',
+)
 
 for (const filePath of requiredFiles) {
   await access(filePath, constants.F_OK)

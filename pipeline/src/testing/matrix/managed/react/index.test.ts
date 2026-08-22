@@ -29,6 +29,7 @@ describe('managed react runtime', () => {
         ' */',
         "import React from 'react'",
         "import ReactDOM from 'react-dom/client'",
+        '// @ts-ignore',
         "import '@reference-ui/react/styles.css'",
         "import { Index } from './Index'",
         '',
