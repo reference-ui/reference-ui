@@ -158,7 +158,7 @@ Paths are resolved with helpers in `packages/reference-core/src/lib/paths/` (e.g
 
 - **`system/base`** prepares the portable `baseSystem` **fragment** bundle, writes `baseSystem.mjs` / `baseSystem.d.mts`, and hands the **collector** bundle to Panda config generation. **`baseSystem` is a Reference UI contract**, not an opaque Panda handwave—see [packages/reference-core/src/system/base/README.md](./packages/reference-core/src/system/base/README.md).
 - **Panda** runs in a worker: codegen, then cssgen; watch can take a **fast CSS-only** path.
-- **Layer postprocessing** updates `baseSystem.css` with a **layer-safe** representation when `layers` participate—so cascade order stays explicit and testable. Deep detail: [packages/reference-core/src/system/css/README.md](./packages/reference-core/src/system/css/README.md) and [RELEASE_READY.md](./packages/reference-core/src/system/RELEASE_READY.md) in the same area.
+- **Layer postprocessing** updates `baseSystem.css` with a **layer-safe** representation when `layers` participate—so cascade order stays explicit and testable. Deep detail: [packages/reference-core/src/system/css/README.md](./packages/reference-core/src/system/css/README.md).
 
 ---
 
@@ -247,7 +247,7 @@ Atlas is the **spine of “what is actually in this repo’s JSX”** for MCP. I
 **Object-like projection** (for docs, MCP, API tables)
 
 - Tasty preserves a **canonical graph** but can expose a **bounded object-like view** of complex aliases when flattening is safe; otherwise it **falls back** to raw or linked definitions (see the Tasty README’s “Object-Like Projection” and “What Raw Means” sections).
-- `FIRST_CLASS_TYPES.md` in the Tasty tree discusses treating **`type` aliases** as first-class documentation symbols.
+- The Tasty README discusses treating **`type` aliases** as first-class documentation symbols (see [packages/reference-rs/src/tasty/README.md](./packages/reference-rs/src/tasty/README.md)).
 
 **Re-exports and `node_modules`**
 

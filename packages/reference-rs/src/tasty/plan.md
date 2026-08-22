@@ -1,9 +1,7 @@
 # Type Product Surface Plan
 
-This note is a companion to [`FIRST_CLASS_TYPES.md`](./FIRST_CLASS_TYPES.md).
-
-That roadmap explains the long-term first-class-types direction. This plan is a
-shorter working document for the next product-facing pass.
+This note is a working document for the product-facing pass on first-class type surfaces,
+complementing the main [README.md](./README.md).
 
 ## What Has Been Done
 
@@ -155,7 +153,7 @@ Expected presentation:
 
 ### A. Clarify the Tasty contract
 
-`FIRST_CLASS_TYPES.md` currently says:
+The Tasty type contract specifies:
 
 - aliases keep canonical identity
 - definitions should stay readable

@@ -196,6 +196,9 @@ async function main() {
     await writeFile(join(TARGET_DIR, 'README.md'), GENERATED_README)
 
     for (const file of sourceFiles) {
+      if (file.relativePath === 'README.md') {
+        continue
+      }
       await writeMirroredFile(file)
     }
 

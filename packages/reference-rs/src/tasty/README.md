@@ -61,42 +61,48 @@ pulled in when the user explicitly re-exports from a package, such as
 From there, Tasty follows imports within that same package, but it does not
 walk arbitrary dependency trees.
 
-For `export type { Name } from 'module'`, Tasty also emits a **synthetic
-type-alias shell** in the barrel file so `Name` appears in the manifest (same
-ergonomics as a local `type Name = …` re-export, without requiring one).
-Renames (`export type { A as B } from '…'`) are not expanded yet.
+For `export type { Name } from 'module'`, Tasty records export bindings to the
+canonical symbol instead of synthesizing duplicate local alias shells, preserving
+a clean manifest while keeping the canonical source symbol as the single source
+of truth.
 
-For type aliases, constructed types (`Omit<…>`, intersections, re-exports), and the
-goal of treating **`type` as a first-class documentation symbol**, see
-[`FIRST_CLASS_TYPES.md`](./FIRST_CLASS_TYPES.md).
+## Types as First-Class Symbols
 
-## Object-Like Projection
+Tasty treats `type` declarations as first-class semantic documentation objects rather
+than second-class syntax aliases:
 
-One important downstream use of Tasty is turning complex TypeScript aliases into
-a **final object-like surface** that other tools can consume.
+1. **Identity**: Stable ids, names, module boundaries, and canonical export bindings.
+2. **Readable definition**: A `TypeRef` structure that preserves composite children
+   (unions, intersections, utility references, mapped types) without collapsing into
+   opaque self-referential strings.
+3. **Navigation**: Direct `Reference` edges connecting symbols to their dependency
+   targets across modules and libraries.
+4. **Derived Object-Like Projection**: Bounded flattening of object-shaped aliases into
+   a member surface for downstream consumers.
 
-That matters for things like:
+### Object-Like Projection & Member Policy
 
-- API docs tables
-- MCP schema or tool generation
-- any consumer that needs the **effective fields** a user can actually interact with
+Downstream consumers (such as Reference UI docs tables or MCP schema generators) often
+need the **effective fields** of complex type aliases (e.g. `ReferenceSystemStyleObject`
+or intersections with `Omit<...>`).
 
-The key idea is:
+Tasty separates **canonical type graph representation** from **derived projections**:
 
-- Tasty should preserve the **canonical type graph**
-- Tasty may also expose a **derived object-like projection** when a type can be
-  flattened in a bounded, explainable way
+- The **canonical graph** faithfully preserves the alias definition, references, and
+  compositional structure.
+- The **projection API** (`projectObjectLikeMembers` / `getDisplayMembers`) derives a
+  bounded, explainable property surface:
+  - follows alias references to canonical definitions
+  - merges intersections of object-like types
+  - applies key filtering for `Omit` / `Pick` when keys and source members are statically known
+  - preserves recursive boundaries (e.g. `Nested<P>`) instead of infinitely expanding
+  - fails closed: unprojectable or ambiguous shapes degrade gracefully to "definition + links"
+    or raw fallback rather than guessing.
 
-That projection is not meant to explain every derivation step. Its main job is
-to expose the **final useful object**:
-
-- field names
-- field types
-- optional / readonly state
-- a bounded view of recursive object structure
-
-If a type cannot be projected safely, Tasty should fall back to the canonical
-definition and links instead of inventing a misleading object view.
+In the JavaScript runtime (`packages/reference-rs/js/tasty`):
+- `symbol.getMembers()` remains strictly interface-only for declared members.
+- `symbol.getDisplayMembers()` / `graph.getDisplayMembers(symbol)` centralizes renderer-facing
+  display policy across interfaces and projected type aliases.
 
 ## Emitted Shape
 
