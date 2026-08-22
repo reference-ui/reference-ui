@@ -6,7 +6,7 @@ settings:
 
 patchedDependencies:
   react-cosmos@7.2.0:
-    hash: 7d4940f155cd8942f33f3193a10d62fe2a94bcd32eab5e1ecddd7256da0026c0
+    hash: 015b82317be2b8bcf39a8b53f5d26f9d6b037a7ed77a638a806573281b484f77
     path: patches/react-cosmos@7.2.0.patch
 
 importers:
@@ -2006,11 +2006,11 @@ importers:
         specifier: ^4.7.0
         version: 4.7.0(vite@7.3.1(@types/node@25.1.0)(lightningcss@1.32.0)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.2))
       react-cosmos:
-        specifier: ^7.2.0
-        version: 7.2.0(patch_hash=7d4940f155cd8942f33f3193a10d62fe2a94bcd32eab5e1ecddd7256da0026c0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        specifier: 7.2.0
+        version: 7.2.0(patch_hash=015b82317be2b8bcf39a8b53f5d26f9d6b037a7ed77a638a806573281b484f77)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react-cosmos-plugin-vite:
-        specifier: ^7.2.0
-        version: 7.2.0(react-cosmos@7.2.0(patch_hash=7d4940f155cd8942f33f3193a10d62fe2a94bcd32eab5e1ecddd7256da0026c0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@7.3.1(@types/node@25.1.0)(lightningcss@1.32.0)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.2))
+        specifier: 7.2.0
+        version: 7.2.0(react-cosmos@7.2.0(patch_hash=015b82317be2b8bcf39a8b53f5d26f9d6b037a7ed77a638a806573281b484f77)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@7.3.1(@types/node@25.1.0)(lightningcss@1.32.0)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.2))
       react-dom:
         specifier: ^19.2.4
         version: 19.2.4(react@19.2.4)
@@ -15653,11 +15653,11 @@ snapshots:
       react-cosmos-renderer: 7.2.0(react@19.2.4)
       react-dom: 19.2.4(react@19.2.4)
 
-  react-cosmos-plugin-vite@7.2.0(react-cosmos@7.2.0(patch_hash=7d4940f155cd8942f33f3193a10d62fe2a94bcd32eab5e1ecddd7256da0026c0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@7.3.1(@types/node@25.1.0)(lightningcss@1.32.0)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.2)):
+  react-cosmos-plugin-vite@7.2.0(react-cosmos@7.2.0(patch_hash=015b82317be2b8bcf39a8b53f5d26f9d6b037a7ed77a638a806573281b484f77)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@7.3.1(@types/node@25.1.0)(lightningcss@1.32.0)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.2)):
     dependencies:
       parse5: 7.3.0
       react: 19.2.4
-      react-cosmos: 7.2.0(patch_hash=7d4940f155cd8942f33f3193a10d62fe2a94bcd32eab5e1ecddd7256da0026c0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      react-cosmos: 7.2.0(patch_hash=015b82317be2b8bcf39a8b53f5d26f9d6b037a7ed77a638a806573281b484f77)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react-cosmos-core: 7.2.0(react@19.2.4)
       react-cosmos-dom: 7.2.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react-dom: 19.2.4(react@19.2.4)
@@ -15676,7 +15676,7 @@ snapshots:
       react-cosmos-core: 7.2.0(react@19.2.4)
       react-dom: 19.2.4(react@19.2.4)
 
-  react-cosmos@7.2.0(patch_hash=7d4940f155cd8942f33f3193a10d62fe2a94bcd32eab5e1ecddd7256da0026c0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+  react-cosmos@7.2.0(patch_hash=015b82317be2b8bcf39a8b53f5d26f9d6b037a7ed77a638a806573281b484f77)(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       '@skidding/launch-editor': 2.2.3
       chokidar: 3.6.0

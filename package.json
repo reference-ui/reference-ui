@@ -10,6 +10,7 @@
   "scripts": {
     "setup:local": "bash ./pipeline/setup/local.sh",
     "pipeline": "pnpm --dir pipeline exec tsx src/cli.ts",
+    "dev": "pnpm dev:docs",
     "dev:docs": "pnpm pipeline dev docs",
     "dev:lib": "pnpm pipeline dev lib",
     "changeset": "changeset",

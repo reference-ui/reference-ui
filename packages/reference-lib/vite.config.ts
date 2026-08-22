@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
@@ -5,7 +6,10 @@ import react from '@vitejs/plugin-react'
 import { referenceVite } from '@reference-ui/core'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const coreDir = resolve(__dirname, '../reference-core')
+const workspaceCoreDir = resolve(__dirname, '../reference-core')
+const coreDir = existsSync(workspaceCoreDir)
+  ? workspaceCoreDir
+  : resolve(__dirname, 'node_modules/@reference-ui/core')
 const reactRoot = resolve(__dirname, '.reference-ui/react')
 const reactStylesCss = resolve(reactRoot, 'styles.css')
 const styledRoot = resolve(__dirname, '.reference-ui/styled')

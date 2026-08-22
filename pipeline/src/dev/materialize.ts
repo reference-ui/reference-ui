@@ -27,6 +27,7 @@ const preservedDevWorkspaceEntries = new Set([
   '.pipeline-dev-install-state.json',
   '.reference-ui',
   'node_modules',
+  'patches',
   'pnpm-lock.yaml',
 ])
 const devInstallStateFileName = '.pipeline-dev-install-state.json'
@@ -240,7 +241,30 @@ export async function materializeRegistryBackedDevWorkspace(
   })
 
   const mergedPackageJson = mergeFixtureIntoConsumerPackageJson(fixturePackageJson, consumerPackageJsonSource)
-  const workspaceYamlContents = 'packages: []\n'
+  const repoPatchesDir = resolve(repoRoot, 'patches')
+  const patchesExist = existsSync(repoPatchesDir)
+  if (patchesExist) {
+    const destPatchesDir = join(workdir, 'patches')
+    await copyPackageSources(repoPatchesDir, destPatchesDir)
+  }
+
+  const workspaceYamlContents = [
+    'packages: []',
+    '',
+    'ignoredBuiltDependencies:',
+    '  - \'@parcel/watcher\'',
+    '  - \'@swc/core\'',
+    '  - esbuild',
+    '  - nx',
+    '',
+    ...(patchesExist
+      ? [
+          'patchedDependencies:',
+          '  react-cosmos@7.2.0: patches/react-cosmos@7.2.0.patch',
+          '',
+        ]
+      : []),
+  ].join('\n')
   const npmrcContents = [
     `registry=${DEFAULT_REGISTRY_URL}`,
     'ignore-workspace=true',

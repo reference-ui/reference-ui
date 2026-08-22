@@ -99,7 +99,7 @@ async function main() {
   const files = await readdir(iconsDir)
   const dtsFiles = files.filter((fileName) => fileName.endsWith('.d.ts')).sort((a, b) => a.localeCompare(b))
 
-  await rm(genDir, { recursive: true, force: true })
+  await rm(genDir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 })
   await mkdir(genDir, { recursive: true })
 
   const exportNames = new Map()

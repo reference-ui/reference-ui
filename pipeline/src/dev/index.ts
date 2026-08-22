@@ -11,6 +11,7 @@ import { buildWorkspacePackages } from '../build/index.js'
 import { run } from '../build/workspace.js'
 import { ensureContainerRuntime } from '../lib/runtime/ensure-container-runtime.js'
 import { markDevWorkspaceInstallComplete, materializeRegistryBackedDevWorkspace } from './materialize.js'
+import { openBrowserWhenReady } from './open-browser.js'
 import { baseNodeContainer, hostRegistryService } from '../testing/matrix/runner/container.js'
 import { externalPnpmStoreCacheKey, matrixNodeImage } from '../testing/matrix/node-modules/cache.js'
 
@@ -53,6 +54,7 @@ async function runPipelineDevDocsInner(trace?: boolean): Promise<void> {
     logPhase('Skipping pnpm install in .pipeline/dev/reference-docs; install inputs unchanged')
   }
 
+  openBrowserWhenReady('http://localhost:5174')
   await run('pnpm', ['run', 'dev'], {
     cwd: workdir,
     interactive: true,
@@ -81,6 +83,7 @@ async function runPipelineDevLibInner(trace?: boolean): Promise<void> {
     logPhase('Skipping pnpm install in .pipeline/dev/reference-lib; install inputs unchanged')
   }
 
+  openBrowserWhenReady('http://localhost:5000')
   await run('pnpm', ['run', 'cosmos'], {
     cwd: workdir,
     interactive: true,
