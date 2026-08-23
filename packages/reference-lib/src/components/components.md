@@ -85,7 +85,7 @@ Foundation components solve application-wide mechanics:
 
 Mounts Reference UI's application-level runtime systems.
 
-`ReferenceLibrary` is not a React context provider. It does not inject values into its descendants or require components to remain beneath a particular context boundary. It provides a stable React-level mount for systems that operate across the application, including Toast.
+`ReferenceLibrary` is not a React context provider. It does not inject values into its descendants or require components to remain beneath a particular context boundary. It provides a stable React-level mount for systems that operate across the application, including Toast and `announce()`.
 
 ```tsx
 <ReferenceLibrary
@@ -157,7 +157,7 @@ interface PortalProps {
 
 A controlled foundation for temporary content displayed above and isolated from the application.
 
-Overlay handles the shared mechanics: portal rendering, nesting, dismissal ordering, focus containment, background inerting, scroll locking, and focus restoration.
+Overlay handles the shared mechanics: portal rendering, layer-stack registration, nesting, dismissal ordering, focus containment, background inerting, scroll locking, and focus restoration.
 
 It does not provide a trigger or prescribe the content's semantic role, structure, placement, dimensions, animation, or appearance. Whether the resulting interface is a dialog, alert dialog, drawer, sheet, or lightbox is determined by the content composed inside it.
 
@@ -209,6 +209,61 @@ onOutsidePress(event) → if (!event.defaultPrevented) → onDismiss()
 </Overlay>
 ```
 
+#### Initial focus
+
+Real dialogs constantly need to focus a specific control — the first input, or the destructive action — rather than whichever element happens to be first in tab order.
+
+`Overlay.Content` accepts `initialFocus`. When omitted, Overlay focuses the first tabbable descendant. A ref focuses that element. `false` skips the move and leaves focus management to the application.
+
+```tsx
+<Overlay.Content
+  role="dialog"
+  aria-modal="true"
+  initialFocus={nameInputRef}
+>
+  <input ref={nameInputRef} />
+</Overlay.Content>
+```
+
+```tsx
+<Overlay.Content
+  role="alertdialog"
+  aria-modal="true"
+  initialFocus={confirmRef}
+>
+  <button type="button" ref={confirmRef}>
+    Delete
+  </button>
+</Overlay.Content>
+```
+
+#### Presence and `data-state`
+
+`open={false}` is a state change, not an immediate unmount. Overlay keeps Backdrop and Content mounted through the exit cycle via `Presence`, and sets `data-state="open" | "closed"` on both so CSS transitions can finish — including drawer and sheet slide-out.
+
+Focus restoration, inerting teardown, and scroll unlock run after Presence reports the exit complete. Applications style against `data-state`; they do not set it, wrap Overlay in Presence, or delay `open={false}` in order to animate.
+
+```css
+[data-state="open"] {
+  transform: translateX(0);
+}
+
+[data-state="closed"] {
+  transform: translateX(100%);
+}
+```
+
+#### Layer stack
+
+Overlay, Popover, and Menu share one layer stack.
+
+- Escape dismisses only the topmost layer.
+- An outside-press whose target is inside a nested popup does not dismiss the parent.
+- A menu opened from a dialog is a child layer: Escape closes the menu first; a second Escape closes the dialog.
+- Popover and Overlay nest in either direction under the same rules.
+
+This contract is not Overlay-specific. Popover and Menu register on the same stack; they do not keep private dismissal worlds.
+
 Approximate API:
 
 ```ts
@@ -231,18 +286,22 @@ interface OverlayBackdropProps
   extends React.HTMLAttributes<HTMLDivElement> {}
 
 interface OverlayContentProps
-  extends React.HTMLAttributes<HTMLDivElement> {}
+  extends React.HTMLAttributes<HTMLDivElement> {
+  initialFocus?: React.RefObject<HTMLElement | null> | false
+}
 ```
 
 ---
 
 ### Popover
 
-Controlled, anchored floating content associated with a trigger.
+Controlled, anchored floating content.
 
-Popover owns the relationship between its trigger and content, including positioning, collision handling, keyboard and pointer interaction, accessible state, outside dismissal, and focus restoration.
+Popover owns positioning, collision handling, keyboard and pointer interaction, accessible state, outside dismissal, focus restoration, and registration on the shared layer stack with Overlay and Menu.
 
-Unlike Overlay, a trigger is fundamental to Popover: it is both the interaction source and the positioning anchor.
+By default, `Popover.Trigger` is both the interaction source and the positioning anchor. That default does not cover every real case. A context menu anchors to pointer coordinates; a selection menu anchors to a text range; a canvas or table-cell menu anchors to a shape or cell rect. An optional virtual `anchor` (element, rect, or point) is the positioning reference in those cases. The trigger may be omitted when the application already owns the interaction — right-click, selection, or a hit-tested canvas object.
+
+Virtual anchors are positioning math. They stay inside Popover.
 
 ```tsx
 <Popover open={open} onDismiss={close}>
@@ -255,6 +314,20 @@ Unlike Overlay, a trigger is fundamental to Popover: it is both the interaction 
   </Popover.Content>
 </Popover>
 ```
+
+```tsx
+<Popover
+  open={open}
+  onDismiss={close}
+  anchor={{ x: pointerX, y: pointerY }}
+>
+  <Popover.Content placement="bottom-start">
+    {children}
+  </Popover.Content>
+</Popover>
+```
+
+When both a trigger and an `anchor` are present, the trigger remains the interaction and accessibility source; `anchor` wins for positioning.
 
 `Popover.Trigger` renders a native `button`. `Popover.Content` renders a native `div`.
 
@@ -285,6 +358,28 @@ An optional arrow participates in the same positioning calculation:
 </Popover>
 ```
 
+Popover uses the same Presence / `data-state` contract as Overlay: `open={false}` does not unmount Content until exit animations complete.
+
+#### Hover interaction
+
+Tooltip owns hover intent and is explicitly non-interactive. Interactive floating content is a Popover.
+
+The hard part of hover-opened interactive content is not the open delay — it is pointer travel from the trigger into the content without dismissing (grace area / safe-polygon tracking). Popover owns that machinery when `openOnHover` is set. Open remains controlled: Popover requests open through `onOpen` after hover intent, and close through `onDismiss` after the pointer leaves the trigger, the content, and the safe polygon.
+
+HoverCard is that composition, not a separate primitive.
+
+```tsx
+<Popover
+  open={open}
+  onOpen={() => setOpen(true)}
+  onDismiss={close}
+  openOnHover
+>
+  <Popover.Trigger>Preview</Popover.Trigger>
+  <Popover.Content>{children}</Popover.Content>
+</Popover>
+```
+
 Approximate API:
 
 ```ts
@@ -302,9 +397,20 @@ type PopoverPlacement =
   | "left-start"
   | "left-end"
 
+type VirtualAnchor =
+  | Element
+  | DOMRect
+  | { getBoundingClientRect(): DOMRect }
+  | { x: number; y: number; width?: number; height?: number }
+
 interface PopoverProps extends OverlayDismissHandlers {
   children?: React.ReactNode
   open: boolean
+  onOpen?: () => void
+  anchor?: VirtualAnchor
+  openOnHover?: boolean
+  openDelay?: number
+  closeDelay?: number
 }
 
 interface PopoverTriggerProps
@@ -488,9 +594,16 @@ toast.update<Props>(
 ): void
 
 toast.dismiss(id?: ToastId): void
+
+announce(
+  message: string,
+  options?: { politeness?: "polite" | "assertive" }
+): void
 ```
 
 Calling `toast.dismiss()` without an ID dismisses every active toast.
+
+`announce()` is the same live-region path without a toast, mounted by `ReferenceLibrary`. Use it for non-toast status that still needs to reach assistive technology. Toast `announce` options go through this path.
 
 A toast definition is ordinary, visible application code. AI agents can create exactly the notification requested without reverse-engineering proprietary variants, fixed layouts, or hidden component state.
 
@@ -503,7 +616,7 @@ Beyond foundational layer management (`Overlay`, `Popover`, `Portal`, `Toast`), 
 Following the same primitive-first philosophy, these components remain decoupled, unstyled, and highly composable:
 
 - **`Listbox`**  
-  The core selection and option-management engine. Handles single/multi selection, disabled item skipping, typeahead matching, and keyboard navigation.  
+  The core selection and option-management engine. Handles single/multi selection, disabled item skipping, typeahead matching, and keyboard navigation. Built on `RovingFocus`.  
   - Composed with `<button>` and `Popover` $\rightarrow$ `Select`
   - Reused internally by list-based `Combobox` popups
 
@@ -511,13 +624,19 @@ Following the same primitive-first philosophy, these components remain decoupled
   Coordinates an input with an associated popup while preserving DOM focus and native text editing behaviour. Handles active-descendant tracking, autocomplete modes, suggestion navigation, value commitment, dismissal, and restoration of the previous value. Reference UI provides `Listbox` for list-based popups; applications may integrate their own grid, tree, or dialog implementations when required by the product.
 
 - **`Menu`**  
-  Owns `role="menu"` keyboard navigation, item activation, typeahead, and nested submenu orchestration. Composes with `Popover` for dropdown menus.
+  Owns `role="menu"` keyboard navigation, item activation, typeahead, and nested submenu orchestration. Built on `RovingFocus`. Composes with `Popover` for dropdown and context menus. Registers on the shared layer stack with Overlay and Popover.
 
 - **`Tabs`**  
-  Coordinates directional keyboard cycling (horizontal/vertical), automatic vs. manual activation, and `aria-controls` / `aria-labelledby` linking between tabs and panels.
+  Coordinates directional keyboard cycling (horizontal/vertical), automatic vs. manual activation, and `aria-controls` / `aria-labelledby` linking between tabs and panels. Built on `RovingFocus`.
 
 - **`Slider`**  
   Encapsulates pointer drag math, multi-thumb collision constraints, keyboard stepping (arrows, PageUp/PageDown, Home/End), and ARIA value ranges (`aria-valuenow`, `aria-valuemin`, `aria-valuemax`).
+
+- **`Switch`**  
+  A two-state control that is not a native HTML element. Renders a `button` with `role="switch"` and keeps `aria-checked` aligned with controlled `checked`. Owns Space/Enter activation. Track, thumb, and labels are application markup.
+
+- **`Calendar`**  
+  The date-grid engine. This is genuinely hard: locale-aware week start and weekday headings, construction of padded month grids, 2D keyboard movement (day, week, Home/End, PageUp/PageDown for months), disabled/unavailable skipping, min/max clamping, today vs selected vs focused, and range selection (start, end, in-range). Values are ISO calendar dates (`YYYY-MM-DD`), not `Date` objects and not a third-party date library. Locale is an explicit prop; `Intl` supplies labels and week-start. Calendar does not parse typed input, format field values, or own time-of-day.
 
 - **`Collapsible`**  
   Coordinates a single disclosure trigger and content region, including `aria-expanded`, `aria-controls`, and controlled visibility.
@@ -529,7 +648,81 @@ Following the same primitive-first philosophy, these components remain decoupled
   Provides accessible, resizable panel partitions (`role="separator"`) in horizontal and vertical orientations. Handles pointer/touch drag calculations, minimum/maximum size clamping, keyboard-driven resizing (Arrow keys, Home/End, Enter to collapse), and selection prevention during resize.
 
 - **`Tooltip`**  
-  Transient informative descriptions linked from its trigger using `aria-describedby`. Tooltip content is non-interactive (interactive floating content is a `Popover`). Handles hover intent delays, warm-up skip delays across neighbouring tooltips, keyboard focus display, and non-modal Escape dismissal per WCAG 2.1 SC 1.4.13 (dismissible, hoverable, and persistent).
+  Transient informative descriptions linked from its trigger using `aria-describedby`. Tooltip content is non-interactive. Handles hover intent delays, warm-up skip delays across neighbouring tooltips, keyboard focus display, and non-modal Escape dismissal per WCAG 2.1 SC 1.4.13 (dismissible, hoverable, and persistent). Interactive hover content is a `Popover` with `openOnHover`, not a Tooltip.
+
+### Switch
+
+```tsx
+<Switch
+  checked={notifications}
+  onChange={setNotifications}
+  aria-labelledby="notifications-label"
+>
+  <Span />
+</Switch>
+```
+
+Approximate API:
+
+```ts
+interface SwitchProps
+  extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "onChange"> {
+  checked: boolean
+  onChange?: (checked: boolean) => void
+}
+```
+
+### Calendar
+
+Anatomy stays visible. Calendar owns grid math, keyboard, and selection; the application owns chrome around it.
+
+`Calendar.Grid` renders a `table`. `Calendar.Previous` and `Calendar.Next` render `button` with locale-derived accessible names. Weekday headers render `th`. Each day is a `td` containing a `button`. `Calendar.Heading` renders the visible month and year and announces it when the month changes. `Calendar` does not invent a date library: values are ISO calendar dates (`YYYY-MM-DD`).
+
+```tsx
+<Calendar
+  value={value}
+  onChange={setValue}
+  locale="en-GB"
+  min={min}
+  max={max}
+>
+  <Calendar.Header>
+    <Calendar.Previous />
+    <Calendar.Heading />
+    <Calendar.Next />
+  </Calendar.Header>
+
+  <Calendar.Grid>
+    <Calendar.Weekdays />
+    <Calendar.Days />
+  </Calendar.Grid>
+</Calendar>
+```
+
+Range selection is the same grid with `selection="range"` and a controlled `{ start, end }` value. Hovering a day while a start date is set previews the in-range interval; that preview is not application state.
+
+Approximate API:
+
+```ts
+type ISODate = `${number}-${number}-${number}`
+
+type CalendarValue =
+  | ISODate
+  | { start: ISODate; end: ISODate | null }
+
+interface CalendarProps {
+  children?: React.ReactNode
+  selection?: "single" | "range"
+  value?: CalendarValue | null
+  onChange?: (value: CalendarValue | null) => void
+  locale?: string
+  min?: ISODate
+  max?: ISODate
+  isDateUnavailable?: (date: ISODate) => boolean
+}
+```
+
+Cells rendered by `Calendar.Days` expose `data-today`, `data-selected`, `data-disabled`, `data-outside-month`, and for ranges `data-range-start`, `data-range-end`, `data-in-range`. Keyboard movement and selection do not require those attributes to be set by the application.
 
 ---
 
@@ -543,7 +736,61 @@ Authoring primitives are the underlying composition and lifecycle machinery used
 - **`Slot`**  
   Merges props, event handlers, and refs onto a single child element without wrapping DOM layers.
 - **`Presence`**  
-  Manages entry and exit animation lifecycles, keeping unmounting elements in the DOM until CSS animations or transitions complete.
+  Manages entry and exit animation lifecycles, keeping unmounting elements in the DOM until CSS animations or transitions complete. Overlay and Popover use Presence internally for the `data-state` exit contract.
+- **`RovingFocus`**  
+  The composite-widget keyboard kernel: roving `tabindex`, arrow movement, Home/End, disabled skipping, optional looping, optional typeahead, and optional two-dimensional movement. Listbox, Menu, and Tabs use it internally. Toolbar, ToggleGroup, tag lists, and picker grids are documented patterns on top of it — they are not reasons to rebuild the same machinery.
+
+`visuallyHidden` is a style prop on typed HTML primitives (clip/absolute/1px), not a component. Every pattern that needs an accessible name without visible text uses it instead of inventing `srOnly`.
+
+### RovingFocus
+
+RovingFocus does not add a wrapper DOM node. It slots keyboard behaviour onto a single composite child. Each `RovingFocus.Item` slots `tabindex` and item registration onto its child.
+
+```tsx
+<RovingFocus orientation="horizontal" loop>
+  <Div role="toolbar" aria-label="Formatting">
+    <RovingFocus.Item>
+      <Button>Bold</Button>
+    </RovingFocus.Item>
+    <RovingFocus.Item>
+      <Button>Italic</Button>
+    </RovingFocus.Item>
+    <RovingFocus.Item disabled>
+      <Button>Underline</Button>
+    </RovingFocus.Item>
+  </Div>
+</RovingFocus>
+```
+
+```tsx
+<RovingFocus orientation="both" typeahead>
+  <Div role="grid" aria-label="Emoji">
+    {cells.map((cell) => (
+      <RovingFocus.Item key={cell.id}>
+        <Button>{cell.label}</Button>
+      </RovingFocus.Item>
+    ))}
+  </Div>
+</RovingFocus>
+```
+
+Approximate API:
+
+```ts
+interface RovingFocusProps {
+  children?: React.ReactNode
+  orientation?: "horizontal" | "vertical" | "both"
+  loop?: boolean
+  typeahead?: boolean
+}
+
+interface RovingFocusItemProps {
+  children?: React.ReactNode
+  disabled?: boolean
+}
+```
+
+`orientation="both"` is the picker-grid case: arrows move in two dimensions. Typeahead is off by default; Listbox and Menu turn it on. Tabs leave it off.
 
 ### Slot merge rules contract
 
@@ -573,12 +820,31 @@ Complex interface patterns are documented compositions of foundational and ARIA 
 
 - **`Dialog`** $\rightarrow$ `Overlay` + `Overlay.Backdrop` + `Overlay.Content` (`role="dialog"`)
 - **`AlertDialog`** $\rightarrow$ `Overlay` + `Overlay.Backdrop` + `Overlay.Content` (`role="alertdialog"`)
-- **`Drawer` / `Sheet`** $\rightarrow$ `Overlay` positioned at screen edge with slide transitions
+- **`Drawer` / `Sheet`** $\rightarrow$ `Overlay` positioned at screen edge; slide-out is CSS against Overlay's `data-state` / Presence contract
 - **`Lightbox`** $\rightarrow$ `Overlay` with media preview presentation
 - **`Select`** $\rightarrow$ select-only `Combobox` with a `Listbox` popup
 - **`Autocomplete`** $\rightarrow$ editable `Combobox` with a `Listbox` popup
 - **`MenuButton`** $\rightarrow$ `<button>` + `Popover` + `Menu`
+- **`ContextMenu`** $\rightarrow$ `Popover` with a virtual pointer `anchor` + `Menu` (no trigger button)
+- **`HoverCard`** $\rightarrow$ `Popover` with `openOnHover`
+- **`DatePicker`** $\rightarrow$ text input + `Popover` + `Calendar` (parsing and display formatting stay in application code)
+- **`DateRangePicker`** $\rightarrow$ text input(s) + `Popover` + `Calendar` with `{ start, end }`
 - **`CommandPalette`** $\rightarrow$ `Overlay` + `Combobox`
+- **`Toolbar` / `ToggleGroup`** $\rightarrow$ `RovingFocus` over application-authored buttons
+
+---
+
+## Deliberate omissions
+
+These are decisions, not unfinished list items.
+
+- **`Tree`** — genuinely hard (nested collapse, typeahead, multi-select, often virtualization). Not in this freeze set. Combobox already states that applications may integrate their own tree when a product needs one.
+- **`Checkbox` / `RadioGroup`** — the native platform already provides state, grouping, and keyboard behaviour. Do not wrap `<input type="checkbox">` or `<input type="radio">`. Switch is included because it is not a native element.
+- **Form-field wiring** (`Field`, `Form`, implicit label association) — explicit IDs are the agent-friendly answer given the no-context stance.
+- **`ScrollArea`** — modern CSS (`overflow`, overlay scrollbars, `scrollbar-gutter`) covers it.
+- **`DataGrid`** — an ecosystem problem (virtualization, editing, column models, selection), not a primitive this library can freeze honestly.
+
+Time-of-day widgets are outside Calendar. Calendar is calendar dates.
 
 ---
 
@@ -601,7 +867,7 @@ Before any primitive's API is locked into the permanent public surface, it must 
 3. **Controlled-state contract is settled:** Props for controlled state, open/close, and dismissal handlers are consistent across the library.
 4. **Event ordering and cancellation are settled:** Event propagation, bubbling order, and `defaultPrevented` behavior are fully defined.
 5. **Styling hooks and state attributes are settled:** Data attributes (e.g. `data-state="open"`, `data-orientation="vertical"`) and style props are finalized.
-6. **Triple composition verification:** At least three substantially different compositions work seamlessly without escape-hatch props.
+6. **Triple composition verification:** At least three substantially different compositions work seamlessly without escape-hatch props. For `Listbox` and `Combobox`, one of those compositions must be virtualized: windowed options that preserve `aria-setsize` / `aria-posinset` and support scroll-to-index. For `Calendar`, one composition must use a locale whose week does not start on Sunday, and one must be a range picker.
 7. **Cross-cutting environment safety:** Nested usage, RTL directionality, SSR hydration, and multi-root/Shadow DOM usage require no API adjustments.
 8. **AI agent verification:** An AI model or agent can implement custom, non-standard user requirements without bypassing or fighting the primitive.
 
