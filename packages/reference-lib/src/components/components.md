@@ -25,11 +25,11 @@ Reference UI centralizes difficult, invariant behaviour. Product semantics, appl
 - **Native props remain available:** Parts accept the attributes and events of the element they render.
 - **Patterns are not necessarily components:** A named interface pattern may be a documented composition of lower-level primitives rather than another runtime abstraction.
 
-## Initial component set
+## Foundation primitives
 
 Reference UI only provides a runtime component when it centralizes behaviour that should not be repeatedly rebuilt by developers or AI agents.
 
-The initial set is intentionally small:
+Foundation primitives solve application-wide mechanics:
 
 - `ReferenceLibrary`
 - `Portal`
@@ -150,7 +150,14 @@ Overlay portals internally by default. `Overlay.Portal` is an optional configura
 </Overlay>
 ```
 
-Because Overlay is controlled, dismissal requests do not change application state themselves. Applications can handle high-level dismissal with `onDismiss` or target specific interactions with granular handlers (`onEscape`, `onOutsidePress`):
+Because Overlay is controlled, dismissal requests do not change application state themselves. Applications can handle high-level dismissal with `onDismiss` or target specific interactions with granular handlers (`onEscape`, `onOutsidePress`).
+
+When both granular and high-level handlers are present, granular handlers execute first. If the granular handler does not cancel the interaction via `event.preventDefault()`, `onDismiss` fires:
+
+```text
+onEscape(event)       → if (!event.defaultPrevented) → onDismiss()
+onOutsidePress(event) → if (!event.defaultPrevented) → onDismiss()
+```
 
 ```tsx
 <Overlay
@@ -302,7 +309,6 @@ Custom toast types are created with `toast.define()`. Each definition owns its r
 ```tsx
 const ProjectSavedToast = toast.define({
   duration: 4000,
-  announce: ({ project }) => `${project.name} was saved`,
 
   render({ project }, { close }) {
     return (
@@ -319,7 +325,11 @@ const ProjectSavedToast = toast.define({
 ```
 
 ```tsx
-toast.show(ProjectSavedToast, { project })
+toast.show(
+  ProjectSavedToast,
+  { project },
+  { announce: `${project.name} was saved` }
+)
 ```
 
 The second argument passed to `render` contains explicit controls for the current toast instance:
@@ -336,7 +346,6 @@ Definitions can replace one another while preserving the identity of an existing
 ```tsx
 const UploadingToast = toast.define({
   duration: false,
-  announce: ({ file }) => `Uploading ${file.name}`,
 
   render({ file }, { close }) {
     return (
@@ -353,7 +362,6 @@ const UploadingToast = toast.define({
 
 const UploadCompleteToast = toast.define({
   duration: 4000,
-  announce: ({ file }) => `${file.name} was uploaded`,
 
   render({ file }, { close }) {
     return (
@@ -372,8 +380,17 @@ const UploadCompleteToast = toast.define({
 ```tsx
 const id = `upload:${file.id}`
 
-toast.show(UploadingToast, { file }, { id })
-toast.update(id, UploadCompleteToast, { file })
+toast.show(
+  UploadingToast,
+  { file },
+  { id, announce: `Uploading ${file.name}` }
+)
+toast.update(
+  id,
+  UploadCompleteToast,
+  { file },
+  { announce: `${file.name} was uploaded` }
+)
 toast.dismiss(id)
 ```
 
@@ -402,7 +419,6 @@ interface ToastDefinition<Props> {
     controls: ToastControls
   ): React.ReactNode
 
-  announce?: string | ((props: Props) => string)
   duration?: number | false
   position?: ToastPosition
 }
@@ -411,6 +427,7 @@ interface ToastOptions {
   id?: ToastId
   duration?: number | false
   position?: ToastPosition
+  announce?: string
 }
 
 toast.define<Props>(
@@ -447,11 +464,14 @@ Following the same primitive-first philosophy, these components remain decoupled
 
 - **`Listbox`**  
   The core selection and option-management engine. Handles single/multi selection, disabled item skipping, typeahead matching, and keyboard navigation.  
-  - Composed with `<button>` + `Popover` $\rightarrow$ **`Select`**
-  - Composed with `<input>` + `Popover` $\rightarrow$ **`Combobox` / Autocomplete / Search**
+  - Composed with `<button>` and `Popover` $\rightarrow$ `Select`
+  - Reused internally by list-based `Combobox` popups
+
+- **`Combobox`**  
+  Coordinates an input with an associated popup while preserving DOM focus and native text editing behaviour. Handles active-descendant tracking, autocomplete modes, suggestion navigation, value commitment, dismissal, and restoration of the previous value. The popup can be a listbox, grid, tree, or dialog.
 
 - **`Menu`**  
-  Owns `role="menu"` keyboard navigation, item activation, typeahead, and nested submenu orchestration. Composes with `Popover` for dropdown and context menus.
+  Owns `role="menu"` keyboard navigation, item activation, typeahead, and nested submenu orchestration. Composes with `Popover` for dropdown menus.
 
 - **`Tabs`**  
   Coordinates directional keyboard cycling (horizontal/vertical), automatic vs. manual activation, and `aria-controls` / `aria-labelledby` linking between tabs and panels.
@@ -459,12 +479,89 @@ Following the same primitive-first philosophy, these components remain decoupled
 - **`Slider`**  
   Encapsulates pointer drag math, multi-thumb collision constraints, keyboard stepping (arrows, PageUp/PageDown, Home/End), and ARIA value ranges (`aria-valuenow`, `aria-valuemin`, `aria-valuemax`).
 
-- **`Accordion` / `Collapsible`**  
-  Coordinates multi-item disclosure state, optional single-expanded constraints, and keyboard header traversal.
+- **`Collapsible`**  
+  Coordinates a single disclosure trigger and content region, including `aria-expanded`, `aria-controls`, and controlled visibility.
+
+- **`Accordion`**  
+  Coordinates a collection of Collapsibles, including single/multiple expansion policies and optional keyboard traversal between headers.
 
 - **`Splitter`**  
   Provides accessible, resizable panel partitions (`role="separator"`) in horizontal and vertical orientations. Handles pointer/touch drag calculations, minimum/maximum size clamping, keyboard-driven resizing (Arrow keys, Home/End, Enter to collapse), and selection prevention during resize.
 
 - **`Tooltip`**  
-  Transient informative descriptions associated with a focusable or hoverable trigger (`role="tooltip"` linked via `aria-describedby` or `aria-labelledby`). Handles hover intent delays, warm-up skip delays across neighbouring tooltips, keyboard focus display, and non-modal Escape dismissal per WCAG 2.1 guidelines.
+  Transient informative descriptions linked from its trigger using `aria-describedby`. Tooltip content is non-interactive (interactive floating content is a `Popover`). Handles hover intent delays, warm-up skip delays across neighbouring tooltips, keyboard focus display, and non-modal Escape dismissal per WCAG 2.1 SC 1.4.13 (dismissible, hoverable, and persistent).
+
+---
+
+## Authoring primitives
+
+Authoring primitives are the underlying composition and lifecycle machinery used to construct design-system components from Reference UI primitives without adding wrapper DOM nodes.
+
+> [!NOTE]
+> `Slot` is available to user-authored design-system components. It does not make Reference UI primitives polymorphic or alter their documented native elements.
+
+- **`Slot`**  
+  Merges props, event handlers, and refs onto a single child element without wrapping DOM layers.
+- **`Presence`**  
+  Manages entry and exit animation lifecycles, keeping unmounting elements in the DOM until CSS animations or transitions complete.
+
+### Slot merge rules contract
+
+The `Slot` API is defined by its strict merge precedence:
+
+- **Native props:** Child props take precedence over Slot props, except for styles, classes, and handlers.
+- **Event handlers:** Composed in sequence: child handler executes first; Slot handler executes second.
+  ```ts
+  childHandler(event)
+  if (!event.defaultPrevented) {
+    slotHandler(event)
+  }
+  ```
+- **Event cancellation:** If a child handler calls `event.preventDefault()`, the Slot handler will not run (`!event.defaultPrevented`).
+- **className:** Combined into a single merged class string.
+- **style:** Merged shallowly; child style properties override Slot style properties.
+- **Refs:** Composed into a merged ref callback that updates both Slot and child refs.
+- **IDs & ARIA attributes:** Merged deterministically; composite attributes like `aria-describedby` concatenate valid ID tokens.
+- **Missing / duplicate slots:** Enforces a single-child invariant when active; passes through cleanly when transparent.
+- **Nested slots:** Merges props recursively through nested slot hierarchies.
+
+---
+
+## Documented compositions
+
+Complex interface patterns are documented compositions of foundational and ARIA primitives rather than rigid standalone components:
+
+- **`Dialog`** $\rightarrow$ `Overlay` + `Overlay.Backdrop` + `Overlay.Content` (`role="dialog"`)
+- **`AlertDialog`** $\rightarrow$ `Overlay` + `Overlay.Backdrop` + `Overlay.Content` (`role="alertdialog"`)
+- **`Drawer` / `Sheet`** $\rightarrow$ `Overlay` positioned at screen edge with slide transitions
+- **`Lightbox`** $\rightarrow$ `Overlay` with media preview presentation
+- **`Select`** $\rightarrow$ select-only `Combobox` with a `Listbox` popup
+- **`Autocomplete`** $\rightarrow$ editable `Combobox` with a `Listbox` popup
+- **`MenuButton`** $\rightarrow$ `<button>` + `Popover` + `Menu`
+- **`CommandPalette`** $\rightarrow$ `Overlay` + `Combobox`
+
+---
+
+## Internal state & signals
+
+Reference UI uses fine-grained signals internally for reactive state management, event coordination, and collision tracking.
+
+However, raw signal primitives are intentionally not exposed as a public API:
+- Exposing raw signals commits the public contract to specific subscription semantics, update batching, equality models, React version integration quirks, SSR serialization, and microfrontend lifecycles.
+- Keeping signals internal allows the library to optimize runtime performance freely while presenting a standard, robust React/TypeScript component surface.
+
+---
+
+## Freeze gate criteria
+
+Before any primitive's API is locked into the permanent public surface, it must satisfy the following freeze gate checklist:
+
+1. **Exact DOM output is documented:** Element hierarchy and tag names are fixed.
+2. **Every native element is fixed:** Every rendered part corresponds to a definite native HTML tag without an `as` prop.
+3. **Controlled-state contract is settled:** Props for controlled state, open/close, and dismissal handlers are consistent across the library.
+4. **Event ordering and cancellation are settled:** Event propagation, bubbling order, and `defaultPrevented` behavior are fully defined.
+5. **Styling hooks and state attributes are settled:** Data attributes (e.g. `data-state="open"`, `data-orientation="vertical"`) and style props are finalized.
+6. **Triple composition verification:** At least three substantially different compositions work seamlessly without escape-hatch props.
+7. **Cross-cutting environment safety:** Nested usage, RTL directionality, SSR hydration, and multi-root/Shadow DOM usage require no API adjustments.
+8. **AI agent verification:** An AI model or agent can implement custom, non-standard user requirements without bypassing or fighting the primitive.
 
