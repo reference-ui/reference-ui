@@ -508,7 +508,7 @@ Following the same primitive-first philosophy, these components remain decoupled
   - Reused internally by list-based `Combobox` popups
 
 - **`Combobox`**  
-  Coordinates an input with an associated popup while preserving DOM focus and native text editing behaviour. Handles active-descendant tracking, autocomplete modes, suggestion navigation, value commitment, dismissal, and restoration of the previous value. The popup can be a listbox, grid, tree, or dialog.
+  Coordinates an input with an associated popup while preserving DOM focus and native text editing behaviour. Handles active-descendant tracking, autocomplete modes, suggestion navigation, value commitment, dismissal, and restoration of the previous value. Reference UI provides `Listbox` for list-based popups; applications may integrate their own grid, tree, or dialog implementations when required by the product.
 
 - **`Menu`**  
   Owns `role="menu"` keyboard navigation, item activation, typeahead, and nested submenu orchestration. Composes with `Popover` for dropdown menus.
