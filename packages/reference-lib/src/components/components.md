@@ -25,11 +25,51 @@ Reference UI centralizes difficult, invariant behaviour. Product semantics, appl
 - **Native props remain available:** Parts accept the attributes and events of the element they render.
 - **Patterns are not necessarily components:** A named interface pattern may be a documented composition of lower-level primitives rather than another runtime abstraction.
 
-## Foundation primitives
+## Reference UI Core
+
+Reference UI replaces legacy component abstractions with a lean, compiler-backed system that mirrors the web platform directly.
+
+### Typed HTML primitives
+
+In earlier component eras, design systems introduced polymorphic `as` props and generic layout wrappers (`<Box>`, `<Flex>`, `<Grid>`, `<Stack>`) to save keystrokes. Over time, this created significant friction: TypeScript union explosions, prop drift, inaccessible `<div>` soup, and unpredictable runtime overrides.
+
+Reference UI eliminates polymorphic `as` props entirely. Instead, it generates statically typed native HTML primitives that map directly 1:1 to the DOM:
+
+- `<Div>` renders `<div>`
+- `<Section>` renders `<section>`
+- `<Nav>` renders `<nav>`
+- `<Header>` renders `<header>`
+- `<Main>` renders `<main>`
+- `<Button>` renders `<button>`
+- `<A>` renders `<a>`
+
+### Layout and rhythm units (`r`)
+
+Layout is not a component abstraction—the browser is the layout engine. Layout and spacing are authored directly through compile-time style props on native elements, powered by Reference UI's typographic baseline rhythm system (`r`):
+
+- **Whole multiples:** `1r`, `2r`, `3r`, `4r`
+- **Decimals & fractions:** `0.5r`, `1/2r`, `1/3r`, `1/4r`
+
+```tsx
+<Section display="flex" flexDirection="column" gap="2r" padding="1r">
+  <Nav display="flex" alignItems="center" gap="1r">
+    <A href="/home">Home</A>
+    <A href="/docs">Docs</A>
+  </Nav>
+
+  <Div display="grid" gridTemplateColumns="repeat(3, 1fr)" gap="1r">
+    {children}
+  </Div>
+</Section>
+```
+
+This guarantees pristine TypeScript type safety, zero DOM wrapper overhead, mathematical layout harmony, and complete transparency for developers and AI models.
+
+## Foundation components
 
 Reference UI only provides a runtime component when it centralizes behaviour that should not be repeatedly rebuilt by developers or AI agents.
 
-Foundation primitives solve application-wide mechanics:
+Foundation components solve application-wide mechanics:
 
 - `ReferenceLibrary`
 - `Portal`
