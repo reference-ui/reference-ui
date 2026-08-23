@@ -165,13 +165,8 @@ Because Overlay is controlled, dismissal requests do not change application stat
 Approximate API:
 
 ```ts
-type OverlayDismissReason =
-  | "escape"
-  | "outside-press"
-  | "focus-out"
-
 interface OverlayDismissHandlers {
-  onDismiss?: (reason: OverlayDismissReason) => void
+  onDismiss?: () => void
   onEscape?: (event: KeyboardEvent) => void
   onOutsidePress?: (event: PointerEvent) => void
 }
@@ -246,8 +241,6 @@ An optional arrow participates in the same positioning calculation:
 Approximate API:
 
 ```ts
-type PopoverDismissReason = OverlayDismissReason
-
 type PopoverPlacement =
   | "top"
   | "top-start"
@@ -443,3 +436,35 @@ toast.dismiss(id?: ToastId): void
 Calling `toast.dismiss()` without an ID dismisses every active toast.
 
 A toast definition is ordinary, visible application code. AI agents can create exactly the notification requested without reverse-engineering proprietary variants, fixed layouts, or hidden component state.
+
+---
+
+## ARIA primitives
+
+Beyond foundational layer management (`Overlay`, `Popover`, `Portal`, `Toast`), certain interface patterns require strict adherence to the **WAI-ARIA Authoring Practices Guide (APG)**. These patterns involve complex state machines, roving tabindex, active-descendant tracking, typeahead searching, and keyboard traversal contracts that should not be repeatedly rebuilt on the fly.
+
+Following the same primitive-first philosophy, these components remain decoupled, unstyled, and highly composable:
+
+- **`Listbox`**  
+  The core selection and option-management engine. Handles single/multi selection, disabled item skipping, typeahead matching, and keyboard navigation.  
+  - Composed with `<button>` + `Popover` $\rightarrow$ **`Select`**
+  - Composed with `<input>` + `Popover` $\rightarrow$ **`Combobox` / Autocomplete / Search**
+
+- **`Menu`**  
+  Owns `role="menu"` keyboard navigation, item activation, typeahead, and nested submenu orchestration. Composes with `Popover` for dropdown and context menus.
+
+- **`Tabs`**  
+  Coordinates directional keyboard cycling (horizontal/vertical), automatic vs. manual activation, and `aria-controls` / `aria-labelledby` linking between tabs and panels.
+
+- **`Slider`**  
+  Encapsulates pointer drag math, multi-thumb collision constraints, keyboard stepping (arrows, PageUp/PageDown, Home/End), and ARIA value ranges (`aria-valuenow`, `aria-valuemin`, `aria-valuemax`).
+
+- **`Accordion` / `Collapsible`**  
+  Coordinates multi-item disclosure state, optional single-expanded constraints, and keyboard header traversal.
+
+- **`Splitter`**  
+  Provides accessible, resizable panel partitions (`role="separator"`) in horizontal and vertical orientations. Handles pointer/touch drag calculations, minimum/maximum size clamping, keyboard-driven resizing (Arrow keys, Home/End, Enter to collapse), and selection prevention during resize.
+
+- **`Tooltip`**  
+  Transient informative descriptions associated with a focusable or hoverable trigger (`role="tooltip"` linked via `aria-describedby` or `aria-labelledby`). Handles hover intent delays, warm-up skip delays across neighbouring tooltips, keyboard focus display, and non-modal Escape dismissal per WCAG 2.1 guidelines.
+
