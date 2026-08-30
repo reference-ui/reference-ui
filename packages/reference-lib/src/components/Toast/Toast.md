@@ -4,7 +4,7 @@ Proof: [TESTS.md](./TESTS.md).
 
 Infrastructure for transient application content. Does not prescribe appearance or meaning. No semantic variants (`success`, `error`, `loading`).
 
-Toast is **not** Overlay: no focus trap, no page inert, no layer-stack modality. The toaster is mounted by `ReferenceLibrary`. It renders at the React root without a portal or React context.
+Toast is **not** Overlay: no focus trap, no page inert, no layer-stack modality. The toaster is mounted by `ReferenceLibrary`. It renders at the React root without a portal or a required React context. The queue is a document-scoped Zustand store ([hooks.md](../../core/hooks/hooks.md)).
 
 ```tsx
 <ReferenceLibrary

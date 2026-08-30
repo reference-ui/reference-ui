@@ -2,7 +2,9 @@
 
 These clones are **references**, not dependencies. Nothing here is imported at runtime. We own the public APIs in `packages/reference-lib/src/components/*/`.
 
-Lift: algorithms, edge cases, tests. Leave: visual CSS, React context contracts, `as` props, semantic variants, framework glue.
+Lift: algorithms, edge cases, tests. Leave: visual CSS, public React context
+contracts, `as` props, semantic variants, framework glue. Shared internal
+state uses Zustand as a direct dependency, not a vendored clone.
 
 ```bash
 bash vendor/clone.sh
@@ -43,6 +45,7 @@ another commit:
 
 | Kernel | Public surface | Job |
 | --- | --- | --- |
+| Shared store | Zustand (direct dep) | Cross-tree state; no public Provider |
 | Layer stack | Overlay | Nesting, Escape, outside-press |
 | Focus lock | `FocusLock`, Overlay | Trap, restore, shards |
 | Scroll lock | Overlay | Body scroll, iOS, scrollbar gap |
@@ -77,7 +80,8 @@ another commit:
 **Leave**
 
 - Stylesheets, icons, iOS “scale the page behind the drawer”
-- `<Provider>` / context as a public API
+- `<Provider>` / context as a public API. Zustand is the cross-tree store;
+  Context is allowed only as internal subtree scoping.
 - `as` / polymorphic roots
 - Toast `success` / `error` / `loading`
 - Second overlay runtimes (`@floating-ui/react` tree, FloatingPortal, useDismiss)

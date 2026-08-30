@@ -195,7 +195,7 @@ AT must not reach background content. Double-hide breaks restore. Live regions a
 
 **Vendor.** `vendor/aria-hidden` — `hideOthers` / `inertOthers`, refcount, preserve pre-hidden, keep `[aria-live]`. Aria `ariaHideOutside.ts` — TreeWalker + MutationObserver, keep `[data-live-announcer]`, `role=row` VoiceOver special case. `vendor/inert` — polyfill edge cases; prefer native `inert` in Overlay, steal tests not the polyfill (`VENDOR.md`).
 
-**Lift** sibling-walk + refcount + live-region exceptions. Prefer native `inert` on Overlay. Do not require an OverlayProvider as a public app wrapper.
+**Lift** sibling-walk + refcount + live-region exceptions. Prefer native `inert` on Overlay. Do not require an OverlayProvider as a public app wrapper. The shared layer stack is a document-scoped Zustand store ([hooks.md](../../core/hooks/hooks.md)).
 
 An already `aria-hidden` subtree is an opaque traversal boundary. Dynamic nodes
 reparented into a pre-hidden or Overlay-managed subtree stay isolated without

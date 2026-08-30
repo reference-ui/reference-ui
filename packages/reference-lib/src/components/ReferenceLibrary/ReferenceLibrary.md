@@ -4,7 +4,10 @@ Proof: [TESTS.md](./TESTS.md).
 
 Mounts Reference UI's application-level runtime systems.
 
-Not a React context provider. Does not inject values into descendants. Provides a stable React-level mount for Toast, `announce()`, and the Tooltip skip-delay group.
+Not a React context provider. Does not require descendants. Provides a stable
+React-level mount for Toast, `announce()`, and the Tooltip skip-delay group —
+document-scoped Zustand stores, not a context tree. See
+[hooks.md](../../core/hooks/hooks.md).
 
 ```tsx
 <ReferenceLibrary
@@ -42,7 +45,9 @@ window.
 
 ## Problems we own
 
-Agents need one place to mount cross-cutting runtimes without a Provider contract. Overlay/Popover/Menu do **not** read from this. They do not require being nested under it.
+Agents need one place to mount cross-cutting runtimes without a Provider
+contract. Overlay/Popover/Menu do **not** read from this through context. They
+do not require being nested under it.
 
 ### Toast + announce mount
 
@@ -56,7 +61,9 @@ After one tooltip shows, neighbours open instantly for a short window. Vendors i
 
 **Vendor.** Radix `skipDelayDuration` on Provider. Aria `globalWarmedUp`. Zag `setGlobalId`. Floating UI `FloatingDelayGroup`.
 
-**Lift** the algorithm. **Leave** the public Provider. The group is module-level state mounted here (`components.md`).
+**Lift** the algorithm. **Leave** the public Provider. The group is a
+document-scoped Zustand store mounted here (`components.md`,
+[hooks.md](../../core/hooks/hooks.md)).
 
 ### What does not live here
 
@@ -66,4 +73,4 @@ Layer stack, FocusLock, scroll lock, inert — Overlay owns those per instance. 
 
 ## Convergence
 
-A mount point, not a context tree. Closest vendor analogue is Sonner’s `<Toaster />` plus Aria’s global tooltip warmup — without making either a descendant contract.
+A mount point for document-scoped Zustand stores, not a context tree. Closest vendor analogue is Sonner’s `<Toaster />` plus Aria’s global tooltip warmup — without making either a descendant contract.

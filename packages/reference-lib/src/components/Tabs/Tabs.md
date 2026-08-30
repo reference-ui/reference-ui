@@ -87,4 +87,4 @@ Nullable selected tab is not APG Tabs. **Leave.**
 
 ## Convergence
 
-**APG:** react-aria `useTabList` / `useTab`. **Composition shape:** radix tabs wrapping RovingFocus. Do not add a Tabs.Provider.
+**APG:** react-aria `useTabList` / `useTab`. **Composition shape:** radix tabs wrapping RovingFocus. Do not add a public `Tabs.Provider`.

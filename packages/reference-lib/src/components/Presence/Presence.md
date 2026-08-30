@@ -54,13 +54,14 @@ Leaving present while `document.visibilityState === "hidden"` should skip the ex
 
 ### Nested Presence
 
-Nested Presence instances coordinate through an internal registration channel.
-When a parent and descendant close together, the parent remains mounted until
-its own finite effects and every registered descendant exit finish. A
-descendant interrupted back to present unregisters its pending exit without
-stranding the parent; removal or StrictMode replay also cleans registration.
-This follows Headless UI's nesting regressions without exposing a Provider or
-context API. Overlay Backdrop and Content remain sibling participants owned by
+Nested Presence instances coordinate through an internal registration
+channel (Zustand plus `src/core/hooks`). When a parent and descendant close
+together, the parent remains mounted until its own finite effects and every
+registered descendant exit finish. A descendant interrupted back to present
+unregisters its pending exit without stranding the parent; removal or
+StrictMode replay also cleans registration.
+This follows Headless UI's nesting regressions without exposing a public
+Provider. Overlay Backdrop and Content remain sibling participants owned by
 Overlay rather than requiring application-authored Presence wrappers.
 
 ### `forceMount`

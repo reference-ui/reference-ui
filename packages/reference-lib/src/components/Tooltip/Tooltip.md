@@ -79,7 +79,9 @@ After one tooltip shows, moving to the next opens **instantly** for a short wind
 
 **Vendor.** Radix Provider `skipDelayDuration` 300. Aria `globalWarmedUp` + `tooltips` map. Zag `setGlobalId`. Floating UI `FloatingDelayGroup`.
 
-**Lift** the algorithm onto a module-level group mounted with `ReferenceLibrary`. **Leave** `Tooltip.Provider` as a public API (`components.md`).
+**Lift** the algorithm onto a document-scoped Zustand group mounted with
+`ReferenceLibrary`. **Leave** `Tooltip.Provider` as a public API
+(`components.md`, [hooks.md](../../core/hooks/hooks.md)).
 
 ### WCAG 1.4.13
 

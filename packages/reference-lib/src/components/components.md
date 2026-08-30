@@ -20,7 +20,12 @@ Reference UI centralizes difficult, invariant behaviour. Product semantics, appl
 
 - **Explicit composition:** Component anatomy is visible in JSX rather than hidden behind configuration objects.
 - **Controlled application state:** Application state is passed directly through props. Components do not invent parallel state models.
-- **No React context contract:** Reference UI does not require React context or expose provider-dependent component APIs.
+- **Zustand, not a context contract:** Shared state that would otherwise need
+  React Context uses Zustand as a direct dependency. Stores stay internal;
+  consumers get props, parts, and any Reference-owned domain hooks or actions
+  named in the component spec. Native Context is allowed only for genuine
+  subtree scoping (a part finding its owner). Applications are not required
+  to wrap trees in a Provider. See [hooks.md](../core/hooks/hooks.md).
 - **Stable DOM semantics:** Components render a defined native element. They do not provide an `as` prop.
 - **Native props remain available:** Parts accept the attributes and events of the element they render.
 - **Style props remain available:** Every fixed, style-bearing part accepts the
@@ -167,7 +172,7 @@ replaces the platform/style surface.
 
 Reference UI only provides a runtime component when it centralizes behaviour that should not be repeatedly rebuilt by developers or AI agents.
 
-Working design lives in sibling folders: `Overlay/Overlay.md` (API + problems), `Overlay/TESTS.md` (contracts to prove, including how vendor e2e suites combine). This document remains the freeze-gate overview. Names under Documented compositions do not get folders — they are not runtime components. Vendor clones themselves are documented in `vendor/VENDOR.md`; they are references, not dependencies. How to run Playwright is `packages/reference-lib/TESTING.md`.
+Working design lives in sibling folders: `Overlay/Overlay.md` (API + problems), `Overlay/TESTS.md` (contracts to prove, including how vendor e2e suites combine). Implementation substrate is [hooks.md](../core/hooks/hooks.md): Zustand plus adapters in `src/core/hooks`. This document remains the freeze-gate overview. Names under Documented compositions do not get folders — they are not runtime components. Vendor clones themselves are documented in `vendor/VENDOR.md`; they are references, not dependencies. How to run Playwright is `packages/reference-lib/TESTING.md`.
 
 Foundation components solve application-wide mechanics:
 
@@ -185,7 +190,10 @@ Foundation components solve application-wide mechanics:
 
 Mounts Reference UI's application-level runtime systems.
 
-`ReferenceLibrary` is not a React context provider. It does not inject values into its descendants or require components to remain beneath a particular context boundary. It provides a stable React-level mount for systems that operate across the application, including Toast and `announce()`.
+`ReferenceLibrary` is a document-scoped runtime mount, not a React context
+provider. Overlay, Popover, and Menu do not need to sit beneath it. Toast,
+`announce()`, and Tooltip skip-delay are Zustand stores keyed by `Document`,
+mounted here. See [hooks.md](../core/hooks/hooks.md).
 
 ```tsx
 <ReferenceLibrary
@@ -374,7 +382,10 @@ Overlay, Popover, and Menu share one layer stack.
 - A menu opened from a dialog is a child layer: Escape closes the menu first; a second Escape closes the dialog.
 - Popover and Overlay nest in either direction under the same rules.
 
-This contract is not Overlay-specific. Popover and Menu register on the same stack; they do not keep private dismissal worlds.
+This contract is not Overlay-specific. Popover and Menu register on the same
+stack; they do not keep private dismissal worlds. The stack is a
+document-scoped Zustand store, not a React context
+([hooks.md](../core/hooks/hooks.md)).
 
 Approximate API:
 
@@ -610,7 +621,7 @@ The runtime DOM is one `div[data-reference-toast-host]`, occupied
 `--reference-toast-index`/`--reference-toast-count`; custom render output stays
 untouched inside.
 
-The toaster is mounted internally by `ReferenceLibrary`. It renders directly at the React root without a portal or React context.
+The toaster is mounted internally by `ReferenceLibrary`. It renders directly at the React root without a portal or a required React context. The queue is a document-scoped Zustand store.
 
 ```tsx
 <ReferenceLibrary
@@ -1182,7 +1193,7 @@ These are decisions, not unfinished list items.
 - **`Progress` / `Meter`** — native elements. Do not wrap them.
 - **Native `<dialog>`** — Overlay is the stacking, nesting, and Presence contract. Do not swap in HTML dialog as a second modal runtime.
 - **`Carousel`** — CSS scroll-snap plus optional `RovingFocus`. Not a primitive.
-- **Form-field wiring** (`Field`, `Form`, implicit label association) — explicit IDs are the agent-friendly answer given the no-context stance.
+- **Form-field wiring** (`Field`, `Form`, implicit label association) — explicit IDs are the agent-friendly answer; a public Field/Form provider is not a freeze primitive.
 - **`ScrollArea`** — modern CSS (`overflow`, overlay scrollbars, `scrollbar-gutter`) covers it.
 - **`DataGrid`** — an ecosystem problem (virtualization, editing, column models, selection), not a primitive this library can freeze honestly.
 - **Virtualized or multi-select `Tree`** — the freeze Tree is APG keyboard + collapse + single selection only. Windowed rows and multi-select stay application-owned.
@@ -1193,13 +1204,23 @@ Time-of-day widgets are outside Calendar. Calendar is calendar dates.
 
 ---
 
-## Internal state & signals
+## Internal state
 
-Reference UI uses fine-grained signals internally for reactive state management, event coordination, and collision tracking.
+Zustand is the standard substrate for shared state and capabilities that
+would otherwise require React Context. It is a direct third-party
+dependency — not vendored, ported, or reimplemented. Adapter hooks in
+`src/core/hooks` integrate it.
 
-However, raw signal primitives are intentionally not exposed as a public API:
-- Exposing raw signals commits the public contract to specific subscription semantics, update batching, equality models, React version integration quirks, SSR serialization, and microfrontend lifecycles.
-- Keeping signals internal allows the library to optimize runtime performance freely while presenting a standard, robust React/TypeScript component surface.
+Stores stay internal. Consumers see Reference-owned domain hooks and actions
+where a spec names them, plus the usual props and parts. Prefer this
+provider-free model for cross-tree coordination, selectors, and imperative
+access. Use native React Context only for genuine subtree scoping or
+dependency injection (a part finding its owner). That context is not a
+public Provider.
+
+Implementation specs document store shape, actions, selectors, hooks,
+lifecycle, isolation, and multi-root/MFE behaviour
+([hooks.md](../core/hooks/hooks.md)).
 
 ---
 
@@ -1226,5 +1247,9 @@ not bless the current design by definition.
 10. **Coverage closure:** Every surveyed vendor test is ported, merged into
     named case IDs, assigned to another owner, or deliberately left with a
     reason; no unclassified test knowledge is hidden in implementation notes.
+11. **Store and hook spec:** Internal Zustand shape, actions, selectors,
+    hooks, lifecycle, isolation, and multi-root/MFE behaviour are documented
+    for that owner ([hooks.md](../core/hooks/hooks.md)). A missing expression is an
+    API blocker, not an implementation detail.
 
 

@@ -3,7 +3,9 @@
 This is the normative proof architecture for Reference UI's runtime primitives.
 
 The public design and freeze gates live in
-[`src/components/components.md`](./src/components/components.md). Each
+[`src/components/components.md`](./src/components/components.md). Shared
+internal state uses Zustand plus `src/core/hooks`
+([`src/core/hooks/hooks.md`](./src/core/hooks/hooks.md)). Each
 `src/components/<Name>/TESTS.md` is the executable contract for one owner.
 Implementation lives in this package. Black-box proof lives in `matrix/lib`.
 Cosmos is for looking; Playwright is for asserting.
@@ -26,6 +28,7 @@ primitive, an internal kernel, native HTML, or a documented composition.
 | Concern | Location |
 | --- | --- |
 | Public design and omissions | `src/components/components.md` |
+| Zustand + core hooks spec | `src/core/hooks/hooks.md` |
 | High-level component contract | `src/components/<Name>/<Name>.md` |
 | Exact cases and source provenance | `src/components/<Name>/TESTS.md` |
 | Visual exploration | this package's Cosmos fixtures |
@@ -84,7 +87,9 @@ Design one component in this order:
    ID, transparent root, valid child shape, and absence of hidden markup.
 4. **Freeze controlled state.** Define values, defaults, request callbacks,
    programmatic updates, rejected requests, invalid runtime input, and dynamic
-   collection identity.
+   collection identity. Document the internal Zustand store, actions,
+   selectors, hooks, lifecycle, isolation, and multi-root/MFE behaviour
+   ([hooks.md](./src/core/hooks/hooks.md)).
 5. **Freeze events.** Specify input modalities, callback order, propagation,
    cancellation through `preventDefault()`, stale-handler behavior, and exactly
    when native browser behavior remains untouched.
@@ -530,7 +535,8 @@ native checkbox/ARIA-switch platform contract. The resulting decisions are:
     request-safe server behavior are public contracts.
 11. **Presence:** finite transitions and animations are both observed;
     zero-duration/hidden-document exits settle safely, and nested Presence
-    instances coordinate descendant completion without a public Provider.
+    instances coordinate descendant completion without a public Provider
+    (Zustand / `src/core/hooks` registration, [hooks.md](./src/core/hooks/hooks.md)).
 12. **Focus return:** FocusLock and Overlay resolve an optional explicit
     return target at deactivation/exit completion, with captured-origin
     proximity fallback and a no-restore option.
@@ -612,15 +618,17 @@ A primitive freezes only when:
 
 ## Implementation order
 
-1. `Slot`, `Portal`, `Presence`
-2. `RovingFocus`, `FocusLock`
-3. `Overlay`
-4. `Popover`
-5. `ReferenceLibrary`, `Toast`, `Tooltip`
-6. `Listbox`, `Menu`, `Tree`
-7. `Combobox`, `Tabs`
-8. `Slider`, `NumberField`, `Collapsible`, `Accordion`, `Splitter`
-9. `Calendar`
+1. Zustand dependency plus `src/core/hooks` adapters
+   ([hooks.md](./src/core/hooks/hooks.md))
+2. `Slot`, `Portal`, `Presence`
+3. `RovingFocus`, `FocusLock`
+4. `Overlay`
+5. `Popover`
+6. `ReferenceLibrary`, `Toast`, `Tooltip`
+7. `Listbox`, `Menu`, `Tree`
+8. `Combobox`, `Tabs`
+9. `Slider`, `NumberField`, `Collapsible`, `Accordion`, `Splitter`
+10. `Calendar`
 
 This order follows behavior dependencies, not visual complexity.
 
@@ -632,5 +640,6 @@ This order follows behavior dependencies, not visual complexity.
   into every consumer.
 - Do not use snapshots for interaction contracts.
 - Do not add a public Provider, `as` prop, semantic variant, or vendor part only
-  to make a ported test compile.
+  to make a ported test compile. Zustand stores stay internal; Context is not
+  a public API.
 - Do not mark a browser-dependent case complete from jsdom.
