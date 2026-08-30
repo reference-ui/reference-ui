@@ -41,10 +41,10 @@ importing `packages/reference-lib/src/...` does not prove the public API.
 
 ## Contract index
 
-The current design pass contains **1,419 tagged behavior cases** plus **73
-composition gates** across 22 top-level components: **1,492 stable case IDs**
+The current design pass contains **1,442 tagged behavior cases** plus **76
+composition gates** across 22 top-level components: **1,518 stable case IDs**
 in total. Four NumberField cases are required manual release gates; the other
-1,488 are automated contracts. Components may carry more than three
+1,514 are automated contracts. Components may carry more than three
 composition gates when ownership boundaries require distinct proof:
 
 - **Foundation:** [ReferenceLibrary](./src/components/ReferenceLibrary/TESTS.md),

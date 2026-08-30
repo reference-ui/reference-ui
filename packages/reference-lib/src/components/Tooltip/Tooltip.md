@@ -63,7 +63,11 @@ close and never attempts to restore focus to that disabled element.
 
 ## Problems we own
 
-Tooltip is a policy layer on Popover positioning, not a modal Overlay. No FocusLock, no inert, no trap. It must still be dismissible, hoverable, and persistent enough to read (WCAG 1.4.13).
+Tooltip is a policy layer on Overlay geometry: non-interactive, skip-delay,
+`aria-describedby`, slot trigger. No FocusLock, no inert, no trap. Overlay
+`isolation={false}` plus `closeOnScroll`. It must still be dismissible,
+hoverable, and persistent enough to read (WCAG 1.4.13). Overlay.Trigger is
+the button host; Tooltip.Trigger stays a Slot onto one child.
 
 ### Open / close delays
 

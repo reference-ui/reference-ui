@@ -4,12 +4,11 @@ Playwright: `matrix/lib/tests/e2e/popover.spec.ts`
 Unit: `matrix/lib/tests/unit/popover-position.test.ts`
 Page: `/popover`
 
-Popover owns controlled anchored **non-modal** content, Trigger interaction,
-hover grace, the Tab-order bridge, and `closeOnScroll`. Geometry
-(`computePosition`, middleware, `autoUpdate`, virtual anchors, Arrow) is
-owned by Overlay; Popover.Content / Popover.Arrow wrap those parts.
-Shared layer-stack behavior is owned by Overlay; exit detection is owned by
-Presence.
+Popover is Overlay with isolation frozen off, plus hover policy.
+`Popover.Trigger` is Overlay.Trigger. Geometry, Tab-order bridge,
+`closeOnScroll`, and Trigger activation are Overlay's. Popover cases
+below prove consumption plus hover grace and impatient click. Shared
+layer-stack behavior is Overlay; exit detection is Presence.
 
 ## API freeze decisions
 
@@ -21,8 +20,8 @@ Presence.
    hover/`closeOnScroll` consumption.
 2. Unprevented native Trigger activation requests open/dismiss after the
    consumer handler; `openOnHover` adds hover intent.
-3. Popover is non-modal and never owns inerting or focus lock; modal content
-   uses Overlay.
+3. Popover freezes Overlay `isolation={false}` and never owns inerting or
+   focus lock; isolating content uses Overlay directly.
 4. `Popover.Arrow` uses numeric `edgePadding`, default 4, for collision math;
    ordinary `padding` remains a token-aware visual StyleProp on its div.
 5. Content positioning owns `position`/`top`/`left`; arbitrary consumer
@@ -807,9 +806,11 @@ add only Popover-specific anatomy and behavior/style conflicts.
 
 ## Owned elsewhere
 
-- Shared layer Escape/outside/cascade matrix: `Overlay`; the modal extension-
-  overlay case stays there while `PO-CLOSE-07` freezes Popover's non-modal
+- Shared layer Escape/outside/cascade matrix: `Overlay`; the isolating extension-
+  overlay case stays there while `PO-CLOSE-07` freezes Popover's non-isolating
   inverse.
+- Trigger activation, Tab-order bridge, `closeOnScroll` kernel: `Overlay`
+  `OV-TRG-*` / `OV-SCRL-*`.
 - Geometry engine (flip/shift/offset/arrow/size/hide/autoUpdate/virtual
   element): `Overlay` `OV-POS-*`.
 - Portal destination matrix: `Portal`.

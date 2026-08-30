@@ -2,18 +2,15 @@
 
 Proof: [TESTS.md](./TESTS.md).
 
-Controlled, anchored, **non-modal** floating content.
+Controlled, anchored, **non-isolating** floating content with hover policy.
 
-Geometry is Overlay's: the Floating UI port lives on `Overlay.Content` /
-`Overlay.Arrow` / `Overlay.anchor`. Popover consumes that API. It does not
-run a second `computePosition`.
+Overlay is the kernel: Trigger, `onOpen`, isolation (off here), geometry,
+Tab-order bridge, `closeOnScroll`, dismiss stack, Presence. Popover does
+not run a second `computePosition`. It adds what Overlay must not own:
+hover grace (`openOnHover`), impatient click, and delay defaults.
 
-Popover owns the rest: `Popover.Trigger` as the default reference and
-interaction source, `onOpen`, hover grace (`openOnHover`), the Tab-order
-bridge into portalled Content, and `closeOnScroll`. Overlay still supplies
-outside-dismiss ordering, nesting, and the shared layer stack; Presence
-supplies exit detection. Isolation (FocusLock, inert, scroll lock) stays
-on Overlay — Popover is not modal.
+`Popover.Trigger` is `Overlay.Trigger`. `Popover.Content` / `Arrow` wrap
+Overlay parts. Isolation is frozen off; `edge` and Handle are not Popover.
 
 By default, `Popover.Trigger` is both the interaction source and the
 positioning anchor. An optional virtual `anchor` is the Overlay reference
@@ -75,10 +72,11 @@ Hover-opened **interactive** content uses `openOnHover`; keyboard focus follows
 the same accessible opening policy. Tooltip is the non-interactive case.
 HoverCard is this composition, not a separate primitive.
 
-Because Content portals, Popover bridges logical keyboard order: Tab from an
-open Trigger enters the first Content control, and leaving the last control
-advances relative to the Trigger's source position while requesting dismissal.
-This is not a trap; outside programmatic focus remains outside.
+Because Content portals, Overlay bridges logical keyboard order when
+isolation focus is off: Tab from an open Trigger enters the first Content
+control, and leaving the last control advances relative to the Trigger's
+source position while requesting dismissal. This is not a trap; outside
+programmatic focus remains outside. Popover inherits that Overlay bridge.
 
 ```tsx
 <Popover
@@ -97,19 +95,14 @@ This is not a trap; outside programmatic focus remains outside.
 ```ts
 type PopoverPlacement = OverlayPlacement
 
-interface PopoverProps extends OverlayDismissHandlers {
-  children?: React.ReactNode
-  open: boolean
-  onOpen?: () => void
-  anchor?: VirtualAnchor
+interface PopoverProps
+  extends Omit<OverlayProps, "isolation" | "edge"> {
   openOnHover?: boolean
   openDelay?: number
   closeDelay?: number
-  closeOnScroll?: boolean
 }
 
-interface PopoverTriggerProps
-  extends ReferencePartProps<"button"> {}
+interface PopoverTriggerProps extends OverlayTriggerProps {}
 
 interface PopoverPortalProps {
   container?: PortalProps["container"]
@@ -120,28 +113,29 @@ interface PopoverContentProps extends OverlayContentProps {}
 interface PopoverArrowProps extends OverlayArrowProps {}
 ```
 
-`Popover` renders no node. `Popover.Trigger` renders `button`.
+`Popover` renders no node. `Popover.Trigger` is `Overlay.Trigger`.
 `Popover.Content` is wrapped `Overlay.Content`. `Popover.Arrow` is wrapped
-`Overlay.Arrow`. `Popover.Portal` renders nothing.
+`Overlay.Arrow`. `Popover.Portal` renders nothing. Isolation is frozen
+off. There is no Handle.
 
-Geometry defaults, CSS variables (`--reference-overlay-*`), hide hooks, and
-`autoUpdate` are Overlay's. Hover mode defaults to 700ms open, 300ms close, a
-300ms impatient-click threshold, and 5px safe-area padding.
+Geometry defaults, CSS variables (`--reference-overlay-*`), hide hooks, the
+Tab bridge, Trigger activation, and `autoUpdate` are Overlay's. Hover mode
+defaults to 700ms open, 300ms close, a 300ms impatient-click threshold, and
+5px safe-area padding.
 
-`closeOnScroll` defaults to `false`: ordinary interactive Popovers remain open
-and reposition as their anchor's composed overflow ancestors scroll. When it
-is true, scrolling an ancestor that moves the anchor requests one controlled
-dismissal; unrelated regions and self-scroll inside an input or textarea do
-not. Combobox enables this policy for `Combobox.Popover`. Tooltip uses Overlay
-geometry but owns an always-on scroll-close policy.
+`closeOnScroll` is Overlay's, default `false` here: ordinary interactive
+Popovers remain open and reposition. Combobox enables it for
+`Combobox.Popover`. Tooltip uses Overlay geometry with always-on
+scroll-close.
 
 ---
 
 ## Problems we own
 
-Popover is non-modal anchored policy on Overlay. Overlay owns the Floating UI
-port. Do not take `@floating-ui/react` as a second overlay runtime
-(`useDismiss`, `FloatingTree`, `FloatingFocusManager`).
+Popover is Overlay with isolation frozen off, plus hover policy. Overlay owns
+the Floating UI port, Trigger, Tab bridge, and `closeOnScroll`. Do not take
+`@floating-ui/react` as a second overlay runtime (`useDismiss`,
+`FloatingTree`, `FloatingFocusManager`).
 
 ### Flip / shift / offset / arrow / size / hide / autoUpdate / virtual anchors
 
@@ -160,10 +154,9 @@ through their gap, and abandon grace when movement is slow, reversed, or
 crosses the side opposite Content. **Leave** FloatingTree `parentId` coupling
 and Base UI’s vendored `floating-ui-react` as runtime.
 
-`closeOnScroll` is Popover policy on Overlay's autoUpdate: when true, a
-composed overflow ancestor that moves the anchor requests one close instead
-of living reposition. Combobox and Tooltip must not add independent document
-listeners.
+`closeOnScroll` is Overlay policy on autoUpdate: when true, a composed
+overflow ancestor that moves the anchor requests one close instead of living
+reposition. Combobox and Tooltip must not add independent document listeners.
 
 ### Impatient click after hover-open
 

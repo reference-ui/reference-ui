@@ -47,12 +47,13 @@ another commit:
 | --- | --- | --- |
 | Shared store | Zustand (direct dep) | Cross-tree state; no public Provider |
 | Layer stack | Overlay | Nesting, Escape, outside-press |
-| Focus lock | `FocusLock`, Overlay | Trap, restore, shards |
-| Scroll lock | Overlay | Body scroll, iOS, scrollbar gap |
-| Inert / hide | Overlay | Rest of page not reachable |
+| Focus lock | `FocusLock`, Overlay | Trap, restore, shards — when isolation `focus` |
+| Scroll lock | Overlay | Body scroll, iOS, scrollbar gap — when isolation `scroll` |
+| Inert / hide | Overlay | Rest of page not reachable — when isolation `inert` |
 | Portal | `Portal` | Move DOM, no extra node |
 | Presence | `Presence` | `data-state` exit before unmount |
-| Position | Overlay | Flip, shift, arrow, size, hide, virtual anchors, autoUpdate |
+| Position | Overlay | Flip, shift, arrow, size, hide, virtual anchors, autoUpdate, `edge` |
+| Trigger / Handle | Overlay | Optional opener; Handle-only edge drag |
 | Tabbables | Overlay `initialFocus`, FocusLock | What Tab lands on |
 | Roving tabindex | `RovingFocus` | Listbox, Menu, Tabs, Tree |
 | Toast queue | `toast.*` | Identity, update-in-place, limit — **not** Overlay |
@@ -72,6 +73,7 @@ another commit:
 - iOS / visualViewport scroll lock
 - `computePosition` middleware and its Playwright tests
 - Toast queue (`id`, `update`, `dismiss`, pause)
+- Overlay edge/Handle drag and nested-stack CSS (Vaul + Sonner language)
 - Combobox state (input focus stays in the field)
 - Calendar grid construction and 2D keyboard
 - NumberField partial-edit parsing, Intl formatting, and decimal step regressions
@@ -169,20 +171,22 @@ are host contrast, while Radix/Base UI Switch tests inform anatomy.
 
 ### `sonner`
 
-**Useful for:** Toast infrastructure only.
+**Useful for:** Toast queue, plus Overlay nested-stack CSS language.
 
 **Lift**
 
 - `src/state.ts` — stable `id`, update in place, dismiss all, and replay;
   Sonner's visible-limit behavior is contrast, not the waiting FIFO contract
 - Pause timers on hover / across updates
+- `--index` / `--count` and swipe-progress as Overlay nested-edge CSS, not
+  as a second toast Overlay
 
 Spectrum and Zag supply the waiting-FIFO contract. Base UI supplies
 remaining-time and pause/update timer-race evidence.
 
 **Leave:** Sonner's mounted/timed visible limit, `src/styles.css`,
 `src/assets.tsx` (icons), and success/error/loading visuals. Toasts are not
-Overlay (no trap, no inert).
+Overlay (no trap, no inert). The queue stays Toast.
 
 ### `zag`
 
@@ -226,15 +230,17 @@ and styling. Filtering and ranking are application-owned for this freeze.
 
 ### `vaul`
 
-**Useful for:** Drawer / Sheet as **Overlay at a screen edge**, not a new primitive.
+**Useful for:** Drawer / Sheet as **Overlay `edge`**, not a new primitive.
 
 **Lift**
 
-- `src/use-prevent-scroll.ts` — note it is already copied from React Aria; prefer Aria/Kashey as canonical
-- `src/use-position-fixed.ts` — iOS `position: fixed` while the sheet is open
-- `src/use-snap-points.ts` — only if we ever document snap drawers; not in the freeze API
+- `src/use-prevent-scroll.ts` — already copied from React Aria; prefer Aria/Kashey as canonical
+- `src/use-position-fixed.ts` — iOS `position: fixed` while an isolating edge Overlay is open
+- Handle-only drag, `CLOSE_THRESHOLD` / `VELOCITY_THRESHOLD`, nested displacement
+- `direction` as Overlay `edge`
 
-**Leave:** `src/style.css`, `src/use-scale-background.ts` (iOS “shrink the app behind the drawer”). That is product chrome, not Overlay.
+**Leave:** `src/style.css`, `src/use-scale-background.ts`, `src/use-snap-points.ts`,
+drag-anywhere on Content. Snap and scale-behind are product chrome.
 
 ### `focus-lock` + `react-focus-lock`
 
@@ -314,14 +320,14 @@ and styling. Filtering and ranking are application-owned for this freeze.
 
 ## Suggested read order (when implementing)
 
-1. **Overlay kernel:** radix dismissable-layer + presence + portal → focus-lock → react-remove-scroll → aria-hidden → a11y-dialog
+1. **Overlay kernel:** radix dismissable-layer + presence + portal → focus-lock → react-remove-scroll → aria-hidden → a11y-dialog → floating-ui core/DOM → vaul edge/Handle/position-fixed
 2. **FocusLock:** focus-lock `src` → react-focus-lock shards → radix focus-scope
-3. **Popover:** floating-ui `computePosition` + tests → radix popover e2e (behaviour, not popper)
+3. **Popover:** Overlay kernel + radix popover e2e hover/impatient-click (not popper)
 4. **Toast:** Sonner identity/update/replay → Spectrum/Zag waiting FIFO → Base
    UI timer-race tests; use Sonner's mounted/timed limit only as contrast
 5. **ARIA widgets:** react-aria first, zag machines when Aria and Radix disagree, downshift for Combobox
 6. **Calendar:** react-aria calendar + react-day-picker grid
 7. **Splitter:** react-resizable-panels `lib`
-8. **Drawer:** Overlay + CSS `data-state`; vaul only for iOS position-fixed, not the scale trick
+8. **Drawer:** Overlay `edge` + Handle; vaul for drag/iOS fixed, not snap or scale-behind
 
 When two vendors disagree, write the freeze-gate test first, then pick the behaviour that matches `components.md`.

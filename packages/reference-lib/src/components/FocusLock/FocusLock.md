@@ -57,7 +57,7 @@ restores the pre-activation target with proximity fallback; an explicit target
 resolves at deactivation and wins when connected/focusable, then falls back to
 the captured origin if invalid. `false` performs no return move.
 
-Used by Overlay. Not used by Popover, Tooltip, or Toast (those are not isolated).
+Used by Overlay when isolation `focus` is on. Not used by Popover, Tooltip, or Toast.
 
 ---
 

@@ -2,33 +2,60 @@
 
 Proof: [TESTS.md](./TESTS.md).
 
-A controlled foundation for temporary content displayed above the application.
+One React primitive for content that sits above the application.
 
-Overlay is the public frontend of the Floating UI port. `vendor/floating-ui`
-core + DOM (`computePosition`, middleware, `autoUpdate`) is source material
-to lift into this component — not a runtime dependency, and not
-`@floating-ui/react`. That React tree is a second overlay runtime
-(`useDismiss`, `FloatingTree`, `FloatingFocusManager`) and stays leave.
+Dialog, drawer, sheet, lightbox, popover, tooltip, and combobox popup are
+not separate overlay runtimes. They are different answers to three
+independent questions on this component:
 
-Floating and overlay are the same job: a layer, optional isolation, and
-optional anchored geometry. Overlay owns all three.
+1. **Where is it bound?** Geometry — nothing, a trigger/anchor, or a
+   viewport edge.
+2. **How isolated is the rest of the page?** Isolation — focus lock,
+   inert, scroll lock: all on, all off, or patched.
+3. **How does it open and close?** Interaction — controlled `open`,
+   optional `Overlay.Trigger`, dismiss handlers, optional edge drag.
 
-- **Layer:** portal, stack, nesting, Escape/outside-press, Presence exit.
-- **Isolation:** FocusLock, background inerting, scroll lock, restore.
-- **Geometry:** when `anchor` is set, Content is the floating element and
-  Overlay runs the ported positioning engine. When `anchor` is omitted,
-  Content is an unanchored layer and application CSS places it (centered
-  dialog, edge drawer). Placement props are then no-ops.
+Semantic role, copy, and appearance stay in application markup. Overlay
+does not infer `role="dialog"` from isolation, and it does not become a
+Dialog, Drawer, or Popover component.
 
-Overlay does not provide a trigger. Dialog, Drawer, Sheet, and Lightbox
-decide “who opened this” in application code. Popover is the anchored
-non-modal policy on top of this same engine: it supplies `Popover.Trigger`
-as the default reference and turns isolation off.
+`vendor/floating-ui` core + DOM (`computePosition`, middleware,
+`autoUpdate`) is source to lift — not a runtime import, and not
+`@floating-ui/react`. That React tree (`useDismiss`, `FloatingTree`,
+`FloatingFocusManager`) is a second overlay runtime and stays leave.
+
+`vendor/vaul` is the viewport-edge kernel: bind Content to an edge, drag
+from `Overlay.Handle` to dismiss, nested-layer displacement, iOS
+`position: fixed`. Snap points and iOS scale-behind stay leave.
+
+`vendor/sonner` is not a toast Overlay. Toast still owns the queue. What
+Overlay lifts from Sonner is viewport-attached stacking language: swipe
+progress, `--reference-overlay-index` / `--reference-overlay-count` for
+nested layers, and the fact that an isolating top layer pauses toast
+timers (Toast already reacts; Overlay publishes that it is the top
+isolating layer).
+
+Popover and Tooltip remain named **policy** on this kernel. They do not
+run a second `computePosition`. Popover is Overlay with isolation off,
+plus hover grace, impatient click, and delay defaults. Tooltip is
+non-interactive description policy (slot trigger, skip-delay group,
+`aria-describedby`, no Presence exit). Combobox.Popover and Menu.Content
+are wrapped `Overlay.Content`.
+
+---
+
+## Anatomy
+
+`Overlay` itself renders no node. Authored parts stay where they belong:
+Trigger and Handle live in the React source tree; Backdrop, Content, and
+Arrow portal.
+
+### Dialog — isolating, unbound, optional Trigger
 
 ```tsx
-<Overlay open={open} onDismiss={close}>
+<Overlay open={open} onOpen={() => setOpen(true)} onDismiss={close}>
+  <Overlay.Trigger>Delete project</Overlay.Trigger>
   <Overlay.Backdrop />
-
   <Overlay.Content
     role="dialog"
     aria-modal="true"
@@ -36,7 +63,6 @@ as the default reference and turns isolation off.
   >
     <h2 id="overlay-title">Delete project?</h2>
     {children}
-
     <button type="button" onClick={close}>
       Cancel
     </button>
@@ -44,34 +70,75 @@ as the default reference and turns isolation off.
 </Overlay>
 ```
 
-Anchored — Floating UI port, still this component:
+Omitted Trigger is valid. The application opens from any other control
+or from state. Isolation defaults on.
+
+### Drawer / sheet — isolating, viewport edge
 
 ```tsx
 <Overlay
   open={open}
+  onOpen={() => setOpen(true)}
   onDismiss={close}
-  anchor={buttonRef}
+  edge="bottom"
 >
-  <Overlay.Content placement="bottom-start" offset={8}>
+  <Overlay.Trigger>Filters</Overlay.Trigger>
+  <Overlay.Backdrop />
+  <Overlay.Content role="dialog" aria-modal="true">
+    <Overlay.Handle />
     {children}
   </Overlay.Content>
 </Overlay>
 ```
 
+`edge` is Overlay geometry, not CSS fighting `computePosition`. Presence
+`data-state` still drives enter/exit transforms. Handle is the drag
+affordance; the rest of Content may scroll.
+
+### Anchored — Floating UI port, still this component
+
 ```tsx
 <Overlay
   open={open}
+  onOpen={() => setOpen(true)}
   onDismiss={close}
-  anchor={{ x: pointerX, y: pointerY }}
+  isolation={false}
 >
-  <Overlay.Content placement="bottom-start">
+  <Overlay.Trigger>Open filters</Overlay.Trigger>
+  <Overlay.Content placement="bottom-start" offset={8}>
     <Overlay.Arrow />
     {children}
   </Overlay.Content>
 </Overlay>
 ```
 
-Overlay portals internally by default. `Overlay.Portal` is an optional configuration part; it does not wrap or own the overlay content.
+That shape is a popover. Popover is the named policy that also owns
+hover. Overlay already has the Trigger, the living position, the layer
+stack, and the Tab-order bridge (because isolation is off).
+
+Virtual anchor when the application owns the hit target:
+
+```tsx
+<Overlay
+  open={open}
+  onDismiss={close}
+  isolation={false}
+  anchor={{ x: pointerX, y: pointerY }}
+>
+  <Overlay.Content placement="bottom-start">
+    {children}
+  </Overlay.Content>
+</Overlay>
+```
+
+When both Trigger and `anchor` are present, Trigger stays the
+interaction and accessibility source; `anchor` wins for geometry.
+
+### Portal
+
+Overlay portals Backdrop, Content, and Arrow internally by default.
+`Overlay.Portal` is an optional configuration part; it does not wrap or
+own the overlay content. Trigger never portals.
 
 ```tsx
 <Overlay open={open} onDismiss={close}>
@@ -81,27 +148,167 @@ Overlay portals internally by default. `Overlay.Portal` is an optional configura
 </Overlay>
 ```
 
-Dismissal requests do not change application state. Granular handlers run first; `onDismiss` fires if they do not `preventDefault()`:
+---
 
-```text
-onEscape(event)       → if (!event.defaultPrevented) → onDismiss()
-onOutsidePress(event) → if (!event.defaultPrevented) → onDismiss()
+## Geometry
+
+Three mutually exclusive bindings. Mixing `edge` with `anchor`, or `edge`
+with a Trigger used as a floating reference, is a diagnostic. Trigger
+may still open an edge overlay; it is not the floating reference then.
+
+**Unbound.** No `anchor`, no `edge`, and Trigger is not used as a
+reference. Overlay writes no `position` / `top` / `left`. Placement,
+offset, collision, strategy, flip, shift, and Arrow are inert. A
+centered dialog is application CSS against Presence `data-state`.
+
+**Anchored.** `anchor` is set, or Trigger is present without `edge`.
+Content is the floating element. Overlay runs the ported engine.
+Defaults are `placement="bottom-start"`, `offset=8`,
+`collisionPadding=8`, absolute strategy, flip and shift enabled.
+Positioning owns `position` / `top` / `left` but never consumer
+`transform`. Content publishes `--reference-overlay-available-width`,
+`--reference-overlay-available-height`, `--reference-overlay-anchor-width`,
+`--reference-overlay-anchor-height`, and
+`--reference-overlay-transform-origin`, plus `data-anchor-hidden` and
+`data-escaped`. Arrow `edgePadding` defaults to 4px; ordinary `padding`
+remains the visual StyleProp. While open, Overlay runs ported
+`autoUpdate` against reference and floating.
+
+**Edge.** `edge` is `top` | `right` | `bottom` | `left`. Content is
+bound to that viewport edge. Overlay writes the binding so drawer CSS
+does not invent coordinates. Flip, shift, Arrow, and `anchor` are inert.
+Size still publishes available dimension on the orthogonal axis
+(`--reference-overlay-available-height` for left/right,
+`--reference-overlay-available-width` for top/bottom). `offset` is gap
+from the edge. Nested edge layers publish `--reference-overlay-index`
+(0 = topmost) and `--reference-overlay-count` so CSS can displace
+without a second primitive.
+
+`closeOnScroll` is Overlay policy on autoUpdate. Default `false`:
+anchored Content lives and repositions. `true` requests one controlled
+dismissal when a composed overflow ancestor moves the reference.
+Unrelated regions and self-scroll inside an input or textarea do not.
+Tooltip and Combobox.Popover turn this on; ordinary dialogs do not.
+
+---
+
+## Isolation
+
+Isolation is three systems, not a `modal` boolean hiding them:
+
+- **focus** — FocusLock on Content, restore after Presence exit
+- **inert** — background not reachable to pointer or AT; live regions
+  and the toast host stay reachable
+- **scroll** — document scroll lock, including iOS `position: fixed`
+
+```ts
+isolation?: boolean | {
+  focus?: boolean
+  inert?: boolean
+  scroll?: boolean
+}
 ```
 
-`Overlay.Content` accepts `initialFocus`. When omitted, Overlay focuses the
-first tabbable descendant. A target ref/resolver focuses that element; `false`
-skips the move. Omitted `restoreFocus` returns to the pre-open target after
-exit. An explicit target redirects that completed return, and `false` leaves
-focus where the application put it.
+Omitted `isolation` is `true`: all three on. That is the dialog/drawer
+default. `isolation={false}` turns all three off: popover, tooltip,
+menu, combobox popup. An object **patches** the `true` bundle:
+`isolation={{ scroll: false }}` keeps focus and inert, drops scroll
+lock.
 
-`open={false}` does not unmount immediately. Overlay keeps Backdrop and Content mounted through the exit cycle via Presence, and sets `data-state="open" | "closed"` on both.
+Do not infer isolation from Trigger, `anchor`, or `edge`. A
+trigger-opened dialog stays isolated. An edge drawer stays isolated
+unless the application patches it. A programmatically opened panel can
+be non-isolating.
 
-Overlay, Popover, and Menu share one layer stack. Escape dismisses only the
-topmost layer. An outside press whose target is inside a nested popup does not
-dismiss the parent. If a press is outside both parent and child, that physical
-event is consumed by the topmost child only; parent closure is a separate
-controlled action or an explicit parent cascade, never a replay of the same
-event.
+Outside-press follows isolation, not a second flag:
+
+- Isolating (`inert` on): Backdrop is the dismiss surface. Geometric
+  outside press uses the deferred pointer sequence so password-manager
+  overlays do not close the dialog.
+- Not isolating: light dismiss on the immediate outside path, same as
+  today's Popover/Menu.
+
+Granular handlers still win. `onEscape` / `onOutsidePress` run first;
+`onDismiss` fires if they do not `preventDefault()`. AlertDialog is
+composition: prevent `onEscape`. Overlay does not read `role`.
+
+---
+
+## Trigger, focus, and keyboard order
+
+`Overlay.Trigger` renders `button[type=button]`. Unprevented click,
+Enter, or Space requests `onOpen` while closed and `onDismiss` while
+open. Consumer handlers run first; `preventDefault()` cancels the
+built-in request. Disabled Trigger requests nothing. Overlay sets
+`aria-expanded` from `open`. It does not invent `aria-haspopup` or
+`aria-controls`.
+
+`onOpen` exists so Trigger can request open. Overlay never flips `open`
+itself.
+
+When isolation `focus` is on, Tab is trapped in Content. Trigger stays
+outside the lock — it is the restore target, not a tab stop inside the
+dialog.
+
+When isolation `focus` is off and Trigger exists, Overlay bridges
+logical keyboard order: Tab from an open Trigger enters the first
+Content control; leaving the last control advances relative to the
+Trigger and requests dismissal. This is not a trap. That bridge used to
+live only on Popover; it is Overlay's, because Overlay now owns Trigger.
+
+`Overlay.Content` `initialFocus` / `restoreFocus` are unchanged. Omitted
+`initialFocus` focuses the first tabbable descendant. `false` skips the
+move. Omitted `restoreFocus` returns to the pre-open target after
+Presence exit.
+
+---
+
+## Handle (edge drag)
+
+`Overlay.Handle` is valid only with `edge`. It renders `div`. Drag is
+axis-locked to that edge. Overlay publishes
+`--reference-overlay-swipe-progress` from 0 to 1 and `data-dragging`
+during an active gesture.
+
+Dismiss is requested when the pointer travels at least 25% of the
+surface on that axis, or when release velocity crosses the ported Vaul
+threshold — even if distance is short. Below both, Content returns and
+no `onDismiss` fires. Consumer `onDismiss` rejection leaves the drawer
+open.
+
+Drag starts on Handle, not on the rest of Content. Scrollable body
+stays scroll. Vaul's default “drag anywhere” fights overflow; freeze
+Handle-only.
+
+Handle without `edge` is a diagnostic. `edge` without Handle is valid:
+the drawer opens and dismisses from Trigger, Backdrop, and Escape, with
+no gesture.
+
+---
+
+## Presence and the layer stack
+
+`open={false}` does not unmount Backdrop and Content until Presence
+completes. Both carry `data-state="open" | "closed"`. Applications style
+against `data-state`; they do not wrap Overlay in Presence.
+
+Isolating teardown (lock, inert, scroll, pointer-events stacking)
+survives until Presence reports exit complete. A rapid reopen cancels
+teardown.
+
+Non-isolating closed Content is inert and leaves the active dismissal
+stack immediately. Anchored geometry and a parent FocusLock shard stay
+alive until exit and restore complete.
+
+Overlay, Popover, Menu, and wrapped Overlay.Content (Combobox.Popover,
+Menu.Content) share one document-scoped Zustand stack. Escape dismisses
+only the topmost layer. An outside press whose target is inside a nested
+popup does not dismiss the parent. If a press is outside both parent and
+child, that physical event is consumed by the topmost child only;
+parent closure is a separate controlled action, never a replay of the
+same event. Closing a parent cascades to nested layers.
+
+---
 
 ## Proposed API
 
@@ -120,11 +327,21 @@ type OverlayPlacement =
   | "left-start"
   | "left-end"
 
+type OverlayEdge = "top" | "right" | "bottom" | "left"
+
 type VirtualAnchor =
   | Element
   | DOMRect
   | { getBoundingClientRect(): DOMRect }
   | { x: number; y: number; width?: number; height?: number }
+
+type OverlayIsolation =
+  | boolean
+  | {
+      focus?: boolean
+      inert?: boolean
+      scroll?: boolean
+    }
 
 interface OverlayDismissHandlers {
   onDismiss?: () => void
@@ -135,8 +352,15 @@ interface OverlayDismissHandlers {
 interface OverlayProps extends OverlayDismissHandlers {
   children?: React.ReactNode
   open: boolean
+  onOpen?: () => void
   anchor?: VirtualAnchor
+  edge?: OverlayEdge
+  isolation?: OverlayIsolation
+  closeOnScroll?: boolean
 }
+
+interface OverlayTriggerProps
+  extends ReferencePartProps<"button"> {}
 
 interface OverlayPortalProps {
   container?: PortalProps["container"]
@@ -161,38 +385,30 @@ interface OverlayArrowProps
   extends ReferencePartProps<"div"> {
   edgePadding?: number
 }
+
+interface OverlayHandleProps
+  extends ReferencePartProps<"div"> {}
 ```
 
-`Overlay` renders no node. `Overlay.Backdrop`, `Overlay.Content`, and
-`Overlay.Arrow` render `div`. `Overlay.Portal` renders nothing.
+`Overlay` renders no node. `Overlay.Trigger` renders `button`.
+`Overlay.Backdrop`, `Overlay.Content`, `Overlay.Arrow`, and
+`Overlay.Handle` render `div`. `Overlay.Portal` renders nothing.
 
-Without `anchor`, Overlay does not write `position` / `top` / `left`.
-Content and Backdrop remain application-laid-out. Placement, offset,
-collision, strategy, flip, shift, and Arrow are inert.
+Omitted `isolation` is `true`. Omitted `closeOnScroll` is `false`.
+Omitted nested object keys leave that system on.
 
-With `anchor`, Content is the floating element. Defaults are
-`placement="bottom-start"`, `offset=8`, `collisionPadding=8`, absolute
-strategy, and flip/shift enabled. Positioning owns `position` / `top` /
-`left` but never consumer `transform`. Content publishes
-`--reference-overlay-available-width`,
-`--reference-overlay-available-height`,
-`--reference-overlay-anchor-width`,
-`--reference-overlay-anchor-height`, and
-`--reference-overlay-transform-origin`, plus `data-anchor-hidden` and
-`data-escaped`. Arrow `edgePadding` defaults to 4px; ordinary `padding`
-remains the token-aware visual StyleProp. While open, Overlay runs the
-ported `autoUpdate` against both reference and floating.
-
-Popover, Tooltip, Combobox.Popover, and Menu.Content consume this geometry
-API. They do not own a second `computePosition` runtime.
+Popover, Tooltip, Combobox.Popover, and Menu.Content consume this API.
+They do not own a second `computePosition` runtime.
 
 ---
 
 ## Problems we own
 
-This is the overlay kernel: isolation **and** the Floating UI port. The
-ecosystem has already solved both. We resynthesize that work; we do not
-invent a second runtime and we do not hide positioning on Popover.
+This is the overlay kernel: layer, isolation, anchored geometry, and
+viewport-edge gesture. The ecosystem split those across Floating UI,
+Radix dialog/popover, Vaul, and Sonner. We resynthesize them. We do not
+invent a second runtime, hide positioning on Popover, or ship a Dialog
+component.
 
 ### Nested layer stack
 
@@ -210,7 +426,7 @@ Clicking a portalled Menu looks “outside” the Dialog’s DOM. Naive `contain
 
 **Lift** branch/shard registration. The same nodes are FocusLock `shards` and scroll-lock exceptions. Portalled nested content is inside the parent for dismiss, focus, and scroll.
 
-When an event is outside both a modal parent and a non-modal child, Reference
+When an event is outside both an isolating parent and a non-isolating child, Reference
 UI freezes child-only handling. Radix currently closes both in one Popover e2e
 path, but replaying an already consumed physical event after a controlled child
 unmount makes parent behavior timing-dependent.
@@ -221,10 +437,10 @@ Dismissing on `pointerdown` races password-manager overlays and other extensions
 
 **Vendor.** Radix `deferPointerDownOutside` + intercept of pointerup/mousedown/click (`dismissable-layer.tsx`, issues #2055, #2171, #3346). React Aria pairs pointerdown with **click** (Android Chrome pointerup bug). e2e: `dialog--with-extension-overlay`.
 
-**Lift** Radix defer. Backdrop is a dedicated dismiss surface that may still dismiss even when later events are intercepted.
+**Lift** Radix defer for isolating Overlay. Backdrop is a dedicated dismiss surface that may still dismiss even when later events are intercepted.
 
-An unregistered extension overlay therefore keeps a modal Overlay open when it
-intercepts the deferred sequence. Non-modal Popover and Menu intentionally
+An unregistered extension overlay therefore keeps an isolating Overlay open when it
+intercepts the deferred sequence. `isolation={false}` and Menu intentionally
 close from their initial outside path; their contracts test that inverse
 explicitly.
 
@@ -244,13 +460,13 @@ Portalled content is outside the layer’s DOM ancestor but inside the React sub
 
 **Lift** capture-flag or `composedPath`. Required because Overlay portals by default.
 
-### Body pointer-events while modal, teardown during Presence
+### Body pointer-events while isolating, teardown during Presence
 
-Modal overlays often set `body { pointer-events: none }` and re-enable the top layer. Leaving that on after `open={false}` while Presence still has the node mounted bricks the page. Nested modals need a refcount of which layer is interactive.
+Isolating overlays often set `body { pointer-events: none }` and re-enable the top layer. Leaving that on after `open={false}` while Presence still has the node mounted bricks the page. Nested isolating layers need a refcount of which layer is interactive.
 
 **Vendor.** Radix `layersWithOutsidePointerEventsDisabled` (issue #3645). Zag `disablePointerEventsOutside` + MutationObserver. react-remove-scroll’s `inert` PE mode is documented as dangerous with portals — do not default it (`VENDOR.md`).
 
-**Lift** Radix/Zag PE stacking. Keep modal isolation through the owned Presence
+**Lift** Radix/Zag PE stacking. Keep isolation through the owned Presence
 exit and tear it down once that exit completes; a rapid reopen cancels teardown.
 Prefer native `inert` for AT; PE stacking is pointer UX.
 
@@ -262,11 +478,11 @@ Closing a Dialog must close the nested Menu. Focus moving during nested teardown
 
 **Lift** Zag cascade semantics + focus-race guard. Public API stays controlled props, not Zag’s machine.
 
-### Modal outside: any outside vs own backdrop
+### Isolating outside: any outside vs own backdrop
 
 Radix dismisses on any outside press (with body PE none). Base UI only dismisses if the target is **this** dialog’s backdrop (issue #1320). Wrong rule closes the wrong sibling modal.
 
-**Freeze.** Backdrop is the explicit dismiss affordance for modal Overlay.
+**Freeze.** Backdrop is the explicit dismiss affordance for isolating Overlay.
 Without a Backdrop, geometric outside press follows the same cancelable
 policy. Nested popups use registered branch rules, not “click anywhere,” and
 all React roots in one `Document` share one top-layer order; only the current
@@ -278,7 +494,7 @@ Hiding the scrollbar shifts layout. Wheel/touch on the locked page still scrolls
 
 **Vendor.** `vendor/react-remove-scroll` (`handleScroll.ts`, `SideEffect.tsx`) — non-passive wheel/touch, shards, RTL, shadow DOM, pinch zoom. React Aria `usePreventScroll` — overflow hidden + scrollbar-gutter or padding. Zag scroller html vs body. Base UI gutter probe.
 
-**Lift** Kashey remove-scroll + Aria/Zag gap compensation. Allow scroll inside Overlay content and shards until the edge.
+**Lift** Kashey remove-scroll + Aria/Zag gap compensation. Allow scroll inside Overlay content and shards until the edge. Runs only when isolation `scroll` is on.
 
 ### iOS / Mobile Safari
 
@@ -286,7 +502,7 @@ Hiding the scrollbar shifts layout. Wheel/touch on the locked page still scrolls
 
 **Vendor.** React Aria `preventScrollMobileWebKit` in `vendor/react-spectrum/packages/react-aria/src/overlays` — overscroll-behavior, touchmove prevent, `HTMLElement.prototype.focus` patch, visualViewport `scrollIntoView`. That path has evolved past Vaul’s copy in `vendor/vaul/src/use-prevent-scroll.ts`. Vaul `use-position-fixed.ts` — Safari `body { position: fixed }` with scroll restore; skip nested/PWA.
 
-**Lift** Aria iOS prevent-scroll as canonical. Lift Vaul `use-position-fixed` only if Drawer/Sheet freeze tests need it. **Leave** `use-scale-background.ts` (iOS shrink-behind) and `use-snap-points.ts` — product chrome, not Overlay (`components.md` omissions).
+**Lift** Aria iOS prevent-scroll as canonical. Lift Vaul `use-position-fixed` for isolating edge Overlay (drawer/sheet). **Leave** `use-scale-background.ts` and `use-snap-points.ts`.
 
 ### Inert / hide the rest of the page
 
@@ -374,6 +590,7 @@ scroll/resize even when the reference is virtual.
 virtual-element idea, not the React hook package.
 
 **Lift** into Overlay `anchor`. Virtual anchors stay positioning math.
+Trigger, if present, remains the interaction source.
 
 ### Living position while open
 
@@ -384,8 +601,9 @@ visualViewport, iframe, shadow, zoom.
 functional tests (`scroll`, `iframe`, `shadow-dom`, `top-layer`, `zoom`).
 
 **Lift** the whole `autoUpdate` + tests onto anchored Overlay.
-`closeOnScroll` is Popover/Tooltip policy on top of this engine, not a
-second document listener.
+`closeOnScroll` is Overlay policy on this engine, not a second document
+listener. Popover/Tooltip/Combobox choose the boolean; they do not
+reimplement the listener.
 
 ### Hide when clipped
 
@@ -396,14 +614,52 @@ A floating layer can stay logically open while visually orphaned.
 **Lift** `data-anchor-hidden` / `data-escaped`. Policy (close vs hide
 visually) is product. Tooltip usually **closes** on scroll.
 
-### Unanchored vs anchored
+### Unbound vs anchored vs edge
 
 A dialog does not need `computePosition`. Running the engine without a
-reference invents coordinates and fights drawer CSS.
+reference invents coordinates and fights drawer CSS. Running flip on an
+edge drawer is the same class of bug.
 
-**Freeze.** No `anchor` means no Overlay-written `position`/`top`/`left`
-and no geometry custom properties. Presence, isolation, and the layer stack
-still run.
+**Freeze.** Unbound writes no `position`/`top`/`left` and no geometry
+custom properties. Edge writes a viewport binding and available-size
+vars, not flip/arrow. Anchored runs the Floating UI port. Presence,
+the layer stack, and isolation still run in every binding.
+
+### Trigger vs portalled Content
+
+Trigger must remain in source DOM as the restore target and expanded
+control. Portalling it with Content loses the page location and breaks
+the Tab bridge.
+
+**Vendor.** Radix Dialog/Popover `Trigger` stays in place; Content
+portals. Vaul uses Radix Dialog.Trigger the same way.
+
+**Lift** that split. Overlay.Trigger never portals. Overlay.Portal
+configures Backdrop/Content/Arrow only.
+
+### Isolation as three systems
+
+`modal={false}` in Radix/Vaul/FloatingFocusManager turns off trap,
+inert, and scroll together, then smuggles light-dismiss in the same
+flag. Applications that need an isolating drawer without scroll lock,
+or a focus-trapped panel that does not inert the page, cannot say so.
+
+**Freeze.** `isolation` is `true` | `false` | a patch object. Outside-
+press deferral follows `inert`. FocusLock follows `focus`. iOS
+position-fixed follows `scroll` on edge overlays. No `modal` prop.
+
+### Edge drag vs overflowing Content
+
+Vaul defaults to dragging the whole surface, then uses `scrollLockTimeout`
+to recover from inner scroll. That races every drawer with a list.
+
+**Vendor.** Vaul `handleOnly`, `onDrag` / `onRelease`,
+`CLOSE_THRESHOLD` 0.25, `VELOCITY_THRESHOLD`. Sonner swipe directions
+and `--index` while dragging.
+
+**Lift** Handle-only drag, 25% distance, velocity flick, swipe-progress
+CSS, nested `--reference-overlay-index` / `-count`. **Leave** snap
+points, fade-from-index, scale-behind, and drag-anywhere.
 
 ---
 
@@ -416,13 +672,16 @@ still run.
 | Scroll lock | react-remove-scroll + Aria iOS | Vaul’s stale Aria copy |
 | Inert | native `inert` + aria-hidden tests | RemoveScroll inert PE mode |
 | Presence / portal | our Presence + Portal | Radix Portal wrapper node |
-| Geometry | Floating UI core + DOM `autoUpdate` | `@floating-ui/react`, Spectrum positioner, Radix popper |
+| Anchored geometry | Floating UI core + DOM `autoUpdate` | `@floating-ui/react`, Spectrum positioner, Radix popper |
+| Viewport edge + Handle | Vaul direction, Handle, velocity/distance | Vaul snap points, scale-behind |
+| Nested stack CSS | Sonner `--index` / `--count` as Overlay vars | Sonner toast queue |
 | Vanilla smoke | a11y-dialog `src/a11y-dialog.ts` | their markup conventions |
 
 **Leave.** Styles, public `<Provider>`, `as`, native `<dialog>` as a second
 modal runtime, Vaul scale-behind, snap points, `@floating-ui/react`
 (`useDismiss`, `FloatingTree`, `FloatingFocusManager`, `FloatingPortal`).
-Popover trigger, hover grace, and tab-order bridge stay Popover. Overlay is
-the port frontend; it is not a nested consumer of Popover positioning.
+Hover grace, impatient click, and tooltip skip-delay stay Popover/Tooltip.
+Toast queue stays Toast. Overlay is the port frontend; it is not a nested
+consumer of Popover positioning.
 
 When vendors disagree, write the freeze-gate test first, then pick the behaviour that matches `components.md`.

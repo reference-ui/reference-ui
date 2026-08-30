@@ -90,18 +90,18 @@ component. Add one only when all of these are true:
 Internal kernels such as the layer registry, scroll lock, inert manager,
 announcer, tabbable solver, typeahead matcher, safe polygon, constraint
 solver, and calendar arithmetic remain implementation details unless
-independent application use proves a stable public contract. Floating
-middleware is the Overlay geometry engine: `placement` / `anchor` /
-`--reference-overlay-*` are public; `computePosition` internals are not.
+independent application use proves a stable public contract. Overlay's
+public geometry is `placement` / `anchor` / `edge` /
+`--reference-overlay-*`; `computePosition` internals are not.
 
 The completeness argument is behavioral rather than pattern-count based:
 
 - `Slot`, `Portal`, and `Presence` cover wrapper-free authoring, relocation,
   and visual lifetime.
 - `FocusLock` and `RovingFocus` cover contained and composite focus movement.
-- `Overlay` and `Popover` cover document layers, dismissal, modality, and
-  anchored geometry. Overlay is the Floating UI port frontend; Popover is
-  non-modal trigger policy on that engine.
+- `Overlay` and `Popover` cover document layers, dismissal, isolation, and
+  geometry. Overlay is the kernel (Floating UI port, viewport edge, Trigger,
+  isolation policy). Popover is hover/impatient-click policy on that kernel.
 - `ReferenceLibrary` and `Toast` cover document-scoped global lifetime,
   announcement, and queued work.
 - `Listbox`, `Menu`, `Tree`, `Combobox`, and `Tabs` cover flat, hierarchical,
@@ -170,8 +170,8 @@ Layout is not a component abstraction—the browser is the layout engine. Layout
 This guarantees pristine TypeScript type safety, zero DOM wrapper overhead, mathematical layout harmony, and complete transparency for developers and AI models.
 
 Behavioral parts with fixed hosts are implemented on these same generated
-primitives. An `Overlay.Content` is still a style-bearing `Div`, a
-`Popover.Trigger` is still a style-bearing `Button`, and a `Tabs.Tab` is
+primitives. An `Overlay.Content` is still a style-bearing `Div`, an
+`Overlay.Trigger` is still a style-bearing `Button`, and a `Tabs.Tab` is
 still a style-bearing `Button`; behavior augments rather than replaces the
 platform/style surface.
 
@@ -179,7 +179,7 @@ platform/style surface.
 
 Reference UI only provides a runtime component when it centralizes behaviour that should not be repeatedly rebuilt by developers or AI agents.
 
-Working design lives in sibling folders: `Overlay/Overlay.md` (API + problems), `Overlay/TESTS.md` (contracts to prove, including how vendor e2e suites combine). Implementation substrate is [hooks.md](../core/hooks/hooks.md): Zustand plus adapters in `src/core/hooks`. This document remains the freeze-gate overview. Names under Documented compositions do not get folders — they are not runtime components. The `vendor/` clones are **port sources**, not runtime dependencies: Overlay is the public frontend of the Floating UI core/DOM port; `@floating-ui/react` stays leave. See `vendor/VENDOR.md`. How to run Playwright is `packages/reference-lib/TESTING.md`.
+Working design lives in sibling folders: `Overlay/Overlay.md` (API + problems), `Overlay/TESTS.md` (contracts to prove, including how vendor e2e suites combine). Implementation substrate is [hooks.md](../core/hooks/hooks.md): Zustand plus adapters in `src/core/hooks`. This document remains the freeze-gate overview. Names under Documented compositions do not get folders — they are not runtime components. The `vendor/` clones are **port sources**, not runtime dependencies: Overlay synthesizes Floating UI core/DOM, Vaul's edge/handle kernel, and Sonner's nested-stack CSS language; `@floating-ui/react` stays leave. See `vendor/VENDOR.md`. How to run Playwright is `packages/reference-lib/TESTING.md`.
 
 Foundation components solve application-wide mechanics:
 
@@ -189,7 +189,7 @@ Foundation components solve application-wide mechanics:
 - `Popover`
 - `Toast`
 
-`Dialog`, `Modal`, `AlertDialog`, `Drawer`, `Sheet`, and `Lightbox` are not separate foundational components. They are semantic and visual compositions of `Overlay`.
+`Dialog`, `Modal`, `AlertDialog`, `Drawer`, `Sheet`, and `Lightbox` are not separate foundational components. They are semantic and visual compositions of `Overlay`. A dialog is isolating Overlay plus role. A drawer is isolating Overlay plus `edge` and optional Handle. A popover-without-hover is Overlay with `isolation={false}` plus Trigger. Hover still belongs to `Popover`.
 
 ---
 
@@ -280,24 +280,24 @@ interface PortalProps {
 
 A controlled foundation for temporary content displayed above the application.
 
-Overlay is the public frontend of the Floating UI port. `vendor/floating-ui`
-core + DOM (`computePosition`, middleware, `autoUpdate`) is source material
-to lift into this component — not a runtime dependency, and not
-`@floating-ui/react`. That React tree (`useDismiss`, `FloatingTree`,
-`FloatingFocusManager`) is a second overlay runtime and stays leave.
+Overlay answers three independent questions: where Content is bound
+(unbound, Trigger/`anchor`, or `edge`), how isolated the rest of the page
+is (`isolation`), and how the layer opens and closes (controlled `open`,
+optional `Overlay.Trigger`, dismiss handlers, optional Handle drag).
 
-Floating and overlay are the same job: a layer, isolation, and optional
-anchored geometry. Overlay owns all three. There is no `modal` flag —
-Overlay is always isolating. Popover is the non-modal trigger policy on
-this same engine: Trigger as the default reference, isolation off.
+`vendor/floating-ui` core + DOM is the anchored geometry port — not a
+runtime import, and not `@floating-ui/react`. `vendor/vaul` is the
+viewport-edge kernel (Handle drag, iOS `position: fixed`, nested
+displacement). `vendor/sonner` contributes nested-stack CSS variables and
+swipe-progress language; the toast queue stays Toast.
 
-It does not provide a trigger or prescribe the content's semantic role,
-structure, animation, or appearance. Unanchored Overlay is a dialog, drawer,
-sheet, or lightbox placed with CSS — placement props are no-ops. Anchored
-Overlay (`anchor`) is a floating layer: Content is the floating element.
+Semantic role, copy, and appearance stay in application markup. Popover
+and Tooltip remain named policy (hover, skip-delay). They consume this
+kernel; they do not run a second overlay runtime.
 
 ```tsx
-<Overlay open={open} onDismiss={close}>
+<Overlay open={open} onOpen={() => setOpen(true)} onDismiss={close}>
+  <Overlay.Trigger>Delete project</Overlay.Trigger>
   <Overlay.Backdrop />
 
   <Overlay.Content
@@ -315,9 +315,20 @@ Overlay (`anchor`) is a floating layer: Content is the floating element.
 </Overlay>
 ```
 
+Trigger is optional. Omitted Trigger is a dialog opened from application
+state. Isolation defaults on.
+
 ```tsx
-<Overlay open={open} onDismiss={close} anchor={buttonRef}>
-  <Overlay.Content placement="bottom-start" offset={8}>
+<Overlay
+  open={open}
+  onOpen={() => setOpen(true)}
+  onDismiss={close}
+  edge="bottom"
+>
+  <Overlay.Trigger>Filters</Overlay.Trigger>
+  <Overlay.Backdrop />
+  <Overlay.Content role="dialog" aria-modal="true">
+    <Overlay.Handle />
     {children}
   </Overlay.Content>
 </Overlay>
@@ -326,15 +337,19 @@ Overlay (`anchor`) is a floating layer: Content is the floating element.
 ```tsx
 <Overlay
   open={open}
+  onOpen={() => setOpen(true)}
   onDismiss={close}
-  anchor={{ x: pointerX, y: pointerY }}
+  isolation={false}
 >
-  <Overlay.Content placement="bottom-start">
+  <Overlay.Trigger>Open filters</Overlay.Trigger>
+  <Overlay.Content placement="bottom-start" offset={8}>
     <Overlay.Arrow />
     {children}
   </Overlay.Content>
 </Overlay>
 ```
+
+That last shape is a popover without hover. `Popover` adds hover grace.
 
 Overlay portals internally by default. `Overlay.Portal` is an optional configuration part; it does not wrap or own the overlay content.
 
@@ -401,7 +416,7 @@ focus where the application placed it.
 
 `open={false}` is a state change, not an immediate unmount. Overlay keeps Backdrop and Content mounted through the exit cycle via `Presence`, and sets `data-state="open" | "closed"` on both so CSS transitions can finish — including drawer and sheet slide-out.
 
-Focus restoration, inerting teardown, and scroll unlock run after Presence reports the exit complete. Applications style against `data-state`; they do not set it, wrap Overlay in Presence, or delay `open={false}` in order to animate.
+Focus restoration, isolating teardown, and scroll unlock run after Presence reports the exit complete. Applications style against `data-state`; they do not set it, wrap Overlay in Presence, or delay `open={false}` in order to animate.
 
 ```css
 [data-state="open"] {
@@ -437,6 +452,16 @@ type OverlayPlacement =
   | "bottom" | "bottom-start" | "bottom-end"
   | "left" | "left-start" | "left-end"
 
+type OverlayEdge = "top" | "right" | "bottom" | "left"
+
+type OverlayIsolation =
+  | boolean
+  | {
+      focus?: boolean
+      inert?: boolean
+      scroll?: boolean
+    }
+
 type VirtualAnchor =
   | Element
   | DOMRect
@@ -456,8 +481,15 @@ interface OverlayDismissHandlers {
 interface OverlayProps extends OverlayDismissHandlers {
   children?: React.ReactNode
   open: boolean
+  onOpen?: () => void
   anchor?: VirtualAnchor
+  edge?: OverlayEdge
+  isolation?: OverlayIsolation
+  closeOnScroll?: boolean
 }
+
+interface OverlayTriggerProps
+  extends ReferencePartProps<"button"> {}
 
 interface OverlayPortalProps {
   container?: PortalProps["container"]
@@ -482,14 +514,23 @@ interface OverlayArrowProps
   extends ReferencePartProps<"div"> {
   edgePadding?: number
 }
+
+interface OverlayHandleProps
+  extends ReferencePartProps<"div"> {}
 ```
 
-`Overlay` renders no node. `Overlay.Backdrop`, `Overlay.Content`, and
-`Overlay.Arrow` render `div`. `Overlay.Portal` renders nothing.
+`Overlay` renders no node. `Overlay.Trigger` renders `button`.
+`Overlay.Backdrop`, `Overlay.Content`, `Overlay.Arrow`, and
+`Overlay.Handle` render `div`. `Overlay.Portal` renders nothing.
 
-Without `anchor`, Overlay writes no `position` / `top` / `left`. Placement,
-offset, collision, strategy, flip, shift, and Arrow are inert. With
-`anchor`, Content is the floating element. Defaults are
+Omitted `isolation` is `true`. An object patches that bundle.
+`isolation={false}` is popover-shaped Overlay without hover. Trigger
+never portals. Handle is valid only with `edge`. `edge` and `anchor`
+are exclusive.
+
+Unbound Overlay writes no `position` / `top` / `left`. Placement,
+offset, collision, strategy, flip, shift, and Arrow are inert. Anchored
+Content is the floating element. Defaults are
 `placement="bottom-start"`, `offset=8`, `collisionPadding=8`, absolute
 strategy, and flip/shift enabled. Positioning owns `position` / `top` /
 `left` but never consumer `transform`. Content publishes
@@ -498,25 +539,29 @@ strategy, and flip/shift enabled. Positioning owns `position` / `top` /
 `--reference-overlay-anchor-width`,
 `--reference-overlay-anchor-height`, and
 `--reference-overlay-transform-origin`, plus `data-anchor-hidden` and
-`data-escaped`. Arrow `edgePadding` defaults to 4px. While open, Overlay
-runs the ported `autoUpdate`.
+`data-escaped`. Edge Overlay binds to a viewport side and publishes
+`--reference-overlay-index` / `--reference-overlay-count`. Arrow
+`edgePadding` defaults to 4px. While open, anchored Overlay runs the
+ported `autoUpdate`.
 
 Popover, Tooltip, `Combobox.Popover`, and `Menu.Content` consume this
-geometry API. They do not own a second `computePosition` runtime.
+API. They do not own a second `computePosition` runtime.
 
 ---
 
 ### Popover
 
-Controlled, anchored, non-modal floating content.
+Controlled, anchored, non-isolating floating content with hover policy.
 
-Geometry is Overlay's Floating UI port. Popover consumes `Overlay.Content` /
-`Overlay.Arrow` / `anchor` and adds Trigger, `onOpen`, hover grace, the
-Tab-order bridge, and `closeOnScroll`. Overlay still owns dismiss ordering
-and the layer stack. Virtual anchors are Overlay positioning math; Popover
-forwards `anchor` and uses Trigger as the default reference.
+Overlay already owns Trigger, `onOpen`, isolation, the Tab-order bridge,
+`closeOnScroll`, geometry, and the layer stack. Popover is Overlay with
+`isolation={false}` plus hover grace (`openOnHover`), impatient click, and
+delay defaults. `Popover.Trigger` is `Overlay.Trigger`.
+`Popover.Content` / `Arrow` wrap Overlay parts.
 
-By default, `Popover.Trigger` is both the interaction source and the positioning anchor. That default does not cover every real case. A context menu anchors to pointer coordinates; a selection menu anchors to a text range; a canvas or table-cell menu anchors to a shape or cell rect. An optional virtual `anchor` (element, rect, or point) is the positioning reference in those cases. The trigger may be omitted when the application already owns the interaction — right-click, selection, or a hit-tested canvas object.
+Virtual anchors remain Overlay positioning math. When both a trigger and
+an `anchor` are present, the trigger remains the interaction and
+accessibility source; `anchor` wins for geometry.
 
 ```tsx
 <Popover
@@ -546,7 +591,7 @@ By default, `Popover.Trigger` is both the interaction source and the positioning
 
 When both a trigger and an `anchor` are present, the trigger remains the interaction and accessibility source; `anchor` wins for Overlay geometry.
 
-`Popover.Trigger` renders a native `button`. `Popover.Content` is wrapped
+`Popover.Trigger` is `Overlay.Trigger` (`button`). `Popover.Content` is wrapped
 `Overlay.Content`. `Popover.Arrow` is wrapped `Overlay.Arrow`.
 
 Popover portals internally by default. `Popover.Portal` optionally configures the destination and does not wrap the content.
@@ -584,25 +629,15 @@ remains available for visual styling.
 </Popover>
 ```
 
-Popover uses Presence / `data-state`, but unlike modal Overlay its logically
+Popover uses Presence / `data-state`, but unlike isolating Overlay its logically
 closed exiting Content is inert and leaves the active dismissal stack
 immediately. Positioning and any parent FocusLock branch remain until the exit
 and focus restoration complete.
 
-Unprevented native click, Enter, or Space activation on `Popover.Trigger`
-requests open through `onOpen` when closed and dismissal through `onDismiss`
-when open. Consumer Trigger handlers run first; `preventDefault()` cancels the
-internal request, so applications do not add a duplicate toggle handler.
-
-Portalling must not break keyboard order: Tab from an open Trigger enters the
-first Content control; leaving the final control advances relative to the
-Trigger's source position and requests dismissal. This is a minimal logical
-order bridge, not a focus trap.
-
-`closeOnScroll` defaults to false, so ordinary interactive Popovers reposition
-with their anchors. Setting it requests one controlled dismissal when a
-composed overflow ancestor moves the anchor; unrelated scrolling and an
-overflowing text field's own scroll are ignored.
+Unprevented Trigger activation is Overlay's (`onOpen` / `onDismiss`).
+`Popover.Trigger` is `Overlay.Trigger`. The Tab-order bridge is Overlay's
+whenever isolation focus is off. `closeOnScroll` is Overlay's, default false
+on Popover.
 
 #### Hover interaction
 
@@ -629,19 +664,14 @@ Approximate API:
 ```ts
 type PopoverPlacement = OverlayPlacement
 
-interface PopoverProps extends OverlayDismissHandlers {
-  children?: React.ReactNode
-  open: boolean
-  onOpen?: () => void
-  anchor?: VirtualAnchor
+interface PopoverProps
+  extends Omit<OverlayProps, "isolation" | "edge"> {
   openOnHover?: boolean
   openDelay?: number
   closeDelay?: number
-  closeOnScroll?: boolean
 }
 
-interface PopoverTriggerProps
-  extends ReferencePartProps<"button"> {}
+interface PopoverTriggerProps extends OverlayTriggerProps {}
 
 interface PopoverPortalProps {
   container?: PortalProps["container"]
@@ -1267,10 +1297,10 @@ The `Slot` API is defined by its strict merge precedence:
 
 Complex interface patterns are documented compositions of foundational and ARIA primitives rather than rigid standalone components:
 
-- **`Dialog`** $\rightarrow$ `Overlay` + `Overlay.Backdrop` + `Overlay.Content` (`role="dialog"`)
-- **`AlertDialog`** $\rightarrow$ `Overlay` + `Overlay.Backdrop` + `Overlay.Content` (`role="alertdialog"`)
-- **`Drawer` / `Sheet`** $\rightarrow$ unanchored `Overlay` at a screen edge; slide-out is CSS against Overlay's `data-state` / Presence contract. Do not put `placement` on Overlay for this — there is no `anchor`.
-- **`Lightbox`** $\rightarrow$ `Overlay` with media preview presentation
+- **`Dialog`** $\rightarrow$ isolating `Overlay` + `Overlay.Backdrop` + `Overlay.Content` (`role="dialog"`), optional `Overlay.Trigger`
+- **`AlertDialog`** $\rightarrow$ same, `role="alertdialog"`, prevent `onEscape`
+- **`Drawer` / `Sheet`** $\rightarrow$ isolating `Overlay` with `edge`, optional `Overlay.Handle` and Trigger. Slide-out is CSS against `data-state` / Presence; `edge` is Overlay geometry, not flip/`anchor`.
+- **`Lightbox`** $\rightarrow$ isolating `Overlay` with media preview presentation
 - **`Select`** $\rightarrow$ select-only `Combobox` (`Combobox.Trigger` +
   `Combobox.Popover`) with a `Listbox` popup
 - **`Autocomplete`** $\rightarrow$ editable `Combobox` (`Combobox.Input` +
@@ -1313,17 +1343,20 @@ These are decisions, not unfinished list items.
   VoiceOver focus failures. Its named stepper buttons and Arrow behavior expose
   numeric adjustment without a second component.
 - **`Progress` / `Meter`** — native elements. Do not wrap them.
-- **Native `<dialog>`** — Overlay is the stacking, nesting, Presence, and
+- **Native `<dialog>`** — Overlay is the stacking, nesting, Presence, isolation, and
   geometry contract. Do not swap in HTML dialog as a second modal runtime.
-- **A `modal` flag on Overlay** — Overlay is always isolating. Non-modal
-  floating content is `Popover`.
+- **A `modal` boolean on Overlay** — isolation is three systems (`focus`,
+  `inert`, `scroll`). Use `isolation`, not a flag that smuggles light-dismiss
+  and trap together. Default remains isolating.
+- **Drawer snap points / iOS scale-behind** — product chrome. Overlay owns
+  `edge`, Handle-only drag, nested stack CSS, and iOS `position: fixed`.
+  Do not lift Vaul `use-snap-points` or `use-scale-background`.
 - **`Carousel`** — CSS scroll-snap plus optional `RovingFocus`. Not a primitive.
 - **Form-field wiring** (`Field`, `Form`, implicit label association) — explicit IDs are the agent-friendly answer; a public Field/Form provider is not a freeze primitive.
 - **`ScrollArea`** — modern CSS (`overflow`, overlay scrollbars, `scrollbar-gutter`) covers it.
 - **`DataGrid`** — an ecosystem problem (virtualization, editing, column models, selection), not a primitive this library can freeze honestly.
 - **Virtualized or multi-select `Tree`** — the freeze Tree is APG keyboard + collapse + single selection only. Windowed rows and multi-select stay application-owned.
 - **`NavigationMenu` / mega-menu** — Popover + Menu + hover intent. A documented pattern later if needed; not a freeze primitive.
-- **Drawer snap points / iOS scale-behind** — Overlay at a screen edge plus CSS. iOS `position: fixed` belongs in Overlay scroll-lock, not a Vaul-shaped primitive.
 
 Time-of-day widgets are outside Calendar. Calendar is calendar dates.
 
@@ -1366,9 +1399,10 @@ not bless the current design by definition.
    ShadowRoot boundary. For `Switch`, compositions must include a sibling
    `htmlFor` label, a wrapping label inside a form that does not serialize
    the button, and independent low- and high-specificity switches inside a
-   nested overlay. For `Overlay`, one composition must be unanchored
-   (dialog/drawer CSS) and one must be anchored (`anchor` + Floating UI
-   geometry) without a second positioning runtime.
+   nested overlay. For `Overlay`, compositions must include an isolating
+   dialog (optional Trigger), an `edge` drawer with Handle, and
+   `isolation={false}` Trigger+Content without a second positioning
+   runtime or a hover policy.
 7. **Cross-cutting environment safety:** Nested usage, RTL directionality, SSR hydration, and multi-root/Shadow DOM usage require no API adjustments.
 8. **AI agent verification:** An AI model or agent can implement custom, non-standard user requirements without bypassing or fighting the primitive.
 9. **Descriptive proof contract:** Every case says what the component should do
