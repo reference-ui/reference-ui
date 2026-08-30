@@ -52,7 +52,7 @@ another commit:
 | Inert / hide | Overlay | Rest of page not reachable |
 | Portal | `Portal` | Move DOM, no extra node |
 | Presence | `Presence` | `data-state` exit before unmount |
-| Position | Popover, Tooltip | Flip, shift, arrow, virtual anchors |
+| Position | Overlay | Flip, shift, arrow, size, hide, virtual anchors, autoUpdate |
 | Tabbables | Overlay `initialFocus`, FocusLock | What Tab lands on |
 | Roving tabindex | `RovingFocus` | Listbox, Menu, Tabs, Tree |
 | Toast queue | `toast.*` | Identity, update-in-place, limit — **not** Overlay |
@@ -92,7 +92,7 @@ another commit:
 
 ### `floating-ui`
 
-**Useful for:** Popover and Tooltip positioning.
+**Useful for:** Overlay geometry — the public frontend of this port.
 
 **Lift**
 
@@ -115,6 +115,7 @@ another commit:
 - `packages/react/portal`
 - `packages/react/roving-focus`
 - `packages/react/slot` — merge rules vs our Slot contract
+- `packages/react/switch` — button host, Thumb child, controlled checked
 - `e2e/*.spec.ts` — dialog, popover, menu nesting
 
 **Leave:** `popper` (use floating-ui), `scroll-area` (deliberate omission), visual examples in apps.
@@ -128,6 +129,7 @@ menu, tooltip, toast, drawer, and localized NumberField behavior.
 
 - `packages/react/src/dialog`, `popover`, `menu`, `tooltip`, `toast`
 - `packages/react/src/collapsible` (Accordion)
+- `packages/react/src/switch` — button + Thumb anatomy; leave form-field wiring
 - `packages/react/src/number-field` — partial parsing, precision, stepping,
   repeat, forms, and mobile-input regressions
 - How they nest Menu inside Dialog on one layer stack
@@ -139,8 +141,8 @@ menu, tooltip, toast, drawer, and localized NumberField behavior.
 
 **Useful for:** APG behaviour for every ARIA primitive. First-class for
 Listbox, Combobox, Menu, Tabs, Slider, NumberField, Calendar, Tooltip, and
-overlays. Switch tests remain platform contrast rather than a Reference UI
-runtime.
+overlays. Switch is a compact button+thumb owner; Aria `input` Switch tests
+are host contrast, while Radix/Base UI Switch tests inform anatomy.
 
 **Lift**
 

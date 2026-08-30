@@ -10,17 +10,17 @@ shared layer stack.
 
 ## Freeze decisions
 
-1. Omitted `Menu.Sub.open` is controlled false, never local ephemeral state.
+1. Omitted nested Menu `open` is controlled false, never local ephemeral state.
 2. Item `onSelect` receives a cancelable event; if unprevented, it bubbles one
    deepest-first dismissal request through the containing Menu/Popover layers.
-3. SubContent uses Popover placement/offset/collision props, defaults to
+3. Menu.Content uses Overlay placement/offset/collision props, defaults to
    right-start (left-start in RTL), inherits the root popup destination, and
    owns stable ARIA IDs.
 4. A root Menu adopts its containing Popover's layer;
    each open submenu adds exactly one child layer. Menu plus Popover must not
    double-register Escape/outside dismissal.
 5. Submenu pointer intent uses fixed 100ms open, 300ms close, and 5px
-   grace-polygon padding; the API intentionally exposes no per-Sub timing
+   grace-polygon padding; the API intentionally exposes no per-submenu timing
    controls.
 6. Item and LinkItem default `closeOnSelect=true`; CheckboxItem and RadioItem
    default it false. Choice state requests precede dismissal when explicitly
@@ -56,8 +56,9 @@ ContextMenu component.
 - [ ] `MN-DOM-01` `[reference]` `[browser]` —
   **Menu should render every public part with its documented native role and no extra host.**
   Render Item, CheckboxItem, RadioGroup/RadioItem, LinkItem, Separator, and a
-  controlled Sub with SubTrigger/SubContent, then inspect portal and source
-  DOM. Assert Menu/SubContent are `div[role=menu]`, Item/SubTrigger are
+  controlled nested Menu with Menu.Trigger/Menu.Content, then inspect portal and source
+  DOM. Assert nested Menu contributes no node, root Menu and Menu.Content are
+  `div[role=menu]`, Item/Menu.Trigger are
   `div[role=menuitem]`, CheckboxItem is `div[role=menuitemcheckbox]`,
   RadioGroup is `div[role=group]`, RadioItem is
   `div[role=menuitemradio]`, LinkItem is `a[role=menuitem]`, and Separator is
@@ -65,18 +66,18 @@ ContextMenu component.
   kinds stay under one Menu owner.
 - [ ] `MN-DOM-02` `[vendor]` `[browser]` —
   **Menu should expose root orientation while keeping submenus vertical and disabled entries inert.**
-  Render a horizontal root with a vertical SubContent, disabled Item, and
-  disabled SubTrigger, then Tab and arrow through both levels and attempt
+  Render a horizontal root with a vertical Menu.Content, disabled Item, and
+  disabled Menu.Trigger, then Tab and arrow through both levels and attempt
   activation. Assert root/submenu orientation semantics, disabled
   `aria-disabled`/`data-disabled`, no disabled focus or action, and no open or
   dismissal request; this deliberately converges away from Base UI's
   focusable-disabled menu behavior.
 - [ ] `MN-DOM-03` `[vendor]` `[browser]` —
-  **Menu SubTrigger should expose controlled expansion and a stable relationship to SubContent.**
-  Render a closed controlled Sub with explicit and generated ID variants, then
+  **Menu.Trigger should expose controlled expansion and a stable relationship to Menu.Content.**
+  Render a closed controlled nested Menu with explicit and generated ID variants, then
   accept open and close requests. Assert `aria-haspopup="menu"`,
   `aria-expanded` matches the prop, and `aria-controls` always resolves to the
-  one stable unique SubContent ID while mounted; this ports vendor submenu ARIA
+  one stable unique Menu.Content ID while mounted; this ports vendor submenu ARIA
   regressions.
 - [ ] `MN-DOM-04` `[reference]` `[browser]` —
   **Menu parts should preserve their fixed native element contracts through interaction.**
@@ -88,7 +89,7 @@ ContextMenu component.
   host appears; internal orchestration must stay transparent.
 - [ ] `MN-DOM-05` `[reference]` `[browser]` —
   **Menu typeahead should prefer explicit textValue over current meaningful rendered text.**
-  Render every actionable Item kind and SubTrigger with nested icons,
+  Render every actionable Item kind and Menu.Trigger with nested icons,
   accessible names, and one `textValue="Zulu"`, then type old, current,
   decorative, and explicit prefixes before and after rerendering labels.
   Assert focus crosses plain, choice, radio, and link commands by current
@@ -106,25 +107,25 @@ ContextMenu component.
   **Menu should generate collision-free stable IDs across nested portals and React roots.**
   Render equal labels in two root menus and two nested submenu levels across
   independent React roots, open all, rerender, and hydrate one copy. Assert
-  every root/SubContent ID is unique and stable, every control reference
+  every root/Menu.Content ID is unique and stable, every control reference
   resolves within the correct menu tree, and no duplicate ID or hydration
   warning occurs; labels are not identities.
 - [ ] `MN-DOM-08` `[reference]` `[browser]` —
-  **Menu SubContent should use the shared Popover engine relative to its SubTrigger.**
-  Open a controlled Sub near a collision boundary and inspect the portalled
-  SubContent before and after viewport change. Assert it is positioned from
-  the SubTrigger, exposes the resolved side and open/closed state hooks, keeps
+  **Menu.Content should use the shared Popover engine relative to its Menu.Trigger.**
+  Open a controlled nested Menu near a collision boundary and inspect the portalled
+  Menu.Content before and after viewport change. Assert it is positioned from
+  the Menu.Trigger, exposes the resolved side and open/closed state hooks, keeps
   one stable ID, and contributes no second Menu positioning runtime; submenu
   geometry belongs to Popover.
 - [ ] `MN-DOM-09` `[reference]` `[browser]` —
   **Menu should default omitted root orientation to vertical at every menu level.**
-  Omit root `orientation`, open the root and SubContent, and press vertical and
+  Omit root `orientation`, open the root and Menu.Content, and press vertical and
   horizontal keys. Assert root and submenu expose vertical semantics,
   Up/Down perform roving, and horizontal keys retain only submenu open/close
   meaning; an omitted prop must not depend on layout CSS.
 - [ ] `MN-DOM-10` `[reference]` `[browser]` —
-  **Menu SubContent should apply one mirrored default placement while preserving explicit geometry props.**
-  Open the same Sub at LTR and RTL boundaries, then supply explicit placement,
+  **Menu.Content should apply one mirrored default placement while preserving explicit geometry props.**
+  Open the same nested Menu at LTR and RTL boundaries, then supply explicit placement,
   offset, and collision padding plus a consumer transform. Assert defaults
   resolve from `right-start` in LTR and `left-start` in RTL, explicit values
   reach Popover once, collision output is observable, and consumer transform
@@ -142,20 +143,21 @@ ContextMenu component.
 - [ ] `MN-FOCUS-02` `[convergence]` `[browser]` —
   **Menu should focus the first enabled root item after pointer opening but not after submenu hover opening.**
   Open a MenuButton by primary click and a ContextMenu by right click, then
-  hover a SubTrigger to open its controlled SubContent. Assert root focus moves
+  hover a Menu.Trigger to open its controlled Menu.Content. Assert root focus moves
   only after the mounted menu exists and lands on its first enabled Item,
-  while hover-opened SubContent leaves focus on the parent item and does not
+  while hover-opened Menu.Content leaves focus on the parent item and does not
   focus its first child; modality controls submenu intent.
 - [ ] `MN-FOCUS-03` `[vendor]` `[browser:all]` —
   **Vertical Menu should provide complete wrapped roving focus over enabled commands.**
-  Open a vertical menu containing enabled Items, disabled Items, SubTriggers,
+  Open a vertical menu containing enabled Items, disabled Items, Menu.Trigger
+  parts,
   and Separators, then exercise Up, Down, Home, End, and both boundaries.
   Assert expected wrapped focus, disabled/Separator skip, exactly one
   `tabindex="0"`, and no action/open request from movement; this ports the APG
   vendor matrix through RovingFocus.
 - [ ] `MN-FOCUS-04` `[vendor]` `[browser:all]` —
   **Horizontal Menu should rove with mirrored Left and Right while reserving cross-axis keys for submenus.**
-  Render a horizontal root in LTR and RTL with one SubTrigger, focus a middle
+  Render a horizontal root in LTR and RTL with one Menu.Trigger, focus a middle
   Item, and press both axes. Assert Left/Right rove with RTL reversal,
   Up/Down do not become root roving keys, and the documented cross-axis
   submenu commands still open/close exactly once; orientation cannot erase
@@ -169,31 +171,31 @@ ContextMenu component.
   focus boundary.
 - [ ] `MN-FOCUS-06` `[vendor]` `[browser]` —
   **Menu should not open a closed submenu merely because roving focus reaches
-  its SubTrigger.**
-  Open a root Menu and move focus onto an enabled closed SubTrigger with arrow
+  its Menu.Trigger.**
+  Open a root Menu and move focus onto an enabled closed Menu.Trigger with arrow
   navigation and with ordinary Tab entry in separate fixtures, without
-  pointer hover or an activation key. Assert the SubTrigger becomes the sole
+  pointer hover or an activation key. Assert the Menu.Trigger becomes the sole
   current tab stop while `aria-expanded` remains false, `onOpen` is empty, and
-  SubContent stays absent. This ports Radix `e2e/dropdown-menu.spec.ts`
+  Menu.Content stays absent. This ports Radix `e2e/dropdown-menu.spec.ts`
   “should not open submenu when moving focus to trigger.”
 - [ ] `MN-TYPE-01` `[vendor]` `[browser]` —
   **Menu typeahead should search and wrap only within the currently active menu level.**
   Open two submenu levels containing repeated prefixes also present in their
   ancestors, focus the deepest Item, and type a matching prefix repeatedly.
-  Assert focus wraps among enabled matches in only that SubContent and never
+  Assert focus wraps among enabled matches in only that Menu.Content and never
   moves an ancestor Item; this ports Radix's “scope typeahead behaviour to the
   active menu” regression.
 - [ ] `MN-TYPE-02` `[vendor]` `[browser]` —
   **Menu should treat Space as search text rather than activation during an active typeahead buffer.**
-  Focus an Item or SubTrigger, type a printable prefix followed immediately by
+  Focus an Item or Menu.Trigger, type a printable prefix followed immediately by
   Space, then repeat Space after the buffer timeout. Assert the first Space
   only extends/no-matches search with no `onSelect` or `onOpen`, while the
   later Space activates once; this protects the Base UI typeahead-versus-Space
   regression.
 - [ ] `MN-TYPE-03` `[reference]` `[browser]` —
   **Menu should reset and scope typeahead buffers as submenu ownership changes.**
-  Start a root prefix, open a SubContent, type matching characters there, close
-  it, and continue typing at the restored SubTrigger. Assert each level uses
+  Start a root prefix, open a Menu.Content, type matching characters there, close
+  it, and continue typing at the restored Menu.Trigger. Assert each level uses
   only its own current buffer, inactive ancestors never move focus, and closed
   submenu text cannot influence the root; buffers follow active-menu
   lifetime.
@@ -225,21 +227,21 @@ ContextMenu component.
   Attach a logging native click/keydown handler that calls
   `preventDefault()`, then activate the Item by pointer and keyboard. Assert
   the native handler runs before `onSelect`, neither selection nor any
-  Sub/Menu/Popover dismissal callback follows, and focus/open DOM stay intact;
+  nested Menu or root Popover dismissal callback follows, and focus/open DOM stay intact;
   cancellation must stop at the action owner.
 - [ ] `MN-ACT-04` `[convergence]` `[browser]` —
   **Menu should dismiss an uncanceled selected path exactly once from deepest submenu to root.**
   Open two controlled submenu levels, activate a deepest Item without
-  preventing its selection event, and record all Sub and root Popover
+  preventing its selection event, and record all nested Menu and root Popover
   callbacks. Assert `onSelect` first, then one dismissal request per open level
   in deepest-first order with no duplicate root call; one command must unwind
   one layer tree deterministically.
 - [ ] `MN-ACT-05` `[vendor]` `[browser]` —
   **Menu should close the complete tree and restore only the root trigger after submenu selection.**
   Open a two-level submenu, click a deepest enabled Item, and accept each
-  controlled close request. Assert every Menu/SubContent unmounts, the action
+  controlled close request. Assert every Menu.Content unmounts, the action
   callback fires once, focus restores once to the root MenuButton trigger
-  rather than intermediate SubTriggers, and no stale child layer remains;
+  rather than intermediate Menu.Trigger parts, and no stale child layer remains;
   this ports vendor nested-menu closure.
 - [ ] `MN-ACT-06` `[vendor]` `[browser]` —
   **Menu should keep disabled items entirely outside action and dismissal paths.**
@@ -308,7 +310,7 @@ ContextMenu component.
 - [ ] `MN-CHOICE-06` `[reference]` `[browser]` —
   **Menu choice activation should order native handlers, selection, state request, and optional dismissal predictably.**
   Give a CheckboxItem and RadioItem logging native click/keydown, `onSelect`,
-  `onChange`, Sub dismissal, and root dismissal callbacks, with
+  `onChange`, nested Menu dismissal, and root dismissal callbacks, with
   `closeOnSelect=true`. Assert the order is native handler, cancelable
   `onSelect`, one checked/value request, then one deepest-first complete-tree
   dismissal sequence; state ownership must settle before layers close.
@@ -422,29 +424,29 @@ ContextMenu component.
 
 - [ ] `MN-SUBKEY-01` `[vendor]` `[browser:all]` —
   **LTR Menu should open an enabled submenu with Right and focus its first enabled item after mount.**
-  Focus a closed SubTrigger in LTR, press ArrowRight, delay then accept the
+  Focus a closed Menu.Trigger in LTR, press ArrowRight, delay then accept the
   controlled open update, and include a disabled first child. Assert one
   `onOpen`, unchanged closed ARIA/DOM and trigger focus before rerender, then
-  mounted SubContent with focus on its first enabled Item; this prevents focus
+  mounted Menu.Content with focus on its first enabled Item; this prevents focus
   from racing controlled mount timing.
 - [ ] `MN-SUBKEY-02` `[vendor]` `[browser:all]` —
   **Menu should give Enter and Space the same controlled submenu open-and-focus behavior.**
-  Focus a closed SubTrigger and press Enter or Space in separate fixtures,
+  Focus a closed Menu.Trigger and press Enter or Space in separate fixtures,
   then accept the open request. Assert one `onOpen` per activation, no Item
-  `onSelect` or ancestor dismissal, and focus on the first enabled SubContent
-  Item only after mount; SubTrigger activation is expansion, not command
+  `onSelect` or ancestor dismissal, and focus on the first enabled Menu.Content
+  Item only after mount; Menu.Trigger activation is expansion, not command
   selection.
 - [ ] `MN-SUBKEY-03` `[vendor]` `[browser:all]` —
-  **LTR Menu should close only the current submenu with Left and restore its SubTrigger.**
-  Open two submenu levels, focus an Item in the deepest LTR SubContent, and
-  press ArrowLeft before accepting that Sub's close. Assert one deepest
-  `onDismiss`, no ancestor close, focus restored to its own SubTrigger after
+  **LTR Menu should close only the current submenu with Left and restore its Menu.Trigger.**
+  Open two submenu levels, focus an Item in the deepest LTR Menu.Content, and
+  press ArrowLeft before accepting that nested Menu's close. Assert one deepest
+  `onDismiss`, no ancestor close, focus restored to its own Menu.Trigger after
   unmount, and parent/root content still visible; this ports vendor
   level-local close behavior.
 - [ ] `MN-SUBKEY-04` `[vendor]` `[rtl]` —
   **RTL Menu should mirror submenu open and close arrows without changing activation or vertical movement.**
   Place the same nested fixture under `dir=rtl`, press Left on a closed
-  SubTrigger and Right inside its SubContent, then use Enter, Space, Up, and
+  Menu.Trigger and Right inside its Menu.Content, then use Enter, Space, Up, and
   Down. Assert mirrored one-level open/close requests and focus restoration,
   while activation and vertical roving match LTR; dynamic direction must be
   read from the current DOM.
@@ -452,42 +454,42 @@ ContextMenu component.
   **Menu should let Escape close one submenu level and restore its trigger before the next Escape escapes upward.**
   Open a two-level tree, focus a deepest Item, press Escape and accept only the
   deepest close, then press Escape again. Assert the first request targets one
-  Sub and restores its SubTrigger while ancestors remain open, and the second
+  nested Menu and restores its Menu.Trigger while ancestors remain open, and the second
   reaches the parent level/layer exactly once; this adopts level-by-level
   ownership rather than Radix's one-key full-tree Escape.
 - [ ] `MN-SUBKEY-06` `[reference]` `[browser]` —
   **Menu should remain visibly controlled when submenu open or close requests are rejected.**
-  Press an opening key on a closed Sub and a closing key inside an open Sub
+  Press an opening key on a closed nested Menu and a closing key inside an open nested Menu
   while the parent logs but ignores both. Assert closed ARIA/DOM/focus remain
   closed in the first fixture and open ARIA/DOM/current focus remain open in
   the second, with one request each; callbacks cannot pretend mount state
   changed.
 - [ ] `MN-SUBKEY-07` `[reference]` `[browser]` —
   **Menu should honor consumer key cancellation before submenu or roving defaults.**
-  Attach a SubTrigger/Item `onKeyDown` that calls `preventDefault()`, then try
+  Attach a Menu.Trigger/Item `onKeyDown` that calls `preventDefault()`, then try
   open, close, and roving keys. Assert the consumer log is first, no
   `onOpen`/`onDismiss`, no focus movement or ARIA change, and unrelated native
   propagation remains authored; cancellation belongs to the node handling the
   key.
 - [ ] `MN-SUBKEY-08` `[reference]` `[browser]` —
-  **Menu should keep a disabled SubTrigger inert even when its Sub is externally open.**
-  Render the disabled Sub first closed and then controlled open, attempt
+  **Menu should keep a disabled Menu.Trigger inert even when its nested Menu is externally open.**
+  Render the disabled nested Menu first closed and then controlled open, attempt
   pointer/keyboard open and close, and traverse the parent menu. Assert the
-  trigger is skipped and emits no request, while externally open SubContent
+  trigger is skipped and emits no request, while externally open Menu.Content
   and ARIA remain represented but noninteractive with no automatic focus;
   controlled representation cannot override disabled input policy.
 - [ ] `MN-SUBKEY-09` `[reference]` `[browser]` —
-  **Menu Sub should default omitted open to controlled false.**
-  Omit `open`, focus the SubTrigger, and activate it once while recording but
+  **Nested Menu should default omitted open to controlled false.**
+  Omit `open`, focus the Menu.Trigger, and activate it once while recording but
   ignoring `onOpen`. Assert exactly one true/open request, continued
-  `aria-expanded="false"`, no SubContent or child layer, and focus on the
+  `aria-expanded="false"`, no Menu.Content or child layer, and focus on the
   trigger; omission must not create ephemeral local submenu state.
 - [ ] `MN-SUBKEY-10` `[vendor]` `[browser]` —
   **Menu should focus the first enabled submenu item when an open-by-pointer
-  SubTrigger is subsequently activated with its directional key.**
-  Hover-open a controlled Sub without moving focus into it, keep focus on its
-  SubTrigger, and press ArrowRight in LTR or ArrowLeft in RTL. Assert no second
-  `onOpen`, focus moves once to the first enabled mounted SubContent item, and
+  Menu.Trigger is subsequently activated with its directional key.**
+  Hover-open a controlled nested Menu without moving focus into it, keep focus on its
+  Menu.Trigger, and press ArrowRight in LTR or ArrowLeft in RTL. Assert no second
+  `onOpen`, focus moves once to the first enabled mounted Menu.Content item, and
   parent/root state remains open. This ports Radix
   `e2e/dropdown-menu.spec.ts` “focus first item when pressing right arrow after
   opening submenu with mouse.”
@@ -496,43 +498,43 @@ ContextMenu component.
 
 - [ ] `MN-INTENT-01` `[vendor]` `[browser:all]` —
   **Menu should request hover opening after 100ms without moving focus into the submenu.**
-  Move a mouse pointer onto a closed enabled SubTrigger, advance to 99ms and
+  Move a mouse pointer onto a closed enabled Menu.Trigger, advance to 99ms and
   then 100ms, and accept the controlled request. Assert no request before the
-  boundary, exactly one `onOpen` at 100ms, SubContent mount after rerender, and
+  boundary, exactly one `onOpen` at 100ms, Menu.Content mount after rerender, and
   unchanged focus rather than focus on its first Item; this ports vendor
   hover-entry intent.
 - [ ] `MN-INTENT-02` `[vendor]` `[browser]` —
   **Menu should keep a submenu open during diagonal pointer travel toward its content.**
-  Open a Sub, move from its SubTrigger through points inside the 5px
-  grace polygon toward the SubContent, and cross parent Items along that path.
+  Open a nested Menu, move from its Menu.Trigger through points inside the 5px
+  grace polygon toward the Menu.Content, and cross parent Items along that path.
   Assert no `onDismiss`, no parent focus/hover takeover, stable trigger
-  expanded state, and reachable SubContent; the polygon protects intentional
+  expanded state, and reachable Menu.Content; the polygon protects intentional
   diagonal travel.
 - [ ] `MN-INTENT-03` `[vendor]` `[browser]` —
   **Menu should request submenu closure 300ms after pointer travel clearly moves away.**
-  Open a Sub, move from its trigger through points outside the grace polygon
-  away from SubContent, and advance time to 299ms then 300ms. Assert no early
-  close, exactly one `onDismiss` at the timeout, and controlled SubContent
+  Open a nested Menu, move from its trigger through points outside the grace polygon
+  away from Menu.Content, and advance time to 299ms then 300ms. Assert no early
+  close, exactly one `onDismiss` at the timeout, and controlled Menu.Content
   remains until the parent rerenders; fixed delay distinguishes intent from
   jitter.
 - [ ] `MN-INTENT-04` `[vendor]` `[browser]` —
   **Menu should remain open without duplicate callbacks when pointer returns through its associated submenu path.**
-  Move SubTrigger to SubContent and back to the same SubTrigger, then open a
-  nested Sub and return to its associated root trigger. Assert the associated
-  Sub stays open with no repeated `onOpen`/`onDismiss`, while unrelated deeper
+  Move Menu.Trigger to Menu.Content and back to the same Menu.Trigger, then open a
+  nested Menu and return to its associated root trigger. Assert the associated
+  nested Menu stays open with no repeated `onOpen`/`onDismiss`, while unrelated deeper
   Submenus close once; this ports Radix's return-to-trigger and unassociated-
   submenu regressions.
 - [ ] `MN-INTENT-05` `[vendor]` `[browser]` —
   **Menu should close an open submenu when pointer intent switches to another parent entry.**
-  Open a Sub and move the pointer to another parent Item, disabled Item,
-  enabled SubTrigger, and disabled SubTrigger in separate runs. Assert the old
-  Sub requests one close in every case, the new enabled entry receives current
+  Open a nested Menu and move the pointer to another parent Item, disabled Item,
+  enabled Menu.Trigger, and disabled Menu.Trigger in separate runs. Assert the old
+  nested Menu requests one close in every case, the new enabled entry receives current
   hover/focus behavior without action, and disabled entries remain inert; this
   ports Radix's “any item in parent menu” matrix.
 - [ ] `MN-INTENT-06` `[vendor]` `[browser]` —
   **Menu should calculate pointer grace from a submenu's resolved collision side.**
   Force a preferred right submenu to flip left at a narrow viewport, then move
-  pointer first toward and then away from the rendered SubContent. Assert
+  pointer first toward and then away from the rendered Menu.Content. Assert
   toward travel keeps it open and away travel requests close according to the
   left-side polygon, with resolved side hooks matching geometry; preferred
   placement cannot drive stale intent math.
@@ -544,8 +546,8 @@ ContextMenu component.
   and a dynamic direction change affects new samples; this ports the Radix RTL
   pointer matrix.
 - [ ] `MN-INTENT-08` `[reference]` `[touch]` —
-  **Menu should never start hover-intent timers for touch and should activate a SubTrigger once on tap.**
-  Send touch pointer enter/move/leave over a closed SubTrigger, advance past
+  **Menu should never start hover-intent timers for touch and should activate a Menu.Trigger once on tap.**
+  Send touch pointer enter/move/leave over a closed Menu.Trigger, advance past
   300ms, then tap it once. Assert no hover-timer callback, exactly one
   activation-driven `onOpen`, no synthetic mouse duplicate, and controlled
   focus/ARIA behavior; touch has no hover trajectory.
@@ -577,14 +579,14 @@ ContextMenu component.
   root modality; this ports vendor outside-tree closure.
 - [ ] `MN-CLOSE-02` `[vendor]` `[browser]` —
   **Menu should treat interaction in any portalled descendant as inside its root subtree.**
-  Open nested portalled SubContent, then click/right-click its background,
-  SubTrigger, and non-item chrome without selecting. Assert no root or
+  Open nested portalled Menu.Content, then click/right-click its background,
+  Menu.Trigger, and non-item chrome without selecting. Assert no root or
   ancestor outside-dismiss callback, all open levels remain, and only actual
   Item activation can trigger command dismissal; composed branch membership
   must cross portal boundaries.
 - [ ] `MN-CLOSE-03` `[reference]` `[browser]` —
-  **Menu should allow focus into nested portalled SubContent as a parent FocusLock shard.**
-  Open a Menu inside a locked Overlay, then keyboard-open a portalled Sub and
+  **Menu should allow focus into nested portalled Menu.Content as a parent FocusLock shard.**
+  Open a Menu inside a locked Overlay, then keyboard-open a portalled nested Menu and
   Tab/focus among its Items. Assert focus enters and remains in the Menu
   subtree without containment bounce, background nodes stay excluded, and the
   parent lock still owns restoration; child portals are branches, not escapes.
@@ -592,9 +594,9 @@ ContextMenu component.
   **Menu should cascade a programmatic root close deepest-first and restore only the root trigger.**
   With two Submenus open and focus in the deepest Item, programmatically set
   root Popover closed and accept the resulting child requests. Assert one
-  `onDismiss` per open Sub in deepest-first order, no duplicate root dismissal,
+  `onDismiss` per open nested Menu in deepest-first order, no duplicate root dismissal,
   child layers/DOM leave in that order, and focus restores once to the root
-  MenuButton rather than each intermediate SubTrigger; root closure owns final
+  MenuButton rather than each intermediate Menu.Trigger; root closure owns final
   restoration.
 - [ ] `MN-CLOSE-05` `[reference]` `[browser]` —
   **Menu should close on Tab or Shift+Tab and continue relative to the root trigger rather than portal order.**
@@ -605,16 +607,16 @@ ContextMenu component.
   trap; this intentionally differs from vendor menus that retain focus on Tab.
 - [ ] `MN-CLOSE-06` `[vendor]` `[browser]` —
   **Menu should choose a live focus fallback when a submenu trigger disappears or becomes disabled before close.**
-  Open a Sub, focus a child, remove or disable its SubTrigger, and then close
+  Open a nested Menu, focus a child, remove or disable its Menu.Trigger, and then close
   that level with Escape/programmatic state. Assert focus never targets
   detached or disabled DOM and falls to the nearest enabled parent Item, root
   trigger, or documented root fallback, with one close request; this ports
   vendor stale-restore regressions.
 - [ ] `MN-CLOSE-07` `[reference]` `[browser]` —
   **Menu should bind one layer to each root popup and each open submenu.**
-  Open equivalent MenuButton and ContextMenu roots with two Sub levels, then
+  Open equivalent MenuButton and ContextMenu roots with two nested Menu levels, then
   press Escape and outside in separate runs while logging layer callbacks.
-  Assert one adopted root Popover/Menu layer plus one child per open Sub and
+  Assert one adopted root Popover/Menu layer plus one child per open nested Menu and
   exactly one request for the top affected level per event, with no duplicate
   Menu and Popover registrations; layer authority must be singular.
 - [ ] `MN-CLOSE-08` `[reference]` `[browser]` —
@@ -638,7 +640,7 @@ ContextMenu component.
   that is registered as its child layer and focus branch.**
   Open a Menu, launch a nested modal dialog from one Item, focus a dialog
   control, and press Shift+Tab among the dialog's candidates. Assert the dialog
-  lock handles focus, no Menu/Sub outside or Tab-close request runs, every menu
+  lock handles focus, no Menu outside or Tab-close request runs, every menu
   level remains controlled open, and closing the dialog restores into a live
   menu target once. This ports Base UI `MenuRoot.test.tsx` “keeps the menu and
   dialog open when pressing Shift+Tab inside a nested dialog.”
@@ -654,10 +656,10 @@ ContextMenu component.
   stop remains; this ports dynamic collection behavior.
 - [ ] `MN-DYNAMIC-02` `[reference]` `[browser]` —
   **Menu should clean every ownership registration when an open submenu is removed or reparented.**
-  Open a Sub with active hover timers and nested layer/branch state, then
+  Open a nested Menu with active hover timers and nested layer/branch state, then
   remove it or move it under another Menu while a separate root remains open.
   Assert its timer, polygon, branch, focus-shard, and layer effects disappear,
-  no stale callback or dismissal touches the unrelated root, and the moved Sub
+  no stale callback or dismissal touches the unrelated root, and the moved nested Menu
   registers once with its new parent.
 - [ ] `MN-DYNAMIC-03` `[reference]` `[browser]` —
   **Menu should use current labels, disabled state, orientation, and direction on the next interaction.**
@@ -668,16 +670,16 @@ ContextMenu component.
   handlers cannot capture initial props.
 - [ ] `MN-DYNAMIC-04` `[vendor]` `[browser]` —
   **Menu should update submenu control relationships atomically when its
-  SubTrigger ID changes.**
-  Open a controlled Sub, change the mounted SubTrigger's explicit ID while
-  retaining SubContent, then close and reopen it. Assert the trigger keeps
-  `aria-expanded`, SubContent's current relationship resolves only to the new
+  Menu.Trigger ID changes.**
+  Open a controlled nested Menu, change the mounted Menu.Trigger's explicit ID while
+  retaining Menu.Content, then close and reopen it. Assert the trigger keeps
+  `aria-expanded`, Menu.Content's current relationship resolves only to the new
   ID, no stale duplicate ID remains, focus restoration targets the same live
   trigger node, and no callback runs from the ID update. This ports Base UI
   `MenuSubmenuTrigger.test.tsx` “follows a submenu trigger id change.”
 - [ ] `MN-ENV-01` `[reference]` `[ssr]` —
   **Menu should hydrate closed compositions and open them with stable generated relationships.**
-  Server-render closed MenuButton, ContextMenu, and nested Sub shapes, hydrate,
+  Server-render closed MenuButton, ContextMenu, and nested Menu shapes, hydrate,
   then open each by its native modality. Assert no server access to browser
   globals, no hydration warning or changed/duplicate ID, controls resolve
   after mount, and focus/callbacks begin only from user action; portals cannot
@@ -685,12 +687,12 @@ ContextMenu component.
 - [ ] `MN-ENV-02` `[reference]` `[react:all]` —
   **Menu should keep one registration, timer, action, and close request across React versions and StrictMode.**
   Mount nested controlled menus under StrictMode in React 17, 18, and 19,
-  hover-open a Sub, select an Item, and dynamically remove it. Assert one live
+  hover-open a nested Menu, select an Item, and dynamically remove it. Assert one live
   registration and intent timer, one `onSelect`, one close per level, and no
   stale callback after cleanup; effect replay must remain unobservable.
 - [ ] `MN-ENV-03` `[reference]` `[shadow]` —
   **Menu should preserve composed-path ownership and submenu behavior from a ShadowRoot.**
-  Mount root source/content in an open ShadowRoot with SubContent portalled to
+  Mount root source/content in an open ShadowRoot with Menu.Content portalled to
   its documented destination, then open, typeahead, focus, and press inside and
   outside. Assert composed inside paths do not dismiss, actual outside paths
   do once, focus/search use the owning root, and portal branches/layers clean
@@ -705,7 +707,7 @@ ContextMenu component.
 - [ ] `MN-A11Y-01` `[reference]` `[browser]` —
   **Menu should pass accessibility checks for every frozen root and submenu shape.**
   Scan named empty, disabled, Separator, MenuButton, ContextMenu, and nested
-  Sub fixtures after opening and closing relevant levels. Assert no violations
+  nested Menu fixtures after opening and closing relevant levels. Assert no violations
   plus exact roles, names, orientation, disabled state, expansion, controls,
   and one current tab stop; automation supplements the explicit focus and
   layer assertions.
@@ -733,10 +735,10 @@ ContextMenu component.
   `context-menu.spec.ts` long-touch root and submenu regressions.
 - [ ] `MN-COMP-03` `[reference]` `[browser]` `[rtl]` —
   **Nested Menu should preserve two-level keyboard, intent, collision, and RTL ownership.**
-  Build two controlled Sub levels near a viewport edge, force collision flip,
+  Build two controlled nested Menu levels near a viewport edge, force collision flip,
   switch `dir`, and exercise keyboard open/close, diagonal pointer travel,
   Item selection, Escape, outside press, and trigger removal. Assert resolved-
-  side grace geometry, one child layer per Sub, deepest-first callbacks,
+  side grace geometry, one child layer per nested Menu, deepest-first callbacks,
   mounted focus targets, and one final root restoration; this is the submenu
   freeze composition.
 - [ ] `MN-COMP-04` `[reference]` `[browser]` —

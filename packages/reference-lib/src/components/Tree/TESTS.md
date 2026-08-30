@@ -420,10 +420,11 @@ Tree state.
   no selection commit; virtual focus must preserve Tree's hierarchy commands.
 - [ ] `TR-CB-03` `[reference]` `[browser]` —
   **Tree should register its Combobox bridge automatically without adapter props or duplicate collection roles.**
-  Nest a controlled Tree directly in Combobox Popup with no `virtualFocus`
-  prop, then open editable and select-only variants and inspect source, Popup,
-  and Tree. Assert source `aria-haspopup="tree"` and controls linkage, one
-  Tree-owned `role=tree`, no role invented on Popup, generated active IDs only
+  Nest a controlled Tree directly in Combobox.Popover with no `virtualFocus`
+  prop, then open editable and select-only variants and inspect source,
+  Combobox.Popover, and Tree. Assert source `aria-haspopup="tree"` and
+  controls linkage, one Tree-owned `role=tree`, no role invented on
+  Combobox.Popover, generated active IDs only
   for mounted TreeItems, and no registration wrapper; built-in hierarchy must
   not require application adapter plumbing.
 - [ ] `TR-CB-04` `[reference]` `[browser:all]` —
@@ -498,7 +499,7 @@ Tree state.
   survives; this is the visible-hierarchy freeze gate.
 - [ ] `TR-COMP-03` `[reference]` `[browser]` —
   **Tree should compose with Combobox through one virtual-focus and commit authority.**
-  Place the three-level Tree directly in an editable Combobox Popup without an
+  Place the three-level Tree directly in an editable Combobox.Popover without an
   adapter prop, navigate, dynamically expand/reorder while the input retains
   DOM focus, then commit a visible leaf. Assert `aria-haspopup="tree"`,
   mounted-only active descendant IDs, one Tree expansion request, one Combobox

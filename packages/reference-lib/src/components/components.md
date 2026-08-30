@@ -62,11 +62,12 @@ native tag and explicitly type their one ref-capable child.
 
 ## Current component inventory
 
-The current top-level runtime candidate is **21 components**:
+The current top-level runtime candidate is **22 components**:
 
 - **Foundation:** `ReferenceLibrary`, `Portal`, `Overlay`, `Popover`, `Toast`
-- **ARIA widgets:** `Listbox`, `Combobox`, `Menu`, `Tabs`, `Slider`, `Tree`,
-  `NumberField`, `Calendar`, `Collapsible`, `Accordion`, `Splitter`, `Tooltip`
+- **ARIA widgets:** `Listbox`, `Combobox`, `Menu`, `Tabs`, `Slider`, `Switch`,
+  `Tree`, `NumberField`, `Calendar`, `Collapsible`, `Accordion`, `Splitter`,
+  `Tooltip`
 - **Authoring machinery:** `Slot`, `Presence`, `RovingFocus`, `FocusLock`
 
 Current evidence says this set is complete for the intended layer; that is a
@@ -87,9 +88,11 @@ component. Add one only when all of these are true:
 4. at least three materially different products need the same public contract.
 
 Internal kernels such as the layer registry, scroll lock, inert manager,
-announcer, tabbable solver, typeahead matcher, safe polygon, floating middleware,
-constraint solver, and calendar arithmetic remain implementation details unless
-independent application use proves a stable public contract.
+announcer, tabbable solver, typeahead matcher, safe polygon, constraint
+solver, and calendar arithmetic remain implementation details unless
+independent application use proves a stable public contract. Floating
+middleware is the Overlay geometry engine: `placement` / `anchor` /
+`--reference-overlay-*` are public; `computePosition` internals are not.
 
 The completeness argument is behavioral rather than pattern-count based:
 
@@ -97,30 +100,33 @@ The completeness argument is behavioral rather than pattern-count based:
   and visual lifetime.
 - `FocusLock` and `RovingFocus` cover contained and composite focus movement.
 - `Overlay` and `Popover` cover document layers, dismissal, modality, and
-  anchored geometry.
+  anchored geometry. Overlay is the Floating UI port frontend; Popover is
+  non-modal trigger policy on that engine.
 - `ReferenceLibrary` and `Toast` cover document-scoped global lifetime,
   announcement, and queued work.
 - `Listbox`, `Menu`, `Tree`, `Combobox`, and `Tabs` cover flat, hierarchical,
   popup-coordinated, and activated collections.
-- `Slider`, `NumberField`, `Collapsible`, `Accordion`, `Splitter`, `Tooltip`,
-  and `Calendar` own the remaining difficult value, localized numeric editing,
-  disclosure, description, resize, and date-grid state machines.
+- `Slider`, `Switch`, `NumberField`, `Collapsible`, `Accordion`, `Splitter`,
+  `Tooltip`, and `Calendar` own the remaining difficult value, on/off thumb
+  anatomy, localized numeric editing, disclosure, description, resize, and
+  date-grid state machines.
 
-The final vendor pass changed membership without increasing the count.
-NumberField passed all four admission criteria: quantities, localized
+The final vendor pass changed membership without treating the count as
+sacred. NumberField passed all four admission criteria: quantities, localized
 currency/percent fields, and scientific/unit inputs otherwise recreate the
 same partial-edit, parsing, precision, stepping, and form invariants.
-Switch did not: a native checkbox with `role="switch"` already owns its state,
-keyboard, disabled, form, reset, and event behavior.
+Switch passed on anatomy, not on a second boolean state machine: a sliding
+thumb has to be a real child, and a native checkbox cannot host one.
+Checkbox and radio stay native.
 
 Adding a pattern name without introducing a new invariant would make the API
 larger without making an agent more capable. Conversely, a vendor regression
 that cannot be expressed by these owners is evidence for an API correction
-inside the relevant owner before it is evidence for component 22.
+inside the relevant owner before it is evidence for component 23.
 
 Generated typed HTML primitives are a separate platform-mirroring surface.
 Existing `Reference`/`ReferenceView` browser documentation UI is also outside
-this behavioral-primitive freeze; neither changes the 21-component inventory
+this behavioral-primitive freeze; neither changes the 22-component inventory
 above.
 
 ## Reference UI Core
@@ -164,15 +170,16 @@ Layout is not a component abstraction—the browser is the layout engine. Layout
 This guarantees pristine TypeScript type safety, zero DOM wrapper overhead, mathematical layout harmony, and complete transparency for developers and AI models.
 
 Behavioral parts with fixed hosts are implemented on these same generated
-primitives. A `Popover.Content` is still a style-bearing `Div`, and a
-`Tabs.Tab` is still a style-bearing `Button`; behavior augments rather than
-replaces the platform/style surface.
+primitives. An `Overlay.Content` is still a style-bearing `Div`, a
+`Popover.Trigger` is still a style-bearing `Button`, and a `Tabs.Tab` is
+still a style-bearing `Button`; behavior augments rather than replaces the
+platform/style surface.
 
 ## Foundation components
 
 Reference UI only provides a runtime component when it centralizes behaviour that should not be repeatedly rebuilt by developers or AI agents.
 
-Working design lives in sibling folders: `Overlay/Overlay.md` (API + problems), `Overlay/TESTS.md` (contracts to prove, including how vendor e2e suites combine). Implementation substrate is [hooks.md](../core/hooks/hooks.md): Zustand plus adapters in `src/core/hooks`. This document remains the freeze-gate overview. Names under Documented compositions do not get folders — they are not runtime components. Vendor clones themselves are documented in `vendor/VENDOR.md`; they are references, not dependencies. How to run Playwright is `packages/reference-lib/TESTING.md`.
+Working design lives in sibling folders: `Overlay/Overlay.md` (API + problems), `Overlay/TESTS.md` (contracts to prove, including how vendor e2e suites combine). Implementation substrate is [hooks.md](../core/hooks/hooks.md): Zustand plus adapters in `src/core/hooks`. This document remains the freeze-gate overview. Names under Documented compositions do not get folders — they are not runtime components. The `vendor/` clones are **port sources**, not runtime dependencies: Overlay is the public frontend of the Floating UI core/DOM port; `@floating-ui/react` stays leave. See `vendor/VENDOR.md`. How to run Playwright is `packages/reference-lib/TESTING.md`.
 
 Foundation components solve application-wide mechanics:
 
@@ -271,11 +278,23 @@ interface PortalProps {
 
 ### Overlay
 
-A controlled foundation for temporary content displayed above and isolated from the application.
+A controlled foundation for temporary content displayed above the application.
 
-Overlay handles the shared mechanics: portal rendering, layer-stack registration, nesting, dismissal ordering, focus containment (`FocusLock`), background inerting, scroll locking, and focus restoration.
+Overlay is the public frontend of the Floating UI port. `vendor/floating-ui`
+core + DOM (`computePosition`, middleware, `autoUpdate`) is source material
+to lift into this component — not a runtime dependency, and not
+`@floating-ui/react`. That React tree (`useDismiss`, `FloatingTree`,
+`FloatingFocusManager`) is a second overlay runtime and stays leave.
 
-It does not provide a trigger or prescribe the content's semantic role, structure, placement, dimensions, animation, or appearance. Whether the resulting interface is a dialog, alert dialog, drawer, sheet, or lightbox is determined by the content composed inside it.
+Floating and overlay are the same job: a layer, isolation, and optional
+anchored geometry. Overlay owns all three. There is no `modal` flag —
+Overlay is always isolating. Popover is the non-modal trigger policy on
+this same engine: Trigger as the default reference, isolation off.
+
+It does not provide a trigger or prescribe the content's semantic role,
+structure, animation, or appearance. Unanchored Overlay is a dialog, drawer,
+sheet, or lightbox placed with CSS — placement props are no-ops. Anchored
+Overlay (`anchor`) is a floating layer: Content is the floating element.
 
 ```tsx
 <Overlay open={open} onDismiss={close}>
@@ -292,6 +311,27 @@ It does not provide a trigger or prescribe the content's semantic role, structur
     <button type="button" onClick={close}>
       Cancel
     </button>
+  </Overlay.Content>
+</Overlay>
+```
+
+```tsx
+<Overlay open={open} onDismiss={close} anchor={buttonRef}>
+  <Overlay.Content placement="bottom-start" offset={8}>
+    {children}
+  </Overlay.Content>
+</Overlay>
+```
+
+```tsx
+<Overlay
+  open={open}
+  onDismiss={close}
+  anchor={{ x: pointerX, y: pointerY }}
+>
+  <Overlay.Content placement="bottom-start">
+    <Overlay.Arrow />
+    {children}
   </Overlay.Content>
 </Overlay>
 ```
@@ -375,7 +415,8 @@ Focus restoration, inerting teardown, and scroll unlock run after Presence repor
 
 #### Layer stack
 
-Overlay, Popover, and Menu share one layer stack.
+Overlay, Popover, and Menu share one layer stack. `Combobox.Popover` is
+wrapped `Overlay.Content`, so it is the same stack.
 
 - Escape dismisses only the topmost layer.
 - An outside-press whose target is inside a nested popup does not dismiss the parent.
@@ -390,6 +431,18 @@ document-scoped Zustand store, not a React context
 Approximate API:
 
 ```ts
+type OverlayPlacement =
+  | "top" | "top-start" | "top-end"
+  | "right" | "right-start" | "right-end"
+  | "bottom" | "bottom-start" | "bottom-end"
+  | "left" | "left-start" | "left-end"
+
+type VirtualAnchor =
+  | Element
+  | DOMRect
+  | { getBoundingClientRect(): DOMRect }
+  | { x: number; y: number; width?: number; height?: number }
+
 type FocusTarget =
   | React.RefObject<HTMLElement | null>
   | (() => HTMLElement | null)
@@ -403,6 +456,7 @@ interface OverlayDismissHandlers {
 interface OverlayProps extends OverlayDismissHandlers {
   children?: React.ReactNode
   open: boolean
+  anchor?: VirtualAnchor
 }
 
 interface OverlayPortalProps {
@@ -416,23 +470,53 @@ interface OverlayContentProps
   extends ReferencePartProps<"div"> {
   initialFocus?: FocusTarget | false
   restoreFocus?: boolean | FocusTarget
+  placement?: OverlayPlacement
+  offset?: number
+  collisionPadding?: number
+  strategy?: "absolute" | "fixed"
+  flip?: boolean
+  shift?: boolean
+}
+
+interface OverlayArrowProps
+  extends ReferencePartProps<"div"> {
+  edgePadding?: number
 }
 ```
+
+`Overlay` renders no node. `Overlay.Backdrop`, `Overlay.Content`, and
+`Overlay.Arrow` render `div`. `Overlay.Portal` renders nothing.
+
+Without `anchor`, Overlay writes no `position` / `top` / `left`. Placement,
+offset, collision, strategy, flip, shift, and Arrow are inert. With
+`anchor`, Content is the floating element. Defaults are
+`placement="bottom-start"`, `offset=8`, `collisionPadding=8`, absolute
+strategy, and flip/shift enabled. Positioning owns `position` / `top` /
+`left` but never consumer `transform`. Content publishes
+`--reference-overlay-available-width`,
+`--reference-overlay-available-height`,
+`--reference-overlay-anchor-width`,
+`--reference-overlay-anchor-height`, and
+`--reference-overlay-transform-origin`, plus `data-anchor-hidden` and
+`data-escaped`. Arrow `edgePadding` defaults to 4px. While open, Overlay
+runs the ported `autoUpdate`.
+
+Popover, Tooltip, `Combobox.Popover`, and `Menu.Content` consume this
+geometry API. They do not own a second `computePosition` runtime.
 
 ---
 
 ### Popover
 
-Controlled, anchored floating content.
+Controlled, anchored, non-modal floating content.
 
-Popover owns positioning, collision handling, and its policy/integration for
-keyboard and pointer interaction, accessible state, and focus restoration.
-Overlay owns outside-dismiss ordering, nesting, and the shared layer stack;
-Presence owns exit detection.
+Geometry is Overlay's Floating UI port. Popover consumes `Overlay.Content` /
+`Overlay.Arrow` / `anchor` and adds Trigger, `onOpen`, hover grace, the
+Tab-order bridge, and `closeOnScroll`. Overlay still owns dismiss ordering
+and the layer stack. Virtual anchors are Overlay positioning math; Popover
+forwards `anchor` and uses Trigger as the default reference.
 
 By default, `Popover.Trigger` is both the interaction source and the positioning anchor. That default does not cover every real case. A context menu anchors to pointer coordinates; a selection menu anchors to a text range; a canvas or table-cell menu anchors to a shape or cell rect. An optional virtual `anchor` (element, rect, or point) is the positioning reference in those cases. The trigger may be omitted when the application already owns the interaction — right-click, selection, or a hit-tested canvas object.
-
-Virtual anchors are positioning math. They stay inside Popover.
 
 ```tsx
 <Popover
@@ -460,9 +544,10 @@ Virtual anchors are positioning math. They stay inside Popover.
 </Popover>
 ```
 
-When both a trigger and an `anchor` are present, the trigger remains the interaction and accessibility source; `anchor` wins for positioning.
+When both a trigger and an `anchor` are present, the trigger remains the interaction and accessibility source; `anchor` wins for Overlay geometry.
 
-`Popover.Trigger` renders a native `button`. `Popover.Content` renders a native `div`.
+`Popover.Trigger` renders a native `button`. `Popover.Content` is wrapped
+`Overlay.Content`. `Popover.Arrow` is wrapped `Overlay.Arrow`.
 
 Popover portals internally by default. `Popover.Portal` optionally configures the destination and does not wrap the content.
 
@@ -478,14 +563,11 @@ Popover portals internally by default. `Popover.Portal` optionally configures th
 </Popover>
 ```
 
-An optional arrow participates in the same positioning calculation. Collision handling includes flipping and shifting in view; list-style popups (Select, Combobox, Menu) also need available-height so the popup can scroll instead of overflowing the viewport. That is positioning math on `Popover.Content`, not a second primitive.
+An optional arrow participates in the same Overlay positioning calculation. Collision handling includes flipping and shifting in view; list-style popups (Select, Combobox, Menu) also need available-height so the popup can scroll instead of overflowing the viewport. That is Overlay geometry, not a second primitive.
 
-Content defaults to `bottom-start`, 8px offset/collision padding, absolute
-positioning, and flip/shift enabled. Positioning owns `position`/`top`/`left`
-but preserves consumer transforms. Available/anchor dimensions and transform
-origin are published as `--reference-popover-*` CSS properties; clipping uses
-`data-anchor-hidden`/`data-escaped`. Arrow `edgePadding` defaults to 4px while
-ordinary `padding` remains available for visual styling.
+Content defaults and `--reference-overlay-*` CSS properties are Overlay's.
+`Popover.Arrow` `edgePadding` defaults to 4px while ordinary `padding`
+remains available for visual styling.
 
 ```tsx
 <Popover
@@ -545,25 +627,7 @@ HoverCard is that composition, not a separate primitive.
 Approximate API:
 
 ```ts
-type PopoverPlacement =
-  | "top"
-  | "top-start"
-  | "top-end"
-  | "right"
-  | "right-start"
-  | "right-end"
-  | "bottom"
-  | "bottom-start"
-  | "bottom-end"
-  | "left"
-  | "left-start"
-  | "left-end"
-
-type VirtualAnchor =
-  | Element
-  | DOMRect
-  | { getBoundingClientRect(): DOMRect }
-  | { x: number; y: number; width?: number; height?: number }
+type PopoverPlacement = OverlayPlacement
 
 interface PopoverProps extends OverlayDismissHandlers {
   children?: React.ReactNode
@@ -583,20 +647,9 @@ interface PopoverPortalProps {
   container?: PortalProps["container"]
 }
 
-interface PopoverContentProps
-  extends ReferencePartProps<"div"> {
-  placement?: PopoverPlacement
-  offset?: number
-  collisionPadding?: number
-  strategy?: "absolute" | "fixed"
-  flip?: boolean
-  shift?: boolean
-}
+interface PopoverContentProps extends OverlayContentProps {}
 
-interface PopoverArrowProps
-  extends ReferencePartProps<"div"> {
-  edgePadding?: number
-}
+interface PopoverArrowProps extends OverlayArrowProps {}
 ```
 
 ---
@@ -803,7 +856,12 @@ A toast definition is ordinary, visible application code. AI agents can create e
 
 ## ARIA primitives
 
-Beyond foundational layer management (`Overlay`, `Popover`, `Portal`, `Toast`), certain interface patterns require strict adherence to the **WAI-ARIA Authoring Practices Guide (APG)**. These patterns involve complex state machines, roving tabindex, active-descendant tracking, typeahead searching, and keyboard traversal contracts that should not be repeatedly rebuilt on the fly.
+Beyond foundational layer and geometry (`Overlay`, `Popover`, `Portal`,
+`Toast`), certain interface patterns require strict adherence to the
+**WAI-ARIA Authoring Practices Guide (APG)**. These patterns involve complex
+state machines, roving tabindex, active-descendant tracking, typeahead
+searching, and keyboard traversal contracts that should not be repeatedly
+rebuilt on the fly.
 
 Proposed APIs for these primitives live in sibling folders (`Listbox/Listbox.md`, `Menu/Menu.md`, and so on).
 
@@ -819,18 +877,24 @@ rebuild active-descendant timing or add a second collection state machine.
 
 - **`Listbox`**  
   The core selection and option-management engine. Handles single/multi selection, disabled item skipping, typeahead matching, and keyboard navigation. Built on `RovingFocus`.  
-  - Composed with `<button>` and `Popover` $\rightarrow$ `Select`
+  - Composed with select-only `Combobox` (`Combobox.Trigger` +
+    `Combobox.Popover`) $\rightarrow$ `Select`
   - Reused internally by list-based `Combobox` popups
 
 - **`Combobox`**  
-  Coordinates an input with an associated popup while preserving DOM focus and native text editing behaviour. Handles active-descendant tracking, autocomplete modes, suggestion navigation, value commitment, dismissal, and restoration of the previous value. Popup directly reuses Popover's positioning/policy integration, Overlay's shared layer stack, and Presence's exit detection so there is one runtime, not a nested Popover. Reference UI provides `Listbox` for list popups and `Tree` for nested popups; custom grids may implement the same virtual-focus adapter. A dialog popup moves DOM focus and is an input + Popover/Overlay composition instead.
+  Coordinates an input with an associated popup while preserving DOM focus and native text editing behaviour. Handles active-descendant tracking, autocomplete modes, suggestion navigation, value commitment, dismissal, and restoration of the previous value. `Combobox.Popover` is wrapped `Overlay.Content`: same Floating UI port, Overlay layer stack, and Presence exit, plus Combobox focus-in-field policy (`virtualFocus` for custom grids). Input or Trigger remains the focus source; there is no `Popover.Trigger` and no Tab bridge. Do not nest a `Popover` root. Reference UI provides `Listbox` for list popups and `Tree` for nested popups. A dialog popup moves DOM focus and is an input + Popover/Overlay composition instead.
 
 - **`Menu`**  
   Owns `role="menu"` keyboard navigation, command/link activation, controlled
   checkbox/radio items, typeahead, and nested submenu orchestration. Built on
-  `RovingFocus`. Composes with `Popover` for dropdown and context menus and
-  preserves native anchor behavior through `Menu.LinkItem`. Adopts Overlay's
-  shared layer stack.
+  `RovingFocus`. Composes with `Popover` for dropdown and context-menu open
+  policy. Geometry is Overlay's. A submenu is a nested `Menu` (renders no
+  node): `Menu.Trigger` is `div[role=menuitem]` and `Menu.Content` is wrapped
+  `Overlay.Content` (default `right-start`, RTL `left-start`). Nested Menu
+  owns `open` / `onOpen` / `onDismiss`; omitted nested `open` is controlled
+  false. Root trigger stays `Popover.Trigger`. `Menu.LinkItem` keeps native
+  anchor behavior. Keep `Menu.CheckboxItem` / `Menu.RadioItem`; there is
+  no standalone RadioGroup primitive.
 
 - **`Tabs`**  
   Coordinates directional keyboard cycling (horizontal/vertical), automatic
@@ -844,6 +908,14 @@ rebuild active-descendant timing or add a second collection state machine.
   minimum-step constraints, keyboard stepping (arrows, PageUp/PageDown,
   Home/End), per-step requests plus one interaction-end callback, and ARIA
   value ranges (`aria-valuenow`, `aria-valuemin`, `aria-valuemax`).
+
+- **`Switch`**  
+  A compact `role="switch"` button. StyleProps on `Switch` are enough for a
+  complete control; Switch renders a default thumb. Author `Switch.Thumb`
+  only to specify the thumb. Owns controlled boolean requests and shared
+  `data-state` on both parts so thumb travel can be CSS. Labels and form
+  serialization stay application HTML. Not a checkbox, not mixed, and not a
+  second form runtime.
 
 - **`Tree`**  
   A minimal APG tree: nested expand/collapse, roving focus among visible items, single selection, typeahead. Built on `RovingFocus`. Not virtualized, not multi-select, not a file explorer. Combobox may use it as a nested popup.
@@ -878,11 +950,57 @@ rebuild active-descendant timing or add a second collection state machine.
   `aria-describedby`. Tooltip content is non-interactive. Handles hover intent
   delays, warm-up skip delays across neighbouring tooltips, keyboard focus
   display, disabled-trigger closure, and non-modal Escape dismissal per WCAG
-  2.1 SC 1.4.13. Closed Content is removed immediately rather than exposing an
-  animation lifecycle. Defaults are 700ms open, 300ms close, and a 300ms
-  document skip window. Skip-delay is document-level configuration on
-  `ReferenceLibrary`; interactive hover content is a `Popover` with
+  2.1 SC 1.4.13. Geometry is Overlay's Floating UI port (`placement` /
+  `offset` on `Tooltip.Content`). Closed Content is removed immediately rather
+  than exposing an animation lifecycle. Defaults are 700ms open, 300ms close,
+  and a 300ms document skip window. Skip-delay is document-level configuration
+  on `ReferenceLibrary`; interactive hover content is a `Popover` with
   `openOnHover`.
+
+### Switch
+
+A compact `role="switch"` button with variable specificity. Mount `Switch`
+with StyleProps and it is a complete control — a default thumb is rendered.
+Author `Switch.Thumb` only when the thumb needs its own StyleProps, refs, or
+children. Labels and form serialization stay application HTML.
+
+```tsx
+<label htmlFor="airplane">Airplane mode</label>
+<Switch
+  id="airplane"
+  checked={enabled}
+  onChange={setEnabled}
+  width="6r"
+  padding="0.25r"
+/>
+```
+
+```tsx
+<Switch id="airplane" checked={enabled} onChange={setEnabled} width="6r">
+  <Switch.Thumb width="2r" bg="bg" />
+</Switch>
+```
+
+```ts
+interface SwitchProps
+  extends Omit<
+    ReferencePartProps<"button">,
+    "onChange" | "type" | "role" | "aria-checked" | "aria-pressed"
+  > {
+  checked: boolean
+  onChange?: (checked: boolean) => void
+  disabled?: boolean
+}
+
+interface SwitchThumbProps
+  extends ReferencePartProps<"span"> {}
+```
+
+`Switch` renders `button[type=button][role=switch]`. Authored `Switch.Thumb`
+replaces the default thumb `span`. StyleProps on `Switch` do not leak onto
+the thumb. `checked` is required and controlled. `onChange` requests the
+opposite boolean. There is no mixed state, hidden form control, or geometry
+custom property. A wrapping `<label>` is valid at either specificity.
 
 ### NumberField
 
@@ -1151,11 +1269,13 @@ Complex interface patterns are documented compositions of foundational and ARIA 
 
 - **`Dialog`** $\rightarrow$ `Overlay` + `Overlay.Backdrop` + `Overlay.Content` (`role="dialog"`)
 - **`AlertDialog`** $\rightarrow$ `Overlay` + `Overlay.Backdrop` + `Overlay.Content` (`role="alertdialog"`)
-- **`Drawer` / `Sheet`** $\rightarrow$ `Overlay` positioned at screen edge; slide-out is CSS against Overlay's `data-state` / Presence contract
+- **`Drawer` / `Sheet`** $\rightarrow$ unanchored `Overlay` at a screen edge; slide-out is CSS against Overlay's `data-state` / Presence contract. Do not put `placement` on Overlay for this — there is no `anchor`.
 - **`Lightbox`** $\rightarrow$ `Overlay` with media preview presentation
-- **`Select`** $\rightarrow$ select-only `Combobox` with a `Listbox` popup
-- **`Autocomplete`** $\rightarrow$ editable `Combobox` with a `Listbox` popup
-- **`MenuButton`** $\rightarrow$ `<button>` + `Popover` + `Menu`
+- **`Select`** $\rightarrow$ select-only `Combobox` (`Combobox.Trigger` +
+  `Combobox.Popover`) with a `Listbox` popup
+- **`Autocomplete`** $\rightarrow$ editable `Combobox` (`Combobox.Input` +
+  `Combobox.Popover`) with a `Listbox` popup
+- **`MenuButton`** $\rightarrow$ `Popover.Trigger` + `Popover.Content` + `Menu`
 - **`ContextMenu`** $\rightarrow$ `Popover` with a virtual pointer `anchor` + `Menu` (no trigger button)
 - **`HoverCard`** $\rightarrow$ `Popover` with `openOnHover`
 - **`DatePicker`** $\rightarrow$ text input + `Popover` + `Calendar` (parsing and display formatting stay in application code)
@@ -1163,7 +1283,7 @@ Complex interface patterns are documented compositions of foundational and ARIA 
 - **Quantity / currency / percent / unit input** $\rightarrow$ `NumberField`
   with application-authored label, error content, and optional steppers
 - **`CommandPalette`** $\rightarrow$ `Overlay` + `Combobox`
-- **`Menubar`** $\rightarrow$ `RovingFocus` (`orientation="horizontal"`) over always-visible `Menu` triggers; submenus are child layers via `Popover`
+- **`Menubar`** $\rightarrow$ `RovingFocus` (`orientation="horizontal"`) over always-visible `Menu` / `Popover` triggers; submenus are nested `Menu` + `Menu.Content` (Overlay geometry)
 - **`Toolbar` / `ToggleGroup`** $\rightarrow$ `RovingFocus` over application-authored buttons
 - **`Disclosure` / expandable details** $\rightarrow$ `Collapsible`
 - **`FAQ` / grouped disclosures** $\rightarrow$ `Accordion`
@@ -1174,24 +1294,29 @@ Complex interface patterns are documented compositions of foundational and ARIA 
   values into application state; rendered tokens use `RovingFocus`
 - **Picker popup** (emoji, icon, command grid) $\rightarrow$ `Popover` or
   `Overlay` + Combobox's custom-grid virtual-focus adapter
+- **Settings toggle / airplane mode** $\rightarrow$ `Switch` plus an
+  application `label` (`htmlFor` or wrapping). `Switch.Thumb` only when the
+  thumb needs its own StyleProps.
 
 ---
 
 ## Deliberate omissions
 
-These are decisions, not unfinished list items.
+These are decisions, not unfinished list items. 
 
-- **`Checkbox` / `RadioGroup` / `Switch`** — native checkbox and radio inputs
-  already own state, grouping, keyboard, disabled, form, reset, and event
-  behavior. Switch semantics are
-  `<input type="checkbox" role="switch">` plus application-authored label and
-  visual siblings, not a button-based duplicate state machine.
+- **`Checkbox` / `RadioGroup`** — native checkbox and radio inputs already
+  own state, grouping, keyboard, disabled, form, reset, and event behavior.
+  Switch is the exception because a sliding thumb cannot live inside a void
+  `<input>`; see `Switch`.
 - **A separate `SpinButton`** — NumberField deliberately keeps textbox
   semantics because recasting localized text input as a spinbutton creates
   VoiceOver focus failures. Its named stepper buttons and Arrow behavior expose
   numeric adjustment without a second component.
 - **`Progress` / `Meter`** — native elements. Do not wrap them.
-- **Native `<dialog>`** — Overlay is the stacking, nesting, and Presence contract. Do not swap in HTML dialog as a second modal runtime.
+- **Native `<dialog>`** — Overlay is the stacking, nesting, Presence, and
+  geometry contract. Do not swap in HTML dialog as a second modal runtime.
+- **A `modal` flag on Overlay** — Overlay is always isolating. Non-modal
+  floating content is `Popover`.
 - **`Carousel`** — CSS scroll-snap plus optional `RovingFocus`. Not a primitive.
 - **Form-field wiring** (`Field`, `Form`, implicit label association) — explicit IDs are the agent-friendly answer; a public Field/Form provider is not a freeze primitive.
 - **`ScrollArea`** — modern CSS (`overflow`, overlay scrollbars, `scrollbar-gutter`) covers it.
@@ -1238,7 +1363,12 @@ not bless the current design by definition.
 6. **Triple composition verification:** At least three substantially different compositions work seamlessly without escape-hatch props. For `Listbox` and `Combobox`, one of those compositions must be virtualized: windowed options that preserve `aria-setsize` / `aria-posinset` and support scroll-to-index. For `Calendar`, one composition must use a locale whose week does not start on Sunday, and one must be a range picker. For `Tree`, one composition must be nested at least two levels, and one must prove collapsed descendants are absent from the roving set.
    For `NumberField`, compositions must include non-Latin digits, an
    affixed percent/currency/unit format, canonical form submission, and a
-   ShadowRoot boundary.
+   ShadowRoot boundary. For `Switch`, compositions must include a sibling
+   `htmlFor` label, a wrapping label inside a form that does not serialize
+   the button, and independent low- and high-specificity switches inside a
+   nested overlay. For `Overlay`, one composition must be unanchored
+   (dialog/drawer CSS) and one must be anchored (`anchor` + Floating UI
+   geometry) without a second positioning runtime.
 7. **Cross-cutting environment safety:** Nested usage, RTL directionality, SSR hydration, and multi-root/Shadow DOM usage require no API adjustments.
 8. **AI agent verification:** An AI model or agent can implement custom, non-standard user requirements without bypassing or fighting the primitive.
 9. **Descriptive proof contract:** Every case says what the component should do

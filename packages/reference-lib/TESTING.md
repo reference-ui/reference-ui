@@ -41,10 +41,10 @@ importing `packages/reference-lib/src/...` does not prove the public API.
 
 ## Contract index
 
-The current design pass contains **1,383 tagged behavior cases** plus **69
-composition gates** across 21 top-level components: **1,452 stable case IDs**
+The current design pass contains **1,419 tagged behavior cases** plus **73
+composition gates** across 22 top-level components: **1,492 stable case IDs**
 in total. Four NumberField cases are required manual release gates; the other
-1,448 are automated contracts. Components may carry more than three
+1,488 are automated contracts. Components may carry more than three
 composition gates when ownership boundaries require distinct proof:
 
 - **Foundation:** [ReferenceLibrary](./src/components/ReferenceLibrary/TESTS.md),
@@ -57,6 +57,7 @@ composition gates when ownership boundaries require distinct proof:
   [Menu](./src/components/Menu/TESTS.md),
   [Tabs](./src/components/Tabs/TESTS.md),
   [Slider](./src/components/Slider/TESTS.md),
+  [Switch](./src/components/Switch/TESTS.md),
   [Tree](./src/components/Tree/TESTS.md),
   [NumberField](./src/components/NumberField/TESTS.md),
   [Calendar](./src/components/Calendar/TESTS.md),
@@ -486,20 +487,18 @@ to reinterpret, omit, or weaken it.
 
 ## Test-derived API decision ledger
 
-The vendor pass left the inventory at 21 components but corrected its
-membership: locale-aware numeric editing proved to be a difficult shared
-invariant that current owners cannot compose, while Switch returned to the
-native checkbox/ARIA-switch platform contract. The resulting decisions are:
+The vendor pass left the inventory at 22 components after Switch joined on
+anatomy grounds: locale-aware numeric editing proved to be a difficult shared
+invariant that current owners cannot compose, and a sliding switch thumb
+cannot live inside a native void checkbox. The resulting decisions are:
 
 1. **Universal parts/defaults:** every rendered part has fixed native
    prop/ref typing and every optional behavioral prop has a deterministic
    omitted-value case.
-2. **Popover:** Content publishes size/hide/coordinate CSS and data output,
-   preserves consumer transforms, Arrow owns numeric `edgePadding` without
-   stealing the visual `padding` StyleProp, and unprevented Trigger activation
-   requests controlled open/dismiss. `closeOnScroll` selects one shared
-   anchor-ancestor dismissal policy without moving that engine into Tooltip or
-   Combobox.
+2. **Popover:** Trigger, hover grace, impatient click, tab-order bridge, and
+   `closeOnScroll` stay Popover. Geometry is Overlay's Floating UI port;
+   Content/Arrow wrap Overlay parts and publish `--reference-overlay-*`.
+   Unprevented Trigger activation requests controlled open/dismiss.
 3. **Listbox/Combobox/Tree:** `VirtualFocusAdapter` owns complete logical
    metadata and scroll-to-index. Built-in Listbox/Tree register automatically;
    custom grids add `ComboboxGridAdapter.getNextIndex()` and transparent
@@ -508,13 +507,14 @@ native checkbox/ARIA-switch platform contract. The resulting decisions are:
 4. **Menu:** submenu open state is controlled false when omitted, selection is
    cancelable before one root dismissal request, command/link and controlled
    checkbox/radio items share navigation without losing native anchor behavior,
-   SubContent uses the Popover placement engine, and each menu tree has one
-   shared layer hierarchy.
+   nested Menu uses `Menu.Trigger` + `Menu.Content` (wrapped Overlay.Content)
+   instead of `Sub*`, and each menu tree has one shared layer hierarchy.
 5. **Tree:** child rows live in explicit `Tree.Group`; native-button
    `Tree.Expander` changes expansion without stealing the roving tab stop or
    selecting the row.
 6. **Combobox:** custom-value and blur/Tab/Escape policies, Input-XOR-Trigger
-   anatomy, sole commit authority, and direct Popover-engine reuse are fixed.
+   anatomy, sole commit authority, and `Combobox.Popover` as wrapped
+   `Overlay.Content` are fixed.
 7. **Slider/Splitter:** non-conflicting geometry custom properties are public.
    Both distinguish per-step requests from one successful interaction-end
    callback. Slider preserves thumb identity and supports explicit minimum-step
@@ -540,10 +540,12 @@ native checkbox/ARIA-switch platform contract. The resulting decisions are:
 12. **Focus return:** FocusLock and Overlay resolve an optional explicit
     return target at deactivation/exit completion, with captured-origin
     proximity fallback and a no-restore option.
-13. **Native Switch:** `<input type="checkbox" role="switch">` already owns
-    checked state, keyboard activation, disabled behavior, form/reset
-    semantics, and platform events. Styling composes a label and ordinary
-    markup; Reference UI does not add a button-based duplicate state machine.
+13. **Switch:** a compact `button[role=switch]` that is complete at low
+    specificity. StyleProps on Switch style the track and a default thumb is
+    rendered; `Switch.Thumb` replaces it when the thumb needs its own
+    surface. Controlled boolean requests and shared `data-state` are in;
+    hidden form inputs, mixed state, geometry custom properties, and an
+    input host are out. Checkbox and radio remain native.
 14. **NumberField:** one conventional controlled root owns a localized dirty
     text session, invertible Intl formats, one step lattice, styleable named
     steppers, managed numeric invalid state, and canonical form serialization.
@@ -610,7 +612,7 @@ A primitive freezes only when:
 4. Pure algorithms have boundary/property cases and one public browser proof.
 5. Its three compositions pass, including the special gates in
    `components.md` (virtualized Listbox/Combobox, non-Sunday and range Calendar,
-   nested visible-only Tree).
+   nested visible-only Tree, labelled/wrapping/in-overlay Switch).
 6. Relevant Chromium/Firefox/WebKit, RTL, SSR/hydration, Shadow DOM/multi-root,
    touch/IME, reduced-motion, and React 17/18/19 tags pass.
 7. The owning combined cases pass without duplicated suites in consumers.
@@ -627,7 +629,7 @@ A primitive freezes only when:
 6. `ReferenceLibrary`, `Toast`, `Tooltip`
 7. `Listbox`, `Menu`, `Tree`
 8. `Combobox`, `Tabs`
-9. `Slider`, `NumberField`, `Collapsible`, `Accordion`, `Splitter`
+9. `Slider`, `Switch`, `NumberField`, `Collapsible`, `Accordion`, `Splitter`
 10. `Calendar`
 
 This order follows behavior dependencies, not visual complexity.

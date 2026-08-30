@@ -4,17 +4,21 @@ Playwright: `matrix/lib/tests/e2e/popover.spec.ts`
 Unit: `matrix/lib/tests/unit/popover-position.test.ts`
 Page: `/popover`
 
-Popover owns controlled anchored content, positioning/collision, virtual
-anchors, accessible trigger state, Presence integration, focus restoration,
-and interactive hover grace. Shared layer-stack behavior is owned by Overlay;
-exit detection is owned by Presence.
+Popover owns controlled anchored **non-modal** content, Trigger interaction,
+hover grace, the Tab-order bridge, and `closeOnScroll`. Geometry
+(`computePosition`, middleware, `autoUpdate`, virtual anchors, Arrow) is
+owned by Overlay; Popover.Content / Popover.Arrow wrap those parts.
+Shared layer-stack behavior is owned by Overlay; exit detection is owned by
+Presence.
 
 ## API freeze decisions
 
-1. Content publishes `--reference-popover-available-width`/`-height`,
-   `--reference-popover-anchor-width`/`-height`, and
-   `--reference-popover-transform-origin`; hide state uses
-   `data-anchor-hidden`/`data-escaped`.
+1. Content publishes Overlay's `--reference-overlay-available-width`/`-height`,
+   `--reference-overlay-anchor-width`/`-height`, and
+   `--reference-overlay-transform-origin`; hide state uses
+   `data-anchor-hidden`/`data-escaped`. Engine cases live in Overlay
+   `OV-POS-*`; Popover cases below prove Trigger-as-default-anchor and
+   hover/`closeOnScroll` consumption.
 2. Unprevented native Trigger activation requests open/dismiss after the
    consumer handler; `openOnHover` adds hover intent.
 3. Popover is non-modal and never owns inerting or focus lock; modal content
@@ -89,7 +93,7 @@ add only Popover-specific anatomy and behavior/style conflicts.
   and sample its public attributes and computed custom properties. Assert
   authoritative `data-state`, resolved `data-side`/`data-align`,
   `data-anchor-hidden`/`data-escaped`, and all five documented
-  `--reference-popover-*` available-size, anchor-size, and transform-origin
+  `--reference-overlay-*` available-size, anchor-size, and transform-origin
   values without stale output.
 - [ ] `PO-DOM-05` `[reference]` `[browser]` —
   **Popover should apply exact Arrow collision insets when `edgePadding` is
@@ -444,7 +448,7 @@ add only Popover-specific anatomy and behavior/style conflicts.
   **Popover should update documented available-size properties when viewport or
   anchor geometry changes.**
   Open Content, record
-  `--reference-popover-available-width`/`-height`, then resize the viewport and
+  `--reference-overlay-available-width`/`-height`, then resize the viewport and
   move/resize the anchor. Assert both computed CSS properties track current
   finite pixel dimensions after each update and never retain values from the
   previous geometry.
@@ -806,6 +810,8 @@ add only Popover-specific anatomy and behavior/style conflicts.
 - Shared layer Escape/outside/cascade matrix: `Overlay`; the modal extension-
   overlay case stays there while `PO-CLOSE-07` freezes Popover's non-modal
   inverse.
+- Geometry engine (flip/shift/offset/arrow/size/hide/autoUpdate/virtual
+  element): `Overlay` `OV-POS-*`.
 - Portal destination matrix: `Portal`.
 - Exit detection: `Presence`.
 - Non-interactive hover description policy: `Tooltip`.

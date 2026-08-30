@@ -2,11 +2,28 @@
 
 Proof: [TESTS.md](./TESTS.md).
 
-A controlled foundation for temporary content displayed above and isolated from the application.
+A controlled foundation for temporary content displayed above the application.
 
-Overlay handles portal rendering, layer-stack registration, nesting, dismissal ordering, focus containment (`FocusLock`), background inerting, scroll locking, and focus restoration.
+Overlay is the public frontend of the Floating UI port. `vendor/floating-ui`
+core + DOM (`computePosition`, middleware, `autoUpdate`) is source material
+to lift into this component — not a runtime dependency, and not
+`@floating-ui/react`. That React tree is a second overlay runtime
+(`useDismiss`, `FloatingTree`, `FloatingFocusManager`) and stays leave.
 
-It does not provide a trigger or prescribe the content's semantic role, structure, placement, dimensions, animation, or appearance. Dialog, Modal, AlertDialog, Drawer, Sheet, and Lightbox are compositions of Overlay, not separate primitives.
+Floating and overlay are the same job: a layer, optional isolation, and
+optional anchored geometry. Overlay owns all three.
+
+- **Layer:** portal, stack, nesting, Escape/outside-press, Presence exit.
+- **Isolation:** FocusLock, background inerting, scroll lock, restore.
+- **Geometry:** when `anchor` is set, Content is the floating element and
+  Overlay runs the ported positioning engine. When `anchor` is omitted,
+  Content is an unanchored layer and application CSS places it (centered
+  dialog, edge drawer). Placement props are then no-ops.
+
+Overlay does not provide a trigger. Dialog, Drawer, Sheet, and Lightbox
+decide “who opened this” in application code. Popover is the anchored
+non-modal policy on top of this same engine: it supplies `Popover.Trigger`
+as the default reference and turns isolation off.
 
 ```tsx
 <Overlay open={open} onDismiss={close}>
@@ -23,6 +40,33 @@ It does not provide a trigger or prescribe the content's semantic role, structur
     <button type="button" onClick={close}>
       Cancel
     </button>
+  </Overlay.Content>
+</Overlay>
+```
+
+Anchored — Floating UI port, still this component:
+
+```tsx
+<Overlay
+  open={open}
+  onDismiss={close}
+  anchor={buttonRef}
+>
+  <Overlay.Content placement="bottom-start" offset={8}>
+    {children}
+  </Overlay.Content>
+</Overlay>
+```
+
+```tsx
+<Overlay
+  open={open}
+  onDismiss={close}
+  anchor={{ x: pointerX, y: pointerY }}
+>
+  <Overlay.Content placement="bottom-start">
+    <Overlay.Arrow />
+    {children}
   </Overlay.Content>
 </Overlay>
 ```
@@ -62,6 +106,26 @@ event.
 ## Proposed API
 
 ```ts
+type OverlayPlacement =
+  | "top"
+  | "top-start"
+  | "top-end"
+  | "right"
+  | "right-start"
+  | "right-end"
+  | "bottom"
+  | "bottom-start"
+  | "bottom-end"
+  | "left"
+  | "left-start"
+  | "left-end"
+
+type VirtualAnchor =
+  | Element
+  | DOMRect
+  | { getBoundingClientRect(): DOMRect }
+  | { x: number; y: number; width?: number; height?: number }
+
 interface OverlayDismissHandlers {
   onDismiss?: () => void
   onEscape?: (event: KeyboardEvent) => void
@@ -71,6 +135,7 @@ interface OverlayDismissHandlers {
 interface OverlayProps extends OverlayDismissHandlers {
   children?: React.ReactNode
   open: boolean
+  anchor?: VirtualAnchor
 }
 
 interface OverlayPortalProps {
@@ -84,16 +149,50 @@ interface OverlayContentProps
   extends ReferencePartProps<"div"> {
   initialFocus?: FocusTarget | false
   restoreFocus?: boolean | FocusTarget
+  placement?: OverlayPlacement
+  offset?: number
+  collisionPadding?: number
+  strategy?: "absolute" | "fixed"
+  flip?: boolean
+  shift?: boolean
+}
+
+interface OverlayArrowProps
+  extends ReferencePartProps<"div"> {
+  edgePadding?: number
 }
 ```
 
-`Overlay` renders no node. `Overlay.Backdrop` and `Overlay.Content` render `div`. `Overlay.Portal` renders nothing.
+`Overlay` renders no node. `Overlay.Backdrop`, `Overlay.Content`, and
+`Overlay.Arrow` render `div`. `Overlay.Portal` renders nothing.
+
+Without `anchor`, Overlay does not write `position` / `top` / `left`.
+Content and Backdrop remain application-laid-out. Placement, offset,
+collision, strategy, flip, shift, and Arrow are inert.
+
+With `anchor`, Content is the floating element. Defaults are
+`placement="bottom-start"`, `offset=8`, `collisionPadding=8`, absolute
+strategy, and flip/shift enabled. Positioning owns `position` / `top` /
+`left` but never consumer `transform`. Content publishes
+`--reference-overlay-available-width`,
+`--reference-overlay-available-height`,
+`--reference-overlay-anchor-width`,
+`--reference-overlay-anchor-height`, and
+`--reference-overlay-transform-origin`, plus `data-anchor-hidden` and
+`data-escaped`. Arrow `edgePadding` defaults to 4px; ordinary `padding`
+remains the token-aware visual StyleProp. While open, Overlay runs the
+ported `autoUpdate` against both reference and floating.
+
+Popover, Tooltip, Combobox.Popover, and Menu.Content consume this geometry
+API. They do not own a second `computePosition` runtime.
 
 ---
 
 ## Problems we own
 
-This is the overlay kernel. The ecosystem has already solved these problems in several places. We resynthesize that work; we do not invent a second runtime.
+This is the overlay kernel: isolation **and** the Floating UI port. The
+ecosystem has already solved both. We resynthesize that work; we do not
+invent a second runtime and we do not hide positioning on Popover.
 
 ### Nested layer stack
 
@@ -227,6 +326,85 @@ Escape must not close `role="alertdialog"`. An open native `:popover-open` shoul
 
 **Lift.**
 
+### Flip / shift / offset
+
+Preferred placement overflows. Middleware must try opposite / expanded /
+opposite-axis, then `bestFit`. Shift clamps into view without detaching from
+the reference (`limitShift`). Flip's `reset` restarts the middleware chain
+(max 50) — arrow `alignmentOffset` must short-circuit or you thrash.
+
+**Vendor.** `vendor/floating-ui/packages/core/src/computePosition.ts` plus
+`middleware/{flip,shift,offset}.ts`, `detectOverflow.ts`. Functional tests
+in `packages/dom/test/functional/`. Spectrum `calculatePosition.ts` —
+**leave**. Radix `popper` — **leave**.
+
+**Lift** core middleware + Playwright cases (not PNG snapshots) onto
+anchored Overlay.Content. This is Overlay's engine, not Popover's.
+
+### Arrow
+
+Arrow `edgePadding` can nudge the floating element. That reset must not
+re-trigger flip (`middlewareData.arrow?.alignmentOffset`).
+
+**Vendor.** `middleware/arrow.ts` + `dom/test/functional/arrow.test.ts`.
+
+**Lift** the math onto `Overlay.Arrow`. **Leave** `FloatingArrow` chrome.
+
+### Available height for list popups
+
+Select, Combobox, and Menu need available height so the popup scrolls
+instead of overflowing. Size middleware depends on whether shift already
+ran. ResizeObserver + size can loop (`autoUpdate` unobserves floating for a
+frame — Floating UI #1740).
+
+**Vendor.** `middleware/size.ts`, `dom/src/autoUpdate.ts`.
+
+**Lift** size middleware onto Overlay.Content. CSS custom properties are
+`--reference-overlay-*`.
+
+### Virtual anchors
+
+Context menus are a point. Selection menus are a rect. Canvas/table cells
+are a `getBoundingClientRect`. autoUpdate must follow `contextElement`
+scroll/resize even when the reference is virtual.
+
+**Vendor.** Floating UI `VirtualElement` (`packages/dom/src/types.ts`),
+`virtual-element.test.ts`. Base UI `PopoverPositioner` `anchor`. Aria
+`targetRect`. `useClientPoint.ts` is the cursor-follow factory — steal the
+virtual-element idea, not the React hook package.
+
+**Lift** into Overlay `anchor`. Virtual anchors stay positioning math.
+
+### Living position while open
+
+Scroll ancestors of **both** reference and floating, resize, layout shift,
+visualViewport, iframe, shadow, zoom.
+
+**Vendor.** `vendor/floating-ui/packages/dom/src/autoUpdate.ts` and its
+functional tests (`scroll`, `iframe`, `shadow-dom`, `top-layer`, `zoom`).
+
+**Lift** the whole `autoUpdate` + tests onto anchored Overlay.
+`closeOnScroll` is Popover/Tooltip policy on top of this engine, not a
+second document listener.
+
+### Hide when clipped
+
+A floating layer can stay logically open while visually orphaned.
+
+**Vendor.** `middleware/hide.ts` (`referenceHidden` / `escaped`).
+
+**Lift** `data-anchor-hidden` / `data-escaped`. Policy (close vs hide
+visually) is product. Tooltip usually **closes** on scroll.
+
+### Unanchored vs anchored
+
+A dialog does not need `computePosition`. Running the engine without a
+reference invents coordinates and fights drawer CSS.
+
+**Freeze.** No `anchor` means no Overlay-written `position`/`top`/`left`
+and no geometry custom properties. Presence, isolation, and the layer stack
+still run.
+
 ---
 
 ## Convergence
@@ -238,8 +416,13 @@ Escape must not close `role="alertdialog"`. An open native `:popover-open` shoul
 | Scroll lock | react-remove-scroll + Aria iOS | Vaul’s stale Aria copy |
 | Inert | native `inert` + aria-hidden tests | RemoveScroll inert PE mode |
 | Presence / portal | our Presence + Portal | Radix Portal wrapper node |
+| Geometry | Floating UI core + DOM `autoUpdate` | `@floating-ui/react`, Spectrum positioner, Radix popper |
 | Vanilla smoke | a11y-dialog `src/a11y-dialog.ts` | their markup conventions |
 
-**Leave.** Styles, public `<Provider>`, `as`, native `<dialog>` as a second modal runtime, Vaul scale-behind, snap points, Base UI’s vendored `floating-ui-react` tree.
+**Leave.** Styles, public `<Provider>`, `as`, native `<dialog>` as a second
+modal runtime, Vaul scale-behind, snap points, `@floating-ui/react`
+(`useDismiss`, `FloatingTree`, `FloatingFocusManager`, `FloatingPortal`).
+Popover trigger, hover grace, and tab-order bridge stay Popover. Overlay is
+the port frontend; it is not a nested consumer of Popover positioning.
 
 When vendors disagree, write the freeze-gate test first, then pick the behaviour that matches `components.md`.

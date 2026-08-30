@@ -6,7 +6,7 @@ Fixture root: `ReferenceLibrary`
 
 Tooltip owns transient description policy: delayed pointer hover, immediate
 keyboard focus, document-level warm/skip delay, controlled dismissal, and
-non-interactive content. Popover owns positioning math.
+non-interactive content. Overlay owns positioning math.
 
 ## API freeze decisions
 

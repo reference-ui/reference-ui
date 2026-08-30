@@ -7,13 +7,14 @@ Page: `/combobox`
 Combobox owns coordination between an editable input or select-only button and
 one popup collection. DOM focus stays on the input/trigger while an active
 option is represented virtually. Listbox/Tree own collection semantics;
-Popover/Overlay own chrome and layers.
+Popover/Overlay own chrome and layers. Overlay owns the Floating UI geometry
+port; Popover owns Trigger/hover/`closeOnScroll` policy.
 
 ## Public virtual-focus decisions
 
 1. `VirtualFocusAdapter` supplies complete logical metadata and
    `scrollToIndex`; Listbox and Tree register their own movement automatically.
-2. Custom grids pass `ComboboxGridAdapter` to Popup, whose
+2. Custom grids pass `ComboboxGridAdapter` to Combobox.Popover, whose
    `getNextIndex({key, currentIndex, direction})` owns grid topology and must
    return an enabled in-range index or `null`.
 3. Transparent `Combobox.VirtualItem` applies the logical item's generated ID,
@@ -29,10 +30,10 @@ Popover/Overlay own chrome and layers.
   unmatched text, true commits it under the cases below.
 - Enter/pointer commits active; Tab commits while moving focus; Escape and blur
   without a valid/custom commit restore the last committed text.
-- Valid anatomy is exactly one Input XOR Trigger and at most one Popup.
-- Popup directly reuses Popover's positioning/policy integration, Overlay's
-  shared layer stack, and Presence's exit detection while exposing a
-  transparent Portal configuration. Combobox is one layer.
+- Valid anatomy is exactly one Input XOR Trigger and at most one Combobox.Popover.
+- Combobox.Popover is wrapped Overlay.Content: same Floating UI port, CSS
+  variables, portal, Overlay layer, and Presence exit. Combobox adds
+  virtualFocus and focus-in-field policy only. Combobox is one layer.
 - Dialog popups move DOM focus and are a separate input + Popover/Overlay
   composition, not a virtual Combobox adapter.
 
@@ -66,7 +67,7 @@ Autocomplete, or CommandPalette primitives.
   **Combobox should render a transparent coordinator with only its documented native parts.**
   Render separate editable and select-only fixtures, then inspect source and
   portal DOM before interaction. Assert Combobox adds no host, Input is a
-  native `input`, Trigger is a native `button`, Popup is a native `div`, and
+  native `input`, Trigger is a native `button`, Combobox.Popover is a native `div`, and
   no hidden focus source or duplicate overlay wrapper appears; coordination
   must remain structurally transparent.
 - [ ] `CB-DOM-02` `[vendor]` `[browser]` —
@@ -74,22 +75,22 @@ Autocomplete, or CommandPalette primitives.
   Render `none`, `list`, and `both` fixtures against registered Listbox, Tree,
   and custom grid adapters, then open and close each programmatically. Assert
   `role=combobox`, prop-authoritative `aria-expanded`, `aria-controls`
-  resolving to Popup, matching `aria-autocomplete`, and `aria-haspopup`
+  resolving to Combobox.Popover, matching `aria-autocomplete`, and `aria-haspopup`
   matching `listbox`, `tree`, or `grid`; this ports vendor input ARIA
   regressions without inventing popup roles.
 - [ ] `CB-DOM-03` `[vendor]` `[browser]` —
   **Select-only Combobox Trigger should remain a button while exposing virtual-combobox state.**
   Render Trigger fixtures for Listbox, Tree, and grid adapters, then
   programmatically toggle `open`. Assert the native button also has
-  `role=combobox`, controlled `aria-expanded`, Popup control linkage,
+  `role=combobox`, controlled `aria-expanded`, Combobox.Popover control linkage,
   role-matching `aria-haspopup`, and unchanged button semantics; this ports
   select-only virtual-focus behavior.
 - [ ] `CB-DOM-04` `[reference]` `[browser]` —
-  **Combobox Popup should own a stable ID while deriving collection role only from its active adapter.**
+  **Combobox.Popover should own a stable ID while deriving collection role only from its active adapter.**
   Open otherwise identical Listbox, Tree, and grid fixtures, rerender them,
-  and inspect Popup plus nested collection. Assert one stable unique Popup ID,
+  and inspect Combobox.Popover plus nested collection. Assert one stable unique Combobox.Popover ID,
   no invented `listbox` or `tree` role because those nested collections supply
-  their own, and `role="grid"` on Popup only when supplied by
+  their own, and `role="grid"` on Combobox.Popover only when supplied by
   `ComboboxGridAdapter`; the coordinator cannot duplicate semantics.
 - [ ] `CB-DOM-05` `[vendor]` `[browser]` —
   **Combobox should expose an active descendant only for a real mounted option while open.**
@@ -101,7 +102,7 @@ Autocomplete, or CommandPalette primitives.
 - [ ] `CB-DOM-06` `[reference]` `[browser]` —
   **Combobox should honor explicit IDs and update every relationship atomically across roots.**
   Render equal Comboboxes in two React roots using generated IDs, then set and
-  change explicit Input/Trigger, Popup, and option IDs during an open state.
+  change explicit Input/Trigger, Combobox.Popover, and option IDs during an open state.
   Assert explicit IDs win, generated peers remain unique, all controls and
   active-descendant references switch in the same commit, and no frame exposes
   a stale or cross-root ID; relationships must never be half-updated.
@@ -115,14 +116,14 @@ Autocomplete, or CommandPalette primitives.
   output; coordination must not replace native editing.
 - [ ] `CB-DOM-08` `[reference]` `[browser]` —
   **Combobox should reject every ambiguous focus-source or popup anatomy.**
-  Render Input plus Trigger, duplicate Inputs, duplicate Popups, and a root
+  Render Input plus Trigger, duplicate Inputs, duplicate Combobox.Popover parts, and a root
   with neither Input nor Trigger in separate fixtures. Assert a descriptive
-  diagnostic names the violated exactly-one-source/at-most-one-Popup rule
+  diagnostic names the violated exactly-one-source/at-most-one-Combobox.Popover rule
   before listeners, ARIA, layers, or callbacks become ambiguous; invalid
   anatomy cannot pick an authority by render order.
 - [ ] `CB-DOM-09` `[reference]` `[browser]` —
-  **Combobox Popup should be absent when closed and remain a nonmodal Popover during owned exit.**
-  Open then close a Popup with and without Presence exit, Tab through the page,
+  **Combobox.Popover should be absent when closed and remain a nonmodal Popover during owned exit.**
+  Open then close a Combobox.Popover with and without Presence exit, Tab through the page,
   and inspect layer/background state. Assert ordinary closed content is
   unmounted, exit-kept chrome is closed and inert until its animation ends,
   open content is portalled/positioned through Popover, and no focus trap or
@@ -144,14 +145,14 @@ Autocomplete, or CommandPalette primitives.
   value or competing callback path. Input may observe other native events, but
   cannot create a second editable store.
 - [ ] `CB-DOM-12` `[reference]` `[browser]` —
-  **Combobox Popup should use one Popover destination and one collision-safe default placement.**
+  **Combobox.Popover should use one Popover destination and one collision-safe default placement.**
   Open near a viewport boundary in document light DOM and an open ShadowRoot,
   then supply explicit Portal container and placement options. Assert default
   `bottom-start` placement with `8px` offset and collision handling in body or
   source ShadowRoot; assert resolved side/hide data plus
-  `--reference-popover-available-width`,
-  `--reference-popover-available-height`, anchor dimensions, and transform
-  origin are published on Popup. Explicit props pass through once and no extra
+  `--reference-overlay-available-width`,
+  `--reference-overlay-available-height`, anchor dimensions, and transform
+  origin are published on Combobox.Popover. Explicit props pass through once and no extra
   layer, host, or consumer-transform overwrite appears; popup chrome has one
   owner and applications can constrain long results from the inherited
   geometry contract.
@@ -162,7 +163,7 @@ Autocomplete, or CommandPalette primitives.
   **Editable Combobox should request opening on ArrowDown without disturbing focus or text.**
   Render closed with controlled input text `Al`, focus the Input, and press
   ArrowDown while delaying the parent update. Assert one `onOpen`, unchanged
-  `aria-expanded=false` and absent Popup, DOM focus and caret still in Input,
+  `aria-expanded=false` and absent Combobox.Popover, DOM focus and caret still in Input,
   and text still `Al`; this ports vendor closed-arrow behavior without
   optimistic state.
 - [ ] `CB-OPEN-02` `[vendor]` `[browser]` —
@@ -175,7 +176,7 @@ Autocomplete, or CommandPalette primitives.
 - [ ] `CB-OPEN-03` `[convergence]` `[browser]` —
   **Editable Combobox should request one opening for a real edit only when popup collection content exists.**
   Type `a` into a closed controlled Input backed by options, then repeat edits
-  with no Popup and with an empty logical collection. Assert one
+  with no Combobox.Popover and with an empty logical collection. Assert one
   `onInputValueChange("a")` followed by one `onOpen` only for the populated
   fixture, no repeated open spam while the parent remains closed, and native
   text authority throughout; empty coordinators cannot open phantom content.
@@ -188,16 +189,16 @@ Autocomplete, or CommandPalette primitives.
   synthetic duplicate; this intentionally differs from Downshift's input
   click toggle.
 - [ ] `CB-OPEN-05` `[reference]` `[browser]` —
-  **Combobox should keep expanded ARIA and Popup DOM controlled when open-state requests are rejected.**
+  **Combobox should keep expanded ARIA and Combobox.Popover DOM controlled when open-state requests are rejected.**
   Trigger `onOpen` from a closed fixture and `onDismiss` from an open fixture
   while the parent records but does not rerender. Assert one callback each,
-  closed remains `aria-expanded=false` with no Popup, open remains true with
-  Popup/active state intact, and focus does not pretend a transition occurred;
+  closed remains `aria-expanded=false` with no Combobox.Popover, open remains true with
+  Combobox.Popover/active state intact, and focus does not pretend a transition occurred;
   requests are not state.
 - [ ] `CB-OPEN-06` `[reference]` `[browser]` —
   **Combobox should apply programmatic open and close without emitting user callbacks.**
   Focus the source, rerender `open` false→true with a valid active option and
-  true→false again. Assert expanded ARIA, Popup, and mounted-only active ID
+  true→false again. Assert expanded ARIA, Combobox.Popover, and mounted-only active ID
   update synchronously with props, focus stays on the source, and neither
   `onOpen` nor dismissal callbacks fire; external state changes are not user
   intent.
@@ -211,7 +212,7 @@ Autocomplete, or CommandPalette primitives.
 - [ ] `CB-OPEN-08` `[vendor]` `[browser]` —
   **Combobox should keep read-only and disabled focus sources from requesting interactive opening.**
   Focus/click/type/arrow a read-only Input, disabled Input, and disabled
-  select-only Trigger. Assert no `onOpen`, no Popup or active descendant, no
+  select-only Trigger. Assert no `onOpen`, no Combobox.Popover or active descendant, no
   Combobox interactive key default, and native disabled/readOnly attributes
   remain; this ports vendor noninteractive-source behavior.
 
@@ -233,7 +234,7 @@ Autocomplete, or CommandPalette primitives.
   synthetic request; Combobox coordinates rather than reimplements editing.
 - [ ] `CB-EDIT-03` `[reference]` `[browser]` —
   **Editable Combobox should preserve native horizontal, boundary, modifier, and caret commands.**
-  Open a suggestion Popup, select part of Input text, and press Left, Right,
+  Open a suggestion Combobox.Popover, select part of Input text, and press Left, Right,
   Home, End, Option/Alt, Control, and Meta editing shortcuts. Assert native
   caret/selection/text outcomes and `defaultPrevented=false`, unchanged active
   option, and no collection/value callback; this deliberately rejects
@@ -242,7 +243,7 @@ Autocomplete, or CommandPalette primitives.
   **Editable Combobox should distinguish Input self-scroll from composed ancestor scroll dismissal.**
   Open with overflowing Input text, dispatch its native scroll, then scroll a
   light-DOM or ShadowRoot ancestor according to Popover's close-on-scroll
-  policy. Assert Input scroll preserves Popup, focus, and active ID, while
+  policy. Assert Input scroll preserves Combobox.Popover, focus, and active ID, while
   ancestor scroll produces exactly one granular/high-level dismissal sequence
   with no lost composed event; this ports React Aria's light/shadow scroll
   regressions through the Popover owner.
@@ -258,7 +259,7 @@ Autocomplete, or CommandPalette primitives.
   End an IME composition producing a prefix that filters to `Bravo`, update
   controlled text/options, then press ArrowDown and Enter. Assert the mounted
   matching option becomes active, one scalar commit and matching label request
-  occur in order, Popup dismissal follows once, and the composition event
+  occur in order, Combobox.Popover dismissal follows once, and the composition event
   itself adds no duplicate; post-IME keys must use current data.
 - [ ] `CB-EDIT-07` `[reference]` `[browser]` —
   **Editable Combobox should restore rejected controlled text without leaving an invalid selection range.**
@@ -320,7 +321,7 @@ Autocomplete, or CommandPalette primitives.
 - [ ] `CB-NAV-05` `[convergence]` `[browser]` —
   **Combobox should make pointer-hovered options active without moving focus or committing.**
   With Input focused and a keyboard-derived active option, move a mouse over
-  enabled `bravo`, then leave Popup without pressing. Assert
+  enabled `bravo`, then leave Combobox.Popover without pressing. Assert
   `aria-activedescendant` changes to `bravo` while hovered, DOM focus stays on
   Input, leaving clears only that pointer-derived active state, and no value,
   text, or dismissal callback fires; hover is preview, not selection.
@@ -339,10 +340,10 @@ Autocomplete, or CommandPalette primitives.
   source focus/caret remain valid, and no commit targets the removed value;
   this ports vendor absent-ID safety.
 - [ ] `CB-NAV-08` `[reference]` `[browser]` —
-  **Combobox should scroll each newly active mounted option within Popup without moving the page or Input.**
-  Place a long Popup in a separately scrolled page, activate an off-viewport
+  **Combobox should scroll each newly active mounted option within Combobox.Popover without moving the page or Input.**
+  Place a long Combobox.Popover in a separately scrolled page, activate an off-viewport
   mounted option with arrows and pointer, and inspect scroll containers. Assert
-  the option becomes visible within Popup, page and Input scroll offsets stay
+  the option becomes visible within Combobox.Popover, page and Input scroll offsets stay
   unchanged, source focus remains, and no extra open/value callback occurs;
   visibility correction belongs to the collection viewport.
 
@@ -358,7 +359,7 @@ Autocomplete, or CommandPalette primitives.
   **Combobox autocomplete list should open/filter on native edits while leaving typed text unchanged during navigation.**
   Render `autocomplete="list"`, type `al`, accept the controlled text/filter
   update, and arrow among `Alpha` and `Alpine`. Assert
-  `aria-autocomplete="list"`, one text request per edit, Popup opening with
+  `aria-autocomplete="list"`, one text request per edit, Combobox.Popover opening with
   current matches, active-ID movement, and displayed `al` unchanged until
   commit; this ports the conventional list-autocomplete contract.
 - [ ] `CB-MODE-03` `[convergence]` `[browser]` —
@@ -395,7 +396,7 @@ Autocomplete, or CommandPalette primitives.
   In `both` mode, arrow through three matching options without typing or
   accepting one. Assert only displayed completion and native selection range
   change, `onInputValueChange` and `onChange` remain silent, controlled
-  `inputValue` stays at the user's prefix, and Popup remains open; callbacks
+  `inputValue` stays at the user's prefix, and Combobox.Popover remains open; callbacks
   distinguish preview from authored state.
 
 ### Commit, revert, Tab, and blur
@@ -417,9 +418,9 @@ Autocomplete, or CommandPalette primitives.
 - [ ] `CB-COMMIT-03` `[vendor]` `[browser]` —
   **Combobox should commit an option once by pointer or touch and ignore popup chrome.**
   Click and tap option `bravo` in separate fixtures, then click section headers
-  and non-option Popup chrome. Assert option activation produces the same
+  and non-option Combobox.Popover chrome. Assert option activation produces the same
   ordered value/text/dismiss requests once per modality, chrome produces none
-  and leaves Popup open, and touch adds no synthetic mouse duplicate; this
+  and leaves Combobox.Popover open, and touch adds no synthetic mouse duplicate; this
   ports React Aria's section-header regression.
 - [ ] `CB-COMMIT-04` `[vendor]` `[browser]` —
   **Combobox should commit a keyboard-derived active option on Tab or Shift+Tab
@@ -442,13 +443,13 @@ Autocomplete, or CommandPalette primitives.
   value and input text, then move focus away by click and Tab in separate
   runs. Assert `onChange("bravo")` occurred exactly once, no extra text or
   selection request appears on blur, committed DOM text remains `Bravo`, and
-  Popup stays closed; this ports React Aria's “should not fire extra
+  Combobox.Popover stays closed; this ports React Aria's “should not fire extra
   onSelectionChange calls after focus moves away” regression.
 - [ ] `CB-COMMIT-07` `[vendor]` `[browser]` —
   **Combobox should not commit on Tab after pointer leave clears the current
   highlight.**
   Open with keyboard-active `bravo`, move the pointer over `charlie`, leave
-  Popup so `CB-NAV-05` clears the pointer-derived active state, and press Tab.
+  Combobox.Popover so `CB-NAV-05` clears the pointer-derived active state, and press Tab.
   Assert no value request for either option, one committed-text restoration
   when needed, one dismissal sequence, cleared active descendant, and native
   focus on the next control. This ports Downshift
@@ -502,7 +503,7 @@ Autocomplete, or CommandPalette primitives.
   Render open with `"alpha"/"Al"`, trigger active-option commit, Escape revert,
   and outside dismissal in separate fixtures while the parent ignores every
   callback. Assert each documented callback order/argument is logged once but
-  rendered `value`, `inputValue`, `open`, Popup, and ARIA remain exactly
+  rendered `value`, `inputValue`, `open`, Combobox.Popover, and ARIA remain exactly
   prop-authoritative; requests cannot create a hidden accepted state.
 - [ ] `CB-REVERT-06` `[reference]` `[browser]` —
   **Combobox should not derive editable display text implicitly from a programmatic value change.**
@@ -633,7 +634,7 @@ Autocomplete, or CommandPalette primitives.
   **Combobox should coordinate a custom grid adapter without imposing Listbox semantics or another overlay.**
   Pass a `ComboboxGridAdapter` whose complete logical order and
   `getNextIndex` describe a two-dimensional grid, then navigate, scroll, and
-  commit from the source. Assert Popup receives `role="grid"`, authored
+  commit from the source. Assert Combobox.Popover receives `role="grid"`, authored
   row/gridcell semantics remain unchanged, only real mounted active IDs are
   exposed, one scalar commit occurs, and one Popover/layer runtime positions
   and dismisses content; the public bridge is not Listbox-shaped.
@@ -691,10 +692,10 @@ Autocomplete, or CommandPalette primitives.
   metadata must win over asynchronous closures.
 - [ ] `CB-ADAPTER-08` `[reference]` `[browser]` —
   **Combobox should reject more than one virtual-focus collection authority in
-  a Popup.**
-  Supply Popup `virtualFocus` while also nesting a registering Listbox or Tree,
+  a Combobox.Popover.**
+  Supply Combobox.Popover `virtualFocus` while also nesting a registering Listbox or Tree,
   and repeat with two built-in collections. Assert a descriptive diagnostic
-  identifies both authorities before Popup role, movement, scroll, active ID,
+  identifies both authorities before Combobox.Popover role, movement, scroll, active ID,
   or commit wiring is established; neither adapter receives a callback and a
   rerender with exactly one authority recovers cleanly. Render order must not
   choose between competing topology and identity models.
@@ -703,38 +704,38 @@ Autocomplete, or CommandPalette primitives.
 
 - [ ] `CB-CLOSE-01` `[reference]` `[browser]` —
   **Combobox should dismiss once from a true outside press and ignore every internal branch interaction.**
-  Open a controlled Popup, press Input/Trigger, Popup chrome, and an Option,
+  Open a controlled Combobox.Popover, press Input/Trigger, Combobox.Popover chrome, and an Option,
   then press an unrelated outside control in separate non-commit fixtures.
   Assert internal paths are not outside, while the external press calls its
   granular handler then high-level `onDismiss` exactly once with source focus
   behavior intact; composed ownership must cross the portal.
 - [ ] `CB-CLOSE-02` `[reference]` `[browser]` —
-  **Combobox Popup should register as an Overlay branch when composed inside a parent Overlay.**
-  Open Combobox inside a modal Overlay, click within its portalled Popup and
-  then inside the parent but outside Combobox. Assert Popup interaction does
+  **Combobox.Popover should register as an Overlay branch when composed inside a parent Overlay.**
+  Open Combobox inside a modal Overlay, click within its portalled Combobox.Popover and
+  then inside the parent but outside Combobox. Assert Combobox.Popover interaction does
   not dismiss either owner, parent-internal/Combobox-external interaction
   requests only Combobox close once, and the parent layer remains; Overlay
   owns the full shared stack matrix.
 - [ ] `CB-CLOSE-03` `[reference]` `[browser]` —
   **Combobox should produce one layer and one dismissal sequence while sharing Popover positioning.**
-  Open one Popup and trigger Escape or outside press in separate fixtures while
+  Open one Combobox.Popover and trigger Escape or outside press in separate fixtures while
   logging Popover/Combobox callbacks and layer-visible state. Assert a single
   layer entry, granular-before-high-level dismissal exactly once, one
-  positioned Popup, and no duplicate Menu/Popover-style runtime; composition
+  positioned Combobox.Popover, and no duplicate Menu/Popover-style runtime; composition
   must not double-register the same event.
 - [ ] `CB-CLOSE-04` `[reference]` `[browser]` —
   **Combobox should clear open and active semantics immediately while Presence finishes visual exit.**
-  Close a controlled open Popup whose Presence exit lasts 200ms, inspect at
+  Close a controlled open Combobox.Popover whose Presence exit lasts 200ms, inspect at
   close commit and after the transition event. Assert source
-  `aria-expanded=false` and no active descendant immediately, exit-kept Popup
+  `aria-expanded=false` and no active descendant immediately, exit-kept Combobox.Popover
   is closed/inert and absent from the active layer, then unmounts only on its
   own exit with no extra dismissal callback; visual lifetime cannot extend
   interaction lifetime.
 - [ ] `CB-CLOSE-05` `[vendor]` `[touch]` —
   **Combobox should dismiss once when a touch finishes outside and should not
   replay that dismissal through a compatibility mouse path.**
-  Open Popup, perform a real touch sequence on `document.body`, and repeat on
-  Input and Popup descendants. Assert the outside sequence produces one
+  Open Combobox.Popover, perform a real touch sequence on `document.body`, and repeat on
+  Input and Combobox.Popover descendants. Assert the outside sequence produces one
   modality-correct blur/revert-or-commit and dismissal path, internal touches
   remain inside, and no later compatibility `mousedown`/click adds a second
   text, value, or close request. This ports Downshift's body `touchend`
@@ -780,7 +781,7 @@ Autocomplete, or CommandPalette primitives.
 - [ ] `CB-A11Y-01` `[reference]` `[browser]` —
   **Combobox should pass accessibility checks across every frozen source and adapter shape.**
   Scan named `none`, `list`, and `both` editable fixtures plus select-only,
-  disabled, empty, virtualized Listbox, and Tree Popup states after opening and
+  disabled, empty, virtualized Listbox, and Tree Combobox.Popover states after opening and
   navigation. Assert no violations and exact role/name/expanded/control/
   autocomplete/haspopup/active-descendant relationships; automation
   supplements focus and callback proofs.
@@ -814,10 +815,10 @@ Autocomplete, or CommandPalette primitives.
   **Combobox should preserve virtual focus, modal isolation, and composed
   outside detection when it runs inside an Overlay in a ShadowRoot.**
   Mount a locked Overlay in an open ShadowRoot, place Combobox Input in
-  Content, portal a windowed Popup to its documented shadow destination, then
-  navigate offscreen, press inside Popup, and touch outside the Overlay. Assert
+  Content, portal a windowed Combobox.Popover to its documented shadow destination, then
+  navigate offscreen, press inside Combobox.Popover, and touch outside the Overlay. Assert
   DOM focus stays on Input while every active ID resolves in the same root,
-  background remains inert, Popup is one FocusLock branch, internal composed
+  background remains inert, Combobox.Popover is one FocusLock branch, internal composed
   paths stay open, and the true outside path dismisses only the top affected
   layer once. This adversarial gate joins the separately owned shadow, inert,
   layer, and virtual-focus contracts.

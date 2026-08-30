@@ -2,14 +2,24 @@
 
 Proof: [TESTS.md](./TESTS.md).
 
-Controlled, anchored floating content.
+Controlled, anchored, **non-modal** floating content.
 
-Owns positioning, collision handling, and the Popover-specific policy and
-integration for keyboard/pointer interaction, accessible state, and focus
-restoration. Overlay supplies outside-dismiss ordering, nesting, and the shared
-layer stack; Presence supplies exit detection.
+Geometry is Overlay's: the Floating UI port lives on `Overlay.Content` /
+`Overlay.Arrow` / `Overlay.anchor`. Popover consumes that API. It does not
+run a second `computePosition`.
 
-By default, `Popover.Trigger` is both the interaction source and the positioning anchor. An optional virtual `anchor` (element, rect, or point) is the positioning reference when the application already owns the interaction — context menu, selection, canvas, table cell. When both are present, the trigger remains the interaction and accessibility source; `anchor` wins for positioning.
+Popover owns the rest: `Popover.Trigger` as the default reference and
+interaction source, `onOpen`, hover grace (`openOnHover`), the Tab-order
+bridge into portalled Content, and `closeOnScroll`. Overlay still supplies
+outside-dismiss ordering, nesting, and the shared layer stack; Presence
+supplies exit detection. Isolation (FocusLock, inert, scroll lock) stays
+on Overlay — Popover is not modal.
+
+By default, `Popover.Trigger` is both the interaction source and the
+positioning anchor. An optional virtual `anchor` is the Overlay reference
+when the application already owns the interaction — context menu, selection,
+canvas, table cell. When both are present, the trigger remains the
+interaction and accessibility source; `anchor` wins for Overlay geometry.
 
 ```tsx
 <Popover
@@ -85,25 +95,7 @@ This is not a trap; outside programmatic focus remains outside.
 ## Proposed API
 
 ```ts
-type PopoverPlacement =
-  | "top"
-  | "top-start"
-  | "top-end"
-  | "right"
-  | "right-start"
-  | "right-end"
-  | "bottom"
-  | "bottom-start"
-  | "bottom-end"
-  | "left"
-  | "left-start"
-  | "left-end"
-
-type VirtualAnchor =
-  | Element
-  | DOMRect
-  | { getBoundingClientRect(): DOMRect }
-  | { x: number; y: number; width?: number; height?: number }
+type PopoverPlacement = OverlayPlacement
 
 interface PopoverProps extends OverlayDismissHandlers {
   children?: React.ReactNode
@@ -123,107 +115,38 @@ interface PopoverPortalProps {
   container?: PortalProps["container"]
 }
 
-interface PopoverContentProps
-  extends ReferencePartProps<"div"> {
-  placement?: PopoverPlacement
-  offset?: number
-  collisionPadding?: number
-  strategy?: "absolute" | "fixed"
-  flip?: boolean
-  shift?: boolean
-}
+interface PopoverContentProps extends OverlayContentProps {}
 
-interface PopoverArrowProps
-  extends ReferencePartProps<"div"> {
-  edgePadding?: number
-}
+interface PopoverArrowProps extends OverlayArrowProps {}
 ```
 
-`Popover` renders no node. `Popover.Trigger` renders `button`. `Popover.Content` and `Popover.Arrow` render `div`. `Popover.Portal` renders nothing.
+`Popover` renders no node. `Popover.Trigger` renders `button`.
+`Popover.Content` is wrapped `Overlay.Content`. `Popover.Arrow` is wrapped
+`Overlay.Arrow`. `Popover.Portal` renders nothing.
 
-Content defaults are `placement="bottom-start"`, `offset=8`,
-`collisionPadding=8`, absolute strategy, and flip/shift enabled. Positioning
-owns `position`/`top`/`left` but never consumer `transform`. Content publishes
-`--reference-popover-available-width`,
-`--reference-popover-available-height`,
-`--reference-popover-anchor-width`,
-`--reference-popover-anchor-height`, and
-`--reference-popover-transform-origin`, plus `data-anchor-hidden` and
-`data-escaped`. Arrow `edgePadding` defaults to 4px; ordinary `padding`
-remains the token-aware visual StyleProp.
-
-Hover mode defaults to 700ms open, 300ms close, a 300ms impatient-click
-threshold, and 5px safe-area padding.
+Geometry defaults, CSS variables (`--reference-overlay-*`), hide hooks, and
+`autoUpdate` are Overlay's. Hover mode defaults to 700ms open, 300ms close, a
+300ms impatient-click threshold, and 5px safe-area padding.
 
 `closeOnScroll` defaults to `false`: ordinary interactive Popovers remain open
 and reposition as their anchor's composed overflow ancestors scroll. When it
 is true, scrolling an ancestor that moves the anchor requests one controlled
 dismissal; unrelated regions and self-scroll inside an input or textarea do
-not. Combobox enables this policy for its Popup. Tooltip uses the same
-positioning engine but owns an always-on scroll-close policy.
+not. Combobox enables this policy for `Combobox.Popover`. Tooltip uses Overlay
+geometry but owns an always-on scroll-close policy.
 
 ---
 
 ## Problems we own
 
-Positioning is math. Popover owns its policy and integration, while
-outside-dismiss ordering and nesting use Overlay's shared layer kernel and exit
-detection uses Presence. Do not take Floating UI React as a second overlay
-runtime (`useDismiss`, `FloatingTree`, `FloatingFocusManager`).
+Popover is non-modal anchored policy on Overlay. Overlay owns the Floating UI
+port. Do not take `@floating-ui/react` as a second overlay runtime
+(`useDismiss`, `FloatingTree`, `FloatingFocusManager`).
 
-### Flip / shift / offset
+### Flip / shift / offset / arrow / size / hide / autoUpdate / virtual anchors
 
-Preferred placement overflows. Middleware must try opposite / expanded / opposite-axis, then `bestFit`. Shift clamps into view without detaching from the reference (`limitShift`). Flip’s `reset` restarts the middleware chain (max 50) — arrow `alignmentOffset` must short-circuit or you thrash.
-
-**Vendor.** `vendor/floating-ui/packages/core/src/computePosition.ts` plus `middleware/{flip,shift,offset}.ts`, `detectOverflow.ts`. Functional tests in `packages/dom/test/functional/`. Spectrum has a parallel `calculatePosition.ts` — **leave**. Radix `popper` — **leave**.
-
-**Lift** core middleware + Playwright cases (not PNG snapshots).
-
-### Arrow
-
-Arrow `edgePadding` can nudge the floating element. That reset must not
-re-trigger flip (`middlewareData.arrow?.alignmentOffset`).
-
-**Vendor.** `middleware/arrow.ts` + interaction in flip/offset. `dom/test/functional/arrow.test.ts`.
-
-**Lift** the math. **Leave** `FloatingArrow` chrome.
-
-### Available height for list popups
-
-Select, Combobox, and Menu need `availableHeight` so the popup scrolls instead of overflowing. Size middleware depends on whether shift already ran. ResizeObserver + size can loop (`autoUpdate` unobserves floating for a frame — Floating UI #1740).
-
-**Vendor.** `middleware/size.ts`, `dom/src/autoUpdate.ts`. Radix exposes `--radix-*-available-height` via popper — lift the **idea**, not the CSS-var names.
-
-**Lift** size middleware onto `Popover.Content`. That is positioning math, not a second primitive.
-
-### Virtual anchors
-
-Context menus are a point. Selection menus are a rect. Canvas/table cells are a `getBoundingClientRect`. autoUpdate must follow `contextElement` scroll/resize even when the reference is virtual.
-
-**Vendor.** Floating UI `VirtualElement` (`packages/dom/src/types.ts`), `virtual-element.test.ts`. Base UI `PopoverPositioner` `anchor`. Aria `targetRect` / `getTargetRect`. `useClientPoint.ts` is the cursor-follow factory — steal the virtual-element idea, not the React hook package.
-
-**Lift** into Popover `anchor`. Virtual anchors stay positioning math.
-
-### Living position while open
-
-Scroll ancestors of **both** reference and floating, resize, layout shift, visualViewport, iframe, shadow, zoom.
-
-**Vendor.** `vendor/floating-ui/packages/dom/src/autoUpdate.ts` and its functional tests (`scroll`, `iframe`, `shadow-dom`, `top-layer`, `zoom`).
-
-**Lift** the whole `autoUpdate` + tests.
-
-`closeOnScroll` selects dismissal instead of living reposition for a
-consumer whose popup becomes misleading after its anchor moves. Detection and
-Shadow DOM ancestry remain Popover-engine responsibilities so Combobox and
-Tooltip do not implement independent document listeners.
-
-### Hide when clipped
-
-A popover can stay logically open while visually orphaned (scrolled out of the clipping context).
-
-**Vendor.** `middleware/hide.ts` (`referenceHidden` / `escaped`).
-
-**Lift** the flags. Policy (close vs hide visually) is product. Tooltip usually **closes** on scroll instead — different primitive.
+**Owned by Overlay.** Popover.Content and Popover.Arrow are wrapped Overlay
+parts. See Overlay.md.
 
 ### Safe polygon / grace travel (`openOnHover`)
 
@@ -236,6 +159,11 @@ The hard part of hover-opened interactive content is not the open delay. It is p
 through their gap, and abandon grace when movement is slow, reversed, or
 crosses the side opposite Content. **Leave** FloatingTree `parentId` coupling
 and Base UI’s vendored `floating-ui-react` as runtime.
+
+`closeOnScroll` is Popover policy on Overlay's autoUpdate: when true, a
+composed overflow ancestor that moves the anchor requests one close instead
+of living reposition. Combobox and Tooltip must not add independent document
+listeners.
 
 ### Impatient click after hover-open
 
@@ -259,10 +187,11 @@ Popover is not isolated: no FocusLock, no page inert. Modal Overlay behind it st
 
 ## Convergence
 
-**Positioning engine:** Floating UI core + DOM `autoUpdate` + tests.
+**Positioning engine:** Overlay's Floating UI port.
 
 **Behaviour:** Radix popover e2e and dismissable-layer (not Radix popper).
 
 **HoverCard:** Popover + `openOnHover` + grace polygon. Not a primitive.
 
-**Leave:** `@floating-ui/react` overlay runtime, Spectrum positioner, Radix popper, a separate HoverCard.
+**Leave:** `@floating-ui/react` overlay runtime, a second geometry engine on
+Popover, Spectrum positioner, Radix popper, a separate HoverCard.

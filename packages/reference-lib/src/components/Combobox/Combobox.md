@@ -7,7 +7,11 @@ Coordinates an input with an associated popup while preserving DOM focus and nat
 List-based popups use `Listbox`. Nested popups may use `Tree`. Applications
 may integrate a grid that supports the same virtual-focus adapter. A dialog
 popup moves DOM focus and is instead an input + Popover/Overlay composition.
-Combobox does not own Overlay/Popover positioning as a second runtime.
+Combobox does not own Overlay positioning as a second runtime.
+`Combobox.Popover` is wrapped `Overlay.Content`: same Floating UI port,
+CSS variables, portal, layer, and Presence path. It is not a nested
+`Popover` root. Input or Trigger remains the focus source; there is no
+`Popover.Trigger` and no Tab bridge into the list.
 
 ```tsx
 <Combobox
@@ -20,7 +24,7 @@ Combobox does not own Overlay/Popover positioning as a second runtime.
   onInputValueChange={setInputValue}
 >
   <Combobox.Input aria-label="Search people" />
-  <Combobox.Popup>
+  <Combobox.Popover>
     <Listbox value={value}>
       {options.map((option) => (
         <Listbox.Option key={option.id} value={option.id}>
@@ -28,7 +32,7 @@ Combobox does not own Overlay/Popover positioning as a second runtime.
         </Listbox.Option>
       ))}
     </Listbox>
-  </Combobox.Popup>
+  </Combobox.Popover>
 </Combobox>
 ```
 
@@ -43,7 +47,7 @@ Select-only (trigger is a button):
   onChange={setValue}
 >
   <Combobox.Trigger>{selectedLabel}</Combobox.Trigger>
-  <Combobox.Popup>
+  <Combobox.Popover>
     <Listbox value={value}>
       {options.map((option) => (
         <Listbox.Option key={option.id} value={option.id}>
@@ -51,7 +55,7 @@ Select-only (trigger is a button):
         </Listbox.Option>
       ))}
     </Listbox>
-  </Combobox.Popup>
+  </Combobox.Popover>
 </Combobox>
 ```
 
@@ -61,7 +65,7 @@ A custom grid keeps its visual/semantic anatomy and supplies only logical
 navigation metadata:
 
 ```tsx
-<Combobox.Popup virtualFocus={gridAdapter} aria-label="Results">
+<Combobox.Popover virtualFocus={gridAdapter} aria-label="Results">
   {visibleRows.map((row) => (
     <div role="row" key={row.id}>
       {row.cells.map((cell) => (
@@ -71,7 +75,7 @@ navigation metadata:
       ))}
     </div>
   ))}
-</Combobox.Popup>
+</Combobox.Popover>
 ```
 
 ## Proposed API
@@ -122,14 +126,7 @@ interface ComboboxInputProps
 interface ComboboxTriggerProps
   extends ReferencePartProps<"button"> {}
 
-interface ComboboxPopupProps
-  extends ReferencePartProps<"div"> {
-  placement?: PopoverPlacement
-  offset?: number
-  collisionPadding?: number
-  strategy?: "absolute" | "fixed"
-  flip?: boolean
-  shift?: boolean
+interface ComboboxPopoverProps extends OverlayContentProps {
   virtualFocus?: ComboboxGridAdapter
 }
 
@@ -143,36 +140,39 @@ interface ComboboxVirtualItemProps extends ReferenceSlotPartProps {
 ```
 
 `Combobox` renders no node. Input renders `input`, Trigger renders
-`button[type=button]`, Popup renders `div`, Portal renders no node, and
-VirtualItem slots behavior onto one native child without a wrapper. Popup
-directly reuses Popover's positioning/policy integration, Overlay's shared
-layer stack, and Presence's exit detection, so applications do not wrap
-Combobox in another Popover. Its default destination is document body
-or the focus source's containing open ShadowRoot.
+`button[type=button]`, `Combobox.Popover` renders `div` as wrapped
+`Overlay.Content`, Portal renders no node, and VirtualItem slots behavior
+onto one native child without a wrapper. Positioning props, CSS variables
+(`--reference-overlay-*`), portal destination, Overlay layer registration, and
+Presence exit are Overlay's. Combobox adds only `virtualFocus` and its
+focus-in-field policy: no Tab bridge into the list, `aria-activedescendant`
+on the focus source, and Combobox-owned blur/commit. Do not nest a `Popover`
+root around Combobox. Default destination is document body or the focus
+source's containing open ShadowRoot.
 
-Popup publishes Popover's resolved side/hide hooks and
-`--reference-popover-available-width`,
-`--reference-popover-available-height`,
-`--reference-popover-anchor-width`,
-`--reference-popover-anchor-height`, and
-`--reference-popover-transform-origin`. Long result collections can consume
-available geometry in CSS without another sizing API or runtime.
+`Combobox.Popover` publishes the same resolved side/hide hooks and
+`--reference-overlay-*` custom properties as `Overlay.Content`. Long result
+collections can consume available geometry in CSS without another sizing API
+or runtime. Combobox sets `closeOnScroll` as Popover policy on that wrapped
+Content.
 
-Exactly one Input XOR Trigger is the focus source and at most one Popup/Portal
-pair is valid. Unprevented native Trigger activation requests open/dismiss
-internally, so select-only compositions do not add a second toggle handler.
+Exactly one Input XOR Trigger is the focus source and at most one
+`Combobox.Popover`/`Combobox.Portal` pair is valid. Unprevented native
+Trigger activation requests open/dismiss internally, so select-only
+compositions do not add a second toggle handler.
 Omitted `value`/`inputValue` are controlled `null`/`""`; omitted
 autocomplete/custom/blur policy is `"list"`/false/true.
 Input omits native `value`, `defaultValue`, and `onChange`; root
 `inputValue`/`onInputValueChange` are the sole editable-text authority.
 
 Listbox and Tree automatically expose their collection registries when nested
-in Combobox. A custom grid passes `virtualFocus` to Popup and wraps each mounted
-`gridcell` in `Combobox.VirtualItem`. The adapter's `items` are the complete
-logical reading order; values are unique and `textValue` drives typeahead.
-Popup takes `role="grid"` from the adapter and the focus source exposes matching
-`aria-haspopup`. `getNextIndex` supplies grid topology for navigation keys. A
-returned index must be in range and enabled. A Popup must resolve exactly one
+in Combobox. A custom grid passes `virtualFocus` to `Combobox.Popover` and
+wraps each mounted `gridcell` in `Combobox.VirtualItem`. The adapter's
+`items` are the complete logical reading order; values are unique and
+`textValue` drives typeahead. `Combobox.Popover` takes `role="grid"` from
+the adapter and the focus source exposes matching `aria-haspopup`.
+`getNextIndex` supplies grid topology for navigation keys. A returned index
+must be in range and enabled. `Combobox.Popover` must resolve exactly one
 collection authority: one built-in Listbox or Tree, or one custom
 `virtualFocus` adapter. Competing registries are diagnosed rather than chosen
 by render order.
@@ -251,4 +251,4 @@ not expose cmdk's `command-score.ts`. The dialog around it is our Overlay
 
 ## Convergence
 
-**State:** react-aria `commit`/`revert`. **Focus-in-input + select-only:** downshift `useCombobox` / `useSelect`. **Modes:** Zag vocabulary. Popup chrome is Popover/Overlay, not a third floating runtime.
+**State:** react-aria `commit`/`revert`. **Focus-in-input + select-only:** downshift `useCombobox` / `useSelect`. **Modes:** Zag vocabulary. `Combobox.Popover` is wrapped `Overlay.Content`, not a third floating runtime.

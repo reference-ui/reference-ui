@@ -34,7 +34,7 @@ type TooltipTriggerProps = ReferenceSlotPartProps
 
 interface TooltipContentProps
   extends ReferencePartProps<"div"> {
-  placement?: PopoverPlacement
+  placement?: OverlayPlacement
   offset?: number
 }
 
@@ -116,10 +116,10 @@ Synthetic hover after keyboard can reopen. Press should close. Hover only if mod
 
 ### Positioning
 
-Same Floating UI flip/shift/arrow as Popover. Usually no `size`/scrollable body. Hide-vs-close on clip: close.
+Same Overlay Floating UI port as Popover. Usually no `size`/scrollable body. Hide-vs-close on clip: close.
 
 ---
 
 ## Convergence
 
-**Positioning:** Floating UI core (shared with Popover). **Behaviour:** Radix/Aria/Zag tooltip machines for delay, skip-delay, Escape, scroll-close. **Leave:** public Provider, HoverCard-as-Tooltip, Floating UI React `useHover` as the overlay runtime.
+**Positioning:** Overlay's Floating UI port. **Behaviour:** Radix/Aria/Zag tooltip machines for delay, skip-delay, Escape, scroll-close. **Leave:** public Provider, HoverCard-as-Tooltip, Floating UI React `useHover` as the overlay runtime.

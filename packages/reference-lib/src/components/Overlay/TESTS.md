@@ -3,15 +3,23 @@
 Playwright: `matrix/lib/tests/e2e/overlay.spec.ts`  
 Page: `/overlay`
 
-Overlay owns the modal layer kernel: portal, one shared layer stack, controlled
-dismissal requests, FocusLock, branch/shard registration, background inerting,
-scroll lock, Presence, and restore-after-exit.
+Overlay owns the modal layer kernel **and** the Floating UI geometry port:
+portal, one shared layer stack, controlled dismissal, FocusLock, branch/shard
+registration, background inerting, scroll lock, Presence, restore-after-exit,
+and anchored `computePosition` / `autoUpdate` when `anchor` is set.
 
 ## Freeze decision
 
-Overlay is always modal/isolating. Its API has no `modal` flag, and Popover
-covers non-modal floating content. Semantic role remains application markup:
-dialog, alertdialog, drawer, sheet, and lightbox are compositions.
+Overlay is always modal/isolating. Its API has no `modal` flag. Popover covers
+non-modal floating content by consuming Overlay geometry without Overlay
+isolation. Semantic role remains application markup: dialog, alertdialog,
+drawer, sheet, and lightbox are compositions.
+
+Without `anchor`, Overlay writes no coordinates. With `anchor`, Content is
+the floating element and geometry defaults match the ported engine:
+`placement="bottom-start"`, `offset=8`, `collisionPadding=8`, absolute
+strategy, flip/shift enabled. `Overlay.Arrow` participates only while
+anchored.
 
 AlertDialog's non-dismissible Escape policy is authored by preventing
 `onEscape`; Overlay does not infer behavior from a role string.
@@ -30,12 +38,17 @@ AlertDialog's non-dismissible Escape policy is authored by preventing
   and a11y-dialog — scroll, background isolation, focus, and vanilla dialog
   behavior.
 - Zag dismissable/layer-stack — parent cascade and recently-removed focus race.
+- `vendor/floating-ui/packages/{core,dom}` and
+  `packages/dom/test/functional/{flip,shift,offset,arrow,size,hide,autoUpdate,scroll,iframe,shadow-dom,top-layer,virtual-element,zoom}.test.ts`
+  — the geometry engine Overlay ports. `@floating-ui/react` remains leave.
 
 ## Part contract
 
 `Overlay.Backdrop` and `Overlay.Content` are fixed
-`ReferencePartProps<"div">` parts. `Overlay` and `Overlay.Portal` are
-transparent; all four run the applicable shared `PART-*` type, DOM, StyleProps,
+`ReferencePartProps<"div">` parts. `Overlay.Arrow` is a fixed
+`ReferencePartProps<"div">` part that only participates while anchored.
+`Overlay` and `Overlay.Portal` are
+transparent; all five run the applicable shared `PART-*` type, DOM, StyleProps,
 ref, event, state, control, and default checks from `TESTING.md`. Cases below
 add only Overlay-specific anatomy and behavior/style conflicts.
 
@@ -52,11 +65,12 @@ add only Overlay-specific anatomy and behavior/style conflicts.
   no host nodes; this freezes the public anatomy before interaction behavior.
 - [ ] `OV-DOM-02` `[reference]` `[browser]` —
   **Overlay should leave dialog semantics and presentation to the application
-  when Content is rendered without semantic props.**
-  Mount an open Overlay with otherwise bare Backdrop and Content parts and
-  inspect the public DOM. Assert that it invents no trigger, role, label,
-  `aria-modal`, heading, close button, dimensions, or appearance, because
-  dialog, alertdialog, drawer, sheet, and lightbox remain compositions.
+  when unanchored Content is rendered without semantic props.**
+  Mount an open Overlay with otherwise bare Backdrop and Content parts, no
+  `anchor`, and inspect the public DOM. Assert that it invents no trigger,
+  role, label, `aria-modal`, heading, close button, coordinates, or
+  appearance, because dialog, alertdialog, drawer, sheet, and lightbox remain
+  compositions and unanchored geometry stays application CSS.
 - [ ] `OV-DOM-03` `[reference]` `[browser]` —
   **Overlay should keep lifecycle state authoritative when Backdrop and Content
   also use token-aware visual StyleProps.**
@@ -762,6 +776,85 @@ add only Overlay-specific anatomy and behavior/style conflicts.
   Chromium, Firefox, and WebKit. Assert the same public callback order, focus,
   DOM state, accessibility visibility, and scroll positions in every engine.
 
+### Anchored geometry (Floating UI port)
+
+- [ ] `OV-POS-01` `[reference]` `[browser]` —
+  **Overlay should write no coordinates when `anchor` is omitted.**
+  Open Overlay with Content `placement`, `offset`, flip/shift props, and an
+  Arrow, but no `anchor`. Assert Overlay adds no `position`/`top`/`left`, no
+  `--reference-overlay-*` custom properties, and no hide data attributes, while
+  isolation and the layer stack still run; unanchored dialog/drawer CSS must
+  not fight the engine.
+- [ ] `OV-POS-02` `[vendor]` `[browser]` —
+  **Overlay should position Content from `anchor` with frozen defaults.**
+  Open Overlay anchored to a visible element and omit Content geometry props.
+  Assert `bottom-start` placement, 8px offset and collision padding, absolute
+  strategy, flip/shift on, owned `position`/`top`/`left`, and published
+  `--reference-overlay-*` variables. This is the ported Floating UI default
+  path, not Popover-specific API.
+- [ ] `OV-POS-03` `[vendor]` `[browser]` —
+  **Overlay should flip and shift anchored Content instead of overflowing.**
+  Anchor Content near a viewport edge with `placement="bottom"` and allow
+  flip/shift, then repeat with `flip={false}` and `shift={false}`. Assert the
+  enabled path chooses a collision-safe side and clamped coordinates, while
+  the disabled path keeps the preferred side even when clipped; this ports
+  `flip.test.ts` / `shift.test.ts`.
+- [ ] `OV-POS-04` `[vendor]` `[browser]` —
+  **Overlay should honor explicit offset, collision padding, and strategy
+  without a second middleware chain.**
+  Parameterize `offset`, `collisionPadding`, and `strategy="fixed"` on
+  anchored Content. Assert each value reaches one `computePosition` pass,
+  `fixed` uses the containing viewport, and consumer `transform` is
+  untouched. This ports `offset.test.ts` plus strategy selection.
+- [ ] `OV-POS-05` `[vendor]` `[browser]` —
+  **Overlay.Arrow should participate in the same position pass as Content.**
+  Render anchored Content with Arrow `edgePadding={4}` and `{12}` near an
+  alignment edge. Assert Arrow coordinates stay inside Content, alignment
+  offset does not retrigger flip, and visual `padding` StyleProps remain
+  distinct from `edgePadding`. This ports `arrow.test.ts`.
+- [ ] `OV-POS-06` `[vendor]` `[browser]` —
+  **Overlay should publish available and anchor geometry for scrolling
+  popups.**
+  Anchor a tall Content near a short viewport and read
+  `--reference-overlay-available-height` / `-width` plus anchor size and
+  transform origin. Assert finite values that match the engine's size
+  middleware after shift, with no ResizeObserver loop. This ports
+  `size.test.ts` and Floating UI #1740.
+- [ ] `OV-POS-07` `[vendor]` `[browser]` —
+  **Overlay should expose clip flags without closing itself.**
+  Scroll an anchored reference until it is clipped and until Content escapes
+  its clipping context. Assert `data-anchor-hidden` / `data-escaped` follow
+  hide middleware while `open` stays true and no `onDismiss` fires; close-on-
+  clip is product policy. This ports `hide.test.ts`.
+- [ ] `OV-POS-08` `[vendor]` `[browser]` —
+  **Overlay should keep a living position while open.**
+  Anchor Content, then scroll ancestors of reference and floating, resize,
+  zoom, and move `visualViewport`. Assert one live autoUpdate subscription,
+  Content coordinates follow, and listeners drop after Presence exit. This
+  ports `autoUpdate.ts` functional tests.
+- [ ] `OV-POS-09` `[vendor]` `[browser]` —
+  **Overlay should accept virtual anchors as positioning references.**
+  Parameterize `anchor` over a point `{x, y}`, a sized rect / `DOMRect`, a
+  `getBoundingClientRect()` object that mutates, and an Element in nested
+  scrollers. Assert point anchors have implicit zero size, sized rects
+  align to all four edges, mutations update without remount, and Element
+  anchors use that node's owner window. This ports `virtual-element.test.ts`.
+- [ ] `OV-POS-10` `[reference]` `[browser]` `[rtl]` —
+  **Overlay should keep physical placement tokens in RTL.**
+  Anchor Content with `placement="bottom-start"` under `dir="rtl"`. Assert
+  the engine still uses that token, alignment follows the ported RTL rules,
+  and no extra Overlay transform is applied.
+- [ ] `OV-POS-11` `[reference]` `[ssr]` —
+  **Overlay should skip geometry on the server and attach after hydration.**
+  Server-render an anchored open Overlay, hydrate, then wait for client
+  autoUpdate. Assert no `window` access during SSR, no hydration mismatch,
+  and coordinates appear only after mount.
+- [ ] `OV-POS-12` `[reference]` `[shadow]` —
+  **Overlay should position inside an open ShadowRoot destination.**
+  Portal anchored Content into an open ShadowRoot and scroll a shadow
+  ancestor. Assert coordinates resolve against that root, not light DOM,
+  and autoUpdate still tracks.
+
 ## Composition gates
 
 - [ ] `OV-COMP-01` `[reference]` `[browser]` —
@@ -788,6 +881,14 @@ add only Overlay-specific anatomy and behavior/style conflicts.
   viewport, scroll internally, and close. Assert consumer transforms animate
   intact, page position and fixed geometry remain stable, internal scrolling
   works, and restore/teardown occur only after exit.
+- [ ] `OV-COMP-04` `[reference]` `[browser]` —
+  **Overlay should keep modal isolation when an anchored dialog uses the
+  geometry engine.**
+  Build labeled `role="dialog"` Content with `aria-modal="true"`, `anchor`
+  on a toolbar button, `placement="bottom-start"`, and a nested Popover
+  inside Content. Open, Tab, Escape the child, then Escape the dialog.
+  Assert coordinates follow the button, isolation remains modal, and each
+  Escape closes only the top layer; anchored is not a second Overlay kind.
 
 ## Owned elsewhere
 
@@ -795,15 +896,16 @@ add only Overlay-specific anatomy and behavior/style conflicts.
   matrix: `FocusLock`.
 - Transition/animation detection: `Presence`.
 - Portal destination semantics: `Portal`.
-- Positioning and hover grace: `Popover`.
+- Trigger, hover grace, impatient click, tab-order bridge, `closeOnScroll`:
+  `Popover`.
 - Toast timer reaction to top modal: `Toast`.
 - Menu submenu intent: `Menu`.
 
 ## Out of scope
 
 - Non-modal Overlay, native `<dialog>` as a second runtime, semantic Dialog/
-  Drawer components, visual styles, snap points, iOS scale-behind, positioning,
-  or a public Provider.
+  Drawer components, visual styles, snap points, iOS scale-behind, a public
+  Provider, or `@floating-ui/react` as runtime.
 - react-remove-scroll's independent `isDisabled` convenience path: an open
   modal Overlay always owns an active scroll lock through Presence exit, so
   there is no second public switch that can desynchronize modal isolation.
