@@ -41,10 +41,10 @@ importing `packages/reference-lib/src/...` does not prove the public API.
 
 ## Contract index
 
-The current design pass contains **1,442 tagged behavior cases** plus **76
-composition gates** across 22 top-level components: **1,518 stable case IDs**
-in total. Four NumberField cases are required manual release gates; the other
-1,514 are automated contracts. Components may carry more than three
+The current design pass contains **1,510 tagged behavior cases** plus **84
+composition gates** across 24 top-level components: **1,594 stable case IDs**
+in total. Four NumberField cases and two DateField cases are required manual
+release gates; the other 1,588 are automated contracts. Components may carry more than three
 composition gates when ownership boundaries require distinct proof:
 
 - **Foundation:** [ReferenceLibrary](./src/components/ReferenceLibrary/TESTS.md),
@@ -60,11 +60,13 @@ composition gates when ownership boundaries require distinct proof:
   [Switch](./src/components/Switch/TESTS.md),
   [Tree](./src/components/Tree/TESTS.md),
   [NumberField](./src/components/NumberField/TESTS.md),
+  [DateField](./src/components/DateField/TESTS.md),
   [Calendar](./src/components/Calendar/TESTS.md),
   [Collapsible](./src/components/Collapsible/TESTS.md),
   [Accordion](./src/components/Accordion/TESTS.md),
   [Splitter](./src/components/Splitter/TESTS.md),
   [Tooltip](./src/components/Tooltip/TESTS.md)
+- **Visual chrome:** [Field](./src/components/Field/TESTS.md)
 - **Authoring machinery:** [Slot](./src/components/Slot/TESTS.md),
   [Presence](./src/components/Presence/TESTS.md),
   [RovingFocus](./src/components/RovingFocus/TESTS.md),
@@ -487,10 +489,12 @@ to reinterpret, omit, or weaken it.
 
 ## Test-derived API decision ledger
 
-The vendor pass left the inventory at 22 components after Switch joined on
-anatomy grounds: locale-aware numeric editing proved to be a difficult shared
-invariant that current owners cannot compose, and a sliding switch thumb
-cannot live inside a native void checkbox. The resulting decisions are:
+The vendor pass left the inventory at 24 components after Field joined as
+visual chrome: wrapping inputs in a box is unavoidable, and generated
+Input recipes must surrender standalone chrome inside that box without
+Field copying `aria-invalid`. DateField remains in on the same grounds as
+NumberField. Switch remains in on anatomy grounds. The resulting
+decisions are:
 
 1. **Universal parts/defaults:** every rendered part has fixed native
    prop/ref typing and every optional behavioral prop has a deterministic
@@ -549,8 +553,22 @@ cannot live inside a native void checkbox. The resulting decisions are:
 14. **NumberField:** one conventional controlled root owns a localized dirty
     text session, invertible Intl formats, one step lattice, styleable named
     steppers, managed numeric invalid state, and canonical form serialization.
-    It deliberately leaves wheel stepping, multiple step scales, parser
-    overrides, and automatic label translation out.
+    `NumberField.Group` consumes Field's bezel recipe on the same
+    `div[role="group"]`. It deliberately leaves wheel stepping, multiple
+    step scales, parser overrides, and automatic label translation out.
+15. **DateField:** one textbox owns a localized dirty date session, locale
+    `formatToParts` grammar, caret-aware day/month/year stepping, and
+    canonical ISO serialization. Calendar and Popover compose through the
+    shared ISO value. Segment spinbuttons, two-digit year windows, `Date`
+    objects, clamping, and a packaged DatePicker are out.
+16. **Field:** a wrapping `div` owns bezel chrome. Nested `input` /
+    `textarea` / `select` surrender standalone recipes through CSS.
+    Invalid, disabled, read-only, and focus follow `:has()` against the
+    enclosed control. `status="warning"` is the only Field-owned visual
+    state. No role, no validity ARIA, no Form/Field provider.
+    `NumberField.Group` consumes that one recipe while keeping
+    `role="group"`. A Combobox token picker is Field + scalar Combobox +
+    application Buttons, not a fourth primitive.
 
 This ledger records the current result, not a presumption of correctness. No
 inventory-level blocker is known at this point, but any descriptive case that
@@ -612,7 +630,10 @@ A primitive freezes only when:
 4. Pure algorithms have boundary/property cases and one public browser proof.
 5. Its three compositions pass, including the special gates in
    `components.md` (virtualized Listbox/Combobox, non-Sunday and range Calendar,
-   nested visible-only Tree, labelled/wrapping/in-overlay Switch).
+   nested visible-only Tree, labelled/wrapping/in-overlay Switch,
+   labelled prefix Field, DateField Input inside Field,
+   NumberField.Group consuming the Field recipe, Combobox token picker
+   inside Field).
 6. Relevant Chromium/Firefox/WebKit, RTL, SSR/hydration, Shadow DOM/multi-root,
    touch/IME, reduced-motion, and React 17/18/19 tags pass.
 7. The owning combined cases pass without duplicated suites in consumers.
@@ -623,14 +644,15 @@ A primitive freezes only when:
 1. Zustand dependency plus `src/core/hooks` adapters
    ([hooks.md](./src/core/hooks/hooks.md))
 2. `Slot`, `Portal`, `Presence`
-3. `RovingFocus`, `FocusLock`
-4. `Overlay`
-5. `Popover`
-6. `ReferenceLibrary`, `Toast`, `Tooltip`
-7. `Listbox`, `Menu`, `Tree`
-8. `Combobox`, `Tabs`
-9. `Slider`, `Switch`, `NumberField`, `Collapsible`, `Accordion`, `Splitter`
-10. `Calendar`
+3. `Field` (generated Input/Textarea/Select recipes recognize the ancestor)
+4. `RovingFocus`, `FocusLock`
+5. `Overlay`
+6. `Popover`
+7. `ReferenceLibrary`, `Toast`, `Tooltip`
+8. `Listbox`, `Menu`, `Tree`
+9. `Combobox`, `Tabs`
+10. `Slider`, `Switch`, `NumberField`, `Collapsible`, `Accordion`, `Splitter`
+11. `Calendar`, `DateField`
 
 This order follows behavior dependencies, not visual complexity.
 

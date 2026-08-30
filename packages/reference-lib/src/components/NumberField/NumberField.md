@@ -97,7 +97,9 @@ interface NumberFieldGroupProps
     | "aria-readonly"
     | "aria-required"
     | "aria-invalid"
-  > {}
+  > {
+  status?: "warning"
+}
 
 type NumberFieldManagedInputProp =
   | "type"
@@ -199,6 +201,8 @@ results before publishing DOM state or callbacks.
   `spellCheck={false}`. Explicit native values for these props win.
 - Input's managed `inputMode` is derived from the accepted grammar and commit
   policy as specified below.
+- Group `status` is omitted. `status="warning"` is Field's visual exception
+  and never implies invalid.
 
 ## Exact anatomy and managed authority
 
@@ -208,6 +212,18 @@ one direct `NumberField.Input` and accepts at most one direct Increment and one
 direct Decrement in any authored order. Any other authored siblings or
 controls are allowed; only named NumberField parts register for behavior.
 NumberField adds no visible wrapper around authored children.
+
+Group is a Field-surface host. It sets `data-reference-field` on that same
+`div[role="group"]` and consumes Field's canonical bezel recipe — not a
+nested `<Field>`, not a copied second stylesheet. NumberField.Input uses
+embedded input styling because it is a descendant of Group. Group's
+managed `data-focus-visible`, `data-disabled`, `data-readonly`, and
+`data-invalid` paint the same bezel tokens Field reaches through `:has()`.
+`status="warning"` is Field's visual exception on Group (`data-status`);
+it never implies invalid. Local StyleProps on Group override that shared
+baseline. Do not wrap Group in Field (two bezels). Do not insert Field
+between Group and Input. Prefixes and extra buttons may be Group siblings,
+the same as Field children. Exact selectors: [Field.md](../Field/Field.md).
 
 Input renders the one visible and focusable `input[type=text]` with ordinary
 textbox semantics. It never receives `role=spinbutton` or numeric
@@ -230,6 +246,8 @@ win against runtime spreads or casts:
 - Group owns `role`, `aria-disabled`, and `aria-invalid`.
   `aria-readonly`/`aria-required` are always absent because `group` does not
   support them; `data-readonly`/`data-required` carry styling state instead.
+  Group always sets `data-reference-field`. `status="warning"` sets
+  `data-status="warning"`; omitted `status` leaves it unset.
 - Input owns host/value/form/input-mode attributes, native
   `disabled`/`readOnly`/`required`, managed state ARIA, and the absence of
   numeric value ARIA. Authored naming, descriptions, and error relationships
@@ -469,7 +487,10 @@ validity.
 
 NumberField, Group, and Input expose `data-disabled`, `data-readonly`,
 `data-required`, `data-invalid`, `data-empty`, and `data-editing` when true.
-Group also exposes `data-focused` and `data-focus-visible`. Steppers expose
+Group also exposes `data-focused` and `data-focus-visible`, and is a
+Field-surface host (`data-reference-field`). `data-focus-visible` drives
+the shared bezel focus ring; `data-focused` must not apply that ring.
+Steppers expose
 `data-disabled` and `data-pressed`. `data-empty` follows visible text during a
 dirty session and controlled `null` otherwise. Managed invalid state is the
 union of application `invalid`, finite/bound/step constraints, and failed
@@ -514,8 +535,9 @@ lattices.
 ### Styleable repeatable steppers
 
 Fixed named button parts own activation, repeat timing, cleanup, bound state,
-and focus policy while leaving all visual chrome and product labels to the
-application.
+and focus policy while leaving stepper visual chrome and product labels to the
+application. Group consumes Field's bezel recipe rather than a second NumberField
+skin.
 
 ## Deliberately left
 
@@ -530,7 +552,9 @@ application.
   the frozen compositions.
 - Uncontrolled/default values, raw-text or commit callbacks, reason/detail
   objects, imperative methods, parser/formatter functions, render props,
-  Provider/Field context contracts, and polymorphic hosts.
+  Provider/Field *context* contracts (Base UI / Aria form wiring), and
+  polymorphic hosts. Visual `Field` is the bezel recipe Group consumes;
+  do not nest `<Field>` in Group or wrap Group in Field.
 - Arbitrary precision, bigint, expressions, compact/hidden-sign editing,
   unsupported algorithmic numbering systems, locale guessing, permissive
   malformed separators, and cross-ShadowRoot form association.
@@ -546,4 +570,4 @@ precision, paste/caret, rejected-control, validity, and repeat cleanup. Zag
 supplies cursor vectors and contrast for spinbutton/ScrubArea behavior.
 Reference UI converges on a controlled `<NumberField>` with four named parts,
 one public step lattice, managed numeric validity without native-number
-proxies, and no hidden interaction authority.
+proxies, Group as a Field-surface host, and no hidden interaction authority.

@@ -61,6 +61,12 @@ Select-only (trigger is a button):
 
 Select = this select-only shape. Autocomplete = editable input + Listbox. CommandPalette = Overlay + Combobox.
 
+A searchable token picker is Field + this editable Combobox. Combobox stays
+scalar. Field is the bezel. Chips and the chevron are application Buttons
+inside Field; they are not `Combobox.Trigger` and not Combobox parts.
+`Combobox.Popover` stays a sibling of Field. The opener focuses Input, then
+requests `onOpen`. Exact tree: [Field.md](../Field/Field.md).
+
 A custom grid keeps its visual/semantic anatomy and supplies only logical
 navigation metadata:
 
@@ -157,7 +163,9 @@ or runtime. Combobox sets `closeOnScroll` as Popover policy on that wrapped
 Content.
 
 Exactly one Input XOR Trigger is the focus source and at most one
-`Combobox.Popover`/`Combobox.Portal` pair is valid. Unprevented native
+`Combobox.Popover`/`Combobox.Portal` pair is valid. Other authored
+siblings — `Field`, opener Buttons, chip Buttons — are visual chrome and
+do not register as Combobox parts. Unprevented native
 Trigger activation requests open/dismiss internally, so select-only
 compositions do not add a second toggle handler.
 Omitted `value`/`inputValue` are controlled `null`/`""`; omitted
@@ -243,7 +251,8 @@ No text field. Focus on a button with `role="combobox"`, typeahead on the button
 Filtering and ranking helpers are application-owned and outside this freeze.
 CommandPalette applications may choose their own matcher; Reference UI does
 not expose cmdk's `command-score.ts`. The dialog around it is our Overlay
-(`VENDOR.md`).
+(`VENDOR.md`). Token chips are the same leave: Combobox commits one value;
+Field + Buttons render the set (`FI-COMP-04`).
 
 **Leave.** cmdk’s Radix Dialog wrap, Downshift render-prop API, Zag positioning/layer dismiss baked into the combobox machine (fight Overlay/Popover split).
 

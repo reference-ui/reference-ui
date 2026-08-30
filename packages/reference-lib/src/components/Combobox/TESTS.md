@@ -651,7 +651,7 @@ Autocomplete, or CommandPalette primitives.
   activate an Option. Assert a descriptive incompatibility diagnostic before
   active/commit callbacks or ambiguous ARIA are established, with no array
   passed to scalar `onChange`; chips and tokenized input remain a higher-level
-  composition.
+  composition (`Field` + application Buttons, `FI-COMP-04`).
 - [ ] `CB-ADAPTER-04` `[reference]` `[browser]` —
   **Combobox VirtualItem should slot stable logical state onto exactly one native grid child.**
   Render enabled, disabled, selected, and active logical cells through
@@ -829,12 +829,17 @@ Autocomplete, or CommandPalette primitives.
 - Visible nested hierarchy: `Tree`.
 - Position/size/portal: `Popover`.
 - Shared nested layer dismissal and focus lock: `Overlay`.
+- Visual bezel around `Combobox.Input`: `Field`. Trigger remains a button
+  and keeps its own chrome. The People token picker (`FI-COMP-04`) is
+  Field-owned proof that sibling opener/chip Buttons do not become
+  Combobox parts.
 
 ## Out of scope
 
 - Filtering/ranking helpers, multiple selection/chips, form serialization/
   validation, async loading UI, status-message prose, DOM-focus dialog popups,
-  cmdk Dialog wrapper, Downshift render props, or Zag's positioning runtime.
+  cmdk Dialog wrap, Downshift render props, or Zag's positioning runtime.
   React Spectrum `ComboBox.test.js` multi-select, `formValue`, and section-
   filtering suites are deliberately left in those product/form owners rather
-  than silently approximated by this scalar coordinator.
+  than silently approximated by this scalar coordinator. Token chrome is
+  `Field` `FI-COMP-04`, not Combobox.Chips.

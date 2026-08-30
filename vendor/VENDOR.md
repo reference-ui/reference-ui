@@ -59,6 +59,8 @@ another commit:
 | Toast queue | `toast.*` | Identity, update-in-place, limit — **not** Overlay |
 | Calendar grid | `Calendar` | ISO dates, locale week start, range |
 | Numeric editor | `NumberField` | localized partial text, Intl round-trip, step/form math |
+| Date editor | `DateField` | localized date text, ISO out, caret-segment step |
+| Input bezel | `Field` | descendant unstyle, `:has()` from the control |
 | Virtual focus | Listbox, Tree, Combobox | logical metadata, mounted active IDs, scroll-to-index |
 | Splitter math | `Splitter` | Drag, min/max, keyboard |
 
@@ -77,6 +79,7 @@ another commit:
 - Combobox state (input focus stays in the field)
 - Calendar grid construction and 2D keyboard
 - NumberField partial-edit parsing, Intl formatting, and decimal step regressions
+- DateField locale-part parsing, incomplete segments, and Gregorian constrain
 - Tests that encode edge cases
 
 **Leave**
@@ -137,12 +140,12 @@ menu, tooltip, toast, drawer, and localized NumberField behavior.
 - How they nest Menu inside Dialog on one layer stack
 - `test/e2e`
 
-**Leave:** `floating-ui-react` vendored inside Base UI — same “don’t take the React overlay runtime” rule. Their public context anatomy.
+**Leave:** `floating-ui-react` vendored inside Base UI — same “don’t take the React overlay runtime” rule. Their public context anatomy, including Field/Form label-and-error providers. Visual `Field` in Reference is a CSS bezel, not that provider.
 
 ### `react-spectrum` (React Aria)
 
 **Useful for:** APG behaviour for every ARIA primitive. First-class for
-Listbox, Combobox, Menu, Tabs, Slider, NumberField, Calendar, Tooltip, and
+Listbox, Combobox, Menu, Tabs, Slider, NumberField, DateField, Calendar, Tooltip, and
 overlays. Switch is a compact button+thumb owner; Aria `input` Switch tests
 are host contrast, while Radix/Base UI Switch tests inform anatomy.
 
@@ -151,12 +154,13 @@ are host contrast, while Radix/Base UI Switch tests inform anatomy.
 - `packages/react-aria/src/overlays` — prevent-scroll (iOS), interact-outside
 - `packages/react-aria/src/focus` — FocusScope
 - Per-widget: `listbox`, `combobox`, `menu`, `tabs`, `slider`, `numberfield`,
-  `calendar`, `disclosure`, `toast`, `tooltip`
-- `packages/@internationalized` — week start/locale for Calendar and
-  NumberParser vectors for NumberField
+  `calendar`, `datefield` / `datepicker` (locale parts, hidden ISO, composition
+  evidence; **leave** `DateSegment` spinbuttons)
+- `packages/@internationalized` — week start/locale for Calendar, NumberParser
+  for NumberField, `parseDate` / Gregorian constrain for DateField
 - Tests under `packages/react-aria/test` and `react-aria-components/test`
 
-**Leave:** Spectrum visual components, locale JSON catalogs we already trimmed, their hook-soup as a public API.
+**Leave:** Spectrum visual components, locale JSON catalogs we already trimmed, their hook-soup as a public API, and Aria `Field` / `Form` providers. Reference `Field` is visual chrome only.
 
 ### `ariakit`
 
@@ -194,7 +198,7 @@ Overlay (no trap, no inert). The queue stays Toast.
 
 **Lift**
 
-- `packages/machines/{dialog,popover,menu,combobox,listbox,tabs,slider,number-input,calendar,toast,tooltip,collapsible,accordion,splitter}`
+- `packages/machines/{dialog,popover,menu,combobox,listbox,tabs,slider,number-input,calendar,date-input,date-picker,toast,tooltip,collapsible,accordion,splitter}`
 - `packages/utilities/dismissable`, `focus-trap`, `aria-hidden`
 
 **Leave:** The machine runtime as our public API. We still ship React components + controlled props.
@@ -327,7 +331,11 @@ drag-anywhere on Content. Snap and scale-behind are product chrome.
    UI timer-race tests; use Sonner's mounted/timed limit only as contrast
 5. **ARIA widgets:** react-aria first, zag machines when Aria and Radix disagree, downshift for Combobox
 6. **Calendar:** react-aria calendar + react-day-picker grid
-7. **Splitter:** react-resizable-panels `lib`
-8. **Drawer:** Overlay `edge` + Handle; vaul for drag/iOS fixed, not snap or scale-behind
+7. **DateField:** NumberField dirty-session contract + Aria/Zag date-input
+   locale parts as contrast (textbox, not DateSegment)
+8. **Splitter:** react-resizable-panels `lib`
+9. **Drawer:** Overlay `edge` + Handle; vaul for drag/iOS fixed, not snap or scale-behind
+10. **Field:** no vendor lift. Generated Input/Textarea/Select recipes plus
+    CSS `:has()`. Leave Base UI / Aria Field providers.
 
 When two vendors disagree, write the freeze-gate test first, then pick the behaviour that matches `components.md`.

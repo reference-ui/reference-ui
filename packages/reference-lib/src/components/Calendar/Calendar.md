@@ -2,9 +2,10 @@
 
 Proof: [TESTS.md](./TESTS.md).
 
-Date-grid engine. Locale-aware week start and weekday headings, padded month grids, 2D keyboard movement, disabled/unavailable skipping, min/max clamping, today vs selected vs focused, range selection. Values are ISO calendar dates (`YYYY-MM-DD`), not `Date` objects and not a third-party date library. Locale is an explicit prop; `Intl` supplies labels and week-start. Does not parse typed input, format field values, or own time-of-day.
+Date-grid engine. Locale-aware week start and weekday headings, padded month grids, 2D keyboard movement, disabled/unavailable skipping, min/max clamping, today vs selected vs focused, range selection. Values are ISO calendar dates (`YYYY-MM-DD`), not `Date` objects and not a third-party date library. Locale is an explicit prop; `Intl` supplies labels and week-start. Does not parse typed input, format field values, or own time-of-day. Typed dates are `DateField`.
 
-DatePicker / DateRangePicker are input + Popover + Calendar. Parsing and display formatting stay in application code.
+DatePicker is `DateField` + `Popover` + `Calendar` sharing one ISO value.
+DateRangePicker is two DateFields plus Calendar `selection="range"`.
 
 ```tsx
 <Calendar

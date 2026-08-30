@@ -12,7 +12,7 @@ Cases drive public props and Input events and observe rendered text, callbacks,
 managed DOM/ARIA/data, focus, or form output. Browser event-order, selection,
 pointer, validation, and form behavior remains Playwright-owned.
 
-This contract defines **147 tagged `NF-*` cases**: 143 automated cases and four
+This contract defines **148 tagged `NF-*` cases**: 144 automated cases and four
 manual release gates.
 
 ## Freeze decisions
@@ -51,6 +51,10 @@ manual release gates.
     pressed re-entry steps immediately and starts a new 400ms delay.
 15. Real AT speech, OS IME, software-keyboard behavior, and genuine autofill
     are manual release gates, not Playwright claims.
+16. Group is a Field-surface host: `data-reference-field` on the same
+    `div[role="group"]`, Field's bezel recipe, no nested `<Field>`.
+    `status="warning"` is the shared visual exception. Visual identity
+    with Field is `FI-SURF-01`.
 
 ## Source evidence
 
@@ -98,8 +102,9 @@ These strengthen input filtering, Unicode digits/signs, Indian and localized
 grouping, percent/unit/currency/exponent parsing, explicit rounding, decimal
 cleanup, dirty stepping, controlled rejection, caret/paste/composition,
 inputMode contrast, and repeat cleanup. Reasons/details, uncontrolled modes,
-wheel/scrub options, custom step families, Field integration, polymorphism,
-and hidden-number validation are deliberately not copied.
+wheel/scrub options, custom step families, Base UI Field provider
+integration, polymorphism, and hidden-number validation are deliberately
+not copied.
 
 ### Zag
 
@@ -144,7 +149,8 @@ The shared `PART-TYPE-01`, `PART-DOM-01`, `PART-PROP-01`,
   Input prop, every documented managed stepper semantic prop, root
   `allowWheel`/`smallStep`/`largeStep`, `as`, and wrong refs. Assert unrelated
   naming/description/event props remain available while Group read-only/
-  required styling remains data-only.
+  required styling remains data-only. Compile Group `status="warning"` and
+  StyleProps; `@ts-expect-error` `status="error"`.
 - [ ] `NF-TYPE-04` `[reference]` `[unit]` —
   **Each stepper should require an authored accessible-name prop at the type
   boundary.** Compile nonempty-shaped `aria-label`, `aria-labelledby`, and both
@@ -157,7 +163,8 @@ The shared `PART-TYPE-01`, `PART-DOM-01`, `PART-PROP-01`,
   **NumberField should render exactly one root div, group div, text input, and
   authored stepper buttons.** Render the complete composition and assert fixed
   tags, `role=group`, `type=text`, `type=button`, authored order, no visible
-  wrapper, no spinbutton role, and no implicit native-number input.
+  wrapper, no spinbutton role, and no implicit native-number input. Group
+  is `data-reference-field` on that same group node.
 - [ ] `NF-DOM-02` `[reference]` `[browser]` —
   **A name should add only one direct canonical hidden form input.** Toggle
   `name` and `form` around controlled null/finite values and assert exactly one
@@ -870,6 +877,19 @@ The shared `PART-TYPE-01`, `PART-DOM-01`, `PART-PROP-01`,
   custom-validity/dirty/pending/rejected/failed branches block, with preserved
   styling/descriptions.
 
+### Field surface
+
+- [ ] `NF-SURF-01` `[reference]` `[browser]` —
+  **Group should consume the Field recipe on its own group node.**
+  Mount NumberField with Group, Input, and steppers, no `<Field>`. Assert
+  exactly one `div[role="group"][data-reference-field]`, no nested Field,
+  Input in embedded mode, `status="warning"` sets `data-status="warning"`
+  without `aria-invalid`, omitted status leaves the attribute unset, and
+  StyleProps on Group change padding/radius while role and the marker
+  remain. Matching default/focus/invalid/warning/disabled/read-only
+  chrome against Field is `FI-SURF-01`; this case owns Group's host
+  contract.
+
 ### Dynamic props and interaction replacement
 
 - [ ] `NF-DYNAMIC-01` `[reference]` `[browser]` —
@@ -1029,6 +1049,9 @@ The shared `PART-TYPE-01`, `PART-DOM-01`, `PART-PROP-01`,
   NumberField boundary.
 - Continuous value dragging and geometry: Slider, not NumberField.
 - Shared announcements: ReferenceLibrary/announce(), not a private live region.
+- Visual bezel recipe: `Field` (`FI-SURF-01`). Group consumes it as a
+  Field-surface host (`NF-SURF-01` / `FI-COMP-03`); wrapping Group in
+  Field is application double chrome.
 
 ## Deliberately left and out of scope
 
@@ -1057,7 +1080,7 @@ The shared `PART-TYPE-01`, `PART-DOM-01`, `PART-PROP-01`,
 
 - Added: `NF-DOM-09`, `NF-PARSE-16..19`, `NF-MATH-15`,
   `NF-EDIT-15..19`, `NF-COMMIT-11`, `NF-STEP-13..15`,
-  `NF-FORM-11..14`, and `NF-MANUAL-01..04`.
+  `NF-FORM-11..14`, `NF-MANUAL-01..04`, and `NF-SURF-01`.
 - Removed: `NF-FORMAT-09..10`, `NF-KEY-08`, `NF-WHEEL-01..06`, and
   `NF-A11Y-07`.
 - Renamed IDs: none. Existing retained IDs were rewritten where settled
@@ -1067,7 +1090,7 @@ The shared `PART-TYPE-01`, `PART-DOM-01`, `PART-PROP-01`,
 
 ## Manufacturing gate
 
-1. All 143 automated cases import only required public exports from
+1. All 144 automated cases import only required public exports from
    `@reference-ui/lib`; repository search finds no NumberField helper/test-only
    import.
 2. All public type/runtime managed-prop, accessible-name, and anatomy cases

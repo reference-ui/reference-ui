@@ -26,8 +26,8 @@ controlled single/range selection, and month navigation.
 Omitted `selection` and `value` mean controlled single selection with a null
 value.
 
-These are Calendar API details, not a reason for DatePicker or a date-library
-public type.
+These are Calendar API details, not a reason for a packaged DatePicker or a
+date-library public type. Typed input is `DateField`.
 
 ## Source evidence
 
@@ -1033,12 +1033,12 @@ public type.
 
 - Generic roving focus ideas are shared, but Calendar's date-aware 2D movement
   remains here.
-- DatePicker input parsing/formatting and popup positioning: application +
+- DatePicker field parsing/formatting: `DateField`. Popup positioning:
   `Popover`.
 
 ## Out of scope
 
-- Typed input parsing, time/timezone values, non-Gregorian calendars, multi-
+- Typed input parsing: `DateField`. Time/timezone values, non-Gregorian calendars, multi-
   month views, week numbers, presets, year/month pickers, form serialization,
   drag/Shift-extended range selection, and third-party public date objects.
   React Spectrum `RangeCalendar.shadow.test.tsx` pointer-capture, release-
