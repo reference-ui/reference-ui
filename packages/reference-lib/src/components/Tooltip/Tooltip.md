@@ -30,18 +30,34 @@ interface TooltipProps extends OverlayDismissHandlers {
   closeDelay?: number
 }
 
-interface TooltipTriggerProps {
-  children?: React.ReactNode
-}
+type TooltipTriggerProps = ReferenceSlotPartProps
 
 interface TooltipContentProps
-  extends React.HTMLAttributes<HTMLDivElement> {
+  extends ReferencePartProps<"div"> {
   placement?: PopoverPlacement
   offset?: number
 }
+
+interface TooltipPortalProps {
+  container?: PortalProps["container"]
+}
 ```
 
-`Tooltip` renders no node. `Tooltip.Content` renders `div` with `role="tooltip"`.
+`Tooltip` renders no node. Trigger requires one ref-capable child resolving to
+one native element and merges its native props/ref by Slot rules.
+`Tooltip.Content` renders `div` with `role="tooltip"`. `Tooltip.Portal` renders
+no node and configures the positioning destination.
+Without it, Content uses the trigger's root: document body for ordinary DOM or
+the containing open ShadowRoot so `aria-describedby` remains in scope.
+Tooltip has no visual-exit Presence contract: accepting `open={false}` removes
+Content and its owned descriptor in that update. Applications needing an
+interactive or animated floating panel use Popover.
+
+Defaults are 700ms hover-open, 300ms close, top placement, and 8px offset.
+ReferenceLibrary's document-level warm group defaults to a 300ms skip window.
+Keyboard focus opens immediately. A disabled Trigger cannot open; if an
+already described Trigger becomes disabled, Tooltip requests one controlled
+close and never attempts to restore focus to that disabled element.
 
 ---
 
@@ -55,7 +71,7 @@ Too short flickers; too long fails WCAG. Keyboard focus should open immediately 
 
 **Vendor.** Radix default 700ms. Aria 1500 / close 500. Zag machine `opening`/`closing` (400 / 150) — clearest states. Floating UI `useHover` `delay` / `restMs`; touch → 0.
 
-**Lift** Zag-style state machine. Defaults are product; freeze them in tests.
+**Lift** the Zag-style state machine with the frozen defaults above.
 
 ### Skip-delay across neighbours
 
@@ -67,11 +83,18 @@ After one tooltip shows, moving to the next opens **instantly** for a short wind
 
 ### WCAG 1.4.13
 
-Escape dismisses without moving pointer/focus. If content is hoverable, the pointer may enter it. Default Tooltip is **non-interactive** — no buttons, no links. Interactive hover is Popover `openOnHover`.
+Escape dismisses without moving pointer/focus. The pointer may enter
+non-interactive Content and the Tooltip remains open. Tooltip Content is
+**non-interactive** — no buttons, no links. Interactive hover is Popover
+`openOnHover`.
 
-**Vendor.** Radix `DismissableLayer` + optional `TooltipContentHoverable` / `disableHoverableContent`. Aria Escape in `useTooltipTrigger`. Zag `closeOnEscape` + `interactive` flag.
+**Vendor.** Radix `DismissableLayer` and hover-retention behavior. Aria Escape
+in `useTooltipTrigger`. Zag `closeOnEscape` supplies contrast for the frozen
+unconditional non-interactive Content behavior.
 
-**Lift** Escape + light dismiss (pointerdown outside). Hoverable hull is opt-in; prefer sending interaction to Popover.
+**Lift** Escape + light dismiss (pointerdown outside). Non-interactive Content
+unconditionally retains the Tooltip while the pointer is over it; interactive
+content uses Popover instead.
 
 ### Close on scroll vs reposition
 

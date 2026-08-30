@@ -14,9 +14,12 @@ This is not a file explorer, not a data grid, and not a virtualized list. Descen
   onExpandedChange={setExpanded}
 >
   <Tree.Item value="src">
+    <Tree.Expander aria-label="Toggle src" />
     src
-    <Tree.Item value="src/index">index.ts</Tree.Item>
-    <Tree.Item value="src/tree">tree.ts</Tree.Item>
+    <Tree.Group>
+      <Tree.Item value="src/index">index.ts</Tree.Item>
+      <Tree.Item value="src/tree">tree.ts</Tree.Item>
+    </Tree.Group>
   </Tree.Item>
   <Tree.Item value="readme">README.md</Tree.Item>
 </Tree>
@@ -36,7 +39,8 @@ Keyboard (APG tree):
 ## Proposed API
 
 ```ts
-interface TreeProps {
+interface TreeProps
+  extends Omit<ReferencePartProps<"div">, "onChange"> {
   children?: React.ReactNode
   value?: string | null
   onChange?: (value: string | null) => void
@@ -44,20 +48,39 @@ interface TreeProps {
   onExpandedChange?: (expanded: string[]) => void
 }
 
-interface TreeItemProps {
-  children?: React.ReactNode
+interface TreeItemProps extends ReferencePartProps<"div"> {
   value: string
   disabled?: boolean
+  textValue?: string
 }
+
+interface TreeGroupProps extends ReferencePartProps<"div"> {}
+
+interface TreeExpanderProps
+  extends ReferencePartProps<"button"> {}
 ```
 
-`Tree` renders `div` with `role="tree"`. `Tree.Item` renders `div` with `role="treeitem"`.
+`Tree` renders `div` with `role="tree"`. `Tree.Item` renders
+`div[role="treeitem"]`; nested items are authored inside
+`Tree.Group` (`div[role="group"]`). A branch's `Tree.Expander` is a native
+`button[type="button"][tabindex="-1"]`: pointer activation changes expansion
+without selecting the item, while the focused treeitem retains APG arrow-key
+expansion.
+
+Omitted value/expanded means controlled null/empty state.
 
 ---
 
 ## Problems we own
 
-The freeze gate is collapsed descendants **absent from the roving set**, plus nesting at least two levels. Combobox may use Tree as a nested popup (same virtual-focus rules as Listbox).
+The defining invariant is collapsed descendants **absent from the roving
+set**, proved through at least two nesting levels. When nested in Combobox,
+Tree automatically
+exposes its visible item registry through the shared virtual-focus bridge:
+input focus remains put, Tree still owns expansion/navigation, and Combobox is
+the sole selection commit callback. The mounted Item named by the Combobox
+source also publishes `data-active`; this preview hook remains independent from
+Tree's controlled selected state.
 
 ### Visible-only roving set
 

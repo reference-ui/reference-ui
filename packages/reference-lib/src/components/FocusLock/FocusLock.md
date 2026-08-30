@@ -29,21 +29,33 @@ Does not add a wrapper node. Slots onto a single child. Overlay.Content is the l
 </FocusLock>
 ```
 
-Disabled while the overlay is closed but still mounted for Presence exit. Restoration runs after Presence reports the exit complete.
+Overlay keeps the lock enabled while closed-state content is still mounted for
+Presence exit. It disables/deactivates the lock only after Presence completes,
+then runs restoration; closed visual state alone must not expose background
+focus early.
 
 ## Proposed API
 
 ```ts
-interface FocusLockProps {
-  children?: React.ReactNode
+type FocusTarget =
+  | React.RefObject<HTMLElement | null>
+  | (() => HTMLElement | null)
+
+interface FocusLockProps
+  extends Omit<ReferenceSlotPartProps, "children"> {
+  children?: React.ReactElement | null | false
   disabled?: boolean
-  restoreFocus?: boolean
-  initialFocus?: React.RefObject<HTMLElement | null> | false
+  restoreFocus?: boolean | FocusTarget
+  initialFocus?: FocusTarget | false
   shards?: Array<HTMLElement | React.RefObject<HTMLElement | null>>
 }
 ```
 
 FocusLock renders no extra node.
+Omitted `disabled` is false and omitted `restoreFocus` is true. `true`
+restores the pre-activation target with proximity fallback; an explicit target
+resolves at deactivation and wins when connected/focusable, then falls back to
+the captured origin if invalid. `false` performs no return move.
 
 Used by Overlay. Not used by Popover, Tooltip, or Toast (those are not isolated).
 
@@ -59,7 +71,9 @@ One solver in production. Pairing two focus libraries causes recursive `focus()`
 
 **Vendor.** `vendor/tabbable/src` is the strictest catalog (`isTabbableRadio`, `CSS.escape`, fieldset+legend, `details:not([open])`). focus-lock `focusables.ts` / `correctFocus.ts` is simpler (no fieldset-disabled, no closed-details). Ariakit’s radio rule is coupled to `activeElement` and disagrees with the browser — **leave**. Radix `getTabbableCandidates` ignores positive `tabindex` (document order only).
 
-**Lift** tabbable’s cases as the shared catalog for FocusLock **and** Overlay `initialFocus`. Prefer Radix stance on positive `tabindex` (document order; optionally warn). Do not ship tabbable’s `displayCheck` modes as public API.
+**Lift** tabbable’s cases as the shared catalog for FocusLock **and** Overlay
+`initialFocus`. Positive `tabindex` still uses deterministic document order
+inside the lock. Do not ship tabbable’s `displayCheck` modes as public API.
 
 ### Shards / branches
 
@@ -73,7 +87,10 @@ A Popover portalled out of a Dialog is outside the lock DOM. Without registratio
 
 Vendors restore on deactivate/unmount. Overlay needs restore **after Presence exit**. focus-lock `return-focus.ts` (`captureFocusRestore`, walk siblings if the node is gone) is the proximity algorithm. react-focus-lock defers a microtask. Radix `setTimeout(0)`. Aria RAF.
 
-**Lift** proximity restore. **Leave** “restore on unmount.” Wire to Presence complete; `disabled` while closed-but-mounted.
+**Lift** proximity restore plus focus-trap's explicit return-target seam.
+**Leave** “restore on unmount.” Resolve the latest explicit target and restore
+only at owner deactivation/Presence completion; `disabled` while
+closed-but-mounted.
 
 ### `initialFocus`: omitted | ref | `false`
 
@@ -86,6 +103,10 @@ focus-trap: `initialFocus === false` means **do not move**. react-focus-lock `au
 Kashey always wraps a `div` (`as` prop) plus local `data-focus-guard` sentinels. Aria injects `<span hidden>` sentinels. Radix uses **document-edge** guards (`focus-guards.tsx`, issue #2812 reflow). Ariakit `FocusTrap` is a visually hidden tab stop, not a manager — **contrast only**.
 
 **Leave** wrapper/`as`/sidecar. Slot onto Overlay.Content. Lift Tab-loop behaviour (Aria/focus-trap keydown or Radix loop) and shared edge guards only if Slot cannot host the listeners.
+
+Only unmodified Tab and Shift+Tab participate in the loop. Ctrl/Alt/Meta-
+modified Tab remains available to the browser or application and never causes
+a lock-authored move.
 
 ### Reclaim: null relatedTarget, removed node
 
@@ -105,7 +126,15 @@ Two reclaimers fight. Radix `focusScopesStack.pause`. focus-trap `trapStack`. re
 
 `activeElement` is the host. tabbable walks slots/`assignedElements`. focus-lock `FOCUS_ALLOW` only works on light-DOM hosts. focus-trap `composedPath` / `shadowDom.test.js`.
 
-**Lift** tabbable shadow/slot + composedPath for events. Iframes/`crossFrame` stay out of freeze unless Overlay documents iframe content.
+**Lift** tabbable shadow/slot + composedPath for events. Open roots expose
+assigned elements in composed slot order. Closed roots are opaque:
+`tabIndex=-1` on the host removes that component from sequential order, while
+an eligible host is one stop rather than an invitation to inspect internals.
+An `<iframe>` element itself is likewise one candidate. Clicking into an
+in-lock frame may leave that frame element active in the outer document, but a
+lock never traverses frame content or traps across Documents; each same-origin
+frame activates its own document-scoped lock when inner containment is needed.
+Cross-frame trapping is deliberately outside this freeze.
 
 ---
 

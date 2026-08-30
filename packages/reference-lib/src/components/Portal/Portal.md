@@ -39,6 +39,10 @@ interface PortalProps {
 
 Portal renders no wrapper.
 
+Omitted or directly `null` container uses `document.body` after mount. A
+supplied ref/function that currently resolves null is unresolved and renders no
+transient body copy until its target exists.
+
 ---
 
 ## Problems we own

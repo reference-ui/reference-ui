@@ -4,15 +4,20 @@ Proof: [TESTS.md](./TESTS.md).
 
 Controlled, anchored floating content.
 
-Owns positioning, collision handling, keyboard and pointer interaction, accessible state, outside dismissal, focus restoration, and registration on the shared layer stack with Overlay and Menu.
+Owns positioning, collision handling, and the Popover-specific policy and
+integration for keyboard/pointer interaction, accessible state, and focus
+restoration. Overlay supplies outside-dismiss ordering, nesting, and the shared
+layer stack; Presence supplies exit detection.
 
 By default, `Popover.Trigger` is both the interaction source and the positioning anchor. An optional virtual `anchor` (element, rect, or point) is the positioning reference when the application already owns the interaction — context menu, selection, canvas, table cell. When both are present, the trigger remains the interaction and accessibility source; `anchor` wins for positioning.
 
 ```tsx
-<Popover open={open} onDismiss={close}>
-  <Popover.Trigger onClick={() => setOpen((prev) => !prev)}>
-    Open filters
-  </Popover.Trigger>
+<Popover
+  open={open}
+  onOpen={() => setOpen(true)}
+  onDismiss={close}
+>
+  <Popover.Trigger>Open filters</Popover.Trigger>
 
   <Popover.Content placement="bottom-start" offset={8}>
     {children}
@@ -33,10 +38,12 @@ By default, `Popover.Trigger` is both the interaction source and the positioning
 ```
 
 ```tsx
-<Popover open={open} onDismiss={close}>
-  <Popover.Trigger onClick={() => setOpen((prev) => !prev)}>
-    More information
-  </Popover.Trigger>
+<Popover
+  open={open}
+  onOpen={() => setOpen(true)}
+  onDismiss={close}
+>
+  <Popover.Trigger>More information</Popover.Trigger>
   <Popover.Portal container={portalContainer} />
   <Popover.Content placement="top">
     <Popover.Arrow />
@@ -45,9 +52,23 @@ By default, `Popover.Trigger` is both the interaction source and the positioning
 </Popover>
 ```
 
-`open={false}` does not unmount Content until exit animations complete (`data-state`).
+`open={false}` does not unmount Content until exit animations complete
+(`data-state`). Closed exiting Content is inert/noninteractive and no longer an
+active dismissal layer, while positioning and the parent FocusLock branch stay
+alive until exit/focus restoration completes.
 
-Hover-opened **interactive** content uses `openOnHover`. Tooltip is the non-interactive case. HoverCard is this composition, not a separate primitive.
+Unprevented native click, Enter, or Space activation on Trigger requests
+`onOpen` while closed and `onDismiss` while open. The consumer handler runs
+first, so `preventDefault()` cancels the built-in request.
+
+Hover-opened **interactive** content uses `openOnHover`; keyboard focus follows
+the same accessible opening policy. Tooltip is the non-interactive case.
+HoverCard is this composition, not a separate primitive.
+
+Because Content portals, Popover bridges logical keyboard order: Tab from an
+open Trigger enters the first Content control, and leaving the last control
+advances relative to the Trigger's source position while requesting dismissal.
+This is not a trap; outside programmatic focus remains outside.
 
 ```tsx
 <Popover
@@ -92,30 +113,63 @@ interface PopoverProps extends OverlayDismissHandlers {
   openOnHover?: boolean
   openDelay?: number
   closeDelay?: number
+  closeOnScroll?: boolean
 }
 
 interface PopoverTriggerProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {}
+  extends ReferencePartProps<"button"> {}
 
 interface PopoverPortalProps {
   container?: PortalProps["container"]
 }
 
 interface PopoverContentProps
-  extends React.HTMLAttributes<HTMLDivElement> {
+  extends ReferencePartProps<"div"> {
   placement?: PopoverPlacement
   offset?: number
   collisionPadding?: number
+  strategy?: "absolute" | "fixed"
+  flip?: boolean
+  shift?: boolean
+}
+
+interface PopoverArrowProps
+  extends ReferencePartProps<"div"> {
+  edgePadding?: number
 }
 ```
 
 `Popover` renders no node. `Popover.Trigger` renders `button`. `Popover.Content` and `Popover.Arrow` render `div`. `Popover.Portal` renders nothing.
 
+Content defaults are `placement="bottom-start"`, `offset=8`,
+`collisionPadding=8`, absolute strategy, and flip/shift enabled. Positioning
+owns `position`/`top`/`left` but never consumer `transform`. Content publishes
+`--reference-popover-available-width`,
+`--reference-popover-available-height`,
+`--reference-popover-anchor-width`,
+`--reference-popover-anchor-height`, and
+`--reference-popover-transform-origin`, plus `data-anchor-hidden` and
+`data-escaped`. Arrow `edgePadding` defaults to 4px; ordinary `padding`
+remains the token-aware visual StyleProp.
+
+Hover mode defaults to 700ms open, 300ms close, a 300ms impatient-click
+threshold, and 5px safe-area padding.
+
+`closeOnScroll` defaults to `false`: ordinary interactive Popovers remain open
+and reposition as their anchor's composed overflow ancestors scroll. When it
+is true, scrolling an ancestor that moves the anchor requests one controlled
+dismissal; unrelated regions and self-scroll inside an input or textarea do
+not. Combobox enables this policy for its Popup. Tooltip uses the same
+positioning engine but owns an always-on scroll-close policy.
+
 ---
 
 ## Problems we own
 
-Positioning is math. Dismiss, nesting, and Presence are the Overlay kernel. Do not take Floating UI React as a second overlay runtime (`useDismiss`, `FloatingTree`, `FloatingFocusManager`).
+Positioning is math. Popover owns its policy and integration, while
+outside-dismiss ordering and nesting use Overlay's shared layer kernel and exit
+detection uses Presence. Do not take Floating UI React as a second overlay
+runtime (`useDismiss`, `FloatingTree`, `FloatingFocusManager`).
 
 ### Flip / shift / offset
 
@@ -127,7 +181,8 @@ Preferred placement overflows. Middleware must try opposite / expanded / opposit
 
 ### Arrow
 
-Arrow padding can nudge the floating element. That reset must not re-trigger flip (`middlewareData.arrow?.alignmentOffset`).
+Arrow `edgePadding` can nudge the floating element. That reset must not
+re-trigger flip (`middlewareData.arrow?.alignmentOffset`).
 
 **Vendor.** `middleware/arrow.ts` + interaction in flip/offset. `dom/test/functional/arrow.test.ts`.
 
@@ -157,6 +212,11 @@ Scroll ancestors of **both** reference and floating, resize, layout shift, visua
 
 **Lift** the whole `autoUpdate` + tests.
 
+`closeOnScroll` selects dismissal instead of living reposition for a
+consumer whose popup becomes misleading after its anchor moves. Detection and
+Shadow DOM ancestry remain Popover-engine responsibilities so Combobox and
+Tooltip do not implement independent document listeners.
+
 ### Hide when clipped
 
 A popover can stay logically open while visually orphaned (scrolled out of the clipping context).
@@ -171,7 +231,11 @@ The hard part of hover-opened interactive content is not the open delay. It is p
 
 **Vendor.** Floating UI `packages/react/src/safePolygon.ts` — cursor triangle + trough, speed intent, opposite-side leave. Aria `useSafeArea.ts` — convex hull of both padded rects (placement-agnostic). Radix HoverCard is **delay-only** (no polygon) — weaker diagonal travel. Zag `rect/src/polygon.ts` is submenu intent (reusable math). Radix Tooltip hoverable uses a hull with padding 5.
 
-**Lift** a first-class grace algorithm into Popover `openOnHover`. Freeze-gate Aria hull vs Floating UI triangle. **Leave** FloatingTree `parentId` coupling and Base UI’s vendored `floating-ui-react` as runtime.
+**Lift** a first-class placement-aware safe polygon into Popover
+`openOnHover`: pad Trigger and Content by 5px, protect direct diagonal travel
+through their gap, and abandon grace when movement is slow, reversed, or
+crosses the side opposite Content. **Leave** FloatingTree `parentId` coupling
+and Base UI’s vendored `floating-ui-react` as runtime.
 
 ### Impatient click after hover-open
 

@@ -11,7 +11,9 @@ Coordinates a single disclosure trigger and content region: `aria-expanded`, `ar
 </Collapsible>
 ```
 
-Inside Accordion, identity is `id` and expansion is driven by the Accordion value. Do not pass `open` when nested.
+Inside Accordion, identity is `id` and expansion is driven by Accordion
+`value`/`onChange`. Do not pass child `open` or `onChange` when nested;
+Accordion is the sole state/request authority.
 
 ## Proposed API
 
@@ -25,13 +27,14 @@ interface CollapsibleProps {
 }
 
 interface CollapsibleTriggerProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {}
+  extends ReferencePartProps<"button"> {}
 
 interface CollapsibleContentProps
-  extends React.HTMLAttributes<HTMLDivElement> {}
+  extends ReferencePartProps<"div"> {}
 ```
 
 `Collapsible` renders no node. `Collapsible.Trigger` renders `button`. `Collapsible.Content` renders `div`.
+Outside Accordion, omitted `open` is controlled false.
 
 ---
 
@@ -45,7 +48,11 @@ Content must stay mounted through exit. Height animation needs the measured size
 
 **Vendor.** Radix Collapsible: Presence + `--radix-collapsible-content-height/width`. Zag collapsible machine. Base UI Accordion builds on Collapsible.
 
-**Lift** Radix Presence+measure mapped to our Presence / `data-state`. **Leave** vendor CSS-var prefixes; applications style against `data-state` and their own vars if they measure.
+**Lift** Radix Presence+measure mapped to our Presence / `data-state`.
+Content publishes
+`--reference-collapsible-content-height` and
+`--reference-collapsible-content-width`; applications own the CSS that consumes
+them.
 
 ### `aria-expanded` / `aria-controls`
 

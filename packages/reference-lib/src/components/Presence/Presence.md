@@ -16,7 +16,7 @@ Applications style against `data-state`. They do not wrap Overlay in Presence, s
 
 ```ts
 interface PresenceProps {
-  children?: React.ReactNode
+  children?: React.ReactElement | null | false
   present: boolean
 }
 ```
@@ -41,7 +41,10 @@ Headless UI `Transition` waits `element.getAnimations()` filtered to **`CSSTrans
 
 ### Instant unmount when there is nothing to wait for
 
-If `animation-name` / transition duration is `none` or `0s` (including `prefers-reduced-motion` CSS), unmount immediately. Do not invent a media-query branch unless freeze tests need it.
+If every computed animation/transition is `none`, canceled, or effectively
+`0s`—including CSS changed by `prefers-reduced-motion`—unmount in the same
+completed close turn. Presence follows computed effects and does not maintain a
+separate media-query state machine.
 
 **Vendor.** Radix: name unchanged → `UNMOUNT`. Zag: `animationDuration === "0s"`. Headless: empty `getAnimations()` → `done()`.
 
@@ -51,7 +54,14 @@ Leaving present while `document.visibilityState === "hidden"` should skip the ex
 
 ### Nested Presence
 
-Headless parent leave waits for child transitions. Radix/Zag do not. Overlay Backdrop + Content are siblings under one Overlay — one Presence owner, not nested Presence unless freeze proves we need it.
+Nested Presence instances coordinate through an internal registration channel.
+When a parent and descendant close together, the parent remains mounted until
+its own finite effects and every registered descendant exit finish. A
+descendant interrupted back to present unregisters its pending exit without
+stranding the parent; removal or StrictMode replay also cleans registration.
+This follows Headless UI's nesting regressions without exposing a Provider or
+context API. Overlay Backdrop and Content remain sibling participants owned by
+Overlay rather than requiring application-authored Presence wrappers.
 
 ### `forceMount`
 

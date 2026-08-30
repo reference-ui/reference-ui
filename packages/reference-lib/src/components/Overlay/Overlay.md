@@ -44,11 +44,20 @@ onEscape(event)       → if (!event.defaultPrevented) → onDismiss()
 onOutsidePress(event) → if (!event.defaultPrevented) → onDismiss()
 ```
 
-`Overlay.Content` accepts `initialFocus`. When omitted, Overlay focuses the first tabbable descendant. A ref focuses that element. `false` skips the move.
+`Overlay.Content` accepts `initialFocus`. When omitted, Overlay focuses the
+first tabbable descendant. A target ref/resolver focuses that element; `false`
+skips the move. Omitted `restoreFocus` returns to the pre-open target after
+exit. An explicit target redirects that completed return, and `false` leaves
+focus where the application put it.
 
 `open={false}` does not unmount immediately. Overlay keeps Backdrop and Content mounted through the exit cycle via Presence, and sets `data-state="open" | "closed"` on both.
 
-Overlay, Popover, and Menu share one layer stack. Escape dismisses only the topmost layer. An outside-press whose target is inside a nested popup does not dismiss the parent.
+Overlay, Popover, and Menu share one layer stack. Escape dismisses only the
+topmost layer. An outside press whose target is inside a nested popup does not
+dismiss the parent. If a press is outside both parent and child, that physical
+event is consumed by the topmost child only; parent closure is a separate
+controlled action or an explicit parent cascade, never a replay of the same
+event.
 
 ## Proposed API
 
@@ -69,11 +78,12 @@ interface OverlayPortalProps {
 }
 
 interface OverlayBackdropProps
-  extends React.HTMLAttributes<HTMLDivElement> {}
+  extends ReferencePartProps<"div"> {}
 
 interface OverlayContentProps
-  extends React.HTMLAttributes<HTMLDivElement> {
-  initialFocus?: React.RefObject<HTMLElement | null> | false
+  extends ReferencePartProps<"div"> {
+  initialFocus?: FocusTarget | false
+  restoreFocus?: boolean | FocusTarget
 }
 ```
 
@@ -101,6 +111,11 @@ Clicking a portalled Menu looks “outside” the Dialog’s DOM. Naive `contain
 
 **Lift** branch/shard registration. The same nodes are FocusLock `shards` and scroll-lock exceptions. Portalled nested content is inside the parent for dismiss, focus, and scroll.
 
+When an event is outside both a modal parent and a non-modal child, Reference
+UI freezes child-only handling. Radix currently closes both in one Popover e2e
+path, but replaying an already consumed physical event after a controlled child
+unmount makes parent behavior timing-dependent.
+
 ### Deferred outside-press (pointerdown → click)
 
 Dismissing on `pointerdown` races password-manager overlays and other extensions that `stopPropagation` on later mouse events. Touch also has a delayed click that can fire after pointer-events are restored.
@@ -108,6 +123,11 @@ Dismissing on `pointerdown` races password-manager overlays and other extensions
 **Vendor.** Radix `deferPointerDownOutside` + intercept of pointerup/mousedown/click (`dismissable-layer.tsx`, issues #2055, #2171, #3346). React Aria pairs pointerdown with **click** (Android Chrome pointerup bug). e2e: `dialog--with-extension-overlay`.
 
 **Lift** Radix defer. Backdrop is a dedicated dismiss surface that may still dismiss even when later events are intercepted.
+
+An unregistered extension overlay therefore keeps a modal Overlay open when it
+intercepts the deferred sequence. Non-modal Popover and Menu intentionally
+close from their initial outside path; their contracts test that inverse
+explicitly.
 
 ### Same-tick open race
 
@@ -131,7 +151,9 @@ Modal overlays often set `body { pointer-events: none }` and re-enable the top l
 
 **Vendor.** Radix `layersWithOutsidePointerEventsDisabled` (issue #3645). Zag `disablePointerEventsOutside` + MutationObserver. react-remove-scroll’s `inert` PE mode is documented as dangerous with portals — do not default it (`VENDOR.md`).
 
-**Lift** Radix/Zag PE stacking. Tear down when modal intent ends, not only when the node unmounts. Prefer native `inert` for AT; PE stacking is pointer UX.
+**Lift** Radix/Zag PE stacking. Keep modal isolation through the owned Presence
+exit and tear it down once that exit completes; a rapid reopen cancels teardown.
+Prefer native `inert` for AT; PE stacking is pointer UX.
 
 ### Cascade when a parent closes
 
@@ -145,7 +167,11 @@ Closing a Dialog must close the nested Menu. Focus moving during nested teardown
 
 Radix dismisses on any outside press (with body PE none). Base UI only dismisses if the target is **this** dialog’s backdrop (issue #1320). Wrong rule closes the wrong sibling modal.
 
-**Freeze-gate.** Backdrop is the dismiss affordance for modal Overlay. Nested popups use branch rules, not “click anywhere.” Encode multi-root modals as a freeze-gate before copying either camp blindly.
+**Freeze.** Backdrop is the explicit dismiss affordance for modal Overlay.
+Without a Backdrop, geometric outside press follows the same cancelable
+policy. Nested popups use registered branch rules, not “click anywhere,” and
+all React roots in one `Document` share one top-layer order; only the current
+eligible layer handles a physical event.
 
 ### Scroll lock: gap, nested scrollables, overscroll
 
@@ -171,13 +197,19 @@ AT must not reach background content. Double-hide breaks restore. Live regions a
 
 **Lift** sibling-walk + refcount + live-region exceptions. Prefer native `inert` on Overlay. Do not require an OverlayProvider as a public app wrapper.
 
+An already `aria-hidden` subtree is an opaque traversal boundary. Dynamic nodes
+reparented into a pre-hidden or Overlay-managed subtree stay isolated without
+duplicating ownership on every descendant.
+
 ### Focus restore after Presence
 
 Restoring focus while the exit animation still has focus inside feels wrong. Restoring into an unmounted trigger fails. Overlay restores **after Presence reports exit complete** — stricter than Radix FocusScope’s `setTimeout(0)` on unmount.
 
 **Vendor.** Radix restore on FocusScope cleanup. Base UI `onOpenChangeComplete`. a11y-dialog restores immediately. None of them know Presence.
 
-**Lift** our documented order. FocusLock stays `disabled` while closed-but-mounted for exit. See `FocusLock.md`.
+**Lift** our documented order. FocusLock stays enabled while closed-state
+Content is still mounted for exit, then deactivates/restores after Presence
+completes. See `FocusLock.md`.
 
 ### AlertDialog Escape policy
 

@@ -8,6 +8,8 @@ DatePicker / DateRangePicker are input + Popover + Calendar. Parsing and display
 
 ```tsx
 <Calendar
+  month={month}
+  onMonthChange={setMonth}
   value={value}
   onChange={setValue}
   locale="en-GB"
@@ -27,30 +29,121 @@ DatePicker / DateRangePicker are input + Popover + Calendar. Parsing and display
 </Calendar>
 ```
 
-Range selection uses `selection="range"` and `{ start, end }`. Hovering a day while a start date is set previews the in-range interval; that preview is not application state.
+Range selection uses `selection="range"` and `{ start, end }`. Hovering or
+focusing a day while a start date is set previews the in-range interval; that
+preview is not application state. A valid preview is requested as the completed
+range when Tab leaves the grid. Month navigation never commits it.
 
 ## Proposed API
 
 ```ts
 type ISODate = `${number}-${number}-${number}`
+type ISOMonth = `${number}-${number}`
+type CalendarWeekday =
+  | "sun"
+  | "mon"
+  | "tue"
+  | "wed"
+  | "thu"
+  | "fri"
+  | "sat"
 
 type CalendarValue =
   | ISODate
   | { start: ISODate; end: ISODate | null }
 
-interface CalendarProps {
-  children?: React.ReactNode
+interface CalendarProps
+  extends Omit<ReferencePartProps<"div">, "onChange"> {
+  month: ISOMonth
+  onMonthChange?: (month: ISOMonth) => void
   selection?: "single" | "range"
   value?: CalendarValue | null
   onChange?: (value: CalendarValue | null) => void
-  locale?: string
+  locale: string
+  firstDayOfWeek?: CalendarWeekday
+  today?: ISODate
   min?: ISODate
   max?: ISODate
   isDateUnavailable?: (date: ISODate) => boolean
 }
+
+interface CalendarHeaderProps
+  extends ReferencePartProps<"div"> {}
+
+interface CalendarHeadingProps
+  extends ReferencePartProps<"div"> {}
+
+interface CalendarNavigationProps
+  extends ReferencePartProps<"button"> {}
+
+interface CalendarGridProps
+  extends ReferencePartProps<"table"> {}
+
+interface CalendarWeekdaysProps
+  extends ReferencePartProps<"thead"> {
+  weekdayStyle?: "narrow" | "short" | "long"
+}
+
+interface CalendarDaysProps
+  extends Omit<ReferencePartProps<"tbody">, "children"> {
+  children?: (day: CalendarDayRenderState) => React.ReactElement
+}
+
+interface CalendarDayRenderState {
+  date: ISODate
+  formattedDay: string
+  outsideMonth: boolean
+  today: boolean
+  selected: boolean
+  disabled: boolean
+  rangeStart: boolean
+  rangeEnd: boolean
+  inRange: boolean
+  preview: boolean
+}
+
+interface CalendarDayProps
+  extends ReferencePartProps<"button"> {
+  date: ISODate
+}
 ```
 
-`Calendar` renders `div`. `Calendar.Header` and `Calendar.Heading` render `div`. `Calendar.Previous` / `Calendar.Next` render `button`. `Calendar.Grid` renders `table`. `Calendar.Weekdays` renders `th`. Each day is a `td` containing a `button`.
+Runtime values are canonical zero-padded `YYYY-MM-DD` / `YYYY-MM` in years
+0001–9999. Omitted selection/value means controlled single/null. `today` may be
+supplied for deterministic SSR; when omitted, the server and first hydration
+render no today marker and the client-local marker is added after mount.
+Omitted min/max/availability leaves every valid date in that domain available.
+Locale determines week start unless `firstDayOfWeek` explicitly overrides it;
+Weekdays defaults to short visible labels and accepts narrow/short/long while
+retaining unambiguous full accessible names.
+
+`Calendar` renders `div`. Header/Heading render `div`; Previous/Next render
+`button[type=button]`; Grid renders `table[role=grid]`; Weekdays renders
+`thead` containing one row of generated `th`; Days renders `tbody` containing
+generated rows and one `td[role=gridcell] > Calendar.Day` per date.
+
+With no child renderer, Days supplies each Day's locale-formatted day number.
+For custom content, its function receives complete public state and returns one
+`<Calendar.Day date={day.date}>…</Calendar.Day>`. Day is the fixed native
+button part and accepts native props, StyleProps, children, events, and refs.
+Calendar remains authoritative for its accessible date label, disabled and
+selected ARIA/data, tabIndex, grid linkage, and selection/navigation default.
+Generated `tr`/`td` elements remain fixed semantic output rather than
+undocumented prop targets.
+
+```tsx
+<Calendar.Days>
+  {(day) => (
+    <Calendar.Day
+      date={day.date}
+      fontWeight={day.selected ? "700" : "400"}
+    >
+      <Span>{day.formattedDay}</Span>
+      {eventsByDate[day.date] ? <Span aria-hidden>•</Span> : null}
+    </Calendar.Day>
+  )}
+</Calendar.Days>
+```
 
 Cells expose `data-today`, `data-selected`, `data-disabled`, `data-outside-month`, and for ranges `data-range-start`, `data-range-end`, `data-in-range`.
 
@@ -64,7 +157,9 @@ This is genuinely hard. We do not take a `Date` library; we re-host vendor grid/
 
 ### Week start ≠ Sunday
 
-Freeze-gate: a locale whose week does not start on Sunday (`en-GB`, etc.). Hardcoding Sunday is the usual US-centric bug.
+The locale's CLDR week start is authoritative unless `firstDayOfWeek`
+explicitly overrides it. `en-GB` and another non-Sunday locale are required
+regressions; hardcoding Sunday is the usual US-centric bug.
 
 **Vendor.** `@internationalized/date` `weekStartData.ts` / `startOfWeek(locale)` (CLDR; some Sunday locales omitted and default Sun — know that compression). react-day-picker `weekStartsOn` / locale / `ISOWeek`.
 
@@ -78,7 +173,14 @@ Aria uses `CalendarDate`. DayPicker uses `Date` plus `day.isoDate` data attrs. P
 
 ### Range hover preview is not application state
 
-While start is set, hovering a day previews in-range. `value` updates when the range completes (or when start is chosen, depending on freeze — Aria keeps an internal `anchorDate` / `highlightedRange`; DayPicker `useRange` calls `onSelect({ from, to: undefined })` on first click, pushing partial range into the app).
+The first enabled activation requests controlled
+`{ start: date, end: null }`. While that start is controlled, hover/focus
+previews an available interval without another callback. The second enabled
+activation requests the completed normalized range; crossing an unavailable
+date is rejected and retains the pending start. Tab away also requests the
+current valid preview before allowing native focus traversal; a rejected
+request leaves the controlled pending value intact. Clicking Previous or Next
+requests only the visible month and never turns a preview into selection.
 
 **Lift** Aria highlight/anchor. Do not make the application store hover preview.
 

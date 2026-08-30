@@ -21,8 +21,9 @@ Merge rules:
 ## Proposed API
 
 ```ts
-interface SlotProps {
-  children?: React.ReactNode
+interface SlotProps
+  extends Omit<ReferenceSlotPartProps, "children"> {
+  children?: React.ReactElement | null | false
   [key: string]: unknown
 }
 ```
@@ -53,7 +54,8 @@ Child handler runs first. If the child calls `event.preventDefault()`, the Slot 
 
 Nested Slot must merge onto the deep element, not a wrapper. Multiple children or a text node throw when Slot is active. Empty/`null`/`false` pass through.
 
-**Vendor.** Radix `Slottable`. Lift the invariant; leave the Slottable public name if we can do nested merge without a second component.
+**Vendor.** Radix `Slottable`. Lift the invariant through Slot's frozen nested
+merge behavior; a public `Slottable` component remains explicitly excluded.
 
 ### Refs
 

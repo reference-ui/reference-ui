@@ -2,7 +2,9 @@
 
 Proof: [TESTS.md](./TESTS.md).
 
-Composite-widget keyboard kernel: roving `tabindex`, arrow movement, Home/End, disabled skipping, optional looping, optional typeahead, optional two-dimensional movement.
+Composite-widget keyboard kernel: roving `tabindex`, arrow movement,
+Home/End/PageUp/PageDown boundary movement, disabled skipping, optional
+looping, optional typeahead, optional two-dimensional movement.
 
 Does not add a wrapper node. Slots keyboard behaviour onto a single composite child. Each `RovingFocus.Item` slots `tabindex` onto its child.
 
@@ -34,23 +36,24 @@ Does not add a wrapper node. Slots keyboard behaviour onto a single composite ch
 </RovingFocus>
 ```
 
-`orientation="both"` moves in two dimensions. Typeahead is off by default; Listbox and Menu turn it on. Tabs leave it off.
+`orientation="both"` moves in two dimensions. Omitted behavior is horizontal,
+non-looping, and typeahead-off; Listbox and Menu turn typeahead on. Tabs leave
+it off.
 
 Toolbar, ToggleGroup, tag lists, and picker grids are documented compositions on top of this — they are not reasons to rebuild the same machinery.
 
 ## Proposed API
 
 ```ts
-interface RovingFocusProps {
-  children?: React.ReactNode
+interface RovingFocusProps extends ReferenceSlotPartProps {
   orientation?: "horizontal" | "vertical" | "both"
   loop?: boolean
   typeahead?: boolean
 }
 
-interface RovingFocusItemProps {
-  children?: React.ReactNode
+interface RovingFocusItemProps extends ReferenceSlotPartProps {
   disabled?: boolean
+  textValue?: string
 }
 ```
 
@@ -72,7 +75,10 @@ Only one item in the tab sequence. Arrows move among focusable items. Disabled i
 
 ### Typeahead
 
-A buffer of typed characters, debounce (~1s in Aria, 350ms in Headless — **leave** Headless timing), wrap-around match. Space during an active search must **not** activate the item (capture-phase). Unicode letters matter (Ariakit).
+A buffer of typed characters uses an exact 1000ms inactivity timeout and
+wrap-around matching. Space during an active search must **not** activate the
+item (capture-phase). Unicode letters matter (Ariakit). Headless UI's 350ms
+timing is deliberately left.
 
 **Vendor.** Aria `useTypeSelect.ts`. Ariakit `composite-typeahead.tsx`. Radix RovingFocus core has **no** typeahead; Radix Menu has its own.
 
@@ -88,7 +94,9 @@ A buffer of typed characters, debounce (~1s in Aria, 350ms in Headless — **lea
 
 ### Virtual focus
 
-Combobox keeps DOM focus in the input and paints active-descendant on the list. That is Combobox, not a public RovingFocus mode unless freeze needs a flag. Do not entangle RovingFocus with Aria’s selection manager.
+Combobox keeps DOM focus in the input and publishes active-descendant through
+its collection bridge. That is not a public RovingFocus mode. RovingFocus stays
+a DOM-focus kernel and does not absorb Aria's selection manager.
 
 ---
 

@@ -19,24 +19,47 @@ Accessible resizable panel partitions (`role="separator"`). Pointer/touch drag, 
 ## Proposed API
 
 ```ts
-interface SplitterProps {
-  children?: React.ReactNode
+interface SplitterProps
+  extends Omit<ReferencePartProps<"div">, "onChange"> {
   orientation?: "horizontal" | "vertical"
   value: number[]
   onChange?: (value: number[]) => void
+  onChangeEnd?: (value: number[]) => void
 }
 
 interface SplitterPanelProps
-  extends React.HTMLAttributes<HTMLDivElement> {
+  extends ReferencePartProps<"div"> {
   min?: number | string
   max?: number | string
+  collapsible?: boolean
+  collapsedSize?: number
 }
 
 interface SplitterHandleProps
-  extends React.HTMLAttributes<HTMLDivElement> {}
+  extends ReferencePartProps<"div"> {
+  disabled?: boolean
+}
 ```
 
 `Splitter` and `Splitter.Panel` render `div`. `Splitter.Handle` renders `div` with `role="separator"`.
+
+`value` entries are percentages in current Panel order and sum to 100.
+Numbers on `min`, `max`, and `collapsedSize` are percentage points; CSS strings
+are measured lengths. Omitted orientation is horizontal. An opted-in
+collapsible Panel defaults to `collapsedSize=0` and restores its last feasible
+expanded size. `onChange` requests each changed drag/keyboard candidate;
+`onChangeEnd` receives the last requested layout once on successful pointer
+release or keyboard keyup. Repeated keydowns form one interaction, pointer
+cancellation emits no end, and programmatic value changes emit neither
+callback. Every Panel exposes its resolved percentage as
+`--reference-splitter-panel-size`; Splitter never overwrites application
+flex/grid/transform styles.
+
+Each Handle's primary pane is the preceding logical Panel: left in LTR, right
+in RTL, and above for vertical groups. Splitter assigns that Panel a stable ID
+when needed and sets the Handle's `aria-controls` to it. Controlled size arrays
+remain positional in current Panel order; the ID stabilizes only ARIA,
+constraints, and remembered collapse size, not value-to-Panel mapping.
 
 ---
 

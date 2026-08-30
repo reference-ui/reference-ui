@@ -32,21 +32,28 @@ interface TabsProps {
 }
 
 interface TabsListProps
-  extends React.HTMLAttributes<HTMLDivElement> {}
+  extends ReferencePartProps<"div"> {}
 
 interface TabsTabProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  extends ReferencePartProps<"button"> {
   value: string
   disabled?: boolean
 }
 
 interface TabsPanelProps
-  extends React.HTMLAttributes<HTMLDivElement> {
+  extends ReferencePartProps<"div"> {
   value: string
 }
 ```
 
-`Tabs` renders no node. `Tabs.List` renders `div` with `role="tablist"`. `Tabs.Tab` renders `button` with `role="tab"`. `Tabs.Panel` renders `div` with `role="tabpanel"`.
+`Tabs` renders no node. `Tabs.List` renders `div` with `role="tablist"`.
+`Tabs.Tab` renders `button[type=button]` with `role="tab"`. `Tabs.Panel`
+renders `div` with `role="tabpanel"`. Every declared Panel stays mounted; the
+one matching controlled `value` is visible and every inactive Panel has the
+native `hidden` attribute. A programmatic selection change moves focus out of
+a panel that becomes hidden to the newly selected Tab or a safe enabled
+fallback.
+Omitted orientation is horizontal and omitted activation is automatic.
 
 ---
 

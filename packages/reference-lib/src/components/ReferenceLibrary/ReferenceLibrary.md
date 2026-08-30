@@ -28,8 +28,15 @@ interface ReferenceLibraryProps {
     defaultDuration?: number | false
     limit?: number
   }
+  tooltip?: {
+    skipDelay?: number
+  }
 }
 ```
+
+Omitted toaster configuration uses Toast's 5000ms, `bottom-end`, global-limit-4
+defaults. Omitted Tooltip configuration uses a 300ms document-level skip-delay
+window.
 
 ---
 

@@ -28,28 +28,44 @@ Pointer drag math, multi-thumb collision, keyboard stepping (arrows, PageUp/Page
 ```ts
 type SliderValue = number | number[]
 
-interface SliderProps {
-  children?: React.ReactNode
+interface SliderProps
+  extends Omit<ReferencePartProps<"div">, "onChange"> {
   value: SliderValue
   onChange?: (value: SliderValue) => void
+  onChangeEnd?: (value: SliderValue) => void
   min?: number
   max?: number
   step?: number
+  minStepsBetweenThumbs?: number
   orientation?: "horizontal" | "vertical"
   disabled?: boolean
 }
 
 interface SliderTrackProps
-  extends React.HTMLAttributes<HTMLDivElement> {}
+  extends ReferencePartProps<"div"> {}
 
 interface SliderRangeProps
-  extends React.HTMLAttributes<HTMLDivElement> {}
+  extends ReferencePartProps<"div"> {}
 
 interface SliderThumbProps
-  extends React.HTMLAttributes<HTMLDivElement> {}
+  extends ReferencePartProps<"div"> {}
 ```
 
 `Slider` renders `div`. `Slider.Track` and `Slider.Range` render `div`. `Slider.Thumb` renders `div` with `role="slider"`.
+
+Defaults are min 0, max 100, step 1, zero minimum steps between thumbs,
+horizontal, and enabled. For array values, `minStepsBetweenThumbs` is a
+nonnegative integer distance multiplied by `step`; pointer and keyboard
+movement clamp at neighboring constraints while preserving thumb identity.
+`onChange` requests every changed candidate. `onChangeEnd` summarizes the last
+requested candidate once on successful pointer release or keyboard keyup;
+repeated keydown events form one interaction, cancellation emits no end, and
+programmatic prop updates emit neither callback.
+Each Thumb
+publishes its clamped percentage as
+`--reference-slider-thumb-position`; Range publishes
+`--reference-slider-range-start`/`--reference-slider-range-end`. Applications
+consume those values in CSS; Slider never overwrites their transforms.
 
 ---
 
@@ -59,13 +75,21 @@ Native `<input type="range">` is one thumb and poor for dual handles. This primi
 
 ### Multi-thumb collision
 
-Thumbs must not cross (or must swap deliberately). Aria clamps each thumb to its neighbours (`getThumbMinValue` / `Max`). Radix `minStepsBetweenThumbs` + `preserveThumbOrder` (order vs swap). Zag `thumbCollisionBehavior`.
+Thumbs must not cross. Aria clamps each thumb to its neighbours
+(`getThumbMinValue` / `Max`). Radix contributes `minStepsBetweenThumbs` and
+Zag contrasts collision behavior.
 
-**Lift** neighbour clamp as default. Freeze preserve-vs-swap if a composition needs swap.
+**Lift** neighbour clamp plus an explicit minimum-step distance. Thumb
+identity/order is preserved; with the default zero distance thumbs may meet but
+never cross or swap.
 
 ### Keyboard + RTL
 
-Arrows step; PageUp/Down large step (~(max−min)/10 in Aria, explicit `largeStep` in Zag); Home/End to bounds. Horizontal RTL reverses increase direction. Vertical is independent of RTL.
+Arrows step. PageUp/Down use
+`ceil(((max - min) / 10) / step) * step`: the smallest whole number of normal
+steps greater than or equal to one tenth of the range, and therefore at least
+one step. There is no configurable `largeStep`. Home/End move to bounds.
+Horizontal RTL reverses increase direction. Vertical is independent of RTL.
 
 **Vendor.** Aria `useSliderThumb`. Radix `PAGE_KEYS` + dir-keyed maps.
 
