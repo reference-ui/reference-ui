@@ -4,6 +4,8 @@
 node_modules
 .pnpm-store
 research/
+vendor/*
+!vendor/VENDOR.md
 # Build outputs
 dist
 target

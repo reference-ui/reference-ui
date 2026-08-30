@@ -69,6 +69,8 @@ This guarantees pristine TypeScript type safety, zero DOM wrapper overhead, math
 
 Reference UI only provides a runtime component when it centralizes behaviour that should not be repeatedly rebuilt by developers or AI agents.
 
+Working API files for primitives that will be implemented live in sibling folders (`Overlay/Overlay.md`, `Popover/Popover.md`, and so on). This document remains the freeze-gate overview. Names under Documented compositions do not get folders — they are not runtime components.
+
 Foundation components solve application-wide mechanics:
 
 - `ReferenceLibrary`
@@ -613,6 +615,8 @@ A toast definition is ordinary, visible application code. AI agents can create e
 
 Beyond foundational layer management (`Overlay`, `Popover`, `Portal`, `Toast`), certain interface patterns require strict adherence to the **WAI-ARIA Authoring Practices Guide (APG)**. These patterns involve complex state machines, roving tabindex, active-descendant tracking, typeahead searching, and keyboard traversal contracts that should not be repeatedly rebuilt on the fly.
 
+Proposed APIs for these primitives live in sibling folders (`Listbox/Listbox.md`, `Menu/Menu.md`, and so on).
+
 Following the same primitive-first philosophy, these components remain decoupled, unstyled, and highly composable:
 
 - **`Listbox`**  
@@ -730,6 +734,8 @@ Cells rendered by `Calendar.Days` expose `data-today`, `data-selected`, `data-di
 
 Authoring primitives are the underlying composition and lifecycle machinery used to construct design-system components from Reference UI primitives without adding wrapper DOM nodes.
 
+Proposed APIs: `Slot/Slot.md`, `Presence/Presence.md`, `RovingFocus/RovingFocus.md`, `FocusLock/FocusLock.md`.
+
 > [!NOTE]
 > `Slot` is available to user-authored design-system components. It does not make Reference UI primitives polymorphic or alter their documented native elements.
 
@@ -739,6 +745,8 @@ Authoring primitives are the underlying composition and lifecycle machinery used
   Manages entry and exit animation lifecycles, keeping unmounting elements in the DOM until CSS animations or transitions complete. Overlay and Popover use Presence internally for the `data-state` exit contract.
 - **`RovingFocus`**  
   The composite-widget keyboard kernel: roving `tabindex`, arrow movement, Home/End, disabled skipping, optional looping, optional typeahead, and optional two-dimensional movement. Listbox, Menu, and Tabs use it internally. Toolbar, ToggleGroup, tag lists, and picker grids are documented patterns on top of it — they are not reasons to rebuild the same machinery.
+- **`FocusLock`**  
+  Contains Tab and programmatic focus inside a subtree, restores focus on deactivation, and allows portalled shards (nested popovers) to remain inside the lock. Overlay uses it internally. Distinct from `RovingFocus`.
 
 `visuallyHidden` is a style prop on typed HTML primitives (clip/absolute/1px), not a component. Every pattern that needs an accessible name without visible text uses it instead of inventing `srOnly`.
 
@@ -870,4 +878,5 @@ Before any primitive's API is locked into the permanent public surface, it must 
 6. **Triple composition verification:** At least three substantially different compositions work seamlessly without escape-hatch props. For `Listbox` and `Combobox`, one of those compositions must be virtualized: windowed options that preserve `aria-setsize` / `aria-posinset` and support scroll-to-index. For `Calendar`, one composition must use a locale whose week does not start on Sunday, and one must be a range picker.
 7. **Cross-cutting environment safety:** Nested usage, RTL directionality, SSR hydration, and multi-root/Shadow DOM usage require no API adjustments.
 8. **AI agent verification:** An AI model or agent can implement custom, non-standard user requirements without bypassing or fighting the primitive.
+
 
