@@ -95,6 +95,7 @@ export async function runMatrixPackageInDagger(
       internalTarballSpecs.some(spec => spec.packageName === pkg.name),
     ),
     libVersion: executionContext.libVersion,
+    reactRuntime: packageRunContext.reactRuntime,
   })
   const sharedNodeModulesCacheKey = matrixSharedNodeModulesCacheKey({
     containerImage,
@@ -104,6 +105,7 @@ export async function runMatrixPackageInDagger(
       internalTarballSpecs.some(spec => spec.packageName === pkg.name),
     ),
     libVersion: executionContext.libVersion,
+    reactRuntime: packageRunContext.reactRuntime,
   })
   const nodeModulesCache = dag.cacheVolume(nodeModulesCacheKey)
   const sharedNodeModulesCache = dag.cacheVolume(sharedNodeModulesCacheKey)

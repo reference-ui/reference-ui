@@ -2,13 +2,26 @@
  * {{ generatedNotice }}
  */
 import React from 'react'
+{%- if mountApi == 'render' %}
+import ReactDOM from 'react-dom'
+{%- else %}
 import ReactDOM from 'react-dom/client'
+{%- endif %}
 // @ts-ignore
 import '@reference-ui/react/styles.css'
 import { Index } from '{{ entryImportPath }}'
 
+{% if mountApi == 'render' -%}
+ReactDOM.render(
+  <React.StrictMode>
+    <Index />
+  </React.StrictMode>,
+  document.getElementById('{{ mountElementId }}')!,
+)
+{%- else -%}
 ReactDOM.createRoot(document.getElementById('{{ mountElementId }}')!).render(
   <React.StrictMode>
     <Index />
   </React.StrictMode>,
 )
+{%- endif %}

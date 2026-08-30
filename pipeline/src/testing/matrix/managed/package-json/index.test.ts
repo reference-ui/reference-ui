@@ -76,6 +76,31 @@ describe('createManagedMatrixPackageJson', () => {
 
     assert.equal(packageJson.devDependencies['@playwright/test'], '1.48.0')
   })
+
+  it('routes every matrix package test script through the pipeline CLI', () => {
+    const packageJson = JSON.parse(
+      createManagedMatrixPackageJson({
+        config: {
+          bundlers: ['vite7'],
+          react: 'react19',
+        },
+        existingPackageJson: {
+          devDependencies: {
+            '@playwright/test': '1.48.0',
+          },
+        },
+        packageName: '@matrix/lib',
+      }),
+    ) as {
+      scripts: Record<string, string>
+    }
+
+    assert.equal(packageJson.scripts.test, 'pnpm --dir ../../pipeline exec tsx src/cli.ts test --packages=@matrix/lib')
+    assert.equal(
+      packageJson.scripts.setup,
+      'pnpm --dir ../../pipeline exec tsx src/cli.ts setup --packages=@matrix/lib --sync',
+    )
+  })
 })
 
 describe('createMatrixConsumerPackageJson', () => {
@@ -196,5 +221,37 @@ describe('createMatrixConsumerPackageJson', () => {
       '@fixtures/extend-library': 'file:.matrix-tarballs/fixtures-extend-library-0.0.0-abcd1234.tgz',
       react: '^19.2.0',
     })
+  })
+
+  it('overrides React dependencies when a consumer runtime is supplied', () => {
+    const packageJson = JSON.parse(
+      createMatrixConsumerPackageJson({
+        bundlers: ['vite7'],
+        fixturePackageJson: {
+          dependencies: {
+            '@reference-ui/lib': 'workspace:*',
+            react: '^19.2.0',
+            'react-dom': '^19.2.0',
+          },
+          devDependencies: {
+            '@types/react': '^19.2.2',
+            '@types/react-dom': '^19.2.2',
+          },
+          name: '@matrix/lib',
+          private: true,
+          type: 'module',
+        },
+        internalTarballSpecifiers,
+        reactRuntime: 'react17',
+      }),
+    ) as {
+      dependencies: Record<string, string>
+      devDependencies: Record<string, string>
+    }
+
+    assert.equal(packageJson.dependencies.react, '^17.0.2')
+    assert.equal(packageJson.dependencies['react-dom'], '^17.0.2')
+    assert.equal(packageJson.devDependencies['@types/react'], '^17.0.83')
+    assert.equal(packageJson.devDependencies['@types/react-dom'], '^17.0.26')
   })
 })

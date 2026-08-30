@@ -24,7 +24,8 @@ Default behavior for targeted package testing:
 - `pnpm --dir ../../pipeline exec tsx src/cli.ts test --packages=@matrix/typescript`
 - runs one Dagger consumer job
 - uses the default environment
-- default React version is the latest React version declared in `matrix.json`
+- default React version is the first entry declared in `matrix.json`
+- `--react` pins one declared runtime without expanding the rest
 - default bundler should be the package default when bundlers matter
 
 This gives us a practical local workflow:

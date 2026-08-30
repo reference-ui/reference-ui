@@ -1,0 +1,8 @@
+{
+  "name": "lib",
+  "refSync": {
+    "mode": "watch-ready"
+  },
+  "bundlers": ["vite7"],
+  "react": ["react19", "react18", "react17"]
+}

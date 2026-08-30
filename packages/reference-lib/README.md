@@ -14,6 +14,10 @@ pnpm run sync   # Run ref sync once
 pnpm run dev    # Watch mode
 ```
 
+## Testing
+
+Component primitives are implemented in this package and proven in `matrix/lib` with Playwright. React 19 is the default agent loop; 17 and 18 are compatibility jobs for that fixture only. See [TESTING.md](./TESTING.md).
+
 ## Component playground ([React Cosmos](https://reactcosmos.org/))
 
 Follows the [Vite getting started](https://reactcosmos.org/docs/getting-started/vite) layout: `react-cosmos-plugin-vite` in `cosmos.config.json`, and `cosmos` / `cosmos-export` scripts. `globalImports` loads `@reference-ui/react/styles.css` for Panda fixtures. On macOS, Node’s port probe can throw (`EADDRNOTAVAIL` for `0.0.0.0`); `portRetries` / `rendererUrl` avoid that upstream behavior so the dev server can start.

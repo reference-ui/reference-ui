@@ -84,7 +84,7 @@ export function describeMatrixEnvironment(packageRunContext: MatrixPackageRunCon
     ? 'full-sync'
     : packageRunContext.config.refSync.mode
 
-  return [packageRunContext.config.react, ...packageRunContext.effectiveBundlers, syncLabel].join(' + ')
+  return [packageRunContext.reactRuntime, ...packageRunContext.effectiveBundlers, syncLabel].join(' + ')
 }
 
 export function announceMatrixPackageStart(packageRunContext: MatrixPackageRunContext): void {

@@ -35,6 +35,7 @@
     "@matrix/css-selectors",
     "@matrix/distro",
     "@matrix/font",
+    "@matrix/lib",
     "@matrix/mcp",
     "@matrix/playwright",
     "@matrix/primitives",

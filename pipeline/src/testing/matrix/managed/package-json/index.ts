@@ -33,6 +33,7 @@ interface MatrixConsumerPackageJsonOptions {
   bundlers: readonly MatrixPackageConfig['bundlers'][number][]
   fixturePackageJson: MatrixFixturePackageJson
   internalTarballSpecifiers?: Readonly<Record<string, string>>
+  reactRuntime?: MatrixPackageConfig['react']
 }
 
 interface ManagedMatrixPackageJsonOptions {
@@ -159,16 +160,31 @@ export function createManagedMatrixPackageJson(options: ManagedMatrixPackageJson
 export function createMatrixConsumerPackageJson(
   options: MatrixConsumerPackageJsonOptions,
 ): string {
+  const reactProfile = options.reactRuntime ? getManagedReactProfile(options.reactRuntime) : null
+  const fixturePackageJson = reactProfile
+    ? {
+      ...options.fixturePackageJson,
+      dependencies: {
+        ...options.fixturePackageJson.dependencies,
+        ...reactProfile.dependencies,
+      },
+      devDependencies: {
+        ...options.fixturePackageJson.devDependencies,
+        ...reactProfile.devDependencies,
+      },
+    }
+    : options.fixturePackageJson
+
   return renderManagedTemplate(new URL('./templates/consumer-package.json.liquid', import.meta.url), {
     dependencies: createTemplateEntries(
       replaceWorkspaceProtocolVersions(
-        options.fixturePackageJson.dependencies,
+        fixturePackageJson.dependencies,
         options.internalTarballSpecifiers ?? {},
       ),
     ),
     devDependencies: createTemplateEntries({
       ...replaceWorkspaceProtocolVersions(
-        options.fixturePackageJson.devDependencies,
+        fixturePackageJson.devDependencies,
         options.internalTarballSpecifiers ?? {},
       ),
       ...getManagedBundlerDevDependencies(options.bundlers),

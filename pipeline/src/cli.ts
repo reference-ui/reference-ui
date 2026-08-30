@@ -23,6 +23,7 @@ import {
 } from './release/index.js'
 import { runDevDocs, runDevLib } from './dev/index.js'
 import { runMatrixTests } from './testing/matrix/run.js'
+import { parseMatrixReactRuntime } from './testing/matrix/discovery/index.js'
 import { setupMatrixPackages } from './testing/matrix/setup/index.js'
 
 function parsePackageOption(value: string | undefined): string[] | undefined {
@@ -36,6 +37,14 @@ function parsePackageOption(value: string | undefined): string[] | undefined {
     .filter(packageName => packageName.length > 0)
 
   return packageNames.length > 0 ? packageNames : undefined
+}
+
+function parseReactOption(value: string | undefined): ReturnType<typeof parseMatrixReactRuntime> | undefined {
+  if (!value) {
+    return undefined
+  }
+
+  return parseMatrixReactRuntime(value)
 }
 
 const program = new Command()
@@ -107,15 +116,17 @@ program
 
 program
   .command('test')
-  .description('Run the Dagger-backed matrix test flow')
-  .option('--full', 'Run the full compatibility matrix across every configured bundler')
-  .option('--packages <names>', 'Comma-separated matrix package names, for example @matrix/distro')
+  .description('Run matrix tests. Default: every package in its default environment')
+  .option('--packages <names>', 'Run only these matrix packages, for example @matrix/lib')
+  .option('--react <runtime>', 'Run against one declared React version (react17, react18, react19) to keep the job small')
+  .option('--full', 'Expand every declared React and bundler for the selected packages')
   .option('--trace', 'Stream the Dagger execution trace for this run')
-  .action(async (options: { full?: boolean; packages?: string; trace?: boolean }) => {
+  .action(async (options: { full?: boolean; packages?: string; react?: string; trace?: boolean }) => {
     await runMatrixTests({
       commandLabel: 'pnpm pipeline test',
       full: options.full,
       packageNames: parsePackageOption(options.packages),
+      react: parseReactOption(options.react),
       trace: options.trace,
     })
   })

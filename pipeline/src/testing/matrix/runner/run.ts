@@ -18,7 +18,6 @@ import { buildWorkspacePackages } from '../../../build/index.js'
 import { ensureContainerRuntime, getDockerRuntimeInfo } from '../../../lib/runtime/ensure-container-runtime.js'
 import { finishStep, formatDuration, setSkipLoggingMuted, startStep } from '../../../lib/log/index.js'
 import { readRegistryManifest } from '../../../registry/manifest.js'
-import { listMatrixWorkspacePackages } from '../discovery/index.js'
 import { externalPnpmStoreCacheKey } from '../node-modules/cache.js'
 import { resolveMatrixPackageConcurrency } from '../concurrency.js'
 import { validateMatrixFixtures } from '../validate.js'
@@ -28,6 +27,7 @@ import { withDaggerExecCacheBuster } from './exec.js'
 import { writeStageLog } from './logs.js'
 import { matrixLogDir, matrixNativeTarget } from './paths.js'
 import { runMatrixPackageInDagger } from './package-runner.js'
+import { planMatrixExecution, type MatrixJob } from './plan.js'
 import { formatRuntimeMemory } from './reporting.js'
 import type { MatrixRunOptions } from './types.js'
 
@@ -83,10 +83,13 @@ function logMatrixConcurrency(
   console.log(`Running up to ${packageConcurrency} matrix package(s) in parallel.`)
 }
 
-export async function runMatrixBootstrapInDagger(options: MatrixRunOptions = {}): Promise<void> {
+export async function runMatrixBootstrapInDagger(
+  options: MatrixRunOptions = {},
+  jobs?: readonly MatrixJob[],
+): Promise<void> {
   console.log('Discovering matrix-enabled fixtures...')
   validateMatrixFixtures()
-  const matrixPackages = listMatrixWorkspacePackages(options.packageNames)
+  const plannedJobs = jobs ? [...jobs] : planMatrixExecution(options).jobs
 
   console.log(`Using shared matrix registry at ${DEFAULT_REGISTRY_URL}.`)
   const buildStageStartedAt = Date.now()
@@ -138,7 +141,7 @@ export async function runMatrixBootstrapInDagger(options: MatrixRunOptions = {})
   await writeStageLog('publish.log', `${publishedPackageNames}\n`)
 
   const matrixPackageContexts = await Promise.all(
-    matrixPackages.map(matrixPackage => createMatrixPackageRunContext(matrixPackage)),
+    plannedJobs.map(job => createMatrixPackageRunContext(job)),
   )
   const dockerRuntime = getDockerRuntimeInfo()
   const packageConcurrencyResolution = resolveMatrixPackageConcurrency({
@@ -202,6 +205,8 @@ export async function runMatrixBootstrapInDagger(options: MatrixRunOptions = {})
 }
 
 export async function runMatrixTests(options: MatrixRunOptions = {}): Promise<void> {
+  const plan = planMatrixExecution(options)
+
   ensureContainerRuntime({
     commandLabel: options.commandLabel ?? 'pnpm pipeline test',
     minimumDockerCpuCount: minimumMatrixDockerCpuCount,
@@ -209,13 +214,15 @@ export async function runMatrixTests(options: MatrixRunOptions = {}): Promise<vo
     minimumDockerMemoryBytes: minimumMatrixDockerMemoryBytes,
   })
 
+  const runBootstrap = () => runMatrixBootstrapInDagger(options, plan.jobs)
+
   if (options.trace) {
     console.log('Dagger execution trace enabled (--trace).')
-    await dagger.connection(() => runMatrixBootstrapInDagger(options), { LogOutput: process.stdout })
+    await dagger.connection(runBootstrap, { LogOutput: process.stdout })
     return
   }
 
-  await dagger.connection(() => runMatrixBootstrapInDagger(options))
+  await dagger.connection(runBootstrap)
 }
 
 export type { MatrixRunOptions } from './types.js'

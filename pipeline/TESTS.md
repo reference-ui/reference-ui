@@ -117,6 +117,8 @@ If a user runs:
 
 the package should run in one default environment only.
 
+`--react` pins one declared React runtime for the selected package(s) without expanding the rest. That is the cheap isolated loop when a package declares more than one React.
+
 Runner selection for that default mode should be conservative:
 
 - run the package's standard Vitest coverage first

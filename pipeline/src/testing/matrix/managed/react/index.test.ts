@@ -13,6 +13,7 @@ describe('managed react runtime', () => {
         '@types/react': '^19.2.2',
         '@types/react-dom': '^19.2.2',
       },
+      mountApi: 'createRoot',
       mountElementId: 'root',
     })
   })
@@ -37,6 +38,48 @@ describe('managed react runtime', () => {
         '  <React.StrictMode>',
         '    <Index />',
         '  </React.StrictMode>,',
+        ')',
+        '',
+      ].join('\n'),
+    )
+  })
+
+  it('describes the managed React 17 dependency surface', () => {
+    assert.deepEqual(getManagedReactProfile('react17'), {
+      dependencies: {
+        react: '^17.0.2',
+        'react-dom': '^17.0.2',
+      },
+      devDependencies: {
+        '@types/react': '^17.0.83',
+        '@types/react-dom': '^17.0.26',
+      },
+      mountApi: 'render',
+      mountElementId: 'root',
+    })
+  })
+
+  it('creates the managed React 17 main.tsx entrypoint', () => {
+    assert.equal(
+      createManagedReactMainSource({
+        entryImportPath: './index',
+        runtime: 'react17',
+      }),
+      [
+        '/*',
+        ' * This file is generated and managed by pipeline.',
+        ' */',
+        "import React from 'react'",
+        "import ReactDOM from 'react-dom'",
+        '// @ts-ignore',
+        "import '@reference-ui/react/styles.css'",
+        "import { Index } from './index'",
+        '',
+        'ReactDOM.render(',
+        '  <React.StrictMode>',
+        '    <Index />',
+        '  </React.StrictMode>,',
+        "  document.getElementById('root')!,",
         ')',
         '',
       ].join('\n'),

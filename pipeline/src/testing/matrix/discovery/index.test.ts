@@ -10,6 +10,7 @@ import {
   getMatrixPackageName,
   getPreferredLocalMatrixBundlers,
   isMatrixWorkspacePackageDir,
+  parseMatrixReactRuntime,
   readMatrixPackageConfig,
 } from './index.js'
 
@@ -37,6 +38,7 @@ describe('readMatrixPackageConfig', () => {
         },
         bundlers: ['vite7', 'webpack5'],
         react: 'react19',
+        reactVersions: ['react19'],
         runTypecheck: true,
       })
     } finally {
@@ -82,7 +84,7 @@ describe('readMatrixPackageConfig', () => {
 
       assert.throws(
         () => readMatrixPackageConfig(tempDir),
-        /react as one of "react19"/,
+        /react as "react17", "react18", "react19"/,
       )
     } finally {
       await rm(tempDir, { force: true, recursive: true })
@@ -120,6 +122,54 @@ describe('readMatrixPackageConfig', () => {
   it('prefers the latest Vite bundler for local matrix setup', () => {
     assert.deepEqual(getPreferredLocalMatrixBundlers(['vite7', 'webpack5']), ['vite7'])
     assert.deepEqual(getPreferredLocalMatrixBundlers(['webpack5']), ['webpack5'])
+  })
+
+  it('accepts a react compatibility array and uses the first entry as the default runtime', async () => {
+    const tempDir = await mkdtemp(join(tmpdir(), 'ref-pipeline-matrix-'))
+
+    try {
+      await writeFile(
+        join(tempDir, 'matrix.json'),
+        '{"name":"lib","refSync":{"mode":"watch-ready"},"bundlers":["vite7"],"react":["react19","react18","react17"]}\n',
+      )
+
+      assert.deepEqual(readMatrixPackageConfig(tempDir), {
+        name: 'lib',
+        refSync: {
+          mode: 'watch-ready',
+        },
+        bundlers: ['vite7'],
+        react: 'react19',
+        reactVersions: ['react19', 'react18', 'react17'],
+        runTypecheck: false,
+      })
+    } finally {
+      await rm(tempDir, { force: true, recursive: true })
+    }
+  })
+
+  it('keeps the first react array entry as default even when a newer runtime follows', async () => {
+    const tempDir = await mkdtemp(join(tmpdir(), 'ref-pipeline-matrix-'))
+
+    try {
+      await writeFile(
+        join(tempDir, 'matrix.json'),
+        '{"name":"lib","refSync":{"mode":"watch-ready"},"bundlers":["vite7"],"react":["react18","react19"]}\n',
+      )
+
+      const config = readMatrixPackageConfig(tempDir)
+
+      assert.equal(config?.react, 'react18')
+      assert.deepEqual(config?.reactVersions, ['react18', 'react19'])
+    } finally {
+      await rm(tempDir, { force: true, recursive: true })
+    }
+  })
+
+  it('parses CLI React runtime aliases', () => {
+    assert.equal(parseMatrixReactRuntime('react19'), 'react19')
+    assert.equal(parseMatrixReactRuntime('18'), 'react18')
+    assert.throws(() => parseMatrixReactRuntime('react16'), /Unknown React runtime/)
   })
 })
 

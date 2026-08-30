@@ -57,9 +57,11 @@ function createFixturePackageJson(overrides?: Partial<MatrixFixturePackageJson>)
       '@reference-ui/core': 'workspace:*',
       '@reference-ui/lib': 'workspace:*',
       react: '^19.2.0',
+      'react-dom': '^19.2.0',
     },
     devDependencies: {
       '@types/react': '^19.2.2',
+      '@types/react-dom': '^19.2.2',
       typescript: '~7.0.2',
       vitest: '^4.0.18',
     },
@@ -227,6 +229,7 @@ describe('matrix node_modules cache helpers', () => {
         devDependencies: {
           '@modelcontextprotocol/sdk': '^1.29.0',
           '@types/react': '^19.2.2',
+          '@types/react-dom': '^19.2.2',
           typescript: '~7.0.2',
           vitest: '^4.0.18',
         },
@@ -252,6 +255,7 @@ describe('matrix node_modules cache helpers', () => {
       devDependencies: {
         '@playwright/test': '1.48.0',
         '@types/react': '^19.2.2',
+        '@types/react-dom': '^19.2.2',
         typescript: '~7.0.2',
         vitest: '^4.0.18',
       },
@@ -315,5 +319,45 @@ describe('matrix node_modules cache helpers', () => {
     })
 
     assert.equal(baselineNodeModules, changedNodeModules)
+  })
+
+  it('keeps cache keys stable when the React runtime matches the fixture dependencies', () => {
+    const manifest = createManifest()
+    const fixturePackageJson = createFixturePackageJson()
+
+    const implicit = matrixNodeModulesCacheKey({
+      coreVersion: '0.0.41',
+      fixturePackageJson,
+      internalPackages: selectInternalPackages(manifest),
+      libVersion: '0.0.44',
+    })
+    const explicitReact19 = matrixNodeModulesCacheKey({
+      coreVersion: '0.0.41',
+      fixturePackageJson,
+      internalPackages: selectInternalPackages(manifest),
+      libVersion: '0.0.44',
+      reactRuntime: 'react19',
+    })
+
+    assert.equal(implicit, explicitReact19)
+  })
+
+  it('splits node_modules cache keys when the React runtime changes', () => {
+    const manifest = createManifest()
+    const fixturePackageJson = createFixturePackageJson()
+    const sharedOptions = {
+      coreVersion: '0.0.41',
+      fixturePackageJson,
+      internalPackages: selectInternalPackages(manifest),
+      libVersion: '0.0.44',
+    } as const
+
+    const react19 = matrixNodeModulesCacheKey({ ...sharedOptions, reactRuntime: 'react19' })
+    const react17 = matrixNodeModulesCacheKey({ ...sharedOptions, reactRuntime: 'react17' })
+    const sharedReact19 = matrixSharedNodeModulesCacheKey({ ...sharedOptions, reactRuntime: 'react19' })
+    const sharedReact17 = matrixSharedNodeModulesCacheKey({ ...sharedOptions, reactRuntime: 'react17' })
+
+    assert.notEqual(react19, react17)
+    assert.notEqual(sharedReact19, sharedReact17)
   })
 })

@@ -19,11 +19,13 @@ function createPackageRunContext(): MatrixPackageRunContext {
       },
       bundlers: ['vite7'],
       react: 'react19',
+      reactVersions: ['react19'],
       runTypecheck: true,
     },
     displayName: '@matrix/distro',
     effectiveBundlers: ['vite7'],
     logPrefix: 'matrix-distro',
+    reactRuntime: 'react19',
     source: {
       fixturePackageJson: {
         name: '@matrix/distro',

@@ -9,6 +9,8 @@
 
 import { createHash } from 'node:crypto'
 import type { RegistryManifestPackage } from '../../../registry/types.js'
+import type { MatrixReactRuntime } from '../discovery/index.js'
+import { getManagedReactProfile } from '../managed/react/index.js'
 import type { MatrixFixturePackageJson } from '../managed/package-json/index.js'
 
 export const matrixNodeImage = 'node:24-bookworm'
@@ -25,6 +27,29 @@ interface MatrixNodeModulesCacheKeyOptions {
   fixturePackageJson: MatrixFixturePackageJson
   internalPackages: readonly Pick<RegistryManifestPackage, 'artifactHash' | 'hash' | 'name' | 'version'>[]
   libVersion: string
+  reactRuntime?: MatrixReactRuntime
+}
+
+function withReactRuntimeDependencies(
+  fixturePackageJson: MatrixFixturePackageJson,
+  reactRuntime?: MatrixReactRuntime,
+): Pick<MatrixFixturePackageJson, 'dependencies' | 'devDependencies'> {
+  if (!reactRuntime) {
+    return fixturePackageJson
+  }
+
+  const reactProfile = getManagedReactProfile(reactRuntime)
+
+  return {
+    dependencies: {
+      ...fixturePackageJson.dependencies,
+      ...reactProfile.dependencies,
+    },
+    devDependencies: {
+      ...fixturePackageJson.devDependencies,
+      ...reactProfile.devDependencies,
+    },
+  }
 }
 
 function createMatrixInstallGraph(
@@ -35,17 +60,18 @@ function createMatrixInstallGraph(
     '@reference-ui/core': options.coreVersion,
     '@reference-ui/lib': options.libVersion,
   }
+  const packageJson = withReactRuntimeDependencies(options.fixturePackageJson, options.reactRuntime)
 
   return JSON.stringify(
     {
       fixtureName,
       manifestFingerprint: registryManifestFingerprint(options.internalPackages),
       dependencies: replaceWorkspaceProtocolVersions({
-        dependencies: options.fixturePackageJson.dependencies,
+        dependencies: packageJson.dependencies,
         versionOverrides,
       }),
       devDependencies: replaceWorkspaceProtocolVersions({
-        dependencies: options.fixturePackageJson.devDependencies,
+        dependencies: packageJson.devDependencies,
         versionOverrides,
       }),
       nodeImage: options.containerImage ?? matrixNodeImage,

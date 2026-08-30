@@ -11,13 +11,12 @@ import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import type { RegistryManifestPackage } from '../../../registry/types.js'
 import {
-  getLatestMatrixBundlerStrategyForPrefix,
-  type MatrixBundlerStrategy,
-  type MatrixWorkspacePackage,
+  type MatrixReactRuntime,
 } from '../discovery/index.js'
 import { createManagedBundlerFiles } from '../managed/bundlers/index.js'
 import { createMatrixConsumerPackageJson, type MatrixFixturePackageJson } from '../managed/package-json/index.js'
 import { createManagedPlaywrightConfigSource } from '../managed/playwright/index.js'
+import { createManagedReactMainSource } from '../managed/react/index.js'
 import { createMatrixConsumerTsconfig } from '../managed/tsconfig/index.js'
 import { createManagedVitestConfigSource } from '../managed/vitest/index.js'
 import { hasMatrixPlaywrightTests, hasMatrixVitestTests } from '../test-presence.js'
@@ -26,6 +25,7 @@ import {
   matrixRefSyncSupportDirectory,
   matrixRefSyncSupportScripts,
 } from './ref-sync.js'
+import type { MatrixJob } from './plan.js'
 import type {
   FixtureSourceFiles,
   MatrixInternalTarballSpec,
@@ -120,28 +120,43 @@ export async function stageGeneratedConsumerFiles(
     internalTarballSpecifiers: Object.fromEntries(
       internalTarballSpecs.map(spec => [spec.packageName, spec.specifier]),
     ),
+    reactRuntime: packageRunContext.reactRuntime,
   })
   const managedBundlerFiles = createManagedBundlerFiles({
     bundlers: packageRunContext.effectiveBundlers,
-    react: packageRunContext.config.react,
+    react: packageRunContext.reactRuntime,
     title: `Reference UI ${packageRunContext.config.name} matrix`,
   })
+
+  const generatedFiles: Record<string, string> = {
+    ...managedBundlerFiles,
+    'playwright.config.ts': createManagedPlaywrightConfigSource(packageRunContext.effectiveBundlers),
+    'vitest.config.ts': createManagedVitestConfigSource({
+      globalSetupPath: packageRunContext.source.hasVitestGlobalSetup
+        ? './tests/unit/global-setup.ts'
+        : null,
+    }),
+  }
+
+  if (packageRunContext.reactRuntime !== packageRunContext.config.react) {
+    generatedFiles['src/main.tsx'] = createManagedReactMainSource({
+      entryImportPath: './index',
+      runtime: packageRunContext.reactRuntime,
+    })
+  }
 
   await mkdir(generatedDir, { recursive: true })
   await mkdir(tarballDir, { recursive: true })
   await mkdir(refSyncSupportDir, { recursive: true })
+
+  if ('src/main.tsx' in generatedFiles) {
+    await mkdir(resolve(generatedDir, 'src'), { recursive: true })
+  }
+
   await writeFile(resolve(generatedDir, 'package.json'), packageJsonSource)
   await writeFile(resolve(generatedDir, 'tsconfig.json'), createMatrixConsumerTsconfig())
   await Promise.all(
-    Object.entries({
-      ...managedBundlerFiles,
-      'playwright.config.ts': createManagedPlaywrightConfigSource(packageRunContext.effectiveBundlers),
-      'vitest.config.ts': createManagedVitestConfigSource({
-        globalSetupPath: packageRunContext.source.hasVitestGlobalSetup
-          ? './tests/unit/global-setup.ts'
-          : null,
-      }),
-    }).map(([relativePath, source]) => writeFile(resolve(generatedDir, relativePath), source)),
+    Object.entries(generatedFiles).map(([relativePath, source]) => writeFile(resolve(generatedDir, relativePath), source)),
   )
   await Promise.all(
     [
@@ -161,6 +176,8 @@ export function matrixGeneratedConsumerDirectory(generatedDir: string) {
       'index.html',
       'package.json',
       'playwright.config.ts',
+      'src',
+      'src/**',
       'tsconfig.json',
       'vite.config.ts',
       'vitest.config.ts',
@@ -173,36 +190,35 @@ export function matrixGeneratedConsumerDirectory(generatedDir: string) {
   })
 }
 
-export function matrixPackageLogPrefix(packageName: string): string {
-  return packageName.replace(/^@/, '').replace(/\//g, '-')
-}
+export function matrixPackageLogPrefix(
+  packageName: string,
+  reactRuntime?: MatrixReactRuntime,
+  defaultReactRuntime?: MatrixReactRuntime,
+): string {
+  const base = packageName.replace(/^@/, '').replace(/\//g, '-')
 
-export function resolveEffectiveBundlers(
-  matrixPackage: MatrixWorkspacePackage,
-  options: { full?: boolean } = {},
-): readonly MatrixBundlerStrategy[] {
-  if (options.full) {
-    return matrixPackage.config.bundlers
+  if (!reactRuntime || reactRuntime === (defaultReactRuntime ?? reactRuntime)) {
+    return base
   }
 
-  const latestViteBundler = getLatestMatrixBundlerStrategyForPrefix('vite', matrixPackage.config.bundlers)
-
-  if (latestViteBundler) {
-    return [latestViteBundler]
-  }
-
-  return [matrixPackage.config.bundlers[0]]
+  return `${base}-${reactRuntime}`
 }
 
 export async function createMatrixPackageRunContext(
-  matrixPackage: MatrixWorkspacePackage,
-  options: { full?: boolean } = {},
+  job: MatrixJob,
 ): Promise<MatrixPackageRunContext> {
+  const { package: matrixPackage, reactRuntime, bundlers } = job
+
   return {
     config: matrixPackage.config,
     displayName: matrixPackage.workspacePackage.name,
-    effectiveBundlers: resolveEffectiveBundlers(matrixPackage, options),
-    logPrefix: matrixPackageLogPrefix(matrixPackage.workspacePackage.name),
+    effectiveBundlers: bundlers,
+    logPrefix: matrixPackageLogPrefix(
+      matrixPackage.workspacePackage.name,
+      reactRuntime,
+      matrixPackage.config.react,
+    ),
+    reactRuntime,
     source: await readMatrixPackageSource(matrixPackage.workspacePackage.dir),
     workspacePackage: matrixPackage.workspacePackage,
   }

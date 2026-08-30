@@ -17,7 +17,7 @@ export type MatrixRefSyncMode = 'full' | 'watch-ready' | 'watch-full'
 const knownMatrixBundlerStrategies = ['vite7', 'webpack5'] as const
 export type MatrixBundlerStrategy = typeof knownMatrixBundlerStrategies[number]
 
-const knownMatrixReactRuntimes = ['react19'] as const
+const knownMatrixReactRuntimes = ['react17', 'react18', 'react19'] as const
 export type MatrixReactRuntime = typeof knownMatrixReactRuntimes[number]
 
 export interface MatrixPackageRefSyncConfig {
@@ -29,6 +29,7 @@ export interface MatrixPackageConfig {
   refSync: MatrixPackageRefSyncConfig
   bundlers: readonly MatrixBundlerStrategy[]
   react: MatrixReactRuntime
+  reactVersions: readonly MatrixReactRuntime[]
   runTypecheck: boolean
 }
 
@@ -104,6 +105,57 @@ function isKnownMatrixReactRuntime(value: unknown): value is MatrixReactRuntime 
   return knownMatrixReactRuntimes.includes(value as MatrixReactRuntime)
 }
 
+export function parseMatrixReactRuntime(value: string): MatrixReactRuntime {
+  const normalized = value.startsWith('react') ? value : `react${value}`
+
+  if (!isKnownMatrixReactRuntime(normalized)) {
+    throw new Error(
+      `Unknown React runtime "${value}". Expected one of ${knownMatrixReactRuntimes.join(', ')}.`,
+    )
+  }
+
+  return normalized
+}
+
+function formatKnownReactRuntimes(): string {
+  return knownMatrixReactRuntimes.map(runtime => `"${runtime}"`).join(', ')
+}
+
+function parseReactField(
+  configPath: string,
+  value: unknown,
+): {
+  react: MatrixReactRuntime
+  reactVersions: readonly MatrixReactRuntime[]
+} {
+  const values = typeof value === 'string' ? [value] : value
+
+  if (!Array.isArray(values) || values.length === 0) {
+    throw new Error(
+      `Expected ${configPath} to declare react as ${formatKnownReactRuntimes()}, or a non-empty array of those values.`,
+    )
+  }
+
+  const reactVersions: MatrixReactRuntime[] = []
+
+  for (const entry of values) {
+    if (!isKnownMatrixReactRuntime(entry)) {
+      throw new Error(
+        `Expected ${configPath} to declare react as ${formatKnownReactRuntimes()}, or a non-empty array of those values. Got: ${String(entry)}`,
+      )
+    }
+
+    if (!reactVersions.includes(entry)) {
+      reactVersions.push(entry)
+    }
+  }
+
+  return {
+    react: reactVersions[0],
+    reactVersions,
+  }
+}
+
 function matrixConfigPath(packageDir: string): string {
   return resolve(packageDir, 'matrix.json')
 }
@@ -165,11 +217,8 @@ export function readMatrixPackageConfig(packageDir: string): MatrixPackageConfig
     }
   }
 
-  if (!isKnownMatrixReactRuntime(config.react)) {
-    throw new Error(
-      `Expected ${configPath} to declare react as one of ${knownMatrixReactRuntimes.map(runtime => `"${runtime}"`).join(', ')}.`,
-    )
-  }
+  const reactField = parseReactField(configPath, config.react)
+  const bundlers = config.bundlers as MatrixBundlerStrategy[]
 
   if (config.runTypecheck !== undefined && typeof config.runTypecheck !== 'boolean') {
     throw new Error(`Expected ${configPath} to declare runTypecheck as a boolean when provided.`)
@@ -180,8 +229,9 @@ export function readMatrixPackageConfig(packageDir: string): MatrixPackageConfig
     refSync: {
       mode: config.refSync.mode,
     },
-    bundlers: config.bundlers as MatrixBundlerStrategy[],
-    react: config.react,
+    bundlers,
+    react: reactField.react,
+    reactVersions: reactField.reactVersions,
     runTypecheck: config.runTypecheck ?? false,
   }
 }

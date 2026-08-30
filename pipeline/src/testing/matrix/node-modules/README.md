@@ -21,6 +21,7 @@ There are two reuse layers:
 - consumer `node_modules` cache
   - shared only when the effective install graph is the same
   - includes staged internal versions, dependency lists, Node image, and pnpm version
+  - React runtime is part of that graph: pinned `--react` jobs must not reuse another major's `node_modules`
   - intentionally excludes fixture source files so normal code edits do not trigger reinstall work
 
 ## Why This Is Separate

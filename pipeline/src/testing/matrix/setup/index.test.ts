@@ -33,6 +33,7 @@ describe('setupMatrixPackages package generation', () => {
         refSync: { mode: 'full' },
         bundlers: ['vite7', 'webpack5'],
         react: 'react19',
+        reactVersions: ['react19'],
         runTypecheck: false,
       },
       configPath: '/Users/ryn/Developer/reference-ui/matrix/mcp/matrix.json',
