@@ -69,7 +69,7 @@ This guarantees pristine TypeScript type safety, zero DOM wrapper overhead, math
 
 Reference UI only provides a runtime component when it centralizes behaviour that should not be repeatedly rebuilt by developers or AI agents.
 
-Working API files for primitives that will be implemented live in sibling folders (`Overlay/Overlay.md`, `Popover/Popover.md`, and so on). This document remains the freeze-gate overview. Names under Documented compositions do not get folders — they are not runtime components.
+Working design lives in sibling folders: `Overlay/Overlay.md` (API + problems), `Overlay/TESTS.md` (contracts to prove, including how vendor e2e suites combine). This document remains the freeze-gate overview. Names under Documented compositions do not get folders — they are not runtime components. Vendor clones themselves are documented in `vendor/VENDOR.md`; they are references, not dependencies. How to run Playwright is `packages/reference-lib/TESTING.md`.
 
 Foundation components solve application-wide mechanics:
 

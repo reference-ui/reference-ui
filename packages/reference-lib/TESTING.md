@@ -12,6 +12,7 @@ The API and freeze-gate contracts are in [`src/components/components.md`](./src/
 | --- | --- |
 | Primitive source | `packages/reference-lib/src/components/` |
 | API / freeze gates | `packages/reference-lib/src/components/components.md` |
+| Contracts to prove | `src/components/<Name>/TESTS.md` — vendor cases, combined ownership |
 | Visual playground | Cosmos in this package (`pnpm run cosmos` / `pnpm run dev:lib`) |
 | Component proof | `matrix/lib` |
 
@@ -97,6 +98,7 @@ matrix/lib/
 - The Vite app is a small router: `/overlay`, `/popover`, and so on. Each spec `goto`s its page.
 - Demo pages are freeze-gate compositions from `components.md` (for Overlay: dialog, alertdialog, drawer — not a kitchen sink).
 - An unfinished Combobox must not block Overlay. Skip or omit the missing spec; do not couple primitives in one file.
+- Vendor libraries copy the same nest/dismiss cases into Dialog, Popover, Menu, Select. We do not. Combined contracts have one owner, listed in that primitive's `TESTS.md`. A later primitive adds only what is unique to it.
 
 `matrix.json` should declare the compatibility array explicitly. Default resolution is the first entry — put the daily runtime first (`react19` today):
 

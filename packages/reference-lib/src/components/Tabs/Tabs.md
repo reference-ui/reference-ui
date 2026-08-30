@@ -1,5 +1,7 @@
 # Tabs
 
+Proof: [TESTS.md](./TESTS.md).
+
 Directional keyboard cycling, automatic vs. manual activation, `aria-controls` / `aria-labelledby` linking. Built on `RovingFocus`.
 
 ```tsx
@@ -45,3 +47,37 @@ interface TabsPanelProps
 ```
 
 `Tabs` renders no node. `Tabs.List` renders `div` with `role="tablist"`. `Tabs.Tab` renders `button` with `role="tab"`. `Tabs.Panel` renders `div` with `role="tabpanel"`.
+
+---
+
+## Problems we own
+
+Tabs is RovingFocus plus an activation policy. Typeahead stays off.
+
+### Automatic vs manual
+
+Automatic: focus selects. Manual: arrows move focus; Space/Enter selects. Getting this wrong is the usual APG miss.
+
+**Vendor.** Radix `activationMode` (default automatic). Aria `keyboardActivation` / `selectOnFocus`. Zag `activationMode`. Aligned.
+
+**Lift.** Our name is `activation`.
+
+### Orientation + RTL
+
+Horizontal vs vertical arrows. `dir` flips left/right. All three vendors agree.
+
+### `aria-controls` only when selected
+
+Aria `useTab.ts` sets `aria-controls` only on the selected tab. Radix may wire it on every trigger. APG: the selected tab controls the visible panel.
+
+**Lift** Aria’s selected-only rule. `aria-labelledby` on the panel points at the tab.
+
+### Zag `deselectable`
+
+Nullable selected tab is not APG Tabs. **Leave.**
+
+---
+
+## Convergence
+
+**APG:** react-aria `useTabList` / `useTab`. **Composition shape:** radix tabs wrapping RovingFocus. Do not add a Tabs.Provider.
