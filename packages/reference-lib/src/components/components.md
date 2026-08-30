@@ -159,7 +159,7 @@ interface PortalProps {
 
 A controlled foundation for temporary content displayed above and isolated from the application.
 
-Overlay handles the shared mechanics: portal rendering, layer-stack registration, nesting, dismissal ordering, focus containment, background inerting, scroll locking, and focus restoration.
+Overlay handles the shared mechanics: portal rendering, layer-stack registration, nesting, dismissal ordering, focus containment (`FocusLock`), background inerting, scroll locking, and focus restoration.
 
 It does not provide a trigger or prescribe the content's semantic role, structure, placement, dimensions, animation, or appearance. Whether the resulting interface is a dialog, alert dialog, drawer, sheet, or lightbox is determined by the content composed inside it.
 
@@ -345,7 +345,7 @@ Popover portals internally by default. `Popover.Portal` optionally configures th
 </Popover>
 ```
 
-An optional arrow participates in the same positioning calculation:
+An optional arrow participates in the same positioning calculation. Collision handling includes flipping and shifting in view; list-style popups (Select, Combobox, Menu) also need available-height so the popup can scroll instead of overflowing the viewport. That is positioning math on `Popover.Content`, not a second primitive.
 
 ```tsx
 <Popover open={open} onDismiss={close}>
@@ -437,6 +437,8 @@ interface PopoverContentProps
 Toast provides the infrastructure for transient application content without prescribing its appearance or meaning.
 
 Reference UI manages mounting, queueing, stacking, timing, dismissal, accessible announcements, and coordination with other interface elements. It does not include semantic variants such as `success`, `error`, or `loading`. Applications define those concepts themselves.
+
+Timers pause while the pointer is over a toast and while a modal Overlay is the top layer. That is queue behaviour, not Overlay.
 
 The toaster is mounted internally by `ReferenceLibrary`. It renders directly at the React root without a portal or React context.
 
@@ -625,7 +627,7 @@ Following the same primitive-first philosophy, these components remain decoupled
   - Reused internally by list-based `Combobox` popups
 
 - **`Combobox`**  
-  Coordinates an input with an associated popup while preserving DOM focus and native text editing behaviour. Handles active-descendant tracking, autocomplete modes, suggestion navigation, value commitment, dismissal, and restoration of the previous value. Reference UI provides `Listbox` for list-based popups; applications may integrate their own grid, tree, or dialog implementations when required by the product.
+  Coordinates an input with an associated popup while preserving DOM focus and native text editing behaviour. Handles active-descendant tracking, autocomplete modes, suggestion navigation, value commitment, dismissal, and restoration of the previous value. Reference UI provides `Listbox` for list-based popups and `Tree` for nested popups; applications may integrate their own grid or dialog implementations when required by the product.
 
 - **`Menu`**  
   Owns `role="menu"` keyboard navigation, item activation, typeahead, and nested submenu orchestration. Built on `RovingFocus`. Composes with `Popover` for dropdown and context menus. Registers on the shared layer stack with Overlay and Popover.
@@ -635,6 +637,9 @@ Following the same primitive-first philosophy, these components remain decoupled
 
 - **`Slider`**  
   Encapsulates pointer drag math, multi-thumb collision constraints, keyboard stepping (arrows, PageUp/PageDown, Home/End), and ARIA value ranges (`aria-valuenow`, `aria-valuemin`, `aria-valuemax`).
+
+- **`Tree`**  
+  A minimal APG tree: nested expand/collapse, roving focus among visible items, single selection, typeahead. Built on `RovingFocus`. Not virtualized, not multi-select, not a file explorer. Combobox may use it as a nested popup.
 
 - **`Switch`**  
   A two-state control that is not a native HTML element. Renders a `button` with `role="switch"` and keeps `aria-checked` aligned with controlled `checked`. Owns Space/Enter activation. Track, thumb, and labels are application markup.
@@ -652,7 +657,7 @@ Following the same primitive-first philosophy, these components remain decoupled
   Provides accessible, resizable panel partitions (`role="separator"`) in horizontal and vertical orientations. Handles pointer/touch drag calculations, minimum/maximum size clamping, keyboard-driven resizing (Arrow keys, Home/End, Enter to collapse), and selection prevention during resize.
 
 - **`Tooltip`**  
-  Transient informative descriptions linked from its trigger using `aria-describedby`. Tooltip content is non-interactive. Handles hover intent delays, warm-up skip delays across neighbouring tooltips, keyboard focus display, and non-modal Escape dismissal per WCAG 2.1 SC 1.4.13 (dismissible, hoverable, and persistent). Interactive hover content is a `Popover` with `openOnHover`, not a Tooltip.
+  Transient informative descriptions linked from its trigger using `aria-describedby`. Tooltip content is non-interactive. Handles hover intent delays, warm-up skip delays across neighbouring tooltips, keyboard focus display, and non-modal Escape dismissal per WCAG 2.1 SC 1.4.13 (dismissible, hoverable, and persistent). Skip-delay across neighbours is a module-level delay group mounted with `ReferenceLibrary`, not a `Tooltip.Provider`. Interactive hover content is a `Popover` with `openOnHover`, not a Tooltip.
 
 ### Switch
 
@@ -838,6 +843,7 @@ Complex interface patterns are documented compositions of foundational and ARIA 
 - **`DatePicker`** $\rightarrow$ text input + `Popover` + `Calendar` (parsing and display formatting stay in application code)
 - **`DateRangePicker`** $\rightarrow$ text input(s) + `Popover` + `Calendar` with `{ start, end }`
 - **`CommandPalette`** $\rightarrow$ `Overlay` + `Combobox`
+- **`Menubar`** $\rightarrow$ `RovingFocus` (`orientation="horizontal"`) over always-visible `Menu` triggers; submenus are child layers via `Popover`
 - **`Toolbar` / `ToggleGroup`** $\rightarrow$ `RovingFocus` over application-authored buttons
 
 ---
@@ -846,11 +852,17 @@ Complex interface patterns are documented compositions of foundational and ARIA 
 
 These are decisions, not unfinished list items.
 
-- **`Tree`** — genuinely hard (nested collapse, typeahead, multi-select, often virtualization). Not in this freeze set. Combobox already states that applications may integrate their own tree when a product needs one.
 - **`Checkbox` / `RadioGroup`** — the native platform already provides state, grouping, and keyboard behaviour. Do not wrap `<input type="checkbox">` or `<input type="radio">`. Switch is included because it is not a native element.
+- **`NumberField` / `SpinButton`** — APG-hard and tempting because native `type="number"` is poor. Not in this freeze. Prefer `input` plus application parsing, or `Slider` when the value is a range.
+- **`Progress` / `Meter`** — native elements. Do not wrap them.
+- **Native `<dialog>`** — Overlay is the stacking, nesting, and Presence contract. Do not swap in HTML dialog as a second modal runtime.
+- **`Carousel`** — CSS scroll-snap plus optional `RovingFocus`. Not a primitive.
 - **Form-field wiring** (`Field`, `Form`, implicit label association) — explicit IDs are the agent-friendly answer given the no-context stance.
 - **`ScrollArea`** — modern CSS (`overflow`, overlay scrollbars, `scrollbar-gutter`) covers it.
 - **`DataGrid`** — an ecosystem problem (virtualization, editing, column models, selection), not a primitive this library can freeze honestly.
+- **Virtualized or multi-select `Tree`** — the freeze Tree is APG keyboard + collapse + single selection only. Windowed rows and multi-select stay application-owned.
+- **`NavigationMenu` / mega-menu** — Popover + Menu + hover intent. A documented pattern later if needed; not a freeze primitive.
+- **Drawer snap points / iOS scale-behind** — Overlay at a screen edge plus CSS. iOS `position: fixed` belongs in Overlay scroll-lock, not a Vaul-shaped primitive.
 
 Time-of-day widgets are outside Calendar. Calendar is calendar dates.
 
@@ -875,7 +887,7 @@ Before any primitive's API is locked into the permanent public surface, it must 
 3. **Controlled-state contract is settled:** Props for controlled state, open/close, and dismissal handlers are consistent across the library.
 4. **Event ordering and cancellation are settled:** Event propagation, bubbling order, and `defaultPrevented` behavior are fully defined.
 5. **Styling hooks and state attributes are settled:** Data attributes (e.g. `data-state="open"`, `data-orientation="vertical"`) and style props are finalized.
-6. **Triple composition verification:** At least three substantially different compositions work seamlessly without escape-hatch props. For `Listbox` and `Combobox`, one of those compositions must be virtualized: windowed options that preserve `aria-setsize` / `aria-posinset` and support scroll-to-index. For `Calendar`, one composition must use a locale whose week does not start on Sunday, and one must be a range picker.
+6. **Triple composition verification:** At least three substantially different compositions work seamlessly without escape-hatch props. For `Listbox` and `Combobox`, one of those compositions must be virtualized: windowed options that preserve `aria-setsize` / `aria-posinset` and support scroll-to-index. For `Calendar`, one composition must use a locale whose week does not start on Sunday, and one must be a range picker. For `Tree`, one composition must be nested at least two levels, and one must prove collapsed descendants are absent from the roving set.
 7. **Cross-cutting environment safety:** Nested usage, RTL directionality, SSR hydration, and multi-root/Shadow DOM usage require no API adjustments.
 8. **AI agent verification:** An AI model or agent can implement custom, non-standard user requirements without bypassing or fighting the primitive.
 

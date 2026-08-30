@@ -132,6 +132,6 @@ Follow `components.md`. Finish the foundation before the ARIA set, and keep each
 
 1. `Portal`, `Presence`, `Slot`, `RovingFocus`
 2. `Overlay`, `Popover`, `Toast` / `ReferenceLibrary`
-3. `Listbox`, `Menu`, `Combobox`, `Tabs`
+3. `Listbox`, `Menu`, `Tree`, `Combobox`, `Tabs`
 4. `Slider`, `Switch`, `Collapsible`, `Accordion`
 5. `Tooltip`, `Splitter`, `Calendar`
