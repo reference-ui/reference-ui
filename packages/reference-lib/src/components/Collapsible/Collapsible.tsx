@@ -24,6 +24,8 @@ interface CollapsibleContextValue {
   setContentId: (id: string | null) => void
   accordionItem?: boolean
   skipEnterRef: React.MutableRefObject<boolean>
+  isContentPresent: boolean
+  setIsContentPresent: (present: boolean) => void
 }
 
 const CollapsibleContext = React.createContext<CollapsibleContextValue | null>(null)
@@ -57,6 +59,8 @@ export function Collapsible({
     : isControlled
       ? openProp
       : internalOpen
+
+  const [isContentPresent, setIsContentPresent] = React.useState(isOpen)
 
   const generatedContentIdRef = React.useRef<string | null>(null)
   if (!generatedContentIdRef.current) {
@@ -94,8 +98,10 @@ export function Collapsible({
       setContentId: setExplicitContentId,
       accordionItem: isAccordionItem,
       skipEnterRef,
+      isContentPresent,
+      setIsContentPresent,
     }),
-    [isOpen, setIsOpen, isDisabled, contentId, isAccordionItem]
+    [isOpen, setIsOpen, isDisabled, contentId, isAccordionItem, isContentPresent]
   )
 
   return (
@@ -124,6 +130,8 @@ export function CollapsibleTrigger({
   const context = React.useContext(CollapsibleContext)
   const isDisabled = disabledProp ?? context?.disabled ?? false
   const isOpen = context?.isOpen ?? false
+  const isContentPresent = context?.isContentPresent ?? isOpen
+  const hideBottomBorder = isOpen || isContentPresent
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     onClick?.(e)
@@ -133,13 +141,13 @@ export function CollapsibleTrigger({
   }
 
   const triggerStyle: React.CSSProperties | undefined = React.useMemo(() => {
-    if (!isOpen || !style) return style
+    if (!hideBottomBorder || !style) return style
     return {
       ...style,
       borderBottomWidth: 0,
       borderBottomStyle: 'none' as const,
     }
-  }, [isOpen, style])
+  }, [hideBottomBorder, style])
 
   const renderIcon = () => {
     if (hideIcon) return null
@@ -177,10 +185,11 @@ export function CollapsibleTrigger({
       aria-controls={isOpen ? context?.contentId : undefined}
       data-state={isOpen ? 'open' : 'closed'}
       data-disabled={isDisabled ? '' : undefined}
+      data-content-present={isContentPresent ? '' : undefined}
       data-reference-accordion-item={context?.accordionItem ? '' : undefined}
       disabled={isDisabled}
       onClick={handleClick}
-      borderBottomWidth={isOpen && borderBottomWidth !== undefined ? '0px' : borderBottomWidth}
+      borderBottomWidth={hideBottomBorder && borderBottomWidth !== undefined ? '0px' : borderBottomWidth}
       style={triggerStyle}
       {...props}
     >
@@ -189,6 +198,7 @@ export function CollapsibleTrigger({
     </Button>
   )
 }
+
 
 export type CollapsibleContentProps = PrimitiveProps<'div'>
 
@@ -215,7 +225,18 @@ const CollapsibleContentPanel = React.forwardRef<HTMLDivElement, CollapsibleCont
       [presenceRef, consumerRef]
     )
 
+    const context = React.useContext(CollapsibleContext)
+    const setIsContentPresent = context?.setIsContentPresent
+
+    React.useEffect(() => {
+      setIsContentPresent?.(true)
+      return () => {
+        setIsContentPresent?.(false)
+      }
+    }, [setIsContentPresent])
+
     const publish = React.useCallback(() => {
+
       const node = nodeRef.current
       if (!node) return
       const rect = node.getBoundingClientRect()

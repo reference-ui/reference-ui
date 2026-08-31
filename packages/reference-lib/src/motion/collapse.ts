@@ -88,10 +88,11 @@ export function animateCollapse(
     paddingBottom: 0,
     overflow: 'hidden',
     duration,
-    ease: 'power2.inOut',
+    ease: 'power2.out',
     onComplete: () => {
       onComplete?.()
     },
   })
 }
+
 

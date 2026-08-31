@@ -15,11 +15,17 @@ const reactStylesCss = resolve(reactRoot, 'styles.css')
 const styledRoot = resolve(__dirname, '.reference-ui/styled')
 const typesRoot = resolve(__dirname, '.reference-ui/types')
 
+const workspaceIconsDir = resolve(__dirname, '../reference-icons')
+const iconsEntry = existsSync(resolve(workspaceIconsDir, 'src/index.ts'))
+  ? resolve(workspaceIconsDir, 'src/index.ts')
+  : undefined
+
 export default defineConfig({
   plugins: [referenceVite(), react()],
   resolve: {
     dedupe: ['react', 'react-dom'],
     alias: [
+      ...(iconsEntry ? [{ find: '@reference-ui/icons', replacement: iconsEntry }] : []),
       { find: '@reference-ui/react/styles.css', replacement: reactStylesCss },
       { find: '@reference-ui/styled/', replacement: `${styledRoot}/` },
       { find: '@reference-ui/styled', replacement: styledRoot },
@@ -35,3 +41,4 @@ export default defineConfig({
     ],
   },
 })
+

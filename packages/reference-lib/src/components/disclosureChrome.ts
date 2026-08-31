@@ -48,7 +48,12 @@ export const dividerTrigger = {
       borderBottomWidth: '0px !important',
       borderBottomColor: 'transparent !important',
     },
+    '&[data-content-present]': {
+      borderBottomWidth: '0px !important',
+      borderBottomColor: 'transparent !important',
+    },
   },
+
   style: {
     backgroundColor: 'transparent',
     borderTop: 'none',
