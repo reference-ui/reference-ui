@@ -83,9 +83,12 @@ export function ListboxOption({
         onKeyDown={handleKeyDown}
         display="flex"
         alignItems="center"
+        minHeight="8.5r"
         px="3r"
-        py="1.5r"
+        py="0.75r"
+        boxSizing="border-box"
         borderRadius="sm"
+        fontSize="3.5r"
         cursor={isDisabled ? 'not-allowed' : 'pointer'}
         bg={isSelected ? 'ui.button.background' : 'transparent'}
         color={isSelected ? 'ui.button.foreground' : 'design.text.base'}

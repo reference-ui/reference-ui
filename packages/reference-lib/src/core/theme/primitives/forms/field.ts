@@ -115,7 +115,29 @@ export const fieldSurfaceStyles = {
     height: '6r',
     minHeight: '0',
     paddingBlock: '0',
-    paddingInline: '2r',
+    paddingInline: '1.5r',
+    backgroundColor: 'transparent',
+    color: '{colors.design.text.light}',
+    borderWidth: '0',
+    borderColor: 'transparent',
+    borderRadius: 'sm',
+    boxShadow: 'none',
+    marginInlineEnd: '-1.5r',
+    cursor: 'pointer',
+    _hover: {
+      backgroundColor: '{colors.ui.table.row.mutedBackground}',
+      color: '{colors.design.text.base}',
+      boxShadow: 'none',
+    },
+    _active: {
+      backgroundColor: '{colors.ui.table.row.mutedBackground}',
+      boxShadow: 'none',
+    },
+    _focusVisible: {
+      outline: '2px solid',
+      outlineColor: '{colors.ui.focus.ring}',
+      outlineOffset: '2px',
+    },
   },
 
   '[data-reference-number-field]': {

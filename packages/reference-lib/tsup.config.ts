@@ -5,6 +5,7 @@ const external = [
   /^@reference-ui\/styled(\/.*)?$/,
   'react',
   'react-dom',
+  'gsap',
 ]
 
 export default defineConfig({

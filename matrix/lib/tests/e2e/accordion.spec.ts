@@ -14,18 +14,18 @@ test.describe('Accordion Composition Gates & Browser Proofs', () => {
     const trigger2 = page.getByTestId('btn-trigger-2')
     const content2 = page.getByTestId('content-2')
 
-    // Initial state: item-1 is open, item-2 is closed
     await expect(trigger1).toHaveAttribute('aria-expanded', 'true')
     await expect(content1).toBeVisible()
     await expect(trigger2).toHaveAttribute('aria-expanded', 'false')
     await expect(content2).toHaveCount(0)
 
-    // Click trigger 2 -> opens item-2, closes item-1
+    // Click trigger 2 -> opens item-2, closes item-1 through Presence + GSAP
     await trigger2.click()
+    await expect(content1).toHaveAttribute('data-state', 'closed')
     await expect(trigger1).toHaveAttribute('aria-expanded', 'false')
-    await expect(content1).toHaveCount(0)
     await expect(trigger2).toHaveAttribute('aria-expanded', 'true')
     await expect(content2).toBeVisible()
+    await expect(content1).toHaveCount(0)
 
     // Arrow keys navigate between triggers
     await trigger2.focus()

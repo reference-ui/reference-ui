@@ -1,22 +1,14 @@
 import * as React from 'react'
 import { Div, Span } from '@reference-ui/react'
 import { Collapsible } from './index'
-
-const triggerProps = {
-  width: '100%' as const,
-  textAlign: 'left' as const,
-  justifyContent: 'flex-start' as const,
-  bg: 'ui.field.background',
-  color: 'ui.field.foreground',
-  borderColor: 'ui.field.border',
-}
+import { dividerContent, dividerTrigger } from '../disclosureChrome'
 
 export default {
   DefaultClosed: () => (
     <Div maxW="80r">
       <Collapsible>
-        <Collapsible.Trigger {...triggerProps}>Show details</Collapsible.Trigger>
-        <Collapsible.Content p="3r">
+        <Collapsible.Trigger {...dividerTrigger}>Show details</Collapsible.Trigger>
+        <Collapsible.Content {...dividerContent}>
           <Span fontSize="3.5r" color="design.text.light">
             Collapsible content revealed on trigger click.
           </Span>
@@ -27,8 +19,8 @@ export default {
   DefaultOpen: () => (
     <Div maxW="80r">
       <Collapsible defaultOpen>
-        <Collapsible.Trigger {...triggerProps}>Hide details</Collapsible.Trigger>
-        <Collapsible.Content p="3r">
+        <Collapsible.Trigger {...dividerTrigger}>Hide details</Collapsible.Trigger>
+        <Collapsible.Content {...dividerContent}>
           <Span fontSize="3.5r" color="design.text.light">
             This section starts open via defaultOpen.
           </Span>
@@ -41,10 +33,10 @@ export default {
     return (
       <Div maxW="80r" display="flex" flexDirection="column" gap="2r">
         <Collapsible open={open} onChange={setOpen}>
-          <Collapsible.Trigger {...triggerProps}>
+          <Collapsible.Trigger {...dividerTrigger}>
             {open ? 'Collapse' : 'Expand'} controlled section
           </Collapsible.Trigger>
-          <Collapsible.Content p="3r">
+          <Collapsible.Content {...dividerContent}>
             <Span fontSize="3.5r" color="design.text.light">
               Open state is controlled externally.
             </Span>

@@ -8,6 +8,8 @@ import {
   H3,
   P,
 } from '@reference-ui/react'
+import { ArrowDropDownIcon } from '@reference-ui/icons'
+import { dividerContent, dividerTrigger } from './disclosureChrome'
 import { Accordion } from './Accordion'
 import { Calendar } from './Calendar'
 import { Collapsible } from './Collapsible'
@@ -50,6 +52,8 @@ function SectionCard({ title, children }: { title: string; children: React.React
     </Div>
   )
 }
+
+const disclosureTrigger = dividerTrigger
 
 export default function ShowcaseFixture() {
   const [switchChecked, setSwitchChecked] = React.useState(true)
@@ -305,51 +309,30 @@ export default function ShowcaseFixture() {
         {/* Collapsible & Accordion */}
         <SectionCard title="Collapsible & Accordion">
           <Collapsible defaultOpen>
-            <Collapsible.Trigger
-              width="100%"
-              textAlign="left"
-              justifyContent="flex-start"
-              bg="ui.field.background"
-              color="ui.field.foreground"
-              borderColor="ui.field.border"
-            >
+            <Collapsible.Trigger {...disclosureTrigger}>
               Toggle Collapsible Section
             </Collapsible.Trigger>
-            <Collapsible.Content p="3r">
+            <Collapsible.Content {...dividerContent}>
               <Span fontSize="3.5r" color="design.text.light">
                 Collapsible content revealed smoothly using Reference primitives.
               </Span>
             </Collapsible.Content>
           </Collapsible>
 
-          <Accordion expansion="single" defaultValue="item-1" display="flex" flexDirection="column" gap="1r">
+          <Accordion expansion="single" defaultValue="item-1" display="flex" flexDirection="column">
             <Collapsible id="item-1">
-              <Collapsible.Trigger
-                width="100%"
-                textAlign="left"
-                justifyContent="flex-start"
-                bg="ui.field.background"
-                color="ui.field.foreground"
-                borderColor="ui.field.border"
-              >
+              <Collapsible.Trigger {...disclosureTrigger}>
                 Accordion Item 1
               </Collapsible.Trigger>
-              <Collapsible.Content p="3r">
+              <Collapsible.Content {...dividerContent}>
                 <Span fontSize="3.5r" color="design.text.light">Content inside Accordion item 1.</Span>
               </Collapsible.Content>
             </Collapsible>
             <Collapsible id="item-2">
-              <Collapsible.Trigger
-                width="100%"
-                textAlign="left"
-                justifyContent="flex-start"
-                bg="ui.field.background"
-                color="ui.field.foreground"
-                borderColor="ui.field.border"
-              >
+              <Collapsible.Trigger {...disclosureTrigger}>
                 Accordion Item 2
               </Collapsible.Trigger>
-              <Collapsible.Content p="3r">
+              <Collapsible.Content {...dividerContent}>
                 <Span fontSize="3.5r" color="design.text.light">Content inside Accordion item 2.</Span>
               </Collapsible.Content>
             </Collapsible>
@@ -381,7 +364,9 @@ export default function ShowcaseFixture() {
           <Combobox value={comboboxVal} onChange={setComboboxVal}>
             <Field>
               <Combobox.Input placeholder="Select framework..." />
-              <Button type="button" aria-label="Open suggestions">▾</Button>
+              <Button type="button" aria-label="Open suggestions">
+                <ArrowDropDownIcon />
+              </Button>
             </Field>
             <Combobox.Popover>
               <Listbox>

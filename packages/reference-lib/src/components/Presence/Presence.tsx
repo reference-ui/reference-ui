@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { finiteGsapTweens } from '../../motion/gsap'
 
 export interface PresenceProps {
   children?: React.ReactElement | null | false
@@ -157,7 +158,9 @@ export function usePresence(present: boolean) {
         }
       }
 
-      if (!hasFiniteAnimation && !hasFiniteTransition) {
+      const hasFiniteGsap = finiteGsapTweens(el).length > 0
+
+      if (!hasFiniteAnimation && !hasFiniteTransition && !hasFiniteGsap) {
         setState('unmounted')
         if (parentPresence) {
           parentPresence.onDescendantExitComplete(presenceId)
@@ -165,7 +168,7 @@ export function usePresence(present: boolean) {
         return
       }
 
-      // Suspend unmount while transitions/animations complete
+      // Suspend unmount while transitions/animations/GSAP tweens complete
       setState('unmountSuspended')
     }
   }, [present, presenceId, parentPresence])
@@ -240,12 +243,21 @@ export function usePresence(present: boolean) {
     el.addEventListener('transitionend', onTransitionEnd)
     el.addEventListener('transitioncancel', onTransitionCancel)
 
+    let gsapCancelled = false
+    const gsapTweens = finiteGsapTweens(el)
+    if (gsapTweens.length > 0) {
+      Promise.all(gsapTweens.map(tween => tween.then())).then(() => {
+        if (!gsapCancelled) handleExitComplete()
+      })
+    }
+
     // Fallback timer in case events don't fire
     const fallbackTimer = setTimeout(() => {
       handleExitComplete()
     }, 5000)
 
     return () => {
+      gsapCancelled = true
       el.removeEventListener('animationend', onAnimationEnd)
       el.removeEventListener('animationcancel', onAnimationCancel)
       el.removeEventListener('transitionend', onTransitionEnd)

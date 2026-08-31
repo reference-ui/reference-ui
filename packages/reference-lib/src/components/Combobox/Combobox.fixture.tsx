@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { Button, Div, Span } from '@reference-ui/react'
+import { ArrowDropDownIcon } from '@reference-ui/icons'
 import { Combobox } from './index'
 import { Field } from '../Field'
 import { Listbox } from '../Listbox'
@@ -47,7 +48,7 @@ export default {
                 field?.querySelector('input')?.focus()
               }}
             >
-              ▾
+              <ArrowDropDownIcon />
             </Button>
           </Field>
           <Combobox.Popover>
@@ -79,7 +80,7 @@ export default {
         <Combobox value={selected} onChange={setSelected}>
           <Combobox.Trigger width="100%" justifyContent="space-between">
             {selectedLabel(selected)}
-            <Span aria-hidden="true">▾</Span>
+            <ArrowDropDownIcon />
           </Combobox.Trigger>
           <Combobox.Popover>
             <Listbox>
