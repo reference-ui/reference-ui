@@ -4,7 +4,10 @@ target/
 # NAPI artifacts
 artifacts/
 npm/
+native/
 *.node
+*.inputs.sha256
+*.sha256
 
 # Node
 node_modules/

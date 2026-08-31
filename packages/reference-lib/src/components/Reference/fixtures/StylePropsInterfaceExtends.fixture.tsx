@@ -1,11 +1,11 @@
 import { Reference } from '../index'
 import type { StyleProps } from '@reference-ui/react'
 
-export interface LocalBaseStyleProps extends StyleProps {
+export type LocalBaseStyleProps = StyleProps & {
   localBaseTone?: 'soft' | 'strong'
 }
 
-export interface MyExtendedInterface extends LocalBaseStyleProps {
+export type MyExtendedInterface = LocalBaseStyleProps & {
   myCustomProps: string
   mode?: 'composed' | 'inline'
 }

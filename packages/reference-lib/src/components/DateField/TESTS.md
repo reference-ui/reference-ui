@@ -68,29 +68,29 @@ below add only DateField-specific anatomy and behavior.
 
 ### DOM and dual-host contract
 
-- [ ] `DF-DOM-01` `[reference]` `[browser]` —
+- [x] `DF-DOM-01` `[reference]` `[browser]` —
   **Childless DateField should resolve directly to one visible text input.**
   Mount a sibling Label above `<DateField id="bday" value={value} onChange={setValue} locale="en-GB" />`.
   Assert DateField resolves to one `input[type=text]`, its ref and StyleProps target
   that input, and no wrapping `div` or extra node exists.
-- [ ] `DF-DOM-02` `[reference]` `[browser]` —
+- [x] `DF-DOM-02` `[reference]` `[browser]` —
   **Compound DateField with Picker should render Field bezel containing input and trigger.**
   Mount `<DateField value={value} onChange={setValue} locale="en-GB"><DateField.Picker /></DateField>`.
   Assert a `Field` surface bezel (`div[data-reference-field]`) wraps the
   synthesized text input and trigger button, with Popover content containing
   Calendar. Assert root ref targets the wrapper `div`.
-- [ ] `DF-DOM-03` `[reference]` `[browser]` —
+- [x] `DF-DOM-03` `[reference]` `[browser]` —
   **DateField should apply the part-resolution merge law for root and explicit props.**
   Pass `placeholder="Root"`, `className="root-cls"`, and `onInput` to `<DateField>`,
   plus `<DateField.Input placeholder="Explicit" className="child-cls" />`.
   Assert explicit `placeholder` wins, classes merge via Reference standard,
   authored `onInput` executes, and managed `value` / combobox role remain authoritative.
-- [ ] `DF-DOM-04` `[reference]` `[browser]` —
+- [x] `DF-DOM-04` `[reference]` `[browser]` —
   **DateField should serialize through one hidden input only when `name` is supplied.**
   Parameterize `name` omitted, `name="birthday"`, and `name` plus `form`.
   Assert no hidden node without `name`, and exactly one `input[type=hidden]`
   carrying canonical ISO or `""`.
-- [ ] `DF-DOM-05` `[reference]` `[browser]` —
+- [x] `DF-DOM-05` `[reference]` `[browser]` —
   **DateField should follow only the controlled ISO prop when opened programmatically.**
   Rerender `value` from `null` to `2024-04-01` to `null` without typing.
   Assert displayed locale text follows each prop, `onChange` is silent, and
@@ -98,130 +98,130 @@ below add only DateField-specific anatomy and behavior.
 
 ### Locale grammar
 
-- [ ] `DF-FMT-01` `[vendor]` `[unit]` —
+- [x] `DF-FMT-01` `[vendor]` `[unit]` —
   **DateField should display and parse `en-GB` as day/month/year.**
   Format `2024-02-01` under `en-GB` and type `01/02/2024`. Assert the
   published ISO is February 1, not January 2.
-- [ ] `DF-FMT-02` `[vendor]` `[unit]` —
+- [x] `DF-FMT-02` `[vendor]` `[unit]` —
   **DateField should display and parse `en-US` as month/day/year.**
   Repeat `DF-FMT-01` with `en-US` and the same keystrokes `01/02/2024`.
   Assert the published ISO is January 2.
-- [ ] `DF-FMT-03` `[vendor]` `[unit]` —
+- [x] `DF-FMT-03` `[vendor]` `[unit]` —
   **DateField should honor locale separators and ISO-like locales.**
   Parameterize `de-DE` (dot literals) and `sv-SE` (year-month-day with `-`).
   Assert `formatToParts` order/separators round-trip.
-- [ ] `DF-FMT-04` `[vendor]` `[unit]` —
+- [x] `DF-FMT-04` `[vendor]` `[unit]` —
   **DateField should keep Japanese numeric literals in the grammar.**
   Format and parse a complete `ja-JP` numeric date including `年`/`月`/`日`.
   Assert literals may be omitted while typing and reformats upon completion.
-- [ ] `DF-FMT-05` `[vendor]` `[unit]` —
+- [x] `DF-FMT-05` `[vendor]` `[unit]` —
   **DateField should accept ASCII mixed with one locale digit set.**
   Type an `ar-EG` date using a mix of ASCII and Arabic-Indic digits.
   Assert one ISO request. Mixing two non-ASCII digit scripts is rejected.
-- [ ] `DF-FMT-06` `[reference]` `[ssr]` —
+- [x] `DF-FMT-06` `[reference]` `[ssr]` —
   **DateField should require an explicit locale and skip environment defaults.**
   Render with `locale="en-GB"` on server and client. Assert identical markup
   and no `navigator.language` read.
 
 ### Partial edits and parsing
 
-- [ ] `DF-EDT-01` `[reference]` `[browser]` —
+- [x] `DF-EDT-01` `[reference]` `[browser]` —
   **DateField should keep partial text visible without publishing.**
   Type `3/`, `31/0`, and a cleared segment under `en-GB`. Assert the
   buffer matches each keystroke, `onChange` is empty, and `data-editing` is true.
-- [ ] `DF-EDT-02` `[reference]` `[browser]` —
+- [x] `DF-EDT-02` `[reference]` `[browser]` —
   **DateField should request `null` once for empty input.**
   Start from `2024-04-01`, delete all text. Assert one `onChange(null)` and no
   further null requests.
-- [ ] `DF-EDT-03` `[reference]` `[browser]` —
+- [x] `DF-EDT-03` `[reference]` `[browser]` —
   **DateField should request ISO when a complete valid edit first appears.**
   Type a complete `en-GB` 1 February 2024. Assert one `onChange("2024-02-01")`.
-- [ ] `DF-EDT-04` `[vendor]` `[unit]` —
+- [x] `DF-EDT-04` `[vendor]` `[unit]` —
   **DateField should reject impossible Gregorian dates without JS Date overflow.**
   Try `31/04/2024`, `29/02/2023`, and `2024-04-31`. Assert no `onChange` and
   commit reverts.
-- [ ] `DF-EDT-05` `[vendor]` `[unit]` —
+- [x] `DF-EDT-05` `[vendor]` `[unit]` —
   **DateField should accept 29 February only on Gregorian leap years.**
   Parameterize `2024-02-29` (ok) and `1900-02-29` (not).
-- [ ] `DF-EDT-06` `[reference]` `[unit]` —
+- [x] `DF-EDT-06` `[reference]` `[unit]` —
   **DateField should treat two-digit years as incomplete.**
   Type `31/12/24` in `en-GB` and commit. Assert revert and managed invalid.
-- [ ] `DF-EDT-07` `[reference]` `[unit]` —
+- [x] `DF-EDT-07` `[reference]` `[unit]` —
   **DateField should allow omitted leading zeros until commit.**
   Type `3/4/2024` in `en-GB`. Assert `onChange("2024-04-03")`.
-- [ ] `DF-EDT-08` `[reference]` `[unit]` —
+- [x] `DF-EDT-08` `[reference]` `[unit]` —
   **DateField should accept complete canonical ISO as interchange in any locale.**
   Paste `2024-12-31` into `en-GB` and `en-US` fields. Assert acceptance.
-- [ ] `DF-EDT-09` `[reference]` `[unit]` —
+- [x] `DF-EDT-09` `[reference]` `[unit]` —
   **DateField should not guess `01/02/2024` across locales.**
   Assert distinct ISO outputs under `en-GB`, `en-US`, and year-first grammars.
 
 ### Commit, echo, and composition
 
-- [ ] `DF-CMT-01` `[reference]` `[browser]` —
+- [x] `DF-CMT-01` `[reference]` `[browser]` —
   **DateField should commit on blur and Enter.**
   Complete a valid date, blur/Enter, assert commit retries and formatted text remains.
-- [ ] `DF-CMT-02` `[reference]` `[browser]` —
+- [x] `DF-CMT-02` `[reference]` `[browser]` —
   **DateField should revert incomplete or rejected dates on commit.**
   Blur from `3/` and `31/04/2024`. Assert revert and managed invalid.
-- [ ] `DF-CMT-03` `[reference]` `[browser]` —
+- [x] `DF-CMT-03` `[reference]` `[browser]` —
   **DateField should honor `preventDefault` on the blur commit boundary.**
   Prevent blur handler. Assert dirty buffer stays and refocus resumes session.
-- [ ] `DF-CMT-04` `[reference]` `[browser]` —
+- [x] `DF-CMT-04` `[reference]` `[browser]` —
   **DateField should preserve the dirty buffer for an accepted live echo.**
   Type complete date, accept `onChange` with matching ISO. Assert buffer preserved.
-- [ ] `DF-CMT-05` `[reference]` `[browser]` —
+- [x] `DF-CMT-05` `[reference]` `[browser]` —
   **DateField should replace the buffer when Calendar or parent sets `value`.**
   Rerender `value="2024-06-15"`. Assert reformatting, `data-editing` false, and no `onChange`.
-- [ ] `DF-CMT-06` `[reference]` `[browser]` —
+- [x] `DF-CMT-06` `[reference]` `[browser]` —
   **DateField should replace the buffer when `locale` changes.**
   Change `en-GB` to `en-US`. Assert month/day reordering.
-- [ ] `DF-CMT-07` `[reference]` `[browser]` —
+- [x] `DF-CMT-07` `[reference]` `[browser]` —
   **DateField should suspend parsing during composition and ignore stale end after a value replace.**
   Compose, replace `value`, fire stale `compositionend`. Assert no bogus `onChange`.
 
 ### Constraints
 
-- [ ] `DF-BND-01` `[reference]` `[unit]` —
+- [x] `DF-BND-01` `[reference]` `[unit]` —
   **DateField should reject out-of-range complete dates without clamping.**
   With `min="2024-06-01"` and `max="2024-06-30"`, type 31 May and 1 July. Assert no `onChange` and revert.
-- [ ] `DF-BND-02` `[reference]` `[browser]` —
+- [x] `DF-BND-02` `[reference]` `[browser]` —
   **DateField should display a programmatic out-of-range value as invalid.**
   Set out-of-range prop. Assert display plus managed invalid.
-- [ ] `DF-BND-03` `[reference]` `[unit]` —
+- [x] `DF-BND-03` `[reference]` `[unit]` —
   **DateField should apply `isDateUnavailable` the same way as min/max.**
   Mark date unavailable, assert typed rejection and programmatic invalid.
-- [ ] `DF-BND-04` `[reference]` `[unit]` —
+- [x] `DF-BND-04` `[reference]` `[unit]` —
   **DateField should fail when `min` is after `max` or either is not canonical ISO.**
   Supply invalid bounds. Assert diagnostic and no edit session.
 
 ### Caret-aware stepping
 
-- [ ] `DF-KEY-01` `[vendor]` `[browser]` —
+- [x] `DF-KEY-01` `[vendor]` `[browser]` —
   **DateField should increment the caret's segment with ArrowUp/Down.**
   Caret in day, month, and year segments. Assert respective segment increments/decrements.
-- [ ] `DF-KEY-02` `[vendor]` `[unit]` —
+- [x] `DF-KEY-02` `[vendor]` `[unit]` —
   **DateField should carry day overflow with Gregorian constrain.**
   `31/01/2024` + day step → `2024-02-01`.
-- [ ] `DF-KEY-03` `[vendor]` `[unit]` —
+- [x] `DF-KEY-03` `[vendor]` `[unit]` —
   **DateField should constrain month and year carry like Calendar.**
   `31/01/2024` + month step → `2024-02-29`; `29/02/2024` + year step → `2025-02-28`.
-- [ ] `DF-KEY-04` `[reference]` `[browser]` —
+- [x] `DF-KEY-04` `[reference]` `[browser]` —
   **DateField should use Shift as 10× of the caret segment.**
   Shift + ArrowUp on day/month/year gives 10-unit stepping.
-- [ ] `DF-KEY-05` `[reference]` `[browser]` —
+- [x] `DF-KEY-05` `[reference]` `[browser]` —
   **DateField should no-op ArrowUp/Down on null or incomplete text.**
   Empty field receives ArrowUp. Assert no `onChange` and no invented date.
-- [ ] `DF-KEY-06` `[reference]` `[browser]` —
+- [x] `DF-KEY-06` `[reference]` `[browser]` —
   **DateField should not step when disabled or read-only.**
   Assert stepping is suppressed.
-- [ ] `DF-KEY-07` `[reference]` `[browser]` —
+- [x] `DF-KEY-07` `[reference]` `[browser]` —
   **DateField should treat a caret on a separator as the nearest numeric segment.**
   Caret on `/` increments preceding segment.
 
 ### DateField.Picker and DateField.Trigger
 
-- [ ] `DF-CAL-01` `[reference]` `[browser]` —
+- [x] `DF-CAL-01` `[reference]` `[browser]` —
   **`<DateField><DateField.Picker /></DateField>` should upgrade input to APG combobox contract with deliberate activation.**
   Mount standard picker without explicit Trigger. Assert DateField.Input has
   `role="combobox"`, `aria-haspopup="dialog"`, `aria-expanded={false}`,
@@ -230,16 +230,16 @@ below add only DateField-specific anatomy and behavior.
   Press `Alt + ArrowDown` or click: assert popup opens and `aria-expanded={true}`.
   Click a day: assert `onChange` called, input reformats, popup dismisses, and
   `aria-expanded={false}`.
-- [ ] `DF-CAL-02` `[reference]` `[browser]` —
+- [x] `DF-CAL-02` `[reference]` `[browser]` —
   **Typing in DateField should update Calendar grid without auto-dismissing.**
   Open picker, type a new complete date in the input. Assert Calendar moves to
   new date and Popover stays open.
-- [ ] `DF-CAL-03` `[reference]` `[browser]` —
+- [x] `DF-CAL-03` `[reference]` `[browser]` —
   **`<DateField.Trigger>` should unfold an auxiliary trigger with `tabIndex={-1}`.**
   Mount `<DateField><DateField.Trigger aria-label="Open">📅</DateField.Trigger><DateField.Picker /></DateField>`.
   Assert dedicated trigger button renders beside input inside Field bezel with
   `tabIndex={-1}`, clicking toggles popover, and input keeps focus.
-- [ ] `DF-CAL-04` `[reference]` `[browser]` —
+- [x] `DF-CAL-04` `[reference]` `[browser]` —
   **`<DateField.Picker>` should support progressive disclosure through slotted Calendar.**
   Pass `<DateField.Picker placement="top"><Calendar firstDayOfWeek="mon" month={month} onMonthChange={setMonth}><Calendar.Grid><Calendar.Weekdays /><Calendar.Days>{(day) => <Calendar.Day date={day.date}>{day.formattedDay}</Calendar.Day>}</Calendar.Days></Calendar.Grid></Calendar></DateField.Picker>`.
   Assert `value`, `onChange`, `locale`, `mode="day"`, `min`, `max`, and `isDateUnavailable`
@@ -248,83 +248,83 @@ below add only DateField-specific anatomy and behavior.
 
 ### DateField.Range
 
-- [ ] `DF-RANGE-01` `[reference]` `[browser]` —
+- [x] `DF-RANGE-01` `[reference]` `[browser]` —
   **`<DateField.Range>` should manage two field edit sessions over one range value.**
   Mount `<DateField.Range value={range} onChange={setRange} locale="en-GB"><DateField.Picker /></DateField.Range>`.
   Type start date: assert end date is untouched and range draft updates.
-- [ ] `DF-RANGE-02` `[reference]` `[browser]` —
+- [x] `DF-RANGE-02` `[reference]` `[browser]` —
   **`<DateField.Range>` should preserve end-only drafts without breaking Calendar.**
   Clear start, type end first. Assert draft holds end, Calendar receives null value,
   and no invalid shape reaches `onChange`.
-- [ ] `DF-RANGE-03` `[reference]` `[browser]` —
+- [x] `DF-RANGE-03` `[reference]` `[browser]` —
   **`<DateField.Range>` should synchronize active endpoint and pane from field focus.**
   Focus start then end across different months. Assert Calendar pane follows
   the focused endpoint.
-- [ ] `DF-RANGE-04` `[reference]` `[browser]` —
+- [x] `DF-RANGE-04` `[reference]` `[browser]` —
   **`<DateField.Range>` should preserve typed inversion until completion.**
   Type start April 15 and end April 10. Assert draft preserves text, `canApply` is false.
   Select range in Calendar: assert normalized completion.
-- [ ] `DF-RANGE-05` `[reference]` `[browser]` —
+- [x] `DF-RANGE-05` `[reference]` `[browser]` —
   **`<DateField.Range>` should handle Apply and Cancel transactions.**
   Open picker, change draft, press Escape/Cancel: assert draft restores to committed
   value without `onChange`. Complete valid draft and commit: assert `onChange` fires.
-- [ ] `DF-RANGE-06` `[reference]` `[browser]` —
+- [x] `DF-RANGE-06` `[reference]` `[browser]` —
   **`<DateField.Range>` should unfold `<DateField.Start>` and `<DateField.End>`.**
   Mount explicit `<DateField.Start placeholder="From" />` and `<DateField.End placeholder="To" />`.
   Assert custom placeholders and props land on respective start/end inputs.
 
 ### Forms
 
-- [ ] `DF-FRM-01` `[reference]` `[browser]` —
+- [x] `DF-FRM-01` `[reference]` `[browser]` —
   **DateField should submit canonical ISO, not localized text.**
   Named field with `value="2024-02-01"`. Submit. Assert hidden value `2024-02-01`.
-- [ ] `DF-FRM-02` `[reference]` `[browser]` —
+- [x] `DF-FRM-02` `[reference]` `[browser]` —
   **DateField should submit an empty name for controlled `null`.**
   Assert hidden value `""` and disabled fields are omitted.
-- [ ] `DF-FRM-03` `[reference]` `[browser]` —
+- [x] `DF-FRM-03` `[reference]` `[browser]` —
   **DateField should block submit on a failed commit boundary.**
   Blur from incomplete text then `requestSubmit()`. Assert prevention.
-- [ ] `DF-FRM-04` `[reference]` `[browser]` —
+- [x] `DF-FRM-04` `[reference]` `[browser]` —
   **DateField should keep native required `valueMissing` and never `setCustomValidity`.**
   Required empty field asserts platform `valueMissing`.
-- [ ] `DF-FRM-05` `[reference]` `[browser]` —
+- [x] `DF-FRM-05` `[reference]` `[browser]` —
   **DateField should reformat on unprevented reset without changing controlled ISO.**
   Dirty field, `form.reset()`. Assert reformat and unchanged parent value.
 
 ### Environments
 
-- [ ] `DF-ENV-01` `[reference]` `[shadow]` —
+- [x] `DF-ENV-01` `[reference]` `[shadow]` —
   **DateField should associate form and events inside an open ShadowRoot.**
   Shadow form submission and scoped events.
-- [ ] `DF-ENV-02` `[reference]` `[browser]` `[rtl]` —
+- [x] `DF-ENV-02` `[reference]` `[browser]` `[rtl]` —
   **DateField should inherit direction for caret presentation without swapping locale parts.**
   `en-GB` under `dir="rtl"`.
-- [ ] `DF-ENV-03` `[reference]` `[unit]` —
+- [x] `DF-ENV-03` `[reference]` `[unit]` —
   **DateField should never pass a `Date` instance to `onChange`.**
   Every callback is `string | null` or `{ start, end } | null`.
 
 ### Manual release gates
 
-- [ ] `DF-MAN-01` `[reference]` `[manual]` —
+- [x] `DF-MAN-01` `[reference]` `[manual]` —
   **DateField should survive a real OS IME candidate window.**
-- [ ] `DF-MAN-02` `[reference]` `[manual]` —
+- [x] `DF-MAN-02` `[reference]` `[manual]` —
   **DateField should keep `inputMode=text` usable on iOS/Android keyboards.**
 
 ## Composition gates
 
-- [ ] `DF-COMP-01` `[reference]` `[browser]` —
+- [x] `DF-COMP-01` `[reference]` `[browser]` —
   **`<DateField><DateField.Picker /></DateField>` should express standard picker in non-Sunday locale.**
   Mount folded picker with `locale="de-DE"`. Open via `Alt + ArrowDown`, pick date,
   assert correct dot separator formatting and Popover dismissal.
-- [ ] `DF-COMP-02` `[reference]` `[browser]` —
+- [x] `DF-COMP-02` `[reference]` `[browser]` —
   **DateField should serialize a birthday through `htmlFor` labeling and canonical form data.**
   Sibling `<Label htmlFor="bday">` and `<DateField id="bday" name="birthday" value="2000-01-15" locale="en-GB" />`.
   Assert native label focusing and successful form submission of `2000-01-15`.
-- [ ] `DF-COMP-03` `[reference]` `[browser]` —
+- [x] `DF-COMP-03` `[reference]` `[browser]` —
   **DateField should keep Japanese literals and embedded Calendar on one ISO value.**
   Render with `locale="ja-JP"`. Format includes `年`/`月`/`日`. Select day in Calendar,
   assert proper Japanese text formatting and canonical ISO emission.
-- [ ] `DF-COMP-04` `[reference]` `[shadow]` —
+- [x] `DF-COMP-04` `[reference]` `[shadow]` —
   **DateField picker should compose inside an open ShadowRoot.**
   Mount `<DateField><DateField.Picker /></DateField>` inside a ShadowRoot. Assert
   popover portal, keyboard navigation, and event bubbling function correctly.
