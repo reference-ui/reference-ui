@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { Div, Span } from '@reference-ui/react'
-import { Combobox, Field } from '../../src/index'
+import { Combobox } from './index'
+import { Field } from '../Field'
 
 export default {
   Searchable: () => {
@@ -13,13 +14,11 @@ export default {
             <Combobox.Trigger>▾</Combobox.Trigger>
           </Field>
           <Combobox.Popover>
-            <Combobox.Listbox>
-              <Combobox.Option value="react">React</Combobox.Option>
-              <Combobox.Option value="vue">Vue</Combobox.Option>
-              <Combobox.Option value="angular">Angular</Combobox.Option>
-              <Combobox.Option value="svelte">Svelte</Combobox.Option>
-              <Combobox.Option value="solid">Solid</Combobox.Option>
-            </Combobox.Listbox>
+            <Combobox.Option value="react">React</Combobox.Option>
+            <Combobox.Option value="vue">Vue</Combobox.Option>
+            <Combobox.Option value="angular">Angular</Combobox.Option>
+            <Combobox.Option value="svelte">Svelte</Combobox.Option>
+            <Combobox.Option value="solid">Solid</Combobox.Option>
           </Combobox.Popover>
         </Combobox>
         <Span fontSize="3r" color="design.text.light">Selected framework: {selected ?? 'None'}</Span>

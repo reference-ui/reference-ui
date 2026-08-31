@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Div, Span } from '@reference-ui/react'
-import { Slider } from '../../src/index'
+import { Slider } from './index'
 
 export default {
   SingleThumb: () => {

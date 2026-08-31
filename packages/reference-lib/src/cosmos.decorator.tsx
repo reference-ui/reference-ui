@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { Button, Div, Span } from '@reference-ui/react'
 import '@reference-ui/react/styles.css'
+import { ReferenceLibrary } from './components/ReferenceLibrary'
 
 export default function CosmosDecorator({ children }: { children: React.ReactNode }) {
   const [dark, setDark] = React.useState(true)
@@ -59,7 +60,7 @@ export default function CosmosDecorator({ children }: { children: React.ReactNod
         flexDirection="column"
       >
         <Div maxWidth="min(72rem, 100%)" width="100%" marginInline="auto" flex="1">
-          {children}
+          <ReferenceLibrary>{children}</ReferenceLibrary>
         </Div>
       </Div>
     </Div>

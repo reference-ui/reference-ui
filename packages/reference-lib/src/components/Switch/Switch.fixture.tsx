@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Div, Span } from '@reference-ui/react'
-import { Switch } from '../../src/index'
+import { Switch } from './index'
 
 export default {
   Default: () => {

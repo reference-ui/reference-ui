@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Div, Span } from '@reference-ui/react'
-import { Tabs } from '../../src/index'
+import { Tabs } from './index'
 
 export default {
   Horizontal: () => (

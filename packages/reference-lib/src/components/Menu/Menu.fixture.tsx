@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { Div, Span } from '@reference-ui/react'
-import { Menu, toast } from '../../src/index'
+import { Menu } from './index'
+import { toast } from '../Toast'
 
 export default {
   StandardDropdown: () => {

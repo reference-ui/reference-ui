@@ -8,26 +8,24 @@ import {
   H3,
   P,
 } from '@reference-ui/react'
-import {
-  Accordion,
-  Calendar,
-  Collapsible,
-  Combobox,
-  DateField,
-  Field,
-  Listbox,
-  Menu,
-  NumberField,
-  Overlay,
-  Popover,
-  Slider,
-  Splitter,
-  Switch,
-  Tabs,
-  toast,
-  Tooltip,
-  Tree,
-} from '../src/index'
+import { Accordion } from './Accordion'
+import { Calendar } from './Calendar'
+import { Collapsible } from './Collapsible'
+import { Combobox } from './Combobox'
+import { DateField } from './DateField'
+import { Field } from './Field'
+import { Listbox } from './Listbox'
+import { Menu } from './Menu'
+import { NumberField } from './NumberField'
+import { Overlay } from './Overlay'
+import { Popover } from './Popover'
+import { Slider } from './Slider'
+import { Splitter } from './Splitter'
+import { Switch } from './Switch'
+import { Tabs } from './Tabs'
+import { Toast, toast } from './Toast'
+import { Tooltip } from './Tooltip'
+import { Tree } from './Tree'
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -391,11 +389,9 @@ export default function ShowcaseFixture() {
               <Combobox.Trigger>▾</Combobox.Trigger>
             </Field>
             <Combobox.Popover>
-              <Combobox.Listbox>
-                <Combobox.Option value="react">React</Combobox.Option>
-                <Combobox.Option value="vue">Vue</Combobox.Option>
-                <Combobox.Option value="svelte">Svelte</Combobox.Option>
-              </Combobox.Listbox>
+              <Combobox.Option value="react">React</Combobox.Option>
+              <Combobox.Option value="vue">Vue</Combobox.Option>
+              <Combobox.Option value="svelte">Svelte</Combobox.Option>
             </Combobox.Popover>
           </Combobox>
 

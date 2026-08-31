@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Div, Span } from '@reference-ui/react'
-import { Calendar, type DateRangeValue } from '../../src/index'
+import { Calendar, type DateRangeValue } from './index'
 
 export default {
   SingleDate: () => {
