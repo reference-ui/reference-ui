@@ -11,8 +11,8 @@
     "setup:local": "bash ./pipeline/setup/local.sh",
     "pipeline": "pnpm --dir pipeline exec tsx src/cli.ts",
     "dev": "pnpm dev:docs",
-    "dev:docs": "pnpm pipeline dev docs",
-    "dev:lib": "pnpm pipeline dev lib",
+    "dev:docs": "pnpm --filter @reference-ui/reference-docs run dev",
+    "dev:lib": "pnpm --filter @reference-ui/lib run dev",
     "changeset": "changeset",
     "release": "pnpm pipeline release"
   },

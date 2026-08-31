@@ -4,7 +4,7 @@ import { KeyboardArrowDownIcon } from '@reference-ui/icons'
 import { Presence } from '../Presence'
 import { AccordionContext } from '../Accordion/accordion-context'
 import { animateCollapse } from '../../motion/collapse'
-import { gsap } from '../../motion/gsap'
+import { gsap, finiteGsapTweens } from '../../motion/gsap'
 
 export interface CollapsibleProps {
   children?: React.ReactNode
@@ -215,23 +215,32 @@ const CollapsibleContentPanel = React.forwardRef<HTMLDivElement, CollapsibleCont
       [presenceRef, consumerRef]
     )
 
+    const publish = React.useCallback(() => {
+      const node = nodeRef.current
+      if (!node) return
+      const rect = node.getBoundingClientRect()
+      if (rect.height > 0) {
+        node.style.setProperty('--reference-collapsible-content-height', `${rect.height}px`)
+      }
+      if (rect.width > 0) {
+        node.style.setProperty('--reference-collapsible-content-width', `${rect.width}px`)
+      }
+    }, [])
+
     React.useLayoutEffect(() => {
       const node = nodeRef.current
       if (!node || !isOpen) return
 
-      const publish = () => {
-        const rect = node.getBoundingClientRect()
-        node.style.setProperty('--reference-collapsible-content-height', `${rect.height}px`)
-        node.style.setProperty('--reference-collapsible-content-width', `${rect.width}px`)
-      }
-
-      publish()
       if (typeof ResizeObserver === 'undefined') return
 
-      const observer = new ResizeObserver(publish)
+      const observer = new ResizeObserver(() => {
+        // Skip layout recalculation during active animation frames to avoid stutter
+        if (finiteGsapTweens(node).length > 0) return
+        publish()
+      })
       observer.observe(node)
       return () => observer.disconnect()
-    }, [isOpen])
+    }, [isOpen, publish])
 
     React.useLayoutEffect(() => {
       const node = nodeRef.current
@@ -239,12 +248,18 @@ const CollapsibleContentPanel = React.forwardRef<HTMLDivElement, CollapsibleCont
 
       const skip = Boolean(skipEnterRef.current && isOpen)
       if (isOpen) skipEnterRef.current = false
-      animateCollapse(node, { open: isOpen, skip })
+      animateCollapse(node, {
+        open: isOpen,
+        skip,
+        onComplete: () => {
+          if (isOpen) publish()
+        },
+      })
 
       return () => {
         gsap.killTweensOf(node)
       }
-    }, [isOpen, skipEnterRef])
+    }, [isOpen, skipEnterRef, publish])
 
     return (
       <Div

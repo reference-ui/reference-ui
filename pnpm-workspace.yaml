@@ -16,4 +16,5 @@ ignoredBuiltDependencies:
 linkWorkspacePackages: true
 
 patchedDependencies:
+  react-cosmos-plugin-vite@7.2.0: patches/react-cosmos-plugin-vite@7.2.0.patch
   react-cosmos@7.2.0: patches/react-cosmos@7.2.0.patch

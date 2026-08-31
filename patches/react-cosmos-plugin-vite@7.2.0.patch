@@ -1,0 +1,17 @@
+diff --git a/dist/viteDevServerPlugin.js b/dist/viteDevServerPlugin.js
+index de0a5e12dd4362c2a350c98fd0520596a8f1f351..56d25e16923aae2b63fab352552030c84bc79f29 100644
+--- a/dist/viteDevServerPlugin.js
++++ b/dist/viteDevServerPlugin.js
+@@ -33,10 +33,11 @@ export async function viteDevServerPlugin({ config, platform, }) {
+     const watcher = await startFixtureWatcher(config, 'add', () => {
+         const module = server.moduleGraph.getModuleById(userImportsResolvedModuleId);
+         if (!module) {
+-            throw new Error(`Vite module graph doesn't contain module with id ${userImportsResolvedModuleId}`);
++            return;
+         }
+         server.moduleGraph.invalidateModule(module);
+         server.reloadModule(module);
++
+     });
+     return () => {
+         watcher.close();

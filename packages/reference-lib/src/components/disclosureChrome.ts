@@ -72,17 +72,22 @@ export const dividerTrigger = {
 export const dividerContent = {
   paddingBlock: '0.75rem' as const,
   paddingInline: '0' as const,
+  borderWidth: '0px' as const,
   borderBottomWidth: '1px' as const,
   borderBottomStyle: 'solid' as const,
   borderBottomColor: 'gray.700' as const,
   css: {
     paddingBlock: '0.75rem',
     paddingInline: '0',
-    borderBottomWidth: '1px',
+    borderWidth: '0px',
     borderStyle: 'solid',
+    borderBottomWidth: '1px',
     borderBottomColor: 'gray.700',
   },
   style: {
+    borderTop: 'none',
+    borderRight: 'none',
+    borderLeft: 'none',
     paddingBlock: '0.75rem',
     paddingInline: 0,
     borderBottomWidth: 1,
@@ -90,3 +95,4 @@ export const dividerContent = {
     borderBottomColor: 'var(--colors-gray-700)',
   } as CSSProperties,
 }
+

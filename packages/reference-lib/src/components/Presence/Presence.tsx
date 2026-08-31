@@ -246,10 +246,11 @@ export function usePresence(present: boolean) {
     let gsapCancelled = false
     const gsapTweens = finiteGsapTweens(el)
     if (gsapTweens.length > 0) {
-      Promise.all(gsapTweens.map(tween => tween.then())).then(() => {
+      Promise.all(gsapTweens.map((tween: gsap.core.Tween) => tween.then())).then(() => {
         if (!gsapCancelled) handleExitComplete()
       })
     }
+
 
     // Fallback timer in case events don't fire
     const fallbackTimer = setTimeout(() => {
