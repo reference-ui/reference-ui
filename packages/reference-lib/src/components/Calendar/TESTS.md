@@ -4,14 +4,20 @@ Playwright: `matrix/lib/tests/e2e/calendar.spec.ts`
 Unit: `matrix/lib/tests/unit/calendar.test.ts`
 Page: `/calendar`
 
-Calendar owns a Gregorian calendar-date grid on canonical ISO
-`YYYY-MM-DD` strings, locale-derived labels/week start, roving day focus,
-controlled single/range selection, and month navigation.
+Calendar owns Gregorian day/range grids and month/year pickers on canonical
+ISO strings, locale-derived labels/week start, roving focus, controlled
+selection, month navigation, and heading-driven views. DateField and
+DateField.Range fold standard pickers through `DateField.Picker`;
+Calendar does not own a field, popup, or product host.
 
 ## Freeze decisions
 
-1. Visible month is controlled canonical `month: YYYY-MM` with
-   `onMonthChange(month: YYYY-MM)`.
+1. Visible month is optional. Omitted `month` is Calendar-owned pane
+   state, seeded from `value` / `today` as documented, and remount
+   (typical Popover Content) re-seeds so DateInput opens on the selected
+   day. Supplying `month` makes it controlled with
+   `onMonthChange(month: YYYY-MM)`. Controlled `month` and `value` stay
+   independent.
 2. A completed range crossing an unavailable date is rejected; no noncontiguous
    range option exists in this freeze.
 3. Padded outside-month days are enabled buttons; focusing/selecting one
@@ -22,12 +28,25 @@ controlled single/range selection, and month navigation.
    today marker; the client-local calendar date is marked after mount. Supplying
    `today` makes server/client output deterministic.
 6. `locale` is required; there is no server-environment-dependent default.
+7. View is Calendar-owned interaction state, like range preview. It starts
+   at the mode home (`day` for day/range, `month`, or `year`) and Calendar
+   commits Month/Year/cell view changes itself. View is not a public
+   controlled axis. Calendar presents exactly one collection; inactive
+   Grid/Months/Years are not in the accessibility tree. Omitted named
+   parts render default Header (with Month/Year) and default collections.
+   Extra children are ordinary chrome with explicit application or Date
+   controller props. The application does not write a `view ===` ternary.
+   Previous/Next are disabled outside day view.
+8. One discriminated `mode` describes the four products: omitted
+   `"day"`, `"range"`, `"month"`, or `"year"`. Their required controlled
+   values are respectively `ISODate | null`, date range or null,
+   `ISOMonth | null`, and `ISOYear | null`. There is no speculative
+   selection × precision cross-product.
 
-Omitted `selection` and `value` mean controlled single selection with a null
-value.
-
-These are Calendar API details, not a reason for a packaged DatePicker or a
-date-library public type. Typed input is `DateField`.
+These are Calendar API details, not a reason for a packaged visual DateInput
+or a date-library public type. Typed input is `DateField`. DateRange is two
+DateFields plus this grid's range machine; its optional transaction
+controller stays in the DateField module.
 
 ## Source evidence
 
@@ -43,6 +62,11 @@ date-library public type. Typed input is `DateField`.
   `getNextFocus`, labels, range preview, and modifier/data-state contrast.
 - Zag date-picker/date-utils tests — month days, week days, locale, year range,
   comparisons, and unavailable skip.
+- `vendor/design-system/Date` — range-native `{ start, end }` painting on
+  day/month/year cells, heading Month/Year drill-down, DateInput opening on
+  the selected month, DateRange field-focus month sync, and day/month/year
+  product modes. `Date` objects, date-fns, and ±100 year `new Date()`
+  defaults are leave.
 
 ## Required cases
 
@@ -102,13 +126,13 @@ date-library public type. Typed input is `DateField`.
   is produced for that invalid fixture, and all three callbacks remain empty;
   invalid values must never leak into application code.
 - [ ] `CA-ISO-07` `[reference]` `[unit]` —
-  **Calendar should reject contradictory bounds and selection value shapes
+  **Calendar should reject contradictory bounds and mode/value shapes
   rather than reinterpret them.** Test `min="2024-06-02"` with
-  `max="2024-06-01"`, single mode with an object range, range mode with a
-  string, and range objects missing `start` or `end`. Assert a descriptive
-  diagnostic identifies the
-  contradiction, renders no ambiguous selection, and calls neither change
-  callback; controlled application data must never be coerced to fit a mode.
+  `max="2024-06-01"`, day mode with a range or month, range mode with a
+  scalar or malformed range, month mode with a day, and year mode with a
+  month. Assert a descriptive diagnostic identifies the contradiction,
+  renders no ambiguous selection, and calls neither change callback;
+  controlled application data must never be coerced to fit a mode.
 - [ ] `CA-ISO-08` `[reference]` `[unit]` —
   **Calendar should keep all Gregorian values inside the four-digit
   0001–9999 domain.** Validate and format boundary dates in years `0001`,
@@ -255,9 +279,10 @@ date-library public type. Typed input is `DateField`.
   **Calendar should forward native props and refs only to its documented
   authored parts.** Supply native attributes, classes, styles, handlers,
   object refs, and callback refs to Calendar, Header, Heading, Previous, Next,
-  Grid, Weekdays, Days, and custom `Calendar.Day` parts, then interact and
+  Month, Year, Grid, Weekdays, Days, Months, Years, custom `Calendar.Day`,
+  `Calendar.MonthCell`, and `Calendar.YearCell` parts, then interact and
   rerender. Assert each public part lands on its fixed `div`, `button`,
-  `table`, `thead`, `tbody`, or day `button` with correct cleanup and managed
+  `table`, `thead`, `tbody`, or cell `button` with correct cleanup and managed
   attributes preserved, while generated `tr`, `th`, and `td` elements remain
   internal non-prop targets; authored and generated ownership must stay
   visible.
@@ -273,11 +298,12 @@ date-library public type. Typed input is `DateField`.
 - [ ] `CA-GRID-10` `[reference]` `[browser]` —
   **Calendar header and navigation parts should keep fixed native elements and
   non-submitting button defaults.** Render Header and Heading inside a form
-  with Previous/Next omitting `type`, activate both, then rerender one with
-  explicit `type="submit"`. Assert Header/Heading are authored `div`s,
-  navigation defaults to `button[type="button"]` and never submits, while the
-  explicit submit type retains native submission after its month request;
-  Calendar prevents accidents without overriding authored HTML behavior.
+  with Previous/Next/Month/Year omitting `type`, activate each, then rerender
+  one with explicit `type="submit"`. Assert Header/Heading are authored `div`s,
+  navigation and Month/Year default to `button[type="button"]` and never
+  submit, while the explicit submit type retains native submission after its
+  month or view request; Calendar prevents accidents without overriding
+  authored HTML behavior.
 - [ ] `CA-GRID-11` `[reference]` `[browser]` —
   **Calendar should render valid, exact table section ancestry without wrapper
   or direct-child violations.** Inspect a month containing six rows while
@@ -520,18 +546,18 @@ date-library public type. Typed input is `DateField`.
   preview-only dates remain false; this adapts React Spectrum selection
   semantics to the fixed cell/button anatomy.
 - [ ] `CA-STATE-10` `[reference]` `[browser]` —
-  **Calendar should default omitted selection and value to controlled
-  single-null state.** Render an explicit locale/month while omitting
-  `selection`, `value`, and first providing then omitting `onChange`; activate
-  June 12 without updating props. Assert the first fixture requests
+  **Calendar should use explicit null as controlled empty state and
+  require value.** Render day mode with an explicit locale/month and
+  `value={null}`, first providing then omitting `onChange`; activate June
+  12 without updating props. Assert the first fixture requests
   `"2024-06-12"` once, both fixtures keep every gridcell
-  `aria-selected="false"` with no `data-selected`, and focus may move to the
-  activated day without creating internal selection; omission is not
-  uncontrolled mode.
+  `aria-selected="false"` with no `data-selected`, and focus may move
+  without creating internal selection. Assert omitted `value` is a
+  type/runtime diagnostic, not implicit uncontrolled or null state.
 - [ ] `CA-STATE-11` `[reference]` `[ssr]` —
   **Calendar should add an omitted client-local today marker only after a
   hydration-safe first render.** Freeze the client-local date at
-  `2024-02-15`, server-render `month="2024-02"` without `today`, hydrate the
+  `2024-02-15`, server-render `month="2024-02"` `value={null}` without `today`, hydrate the
   exact output, and observe the first post-mount commit. Assert server markup
   and the initial hydration tree contain no `data-today` or
   `aria-current`, hydration has no warning, and exactly the 15th gains both
@@ -622,6 +648,20 @@ date-library public type. Typed input is `DateField`.
   deterministic `tabIndex=0` day selected by initial-target rules, and
   Calendar never forces focus into that day; roving readiness and active focus
   are separate.
+- [ ] `CA-MONTH-09` `[reference]` `[browser]` —
+  **Calendar should own the visible pane when `month` is omitted.**
+  Render `value="2024-09-18"` with no `month` / `onMonthChange`. Assert
+  September is visible, Next commits October internally with an empty
+  `onMonthChange` log, and Heading follows. Then change `value` to
+  `2024-04-10`. Assert the pane follows to April. User navigation to May
+  must not emit `onChange`.
+- [ ] `CA-MONTH-10` `[reference]` `[browser]` —
+  **Calendar should re-seed omitted `month` on remount, not while kept
+  mounted.** Render DateInput-style `value="2024-09-18"` with omitted
+  `month`. Navigate to April, unmount, remount. Assert September is
+  visible again with no application `onMonthChange`. In a kept-mounted
+  fixture, navigate to April, hide without unmounting, show again.
+  Assert April remains; pass controlled `month` to reset that product.
 
 ### Day/week keyboard navigation
 
@@ -715,7 +755,7 @@ date-library public type. Typed input is `DateField`.
 
 - [ ] `CA-SINGLE-01` `[vendor]` `[browser:all]` —
   **Calendar should request an enabled clicked ISO date exactly once in single
-  mode.** Render `selection="single" value={null}`, primary-click
+  mode.** Render `value={null}` with mode omitted, primary-click
   `2024-04-10`, and keep the controlled value unchanged. Assert
   `onChange` receives exactly `"2024-04-10"` once, focus and sole tab stop move
   to that button, and no cell becomes selected until the parent accepts the
@@ -774,7 +814,7 @@ date-library public type. Typed input is `DateField`.
 
 - [ ] `CA-RANGE-01` `[convergence]` `[browser]` —
   **Calendar should request a controlled pending range on the first enabled
-  activation.** Render `selection="range" value={null}`, activate
+  activation.** Render `mode="range" value={null}`, activate
   `2024-04-10`, inspect before acceptance, then rerender with
   `{start:"2024-04-10",end:null}`. Assert one `onChange` request with that
   exact object, no optimistic selection before acceptance, and afterward only
@@ -910,14 +950,197 @@ date-library public type. Typed input is `DateField`.
   value remains the range anchor if its date is later rendered again. This
   ports React Spectrum `RangeCalendar.shadow.test.tsx` “should not commit the
   selection when pressing the month navigation buttons.”
+- [ ] `CA-RANGE-16` `[reference]` `[browser]` —
+  **Calendar should keep a pending range intact while month/year view
+  navigation runs.**
+  Render pending April 10 with a valid April 15 preview, click Month,
+  choose June, wait for the accepted month, then click Year and choose
+  2025. Assert `onMonthChange` for June then 2025, `data-view` returns to
+  `day` after each accepted month, the controlled pending
+  `{ start: "2024-04-10", end: null }`
+  is unchanged, preview is not committed, and the 2025 June day view can
+  still complete from that same start.
+
+### Month and year views
+
+- [ ] `CA-VIEW-01` `[reference]` `[browser]` —
+  **Calendar should be a complete control with internal day view when
+  children are omitted.**
+  Mount day-mode April 2024 with no children. Assert default
+  Header contains Previous, Heading, Month, Year, and Next; day Grid is
+  present; Months and Years are absent from the accessibility tree;
+  `data-view` is `day`; Month/Year are not pressed; and no public view
+  state is required.
+- [ ] `CA-VIEW-02` `[reference]` `[browser]` —
+  **Calendar Month should toggle its private month view.**
+  Folded day-mode April 2024, click Month, then click Month again.
+  Assert `data-view` becomes `month` then `day` immediately, Months then
+  Grid are the sole collection in the accessibility tree, Year is not
+  pressed, and `onChange` / `onMonthChange` stay empty. Assert the
+  consumer `onClick` runs first and `preventDefault()` cancels the private
+  toggle without introducing a view callback.
+- [ ] `CA-VIEW-03` `[reference]` `[browser]` —
+  **Calendar Year should toggle its private year view.**
+  Repeat `CA-VIEW-02` with Year. Assert `"year"` then `"day"`, Month is
+  not pressed, and day-grid keyboard is not active while year view is
+  shown.
+- [ ] `CA-VIEW-04` `[reference]` `[browser]` —
+  **Calendar Months should render twelve locale-labelled cells for the
+  controlled year with min/max disabling whole months.**
+  Folded `month="2024-04"` `value={null}` `locale="en-GB"` with
+  `min="2024-03-15"` `max="2024-10-02"`, click Month (internal view). Assert twelve
+  MonthCell buttons, short locale names January–December, March and
+  October enabled (partial months), January/February/November/December
+  disabled, April has `data-current`, and no `role="grid"` day table is
+  in the accessibility tree.
+- [ ] `CA-VIEW-05` `[reference]` `[browser]` —
+  **Calendar should treat an enabled month cell as navigation, not
+  selection, and return to day view only after `month` is accepted.**
+  Folded April 2024, `value="2024-04-10"`, internal month view, activate
+  June, leave `month` unchanged, then accept `"2024-06"`. Assert one
+  `onMonthChange("2024-06")`, `onChange` empty,
+  `data-view` stays `month` until the prop updates, then `day` with the
+  June grid and April 10 still the controlled value. Disabled January
+  emits nothing. Calendar never asks the application to synchronize its
+  private view.
+- [ ] `CA-VIEW-06` `[reference]` `[browser]` —
+  **Calendar Years should list a clamped twenty-one-year window when
+  bounds are omitted, and min-through-max years when bounds exist.**
+  Unbounded folded `month="2024-04"` `value={null}`, click Year: assert years
+  `2014`–`2034` inclusive (ten either side of 2024). `month="0001-01"`:
+  start at `0001`. `month="9999-12"`: end at `9999`. Bounded
+  `min="1990-06-01"` `max="1995-01-31"`: assert years 1990–1995 only,
+  2024 absent, and the current in-range year scrolled into view. Each
+  YearCell shows a four-digit year.
+- [ ] `CA-VIEW-07` `[reference]` `[browser]` —
+  **Calendar should treat an enabled year cell as navigation that
+  preserves the month number.**
+  Folded `month="2024-04"` `value="2024-04-10"`, internal year view,
+  activate 2020, then accept `"2020-04"`. Assert `onMonthChange("2020-04")`,
+  `data-view="day"` only after acceptance. Repeat
+  with `month="2024-02"` toward year `2023` so the result stays
+  `"2023-02"`. A year wholly outside min/max stays disabled and silent.
+- [ ] `CA-VIEW-08` `[reference]` `[browser]` —
+  **Calendar Previous and Next should be native-disabled in month and
+  year view and must not complete a range preview.**
+  Pending range with April 15 preview, click Month, then Year. Assert
+  Previous/Next `disabled` / `aria-disabled`, clicks emit neither
+  `onMonthChange` nor `onChange`, and the pending start remains.
+  Returning to day view re-enables directions that have an enabled
+  target month per `CA-MONTH-04`.
+- [ ] `CA-VIEW-09` `[reference]` `[browser]` —
+  **Calendar month and year cells should paint range start, end, and
+  in-range from the controlled value without preview.**
+  Completed `{ start: "2024-03-20", end: "2024-06-02" }` in month view
+  for 2024: March has `data-range-start`, June `data-range-end`,
+  April/May `data-in-range`, inclusive selected markers, no preview.
+  Year view of a 2023–2025 range marks those years the same way.
+  Hovering a month cell does not invent day-grid preview attributes.
+- [ ] `CA-VIEW-10` `[reference]` `[browser]` —
+  **Calendar month and year grids should move focus in a three-column
+  field without selecting.**
+  In month view, focus April, ArrowRight/Left/Down/Up. Assert focus
+  visits May, March, July, January (or the documented in-grid
+  equivalent), Tab has one tab stop, Enter/Space on June follows
+  `CA-VIEW-05`, and `onChange` stays empty. Repeat a shorter vector on
+  Years. RTL reverses only horizontal arrows.
+- [ ] `CA-VIEW-11` `[reference]` `[browser]` —
+  **Calendar should announce view and month through Heading without a
+  global announcer.**
+  Folded day April 2024, click Month, activate June, accept the month.
+  Assert one Heading node keeps `aria-live="polite"` `aria-atomic`,
+  each accepted view/month produces one locale text mutation (year
+  while in month view, June 2024 in day view), when the day Grid is
+  shown its `aria-labelledby` still points at Heading, and Month/Year
+  accessible names remain the locale month and year.
+- [ ] `CA-VIEW-12` `[reference]` `[browser]` —
+  **Calendar should reset its private view to the home collection when
+  mode changes.**
+  Author Grid, Months, and Years as siblings. Start in day mode, enter
+  month view, then rerender with compatible month, year, and range modes
+  and values while focus stays outside. Assert `data-mode` follows each
+  prop, `data-view` resets to `month`, `year`, and `day` respectively,
+  exactly one collection is in the accessibility tree, `onChange` stays
+  empty, and external focus is not stolen. No public `view` prop or
+  application ternary is involved.
+- [ ] `CA-VIEW-13` `[reference]` `[browser]` —
+  **Calendar should replace only authored default parts and keep view
+  ownership.**
+  Author a custom Days renderer inside Grid and omit Header, Months, and
+  Years. Assert default Month/Year header remains, custom day content
+  renders in day view, clicking Month still presents default Months,
+  and `data-view` is internal. A second fixture that authors Heading
+  without Month/Year has no drill-down buttons and stays in day view.
+
+### Modes
+
+- [ ] `CA-MODE-01` `[reference]` `[browser]` —
+  **Calendar should treat omitted mode as a day picker.**
+  Folded Calendar with `value={null}`, omit `mode`, and select 10 April
+  2024. Assert `onChange("2024-04-10")`, `data-mode="day"`, day Grid is
+  the home view, and Month-cell activation is navigation only.
+- [ ] `CA-MODE-02` `[reference]` `[browser]` —
+  **Calendar should publish `YYYY-MM` in month mode.**
+  Folded `mode="month"` `month="2024-04"` `value={null}`. Assert
+  `data-view` starts at `month`, no day Grid is in the accessibility tree,
+  activating June requests `onChange("2024-06")` and not a day, and
+  clicking Year then 2020 is navigation: `onMonthChange("2020-04")`,
+  `onChange` empty, then month view of 2020.
+- [ ] `CA-MODE-03` `[reference]` `[browser]` —
+  **Calendar should publish `YYYY` in year mode.**
+  Folded `mode="year"` `month="2024-04"` `value={null}`. Assert
+  `data-view` starts at `year`, no day or month grid is in the
+  accessibility tree, activating 2020 requests `onChange("2020")`, and
+  Month/Year header buttons do not reveal a day table.
+- [ ] `CA-MODE-04` `[reference]` `[unit]` —
+  **Calendar should expose one discriminant rather than a mode
+  cross-product.**
+  Type-check each mode with its exact value/callback pair, then bypass
+  types with month-range, year-range, and the former simultaneous
+  `selection`/`precision` props. Assert those shapes are absent from the
+  public type, invalid runtime shapes fail through `CA-ISO-07`, and
+  Calendar never guesses a value unit.
+- [ ] `CA-MODE-05` `[reference]` `[browser]` —
+  **Calendar `isDateUnavailable` should block a month or year only when
+  every day of that unit is unavailable.**
+  `mode="month"` with weekends unavailable: June 2024 stays enabled.
+  Mark every day of June 2024 unavailable: June is disabled and silent.
+  Repeat a fully unavailable year in `mode="year"`.
+
+### Explicit application chrome and ISO utilities
+
+- [ ] `CA-CHROME-01` `[reference]` `[browser]` —
+  **Application presets should update controlled state without an
+  imperative Calendar request channel.**
+  Put preset Buttons beside folded range Calendars: one uses the direct
+  application setter and one uses `DateField.Range` commit. Activate a complete
+  April 10–16 preset, accept that state, and assert inclusive range attributes
+  update with no pending stage or extra Calendar callback. Calendar exposes
+  no `useCalendar` / `requestChange` API; `DateField.Range` coordinates externally.
+- [ ] `CA-CHROME-02` `[reference]` `[browser]` —
+  **Extra application chrome should not replace default anatomy.**
+  Give a folded day Calendar a sibling recents Button with explicit
+  `value`/`onSelect` props. Have it update selection and month through
+  the same application callbacks used by Calendar. Assert default Header
+  and Grid remain, January becomes selected and visible after acceptance,
+  and no implicit parent context or Presets part is required.
+- [ ] `CA-UTIL-01` `[reference]` `[unit]` —
+  **Public ISO helpers should match the Calendar arithmetic gate.**
+  `addCalendarDays("2024-02-28", 1)` is `"2024-02-29"`; `addCalendarMonths(
+  "2024-01-31", 1)` is `"2024-02-29"` and
+  `addCalendarMonths("2024-01", 1)` is `"2024-02"`; `startOfCalendarMonth` /
+  `endOfCalendarYear` round-trip canonical bounds; `calendarMonth("2024-09-18")`
+  is `"2024-09"`, `calendarMonth("2024-09")` is `"2024-09"`, and
+  `calendarMonth("2024")` is `"2024-01"`; invalid strings throw
+  the same descriptive failure as `CA-ISO-01`. No helper accepts `Date`.
 
 ### Dynamic and environment behavior
 
 - [ ] `CA-DYNAMIC-01` `[reference]` `[browser]` —
-  **Calendar should diagnose a runtime selection-mode change whose controlled
-  value has the old shape.** Rerender single mode with
-  `value="2024-04-10"` directly to range mode with that string, and range mode
-  with an object directly to single mode in a reset fixture. Assert one
+  **Calendar should diagnose a runtime mode change whose controlled value
+  has the old shape.** Rerender day mode with `value="2024-04-10"`
+  directly to range mode with that string, and range mode with an object
+  directly to month mode in a reset fixture. Assert one
   descriptive development diagnostic names mode and value shape, no
   reinterpretation, selection request, month request, or partially mixed
   attributes occur, and valid rendering resumes only after the parent supplies
@@ -1001,12 +1224,13 @@ date-library public type. Typed input is `DateField`.
 - [ ] `CA-COMP-02` `[reference]` `[touch]` —
   **A date-range Calendar should preview and complete only contiguous available
   ranges across a controlled month boundary.** Build a pending range near
-  month end with one unavailable middle date, test mouse/focus preview, touch
-  taps, blocked completion, an allowed padded endpoint, and a fresh range after
-  completion. Assert invalid spans never paint through the blocked day or emit
-  completion, allowed outside completion orders month before range callbacks,
-  and all endpoint/inclusive selected attributes derive from accepted value;
-  this proves the range-picker freeze gate.
+  month end with one unavailable middle date through `<DateField.Range>`,
+  test mouse/focus preview, touch taps, blocked completion, an allowed padded
+  endpoint, and a fresh range after completion. Assert invalid spans never
+  paint through the blocked day or emit completion, allowed outside completion
+  orders month before draft callbacks, durable value stays silent until Apply,
+  and all endpoint/inclusive selected attributes derive from accepted draft;
+  repeat direct wiring to prove the controller does not alter the grid machine.
 - [ ] `CA-COMP-03` `[reference]` `[browser]` `[rtl]` —
   **Calendar should keep month control independent from selection across
   non-Sunday and RTL locale presentations.** Build an `en-GB` Monday-first
@@ -1028,23 +1252,50 @@ date-library public type. Typed input is `DateField`.
   locale and month, and an enabled outside event date orders its Day handler,
   `onMonthChange`, and `onChange` exactly once; this proves product-specific
   day rendering without replacing generated grid rows or cells.
+- [ ] `CA-COMP-05` `[reference]` `[browser]` —
+  **Calendar should serve DateField as a folded grid with progressive disclosure.**
+  Build DateField in `en-GB` through `<DateField value={value} onChange={setValue} locale="en-GB"><DateField.Picker /></DateField>`
+  with selected September value and omitted `month`. Open via `Alt + ArrowDown`,
+  click Year, pick another year, pick a month, select a day. Assert Calendar
+  receives its managed props (`mode="day"`, `value`, `onChange`, `locale`),
+  September is visible without ISO slicing, `data-view` returns to `day`,
+  DateField reformats after the day request, Popover dismisses on day selection,
+  and slotted Calendar customization works seamlessly.
+
+- [ ] `CA-COMP-06` `[reference]` `[browser]` —
+  **Calendar should express a month picker and a recents list without a
+  DateField or a Presets part.**
+  Folded `mode="month"` beside a child that offers “This month” and
+  “Last month” through explicit application props plus
+  `addCalendarMonths`. Activate a preset, then pick a different month on
+  the grid. Assert values stay `YYYY-MM`, view never shows a day table,
+  and no DateField, Calendar context hook, or `Calendar.Preset` exists.
 
 ## Owned elsewhere
 
 - Generic roving focus ideas are shared, but Calendar's date-aware 2D movement
   remains here.
-- DatePicker field parsing/formatting: `DateField`. Popup positioning:
-  `Popover`.
+- DateField / DateField.Range field parsing/formatting: `DateField`. Popup
+  positioning: `DateField.Picker`. Connected start/end bezel: `Field`
+  surface recipe. Apply/Cancel snapshots: `DateField.Range` transaction.
+  Preset *labels* and recents data: the application; explicit callbacks
+  remain the request seam.
 
 ## Out of scope
 
-- Typed input parsing: `DateField`. Time/timezone values, non-Gregorian calendars, multi-
-  month views, week numbers, presets, year/month pickers, form serialization,
-  drag/Shift-extended range selection, and third-party public date objects.
+- Typed input parsing: `DateField`. Time/timezone values, non-Gregorian
+  calendars, multi-month views, week numbers, a `Calendar.Preset` part,
+  DateField month/year grammar, form serialization, drag/Shift-extended
+  range selection, packaged visual DateInput/DateRange, and third-party
+  public date objects. Calendar month/year modes and heading month/year
+  navigation are in scope (`CA-MODE-*`, `CA-VIEW-*`); month-range and
+  year-range modes, public view control, and an imperative Calendar hook
+  are not.
   React Spectrum `RangeCalendar.shadow.test.tsx` pointer-capture, release-
   outside, and release-across-shadow cases are deliberately classified here
   because this contract uses two explicit activations rather than a drag range
   gesture.
 - Replacing generated `tr`/`td` elements or targeting them with per-cell props;
   date-level children, native props, StyleProps, events, and refs belong on the
-  public `Calendar.Day` returned by `Calendar.Days`.
+  public `Calendar.Day` returned by `Calendar.Days`. Month and year cells use
+  `Calendar.MonthCell` / `Calendar.YearCell` the same way.

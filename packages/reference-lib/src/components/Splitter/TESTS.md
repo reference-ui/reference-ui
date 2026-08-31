@@ -4,9 +4,11 @@ Playwright: `matrix/lib/tests/e2e/splitter.spec.ts`
 Unit: `matrix/lib/tests/unit/splitter.test.ts`
 Page: `/splitter`
 
-Splitter owns adjacent-panel resize constraints, separator ARIA, pointer/touch
-drag sessions, keyboard resize, collapse/restore, controlled layout values,
-and one interaction-end request.
+Splitter owns a 1D flex partition, separator ARIA, pointer/touch drag with
+direct DOM size writes, keyboard resize, collapse/restore, controlled
+percentage values, one interaction-end request, and the pointermove frame
+budget. It does not own CSS Grid and does not resize a box inside a foreign
+layout.
 
 ## Freeze decisions
 
@@ -14,27 +16,40 @@ The required public details are:
 
 1. `value: number[]` is percentages summing to 100 in current Panel order.
 2. Numeric `min`/`max` are percentages; strings are measured CSS lengths
-   converted against current group size.
+   (`px`, `r`, `rem`, `%`, …) converted against available group size (sum of
+   Panel sizes on the layout axis, excluding Handles).
 3. A Panel opts into collapse with `collapsible`; `collapsedSize` defaults to
    0 and Enter restores its last expanded size.
-4. The separator's primary pane is the preceding logical Panel (left in LTR,
-   right in RTL, above vertically), linked by generated `aria-controls`.
+4. Anatomy is `Panel (Handle Panel)+`. The Handle is an in-flow flex child
+   between Panels. The primary pane is the preceding logical Panel (left in
+   LTR, right in RTL, above vertically), linked by `aria-controls`.
 5. Keyboard increments are 1 percentage point per Arrow and 10 with Shift.
-6. Each Panel exposes its resolved percentage as
-   `--reference-splitter-panel-size`; root/Panel/Handle expose exact
-   orientation/resizing/collapsed/disabled data state without overwriting
-   consumer flex/grid/transform styles.
+6. Each Panel exposes `--reference-splitter-panel-size` as a percentage.
+   Root owns `display: flex` and `flex-direction`; Panels own
+   `flex: 1 1 var(--reference-splitter-panel-size)` and `min-width/height: 0`
+   on the layout axis; Handle is `flex: 0 0 auto`. Root exposes
+   `--reference-splitter-N`. Those flex properties are omitted from public
+   StyleProps. Splitter never writes `grid-template-*` or `width` as a
+   competing signal.
 7. Arrays are positional. Dynamic reorder/insert/remove must update Panel order
-   and the corresponding controlled value entries atomically; React keys are
-   not a public value-to-Panel mapping. Stable Panel IDs key only constraints
-   and remembered collapse sizes.
+   and the corresponding controlled value entries atomically. Stable Panel IDs
+   key only constraints and remembered collapse sizes.
 8. Handle exposes `disabled`; Panel exposes `collapsible`/`collapsedSize`.
-9. `onChange` requests each changed layout candidate. `onChangeEnd` receives
-   the last requested complete array once after successful pointer release or
+   There is no `placement` prop.
+9. `onChange` requests each changed complete array. `onChangeEnd` receives
+   the last requested layout once after successful pointer release or
    keyboard keyup. Canceled sessions, no-op input, and programmatic updates do
    not emit it.
+10. While the pointer is down, origin pointer/layout/group size/constraints
+    are captured once. Each move solves origin + total delta, writes CSS
+    variables through element refs, and must not React-commit, read layout,
+    convert CSS/`r` lengths, or write ARIA. Visuals follow the solver until
+    pointerup, then `value`. ARIA updates on keyboard, pointerup, and idle
+    controlled changes.
 
-These require API detail, not another top-level component.
+These require API detail, not another top-level component. There is no
+one-Panel mode and no grid mode. Nested Splitters provide a second axis.
+An application grid wraps a Splitter or lives inside a Panel.
 
 Omitted orientation is horizontal.
 
@@ -42,10 +57,16 @@ Omitted orientation is horizontal.
 
 - `vendor/react-resizable-panels/lib` tests for
   `calculatePanelConstraints`, `adjustLayoutByDelta`, keyboard handling,
-  separator ARIA, dynamic panels, nested groups, and global pointer sessions.
+  separator ARIA, dynamic panels, nested groups, and pointer sessions.
 - `vendor/zag/packages/machines/splitter/tests/splitter.utils.test.ts` and
   Splitter machine — value normalization, collapse/expand, user-select, cursor,
   and orientation behavior.
+- `vendor/design-system/resizable` — direct DOM size writes
+  (`Handle/domHelpers.ts`), capture-at-down constraint resolution,
+  ARIA isolated from the 60 fps path (`WcagContext`), Handle
+  `touch-action: none`, immediate pointer capture. Leave layout-agnostic
+  `width` writes, `position: fixed` + rAF polling, and one-box-in-foreign-grid
+  as a public mode.
 
 Universal `PART-TYPE-01` and `PART-STYLE-01` cover each rendered
 `ReferencePartProps` native/StyleProps intersection, including omission of
@@ -64,9 +85,11 @@ coexistence and do not repeat the generic StyleProps matrix.
   `onChange={(value: number[]) => ...}`, and
   `onChangeEnd={(value: number[]) => ...}` plus orientation StyleProps;
   compile Panel numeric/CSS-string constraints and Handle `disabled`; reject
-  scalar values, event-shaped callbacks, invalid orientation literals, and
-  behavior props on the wrong part. Assert generic native/StyleProps/ref
-  coverage remains delegated to the universal `PART-*` matrix.
+  scalar values, event-shaped callbacks, invalid orientation literals,
+  `display` / `flexDirection` on Root, `flex` / `flexGrow` / `flexBasis` on
+  Panel/Handle, and behavior props on the wrong part. Assert generic
+  native/StyleProps/ref coverage remains delegated to the universal
+  `PART-*` matrix.
 
 ### DOM, identity, and ARIA
 
@@ -81,11 +104,12 @@ coexistence and do not repeat the generic StyleProps matrix.
 - [ ] `SP-DOM-02` `[reference]` `[browser]` —
   **Splitter should reject structural anatomy when Panels and Handles do not alternate.**
   Render leading, trailing, and consecutive Handles, consecutive Panels
-  without their required Handle, and two Panels with a one- or three-entry
-  `value`; assert each reports a descriptive anatomy/count error before any
-  separator ARIA, pointer capture, or document listener remains.
+  without their required Handle, a one-Panel tree, and two Panels with a
+  one- or three-entry `value`; assert each reports a descriptive
+  anatomy/count error before any separator ARIA, pointer capture, or
+  document listener remains.
   A partial resize surface cannot safely infer which positional values are
-  adjacent.
+  adjacent, and a one-Panel tree is not a supported mode.
 - [ ] `SP-DOM-03` `[vendor]` `[browser]` —
   **Splitter should expose valid constrained ARIA values when every Handle in a multi-Panel group is inspected.**
   Render `[20,30,50]` with distinct min/max constraints, then assert each
@@ -117,8 +141,9 @@ coexistence and do not repeat the generic StyleProps matrix.
   then start/end a drag, collapse the primary Panel, and disable the Handle;
   assert documented orientation, resizing, collapsed, and disabled data hooks
   update on the proper nodes while every unrelated class/style remains exact.
-  The behavior kernel publishes state and percentage variables rather than
-  taking ownership of product layout chrome.
+  The behavior kernel publishes state and percentage variables and owns flex
+  on the layout axis. Authored cross-axis StyleProps, classes, and
+  transform remain exact.
 - [ ] `SP-DOM-07` `[reference]` `[browser]` —
   **Splitter should preserve native div props, handlers, and refs when every public part is customized.**
   Pass IDs, `data-owner`, ARIA labeling, classes, styles, click handlers, and
@@ -136,19 +161,20 @@ coexistence and do not repeat the generic StyleProps matrix.
   An application supplies the accessible name, while Splitter owns whether the
   separator can act.
 - [ ] `SP-DOM-09` `[reference]` `[browser]` —
-  **Splitter should publish each controlled Panel percentage when its frozen geometry hook is read.**
+  **Splitter should publish each idle Panel percentage when its frozen geometry hook is read.**
   Render `[25,75]` and assert exact
-  `--reference-splitter-panel-size: 25%`/`75%`, then rerender `[40,60]` and
-  assert both properties and Handle ARIA update atomically without changing
-  consumer flex basis, grid placement, transform, or unrelated custom
+  `--reference-splitter-panel-size: 25%`/`75%` on the Panels plus
+  `--reference-splitter-1: 25%` / `--reference-splitter-2: 75%` on Root, then
+  rerender `[40,60]` and assert Panel, Root, and Handle ARIA update atomically
+  without changing consumer cross-axis styles, transform, or unrelated custom
   properties.
-  Applications consume one non-conflicting size signal instead of relying on
-  private inline layout writes.
+  Flex-basis follows the variable. Pointer-down writes are covered by
+  `SP-PERF-04` / `SP-CTRL-02`.
 - [ ] `SP-DOM-10` `[reference]` `[browser]` —
   **Splitter should use horizontal Panel geometry and vertical separator behavior when orientation is omitted.**
   Omit `orientation` with controlled `[40,60]`, assert horizontal Root/Panel
-  hooks and `aria-orientation="vertical"`, then press ArrowRight and assert one
-  `[41,59]` request under LTR.
+  hooks, Root `flex-direction: row`, and `aria-orientation="vertical"`, then
+  press ArrowRight and assert one `[41,59]` request under LTR.
   This explicit omitted-value case prevents `undefined` from selecting the
   vertical key or measurement axis.
 - [ ] `SP-DOM-11` `[reference]` `[browser]` —
@@ -159,6 +185,21 @@ coexistence and do not repeat the generic StyleProps matrix.
   `collapsedSize` resolves to `0`.
   This distinguishes omitted/false behavior from a truthy fallback and keeps
   collapse an explicit Panel capability.
+- [ ] `SP-DOM-12` `[reference]` `[browser]` —
+  **Splitter should keep Root indexed size signals aligned with Panel order when Panels are reordered.**
+  Render A/B/C at `[20,30,50]` and assert `--reference-splitter-1..3` match
+  those entries; atomically reorder to B/A/C with `[30,20,50]` and assert the
+  indexed Root properties follow the new Panel order while each Panel's own
+  `--reference-splitter-panel-size` travels with that Panel.
+- [ ] `SP-DOM-13` `[reference]` `[browser]` —
+  **Splitter should keep Root as a flex partition when orientation is horizontal or vertical.**
+  Assert computed `display: flex` and `flex-direction: row` when horizontal,
+  `column` when vertical; Panels have `flex-grow: 1`, `flex-shrink: 1`,
+  `flex-basis` equal to their size variable, and `min-width` or `min-height`
+  `0` on the layout axis; Handle is `flex: 0 0 auto`. Authored `display: grid`
+  on Root is a type error (omitted from StyleProps) and must not appear at
+  runtime as a supported mode.
+
 - [ ] `SP-A11Y-01` `[reference]` `[browser]` —
   **Splitter should pass accessibility checks when each frozen layout variant is rendered.**
   Run the checker over horizontal, vertical, three-Panel, mixed-constraint, and
@@ -209,13 +250,13 @@ coexistence and do not repeat the generic StyleProps matrix.
   This ports `adjustLayoutByDelta.test.ts` “should fallback to the previous
   layout if an intermediate layout is invalid.”
 - [ ] `SP-MATH-06` `[reference]` `[unit]` —
-  **Splitter should recompute measured length constraints when group size changes without mutating controlled percentages.**
-  With a 500px horizontal group, resolve `min="120px"` to `24` and
-  `max="450px"` to `90`; resize the group to 1000px and assert `12`/`45`,
-  updated Handle ARIA limits, unchanged controlled `[40,60]`, and no
-  `onChange`.
+  **Splitter should recompute measured length constraints when available group size changes without mutating controlled percentages.**
+  With a 500px available horizontal group (Panel-axis sum), resolve
+  `min="120px"` to `24` and `max="450px"` to `90`; resize that available size
+  to 1000px and assert `12`/`45`, updated Handle ARIA limits, unchanged
+  controlled `[40,60]`, and no `onChange`.
   Measurement changes feasibility for future input, not the parent's current
-  array by itself.
+  array by itself. Handle thickness is not part of the 100-point total.
 - [ ] `SP-MATH-07` `[reference]` `[unit]` —
   **Splitter should combine percentage and measured constraints when preserving a 100-point total.**
   In a 400px group solve three Panels using numeric `min=12.5`, string
@@ -248,6 +289,22 @@ coexistence and do not repeat the generic StyleProps matrix.
   diagnostic, unchanged layout, and no drag listener.
   Validation must still allow an opted-in collapsed size below that Panel's
   ordinary minimum.
+- [ ] `SP-MATH-11` `[reference]` `[unit]` —
+  **Splitter should treat available group size as the Panel-axis sum when converting measured constraints.**
+  In a 516px-wide Root with two Panels totaling 500px and a 16px Handle,
+  resolve `min="100px"` to `20` of the 500px available size, not `~19.4` of
+  the Root box; repeat vertically with Handle height excluded the same way.
+  Percentages describe Panel space. Including separator chrome in the
+  denominator desyncs flex/grid recipes from the solver.
+- [ ] `SP-MATH-12` `[vendor]` `[unit]` —
+  **Splitter should apply pointer delta to the pointerdown origin layout rather than accumulating per-move increments.**
+  Capture origin `[40,60]` and a 500px available size, then apply moves of
+  `+10px`, `+25px`, and `+50px` from that same origin and assert candidates
+  `[42,58]`, `[45,55]`, and `[50,50]` with no drift from skipped intermediate
+  events.
+  This is the origin-relative rule in
+  `vendor/react-resizable-panels/lib/global/utils/updateActiveHitRegion.ts`
+  and `vendor/design-system/resizable/Handle/domHelpers.ts`.
 
 ### Controlled values
 
@@ -260,13 +317,15 @@ coexistence and do not repeat the generic StyleProps matrix.
   Consumers should never receive only the adjacent pair or a vendor-specific
   object layout.
 - [ ] `SP-CTRL-02` `[reference]` `[browser]` —
-  **Splitter should retain controlled Panel geometry and Handle ARIA when the parent rejects a resize request.**
-  Keep `value={[40,60]}`, drag 50px right in a 500px group, and assert one
-  `[50,50]` request while Panel CSS properties remain `40%`/`60%` and Handle
-  `aria-valuenow` remains `40`; move again and assert requests derive from the
-  current pointer/controlled props without an optimistic visual jump.
-  This separates the in-progress request calculation from rendered controlled
-  authority.
+  **Splitter should follow the live solver on CSS size signals while the pointer is down when the parent rejects every request.**
+  Keep `value={[40,60]}`, drag 50px right in a 500px available group, and
+  assert one `[50,50]` request, Panel `--reference-splitter-panel-size`
+  reading `50%`/`50%` during the gesture, and Handle `aria-valuenow`
+  remaining `40` until release; on successful release assert
+  `onChangeEnd([50,50])`, then CSS variables and ARIA snap back to `40%`/
+  `60%` and `40` because `value` never changed.
+  Direct DOM writes are how the flex partition stays fast. `value` is
+  authoritative once the pointer is up.
 - [ ] `SP-CTRL-03` `[vendor]` `[browser]` —
   **Splitter should follow programmatic controlled values when no user interaction occurred.**
   Focus the Handle, rerender `[40,60]` as `[25,75]`, and assert Panel size
@@ -282,14 +341,15 @@ coexistence and do not repeat the generic StyleProps matrix.
   This ports react-resizable-panels `Group.test.tsx` “move the pointer a bit,
   but not enough to impact the layout” without an empty change event.
 - [ ] `SP-CTRL-05` `[reference]` `[browser]` —
-  **Splitter should use current values, constraints, and callback when they change during a drag.**
-  Begin dragging `[40,60]` in a 500px group, then rerender `[45,55]`, first
-  Panel `max=50`, and handler B; on the next move assert only B receives a
-  request clamped at `[50,50]`, Panel rendering stays at current controlled
-  values until accepted, and there is no cached-origin jump or call to handler
-  A.
-  Active global tracking must read live controlled inputs rather than a stale
-  closure.
+  **Splitter should use current callbacks and constraints without rebasing origin layout when they change during a drag.**
+  Begin dragging `[40,60]` in a 500px group from origin x=`200`, accept an
+  echo `[45,55]`, then rerender first Panel `max=50` and handler B; continue
+  to x=`250` and assert only B receives a request solved from origin `[40,60]`
+  + 50px (`[50,50]` after the new max), CSS variables follow that candidate,
+  and handler A is not called.
+  Live constraint/callback identity applies to the captured origin solve.
+  Echoed `value` must not become a new origin or the next small move would
+  jump.
 - [ ] `SP-CTRL-06` `[reference]` `[browser]` —
   **Splitter should let a consumer Handle handler cancel resize when it prevents the matching default.**
   In separate fixtures, make Handle `onPointerDown` or `onKeyDown` log first
@@ -333,22 +393,24 @@ coexistence and do not repeat the generic StyleProps matrix.
   **Splitter should report current controlled intent without inventing an
   accepted layout or calling stale handlers.**
   Reject changed drag requests from `[40,60]`, replace constraints and the end
-  handler during capture, and release successfully. Assert rendered Panel
-  percentages and Handle ARIA stay controlled while only the latest handler
-  receives the last requested normalized array once. Then rerender `value`
-  programmatically and perform a constrained no-op, asserting neither
-  `onChange` nor `onChangeEnd` runs.
+  handler during capture, and release successfully. Assert session CSS
+  variables followed the solver, then snap to controlled percentages on
+  release; Handle ARIA stays at the controlled primary size until end, then
+  remains controlled; only the latest handler receives the last requested
+  normalized array once. Then rerender `value` programmatically and perform a
+  constrained no-op, asserting neither `onChange` nor `onChangeEnd` runs.
 
 ### Pointer, pen, and touch drag
 
 - [ ] `SP-DRAG-01` `[vendor]` `[browser:all]` —
   **Splitter should start one focused resize session when the primary pointer presses an enabled Handle.**
-  In a 500px horizontal group, press pointer `7` at Handle x=`200` and assert
-  focus on that Handle, one captured/global session with the origin and
-  `[40,60]`, and documented resizing state before any movement or callback in
-  all engines.
-  This follows Zag's `POINTER_DOWN` transition and react-resizable-panels'
-  global session setup.
+  In a 500px available horizontal group, press pointer `7` at Handle x=`200`
+  and assert focus on that Handle, immediate pointer capture (not deferred to
+  the first move), one session holding origin pointer and `[40,60]`, and
+  documented `data-resizing` before any movement or callback in all engines.
+  Immediate capture is
+  `vendor/design-system/resizable/Handle/index.tsx`. react-resizable-panels
+  delays capture to preserve click; Splitter has no click contract.
 - [ ] `SP-DRAG-02` `[vendor]` `[browser:all]` —
   **Splitter should map horizontal physical drag to logical Panel growth when direction is LTR or RTL.**
   Starting at `[40,60]` in a 500px group, drag the Handle 50px right/left and
@@ -573,13 +635,13 @@ coexistence and do not repeat the generic StyleProps matrix.
   panels change” while explicitly rejecting object/key-based public layout
   mapping.
 - [ ] `SP-DYNAMIC-02` `[vendor]` `[browser]` —
-  **Splitter should recompute measured constraints and Handle ARIA when group geometry changes.**
-  Keep controlled `[40,60]` while resizing a group from 500px to 1000px with
-  `min="120px"`/`max="450px"`; assert the size hooks stay `40%`/`60%`,
-  measured ARIA limits change from `24..90` to `12..45` as applicable, and no
-  `onChange` occurs until the next user action.
-  This uses the resize-observer behavior in Zag's `ROOT.RESIZE` path without
-  adopting its optional pixel-preservation mode.
+  **Splitter should recompute measured constraints and Handle ARIA when available group size changes.**
+  Keep controlled `[40,60]` while resizing available Panel-axis size from
+  500px to 1000px with `min="120px"`/`max="450px"`; assert the size hooks stay
+  `40%`/`60%`, measured ARIA limits change from `24..90` to `12..45` as
+  applicable, and no `onChange` occurs until the next user action.
+  This uses idle ResizeObserver without adopting Zag's optional
+  pixel-preservation mode or rAF polling.
 - [ ] `SP-DYNAMIC-03` `[reference]` `[browser]` —
   **Splitter should avoid invalid math and global leaks when a Panel is hidden and shown.**
   Hide the middle Panel of A/Handle/B/Handle/C so anatomy is transiently
@@ -600,7 +662,7 @@ coexistence and do not repeat the generic StyleProps matrix.
   **Splitter should register each part and resize session once when run across supported React versions.**
   Under StrictMode in React 17, 18, and 19, mount/reorder a three-Panel group,
   drag one Handle, and unmount; assert stable refs/IDs, one registration per
-  live part, one capture/global session and request per physical action, and
+  live part, one pointer session and request per physical action, and
   complete cleanup.
   This catches effect replay without weakening dynamic anatomy.
 - [ ] `SP-ENV-03` `[reference]` `[shadow]` —
@@ -619,36 +681,106 @@ coexistence and do not repeat the generic StyleProps matrix.
   This targeted smoke catches Pointer Events and keyboard differences without
   expanding the entire matrix.
 
+### Pointer session frame budget
+
+- [ ] `SP-PERF-01` `[reference]` `[browser]` —
+  **Splitter should not commit React on Panel descendants when pointermove updates layout.**
+  Mount a two-Panel group whose Panels render a child that counts commits.
+  Keep `value` rejected (parent does not setState). After idle settle,
+  pointerdown, record the child's commit count once `data-resizing` is set,
+  then 30 pointermoves that each change the candidate; assert that count is
+  unchanged across those moves and that `data-resizing` does not toggle
+  per move.
+  A correct solver that still re-renders editors every move is a failed port
+  of `vendor/design-system/resizable/Handle/domHelpers.ts`. Parent `setState`
+  on `onChange` is application-owned; this case proves Splitter itself does
+  not commit.
+- [ ] `SP-PERF-02` `[reference]` `[browser]` —
+  **Splitter should not read layout on pointermove after the session has captured geometry.**
+  Spy `getBoundingClientRect`, `offsetWidth`, `offsetHeight`, and
+  `getComputedStyle` on Root, Panels, and Handle; pointerdown, then 20
+  changing moves. Assert the spies do not gain calls during pointermove (idle
+  and pointerdown may measure once).
+  Constraint conversion and group size belong to capture and idle
+  ResizeObserver, not the hot path.
+- [ ] `SP-PERF-03` `[reference]` `[browser]` —
+  **Splitter should not write separator ARIA on pointermove.**
+  Drag through three distinct candidates while the parent accepts each, and
+  assert `aria-valuenow` / `valuemin` / `valuemax` stay at the pre-session
+  values until pointerup, when they match the last candidate (or snap to
+  controlled `value` if rejected, per `SP-CTRL-02`).
+  This is `vendor/design-system/resizable` WcagContext isolation: ARIA is not
+  a 60 fps subscriber.
+- [ ] `SP-PERF-04` `[reference]` `[browser]` —
+  **Splitter should write CSS size signals on the same turn as a changed pointermove.**
+  With a parent that delays `value` by one animation frame, drag 50px in a
+  500px group and read `--reference-splitter-panel-size` / `--reference-splitter-1`
+  inside that pointermove's turn (or the following microtask, before rAF).
+  Assert `50%`/`50%` before the delayed `value` arrives.
+  Visual authority during the session is the ref write, not the React commit.
+- [ ] `SP-PERF-05` `[reference]` `[browser]` —
+  **Splitter should not poll with requestAnimationFrame while idle or in order to produce a drag frame.**
+  Spy `requestAnimationFrame` around mount, idle, a full drag, and unmount.
+  Assert no looping poll while idle (ResizeObserver/window resize are
+  allowed) and that drag frames are produced from pointermove without a rAF
+  throttle or overlay-handle chase.
+  `vendor/design-system/resizable` rAF-polled a `position: fixed` handle;
+  in-flow Handles do not need that.
+- [ ] `SP-PERF-06` `[reference]` `[browser]` —
+  **Splitter should resolve CSS and `r` constraints at pointerdown, not on pointermove.**
+  Panel `min="12r"` (`--spacing-root` such that 12r = 48px) and `max="40%"`
+  in a 400px available group (min 12 points, max 40). Pointerdown, then
+  change `--spacing-root` so 12r would become 96px, then drag toward min.
+  Assert the session still clamps at 12 points (captured), not 24; the next
+  pointer session after release uses the new spacing root.
+  Length conversion is idle/capture work. Resizable throttled `cssLengthToPx`;
+  Splitter converts once per capture.
+- [ ] `SP-PERF-07` `[reference]` `[browser]` —
+  **Splitter should attach document session resources only while a pointer session is active.**
+  Two nested Splitters plus a sibling Splitter on the page; idle, then drag
+  the inner Handle. Assert no document-level pointermove listener exists
+  before pointerdown, that only the inner instance holds capture/cursor/
+  user-select during the drag, and that those document resources are gone
+  after pointerup.
+  react-resizable-panels always-on `onDocumentPointerMove` hit-testing is
+  leave; session-scoped document lock is lift.
+
 ## Composition gates
 
 - [ ] `SP-COMP-01` `[reference]` `[browser]` `[rtl]` —
-  **Splitter should resize and restore a collapsible sidebar when application direction is LTR or RTL.**
-  Build sidebar/main Panels at `[30,70]` with sidebar
-  `min=20,collapsible,collapsedSize=5`, drag and Enter-collapse/restore in LTR,
-  then switch to RTL and assert logical primary control, reversed physical
-  delta, arrays, Handle ARIA, size/collapsed hooks, and remembered sidebar size
-  remain correct.
-  This composition proves direction changes semantics without moving value
-  entries or collapse metadata to the main Panel.
+  **Splitter should resize and restore a collapsible sidebar in a flex partition when direction is LTR or RTL.**
+  Two-Panel Root at `[30,70]` with sidebar `min=20,collapsible,collapsedSize=5`.
+  Drag and Enter-collapse/restore in LTR, then switch to RTL and assert
+  logical primary control, reversed physical delta, arrays, Handle ARIA,
+  size/collapsed hooks, remembered sidebar size, and Root remaining
+  `display: flex`.
 - [ ] `SP-COMP-02` `[reference]` `[browser]` —
   **Splitter should honor measured constraints when a vertical editor and console composition resizes.**
-  Build a 600px vertical editor/console at `[70,30]` with console
-  `min="120px"` and editor `min=40`, drag upward and use Shift+Arrow/Home/End,
-  asserting feasible complete arrays, above-Panel primary ARIA, row-resize
-  cursor, exact percentage hooks, and no selection leak.
-  This proves mixed units, vertical geometry, and keyboard defaults share one
-  solver.
+  Vertical two-Panel at `[70,30]` with console `min="120px"` and editor
+  `min=40`. Drag and Shift+Arrow/Home/End. Assert feasible complete arrays,
+  above-Panel primary ARIA, `flex-direction: column`, row-resize cursor, and
+  no selection leak.
 - [ ] `SP-COMP-03` `[reference]` `[browser]` —
-  **Splitter should isolate resize state when a three-Panel workspace contains a nested Splitter.**
-  Build navigation/editor/preview Panels with an inner vertical
-  editor/console Splitter, operate inner and outer Handles concurrently in
-  sequence, and assert only the owning callback/ARIA/size hooks change, totals
-  remain `100` per group, focus/cursor axes are correct, and cleanup leaves no
-  global session.
-  This adversarial composition proves nested groups do not confuse positional
-  arrays, Handle adjacency, or document-wide drag resources.
+  **Splitter should isolate nested flex partitions when a three-Panel workspace contains an inner Splitter.**
+  Navigation/editor/preview with an inner vertical editor/console Splitter.
+  Operate inner and outer Handles in sequence. Assert only the owning
+  callback/ARIA/size hooks change, totals remain `100` per group, cleanup
+  leaves no document gesture, and inner pointermoves do not commit the outer
+  tree's descendants.
+- [ ] `SP-COMP-04` `[reference]` `[browser]` —
+  **Splitter should let an inner CSS grid reflow when its Panel's flex-basis changes.**
+  Put `display: grid; grid-template-columns: 1fr 2fr` content inside the
+  main Panel of a two-Panel Splitter. Drag the Handle so the main Panel
+  grows. Assert the inner grid's used width matches the Panel, both inner
+  tracks scale, and Splitter never wrote `grid-template-columns` on Root or
+  the Panel.
+  Grid is content inside a pane, not a Splitter mode.
 
 ## Out of scope
 
 - Persistence/localStorage, imperative layout methods, product skins, public
-  hit-region APIs, drag handles detached from adjacent Panels, or snap points.
+  hit-region APIs, `position: fixed` handles, rAF handle chasing, snap
+  points, collapse animation, a parallel `isCollapsed` boolean,
+  `onCollapse`/`onExpand`/`onDragStart`/`onDragEnd`/`onHandleHover` extras,
+  a grid or block layout mode, a one-Panel tree, or a second `Resizable`
+  component. Root `display: flex` is owned, not optional.

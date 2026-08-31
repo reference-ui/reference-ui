@@ -60,9 +60,10 @@ another commit:
 | Calendar grid | `Calendar` | ISO dates, locale week start, range |
 | Numeric editor | `NumberField` | localized partial text, Intl round-trip, step/form math |
 | Date editor | `DateField` | localized date text, ISO out, caret-segment step |
+| Date product recipe | `<DateField>` + `<DateField.Picker>` + `<DateField.Range>` | fold/unfold recipe, APG combobox contract, range namespace |
 | Input bezel | `Field` | descendant unstyle, `:has()` from the control |
 | Virtual focus | Listbox, Tree, Combobox | logical metadata, mounted active IDs, scroll-to-index |
-| Splitter math | `Splitter` | Drag, min/max, keyboard |
+| Splitter math | `Splitter` | Drag session, min/max, keyboard; CSS size signals |
 
 ---
 
@@ -80,6 +81,7 @@ another commit:
 - Calendar grid construction and 2D keyboard
 - NumberField partial-edit parsing, Intl formatting, and decimal step regressions
 - DateField locale-part parsing, incomplete segments, and Gregorian constrain
+- DateInput/DateRange cross-part state as headless controllers, not fixed DOM
 - Tests that encode edge cases
 
 **Leave**
@@ -314,11 +316,16 @@ drag-anywhere on Content. Snap and scale-behind are product chrome.
 
 ### `react-resizable-panels`
 
-**Useful for:** `Splitter`.
+**Useful for:** `Splitter` group math.
 
-**Lift:** `lib` — pointer/keyboard resize, min/max, collapse. Map to `role="separator"`.
+**Lift:** `lib` — `adjustLayoutByDelta`, `calculatePanelConstraints`,
+pointer/keyboard resize, min/max, collapse midpoint, separator ARIA. Map to
+`role="separator"` and controlled `%[]`.
 
-**Leave:** Demo `src/` (already not cloned), VS Code skin.
+**Leave:** Demo `src/` (already not cloned), VS Code skin, public hit-region
+API, always-on document pointermove, `useSyncExternalStore` style writes
+every move, imperative layout methods, auto-save, `defaultSize`, overlay
+hit targets, flex-grow ownership of Panel layout.
 
 ---
 
@@ -331,11 +338,58 @@ drag-anywhere on Content. Snap and scale-behind are product chrome.
    UI timer-race tests; use Sonner's mounted/timed limit only as contrast
 5. **ARIA widgets:** react-aria first, zag machines when Aria and Radix disagree, downshift for Combobox
 6. **Calendar:** react-aria calendar + react-day-picker grid
-7. **DateField:** NumberField dirty-session contract + Aria/Zag date-input
-   locale parts as contrast (textbox, not DateSegment)
-8. **Splitter:** react-resizable-panels `lib`
+7. **DateField / DateRange:** NumberField dirty-session contract +
+   Aria/Zag date-input locale parts as contrast (textbox, not DateSegment) →
+   Combobox APG contract on DateField.Picker → Fold/unfold recipe and
+   Part-Resolution Law with slotted Calendar progressive disclosure,
+   never fixed monolithic product DOM
+8. **Splitter:** react-resizable-panels `lib` math + `design-system/resizable`
+   session isolation (DOM writes, capture-at-down, ARIA off the hot path)
 9. **Drawer:** Overlay `edge` + Handle; vaul for drag/iOS fixed, not snap or scale-behind
 10. **Field:** no vendor lift. Generated Input/Textarea/Select recipes plus
     CSS `:has()`. Leave Base UI / Aria Field providers.
 
 When two vendors disagree, write the freeze-gate test first, then pick the behaviour that matches `components.md`.
+
+### `design-system/page-layout` (slots only)
+
+**Useful for:** the named-region **API** every declarative compound will use.
+
+**Lift**
+
+- `page-layout/slots/core` public surface: `SlotRoot`, `createSlotRootContext`,
+  `resolveSlotVisibility`, `createSlotCacheKey`, `transformSlotElements`
+- `page-layout/slots/hooks/useSlotRegistration.ts` live getters, `deps`, and
+  split register / unregister layout effects
+- Tests: `slots/core/core.test.ts`, `slots/core/react.test.tsx`,
+  `tests/slot-live-content.test.tsx`, `tests/region-visibility.test.tsx`
+
+**Leave:** PageLayout, sidebars, `getRegisteredSlots`, product part wrappers,
+and the hand-rolled listener `SlotRoot`. Implementation is Zustand behind the
+same public facade. See `Slot/Slot.md`.
+
+### `design-system/resizable`
+
+**Useful for:** `Splitter` pointer session. Direct DOM size writes, capture
+at pointerdown, ARIA isolated from the 60 fps path. The one-box
+layout-agnostic API is contrast, not the public mode.
+
+**Lift**
+
+- Direct DOM size writes during drag (`Handle/domHelpers.ts` `updatePanelWidth`)
+- Capture origin width + resolved min/max at pointerdown (`initializeDragState`)
+- Immediate `setPointerCapture` on pointerdown
+- ARIA/keyboard isolated from the 60 fps path (`WcagContext` does not
+  subscribe to rect polling)
+- Handle `touch-action: none`
+- CSS-length conversion off the hot path (`useCssToPx` / `css-length-to-px`)
+- Tests in `Resizable/Resizable.spec.tsx` for Enter collapse/restore and
+  non-accumulating deltas at min
+
+**Leave:** Layout-agnostic `width` writes (grid/flex/block never agreed).
+`position: fixed` plus rAF `getBoundingClientRect` polling
+(`useRealtimeUpdate`). Collapse `transform`/`opacity` animation and forced
+`offsetWidth` reflow, baked `aria-label`, `onCollapse`/`onExpand`/
+`onDragStart`/`onDragEnd`/`onHandleHover`, unmounting the Handle when
+disabled, `isCollapsed` as a parallel boolean. Public Splitter is a flex
+partition; see `Splitter/Splitter.md`.

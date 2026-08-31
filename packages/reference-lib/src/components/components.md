@@ -76,8 +76,8 @@ review conclusion, not an axiom. It does not mean every named UI pattern
 becomes a component. It means ordinary HTML/CSS plus these behavior owners can
 express the product patterns listed below without an application or agent
 having to rebuild focus containment, layering, positioning, collection
-navigation, disclosure, range math, localized numeric editing, or date-field
-and date-grid logic. A counterexample that cannot do so reopens this inventory.
+navigation, disclosure, range math, localized numeric editing, or date-field,
+date-range, and date-grid logic. A counterexample that cannot do so reopens this inventory.
 
 Vendor coverage may require a new part, callback, option, internal helper, or
 documented composition. It does **not** by itself justify a new top-level
@@ -97,8 +97,10 @@ public geometry is `placement` / `anchor` / `edge` /
 
 The completeness argument is behavioral rather than pattern-count based:
 
-- `Slot`, `Portal`, and `Presence` cover wrapper-free authoring, relocation,
-  and visual lifetime.
+- `Slot` covers named-region registration so compound components can
+  expose declarative part APIs. `Portal` and `Presence` cover relocation
+  and visual lifetime. Wrapper-free prop merge onto a single child is the
+  `ReferenceSlotPartProps` contract, not Slot.
 - `Field` covers the input bezel: descendant controls surrender standalone
   chrome, and the wrapper reacts through CSS `:has()` instead of becoming a
   second validity owner. `NumberField.Group` consumes that same recipe on
@@ -114,7 +116,7 @@ The completeness argument is behavioral rather than pattern-count based:
 - `Slider`, `Switch`, `NumberField`, `DateField`, `Collapsible`, `Accordion`,
   `Splitter`, `Tooltip`, and `Calendar` own the remaining difficult value,
   on/off thumb anatomy, localized numeric editing, locale-aware date editing,
-  disclosure, description, resize, and date-grid state machines.
+  disclosure, description, resize session, and date-grid state machines.
 
 The final vendor pass changed membership without treating the count as
 sacred. NumberField passed all four admission criteria: quantities, localized
@@ -978,12 +980,17 @@ rebuild active-descendant timing or add a second collection state machine.
   Owns localized date-only text editing where native `input[type=date]` is
   not deterministic enough: locale-ordered numeric grammar, partial
   segments, caret-aware day/month/year stepping, and one controlled ISO
-  calendar date. The visible host remains `input[type=text]`. Calendar and
-  Popover compose through the shared ISO value; DateField does not own a
-  popup. Segment spinbuttons and a packaged DatePicker stay leave.
+  calendar date. DateField is a fold/unfold recipe: childless `<DateField />`
+  collapses directly to one atomic textbox (`input[type=text]`); `<DateField><DateField.Picker /></DateField>`
+  represents the standard date picker (upgrading the input to an APG combobox
+  and synthesizing the popup layer and day Calendar); `<DateField.Range><DateField.Picker /></DateField.Range>`
+  represents the range picker. Unfolded parts (`DateField.Input`, `DateField.Trigger`,
+  `DateField.Picker`, `DateField.Calendar`, `DateField.Start`, `DateField.End`)
+  follow the Reference UI part-resolution law. Segment spinbuttons and packaged
+  visual Date products stay leave.
 
 - **`Calendar`**  
-  The date-grid engine. This is genuinely hard: locale-aware week start and weekday headings, construction of padded month grids, 2D keyboard movement (day, week, Home/End, PageUp/PageDown for months), disabled/unavailable skipping, min/max clamping, today vs selected vs focused, and range selection (start, end, in-range). Values are ISO calendar dates (`YYYY-MM-DD`), not `Date` objects and not a third-party date library. Locale is an explicit prop; `Intl` supplies labels and week-start. Calendar does not parse typed input, format field values, or own time-of-day. Typed dates are `DateField`.
+  The date-grid engine. This is genuinely hard: locale-aware week start and weekday headings, construction of padded month grids, 2D keyboard movement, disabled/unavailable skipping, min/max clamping, today vs selected vs focused, range selection, and heading-driven navigation. One discriminated `mode` describes day, range, month, or year products and their exact ISO value shape; private view is not another application axis. Extra children are explicit application chrome. Typed dates are `DateField`.
 
 - **`Collapsible`**  
   Coordinates a single disclosure trigger and content region, including `aria-expanded`, `aria-controls`, and controlled visibility.
@@ -992,12 +999,11 @@ rebuild active-descendant timing or add a second collection state machine.
   Coordinates a collection of Collapsibles, including single/multiple expansion policies and optional keyboard traversal between headers.
 
 - **`Splitter`**  
-  Provides accessible, resizable panel partitions (`role="separator"`) in
-  horizontal and vertical orientations. Handles pointer/touch drag
-  calculations, minimum/maximum size clamping, per-step and interaction-end
-  callbacks, keyboard-driven resizing (Arrow keys, Home/End, Enter to
-  collapse), and selection prevention during resize. Each Handle controls the
-  preceding logical Panel through a stable `aria-controls` relationship.
+  A 1D flex partition with a window-splitter Handle. Owns Root
+  `display: flex`, percentage flex-basis via CSS variables, the pointer
+  loop (direct DOM writes, no React commit per move), min/max, keyboard,
+  collapse/restore, and ARIA. Nested Splitters provide a second axis. CSS
+  Grid is page chrome or content inside a Panel, not a Splitter mode.
 
 - **`Tooltip`**  
   Transient informative descriptions linked from its trigger using
@@ -1059,6 +1065,7 @@ custom property. A wrapping `<label>` is valid at either specificity.
 ### NumberField
 
 ```tsx
+<Label htmlFor="quantity">Quantity</Label>
 <NumberField
   value={quantity}
   onChange={setQuantity}
@@ -1068,7 +1075,6 @@ custom property. A wrapping `<label>` is valid at either specificity.
   step={1}
   name="quantity"
 >
-  <Label htmlFor="quantity">Quantity</Label>
   <NumberField.Group>
     <NumberField.Decrement aria-label="Decrease quantity">
       −
@@ -1122,41 +1128,79 @@ interface NumberFieldProps
 
 ### DateField
 
-Locale-aware date-only text editing. DateField owns the dirty localized
-string; the public value is one canonical ISO calendar date or `null`.
-`input[type=date]` is not the host. Calendar and Popover compose by sharing
-that ISO value.
+Locale-aware date-only text editing. DateField is a typed input: the dirty
+localized string, one canonical ISO calendar date or `null`.
+`input[type=date]` is not the host. Calendar is composed by sharing that
+ISO value — Field for chrome, Popover for the layer. There is no `range`
+toggle: DateRange is two DateFields plus Calendar `mode="range"`.
 
 ```tsx
+<Label htmlFor="birthday">Birthday</Label>
 <DateField
+  id="birthday"
   value={date}
   onChange={setDate}
   locale="en-GB"
   name="birthday"
->
-  <Label htmlFor="birthday-input">Birthday</Label>
-  <DateField.Input id="birthday-input" />
-</DateField>
+/>
 ```
 
-`DateField` renders `div` and requires exactly one `DateField.Input`
-(`input[type=text]`). Other children, including Popover + Calendar, are
-allowed. Visual `Field` may wrap `DateField.Input` for prefixes or a
-calendar button; DateField does not own the bezel. `locale` `formatToParts`
-is the visible grammar (`en-GB`
-day/month/year, `en-US` month/day/year). Partial segments stay visible
+DateField is a fold/unfold recipe. Childless `<DateField />` collapses directly
+to `DateField.Input` rendering one visible `input[type=text]` directly with
+standard textbox semantics (dual-host contract). When `<DateField.Picker />`
+is present, bound inputs upgrade to the W3C APG Date Picker Combobox contract
+(`role="combobox" aria-haspopup="dialog" aria-expanded aria-controls aria-autocomplete="none"`),
+opening via deliberate activation (pointer click or `Alt + ArrowDown`). Authoring
+`<DateField.Trigger>` provides an auxiliary opener button (`tabIndex={-1}`).
+Two dates are `<DateField.Range>`, which coordinates two combobox inputs
+(`DateField.Start` and `DateField.End`), trigger, embedded range Calendar, and
+internal draft/Apply/Cancel transactions. Slotted `<Calendar>` (or `<DateField.Calendar>`)
+unfolds and replaces the synthesized default Calendar with managed invariants.
+Calendar omits `month` so opening remounts the grid on the selected day.
+`locale` `formatToParts` is the visible grammar. Partial segments stay visible
 without publishing. Blur and Enter commit; impossible dates revert.
 ArrowUp/Down step the caret's day, month, or year using Calendar's
 Gregorian constrain. A supplied `name` serializes canonical `YYYY-MM-DD`
-through one hidden input. Segment spinbuttons, two-digit year windows,
-`Date` objects, and a packaged DatePicker are absent. Exact contract:
+through hidden inputs. Segment spinbuttons, two-digit year windows,
+`Date` objects, and packaged visual Date products are absent. Exact contract:
 [DateField.md](./DateField/DateField.md).
 
 ```ts
 type ISODate = `${number}-${number}-${number}`
+type ISOMonth = `${number}-${number}`
+
+type DateRangeValue = {
+  start: ISODate
+  end: ISODate
+} | null
+
+type DateRangeDraft = {
+  start: ISODate | null
+  end: ISODate | null
+}
+
+type DateFieldManagedProp =
+  | "type"
+  | "role"
+  | "value"
+  | "defaultValue"
+  | "onChange"
+  | "inputMode"
+  | "aria-invalid"
+  | "aria-disabled"
+  | "aria-readonly"
+  | "aria-required"
+  | "aria-valuemin"
+  | "aria-valuemax"
+  | "aria-valuenow"
+  | "aria-valuetext"
 
 interface DateFieldProps
-  extends Omit<ReferencePartProps<"div">, "onChange" | "defaultValue"> {
+  extends Omit<
+    ReferencePartProps<"div">,
+    DateFieldManagedProp | "children"
+  > {
+  children?: React.ReactNode
   value: ISODate | null
   onChange?: (value: ISODate | null) => void
   locale: string
@@ -1169,73 +1213,115 @@ interface DateFieldProps
   invalid?: boolean
   name?: string
   form?: string
+  placeholder?: string
 }
+
+interface DateFieldInputProps
+  extends Omit<
+    ReferencePartProps<"input">,
+    DateFieldManagedProp
+  > {}
+
+interface DateFieldTriggerProps
+  extends ReferencePartProps<"button"> {}
+
+interface DateFieldPickerProps
+  extends PopoverContentProps {
+  children?: React.ReactNode
+}
+
+interface DateFieldCalendarProps
+  extends Omit<
+    CalendarProps,
+    | "value"
+    | "onChange"
+    | "locale"
+    | "mode"
+    | "min"
+    | "max"
+    | "isDateUnavailable"
+  > {
+  min?: ISODate
+  max?: ISODate
+  isDateUnavailable?: (date: ISODate) => boolean
+}
+
+interface DateFieldRangeProps
+  extends Omit<
+    ReferencePartProps<"div">,
+    DateFieldManagedProp | "children"
+  > {
+  children?: React.ReactNode
+  value: DateRangeValue
+  onChange?: (value: DateRangeValue) => void
+  locale: string
+  min?: ISODate
+  max?: ISODate
+  isDateUnavailable?: (date: ISODate) => boolean
+  disabled?: boolean
+  readOnly?: boolean
+  required?: boolean
+  invalid?: boolean
+  name?: string | { start?: string; end?: string }
+  form?: string
+}
+
+interface DateFieldStartProps
+  extends Omit<
+    ReferencePartProps<"input">,
+    DateFieldManagedProp
+  > {}
+
+interface DateFieldEndProps
+  extends Omit<
+    ReferencePartProps<"input">,
+    DateFieldManagedProp
+  > {}
 ```
 
 ### Calendar
 
-Anatomy stays visible. Calendar owns grid math, keyboard, and selection; the application owns chrome around it.
-
-`Calendar.Grid` renders `table[role=grid]`. `Calendar.Previous` and
-`Calendar.Next` render `button[type=button]` with locale-derived accessible
-names. `Calendar.Weekdays` renders `thead` with generated `th` headers;
-`Calendar.Days` renders `tbody` with each date as
-`td[role=gridcell] > Calendar.Day`. With no renderer, Day contains the
-locale-formatted number. A Days render function can return
-`Calendar.Day` with custom contents, native props, StyleProps, and refs while
-Calendar retains managed date semantics and interaction. `Calendar.Heading`
-renders the controlled `month`
-(`YYYY-MM`) and announces it when the month changes. `Calendar` does not invent
-a date library: values are ISO calendar dates (`YYYY-MM-DD`). An explicit
-`today` makes SSR deterministic; when omitted, the client-local marker is
-added only after hydration. Locale supplies week start by default; an explicit
-`firstDayOfWeek` override and narrow/short/long weekday labels remain within
-the same Gregorian grid owner.
+Anatomy stays visible when you unfold it. Calendar owns grid math, keyboard,
+selection, heading-driven navigation, one discriminated product `mode`, and
+which collection is on screen. Omitted named parts are a complete control.
+Extra children are ordinary application chrome with explicit callbacks —
+recents and “last year” are not a Presets part or an imperative context.
+View is private. `month` is internal unless supplied and seeds from `value`
+when omitted. DateField and DateField.Range compose Calendar
+externally; they do not become Calendar context or state.
 
 ```tsx
-<Calendar
-  month={month}
-  onMonthChange={setMonth}
-  value={value}
-  onChange={setValue}
-  locale="en-GB"
-  min={min}
-  max={max}
->
-  <Calendar.Header>
-    <Calendar.Previous />
-    <Calendar.Heading />
-    <Calendar.Next />
-  </Calendar.Header>
-
-  <Calendar.Grid>
-    <Calendar.Weekdays />
-    <Calendar.Days />
-  </Calendar.Grid>
-</Calendar>
+<Calendar value={value} onChange={setValue} locale="en-GB" min={min} max={max} />
 ```
 
-Range selection is the same grid with `selection="range"` and a controlled `{ start, end }` value. Hovering a day while a start date is set previews the in-range interval; that preview is not application state.
+```tsx
+<Calendar mode="range" value={range} onChange={setRange} locale="en-GB" />
+```
+
+```tsx
+<Calendar mode="month" value={billingMonth} onChange={setBillingMonth} locale="en-GB" />
+```
+
+Range hover preview is not application state. DateInput, DateRange, month
+picker, and year picker are folds of this control plus Popover /
+DateField. DateRange uses the `DateField.Range` draft state machine
+specified by DateField. Exact contract: [Calendar.md](./Calendar/Calendar.md).
 
 Approximate API:
 
 ```ts
 type ISODate = `${number}-${number}-${number}`
 type ISOMonth = `${number}-${number}`
+type ISOYear = `${number}`
 type CalendarWeekday =
   | "sun" | "mon" | "tue" | "wed" | "thu" | "fri" | "sat"
 
-type CalendarValue =
-  | ISODate
-  | { start: ISODate; end: ISODate | null }
+type CalendarDateRange = { start: ISODate; end: ISODate | null }
 
-interface CalendarProps
-  extends Omit<ReferencePartProps<"div">, "onChange"> {
-  month: ISOMonth
+interface CalendarSharedProps
+  extends Omit<ReferencePartProps<"div">, "defaultValue" | "onChange"> {
+  month?: ISOMonth
   onMonthChange?: (month: ISOMonth) => void
-  selection?: "single" | "range"
-  value?: CalendarValue | null
-  onChange?: (value: CalendarValue | null) => void
   locale: string
   firstDayOfWeek?: CalendarWeekday
   today?: ISODate
@@ -1243,6 +1329,31 @@ interface CalendarProps
   max?: ISODate
   isDateUnavailable?: (date: ISODate) => boolean
 }
+
+type CalendarProps =
+  CalendarSharedProps &
+    (
+      | {
+          mode?: "day"
+          value: ISODate | null
+          onChange?: (value: ISODate | null) => void
+        }
+      | {
+          mode: "range"
+          value: CalendarDateRange | null
+          onChange?: (value: CalendarDateRange | null) => void
+        }
+      | {
+          mode: "month"
+          value: ISOMonth | null
+          onChange?: (value: ISOMonth | null) => void
+        }
+      | {
+          mode: "year"
+          value: ISOYear | null
+          onChange?: (value: ISOYear | null) => void
+        }
+    )
 
 interface CalendarDayRenderState {
   date: ISODate
@@ -1273,7 +1384,7 @@ interface CalendarDayProps
 }
 ```
 
-Cells rendered by `Calendar.Days` expose `data-today`, `data-selected`, `data-disabled`, `data-outside-month`, and for ranges `data-range-start`, `data-range-end`, `data-in-range`. Keyboard movement and selection do not require those attributes to be set by the application.
+Cells rendered by `Calendar.Days` expose `data-today`, `data-selected`, `data-disabled`, `data-outside-month`, and for ranges `data-range-start`, `data-range-end`, `data-in-range`. Month and year cells expose `data-current` plus the same selected/disabled/range markers against the controlled value's month or year. Keyboard movement and selection do not require those attributes to be set by the application. Exact view contract: [Calendar.md](./Calendar/Calendar.md).
 
 ---
 
@@ -1287,7 +1398,8 @@ nodes; Field exists because this wrapper is the bezel. Exact selectors:
 ### Field
 
 Visual bezel around a form control. Field owns chrome. The enclosed input
-owns semantics. No role, no validity ARIA, no label wiring. Generated
+owns semantics. Label sits above Field, never inside it. No role, no
+validity ARIA, no label wiring. Generated
 `Input` / `Textarea` / `Select` (and `*.Input` parts) surrender standalone
 border, background, shadow, and focus ring when they are descendants of
 Field. The bezel follows `:has()` against the real control.
@@ -1341,10 +1453,15 @@ Authoring primitives are the underlying composition and lifecycle machinery used
 Proposed APIs: `Slot/Slot.md`, `Presence/Presence.md`, `RovingFocus/RovingFocus.md`, `FocusLock/FocusLock.md`.
 
 > [!NOTE]
-> `Slot` is available to user-authored design-system components. It does not make Reference UI primitives polymorphic or alter their documented native elements.
+> `Slot` is the named-region registry for declarative component APIs.
+> Transparent parts that merge onto one child use `ReferenceSlotPartProps`;
+> that merge does not make Reference UI primitives polymorphic or alter
+> their documented native elements.
 
 - **`Slot`**  
-  Merges props, event handlers, and refs onto a single child element without wrapping DOM layers.
+  A part registers an element into a slot id; the host reads the root and
+  renders that element in the matching region. Live content is a getter,
+  not a registration dependency. Not Radix `asChild` merge and not Portal.
 - **`Presence`**  
   Manages entry and exit animation lifecycles, keeping unmounting elements in
   the DOM until CSS animations, transitions, and registered nested Presence
@@ -1408,25 +1525,29 @@ interface RovingFocusItemProps extends ReferenceSlotPartProps {
 Omitted behavior is horizontal, non-looping, and typeahead-off; Listbox and
 Menu turn typeahead on. Tabs leave it off.
 
-### Slot merge rules contract
+### Transparent part merge rules
 
-The `Slot` API is defined by its strict merge precedence:
+`ReferenceSlotPartProps` parts (FocusLock, RovingFocus, Tooltip.Trigger, and
+other single-child hosts) merge onto one child. This is **not** the Slot
+registration primitive in `Slot/Slot.md`.
 
-- **Native props:** Child props take precedence over Slot props, except for styles, classes, and handlers.
-- **Event handlers:** Composed in sequence: child handler executes first; Slot handler executes second.
+The merge API is defined by its strict precedence:
+
+- **Native props:** Child props take precedence over part props, except for styles, classes, and handlers.
+- **Event handlers:** Composed in sequence: child handler executes first; part handler executes second.
   ```ts
   childHandler(event)
   if (!event.defaultPrevented) {
-    slotHandler(event)
+    partHandler(event)
   }
   ```
-- **Event cancellation:** If a child handler calls `event.preventDefault()`, the Slot handler will not run (`!event.defaultPrevented`).
+- **Event cancellation:** If a child handler calls `event.preventDefault()`, the part handler will not run (`!event.defaultPrevented`).
 - **className:** Combined into a single merged class string.
-- **style:** Merged shallowly; child style properties override Slot style properties.
-- **Refs:** Composed into a merged ref callback that updates both Slot and child refs.
+- **style:** Merged shallowly; child style properties override part style properties.
+- **Refs:** Composed into a merged ref callback that updates both part and child refs.
 - **IDs & ARIA attributes:** Merged deterministically; composite attributes like `aria-describedby` concatenate valid ID tokens.
-- **Missing / duplicate slots:** Enforces a single-child invariant when active; passes through cleanly when transparent.
-- **Nested slots:** Merges props recursively through nested slot hierarchies.
+- **Missing / duplicate children:** Enforces a single-child invariant when active; passes through cleanly when transparent.
+- **Nested transparent parts:** Merges props recursively through nested single-child hosts.
 
 ---
 
@@ -1444,9 +1565,8 @@ Complex interface patterns are documented compositions of foundational and ARIA 
   `Combobox.Popover`) with a `Listbox` popup
 - **`MenuButton`** $\rightarrow$ `Popover.Trigger` + `Popover.Content` + `Menu`
 - **`ContextMenu`** $\rightarrow$ `Popover` with a virtual pointer `anchor` + `Menu` (no trigger button)
-- **`HoverCard`** $\rightarrow$ `Popover` with `openOnHover`
-- **`DatePicker`** $\rightarrow$ `DateField` + `Popover` + `Calendar` sharing one ISO `value`
-- **`DateRangePicker`** $\rightarrow$ two `DateField`s + `Popover` + `Calendar` with `{ start, end }`
+- **`DateInput`** $\rightarrow$ standard date picker: `<DateField><DateField.Picker /></DateField>`. Upgrades input to APG combobox, synthesizes trigger, popover layer, day Calendar, and dismissal on day selection; unfolds into `DateField.Input`, `DateField.Trigger`, `DateField.Picker`, `DateField.Calendar`.
+- **`DateRange`** $\rightarrow$ standard range picker: `<DateField.Range><DateField.Picker /></DateField.Range>`. Coordinates two combobox inputs (`DateField.Start`, `DateField.End`), trigger, range Calendar, and draft transaction; unfolds into individual parts.
 - **Quantity / currency / percent / unit input** $\rightarrow$ `NumberField`
   with application-authored label, error content, and optional steppers
 - **`CommandPalette`** $\rightarrow$ `Overlay` + `Combobox`
@@ -1464,9 +1584,9 @@ Complex interface patterns are documented compositions of foundational and ARIA 
 - **Picker popup** (emoji, icon, command grid) $\rightarrow$ `Popover` or
   `Overlay` + Combobox's custom-grid virtual-focus adapter
 - **Prefixed / suffixed text field** $\rightarrow$ `Field` around `Input` (or
-  `DateField.Input`) plus authored prefix, suffix, or action buttons. Label
-  stays `htmlFor` on the control. `NumberField.Group` consumes that recipe
-  on `div[role="group"]`; do not wrap Group in Field.
+  atomic `DateField`) plus authored prefix, suffix, or action buttons. Label
+  sits above Field and stays `htmlFor` on the control. `NumberField.Group`
+  consumes that recipe on `div[role="group"]`; do not wrap Group in Field.
 
 ---
 
@@ -1501,8 +1621,10 @@ These are decisions, not unfinished list items.
 - **Virtualized or multi-select `Tree`** — the freeze Tree is APG keyboard + collapse + single selection only. Windowed rows and multi-select stay application-owned.
 - **`NavigationMenu` / mega-menu** — Popover + Menu + hover intent. A documented pattern later if needed; not a freeze primitive.
 - **Aria/Zag `DateSegment` spinbuttons** — DateField is one textbox, like
-  NumberField. Segment APG, placeholder parts, and a packaged DatePicker
-  stay leave.
+  NumberField. Segment APG, placeholder parts, and packaged visual Date
+  products stay leave. The fold/unfold recipe (`<DateField><DateField.Picker /></DateField>`,
+  `<DateField.Range><DateField.Picker /></DateField.Range>`) provides direct
+  progressive disclosure without segment spinbutton machines.
 
 Time-of-day widgets are outside Calendar and DateField. Both are calendar dates.
 
@@ -1539,7 +1661,7 @@ not bless the current design by definition.
 3. **Controlled-state contract is settled:** Props for controlled state, open/close, and dismissal handlers are consistent across the library.
 4. **Event ordering and cancellation are settled:** Event propagation, bubbling order, and `defaultPrevented` behavior are fully defined.
 5. **Styling hooks and state attributes are settled:** Data attributes (e.g. `data-state="open"`, `data-orientation="vertical"`) and style props are finalized.
-6. **Triple composition verification:** At least three substantially different compositions work seamlessly without escape-hatch props. For `Listbox` and `Combobox`, one of those compositions must be virtualized: windowed options that preserve `aria-setsize` / `aria-posinset` and support scroll-to-index. For `Calendar`, one composition must use a locale whose week does not start on Sunday, and one must be a range picker. For `Tree`, one composition must be nested at least two levels, and one must prove collapsed descendants are absent from the roving set.
+6. **Triple composition verification:** At least three substantially different compositions work seamlessly without escape-hatch props. For `Listbox` and `Combobox`, one of those compositions must be virtualized: windowed options that preserve `aria-setsize` / `aria-posinset` and support scroll-to-index. For `Calendar`, one composition must use a locale whose week does not start on Sunday, one must be a DateRange picker, one must be a folded month picker, and one must be recents chrome with an explicit application callback. For `Tree`, one composition must be nested at least two levels, and one must prove collapsed descendants are absent from the roving set.
    For `NumberField`, compositions must include non-Latin digits, an
    affixed percent/currency/unit format, canonical form submission, and a
    ShadowRoot boundary. For `Switch`, compositions must include a sibling
@@ -1549,15 +1671,24 @@ not bless the current design by definition.
    dialog (optional Trigger), an `edge` drawer with Handle, and
    `isolation={false}` Trigger+Content without a second positioning
    runtime or a hover policy. For `DateField`, compositions must include
-   DatePicker (`DateField` + `Popover` + `Calendar`) in a non-Sunday
-   locale, canonical ISO form submission, a locale with numeric literals
-   (for example `ja-JP`), and a ShadowRoot boundary. For `Field`,
-   compositions must include a labelled prefix/suffix Input, DateField.Input
+   childless DateField (atomic textbox), standard folded picker
+   (`<DateField><DateField.Picker /></DateField>`), unfolded picker
+   (`<DateField.Input>` + `<DateField.Trigger>` + `<DateField.Picker>`),
+   folded range (`<DateField.Range><DateField.Picker /></DateField.Range>`),
+   unfolded range (`<DateField.Start>` + `<DateField.End>` + `<DateField.Trigger>` + `<DateField.Picker>`),
+   canonical ISO form submission, a locale with numeric literals (for
+   example `ja-JP`), and a ShadowRoot boundary. For `Field`,
+   compositions must include a labelled prefix/suffix Input, atomic DateField
    with a calendar trigger, the People token picker (`Combobox.Input` +
    opener/chip Buttons, Popover outside), and NumberField.Group consuming
    the Field recipe on `div[role="group"]` without a nested Field, with
    identical default/focus/invalid/warning/disabled/read-only chrome
-   (`FI-SURF-01`).
+   (`FI-SURF-01`). For `Splitter`, compositions must include a collapsible
+   flex sidebar in LTR and RTL, a vertical editor/console, a nested
+   two-axis workspace, and an inner CSS grid that reflows when its Panel
+   resizes — without a Splitter grid mode. The pointer gesture stays
+   inside the frame budget (no React commit or layout read per
+   pointermove).
 7. **Cross-cutting environment safety:** Nested usage, RTL directionality, SSR hydration, and multi-root/Shadow DOM usage require no API adjustments.
 8. **AI agent verification:** An AI model or agent can implement custom, non-standard user requirements without bypassing or fighting the primitive.
 9. **Descriptive proof contract:** Every case says what the component should do

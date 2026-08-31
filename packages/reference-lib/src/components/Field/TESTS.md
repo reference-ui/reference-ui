@@ -90,10 +90,10 @@ cases cover the omitted ARIA surface, `status`, and descendant chrome.
   Repeat `FI-CSS-01` for `Textarea` and `Select`. Assert tag-based
   embedding, not a React context flag.
 - [ ] `FI-CSS-04` `[reference]` `[browser]` —
-  **Field-surface hosts should embed DateField.Input, Combobox.Input,
+  **Field-surface hosts should embed DateField, Combobox.Input,
   and NumberField.Input.**
-  Wrap Field around `DateField.Input` and `Combobox.Input` as children of
-  those widgets. Mount NumberField with Group and Input and no Field.
+  Wrap Field around atomic DateField and around `Combobox.Input` as a
+  Combobox child. Mount NumberField with Group and Input and no Field.
   Assert each named Input is a descendant `input` in embedded mode.
   NumberField.Input embeds because Group is a Field-surface host.
 
@@ -142,7 +142,7 @@ cases cover the omitted ARIA surface, `status`, and descendant chrome.
   background, gap, box-shadow/outline) in default, `:focus-visible` /
   `data-focus-visible`, invalid, `status="warning"`, disabled, and
   read-only: (1) Field + currency prefix + Input + clear Button;
-  (2) Field + DateField.Input + calendar `Popover.Trigger`;
+  (2) Field + DateField + calendar `Popover.Trigger`;
   (3) Field + Combobox.Input + opener/chip Buttons on another row;
   (4) NumberField.Group + Decrement + Input + Increment, no `<Field>`.
   Assert identical presentation per state, one `data-reference-field`
@@ -168,13 +168,11 @@ cases cover the omitted ARIA surface, `status`, and descendant chrome.
   `aria-describedby`. Assert the label's `htmlFor` matches Input `id`,
   Field has no role, and AT-relevant attributes live on Input.
 - [ ] `FI-COMP-02` `[reference]` `[browser]` —
-  **Field should embed DateField.Input without owning DateField
-  state.**
-  DateField + Field wrapping DateField.Input and a calendar
-  `Popover.Trigger`; `Popover.Content` / Calendar stay outside the
-  bezel (portalled). Type a date and open the calendar. Assert ISO
-  `onChange` still comes from DateField, Input is embedded, and the
-  trigger remains a named button.
+  **Field should embed atomic DateField or host DateField bezel without owning its state.**
+  Mount `<DateField><DateField.Trigger aria-label="Open">📅</DateField.Trigger><DateField.Picker /></DateField>`.
+  Assert the Field surface bezel wraps the input and trigger button, Calendar stays
+  inside the portalled Popover layer, typing and picking work seamlessly, and
+  ISO `onChange` is published without Field adding state.
 - [ ] `FI-COMP-03` `[reference]` `[browser]` —
   **NumberField.Group should consume the Field recipe without a nested
   Field.**
@@ -207,12 +205,14 @@ cases cover the omitted ARIA surface, `status`, and descendant chrome.
 - NumberField.Group `role="group"`, stepper naming, and managed
   `data-*` state: `NumberField`. This file owns the shared recipe and
   `FI-SURF-01` / `FI-COMP-03`.
-- Date/number dirty sessions: `DateField` / `NumberField`.
+- Date/number dirty sessions: `DateField` / `NumberField`. `DateField.Range`
+  coordinates two inputs in one Field surface bezel (`DF-COMP-05`); this file
+  owns only the shared bezel.
 - Combobox Input XOR Trigger, scalar commit, focus-in-input, Popover
   portal: `Combobox`. This file proves only the Field bezel around that
   tree (`FI-COMP-04`).
 - Form submit/hidden inputs: those field components, not Field.
-- Slot merge: `Slot`.
+- Transparent-part merge: `ReferenceSlotPartProps` in `components.md`.
 - Chip-row composite keyboard: `RovingFocus`, optional.
 
 ## Out of scope

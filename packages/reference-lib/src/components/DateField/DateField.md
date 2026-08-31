@@ -2,79 +2,271 @@
 
 Proof: [TESTS.md](./TESTS.md).
 
-Locale-aware editing of one date-only value. DateField owns the boundary
-between an ephemeral localized edit string and one controlled ISO calendar
-date.
+Locale-aware editing of date values. `DateField` is the recipe:
+- **Childless (folded)**: collapses directly to `DateField.Input`, rendering one
+  visible locale textbox (`input[type=text]`) and managing one controlled ISO
+  calendar date.
+- **Folded standard date picker**: adding `<DateField.Picker />` folds in the
+  complete date-picker capability (trigger, popup layer, day Calendar
+  integration, and dismissal on selection) without requiring manual assembly.
+- **Range editing**: two dates are `<DateField.Range>`, which manages range
+  value types (`{ start: ISODate, end: ISODate } | null`), two inputs
+  (`DateField.Start` and `DateField.End`), active endpoint tracking, and
+  draft/Apply transactions in its own unified namespace.
+- **Unfolding on demand**: every part (`DateField.Input`, `DateField.Trigger`,
+  `DateField.Picker`, `DateField.Calendar`, `DateField.Start`, `DateField.End`)
+  can be explicitly authored to customize styling, icons, labels, or grid
+  presentation without rebuilding the component.
 
-It does not own popup behaviour or calendar presentation. A Calendar is
-composed by sharing the same controlled value. Popover remains the layer.
-Native `input[type=date]` is not the host: its chrome, locale display,
-partial-edit, and popup behaviour vary by browser and cannot share an ISO
-value with Calendar without fighting the picker.
+Label sits above the field, never inside it.
+
+### Folded atomic field (single textbox)
 
 ```tsx
+<Label htmlFor="birthday">Birthday</Label>
 <DateField
-  value={date}
-  onChange={setDate}
+  id="birthday"
+  value={value}
+  onChange={setValue}
+  locale="en-GB"
+  name="birthday"
+  placeholder="DD/MM/YYYY"
+/>
+```
+
+### Folded standard date picker
+
+```tsx
+<Label htmlFor="birthday">Birthday</Label>
+<DateField
+  id="birthday"
+  value={value}
+  onChange={setValue}
   locale="en-GB"
   name="birthday"
 >
-  <Label htmlFor="birthday-input">Birthday</Label>
-  <DateField.Input id="birthday-input" />
+  <DateField.Picker />
 </DateField>
 ```
 
-DatePicker is the composition, not a primitive:
+### Unfolded date picker (customized Calendar engine)
 
 ```tsx
+<Label htmlFor="birthday">Birthday</Label>
 <DateField
-  value={date}
-  onChange={setDate}
+  id="birthday"
+  value={value}
+  onChange={setValue}
   locale="en-GB"
-  min={min}
-  max={max}
-  isDateUnavailable={isUnavailable}
+  name="birthday"
 >
-  <Label htmlFor="start-input">Start date</Label>
-  <DateField.Input id="start-input" />
-  <Popover
-    open={open}
-    onOpen={() => setOpen(true)}
-    onDismiss={() => setOpen(false)}
-  >
-    <Popover.Trigger aria-label="Open calendar">
-      Open
-    </Popover.Trigger>
-    <Popover.Content>
-      <Calendar
-        month={month}
-        onMonthChange={setMonth}
-        value={date}
-        onChange={setDate}
-        locale="en-GB"
-        min={min}
-        max={max}
-        isDateUnavailable={isUnavailable}
-      />
-    </Popover.Content>
-  </Popover>
+  <DateField.Input placeholder="DD/MM/YYYY" className="custom-input" />
+  <DateField.Trigger aria-label="Choose date">
+    <CalendarIcon />
+  </DateField.Trigger>
+  <DateField.Picker placement="bottom-end">
+    <Calendar
+      firstDayOfWeek="mon"
+      month={month}
+      onMonthChange={setMonth}
+    >
+      <Calendar.Grid>
+        <Calendar.Weekdays />
+        <Calendar.Days>
+          {(day) => (
+            <Calendar.Day date={day.date}>
+              {day.formattedDay}
+            </Calendar.Day>
+          )}
+        </Calendar.Days>
+      </Calendar.Grid>
+    </Calendar>
+  </DateField.Picker>
 </DateField>
 ```
 
-Calendar does not register with DateField. DateField does not open, place,
-or dismiss Popover. Shared `value` / `onChange` / `locale` / bounds /
-availability is the entire integration contract.
+### Folded standard range picker
+
+```tsx
+<Label>Booking period</Label>
+<DateField.Range
+  value={range}
+  onChange={setRange}
+  locale="en-GB"
+  name={{ start: "checkIn", end: "checkOut" }}
+>
+  <DateField.Picker />
+</DateField.Range>
+```
+
+### Unfolded range picker
+
+```tsx
+<Label>Booking period</Label>
+<DateField.Range
+  value={range}
+  onChange={setRange}
+  locale="en-GB"
+  name={{ start: "checkIn", end: "checkOut" }}
+>
+  <DateField.Start aria-label="Start date" placeholder="Start" />
+  <DateField.End aria-label="End date" placeholder="End" />
+  <DateField.Trigger aria-label="Choose booking dates">
+    <CalendarIcon />
+  </DateField.Trigger>
+  <DateField.Picker>
+    <Calendar mode="range" fixedWeeks min={min} max={max} />
+  </DateField.Picker>
+</DateField.Range>
+```
+
+---
+
+## Part-resolution law
+
+DateField establishes the Reference UI part-resolution law:
+
+> **The root owns semantics and synthesizes default parts. An explicit child
+> part replaces and unfolds that synthesized part.**
+
+When `<DateField>` is childless, it synthesizes the default `DateField.Input`.
+When `<DateField.Picker />` is present, every bound DateField input upgrades
+to a picker trigger and controller. It adopts the standard W3C APG Date Picker
+Combobox contract:
+
+```html
+role="combobox"
+aria-haspopup="dialog"
+aria-expanded={open}
+aria-controls={pickerId}
+aria-autocomplete="none"
+```
+
+Without `DateField.Picker`, it remains an ordinary `input[type=text]` with
+standard textbox semantics.
+
+### Deliberate activation and opening policy
+
+Focus arrival alone does not open the popup, ensuring keyboard typists are
+never interrupted. The picker opens through deliberate activation:
+- Pointer or touch click on the input (or optional trigger button).
+- Keyboard shortcut: `Alt + ArrowDown` (standard combobox/picker open command).
+- Plain `ArrowDown` / `ArrowUp` remains dedicated to caret-aware segment
+  stepping (`DF-KEY-01`).
+
+### Optional graphical trigger
+
+`<DateField.Trigger>` is an optional visual affordance (e.g. containing a
+calendar icon). Since the input itself is the primary controller,
+`<DateField.Trigger>` defaults to `tabIndex={-1}` (following APG recommendations)
+so keyboard users navigate smoothly without redundant tab stops.
+
+### Ownership boundaries and Calendar progressive disclosure
+
+- **`DateField`** owns typed text editing, localized format parsing,
+  caret-aware segment stepping, and canonical ISO state.
+- **`DateField.Picker`** owns opening/closing, popup layering, dismissal on
+  selection, and focus return.
+- **`Calendar`** owns the 2D grid engine, roving tabindex, month/year
+  navigation, range preview, and visual day presentation.
+
+When `<DateField.Picker>` is childless, it renders a synthesized default
+`<Calendar />`. Supplying `<Calendar>` (or the context-bound alias
+`<DateField.Calendar>`) unfolds and replaces the synthesized default.
+
+#### Managed Calendar props
+When slotted inside `DateField.Picker`, these core invariants are bound and
+managed automatically:
+- `value`
+- `onChange`
+- `locale`
+- `mode` (`"day"` for `DateField`, `"range"` for `DateField.Range`)
+- `min`
+- `max`
+- `isDateUnavailable`
+
+Single `DateField` forces `mode="day"`. `DateField.Range` forces `mode="range"`
+and binds Calendar to its draft transaction. A consumer cannot accidentally
+put a month-value Calendar behind a day-text field.
+
+#### Fully customizable Calendar features
+Everything else on `<Calendar>` remains directly configurable without
+cluttering `DateField` with duplicate props:
+- `firstDayOfWeek`
+- `today`
+- `month` / `onMonthChange` (to control visible pane independently of value)
+- Custom day rendering via `<Calendar.Grid>`, `<Calendar.Weekdays>`, `<Calendar.Days>`, `<Calendar.Day>`
+- Navigation parts: `<Calendar.Header>`, `<Calendar.PrevButton>`, `<Calendar.NextButton>`, `<Calendar.Heading>`
+- Alternative drill-down views: `<Calendar.Months>`, `<Calendar.Years>`
+- StyleProps and CSS classes.
+
+#### TypeScript and bound alias
+Standalone `<Calendar>` strictly requires `value` and `locale`. Inside
+`<DateField.Picker>`, those props are inherited from the parent DateField.
+Consumers can slot literal `<Calendar>` using Reference's bound part mechanism,
+or use the thin alias `<DateField.Calendar>` where `value` and `locale` are
+omitted from required props.
+
+Prop resolution is completely deterministic:
+
+```ts
+finalInputProps = merge(
+  inputDefaults,
+  rootInputProps,
+  explicitInputProps,
+  managedMachineProps,
+)
+```
+
+1. Root shorthand props (`placeholder`, `className`, `id`, `onInput`, etc.)
+   seed the implicit input.
+2. Explicit `DateField.Input` (or `DateField.Start` / `DateField.End`) props
+   override root shorthand props.
+3. Classes, styles, and refs use Reference's standard merge.
+4. Authored event handlers compose and execute before internal state machine
+   observations.
+5. Managed value, combobox/textbox semantics, and accessibility always win.
+
+---
 
 ## Proposed API
 
 ```ts
 type ISODate = `${number}-${number}-${number}`
+type ISOMonth = `${number}-${number}`
+
+type DateRangeValue = {
+  start: ISODate
+  end: ISODate
+} | null
+
+type DateRangeDraft = {
+  start: ISODate | null
+  end: ISODate | null
+}
+
+type DateFieldManagedProp =
+  | "type"
+  | "role"
+  | "value"
+  | "defaultValue"
+  | "onChange"
+  | "inputMode"
+  | "aria-invalid"
+  | "aria-disabled"
+  | "aria-readonly"
+  | "aria-required"
+  | "aria-valuemin"
+  | "aria-valuemax"
+  | "aria-valuenow"
+  | "aria-valuetext"
 
 interface DateFieldProps
   extends Omit<
     ReferencePartProps<"div">,
-    "onChange" | "defaultValue"
+    DateFieldManagedProp | "children"
   > {
+  children?: React.ReactNode
   value: ISODate | null
   onChange?: (value: ISODate | null) => void
   locale: string
@@ -87,44 +279,85 @@ interface DateFieldProps
   invalid?: boolean
   name?: string
   form?: string
+  placeholder?: string
 }
-
-type DateFieldManagedInputProp =
-  | "type"
-  | "value"
-  | "defaultValue"
-  | "inputMode"
-  | "name"
-  | "form"
-  | "min"
-  | "max"
-  | "disabled"
-  | "readOnly"
-  | "required"
-  | "aria-invalid"
-  | "aria-disabled"
-  | "aria-readonly"
-  | "aria-required"
 
 interface DateFieldInputProps
   extends Omit<
     ReferencePartProps<"input">,
-    DateFieldManagedInputProp
+    DateFieldManagedProp
+  > {}
+
+interface DateFieldTriggerProps
+  extends ReferencePartProps<"button"> {}
+
+interface DateFieldPickerProps
+  extends PopoverContentProps {
+  children?: React.ReactNode
+}
+
+interface DateFieldCalendarProps
+  extends Omit<
+    CalendarProps,
+    | "value"
+    | "onChange"
+    | "locale"
+    | "mode"
+    | "min"
+    | "max"
+    | "isDateUnavailable"
+  > {
+  min?: ISODate
+  max?: ISODate
+  isDateUnavailable?: (date: ISODate) => boolean
+}
+
+interface DateFieldRangeProps
+  extends Omit<
+    ReferencePartProps<"div">,
+    DateFieldManagedProp | "children"
+  > {
+  children?: React.ReactNode
+  value: DateRangeValue
+  onChange?: (value: DateRangeValue) => void
+  locale: string
+  min?: ISODate
+  max?: ISODate
+  isDateUnavailable?: (date: ISODate) => boolean
+  disabled?: boolean
+  readOnly?: boolean
+  required?: boolean
+  invalid?: boolean
+  name?: string | { start?: string; end?: string }
+  form?: string
+}
+
+interface DateFieldStartProps
+  extends Omit<
+    ReferencePartProps<"input">,
+    DateFieldManagedProp
+  > {}
+
+interface DateFieldEndProps
+  extends Omit<
+    ReferencePartProps<"input">,
+    DateFieldManagedProp
   > {}
 ```
 
-There is no `DateField.Root`, `DateField.Segment`, `DateField.Group`,
-`defaultValue`, uncontrolled mode, controlled text prop, raw-text callback,
-parser/formatter function, granularity, placeholder-parts API, or
-polymorphic `as` prop. `DateField.onChange` is the only date request
-authority. Input retains native edit, clipboard, composition, selection,
-focus, and keyboard handlers so applications can observe text without
-creating another store.
+There is no `defaultValue`, uncontrolled mode, controlled text prop,
+raw-text callback, parser/formatter override function, granularity,
+placeholder-parts API, or polymorphic `as` prop. `DateField.onChange` is
+the only date request authority. Input retains native edit, clipboard,
+composition, selection, focus, and keyboard handlers so applications can
+observe text without creating another store.
 
 `ISODate` is Calendar's Gregorian domain: canonical zero-padded
 `YYYY-MM-DD` in years 0001–9999. Runtime validation is the same gate as
 Calendar (`CA-ISO-01`). DateField never accepts or publishes JavaScript
 `Date`. Time, timezone, and instant semantics are outside its domain.
+
+---
 
 ## Defaults
 
@@ -139,76 +372,96 @@ Calendar (`CA-ISO-01`). DateField never accepts or publishes JavaScript
   `spellCheck={false}`, and managed `inputMode="text"`. Explicit native
   `autoComplete` / `autoCorrect` / `spellCheck` win. Birthday and booking
   forms pass `autoComplete="bday"` themselves.
+- `<DateField.Picker>` defaults to `placement="bottom-start"`.
+- `<DateField.Trigger>` defaults to `tabIndex={-1}` and `type="button"`.
+
+---
 
 ## Exact anatomy and managed authority
 
-`DateField` renders `div`. It requires exactly one `DateField.Input`.
-Other authored children are allowed, including labels, Popover, and
-Calendar. Only the named Input part registers for editing behaviour.
-DateField adds no visible wrapper around authored children.
+### The dual-host contract (explicit freeze)
 
-Visual `Field` may wrap `DateField.Input` for prefixes, suffixes, or a
-calendar `Popover.Trigger`. DateField still owns the dirty session; Field
-owns chrome. That bezel is the same recipe NumberField.Group consumes.
+Reference UI components generally maintain stable host element types. DateField
+defines an explicit, frozen dual-host exception to deliver a brutally simple
+default without trapping consumers when unfolding:
 
-`DateField.Input` renders the one visible and focusable
-`input[type=text]` with ordinary textbox semantics. It never receives
-`role=spinbutton`, `type=date`, or date `aria-value*`. React Aria and Zag
-DateField expose per-segment spinbuttons; that APG is leave. One textbox
-matches NumberField's VoiceOver contract and keeps DatePicker chrome in
-application JSX.
+1. **Childless `<DateField />` (folded)**:
+   Renders the visible `input[type=text]` directly. It has ordinary textbox
+   semantics (never `role=spinbutton`, `role=combobox`, or `type=date`).
+   Component ref, native input props (`placeholder`, `name`, `form`, `id`),
+   and StyleProps target this `HTMLInputElement` directly. If `name` is
+   supplied, it renders one managed sibling `input[type=hidden]` via Fragment.
+2. **Compound `<DateField>` (with children)**:
+   Renders the canonical `Field` bezel (`div[data-reference-field]`),
+   coordinating:
+   - `DateField.Input` (explicit or synthesized). Upgrades to `role="combobox"`
+     with `aria-haspopup="dialog"`, `aria-expanded={open}`,
+     `aria-controls={pickerId}`, and `aria-autocomplete="none"`. It serves as
+     the primary keyboard and pointer controller.
+   - `DateField.Trigger` (optional; when authored, renders an auxiliary
+     `button[type=button]` opener with default `tabIndex={-1}`).
+   - An anchored `Popover` layer containing `DateField.Picker` (wrapped
+     `Popover.Content` with `placement="bottom-start"` by default) and an
+     embedded `<Calendar>` (explicit child or synthesized day Calendar).
+   Component ref and container StyleProps target the wrapper `div[data-reference-field]`,
+   while input props pass to `DateField.Input` via the Part-Resolution Law.
 
-Input owns a stable ID unless an explicit `id` is supplied. DateField and
-Input are fixed-host generated primitives with their documented native
-props, complete StyleProps, and matching refs. Managed props listed above
-are absent from public part types and win against runtime spreads or casts.
+Selecting an enabled date on the Calendar commits the value and dismisses the
+popover. Typing in the field updates the shared value and grid without
+auto-dismissing.
 
-When `name` is supplied, DateField generates exactly one direct
-`input[type=hidden]` after its authored children. It has no public part or
-ref. It carries `name`, `form`, canonical ISO or `""` for `null`, and
-disabled state. No hidden `input[type=date]` exists; Aria's autofill host
-is contrast. Visible `autoComplete` remains the autofill seam.
+### 3. Range `<DateField.Range>`
+Renders the shared `Field` bezel containing:
+1. `DateField.Start` (explicit or synthesized). Combobox controller for the
+   start date endpoint.
+2. `DateField.End` (explicit or synthesized). Combobox controller for the
+   end date endpoint.
+3. `DateField.Trigger` (optional; auxiliary opener button with default `tabIndex={-1}`).
+4. `DateField.Picker` containing `<Calendar mode="range">`. Deliberate
+   activation of either endpoint sets `activeEndpoint` and opens the picker
+   anchored to that field.
+
+`<DateField.Range>` internally coordinates:
+- Independent draft editing for start and end text buffers.
+- `activeEndpoint` tracking (`start` vs `end`) with focused-field month
+  synchronization (`calendarMonth`).
+- Safe Calendar range mapping (`calendarValue` passes `null` when an end-only
+  draft is active).
+- `canApply` validity checking (chronological, in-bounds, contiguous
+  availability).
+- Apply / Cancel / Escape transactions on popup close and commit.
+
+---
 
 ## Controlled value and dirty edit session
 
-`value: ISODate | null` is durable application state. Input owns a
-transient text buffer and a separate dirty-session flag. A user edit
-starts the dirty session even when the resulting string equals formatted
-controlled text. `data-editing` reflects that flag, not string inequality.
+`value: ISODate | null` is durable application state. Each text input owns a
+transient text buffer and a separate dirty-session flag. A user edit starts the
+dirty session even when the resulting string equals formatted controlled text.
+`data-editing` reflects that flag, not string inequality.
 
-Partial values such as `3/`, `31/0`, `2024-`, a temporarily empty
-segment, or a missing locale literal remain visible without publishing an
-invalid date. A complete valid edit requests `onChange` unless it repeats
-the latest live candidate. Empty input requests `null` once. Invalid or
-incomplete text emits no date request.
+Partial values such as `3/`, `31/0`, `2024-`, a temporarily empty segment, or
+a missing locale literal remain visible without publishing an invalid date. A
+complete valid edit requests `onChange`. Empty input requests `null`. Invalid
+or incomplete text emits no date request.
 
-An echo matching the latest requested ISO or null candidate is accepted
-without replacing the authored buffer or clearing `data-editing`.
-Out-of-order echoes and unrelated programmatic `value` changes replace
-text and selection from the latest controlled prop, end the dirty
-session, and clear any failed boundary. Calendar selection is this
-programmatic path: it reformats the input and does not go through the
-parser. Authoritative locale or constraint changes also clear a failed
-boundary after recomputing state. Programmatic changes emit no callback.
-
-Blur and Enter are commit boundaries. A complete candidate retries
-whenever it differs from the current controlled prop, even if it was
-already requested while typing. Empty commits `null`. Impossible,
-incomplete, out-of-range, unavailable, or otherwise rejected dates revert
-to the formatted controlled value without a date request and expose
-managed invalid state.
+Blur and Enter are commit boundaries. Complete candidates retry if different
+from current prop; incomplete or invalid entries revert to the formatted
+controlled value.
 
 Input consumer handlers run before matching edit, key, paste, and blur
-defaults. `preventDefault()` on the composed blur boundary cancels commit
-and leaves the dirty buffer intact while unfocused; refocusing resumes
-the same session. Noncancelable native `input` events are observations,
-not retroactive vetoes.
+defaults. `preventDefault()` on the composed blur boundary cancels commit and
+leaves the dirty buffer intact while unfocused; refocusing resumes the same
+session. Noncancelable native `input` events are observations, not retroactive
+vetoes.
 
-Starting composition suspends parsing, stepping, and commit. A
-programmatic `value` or `locale` change during composition invalidates
-that session, replaces text from latest controlled state, and ignores
-stale `compositionend` fallout. Synthetic DOM composition is automated;
-real OS IME is a manual release gate.
+Starting composition suspends parsing, stepping, and commit. A programmatic
+`value` or `locale` change during composition invalidates that session,
+replaces text from latest controlled state, and ignores stale
+`compositionend` fallout. Synthetic DOM composition is automated; real OS IME
+is a manual release gate.
+
+---
 
 ## Parsing and formatting
 
@@ -243,6 +496,8 @@ the buffer until commit, then revert, and they never request `onChange`.
 A programmatic value outside min/max or marked unavailable still displays
 and exposes managed invalid; DateField does not rewrite parent state.
 
+---
+
 ## Caret-aware segment stepping
 
 Unprevented ArrowUp / ArrowDown increment or decrement the numeric
@@ -263,7 +518,7 @@ Stepping is a commit boundary: it requests only the final ISO date and
 ends the dirty session by formatting accepted or rejected controlled
 state. From `null` or incomplete text, ArrowUp/Down are no-ops — DateField
 does not invent `today` (that would be timezone-dependent and SSR-unsafe).
-Disabled and read-only Inputs do not step.
+Disabled and read-only DateFields do not step.
 
 Caret on a literal/separator uses the nearest preceding numeric segment,
 or the following one at the start of the field.
@@ -271,6 +526,8 @@ or the following one at the start of the field.
 This is why DateField is a component rather than application parse code:
 locale parts, caret mapping, and Gregorian carry are one invariant.
 Segment spinbuttons stay leave.
+
+---
 
 ## Validity, forms, submit, and reset
 
@@ -294,9 +551,11 @@ DateField observes each `requestSubmit()`, a failed blur/Enter boundary
 blocks until a documented resolution, and `HTMLFormElement.submit()` is
 outside the guarantee. Reset never changes the controlled ISO value.
 
+---
+
 ## Observable state and environments
 
-DateField and Input expose `data-disabled`, `data-readonly`,
+The visible DateField input exposes `data-disabled`, `data-readonly`,
 `data-required`, `data-invalid`, `data-empty`, and `data-editing` when
 true. `data-empty` follows visible text during a dirty session and
 controlled `null` otherwise. Managed invalid is the union of application
@@ -318,31 +577,34 @@ The dirty buffer is local interaction state, not a Zustand store.
 
 ## Problems we own
 
-### Localized partial editing without a second date value
+### Brutally simple defaults that unfold cleanly
 
-The dirty buffer is short-lived interaction state. Public Input events
-expose it; only `DateField.onChange` requests durable ISO state.
+The consumer should never have to reconstruct `Popover + Field + Trigger + Calendar`
+just to put a date picker on screen. Folded `<DateField><DateField.Picker /></DateField>`
+is the complete standard picker. Unfolding `<DateField.Input>`,
+`<DateField.Trigger>`, or `<DateField.Picker>` provides full control over
+every part without leaving the DateField system.
 
-### Locale order without guessing
+### Range without discriminated union pollution
 
-`01/02/2024` is not a universal date. Intl parts are the grammar. Dual
-acceptance of locale text and canonical ISO interchange is explicit, not
-heuristic.
-
-### Impossible dates without `Date` overflow
-
-April 31, 29 February on a non-leap year, and JS local-time rollover are
-the usual bugs. The Calendar ISO gate is the only calendar math.
+Range requires two inputs, `{ start, end }` value objects, draft transactions,
+and start/end form names. Placing range on `<DateField.Range>` isolates those
+types cleanly and keeps scalar `<DateField>` atomic and focused.
 
 ### Caret-aware Gregorian stepping
 
-Aria/Zag own this by focusing spinbutton segments. A single textbox still
-has to know which part the caret is in and how month/leap carry works.
+Single textboxes understand which segment the caret is in (day, month, year)
+and apply Gregorian leap/month carry without JS `Date` rollover bugs.
 
-### Calendar composition without a DatePicker runtime
+### APG Date Picker Combobox contract without runtime lock-in
 
-Selecting a day must reformat the field. Typing a day must update the
-grid. Neither owner may wrap the other.
+Slotted `<DateField.Picker>` upgrades the input to `role="combobox"` and handles
+dialog placement and dismissal, while `<Calendar>` retains its full 2D roving
+grid engine. Neither layer locks out the other.
+
+---
+
+## Ecosystem comparison
 
 **Vendor.** React Aria `DateField` / `DatePicker` / `HiddenDateInput`
 (`vendor/react-spectrum/packages/react-aria-components`). Stately
@@ -352,35 +614,32 @@ react-day-picker has no field.
 
 **Lift** locale `formatToParts` order, partial/incomplete segments,
 Gregorian constrain, hidden canonical serialization, form/required
-evidence, and DatePicker-as-composition. **Leave** `DateSegment`
-spinbuttons, `CalendarDate` objects, `granularity`, time fields,
-`createCalendar` non-Gregorian, placeholder-part chrome, `Date` parsing,
-I18nProvider locale default, and a packaged DatePicker.
+evidence, APG combobox contract, and DatePicker-as-fold. **Leave**
+`DateSegment` spinbuttons, `CalendarDate` objects, `granularity`, time
+fields, `createCalendar` non-Gregorian, placeholder-part chrome, `Date`
+parsing, I18nProvider locale default, and a packaged monolithic DatePicker.
 
 ---
 
 ## Deliberately left
 
-- Date ranges. DateRangePicker is two DateFields plus Calendar
-  `selection="range"`, or application state. Not this primitive.
+- Segment spinbuttons (`DateField.Segment`). DateField is one textbox per date.
+- `JavaScript Date` objects. Public state is Gregorian ISO strings.
 - Time, timezone, granularity, and `input[type=datetime-local]`.
 - Non-Gregorian calendar systems.
 - Natural-language parsing ("next Tuesday").
-- Two-digit year windows.
+- Two-digit year century windows (`24 → 2024`).
 - Clamping to min/max.
-- Segment spinbuttons, `DateField.Segment`, and Aria placeholder parts.
-- Popup and Calendar lifecycle.
-- Uncontrolled values, `JavaScript Date`, parser/formatter overrides.
-- A packaged `DatePicker` component.
+- Aria placeholder-part chrome.
+- Packaged visual dropdowns with fixed, un-unfoldable DOM.
 
-DatePicker remains a tested composition of DateField, Popover, and
-Calendar.
+---
 
 ## Convergence
 
-NumberField supplies the dirty-buffer / commit / form / composition
-contract. Calendar supplies the ISO/Gregorian gate and constrain math.
-React Aria DateField supplies locale-part and hidden-input evidence as
-contrast for segments. Zag date-input supplies incomplete-segment
-contrast. Reference UI converges on one controlled textbox, locale-ordered
-numeric grammar, caret-aware stepping, and ISO out.
+Reference UI converges on:
+1. `<DateField />` — one atomic textbox (childless).
+2. `<DateField><DateField.Picker /></DateField>` — standard date picker (compound).
+3. `<DateField.Range><DateField.Picker /></DateField.Range>` — standard range picker.
+4. Part-resolution law for deterministic prop merge across folded and unfolded parts.
+5. Slotted `<Calendar>` progressive disclosure with managed invariants and full grid customization.

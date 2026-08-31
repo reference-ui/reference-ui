@@ -5,7 +5,7 @@ Proof: [TESTS.md](./TESTS.md).
 The visual bezel around a form control. Field owns chrome: background,
 radius, spacing, prefix/suffix layout, and the visible focus ring.
 The enclosed control owns semantics: label, `aria-invalid`, descriptions,
-disabled, and read-only.
+disabled, and read-only. Label sits above Field, never inside it.
 
 Field is a wrapping `div` because wrapping inputs in a box is an
 unavoidable layout tradition. It is not a form provider, not a label, and
@@ -34,35 +34,53 @@ Field then reacts to state that already exists on the control.
 {invalid ? <P id="amount-error">Enter an amount.</P> : null}
 ```
 
-DateField uses the same bezel around `DateField.Input` and a calendar trigger.
-`Popover.Trigger` is a named Button inside Field; `Popover.Content` portals
-and is not bezel content.
+DateField uses the same bezel around the input and a calendar trigger.
+Compound `<DateField><DateField.Picker /></DateField>` consumes the `Field`
+surface bezel recipe internally (`div[data-reference-field]`), or `Field` can
+wrap childless `<DateField>` and custom opener buttons explicitly:
 
 ```tsx
-<DateField value={date} onChange={setDate} locale="en-GB">
-  <Label htmlFor="start-input">Start date</Label>
-  <Popover
-    open={open}
-    onOpen={() => setOpen(true)}
-    onDismiss={() => setOpen(false)}
-  >
-    <Field>
-      <DateField.Input id="start-input" />
-      <Popover.Trigger aria-label="Open calendar">
-        Open
-      </Popover.Trigger>
-    </Field>
-    <Popover.Content>
-      <Calendar
-        month={month}
-        onMonthChange={setMonth}
-        value={date}
-        onChange={setDate}
-        locale="en-GB"
-      />
-    </Popover.Content>
-  </Popover>
+<Label htmlFor="start-input">Start date</Label>
+<DateField
+  id="start-input"
+  value={date}
+  onChange={setDate}
+  locale="en-GB"
+>
+  <DateField.Input />
+  <DateField.Trigger aria-label="Open calendar">
+    <CalendarIcon />
+  </DateField.Trigger>
+  <DateField.Picker>
+    <Calendar />
+  </DateField.Picker>
 </DateField>
+```
+
+The trigger is a sibling button (`tabIndex={-1}` by default), not a wrapper
+around Field. Wrapping this bezel in a button would put an editable input inside
+another interactive control; a transparent trigger would instead put controller
+ARIA on Field's noninteractive `div`. Field remains chrome in both cases.
+
+DateField.Range coordinates one shared Field surface bezel around two inputs
+(`DateField.Start` and `DateField.End`). Invalid/focus on either paints the shared
+bezel.
+
+```tsx
+<DateField.Range
+  value={range}
+  onChange={setRange}
+  locale="en-GB"
+>
+  <DateField.Start aria-label="Start date" placeholder="Start" />
+  <DateField.End aria-label="End date" placeholder="End" />
+  <DateField.Trigger aria-label="Choose booking dates">
+    <CalendarIcon />
+  </DateField.Trigger>
+  <DateField.Picker>
+    <Calendar mode="range" />
+  </DateField.Picker>
+</DateField.Range>
 ```
 
 A Combobox token picker is the same bezel with more siblings. Combobox still
@@ -224,13 +242,14 @@ focus-visible ring; that keeps mouse-focus on Group identical to Field.
 
 Embedded mode targets descendant `input`, `textarea`, and `select` — the
 hosts of generated `Input` / `Textarea` / `Select` and of
-`NumberField.Input`, `DateField.Input`, and `Combobox.Input`. A sibling
+`NumberField.Input`, `DateField`, and `Combobox.Input`. A sibling
 `Button` is not a form control: it keeps its own chrome and focus ring.
 A disabled clear button or stepper must not make the bezel look disabled.
 
-Author Field around `Input` / `Textarea` / `Select`, or around
-`DateField.Input` / `Combobox.Input` as children of those widgets.
-`Combobox.Popover` is not a Field child. Do not wrap `NumberField.Group`
+Author Field around `Input` / `Textarea` / `Select`. DateInput and
+DateRange wrap DateField(s) plus the calendar trigger in Field;
+Combobox wraps Field around `Combobox.Input`. `Combobox.Popover` is not a
+Field child. Do not wrap `NumberField.Group`
 in Field and do not insert Field between Group and Input. Group already
 is the bezel.
 

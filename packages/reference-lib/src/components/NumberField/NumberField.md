@@ -12,9 +12,11 @@ drift-resistant step math, and exposes styleable increment/decrement buttons.
 mobile-keyboard, and spinner behavior vary by browser and cannot represent
 currency, percent, unit, or many localized strings. `NumberField.Input`
 therefore renders `input[type=text]`; applications own labels, descriptions,
-error content, and stepper names through ordinary HTML and ARIA.
+error content, and stepper names through ordinary HTML and ARIA. Label sits
+above the field, never inside NumberField. Group is the chrome.
 
 ```tsx
+<Label htmlFor="quantity-input">Quantity</Label>
 <NumberField
   value={quantity}
   onChange={setQuantity}
@@ -24,7 +26,6 @@ error content, and stepper names through ordinary HTML and ARIA.
   step={1}
   name="quantity"
 >
-  <Label htmlFor="quantity-input">Quantity</Label>
   <NumberField.Group>
     <NumberField.Decrement aria-label="Decrease quantity">
       −
@@ -211,7 +212,9 @@ results before publishing DOM state or callbacks.
 one direct `NumberField.Input` and accepts at most one direct Increment and one
 direct Decrement in any authored order. Any other authored siblings or
 controls are allowed; only named NumberField parts register for behavior.
-NumberField adds no visible wrapper around authored children.
+NumberField adds no visible wrapper around authored children. Label is a
+sibling above NumberField, never a child. That is the same rule as
+DateField and Field.
 
 Group is a Field-surface host. It sets `data-reference-field` on that same
 `div[role="group"]` and consumes Field's canonical bezel recipe — not a

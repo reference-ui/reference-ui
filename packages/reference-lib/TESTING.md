@@ -41,10 +41,10 @@ importing `packages/reference-lib/src/...` does not prove the public API.
 
 ## Contract index
 
-The current design pass contains **1,510 tagged behavior cases** plus **84
-composition gates** across 24 top-level components: **1,594 stable case IDs**
+The current design pass contains **1,552 tagged behavior cases** plus **89
+composition gates** across 24 top-level components: **1,641 stable case IDs**
 in total. Four NumberField cases and two DateField cases are required manual
-release gates; the other 1,588 are automated contracts. Components may carry more than three
+release gates; the other 1,635 are automated contracts. Components may carry more than three
 composition gates when ownership boundaries require distinct proof:
 
 - **Foundation:** [ReferenceLibrary](./src/components/ReferenceLibrary/TESTS.md),
@@ -312,7 +312,8 @@ the public ref nor Reference UI styling surface.
 
 Use Vitest only where a real browser adds no information:
 
-- Slot merge and ref composition.
+- Slot registration store, scan, snapshot identity, and live getters.
+- Transparent-part merge and ref composition (`ReferenceSlotPartProps`).
 - Collection registration, typeahead buffer, and 2D navigation math.
 - Floating placement middleware.
 - Toast queue and remaining-time arithmetic.
@@ -522,14 +523,22 @@ decisions are:
 7. **Slider/Splitter:** non-conflicting geometry custom properties are public.
    Both distinguish per-step requests from one successful interaction-end
    callback. Slider preserves thumb identity and supports explicit minimum-step
-   distance. Splitter fixes percentage/CSS constraint units, normalization,
-   primary pane, keyboard increments, stable panel identity, and
-   collapse/restore.
-8. **Calendar:** visible month and locale are explicit, today has deterministic
+   distance. Splitter is a flex partition: Root owns `display: flex`,
+   `value` is percentages summing to 100, and while the pointer is down
+   CSS variables write without a React commit, layout read, or ARIA write
+   per move. Nested Splitters provide a second axis; grid is not a mode.
+8. **Calendar:** locale is explicit, visible month is optional (omitted
+   `month` is Calendar-owned and seeded from `value` / `today`; supplied
+   `month` stays independent of `value`), today has deterministic
    SSR behavior, locale week start is overridable, weekday label width is
-   explicit, unavailable ranges are contiguous-only, outside dates request
-   month changes, custom `Calendar.Day` content retains managed semantics, and
-   malformed ISO input fails safely.
+   explicit, unavailable ranges are contiguous-only, outside dates navigate
+   the pane, view is private interaction state, one discriminated `mode`
+   fixes the day/range/month/year value contract, omitted children are a
+   complete control with Month/Year drill-down, extra chrome receives
+   explicit application callbacks, custom
+   `Calendar.Day` content retains managed semantics, and malformed ISO
+   input fails safely. DateInput and DateRange are compositions;
+   Calendar itself exposes no product controller.
 9. **ReferenceLibrary/Tooltip:** skip-delay is document-scoped configuration
    with frozen timing; global Toast/announce operations route through an
    explicit target Document when more than one host is eligible. A disabled
@@ -556,11 +565,17 @@ decisions are:
     `NumberField.Group` consumes Field's bezel recipe on the same
     `div[role="group"]`. It deliberately leaves wheel stepping, multiple
     step scales, parser overrides, and automatic label translation out.
-15. **DateField:** one textbox owns a localized dirty date session, locale
+15. **DateField:** one recipe owns a localized dirty date session, locale
     `formatToParts` grammar, caret-aware day/month/year stepping, and
-    canonical ISO serialization. Calendar and Popover compose through the
-    shared ISO value. Segment spinbuttons, two-digit year windows, `Date`
-    objects, clamping, and a packaged DatePicker are out.
+    canonical ISO serialization. Childless `<DateField />` resolves directly
+    to `input[type=text]` (dual-host contract). `<DateField><DateField.Picker /></DateField>`
+    expresses the standard date picker (upgrades input to APG combobox, opens
+    on click or `Alt + ArrowDown`, synthesizes popup layer and day Calendar);
+    `<DateField.Range><DateField.Picker /></DateField.Range>` expresses the
+    range picker. Unfolded parts (`DateField.Input`, `DateField.Trigger`,
+    `DateField.Picker`, `DateField.Calendar`, `DateField.Start`, `DateField.End`)
+    follow the Part-Resolution Law. Segment spinbuttons, two-digit year windows,
+    `Date` objects, clamping, and packaged visual Date products are out.
 16. **Field:** a wrapping `div` owns bezel chrome. Nested `input` /
     `textarea` / `select` surrender standalone recipes through CSS.
     Invalid, disabled, read-only, and focus follow `:has()` against the
@@ -631,7 +646,7 @@ A primitive freezes only when:
 5. Its three compositions pass, including the special gates in
    `components.md` (virtualized Listbox/Combobox, non-Sunday and range Calendar,
    nested visible-only Tree, labelled/wrapping/in-overlay Switch,
-   labelled prefix Field, DateField Input inside Field,
+   labelled prefix Field, atomic DateField inside Field,
    NumberField.Group consuming the Field recipe, Combobox token picker
    inside Field).
 6. Relevant Chromium/Firefox/WebKit, RTL, SSR/hydration, Shadow DOM/multi-root,

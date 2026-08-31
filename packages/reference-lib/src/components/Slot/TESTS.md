@@ -4,289 +4,355 @@ Vitest: `matrix/lib/tests/unit/slot.test.ts`
 Browser smoke: `matrix/lib/tests/e2e/slot.spec.ts`
 Page: `/slot`
 
-Slot is the prop/ref merge kernel. Unit tests own the complete matrix; the
-browser smoke proves the resulting native event and ref behavior.
+Slot is the named-region registry: `SlotRoot` plus
+`createSlotRootContext`. Unit tests own the store and hook matrix. The
+browser smoke proves a compound host renders live part elements in named
+regions.
 
 ## Source evidence
 
-- `vendor/radix-primitives/packages/react/slot/src/slot.test.tsx` — prop/ref
-  merging, child-first events, ARIA-token normalization, empty/error cases,
-  lazy children, nested Slottable, and stable composed-ref regressions.
-- `vendor/react-spectrum/packages/react-aria/test/utils/mergeProps.test.jsx` —
-  callbacks, classes, IDs, and ARIA references.
-- `vendor/react-spectrum/packages/react-aria/test/utils/mergeRefs.test.tsx` —
-  object/callback refs and React 19 ref cleanup.
+Lift cases from `vendor/design-system/page-layout/slots`, not the
+implementation:
 
-Radix runs the Slot handler even after the child prevents default. Reference UI
-does not: `defaultPrevented` is the explicit cancellation channel.
+- `slots/core/core.test.ts` — register, overwrite by registration id,
+  duplicate slot ids, unregister, `scanById` first match, `scanAll`,
+  `getAll` cache identity, metadata, subscribe / unsubscribe.
+- `slots/core/react.test.tsx` — `createSlotRootContext` Provider, custom
+  root, isolated default roots, `useRoot` throw, mount/unmount
+  registration, metadata, `useScanById` / `useGetAll` updates.
+- `slots/hooks/useSlotRegistration.ts` — live getters, `deps`, split
+  register / unregister effects. No equivalent unit file; behaviour is
+  proven here as kernel cases.
+- `tests/slot-live-content.test.tsx` — in-place content refresh without a
+  remount key. Port the assertion, not the PageLayout fixture.
+- `tests/region-visibility.test.tsx` — `hidden` vs `visible={false}`,
+  hidden wins, in-place register on toggle (no `unregister`).
+
+Contrast only:
+
+- `vendor/radix-primitives/packages/react/slot` — `asChild` merge. Not this
+  primitive.
+- PageLayout `getRegisteredSlots`, sidebar pipelines, and product part
+  wrappers — consume `scanById` / `scanAll`; they are not Slot API.
 
 ## Required cases
 
-### Public type and anatomy
+### Public type and factory
 
 - [ ] `SL-TYPE-01` `[reference]` `[unit]` —
-  **Slot should expose strict child typing when its public props extend `ReferenceSlotPartProps`.**
-  Compile Slot with representative base and responsive StyleProps, native
-  attributes, handlers, and exactly one React element, `null`, `false`, or an
-  omitted child. Assert that text, numbers, and child arrays fail type checking
-  despite the open merge-prop index signature, while Fragment rejection
-  remains the runtime anatomy assertion in `SL-CHILD-04` rather than a
-  duplicate universal PART case.
+  **Slot should type the root generic, registration options, and hook
+  results when `createSlotRootContext` is instantiated.**
+  Compile `createSlotRootContext<{ icon: string; open?: boolean }>()` and
+  pass `useSlotRegistration` an element, that meta, and a `SlotVisibility`
+  object. Assert `useScanById` is `SlotRegistration<{ icon: string;
+  open?: boolean }> | undefined`, `useGetAll` is an array of that
+  registration, `resolveSlotVisibility` accepts omitted/`undefined`
+  visibility, and that a mismatched meta object and a non-element
+  `element` fail type checking.
 
-### Transparent child and ordinary props
+### SlotRoot registration
 
-- [ ] `SL-DOM-01` `[reference]` `[unit]` —
-  **Slot should preserve the authored native element when it receives one native child.**
-  Render Slot around a marked `<button>` and retain the child node returned by
-  the renderer. Assert that the result is that same button with the same tag
-  and that no Slot wrapper or additional DOM node exists.
-- [ ] `SL-PROP-01` `[vendor]` `[unit]` —
-  **Slot should forward its ordinary attributes when the child does not define them.**
-  Render a button with Slot-only `name`, `data-owner`, and `aria-label`
-  values. Assert that each exact value appears on the button and that Slot
-  adds no other host element to receive them.
-- [ ] `SL-PROP-02` `[vendor]` `[unit]` —
-  **Slot should preserve child precedence when Slot and its child define the same ordinary prop.**
-  Give Slot and its button different `id`, `title`, `tabIndex`, `disabled`,
-  and non-composite ARIA values. Assert that every rendered value is the
-  child's value while no conflicting Slot value leaks into the DOM.
-- [ ] `SL-PROP-03` `[convergence]` `[unit]` —
-  **Slot should respect an explicit child `undefined` when Slot supplies a value for the same prop.**
-  Set a Slot prop such as `title="slot"` and include `title={undefined}` on
-  the child. Assert that the rendered child has no `title` rather than
-  restoring the Slot value, because key ownership must not depend on
-  truthiness.
-- [ ] `SL-PROP-04` `[vendor]` `[unit]` —
-  **Slot should retain all disjoint props when Slot and its child contribute different keys.**
-  Put `data-slot="yes"` and `aria-describedby="help"` on Slot, and `name` and
-  `title` on the child. Assert that all four values coexist unchanged on the
-  one rendered child.
-- [ ] `SL-PROP-05` `[reference]` `[unit]` —
-  **Slot should expose only current props when Slot or child values change across rerenders.**
-  Render distinct Slot-only and child-only attributes, then remove some keys
-  and replace the others with concrete new values. Assert that removed DOM
-  attributes disappear and every surviving attribute reflects the latest
-  render with no stale value.
-- [ ] `SL-PROP-06` `[reference]` `[unit]` —
-  **Slot should reach the eventual native node when its only child is a ref-forwarding custom component.**
-  Render Slot around a custom component that forwards received props and its
-  ref to an `<a>`, without an `as` prop or wrapper contract. Assert that the
-  merged attributes are present on that link and no intermediate authored or
-  Slot host is introduced.
+- [ ] `SL-REG-01` `[vendor]` `[unit]` —
+  **SlotRoot should register a slot.**
+  Call `register` with one registration id, slot id `"test-slot"`, and a
+  marked element. Assert `getAll()` has length 1 with that slot id and
+  element, and `getVersion()` is greater than the empty-root version.
+- [ ] `SL-REG-02` `[vendor]` `[unit]` —
+  **SlotRoot should register multiple slots.**
+  Register two different registration ids. Assert `getAll()` has length 2
+  in registration order and version advanced for each register.
+- [ ] `SL-REG-03` `[vendor]` `[unit]` —
+  **SlotRoot should overwrite a slot with the same registration id.**
+  Register id `r1` with element `"First"`, then register `r1` again with
+  `"Second"`. Assert `getAll()` still has length 1 and the element is
+  `"Second"`.
+- [ ] `SL-REG-04` `[vendor]` `[unit]` —
+  **SlotRoot should allow the same slot id with different registration
+  ids.**
+  Register `r1` and `r2` both with `slotId: "duplicate"`. Assert
+  `getAll()` has length 2.
 
-### Classes and styles
+### Unregistration
 
-- [ ] `SL-CLASS-01` `[vendor]` `[unit]` —
-  **Slot should combine both class names when Slot and its child each provide one.**
-  Render `className="slot"` on Slot and `className="child"` on the button.
-  Assert that the button's exact class string is `slot child`, with each token
-  present once and in Slot-then-child order.
-- [ ] `SL-CLASS-02` `[convergence]` `[unit]` —
-  **Slot should emit only meaningful class tokens when either class name is missing or empty.**
-  Parameterize Slot and child class names across `undefined`, `null`, `""`,
-  and one conditional token. Assert that the resulting class is absent or
-  contains only the real token, never literal `undefined`/`null`, blank
-  tokens, or extra whitespace.
-- [ ] `SL-STYLE-01` `[vendor]` `[unit]` —
-  **Slot should preserve both style objects when their declarations are disjoint.**
-  Give Slot `{ color: "red" }` and the child `{ marginTop: 4 }`. Assert on the
-  child's inline style or computed declarations that both values survive and
-  no wrapper receives either style.
-- [ ] `SL-STYLE-02` `[vendor]` `[unit]` —
-  **Slot should let the child override only conflicting style properties when both sides provide styles.**
-  Give Slot `color: red` and `padding: 4px`, then give the child `color: blue`
-  and `margin: 2px`. Assert that the child renders blue while retaining the
-  Slot-only padding and child-only margin.
-- [ ] `SL-STYLE-03` `[reference]` `[unit]` —
-  **Slot should remove stale inline declarations when merged styles change on rerender.**
-  Initially render Slot and child styles, then remove one declaration from
-  each side and change a remaining value. Assert that the removed
-  declarations are absent and the changed declaration has only its current
-  value on the same child node.
+- [ ] `SL-UNREG-01` `[vendor]` `[unit]` —
+  **SlotRoot should unregister a slot.**
+  Register then unregister that id. Assert `getAll()` is empty and version
+  advanced.
+- [ ] `SL-UNREG-02` `[vendor]` `[unit]` —
+  **SlotRoot should handle unregistering a non-existent slot.**
+  Call `unregister` with an id that was never registered. Assert no throw.
+- [ ] `SL-UNREG-03` `[reference]` `[unit]` —
+  **SlotRoot should leave version and subscribers unchanged when
+  unregistering a missing id.**
+  On an empty root and on a root that has other entries, unregister a
+  missing id. Assert existing entries unchanged, `getVersion()` unchanged,
+  and subscribers not notified. (Vendor always increments; we do not.)
+- [ ] `SL-UNREG-04` `[vendor]` `[unit]` —
+  **SlotRoot should only unregister the specific registration id.**
+  Register `r1`/`"slot-1"` and `r2`/`"slot-2"`, then unregister `r1`.
+  Assert `getAll()` has length 1 and the survivor is `"slot-2"`.
 
-### Event composition and cancellation
+### Scan by id
 
-- [ ] `SL-EVENT-01` `[vendor]` `[unit]` —
-  **Slot should run the child handler before its own handler when both handle the same event.**
-  Attach logging click handlers to Slot and its button, dispatch one click,
-  and retain each received event object. Assert the exact log
-  `["child", "slot"]`, one call per handler, and strict identity of the event
-  passed to both.
-- [ ] `SL-EVENT-02` `[reference]` `[unit]` —
-  **Slot should skip its handler when the child prevents the shared event's default.**
-  Have the child click handler log and call `preventDefault()` while Slot also
-  has a click handler. Dispatch one cancelable click and assert that only the
-  child log appears, `defaultPrevented` is true, and the Slot handler has no
-  call.
-- [ ] `SL-EVENT-03` `[reference]` `[unit]` —
-  **Slot should still run its handler when the child only stops propagation.**
-  Have the child click handler call `stopPropagation()` without preventing
-  default, and log both child and Slot handlers. Assert child-then-Slot order
-  on the slotted node while an ancestor listener receives nothing, proving
-  Slot cancellation depends only on `defaultPrevented`.
-- [ ] `SL-EVENT-04` `[vendor]` `[unit]` —
-  **Slot should invoke every defined handler once when only one side supplies the event callback.**
-  Parameterize only-child, only-Slot, child-with-Slot-`undefined`, and
-  Slot-with-child-`undefined` click handlers. Dispatch one click per fixture
-  and assert that the sole defined callback runs exactly once with no call or
-  exception for the undefined side.
-- [ ] `SL-EVENT-05` `[reference]` `[unit]` —
-  **Slot should apply the same composition rules when different React event props are merged.**
-  Parameterize click, keydown, pointerdown, focus, blur, input, and change,
-  including each capture form, with handlers on Slot and child. Dispatch the
-  matching event and assert one child-then-Slot sequence with the same event,
-  plus Slot suppression whenever the child prevents default.
-- [ ] `SL-EVENT-06` `[reference]` `[unit]` —
-  **Slot should call the latest closures when event handlers change across rerenders.**
-  Render child and Slot handlers that capture `"old"`, rerender the same node
-  with handlers capturing `"new"`, and dispatch one click. Assert that only
-  the new child-then-Slot log appears and neither stale callback runs.
-- [ ] `SL-EVENT-07` `[reference]` `[browser]` —
-  **Slot should produce one composed activation sequence when a real button is clicked or keyboard-activated.**
-  On a native button, record child and Slot click handlers for a pointer click,
-  Enter, and Space using real browser input. Assert exactly one
-  child-then-Slot sequence per native activation and no synthetic duplicate
-  sequence.
+- [ ] `SL-SCAN-01` `[vendor]` `[unit]` —
+  **SlotRoot should find a slot by exact id.**
+  Register `"target-slot"` and assert `scanById("target-slot")` returns
+  that slot id and the same element.
+- [ ] `SL-SCAN-02` `[vendor]` `[unit]` —
+  **SlotRoot should return undefined for a non-existent id.**
+  Assert `scanById("non-existent")` is `undefined` on empty and on a root
+  that has other ids.
+- [ ] `SL-SCAN-03` `[vendor]` `[unit]` —
+  **SlotRoot should return the first match when multiple slots have the
+  same id.**
+  Register `r1` then `r2` both as `"duplicate"` with elements `"First"`
+  then `"Second"`. Assert `scanById("duplicate")` is `"First"`.
+- [ ] `SL-SCAN-04` `[reference]` `[unit]` —
+  **SlotRoot should not treat a prefixed sibling as an exact id match.**
+  Register `"title"`, `"title.extra"`, and `"body"`. Assert
+  `scanById("title")` returns only the exact `"title"` registration.
 
-### Composite ARIA ID references
+### Scan all
 
-- [ ] `SL-ARIA-01` `[vendor]` `[unit]` —
-  **Slot should normalize and deduplicate `aria-describedby` when Slot and child reference overlapping IDs.**
-  Give the child `"child shared\tchild"` and Slot
-  `" shared  slot "` as `aria-describedby` values. Assert the exact rendered
-  token list `child shared slot`, preserving child-first order with one space
-  and one occurrence per ID.
-- [ ] `SL-ARIA-02` `[reference]` `[unit]` —
-  **Slot should compose every documented multi-ID ARIA reference when both sides provide tokens.**
-  Repeat the overlapping child/Slot fixture for `aria-labelledby`,
-  `aria-controls`, and `aria-owns`. Assert that each attribute is normalized
-  to child-first unique ID tokens using the same ordering rule as
-  `aria-describedby`.
-- [ ] `SL-ARIA-03` `[reference]` `[unit]` —
-  **Slot should omit empty ARIA references when one or both sides provide no valid ID token.**
-  Parameterize each composite ARIA attribute with only-child, only-Slot,
-  whitespace-only, and empty-string values. Assert that valid one-sided IDs
-  survive unchanged and an all-empty result removes the attribute instead of
-  emitting a blank token list.
-- [ ] `SL-ARIA-04` `[reference]` `[unit]` —
-  **Slot should update composite ARIA references when an ID changes or disappears on rerender.**
-  Render overlapping child and Slot IDs, then rename one ID and remove
-  another without replacing the child. Assert that the merged attribute
-  contains only the current deduplicated tokens and no stale reference.
-- [ ] `SL-ARIA-05` `[vendor]` `[unit]` —
-  **Slot should preserve the child's ordinary `id` when both Slot and child define one.**
-  Render `id="slot-id"` on Slot and `id="child-id"` on the child. Assert that
-  the native node's exact ID is `child-id`, never a concatenated or duplicated
-  identifier.
+- [ ] `SL-SCANALL-01` `[vendor]` `[unit]` —
+  **SlotRoot should find all slots matching a predicate.**
+  Register `"actions.primary"`, `"actions.secondary"`, and `"title"`.
+  Assert `scanAll(s => s.slotId.startsWith("actions"))` returns only the
+  two action slots in registration order.
+- [ ] `SL-SCANALL-02` `[vendor]` `[unit]` —
+  **SlotRoot should return an empty array when no matches.**
+  Assert `scanAll` with a failing predicate on a populated root is `[]`,
+  not `undefined`.
+- [ ] `SL-SCANALL-03` `[vendor]` `[unit]` —
+  **SlotRoot should return all slots when the predicate is always true.**
+  Assert `scanAll(() => true)` has the same order and length as `getAll()`
+  on a three-slot root, without sharing array identity with `getAll()`.
 
-### Ref composition
+### Get all and snapshot identity
 
-- [ ] `SL-REF-01` `[vendor]` `[react:all]` —
-  **Slot should attach both object refs to the same native child when Slot and child each provide one.**
-  Give Slot and its button separate `createRef` objects and mount once. Assert
-  that both `.current` values are strictly the rendered button and neither
-  points to an intermediate node.
-- [ ] `SL-REF-02` `[vendor]` `[react:all]` —
-  **Slot should attach mixed callback and object refs once when the slotted child mounts.**
-  Test object-plus-callback and callback-plus-callback combinations while
-  logging callback order. Assert one attachment per supplied ref, the same
-  native child argument for all refs, and deterministic Slot-then-child
-  attachment order.
-- [ ] `SL-REF-03` `[vendor]` `[react:all]` —
-  **Slot should keep its composed ref callback stable when ref inputs do not change across rerenders.**
-  Have a forwarding child record every received ref identity, then rerender
-  Slot multiple times with the same refs and child key. Assert one unique
-  composed callback identity, one mounted node, and no detach/reattach calls.
-- [ ] `SL-REF-04` `[vendor]` `[react:all]` —
-  **Slot should settle without a ref loop when a callback ref schedules a render during attachment.**
-  Pass Slot a stable callback ref that updates state whenever it receives the
-  non-null button. Assert that rendering completes below a finite render-count
-  guard, the button remains mounted once, and the callback is not repeatedly
-  detached and attached.
-- [ ] `SL-REF-05` `[vendor]` `[react:all]` —
-  **Slot should clean up both refs when its native child is replaced or unmounted.**
-  Attach Slot and child callback refs, replace the keyed button with a link,
-  then remove it. Assert each old ref receives its React-version-appropriate
-  cleanup callback or `null` exactly once, each current ref attaches to the
-  replacement once, and both end detached.
-- [ ] `SL-REF-06` `[reference]` `[react:all]` —
-  **Slot should transfer one changed ref without disturbing the unchanged ref when refs update.**
-  Mount with a stable child ref and Slot ref A, then rerender the same native
-  node with Slot ref B. Assert A cleans up, B receives the existing node, and
-  the child ref neither detaches nor changes its node.
-- [ ] `SL-REF-07` `[reference]` `[react:all]` —
-  **Slot should resolve every composed ref to the deepest native node when Slots are nested.**
-  Nest two Slot layers around one button with a ref at every level, then
-  unmount the tree. Assert that all refs receive the exact same button and
-  each performs one React-version-appropriate cleanup with no wrapper node.
+- [ ] `SL-ALL-01` `[vendor]` `[unit]` —
+  **SlotRoot should return an empty array for a new root.**
+  Assert `getAll()` is `[]`.
+- [ ] `SL-ALL-02` `[vendor]` `[unit]` —
+  **SlotRoot should return all registered slots.**
+  Register two slots and assert `getAll()` contains both in register
+  order.
+- [ ] `SL-ALL-03` `[vendor]` `[unit]` —
+  **SlotRoot should return the cached array when slots are unchanged.**
+  Call `getAll()` twice with no register/unregister between. Assert
+  strict array identity (`===`).
+- [ ] `SL-ALL-04` `[vendor]` `[unit]` —
+  **SlotRoot should return a new array after slots change.**
+  Call `getAll()`, register another id, call `getAll()` again. Assert the
+  second array is not the first and has length 2.
 
-### Child invariants and nesting
+### Metadata
 
-- [ ] `SL-CHILD-01` `[vendor]` `[unit]` —
-  **Slot should render nothing without error when its child is empty or falsy.**
-  Parameterize no child, `null`, `undefined`, and `false` while Slot carries a
-  marker prop. Assert an empty container, no leaked host for the marker, and
-  no thrown error or console error.
-- [ ] `SL-CHILD-02` `[vendor]` `[unit]` —
-  **Slot should reject non-element content when its only active child is text or a number.**
-  Render Slot separately with `"hello"` and `0`. Assert that each render
-  throws the documented descriptive single-element error and leaves no
-  partially rendered text or host node.
-- [ ] `SL-CHILD-03` `[vendor]` `[unit]` —
-  **Slot should reject multiple element children when more than one slot target is active.**
-  Render two marked buttons as direct Slot children and capture the failure.
-  Assert the same documented single-element error used for invalid scalar
-  content and verify that neither button is partially committed.
-- [ ] `SL-CHILD-04` `[reference]` `[unit]` —
-  **Slot should fail loudly when a Fragment cannot accept the props that must be merged.**
-  Give Slot a class, handler, and ref around a nonempty Fragment target.
-  Assert a descriptive anatomy error, no silently unstyled fragment children,
-  no handler attachment, and no ref attachment.
-- [ ] `SL-CHILD-05` `[reference]` `[unit]` —
-  **Slot should recursively merge every layer when nested Slots share one deepest child.**
-  Nest outer and inner Slot props around one button with conflicting ordinary
-  props, classes, styles, handlers, and refs, then activate it once. Assert
-  deepest-child ordinary precedence, accumulated classes/styles, all refs on
-  the button, and handler order from deepest to outer stopping at the first
-  `preventDefault()`.
-- [ ] `SL-CHILD-06` `[vendor]` `[react:all]` —
-  **Slot should attach merged props and refs when a lazy forwarding child resolves under Suspense.**
-  Render a lazy button in Slot with a marked fallback, Slot props, a handler,
-  and a ref; resolve the lazy module and activate the button. Assert that the
-  fallback never receives the merged props/ref, while the resolved button
-  receives them once and runs the handler once.
-- [ ] `SL-CHILD-07` `[reference]` `[unit]` —
-  **Slot should attach current props and refs when its child changes between empty and one element.**
-  Rerender one Slot from `null` to a button, update its props, return to empty,
-  and mount the button again. Assert current attributes on each mount,
-  correct attach/cleanup calls, and no stale cloned node or previous value.
+- [ ] `SL-META-01` `[vendor]` `[unit]` —
+  **SlotRoot should store and retrieve metadata.**
+  Register with `{ priority: 1, label: "Test Item" }` on a typed root.
+  Assert `scanById` returns that meta.
+- [ ] `SL-META-02` `[vendor]` `[unit]` —
+  **SlotRoot should allow undefined metadata.**
+  Register with omitted `meta`. Assert `scanById` yields `undefined` meta
+  and does not throw.
+- [ ] `SL-META-03` `[vendor]` `[unit]` —
+  **SlotRoot should filter slots by metadata.**
+  Register `{ priority: 1 }` and `{ priority: 10 }`. Assert
+  `scanAll(s => (s.meta?.priority ?? 0) >= 5)` returns only the high
+  entry.
+
+### Subscriptions and version
+
+- [ ] `SL-SUB-01` `[vendor]` `[unit]` —
+  **SlotRoot should notify subscribers on register.**
+  Subscribe, then register. Assert the listener ran once and
+  `getVersion()` increased.
+- [ ] `SL-SUB-02` `[vendor]` `[unit]` —
+  **SlotRoot should notify subscribers on unregister.**
+  Subscribe on a populated root, unregister that id. Assert one
+  notification and a version bump.
+- [ ] `SL-SUB-03` `[vendor]` `[unit]` —
+  **SlotRoot should notify multiple subscribers.**
+  Attach two listeners, register once, and assert both ran once.
+- [ ] `SL-SUB-04` `[vendor]` `[unit]` —
+  **SlotRoot should return an unsubscribe function.**
+  Subscribe, register (one call), unsubscribe, register again. Assert the
+  retired listener stays at one call.
+- [ ] `SL-SUB-05` `[vendor]` `[unit]` —
+  **SlotRoot should handle an unsubscribe function called multiple
+  times.**
+  Call the same unsubscribe twice. Assert no throw.
+- [ ] `SL-SUB-06` `[reference]` `[unit]` —
+  **SlotRoot should keep notifying remaining subscribers when one
+  listener throws.**
+  Subscribe a throwing listener then a recording listener, register once.
+  Assert the recording listener ran and the throw did not swallow the
+  update.
+- [ ] `SL-VER-01` `[reference]` `[unit]` —
+  **SlotRoot should not bump version when only live element or meta
+  content changes.**
+  Hold a registered object whose `element` / `meta` getters later return
+  new values without a structural `register`. Assert `getVersion()` is
+  unchanged, `getAll()` array identity is unchanged, and subscribers are
+  not notified, while subsequent reads return the new element and meta.
+
+### Visibility helpers
+
+- [ ] `SL-VIS-01` `[vendor]` `[unit]` —
+  **`resolveSlotVisibility` should collapse flags into visible, hidden,
+  or unmounted.**
+  Parameterize omitted flags, `{ visible: true }`, `{ visible: false }`,
+  `{ hidden: true }`, `{ hidden: false, visible: false }`, and
+  `{ hidden: true, visible: false }`. Assert `"visible"`, `"unmounted"`,
+  and `"hidden"` respectively, with `hidden: true` winning when both
+  would hide.
+- [ ] `SL-VIS-02` `[reference]` `[unit]` —
+  **SlotRoot should store visibility without dropping the registration.**
+  Register with `{ visible: false }` and with `{ hidden: true }`. Assert
+  `scanById` still returns each slot and its flags, and that
+  `resolveSlotVisibility` on those flags matches `SL-VIS-01`.
+
+### Cache key and transform helpers
+
+- [ ] `SL-HELP-01` `[vendor]` `[unit]` —
+  **`createSlotCacheKey` should join sorted slot ids.**
+  Pass two registrations in reverse id order. Assert the key is the
+  sorted `slotId` list joined by `","` and is equal for the same set in
+  either order.
+- [ ] `SL-HELP-02` `[vendor]` `[unit]` —
+  **`transformSlotElements` should clone each element with host-supplied
+  props.**
+  Pass a `createProps` that adds a marked data attribute from `slotId`.
+  Assert each result is a clone of the original type, carries those
+  props, and that `getAll()` itself is not cloned.
+
+### Provider and useRoot
+
+- [ ] `SL-PROV-01` `[vendor]` `[unit]` —
+  **`createSlotRootContext` should create a provider that wraps
+  children.**
+  Render the returned `Provider` around a `useRoot` consumer. Assert the
+  result is a `SlotRoot` and the provider adds no extra DOM host of its
+  own.
+- [ ] `SL-PROV-02` `[vendor]` `[unit]` —
+  **Provider should accept a custom root instance.**
+  Construct a `SlotRoot`, pass it as `root`, and assert `useRoot()` is
+  strictly that instance.
+- [ ] `SL-PROV-03` `[vendor]` `[unit]` —
+  **Provider should create a new root if none is provided.**
+  Render two providers with no `root` prop. Assert each `useRoot()` is a
+  `SlotRoot` and the two instances are not the same.
+- [ ] `SL-USE-01` `[vendor]` `[unit]` —
+  **`useRoot` should throw when used outside of a provider.**
+  Render `useRoot` with no ancestor `Provider`. Assert a descriptive
+  error and no implicit global root.
+- [ ] `SL-USE-02` `[vendor]` `[unit]` —
+  **`useRoot` should return the root instance.**
+  Assert the instance exposes `getAll`, `scanById`, and `scanAll`.
+
+### useSlotRegistration
+
+- [ ] `SL-HOOK-01` `[vendor]` `[unit]` —
+  **`useSlotRegistration` should register the slot on mount.**
+  Mount a filler under `Provider` with slot id `"test"`. Assert
+  `getAll()` has length 1 and that slot id after mount.
+- [ ] `SL-HOOK-02` `[vendor]` `[unit]` —
+  **`useSlotRegistration` should unregister the slot on unmount.**
+  Mount then unmount the filler. Assert `getAll()` is empty.
+- [ ] `SL-HOOK-03` `[vendor]` `[unit]` —
+  **`useSlotRegistration` should handle metadata.**
+  Register with `{ priority: 5 }` on a typed context. Assert
+  `scanById("test")?.meta` equals that object.
+- [ ] `SL-HOOK-04` `[reference]` `[unit]` —
+  **`useSlotRegistration` should expose live element, meta, and
+  visibility without re-registering.**
+  Keep the filler mounted, rerender it with a new child element and new
+  meta while keeping the same slot id. Assert version and `getAll()`
+  array identity are unchanged, subscribers to the root are not notified,
+  and a sibling consumer that rerenders in the same parent turn reads the
+  new element and meta.
+- [ ] `SL-HOOK-05` `[reference]` `[unit]` —
+  **`useSlotRegistration` should re-register in place when `slotId` or
+  `deps` change.**
+  Parameterize a change to `slotId` and to a `deps` value that tracks
+  `visible` / `hidden`. Assert each change calls `register` for the same
+  registration id, notifies subscribers, bumps version, and does **not**
+  call `unregister`. Unrelated parent rerenders without those changes
+  must not re-register.
+- [ ] `SL-HOOK-06` `[reference]` `[react:all]` —
+  **`useSlotRegistration` should settle one registration under
+  StrictMode replay.**
+  Mount a filler under StrictMode, then unmount. Assert no leaked
+  registration after replay, one live entry while mounted, and a clean
+  empty root after final unmount.
+
+### useScanById and useGetAll
+
+- [ ] `SL-READ-01` `[vendor]` `[unit]` —
+  **`useScanById` should return a slot by id.**
+  Pre-register `"target"` on a custom root. Assert the hook returns that
+  slot.
+- [ ] `SL-READ-02` `[vendor]` `[unit]` —
+  **`useScanById` should return undefined for a non-existent id.**
+  Assert `undefined` on an empty root.
+- [ ] `SL-READ-03` `[vendor]` `[unit]` —
+  **`useScanById` should update when a slot is registered.**
+  Render the hook on an empty root, then `register` that id. Assert the
+  consumer rerenders from `undefined` to the registration.
+- [ ] `SL-READ-04` `[vendor]` `[unit]` —
+  **`useGetAll` should return all slots.**
+  Pre-register two ids. Assert the hook's array has length 2.
+- [ ] `SL-READ-05` `[vendor]` `[unit]` —
+  **`useGetAll` should return an empty array for an empty root.**
+  Assert `[]`, not `undefined`.
+- [ ] `SL-READ-06` `[vendor]` `[unit]` —
+  **`useGetAll` should update when slots change.**
+  Start empty, register one, unregister it. Assert length 0 → 1 → 0.
+- [ ] `SL-READ-07` `[reference]` `[unit]` —
+  **`useGetAll` should keep array identity while only live content
+  changes.**
+  After `SL-HOOK-04`, assert the hook did not emit a new array.
 
 ## Composition gates
 
 - [ ] `SL-COMP-01` `[reference]` `[browser]` —
-  **Slot should preserve native button behavior when an authoring component merges onto it.**
-  Compose Slot-owned classes, styles, ARIA references, a click handler, and a
-  ref onto a consumer button, then activate it with pointer and keyboard.
-  Assert one unwrapped button, the full merged surface, one shared native node
-  for refs, and child-then-Slot activation order.
-- [ ] `SL-COMP-02` `[reference]` `[browser]` —
-  **Slot should merge two nested authoring components onto one link when both are transparent.**
-  Wrap one consumer link in two Slot-based components with disjoint and
-  conflicting props, handlers, styles, classes, and refs. Assert one link in
-  the DOM with deepest-child precedence, accumulated composite values, every
-  ref on that link, and deepest-to-outer handlers until cancellation.
-- [ ] `SL-COMP-03` `[reference]` `[browser]` `[react:all]` —
-  **Slot should preserve cancellation and ref ownership when a Suspense child resolves lazily.**
-  Render a lazy forwarding child with a fallback beneath nested Slot behavior,
-  then resolve it and have its consumer handler call `preventDefault()`.
-  Assert that no merged surface touches the fallback, all refs attach to the
-  resolved child, and the prevented event skips every outer Slot default.
-
-`Tooltip.Trigger`, `RovingFocus.Item`, and `FocusLock` each get one integration
-smoke proving they use Slot. Any merge-matrix regression is fixed here first.
+  **A host should render registered parts in named regions when fillers
+  are siblings that commit first.**
+  Mount `{children}` then `MyComponentLayout` under one `Provider`. Have
+  `MyComponentTitle` and `MyComponentActions` call `useSlotRegistration`
+  for `"title"` and `"actions"`. Assert the title element appears in the
+  header region and the actions element in the footer, and the filling
+  parts host neither.
+- [ ] `SL-COMP-02` `[vendor]` `[browser]` —
+  **A host should refresh slotted content on an in-place rerender
+  without a remount key.**
+  Keep the same `MyComponentTitle` / body filler mounted, change
+  registered text from `"A"` to `"B"` without changing the part's React
+  key. Assert the regions show `"B"`, the old text is gone, and a
+  mount-counter inside the slotted body is still 1.
+- [ ] `SL-COMP-03` `[reference]` `[browser]` —
+  **A host should scan a prefix of slot ids when several entries share
+  a region kind.**
+  Register `"actions.primary"` and `"actions.secondary"` plus an unrelated
+  `"title"`. From the layout, `scanAll` with an `"actions"` prefix. Assert
+  only the action elements render in the actions region, in registration
+  order, using `createSlotCacheKey` only as a memo input — not as a React
+  child key that collapses duplicates.
+- [ ] `SL-COMP-04` `[vendor]` `[browser]` —
+  **A host should honor `resolveSlotVisibility` without unregistering.**
+  Toggle a filler from visible to `hidden: true` then `visible: false`.
+  Assert hidden keeps the region mounted with `display: none` and the
+  same DOM node, `register` ran and `unregister` did not, unmounted
+  removes the region from the tree while the filler remains registered,
+  and restoring `visible` shows current live content. Hidden wins when
+  both flags would hide.
 
 ## Out of scope
 
-- `as` or polymorphic Reference UI primitives.
-- A public Radix-style `Slottable` marker API.
-- Merging multiple rendered descendants or choosing a target by selector.
+- Radix `asChild` / prop-merge Slot and a public `Slottable`.
+- PageLayout `getRegisteredSlots`, sidebar pipelines, and product
+  `useTitleSlot` wrappers.
+- Portal relocation and Presence lifetime.
+- A document-global default root.
+- Putting `element` in Zustand state.
