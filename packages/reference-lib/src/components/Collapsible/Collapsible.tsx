@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { Button, Div, type PrimitiveProps } from '@reference-ui/react'
 import { Presence } from '../Presence'
 
 export interface CollapsibleProps {
@@ -67,13 +68,15 @@ export function Collapsible({
   )
 }
 
+export type CollapsibleTriggerProps = PrimitiveProps<'button'>
+
 export function CollapsibleTrigger({
   children,
   onClick,
   disabled: disabledProp,
   type = 'button',
   ...props
-}: React.ComponentPropsWithoutRef<'button'>) {
+}: CollapsibleTriggerProps) {
   const context = React.useContext(CollapsibleContext)
   const isDisabled = disabledProp ?? context?.disabled ?? false
   const isOpen = context?.isOpen ?? false
@@ -86,7 +89,7 @@ export function CollapsibleTrigger({
   }
 
   return (
-    <button
+    <Button
       type={type}
       aria-expanded={isOpen}
       aria-controls={isOpen ? context?.contentId : undefined}
@@ -97,15 +100,17 @@ export function CollapsibleTrigger({
       {...props}
     >
       {children}
-    </button>
+    </Button>
   )
 }
+
+export type CollapsibleContentProps = PrimitiveProps<'div'>
 
 export function CollapsibleContent({
   children,
   id: idProp,
   ...props
-}: React.ComponentPropsWithoutRef<'div'>) {
+}: CollapsibleContentProps) {
   const context = React.useContext(CollapsibleContext)
   const setContentId = context?.setContentId
 
@@ -122,14 +127,14 @@ export function CollapsibleContent({
 
   return (
     <Presence present={context.isOpen}>
-      <div
+      <Div
         id={contentId}
         data-state={context.isOpen ? 'open' : 'closed'}
         data-disabled={context.disabled ? '' : undefined}
         {...props}
       >
         {children}
-      </div>
+      </Div>
     </Presence>
   )
 }

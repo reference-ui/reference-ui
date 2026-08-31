@@ -1,9 +1,9 @@
 import * as React from 'react'
-import { Overlay } from '../Overlay'
+import { Input, Button, Span, Div, type PrimitiveProps, type PrimitiveElement } from '@reference-ui/react'
+import { Overlay, type OverlayContentProps } from '../Overlay'
 import { Calendar, type ISODate, type DateRangeValue } from '../Calendar'
 
-export interface DateFieldProps
-  extends Omit<React.ComponentPropsWithoutRef<'input'>, 'onChange' | 'value' | 'defaultValue'> {
+export type DateFieldProps = Omit<PrimitiveProps<'input'>, 'onChange' | 'value' | 'defaultValue'> & {
   value?: ISODate | null
   defaultValue?: ISODate | null
   onChange?: (value: ISODate | null) => void
@@ -25,18 +25,20 @@ interface DateFieldContextValue {
 
 const DateFieldContext = React.createContext<DateFieldContextValue | null>(null)
 
+export type DateFieldInputProps = PrimitiveProps<'input'>
+
 export function DateFieldInput({
   className,
   style,
   ...props
-}: React.ComponentPropsWithoutRef<'input'>) {
+}: DateFieldInputProps) {
   const context = React.useContext(DateFieldContext)
   if (!context) return null
 
   const { value, isOpen, setIsOpen, disabled, handleInputChange } = context
 
   return (
-    <input
+    <Input
       type="text"
       role="combobox"
       aria-expanded={isOpen}
@@ -47,53 +49,51 @@ export function DateFieldInput({
       onChange={handleInputChange}
       onClick={() => setIsOpen(true)}
       className={className}
-      style={{
-        padding: '6px 10px',
-        fontSize: 14,
-        borderRadius: 6,
-        border: '1px solid #ccc',
-        outline: 'none',
-        ...style,
-      }}
+      style={style}
       {...props}
     />
   )
 }
+
+export type DateFieldTriggerProps = React.ComponentPropsWithoutRef<typeof Overlay.Trigger>
 
 export function DateFieldTrigger({
   children = '📅',
   className,
   style,
   ...props
-}: React.ComponentPropsWithoutRef<'button'>) {
+}: DateFieldTriggerProps) {
   return (
     <Overlay.Trigger aria-haspopup="dialog" {...props}>
-      <span style={{ fontSize: 16 }}>{children}</span>
+      <Span fontSize="4r">{children}</Span>
     </Overlay.Trigger>
   )
 }
+
+export type DateFieldPickerProps = OverlayContentProps
 
 export function DateFieldPicker({
   children,
   className,
   style,
   ...props
-}: React.ComponentPropsWithoutRef<'div'>) {
+}: DateFieldPickerProps) {
   const context = React.useContext(DateFieldContext)
 
   return (
     <Overlay.Portal>
       <Overlay.Content
         role="dialog"
+        bg="ui.dialog.background"
+        color="ui.dialog.foreground"
+        borderRadius="md"
+        boxShadow="0 4px 16px rgba(0,0,0,0.15)"
+        border="1px solid"
+        borderColor="ui.dialog.border"
+        p="2r"
+        zIndex={50}
         className={className}
-        style={{
-          backgroundColor: '#fff',
-          borderRadius: 8,
-          boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
-          padding: 8,
-          zIndex: 50,
-          ...style,
-        }}
+        style={style}
         {...props}
       >
         {children ?? (
@@ -180,21 +180,14 @@ export const DateField = React.forwardRef<HTMLInputElement, DateFieldProps>(
 
     if (!children) {
       return (
-        <input
+        <Input
           ref={ref}
           type="text"
           disabled={disabled}
           value={value ?? ''}
           onChange={handleInputChange}
           className={className}
-          style={{
-            padding: '6px 10px',
-            fontSize: 14,
-            borderRadius: 6,
-            border: '1px solid #ccc',
-            outline: 'none',
-            ...style,
-          }}
+          style={style}
           {...props}
         />
       )
@@ -203,18 +196,16 @@ export const DateField = React.forwardRef<HTMLInputElement, DateFieldProps>(
     return (
       <DateFieldContext.Provider value={contextValue}>
         <Overlay open={isOpen} onOpenChange={setIsOpen} isolation={false}>
-          <div
+          <Div
             data-reference-field=""
+            display="inline-flex"
+            alignItems="center"
+            gap="1r"
             className={className}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 4,
-              ...style,
-            }}
+            style={style}
           >
             {children}
-          </div>
+          </Div>
         </Overlay>
       </DateFieldContext.Provider>
     )

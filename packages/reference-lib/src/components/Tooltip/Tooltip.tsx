@@ -1,5 +1,6 @@
 import * as React from 'react'
-import { Overlay, type OverlayPlacement } from '../Overlay'
+import { Div, type PrimitiveProps, type PrimitiveElement } from '@reference-ui/react'
+import { Overlay, type OverlayPlacement, type OverlayContentProps } from '../Overlay'
 import { Portal, type PortalProps } from '../Portal'
 import { tooltipWarmup } from '../ReferenceLibrary'
 
@@ -189,10 +190,7 @@ export function TooltipPortal({ children, container }: PortalProps) {
   return <Portal container={container}>{children}</Portal>
 }
 
-export interface TooltipContentProps extends React.ComponentPropsWithoutRef<'div'> {
-  placement?: OverlayPlacement
-  offset?: number
-}
+export type TooltipContentProps = OverlayContentProps
 
 export function TooltipContent({
   children,
@@ -212,6 +210,14 @@ export function TooltipContent({
       role="tooltip"
       placement={placement}
       offset={offset}
+      bg="design.primary.background"
+      color="design.primary.foreground"
+      fontSize="3r"
+      lineHeight="4r"
+      py="1r"
+      px="2.5r"
+      borderRadius="sm"
+      boxShadow="0 2px 8px rgba(0,0,0,0.2)"
       {...props}
     >
       {children}
@@ -219,7 +225,9 @@ export function TooltipContent({
   )
 }
 
-export function TooltipArrow(props: React.ComponentPropsWithoutRef<'div'>) {
+export type TooltipArrowProps = PrimitiveProps<'div'>
+
+export function TooltipArrow(props: TooltipArrowProps) {
   return <Overlay.Arrow {...props} data-reference-tooltip-arrow="" />
 }
 

@@ -1,8 +1,8 @@
 import * as React from 'react'
+import { Div, Button, type PrimitiveProps, type PrimitiveElement } from '@reference-ui/react'
 import { RovingFocus } from '../RovingFocus'
 
-export interface TreeProps
-  extends Omit<React.ComponentPropsWithoutRef<'div'>, 'onChange' | 'value' | 'defaultValue'> {
+export type TreeProps = Omit<PrimitiveProps<'div'>, 'onChange' | 'value' | 'defaultValue'> & {
   value?: string | null
   defaultValue?: string | null
   onChange?: (value: string | null) => void
@@ -24,7 +24,7 @@ interface TreeContextValue {
 
 const TreeContext = React.createContext<TreeContextValue | null>(null)
 
-export interface TreeItemProps extends React.ComponentPropsWithoutRef<'div'> {
+export type TreeItemProps = PrimitiveProps<'div'> & {
   id: string
   disabled?: boolean
   isBranch?: boolean
@@ -72,7 +72,7 @@ export function TreeItem({
 
   return (
     <RovingFocus.Item id={id} disabled={isDisabled}>
-      <div
+      <Div
         role="treeitem"
         id={id}
         tabIndex={isDisabled ? -1 : 0}
@@ -84,45 +84,47 @@ export function TreeItem({
         data-disabled={isDisabled ? '' : undefined}
         onClick={handleClick}
         onKeyDown={handleKeyDown}
+        display="flex"
+        flexDirection="column"
+        outline="none"
+        userSelect="none"
+        cursor={isDisabled ? 'not-allowed' : 'pointer'}
         className={className}
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          outline: 'none',
-          userSelect: 'none',
-          cursor: isDisabled ? 'not-allowed' : 'pointer',
-          ...style,
-        }}
+        style={style}
         {...props}
       >
         {children}
-      </div>
+      </Div>
     </RovingFocus.Item>
   )
 }
+
+export type TreeGroupProps = PrimitiveProps<'div'>
 
 export function TreeGroup({
   children,
   className,
   style,
   ...props
-}: React.ComponentPropsWithoutRef<'div'>) {
+}: TreeGroupProps) {
   return (
-    <div
+    <Div
       role="group"
+      pl="4r"
+      display="flex"
+      flexDirection="column"
+      gap="0.5r"
       className={className}
-      style={{
-        paddingLeft: 16,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 2,
-        ...style,
-      }}
+      style={style}
       {...props}
     >
       {children}
-    </div>
+    </Div>
   )
+}
+
+export type TreeExpanderProps = PrimitiveProps<'button'> & {
+  itemId: string
 }
 
 export function TreeExpander({
@@ -132,7 +134,7 @@ export function TreeExpander({
   style,
   onClick,
   ...props
-}: React.ComponentPropsWithoutRef<'button'> & { itemId: string }) {
+}: TreeExpanderProps) {
   const context = React.useContext(TreeContext)
   const isExpanded = context?.isItemExpanded(itemId)
 
@@ -145,24 +147,23 @@ export function TreeExpander({
   }
 
   return (
-    <button
+    <Button
       type="button"
       tabIndex={-1}
       aria-label={isExpanded ? 'Collapse' : 'Expand'}
       onClick={handleClick}
+      border="none"
+      bg="transparent"
+      cursor="pointer"
+      px="1r"
+      py="0"
+      fontSize="3r"
       className={className}
-      style={{
-        border: 'none',
-        backgroundColor: 'transparent',
-        cursor: 'pointer',
-        padding: '0 4px',
-        fontSize: 12,
-        ...style,
-      }}
+      style={style}
       {...props}
     >
       {children ?? (isExpanded ? '▼' : '▶')}
-    </button>
+    </Button>
   )
 }
 
@@ -240,26 +241,26 @@ export const Tree = React.forwardRef<HTMLDivElement, TreeProps>(
     return (
       <TreeContext.Provider value={contextValue}>
         <RovingFocus.Root orientation="vertical" loop>
-          <div
+          <Div
             ref={ref}
             role="tree"
             data-reference-tree=""
             data-disabled={disabled ? '' : undefined}
+            display="flex"
+            flexDirection="column"
+            gap="0.5r"
+            p="1r"
+            border="1px solid"
+            borderColor="ui.field.border"
+            borderRadius="md"
+            bg="ui.field.background"
+            outline="none"
             className={className}
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 2,
-              padding: 4,
-              border: '1px solid #e5e7eb',
-              borderRadius: 6,
-              outline: 'none',
-              ...style,
-            }}
+            style={style}
             {...props}
           >
             {children}
-          </div>
+          </Div>
         </RovingFocus.Root>
       </TreeContext.Provider>
     )

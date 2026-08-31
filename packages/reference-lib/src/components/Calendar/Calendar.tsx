@@ -1,4 +1,17 @@
 import * as React from 'react'
+import {
+  Div,
+  H2,
+  Button,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  type PrimitiveProps,
+  type PrimitiveElement,
+} from '@reference-ui/react'
 
 export type CalendarMode = 'day' | 'range' | 'month' | 'year'
 export type ISODate = string // YYYY-MM-DD
@@ -7,8 +20,7 @@ export interface DateRangeValue {
   end: ISODate | null
 }
 
-export interface CalendarProps
-  extends Omit<React.ComponentPropsWithoutRef<'div'>, 'onChange' | 'value' | 'defaultValue'> {
+export type CalendarProps = Omit<PrimitiveProps<'div'>, 'onChange' | 'value' | 'defaultValue'> & {
   mode?: CalendarMode
   value?: ISODate | DateRangeValue | null
   defaultValue?: ISODate | DateRangeValue | null
@@ -35,35 +47,37 @@ interface CalendarContextValue {
 
 const CalendarContext = React.createContext<CalendarContextValue | null>(null)
 
+export type CalendarHeaderProps = PrimitiveProps<'div'>
+
 export function CalendarHeader({
   children,
   className,
   style,
   ...props
-}: React.ComponentPropsWithoutRef<'div'>) {
+}: CalendarHeaderProps) {
   return (
-    <div
+    <Div
       data-reference-calendar-header=""
+      display="flex"
+      alignItems="center"
+      justifyContent="space-between"
+      mb="2r"
       className={className}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: 8,
-        ...style,
-      }}
+      style={style}
       {...props}
     >
       {children}
-    </div>
+    </Div>
   )
 }
+
+export type CalendarHeadingProps = PrimitiveProps<'h2'>
 
 export function CalendarHeading({
   className,
   style,
   ...props
-}: React.ComponentPropsWithoutRef<'h2'>) {
+}: CalendarHeadingProps) {
   const context = React.useContext(CalendarContext)
   if (!context) return null
 
@@ -76,21 +90,22 @@ export function CalendarHeading({
   })
 
   return (
-    <h2
+    <H2
       data-reference-calendar-heading=""
+      fontSize="4r"
+      fontWeight="600"
+      m="0"
+      color="design.text.base"
       className={className}
-      style={{
-        fontSize: 16,
-        fontWeight: 600,
-        margin: 0,
-        ...style,
-      }}
+      style={style}
       {...props}
     >
       {monthName}
-    </h2>
+    </H2>
   )
 }
+
+export type CalendarPrevButtonProps = PrimitiveProps<'button'>
 
 export function CalendarPrevButton({
   children = '‹',
@@ -98,7 +113,7 @@ export function CalendarPrevButton({
   style,
   onClick,
   ...props
-}: React.ComponentPropsWithoutRef<'button'>) {
+}: CalendarPrevButtonProps) {
   const context = React.useContext(CalendarContext)
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -109,26 +124,28 @@ export function CalendarPrevButton({
   }
 
   return (
-    <button
+    <Button
       type="button"
       aria-label="Previous month"
       disabled={context?.disabled}
       onClick={handleClick}
+      p="1r 2r"
+      borderRadius="sm"
+      border="1px solid"
+      borderColor="ui.field.border"
+      bg="ui.button.background"
+      color="ui.button.foreground"
+      cursor="pointer"
       className={className}
-      style={{
-        padding: '4px 8px',
-        borderRadius: 4,
-        border: '1px solid #ccc',
-        backgroundColor: '#fff',
-        cursor: 'pointer',
-        ...style,
-      }}
+      style={style}
       {...props}
     >
       {children}
-    </button>
+    </Button>
   )
 }
+
+export type CalendarNextButtonProps = PrimitiveProps<'button'>
 
 export function CalendarNextButton({
   children = '›',
@@ -136,7 +153,7 @@ export function CalendarNextButton({
   style,
   onClick,
   ...props
-}: React.ComponentPropsWithoutRef<'button'>) {
+}: CalendarNextButtonProps) {
   const context = React.useContext(CalendarContext)
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -147,32 +164,34 @@ export function CalendarNextButton({
   }
 
   return (
-    <button
+    <Button
       type="button"
       aria-label="Next month"
       disabled={context?.disabled}
       onClick={handleClick}
+      p="1r 2r"
+      borderRadius="sm"
+      border="1px solid"
+      borderColor="ui.field.border"
+      bg="ui.button.background"
+      color="ui.button.foreground"
+      cursor="pointer"
       className={className}
-      style={{
-        padding: '4px 8px',
-        borderRadius: 4,
-        border: '1px solid #ccc',
-        backgroundColor: '#fff',
-        cursor: 'pointer',
-        ...style,
-      }}
+      style={style}
       {...props}
     >
       {children}
-    </button>
+    </Button>
   )
 }
+
+export type CalendarGridProps = PrimitiveProps<'table'>
 
 export function CalendarGrid({
   className,
   style,
   ...props
-}: React.ComponentPropsWithoutRef<'table'>) {
+}: CalendarGridProps) {
   const context = React.useContext(CalendarContext)
   if (!context) return null
 
@@ -214,51 +233,47 @@ export function CalendarGrid({
   const weekDayNames = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
 
   return (
-    <table
+    <Table
       role="grid"
       data-reference-calendar-grid=""
+      borderCollapse="collapse"
+      width="100%"
+      textAlign="center"
       className={className}
-      style={{
-        borderCollapse: 'collapse',
-        width: '100%',
-        textAlign: 'center',
-        ...style,
-      }}
+      style={style}
       {...props}
     >
-      <thead>
-        <tr role="row">
+      <Thead>
+        <Tr role="row">
           {weekDayNames.map((wd, i) => (
-            <th
+            <Th
               key={i}
               role="columnheader"
-              style={{
-                fontSize: 12,
-                color: '#666',
-                padding: 4,
-                fontWeight: 500,
-              }}
+              fontSize="3r"
+              color="design.text.light"
+              p="1r"
+              fontWeight="500"
             >
               {wd}
-            </th>
+            </Th>
           ))}
-        </tr>
-      </thead>
-      <tbody>
+        </Tr>
+      </Thead>
+      <Tbody>
         {weeks.map((week, wIdx) => (
-          <tr key={wIdx} role="row">
+          <Tr key={wIdx} role="row">
             {week.map((cell, cIdx) => {
               if (!cell.inMonth) {
-                return <td key={cIdx} role="gridcell" style={{ padding: 2 }} />
+                return <Td key={cIdx} role="gridcell" p="0.5r" />
               }
 
               const selected = isDateSelected(cell.dateStr)
 
               return (
-                <td key={cIdx} role="gridcell" style={{ padding: 2 }}>
-                  <button
+                <Td key={cIdx} role="gridcell" p="0.5r">
+                  <Button
                     type="button"
-                    role="button"
+                    role="gridcell"
                     tabIndex={selected ? 0 : -1}
                     aria-selected={selected}
                     aria-label={cell.dateStr}
@@ -266,30 +281,31 @@ export function CalendarGrid({
                     data-selected={selected ? '' : undefined}
                     disabled={disabled}
                     onClick={() => selectDate(cell.dateStr)}
-                    style={{
-                      width: 32,
-                      height: 32,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      borderRadius: '50%',
-                      border: 'none',
-                      backgroundColor: selected ? '#0066cc' : 'transparent',
-                      color: selected ? '#fff' : 'inherit',
-                      fontSize: 13,
-                      cursor: disabled ? 'not-allowed' : 'pointer',
-                      outline: 'none',
-                    }}
+                    width="7r"
+                    height="7r"
+                    display="inline-flex"
+                    alignItems="center"
+                    justifyContent="center"
+                    borderRadius="full"
+                    border="none"
+                    bg={selected ? 'colors.gray.900' : 'transparent'}
+                    color={selected ? 'colors.gray.50' : 'design.text.base'}
+                    fontSize="3r"
+                    fontWeight={selected ? '600' : '400'}
+                    cursor={disabled ? 'not-allowed' : 'pointer'}
+                    outline="none"
+                    _hover={!selected && !disabled ? { bg: 'colors.gray.100' } : undefined}
+                    _focusVisible={{ outline: '2px solid', outlineColor: 'ui.focus.ring', outlineOffset: '2px' }}
                   >
                     {cell.dayNum}
-                  </button>
-                </td>
+                  </Button>
+                </Td>
               )
             })}
-          </tr>
+          </Tr>
         ))}
-      </tbody>
-    </table>
+      </Tbody>
+    </Table>
   )
 }
 
@@ -412,19 +428,18 @@ export function Calendar({
 
   return (
     <CalendarContext.Provider value={contextValue}>
-      <div
+      <Div
         data-reference-calendar=""
         data-disabled={disabled ? '' : undefined}
+        width="65r"
+        p="3r"
+        border="1px solid"
+        borderColor="ui.field.border"
+        borderRadius="md"
+        bg="ui.field.background"
+        userSelect="none"
         className={className}
-        style={{
-          width: 250,
-          padding: 12,
-          border: '1px solid #e5e7eb',
-          borderRadius: 8,
-          backgroundColor: '#fff',
-          userSelect: 'none',
-          ...style,
-        }}
+        style={style}
         {...props}
       >
         {children ?? (
@@ -437,7 +452,7 @@ export function Calendar({
             <CalendarGrid />
           </>
         )}
-      </div>
+      </Div>
     </CalendarContext.Provider>
   )
 }

@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { Button, Div, type PrimitiveProps, type PrimitiveElement } from '@reference-ui/react'
 import { referenceToast, type ToastItem } from '../ReferenceLibrary'
 
 export type ToastPosition =
@@ -71,70 +72,114 @@ export const toast = {
   },
 }
 
+export type ToastRootProps = PrimitiveProps<'div'>
+
 export function ToastRoot({
   children,
   ...props
-}: React.ComponentPropsWithoutRef<'div'>) {
+}: ToastRootProps) {
   return (
-    <div {...props} data-reference-toast-root="">
+    <Div
+      data-reference-toast-root=""
+      display="flex"
+      flexDirection="column"
+      gap="1r"
+      p="3.5r"
+      bg="ui.dialog.background"
+      color="ui.dialog.foreground"
+      border="1px solid"
+      borderColor="ui.dialog.border"
+      borderRadius="md"
+      boxShadow="0 4px 16px rgba(0,0,0,0.15)"
+      minW="60r"
+      maxW="90r"
+      {...props}
+    >
       {children}
-    </div>
+    </Div>
   )
 }
+
+export type ToastTitleProps = PrimitiveProps<'div'>
 
 export function ToastTitle({
   children,
   ...props
-}: React.ComponentPropsWithoutRef<'div'>) {
+}: ToastTitleProps) {
   return (
-    <div {...props} data-reference-toast-title="">
+    <Div
+      data-reference-toast-title=""
+      fontWeight="600"
+      fontSize="3.5r"
+      color="design.text.base"
+      {...props}
+    >
       {children}
-    </div>
+    </Div>
   )
 }
+
+export type ToastDescriptionProps = PrimitiveProps<'div'>
 
 export function ToastDescription({
   children,
   ...props
-}: React.ComponentPropsWithoutRef<'div'>) {
+}: ToastDescriptionProps) {
   return (
-    <div {...props} data-reference-toast-description="">
+    <Div
+      data-reference-toast-description=""
+      fontSize="3r"
+      color="design.text.light"
+      {...props}
+    >
       {children}
-    </div>
+    </Div>
   )
 }
+
+export type ToastActionProps = PrimitiveProps<'button'>
 
 export function ToastAction({
   children,
   onClick,
   ...props
-}: React.ComponentPropsWithoutRef<'button'>) {
+}: ToastActionProps) {
   return (
-    <button
+    <Button
       type="button"
-      {...props}
       data-reference-toast-action=""
+      px="2.5r"
+      py="1r"
+      fontSize="3r"
+      borderRadius="sm"
       onClick={onClick}
+      {...props}
     >
       {children}
-    </button>
+    </Button>
   )
 }
+
+export type ToastCloseProps = PrimitiveProps<'button'>
 
 export function ToastClose({
   children,
   onClick,
   ...props
-}: React.ComponentPropsWithoutRef<'button'>) {
+}: ToastCloseProps) {
   return (
-    <button
+    <Button
       type="button"
-      {...props}
       data-reference-toast-close=""
+      px="2r"
+      py="1r"
+      fontSize="3r"
+      borderRadius="sm"
       onClick={onClick}
+      {...props}
     >
       {children}
-    </button>
+    </Button>
   )
 }
 

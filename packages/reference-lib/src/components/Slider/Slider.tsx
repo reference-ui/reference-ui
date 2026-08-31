@@ -1,10 +1,10 @@
 import * as React from 'react'
+import { Div, type PrimitiveProps, type PrimitiveElement } from '@reference-ui/react'
 
 export type SliderOrientation = 'horizontal' | 'vertical'
 export type SliderValue = number | number[]
 
-export interface SliderProps
-  extends Omit<React.ComponentPropsWithoutRef<'div'>, 'onChange' | 'defaultValue'> {
+export type SliderProps = Omit<PrimitiveProps<'div'>, 'onChange' | 'defaultValue'> & {
   value?: SliderValue
   defaultValue?: SliderValue
   min?: number
@@ -30,40 +30,42 @@ interface SliderContextValue {
 
 const SliderContext = React.createContext<SliderContextValue | null>(null)
 
+export type SliderTrackProps = PrimitiveProps<'div'>
+
 export function SliderTrack({
   children,
   className,
   style,
   ...props
-}: React.ComponentPropsWithoutRef<'div'>) {
+}: SliderTrackProps) {
   const context = React.useContext(SliderContext)
   const orientation = context?.orientation ?? 'horizontal'
 
   return (
-    <div
+    <Div
       data-reference-slider-track=""
+      position="relative"
+      flexGrow={1}
+      borderRadius="full"
+      bg="colors.gray.200"
+      height={orientation === 'horizontal' ? '1.5r' : '100%'}
+      width={orientation === 'vertical' ? '1.5r' : '100%'}
       className={className}
-      style={{
-        position: 'relative',
-        flexGrow: 1,
-        borderRadius: 9999,
-        backgroundColor: '#e5e7eb',
-        height: orientation === 'horizontal' ? 6 : '100%',
-        width: orientation === 'vertical' ? 6 : '100%',
-        ...style,
-      }}
+      style={style}
       {...props}
     >
       {children}
-    </div>
+    </Div>
   )
 }
+
+export type SliderRangeProps = PrimitiveProps<'div'>
 
 export function SliderRange({
   className,
   style,
   ...props
-}: React.ComponentPropsWithoutRef<'div'>) {
+}: SliderRangeProps) {
   const context = React.useContext(SliderContext)
   if (!context) return null
 
@@ -79,13 +81,13 @@ export function SliderRange({
   const isHorizontal = orientation === 'horizontal'
 
   return (
-    <div
+    <Div
       data-reference-slider-range=""
+      position="absolute"
+      bg="ui.progress.bar.foreground"
+      borderRadius="full"
       className={className}
       style={{
-        position: 'absolute',
-        backgroundColor: '#0066cc',
-        borderRadius: 9999,
         [isHorizontal ? 'left' : 'bottom']: `${startPercent}%`,
         [isHorizontal ? 'width' : 'height']: `${sizePercent}%`,
         [isHorizontal ? 'height' : 'width']: '100%',
@@ -96,7 +98,7 @@ export function SliderRange({
   )
 }
 
-export interface SliderThumbProps extends React.ComponentPropsWithoutRef<'div'> {
+export type SliderThumbProps = PrimitiveProps<'div'> & {
   index?: number
 }
 
@@ -143,7 +145,7 @@ export function SliderThumb({
   }
 
   return (
-    <div
+    <Div
       role="slider"
       tabIndex={disabled ? -1 : 0}
       aria-valuemin={min}
@@ -152,20 +154,22 @@ export function SliderThumb({
       aria-orientation={orientation}
       data-disabled={disabled ? '' : undefined}
       onKeyDown={handleKeyDown}
+      position="absolute"
+      width="4.5r"
+      height="4.5r"
+      borderRadius="full"
+      bg="ui.field.background"
+      border="2px solid"
+      borderColor="ui.progress.bar.foreground"
+      boxShadow="0 1px 3px rgba(0,0,0,0.2)"
+      cursor={disabled ? 'not-allowed' : 'pointer'}
+      touchAction="none"
+      outline="none"
+      _focusVisible={{ outline: '2px solid', outlineColor: 'ui.focus.ring', outlineOffset: '2px' }}
       className={className}
       style={{
-        position: 'absolute',
         [isHorizontal ? 'left' : 'bottom']: `${percent}%`,
         transform: isHorizontal ? 'translateX(-50%)' : 'translateY(50%)',
-        width: 18,
-        height: 18,
-        borderRadius: '50%',
-        backgroundColor: '#fff',
-        border: '2px solid #0066cc',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        touchAction: 'none',
-        outline: 'none',
         ...style,
       }}
       {...props}
@@ -246,22 +250,20 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
 
     return (
       <SliderContext.Provider value={contextValue}>
-        <div
+        <Div
           ref={ref}
           data-reference-slider=""
           data-orientation={orientation}
           data-disabled={disabled ? '' : undefined}
+          position="relative"
+          display="flex"
+          alignItems="center"
+          userSelect="none"
+          touchAction="none"
+          width={isHorizontal ? '100%' : '6r'}
+          height={isHorizontal ? '6r' : '100%'}
           className={className}
-          style={{
-            position: 'relative',
-            display: 'flex',
-            alignItems: 'center',
-            userSelect: 'none',
-            touchAction: 'none',
-            width: isHorizontal ? '100%' : 24,
-            height: isHorizontal ? 24 : '100%',
-            ...style,
-          }}
+          style={style}
           {...props}
         >
           {children ?? (
@@ -270,7 +272,7 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
               <SliderThumb />
             </SliderTrack>
           )}
-        </div>
+        </Div>
       </SliderContext.Provider>
     )
   }

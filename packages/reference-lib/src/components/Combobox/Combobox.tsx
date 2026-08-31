@@ -1,5 +1,6 @@
 import * as React from 'react'
-import { Overlay } from '../Overlay'
+import { Input, Button, Div, type PrimitiveProps, type PrimitiveElement } from '@reference-ui/react'
+import { Overlay, type OverlayContentProps } from '../Overlay'
 import { Listbox, type ListboxOptionProps } from '../Listbox'
 
 export interface ComboboxProps {
@@ -28,6 +29,8 @@ interface ComboboxContextValue {
 
 const ComboboxContext = React.createContext<ComboboxContextValue | null>(null)
 
+export type ComboboxInputProps = PrimitiveProps<'input'>
+
 export function ComboboxInput({
   onChange,
   onKeyDown,
@@ -35,7 +38,7 @@ export function ComboboxInput({
   className,
   style,
   ...props
-}: React.ComponentPropsWithoutRef<'input'>) {
+}: ComboboxInputProps) {
   const context = React.useContext(ComboboxContext)
   if (!context) return null
 
@@ -72,7 +75,7 @@ export function ComboboxInput({
   }
 
   return (
-    <input
+    <Input
       role="combobox"
       aria-expanded={isOpen}
       aria-autocomplete="list"
@@ -82,25 +85,20 @@ export function ComboboxInput({
       onChange={handleChange}
       onFocus={handleFocus}
       onKeyDown={handleKeyDown}
+      width="100%"
       className={className}
-      style={{
-        width: '100%',
-        padding: '6px 10px',
-        fontSize: 14,
-        borderRadius: 6,
-        border: '1px solid #ccc',
-        outline: 'none',
-        ...style,
-      }}
+      style={style}
       {...props}
     />
   )
 }
 
+export type ComboboxTriggerProps = React.ComponentPropsWithoutRef<typeof Overlay.Trigger>
+
 export function ComboboxTrigger({
   children,
   ...props
-}: React.ComponentPropsWithoutRef<'button'>) {
+}: ComboboxTriggerProps) {
   return (
     <Overlay.Trigger aria-haspopup="listbox" {...props}>
       {children}
@@ -108,29 +106,31 @@ export function ComboboxTrigger({
   )
 }
 
+export type ComboboxPopoverProps = OverlayContentProps
+
 export function ComboboxPopover({
   children,
   className,
   style,
   ...props
-}: React.ComponentPropsWithoutRef<'div'>) {
+}: ComboboxPopoverProps) {
   const context = React.useContext(ComboboxContext)
 
   return (
     <Overlay.Portal>
       <Overlay.Content
         role="presentation"
+        minW="50r"
+        bg="ui.dialog.background"
+        color="ui.dialog.foreground"
+        borderRadius="md"
+        boxShadow="0 4px 16px rgba(0,0,0,0.15)"
+        border="1px solid"
+        borderColor="ui.dialog.border"
+        p="1r"
+        zIndex={50}
         className={className}
-        style={{
-          minWidth: 200,
-          backgroundColor: '#fff',
-          borderRadius: 6,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-          border: '1px solid #e5e7eb',
-          padding: 4,
-          zIndex: 50,
-          ...style,
-        }}
+        style={style}
         {...props}
       >
         <Listbox
@@ -224,9 +224,9 @@ export function Combobox({
   return (
     <ComboboxContext.Provider value={contextValue}>
       <Overlay open={isOpen} onOpenChange={setIsOpen} isolation={false}>
-        <div data-reference-combobox="" style={{ position: 'relative' }}>
+        <Div data-reference-combobox="" position="relative">
           {children}
-        </div>
+        </Div>
       </Overlay>
     </ComboboxContext.Provider>
   )

@@ -1,9 +1,9 @@
 import * as React from 'react'
+import { Div, type PrimitiveProps, type PrimitiveElement } from '@reference-ui/react'
 
 export type SplitterOrientation = 'horizontal' | 'vertical'
 
-export interface SplitterProps
-  extends Omit<React.ComponentPropsWithoutRef<'div'>, 'onChange' | 'defaultValue'> {
+export type SplitterProps = Omit<PrimitiveProps<'div'>, 'onChange' | 'defaultValue'> & {
   orientation?: SplitterOrientation
   value?: number[]
   defaultValue?: number[]
@@ -21,7 +21,7 @@ interface SplitterContextValue {
 
 const SplitterContext = React.createContext<SplitterContextValue | null>(null)
 
-export interface SplitterPanelProps extends React.ComponentPropsWithoutRef<'div'> {
+export type SplitterPanelProps = PrimitiveProps<'div'> & {
   index?: number
   collapsible?: boolean
   collapsedSize?: number
@@ -41,24 +41,22 @@ export function SplitterPanel({
   const size = context?.value[index] ?? 50
 
   return (
-    <div
+    <Div
       data-reference-splitter-panel=""
+      flex={`0 0 ${size}%`}
+      minWidth={orientation === 'horizontal' ? 0 : undefined}
+      minHeight={orientation === 'vertical' ? 0 : undefined}
+      overflow="auto"
       className={className}
-      style={{
-        flex: `0 0 ${size}%`,
-        minWidth: orientation === 'horizontal' ? 0 : undefined,
-        minHeight: orientation === 'vertical' ? 0 : undefined,
-        overflow: 'auto',
-        ...style,
-      }}
+      style={style}
       {...props}
     >
       {children}
-    </div>
+    </Div>
   )
 }
 
-export interface SplitterHandleProps extends React.ComponentPropsWithoutRef<'div'> {
+export type SplitterHandleProps = PrimitiveProps<'div'> & {
   index?: number
   disabled?: boolean
 }
@@ -105,7 +103,7 @@ export function SplitterHandle({
   }
 
   return (
-    <div
+    <Div
       role="separator"
       tabIndex={isDisabled ? -1 : 0}
       aria-valuenow={Math.round(currentVal)}
@@ -115,17 +113,16 @@ export function SplitterHandle({
       data-reference-splitter-handle=""
       data-disabled={isDisabled ? '' : undefined}
       onKeyDown={handleKeyDown}
+      flex="0 0 auto"
+      width={isHorizontal ? '2r' : '100%'}
+      height={isHorizontal ? '100%' : '2r'}
+      bg="ui.hr.border"
+      cursor={isDisabled ? 'default' : isHorizontal ? 'col-resize' : 'row-resize'}
+      touchAction="none"
+      outline="none"
+      _focusVisible={{ outline: '2px solid', outlineColor: 'ui.focus.ring' }}
       className={className}
-      style={{
-        flex: '0 0 auto',
-        width: isHorizontal ? 8 : '100%',
-        height: isHorizontal ? '100%' : 8,
-        backgroundColor: '#e5e7eb',
-        cursor: isDisabled ? 'default' : isHorizontal ? 'col-resize' : 'row-resize',
-        touchAction: 'none',
-        outline: 'none',
-        ...style,
-      }}
+      style={style}
       {...props}
     />
   )
@@ -191,24 +188,22 @@ export const Splitter = React.forwardRef<HTMLDivElement, SplitterProps>(
 
     return (
       <SplitterContext.Provider value={contextValue}>
-        <div
+        <Div
           ref={ref}
           data-reference-splitter=""
           data-orientation={orientation}
           data-disabled={disabled ? '' : undefined}
+          display="flex"
+          flexDirection={orientation === 'vertical' ? 'column' : 'row'}
+          width="100%"
+          height="100%"
+          overflow="hidden"
           className={className}
-          style={{
-            display: 'flex',
-            flexDirection: orientation === 'vertical' ? 'column' : 'row',
-            width: '100%',
-            height: '100%',
-            overflow: 'hidden',
-            ...style,
-          }}
+          style={style}
           {...props}
         >
           {children}
-        </div>
+        </Div>
       </SplitterContext.Provider>
     )
   }

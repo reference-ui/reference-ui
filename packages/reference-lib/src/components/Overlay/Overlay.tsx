@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { Button, Div, type PrimitiveProps } from '@reference-ui/react'
 import { Portal, type PortalProps } from '../Portal'
 import { Presence } from '../Presence'
 import { FocusLock } from '../FocusLock'
@@ -108,11 +109,36 @@ export function Overlay({
       }
     }
     return {
-      focus: isolationProp.focus ?? true,
-      inert: isolationProp.inert ?? true,
-      scroll: isolationProp.scroll ?? true,
+      focus: isolationProp.focus ?? false,
+      inert: isolationProp.inert ?? false,
+      scroll: isolationProp.scroll ?? false,
     }
   }, [isolationProp])
+
+  // Native inert management on non-overlay DOM nodes
+  React.useEffect(() => {
+    if (!isOpen || !isolation.inert) return
+
+    const overlayEl = contentRef.current
+    if (!overlayEl) return
+
+    const siblingsToInert: HTMLElement[] = []
+    const rootNodes = Array.from(document.body.children) as HTMLElement[]
+
+    for (const node of rootNodes) {
+      if (node !== overlayEl && !node.contains(overlayEl) && !node.hasAttribute('data-reference-portal-container')) {
+        const prevInert = node.getAttribute('inert')
+        node.setAttribute('inert', '')
+        siblingsToInert.push(node)
+      }
+    }
+
+    return () => {
+      for (const node of siblingsToInert) {
+        node.removeAttribute('inert')
+      }
+    }
+  }, [isOpen, isolation.inert])
 
   const contextValue = React.useMemo<OverlayContextValue>(() => {
     return {
@@ -152,10 +178,12 @@ export function Overlay({
   )
 }
 
+export type OverlayTriggerProps = PrimitiveProps<'button'>
+
 export function OverlayTrigger({
   children,
   ...props
-}: React.ComponentPropsWithoutRef<'button'>) {
+}: OverlayTriggerProps) {
   const context = React.useContext(OverlayContext)
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -172,7 +200,7 @@ export function OverlayTrigger({
   }
 
   return (
-    <button
+    <Button
       type="button"
       {...props}
       ref={composedRef}
@@ -180,7 +208,7 @@ export function OverlayTrigger({
       onClick={handleClick}
     >
       {children}
-    </button>
+    </Button>
   )
 }
 
@@ -188,50 +216,54 @@ export function OverlayPortal({ children, container }: PortalProps) {
   return <Portal container={container}>{children}</Portal>
 }
 
+export type OverlayBackdropProps = PrimitiveProps<'div'>
+
 export function OverlayBackdrop({
   children,
   style,
+  className,
   ...props
-}: React.ComponentPropsWithoutRef<'div'>) {
+}: OverlayBackdropProps) {
   const context = React.useContext(OverlayContext)
   if (!context) return null
 
   return (
     <Presence present={context.isOpen}>
-      <div
+      <Div
         data-reference-overlay-backdrop=""
         data-state={context.isOpen ? 'open' : 'closed'}
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.4)',
-          zIndex: 40,
-          ...style,
-        }}
+        position="fixed"
+        top={0}
+        left={0}
+        right={0}
+        bottom={0}
+        bg="rgba(0, 0, 0, 0.4)"
+        zIndex={40}
         onClick={e => {
           props.onClick?.(e)
           if (!e.defaultPrevented) {
             context.setIsOpen(false)
           }
         }}
+        className={className}
+        style={style}
         {...props}
       >
         {children}
-      </div>
+      </Div>
     </Presence>
   )
 }
 
-export interface OverlayContentProps extends React.ComponentPropsWithoutRef<'div'> {
+export interface OverlayContentProps
+  extends Omit<React.ComponentPropsWithoutRef<'div'>, 'color' | 'content'> {
   placement?: Placement
   offset?: number
   collisionPadding?: number
   strategy?: Strategy
   flip?: boolean
   shift?: boolean
+  [key: string]: any
 }
 
 export function OverlayContent({
@@ -243,6 +275,7 @@ export function OverlayContent({
   flip = true,
   shift = true,
   style,
+  className,
   ...props
 }: OverlayContentProps) {
   const context = React.useContext(OverlayContext)
@@ -420,20 +453,25 @@ export function OverlayContent({
   }, [isOpen, context.isolation.scroll])
 
   const contentElement = (
-    <div
+    <Div
       data-reference-overlay-content=""
       data-state={isOpen ? 'open' : 'closed'}
-      {...props}
       ref={node => {
         contentRef.current = node
       }}
-      style={{
-        zIndex: 50,
-        ...style,
-      }}
+      zIndex={50}
+      bg="ui.dialog.background"
+      color="ui.dialog.foreground"
+      borderRadius="md"
+      border="1px solid"
+      borderColor="ui.dialog.border"
+      boxShadow="0 4px 20px rgba(0,0,0,0.15)"
+      className={className}
+      style={style}
+      {...props}
     >
       {children}
-    </div>
+    </Div>
   )
 
   const wrappedWithFocusLock = context.isolation.focus ? (
@@ -449,37 +487,44 @@ export function OverlayContent({
   )
 }
 
+export type OverlayArrowProps = PrimitiveProps<'div'> & {
+  edgePadding?: number
+}
+
 export function OverlayArrow({
   edgePadding = 4,
   style,
+  className,
   ...props
-}: React.ComponentPropsWithoutRef<'div'> & { edgePadding?: number }) {
+}: OverlayArrowProps) {
   const context = React.useContext(OverlayContext)
 
   return (
-    <div
+    <Div
       {...props}
       data-reference-overlay-arrow=""
       data-edge-padding={edgePadding}
       ref={node => {
         if (context) context.arrowRef.current = node
       }}
-      style={{
-        position: 'absolute',
-        width: 8,
-        height: 8,
-        pointerEvents: 'none',
-        ...style,
-      }}
+      position="absolute"
+      width="2r"
+      height="2r"
+      pointerEvents="none"
+      className={className}
+      style={style}
     />
   )
 }
 
+export type OverlayHandleProps = PrimitiveProps<'div'>
+
 export function OverlayHandle({
   style,
+  className,
   onPointerDown: userPointerDown,
   ...props
-}: React.ComponentPropsWithoutRef<'div'>) {
+}: OverlayHandleProps) {
   const context = React.useContext(OverlayContext)
   const isDraggingRef = React.useRef(false)
   const startYRef = React.useRef(0)
@@ -524,22 +569,22 @@ export function OverlayHandle({
   }
 
   return (
-    <div
+    <Div
       {...props}
       data-reference-overlay-handle=""
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
-      style={{
-        width: 32,
-        height: 4,
-        borderRadius: 2,
-        backgroundColor: '#ccc',
-        margin: '8px auto',
-        cursor: 'grab',
-        touchAction: 'none',
-        ...style,
-      }}
+      width="8r"
+      height="1r"
+      borderRadius="full"
+      bg="colors.gray.400"
+      mx="auto"
+      my="2r"
+      cursor="grab"
+      touchAction="none"
+      className={className}
+      style={style}
     />
   )
 }

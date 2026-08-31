@@ -1,5 +1,6 @@
 import * as React from 'react'
-import { Overlay, type OverlayProps } from '../Overlay'
+import { Button, Div, type PrimitiveProps, type PrimitiveElement } from '@reference-ui/react'
+import { Overlay, type OverlayProps, type OverlayContentProps } from '../Overlay'
 import { Portal, type PortalProps } from '../Portal'
 
 export interface PopoverProps extends Omit<OverlayProps, 'isolation'> {
@@ -82,11 +83,13 @@ export function Popover({
   )
 }
 
+export type PopoverTriggerProps = PrimitiveProps<'button'>
+
 export function PopoverTrigger({
   children,
   id,
   ...props
-}: React.ComponentPropsWithoutRef<'button'>) {
+}: PopoverTriggerProps) {
   const context = React.useContext(PopoverContext)
   const hoverTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -124,7 +127,7 @@ export function PopoverTrigger({
   }
 
   return (
-    <button
+    <Button
       type="button"
       id={id}
       aria-haspopup="dialog"
@@ -137,7 +140,7 @@ export function PopoverTrigger({
       onPointerLeave={handlePointerLeave}
     >
       {children}
-    </button>
+    </Button>
   )
 }
 
@@ -145,11 +148,13 @@ export function PopoverPortal({ children, container }: PortalProps) {
   return <Portal container={container}>{children}</Portal>
 }
 
+export type PopoverContentProps = OverlayContentProps
+
 export function PopoverContent({
   children,
   id,
   ...props
-}: React.ComponentPropsWithoutRef<'div'>) {
+}: PopoverContentProps) {
   const context = React.useContext(PopoverContext)
   if (!context) return null
 
@@ -169,17 +174,23 @@ export function PopoverContent({
   )
 }
 
+export type PopoverArrowProps = PrimitiveProps<'div'> & {
+  edgePadding?: number
+}
+
 export function PopoverArrow({
   edgePadding = 4,
   ...props
-}: React.ComponentPropsWithoutRef<'div'> & { edgePadding?: number }) {
+}: PopoverArrowProps) {
   return <Overlay.Arrow data-reference-popover-arrow="" edgePadding={edgePadding} {...props} />
 }
+
+export type PopoverCloseProps = PrimitiveProps<'button'>
 
 export function PopoverClose({
   children,
   ...props
-}: React.ComponentPropsWithoutRef<'button'>) {
+}: PopoverCloseProps) {
   const context = React.useContext(PopoverContext)
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -190,9 +201,9 @@ export function PopoverClose({
   }
 
   return (
-    <button type="button" {...props} onClick={handleClick}>
+    <Button type="button" {...props} onClick={handleClick}>
       {children}
-    </button>
+    </Button>
   )
 }
 

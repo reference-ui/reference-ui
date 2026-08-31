@@ -1,11 +1,11 @@
 import * as React from 'react'
+import { Div, type PrimitiveProps, type PrimitiveElement } from '@reference-ui/react'
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '../Collapsible'
 
 export type AccordionExpansion = 'single' | 'multiple'
 export type AccordionValue = string | string[] | null
 
-export interface AccordionProps
-  extends Omit<React.ComponentPropsWithoutRef<'div'>, 'onChange' | 'value' | 'defaultValue'> {
+export type AccordionProps = Omit<PrimitiveProps<'div'>, 'onChange' | 'value' | 'defaultValue'> & {
   expansion?: AccordionExpansion
   value?: AccordionValue
   defaultValue?: AccordionValue
@@ -23,13 +23,13 @@ interface AccordionContextValue {
 
 const AccordionContext = React.createContext<AccordionContextValue | null>(null)
 
-export interface AccordionItemProps {
+export type AccordionItemProps = PrimitiveProps<'div'> & {
   id: string
   children?: React.ReactNode
   disabled?: boolean
 }
 
-export function AccordionItem({ id, children, disabled = false }: AccordionItemProps) {
+export function AccordionItem({ id, children, disabled = false, ...props }: AccordionItemProps) {
   const context = React.useContext(AccordionContext)
 
   if (!context) {
@@ -47,9 +47,9 @@ export function AccordionItem({ id, children, disabled = false }: AccordionItemP
         context.toggleItem(id)
       }}
     >
-      <div data-reference-accordion-item="" data-state={isOpen ? 'open' : 'closed'}>
+      <Div data-reference-accordion-item="" data-state={isOpen ? 'open' : 'closed'} {...props}>
         {children}
-      </div>
+      </Div>
     </Collapsible>
   )
 }
@@ -155,14 +155,14 @@ export const Accordion = React.forwardRef<HTMLDivElement, AccordionProps>(
 
     return (
       <AccordionContext.Provider value={contextValue}>
-        <div
+        <Div
           ref={ref}
           data-reference-accordion=""
           onKeyDown={handleKeyDown}
           {...props}
         >
           {children}
-        </div>
+        </Div>
       </AccordionContext.Provider>
     )
   }

@@ -1,7 +1,7 @@
 import * as React from 'react'
+import { Div, Input, Button, type PrimitiveProps, type PrimitiveElement } from '@reference-ui/react'
 
-export interface NumberFieldProps
-  extends Omit<React.ComponentPropsWithoutRef<'div'>, 'onChange' | 'value' | 'defaultValue'> {
+export type NumberFieldProps = Omit<PrimitiveProps<'div'>, 'onChange' | 'value' | 'defaultValue'> & {
   value?: number | null
   defaultValue?: number | null
   onChange?: (value: number | null) => void
@@ -26,12 +26,14 @@ interface NumberFieldContextValue {
 
 const NumberFieldContext = React.createContext<NumberFieldContextValue | null>(null)
 
+export type NumberFieldInputProps = PrimitiveProps<'input'>
+
 export function NumberFieldInput({
   className,
   style,
   onKeyDown: userOnKeyDown,
   ...props
-}: React.ComponentPropsWithoutRef<'input'>) {
+}: NumberFieldInputProps) {
   const context = React.useContext(NumberFieldContext)
   if (!context) return null
 
@@ -45,7 +47,7 @@ export function NumberFieldInput({
   }
 
   return (
-    <input
+    <Input
       type="text"
       role="spinbutton"
       inputMode="decimal"
@@ -56,20 +58,16 @@ export function NumberFieldInput({
       value={value !== null ? String(value) : ''}
       onChange={handleInputChange}
       onKeyDown={onKeyDown}
+      width="28r"
+      textAlign="center"
       className={className}
-      style={{
-        padding: '6px 10px',
-        fontSize: 14,
-        borderRadius: 6,
-        border: '1px solid #ccc',
-        outline: 'none',
-        width: 120,
-        ...style,
-      }}
+      style={style}
       {...props}
     />
   )
 }
+
+export type NumberFieldIncrementProps = PrimitiveProps<'button'>
 
 export function NumberFieldIncrement({
   children = '+',
@@ -77,7 +75,7 @@ export function NumberFieldIncrement({
   style,
   onClick,
   ...props
-}: React.ComponentPropsWithoutRef<'button'>) {
+}: NumberFieldIncrementProps) {
   const context = React.useContext(NumberFieldContext)
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -88,27 +86,30 @@ export function NumberFieldIncrement({
   }
 
   return (
-    <button
+    <Button
       type="button"
       tabIndex={-1}
       aria-label="Increment"
       disabled={context?.disabled}
       onClick={handleClick}
+      px="2.5r"
+      py="1.5r"
+      borderRadius="sm"
+      border="1px solid"
+      borderColor="ui.field.border"
+      bg="ui.button.background"
+      color="ui.button.foreground"
+      cursor="pointer"
       className={className}
-      style={{
-        padding: '4px 8px',
-        borderRadius: 4,
-        border: '1px solid #ccc',
-        backgroundColor: '#f3f4f6',
-        cursor: 'pointer',
-        ...style,
-      }}
+      style={style}
       {...props}
     >
       {children}
-    </button>
+    </Button>
   )
 }
+
+export type NumberFieldDecrementProps = PrimitiveProps<'button'>
 
 export function NumberFieldDecrement({
   children = '-',
@@ -116,7 +117,7 @@ export function NumberFieldDecrement({
   style,
   onClick,
   ...props
-}: React.ComponentPropsWithoutRef<'button'>) {
+}: NumberFieldDecrementProps) {
   const context = React.useContext(NumberFieldContext)
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -127,25 +128,26 @@ export function NumberFieldDecrement({
   }
 
   return (
-    <button
+    <Button
       type="button"
       tabIndex={-1}
       aria-label="Decrement"
       disabled={context?.disabled}
       onClick={handleClick}
+      px="2.5r"
+      py="1.5r"
+      borderRadius="sm"
+      border="1px solid"
+      borderColor="ui.field.border"
+      bg="ui.button.background"
+      color="ui.button.foreground"
+      cursor="pointer"
       className={className}
-      style={{
-        padding: '4px 8px',
-        borderRadius: 4,
-        border: '1px solid #ccc',
-        backgroundColor: '#f3f4f6',
-        cursor: 'pointer',
-        ...style,
-      }}
+      style={style}
       {...props}
     >
       {children}
-    </button>
+    </Button>
   )
 }
 
@@ -256,19 +258,17 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
 
     return (
       <NumberFieldContext.Provider value={contextValue}>
-        <div
+        <Div
           ref={ref}
           role="group"
           data-reference-field=""
           data-reference-number-field=""
           data-disabled={disabled ? '' : undefined}
+          display="inline-flex"
+          alignItems="center"
+          gap="1r"
           className={className}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 4,
-            ...style,
-          }}
+          style={style}
           {...props}
         >
           {children ?? (
@@ -278,7 +278,7 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
               <NumberFieldIncrement />
             </>
           )}
-        </div>
+        </Div>
       </NumberFieldContext.Provider>
     )
   }

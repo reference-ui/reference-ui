@@ -1,12 +1,12 @@
 import * as React from 'react'
+import { Div, type PrimitiveProps, type PrimitiveElement } from '@reference-ui/react'
 import { RovingFocus } from '../RovingFocus'
 
 export type ListboxSelection = 'single' | 'multiple'
 export type ListboxOrientation = 'horizontal' | 'vertical'
 export type ListboxValue = string | string[] | null
 
-export interface ListboxProps
-  extends Omit<React.ComponentPropsWithoutRef<'div'>, 'onChange' | 'value' | 'defaultValue'> {
+export type ListboxProps = Omit<PrimitiveProps<'div'>, 'onChange' | 'value' | 'defaultValue'> & {
   selection?: ListboxSelection
   value?: ListboxValue
   defaultValue?: ListboxValue
@@ -26,7 +26,7 @@ interface ListboxContextValue {
 
 const ListboxContext = React.createContext<ListboxContextValue | null>(null)
 
-export interface ListboxOptionProps extends React.ComponentPropsWithoutRef<'div'> {
+export type ListboxOptionProps = PrimitiveProps<'div'> & {
   value: string
   disabled?: boolean
   textValue?: string
@@ -64,7 +64,7 @@ export function ListboxOption({
 
   return (
     <RovingFocus.Item disabled={isDisabled} textValue={textValue}>
-      <div
+      <Div
         role="option"
         tabIndex={isDisabled ? -1 : 0}
         aria-selected={isSelected}
@@ -74,24 +74,25 @@ export function ListboxOption({
         data-value={value}
         onClick={handleClick}
         onKeyDown={handleKeyDown}
+        display="flex"
+        alignItems="center"
+        px="3r"
+        py="1.5r"
+        borderRadius="sm"
+        cursor={isDisabled ? 'not-allowed' : 'pointer'}
+        bg={isSelected ? 'colors.gray.900' : 'transparent'}
+        color={isSelected ? 'colors.gray.50' : 'design.text.base'}
+        opacity={isDisabled ? 0.5 : 1}
+        outline="none"
+        userSelect="none"
+        _hover={!isSelected && !isDisabled ? { bg: 'colors.gray.100' } : undefined}
+        _focusVisible={{ outline: '2px solid', outlineColor: 'ui.focus.ring', outlineOffset: '2px' }}
         className={className}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          padding: '6px 10px',
-          borderRadius: 4,
-          cursor: isDisabled ? 'not-allowed' : 'pointer',
-          backgroundColor: isSelected ? '#0066cc' : 'transparent',
-          color: isSelected ? '#fff' : 'inherit',
-          opacity: isDisabled ? 0.5 : 1,
-          outline: 'none',
-          userSelect: 'none',
-          ...style,
-        }}
+        style={style}
         {...props}
       >
         {children}
-      </div>
+      </Div>
     </RovingFocus.Item>
   )
 }
@@ -169,28 +170,28 @@ export const Listbox = React.forwardRef<HTMLDivElement, ListboxProps>(
     return (
       <ListboxContext.Provider value={contextValue}>
         <RovingFocus.Root orientation={orientation} loop typeahead>
-          <div
+          <Div
             ref={ref}
             role="listbox"
             aria-orientation={orientation}
             data-orientation={orientation}
             data-reference-listbox=""
             data-disabled={disabled ? '' : undefined}
+            display="flex"
+            flexDirection={orientation === 'vertical' ? 'column' : 'row'}
+            gap="0.5r"
+            p="1r"
+            border="1px solid"
+            borderColor="ui.field.border"
+            borderRadius="md"
+            bg="ui.field.background"
+            outline="none"
             className={className}
-            style={{
-              display: 'flex',
-              flexDirection: orientation === 'vertical' ? 'column' : 'row',
-              gap: 2,
-              padding: 4,
-              border: '1px solid #e5e7eb',
-              borderRadius: 6,
-              outline: 'none',
-              ...style,
-            }}
+            style={style}
             {...props}
           >
             {children}
-          </div>
+          </Div>
         </RovingFocus.Root>
       </ListboxContext.Provider>
     )

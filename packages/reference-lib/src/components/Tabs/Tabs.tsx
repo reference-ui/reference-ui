@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { Button, Div, type PrimitiveProps, type PrimitiveElement } from '@reference-ui/react'
 
 export type TabsOrientation = 'horizontal' | 'vertical'
 export type TabsActivation = 'automatic' | 'manual'
@@ -73,13 +74,15 @@ export function Tabs({
   )
 }
 
+export type TabsListProps = PrimitiveProps<'div'>
+
 export function TabsList({
   children,
   className,
   style,
   onKeyDown,
   ...props
-}: React.ComponentPropsWithoutRef<'div'>) {
+}: TabsListProps) {
   const context = React.useContext(TabsContext)
   const orientation = context?.orientation ?? 'horizontal'
 
@@ -132,27 +135,29 @@ export function TabsList({
   }
 
   return (
-    <div
+    <Div
       role="tablist"
       aria-orientation={orientation}
       data-orientation={orientation}
       data-reference-tabs-list=""
       onKeyDown={handleKeyDown}
+      display="flex"
+      flexDirection={orientation === 'vertical' ? 'column' : 'row'}
+      gap="1r"
+      borderBottom={orientation === 'horizontal' ? '1px solid' : undefined}
+      borderRight={orientation === 'vertical' ? '1px solid' : undefined}
+      borderColor="ui.table.border"
+      p="1r"
       className={className}
-      style={{
-        display: 'flex',
-        flexDirection: orientation === 'vertical' ? 'column' : 'row',
-        gap: '4px',
-        ...style,
-      }}
+      style={style}
       {...props}
     >
       {children}
-    </div>
+    </Div>
   )
 }
 
-export interface TabProps extends React.ComponentPropsWithoutRef<'button'> {
+export type TabProps = Omit<PrimitiveProps<'button'>, 'value'> & {
   value: string
 }
 
@@ -181,7 +186,7 @@ export function Tab({
   }
 
   return (
-    <button
+    <Button
       type="button"
       role="tab"
       id={tabId}
@@ -193,26 +198,27 @@ export function Tab({
       data-value={value}
       disabled={isDisabled}
       onClick={handleClick}
+      px="3r"
+      py="1.5r"
+      border="none"
+      borderRadius="sm"
+      cursor={isDisabled ? 'not-allowed' : 'pointer'}
+      bg={isSelected ? 'ui.button.background' : 'transparent'}
+      color={isSelected ? 'ui.button.foreground' : 'design.text.base'}
+      fontWeight={isSelected ? '600' : '400'}
+      opacity={isDisabled ? 0.5 : 1}
+      _hover={!isSelected && !isDisabled ? { bg: 'colors.gray.100' } : undefined}
+      _focusVisible={{ outline: '2px solid', outlineColor: 'ui.focus.ring', outlineOffset: '2px' }}
       className={className}
-      style={{
-        padding: '6px 12px',
-        border: 'none',
-        borderRadius: '4px',
-        cursor: isDisabled ? 'not-allowed' : 'pointer',
-        backgroundColor: isSelected ? '#0066cc' : '#eee',
-        color: isSelected ? '#fff' : '#333',
-        fontWeight: isSelected ? 600 : 400,
-        opacity: isDisabled ? 0.5 : 1,
-        ...style,
-      }}
+      style={style}
       {...props}
     >
       {children}
-    </button>
+    </Button>
   )
 }
 
-export interface TabPanelProps extends React.ComponentPropsWithoutRef<'div'> {
+export type TabPanelProps = Omit<PrimitiveProps<'div'>, 'value'> & {
   value: string
 }
 
@@ -230,22 +236,21 @@ export function TabPanel({
   const panelId = idProp ?? (context ? `${context.baseId}-panel-${value}` : undefined)
 
   return (
-    <div
+    <Div
       role="tabpanel"
       id={panelId}
       aria-labelledby={tabId}
       hidden={!isSelected}
       data-state={isSelected ? 'active' : 'inactive'}
       data-value={value}
+      p="4r"
+      color="design.text.base"
       className={className}
-      style={{
-        padding: '16px',
-        ...style,
-      }}
+      style={style}
       {...props}
     >
       {isSelected && children}
-    </div>
+    </Div>
   )
 }
 

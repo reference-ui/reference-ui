@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { Div, type PrimitiveProps, type PrimitiveElement } from '@reference-ui/react'
 
 export interface ReferenceLibraryProps {
   children?: React.ReactNode
@@ -240,58 +241,52 @@ export function ReferenceLibrary({
       {isActiveHost && store && (
         <>
           {/* Toast Host */}
-          <div
+          <Div
             data-reference-toast-host=""
-            style={{
-              position: 'fixed',
-              bottom: 16,
-              right: 16,
-              zIndex: 9999,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 8,
-              pointerEvents: 'none',
-            }}
+            position="fixed"
+            bottom="4r"
+            right="4r"
+            zIndex={9999}
+            display="flex"
+            flexDirection="column"
+            gap="2r"
+            pointerEvents="none"
           >
             {store.toasts.slice(0, toaster?.limit ?? 4).map(t => (
-              <div
+              <Div
                 key={t.id}
                 data-toast-id={t.id}
-                style={{
-                  pointerEvents: 'auto',
-                  padding: '8px 16px',
-                  background: '#222',
-                  color: '#fff',
-                  borderRadius: 4,
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-                }}
+                pointerEvents="auto"
+                p="2r 4r"
+                bg="ui.dialog.background"
+                color="ui.dialog.foreground"
+                borderRadius="md"
+                boxShadow="0 4px 16px rgba(0,0,0,0.15)"
               >
                 {t.content}
-              </div>
+              </Div>
             ))}
-          </div>
+          </Div>
 
           {/* Live Regions */}
-          <div
-            style={{
-              position: 'absolute',
-              width: 1,
-              height: 1,
-              padding: 0,
-              margin: -1,
-              overflow: 'hidden',
-              clip: 'rect(0, 0, 0, 0)',
-              whiteSpace: 'nowrap',
-              border: 0,
-            }}
+          <Div
+            position="absolute"
+            width="1px"
+            height="1px"
+            p="0"
+            m="-1px"
+            overflow="hidden"
+            clip="rect(0, 0, 0, 0)"
+            whiteSpace="nowrap"
+            border="0"
           >
-            <div role="status" aria-live="polite" data-testid="polite-announcer">
+            <Div role="status" aria-live="polite" data-testid="polite-announcer">
               {store.politeAnnouncement}
-            </div>
-            <div role="alert" aria-live="assertive" data-testid="assertive-announcer">
+            </Div>
+            <Div role="alert" aria-live="assertive" data-testid="assertive-announcer">
               {store.assertiveAnnouncement}
-            </div>
-          </div>
+            </Div>
+          </Div>
         </>
       )}
     </>

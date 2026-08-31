@@ -1,5 +1,6 @@
 import * as React from 'react'
-import { Overlay } from '../Overlay'
+import { Button, Div, Span, type PrimitiveProps, type PrimitiveElement } from '@reference-ui/react'
+import { Overlay, type OverlayContentProps } from '../Overlay'
 import { RovingFocus } from '../RovingFocus'
 
 export interface MenuProps {
@@ -56,7 +57,7 @@ export function Menu({
 export function MenuTrigger({
   children,
   ...props
-}: React.ComponentPropsWithoutRef<'button'>) {
+}: React.ComponentPropsWithoutRef<typeof Overlay.Trigger>) {
   return (
     <Overlay.Trigger aria-haspopup="menu" {...props}>
       {children}
@@ -64,41 +65,43 @@ export function MenuTrigger({
   )
 }
 
+export type MenuContentProps = OverlayContentProps
+
 export function MenuContent({
   children,
   className,
   style,
   ...props
-}: React.ComponentPropsWithoutRef<'div'>) {
+}: MenuContentProps) {
   return (
     <Overlay.Portal>
       <Overlay.Content
         role="menu"
         data-reference-menu-content=""
+        minW="40r"
+        bg="ui.dialog.background"
+        color="ui.dialog.foreground"
+        borderRadius="md"
+        p="1r"
+        boxShadow="0 4px 16px rgba(0,0,0,0.12)"
+        border="1px solid"
+        borderColor="ui.dialog.border"
+        zIndex={50}
         className={className}
-        style={{
-          minWidth: 160,
-          backgroundColor: '#fff',
-          borderRadius: 6,
-          padding: 4,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-          border: '1px solid #e5e7eb',
-          zIndex: 50,
-          ...style,
-        }}
+        style={style}
         {...props}
       >
         <RovingFocus.Root orientation="vertical" loop>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <Div display="flex" flexDirection="column" gap="0.5r">
             {children}
-          </div>
+          </Div>
         </RovingFocus.Root>
       </Overlay.Content>
     </Overlay.Portal>
   )
 }
 
-export interface MenuItemProps extends React.ComponentPropsWithoutRef<'div'> {
+export type MenuItemProps = PrimitiveProps<'div'> & {
   disabled?: boolean
   onSelect?: () => void
   closeOnSelect?: boolean
@@ -142,35 +145,36 @@ export function MenuItem({
 
   return (
     <RovingFocus.Item disabled={disabled}>
-      <div
+      <Div
         role="menuitem"
         tabIndex={disabled ? -1 : 0}
         aria-disabled={disabled ? 'true' : undefined}
         data-disabled={disabled ? '' : undefined}
         onClick={handleClick}
         onKeyDown={handleKeyDown}
+        display="flex"
+        alignItems="center"
+        px="2.5r"
+        py="1.5r"
+        borderRadius="sm"
+        fontSize="3.5r"
+        cursor={disabled ? 'not-allowed' : 'pointer'}
+        opacity={disabled ? 0.5 : 1}
+        outline="none"
+        userSelect="none"
+        _hover={!disabled ? { bg: 'colors.gray.100', color: 'design.text.base' } : undefined}
+        _focusVisible={{ outline: '2px solid', outlineColor: 'ui.focus.ring', outlineOffset: '2px' }}
         className={className}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          padding: '6px 8px',
-          borderRadius: 4,
-          fontSize: 14,
-          cursor: disabled ? 'not-allowed' : 'pointer',
-          opacity: disabled ? 0.5 : 1,
-          outline: 'none',
-          userSelect: 'none',
-          ...style,
-        }}
+        style={style}
         {...props}
       >
         {children}
-      </div>
+      </Div>
     </RovingFocus.Item>
   )
 }
 
-export interface MenuCheckboxItemProps extends MenuItemProps {
+export type MenuCheckboxItemProps = MenuItemProps & {
   checked?: boolean
   onCheckedChange?: (checked: boolean) => void
 }
@@ -197,27 +201,27 @@ export function MenuCheckboxItem({
       onSelect={handleSelect}
       {...props}
     >
-      <span style={{ width: 16, marginRight: 6 }}>{checked ? '✓' : ''}</span>
+      <Span display="inline-flex" width="4r" mr="1.5r">{checked ? '✓' : ''}</Span>
       {children}
     </MenuItem>
   )
 }
 
+export type MenuSeparatorProps = PrimitiveProps<'div'>
+
 export function MenuSeparator({
   className,
   style,
   ...props
-}: React.ComponentPropsWithoutRef<'div'>) {
+}: MenuSeparatorProps) {
   return (
-    <div
+    <Div
       role="separator"
+      height="1px"
+      bg="ui.hr.border"
+      my="1r"
       className={className}
-      style={{
-        height: 1,
-        backgroundColor: '#e5e7eb',
-        margin: '4px 0',
-        ...style,
-      }}
+      style={style}
       {...props}
     />
   )

@@ -1,14 +1,14 @@
 import * as React from 'react'
+import { Button, Span, type PrimitiveProps, type PrimitiveElement } from '@reference-ui/react'
 
-export interface SwitchProps
-  extends Omit<React.ComponentPropsWithoutRef<'button'>, 'onChange' | 'role' | 'type'> {
+export type SwitchProps = Omit<PrimitiveProps<'button'>, 'onChange' | 'role' | 'type'> & {
   checked?: boolean
   defaultChecked?: boolean
   onChange?: (checked: boolean) => void
   disabled?: boolean
 }
 
-export interface SwitchThumbProps extends React.ComponentPropsWithoutRef<'span'> {}
+export type SwitchThumbProps = PrimitiveProps<'span'>
 
 interface SwitchContextValue {
   checked: boolean
@@ -23,23 +23,21 @@ export function SwitchThumb({ className, style, ...props }: SwitchThumbProps) {
   const disabled = context?.disabled ?? false
 
   return (
-    <span
+    <Span
       data-reference-switch-thumb=""
       data-state={checked ? 'checked' : 'unchecked'}
       data-disabled={disabled ? '' : undefined}
+      display="inline-block"
+      width="5r"
+      height="5r"
+      borderRadius="full"
+      bg="ui.checkbox.tick.stroke"
+      boxShadow="0 1px 3px rgba(0,0,0,0.2)"
+      transition="transform 200ms ease"
+      transform={checked ? 'translateX(5r)' : 'translateX(0)'}
+      pointerEvents="none"
       className={className}
-      style={{
-        display: 'inline-block',
-        width: 20,
-        height: 20,
-        borderRadius: '50%',
-        backgroundColor: '#fff',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-        transition: 'transform 0.2s',
-        transform: checked ? 'translateX(20px)' : 'translateX(0px)',
-        pointerEvents: 'none',
-        ...style,
-      }}
+      style={style}
       {...props}
     />
   )
@@ -86,7 +84,7 @@ export const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(
 
     return (
       <SwitchContext.Provider value={contextValue}>
-        <button
+        <Button
           type="button"
           role="switch"
           ref={ref}
@@ -95,26 +93,25 @@ export const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(
           data-state={checked ? 'checked' : 'unchecked'}
           data-disabled={disabled ? '' : undefined}
           onClick={handleClick}
+          display="inline-flex"
+          alignItems="center"
+          width="11r"
+          height="6r"
+          p="0.5r"
+          borderRadius="full"
+          border="none"
+          cursor={disabled ? 'not-allowed' : 'pointer'}
+          bg={checked ? 'ui.checkbox.checked.fill' : 'colors.gray.300'}
+          opacity={disabled ? 0.6 : 1}
+          transition="background-color 200ms ease"
+          _focusVisible={{ outline: '2px solid', outlineColor: 'ui.focus.ring', outlineOffset: '2px' }}
           className={className}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            width: 44,
-            height: 24,
-            padding: 2,
-            borderRadius: 12,
-            border: 'none',
-            cursor: disabled ? 'not-allowed' : 'pointer',
-            backgroundColor: checked ? '#0066cc' : '#ccc',
-            opacity: disabled ? 0.6 : 1,
-            transition: 'background-color 0.2s',
-            ...style,
-          }}
+          style={style}
           {...props}
         >
           {children}
           {!hasAuthoredThumb && <SwitchThumb />}
-        </button>
+        </Button>
       </SwitchContext.Provider>
     )
   }
