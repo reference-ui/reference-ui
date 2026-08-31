@@ -13,30 +13,27 @@ export function PopoverFixture() {
           Open Popover
         </Popover.Trigger>
 
-        <Popover.Portal>
-          <Popover.Content
-            data-testid="popover-content"
-            style={{
-              position: 'fixed',
-              top: '100px',
-              left: '100px',
-              background: '#fff',
-              border: '1px solid #ccc',
-              padding: '16px',
-              borderRadius: '4px',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-              zIndex: 1000,
-            }}
-          >
-            <Popover.Arrow data-testid="popover-arrow" />
-            <h3 data-testid="popover-title">Popover Header</h3>
-            <p>Non-modal popover content</p>
-            <input data-testid="popover-input" placeholder="Type here" />
-            <Popover.Close data-testid="btn-popover-close">
-              Close Popover
-            </Popover.Close>
-          </Popover.Content>
-        </Popover.Portal>
+        <Popover.Content
+          data-testid="popover-content"
+          placement="bottom-start"
+          offset={8}
+          style={{
+            background: '#fff',
+            border: '1px solid #ccc',
+            padding: '16px',
+            borderRadius: '4px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+            zIndex: 1000,
+          }}
+        >
+          <Popover.Arrow data-testid="popover-arrow" />
+          <h3 data-testid="popover-title">Popover Header</h3>
+          <p>Non-modal popover content</p>
+          <input data-testid="popover-input" placeholder="Type here" />
+          <Popover.Close data-testid="btn-popover-close">
+            Close Popover
+          </Popover.Close>
+        </Popover.Content>
       </Popover>
 
       <button type="button" data-testid="btn-outside">

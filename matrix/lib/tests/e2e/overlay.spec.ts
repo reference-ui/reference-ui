@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Locator } from '@playwright/test'
 
 test.describe('Overlay Composition Gates & Browser Proofs', () => {
   test.beforeEach(async ({ page }) => {
@@ -15,14 +15,12 @@ test.describe('Overlay Composition Gates & Browser Proofs', () => {
     await expect(backdrop).toHaveCount(0)
     await expect(content).toHaveCount(0)
 
-    // Click trigger to open
     await page.getByTestId('btn-open-overlay').click()
 
     await expect(backdrop).toBeVisible()
     await expect(content).toBeVisible()
     await expect(content.getByTestId('overlay-title')).toHaveText('Dialog Title')
 
-    // Close
     await page.getByTestId('btn-close-overlay').click()
     await expect(content).toHaveCount(0)
   })
@@ -42,7 +40,6 @@ test.describe('Overlay Composition Gates & Browser Proofs', () => {
     const backdrop = page.getByTestId('overlay-backdrop')
     await expect(content).toBeVisible()
 
-    // Click on the backdrop (e.g. top-left corner)
     await backdrop.click({ position: { x: 10, y: 10 } })
     await expect(content).toHaveCount(0)
   })
@@ -57,8 +54,66 @@ test.describe('Overlay Composition Gates & Browser Proofs', () => {
     await page.keyboard.press('Tab')
     await expect(closeBtn).toBeFocused()
 
-    // Tab wraps back to first action
     await page.keyboard.press('Tab')
     await expect(firstAction).toBeFocused()
   })
+
+  test('OV-POS-01: Unbound Content writes no position/top/left', async ({ page }) => {
+    await page.getByTestId('btn-open-unbound').click()
+    const content = page.getByTestId('overlay-unbound-content')
+    await expect(content).toBeVisible()
+
+    const inline = await content.evaluate(el => ({
+      position: (el as HTMLElement).style.position,
+      top: (el as HTMLElement).style.top,
+      left: (el as HTMLElement).style.left,
+    }))
+
+    expect(inline.position).toBe('')
+    expect(inline.top).toBe('')
+    expect(inline.left).toBe('')
+  })
+
+  test('OV-POS-01 dialog: isolating Trigger does not overwrite application centering', async ({
+    page,
+  }) => {
+    await page.getByTestId('btn-open-overlay').click()
+    const content = page.getByTestId('overlay-content')
+    await expect(content).toBeVisible()
+
+    const inline = await content.evaluate(el => ({
+      position: (el as HTMLElement).style.position,
+      top: (el as HTMLElement).style.top,
+      left: (el as HTMLElement).style.left,
+    }))
+
+    expect(inline.position).toBe('fixed')
+    expect(inline.top).toBe('50%')
+    expect(inline.left).toBe('50%')
+  })
+
+  test('OV-TRG-02: isolation={false} Trigger is the Floating UI reference', async ({
+    page,
+  }) => {
+    const trigger = page.getByTestId('btn-open-anchored')
+    const content = page.getByTestId('overlay-anchored-content')
+
+    await expect(content).toHaveCount(0)
+    await trigger.click()
+    await expect(content).toBeVisible()
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true')
+
+    await expectAnchoredBottomStart(trigger, content)
+  })
 })
+
+async function expectAnchoredBottomStart(trigger: Locator, content: Locator) {
+  const triggerBox = await trigger.boundingBox()
+  const contentBox = await content.boundingBox()
+  expect(triggerBox).toBeTruthy()
+  expect(contentBox).toBeTruthy()
+
+  expect(contentBox!.y).toBeGreaterThanOrEqual(triggerBox!.y + triggerBox!.height - 2)
+  expect(contentBox!.y).toBeLessThan(triggerBox!.y + triggerBox!.height + 24)
+  expect(Math.abs(contentBox!.x - triggerBox!.x)).toBeLessThan(16)
+}

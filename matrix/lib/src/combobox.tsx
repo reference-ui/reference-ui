@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Combobox } from '@reference-ui/lib'
+import { Combobox, Listbox } from '@reference-ui/lib'
 
 export function ComboboxFixture() {
   const [value, setValue] = React.useState<string | null>(null)
@@ -16,15 +16,17 @@ export function ComboboxFixture() {
           <Combobox.Input data-testid="combobox-input" placeholder="Select a fruit..." />
 
           <Combobox.Popover data-testid="combobox-popover">
-            <Combobox.Option value="apple" data-testid="combo-opt-apple">
-              Apple
-            </Combobox.Option>
-            <Combobox.Option value="banana" data-testid="combo-opt-banana">
-              Banana
-            </Combobox.Option>
-            <Combobox.Option value="cherry" data-testid="combo-opt-cherry">
-              Cherry
-            </Combobox.Option>
+            <Listbox>
+              <Listbox.Option value="apple" data-testid="combo-opt-apple">
+                Apple
+              </Listbox.Option>
+              <Listbox.Option value="banana" data-testid="combo-opt-banana">
+                Banana
+              </Listbox.Option>
+              <Listbox.Option value="cherry" data-testid="combo-opt-cherry">
+                Cherry
+              </Listbox.Option>
+            </Listbox>
           </Combobox.Popover>
         </Combobox>
       </div>

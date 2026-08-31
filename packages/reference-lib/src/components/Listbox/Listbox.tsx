@@ -1,6 +1,7 @@
 import * as React from 'react'
-import { Div, type PrimitiveProps, type PrimitiveElement } from '@reference-ui/react'
+import { Div, type PrimitiveProps } from '@reference-ui/react'
 import { RovingFocus } from '../RovingFocus'
+import { ComboboxContext } from '../Combobox/combobox-context'
 
 export type ListboxSelection = 'single' | 'multiple'
 export type ListboxOrientation = 'horizontal' | 'vertical'
@@ -44,8 +45,13 @@ export function ListboxOption({
   ...props
 }: ListboxOptionProps) {
   const context = React.useContext(ListboxContext)
+  const combobox = React.useContext(ComboboxContext)
   const isSelected = context ? context.isOptionSelected(value) : false
   const isDisabled = disabled || (context?.disabled ?? false)
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (combobox) e.preventDefault()
+  }
 
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     onClick?.(e)
@@ -72,6 +78,7 @@ export function ListboxOption({
         data-state={isSelected ? 'selected' : 'unselected'}
         data-disabled={isDisabled ? '' : undefined}
         data-value={value}
+        onMouseDown={handleMouseDown}
         onClick={handleClick}
         onKeyDown={handleKeyDown}
         display="flex"
@@ -80,13 +87,13 @@ export function ListboxOption({
         py="1.5r"
         borderRadius="sm"
         cursor={isDisabled ? 'not-allowed' : 'pointer'}
-        bg={isSelected ? 'colors.gray.900' : 'transparent'}
-        color={isSelected ? 'colors.gray.50' : 'design.text.base'}
+        bg={isSelected ? 'ui.button.background' : 'transparent'}
+        color={isSelected ? 'ui.button.foreground' : 'design.text.base'}
         opacity={isDisabled ? 0.5 : 1}
         outline="none"
         userSelect="none"
-        _hover={!isSelected && !isDisabled ? { bg: 'colors.gray.100' } : undefined}
-        _focusVisible={{ outline: '2px solid', outlineColor: 'ui.focus.ring', outlineOffset: '2px' }}
+        _hover={!isSelected && !isDisabled ? { bg: 'ui.table.row.mutedBackground' } : undefined}
+        _focusVisible={{ outline: '2px solid', outlineColor: 'ui.focus.ring', outlineOffset: '-2px' }}
         className={className}
         style={style}
         {...props}
@@ -113,13 +120,18 @@ export const Listbox = React.forwardRef<HTMLDivElement, ListboxProps>(
     },
     ref
   ) {
+    const combobox = React.useContext(ComboboxContext)
     const isControlled = valueProp !== undefined
     const [internalValue, setInternalValue] = React.useState<ListboxValue>(() => {
       if (defaultValue !== undefined) return defaultValue
       return selection === 'single' ? null : []
     })
 
-    const value = isControlled ? valueProp : internalValue
+    const value = combobox
+      ? combobox.value
+      : isControlled
+        ? valueProp
+        : internalValue
 
     const isOptionSelected = React.useCallback(
       (val: string) => {
@@ -147,12 +159,17 @@ export const Listbox = React.forwardRef<HTMLDivElement, ListboxProps>(
           nextValue = arr
         }
 
+        if (combobox) {
+          combobox.handleSelect(val)
+          return
+        }
+
         if (!isControlled) {
           setInternalValue(nextValue)
         }
         onChange?.(nextValue)
       },
-      [selection, value, isControlled, onChange]
+      [selection, value, isControlled, onChange, combobox]
     )
 
     const contextValue = React.useMemo<ListboxContextValue>(
@@ -180,11 +197,6 @@ export const Listbox = React.forwardRef<HTMLDivElement, ListboxProps>(
             display="flex"
             flexDirection={orientation === 'vertical' ? 'column' : 'row'}
             gap="0.5r"
-            p="1r"
-            border="1px solid"
-            borderColor="ui.field.border"
-            borderRadius="md"
-            bg="ui.field.background"
             outline="none"
             className={className}
             style={style}

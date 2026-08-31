@@ -1,55 +1,31 @@
 import * as React from 'react'
-import { Div, type PrimitiveProps, type PrimitiveElement } from '@reference-ui/react'
+import { Div, type PrimitiveProps } from '@reference-ui/react'
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '../Collapsible'
+import { AccordionContext } from './accordion-context'
 
 export type AccordionExpansion = 'single' | 'multiple'
 export type AccordionValue = string | string[] | null
+export type AccordionKeyboard = 'headers' | 'none' | 'arrows'
 
 export type AccordionProps = Omit<PrimitiveProps<'div'>, 'onChange' | 'value' | 'defaultValue'> & {
   expansion?: AccordionExpansion
   value?: AccordionValue
   defaultValue?: AccordionValue
-  onChange?: (value: any) => void
+  onChange?: (value: AccordionValue) => void
   disabled?: boolean
-  keyboard?: 'none' | 'arrows'
+  keyboard?: AccordionKeyboard
 }
 
-interface AccordionContextValue {
-  expansion: AccordionExpansion
-  isItemOpen: (id: string) => boolean
-  toggleItem: (id: string) => void
-  disabled: boolean
-}
-
-const AccordionContext = React.createContext<AccordionContextValue | null>(null)
-
-export type AccordionItemProps = PrimitiveProps<'div'> & {
+export type AccordionItemProps = {
   id: string
   children?: React.ReactNode
   disabled?: boolean
 }
 
-export function AccordionItem({ id, children, disabled = false, ...props }: AccordionItemProps) {
-  const context = React.useContext(AccordionContext)
-
-  if (!context) {
-    return <>{children}</>
-  }
-
-  const isOpen = context.isItemOpen(id)
-  const isDisabled = disabled || context.disabled
-
+export function AccordionItem({ id, children, disabled = false }: AccordionItemProps) {
   return (
-    <Collapsible
-      open={isOpen}
-      disabled={isDisabled}
-      onOpenChange={() => {
-        context.toggleItem(id)
-      }}
-    >
-      <Div data-reference-accordion-item="" data-state={isOpen ? 'open' : 'closed'} {...props}>
-        {children}
-      </Div>
+    <Collapsible id={id} disabled={disabled}>
+      {children}
     </Collapsible>
   )
 }
@@ -63,7 +39,7 @@ export const Accordion = React.forwardRef<HTMLDivElement, AccordionProps>(
       defaultValue,
       onChange,
       disabled = false,
-      keyboard = 'arrows',
+      keyboard = 'headers',
       onKeyDown,
       ...props
     },
@@ -116,9 +92,7 @@ export const Accordion = React.forwardRef<HTMLDivElement, AccordionProps>(
       if (e.defaultPrevented || keyboard === 'none') return
 
       const triggers = Array.from(
-        e.currentTarget.querySelectorAll<HTMLButtonElement>(
-          '[data-reference-accordion-item] button[aria-expanded]'
-        )
+        e.currentTarget.querySelectorAll<HTMLButtonElement>('button[aria-expanded]')
       ).filter(btn => !btn.disabled)
 
       if (triggers.length === 0) return
@@ -143,7 +117,7 @@ export const Accordion = React.forwardRef<HTMLDivElement, AccordionProps>(
       }
     }
 
-    const contextValue = React.useMemo<AccordionContextValue>(
+    const contextValue = React.useMemo(
       () => ({
         expansion,
         isItemOpen,

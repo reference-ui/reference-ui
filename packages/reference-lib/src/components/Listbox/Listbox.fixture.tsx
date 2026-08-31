@@ -7,7 +7,15 @@ export default {
     const [value, setValue] = React.useState<string | null>('react')
     return (
       <Div maxW="60r" display="flex" flexDirection="column" gap="3r">
-        <Listbox value={value} onChange={setValue}>
+        <Listbox
+          value={value}
+          onChange={setValue}
+          border="1px solid"
+          borderColor="ui.field.border"
+          borderRadius="md"
+          p="1r"
+          bg="ui.field.background"
+        >
           <Listbox.Option value="react">React</Listbox.Option>
           <Listbox.Option value="vue">Vue</Listbox.Option>
           <Listbox.Option value="svelte">Svelte</Listbox.Option>
@@ -21,7 +29,16 @@ export default {
     const [value, setValue] = React.useState<string[]>(['email'])
     return (
       <Div maxW="60r" display="flex" flexDirection="column" gap="3r">
-        <Listbox selection="multiple" value={value} onChange={setValue}>
+        <Listbox
+          selection="multiple"
+          value={value}
+          onChange={setValue}
+          border="1px solid"
+          borderColor="ui.field.border"
+          borderRadius="md"
+          p="1r"
+          bg="ui.field.background"
+        >
           <Listbox.Option value="email">Email notifications</Listbox.Option>
           <Listbox.Option value="sms">SMS alerts</Listbox.Option>
           <Listbox.Option value="push">Push notifications</Listbox.Option>

@@ -1,7 +1,13 @@
 import * as React from 'react'
-import { Button, Div, type PrimitiveProps, type PrimitiveElement } from '@reference-ui/react'
-import { Overlay, type OverlayProps, type OverlayContentProps } from '../Overlay'
-import { Portal, type PortalProps } from '../Portal'
+import { Button, type PrimitiveProps } from '@reference-ui/react'
+import {
+  Overlay,
+  useOverlay,
+  type OverlayProps,
+  type OverlayContentProps,
+  type OverlayTriggerProps,
+} from '../Overlay'
+import { type PortalProps } from '../Portal'
 
 export interface PopoverProps extends Omit<OverlayProps, 'isolation'> {
   openOnHover?: boolean
@@ -15,8 +21,6 @@ interface PopoverContextValue {
   openOnHover: boolean
   openDelay: number
   closeDelay: number
-  triggerRef: React.MutableRefObject<HTMLElement | null>
-  contentRef: React.MutableRefObject<HTMLDivElement | null>
   contentId: string
 }
 
@@ -28,7 +32,9 @@ export function Popover({
   children,
   open: openProp,
   defaultOpen = false,
+  onOpen,
   onOpenChange,
+  onDismiss,
   openOnHover = false,
   openDelay = 700,
   closeDelay = 300,
@@ -37,9 +43,6 @@ export function Popover({
   const [internalOpen, setInternalOpen] = React.useState(defaultOpen)
   const isControlled = openProp !== undefined
   const isOpen = isControlled ? openProp : internalOpen
-
-  const triggerRef = React.useRef<HTMLElement | null>(null)
-  const contentRef = React.useRef<HTMLDivElement | null>(null)
 
   const contentIdRef = React.useRef<string | null>(null)
   if (!contentIdRef.current) {
@@ -63,8 +66,6 @@ export function Popover({
       openOnHover,
       openDelay,
       closeDelay,
-      triggerRef,
-      contentRef,
       contentId: contentIdRef.current!,
     }
   }, [isOpen, setIsOpen, openOnHover, openDelay, closeDelay])
@@ -73,6 +74,8 @@ export function Popover({
     <PopoverContext.Provider value={contextValue}>
       <Overlay
         open={isOpen}
+        onOpen={onOpen}
+        onDismiss={onDismiss}
         onOpenChange={setIsOpen}
         isolation={false}
         {...overlayProps}
@@ -83,69 +86,59 @@ export function Popover({
   )
 }
 
-export type PopoverTriggerProps = PrimitiveProps<'button'>
+export type PopoverTriggerProps = OverlayTriggerProps
 
 export function PopoverTrigger({
   children,
   id,
+  onPointerEnter,
+  onPointerLeave,
   ...props
 }: PopoverTriggerProps) {
   const context = React.useContext(PopoverContext)
+  const overlay = useOverlay()
   const hoverTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handlePointerEnter = (e: React.PointerEvent<HTMLButtonElement>) => {
-    props.onPointerEnter?.(e)
-    if (context?.openOnHover) {
-      if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current)
-      hoverTimerRef.current = setTimeout(() => {
-        context.setIsOpen(true)
-      }, context.openDelay)
-    }
+    onPointerEnter?.(e)
+    if (!context?.openOnHover || e.defaultPrevented) return
+    if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current)
+    hoverTimerRef.current = setTimeout(() => {
+      overlay?.setIsOpen(true)
+    }, context.openDelay)
   }
 
   const handlePointerLeave = (e: React.PointerEvent<HTMLButtonElement>) => {
-    props.onPointerLeave?.(e)
-    if (context?.openOnHover) {
+    onPointerLeave?.(e)
+    if (!context?.openOnHover || e.defaultPrevented) return
+    if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current)
+    hoverTimerRef.current = setTimeout(() => {
+      overlay?.setIsOpen(false)
+    }, context.closeDelay)
+  }
+
+  React.useEffect(() => {
+    return () => {
       if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current)
-      hoverTimerRef.current = setTimeout(() => {
-        context.setIsOpen(false)
-      }, context.closeDelay)
     }
-  }
-
-  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    props.onClick?.(e)
-    if (!e.defaultPrevented && context) {
-      context.setIsOpen(!context.isOpen)
-    }
-  }
-
-  const composedRef = (node: HTMLButtonElement | null) => {
-    if (context) {
-      context.triggerRef.current = node
-    }
-  }
+  }, [])
 
   return (
-    <Button
-      type="button"
+    <Overlay.Trigger
       id={id}
       aria-haspopup="dialog"
-      aria-expanded={context?.isOpen}
       aria-controls={context?.isOpen ? context.contentId : undefined}
-      {...props}
-      ref={composedRef}
-      onClick={handleClick}
       onPointerEnter={handlePointerEnter}
       onPointerLeave={handlePointerLeave}
+      {...props}
     >
       {children}
-    </Button>
+    </Overlay.Trigger>
   )
 }
 
 export function PopoverPortal({ children, container }: PortalProps) {
-  return <Portal container={container}>{children}</Portal>
+  return <Overlay.Portal container={container}>{children}</Overlay.Portal>
 }
 
 export type PopoverContentProps = OverlayContentProps
@@ -165,8 +158,6 @@ export function PopoverContent({
       id={contentId}
       role="dialog"
       tabIndex={-1}
-      data-side="bottom"
-      data-align="start"
       {...props}
     >
       {children}
@@ -191,12 +182,12 @@ export function PopoverClose({
   children,
   ...props
 }: PopoverCloseProps) {
-  const context = React.useContext(PopoverContext)
+  const overlay = useOverlay()
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     props.onClick?.(e)
-    if (!e.defaultPrevented && context) {
-      context.setIsOpen(false)
+    if (!e.defaultPrevented) {
+      overlay?.setIsOpen(false)
     }
   }
 

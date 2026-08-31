@@ -81,21 +81,20 @@ export function DateFieldPicker({
   const context = React.useContext(DateFieldContext)
 
   return (
-    <Overlay.Portal>
-      <Overlay.Content
-        role="dialog"
-        bg="ui.dialog.background"
-        color="ui.dialog.foreground"
-        borderRadius="md"
-        boxShadow="0 4px 16px rgba(0,0,0,0.15)"
-        border="1px solid"
-        borderColor="ui.dialog.border"
-        p="2r"
-        zIndex={50}
-        className={className}
-        style={style}
-        {...props}
-      >
+    <Overlay.Content
+      role="dialog"
+      bg="ui.dialog.background"
+      color="ui.dialog.foreground"
+      borderRadius="md"
+      boxShadow="0 4px 16px rgba(0,0,0,0.15)"
+      border="1px solid"
+      borderColor="ui.dialog.border"
+      p="2r"
+      zIndex={50}
+      className={className}
+      style={style}
+      {...props}
+    >
         {children ?? (
           <Calendar
             value={context?.value}
@@ -104,7 +103,6 @@ export function DateFieldPicker({
           />
         )}
       </Overlay.Content>
-    </Overlay.Portal>
   )
 }
 

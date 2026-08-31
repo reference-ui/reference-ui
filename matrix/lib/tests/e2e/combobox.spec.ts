@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Locator } from '@playwright/test'
 
 test.describe('Combobox Composition Gates & Browser Proofs', () => {
   test.beforeEach(async ({ page }) => {
@@ -22,6 +22,7 @@ test.describe('Combobox Composition Gates & Browser Proofs', () => {
     await input.click()
     await expect(input).toHaveAttribute('aria-expanded', 'true')
     await expect(popover).toBeVisible()
+    await expectAnchoredBottomStart(input, popover)
 
     const optBanana = page.getByTestId('combo-opt-banana')
     await expect(optBanana).toBeVisible()
@@ -33,3 +34,14 @@ test.describe('Combobox Composition Gates & Browser Proofs', () => {
     await expect(display).toHaveText('Selected: banana')
   })
 })
+
+async function expectAnchoredBottomStart(trigger: Locator, content: Locator) {
+  const triggerBox = await trigger.boundingBox()
+  const contentBox = await content.boundingBox()
+  expect(triggerBox).toBeTruthy()
+  expect(contentBox).toBeTruthy()
+
+  expect(contentBox!.y).toBeGreaterThanOrEqual(triggerBox!.y + triggerBox!.height - 2)
+  expect(contentBox!.y).toBeLessThan(triggerBox!.y + triggerBox!.height + 24)
+  expect(Math.abs(contentBox!.x - triggerBox!.x)).toBeLessThan(16)
+}

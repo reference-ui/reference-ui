@@ -74,30 +74,28 @@ export function MenuContent({
   ...props
 }: MenuContentProps) {
   return (
-    <Overlay.Portal>
-      <Overlay.Content
-        role="menu"
-        data-reference-menu-content=""
-        minW="40r"
-        bg="ui.dialog.background"
-        color="ui.dialog.foreground"
-        borderRadius="md"
-        p="1r"
-        boxShadow="0 4px 16px rgba(0,0,0,0.12)"
-        border="1px solid"
-        borderColor="ui.dialog.border"
-        zIndex={50}
-        className={className}
-        style={style}
-        {...props}
-      >
+    <Overlay.Content
+      role="menu"
+      data-reference-menu-content=""
+      minW="40r"
+      bg="ui.dialog.background"
+      color="ui.dialog.foreground"
+      borderRadius="md"
+      p="1r"
+      boxShadow="0 4px 16px rgba(0,0,0,0.12)"
+      border="1px solid"
+      borderColor="ui.dialog.border"
+      zIndex={50}
+      className={className}
+      style={style}
+      {...props}
+    >
         <RovingFocus.Root orientation="vertical" loop>
           <Div display="flex" flexDirection="column" gap="0.5r">
             {children}
           </Div>
         </RovingFocus.Root>
       </Overlay.Content>
-    </Overlay.Portal>
   )
 }
 

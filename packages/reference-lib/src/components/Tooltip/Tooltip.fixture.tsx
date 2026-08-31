@@ -20,12 +20,10 @@ export default {
             Hover me
           </Button>
         </Tooltip.Trigger>
-        <Tooltip.Portal>
-          <Tooltip.Content placement="top">
+        <Tooltip.Content placement="top">
             Helpful tooltip text
             <Tooltip.Arrow />
           </Tooltip.Content>
-        </Tooltip.Portal>
       </Tooltip>
     </Div>
   ),
@@ -46,12 +44,10 @@ export default {
               {placement}
             </Button>
           </Tooltip.Trigger>
-          <Tooltip.Portal>
-            <Tooltip.Content placement={placement}>
+          <Tooltip.Content placement={placement}>
               Tooltip on {placement}
               <Tooltip.Arrow />
             </Tooltip.Content>
-          </Tooltip.Portal>
         </Tooltip>
       ))}
     </Div>
@@ -72,12 +68,10 @@ export default {
             Tab to focus
           </Button>
         </Tooltip.Trigger>
-        <Tooltip.Portal>
-          <Tooltip.Content placement="bottom">
+        <Tooltip.Content placement="bottom">
             Also visible on keyboard focus
             <Tooltip.Arrow />
           </Tooltip.Content>
-        </Tooltip.Portal>
       </Tooltip>
     </Div>
   ),

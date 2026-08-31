@@ -1,11 +1,14 @@
 import * as React from 'react'
 import { Button, Div, type PrimitiveProps } from '@reference-ui/react'
 import { Presence } from '../Presence'
+import { AccordionContext } from '../Accordion/accordion-context'
 
 export interface CollapsibleProps {
   children?: React.ReactNode
+  id?: string
   open?: boolean
   defaultOpen?: boolean
+  onChange?: (open: boolean) => void
   onOpenChange?: (open: boolean) => void
   disabled?: boolean
 }
@@ -15,7 +18,8 @@ interface CollapsibleContextValue {
   setIsOpen: (open: boolean) => void
   disabled: boolean
   contentId: string
-  setContentId: (id: string) => void
+  setContentId: (id: string | null) => void
+  accordionItem?: boolean
 }
 
 const CollapsibleContext = React.createContext<CollapsibleContextValue | null>(null)
@@ -24,14 +28,23 @@ let collapsibleIdCounter = 0
 
 export function Collapsible({
   children,
+  id,
   open: openProp,
   defaultOpen = false,
+  onChange,
   onOpenChange,
   disabled = false,
 }: CollapsibleProps) {
+  const accordion = React.useContext(AccordionContext)
+  const isAccordionItem = Boolean(accordion && id)
+
   const [internalOpen, setInternalOpen] = React.useState(defaultOpen)
   const isControlled = openProp !== undefined
-  const isOpen = isControlled ? openProp : internalOpen
+  const isOpen = isAccordionItem
+    ? accordion!.isItemOpen(id!)
+    : isControlled
+      ? openProp
+      : internalOpen
 
   const generatedContentIdRef = React.useRef<string | null>(null)
   if (!generatedContentIdRef.current) {
@@ -41,25 +54,35 @@ export function Collapsible({
   const [explicitContentId, setExplicitContentId] = React.useState<string | null>(null)
   const contentId = explicitContentId ?? generatedContentIdRef.current
 
+  const notify = onChange ?? onOpenChange
+
   const setIsOpen = React.useCallback(
     (nextOpen: boolean) => {
+      if (isAccordionItem) {
+        accordion!.toggleItem(id!)
+        return
+      }
       if (!isControlled) {
         setInternalOpen(nextOpen)
       }
-      onOpenChange?.(nextOpen)
+      notify?.(nextOpen)
     },
-    [isControlled, onOpenChange]
+    [isAccordionItem, accordion, id, isControlled, notify]
   )
 
-  const contextValue = React.useMemo<CollapsibleContextValue>(() => {
-    return {
+  const isDisabled = disabled || (isAccordionItem ? accordion!.disabled : false)
+
+  const contextValue = React.useMemo<CollapsibleContextValue>(
+    () => ({
       isOpen,
       setIsOpen,
-      disabled,
+      disabled: isDisabled,
       contentId,
       setContentId: setExplicitContentId,
-    }
-  }, [isOpen, setIsOpen, disabled, contentId])
+      accordionItem: isAccordionItem,
+    }),
+    [isOpen, setIsOpen, isDisabled, contentId, isAccordionItem]
+  )
 
   return (
     <CollapsibleContext.Provider value={contextValue}>
@@ -95,6 +118,7 @@ export function CollapsibleTrigger({
       aria-controls={isOpen ? context?.contentId : undefined}
       data-state={isOpen ? 'open' : 'closed'}
       data-disabled={isDisabled ? '' : undefined}
+      data-reference-accordion-item={context?.accordionItem ? '' : undefined}
       disabled={isDisabled}
       onClick={handleClick}
       {...props}
@@ -117,7 +141,7 @@ export function CollapsibleContent({
   React.useEffect(() => {
     if (idProp && setContentId) {
       setContentId(idProp)
-      return () => setContentId(null as any)
+      return () => setContentId(null)
     }
   }, [idProp, setContentId])
 

@@ -58,7 +58,7 @@ export function NumberFieldInput({
       value={value !== null ? String(value) : ''}
       onChange={handleInputChange}
       onKeyDown={onKeyDown}
-      width="28r"
+      minWidth="12r"
       textAlign="center"
       className={className}
       style={style}
@@ -92,14 +92,6 @@ export function NumberFieldIncrement({
       aria-label="Increment"
       disabled={context?.disabled}
       onClick={handleClick}
-      px="2.5r"
-      py="1.5r"
-      borderRadius="sm"
-      border="1px solid"
-      borderColor="ui.field.border"
-      bg="ui.button.background"
-      color="ui.button.foreground"
-      cursor="pointer"
       className={className}
       style={style}
       {...props}
@@ -134,14 +126,6 @@ export function NumberFieldDecrement({
       aria-label="Decrement"
       disabled={context?.disabled}
       onClick={handleClick}
-      px="2.5r"
-      py="1.5r"
-      borderRadius="sm"
-      border="1px solid"
-      borderColor="ui.field.border"
-      bg="ui.button.background"
-      color="ui.button.foreground"
-      cursor="pointer"
       className={className}
       style={style}
       {...props}
@@ -264,9 +248,6 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
           data-reference-field=""
           data-reference-number-field=""
           data-disabled={disabled ? '' : undefined}
-          display="inline-flex"
-          alignItems="center"
-          gap="1r"
           className={className}
           style={style}
           {...props}

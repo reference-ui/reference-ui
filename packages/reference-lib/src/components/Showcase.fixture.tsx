@@ -105,11 +105,14 @@ export default function ShowcaseFixture() {
 
         {/* Field & Input */}
         <SectionCard title="Field">
-          <Field>
-            <Input placeholder="Enter username..." width="100%" border="none" outline="none" bg="transparent" />
-          </Field>
-          <Field status="warning">
-            <Input placeholder="Warning state..." width="100%" border="none" outline="none" bg="transparent" />
+          <Div display="flex" alignItems="center" gap="2r">
+            <Field flex="1">
+              <Input placeholder="Enter username..." />
+            </Field>
+            <Button type="button">Save</Button>
+          </Div>
+          <Field status="warning" width="100%">
+            <Input placeholder="Warning state..." />
           </Field>
         </SectionCard>
 
@@ -303,61 +306,53 @@ export default function ShowcaseFixture() {
         <SectionCard title="Collapsible & Accordion">
           <Collapsible defaultOpen>
             <Collapsible.Trigger
-              px="3r"
-              py="1.5r"
-              borderRadius="sm"
-              bg="colors.gray.100"
-              border="1px solid"
-              borderColor="ui.field.border"
-              cursor="pointer"
               width="100%"
               textAlign="left"
+              justifyContent="flex-start"
+              bg="ui.field.background"
+              color="ui.field.foreground"
+              borderColor="ui.field.border"
             >
               Toggle Collapsible Section
             </Collapsible.Trigger>
-            <Collapsible.Content p="2r" bg="colors.gray.50" borderRadius="sm" mt="1r">
-              <Span fontSize="3r">Collapsible content revealed smoothly using Reference primitives!</Span>
+            <Collapsible.Content p="3r">
+              <Span fontSize="3.5r" color="design.text.light">
+                Collapsible content revealed smoothly using Reference primitives.
+              </Span>
             </Collapsible.Content>
           </Collapsible>
 
-          <Accordion expansion="single" defaultValue="item-1">
-            <Accordion.Item id="item-1">
+          <Accordion expansion="single" defaultValue="item-1" display="flex" flexDirection="column" gap="1r">
+            <Collapsible id="item-1">
               <Collapsible.Trigger
-                px="3r"
-                py="1.5r"
-                bg="colors.gray.100"
-                border="1px solid"
-                borderColor="ui.field.border"
-                borderRadius="sm"
-                cursor="pointer"
                 width="100%"
                 textAlign="left"
+                justifyContent="flex-start"
+                bg="ui.field.background"
+                color="ui.field.foreground"
+                borderColor="ui.field.border"
               >
                 Accordion Item 1
               </Collapsible.Trigger>
-              <Collapsible.Content p="2r">
-                <Span fontSize="3r">Content inside Accordion item 1.</Span>
+              <Collapsible.Content p="3r">
+                <Span fontSize="3.5r" color="design.text.light">Content inside Accordion item 1.</Span>
               </Collapsible.Content>
-            </Accordion.Item>
-            <Accordion.Item id="item-2">
+            </Collapsible>
+            <Collapsible id="item-2">
               <Collapsible.Trigger
-                px="3r"
-                py="1.5r"
-                bg="colors.gray.100"
-                border="1px solid"
-                borderColor="ui.field.border"
-                borderRadius="sm"
-                cursor="pointer"
                 width="100%"
                 textAlign="left"
-                mt="1r"
+                justifyContent="flex-start"
+                bg="ui.field.background"
+                color="ui.field.foreground"
+                borderColor="ui.field.border"
               >
                 Accordion Item 2
               </Collapsible.Trigger>
-              <Collapsible.Content p="2r">
-                <Span fontSize="3r">Content inside Accordion item 2.</Span>
+              <Collapsible.Content p="3r">
+                <Span fontSize="3.5r" color="design.text.light">Content inside Accordion item 2.</Span>
               </Collapsible.Content>
-            </Accordion.Item>
+            </Collapsible>
           </Accordion>
         </SectionCard>
 
@@ -385,13 +380,15 @@ export default function ShowcaseFixture() {
         <SectionCard title="Combobox & Listbox">
           <Combobox value={comboboxVal} onChange={setComboboxVal}>
             <Field>
-              <Combobox.Input placeholder="Select framework..." border="none" outline="none" bg="transparent" />
-              <Combobox.Trigger>▾</Combobox.Trigger>
+              <Combobox.Input placeholder="Select framework..." />
+              <Button type="button" aria-label="Open suggestions">▾</Button>
             </Field>
             <Combobox.Popover>
-              <Combobox.Option value="react">React</Combobox.Option>
-              <Combobox.Option value="vue">Vue</Combobox.Option>
-              <Combobox.Option value="svelte">Svelte</Combobox.Option>
+              <Listbox>
+                <Listbox.Option value="react">React</Listbox.Option>
+                <Listbox.Option value="vue">Vue</Listbox.Option>
+                <Listbox.Option value="svelte">Svelte</Listbox.Option>
+              </Listbox>
             </Combobox.Popover>
           </Combobox>
 
@@ -413,7 +410,7 @@ export default function ShowcaseFixture() {
         <SectionCard title="DateField & Calendar">
           <DateField value={dateVal} onChange={setDateVal}>
             <Field>
-              <DateField.Input border="none" outline="none" bg="transparent" />
+              <DateField.Input />
               <DateField.Trigger />
             </Field>
             <DateField.Picker>
@@ -483,9 +480,8 @@ export default function ShowcaseFixture() {
           </Button>
 
           <Overlay open={isOverlayOpen} onOpenChange={setIsOverlayOpen}>
-            <Overlay.Backdrop />
-            <Overlay.Portal>
-              <Overlay.Content
+            <Overlay.Backdrop bg="rgba(0,0,0,0.4)" zIndex={40} />
+            <Overlay.Content
                 position="fixed"
                 top="50%"
                 left="50%"
@@ -532,7 +528,6 @@ export default function ShowcaseFixture() {
                   </Button>
                 </Div>
               </Overlay.Content>
-            </Overlay.Portal>
           </Overlay>
         </SectionCard>
 

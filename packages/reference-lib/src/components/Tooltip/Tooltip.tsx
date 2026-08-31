@@ -1,7 +1,7 @@
 import * as React from 'react'
-import { Div, type PrimitiveProps, type PrimitiveElement } from '@reference-ui/react'
-import { Overlay, type OverlayPlacement, type OverlayContentProps } from '../Overlay'
-import { Portal, type PortalProps } from '../Portal'
+import { type PrimitiveProps } from '@reference-ui/react'
+import { Overlay, type OverlayContentProps } from '../Overlay'
+import { type PortalProps } from '../Portal'
 import { tooltipWarmup } from '../ReferenceLibrary'
 
 export interface TooltipProps {
@@ -89,6 +89,7 @@ export function Tooltip({
         onOpenChange={setIsOpen}
         isolation={false}
         closeOnScroll={true}
+        presence={false}
         anchor={triggerRef}
       >
         {children}
@@ -187,7 +188,7 @@ export function TooltipTrigger({
 }
 
 export function TooltipPortal({ children, container }: PortalProps) {
-  return <Portal container={container}>{children}</Portal>
+  return <Overlay.Portal container={container}>{children}</Overlay.Portal>
 }
 
 export type TooltipContentProps = OverlayContentProps
@@ -204,6 +205,20 @@ export function TooltipContent({
 
   const contentId = id ?? context.contentId
 
+  const handlePointerEnter = (e: React.PointerEvent<HTMLDivElement>) => {
+    props.onPointerEnter?.(e)
+    if (!e.defaultPrevented) {
+      context.setIsOpen(true)
+    }
+  }
+
+  const handlePointerLeave = (e: React.PointerEvent<HTMLDivElement>) => {
+    props.onPointerLeave?.(e)
+    if (!e.defaultPrevented) {
+      window.setTimeout(() => context.setIsOpen(false), context.closeDelay)
+    }
+  }
+
   return (
     <Overlay.Content
       id={contentId}
@@ -218,7 +233,10 @@ export function TooltipContent({
       px="2.5r"
       borderRadius="sm"
       boxShadow="0 2px 8px rgba(0,0,0,0.2)"
+      zIndex={50}
       {...props}
+      onPointerEnter={handlePointerEnter}
+      onPointerLeave={handlePointerLeave}
     >
       {children}
     </Overlay.Content>

@@ -1,7 +1,8 @@
 import * as React from 'react'
-import { Input, Button, Div, type PrimitiveProps, type PrimitiveElement } from '@reference-ui/react'
-import { Overlay, type OverlayContentProps } from '../Overlay'
-import { Listbox, type ListboxOptionProps } from '../Listbox'
+import { Input, Button, type PrimitiveProps } from '@reference-ui/react'
+import { Overlay, useOverlay, type OverlayContentProps } from '../Overlay'
+import { ListboxOption, type ListboxOptionProps } from '../Listbox'
+import { ComboboxContext } from './combobox-context'
 
 export interface ComboboxProps {
   children?: React.ReactNode
@@ -10,26 +11,17 @@ export interface ComboboxProps {
   onChange?: (value: string | null) => void
   inputValue?: string
   defaultInputValue?: string
-  onInputChange?: (inputValue: string) => void
+  onInputValueChange?: (value: string) => void
+  onInputChange?: (value: string) => void
   open?: boolean
   defaultOpen?: boolean
+  onOpen?: () => void
+  onDismiss?: () => void
   onOpenChange?: (open: boolean) => void
   disabled?: boolean
 }
 
-interface ComboboxContextValue {
-  value: string | null
-  inputValue: string
-  isOpen: boolean
-  disabled: boolean
-  setIsOpen: (open: boolean) => void
-  handleSelect: (val: string | null) => void
-  handleInputChange: (val: string) => void
-}
-
-const ComboboxContext = React.createContext<ComboboxContextValue | null>(null)
-
-export type ComboboxInputProps = PrimitiveProps<'input'>
+export type ComboboxInputProps = Omit<PrimitiveProps<'input'>, 'value' | 'defaultValue'>
 
 export function ComboboxInput({
   onChange,
@@ -40,17 +32,36 @@ export function ComboboxInput({
   ...props
 }: ComboboxInputProps) {
   const context = React.useContext(ComboboxContext)
-  if (!context) return null
+  const overlay = useOverlay()
+  const inputRef = React.useRef<HTMLInputElement | null>(null)
+  const sourceRef = context?.sourceRef
+  const inputValue = context?.inputValue ?? ''
+  const isOpen = context?.isOpen ?? false
+  const disabled = context?.disabled ?? false
+  const setIsOpen = context?.setIsOpen
+  const handleInputChange = context?.handleInputChange
 
-  const { inputValue, isOpen, disabled, setIsOpen, handleInputChange } = context
+  const assignAnchor = React.useCallback(
+    (node: HTMLInputElement | null) => {
+      inputRef.current = node
+      const host = (node?.closest('[data-reference-field]') as HTMLElement | null) ?? node
+      if (sourceRef) sourceRef.current = host
+      if (overlay) overlay.triggerRef.current = host
+    },
+    [overlay, sourceRef]
+  )
+
+  React.useLayoutEffect(() => {
+    assignAnchor(inputRef.current)
+  })
+
+  if (!context || !setIsOpen || !handleInputChange) return null
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange?.(e)
     if (!e.defaultPrevented) {
       handleInputChange(e.target.value)
-      if (!isOpen) {
-        setIsOpen(true)
-      }
+      if (!isOpen) setIsOpen(true)
     }
   }
 
@@ -76,6 +87,7 @@ export function ComboboxInput({
 
   return (
     <Input
+      ref={assignAnchor}
       role="combobox"
       aria-expanded={isOpen}
       aria-autocomplete="list"
@@ -85,7 +97,6 @@ export function ComboboxInput({
       onChange={handleChange}
       onFocus={handleFocus}
       onKeyDown={handleKeyDown}
-      width="100%"
       className={className}
       style={style}
       {...props}
@@ -93,16 +104,46 @@ export function ComboboxInput({
   )
 }
 
-export type ComboboxTriggerProps = React.ComponentPropsWithoutRef<typeof Overlay.Trigger>
+export type ComboboxTriggerProps = PrimitiveProps<'button'>
 
 export function ComboboxTrigger({
   children,
+  onClick,
+  className,
+  style,
   ...props
 }: ComboboxTriggerProps) {
+  const context = React.useContext(ComboboxContext)
+  const overlay = useOverlay()
+  if (!context) return null
+
+  const composedRef = (node: HTMLButtonElement | null) => {
+    context.sourceRef.current = node
+    if (overlay) overlay.triggerRef.current = node
+  }
+
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    onClick?.(e)
+    if (!e.defaultPrevented && !context.disabled) {
+      context.setIsOpen(!context.isOpen)
+    }
+  }
+
   return (
-    <Overlay.Trigger aria-haspopup="listbox" {...props}>
+    <Button
+      ref={composedRef}
+      type="button"
+      role="combobox"
+      aria-expanded={context.isOpen}
+      aria-haspopup="listbox"
+      disabled={context.disabled}
+      onClick={handleClick}
+      className={className}
+      style={style}
+      {...props}
+    >
       {children}
-    </Overlay.Trigger>
+    </Button>
   )
 }
 
@@ -110,43 +151,35 @@ export type ComboboxPopoverProps = OverlayContentProps
 
 export function ComboboxPopover({
   children,
-  className,
   style,
   ...props
 }: ComboboxPopoverProps) {
-  const context = React.useContext(ComboboxContext)
-
   return (
-    <Overlay.Portal>
-      <Overlay.Content
-        role="presentation"
-        minW="50r"
-        bg="ui.dialog.background"
-        color="ui.dialog.foreground"
-        borderRadius="md"
-        boxShadow="0 4px 16px rgba(0,0,0,0.15)"
-        border="1px solid"
-        borderColor="ui.dialog.border"
-        p="1r"
-        zIndex={50}
-        className={className}
-        style={style}
-        {...props}
-      >
-        <Listbox
-          value={context?.value}
-          onChange={(nextVal) => context?.handleSelect(nextVal)}
-          style={{ border: 'none', padding: 0 }}
-        >
-          {children}
-        </Listbox>
-      </Overlay.Content>
-    </Overlay.Portal>
+    <Overlay.Content
+      data-reference-combobox-popover=""
+      role="presentation"
+      placement="bottom-start"
+      p="1r"
+      bg="ui.dialog.background"
+      color="ui.dialog.foreground"
+      borderRadius="md"
+      border="1px solid"
+      borderColor="ui.dialog.border"
+      boxShadow="0 4px 16px rgba(0,0,0,0.12)"
+      zIndex={50}
+      style={{
+        minWidth: 'var(--reference-overlay-anchor-width, 12.5rem)',
+        ...style,
+      }}
+      {...props}
+    >
+      {children}
+    </Overlay.Content>
   )
 }
 
 export function ComboboxOption(props: ListboxOptionProps) {
-  return <Listbox.Option {...props} />
+  return <ListboxOption {...props} />
 }
 
 export function Combobox({
@@ -155,10 +188,13 @@ export function Combobox({
   defaultValue = null,
   onChange,
   inputValue: inputValProp,
-  defaultInputValue = '',
+  defaultInputValue,
+  onInputValueChange,
   onInputChange,
   open: openProp,
   defaultOpen = false,
+  onOpen,
+  onDismiss,
   onOpenChange,
   disabled = false,
 }: ComboboxProps) {
@@ -167,48 +203,49 @@ export function Combobox({
   const value = isControlledValue ? valueProp : internalValue
 
   const isControlledInput = inputValProp !== undefined
-  const [internalInput, setInternalInput] = React.useState<string>(defaultInputValue)
+  const [internalInput, setInternalInput] = React.useState<string>(
+    () => defaultInputValue ?? (value ? String(value) : '')
+  )
   const inputValue = isControlledInput ? inputValProp : internalInput
 
   const isControlledOpen = openProp !== undefined
   const [internalOpen, setInternalOpen] = React.useState<boolean>(defaultOpen)
   const isOpen = isControlledOpen ? openProp : internalOpen
+  const sourceRef = React.useRef<HTMLElement | null>(null)
+
+  const notifyInput = onInputValueChange ?? onInputChange
 
   const setIsOpen = React.useCallback(
     (nextOpen: boolean) => {
-      if (!isControlledOpen) {
-        setInternalOpen(nextOpen)
-      }
+      if (nextOpen && !isOpen) onOpen?.()
+      if (!isControlledOpen) setInternalOpen(nextOpen)
       onOpenChange?.(nextOpen)
+      if (!nextOpen && isOpen) onDismiss?.()
     },
-    [isControlledOpen, onOpenChange]
+    [isControlledOpen, isOpen, onOpen, onOpenChange, onDismiss]
   )
 
   const handleInputChange = React.useCallback(
     (nextInput: string) => {
-      if (!isControlledInput) {
-        setInternalInput(nextInput)
-      }
-      onInputChange?.(nextInput)
+      if (!isControlledInput) setInternalInput(nextInput)
+      notifyInput?.(nextInput)
     },
-    [isControlledInput, onInputChange]
+    [isControlledInput, notifyInput]
   )
 
   const handleSelect = React.useCallback(
     (nextVal: string | null) => {
-      if (!isControlledValue) {
-        setInternalValue(nextVal)
-      }
+      if (!isControlledValue) setInternalValue(nextVal)
       onChange?.(nextVal)
-      if (nextVal !== null) {
+      if (nextVal !== null && !isControlledInput) {
         handleInputChange(nextVal)
       }
       setIsOpen(false)
     },
-    [isControlledValue, onChange, handleInputChange, setIsOpen]
+      [isControlledValue, isControlledInput, onChange, handleInputChange, setIsOpen]
   )
 
-  const contextValue = React.useMemo<ComboboxContextValue>(
+  const contextValue = React.useMemo(
     () => ({
       value,
       inputValue,
@@ -217,16 +254,21 @@ export function Combobox({
       setIsOpen,
       handleSelect,
       handleInputChange,
+      sourceRef,
     }),
     [value, inputValue, isOpen, disabled, setIsOpen, handleSelect, handleInputChange]
   )
 
   return (
     <ComboboxContext.Provider value={contextValue}>
-      <Overlay open={isOpen} onOpenChange={setIsOpen} isolation={false}>
-        <Div data-reference-combobox="" position="relative">
-          {children}
-        </Div>
+      <Overlay
+        open={isOpen}
+        onDismiss={() => setIsOpen(false)}
+        isolation={false}
+        closeOnScroll
+        anchor={sourceRef}
+      >
+        {children}
       </Overlay>
     </ComboboxContext.Provider>
   )

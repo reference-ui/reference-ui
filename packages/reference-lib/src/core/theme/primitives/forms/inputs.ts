@@ -7,6 +7,7 @@ import {
   thumbFocusRingStyles,
   trackBackground,
 } from '../shared'
+import { fieldSurfaceStyles } from './field'
 
 export const inputPrimitiveStyles = {
   '.ref-input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]), .ref-select, .ref-textarea': {
@@ -226,3 +227,4 @@ export const inputPrimitiveStyles = {
 } as const
 
 globalCss(inputPrimitiveStyles)
+globalCss(fieldSurfaceStyles)
