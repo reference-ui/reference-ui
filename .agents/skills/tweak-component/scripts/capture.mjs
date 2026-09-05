@@ -15,6 +15,8 @@ function parseArgs() {
     target: '',
     hover: '',
     click: '',
+    press: '',
+    type: '',
     states: false,
     wait: 2500,
     viewport: { width: 1000, height: 700 },
@@ -29,6 +31,10 @@ function parseArgs() {
       options.hover = args[++i]
     } else if (arg === '--click' && i + 1 < args.length) {
       options.click = args[++i]
+    } else if (arg === '--press' && i + 1 < args.length) {
+      options.press = args[++i]
+    } else if (arg === '--type' && i + 1 < args.length) {
+      options.type = args[++i]
     } else if (arg === '--target' && i + 1 < args.length) {
       options.target = args[++i]
     } else if (arg === '--out-dir' && i + 1 < args.length) {
@@ -135,39 +141,43 @@ async function main() {
         await targetLoc.screenshot({ path: hoverPath })
         savedFiles.push({ label: 'Hover', path: hoverPath })
 
-        // 3. Open state if trigger opens an overlay / dialog / listbox
+        // 3. Open state: activate trigger or open combobox/dropdown
         const hasPopup = await trigger.getAttribute('aria-haspopup').catch(() => null)
         if (hasPopup) {
           await trigger.click()
           await page.waitForTimeout(400)
-          const openPath = path.join(opts.outDir, `${opts.name}_open.png`)
+        } else {
+          // If not aria-haspopup button, try clicking field and pressing ArrowDown
+          await targetLoc.click()
+          await page.keyboard.press('ArrowDown')
+          await page.waitForTimeout(400)
+        }
 
-          const popupLoc = frame.locator('[role="dialog"], [role="listbox"]').first()
-          if (await popupLoc.count() > 0 && await popupLoc.isVisible()) {
-            const fieldBox = await targetLoc.boundingBox().catch(() => null)
-            const popupBox = await popupLoc.boundingBox().catch(() => null)
+        const openPath = path.join(opts.outDir, `${opts.name}_open.png`)
+        const popupLoc = frame.locator('[role="dialog"], [role="listbox"]').first()
+        if (await popupLoc.count() > 0 && await popupLoc.isVisible()) {
+          const fieldBox = await targetLoc.boundingBox().catch(() => null)
+          const popupBox = await popupLoc.boundingBox().catch(() => null)
 
-            if (fieldBox && popupBox) {
-              const minX = Math.max(0, Math.min(fieldBox.x, popupBox.x) - 16)
-              const minY = Math.max(0, Math.min(fieldBox.y, popupBox.y) - 16)
-              const maxX = Math.max(fieldBox.x + fieldBox.width, popupBox.x + popupBox.width) + 16
-              const maxY = Math.max(fieldBox.y + fieldBox.height, popupBox.y + popupBox.height) + 16
+          if (fieldBox && popupBox) {
+            const minX = Math.max(0, Math.min(fieldBox.x, popupBox.x) - 16)
+            const minY = Math.max(0, Math.min(fieldBox.y, popupBox.y) - 16)
+            const maxX = Math.max(fieldBox.x + fieldBox.width, popupBox.x + popupBox.width) + 16
+            const maxY = Math.max(fieldBox.y + fieldBox.height, popupBox.y + popupBox.height) + 16
 
-              await page.screenshot({
-                path: openPath,
-                clip: { x: minX, y: minY, width: maxX - minX, height: maxY - minY }
-              })
-            } else {
-              await root.screenshot({ path: openPath })
-            }
+            await page.screenshot({
+              path: openPath,
+              clip: { x: minX, y: minY, width: maxX - minX, height: maxY - minY }
+            })
+            savedFiles.push({ label: 'Open', path: openPath })
           } else {
-            await targetLoc.screenshot({ path: openPath })
+            await root.screenshot({ path: openPath })
+            savedFiles.push({ label: 'Open', path: openPath })
           }
-          savedFiles.push({ label: 'Open', path: openPath })
         }
       }
     } else {
-      // Single capture mode with optional explicit hover / click
+      // Single capture mode with optional explicit actions
       await page.mouse.move(0, 0)
       if (opts.hover) {
         const hoverEl = frame.locator(opts.hover).first()
@@ -179,9 +189,35 @@ async function main() {
         await clickEl.click()
         await page.waitForTimeout(400)
       }
+      if (opts.type) {
+        await page.keyboard.type(opts.type)
+        await page.waitForTimeout(200)
+      }
+      if (opts.press) {
+        await page.keyboard.press(opts.press)
+        await page.waitForTimeout(300)
+      }
 
       const outPath = opts.out || path.join(opts.outDir, `${opts.name}.png`)
-      await targetLoc.screenshot({ path: outPath })
+      const popupLoc = frame.locator('[role="dialog"], [role="listbox"]').first()
+      if (await popupLoc.count() > 0 && await popupLoc.isVisible()) {
+        const fieldBox = await targetLoc.boundingBox().catch(() => null)
+        const popupBox = await popupLoc.boundingBox().catch(() => null)
+        if (fieldBox && popupBox) {
+          const minX = Math.max(0, Math.min(fieldBox.x, popupBox.x) - 16)
+          const minY = Math.max(0, Math.min(fieldBox.y, popupBox.y) - 16)
+          const maxX = Math.max(fieldBox.x + fieldBox.width, popupBox.x + popupBox.width) + 16
+          const maxY = Math.max(fieldBox.y + fieldBox.height, popupBox.y + popupBox.height) + 16
+          await page.screenshot({
+            path: outPath,
+            clip: { x: minX, y: minY, width: maxX - minX, height: maxY - minY }
+          })
+        } else {
+          await root.screenshot({ path: outPath })
+        }
+      } else {
+        await targetLoc.screenshot({ path: outPath })
+      }
       savedFiles.push({ label: 'Captured', path: outPath })
     }
 
