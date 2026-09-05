@@ -34,42 +34,50 @@ This document specifies the remaining implementation gaps, testing contracts, ve
 
 ## 3. Detailed Gaps & Missing Functionality
 
+### Architectural Philosophy: Agent-First Transparency & Conservative State
+Per [components.md](../components.md), Reference UI is an **agent-first, primitive-first** design system.
+- **Hierarchical Invariants over Stateful Monoliths**: `Tree`'s core mandate is centralizing difficult hierarchical keyboard invariants (ArrowRight/ArrowLeft parent-child traversal and expand/collapse coordination) and ARIA semantics (`role="tree"`, `role="treeitem"`, `aria-level`, `aria-expanded`).
+- **Conservative on Selection State**: Do NOT build a monolithic, desktop-style multi-selection state machine (e.g. multi-level `Shift+Arrow` range math across collapsed branches or `Cmd+Click` modifier toggles) inside `Tree`. Multi-selection is controlled application state (`selectedKeys: string[]` + `onSelectChange`) or achieved transparently by composing a `<Checkbox />` inside `<Tree.Item>`.
+- **Frictionless Styling**:
+  - An agent or developer must be able to style open/closed and selected states using standard data attributes (`data-state="open|closed"`, `data-selected="true|false"`, `aria-selected="true|false"`) and token props (`_selected`, `_hover`).
+  - Indentation should be CSS-driven (via `--reference-tree-level` or standard padding tokens), not rigid hardcoded pixel offsets.
+
 ### Functional & Behavioral Gaps
-- **Hierarchical Keyboard Navigation**: ArrowRight on closed node expands it; ArrowRight on open node moves to first child. ArrowLeft on open node closes it; ArrowLeft on closed node moves to parent node.
-- **Typeahead Across Tree**: Typing alphanumeric characters jumping to next matching visible tree item.
-- **APG Tree Roles & Attributes**: `role="tree"`, `role="treeitem"`, `aria-expanded`, `aria-level`, `aria-setsize`, `aria-posinset`.
-- **Multi-Selection in Hierarchy**: Selecting multiple tree items with Ctrl/Cmd and Shift.
+- **Hierarchical Keyboard Navigation**: ArrowRight on closed node expands it; ArrowRight on open node moves to first child. ArrowLeft on open node closes it; ArrowLeft on closed node moves focus to parent node.
+- **APG Tree Roles & Level Semantics**: Strict verification of `role="tree"`, `role="treeitem"`, `aria-expanded`, and `aria-level` derived dynamically from hierarchy.
+- **Typeahead Across Visible Nodes**: Typing alphanumeric characters jumping to matching visible tree items via `RovingFocus`.
+- **Transparent Selection Composition**: Verify clean controlled selection (`selectedKeys: string[]`) and effortless composition with a `<Checkbox>` without focus or layout collision.
 
 ### Universal Part Conformance Gaps (`PART-*`)
 - `PART-DOM-01`: Strict hierarchical role and relationship verification.
-- `PART-CONTROL-01`: Controlled expanded keys and selected keys.
+- `PART-STYLE-01`: Token-aware StyleProps passthrough on `Tree.Root`, `Tree.Item`, and `Tree.Content`.
+- `PART-CONTROL-01`: Controlled expanded keys and selected keys respecting parent callback cancellation.
 
 ---
 
 ## 4. Vendor Inspiration & Test/Functionality Harvest
 
-To guarantee battle-tested reliability, algorithms, edge-case regressions, and test fixtures are lifted from surveyed vendor implementations:
+To guarantee battle-tested reliability while adhering strictly to our conservative state boundary:
 
 ### Primary Upstream Reference Packages
 - **`vendor/react-spectrum/packages/@react-aria/tree`**:
-  Hierarchical arrow navigation algorithm, recursive tree collection model, selection manager.
-
+  Hierarchical arrow navigation algorithms (ArrowRight/Left parent-child movement) and `aria-level` calculation.
 - **`vendor/zag/packages/machines/tree-view`**:
-  Parent/child node state machine, expansion toggling.
+  Expansion toggle state machine and focused node tracking.
 
 ### Strict Boundary Rules: What to Lift vs. What to Leave
-- **LIFT**: Hierarchical arrow navigation logic, tree item ARIA attributes, typeahead.
-- **LEAVE**: Heavy stately collection abstractions, proprietary tree styling.
+- **LIFT**: Hierarchical arrow navigation logic, parent/child focus transitions, APG `aria-level` attributes, typeahead buffer integration.
+- **LEAVE**: Heavy desktop range-selection state machines (multi-branch Shift+Click selection), proprietary collection managers, rigid indented markup wrappers.
 
 ---
 
 ## 5. Next Execution Milestones & Priority Action Items
 
-### Step 1: **Automate TR-KEY-01 to TR-KEY-06**: ArrowRight, ArrowLeft, ArrowUp, ArrowDown traversal in Playwright.
+### Step 1: **Automate TR-KEY-01 to TR-KEY-04**: Playwright tests for ArrowRight (expand / move to child) and ArrowLeft (collapse / move to parent).
 
-### Step 2: **Automate TR-LEVEL-01**: Verification of `aria-level`, `aria-setsize`, and `aria-posinset`.
+### Step 2: **Automate TR-LEVEL-01**: Verification of `aria-level` attributes across nested branches.
 
-### Step 3: **Automate TR-MULTI-01**: Multi-selection in tree hierarchy.
+### Step 3: **Verify Styling & Checkbox Composition**: Author Cosmos fixture demonstrating how an agent or developer easily composes `<Tree.Item>` with a `<Checkbox />` and styles selected states via `data-selected`.
 
 ---
 

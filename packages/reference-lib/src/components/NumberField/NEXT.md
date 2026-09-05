@@ -34,36 +34,42 @@ This document specifies the remaining implementation gaps, testing contracts, ve
 
 ## 3. Detailed Gaps & Missing Functionality
 
+### Architectural Philosophy: Agent-First Transparency & Conservative State
+Per [NumberField.md](./NumberField.md) and [components.md](../components.md):
+- **Core Invariant**: Centralize the difficult boundary between ephemeral, localized partial string input and a controlled numeric `number | null` value. It accepts partial typing (e.g. "-", ".", "1,") without publishing `NaN`, parses supported decimal numbering systems via `Intl.NumberFormat`, and performs drift-resistant step math.
+- **Pure Input Chrome, Zero Form Soup**: `NumberField` accepts neither `label` nor `errorMessage` props—labels, descriptions, and visual bezels belong to [Field](../Field) and standard HTML/ARIA.
+- **Fixed Anatomy**: `NumberField`, `NumberField.Group`, `NumberField.Input` (renders `input[type=text]`, NOT `type=number`), `NumberField.Increment`, `NumberField.Decrement`. No esoteric desktop features (e.g. pointer-lock scrub areas).
+- **Styling Transparency**:
+  - The input bezel coordinates with [Field](../Field).
+  - Stepper buttons are native `<button type="button">` with standard token-aware StyleProps.
+
 ### Functional & Behavioral Gaps
-- **Locale-Aware Partial Parsing**: Allowing valid partial numeric input (e.g. "-", ".", "1,") during editing, then formatting to localized string on blur via `Intl.NumberFormat`.
-- **Key & Stepper Repeat Mechanics**: Click-and-hold on increment/decrement buttons repeating steps at increasing acceleration.
+- **Locale-Aware Partial Parsing**: Allowing valid partial numeric input during editing, then formatting to localized string on blur via `Intl.NumberFormat`.
+- **Key & Stepper Repeat Mechanics**: Click-and-hold on increment/decrement buttons repeating steps with drift-resistant decimal arithmetic.
 - **Modifier Stepping**: Shift+Arrow for large step (`step * 10`), Alt+Arrow for fine step (`step / 10`).
-- **Scrub Area Dragging**: Horizontal drag on `ScrubArea` with pointer lock / delta accumulation adjusting numeric value.
-- **Min/Max Clamping**: Strict value clamping to `min` and `max` constraints.
+- **Min/Max Clamping & Boundaries**: Strict value clamping to `min` and `max` constraints without NaN conversions.
+- **Form Submission**: Serializing canonical numeric string into native `<form>` submission.
 
 ### Universal Part Conformance Gaps (`PART-*`)
 - `PART-DOM-01`: Ensure input has `role="spinbutton"`, `aria-valuenow`, `aria-valuemin`, `aria-valuemax`, `aria-valuetext`.
+- `PART-STYLE-01`: Token-aware StyleProps passthrough on `NumberField.Group`, `Input`, `Increment`, and `Decrement`.
 - `PART-CONTROL-01`: Controlled `value` prop updates and parent callback rejection.
 
 ---
 
 ## 4. Vendor Inspiration & Test/Functionality Harvest
 
-To guarantee battle-tested reliability, algorithms, edge-case regressions, and test fixtures are lifted from surveyed vendor implementations:
+To guarantee battle-tested reliability while adhering strictly to our conservative state boundary:
 
 ### Primary Upstream Reference Packages
 - **`vendor/base-ui/packages/react/src/number-field`**:
   Partial parse regexes, precision tracking, click-and-hold stepper repeat, mobile touch input handling.
-
 - **`vendor/react-spectrum/packages/@internationalized/number/src/NumberParser.ts`**:
   Locale decimal and grouping separator parsing without loss of precision.
 
-- **`vendor/zag/packages/machines/number-input`**:
-  Scrub area pointer drag session, step snapping math.
-
 ### Strict Boundary Rules: What to Lift vs. What to Leave
-- **LIFT**: Intl parse/format round-tripping, click-and-hold repeat timer, scrub drag math, modifier steps.
-- **LEAVE**: Base UI context providers, proprietary visual styles, unnecessary DOM wrappers.
+- **LIFT**: Intl parse/format round-tripping, click-and-hold repeat timer, modifier step multiplication, decimal drift resistance.
+- **LEAVE**: Base UI context providers, proprietary visual styles, desktop pointer-lock scrub mechanics.
 
 ---
 
@@ -73,7 +79,7 @@ To guarantee battle-tested reliability, algorithms, edge-case regressions, and t
 
 ### Step 2: **Automate NF-STEP-01 to NF-STEP-04**: Large step (Shift), fine step (Alt), and boundary clamping in Playwright.
 
-### Step 3: **Automate NF-SCRUB-01**: ScrubArea drag interaction test.
+### Step 3: **Automate NF-REPEAT-01**: Click-and-hold repeat stepping on increment/decrement buttons.
 
 ---
 

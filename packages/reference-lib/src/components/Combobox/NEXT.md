@@ -34,39 +34,44 @@ This document specifies the remaining implementation gaps, testing contracts, ve
 
 ## 3. Detailed Gaps & Missing Functionality
 
+### Architectural Philosophy: Agent-First Transparency & Conservative State
+Per [components.md](../components.md), Reference UI separates invariant browser coordination from application logic:
+- **Focus & Virtual Selection Invariant**: Combobox's sole difficult responsibility is ensuring DOM focus remains locked inside `<input role="combobox">` while virtual selection coordinates with `<Listbox>` options via `aria-activedescendant`.
+- **Filtering & Ranking are Application-Owned**: Do NOT bake fuzzy-scoring algorithms (like `command-score.ts`) or async query/loading state machines into `Combobox`. An agent or application simply filters its items array and renders `<Combobox.Option>` elements.
+- **Styling Transparency**:
+  - The input bezel uses [Field](../Field) visual chrome (`div[data-reference-field]`).
+  - Options expose `aria-selected` and `data-highlighted` for direct token-aware styling without hidden CSS overrides.
+
 ### Functional & Behavioral Gaps
 - **Active-Descendant Model**: Physical focus must stay in `<input>` while virtual focus traverses options via `aria-activedescendant`.
-- **Autocomplete Modes**: Complete verification of `autocomplete="none" | "list" | "both" | "inline"`.
+- **Autocomplete Modes**: Verification of standard APG `aria-autocomplete="list | both | none"`.
 - **Keyboard Navigation**: ArrowDown opens popup and highlights first option; Escape closes popup; Enter commits highlighted option without submitting parent `<form>`.
-- **Async Loading & Filtering**: Dynamic option list updates with loading spinner state and accessible empty announcement.
-- **Form Participation**: Submitting selected value via canonical hidden `<input>`.
+- **Native Form Participation**: Submitting selected value via canonical hidden `<input name="...">`.
 
 ### Universal Part Conformance Gaps (`PART-*`)
 - `PART-DOM-01`: Ensure input has `role="combobox"`, `aria-autocomplete`, `aria-expanded`, and `aria-controls` pointing to `Listbox`.
+- `PART-STYLE-01`: Token-aware StyleProps passthrough on `Combobox.Input` and `Combobox.Trigger`.
 - `PART-CONTROL-01`: Controlled `value` and `open` states must respect parent callback cancellation.
 
 ---
 
 ## 4. Vendor Inspiration & Test/Functionality Harvest
 
-To guarantee battle-tested reliability, algorithms, edge-case regressions, and test fixtures are lifted from surveyed vendor implementations:
+To guarantee battle-tested reliability while adhering strictly to our conservative state boundary:
 
 ### Primary Upstream Reference Packages
 - **`vendor/downshift/src/hooks/useCombobox`**:
   Input focus preservation while traversing listbox, active-descendant synchronization, input value reset on blur.
-
 - **`vendor/react-spectrum/packages/react-aria-components/test/ComboBox.test.js`**:
-  Autocomplete list modes, filter predicates, clear button handling, custom value entry, form submit prevention on Enter.
-
+  APG keyboard interaction matrix, Enter key form submission suppression, clear button handling.
 - **`vendor/cmdk/src/index.tsx`**:
-  CommandPalette composite pattern, filtering score integration, keyboard shortcut binding.
-
+  Contrast reference: observe how cmdk composes Combobox with Dialog. Note that cmdk's internal scoring engine (`command-score.ts`) is explicitly left to application code.
 - **`vendor/zag/packages/machines/combobox`**:
-  Popup positioning coordination, hover vs arrow selection synchronization.
+  State machine transitions for input focus and popup coordination.
 
 ### Strict Boundary Rules: What to Lift vs. What to Leave
 - **LIFT**: Active-descendant roving logic, APG keyboard interaction matrix, input commit semantics.
-- **LEAVE**: Downshift render-prop API, cmdk internal scoring engine (app-level responsibility), heavy context trees.
+- **LEAVE**: Downshift render-prop API, internal fuzzy search scoring engine (application-owned), async data-loading state machines.
 
 ---
 

@@ -34,46 +34,56 @@ This document specifies the remaining implementation gaps, testing contracts, ve
 
 ## 3. Detailed Gaps & Missing Functionality
 
+### Architectural Philosophy: Agent-First Transparency & Conservative State
+Per [components.md](../components.md), Reference UI is an **agent-first, primitive-first** design system. Primitives centralize only invariant, difficult platform behaviors (e.g. DOM semantics, roving focus, typeahead buffer timing) while leaving application state and visual styling fully transparent and composable.
+- **Conservative on Internal State**: Do NOT build monolithic, opaque stateful conveniences (e.g. desktop `Shift+Arrow` range-selection algorithms or modifier-key toggle engines) inside `Listbox`.
+- **Extendable Multi-Selection Contract**: Multi-selection should remain a clean, controlled prop interface: `selection="multiple"`, `value: string[]`, and `onChange: (next: string[]) => void`. The application/agent owns the state; `Listbox` coordinates the collection ARIA attributes (`aria-multiselectable`) and roving focus.
+- **Styling Transparency**:
+  - An agent or developer must be able to style selected states with zero friction using standard data attributes (`data-state="selected"`, `aria-selected="true"`) or token-aware `_selected={{ ... }}` StyleProps.
+  - The primitive must not lock in rigid, opinionated styles (e.g. hardcoded colors that require `!important` or aggressive overrides).
+  - Composition-first: users and agents can trivially embed a `<Checkbox>`, badge, or custom icon inside `<Listbox.Option>` without fighting an internal widget context.
+
 ### Functional & Behavioral Gaps
-- **Multi-Selection Support**: `selectionMode="multiple"` with Ctrl/Cmd+Click and Shift+Arrow range selection.
-- **Typeahead Search**: Rapid alphanumeric key presses jumping to matching option by prefix.
-- **Disabled Options**: Skipping disabled options in arrow traversal and preventing selection.
-- **Virtualization Integration**: Support for large option lists with dynamic DOM recycling.
-- **Form Participation**: Serializing selected value(s) into hidden input.
+- **Transparent Multi-Selection Extendability**: Verify `selection="multiple"` cleanly toggles individual option inclusion in the controlled `value` array and sets `aria-multiselectable="true"` without opaque range math.
+- **Option Styling & State Affordances**: Ensure `Listbox.Option` reliably exposes `data-state="selected|unselected"`, `aria-selected="true|false"`, and accepts `_selected` / `_hover` token props cleanly.
+- **Typeahead Search**: Rapid alphanumeric key presses jumping to matching option by prefix via `RovingFocus` typeahead buffer.
+- **Disabled Options**: Skipping disabled options in arrow traversal and preventing selection without trapping focus.
+- **Virtualization Contract**: Support lightweight logical metadata adapter (`virtual={items, scrollToIndex}`) for large collections without bundling a heavyweight virtualizer.
 
 ### Universal Part Conformance Gaps (`PART-*`)
 - `PART-DOM-01`: Strict `role="listbox"`, `role="option"`, `aria-selected`, `aria-multiselectable`.
-- `PART-CONTROL-01`: Controlled `value` prop respecting parent rejection.
+- `PART-STYLE-01`: Token-aware StyleProps passthrough on `Listbox.Root` and `Listbox.Option` without style collisions.
+- `PART-CONTROL-01`: Controlled `value` prop respecting parent callback rejection.
 
 ---
 
 ## 4. Vendor Inspiration & Test/Functionality Harvest
 
-To guarantee battle-tested reliability, algorithms, edge-case regressions, and test fixtures are lifted from surveyed vendor implementations:
+To guarantee battle-tested reliability while adhering strictly to our conservative state boundary:
 
 ### Primary Upstream Reference Packages
-- **`vendor/react-spectrum/packages/react-aria-components/test/ListBox.test.js`**:
-  Multi-selection algorithms, disabled keys filtering, virtual collection traversal.
-
 - **`vendor/radix-primitives/packages/react/select`**:
-  Option registration, typeahead buffer clearing, scroll-into-view on highlight.
-
+  Option registration model, typeahead buffer clearing, scroll-into-view on highlight.
 - **`vendor/zag/packages/machines/listbox`**:
-  Roving focus vs active-descendant selection states.
+  Clean separation between roving focus and selection state.
+- **`vendor/react-spectrum/packages/react-aria-components/test/ListBox.test.js`**:
+  Contrast reference: observe how React Aria bundles heavy selection managers (which we intentionally leave in favor of transparent controlled arrays).
 
 ### Strict Boundary Rules: What to Lift vs. What to Leave
-- **LIFT**: Typeahead matching, multi-select range selection, virtual collection indexing.
-- **LEAVE**: Select popup mechanics (owned by Combobox/Popover), heavy context contracts.
+- **LIFT**: Roving focus coordination, typeahead character buffer with 1000ms timeout, disabled option skipping, `aria-selected` / `aria-multiselectable` ARIA contracts.
+- **LEAVE**: Heavy desktop range-selection state machines (Shift+Click ranges, drag lasso), proprietary selection managers, bloated context providers, opinionated visual checkmark injection.
 
 ---
 
 ## 5. Next Execution Milestones & Priority Action Items
 
-### Step 1: **Automate LB-MULTI-01 & LB-MULTI-02**: Multi-selection click and keyboard range selection.
+### Step 1: **Automate LB-DOM-01 & LB-MULTI-01**: Playwright test asserting `selection="multiple"` sets `aria-multiselectable="true"` and emits updated `string[]` arrays on option toggle.
 
-### Step 2: **Automate LB-TYPE-01**: Typeahead jumping to matching option in Playwright.
+### Step 2: **Verify Styling Transparency**: Add Cosmos fixtures demonstrating how an agent or user easily styles multi-select states (e.g. via `data-state="selected"`, token props `_selected`, and embedding a `<Checkbox />`).
 
-### Step 3: **Automate LB-DIS-01**: Skipping disabled options during arrow navigation.
+### Step 3: **Automate LB-TYPE-01**: Typeahead jumping to matching option prefix via RovingFocus in Playwright.
+
+### Step 4: **Automate LB-DIS-01**: Skipping disabled options during arrow navigation.
 
 ---
 
