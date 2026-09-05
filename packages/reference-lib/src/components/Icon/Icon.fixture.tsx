@@ -340,7 +340,7 @@ export default {
                 <strong>The consequence:</strong> In buttons, a 16px left padding plus the 2px internal padding means the visible glyph sits <strong>~18px</strong> from the edge, while the gap to text is only <strong>~8px</strong>.
               </P>
               <P m="0">
-                <strong>The clean fix:</strong> Optical padding in buttons (<code>paddingInlineStart: 2.5r</code>) balances the visible distance without having to hack or alter 3,800+ upstream SVGs.
+                <strong>The clean fix:</strong> A <code>marginInlineStart: -1r</code> on the outer edge of the leading icon naturally absorbs the 2px internal inset, and <code>aspectRatio: 1</code> auto-squares icon buttons without needing any custom CSS variables or hardcoded dimensions.
               </P>
             </Div>
           </div>
