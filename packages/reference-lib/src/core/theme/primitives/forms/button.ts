@@ -14,10 +14,19 @@ export const buttonPrimitiveStyles = {
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
-    flexShrink: 0,
-    gap: '2r',
+    gap: '1.5r',
     ...controlSize,
-    paddingInline: '4r',
+    paddingInline: '3.5r',
+    '&:has(> [data-slot="icon"]:first-child:not(:only-child), > svg:first-child:not(:only-child))': {
+      paddingInlineStart: '2.5r',
+    },
+    '&:has(> [data-slot="icon"]:last-child:not(:only-child), > svg:last-child:not(:only-child))': {
+      paddingInlineEnd: '2.5r',
+    },
+    '&:has(> [data-slot="icon"]:only-child, > svg:only-child)': {
+      paddingInline: '0',
+      width: controlSize.height,
+    },
     borderWidth: '1px',
     borderStyle: 'solid',
     borderColor: 'transparent',

@@ -50,6 +50,7 @@ export function createIcon(
     return (
       <IconShell
         ref={ref}
+        data-slot="icon"
         display="inline-flex"
         alignItems="center"
         justifyContent="center"

@@ -229,21 +229,18 @@ export default {
 
         {/* 4. Buttons with Icons */}
         <SectionCard
-          title="Buttons with Icons"
-          subtitle="Buttons at 34px controlHeight with leading icons, trailing chevrons, and standalone icon buttons"
+          title="Buttons with Icons (Automated Optical Default)"
+          subtitle="Buttons at 34px controlHeight with leading icons, trailing chevrons, and standalone icon buttons. Zero custom padding needed."
         >
           <Div display="flex" gap="4r" alignItems="center" flexWrap="wrap">
             {/* Primary button with leading icon */}
-            <Button display="inline-flex" alignItems="center" gap="1.5r">
+            <Button>
               <AddIcon />
               <span>Create Record</span>
             </Button>
 
             {/* Dropdown button with trailing chevron */}
             <Button
-              display="inline-flex"
-              alignItems="center"
-              gap="1.5r"
               bg="ui.table.row.mutedBackground"
               color="design.text.base"
               border="1px solid"
@@ -253,18 +250,11 @@ export default {
               <KeyboardArrowDownIcon />
             </Button>
 
-            {/* Standalone ghost icon buttons */}
+            {/* Standalone ghost icon buttons (automatically square!) */}
             <Div display="flex" alignItems="center" gap="1.5r">
               <Button
                 type="button"
                 aria-label="Settings"
-                width={controlHeight}
-                height={controlHeight}
-                p="0"
-                display="inline-flex"
-                alignItems="center"
-                justifyContent="center"
-                borderRadius="sm"
                 bg="ui.table.row.mutedBackground"
                 color="design.text.base"
                 border="1px solid"
@@ -277,13 +267,6 @@ export default {
               <Button
                 type="button"
                 aria-label="Close"
-                width={controlHeight}
-                height={controlHeight}
-                p="0"
-                display="inline-flex"
-                alignItems="center"
-                justifyContent="center"
-                borderRadius="sm"
                 bg="ui.table.row.mutedBackground"
                 color="design.text.base"
                 border="1px solid"
@@ -313,7 +296,57 @@ export default {
             </Div>
           </Div>
         </SectionCard>
+
+        {/* 5. Under the Hood: 2px SVG Internal Padding Breakdown */}
+        <SectionCard
+          title="Under the Hood: Material Symbols 2px Padding"
+          subtitle="Material Symbols SVGs use a 24×24 viewBox with a 20×20 live area, creating a built-in 2px inset"
+        >
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px', alignItems: 'center' }}>
+            <Div display="flex" alignItems="center" gap="4r">
+              {/* Scaled 4x for visualization */}
+              <Div
+                position="relative"
+                width="80px"
+                height="80px"
+                border="2px dashed rgba(239, 68, 68, 0.6)"
+                bg="rgba(239, 68, 68, 0.05)"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+              >
+                {/* 2px padding ring visualization (8px at 4x) */}
+                <Div
+                  position="absolute"
+                  inset="8px"
+                  border="1px dashed rgba(34, 197, 94, 0.6)"
+                  bg="rgba(34, 197, 94, 0.05)"
+                />
+                <AddIcon style={{ width: '80px', height: '80px', minWidth: '80px', minHeight: '80px' }} />
+              </Div>
+
+              <Div display="flex" flexDirection="column" gap="1r">
+                <Span fontSize="2.5r" color="red.400">■ Red dashed = 24×24 SVG Bounding Box</Span>
+                <Span fontSize="2.5r" color="green.400">■ Green dashed = 20×20 Live Artwork Area</Span>
+                <Span fontSize="2.5r" color="design.text.light">2px built-in whitespace on all 4 sides</Span>
+              </Div>
+            </Div>
+
+            <Div display="flex" flexDirection="column" gap="1.5r" fontSize="3r" color="design.text.light">
+              <P m="0">
+                <strong>Why it exists:</strong> Google designed it so that circular, square, and tall glyphs have the same optical weight without clipping.
+              </P>
+              <P m="0">
+                <strong>The consequence:</strong> In buttons, a 16px left padding plus the 2px internal padding means the visible glyph sits <strong>~18px</strong> from the edge, while the gap to text is only <strong>~8px</strong>.
+              </P>
+              <P m="0">
+                <strong>The clean fix:</strong> Optical padding in buttons (<code>paddingInlineStart: 2.5r</code>) balances the visible distance without having to hack or alter 3,800+ upstream SVGs.
+              </P>
+            </Div>
+          </div>
+        </SectionCard>
       </Div>
     )
   },
 }
+
