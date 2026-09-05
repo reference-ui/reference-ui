@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Button, Div, Span } from '@reference-ui/react'
-import { ArrowDropDownIcon } from '@reference-ui/icons'
+import { KeyboardArrowDownIcon } from '@reference-ui/icons'
 import { Combobox } from './index'
 import { Field } from '../Field'
 import { Listbox } from '../Listbox'
@@ -43,9 +43,11 @@ export default {
             <Button
               type="button"
               aria-label="Open suggestions"
-              width="8.5r"
-              height="8.5r"
-              minWidth="8.5r"
+              width="6r"
+              height="6r"
+              minWidth="6r"
+              marginInlineEnd="-2r"
+              borderRadius="sm"
               p="0"
               bg="transparent"
               border="none"
@@ -54,13 +56,13 @@ export default {
               justifyContent="center"
               cursor="pointer"
               color="design.text.base"
-              _hover={{ bg: 'ui.button.mutedBackground' }}
+              _hover={{ bg: 'gray.800', color: 'ui.field.foreground' }}
               onClick={event => {
                 const field = event.currentTarget.closest('[data-reference-field]')
                 field?.querySelector('input')?.focus()
               }}
             >
-              <ArrowDropDownIcon width="4r" height="4r" />
+              <KeyboardArrowDownIcon width="4r" height="4r" style={{ width: '16px', height: '16px' }} />
             </Button>
           </Field>
           <Combobox.Popover>
@@ -136,9 +138,11 @@ export default {
             <Button
               type="button"
               aria-label="Open suggestions"
-              width="8.5r"
-              height="8.5r"
-              minWidth="8.5r"
+              width="6r"
+              height="6r"
+              minWidth="6r"
+              marginInlineEnd="-2r"
+              borderRadius="sm"
               p="0"
               bg="transparent"
               border="none"
@@ -147,13 +151,13 @@ export default {
               justifyContent="center"
               cursor="pointer"
               color="design.text.base"
-              _hover={{ bg: 'ui.button.mutedBackground' }}
+              _hover={{ bg: 'gray.800', color: 'ui.field.foreground' }}
               onClick={event => {
                 const field = event.currentTarget.closest('[data-reference-field]')
                 field?.querySelector('input')?.focus()
               }}
             >
-              <ArrowDropDownIcon width="4r" height="4r" />
+              <KeyboardArrowDownIcon width="4r" height="4r" style={{ width: '16px', height: '16px' }} />
             </Button>
           </Field>
           <Combobox.Popover>
@@ -203,9 +207,11 @@ export default {
             <Button
               type="button"
               aria-label="Open suggestions"
-              width="8.5r"
-              height="8.5r"
-              minWidth="8.5r"
+              width="6r"
+              height="6r"
+              minWidth="6r"
+              marginInlineEnd="-2r"
+              borderRadius="sm"
               p="0"
               bg="transparent"
               border="none"
@@ -214,9 +220,9 @@ export default {
               justifyContent="center"
               cursor="pointer"
               color="design.text.base"
-              _hover={{ bg: 'ui.button.mutedBackground' }}
+              _hover={{ bg: 'gray.800', color: 'ui.field.foreground' }}
             >
-              <ArrowDropDownIcon width="4r" height="4r" />
+              <KeyboardArrowDownIcon width="4r" height="4r" style={{ width: '16px', height: '16px' }} />
             </Button>
           </Field>
           <Combobox.Popover>
@@ -250,7 +256,7 @@ export default {
         <Combobox value={selected} onChange={setSelected}>
           <Combobox.Trigger width="100%" justifyContent="space-between">
             {selectedLabel(selected)}
-            <ArrowDropDownIcon width="4r" height="4r" />
+            <KeyboardArrowDownIcon width="4r" height="4r" style={{ width: '16px', height: '16px' }} />
           </Combobox.Trigger>
           <Combobox.Popover>
             <Listbox>

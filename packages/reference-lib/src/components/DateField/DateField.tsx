@@ -2,6 +2,7 @@ import * as React from 'react'
 import { Input, Button, Span, Div, type PrimitiveProps, type PrimitiveElement } from '@reference-ui/react'
 import { Overlay, type OverlayContentProps } from '../Overlay'
 import { Calendar, type ISODate, type DateRangeValue } from '../Calendar'
+import { CalendarTodayIcon } from '@reference-ui/icons'
 
 export type DateFieldProps = Omit<PrimitiveProps<'input'>, 'onChange' | 'value' | 'defaultValue'> & {
   value?: ISODate | null
@@ -58,7 +59,7 @@ export function DateFieldInput({
 export type DateFieldTriggerProps = React.ComponentPropsWithoutRef<typeof Overlay.Trigger>
 
 export function DateFieldTrigger({
-  children = '📅',
+  children,
   className,
   style,
   ...props
@@ -74,15 +75,19 @@ export function DateFieldTrigger({
       width="6r"
       height="6r"
       minWidth="6r"
+      marginInlineEnd="-2r"
       display="inline-flex"
       alignItems="center"
       justifyContent="center"
       cursor="pointer"
+      color="design.text.base"
+      _hover={{ bg: 'gray.800', color: 'ui.field.foreground' }}
+      borderRadius="sm"
       className={className}
       style={style}
       {...props}
     >
-      <Span fontSize="4r" lineHeight="1">{children}</Span>
+      {children ?? <CalendarTodayIcon width="4r" height="4r" style={{ width: '16px', height: '16px' }} />}
     </Overlay.Trigger>
   )
 }
