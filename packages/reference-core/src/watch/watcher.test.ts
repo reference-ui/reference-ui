@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import {
   getWatcherState,
+  handleWatchEvents,
   startWatcher,
   type WatchCallbacks,
 } from './watcher'
@@ -115,5 +116,131 @@ describe('watch/watcher', () => {
     } finally {
       await subscription.unsubscribe()
     }
+  })
+
+  describe('handleWatchEvents', () => {
+    const projectRoot = '/workspace/test-app'
+
+    it('forwards error to callbacks.onError and halts event processing', () => {
+      const onError = vi.fn()
+      const onChange = vi.fn()
+      const error = new Error('Parcel watcher error')
+
+      handleWatchEvents(error, [{ type: 'create', path: `${projectRoot}/src/Button.tsx` }], {
+        projectRoot,
+        isMatch: () => true,
+        dependencyPathSet: new Set(),
+        callbacks: { onError, onChange },
+      })
+
+      expect(onError).toHaveBeenCalledWith(error)
+      expect(onChange).not.toHaveBeenCalled()
+    })
+
+    it('handles undefined or empty events gracefully', () => {
+      const onError = vi.fn()
+      const onChange = vi.fn()
+
+      handleWatchEvents(null, undefined, {
+        projectRoot,
+        isMatch: () => true,
+        dependencyPathSet: new Set(),
+        callbacks: { onError, onChange },
+      })
+
+      handleWatchEvents(null, [], {
+        projectRoot,
+        isMatch: () => true,
+        dependencyPathSet: new Set(),
+        callbacks: { onError, onChange },
+      })
+
+      expect(onError).not.toHaveBeenCalled()
+      expect(onChange).not.toHaveBeenCalled()
+    })
+
+    it('filters out files that do not match include pattern and are not dependencies', () => {
+      const onError = vi.fn()
+      const onChange = vi.fn()
+
+      handleWatchEvents(
+        null,
+        [
+          { type: 'update', path: `${projectRoot}/node_modules/pkg/index.js` },
+          { type: 'create', path: `${projectRoot}/README.md` },
+        ],
+        {
+          projectRoot,
+          isMatch: (rel) => rel.startsWith('src/'),
+          dependencyPathSet: new Set(),
+          callbacks: { onError, onChange },
+        },
+      )
+
+      expect(onChange).not.toHaveBeenCalled()
+    })
+
+    it('maps parcel event types to reference FileEvents (create -> add, update -> change, delete -> unlink)', () => {
+      const onChange = vi.fn()
+
+      handleWatchEvents(
+        null,
+        [
+          { type: 'create', path: `${projectRoot}/src/New.tsx` },
+          { type: 'update', path: `${projectRoot}/src/Existing.tsx` },
+          { type: 'delete', path: `${projectRoot}/src/Old.tsx` },
+        ],
+        {
+          projectRoot,
+          isMatch: (rel) => rel.startsWith('src/'),
+          dependencyPathSet: new Set(),
+          callbacks: { onError: vi.fn(), onChange },
+        },
+      )
+
+      expect(onChange).toHaveBeenCalledTimes(3)
+      expect(onChange).toHaveBeenNthCalledWith(1, {
+        event: 'add',
+        path: `${projectRoot}/src/New.tsx`,
+        relativePath: 'src/New.tsx',
+        requiresFullResync: false,
+      })
+      expect(onChange).toHaveBeenNthCalledWith(2, {
+        event: 'change',
+        path: `${projectRoot}/src/Existing.tsx`,
+        relativePath: 'src/Existing.tsx',
+        requiresFullResync: false,
+      })
+      expect(onChange).toHaveBeenNthCalledWith(3, {
+        event: 'unlink',
+        path: `${projectRoot}/src/Old.tsx`,
+        relativePath: 'src/Old.tsx',
+        requiresFullResync: false,
+      })
+    })
+
+    it('sets requiresFullResync: true when changed file matches dependencyPathSet', () => {
+      const onChange = vi.fn()
+      const configPath = `${projectRoot}/ui.config.ts`
+
+      handleWatchEvents(
+        null,
+        [{ type: 'update', path: configPath }],
+        {
+          projectRoot,
+          isMatch: (rel) => rel.startsWith('src/'), // config is outside src/ so isMatch is false
+          dependencyPathSet: new Set([configPath]),
+          callbacks: { onError: vi.fn(), onChange },
+        },
+      )
+
+      expect(onChange).toHaveBeenCalledTimes(1)
+      expect(onChange).toHaveBeenCalledWith({
+        event: 'change',
+        path: configPath,
+        relativePath: 'ui.config.ts',
+        requiresFullResync: true,
+      })
+    })
   })
 })

@@ -1,4 +1,4 @@
-import { subscribe } from '@parcel/watcher'
+import { subscribe, type Event as ParcelEvent } from '@parcel/watcher'
 import { relative, resolve } from 'node:path'
 import picomatch from 'picomatch'
 
@@ -28,6 +28,39 @@ export interface WatchSubscription {
   unsubscribe(): Promise<void>
 }
 
+export interface WatchEventHandlerOptions {
+  projectRoot: string
+  isMatch: (path: string) => boolean
+  dependencyPathSet: Set<string>
+  callbacks: WatchCallbacks
+}
+
+export function handleWatchEvents(
+  err: Error | null,
+  events: ParcelEvent[] | undefined,
+  options: WatchEventHandlerOptions,
+): void {
+  if (err) {
+    options.callbacks.onError(err)
+    return
+  }
+
+  if (!events) return
+
+  for (const ev of events) {
+    const relativePath = relative(options.projectRoot, ev.path)
+    const resolvedPath = resolve(ev.path)
+    if (!options.isMatch(relativePath) && !options.dependencyPathSet.has(resolvedPath)) continue
+
+    options.callbacks.onChange({
+      event: EVENT_MAP[ev.type as keyof typeof EVENT_MAP],
+      path: ev.path,
+      relativePath,
+      requiresFullResync: options.dependencyPathSet.has(resolvedPath),
+    })
+  }
+}
+
 export function getWatcherState(payload: WatchPayload): {
   include: string[]
   dependencyPaths: string[]
@@ -53,25 +86,13 @@ export async function startWatcher(payload: WatchPayload, callbacks: WatchCallba
     watchRoots.map((watchRoot) =>
       subscribe(
         watchRoot,
-        (err, events) => {
-          if (err) {
-            callbacks.onError(err)
-            return
-          }
-
-          for (const ev of events) {
-            const relativePath = relative(projectRoot, ev.path)
-            const resolvedPath = resolve(ev.path)
-            if (!isMatch(relativePath) && !dependencyPathSet.has(resolvedPath)) continue
-
-            callbacks.onChange({
-              event: EVENT_MAP[ev.type as keyof typeof EVENT_MAP],
-              path: ev.path,
-              relativePath,
-              requiresFullResync: dependencyPathSet.has(resolvedPath),
-            })
-          }
-        },
+        (err, events) =>
+          handleWatchEvents(err, events, {
+            projectRoot,
+            isMatch,
+            dependencyPathSet,
+            callbacks,
+          }),
         { ignore: getWatchIgnoreGlobs(watchRoot) },
       ),
     ),
