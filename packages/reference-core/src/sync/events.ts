@@ -117,20 +117,47 @@ export function initEvents(): void {
     emit(VIRTUAL_COMPLETE_EVENT, {})
   })
 
+  let fullResyncInFlight = false
+  let pendingFullResync = false
+
+  const onFullSyncSettled = () => {
+    if (!fullResyncInFlight) return
+    fullResyncInFlight = false
+    if (pendingFullResync) {
+      pendingFullResync = false
+      startFullResync()
+    }
+  }
+
+  on('sync:complete', onFullSyncSettled)
+  on('sync:failed', onFullSyncSettled)
+
+  const startFullResync = () => {
+    if (fullResyncInFlight) {
+      pendingFullResync = true
+      return
+    }
+
+    fullResyncInFlight = true
+    refreshWatchConfig()
+      .then(() => {
+        emit('run:virtual:copy:all')
+      })
+      .catch((error) => {
+        log.error('[sync] Failed to refresh config after watch change', error)
+        fullResyncInFlight = false
+        pendingFullResync = false
+        emit('system:config:failed')
+      })
+  }
+
   /**
    * Watch mode mutates the virtual tree first. Rebuild decisions are driven by
    * the resulting `virtual:fs:change` events rather than by raw source changes.
    */
   on('watch:change', payload => {
     if (payload.requiresFullResync) {
-      refreshWatchConfig()
-        .then(() => {
-          emit('run:virtual:copy:all')
-        })
-        .catch((error) => {
-          log.error('[sync] Failed to refresh config after watch change', error)
-          emit('system:config:failed')
-        })
+      startFullResync()
       return
     }
 

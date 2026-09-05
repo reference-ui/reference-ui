@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import { rm } from 'node:fs/promises'                    // ← static
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { deriveWatchRoots } from './roots'
+import { deriveWatchRoots, isNestedOrEqual } from './roots'
 
 function createTempWorkspace(): string {
   return mkdtempSync(join(tmpdir(), 'reference-watch-roots-'))
@@ -101,5 +101,48 @@ describe('watch/roots', () => {
     expect(deriveWatchRoots(workspace, ['src/**/*.{ts,tsx}'], [join(workspace, 'ui.config.ts')])).toEqual([
       workspace,
     ])
+  })
+
+  it('normalizes Windows-style backslashes in include globs', () => {
+    const workspace = createTempWorkspace()
+    rootsToDelete.push(workspace)
+    mkdirSync(join(workspace, 'src', 'components'), { recursive: true })
+
+    expect(deriveWatchRoots(workspace, ['src\\components\\**\\*.tsx'])).toEqual([
+      join(workspace, 'src', 'components'),
+    ])
+  })
+
+  it('handles multiple extraPaths and collapses nested roots to covering root', () => {
+    const workspace = createTempWorkspace()
+    rootsToDelete.push(workspace)
+    mkdirSync(join(workspace, 'src'), { recursive: true })
+    mkdirSync(join(workspace, 'packages', 'tokens'), { recursive: true })
+
+    const rootConfig = join(workspace, 'ui.config.ts')
+    const internalFile = join(workspace, 'src', 'theme.ts')
+    const externalFile = join(workspace, 'packages', 'tokens', 'colors.ts')
+
+    writeFileSync(rootConfig, 'export default {}\n', 'utf-8')
+    writeFileSync(internalFile, 'export default {}\n', 'utf-8')
+    writeFileSync(externalFile, 'export default {}\n', 'utf-8')
+
+    expect(
+      deriveWatchRoots(workspace, ['src/**/*.{ts,tsx}'], [rootConfig, internalFile, externalFile]),
+    ).toEqual([
+      workspace,
+    ])
+  })
+
+  it('isNestedOrEqual accurately handles nested paths and prevents prefix false-positives', () => {
+    const parent = join(tmpdir(), 'project', 'src')
+    const child = join(tmpdir(), 'project', 'src', 'components')
+    const prefixSibling = join(tmpdir(), 'project', 'src-backup')
+    const sibling = join(tmpdir(), 'project', 'docs')
+
+    expect(isNestedOrEqual(parent, child)).toBe(true)
+    expect(isNestedOrEqual(parent, parent)).toBe(true)
+    expect(isNestedOrEqual(parent, prefixSibling)).toBe(false)
+    expect(isNestedOrEqual(parent, sibling)).toBe(false)
   })
 })

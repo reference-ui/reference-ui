@@ -19,6 +19,13 @@ test.describe('NumberField Composition Gates & Browser Proofs', () => {
     await expect(input).toHaveValue('42')
     await expect(display).toHaveText('Numeric Value: 42')
 
+    const incBox = await btnInc.boundingBox()
+    const decBox = await btnDec.boundingBox()
+    expect(incBox).not.toBeNull()
+    expect(decBox).not.toBeNull()
+    expect(incBox!.width).toBeCloseTo(incBox!.height, 0)
+    expect(decBox!.width).toBeCloseTo(decBox!.height, 0)
+
     // Click increment -> 43
     await btnInc.click()
     await expect(input).toHaveValue('43')

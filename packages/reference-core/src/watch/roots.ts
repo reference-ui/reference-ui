@@ -1,5 +1,5 @@
 import { existsSync, statSync } from 'node:fs'
-import { dirname, resolve } from 'node:path'
+import { dirname, isAbsolute, relative, resolve } from 'node:path'
 
 const GLOB_MAGIC = /[*?[\]{}()!]/
 
@@ -23,11 +23,7 @@ function extractStaticPrefix(pattern: string): string | undefined {
     prefix.push(segment)
   }
 
-  if (prefix.length === 0) {
-    return undefined
-  }
-
-  return prefix.join('/')
+  return prefix.length > 0 ? prefix.join('/') : undefined
 }
 
 function coerceWatchableRoot(projectRoot: string, candidate: string): string {
@@ -38,25 +34,34 @@ function coerceWatchableRoot(projectRoot: string, candidate: string): string {
   return absoluteCandidate
 }
 
-function collapseNestedRoots(roots: string[]): string[] {
-  const sortedRoots = [...new Set(roots)].sort((a, b) => a.length - b.length)
+export function isNestedOrEqual(parent: string, candidate: string): boolean {
+  const rel = relative(parent, candidate)
+  return !rel || (!rel.startsWith('..') && !isAbsolute(rel))
+}
+
+export function collapseNestedRoots(roots: string[]): string[] {
+  const uniqueRoots = [...new Set(roots.map((r) => resolve(r)))].sort((a, b) => a.length - b.length)
   const collapsed: string[] = []
 
-  for (const root of sortedRoots) {
-    const normalizedRoot = root.endsWith('/') ? root : `${root}/`
-    if (collapsed.some((existing) => normalizedRoot.startsWith(existing.endsWith('/') ? existing : `${existing}/`))) {
-      continue
+  for (const root of uniqueRoots) {
+    if (!collapsed.some((existing) => isNestedOrEqual(existing, root))) {
+      collapsed.push(root)
     }
-    collapsed.push(root)
   }
 
   return collapsed
 }
 
-export function deriveWatchRoots(projectRoot: string, include: string[], extraPaths: string[] = []): string[] {
+export function deriveWatchRoots(
+  projectRoot: string,
+  include: string[],
+  extraPaths: string[] = [],
+): string[] {
   const resolvedProjectRoot = resolve(projectRoot)
   const prefixes = include.map(extractStaticPrefix)
-  const includeRoots = prefixes.length === 0 || prefixes.some((prefix) => prefix == null)
+  const isUnrooted = prefixes.length === 0 || prefixes.some((prefix) => prefix == null)
+
+  const includeRoots = isUnrooted
     ? [resolvedProjectRoot]
     : prefixes.map((prefix) => coerceWatchableRoot(resolvedProjectRoot, prefix!))
 
@@ -64,3 +69,4 @@ export function deriveWatchRoots(projectRoot: string, include: string[], extraPa
 
   return collapseNestedRoots([...includeRoots, ...extraRoots])
 }
+

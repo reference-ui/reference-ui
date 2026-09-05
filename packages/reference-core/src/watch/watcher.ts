@@ -24,7 +24,15 @@ export interface WatchCallbacks {
   onChange(change: WatchChange): void
 }
 
-export function getWatcherState(payload: WatchPayload): { include: string[]; dependencyPaths: string[]; watchRoots: string[] } {
+export interface WatchSubscription {
+  unsubscribe(): Promise<void>
+}
+
+export function getWatcherState(payload: WatchPayload): {
+  include: string[]
+  dependencyPaths: string[]
+  watchRoots: string[]
+} {
   const { projectRoot, config } = payload
   const dependencyPaths = Array.from(new Set((config.dependencyPaths ?? []).map((path) => resolve(projectRoot, path))))
 
@@ -35,14 +43,14 @@ export function getWatcherState(payload: WatchPayload): { include: string[]; dep
   }
 }
 
-export async function startWatcher(payload: WatchPayload, callbacks: WatchCallbacks): Promise<void> {
+export async function startWatcher(payload: WatchPayload, callbacks: WatchCallbacks): Promise<WatchSubscription> {
   const { projectRoot } = payload
   const { include, dependencyPaths, watchRoots } = getWatcherState(payload)
   const isMatch = picomatch(include)
   const dependencyPathSet = new Set(dependencyPaths)
 
-  await Promise.all(
-    watchRoots.map(async (watchRoot) =>
+  const subscriptions = await Promise.all(
+    watchRoots.map((watchRoot) =>
       subscribe(
         watchRoot,
         (err, events) => {
@@ -68,4 +76,19 @@ export async function startWatcher(payload: WatchPayload, callbacks: WatchCallba
       ),
     ),
   )
+
+  return {
+    async unsubscribe() {
+      await Promise.all(
+        subscriptions.map(async (sub) => {
+          try {
+            await sub.unsubscribe()
+          } catch {
+            // Ignore unsubscribe errors during teardown
+          }
+        }),
+      )
+    },
+  }
 }
+
