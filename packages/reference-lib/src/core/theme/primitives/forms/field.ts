@@ -1,6 +1,6 @@
 import {
   baseTypography,
-  formControlSize,
+  controlSize,
 } from '../shared'
 
 const embeddedControl = ':is(input, textarea, select, .ref-input, .ref-textarea, .ref-select)'
@@ -8,7 +8,7 @@ const embeddedControl = ':is(input, textarea, select, .ref-input, .ref-textarea,
 export const fieldSurfaceStyles = {
   '[data-reference-field]': {
     ...baseTypography,
-    ...formControlSize,
+    ...controlSize,
     appearance: 'none',
     boxSizing: 'border-box',
     display: 'inline-flex',

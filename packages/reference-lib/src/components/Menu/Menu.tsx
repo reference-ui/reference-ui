@@ -2,7 +2,7 @@ import * as React from 'react'
 import { Button, Div, Span, type PrimitiveProps, type PrimitiveElement } from '@reference-ui/react'
 import { Overlay, type OverlayContentProps } from '../Overlay'
 import { RovingFocus } from '../RovingFocus'
-import { formControlSize, formControlHeightPx } from '../../core/theme/primitives/shared'
+import { controlSize, controlHeightPx } from '../../core/theme/primitives/shared'
 
 export interface MenuProps {
   children?: React.ReactNode
@@ -157,10 +157,10 @@ export function MenuItem({
         onKeyDown={handleKeyDown}
         display="flex"
         alignItems="center"
-        height={formControlSize.height}
-        minHeight={formControlSize.height}
+        height={controlSize.height}
+        minHeight={controlSize.height}
         px="3r"
-        py={formControlSize.paddingBlock}
+        py={controlSize.paddingBlock}
         boxSizing="border-box"
         borderRadius="sm"
         fontSize="3.5r"
@@ -176,8 +176,8 @@ export function MenuItem({
         _focusVisible={{ bg: 'ui.table.row.mutedBackground', color: 'design.text.base', outline: 'none' }}
         className={className}
         style={{
-          minHeight: formControlHeightPx,
-          height: formControlHeightPx,
+          minHeight: controlHeightPx,
+          height: controlHeightPx,
           boxSizing: 'border-box',
           ...style,
         }}

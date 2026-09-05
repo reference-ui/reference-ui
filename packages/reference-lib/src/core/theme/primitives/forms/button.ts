@@ -2,7 +2,7 @@ import { globalCss } from '@reference-ui/system'
 import {
   baseTypography,
   focusRingStyles,
-  formControlSize,
+  controlSize,
   pressableActiveStyles,
 } from '../shared'
 
@@ -16,7 +16,7 @@ export const buttonPrimitiveStyles = {
     justifyContent: 'center',
     flexShrink: 0,
     gap: '2r',
-    ...formControlSize,
+    ...controlSize,
     paddingInline: '4r',
     borderWidth: '1px',
     borderStyle: 'solid',

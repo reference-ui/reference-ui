@@ -3,7 +3,7 @@ import { setupFocusVisible } from './focus-visible'
 import {
   baseTypography,
   focusRingStyles,
-  formControlSize,
+  controlSize,
   pressableActiveStyles,
   thumbFocusRingStyles,
   trackBackground,
@@ -53,7 +53,7 @@ export const inputPrimitiveStyles = {
 
   '.ref-input[type="file"]': {
     ...baseTypography,
-    ...formControlSize,
+    ...controlSize,
     boxSizing: 'border-box',
     width: '100%',
     borderWidth: '1px',
@@ -113,7 +113,7 @@ export const inputPrimitiveStyles = {
   },
 
   '.ref-input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]), .ref-select': {
-    ...formControlSize,
+    ...controlSize,
     paddingInline: '3r',
   },
 
@@ -217,7 +217,7 @@ export const inputPrimitiveStyles = {
 
   '.ref-output': {
     ...baseTypography,
-    ...formControlSize,
+    ...controlSize,
     boxSizing: 'border-box',
     display: 'inline-flex',
     alignItems: 'center',

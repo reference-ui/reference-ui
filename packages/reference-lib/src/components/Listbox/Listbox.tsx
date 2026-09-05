@@ -3,7 +3,7 @@ import { Div, Span, type PrimitiveProps } from '@reference-ui/react'
 import { CheckIcon } from '@reference-ui/icons'
 import { RovingFocus } from '../RovingFocus'
 import { ComboboxContext } from '../Combobox/combobox-context'
-import { formControlSize, formControlHeightPx } from '../../core/theme/primitives/shared'
+import { controlSize, controlHeightPx } from '../../core/theme/primitives/shared'
 
 export type ListboxSelection = 'single' | 'multiple'
 export type ListboxOrientation = 'horizontal' | 'vertical'
@@ -132,10 +132,10 @@ export function ListboxOption({
         display="flex"
         alignItems="center"
         justifyContent={combobox ? 'space-between' : undefined}
-        height={formControlSize.height}
-        minHeight={formControlSize.height}
+        height={controlSize.height}
+        minHeight={controlSize.height}
         px="3r"
-        py={formControlSize.paddingBlock}
+        py={controlSize.paddingBlock}
         boxSizing="border-box"
         borderRadius="sm"
         fontSize="3.5r"
@@ -177,8 +177,8 @@ export function ListboxOption({
         }}
         className={className}
         style={{
-          minHeight: formControlHeightPx,
-          height: formControlHeightPx,
+          minHeight: controlHeightPx,
+          height: controlHeightPx,
           boxSizing: 'border-box',
           ...style,
         }}

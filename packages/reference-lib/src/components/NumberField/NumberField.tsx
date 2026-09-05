@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Div, Input, Button, type PrimitiveProps, type PrimitiveElement } from '@reference-ui/react'
-import { formControlSize, formControlHeightPx } from '../../core/theme/primitives/shared'
+import { controlSize, controlHeightPx } from '../../core/theme/primitives/shared'
 
 export type NumberFieldProps = Omit<PrimitiveProps<'div'>, 'onChange' | 'value' | 'defaultValue'> & {
   value?: number | null
@@ -311,8 +311,8 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
           alignItems="center"
           width="fit-content"
           maxW="36r"
-          height={formControlSize.height}
-          minHeight={formControlSize.height}
+          height={controlSize.height}
+          minHeight={controlSize.height}
           p="0.75r"
           gap="0.5r"
           border="1px solid"
@@ -323,8 +323,8 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
           _focusWithin={{ borderColor: 'ui.focus.ring' }}
           className={className}
           style={{
-            minHeight: formControlHeightPx,
-            height: formControlHeightPx,
+            minHeight: controlHeightPx,
+            height: controlHeightPx,
             boxSizing: 'border-box',
             ...style,
           }}

@@ -43,7 +43,7 @@ export function pressableActiveStyles(background: string) {
 export const trackBackground =
   'color-mix(in oklch, {colors.ui.progress.track.mixForeground} 12%, {colors.ui.progress.track.mixBackground})'
 
-export const formControlSize = {
+export const controlSize = {
   height: '8.5r',
   paddingBlock: '0.75r',
 } as const
@@ -52,5 +52,10 @@ export const formControlSize = {
  * Standard 34px control height (8.5r where 1r = 4px).
  * Shared across buttons, inputs, fields, and dropdown items (Combobox, Menu, Listbox).
  */
-export const formControlHeight = formControlSize.height
-export const formControlHeightPx = '34px'
+export const controlHeight = controlSize.height
+export const controlHeightPx = '34px'
+
+// Aliases for backwards compatibility
+export const formControlSize = controlSize
+export const formControlHeight = controlHeight
+export const formControlHeightPx = controlHeightPx
