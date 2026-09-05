@@ -290,49 +290,40 @@ export default {
           subtitle="Testing optical balance when icons sit alongside text labels"
         />
 
-        {/* Buttons with Icons */}
+        {/* Buttons with Icons using the 3 tokens */}
         <Card>
-          <H4 fontSize="3.5r" fontWeight="600" m="0">Buttons with Leading Icons (Button Text: 3.5r / 14px)</H4>
+          <H4 fontSize="3.5r" fontWeight="600" m="0">The 3 Icon Tokens: small (4r), base (5r default), large (6r)</H4>
           <Div display="flex" gap="4r" alignItems="center" flexWrap="wrap">
-            {/* 3.5r icon */}
+            {/* small */}
             <Div display="flex" flexDirection="column" gap="1r" alignItems="center">
-              <Span fontSize="2.5r" color="design.text.light">Icon 3.5r (1:1 with font)</Span>
+              <Span fontSize="2.5r" color="design.text.light">size="small" (4r / 16px)</Span>
               <Button display="inline-flex" alignItems="center" gap="1.5r">
-                <AddIcon size="3.5r" />
+                <AddIcon size="small" />
                 <span>Create New</span>
               </Button>
             </Div>
 
-            {/* 4r icon */}
+            {/* base (explicit or default) */}
             <Div display="flex" flexDirection="column" gap="1r" alignItems="center">
-              <Span fontSize="2.5r" color="design.text.light">Icon 4r (16px optical)</Span>
-              <Button display="inline-flex" alignItems="center" gap="1.5r">
-                <AddIcon size="4r" />
-                <span>Create New</span>
-              </Button>
-            </Div>
-
-            {/* 4.5r icon */}
-            <Div display="flex" flexDirection="column" gap="1r" alignItems="center">
-              <Span fontSize="2.5r" color="design.text.light">Icon 4.5r (18px)</Span>
-              <Button display="inline-flex" alignItems="center" gap="1.5r">
-                <AddIcon size="4.5r" />
-                <span>Create New</span>
-              </Button>
-            </Div>
-
-            {/* 5r icon (default) */}
-            <Div display="flex" flexDirection="column" gap="1r" alignItems="center">
-              <Span fontSize="2.5r" color="design.text.light">Icon 5r (20px default)</Span>
+              <Span fontSize="2.5r" color="design.text.light">Default / size="base" (5r / 20px)</Span>
               <Button display="inline-flex" alignItems="center" gap="1.5r">
                 <AddIcon />
                 <span>Create New</span>
               </Button>
             </Div>
 
+            {/* large */}
+            <Div display="flex" flexDirection="column" gap="1r" alignItems="center">
+              <Span fontSize="2.5r" color="design.text.light">size="large" (6r / 24px)</Span>
+              <Button display="inline-flex" alignItems="center" gap="1.5r">
+                <AddIcon size="large" />
+                <span>Create New</span>
+              </Button>
+            </Div>
+
             {/* Trailing chevron */}
             <Div display="flex" flexDirection="column" gap="1r" alignItems="center">
-              <Span fontSize="2.5r" color="design.text.light">Button + Trailing Chevron (5r)</Span>
+              <Span fontSize="2.5r" color="design.text.light">Default Chevron (5r)</Span>
               <Button display="inline-flex" alignItems="center" gap="1.5r">
                 <span>Actions</span>
                 <KeyboardArrowDownIcon />

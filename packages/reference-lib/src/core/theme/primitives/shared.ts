@@ -59,3 +59,21 @@ export const controlHeightPx = '34px'
 export const formControlSize = controlSize
 export const formControlHeight = controlHeight
 export const formControlHeightPx = controlHeightPx
+
+/**
+ * 3 icon size tokens packaged with reference-lib:
+ * - small: 4r (16px) — compact / dense inline text companion
+ * - base: 5r (20px) — default, fits into controls (34px height) nicely
+ * - large: 6r (24px) — headings / prominent UI
+ */
+export const iconSizes = {
+  small: '4r',
+  base: '5r',
+  large: '6r',
+  sm: '4r',
+  md: '5r',
+  lg: '6r',
+} as const
+
+export const defaultIconSize = iconSizes.base
+

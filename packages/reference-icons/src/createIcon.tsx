@@ -11,8 +11,20 @@ const IconShell = Div as unknown as React.ForwardRefExoticComponent<
   React.PropsWithoutRef<MaterialSymbolIconShellProps> & React.RefAttributes<HTMLDivElement>
 >
 
+export const ICON_SIZE_TOKENS: Record<string, string> = {
+  small: 'var(--spacing-4r, 16px)',
+  sm: 'var(--spacing-4r, 16px)',
+  base: 'var(--spacing-5r, 20px)',
+  md: 'var(--spacing-5r, 20px)',
+  large: 'var(--spacing-6r, 24px)',
+  lg: 'var(--spacing-6r, 24px)',
+}
+
 function formatIconSize(val: IconSizeValue | undefined): string {
-  if (val === undefined || val === null) return 'var(--spacing-5r, 20px)'
+  if (val === undefined || val === null) return ICON_SIZE_TOKENS.base
+  if (typeof val === 'string' && val in ICON_SIZE_TOKENS) {
+    return ICON_SIZE_TOKENS[val]
+  }
   if (typeof val === 'number') return `${val}px`
   if (typeof val === 'string' && /^-?\d+(\.\d+)?r$/.test(val)) {
     const num = parseFloat(val)

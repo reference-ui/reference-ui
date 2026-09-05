@@ -2,7 +2,8 @@ import type * as React from 'react'
 import type { DivProps } from '@reference-ui/react'
 
 export type IconVariant = 'outline' | 'filled'
-export type IconSizeValue = React.CSSProperties['width']
+export type IconSizeToken = 'small' | 'base' | 'large' | 'sm' | 'md' | 'lg'
+export type IconSizeValue = IconSizeToken | React.CSSProperties['width']
 
 export type MaterialSymbolIconShellProps = Omit<DivProps, 'size'> & {
   size?: IconSizeValue

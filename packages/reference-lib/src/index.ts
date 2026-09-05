@@ -5,6 +5,13 @@
  * Run `ref sync` in reference-lib before using.
  */
 export { baseSystem } from '../.reference-ui/system/baseSystem.mjs'
+export {
+  controlHeight,
+  controlHeightPx,
+  controlSize,
+  defaultIconSize,
+  iconSizes,
+} from './core/theme/primitives/index'
 export { Reference, ReferenceView, referenceBrowserTokenConfig } from './components/Reference/index'
 export * from './components/Slot/index'
 export * from './components/Presence/index'

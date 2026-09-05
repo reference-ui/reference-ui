@@ -7,9 +7,11 @@ export {
 	controlSize,
 	controlHeight,
 	controlHeightPx,
+	defaultIconSize,
 	formControlSize,
 	formControlHeight,
 	formControlHeightPx,
+	iconSizes,
 	trackBackground,
 } from './shared'
 export { ui } from './tokens'
