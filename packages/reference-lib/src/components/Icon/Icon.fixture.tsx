@@ -467,7 +467,7 @@ export default {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
               {/* Option A: Current (26px vs 14px) */}
-              <Div p="3r" borderRadius="sm" border="1px solid" borderColor="ui.field.border" bg="ui.table.row.mutedBackground" display="flex" flexDirection="column" gap="2r">
+              <Div p="3r" borderRadius="sm" border="1px solid" borderColor="ui.field.border" bg="ui.table.row.mutedBackground" display="flex" flexDirection="column" alignItems="flex-start" gap="2r">
                 <Span fontSize="2.5r" fontWeight="700" color="red.400">A. As-Is (No pull)</Span>
                 <Span fontSize="2.25r" color="design.text.light">Edge-to-glyph: <strong>26px</strong> | Glyph-to-text: <strong>14px</strong></Span>
                 <Button height="12r" px="5r" fontSize="4.5r" style={{ ['--reference-icon-offset' as any]: '0px' }}>
@@ -477,7 +477,7 @@ export default {
               </Div>
 
               {/* Option B: Gentle -4px Pull */}
-              <Div p="3r" borderRadius="sm" border="1px solid" borderColor="ui.field.border" bg="ui.table.row.mutedBackground" display="flex" flexDirection="column" gap="2r">
+              <Div p="3r" borderRadius="sm" border="1px solid" borderColor="ui.field.border" bg="ui.table.row.mutedBackground" display="flex" flexDirection="column" alignItems="flex-start" gap="2r">
                 <Span fontSize="2.5r" fontWeight="700" color="yellow.400">B. -4px Pull (-1r)</Span>
                 <Span fontSize="2.25r" color="design.text.light">Edge-to-glyph: <strong>22px</strong> | Glyph-to-text: <strong>14px</strong></Span>
                 <Button height="12r" px="5r" fontSize="4.5r" style={{ ['--reference-icon-offset' as any]: '-4px' }}>
@@ -487,7 +487,7 @@ export default {
               </Div>
 
               {/* Option C: Balanced -8px Pull */}
-              <Div p="3r" borderRadius="sm" border="1px solid" borderColor="ui.field.border" bg="ui.table.row.mutedBackground" display="flex" flexDirection="column" gap="2r">
+              <Div p="3r" borderRadius="sm" border="1px solid" borderColor="ui.field.border" bg="ui.table.row.mutedBackground" display="flex" flexDirection="column" alignItems="flex-start" gap="2r">
                 <Span fontSize="2.5r" fontWeight="700" color="green.400">C. -8px Pull (-2r)</Span>
                 <Span fontSize="2.25r" color="design.text.light">Edge-to-glyph: <strong>18px</strong> | Glyph-to-text: <strong>14px</strong></Span>
                 <Button height="12r" px="5r" fontSize="4.5r" style={{ ['--reference-icon-offset' as any]: '-8px' }}>
@@ -497,7 +497,7 @@ export default {
               </Div>
 
               {/* Option D: Exact Equal Spacing (14px = 14px) */}
-              <Div p="3r" borderRadius="sm" border="1px solid" borderColor="ui.field.border" bg="ui.table.row.mutedBackground" display="flex" flexDirection="column" gap="2r">
+              <Div p="3r" borderRadius="sm" border="1px solid" borderColor="ui.field.border" bg="ui.table.row.mutedBackground" display="flex" flexDirection="column" alignItems="flex-start" gap="2r">
                 <Span fontSize="2.5r" fontWeight="700" color="blue.400">D. Equal Spacing (14px = 14px)</Span>
                 <Span fontSize="2.25r" color="design.text.light">Edge-to-glyph: <strong>14px</strong> | Glyph-to-text: <strong>14px</strong></Span>
                 <Button height="12r" px="5r" fontSize="4.5r" style={{ ['--reference-icon-offset' as any]: '-12px' }}>
