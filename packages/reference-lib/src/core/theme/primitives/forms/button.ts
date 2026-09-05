@@ -14,14 +14,14 @@ export const buttonPrimitiveStyles = {
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '1.5r',
+    gap: '0.5em',
     ...controlSize,
     paddingInline: '3.5r',
     ':where(&) > :where([data-slot="icon"], svg):where(:first-child:not(:only-child))': {
-      marginInlineStart: 'var(--reference-icon-offset, -1r)',
+      marginInlineStart: 'var(--reference-icon-offset, -0.5r)',
     },
     ':where(&) > :where([data-slot="icon"], svg):where(:last-child:not(:only-child))': {
-      marginInlineEnd: 'var(--reference-icon-offset, -1r)',
+      marginInlineEnd: 'var(--reference-icon-offset, -0.5r)',
     },
     '&:where(:has(> [data-slot="icon"]:only-child, > svg:only-child))': {
       paddingInline: '0',

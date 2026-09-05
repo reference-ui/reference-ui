@@ -396,9 +396,132 @@ export default {
             Button Optical Behavior Across Varying Heights
           </H3>
           <P fontSize="3.5r" color="design.text.light" mt="1r" mb="0">
-            Testing <code>aspect-ratio: 1</code> auto-squaring and <code>margin-inline: -1r</code> optical insets across compact (24px), standard (34px), touch (42px), and hero (52px) buttons.
+            Testing <code>aspect-ratio: 1</code> auto-squaring and optical spacing across compact (24px), standard (34px), touch (42px), and hero (52px) buttons.
           </P>
         </Div>
+
+        {/* Diagnostic Spacing Lab */}
+        {/* Diagnostic Spacing Lab */}
+        <SectionCard
+          title="Diagnostic Spacing Comparison: Why the Leading Icon Looked Weird"
+          subtitle="Mathematical & optical breakdown of how leading icon placement behaves across heights"
+        >
+          <Div display="flex" flexDirection="column" gap="4r">
+            {/* Treatment 1 */}
+            <Div
+              p="4r"
+              borderRadius="sm"
+              bg="rgba(239, 68, 68, 0.04)"
+              border="1px solid rgba(239, 68, 68, 0.25)"
+              display="flex"
+              flexDirection="column"
+              gap="2r"
+            >
+              <Div display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap="2r">
+                <Span fontSize="3r" fontWeight="700" color="red.400">
+                  Treatment 1: Flawed (Static -4px pull + static 6px gap)
+                </Span>
+                <Span fontSize="2.5r" color="design.text.light">
+                  Flaw: Gap stays 6px while button grows to 52px; 4px pull drags icon away from center.
+                </Span>
+              </Div>
+              <Div display="flex" alignItems="center" gap="3r" flexWrap="wrap" mt="1r">
+                <Button height="6r" px="2.5r" fontSize="3r" gap="1.5r" style={{ ['--reference-icon-offset' as any]: '-1r' }}>
+                  <AddIcon size="small" />
+                  <span>24px Compact</span>
+                </Button>
+                <Button height="8.5r" fontSize="3.5r" gap="1.5r" style={{ ['--reference-icon-offset' as any]: '-1r' }}>
+                  <AddIcon />
+                  <span>34px Standard</span>
+                </Button>
+                <Button height="10.5r" px="4r" fontSize="4r" gap="1.5r" style={{ ['--reference-icon-offset' as any]: '-1r' }}>
+                  <AddIcon />
+                  <span>42px Touch</span>
+                </Button>
+                <Button height="13r" px="5r" fontSize="4.5r" gap="1.5r" style={{ ['--reference-icon-offset' as any]: '-1r' }}>
+                  <AddIcon size="large" />
+                  <span>52px Hero CTA</span>
+                </Button>
+              </Div>
+            </Div>
+
+            {/* Treatment 2 */}
+            <Div
+              p="4r"
+              borderRadius="sm"
+              bg="rgba(34, 197, 94, 0.04)"
+              border="1px solid rgba(34, 197, 94, 0.25)"
+              display="flex"
+              flexDirection="column"
+              gap="2r"
+            >
+              <Div display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap="2r">
+                <Span fontSize="3r" fontWeight="700" color="green.400">
+                  Treatment 2: New Built-in Default (Proportional Gap 0.5em + Exact -2px / -0.5r SVG Pull)
+                </Span>
+                <Span fontSize="2.5r" color="design.text.light">
+                  Optical fix: Built-in to Button with zero props. Cancels 2px SVG padding; gap breathes with font size.
+                </Span>
+              </Div>
+              <Div display="flex" alignItems="center" gap="3r" flexWrap="wrap" mt="1r">
+                <Button height="6r" px="2.5r" fontSize="3r">
+                  <AddIcon size="small" />
+                  <span>24px Compact</span>
+                </Button>
+                <Button height="8.5r" fontSize="3.5r">
+                  <AddIcon />
+                  <span>34px Standard</span>
+                </Button>
+                <Button height="10.5r" px="4r" fontSize="4r">
+                  <AddIcon />
+                  <span>42px Touch</span>
+                </Button>
+                <Button height="13r" px="5r" fontSize="4.5r">
+                  <AddIcon size="large" />
+                  <span>52px Hero CTA</span>
+                </Button>
+              </Div>
+            </Div>
+
+            {/* Treatment 3 */}
+            <Div
+              p="4r"
+              borderRadius="sm"
+              bg="rgba(59, 130, 246, 0.04)"
+              border="1px solid rgba(59, 130, 246, 0.25)"
+              display="flex"
+              flexDirection="column"
+              gap="2r"
+            >
+              <Div display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap="2r">
+                <Span fontSize="3r" fontWeight="700" color="blue.400">
+                  Treatment 3: Pure Natural Flex (0px pull + Proportional Gap 0.5em)
+                </Span>
+                <Span fontSize="2.5r" color="design.text.light">
+                  Zero negative margin hack. Relies entirely on natural button padding and proportional gap.
+                </Span>
+              </Div>
+              <Div display="flex" alignItems="center" gap="3r" flexWrap="wrap" mt="1r">
+                <Button height="6r" px="2.5r" fontSize="3r" gap="0.5em" style={{ ['--reference-icon-offset' as any]: '0px' }}>
+                  <AddIcon size="small" />
+                  <span>24px Compact</span>
+                </Button>
+                <Button height="8.5r" fontSize="3.5r" gap="0.5em" style={{ ['--reference-icon-offset' as any]: '0px' }}>
+                  <AddIcon />
+                  <span>34px Standard</span>
+                </Button>
+                <Button height="10.5r" px="4r" fontSize="4r" gap="0.5em" style={{ ['--reference-icon-offset' as any]: '0px' }}>
+                  <AddIcon />
+                  <span>42px Touch</span>
+                </Button>
+                <Button height="13r" px="5r" fontSize="4.5r" gap="0.5em" style={{ ['--reference-icon-offset' as any]: '0px' }}>
+                  <AddIcon size="large" />
+                  <span>52px Hero CTA</span>
+                </Button>
+              </Div>
+            </Div>
+          </Div>
+        </SectionCard>
 
         {scales.map(scale => (
           <SectionCard
@@ -517,9 +640,10 @@ export default {
                 Automated System Calculations:
               </Span>
               <Span>1. Icon-only buttons: Dropped padding, computed <code>aspect-ratio: 1</code> → <strong>48px × 48px square</strong></Span>
-              <Span>2. Leading icon: Detected <code>:first-child</code> → applied <code>margin-inline-start: -1r</code> (4px optical pull)</Span>
-              <Span>3. Trailing chevron: Detected <code>:last-child</code> → applied <code>margin-inline-end: -1r</code> (4px optical pull)</Span>
-              <Span>4. Target compatibility: Matches both <code>[data-slot="icon"]</code> and raw <code>&lt;svg&gt;</code> elements</Span>
+              <Span>2. Leading icon: Detected <code>:first-child</code> → applied <code>margin-inline-start: -0.5r</code> (2px optical SVG inset pull)</Span>
+              <Span>3. Trailing chevron: Detected <code>:last-child</code> → applied <code>margin-inline-end: -0.5r</code> (2px optical SVG inset pull)</Span>
+              <Span>4. Proportional typography gap: <code>gap: 0.5em</code> scales seamlessly with font size (9px gap at 18px text)</Span>
+              <Span>5. Target compatibility: Matches both <code>[data-slot="icon"]</code> and raw <code>&lt;svg&gt;</code> elements</Span>
             </Div>
 
             {/* Live buttons grid */}
