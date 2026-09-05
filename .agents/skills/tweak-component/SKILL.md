@@ -1,6 +1,6 @@
 ---
 name: tweak-component
-description: Autonomous workflow for inspecting, tweaking, and verifying components in @reference-ui/lib against Cosmos fixtures, visual snapshots, and Vitest/Playwright test contracts.
+description: Autonomous workflow for inspecting, tweaking, and verifying components in @reference-ui/lib against Cosmos fixtures, returning visual screenshots, and passing Vitest/Playwright test contracts.
 ---
 
 # Component Tweaking & Manufacturing Skill (`tweak-component`)
@@ -31,14 +31,14 @@ Read the component design specification and test contract before modifying code:
 - Test Contract: `packages/reference-lib/src/components/<Component>/TESTS.md`
 - Roadmap / Gaps: `packages/reference-lib/src/components/<Component>/NEXT.md` (if present)
 
-### Step 2: Visual & Behavioral Baseline Capture
-Run the capture script to take a snapshot of the current state:
+### Step 2: Baseline Capture & Immediate Visual Sharing
+Establish the visual baseline and **share it with the developer immediately in chat**:
 ```bash
-node .agents/skills/tweak-component/scripts/capture.mjs <ComponentName> <FixtureName> /Users/ryn/.gemini/antigravity/brain/<conversation-id>/before_<name>.png
+node .agents/skills/tweak-component/scripts/capture.mjs <ComponentName> <FixtureName> --states --out-dir <artifacts-dir>
 ```
-Use `view_file` to visually examine the generated screenshot and identify:
-- Visual defects, misalignment, or nested borders (e.g. double bezel).
-- State discrepancies between input text and display text.
+- The script automatically outputs tight resting, hover, and popup screenshots along with a ready-to-paste markdown table.
+- **MANDATORY**: Embed the captured baseline screenshots directly into your chat response (`![Caption](/absolute/path.png)`). Never proceed without letting the user see what the baseline looks like.
+- Inspect the images with `view_file` to identify visual bugs, misalignment, nested borders, or clipped triggers.
 
 ### Step 3: Implement & Tweak Component Code
 Apply modifications under `packages/reference-lib/src/components/<Component>/`:
@@ -55,17 +55,44 @@ Execute targeted checks locally (never run global `pnpm test` wrappers):
 pnpm --filter @reference-ui/lib run typecheck
 
 # 2. Pure Model Unit Tests (Vitest)
-cd matrix/lib && pnpm exec vitest run tests/unit/<component>.test.ts
+pnpm --filter @reference-ui/lib test
 
 # 3. Browser E2E Tests (Playwright)
-cd matrix/lib && pnpm exec playwright test tests/e2e/<component>.spec.ts
+pnpm --dir matrix/lib exec playwright test tests/e2e/<component>.spec.ts
 ```
 
-### Step 5: Visual Re-inspection & Sign-off
-1. Capture an updated screenshot:
+### Step 5: Visual Re-inspection & Mandatory Visual Feedback
+After passing tests, verify the visual result and **always return screenshots in chat**:
+1. Run the multi-state capture script:
    ```bash
-   node .agents/skills/tweak-component/scripts/capture.mjs <ComponentName> <FixtureName> /Users/ryn/.gemini/antigravity/brain/<conversation-id>/after_<name>.png
+   node .agents/skills/tweak-component/scripts/capture.mjs <ComponentName> <FixtureName> --states --out-dir <artifacts-dir>
    ```
-2. View the new image with `view_file` to confirm visual defects are resolved.
-3. Update `packages/reference-lib/src/components/<Component>/TESTS.md` by marking verified items as `- [x] <PREFIX>-...`.
-4. Report back to the user with a concise summary and side-by-side before/after screenshots.
+2. Visually inspect the generated files with `view_file`.
+3. **MANDATORY USER VISUAL FEEDBACK**:
+   - Always paste the markdown snippet printed by `capture.mjs` directly into your user-facing chat response.
+   - Present a side-by-side or multi-state comparison table (e.g. `Resting | Hover | Open`).
+   - The user must never have to ask to see screenshots; they should be returned automatically with every verification.
+4. Update `packages/reference-lib/src/components/<Component>/TESTS.md` by marking verified items as `- [x] <PREFIX>-...`.
+5. Update `walkthrough.md` with the embedded images and geometric breakdown.
+
+---
+
+## 3. Capture Tool Reference (`capture.mjs`)
+
+Syntax:
+```bash
+node .agents/skills/tweak-component/scripts/capture.mjs <Component> <Fixture> [options]
+```
+
+Options:
+- `--states`: Captures `resting` (mouse at 0,0), `hover` (trigger hovered), and `open` (if trigger opens a dialog/listbox).
+- `--target <css>`: Specific element to snapshot inside the fixture iframe (auto-defaults to `[data-reference-field]`, then first child of `#root`, then `#root`).
+- `--hover <css>`: Manually hover a specific element.
+- `--click <css>`: Manually click a specific element.
+- `--out-dir <dir>`: Directory where screenshots will be stored (e.g. `<artifacts-dir>`).
+- `--viewport <WxH>`: Custom viewport dimensions (default `1000x700`).
+- `--wait <ms>`: Delay for Cosmos postMessage handshake (default `2500`).
+
+Output:
+- Saves tightly clipped images of component + popovers.
+- Emits markdown snippets ready to paste directly into chat messages and `walkthrough.md`.
