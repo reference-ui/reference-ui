@@ -29,7 +29,7 @@ export function createWatcherErrorHandler(
     // The watcher remains functional and continues receiving real file events.
     // Firing a full re-sync here triggers more build writes and creates an infinite loop.
     if (isFSEventsDroppedError(error)) {
-      log.warn('[watch] OS file system event buffer dropped events under heavy write activity; watcher remains active.')
+      log.debug('watch', 'OS file system event buffer dropped events under heavy write activity; watcher remains active.')
       return
     }
 

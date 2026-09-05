@@ -100,24 +100,27 @@ event wiring instead of embedding it in the watcher.
 
 ## Confidence Today
 
-Current confidence is mostly downstream rather than direct.
+Proven with direct unit tests and integration tests:
 
-Proven today:
+- `roots.test.ts`: cross-platform path resolution, Windows backslash glob normalization, and root collapsing
+- `watcher.test.ts`: direct tests for `@parcel/watcher` state derivation, include filtering, teardown `unsubscribe()`, and dependency path resync detection
+- `worker.test.ts`: error handler cooldowns, circuit breakers, and graceful OS buffer overflow handling
+- `reference-unit`: verifies watch-mode edits update the virtual mirror
+- `reference-e2e`: verifies a watch-mode edit propagates all the way to visible runtime styling in a sandboxed app
 
-- `reference-unit` verifies watch-mode edits update the virtual mirror
-- `reference-e2e` verifies a watch-mode edit propagates all the way to visible
-  runtime styling in a sandboxed app
+## Rules & Design Principles
 
-What is still missing:
+### 1. Strictly No `node:fs` Watching
+- **NEVER use `node:fs`** (e.g. `fs.watch`, `fs.watchFile`, `fs.promises.watch`) for watching files or directories.
+- All file system monitoring in this module MUST strictly and exclusively use `@parcel/watcher`.
+- `@parcel/watcher` provides native, performant, cross-platform file change events (FSEvents on macOS, inotify on Linux, etc.). Do not introduce ad-hoc Node.js file system watchers.
 
-- direct `reference-core` tests for event mapping
-- direct tests for include filtering
-- direct tests for ignore behavior
-- direct tests for repeated edits and failure behavior
+### 2. Anticipate OS Event Drops Gracefully
+- Under heavy write activity (e.g. during compilation/sync), OS file system event queues like macOS FSEvents can drop buffer events.
+- The watch worker anticipates this and handles it quietly in the background (logged at debug level). It does not spam the user console with warnings or trigger recursive, self-perpetuating full re-sync loops.
 
-## Design Rules
+### 3. Keep the Implementation Clean and Minimal
+- The watcher module's responsibility is small: subscribe to filesystem changes with `@parcel/watcher`, filter against include/dependency paths, and emit normalized events onto the event bus.
+- Do not introduce complex nested fallbacks or secondary watcher subsystems.
+- Watch normalizes events; it does not orchestrate rebuilds. The event contract stays small and boring.
 
-- watch normalizes events; it does not orchestrate rebuilds
-- the event contract should stay small and boring
-- emitted payloads should be usable by any downstream worker
-- filter decisions should stay close to config include semantics
