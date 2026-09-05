@@ -348,5 +348,149 @@ export default {
       </Div>
     )
   },
+
+  ButtonHeightScale: () => {
+    const scales = [
+      {
+        name: 'Compact / Dense',
+        height: '6r',
+        px: '24px',
+        customPx: '2.5r',
+        fontSize: '3r',
+        iconSize: 'small' as const,
+        description: 'Tight data tables, toolbars, sub-actions. Uses custom px="2.5r" (10px).',
+      },
+      {
+        name: 'Standard Control (Default)',
+        height: '8.5r',
+        px: '34px',
+        customPx: undefined,
+        fontSize: '3.5r',
+        iconSize: 'base' as const,
+        description: 'Default controlHeight across all Reference UI inputs and buttons. Inherits default 3.5r (14px) padding.',
+      },
+      {
+        name: 'Large / Touch',
+        height: '10.5r',
+        px: '42px',
+        customPx: '4r',
+        fontSize: '4r',
+        iconSize: 'large' as const,
+        description: 'Apple HIG touch target, prominent forms, mobile cards. Uses custom px="4r" (16px).',
+      },
+      {
+        name: 'Hero / Marketing',
+        height: '13r',
+        px: '52px',
+        customPx: '5r',
+        fontSize: '4.5r',
+        iconSize: 'large' as const,
+        description: 'Landing page CTAs, hero sections, modal primaries. Uses custom px="5r" (20px).',
+      },
+    ]
+
+    return (
+      <Div maxW="240r" mx="auto" p="6r" display="flex" flexDirection="column" gap="6r">
+        <Div>
+          <H3 fontSize="5r" fontWeight="700" m="0" color="design.text.base">
+            Button Optical Behavior Across Varying Heights
+          </H3>
+          <P fontSize="3.5r" color="design.text.light" mt="1r" mb="0">
+            Testing <code>aspect-ratio: 1</code> auto-squaring and <code>margin-inline: -1r</code> optical insets across compact (24px), standard (34px), touch (42px), and hero (52px) buttons.
+          </P>
+        </Div>
+
+        {scales.map(scale => (
+          <SectionCard
+            key={scale.height}
+            title={`${scale.name} — ${scale.height} (${scale.px})`}
+            subtitle={scale.description}
+          >
+            <Div display="flex" alignItems="center" justifyContent="space-between" flexWrap="wrap" gap="4r">
+              {/* 1. Text Only */}
+              <Div display="flex" flexDirection="column" gap="1r" alignItems="flex-start">
+                <Span fontSize="2.5r" color="design.text.light">Text Only</Span>
+                <Button height={scale.height} fontSize={scale.fontSize} px={scale.customPx}>
+                  <span>Continue</span>
+                </Button>
+              </Div>
+
+              {/* 2. Leading Icon */}
+              <Div display="flex" flexDirection="column" gap="1r" alignItems="flex-start">
+                <Span fontSize="2.5r" color="design.text.light">Leading Icon</Span>
+                <Button height={scale.height} fontSize={scale.fontSize} px={scale.customPx}>
+                  <AddIcon size={scale.iconSize} />
+                  <span>Create Item</span>
+                </Button>
+              </Div>
+
+              {/* 3. Trailing Chevron */}
+              <Div display="flex" flexDirection="column" gap="1r" alignItems="flex-start">
+                <Span fontSize="2.5r" color="design.text.light">Trailing Chevron</Span>
+                <Button
+                  height={scale.height}
+                  fontSize={scale.fontSize}
+                  px={scale.customPx}
+                  bg="ui.table.row.mutedBackground"
+                  color="design.text.base"
+                  border="1px solid"
+                  borderColor="ui.field.border"
+                >
+                  <span>Options</span>
+                  <KeyboardArrowDownIcon size={scale.iconSize} />
+                </Button>
+              </Div>
+
+              {/* 4. Standalone Icon-Only (Proving auto-square aspect-ratio: 1) */}
+              <Div display="flex" flexDirection="column" gap="1r" alignItems="flex-start">
+                <Span fontSize="2.5r" color="design.text.light">Icon-Only (aspect-ratio: 1)</Span>
+                <Div display="flex" alignItems="center" gap="1.5r">
+                  <Button
+                    type="button"
+                    aria-label="Settings"
+                    height={scale.height}
+                    bg="ui.table.row.mutedBackground"
+                    color="design.text.base"
+                    border="1px solid"
+                    borderColor="ui.field.border"
+                  >
+                    <SettingsIcon size={scale.iconSize} />
+                  </Button>
+                  <Button
+                    type="button"
+                    aria-label="Close"
+                    height={scale.height}
+                    bg="ui.table.row.mutedBackground"
+                    color="design.text.base"
+                    border="1px solid"
+                    borderColor="ui.field.border"
+                  >
+                    <CloseIcon size={scale.iconSize} />
+                  </Button>
+                </Div>
+              </Div>
+
+              {/* 5. Geometry Check Badge */}
+              <Div
+                px="3r"
+                py="1.5r"
+                borderRadius="sm"
+                bg="ui.panel.background"
+                border="1px dashed"
+                borderColor="ui.field.border"
+                display="flex"
+                flexDirection="column"
+                gap="0.5r"
+                fontSize="2.5r"
+              >
+                <Span color="design.text.light">Height: <strong>{scale.px}</strong></Span>
+                <Span color="green.400">Square: <strong>{scale.px} × {scale.px}</strong></Span>
+              </Div>
+            </Div>
+          </SectionCard>
+        ))}
+      </Div>
+    )
+  },
 }
 
