@@ -410,7 +410,7 @@ export default {
               1. <strong>Proportional Typography Gap (<code>gap: 0.5em</code>)</strong>: Spacing scales naturally with typography across every button height (6px at 12px text → 7px at 14px text → 9px at 18px text).
             </Span>
             <Span>
-              2. <strong>Proportional Optical Inset (<code>margin-inline: -0.45em</code>)</strong>: Leading and trailing icons absorb SVG perimeter whitespace dynamically based on font size (e.g. -5px at compact, -6px at standard, -8px at hero).
+              2. <strong>Continuous Optical Scaling (<code>margin-inline: calc(-1.4em + 14px)</code>)</strong>: Insets scale smoothly across font and padding slopes (-2.8px at compact 12px → -5.6px at standard 14px → -11.2px at hero 18px), keeping perimeter glyph spacing balanced (~8.5px–10.5px) without hugging or floating.
             </Span>
             <Span>
               3. <strong>Auto-Squaring (<code>aspect-ratio: 1 / 1</code>)</strong>: Icon-only buttons drop horizontal padding and automatically lock to a perfect square at whatever height the button has.
@@ -434,7 +434,7 @@ export default {
               {/* 1. Text Only */}
               <Div display="flex" flexDirection="column" gap="1r" alignItems="flex-start">
                 <Span fontSize="2.5r" color="design.text.light">Text Only</Span>
-                <Button height={scale.height} fontSize={scale.fontSize} px={scale.customPx}>
+                <Button height={scale.height} style={{ height: scale.px }} fontSize={scale.fontSize} px={scale.customPx}>
                   <span>Continue</span>
                 </Button>
               </Div>
@@ -442,7 +442,7 @@ export default {
               {/* 2. Leading Icon */}
               <Div display="flex" flexDirection="column" gap="1r" alignItems="flex-start">
                 <Span fontSize="2.5r" color="design.text.light">Leading Icon</Span>
-                <Button height={scale.height} fontSize={scale.fontSize} px={scale.customPx}>
+                <Button height={scale.height} style={{ height: scale.px }} fontSize={scale.fontSize} px={scale.customPx}>
                   <AddIcon size={scale.iconSize} />
                   <span>Create Item</span>
                 </Button>
@@ -453,6 +453,7 @@ export default {
                 <Span fontSize="2.5r" color="design.text.light">Trailing Chevron</Span>
                 <Button
                   height={scale.height}
+                  style={{ height: scale.px }}
                   fontSize={scale.fontSize}
                   px={scale.customPx}
                   bg="ui.table.row.mutedBackground"
@@ -473,6 +474,7 @@ export default {
                     type="button"
                     aria-label="Settings"
                     height={scale.height}
+                    style={{ height: scale.px }}
                     bg="ui.table.row.mutedBackground"
                     color="design.text.base"
                     border="1px solid"
@@ -484,6 +486,7 @@ export default {
                     type="button"
                     aria-label="Close"
                     height={scale.height}
+                    style={{ height: scale.px }}
                     bg="ui.table.row.mutedBackground"
                     color="design.text.base"
                     border="1px solid"
@@ -541,8 +544,8 @@ export default {
                 Automated System Calculations:
               </Span>
               <Span>1. Icon-only buttons: Dropped padding, computed <code>aspect-ratio: 1</code> → <strong>48px × 48px square</strong></Span>
-              <Span>2. Leading icon: Detected <code>:first-child</code> → applied <code>margin-inline-start: -0.45em</code> (-8px optical pull at 18px font)</Span>
-              <Span>3. Trailing chevron: Detected <code>:last-child</code> → applied <code>margin-inline-end: -0.45em</code> (-8px optical pull at 18px font)</Span>
+              <Span>2. Leading icon: Detected <code>:first-child</code> → applied <code>margin-inline-start: calc(-1.4em + 14px)</code> (-11.2px optical pull at 18px font)</Span>
+              <Span>3. Trailing chevron: Detected <code>:last-child</code> → applied <code>margin-inline-end: calc(-1.4em + 14px)</code> (-11.2px optical pull at 18px font)</Span>
               <Span>4. Proportional typography gap: <code>gap: 0.5em</code> scales seamlessly with font size (9px gap at 18px text)</Span>
               <Span>5. Target compatibility: Matches both <code>[data-slot="icon"]</code> and raw <code>&lt;svg&gt;</code> elements</Span>
             </Div>

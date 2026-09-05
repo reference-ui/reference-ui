@@ -157,8 +157,8 @@ export function MenuItem({
         onKeyDown={handleKeyDown}
         display="flex"
         alignItems="center"
-        height={controlSize.height}
         minHeight={controlSize.height}
+        height="auto"
         px="3r"
         py={controlSize.paddingBlock}
         boxSizing="border-box"
@@ -177,7 +177,6 @@ export function MenuItem({
         className={className}
         style={{
           minHeight: controlHeightPx,
-          height: controlHeightPx,
           boxSizing: 'border-box',
           ...style,
         }}

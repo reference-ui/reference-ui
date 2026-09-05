@@ -132,8 +132,8 @@ export function ListboxOption({
         display="flex"
         alignItems="center"
         justifyContent={combobox ? 'space-between' : undefined}
-        height={controlSize.height}
         minHeight={controlSize.height}
+        height="auto"
         px="3r"
         py={controlSize.paddingBlock}
         boxSizing="border-box"
@@ -178,7 +178,6 @@ export function ListboxOption({
         className={className}
         style={{
           minHeight: controlHeightPx,
-          height: controlHeightPx,
           boxSizing: 'border-box',
           ...style,
         }}
