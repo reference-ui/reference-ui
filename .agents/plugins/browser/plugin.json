@@ -1,0 +1,4 @@
+{
+  "name": "browser-automation",
+  "description": "Browser automation via Puppeteer MCP for visual inspection of Cosmos fixtures and UI components"
+}
