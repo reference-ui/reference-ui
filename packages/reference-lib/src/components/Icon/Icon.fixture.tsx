@@ -5,42 +5,18 @@ import {
   KeyboardArrowDownIcon,
   CheckIcon,
   AddIcon,
-  InfoIcon,
+  CloseIcon,
   SettingsIcon,
+  CalendarTodayIcon,
+  FilterListIcon,
 } from '@reference-ui/icons'
 import { DateField } from '../DateField'
 import { Combobox } from '../Combobox'
 import { Field } from '../Field'
 import { Listbox } from '../Listbox'
-import { controlHeight, controlHeightPx } from '../../core/theme/primitives/shared'
+import { controlHeight, iconSizes, defaultIconSize } from '../../core/theme/primitives/shared'
 
-// Font scale definitions
-const FONT_SCALE = [
-  { token: '3r', px: 12, label: 'Micro / Badge', optical: '3.5r', opticalPx: 14 },
-  { token: '3.5r', px: 14, label: 'Control / Input (Default)', optical: '4r', opticalPx: 16 },
-  { token: '4r', px: 16, label: 'Body Text (Default)', optical: '4.5r', opticalPx: 18 },
-  { token: '4.5r', px: 18, label: 'Subhead / Quote', optical: '5r', opticalPx: 20 },
-  { token: '5r', px: 20, label: 'Section Title (H3)', optical: '6r', opticalPx: 24 },
-  { token: '6r', px: 24, label: 'Heading (H2)', optical: '7r', opticalPx: 28 },
-  { token: '9r', px: 36, label: 'Page Title (H1)', optical: '10r', opticalPx: 40 },
-]
-
-function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }) {
-  return (
-    <Div mb="4r">
-      <H3 fontSize="4.5r" fontWeight="600" m="0" color="design.text.base">
-        {title}
-      </H3>
-      {subtitle && (
-        <P fontSize="3.5r" color="design.text.light" mt="1r" mb="0">
-          {subtitle}
-        </P>
-      )}
-    </Div>
-  )
-}
-
-function Card({ children }: { children: React.ReactNode }) {
+function SectionCard({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
   return (
     <Div
       p="5r"
@@ -54,195 +30,167 @@ function Card({ children }: { children: React.ReactNode }) {
       flexDirection="column"
       gap="4r"
     >
+      <Div>
+        <H4 fontSize="3.5r" fontWeight="600" m="0" color="design.text.base">
+          {title}
+        </H4>
+        {subtitle && (
+          <P fontSize="3r" color="design.text.light" mt="0.5r" mb="0">
+            {subtitle}
+          </P>
+        )}
+      </Div>
       {children}
     </Div>
   )
 }
 
 export default {
-  ScaleMatrix: () => {
-    const [showGuides, setShowGuides] = React.useState(true)
-
+  Overview: () => {
     return (
-      <Div maxW="240r" mx="auto" p="6r" display="flex" flexDirection="column" gap="6r">
-        <Div display="flex" justifyContent="space-between" alignItems="center">
-          <SectionHeader
-            title="Font Scale vs Icon Scale Matrix"
-            subtitle="Comparing 1:1 geometric matching vs optical offset pairing vs standard 5r control size"
-          />
-          <Button
-            type="button"
-            onClick={() => setShowGuides(!showGuides)}
-            fontSize="3r"
-            height="6r"
-            px="2.5r"
-            bg="ui.table.row.mutedBackground"
-            color="design.text.base"
-            border="1px solid"
-            borderColor="ui.field.border"
-            borderRadius="sm"
-            cursor="pointer"
-          >
-            {showGuides ? 'Hide Guides' : 'Show Guides'}
-          </Button>
+      <Div maxW="220r" mx="auto" p="6r" display="flex" flexDirection="column" gap="5r">
+        {/* Header */}
+        <Div>
+          <H3 fontSize="5r" fontWeight="700" m="0" color="design.text.base">
+            Icon Sizing & Control Integration
+          </H3>
+          <P fontSize="3.5r" color="design.text.light" mt="1r" mb="0">
+            Standard icon tokens packaged with Reference UI. Icons default to <strong>base (5r / 20px)</strong> to fit controls out of the box with zero props needed.
+          </P>
         </Div>
 
-        <Card>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '70px 140px 1fr 1fr 1fr',
-              gap: '12px',
-              alignItems: 'center',
-              paddingBottom: '8px',
-              borderBottom: '1px solid rgba(255,255,255,0.1)',
-            }}
-          >
-            <Span fontSize="2.5r" fontWeight="600" color="design.text.light">FONT</Span>
-            <Span fontSize="2.5r" fontWeight="600" color="design.text.light">ROLE</Span>
-            <Span fontSize="2.5r" fontWeight="600" color="design.text.light">1:1 MATCH</Span>
-            <Span fontSize="2.5r" fontWeight="600" color="design.text.light">OPTICAL PAIRING</Span>
-            <Span fontSize="2.5r" fontWeight="600" color="design.text.light">CONTROL ({controlHeight} / 34px)</Span>
-          </div>
-
-          {FONT_SCALE.map((item) => (
-            <div
-              key={item.token}
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '70px 140px 1fr 1fr 1fr',
-                gap: '12px',
-                alignItems: 'center',
-                paddingTop: '8px',
-                paddingBottom: '8px',
-                borderBottom: '1px solid rgba(255,255,255,0.05)',
-              }}
-            >
-              {/* Font info */}
-              <Div display="flex" flexDirection="column">
-                <Span fontSize="3.5r" fontWeight="600">{item.token}</Span>
-                <Span fontSize="2.5r" color="design.text.light">{item.px}px</Span>
-              </Div>
-
-              {/* Usage */}
-              <Span fontSize="3r" color="design.text.light">{item.label}</Span>
-
-              {/* 1:1 match */}
-              <Div
-                display="inline-flex"
-                alignItems="center"
-                gap="1.5r"
-                p="1r"
-                borderRadius="sm"
-                bg={showGuides ? 'rgba(59, 130, 246, 0.08)' : 'transparent'}
-                border={showGuides ? '1px dashed rgba(59, 130, 246, 0.4)' : '1px solid transparent'}
-              >
-                <SettingsIcon size={item.token as any} />
-                <Span fontSize={item.token as any} lineHeight="1">Label</Span>
-                <Span fontSize="2.5r" color="design.text.light" ml="auto">({item.token})</Span>
-              </Div>
-
-              {/* Optical match */}
-              <Div
-                display="inline-flex"
-                alignItems="center"
-                gap="1.5r"
-                p="1r"
-                borderRadius="sm"
-                bg={showGuides ? 'rgba(16, 185, 129, 0.08)' : 'transparent'}
-                border={showGuides ? '1px dashed rgba(16, 185, 129, 0.4)' : '1px solid transparent'}
-              >
-                <SettingsIcon size={item.optical as any} />
-                <Span fontSize={item.token as any} lineHeight="1">Label</Span>
-                <Span fontSize="2.5r" color="design.text.light" ml="auto">({item.optical})</Span>
-              </Div>
-
-              {/* Fixed 5r icon in actual 34px controlHeight container */}
-              <Div
-                display="inline-flex"
-                alignItems="center"
-                gap="1.5r"
-                height={controlHeight}
-                px="3r"
-                borderRadius="sm"
-                boxSizing="border-box"
-                bg={showGuides ? 'rgba(245, 158, 11, 0.08)' : 'transparent'}
-                border={showGuides ? '1px dashed rgba(245, 158, 11, 0.4)' : '1px solid transparent'}
-              >
-                <SettingsIcon />
-                <Span fontSize={item.token as any} lineHeight="1">Label</Span>
-                <Span fontSize="2.5r" color="design.text.light" ml="auto">(5r)</Span>
-              </Div>
-            </div>
-          ))}
-        </Card>
-      </Div>
-    )
-  },
-
-  ControlsAndInputs: () => {
-    return (
-      <Div maxW="240r" mx="auto" p="6r" display="flex" flexDirection="column" gap="6r">
-        <SectionHeader
-          title="Icons Inside Controls & Form Inputs"
-          subtitle="Form control height is 8.5r (34px), input text is 3.5r (14px). Comparing prefix & suffix icon sizes."
-        />
-
-        {/* Input Prefix Icons Comparison */}
-        <Card>
-          <H4 fontSize="3.5r" fontWeight="600" m="0">Input Prefix Icon Comparison</H4>
+        {/* 1. The 3 Icon Tokens */}
+        <SectionCard
+          title="The 3 Icon Sizing Tokens"
+          subtitle="Simple, un-opinionated sizing scale mapped directly to the rhythm grid"
+        >
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-            {/* 4r prefix */}
-            <Div display="flex" flexDirection="column" gap="1.5r">
-              <Span fontSize="2.5r" fontWeight="500" color="design.text.light">
-                Prefix: 4r (16px) — Optical match for 14px text
-              </Span>
-              <Div data-reference-field display="flex" alignItems="center">
-                <SearchIcon size="4r" color="{colors.design.text.light}" />
-                <Input placeholder="Search records..." />
+            {/* small */}
+            <Div
+              p="3r"
+              borderRadius="sm"
+              border="1px solid"
+              borderColor="ui.field.border"
+              bg="ui.table.row.mutedBackground"
+              display="flex"
+              alignItems="center"
+              gap="3r"
+            >
+              <SettingsIcon size="small" />
+              <Div display="flex" flexDirection="column">
+                <Span fontSize="3r" fontWeight="600">small ({iconSizes.small} / 16px)</Span>
+                <Span fontSize="2.5r" color="design.text.light">Dense controls & inline copy</Span>
               </Div>
             </Div>
 
-            {/* 4.5r prefix */}
-            <Div display="flex" flexDirection="column" gap="1.5r">
-              <Span fontSize="2.5r" fontWeight="500" color="design.text.light">
-                Prefix: 4.5r (18px) — Balanced presence
-              </Span>
-              <Div data-reference-field display="flex" alignItems="center">
-                <SearchIcon size="4.5r" color="{colors.design.text.light}" />
-                <Input placeholder="Search records..." />
+            {/* base (default) */}
+            <Div
+              p="3r"
+              borderRadius="sm"
+              border="1px solid"
+              borderColor="ui.focus.ring"
+              bg="ui.table.row.mutedBackground"
+              display="flex"
+              alignItems="center"
+              gap="3r"
+            >
+              <SettingsIcon />
+              <Div display="flex" flexDirection="column">
+                <Span fontSize="3r" fontWeight="600">base ({defaultIconSize} / 20px) ★ Default</Span>
+                <Span fontSize="2.5r" color="design.text.light">Fits 34px controls natively</Span>
               </Div>
             </Div>
 
-            {/* 5r prefix */}
+            {/* large */}
+            <Div
+              p="3r"
+              borderRadius="sm"
+              border="1px solid"
+              borderColor="ui.field.border"
+              bg="ui.table.row.mutedBackground"
+              display="flex"
+              alignItems="center"
+              gap="3r"
+            >
+              <SettingsIcon size="large" />
+              <Div display="flex" flexDirection="column">
+                <Span fontSize="3r" fontWeight="600">large ({iconSizes.large} / 24px)</Span>
+                <Span fontSize="2.5r" color="design.text.light">Prominent UI & headings</Span>
+              </Div>
+            </Div>
+          </div>
+        </SectionCard>
+
+        {/* 2. Form Inputs with Prefix & Suffix */}
+        <SectionCard
+          title="Icons in Form Inputs"
+          subtitle="Height 8.5r (34px), text 3.5r (14px). Base 20px icons integrate seamlessly as prefixes and trigger buttons."
+        >
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+            {/* Input with prefix */}
             <Div display="flex" flexDirection="column" gap="1.5r">
               <Span fontSize="2.5r" fontWeight="500" color="design.text.light">
-                Prefix: 5r (20px) — Current default
+                Search Input (Prefix Icon)
               </Span>
               <Div data-reference-field display="flex" alignItems="center">
                 <SearchIcon color="{colors.design.text.light}" />
                 <Input placeholder="Search records..." />
               </Div>
             </Div>
-          </div>
-        </Card>
 
-        {/* Real Production Components */}
-        <Card>
-          <H4 fontSize="3.5r" fontWeight="600" m="0">Real Components with Accessory Triggers</H4>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px' }}>
-            <Div display="flex" flexDirection="column" gap="2r">
+            {/* Input with prefix and suffix clear button */}
+            <Div display="flex" flexDirection="column" gap="1.5r">
               <Span fontSize="2.5r" fontWeight="500" color="design.text.light">
-                DateField with FoldedPicker (Default 5r icon in 6r trigger)
+                Input with Prefix & Clear Button
+              </Span>
+              <Div data-reference-field display="flex" alignItems="center">
+                <FilterListIcon color="{colors.design.text.light}" />
+                <Input placeholder="Filter by keyword..." defaultValue="Active Filter" />
+                <Button
+                  type="button"
+                  aria-label="Clear filter"
+                  width="6r"
+                  height="6r"
+                  minWidth="6r"
+                  marginInlineEnd="-2r"
+                  borderRadius="sm"
+                  p="0"
+                  bg="transparent"
+                  border="none"
+                  display="inline-flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  cursor="pointer"
+                  color="design.text.light"
+                  _hover={{ bg: 'ui.table.row.mutedBackground', color: 'design.text.base' }}
+                >
+                  <CloseIcon size="small" />
+                </Button>
+              </Div>
+            </Div>
+          </div>
+        </SectionCard>
+
+        {/* 3. Controls with Accessory Triggers */}
+        <SectionCard
+          title="Controls with Accessory Trigger Buttons"
+          subtitle="Pill triggers use 6r (24px) container height; default 5r (20px) icons leave exact 2px clearance"
+        >
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px' }}>
+            {/* DateField FoldedPicker */}
+            <Div display="flex" flexDirection="column" gap="1.5r">
+              <Span fontSize="2.5r" fontWeight="500" color="design.text.light">
+                DateField with FoldedPicker Trigger
               </Span>
               <DateField defaultValue="2026-09-05">
                 <DateField.Picker />
               </DateField>
             </Div>
 
-            <Div display="flex" flexDirection="column" gap="2r">
+            {/* Combobox Trigger */}
+            <Div display="flex" flexDirection="column" gap="1.5r">
               <Span fontSize="2.5r" fontWeight="500" color="design.text.light">
-                Combobox with Chevron Trigger (Default 5r icon in 6r trigger)
+                Combobox with Chevron Trigger
               </Span>
               <Combobox defaultValue="option-1">
                 <Field width="100%">
@@ -263,7 +211,7 @@ export default {
                     justifyContent="center"
                     cursor="pointer"
                     color="design.text.base"
-                    _hover={{ bg: 'gray.800', color: 'ui.field.foreground' }}
+                    _hover={{ bg: 'ui.table.row.mutedBackground', color: 'design.text.base' }}
                   >
                     <KeyboardArrowDownIcon />
                   </Button>
@@ -277,142 +225,94 @@ export default {
               </Combobox>
             </Div>
           </div>
-        </Card>
-      </Div>
-    )
-  },
+        </SectionCard>
 
-  ButtonsAndInline: () => {
-    return (
-      <Div maxW="240r" mx="auto" p="6r" display="flex" flexDirection="column" gap="6r">
-        <SectionHeader
-          title="Icons in Buttons, Badges & Inline Text"
-          subtitle="Testing optical balance when icons sit alongside text labels"
-        />
-
-        {/* Buttons with Icons using the 3 tokens */}
-        <Card>
-          <H4 fontSize="3.5r" fontWeight="600" m="0">The 3 Icon Tokens: small (4r), base (5r default), large (6r)</H4>
+        {/* 4. Buttons with Icons */}
+        <SectionCard
+          title="Buttons with Icons"
+          subtitle="Buttons at 34px controlHeight with leading icons, trailing chevrons, and standalone icon buttons"
+        >
           <Div display="flex" gap="4r" alignItems="center" flexWrap="wrap">
-            {/* small */}
-            <Div display="flex" flexDirection="column" gap="1r" alignItems="center">
-              <Span fontSize="2.5r" color="design.text.light">size="small" (4r / 16px)</Span>
-              <Button display="inline-flex" alignItems="center" gap="1.5r">
-                <AddIcon size="small" />
-                <span>Create New</span>
-              </Button>
-            </Div>
+            {/* Primary button with leading icon */}
+            <Button display="inline-flex" alignItems="center" gap="1.5r">
+              <AddIcon />
+              <span>Create Record</span>
+            </Button>
 
-            {/* base (explicit or default) */}
-            <Div display="flex" flexDirection="column" gap="1r" alignItems="center">
-              <Span fontSize="2.5r" color="design.text.light">Default / size="base" (5r / 20px)</Span>
-              <Button display="inline-flex" alignItems="center" gap="1.5r">
-                <AddIcon />
-                <span>Create New</span>
-              </Button>
-            </Div>
+            {/* Dropdown button with trailing chevron */}
+            <Button
+              display="inline-flex"
+              alignItems="center"
+              gap="1.5r"
+              bg="ui.table.row.mutedBackground"
+              color="design.text.base"
+              border="1px solid"
+              borderColor="ui.field.border"
+            >
+              <span>Actions</span>
+              <KeyboardArrowDownIcon />
+            </Button>
 
-            {/* large */}
-            <Div display="flex" flexDirection="column" gap="1r" alignItems="center">
-              <Span fontSize="2.5r" color="design.text.light">size="large" (6r / 24px)</Span>
-              <Button display="inline-flex" alignItems="center" gap="1.5r">
-                <AddIcon size="large" />
-                <span>Create New</span>
-              </Button>
-            </Div>
-
-            {/* Trailing chevron */}
-            <Div display="flex" flexDirection="column" gap="1r" alignItems="center">
-              <Span fontSize="2.5r" color="design.text.light">Default Chevron (5r)</Span>
-              <Button display="inline-flex" alignItems="center" gap="1.5r">
-                <span>Actions</span>
-                <KeyboardArrowDownIcon />
-              </Button>
-            </Div>
-          </Div>
-        </Card>
-
-        {/* Badges and Chips */}
-        <Card>
-          <H4 fontSize="3.5r" fontWeight="600" m="0">Badges & Chips (Text: 3r / 12px)</H4>
-          <Div display="flex" gap="4r" alignItems="center">
-            {/* 3r icon */}
-            <Div display="flex" flexDirection="column" gap="1r">
-              <Span fontSize="2.5r" color="design.text.light">Icon 3r (1:1)</Span>
-              <Div
+            {/* Standalone ghost icon buttons */}
+            <Div display="flex" alignItems="center" gap="1.5r">
+              <Button
+                type="button"
+                aria-label="Settings"
+                width={controlHeight}
+                height={controlHeight}
+                p="0"
                 display="inline-flex"
                 alignItems="center"
-                gap="1r"
-                px="2r"
-                py="0.75r"
-                borderRadius="full"
+                justifyContent="center"
+                borderRadius="sm"
                 bg="ui.table.row.mutedBackground"
-                fontSize="3r"
                 color="design.text.base"
+                border="1px solid"
+                borderColor="ui.field.border"
+                cursor="pointer"
               >
-                <CheckIcon size="3r" color="{colors.green.600}" />
-                <span>Active</span>
-              </Div>
-            </Div>
+                <SettingsIcon />
+              </Button>
 
-            {/* 3.5r icon */}
-            <Div display="flex" flexDirection="column" gap="1r">
-              <Span fontSize="2.5r" color="design.text.light">Icon 3.5r (optical)</Span>
-              <Div
+              <Button
+                type="button"
+                aria-label="Close"
+                width={controlHeight}
+                height={controlHeight}
+                p="0"
                 display="inline-flex"
                 alignItems="center"
-                gap="1r"
-                px="2r"
-                py="0.75r"
-                borderRadius="full"
+                justifyContent="center"
+                borderRadius="sm"
                 bg="ui.table.row.mutedBackground"
-                fontSize="3r"
                 color="design.text.base"
+                border="1px solid"
+                borderColor="ui.field.border"
+                cursor="pointer"
               >
-                <CheckIcon size="3.5r" color="{colors.green.600}" />
-                <span>Active</span>
-              </Div>
+                <CloseIcon />
+              </Button>
             </Div>
 
-            {/* 4r icon */}
-            <Div display="flex" flexDirection="column" gap="1r">
-              <Span fontSize="2.5r" color="design.text.light">Icon 4r</Span>
-              <Div
-                display="inline-flex"
-                alignItems="center"
-                gap="1r"
-                px="2r"
-                py="0.75r"
-                borderRadius="full"
-                bg="ui.table.row.mutedBackground"
-                fontSize="3r"
-                color="design.text.base"
-              >
-                <CheckIcon size="4r" color="{colors.green.600}" />
-                <span>Active</span>
-              </Div>
+            {/* Small Badge / Chip */}
+            <Div
+              display="inline-flex"
+              alignItems="center"
+              gap="1r"
+              px="2.5r"
+              py="1r"
+              borderRadius="full"
+              bg="ui.table.row.mutedBackground"
+              border="1px solid"
+              borderColor="ui.field.border"
+              fontSize="3r"
+              color="design.text.base"
+            >
+              <CheckIcon size="small" color="{colors.green.600}" />
+              <span>Active Status</span>
             </Div>
           </Div>
-        </Card>
-
-        {/* Prose Inline */}
-        <Card>
-          <H4 fontSize="3.5r" fontWeight="600" m="0">Inline with Body Text (Text: 4r / 16px)</H4>
-          <Div display="flex" flexDirection="column" gap="3r">
-            <P fontSize="4r" lineHeight="1.6" m="0" display="flex" alignItems="center" gap="1.5r">
-              <InfoIcon size="4r" color="{colors.blue.500}" />
-              <span>With <strong>4r (16px)</strong> icon: Icon matches font-size exactly.</span>
-            </P>
-            <P fontSize="4r" lineHeight="1.6" m="0" display="flex" alignItems="center" gap="1.5r">
-              <InfoIcon size="4.5r" color="{colors.blue.500}" />
-              <span>With <strong>4.5r (18px)</strong> icon: Optical compensation for glyph padding.</span>
-            </P>
-            <P fontSize="4r" lineHeight="1.6" m="0" display="flex" alignItems="center" gap="1.5r">
-              <InfoIcon size="5r" color="{colors.blue.500}" />
-              <span>With <strong>5r (20px)</strong> default icon: Matches section rhythm and control icons.</span>
-            </P>
-          </Div>
-        </Card>
+        </SectionCard>
       </Div>
     )
   },
