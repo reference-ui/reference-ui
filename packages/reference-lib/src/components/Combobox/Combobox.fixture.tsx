@@ -62,7 +62,7 @@ export default {
                 field?.querySelector('input')?.focus()
               }}
             >
-              <KeyboardArrowDownIcon width="4r" height="4r" style={{ width: '16px', height: '16px' }} />
+              <KeyboardArrowDownIcon />
             </Button>
           </Field>
           <Combobox.Popover>
@@ -157,7 +157,7 @@ export default {
                 field?.querySelector('input')?.focus()
               }}
             >
-              <KeyboardArrowDownIcon width="4r" height="4r" style={{ width: '16px', height: '16px' }} />
+              <KeyboardArrowDownIcon />
             </Button>
           </Field>
           <Combobox.Popover>
@@ -222,7 +222,7 @@ export default {
               color="design.text.base"
               _hover={{ bg: 'gray.800', color: 'ui.field.foreground' }}
             >
-              <KeyboardArrowDownIcon width="4r" height="4r" style={{ width: '16px', height: '16px' }} />
+              <KeyboardArrowDownIcon />
             </Button>
           </Field>
           <Combobox.Popover>
@@ -256,7 +256,7 @@ export default {
         <Combobox value={selected} onChange={setSelected}>
           <Combobox.Trigger width="100%" justifyContent="space-between">
             {selectedLabel(selected)}
-            <KeyboardArrowDownIcon width="4r" height="4r" style={{ width: '16px', height: '16px' }} />
+            <KeyboardArrowDownIcon />
           </Combobox.Trigger>
           <Combobox.Popover>
             <Listbox>

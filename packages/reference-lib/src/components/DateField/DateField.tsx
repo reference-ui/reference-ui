@@ -87,7 +87,7 @@ export function DateFieldTrigger({
       style={style}
       {...props}
     >
-      {children ?? <CalendarTodayIcon width="4r" height="4r" style={{ width: '16px', height: '16px' }} />}
+      {children ?? <CalendarTodayIcon />}
     </Overlay.Trigger>
   )
 }

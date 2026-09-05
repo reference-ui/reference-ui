@@ -62,7 +62,7 @@ function parseArgs() {
 
 function checkPort(port) {
   return new Promise((resolve) => {
-    const req = http.get(`http://localhost:${port}/`, { timeout: 1500 }, (res) => resolve(true))
+    const req = http.get(`http://127.0.0.1:${port}/`, { timeout: 3000 }, (res) => resolve(true))
     req.on('error', () => resolve(false))
     req.on('timeout', () => { req.destroy(); resolve(false) })
   })
