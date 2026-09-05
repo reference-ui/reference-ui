@@ -489,6 +489,40 @@ export default {
             </Div>
           </SectionCard>
         ))}
+
+        {/* Overrides & Escape Hatches */}
+        <SectionCard
+          title="Overrides & Escape Hatches (Zero Specificity Proof)"
+          subtitle="Because default optical and squaring rules use :where(), any user prop or style wins effortlessly without !important"
+        >
+          <Div display="flex" gap="4r" alignItems="center" flexWrap="wrap">
+            {/* 1. Rectangular icon-only override */}
+            <Div display="flex" flexDirection="column" gap="1r">
+              <Span fontSize="2.5r" color="design.text.light">1. Non-Square Icon Button (width="20r" aspectRatio="auto")</Span>
+              <Button aspectRatio="auto" width="20r">
+                <SearchIcon />
+              </Button>
+            </Div>
+
+            {/* 2. Neutralize optical offset via CSS variable */}
+            <Div display="flex" flexDirection="column" gap="1r">
+              <Span fontSize="2.5r" color="design.text.light">2. Neutralized Offset (--reference-icon-offset: 0)</Span>
+              <Button style={{ ['--reference-icon-offset' as any]: '0px' }}>
+                <AddIcon />
+                <span>Zero Optical Pull</span>
+              </Button>
+            </Div>
+
+            {/* 3. Explicit Margin on Icon */}
+            <Div display="flex" flexDirection="column" gap="1r">
+              <Span fontSize="2.5r" color="design.text.light">3. Explicit Icon Margin (ml="3r")</Span>
+              <Button>
+                <AddIcon ml="3r" />
+                <span>Pushed Icon</span>
+              </Button>
+            </Div>
+          </Div>
+        </SectionCard>
       </Div>
     )
   },

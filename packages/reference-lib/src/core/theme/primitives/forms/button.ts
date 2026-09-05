@@ -17,13 +17,13 @@ export const buttonPrimitiveStyles = {
     gap: '1.5r',
     ...controlSize,
     paddingInline: '3.5r',
-    '& > [data-slot="icon"]:first-child:not(:only-child), & > svg:first-child:not(:only-child)': {
-      marginInlineStart: '-1r',
+    ':where(&) > :where([data-slot="icon"], svg):where(:first-child:not(:only-child))': {
+      marginInlineStart: 'var(--reference-icon-offset, -1r)',
     },
-    '& > [data-slot="icon"]:last-child:not(:only-child), & > svg:last-child:not(:only-child)': {
-      marginInlineEnd: '-1r',
+    ':where(&) > :where([data-slot="icon"], svg):where(:last-child:not(:only-child))': {
+      marginInlineEnd: 'var(--reference-icon-offset, -1r)',
     },
-    '&:has(> [data-slot="icon"]:only-child, > svg:only-child)': {
+    '&:where(:has(> [data-slot="icon"]:only-child, > svg:only-child))': {
       paddingInline: '0',
       aspectRatio: '1 / 1',
       width: 'auto',
