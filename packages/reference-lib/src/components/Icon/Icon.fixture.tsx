@@ -645,6 +645,50 @@ export default {
           </Div>
         </SectionCard>
 
+        {/* Arbitrary Icon Sizing: "Make the icon bigger" */}
+        <SectionCard
+          title="Arbitrary Icon Scaling: 'Make the Icon Bigger'"
+          subtitle="A user or designer asks to make the icon smaller (16px), default (20px), large (24px), or prominent (28px). Because layout uses proportional typography gap and -0.25em inset, it stays optically centered and balanced automatically."
+        >
+          <Div display="flex" gap="4r" alignItems="flex-start" flexWrap="wrap">
+            {/* 1. small (16px) */}
+            <Div display="flex" flexDirection="column" gap="1r" alignItems="flex-start">
+              <Span fontSize="2.5r" color="design.text.light">small (16px)</Span>
+              <Button>
+                <AddIcon size="small" />
+                <span>Create Item</span>
+              </Button>
+            </Div>
+
+            {/* 2. base (20px - default) */}
+            <Div display="flex" flexDirection="column" gap="1r" alignItems="flex-start">
+              <Span fontSize="2.5r" color="design.text.light">base (20px - default)</Span>
+              <Button>
+                <AddIcon size="base" />
+                <span>Create Item</span>
+              </Button>
+            </Div>
+
+            {/* 3. large (24px - bigger) */}
+            <Div display="flex" flexDirection="column" gap="1r" alignItems="flex-start">
+              <Span fontSize="2.5r" color="design.text.light">large (24px - bigger)</Span>
+              <Button>
+                <AddIcon size="large" />
+                <span>Create Item</span>
+              </Button>
+            </Div>
+
+            {/* 4. custom 28px */}
+            <Div display="flex" flexDirection="column" gap="1r" alignItems="flex-start">
+              <Span fontSize="2.5r" color="design.text.light">custom (28px - prominent)</Span>
+              <Button>
+                <AddIcon size={28} />
+                <span>Create Item</span>
+              </Button>
+            </Div>
+          </Div>
+        </SectionCard>
+
         {/* Overrides & Escape Hatches */}
         <SectionCard
           title="Overrides & Escape Hatches (Zero Specificity Proof)"
