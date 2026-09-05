@@ -12,6 +12,7 @@ import { DateField } from '../DateField'
 import { Combobox } from '../Combobox'
 import { Field } from '../Field'
 import { Listbox } from '../Listbox'
+import { controlHeight, controlHeightPx } from '../../core/theme/primitives/shared'
 
 // Font scale definitions
 const FONT_SCALE = [
@@ -101,7 +102,7 @@ export default {
             <Span fontSize="2.5r" fontWeight="600" color="design.text.light">ROLE</Span>
             <Span fontSize="2.5r" fontWeight="600" color="design.text.light">1:1 MATCH</Span>
             <Span fontSize="2.5r" fontWeight="600" color="design.text.light">OPTICAL PAIRING</Span>
-            <Span fontSize="2.5r" fontWeight="600" color="design.text.light">CONTROL (5r)</Span>
+            <Span fontSize="2.5r" fontWeight="600" color="design.text.light">CONTROL ({controlHeight} / 34px)</Span>
           </div>
 
           {FONT_SCALE.map((item) => (
@@ -156,13 +157,15 @@ export default {
                 <Span fontSize="2.5r" color="design.text.light" ml="auto">({item.optical})</Span>
               </Div>
 
-              {/* Fixed 5r control size */}
+              {/* Fixed 5r icon in actual 34px controlHeight container */}
               <Div
                 display="inline-flex"
                 alignItems="center"
                 gap="1.5r"
-                p="1r"
+                height={controlHeight}
+                px="3r"
                 borderRadius="sm"
+                boxSizing="border-box"
                 bg={showGuides ? 'rgba(245, 158, 11, 0.08)' : 'transparent'}
                 border={showGuides ? '1px dashed rgba(245, 158, 11, 0.4)' : '1px solid transparent'}
               >
