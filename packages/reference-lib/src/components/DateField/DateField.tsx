@@ -64,8 +64,25 @@ export function DateFieldTrigger({
   ...props
 }: DateFieldTriggerProps) {
   return (
-    <Overlay.Trigger aria-haspopup="dialog" {...props}>
-      <Span fontSize="4r">{children}</Span>
+    <Overlay.Trigger
+      aria-haspopup="dialog"
+      type="button"
+      tabIndex={-1}
+      bg="transparent"
+      border="none"
+      p="0"
+      width="6r"
+      height="6r"
+      minWidth="6r"
+      display="inline-flex"
+      alignItems="center"
+      justifyContent="center"
+      cursor="pointer"
+      className={className}
+      style={style}
+      {...props}
+    >
+      <Span fontSize="4r" lineHeight="1">{children}</Span>
     </Overlay.Trigger>
   )
 }
@@ -191,6 +208,10 @@ export const DateField = React.forwardRef<HTMLInputElement, DateFieldProps>(
       )
     }
 
+    const hasInput = React.Children.toArray(children).some(
+      (child) => React.isValidElement(child) && (child.type === DateFieldInput)
+    )
+
     return (
       <DateFieldContext.Provider value={contextValue}>
         <Overlay open={isOpen} onOpenChange={setIsOpen} isolation={false}>
@@ -198,11 +219,19 @@ export const DateField = React.forwardRef<HTMLInputElement, DateFieldProps>(
             data-reference-field=""
             display="inline-flex"
             alignItems="center"
-            gap="1r"
+            width="100%"
             className={className}
             style={style}
           >
-            {children}
+            {hasInput ? (
+              children
+            ) : (
+              <>
+                <DateFieldInput />
+                <DateFieldTrigger />
+                {children}
+              </>
+            )}
           </Div>
         </Overlay>
       </DateFieldContext.Provider>

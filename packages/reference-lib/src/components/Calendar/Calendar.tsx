@@ -610,11 +610,6 @@ export function Calendar({
         data-reference-calendar=""
         data-disabled={disabled ? '' : undefined}
         width="65r"
-        p="3r"
-        border="1px solid"
-        borderColor="ui.field.border"
-        borderRadius="md"
-        bg="ui.field.background"
         userSelect="none"
         className={className}
         style={style}
