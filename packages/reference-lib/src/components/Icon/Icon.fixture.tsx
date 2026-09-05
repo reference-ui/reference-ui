@@ -490,6 +490,129 @@ export default {
           </SectionCard>
         ))}
 
+        {/* Case Study: Custom button.xl (48px) with Arbitrary Icons */}
+        <SectionCard
+          title="Case Study: Custom 'button.xl' (48px) Handling Arbitrary Icons"
+          subtitle="A developer only specifies height='12r', px='5r', fontSize='4.5r' (zero icon configuration). The engine calculates optical insets, auto-squaring, and alignment automatically."
+        >
+          <Div display="flex" flexDirection="column" gap="4r">
+            {/* Code explanation box */}
+            <Div
+              p="3r"
+              borderRadius="sm"
+              bg="ui.panel.background"
+              border="1px solid"
+              borderColor="ui.field.border"
+              display="flex"
+              flexDirection="column"
+              gap="1r"
+              fontSize="2.75r"
+              color="design.text.light"
+            >
+              <Span color="design.text.base" fontWeight="600">
+                Developer Input (Zero icon props):
+              </Span>
+              <code>{`<Button height="12r" px="5r" fontSize="4.5r"> ... </Button>`}</code>
+              <Span color="green.400" mt="1r" fontWeight="600">
+                Automated System Calculations:
+              </Span>
+              <Span>1. Icon-only buttons: Dropped padding, computed <code>aspect-ratio: 1</code> → <strong>48px × 48px square</strong></Span>
+              <Span>2. Leading icon: Detected <code>:first-child</code> → applied <code>margin-inline-start: -1r</code> (4px optical pull)</Span>
+              <Span>3. Trailing chevron: Detected <code>:last-child</code> → applied <code>margin-inline-end: -1r</code> (4px optical pull)</Span>
+              <Span>4. Target compatibility: Matches both <code>[data-slot="icon"]</code> and raw <code>&lt;svg&gt;</code> elements</Span>
+            </Div>
+
+            {/* Live buttons grid */}
+            <Div display="flex" gap="4r" alignItems="center" flexWrap="wrap">
+              {/* Reference icon */}
+              <Div display="flex" flexDirection="column" gap="1r">
+                <Span fontSize="2.5r" color="design.text.light">Reference Icon (@reference-ui/icons)</Span>
+                <Button height="12r" px="5r" fontSize="4.5r">
+                  <AddIcon size="large" />
+                  <span>Create Project</span>
+                </Button>
+              </Div>
+
+              {/* Raw third-party SVG */}
+              <Div display="flex" flexDirection="column" gap="1r">
+                <Span fontSize="2.5r" color="design.text.light">Raw Third-Party SVG (Lucide/Figma)</Span>
+                <Button height="12r" px="5r" fontSize="4.5r">
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                  </svg>
+                  <span>Featured Action</span>
+                </Button>
+              </Div>
+
+              {/* Trailing chevron */}
+              <Div display="flex" flexDirection="column" gap="1r">
+                <Span fontSize="2.5r" color="design.text.light">Trailing Chevron Menu</Span>
+                <Button
+                  height="12r"
+                  px="5r"
+                  fontSize="4.5r"
+                  bg="ui.table.row.mutedBackground"
+                  color="design.text.base"
+                  border="1px solid"
+                  borderColor="ui.field.border"
+                >
+                  <span>Account Settings</span>
+                  <KeyboardArrowDownIcon size="large" />
+                </Button>
+              </Div>
+
+              {/* Standalone 48x48 icon-only button */}
+              <Div display="flex" flexDirection="column" gap="1r">
+                <Span fontSize="2.5r" color="design.text.light">Icon-Only Square (48×48)</Span>
+                <Div display="flex" alignItems="center" gap="2r">
+                  <Button
+                    type="button"
+                    aria-label="Settings"
+                    height="12r"
+                    bg="ui.table.row.mutedBackground"
+                    color="design.text.base"
+                    border="1px solid"
+                    borderColor="ui.field.border"
+                  >
+                    <SettingsIcon size="large" />
+                  </Button>
+                  <Button
+                    type="button"
+                    aria-label="Raw Star"
+                    height="12r"
+                    bg="ui.table.row.mutedBackground"
+                    color="design.text.base"
+                    border="1px solid"
+                    borderColor="ui.field.border"
+                  >
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                    </svg>
+                  </Button>
+                </Div>
+              </Div>
+            </Div>
+          </Div>
+        </SectionCard>
+
         {/* Overrides & Escape Hatches */}
         <SectionCard
           title="Overrides & Escape Hatches (Zero Specificity Proof)"
