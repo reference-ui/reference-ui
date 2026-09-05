@@ -171,8 +171,9 @@ export function MenuItem({
         opacity={disabled ? 0.5 : 1}
         outline="none"
         userSelect="none"
-        _hover={!selected && !disabled ? { bg: 'ui.table.row.mutedBackground', color: 'design.text.base' } : undefined}
-        _focusVisible={{ outline: '2px solid', outlineColor: 'ui.focus.ring', outlineOffset: '-2px' }}
+        _hover={!disabled ? { bg: 'ui.button.background', color: 'ui.button.foreground' } : undefined}
+        _focus={{ bg: 'ui.button.background', color: 'ui.button.foreground', outline: 'none' }}
+        _focusVisible={{ bg: 'ui.button.background', color: 'ui.button.foreground', outline: 'none' }}
         className={className}
         style={{
           minHeight: formControlHeightPx,

@@ -10,6 +10,7 @@ export function NumberFieldFixture() {
 
       <div style={{ margin: '16px 0' }}>
         <NumberField
+          data-testid="number-field-root"
           value={value}
           onChange={setValue}
           min={0}

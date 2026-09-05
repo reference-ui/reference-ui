@@ -25,6 +25,7 @@ export type ComboboxInputProps = Omit<PrimitiveProps<'input'>, 'value' | 'defaul
 
 export function ComboboxInput({
   onChange,
+  onClick,
   onKeyDown,
   onFocus,
   className,
@@ -65,6 +66,13 @@ export function ComboboxInput({
     }
   }
 
+  const handleClick = (e: React.MouseEvent<HTMLInputElement>) => {
+    onClick?.(e)
+    if (!e.defaultPrevented && !disabled && !isOpen) {
+      setIsOpen(true)
+    }
+  }
+
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
     onFocus?.(e)
     if (!e.defaultPrevented && !disabled) {
@@ -95,6 +103,7 @@ export function ComboboxInput({
       disabled={disabled}
       value={inputValue}
       onChange={handleChange}
+      onClick={handleClick}
       onFocus={handleFocus}
       onKeyDown={handleKeyDown}
       className={className}

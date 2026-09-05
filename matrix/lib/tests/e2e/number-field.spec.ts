@@ -42,4 +42,33 @@ test.describe('NumberField Composition Gates & Browser Proofs', () => {
     await expect(input).toHaveValue('43')
     await expect(display).toHaveText('Numeric Value: 43')
   })
+
+  test('NF-DOM-02: Mouse click into NumberField changes border color without outline ring', async ({
+    page,
+  }) => {
+    const root = page.getByTestId('number-field-root')
+    const input = page.getByTestId('number-field-input')
+
+    await input.click()
+    await expect(input).toBeFocused()
+
+    const styles = await root.evaluate(el => {
+      const s = window.getComputedStyle(el)
+      return {
+        outlineStyle: s.outlineStyle,
+        outlineWidth: s.outlineWidth,
+        outlineColor: s.outlineColor,
+        borderColor: s.borderColor,
+      }
+    })
+
+    const isOutlineAbsent =
+      styles.outlineStyle === 'none' ||
+      styles.outlineWidth === '0px' ||
+      styles.outlineColor === 'rgba(0, 0, 0, 0)' ||
+      styles.outlineColor === 'transparent' ||
+      styles.outlineColor.includes('/ 0)')
+
+    expect(isOutlineAbsent).toBe(true)
+  })
 })

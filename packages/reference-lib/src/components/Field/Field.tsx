@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { Div, type PrimitiveProps } from '@reference-ui/react'
+import '../../core/theme/primitives/forms/inputs'
 
 export type FieldStatus = 'warning'
 

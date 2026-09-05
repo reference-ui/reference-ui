@@ -1,5 +1,6 @@
 import * as React from 'react'
-import { Div, type PrimitiveProps } from '@reference-ui/react'
+import { Div, Span, type PrimitiveProps } from '@reference-ui/react'
+import { CheckIcon } from '@reference-ui/icons'
 import { RovingFocus } from '../RovingFocus'
 import { ComboboxContext } from '../Combobox/combobox-context'
 import { formControlSize, formControlHeightPx } from '../../core/theme/primitives/shared'
@@ -47,7 +48,11 @@ export function ListboxOption({
 }: ListboxOptionProps) {
   const context = React.useContext(ListboxContext)
   const combobox = React.useContext(ComboboxContext)
-  const isSelected = context ? context.isOptionSelected(value) : false
+  const isSelected = context
+    ? context.isOptionSelected(value)
+    : combobox
+      ? combobox.value === value
+      : false
   const isDisabled = disabled || (context?.disabled ?? false)
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -56,8 +61,12 @@ export function ListboxOption({
 
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     onClick?.(e)
-    if (!e.defaultPrevented && !isDisabled && context) {
-      context.selectOption(value)
+    if (!e.defaultPrevented && !isDisabled) {
+      if (context) {
+        context.selectOption(value)
+      } else if (combobox) {
+        combobox.handleSelect(value)
+      }
     }
   }
 
@@ -65,7 +74,11 @@ export function ListboxOption({
     onKeyDown?.(e)
     if (!e.defaultPrevented && !isDisabled && (e.key === 'Enter' || e.key === ' ')) {
       e.preventDefault()
-      context?.selectOption(value)
+      if (context) {
+        context.selectOption(value)
+      } else if (combobox) {
+        combobox.handleSelect(value)
+      }
     }
   }
 
@@ -84,6 +97,7 @@ export function ListboxOption({
         onKeyDown={handleKeyDown}
         display="flex"
         alignItems="center"
+        justifyContent={combobox ? 'space-between' : undefined}
         height={formControlSize.height}
         minHeight={formControlSize.height}
         px="3r"
@@ -93,13 +107,26 @@ export function ListboxOption({
         fontSize="3.5r"
         lineHeight="5r"
         cursor={isDisabled ? 'not-allowed' : 'pointer'}
-        bg={isSelected ? 'ui.button.background' : 'transparent'}
-        color={isSelected ? 'ui.button.foreground' : 'design.text.base'}
+        bg={isSelected && !combobox ? 'ui.button.background' : 'transparent'}
+        color={isSelected && !combobox ? 'ui.button.foreground' : 'design.text.base'}
         opacity={isDisabled ? 0.5 : 1}
         outline="none"
         userSelect="none"
-        _hover={!isSelected && !isDisabled ? { bg: 'ui.table.row.mutedBackground', color: 'design.text.base' } : undefined}
-        _focusVisible={{ outline: '2px solid', outlineColor: 'ui.focus.ring', outlineOffset: '-2px' }}
+        _hover={
+          combobox
+            ? (!isDisabled ? { bg: 'ui.button.background', color: 'ui.button.foreground' } : undefined)
+            : (!isSelected && !isDisabled ? { bg: 'ui.table.row.mutedBackground', color: 'design.text.base' } : undefined)
+        }
+        _focus={
+          combobox
+            ? { bg: 'ui.button.background', color: 'ui.button.foreground', outline: 'none' }
+            : undefined
+        }
+        _focusVisible={
+          combobox
+            ? { bg: 'ui.button.background', color: 'ui.button.foreground', outline: 'none' }
+            : { outline: '2px solid', outlineColor: 'ui.focus.ring', outlineOffset: '-2px' }
+        }
         className={className}
         style={{
           minHeight: formControlHeightPx,
@@ -109,7 +136,29 @@ export function ListboxOption({
         }}
         {...props}
       >
-        {children}
+        {combobox ? (
+          <>
+            <Span flex="1" display="inline-flex" alignItems="center" minWidth="0" textAlign="start">
+              {children}
+            </Span>
+            {isSelected && (
+              <Span
+                data-slot="check"
+                display="inline-flex"
+                alignItems="center"
+                justifyContent="center"
+                width="4r"
+                height="4r"
+                flexShrink={0}
+                color="currentColor"
+              >
+                <CheckIcon width="4r" height="4r" />
+              </Span>
+            )}
+          </>
+        ) : (
+          children
+        )}
       </Div>
     </RovingFocus.Item>
   )

@@ -29,6 +29,15 @@ export function FieldFixture() {
           />
         </Field>
       </div>
+
+      <div style={{ margin: '16px 0' }}>
+        <Field data-testid="standard-field">
+          <input
+            data-testid="standard-field-input"
+            placeholder="Standard input"
+          />
+        </Field>
+      </div>
     </div>
   )
 }

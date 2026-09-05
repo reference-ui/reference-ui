@@ -320,7 +320,7 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
           borderRadius="md"
           bg="ui.field.background"
           boxSizing="border-box"
-          _focusWithin={{ borderColor: 'ui.focus.ring', outline: '2px solid', outlineColor: 'ui.focus.ring', outlineOffset: '1px' }}
+          _focusWithin={{ borderColor: 'ui.focus.ring' }}
           className={className}
           style={{
             minHeight: formControlHeightPx,

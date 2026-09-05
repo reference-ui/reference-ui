@@ -32,4 +32,47 @@ test.describe('Menu Composition Gates & Browser Proofs', () => {
     await expect(content).toHaveCount(0)
     await expect(display).toHaveText('Last Action: Edit')
   })
+
+  test('MN-DOM-02: Keyboard roving focus highlights MenuItem with solid background and no outline ring', async ({
+    page,
+  }) => {
+    const trigger = page.getByTestId('btn-menu-trigger')
+    const content = page.getByTestId('menu-content')
+
+    await trigger.click()
+    await expect(content).toBeVisible()
+
+    const itemEdit = page.getByTestId('menu-item-edit')
+    await expect(itemEdit).toBeVisible()
+
+    // Focus first item
+    await itemEdit.focus()
+    await expect(itemEdit).toBeFocused()
+
+    const itemStyles = await itemEdit.evaluate(el => {
+      const s = window.getComputedStyle(el)
+      return {
+        outlineStyle: s.outlineStyle,
+        outlineWidth: s.outlineWidth,
+        outlineColor: s.outlineColor,
+        backgroundColor: s.backgroundColor,
+        color: s.color,
+      }
+    })
+
+    // No outline ring
+    const isOutlineAbsent =
+      itemStyles.outlineStyle === 'none' ||
+      itemStyles.outlineWidth === '0px' ||
+      itemStyles.outlineColor === 'rgba(0, 0, 0, 0)' ||
+      itemStyles.outlineColor === 'transparent' ||
+      itemStyles.outlineColor.includes('/ 0)')
+
+    expect(isOutlineAbsent).toBe(true)
+
+    // Solid background (not transparent)
+    expect(itemStyles.backgroundColor).not.toBe('rgba(0, 0, 0, 0)')
+    expect(itemStyles.backgroundColor).not.toBe('transparent')
+    expect(itemStyles.backgroundColor.includes('/ 0)')).toBe(false)
+  })
 })

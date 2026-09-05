@@ -29,7 +29,7 @@ export const fieldSurfaceStyles = {
     outlineOffset: '4px',
     transitionProperty:
       'border-color, box-shadow, opacity, outline-color, outline-offset',
-    transitionDuration: '300ms',
+    transitionDuration: '150ms',
     transitionTimingFunction: 'ease',
     _hover: {
       borderColor: '{colors.ui.field.borderHover}',
@@ -60,6 +60,11 @@ export const fieldSurfaceStyles = {
     _hover: {
       borderColor: 'transparent',
     },
+    _focus: {
+      outline: 'none',
+      boxShadow: 'none',
+      borderColor: 'transparent',
+    },
     _focusVisible: {
       outline: 'none',
       boxShadow: 'none',
@@ -71,13 +76,17 @@ export const fieldSurfaceStyles = {
     },
   },
 
+  [`[data-reference-field]:has(${embeddedControl}:focus)`]: {
+    borderColor: '{colors.ui.focus.ring}',
+  },
+
   [`[data-reference-field]:has(${embeddedControl}:focus-visible), [data-reference-field][data-focus-visible]`]:
     {
       outlineWidth: '2px',
       outlineOffset: '2px',
       outlineStyle: 'solid',
       outlineColor: '{colors.ui.focus.ring}',
-      borderColor: '{colors.ui.field.border}',
+      borderColor: '{colors.ui.focus.ring}',
     },
 
   '[data-reference-field]:has([aria-invalid="true"]), [data-reference-field][data-invalid]': {
