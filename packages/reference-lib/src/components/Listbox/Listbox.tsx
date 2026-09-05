@@ -165,6 +165,10 @@ export function ListboxOption({
           '& .ref-span': {
             color: 'inherit',
           },
+          '& [data-slot="check"], & [data-slot="check"] *': {
+            color: 'inherit',
+            fill: 'currentColor',
+          },
           '& [data-slot="description"]': {
             opacity: isActive ? 0.75 : 0.65,
             fontSize: '3r',
@@ -203,7 +207,7 @@ export function ListboxOption({
                 flexShrink={0}
                 color="inherit"
               >
-                <CheckIcon width="4r" height="4r" />
+                <CheckIcon width="4r" height="4r" color="inherit" />
               </Span>
             )}
           </>

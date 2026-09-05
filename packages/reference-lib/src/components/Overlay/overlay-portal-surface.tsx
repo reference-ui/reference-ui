@@ -12,17 +12,22 @@ import { Div, useColorMode, type PrimitiveProps } from '@reference-ui/react'
  */
 export type OverlayPortaledSurfaceProps = PrimitiveProps<'div'>
 
-export function OverlayPortaledSurface({
-  children,
-  colorMode: colorModeProp,
-  ...props
-}: OverlayPortaledSurfaceProps) {
-  const inheritedColorMode = useColorMode()
-  const colorMode = colorModeProp ?? inheritedColorMode
+export const OverlayPortaledSurface = React.forwardRef<HTMLDivElement, OverlayPortaledSurfaceProps>(
+  function OverlayPortaledSurface(
+    {
+      children,
+      colorMode: colorModeProp,
+      ...props
+    },
+    ref
+  ) {
+    const inheritedColorMode = useColorMode()
+    const colorMode = colorModeProp ?? inheritedColorMode
 
-  return (
-    <Div colorMode={colorMode} {...props}>
-      {children}
-    </Div>
-  )
-}
+    return (
+      <Div ref={ref} colorMode={colorMode} {...props}>
+        {children}
+      </Div>
+    )
+  }
+)

@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import * as React from 'react'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { createRoot } from 'react-dom/client'
 import { Combobox } from './index'
 import { Listbox } from '../Listbox'
@@ -71,6 +71,7 @@ describe('Combobox & Listbox React Spectrum theming and active navigation', () =
     const reactCheck = reactOption.querySelector('[data-slot="check"]') as HTMLElement
     expect(reactCheck).toBeTruthy()
     expect(reactCheck.className).toContain('c_inherit')
+    expect(reactCheck.querySelector('.ref-div')?.className).toContain('c_inherit')
 
     expect(vueOption).toBeTruthy()
     expect(vueOption.hasAttribute('data-active')).toBe(false)

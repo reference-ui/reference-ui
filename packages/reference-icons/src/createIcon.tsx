@@ -16,7 +16,7 @@ export function createIcon(
   displayName: string,
 ): MaterialSymbolIconComponent {
   const Icon = React.forwardRef<HTMLDivElement, MaterialSymbolIconProps>(function MaterialIcon(
-    { variant = 'outline', size = '1em', style, ...rest },
+    { variant = 'outline', size = '1em', style, color = 'inherit', ...rest },
     ref,
   ) {
     const Svg = (variant === 'filled' ? Filled : Outline) as React.ComponentType<
@@ -31,6 +31,7 @@ export function createIcon(
         justifyContent="center"
         lineHeight="0"
         flexShrink="0"
+        color={color}
         size={size}
         style={style}
         {...rest}
