@@ -17,11 +17,11 @@ export const buttonPrimitiveStyles = {
     gap: '0.5em',
     ...controlSize,
     paddingInline: '3.5r',
-    ':where(&) > :where([data-slot="icon"], svg):where(:first-child:not(:only-child))': {
-      marginInlineStart: 'var(--reference-icon-offset, -0.5r)',
+    '& > [data-slot="icon"]:first-child:not(:only-child), & > svg:first-child:not(:only-child)': {
+      marginInlineStart: 'var(--reference-icon-offset, calc(-1 * var(--spacing-root, 4px)))',
     },
-    ':where(&) > :where([data-slot="icon"], svg):where(:last-child:not(:only-child))': {
-      marginInlineEnd: 'var(--reference-icon-offset, -0.5r)',
+    '& > [data-slot="icon"]:last-child:not(:only-child), & > svg:last-child:not(:only-child)': {
+      marginInlineEnd: 'var(--reference-icon-offset, calc(-1 * var(--spacing-root, 4px)))',
     },
     '&:where(:has(> [data-slot="icon"]:only-child, > svg:only-child))': {
       paddingInline: '0',

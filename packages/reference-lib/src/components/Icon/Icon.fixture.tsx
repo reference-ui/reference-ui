@@ -445,43 +445,69 @@ export default {
               </Div>
             </Div>
 
-            {/* Treatment 2 */}
+        {/* Optical Spacing Lab: Edge vs Text Consistency */}
+        <SectionCard
+          title="Optical Spacing Lab: Leading Icon Edge vs. Text Distance"
+          subtitle="Addressing the user feedback: 'The icon isn't really consistently spaced between the edge and the text (A: Edge to Icon vs. B: Icon to Text)'"
+        >
+          <Div display="flex" flexDirection="column" gap="4r">
             <Div
-              p="4r"
+              p="3r"
               borderRadius="sm"
-              bg="rgba(34, 197, 94, 0.04)"
-              border="1px solid rgba(34, 197, 94, 0.25)"
-              display="flex"
-              flexDirection="column"
-              gap="2r"
+              bg="ui.panel.background"
+              border="1px solid"
+              borderColor="ui.field.border"
+              fontSize="2.75r"
+              color="design.text.light"
             >
-              <Div display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap="2r">
-                <Span fontSize="3r" fontWeight="700" color="green.400">
-                  Treatment 2: New Built-in Default (Proportional Gap 0.5em + Exact -2px / -0.5r SVG Pull)
-                </Span>
-                <Span fontSize="2.5r" color="design.text.light">
-                  Optical fix: Built-in to Button with zero props. Cancels 2px SVG padding; gap breathes with font size.
-                </Span>
-              </Div>
-              <Div display="flex" alignItems="center" gap="3r" flexWrap="wrap" mt="1r">
-                <Button height="6r" px="2.5r" fontSize="3r">
-                  <AddIcon size="small" />
-                  <span>24px Compact</span>
-                </Button>
-                <Button height="8.5r" fontSize="3.5r">
-                  <AddIcon />
-                  <span>34px Standard</span>
-                </Button>
-                <Button height="10.5r" px="4r" fontSize="4r">
-                  <AddIcon />
-                  <span>42px Touch</span>
-                </Button>
-                <Button height="13r" px="5r" fontSize="4.5r">
-                  <AddIcon size="large" />
-                  <span>52px Hero CTA</span>
-                </Button>
-              </Div>
+              <P m="0">
+                In the 48px button, <code>px="5r"</code> (20px) gives <strong>26px from edge to glyph</strong> (due to 5px SVG whitespace), but only <strong>14px between glyph and text</strong>. Below are 4 visual treatments:
+              </P>
             </Div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
+              {/* Option A: Current (26px vs 14px) */}
+              <Div p="3r" borderRadius="sm" border="1px solid" borderColor="ui.field.border" bg="ui.table.row.mutedBackground" display="flex" flexDirection="column" gap="2r">
+                <Span fontSize="2.5r" fontWeight="700" color="red.400">A. As-Is (No pull)</Span>
+                <Span fontSize="2.25r" color="design.text.light">Edge-to-glyph: <strong>26px</strong> | Glyph-to-text: <strong>14px</strong></Span>
+                <Button height="12r" px="5r" fontSize="4.5r" style={{ ['--reference-icon-offset' as any]: '0px' }}>
+                  <AddIcon size="large" />
+                  <span>Create Project</span>
+                </Button>
+              </Div>
+
+              {/* Option B: Gentle -4px Pull */}
+              <Div p="3r" borderRadius="sm" border="1px solid" borderColor="ui.field.border" bg="ui.table.row.mutedBackground" display="flex" flexDirection="column" gap="2r">
+                <Span fontSize="2.5r" fontWeight="700" color="yellow.400">B. -4px Pull (-1r)</Span>
+                <Span fontSize="2.25r" color="design.text.light">Edge-to-glyph: <strong>22px</strong> | Glyph-to-text: <strong>14px</strong></Span>
+                <Button height="12r" px="5r" fontSize="4.5r" style={{ ['--reference-icon-offset' as any]: '-4px' }}>
+                  <AddIcon size="large" />
+                  <span>Create Project</span>
+                </Button>
+              </Div>
+
+              {/* Option C: Balanced -8px Pull */}
+              <Div p="3r" borderRadius="sm" border="1px solid" borderColor="ui.field.border" bg="ui.table.row.mutedBackground" display="flex" flexDirection="column" gap="2r">
+                <Span fontSize="2.5r" fontWeight="700" color="green.400">C. -8px Pull (-2r)</Span>
+                <Span fontSize="2.25r" color="design.text.light">Edge-to-glyph: <strong>18px</strong> | Glyph-to-text: <strong>14px</strong></Span>
+                <Button height="12r" px="5r" fontSize="4.5r" style={{ ['--reference-icon-offset' as any]: '-8px' }}>
+                  <AddIcon size="large" />
+                  <span>Create Project</span>
+                </Button>
+              </Div>
+
+              {/* Option D: Exact Equal Spacing (14px = 14px) */}
+              <Div p="3r" borderRadius="sm" border="1px solid" borderColor="ui.field.border" bg="ui.table.row.mutedBackground" display="flex" flexDirection="column" gap="2r">
+                <Span fontSize="2.5r" fontWeight="700" color="blue.400">D. Equal Spacing (14px = 14px)</Span>
+                <Span fontSize="2.25r" color="design.text.light">Edge-to-glyph: <strong>14px</strong> | Glyph-to-text: <strong>14px</strong></Span>
+                <Button height="12r" px="5r" fontSize="4.5r" style={{ ['--reference-icon-offset' as any]: '-12px' }}>
+                  <AddIcon size="large" />
+                  <span>Create Project</span>
+                </Button>
+              </Div>
+            </div>
+          </Div>
+        </SectionCard>
 
             {/* Treatment 3 */}
             <Div
