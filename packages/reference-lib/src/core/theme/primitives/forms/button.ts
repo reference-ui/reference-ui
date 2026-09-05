@@ -18,10 +18,10 @@ export const buttonPrimitiveStyles = {
     ...controlSize,
     paddingInline: '3.5r',
     '& > [data-slot="icon"]:first-child:not(:only-child), & > svg:first-child:not(:only-child)': {
-      marginInlineStart: 'var(--reference-icon-offset, calc(-1 * var(--spacing-root, 4px)))',
+      marginInlineStart: 'var(--reference-icon-offset, -0.45em)',
     },
     '& > [data-slot="icon"]:last-child:not(:only-child), & > svg:last-child:not(:only-child)': {
-      marginInlineEnd: 'var(--reference-icon-offset, calc(-1 * var(--spacing-root, 4px)))',
+      marginInlineEnd: 'var(--reference-icon-offset, -0.45em)',
     },
     '&:where(:has(> [data-slot="icon"]:only-child, > svg:only-child))': {
       paddingInline: '0',

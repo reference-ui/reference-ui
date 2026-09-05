@@ -400,152 +400,27 @@ export default {
           </P>
         </Div>
 
-        {/* Diagnostic Spacing Lab */}
-        {/* Diagnostic Spacing Lab */}
+        {/* Core Mathematical Law Summary Card */}
         <SectionCard
-          title="Diagnostic Spacing Comparison: Why the Leading Icon Looked Weird"
-          subtitle="Mathematical & optical breakdown of how leading icon placement behaves across heights"
+          title="Automated Optical System: Proportional Gap & Dynamic Insets"
+          subtitle="How Reference UI calculates button icon alignment across all sizes with zero developer configuration"
         >
-          <Div display="flex" flexDirection="column" gap="4r">
-            {/* Treatment 1 */}
-            <Div
-              p="4r"
-              borderRadius="sm"
-              bg="rgba(239, 68, 68, 0.04)"
-              border="1px solid rgba(239, 68, 68, 0.25)"
-              display="flex"
-              flexDirection="column"
-              gap="2r"
-            >
-              <Div display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap="2r">
-                <Span fontSize="3r" fontWeight="700" color="red.400">
-                  Treatment 1: Flawed (Static -4px pull + static 6px gap)
-                </Span>
-                <Span fontSize="2.5r" color="design.text.light">
-                  Flaw: Gap stays 6px while button grows to 52px; 4px pull drags icon away from center.
-                </Span>
-              </Div>
-              <Div display="flex" alignItems="center" gap="3r" flexWrap="wrap" mt="1r">
-                <Button height="6r" px="2.5r" fontSize="3r" gap="1.5r" style={{ ['--reference-icon-offset' as any]: '-1r' }}>
-                  <AddIcon size="small" />
-                  <span>24px Compact</span>
-                </Button>
-                <Button height="8.5r" fontSize="3.5r" gap="1.5r" style={{ ['--reference-icon-offset' as any]: '-1r' }}>
-                  <AddIcon />
-                  <span>34px Standard</span>
-                </Button>
-                <Button height="10.5r" px="4r" fontSize="4r" gap="1.5r" style={{ ['--reference-icon-offset' as any]: '-1r' }}>
-                  <AddIcon />
-                  <span>42px Touch</span>
-                </Button>
-                <Button height="13r" px="5r" fontSize="4.5r" gap="1.5r" style={{ ['--reference-icon-offset' as any]: '-1r' }}>
-                  <AddIcon size="large" />
-                  <span>52px Hero CTA</span>
-                </Button>
-              </Div>
-            </Div>
-
-        {/* Optical Spacing Lab: Edge vs Text Consistency */}
-        <SectionCard
-          title="Optical Spacing Lab: Leading Icon Edge vs. Text Distance"
-          subtitle="Addressing the user feedback: 'The icon isn't really consistently spaced between the edge and the text (A: Edge to Icon vs. B: Icon to Text)'"
-        >
-          <Div display="flex" flexDirection="column" gap="4r">
-            <Div
-              p="3r"
-              borderRadius="sm"
-              bg="ui.panel.background"
-              border="1px solid"
-              borderColor="ui.field.border"
-              fontSize="2.75r"
-              color="design.text.light"
-            >
-              <P m="0">
-                In the 48px button, <code>px="5r"</code> (20px) gives <strong>26px from edge to glyph</strong> (due to 5px SVG whitespace), but only <strong>14px between glyph and text</strong>. Below are 4 visual treatments:
-              </P>
-            </Div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
-              {/* Option A: Current (26px vs 14px) */}
-              <Div p="3r" borderRadius="sm" border="1px solid" borderColor="ui.field.border" bg="ui.table.row.mutedBackground" display="flex" flexDirection="column" alignItems="flex-start" gap="2r">
-                <Span fontSize="2.5r" fontWeight="700" color="red.400">A. As-Is (No pull)</Span>
-                <Span fontSize="2.25r" color="design.text.light">Edge-to-glyph: <strong>26px</strong> | Glyph-to-text: <strong>14px</strong></Span>
-                <Button height="12r" px="5r" fontSize="4.5r" style={{ ['--reference-icon-offset' as any]: '0px' }}>
-                  <AddIcon size="large" />
-                  <span>Create Project</span>
-                </Button>
-              </Div>
-
-              {/* Option B: Gentle -4px Pull */}
-              <Div p="3r" borderRadius="sm" border="1px solid" borderColor="ui.field.border" bg="ui.table.row.mutedBackground" display="flex" flexDirection="column" alignItems="flex-start" gap="2r">
-                <Span fontSize="2.5r" fontWeight="700" color="yellow.400">B. -4px Pull (-1r)</Span>
-                <Span fontSize="2.25r" color="design.text.light">Edge-to-glyph: <strong>22px</strong> | Glyph-to-text: <strong>14px</strong></Span>
-                <Button height="12r" px="5r" fontSize="4.5r" style={{ ['--reference-icon-offset' as any]: '-4px' }}>
-                  <AddIcon size="large" />
-                  <span>Create Project</span>
-                </Button>
-              </Div>
-
-              {/* Option C: Balanced -8px Pull */}
-              <Div p="3r" borderRadius="sm" border="1px solid" borderColor="ui.field.border" bg="ui.table.row.mutedBackground" display="flex" flexDirection="column" alignItems="flex-start" gap="2r">
-                <Span fontSize="2.5r" fontWeight="700" color="green.400">C. -8px Pull (-2r)</Span>
-                <Span fontSize="2.25r" color="design.text.light">Edge-to-glyph: <strong>18px</strong> | Glyph-to-text: <strong>14px</strong></Span>
-                <Button height="12r" px="5r" fontSize="4.5r" style={{ ['--reference-icon-offset' as any]: '-8px' }}>
-                  <AddIcon size="large" />
-                  <span>Create Project</span>
-                </Button>
-              </Div>
-
-              {/* Option D: Exact Equal Spacing (14px = 14px) */}
-              <Div p="3r" borderRadius="sm" border="1px solid" borderColor="ui.field.border" bg="ui.table.row.mutedBackground" display="flex" flexDirection="column" alignItems="flex-start" gap="2r">
-                <Span fontSize="2.5r" fontWeight="700" color="blue.400">D. Equal Spacing (14px = 14px)</Span>
-                <Span fontSize="2.25r" color="design.text.light">Edge-to-glyph: <strong>14px</strong> | Glyph-to-text: <strong>14px</strong></Span>
-                <Button height="12r" px="5r" fontSize="4.5r" style={{ ['--reference-icon-offset' as any]: '-12px' }}>
-                  <AddIcon size="large" />
-                  <span>Create Project</span>
-                </Button>
-              </Div>
-            </div>
-          </Div>
-        </SectionCard>
-
-            {/* Treatment 3 */}
-            <Div
-              p="4r"
-              borderRadius="sm"
-              bg="rgba(59, 130, 246, 0.04)"
-              border="1px solid rgba(59, 130, 246, 0.25)"
-              display="flex"
-              flexDirection="column"
-              gap="2r"
-            >
-              <Div display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap="2r">
-                <Span fontSize="3r" fontWeight="700" color="blue.400">
-                  Treatment 3: Pure Natural Flex (0px pull + Proportional Gap 0.5em)
-                </Span>
-                <Span fontSize="2.5r" color="design.text.light">
-                  Zero negative margin hack. Relies entirely on natural button padding and proportional gap.
-                </Span>
-              </Div>
-              <Div display="flex" alignItems="center" gap="3r" flexWrap="wrap" mt="1r">
-                <Button height="6r" px="2.5r" fontSize="3r" gap="0.5em" style={{ ['--reference-icon-offset' as any]: '0px' }}>
-                  <AddIcon size="small" />
-                  <span>24px Compact</span>
-                </Button>
-                <Button height="8.5r" fontSize="3.5r" gap="0.5em" style={{ ['--reference-icon-offset' as any]: '0px' }}>
-                  <AddIcon />
-                  <span>34px Standard</span>
-                </Button>
-                <Button height="10.5r" px="4r" fontSize="4r" gap="0.5em" style={{ ['--reference-icon-offset' as any]: '0px' }}>
-                  <AddIcon />
-                  <span>42px Touch</span>
-                </Button>
-                <Button height="13r" px="5r" fontSize="4.5r" gap="0.5em" style={{ ['--reference-icon-offset' as any]: '0px' }}>
-                  <AddIcon size="large" />
-                  <span>52px Hero CTA</span>
-                </Button>
-              </Div>
-            </Div>
+          <Div display="flex" flexDirection="column" gap="2r" fontSize="3r" color="design.text.light">
+            <Span>
+              1. <strong>Proportional Typography Gap (<code>gap: 0.5em</code>)</strong>: Spacing scales naturally with typography across every button height (6px at 12px text → 7px at 14px text → 9px at 18px text).
+            </Span>
+            <Span>
+              2. <strong>Proportional Optical Inset (<code>margin-inline: -0.45em</code>)</strong>: Leading and trailing icons absorb SVG perimeter whitespace dynamically based on font size (e.g. -5px at compact, -6px at standard, -8px at hero).
+            </Span>
+            <Span>
+              3. <strong>Auto-Squaring (<code>aspect-ratio: 1 / 1</code>)</strong>: Icon-only buttons drop horizontal padding and automatically lock to a perfect square at whatever height the button has.
+            </Span>
+            <Span>
+              4. <strong>Universal Compatibility</strong>: Automatically matches both <code>[data-slot="icon"]</code> components and raw third-party <code>&lt;svg&gt;</code> elements with zero configuration.
+            </Span>
+            <Span>
+              5. <strong>Zero-Specificity Escapes</strong>: Defaults use CSS variables (<code>var(--reference-icon-offset)</code>) so consumer props always win cleanly.
+            </Span>
           </Div>
         </SectionCard>
 
@@ -666,8 +541,8 @@ export default {
                 Automated System Calculations:
               </Span>
               <Span>1. Icon-only buttons: Dropped padding, computed <code>aspect-ratio: 1</code> → <strong>48px × 48px square</strong></Span>
-              <Span>2. Leading icon: Detected <code>:first-child</code> → applied <code>margin-inline-start: -0.5r</code> (2px optical SVG inset pull)</Span>
-              <Span>3. Trailing chevron: Detected <code>:last-child</code> → applied <code>margin-inline-end: -0.5r</code> (2px optical SVG inset pull)</Span>
+              <Span>2. Leading icon: Detected <code>:first-child</code> → applied <code>margin-inline-start: -0.45em</code> (-8px optical pull at 18px font)</Span>
+              <Span>3. Trailing chevron: Detected <code>:last-child</code> → applied <code>margin-inline-end: -0.45em</code> (-8px optical pull at 18px font)</Span>
               <Span>4. Proportional typography gap: <code>gap: 0.5em</code> scales seamlessly with font size (9px gap at 18px text)</Span>
               <Span>5. Target compatibility: Matches both <code>[data-slot="icon"]</code> and raw <code>&lt;svg&gt;</code> elements</Span>
             </Div>
