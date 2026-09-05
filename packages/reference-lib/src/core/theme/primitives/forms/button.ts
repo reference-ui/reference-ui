@@ -21,10 +21,10 @@ export const buttonPrimitiveStyles = {
       fontSize: 'inherit',
     },
     '& > [data-slot="icon"]:first-child:not(:only-child), & > svg:first-child:not(:only-child)': {
-      marginInlineStart: 'var(--reference-icon-offset, calc(-1.4em + 14px))',
+      marginInlineStart: 'var(--reference-icon-offset, -0.25em)',
     },
     '& > [data-slot="icon"]:last-child:not(:only-child), & > svg:last-child:not(:only-child)': {
-      marginInlineEnd: 'var(--reference-icon-offset, calc(-1.4em + 14px))',
+      marginInlineEnd: 'var(--reference-icon-offset, -0.25em)',
     },
     '&:where(:has(> [data-slot="icon"]:only-child, > svg:only-child))': {
       paddingInline: '0',

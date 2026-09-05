@@ -356,6 +356,7 @@ export default {
         height: '6r',
         px: '24px',
         customPx: '2.5r',
+        paddingPx: '10px',
         fontSize: '3r',
         iconSize: 'small' as const,
         description: 'Tight data tables, toolbars, sub-actions. Uses custom px="2.5r" (10px).',
@@ -365,6 +366,7 @@ export default {
         height: '8.5r',
         px: '34px',
         customPx: undefined,
+        paddingPx: '14px',
         fontSize: '3.5r',
         iconSize: 'base' as const,
         description: 'Default controlHeight across all Reference UI inputs and buttons. Inherits default 3.5r (14px) padding.',
@@ -374,6 +376,7 @@ export default {
         height: '10.5r',
         px: '42px',
         customPx: '4r',
+        paddingPx: '16px',
         fontSize: '4r',
         iconSize: 'large' as const,
         description: 'Apple HIG touch target, prominent forms, mobile cards. Uses custom px="4r" (16px).',
@@ -383,6 +386,7 @@ export default {
         height: '13r',
         px: '52px',
         customPx: '5r',
+        paddingPx: '20px',
         fontSize: '4.5r',
         iconSize: 'large' as const,
         description: 'Landing page CTAs, hero sections, modal primaries. Uses custom px="5r" (20px).',
@@ -410,7 +414,7 @@ export default {
               1. <strong>Proportional Typography Gap (<code>gap: 0.5em</code>)</strong>: Spacing scales naturally with typography across every button height (6px at 12px text → 7px at 14px text → 9px at 18px text).
             </Span>
             <Span>
-              2. <strong>Continuous Optical Scaling (<code>margin-inline: calc(-1.4em + 14px)</code>)</strong>: Insets scale smoothly across font and padding slopes (-2.8px at compact 12px → -5.6px at standard 14px → -11.2px at hero 18px), keeping perimeter glyph spacing balanced (~8.5px–10.5px) without hugging or floating.
+              2. <strong>Perimeter Clearance Guarantee (<code>margin-inline: -0.25em</code>)</strong>: Insets absorb internal SVG whitespace (~2–4px) while ensuring horizontal perimeter clearance always exceeds vertical clearance (H &gt; V).
             </Span>
             <Span>
               3. <strong>Auto-Squaring (<code>aspect-ratio: 1 / 1</code>)</strong>: Icon-only buttons drop horizontal padding and automatically lock to a perfect square at whatever height the button has.
@@ -434,7 +438,7 @@ export default {
               {/* 1. Text Only */}
               <Div display="flex" flexDirection="column" gap="1r" alignItems="flex-start">
                 <Span fontSize="2.5r" color="design.text.light">Text Only</Span>
-                <Button height={scale.height} style={{ height: scale.px }} fontSize={scale.fontSize} px={scale.customPx}>
+                <Button height={scale.height} style={{ height: scale.px, paddingInline: scale.paddingPx }} fontSize={scale.fontSize} px={scale.customPx}>
                   <span>Continue</span>
                 </Button>
               </Div>
@@ -442,7 +446,7 @@ export default {
               {/* 2. Leading Icon */}
               <Div display="flex" flexDirection="column" gap="1r" alignItems="flex-start">
                 <Span fontSize="2.5r" color="design.text.light">Leading Icon</Span>
-                <Button height={scale.height} style={{ height: scale.px }} fontSize={scale.fontSize} px={scale.customPx}>
+                <Button height={scale.height} style={{ height: scale.px, paddingInline: scale.paddingPx }} fontSize={scale.fontSize} px={scale.customPx}>
                   <AddIcon size={scale.iconSize} />
                   <span>Create Item</span>
                 </Button>
@@ -453,7 +457,7 @@ export default {
                 <Span fontSize="2.5r" color="design.text.light">Trailing Chevron</Span>
                 <Button
                   height={scale.height}
-                  style={{ height: scale.px }}
+                  style={{ height: scale.px, paddingInline: scale.paddingPx }}
                   fontSize={scale.fontSize}
                   px={scale.customPx}
                   bg="ui.table.row.mutedBackground"
