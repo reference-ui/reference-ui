@@ -45,14 +45,14 @@ export default {
       </Field>
     </Div>
   ),
-  WarningStatus: () => (
+  CustomBorder: () => (
     <Div maxW="80r" display="flex" flexDirection="column" gap="2r">
       <Label htmlFor="review">Review</Label>
-      <Field status="warning" width="100%">
+      <Field borderColor="colors.amber.500" width="100%">
         <Input id="review" placeholder="Review this value..." />
       </Field>
       <P fontSize="3r" color="design.text.light" m="0">
-        Warning is Field-owned chrome. Invalid still lives on the input.
+        Custom styling (e.g. amber highlight) is applied directly via StyleProps.
       </P>
     </Div>
   ),

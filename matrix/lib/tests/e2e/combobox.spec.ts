@@ -26,6 +26,8 @@ test.describe('Combobox Composition Gates & Browser Proofs', () => {
 
     const optBanana = page.getByTestId('combo-opt-banana')
     await expect(optBanana).toBeVisible()
+    const optBox = await optBanana.boundingBox()
+    expect(optBox?.height).toBe(34)
 
     // Click Banana option -> selects banana and closes popover
     await optBanana.click()

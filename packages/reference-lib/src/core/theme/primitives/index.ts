@@ -5,6 +5,8 @@ export {
 	focusRing,
 	focusRingStyles,
 	formControlSize,
+	formControlHeight,
+	formControlHeightPx,
 	trackBackground,
 } from './shared'
 export { ui } from './tokens'

@@ -28,7 +28,11 @@ export function SwitchThumb({ className, style, ...props }: SwitchThumbProps) {
       data-state={checked ? 'checked' : 'unchecked'}
       data-disabled={disabled ? '' : undefined}
       className={className}
-      style={style}
+      style={{
+        transform: checked ? 'translateX(1.25rem)' : 'translateX(0)',
+        transition: 'transform 200ms cubic-bezier(0.16, 1, 0.3, 1)',
+        ...style,
+      }}
       {...props}
     />
   )

@@ -24,6 +24,7 @@ interface SliderContextValue {
   step: number
   orientation: SliderOrientation
   disabled: boolean
+  trackRef: React.RefObject<HTMLDivElement | null>
   updateThumbValue: (index: number, nextVal: number) => void
   commitThumbValue: (index: number, nextVal: number) => void
 }
@@ -32,32 +33,57 @@ const SliderContext = React.createContext<SliderContextValue | null>(null)
 
 export type SliderTrackProps = PrimitiveProps<'div'>
 
-export function SliderTrack({
-  children,
-  className,
-  style,
-  ...props
-}: SliderTrackProps) {
-  const context = React.useContext(SliderContext)
-  const orientation = context?.orientation ?? 'horizontal'
+export const SliderTrack = React.forwardRef<HTMLDivElement, SliderTrackProps>(
+  function SliderTrack(
+    {
+      children,
+      className,
+      style,
+      ...props
+    },
+    forwardedRef
+  ) {
+    const context = React.useContext(SliderContext)
+    const orientation = context?.orientation ?? 'horizontal'
+    const isHorizontal = orientation === 'horizontal'
 
-  return (
-    <Div
-      data-reference-slider-track=""
-      position="relative"
-      flexGrow={1}
-      borderRadius="full"
-      bg="colors.gray.200"
-      height={orientation === 'horizontal' ? '1.5r' : '100%'}
-      width={orientation === 'vertical' ? '1.5r' : '100%'}
-      className={className}
-      style={style}
-      {...props}
-    >
-      {children}
-    </Div>
-  )
-}
+    const handleRef = React.useCallback(
+      (node: HTMLDivElement | null) => {
+        if (context) {
+          ;(context.trackRef as React.MutableRefObject<HTMLDivElement | null>).current = node
+        }
+        if (typeof forwardedRef === 'function') {
+          forwardedRef(node)
+        } else if (forwardedRef) {
+          ;(forwardedRef as React.MutableRefObject<HTMLDivElement | null>).current = node
+        }
+      },
+      [context, forwardedRef]
+    )
+
+    return (
+      <Div
+        ref={handleRef}
+        data-reference-slider-track=""
+        position="relative"
+        flexGrow={1}
+        borderRadius="full"
+        bg="colors.gray.200"
+        height={isHorizontal ? '1.5r' : '100%'}
+        width={orientation === 'vertical' ? '1.5r' : '100%'}
+        className={className}
+        style={{
+          height: isHorizontal ? '6px' : '100%',
+          width: orientation === 'vertical' ? '6px' : '100%',
+          ...style,
+        }}
+        {...props}
+      >
+        {children}
+      </Div>
+    )
+  }
+)
 
 export type SliderRangeProps = PrimitiveProps<'div'>
 
@@ -86,11 +112,14 @@ export function SliderRange({
       position="absolute"
       bg="ui.progress.bar.foreground"
       borderRadius="full"
+      pointerEvents="none"
       className={className}
       style={{
         [isHorizontal ? 'left' : 'bottom']: `${startPercent}%`,
         [isHorizontal ? 'width' : 'height']: `${sizePercent}%`,
         [isHorizontal ? 'height' : 'width']: '100%',
+        top: 0,
+        bottom: 0,
         ...style,
       }}
       {...props}
@@ -107,6 +136,9 @@ export function SliderThumb({
   className,
   style,
   onKeyDown,
+  onPointerDown,
+  onPointerMove,
+  onPointerUp,
   ...props
 }: SliderThumbProps) {
   const context = React.useContext(SliderContext)
@@ -117,6 +149,7 @@ export function SliderThumb({
   const range = max - min || 1
   const percent = Math.max(0, Math.min(100, ((val - min) / range) * 100))
   const isHorizontal = orientation === 'horizontal'
+  const isDraggingRef = React.useRef(false)
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     onKeyDown?.(e)
@@ -144,6 +177,59 @@ export function SliderThumb({
     }
   }
 
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    onPointerDown?.(e)
+    if (e.defaultPrevented || disabled) return
+    e.stopPropagation()
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId)
+    } catch {}
+    isDraggingRef.current = true
+    e.currentTarget.focus()
+  }
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    onPointerMove?.(e)
+    if (!isDraggingRef.current || disabled) return
+    const trackEl = context.trackRef.current
+    if (!trackEl) return
+
+    const rect = trackEl.getBoundingClientRect()
+    let nextPercent: number
+    if (isHorizontal) {
+      nextPercent = (e.clientX - rect.left) / rect.width
+    } else {
+      nextPercent = (rect.bottom - e.clientY) / rect.height
+    }
+    nextPercent = Math.max(0, Math.min(1, nextPercent))
+    const rawVal = min + nextPercent * (max - min)
+    updateThumbValue(index, rawVal)
+  }
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    onPointerUp?.(e)
+    if (!isDraggingRef.current) return
+    isDraggingRef.current = false
+    try {
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId)
+      }
+    } catch {}
+    const trackEl = context.trackRef.current
+    if (trackEl) {
+      const rect = trackEl.getBoundingClientRect()
+      let nextPercent: number
+      if (isHorizontal) {
+        nextPercent = (e.clientX - rect.left) / rect.width
+      } else {
+        nextPercent = (rect.bottom - e.clientY) / rect.height
+      }
+      nextPercent = Math.max(0, Math.min(1, nextPercent))
+      const rawVal = min + nextPercent * (max - min)
+      commitThumbValue(index, rawVal)
+    }
+  }
+
   return (
     <Div
       role="slider"
@@ -154,6 +240,9 @@ export function SliderThumb({
       aria-orientation={orientation}
       data-disabled={disabled ? '' : undefined}
       onKeyDown={handleKeyDown}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
       position="absolute"
       width="4.5r"
       height="4.5r"
@@ -169,7 +258,9 @@ export function SliderThumb({
       className={className}
       style={{
         [isHorizontal ? 'left' : 'bottom']: `${percent}%`,
-        transform: isHorizontal ? 'translateX(-50%)' : 'translateY(50%)',
+        top: isHorizontal ? '50%' : undefined,
+        left: !isHorizontal ? '50%' : undefined,
+        transform: isHorizontal ? 'translate(-50%, -50%)' : 'translate(-50%, 50%)',
         ...style,
       }}
       {...props}
@@ -206,6 +297,8 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
       return [typeof currentValue === 'number' ? currentValue : min]
     }, [currentValue, min])
 
+    const trackRef = React.useRef<HTMLDivElement | null>(null)
+
     const updateThumbValue = React.useCallback(
       (index: number, nextVal: number) => {
         const clampedVal = Math.max(min, Math.min(max, Math.round(nextVal / step) * step))
@@ -240,6 +333,7 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
         step,
         orientation,
         disabled,
+        trackRef,
         updateThumbValue,
         commitThumbValue,
       }),
@@ -247,6 +341,67 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
     )
 
     const isHorizontal = orientation === 'horizontal'
+    const isDraggingRef = React.useRef(false)
+    const activeThumbIndexRef = React.useRef(0)
+
+    const getValueFromPointer = (e: React.PointerEvent<HTMLDivElement>) => {
+      const trackEl = trackRef.current ?? e.currentTarget
+      const rect = trackEl.getBoundingClientRect()
+      let nextPercent: number
+      if (isHorizontal) {
+        nextPercent = (e.clientX - rect.left) / rect.width
+      } else {
+        nextPercent = (rect.bottom - e.clientY) / rect.height
+      }
+      nextPercent = Math.max(0, Math.min(1, nextPercent))
+      return min + nextPercent * (max - min)
+    }
+
+    const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+      props.onPointerDown?.(e)
+      if (e.defaultPrevented || disabled) return
+
+      try {
+        e.currentTarget.setPointerCapture(e.pointerId)
+      } catch {}
+      isDraggingRef.current = true
+
+      const rawVal = getValueFromPointer(e)
+      let closestIndex = 0
+      if (values.length > 1) {
+        let minDiff = Infinity
+        values.forEach((v, i) => {
+          const diff = Math.abs(v - rawVal)
+          if (diff < minDiff) {
+            minDiff = diff
+            closestIndex = i
+          }
+        })
+      }
+      activeThumbIndexRef.current = closestIndex
+      updateThumbValue(closestIndex, rawVal)
+      commitThumbValue(closestIndex, rawVal)
+    }
+
+    const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+      props.onPointerMove?.(e)
+      if (!isDraggingRef.current || disabled) return
+      const rawVal = getValueFromPointer(e)
+      updateThumbValue(activeThumbIndexRef.current, rawVal)
+    }
+
+    const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+      props.onPointerUp?.(e)
+      if (!isDraggingRef.current) return
+      isDraggingRef.current = false
+      try {
+        if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+          e.currentTarget.releasePointerCapture(e.pointerId)
+        }
+      } catch {}
+      const rawVal = getValueFromPointer(e)
+      commitThumbValue(activeThumbIndexRef.current, rawVal)
+    }
 
     return (
       <SliderContext.Provider value={contextValue}>
@@ -260,6 +415,10 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
           alignItems="center"
           userSelect="none"
           touchAction="none"
+          cursor={disabled ? 'not-allowed' : 'pointer'}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
           width={isHorizontal ? '100%' : '6r'}
           height={isHorizontal ? '6r' : '100%'}
           className={className}

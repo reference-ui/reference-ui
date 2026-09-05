@@ -43,12 +43,24 @@ export default {
             <Button
               type="button"
               aria-label="Open suggestions"
+              width="8.5r"
+              height="8.5r"
+              minWidth="8.5r"
+              p="0"
+              bg="transparent"
+              border="none"
+              display="inline-flex"
+              alignItems="center"
+              justifyContent="center"
+              cursor="pointer"
+              color="design.text.base"
+              _hover={{ bg: 'ui.button.mutedBackground' }}
               onClick={event => {
                 const field = event.currentTarget.closest('[data-reference-field]')
                 field?.querySelector('input')?.focus()
               }}
             >
-              <ArrowDropDownIcon />
+              <ArrowDropDownIcon width="4r" height="4r" />
             </Button>
           </Field>
           <Combobox.Popover>
@@ -80,7 +92,7 @@ export default {
         <Combobox value={selected} onChange={setSelected}>
           <Combobox.Trigger width="100%" justifyContent="space-between">
             {selectedLabel(selected)}
-            <ArrowDropDownIcon />
+            <ArrowDropDownIcon width="4r" height="4r" />
           </Combobox.Trigger>
           <Combobox.Popover>
             <Listbox>

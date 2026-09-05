@@ -29,4 +29,23 @@ test.describe('Slider Composition Gates & Browser Proofs', () => {
     await expect(thumb).toHaveAttribute('aria-valuenow', '30')
     await expect(display).toHaveText('Current value: 30')
   })
+
+  test('SD-DOM-03: Updates slider value via pointer dragging and track clicking', async ({
+    page,
+  }) => {
+    const track = page.getByTestId('slider-track')
+    const thumb = page.getByTestId('slider-thumb')
+    const display = page.getByTestId('slider-value-display')
+
+    const box = await track.boundingBox()
+    expect(box).not.toBeNull()
+
+    // Click near 80% mark on the track (width is 300px)
+    const targetX = box!.x + box!.width * 0.8
+    const targetY = box!.y + box!.height / 2
+    await track.click({ position: { x: box!.width * 0.8, y: box!.height / 2 } })
+
+    await expect(thumb).toHaveAttribute('aria-valuenow', '80')
+    await expect(display).toHaveText('Current value: 80')
+  })
 })

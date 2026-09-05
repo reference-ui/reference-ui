@@ -24,6 +24,8 @@ test.describe('Menu Composition Gates & Browser Proofs', () => {
     const itemEdit = page.getByTestId('menu-item-edit')
     await expect(itemEdit).toBeVisible()
     await expect(itemEdit).toHaveAttribute('role', 'menuitem')
+    const itemBox = await itemEdit.boundingBox()
+    expect(itemBox?.height).toBe(34)
 
     // Click edit -> selects Edit and closes menu
     await itemEdit.click()

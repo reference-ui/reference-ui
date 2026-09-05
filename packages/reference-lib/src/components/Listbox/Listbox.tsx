@@ -2,6 +2,7 @@ import * as React from 'react'
 import { Div, type PrimitiveProps } from '@reference-ui/react'
 import { RovingFocus } from '../RovingFocus'
 import { ComboboxContext } from '../Combobox/combobox-context'
+import { formControlSize, formControlHeightPx } from '../../core/theme/primitives/shared'
 
 export type ListboxSelection = 'single' | 'multiple'
 export type ListboxOrientation = 'horizontal' | 'vertical'
@@ -83,22 +84,29 @@ export function ListboxOption({
         onKeyDown={handleKeyDown}
         display="flex"
         alignItems="center"
-        minHeight="8.5r"
+        height={formControlSize.height}
+        minHeight={formControlSize.height}
         px="3r"
-        py="0.75r"
+        py={formControlSize.paddingBlock}
         boxSizing="border-box"
         borderRadius="sm"
         fontSize="3.5r"
+        lineHeight="5r"
         cursor={isDisabled ? 'not-allowed' : 'pointer'}
         bg={isSelected ? 'ui.button.background' : 'transparent'}
         color={isSelected ? 'ui.button.foreground' : 'design.text.base'}
         opacity={isDisabled ? 0.5 : 1}
         outline="none"
         userSelect="none"
-        _hover={!isSelected && !isDisabled ? { bg: 'ui.table.row.mutedBackground' } : undefined}
+        _hover={!isSelected && !isDisabled ? { bg: 'ui.table.row.mutedBackground', color: 'design.text.base' } : undefined}
         _focusVisible={{ outline: '2px solid', outlineColor: 'ui.focus.ring', outlineOffset: '-2px' }}
         className={className}
-        style={style}
+        style={{
+          minHeight: formControlHeightPx,
+          height: formControlHeightPx,
+          boxSizing: 'border-box',
+          ...style,
+        }}
         {...props}
       >
         {children}
@@ -201,6 +209,13 @@ export const Listbox = React.forwardRef<HTMLDivElement, ListboxProps>(
             flexDirection={orientation === 'vertical' ? 'column' : 'row'}
             gap="0.5r"
             outline="none"
+            p={combobox ? '0' : '1r'}
+            bg={combobox ? 'transparent' : 'ui.dialog.background'}
+            color={combobox ? 'inherit' : 'ui.dialog.foreground'}
+            borderRadius={combobox ? undefined : 'md'}
+            border={combobox ? undefined : '1px solid'}
+            borderColor={combobox ? undefined : 'ui.dialog.border'}
+            boxShadow={combobox ? undefined : '0 4px 16px rgba(0,0,0,0.12)'}
             className={className}
             style={style}
             {...props}

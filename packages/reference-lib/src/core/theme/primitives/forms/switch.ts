@@ -59,7 +59,7 @@ export const switchPrimitiveStyles = {
   },
 
   '[data-reference-switch-thumb][data-state="checked"]': {
-    transform: 'translateX(5r)',
+    transform: 'translateX(1.25rem)',
   },
 } as const
 

@@ -22,6 +22,7 @@ export const rhythmSpacingTokens = {
     '5r': { value: getRhythm(5) },
     '6r': { value: getRhythm(6) },
     '8r': { value: getRhythm(8) },
+    '8.5r': { value: getRhythm(8.5) },
     '10r': { value: getRhythm(10) },
     '12r': { value: getRhythm(12) },
   },

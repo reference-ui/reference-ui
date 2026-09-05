@@ -20,6 +20,8 @@ test.describe('Listbox Composition Gates & Browser Proofs', () => {
     await expect(optApple).toHaveAttribute('data-state', 'selected')
     await expect(optBanana).toHaveAttribute('aria-selected', 'false')
     await expect(optBanana).toHaveAttribute('data-state', 'unselected')
+    const optBox = await optApple.boundingBox()
+    expect(optBox?.height).toBe(34)
     await expect(display).toHaveText('Selected: apple')
 
     // Click Banana -> selects banana

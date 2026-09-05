@@ -2,6 +2,7 @@ import * as React from 'react'
 import { Button, Div, Span, type PrimitiveProps, type PrimitiveElement } from '@reference-ui/react'
 import { Overlay, type OverlayContentProps } from '../Overlay'
 import { RovingFocus } from '../RovingFocus'
+import { formControlSize, formControlHeightPx } from '../../core/theme/primitives/shared'
 
 export interface MenuProps {
   children?: React.ReactNode
@@ -77,6 +78,7 @@ export function MenuContent({
     <Overlay.Content
       role="menu"
       data-reference-menu-content=""
+      placement="bottom-start"
       minW="40r"
       bg="ui.dialog.background"
       color="ui.dialog.foreground"
@@ -90,17 +92,18 @@ export function MenuContent({
       style={style}
       {...props}
     >
-        <RovingFocus.Root orientation="vertical" loop>
-          <Div display="flex" flexDirection="column" gap="0.5r">
-            {children}
-          </Div>
-        </RovingFocus.Root>
-      </Overlay.Content>
+      <RovingFocus.Root orientation="vertical" loop>
+        <Div display="flex" flexDirection="column" gap="0.5r" outline="none">
+          {children}
+        </Div>
+      </RovingFocus.Root>
+    </Overlay.Content>
   )
 }
 
 export type MenuItemProps = PrimitiveProps<'div'> & {
   disabled?: boolean
+  selected?: boolean
   onSelect?: () => void
   closeOnSelect?: boolean
 }
@@ -108,6 +111,7 @@ export type MenuItemProps = PrimitiveProps<'div'> & {
 export function MenuItem({
   children,
   disabled = false,
+  selected = false,
   onSelect,
   closeOnSelect = true,
   onClick,
@@ -148,22 +152,34 @@ export function MenuItem({
         tabIndex={disabled ? -1 : 0}
         aria-disabled={disabled ? 'true' : undefined}
         data-disabled={disabled ? '' : undefined}
+        data-state={selected ? 'selected' : undefined}
         onClick={handleClick}
         onKeyDown={handleKeyDown}
         display="flex"
         alignItems="center"
-        px="2.5r"
-        py="1.5r"
+        height={formControlSize.height}
+        minHeight={formControlSize.height}
+        px="3r"
+        py={formControlSize.paddingBlock}
+        boxSizing="border-box"
         borderRadius="sm"
         fontSize="3.5r"
+        lineHeight="5r"
         cursor={disabled ? 'not-allowed' : 'pointer'}
+        bg={selected ? 'ui.button.background' : 'transparent'}
+        color={selected ? 'ui.button.foreground' : 'design.text.base'}
         opacity={disabled ? 0.5 : 1}
         outline="none"
         userSelect="none"
-        _hover={!disabled ? { bg: 'colors.gray.100', color: 'design.text.base' } : undefined}
-        _focusVisible={{ outline: '2px solid', outlineColor: 'ui.focus.ring', outlineOffset: '2px' }}
+        _hover={!selected && !disabled ? { bg: 'ui.table.row.mutedBackground', color: 'design.text.base' } : undefined}
+        _focusVisible={{ outline: '2px solid', outlineColor: 'ui.focus.ring', outlineOffset: '-2px' }}
         className={className}
-        style={style}
+        style={{
+          minHeight: formControlHeightPx,
+          height: formControlHeightPx,
+          boxSizing: 'border-box',
+          ...style,
+        }}
         {...props}
       >
         {children}
@@ -175,6 +191,7 @@ export function MenuItem({
 export type MenuCheckboxItemProps = MenuItemProps & {
   checked?: boolean
   onCheckedChange?: (checked: boolean) => void
+  indicator?: React.ReactNode
 }
 
 export function MenuCheckboxItem({
@@ -183,6 +200,7 @@ export function MenuCheckboxItem({
   children,
   onSelect,
   closeOnSelect = false,
+  indicator,
   ...props
 }: MenuCheckboxItemProps) {
   const handleSelect = () => {
@@ -199,7 +217,21 @@ export function MenuCheckboxItem({
       onSelect={handleSelect}
       {...props}
     >
-      <Span display="inline-flex" width="4r" mr="1.5r">{checked ? '✓' : ''}</Span>
+      <Span
+        display="inline-flex"
+        alignItems="center"
+        justifyContent="center"
+        width="4r"
+        height="4r"
+        mr="2r"
+        color="inherit"
+      >
+        {checked ? (indicator ?? (
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        )) : null}
+      </Span>
       {children}
     </MenuItem>
   )

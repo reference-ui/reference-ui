@@ -115,8 +115,8 @@ export default function ShowcaseFixture() {
             </Field>
             <Button type="button">Save</Button>
           </Div>
-          <Field status="warning" width="100%">
-            <Input placeholder="Warning state..." />
+          <Field borderColor="colors.amber.500" width="100%">
+            <Input placeholder="Custom warning styling..." />
           </Field>
         </SectionCard>
 
@@ -364,8 +364,23 @@ export default function ShowcaseFixture() {
           <Combobox value={comboboxVal} onChange={setComboboxVal}>
             <Field>
               <Combobox.Input placeholder="Select framework..." />
-              <Button type="button" aria-label="Open suggestions">
-                <ArrowDropDownIcon />
+              <Button
+                type="button"
+                aria-label="Open suggestions"
+                width="8.5r"
+                height="8.5r"
+                minWidth="8.5r"
+                p="0"
+                bg="transparent"
+                border="none"
+                display="inline-flex"
+                alignItems="center"
+                justifyContent="center"
+                cursor="pointer"
+                color="design.text.base"
+                _hover={{ bg: 'ui.button.mutedBackground' }}
+              >
+                <ArrowDropDownIcon width="4r" height="4r" />
               </Button>
             </Field>
             <Combobox.Popover>

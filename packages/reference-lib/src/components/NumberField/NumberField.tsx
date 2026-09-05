@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { Div, Input, Button, type PrimitiveProps, type PrimitiveElement } from '@reference-ui/react'
+import { formControlSize, formControlHeightPx } from '../../core/theme/primitives/shared'
 
 export type NumberFieldProps = Omit<PrimitiveProps<'div'>, 'onChange' | 'value' | 'defaultValue'> & {
   value?: number | null
@@ -58,8 +59,15 @@ export function NumberFieldInput({
       value={value !== null ? String(value) : ''}
       onChange={handleInputChange}
       onKeyDown={onKeyDown}
-      minWidth="12r"
+      flex="1"
+      minWidth="8r"
+      height="100%"
       textAlign="center"
+      bg="transparent"
+      border="none"
+      outline="none"
+      p="0"
+      color="design.text.base"
       className={className}
       style={style}
       {...props}
@@ -70,7 +78,7 @@ export function NumberFieldInput({
 export type NumberFieldIncrementProps = PrimitiveProps<'button'>
 
 export function NumberFieldIncrement({
-  children = '+',
+  children,
   className,
   style,
   onClick,
@@ -92,11 +100,37 @@ export function NumberFieldIncrement({
       aria-label="Increment"
       disabled={context?.disabled}
       onClick={handleClick}
+      height="100%"
+      aspectRatio="1 / 1"
+      p="0"
+      border="none"
+      bg="transparent"
+      borderRadius="sm"
+      display="inline-flex"
+      alignItems="center"
+      justifyContent="center"
+      flexShrink={0}
+      color="design.text.base"
+      cursor={context?.disabled ? 'not-allowed' : 'pointer'}
+      opacity={context?.disabled ? 0.5 : 1}
+      outline="none"
+      _hover={!context?.disabled ? { bg: 'ui.button.mutedBackground', color: 'design.text.base' } : undefined}
+      _active={!context?.disabled ? { bg: 'ui.table.row.mutedBackground' } : undefined}
+      _focusVisible={{ outline: '2px solid', outlineColor: 'ui.focus.ring', outlineOffset: '1px' }}
       className={className}
-      style={style}
+      style={{
+        aspectRatio: '1 / 1',
+        height: '100%',
+        ...style,
+      }}
       {...props}
     >
-      {children}
+      {children ?? (
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
+      )}
     </Button>
   )
 }
@@ -104,7 +138,7 @@ export function NumberFieldIncrement({
 export type NumberFieldDecrementProps = PrimitiveProps<'button'>
 
 export function NumberFieldDecrement({
-  children = '-',
+  children,
   className,
   style,
   onClick,
@@ -126,11 +160,36 @@ export function NumberFieldDecrement({
       aria-label="Decrement"
       disabled={context?.disabled}
       onClick={handleClick}
+      height="100%"
+      aspectRatio="1 / 1"
+      p="0"
+      border="none"
+      bg="transparent"
+      borderRadius="sm"
+      display="inline-flex"
+      alignItems="center"
+      justifyContent="center"
+      flexShrink={0}
+      color="design.text.base"
+      cursor={context?.disabled ? 'not-allowed' : 'pointer'}
+      opacity={context?.disabled ? 0.5 : 1}
+      outline="none"
+      _hover={!context?.disabled ? { bg: 'ui.button.mutedBackground', color: 'design.text.base' } : undefined}
+      _active={!context?.disabled ? { bg: 'ui.table.row.mutedBackground' } : undefined}
+      _focusVisible={{ outline: '2px solid', outlineColor: 'ui.focus.ring', outlineOffset: '1px' }}
       className={className}
-      style={style}
+      style={{
+        aspectRatio: '1 / 1',
+        height: '100%',
+        ...style,
+      }}
       {...props}
     >
-      {children}
+      {children ?? (
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
+      )}
     </Button>
   )
 }
@@ -248,8 +307,27 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
           data-reference-field=""
           data-reference-number-field=""
           data-disabled={disabled ? '' : undefined}
+          display="inline-flex"
+          alignItems="center"
+          width="fit-content"
+          maxW="36r"
+          height={formControlSize.height}
+          minHeight={formControlSize.height}
+          p="0.75r"
+          gap="0.5r"
+          border="1px solid"
+          borderColor="ui.field.border"
+          borderRadius="md"
+          bg="ui.field.background"
+          boxSizing="border-box"
+          _focusWithin={{ borderColor: 'ui.focus.ring', outline: '2px solid', outlineColor: 'ui.focus.ring', outlineOffset: '1px' }}
           className={className}
-          style={style}
+          style={{
+            minHeight: formControlHeightPx,
+            height: formControlHeightPx,
+            boxSizing: 'border-box',
+            ...style,
+          }}
           {...props}
         >
           {children ?? (

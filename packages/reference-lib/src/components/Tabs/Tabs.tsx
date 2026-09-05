@@ -207,7 +207,7 @@ export function Tab({
       color={isSelected ? 'ui.button.foreground' : 'design.text.base'}
       fontWeight={isSelected ? '600' : '400'}
       opacity={isDisabled ? 0.5 : 1}
-      _hover={!isSelected && !isDisabled ? { bg: 'colors.gray.100' } : undefined}
+      _hover={!isSelected && !isDisabled ? { bg: 'ui.button.mutedBackground' } : undefined}
       _focusVisible={{ outline: '2px solid', outlineColor: 'ui.focus.ring', outlineOffset: '2px' }}
       className={className}
       style={style}

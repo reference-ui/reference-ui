@@ -47,3 +47,10 @@ export const formControlSize = {
   height: '8.5r',
   paddingBlock: '0.75r',
 } as const
+
+/**
+ * Standard 34px control height (8.5r where 1r = 4px).
+ * Shared across buttons, inputs, fields, and dropdown items (Combobox, Menu, Listbox).
+ */
+export const formControlHeight = formControlSize.height
+export const formControlHeightPx = '34px'

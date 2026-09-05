@@ -39,10 +39,16 @@ interface CalendarContextValue {
   currentMonth: { year: number; month: number }
   locale: string
   disabled: boolean
+  viewMode: 'day' | 'month'
+  toggleViewMode: () => void
+  selectMonth: (monthIndex: number) => void
   goToPrevMonth: () => void
   goToNextMonth: () => void
   selectDate: (dateStr: ISODate) => void
   isDateSelected: (dateStr: ISODate) => boolean
+  isDateInRange: (dateStr: ISODate) => boolean
+  isRangeStart: (dateStr: ISODate) => boolean
+  isRangeEnd: (dateStr: ISODate) => boolean
 }
 
 const CalendarContext = React.createContext<CalendarContextValue | null>(null)
@@ -71,7 +77,7 @@ export function CalendarHeader({
   )
 }
 
-export type CalendarHeadingProps = PrimitiveProps<'h2'>
+export type CalendarHeadingProps = PrimitiveProps<'button'>
 
 export function CalendarHeading({
   className,
@@ -81,7 +87,7 @@ export function CalendarHeading({
   const context = React.useContext(CalendarContext)
   if (!context) return null
 
-  const { currentMonth, locale } = context
+  const { currentMonth, locale, toggleViewMode, viewMode } = context
   const date = new Date(Date.UTC(currentMonth.year, currentMonth.month, 1))
   const monthName = date.toLocaleDateString(locale, {
     month: 'long',
@@ -90,18 +96,30 @@ export function CalendarHeading({
   })
 
   return (
-    <H2
+    <Button
+      type="button"
       data-reference-calendar-heading=""
+      onClick={toggleViewMode}
+      bg="transparent"
+      border="none"
+      p="1r 2r"
+      borderRadius="sm"
+      cursor="pointer"
       fontSize="4r"
       fontWeight="600"
       m="0"
       color="design.text.base"
+      display="inline-flex"
+      alignItems="center"
+      gap="1r"
+      _hover={{ bg: 'ui.button.mutedBackground' }}
       className={className}
       style={style}
       {...props}
     >
-      {monthName}
-    </H2>
+      <span>{monthName}</span>
+      <span style={{ fontSize: '0.65em', opacity: 0.6 }}>{viewMode === 'month' ? '▲' : '▼'}</span>
+    </Button>
   )
 }
 
@@ -129,13 +147,18 @@ export function CalendarPrevButton({
       aria-label="Previous month"
       disabled={context?.disabled}
       onClick={handleClick}
-      p="1r 2r"
+      width="7r"
+      height="7r"
+      p="0"
       borderRadius="sm"
-      border="1px solid"
-      borderColor="ui.field.border"
-      bg="ui.button.background"
-      color="ui.button.foreground"
-      cursor="pointer"
+      border="none"
+      bg="transparent"
+      color="design.text.base"
+      display="inline-flex"
+      alignItems="center"
+      justifyContent="center"
+      cursor={context?.disabled ? 'not-allowed' : 'pointer'}
+      _hover={!context?.disabled ? { bg: 'ui.button.mutedBackground' } : undefined}
       className={className}
       style={style}
       {...props}
@@ -169,13 +192,18 @@ export function CalendarNextButton({
       aria-label="Next month"
       disabled={context?.disabled}
       onClick={handleClick}
-      p="1r 2r"
+      width="7r"
+      height="7r"
+      p="0"
       borderRadius="sm"
-      border="1px solid"
-      borderColor="ui.field.border"
-      bg="ui.button.background"
-      color="ui.button.foreground"
-      cursor="pointer"
+      border="none"
+      bg="transparent"
+      color="design.text.base"
+      display="inline-flex"
+      alignItems="center"
+      justifyContent="center"
+      cursor={context?.disabled ? 'not-allowed' : 'pointer'}
+      _hover={!context?.disabled ? { bg: 'ui.button.mutedBackground' } : undefined}
       className={className}
       style={style}
       {...props}
@@ -195,7 +223,59 @@ export function CalendarGrid({
   const context = React.useContext(CalendarContext)
   if (!context) return null
 
-  const { currentMonth, selectDate, isDateSelected, disabled } = context
+  const {
+    currentMonth,
+    selectDate,
+    selectMonth,
+    isDateSelected,
+    isDateInRange,
+    isRangeStart,
+    isRangeEnd,
+    disabled,
+    viewMode,
+  } = context
+
+  if (viewMode === 'month') {
+    const monthNames = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    ]
+    return (
+      <Div
+        data-reference-calendar-month-grid=""
+        display="grid"
+        gridTemplateColumns="repeat(3, 1fr)"
+        gap="2r"
+        py="2r"
+        className={className}
+        style={style}
+        {...props}
+      >
+        {monthNames.map((mName, i) => {
+          const isCurrent = i === currentMonth.month
+          return (
+            <Button
+              key={mName}
+              type="button"
+              onClick={() => selectMonth(i)}
+              p="2.5r 1r"
+              borderRadius="sm"
+              border="none"
+              bg={isCurrent ? 'ui.button.background' : 'transparent'}
+              color={isCurrent ? 'ui.button.foreground' : 'design.text.base'}
+              fontWeight={isCurrent ? '600' : '400'}
+              fontSize="3.5r"
+              cursor="pointer"
+              _hover={!isCurrent ? { bg: 'ui.button.mutedBackground' } : undefined}
+            >
+              {mName}
+            </Button>
+          )
+        })}
+      </Div>
+    )
+  }
+
   const { year, month } = currentMonth
 
   // Generate days in month
@@ -237,6 +317,7 @@ export function CalendarGrid({
       role="grid"
       data-reference-calendar-grid=""
       borderCollapse="collapse"
+      tableLayout="fixed"
       width="100%"
       textAlign="center"
       className={className}
@@ -251,7 +332,7 @@ export function CalendarGrid({
               role="columnheader"
               fontSize="3r"
               color="design.text.light"
-              p="1r"
+              p="1r 0"
               fontWeight="500"
             >
               {wd}
@@ -264,13 +345,26 @@ export function CalendarGrid({
           <Tr key={wIdx} role="row">
             {week.map((cell, cIdx) => {
               if (!cell.inMonth) {
-                return <Td key={cIdx} role="gridcell" p="0.5r" />
+                return <Td key={cIdx} role="gridcell" p="0.5r 0" />
               }
 
               const selected = isDateSelected(cell.dateStr)
+              const inRange = isDateInRange(cell.dateStr)
+              const rangeStart = isRangeStart(cell.dateStr)
+              const rangeEnd = isRangeEnd(cell.dateStr)
 
               return (
-                <Td key={cIdx} role="gridcell" p="0.5r">
+                <Td
+                  key={cIdx}
+                  role="gridcell"
+                  p="0.5r 0"
+                  textAlign="center"
+                  bg={inRange ? 'ui.table.row.mutedBackground' : undefined}
+                  borderTopLeftRadius={rangeStart ? 'full' : undefined}
+                  borderBottomLeftRadius={rangeStart ? 'full' : undefined}
+                  borderTopRightRadius={rangeEnd ? 'full' : undefined}
+                  borderBottomRightRadius={rangeEnd ? 'full' : undefined}
+                >
                   <Button
                     type="button"
                     role="gridcell"
@@ -279,6 +373,7 @@ export function CalendarGrid({
                     aria-label={cell.dateStr}
                     data-date={cell.dateStr}
                     data-selected={selected ? '' : undefined}
+                    data-in-range={inRange ? '' : undefined}
                     disabled={disabled}
                     onClick={() => selectDate(cell.dateStr)}
                     width="7r"
@@ -288,13 +383,13 @@ export function CalendarGrid({
                     justifyContent="center"
                     borderRadius="full"
                     border="none"
-                    bg={selected ? 'colors.gray.900' : 'transparent'}
-                    color={selected ? 'colors.gray.50' : 'design.text.base'}
+                    bg={selected ? 'ui.button.background' : 'transparent'}
+                    color={selected ? 'ui.button.foreground' : 'design.text.base'}
                     fontSize="3r"
                     fontWeight={selected ? '600' : '400'}
                     cursor={disabled ? 'not-allowed' : 'pointer'}
                     outline="none"
-                    _hover={!selected && !disabled ? { bg: 'colors.gray.100' } : undefined}
+                    _hover={!selected && !disabled ? { bg: 'ui.button.mutedBackground' } : undefined}
                     _focusVisible={{ outline: '2px solid', outlineColor: 'ui.focus.ring', outlineOffset: '2px' }}
                   >
                     {cell.dayNum}
@@ -328,9 +423,18 @@ export function Calendar({
   const isControlledValue = valueProp !== undefined
   const [internalValue, setInternalValue] = React.useState<ISODate | DateRangeValue | null>(defaultValue)
   const value = isControlledValue ? valueProp : internalValue
+  const [viewMode, setViewMode] = React.useState<'day' | 'month'>('day')
 
   const parseMonth = (mStr?: string) => {
     if (!mStr) {
+      if (typeof value === 'string' && value.includes('-')) {
+        const [y, m] = value.split('-').map(Number)
+        if (y && m) return { year: y, month: m - 1 }
+      }
+      if (value && typeof value === 'object' && 'start' in value && value.start) {
+        const [y, m] = value.start.split('-').map(Number)
+        if (y && m) return { year: y, month: m - 1 }
+      }
       const now = new Date()
       return { year: now.getUTCFullYear(), month: now.getUTCMonth() }
     }
@@ -340,6 +444,23 @@ export function Calendar({
 
   const [internalMonth, setInternalMonth] = React.useState(() => parseMonth(monthProp))
   const currentMonth = monthProp ? parseMonth(monthProp) : internalMonth
+
+  const toggleViewMode = React.useCallback(() => {
+    setViewMode(v => (v === 'day' ? 'month' : 'day'))
+  }, [])
+
+  const selectMonth = React.useCallback(
+    (monthIndex: number) => {
+      const nextY = currentMonth.year
+      const monthStr = `${nextY}-${String(monthIndex + 1).padStart(2, '0')}`
+      if (!monthProp) {
+        setInternalMonth({ year: nextY, month: monthIndex })
+      }
+      onMonthChange?.(monthStr)
+      setViewMode('day')
+    },
+    [currentMonth.year, monthProp, onMonthChange]
+  )
 
   const goToPrevMonth = React.useCallback(() => {
     let nextY = currentMonth.year
@@ -383,6 +504,41 @@ export function Calendar({
     [mode, value]
   )
 
+  const isDateInRange = React.useCallback(
+    (dateStr: ISODate) => {
+      if (mode === 'range' && value && typeof value === 'object') {
+        const range = value as DateRangeValue
+        if (range.start && range.end) {
+          return dateStr > range.start && dateStr < range.end
+        }
+      }
+      return false
+    },
+    [mode, value]
+  )
+
+  const isRangeStart = React.useCallback(
+    (dateStr: ISODate) => {
+      if (mode === 'range' && value && typeof value === 'object') {
+        const range = value as DateRangeValue
+        return range.start === dateStr
+      }
+      return false
+    },
+    [mode, value]
+  )
+
+  const isRangeEnd = React.useCallback(
+    (dateStr: ISODate) => {
+      if (mode === 'range' && value && typeof value === 'object') {
+        const range = value as DateRangeValue
+        return range.end === dateStr
+      }
+      return false
+    },
+    [mode, value]
+  )
+
   const selectDate = React.useCallback(
     (dateStr: ISODate) => {
       if (mode === 'day') {
@@ -418,12 +574,34 @@ export function Calendar({
       currentMonth,
       locale,
       disabled,
+      viewMode,
+      toggleViewMode,
+      selectMonth,
       goToPrevMonth,
       goToNextMonth,
       selectDate,
       isDateSelected,
+      isDateInRange,
+      isRangeStart,
+      isRangeEnd,
     }),
-    [mode, value, currentMonth, locale, disabled, goToPrevMonth, goToNextMonth, selectDate, isDateSelected]
+    [
+      mode,
+      value,
+      currentMonth,
+      locale,
+      disabled,
+      viewMode,
+      toggleViewMode,
+      selectMonth,
+      goToPrevMonth,
+      goToNextMonth,
+      selectDate,
+      isDateSelected,
+      isDateInRange,
+      isRangeStart,
+      isRangeEnd,
+    ]
   )
 
   return (
