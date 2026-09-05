@@ -1,8 +1,13 @@
 import * as React from 'react'
 import { Input, Button, type PrimitiveProps } from '@reference-ui/react'
 import { Overlay, useOverlay, type OverlayContentProps } from '../Overlay'
-import { ListboxOption, type ListboxOptionProps } from '../Listbox'
-import { ComboboxContext } from './combobox-context'
+import {
+  ListboxOption,
+  ListboxSection,
+  ListboxEmpty,
+  type ListboxOptionProps,
+} from '../Listbox'
+import { ComboboxContext, type ComboboxOptionEntry } from './combobox-context'
 
 export interface ComboboxProps {
   children?: React.ReactNode
@@ -84,12 +89,104 @@ export function ComboboxInput({
     onKeyDown?.(e)
     if (e.defaultPrevented || disabled) return
 
-    if (e.key === 'ArrowDown' && !isOpen) {
+    const getEnabledOptions = () => {
+      return context.getOrderedOptions().filter(opt => !opt.disabled)
+    }
+
+    if (e.key === 'ArrowDown') {
       e.preventDefault()
-      setIsOpen(true)
-    } else if (e.key === 'Escape' && isOpen) {
+      if (!isOpen) {
+        setIsOpen(true)
+      } else {
+        const enabled = getEnabledOptions()
+        if (enabled.length > 0) {
+          const currentIndex = enabled.findIndex(opt => opt.value === context.activeValue)
+          let nextIndex = currentIndex + 1
+          if (nextIndex >= enabled.length || currentIndex === -1) nextIndex = 0
+          const nextOption = enabled[nextIndex]
+          if (nextOption) {
+            context.setActiveValue(nextOption.value)
+            nextOption.node?.scrollIntoView({ block: 'nearest' })
+          }
+        }
+      }
+    } else if (e.key === 'ArrowUp') {
       e.preventDefault()
-      setIsOpen(false)
+      if (!isOpen) {
+        setIsOpen(true)
+      } else {
+        const enabled = getEnabledOptions()
+        if (enabled.length > 0) {
+          const currentIndex = enabled.findIndex(opt => opt.value === context.activeValue)
+          let prevIndex = currentIndex - 1
+          if (prevIndex < 0 || currentIndex === -1) prevIndex = enabled.length - 1
+          const prevOption = enabled[prevIndex]
+          if (prevOption) {
+            context.setActiveValue(prevOption.value)
+            prevOption.node?.scrollIntoView({ block: 'nearest' })
+          }
+        }
+      }
+    } else if (e.key === 'Home') {
+      if (isOpen) {
+        const enabled = getEnabledOptions()
+        if (enabled.length > 0) {
+          e.preventDefault()
+          context.setActiveValue(enabled[0].value)
+          enabled[0].node?.scrollIntoView({ block: 'nearest' })
+        }
+      }
+    } else if (e.key === 'End') {
+      if (isOpen) {
+        const enabled = getEnabledOptions()
+        if (enabled.length > 0) {
+          e.preventDefault()
+          const lastOption = enabled[enabled.length - 1]
+          context.setActiveValue(lastOption.value)
+          lastOption.node?.scrollIntoView({ block: 'nearest' })
+        }
+      }
+    } else if (e.key === 'PageDown') {
+      if (isOpen) {
+        const enabled = getEnabledOptions()
+        if (enabled.length > 0) {
+          e.preventDefault()
+          const currentIndex = enabled.findIndex(opt => opt.value === context.activeValue)
+          const nextIndex = Math.min(enabled.length - 1, (currentIndex === -1 ? 0 : currentIndex) + 5)
+          const nextOption = enabled[nextIndex]
+          context.setActiveValue(nextOption.value)
+          nextOption.node?.scrollIntoView({ block: 'nearest' })
+        }
+      }
+    } else if (e.key === 'PageUp') {
+      if (isOpen) {
+        const enabled = getEnabledOptions()
+        if (enabled.length > 0) {
+          e.preventDefault()
+          const currentIndex = enabled.findIndex(opt => opt.value === context.activeValue)
+          const prevIndex = Math.max(0, (currentIndex === -1 ? enabled.length - 1 : currentIndex) - 5)
+          const prevOption = enabled[prevIndex]
+          context.setActiveValue(prevOption.value)
+          prevOption.node?.scrollIntoView({ block: 'nearest' })
+        }
+      }
+    } else if (e.key === 'Enter') {
+      if (isOpen && context.activeValue != null) {
+        e.preventDefault()
+        context.handleSelect(context.activeValue)
+      }
+    } else if (e.key === 'Tab') {
+      if (isOpen && context.activeValue != null) {
+        context.handleSelect(context.activeValue)
+      }
+    } else if (e.key === 'Escape') {
+      if (isOpen) {
+        e.preventDefault()
+        setIsOpen(false)
+      } else if (inputValue !== '') {
+        e.preventDefault()
+        handleInputChange(context.value ?? '')
+      }
     }
   }
 
@@ -100,6 +197,7 @@ export function ComboboxInput({
       aria-expanded={isOpen}
       aria-autocomplete="list"
       aria-haspopup="listbox"
+      aria-activedescendant={isOpen ? (context.activeOptionId ?? undefined) : undefined}
       disabled={disabled}
       value={inputValue}
       onChange={handleChange}
@@ -222,6 +320,40 @@ export function Combobox({
   const isOpen = isControlledOpen ? openProp : internalOpen
   const sourceRef = React.useRef<HTMLElement | null>(null)
 
+  const [activeValue, setActiveValue] = React.useState<string | null>(value ?? null)
+  const optionsMapRef = React.useRef<Map<string, ComboboxOptionEntry>>(new Map())
+
+  const registerOption = React.useCallback((entry: ComboboxOptionEntry) => {
+    optionsMapRef.current.set(entry.value, entry)
+    return () => {
+      optionsMapRef.current.delete(entry.value)
+    }
+  }, [])
+
+  const getOrderedOptions = React.useCallback((): ComboboxOptionEntry[] => {
+    const entries = Array.from(optionsMapRef.current.values())
+    return entries
+      .filter(entry => entry.node && entry.node.isConnected)
+      .sort((a, b) => {
+        const pos = a.node!.compareDocumentPosition(b.node!)
+        if (pos & Node.DOCUMENT_POSITION_FOLLOWING) return -1
+        if (pos & Node.DOCUMENT_POSITION_PRECEDING) return 1
+        return 0
+      })
+  }, [])
+
+  React.useEffect(() => {
+    if (isOpen) {
+      setActiveValue(value ?? null)
+    } else {
+      setActiveValue(null)
+    }
+  }, [isOpen, value])
+
+  const effectiveActive = activeValue ?? (isOpen ? value : null)
+  const activeOption = effectiveActive ? optionsMapRef.current.get(effectiveActive) : null
+  const activeOptionId = effectiveActive ? (activeOption?.id ?? `ref-opt-${effectiveActive}`) : null
+
   const notifyInput = onInputValueChange ?? onInputChange
 
   const setIsOpen = React.useCallback(
@@ -238,8 +370,12 @@ export function Combobox({
     (nextInput: string) => {
       if (!isControlledInput) setInternalInput(nextInput)
       notifyInput?.(nextInput)
+      const enabled = getOrderedOptions().filter(opt => !opt.disabled)
+      if (enabled.length > 0) {
+        setActiveValue(enabled[0].value)
+      }
     },
-    [isControlledInput, notifyInput]
+    [isControlledInput, notifyInput, getOrderedOptions]
   )
 
   const handleSelect = React.useCallback(
@@ -247,11 +383,13 @@ export function Combobox({
       if (!isControlledValue) setInternalValue(nextVal)
       onChange?.(nextVal)
       if (nextVal !== null && !isControlledInput) {
-        handleInputChange(nextVal)
+        const selectedOpt = optionsMapRef.current.get(nextVal)
+        const labelText = selectedOpt?.textValue ?? nextVal
+        handleInputChange(labelText)
       }
       setIsOpen(false)
     },
-      [isControlledValue, isControlledInput, onChange, handleInputChange, setIsOpen]
+    [isControlledValue, isControlledInput, onChange, handleInputChange, setIsOpen]
   )
 
   const contextValue = React.useMemo(
@@ -264,8 +402,26 @@ export function Combobox({
       handleSelect,
       handleInputChange,
       sourceRef,
+      activeValue,
+      setActiveValue,
+      activeOptionId,
+      registerOption,
+      getOrderedOptions,
     }),
-    [value, inputValue, isOpen, disabled, setIsOpen, handleSelect, handleInputChange]
+    [
+      value,
+      inputValue,
+      isOpen,
+      disabled,
+      setIsOpen,
+      handleSelect,
+      handleInputChange,
+      activeValue,
+      setActiveValue,
+      activeOptionId,
+      registerOption,
+      getOrderedOptions,
+    ]
   )
 
   return (
@@ -287,3 +443,5 @@ Combobox.Input = ComboboxInput
 Combobox.Trigger = ComboboxTrigger
 Combobox.Popover = ComboboxPopover
 Combobox.Option = ComboboxOption
+Combobox.Section = ListboxSection
+Combobox.Empty = ListboxEmpty

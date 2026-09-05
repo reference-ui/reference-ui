@@ -111,7 +111,7 @@ export function TooltipTrigger({
   }
 
   const child = children as React.ReactElement<any>
-  const originalRef = (child as any).ref
+  const originalRef = (child.props as any)?.ref
   const originalOnPointerEnter = child.props.onPointerEnter
   const originalOnPointerLeave = child.props.onPointerLeave
   const originalOnFocus = child.props.onFocus

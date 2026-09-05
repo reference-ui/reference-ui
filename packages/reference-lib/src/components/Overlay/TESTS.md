@@ -93,6 +93,13 @@ Overlay-specific anatomy and behavior/style conflicts.
   destination function, then open the Overlay after each target is available.
   Assert Backdrop and Content move through Portal into the resolved container
   and no configuration host appears in either source or destination DOM.
+- [x] `OV-THEME-01` `[reference]` `[browser]` —
+  **Overlay should re-establish themed layer scope on portaled Backdrop and
+  Content when they inherit color mode from the React tree.**
+  Open anchored Content inside a dark `colorMode` scope using token StyleProps
+  (`ui.dialog.background`, etc.) with no inline background override. Assert
+  the portaled node is a direct `body` child, carries both `data-layer` and
+  `data-panda-theme="dark"`, and resolves a non-white dialog background.
 - [x] `OV-DOM-05` `[reference]` `[browser]` —
   **Overlay should render no modal parts when it initially mounts closed
   without an active exit.**

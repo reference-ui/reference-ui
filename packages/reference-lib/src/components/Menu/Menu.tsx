@@ -166,14 +166,14 @@ export function MenuItem({
         fontSize="3.5r"
         lineHeight="5r"
         cursor={disabled ? 'not-allowed' : 'pointer'}
-        bg={selected ? 'ui.button.background' : 'transparent'}
-        color={selected ? 'ui.button.foreground' : 'design.text.base'}
+        bg={selected ? 'ui.table.row.mutedBackground' : 'transparent'}
+        color="design.text.base"
         opacity={disabled ? 0.5 : 1}
         outline="none"
         userSelect="none"
-        _hover={!disabled ? { bg: 'ui.button.background', color: 'ui.button.foreground' } : undefined}
-        _focus={{ bg: 'ui.button.background', color: 'ui.button.foreground', outline: 'none' }}
-        _focusVisible={{ bg: 'ui.button.background', color: 'ui.button.foreground', outline: 'none' }}
+        _hover={!disabled ? { bg: 'ui.table.row.mutedBackground', color: 'design.text.base' } : undefined}
+        _focus={{ bg: 'ui.table.row.mutedBackground', color: 'design.text.base', outline: 'none' }}
+        _focusVisible={{ bg: 'ui.table.row.mutedBackground', color: 'design.text.base', outline: 'none' }}
         className={className}
         style={{
           minHeight: formControlHeightPx,

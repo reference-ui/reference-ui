@@ -42,8 +42,10 @@ export function ListboxOption({
   children,
   onClick,
   onKeyDown,
+  onPointerEnter,
   className,
   style,
+  id: idProp,
   ...props
 }: ListboxOptionProps) {
   const context = React.useContext(ListboxContext)
@@ -55,8 +57,34 @@ export function ListboxOption({
       : false
   const isDisabled = disabled || (context?.disabled ?? false)
 
+  const optionId = idProp ?? `ref-opt-${value}`
+  const optionRef = React.useRef<HTMLDivElement | null>(null)
+
+  React.useEffect(() => {
+    if (combobox?.registerOption) {
+      return combobox.registerOption({
+        value,
+        id: optionId,
+        node: optionRef.current ?? (typeof document !== 'undefined' ? document.getElementById(optionId) : null),
+        disabled: isDisabled,
+        textValue: textValue ?? (typeof children === 'string' ? children : undefined),
+      })
+    }
+  }, [combobox, value, optionId, isDisabled, textValue, children])
+
+  const isActive = combobox
+    ? combobox.activeValue === value || (combobox.activeValue === null && isSelected)
+    : isSelected
+
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     if (combobox) e.preventDefault()
+  }
+
+  const handlePointerEnter = (e: React.PointerEvent<HTMLDivElement>) => {
+    onPointerEnter?.(e)
+    if (!isDisabled && combobox) {
+      combobox.setActiveValue(value)
+    }
   }
 
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -83,16 +111,22 @@ export function ListboxOption({
   }
 
   return (
-    <RovingFocus.Item disabled={isDisabled} textValue={textValue}>
+    <RovingFocus.Item id={optionId} disabled={isDisabled} textValue={textValue}>
       <Div
+        ref={optionRef}
+        id={optionId}
         role="option"
         tabIndex={isDisabled ? -1 : 0}
         aria-selected={isSelected}
         aria-disabled={isDisabled ? 'true' : undefined}
         data-state={isSelected ? 'selected' : 'unselected'}
+        data-active={isActive ? '' : undefined}
         data-disabled={isDisabled ? '' : undefined}
         data-value={value}
         onMouseDown={handleMouseDown}
+        onPointerEnter={handlePointerEnter}
+        onPointerOver={handlePointerEnter}
+        onMouseEnter={handlePointerEnter}
         onClick={handleClick}
         onKeyDown={handleKeyDown}
         display="flex"
@@ -107,26 +141,36 @@ export function ListboxOption({
         fontSize="3.5r"
         lineHeight="5r"
         cursor={isDisabled ? 'not-allowed' : 'pointer'}
-        bg={isSelected && !combobox ? 'ui.button.background' : 'transparent'}
-        color={isSelected && !combobox ? 'ui.button.foreground' : 'design.text.base'}
+        bg={isActive ? 'ui.button.background' : 'transparent'}
+        color={isActive ? 'ui.button.foreground' : 'design.text.base'}
         opacity={isDisabled ? 0.5 : 1}
         outline="none"
         userSelect="none"
         _hover={
           combobox
-            ? (!isDisabled ? { bg: 'ui.button.background', color: 'ui.button.foreground' } : undefined)
+            ? undefined
             : (!isSelected && !isDisabled ? { bg: 'ui.table.row.mutedBackground', color: 'design.text.base' } : undefined)
         }
         _focus={
           combobox
-            ? { bg: 'ui.button.background', color: 'ui.button.foreground', outline: 'none' }
+            ? { outline: 'none' }
             : undefined
         }
         _focusVisible={
           combobox
-            ? { bg: 'ui.button.background', color: 'ui.button.foreground', outline: 'none' }
+            ? { outline: 'none' }
             : { outline: '2px solid', outlineColor: 'ui.focus.ring', outlineOffset: '-2px' }
         }
+        css={{
+          '& .ref-span': {
+            color: 'inherit',
+          },
+          '& [data-slot="description"]': {
+            opacity: isActive ? 0.75 : 0.65,
+            fontSize: '3r',
+            lineHeight: '4r',
+          },
+        }}
         className={className}
         style={{
           minHeight: formControlHeightPx,
@@ -138,7 +182,14 @@ export function ListboxOption({
       >
         {combobox ? (
           <>
-            <Span flex="1" display="inline-flex" alignItems="center" minWidth="0" textAlign="start">
+            <Span
+              flex="1"
+              display="inline-flex"
+              alignItems="center"
+              minWidth="0"
+              textAlign="start"
+              color="inherit"
+            >
               {children}
             </Span>
             {isSelected && (
@@ -150,7 +201,7 @@ export function ListboxOption({
                 width="4r"
                 height="4r"
                 flexShrink={0}
-                color="currentColor"
+                color="inherit"
               >
                 <CheckIcon width="4r" height="4r" />
               </Span>
@@ -164,7 +215,7 @@ export function ListboxOption({
   )
 }
 
-export const Listbox = React.forwardRef<HTMLDivElement, ListboxProps>(
+const ListboxComponentBase = React.forwardRef<HTMLDivElement, ListboxProps>(
   function Listbox(
     {
       children,
@@ -244,6 +295,13 @@ export const Listbox = React.forwardRef<HTMLDivElement, ListboxProps>(
       [selection, orientation, value, disabled, isOptionSelected, selectOption]
     )
 
+    const handleMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
+      props.onMouseLeave?.(e)
+      if (combobox) {
+        combobox.setActiveValue(combobox.value ?? null)
+      }
+    }
+
     return (
       <ListboxContext.Provider value={contextValue}>
         <RovingFocus.Root orientation={orientation} loop typeahead>
@@ -258,6 +316,8 @@ export const Listbox = React.forwardRef<HTMLDivElement, ListboxProps>(
             flexDirection={orientation === 'vertical' ? 'column' : 'row'}
             gap="0.5r"
             outline="none"
+            onMouseLeave={handleMouseLeave}
+            onPointerLeave={handleMouseLeave}
             p={combobox ? '0' : '1r'}
             bg={combobox ? 'transparent' : 'ui.dialog.background'}
             color={combobox ? 'inherit' : 'ui.dialog.foreground'}
@@ -275,8 +335,120 @@ export const Listbox = React.forwardRef<HTMLDivElement, ListboxProps>(
       </ListboxContext.Provider>
     )
   }
-) as React.ForwardRefExoticComponent<ListboxProps & React.RefAttributes<HTMLDivElement>> & {
-  Option: typeof ListboxOption
+)
+export type ListboxSectionProps = PrimitiveProps<'div'> & {
+  title?: React.ReactNode
 }
 
+export function ListboxSection({
+  title,
+  children,
+  className,
+  style,
+  ...props
+}: ListboxSectionProps) {
+  const headingId = React.useId()
+  return (
+    <Div
+      role="group"
+      aria-labelledby={title ? headingId : undefined}
+      data-reference-listbox-section=""
+      display="flex"
+      flexDirection="column"
+      gap="0.5r"
+      py="1r"
+      className={className}
+      style={style}
+      {...props}
+    >
+      {title && (
+        <Span
+          id={headingId}
+          data-reference-listbox-header=""
+          display="block"
+          px="3r"
+          py="1r"
+          fontSize="2.75r"
+          fontWeight="600"
+          textTransform="uppercase"
+          letterSpacing="0.05em"
+          color="design.text.light"
+          userSelect="none"
+        >
+          {title}
+        </Span>
+      )}
+      {children}
+    </Div>
+  )
+}
+
+export type ListboxHeaderProps = PrimitiveProps<'span'>
+
+export function ListboxHeader({
+  children,
+  className,
+  style,
+  ...props
+}: ListboxHeaderProps) {
+  return (
+    <Span
+      data-reference-listbox-header=""
+      display="block"
+      px="3r"
+      py="1r"
+      fontSize="2.75r"
+      fontWeight="600"
+      textTransform="uppercase"
+      letterSpacing="0.05em"
+      color="design.text.light"
+      userSelect="none"
+      className={className}
+      style={style}
+      {...props}
+    >
+      {children}
+    </Span>
+  )
+}
+
+export type ListboxEmptyProps = PrimitiveProps<'div'>
+
+export function ListboxEmpty({
+  children = 'No results found',
+  className,
+  style,
+  ...props
+}: ListboxEmptyProps) {
+  return (
+    <Div
+      data-reference-listbox-empty=""
+      role="status"
+      aria-live="polite"
+      px="3r"
+      py="3r"
+      fontSize="3.5r"
+      color="design.text.light"
+      textAlign="center"
+      userSelect="none"
+      className={className}
+      style={style}
+      {...props}
+    >
+      {children}
+    </Div>
+  )
+}
+
+export type ListboxComponent = React.ForwardRefExoticComponent<ListboxProps & React.RefAttributes<HTMLDivElement>> & {
+  Option: typeof ListboxOption
+  Section: typeof ListboxSection
+  Header: typeof ListboxHeader
+  Empty: typeof ListboxEmpty
+}
+
+export const Listbox = ListboxComponentBase as ListboxComponent
 Listbox.Option = ListboxOption
+Listbox.Section = ListboxSection
+Listbox.Header = ListboxHeader
+Listbox.Empty = ListboxEmpty

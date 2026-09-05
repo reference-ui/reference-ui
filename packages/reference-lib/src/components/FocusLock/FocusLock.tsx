@@ -302,7 +302,7 @@ export function FocusLock({
   }
 
   const child = children as React.ReactElement<any>
-  const originalRef = (child as any).ref
+  const originalRef = (child.props as any)?.ref
 
   const composedRef = (node: HTMLElement | null) => {
     containerRef.current = node

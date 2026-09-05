@@ -78,9 +78,10 @@ export const fieldSurfaceStyles = {
 
   [`[data-reference-field]:has(${embeddedControl}:focus)`]: {
     borderColor: '{colors.ui.focus.ring}',
+    outlineColor: 'transparent',
   },
 
-  [`[data-reference-field]:has(${embeddedControl}:focus-visible), [data-reference-field][data-focus-visible]`]:
+  [`[data-reference-field][data-focus-visible], [data-reference-field]:has(${embeddedControl}[data-focus-visible])`]:
     {
       outlineWidth: '2px',
       outlineOffset: '2px',

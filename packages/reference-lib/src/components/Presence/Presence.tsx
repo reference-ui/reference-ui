@@ -326,7 +326,7 @@ export function Presence({ children, present }: PresenceProps) {
 
   // Compose the child's ref with Presence internal observer ref
   const child = children as React.ReactElement<any>
-  const originalRef = (child as any).ref
+  const originalRef = (child.props as any)?.ref
 
   const composedRef = (node: HTMLElement | null) => {
     ref(node)

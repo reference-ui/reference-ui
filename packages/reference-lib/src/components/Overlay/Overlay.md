@@ -140,6 +140,11 @@ Overlay portals Backdrop, Content, and Arrow internally by default.
 `Overlay.Portal` is an optional configuration part; it does not wrap or
 own the overlay content. Trigger never portals.
 
+Portaled Backdrop and Content render under `document.body`, outside the
+themed `data-layer` ancestor. `OverlayPortaledSurface` (internal to this
+module) passes explicit `colorMode` so token-aware StyleProps such as
+`ui.dialog.background` resolve correctly in dark and light mode.
+
 ```tsx
 <Overlay open={open} onDismiss={close}>
   <Overlay.Portal container={portalContainer} />

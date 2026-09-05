@@ -317,7 +317,7 @@ export function RovingFocusItem({
   }
 
   const child = children as React.ReactElement<any>
-  const originalRef = (child as any).ref
+  const originalRef = (child.props as any)?.ref
   const originalOnFocus = child.props.onFocus
   const originalOnKeyDown = child.props.onKeyDown
 

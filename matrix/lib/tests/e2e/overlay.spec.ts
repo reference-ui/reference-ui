@@ -107,6 +107,31 @@ test.describe('Overlay Composition Gates & Browser Proofs', () => {
   })
 })
 
+test('OV-THEME-01: Portaled Content re-establishes layer scope for inherited color mode', async ({
+  page,
+}) => {
+  await page.getByTestId('btn-open-themed-anchored').click()
+  const content = page.getByTestId('overlay-themed-content')
+  await expect(content).toBeVisible()
+
+  const surface = await content.evaluate(el => {
+    const style = window.getComputedStyle(el)
+    return {
+      isDirectBodyChild: el.parentElement === document.body,
+      dataLayer: el.getAttribute('data-layer'),
+      dataTheme: el.getAttribute('data-panda-theme'),
+      backgroundColor: style.backgroundColor,
+    }
+  })
+
+  expect(surface.isDirectBodyChild).toBe(true)
+  expect(surface.dataLayer).toBeTruthy()
+  expect(surface.dataTheme).toBe('dark')
+  expect(surface.backgroundColor).not.toBe('rgb(255, 255, 255)')
+  expect(surface.backgroundColor).not.toBe('rgba(0, 0, 0, 0)')
+  expect(surface.backgroundColor).not.toBe('transparent')
+})
+
 async function expectAnchoredBottomStart(trigger: Locator, content: Locator) {
   const triggerBox = await trigger.boundingBox()
   const contentBox = await content.boundingBox()

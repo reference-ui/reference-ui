@@ -1,10 +1,12 @@
 import * as React from 'react'
+import { Div } from '@reference-ui/react'
 import { Overlay } from '@reference-ui/lib'
 
 export function OverlayFixture() {
   const [dialogOpen, setDialogOpen] = React.useState(false)
   const [unboundOpen, setUnboundOpen] = React.useState(false)
   const [anchoredOpen, setAnchoredOpen] = React.useState(false)
+  const [themedAnchoredOpen, setThemedAnchoredOpen] = React.useState(false)
 
   return (
     <div data-testid="overlay-fixture-root">
@@ -105,6 +107,36 @@ export function OverlayFixture() {
             Anchored panel
           </Overlay.Content>
         </Overlay>
+      </section>
+
+      <section data-testid="overlay-themed-portal-section" style={{ marginTop: 32 }}>
+        <h2>Themed portal (dark color mode)</h2>
+        <Div colorMode="dark" bg="gray.950" p="4" minH="20r" borderRadius="md">
+          <Overlay
+            open={themedAnchoredOpen}
+            onOpenChange={setThemedAnchoredOpen}
+            isolation={false}
+          >
+            <Overlay.Trigger data-testid="btn-open-themed-anchored">
+              Open themed popover
+            </Overlay.Trigger>
+            <Overlay.Content
+              data-testid="overlay-themed-content"
+              placement="bottom-start"
+              offset={8}
+              bg="ui.dialog.background"
+              color="ui.dialog.foreground"
+              border="1px solid"
+              borderColor="ui.dialog.border"
+              borderRadius="md"
+              p="3r"
+              minW="24r"
+              zIndex={20}
+            >
+              Themed popover body
+            </Overlay.Content>
+          </Overlay>
+        </Div>
       </section>
 
       <button type="button" data-testid="btn-outside-element">

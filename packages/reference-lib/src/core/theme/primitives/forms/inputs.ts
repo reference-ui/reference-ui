@@ -1,4 +1,5 @@
 import { globalCss } from '@reference-ui/system'
+import { setupFocusVisible } from './focus-visible'
 import {
   baseTypography,
   focusRingStyles,
@@ -8,6 +9,8 @@ import {
   trackBackground,
 } from '../shared'
 import { fieldSurfaceStyles } from './field'
+
+setupFocusVisible()
 
 export const inputPrimitiveStyles = {
   '.ref-input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]), .ref-select, .ref-textarea': {
@@ -32,6 +35,10 @@ export const inputPrimitiveStyles = {
       borderColor: '{colors.ui.focus.ring}',
     },
     _focusVisible: {
+      outline: 'none',
+      borderColor: '{colors.ui.focus.ring}',
+    },
+    '&[data-focus-visible]': {
       ...focusRingStyles._focusVisible,
       borderColor: '{colors.ui.focus.ring}',
     },
@@ -68,6 +75,10 @@ export const inputPrimitiveStyles = {
       borderColor: '{colors.ui.focus.ring}',
     },
     _focusVisible: {
+      outline: 'none',
+      borderColor: '{colors.ui.focus.ring}',
+    },
+    '&[data-focus-visible]': {
       ...focusRingStyles._focusVisible,
       borderColor: '{colors.ui.focus.ring}',
     },

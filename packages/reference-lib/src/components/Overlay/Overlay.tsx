@@ -3,6 +3,7 @@ import { Button, Div, type PrimitiveProps } from '@reference-ui/react'
 import { Portal, type PortalProps } from '../Portal'
 import { Presence } from '../Presence'
 import { FocusLock } from '../FocusLock'
+import { OverlayPortaledSurface } from './overlay-portal-surface'
 import {
   computePosition,
   autoUpdate,
@@ -312,7 +313,7 @@ export function OverlayBackdrop({
 
   const node = (
     <Presence present={context.isOpen}>
-      <Div
+      <OverlayPortaledSurface
         data-reference-overlay-backdrop=""
         data-state={context.isOpen ? 'open' : 'closed'}
         position="fixed"
@@ -335,7 +336,7 @@ export function OverlayBackdrop({
         {...props}
       >
         {children}
-      </Div>
+      </OverlayPortaledSurface>
     </Presence>
   )
 
@@ -545,7 +546,27 @@ export function OverlayContent({
         if (!content || !target) return
         if (content.contains(target) || trigger?.contains(target)) return
 
+        const anchorEl =
+          anchor && typeof anchor === 'object' && 'current' in anchor
+            ? (anchor.current as HTMLElement | null)
+            : anchor instanceof HTMLElement
+              ? anchor
+              : null
+        if (anchorEl?.contains(target)) return
+
         const targetEl = target instanceof Element ? target : target.parentElement
+        if (targetEl) {
+          const triggerField = trigger?.closest('[data-reference-field]')
+          const anchorField = anchorEl?.closest('[data-reference-field]')
+          const targetField = targetEl.closest('[data-reference-field]')
+          if (targetField && (targetField === triggerField || targetField === anchorField)) {
+            return
+          }
+          if (targetEl.closest('[data-reference-overlay-ignore]')) {
+            return
+          }
+        }
+
         if (targetEl?.closest('[data-reference-overlay-backdrop]')) {
           return
         }
@@ -584,7 +605,7 @@ export function OverlayContent({
   if (!context) return null
 
   const contentElement = (
-    <Div
+    <OverlayPortaledSurface
       data-reference-overlay-content=""
       data-state={isOpen ? 'open' : 'closed'}
       ref={(node: HTMLDivElement | null) => {
@@ -596,7 +617,7 @@ export function OverlayContent({
       {...props}
     >
       {children}
-    </Div>
+    </OverlayPortaledSurface>
   )
 
   const wrappedWithFocusLock = context.isolation.focus ? (

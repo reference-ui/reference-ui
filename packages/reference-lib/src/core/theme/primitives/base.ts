@@ -6,10 +6,11 @@ export const base = {
     ...baseTypography,
   },
 
-  '[class^="ref-"]:focus-visible, [class*=" ref-"]:focus-visible': {
-    outlineColor: '{colors.ui.focus.ring}',
-    outlineOffset: '2px',
-  },
+  '[class^="ref-"]:focus-visible:not([role="option"]):not([role="menuitem"]), [class*=" ref-"]:focus-visible:not([role="option"]):not([role="menuitem"])':
+    {
+      outlineColor: '{colors.ui.focus.ring}',
+      outlineOffset: '2px',
+    },
 
   '[class^="ref-"]::selection, [class*=" ref-"]::selection': {
     backgroundColor: '{colors.ui.selection.background}',
