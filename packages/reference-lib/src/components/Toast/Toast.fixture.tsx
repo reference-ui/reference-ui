@@ -14,16 +14,164 @@ export default {
       borderColor="ui.field.border"
       cursor="pointer"
       onClick={() => {
-        toast.show(
-          <Toast.Root>
-            <Toast.Title>Changes saved</Toast.Title>
-            <Toast.Description>Your settings were updated successfully.</Toast.Description>
-          </Toast.Root>,
+        toast('Changes saved', {
+          description: 'Your settings were updated successfully.',
+          closeButton: true,
+          position: 'bottom-end',
+        })
+      }}
+    >
+      Show toast
+    </Button>
+  ),
+  Stacked: () => {
+    const countRef = React.useRef(0)
+    return (
+      <Div display="flex" gap="2r" alignItems="center">
+        <Button
+          px="3r"
+          py="1.5r"
+          borderRadius="sm"
+          bg="ui.button.background"
+          color="ui.button.foreground"
+          border="1px solid"
+          borderColor="ui.field.border"
+          cursor="pointer"
+          onClick={() => {
+            countRef.current += 1
+            toast(`Notification #${countRef.current}`, {
+              description: 'Hover to expand the stack and click between toasts.',
+              closeButton: true,
+              position: 'bottom-end',
+            })
+          }}
+        >
+          Add to stack
+        </Button>
+        <Button
+          px="3r"
+          py="1.5r"
+          borderRadius="sm"
+          bg="ui.button.background"
+          color="ui.button.foreground"
+          border="1px solid"
+          borderColor="ui.field.border"
+          cursor="pointer"
+          onClick={() => toast.dismissAll()}
+        >
+          Dismiss all
+        </Button>
+      </Div>
+    )
+  },
+  SonnerAPI: () => (
+    <Div display="flex" gap="2r" flexWrap="wrap">
+      <Button
+        px="3r"
+        py="1.5r"
+        borderRadius="sm"
+        bg="ui.button.background"
+        color="ui.button.foreground"
+        border="1px solid"
+        borderColor="ui.field.border"
+        cursor="pointer"
+        onClick={() => {
+          toast.success('Project deployed', {
+            description: 'Version 2.4.0 is now live in production.',
+            closeButton: true,
+          })
+        }}
+      >
+        Success toast
+      </Button>
+      <Button
+        px="3r"
+        py="1.5r"
+        borderRadius="sm"
+        bg="ui.button.background"
+        color="ui.button.foreground"
+        border="1px solid"
+        borderColor="ui.field.border"
+        cursor="pointer"
+        onClick={() => {
+          toast.error('Build failed', {
+            description: 'Syntax error in components/Button.tsx:24.',
+            closeButton: true,
+          })
+        }}
+      >
+        Error toast
+      </Button>
+      <Button
+        px="3r"
+        py="1.5r"
+        borderRadius="sm"
+        bg="ui.button.background"
+        color="ui.button.foreground"
+        border="1px solid"
+        borderColor="ui.field.border"
+        cursor="pointer"
+        onClick={() => {
+          toast.info('Update available', {
+            description: 'A newer version of Reference UI was published.',
+            closeButton: true,
+          })
+        }}
+      >
+        Info toast
+      </Button>
+      <Button
+        px="3r"
+        py="1.5r"
+        borderRadius="sm"
+        bg="ui.button.background"
+        color="ui.button.foreground"
+        border="1px solid"
+        borderColor="ui.field.border"
+        cursor="pointer"
+        onClick={() => {
+          toast.warning('Storage limit warning', {
+            description: 'Your workspace is using 85% of allocated disk.',
+            closeButton: true,
+          })
+        }}
+      >
+        Warning toast
+      </Button>
+    </Div>
+  ),
+  CustomToast: () => (
+    <Button
+      px="3r"
+      py="1.5r"
+      borderRadius="sm"
+      bg="ui.button.background"
+      color="ui.button.foreground"
+      border="1px solid"
+      borderColor="ui.field.border"
+      cursor="pointer"
+      onClick={() => {
+        toast.custom(
+          (id) => (
+            <Toast.Root
+              border="1px solid"
+              borderColor="design.text.base"
+              p="4r"
+            >
+              <Div display="flex" alignItems="center" justifyContent="space-between">
+                <Div display="flex" flexDirection="column" gap="0.5r">
+                  <Toast.Title>Custom Toast Component</Toast.Title>
+                  <Toast.Description>Rendered via toast.custom((id) =&gt; ...)</Toast.Description>
+                </Div>
+                <Toast.Close onClick={() => toast.dismiss(id)} />
+              </Div>
+            </Toast.Root>
+          ),
           { position: 'bottom-end' }
         )
       }}
     >
-      Show toast
+      Show custom toast
     </Button>
   ),
   WithAction: () => (
@@ -38,14 +186,19 @@ export default {
         borderColor="ui.field.border"
         cursor="pointer"
         onClick={() => {
-          toast.show(
-            <Toast.Root>
-              <Toast.Title>Update available</Toast.Title>
-              <Toast.Description>A new version of Reference UI is ready.</Toast.Description>
-              <Toast.Action onClick={() => toast.dismissAll()}>Dismiss all</Toast.Action>
-            </Toast.Root>,
-            { position: 'top-center' }
-          )
+          toast('Update ready to install', {
+            description: 'Restart required to complete installation.',
+            position: 'top-center',
+            closeButton: true,
+            action: {
+              label: 'Restart now',
+              onClick: () => alert('Restarting...'),
+            },
+            cancel: {
+              label: 'Later',
+              onClick: () => {},
+            },
+          })
         }}
       >
         Top-center with action
@@ -60,14 +213,11 @@ export default {
         borderColor="ui.field.border"
         cursor="pointer"
         onClick={() => {
-          toast.show(
-            <Toast.Root>
-              <Toast.Title>File uploaded</Toast.Title>
-              <Toast.Description>design-tokens.json is ready to review.</Toast.Description>
-              <Toast.Close onClick={() => toast.dismissAll()}>Close</Toast.Close>
-            </Toast.Root>,
-            { position: 'bottom-start' }
-          )
+          toast('File uploaded', {
+            description: 'design-tokens.json is ready to review.',
+            position: 'bottom-start',
+            closeButton: true,
+          })
         }}
       >
         Bottom-start with close
@@ -81,8 +231,13 @@ export default {
           duration: 4000,
           render: ({ name }) => (
             <Toast.Root>
-              <Toast.Title>Project saved</Toast.Title>
-              <Toast.Description>{name} was saved to disk.</Toast.Description>
+              <Div display="flex" alignItems="flex-start" justifyContent="space-between">
+                <Div display="flex" flexDirection="column" gap="0.5r">
+                  <Toast.Title>Project saved</Toast.Title>
+                  <Toast.Description>{name} was saved to disk.</Toast.Description>
+                </Div>
+                <Toast.Close />
+              </Div>
             </Toast.Root>
           ),
         }),

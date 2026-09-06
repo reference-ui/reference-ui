@@ -77,4 +77,30 @@ export default {
       </Splitter>
     </Div>
   ),
+  CustomThumb: () => (
+    <Div
+      height="25r"
+      border="1px solid"
+      borderColor="ui.field.border"
+      borderRadius="md"
+      overflow="hidden"
+    >
+      <Splitter defaultValue={[50, 50]} height="100%">
+        <Splitter.Panel index={0} p="3r" bg="colors.gray.100">
+          <Span fontSize="3r" fontWeight="500">
+            Custom 5-Dot Thumb
+          </Span>
+        </Splitter.Panel>
+        <Splitter.Handle index={0}>
+          <Splitter.Thumb dots={5} />
+        </Splitter.Handle>
+        <Splitter.Panel index={1} p="3r" bg="colors.gray.50">
+          <Span fontSize="3r" fontWeight="500">
+            Content
+          </Span>
+        </Splitter.Panel>
+      </Splitter>
+    </Div>
+  ),
 }
+

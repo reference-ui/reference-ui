@@ -8,7 +8,7 @@ import {
   H3,
   P,
 } from '@reference-ui/react'
-import { ArrowDropDownIcon } from '@reference-ui/icons'
+import { KeyboardArrowDownIcon } from '@reference-ui/icons'
 import { dividerContent, dividerTrigger } from './disclosureChrome'
 import { Accordion } from './Accordion'
 import { Calendar } from './Calendar'
@@ -265,16 +265,16 @@ export default function ShowcaseFixture() {
               borderColor="ui.field.border"
               cursor="pointer"
               alignSelf="flex-start"
+              display="inline-flex"
+              alignItems="center"
+              gap="1.5r"
             >
-              Actions Menu ▾
+              <span>Actions Menu</span>
+              <KeyboardArrowDownIcon />
             </Menu.Trigger>
             <Menu.Content>
-              <Menu.Item onSelect={() => toast.show('Profile clicked')}>Profile</Menu.Item>
-              <Menu.Item onSelect={() => toast.show('Settings clicked')}>Settings</Menu.Item>
-              <Menu.Separator />
-              <Menu.CheckboxItem checked onSelect={() => toast.show('Notifications toggled')}>
-                Notifications
-              </Menu.CheckboxItem>
+              <Menu.Item onClick={() => toast.show('Profile clicked')}>Profile</Menu.Item>
+              <Menu.Item onClick={() => toast.show('Settings clicked')}>Settings</Menu.Item>
               <Menu.Separator />
               <Menu.Item disabled>Disabled Action</Menu.Item>
             </Menu.Content>
@@ -404,7 +404,7 @@ export default function ShowcaseFixture() {
                 color="design.text.base"
                 _hover={{ bg: 'ui.button.mutedBackground' }}
               >
-                <ArrowDropDownIcon width="4r" height="4r" />
+                <KeyboardArrowDownIcon width="4r" height="4r" />
               </Button>
             </Field>
             <Combobox.Popover>
@@ -461,27 +461,19 @@ export default function ShowcaseFixture() {
             p="2r"
           >
             <Tree.Item id="folder-1" isBranch>
-              <Div display="flex" alignItems="center" gap="1r" py="1r">
-                <Tree.Expander itemId="folder-1" />
-                <Span fontSize="3r" fontWeight="600">📁 components/</Span>
-              </Div>
+              <Tree.Expander itemId="folder-1" />
+              <Span fontSize="3r" fontWeight="600">📁 components/</Span>
               <Tree.Group>
                 <Tree.Item id="file-1">
-                  <Div py="0.5r">
-                    <Span fontSize="3r">📄 Button.tsx</Span>
-                  </Div>
+                  <Span fontSize="3r">📄 Button.tsx</Span>
                 </Tree.Item>
                 <Tree.Item id="file-2">
-                  <Div py="0.5r">
-                    <Span fontSize="3r">📄 Switch.tsx</Span>
-                  </Div>
+                  <Span fontSize="3r">📄 Switch.tsx</Span>
                 </Tree.Item>
               </Tree.Group>
             </Tree.Item>
             <Tree.Item id="file-3">
-              <Div py="1r">
-                <Span fontSize="3r">📄 package.json</Span>
-              </Div>
+              <Span fontSize="3r">📄 package.json</Span>
             </Tree.Item>
           </Tree>
         </SectionCard>

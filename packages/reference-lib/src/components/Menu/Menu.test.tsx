@@ -98,13 +98,13 @@ describe('Menu component keyboard navigation and triggers', () => {
   })
 
   it('closes menu and restores focus to trigger when item is clicked', async () => {
-    let selected = false
+    let clicked = false
     await React.act(async () => {
       root.render(
         <Menu defaultOpen>
           <Menu.Trigger id="trigger-btn">Trigger</Menu.Trigger>
           <Menu.Content>
-            <Menu.Item id="item-1" onSelect={() => { selected = true }}>
+            <Menu.Item id="item-1" onClick={() => { clicked = true }}>
               Item 1
             </Menu.Item>
           </Menu.Content>
@@ -119,8 +119,30 @@ describe('Menu component keyboard navigation and triggers', () => {
       item1.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     })
 
-    expect(selected).toBe(true)
+    expect(clicked).toBe(true)
     expect(trigger.getAttribute('aria-expanded')).toBe('false')
     expect(document.activeElement).toBe(trigger)
+  })
+
+  it('does not focus menu items when opened via mouse click', async () => {
+    await React.act(async () => {
+      root.render(
+        <Menu>
+          <Menu.Trigger id="trigger-btn">Trigger</Menu.Trigger>
+          <Menu.Content>
+            <Menu.Item id="item-1">Item 1</Menu.Item>
+            <Menu.Item id="item-2">Item 2</Menu.Item>
+          </Menu.Content>
+        </Menu>
+      )
+    })
+
+    const trigger = document.getElementById('trigger-btn')!
+    await React.act(async () => {
+      trigger.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    })
+
+    const item1 = document.getElementById('item-1')!
+    expect(document.activeElement).not.toBe(item1)
   })
 })

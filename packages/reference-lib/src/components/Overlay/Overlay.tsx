@@ -188,6 +188,12 @@ export function Overlay({
       if (node.hasAttribute('data-reference-overlay-backdrop')) continue
       if (node.hasAttribute('data-reference-overlay-content')) continue
       if (node.hasAttribute('data-reference-portal-container')) continue
+      if (
+        node.hasAttribute('data-reference-toast-host') ||
+        node.querySelector('[data-reference-toast-host]')
+      ) {
+        continue
+      }
       node.setAttribute('inert', '')
       siblingsToInert.push(node)
     }

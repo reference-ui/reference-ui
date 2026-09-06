@@ -42,16 +42,11 @@ function SectionCard({
 }
 
 function MenuItemsList() {
-  const [checkedItem, setCheckedItem] = React.useState(true)
   return (
     <Menu.Content>
-      <Menu.Item onSelect={() => toast.show('Cut selected')}>Cut</Menu.Item>
-      <Menu.Item onSelect={() => toast.show('Copy selected')}>Copy</Menu.Item>
-      <Menu.Item onSelect={() => toast.show('Paste selected')}>Paste</Menu.Item>
-      <Menu.Separator />
-      <Menu.CheckboxItem checked={checkedItem} onCheckedChange={setCheckedItem}>
-        Show Toolbar
-      </Menu.CheckboxItem>
+      <Menu.Item onClick={() => toast.show('Cut clicked')}>Cut</Menu.Item>
+      <Menu.Item onClick={() => toast.show('Copy clicked')}>Copy</Menu.Item>
+      <Menu.Item onClick={() => toast.show('Paste clicked')}>Paste</Menu.Item>
       <Menu.Separator />
       <Menu.Item disabled>Delete (Disabled)</Menu.Item>
     </Menu.Content>

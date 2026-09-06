@@ -27,7 +27,7 @@ export function Menu({
   onOpenChange,
 }: MenuProps) {
   const [internalOpen, setInternalOpen] = React.useState(defaultOpen)
-  const [focusStrategy, setFocusStrategy] = React.useState<'first' | 'last' | null>('first')
+  const [focusStrategy, setFocusStrategy] = React.useState<'first' | 'last' | null>(null)
   const isControlled = openProp !== undefined
   const isOpen = isControlled ? openProp : internalOpen
 
@@ -88,7 +88,7 @@ export function MenuTrigger({
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     onClick?.(e)
     if (e.defaultPrevented || !context) return
-    context.setFocusStrategy('first')
+    context.setFocusStrategy(null)
   }
 
   return (
@@ -121,9 +121,15 @@ export function MenuContent({
 
     const frameId = requestAnimationFrame(() => {
       if (!contentRef.current) return
+
+      if (context.focusStrategy === null) {
+        contentRef.current.focus({ preventScroll: true })
+        return
+      }
+
       const items = Array.from(
         contentRef.current.querySelectorAll<HTMLElement>(
-          '[role="menuitem"]:not([aria-disabled="true"]):not([data-disabled]), [role="menuitemcheckbox"]:not([aria-disabled="true"]):not([data-disabled])'
+          '[role="menuitem"]:not([aria-disabled="true"]):not([data-disabled])'
         )
       )
       if (items.length === 0) return
@@ -167,7 +173,7 @@ export function MenuContent({
       style={style}
       {...props}
     >
-      <div ref={contentRef} onKeyDown={handleKeyDown} style={{ outline: 'none' }}>
+      <div ref={contentRef} tabIndex={-1} onKeyDown={handleKeyDown} style={{ outline: 'none' }}>
         <RovingFocus.Root orientation="vertical" loop>
           <Div display="flex" flexDirection="column" gap="0.5r" outline="none">
             {children}
@@ -182,6 +188,8 @@ export type MenuItemProps = PrimitiveProps<'div'> & {
   disabled?: boolean
   selected?: boolean
   onSelect?: () => void
+  closeOnClick?: boolean
+  /** @deprecated Use closeOnClick instead */
   closeOnSelect?: boolean
 }
 
@@ -190,7 +198,8 @@ export function MenuItem({
   disabled = false,
   selected = false,
   onSelect,
-  closeOnSelect = true,
+  closeOnClick = true,
+  closeOnSelect,
   onClick,
   onKeyDown,
   className,
@@ -199,28 +208,28 @@ export function MenuItem({
 }: MenuItemProps) {
   const context = React.useContext(MenuContext)
   const overlay = useOverlay()
+  const shouldClose = closeOnSelect !== undefined ? closeOnSelect : closeOnClick
 
-  const handleSelect = () => {
+  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (disabled) return
+    onClick?.(e)
     onSelect?.()
-    if (closeOnSelect && context) {
+    if (!e.defaultPrevented && shouldClose && context) {
       context.setIsOpen(false)
       overlay?.triggerRef.current?.focus()
     }
   }
 
-  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    onClick?.(e)
-    if (!e.defaultPrevented) {
-      handleSelect()
-    }
-  }
-
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     onKeyDown?.(e)
-    if (!e.defaultPrevented && (e.key === 'Enter' || e.key === ' ')) {
+    if (!e.defaultPrevented && !disabled && (e.key === 'Enter' || e.key === ' ')) {
       e.preventDefault()
-      handleSelect()
+      onClick?.(e as unknown as React.MouseEvent<HTMLDivElement>)
+      onSelect?.()
+      if (shouldClose && context) {
+        context.setIsOpen(false)
+        overlay?.triggerRef.current?.focus()
+      }
     }
   }
 
@@ -267,55 +276,6 @@ export function MenuItem({
   )
 }
 
-export type MenuCheckboxItemProps = MenuItemProps & {
-  checked?: boolean
-  onCheckedChange?: (checked: boolean) => void
-  indicator?: React.ReactNode
-}
-
-export function MenuCheckboxItem({
-  checked = false,
-  onCheckedChange,
-  children,
-  onSelect,
-  closeOnSelect = false,
-  indicator,
-  ...props
-}: MenuCheckboxItemProps) {
-  const handleSelect = () => {
-    onCheckedChange?.(!checked)
-    onSelect?.()
-  }
-
-  return (
-    <MenuItem
-      role="menuitemcheckbox"
-      aria-checked={checked}
-      data-state={checked ? 'checked' : 'unchecked'}
-      closeOnSelect={closeOnSelect}
-      onSelect={handleSelect}
-      {...props}
-    >
-      <Span
-        display="inline-flex"
-        alignItems="center"
-        justifyContent="center"
-        width="4r"
-        height="4r"
-        mr="2r"
-        color="inherit"
-      >
-        {checked ? (indicator ?? (
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-        )) : null}
-      </Span>
-      {children}
-    </MenuItem>
-  )
-}
-
 export type MenuSeparatorProps = PrimitiveProps<'div'>
 
 export function MenuSeparator({
@@ -339,5 +299,4 @@ export function MenuSeparator({
 Menu.Trigger = MenuTrigger
 Menu.Content = MenuContent
 Menu.Item = MenuItem
-Menu.CheckboxItem = MenuCheckboxItem
 Menu.Separator = MenuSeparator

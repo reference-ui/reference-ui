@@ -1,6 +1,5 @@
 import * as React from 'react'
 import { Div, Button, type PrimitiveProps } from '@reference-ui/react'
-import { controlSize, controlHeightPx } from '../../core/theme/primitives/shared'
 
 export type TreeProps = Omit<PrimitiveProps<'div'>, 'onChange' | 'value' | 'defaultValue'> & {
   value?: string | null
@@ -154,6 +153,7 @@ export function TreeItem({
           aria-disabled={isDisabled ? 'true' : undefined}
           aria-level={level}
           data-state={isSelected ? 'selected' : 'unselected'}
+          data-selected={isSelected ? '' : undefined}
           data-expanded={isExpanded ? '' : undefined}
           data-disabled={isDisabled ? '' : undefined}
           data-level={level}
@@ -182,30 +182,21 @@ export function TreeItem({
             data-slot="row"
             display="flex"
             alignItems="center"
-            minHeight={controlSize.height}
+            minHeight="8r"
             height="auto"
-            px="2.5r"
+            p="1.5r"
             gap="1.5r"
             boxSizing="border-box"
             borderRadius="sm"
             fontSize="3.5r"
             lineHeight="5r"
-            bg={isSelected ? 'ui.button.background' : 'transparent'}
-            color={isSelected ? 'ui.button.foreground' : 'design.text.base'}
+            bg={isSelected ? 'ui.table.row.mutedBackground' : 'transparent'}
+            color="design.text.base"
             _hover={
-              !isSelected && !isDisabled
-                ? { bg: 'ui.table.row.mutedBackground', color: 'design.text.base' }
+              !isDisabled
+                ? { bg: 'ui.table.row.mutedBackground' }
                 : undefined
             }
-            style={{
-              minHeight: controlHeightPx,
-              boxSizing: 'border-box',
-            }}
-            css={{
-              '& .ref-span, & span, & svg': {
-                color: 'inherit',
-              },
-            }}
           >
             {rowContent}
           </Div>
@@ -226,6 +217,7 @@ export function TreeItem({
         aria-disabled={isDisabled ? 'true' : undefined}
         aria-level={level}
         data-state={isSelected ? 'selected' : 'unselected'}
+        data-selected={isSelected ? '' : undefined}
         data-disabled={isDisabled ? '' : undefined}
         data-level={level}
         data-active={isCurrentFocus ? '' : undefined}
@@ -235,9 +227,9 @@ export function TreeItem({
         onKeyDown={handleKeyDown}
         display="flex"
         alignItems="center"
-        minHeight={controlSize.height}
+        minHeight="8r"
         height="auto"
-        px="2.5r"
+        p="1.5r"
         gap="1.5r"
         boxSizing="border-box"
         borderRadius="sm"
@@ -246,11 +238,11 @@ export function TreeItem({
         outline="none"
         userSelect="none"
         cursor={isDisabled ? 'not-allowed' : 'pointer'}
-        bg={isSelected ? 'ui.button.background' : 'transparent'}
-        color={isSelected ? 'ui.button.foreground' : 'design.text.base'}
+        bg={isSelected ? 'ui.table.row.mutedBackground' : 'transparent'}
+        color="design.text.base"
         _hover={
-          !isSelected && !isDisabled
-            ? { bg: 'ui.table.row.mutedBackground', color: 'design.text.base' }
+          !isDisabled
+            ? { bg: 'ui.table.row.mutedBackground' }
             : undefined
         }
         _focusVisible={{
@@ -258,17 +250,8 @@ export function TreeItem({
           outlineColor: 'ui.focus.ring',
           outlineOffset: '-1px',
         }}
-        css={{
-          '& .ref-span, & span, & svg': {
-            color: 'inherit',
-          },
-        }}
         className={className}
-        style={{
-          minHeight: controlHeightPx,
-          boxSizing: 'border-box',
-          ...style,
-        }}
+        style={style}
         {...props}
       >
         {children}
@@ -303,7 +286,7 @@ export function TreeGroup({
     <TreeLevelContext.Provider value={nextLevel}>
       <Div
         role="group"
-        pl="6r"
+        pl="7.5r"
         display="flex"
         flexDirection="column"
         gap="0.5r"
@@ -319,10 +302,14 @@ export function TreeGroup({
 TreeGroup.displayName = 'TreeGroup'
 
 export type TreeExpanderProps = PrimitiveProps<'button'> & {
+  expanded?: boolean
+  onToggle?: () => void
   itemId?: string
 }
 
 export function TreeExpander({
+  expanded: expandedProp,
+  onToggle,
   itemId: itemIdProp,
   children,
   className,
@@ -333,12 +320,18 @@ export function TreeExpander({
   const tree = React.useContext(TreeContext)
   const itemContext = React.useContext(TreeItemContext)
   const itemId = itemIdProp ?? itemContext?.id ?? ''
-  const isExpanded = tree?.isItemExpanded(itemId) ?? false
+
+  // Stateless if `expanded` is explicitly passed; otherwise falls back to context
+  const isExpanded =
+    expandedProp !== undefined
+      ? expandedProp
+      : tree?.isItemExpanded(itemId) ?? itemContext?.isExpanded ?? false
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation()
     onClick?.(e)
-    if (!e.defaultPrevented && itemId && tree) {
+    onToggle?.()
+    if (!e.defaultPrevented && itemId && tree && expandedProp === undefined) {
       tree.toggleExpanded(itemId)
     }
   }
@@ -348,6 +341,7 @@ export function TreeExpander({
       type="button"
       tabIndex={-1}
       aria-label={isExpanded ? 'Collapse' : 'Expand'}
+      aria-expanded={isExpanded}
       aria-hidden="true"
       onClick={handleClick}
       border="none"
@@ -357,11 +351,11 @@ export function TreeExpander({
       display="inline-flex"
       alignItems="center"
       justifyContent="center"
-      width="5r"
-      height="5r"
+      width="6r"
+      height="6r"
       p="0"
       flexShrink={0}
-      borderRadius="sm"
+      borderRadius="xs"
       _hover={{
         color: 'inherit',
         bg: 'color-mix(in oklch, currentColor 14%, transparent)',
@@ -372,8 +366,8 @@ export function TreeExpander({
     >
       {children ?? (
         <svg
-          width="12"
-          height="12"
+          width="14"
+          height="14"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -382,7 +376,7 @@ export function TreeExpander({
           strokeLinejoin="round"
           style={{
             transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
-            transition: 'transform 150ms ease',
+            transition: 'transform 150ms cubic-bezier(0.4, 0, 0.2, 1)',
           }}
         >
           <polyline points="9 18 15 12 9 6" />
@@ -699,11 +693,6 @@ export const Tree = React.forwardRef<HTMLDivElement, TreeProps>(
             display="flex"
             flexDirection="column"
             gap="0.5r"
-            p="1r"
-            border="1px solid"
-            borderColor="ui.field.border"
-            borderRadius="md"
-            bg="ui.field.background"
             outline="none"
             className={className}
             style={style}

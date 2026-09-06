@@ -139,6 +139,15 @@ positions, and announcement requests. It is never an Overlay.
   `"Saved"` during effect replay. Assert one queue record, one item wrapper,
   one current render output, and one timer survive with no render-phase queue
   mutation, protecting the imperative store from React development replays.
+- [x] `TO-DEF-DEFAULT` `[reference]` `[browser]` —
+  **Toast should render a default notification with title, description, and close button.**
+  Calling `toast('Title', {description, closeButton: true})` renders a styled card with
+  semantic role, title, description, and corner close button. Activating the close button
+  dismisses the toast immediately.
+- [x] `TO-DEF-CUSTOM` `[reference]` `[browser]` —
+  **Toast should render arbitrary application components via `toast.custom()`.**
+  Calling `toast.custom((id) => <CustomToast id={id} />)` renders custom JSX in place with
+  its own layout and dismiss control.
 
 ### Identity, show, and update
 
@@ -330,6 +339,16 @@ positions, and announcement requests. It is never an Overlay.
   fixture. Assert every visible and queued record, stack, scheduled callback,
   pause source, and retained remaining-time entry is removed while the empty
   host remains, proving dismiss-all leaves no work that can later resurrect.
+- [x] `TO-STACK-01` `[reference]` `[browser]` —
+  **Toast should maintain newest-in-front stacking with scale and vertical offset.**
+  When multiple toasts are shown in the same position, the newest toast is in front
+  with scale 1 and highest z-index, while background cards scale down cleanly (0.95, 0.90)
+  without border projection glitches at the anchor.
+- [x] `TO-STACK-HOVER` `[reference]` `[browser]` —
+  **Toast should expand smoothly on hover without flickering feedback loops.**
+  Hovering over the stack expands all cards into a vertical list. Moving the pointer
+  across gaps or between cards maintains expansion via continuous hit envelopes and
+  pointer bridge guards, eliminating layout flicker.
 
 ### Timers
 

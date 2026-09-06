@@ -5,12 +5,19 @@ import { Tree } from './index'
 export default {
   FileExplorer: () => {
     const [selected, setSelected] = React.useState<string | null>('file-switch')
+    const [expanded, setExpanded] = React.useState<string[]>(['folder-switch', 'folder-tabs'])
+
     return (
       <Div maxW="80r" display="flex" flexDirection="column" gap="3r">
         <Tree
           value={selected}
           onChange={setSelected}
-          defaultExpanded={['folder-switch', 'folder-tabs']}
+          expanded={expanded}
+          onExpandedChange={setExpanded}
+          border="1px solid"
+          borderColor="ui.field.border"
+          borderRadius="md"
+          p="1.5r"
         >
           <Tree.Item id="folder-switch" isBranch>
             <Tree.Expander itemId="folder-switch" />
@@ -34,17 +41,45 @@ export default {
       </Div>
     )
   },
+  StatelessExpander: () => {
+    const [isOpen, setIsOpen] = React.useState(false)
+    return (
+      <Div maxW="60r" display="flex" flexDirection="column" gap="3r">
+        <Div
+          display="flex"
+          alignItems="center"
+          gap="1.5r"
+          p="1.5r"
+          borderRadius="sm"
+          border="1px solid"
+          borderColor="ui.field.border"
+        >
+          <Tree.Expander
+            expanded={isOpen}
+            onClick={() => setIsOpen((prev) => !prev)}
+          />
+          <Span fontSize="3.5r" fontWeight="600">
+            Stateless Expander ({isOpen ? 'Expanded' : 'Collapsed'})
+          </Span>
+        </Div>
+      </Div>
+    )
+  },
   CollapsedByDefault: () => (
     <Div maxW="60r">
-      <Tree defaultValue="item-a">
+      <Tree
+        defaultValue="item-a"
+        border="1px solid"
+        borderColor="ui.field.border"
+        borderRadius="md"
+        p="1.5r"
+      >
         <Tree.Item id="branch-1" isBranch>
-          <Div display="flex" alignItems="center" gap="1r">
-            <Tree.Expander itemId="branch-1" />
-            <Span fontSize="3r">Expandable branch</Span>
-          </Div>
+          <Tree.Expander itemId="branch-1" />
+          <Span fontSize="3.5r">Expandable branch</Span>
           <Tree.Group>
             <Tree.Item id="item-a">
-              <Span fontSize="3r">Hidden until expanded</Span>
+              <Span fontSize="3.5r">Hidden until expanded</Span>
             </Tree.Item>
           </Tree.Group>
         </Tree.Item>

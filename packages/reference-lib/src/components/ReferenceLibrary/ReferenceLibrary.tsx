@@ -294,23 +294,42 @@ function getPositionStyles(position: string): React.CSSProperties {
 interface ToastItemWrapperProps {
   item: ToastItem
   index: number
+  frontOffset: number
+  expandedOffset: number
   totalCount: number
   isExpanded: boolean
   isTop: boolean
+  onHeight: (id: string, height: number) => void
   onDismiss: (id: string) => void
+  onDragStateChange: (dragging: boolean) => void
 }
 
 function ToastItemWrapper({
   item,
   index,
+  frontOffset,
+  expandedOffset,
   totalCount,
   isExpanded,
   isTop,
+  onHeight,
   onDismiss,
+  onDragStateChange,
 }: ToastItemWrapperProps) {
   const [dragOffset, setDragOffset] = React.useState(0)
   const [isDragging, setIsDragging] = React.useState(false)
   const dragStartRef = React.useRef<number | null>(null)
+  const ref = React.useRef<HTMLDivElement>(null)
+
+  // Report height for dynamic expanded stacking
+  React.useLayoutEffect(() => {
+    if (ref.current) {
+      const h = ref.current.getBoundingClientRect().height
+      if (h > 0) {
+        onHeight(item.id, h)
+      }
+    }
+  }, [item.id, onHeight])
 
   // Auto-dismiss timer with pause on hover
   React.useEffect(() => {
@@ -323,11 +342,16 @@ function ToastItemWrapper({
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0) return
+    const target = e.target as HTMLElement
+    // Do not initiate drag when clicking buttons/interactive elements inside toast
+    if (target.closest('button') || target.tagName === 'BUTTON') return
+
     try {
       e.currentTarget.setPointerCapture(e.pointerId)
     } catch {}
     dragStartRef.current = e.clientX
     setIsDragging(true)
+    onDragStateChange(true)
   }
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -339,13 +363,14 @@ function ToastItemWrapper({
   const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!isDragging) return
     setIsDragging(false)
+    onDragStateChange(false)
     try {
       if (e.currentTarget.hasPointerCapture(e.pointerId)) {
         e.currentTarget.releasePointerCapture(e.pointerId)
       }
     } catch {}
     if (Math.abs(dragOffset) > 75) {
-      setDragOffset(dragOffset > 0 ? 300 : -300)
+      setDragOffset(dragOffset > 0 ? 350 : -350)
       setTimeout(() => onDismiss(item.id), 120)
     } else {
       setDragOffset(0)
@@ -354,25 +379,32 @@ function ToastItemWrapper({
   }
 
   // Sonner card deck math
-  const yOffset = isTop ? index * 12 : -index * 12
-  const scale = Math.max(0.85, 1 - index * 0.05)
-  const opacity = index > 2 && !isExpanded ? 0 : 1 - Math.abs(dragOffset) / 300
-  const zIndex = totalCount - index
+  // frontOffset: 0 for the newest front toast, 1 for the one behind it, etc.
+  const isFront = frontOffset === 0
+  const stackedY = isTop ? frontOffset * 14 : -frontOffset * 14
+  const expandedY = isTop ? expandedOffset : -expandedOffset
+  const y = isExpanded ? expandedY : stackedY
+  const scale = isExpanded ? 1 : Math.max(0.85, 1 - frontOffset * 0.05)
+  const zIndex = totalCount - frontOffset
+  const opacity = frontOffset > 2 && !isExpanded ? 0 : 1 - Math.abs(dragOffset) / 300
+  const transformOrigin = isTop ? 'top center' : 'bottom center'
 
-  const transform = isExpanded
-    ? `translate3d(${dragOffset}px, 0px, 0px) scale(1)`
-    : `translate3d(${dragOffset}px, ${yOffset}px, 0px) scale(${scale})`
+  const transform = `translate3d(${dragOffset}px, ${y}px, 0px) scale(${scale})`
 
   return (
     <Div
+      ref={ref}
       data-reference-toast-id={item.id}
       data-toast-id={item.id}
       data-reference-toast-position={item.position ?? 'bottom-end'}
+      data-front={isFront ? 'true' : 'false'}
       data-state="open"
-      pointerEvents="auto"
-      position={isExpanded || index === 0 ? 'relative' : 'absolute'}
-      bottom={!isTop && !isExpanded ? 0 : undefined}
-      top={isTop && !isExpanded ? 0 : undefined}
+      pointerEvents={frontOffset > 2 && !isExpanded ? 'none' : 'auto'}
+      position="absolute"
+      bottom={!isTop ? 0 : undefined}
+      top={isTop ? 0 : undefined}
+      left={0}
+      right={0}
       zIndex={zIndex}
       opacity={opacity}
       userSelect="none"
@@ -383,6 +415,7 @@ function ToastItemWrapper({
       onPointerCancel={handlePointerUp}
       style={{
         transform,
+        transformOrigin,
         transition: isDragging
           ? 'none'
           : 'transform 260ms cubic-bezier(0.16, 1, 0.3, 1), opacity 200ms ease',
@@ -391,9 +424,31 @@ function ToastItemWrapper({
         ['--reference-toast-count' as any]: `${totalCount}`,
       }}
     >
-      <ToastItemContext.Provider value={{ id: item.id }}>
-        {item.content}
-      </ToastItemContext.Provider>
+      {/* Invisible gap bridge when expanded to prevent flicker when pointer travels between cards */}
+      {isExpanded && frontOffset > 0 && (
+        <div
+          data-reference-toast-bridge=""
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            height: '16px',
+            [isTop ? 'bottom' : 'top']: '100%',
+            pointerEvents: 'auto',
+          }}
+        />
+      )}
+      <Div
+        style={{
+          opacity: isExpanded || isFront ? 1 : 0,
+          transition: 'opacity 180ms ease',
+          pointerEvents: isExpanded || isFront ? 'auto' : 'none',
+        }}
+      >
+        <ToastItemContext.Provider value={{ id: item.id }}>
+          {item.content}
+        </ToastItemContext.Provider>
+      </Div>
     </Div>
   )
 }
@@ -408,8 +463,59 @@ function ToastPositionStack({
   onDismiss: (id: string) => void
 }) {
   const [isExpanded, setIsExpanded] = React.useState(false)
+  const isInteractingRef = React.useRef(false)
+  const leaveTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
+  const [heights, setHeights] = React.useState<Record<string, number>>({})
   const isTop = position.startsWith('top')
   const posStyles = getPositionStyles(position)
+
+  const handleHeight = React.useCallback((id: string, h: number) => {
+    setHeights(prev => (prev[id] === h ? prev : { ...prev, [id]: h }))
+  }, [])
+
+  const handleMouseEnter = () => {
+    if (leaveTimeoutRef.current) {
+      clearTimeout(leaveTimeoutRef.current)
+      leaveTimeoutRef.current = null
+    }
+    setIsExpanded(true)
+  }
+
+  const handleMouseLeave = () => {
+    if (isInteractingRef.current) return
+    leaveTimeoutRef.current = setTimeout(() => {
+      setIsExpanded(false)
+    }, 80)
+  }
+
+  const totalCount = toasts.length
+  const GAP = 12
+
+  // Calculate offsets for expanded state:
+  // Front toast is at index totalCount - 1 (newest).
+  const itemOffsets = React.useMemo(() => {
+    const offsets: number[] = new Array(totalCount).fill(0)
+    let accumulated = 0
+    for (let f = 0; f < totalCount; f++) {
+      const actualIdx = totalCount - 1 - f
+      offsets[actualIdx] = accumulated
+      const h = heights[toasts[actualIdx]?.id] || 68
+      accumulated += h + GAP
+    }
+    return offsets
+  }, [totalCount, toasts, heights])
+
+  const totalExpandedHeight = React.useMemo(() => {
+    let sum = 0
+    for (const t of toasts) {
+      sum += (heights[t.id] || 68) + GAP
+    }
+    return sum > 0 ? sum - GAP : 0
+  }, [toasts, heights])
+
+  const frontToastId = toasts[totalCount - 1]?.id
+  const frontToastHeight = heights[frontToastId] || 68
+  const collapsedHeight = frontToastHeight + (totalCount > 1 ? Math.min(totalCount - 1, 2) * 14 : 0)
 
   return (
     <Div
@@ -417,28 +523,44 @@ function ToastPositionStack({
       data-expanded={isExpanded ? 'true' : 'false'}
       position="fixed"
       zIndex={9999}
-      display="flex"
-      flexDirection={isTop ? 'column' : 'column-reverse'}
-      gap={isExpanded ? '2r' : '0'}
-      pointerEvents="none"
-      onPointerEnter={() => setIsExpanded(true)}
-      onPointerLeave={() => setIsExpanded(false)}
+      pointerEvents="auto"
+      onPointerEnter={handleMouseEnter}
+      onPointerLeave={handleMouseLeave}
+      onPointerDown={() => {
+        isInteractingRef.current = true
+      }}
+      onPointerUp={() => {
+        isInteractingRef.current = false
+      }}
       style={{
         ...posStyles,
-        transition: 'gap 200ms ease',
+        width: '356px',
+        maxWidth: 'calc(100vw - 32px)',
+        height: isExpanded ? `${totalExpandedHeight}px` : `${collapsedHeight}px`,
+        transition: 'height 260ms cubic-bezier(0.16, 1, 0.3, 1)',
       }}
     >
-      {toasts.map((item, idx) => (
-        <ToastItemWrapper
-          key={item.id}
-          item={item}
-          index={idx}
-          totalCount={toasts.length}
-          isExpanded={isExpanded}
-          isTop={isTop}
-          onDismiss={onDismiss}
-        />
-      ))}
+      {toasts.map((item, idx) => {
+        const frontOffset = totalCount - 1 - idx
+        const expandedOffset = itemOffsets[idx] || 0
+        return (
+          <ToastItemWrapper
+            key={item.id}
+            item={item}
+            index={idx}
+            frontOffset={frontOffset}
+            expandedOffset={expandedOffset}
+            totalCount={totalCount}
+            isExpanded={isExpanded}
+            isTop={isTop}
+            onHeight={handleHeight}
+            onDismiss={onDismiss}
+            onDragStateChange={(dragging) => {
+              isInteractingRef.current = dragging
+            }}
+          />
+        )
+      })}
     </Div>
   )
 }
@@ -463,7 +585,12 @@ function ToastHost({
   }, [visibleToasts])
 
   return (
-    <Div data-reference-toast-host="" pointerEvents="none">
+    <Div
+      data-reference-toast-host=""
+      data-reference-overlay-ignore=""
+      data-react-aria-top-layer=""
+      pointerEvents="none"
+    >
       {visibleToasts.length > 0 &&
         Array.from(grouped.entries()).map(([pos, items]) => (
           <ToastPositionStack
