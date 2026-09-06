@@ -153,8 +153,10 @@ export const fieldSurfaceStyles = {
   },
 
   '[data-reference-number-field]': {
-    width: 'max-content',
-    maxWidth: '100%',
+    width: 'fit-content',
+    maxWidth: '36r',
+    padding: '0.75r',
+    gap: '0.5r',
   },
 
   '[data-reference-number-field] > :is(button, .ref-button)': {
@@ -163,8 +165,7 @@ export const fieldSurfaceStyles = {
   },
 
   '[data-reference-number-field] :is(input, .ref-input)': {
-    flex: '0 0 18r',
-    width: '18r',
-    minWidth: '12r',
+    textAlign: 'center',
+    minWidth: '8r',
   },
 } as const

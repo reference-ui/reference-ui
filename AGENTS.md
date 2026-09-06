@@ -22,26 +22,38 @@ Repository-wide conventions, dev server policies, and visual verification instru
 > `playwright` is NOT a root dependency; doing this causes `Cannot find module 'playwright'` errors and wastes tokens.
 
 ### The Canonical Capture Command
-Use the built-in capture tool from the workspace root:
+Use the built-in capture tool from the workspace root to script and snapshot any component scenario:
 
 ```bash
-# 1. Capture resting, hover, focus (click), keyboard tab (:focus-visible), and open states:
-pnpm capture <Component> [Fixture] --states
-
-# 2. List available fixtures for a component:
+# 1. Discover all components or fixtures:
+pnpm capture --list
 pnpm capture <Component> --list
 
-# 3. Capture single state (auto-defaults to the primary fixture if omitted):
+# 2. Script any custom interactions and states directly (RECOMMENDED):
+pnpm capture <Component> [Fixture] -e "
+  await capture('resting');
+  await frame.locator('...').click();
+  await capture('clicked');
+"
+
+# 3. Or pass a custom script file:
+pnpm capture <Component> [Fixture] -s path/to/script.mjs
+
+# 4. Or snapshot resting state (auto-defaults to primary fixture if omitted):
 pnpm capture <Component> [Fixture]
+
+# 5. Or use the programmatic API from any node script:
+# import { captureFixture } from './.agents/skills/tweak-component/scripts/capture.mjs'
 ```
 
-Examples:
-- `pnpm capture Field Default --states`
-- `pnpm capture Slider NativeParity --states`
-- `pnpm capture Combobox Searchable --states`
-- `pnpm capture Button --list`
+In scripts, you receive: `{ page, frame, root, target, interactive, capture, pressTab, inspectStyles, wait }`.
+- `capture(label, [locator])`: Captures outline-padded screenshot, syncs to Antigravity brain dir, and adds to markdown table.
+- `pressTab([locator])`: Triggers native keyboard `:focus-visible` outline via temporary shim button.
+- `inspectStyles([locatorOrSelector])`: Inspects computed border, outline, and box-model styles of target or selector.
+- `frame.evaluate(fn, arg)`: Executes code inside the fixture iframe's window/document context directly.
+- `--inspect-styles`: CLI flag that dumps a computed styles table across states or for target.
 
-Captures are automatically saved to `.reference-ui/captures/` with outline-safe padding. When verifying visual changes, **always embed the markdown table emitted by `pnpm capture` directly into your response**.
+Captures are automatically saved to `.reference-ui/captures/` with outline-safe padding and synced to the Antigravity conversation brain directory so they render in chat. **Always embed the markdown table emitted by `pnpm capture` directly into your response**.
 
 ---
 
@@ -56,6 +68,15 @@ pnpm --filter @reference-ui/lib run typecheck
 # Unit tests (Vitest)
 pnpm --filter @reference-ui/lib test
 
+# Build library before browser tests (matrix/lib consumes dist/index.mjs bundle)
+pnpm --filter @reference-ui/lib run build
+
 # Browser E2E contracts (Playwright)
 pnpm --dir matrix/lib exec playwright test tests/e2e/<component>.spec.ts
 ```
+
+> [!NOTE]
+> `matrix/lib` playwright tests consume `@reference-ui/lib` from `dist/index.mjs`.
+> If you make changes in `packages/reference-lib/src/`, always run:
+> `pnpm --filter @reference-ui/lib run build`
+> before executing the Playwright tests so they test your latest source changes.

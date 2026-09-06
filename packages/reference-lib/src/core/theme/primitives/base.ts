@@ -6,7 +6,7 @@ export const base = {
     ...baseTypography,
   },
 
-  '[class^="ref-"]:focus-visible:not([role="option"]):not([role="menuitem"]), [class*=" ref-"]:focus-visible:not([role="option"]):not([role="menuitem"])':
+  '[class^="ref-"]:focus-visible:not([role="option"]):not([role="menuitem"]):not([type="range"]), [class*=" ref-"]:focus-visible:not([role="option"]):not([role="menuitem"]):not([type="range"])':
     {
       outlineColor: '{colors.ui.focus.ring}',
       outlineOffset: '2px',

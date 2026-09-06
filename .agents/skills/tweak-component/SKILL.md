@@ -34,13 +34,20 @@ Read the component design specification and test contract before modifying code:
 ### Step 2: Baseline Capture & Immediate Visual Sharing
 Establish the visual baseline and **share it with the developer immediately in chat**:
 ```bash
-pnpm capture <ComponentName> [FixtureName] --states
+# Snapshot resting state:
+pnpm capture <ComponentName> [FixtureName]
+
+# Or script custom interactions directly:
+pnpm capture <ComponentName> [FixtureName] -e "
+  await capture('resting');
+  await frame.locator('...').click();
+  await capture('clicked');
+"
 ```
-- Or with explicit output dir: `pnpm capture <ComponentName> [FixtureName] --states --out-dir <artifacts-dir>`
-- The script automatically outputs unclipped resting, hover, focus (pointer click), tab (keyboard focus-visible outline), and popup screenshots along with a ready-to-paste markdown table.
-- To discover available fixtures: `pnpm capture <ComponentName> --list`
+- To discover all available components and fixtures: `pnpm capture --list` or `pnpm capture <ComponentName> --list`
 - If fixture name is omitted, it auto-selects the primary fixture.
-- **MANDATORY**: Embed the captured baseline screenshots directly into your chat response (`![Caption](/absolute/path.png)`). Never proceed without letting the user see what the baseline looks like.
+- The script automatically outputs unclipped screenshots, syncs to the Antigravity brain directory, and prints a ready-to-paste markdown table.
+- **MANDATORY**: Embed the captured screenshots directly into your chat response (`![Caption](/absolute/path.png)`).
 - Inspect the images with `view_file` to identify visual bugs, misalignment, nested borders, or clipped triggers.
 
 ### Step 3: Implement & Tweak Component Code
@@ -60,15 +67,22 @@ pnpm --filter @reference-ui/lib run typecheck
 # 2. Pure Model Unit Tests (Vitest)
 pnpm --filter @reference-ui/lib test
 
-# 3. Browser E2E Tests (Playwright)
+# 3. Build library before browser tests (matrix/lib consumes dist/index.mjs bundle)
+pnpm --filter @reference-ui/lib run build
+
+# 4. Browser E2E Tests (Playwright)
 pnpm --dir matrix/lib exec playwright test tests/e2e/<component>.spec.ts
 ```
 
+> [!NOTE]
+> `matrix/lib` playwright tests consume `@reference-ui/lib` from `dist/index.mjs`.
+> If you make changes in `packages/reference-lib/src/`, always run `pnpm --filter @reference-ui/lib run build` before running Playwright tests.
+
 ### Step 5: Visual Re-inspection & Mandatory Visual Feedback
 After passing tests, verify the visual result and **always return screenshots in chat**:
-1. Run the multi-state capture script:
+1. Run the multi-state capture script (optionally with `--inspect-styles` to verify outline/border tokens):
    ```bash
-   pnpm capture <ComponentName> [FixtureName] --states
+   pnpm capture <ComponentName> [FixtureName] --states --inspect-styles
    ```
 2. Visually inspect the generated files with `view_file`.
 3. **MANDATORY USER VISUAL FEEDBACK**:
@@ -84,22 +98,26 @@ After passing tests, verify the visual result and **always return screenshots in
 
 Syntax:
 ```bash
-pnpm capture <Component> [Fixture] [options]
+pnpm capture [Component] [Fixture] [options]
 ```
 
 Options:
-- `--states`: Captures `Resting` (mouse at 0,0), `Hover` (trigger hovered), `Focus` (pointer clicked), `Tab` (keyboard `:focus-visible` with outline), and `Open` (if trigger opens a dialog/listbox/menu).
-- `--list`: List all available fixture exports for the component.
+- `-e, --eval <code>`: Run inline async interaction script with `{ page, frame, root, target, interactive, capture, pressTab, inspectStyles, wait }`.
+- `-s, --script <path>`: Run custom `.mjs` script file exporting `default async function({ page, frame, root, target, interactive, capture, pressTab, inspectStyles, wait })`.
+- `-l, --list`: List all available fixtures for a component, or list all components in the repo if component is omitted.
+- `--states`: Multi-state capture (`Resting`, `Hover`, `Focus (Click)`, `Tab`, `Open`).
+- `--inspect-styles`: Dumps a computed styles table (outline, border, box-model) across states or for target.
 - `--target <css>`: Specific element to snapshot inside the fixture iframe (auto-defaults to `[data-reference-field]`, then fixture root, then `#root`).
-- `--hover <css>`: Manually hover a specific element.
-- `--click <css>`: Manually click a specific element.
-- `--focus`: Focus the primary interactive element.
-- `--tab`: Tab into the primary interactive element (`:focus-visible`).
 - `--pad <px>`: Padding around the bounding box to preserve focus rings, shadows, and outlines (default `20`).
 - `--out-dir <dir>`: Directory where screenshots will be stored (default: `.reference-ui/captures/`).
 - `--viewport <WxH>`: Custom viewport dimensions (default `1000x700`).
-- `--wait <ms>`: Delay for Cosmos postMessage handshake (default `2200`).
+
+Script Context Helpers:
+- `pressTab([locator])`: Simulates native keyboard tab with outline-preserving DOM shim.
+- `inspectStyles([locatorOrSelector])`: Returns computed border, outline, box-model properties.
+- `frame.evaluate(fn, arg)`: Executes code directly inside the fixture iframe.
 
 Output:
 - Saves unclipped, focus-ring-safe images of component + popovers to workspace directory.
+- Automatically syncs to Antigravity brain directory for direct rendering in chat.
 - Emits markdown snippets and tables ready to paste directly into chat messages and `walkthrough.md`.

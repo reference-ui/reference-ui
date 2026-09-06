@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { createRequire } from 'node:module'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import path from 'node:path'
 import fs from 'node:fs'
 import http from 'node:http'
@@ -10,7 +10,7 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 // 1. Locate repository root dynamically
-function findRepoRoot(startDir) {
+export function findRepoRoot(startDir = __dirname) {
   let cur = startDir
   while (cur !== path.dirname(cur)) {
     if (fs.existsSync(path.join(cur, 'pnpm-workspace.yaml'))) return cur
@@ -39,115 +39,8 @@ try {
 }
 const { chromium } = playwright
 
-// 3. Parse command-line arguments
-function parseArgs() {
-  const args = process.argv.slice(2)
-  const defaultOutDir = path.join(repoRoot, '.reference-ui/captures')
-  const options = {
-    component: '',
-    fixture: '',
-    outDir: defaultOutDir,
-    name: '',
-    target: '',
-    hover: '',
-    click: '',
-    focus: false,
-    tab: false,
-    press: '',
-    type: '',
-    states: false,
-    list: false,
-    wait: 2200,
-    pad: 20,
-    viewport: { width: 1000, height: 700 },
-  }
-
-  const positional = []
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i]
-    if (arg === '--states') {
-      options.states = true
-    } else if (arg === '--list') {
-      options.list = true
-    } else if (arg === '--focus') {
-      options.focus = true
-    } else if (arg === '--tab') {
-      options.tab = true
-    } else if (arg === '--hover' && i + 1 < args.length) {
-      options.hover = args[++i]
-    } else if (arg === '--click' && i + 1 < args.length) {
-      options.click = args[++i]
-    } else if (arg === '--press' && i + 1 < args.length) {
-      options.press = args[++i]
-    } else if (arg === '--type' && i + 1 < args.length) {
-      options.type = args[++i]
-    } else if (arg === '--target' && i + 1 < args.length) {
-      options.target = args[++i]
-    } else if (arg === '--out-dir' && i + 1 < args.length) {
-      options.outDir = path.resolve(process.cwd(), args[++i])
-    } else if (arg === '--out' && i + 1 < args.length) {
-      options.out = path.resolve(process.cwd(), args[++i])
-    } else if (arg === '--name' && i + 1 < args.length) {
-      options.name = args[++i]
-    } else if (arg === '--pad' && i + 1 < args.length) {
-      options.pad = parseInt(args[++i], 10)
-    } else if (arg === '--wait' && i + 1 < args.length) {
-      options.wait = parseInt(args[++i], 10)
-    } else if (arg === '--viewport' && i + 1 < args.length) {
-      const [w, h] = args[++i].split('x').map(n => parseInt(n, 10))
-      if (w && h) options.viewport = { width: w, height: h }
-    } else if (!arg.startsWith('--')) {
-      positional.push(arg)
-    }
-  }
-
-  if (positional[0]) options.component = positional[0]
-  if (positional[1]) options.fixture = positional[1]
-
-  return options
-}
-
-// 4. Resolve fixture file path on disk
-function resolveFixtureFilePath(componentInput) {
-  const componentsDir = path.join(repoRoot, 'packages/reference-lib/src/components')
-  if (!fs.existsSync(componentsDir)) {
-    return null
-  }
-
-  if (componentInput.includes('/') || componentInput.endsWith('.tsx')) {
-    const direct = path.resolve(componentInput)
-    if (fs.existsSync(direct)) return direct
-    const inPkg = path.join(repoRoot, 'packages/reference-lib', componentInput)
-    if (fs.existsSync(inPkg)) return inPkg
-    return null
-  }
-
-  // Exact matches
-  const candidate1 = path.join(componentsDir, componentInput, `${componentInput}.fixture.tsx`)
-  if (fs.existsSync(candidate1)) return candidate1
-
-  const candidate2 = path.join(componentsDir, `${componentInput}.fixture.tsx`)
-  if (fs.existsSync(candidate2)) return candidate2
-
-  // Case-insensitive search
-  const entries = fs.readdirSync(componentsDir, { withFileTypes: true })
-  for (const entry of entries) {
-    if (entry.name.toLowerCase() === componentInput.toLowerCase()) {
-      if (entry.isDirectory()) {
-        const sub = path.join(componentsDir, entry.name, `${entry.name}.fixture.tsx`)
-        if (fs.existsSync(sub)) return sub
-      }
-    }
-    if (entry.name.toLowerCase() === `${componentInput.toLowerCase()}.fixture.tsx`) {
-      return path.join(componentsDir, entry.name)
-    }
-  }
-
-  return null
-}
-
-// 5. Parse fixture file to extract named fixture exports
-function extractFixtureNames(filePath) {
+// 3. Extract named fixture exports from a fixture file
+export function extractFixtureNames(filePath) {
   if (!filePath || !fs.existsSync(filePath)) return []
   const content = fs.readFileSync(filePath, 'utf-8')
   const startIdx = content.indexOf('export default {')
@@ -200,8 +93,75 @@ function extractFixtureNames(filePath) {
   return names
 }
 
+// 4. Resolve fixture file path on disk
+export function resolveFixtureFilePath(componentInput) {
+  const componentsDir = path.join(repoRoot, 'packages/reference-lib/src/components')
+  if (!fs.existsSync(componentsDir)) {
+    return null
+  }
+
+  if (componentInput.includes('/') || componentInput.endsWith('.tsx')) {
+    const direct = path.resolve(componentInput)
+    if (fs.existsSync(direct)) return direct
+    const inPkg = path.join(repoRoot, 'packages/reference-lib', componentInput)
+    if (fs.existsSync(inPkg)) return inPkg
+    return null
+  }
+
+  // Exact matches
+  const candidate1 = path.join(componentsDir, componentInput, `${componentInput}.fixture.tsx`)
+  if (fs.existsSync(candidate1)) return candidate1
+
+  const candidate2 = path.join(componentsDir, `${componentInput}.fixture.tsx`)
+  if (fs.existsSync(candidate2)) return candidate2
+
+  // Case-insensitive search
+  const entries = fs.readdirSync(componentsDir, { withFileTypes: true })
+  for (const entry of entries) {
+    if (entry.name.toLowerCase() === componentInput.toLowerCase()) {
+      if (entry.isDirectory()) {
+        const sub = path.join(componentsDir, entry.name, `${entry.name}.fixture.tsx`)
+        if (fs.existsSync(sub)) return sub
+      }
+    }
+    if (entry.name.toLowerCase() === `${componentInput.toLowerCase()}.fixture.tsx`) {
+      return path.join(componentsDir, entry.name)
+    }
+  }
+
+  return null
+}
+
+// 5. Discover all components and fixtures in the repository
+export function getAllComponentFixtures() {
+  const componentsDir = path.join(repoRoot, 'packages/reference-lib/src/components')
+  if (!fs.existsSync(componentsDir)) return {}
+
+  const result = {}
+  const entries = fs.readdirSync(componentsDir, { withFileTypes: true })
+  for (const entry of entries) {
+    if (entry.isDirectory()) {
+      const subFixture = path.join(componentsDir, entry.name, `${entry.name}.fixture.tsx`)
+      if (fs.existsSync(subFixture)) {
+        result[entry.name] = {
+          filePath: subFixture,
+          fixtures: extractFixtureNames(subFixture),
+        }
+      }
+    } else if (entry.name.endsWith('.fixture.tsx')) {
+      const compName = entry.name.replace('.fixture.tsx', '')
+      const fullPath = path.join(componentsDir, entry.name)
+      result[compName] = {
+        filePath: fullPath,
+        fixtures: extractFixtureNames(fullPath),
+      }
+    }
+  }
+  return result
+}
+
 // 6. Check if Cosmos dev server is responding
-async function checkPort(port, retries = 3) {
+export async function checkPort(port, retries = 3) {
   for (let i = 0; i < retries; i++) {
     const ok = await new Promise(resolve => {
       const req = http.get(`http://localhost:${port}/`, { timeout: 2500 }, () => resolve(true))
@@ -218,7 +178,7 @@ async function checkPort(port, retries = 3) {
 }
 
 // 7. Safe screenshot with padding to preserve outlines, focus rings, and shadows
-async function capturePadded(page, targetLoc, outPath, pad = 20, viewport) {
+export async function capturePadded(page, targetLoc, outPath, pad = 20, viewport = { width: 1000, height: 700 }) {
   await targetLoc.scrollIntoViewIfNeeded().catch(() => {})
   await page.waitForTimeout(100)
 
@@ -238,58 +198,34 @@ async function capturePadded(page, targetLoc, outPath, pad = 20, viewport) {
   }
 }
 
-// 8. Main execution
-async function main() {
-  const opts = parseArgs()
-
-  if (!opts.component) {
-    console.error('Usage: pnpm capture <Component> [Fixture] [options]')
-    console.error('Options:')
-    console.error('  --states          Capture Resting, Hover, Focus (click), and Tab (keyboard focus-visible)')
-    console.error('  --list            List available fixtures for component')
-    console.error('  --target <css>    CSS selector for component bounding box')
-    console.error('  --hover <css>     Hover specific element')
-    console.error('  --click <css>     Click specific element')
-    console.error('  --focus           Focus primary interactive element')
-    console.error('  --tab             Tab into primary interactive element (keyboard focus-visible)')
-    console.error('  --out-dir <dir>   Output directory (default: .reference-ui/captures)')
-    console.error('  --pad <px>        Padding around bounding box (default: 20)')
-    process.exit(1)
+// 8. Core capture runner (used both by CLI and programmatic API)
+export async function runCapture(rawOpts, customScriptFn = null) {
+  const defaultOutDir = path.join(repoRoot, '.reference-ui/captures')
+  const opts = {
+    outDir: defaultOutDir,
+    wait: 2200,
+    pad: 20,
+    viewport: { width: 1000, height: 700 },
+    ...rawOpts,
   }
 
   const fixtureFilePath = resolveFixtureFilePath(opts.component)
   if (!fixtureFilePath) {
-    console.error(`ERROR: Could not find fixture file for component '${opts.component}'.`)
-    console.error('Checked under packages/reference-lib/src/components/')
-    process.exit(1)
+    throw new Error(`Could not find fixture file for component '${opts.component}'. Checked under packages/reference-lib/src/components/`)
   }
 
   const availableFixtures = extractFixtureNames(fixtureFilePath)
 
-  if (opts.list) {
-    console.log(`\nAvailable fixtures in ${path.relative(repoRoot, fixtureFilePath)}:`)
-    if (availableFixtures.length === 0) {
-      console.log('  (single default export)')
-    } else {
-      availableFixtures.forEach(f => console.log(`  - ${f}`))
-    }
-    process.exit(0)
-  }
-
   // Resolve fixture name
   let selectedFixture = opts.fixture
   if (selectedFixture) {
-    // Case-insensitive match if available
     const matched = availableFixtures.find(f => f.toLowerCase() === selectedFixture.toLowerCase())
     if (matched) {
       selectedFixture = matched
     } else if (availableFixtures.length > 0) {
-      console.error(`ERROR: Fixture '${selectedFixture}' not found in ${path.basename(fixtureFilePath)}.`)
-      console.error(`Available fixtures: ${availableFixtures.join(', ')}`)
-      process.exit(1)
+      throw new Error(`Fixture '${selectedFixture}' not found in ${path.basename(fixtureFilePath)}. Available fixtures: ${availableFixtures.join(', ')}`)
     }
   } else {
-    // Auto-select first fixture if named exports exist
     if (availableFixtures.length > 0) {
       selectedFixture = availableFixtures[0]
       console.log(`No fixture specified. Auto-selected primary fixture: '${selectedFixture}' (available: ${availableFixtures.join(', ')})`)
@@ -299,9 +235,7 @@ async function main() {
   // Cosmos dev server health check
   const isAlive = await checkPort(5000)
   if (!isAlive) {
-    console.error('\nCOSMOS_NOT_RUNNING: Cosmos playground is not reachable on port 5000.')
-    console.error('Please run "pnpm dev:lib" locally in your terminal before capturing fixtures.\n')
-    process.exit(1)
+    throw new Error('COSMOS_NOT_RUNNING: Cosmos playground is not reachable on port 5000. Please run "pnpm dev:lib" locally in your terminal.')
   }
 
   fs.mkdirSync(opts.outDir, { recursive: true })
@@ -322,15 +256,19 @@ async function main() {
   const browser = await chromium.launch({ headless: true })
   const page = await browser.newPage({ viewport: opts.viewport })
 
+  const savedFiles = []
+
   try {
     await page.goto(url, { waitUntil: 'load', timeout: 12000 })
-    await page.waitForTimeout(opts.wait)
 
     const frame = page.frameLocator('iframe')
     const root = frame.locator('#root')
-    await root.waitFor({ timeout: 6000 }).catch(() => {})
 
-    // 1. Resolve target locator
+    // Wait for root or child to mount
+    await root.locator('> *').first().waitFor({ state: 'visible', timeout: 8000 }).catch(() => {})
+    await page.waitForTimeout(150)
+
+    // Resolve target locator
     let targetLoc
     if (opts.target) {
       targetLoc = frame.locator(opts.target).first()
@@ -353,7 +291,7 @@ async function main() {
       }
     }
 
-    // 2. Resolve primary interactive element inside target
+    // Resolve primary interactive element inside target
     let interactiveEl = targetLoc.locator('input, button, [role="slider"], [role="button"], [role="combobox"], [role="switch"], [tabindex="0"], [role="tab"]').first()
     if (await interactiveEl.count() === 0 || !(await interactiveEl.isVisible())) {
       interactiveEl = frame.locator('input, button, [role="slider"], [role="button"], [role="combobox"], [role="switch"], [tabindex="0"], [role="tab"]').first()
@@ -362,58 +300,171 @@ async function main() {
       interactiveEl = targetLoc
     }
 
-    const savedFiles = []
+    // Enhance frame with an evaluate method so scripts calling `await frame.evaluate(...)`
+    // execute code within the fixture iframe's document/window context directly
+    frame.evaluate = async (fn, arg) => {
+      return frame.locator(':root').evaluate(fn, arg)
+    }
 
-    if (opts.states) {
-      // --- STATE 1: Resting (mouse at 0, 0) ---
+    // Helper: inspect computed styles of target or custom selector/locator
+    async function inspectStyles(targetOrSelector) {
+      let loc
+      if (typeof targetOrSelector === 'string') {
+        loc = frame.locator(targetOrSelector).first()
+      } else if (targetOrSelector) {
+        loc = targetOrSelector
+      } else {
+        loc = targetLoc
+      }
+      return loc.evaluate(el => {
+        const cs = window.getComputedStyle(el)
+        return {
+          tag: el.tagName,
+          id: el.id || undefined,
+          className: el.className || undefined,
+          border: cs.border,
+          borderColor: cs.borderColor,
+          borderWidth: cs.borderWidth,
+          borderStyle: cs.borderStyle,
+          borderRadius: cs.borderRadius,
+          outline: cs.outline,
+          outlineColor: cs.outlineColor,
+          outlineWidth: cs.outlineWidth,
+          outlineStyle: cs.outlineStyle,
+          outlineOffset: cs.outlineOffset,
+          boxShadow: cs.boxShadow,
+          backgroundColor: cs.backgroundColor,
+          color: cs.color,
+          width: cs.width,
+          height: cs.height,
+        }
+      })
+    }
+
+    // Helper: press Tab with native keyboard :focus-visible outline shim
+    async function pressTab(customLoc) {
       await page.mouse.move(0, 0)
+      await frame.locator('body').click({ position: { x: 5, y: 5 } }).catch(() => {})
+      const el = customLoc || interactiveEl
+      await el.evaluate(node => {
+        const btn = document.createElement('button')
+        btn.id = '__capture_tab_shim__'
+        btn.textContent = 'shim'
+        node.parentNode.insertBefore(btn, node)
+        btn.focus()
+      }).catch(() => {})
+      await page.keyboard.press('Tab')
       await page.waitForTimeout(200)
-      const restingPath = path.join(opts.outDir, `${baseName}_resting.png`)
-      await capturePadded(page, targetLoc, restingPath, opts.pad, opts.viewport)
-      savedFiles.push({ label: 'Resting', path: restingPath })
+      await frame.locator('#__capture_tab_shim__').evaluate(btn => btn?.remove()).catch(() => {})
+    }
 
-      // --- STATE 2: Hover ---
+    // Helper: capture screenshot of target or custom element
+    async function captureStep(label, customTarget, customPad = opts.pad) {
+      const cleanLabel = String(label).trim().replace(/\s+/g, '_')
+      const outPath = path.join(opts.outDir, `${baseName}_${cleanLabel}.png`)
+
+      let snapTarget = targetLoc
+      if (customTarget) {
+        if (customTarget === 'full' || customTarget === 'viewport') {
+          await page.screenshot({ path: outPath })
+          savedFiles.push({ label, path: outPath })
+          console.log(`  [captured] ${label}: ${outPath}`)
+          return outPath
+        } else if (typeof customTarget === 'string') {
+          snapTarget = frame.locator(customTarget).first()
+        } else {
+          snapTarget = customTarget
+        }
+      }
+
+      await capturePadded(page, snapTarget, outPath, customPad, opts.viewport)
+      savedFiles.push({ label, path: outPath })
+      console.log(`  [captured] ${label}: ${outPath}`)
+      return outPath
+    }
+
+    // Build context passed to script functions
+    const scriptContext = {
+      page,
+      frame,
+      root,
+      target: targetLoc,
+      interactive: interactiveEl,
+      pressTab,
+      inspectStyles,
+      wait: (ms) => page.waitForTimeout(ms),
+      capture: captureStep,
+    }
+
+    // 1. Script function passed programmatically or via --script / --eval
+    if (customScriptFn) {
+      console.log('Executing custom capture script function...')
+      await customScriptFn(scriptContext)
+    } else if (opts.script) {
+      const scriptPath = path.resolve(process.cwd(), opts.script)
+      if (!fs.existsSync(scriptPath)) {
+        throw new Error(`Script file not found: ${scriptPath}`)
+      }
+      console.log(`Executing capture script: ${opts.script}`)
+      const scriptUrl = pathToFileURL(scriptPath).href
+      const mod = await import(scriptUrl)
+      const fn = mod.default || mod.run || (typeof mod === 'function' ? mod : null)
+      if (typeof fn !== 'function') {
+        throw new Error(`Script ${opts.script} must export a default async function({ page, frame, root, target, interactive, capture, pressTab, wait })`)
+      }
+      await fn(scriptContext)
+    } else if (opts.eval) {
+      console.log(`Executing inline script: ${opts.eval.trim()}`)
+      const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor
+      const fn = new AsyncFunction('ctx', `
+        const { page, frame, root, target, interactive, pressTab, inspectStyles, wait, capture } = ctx;
+        return (async () => {
+          ${opts.eval}
+        })();
+      `)
+      await fn(scriptContext)
+    } else if (opts.states) {
+      // Legacy multi-state capture
+      const stateStyles = []
+
+      await page.mouse.move(0, 0)
+      await page.waitForTimeout(150)
+      await captureStep('Resting')
+      if (opts.inspectStyles) {
+        stateStyles.push({ state: 'Resting', ...(await inspectStyles(targetLoc)) })
+      }
+
       if (await interactiveEl.count() > 0 && await interactiveEl.isVisible()) {
         await interactiveEl.hover().catch(() => {})
-        await page.waitForTimeout(250)
-        const hoverPath = path.join(opts.outDir, `${baseName}_hover.png`)
-        await capturePadded(page, targetLoc, hoverPath, opts.pad, opts.viewport)
-        savedFiles.push({ label: 'Hover', path: hoverPath })
-      }
+        await page.waitForTimeout(200)
+        await captureStep('Hover')
+        if (opts.inspectStyles) {
+          stateStyles.push({ state: 'Hover', ...(await inspectStyles(targetLoc)) })
+        }
 
-      // --- STATE 3: Focus (Pointer Click) ---
-      if (await interactiveEl.count() > 0 && await interactiveEl.isVisible()) {
         await interactiveEl.click().catch(() => {})
-        await page.waitForTimeout(250)
-        const focusPath = path.join(opts.outDir, `${baseName}_focus.png`)
-        await capturePadded(page, targetLoc, focusPath, opts.pad, opts.viewport)
-        savedFiles.push({ label: 'Focus (Click)', path: focusPath })
+        await page.waitForTimeout(200)
+        await captureStep('Focus (Click)')
+        if (opts.inspectStyles) {
+          stateStyles.push({ state: 'Focus (Click)', ...(await inspectStyles(targetLoc)) })
+        }
+
+        await pressTab(interactiveEl)
+        await captureStep('Tab (Keyboard)')
+        if (opts.inspectStyles) {
+          stateStyles.push({ state: 'Tab (Keyboard)', ...(await inspectStyles(targetLoc)) })
+        }
       }
 
-      // --- STATE 4: Tab (Keyboard Focus-Visible) ---
-      if (await interactiveEl.count() > 0 && await interactiveEl.isVisible()) {
-        await page.mouse.move(0, 0)
-        // Reset focus cleanly
-        await frame.locator('body').click({ position: { x: 5, y: 5 } }).catch(() => {})
-        // Insert temporary preceding button inside iframe to trigger native keyboard modality via Tab
-        await interactiveEl.evaluate(el => {
-          const btn = document.createElement('button')
-          btn.id = '__capture_tab_shim__'
-          btn.textContent = 'shim'
-          el.parentNode.insertBefore(btn, el)
-          btn.focus()
-        }).catch(() => {})
-
-        await page.keyboard.press('Tab')
-        await page.waitForTimeout(250)
-        await frame.locator('#__capture_tab_shim__').evaluate(el => el?.remove()).catch(() => {})
-
-        const tabPath = path.join(opts.outDir, `${baseName}_tab.png`)
-        await capturePadded(page, targetLoc, tabPath, opts.pad, opts.viewport)
-        savedFiles.push({ label: 'Tab (Keyboard)', path: tabPath })
+      if (stateStyles.length > 0) {
+        console.log('\n--- COMPUTED STYLES TABLE ---')
+        console.log('| State | Outline | Outline Color | Border | Border Color |')
+        console.log('| :--- | :--- | :--- | :--- | :--- |')
+        for (const s of stateStyles) {
+          console.log(`| ${s.state} | ${s.outlineWidth} ${s.outlineStyle} (offset: ${s.outlineOffset}) | ${s.outlineColor} | ${s.borderWidth} ${s.borderStyle} | ${s.borderColor} |`)
+        }
       }
 
-      // --- STATE 5: Open (Popups / Dialogs / Menus) ---
       const trigger = targetLoc.locator('button, [role="button"], [role="combobox"]').first()
       if (await trigger.count() > 0 && await trigger.isVisible()) {
         const hasPopup = await trigger.getAttribute('aria-haspopup').catch(() => null)
@@ -421,23 +472,17 @@ async function main() {
         if (hasPopup || role === 'combobox') {
           await trigger.click().catch(() => {})
           await page.waitForTimeout(350)
-
           const popupLoc = frame.locator('[role="dialog"], [role="listbox"], [role="menu"], [data-reference-popover]').first()
           if (await popupLoc.count() > 0 && await popupLoc.isVisible()) {
             const fieldBox = await targetLoc.boundingBox().catch(() => null)
             const popupBox = await popupLoc.boundingBox().catch(() => null)
-
-            const openPath = path.join(opts.outDir, `${baseName}_open.png`)
             if (fieldBox && popupBox) {
               const minX = Math.max(0, Math.min(fieldBox.x, popupBox.x) - opts.pad)
               const minY = Math.max(0, Math.min(fieldBox.y, popupBox.y) - opts.pad)
               const maxX = Math.min(opts.viewport.width, Math.max(fieldBox.x + fieldBox.width, popupBox.x + popupBox.width) + opts.pad)
               const maxY = Math.min(opts.viewport.height, Math.max(fieldBox.y + fieldBox.height, popupBox.y + popupBox.height) + opts.pad)
-
-              await page.screenshot({
-                path: openPath,
-                clip: { x: minX, y: minY, width: maxX - minX, height: maxY - minY },
-              })
+              const openPath = path.join(opts.outDir, `${baseName}_Open.png`)
+              await page.screenshot({ path: openPath, clip: { x: minX, y: minY, width: maxX - minX, height: maxY - minY } })
               savedFiles.push({ label: 'Open', path: openPath })
             }
           }
@@ -449,36 +494,27 @@ async function main() {
       if (opts.hover) {
         const hoverEl = frame.locator(opts.hover).first()
         await hoverEl.hover()
-        await page.waitForTimeout(250)
+        await page.waitForTimeout(200)
       }
       if (opts.click) {
         const clickEl = frame.locator(opts.click).first()
         await clickEl.click()
-        await page.waitForTimeout(300)
+        await page.waitForTimeout(250)
       }
       if (opts.focus) {
         await interactiveEl.focus().catch(() => {})
-        await page.waitForTimeout(200)
+        await page.waitForTimeout(150)
       }
       if (opts.tab) {
-        await interactiveEl.evaluate(el => {
-          const btn = document.createElement('button')
-          btn.id = '__capture_tab_shim__'
-          btn.textContent = 'shim'
-          el.parentNode.insertBefore(btn, el)
-          btn.focus()
-        }).catch(() => {})
-        await page.keyboard.press('Tab')
-        await page.waitForTimeout(200)
-        await frame.locator('#__capture_tab_shim__').evaluate(el => el?.remove()).catch(() => {})
+        await pressTab(interactiveEl)
       }
       if (opts.type) {
         await page.keyboard.type(opts.type)
-        await page.waitForTimeout(200)
+        await page.waitForTimeout(150)
       }
       if (opts.press) {
         await page.keyboard.press(opts.press)
-        await page.waitForTimeout(250)
+        await page.waitForTimeout(200)
       }
 
       const outPath = opts.out || path.join(opts.outDir, `${baseName}.png`)
@@ -491,10 +527,7 @@ async function main() {
           const minY = Math.max(0, Math.min(fieldBox.y, popupBox.y) - opts.pad)
           const maxX = Math.min(opts.viewport.width, Math.max(fieldBox.x + fieldBox.width, popupBox.x + popupBox.width) + opts.pad)
           const maxY = Math.min(opts.viewport.height, Math.max(fieldBox.y + fieldBox.height, popupBox.y + popupBox.height) + opts.pad)
-          await page.screenshot({
-            path: outPath,
-            clip: { x: minX, y: minY, width: maxX - minX, height: maxY - minY },
-          })
+          await page.screenshot({ path: outPath, clip: { x: minX, y: minY, width: maxX - minX, height: maxY - minY } })
         } else {
           await capturePadded(page, targetLoc, outPath, opts.pad, opts.viewport)
         }
@@ -502,6 +535,14 @@ async function main() {
         await capturePadded(page, targetLoc, outPath, opts.pad, opts.viewport)
       }
       savedFiles.push({ label: 'Captured', path: outPath })
+
+      if (opts.inspectStyles) {
+        const s = await inspectStyles(targetLoc)
+        console.log('\n--- COMPUTED STYLES [target] ---')
+        console.log(`Outline: ${s.outlineWidth} ${s.outlineStyle} (color: ${s.outlineColor}, offset: ${s.outlineOffset})`)
+        console.log(`Border:  ${s.borderWidth} ${s.borderStyle} (color: ${s.borderColor})`)
+        console.log(`Box:     ${s.width}x${s.height}, bg: ${s.backgroundColor}`)
+      }
     }
 
     // Auto-detect Antigravity brain directory to ensure images render cleanly in chat and artifacts
@@ -540,12 +581,176 @@ async function main() {
       console.log('\n--- READY-TO-EMBED MARKDOWN ---')
       console.log(`![${opts.component} ${selectedFixture || ''}](${resolvedFiles[0].embedPath})`)
     }
-  } catch (err) {
-    console.error('Capture error:', err.message)
-    process.exit(1)
+
+    return {
+      component: opts.component,
+      fixture: selectedFixture,
+      files: resolvedFiles,
+    }
   } finally {
     await browser.close()
   }
 }
 
-main()
+// 9. Programmatic API for scripts to import
+export async function captureFixture(component, fixture, scriptFn, options = {}) {
+  return runCapture({ component, fixture, ...options }, scriptFn)
+}
+
+// 10. CLI Argument Parser
+function parseArgs() {
+  const args = process.argv.slice(2)
+  const defaultOutDir = path.join(repoRoot, '.reference-ui/captures')
+  const options = {
+    component: '',
+    fixture: '',
+    outDir: defaultOutDir,
+    name: '',
+    target: '',
+    eval: '',
+    script: '',
+    hover: '',
+    click: '',
+    focus: false,
+    tab: false,
+    press: '',
+    type: '',
+    states: false,
+    list: false,
+    wait: 2200,
+    pad: 20,
+    viewport: { width: 1000, height: 700 },
+  }
+
+  const positional = []
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i]
+    if (arg === '--states') {
+      options.states = true
+    } else if (arg === '--inspect-styles' || arg === '--styles') {
+      options.inspectStyles = true
+    } else if (arg === '--list' || arg === '-l') {
+      options.list = true
+    } else if (arg === '--focus') {
+      options.focus = true
+    } else if (arg === '--tab') {
+      options.tab = true
+    } else if ((arg === '--eval' || arg === '-e') && i + 1 < args.length) {
+      options.eval = args[++i]
+    } else if ((arg === '--script' || arg === '-s') && i + 1 < args.length) {
+      options.script = args[++i]
+    } else if (arg === '--hover' && i + 1 < args.length) {
+      options.hover = args[++i]
+    } else if (arg === '--click' && i + 1 < args.length) {
+      options.click = args[++i]
+    } else if (arg === '--press' && i + 1 < args.length) {
+      options.press = args[++i]
+    } else if (arg === '--type' && i + 1 < args.length) {
+      options.type = args[++i]
+    } else if (arg === '--target' && i + 1 < args.length) {
+      options.target = args[++i]
+    } else if (arg === '--out-dir' && i + 1 < args.length) {
+      options.outDir = path.resolve(process.cwd(), args[++i])
+    } else if (arg === '--out' && i + 1 < args.length) {
+      options.out = path.resolve(process.cwd(), args[++i])
+    } else if (arg === '--name' && i + 1 < args.length) {
+      options.name = args[++i]
+    } else if (arg === '--pad' && i + 1 < args.length) {
+      options.pad = parseInt(args[++i], 10)
+    } else if (arg === '--wait' && i + 1 < args.length) {
+      options.wait = parseInt(args[++i], 10)
+    } else if (arg === '--viewport' && i + 1 < args.length) {
+      const [w, h] = args[++i].split('x').map(n => parseInt(n, 10))
+      if (w && h) options.viewport = { width: w, height: h }
+    } else if (!arg.startsWith('--')) {
+      positional.push(arg)
+    }
+  }
+
+  if (positional[0]) {
+    // Handle "Slider/SingleThumb" or "Slider.SingleThumb"
+    if (positional[0].includes('/') && !positional[0].endsWith('.tsx')) {
+      const parts = positional[0].split('/')
+      options.component = parts[0]
+      options.fixture = parts.slice(1).join('/')
+    } else {
+      options.component = positional[0]
+    }
+  }
+  if (positional[1] && !options.fixture) {
+    options.fixture = positional[1]
+  }
+
+  return options
+}
+
+// 11. Main CLI Entrypoint
+async function main() {
+  const opts = parseArgs()
+
+  // 1. If --list without component: list all components and fixtures in the repo
+  if (opts.list && !opts.component) {
+    const all = getAllComponentFixtures()
+    console.log('\nAvailable components and fixtures in @reference-ui/lib:\n')
+    for (const [comp, info] of Object.entries(all).sort(([a], [b]) => a.localeCompare(b))) {
+      const fxList = info.fixtures.length > 0 ? info.fixtures.join(', ') : '(default)'
+      console.log(`  ${comp.padEnd(16)} -> [ ${fxList} ]`)
+    }
+    console.log('\nUsage Examples:')
+    console.log('  pnpm capture Slider SingleThumb')
+    console.log('  pnpm capture Slider SingleThumb -e "await capture(\'resting\'); await frame.locator(\'[role=slider]\').hover(); await capture(\'hover\');"')
+    console.log('  pnpm capture Tabs Horizontal --script ./my-scenario.mjs')
+    process.exit(0)
+  }
+
+  // 2. If no component specified at all, show friendly help and discovery
+  if (!opts.component) {
+    const all = getAllComponentFixtures()
+    const compNames = Object.keys(all).sort()
+    console.log('Usage: pnpm capture <Component> [Fixture] [options]')
+    console.log('\nScripting Options:')
+    console.log('  -e, --eval <code>     Run inline async script with { page, frame, root, target, interactive, capture, pressTab, inspectStyles, wait }')
+    console.log('  -s, --script <file>   Run script file exporting default async fn')
+    console.log('  -l, --list            List available fixtures for component (or all components if omitted)')
+    console.log('  --states              Multi-state capture: Resting, Hover, Focus (click), Tab, Open')
+    console.log('  --inspect-styles      Dump computed styles (outline, border, box-model) table')
+    console.log('  --target <css>        CSS selector for component bounding box')
+    console.log('  --pad <px>            Outline-safe bounding box padding (default: 20)')
+    console.log('\nAvailable components in @reference-ui/lib:')
+    console.log(`  ${compNames.join(', ')}`)
+    console.log('\nRun "pnpm capture --list" to view all components with their fixture names.')
+    process.exit(0)
+  }
+
+  // 3. If component specified with --list: list fixtures for this component
+  const fixtureFilePath = resolveFixtureFilePath(opts.component)
+  if (!fixtureFilePath) {
+    console.error(`ERROR: Could not find fixture file for component '${opts.component}'.`)
+    console.error('Checked under packages/reference-lib/src/components/')
+    process.exit(1)
+  }
+
+  const availableFixtures = extractFixtureNames(fixtureFilePath)
+  if (opts.list) {
+    console.log(`\nAvailable fixtures for ${opts.component} (${path.relative(repoRoot, fixtureFilePath)}):`)
+    if (availableFixtures.length === 0) {
+      console.log('  (single default export)')
+    } else {
+      availableFixtures.forEach(f => console.log(`  - ${f}`))
+    }
+    process.exit(0)
+  }
+
+  try {
+    await runCapture(opts)
+  } catch (err) {
+    console.error('Capture error:', err.message)
+    process.exit(1)
+  }
+}
+
+// Only invoke main when run directly from the CLI
+const isDirectRun = Boolean(process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href)
+if (isDirectRun) {
+  main()
+}

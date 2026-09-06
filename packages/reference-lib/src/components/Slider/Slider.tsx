@@ -1,7 +1,8 @@
 import * as React from 'react'
 import { Div, type PrimitiveProps, type PrimitiveElement } from '@reference-ui/react'
 import {
-  thumbFocusRingStyles,
+  focusRing,
+  focusRingStyles,
   pressableActiveStyles,
   trackBackground,
   sliderTrack,
@@ -37,6 +38,7 @@ interface SliderContextValue {
   updateThumbValue: (index: number, nextVal: number) => void
   commitThumbValue: (index: number, nextVal: number) => void
   setDraggingIndex: (index: number | null) => void
+  registerThumb: (index: number, node: HTMLDivElement | null) => void
 }
 
 const SliderContext = React.createContext<SliderContextValue | null>(null)
@@ -144,10 +146,14 @@ export function SliderRange({
 
 export type SliderThumbProps = PrimitiveProps<'div'> & {
   index?: number
+  valueText?: string
+  formatValue?: (value: number) => string
 }
 
 export function SliderThumb({
   index = 0,
+  valueText,
+  formatValue,
   className,
   style,
   onKeyDown,
@@ -159,7 +165,7 @@ export function SliderThumb({
   const context = React.useContext(SliderContext)
   if (!context) return null
 
-  const { values, min, max, step, minStepsBetweenThumbs, orientation, disabled, updateThumbValue, commitThumbValue } = context
+  const { values, min, max, step, minStepsBetweenThumbs, orientation, disabled, updateThumbValue, commitThumbValue, registerThumb } = context
   const val = values[index] ?? min
   const range = max - min || 1
   const percent = Math.max(0, Math.min(100, ((val - min) / range) * 100))
@@ -169,6 +175,13 @@ export function SliderThumb({
   const isDragging = context.draggingIndex === index
   const isActive = isDragging || isThumbPressed
 
+  const setThumbRef = React.useCallback(
+    (node: HTMLDivElement | null) => {
+      registerThumb(index, node)
+    },
+    [registerThumb, index]
+  )
+
   const thumbMin = index > 0 && values.length > 1 ? values[index - 1] + minStepsBetweenThumbs * step : min
   const thumbMax = index < values.length - 1 && values.length > 1 ? values[index + 1] - minStepsBetweenThumbs * step : max
 
@@ -177,12 +190,13 @@ export function SliderThumb({
     if (e.defaultPrevented || disabled) return
 
     const pageStep = Math.max(step, Math.ceil((max - min) / 10 / step) * step)
+    const stepAmount = e.shiftKey ? pageStep : step
 
     let nextVal = val
     if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
-      nextVal = Math.min(thumbMax, val + step)
+      nextVal = Math.min(thumbMax, val + stepAmount)
     } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
-      nextVal = Math.max(thumbMin, val - step)
+      nextVal = Math.max(thumbMin, val - stepAmount)
     } else if (e.key === 'Home') {
       nextVal = thumbMin
     } else if (e.key === 'End') {
@@ -257,14 +271,36 @@ export function SliderThumb({
     }
   }
 
+  const defaultAriaLabel =
+    values.length === 2
+      ? index === 0
+        ? 'Minimum'
+        : 'Maximum'
+      : values.length > 2
+      ? `Value ${index + 1} of ${values.length}`
+      : undefined
+
+  const ariaValueText =
+    props['aria-valuetext'] ??
+    valueText ??
+    (props['aria-valuenow'] !== undefined
+      ? undefined
+      : formatValue
+      ? formatValue(val)
+      : undefined)
+
   return (
     <Div
+      ref={setThumbRef}
       role="slider"
       tabIndex={disabled ? -1 : 0}
+      aria-label={props['aria-label'] ?? defaultAriaLabel}
       aria-valuemin={thumbMin}
       aria-valuemax={thumbMax}
       aria-valuenow={val}
+      aria-valuetext={ariaValueText}
       aria-orientation={orientation}
+      aria-disabled={disabled ? true : undefined}
       data-reference-slider-thumb=""
       data-orientation={orientation}
       data-disabled={disabled ? '' : undefined}
@@ -281,9 +317,8 @@ export function SliderThumb({
       boxShadow={isActive ? undefined : '0 1px 3px rgba(0,0,0,0.2)'}
       cursor={disabled ? 'not-allowed' : 'pointer'}
       touchAction="none"
-      outline="none"
       transition="box-shadow 200ms ease, transform 200ms ease"
-      _focusVisible={thumbFocusRingStyles}
+      _focusVisible={focusRing}
       className={className}
       style={{
         width: isHorizontal ? sliderThumb.lengthPx : sliderThumb.crossPx,
@@ -366,6 +401,15 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
     )
 
     const [draggingIndex, setDraggingIndex] = React.useState<number | null>(null)
+    const thumbNodesRef = React.useRef<Map<number, HTMLDivElement>>(new Map())
+
+    const registerThumb = React.useCallback((index: number, node: HTMLDivElement | null) => {
+      if (node) {
+        thumbNodesRef.current.set(index, node)
+      } else {
+        thumbNodesRef.current.delete(index)
+      }
+    }, [])
 
     const contextValue = React.useMemo<SliderContextValue>(
       () => ({
@@ -381,8 +425,9 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
         updateThumbValue,
         commitThumbValue,
         setDraggingIndex,
+        registerThumb,
       }),
-      [values, min, max, step, minStepsBetweenThumbs, orientation, disabled, draggingIndex, updateThumbValue, commitThumbValue]
+      [values, min, max, step, minStepsBetweenThumbs, orientation, disabled, draggingIndex, updateThumbValue, commitThumbValue, registerThumb]
     )
 
     const isHorizontal = orientation === 'horizontal'
@@ -427,6 +472,7 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
       setDraggingIndex(closestIndex)
       updateThumbValue(closestIndex, rawVal)
       commitThumbValue(closestIndex, rawVal)
+      thumbNodesRef.current.get(closestIndex)?.focus()
     }
 
     const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {

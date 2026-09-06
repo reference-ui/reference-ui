@@ -1,6 +1,5 @@
 import * as React from 'react'
 import { Div, Input, Button, type PrimitiveProps, type PrimitiveElement } from '@reference-ui/react'
-import { controlSize, controlHeightPx } from '../../core/theme/primitives/shared'
 import { setupFocusVisible } from '../../core/theme/primitives/forms/focus-visible'
 
 setupFocusVisible()
@@ -62,15 +61,6 @@ export function NumberFieldInput({
       value={value !== null ? String(value) : ''}
       onChange={handleInputChange}
       onKeyDown={onKeyDown}
-      flex="1"
-      minWidth="8r"
-      height="100%"
-      textAlign="center"
-      bg="transparent"
-      border="none"
-      outline="none"
-      p="0"
-      color="design.text.base"
       className={className}
       style={style}
       {...props}
@@ -314,27 +304,8 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
           data-reference-field=""
           data-reference-number-field=""
           data-disabled={disabled ? '' : undefined}
-          display="inline-flex"
-          alignItems="center"
-          width="fit-content"
-          maxW="36r"
-          height={controlSize.height}
-          minHeight={controlSize.height}
-          p="0.75r"
-          gap="0.5r"
-          border="1px solid"
-          borderColor="ui.field.border"
-          borderRadius="md"
-          bg="ui.field.background"
-          boxSizing="border-box"
-          _focusWithin={{ borderColor: 'ui.focus.ring' }}
           className={className}
-          style={{
-            minHeight: controlHeightPx,
-            height: controlHeightPx,
-            boxSizing: 'border-box',
-            ...style,
-          }}
+          style={style}
           {...props}
         >
           {children ?? (

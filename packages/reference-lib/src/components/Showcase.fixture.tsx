@@ -57,6 +57,7 @@ const disclosureTrigger = dividerTrigger
 
 export default function ShowcaseFixture() {
   const [switchChecked, setSwitchChecked] = React.useState(true)
+  const [singleSliderVal, setSingleSliderVal] = React.useState(40)
   const [sliderVal, setSliderVal] = React.useState<number | number[]>([25, 75])
   const [comboboxVal, setComboboxVal] = React.useState<string | null>('react')
   const [dateVal, setDateVal] = React.useState<string | null>('2026-08-31')
@@ -139,25 +140,48 @@ export default function ShowcaseFixture() {
         </SectionCard>
 
         {/* Slider */}
-        <SectionCard title="Slider (Range)">
-          <Div px="2r">
-            <Slider
-              value={sliderVal}
-              onChange={setSliderVal}
-              min={0}
-              max={100}
-              step={1}
-            >
-              <Slider.Track>
-                <Slider.Range />
-                <Slider.Thumb index={0} />
-                <Slider.Thumb index={1} />
-              </Slider.Track>
-            </Slider>
+        <SectionCard title="Slider">
+          <Div display="flex" flexDirection="column" gap="4r">
+            <Div display="flex" flexDirection="column" gap="1.5r">
+              <Span fontSize="3r" color="design.text.light">
+                Single Thumb ({singleSliderVal}%)
+              </Span>
+              <Div px="2r">
+                <Slider
+                  value={singleSliderVal}
+                  onChange={setSingleSliderVal}
+                  min={0}
+                  max={100}
+                  step={1}
+                >
+                  <Slider.Track>
+                    <Slider.Range />
+                    <Slider.Thumb aria-label="Volume" />
+                  </Slider.Track>
+                </Slider>
+              </Div>
+            </Div>
+            <Div display="flex" flexDirection="column" gap="1.5r">
+              <Span fontSize="3r" color="design.text.light">
+                Range Thumbs ({Array.isArray(sliderVal) ? `${sliderVal[0]}% – ${sliderVal[1]}%` : `${sliderVal}%`})
+              </Span>
+              <Div px="2r">
+                <Slider
+                  value={sliderVal}
+                  onChange={setSliderVal}
+                  min={0}
+                  max={100}
+                  step={1}
+                >
+                  <Slider.Track>
+                    <Slider.Range />
+                    <Slider.Thumb index={0} aria-label="Minimum" />
+                    <Slider.Thumb index={1} aria-label="Maximum" />
+                  </Slider.Track>
+                </Slider>
+              </Div>
+            </Div>
           </Div>
-          <Span fontSize="3r" color="design.text.light">
-            Range: {Array.isArray(sliderVal) ? `${sliderVal[0]} - ${sliderVal[1]}` : sliderVal}
-          </Span>
         </SectionCard>
 
         {/* Tooltip & Popover */}

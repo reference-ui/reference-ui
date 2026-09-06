@@ -170,7 +170,7 @@ export const inputPrimitiveStyles = {
     WebkitAppearance: 'none',
     display: 'block',
     width: '100%',
-    height: '4r',
+    height: '6r',
     padding: '0',
     borderWidth: '0',
     borderRadius: '0',
@@ -180,6 +180,40 @@ export const inputPrimitiveStyles = {
     accentColor: '{colors.ui.progress.bar.foreground}',
     cursor: 'pointer',
     outline: 'none',
+    _focus: {
+      outline: 'none',
+    },
+    _focusVisible: {
+      outline: 'none',
+    },
+    '&:focus': {
+      outline: 'none',
+      outlineWidth: '0px',
+      outlineStyle: 'none',
+      outlineColor: 'transparent',
+      boxShadow: 'none',
+    },
+    '&:focus-visible': {
+      outline: 'none',
+      outlineWidth: '0px',
+      outlineStyle: 'none',
+      outlineColor: 'transparent',
+      boxShadow: 'none',
+    },
+    '&[data-focus-visible]': {
+      outline: 'none',
+      outlineWidth: '0px',
+      outlineStyle: 'none',
+      outlineColor: 'transparent',
+      boxShadow: 'none',
+    },
+    '&[data-focus-visible]:focus': {
+      outline: 'none',
+      outlineWidth: '0px',
+      outlineStyle: 'none',
+      outlineColor: 'transparent',
+      boxShadow: 'none',
+    },
   },
 
   '.ref-input[type="range"]::-webkit-slider-runnable-track': {
@@ -204,8 +238,12 @@ export const inputPrimitiveStyles = {
     transitionTimingFunction: 'ease',
   },
 
-  '.ref-input[type="range"]:focus-visible::-webkit-slider-thumb': {
-    ...thumbFocusRingStyles,
+  '.ref-input[type="range"]:focus-visible::-webkit-slider-thumb, .ref-input[type="range"][data-focus-visible]::-webkit-slider-thumb': {
+    outlineWidth: '2px',
+    outlineOffset: '2px',
+    outlineStyle: 'solid',
+    outlineColor: '{colors.ui.focus.ring}',
+    boxShadow: 'none',
   },
 
   '.ref-input[type="range"]:active::-webkit-slider-thumb': {
@@ -239,8 +277,12 @@ export const inputPrimitiveStyles = {
     transitionTimingFunction: 'ease',
   },
 
-  '.ref-input[type="range"]:focus-visible::-moz-range-thumb': {
-    ...thumbFocusRingStyles,
+  '.ref-input[type="range"]:focus-visible::-moz-range-thumb, .ref-input[type="range"][data-focus-visible]::-moz-range-thumb': {
+    outlineWidth: '2px',
+    outlineOffset: '2px',
+    outlineStyle: 'solid',
+    outlineColor: '{colors.ui.focus.ring}',
+    boxShadow: 'none',
   },
 
   '.ref-input[type="range"]:active::-moz-range-thumb': {
@@ -248,14 +290,20 @@ export const inputPrimitiveStyles = {
   },
 
   '[data-reference-slider-thumb]': {
+    outline: '2px solid transparent',
+    outlineOffset: '2px',
     boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-    transitionProperty: 'box-shadow, transform',
+    transitionProperty: 'box-shadow, transform, outline-color',
     transitionDuration: '200ms',
     transitionTimingFunction: 'ease',
   },
 
-  '[data-reference-slider-thumb]:focus-visible': {
-    ...thumbFocusRingStyles,
+  '[data-reference-slider-thumb]:focus-visible, [data-reference-slider-thumb][data-focus-visible]': {
+    outlineWidth: '2px',
+    outlineOffset: '2px',
+    outlineStyle: 'solid',
+    outlineColor: '{colors.ui.focus.ring}',
+    boxShadow: 'none',
   },
 
   '[data-reference-slider-thumb]:active, [data-reference-slider-thumb][data-active]': {

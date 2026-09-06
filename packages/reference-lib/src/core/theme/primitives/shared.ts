@@ -13,26 +13,22 @@ export const blockText = {
 
 export const focusRingStyles = {
   outline: '2px solid transparent',
-  outlineOffset: '4px',
+  outlineOffset: '2px',
   transitionProperty:
     'border-color, box-shadow, opacity, outline-color, outline-offset',
   transitionDuration: '150ms',
   transitionTimingFunction: 'ease',
   _focusVisible: {
-    focusVisibleRing: 'outside',
-    focusRingColor: '{colors.ui.focus.ring}',
-    focusRingOffset: '2px',
-    focusRingWidth: '2px',
-    focusRingStyle: 'solid',
+    outline: '2px solid',
+    outlineColor: 'ui.focus.ring',
+    outlineOffset: '2px',
     boxShadow: 'none',
   },
 } as const
 
 export const focusRing = focusRingStyles._focusVisible
 
-export const thumbFocusRingStyles = {
-  boxShadow: '0 0 0 4px color-mix(in oklch, {colors.ui.focus.ring} 80%, transparent)',
-} as const
+export const thumbFocusRingStyles = focusRing
 
 export function pressableActiveStyles(background: string) {
   return {
