@@ -49,19 +49,21 @@ async function cleanDaggerEngineCache(): Promise<boolean> {
     return false
   }
 
+  let cleanedSomething = false
   const containerIds = listDaggerEngineContainerIds()
 
-  if (containerIds.length === 0) {
-    return false
+  if (containerIds.length > 0) {
+    const removal = runDockerCommand(['rm', '--force', '--volumes', ...containerIds])
+    if (removal.status !== 0) {
+      throw new Error(removal.stderr.trim() || 'Failed to remove Dagger engine containers and volumes.')
+    }
+    cleanedSomething = true
   }
 
-  const removal = runDockerCommand(['rm', '--force', '--volumes', ...containerIds])
+  runDockerCommand(['volume', 'prune', '-f'])
+  runDockerCommand(['builder', 'prune', '-f'])
 
-  if (removal.status !== 0) {
-    throw new Error(removal.stderr.trim() || 'Failed to remove Dagger engine containers and volumes.')
-  }
-
-  return true
+  return cleanedSomething
 }
 
 export async function cleanPipeline(): Promise<void> {

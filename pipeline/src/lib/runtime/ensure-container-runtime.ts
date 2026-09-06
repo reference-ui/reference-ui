@@ -287,6 +287,51 @@ function needsMoreDockerDiskFreeSpace(options: ContainerRuntimeOptions, runtime:
   )
 }
 
+export function shouldReclaimDockerDiskSpace(
+  options: ContainerRuntimeOptions,
+  runtime: DockerRuntimeInfo,
+  safetyBufferBytes: number = 10 * 1024 * 1024 * 1024,
+): boolean {
+  if (!options.minimumDockerDiskFreeBytes || runtime.diskFreeBytes === null) {
+    return false
+  }
+
+  const reclaimThreshold = options.minimumDockerDiskFreeBytes + safetyBufferBytes
+  return runtime.diskFreeBytes < reclaimThreshold
+}
+
+function listDaggerEngineContainerIds(): string[] {
+  const result = runCommand('docker', ['ps', '-aq', '--filter', 'name=dagger-engine-'])
+
+  if (result.status !== 0) {
+    return []
+  }
+
+  return result.stdout
+    .split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(line => line.length > 0)
+}
+
+export function reclaimDockerDiskSpace(): boolean {
+  if (!dockerReachable()) {
+    return false
+  }
+
+  let cleanedSomething = false
+  const containerIds = listDaggerEngineContainerIds()
+
+  if (containerIds.length > 0) {
+    runCommand('docker', ['rm', '--force', '--volumes', ...containerIds])
+    cleanedSomething = true
+  }
+
+  runCommand('docker', ['volume', 'prune', '-f'])
+  runCommand('docker', ['builder', 'prune', '-f'])
+
+  return cleanedSomething
+}
+
 function needsMoreDockerResources(options: ContainerRuntimeOptions, runtime: DockerRuntimeInfo): boolean {
   return needsMoreDockerCpu(options, runtime.cpuCount) || needsMoreDockerMemory(options, runtime.memoryBytes)
 }
@@ -424,7 +469,24 @@ function assertDockerResources(options: ContainerRuntimeOptions): void {
     }
   }
 
-  const runtime = getDockerRuntimeInfo()
+  let runtime = getDockerRuntimeInfo()
+  const needsReclaim = shouldReclaimDockerDiskSpace(options, runtime)
+
+  if (needsReclaim) {
+    const commandLabel = options.commandLabel ?? 'this Dagger pipeline command'
+    const freeDisk = runtime.diskFreeBytes === null ? 'unknown free disk' : formatGiB(runtime.diskFreeBytes)
+    const requiredDisk = options.minimumDockerDiskFreeBytes ? formatGiB(options.minimumDockerDiskFreeBytes) : 'required'
+
+    console.log(
+      `${commandLabel} detected low Docker disk headroom (${freeDisk} free, minimum requirement ${requiredDisk}). Automatically reclaiming Dagger engine cache and volumes...`
+    )
+    reclaimDockerDiskSpace()
+    runtime = getDockerRuntimeInfo()
+
+    const reclaimedFreeDisk = runtime.diskFreeBytes === null ? 'sufficient free disk' : formatGiB(runtime.diskFreeBytes)
+    console.log(`✔ Successfully reclaimed Docker disk space: now ${reclaimedFreeDisk} free.`)
+  }
+
   const lacksCpuOrMemory = needsMoreDockerResources(options, runtime)
   const lacksDiskFreeSpace = needsMoreDockerDiskFreeSpace(options, runtime)
 
@@ -443,12 +505,12 @@ function assertDockerResources(options: ContainerRuntimeOptions): void {
       const totalDisk = runtime.diskTotalBytes === null ? 'unknown total disk' : formatGiB(runtime.diskTotalBytes)
 
       throw new Error(
-        `${commandLabel} requires at least ${requiredResources}, but Colima currently has ${freeDisk} free (${usedDisk} used of ${totalDisk} total). Run \`pnpm pipeline clean\` to clear pipeline and Dagger caches, or reclaim Docker disk / restart Colima with a larger disk via \`colima stop && colima start --disk 160\`, then retry.`
+        `${commandLabel} requires at least ${requiredResources}, but Colima currently has ${freeDisk} free (${usedDisk} used of ${totalDisk} total) even after automatic cache reclamation. Reclaim host disk or restart Colima with a larger disk via \`colima stop && colima start --disk 160\`, then retry.`
       )
     }
 
     throw new Error(
-      `${commandLabel} requires at least ${requiredResources}, but Docker currently reports ${formatDetectedDockerResources(runtime)}. Reclaim Docker disk space and retry.`
+      `${commandLabel} requires at least ${requiredResources}, but Docker currently reports ${formatDetectedDockerResources(runtime)} even after automatic cache reclamation. Reclaim Docker disk space and retry.`
     )
   }
 
