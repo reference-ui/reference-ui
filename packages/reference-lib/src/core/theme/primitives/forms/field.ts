@@ -89,7 +89,7 @@ export const fieldSurfaceStyles = {
       outlineOffset: '2px',
       outlineStyle: 'solid',
       outlineColor: '{colors.ui.focus.ring}',
-      borderColor: '{colors.ui.focus.ring}',
+      borderColor: '{colors.ui.field.borderHover}',
     },
 
   '[data-reference-field]:has([aria-invalid="true"]), [data-reference-field][data-invalid]': {

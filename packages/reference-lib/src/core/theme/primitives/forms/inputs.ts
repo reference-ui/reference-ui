@@ -36,11 +36,11 @@ export const inputPrimitiveStyles = {
     },
     _focusVisible: {
       outline: 'none',
-      borderColor: '{colors.ui.focus.ring}',
+      borderColor: '{colors.ui.field.borderHover}',
     },
     '&[data-focus-visible]': {
       ...focusRingStyles._focusVisible,
-      borderColor: '{colors.ui.focus.ring}',
+      borderColor: '{colors.ui.field.borderHover}',
     },
     _disabled: {
       cursor: 'not-allowed',
@@ -76,11 +76,11 @@ export const inputPrimitiveStyles = {
     },
     _focusVisible: {
       outline: 'none',
-      borderColor: '{colors.ui.focus.ring}',
+      borderColor: '{colors.ui.field.borderHover}',
     },
     '&[data-focus-visible]': {
       ...focusRingStyles._focusVisible,
-      borderColor: '{colors.ui.focus.ring}',
+      borderColor: '{colors.ui.field.borderHover}',
     },
     _disabled: {
       cursor: 'not-allowed',

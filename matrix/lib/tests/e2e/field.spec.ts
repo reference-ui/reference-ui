@@ -87,5 +87,7 @@ test.describe('Field Composition Gates & Browser Proofs', () => {
     expect(keyboardTabStyles.outlineStyle).toBe('solid')
     expect(keyboardTabStyles.outlineWidth).toBe('2px')
     expect(keyboardTabStyles.outlineColor.includes('/ 0)')).toBe(false)
+    // Border color on keyboard tab stays subtle and does not duplicate the white outline ring
+    expect(keyboardTabStyles.borderColor).not.toBe(mouseClickStyles.borderColor)
   })
 })
