@@ -51,7 +51,7 @@ export async function buildStyledPackage(): Promise<void> {
       styledDir: STYLED_DIR,
       pandaConfigPath: PANDA_CONFIG_PATH,
       systemEntry,
-      fragmentFiles
+      fragmentFiles,
     })
     await runPandaCodegen()
 
@@ -61,14 +61,13 @@ export async function buildStyledPackage(): Promise<void> {
       JSON.stringify(
         { fragmentsCollected: fragmentFiles.length, outputPath: STYLED_DIR, generatedAt: new Date().toISOString() },
         null,
-        2
+        2,
       ),
-      'utf-8'
+      'utf-8',
     )
 
     console.log('\n[build:styled] ✓ Styled package built successfully!')
     console.log(`[build:styled] Output: ${STYLED_DIR}`)
-    process.exit(0)
   } catch (error) {
     console.error('\n[build:styled] ✗ Build failed:', error)
     process.exit(1)

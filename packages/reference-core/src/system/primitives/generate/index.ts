@@ -10,7 +10,7 @@ const CLI_ROOT = resolve(dirname(__filename), '../../../..')
 const outPath = join(CLI_ROOT, 'src/system/primitives/index.tsx')
 
 export async function buildPrimitives(): Promise<void> {
-  const content = createPrimitiveSource(CLI_ROOT)
+  const content = await createPrimitiveSource(CLI_ROOT)
   writeFileSync(outPath, content, 'utf8')
   console.log(`[build:primitives] Generated ${outPath}`)
 }
