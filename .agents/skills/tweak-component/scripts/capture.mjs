@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import fs from 'node:fs'
 import http from 'node:http'
+import os from 'node:os'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -503,17 +504,41 @@ async function main() {
       savedFiles.push({ label: 'Captured', path: outPath })
     }
 
+    // Auto-detect Antigravity brain directory to ensure images render cleanly in chat and artifacts
+    const conversationId = process.env.ANTIGRAVITY_CONVERSATION_ID
+    const brainDir = conversationId
+      ? path.join(os.homedir(), '.gemini/antigravity/brain', conversationId)
+      : null
+    const hasBrainDir = brainDir && fs.existsSync(brainDir)
+
+    const resolvedFiles = savedFiles.map(f => {
+      let embedPath = f.path
+      if (hasBrainDir) {
+        const destPath = path.join(brainDir, path.basename(f.path))
+        try {
+          fs.copyFileSync(f.path, destPath)
+          embedPath = destPath
+        } catch {
+          // Fallback to original path if copy fails
+        }
+      }
+      return { ...f, embedPath }
+    })
+
     console.log('\n--- CAPTURED SCREENSHOTS ---')
     savedFiles.forEach(f => console.log(`${f.label}: ${f.path}`))
+    if (hasBrainDir) {
+      console.log(`(Synced to Antigravity brain: ${brainDir})`)
+    }
 
-    if (savedFiles.length > 1) {
+    if (resolvedFiles.length > 1) {
       console.log('\n--- READY-TO-EMBED MARKDOWN TABLE ---')
-      console.log(`| ${savedFiles.map(f => f.label).join(' | ')} |`)
-      console.log(`| ${savedFiles.map(() => ':---:').join(' | ')} |`)
-      console.log(`| ${savedFiles.map(f => `![${opts.component} ${f.label}](${f.path})`).join(' | ')} |`)
-    } else if (savedFiles.length === 1) {
+      console.log(`| ${resolvedFiles.map(f => f.label).join(' | ')} |`)
+      console.log(`| ${resolvedFiles.map(() => ':---:').join(' | ')} |`)
+      console.log(`| ${resolvedFiles.map(f => `![${opts.component} ${f.label}](${f.embedPath})`).join(' | ')} |`)
+    } else if (resolvedFiles.length === 1) {
       console.log('\n--- READY-TO-EMBED MARKDOWN ---')
-      console.log(`![${opts.component} ${selectedFixture || ''}](${savedFiles[0].path})`)
+      console.log(`![${opts.component} ${selectedFixture || ''}](${resolvedFiles[0].embedPath})`)
     }
   } catch (err) {
     console.error('Capture error:', err.message)
