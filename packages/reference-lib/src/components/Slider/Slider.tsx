@@ -22,6 +22,7 @@ interface SliderContextValue {
   min: number
   max: number
   step: number
+  minStepsBetweenThumbs: number
   orientation: SliderOrientation
   disabled: boolean
   trackRef: React.RefObject<HTMLDivElement | null>
@@ -68,13 +69,14 @@ export const SliderTrack = React.forwardRef<HTMLDivElement, SliderTrackProps>(
         position="relative"
         flexGrow={1}
         borderRadius="full"
-        bg="colors.gray.200"
+        bg="ui.table.border"
         height={isHorizontal ? '1.5r' : '100%'}
         width={orientation === 'vertical' ? '1.5r' : '100%'}
         className={className}
         style={{
           height: isHorizontal ? '6px' : '100%',
           width: orientation === 'vertical' ? '6px' : '100%',
+          backgroundColor: 'rgba(128, 128, 128, 0.3)',
           ...style,
         }}
         {...props}
@@ -115,11 +117,13 @@ export function SliderRange({
       pointerEvents="none"
       className={className}
       style={{
-        [isHorizontal ? 'left' : 'bottom']: `${startPercent}%`,
-        [isHorizontal ? 'width' : 'height']: `${sizePercent}%`,
-        [isHorizontal ? 'height' : 'width']: '100%',
+        left: isHorizontal ? `${startPercent}%` : undefined,
+        bottom: !isHorizontal ? `${startPercent}%` : undefined,
+        width: isHorizontal ? `${sizePercent}%` : '100%',
+        height: isHorizontal ? '100%' : `${sizePercent}%`,
+        ['--reference-slider-range-start' as any]: `${startPercent}%`,
+        ['--reference-slider-range-end' as any]: `${endPercent}%`,
         top: 0,
-        bottom: 0,
         ...style,
       }}
       {...props}
@@ -144,30 +148,35 @@ export function SliderThumb({
   const context = React.useContext(SliderContext)
   if (!context) return null
 
-  const { values, min, max, step, orientation, disabled, updateThumbValue, commitThumbValue } = context
+  const { values, min, max, step, minStepsBetweenThumbs, orientation, disabled, updateThumbValue, commitThumbValue } = context
   const val = values[index] ?? min
   const range = max - min || 1
   const percent = Math.max(0, Math.min(100, ((val - min) / range) * 100))
   const isHorizontal = orientation === 'horizontal'
   const isDraggingRef = React.useRef(false)
 
+  const thumbMin = index > 0 && values.length > 1 ? values[index - 1] + minStepsBetweenThumbs * step : min
+  const thumbMax = index < values.length - 1 && values.length > 1 ? values[index + 1] - minStepsBetweenThumbs * step : max
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     onKeyDown?.(e)
     if (e.defaultPrevented || disabled) return
 
+    const pageStep = Math.max(step, Math.ceil((max - min) / 10 / step) * step)
+
     let nextVal = val
     if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
-      nextVal = Math.min(max, val + step)
+      nextVal = Math.min(thumbMax, val + step)
     } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
-      nextVal = Math.max(min, val - step)
+      nextVal = Math.max(thumbMin, val - step)
     } else if (e.key === 'Home') {
-      nextVal = min
+      nextVal = thumbMin
     } else if (e.key === 'End') {
-      nextVal = max
+      nextVal = thumbMax
     } else if (e.key === 'PageUp') {
-      nextVal = Math.min(max, val + step * 10)
+      nextVal = Math.min(thumbMax, val + pageStep)
     } else if (e.key === 'PageDown') {
-      nextVal = Math.max(min, val - step * 10)
+      nextVal = Math.max(thumbMin, val - pageStep)
     }
 
     if (nextVal !== val) {
@@ -234,10 +243,11 @@ export function SliderThumb({
     <Div
       role="slider"
       tabIndex={disabled ? -1 : 0}
-      aria-valuemin={min}
-      aria-valuemax={max}
+      aria-valuemin={thumbMin}
+      aria-valuemax={thumbMax}
       aria-valuenow={val}
       aria-orientation={orientation}
+      data-reference-slider-thumb=""
       data-disabled={disabled ? '' : undefined}
       onKeyDown={handleKeyDown}
       onPointerDown={handlePointerDown}
@@ -247,20 +257,21 @@ export function SliderThumb({
       width="4.5r"
       height="4.5r"
       borderRadius="full"
-      bg="ui.field.background"
+      bg="ui.dialog.background"
       border="2px solid"
       borderColor="ui.progress.bar.foreground"
-      boxShadow="0 1px 3px rgba(0,0,0,0.2)"
+      boxShadow="0 1px 4px rgba(0,0,0,0.3)"
       cursor={disabled ? 'not-allowed' : 'pointer'}
       touchAction="none"
       outline="none"
       _focusVisible={{ outline: '2px solid', outlineColor: 'ui.focus.ring', outlineOffset: '2px' }}
       className={className}
       style={{
-        [isHorizontal ? 'left' : 'bottom']: `${percent}%`,
+        left: isHorizontal ? `${percent}%` : '50%',
+        bottom: !isHorizontal ? `${percent}%` : undefined,
         top: isHorizontal ? '50%' : undefined,
-        left: !isHorizontal ? '50%' : undefined,
         transform: isHorizontal ? 'translate(-50%, -50%)' : 'translate(-50%, 50%)',
+        ['--reference-slider-thumb-position' as any]: `${percent}%`,
         ...style,
       }}
       {...props}
@@ -301,7 +312,9 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
 
     const updateThumbValue = React.useCallback(
       (index: number, nextVal: number) => {
-        const clampedVal = Math.max(min, Math.min(max, Math.round(nextVal / step) * step))
+        const thumbMin = index > 0 && values.length > 1 ? values[index - 1] + minStepsBetweenThumbs * step : min
+        const thumbMax = index < values.length - 1 && values.length > 1 ? values[index + 1] - minStepsBetweenThumbs * step : max
+        const clampedVal = Math.max(thumbMin, Math.min(thumbMax, Math.round(nextVal / step) * step))
         const nextValues = [...values]
         nextValues[index] = clampedVal
 
@@ -311,18 +324,20 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
         }
         onChange?.(result)
       },
-      [values, currentValue, min, max, step, isControlled, onChange]
+      [values, currentValue, min, max, step, minStepsBetweenThumbs, isControlled, onChange]
     )
 
     const commitThumbValue = React.useCallback(
       (index: number, nextVal: number) => {
-        const clampedVal = Math.max(min, Math.min(max, Math.round(nextVal / step) * step))
+        const thumbMin = index > 0 && values.length > 1 ? values[index - 1] + minStepsBetweenThumbs * step : min
+        const thumbMax = index < values.length - 1 && values.length > 1 ? values[index + 1] - minStepsBetweenThumbs * step : max
+        const clampedVal = Math.max(thumbMin, Math.min(thumbMax, Math.round(nextVal / step) * step))
         const nextValues = [...values]
         nextValues[index] = clampedVal
         const result = Array.isArray(currentValue) ? nextValues : clampedVal
         onChangeEnd?.(result)
       },
-      [values, currentValue, min, max, step, onChangeEnd]
+      [values, currentValue, min, max, step, minStepsBetweenThumbs, onChangeEnd]
     )
 
     const contextValue = React.useMemo<SliderContextValue>(
@@ -331,13 +346,14 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
         min,
         max,
         step,
+        minStepsBetweenThumbs,
         orientation,
         disabled,
         trackRef,
         updateThumbValue,
         commitThumbValue,
       }),
-      [values, min, max, step, orientation, disabled, updateThumbValue, commitThumbValue]
+      [values, min, max, step, minStepsBetweenThumbs, orientation, disabled, updateThumbValue, commitThumbValue]
     )
 
     const isHorizontal = orientation === 'horizontal'

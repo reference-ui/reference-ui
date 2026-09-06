@@ -106,6 +106,10 @@ function resolveReference(
   // Trigger is the floating reference only when isolation focus is off
   // (popover/menu/tooltip). Isolating dialogs keep Trigger as opener only.
   if (trigger && !isolationFocus) {
+    const fieldAncestor = trigger.closest('[data-reference-field]') as HTMLElement | null
+    if (fieldAncestor) {
+      return fieldAncestor
+    }
     return trigger
   }
 
@@ -346,6 +350,8 @@ export function OverlayBackdrop({
 export interface OverlayContentProps
   extends Omit<React.ComponentPropsWithoutRef<'div'>, 'color' | 'content'> {
   placement?: Placement
+  side?: 'top' | 'bottom' | 'left' | 'right'
+  align?: 'start' | 'center' | 'end'
   offset?: number
   collisionPadding?: number
   strategy?: Strategy
@@ -357,6 +363,8 @@ export interface OverlayContentProps
 export function OverlayContent({
   children,
   placement = 'bottom-start',
+  side: sideProp,
+  align: alignProp,
   offset = 8,
   collisionPadding = 8,
   strategy = 'absolute',
@@ -369,6 +377,16 @@ export function OverlayContent({
   const context = React.useContext(OverlayContext)
   const [mountedContent, setMountedContent] = React.useState<HTMLDivElement | null>(null)
 
+  const resolvedPlacement: Placement = (
+    sideProp && alignProp
+      ? (`${sideProp}-${alignProp}` as Placement)
+      : sideProp
+      ? (sideProp as Placement)
+      : alignProp
+      ? (`${placement.split('-')[0] || 'bottom'}-${alignProp}` as Placement)
+      : placement
+  )
+
   const isOpen = context?.isOpen ?? false
   const setIsOpen = context?.setIsOpen
   const anchor = context?.anchor
@@ -378,6 +396,13 @@ export function OverlayContent({
   const triggerRef = context?.triggerRef
   const arrowRef = context?.arrowRef
   const isolationFocus = context?.isolation.focus ?? true
+
+  const lastPlacementRef = React.useRef<Placement | undefined>(undefined)
+  React.useEffect(() => {
+    if (!isOpen) {
+      lastPlacementRef.current = undefined
+    }
+  }, [isOpen])
 
   React.useLayoutEffect(() => {
     if (!context || !isOpen || !setIsOpen || !contentRef || !triggerRef || !arrowRef) {
@@ -428,7 +453,8 @@ export function OverlayContent({
       const floating = contentRef.current
       if (!reference || !floating) return
       const res = computePosition(reference, floating, {
-        placement,
+        placement: resolvedPlacement,
+        previousPlacement: lastPlacementRef.current,
         strategy,
         offset,
         collisionPadding,
@@ -438,6 +464,7 @@ export function OverlayContent({
           element: arrowRef.current,
         },
       })
+      lastPlacementRef.current = res.placement
 
       floating.style.position = res.strategy
       floating.style.left = `${res.x}px`

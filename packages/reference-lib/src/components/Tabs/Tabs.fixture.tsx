@@ -47,4 +47,24 @@ export default {
       </Tabs>
     </Div>
   ),
+  Pill: () => (
+    <Div maxW="100r">
+      <Tabs defaultValue="overview" variant="pill">
+        <Tabs.List>
+          <Tabs.Tab value="overview">Overview</Tabs.Tab>
+          <Tabs.Tab value="activity">Activity</Tabs.Tab>
+          <Tabs.Tab value="settings">Settings</Tabs.Tab>
+        </Tabs.List>
+        <Tabs.Panel value="overview">
+          <Span fontSize="3.5r">High-level project overview.</Span>
+        </Tabs.Panel>
+        <Tabs.Panel value="activity">
+          <Span fontSize="3.5r">Recent activity audit trail.</Span>
+        </Tabs.Panel>
+        <Tabs.Panel value="settings">
+          <Span fontSize="3.5r">Team-wide workspace settings.</Span>
+        </Tabs.Panel>
+      </Tabs>
+    </Div>
+  ),
 }

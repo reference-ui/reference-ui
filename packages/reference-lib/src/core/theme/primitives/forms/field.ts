@@ -78,6 +78,8 @@ export const fieldSurfaceStyles = {
 
   [`[data-reference-field]:has(${embeddedControl}:focus)`]: {
     borderColor: '{colors.ui.focus.ring}',
+    outlineWidth: '0px',
+    outlineStyle: 'none',
     outlineColor: 'transparent',
   },
 
@@ -120,7 +122,7 @@ export const fieldSurfaceStyles = {
     paddingBlock: '2r',
   },
 
-  '[data-reference-field] > .ref-button': {
+  '[data-reference-field]:not([data-reference-number-field]) > .ref-button': {
     flexShrink: 0,
     height: '6r',
     minHeight: '0',
@@ -153,6 +155,11 @@ export const fieldSurfaceStyles = {
   '[data-reference-number-field]': {
     width: 'max-content',
     maxWidth: '100%',
+  },
+
+  '[data-reference-number-field] > :is(button, .ref-button)': {
+    marginInlineEnd: '0',
+    paddingInline: '0',
   },
 
   '[data-reference-number-field] :is(input, .ref-input)': {

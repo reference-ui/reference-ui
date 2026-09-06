@@ -103,6 +103,7 @@ export function NumberFieldIncrement({
       height="100%"
       aspectRatio="1 / 1"
       p="0"
+      m="0"
       border="none"
       bg="transparent"
       borderRadius="sm"
@@ -121,6 +122,7 @@ export function NumberFieldIncrement({
       style={{
         aspectRatio: '1 / 1',
         height: '100%',
+        margin: 0,
         ...style,
       }}
       {...props}
@@ -163,6 +165,7 @@ export function NumberFieldDecrement({
       height="100%"
       aspectRatio="1 / 1"
       p="0"
+      m="0"
       border="none"
       bg="transparent"
       borderRadius="sm"
@@ -181,6 +184,7 @@ export function NumberFieldDecrement({
       style={{
         aspectRatio: '1 / 1',
         height: '100%',
+        margin: 0,
         ...style,
       }}
       {...props}

@@ -24,6 +24,7 @@ export type ReferenceType = HTMLElement | VirtualAnchor
 
 export interface ComputePositionOptions {
   placement?: Placement
+  previousPlacement?: Placement
   strategy?: Strategy
   offset?: number
   collisionPadding?: number
@@ -125,6 +126,7 @@ export function computePosition(
 ): ComputePositionReturn {
   const {
     placement: initialPlacement = 'bottom-start',
+    previousPlacement,
     strategy = 'absolute',
     offset = 8,
     collisionPadding = 8,
@@ -139,35 +141,51 @@ export function computePosition(
   const viewportWidth = window.innerWidth
   const viewportHeight = window.innerHeight
 
-  let currentPlacement = initialPlacement
+  let currentPlacement = previousPlacement ?? initialPlacement
   let side = getSide(currentPlacement)
-  const alignment = getAlignment(currentPlacement)
+  const alignment = getAlignment(currentPlacement) ?? getAlignment(initialPlacement)
 
-  // 1. Apply Flip if requested
+  // 1. Apply Flip with hysteresis (if previously placed on a side, only flip if it no longer fits that side)
   if (flip) {
     const isVertical = side === 'top' || side === 'bottom'
     if (isVertical) {
-      if (side === 'top' && referenceRect.top - floatingRect.height - offset < collisionPadding) {
-        if (referenceRect.bottom + floatingRect.height + offset <= viewportHeight - collisionPadding) {
-          side = 'bottom'
-          currentPlacement = alignment ? `${side}-${alignment}` as Placement : side
+      if (side === 'top') {
+        const overflowsTop = referenceRect.top - floatingRect.height - offset < collisionPadding
+        if (overflowsTop) {
+          const fitsBottom = referenceRect.bottom + floatingRect.height + offset <= viewportHeight - collisionPadding
+          if (fitsBottom) {
+            side = 'bottom'
+            currentPlacement = alignment ? (`${side}-${alignment}` as Placement) : side
+          }
         }
-      } else if (side === 'bottom' && referenceRect.bottom + floatingRect.height + offset > viewportHeight - collisionPadding) {
-        if (referenceRect.top - floatingRect.height - offset >= collisionPadding) {
-          side = 'top'
-          currentPlacement = alignment ? `${side}-${alignment}` as Placement : side
+      } else if (side === 'bottom') {
+        const overflowsBottom = referenceRect.bottom + floatingRect.height + offset > viewportHeight - collisionPadding
+        if (overflowsBottom) {
+          const fitsTop = referenceRect.top - floatingRect.height - offset >= collisionPadding
+          if (fitsTop) {
+            side = 'top'
+            currentPlacement = alignment ? (`${side}-${alignment}` as Placement) : side
+          }
         }
       }
     } else {
-      if (side === 'left' && referenceRect.left - floatingRect.width - offset < collisionPadding) {
-        if (referenceRect.right + floatingRect.width + offset <= viewportWidth - collisionPadding) {
-          side = 'right'
-          currentPlacement = alignment ? `${side}-${alignment}` as Placement : side
+      if (side === 'left') {
+        const overflowsLeft = referenceRect.left - floatingRect.width - offset < collisionPadding
+        if (overflowsLeft) {
+          const fitsRight = referenceRect.right + floatingRect.width + offset <= viewportWidth - collisionPadding
+          if (fitsRight) {
+            side = 'right'
+            currentPlacement = alignment ? (`${side}-${alignment}` as Placement) : side
+          }
         }
-      } else if (side === 'right' && referenceRect.right + floatingRect.width + offset > viewportWidth - collisionPadding) {
-        if (referenceRect.left - floatingRect.width - offset >= collisionPadding) {
-          side = 'left'
-          currentPlacement = alignment ? `${side}-${alignment}` as Placement : side
+      } else if (side === 'right') {
+        const overflowsRight = referenceRect.right + floatingRect.width + offset > viewportWidth - collisionPadding
+        if (overflowsRight) {
+          const fitsLeft = referenceRect.left - floatingRect.width - offset >= collisionPadding
+          if (fitsLeft) {
+            side = 'left'
+            currentPlacement = alignment ? (`${side}-${alignment}` as Placement) : side
+          }
         }
       }
     }

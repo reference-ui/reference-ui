@@ -3,6 +3,7 @@ import { Button, Div, type PrimitiveProps, type PrimitiveElement } from '@refere
 
 export type TabsOrientation = 'horizontal' | 'vertical'
 export type TabsActivation = 'automatic' | 'manual'
+export type TabsVariant = 'line' | 'pill'
 
 export interface TabsProps {
   children?: React.ReactNode
@@ -11,6 +12,7 @@ export interface TabsProps {
   onChange?: (value: string) => void
   orientation?: TabsOrientation
   activation?: TabsActivation
+  variant?: TabsVariant
   disabled?: boolean
 }
 
@@ -19,6 +21,7 @@ interface TabsContextValue {
   setValue: (value: string) => void
   orientation: TabsOrientation
   activation: TabsActivation
+  variant: TabsVariant
   disabled: boolean
   baseId: string
 }
@@ -34,6 +37,7 @@ export function Tabs({
   onChange,
   orientation = 'horizontal',
   activation = 'automatic',
+  variant = 'line',
   disabled = false,
 }: TabsProps) {
   const [internalValue, setInternalValue] = React.useState(defaultValue)
@@ -61,10 +65,11 @@ export function Tabs({
       setValue,
       orientation,
       activation,
+      variant,
       disabled,
       baseId: baseIdRef.current!,
     }),
-    [value, setValue, orientation, activation, disabled]
+    [value, setValue, orientation, activation, variant, disabled]
   )
 
   return (
@@ -74,10 +79,13 @@ export function Tabs({
   )
 }
 
-export type TabsListProps = PrimitiveProps<'div'>
+export type TabsListProps = PrimitiveProps<'div'> & {
+  variant?: TabsVariant
+}
 
 export function TabsList({
   children,
+  variant: variantProp,
   className,
   style,
   onKeyDown,
@@ -85,6 +93,7 @@ export function TabsList({
 }: TabsListProps) {
   const context = React.useContext(TabsContext)
   const orientation = context?.orientation ?? 'horizontal'
+  const variant = variantProp ?? context?.variant ?? 'line'
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     onKeyDown?.(e)
@@ -134,20 +143,26 @@ export function TabsList({
     }
   }
 
+  const isLine = variant === 'line'
+
   return (
     <Div
       role="tablist"
       aria-orientation={orientation}
       data-orientation={orientation}
+      data-variant={variant}
       data-reference-tabs-list=""
       onKeyDown={handleKeyDown}
-      display="flex"
+      display={isLine ? 'flex' : 'inline-flex'}
       flexDirection={orientation === 'vertical' ? 'column' : 'row'}
-      gap="1r"
-      borderBottom={orientation === 'horizontal' ? '1px solid' : undefined}
-      borderRight={orientation === 'vertical' ? '1px solid' : undefined}
-      borderColor="ui.table.border"
-      p="1r"
+      gap={isLine ? (orientation === 'horizontal' ? '4r' : '1r') : '1r'}
+      borderBottom={isLine && orientation === 'horizontal' ? '1px solid' : undefined}
+      borderRight={isLine && orientation === 'vertical' ? '1px solid' : undefined}
+      borderColor={isLine ? 'ui.table.border' : undefined}
+      bg={isLine ? 'transparent' : 'ui.table.row.mutedBackground'}
+      p={isLine ? '0' : '1r'}
+      borderRadius={isLine ? undefined : 'md'}
+      position="relative"
       className={className}
       style={style}
       {...props}
@@ -159,11 +174,13 @@ export function TabsList({
 
 export type TabProps = Omit<PrimitiveProps<'button'>, 'value'> & {
   value: string
+  variant?: TabsVariant
 }
 
 export function Tab({
   value,
   children,
+  variant: variantProp,
   disabled: disabledProp,
   onClick,
   onFocus,
@@ -173,6 +190,8 @@ export function Tab({
   ...props
 }: TabProps) {
   const context = React.useContext(TabsContext)
+  const orientation = context?.orientation ?? 'horizontal'
+  const variant = variantProp ?? context?.variant ?? 'line'
   const isSelected = context ? context.value === value : false
   const isDisabled = disabledProp ?? context?.disabled ?? false
   const tabId = idProp ?? (context ? `${context.baseId}-tab-${value}` : undefined)
@@ -185,6 +204,8 @@ export function Tab({
     }
   }
 
+  const isLine = variant === 'line'
+
   return (
     <Button
       type="button"
@@ -194,21 +215,58 @@ export function Tab({
       aria-selected={isSelected}
       aria-controls={isSelected ? panelId : undefined}
       data-state={isSelected ? 'active' : 'inactive'}
+      data-variant={variant}
       data-disabled={isDisabled ? '' : undefined}
       data-value={value}
       disabled={isDisabled}
       onClick={handleClick}
-      px="3r"
-      py="1.5r"
+      px={isLine ? '2r' : '3r'}
+      py={isLine ? '2.5r' : '1.5r'}
       border="none"
-      borderRadius="sm"
+      borderBottom={
+        isLine && orientation === 'horizontal'
+          ? isSelected
+            ? '2px solid'
+            : '2px solid transparent'
+          : undefined
+      }
+      borderRight={
+        isLine && orientation === 'vertical'
+          ? isSelected
+            ? '2px solid'
+            : '2px solid transparent'
+          : undefined
+      }
+      borderColor={isLine && isSelected ? 'ui.focus.ring' : 'transparent'}
+      marginBottom={isLine && orientation === 'horizontal' ? '-1px' : undefined}
+      marginRight={isLine && orientation === 'vertical' ? '-1px' : undefined}
+      borderRadius={isLine ? '0' : 'sm'}
       cursor={isDisabled ? 'not-allowed' : 'pointer'}
-      bg={isSelected ? 'ui.button.background' : 'transparent'}
-      color={isSelected ? 'ui.button.foreground' : 'design.text.base'}
-      fontWeight={isSelected ? '600' : '400'}
+      bg={
+        isLine
+          ? 'transparent'
+          : isSelected
+          ? 'ui.dialog.background'
+          : 'transparent'
+      }
+      color={isSelected ? 'design.text.base' : 'design.text.light'}
+      fontWeight={isSelected ? '600' : '500'}
+      fontSize="3.5r"
+      boxShadow={!isLine && isSelected ? '0 1px 3px rgba(0,0,0,0.12)' : 'none'}
       opacity={isDisabled ? 0.5 : 1}
-      _hover={!isSelected && !isDisabled ? { bg: 'ui.button.mutedBackground' } : undefined}
-      _focusVisible={{ outline: '2px solid', outlineColor: 'ui.focus.ring', outlineOffset: '2px' }}
+      transition="color 150ms ease, border-color 150ms ease, background-color 150ms ease"
+      _hover={
+        !isSelected && !isDisabled
+          ? isLine
+            ? { color: 'design.text.base', borderColor: 'ui.field.border' }
+            : { color: 'design.text.base', bg: 'rgba(255,255,255,0.04)' }
+          : undefined
+      }
+      _focusVisible={{
+        outline: '2px solid',
+        outlineColor: 'ui.focus.ring',
+        outlineOffset: isLine ? '-2px' : '2px',
+      }}
       className={className}
       style={style}
       {...props}
@@ -243,7 +301,8 @@ export function TabPanel({
       hidden={!isSelected}
       data-state={isSelected ? 'active' : 'inactive'}
       data-value={value}
-      p="4r"
+      py="3r"
+      px="0"
       color="design.text.base"
       className={className}
       style={style}

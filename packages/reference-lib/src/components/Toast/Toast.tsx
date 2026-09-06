@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Button, Div, type PrimitiveProps, type PrimitiveElement } from '@reference-ui/react'
-import { referenceToast, type ToastItem } from '../ReferenceLibrary'
+import { referenceToast, ToastItemContext, type ToastItem } from '../ReferenceLibrary'
 
 export type ToastPosition =
   | 'top-start'
@@ -90,9 +90,10 @@ export function ToastRoot({
       border="1px solid"
       borderColor="ui.dialog.border"
       borderRadius="md"
-      boxShadow="0 4px 16px rgba(0,0,0,0.15)"
-      minW="60r"
+      boxShadow="0 8px 24px rgba(0,0,0,0.18), 0 1px 2px rgba(0,0,0,0.08)"
+      minW="64r"
       maxW="90r"
+      position="relative"
       {...props}
     >
       {children}
@@ -167,18 +168,42 @@ export function ToastClose({
   onClick,
   ...props
 }: ToastCloseProps) {
+  const itemContext = React.useContext(ToastItemContext)
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    onClick?.(e)
+    if (!e.defaultPrevented && itemContext?.id) {
+      referenceToast.dismiss(itemContext.id)
+    }
+  }
+
   return (
     <Button
       type="button"
       data-reference-toast-close=""
+      aria-label="Close"
       px="2r"
       py="1r"
       fontSize="3r"
       borderRadius="sm"
-      onClick={onClick}
+      onClick={handleClick}
       {...props}
     >
-      {children}
+      {children ?? (
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          style={{ display: 'block' }}
+        >
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      )}
     </Button>
   )
 }

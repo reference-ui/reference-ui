@@ -9,7 +9,7 @@ function parseArgs() {
   const args = process.argv.slice(2)
   const options = {
     component: 'DateField',
-    fixture: 'FoldedPicker',
+    fixture: '',
     outDir: '/tmp',
     name: '',
     target: '',
@@ -55,17 +55,22 @@ function parseArgs() {
 
   if (positional[0]) options.component = positional[0]
   if (positional[1]) options.fixture = positional[1]
-  if (!options.name) options.name = `${options.component}_${options.fixture}`
+  if (!options.name) options.name = options.fixture ? `${options.component}_${options.fixture}` : options.component
 
   return options
 }
 
-function checkPort(port) {
-  return new Promise((resolve) => {
-    const req = http.get(`http://127.0.0.1:${port}/`, { timeout: 3000 }, (res) => resolve(true))
-    req.on('error', () => resolve(false))
-    req.on('timeout', () => { req.destroy(); resolve(false) })
-  })
+async function checkPort(port, retries = 10) {
+  for (let i = 0; i < retries; i++) {
+    const ok = await new Promise((resolve) => {
+      const req = http.get(`http://localhost:${port}/`, { timeout: 4000 }, (res) => resolve(true))
+      req.on('error', () => resolve(false))
+      req.on('timeout', () => { req.destroy(); resolve(false) })
+    })
+    if (ok) return true
+    await new Promise((r) => setTimeout(r, 1000))
+  }
+  return false
 }
 
 async function main() {
@@ -78,12 +83,24 @@ async function main() {
 
   fs.mkdirSync(opts.outDir, { recursive: true })
 
-  const fixtureParam = JSON.stringify({
-    path: `src/components/${opts.component}/${opts.component}.fixture.tsx`,
-    name: opts.fixture
-  })
+  let fixtureObj
+  const topLevelPath = path.resolve(`packages/reference-lib/src/components/${opts.component}.fixture.tsx`)
+  if (opts.component.includes('/') || opts.component.endsWith('.tsx')) {
+    fixtureObj = { path: opts.component }
+    if (opts.fixture) fixtureObj.name = opts.fixture
+  } else if (fs.existsSync(topLevelPath)) {
+    fixtureObj = { path: `src/components/${opts.component}.fixture.tsx` }
+    if (opts.fixture) fixtureObj.name = opts.fixture
+  } else {
+    fixtureObj = {
+      path: `src/components/${opts.component}/${opts.component}.fixture.tsx`
+    }
+    if (opts.fixture) fixtureObj.name = opts.fixture
+  }
+
+  const fixtureParam = JSON.stringify(fixtureObj)
   const url = `http://localhost:5000/?fixture=${encodeURIComponent(fixtureParam)}`
-  console.log(`Connecting to Cosmos fixture: ${opts.component} -> ${opts.fixture}`)
+  console.log(`Connecting to Cosmos fixture: ${JSON.stringify(fixtureObj)}`)
 
   const browser = await chromium.launch({ headless: true })
   const page = await browser.newPage({ viewport: opts.viewport })
@@ -200,22 +217,28 @@ async function main() {
 
       const outPath = opts.out || path.join(opts.outDir, `${opts.name}.png`)
       const popupLoc = frame.locator('[role="dialog"], [role="listbox"]').first()
-      if (await popupLoc.count() > 0 && await popupLoc.isVisible()) {
+      if (!opts.target && await popupLoc.count() > 0 && await popupLoc.isVisible()) {
         const fieldBox = await targetLoc.boundingBox().catch(() => null)
         const popupBox = await popupLoc.boundingBox().catch(() => null)
         if (fieldBox && popupBox) {
           const minX = Math.max(0, Math.min(fieldBox.x, popupBox.x) - 16)
           const minY = Math.max(0, Math.min(fieldBox.y, popupBox.y) - 16)
-          const maxX = Math.max(fieldBox.x + fieldBox.width, popupBox.x + popupBox.width) + 16
-          const maxY = Math.max(fieldBox.y + fieldBox.height, popupBox.y + popupBox.height) + 16
-          await page.screenshot({
-            path: outPath,
-            clip: { x: minX, y: minY, width: maxX - minX, height: maxY - minY }
-          })
+          const maxX = Math.min(opts.viewport.width, Math.max(fieldBox.x + fieldBox.width, popupBox.x + popupBox.width) + 16)
+          const maxY = Math.min(opts.viewport.height, Math.max(fieldBox.y + fieldBox.height, popupBox.y + popupBox.height) + 16)
+          if (maxX > minX && maxY > minY) {
+            await page.screenshot({
+              path: outPath,
+              clip: { x: minX, y: minY, width: maxX - minX, height: maxY - minY }
+            })
+          } else {
+            await root.screenshot({ path: outPath })
+          }
         } else {
           await root.screenshot({ path: outPath })
         }
       } else {
+        await targetLoc.scrollIntoViewIfNeeded().catch(() => {})
+        await page.waitForTimeout(200)
         await targetLoc.screenshot({ path: outPath })
       }
       savedFiles.push({ label: 'Captured', path: outPath })

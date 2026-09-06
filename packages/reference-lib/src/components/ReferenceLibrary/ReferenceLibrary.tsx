@@ -22,7 +22,7 @@ export interface ToastItem {
   remaining?: number
 }
 
-interface ToastOptions {
+interface ReferenceToastOptions {
   id?: string
   duration?: number | false
   position?: string
@@ -92,7 +92,7 @@ function notifyStore(store: DocumentRuntimeStore) {
 
 // Global toast internal API
 export const referenceToast = {
-  show(content: React.ReactNode, options: ToastOptions = {}) {
+  show(content: React.ReactNode, options: ReferenceToastOptions = {}) {
     const doc = options.document ?? (typeof document !== 'undefined' ? document : undefined)
     const store = getDocStore(doc)
     const id = options.id ?? `toast-${Date.now()}-${Math.random()}`
@@ -240,33 +240,7 @@ export function ReferenceLibrary({
       {/* Only the elected active host in this document renders runtime roots */}
       {isActiveHost && store && (
         <>
-          {/* Toast Host */}
-          <Div
-            data-reference-toast-host=""
-            position="fixed"
-            bottom="4r"
-            right="4r"
-            zIndex={9999}
-            display="flex"
-            flexDirection="column"
-            gap="2r"
-            pointerEvents="none"
-          >
-            {store.toasts.slice(0, toaster?.limit ?? 4).map(t => (
-              <Div
-                key={t.id}
-                data-toast-id={t.id}
-                pointerEvents="auto"
-                p="2r 4r"
-                bg="ui.dialog.background"
-                color="ui.dialog.foreground"
-                borderRadius="md"
-                boxShadow="0 4px 16px rgba(0,0,0,0.15)"
-              >
-                {t.content}
-              </Div>
-            ))}
-          </Div>
+          <ToastHost toasts={store.toasts} limit={toaster?.limit} />
 
           {/* Live Regions */}
           <Div
@@ -290,5 +264,211 @@ export function ReferenceLibrary({
         </>
       )}
     </>
+  )
+}
+
+export const ToastItemContext = React.createContext<{ id?: string }>({})
+
+function getPositionStyles(position: string): React.CSSProperties {
+  switch (position) {
+    case 'top-start':
+      return { top: '16px', left: '16px', alignItems: 'flex-start' }
+    case 'top-center':
+      return { top: '16px', left: '50%', transform: 'translateX(-50%)', alignItems: 'center' }
+    case 'top-end':
+      return { top: '16px', right: '16px', alignItems: 'flex-end' }
+    case 'bottom-start':
+      return { bottom: '16px', left: '16px', alignItems: 'flex-start' }
+    case 'bottom-center':
+      return { bottom: '16px', left: '50%', transform: 'translateX(-50%)', alignItems: 'center' }
+    case 'bottom-end':
+    default:
+      return { bottom: '16px', right: '16px', alignItems: 'flex-end' }
+  }
+}
+
+interface ToastItemWrapperProps {
+  item: ToastItem
+  index: number
+  totalCount: number
+  isExpanded: boolean
+  isTop: boolean
+  onDismiss: (id: string) => void
+}
+
+function ToastItemWrapper({
+  item,
+  index,
+  totalCount,
+  isExpanded,
+  isTop,
+  onDismiss,
+}: ToastItemWrapperProps) {
+  const [dragOffset, setDragOffset] = React.useState(0)
+  const [isDragging, setIsDragging] = React.useState(false)
+  const dragStartRef = React.useRef<number | null>(null)
+
+  // Auto-dismiss timer with pause on hover
+  React.useEffect(() => {
+    if (item.duration === false || isExpanded) return
+    const timer = setTimeout(() => {
+      onDismiss(item.id)
+    }, item.duration ?? 5000)
+    return () => clearTimeout(timer)
+  }, [item.id, item.duration, isExpanded, onDismiss])
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId)
+    } catch {}
+    dragStartRef.current = e.clientX
+    setIsDragging(true)
+  }
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDragging || dragStartRef.current === null) return
+    const delta = e.clientX - dragStartRef.current
+    setDragOffset(delta)
+  }
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDragging) return
+    setIsDragging(false)
+    try {
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId)
+      }
+    } catch {}
+    if (Math.abs(dragOffset) > 75) {
+      setDragOffset(dragOffset > 0 ? 300 : -300)
+      setTimeout(() => onDismiss(item.id), 120)
+    } else {
+      setDragOffset(0)
+    }
+    dragStartRef.current = null
+  }
+
+  // Sonner card deck math
+  const yOffset = isTop ? index * 12 : -index * 12
+  const scale = Math.max(0.85, 1 - index * 0.05)
+  const opacity = index > 2 && !isExpanded ? 0 : 1 - Math.abs(dragOffset) / 300
+  const zIndex = totalCount - index
+
+  const transform = isExpanded
+    ? `translate3d(${dragOffset}px, 0px, 0px) scale(1)`
+    : `translate3d(${dragOffset}px, ${yOffset}px, 0px) scale(${scale})`
+
+  return (
+    <Div
+      data-reference-toast-id={item.id}
+      data-reference-toast-position={item.position ?? 'bottom-end'}
+      data-state="open"
+      pointerEvents="auto"
+      position={isExpanded || index === 0 ? 'relative' : 'absolute'}
+      bottom={!isTop && !isExpanded ? 0 : undefined}
+      top={isTop && !isExpanded ? 0 : undefined}
+      zIndex={zIndex}
+      opacity={opacity}
+      userSelect="none"
+      touchAction="pan-y"
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+      style={{
+        transform,
+        transition: isDragging
+          ? 'none'
+          : 'transform 260ms cubic-bezier(0.16, 1, 0.3, 1), opacity 200ms ease',
+        cursor: isDragging ? 'grabbing' : 'grab',
+        ['--reference-toast-index' as any]: `${index}`,
+        ['--reference-toast-count' as any]: `${totalCount}`,
+      }}
+    >
+      <ToastItemContext.Provider value={{ id: item.id }}>
+        {item.content}
+      </ToastItemContext.Provider>
+    </Div>
+  )
+}
+
+function ToastPositionStack({
+  position,
+  toasts,
+  onDismiss,
+}: {
+  position: string
+  toasts: ToastItem[]
+  onDismiss: (id: string) => void
+}) {
+  const [isExpanded, setIsExpanded] = React.useState(false)
+  const isTop = position.startsWith('top')
+  const posStyles = getPositionStyles(position)
+
+  return (
+    <Div
+      data-reference-toast-position={position}
+      data-expanded={isExpanded ? 'true' : 'false'}
+      position="fixed"
+      zIndex={9999}
+      display="flex"
+      flexDirection={isTop ? 'column' : 'column-reverse'}
+      gap={isExpanded ? '2r' : '0'}
+      pointerEvents="none"
+      onPointerEnter={() => setIsExpanded(true)}
+      onPointerLeave={() => setIsExpanded(false)}
+      style={{
+        ...posStyles,
+        transition: 'gap 200ms ease',
+      }}
+    >
+      {toasts.map((item, idx) => (
+        <ToastItemWrapper
+          key={item.id}
+          item={item}
+          index={idx}
+          totalCount={toasts.length}
+          isExpanded={isExpanded}
+          isTop={isTop}
+          onDismiss={onDismiss}
+        />
+      ))}
+    </Div>
+  )
+}
+
+function ToastHost({
+  toasts,
+  limit = 4,
+}: {
+  toasts: ToastItem[]
+  limit?: number
+}) {
+  const visibleToasts = toasts.slice(0, limit)
+  const grouped = React.useMemo(() => {
+    const map = new Map<string, ToastItem[]>()
+    for (const item of visibleToasts) {
+      const pos = item.position ?? 'bottom-end'
+      const list = map.get(pos) ?? []
+      list.push(item)
+      map.set(pos, list)
+    }
+    return map
+  }, [visibleToasts])
+
+  if (visibleToasts.length === 0) return null
+
+  return (
+    <Div data-reference-toast-host="" pointerEvents="none">
+      {Array.from(grouped.entries()).map(([pos, items]) => (
+        <ToastPositionStack
+          key={pos}
+          position={pos}
+          toasts={items}
+          onDismiss={(id) => referenceToast.dismiss(id)}
+        />
+      ))}
+    </Div>
   )
 }

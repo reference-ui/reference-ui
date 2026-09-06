@@ -2,6 +2,7 @@ import * as React from 'react'
 import { Input, Button, Span, Div, type PrimitiveProps, type PrimitiveElement } from '@reference-ui/react'
 import { Overlay, type OverlayContentProps } from '../Overlay'
 import { Calendar, type ISODate, type DateRangeValue } from '../Calendar'
+import { Field } from '../Field'
 import { CalendarTodayIcon } from '@reference-ui/icons'
 
 export type DateFieldProps = Omit<PrimitiveProps<'input'>, 'onChange' | 'value' | 'defaultValue'> & {
@@ -213,31 +214,43 @@ export const DateField = React.forwardRef<HTMLInputElement, DateFieldProps>(
       )
     }
 
-    const hasInput = React.Children.toArray(children).some(
-      (child) => React.isValidElement(child) && (child.type === DateFieldInput)
+    const hasField = React.Children.toArray(children).some(
+      (child) =>
+        React.isValidElement(child) &&
+        (child.type === Field || (child.props as any)?.['data-reference-field'] !== undefined)
     )
+
+    const hasInput =
+      hasField ||
+      React.Children.toArray(children).some(
+        (child) => React.isValidElement(child) && child.type === DateFieldInput
+      )
 
     return (
       <DateFieldContext.Provider value={contextValue}>
         <Overlay open={isOpen} onOpenChange={setIsOpen} isolation={false}>
-          <Div
-            data-reference-field=""
-            display="inline-flex"
-            alignItems="center"
-            width="100%"
-            className={className}
-            style={style}
-          >
-            {hasInput ? (
-              children
-            ) : (
-              <>
-                <DateFieldInput />
-                <DateFieldTrigger />
-                {children}
-              </>
-            )}
-          </Div>
+          {hasField ? (
+            children
+          ) : (
+            <Div
+              data-reference-field=""
+              display="inline-flex"
+              alignItems="center"
+              width="100%"
+              className={className}
+              style={style}
+            >
+              {hasInput ? (
+                children
+              ) : (
+                <>
+                  <DateFieldInput />
+                  <DateFieldTrigger />
+                  {children}
+                </>
+              )}
+            </Div>
+          )}
         </Overlay>
       </DateFieldContext.Provider>
     )
