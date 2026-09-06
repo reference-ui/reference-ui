@@ -1,6 +1,9 @@
 import * as React from 'react'
 import { Div, Input, Button, type PrimitiveProps, type PrimitiveElement } from '@reference-ui/react'
 import { controlSize, controlHeightPx } from '../../core/theme/primitives/shared'
+import { setupFocusVisible } from '../../core/theme/primitives/forms/focus-visible'
+
+setupFocusVisible()
 
 export type NumberFieldProps = Omit<PrimitiveProps<'div'>, 'onChange' | 'value' | 'defaultValue'> & {
   value?: number | null

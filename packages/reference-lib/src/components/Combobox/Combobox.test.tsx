@@ -79,7 +79,9 @@ describe('Combobox & Listbox React Spectrum theming and active navigation', () =
     expect(vueOption.className).toContain('c_design.text.base')
     expect(vueOption.querySelector('[data-slot="check"]')).toBeFalsy()
 
-    root.unmount()
+    await React.act(async () => {
+      root.unmount()
+    })
     container.remove()
   })
 
@@ -122,7 +124,9 @@ describe('Combobox & Listbox React Spectrum theming and active navigation', () =
     expect(reactOption.hasAttribute('data-active')).toBe(true)
     expect(vueOption.hasAttribute('data-active')).toBe(false)
 
-    root.unmount()
+    await React.act(async () => {
+      root.unmount()
+    })
     container.remove()
   })
 
@@ -159,7 +163,9 @@ describe('Combobox & Listbox React Spectrum theming and active navigation', () =
 
     expect(input.getAttribute('aria-expanded')).toBe('false')
 
-    root.unmount()
+    await React.act(async () => {
+      root.unmount()
+    })
     container.remove()
   })
 
@@ -231,7 +237,9 @@ describe('Combobox & Listbox React Spectrum theming and active navigation', () =
     })
     expect(input.getAttribute('aria-expanded')).toBe('false')
 
-    root.unmount()
+    await React.act(async () => {
+      root.unmount()
+    })
     container.remove()
   })
 
@@ -263,7 +271,9 @@ describe('Combobox & Listbox React Spectrum theming and active navigation', () =
     expect(empty).toBeTruthy()
     expect(empty.textContent).toBe('No items found')
 
-    root.unmount()
+    await React.act(async () => {
+      root.unmount()
+    })
     container.remove()
   })
 })

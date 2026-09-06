@@ -17,26 +17,45 @@ export function initWatchReady({ onReady, onCycleStart }: WatchReadyOptions): vo
   let readyEmitted = false
   let pandaCssReady = false
   let runtimeBundleReady = false
+  let changeSeq = 0
+  let buildingSeq = 0
+  let cssSeq = 0
+  let packageSeq = 0
 
   const emitReadyIfReady = () => {
-    if (!pandaCssReady || !runtimeBundleReady || readyEmitted) return
+    if (
+      !pandaCssReady ||
+      !runtimeBundleReady ||
+      readyEmitted ||
+      cssSeq < changeSeq ||
+      packageSeq < changeSeq
+    ) {
+      return
+    }
     readyEmitted = true
     onReady()
   }
 
   on('watch:change', () => {
+    changeSeq++
     readyEmitted = false
     pandaCssReady = false
     runtimeBundleReady = false
     onCycleStart?.()
   })
 
+  on('run:system:config', () => {
+    buildingSeq = changeSeq
+  })
+
   on('system:panda:css', () => {
+    cssSeq = buildingSeq || changeSeq
     pandaCssReady = true
     emitReadyIfReady()
   })
 
   on('packager:runtime:complete', () => {
+    packageSeq = buildingSeq || changeSeq
     runtimeBundleReady = true
     emitReadyIfReady()
   })

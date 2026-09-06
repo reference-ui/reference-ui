@@ -79,6 +79,10 @@ export function TreeItem({
     if (target.closest('button')) {
       return
     }
+    // If click originated inside a nested treeitem, let that child treeitem handle it
+    if (target.closest('[role="treeitem"]') !== e.currentTarget) {
+      return
+    }
     e.stopPropagation()
     onClick?.(e)
     if (!e.defaultPrevented && !isDisabled && tree) {
@@ -89,6 +93,7 @@ export function TreeItem({
   }
 
   const handleFocus = (e: React.FocusEvent<HTMLDivElement>) => {
+    if (e.target !== e.currentTarget) return
     onFocus?.(e)
     if (!e.defaultPrevented && !isDisabled && tree && tree.focusedId !== id) {
       tree.setFocusedId(id)
@@ -96,6 +101,7 @@ export function TreeItem({
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.target !== e.currentTarget) return
     onKeyDown?.(e)
     if (e.defaultPrevented || isDisabled || !tree) return
 

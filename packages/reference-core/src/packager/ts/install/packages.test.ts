@@ -172,11 +172,14 @@ function writeReactSupportFixture(cliDir: string): void {
 }
 
 function expectCapturedReactSupportTsconfigFiles(files: string[]): void {
-  expect(files).toHaveLength(25)
+  expect(files).toHaveLength(28)
   expect(files.some((file) => file.endsWith('/src/entry/react.ts'))).toBe(true)
   expect(files.some((file) => file.endsWith('/src/system/primitives/index.tsx'))).toBe(true)
   expect(files.some((file) => file.endsWith('/src/system/primitives/types.ts'))).toBe(true)
   expect(files.some((file) => file.endsWith('/src/system/primitives/shared/index.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/system/primitives/shared/color-mode.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/system/primitives/shared/layers.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/system/primitives/shared/split-props.ts'))).toBe(true)
   expect(files.some((file) => file.endsWith('/src/system/runtime/index.ts'))).toBe(true)
   expect(files.some((file) => file.endsWith('/src/types/index.ts'))).toBe(true)
   expect(files.some((file) => file.endsWith('/src/types/public/index.ts'))).toBe(true)

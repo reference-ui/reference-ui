@@ -1,6 +1,8 @@
 import * as React from 'react'
 import { Div, type PrimitiveProps } from '@reference-ui/react'
-import '../../core/theme/primitives/forms/inputs'
+import { setupFocusVisible } from '../../core/theme/primitives/forms/focus-visible'
+
+setupFocusVisible()
 
 export type FieldStatus = 'warning'
 
