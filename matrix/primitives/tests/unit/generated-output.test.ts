@@ -151,6 +151,26 @@ describe('primitives generated output', () => {
     expect(foundFragments).toEqual([])
   })
 
+  it('emits zero-specificity :where() for primitive variants in the PostCSS AST', () => {
+    let hasWherePrimary = false
+    let hasBareAttributeSelector = false
+
+    generatedOutput.reactStylesheetAst?.walkRules((rule) => {
+      if (rule.selector.includes('.ref-button:where([data-variant="primary"])')) {
+        hasWherePrimary = true
+      }
+      if (
+        rule.selector.includes('.ref-button[data-variant=') &&
+        !rule.selector.includes(':where')
+      ) {
+        hasBareAttributeSelector = true
+      }
+    })
+
+    expect(hasWherePrimary).toBe(true)
+    expect(hasBareAttributeSelector).toBe(false)
+  })
+
   it('updates mirrored virtual source while keeping generated CSS stable for source-only fixture changes after ref sync', async () => {
     const originalSource = readFileSync(fixtureSourcePath, 'utf-8')
     const originalVirtualSource = readFileSync(virtualFixtureSourcePath, 'utf-8')

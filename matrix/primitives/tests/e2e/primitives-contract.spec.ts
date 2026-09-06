@@ -540,4 +540,53 @@ test.describe('primitives contract', () => {
       runRefSync()
     }
   })
+
+  test('verifies first-class primitive variant contract (DOM reflection, no prop leakage, baseline inversion, :where specificity)', async ({ page }) => {
+    await reloadPrimitivesApp(page)
+
+    const defaultBtn = page.getByTestId('primitive-button-default')
+    const primaryBtn = page.getByTestId('primitive-button-primary')
+    const ghostBtn = page.getByTestId('primitive-button-ghost')
+    const overrideBtn = page.getByTestId('primitive-button-style-override')
+
+    await expect(defaultBtn).toBeVisible()
+    await expect(primaryBtn).toBeVisible()
+    await expect(ghostBtn).toBeVisible()
+    await expect(overrideBtn).toBeVisible()
+
+    // 1. DOM Attribute Emission & No Prop Leakage
+    expect(await defaultBtn.getAttribute('data-variant')).toBeNull()
+    expect(await defaultBtn.getAttribute('variant')).toBeNull()
+
+    expect(await primaryBtn.getAttribute('data-variant')).toBe('primary')
+    expect(await primaryBtn.getAttribute('variant')).toBeNull()
+
+    expect(await ghostBtn.getAttribute('data-variant')).toBe('ghost')
+    expect(await ghostBtn.getAttribute('variant')).toBeNull()
+
+    expect(await overrideBtn.getAttribute('data-variant')).toBe('primary')
+    expect(await overrideBtn.getAttribute('variant')).toBeNull()
+
+    // 2. Baseline Inversion & Computed Styles
+    const defaultStyles = await readComputedStyle(defaultBtn, ['background-color', 'border-color'])
+    const primaryStyles = await readComputedStyle(primaryBtn, ['background-color', 'border-color'])
+    const ghostStyles = await readComputedStyle(ghostBtn, ['background-color', 'border-color'])
+    const overrideStyles = await readComputedStyle(overrideBtn, ['background-color'])
+
+    // Default button background is neutral (muted background, not high contrast CTA)
+    expect(defaultStyles['background-color']).not.toBe(primaryStyles['background-color'])
+    // Default button has border
+    expect(defaultStyles['border-color']).not.toBe('transparent')
+    expect(defaultStyles['border-color']).not.toBe('rgba(0, 0, 0, 0)')
+
+    // Primary button has transparent border
+    expect(['transparent', 'rgba(0, 0, 0, 0)']).toContain(primaryStyles['border-color'])
+
+    // Ghost button has transparent background and transparent border
+    expect(['transparent', 'rgba(0, 0, 0, 0)']).toContain(ghostStyles['background-color'])
+    expect(['transparent', 'rgba(0, 0, 0, 0)']).toContain(ghostStyles['border-color'])
+
+    // Style Prop Precedence: Style prop (bg="rgb(128, 0, 128)") overrides variant styles because :where() has 0 specificity
+    expect(overrideStyles['background-color']).toBe('rgb(128, 0, 128)')
+  })
 })

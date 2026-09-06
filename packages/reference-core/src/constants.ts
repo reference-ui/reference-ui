@@ -54,6 +54,7 @@ export const REACT_DTS_INCLUDE = [
   'src/types/public/style-prop.ts',
   'src/types/public/style-props.ts',
   'src/types/public/system-style-object.ts',
+  'src/types/public/variants.ts',
 ] as const
 
 /**
@@ -82,6 +83,7 @@ export const SYSTEM_DTS_INCLUDE = [
   'src/types/public/style-prop.ts',
   'src/types/public/style-props.ts',
   'src/types/public/system-style-object.ts',
+  'src/types/public/variants.ts',
 ] as const
 
 /**

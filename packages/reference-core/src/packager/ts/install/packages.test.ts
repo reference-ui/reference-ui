@@ -172,7 +172,7 @@ function writeReactSupportFixture(cliDir: string): void {
 }
 
 function expectCapturedReactSupportTsconfigFiles(files: string[]): void {
-  expect(files).toHaveLength(21)
+  expect(files).toHaveLength(22)
   expect(files.some((file) => file.endsWith('/src/entry/react.ts'))).toBe(true)
   expect(files.some((file) => file.endsWith('/src/system/primitives/index.tsx'))).toBe(true)
   expect(files.some((file) => file.endsWith('/src/system/primitives/types.ts'))).toBe(true)
@@ -185,6 +185,7 @@ function expectCapturedReactSupportTsconfigFiles(files: string[]): void {
   expect(files.some((file) => file.endsWith('/src/types/public/strict-radii.ts'))).toBe(true)
   expect(files.some((file) => file.endsWith('/src/types/public/style-props.ts'))).toBe(true)
   expect(files.some((file) => file.endsWith('/src/types/public/system-style-object.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/types/public/variants.ts'))).toBe(true)
 }
 
 function expectGeneratedReactSupportFiles(outDir: string): void {
@@ -204,7 +205,7 @@ function expectGeneratedReactSupportFiles(outDir: string): void {
 }
 
 function expectCapturedSystemSupportTsconfigFiles(files: string[]): void {
-  expect(files).toHaveLength(18)
+  expect(files).toHaveLength(19)
   expect(files.some((file) => file.endsWith('/src/entry/system.ts'))).toBe(true)
   expect(files.some((file) => file.endsWith('/src/types/index.ts'))).toBe(true)
   expect(files.some((file) => file.endsWith('/src/types/public/index.ts'))).toBe(true)
@@ -214,6 +215,7 @@ function expectCapturedSystemSupportTsconfigFiles(files: string[]): void {
   expect(files.some((file) => file.endsWith('/src/types/public/strict-radii.ts'))).toBe(true)
   expect(files.some((file) => file.endsWith('/src/types/public/style-props.ts'))).toBe(true)
   expect(files.some((file) => file.endsWith('/src/types/public/system-style-object.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/types/public/variants.ts'))).toBe(true)
 }
 
 describe('packager/ts/install/packages', () => {

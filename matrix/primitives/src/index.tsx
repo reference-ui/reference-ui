@@ -1,4 +1,4 @@
-import { Div, H1, Main, P } from '@reference-ui/react'
+import { Button, Div, H1, Main, P } from '@reference-ui/react'
 
 import { primitiveCssPropFixture } from './primitiveCssPropFixture'
 
@@ -14,6 +14,20 @@ export function Index() {
       <Div data-testid="primitive-basic" p="3">
         Basic primitive
       </Div>
+      <Button data-testid="primitive-button-default">Default Button</Button>
+      <Button data-testid="primitive-button-primary" variant="primary">
+        Primary Button
+      </Button>
+      <Button data-testid="primitive-button-ghost" variant="ghost">
+        Ghost Button
+      </Button>
+      <Button
+        data-testid="primitive-button-style-override"
+        variant="primary"
+        backgroundColor="rgb(128, 0, 128)"
+      >
+        Style Override Button
+      </Button>
       <PrimitiveJsxMarker
         data-testid="primitive-jsx-element"
         backgroundColor="yellow.100"

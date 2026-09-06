@@ -36,25 +36,48 @@ export const buttonPrimitiveStyles = {
     borderColor: 'transparent',
     borderRadius: 'sm',
     ...focusRingStyles,
-    backgroundColor: '{colors.ui.button.background}',
-    color: '{colors.ui.button.foreground}',
     fontSize: '3.5r',
     fontWeight: '500',
     lineHeight: '5r',
     whiteSpace: 'nowrap',
     cursor: 'pointer',
     userSelect: 'none',
-    _hover: {
-      backgroundColor:
-        'color-mix(in oklch, {colors.ui.button.background} 90%, transparent)',
-    },
-    _active: pressableActiveStyles('var(--colors-ui-button-background)'),
     _disabled: {
       pointerEvents: 'none',
       cursor: 'not-allowed',
       color: '{colors.ui.button.disabled.foreground}',
       backgroundColor: '{colors.ui.button.disabled.background}',
     },
+  },
+  '.ref-button:where([data-variant="default"], :not([data-variant]))': {
+    backgroundColor: '{colors.ui.table.row.mutedBackground}',
+    color: '{colors.design.text.base}',
+    borderColor: '{colors.ui.field.border}',
+    _hover: {
+      backgroundColor:
+        'color-mix(in oklch, {colors.ui.table.row.mutedBackground} 80%, {colors.gray.300})',
+      borderColor: '{colors.ui.field.borderHover}',
+    },
+    _active: pressableActiveStyles('var(--colors-ui-table-row-muted-background)'),
+  },
+  '.ref-button:where([data-variant="primary"])': {
+    backgroundColor: '{colors.ui.button.background}',
+    color: '{colors.ui.button.foreground}',
+    borderColor: 'transparent',
+    _hover: {
+      backgroundColor:
+        'color-mix(in oklch, {colors.ui.button.background} 90%, transparent)',
+    },
+    _active: pressableActiveStyles('var(--colors-ui-button-background)'),
+  },
+  '.ref-button:where([data-variant="ghost"])': {
+    backgroundColor: 'transparent',
+    color: '{colors.design.text.base}',
+    borderColor: 'transparent',
+    _hover: {
+      backgroundColor: '{colors.ui.table.row.mutedBackground}',
+    },
+    _active: pressableActiveStyles('var(--colors-ui-table-row-muted-background)'),
   },
 } as const
 

@@ -35,7 +35,13 @@ export type {
   ColorModeProps,
   ContainerProps,
   ResponsiveProps,
+  VariantProps,
 } from './props'
+export type {
+  PrimitiveDefaultVariants,
+  PrimitiveVariantRegistry,
+  PrimitiveVariantValue,
+} from './variants'
 export type {
   HTMLStyledProps,
   PrimitiveComponent,

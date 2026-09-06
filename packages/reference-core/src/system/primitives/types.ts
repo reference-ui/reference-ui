@@ -5,8 +5,6 @@
 /// <reference lib="dom" />
 
 import type * as React from 'react'
-import type { StyleProps } from '../../types/public/style-props'
-import type { ColorModeProps } from '../../types/public/props'
 import type * as PrimitivesCore from '../../types/public/primitives'
 
 export type {
@@ -16,21 +14,20 @@ export type {
   PrimitiveProps,
   PrimitiveTag,
 } from '../../types/public/primitives'
+export type {
+  PrimitiveDefaultVariants,
+  PrimitiveVariantRegistry,
+  PrimitiveVariantValue,
+} from '../../types/public/variants'
 
-type PrimitiveOwnProps = StyleProps & ColorModeProps & PrimitivesCore.PrimitiveCssProps
-
-/** DOM props + style/colorMode/css for a given intrinsic tag (shared by all concrete *Component aliases). */
-export type PrimitivePropsBase<T extends PrimitivesCore.PrimitiveTag> = Omit<
-  React.ComponentPropsWithoutRef<T>,
-  keyof PrimitiveOwnProps
-> &
-  PrimitiveOwnProps
+/** DOM props + style/colorMode/variant/css for a given intrinsic tag (shared by all concrete *Component aliases). */
+export type PrimitivePropsBase<T extends PrimitivesCore.PrimitiveTag> =
+  PrimitivesCore.PrimitiveProps<T>
 
 // Type aliases for all HTML element components
 
 export type AComponent = React.ForwardRefExoticComponent<
-  Omit<React.ComponentPropsWithoutRef<'a'>, keyof PrimitiveOwnProps> &
-    PrimitiveOwnProps &
+  PrimitivePropsBase<'a'> &
     React.RefAttributes<HTMLAnchorElement>
 >
 export type AbbrComponent = React.ForwardRefExoticComponent<
@@ -337,7 +334,6 @@ export type WbrComponent = React.ForwardRefExoticComponent<
 
 export type SimplifiedPrimitive<T extends PrimitivesCore.PrimitiveTag> =
   React.ForwardRefExoticComponent<
-    Omit<React.ComponentPropsWithoutRef<T>, keyof PrimitiveOwnProps> &
-      PrimitiveOwnProps &
+    PrimitivePropsBase<T> &
       React.RefAttributes<React.ComponentRef<T>>
   >

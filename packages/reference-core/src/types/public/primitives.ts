@@ -2,9 +2,10 @@
 
 import type * as React from 'react'
 import type { Tag } from '../../system/primitives/tags'
-import type { ColorModeProps } from './props'
+import type { ColorModeProps, VariantProps } from './props'
 import type { StyleProps } from './style-props'
 import type { SystemStyleObject } from './system-style-object'
+import type { PrimitiveVariantValue } from './variants'
 
 export type PrimitiveTag = Tag
 
@@ -18,13 +19,14 @@ export interface PrimitiveCssProps {
  */
 export type HTMLStyledProps<T extends PrimitiveTag> = PrimitiveProps<T>
 
-type PrimitiveOwnProps = StyleProps & ColorModeProps & PrimitiveCssProps
+type PrimitiveOwnProps<T extends PrimitiveTag = PrimitiveTag> =
+  StyleProps & ColorModeProps & VariantProps<PrimitiveVariantValue<T>> & PrimitiveCssProps
 type PrimitiveNativeProps<T extends PrimitiveTag> = React.ComponentPropsWithoutRef<T>
 
 export type PrimitiveProps<T extends PrimitiveTag> = Omit<
   PrimitiveNativeProps<T>,
-  keyof PrimitiveOwnProps
-> & PrimitiveOwnProps
+  keyof PrimitiveOwnProps<T>
+> & PrimitiveOwnProps<T>
 
 /**
  * React's `JSX.IntrinsicElements` types `caption` and `menu` with the generic
