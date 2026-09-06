@@ -25,171 +25,227 @@ interface NumberFieldContextValue {
   decrement: (factor?: number) => void
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   handleKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void
+  inputRef: React.RefObject<HTMLInputElement | null>
+  focusInput: () => void
 }
 
 const NumberFieldContext = React.createContext<NumberFieldContextValue | null>(null)
 
 export type NumberFieldInputProps = PrimitiveProps<'input'>
 
-export function NumberFieldInput({
-  className,
-  style,
-  onKeyDown: userOnKeyDown,
-  ...props
-}: NumberFieldInputProps) {
-  const context = React.useContext(NumberFieldContext)
-  if (!context) return null
+export const NumberFieldInput = React.forwardRef<HTMLInputElement, NumberFieldInputProps>(
+  function NumberFieldInput(
+    {
+      className,
+      style,
+      onKeyDown: userOnKeyDown,
+      ...props
+    },
+    ref
+  ) {
+    const context = React.useContext(NumberFieldContext)
+    if (!context) return null
 
-  const { value, min, max, disabled, handleInputChange, handleKeyDown } = context
+    const { value, min, max, disabled, handleInputChange, handleKeyDown, inputRef } = context
 
-  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    userOnKeyDown?.(e)
-    if (!e.defaultPrevented) {
-      handleKeyDown(e)
+    const setInputRef = React.useCallback(
+      (node: HTMLInputElement | null) => {
+        if (inputRef) {
+          ;(inputRef as React.MutableRefObject<HTMLInputElement | null>).current = node
+        }
+        if (typeof ref === 'function') {
+          ref(node)
+        } else if (ref) {
+          ;(ref as React.MutableRefObject<HTMLInputElement | null>).current = node
+        }
+      },
+      [ref, inputRef]
+    )
+
+    const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      userOnKeyDown?.(e)
+      if (!e.defaultPrevented) {
+        handleKeyDown(e)
+      }
     }
-  }
 
-  return (
-    <Input
-      type="text"
-      role="spinbutton"
-      inputMode="decimal"
-      aria-valuenow={value !== null ? value : undefined}
-      aria-valuemin={min}
-      aria-valuemax={max}
-      disabled={disabled}
-      value={value !== null ? String(value) : ''}
-      onChange={handleInputChange}
-      onKeyDown={onKeyDown}
-      className={className}
-      style={style}
-      {...props}
-    />
-  )
-}
+    return (
+      <Input
+        ref={setInputRef}
+        type="text"
+        role="spinbutton"
+        inputMode="decimal"
+        aria-valuenow={value !== null ? value : undefined}
+        aria-valuemin={min}
+        aria-valuemax={max}
+        disabled={disabled}
+        value={value !== null ? String(value) : ''}
+        onChange={handleInputChange}
+        onKeyDown={onKeyDown}
+        className={className}
+        style={style}
+        {...props}
+      />
+    )
+  }
+)
 
 export type NumberFieldIncrementProps = PrimitiveProps<'button'>
 
-export function NumberFieldIncrement({
-  children,
-  className,
-  style,
-  onClick,
-  ...props
-}: NumberFieldIncrementProps) {
-  const context = React.useContext(NumberFieldContext)
+export const NumberFieldIncrement = React.forwardRef<HTMLButtonElement, NumberFieldIncrementProps>(
+  function NumberFieldIncrement(
+    {
+      children,
+      className,
+      style,
+      onClick,
+      onPointerDown,
+      ...props
+    },
+    ref
+  ) {
+    const context = React.useContext(NumberFieldContext)
 
-  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    onClick?.(e)
-    if (!e.defaultPrevented) {
-      context?.increment()
+    const handlePointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
+      onPointerDown?.(e)
+      if (!e.defaultPrevented && !context?.disabled) {
+        e.preventDefault()
+        context?.focusInput()
+      }
     }
-  }
 
-  return (
-    <Button
-      type="button"
-      tabIndex={-1}
-      aria-label="Increment"
-      disabled={context?.disabled}
-      onClick={handleClick}
-      height="100%"
-      aspectRatio="1 / 1"
-      p="0"
-      m="0"
-      border="none"
-      bg="transparent"
-      borderRadius="sm"
-      display="inline-flex"
-      alignItems="center"
-      justifyContent="center"
-      flexShrink={0}
-      color="design.text.base"
-      cursor={context?.disabled ? 'not-allowed' : 'pointer'}
-      opacity={context?.disabled ? 0.5 : 1}
-      outline="none"
-      _hover={!context?.disabled ? { bg: 'ui.button.mutedBackground', color: 'design.text.base' } : undefined}
-      _active={!context?.disabled ? { bg: 'ui.table.row.mutedBackground' } : undefined}
-      _focusVisible={{ outline: '2px solid', outlineColor: 'ui.focus.ring', outlineOffset: '1px' }}
-      className={className}
-      style={{
-        aspectRatio: '1 / 1',
-        height: '100%',
-        margin: 0,
-        ...style,
-      }}
-      {...props}
-    >
-      {children ?? (
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="12" y1="5" x2="12" y2="19" />
-          <line x1="5" y1="12" x2="19" y2="12" />
-        </svg>
-      )}
-    </Button>
-  )
-}
+    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+      onClick?.(e)
+      if (!e.defaultPrevented && !context?.disabled) {
+        context?.increment()
+        context?.focusInput()
+      }
+    }
+
+    return (
+      <Button
+        ref={ref}
+        type="button"
+        tabIndex={-1}
+        aria-label="Increment"
+        disabled={context?.disabled}
+        onClick={handleClick}
+        onPointerDown={handlePointerDown}
+        height="100%"
+        aspectRatio="1 / 1"
+        p="0"
+        m="0"
+        border="none"
+        bg="transparent"
+        borderRadius="sm"
+        display="inline-flex"
+        alignItems="center"
+        justifyContent="center"
+        flexShrink={0}
+        color="design.text.base"
+        cursor={context?.disabled ? 'not-allowed' : 'pointer'}
+        opacity={context?.disabled ? 0.5 : 1}
+        outline="none"
+        _hover={!context?.disabled ? { bg: 'ui.button.mutedBackground', color: 'design.text.base' } : undefined}
+        _active={!context?.disabled ? { bg: 'ui.table.row.mutedBackground' } : undefined}
+        _focusVisible={{ outline: '2px solid', outlineColor: 'ui.focus.ring', outlineOffset: '1px' }}
+        className={className}
+        style={{
+          aspectRatio: '1 / 1',
+          height: '100%',
+          margin: 0,
+          ...style,
+        }}
+        {...props}
+      >
+        {children ?? (
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+        )}
+      </Button>
+    )
+  }
+)
 
 export type NumberFieldDecrementProps = PrimitiveProps<'button'>
 
-export function NumberFieldDecrement({
-  children,
-  className,
-  style,
-  onClick,
-  ...props
-}: NumberFieldDecrementProps) {
-  const context = React.useContext(NumberFieldContext)
+export const NumberFieldDecrement = React.forwardRef<HTMLButtonElement, NumberFieldDecrementProps>(
+  function NumberFieldDecrement(
+    {
+      children,
+      className,
+      style,
+      onClick,
+      onPointerDown,
+      ...props
+    },
+    ref
+  ) {
+    const context = React.useContext(NumberFieldContext)
 
-  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    onClick?.(e)
-    if (!e.defaultPrevented) {
-      context?.decrement()
+    const handlePointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
+      onPointerDown?.(e)
+      if (!e.defaultPrevented && !context?.disabled) {
+        e.preventDefault()
+        context?.focusInput()
+      }
     }
-  }
 
-  return (
-    <Button
-      type="button"
-      tabIndex={-1}
-      aria-label="Decrement"
-      disabled={context?.disabled}
-      onClick={handleClick}
-      height="100%"
-      aspectRatio="1 / 1"
-      p="0"
-      m="0"
-      border="none"
-      bg="transparent"
-      borderRadius="sm"
-      display="inline-flex"
-      alignItems="center"
-      justifyContent="center"
-      flexShrink={0}
-      color="design.text.base"
-      cursor={context?.disabled ? 'not-allowed' : 'pointer'}
-      opacity={context?.disabled ? 0.5 : 1}
-      outline="none"
-      _hover={!context?.disabled ? { bg: 'ui.button.mutedBackground', color: 'design.text.base' } : undefined}
-      _active={!context?.disabled ? { bg: 'ui.table.row.mutedBackground' } : undefined}
-      _focusVisible={{ outline: '2px solid', outlineColor: 'ui.focus.ring', outlineOffset: '1px' }}
-      className={className}
-      style={{
-        aspectRatio: '1 / 1',
-        height: '100%',
-        margin: 0,
-        ...style,
-      }}
-      {...props}
-    >
-      {children ?? (
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="5" y1="12" x2="19" y2="12" />
-        </svg>
-      )}
-    </Button>
-  )
-}
+    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+      onClick?.(e)
+      if (!e.defaultPrevented && !context?.disabled) {
+        context?.decrement()
+        context?.focusInput()
+      }
+    }
+
+    return (
+      <Button
+        ref={ref}
+        type="button"
+        tabIndex={-1}
+        aria-label="Decrement"
+        disabled={context?.disabled}
+        onClick={handleClick}
+        onPointerDown={handlePointerDown}
+        height="100%"
+        aspectRatio="1 / 1"
+        p="0"
+        m="0"
+        border="none"
+        bg="transparent"
+        borderRadius="sm"
+        display="inline-flex"
+        alignItems="center"
+        justifyContent="center"
+        flexShrink={0}
+        color="design.text.base"
+        cursor={context?.disabled ? 'not-allowed' : 'pointer'}
+        opacity={context?.disabled ? 0.5 : 1}
+        outline="none"
+        _hover={!context?.disabled ? { bg: 'ui.button.mutedBackground', color: 'design.text.base' } : undefined}
+        _active={!context?.disabled ? { bg: 'ui.table.row.mutedBackground' } : undefined}
+        _focusVisible={{ outline: '2px solid', outlineColor: 'ui.focus.ring', outlineOffset: '1px' }}
+        className={className}
+        style={{
+          aspectRatio: '1 / 1',
+          height: '100%',
+          margin: 0,
+          ...style,
+        }}
+        {...props}
+      >
+        {children ?? (
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+        )}
+      </Button>
+    )
+  }
+)
 
 export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
   function NumberField(
@@ -212,6 +268,20 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
     const isControlled = valueProp !== undefined
     const [internalValue, setInternalValue] = React.useState<number | null>(defaultValue)
     const value = isControlled ? valueProp : internalValue
+
+    const inputRef = React.useRef<HTMLInputElement | null>(null)
+
+    const focusInput = React.useCallback(() => {
+      if (inputRef.current) {
+        inputRef.current.focus()
+        const len = inputRef.current.value.length
+        try {
+          inputRef.current.setSelectionRange(len, len)
+        } catch {
+          // ignore if not supported
+        }
+      }
+    }, [])
 
     const increment = React.useCallback(
       (factor = 1) => {
@@ -292,8 +362,10 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
         decrement,
         handleInputChange,
         handleKeyDown,
+        inputRef,
+        focusInput,
       }),
-      [value, min, max, step, disabled, increment, decrement, handleInputChange, handleKeyDown]
+      [value, min, max, step, disabled, increment, decrement, handleInputChange, handleKeyDown, focusInput]
     )
 
     return (

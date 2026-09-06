@@ -76,7 +76,7 @@ export const fieldSurfaceStyles = {
     },
   },
 
-  [`[data-reference-field]:has(${embeddedControl}:focus)`]: {
+  [`[data-reference-field]:has(${embeddedControl}:focus), [data-reference-number-field]:has(> :is(button, .ref-button):active)`]: {
     borderColor: '{colors.ui.focus.ring}',
     outlineWidth: '0px',
     outlineStyle: 'none',
@@ -153,6 +153,7 @@ export const fieldSurfaceStyles = {
   },
 
   '[data-reference-number-field]': {
+    position: 'relative',
     width: 'fit-content',
     maxWidth: '36r',
     padding: '0.75r',

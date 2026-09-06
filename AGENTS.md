@@ -4,6 +4,19 @@ Repository-wide conventions, dev server policies, and visual verification instru
 
 ---
 
+## 0. Component Polishing & Tweaking Contract (`tweak-component`)
+
+Whenever a user prompt asks to fix, polish, style, improve, or adjust how any component in `@reference-ui/lib` feels or looks:
+- **Immediately activate the `tweak-component` skill** (`.agents/skills/tweak-component/SKILL.md`).
+- **Do NOT pause for speculative planning mode artifacts** (`implementation_plan.md`). Jump straight into the 5-step loop:
+  1. **Contract Ingestion**: Read `<Component>.md` and `TESTS.md`.
+  2. **Baseline Capture**: Run `pnpm capture <Component>` and embed the screenshot directly in chat.
+  3. **Implement & Tweak**: Apply changes in `packages/reference-lib/src/components/<Component>/`.
+  4. **Verification**: Run targeted `typecheck`, `vitest`, `build`, and Playwright E2E checks.
+  5. **Multi-State Visual Re-inspection**: Run `pnpm capture <Component> --states` and embed the markdown table into chat.
+
+---
+
 ## 1. Dev Server & Local Environment Policy
 
 > [!IMPORTANT]

@@ -8,6 +8,7 @@ import {
   sliderTrack,
   sliderThumb,
 } from '../../core/theme/primitives/shared'
+import { isFocusVisible } from '../../core/theme/primitives/forms/focus-visible'
 
 export type SliderOrientation = 'horizontal' | 'vertical'
 export type SliderValue = number | number[]
@@ -34,10 +35,12 @@ interface SliderContextValue {
   orientation: SliderOrientation
   disabled: boolean
   draggingIndex: number | null
+  focusVisibleIndex: number | null
   trackRef: React.RefObject<HTMLDivElement | null>
   updateThumbValue: (index: number, nextVal: number) => void
   commitThumbValue: (index: number, nextVal: number) => void
   setDraggingIndex: (index: number | null) => void
+  setFocusVisibleIndex: (index: number | null) => void
   registerThumb: (index: number, node: HTMLDivElement | null) => void
 }
 
@@ -165,7 +168,26 @@ export function SliderThumb({
   const context = React.useContext(SliderContext)
   if (!context) return null
 
-  const { values, min, max, step, minStepsBetweenThumbs, orientation, disabled, updateThumbValue, commitThumbValue, registerThumb } = context
+  const {
+    values,
+    min,
+    max,
+    step,
+    minStepsBetweenThumbs,
+    orientation,
+    disabled,
+    updateThumbValue,
+    commitThumbValue,
+    registerThumb,
+    focusVisibleIndex,
+    setFocusVisibleIndex,
+  } = context
+  const [localFocusVisible, setLocalFocusVisible] = React.useState(false)
+  const isFocusVisibleManaged =
+    focusVisibleIndex !== undefined
+      ? focusVisibleIndex === index
+      : localFocusVisible
+
   const val = values[index] ?? min
   const range = max - min || 1
   const percent = Math.max(0, Math.min(100, ((val - min) / range) * 100))
@@ -188,6 +210,9 @@ export function SliderThumb({
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     onKeyDown?.(e)
     if (e.defaultPrevented || disabled) return
+
+    setFocusVisibleIndex(index)
+    setLocalFocusVisible(true)
 
     const pageStep = Math.max(step, Math.ceil((max - min) / 10 / step) * step)
     const stepAmount = e.shiftKey ? pageStep : step
@@ -223,13 +248,39 @@ export function SliderThumb({
     } catch {}
     isDraggingRef.current = true
     setIsThumbPressed(true)
+    setFocusVisibleIndex(null)
+    setLocalFocusVisible(false)
     context.setDraggingIndex(index)
     e.currentTarget.focus()
+  }
+
+  const handleFocus = (e: React.FocusEvent<HTMLDivElement>) => {
+    props.onFocus?.(e)
+    if (e.defaultPrevented) return
+
+    if (!isDraggingRef.current && context.draggingIndex === null && isFocusVisible()) {
+      setFocusVisibleIndex(index)
+      setLocalFocusVisible(true)
+    } else {
+      setFocusVisibleIndex(null)
+      setLocalFocusVisible(false)
+    }
+  }
+
+  const handleBlur = (e: React.FocusEvent<HTMLDivElement>) => {
+    props.onBlur?.(e)
+    if (e.defaultPrevented) return
+
+    if (focusVisibleIndex === index) {
+      setFocusVisibleIndex(null)
+    }
+    setLocalFocusVisible(false)
   }
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     onPointerMove?.(e)
     if (!isDraggingRef.current || disabled) return
+    setFocusVisibleIndex(null)
     const trackEl = context.trackRef.current
     if (!trackEl) return
 
@@ -250,6 +301,8 @@ export function SliderThumb({
     if (!isDraggingRef.current) return
     isDraggingRef.current = false
     setIsThumbPressed(false)
+    setFocusVisibleIndex(null)
+    setLocalFocusVisible(false)
     context.setDraggingIndex(null)
     try {
       if (e.currentTarget.hasPointerCapture(e.pointerId)) {
@@ -305,10 +358,13 @@ export function SliderThumb({
       data-orientation={orientation}
       data-disabled={disabled ? '' : undefined}
       data-active={isActive ? '' : undefined}
+      data-focus-visible={!isActive && isFocusVisibleManaged ? '' : undefined}
       onKeyDown={handleKeyDown}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
+      onFocus={handleFocus}
+      onBlur={handleBlur}
       position="absolute"
       width={isHorizontal ? sliderThumb.length : sliderThumb.cross}
       height={isHorizontal ? sliderThumb.cross : sliderThumb.length}
@@ -327,6 +383,7 @@ export function SliderThumb({
         boxShadow: isActive
           ? '0 0 0 4px color-mix(in oklch, var(--colors-ui-progress-bar-foreground, currentColor) 15.2%, transparent)'
           : undefined,
+        outline: !isActive && isFocusVisibleManaged ? undefined : 'none',
         left: isHorizontal ? `${percent}%` : '50%',
         bottom: !isHorizontal ? `${percent}%` : undefined,
         top: isHorizontal ? '50%' : undefined,
@@ -401,6 +458,7 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
     )
 
     const [draggingIndex, setDraggingIndex] = React.useState<number | null>(null)
+    const [focusVisibleIndex, setFocusVisibleIndex] = React.useState<number | null>(null)
     const thumbNodesRef = React.useRef<Map<number, HTMLDivElement>>(new Map())
 
     const registerThumb = React.useCallback((index: number, node: HTMLDivElement | null) => {
@@ -421,13 +479,15 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
         orientation,
         disabled,
         draggingIndex,
+        focusVisibleIndex,
         trackRef,
         updateThumbValue,
         commitThumbValue,
         setDraggingIndex,
+        setFocusVisibleIndex,
         registerThumb,
       }),
-      [values, min, max, step, minStepsBetweenThumbs, orientation, disabled, draggingIndex, updateThumbValue, commitThumbValue, registerThumb]
+      [values, min, max, step, minStepsBetweenThumbs, orientation, disabled, draggingIndex, focusVisibleIndex, updateThumbValue, commitThumbValue, registerThumb]
     )
 
     const isHorizontal = orientation === 'horizontal'
@@ -455,6 +515,7 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
         e.currentTarget.setPointerCapture(e.pointerId)
       } catch {}
       isDraggingRef.current = true
+      setFocusVisibleIndex(null)
 
       const rawVal = getValueFromPointer(e)
       let closestIndex = 0
@@ -478,6 +539,7 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
     const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
       props.onPointerMove?.(e)
       if (!isDraggingRef.current || disabled) return
+      setFocusVisibleIndex(null)
       const rawVal = getValueFromPointer(e)
       updateThumbValue(activeThumbIndexRef.current, rawVal)
     }
@@ -487,6 +549,7 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
       if (!isDraggingRef.current) return
       isDraggingRef.current = false
       setDraggingIndex(null)
+      setFocusVisibleIndex(null)
       try {
         if (e.currentTarget.hasPointerCapture(e.pointerId)) {
           e.currentTarget.releasePointerCapture(e.pointerId)
@@ -494,6 +557,7 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
       } catch {}
       const rawVal = getValueFromPointer(e)
       commitThumbValue(activeThumbIndexRef.current, rawVal)
+      thumbNodesRef.current.get(activeThumbIndexRef.current)?.focus()
     }
 
     return (

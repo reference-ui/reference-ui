@@ -71,4 +71,24 @@ describe('focus-visible and modality tracking', () => {
     input.dispatchEvent(new KeyboardEvent('keydown', { key: 'a', bubbles: true }))
     expect(getModality()).toBe('pointer')
   })
+
+  it('removes data-focus-visible on pointerdown when an element is active', () => {
+    const field = document.createElement('div')
+    field.setAttribute('data-reference-field', '')
+    const input = document.createElement('input')
+    input.type = 'text'
+    field.appendChild(input)
+    document.body.appendChild(field)
+
+    // Keyboard navigation focuses input
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }))
+    input.focus()
+    input.dispatchEvent(new FocusEvent('focusin', { bubbles: true }))
+    expect(input.hasAttribute('data-focus-visible')).toBe(true)
+
+    // User clicks mouse
+    document.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))
+    expect(input.hasAttribute('data-focus-visible')).toBe(false)
+    expect(field.hasAttribute('data-focus-visible')).toBe(false)
+  })
 })

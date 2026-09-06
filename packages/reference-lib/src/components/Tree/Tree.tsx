@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { Div, Button, type PrimitiveProps } from '@reference-ui/react'
+import { controlSize, controlHeightPx } from '../../core/theme/primitives/shared'
 
 export type TreeProps = Omit<PrimitiveProps<'div'>, 'onChange' | 'value' | 'defaultValue'> & {
   value?: string | null
@@ -43,14 +44,16 @@ const TreeItemContext = React.createContext<TreeItemContextValue | null>(null)
 const TreeLevelContext = React.createContext<number>(1)
 
 export type TreeItemProps = PrimitiveProps<'div'> & {
-  id: string
+  id?: string
+  value?: string
   disabled?: boolean
   isBranch?: boolean
   textValue?: string
 }
 
 export function TreeItem({
-  id,
+  id: idProp,
+  value: valueProp,
   disabled = false,
   isBranch = false,
   textValue,
@@ -62,6 +65,8 @@ export function TreeItem({
   style,
   ...props
 }: TreeItemProps) {
+  const generatedId = React.useId()
+  const id = (valueProp ?? idProp ?? generatedId) as string
   const tree = React.useContext(TreeContext)
   const level = React.useContext(TreeLevelContext) ?? 1
   const isSelected = tree ? tree.isItemSelected(id) : false
@@ -119,6 +124,97 @@ export function TreeItem({
     tree.handleItemKeyDown(e, id, itemRef.current, isBranch, isExpanded)
   }
 
+  if (isBranch) {
+    const rowContent: React.ReactNode[] = []
+    const groupContent: React.ReactNode[] = []
+
+    React.Children.forEach(children, (child) => {
+      if (
+        React.isValidElement(child) &&
+        (child.type === TreeGroup ||
+          (child.type as any)?.displayName === 'TreeGroup' ||
+          (child.props as any)?.role === 'group' ||
+          (child.props as any)?.['data-testid']?.includes('group'))
+      ) {
+        groupContent.push(child)
+      } else {
+        rowContent.push(child)
+      }
+    })
+
+    return (
+      <TreeItemContext.Provider value={{ id, isBranch, isExpanded, level }}>
+        <Div
+          ref={itemRef}
+          role="treeitem"
+          id={id}
+          tabIndex={tabIndex}
+          aria-selected={isSelected}
+          aria-expanded={isExpanded}
+          aria-disabled={isDisabled ? 'true' : undefined}
+          aria-level={level}
+          data-state={isSelected ? 'selected' : 'unselected'}
+          data-expanded={isExpanded ? '' : undefined}
+          data-disabled={isDisabled ? '' : undefined}
+          data-level={level}
+          data-active={isCurrentFocus ? '' : undefined}
+          data-text-value={textValue}
+          onClick={handleClick}
+          onFocus={handleFocus}
+          onKeyDown={handleKeyDown}
+          display="flex"
+          flexDirection="column"
+          outline="none"
+          userSelect="none"
+          cursor={isDisabled ? 'not-allowed' : 'pointer'}
+          css={{
+            '&:focus-visible > [data-slot="row"]': {
+              outline: '2px solid',
+              outlineColor: 'var(--colors-ui-focus-ring, {colors.ui.focus.ring})',
+              outlineOffset: '-1px',
+            },
+          }}
+          className={className}
+          style={style}
+          {...props}
+        >
+          <Div
+            data-slot="row"
+            display="flex"
+            alignItems="center"
+            minHeight={controlSize.height}
+            height="auto"
+            px="2.5r"
+            gap="1.5r"
+            boxSizing="border-box"
+            borderRadius="sm"
+            fontSize="3.5r"
+            lineHeight="5r"
+            bg={isSelected ? 'ui.button.background' : 'transparent'}
+            color={isSelected ? 'ui.button.foreground' : 'design.text.base'}
+            _hover={
+              !isSelected && !isDisabled
+                ? { bg: 'ui.table.row.mutedBackground', color: 'design.text.base' }
+                : undefined
+            }
+            style={{
+              minHeight: controlHeightPx,
+              boxSizing: 'border-box',
+            }}
+            css={{
+              '& .ref-span, & span, & svg': {
+                color: 'inherit',
+              },
+            }}
+          >
+            {rowContent}
+          </Div>
+          {groupContent}
+        </Div>
+      </TreeItemContext.Provider>
+    )
+  }
+
   return (
     <TreeItemContext.Provider value={{ id, isBranch, isExpanded, level }}>
       <Div
@@ -127,11 +223,9 @@ export function TreeItem({
         id={id}
         tabIndex={tabIndex}
         aria-selected={isSelected}
-        aria-expanded={isBranch ? isExpanded : undefined}
         aria-disabled={isDisabled ? 'true' : undefined}
         aria-level={level}
         data-state={isSelected ? 'selected' : 'unselected'}
-        data-expanded={isBranch && isExpanded ? '' : undefined}
         data-disabled={isDisabled ? '' : undefined}
         data-level={level}
         data-active={isCurrentFocus ? '' : undefined}
@@ -140,18 +234,41 @@ export function TreeItem({
         onFocus={handleFocus}
         onKeyDown={handleKeyDown}
         display="flex"
-        flexDirection="column"
+        alignItems="center"
+        minHeight={controlSize.height}
+        height="auto"
+        px="2.5r"
+        gap="1.5r"
+        boxSizing="border-box"
+        borderRadius="sm"
+        fontSize="3.5r"
+        lineHeight="5r"
         outline="none"
         userSelect="none"
         cursor={isDisabled ? 'not-allowed' : 'pointer'}
-        borderRadius="sm"
+        bg={isSelected ? 'ui.button.background' : 'transparent'}
+        color={isSelected ? 'ui.button.foreground' : 'design.text.base'}
+        _hover={
+          !isSelected && !isDisabled
+            ? { bg: 'ui.table.row.mutedBackground', color: 'design.text.base' }
+            : undefined
+        }
         _focusVisible={{
           outline: '2px solid',
           outlineColor: 'ui.focus.ring',
           outlineOffset: '-1px',
         }}
+        css={{
+          '& .ref-span, & span, & svg': {
+            color: 'inherit',
+          },
+        }}
         className={className}
-        style={style}
+        style={{
+          minHeight: controlHeightPx,
+          boxSizing: 'border-box',
+          ...style,
+        }}
         {...props}
       >
         {children}
@@ -186,7 +303,7 @@ export function TreeGroup({
     <TreeLevelContext.Provider value={nextLevel}>
       <Div
         role="group"
-        pl="4r"
+        pl="6r"
         display="flex"
         flexDirection="column"
         gap="0.5r"
@@ -199,6 +316,7 @@ export function TreeGroup({
     </TreeLevelContext.Provider>
   )
 }
+TreeGroup.displayName = 'TreeGroup'
 
 export type TreeExpanderProps = PrimitiveProps<'button'> & {
   itemId?: string
@@ -234,18 +352,19 @@ export function TreeExpander({
       onClick={handleClick}
       border="none"
       bg="transparent"
-      color="design.text.light"
+      color="inherit"
       cursor="pointer"
       display="inline-flex"
       alignItems="center"
       justifyContent="center"
-      p="0.5r"
-      fontSize="2.5r"
-      lineHeight="1"
+      width="5r"
+      height="5r"
+      p="0"
+      flexShrink={0}
       borderRadius="sm"
       _hover={{
-        color: 'design.text.base',
-        bg: 'ui.button.mutedBackground',
+        color: 'inherit',
+        bg: 'color-mix(in oklch, currentColor 14%, transparent)',
       }}
       className={className}
       style={style}
@@ -258,7 +377,7 @@ export function TreeExpander({
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          strokeWidth="2"
+          strokeWidth="2.5"
           strokeLinecap="round"
           strokeLinejoin="round"
           style={{
@@ -597,11 +716,13 @@ export const Tree = React.forwardRef<HTMLDivElement, TreeProps>(
     )
   }
 ) as React.ForwardRefExoticComponent<TreeProps & React.RefAttributes<HTMLDivElement>> & {
+  Root: typeof Tree
   Item: typeof TreeItem
   Group: typeof TreeGroup
   Expander: typeof TreeExpander
 }
 
+Tree.Root = Tree
 Tree.Item = TreeItem
 Tree.Group = TreeGroup
 Tree.Expander = TreeExpander

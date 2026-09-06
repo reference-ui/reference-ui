@@ -571,6 +571,10 @@ validation, without repeating the universal StyleProps matrix.
   Repeat the corresponding RTL/vertical Arrow keys and assert identical
   clamps, proving React Aria/Zag axis mapping changes physical direction but
   not Radix-derived value-space distance or Thumb identity.
+- [x] `SD-POINTER-14` `[reference]` `[browser:all]` —
+  **Slider should scope the focus outline to keyboard navigation and remove it immediately on pointer click or drag.**
+  Tab into a Thumb and assert `data-focus-visible` and solid keyboard focus ring are present, then click the Thumb with a pointer and assert `data-focus-visible` and outline are immediately removed while the Thumb remains active and focused.
+  Stepping via Arrow keys restores the focus outline, and clicking the Track maintains focus without restoring the keyboard outline.
 
 ### Dynamic anatomy and environments
 

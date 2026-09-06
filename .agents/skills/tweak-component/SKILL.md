@@ -1,6 +1,6 @@
 ---
 name: tweak-component
-description: Autonomous workflow for inspecting, tweaking, and verifying components in @reference-ui/lib against Cosmos fixtures, returning visual screenshots, and passing Vitest/Playwright test contracts.
+description: Autonomous workflow for inspecting, tweaking, styling, and visually verifying components in @reference-ui/lib against Cosmos fixtures, returning visual screenshots, and passing Vitest/Playwright test contracts. Activate whenever the user asks to polish, style, fix, or improve how a component feels or looks.
 ---
 
 # Component Tweaking & Manufacturing Skill (`tweak-component`)

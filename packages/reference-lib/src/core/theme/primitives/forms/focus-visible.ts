@@ -58,6 +58,10 @@ function handleKeyDown(e: KeyboardEvent) {
 
 function handlePointerDown() {
   currentModality = 'pointer'
+  if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) {
+    document.activeElement.removeAttribute('data-focus-visible')
+    updateFieldFocusVisible(document.activeElement, false)
+  }
 }
 
 function updateFieldFocusVisible(element: HTMLElement, isVisible: boolean) {

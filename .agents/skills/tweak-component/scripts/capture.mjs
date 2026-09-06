@@ -162,16 +162,20 @@ export function getAllComponentFixtures() {
 
 // 6. Check if Cosmos dev server is responding
 export async function checkPort(port, retries = 3) {
+  const hosts = ['127.0.0.1', 'localhost', '::1']
   for (let i = 0; i < retries; i++) {
-    const ok = await new Promise(resolve => {
-      const req = http.get(`http://localhost:${port}/`, { timeout: 2500 }, () => resolve(true))
-      req.on('error', () => resolve(false))
-      req.on('timeout', () => {
-        req.destroy()
-        resolve(false)
+    for (const host of hosts) {
+      const ok = await new Promise(resolve => {
+        const url = host.includes(':') ? `http://[${host}]:${port}/` : `http://${host}:${port}/`
+        const req = http.get(url, { timeout: 4000 }, () => resolve(true))
+        req.on('error', () => resolve(false))
+        req.on('timeout', () => {
+          req.destroy()
+          resolve(false)
+        })
       })
-    })
-    if (ok) return true
+      if (ok) return true
+    }
     await new Promise(r => setTimeout(r, 600))
   }
   return false
@@ -248,7 +252,7 @@ export async function runCapture(rawOpts, customScriptFn = null) {
   }
 
   const fixtureParam = JSON.stringify(fixtureObj)
-  const url = `http://localhost:5000/?fixture=${encodeURIComponent(fixtureParam)}`
+  const url = `http://127.0.0.1:5000/?fixture=${encodeURIComponent(fixtureParam)}`
   const baseName = opts.name || (selectedFixture ? `${opts.component}_${selectedFixture}` : opts.component)
 
   console.log(`Connecting to Cosmos fixture: ${JSON.stringify(fixtureObj)}`)
