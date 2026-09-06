@@ -1,4 +1,8 @@
 import * as React from 'react'
+import { setupFocusVisible } from '../core/theme/primitives/forms/focus-visible'
+
+setupFocusVisible()
+
 import {
   A,
   Abbr,
@@ -251,6 +255,7 @@ function FormControlsSection() {
             max={100}
             value={rangeVal}
             onChange={e => setRangeVal(Number(e.target.value))}
+            style={{ '--range-percent': `${rangeVal}%` } as React.CSSProperties}
           />
         </Div>
       </Form>

@@ -1,5 +1,8 @@
 import * as React from 'react'
 import { Div, type PrimitiveProps, type PrimitiveElement } from '@reference-ui/react'
+import { setupFocusVisible } from '../../core/theme/primitives/forms/focus-visible'
+
+setupFocusVisible()
 
 export interface ReferenceLibraryProps {
   children?: React.ReactNode
@@ -183,6 +186,7 @@ export function ReferenceLibrary({
     if (typeof document === 'undefined') return
 
     const doc = document
+    setupFocusVisible(doc)
     const s = getDocStore(doc)
 
     if (tooltip?.skipDelay !== undefined) {

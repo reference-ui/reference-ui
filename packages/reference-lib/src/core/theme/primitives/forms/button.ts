@@ -77,7 +77,11 @@ export const buttonPrimitiveStyles = {
     _hover: {
       backgroundColor: '{colors.ui.table.row.mutedBackground}',
     },
-    _active: pressableActiveStyles('var(--colors-ui-table-row-muted-background)'),
+    _active: {
+      backgroundColor:
+        'color-mix(in oklch, {colors.ui.table.row.mutedBackground} 80%, {colors.gray.300})',
+      boxShadow: 'none',
+    },
   },
 } as const
 

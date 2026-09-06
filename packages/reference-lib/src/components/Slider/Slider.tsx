@@ -1,5 +1,12 @@
 import * as React from 'react'
 import { Div, type PrimitiveProps, type PrimitiveElement } from '@reference-ui/react'
+import {
+  thumbFocusRingStyles,
+  pressableActiveStyles,
+  trackBackground,
+  sliderTrack,
+  sliderThumb,
+} from '../../core/theme/primitives/shared'
 
 export type SliderOrientation = 'horizontal' | 'vertical'
 export type SliderValue = number | number[]
@@ -25,9 +32,11 @@ interface SliderContextValue {
   minStepsBetweenThumbs: number
   orientation: SliderOrientation
   disabled: boolean
+  draggingIndex: number | null
   trackRef: React.RefObject<HTMLDivElement | null>
   updateThumbValue: (index: number, nextVal: number) => void
   commitThumbValue: (index: number, nextVal: number) => void
+  setDraggingIndex: (index: number | null) => void
 }
 
 const SliderContext = React.createContext<SliderContextValue | null>(null)
@@ -66,17 +75,19 @@ export const SliderTrack = React.forwardRef<HTMLDivElement, SliderTrackProps>(
       <Div
         ref={handleRef}
         data-reference-slider-track=""
+        data-orientation={orientation}
         position="relative"
-        flexGrow={1}
+        flexGrow={isHorizontal ? 1 : 0}
+        flexShrink={0}
         borderRadius="full"
-        bg="ui.table.border"
-        height={isHorizontal ? '1.5r' : '100%'}
-        width={orientation === 'vertical' ? '1.5r' : '100%'}
+        height={isHorizontal ? sliderTrack.height : '100%'}
+        width={orientation === 'vertical' ? sliderTrack.height : '100%'}
         className={className}
         style={{
-          height: isHorizontal ? '6px' : '100%',
-          width: orientation === 'vertical' ? '6px' : '100%',
-          backgroundColor: 'rgba(128, 128, 128, 0.3)',
+          height: isHorizontal ? sliderTrack.heightPx : '100%',
+          width: orientation === 'vertical' ? sliderTrack.heightPx : '100%',
+          background: trackBackground,
+          backgroundColor: trackBackground,
           ...style,
         }}
         {...props}
@@ -117,13 +128,13 @@ export function SliderRange({
       pointerEvents="none"
       className={className}
       style={{
-        left: isHorizontal ? `${startPercent}%` : undefined,
+        left: isHorizontal ? `${startPercent}%` : 0,
         bottom: !isHorizontal ? `${startPercent}%` : undefined,
+        top: isHorizontal ? 0 : undefined,
         width: isHorizontal ? `${sizePercent}%` : '100%',
         height: isHorizontal ? '100%' : `${sizePercent}%`,
         ['--reference-slider-range-start' as any]: `${startPercent}%`,
         ['--reference-slider-range-end' as any]: `${endPercent}%`,
-        top: 0,
         ...style,
       }}
       {...props}
@@ -154,6 +165,9 @@ export function SliderThumb({
   const percent = Math.max(0, Math.min(100, ((val - min) / range) * 100))
   const isHorizontal = orientation === 'horizontal'
   const isDraggingRef = React.useRef(false)
+  const [isThumbPressed, setIsThumbPressed] = React.useState(false)
+  const isDragging = context.draggingIndex === index
+  const isActive = isDragging || isThumbPressed
 
   const thumbMin = index > 0 && values.length > 1 ? values[index - 1] + minStepsBetweenThumbs * step : min
   const thumbMax = index < values.length - 1 && values.length > 1 ? values[index + 1] - minStepsBetweenThumbs * step : max
@@ -194,6 +208,8 @@ export function SliderThumb({
       e.currentTarget.setPointerCapture(e.pointerId)
     } catch {}
     isDraggingRef.current = true
+    setIsThumbPressed(true)
+    context.setDraggingIndex(index)
     e.currentTarget.focus()
   }
 
@@ -219,6 +235,8 @@ export function SliderThumb({
     onPointerUp?.(e)
     if (!isDraggingRef.current) return
     isDraggingRef.current = false
+    setIsThumbPressed(false)
+    context.setDraggingIndex(null)
     try {
       if (e.currentTarget.hasPointerCapture(e.pointerId)) {
         e.currentTarget.releasePointerCapture(e.pointerId)
@@ -248,25 +266,32 @@ export function SliderThumb({
       aria-valuenow={val}
       aria-orientation={orientation}
       data-reference-slider-thumb=""
+      data-orientation={orientation}
       data-disabled={disabled ? '' : undefined}
+      data-active={isActive ? '' : undefined}
       onKeyDown={handleKeyDown}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       position="absolute"
-      width="4.5r"
-      height="4.5r"
-      borderRadius="full"
-      bg="ui.dialog.background"
-      border="2px solid"
-      borderColor="ui.progress.bar.foreground"
-      boxShadow="0 1px 4px rgba(0,0,0,0.3)"
+      width={isHorizontal ? sliderThumb.length : sliderThumb.cross}
+      height={isHorizontal ? sliderThumb.cross : sliderThumb.length}
+      borderRadius={sliderThumb.borderRadius}
+      bg="ui.progress.bar.foreground"
+      boxShadow={isActive ? undefined : '0 1px 3px rgba(0,0,0,0.2)'}
       cursor={disabled ? 'not-allowed' : 'pointer'}
       touchAction="none"
       outline="none"
-      _focusVisible={{ outline: '2px solid', outlineColor: 'ui.focus.ring', outlineOffset: '2px' }}
+      transition="box-shadow 200ms ease, transform 200ms ease"
+      _focusVisible={thumbFocusRingStyles}
       className={className}
       style={{
+        width: isHorizontal ? sliderThumb.lengthPx : sliderThumb.crossPx,
+        height: isHorizontal ? sliderThumb.crossPx : sliderThumb.lengthPx,
+        borderRadius: sliderThumb.borderRadiusPx,
+        boxShadow: isActive
+          ? '0 0 0 4px color-mix(in oklch, var(--colors-ui-progress-bar-foreground, currentColor) 15.2%, transparent)'
+          : undefined,
         left: isHorizontal ? `${percent}%` : '50%',
         bottom: !isHorizontal ? `${percent}%` : undefined,
         top: isHorizontal ? '50%' : undefined,
@@ -340,6 +365,8 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
       [values, currentValue, min, max, step, minStepsBetweenThumbs, onChangeEnd]
     )
 
+    const [draggingIndex, setDraggingIndex] = React.useState<number | null>(null)
+
     const contextValue = React.useMemo<SliderContextValue>(
       () => ({
         values,
@@ -349,11 +376,13 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
         minStepsBetweenThumbs,
         orientation,
         disabled,
+        draggingIndex,
         trackRef,
         updateThumbValue,
         commitThumbValue,
+        setDraggingIndex,
       }),
-      [values, min, max, step, minStepsBetweenThumbs, orientation, disabled, updateThumbValue, commitThumbValue]
+      [values, min, max, step, minStepsBetweenThumbs, orientation, disabled, draggingIndex, updateThumbValue, commitThumbValue]
     )
 
     const isHorizontal = orientation === 'horizontal'
@@ -395,6 +424,7 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
         })
       }
       activeThumbIndexRef.current = closestIndex
+      setDraggingIndex(closestIndex)
       updateThumbValue(closestIndex, rawVal)
       commitThumbValue(closestIndex, rawVal)
     }
@@ -410,6 +440,7 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
       props.onPointerUp?.(e)
       if (!isDraggingRef.current) return
       isDraggingRef.current = false
+      setDraggingIndex(null)
       try {
         if (e.currentTarget.hasPointerCapture(e.pointerId)) {
           e.currentTarget.releasePointerCapture(e.pointerId)
@@ -428,7 +459,9 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
           data-disabled={disabled ? '' : undefined}
           position="relative"
           display="flex"
+          flexDirection={isHorizontal ? 'row' : 'column'}
           alignItems="center"
+          justifyContent="center"
           userSelect="none"
           touchAction="none"
           cursor={disabled ? 'not-allowed' : 'pointer'}

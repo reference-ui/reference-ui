@@ -2,31 +2,30 @@ import { globalCss } from '@reference-ui/system'
 import { setupFocusVisible } from './focus-visible'
 import {
   baseTypography,
-  focusRingStyles,
   controlSize,
   pressableActiveStyles,
   thumbFocusRingStyles,
   trackBackground,
+  sliderTrack,
+  sliderThumb,
 } from '../shared'
 import { fieldSurfaceStyles } from './field'
 
 setupFocusVisible()
 
+const fieldBase = fieldSurfaceStyles['[data-reference-field]']
+
 export const inputPrimitiveStyles = {
   '.ref-input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]), .ref-select, .ref-textarea': {
-    ...baseTypography,
-    appearance: 'none',
-    boxSizing: 'border-box',
+    ...fieldBase,
+    display: undefined,
+    alignItems: undefined,
+    gap: undefined,
+    minWidth: undefined,
+    maxWidth: undefined,
     width: '100%',
-    borderWidth: '1px',
-    borderStyle: 'solid',
-    borderColor: '{colors.ui.field.border}',
-    borderRadius: 'sm',
-    ...focusRingStyles,
-    backgroundColor: '{colors.ui.field.background}',
-    color: '{colors.ui.field.foreground}',
-    fontSize: '3.5r',
-    lineHeight: '5r',
+    paddingInline: '3r',
+    outlineOffset: '2px',
     _hover: {
       borderColor: '{colors.ui.field.borderHover}',
     },
@@ -34,12 +33,31 @@ export const inputPrimitiveStyles = {
       outline: 'none',
       borderColor: '{colors.ui.focus.ring}',
     },
-    _focusVisible: {
+    '&:focus': {
       outline: 'none',
-      borderColor: '{colors.ui.field.borderHover}',
+      outlineWidth: '0px',
+      outlineStyle: 'none',
+      outlineColor: 'transparent',
+      borderColor: '{colors.ui.focus.ring}',
+    },
+    '&:focus:hover': {
+      borderColor: '{colors.ui.focus.ring}',
     },
     '&[data-focus-visible]': {
-      ...focusRingStyles._focusVisible,
+      outlineWidth: '2px',
+      outlineOffset: '2px',
+      outlineStyle: 'solid',
+      outlineColor: '{colors.ui.focus.ring}',
+      borderColor: '{colors.ui.field.borderHover}',
+    },
+    '&[data-focus-visible]:focus': {
+      outlineWidth: '2px',
+      outlineOffset: '2px',
+      outlineStyle: 'solid',
+      outlineColor: '{colors.ui.focus.ring}',
+      borderColor: '{colors.ui.field.borderHover}',
+    },
+    '&[data-focus-visible]:focus:hover': {
       borderColor: '{colors.ui.field.borderHover}',
     },
     _disabled: {
@@ -52,20 +70,15 @@ export const inputPrimitiveStyles = {
   },
 
   '.ref-input[type="file"]': {
-    ...baseTypography,
-    ...controlSize,
-    boxSizing: 'border-box',
+    ...fieldBase,
+    display: undefined,
+    alignItems: undefined,
+    gap: undefined,
+    minWidth: undefined,
+    maxWidth: undefined,
     width: '100%',
-    borderWidth: '1px',
-    borderStyle: 'solid',
-    borderColor: '{colors.ui.field.border}',
-    borderRadius: 'sm',
-    ...focusRingStyles,
-    backgroundColor: '{colors.ui.field.background}',
-    color: '{colors.ui.field.foreground}',
-    fontSize: '3.5r',
-    lineHeight: '5r',
     paddingInline: '1r',
+    outlineOffset: '2px',
     cursor: 'pointer',
     _hover: {
       borderColor: '{colors.ui.field.borderHover}',
@@ -74,12 +87,31 @@ export const inputPrimitiveStyles = {
       outline: 'none',
       borderColor: '{colors.ui.focus.ring}',
     },
-    _focusVisible: {
+    '&:focus': {
       outline: 'none',
-      borderColor: '{colors.ui.field.borderHover}',
+      outlineWidth: '0px',
+      outlineStyle: 'none',
+      outlineColor: 'transparent',
+      borderColor: '{colors.ui.focus.ring}',
+    },
+    '&:focus:hover': {
+      borderColor: '{colors.ui.focus.ring}',
     },
     '&[data-focus-visible]': {
-      ...focusRingStyles._focusVisible,
+      outlineWidth: '2px',
+      outlineOffset: '2px',
+      outlineStyle: 'solid',
+      outlineColor: '{colors.ui.focus.ring}',
+      borderColor: '{colors.ui.field.borderHover}',
+    },
+    '&[data-focus-visible]:focus': {
+      outlineWidth: '2px',
+      outlineOffset: '2px',
+      outlineStyle: 'solid',
+      outlineColor: '{colors.ui.focus.ring}',
+      borderColor: '{colors.ui.field.borderHover}',
+    },
+    '&[data-focus-visible]:focus:hover': {
       borderColor: '{colors.ui.field.borderHover}',
     },
     _disabled: {
@@ -93,22 +125,24 @@ export const inputPrimitiveStyles = {
       paddingInline: '4r',
       borderWidth: '1px',
       borderStyle: 'solid',
-      borderColor: 'transparent',
+      borderColor: '{colors.ui.field.border}',
       borderRadius: 'sm',
-      backgroundColor: '{colors.ui.button.background}',
-      color: '{colors.ui.button.foreground}',
+      backgroundColor: '{colors.ui.table.row.mutedBackground}',
+      color: '{colors.design.text.base}',
       fontSize: '3.5r',
       fontWeight: '500',
       lineHeight: '5r',
       cursor: 'pointer',
-      transitionProperty: 'background-color, box-shadow, opacity',
-      transitionDuration: '300ms',
+      transitionProperty:
+        'background-color, border-color, box-shadow, opacity',
+      transitionDuration: '150ms',
       transitionTimingFunction: 'ease',
       _hover: {
         backgroundColor:
-          'color-mix(in oklch, {colors.ui.button.background} 90%, transparent)',
+          'color-mix(in oklch, {colors.ui.table.row.mutedBackground} 80%, {colors.gray.300})',
+        borderColor: '{colors.ui.field.borderHover}',
       },
-      _active: pressableActiveStyles('var(--colors-ui-button-background)'),
+      _active: pressableActiveStyles('var(--colors-ui-table-row-muted-background)'),
     },
   },
 
@@ -149,23 +183,22 @@ export const inputPrimitiveStyles = {
   },
 
   '.ref-input[type="range"]::-webkit-slider-runnable-track': {
-    height: '1.5r',
+    height: sliderTrack.height,
     borderRadius: 'full',
-    background: trackBackground,
+    background: `linear-gradient(to right, {colors.ui.progress.bar.foreground} 0%, {colors.ui.progress.bar.foreground} var(--range-percent, 0%), ${trackBackground} var(--range-percent, 0%), ${trackBackground} 100%)`,
     backgroundColor: trackBackground,
   },
 
   '.ref-input[type="range"]::-webkit-slider-thumb': {
     WebkitAppearance: 'none',
     appearance: 'none',
-    width: 'calc(4 * var(--spacing-root) - 1px)',
-    height: 'calc(4 * var(--spacing-root) - 1px)',
-    marginTop: 'calc(-1.25 * var(--spacing-root) + 0.5px)',
-    borderWidth: '2px',
-    borderStyle: 'solid',
-    borderColor: '{colors.ui.field.background}',
-    borderRadius: 'full',
+    width: sliderThumb.lengthPx,
+    height: sliderThumb.crossPx,
+    marginTop: `calc((${sliderTrack.heightPx} - ${sliderThumb.crossPx}) / 2)`,
+    borderWidth: '0',
+    borderRadius: sliderThumb.borderRadius,
     backgroundColor: '{colors.ui.progress.bar.foreground}',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
     transitionProperty: 'box-shadow, transform',
     transitionDuration: '200ms',
     transitionTimingFunction: 'ease',
@@ -180,7 +213,7 @@ export const inputPrimitiveStyles = {
   },
 
   '.ref-input[type="range"]::-moz-range-track': {
-    height: '1.5r',
+    height: sliderTrack.height,
     borderWidth: '0',
     borderRadius: 'full',
     background: trackBackground,
@@ -188,20 +221,19 @@ export const inputPrimitiveStyles = {
   },
 
   '.ref-input[type="range"]::-moz-range-progress': {
-    height: '1.5r',
+    height: sliderTrack.height,
     borderRadius: 'full',
     background: '{colors.ui.progress.bar.foreground}',
     backgroundColor: '{colors.ui.progress.bar.foreground}',
   },
 
   '.ref-input[type="range"]::-moz-range-thumb': {
-    width: 'calc(4 * var(--spacing-root) - 1px)',
-    height: 'calc(4 * var(--spacing-root) - 1px)',
-    borderWidth: '2px',
-    borderStyle: 'solid',
-    borderColor: '{colors.ui.field.background}',
-    borderRadius: 'full',
+    width: sliderThumb.lengthPx,
+    height: sliderThumb.crossPx,
+    borderWidth: '0',
+    borderRadius: sliderThumb.borderRadius,
     backgroundColor: '{colors.ui.progress.bar.foreground}',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
     transitionProperty: 'box-shadow, transform',
     transitionDuration: '200ms',
     transitionTimingFunction: 'ease',
@@ -212,6 +244,25 @@ export const inputPrimitiveStyles = {
   },
 
   '.ref-input[type="range"]:active::-moz-range-thumb': {
+    ...pressableActiveStyles('{colors.ui.progress.bar.foreground}'),
+  },
+
+  '[data-reference-slider-thumb]': {
+    boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+    transitionProperty: 'box-shadow, transform',
+    transitionDuration: '200ms',
+    transitionTimingFunction: 'ease',
+  },
+
+  '[data-reference-slider-thumb]:focus-visible': {
+    ...thumbFocusRingStyles,
+  },
+
+  '[data-reference-slider-thumb]:active, [data-reference-slider-thumb][data-active]': {
+    ...pressableActiveStyles('{colors.ui.progress.bar.foreground}'),
+  },
+
+  '[data-reference-slider]:active [data-reference-slider-thumb]': {
     ...pressableActiveStyles('{colors.ui.progress.bar.foreground}'),
   },
 

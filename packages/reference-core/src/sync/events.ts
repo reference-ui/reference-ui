@@ -58,6 +58,8 @@ function initWatchBurstRebuilds(): void {
 
   on(VIRTUAL_COMPLETE_EVENT, () => {
     ready = true
+    clearScheduledRebuild()
+    pendingReferenceBuild = false
   })
 
   // Git checkouts and large refactors can emit a burst of per-file virtual

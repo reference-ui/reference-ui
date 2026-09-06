@@ -41,7 +41,29 @@ export function pressableActiveStyles(background: string) {
 }
 
 export const trackBackground =
-  'color-mix(in oklch, {colors.ui.progress.track.mixForeground} 12%, {colors.ui.progress.track.mixBackground})'
+  'color-mix(in oklch, var(--colors-ui-progress-track-mix-foreground, {colors.ui.progress.track.mixForeground}) 12%, var(--colors-ui-progress-track-mix-background, {colors.ui.progress.track.mixBackground}))'
+
+export const sliderTrack = {
+  height: '1.5r',
+  heightPx: '6px',
+} as const
+
+/**
+ * Single source of truth for slider thumbs across primitive CSS inputs and library components.
+ * Inspired by DSP faders: a sleek, tactile small rounded rectangle elongated in the travel direction.
+ * - Horizontal: 20px wide by 14px high
+ * - Vertical: 14px wide by 20px high
+ * - Cross-axis gives a 4px overhang on each side of the 6px track.
+ */
+export const sliderThumb = {
+  cross: '4r',
+  crossPx: '16px',
+  length: '6r',
+  lengthPx: '24px',
+  borderRadius: 'sm',
+  borderRadiusPx: '4px',
+  borderWidth: '0px',
+} as const
 
 export const controlSize = {
   height: '8.5r',

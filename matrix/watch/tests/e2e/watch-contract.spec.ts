@@ -148,18 +148,36 @@ function readSessionSnapshot(): { buildState: string | null; source: string; upd
   }
 }
 
-function getReadyMarker(): string | null {
-  const snapshot = readSessionSnapshot()
+async function waitForWatchReady(timeoutMs = 60_000): Promise<string> {
+  const deadline = Date.now() + timeoutMs
 
-  if (!snapshot || snapshot.buildState !== 'ready') {
-    return null
+  while (Date.now() < deadline) {
+    const snapshot = readSessionSnapshot()
+
+    if (snapshot?.buildState === 'failed') {
+      throw new Error(`ref sync watch failed before reaching ready\n${snapshot.source}`)
+    }
+
+    if (snapshot?.buildState === 'ready' && snapshot.updatedAt) {
+      return snapshot.updatedAt
+    }
+
+    await new Promise((resolvePromise) => setTimeout(resolvePromise, 50))
   }
 
-  return snapshot.updatedAt
+  throw new Error(`Timed out waiting for watch-ready state at ${sessionPath}`)
 }
 
-async function waitForNextWatchReady(timeoutMs = 60_000, baselineMarker = getReadyMarker()): Promise<void> {
+async function getReadyMarker(timeoutMs = 60_000): Promise<string> {
+  return await waitForWatchReady(timeoutMs)
+}
+
+async function waitForNextWatchReady(
+  timeoutMs = 60_000,
+  baselineMarker?: string | null,
+): Promise<string> {
   const deadline = Date.now() + timeoutMs
+  const initialMarker = baselineMarker ?? (await waitForWatchReady(timeoutMs))
 
   while (Date.now() < deadline) {
     const snapshot = readSessionSnapshot()
@@ -170,11 +188,11 @@ async function waitForNextWatchReady(timeoutMs = 60_000, baselineMarker = getRea
 
     const nextMarker = snapshot?.buildState === 'ready' ? snapshot.updatedAt : null
 
-    if (nextMarker && nextMarker !== baselineMarker) {
-      return
+    if (nextMarker && nextMarker !== initialMarker) {
+      return nextMarker
     }
 
-    await new Promise((resolvePromise) => setTimeout(resolvePromise, 100))
+    await new Promise((resolvePromise) => setTimeout(resolvePromise, 50))
   }
 
   throw new Error(`Timed out waiting for a fresh watch-ready marker at ${sessionPath}`)
@@ -312,7 +330,7 @@ test.describe('watch contract', () => {
       await page.goto('/')
       await expect(page.getByTestId('watch-root')).toBeVisible({ timeout: 60_000 })
 
-      const cssBaseline = getReadyMarker()
+      const cssBaseline = await getReadyMarker()
       await writeFile(cssFilePath, buildCssSlice(cssColor))
       await waitForNextWatchReady(60_000, cssBaseline)
       await reloadWatchApp(page)
@@ -321,7 +339,7 @@ test.describe('watch contract', () => {
       expectFileToContain(reactStylesPath, cssColor, 'react/styles.css should contain the watched css() color at the ready edge')
       await expectComputedStyle(page, 'watch-css', 'color', hexToRgb(cssColor))
 
-      const primitiveBaseline = getReadyMarker()
+      const primitiveBaseline = await getReadyMarker()
       await writeFile(primitiveFilePath, buildPrimitiveSlice(primitiveColor))
       await waitForNextWatchReady(60_000, primitiveBaseline)
       await reloadWatchApp(page)
@@ -333,7 +351,7 @@ test.describe('watch contract', () => {
         readCssVariableValue(reactStylesPath, '--colors-blue-600'),
       )
 
-      const comboBaseline = getReadyMarker()
+      const comboBaseline = await getReadyMarker()
       await Promise.all([
         writeFile(recipeFilePath, buildRecipeSlice(recipeColor)),
         writeFile(tokensFilePath, buildTokensSlice(tokenColor)),
@@ -345,7 +363,7 @@ test.describe('watch contract', () => {
       expectFileToContain(reactStylesPath, tokenColor, 'react/styles.css should contain the updated token color at the ready edge')
       await expectComputedStyle(page, 'watch-token', 'color', hexToRgb(tokenColor))
     } finally {
-      const restoreBaseline = getReadyMarker()
+      const restoreBaseline = await getReadyMarker().catch(() => null)
       await Promise.all([
         writeFile(cssFilePath, originalCss),
         writeFile(primitiveFilePath, originalPrimitive),
@@ -374,7 +392,7 @@ test.describe('watch contract', () => {
       await expect(page.getByTestId('watch-root')).toBeVisible({ timeout: 60_000 })
       await expectComputedStyle(page, 'watch-config-token', 'color', hexToRgb(watchConfigImportedTokenValue))
 
-      const baselineMarker = getReadyMarker()
+      const baselineMarker = await getReadyMarker()
       await writeFile(configBaseSystemFilePath, updatedConfigBaseSystemSource)
       await waitForNextWatchReady(60_000, baselineMarker)
       await reloadWatchApp(page)
@@ -391,7 +409,7 @@ test.describe('watch contract', () => {
       )
       await expectComputedStyle(page, 'watch-config-token', 'color', hexToRgb(updatedTokenValue))
     } finally {
-      const restoreBaseline = getReadyMarker()
+      const restoreBaseline = await getReadyMarker().catch(() => null)
       await writeFile(configBaseSystemFilePath, originalConfigBaseSystemSource)
       await waitForNextWatchReady(60_000, restoreBaseline).catch(() => {})
     }
@@ -421,7 +439,7 @@ test.describe('watch contract', () => {
         )
         .toBe('')
 
-      const addBaseline = getReadyMarker()
+      const addBaseline = await getReadyMarker()
       await writeFile(tokenFragmentFilePath, fragmentSource)
       await waitForNextWatchReady(60_000, addBaseline)
 
@@ -448,7 +466,7 @@ test.describe('watch contract', () => {
         )
         .toBe(normalizeColorValue(readCssVariableValue(reactStylesPath, watchFragmentTokenVariable)))
 
-      const removeBaseline = getReadyMarker()
+      const removeBaseline = await getReadyMarker()
       await unlink(tokenFragmentFilePath)
       await waitForNextWatchReady(60_000, removeBaseline)
 
@@ -471,7 +489,7 @@ test.describe('watch contract', () => {
         .toBe('')
     } finally {
       if (existsSync(tokenFragmentFilePath)) {
-        const restoreBaseline = getReadyMarker()
+        const restoreBaseline = await getReadyMarker().catch(() => null)
         await unlink(tokenFragmentFilePath)
         await waitForNextWatchReady(60_000, restoreBaseline).catch(() => {})
       }

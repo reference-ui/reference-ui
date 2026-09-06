@@ -2,6 +2,9 @@ import * as React from 'react'
 import { Button, Div, Span } from '@reference-ui/react'
 import '@reference-ui/react/styles.css'
 import { ReferenceLibrary } from './components/ReferenceLibrary'
+import { setupFocusVisible } from './core/theme/primitives/forms/focus-visible'
+
+setupFocusVisible()
 
 export default function CosmosDecorator({ children }: { children: React.ReactNode }) {
   const [dark, setDark] = React.useState(true)

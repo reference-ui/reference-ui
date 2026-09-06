@@ -12,6 +12,9 @@ export {
   defaultIconSize,
   iconSizes,
 } from './core/theme/primitives/index'
+export { setupFocusVisible } from './core/theme/primitives/forms/focus-visible'
+import { setupFocusVisible as initFocusVisible } from './core/theme/primitives/forms/focus-visible'
+initFocusVisible()
 export { Reference, ReferenceView, referenceBrowserTokenConfig } from './components/Reference/index'
 export * from './components/Slot/index'
 export * from './components/Presence/index'

@@ -1,6 +1,6 @@
 import * as React from 'react'
-import { Button, Div, Span, type PrimitiveProps, type PrimitiveElement } from '@reference-ui/react'
-import { Overlay, type OverlayContentProps } from '../Overlay'
+import { Div, Span, type PrimitiveProps } from '@reference-ui/react'
+import { Overlay, useOverlay, type OverlayContentProps } from '../Overlay'
 import { RovingFocus } from '../RovingFocus'
 import { controlSize, controlHeightPx } from '../../core/theme/primitives/shared'
 
@@ -14,6 +14,8 @@ export interface MenuProps {
 interface MenuContextValue {
   isOpen: boolean
   setIsOpen: (open: boolean) => void
+  focusStrategy: 'first' | 'last' | null
+  setFocusStrategy: React.Dispatch<React.SetStateAction<'first' | 'last' | null>>
 }
 
 const MenuContext = React.createContext<MenuContextValue | null>(null)
@@ -25,6 +27,7 @@ export function Menu({
   onOpenChange,
 }: MenuProps) {
   const [internalOpen, setInternalOpen] = React.useState(defaultOpen)
+  const [focusStrategy, setFocusStrategy] = React.useState<'first' | 'last' | null>('first')
   const isControlled = openProp !== undefined
   const isOpen = isControlled ? openProp : internalOpen
 
@@ -42,8 +45,10 @@ export function Menu({
     () => ({
       isOpen,
       setIsOpen,
+      focusStrategy,
+      setFocusStrategy,
     }),
-    [isOpen, setIsOpen]
+    [isOpen, setIsOpen, focusStrategy]
   )
 
   return (
@@ -55,12 +60,44 @@ export function Menu({
   )
 }
 
+export type MenuTriggerProps = React.ComponentPropsWithoutRef<typeof Overlay.Trigger>
+
 export function MenuTrigger({
   children,
+  onKeyDown,
+  onClick,
   ...props
-}: React.ComponentPropsWithoutRef<typeof Overlay.Trigger>) {
+}: MenuTriggerProps) {
+  const context = React.useContext(MenuContext)
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+    onKeyDown?.(e)
+    if (e.defaultPrevented || !context) return
+
+    if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      context.setFocusStrategy('first')
+      context.setIsOpen(true)
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      context.setFocusStrategy('last')
+      context.setIsOpen(true)
+    }
+  }
+
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    onClick?.(e)
+    if (e.defaultPrevented || !context) return
+    context.setFocusStrategy('first')
+  }
+
   return (
-    <Overlay.Trigger aria-haspopup="menu" {...props}>
+    <Overlay.Trigger
+      aria-haspopup="menu"
+      onKeyDown={handleKeyDown}
+      onClick={handleClick}
+      {...props}
+    >
       {children}
     </Overlay.Trigger>
   )
@@ -72,8 +109,46 @@ export function MenuContent({
   children,
   className,
   style,
+  onKeyDown,
   ...props
 }: MenuContentProps) {
+  const context = React.useContext(MenuContext)
+  const overlay = useOverlay()
+  const contentRef = React.useRef<HTMLDivElement | null>(null)
+
+  React.useEffect(() => {
+    if (!context?.isOpen) return
+
+    const frameId = requestAnimationFrame(() => {
+      if (!contentRef.current) return
+      const items = Array.from(
+        contentRef.current.querySelectorAll<HTMLElement>(
+          '[role="menuitem"]:not([aria-disabled="true"]):not([data-disabled]), [role="menuitemcheckbox"]:not([aria-disabled="true"]):not([data-disabled])'
+        )
+      )
+      if (items.length === 0) return
+
+      const target = context.focusStrategy === 'last' ? items[items.length - 1] : items[0]
+      target?.focus()
+    })
+
+    return () => cancelAnimationFrame(frameId)
+  }, [context?.isOpen, context?.focusStrategy])
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    onKeyDown?.(e)
+    if (e.defaultPrevented || !context) return
+
+    if (e.key === 'Tab') {
+      context.setIsOpen(false)
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      e.stopPropagation()
+      context.setIsOpen(false)
+      overlay?.triggerRef.current?.focus()
+    }
+  }
+
   return (
     <Overlay.Content
       role="menu"
@@ -92,11 +167,13 @@ export function MenuContent({
       style={style}
       {...props}
     >
-      <RovingFocus.Root orientation="vertical" loop>
-        <Div display="flex" flexDirection="column" gap="0.5r" outline="none">
-          {children}
-        </Div>
-      </RovingFocus.Root>
+      <div ref={contentRef} onKeyDown={handleKeyDown} style={{ outline: 'none' }}>
+        <RovingFocus.Root orientation="vertical" loop>
+          <Div display="flex" flexDirection="column" gap="0.5r" outline="none">
+            {children}
+          </Div>
+        </RovingFocus.Root>
+      </div>
     </Overlay.Content>
   )
 }
@@ -121,12 +198,14 @@ export function MenuItem({
   ...props
 }: MenuItemProps) {
   const context = React.useContext(MenuContext)
+  const overlay = useOverlay()
 
   const handleSelect = () => {
     if (disabled) return
     onSelect?.()
     if (closeOnSelect && context) {
       context.setIsOpen(false)
+      overlay?.triggerRef.current?.focus()
     }
   }
 

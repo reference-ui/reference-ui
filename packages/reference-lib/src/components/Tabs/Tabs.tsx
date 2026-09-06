@@ -156,15 +156,22 @@ export function TabsList({
       display={isLine ? 'flex' : 'inline-flex'}
       flexDirection={orientation === 'vertical' ? 'column' : 'row'}
       gap={isLine ? (orientation === 'horizontal' ? '4r' : '1r') : '1r'}
-      borderBottom={isLine && orientation === 'horizontal' ? '1px solid' : undefined}
-      borderRight={isLine && orientation === 'vertical' ? '1px solid' : undefined}
-      borderColor={isLine ? 'ui.table.border' : undefined}
+      borderBottomWidth={isLine && orientation === 'horizontal' ? '1px' : undefined}
+      borderBottomStyle={isLine && orientation === 'horizontal' ? 'solid' : undefined}
+      borderBottomColor={isLine && orientation === 'horizontal' ? 'ui.table.border' : undefined}
+      borderRightWidth={isLine && orientation === 'vertical' ? '1px' : undefined}
+      borderRightStyle={isLine && orientation === 'vertical' ? 'solid' : undefined}
+      borderRightColor={isLine && orientation === 'vertical' ? 'ui.table.border' : undefined}
       bg={isLine ? 'transparent' : 'ui.table.row.mutedBackground'}
       p={isLine ? '0' : '1r'}
       borderRadius={isLine ? undefined : 'md'}
       position="relative"
       className={className}
-      style={style}
+      style={{
+        borderBottomColor: isLine && orientation === 'horizontal' ? 'var(--colors-ui-table-border)' : undefined,
+        borderRightColor: isLine && orientation === 'vertical' ? 'var(--colors-ui-table-border)' : undefined,
+        ...style,
+      }}
       {...props}
     >
       {children}
@@ -226,15 +233,15 @@ export function Tab({
       borderBottom={
         isLine && orientation === 'horizontal'
           ? isSelected
-            ? '2px solid'
-            : '2px solid transparent'
+            ? '3px solid'
+            : '3px solid transparent'
           : undefined
       }
       borderRight={
         isLine && orientation === 'vertical'
           ? isSelected
-            ? '2px solid'
-            : '2px solid transparent'
+            ? '3px solid'
+            : '3px solid transparent'
           : undefined
       }
       borderColor={isLine && isSelected ? 'ui.focus.ring' : 'transparent'}
@@ -250,7 +257,8 @@ export function Tab({
           : 'transparent'
       }
       color={isSelected ? 'design.text.base' : 'design.text.light'}
-      fontWeight={isSelected ? '600' : '500'}
+      fontWeight="500"
+      textShadow={isSelected ? '0 0 0.4px currentColor' : undefined}
       fontSize="3.5r"
       boxShadow={!isLine && isSelected ? '0 1px 3px rgba(0,0,0,0.12)' : 'none'}
       opacity={isDisabled ? 0.5 : 1}
