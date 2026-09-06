@@ -8,8 +8,11 @@ auth:
 uplinks:
   npmjs:
     url: https://registry.npmjs.org/
+    timeout: 120s
     maxage: 30d
     cache: true
+    fail_timeout: 1m
+    max_fails: 3
 
 packages:
   '@reference-ui/*':
@@ -24,7 +27,8 @@ packages:
     proxy: npmjs
 
 server:
-  keepAliveTimeout: 60
+  keepAliveTimeout: 120
+  requestTimeout: 120s
 
 log:
   - type: stdout

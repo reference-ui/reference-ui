@@ -8,7 +8,7 @@ import {
   ColorModeContext,
   useColorMode,
   splitPrimitiveProps,
-  useLayerScopeAttrs,
+  usePrimitiveContext,
   joinClassName,
 } from './shared'
 import type { PrimitiveElement, PrimitiveProps } from './types'
@@ -25,7 +25,7 @@ export const {{ tag.exportName }}: Components.{{ tag.exportName }}Component = Re
 >((allProps, ref) => {
   const typedProps = allProps as PrimitiveProps<'{{ tag.name }}'> & Record<string, unknown>
   const { className, children, colorMode, variant, styleProps, elementProps } = splitPrimitiveProps(typedProps)
-  const { providesLayerScope, resolvedColorMode, dataLayerAttr, colorModeAttr, variantAttr } = useLayerScopeAttrs(colorMode, variant)
+  const { providesLayerScope, resolvedColorMode, dataLayerAttr, colorModeAttr, variantAttr } = usePrimitiveContext(colorMode, variant)
   const { css: cssProp, ...boxProps } = styleProps
   const primitiveClass = 'ref-{{ tag.name }}'
   const boxClass = box(boxProps as Parameters<typeof box>[0])

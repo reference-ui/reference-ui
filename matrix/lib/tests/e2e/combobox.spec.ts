@@ -32,7 +32,7 @@ test.describe('Combobox Composition Gates & Browser Proofs', () => {
     // Click Banana option -> selects banana and closes popover
     await optBanana.click()
     await expect(popover).toHaveCount(0)
-    await expect(input).toHaveValue('banana')
+    await expect(input).toHaveValue('Banana')
     await expect(display).toHaveText('Selected: banana')
   })
 

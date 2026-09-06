@@ -631,10 +631,17 @@ export function OverlayContent({
 
   if (!context) return null
 
+  const anchorNode =
+    context.triggerRef.current ??
+    (context.anchor && typeof context.anchor === 'object' && 'current' in context.anchor
+      ? context.anchor.current
+      : null)
+
   const contentElement = (
     <OverlayPortaledSurface
       data-reference-overlay-content=""
       data-state={isOpen ? 'open' : 'closed'}
+      anchorNode={anchorNode}
       ref={(node: HTMLDivElement | null) => {
         context.contentRef.current = node
         setMountedContent(node)

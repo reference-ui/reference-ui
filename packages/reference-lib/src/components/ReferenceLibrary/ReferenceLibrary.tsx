@@ -362,6 +362,7 @@ function ToastItemWrapper({
   return (
     <Div
       data-reference-toast-id={item.id}
+      data-toast-id={item.id}
       data-reference-toast-position={item.position ?? 'bottom-end'}
       data-state="open"
       pointerEvents="auto"
@@ -457,18 +458,17 @@ function ToastHost({
     return map
   }, [visibleToasts])
 
-  if (visibleToasts.length === 0) return null
-
   return (
     <Div data-reference-toast-host="" pointerEvents="none">
-      {Array.from(grouped.entries()).map(([pos, items]) => (
-        <ToastPositionStack
-          key={pos}
-          position={pos}
-          toasts={items}
-          onDismiss={(id) => referenceToast.dismiss(id)}
-        />
-      ))}
+      {visibleToasts.length > 0 &&
+        Array.from(grouped.entries()).map(([pos, items]) => (
+          <ToastPositionStack
+            key={pos}
+            position={pos}
+            toasts={items}
+            onDismiss={(id) => referenceToast.dismiss(id)}
+          />
+        ))}
     </Div>
   )
 }

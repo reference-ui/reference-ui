@@ -54,7 +54,7 @@ export function createMatrixInstallCommand(registryUrl: string): string[] {
     'sh',
     '-lc',
     [
-      `pnpm install --reporter append-only --registry ${registryUrl}`,
+      `pnpm install --reporter append-only --registry ${registryUrl} --fetch-retries 5 --fetch-retry-mintimeout 10000 --fetch-retry-maxtimeout 120000`,
       `printf '%s\\n' "$${MATRIX_INSTALL_CACHE_KEY_ENV_VAR}" > "${MATRIX_INSTALL_CACHE_MARKER_PATH}"`,
     ].join(' && '),
   ]

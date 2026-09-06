@@ -59,7 +59,7 @@ describe('matrix node_modules install helpers', () => {
       'sh',
       '-lc',
       [
-        'pnpm install --reporter append-only --registry http://registry:4873',
+        'pnpm install --reporter append-only --registry http://registry:4873 --fetch-retries 5 --fetch-retry-mintimeout 10000 --fetch-retry-maxtimeout 120000',
         `printf '%s\\n' "$${MATRIX_INSTALL_CACHE_KEY_ENV_VAR}" > "${MATRIX_INSTALL_CACHE_MARKER_PATH}"`,
       ].join(' && '),
     ])

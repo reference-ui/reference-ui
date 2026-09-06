@@ -55,7 +55,7 @@ describe('system/primitives/generate', () => {
     expect(out).toContain("import { box } from '@reference-ui/styled/patterns/box'")
     expect(out).toContain("import {")
     expect(out).toContain("  splitPrimitiveProps,")
-    expect(out).toContain("  useLayerScopeAttrs,")
+    expect(out).toContain("  usePrimitiveContext,")
     expect(out).toContain("} from './shared'")
     expect(out).toContain("export const Div: Components.DivComponent = React.forwardRef<")
     expect(out).toContain("PrimitiveElement<'div'>")

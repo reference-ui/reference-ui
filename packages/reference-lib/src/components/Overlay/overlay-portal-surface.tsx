@@ -10,19 +10,31 @@ import { Div, useColorMode, type PrimitiveProps } from '@reference-ui/react'
  * @see packages/reference-core/src/system/build/primitives/generate.ts
  *      (`shouldEmitDataLayer` when `hasExplicitColorMode`)
  */
-export type OverlayPortaledSurfaceProps = PrimitiveProps<'div'>
+export type OverlayPortaledSurfaceProps = PrimitiveProps<'div'> & {
+  anchorNode?: HTMLElement | null
+}
 
 export const OverlayPortaledSurface = React.forwardRef<HTMLDivElement, OverlayPortaledSurfaceProps>(
   function OverlayPortaledSurface(
     {
       children,
       colorMode: colorModeProp,
+      anchorNode,
       ...props
     },
     ref
   ) {
     const inheritedColorMode = useColorMode()
-    const colorMode = colorModeProp ?? inheritedColorMode
+    const getDomColorMode = (el: HTMLElement | null | undefined): string | undefined => {
+      if (!el) return undefined
+      const themedAncestor = el.closest('[data-panda-theme], [data-color-mode], [data-theme]')
+      return themedAncestor?.getAttribute('data-panda-theme') ??
+        themedAncestor?.getAttribute('data-color-mode') ??
+        themedAncestor?.getAttribute('data-theme') ??
+        undefined
+    }
+    const anchorColorMode = getDomColorMode(anchorNode)
+    const colorMode = colorModeProp ?? inheritedColorMode ?? anchorColorMode
 
     return (
       <Div ref={ref} colorMode={colorMode} {...props}>

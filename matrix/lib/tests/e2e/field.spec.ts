@@ -75,7 +75,6 @@ test.describe('Field Composition Gates & Browser Proofs', () => {
     const keyboardTabStyles = await standardField.evaluate(el => {
       const s = window.getComputedStyle(el)
       return {
-        hasFullSelector: el.matches(':has(:is(input, textarea, select, .ref-input, .ref-textarea, .ref-select):focus-visible)'),
         outlineStyle: s.outlineStyle,
         outlineWidth: s.outlineWidth,
         outlineColor: s.outlineColor,

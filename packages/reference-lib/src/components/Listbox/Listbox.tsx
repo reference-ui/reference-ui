@@ -129,6 +129,12 @@ export function ListboxOption({
         onMouseEnter={handlePointerEnter}
         onClick={handleClick}
         onKeyDown={handleKeyDown}
+        onFocus={(e) => {
+          (props as any).onFocus?.(e)
+          if (!isDisabled && combobox) {
+            combobox.setActiveValue(value)
+          }
+        }}
         display="flex"
         alignItems="center"
         justifyContent={combobox ? 'space-between' : undefined}
@@ -153,12 +159,12 @@ export function ListboxOption({
         }
         _focus={
           combobox
-            ? { outline: 'none' }
+            ? { outline: 'none', bg: 'ui.button.background', color: 'ui.button.foreground' }
             : undefined
         }
         _focusVisible={
           combobox
-            ? { outline: 'none' }
+            ? { outline: 'none', bg: 'ui.button.background', color: 'ui.button.foreground' }
             : { outline: '2px solid', outlineColor: 'ui.focus.ring', outlineOffset: '-2px' }
         }
         css={{
