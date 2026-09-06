@@ -224,6 +224,12 @@ export const ui = {
   disclosure: {
     border: { light: '{colors.gray.200}', dark: '{colors.gray.800}' },
   },
+
+  tab: {
+    track: {
+      background: { light: '{colors.gray.100}', dark: '{colors.gray.900}' },
+    },
+  },
 } as const
 
 tokens({ colors: { ui } })

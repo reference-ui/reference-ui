@@ -7,7 +7,7 @@ export default {
   Atomic: () => {
     const [value, setValue] = React.useState<string | null>('2026-08-31')
     return (
-      <Div maxW="60r" display="flex" flexDirection="column" gap="3r">
+      <Div width="60r" maxW="60r" display="flex" flexDirection="column" gap="3r">
         <DateField value={value} onChange={setValue} placeholder="YYYY-MM-DD" />
         <Span fontSize="3r" color="design.text.light">Chosen date: {value ?? 'None'}</Span>
       </Div>
@@ -16,7 +16,7 @@ export default {
   FoldedPicker: () => {
     const [value, setValue] = React.useState<string | null>('2026-08-31')
     return (
-      <Div maxW="80r" display="flex" flexDirection="column" gap="3r">
+      <Div width="80r" maxW="80r" display="flex" flexDirection="column" gap="3r">
         <DateField value={value} onChange={setValue}>
           <DateField.Picker />
         </DateField>
@@ -27,7 +27,7 @@ export default {
   WithPicker: () => {
     const [value, setValue] = React.useState<string | null>('2026-08-31')
     return (
-      <Div maxW="80r" display="flex" flexDirection="column" gap="3r">
+      <Div width="80r" maxW="80r" display="flex" flexDirection="column" gap="3r">
         <DateField value={value} onChange={setValue}>
           <DateField.Input />
           <DateField.Trigger />

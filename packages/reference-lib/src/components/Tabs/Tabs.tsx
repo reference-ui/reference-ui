@@ -162,7 +162,7 @@ export function TabsList({
       borderRightWidth={isLine && orientation === 'vertical' ? '1px' : undefined}
       borderRightStyle={isLine && orientation === 'vertical' ? 'solid' : undefined}
       borderRightColor={isLine && orientation === 'vertical' ? 'ui.table.border' : undefined}
-      bg={isLine ? 'transparent' : 'ui.table.row.mutedBackground'}
+      bg={isLine ? 'transparent' : 'ui.tab.track.background'}
       p={isLine ? '0' : '1r'}
       borderRadius={isLine ? undefined : 'md'}
       position="relative"
@@ -227,8 +227,10 @@ export function Tab({
       data-value={value}
       disabled={isDisabled}
       onClick={handleClick}
-      px={isLine ? '2r' : '3r'}
-      py={isLine ? '2.5r' : '1.5r'}
+      h={isLine ? 'auto' : undefined}
+      px={isLine ? (orientation === 'vertical' ? '3r' : '2r') : '3r'}
+      pt={isLine ? (orientation === 'horizontal' ? '2.5r' : '2r') : '1.5r'}
+      pb={isLine ? (orientation === 'horizontal' ? '3.5r' : '2r') : '1.5r'}
       border="none"
       borderBottom={
         isLine && orientation === 'horizontal'
@@ -253,12 +255,18 @@ export function Tab({
         isLine
           ? 'transparent'
           : isSelected
-          ? 'ui.dialog.background'
+          ? 'gray.200'
           : 'transparent'
       }
-      color={isSelected ? 'design.text.base' : 'design.text.light'}
+      color={
+        isSelected
+          ? isLine
+            ? 'design.text.base'
+            : 'ui.button.foreground'
+          : 'design.text.light'
+      }
       fontWeight="500"
-      textShadow={isSelected ? '0 0 0.4px currentColor' : undefined}
+      textShadow={isLine && isSelected ? '0 0 0.4px currentColor' : undefined}
       fontSize="3.5r"
       boxShadow={!isLine && isSelected ? '0 1px 3px rgba(0,0,0,0.12)' : 'none'}
       opacity={isDisabled ? 0.5 : 1}
@@ -309,7 +317,7 @@ export function TabPanel({
       hidden={!isSelected}
       data-state={isSelected ? 'active' : 'inactive'}
       data-value={value}
-      py="3r"
+      py="5r"
       px="0"
       color="design.text.base"
       className={className}
