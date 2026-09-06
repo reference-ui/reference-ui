@@ -34,9 +34,12 @@ Read the component design specification and test contract before modifying code:
 ### Step 2: Baseline Capture & Immediate Visual Sharing
 Establish the visual baseline and **share it with the developer immediately in chat**:
 ```bash
-node .agents/skills/tweak-component/scripts/capture.mjs <ComponentName> <FixtureName> --states --out-dir <artifacts-dir>
+pnpm capture <ComponentName> [FixtureName] --states
 ```
-- The script automatically outputs tight resting, hover, and popup screenshots along with a ready-to-paste markdown table.
+- Or with explicit output dir: `pnpm capture <ComponentName> [FixtureName] --states --out-dir <artifacts-dir>`
+- The script automatically outputs unclipped resting, hover, focus (pointer click), tab (keyboard focus-visible outline), and popup screenshots along with a ready-to-paste markdown table.
+- To discover available fixtures: `pnpm capture <ComponentName> --list`
+- If fixture name is omitted, it auto-selects the primary fixture.
 - **MANDATORY**: Embed the captured baseline screenshots directly into your chat response (`![Caption](/absolute/path.png)`). Never proceed without letting the user see what the baseline looks like.
 - Inspect the images with `view_file` to identify visual bugs, misalignment, nested borders, or clipped triggers.
 
@@ -65,34 +68,38 @@ pnpm --dir matrix/lib exec playwright test tests/e2e/<component>.spec.ts
 After passing tests, verify the visual result and **always return screenshots in chat**:
 1. Run the multi-state capture script:
    ```bash
-   node .agents/skills/tweak-component/scripts/capture.mjs <ComponentName> <FixtureName> --states --out-dir <artifacts-dir>
+   pnpm capture <ComponentName> [FixtureName] --states
    ```
 2. Visually inspect the generated files with `view_file`.
 3. **MANDATORY USER VISUAL FEEDBACK**:
    - Always paste the markdown snippet printed by `capture.mjs` directly into your user-facing chat response.
-   - Present a side-by-side or multi-state comparison table (e.g. `Resting | Hover | Open`).
+   - Present a side-by-side or multi-state comparison table (e.g. `Resting | Hover | Focus (Click) | Tab (Keyboard) | Open`).
    - The user must never have to ask to see screenshots; they should be returned automatically with every verification.
 4. Update `packages/reference-lib/src/components/<Component>/TESTS.md` by marking verified items as `- [x] <PREFIX>-...`.
 5. Update `walkthrough.md` with the embedded images and geometric breakdown.
 
 ---
 
-## 3. Capture Tool Reference (`capture.mjs`)
+## 3. Capture Tool Reference (`pnpm capture`)
 
 Syntax:
 ```bash
-node .agents/skills/tweak-component/scripts/capture.mjs <Component> <Fixture> [options]
+pnpm capture <Component> [Fixture] [options]
 ```
 
 Options:
-- `--states`: Captures `resting` (mouse at 0,0), `hover` (trigger hovered), and `open` (if trigger opens a dialog/listbox).
-- `--target <css>`: Specific element to snapshot inside the fixture iframe (auto-defaults to `[data-reference-field]`, then first child of `#root`, then `#root`).
+- `--states`: Captures `Resting` (mouse at 0,0), `Hover` (trigger hovered), `Focus` (pointer clicked), `Tab` (keyboard `:focus-visible` with outline), and `Open` (if trigger opens a dialog/listbox/menu).
+- `--list`: List all available fixture exports for the component.
+- `--target <css>`: Specific element to snapshot inside the fixture iframe (auto-defaults to `[data-reference-field]`, then fixture root, then `#root`).
 - `--hover <css>`: Manually hover a specific element.
 - `--click <css>`: Manually click a specific element.
-- `--out-dir <dir>`: Directory where screenshots will be stored (e.g. `<artifacts-dir>`).
+- `--focus`: Focus the primary interactive element.
+- `--tab`: Tab into the primary interactive element (`:focus-visible`).
+- `--pad <px>`: Padding around the bounding box to preserve focus rings, shadows, and outlines (default `20`).
+- `--out-dir <dir>`: Directory where screenshots will be stored (default: `.reference-ui/captures/`).
 - `--viewport <WxH>`: Custom viewport dimensions (default `1000x700`).
-- `--wait <ms>`: Delay for Cosmos postMessage handshake (default `2500`).
+- `--wait <ms>`: Delay for Cosmos postMessage handshake (default `2200`).
 
 Output:
-- Saves tightly clipped images of component + popovers.
-- Emits markdown snippets ready to paste directly into chat messages and `walkthrough.md`.
+- Saves unclipped, focus-ring-safe images of component + popovers to workspace directory.
+- Emits markdown snippets and tables ready to paste directly into chat messages and `walkthrough.md`.

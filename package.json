@@ -13,6 +13,8 @@
     "dev": "pnpm dev:docs",
     "dev:docs": "pnpm --filter @reference-ui/reference-docs run dev",
     "dev:lib": "pnpm --filter @reference-ui/lib run dev",
+    "capture": "node .agents/skills/tweak-component/scripts/capture.mjs",
+    "capture:states": "node .agents/skills/tweak-component/scripts/capture.mjs --states",
     "changeset": "changeset",
     "release": "pnpm pipeline release"
   },
