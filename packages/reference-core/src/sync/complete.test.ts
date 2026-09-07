@@ -143,11 +143,11 @@ describe('sync/complete', () => {
     expect(markSyncCycleStart).toHaveBeenCalledTimes(1)
   })
 
-  it('prints a watch failure marker instead of exiting on MCP failure', async () => {
+  it('prints a watch failure marker instead of exiting on pipeline failure', async () => {
     const { initComplete, REF_SYNC_FAILED_MESSAGE } = await loadCompleteModule()
     initComplete(createPayload(true))
 
-    fireEvent('mcp:failed')
+    fireEvent('virtual:failed')
 
     expect(logSyncFailure).toHaveBeenCalled()
     expect(REF_SYNC_FAILED_MESSAGE).toBe('[ref sync] failed\n')

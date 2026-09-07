@@ -31,6 +31,7 @@ export const REGISTRY_PACKAGE_NAMES = [
 	'@reference-ui/rust',
 	'@reference-ui/core',
 	'@reference-ui/lib',
+	'@reference-ui/mcp',
 	'@fixtures/extend-library',
 	'@fixtures/extend-library-2',
 	'@fixtures/meta-extend-library',
@@ -46,4 +47,5 @@ export const RELEASE_PACKAGE_NAMES = [
 	'@reference-ui/rust',
 	'@reference-ui/core',
 	'@reference-ui/lib',
+	'@reference-ui/mcp',
 ] as const

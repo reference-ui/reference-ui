@@ -7,3 +7,8 @@ export { resolveRefConfigFile } from './ref-config'
 export { getOutDirPath } from './out-dir'
 export { getOutDirTmpPath, getProjectTmpDirPath } from './tmp-dir'
 export { getVirtualDirPath } from './virtual-dir'
+export {
+  GlobalProjectRegistry,
+  type ProjectEntry,
+  type RegistryData,
+} from './global-registry'

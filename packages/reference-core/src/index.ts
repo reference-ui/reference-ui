@@ -1,10 +1,10 @@
 #!/usr/bin/env node
+import { spawn } from 'node:child_process'
 import { Command } from 'commander'
 import { log } from './lib/log'
 import { runCommand } from './lib/run'
 import { cleanCommand } from './clean'
 import { runSync } from './sync'
-import { mcpCommand, type McpCommandOptions } from './mcp/cli/command'
 
 async function main(): Promise<void> {
   const program = new Command()
@@ -33,21 +33,39 @@ async function main(): Promise<void> {
 
   program
     .command('mcp [project]')
-    .description('Run the Reference UI MCP server')
-    .option('--project <path>', 'Path to target project')
-    .option('--transport <transport>', 'Transport to use (stdio or http)')
-    .option('--host <host>', 'Host to bind when using HTTP transport')
-    .option('--port <port>', 'Port to bind when using HTTP transport', value =>
-      Number.parseInt(value, 10)
-    )
+    .description('Run the Reference UI MCP server (delegates to @reference-ui/mcp)')
+    .allowUnknownOption()
+    .helpOption(false)
     .action(
-      runCommand((positionalProject?: string, commandOptions?: McpCommandOptions) => {
-        const options = commandOptions ?? {}
-        const project = options.project || positionalProject || process.env.REF_PROJECT
+      runCommand(() => {
+        const mcpArgs = process.argv.slice(3)
+        return new Promise<void>(resolve => {
+          const child = spawn('ref-mcp', mcpArgs, {
+            stdio: 'inherit',
+            env: process.env,
+          })
 
-        return mcpCommand(process.cwd(), {
-          ...options,
-          project,
+          child.on('error', () => {
+            console.error(
+              '[@reference-ui/core] The Reference UI MCP server has moved to its own package: @reference-ui/mcp.\n\n' +
+                'To run the Reference UI MCP server, use:\n' +
+                '  npx @reference-ui/mcp\n\n' +
+                'Or install @reference-ui/mcp and run:\n' +
+                '  ref-mcp\n'
+            )
+            process.exit(1)
+          })
+
+          child.on('exit', (code, signal) => {
+            if (signal) {
+              process.kill(process.pid, signal)
+              return
+            }
+            if (code !== 0) {
+              process.exit(code ?? 1)
+            }
+            resolve()
+          })
         })
       })
     )

@@ -54,7 +54,6 @@ export function initComplete(payload: SyncPayload): void {
   once('system:config:failed', handleFailure)
   once('system:panda:codegen:failed', handleFailure)
   once('virtual:failed', handleFailure)
-  once('mcp:failed', handleFailure)
 
   on('virtual:complete', () => {
     logSyncMilestone('Prepared virtual workspace')

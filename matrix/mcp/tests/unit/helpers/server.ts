@@ -22,9 +22,17 @@ import {
 } from './types'
 
 function resolveInstalledMcpBinPath(cwd: string): string {
-  const local = join(cwd, 'node_modules', '@reference-ui', 'core', 'bin', 'mcp.mjs')
-  if (existsSync(local)) return local
-  return join(process.cwd(), 'node_modules', '@reference-ui', 'core', 'bin', 'mcp.mjs')
+  const candidates = [
+    join(cwd, 'node_modules', '@reference-ui', 'mcp', 'bin', 'mcp.mjs'),
+    join(process.cwd(), 'packages', 'reference-mcp', 'bin', 'mcp.mjs'),
+    join(process.cwd(), 'node_modules', '@reference-ui', 'mcp', 'bin', 'mcp.mjs'),
+    join(cwd, 'node_modules', '@reference-ui', 'core', 'bin', 'mcp.mjs'),
+    join(process.cwd(), 'node_modules', '@reference-ui', 'core', 'bin', 'mcp.mjs'),
+  ]
+  for (const candidate of candidates) {
+    if (existsSync(candidate)) return candidate
+  }
+  return candidates[0]
 }
 
 async function waitForServerReady(

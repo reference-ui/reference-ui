@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { workerData } from 'node:worker_threads'
 import type { ReferenceUIConfig } from './types'
 import { DEFAULT_OUT_DIR } from './constants'
-import { getProjectTmpDirPath } from '../lib/paths'
+import { getProjectTmpDirPath } from '../lib/paths/tmp-dir'
 
 /** Main-thread only. Workers use workerData from pool. */
 let mainConfig: ReferenceUIConfig | undefined

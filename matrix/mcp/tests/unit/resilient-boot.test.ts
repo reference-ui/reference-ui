@@ -38,7 +38,7 @@ describe('resilient boot (empty / non-project directory)', { timeout: MATRIX_MCP
 
     try {
       const tools = await client.listTools()
-      expect(tools.tools.length).toBe(8)
+      expect(tools.tools.length).toBe(9)
 
       const result = await client.callTool({
         name: 'list_components',

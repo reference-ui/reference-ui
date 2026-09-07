@@ -1035,6 +1035,9 @@ importers:
       '@reference-ui/lib':
         specifier: workspace:*
         version: link:../../packages/reference-lib
+      '@reference-ui/mcp':
+        specifier: workspace:*
+        version: link:../../packages/reference-mcp
       react:
         specifier: ^19.2.0
         version: 19.2.4
@@ -1582,9 +1585,6 @@ importers:
 
   packages/reference-core:
     dependencies:
-      '@modelcontextprotocol/sdk':
-        specifier: ^1.29.0
-        version: 1.29.0(zod@4.3.6)
       '@pandacss/dev':
         specifier: ^1.11.1
         version: 1.11.1(typescript@7.0.2)
@@ -1642,9 +1642,6 @@ importers:
       tsup:
         specifier: ^8.4.0
         version: 8.5.1(@swc/core@1.5.29(@swc/helpers@0.5.18))(postcss@8.5.26)(tsx@4.21.0)(typescript@7.0.2)(yaml@2.8.2)
-      zod:
-        specifier: ^4.3.6
-        version: 4.3.6
     devDependencies:
       '@eslint/js':
         specifier: ^10.0.1
@@ -1820,6 +1817,49 @@ importers:
       vite:
         specifier: ^7.3.5
         version: 7.3.6(@types/node@25.1.0)(lightningcss@1.32.0)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.2)
+      vitest:
+        specifier: ^4.1.0
+        version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@25.1.0)(happy-dom@15.11.7)(vite@7.3.6(@types/node@25.1.0)(lightningcss@1.32.0)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.2))
+
+  packages/reference-mcp:
+    dependencies:
+      '@modelcontextprotocol/sdk':
+        specifier: ^1.29.0
+        version: 1.29.0(zod@4.3.6)
+      '@reference-ui/core':
+        specifier: workspace:*
+        version: link:../reference-core
+      '@reference-ui/icons':
+        specifier: 0.0.43
+        version: link:../reference-icons
+      '@reference-ui/lib':
+        specifier: workspace:*
+        version: link:../reference-lib
+      '@reference-ui/rust':
+        specifier: workspace:*
+        version: link:../reference-rs
+      commander:
+        specifier: ^14.0.3
+        version: 14.0.3
+      fast-glob:
+        specifier: ^3.3.2
+        version: 3.3.3
+      picocolors:
+        specifier: ^1.1.0
+        version: 1.1.1
+      zod:
+        specifier: ^4.3.6
+        version: 4.3.6
+    devDependencies:
+      '@types/node':
+        specifier: ^25.1.0
+        version: 25.1.0
+      tsup:
+        specifier: ^8.4.0
+        version: 8.5.1(@swc/core@1.5.29(@swc/helpers@0.5.18))(postcss@8.5.26)(tsx@4.21.0)(typescript@7.0.2)(yaml@2.8.2)
+      typescript:
+        specifier: ~7.0.2
+        version: 7.0.2
       vitest:
         specifier: ^4.1.0
         version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@25.1.0)(happy-dom@15.11.7)(vite@7.3.6(@types/node@25.1.0)(lightningcss@1.32.0)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.2))

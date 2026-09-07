@@ -241,7 +241,6 @@ export function initEvents(): void {
       'virtual:failed',
       'packager-ts:failed',
       'reference:failed',
-      'mcp:failed',
       'reference:component:copy-failed',
     ],
     emit: 'sync:failed',

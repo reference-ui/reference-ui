@@ -32,7 +32,7 @@ export interface ResourceTextEntry {
 export interface ComponentSummary {
   count: number
   interfaceName: string | null
-  kind: 'project' | 'primitive'
+  kind: 'project' | 'primitive' | 'component' | 'library'
   name: string
   observedProps: string[]
   propCount: number
@@ -62,7 +62,7 @@ export interface ComponentReadout {
     usage: string
   }
   interface: { name: string; source: string } | null
-  kind: 'project' | 'primitive'
+  kind: 'project' | 'primitive' | 'component' | 'library'
   name: string
   propSummary: {
     documented: number
