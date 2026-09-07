@@ -97,10 +97,10 @@ export function SplitterThumb({
 
   const isHighlighted = isDragging || isHovered || isFocused
 
-  const dotSize = 3.5
+  const dotSize = 3
   const dotGap = 3
   const padding = 4
-  const computedLength = Math.max(20, dots * dotSize + (dots - 1) * dotGap + padding * 2)
+  const computedLength = Math.max(22, dots * dotSize + (dots - 1) * dotGap + padding * 2)
 
   return (
     <Div
@@ -119,15 +119,16 @@ export function SplitterThumb({
       bg="ui.field.background"
       boxSizing="border-box"
       pointerEvents="none"
-      transition="opacity 150ms ease"
+      transition="opacity 150ms ease, border-color 150ms ease"
       style={{
         transform: 'translate(-50%, -50%)',
         width: isHorizontal ? 10 : computedLength,
         height: isHorizontal ? computedLength : 10,
+        borderRadius: 9999,
+        border: '1px solid var(--colors-ui-table-border, var(--colors-gray-700, #4b5563))',
         opacity: isHighlighted ? 1 : 0,
-        backgroundColor: 'var(--colors-ui-field-background, var(--colors-gray-950, #0b0e14))',
-        border: 'none',
-        outline: 'none',
+        backgroundColor: 'var(--colors-ui-field-background, var(--colors-gray-900, #111827))',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.25)',
         ...style,
       }}
       className={className}
@@ -145,8 +146,8 @@ export function SplitterThumb({
               height: dotSize,
               borderRadius: 9999,
               backgroundColor: isDragging
-                ? (dotActiveColor ?? 'var(--colors-gray-50, #ffffff)')
-                : (dotHoverColor ?? 'var(--colors-gray-500, #6b7280)'),
+                ? (dotActiveColor ?? 'var(--colors-ui-focus-ring, var(--colors-gray-200))')
+                : (dotHoverColor ?? 'var(--colors-gray-400, #9ca3af)'),
               transition: 'background-color 150ms ease',
             }}
           />
@@ -430,7 +431,7 @@ export function SplitterHandle({
             width: isHorizontal ? 1 : '100%',
             height: isHorizontal ? '100%' : 1,
             backgroundColor: isLineHighlighted
-              ? 'var(--colors-gray-50, var(--colors-ui-focus-ring, #ffffff))'
+              ? 'var(--colors-ui-focus-ring, var(--colors-gray-400))'
               : 'var(--colors-ui-table-border, var(--colors-gray-800, #374151))',
             transition: 'background-color 150ms ease',
           }}
@@ -470,8 +471,10 @@ export function SplitterHandle({
         alignItems="center"
         justifyContent="center"
         position="relative"
-        width={isHorizontal ? '4r' : '100%'}
-        height={isHorizontal ? '100%' : '4r'}
+        width={isHorizontal ? '9px' : '100%'}
+        height={isHorizontal ? '100%' : '9px'}
+        margin={isHorizontal ? '0 -4px' : '-4px 0'}
+        zIndex={1}
         bg="transparent"
         cursor={isDisabled ? 'default' : isHorizontal ? 'col-resize' : 'row-resize'}
         touchAction="none"
