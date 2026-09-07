@@ -23,7 +23,13 @@ function resolveBorderRadiusValue(
   }
 
   if (typeof raw === 'string') {
-    return args.token(`radii.${raw}`) ?? (value as string | number)
+    const tokenKey = raw.startsWith('radii.') ? raw.slice(6) : raw
+    const token = args.token(`radii.${tokenKey}`) ?? args.token(tokenKey)
+    if (token) return token
+    if (raw.startsWith('radii.')) {
+      return `var(--radii-${tokenKey.replace(/\./g, '-')})`
+    }
+    return value as string | number
   }
 
   return value as string | number
@@ -84,3 +90,6 @@ export const rhythmBorderRadiusUtilities = {
     'borderEndEndRadius',
   ),
 }
+
+export { borderShorthandUtilities } from '../shorthands/border'
+

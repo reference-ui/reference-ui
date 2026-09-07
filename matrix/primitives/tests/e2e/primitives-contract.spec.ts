@@ -244,6 +244,18 @@ test.describe('primitives contract', () => {
     expect(computed['border-radius']).toBe('12px')
   })
 
+  test('primitive resolves category-prefixed color tokens in the browser', async ({ page }) => {
+    const element = page.getByTestId('primitive-category-tokens')
+    const expectedTextDanger = await readCssVariable(element, primitiveMatrixColors.textDangerCssVariable)
+    const expectedSurfaceWarning = await readCssVariable(element, primitiveMatrixColors.surfaceWarningCssVariable)
+    const expectedBorderStrong = await readCssVariable(element, primitiveMatrixColors.borderStrongCssVariable)
+    const computed = await readComputedStyle(element, ['color', 'background-color', 'border-color'])
+
+    expectColorValue(computed.color, expectedTextDanger)
+    expectColorValue(computed['background-color'], expectedSurfaceWarning)
+    expectColorValue(computed['border-color'], expectedBorderStrong)
+  })
+
   test('inline border primitive applies border width', async ({ page }) => {
     const inlineBorder = page.getByTestId('primitive-inline-border')
     const inlineStyles = await readComputedStyle(inlineBorder, ['border-width'])

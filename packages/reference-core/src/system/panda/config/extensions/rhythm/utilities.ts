@@ -5,8 +5,10 @@
  */
 
 import { rhythmBorderRadiusUtilities } from './border'
+import { shorthandUtilities } from '../shorthands'
 import { resolveRhythm } from './helpers'
 import { sizeStyles } from '../size/styles'
+import { colorUtilities } from '../color'
 
 type RhythmTransform = {
   property: string
@@ -103,6 +105,8 @@ export const rhythmUtilities = {
   scrollPaddingInlineEnd: rhythmTransform('scrollPaddingInlineEnd'),
 
   ...rhythmBorderRadiusUtilities,
+  ...shorthandUtilities,
+  ...colorUtilities,
 
   borderWidth: rhythmTransform('borderWidth'),
   borderTopWidth: rhythmTransform('borderTopWidth'),

@@ -50,6 +50,16 @@ export function Index() {
         Styled primitive
       </Div>
       <Div
+        data-testid="primitive-category-tokens"
+        color="colors.red.600"
+        backgroundColor="colors.yellow.100"
+        borderColor="colors.blue.600"
+        borderStyle="solid"
+        borderWidth="2px"
+      >
+        Category prefix tokens
+      </Div>
+      <Div
         data-testid="primitive-inline-border"
         borderColor="green.600"
         borderStyle="solid"

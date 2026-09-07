@@ -151,6 +151,21 @@ describe('primitives generated output', () => {
     expect(foundFragments).toEqual([])
   })
 
+  it('resolves category-prefixed color tokens to valid CSS variables instead of raw property values', () => {
+    const rawCategoryDeclarations: string[] = []
+
+    generatedOutput.reactStylesheetAst?.walkDecls((decl) => {
+      if (
+        (decl.prop === 'border-color' || decl.prop === 'background-color' || decl.prop === 'color' || decl.prop === 'background') &&
+        /colors\.[a-z0-9_.-]+/i.test(decl.value)
+      ) {
+        rawCategoryDeclarations.push(`${decl.prop}: ${decl.value}`)
+      }
+    })
+
+    expect(rawCategoryDeclarations).toEqual([])
+  })
+
   it('emits zero-specificity :where() for primitive variants in the PostCSS AST', () => {
     let hasWherePrimary = false
     let hasBareAttributeSelector = false

@@ -24,6 +24,13 @@ describe('getRhythm', () => {
 })
 
 describe('resolveRhythm', () => {
+  it('resolves bare "r" and "1r" to var(--spacing-root)', () => {
+    expect(resolveRhythm('r')).toBe('var(--spacing-root)')
+    expect(resolveRhythm('1r')).toBe('var(--spacing-root)')
+    expect(resolveRhythm('+r')).toBe('var(--spacing-root)')
+    expect(resolveRhythm('-r')).toBe('calc(-1 * var(--spacing-root))')
+  })
+
   it('resolves "2r" to calc', () => {
     expect(resolveRhythm('2r')).toBe('calc(2 * var(--spacing-root))')
   })

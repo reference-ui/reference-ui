@@ -47,6 +47,13 @@ function resolveSingleRhythmValue(value: string): string | undefined {
   }
 
   const rhythmValue = value.slice(0, -1)
+  if (rhythmValue === '' || rhythmValue === '+') {
+    return getRhythm(1)
+  }
+  if (rhythmValue === '-') {
+    return 'calc(-1 * var(--spacing-root))'
+  }
+
   const fraction = parseRhythmFraction(rhythmValue)
   if (fraction) {
     return getRhythm(fraction[0], fraction[1])
