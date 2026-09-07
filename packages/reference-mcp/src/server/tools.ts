@@ -314,8 +314,15 @@ function checkReferenceLibraryDisabled(
           .string()
           .optional()
           .describe('Optional relative or absolute filesystem path to target project directory.'),
-        query: z.string().optional().describe('Search term for icon name (e.g. "search", "arrow", "check").'),
-        limit: z.number().int().positive().max(200).optional().describe('Maximum number of icons to return.'),
+        query: z
+          .string()
+          .optional()
+          .describe('Search term for icon name, tag, or semantic keyword (e.g. "search", "trash", "gear", "pencil", "arrow").'),
+        category: z
+          .string()
+          .optional()
+          .describe('Optional category filter (e.g. "action", "navigation", "editor", "content", "device").'),
+        limit: z.number().int().positive().max(100).optional().describe('Maximum number of icons to return (default: 25).'),
       },
     },
     async input =>

@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { Div, Span, Button, Input, P, H3, H4 } from '@reference-ui/react'
+import * as AllIcons from '@reference-ui/icons'
 import {
   SearchIcon,
   KeyboardArrowDownIcon,
@@ -9,12 +10,33 @@ import {
   SettingsIcon,
   CalendarTodayIcon,
   FilterListIcon,
+  DeleteIcon,
+  EditIcon,
+  ArrowBackIcon,
+  ArrowForwardIcon,
+  MenuIcon,
+  NotificationsIcon,
+  FavoriteIcon,
+  ShareIcon,
+  VisibilityIcon,
+  DownloadIcon,
+  RefreshIcon,
+  HomeIcon,
+  PersonIcon,
+  LockIcon,
+  MailIcon,
 } from '@reference-ui/icons'
 import { DateField } from '../DateField'
 import { Combobox } from '../Combobox'
 import { Field } from '../Field'
 import { Listbox } from '../Listbox'
 import { controlHeight, iconSizes, defaultIconSize } from '../../core/theme/primitives/shared'
+
+const ALL_ICONS_LIST = (
+  Object.entries(AllIcons).filter(
+    ([k, v]) => k.endsWith('Icon') && (typeof v === 'object' || typeof v === 'function') && v !== null
+  ) as [string, React.ComponentType<{ size?: string | number; color?: string; style?: React.CSSProperties }>][]
+).sort(([a], [b]) => a.localeCompare(b))
 
 function SectionCard({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
   return (
@@ -725,5 +747,198 @@ export default {
       </Div>
     )
   },
+
+  Batch: () => {
+    const [batch, setBatch] = React.useState(0)
+    const [pageInput, setPageInput] = React.useState('')
+    const [copiedName, setCopiedName] = React.useState<string | null>(null)
+    const copyTimeoutRef = React.useRef<any>(null)
+
+    const handleCopy = (name: string) => {
+      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+        navigator.clipboard.writeText(name).catch(() => {})
+      }
+      setCopiedName(name)
+      if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current)
+      copyTimeoutRef.current = setTimeout(() => setCopiedName(null), 1500)
+    }
+
+    React.useEffect(() => {
+      const setter = (b: any) => {
+        const num = typeof b === 'number' ? b : parseInt(String(b), 10)
+        if (!isNaN(num)) setBatch(num)
+      }
+      ;(window as any).setBatch = setter
+      try {
+        if (window.parent && window.parent !== window) {
+          ;(window.parent as any).setBatch = setter
+        }
+      } catch {}
+      const urlParams = new URLSearchParams(window.location.search)
+      const b = urlParams.get('batch')
+      if (b && !isNaN(parseInt(b, 10))) setBatch(parseInt(b, 10))
+    }, [])
+
+    const pageSize = 20
+    const total = ALL_ICONS_LIST.length
+    const totalBatches = Math.ceil(total / pageSize)
+    const current = Math.max(0, Math.min(batch, totalBatches - 1))
+    const start = current * pageSize
+    const end = Math.min(start + pageSize, total)
+    const items = ALL_ICONS_LIST.slice(start, end)
+
+    return (
+      <Div maxW="300r" w="100%" mx="auto" p="3r" display="flex" flexDirection="column" gap="4r">
+        {/* Header & Batch Navigation */}
+        <Div display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap="4r">
+          <Div>
+            <H3 fontSize="5r" fontWeight="700" m="0" color="design.text.base">
+              Icon Contact Sheet (Batch #{current + 1} of {totalBatches})
+            </H3>
+            <P fontSize="3.5r" color="design.text.light" mt="1r" mb="0">
+              Icons #{start + 1} – #{end} of {total.toLocaleString()} • 20 icons per atomized sheet
+            </P>
+          </Div>
+
+          <Div display="flex" gap="2r" alignItems="center">
+            <Button
+              type="button"
+              disabled={current <= 0}
+              onClick={() => setBatch(current - 1)}
+            >
+              ← Previous (20)
+            </Button>
+
+            <Div display="flex" alignItems="center" gap="1r">
+              <Input
+                type="number"
+                min={1}
+                max={totalBatches}
+                placeholder={String(current + 1)}
+                value={pageInput}
+                onChange={e => setPageInput(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    const parsed = parseInt(pageInput, 10)
+                    if (!isNaN(parsed) && parsed >= 1 && parsed <= totalBatches) {
+                      setBatch(parsed - 1)
+                      setPageInput('')
+                    }
+                  }
+                }}
+                width="16r"
+                textAlign="center"
+              />
+              <Span fontSize="3r" color="design.text.light">
+                / {totalBatches}
+              </Span>
+            </Div>
+
+            <Button
+              type="button"
+              disabled={current >= totalBatches - 1}
+              onClick={() => setBatch(current + 1)}
+            >
+              Next (20) →
+            </Button>
+          </Div>
+        </Div>
+
+        {/* 4x5 Contact Sheet Grid (Seamless, no outer overflow box or border wrapping) */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '10px',
+          }}
+        >
+          {items.map(([name, Comp], idx) => {
+            const globalIdx = start + idx + 1
+            const isCopied = copiedName === name
+            const IconComp = Comp as React.ComponentType<{ size?: string | number; color?: string }>
+            const nameFontSize =
+              name.length > 28 ? '12px' : name.length > 22 ? '13px' : '14px'
+
+            return (
+              <div
+                key={name}
+                onClick={() => handleCopy(name)}
+                title={`#${globalIdx}: ${name} (Click to copy)`}
+                style={{
+                  position: 'relative',
+                  padding: '16px 8px 14px',
+                  borderRadius: '10px',
+                  border: isCopied
+                    ? '1px solid var(--colors-ui-focus-ring, #3b82f6)'
+                    : '1px solid var(--colors-ui-field-border, rgba(255,255,255,0.08))',
+                  backgroundColor: isCopied
+                    ? 'rgba(59,130,246,0.12)'
+                    : 'rgba(255,255,255,0.03)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '10px',
+                  minHeight: '156px',
+                  cursor: 'pointer',
+                  userSelect: 'none',
+                  overflow: 'hidden',
+                  transition: 'border-color 0.15s, background-color 0.15s',
+                }}
+              >
+                {/* Index tag */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '8px',
+                    left: '10px',
+                    fontSize: '11px',
+                    fontFamily: 'monospace',
+                    color: 'var(--colors-design-text-light, #888)',
+                    lineHeight: 1,
+                  }}
+                >
+                  #{String(globalIdx).padStart(4, '0')}
+                </div>
+
+                {/* Icon Glyph (pure glyph, prominent, no background box) */}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: '88px',
+                    width: '100%',
+                    marginTop: '4px',
+                  }}
+                >
+                  <IconComp size={80} color="design.text.base" />
+                </div>
+
+                {/* Exact Reference UI Component Name (single line, no description) */}
+                <span
+                  style={{
+                    fontSize: nameFontSize,
+                    fontWeight: 600,
+                    color: isCopied ? 'var(--colors-primary, #3b82f6)' : 'var(--colors-design-text-base, #fff)',
+                    lineHeight: 1.2,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    maxWidth: '100%',
+                    textAlign: 'center',
+                    letterSpacing: '-0.02em',
+                  }}
+                >
+                  {isCopied ? 'Copied!' : name}
+                </span>
+              </div>
+            )
+          })}
+        </div>
+      </Div>
+    )
+  },
 }
+
 

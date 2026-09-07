@@ -209,7 +209,7 @@ export async function checkPort(port, retries = 3) {
 }
 
 // 7. Safe screenshot with padding to preserve outlines, focus rings, and shadows
-export async function capturePadded(page, targetLoc, outPath, pad = 20, viewport = { width: 1000, height: 700 }) {
+export async function capturePadded(page, targetLoc, outPath, pad = 20, viewport = { width: 1600, height: 1050 }) {
   await targetLoc.scrollIntoViewIfNeeded().catch(() => {})
   await page.waitForTimeout(100)
 
@@ -236,7 +236,7 @@ export async function runCapture(rawOpts, customScriptFn = null) {
     outDir: defaultOutDir,
     wait: 2200,
     pad: 20,
-    viewport: { width: 1000, height: 700 },
+    viewport: { width: 1600, height: 1050 },
     ...rawOpts,
   }
 
@@ -645,7 +645,7 @@ function parseArgs() {
     list: false,
     wait: 2200,
     pad: 20,
-    viewport: { width: 1000, height: 700 },
+    viewport: { width: 1600, height: 1050 },
   }
 
   const positional = []

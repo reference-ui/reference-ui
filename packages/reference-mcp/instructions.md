@@ -90,8 +90,10 @@ Reference UI codebases configure their component and asset tiers in `ui.config.t
    - When set to `false`, `@reference-ui/lib` components are excluded from discovery, and MCP queries for them will inform you that the reference library is disabled for this project.
 
 3. **Level 3: Reference Icons (`@reference-ui/icons`)** (`use_reference_icons`, default: `true`):
-   - Over 2,500 Material Symbols React icon components (`SearchIcon`, `ArrowForwardIcon`, `CheckIcon`, etc.).
-   - Searchable via the `list_icons` tool.
+   - Over 3,800 Material Symbols React icon components (`SearchIcon`, `ArrowForwardIcon`, `CheckIcon`, `DeleteIcon`, etc.).
+   - Searchable via the `list_icons` tool. Supports semantic search keywords (e.g. `'trash'` $\rightarrow$ `DeleteIcon`, `'gear'` $\rightarrow$ `SettingsIcon`, `'pencil'` $\rightarrow$ `EditIcon`, `'magnifying glass'` $\rightarrow$ `SearchIcon`).
+   - Sizing tokens: `size="sm"` (16px / `4r`), `size="md"` (20px / `5r`, default), `size="lg"` (24px / `6r`).
+   - Color: inherits by default (`'inherit'`) or accepts theme token colors via StyleProps (`color="text"`, `color="primary"`, `color="muted"`).
    - Configurable in `ui.config.ts` via `use_reference_icons` (or camelCase `useReferenceIcons`, boolean, defaults to `true`).
    - When set to `false`, `list_icons` will inform you that Reference Icons are disabled and that the project uses its own custom icon system.
 
@@ -108,7 +110,7 @@ When building or modifying UI with Reference UI:
 3. **Inspect Component Interfaces**:
    Call `get_component({ name: 'ComponentName' })` for overview and usage patterns, or `get_component_props({ name: 'ComponentName' })` for full TypeScript interfaces.
 4. **Discover Icons**:
-   Call `list_icons({ query: 'icon-name' })` to search for icon components from `@reference-ui/icons`.
+   Call `list_icons({ query: 'semantic-search-term' })` (e.g. `query: 'trash'`, `query: 'search'`, `category: 'navigation'`) to discover icon components from `@reference-ui/icons`.
 5. **Inspect StyleProps & Tokens**:
    - Call `get_style_props` to see all available StyleProps categories and token compatibilities.
    - Call `get_tokens` to inspect specific project design tokens (colors, font sizes, shadows).
