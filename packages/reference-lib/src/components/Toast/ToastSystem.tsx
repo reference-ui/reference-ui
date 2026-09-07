@@ -289,8 +289,6 @@ function ToastItemWrapper({
       top={isTop ? 0 : undefined}
       left={0}
       right={0}
-      zIndex={zIndex}
-      opacity={opacity}
       userSelect="none"
       touchAction="pan-y"
       onPointerDown={handlePointerDown}
@@ -304,6 +302,8 @@ function ToastItemWrapper({
         }
       }}
       style={{
+        zIndex,
+        opacity,
         transform,
         transformOrigin,
         transition: isDragging
@@ -329,7 +329,7 @@ function ToastItemWrapper({
       )}
       <Div
         style={{
-          opacity: isExpanded || isFront ? 1 : 0,
+          opacity: 1,
           transition: 'opacity 180ms ease',
           pointerEvents: isExpanded || isFront ? 'auto' : 'none',
         }}
@@ -425,6 +425,7 @@ function ToastPositionStack({
         maxWidth: 'calc(100vw - 32px)',
         height: isExpanded ? `${totalExpandedHeight}px` : `${collapsedHeight}px`,
         transition: 'height 260ms cubic-bezier(0.16, 1, 0.3, 1)',
+        ['--reference-front-height' as any]: `${frontToastHeight}px`,
       }}
     >
       {toasts.map((item, idx) => {
@@ -512,6 +513,17 @@ export function ToastHost({ limit = 4 }: { limit?: number }) {
             onDismiss={(id) => referenceToast.dismiss(id)}
           />
         ))}
+      <style>{`
+        [data-reference-toast-position][data-expanded="false"] [data-front="false"] [data-reference-toast-root] {
+          height: var(--reference-front-height, 68px) !important;
+          overflow: hidden !important;
+        }
+        [data-reference-toast-position][data-expanded="false"] [data-front="false"] [data-reference-toast-root] > * {
+          opacity: 0 !important;
+          pointer-events: none !important;
+          transition: opacity 180ms ease !important;
+        }
+      `}</style>
     </Div>
   )
 }
