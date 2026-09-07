@@ -34,7 +34,8 @@
     }
   },
   "scripts": {
-    "build": "tsup",
+    "build:index": "node scripts/build-icons-index.mjs",
+    "build": "node scripts/build-icons-index.mjs && tsup",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
     "test": "pnpm run typecheck && vitest run"
@@ -50,6 +51,7 @@
     "@reference-ui/rust": "workspace:*",
     "commander": "^14.0.3",
     "fast-glob": "^3.3.2",
+    "minisearch": "^7.2.0",
     "picocolors": "^1.1.0",
     "zod": "^4.3.6"
   },

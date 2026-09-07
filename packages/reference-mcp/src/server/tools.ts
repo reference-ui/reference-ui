@@ -308,7 +308,7 @@ function checkReferenceLibraryDisabled(
     {
       title: 'List Icons',
       description:
-        'Search and discover icons available in @reference-ui/icons (Material Symbols React components).',
+        'Fast fuzzy search across 3,800+ @reference-ui/icons (Material Symbols). Supports single keywords, natural language sentences, or batch demand lists, returning lean { name, description } icon records.',
       inputSchema: {
         project: z
           .string()
@@ -317,32 +317,51 @@ function checkReferenceLibraryDisabled(
         query: z
           .string()
           .optional()
-          .describe('Search term for icon name, tag, or semantic keyword (e.g. "search", "trash", "gear", "pencil", "arrow").'),
+          .describe(
+            'Search query, natural language sentence, or comma-separated icon needs (e.g. "trash", "gear", "I need icons for user settings, shopping cart, and trash").'
+          ),
+        demands: z
+          .array(z.string())
+          .optional()
+          .describe(
+            'Optional explicit list of icon demands to search in batch in a single tool call (e.g. ["user profile", "trash", "settings"]).'
+          ),
         category: z
           .string()
           .optional()
           .describe('Optional category filter (e.g. "action", "navigation", "editor", "content", "device").'),
-        limit: z.number().int().positive().max(100).optional().describe('Maximum number of icons to return (default: 25).'),
+        limit: z
+          .number()
+          .int()
+          .positive()
+          .max(100)
+          .optional()
+          .describe('Maximum number of icons to return (default: 25).'),
+        verbose: z
+          .boolean()
+          .optional()
+          .describe(
+            'Set to true to include import statements and JSX usage examples in results (default: false).'
+          ),
       },
     },
-    async input =>
-      executeWithProject(
-        projectManager,
-        input.project,
-        artifact => {
-          if (artifact.useReferenceIcons === false) {
-            return {
-              enabled: false,
-              notice:
-                "Reference Icons are disabled in ui.config (use_reference_icons: false). Use the project's custom icon system.",
-              total: 0,
-              returned: 0,
-              icons: [],
-            }
-          }
-          return searchIcons(input)
-        },
-        () => searchIcons(input)
-      )
+    async input => {
+      const projectPath = projectManager.resolveProject(input.project)
+      if (projectPath) {
+        const state = projectManager.getOrCreateState(projectPath)
+        const artifact = await state.waitForReady(1000).catch(() => null)
+        if (artifact && artifact.useReferenceIcons === false) {
+          return toTextResult({
+            enabled: false,
+            notice:
+              "Reference Icons are disabled in ui.config (use_reference_icons: false). Use the project's custom icon system.",
+            total: 0,
+            returned: 0,
+            icons: [],
+          })
+        }
+      }
+      return toTextResult(searchIcons(input))
+    }
   )
 }

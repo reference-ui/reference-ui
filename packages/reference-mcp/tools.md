@@ -199,10 +199,13 @@ Extracts design tokens declared in `ui.config.ts` and token fragment files. Auto
   - `project` *(string, optional)*: Target project directory.
 
 #### `list_icons`
-Searches the `@reference-ui/icons` catalog of over 2,500 Material Symbols React icon components.
+Fast fuzzy search across 3,800+ `@reference-ui/icons` (Material Symbols React icon components). Supports single keywords, typos, natural language sentences, or explicit batch demands, returning token-minimal `{ name, description }` records.
 - **Inputs**:
-  - `query` *(string, optional)*: Search term (e.g. `'search'`, `'arrow'`, `'check'`).
-  - `limit` *(number, optional, max: 200, default: 50)*: Number of icons to return.
+  - `query` *(string, optional)*: Search term, natural language sentence, or comma-separated icon needs (e.g. `'trash'`, `'gear'`, `'I need icons for user settings, shopping cart, and trash'`).
+  - `demands` *(string[], optional)*: Explicit list of icon demands to search in batch in a single tool call (e.g. `['user profile', 'trash', 'settings']`).
+  - `category` *(string, optional)*: Optional category filter (e.g. `'action'`, `'navigation'`, `'editor'`).
+  - `limit` *(number, optional, max: 100, default: 25)*: Number of icons to return (or per demand).
+  - `verbose` *(boolean, optional, default: false)*: Set to true to include import statements and JSX usage examples.
   - `project` *(string, optional)*: Target project directory.
 - **Config Reaction**:
   - If `use_reference_icons: false`, returns a notice instead of icons:
@@ -215,7 +218,7 @@ Searches the `@reference-ui/icons` catalog of over 2,500 Material Symbols React 
       "icons": []
     }
     ```
-- **Normal Output**:
+- **Normal Output (Single Query)**:
   ```json
   {
     "total": 14,
@@ -223,9 +226,30 @@ Searches the `@reference-ui/icons` catalog of over 2,500 Material Symbols React 
     "icons": [
       {
         "name": "ArrowForwardIcon",
-        "import": "import { ArrowForwardIcon } from '@reference-ui/icons'",
-        "example": "<ArrowForwardIcon size=\"md\" color=\"text\" />"
+        "description": "Arrow Forward icon showing a rightward-pointing arrow. Used for advancing, next navigation, and forward progression."
       }
+    ]
+  }
+  ```
+- **Multi-Demand Output (Sentences or `demands` array)**:
+  ```json
+  {
+    "totalDemands": 2,
+    "demands": [
+      {
+        "demand": "shopping cart",
+        "icons": [{ "name": "ShoppingCartIcon", "description": "..." }]
+      },
+      {
+        "demand": "trash",
+        "icons": [{ "name": "DeleteIcon", "description": "..." }]
+      }
+    ],
+    "total": 2,
+    "returned": 2,
+    "icons": [
+      { "name": "ShoppingCartIcon", "description": "..." },
+      { "name": "DeleteIcon", "description": "..." }
     ]
   }
   ```
