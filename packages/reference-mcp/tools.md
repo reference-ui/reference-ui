@@ -165,7 +165,27 @@ Returns a compact, high-signal model for one component, including observed usage
       ]
     },
     "interface": { "name": "AccordionProps", "source": "@reference-ui/lib" },
-    "props": [ ... ],
+    "props": [
+      {
+        "name": "expansion",
+        "type": "'single' | 'multiple'",
+        "description": "Determines whether one or multiple items can be opened simultaneously.",
+        "defaultValue": "single",
+        "optional": true
+      },
+      {
+        "name": "value",
+        "type": "string | string[] | null",
+        "description": "The controlled value of the expanded item(s).",
+        "optional": true
+      },
+      {
+        "name": "onChange",
+        "type": "(value: string | string[] | null) => void",
+        "description": "Event handler called when the expanded state changes.",
+        "optional": true
+      }
+    ],
     "propSummary": { "total": 7, "observed": 0, "documented": 7, "style": 1, "returned": 7 },
     "styleProps": { "supported": true, "tool": "get_style_props" }
   }
