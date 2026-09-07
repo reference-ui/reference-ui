@@ -7,7 +7,37 @@ import {
   type DiscoveredProject,
   type DiscoverProjectsOptions,
 } from '../../lib/paths/workspace-discovery'
+import { createDeferred, type Deferred } from './deferred'
 import { createMcpModelState, type McpModelState } from './model-state'
+
+export interface SelectProjectSuccess {
+  status: 'active'
+  project: string
+  configPath: string
+}
+
+export interface SelectProjectFailure {
+  error: string
+}
+
+export type SelectProjectResult = SelectProjectSuccess | SelectProjectFailure
+
+export interface ListProjectsResult {
+  [key: string]: unknown
+  activeProject: string | null
+  projects: Array<DiscoveredProject & { isDefault: boolean }>
+  sanitizedStaleCount: number
+}
+
+export function compareProjectsByLastActive(
+  a: DiscoveredProject,
+  b: DiscoveredProject
+): number {
+  const timeA = a.lastActive ? new Date(a.lastActive).getTime() : 0
+  const timeB = b.lastActive ? new Date(b.lastActive).getTime() : 0
+  if (timeA !== timeB) return timeB - timeA
+  return a.path.localeCompare(b.path)
+}
 
 export class ProjectManager {
   readonly workspaceRoot: string
@@ -15,15 +45,11 @@ export class ProjectManager {
   private activeProjectPath: string | null = null
   private projectCache = new Map<string, McpModelState>()
   private discoveredProjects: DiscoveredProject[] = []
-  private readyPromise: Promise<void>
-  private readyResolve!: () => void
+  private discoveryDeferred: Deferred<void> = createDeferred()
 
   constructor(workspaceRoot: string, options?: { project?: string }) {
     this.workspaceRoot = this.canonicalize(workspaceRoot)
     this.explicitProject = options?.project ?? process.env.REF_PROJECT ?? null
-    this.readyPromise = new Promise<void>(res => {
-      this.readyResolve = res
-    })
   }
 
   /**
@@ -39,7 +65,7 @@ export class ProjectManager {
         this.getOrCreateState(defaultPath).warmStart().catch(() => {})
       }
     } finally {
-      this.readyResolve()
+      this.discoveryDeferred.resolve()
     }
   }
 
@@ -47,13 +73,11 @@ export class ProjectManager {
    * Tool handlers await this before accessing projects. Fast (< 50ms).
    */
   async waitForDiscovery(): Promise<void> {
-    return this.readyPromise
+    return this.discoveryDeferred.promise
   }
 
   getActiveProject(): string | null {
-    if (this.activeProjectPath && !existsSync(this.activeProjectPath)) {
-      this.activeProjectPath = null
-    }
+    this.pruneActiveProjectIfMissing()
     return this.activeProjectPath
   }
 
@@ -68,13 +92,7 @@ export class ProjectManager {
     return this.getActiveProject()
   }
 
-  selectProject(rawPath: string): {
-    status: 'active'
-    project: string
-    configPath: string
-  } | {
-    error: string
-  } {
+  selectProject(rawPath: string): SelectProjectResult {
     const matched = this.matchProjectPath(rawPath)
     if (!matched) {
       return {
@@ -105,12 +123,8 @@ export class ProjectManager {
     }
   }
 
-  listProjects(options?: DiscoverProjectsOptions): {
-    activeProject: string | null
-    projects: Array<DiscoveredProject & { isDefault: boolean }>
-    sanitizedStaleCount: number
-  } {
-    this.getActiveProject()
+  listProjects(options?: DiscoverProjectsOptions): ListProjectsResult {
+    this.pruneActiveProjectIfMissing()
     const { sanitizedCount } = GlobalProjectRegistry.read()
     const projects = discoverProjects(this.workspaceRoot, options)
     this.discoveredProjects = projects
@@ -135,6 +149,21 @@ export class ProjectManager {
       this.projectCache.set(canonical, state)
     }
     return state
+  }
+
+  invalidateProject(projectPath: string): void {
+    const canonical = this.canonicalize(projectPath)
+    this.projectCache.delete(canonical)
+  }
+
+  clearCache(): void {
+    this.projectCache.clear()
+  }
+
+  private pruneActiveProjectIfMissing(): void {
+    if (this.activeProjectPath && !existsSync(this.activeProjectPath)) {
+      this.activeProjectPath = null
+    }
   }
 
   private canonicalize(rawPath: string): string {
@@ -167,25 +196,14 @@ export class ProjectManager {
       return workspaceProjects[0].path
     }
     if (workspaceProjects.length > 1) {
-      // Pick most recent lastActive from global registry
-      const sortedByActive = [...workspaceProjects].sort((a, b) => {
-        const timeA = a.lastActive ? new Date(a.lastActive).getTime() : 0
-        const timeB = b.lastActive ? new Date(b.lastActive).getTime() : 0
-        if (timeA !== timeB) return timeB - timeA
-        return a.path.localeCompare(b.path)
-      })
-      return sortedByActive[0].path
+      const sorted = [...workspaceProjects].sort(compareProjectsByLastActive)
+      return sorted[0].path
     }
 
     // 5. Global registry projects
     const registryProjects = this.discoveredProjects.filter(p => p.source === 'global_registry')
     if (registryProjects.length > 0) {
-      const sorted = [...registryProjects].sort((a, b) => {
-        const timeA = a.lastActive ? new Date(a.lastActive).getTime() : 0
-        const timeB = b.lastActive ? new Date(b.lastActive).getTime() : 0
-        if (timeA !== timeB) return timeB - timeA
-        return a.path.localeCompare(b.path)
-      })
+      const sorted = [...registryProjects].sort(compareProjectsByLastActive)
       return sorted[0].path
     }
 
@@ -196,7 +214,7 @@ export class ProjectManager {
     const normalized = raw.trim().replace(/\\/g, '/').replace(/\/+$/, '')
     if (!normalized) return null
 
-    // 1. If absolute path
+    // 1. If absolute path or relative path exists directly
     const target = isAbsolute(normalized)
       ? this.canonicalize(normalized)
       : this.canonicalize(resolve(this.workspaceRoot, normalized))
@@ -217,16 +235,17 @@ export class ProjectManager {
       }
     }
 
-    // Check if normalized matches trailing segment of any discovered project
+    // 2. Match against discovered projects by full path or path segment boundary
     const normalizedTarget = target.replace(/\\/g, '/')
     const matchSuffix = this.discoveredProjects.find(p => {
       const normP = p.path.replace(/\\/g, '/')
       return (
         normP === normalizedTarget ||
-        normP.endsWith(`/${normalized}`) ||
-        normP.endsWith(normalized)
+        normP === normalized ||
+        normP.endsWith(`/${normalized}`)
       )
     })
+
     if (matchSuffix) {
       return matchSuffix.path
     }

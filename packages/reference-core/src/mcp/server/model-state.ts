@@ -5,140 +5,184 @@ import { readMcpArtifact } from '../pipeline/artifact'
 import { getMcpModelPath } from '../pipeline/paths'
 import type { McpBuildArtifact } from '../pipeline/types'
 import { McpChildProcessError, spawnMcpBuildChild } from '../worker/child-process/process'
+import { createDeferred, type Deferred } from './deferred'
+
+export type ProjectErrorCode =
+  | 'missing_artifacts'
+  | 'config_not_found'
+  | 'config_invalid'
+  | 'build_failed'
 
 export interface ProjectError {
-  code: 'missing_artifacts' | 'config_not_found' | 'config_invalid' | 'build_failed'
+  code: ProjectErrorCode
   message: string
 }
+
+export type ModelStateStatus = 'idle' | 'warming' | 'ready' | 'error'
 
 export interface McpModelState {
   /** Load cached artifact if present, else build; may start a background refresh when cache exists. */
   warmStart(): Promise<void>
-  /** Current best artifact. Throws if not ready. Fast synchronous check. */
+  /** Current best artifact. Throws if not ready. Fast check. */
   load(): Promise<McpBuildArtifact>
   /** Wait for warmStart to complete, with timeout. Returns null on timeout or error. */
   waitForReady(timeoutMs?: number): Promise<McpBuildArtifact | null>
+  /** Invalidate current state and trigger a fresh rebuild. */
+  reload?(): Promise<void>
   /** If warmStart failed, contains the error. Used for structured error responses. */
   readonly error: ProjectError | null
+  /** Current lifecycle status. */
+  readonly status?: ModelStateStatus
 }
 
-export function createMcpModelState(options: { cwd: string }): McpModelState {
-  const cwd = resolve(options.cwd)
-  let artifact: McpBuildArtifact | null = null
-  let bgRunning = false
-  let projectError: ProjectError | null = null
-
-  let readyResolve: (art: McpBuildArtifact | null) => void
-  let isReadySettled = false
-  const readyPromise = new Promise<McpBuildArtifact | null>(res => {
-    readyResolve = res
-  })
-
-  function settleReady(val: McpBuildArtifact | null) {
-    if (!isReadySettled) {
-      isReadySettled = true
-      readyResolve(val)
+export function classifyProjectError(err: unknown): ProjectError {
+  if (err instanceof McpChildProcessError) {
+    return {
+      code: err.errorType,
+      message: err.message,
     }
   }
 
-  async function buildArtifactInChild(): Promise<McpBuildArtifact> {
+  const msg = err instanceof Error ? err.message : String(err)
+  const isMissing = msg.includes('manifest.js') || msg.includes('ref sync')
+  return {
+    code: isMissing ? 'missing_artifacts' : 'build_failed',
+    message: msg,
+  }
+}
+
+export class McpProjectModelState implements McpModelState {
+  readonly cwd: string
+  private currentArtifact: McpBuildArtifact | null = null
+  private currentError: ProjectError | null = null
+  private currentStatus: ModelStateStatus = 'idle'
+  private deferred: Deferred<McpBuildArtifact | null> = createDeferred()
+  private isRefreshing = false
+
+  constructor(options: { cwd: string }) {
+    this.cwd = resolve(options.cwd)
+  }
+
+  get error(): ProjectError | null {
+    return this.currentError
+  }
+
+  get status(): ModelStateStatus {
+    return this.currentStatus
+  }
+
+  async warmStart(): Promise<void> {
+    if (this.currentStatus === 'ready' && this.currentArtifact) {
+      return
+    }
+
+    if (this.currentStatus === 'warming') {
+      await this.deferred.promise
+      return
+    }
+
+    if (this.currentStatus === 'error') {
+      this.deferred.reset()
+    }
+
+    this.currentStatus = 'warming'
+
     try {
-      await spawnMcpBuildChild(cwd)
-      const art = await readMcpArtifact(cwd)
-      projectError = null
-      return art
-    } catch (err) {
-      if (err instanceof McpChildProcessError) {
-        projectError = {
-          code: err.errorType,
-          message: err.message,
-        }
-      } else {
-        const msg = err instanceof Error ? err.message : String(err)
-        const isMissing = msg.includes('manifest.js') || msg.includes('ref sync')
-        projectError = {
-          code: isMissing ? 'missing_artifacts' : 'build_failed',
-          message: msg,
+      const modelPath = getMcpModelPath(this.cwd)
+      if (existsSync(modelPath)) {
+        try {
+          const cached = await readMcpArtifact(this.cwd)
+          this.setReady(cached)
+          this.scheduleBackgroundRefresh()
+          return
+        } catch (readErr) {
+          log.warn('[mcp] Failed to read cached model artifact, rebuilding:', readErr)
         }
       }
+
+      const built = await this.buildArtifactInChild()
+      this.setReady(built)
+    } catch (err) {
+      this.setError(classifyProjectError(err))
+    }
+  }
+
+  async load(): Promise<McpBuildArtifact> {
+    if (!this.currentArtifact) {
+      throw new Error('[mcp] Model is not ready')
+    }
+    return this.currentArtifact
+  }
+
+  async waitForReady(timeoutMs = 30_000): Promise<McpBuildArtifact | null> {
+    if (this.currentArtifact) {
+      return this.currentArtifact
+    }
+
+    if (this.currentStatus === 'idle' || this.currentStatus === 'error') {
+      void this.warmStart()
+    }
+
+    let timeoutTimer: NodeJS.Timeout | undefined
+    const timeoutPromise = new Promise<null>(res => {
+      timeoutTimer = setTimeout(() => res(null), timeoutMs)
+    })
+
+    try {
+      return await Promise.race([this.deferred.promise, timeoutPromise])
+    } finally {
+      if (timeoutTimer) clearTimeout(timeoutTimer)
+    }
+  }
+
+  async reload(): Promise<void> {
+    this.currentStatus = 'idle'
+    this.currentArtifact = null
+    this.currentError = null
+    this.deferred.reset()
+    await this.warmStart()
+  }
+
+  private setReady(artifact: McpBuildArtifact): void {
+    this.currentArtifact = artifact
+    this.currentError = null
+    this.currentStatus = 'ready'
+    this.deferred.resolve(artifact)
+  }
+
+  private setError(error: ProjectError): void {
+    this.currentError = error
+    this.currentStatus = 'error'
+    this.deferred.resolve(null)
+  }
+
+  private async buildArtifactInChild(): Promise<McpBuildArtifact> {
+    try {
+      await spawnMcpBuildChild(this.cwd)
+      return await readMcpArtifact(this.cwd)
+    } catch (err) {
+      this.currentError = classifyProjectError(err)
       throw err
     }
   }
 
-  function scheduleBackgroundRefresh(): void {
-    if (bgRunning) return
-    bgRunning = true
-    buildArtifactInChild()
+  private scheduleBackgroundRefresh(): void {
+    if (this.isRefreshing) return
+    this.isRefreshing = true
+
+    this.buildArtifactInChild()
       .then(next => {
-        artifact = next
-        settleReady(next)
+        this.setReady(next)
       })
       .catch(error => {
         log.warn('[mcp] Background model refresh failed:', error)
       })
       .finally(() => {
-        bgRunning = false
+        this.isRefreshing = false
       })
   }
+}
 
-  let warmStarted = false
-
-  const stateObj: McpModelState = {
-    get error() {
-      return projectError
-    },
-
-    async warmStart(): Promise<void> {
-      if (warmStarted) return
-      warmStarted = true
-      try {
-        const modelPath = getMcpModelPath(cwd)
-        if (existsSync(modelPath)) {
-          try {
-            artifact = await readMcpArtifact(cwd)
-            settleReady(artifact)
-            scheduleBackgroundRefresh()
-          } catch (readErr) {
-            log.warn('[mcp] Failed to read cached model artifact, rebuilding:', readErr)
-            artifact = await buildArtifactInChild()
-            settleReady(artifact)
-          }
-        } else {
-          artifact = await buildArtifactInChild()
-          settleReady(artifact)
-        }
-      } catch {
-        settleReady(null)
-      }
-    },
-
-    async load(): Promise<McpBuildArtifact> {
-      if (!artifact) {
-        throw new Error('[mcp] Model is not ready')
-      }
-      return artifact
-    },
-
-    async waitForReady(timeoutMs = 30_000): Promise<McpBuildArtifact | null> {
-      if (artifact) return artifact
-
-      if (!warmStarted) {
-        stateObj.warmStart().catch(() => {})
-      }
-
-      let timeoutTimer: NodeJS.Timeout | undefined
-      const timeoutPromise = new Promise<null>(res => {
-        timeoutTimer = setTimeout(() => res(null), timeoutMs)
-      })
-
-      try {
-        const result = await Promise.race([readyPromise, timeoutPromise])
-        return result
-      } finally {
-        if (timeoutTimer) clearTimeout(timeoutTimer)
-      }
-    },
-  }
-
-  return stateObj
+export function createMcpModelState(options: { cwd: string }): McpModelState {
+  return new McpProjectModelState(options)
 }

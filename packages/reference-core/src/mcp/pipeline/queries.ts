@@ -127,7 +127,7 @@ function findReferenceUiComponentFallback(input: McpGetComponentInput): McpCompo
   return findReferenceUiPrimitive(input.name)
 }
 
-function summarizeProps(props: McpComponentProp[], returned: number): McpPropSummary {
+export function summarizeProps(props: McpComponentProp[], returned: number): McpPropSummary {
   const observed = props.filter(isObservedProp).length
   const style = props.filter(prop => prop.styleProp).length
 

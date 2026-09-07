@@ -88,5 +88,25 @@ describe('ProjectManager', () => {
     const state1 = pm.getOrCreateState(pkg)
     const state2 = pm.getOrCreateState(pkg)
     expect(state1).toBe(state2)
+
+    pm.invalidateProject(pkg)
+    const state3 = pm.getOrCreateState(pkg)
+    expect(state3).not.toBe(state1)
+  })
+
+  it('strictly matches project suffix on path boundaries', async () => {
+    const pkgFooBar = join(testDir, 'foobar')
+    const pkgBar = join(testDir, 'bar')
+    mkdirSync(pkgFooBar, { recursive: true })
+    mkdirSync(pkgBar, { recursive: true })
+    writeFileSync(join(pkgFooBar, 'ui.config.ts'), 'export default {}')
+    writeFileSync(join(pkgBar, 'ui.config.ts'), 'export default {}')
+
+    const pm = new ProjectManager(testDir)
+    await pm.initialize()
+
+    // Querying 'bar' must match pkgBar, never foobar
+    const matched = pm.resolveProject('bar')
+    expect(matched).toBe(pkgBar)
   })
 })

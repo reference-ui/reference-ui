@@ -2,11 +2,19 @@ import {
   findReferenceUiPrimitive,
   REFERENCE_UI_PRIMITIVES,
 } from '../pipeline/primitives'
-import { compactComponent, summarizeComponent } from '../pipeline/queries'
+import { compactComponent, summarizeComponent, summarizeProps } from '../pipeline/queries'
 import { getStylePropsReference } from '../pipeline/style-props'
 
 export const UNIVERSAL_PRIMITIVES_NOTICE =
   'No ui.config.ts detected in this workspace. Serving Reference UI built-in primitives and StyleProps.'
+
+function asUniversalResult<T extends Record<string, unknown>>(payload: T) {
+  return {
+    mode: 'universal_primitives' as const,
+    notice: UNIVERSAL_PRIMITIVES_NOTICE,
+    ...payload,
+  }
+}
 
 export function getUniversalComponents(options?: { query?: string; limit?: number }) {
   let primitives = REFERENCE_UI_PRIMITIVES
@@ -20,11 +28,9 @@ export function getUniversalComponents(options?: { query?: string; limit?: numbe
     primitives = primitives.slice(0, options.limit)
   }
 
-  return {
-    mode: 'universal_primitives' as const,
-    notice: UNIVERSAL_PRIMITIVES_NOTICE,
+  return asUniversalResult({
     components: primitives.map(summarizeComponent),
-  }
+  })
 }
 
 export function getUniversalComponent(name: string) {
@@ -34,11 +40,7 @@ export function getUniversalComponent(name: string) {
       error: `Component '${name}' not found. In Universal Reference Mode only built-in primitives are available.`,
     }
   }
-  return {
-    mode: 'universal_primitives' as const,
-    notice: UNIVERSAL_PRIMITIVES_NOTICE,
-    ...compactComponent(primitive),
-  }
+  return asUniversalResult({ ...compactComponent(primitive) })
 }
 
 export function getUniversalComponentProps(name: string) {
@@ -49,9 +51,7 @@ export function getUniversalComponentProps(name: string) {
     }
   }
   const compact = compactComponent(primitive)
-  return {
-    mode: 'universal_primitives' as const,
-    notice: UNIVERSAL_PRIMITIVES_NOTICE,
+  return asUniversalResult({
     name: primitive.name,
     kind: primitive.kind,
     source: primitive.source,
@@ -60,15 +60,9 @@ export function getUniversalComponentProps(name: string) {
     usageSemantics: compact.usageSemantics,
     interface: primitive.interface,
     props: primitive.props,
-    propSummary: {
-      documented: primitive.props.filter(p => p.origin === 'documented').length,
-      observed: 0,
-      returned: primitive.props.length,
-      style: primitive.props.filter(p => p.styleProp).length,
-      total: primitive.props.length,
-    },
+    propSummary: summarizeProps(primitive.props, primitive.props.length),
     styleProps: compact.styleProps,
-  }
+  })
 }
 
 export function getUniversalComponentExamples(name: string) {
@@ -78,32 +72,24 @@ export function getUniversalComponentExamples(name: string) {
       error: `Usage examples for '${name}' require a synced project.`,
     }
   }
-  return {
-    mode: 'universal_primitives' as const,
-    notice: UNIVERSAL_PRIMITIVES_NOTICE,
+  return asUniversalResult({
     name: primitive.name,
     kind: primitive.kind,
     source: primitive.source,
     examples: primitive.examples,
-  }
+  })
 }
 
 export function getUniversalTokens() {
-  return {
-    mode: 'universal_primitives' as const,
-    notice: UNIVERSAL_PRIMITIVES_NOTICE,
+  return asUniversalResult({
     message: 'Tokens require a synced project with ui.config.ts and token definitions.',
     total: 0,
     returned: 0,
     compressed: false,
     tokens: [],
-  }
+  })
 }
 
 export function getUniversalStyleProps(input?: { query?: string; includeProps?: boolean }) {
-  return {
-    mode: 'universal_primitives' as const,
-    notice: UNIVERSAL_PRIMITIVES_NOTICE,
-    ...getStylePropsReference(input),
-  }
+  return asUniversalResult({ ...getStylePropsReference(input) })
 }
