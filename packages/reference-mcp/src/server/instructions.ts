@@ -13,6 +13,7 @@ Reference UI is a knowledge-first component and design-system engine for React, 
 3. Rhythm Spacing: Use strings ending in 'r' (e.g. '1r', '2r', '4r').
 4. Container Queries: Use container and r={{ 320: { ... }, 640: { ... } }}. No viewport media queries.
 5. Workspace Intelligence: Call list_projects, select_project, or pass project parameter to target packages.
+6. Dynamic Values: Pass calculated runtime numbers (e.g. dynamic zIndex or opacity) via inline style={{ ... }} rather than props, as static atomic CSS engines drop arbitrary runtime prop values.
 `
 
 const instructionsCache = new Map<string, string>()

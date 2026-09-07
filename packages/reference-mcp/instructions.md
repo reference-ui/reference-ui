@@ -9,7 +9,7 @@ When developing in a Reference UI codebase, follow these core principles:
 ## 1. Core Guiding Principles
 
 1. **No External CSS Frameworks or Utility Classes**:
-   Do NOT use Tailwind CSS classes, inline `style={{ ... }}` objects, or arbitrary CSS class names. All styling is applied through type-safe, token-aware **StyleProps** directly on primitives and components.
+   Do NOT use Tailwind CSS classes, arbitrary CSS class names, or inline `style={{ ... }}` objects (except for dynamically calculated runtime values; see Section 5). All standard styling is applied through type-safe, token-aware **StyleProps** directly on primitives and components.
 
 2. **Primitives First (1:1 with HTML)**:
    Import layout and structural elements from `@reference-ui/react` rather than using raw HTML elements:
