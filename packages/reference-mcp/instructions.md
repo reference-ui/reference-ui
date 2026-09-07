@@ -116,3 +116,22 @@ When building or modifying UI with Reference UI:
    - Call `get_tokens` to inspect specific project design tokens (colors, font sizes, shadows).
 6. **Inspect Captured Usage**:
    Call `get_component_examples({ name: 'ComponentName' })` to see real JSX examples from the project.
+
+---
+
+## 5. Build-Time vs Run-Time CSS Caution (Dynamic Values)
+
+> [!CAUTION]
+> **Static Atomic CSS Engine Edge Case**:
+> When passing dynamic, dynamically-calculated, or arbitrary numerical runtime values to styled components (e.g., `zIndex={totalCount - offset}` or `opacity={1 - dragOffset / 300}`), **do NOT pass them as component props**. 
+> 
+> Because this project uses a build-time static atomic CSS engine (Panda CSS), passing arbitrary raw values as props will result in the engine dropping them entirely since they do not map to pre-compiled theme tokens, leading to silent layout failures (e.g. `zIndex` falling back to `auto`).
+> 
+> **Solution**: Always move dynamically calculated variables, raw integers, and arbitrary CSS variables to an inline `style={{ ... }}` object to bypass the static engine and force the style onto the DOM node directly:
+> ```tsx
+> // ❌ WRONG (Build-time engine drops it)
+> <Div zIndex={zIndex} opacity={opacity} />
+> 
+> // ✅ CORRECT (Force via inline style)
+> <Div style={{ zIndex, opacity }} />
+> ```
