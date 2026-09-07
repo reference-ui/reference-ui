@@ -9,6 +9,12 @@ import {
   Button,
   Input,
 } from '@reference-ui/react'
+import {
+  LightModeIcon,
+  DarkModeIcon,
+  BoltIcon,
+  IframeIcon,
+} from '@reference-ui/icons'
 import { getBookEntries, getBookEntry, groupEntriesByCategory } from './registry'
 import { BookDecorator } from './decorator'
 import type { BookEntry, BookStory, ViewportPreset, ViewportConfig } from './types'
@@ -224,12 +230,16 @@ export function BookShell() {
             borderRadius="sm"
             border="none"
             cursor="pointer"
-            fontSize="3r"
+            display="inline-flex"
+            alignItems="center"
+            justifyContent="center"
+            color="design.text.base"
             onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}
-            title="Toggle theme"
+            title={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
+            aria-label={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
             _hover={{ bg: isDark ? 'gray.800' : 'gray.200' }}
           >
-            {isDark ? '☀️' : '🌙'}
+            {isDark ? <LightModeIcon size="md" /> : <DarkModeIcon size="md" />}
           </Button>
         </Header>
 
@@ -469,6 +479,9 @@ export function BookShell() {
                 borderRadius="sm"
                 border="none"
                 cursor="pointer"
+                display="inline-flex"
+                alignItems="center"
+                gap="1r"
                 bg={canvasMode === 'direct' ? (isDark ? 'gray.800' : 'white') : 'transparent'}
                 color={canvasMode === 'direct' ? 'design.text.base' : 'design.text.light'}
                 fontWeight={canvasMode === 'direct' ? '600' : 'normal'}
@@ -478,7 +491,8 @@ export function BookShell() {
                   bg: canvasMode === 'direct' ? undefined : (isDark ? 'gray.800' : 'gray.100'),
                 }}
               >
-                ⚡️ Direct
+                <BoltIcon size="sm" />
+                <Span>Direct</Span>
               </Button>
               <Button
                 type="button"
@@ -489,6 +503,9 @@ export function BookShell() {
                 borderRadius="sm"
                 border="none"
                 cursor="pointer"
+                display="inline-flex"
+                alignItems="center"
+                gap="1r"
                 bg={canvasMode === 'iframe' ? (isDark ? 'gray.800' : 'white') : 'transparent'}
                 color={canvasMode === 'iframe' ? 'design.text.base' : 'design.text.light'}
                 fontWeight={canvasMode === 'iframe' ? '600' : 'normal'}
@@ -498,7 +515,8 @@ export function BookShell() {
                   bg: canvasMode === 'iframe' ? undefined : (isDark ? 'gray.800' : 'gray.100'),
                 }}
               >
-                🖼 Iframe
+                <IframeIcon size="sm" />
+                <Span>Iframe</Span>
               </Button>
             </Div>
           </Div>
