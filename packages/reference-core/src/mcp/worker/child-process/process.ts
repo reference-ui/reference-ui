@@ -26,6 +26,23 @@ export type McpBuildChildResult = {
   componentCount: number
 }
 
+export interface McpChildErrorPayload {
+  ok: false
+  kind: string
+  error: 'config_not_found' | 'config_invalid' | 'missing_artifacts' | 'build_failed'
+  message: string
+}
+
+export class McpChildProcessError extends Error {
+  constructor(
+    public readonly errorType: 'config_not_found' | 'config_invalid' | 'missing_artifacts' | 'build_failed',
+    message: string,
+  ) {
+    super(message)
+    this.name = 'McpChildProcessError'
+  }
+}
+
 /**
  * Run full MCP artifact build (Atlas + Tasty + model.json) in a short-lived Node
  * child so heavy graphs are not retained in the MCP worker isolate.
@@ -49,6 +66,16 @@ export async function spawnMcpBuildChild(projectCwd: string): Promise<McpBuildCh
   )
 
   if (code !== 0) {
+    try {
+      const parsedErr = parseChildJsonLine<McpChildErrorPayload>(stdout)
+      if (parsedErr && parsedErr.ok === false) {
+        throw new McpChildProcessError(parsedErr.error, parsedErr.message)
+      }
+    } catch (e) {
+      if (e instanceof McpChildProcessError) {
+        throw e
+      }
+    }
     throw new Error(formatSpawnMonitoredFailure('mcp-child', { code, signal, stderr, stdout }))
   }
 

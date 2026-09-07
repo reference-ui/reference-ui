@@ -1,5 +1,6 @@
 import { resolve } from 'node:path'
 import { loadUserConfig, setConfig, setCwd } from '../../../config'
+import { ConfigNotFoundError, ConfigValidationError } from '../../../config/errors'
 import { buildMcpArtifact, prefetchMcpAtlas } from '../../pipeline/build'
 import { getMcpModelPath } from '../../pipeline/paths'
 
@@ -48,12 +49,40 @@ async function runMcpChildWork(msg: McpChildMessage): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  const msg = parseArgvPayload()
+  let msg: McpChildMessage | undefined
   try {
+    msg = parseArgvPayload()
     await runMcpChildWork(msg)
     process.exit(0)
   } catch (e) {
     const errMsg = e instanceof Error ? e.message : String(e)
+    const isConfigNotFound =
+      e instanceof ConfigNotFoundError ||
+      (e instanceof Error && e.name === 'ConfigNotFoundError') ||
+      errMsg.includes('No ui.config.')
+    const isConfigInvalid =
+      e instanceof ConfigValidationError ||
+      (e instanceof Error && e.name === 'ConfigValidationError') ||
+      errMsg.includes('Invalid ui.config')
+    const isMissingArtifacts =
+      errMsg.includes('manifest.js') || errMsg.includes('ref sync')
+
+    const errorType = isConfigNotFound
+      ? 'config_not_found'
+      : isConfigInvalid
+        ? 'config_invalid'
+        : isMissingArtifacts
+          ? 'missing_artifacts'
+          : 'build_failed'
+
+    const errorPayload = {
+      ok: false as const,
+      kind: msg?.kind ?? 'unknown',
+      error: errorType,
+      message: errMsg,
+    }
+
+    console.log(JSON.stringify(errorPayload))
     console.error(errMsg)
     process.exit(1)
   }

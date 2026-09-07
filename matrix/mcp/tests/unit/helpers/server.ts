@@ -8,6 +8,7 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'
 import { spawn } from 'node:child_process'
+import { existsSync } from 'node:fs'
 import { createServer } from 'node:net'
 import { join } from 'node:path'
 import type { Readable } from 'node:stream'
@@ -21,7 +22,9 @@ import {
 } from './types'
 
 function resolveInstalledMcpBinPath(cwd: string): string {
-  return join(cwd, 'node_modules', '@reference-ui', 'core', 'bin', 'mcp.mjs')
+  const local = join(cwd, 'node_modules', '@reference-ui', 'core', 'bin', 'mcp.mjs')
+  if (existsSync(local)) return local
+  return join(process.cwd(), 'node_modules', '@reference-ui', 'core', 'bin', 'mcp.mjs')
 }
 
 async function waitForServerReady(
@@ -96,6 +99,7 @@ async function getAvailablePort(): Promise<number> {
 export async function startMcpServer(
   cwd: string,
   port = 0,
+  options?: { env?: NodeJS.ProcessEnv },
 ): Promise<RunningMcpServer> {
   const registry = process.env.npm_config_registry
 
@@ -113,6 +117,7 @@ export async function startMcpServer(
       detached: true,
       env: {
         ...process.env,
+        ...options?.env,
         npm_config_registry: registry,
       },
       stdio: ['ignore', 'pipe', 'pipe'],

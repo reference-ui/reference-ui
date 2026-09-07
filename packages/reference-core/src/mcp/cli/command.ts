@@ -1,4 +1,3 @@
-import { loadUserConfig, setConfig, setCwd } from '../../config'
 import {
   DEFAULT_REFERENCE_MCP_HOST,
   DEFAULT_REFERENCE_MCP_PORT,
@@ -12,6 +11,7 @@ export interface McpCommandOptions {
   transport?: string
   port?: number
   host?: string
+  project?: string
 }
 
 export function resolveTransport(options?: McpCommandOptions): McpTransport {
@@ -34,19 +34,17 @@ export async function mcpCommand(
   cwd: string,
   options?: McpCommandOptions
 ): Promise<void> {
-  const config = await loadUserConfig(cwd)
-  setConfig(config)
-  setCwd(cwd)
-
   const transport = resolveTransport(options)
+  const project = options?.project ?? process.env.REF_PROJECT
 
   if (transport === 'stdio') {
-    await runReferenceMcpServer({ cwd })
+    await runReferenceMcpServer({ cwd, project })
     return
   }
 
   await runReferenceMcpHttpServer({
     cwd,
+    project,
     host: options?.host ?? DEFAULT_REFERENCE_MCP_HOST,
     port: options?.port ?? DEFAULT_REFERENCE_MCP_PORT,
   })

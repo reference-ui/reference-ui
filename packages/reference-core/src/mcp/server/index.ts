@@ -1,7 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
-import { existsSync, readFileSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import {
   createServer,
   type IncomingMessage,
@@ -12,8 +12,6 @@ import { resolve } from 'node:path'
 import { z } from 'zod'
 import { log } from '../../lib/log'
 import { resolveCorePackageDir } from '../../lib/paths/core-package-dir'
-import { readMcpArtifact } from '../pipeline/artifact'
-import { getMcpModelPath } from '../pipeline/paths'
 import {
   compactComponent,
   findComponent,
@@ -23,90 +21,53 @@ import {
 } from '../pipeline/queries'
 import { getStylePropsReference } from '../pipeline/style-props'
 import type { McpBuildArtifact, McpPublicModel } from '../pipeline/types'
-import { spawnMcpBuildChild } from '../worker/child-process/process'
+import {
+  createMcpModelState,
+  type McpModelState,
+  type ProjectError,
+} from './model-state'
+import { ProjectManager } from './project-manager'
+import {
+  getUniversalComponent,
+  getUniversalComponentExamples,
+  getUniversalComponentProps,
+  getUniversalComponents,
+  getUniversalTokens,
+} from './universal-primitives'
+
+export { createMcpModelState, type McpModelState, type ProjectError }
+export { ProjectManager }
 
 export interface CreateReferenceMcpServerOptions {
   cwd: string
-  modelState: McpModelState
+  projectManager?: ProjectManager
+  modelState?: McpModelState
 }
 
 export interface RunReferenceMcpHttpServerOptions {
   cwd: string
   port?: number
   host?: string
+  project?: string
 }
 
 export const DEFAULT_REFERENCE_MCP_PORT = 3697
 export const DEFAULT_REFERENCE_MCP_HOST = '127.0.0.1'
 export const DEFAULT_REFERENCE_MCP_PATH = '/mcp'
 export const REFERENCE_MCP_READY_PREFIX = '[ref mcp] ready'
+export const REFERENCE_MCP_INSTRUCTIONS_URI = 'reference-ui://instructions'
 export const REFERENCE_MCP_GETTING_STARTED_URI = 'reference-ui://getting-started'
 
-const REFERENCE_UI_START_GUIDE_FALLBACK = `# Reference UI Start Guide
+const REFERENCE_UI_INSTRUCTIONS_FALLBACK = `# Reference UI Agent Instructions & Guiding Principles
 
-Reference UI MCP is a project-aware component, prop, style, and token reference.
+Reference UI is a knowledge-first component and design-system engine for React, featuring generated primitives, token-aware atomic styling, rhythm units, and container-query-first responsive design.
 
-Run \`pnpm exec ref sync\` before starting MCP so generated Reference UI artifacts exist.
-
-Start with \`getting_started\`, then use \`list_components\`, \`get_component\`, \`get_component_examples\`, \`get_component_props\`, \`get_style_props\`, and \`get_tokens\` as needed.
+1. Primitives First: Import from @reference-ui/react (<Div>, <Section>, <Main>, <P>, <Button>).
+2. StyleProps: Use camelCased atomic StyleProps; no Tailwind or arbitrary CSS classes.
+3. Rhythm Spacing: Use strings ending in 'r' (e.g. '1r', '2r', '4r').
+4. Container Queries: Use container and r={{ 320: { ... }, 640: { ... } }}. No viewport media queries.
+5. Workspace Intelligence: Call list_projects, select_project, or pass project parameter to target packages.
 `
-
-export interface McpModelState {
-  /** Load cached artifact if present, else build; may start a background refresh when cache exists. */
-  warmStart(): Promise<void>
-  /** Current best artifact (updates when a background refresh completes). */
-  load(): Promise<McpBuildArtifact>
-}
-
-/**
- * When `model.json` already exists, it is read immediately so tools stay responsive; a full
- * rebuild runs once in the background and replaces the in-memory artifact when done. When no
- * cache exists, the first build runs before the server accepts traffic.
- */
-export function createMcpModelState(options: { cwd: string }): McpModelState {
-  const cwd = resolve(options.cwd)
-  let artifact: McpBuildArtifact | null = null
-  let bgRunning = false
-
-  async function buildArtifactInChild(): Promise<McpBuildArtifact> {
-    await spawnMcpBuildChild(cwd)
-    return readMcpArtifact(cwd)
-  }
-
-  function scheduleBackgroundRefresh(): void {
-    if (bgRunning) return
-    bgRunning = true
-    buildArtifactInChild()
-      .then(next => {
-        artifact = next
-      })
-      .catch(error => {
-        log.warn('[mcp] Background model refresh failed:', error)
-      })
-      .finally(() => {
-        bgRunning = false
-      })
-  }
-
-  return {
-    async warmStart(): Promise<void> {
-      const modelPath = getMcpModelPath(cwd)
-      if (existsSync(modelPath)) {
-        artifact = await readMcpArtifact(cwd)
-        scheduleBackgroundRefresh()
-      } else {
-        artifact = await buildArtifactInChild()
-      }
-    },
-
-    async load(): Promise<McpBuildArtifact> {
-      if (!artifact) {
-        throw new Error('[mcp] Model is not ready')
-      }
-      return artifact
-    },
-  }
-}
 
 function toTextResult<T extends Record<string, unknown>>(payload: T) {
   return {
@@ -130,40 +91,160 @@ function toPublicModel(artifact: McpBuildArtifact): McpPublicModel {
   }
 }
 
-function loadReferenceMcpStartGuide(cwd: string): string {
+function loadReferenceMcpInstructions(cwd: string): string {
   try {
     const coreDir = resolveCorePackageDir(cwd)
-    return readFileSync(resolve(coreDir, 'src', 'mcp', 'START.mdx'), 'utf8')
+    return readFileSync(resolve(coreDir, 'src', 'mcp', 'instructions.md'), 'utf8')
   } catch (error) {
-    log.warn('[mcp] Failed to load START.mdx; using fallback start guide.', error)
-    return REFERENCE_UI_START_GUIDE_FALLBACK
+    log.warn('[mcp] Failed to load instructions.md; using fallback instructions.', error)
+    return REFERENCE_UI_INSTRUCTIONS_FALLBACK
   }
 }
 
 export function createReferenceMcpServer(
   options: CreateReferenceMcpServerOptions
 ): McpServer {
-  const state = options.modelState
-  const startGuide = loadReferenceMcpStartGuide(options.cwd)
-  const server = new McpServer({
-    name: 'reference-ui',
-    title: 'Reference UI',
-    version: '0.0.3',
-    description:
-      'Atlas- and generated-types-backed component inspection for Reference UI projects.',
-  }, {
-    instructions: startGuide,
-  })
+  const projectManager = options.projectManager ?? new ProjectManager(options.cwd)
+  const instructions = loadReferenceMcpInstructions(options.cwd)
+
+  const server = new McpServer(
+    {
+      name: 'reference-ui',
+      title: 'Reference UI',
+      version: '0.0.3',
+      description:
+        'Atlas- and generated-types-backed component intelligence for Reference UI projects.',
+    },
+    {
+      instructions,
+    }
+  )
+
+  async function withProject(
+    requestedProject: string | undefined,
+    handler: (
+      artifact: McpBuildArtifact,
+      projectPath: string
+    ) => Promise<Record<string, unknown>> | Record<string, unknown>,
+    fallbackUniversal: () => Record<string, unknown>
+  ) {
+    await projectManager.waitForDiscovery()
+    const projectPath = projectManager.resolveProject(requestedProject)
+
+    const activeProject = projectManager.getActiveProject()
+    const discovered = projectManager.getDiscoveredProjects()
+    const availableProjects = discovered.map(p => p.path)
+    let notice: string | undefined
+
+    if (!projectPath) {
+      const fallback = fallbackUniversal()
+      if ('error' in fallback && typeof fallback.error === 'string') {
+        return toErrorResult(fallback.error)
+      }
+      return toTextResult({
+        activeProject,
+        availableProjects,
+        ...fallback,
+      })
+    }
+
+    if (discovered.length > 1 && !requestedProject) {
+      notice = `Operating in active project '${projectPath}'. To switch projects, call select_project({ path: '...' }) or pass 'project' in your tool call.`
+    }
+
+    const state = projectManager.getOrCreateState(projectPath)
+    const artifact = await state.waitForReady(30_000)
+
+    if (!artifact) {
+      if (state.error) {
+        if (state.error.code === 'missing_artifacts') {
+          return toErrorResult(
+            `Project at '${projectPath}' has not been synced yet.\n` +
+              `Generated type artifacts are missing at '${projectPath}/.reference-ui/types/tasty/manifest.js'.\n` +
+              `Run 'ref sync' (or 'pnpm dev') to generate the model artifacts.`
+          )
+        }
+        return toErrorResult(state.error.message)
+      }
+      return toErrorResult('Project is still loading. Please retry in a few seconds.')
+    }
+
+    const res = await handler(artifact, projectPath)
+    if ('error' in res && typeof res.error === 'string') {
+      return toErrorResult(res.error)
+    }
+
+    return toTextResult({
+      activeProject,
+      availableProjects,
+      ...(notice ? { notice } : {}),
+      ...res,
+    })
+  }
 
   server.registerTool(
-    'getting_started',
+    'list_projects',
     {
-      title: 'Getting Started',
+      title: 'List Projects',
       description:
-        'Return the Reference UI start guide, including primitives, StyleProps, tokens, and recommended MCP workflow.',
-      inputSchema: {},
+        'Discover and list all Reference UI project paths across the workspace, global registry, and optional search path. Automatically self-heals stale registry entries.',
+      inputSchema: {
+        scanPath: z
+          .string()
+          .optional()
+          .describe(
+            "Optional directory to scan for Reference UI projects (e.g. '~/Developer'). Defaults to workspace and global registry."
+          ),
+        maxDepth: z
+          .number()
+          .int()
+          .min(1)
+          .max(5)
+          .default(3)
+          .optional()
+          .describe('Max directory traversal depth when scanPath is provided.'),
+      },
     },
-    async () => toTextResult({ guide: startGuide })
+    async input => {
+      await projectManager.waitForDiscovery()
+      const result = projectManager.listProjects({
+        scanPath: input.scanPath,
+        maxDepth: input.maxDepth,
+      })
+      return toTextResult(result)
+    }
+  )
+
+  server.registerTool(
+    'select_project',
+    {
+      title: 'Select Project',
+      description:
+        'Set the active project path for the session and initiate background warmup of its Atlas AST and model artifacts.',
+      inputSchema: {
+        path: z
+          .string()
+          .describe(
+            'Relative or absolute filesystem path to the project directory where ui.config.* resides.'
+          ),
+      },
+    },
+    async input => {
+      await projectManager.waitForDiscovery()
+      const result = projectManager.selectProject(input.path)
+      if ('error' in result) {
+        return toErrorResult(result.error)
+      }
+      const state = projectManager.getOrCreateState(result.project)
+      const artifact = await state.waitForReady(30_000)
+      return toTextResult({
+        status: 'active',
+        project: result.project,
+        configPath: result.configPath,
+        atlasStatus: artifact ? 'ready' : 'loading',
+        componentsCount: artifact ? artifact.components.length : 0,
+      })
+    }
   )
 
   server.registerTool(
@@ -173,15 +254,21 @@ export function createReferenceMcpServer(
       description:
         'List components observed in the current project graph, including imported Reference UI primitives that are actually used in JSX.',
       inputSchema: {
+        project: z
+          .string()
+          .optional()
+          .describe('Optional relative or absolute filesystem path to target project directory.'),
         query: z.string().optional(),
         source: z.string().optional(),
         limit: z.number().int().positive().max(100).optional(),
       },
     },
-    async input => {
-      const artifact = await state.load()
-      return toTextResult({ components: listComponents(artifact, input) })
-    }
+    async input =>
+      withProject(
+        input.project,
+        artifact => ({ components: listComponents(artifact, input) }),
+        () => getUniversalComponents(input)
+      )
   )
 
   server.registerTool(
@@ -193,16 +280,24 @@ export function createReferenceMcpServer(
       inputSchema: {
         name: z.string(),
         source: z.string().optional(),
+        project: z
+          .string()
+          .optional()
+          .describe('Optional relative or absolute filesystem path to target project directory.'),
       },
     },
-    async input => {
-      const artifact = await state.load()
-      const component = findComponent(artifact, input)
-      if (!component) {
-        return toErrorResult(`Component not found: ${input.name}`)
-      }
-      return toTextResult({ ...compactComponent(component) })
-    }
+    async input =>
+      withProject(
+        input.project,
+        artifact => {
+          const component = findComponent(artifact, input)
+          if (!component) {
+            return { error: `Component not found: ${input.name}` }
+          }
+          return { ...compactComponent(component) }
+        },
+        () => getUniversalComponent(input.name)
+      )
   )
 
   server.registerTool(
@@ -218,29 +313,37 @@ export function createReferenceMcpServer(
         includeStyleProps: z.boolean().optional(),
         query: z.string().optional(),
         limit: z.number().int().positive().max(500).optional(),
+        project: z
+          .string()
+          .optional()
+          .describe('Optional relative or absolute filesystem path to target project directory.'),
       },
     },
-    async input => {
-      const artifact = await state.load()
-      const result = getComponentProps(artifact, input)
-      if (!result) {
-        return toErrorResult(`Component not found: ${input.name}`)
-      }
-      const compact = compactComponent(result.component)
+    async input =>
+      withProject(
+        input.project,
+        artifact => {
+          const result = getComponentProps(artifact, input)
+          if (!result) {
+            return { error: `Component not found: ${input.name}` }
+          }
+          const compact = compactComponent(result.component)
 
-      return toTextResult({
-        name: result.component.name,
-        kind: result.component.kind ?? 'project',
-        source: result.component.source,
-        count: result.component.count,
-        usage: result.component.usage,
-        usageSemantics: compact.usageSemantics,
-        interface: result.component.interface,
-        props: result.props,
-        propSummary: result.propSummary,
-        styleProps: compact.styleProps,
-      })
-    }
+          return {
+            name: result.component.name,
+            kind: result.component.kind ?? 'project',
+            source: result.component.source,
+            count: result.component.count,
+            usage: result.component.usage,
+            usageSemantics: compact.usageSemantics,
+            interface: result.component.interface,
+            props: result.props,
+            propSummary: result.propSummary,
+            styleProps: compact.styleProps,
+          }
+        },
+        () => getUniversalComponentProps(input.name)
+      )
   )
 
   server.registerTool(
@@ -251,22 +354,30 @@ export function createReferenceMcpServer(
       inputSchema: {
         name: z.string(),
         source: z.string().optional(),
+        project: z
+          .string()
+          .optional()
+          .describe('Optional relative or absolute filesystem path to target project directory.'),
       },
     },
-    async input => {
-      const artifact = await state.load()
-      const component = findComponent(artifact, input)
-      if (!component) {
-        return toErrorResult(`Component not found: ${input.name}`)
-      }
+    async input =>
+      withProject(
+        input.project,
+        artifact => {
+          const component = findComponent(artifact, input)
+          if (!component) {
+            return { error: `Component not found: ${input.name}` }
+          }
 
-      return toTextResult({
-        name: component.name,
-        kind: component.kind ?? 'project',
-        source: component.source,
-        examples: component.examples,
-      })
-    }
+          return {
+            name: component.name,
+            kind: component.kind ?? 'project',
+            source: component.source,
+            examples: component.examples,
+          }
+        },
+        () => getUniversalComponentExamples(input.name)
+      )
   )
 
   server.registerTool(
@@ -280,9 +391,7 @@ export function createReferenceMcpServer(
         includeProps: z.boolean().optional(),
       },
     },
-    async input => {
-      return toTextResult(getStylePropsReference(input))
-    }
+    async input => toTextResult(getStylePropsReference(input))
   )
 
   server.registerTool(
@@ -295,12 +404,18 @@ export function createReferenceMcpServer(
         category: z.string().optional(),
         query: z.string().optional(),
         limit: z.number().int().positive().max(1000).optional(),
+        project: z
+          .string()
+          .optional()
+          .describe('Optional relative or absolute filesystem path to target project directory.'),
       },
     },
-    async input => {
-      const artifact = await state.load()
-      return toTextResult({ ...listTokens(artifact, input) })
-    }
+    async input =>
+      withProject(
+        input.project,
+        artifact => ({ ...listTokens(artifact, input) }),
+        () => getUniversalTokens()
+      )
   )
 
   server.registerResource(
@@ -312,8 +427,28 @@ export function createReferenceMcpServer(
       mimeType: 'application/json',
     },
     async uri => {
-      const artifact = await state.load()
-      const model = toPublicModel(artifact)
+      await projectManager.waitForDiscovery()
+      const projectPath = projectManager.getActiveProject()
+      let model: McpPublicModel
+      if (projectPath) {
+        const state = projectManager.getOrCreateState(projectPath)
+        const artifact = await state.waitForReady(30_000)
+        if (artifact) {
+          model = toPublicModel(artifact)
+        } else {
+          model = {
+            schemaVersion: 1,
+            generatedAt: new Date().toISOString(),
+            components: getUniversalComponents().components,
+          }
+        }
+      } else {
+        model = {
+          schemaVersion: 1,
+          generatedAt: new Date().toISOString(),
+          components: getUniversalComponents().components,
+        }
+      }
       return {
         contents: [
           {
@@ -327,11 +462,11 @@ export function createReferenceMcpServer(
   )
 
   server.registerResource(
-    'getting-started',
-    REFERENCE_MCP_GETTING_STARTED_URI,
+    'instructions',
+    REFERENCE_MCP_INSTRUCTIONS_URI,
     {
-      title: 'Reference UI MCP Getting Started',
-      description: 'Short guide for using Reference UI MCP tools efficiently.',
+      title: 'Reference UI MCP Instructions',
+      description: 'Comprehensive guide and instructions for Reference UI.',
       mimeType: 'text/markdown',
     },
     async uri => ({
@@ -339,7 +474,26 @@ export function createReferenceMcpServer(
         {
           uri: uri.href,
           mimeType: 'text/markdown',
-          text: startGuide,
+          text: instructions,
+        },
+      ],
+    })
+  )
+
+  server.registerResource(
+    'getting-started',
+    REFERENCE_MCP_GETTING_STARTED_URI,
+    {
+      title: 'Reference UI MCP Getting Started (Legacy Alias)',
+      description: 'Legacy alias for reference-ui://instructions.',
+      mimeType: 'text/markdown',
+    },
+    async uri => ({
+      contents: [
+        {
+          uri: uri.href,
+          mimeType: 'text/markdown',
+          text: instructions,
         },
       ],
     })
@@ -425,6 +579,8 @@ async function readMcpRequestBody(
 export function createReferenceMcpHttpServer(
   options: CreateReferenceMcpServerOptions
 ): HttpServer {
+  const projectManager = options.projectManager ?? new ProjectManager(options.cwd)
+
   return createServer(async (req, res) => {
     if (!matchesMcpPath(req)) {
       writeJsonResponse(res, 404, {
@@ -444,7 +600,10 @@ export function createReferenceMcpHttpServer(
       return
     }
 
-    const server = createReferenceMcpServer(options)
+    const server = createReferenceMcpServer({
+      cwd: options.cwd,
+      projectManager,
+    })
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
       enableJsonResponse: true,
@@ -473,33 +632,43 @@ export function createReferenceMcpHttpServer(
   })
 }
 
-export async function runReferenceMcpServer(options: { cwd: string }): Promise<void> {
-  const modelState = createMcpModelState({ cwd: options.cwd })
-  await modelState.warmStart()
+export async function runReferenceMcpServer(options: {
+  cwd: string
+  project?: string
+}): Promise<void> {
+  const projectManager = new ProjectManager(options.cwd, { project: options.project })
   const server = createReferenceMcpServer({
     cwd: options.cwd,
-    modelState,
+    projectManager,
   })
   const transport = new StdioServerTransport()
   await server.connect(transport)
+
+  // Resilient non-blocking boot: initialize in background after handshake completes
+  projectManager.initialize().catch(err => {
+    log.warn('[mcp] Background project discovery warning:', err)
+  })
 }
 
 export async function runReferenceMcpHttpServer(
   options: RunReferenceMcpHttpServerOptions
 ): Promise<void> {
-  const modelState = createMcpModelState({ cwd: options.cwd })
-  await modelState.warmStart()
-
+  const projectManager = new ProjectManager(options.cwd, { project: options.project })
   const host = options.host ?? DEFAULT_REFERENCE_MCP_HOST
   const port = options.port ?? DEFAULT_REFERENCE_MCP_PORT
   const server = createReferenceMcpHttpServer({
     cwd: options.cwd,
-    modelState,
+    projectManager,
   })
 
   await new Promise<void>((resolve, reject) => {
     server.once('error', reject)
     server.listen(port, host, () => resolve())
+  })
+
+  // Resilient non-blocking boot
+  projectManager.initialize().catch(err => {
+    log.warn('[mcp] Background project discovery warning:', err)
   })
 
   process.stdout.write(

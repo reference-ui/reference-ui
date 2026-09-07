@@ -19,4 +19,9 @@ describe('resolveTransport', () => {
     expect(resolveTransport({ transport: 'stdio', port: 3697 })).toBe('stdio')
     expect(resolveTransport({ transport: 'http' })).toBe('http')
   })
+
+  it('supports explicit project and env var in options', () => {
+    const opts = { project: 'packages/reference-lib' }
+    expect(opts.project).toBe('packages/reference-lib')
+  })
 })

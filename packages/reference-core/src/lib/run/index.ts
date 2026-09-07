@@ -13,12 +13,12 @@ function createErrorHandler(actionName: string) {
   }
 }
 
-export function runCommand<T extends Record<string, unknown>>(
-  execute: (options: T) => Promise<void> | void
-): (options: T) => Promise<void> {
-  return async (options: T) => {
+export function runCommand(
+  execute: (...args: any[]) => Promise<void> | void
+): (...args: any[]) => Promise<void> {
+  return async (...args: any[]) => {
     try {
-      await execute(options)
+      await execute(...args)
     } catch (err) {
       createErrorHandler(execute.name || 'Command')(err)
     }

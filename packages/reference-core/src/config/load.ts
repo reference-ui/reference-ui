@@ -1,6 +1,7 @@
 import type { ReferenceUIConfig } from './types'
 import { ConfigNotFoundError, LoadConfigError } from './errors'
 import { resolveRefConfigFile } from '../lib/paths'
+import { GlobalProjectRegistry } from '../lib/paths/global-registry'
 import { bundleConfigWithDependencies } from './bundle'
 import { evaluateConfig } from './evaluate'
 import { validateConfig } from './validate'
@@ -38,8 +39,18 @@ export async function loadUserConfigWithDependencies(
     throw new LoadConfigError(configPath, err)
   }
 
+  const config = validateConfig(raw)
+
+  queueMicrotask(() => {
+    try {
+      GlobalProjectRegistry.upsert(cwd)
+    } catch {
+      // Best-effort
+    }
+  })
+
   return {
-    config: validateConfig(raw),
+    config,
     dependencyPaths,
   }
 }

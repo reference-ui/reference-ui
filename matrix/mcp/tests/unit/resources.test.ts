@@ -49,27 +49,22 @@ describe('matrix MCP resources', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
     expect(modelJson?.text).not.toContain('"props"')
   })
 
-  it('serves a getting-started resource for clients that do not surface instructions', async () => {
-    const resource = await running!.client.readResource({
+  it('serves instructions and legacy getting-started resources', async () => {
+    const instructionsRes = await running!.client.readResource({
+      uri: 'reference-ui://instructions',
+    })
+    saveResponse('resources', 'instructions', instructionsRes)
+    const instructions = findTextResource(instructionsRes)
+
+    expect(instructions?.mimeType).toBe('text/markdown')
+    expect(instructions?.text).toContain('Reference UI')
+    expect(instructions?.text).toContain('StyleProps')
+
+    const legacyRes = await running!.client.readResource({
       uri: 'reference-ui://getting-started',
     })
-    saveResponse('resources', 'getting-started', resource)
-    const gettingStarted = findTextResource(resource)
-
-    expect(gettingStarted?.mimeType).toBe('text/markdown')
-    expect(gettingStarted?.text).toContain('Reference UI Start Guide')
-    expect(gettingStarted?.text).toContain('get_component_props')
-  })
-
-  it('serves the getting-started guide as a tool', async () => {
-    const result = await running!.client.callTool({
-      name: 'getting_started',
-      arguments: {},
-    })
-    saveResponse('getting_started', 'default', result)
-    const payload = parseTextJson<{ guide: string }>(result)
-
-    expect(payload.guide).toContain('Reference UI Start Guide')
-    expect(payload.guide).toContain('@reference-ui/react')
+    const legacy = findTextResource(legacyRes)
+    expect(legacy?.mimeType).toBe('text/markdown')
+    expect(legacy?.text).toBe(instructions?.text)
   })
 })

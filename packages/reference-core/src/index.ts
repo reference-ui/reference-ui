@@ -32,15 +32,24 @@ async function main(): Promise<void> {
     .action(runCommand(() => cleanCommand(process.cwd())))
 
   program
-    .command('mcp')
+    .command('mcp [project]')
     .description('Run the Reference UI MCP server')
+    .option('--project <path>', 'Path to target project')
     .option('--transport <transport>', 'Transport to use (stdio or http)')
     .option('--host <host>', 'Host to bind when using HTTP transport')
     .option('--port <port>', 'Port to bind when using HTTP transport', value =>
       Number.parseInt(value, 10)
     )
     .action(
-      runCommand(options => mcpCommand(process.cwd(), options as McpCommandOptions))
+      runCommand((positionalProject?: string, commandOptions?: McpCommandOptions) => {
+        const options = commandOptions ?? {}
+        const project = options.project || positionalProject || process.env.REF_PROJECT
+
+        return mcpCommand(process.cwd(), {
+          ...options,
+          project,
+        })
+      })
     )
 
   program.parse()
