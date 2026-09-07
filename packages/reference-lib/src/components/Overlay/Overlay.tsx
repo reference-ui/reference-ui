@@ -4,6 +4,9 @@ import { Portal, type PortalProps } from '../Portal'
 import { Presence } from '../Presence'
 import { FocusLock } from '../FocusLock'
 import { OverlayPortaledSurface } from './overlay-portal-surface'
+import { overlayStackStore } from './overlay-stack'
+import { usePreventScroll } from './scroll-lock'
+import { ariaHideOutside } from './aria-hide-outside'
 import {
   computePosition,
   autoUpdate,
@@ -51,6 +54,7 @@ export interface OverlayProps extends OverlayDismissHandlers {
 }
 
 interface OverlayContextValue {
+  id: string;
   isOpen: boolean
   setIsOpen: (open: boolean) => void
   isolation: { focus: boolean; inert: boolean; scroll: boolean }
@@ -116,6 +120,7 @@ function resolveReference(
   return null
 }
 
+let _overlayIdCounter = 0;
 export function Overlay({
   children,
   open: openProp,
@@ -132,6 +137,7 @@ export function Overlay({
   onInteractOutside,
   onDismiss,
 }: OverlayProps) {
+  const [overlayId] = React.useState(() => 'overlay-' + _overlayIdCounter++);
   const [internalOpen, setInternalOpen] = React.useState(defaultOpen)
   const isControlled = openProp !== undefined
   const isOpen = isControlled ? openProp : internalOpen
@@ -180,33 +186,23 @@ export function Overlay({
     const overlayEl = contentRef.current
     if (!overlayEl) return
 
-    const siblingsToInert: HTMLElement[] = []
-    const rootNodes = Array.from(document.body.children) as HTMLElement[]
-
-    for (const node of rootNodes) {
-      if (node === overlayEl || node.contains(overlayEl)) continue
-      if (node.hasAttribute('data-reference-overlay-backdrop')) continue
-      if (node.hasAttribute('data-reference-overlay-content')) continue
-      if (node.hasAttribute('data-reference-portal-container')) continue
-      if (
-        node.hasAttribute('data-reference-toast-host') ||
-        node.querySelector('[data-reference-toast-host]')
-      ) {
-        continue
-      }
-      node.setAttribute('inert', '')
-      siblingsToInert.push(node)
-    }
-
-    return () => {
-      for (const node of siblingsToInert) {
-        node.removeAttribute('inert')
-      }
-    }
+    return ariaHideOutside(overlayEl);
   }, [isOpen, isolation.inert])
+
+  React.useEffect(() => {
+    if (isOpen) {
+      overlayStackStore.getState().addLayer({ id: overlayId, dismiss: () => setIsOpen(false), isModal: isolation.inert ?? false })
+    } else {
+      overlayStackStore.getState().removeLayer(overlayId)
+    }
+    return () => {
+      overlayStackStore.getState().removeLayer(overlayId)
+    }
+  }, [isOpen, overlayId, setIsOpen, isolation.inert])
 
   const contextValue = React.useMemo<OverlayContextValue>(() => {
     return {
+      id: overlayId,
       isOpen,
       setIsOpen,
       isolation,
@@ -549,10 +545,13 @@ export function OverlayContent({
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        context.onEscape?.(e)
-        if (!e.defaultPrevented) {
-          e.preventDefault()
-          setIsOpen(false)
+        const topLayer = overlayStackStore.getState().layers[overlayStackStore.getState().layers.length - 1]
+        if (topLayer?.id === context.id) {
+          context.onEscape?.(e)
+          if (!e.defaultPrevented) {
+            e.preventDefault()
+            setIsOpen(false)
+          }
         }
       }
     }
@@ -604,10 +603,13 @@ export function OverlayContent({
           return
         }
 
-        context.onOutsidePress?.(e)
-        context.onInteractOutside?.(e)
-        if (!e.defaultPrevented) {
-          setIsOpen(false)
+        const topLayer = overlayStackStore.getState().layers[overlayStackStore.getState().layers.length - 1]
+        if (topLayer?.id === context.id) {
+          context.onOutsidePress?.(e)
+          context.onInteractOutside?.(e)
+          if (!e.defaultPrevented) {
+            setIsOpen(false)
+          }
         }
       }
 
@@ -626,14 +628,7 @@ export function OverlayContent({
     }
   }, [isOpen, context, contentRef, triggerRef, setIsOpen])
 
-  React.useEffect(() => {
-    if (!context || !isOpen || !context.isolation.scroll) return
-    const originalOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = originalOverflow
-    }
-  }, [isOpen, context])
+  usePreventScroll({ isDisabled: !context || !isOpen || !context.isolation.scroll })
 
   if (!context) return null
 
@@ -716,12 +711,14 @@ export function OverlayHandle({
   const context = React.useContext(OverlayContext)
   const isDraggingRef = React.useRef(false)
   const startYRef = React.useRef(0)
+  const velocityTrackerRef = React.useRef<{ time: number; y: number }[]>([])
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     userPointerDown?.(e)
     if (!e.defaultPrevented && context?.edge) {
       isDraggingRef.current = true
       startYRef.current = e.clientY
+      velocityTrackerRef.current = [{ time: performance.now(), y: e.clientY }]
       const target = e.currentTarget
       target.setPointerCapture(e.pointerId)
       context.contentRef.current?.setAttribute('data-dragging', '')
@@ -732,6 +729,11 @@ export function OverlayHandle({
     if (!isDraggingRef.current || !context?.contentRef.current) return
     const deltaY = e.clientY - startYRef.current
     if (deltaY > 0) {
+      velocityTrackerRef.current.push({ time: performance.now(), y: e.clientY })
+      if (velocityTrackerRef.current.length > 5) {
+        velocityTrackerRef.current.shift()
+      }
+      
       const height = context.contentRef.current.offsetHeight || 300
       const progress = Math.min(1, deltaY / height)
       context.contentRef.current.style.setProperty(
@@ -751,7 +753,18 @@ export function OverlayHandle({
 
     context.contentRef.current.removeAttribute('data-dragging')
 
-    if (progress >= 0.25) {
+    const history = velocityTrackerRef.current
+    const first = history[0]
+    const last = history[history.length - 1]
+    let velocity = 0
+    if (first && last) {
+      const dt = last.time - first.time
+      if (dt > 0) {
+        velocity = (last.y - first.y) / dt
+      }
+    }
+
+    if (progress >= 0.25 || velocity > 0.4) {
       context.setIsOpen(false)
     } else {
       context.contentRef.current.style.transform = ''

@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Button, Div, type PrimitiveProps } from '@reference-ui/react'
-import { referenceToast, ToastItemContext } from '../ReferenceLibrary'
+import { referenceToast, ToastItemContext } from './ToastSystem'
 
 export type ToastPosition =
   | 'top-start'

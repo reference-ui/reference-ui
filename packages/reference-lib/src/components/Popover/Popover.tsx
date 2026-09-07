@@ -22,6 +22,9 @@ interface PopoverContextValue {
   openDelay: number
   closeDelay: number
   contentId: string
+  startCloseTimer: () => void
+  startOpenTimer: () => void
+  clearHoverTimer: () => void
 }
 
 const PopoverContext = React.createContext<PopoverContextValue | null>(null)
@@ -41,6 +44,12 @@ export function Popover({
   ...overlayProps
 }: PopoverProps) {
   const [internalOpen, setInternalOpen] = React.useState(defaultOpen)
+  const hoverTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const clearHoverTimer = React.useCallback(() => {
+    if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current)
+  }, [])
+
   const isControlled = openProp !== undefined
   const isOpen = isControlled ? openProp : internalOpen
 
@@ -51,6 +60,7 @@ export function Popover({
 
   const setIsOpen = React.useCallback(
     (nextOpen: boolean) => {
+      clearHoverTimer()
       if (!isControlled) {
         setInternalOpen(nextOpen)
       }
@@ -58,6 +68,22 @@ export function Popover({
     },
     [isControlled, onOpenChange]
   )
+
+  const startCloseTimer = React.useCallback(() => {
+    clearHoverTimer()
+    if (!openOnHover) return
+    hoverTimerRef.current = setTimeout(() => {
+      setIsOpen(false)
+    }, closeDelay)
+  }, [openOnHover, closeDelay, setIsOpen, clearHoverTimer])
+
+  const startOpenTimer = React.useCallback(() => {
+    clearHoverTimer()
+    if (!openOnHover) return
+    hoverTimerRef.current = setTimeout(() => {
+      setIsOpen(true)
+    }, openDelay)
+  }, [openOnHover, openDelay, setIsOpen, clearHoverTimer])
 
   const contextValue = React.useMemo<PopoverContextValue>(() => {
     return {
@@ -67,8 +93,11 @@ export function Popover({
       openDelay,
       closeDelay,
       contentId: contentIdRef.current!,
+      startCloseTimer,
+      startOpenTimer,
+      clearHoverTimer,
     }
-  }, [isOpen, setIsOpen, openOnHover, openDelay, closeDelay])
+  }, [isOpen, setIsOpen, openOnHover, openDelay, closeDelay, startCloseTimer, startOpenTimer, clearHoverTimer])
 
   return (
     <PopoverContext.Provider value={contextValue}>
@@ -97,31 +126,18 @@ export function PopoverTrigger({
 }: PopoverTriggerProps) {
   const context = React.useContext(PopoverContext)
   const overlay = useOverlay()
-  const hoverTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handlePointerEnter = (e: React.PointerEvent<HTMLButtonElement>) => {
     onPointerEnter?.(e)
     if (!context?.openOnHover || e.defaultPrevented) return
-    if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current)
-    hoverTimerRef.current = setTimeout(() => {
-      overlay?.setIsOpen(true)
-    }, context.openDelay)
+    context.startOpenTimer()
   }
 
   const handlePointerLeave = (e: React.PointerEvent<HTMLButtonElement>) => {
     onPointerLeave?.(e)
     if (!context?.openOnHover || e.defaultPrevented) return
-    if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current)
-    hoverTimerRef.current = setTimeout(() => {
-      overlay?.setIsOpen(false)
-    }, context.closeDelay)
+    context.startCloseTimer()
   }
-
-  React.useEffect(() => {
-    return () => {
-      if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current)
-    }
-  }, [])
 
   return (
     <Overlay.Trigger
@@ -146,6 +162,8 @@ export type PopoverContentProps = OverlayContentProps
 export function PopoverContent({
   children,
   id,
+  onPointerEnter,
+  onPointerLeave,
   ...props
 }: PopoverContentProps) {
   const context = React.useContext(PopoverContext)
@@ -158,6 +176,18 @@ export function PopoverContent({
       id={contentId}
       role="dialog"
       tabIndex={-1}
+      onPointerEnter={(e: React.PointerEvent<HTMLDivElement>) => {
+        onPointerEnter?.(e)
+        if (context.openOnHover && !e.defaultPrevented) {
+          context.clearHoverTimer()
+        }
+      }}
+      onPointerLeave={(e: React.PointerEvent<HTMLDivElement>) => {
+        onPointerLeave?.(e)
+        if (context.openOnHover && !e.defaultPrevented) {
+          context.startCloseTimer()
+        }
+      }}
       {...props}
     >
       {children}

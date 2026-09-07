@@ -117,6 +117,50 @@ function getTabbableCandidates(container: HTMLElement, shards: HTMLElement[] = [
   return Array.from(new Set(candidates))
 }
 
+function findFocusableProximity(
+  node: HTMLElement | null,
+  parent: HTMLElement | null,
+  next: Node | null,
+  prev: Node | null
+): HTMLElement | null {
+  if (node && isElementFocusable(node) && node.isConnected) {
+    return node
+  }
+
+  // Right siblings
+  let curr = next as HTMLElement | null
+  while (curr) {
+    if (curr.isConnected) {
+      if (isElementFocusable(curr)) return curr
+      const desc = curr.querySelector<HTMLElement>(CANDIDATE_SELECTORS)
+      if (desc && isElementFocusable(desc)) return desc
+    }
+    curr = curr.nextElementSibling as HTMLElement | null
+  }
+
+  // Left siblings
+  curr = prev as HTMLElement | null
+  while (curr) {
+    if (curr.isConnected) {
+      const focusables = Array.from(curr.querySelectorAll<HTMLElement>(CANDIDATE_SELECTORS)).filter(isElementFocusable)
+      if (focusables.length > 0) return focusables[focusables.length - 1]
+      if (isElementFocusable(curr)) return curr
+    }
+    curr = curr.previousElementSibling as HTMLElement | null
+  }
+
+  // Ancestors
+  curr = parent
+  while (curr) {
+    if (curr.isConnected) {
+      if (isElementFocusable(curr)) return curr
+    }
+    curr = curr.parentElement
+  }
+
+  return null
+}
+
 // Global active lock stack for nested FocusLocks
 const activeLocks: Array<{
   id: string
@@ -136,7 +180,12 @@ export function FocusLock({
 }: FocusLockProps) {
   const containerRef = React.useRef<HTMLElement | null>(null)
   const lastFocusedNodeRef = React.useRef<HTMLElement | null>(null)
-  const previousActiveElementRef = React.useRef<HTMLElement | null>(null)
+  const previousActiveElementRef = React.useRef<{
+    node: HTMLElement | null;
+    parent: HTMLElement | null;
+    next: Node | null;
+    prev: Node | null;
+  } | null>(null)
 
   const lockIdRef = React.useRef<string | null>(null)
   if (!lockIdRef.current) {
@@ -157,20 +206,25 @@ export function FocusLock({
     return list
   }, [shardsProp])
 
-  // Track active element before activation
-  React.useEffect(() => {
-    if (!disabled && typeof document !== 'undefined') {
-      if (!previousActiveElementRef.current) {
-        previousActiveElementRef.current = document.activeElement as HTMLElement | null
-      }
-    }
-  }, [disabled])
-
   // Activation & stack management
   React.useEffect(() => {
-    if (disabled) return
+    if (disabled) {
+      previousActiveElementRef.current = null
+      return
+    }
+
     const container = containerRef.current
     if (!container) return
+
+    if (!previousActiveElementRef.current && typeof document !== 'undefined') {
+      const active = document.activeElement as HTMLElement | null
+      previousActiveElementRef.current = {
+        node: active,
+        parent: active?.parentElement || null,
+        next: active?.nextSibling || null,
+        prev: active?.previousSibling || null,
+      }
+    }
 
     const lockEntry = {
       id: lockId,
@@ -214,11 +268,14 @@ export function FocusLock({
         const explicitRestore = resolveFocusTarget(restoreFocus)
         if (explicitRestore && isElementFocusable(explicitRestore)) {
           explicitRestore.focus()
-        } else if (
-          previousActiveElementRef.current &&
-          isElementFocusable(previousActiveElementRef.current)
-        ) {
-          previousActiveElementRef.current.focus()
+        } else if (previousActiveElementRef.current) {
+          const proxy = findFocusableProximity(
+            previousActiveElementRef.current.node,
+            previousActiveElementRef.current.parent,
+            previousActiveElementRef.current.next,
+            previousActiveElementRef.current.prev
+          )
+          if (proxy) proxy.focus()
         }
       }
     }
