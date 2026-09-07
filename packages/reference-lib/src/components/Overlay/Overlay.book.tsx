@@ -2,17 +2,6 @@ import * as React from 'react'
 import { Div, Button, H3, P } from '@reference-ui/react'
 import { Overlay } from './index'
 
-const triggerChrome = {
-  px: '3r' as const,
-  py: '1.5r' as const,
-  borderRadius: 'sm' as const,
-  bg: 'ui.button.background' as const,
-  color: 'ui.button.foreground' as const,
-  border: '1px solid' as const,
-  borderColor: 'ui.field.border' as const,
-  cursor: 'pointer' as const,
-}
-
 const dialogChrome = {
   p: '5r' as const,
   bg: 'ui.dialog.background' as const,
@@ -30,7 +19,7 @@ export default {
     const [open, setOpen] = React.useState(false)
     return (
       <Div>
-        <Button {...triggerChrome} onClick={() => setOpen(true)}>
+        <Button variant="primary" onClick={() => setOpen(true)}>
           Open dialog
         </Button>
 
@@ -52,19 +41,10 @@ export default {
               Modal overlay with backdrop and focus containment.
             </P>
             <Div display="flex" justifyContent="flex-end" gap="2r" mt="4r">
-              <Button
-                px="3r"
-                py="1.5r"
-                borderRadius="sm"
-                bg="colors.gray.100"
-                border="1px solid"
-                borderColor="ui.field.border"
-                cursor="pointer"
-                onClick={() => setOpen(false)}
-              >
+              <Button onClick={() => setOpen(false)}>
                 Cancel
               </Button>
-              <Button {...triggerChrome} onClick={() => setOpen(false)}>
+              <Button variant="primary" onClick={() => setOpen(false)}>
                 Confirm
               </Button>
             </Div>
@@ -77,7 +57,7 @@ export default {
     const [open, setOpen] = React.useState(false)
     return (
       <Overlay open={open} onOpenChange={setOpen}>
-        <Overlay.Trigger {...triggerChrome}>Open via trigger</Overlay.Trigger>
+        <Overlay.Trigger variant="primary">Open via trigger</Overlay.Trigger>
         <Overlay.Backdrop bg="rgba(0,0,0,0.4)" zIndex={40} />
         <Overlay.Content
           position="fixed"
@@ -107,7 +87,7 @@ export default {
     return (
       <Div p="8r">
         <Overlay open={open} onOpenChange={setOpen} isolation={false}>
-          <Overlay.Trigger {...triggerChrome}>Open anchored</Overlay.Trigger>
+          <Overlay.Trigger variant="primary">Open anchored</Overlay.Trigger>
           <Overlay.Content
             placement="bottom-start"
             offset={8}

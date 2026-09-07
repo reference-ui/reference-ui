@@ -5,14 +5,7 @@ import { Toast, toast } from './index'
 export default {
   Basic: () => (
     <Button
-      px="3r"
-      py="1.5r"
-      borderRadius="sm"
-      bg="ui.button.background"
-      color="ui.button.foreground"
-      border="1px solid"
-      borderColor="ui.field.border"
-      cursor="pointer"
+      variant="primary"
       onClick={() => {
         toast('Changes saved', {
           description: 'Your settings were updated successfully.',
@@ -29,14 +22,7 @@ export default {
     return (
       <Div display="flex" gap="2r" alignItems="center">
         <Button
-          px="3r"
-          py="1.5r"
-          borderRadius="sm"
-          bg="ui.button.background"
-          color="ui.button.foreground"
-          border="1px solid"
-          borderColor="ui.field.border"
-          cursor="pointer"
+          variant="primary"
           onClick={() => {
             countRef.current += 1
             toast(`Notification #${countRef.current}`, {
@@ -49,14 +35,6 @@ export default {
           Add to stack
         </Button>
         <Button
-          px="3r"
-          py="1.5r"
-          borderRadius="sm"
-          bg="ui.button.background"
-          color="ui.button.foreground"
-          border="1px solid"
-          borderColor="ui.field.border"
-          cursor="pointer"
           onClick={() => toast.dismissAll()}
         >
           Dismiss all
@@ -67,14 +45,7 @@ export default {
   SonnerAPI: () => (
     <Div display="flex" gap="2r" flexWrap="wrap">
       <Button
-        px="3r"
-        py="1.5r"
-        borderRadius="sm"
-        bg="ui.button.background"
-        color="ui.button.foreground"
-        border="1px solid"
-        borderColor="ui.field.border"
-        cursor="pointer"
+        variant="primary"
         onClick={() => {
           toast.success('Project deployed', {
             description: 'Version 2.4.0 is now live in production.',
@@ -85,14 +56,6 @@ export default {
         Success toast
       </Button>
       <Button
-        px="3r"
-        py="1.5r"
-        borderRadius="sm"
-        bg="ui.button.background"
-        color="ui.button.foreground"
-        border="1px solid"
-        borderColor="ui.field.border"
-        cursor="pointer"
         onClick={() => {
           toast.error('Build failed', {
             description: 'Syntax error in components/Button.tsx:24.',
@@ -103,14 +66,6 @@ export default {
         Error toast
       </Button>
       <Button
-        px="3r"
-        py="1.5r"
-        borderRadius="sm"
-        bg="ui.button.background"
-        color="ui.button.foreground"
-        border="1px solid"
-        borderColor="ui.field.border"
-        cursor="pointer"
         onClick={() => {
           toast.info('Update available', {
             description: 'A newer version of Reference UI was published.',
@@ -121,14 +76,6 @@ export default {
         Info toast
       </Button>
       <Button
-        px="3r"
-        py="1.5r"
-        borderRadius="sm"
-        bg="ui.button.background"
-        color="ui.button.foreground"
-        border="1px solid"
-        borderColor="ui.field.border"
-        cursor="pointer"
         onClick={() => {
           toast.warning('Storage limit warning', {
             description: 'Your workspace is using 85% of allocated disk.',
@@ -142,14 +89,7 @@ export default {
   ),
   CustomToast: () => (
     <Button
-      px="3r"
-      py="1.5r"
-      borderRadius="sm"
-      bg="ui.button.background"
-      color="ui.button.foreground"
-      border="1px solid"
-      borderColor="ui.field.border"
-      cursor="pointer"
+      variant="primary"
       onClick={() => {
         toast.custom(
           (id) => (
@@ -177,14 +117,7 @@ export default {
   WithAction: () => (
     <Div display="flex" gap="2r" flexWrap="wrap">
       <Button
-        px="3r"
-        py="1.5r"
-        borderRadius="sm"
-        bg="ui.button.background"
-        color="ui.button.foreground"
-        border="1px solid"
-        borderColor="ui.field.border"
-        cursor="pointer"
+        variant="primary"
         onClick={() => {
           toast('Update ready to install', {
             description: 'Restart required to complete installation.',
@@ -204,14 +137,6 @@ export default {
         Top-center with action
       </Button>
       <Button
-        px="3r"
-        py="1.5r"
-        borderRadius="sm"
-        bg="ui.button.background"
-        color="ui.button.foreground"
-        border="1px solid"
-        borderColor="ui.field.border"
-        cursor="pointer"
         onClick={() => {
           toast('File uploaded', {
             description: 'design-tokens.json is ready to review.',
@@ -246,14 +171,7 @@ export default {
 
     return (
       <Button
-        px="3r"
-        py="1.5r"
-        borderRadius="sm"
-        bg="ui.button.background"
-        color="ui.button.foreground"
-        border="1px solid"
-        borderColor="ui.field.border"
-        cursor="pointer"
+        variant="primary"
         onClick={() => ProjectSavedToast({ name: 'reference-ui' })}
       >
         Show defined toast

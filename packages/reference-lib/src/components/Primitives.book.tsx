@@ -688,21 +688,12 @@ function DisclosureAndDialogSection() {
             <Div display="flex" justifyContent="flex-end" gap="2r">
               <Button
                 type="button"
-                px="2.5r"
-                py="1r"
-                borderRadius="sm"
-                bg="colors.gray.100"
-                border="1px solid"
-                borderColor="ui.field.border"
-                cursor="pointer"
               >
                 Dismiss
               </Button>
               <Button
                 type="button"
-                px="2.5r"
-                py="1r"
-                borderRadius="sm"
+                variant="primary"
               >
                 Confirm
               </Button>

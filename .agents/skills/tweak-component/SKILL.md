@@ -1,6 +1,6 @@
 ---
 name: tweak-component
-description: Autonomous workflow for inspecting, tweaking, styling, and visually verifying components in @reference-ui/lib against Cosmos fixtures, returning visual screenshots, and passing Vitest/Playwright test contracts. Activate whenever the user asks to polish, style, fix, or improve how a component feels or looks.
+description: Autonomous workflow for inspecting, tweaking, styling, and visually verifying components in @reference-ui/lib against Book stories (*.book.ts / *.book.tsx), returning visual screenshots, and passing Vitest/Playwright test contracts. Activate whenever the user asks to polish, style, fix, or improve how a component feels or looks.
 ---
 
 # Component Tweaking & Manufacturing Skill (`tweak-component`)
@@ -9,17 +9,17 @@ Use this skill when tasked with fixing, implementing, or visually polishing any 
 
 ---
 
-## 1. Pre-flight Check: Cosmos Dev Server
+## 1. Pre-flight Check: Book Dev Server
 
 > [!IMPORTANT]
-> **NEVER start background `pnpm dev:lib` or `cosmos` commands.**
+> **NEVER start background `pnpm dev:lib` processes.**
 > The developer runs `pnpm dev:lib` locally in their own terminal to monitor logs and prevent port conflicts.
 
-Before attempting visual fixture capture:
-1. Verify if the Cosmos dev server is responding at `http://localhost:5000/`.
+Before attempting visual capture:
+1. Verify if the Book dev server is responding at `http://localhost:5000/`.
 2. If it is **not running**, politely stop and ask the developer:
-   *"Please run `pnpm dev:lib` in your terminal so I can inspect and interact with the Cosmos fixtures."*
-3. Wait for the user to confirm it is up before running fixture captures.
+   *"Please run `pnpm dev:lib` in your terminal so I can inspect and interact with the Book stories."*
+3. Wait for the user to confirm it is up before running captures.
 
 ---
 

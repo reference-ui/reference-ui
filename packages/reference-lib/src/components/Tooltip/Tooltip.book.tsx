@@ -7,16 +7,7 @@ export default {
     <Div p="8r">
       <Tooltip>
         <Tooltip.Trigger>
-          <Button
-            px="3r"
-            py="1.5r"
-            borderRadius="sm"
-            bg="ui.button.background"
-            color="ui.button.foreground"
-            border="1px solid"
-            borderColor="ui.field.border"
-            cursor="pointer"
-          >
+          <Button variant="primary">
             Hover me
           </Button>
         </Tooltip.Trigger>
@@ -32,15 +23,7 @@ export default {
       {(['top', 'right', 'bottom', 'left'] as const).map(placement => (
         <Tooltip key={placement}>
           <Tooltip.Trigger>
-            <Button
-              px="3r"
-              py="1.5r"
-              borderRadius="sm"
-              bg="ui.button.background"
-              border="1px solid"
-              borderColor="ui.field.border"
-              cursor="pointer"
-            >
+            <Button>
               {placement}
             </Button>
           </Tooltip.Trigger>
@@ -56,15 +39,7 @@ export default {
     <Div p="4r">
       <Tooltip openDelay={0}>
         <Tooltip.Trigger>
-          <Button
-            px="3r"
-            py="1.5r"
-            borderRadius="sm"
-            bg="ui.button.background"
-            border="1px solid"
-            borderColor="ui.field.border"
-            cursor="pointer"
-          >
+          <Button variant="primary">
             Tab to focus
           </Button>
         </Tooltip.Trigger>

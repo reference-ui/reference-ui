@@ -21,6 +21,11 @@ const iconsEntry = existsSync(resolve(workspaceIconsDir, 'src/index.ts'))
   : undefined
 
 export default defineConfig({
+  server: {
+    port: 5000,
+    strictPort: true,
+    host: true,
+  },
   plugins: [referenceVite(), react()],
   resolve: {
     dedupe: ['react', 'react-dom'],

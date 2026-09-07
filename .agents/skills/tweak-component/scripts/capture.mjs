@@ -39,68 +39,80 @@ try {
 }
 const { chromium } = playwright
 
-// 3. Extract named fixture exports from a fixture file
+// 3. Extract named story/fixture exports from a book or fixture file
 export function extractFixtureNames(filePath) {
   if (!filePath || !fs.existsSync(filePath)) return []
   const content = fs.readFileSync(filePath, 'utf-8')
   const startIdx = content.indexOf('export default {')
-  if (startIdx === -1) return []
-
-  let depth = 0
-  let inObj = false
-  let startBrace = -1
-  let endBrace = -1
-  for (let i = startIdx; i < content.length; i++) {
-    if (content[i] === '{') {
-      if (!inObj) {
-        inObj = true
-        startBrace = i
-      }
-      depth++
-    } else if (content[i] === '}') {
-      depth--
-      if (depth === 0 && inObj) {
-        endBrace = i
-        break
-      }
-    }
-  }
-  if (startBrace === -1 || endBrace === -1) return []
-
-  const names = []
-  let d = 0
-  let curToken = ''
-  for (let i = startBrace + 1; i < endBrace; i++) {
-    const ch = content[i]
-    if (ch === '{' || ch === '(' || ch === '[') {
-      d++
-    } else if (ch === '}' || ch === ')' || ch === ']') {
-      d--
-    } else if (d === 0) {
-      if (ch === ':' || (ch === '(' && curToken.trim())) {
-        const key = curToken.trim().replace(/^['"]|['"]$/g, '')
-        if (/^[a-zA-Z0-9_$]+$/.test(key) && !names.includes(key)) {
-          names.push(key)
+  if (startIdx !== -1) {
+    let depth = 0
+    let inObj = false
+    let startBrace = -1
+    let endBrace = -1
+    for (let i = startIdx; i < content.length; i++) {
+      if (content[i] === '{') {
+        if (!inObj) {
+          inObj = true
+          startBrace = i
         }
-        curToken = ''
-      } else if (ch === ',' || ch === '\n') {
-        curToken = ''
-      } else {
-        curToken += ch
+        depth++
+      } else if (content[i] === '}') {
+        depth--
+        if (depth === 0 && inObj) {
+          endBrace = i
+          break
+        }
       }
     }
+    if (startBrace !== -1 && endBrace !== -1) {
+      const names = []
+      let d = 0
+      let curToken = ''
+      for (let i = startBrace + 1; i < endBrace; i++) {
+        const ch = content[i]
+        if (ch === '{' || ch === '(' || ch === '[') {
+          d++
+        } else if (ch === '}' || ch === ')' || ch === ']') {
+          d--
+        } else if (d === 0) {
+          if (ch === ':' || (ch === '(' && curToken.trim())) {
+            const key = curToken.trim().replace(/^['"]|['"]$/g, '')
+            if (/^[a-zA-Z0-9_$]+$/.test(key) && !names.includes(key)) {
+              names.push(key)
+            }
+            curToken = ''
+          } else if (ch === ',' || ch === '\n') {
+            curToken = ''
+          } else {
+            curToken += ch
+          }
+        }
+      }
+      if (names.length > 0) return names
+    }
   }
-  return names
+
+  // Check for named exports: export function Name or export const Name =
+  const namedMatches = [...content.matchAll(/export\s+(?:function|const|var|let)\s+([A-Z][a-zA-Z0-9_$]*)/g)]
+  const names = namedMatches.map(m => m[1]).filter(n => n !== 'Default' && n !== 'Meta')
+  if (names.length > 0) return names
+
+  // Fallback: single default export component
+  if (/export\s+default\s+/.test(content)) {
+    return ['Default']
+  }
+
+  return []
 }
 
-// 4. Resolve fixture file path on disk
+// 4. Resolve book/fixture file path on disk
 export function resolveFixtureFilePath(componentInput) {
   const componentsDir = path.join(repoRoot, 'packages/reference-lib/src/components')
   if (!fs.existsSync(componentsDir)) {
     return null
   }
 
-  if (componentInput.includes('/') || componentInput.endsWith('.tsx')) {
+  if (componentInput.includes('/') || componentInput.endsWith('.tsx') || componentInput.endsWith('.ts')) {
     const direct = path.resolve(componentInput)
     if (fs.existsSync(direct)) return direct
     const inPkg = path.join(repoRoot, 'packages/reference-lib', componentInput)
@@ -108,31 +120,38 @@ export function resolveFixtureFilePath(componentInput) {
     return null
   }
 
-  // Exact matches
-  const candidate1 = path.join(componentsDir, componentInput, `${componentInput}.fixture.tsx`)
-  if (fs.existsSync(candidate1)) return candidate1
+  const extensions = ['.book.tsx', '.book.ts', '.fixture.tsx', '.fixture.ts']
 
-  const candidate2 = path.join(componentsDir, `${componentInput}.fixture.tsx`)
-  if (fs.existsSync(candidate2)) return candidate2
+  // Exact matches
+  for (const ext of extensions) {
+    const candidate1 = path.join(componentsDir, componentInput, `${componentInput}${ext}`)
+    if (fs.existsSync(candidate1)) return candidate1
+    const candidate2 = path.join(componentsDir, `${componentInput}${ext}`)
+    if (fs.existsSync(candidate2)) return candidate2
+  }
 
   // Case-insensitive search
   const entries = fs.readdirSync(componentsDir, { withFileTypes: true })
   for (const entry of entries) {
     if (entry.name.toLowerCase() === componentInput.toLowerCase()) {
       if (entry.isDirectory()) {
-        const sub = path.join(componentsDir, entry.name, `${entry.name}.fixture.tsx`)
-        if (fs.existsSync(sub)) return sub
+        for (const ext of extensions) {
+          const sub = path.join(componentsDir, entry.name, `${entry.name}${ext}`)
+          if (fs.existsSync(sub)) return sub
+        }
       }
     }
-    if (entry.name.toLowerCase() === `${componentInput.toLowerCase()}.fixture.tsx`) {
-      return path.join(componentsDir, entry.name)
+    for (const ext of extensions) {
+      if (entry.name.toLowerCase() === `${componentInput.toLowerCase()}${ext}`) {
+        return path.join(componentsDir, entry.name)
+      }
     }
   }
 
   return null
 }
 
-// 5. Discover all components and fixtures in the repository
+// 5. Discover all components and books/fixtures in the repository
 export function getAllComponentFixtures() {
   const componentsDir = path.join(repoRoot, 'packages/reference-lib/src/components')
   if (!fs.existsSync(componentsDir)) return {}
@@ -141,19 +160,27 @@ export function getAllComponentFixtures() {
   const entries = fs.readdirSync(componentsDir, { withFileTypes: true })
   for (const entry of entries) {
     if (entry.isDirectory()) {
-      const subFixture = path.join(componentsDir, entry.name, `${entry.name}.fixture.tsx`)
-      if (fs.existsSync(subFixture)) {
-        result[entry.name] = {
-          filePath: subFixture,
-          fixtures: extractFixtureNames(subFixture),
+      for (const ext of ['.book.tsx', '.book.ts', '.fixture.tsx', '.fixture.ts']) {
+        const subFixture = path.join(componentsDir, entry.name, `${entry.name}${ext}`)
+        if (fs.existsSync(subFixture)) {
+          result[entry.name] = {
+            filePath: subFixture,
+            fixtures: extractFixtureNames(subFixture),
+          }
+          break
         }
       }
-    } else if (entry.name.endsWith('.fixture.tsx')) {
-      const compName = entry.name.replace('.fixture.tsx', '')
-      const fullPath = path.join(componentsDir, entry.name)
-      result[compName] = {
-        filePath: fullPath,
-        fixtures: extractFixtureNames(fullPath),
+    } else {
+      const match = entry.name.match(/^(.+?)\.(book|fixture)\.[jt]sx?$/)
+      if (match) {
+        const compName = match[1]
+        const fullPath = path.join(componentsDir, entry.name)
+        if (!result[compName] || entry.name.includes('.book.')) {
+          result[compName] = {
+            filePath: fullPath,
+            fixtures: extractFixtureNames(fullPath),
+          }
+        }
       }
     }
   }
@@ -236,26 +263,21 @@ export async function runCapture(rawOpts, customScriptFn = null) {
     }
   }
 
-  // Cosmos dev server health check
+  // Book dev server health check
   const isAlive = await checkPort(5000)
   if (!isAlive) {
-    throw new Error('COSMOS_NOT_RUNNING: Cosmos playground is not reachable on port 5000. Please run "pnpm dev:lib" locally in your terminal.')
+    throw new Error('BOOK_NOT_RUNNING: Book dev server is not reachable on port 5000. Please run "pnpm dev:lib" locally in your terminal.')
   }
 
   fs.mkdirSync(opts.outDir, { recursive: true })
 
-  // Construct Cosmos URL parameter
-  const relFixturePath = path.relative(path.join(repoRoot, 'packages/reference-lib'), fixtureFilePath)
-  const fixtureObj = { path: relFixturePath }
-  if (selectedFixture) {
-    fixtureObj.name = selectedFixture
-  }
-
-  const fixtureParam = JSON.stringify(fixtureObj)
-  const url = `http://127.0.0.1:5000/?fixture=${encodeURIComponent(fixtureParam)}`
+  // Construct Book URL parameter
+  const compId = opts.component
+  const storyParam = selectedFixture ? `&story=${encodeURIComponent(selectedFixture)}` : ''
+  const url = `http://127.0.0.1:5000/?book=${encodeURIComponent(compId)}${storyParam}`
   const baseName = opts.name || (selectedFixture ? `${opts.component}_${selectedFixture}` : opts.component)
 
-  console.log(`Connecting to Cosmos fixture: ${JSON.stringify(fixtureObj)}`)
+  console.log(`Connecting to Book story: ${opts.component}${selectedFixture ? ` : ${selectedFixture}` : ''}`)
 
   const browser = await chromium.launch({ headless: true })
   const page = await browser.newPage({ viewport: opts.viewport })

@@ -6,16 +6,7 @@ export default {
   ClickToOpen: () => (
     <Div p="4r">
       <Popover>
-        <Popover.Trigger
-          px="3r"
-          py="1.5r"
-          borderRadius="sm"
-          bg="ui.button.background"
-          color="ui.button.foreground"
-          border="1px solid"
-          borderColor="ui.field.border"
-          cursor="pointer"
-        >
+        <Popover.Trigger variant="primary">
           Open popover
         </Popover.Trigger>
         <Popover.Content
@@ -37,16 +28,7 @@ export default {
               <Span fontSize="3r" color="design.text.light">
                 Non-isolating floating content anchored to the trigger.
               </Span>
-              <Popover.Close
-                px="2.5r"
-                py="1r"
-                borderRadius="sm"
-                bg="colors.gray.100"
-                border="1px solid"
-                borderColor="ui.field.border"
-                cursor="pointer"
-                alignSelf="flex-start"
-              >
+              <Popover.Close alignSelf="flex-start">
                 Close
               </Popover.Close>
             </Div>
@@ -58,16 +40,7 @@ export default {
   HoverCard: () => (
     <Div p="4r">
       <Popover openOnHover openDelay={300} closeDelay={200}>
-        <Popover.Trigger
-          px="3r"
-          py="1.5r"
-          borderRadius="sm"
-          bg="ui.button.background"
-          color="ui.button.foreground"
-          border="1px solid"
-          borderColor="ui.field.border"
-          cursor="pointer"
-        >
+        <Popover.Trigger variant="primary">
           Hover for preview
         </Popover.Trigger>
         <Popover.Content
@@ -93,15 +66,7 @@ export default {
     <Div display="grid" gridTemplateColumns="repeat(2, 1fr)" gap="6r" p="8r">
       {(['top', 'right', 'bottom', 'left'] as const).map(placement => (
         <Popover key={placement}>
-          <Popover.Trigger
-            px="3r"
-            py="1.5r"
-            borderRadius="sm"
-            bg="ui.button.background"
-            border="1px solid"
-            borderColor="ui.field.border"
-            cursor="pointer"
-          >
+          <Popover.Trigger>
             {placement}
           </Popover.Trigger>
           <Popover.Content

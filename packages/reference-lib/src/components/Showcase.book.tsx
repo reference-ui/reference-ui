@@ -70,7 +70,7 @@ export default function ShowcaseFixture() {
       {/* Header */}
       <Div
         p="6r"
-        borderRadius="xl"
+        borderRadius="lg"
         bg="ui.dialog.background"
         border="1px solid"
         borderColor="ui.dialog.border"
@@ -80,7 +80,7 @@ export default function ShowcaseFixture() {
           Reference UI Component Suite
         </H2>
         <P fontSize="3.5r" color="design.text.light" mt="1r" mb="0">
-          Interactive Cosmos fixture showcasing all Reference UI components built with JSX primitives & tokens.
+          Interactive Book showcasing all Reference UI components built with JSX primitives & tokens.
         </P>
       </Div>
 
@@ -189,16 +189,7 @@ export default function ShowcaseFixture() {
           <Div display="flex" gap="3r" flexWrap="wrap" alignItems="center">
             <Tooltip>
               <Tooltip.Trigger>
-                <Button
-                  px="3r"
-                  py="1.5r"
-                  borderRadius="sm"
-                  bg="ui.button.background"
-                  color="ui.button.foreground"
-                  border="1px solid"
-                  borderColor="ui.field.border"
-                  cursor="pointer"
-                >
+                <Button variant="primary">
                   Hover for Tooltip
                 </Button>
               </Tooltip.Trigger>
@@ -209,16 +200,7 @@ export default function ShowcaseFixture() {
             </Tooltip>
 
             <Popover>
-              <Popover.Trigger
-                px="3r"
-                py="1.5r"
-                borderRadius="sm"
-                bg="ui.button.background"
-                color="ui.button.foreground"
-                border="1px solid"
-                borderColor="ui.field.border"
-                cursor="pointer"
-              >
+              <Popover.Trigger variant="primary">
                 Open Popover
               </Popover.Trigger>
               <Popover.Content
@@ -233,16 +215,7 @@ export default function ShowcaseFixture() {
                 <Div display="flex" flexDirection="column" gap="2r">
                   <Span fontWeight="600" fontSize="3.5r">Popover Details</Span>
                   <Span fontSize="3r" color="design.text.light">Interactive content inside floating popover.</Span>
-                  <Popover.Close
-                    px="2.5r"
-                    py="1r"
-                    borderRadius="sm"
-                    bg="colors.gray.100"
-                    border="1px solid"
-                    borderColor="ui.field.border"
-                    cursor="pointer"
-                    alignSelf="flex-start"
-                  >
+                  <Popover.Close alignSelf="flex-start">
                     Close
                   </Popover.Close>
                 </Div>
@@ -256,18 +229,8 @@ export default function ShowcaseFixture() {
         <SectionCard title="Menu">
           <Menu>
             <Menu.Trigger
-              px="3r"
-              py="1.5r"
-              borderRadius="sm"
-              bg="ui.button.background"
-              color="ui.button.foreground"
-              border="1px solid"
-              borderColor="ui.field.border"
-              cursor="pointer"
+              variant="primary"
               alignSelf="flex-start"
-              display="inline-flex"
-              alignItems="center"
-              gap="1.5r"
             >
               <span>Actions Menu</span>
               <KeyboardArrowDownIcon />
@@ -285,14 +248,7 @@ export default function ShowcaseFixture() {
         <SectionCard title="Toast Notifications">
           <Div display="flex" gap="2r" flexWrap="wrap">
             <Button
-              px="3r"
-              py="1.5r"
-              borderRadius="sm"
-              bg="ui.button.background"
-              color="ui.button.foreground"
-              border="1px solid"
-              borderColor="ui.field.border"
-              cursor="pointer"
+              variant="primary"
               onClick={() => {
                 toast.show(
                   <Toast.Root>
@@ -306,14 +262,6 @@ export default function ShowcaseFixture() {
               Show Bottom-End Toast
             </Button>
             <Button
-              px="3r"
-              py="1.5r"
-              borderRadius="sm"
-              bg="ui.button.background"
-              color="ui.button.foreground"
-              border="1px solid"
-              borderColor="ui.field.border"
-              cursor="pointer"
               onClick={() => {
                 toast.show(
                   <Toast.Root>
@@ -481,14 +429,7 @@ export default function ShowcaseFixture() {
         {/* Modal Overlay */}
         <SectionCard title="Modal Overlay (Dialog)">
           <Button
-            px="3r"
-            py="1.5r"
-            borderRadius="sm"
-            bg="ui.button.background"
-            color="ui.button.foreground"
-            border="1px solid"
-            borderColor="ui.field.border"
-            cursor="pointer"
+            variant="primary"
             alignSelf="flex-start"
             onClick={() => setIsOverlayOpen(true)}
           >
@@ -518,26 +459,12 @@ export default function ShowcaseFixture() {
                 </P>
                 <Div display="flex" justifyContent="flex-end" gap="2r" mt="4r">
                   <Button
-                    px="3r"
-                    py="1.5r"
-                    borderRadius="sm"
-                    bg="colors.gray.100"
-                    border="1px solid"
-                    borderColor="ui.field.border"
-                    cursor="pointer"
                     onClick={() => setIsOverlayOpen(false)}
                   >
                     Cancel
                   </Button>
                   <Button
-                    px="3r"
-                    py="1.5r"
-                    borderRadius="sm"
-                    bg="ui.button.background"
-                    color="ui.button.foreground"
-                    border="1px solid"
-                    borderColor="ui.field.border"
-                    cursor="pointer"
+                    variant="primary"
                     onClick={() => setIsOverlayOpen(false)}
                   >
                     Confirm
@@ -551,11 +478,11 @@ export default function ShowcaseFixture() {
         <SectionCard title="Splitter">
           <Div height="30r" border="1px solid" borderColor="ui.field.border" borderRadius="md" overflow="hidden">
             <Splitter defaultValue={[40, 60]} height="100%">
-              <Splitter.Panel index={0} p="3r" bg="colors.gray.100">
+              <Splitter.Panel index={0} p="3r" bg="ui.table.row.mutedBackground" color="design.text.base">
                 <Span fontSize="3r" fontWeight="500">Panel 1 (Resizable)</Span>
               </Splitter.Panel>
               <Splitter.Handle index={0} />
-              <Splitter.Panel index={1} p="3r" bg="colors.gray.50">
+              <Splitter.Panel index={1} p="3r" bg="ui.field.background" color="design.text.base">
                 <Span fontSize="3r" fontWeight="500">Panel 2 (Resizable)</Span>
               </Splitter.Panel>
             </Splitter>

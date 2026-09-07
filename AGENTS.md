@@ -20,10 +20,10 @@ Whenever a user prompt asks to fix, polish, style, improve, or adjust how any co
 ## 1. Dev Server & Local Environment Policy
 
 > [!IMPORTANT]
-> **DO NOT start background `pnpm dev:lib` or `cosmos` processes.**
+> **DO NOT start background `pnpm dev:lib` processes.**
 > The developer runs `pnpm dev:lib` locally in their terminal to monitor logs and avoid port collisions.
-> If Cosmos on port 5000 is not reachable, politely ask the developer:
-> *"Please run `pnpm dev:lib` in your terminal so I can inspect and interact with the Cosmos fixtures."*
+> If the Book dev server on port 5000 is not reachable, politely ask the developer:
+> *"Please run `pnpm dev:lib` in your terminal so I can inspect and interact with the Book stories."*
 
 ---
 
@@ -84,12 +84,22 @@ pnpm --filter @reference-ui/lib test
 # Build library before browser tests (matrix/lib consumes dist/index.mjs bundle)
 pnpm --filter @reference-ui/lib run build
 
-# Browser E2E contracts (Playwright)
-pnpm --dir matrix/lib exec playwright test tests/e2e/<component>.spec.ts
+# Matrix Testing (Canonical: ALWAYS use pipeline)
+# NEVER execute raw playwright directly across matrix packages; use the pipeline CLI:
+pnpm pipeline test --packages=@matrix/<package>
+# e.g.:
+# pnpm pipeline test --packages=@matrix/primitives
+# pnpm pipeline test --packages=@matrix/lib
 ```
+
+> [!IMPORTANT]
+> **Matrix Testing Policy**:
+> ALWAYS use `pnpm pipeline test --packages=@matrix/<package>` to test matrix packages.
+> Do NOT execute raw `playwright test` directly inside matrix packages. The pipeline CLI is the canonical, hermetic testing system that manages dependencies, environments, and runners correctly.
 
 > [!NOTE]
 > `matrix/lib` playwright tests consume `@reference-ui/lib` from `dist/index.mjs`.
 > If you make changes in `packages/reference-lib/src/`, always run:
 > `pnpm --filter @reference-ui/lib run build`
-> before executing the Playwright tests so they test your latest source changes.
+> before executing the tests so they test your latest source changes.
+
