@@ -22,14 +22,29 @@ export interface McpComponentProp {
   styleProp?: boolean
 }
 
+export interface McpComponentAnatomyPart {
+  name: string
+  tag?: string
+  description?: string
+  requiredProps?: string[]
+}
+
+export interface McpComponentAnatomy {
+  pattern: 'compound' | 'single'
+  root: string
+  parts: McpComponentAnatomyPart[]
+}
+
 export interface McpComponent {
   name: string
   kind?: McpComponentKind
   source: string
+  description?: string | null
   count: number
   usage: Usage
   usedWith: Record<string, Usage>
   examples: string[]
+  anatomy?: McpComponentAnatomy | null
   interface: McpComponentInterface | null
   props: McpComponentProp[]
 }
@@ -138,11 +153,13 @@ export interface McpComponentCompact {
   name: string
   kind: McpComponentKind
   source: string
+  description?: string | null
   count: number
   usage: Usage
   usageSemantics: McpUsageSemantics
   usedWith: Record<string, Usage>
   examples: string[]
+  anatomy?: McpComponentAnatomy | null
   interface: McpComponentInterface | null
   props: McpComponentProp[]
   propSummary: McpPropSummary

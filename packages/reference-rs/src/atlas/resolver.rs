@@ -238,6 +238,20 @@ pub fn resolve_named_type(
         }
     }
 
+    for source in &module.star_reexports {
+        if let Some(target_module) = resolve_relative_module(modules, module_path, source) {
+            if let Some(resolved) = resolve_named_type_export(
+                modules,
+                package_indexes,
+                &target_module,
+                type_name,
+                visited,
+            ) {
+                return Some(resolved);
+            }
+        }
+    }
+
     None
 }
 
@@ -298,7 +312,55 @@ pub fn collect_public_package_components(
         }
     }
 
+    let mut star_visited = HashSet::new();
+    collect_star_reexport_components(modules, index_path, &mut star_visited, &mut components);
+
     components.into_values().collect()
+}
+
+fn collect_star_reexport_components(
+    modules: &HashMap<PathBuf, ModuleInfo>,
+    module_path: &Path,
+    visited: &mut HashSet<PathBuf>,
+    out: &mut BTreeMap<String, PublicPackageComponent>,
+) {
+    let Some(module) = modules.get(module_path) else {
+        return;
+    };
+    for source in &module.star_reexports {
+        if let Some(target_module_path) = resolve_relative_module(modules, module_path, source) {
+            if !visited.insert(target_module_path.clone()) {
+                continue;
+            }
+            if let Some(target_module) = modules.get(&target_module_path) {
+                for component in target_module.components.values() {
+                    out.insert(
+                        component_key(&component.name, &component.source_display),
+                        PublicPackageComponent {
+                            export_name: component.name.clone(),
+                            component_name: component.name.clone(),
+                            module_path: target_module_path.clone(),
+                        },
+                    );
+                }
+                for export_name in target_module.named_component_reexports.keys() {
+                    if let Some((target_path, comp_name, source_display)) =
+                        resolve_named_component_export_target(modules, &target_module_path, export_name)
+                    {
+                        out.insert(
+                            component_key(&comp_name, &source_display),
+                            PublicPackageComponent {
+                                export_name: export_name.clone(),
+                                component_name: comp_name,
+                                module_path: target_path,
+                            },
+                        );
+                    }
+                }
+                collect_star_reexport_components(modules, &target_module_path, visited, out);
+            }
+        }
+    }
 }
 
 fn resolve_named_component_export_target(
@@ -306,8 +368,22 @@ fn resolve_named_component_export_target(
     module_path: &Path,
     export_name: &str,
 ) -> Option<(PathBuf, String, String)> {
+    let mut visited = HashSet::new();
+    resolve_named_component_export_target_inner(modules, module_path, export_name, &mut visited)
+}
+
+fn resolve_named_component_export_target_inner(
+    modules: &HashMap<PathBuf, ModuleInfo>,
+    module_path: &Path,
+    export_name: &str,
+    visited: &mut HashSet<PathBuf>,
+) -> Option<(PathBuf, String, String)> {
     if export_name == "default" {
         return resolve_default_component_export_target(modules, module_path);
+    }
+
+    if !visited.insert(module_path.to_path_buf()) {
+        return None;
     }
 
     let module = modules.get(module_path)?;
@@ -321,11 +397,24 @@ fn resolve_named_component_export_target(
     if let Some(reexport) = module.named_component_reexports.get(export_name) {
         if let Some(target_module) = resolve_relative_module(modules, module_path, &reexport.source)
         {
-            return resolve_named_component_export_target(
+            return resolve_named_component_export_target_inner(
                 modules,
                 &target_module,
                 &reexport.imported,
+                visited,
             );
+        }
+    }
+    for source in &module.star_reexports {
+        if let Some(target_module) = resolve_relative_module(modules, module_path, source) {
+            if let Some(found) = resolve_named_component_export_target_inner(
+                modules,
+                &target_module,
+                export_name,
+                visited,
+            ) {
+                return Some(found);
+            }
         }
     }
     None
@@ -533,6 +622,19 @@ fn resolve_named_type_export(
                 &reexport.imported,
                 visited,
             );
+        }
+    }
+    for source in &module.star_reexports {
+        if let Some(target_module) = resolve_relative_module(modules, module_path, source) {
+            if let Some(resolved) = resolve_named_type_export(
+                modules,
+                package_indexes,
+                &target_module,
+                export_name,
+                visited,
+            ) {
+                return Some(resolved);
+            }
         }
     }
     None

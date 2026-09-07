@@ -92,9 +92,15 @@ describe('get_component', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
     )
     expect(component.props).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ name: 'type' }),
-        expect.objectContaining({ name: 'collapsible' }),
+        expect.objectContaining({ name: 'expansion' }),
+        expect.objectContaining({ name: 'defaultValue' }),
       ])
+    )
+    expect(component.anatomy).toEqual(
+      expect.objectContaining({
+        pattern: 'compound',
+        root: 'Accordion',
+      })
     )
   })
 

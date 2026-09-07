@@ -328,11 +328,15 @@ describe('mcp queries', () => {
         kind: 'component',
       })
     )
+    expect(comp?.description).toContain('Coordinates a collection of Collapsibles')
+    expect(comp?.anatomy?.pattern).toBe('compound')
+    expect(comp?.anatomy?.parts.map(p => p.name)).toContain('Accordion.Item')
+    expect(comp?.examples.length).toBeGreaterThan(0)
     const propsResult = getComponentProps(artifact, { name: 'Accordion' })
     expect(propsResult?.props).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ name: 'type' }),
-        expect.objectContaining({ name: 'collapsible' }),
+        expect.objectContaining({ name: 'expansion' }),
+        expect.objectContaining({ name: 'defaultValue' }),
       ])
     )
   })

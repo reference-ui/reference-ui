@@ -89,6 +89,7 @@ fn parse_module(
         named_component_reexports: state.named_component_reexports,
         types: state.types,
         named_type_reexports: state.named_type_reexports,
+        star_reexports: state.star_reexports,
     }
 }
 
@@ -101,6 +102,7 @@ struct ModuleParseState {
     named_component_reexports: HashMap<String, ReExport>,
     types: HashMap<String, TypeDef>,
     named_type_reexports: HashMap<String, ReExport>,
+    star_reexports: Vec<String>,
 }
 
 fn collect_statement(
@@ -169,6 +171,12 @@ fn collect_statement(
             default_name,
             state,
         ),
+        Statement::ExportAllDeclaration(export_all) => {
+            if export_all.exported.is_none() {
+                let source_module = unquote(slice_span(source, export_all.source.span));
+                state.star_reexports.push(source_module);
+            }
+        }
         _ => {}
     }
 }

@@ -656,4 +656,48 @@ mod tests {
             Some("ButtonProps")
         );
     }
+
+    #[test]
+    fn test_star_reexports_resolution() {
+        let temp_dir = std::env::temp_dir();
+        let root = temp_dir.join(format!("atlas_test_star_{}", std::process::id()));
+        if root.exists() {
+            let _ = std::fs::remove_dir_all(&root);
+        }
+        std::fs::create_dir_all(root.join("src/components")).unwrap();
+
+        std::fs::write(
+            root.join("src/components/Accordion.tsx"),
+            "export interface AccordionProps {\n  expansion?: 'single' | 'multiple';\n}\nexport function Accordion(props: AccordionProps) {\n  return <div />;\n}\n",
+        ).unwrap();
+
+        std::fs::write(
+            root.join("src/components/index.ts"),
+            "export * from './Accordion';\n",
+        ).unwrap();
+
+        std::fs::write(
+            root.join("src/App.tsx"),
+            "import { Accordion } from './components';\nexport function App() {\n  return <Accordion expansion=\"single\" />;\n}\n",
+        ).unwrap();
+
+        let config = AtlasConfig {
+            root_dir: root.to_string_lossy().to_string(),
+            include: None,
+            exclude: None,
+        };
+
+        let mut analyzer = AtlasAnalyzer::new(config);
+        let components = analyzer.analyze(&root.to_string_lossy());
+
+        assert_eq!(components.len(), 1);
+        let accordion = &components[0];
+        assert_eq!(accordion.name, "Accordion");
+        assert_eq!(accordion.count, 1);
+        assert_eq!(accordion.props.len(), 1);
+        assert_eq!(accordion.props[0].name, "expansion");
+        assert_eq!(accordion.props[0].count, 1);
+
+        let _ = std::fs::remove_dir_all(&root);
+    }
 }

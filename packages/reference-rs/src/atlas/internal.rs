@@ -14,6 +14,7 @@ pub struct ModuleInfo {
     pub named_component_reexports: HashMap<String, ReExport>,
     pub types: HashMap<String, TypeDef>,
     pub named_type_reexports: HashMap<String, ReExport>,
+    pub star_reexports: Vec<String>,
 }
 
 #[derive(Clone, Debug)]

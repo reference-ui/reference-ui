@@ -20,3 +20,6 @@ tests/virtualfs/cases/**/output/
 
 # Generated Atlas test output
 tests/atlas/cases/**/output/
+
+# Generated ts-rs test bindings
+bindings/

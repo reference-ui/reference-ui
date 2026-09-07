@@ -16,6 +16,7 @@ import type {
 } from './types'
 import { findReferenceUiPrimitive } from './primitives'
 import { findReferenceUiLibraryComponent } from './library-catalog'
+import { findComponentDoc } from './component-docs'
 
 const DEFAULT_LIMIT = 25
 const DEFAULT_PROP_PREVIEW_LIMIT = 8
@@ -85,10 +86,12 @@ function mergeComponents(left: McpComponent, right: McpComponent): McpComponent 
     ...right,
     ...left,
     kind: left.kind ?? right.kind ?? 'project',
+    description: left.description || right.description || null,
     count: Math.max(left.count, right.count),
     usage: chooseUsage(left.usage, right.usage),
     usedWith: { ...right.usedWith, ...left.usedWith },
     examples: Array.from(new Set([...left.examples, ...right.examples])).slice(0, 5),
+    anatomy: left.anatomy || right.anatomy || null,
     interface: left.interface ?? right.interface,
     props: Array.from(props.values()),
   }
@@ -225,6 +228,46 @@ export function listComponents(
     .map(summarizeComponent)
 }
 
+export function enrichComponent(
+  component: McpComponent,
+  artifact?: McpBuildArtifact
+): McpComponent {
+  const enriched: McpComponent = {
+    ...component,
+    examples: [...component.examples],
+    props: [...component.props],
+    usedWith: { ...component.usedWith },
+  }
+
+  // 1. If it has a local doc in the workspace root, read from disk
+  if (artifact?.workspaceRoot) {
+    const doc = findComponentDoc(artifact.workspaceRoot, component.name, component.source)
+    if (doc) {
+      enriched.description = enriched.description || doc.description
+      if (!enriched.anatomy && doc.anatomy) {
+        enriched.anatomy = doc.anatomy
+      }
+      if (enriched.examples.length === 0 && doc.examples.length > 0) {
+        enriched.examples = doc.examples.slice(0, 5)
+      }
+    }
+  }
+
+  // 2. If it matches a @reference-ui/lib component, merge catalog documentation
+  const libComponent = findReferenceUiLibraryComponent(component.name)
+  if (libComponent) {
+    enriched.description = enriched.description || libComponent.description
+    if (!enriched.anatomy && libComponent.anatomy) {
+      enriched.anatomy = libComponent.anatomy
+    }
+    if (enriched.examples.length === 0 && libComponent.examples.length > 0) {
+      enriched.examples = libComponent.examples.slice(0, 5)
+    }
+  }
+
+  return enriched
+}
+
 export function findComponent(
   artifact: McpBuildArtifact,
   input: McpGetComponentInput
@@ -236,19 +279,23 @@ export function findComponent(
   const matches = findCanonicalComponentMatches(artifact, input.name)
     .filter(component => !(artifact.useReferenceLibrary === false && component.source === REFERENCE_UI_LIB_SOURCE))
 
+  let baseComponent: McpComponent | null = null
+
   if (input.source) {
-    return matches.find(component => component.source === input.source)
+    baseComponent = matches.find(component => component.source === input.source)
       ?? findReferenceUiComponentFallback(input, artifact)
+  } else if (matches.length === 1) {
+    baseComponent = matches[0] ?? null
+  } else if (matches.length === 0) {
+    baseComponent = findReferenceUiComponentFallback(input, artifact)
+  } else {
+    const exactLocal = matches.find(component => component.source.startsWith('.'))
+    baseComponent = exactLocal ?? matches[0] ?? null
   }
 
-  if (matches.length === 1) return matches[0] ?? null
+  if (!baseComponent) return null
 
-  // In empty or lightly-used projects, allow direct queries for packaged
-  // Reference UI primitives or library components even when they have not been observed yet.
-  if (matches.length === 0) return findReferenceUiComponentFallback(input, artifact)
-
-  const exactLocal = matches.find(component => component.source.startsWith('.'))
-  return exactLocal ?? matches[0] ?? null
+  return enrichComponent(baseComponent, artifact)
 }
 
 export function compactComponent(component: McpComponent): McpComponentCompact {
@@ -262,11 +309,13 @@ export function compactComponent(component: McpComponent): McpComponentCompact {
     name: component.name,
     kind: component.kind ?? 'project',
     source: component.source,
+    description: component.description ?? null,
     count: component.count,
     usage: component.usage,
     usageSemantics: USAGE_SEMANTICS,
     usedWith: component.usedWith,
     examples: component.examples,
+    anatomy: component.anatomy ?? null,
     interface: component.interface,
     props,
     propSummary: summarizeProps(component.props, props.length),

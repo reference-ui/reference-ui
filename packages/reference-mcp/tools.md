@@ -148,13 +148,26 @@ Returns a compact, high-signal model for one component, including observed usage
     "name": "Accordion",
     "kind": "component",
     "source": "@reference-ui/lib",
+    "description": "Coordinates a collection of Collapsibles: single/multiple expansion and optional keyboard traversal between headers.",
     "count": 0,
     "usage": "unused",
-    "examples": ["<Accordion type=\"single\" collapsible>..."],
+    "usedWith": {},
+    "examples": [
+      "<Accordion expansion=\"single\" defaultValue=\"item-1\">\n  <Accordion.Item id=\"item-1\">\n    <Accordion.Trigger>Section title</Accordion.Trigger>\n    <Accordion.Content>Section body text</Accordion.Content>\n  </Accordion.Item>\n</Accordion>"
+    ],
+    "anatomy": {
+      "pattern": "compound",
+      "root": "Accordion",
+      "parts": [
+        { "name": "Accordion.Item", "tag": "<Accordion.Item id=\"...\">", "requiredProps": ["id"], "description": "Item wrapper coordinating disclosure state." },
+        { "name": "Accordion.Trigger", "tag": "<Accordion.Trigger>", "description": "Interactive button toggling expansion." },
+        { "name": "Accordion.Content", "tag": "<Accordion.Content>", "description": "Collapsible panel displaying section body text." }
+      ]
+    },
     "interface": { "name": "AccordionProps", "source": "@reference-ui/lib" },
     "props": [ ... ],
-    "propSummary": { "total": 6, "observed": 0, "documented": 6, "style": 0, "returned": 6 },
-    "styleProps": { "supported": false }
+    "propSummary": { "total": 7, "observed": 0, "documented": 7, "style": 1, "returned": 7 },
+    "styleProps": { "supported": true, "tool": "get_style_props" }
   }
   ```
 

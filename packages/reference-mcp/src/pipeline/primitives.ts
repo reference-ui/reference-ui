@@ -102,9 +102,15 @@ export function createReferenceUiPrimitive(name: string): McpComponent {
     name,
     kind: 'primitive',
     source: '@reference-ui/react',
+    description: `HTML <${tag}> primitive driven by Reference UI StyleProps.`,
     count: 0,
     usage: 'unused',
     usedWith: {},
+    anatomy: {
+      pattern: 'single',
+      root: name,
+      parts: [],
+    },
     examples: [
       `<${name} />`,
       `<${name} padding="2r" color="text" />`,
