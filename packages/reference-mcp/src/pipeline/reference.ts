@@ -16,6 +16,7 @@ export interface McpReferenceMemberData {
 }
 
 export interface McpReferenceData {
+  description?: string | null
   members: McpReferenceMemberData[]
   warnings: string[]
 }
@@ -162,7 +163,8 @@ export async function loadReferenceDocument(
 export async function loadMcpReferenceData(
   api: TastyApi,
   name: string,
-  source?: string
+  source?: string,
+  componentName?: string
 ): Promise<McpReferenceData | null> {
   let symbol: TastySymbol
 
@@ -175,7 +177,18 @@ export async function loadMcpReferenceData(
   const projectedMembers = await api.graph.getDisplayMembers(symbol)
   const members = shouldHideAliasProjection(symbol) ? [] : projectedMembers
 
+  let description = symbol.getDescription() ?? null
+  if (!description && componentName && componentName !== name) {
+    try {
+      const compSymbol = await loadReferenceSymbol(api, componentName, source)
+      description = compSymbol.getDescription() ?? null
+    } catch {
+      // Fallback symbol lookup failed
+    }
+  }
+
   return {
+    description,
     members: members.map(toMcpReferenceMemberData),
     warnings: api.getWarnings(),
   }

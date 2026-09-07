@@ -130,7 +130,8 @@ export async function generateMcpArtifactFromAtlas(input: {
           reference = await loadMcpReferenceData(
             api,
             component.interface.name,
-            component.interface.source
+            component.interface.source,
+            component.name
           )
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error)
@@ -140,6 +141,16 @@ export async function generateMcpArtifactFromAtlas(input: {
               cause: error,
             }
           )
+        }
+      } else {
+        try {
+          reference = await loadMcpReferenceData(
+            api,
+            component.name,
+            component.source
+          )
+        } catch {
+          // No component reference data found
         }
       }
 

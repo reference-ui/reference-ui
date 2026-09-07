@@ -304,14 +304,12 @@ export const REFERENCE_UI_LIBRARY_COMPONENTS: McpComponent[] = [
         {
           "name": "Collapsible.Trigger",
           "tag": "<Collapsible.Trigger>",
-          "requiredProps": [],
-          "description": "renders `button`."
+          "requiredProps": []
         },
         {
           "name": "Collapsible.Content",
           "tag": "<Collapsible.Content>",
-          "requiredProps": [],
-          "description": "renders `div`."
+          "requiredProps": []
         }
       ]
     },
@@ -389,8 +387,7 @@ export const REFERENCE_UI_LIBRARY_COMPONENTS: McpComponent[] = [
         {
           "name": "Combobox.Popover",
           "tag": "<Combobox.Popover>",
-          "requiredProps": [],
-          "description": "renders `div` as wrapped\n`Overlay."
+          "requiredProps": []
         },
         {
           "name": "Combobox.Trigger",
@@ -724,8 +721,7 @@ export const REFERENCE_UI_LIBRARY_COMPONENTS: McpComponent[] = [
           "tag": "<Listbox.Option>",
           "requiredProps": [
             "value"
-          ],
-          "description": "renders `div` with `role=\"option\"`."
+          ]
         },
         {
           "name": "Listbox.Section",
@@ -1063,8 +1059,7 @@ export const REFERENCE_UI_LIBRARY_COMPONENTS: McpComponent[] = [
         {
           "name": "Overlay.Trigger",
           "tag": "<Overlay.Trigger>",
-          "requiredProps": [],
-          "description": "renders `button`."
+          "requiredProps": []
         },
         {
           "name": "Overlay.Backdrop",
@@ -1091,8 +1086,7 @@ export const REFERENCE_UI_LIBRARY_COMPONENTS: McpComponent[] = [
         {
           "name": "Overlay.Portal",
           "tag": "<Overlay.Portal>",
-          "requiredProps": [],
-          "description": "renders nothing."
+          "requiredProps": []
         }
       ]
     },
@@ -1200,8 +1194,7 @@ export const REFERENCE_UI_LIBRARY_COMPONENTS: McpComponent[] = [
         {
           "name": "Popover.Portal",
           "tag": "<Popover.Portal>",
-          "requiredProps": [],
-          "description": "renders nothing."
+          "requiredProps": []
         },
         {
           "name": "Popover.Arrow",
@@ -1505,8 +1498,7 @@ export const REFERENCE_UI_LIBRARY_COMPONENTS: McpComponent[] = [
         {
           "name": "Slider.Thumb",
           "tag": "<Slider.Thumb>",
-          "requiredProps": [],
-          "description": "renders `div` with `role=\"slider\"`."
+          "requiredProps": []
         }
       ]
     },
@@ -1643,8 +1635,7 @@ export const REFERENCE_UI_LIBRARY_COMPONENTS: McpComponent[] = [
         {
           "name": "Splitter.Handle",
           "tag": "<Splitter.Handle>",
-          "requiredProps": [],
-          "description": "renders `div`\nwith `role=\"separator\"`."
+          "requiredProps": []
         },
         {
           "name": "Splitter.Thumb",
@@ -1701,8 +1692,7 @@ export const REFERENCE_UI_LIBRARY_COMPONENTS: McpComponent[] = [
         {
           "name": "Switch.Thumb",
           "tag": "<Switch.Thumb>",
-          "requiredProps": [],
-          "description": "renders\n`span`."
+          "requiredProps": []
         }
       ]
     },
@@ -1798,24 +1788,21 @@ export const REFERENCE_UI_LIBRARY_COMPONENTS: McpComponent[] = [
         {
           "name": "Tabs.List",
           "tag": "<Tabs.List>",
-          "requiredProps": [],
-          "description": "renders `div` with `role=\"tablist\"`."
+          "requiredProps": []
         },
         {
           "name": "Tabs.Tab",
           "tag": "<Tabs.Tab>",
           "requiredProps": [
             "value"
-          ],
-          "description": "renders `button[type=button]` with `role=\"tab\"`."
+          ]
         },
         {
           "name": "Tabs.Panel",
           "tag": "<Tabs.Panel>",
           "requiredProps": [
             "value"
-          ],
-          "description": "renders `div` with `role=\"tabpanel\"`."
+          ]
         },
         {
           "name": "Tabs.Trigger",
@@ -1996,14 +1983,12 @@ export const REFERENCE_UI_LIBRARY_COMPONENTS: McpComponent[] = [
           "requiredProps": [
             "id",
             "placement"
-          ],
-          "description": "renders `div` with `role=\"tooltip\"`."
+          ]
         },
         {
           "name": "Tooltip.Portal",
           "tag": "<Tooltip.Portal>",
-          "requiredProps": [],
-          "description": "renders\nno node and configures the positioning destination."
+          "requiredProps": []
         },
         {
           "name": "Tooltip.Arrow",
@@ -2072,8 +2057,7 @@ export const REFERENCE_UI_LIBRARY_COMPONENTS: McpComponent[] = [
           "tag": "<Tree.Item>",
           "requiredProps": [
             "value"
-          ],
-          "description": "renders\n`div[role=\"treeitem\"]`; nested items are authored inside\n`Tree."
+          ]
         },
         {
           "name": "Tree.Expander",

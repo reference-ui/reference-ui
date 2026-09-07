@@ -159,9 +159,9 @@ Returns a compact, high-signal model for one component, including observed usage
       "pattern": "compound",
       "root": "Accordion",
       "parts": [
-        { "name": "Accordion.Item", "tag": "<Accordion.Item id=\"...\">", "requiredProps": ["id"], "description": "Item wrapper coordinating disclosure state." },
-        { "name": "Accordion.Trigger", "tag": "<Accordion.Trigger>", "description": "Interactive button toggling expansion." },
-        { "name": "Accordion.Content", "tag": "<Accordion.Content>", "description": "Collapsible panel displaying section body text." }
+        { "name": "Accordion.Item", "tag": "<Accordion.Item>", "requiredProps": ["id"] },
+        { "name": "Accordion.Trigger", "tag": "<Accordion.Trigger>", "requiredProps": [] },
+        { "name": "Accordion.Content", "tag": "<Accordion.Content>", "requiredProps": [] }
       ]
     },
     "interface": { "name": "AccordionProps", "source": "@reference-ui/lib" },

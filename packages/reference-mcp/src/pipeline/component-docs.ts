@@ -153,7 +153,7 @@ export function parseComponentDoc(
     }
   }
 
-  // 1. Scan source code (if provided) for static assignments and JSDoc
+  // 2. Scan source code (if provided) for static assignments
   if (sourceContent) {
     const staticAssignRegex = new RegExp(`^\\s*${componentName}\\.([A-Za-z0-9_]+)\\s*=`, 'gm')
     let staticMatch: RegExpExecArray | null
@@ -167,49 +167,23 @@ export function parseComponentDoc(
         })
       }
     }
-
-    // Extract JSDoc comments directly preceding the part's definition or assignment
-    for (const [partName, part] of partMap.entries()) {
-      if (!part.description) {
-        const jsdocPattern = new RegExp(
-          `/\\*\\*([\\s\\S]*?)\\*/\\s*(?:export\\s+(?:const|function)\\s+(?:${componentName})?${partName}|(?:${componentName}\\.${partName}\\s*=))`,
-          'm'
-        )
-        const jsdocMatch = sourceContent.match(jsdocPattern)
-        if (jsdocMatch) {
-          const cleaned = jsdocMatch[1]
-            .split('\n')
-            .map(line => line.replace(/^\s*\*\s?/, '').trim())
-            .filter(line => line && !line.startsWith('@'))
-            .join(' ')
-            .trim()
-          if (cleaned) {
-            part.description = cleaned
-          }
-        }
-      }
-    }
   }
 
-  // 2. Scan markdown for explicit structured list items:
-  // e.g. - `ComponentName.PartName`: Description
+  // 3. Scan markdown for explicit compound part mentions (e.g. - `ComponentName.PartName`)
   const structuredListRegex = new RegExp(
-    `^[ \\t]*[-*][ \\t]+(?:\`|\\*\\*)?${componentName}\\.([A-Za-z0-9_]+)(?:\`|\\*\\*)?[:–—][ \\t]+(.+)$`,
+    `^[ \\t]*[-*][ \\t]+(?:\`|\\*\\*)?${componentName}\\.([A-Za-z0-9_]+)(?:\`|\\*\\*)?`,
     'gm'
   )
   let listMatch: RegExpExecArray | null
   while ((listMatch = structuredListRegex.exec(content)) !== null) {
     const partName = listMatch[1]
-    const partDesc = listMatch[2].trim()
-    const existing = partMap.get(partName) || {
-      name: `${componentName}.${partName}`,
-      tag: `<${componentName}.${partName}>`,
-      requiredProps: [],
+    if (!partMap.has(partName)) {
+      partMap.set(partName, {
+        name: `${componentName}.${partName}`,
+        tag: `<${componentName}.${partName}>`,
+        requiredProps: [],
+      })
     }
-    if (!existing.description && partDesc) {
-      existing.description = cleanMarkdownLink(partDesc)
-    }
-    partMap.set(partName, existing)
   }
 
   const parts = Array.from(partMap.values())

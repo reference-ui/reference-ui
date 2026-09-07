@@ -25,7 +25,6 @@ export interface McpComponentProp {
 export interface McpComponentAnatomyPart {
   name: string
   tag?: string
-  description?: string
   requiredProps?: string[]
 }
 

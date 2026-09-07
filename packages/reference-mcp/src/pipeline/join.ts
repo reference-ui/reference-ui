@@ -45,6 +45,7 @@ export function joinMcpComponentWithReference(
   return {
     name: component.name,
     source: component.source,
+    description: reference?.description ?? null,
     count: component.count,
     usage: component.usage,
     usedWith: component.usedWith,
@@ -85,6 +86,11 @@ export function joinMcpComponent(
     component,
     document
       ? {
+          description:
+            document.description ??
+            document.jsDoc?.summary ??
+            document.jsDoc?.description ??
+            null,
           members: document.members.map(member => ({
             name: member.name,
             type: getPropType(member),

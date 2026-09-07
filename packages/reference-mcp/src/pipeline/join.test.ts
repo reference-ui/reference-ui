@@ -81,6 +81,7 @@ describe('joinMcpComponent', () => {
       name: 'ButtonProps',
       source: './src/components/Button.tsx',
     })
+    expect(result.description).toBe('Button props')
     expect(result.props[0]).toMatchObject({
       name: 'variant',
       type: '"solid" | "ghost"',
@@ -102,6 +103,7 @@ describe('joinMcpComponent', () => {
   it('keeps Atlas data when no reference document is available', () => {
     const result = joinMcpComponent(createComponent(), null)
 
+    expect(result.description).toBeNull()
     expect(result.props[0]).toMatchObject({
       name: 'variant',
       usage: 'very common',

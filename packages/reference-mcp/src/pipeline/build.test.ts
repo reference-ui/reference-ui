@@ -85,7 +85,8 @@ describe('buildMcpArtifact', () => {
     expect(loadMcpReferenceData).toHaveBeenCalledWith(
       {},
       'ButtonProps',
-      './src/components/Button.tsx'
+      './src/components/Button.tsx',
+      'Button'
     )
     expect(loadMcpTokens).toHaveBeenCalledWith(
       '/workspace/app',
