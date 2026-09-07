@@ -1,20 +1,62 @@
 # Reference UI MCP
 
-Reference UI MCP exposes project-aware tools for components, props, style props, and tokens.
+`@reference-ui/mcp` provides project-aware Model Context Protocol (MCP) intelligence for Reference UI workspaces. It exposes high-signal, token-efficient tools for AI coding assistants to discover, inspect, and style components, access design tokens, and search icons.
 
-Run `pnpm exec ref sync` once after install or package updates before starting MCP. The server reads generated Reference UI artifacts for project-aware queries.
+For complete tool input schemas, output contracts, and architecture internals, see **[tools.md](./tools.md)**.
+For AI agent instructions and guiding principles, see **[instructions.md](./instructions.md)**.
 
-## Tools
+---
 
-- `getting_started`: short guide to Reference UI primitives, StyleProps, tokens, and the recommended MCP workflow.
-- `list_components`: compact discovery for components observed in the project graph, including imported Reference UI primitives actually used in JSX.
-- `get_component`: compact guide for one observed component, including examples, high-signal props, co-usage, and StyleProps support.
-- `get_component_props`: full prop/interface readout for one component, with filters for unused props, StyleProps, query, and limit.
-- `get_component_examples`: captured JSX usage examples for one component.
-- `get_style_props`: shared Reference UI StyleProps guide and token category compatibility.
-- `get_tokens`: flattened token catalog collected from local and extended-system token fragments. Large result sets return every matching token in compressed form; query a token path for descriptions.
+## 3 Customization Tiers (`ui.config.ts`)
 
-## Resources
+Reference UI projects configure their component and asset surface via boolean flags in `ui.config.ts`:
 
-- `reference-ui://component-model`: compact component model resource for clients that prefer resource reads.
-- `reference-ui://getting-started`: same start guide returned by `getting_started`, for clients that surface MCP resources.
+1. **Level 1: Primitives (`@reference-ui/react`)** (Always Enabled):
+   - Mirror standard HTML elements 1:1 (`Div`, `Span`, `Button`, `Section`, `H1`–`H6`).
+   - Driven entirely by type-safe, token-aware StyleProps.
+2. **Level 2: Reference Library (`@reference-ui/lib`)** (`use_reference_library`, default: `true`):
+   - 24 compound, accessible components (`Accordion`, `Tabs`, `Splitter`, `Menu`, `Popover`, `Switch`, etc.).
+   - When set to `false`, excluded from `list_components` and guarded with clear notices in `get_component`.
+3. **Level 3: Reference Icons (`@reference-ui/icons`)** (`use_reference_icons`, default: `true`):
+   - Over 2,500 Material Symbols React icon components.
+   - When set to `false`, `list_icons` notifies that Reference Icons are disabled.
+
+---
+
+## Tool Surface
+
+| Tool | Purpose |
+| :--- | :--- |
+| `list_projects` | Discovers all Reference UI projects across the workspace and user machine registry. |
+| `select_project` | Sets the active project for the session and initiates background AST warmup. |
+| `list_components` | Compact discovery of custom components and JSX-observed primitives (avoids HTML token spam). |
+| `get_component` | High-signal summary of one component (props, examples, co-usage, StyleProps). |
+| `get_component_props` | Full TypeScript prop signatures, types, defaults, and descriptions. |
+| `get_component_examples` | Real JSX usage examples captured from the codebase. |
+| `get_style_props` | Shared StyleProps categories, rhythm rules (`'1r'`), and container queries guide. |
+| `get_tokens` | Project token paths, categories, and values (compressed for large token graphs). |
+| `list_icons` | Searches `@reference-ui/icons` by name with import statements and usage snippets. |
+
+---
+
+## Architecture
+
+- **`src/child-process/`**: Sandboxed worker pool executing Atlas AST analysis and model builds out-of-process.
+- **`src/pipeline/`**: Data model extraction, library/icon catalogs, AST enrichment, and query engines.
+- **`src/server/`**: MCP protocol server, active project tracking, model state caching, and universal fallback mode.
+- **`src/cli/`**: CLI command bindings for stdio and HTTP/SSE transports (`ref mcp`).
+
+---
+
+## Running MCP
+
+Run `pnpm exec ref sync` once after installation or package updates before starting the MCP server:
+
+```shell
+# Stdio transport (for IDEs and AI agent configs):
+pnpm exec ref mcp
+
+# HTTP/SSE transport:
+pnpm exec ref mcp --http --port 3000
+```
+

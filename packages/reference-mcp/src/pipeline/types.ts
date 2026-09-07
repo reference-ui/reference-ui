@@ -62,6 +62,8 @@ export interface McpBuildArtifact {
   diagnostics: AtlasDiagnostic[]
   components: McpComponent[]
   tokens?: McpToken[]
+  useReferenceLibrary?: boolean
+  useReferenceIcons?: boolean
 }
 
 export interface McpPublicModel {

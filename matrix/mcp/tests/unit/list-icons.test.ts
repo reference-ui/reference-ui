@@ -1,3 +1,6 @@
+import { mkdirSync, realpathSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import {
   connectSharedMatrixMcp,
@@ -5,6 +8,7 @@ import {
   parseTextJson,
   saveResponse,
   stopMcpClient,
+  writeMockProject,
   type RunningMcpClient,
 } from './helpers'
 
@@ -54,5 +58,33 @@ describe('list_icons', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
     expect(data.total).toBeGreaterThan(10)
     expect(data.returned).toBe(10)
     expect(data.icons).toHaveLength(10)
+  })
+
+  it('returns disabled notice when project has use_reference_icons: false', async () => {
+    const rawTmpDir = join(tmpdir(), `ref-mcp-icons-${Date.now()}-${Math.random().toString(36).slice(2)}`)
+    mkdirSync(rawTmpDir, { recursive: true })
+    const tmpDir = realpathSync(rawTmpDir)
+
+    try {
+      writeMockProject(tmpDir, { useReferenceIcons: false })
+      const result = await running!.client.callTool({
+        name: 'list_icons',
+        arguments: { project: tmpDir },
+      })
+      saveResponse('list_icons', 'disabled-icons', result)
+      const data = parseTextJson<{
+        enabled: boolean
+        notice: string
+        total: number
+        returned: number
+        icons: unknown[]
+      }>(result)
+
+      expect(data.enabled).toBe(false)
+      expect(data.notice).toContain('use_reference_icons: false')
+      expect(data.icons).toHaveLength(0)
+    } finally {
+      rmSync(tmpDir, { recursive: true, force: true })
+    }
   })
 })

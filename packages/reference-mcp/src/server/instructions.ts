@@ -1,5 +1,6 @@
-import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { existsSync, readFileSync } from 'node:fs'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { log } from './logger'
 import { resolveCorePackageDir } from '@reference-ui/core/paths'
 
@@ -21,14 +22,31 @@ export function loadReferenceMcpInstructions(cwd: string): string {
   if (cached) return cached
 
   try {
+    const here = dirname(fileURLToPath(import.meta.url))
+    const candidates = [
+      resolve(here, '../../instructions.md'),
+      resolve(here, '../instructions.md'),
+    ]
+    for (const candidate of candidates) {
+      if (existsSync(candidate)) {
+        const content = readFileSync(candidate, 'utf8')
+        instructionsCache.set(cwd, content)
+        return content
+      }
+    }
+
     const coreDir = resolveCorePackageDir(cwd)
-    const content = readFileSync(resolve(coreDir, 'src', 'mcp', 'instructions.md'), 'utf8')
-    instructionsCache.set(cwd, content)
-    return content
+    const coreCandidate = resolve(coreDir, 'src', 'mcp', 'instructions.md')
+    if (existsSync(coreCandidate)) {
+      const content = readFileSync(coreCandidate, 'utf8')
+      instructionsCache.set(cwd, content)
+      return content
+    }
   } catch (error) {
     log.warn('[mcp] Failed to load instructions.md; using fallback instructions.', error)
-    return REFERENCE_UI_INSTRUCTIONS_FALLBACK
   }
+
+  return REFERENCE_UI_INSTRUCTIONS_FALLBACK
 }
 
 export function clearInstructionsCache(): void {

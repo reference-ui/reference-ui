@@ -58,6 +58,7 @@ export async function generateMcpArtifact(
     primitiveComponents: createObservedReferenceUiPrimitives(
       await loadReferenceUiPrimitiveUsageSafely(cwd, config)
     ),
+    config,
   })
 }
 
@@ -109,8 +110,16 @@ export async function generateMcpArtifactFromAtlas(input: {
   atlas: Awaited<ReturnType<typeof analyzeDetailed>>
   tokens?: McpBuildArtifact['tokens']
   primitiveComponents?: McpBuildArtifact['components']
+  config?: ReturnType<typeof getConfig>
 }): Promise<McpBuildArtifact> {
-  const { cwd, manifestPath, atlas, tokens = [], primitiveComponents = [] } = input
+  const { cwd, manifestPath, atlas, tokens = [], primitiveComponents = [], config } = input
+  const useReferenceLibrary = config
+    ? (config.useReferenceLibrary ?? config.use_reference_library ?? true)
+    : true
+  const useReferenceIcons = config
+    ? (config.useReferenceIcons ?? config.use_reference_icons ?? true)
+    : true
+
   const api = createReferenceApi(manifestPath)
   const components = await Promise.all(
     atlas.components.map(async component => {
@@ -138,13 +147,20 @@ export async function generateMcpArtifactFromAtlas(input: {
     })
   )
 
+  let allComponents = [...components, ...primitiveComponents]
+  if (!useReferenceLibrary) {
+    allComponents = allComponents.filter(c => c.source !== '@reference-ui/lib')
+  }
+
   const artifact: McpBuildArtifact = {
     schemaVersion: 1,
     generatedAt: new Date().toISOString(),
     workspaceRoot: cwd,
     manifestPath,
     diagnostics: atlas.diagnostics,
-    components: [...components, ...primitiveComponents].sort((left, right) => {
+    useReferenceLibrary,
+    useReferenceIcons,
+    components: allComponents.sort((left, right) => {
       if (right.count !== left.count) return right.count - left.count
       if (left.name !== right.name) return left.name.localeCompare(right.name)
       return left.source.localeCompare(right.source)

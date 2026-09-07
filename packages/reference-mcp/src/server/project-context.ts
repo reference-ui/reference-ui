@@ -24,7 +24,6 @@ export async function executeWithProject(
 
   const activeProject = projectManager.getActiveProject()
   const discovered = projectManager.getDiscoveredProjects()
-  const availableProjects = discovered.map(p => p.path)
   let notice: string | undefined
 
   if (!projectPath) {
@@ -34,7 +33,6 @@ export async function executeWithProject(
     }
     return toTextResult({
       activeProject,
-      availableProjects,
       ...fallback,
     })
   }
@@ -67,7 +65,6 @@ export async function executeWithProject(
 
   return toTextResult({
     activeProject,
-    availableProjects,
     ...(notice ? { notice } : {}),
     ...res,
   })

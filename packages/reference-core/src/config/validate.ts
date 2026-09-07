@@ -108,6 +108,44 @@ function validateMcpConfig(cfg: ConfigRecord): void {
   validatePatternList('mcp.exclude', mcp.exclude)
 }
 
+function validateBooleanFlag(
+  cfg: ConfigRecord,
+  camelKey: string,
+  snakeKey: string
+): boolean | undefined {
+  const val = cfg[camelKey] ?? cfg[snakeKey]
+  if (val == null) return undefined
+  if (typeof val !== 'boolean') {
+    throw ConfigValidationError.invalidConfig(
+      camelKey,
+      `'${camelKey}' (or '${snakeKey}') must be a boolean.`
+    )
+  }
+  return val
+}
+
+function validateLibraryAndIconFlags(cfg: ConfigRecord): void {
+  const useReferenceLibrary = validateBooleanFlag(
+    cfg,
+    'useReferenceLibrary',
+    'use_reference_library'
+  )
+  if (useReferenceLibrary !== undefined) {
+    cfg.useReferenceLibrary = useReferenceLibrary
+    cfg.use_reference_library = useReferenceLibrary
+  }
+
+  const useReferenceIcons = validateBooleanFlag(
+    cfg,
+    'useReferenceIcons',
+    'use_reference_icons'
+  )
+  if (useReferenceIcons !== undefined) {
+    cfg.useReferenceIcons = useReferenceIcons
+    cfg.use_reference_icons = useReferenceIcons
+  }
+}
+
 function validateBaseSystems(
   field: BaseSystemField,
   value: unknown
@@ -218,6 +256,7 @@ export function validateConfig(raw: unknown): ReferenceUIConfig {
   validateConfigJsxElements(cfg)
   validateStrict(cfg)
   validateMcpConfig(cfg)
+  validateLibraryAndIconFlags(cfg)
   const extendsSystems = validateBaseSystems('extends', cfg.extends)
   const layers = validateBaseSystems('layers', cfg.layers)
   validateBaseSystemEntries('extends', extendsSystems, { requireFragment: true })

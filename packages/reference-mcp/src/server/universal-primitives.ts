@@ -17,6 +17,8 @@ function asUniversalResult<T extends Record<string, unknown>>(payload: T) {
   return {
     mode: 'universal_primitives' as const,
     notice: UNIVERSAL_PRIMITIVES_NOTICE,
+    primitivesOverview:
+      'All standard HTML elements are available as capitalized primitives from @reference-ui/react (Div, Span, Section, Button, P, H1-H6, etc.) and accept token-aware StyleProps. Call get_style_props for styling reference.',
     ...payload,
   }
 }

@@ -11,13 +11,21 @@ export interface MockProjectOptions {
   hasArtifacts?: boolean
   brokenConfig?: boolean
   invalidJsonArtifact?: boolean
+  useReferenceLibrary?: boolean
+  useReferenceIcons?: boolean
 }
 
-export function createMockProjectArtifact(projectDir: string, components: MockComponentDef[] = []) {
+export function createMockProjectArtifact(
+  projectDir: string,
+  components: MockComponentDef[] = [],
+  extra?: { useReferenceLibrary?: boolean; useReferenceIcons?: boolean }
+) {
   return {
     schemaVersion: 1,
     generatedAt: new Date().toISOString(),
     workspaceRoot: projectDir,
+    ...(extra?.useReferenceLibrary !== undefined ? { useReferenceLibrary: extra.useReferenceLibrary } : {}),
+    ...(extra?.useReferenceIcons !== undefined ? { useReferenceIcons: extra.useReferenceIcons } : {}),
     components: components.map(c => ({
       name: c.name,
       kind: 'project' as const,
@@ -52,7 +60,11 @@ export function writeMockProject(projectDir: string, options: MockProjectOptions
   if (options.brokenConfig) {
     writeFileSync(configPath, 'export default { broken syntax ::::', 'utf8')
   } else {
-    writeFileSync(configPath, "export default { name: 'test-system', include: ['src/**/*.{ts,tsx}'] }\n", 'utf8')
+    const flags: string[] = []
+    if (options.useReferenceLibrary !== undefined) flags.push(`use_reference_library: ${options.useReferenceLibrary}`)
+    if (options.useReferenceIcons !== undefined) flags.push(`use_reference_icons: ${options.useReferenceIcons}`)
+    const extra = flags.length > 0 ? `, ${flags.join(', ')}` : ''
+    writeFileSync(configPath, `export default { name: 'test-system', include: ['src/**/*.{ts,tsx}']${extra} }\n`, 'utf8')
   }
 
   // 2. Artifacts (.reference-ui/mcp/model.json)
@@ -64,7 +76,10 @@ export function writeMockProject(projectDir: string, options: MockProjectOptions
     if (options.invalidJsonArtifact) {
       writeFileSync(modelPath, '{ invalid json', 'utf8')
     } else {
-      const artifact = createMockProjectArtifact(projectDir, options.components ?? [])
+      const artifact = createMockProjectArtifact(projectDir, options.components ?? [], {
+        useReferenceLibrary: options.useReferenceLibrary,
+        useReferenceIcons: options.useReferenceIcons,
+      })
       writeFileSync(modelPath, JSON.stringify(artifact, null, 2), 'utf8')
     }
   }

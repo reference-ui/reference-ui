@@ -318,4 +318,53 @@ describe('mcp queries', () => {
       ])
     )
   })
+
+  it('supports @reference-ui/lib component queries when useReferenceLibrary is true or default', () => {
+    const comp = findComponent(artifact, { name: 'Accordion' })
+    expect(comp).toEqual(
+      expect.objectContaining({
+        name: 'Accordion',
+        source: '@reference-ui/lib',
+        kind: 'component',
+      })
+    )
+    const propsResult = getComponentProps(artifact, { name: 'Accordion' })
+    expect(propsResult?.props).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: 'type' }),
+        expect.objectContaining({ name: 'collapsible' }),
+      ])
+    )
+  })
+
+  it('excludes @reference-ui/lib components when useReferenceLibrary is false', () => {
+    const artifactWithLib: McpBuildArtifact = {
+      ...artifact,
+      useReferenceLibrary: false,
+      components: [
+        ...artifact.components,
+        {
+          name: 'Accordion',
+          kind: 'component',
+          source: '@reference-ui/lib',
+          count: 1,
+          usage: 'rare',
+          usedWith: {},
+          examples: [],
+          interface: { name: 'AccordionProps', source: '@reference-ui/lib' },
+          props: [],
+        },
+      ],
+    }
+
+    const listed = listComponents(artifactWithLib, { query: 'Accordion' })
+    expect(listed).toHaveLength(0)
+
+    const found = findComponent(artifactWithLib, { name: 'Accordion' })
+    expect(found).toBeNull()
+
+    const foundWithSource = findComponent(artifactWithLib, { name: 'Accordion', source: '@reference-ui/lib' })
+    expect(foundWithSource).toBeNull()
+  })
 })
+

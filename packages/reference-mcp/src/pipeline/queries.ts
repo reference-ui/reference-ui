@@ -15,12 +15,14 @@ import type {
   McpUsageSemantics,
 } from './types'
 import { findReferenceUiPrimitive } from './primitives'
+import { findReferenceUiLibraryComponent } from './library-catalog'
 
 const DEFAULT_LIMIT = 25
 const DEFAULT_PROP_PREVIEW_LIMIT = 8
 const DEFAULT_COMPONENT_PROP_LIMIT = 30
 const TOKEN_COMPRESSION_THRESHOLD = 200
 const REFERENCE_UI_REACT_SOURCE = '@reference-ui/react'
+const REFERENCE_UI_LIB_SOURCE = '@reference-ui/lib'
 
 const USAGE_SEMANTICS: McpUsageSemantics = {
   count:
@@ -122,9 +124,28 @@ function findCanonicalComponentMatches(
     .filter(component => component.name === name)
 }
 
-function findReferenceUiComponentFallback(input: McpGetComponentInput): McpComponent | null {
-  if (input.source && input.source !== REFERENCE_UI_REACT_SOURCE) return null
-  return findReferenceUiPrimitive(input.name)
+function findReferenceUiComponentFallback(
+  input: McpGetComponentInput,
+  artifact?: McpBuildArtifact
+): McpComponent | null {
+  if (
+    input.source &&
+    input.source !== REFERENCE_UI_REACT_SOURCE &&
+    input.source !== REFERENCE_UI_LIB_SOURCE
+  ) {
+    return null
+  }
+  if (!input.source || input.source === REFERENCE_UI_REACT_SOURCE) {
+    const primitive = findReferenceUiPrimitive(input.name)
+    if (primitive) return primitive
+  }
+  if (!input.source || input.source === REFERENCE_UI_LIB_SOURCE) {
+    if (artifact && artifact.useReferenceLibrary === false) {
+      return null
+    }
+    return findReferenceUiLibraryComponent(input.name)
+  }
+  return null
 }
 
 export function summarizeProps(props: McpComponentProp[], returned: number): McpPropSummary {
@@ -190,6 +211,9 @@ export function listComponents(
 
   return components
     .filter(component => {
+      if (artifact.useReferenceLibrary === false && component.source === REFERENCE_UI_LIB_SOURCE) {
+        return false
+      }
       if (source && component.source !== source) return false
       if (!query) return true
 
@@ -205,18 +229,23 @@ export function findComponent(
   artifact: McpBuildArtifact,
   input: McpGetComponentInput
 ): McpComponent | null {
+  if (artifact.useReferenceLibrary === false && input.source === REFERENCE_UI_LIB_SOURCE) {
+    return null
+  }
+
   const matches = findCanonicalComponentMatches(artifact, input.name)
+    .filter(component => !(artifact.useReferenceLibrary === false && component.source === REFERENCE_UI_LIB_SOURCE))
 
   if (input.source) {
     return matches.find(component => component.source === input.source)
-      ?? findReferenceUiComponentFallback(input)
+      ?? findReferenceUiComponentFallback(input, artifact)
   }
 
   if (matches.length === 1) return matches[0] ?? null
 
   // In empty or lightly-used projects, allow direct queries for packaged
-  // Reference UI primitives even when they have not been observed yet.
-  if (matches.length === 0) return findReferenceUiComponentFallback(input)
+  // Reference UI primitives or library components even when they have not been observed yet.
+  if (matches.length === 0) return findReferenceUiComponentFallback(input, artifact)
 
   const exactLocal = matches.find(component => component.source.startsWith('.'))
   return exactLocal ?? matches[0] ?? null

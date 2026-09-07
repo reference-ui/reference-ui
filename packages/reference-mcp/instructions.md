@@ -11,11 +11,14 @@ When developing in a Reference UI codebase, follow these core principles:
 1. **No External CSS Frameworks or Utility Classes**:
    Do NOT use Tailwind CSS classes, inline `style={{ ... }}` objects, or arbitrary CSS class names. All styling is applied through type-safe, token-aware **StyleProps** directly on primitives and components.
 
-2. **Primitives First**:
-   Import layout and structural elements from `@reference-ui/react` rather than using raw HTML elements (`div`, `section`, `span`, `p`, etc.):
+2. **Primitives First (1:1 with HTML)**:
+   Import layout and structural elements from `@reference-ui/react` rather than using raw HTML elements:
    ```tsx
-   import { Div, Section, Main, H1, P, Button } from '@reference-ui/react'
+   import { Div, Section, Main, H1, P, Button, Span, Input } from '@reference-ui/react'
    ```
+   - **All HTML elements exist as PascalCase primitives** (`Div`, `Span`, `P`, `Button`, `Section`, `H1`–`H6`, `Table`, `Tr`, `Td`, etc.).
+   - Do NOT query `list_components` to check if a standard HTML tag exists—assume all standard HTML elements are natively available as primitives.
+   - Use `list_components` primarily to discover **custom project components** (e.g. `Menu`, `Dialog`, `Splitter`, `Tabs`) and observed usage in that project.
 
 3. **Rhythm Spacing Units (`'r'`)**:
    Always express padding, margins, gaps, widths, and radii using rhythm strings ending in `r`:
@@ -59,30 +62,55 @@ When developing in a Reference UI codebase, follow these core principles:
 
 ---
 
-## 2. Multi-Project Workspace Intelligence
+## 2. Dynamic Project Tracking in Monorepos
 
-In monorepos and multi-package workspaces, the Reference UI MCP server can target different subpackages dynamically:
+In monorepos and multi-package workspaces, the user will often pivot between different packages (e.g. `packages/reference-lib`, `packages/reference-docs`). Always track the package you are working in:
 
-- **Discover Projects**: Call `list_projects` to see all Reference UI projects in your workspace and global machine registry.
-- **Switch Active Project**: Call `select_project({ path: 'packages/...' })` to switch the server's primary context.
-- **Per-Query Project Targeting**: Pass `project: 'packages/...'` directly into any tool call without altering the active default:
+- **Set Session Focus**: When shifting your work to a package, call `select_project({ path: 'packages/...' })`. All subsequent tool calls will operate in that project's AST and token graph.
+- **Per-Query Targeting**: If you just need a one-off query from another package without altering active focus, pass `project: 'packages/...'`:
   ```ts
   get_component({ name: 'Button', project: 'packages/reference-lib' })
   ```
-- **Universal Mode**: If a workspace has no `ui.config.ts`, the server automatically operates in Universal Primitives mode, providing full documentation for all built-in primitives and StyleProps.
+- **Discover Projects**: Call `list_projects` to discover all Reference UI projects in your workspace and global machine registry.
+- **Universal Mode**: If a workspace has no `ui.config.ts`, the server automatically operates in Universal Primitives mode, providing documentation for built-in primitives and StyleProps.
 
 ---
 
-## 3. Recommended MCP Investigation Workflow
+## 3. Levels of Customization & Config Flags
+
+Reference UI codebases configure their component and asset tiers in `ui.config.ts`:
+
+1. **Level 1: Primitives (`@reference-ui/react`)** (Always Enabled):
+   - Fundamental layout and typography primitives (`Div`, `Span`, `Button`, `Section`, `H1`–`H6`, etc.) mirroring HTML elements 1:1.
+   - Fully token-aware and driven by atomic StyleProps. Universal across all projects.
+
+2. **Level 2: Reference Library (`@reference-ui/lib`)** (`use_reference_library`, default: `true`):
+   - 24 official accessible compound components (`Accordion`, `Calendar`, `Collapsible`, `Combobox`, `DateField`, `Field`, `FocusLock`, `Listbox`, `Menu`, `NumberField`, `Overlay`, `Popover`, `Portal`, `Presence`, `ReferenceLibrary`, `RovingFocus`, `Slider`, `Slot`, `Splitter`, `Switch`, `Tabs`, `Toast`, `Tooltip`, `Tree`).
+   - Configurable in `ui.config.ts` via `use_reference_library` (or camelCase `useReferenceLibrary`, boolean, defaults to `true`).
+   - When set to `false`, `@reference-ui/lib` components are excluded from discovery, and MCP queries for them will inform you that the reference library is disabled for this project.
+
+3. **Level 3: Reference Icons (`@reference-ui/icons`)** (`use_reference_icons`, default: `true`):
+   - Over 2,500 Material Symbols React icon components (`SearchIcon`, `ArrowForwardIcon`, `CheckIcon`, etc.).
+   - Searchable via the `list_icons` tool.
+   - Configurable in `ui.config.ts` via `use_reference_icons` (or camelCase `useReferenceIcons`, boolean, defaults to `true`).
+   - When set to `false`, `list_icons` will inform you that Reference Icons are disabled and that the project uses its own custom icon system.
+
+---
+
+## 4. Recommended MCP Investigation Workflow
 
 When building or modifying UI with Reference UI:
 
-1. **Discover Components**:
-   Call `list_components` to see which custom components and primitives are active in the project graph.
-2. **Inspect Component Interfaces**:
+1. **Verify Your Target Project**:
+   Ensure you are targeting the package relevant to the user's request (via `select_project` or `project: '...'`).
+2. **Discover Custom Components**:
+   Call `list_components` to see custom components and observed primitives in that project graph.
+3. **Inspect Component Interfaces**:
    Call `get_component({ name: 'ComponentName' })` for overview and usage patterns, or `get_component_props({ name: 'ComponentName' })` for full TypeScript interfaces.
-3. **Inspect StyleProps & Tokens**:
+4. **Discover Icons**:
+   Call `list_icons({ query: 'icon-name' })` to search for icon components from `@reference-ui/icons`.
+5. **Inspect StyleProps & Tokens**:
    - Call `get_style_props` to see all available StyleProps categories and token compatibilities.
    - Call `get_tokens` to inspect specific project design tokens (colors, font sizes, shadows).
-4. **Inspect Captured Usage**:
+6. **Inspect Captured Usage**:
    Call `get_component_examples({ name: 'ComponentName' })` to see real JSX examples from the project.

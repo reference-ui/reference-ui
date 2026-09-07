@@ -7,6 +7,8 @@ import {
   listComponents,
   listTokens,
 } from '../pipeline/queries'
+import { findReferenceUiLibraryComponent } from '../pipeline/library-catalog'
+import type { McpBuildArtifact } from '../pipeline/types'
 import { getStylePropsReference } from '../pipeline/style-props'
 import { toErrorResult, toTextResult } from './formatters'
 import { executeWithProject } from './project-context'
@@ -114,6 +116,33 @@ export function registerReferenceTools(
       )
   )
 
+function checkReferenceLibraryDisabled(
+  artifact: McpBuildArtifact,
+  name: string,
+  source?: string
+): { error: string } | null {
+  if (artifact.useReferenceLibrary !== false) return null
+
+  if (source === '@reference-ui/lib') {
+    return {
+      error: `Component '${name}' is part of @reference-ui/lib, but 'use_reference_library' is disabled in ui.config.`,
+    }
+  }
+
+  if (!source) {
+    const localMatches = artifact.components.filter(
+      c => c.name.toLowerCase() === name.toLowerCase() && c.source !== '@reference-ui/lib'
+    )
+    if (localMatches.length === 0 && findReferenceUiLibraryComponent(name)) {
+      return {
+        error: `Component '${name}' is part of @reference-ui/lib, but 'use_reference_library' is disabled in ui.config.`,
+      }
+    }
+  }
+
+  return null
+}
+
   server.registerTool(
     'get_component',
     {
@@ -134,6 +163,9 @@ export function registerReferenceTools(
         projectManager,
         input.project,
         artifact => {
+          const disabledError = checkReferenceLibraryDisabled(artifact, input.name, input.source)
+          if (disabledError) return disabledError
+
           const component = findComponent(artifact, input)
           if (!component) {
             return { error: `Component not found: ${input.name}` }
@@ -168,6 +200,9 @@ export function registerReferenceTools(
         projectManager,
         input.project,
         artifact => {
+          const disabledError = checkReferenceLibraryDisabled(artifact, input.name, input.source)
+          if (disabledError) return disabledError
+
           const result = getComponentProps(artifact, input)
           if (!result) {
             return { error: `Component not found: ${input.name}` }
@@ -210,6 +245,9 @@ export function registerReferenceTools(
         projectManager,
         input.project,
         artifact => {
+          const disabledError = checkReferenceLibraryDisabled(artifact, input.name, input.source)
+          if (disabledError) return disabledError
+
           const component = findComponent(artifact, input)
           if (!component) {
             return { error: `Component not found: ${input.name}` }
@@ -272,10 +310,32 @@ export function registerReferenceTools(
       description:
         'Search and discover icons available in @reference-ui/icons (Material Symbols React components).',
       inputSchema: {
+        project: z
+          .string()
+          .optional()
+          .describe('Optional relative or absolute filesystem path to target project directory.'),
         query: z.string().optional().describe('Search term for icon name (e.g. "search", "arrow", "check").'),
         limit: z.number().int().positive().max(200).optional().describe('Maximum number of icons to return.'),
       },
     },
-    async input => toTextResult(searchIcons(input))
+    async input =>
+      executeWithProject(
+        projectManager,
+        input.project,
+        artifact => {
+          if (artifact.useReferenceIcons === false) {
+            return {
+              enabled: false,
+              notice:
+                "Reference Icons are disabled in ui.config (use_reference_icons: false). Use the project's custom icon system.",
+              total: 0,
+              returned: 0,
+              icons: [],
+            }
+          }
+          return searchIcons(input)
+        },
+        () => searchIcons(input)
+      )
   )
 }

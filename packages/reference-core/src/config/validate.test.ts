@@ -280,4 +280,48 @@ describe('validateConfig', () => {
       })
     ).toThrowError(/mcp\.include/i)
   })
+
+  it('accepts and normalizes use_reference_library and use_reference_icons (both camelCase and snake_case)', () => {
+    const configSnake = validateConfig({
+      name: SYSTEM_NAME,
+      include: DEFAULT_INCLUDE,
+      use_reference_library: false,
+      use_reference_icons: false,
+    })
+
+    expect(configSnake.use_reference_library).toBe(false)
+    expect(configSnake.useReferenceLibrary).toBe(false)
+    expect(configSnake.use_reference_icons).toBe(false)
+    expect(configSnake.useReferenceIcons).toBe(false)
+
+    const configCamel = validateConfig({
+      name: SYSTEM_NAME,
+      include: DEFAULT_INCLUDE,
+      useReferenceLibrary: true,
+      useReferenceIcons: true,
+    })
+
+    expect(configCamel.use_reference_library).toBe(true)
+    expect(configCamel.useReferenceLibrary).toBe(true)
+    expect(configCamel.use_reference_icons).toBe(true)
+    expect(configCamel.useReferenceIcons).toBe(true)
+  })
+
+  it('rejects non-boolean use_reference_library and use_reference_icons', () => {
+    expect(() =>
+      validateConfig({
+        name: SYSTEM_NAME,
+        include: DEFAULT_INCLUDE,
+        use_reference_library: 'yes' as never,
+      })
+    ).toThrowError(/useReferenceLibrary/i)
+
+    expect(() =>
+      validateConfig({
+        name: SYSTEM_NAME,
+        include: DEFAULT_INCLUDE,
+        use_reference_icons: 123 as never,
+      })
+    ).toThrowError(/useReferenceIcons/i)
+  })
 })

@@ -97,6 +97,24 @@ export interface ReferenceUIConfig {
   mcp?: ReferenceUIMcpConfig
 
   /**
+   * Enable Reference UI Component Library (@reference-ui/lib).
+   * When enabled, library components (Accordion, Calendar, DateField, Menu, Popover, Slider, Splitter, Tabs, Toast, etc.)
+   * are indexed and presented to MCP coding agents.
+   * @default true
+   */
+  useReferenceLibrary?: boolean
+  use_reference_library?: boolean
+
+  /**
+   * Enable Reference UI Icons (@reference-ui/icons).
+   * When enabled, reference icons are indexed and discoverable via list_icons.
+   * Set to false if using custom or third-party icons.
+   * @default true
+   */
+  useReferenceIcons?: boolean
+  use_reference_icons?: boolean
+
+  /**
    * Skip TypeScript declaration generation (tsup).
    * Use in test environments where .d.ts output is not needed.
    * @default false
