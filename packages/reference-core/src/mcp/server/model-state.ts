@@ -81,18 +81,28 @@ export function createMcpModelState(options: { cwd: string }): McpModelState {
       })
   }
 
-  return {
+  let warmStarted = false
+
+  const stateObj: McpModelState = {
     get error() {
       return projectError
     },
 
     async warmStart(): Promise<void> {
+      if (warmStarted) return
+      warmStarted = true
       try {
         const modelPath = getMcpModelPath(cwd)
         if (existsSync(modelPath)) {
-          artifact = await readMcpArtifact(cwd)
-          settleReady(artifact)
-          scheduleBackgroundRefresh()
+          try {
+            artifact = await readMcpArtifact(cwd)
+            settleReady(artifact)
+            scheduleBackgroundRefresh()
+          } catch (readErr) {
+            log.warn('[mcp] Failed to read cached model artifact, rebuilding:', readErr)
+            artifact = await buildArtifactInChild()
+            settleReady(artifact)
+          }
         } else {
           artifact = await buildArtifactInChild()
           settleReady(artifact)
@@ -112,6 +122,10 @@ export function createMcpModelState(options: { cwd: string }): McpModelState {
     async waitForReady(timeoutMs = 30_000): Promise<McpBuildArtifact | null> {
       if (artifact) return artifact
 
+      if (!warmStarted) {
+        stateObj.warmStart().catch(() => {})
+      }
+
       let timeoutTimer: NodeJS.Timeout | undefined
       const timeoutPromise = new Promise<null>(res => {
         timeoutTimer = setTimeout(() => res(null), timeoutMs)
@@ -125,4 +139,6 @@ export function createMcpModelState(options: { cwd: string }): McpModelState {
       }
     },
   }
+
+  return stateObj
 }

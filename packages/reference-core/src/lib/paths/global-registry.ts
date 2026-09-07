@@ -21,7 +21,11 @@ export class GlobalProjectRegistry {
   }
 
   static getRegistryPath(): string {
-    return this.overridePath ?? join(homedir(), '.reference-ui', 'registry.json')
+    return (
+      this.overridePath ??
+      process.env.REF_REGISTRY_PATH ??
+      join(homedir(), '.reference-ui', 'registry.json')
+    )
   }
 
   static read(): { projects: Record<string, ProjectEntry>; sanitizedCount: number } {

@@ -51,6 +51,9 @@ export class ProjectManager {
   }
 
   getActiveProject(): string | null {
+    if (this.activeProjectPath && !existsSync(this.activeProjectPath)) {
+      this.activeProjectPath = null
+    }
     return this.activeProjectPath
   }
 
@@ -62,7 +65,7 @@ export class ProjectManager {
     if (requested) {
       return this.matchProjectPath(requested)
     }
-    return this.activeProjectPath
+    return this.getActiveProject()
   }
 
   selectProject(rawPath: string): {
@@ -89,6 +92,12 @@ export class ProjectManager {
     this.activeProjectPath = matched
     this.getOrCreateState(matched).warmStart().catch(() => {})
 
+    try {
+      GlobalProjectRegistry.upsert(matched)
+    } catch {
+      // Best-effort registry tracking
+    }
+
     return {
       status: 'active',
       project: matched,
@@ -101,6 +110,7 @@ export class ProjectManager {
     projects: Array<DiscoveredProject & { isDefault: boolean }>
     sanitizedStaleCount: number
   } {
+    this.getActiveProject()
     const { sanitizedCount } = GlobalProjectRegistry.read()
     const projects = discoverProjects(this.workspaceRoot, options)
     this.discoveredProjects = projects
@@ -183,13 +193,13 @@ export class ProjectManager {
   }
 
   private matchProjectPath(raw: string): string | null {
-    const trimmed = raw.trim()
-    if (!trimmed) return null
+    const normalized = raw.trim().replace(/\\/g, '/').replace(/\/+$/, '')
+    if (!normalized) return null
 
     // 1. If absolute path
-    const target = isAbsolute(trimmed)
-      ? this.canonicalize(trimmed)
-      : this.canonicalize(resolve(this.workspaceRoot, trimmed))
+    const target = isAbsolute(normalized)
+      ? this.canonicalize(normalized)
+      : this.canonicalize(resolve(this.workspaceRoot, normalized))
 
     if (existsSync(target)) {
       const directConfig = resolveRefConfigFile(target)
@@ -207,10 +217,16 @@ export class ProjectManager {
       }
     }
 
-    // Check if trimmed matches trailing segment of any discovered project
-    const matchSuffix = this.discoveredProjects.find(
-      p => p.path === target || p.path.endsWith(`/${trimmed}`) || p.path.endsWith(trimmed)
-    )
+    // Check if normalized matches trailing segment of any discovered project
+    const normalizedTarget = target.replace(/\\/g, '/')
+    const matchSuffix = this.discoveredProjects.find(p => {
+      const normP = p.path.replace(/\\/g, '/')
+      return (
+        normP === normalizedTarget ||
+        normP.endsWith(`/${normalized}`) ||
+        normP.endsWith(normalized)
+      )
+    })
     if (matchSuffix) {
       return matchSuffix.path
     }

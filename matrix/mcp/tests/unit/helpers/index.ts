@@ -5,6 +5,7 @@
  * modules for payload parsing, artifact prebuilds, server lifecycle, and types.
  */
 export * from './artifact'
+export * from './fixtures'
 export * from './responses'
 export * from './server'
 export * from './types'

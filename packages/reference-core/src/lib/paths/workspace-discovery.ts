@@ -129,9 +129,20 @@ function scanDirectoryBounded(
   maxResults = 50,
 ): DiscoveredProject[] {
   const results: DiscoveredProject[] = []
+  const visitedRealPaths = new Set<string>()
 
   function traverse(dir: string, depth: number) {
     if (depth > maxDepth || results.length >= maxResults) return
+
+    let canonicalDir: string
+    try {
+      canonicalDir = realpathSync(dir)
+    } catch {
+      return
+    }
+
+    if (visitedRealPaths.has(canonicalDir)) return
+    visitedRealPaths.add(canonicalDir)
 
     let entries: string[] = []
     try {
