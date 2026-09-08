@@ -108,6 +108,34 @@ export function hasIsolatingLayer(layers: Layer[], doc?: Document | null): boole
   return layersFor(layers, doc).some(l => l.isModal)
 }
 
+export function isLayerPointerEventsEnabled(
+  layers: Layer[],
+  layerId: string,
+  doc?: Document | null
+): boolean {
+  const docLayers = layersFor(layers, doc)
+  const modalLayers = docLayers.filter(l => l.isModal && (l.open || l.node !== null))
+  if (modalLayers.length === 0) {
+    return true
+  }
+  const highestModal = modalLayers[modalLayers.length - 1]
+  if (!highestModal) return true
+
+  if (layerId === highestModal.id) return true
+
+  const descendants = descendantsDeepestFirst(docLayers, highestModal.id)
+  return descendants.some(d => d.id === layerId)
+}
+
+export function useLayerPointerEvents(id: string, doc?: Document | null): 'auto' | 'none' | undefined {
+  return useStore(overlayStackStore, state => {
+    const hasModal = hasIsolatingLayer(state.layers, doc)
+    if (!hasModal) return undefined
+    const enabled = isLayerPointerEventsEnabled(state.layers, id, doc)
+    return enabled ? 'auto' : 'none'
+  })
+}
+
 export function edgeStack(layers: Layer[], doc?: Document | null): Layer[] {
   return layersFor(layers, doc).filter(l => l.edge)
 }

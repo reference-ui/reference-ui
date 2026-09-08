@@ -12,6 +12,7 @@ export interface FocusLockProps {
   disabled?: boolean
   initialFocus?: FocusTarget | boolean
   restoreFocus?: FocusTarget | boolean
+  defaultRestoreTarget?: FocusTarget
   shards?: Array<HTMLElement | React.RefObject<HTMLElement | null>>
 }
 
@@ -129,8 +130,12 @@ function findFocusableProximity(
     return node
   }
 
+  const liveParent = (node && node.isConnected ? node.parentElement : null) || parent
+  const liveNext = (node && node.isConnected ? node.nextElementSibling : null) || next
+  const livePrev = (node && node.isConnected ? node.previousElementSibling : null) || prev
+
   // Right siblings
-  let curr = next as HTMLElement | null
+  let curr = liveNext as HTMLElement | null
   while (curr) {
     if (curr.isConnected) {
       if (isElementFocusable(curr)) return curr
@@ -141,7 +146,7 @@ function findFocusableProximity(
   }
 
   // Left siblings
-  curr = prev as HTMLElement | null
+  curr = livePrev as HTMLElement | null
   while (curr) {
     if (curr.isConnected) {
       const focusables = Array.from(curr.querySelectorAll<HTMLElement>(CANDIDATE_SELECTORS)).filter(isElementFocusable)
@@ -152,7 +157,7 @@ function findFocusableProximity(
   }
 
   // Ancestors
-  curr = parent
+  curr = liveParent
   while (curr) {
     if (curr.isConnected) {
       if (isElementFocusable(curr)) return curr
@@ -173,20 +178,25 @@ const activeLocks: Array<{
 
 let lockIdCounter = 0
 
-export function FocusLock({
-  children,
-  disabled = false,
-  initialFocus,
-  restoreFocus = true,
-  shards: shardsProp,
-}: FocusLockProps) {
+export const FocusLock = React.forwardRef<HTMLElement, FocusLockProps>(
+  function FocusLock(
+    {
+      children,
+      disabled = false,
+      initialFocus,
+      restoreFocus = true,
+      defaultRestoreTarget,
+      shards: shardsProp,
+    },
+    forwardedRef
+  ) {
   const containerRef = React.useRef<HTMLElement | null>(null)
   const lastFocusedNodeRef = React.useRef<HTMLElement | null>(null)
   const previousActiveElementRef = React.useRef<{
-    node: HTMLElement | null;
-    parent: HTMLElement | null;
-    next: Node | null;
-    prev: Node | null;
+    node: HTMLElement | null
+    parent: HTMLElement | null
+    next: Node | null
+    prev: Node | null
   } | null>(null)
 
   const lockIdRef = React.useRef<string | null>(null)
@@ -208,6 +218,15 @@ export function FocusLock({
     return list
   }, [shardsProp])
 
+  const restoreFocusRef = React.useRef(restoreFocus)
+  restoreFocusRef.current = restoreFocus
+
+  const defaultRestoreTargetRef = React.useRef(defaultRestoreTarget)
+  defaultRestoreTargetRef.current = defaultRestoreTarget
+
+  const getResolvedShardsRef = React.useRef(getResolvedShards)
+  getResolvedShardsRef.current = getResolvedShards
+
   // Activation & stack management
   React.useEffect(() => {
     if (disabled) {
@@ -219,7 +238,14 @@ export function FocusLock({
     if (!container) return
 
     if (!previousActiveElementRef.current && typeof document !== 'undefined') {
-      const active = document.activeElement as HTMLElement | null
+      let active = document.activeElement as HTMLElement | null
+      if (
+        (!active || active === document.body || container.contains(active)) &&
+        defaultRestoreTargetRef.current
+      ) {
+        const defaultTarget = resolveFocusTarget(defaultRestoreTargetRef.current)
+        if (defaultTarget) active = defaultTarget
+      }
       previousActiveElementRef.current = {
         node: active,
         parent: active?.parentElement || null,
@@ -231,7 +257,7 @@ export function FocusLock({
     const lockEntry = {
       id: lockId,
       container,
-      shards: getResolvedShards,
+      shards: () => getResolvedShardsRef.current(),
       lastFocusedNode: lastFocusedNodeRef,
     }
 
@@ -240,21 +266,42 @@ export function FocusLock({
     // Initial focus resolution
     if (initialFocus !== false) {
       const explicitTarget = resolveFocusTarget(initialFocus)
-      if (explicitTarget && isElementFocusable(explicitTarget)) {
+      const shards = getResolvedShardsRef.current()
+      const isTargetInContainer = (el: HTMLElement | null): el is HTMLElement => {
+        if (!el || !isElementFocusable(el)) return false
+        return container.contains(el) || shards.some(s => s.contains(el))
+      }
+
+      if (explicitTarget && isTargetInContainer(explicitTarget)) {
         explicitTarget.focus()
         lastFocusedNodeRef.current = explicitTarget
       } else {
-        // Focus first tabbable descendant or container
-        const tabbables = getTabbableCandidates(container, getResolvedShards())
-        if (tabbables.length > 0 && tabbables[0]) {
-          tabbables[0].focus()
-          lastFocusedNodeRef.current = tabbables[0]
+        // If an element inside container already has focus (e.g. via React autoFocus)
+        const currentActive = typeof document !== 'undefined' ? (document.activeElement as HTMLElement | null) : null
+        if (currentActive && isTargetInContainer(currentActive) && currentActive !== container) {
+          lastFocusedNodeRef.current = currentActive
         } else {
-          if (!container.hasAttribute('tabindex')) {
-            container.setAttribute('tabindex', '-1')
+          // Check for authored autoFocus descendant inside container
+          const autoFocusCandidate = container.querySelector<HTMLElement>(
+            '[autofocus], [data-autofocus]'
+          )
+          if (autoFocusCandidate && isElementFocusable(autoFocusCandidate)) {
+            autoFocusCandidate.focus()
+            lastFocusedNodeRef.current = autoFocusCandidate
+          } else {
+            // Focus first tabbable descendant or container
+            const tabbables = getTabbableCandidates(container, shards)
+            if (tabbables.length > 0 && tabbables[0]) {
+              tabbables[0].focus()
+              lastFocusedNodeRef.current = tabbables[0]
+            } else {
+              if (!container.hasAttribute('tabindex')) {
+                container.setAttribute('tabindex', '-1')
+              }
+              container.focus()
+              lastFocusedNodeRef.current = container
+            }
           }
-          container.focus()
-          lastFocusedNodeRef.current = container
         }
       }
     }
@@ -266,22 +313,35 @@ export function FocusLock({
       }
 
       // Restore focus on deactivation/unmount
-      if (restoreFocus !== false) {
-        const explicitRestore = resolveFocusTarget(restoreFocus)
-        if (explicitRestore && isElementFocusable(explicitRestore)) {
-          explicitRestore.focus()
-        } else if (previousActiveElementRef.current) {
-          const proxy = findFocusableProximity(
-            previousActiveElementRef.current.node,
-            previousActiveElementRef.current.parent,
-            previousActiveElementRef.current.next,
-            previousActiveElementRef.current.prev
-          )
-          if (proxy) proxy.focus()
+      const latestRestoreFocus = restoreFocusRef.current
+      const doRestore = () => {
+        if (latestRestoreFocus !== false) {
+          const explicitRestore = resolveFocusTarget(latestRestoreFocus)
+          if (explicitRestore && isElementFocusable(explicitRestore)) {
+            explicitRestore.focus()
+          } else if (previousActiveElementRef.current) {
+            const proxy = findFocusableProximity(
+              previousActiveElementRef.current.node,
+              previousActiveElementRef.current.parent,
+              previousActiveElementRef.current.next,
+              previousActiveElementRef.current.prev
+            )
+            if (proxy) proxy.focus()
+          }
         }
       }
+
+      doRestore()
+
+      if (typeof queueMicrotask === 'function') {
+        queueMicrotask(() => {
+          if (document.activeElement === document.body || !document.activeElement) {
+            doRestore()
+          }
+        })
+      }
     }
-  }, [disabled, lockId, initialFocus, restoreFocus, getResolvedShards])
+  }, [disabled, lockId])
 
   // Handle Tab looping and containment
   React.useEffect(() => {
@@ -303,7 +363,12 @@ export function FocusLock({
       if (e.key !== 'Tab' || !isTopLock()) return
       if (e.ctrlKey || e.altKey || e.metaKey) return
 
-      const resolvedShards = getResolvedShards()
+      // When initialFocus is false and focus hasn't entered container yet, allow natural tab
+      if (initialFocus === false && !lastFocusedNodeRef.current) {
+        return
+      }
+
+      const resolvedShards = getResolvedShardsRef.current()
       const tabbables = getTabbableCandidates(container, resolvedShards)
 
       if (tabbables.length === 0) {
@@ -316,10 +381,26 @@ export function FocusLock({
       const last = tabbables[tabbables.length - 1]
       const active = document.activeElement as HTMLElement | null
 
+      const isInside =
+        active &&
+        (container.contains(active) ||
+          resolvedShards.some(shard => shard.contains(active)))
+
+      if (!isInside) {
+        // Leaked outside: trap immediately
+        e.preventDefault()
+        if (e.shiftKey) {
+          last?.focus()
+        } else {
+          first?.focus()
+        }
+        return
+      }
+
       if (!e.shiftKey && active === last) {
         e.preventDefault()
         first?.focus()
-      } else if (e.shiftKey && active === first) {
+      } else if (e.shiftKey && (active === first || active === container)) {
         e.preventDefault()
         last?.focus()
       }
@@ -330,16 +411,19 @@ export function FocusLock({
       const target = e.target as HTMLElement | null
       if (!target) return
 
-      const resolvedShards = getResolvedShards()
+      const resolvedShards = getResolvedShardsRef.current()
       const isInside =
         container.contains(target) ||
-        resolvedShards.some(shard => shard.contains(target)) ||
-        overlayStackStore.getState().layers.some(l => isNodeInside(l.node, target)) ||
-        Boolean(target.closest('[data-reference-overlay-content][data-state="open"]'))
+        resolvedShards.some(shard => shard.contains(target))
 
       if (isInside) {
         lastFocusedNodeRef.current = target
       } else {
+        // If initialFocus is false and focus hasn't entered yet, do not reclaim
+        if (initialFocus === false && !lastFocusedNodeRef.current) {
+          return
+        }
+
         // Reclaim focus
         const fallback =
           lastFocusedNodeRef.current && isElementFocusable(lastFocusedNodeRef.current)
@@ -350,14 +434,31 @@ export function FocusLock({
       }
     }
 
+    const mutationObserver = new MutationObserver(mutations => {
+      if (!isTopLock()) return
+      const focusedElement = document.activeElement as HTMLElement | null
+      if (focusedElement !== document.body && focusedElement !== null) return
+      for (const mutation of mutations) {
+        if (mutation.removedNodes.length > 0) {
+          const tabbables = getTabbableCandidates(container, getResolvedShardsRef.current())
+          const fallback = tabbables[0] || container
+          fallback.focus()
+          lastFocusedNodeRef.current = fallback
+          break
+        }
+      }
+    })
+    mutationObserver.observe(container, { childList: true, subtree: true })
+
     document.addEventListener('keydown', handleKeyDown)
     document.addEventListener('focusin', handleFocusIn)
 
     return () => {
+      mutationObserver.disconnect()
       document.removeEventListener('keydown', handleKeyDown)
       document.removeEventListener('focusin', handleFocusIn)
     }
-  }, [disabled, lockId, getResolvedShards])
+  }, [disabled, lockId, initialFocus])
 
   if (!children) {
     return null
@@ -372,6 +473,11 @@ export function FocusLock({
 
   const composedRef = (node: HTMLElement | null) => {
     containerRef.current = node
+    if (typeof forwardedRef === 'function') {
+      forwardedRef(node)
+    } else if (forwardedRef && typeof forwardedRef === 'object' && 'current' in forwardedRef) {
+      ;(forwardedRef as React.MutableRefObject<HTMLElement | null>).current = node
+    }
     if (typeof originalRef === 'function') {
       originalRef(node)
     } else if (originalRef && typeof originalRef === 'object' && 'current' in originalRef) {
@@ -382,4 +488,5 @@ export function FocusLock({
   return React.cloneElement(child, {
     ref: composedRef,
   })
-}
+})
+FocusLock.displayName = 'FocusLock'

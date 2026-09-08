@@ -6,7 +6,6 @@ import { PortalFixture } from './portal'
 import { FocusLockFixture } from './focus-lock'
 import { RovingFocusFixture } from './roving-focus'
 import { ReferenceLibraryFixture } from './reference-library'
-import { OverlayFixture } from './overlay'
 import { PopoverFixture } from './popover'
 import { TooltipFixture } from './tooltip'
 import { ToastFixture } from './toast'
@@ -50,10 +49,6 @@ export function Index() {
 
   if (path === '/reference-library') {
     return <ReferenceLibraryFixture />
-  }
-
-  if (path === '/overlay') {
-    return <OverlayFixture />
   }
 
   if (path === '/popover') {

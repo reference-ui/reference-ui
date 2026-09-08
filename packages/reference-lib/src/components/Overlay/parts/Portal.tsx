@@ -8,7 +8,11 @@ export function OverlayPortal({ children, container }: PortalProps) {
   React.useLayoutEffect(() => {
     if (!context) return
     context.setPortalContainer(container)
-    return () => context.setPortalContainer(undefined)
+    const unregister = context.registerPart('portal')
+    return () => {
+      unregister?.()
+      context.setPortalContainer(undefined)
+    }
   }, [context, container])
 
   return <>{children}</>

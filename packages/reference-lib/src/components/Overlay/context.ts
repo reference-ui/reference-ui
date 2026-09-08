@@ -7,6 +7,14 @@ import type {
   OverlayProps,
 } from './types'
 
+export type OverlayPartName =
+  | 'trigger'
+  | 'backdrop'
+  | 'content'
+  | 'handle'
+  | 'portal'
+  | 'arrow'
+
 export interface OverlayContextValue {
   id: string
   isOpen: boolean
@@ -17,6 +25,8 @@ export interface OverlayContextValue {
   closeOnScroll?: boolean
   presence: boolean
   mixedGeometry: boolean
+  isCorrupted: boolean
+  registerPart: (part: OverlayPartName) => () => void
   portalContainer?: PortalProps['container']
   setPortalContainer: (container: PortalProps['container']) => void
   contentRef: React.MutableRefObject<HTMLDivElement | null>
@@ -36,7 +46,9 @@ export function useOverlay() {
 }
 
 export function overlayWarn(message: string) {
-  if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+  const isProd =
+    typeof process !== 'undefined' && process.env?.NODE_ENV === 'production'
+  if (!isProd) {
     console.error(`[Overlay] ${message}`)
   }
 }

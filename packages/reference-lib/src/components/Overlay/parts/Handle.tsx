@@ -25,10 +25,8 @@ export function OverlayHandle({
   const history = React.useRef<Array<{ time: number; x: number; y: number }>>([])
   const userRef = (props as { ref?: React.Ref<HTMLDivElement> }).ref
 
-  React.useEffect(() => {
-    if (context && !context.edge) {
-      overlayWarn('Overlay.Handle requires `edge`.')
-    }
+  React.useLayoutEffect(() => {
+    return context?.registerPart('handle')
   }, [context])
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {

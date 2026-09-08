@@ -4,7 +4,7 @@ import { Portal } from '../../Portal'
 import { Presence } from '../../Presence'
 import { FocusLock } from '../../FocusLock'
 import { OverlayContext } from '../context'
-import { overlayStackStore, descendantsDeepestFirst, useOverlayZIndex } from '../stack'
+import { overlayStackStore, descendantsDeepestFirst, useOverlayZIndex, useLayerPointerEvents } from '../stack'
 import { assignRef } from '../refs'
 import { usePreventScroll } from '../isolation/scroll-lock'
 import { useHideOutside } from '../isolation/hide-outside'
@@ -50,6 +50,10 @@ export function OverlayContent({
   const zIndex = useOverlayZIndex(context?.id ?? '')
   const userRef = (props as { ref?: React.Ref<HTMLDivElement> }).ref
 
+  React.useLayoutEffect(() => {
+    return context?.registerPart('content')
+  }, [context])
+
   const isOpen = context?.isOpen ?? false
   const isolation = context?.isolation
   const shards = React.useMemo(() => {
@@ -90,7 +94,7 @@ export function OverlayContent({
 
   usePreventScroll(Boolean(node && isolation?.scroll), Boolean(context?.edge && isolation?.scroll))
   useHideOutside(node, Boolean(node && isolation?.inert))
-  usePointerLock(Boolean(node && isolation?.inert))
+  usePointerLock(Boolean(node && isolation?.inert), node?.ownerDocument)
 
   React.useEffect(() => {
     if (!context || isolation?.focus || !isOpen || !node) return
@@ -123,7 +127,9 @@ export function OverlayContent({
     return () => doc.removeEventListener('keydown', onKeyDown)
   }, [context, isolation?.focus, isOpen, node])
 
-  if (!context) return null
+  const pointerEventsLock = useLayerPointerEvents(context?.id ?? '', node?.ownerDocument)
+
+  if (!context || context.isCorrupted) return null
 
   const content = (
     <Div
@@ -135,7 +141,11 @@ export function OverlayContent({
         assignRef(userRef, el)
       }}
       className={className}
-      style={{ zIndex, ...style }}
+      style={{
+        zIndex,
+        ...style,
+        ...(pointerEventsLock ? { pointerEvents: pointerEventsLock } : {}),
+      }}
       {...props}
     >
       {children}
@@ -143,7 +153,12 @@ export function OverlayContent({
   )
 
   const locked = isolation?.focus ? (
-    <FocusLock initialFocus={initialFocus} restoreFocus={restoreFocus ?? true} shards={shards}>
+    <FocusLock
+      defaultRestoreTarget={context?.triggerRef}
+      initialFocus={initialFocus}
+      restoreFocus={restoreFocus ?? true}
+      shards={shards}
+    >
       {content}
     </FocusLock>
   ) : (

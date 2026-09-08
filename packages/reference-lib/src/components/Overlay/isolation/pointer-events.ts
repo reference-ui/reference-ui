@@ -9,18 +9,16 @@ const locks = new WeakMap<Document, Lock>()
 
 function apply(doc: Document): () => void {
   const body = doc.body
-  const prevBody = body.style.pointerEvents
-  body.style.pointerEvents = 'none'
-
-  const style = doc.createElement('style')
-  style.setAttribute('data-reference-overlay-pointer-lock', '')
-  style.textContent =
-    '[data-reference-overlay-content],[data-reference-overlay-backdrop]{pointer-events:auto!important}'
-  doc.head.appendChild(style)
+  const prevBody = body.style.getPropertyValue('pointer-events')
+  const prevPriority = body.style.getPropertyPriority('pointer-events')
+  body.style.setProperty('pointer-events', 'none')
 
   return () => {
-    body.style.pointerEvents = prevBody
-    style.remove()
+    if (prevBody) {
+      body.style.setProperty('pointer-events', prevBody, prevPriority)
+    } else {
+      body.style.removeProperty('pointer-events')
+    }
   }
 }
 
@@ -48,9 +46,11 @@ export function acquirePointerLock(doc: Document): () => void {
   }
 }
 
-export function usePointerLock(enabled: boolean) {
+export function usePointerLock(enabled: boolean, doc?: Document | null) {
   React.useEffect(() => {
-    if (!enabled || typeof document === 'undefined') return
-    return acquirePointerLock(document)
-  }, [enabled])
+    if (!enabled) return
+    const targetDoc = doc ?? (typeof document !== 'undefined' ? document : null)
+    if (!targetDoc) return
+    return acquirePointerLock(targetDoc)
+  }, [enabled, doc])
 }

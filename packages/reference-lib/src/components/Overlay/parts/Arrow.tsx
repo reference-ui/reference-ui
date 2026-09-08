@@ -16,6 +16,10 @@ export function OverlayArrow({
   const context = React.useContext(OverlayContext)
   const userRef = (props as { ref?: React.Ref<HTMLDivElement> }).ref
 
+  React.useLayoutEffect(() => {
+    return context?.registerPart('arrow')
+  }, [context])
+
   return (
     <Div
       {...props}

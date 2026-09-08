@@ -15,9 +15,13 @@ export function OverlayTrigger({
   const context = React.useContext(OverlayContext)
   const userRef = (props as { ref?: React.Ref<HTMLButtonElement> }).ref
 
+  React.useLayoutEffect(() => {
+    return context?.registerPart('trigger')
+  }, [context])
+
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     onClick?.(e)
-    if (e.defaultPrevented || disabled || !context) return
+    if (e.defaultPrevented || disabled || !context || context.isCorrupted) return
     context.setIsOpen(!context.isOpen)
   }
 

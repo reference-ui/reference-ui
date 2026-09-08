@@ -16,6 +16,103 @@ interface PresenceContextValue {
 
 const PresenceContext = React.createContext<PresenceContextValue | null>(null)
 
+export interface PresenceCoordinatorContextValue {
+  registerPart: (id: string) => void
+  unregisterPart: (id: string) => void
+  reportPartFinished: (id: string) => void
+  subscribeToAllComplete: (cb: () => void) => () => void
+  isCoordinatorActive: () => boolean
+}
+
+export const PresenceCoordinatorContext =
+  React.createContext<PresenceCoordinatorContextValue | null>(null)
+
+export function usePresenceCoordinator(present: boolean): PresenceCoordinatorContextValue {
+  const registeredParts = React.useRef<Set<string>>(new Set())
+  const finishedParts = React.useRef<Set<string>>(new Set())
+  const subscribers = React.useRef<Set<() => void>>(new Set())
+  const presentRef = React.useRef(present)
+  presentRef.current = present
+
+  React.useEffect(() => {
+    if (present) {
+      finishedParts.current.clear()
+    }
+  }, [present])
+
+  const notifyAllComplete = React.useCallback(() => {
+    if (!presentRef.current) {
+      if (
+        registeredParts.current.size > 0 &&
+        finishedParts.current.size >= registeredParts.current.size
+      ) {
+        subscribers.current.forEach(cb => cb())
+      }
+    }
+  }, [])
+
+  const registerPart = React.useCallback((id: string) => {
+    registeredParts.current.add(id)
+  }, [])
+
+  const unregisterPart = React.useCallback(
+    (id: string) => {
+      registeredParts.current.delete(id)
+      finishedParts.current.delete(id)
+      if (
+        !presentRef.current &&
+        registeredParts.current.size > 0 &&
+        finishedParts.current.size >= registeredParts.current.size
+      ) {
+        queueMicrotask(notifyAllComplete)
+      }
+    },
+    [notifyAllComplete]
+  )
+
+  const reportPartFinished = React.useCallback(
+    (id: string) => {
+      finishedParts.current.add(id)
+      if (
+        !presentRef.current &&
+        registeredParts.current.size > 0 &&
+        finishedParts.current.size >= registeredParts.current.size
+      ) {
+        queueMicrotask(notifyAllComplete)
+      }
+    },
+    [notifyAllComplete]
+  )
+
+  const subscribeToAllComplete = React.useCallback((cb: () => void) => {
+    subscribers.current.add(cb)
+    return () => {
+      subscribers.current.delete(cb)
+    }
+  }, [])
+
+  const isCoordinatorActive = React.useCallback(() => {
+    return !presentRef.current && registeredParts.current.size > 1
+  }, [])
+
+  return React.useMemo(
+    () => ({
+      registerPart,
+      unregisterPart,
+      reportPartFinished,
+      subscribeToAllComplete,
+      isCoordinatorActive,
+    }),
+    [
+      registerPart,
+      unregisterPart,
+      reportPartFinished,
+      subscribeToAllComplete,
+      isCoordinatorActive,
+    ]
+  )
+}
+
 let presenceIdCounter = 0
 
 export function usePresence(present: boolean) {
@@ -30,6 +127,7 @@ export function usePresence(present: boolean) {
   const [, forceUpdate] = React.useReducer(x => x + 1, 0)
 
   const parentPresence = React.useContext(PresenceContext)
+  const coordinator = React.useContext(PresenceCoordinatorContext)
   const presenceIdRef = React.useRef<string | null>(null)
   if (presenceIdRef.current === null) {
     presenceIdRef.current = `presence-${++presenceIdCounter}`
@@ -158,9 +256,23 @@ export function usePresence(present: boolean) {
         }
       }
 
-      const hasFiniteGsap = finiteGsapTweens(el).length > 0
+      const prefersReducedMotion =
+        typeof window !== 'undefined' &&
+        window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+      if (prefersReducedMotion) {
+        hasFiniteAnimation = false
+        hasFiniteTransition = false
+      }
+
+      const hasFiniteGsap = !prefersReducedMotion && finiteGsapTweens(el).length > 0
 
       if (!hasFiniteAnimation && !hasFiniteTransition && !hasFiniteGsap) {
+        if (coordinator && coordinator.isCoordinatorActive()) {
+          isOwnAnimationDoneRef.current = true
+          coordinator.reportPartFinished(presenceId)
+          setState('unmountSuspended')
+          return
+        }
         setState('unmounted')
         if (parentPresence) {
           parentPresence.onDescendantExitComplete(presenceId)
@@ -171,7 +283,33 @@ export function usePresence(present: boolean) {
       // Suspend unmount while transitions/animations/GSAP tweens complete
       setState('unmountSuspended')
     }
-  }, [present, presenceId, parentPresence])
+  }, [present, presenceId, parentPresence, coordinator])
+
+  const stateRef = React.useRef(state)
+  stateRef.current = state
+
+  // Register with coordinator on mount
+  React.useLayoutEffect(() => {
+    if (coordinator) {
+      coordinator.registerPart(presenceId)
+      return () => {
+        coordinator.unregisterPart(presenceId)
+      }
+    }
+  }, [coordinator, presenceId])
+
+  // Subscribe to allComplete from coordinator
+  React.useEffect(() => {
+    if (!coordinator) return
+    return coordinator.subscribeToAllComplete(() => {
+      if (stateRef.current === 'unmountSuspended') {
+        setState('unmounted')
+        if (parentPresence) {
+          parentPresence.onDescendantExitComplete(presenceId)
+        }
+      }
+    })
+  }, [coordinator, parentPresence, presenceId])
 
   // Register with parent presence on mount
   React.useEffect(() => {
@@ -201,10 +339,17 @@ export function usePresence(present: boolean) {
     let isCompleted = false
 
     const handleExitComplete = () => {
+      if (prevPresentRef.current || stateRef.current !== 'unmountSuspended') {
+        return
+      }
       isOwnAnimationDoneRef.current = true
       if (isCompleted) return
       if (pendingDescendantsRef.current.size > 0) {
         // Wait for descendants to finish
+        return
+      }
+      if (coordinator && coordinator.isCoordinatorActive()) {
+        coordinator.reportPartFinished(presenceId)
         return
       }
       isCompleted = true

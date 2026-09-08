@@ -7,6 +7,8 @@ import { ScrollFixture } from './fixtures/scroll-fixture'
 import { EdgeFixture } from './fixtures/edge-fixture'
 import { InertFixture } from './fixtures/inert-fixture'
 import { ThemeFixture } from './fixtures/theme-fixture'
+import { FocusFixture } from './fixtures/focus-fixture'
+import { AnchorFixture } from './fixtures/anchor-fixture'
 
 export function Index() {
   const path = typeof window !== 'undefined' ? window.location.pathname : '/'
@@ -18,6 +20,8 @@ export function Index() {
   if (path === '/overlay/edge') return <EdgeFixture />
   if (path === '/overlay/inert') return <InertFixture />
   if (path === '/overlay/theme') return <ThemeFixture />
+  if (path === '/overlay/focus') return <FocusFixture />
+  if (path === '/overlay/anchor') return <AnchorFixture />
 
   return (
     <Main data-testid="overlays-root" p="4" gap="4">
@@ -32,6 +36,8 @@ export function Index() {
         <a href="/overlay/edge">Edge Sheet & Gesture</a>
         <a href="/overlay/inert">Inert Isolation</a>
         <a href="/overlay/theme">Theming</a>
+        <a href="/overlay/focus">Focus & Restoration</a>
+        <a href="/overlay/anchor">Anchored & Arrow</a>
       </nav>
 
       {/* When loading root / or /overlay, render comprehensive all-in-one suite */}
@@ -49,6 +55,10 @@ export function Index() {
         <InertFixture />
         <hr />
         <ThemeFixture />
+        <hr />
+        <FocusFixture />
+        <hr />
+        <AnchorFixture />
       </div>
     </Main>
   )

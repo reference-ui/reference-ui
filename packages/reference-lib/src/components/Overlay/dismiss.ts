@@ -6,7 +6,7 @@ import {
   layerDocument,
   type Layer,
 } from './stack'
-import { closestFromEvent, isEventInside, isPrimaryPointer } from './events'
+import { closestFromEvent, isEventInside, isPrimaryPointer, markEventConsumed, isEventConsumed } from './events'
 
 type DocEntry = {
   escape: (event: KeyboardEvent) => void
@@ -61,6 +61,7 @@ function insideOwnBackdrop(layer: Layer, event: Event): boolean {
 }
 
 function requestOutside(layer: Layer, event: PointerEvent) {
+  markEventConsumed(event)
   const h = getLayerHandlers(layer.id)
   h?.onOutsidePress?.(event)
   h?.onInteractOutside?.(event)
@@ -91,7 +92,7 @@ function onEscape(event: KeyboardEvent) {
 }
 
 function onPointerDown(event: PointerEvent) {
-  if (!isPrimaryPointer(event)) return
+  if (!isPrimaryPointer(event) || isEventConsumed(event)) return
   const doc = ownerDoc(event)
   const top = getTopLiveLayer(overlayStackStore.getState().layers, doc)
   if (!top || isRecentlyRemoved(top.id) || !top.node) return
@@ -120,6 +121,7 @@ function onPointerMove(event: PointerEvent) {
 }
 
 function onClick(event: MouseEvent) {
+  if (isEventConsumed(event)) return
   const doc = ownerDoc(event)
   const pending = pendingByDoc.get(doc)
   if (!pending) return

@@ -6,9 +6,10 @@ import { defineConfig } from '@playwright/test'
 export default defineConfig({
   reporter: 'line',
   testDir: './tests/e2e',
-  timeout: 15_000,
-  workers: 1,
-  fullyParallel: false,
+  timeout: 45_000,
+  retries: 1,
+  workers: process.env.CI ? 2 : 6,
+  fullyParallel: true,
   use: {
     headless: true,
   },

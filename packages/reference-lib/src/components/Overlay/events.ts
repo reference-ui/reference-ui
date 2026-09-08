@@ -69,3 +69,13 @@ export function isEditableTarget(target: EventTarget | null): boolean {
     (target instanceof HTMLElement && target.isContentEditable)
   )
 }
+
+const consumedEvents = new WeakSet<Event>()
+
+export function markEventConsumed(event: Event) {
+  consumedEvents.add(event)
+}
+
+export function isEventConsumed(event: Event): boolean {
+  return consumedEvents.has(event)
+}

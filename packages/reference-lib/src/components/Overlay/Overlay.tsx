@@ -10,6 +10,7 @@ import { OverlayContent } from './parts/Content'
 import { OverlayArrow } from './parts/Arrow'
 import { OverlayHandle } from './parts/Handle'
 import { syncDismissListeners } from './dismiss'
+import { PresenceCoordinatorContext, usePresenceCoordinator } from '../Presence'
 
 export {
   OverlayTrigger,
@@ -57,6 +58,7 @@ export function Overlay({
   const [internalOpen, setInternalOpen] = React.useState(defaultOpen)
   const isControlled = openProp !== undefined
   const isOpen = isControlled ? openProp : internalOpen
+  const presenceCoordinator = usePresenceCoordinator(isOpen)
 
   const contentRef = React.useRef<HTMLDivElement | null>(null)
   const triggerRef = React.useRef<HTMLElement | null>(null)
@@ -68,8 +70,37 @@ export function Overlay({
   const isolation = React.useMemo(() => resolveIsolation(isolationProp), [isolationProp])
   const mixedGeometry = Boolean(edge && anchor)
 
+  const registeredParts = React.useRef(new Map<string, number>())
+  const [isCorrupted, setIsCorrupted] = React.useState(false)
+
+  const registerPart = React.useCallback(
+    (name: import('./context').OverlayPartName) => {
+      const current = (registeredParts.current.get(name) ?? 0) + 1
+      registeredParts.current.set(name, current)
+      if (current > 1) {
+        overlayWarn(
+          `Duplicate Overlay.${name[0].toUpperCase() + name.slice(1)} detected: an Overlay may define at most one ${name} part.`
+        )
+        setIsCorrupted(true)
+      }
+      if (name === 'handle' && !edge) {
+        overlayWarn('Overlay.Handle requires `edge`.')
+        setIsCorrupted(true)
+      }
+      return () => {
+        const next = (registeredParts.current.get(name) ?? 1) - 1
+        if (next <= 0) registeredParts.current.delete(name)
+        else registeredParts.current.set(name, next)
+      }
+    },
+    [edge]
+  )
+
   React.useEffect(() => {
-    if (mixedGeometry) overlayWarn('`edge` and `anchor` are mutually exclusive.')
+    if (mixedGeometry) {
+      overlayWarn('`edge` and `anchor` are mutually exclusive.')
+      setIsCorrupted(true)
+    }
   }, [mixedGeometry])
 
   const setIsOpen = React.useCallback(
@@ -83,7 +114,18 @@ export function Overlay({
   )
 
   React.useEffect(() => {
+    if (isCorrupted) {
+      overlayStackStore.getState().removeLayer(overlayId)
+      return
+    }
+
     if (isOpen) {
+      if (!contentRef.current && (registeredParts.current.get('content') ?? 0) === 0) {
+        overlayWarn('Missing Overlay.Content: an open Overlay requires exactly one Content part.')
+        setIsCorrupted(true)
+        return
+      }
+
       overlayStackStore.getState().addLayer({
         id: overlayId,
         parentId: parent?.id ?? null,
@@ -116,6 +158,7 @@ export function Overlay({
     }
   }, [
     isOpen,
+    isCorrupted,
     overlayId,
     parent?.id,
     isolation,
@@ -126,7 +169,7 @@ export function Overlay({
     onInteractOutside,
   ])
 
-  React.useEffect(() => {
+  React.useLayoutEffect(() => {
     setLayerHandlers(overlayId, {
       dismiss: () => setIsOpen(false),
       onEscape,
@@ -150,6 +193,8 @@ export function Overlay({
       closeOnScroll,
       presence,
       mixedGeometry,
+      isCorrupted,
+      registerPart,
       portalContainer,
       setPortalContainer,
       contentRef,
@@ -171,6 +216,8 @@ export function Overlay({
       closeOnScroll,
       presence,
       mixedGeometry,
+      isCorrupted,
+      registerPart,
       portalContainer,
       onEscape,
       onOutsidePress,
@@ -180,7 +227,11 @@ export function Overlay({
     ]
   )
 
-  return <OverlayContext.Provider value={contextValue}>{children}</OverlayContext.Provider>
+  return (
+    <PresenceCoordinatorContext.Provider value={presenceCoordinator}>
+      <OverlayContext.Provider value={contextValue}>{children}</OverlayContext.Provider>
+    </PresenceCoordinatorContext.Provider>
+  )
 }
 
 Overlay.Trigger = OverlayTrigger

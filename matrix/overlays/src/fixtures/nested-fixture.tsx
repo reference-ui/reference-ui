@@ -22,6 +22,27 @@ export function NestedFixture() {
       >
         Open Parent Dialog
       </button>
+      <button
+        type="button"
+        data-testid="btn-close-root-parent"
+        data-reference-overlay-ignore=""
+        style={{ marginLeft: 8 }}
+        onClick={() => {
+          log('close:parent')
+          setParentOpen(false)
+        }}
+      >
+        Close Parent
+      </button>
+      <button
+        type="button"
+        data-testid="btn-clear-nested-log"
+        data-reference-overlay-ignore=""
+        style={{ marginLeft: 8 }}
+        onClick={() => setEventsLog([])}
+      >
+        Clear Log
+      </button>
 
       <pre data-testid="nested-events-log">{eventsLog.join(',')}</pre>
 
@@ -58,6 +79,17 @@ export function NestedFixture() {
           <h3>Parent Dialog (Level 1)</h3>
           <button type="button" data-testid="btn-parent-action">
             Parent Action Button
+          </button>
+          <button
+            type="button"
+            data-testid="btn-parent-close-inner"
+            style={{ marginLeft: 8 }}
+            onClick={() => {
+              log('close:parent')
+              setParentOpen(false)
+            }}
+          >
+            Close Parent
           </button>
 
           <div style={{ marginTop: 16 }}>

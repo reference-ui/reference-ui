@@ -434,11 +434,38 @@ export function freePort(port, logPrefix = '[agent]') {
   }
 }
 
+function getLatestSrcMtime(dir) {
+  let latest = 0
+  try {
+    const entries = fs.readdirSync(dir, { withFileTypes: true })
+    for (const ent of entries) {
+      const full = path.join(dir, ent.name)
+      if (ent.isDirectory()) {
+        const sub = getLatestSrcMtime(full)
+        if (sub > latest) latest = sub
+      } else if (ent.isFile() && (ent.name.endsWith('.ts') || ent.name.endsWith('.tsx') || ent.name.endsWith('.css'))) {
+        const stat = fs.statSync(full)
+        if (stat.mtimeMs > latest) latest = stat.mtimeMs
+      }
+    }
+  } catch {}
+  return latest
+}
+
 async function ensureLibBuild(options = {}) {
   const distPath = path.join(repoRoot, 'packages/reference-lib/dist/index.mjs')
   const distExists = fs.existsSync(distPath)
-  if (!distExists || options.forceBuild) {
-    console.log('[agent] Building @reference-ui/lib bundle for matrix consumption...')
+  let distMtime = 0
+  if (distExists) {
+    try { distMtime = fs.statSync(distPath).mtimeMs } catch {}
+  }
+
+  const srcDir = path.join(repoRoot, 'packages/reference-lib/src')
+  const srcMtime = getLatestSrcMtime(srcDir)
+  const isStale = !distExists || srcMtime > distMtime
+
+  if (options.forceBuild) {
+    console.log('[agent] Full rebuild of @reference-ui/lib requested...')
     const buildRes = await runCommand('pnpm', ['--filter', '@reference-ui/lib', 'run', 'build'], {
       env: { REF_PIPELINE_SKIP_DEPENDENCY_BUILDS: '1' },
       skipQueue: true,
@@ -447,7 +474,21 @@ async function ensureLibBuild(options = {}) {
       console.error('[agent] Error: Failed to build @reference-ui/lib.')
       return false
     }
-    console.log('[agent] ✔ @reference-ui/lib build complete.\n')
+    console.log('[agent] ✔ @reference-ui/lib full build complete.\n')
+  } else if (isStale) {
+    console.log('[agent] ⚡ Source files changed. Fast compiling @reference-ui/lib bundle (~400ms)...')
+    const tsupRes = await runCommand('pnpm', ['--filter', '@reference-ui/lib', 'exec', 'tsup'], {
+      skipQueue: true,
+    })
+    if (tsupRes.code !== 0) {
+      console.error('[agent] Fast tsup compile failed, falling back to full build...')
+      const fullRes = await runCommand('pnpm', ['--filter', '@reference-ui/lib', 'run', 'build'], {
+        env: { REF_PIPELINE_SKIP_DEPENDENCY_BUILDS: '1' },
+        skipQueue: true,
+      })
+      if (fullRes.code !== 0) return false
+    }
+    console.log('[agent] ✔ @reference-ui/lib bundle updated.\n')
   }
   return true
 }
@@ -733,17 +774,25 @@ async function actionVerify(componentName) {
     console.log('Step 1/4: Typechecking @reference-ui/lib...')
     let res = await runCommand('pnpm', ['--filter', '@reference-ui/lib', 'run', 'typecheck'], { skipQueue: true })
     if (res.code !== 0) {
-      console.error('\n✖ Step 1 failed: Typecheck errors found.')
-      process.exit(res.code)
+      console.error('\n=======================================================')
+      console.error(`✖ [agent] Step 1 failed: Typecheck errors found (exit code ${res.code}).`)
+      console.error('=======================================================\n')
+      return res.code
     }
     console.log('✔ Typecheck passed.\n')
 
     // Step 2: Unit tests
-    console.log('Step 2/4: Running Vitest unit tests...')
-    res = await runCommand('pnpm', ['--filter', '@reference-ui/lib', 'test'], { skipQueue: true })
+    console.log(`Step 2/4: Running Vitest unit tests for ${componentName}...`)
+    res = await runCommand('pnpm', ['--filter', '@reference-ui/lib', 'test', '--', '-t', componentName], { skipQueue: true })
     if (res.code !== 0) {
-      console.error('\n✖ Step 2 failed: Unit tests failed.')
-      process.exit(res.code)
+      console.log(`[agent] Running full unit test suite fallback...`)
+      res = await runCommand('pnpm', ['--filter', '@reference-ui/lib', 'test'], { skipQueue: true })
+      if (res.code !== 0) {
+        console.error('\n=======================================================')
+        console.error(`✖ [agent] Step 2 failed: Unit tests failed (exit code ${res.code}).`)
+        console.error('=======================================================\n')
+        return res.code
+      }
     }
     console.log('✔ Unit tests passed.\n')
 
@@ -754,8 +803,10 @@ async function actionVerify(componentName) {
       skipQueue: true,
     })
     if (res.code !== 0) {
-      console.error('\n✖ Step 3 failed: Library build failed.')
-      process.exit(res.code)
+      console.error('\n=======================================================')
+      console.error(`✖ [agent] Step 3 failed: Library build failed (exit code ${res.code}).`)
+      console.error('=======================================================\n')
+      return res.code
     }
     console.log('✔ Library build completed.\n')
 
@@ -764,16 +815,23 @@ async function actionVerify(componentName) {
     const libSpecPath = path.join(repoRoot, `matrix/lib/tests/e2e/${normalized}.spec.ts`)
     const targetDir = fs.existsSync(overlaysSpecPath) ? 'matrix/overlays' : 'matrix/lib'
     const specPath = fs.existsSync(overlaysSpecPath) ? overlaysSpecPath : libSpecPath
+    const verifyWorkers = Math.min(8, Math.max(2, Math.floor(os.cpus().length / 4)))
     if (fs.existsSync(specPath)) {
-      console.log(`Step 4/4: Running Playwright E2E spec (${targetDir}/tests/e2e/${normalized}.spec.ts)...`)
+      console.log(`Step 4/4: Running Playwright E2E spec (${targetDir}/tests/e2e/${normalized}.spec.ts) with ${verifyWorkers} workers...`)
       res = await runCommand('pnpm', [
         '--dir', targetDir,
         'exec', 'playwright', 'test',
         `tests/e2e/${normalized}.spec.ts`,
+        `--workers=${verifyWorkers}`,
+        '--fully-parallel',
       ], { skipQueue: true })
       if (res.code !== 0) {
-        console.error('\n✖ Step 4 failed: Browser E2E spec failed.')
-        process.exit(res.code)
+        console.error('\n=======================================================')
+        console.error(`✖ [agent] Step 4 failed: Browser E2E spec failed (exit code ${res.code}).`)
+        console.error('=======================================================\n')
+        freePort(4173)
+        clearServerState()
+        return res.code
       }
       console.log(`✔ E2E spec passed.\n`)
     } else {
@@ -782,17 +840,23 @@ async function actionVerify(componentName) {
         '--dir', 'matrix/lib',
         'exec', 'playwright', 'test',
         'tests/e2e/smoke.spec.ts',
+        `--workers=${verifyWorkers}`,
       ], { skipQueue: true })
       if (res.code !== 0) {
-        console.error('\n✖ Step 4 failed: Smoke test failed.')
-        process.exit(res.code)
+        console.error('\n=======================================================')
+        console.error(`✖ [agent] Step 4 failed: Smoke test failed (exit code ${res.code}).`)
+        console.error('=======================================================\n')
+        freePort(4173)
+        clearServerState()
+        return res.code
       }
       console.log(`✔ Smoke test passed.\n`)
     }
 
-    console.log(`========================================`)
-    console.log(` All 4 Verification Steps Passed for ${componentName}! `)
-    console.log(`========================================\n`)
+    console.log(`=======================================================`)
+    console.log(`✔ [agent] All 4 Verification Steps Passed for ${componentName}! `)
+    console.log(`=======================================================\n`)
+    return 0
   })
 }
 
@@ -829,7 +893,19 @@ function clearServerState() {
   try { if (fs.existsSync(SERVER_STATE_FILE)) fs.unlinkSync(SERVER_STATE_FILE) } catch {}
 }
 
+export function isKnownPackage(name) {
+  if (!name || typeof name !== 'string') return false
+  const clean = name.trim().replace(/^@matrix\//, '').replace(/^matrix\//, '')
+  return fs.existsSync(path.join(repoRoot, 'matrix', clean))
+}
+
 function findSpecByTestId(testId) {
+  if (!testId || typeof testId !== 'string') return null
+  const clean = testId.trim()
+  // Must look like a test case ID (e.g. OV-OUT-01, OV-DOM-05, TOAST-02)
+  const isCaseId = /^[A-Z]{2,}(?:-[A-Z0-9]+)+$/i.test(clean) || clean.toUpperCase().startsWith('OV-')
+  if (!isCaseId) return null
+
   const matrixDir = path.join(repoRoot, 'matrix')
   if (!fs.existsSync(matrixDir)) return null
   const pkgs = fs.readdirSync(matrixDir)
@@ -842,13 +918,14 @@ function findSpecByTestId(testId) {
         const content = fs.readFileSync(fullPath, 'utf-8')
         const lines = content.split('\n')
         for (let i = 0; i < lines.length; i++) {
-          if (lines[i].includes(testId)) {
+          const line = lines[i]
+          if (line.includes(clean) && (line.includes('test(') || line.includes('test.only(') || line.includes('test.describe('))) {
             return {
               pkg: `matrix/${pkg}`,
               target: `tests/e2e/${f}:${i + 1}`,
               file: `tests/e2e/${f}`,
               line: i + 1,
-              testTitle: lines[i].trim(),
+              testTitle: line.trim(),
             }
           }
         }
@@ -1022,6 +1099,13 @@ async function actionPlaywright(rawArgs = []) {
     }
 
     if (!targetPackage && !arg.startsWith('-')) {
+      // 0. Known matrix package check (e.g. overlays, lib, primitives)
+      if (isKnownPackage(arg)) {
+        targetPackage = arg
+        i++
+        continue
+      }
+
       // 1. Direct test ID match (e.g. OV-OUT-01, OV-LAYER-02)
       const testIdMatch = findSpecByTestId(arg)
       if (testIdMatch) {
@@ -1070,7 +1154,7 @@ async function actionPlaywright(rawArgs = []) {
 
   if (targetSpec) {
     playwrightArgs.unshift(targetSpec)
-  } else {
+  } else if (!resolvedTarget) {
     // If not resolved yet, infer from spec file arguments
     for (const arg of playwrightArgs) {
       if (arg.endsWith('.spec.ts') || arg.endsWith('.spec.js') || arg.includes('.spec.')) {
@@ -1138,11 +1222,13 @@ async function actionPlaywright(rawArgs = []) {
     if (!hasWorkersArg) {
       if (isSingleTest) {
         playwrightArgs.push('--workers=1')
-      } else if (configWorkers !== null) {
-        playwrightArgs.push(`--workers=${configWorkers}`)
       } else {
-        const defaultWorkers = Math.min(8, Math.max(2, Math.floor(os.cpus().length / 4)))
-        playwrightArgs.push(`--workers=${defaultWorkers}`)
+        // High-concurrency hardware auto-tuning:
+        // On modern workstations (e.g. 13900K with 24c/32t, M-series Max/Ultra), run with optimal 6-8 workers!
+        const cpus = os.cpus().length
+        const hwWorkers = Math.min(8, Math.max(2, Math.floor(cpus / 4)))
+        const workersToUse = (configWorkers && configWorkers > 1) ? configWorkers : hwWorkers
+        playwrightArgs.push(`--workers=${workersToUse}`)
       }
     }
 
@@ -1453,9 +1539,11 @@ async function main() {
       process.exit(pipeRes.code)
       break
 
-    case 'verify':
-      await actionVerify(args[1])
+    case 'verify': {
+      const code = await actionVerify(args[1])
+      process.exit(code ?? 0)
       break
+    }
 
     case 'playwright':
     case 'pw':

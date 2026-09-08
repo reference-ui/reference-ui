@@ -7,8 +7,8 @@ export default defineConfig({
   reporter: 'line',
   testDir: './tests/e2e',
   timeout: 180_000,
-  workers: 1,
-  fullyParallel: false,
+  workers: process.env.CI ? 2 : undefined,
+  fullyParallel: true,
   use: {
     headless: true,
   },

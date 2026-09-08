@@ -3,252 +3,148 @@
 Current freeze, cases, and proof. Design narrative: [Overlay.md](./Overlay.md).
 System orchestration: [OVERLAYS.md](../../../OVERLAYS.md).
 
-Playwright: `matrix/overlays/tests/e2e/overlay.spec.ts` (deep contract suite) · `matrix/lib/tests/e2e/overlay.spec.ts` (cross-component integration)
-Page: `/overlay/*` (modular fixtures) · `/overlay`
+Playwright: `matrix/overlays/tests/e2e/overlay.spec.ts`
+Fixtures: `matrix/overlays/src/fixtures/*`
+Pages: `/overlay/*`
 
-## Legend
+---
 
-- `[x]` Playwright title contains this case ID.
-- `[ ]` Specified; not E2E-proven. The engine may still exist in source.
+## Next agent — production Overlay
 
-## Current (2026-09-08)
+Read this section first. Do not read Parked until a Must case fails because of one.
 
-**Production: no.** Gates 1–2 in [OVERLAYS.md](../../../OVERLAYS.md).
+**Overlay kernel is shipped.** Gate 1 defects are closed in source. Happy-path + nested stack E2E exists in `@matrix/overlays`.
+
+Production Overlay means: every **public Overlay surface** works, including the OS-nasty edges that surface owns. It does not mean cloning FocusLock / Portal / Popover / Floating UI catalogs into more `OV-*` titles.
+
+### What Overlay supports (the surface)
+
+Three independent axes. Prove each axis and the seams between them. Do not prove a sibling primitive's catalog on Overlay.
+
+| Axis | Public surface | Already proven | Still Overlay-owned |
+| :--- | :--- | :--- | :--- |
+| Geometry | Unbound · anchored (element / virtual) · `edge` | Unbound, defaults, flip/shift/arrow, four edges, Handle distance/velocity | Virtual anchor, `closeOnScroll`, available-size vars, Trigger vs edge/virtual, nested `--index`, mixed-geometry diagnostic |
+| Isolation | `true` · `false` · `{ focus, inert, scroll }` patch | Default modal bundle, `false`, inert siblings, toast/live exceptions, pointer teardown, desktop scroll lock | Patch object, defer-only-when-inert, authored-inert restore, scrollbar gap, iOS visualViewport + edge `position: fixed` |
+| Interaction | `open` / `defaultOpen`, Trigger, Escape, outside, Handle | Controlled, Escape nested, Backdrop outside, `composedPath`, layer cascade | Same-tick open, no-Backdrop light dismiss, touch defer, focus≠dismiss, Trigger activate + trap/bridge |
+
+Seams Overlay owns (not the child primitive): nested Overlay.Content is a FocusLock **shard** (`OV-FOCUS-07`); restore runs **after Presence** (`OV-RESTORE-*` timing only); `Overlay.Portal` moves Backdrop/Content, Trigger never portals.
+
+### OS overlay coverage (do not skip)
+
+These are the nasty cases. Cover them on Overlay. Do not invent extra IDs that restate a proven kernel test.
+
+| OS / platform pattern | Overlay mapping | Proof |
+| :--- | :--- | :--- |
+| Modal dialog (Win/macOS) | Unbound + isolation default | Proven (`OV-DOM-*`, Escape, trap, inert, scroll) |
+| Nested menu / popover in a dialog | One stack, child is inside + shard | Layer proven; **shard wiring** `OV-FOCUS-07` |
+| Alert / destructive | App `preventDefault` on `onEscape` | Proven `OV-ESC-06` — do not add `OV-COMP-02` |
+| Modeless popover / flyout | `isolation={false}`, no Backdrop | Proven `OV-ISO-02`; **geometric outside** `OV-OUT-11` |
+| Context menu at a point | Virtual `anchor` + optional Trigger | `OV-POS-09` + `OV-TRG-06` (one fixture) |
+| iOS/Android sheet | `edge` + Handle-only drag, inner scroll | Proven bind/threshold; **Handle vs body scroll** `OV-HND-03` |
+| Stacked sheets | `--reference-overlay-index` / `-count` | `OV-EDGE-04` |
+| Keyboard over a sheet (iOS Safari) | visualViewport + edge `position: fixed` | **One WebKit fixture:** `OV-EDGE-06` + `OV-SCROLL-07` |
+| Click the opener that mounts the layer | Same-tick pointerdown | `OV-OUT-04` |
+| Touch delayed click | Defer until click; cancel if back inside | `OV-OUT-06` |
+| Focus move is not a click-outside | Focus ≠ dismiss | `OV-FOCUS-09` |
+| Drawer that must not lock scroll | `isolation={{ scroll: false }}` | `OV-ISO-03` |
+| Tooltip / combobox scroll-close | `closeOnScroll` | `OV-SCRL-01` + `OV-SCRL-02` (one fixture) |
+| Scrollbar gap when a modal opens | Scroll-lock compensation | `OV-SCROLL-02` |
+| Opener removed while closing | Presence then FocusLock fallback | `OV-RESTORE-03` timing only — **walk is `FL-RESTORE-03/04`** |
+
+Parked on purpose (not Overlay kernel, or not this pass): password-manager overlay, native `:popover-open`, iframe stacks, two React roots, SSR/`OV-ENV-*`, RTL extras, MutationObserver inert dynamism, full Floating UI autoUpdate/hide/iframe/zoom matrix, TalkBack.
+
+### Do not duplicate
+
+| If you are about to write… | Stop. It lives here |
+| :--- | :--- |
+| Tab loop, tabbable catalog, proximity restore walk, shard Tab order | `FocusLock` `FL-TAB-*` / `FL-CAND-*` / `FL-SHARD-*` / `FL-RESTORE-03/04` |
+| Nested lock pause/resume without Overlay | `FL-NEST-*` (`OV-FOCUS-06` already wires Overlay nesting) |
+| Portal container element vs ref vs function | `Portal` — Overlay smokes **one** container (`OV-DOM-04`) |
+| Handle without `edge` | Already `OV-DOM-09` |
+| AlertDialog composition | `OV-ESC-06` |
+| Cascade restore only outer origin | `OV-LAYER-06` |
+| Dialog / popover-without-hover “composition smokes” | Overlay.md examples; proven kernel + Trigger cases |
+| Hover polygon, delays, impatient click | `Popover` |
+| Skip-delay, `aria-describedby` | `Tooltip` |
+| Flip/shift/arrow defaults | Proven `OV-POS-02`–`05` (do not copy `PO-FLIP/SHIFT/ARROW`) |
+| Omitted `isolation` / omitted Trigger | Isolating dialog fixtures already do this |
+
+Do not add `OV-*` cases. Extend existing `@matrix/overlays` fixtures. Run `pnpm agent playwright overlays -g "OV-…"`. `[x]` for new work means the test asserts the **prose**. Combined titles are fine when one fixture covers two IDs that are the same OS case.
+
+### Status (2026-09-08)
 
 | | |
 | :--- | :--- |
 | Engine | Shipped |
-| Named `[x]` | 29 / 133 |
-| Playwright tests | 41 (23 in @matrix/overlays, 18 in @matrix/lib) |
+| Production | **No** — Overlay-owned nasties below are open |
+| Named proven | 60 (includes `OV-POS-02`–`05`) |
+| Unit tests | **None** for stack / dismiss / gesture / isolation |
 
-Named proven: `OV-DOM-01`, `OV-DOM-02`, `OV-DOM-05`, `OV-DOM-06`, `OV-DOM-07`, `OV-POS-01`, `OV-TRG-02`, `OV-THEME-01`, `OV-THEME-02`, `OV-ESC-01`, `OV-ESC-02`, `OV-ESC-04`, `OV-OUT-01`, `OV-OUT-02`, `OV-OUT-03`, `OV-OUT-05`, `OV-OUT-08`, `OV-OUT-09`, `OV-LAYER-01`, `OV-LAYER-02`, `OV-LAYER-03`, `OV-INERT-01`, `OV-INERT-05`, `OV-SCROLL-01`, `OV-SCROLL-03`, `OV-EDGE-01`, `OV-HND-01`, `OV-HND-02`, `OV-ISO-02`.
+`OVERLAYS.md` is stale on Gate 1. Trust this file and source.
 
-Unnamed Playwright (do **not** check a contract ID): focus trap. Those are weaker than `OV-FOCUS-*`.
+### Work order
 
-### In the tree
+Implement if missing, then prove. **Unit-test** stack cascade, `resolveIsolation`, Handle 25%/velocity, `composedPath` (`matrix/lib/tests/unit/`). Playwright for DOM, focus, pointer, touch, Presence.
 
-Portal, layer stack, controlled + `defaultOpen`, Presence, isolation bundle (focus / inert / scroll), Trigger, anchored Floating UI (flip/shift/arrow/size/hide/autoUpdate), edge CSS binding, Handle drag (all four edges), sibling-walk `inert` with toast/live-region exceptions, iOS visualViewport scroll lock, dedicated `@matrix/overlays` deep test suite.
+One fixture per row when IDs share a scenario.
 
-### Defects (must fix before trusting the contract)
+| Step | Surface / OS case | IDs | Notes |
+| :--- | :--- | :--- | :--- |
+| 0 | Unit kernel | — | Pure functions. No new E2E titles. |
+| 1 | Dismiss nasties | `OV-OUT-04`, `OV-OUT-11`, `OV-OUT-06`, `OV-FOCUS-09`, `OV-ISO-04` | Same-tick, modeless outside, touch defer, focus≠dismiss, defer only when `inert`. |
+| 2 | Isolation patch | `OV-ISO-03` | `{ scroll: false }` and mixed flags. iOS fixed follows `scroll` on **edge** only. |
+| 3 | Trigger | `OV-TRG-03`, `OV-TRG-04`, `OV-TRG-05` | Activate + `preventDefault`. `OV-TRG-04` is “Trigger is not a trap stop”; restore is already `OV-RESTORE-01`. |
+| 4 | Seams | `OV-FOCUS-07`, `OV-RESTORE-03`, `OV-RESTORE-04`, `OV-RESTORE-05` | Shard **registration** only. Restore: Presence timing + deleted opener / `false` / reopen. Do not copy `FL-RESTORE` walks. Extend `OV-POINTER-06` for reopen. |
+| 5 | Sheet / iOS | `OV-HND-03`, `OV-EDGE-06` + `OV-SCROLL-07` | Handle vs inner scroll. **One** WebKit keyboard/visualViewport fixture for both IDs. |
+| 6 | Anchored policy | `OV-POS-09` + `OV-TRG-06`, `OV-SCRL-01` + `OV-SCRL-02` | One virtual-anchor fixture; one closeOnScroll omitted-vs-true fixture. |
+| 7 | Same pass | `OV-DOM-04` (+ Trigger stays), `OV-EDGE-03`, `OV-EDGE-04`, `OV-SCROLL-02`, `OV-POS-06`, `OV-EDGE-02`, `OV-INERT-02` | One Portal container, not three Portal forms. `OV-TRG-07` and `OV-HND-04` are absorbed (`OV-DOM-04` / `OV-DOM-09`). |
 
-Gate 1 kernel defects from 2026-09-08 are closed in source: iOS/visualViewport
-scroll lock, four-edge Handle, top-layer Backdrop, `composedPath` outside press,
-and deterministic deepest-first cascade. Deep E2E density established in `@matrix/overlays`.
+Then **stop Overlay work.** Gate 3 is FocusLock (`FL-RESTORE-*` deleted-trigger walk, `FL-SHARD-*` portalled catalog, `FL-NEST-*`). Then Popover polygon, Tooltip store, Toast overlay-stack pause.
 
-### Remaining
+### Done when
 
-Continue expanding deep suites for `OV-FOCUS-*`, `OV-POINTER-*`, and complex multi-layer cancellation edge cases. Unchecked cases below stay the contract.
+- Overlay-owned rows above are `[x]` with prose-level asserts (combined titles OK).
+- Step 0 unit tests exist.
+- No new SPEC cases, no FocusLock/Portal/Popover catalog copied into Overlay.
+- Parked stays parked.
 
-## Freeze decision
+---
 
-Omitted `isolation` is `true` (focus + inert + scroll). `isolation={false}`
-turns all three off. An object patches the `true` bundle. There is no
-`modal` prop. Semantic role remains application markup: dialog,
-alertdialog, drawer, sheet, lightbox, and popover-without-hover are
-compositions. Popover/Tooltip remain named policy (hover, skip-delay).
+## Freeze
 
-Geometry is one of unbound, anchored, or `edge`. Unbound writes no
-coordinates. Anchored Content is the floating element with ported
-defaults: `placement="bottom-start"`, `offset=8`, `collisionPadding=8`,
-absolute strategy, flip/shift enabled. `Overlay.Arrow` participates only
-while anchored. `edge` binds Content to a viewport edge; flip/arrow/anchor
-are inert. `edge` plus `anchor` is a diagnostic.
+Omitted `isolation` is `true` (focus + inert + scroll). `isolation={false}` turns all three off. An object patches the `true` bundle. There is no `modal` prop. Semantic role remains application markup: dialog, alertdialog, drawer, sheet, lightbox, and popover-without-hover are compositions. Popover/Tooltip remain named policy (hover, skip-delay).
 
-`Overlay.Trigger` is optional, never portalled, and requests `onOpen` /
-`onDismiss`. Handle-only drag applies only with `edge`.
+Geometry is one of unbound, anchored, or `edge`. Unbound writes no coordinates. Anchored Content is the floating element with ported defaults: `placement="bottom-start"`, `offset=8`, `collisionPadding=8`, absolute strategy, flip/shift enabled. `Overlay.Arrow` participates only while anchored. `edge` binds Content to a viewport edge; flip/arrow/anchor are inert. `edge` plus `anchor` is a diagnostic.
 
-AlertDialog's non-dismissible Escape policy is authored by preventing
-`onEscape`; Overlay does not infer behavior from a role string.
+`Overlay.Trigger` is optional, never portalled, and requests `onOpen` / `onDismiss`. Handle-only drag applies only with `edge`.
 
-## Source evidence
+AlertDialog's non-dismissible Escape policy is authored by preventing `onEscape`; Overlay does not infer behavior from a role string.
 
-- `vendor/radix-primitives/packages/react/dismissable-layer/src/dismissable-layer.test.tsx`
-  — outside/inside/branch detection, cancellation, touch deferral, shadow
-  paths, extension overlays, child-before-parent races, and latest callbacks.
-- `vendor/radix-primitives/e2e/{dialog,popover,dropdown-menu,context-menu,select,menubar}.spec.ts`
-  — topmost Escape, nested outside press, focus trap/removal, pointer-events
-  teardown, and repeated copies consolidated here.
-- React Aria overlay tests — `usePreventScroll`, `ariaHideOutside`,
-  `useInteractOutside`, Shadow DOM, nested/out-of-order modals, and dynamic DOM.
-- `vendor/react-remove-scroll`, `aria-hidden`, `inert`, FocusLock sources/tests,
-  and a11y-dialog — scroll, background isolation, focus, and vanilla dialog
-  behavior.
-- Zag dismissable/layer-stack — parent cascade and recently-removed focus race.
-- `vendor/floating-ui/packages/{core,dom}` and
-  `packages/dom/test/functional/{flip,shift,offset,arrow,size,hide,autoUpdate,scroll,iframe,shadow-dom,top-layer,virtual-element,zoom}.test.ts`
-  — the geometry engine Overlay ports. `@floating-ui/react` remains leave.
+## Legend
+
+- `[x]` Playwright title contains this case ID **and** the test asserts the prose (production bar). Older `[x]` entries may only match the ID; do not weaken them.
+- `[ ]` Specified; not proven. Engine may still exist in source.
 
 ## Part contract
 
-`Overlay.Trigger` is a fixed `ReferencePartProps<"button">` part.
-`Overlay.Backdrop`, `Overlay.Content`, `Overlay.Arrow`, and
-`Overlay.Handle` are fixed `ReferencePartProps<"div">` parts. Arrow
-participates only while anchored; Handle participates only with `edge`.
-`Overlay` and `Overlay.Portal` are transparent. All seven run the
-applicable shared `PART-*` type, DOM, StyleProps, ref, event, state,
-control, and default checks from `TESTING.md`. Cases below add only
-Overlay-specific anatomy and behavior/style conflicts.
+`Overlay.Trigger` is a fixed `ReferencePartProps<"button">` part. `Overlay.Backdrop`, `Overlay.Content`, `Overlay.Arrow`, and `Overlay.Handle` are fixed `ReferencePartProps<"div">` parts. Arrow participates only while anchored; Handle participates only with `edge`. `Overlay` and `Overlay.Portal` are transparent. Shared `PART-*` checks live in `TESTING.md`.
 
-## Required cases
+## Source evidence
 
-### DOM, portal, and controlled state
+- Radix `dismissable-layer` tests + `e2e/{dialog,popover,dropdown-menu}.spec.ts`
+- React Aria `usePreventScroll` / `ariaHideOutside` / `useInteractOutside`
+- `vendor/react-remove-scroll`, `aria-hidden`, FocusLock, a11y-dialog
+- Zag layer-stack cascade + recently-removed focus race
+- `vendor/floating-ui` core + DOM (`@floating-ui/react` remains leave)
 
-- [x] `OV-DOM-01` `[reference]` `[browser]` —
-  **Overlay should render only its authored Backdrop and Content nodes when it
-  uses the default portal.**
-  Mount an open Overlay with its transparent root and Portal configuration,
-  one Backdrop, and one Content. Assert that Backdrop and Content are separate
-  sibling `div` elements under `document.body` and that Overlay and Portal add
-  no host nodes; this freezes the public anatomy before interaction behavior.
-- [x] `OV-DOM-02` `[reference]` `[browser]` —
-  **Overlay should leave dialog semantics and presentation to the application
-  when unbound Content is rendered without semantic props.**
-  Mount an open Overlay with otherwise bare Backdrop and Content parts, no
-  `anchor`, no `edge`, and no Trigger, then inspect the public DOM. Assert
-  that it invents no trigger, role, label, `aria-modal`, heading, close
-  button, coordinates, or appearance, because dialog, alertdialog, drawer,
-  sheet, and lightbox remain compositions and unbound geometry stays
-  application CSS.
-- [ ] `OV-DOM-03` `[reference]` `[browser]` —
-  **Overlay should keep lifecycle state authoritative when Backdrop and Content
-  also use token-aware visual StyleProps.**
-  Give both fixed `ReferencePartProps<"div">` parts unrelated base and
-  responsive StyleProps, then drive controlled open and Presence exit. Assert
-  synchronized `data-state="open"|"closed"` on both parts while their computed
-  visual styles remain intact; generic prop, ref, event, and StyleProps coverage
-  belongs to the shared `PART-*` matrix.
-- [ ] `OV-DOM-04` `[reference]` `[browser]` —
-  **Overlay should use the requested Portal destination without a wrapper when
-  an element, ref, or function container is supplied.**
-  Parameterize `Overlay.Portal` over a direct element, mutable ref, and
-  destination function, then open the Overlay after each target is available.
-  Assert Backdrop and Content move through Portal into the resolved container
-  and no configuration host appears in either source or destination DOM.
-- [x] `OV-THEME-01` `[reference]` `[browser]` —
-  **Overlay should re-establish themed layer scope on portaled Backdrop and
-  Content when they inherit color mode from the React tree.**
-  Open anchored Content inside a dark `colorMode` scope using token StyleProps
-  (`ui.dialog.background`, etc.) with no inline background override. Assert
-  the portaled node is a direct `body` child, carries both `data-layer` and
-  `data-panda-theme="dark"`, and resolves a non-white dialog background.
-- [x] `OV-DOM-05` `[reference]` `[browser]` —
-  **Overlay should render no modal parts when it initially mounts closed
-  without an active exit.**
-  Mount `open={false}` with authored Backdrop and Content and no preceding open
-  lifecycle. Assert that neither part nor a portal payload is present and that
-  no focus lock, inerting, layer registration, or scroll lock is observable.
-- [x] `OV-DOM-06` `[reference]` `[browser]` —
-  **Overlay should follow only the controlled prop when the application opens
-  or closes it programmatically.**
-  Rerender the same fixture from `open={false}` to `true` and back to `false`,
-  completing any owned exit without keyboard or pointer input. Assert the DOM
-  and `data-state` follow each prop value while `onEscape`, `onOutsidePress`,
-  and `onDismiss` are never called.
-- [x] `OV-DOM-07` `[reference]` `[browser]` —
-  **Overlay should remain fully modal when the parent rejects a dismissal
-  request.**
-  Open a controlled Overlay, trigger one permitted Escape or outside-press
-  request, log the callbacks, and deliberately keep `open={true}`. Assert open
-  DOM, focus containment, background inerting, layer order, and scroll lock all
-  remain active; a callback request must not impersonate accepted state.
-- [ ] `OV-DOM-08` `[reference]` `[browser]` —
-  **Overlay should fail atomically when one instance defines duplicate
-  Backdrop, Content, Trigger, or Handle parts.**
-  Mount separate fixtures with two Backdrops, two Contents, two Triggers, and
-  two Handles and capture the development diagnostic. Assert a descriptive
-  single-part error names the duplicated anatomy and that no portal payload,
-  layer entry, focus lock, inert state, or scroll lock is partially activated.
-- [ ] `OV-DOM-09` `[reference]` `[browser]` —
-  **Overlay should validate its complete anatomy when an open instance has
-  missing or duplicate structural parts.**
-  Exercise exactly one Content with zero or one Backdrop, Trigger, Handle, and
-  Portal as valid shapes, then omit Content or duplicate Content, Backdrop,
-  Trigger, Handle, or Portal. Assert valid shapes activate one layer system,
-  while every invalid shape reports the missing or duplicate part and leaves
-  no partially managed layer. Handle without `edge` is invalid even once.
+---
 
-### Escape ordering and cancellation
+## Production blockers
 
-- [x] `OV-ESC-01` `[vendor]` `[browser:all]` —
-  **Overlay should request one dismissal after its granular callback when
-  Escape reaches the active layer.**
-  Open one controlled Overlay, focus a control in Content, press the physical
-  Escape key, and record callback order and event identity. Assert exactly
-  `onEscape(event)` followed by `onDismiss()` once, with focus and controlled
-  DOM unchanged until the parent accepts the request.
-- [x] `OV-ESC-02` `[vendor]` `[browser]` —
-  **Overlay should remain open when its granular Escape callback prevents the
-  default dismissal.**
-  Open a controlled Overlay whose `onEscape` calls `event.preventDefault()`,
-  focus inside Content, and press Escape. Assert `onEscape` receives the
-  keyboard event once, `onDismiss` is not called, and the controlled layer,
-  focus lock, inerting, and scroll lock remain active.
-- [ ] `OV-ESC-03` `[vendor]` `[browser]` —
-  **Overlay should use current callbacks when Escape occurs after a rerender.**
-  Rerender an open Overlay from an unblocked handler to a latest closure that
-  reads updated state and prevents Escape, then press Escape. Assert only the
-  current closure observes the key and `onDismiss` stays at zero, matching
-  Radix `dismissable-layer.test.tsx` (“calls the latest escape key handler
-  after re-rendering” and “observes the latest state when preventing escape
-  dismissal”).
-- [x] `OV-ESC-04` `[vendor]` `[browser]` —
-  **Overlay should route Escape to only the top layer when controlled layers
-  are nested.**
-  Open a parent Overlay and a registered child layer, press Escape inside the
-  child, accept only the child's request, and then press Escape again after it
-  closes. Assert the first key calls only the child's granular and dismissal
-  callbacks and the second reaches the parent, as in Radix
-  `e2e/dialog.spec.ts` (“pressing Escape closes only the dropdown”).
-- [ ] `OV-ESC-05` `[reference]` `[browser]` —
-  **Overlay should ignore inactive and foreign-document layers when Escape is
-  pressed in the active document.**
-  Keep one layer closed or exiting in the main document and another open in a
-  same-origin iframe, then activate a live main-document Overlay and press
-  Escape there. Assert only that document's top live layer receives callbacks;
-  exiting and iframe stacks do not intercept or reorder the event.
-- [ ] `OV-ESC-06` `[reference]` `[browser]` —
-  **Overlay should support a non-dismissible AlertDialog when the application
-  prevents Escape.**
-  Compose Content as `role="alertdialog"`, explicitly focus its destructive
-  control, make `onEscape` call `preventDefault()`, and press Escape. Assert the
-  granular callback runs once, `onDismiss` does not run, focus stays contained,
-  and the dialog remains open without Overlay inferring policy from the role.
-- [ ] `OV-ESC-07` `[convergence]` `[browser]` —
-  **Overlay should wait to handle Escape when a native top-layer popover
-  consumes the first key.**
-  Open an Overlay containing an active element using the browser's native
-  popover top layer, focus within that top layer, and press Escape twice.
-  Assert the first key closes only the native popover with no Overlay callback
-  and the later key requests Overlay dismissal, preserving browser top-layer
-  precedence.
+Full freeze text. These are the only Overlay cases to implement or prove next.
 
-### Outside press
+### Must 1 — Dismiss races
 
-- [x] `OV-OUT-01` `[vendor]` `[browser:all]` —
-  **Overlay should request dismissal in granular-first order when a primary
-  pointer sequence lands on its Backdrop.**
-  Open one controlled Overlay and perform a real primary mouse sequence on
-  that Overlay's registered Backdrop. Assert exactly one
-  `onOutsidePress(pointerEvent)` followed by one `onDismiss()`, while the
-  background control receives no activation and controlled state changes only
-  if the parent accepts.
-- [x] `OV-OUT-02` `[vendor]` `[browser]` —
-  **Overlay should not request dismissal when pointer interaction stays inside
-  Content.**
-  Open the Overlay and perform primary pointer sequences on Content itself and
-  on ordinary nested buttons, text, and non-portalled descendants. Assert
-  `onOutsidePress` and `onDismiss` remain uncalled and the layer stays active,
-  matching Radix `dismissable-layer.test.tsx` (“does not dismiss on pointer
-  down inside”).
-- [x] `OV-OUT-03` `[vendor]` `[browser]` —
-  **Overlay should skip high-level dismissal when the application prevents an
-  outside-press event.**
-  Open a controlled Overlay whose `onOutsidePress` records the public pointer
-  event and calls `preventDefault()`, then press its Backdrop. Assert the
-  granular callback runs once with intact pointer metadata, `onDismiss` does
-  not run, and modal state remains active, matching Radix
-  `dismissable-layer.test.tsx` (“does not dismiss when pointer down outside is
-  prevented”).
 - [ ] `OV-OUT-04` `[vendor]` `[browser]` —
   **Overlay should not immediately dismiss when the pointerdown that opens it
   is also outside its newly mounted Content.**
@@ -256,14 +152,14 @@ Overlay-specific anatomy and behavior/style conflicts.
   `pointerdown`, allowing document listeners to settle normally. Assert that
   the opening event produces no `onOutsidePress` or `onDismiss`, Content stays
   open, and only a later independent outside sequence can request close.
-- [x] `OV-OUT-05` `[vendor]` `[browser]` —
-  **Overlay should ignore dismissal when a non-primary mouse or pen barrel
-  button interacts with Backdrop.**
-  Right-click the Backdrop and repeat with a pen barrel-button sequence,
-  including the later `contextmenu` event. Assert no `onOutsidePress` or
-  `onDismiss` callback and no delayed duplicate; this frozen policy conflicts
-  with current Radix `dismissable-layer.test.tsx` (“dismisses immediately on
-  non-primary mouse pointer down outside” and its pen equivalent).
+- [ ] `OV-OUT-11` `[reference]` `[browser]` —
+  **Overlay should retain cancelable geometric outside dismissal when no
+  Backdrop part is authored.**
+  Mount valid open Content without Backdrop, place a background control beyond
+  its bounding rect, and perform a primary pointer sequence in that outside
+  region with and without `onOutsidePress.preventDefault()`. Assert the normal
+  path calls granular then high-level dismissal, the prevented path skips
+  `onDismiss`, and the actual background control remains inert and unactivated.
 - [ ] `OV-OUT-06` `[vendor]` `[touch]` —
   **Overlay should cancel stale outside dismissal when a deferred touch
   sequence returns inside or is canceled before click.**
@@ -273,6 +169,307 @@ Overlay-specific anatomy and behavior/style conflicts.
   the other paths stay silent, matching Radix `dismissable-layer.test.tsx`
   (“defers touch pointer down outside dismissal until click” and “cancels
   pending touch outside dismissal when pointer down moves back inside”).
+- [ ] `OV-FOCUS-09` `[convergence]` `[browser]` —
+  **Overlay should never treat focus movement by itself as an outside-dismiss
+  command.**
+  Open with `initialFocus={false}` while focus remains on the source, then in a
+  second fixture enter Content and programmatically focus an outside element
+  without a pointer sequence. Assert the first state causes no immediate
+  dismissal and the second is reclaimed by FocusLock, with
+  `onOutsidePress`/`onDismiss` empty in both. Modal focus containment and
+  pointer dismissal are separate policies; Reference UI deliberately does not
+  copy Radix focus-outside dismissal.
+
+### Must 2 — Isolation API
+
+- [ ] `OV-ISO-03` `[reference]` `[browser]` —
+  **Overlay should patch the isolating bundle when `isolation` is an
+  object.**
+  Open Overlay with `isolation={{ scroll: false }}` then with
+  `{ focus: false, inert: true, scroll: true }`. Assert omitted keys stay
+  on in the first fixture, and only the named combination runs in the
+  second; iOS position-fixed follows `scroll` on edge overlays only.
+- [ ] `OV-ISO-04` `[reference]` `[browser]` —
+  **Overlay should defer outside-press only while inert isolation is on.**
+  Compare omitted isolation with `isolation={false}` on an outside
+  pointerdown that is not a Backdrop. Assert the isolating path waits for
+  the deferred click (no dismiss at pointerdown) and the non-isolating
+  path dismisses on the initial outside event. Do not block this case
+  on a full password-manager extension fixture (`OV-OUT-07` is Parked).
+
+### Must 3 — Trigger
+
+- [ ] `OV-TRG-03` `[reference]` `[browser]` —
+  **Overlay.Trigger should request open and dismiss from unprevented
+  activation.**
+  Click, Enter, and Space a closed then open Trigger. Assert `onOpen` while
+  closed and `onDismiss` while open, consumer handlers run first, and
+  `preventDefault()` cancels the built-in request. Repeat with `disabled`:
+  no requests.
+- [ ] `OV-TRG-04` `[reference]` `[browser]` —
+  **Overlay.Trigger should remain outside the focus lock when isolation
+  focus is on.**
+  Open isolating Overlay from Trigger. Assert focus moves into Content,
+  Tab cycles inside Content, and Trigger is not a trap stop. Restore-after-
+  Presence is already `OV-RESTORE-01` — do not re-assert it here.
+- [ ] `OV-TRG-05` `[reference]` `[browser]` —
+  **Overlay should bridge Tab from Trigger into Content when isolation
+  focus is off.**
+  Open `isolation={false}` Overlay from Trigger with two focusable Content
+  controls. Tab from Trigger into Content, then Tab past the last control.
+  Assert focus enters Content, then advances relative to Trigger and one
+  `onDismiss` fires; this is the former Popover tab-order bridge.
+
+### Must 4 — Focus + restore
+
+- [ ] `OV-FOCUS-07` `[reference]` `[browser]` —
+  **Overlay should register portalled child Content as a FocusLock shard.**
+  Open a parent Overlay with a nested Popover or Menu whose Content portals
+  elsewhere, then Tab or programmatically focus its first control. Assert
+  Overlay wired that node as a shard so focus stays in the child without
+  parent reclaim, then parent policy resumes after unmount. Do not re-prove
+  shard Tab order, overlap, or shadow catalogs (`FL-SHARD-*`).
+- [ ] `OV-RESTORE-03` `[vendor]` `[browser]` —
+  **Overlay should restore only after Presence when the opener is gone.**
+  Open from a trigger, start close, remove or disable the trigger before the
+  owned exit ends. Assert no restore during exit, then after Presence one live
+  candidate receives focus (not a detached node). The right/left/ancestor
+  walk is `FL-RESTORE-03` / `FL-RESTORE-04` — do not copy that matrix here.
+- [ ] `OV-RESTORE-04` `[reference]` `[browser]` —
+  **Overlay should not steal focus after Presence when `restoreFocus={false}`.**
+  Start an animated close with `restoreFocus={false}` and move focus to a valid
+  outside target as part of the close workflow. Assert Presence tears down
+  isolation without restoring the opener. Skip-restore itself is
+  `FL-RESTORE-02` — Overlay only proves it does not override that after exit.
+- [ ] `OV-RESTORE-05` `[reference]` `[browser]` —
+  **Overlay should cancel pending focus restoration when it reopens during
+  exit.**
+  Same Presence reopen as proven `OV-POINTER-06`: begin close, reopen before
+  exit, dispatch stale end events. Assert focus stays in the live Overlay and
+  trigger restore is canceled (pointer teardown is already proven there).
+  Extend that fixture; do not duplicate the reopen harness.
+
+### Must 5 — Edge / iOS
+
+- [ ] `OV-HND-03` `[reference]` `[touch]` —
+  **Overlay should keep overflowing Content scrollable while Handle
+  drags.**
+  Mount edge Content with a tall scrollable body and a Handle. Scroll the
+  body, then drag Handle. Assert body scroll does not request dismiss and
+  Handle drag does not scroll the body. This freezes Handle-only against
+  Vaul drag-anywhere.
+- [ ] `OV-EDGE-06` `[vendor]` `[touch]` —
+  **Overlay should apply iOS position-fixed when edge isolation scroll is
+  on.**
+  One WebKit fixture with `OV-SCROLL-07`: open isolating `edge="bottom"`
+  at a nonzero offset, focus an inner input, resize `visualViewport`. Assert
+  body `position: fixed` restore, nested edge overlays skip a second fixed
+  lock, Content does not jump, and page offset restores after teardown.
+  This ports Vaul `use-position-fixed.ts` plus Aria visualViewport. Do not
+  split into two iOS keyboard tests.
+- [ ] `OV-SCROLL-07` `[vendor]` `[touch]` —
+  **Overlay should keep page position stable when Mobile Safari changes
+  visualViewport around a focused input.**
+  Covered in the `OV-EDGE-06` WebKit fixture (keyboard / address-bar /
+  visualViewport). If proving an unbound dialog instead of a sheet, the
+  same visualViewport asserts apply without a second `position: fixed`.
+
+### Must 6 — Geometry policy
+
+- [ ] `OV-POS-09` `[vendor]` `[browser]` —
+  **Overlay should accept virtual anchors as positioning references.**
+  One fixture with `OV-TRG-06`: `anchor` as `{x, y}` (and a sized rect or
+  mutating `getBoundingClientRect` if cheap). Assert point anchors have
+  implicit zero size, coordinates follow the virtual rect, and Trigger
+  remains the interaction source (`aria-expanded`, open request) when
+  present. Do not port the entire Floating UI `virtual-element.test.ts`
+  matrix onto Overlay.
+- [ ] `OV-SCRL-02` `[reference]` `[browser]` —
+  **Overlay should request one dismiss when `closeOnScroll` is true and a
+  composed ancestor moves the reference.**
+  One fixture with `OV-SCRL-01`: omitted `closeOnScroll` updates coordinates
+  with no `onDismiss`; `closeOnScroll` requests one dismiss from that ancestor
+  scroll, none from unrelated regions or from scrolling an inner
+  `input`/`textarea`.
+
+### Should — same Overlay pass
+
+Do these while already in Overlay source. Do not open a new epic for them.
+
+- [ ] `OV-DOM-04` `[reference]` `[browser]` —
+  **Overlay should honor Overlay.Portal's container and never portal Trigger.**
+  Open Overlay with Trigger, one `Overlay.Portal container={element}`,
+  Backdrop, and Content. Assert Backdrop and Content are in that container
+  with no Overlay wrapper host, and Trigger stays in source DOM.
+  Element vs ref vs function is `Portal`'s contract — do not parameterize
+  all three here. Absorbs `OV-TRG-07`.
+- [ ] `OV-TRG-06` `[reference]` `[browser]` —
+  **Overlay should keep Trigger as the interaction source when `anchor`
+  wins geometry.**
+  Covered by the `OV-POS-09` fixture. Do not write a second test.
+- [ ] `OV-EDGE-03` `[reference]` `[browser]` —
+  **Overlay should treat Trigger as an opener, not a floating reference,
+  when `edge` is set.**
+  Open `edge="bottom"` Overlay from Trigger. Assert Trigger remains in
+  source DOM and Content binds to the viewport bottom rather than the
+  button rect.
+- [ ] `OV-EDGE-04` `[vendor]` `[browser]` —
+  **Overlay should publish nested edge stack CSS variables.**
+  Open two nested `edge="bottom"` Overlays. Assert `--reference-overlay-index`
+  and `--reference-overlay-count` on each Content distinguish topmost from
+  parent so CSS can displace. This ports Vaul nested displacement and
+  Sonner `--index` language, not the toast queue.
+- [ ] `OV-SCROLL-02` `[vendor]` `[browser]` —
+  **Overlay should avoid layout shift when locking a page that has a visible
+  scrollbar and authored root styles.**
+  Record fixed element rects and existing html/body overflow, padding, margin,
+  and `scrollbar-gutter`, then open and fully close Overlay. Assert scrollbar
+  width is compensated without rect shift and every authored value and
+  priority restores exactly, rather than overwriting a zero or pre-existing
+  declaration.
+- [ ] `OV-POS-06` `[vendor]` `[browser]` —
+  **Overlay should publish available and anchor geometry for scrolling
+  popups.**
+  Anchor a tall Content near a short viewport and read
+  `--reference-overlay-available-height` / `-width` plus anchor size and
+  transform origin. Assert finite values that match the engine's size
+  middleware after shift, with no ResizeObserver loop. This ports
+  `size.test.ts` and Floating UI #1740.
+- [ ] `OV-SCRL-01` `[reference]` `[browser]` —
+  **Overlay should keep a living anchored position when `closeOnScroll`
+  is omitted.**
+  Covered by the `OV-SCRL-02` fixture (omitted vs true). Do not write a
+  second test.
+- [ ] `OV-EDGE-02` `[reference]` `[browser]` —
+  **Overlay should reject `edge` combined with `anchor`.**
+  Mount Overlay with both `edge="bottom"` and a virtual `anchor`. Assert a
+  development diagnostic and that neither Floating UI coordinates nor an
+  edge binding is partially applied.
+- [ ] `OV-INERT-02` `[vendor]` `[browser]` —
+  **Overlay should preserve pre-existing isolation attributes when it closes.**
+  Mark separate background nodes `inert` and `aria-hidden="true"` before
+  opening, add ordinary siblings for Overlay to manage, then complete close.
+  Assert authored attributes remain exactly as supplied and only
+  Overlay-owned additions are removed, covering React Aria
+  `ariaHideOutside.test.js` (“should not overwrite an existing aria-hidden
+  prop”).
+
+### Absorbed — do not implement as Overlay E2E
+
+- [x] `OV-HND-04` — Handle without `edge`: already `OV-DOM-09`.
+- [ ] `OV-TRG-07` — Trigger never portals: part of `OV-DOM-04`.
+- [ ] `OV-COMP-05` `[reference]` `[browser]` —
+  **Overlay should express a labeled dialog from Overlay.Trigger without a
+  Popover root.**
+  Overlay.md example, not a new contract. Proven kernel + `OV-TRG-03` /
+  `OV-TRG-04` / `OV-ESC-*`. Do not add a composition suite.
+- [ ] `OV-COMP-06` `[reference]` `[browser]` —
+  **Overlay should express a non-isolating anchored panel from Trigger
+  without hover policy.**
+  Overlay.md example. Proven `OV-ISO-02` + `OV-TRG-05` + living position.
+  Hover policy stays `Popover`.
+
+---
+
+## Proven kernel — do not redo
+
+Engine + named Playwright coverage. Do not rewrite these tests. If a Must case needs a fixture, extend; do not duplicate.
+
+### DOM, portal, controlled state
+
+- [x] `OV-DOM-01` — Default portal: Backdrop and Content are sibling `div`s under `document.body`; Overlay and Portal add no host nodes.
+- [x] `OV-DOM-02` — Unbound Content invents no trigger, role, label, `aria-modal`, coordinates, or appearance.
+- [x] `OV-DOM-05` — Initially closed with no exit: no parts, portal payload, focus lock, inert, layer, or scroll lock.
+- [x] `OV-DOM-06` — Controlled `open` only; programmatic open/close never calls `onEscape` / `onOutsidePress` / `onDismiss`.
+- [x] `OV-DOM-07` — Parent rejects dismiss: DOM, focus, inert, layer, and scroll lock stay active.
+- [x] `OV-DOM-08` — Duplicate Backdrop/Content/Trigger/Handle fails atomically; no partial layer.
+- [x] `OV-DOM-09` — Missing Content or Handle-without-`edge` is invalid; valid shapes activate one layer.
+- [x] `OV-THEME-01` — Portaled dark `colorMode`: `data-layer` + `data-panda-theme="dark"`, token background resolves.
+- [x] `OV-THEME-02` — Light-mode sibling of `OV-THEME-01` (same Playwright test).
+
+### Escape, outside press, layer stack, pointer isolation
+
+- [x] `OV-ESC-01` — Escape → `onEscape(event)` then `onDismiss()` once.
+- [x] `OV-ESC-02` — `onEscape.preventDefault()` skips `onDismiss`; isolation stays.
+- [x] `OV-ESC-03` — Latest callback after rerender.
+- [x] `OV-ESC-04` — Nested: first Escape is child-only; next is parent.
+- [x] `OV-ESC-06` — AlertDialog via prevented `onEscape`; Overlay does not read `role`.
+- [x] `OV-OUT-01` — Backdrop primary sequence: `onOutsidePress` then `onDismiss`.
+- [x] `OV-OUT-02` — Inside Content: no dismiss.
+- [x] `OV-OUT-03` — `onOutsidePress.preventDefault()` skips `onDismiss`.
+- [x] `OV-OUT-05` — Non-primary / pen barrel: no dismiss (frozen vs current Radix).
+- [x] `OV-OUT-08` — Backdrop that `stopPropagation`s click still dismisses.
+- [x] `OV-OUT-09` — `composedPath`: inner shadow is inside; sibling shadow is outside.
+- [x] `OV-LAYER-01` — Portalled child popup is inside the parent (branch + shard).
+- [x] `OV-LAYER-02` — Press in parent, outside child: child only.
+- [x] `OV-LAYER-03` — One physical outside event → topmost child only (not Radix close-both).
+- [x] `OV-LAYER-04` — Deferred modal parent does not close from the child's outside touch.
+- [x] `OV-LAYER-05` — Child dismiss clears parent's pending outside interaction.
+- [x] `OV-LAYER-06` — Parent close cascades deepest-first; recently-removed child cannot outside-dismiss an ancestor.
+- [x] `OV-POINTER-01` — Background pointer activation blocked while modal.
+- [x] `OV-POINTER-02` — Consumer `pointer-events` restored byte-for-byte.
+- [x] `OV-POINTER-03` — Nested modals: refcount until final Presence exit.
+- [x] `OV-POINTER-04` — Only top modal Content is interactive.
+- [x] `OV-POINTER-05` — Isolation through animated exit.
+- [x] `OV-POINTER-06` — Reopen during exit cancels pointer teardown.
+
+### Focus, restore, Presence
+
+- [x] `OV-FOCUS-01` — Default initial focus: first tabbable.
+- [x] `OV-FOCUS-02` — `initialFocus` ref / resolver; invalid falls back inside the lock.
+- [x] `OV-FOCUS-03` — `initialFocus={false}` skips the move; trap still runs once inside.
+- [x] `OV-FOCUS-04` — Tab / Shift+Tab loop; programmatic outside focus reclaimed.
+- [x] `OV-FOCUS-05` — Focused descendant removed / disabled / hidden stays contained.
+- [x] `OV-FOCUS-06` — Nested modal pauses parent lock and resumes without reclaim fight.
+- [x] `OV-RESTORE-01` — Restore only after animated Presence exit.
+- [x] `OV-RESTORE-02` — Zero-duration close restores in the completed close turn.
+- [x] `OV-RESTORE-07` — Explicit `restoreFocus` target after Presence.
+- [x] `OV-PRES-01` — Closed `data-state` while both parts finish owned CSS exit.
+- [x] `OV-PRES-02` — Waits for the slower of Backdrop / Content.
+- [x] `OV-PRES-03` — Ignores bubbled child animation events.
+- [x] `OV-PRES-04` — Reduced motion / zero motion completes without fallback sleep.
+- [x] `OV-PRES-05` — Rapid close/reopen/close: one current lifecycle.
+
+### Isolation, scroll, edge, geometry, trigger
+
+- [x] `OV-INERT-01` — Unrelated siblings inert / a11y-hidden; Content reachable.
+- [x] `OV-INERT-05` — Live regions, toast host, registered child branch stay accessible.
+- [x] `OV-SCROLL-01` — Document offset preserved against background wheel/touch/keys.
+- [x] `OV-SCROLL-03` — Inner scroller consumes until edge; excess does not chain to the document.
+- [x] `OV-ISO-02` — `isolation={false}`: no FocusLock, inert, or scroll lock; immediate light-dismiss.
+- [x] `OV-EDGE-01` — All four `edge` bindings; flip/arrow inert; orthogonal available-size vars.
+- [x] `OV-HND-01` — Handle dismiss at 25% or velocity flick.
+- [x] `OV-HND-02` — Sub-threshold drag snaps back; no `onDismiss`.
+- [x] `OV-POS-01` — Unbound writes no `position`/`top`/`left` or geometry CSS vars.
+- [x] `OV-POS-02` — Anchored defaults: `bottom-start`, offset 8, collisionPadding 8, absolute, flip/shift, `--reference-overlay-*`.
+- [x] `OV-POS-03` — Flip/shift vs `flip={false}` / `shift={false}`.
+- [x] `OV-POS-04` — Explicit offset, collisionPadding, `strategy="fixed"`; consumer `transform` untouched.
+- [x] `OV-POS-05` — Arrow `edgePadding` in the same position pass; visual `padding` stays a StyleProp.
+- [x] `OV-TRG-02` — Trigger is in-source `button[type=button]`, default floating reference when `isolation={false}`.
+
+---
+
+## Parked — do not start
+
+Still the freeze if a Must case fails because of one of these. Do not implement, fixture, or E2E these until Overlay Must is done **and** OVERLAYS.md Gates 3–6 are in progress (or a production bug names the ID).
+
+### Dismiss / layer / focus leftovers
+
+- [ ] `OV-ESC-05` `[reference]` `[browser]` —
+  **Overlay should ignore inactive and foreign-document layers when Escape is
+  pressed in the active document.**
+  Keep one layer closed or exiting in the main document and another open in a
+  same-origin iframe, then activate a live main-document Overlay and press
+  Escape there. Assert only that document's top live layer receives callbacks;
+  exiting and iframe stacks do not intercept or reorder the event.
+- [ ] `OV-ESC-07` `[convergence]` `[browser]` —
+  **Overlay should wait to handle Escape when a native top-layer popover
+  consumes the first key.**
+  Open an Overlay containing an active element using the browser's native
+  popover top layer, focus within that top layer, and press Escape twice.
+  Assert the first key closes only the native popover with no Overlay callback
+  and the later key requests Overlay dismissal, preserving browser top-layer
+  precedence.
 - [ ] `OV-OUT-07` `[vendor]` `[browser]` —
   **Overlay should stay open when an unregistered extension overlay stops the
   later events of a deferred outside sequence.**
@@ -281,23 +478,6 @@ Overlay-specific anatomy and behavior/style conflicts.
   its control. Assert no deferred `onOutsidePress` or `onDismiss` occurs,
   preserving Radix `e2e/dialog.spec.ts` (“keeps the dialog open when an outside
   overlay stops later mouse events”).
-- [x] `OV-OUT-08` `[vendor]` `[browser]` —
-  **Overlay should still dismiss when its registered Backdrop stops a later
-  click from propagating.**
-  Register Backdrop as the layer's dismiss surface, stop propagation from its
-  click handler, and perform a complete primary sequence there. Assert one
-  granular outside callback and one dismissal request despite the stopped
-  click, matching Radix `dismissable-layer.test.tsx` (“dismisses when a
-  registered dismiss surface stops propagation”).
-- [x] `OV-OUT-09` `[vendor]` `[shadow]` —
-  **Overlay should classify composed shadow events by their real path when
-  shadow trees are inside or outside Content.**
-  Put one open ShadowRoot under Content and a sibling ShadowRoot behind the
-  layer, then dispatch real composed primary pointer sequences from each.
-  Assert the inner path triggers no dismissal, while the sibling path follows
-  outside policy and remains isolated from background activation, as in Radix
-  `dismissable-layer.test.tsx` (“treats a shadow tree inside the layer as
-  inside”).
 - [ ] `OV-OUT-10` `[reference]` `[browser]` —
   **Overlay should avoid a second dismissal path when focus moves during a
   deferred stopped pointer interaction.**
@@ -307,68 +487,6 @@ Overlay-specific anatomy and behavior/style conflicts.
   path calls `onDismiss`, matching Radix `dismissable-layer.test.tsx` (“does
   not dismiss when focus moves outside during a deferred stopped
   interaction”).
-- [ ] `OV-OUT-11` `[reference]` `[browser]` —
-  **Overlay should retain cancelable geometric outside dismissal when no
-  Backdrop part is authored.**
-  Mount valid open Content without Backdrop, place a background control beyond
-  its bounding rect, and perform a primary pointer sequence in that outside
-  region with and without `onOutsidePress.preventDefault()`. Assert the normal
-  path calls granular then high-level dismissal, the prevented path skips
-  `onDismiss`, and the actual background control remains inert and unactivated.
-
-### Shared layer stack and branches
-
-- [x] `OV-LAYER-01` `[vendor]` `[browser]` —
-  **Overlay should treat portalled child popup content as inside when a nested
-  Popover or Menu is used.**
-  Open a parent Overlay and a registered child popup whose Content portals
-  outside the parent's DOM subtree, then interact inside the child. Assert
-  neither child nor parent receives an outside or dismissal request merely
-  because `Node.contains` is false; the node is one dismiss branch and
-  FocusLock shard.
-- [x] `OV-LAYER-02` `[vendor]` `[browser]` —
-  **Overlay should dismiss only the child layer when a press is inside the
-  parent but outside that child.**
-  Open nested parent and child layers, then press a parent Content control that
-  is outside the child's portalled Content. Assert the child receives
-  `onOutsidePress` then `onDismiss` once and the parent receives neither,
-  matching Radix `e2e/dialog.spec.ts` (“dismissing the dropdown does not close
-  the dialog”).
-- [x] `OV-LAYER-03` `[convergence]` `[browser]` —
-  **Overlay should let only the child handle one outside event when a press is
-  outside both parent and non-modal child.**
-  Open a modal parent with a non-modal registered child and press once beyond
-  both layer regions. Assert child granular and dismissal callbacks run first
-  while the parent receives no stale request from that event. Reference UI
-  freezes one physical event to one topmost layer; closing a parent may
-  explicitly cascade descendants, but accepting a child request must not
-  reinterpret the already-consumed event for its parent. This intentionally
-  differs from Radix `e2e/popover.spec.ts` “dismisses both the popover and the
-  dialog when clicking outside both layers.”
-- [ ] `OV-LAYER-04` `[vendor]` `[touch]` —
-  **Overlay should not dismiss a deferred modal parent when the same outside
-  touch already dismissed its child.**
-  Open a deferred modal parent and live child layer, then perform one complete
-  outside touch tap and accept the child's close. Assert one child request and
-  no later parent request from the delayed click, matching Radix
-  `dismissable-layer.test.tsx` (“does not dismiss a deferred modal parent when
-  a nested layer is dismissed by an outside touch tap”).
-- [ ] `OV-LAYER-05` `[vendor]` `[browser]` —
-  **Overlay should clear deferred parent state when a child layer dismisses
-  first during an outside interaction.**
-  Open a deferred parent and immediate child, perform one outside mouse
-  sequence, and remove the child after accepting its request. Assert the
-  parent's pending interaction is canceled and never fires after child
-  removal, matching Radix `dismissable-layer.test.tsx` (“does not dismiss a
-  deferred parent when a child layer dismisses first”).
-- [ ] `OV-LAYER-06` `[convergence]` `[browser]` —
-  **Overlay should tear down descendants deepest-first when a controlled parent
-  closes.**
-  Open a parent with multiple nested layers, change the parent to closed, and
-  observe descendant dismissal/removal and focus events through final exit.
-  Assert descendant requests or removals occur deepest-first, only the outer
-  restoration survives, and focus from a recently removed child cannot
-  outside-dismiss another ancestor.
 - [ ] `OV-LAYER-07` `[reference]` `[browser]` —
   **Overlay should share top-layer ordering when sibling instances live in
   independent React roots.**
@@ -397,108 +515,6 @@ Overlay-specific anatomy and behavior/style conflicts.
   each, and send Escape/outside input within both contexts. Assert callbacks
   route only through the source document's ordering and closing either stack
   does not unregister or promote entries in the other.
-
-### Modal pointer isolation
-
-- [ ] `OV-POINTER-01` `[vendor]` `[browser:all]` —
-  **Overlay should block background pointer activation when a modal layer is
-  open.**
-  Put clickable and editable controls behind Backdrop/Content, open Overlay,
-  and attempt real mouse, pen, and touch activation at those coordinates.
-  Assert no background click, focus, value, or counter change while Content
-  remains interactive, covering Radix `e2e/dialog.spec.ts` (“can be open/closed
-  with a pointer”).
-- [ ] `OV-POINTER-02` `[vendor]` `[browser]` —
-  **Overlay should restore exact consumer pointer styles when the final modal
-  closes.**
-  Start with non-default inline and stylesheet-driven `pointer-events` on body
-  and the application root, open and fully close an Overlay, then repeat with
-  an exit. Assert the original authored values and priorities are preserved
-  during management and restored byte-for-byte afterward rather than replaced
-  with a guessed empty value.
-- [ ] `OV-POINTER-03` `[vendor]` `[browser]` —
-  **Overlay should keep background isolated when nested modals close out of
-  order.**
-  Open two modal layers, close the parent first in one run and the child first
-  in another, and try the background between exits. Assert a document-level
-  reference count keeps background pointer behavior disabled until the final
-  modal Presence exit completes and restores it exactly once.
-- [ ] `OV-POINTER-04` `[reference]` `[browser]` —
-  **Overlay should make only the top modal Content interactive when layers
-  overlap.**
-  Open two modal siblings or nested Overlays and attempt real pointer
-  activation on exposed coordinates of the lower Content and on the top
-  Content. Assert the lower handler and focus target are unreachable while the
-  top responds normally, without treating lower Content as background to
-  dismiss both.
-- [ ] `OV-POINTER-05` `[reference]` `[browser]` —
-  **Overlay should retain modal pointer isolation when a controlled close is
-  still exiting.**
-  Close an open Overlay whose Backdrop and Content have explicit transition
-  durations, probe the background before and after the final owned end event,
-  and finish Presence. Assert isolation persists through the entire exit and
-  original pointer behavior is restored once only after both parts unmount.
-- [ ] `OV-POINTER-06` `[reference]` `[browser]` —
-  **Overlay should cancel pointer teardown when it reopens during exit.**
-  Begin an animated close, reopen before completion, and dispatch both stale
-  and current transition end events while continuously probing a background
-  button. Assert the button never receives an interactive frame while Overlay
-  is open and stale exit work cannot restore body/root pointer behavior.
-
-### Initial focus and containment integration
-
-- [ ] `OV-FOCUS-01` `[convergence]` `[browser:all]` —
-  **Overlay should focus its first tabbable Content descendant when it opens
-  from a trigger without `initialFocus`.**
-  Focus an authored trigger, open Content containing multiple ordered
-  tabbables, and omit `initialFocus`. Assert the first eligible descendant
-  becomes `document.activeElement` after mount, the original trigger is saved
-  for restore, and no hidden focus guard becomes the public target.
-- [ ] `OV-FOCUS-02` `[reference]` `[browser]` —
-  **Overlay should honor either FocusTarget form when `initialFocus` resolves
-  inside Content at activation.**
-  Open separate fixtures with `initialFocus` as a ref and as a resolver
-  returning a later valid Content descendant, then smoke an invalid resolver
-  returning a detached node. Assert each valid target receives focus after
-  portal mount and the invalid target falls back to the first tabbable without
-  escaping the lock; FocusLock owns the complete validity and candidate matrix.
-- [ ] `OV-FOCUS-03` `[vendor]` `[browser]` —
-  **Overlay should skip only the initial focus move when
-  `initialFocus={false}` is set.**
-  Keep focus on the opening trigger, open Overlay with
-  `initialFocus={false}`, and then attempt Tab and programmatic focus outside.
-  Assert opening does not move focus, but once focus enters the active Content
-  the lock still contains later navigation and reclaims disallowed outside
-  focus.
-- [ ] `OV-FOCUS-04` `[vendor]` `[browser:all]` —
-  **Overlay should contain sequential and programmatic focus when its modal
-  Content is active.**
-  Open Content with first and last tabbables, press Tab and Shift+Tab across
-  both boundaries, then call `focus()` on a background control. Assert
-  sequential focus loops within Content and the programmatic escape is
-  reclaimed to the appropriate live candidate without duplicate focus events.
-- [ ] `OV-FOCUS-05` `[vendor]` `[browser]` —
-  **Overlay should preserve containment when its currently focused descendant
-  is removed, disabled, or hidden.**
-  Focus a middle Content control, dynamically remove it, then repeat by
-  disabling and hiding it before the next Tab. Assert focus lands on another
-  eligible candidate or Content itself and never reaches background or
-  detached DOM, covering Radix `e2e/dialog.spec.ts` (“keeps focus trapped even
-  if focused element is removed”).
-- [ ] `OV-FOCUS-06` `[vendor]` `[browser]` —
-  **Overlay should pause the parent focus lock when a nested modal becomes
-  active.**
-  Open a parent, focus within it, open a child modal, and attempt focus movement
-  between child, parent, and background before and after child close. Assert
-  only the child contains focus while active, then the parent resumes without
-  competing reclaim loops, oscillation, or duplicate restoration.
-- [ ] `OV-FOCUS-07` `[reference]` `[browser]` —
-  **Overlay should permit focus in a portalled child popup when that Content is
-  registered as a shard.**
-  Open a parent Overlay with a nested Popover or Menu whose Content portals
-  elsewhere, then Tab or programmatically focus its first control. Assert focus
-  remains in child Content without parent reclaim and returns to the parent
-  policy after the branch unmounts.
 - [ ] `OV-FOCUS-08` `[reference]` `[browser]` —
   **Overlay should resolve initial focus after Content mounts when its public
   ref and internal FocusLock ref are composed.**
@@ -507,72 +523,14 @@ Overlay-specific anatomy and behavior/style conflicts.
   rerender unrelated StyleProps. Assert the Content ref attaches before one
   resolver-driven focus move and the rerender causes neither ref churn nor a
   second move; generic ref stability remains covered by `PART-REF-*`.
-- [ ] `OV-FOCUS-09` `[convergence]` `[browser]` —
-  **Overlay should never treat focus movement by itself as an outside-dismiss
-  command.**
-  Open with `initialFocus={false}` while focus remains on the source, then in a
-  second fixture enter Content and programmatically focus an outside element
-  without a pointer sequence. Assert the first state causes no immediate
-  dismissal and the second is reclaimed by FocusLock, with
-  `onOutsidePress`/`onDismiss` empty in both. Modal focus containment and
-  pointer dismissal are separate policies; Reference UI deliberately does not
-  copy Radix focus-outside dismissal.
-
-### Focus restoration and Presence order
-
-- [ ] `OV-RESTORE-01` `[reference]` `[browser:all]` —
-  **Overlay should restore its captured origin only when an animated close with
-  omitted or true `restoreFocus` has fully exited.**
-  In separate omitted and `restoreFocus={true}` Content fixtures, focus a
-  trigger, open, move focus inside, and close through explicit Backdrop and
-  Content exits. Assert focus containment and modal isolation persist until
-  both parts unmount, then the captured trigger receives one return move and
-  all modal systems release.
-- [ ] `OV-RESTORE-02` `[reference]` `[browser]` —
-  **Overlay should restore focus and release modal systems in the completed
-  close turn when exit duration is zero.**
-  Open from a focused trigger and close with no effective transition or
-  animation on either part. Assert Backdrop/Content unmount, focus restores,
-  and focus lock, inerting, pointer isolation, scroll lock, and layer
-  registration tear down in that completed close turn without an unexplained
-  timer frame.
-- [ ] `OV-RESTORE-03` `[vendor]` `[browser]` —
-  **Overlay should fall back through the captured origin when an explicit
-  restore target is invalid at Presence completion.**
-  Open from a trigger beside one valid proximity candidate, close with
-  `restoreFocus` resolving to a detached or disabled target, and invalidate the
-  captured trigger before the owned exit ends. Assert no return occurs during
-  exit and completion focuses one live captured-origin proximity fallback,
-  never either invalid node; FocusLock owns the right/left/ancestor solver
-  matrix.
-- [ ] `OV-RESTORE-04` `[reference]` `[browser]` —
-  **Overlay should preserve deliberate application focus when animated close
-  uses `restoreFocus={false}`.**
-  Start an animated close with `restoreFocus={false}` and move focus to a valid
-  outside target as part of the application close workflow. Assert Presence
-  completion tears down modal systems without focusing the captured origin or
-  any fallback, leaving the deliberate target active.
-- [ ] `OV-RESTORE-05` `[reference]` `[browser]` —
-  **Overlay should cancel pending focus restoration when it reopens during
-  exit.**
-  Open from a trigger, begin close, reopen before exit completion, and dispatch
-  stale end events from both parts. Assert focus stays in the live Overlay,
-  trigger restore and all modal teardown are canceled, and only a subsequent
-  current close may release them.
 - [ ] `OV-RESTORE-06` `[reference]` `[browser]` —
   **Overlay should restore only the outer origin when closing a parent cascades
   through nested layers.**
   Open a parent from an outer trigger, open descendants from controls that will
   disappear with the parent, and close the parent. Assert deepest-first
   teardown never focuses removed child triggers and final exit produces one
-  restoration to the outer original trigger.
-- [ ] `OV-RESTORE-07` `[reference]` `[browser]` —
-  **Overlay should focus an explicit return target when `restoreFocus` is a
-  valid FocusTarget and Presence has completed.**
-  Open from trigger A with Content `restoreFocus` pointing by ref to connected
-  button B, move focus inside, and close through a finite exit. Assert neither A
-  nor B receives focus while Content remains mounted, then B receives exactly
-  one return move after the final owned exit instead of the captured origin.
+  restoration to the outer original trigger. (`OV-LAYER-06` already covers the
+  cascade; only reopen this if restore lands on a child trigger.)
 - [ ] `OV-RESTORE-08` `[reference]` `[browser]` —
   **Overlay should resolve the latest return target when a `restoreFocus`
   resolver changes its result during exit.**
@@ -580,64 +538,25 @@ Overlay-specific anatomy and behavior/style conflicts.
   result to button B while Content remains mounted, and complete Presence.
   Assert no early return occurs and the resolver is evaluated at completed
   teardown so B, not stale A or the captured origin, receives focus once.
+- [ ] `OV-DOM-03` `[reference]` `[browser]` —
+  **Overlay should keep lifecycle state authoritative when Backdrop and Content
+  also use token-aware visual StyleProps.**
+  Give both fixed `ReferencePartProps<"div">` parts unrelated base and
+  responsive StyleProps, then drive controlled open and Presence exit. Assert
+  synchronized `data-state="open"|"closed"` on both parts while their computed
+  visual styles remain intact; generic prop, ref, event, and StyleProps coverage
+  belongs to the shared `PART-*` matrix.
+- [ ] `OV-ISO-01` `[reference]` `[browser]` —
+  **Overlay should isolate with focus, inert, and scroll when `isolation`
+  is omitted.**
+  Implied by isolating dialog fixtures. Optional named title only.
+- [ ] `OV-TRG-01` `[reference]` `[browser]` —
+  **Overlay should open from application state when Trigger is omitted.**
+  Implied by dialog fixtures that open from sibling buttons. Optional named
+  title only.
 
-### Presence and state
+### Inert leftovers
 
-- [ ] `OV-PRES-01` `[reference]` `[browser:all]` —
-  **Overlay should keep both modal parts mounted when their closed state starts
-  an owned CSS exit.**
-  Open Backdrop and Content with explicit transition and keyframe fixtures,
-  then set `open={false}`. Assert each receives `data-state="closed"` before
-  style sampling, both remain mounted through their own effective exits, and
-  unmount occurs only after every owned transition or animation completes.
-- [ ] `OV-PRES-02` `[reference]` `[browser]` —
-  **Overlay should wait for the slower part when Backdrop and Content have
-  different exit durations.**
-  Give Backdrop and Content distinct nonzero exit durations, close once, and
-  fire the shorter part's end event before the longer part's. Assert neither
-  portal nor modal systems tear down early and the final owned event completes
-  both parts without requiring an authored nested Presence.
-- [ ] `OV-PRES-03` `[reference]` `[browser]` —
-  **Overlay should ignore bubbled child animation events when Content itself is
-  still exiting.**
-  Put an animated descendant inside Content, close Overlay, and finish the
-  descendant before Content and Backdrop. Assert the bubbled event leaves both
-  parts mounted and modal behavior active until events whose targets and names
-  match the owned exits arrive.
-- [ ] `OV-PRES-04` `[reference]` `[browser]` —
-  **Overlay should complete close immediately when effective motion cannot
-  produce an exit event.**
-  Close fixtures under reduced motion, a hidden document, and computed
-  zero/no-transition and zero/no-animation styles. Assert closed state is
-  observable for the lifecycle but unmount, restore, and modal teardown
-  complete without waiting for nonexistent events or fallback sleeps.
-- [ ] `OV-PRES-05` `[reference]` `[browser]` —
-  **Overlay should maintain one current lifecycle when close, reopen, and close
-  happen rapidly.**
-  Drive `true → false → true → false`, mixing stale and current end events and
-  destination checks. Assert one portal payload, one live layer entry, one
-  inert/pointer/scroll lock reference, and one final restoration/teardown, with
-  no stale lifecycle able to remove current state.
-
-### Background inert and accessibility tree
-
-- [x] `OV-INERT-01` `[vendor]` `[browser:all]` —
-  **Overlay should remove unrelated application content from interaction and
-  the accessibility tree when it is open.**
-  Open Content beside multiple body and root siblings containing controls,
-  while retaining the portal ancestry needed to reach Content. Assert every
-  unrelated sibling is effectively inert and accessibility-hidden, Content
-  remains reachable, and role queries cannot find background controls, as in
-  React Aria `ariaHideOutside.test.js` (“should hide everything except the
-  provided element [button]”).
-- [ ] `OV-INERT-02` `[vendor]` `[browser]` —
-  **Overlay should preserve pre-existing isolation attributes when it closes.**
-  Mark separate background nodes `inert` and `aria-hidden="true"` before
-  opening, add ordinary siblings for Overlay to manage, then complete close.
-  Assert authored attributes remain exactly as supplied and only
-  Overlay-owned additions are removed, covering React Aria
-  `ariaHideOutside.test.js` (“should not overwrite an existing aria-hidden
-  prop”).
 - [ ] `OV-INERT-03` `[vendor]` `[browser]` —
   **Overlay should keep background hidden when nested instances close in any
   order.**
@@ -655,14 +574,6 @@ Overlay-specific anatomy and behavior/style conflicts.
   nodes become effectively inert/hidden, inside nodes remain available, and
   stale ownership is cleaned, covering React Aria `ariaHideOutside.test.js`
   (“should handle when a new element is added and then reparented”).
-- [x] `OV-INERT-05` `[vendor]` `[browser]` —
-  **Overlay should keep live regions and registered child branches accessible
-  when surrounding background is hidden.**
-  Open Overlay beside Toast and live-announcer hosts and then mount a
-  registered portalled child layer among otherwise unrelated siblings. Assert
-  those exempt hosts and the full child branch remain accessibility-visible
-  while adjacent background controls are inert/hidden, including dynamically
-  added top-layer hosts.
 - [ ] `OV-INERT-06` `[vendor]` `[shadow]` —
   **Overlay should hide the correct siblings when Content is reached through
   nested open ShadowRoots.**
@@ -707,31 +618,8 @@ Overlay-specific anatomy and behavior/style conflicts.
   deduplicated, and final teardown restores only attributes Overlay actually
   added. This ports React Aria's add-then-reparent hidden-container regression.
 
-### Scroll lock
+### Scroll / env leftovers
 
-- [x] `OV-SCROLL-01` `[vendor]` `[browser:all]` —
-  **Overlay should preserve document position when user scrolling targets the
-  locked page.**
-  Start at a nonzero page offset, open Overlay, and send real wheel,
-  one-finger touch, Space/PageDown, and arrow-key scrolling against background
-  and document targets. Assert `scrollX`/`scrollY` do not change for user input
-  while an explicit application `scrollTo` remains outside the claimed
-  contract.
-- [ ] `OV-SCROLL-02` `[vendor]` `[browser]` —
-  **Overlay should avoid layout shift when locking a page that has a visible
-  scrollbar and authored root styles.**
-  Record fixed element rects and existing html/body overflow, padding, margin,
-  and `scrollbar-gutter`, then open and fully close Overlay. Assert scrollbar
-  width is compensated without rect shift and every authored value and
-  priority restores exactly, rather than overwriting a zero or pre-existing
-  declaration.
-- [x] `OV-SCROLL-03` `[vendor]` `[browser:all]` —
-  **Overlay should allow an internal scrollable to move when it can consume
-  wheel or touch input.**
-  Put a bounded overflow region inside Content, send wheel and touch gestures
-  through its middle and then beyond each edge, and monitor both region and
-  page offsets. Assert the region scrolls normally until its boundary and
-  excess movement never chains to the locked document.
 - [ ] `OV-SCROLL-04` `[vendor]` `[browser]` —
   **Overlay should apply the same edge-aware scrolling rules when the
   scrollable is in a registered portalled shard.**
@@ -754,13 +642,6 @@ Overlay-specific anatomy and behavior/style conflicts.
   background and a two-contact pinch gesture, and observe page offset and
   viewport scale. Assert the drag cannot scroll the page while pinch zoom is
   not canceled, separating accessibility zoom from background scrolling.
-- [ ] `OV-SCROLL-07` `[vendor]` `[touch]` —
-  **Overlay should keep fixed Content and page position stable when Mobile
-  Safari changes its visual viewport around a focused input.**
-  On Mobile Safari, open at a nonzero offset, focus an input in fixed Content,
-  exercise keyboard appearance, visualViewport resize/offset, and address-bar
-  movement, then close. Assert Content does not jump, the page does not
-  user-scroll, and the exact original position restores after teardown.
 - [ ] `OV-SCROLL-08` `[reference]` `[rtl]` —
   **Overlay should compensate the logical scrollbar side when a locked
   document is RTL.**
@@ -783,9 +664,6 @@ Overlay-specific anatomy and behavior/style conflicts.
   html/body inline styles. Assert stale listeners are removed, current ones
   remain as needed, and final cleanup restores every owned style/listener once
   with no leak or double removal.
-
-### SSR, roots, and browser matrix
-
 - [ ] `OV-ENV-01` `[reference]` `[ssr]` —
   **Overlay should server-render safely when it is closed and no DOM globals
   exist.**
@@ -822,50 +700,8 @@ Overlay-specific anatomy and behavior/style conflicts.
   Chromium, Firefox, and WebKit. Assert the same public callback order, focus,
   DOM state, accessibility visibility, and scroll positions in every engine.
 
-### Anchored geometry (Floating UI port)
+### Geometry / edge leftovers
 
-- [x] `OV-POS-01` `[reference]` `[browser]` —
-  **Overlay should write no coordinates when `anchor` and `edge` are omitted.**
-  Open Overlay with Content `placement`, `offset`, flip/shift props, and an
-  Arrow, but no `anchor` and no `edge`. Assert Overlay adds no
-  `position`/`top`/`left`, no `--reference-overlay-*` custom properties, and
-  no hide data attributes, while isolation and the layer stack still run;
-  unbound dialog CSS must not fight the engine.
-- [ ] `OV-POS-02` `[vendor]` `[browser]` —
-  **Overlay should position Content from `anchor` with frozen defaults.**
-  Open Overlay anchored to a visible element and omit Content geometry props.
-  Assert `bottom-start` placement, 8px offset and collision padding, absolute
-  strategy, flip/shift on, owned `position`/`top`/`left`, and published
-  `--reference-overlay-*` variables. This is the ported Floating UI default
-  path, not Popover-specific API.
-- [ ] `OV-POS-03` `[vendor]` `[browser]` —
-  **Overlay should flip and shift anchored Content instead of overflowing.**
-  Anchor Content near a viewport edge with `placement="bottom"` and allow
-  flip/shift, then repeat with `flip={false}` and `shift={false}`. Assert the
-  enabled path chooses a collision-safe side and clamped coordinates, while
-  the disabled path keeps the preferred side even when clipped; this ports
-  `flip.test.ts` / `shift.test.ts`.
-- [ ] `OV-POS-04` `[vendor]` `[browser]` —
-  **Overlay should honor explicit offset, collision padding, and strategy
-  without a second middleware chain.**
-  Parameterize `offset`, `collisionPadding`, and `strategy="fixed"` on
-  anchored Content. Assert each value reaches one `computePosition` pass,
-  `fixed` uses the containing viewport, and consumer `transform` is
-  untouched. This ports `offset.test.ts` plus strategy selection.
-- [ ] `OV-POS-05` `[vendor]` `[browser]` —
-  **Overlay.Arrow should participate in the same position pass as Content.**
-  Render anchored Content with Arrow `edgePadding={4}` and `{12}` near an
-  alignment edge. Assert Arrow coordinates stay inside Content, alignment
-  offset does not retrigger flip, and visual `padding` StyleProps remain
-  distinct from `edgePadding`. This ports `arrow.test.ts`.
-- [ ] `OV-POS-06` `[vendor]` `[browser]` —
-  **Overlay should publish available and anchor geometry for scrolling
-  popups.**
-  Anchor a tall Content near a short viewport and read
-  `--reference-overlay-available-height` / `-width` plus anchor size and
-  transform origin. Assert finite values that match the engine's size
-  middleware after shift, with no ResizeObserver loop. This ports
-  `size.test.ts` and Floating UI #1740.
 - [ ] `OV-POS-07` `[vendor]` `[browser]` —
   **Overlay should expose clip flags without closing itself.**
   Scroll an anchored reference until it is clipped and until Content escapes
@@ -877,14 +713,8 @@ Overlay-specific anatomy and behavior/style conflicts.
   Anchor Content, then scroll ancestors of reference and floating, resize,
   zoom, and move `visualViewport`. Assert one live autoUpdate subscription,
   Content coordinates follow, and listeners drop after Presence exit. This
-  ports `autoUpdate.ts` functional tests.
-- [ ] `OV-POS-09` `[vendor]` `[browser]` —
-  **Overlay should accept virtual anchors as positioning references.**
-  Parameterize `anchor` over a point `{x, y}`, a sized rect / `DOMRect`, a
-  `getBoundingClientRect()` object that mutates, and an Element in nested
-  scrollers. Assert point anchors have implicit zero size, sized rects
-  align to all four edges, mutations update without remount, and Element
-  anchors use that node's owner window. This ports `virtual-element.test.ts`.
+  ports `autoUpdate.ts` functional tests. (`OV-SCRL-01` is the Overlay policy
+  half; this is the full Floating UI autoUpdate matrix.)
 - [ ] `OV-POS-10` `[reference]` `[browser]` `[rtl]` —
   **Overlay should keep physical placement tokens in RTL.**
   Anchor Content with `placement="bottom-start"` under `dir="rtl"`. Assert
@@ -900,160 +730,14 @@ Overlay-specific anatomy and behavior/style conflicts.
   Portal anchored Content into an open ShadowRoot and scroll a shadow
   ancestor. Assert coordinates resolve against that root, not light DOM,
   and autoUpdate still tracks.
-
-### Trigger
-
-- [ ] `OV-TRG-01` `[reference]` `[browser]` —
-  **Overlay should open from application state when Trigger is omitted.**
-  Mount isolating Overlay with Backdrop and Content and no Trigger. Drive
-  `open` from a sibling button that is not Overlay.Trigger. Assert Content
-  portals, isolation runs, and no Trigger node is invented.
-- [x] `OV-TRG-02` `[reference]` `[browser]` —
-  **Overlay.Trigger should stay in source DOM as a button and default
-  anchored reference.**
-  Mount `isolation={false}` Overlay with Trigger and Content, no `anchor` or
-  `edge`. Assert Trigger is `button[type=button]` next to the authored parent,
-  Content portals, `aria-expanded` follows `open`, and Content coordinates
-  use Trigger as the Floating UI reference.
-- [ ] `OV-TRG-03` `[reference]` `[browser]` —
-  **Overlay.Trigger should request open and dismiss from unprevented
-  activation.**
-  Click, Enter, and Space a closed then open Trigger. Assert `onOpen` while
-  closed and `onDismiss` while open, consumer handlers run first, and
-  `preventDefault()` cancels the built-in request. Repeat with `disabled`:
-  no requests.
-- [ ] `OV-TRG-04` `[reference]` `[browser]` —
-  **Overlay.Trigger should remain outside the focus lock when isolation
-  focus is on.**
-  Open isolating Overlay from Trigger. Assert focus moves into Content,
-  Tab cycles inside Content, Trigger is not a trap stop, and restore
-  returns to Trigger after Presence exit.
-- [ ] `OV-TRG-05` `[reference]` `[browser]` —
-  **Overlay should bridge Tab from Trigger into Content when isolation
-  focus is off.**
-  Open `isolation={false}` Overlay from Trigger with two focusable Content
-  controls. Tab from Trigger into Content, then Tab past the last control.
-  Assert focus enters Content, then advances relative to Trigger and one
-  `onDismiss` fires; this is the former Popover tab-order bridge.
-- [ ] `OV-TRG-06` `[reference]` `[browser]` —
-  **Overlay should keep Trigger as the interaction source when `anchor`
-  wins geometry.**
-  Mount Trigger plus `anchor={{ x, y }}` with `isolation={false}`. Activate
-  Trigger, then inspect coordinates. Assert `aria-expanded` and open
-  requests follow Trigger, while Content aligns to the virtual point, not
-  the button rect.
-- [ ] `OV-TRG-07` `[reference]` `[browser]` —
-  **Overlay.Trigger should never portal even when Portal names a container.**
-  Open Overlay with Trigger, custom Portal container, Backdrop, and Content.
-  Assert Trigger remains in source DOM and only Backdrop/Content/Arrow move.
-
-### Isolation
-
-- [ ] `OV-ISO-01` `[reference]` `[browser]` —
-  **Overlay should isolate with focus, inert, and scroll when `isolation`
-  is omitted.**
-  Open Overlay over a focusable, scrollable background. Assert FocusLock,
-  background inerting, and document scroll lock all run. Existing modal
-  cases remain the omitted-`isolation` proof matrix.
-- [x] `OV-ISO-02` `[reference]` `[browser]` —
-  **Overlay should isolate none of the page when `isolation={false}`.**
-  Open Overlay with Trigger and Content over a focusable, scrollable
-  background. Assert no FocusLock, no inert/`aria-hidden` on the background,
-  no scroll lock, and light-dismiss uses the immediate outside path.
-- [ ] `OV-ISO-03` `[reference]` `[browser]` —
-  **Overlay should patch the isolating bundle when `isolation` is an
-  object.**
-  Open Overlay with `isolation={{ scroll: false }}` then with
-  `{ focus: false, inert: true, scroll: true }`. Assert omitted keys stay
-  on in the first fixture, and only the named combination runs in the
-  second; iOS position-fixed follows `scroll` on edge overlays only.
-- [ ] `OV-ISO-04` `[reference]` `[browser]` —
-  **Overlay should defer outside-press only while inert isolation is on.**
-  Repeat the password-manager extension sequence with omitted isolation and
-  with `isolation={false}`. Assert the isolating path stays open when later
-  events are intercepted, and the non-isolating path dismisses on the
-  initial outside event.
-
-### Viewport edge
-
-- [x] `OV-EDGE-01` `[vendor]` `[browser]` —
-  **Overlay should bind Content to the requested viewport edge.**
-  Parameterize `edge` over top, right, bottom, and left with no `anchor`.
-  Assert Overlay writes the edge binding, `data-edge` matches, flip/arrow
-  are inert, and available-size CSS vars exist on the orthogonal axis.
-  This ports Vaul `direction`.
-- [ ] `OV-EDGE-02` `[reference]` `[browser]` —
-  **Overlay should reject `edge` combined with `anchor`.**
-  Mount Overlay with both `edge="bottom"` and a virtual `anchor`. Assert a
-  development diagnostic and that neither Floating UI coordinates nor an
-  edge binding is partially applied.
-- [ ] `OV-EDGE-03` `[reference]` `[browser]` —
-  **Overlay should treat Trigger as an opener, not a floating reference,
-  when `edge` is set.**
-  Open `edge="bottom"` Overlay from Trigger. Assert Trigger remains in
-  source DOM and Content binds to the viewport bottom rather than the
-  button rect.
-- [ ] `OV-EDGE-04` `[vendor]` `[browser]` —
-  **Overlay should publish nested edge stack CSS variables.**
-  Open two nested `edge="bottom"` Overlays. Assert `--reference-overlay-index`
-  and `--reference-overlay-count` on each Content distinguish topmost from
-  parent so CSS can displace. This ports Vaul nested displacement and
-  Sonner `--index` language, not the toast queue.
 - [ ] `OV-EDGE-05` `[reference]` `[browser]` `[rtl]` —
   **Overlay should keep physical `left` / `right` edges in RTL.**
   Open `edge="left"` under `dir="rtl"`. Assert the binding stays the
   physical left side; RTL does not swap `edge` tokens.
-- [ ] `OV-EDGE-06` `[vendor]` `[touch]` —
-  **Overlay should apply iOS position-fixed when edge isolation scroll is
-  on.**
-  Open isolating `edge="bottom"` Overlay on WebKit, focus an inner input,
-  and resize `visualViewport`. Assert body `position: fixed` restore,
-  page scroll does not jump, and nested edge overlays skip a second fixed
-  lock. This ports Vaul `use-position-fixed.ts`.
 
-### Handle
+### Composition leftovers
 
-- [x] `OV-HND-01` `[vendor]` `[touch]` —
-  **Overlay.Handle should request dismiss after distance or velocity
-  thresholds.**
-  Drag Handle on `edge="bottom"` Content past 25% of height; repeat a short
-  flick above the ported velocity threshold. Assert `--reference-overlay-swipe-progress`
-  and `data-dragging` during the gesture, then one `onDismiss` on release
-  for each fixture. This ports Vaul `CLOSE_THRESHOLD` / `VELOCITY_THRESHOLD`
-  and Sonner swipe, Handle-only.
-- [x] `OV-HND-02` `[vendor]` `[touch]` —
-  **Overlay.Handle should return Content without dismissing below
-  threshold.**
-  Drag Handle less than 25% with low velocity and release. Assert Content
-  returns to the open edge binding, `onDismiss` is silent, and progress
-  resets.
-- [ ] `OV-HND-03` `[reference]` `[touch]` —
-  **Overlay should keep overflowing Content scrollable while Handle
-  drags.**
-  Mount edge Content with a tall scrollable body and a Handle. Scroll the
-  body, then drag Handle. Assert body scroll does not request dismiss and
-  Handle drag does not scroll the body. This freezes Handle-only against
-  Vaul drag-anywhere.
-- [ ] `OV-HND-04` `[reference]` `[browser]` —
-  **Overlay should reject Handle without `edge`.**
-  Mount Handle on unbound isolating Content. Assert a development
-  diagnostic and no swipe CSS or drag listeners.
-
-### closeOnScroll
-
-- [ ] `OV-SCRL-01` `[reference]` `[browser]` —
-  **Overlay should keep a living anchored position when `closeOnScroll`
-  is omitted.**
-  Anchor Content, scroll a composed overflow ancestor of the reference,
-  and assert coordinates update with no `onDismiss`.
-- [ ] `OV-SCRL-02` `[reference]` `[browser]` —
-  **Overlay should request one dismiss when `closeOnScroll` is true and a
-  composed ancestor moves the reference.**
-  Repeat with `closeOnScroll`. Assert one `onDismiss` from that ancestor
-  scroll, none from unrelated regions or from scrolling an inner
-  `input`/`textarea`.
-
-## Composition gates
+Heavier system smokes. After Overlay Must, prefer FocusLock / Popover / Tooltip / Toast gates. Revisit these as integration, not Overlay kernel work.
 
 - [ ] `OV-COMP-01` `[reference]` `[browser]` —
   **Overlay should preserve modal dialog behavior when a labeled dialog
@@ -1070,7 +754,8 @@ Overlay-specific anatomy and behavior/style conflicts.
   destructive control and an `onEscape` that prevents default, then open and
   press Escape. Assert the destructive control receives initial focus,
   `onEscape` runs once, `onDismiss` stays silent, and all modal isolation
-  remains active.
+  remains active. (`OV-ESC-06` already covers the policy; this is the labeled
+  composition smoke.)
 - [ ] `OV-COMP-03` `[reference]` `[touch]` —
   **Overlay should maintain drawer isolation when an edge Drawer uses a
   Handle, transform exit, and custom portal on Mobile Safari.**
@@ -1089,19 +774,6 @@ Overlay-specific anatomy and behavior/style conflicts.
   inside Content. Open, Tab, Escape the child, then Escape the dialog.
   Assert coordinates follow the button, isolation remains on, and each
   Escape closes only the top layer; anchored is not a second Overlay kind.
-- [ ] `OV-COMP-05` `[reference]` `[browser]` —
-  **Overlay should express a labeled dialog from Overlay.Trigger without a
-  Popover root.**
-  Build Trigger + Backdrop + `role="dialog"` Content with an accessible
-  name. Open from Trigger, Tab, Escape, then restore. Assert isolation,
-  `aria-expanded`, restore to Trigger, and no Popover/Tooltip parts.
-- [ ] `OV-COMP-06` `[reference]` `[browser]` —
-  **Overlay should express a non-isolating anchored panel from Trigger
-  without hover policy.**
-  Build `isolation={false}` Trigger + Content with two focusable controls
-  and no `openOnHover`. Open from click, Tab through the bridge, outside-
-  press to dismiss. Assert no inert/scroll lock, living position, and that
-  hover does not open; Popover remains the hover policy layer.
 - [ ] `OV-COMP-07` `[reference]` `[touch]` —
   **Overlay should nest an edge drawer above an isolating dialog on one
   stack.**
@@ -1110,10 +782,11 @@ Overlay-specific anatomy and behavior/style conflicts.
   Assert each input closes only the drawer first, stack CSS vars distinguish
   the two Contents, and the dialog isolation resumes.
 
+---
+
 ## Owned elsewhere
 
-- FocusTarget validity, tabbable/shard behavior, and restore-proximity solver
-  matrix: `FocusLock`.
+- FocusTarget validity, tabbable/shard behavior, and restore-proximity solver matrix: `FocusLock`.
 - Transition/animation detection: `Presence`.
 - Portal destination semantics: `Portal`.
 - Hover grace, impatient click, and hover delays: `Popover`.

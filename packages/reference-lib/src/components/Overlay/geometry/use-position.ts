@@ -159,7 +159,7 @@ export function useOverlayPosition({
 
   React.useEffect(() => {
     return () => {
-      if (content && !isOpen) clearGeometry(content)
+      if (content && !isOpen && (edge || anchor)) clearGeometry(content)
     }
-  }, [content, isOpen])
+  }, [content, isOpen, edge, anchor])
 }
