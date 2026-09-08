@@ -10,6 +10,7 @@ import { createTokensCollector } from '../../api/tokens'
 import { createFontCollector } from '../../api/font'
 import { createGlobalCssCollector } from '../../api/globalCss'
 import { createBoxPatternCollector } from '../../api/patterns'
+import { staticCss } from '../../panda/config/static-css'
 
 const styledBaseConfig = {
   jsxFramework: 'react' as const,
@@ -18,6 +19,7 @@ const styledBaseConfig = {
   outExtension: 'js' as const,
   include: ['./src/**/*.{ts,tsx}'],
   exclude: ['**/*.d.ts'],
+  staticCss,
 }
 
 export async function getFragmentFiles(coreRoot: string): Promise<string[]> {

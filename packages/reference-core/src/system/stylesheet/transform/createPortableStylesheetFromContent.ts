@@ -129,60 +129,6 @@ function removeOriginalTokensLayer(root: postcss.Root): string {
   return strippedRoot.nodes.map(stringifyCssNode).join('\n').trim()
 }
 
-function kebabToCamelCase(value: string): string {
-  return value.replace(/-([a-z0-9])/g, (_, char: string) => char.toUpperCase())
-}
-
-function pushColorUtilityRulesForToken(
-  utilityRules: string[],
-  content: string,
-  tokenName: string,
-  cssVarSuffix: string
-): void {
-  if (!content.includes(`.bg_${tokenName}`)) {
-    utilityRules.push(`  .bg_${tokenName} {`)
-    utilityRules.push(`    background: var(--colors-${cssVarSuffix});`)
-    utilityRules.push('}')
-    utilityRules.push('')
-  }
-
-  if (!content.includes(`.bg-c_${tokenName}`)) {
-    utilityRules.push(`  .bg-c_${tokenName} {`)
-    utilityRules.push(`    background-color: var(--colors-${cssVarSuffix});`)
-    utilityRules.push('}')
-    utilityRules.push('')
-  }
-
-  if (!content.includes(`.c_${tokenName}`)) {
-    utilityRules.push(`  .c_${tokenName} {`)
-    utilityRules.push(`    color: var(--colors-${cssVarSuffix});`)
-    utilityRules.push('}')
-    utilityRules.push('')
-  }
-}
-
-function extractPublicColorTokenUtilities(
-  rootTokenDeclarations: string,
-  content: string
-): string {
-  const colorTokens = new Map<string, string>()
-  const matches = rootTokenDeclarations.matchAll(/--colors-([a-z0-9-]+)\s*:/gi)
-  for (const match of matches) {
-    const cssVarSuffix = match[1]
-    const tokenName = kebabToCamelCase(cssVarSuffix)
-    if (!/^[A-Za-z][A-Za-z0-9]*$/.test(tokenName)) continue
-    colorTokens.set(tokenName, cssVarSuffix)
-  }
-
-  const utilityRules: string[] = []
-  for (const [tokenName, cssVarSuffix] of colorTokens) {
-    pushColorUtilityRulesForToken(utilityRules, content, tokenName, cssVarSuffix)
-  }
-
-  while (utilityRules.at(-1) === '') utilityRules.pop()
-  return utilityRules.join('\n')
-}
-
 /**
  * Transform raw Panda CSS into the portable stylesheet shape.
  * 1. Preserve Panda's internal @layer order declaration
@@ -201,16 +147,9 @@ export function createPortableStylesheetFromContent(
     preservedContent,
   } = parseTokensLayer(tokensLayer, layerName)
   const strippedContent = removeOriginalTokensLayer(root)
-  const baseContent = preservedContent
+  const content = preservedContent
     ? `${strippedContent}\n\n@layer tokens {\n${preservedContent}\n}`
     : strippedContent
-  const generatedColorUtilities = extractPublicColorTokenUtilities(
-    rootTokenDeclarations,
-    baseContent
-  )
-  const content = generatedColorUtilities
-    ? `${baseContent}\n\n@layer utilities {\n${generatedColorUtilities}\n}`
-    : baseContent
 
   return renderPortableStylesheet({
     layerName,

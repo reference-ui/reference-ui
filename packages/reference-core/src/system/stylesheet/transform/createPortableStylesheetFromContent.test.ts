@@ -135,18 +135,4 @@ describe('createPortableStylesheetFromContent', () => {
     )
   })
 
-  it('synthesizes public color token utilities when Panda did not emit them', () => {
-    const raw = `@layer base, tokens;
-@layer tokens {
-  :where(:root, :host) {
-    --colors-reference-unit-color-mode-token: rgb(219, 234, 254);
-    --colors-fixture-demo-bg: #0f172a;
-  }
-}`
-    const out = createPortableStylesheetFromContent(raw, 'sys')
-    expect(out).toMatch(/\.c_referenceUnitColorModeToken\s*\{/)
-    expect(out).toMatch(/color:\s*var\(--colors-reference-unit-color-mode-token\);/)
-    expect(out).toMatch(/\.bg_fixtureDemoBg\s*\{/)
-    expect(out).toMatch(/background:\s*var\(--colors-fixture-demo-bg\);/)
-  })
 })
