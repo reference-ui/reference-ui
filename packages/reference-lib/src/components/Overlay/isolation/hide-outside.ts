@@ -103,11 +103,26 @@ export function hideOutside(overlayEl: HTMLElement): () => void {
 
   const observer = new MutationObserver(mutations => {
     const liveKeep = overlayKeep(doc)
+    const isKept = (node: Element) =>
+      isNodeInside(overlayEl, node) ||
+      overlayEl === node ||
+      liveKeep.some(k => k === node || isNodeInside(k, node) || node.contains(k))
+
     for (const mutation of mutations) {
       for (const node of Array.from(mutation.addedNodes)) {
         if (!(node instanceof Element)) continue
         if (node.getAttribute('aria-hidden') === 'true') continue
-        if (isNodeInside(overlayEl, node) || overlayEl === node) continue
+
+        // OV-INERT-04: a node reparented into Content must drop stale inert.
+        if (isKept(node)) {
+          const idx = hidden.indexOf(node)
+          if (idx !== -1) {
+            show(node)
+            hidden.splice(idx, 1)
+          }
+          continue
+        }
+
         if (shouldSkip(node, liveKeep)) continue
         const parent = parentOf(node)
         if (!parent) continue

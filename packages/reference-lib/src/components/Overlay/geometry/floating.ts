@@ -128,6 +128,31 @@ function rectHidden(rect: DOMRect, vw: number, vh: number, pad: number): boolean
   )
 }
 
+function isFullyClipped(rect: DOMRect, clip: DOMRect, pad: number): boolean {
+  return (
+    rect.bottom <= clip.top + pad ||
+    rect.top >= clip.bottom - pad ||
+    rect.right <= clip.left + pad ||
+    rect.left >= clip.right - pad
+  )
+}
+
+function hiddenByClipping(
+  rect: DOMRect,
+  source: Element | null,
+  vw: number,
+  vh: number,
+  pad: number
+): boolean {
+  if (rectHidden(rect, vw, vh, pad)) return true
+  if (!source) return false
+  for (const anc of getOverflowAncestors(source)) {
+    if (!(anc instanceof Element)) continue
+    if (isFullyClipped(rect, anc.getBoundingClientRect(), pad)) return true
+  }
+  return false
+}
+
 export function computePosition(
   reference: ReferenceType,
   floating: HTMLElement,
@@ -217,6 +242,17 @@ export function computePosition(
     y += win.scrollY
   }
 
+  const floatingClient = new DOMRect(
+    strategy === 'absolute' ? x - win.scrollX : x,
+    strategy === 'absolute' ? y - win.scrollY : y,
+    floatingRect.width,
+    floatingRect.height
+  )
+  const referenceEl =
+    'nodeType' in reference && (reference as Node).nodeType === Node.ELEMENT_NODE
+      ? (reference as Element)
+      : null
+
   const middlewareData: ComputePositionReturn['middlewareData'] = {
     size: {
       availableWidth: Math.max(0, viewportWidth - collisionPadding * 2),
@@ -225,13 +261,14 @@ export function computePosition(
       anchorHeight: referenceRect.height,
     },
     hide: {
-      referenceHidden: rectHidden(referenceRect, viewportWidth, viewportHeight, collisionPadding),
-      escaped: rectHidden(
-        new DOMRect(strategy === 'absolute' ? x - win.scrollX : x, strategy === 'absolute' ? y - win.scrollY : y, floatingRect.width, floatingRect.height),
+      referenceHidden: hiddenByClipping(
+        referenceRect,
+        referenceEl,
         viewportWidth,
         viewportHeight,
-        0
+        collisionPadding
       ),
+      escaped: hiddenByClipping(floatingClient, referenceEl, viewportWidth, viewportHeight, 0),
     },
   }
 
@@ -336,13 +373,15 @@ export function autoUpdate(
 
   win.addEventListener('resize', handleResize)
 
-  let ancestors: Array<Element | Window> = []
+  const ancestorSet = new Set<Element | Window>()
   if ('nodeType' in reference && reference.nodeType === Node.ELEMENT_NODE) {
-    ancestors = getOverflowAncestors(reference as Element)
-    ancestors.forEach(anc => anc.addEventListener('scroll', handleScroll, { passive: true }))
+    for (const anc of getOverflowAncestors(reference as Element)) ancestorSet.add(anc)
   } else {
-    win.addEventListener('scroll', handleScroll, { passive: true })
+    ancestorSet.add(win)
   }
+  for (const anc of getOverflowAncestors(floating)) ancestorSet.add(anc)
+  const ancestors = Array.from(ancestorSet)
+  ancestors.forEach(anc => anc.addEventListener('scroll', handleScroll, { passive: true }))
 
   const vv = win.visualViewport
   vv?.addEventListener('resize', handleResize)
@@ -360,11 +399,7 @@ export function autoUpdate(
 
   return () => {
     win.removeEventListener('resize', handleResize)
-    if (ancestors.length > 0) {
-      ancestors.forEach(anc => anc.removeEventListener('scroll', handleScroll))
-    } else {
-      win.removeEventListener('scroll', handleScroll)
-    }
+    ancestors.forEach(anc => anc.removeEventListener('scroll', handleScroll))
     vv?.removeEventListener('resize', handleResize)
     vv?.removeEventListener('scroll', handleResize)
     resizeObserver?.disconnect()

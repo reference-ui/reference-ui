@@ -37,6 +37,14 @@ export function AnchorFixture() {
   const [openPos06, setOpenPos06] = React.useState(false)
   const anchorPos06Ref = React.useRef<HTMLButtonElement | null>(null)
 
+  const [openPos07, setOpenPos07] = React.useState(false)
+  const [pos07Log, setPos07Log] = React.useState<string[]>([])
+  const anchorPos07Ref = React.useRef<HTMLButtonElement | null>(null)
+
+  const [openPos08, setOpenPos08] = React.useState(false)
+  const [pos08Log, setPos08Log] = React.useState<string[]>([])
+  const anchorPos08Ref = React.useRef<HTMLButtonElement | null>(null)
+
   return (
     <div data-testid="anchor-fixture-root" style={{ padding: 24, minHeight: '200vh' }}>
       <h2>Anchored Floating UI Geometry Fixtures</h2>
@@ -503,6 +511,111 @@ export function AnchorFixture() {
               data-testid="btn-close-pos-06"
               onClick={() => setOpenPos06(false)}
             >
+              Close
+            </button>
+          </Overlay.Content>
+        </Overlay>
+      </section>
+
+      {/* OV-POS-07: Clip flags without closing */}
+      <section data-testid="section-pos-07" style={{ marginBottom: 48 }}>
+        <h3>OV-POS-07: Hide flags without dismiss</h3>
+        <div
+          data-testid="pos-07-clip"
+          style={{
+            height: 72,
+            width: 260,
+            overflow: 'auto',
+            border: '1px solid #9ca3af',
+            marginBottom: 12,
+          }}
+        >
+          <div style={{ height: 240, paddingTop: 8 }}>
+            <button
+              type="button"
+              ref={anchorPos07Ref}
+              data-testid="anchor-target-pos-07"
+              style={{ width: 140, height: 36 }}
+              onClick={() => {
+                setPos07Log(['open'])
+                setOpenPos07(true)
+              }}
+            >
+              Clip Anchor
+            </button>
+          </div>
+        </div>
+        <pre data-testid="pos-07-log">{pos07Log.join(',')}</pre>
+        <Overlay
+          open={openPos07}
+          onOpenChange={setOpenPos07}
+          anchor={anchorPos07Ref}
+          isolation={false}
+          onDismiss={() => {
+            setPos07Log(l => [...l, 'dismiss'])
+            setOpenPos07(false)
+          }}
+        >
+          <Overlay.Content
+            data-testid="content-pos-07"
+            placement="bottom-start"
+            shift={false}
+            style={{ width: 180, height: 80, background: '#ffe4e6', padding: 8 }}
+          >
+            <p>Hide middleware content</p>
+            <button type="button" data-testid="btn-close-pos-07" onClick={() => setOpenPos07(false)}>
+              Close
+            </button>
+          </Overlay.Content>
+        </Overlay>
+      </section>
+
+      {/* OV-POS-08: Living autoUpdate */}
+      <section data-testid="section-pos-08" style={{ marginBottom: 48 }}>
+        <h3>OV-POS-08: Living autoUpdate</h3>
+        <div
+          data-testid="pos-08-scroller"
+          style={{
+            height: 120,
+            width: 320,
+            overflow: 'auto',
+            border: '1px solid #9ca3af',
+            position: 'relative',
+          }}
+        >
+          <div style={{ height: 360, padding: 16 }}>
+            <button
+              type="button"
+              ref={anchorPos08Ref}
+              data-testid="anchor-target-pos-08"
+              style={{ width: 140, height: 36, marginTop: 80 }}
+              onClick={() => {
+                setPos08Log(['open'])
+                setOpenPos08(true)
+              }}
+            >
+              Live Anchor
+            </button>
+          </div>
+        </div>
+        <pre data-testid="pos-08-log">{pos08Log.join(',')}</pre>
+        <Overlay
+          open={openPos08}
+          onOpenChange={setOpenPos08}
+          anchor={anchorPos08Ref}
+          isolation={false}
+          onDismiss={() => {
+            setPos08Log(l => [...l, 'dismiss'])
+            setOpenPos08(false)
+          }}
+        >
+          <Overlay.Content
+            data-testid="content-pos-08"
+            placement="bottom-start"
+            style={{ width: 160, height: 60, background: '#dbeafe', padding: 8 }}
+          >
+            <p>Living position</p>
+            <button type="button" data-testid="btn-close-pos-08" onClick={() => setOpenPos08(false)}>
               Close
             </button>
           </Overlay.Content>

@@ -77,6 +77,9 @@ export function DialogFixture() {
   const [openInertPreserve, setOpenInertPreserve] = React.useState(false)
   const inertContainerRef = React.useRef<HTMLDivElement | null>(null)
   const preInertRef = React.useRef<HTMLDivElement | null>(null)
+
+  const [esc07Open, setEsc07Open] = React.useState(false)
+  const [esc07Log, setEsc07Log] = React.useState<string[]>([])
   React.useEffect(() => {
     preInertRef.current?.setAttribute('inert', '')
   }, [])
@@ -1444,6 +1447,75 @@ export function DialogFixture() {
               </Overlay.Content>
             </Overlay.Portal>
           )}
+        </Overlay>
+      </section>
+
+      {/* OV-ESC-07: Native top-layer popover consumes first Escape */}
+      <section data-testid="section-ov-esc-07" style={{ marginTop: 24 }}>
+        <h3>OV-ESC-07: Native popover Escape precedence</h3>
+        <button
+          type="button"
+          data-testid="btn-open-esc-07"
+          onClick={() => {
+            setEsc07Log(['open'])
+            setEsc07Open(true)
+          }}
+        >
+          Open Escape Popover Dialog
+        </button>
+        <pre data-testid="esc-07-log">{esc07Log.join(',')}</pre>
+        <Overlay
+          open={esc07Open}
+          onOpenChange={setEsc07Open}
+          onEscape={() => setEsc07Log(l => [...l, 'escape'])}
+          onDismiss={() => {
+            setEsc07Log(l => [...l, 'dismiss'])
+            setEsc07Open(false)
+          }}
+        >
+          <Overlay.Backdrop
+            data-testid="esc-07-backdrop"
+            style={{ backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 1000 }}
+          />
+          <Overlay.Content
+            data-testid="esc-07-content"
+            role="dialog"
+            style={{
+              position: 'fixed',
+              top: '40%',
+              left: '40%',
+              background: '#fff',
+              padding: 24,
+              zIndex: 1001,
+            }}
+          >
+            <p>Native popover host</p>
+            <button
+              type="button"
+              data-testid="btn-show-native-popover"
+              popoverTarget="ov-esc-07-popover"
+            >
+              Show Native Popover
+            </button>
+            <div
+              id="ov-esc-07-popover"
+              data-testid="native-popover"
+              popover="auto"
+              style={{ padding: 12, background: '#fef3c7', border: '1px solid #ca8a04' }}
+            >
+              <p>Native top-layer popover</p>
+              <button type="button" data-testid="btn-native-popover-inner">
+                Inside Native Popover
+              </button>
+            </div>
+            <button
+              type="button"
+              data-testid="btn-close-esc-07"
+              onClick={() => setEsc07Open(false)}
+            >
+              Close
+            </button>
+          </Overlay.Content>
         </Overlay>
       </section>
     </div>

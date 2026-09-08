@@ -53,6 +53,14 @@ export function FocusFixture() {
   // OV-RESTORE-04: restoreFocus={false} with Presence
   const [openRestoreFalse, setOpenRestoreFalse] = React.useState(false)
 
+  // OV-FOCUS-08: Composed refs + initialFocus resolver
+  const [openFocus08, setOpenFocus08] = React.useState(false)
+  const [focus08Pad, setFocus08Pad] = React.useState(16)
+  const [focus08RefLog, setFocus08RefLog] = React.useState<string[]>([])
+  const [focus08Moves, setFocus08Moves] = React.useState(0)
+  const [focus08PortalEl, setFocus08PortalEl] = React.useState<HTMLElement | null>(null)
+  const focus08NodeRef = React.useRef<HTMLDivElement | null>(null)
+
   return (
     <div data-testid="focus-fixture-root" style={{ padding: 16 }}>
       <h2>Overlay Focus Trapping & Restoration Fixtures</h2>
@@ -661,6 +669,79 @@ export function FocusFixture() {
               </Overlay.Content>
             </Overlay>
           </Overlay.Content>
+        </Overlay>
+      </section>
+
+      {/* OV-FOCUS-08: Composed public + FocusLock refs */}
+      <section data-testid="section-ov-focus-08" style={{ marginTop: 24 }}>
+        <h3>OV-FOCUS-08: Composed Content ref + initialFocus resolver</h3>
+        <button
+          type="button"
+          data-testid="btn-open-focus-08"
+          onClick={() => {
+            setFocus08RefLog([])
+            setFocus08Moves(0)
+            setOpenFocus08(true)
+          }}
+        >
+          Open Focus-08
+        </button>
+        <button
+          type="button"
+          data-testid="btn-focus-08-rerender"
+          data-reference-overlay-ignore=""
+          style={{ marginLeft: 8 }}
+          onClick={() => setFocus08Pad(p => p + 8)}
+        >
+          Rerender StyleProps
+        </button>
+        <div
+          ref={el => setFocus08PortalEl(el)}
+          data-testid="focus-08-portal"
+          data-reference-portal-container=""
+          style={{ marginTop: 8, minHeight: 8 }}
+        />
+        <pre data-testid="focus-08-ref-log">{focus08RefLog.join(',')}</pre>
+        <span data-testid="focus-08-move-count">{focus08Moves}</span>
+        <Overlay open={openFocus08} onOpenChange={setOpenFocus08}>
+          {focus08PortalEl && (
+            <Overlay.Portal container={focus08PortalEl}>
+              <Overlay.Content
+                data-testid="focus-08-content"
+                ref={(el: HTMLDivElement | null) => {
+                  focus08NodeRef.current = el
+                  setFocus08RefLog(l => {
+                    const next = el ? 'attach' : 'detach'
+                    return l[l.length - 1] === next ? l : [...l, next]
+                  })
+                }}
+                initialFocus={() =>
+                  focus08NodeRef.current?.querySelector<HTMLElement>('[data-testid="focus-08-target"]') ??
+                  null
+                }
+                style={{
+                  position: 'relative',
+                  background: '#fff',
+                  padding: focus08Pad,
+                  border: '1px solid #333',
+                }}
+              >
+                <button type="button" data-testid="focus-08-first">
+                  First
+                </button>
+                <button
+                  type="button"
+                  data-testid="focus-08-target"
+                  onFocus={() => setFocus08Moves(c => c + 1)}
+                >
+                  Resolver Target
+                </button>
+                <button type="button" data-testid="btn-close-focus-08" onClick={() => setOpenFocus08(false)}>
+                  Close
+                </button>
+              </Overlay.Content>
+            </Overlay.Portal>
+          )}
         </Overlay>
       </section>
     </div>

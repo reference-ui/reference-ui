@@ -507,6 +507,45 @@ test.describe('Overlay Deep SPEC & Production Verification Suite', () => {
     })
   })
 
+
+    test('OV-LAYER-08: Overlay should retain a valid stack when layers are removed out of registration order', async ({
+      page,
+    }) => {
+      await page.goto('/overlay/nested')
+      await expect(page.getByTestId('nested-fixture-root')).toBeVisible()
+
+      await page.getByTestId('btn-sib-all').click({ force: true })
+      await expect(page.getByTestId('sib-content-1')).toBeVisible()
+      await expect(page.getByTestId('sib-content-2')).toBeVisible()
+      await expect(page.getByTestId('sib-content-3')).toBeVisible()
+
+      await page.screenshot({ path: 'all-open.png' })
+      console.log('All 3 visible')
+
+      // We have 3 sibling layers open.
+      // Unmount the middle layer (2)
+      await page.getByTestId('btn-sib-close-2').click({ force: true })
+      await expect(page.getByTestId('sib-content-2')).toHaveCount(0)
+
+      await page.screenshot({ path: 'layer2-closed.png' })
+      console.log('Layer 2 closed. Pressing Escape')
+
+      // The top live layer is 3. Escape should close 3.
+      await page.keyboard.press('Escape')
+      await page.waitForTimeout(500)
+      await page.screenshot({ path: 'after-escape-1.png' })
+      await expect(page.getByTestId('sib-content-3')).toHaveCount(0)
+
+      console.log('Layer 3 closed. Pressing Escape for 1')
+
+      // The next live layer is 1.
+      await expect(page.getByTestId('sib-content-1')).toBeVisible()
+      await page.keyboard.press('Escape')
+      await page.waitForTimeout(500)
+      await page.screenshot({ path: 'after-escape-2.png' })
+      await expect(page.getByTestId('sib-content-1')).toHaveCount(0)
+    })
+
   test.describe('4. Outside Press & Pointer Mechanics', () => {
     test.beforeEach(async ({ page }) => {
       await page.goto('/overlay/outside')
@@ -624,6 +663,74 @@ test.describe('Overlay Deep SPEC & Production Verification Suite', () => {
 
       // Cleanup
       await page.evaluate(() => document.body.style.removeProperty('pointer-events'))
+    })
+
+    test('OV-OUT-07: Overlay stays open when an unregistered extension overlay stops later events of a deferred outside sequence', async ({
+      page,
+    }) => {
+      await page.getByTestId('btn-open-outside-dialog').click()
+      const content = page.getByTestId('outside-content')
+      const log = page.getByTestId('outside-events-log')
+      await expect(content).toBeVisible()
+      await expect(log).toHaveText('open')
+
+      // Password-manager-style sibling: pointerdown is not stopped, but
+      // mousedown/mouseup/click are. Overlay must defer and then drop the
+      // sequence when the matching click never reaches the document.
+      await page.evaluate(() => {
+        const el = document.querySelector('[data-testid="btn-extension-control"]') as HTMLElement
+        el.dispatchEvent(
+          new PointerEvent('pointerdown', {
+            bubbles: true,
+            composed: true,
+            cancelable: true,
+            pointerId: 1,
+            pointerType: 'mouse',
+            isPrimary: true,
+            button: 0,
+          })
+        )
+        el.dispatchEvent(
+          new MouseEvent('mousedown', {
+            bubbles: true,
+            composed: true,
+            cancelable: true,
+            button: 0,
+          })
+        )
+        el.dispatchEvent(
+          new PointerEvent('pointerup', {
+            bubbles: true,
+            composed: true,
+            cancelable: true,
+            pointerId: 1,
+            pointerType: 'mouse',
+            isPrimary: true,
+            button: 0,
+          })
+        )
+        el.dispatchEvent(
+          new MouseEvent('mouseup', {
+            bubbles: true,
+            composed: true,
+            cancelable: true,
+            button: 0,
+          })
+        )
+        el.dispatchEvent(
+          new MouseEvent('click', {
+            bubbles: true,
+            composed: true,
+            cancelable: true,
+            button: 0,
+          })
+        )
+      })
+
+      await expect(content).toBeVisible()
+      await expect(log).not.toContainText('outside')
+      await expect(log).not.toContainText('dismiss')
+      await expect(log).toContainText('extension:activate')
     })
 
     test('OV-OUT-04: Overlay should not immediately dismiss when the pointerdown that opens it is also outside its newly mounted Content', async ({
@@ -2787,4 +2894,493 @@ test.describe('Overlay Deep SPEC & Production Verification Suite', () => {
       await expect(dismissCountEl).toHaveText('1')
     })
   })
+
+  test.describe('OV-ESC-07: Native top-layer popover Escape', () => {
+    test.beforeEach(async ({ page }) => {
+      await page.goto('/overlay/dialog')
+      await expect(page.getByTestId('dialog-fixture-root')).toBeVisible()
+    })
+
+    test('OV-ESC-07: Overlay waits to handle Escape when a native top-layer popover consumes the first key', async ({
+      page,
+    }) => {
+      await page.getByTestId('btn-open-esc-07').click()
+      const content = page.getByTestId('esc-07-content')
+      const nativePopover = page.getByTestId('native-popover')
+      const log = page.getByTestId('esc-07-log')
+      await expect(content).toBeVisible()
+      await expect(log).toHaveText('open')
+
+      await page.getByTestId('btn-show-native-popover').click()
+      await expect
+        .poll(async () => nativePopover.evaluate(el => el.matches(':popover-open')))
+        .toBe(true)
+
+      await page.getByTestId('btn-native-popover-inner').focus()
+      await expect(page.getByTestId('btn-native-popover-inner')).toBeFocused()
+
+      await page.keyboard.press('Escape')
+      await expect
+        .poll(async () => nativePopover.evaluate(el => el.matches(':popover-open')))
+        .toBe(false)
+      await expect(content).toBeVisible()
+      await expect(log).toHaveText('open')
+
+      await page.keyboard.press('Escape')
+      await expect(content).toHaveCount(0)
+      await expect(log).toContainText('escape')
+      await expect(log).toContainText('dismiss')
+    })
+  })
+
+  test.describe('OV-INERT-04 / OV-INERT-07: Dynamic inert and restore', () => {
+    test.beforeEach(async ({ page }) => {
+      await page.goto('/overlay/inert')
+      await expect(page.getByTestId('inert-fixture-root')).toBeVisible()
+    })
+
+    test('OV-INERT-04: Overlay classifies dynamic nodes correctly when they are inserted or reparented during an active modal', async ({
+      page,
+    }) => {
+      await page.getByTestId('btn-open-inert-dialog').click()
+      const content = page.getByTestId('inert-content')
+      await expect(content).toBeVisible()
+
+      const result = await page.evaluate(async () => {
+        const contentEl = document.querySelector('[data-testid="inert-content"]') as HTMLElement
+        const wait = () => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+        const outside = document.createElement('button')
+        outside.type = 'button'
+        outside.setAttribute('data-testid', 'inert-04-added-outside')
+        outside.textContent = 'Added outside'
+        document.body.appendChild(outside)
+        await wait()
+        const outsideHidden =
+          outside.hasAttribute('inert') || Boolean(outside.closest('[inert]'))
+
+        const inside = document.createElement('button')
+        inside.type = 'button'
+        inside.setAttribute('data-testid', 'inert-04-added-inside')
+        inside.textContent = 'Added inside'
+        contentEl.appendChild(inside)
+        await wait()
+        const insideHidden =
+          inside.hasAttribute('inert') || Boolean(inside.closest('[inert]'))
+
+        contentEl.appendChild(outside)
+        await wait()
+        const reparentedInsideHidden =
+          outside.hasAttribute('inert') || Boolean(outside.closest('[inert]'))
+        const reparentedManaged = outside.hasAttribute('data-overlay-managed-inert')
+
+        document.body.appendChild(inside)
+        await wait()
+        const reparentedOutsideHidden =
+          inside.hasAttribute('inert') || Boolean(inside.closest('[inert]'))
+
+        outside.remove()
+        inside.remove()
+        return {
+          outsideHidden,
+          insideHidden,
+          reparentedInsideHidden,
+          reparentedManaged,
+          reparentedOutsideHidden,
+        }
+      })
+
+      expect(result.outsideHidden).toBe(true)
+      expect(result.insideHidden).toBe(false)
+      expect(result.reparentedInsideHidden).toBe(false)
+      expect(result.reparentedManaged).toBe(false)
+      expect(result.reparentedOutsideHidden).toBe(true)
+    })
+
+    test('OV-INERT-07: Overlay restores background attributes once when animated exit completes and cancels that restoration when it reopens', async ({
+      page,
+    }) => {
+      const authoredInert = page.getByTestId('inert-07-authored-inert')
+      const authoredAria = page.getByTestId('inert-07-authored-aria')
+      const ordinary = page.getByTestId('inert-07-ordinary')
+      const content = page.getByTestId('inert-07-content')
+
+      await expect(authoredInert).toHaveAttribute('inert')
+      await expect(authoredAria).toHaveAttribute('aria-hidden', 'true')
+      await expect(ordinary).not.toHaveAttribute('inert')
+
+      await page.getByTestId('btn-open-inert-07').click()
+      await expect(content).toBeVisible()
+      await expect(ordinary).toHaveAttribute('inert')
+      await expect(authoredInert).toHaveAttribute('inert')
+      await expect(authoredAria).toHaveAttribute('aria-hidden', 'true')
+
+      await page.getByTestId('btn-close-inert-07').click()
+      await expect(content).toHaveCount(0, { timeout: 3000 })
+      await expect(ordinary).not.toHaveAttribute('inert')
+      await expect(ordinary).not.toHaveAttribute('data-overlay-managed-inert')
+      await expect(authoredInert).toHaveAttribute('inert')
+      await expect(authoredAria).toHaveAttribute('aria-hidden', 'true')
+
+      await page.getByTestId('btn-open-inert-07').click()
+      await expect(content).toBeVisible()
+      await page.getByTestId('btn-inert-07-reopen').click()
+      await page.waitForTimeout(80)
+      await expect(content).toHaveAttribute('data-state', 'open')
+      await page.evaluate(() => {
+        const el = document.querySelector('[data-testid="inert-07-content"]')
+        el?.dispatchEvent(
+          new TransitionEvent('transitionend', { bubbles: true, propertyName: 'opacity' })
+        )
+        const backdrop = document.querySelector('[data-testid="inert-07-backdrop"]')
+        backdrop?.dispatchEvent(
+          new TransitionEvent('transitionend', { bubbles: true, propertyName: 'opacity' })
+        )
+      })
+      await page.waitForTimeout(220)
+      await expect(content).toBeVisible()
+      await expect(ordinary).toHaveAttribute('inert')
+      await expect(authoredInert).toHaveAttribute('inert')
+      await expect(authoredAria).toHaveAttribute('aria-hidden', 'true')
+
+      await page.getByTestId('btn-close-inert-07').click()
+      await expect(content).toHaveCount(0, { timeout: 3000 })
+      await expect(ordinary).not.toHaveAttribute('inert')
+      await expect(authoredInert).toHaveAttribute('inert')
+      await expect(authoredAria).toHaveAttribute('aria-hidden', 'true')
+    })
+  })
+
+  test.describe('OV-SCROLL-04: Portalled shard scrolling', () => {
+    test.beforeEach(async ({ page }) => {
+      await page.goto('/overlay/scroll')
+      await expect(page.getByTestId('scroll-fixture-root')).toBeVisible()
+    })
+
+    test('OV-SCROLL-04: Overlay applies the same edge-aware scrolling rules when the scrollable is in a registered portalled shard', async ({
+      page,
+    }) => {
+      await page.evaluate(() => window.scrollTo(0, 0))
+      await page.getByTestId('section-ov-scroll-04').scrollIntoViewIfNeeded()
+      await page.getByTestId('btn-open-shard-scroll').click({ force: true })
+      await expect(page.getByTestId('shard-scroll-parent-content')).toBeVisible()
+      await page.getByTestId('btn-open-shard-scroll-child').click()
+      const inner = page.getByTestId('shard-scroll-inner')
+      await expect(inner).toBeVisible()
+
+      const pageY = await page.evaluate(() => window.scrollY)
+      const bg = page.getByTestId('bg-scroller-unregistered')
+      const bgStart = await bg.evaluate(el => el.scrollTop)
+
+      const box = await inner.boundingBox()
+      expect(box).toBeTruthy()
+      await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2)
+      await page.mouse.wheel(0, 80)
+      await page.waitForFunction(
+        () => (document.querySelector('[data-testid="shard-scroll-inner"]') as HTMLElement)?.scrollTop > 0
+      )
+
+      const mid = await inner.evaluate(el => el.scrollTop)
+      expect(mid).toBeGreaterThan(0)
+      expect(await page.evaluate(() => window.scrollY)).toBe(pageY)
+      expect(await bg.evaluate(el => el.scrollTop)).toBe(bgStart)
+
+      await inner.evaluate(el => {
+        el.scrollTop = el.scrollHeight
+      })
+      const atEdge = await inner.evaluate(el => el.scrollTop)
+      await page.mouse.wheel(0, 120)
+      expect(await page.evaluate(() => window.scrollY)).toBe(pageY)
+      expect(await inner.evaluate(el => el.scrollTop)).toBeGreaterThanOrEqual(atEdge - 1)
+      expect(await bg.evaluate(el => el.scrollTop)).toBe(bgStart)
+
+      const bgBox = await bg.boundingBox()
+      if (bgBox) {
+        await page.mouse.move(bgBox.x + bgBox.width / 2, bgBox.y + bgBox.height / 2)
+        await page.mouse.wheel(0, 80)
+      }
+      expect(await page.evaluate(() => window.scrollY)).toBe(pageY)
+      expect(await bg.evaluate(el => el.scrollTop)).toBe(bgStart)
+    })
+  })
+
+  test.describe('OV-POS-07 / OV-POS-08: Living geometry', () => {
+    test.beforeEach(async ({ page }) => {
+      await page.goto('/overlay/anchor')
+      await expect(page.getByTestId('anchor-fixture-root')).toBeVisible()
+    })
+
+    test('OV-POS-07: Overlay exposes clip flags without closing itself', async ({ page }) => {
+      const clip = page.getByTestId('pos-07-clip')
+      const content = page.getByTestId('content-pos-07')
+      const log = page.getByTestId('pos-07-log')
+
+      await page.getByTestId('anchor-target-pos-07').click()
+      await expect(content).toBeVisible()
+      await expect(log).toHaveText('open')
+
+      await clip.evaluate(el => {
+        el.scrollTop = 160
+        el.dispatchEvent(new Event('scroll'))
+      })
+      await page.evaluate(() => window.scrollBy(0, 400))
+      await page.waitForFunction(() => {
+        const el = document.querySelector('[data-testid="content-pos-07"]')
+        return el?.hasAttribute('data-anchor-hidden') || el?.hasAttribute('data-escaped')
+      })
+      await page.waitForFunction(() => {
+        const el = document.querySelector('[data-testid="content-pos-07"]')
+        return el?.hasAttribute('data-anchor-hidden')
+      })
+
+      await expect(content).toBeVisible()
+      const hidden = await content.evaluate(el => ({
+        anchorHidden: el.hasAttribute('data-anchor-hidden'),
+        escaped: el.hasAttribute('data-escaped'),
+      }))
+      expect(hidden.anchorHidden || hidden.escaped).toBe(true)
+      await expect(log).not.toContainText('dismiss')
+    })
+
+    test('OV-POS-08: Overlay keeps a living position while open', async ({ page }) => {
+      const scroller = page.getByTestId('pos-08-scroller')
+      const content = page.getByTestId('content-pos-08')
+
+      await page.getByTestId('anchor-target-pos-08').evaluate((el: HTMLElement) => {
+        el.scrollIntoView({ block: 'center' })
+      })
+      await page.getByTestId('anchor-target-pos-08').click()
+      await expect(content).toBeVisible()
+
+      const before = await content.evaluate(el => ({
+        top: (el as HTMLElement).style.top,
+        left: (el as HTMLElement).style.left,
+      }))
+
+      await scroller.evaluate(el => {
+        el.scrollTop += 40
+      })
+      await page.waitForFunction(
+        (prev: { top: string; left: string }) => {
+          const el = document.querySelector('[data-testid="content-pos-08"]') as HTMLElement | null
+          if (!el) return false
+          return el.style.top !== prev.top || el.style.left !== prev.left
+        },
+        before
+      )
+
+      const afterScroll = await content.evaluate(el => ({
+        top: (el as HTMLElement).style.top,
+        left: (el as HTMLElement).style.left,
+      }))
+      expect(afterScroll.top !== before.top || afterScroll.left !== before.left).toBe(true)
+
+      await page.evaluate(() => {
+        window.visualViewport?.dispatchEvent(new Event('resize'))
+        window.dispatchEvent(new Event('resize'))
+      })
+      await expect(content).toBeVisible()
+      await expect(page.getByTestId('pos-08-log')).not.toContainText('dismiss')
+
+      await page.getByTestId('btn-close-pos-08').click()
+      await expect(content).toHaveCount(0)
+    })
+  })
+
+  test.describe('OV-RESTORE-06 / OV-FOCUS-08: Focus robustness', () => {
+    test('OV-RESTORE-06: Overlay restores only the outer origin when closing a parent cascades through nested layers', async ({
+      page,
+    }) => {
+      await page.goto('/overlay/nested')
+      await expect(page.getByTestId('nested-fixture-root')).toBeVisible()
+
+      const rootTrigger = page.getByTestId('btn-open-root-parent')
+      await rootTrigger.focus()
+      await page.keyboard.press('Enter')
+      await expect(page.getByTestId('nested-parent-content')).toBeVisible()
+
+      await page.getByTestId('btn-open-child').click()
+      await expect(page.getByTestId('nested-child-content')).toBeVisible()
+      await page.getByTestId('btn-open-grandchild').click()
+      await expect(page.getByTestId('nested-grandchild-content')).toBeVisible()
+
+      const focusedDuringClose: string[] = []
+      await page.exposeFunction('ovRestore06Focus', (id: string) => {
+        focusedDuringClose.push(id)
+      })
+      await page.evaluate(() => {
+        document.addEventListener('focusin', e => {
+          const id = (e.target as HTMLElement | null)?.getAttribute?.('data-testid') ?? ''
+          ;(window as unknown as { ovRestore06Focus: (id: string) => void }).ovRestore06Focus(id)
+        })
+      })
+
+      await page.getByTestId('btn-parent-close-inner').click()
+      await expect(page.getByTestId('nested-grandchild-content')).toHaveCount(0)
+      await expect(page.getByTestId('nested-child-content')).toHaveCount(0)
+      await expect(page.getByTestId('nested-parent-content')).toHaveCount(0)
+
+      await expect(rootTrigger).toBeFocused()
+      expect(focusedDuringClose.filter(id => id === 'btn-open-child' || id === 'btn-open-grandchild')).toEqual([])
+    })
+
+    test('OV-FOCUS-08: Overlay resolves initial focus after Content mounts when its public ref and internal FocusLock ref are composed', async ({
+      page,
+    }) => {
+      await page.goto('/overlay/focus')
+      await expect(page.getByTestId('focus-fixture-root')).toBeVisible()
+
+      await page.getByTestId('btn-open-focus-08').click()
+      const content = page.getByTestId('focus-08-content')
+      const target = page.getByTestId('focus-08-target')
+      const refLog = page.getByTestId('focus-08-ref-log')
+      const moveCount = page.getByTestId('focus-08-move-count')
+      await expect(content).toBeVisible()
+      await expect(target).toBeFocused()
+      await expect(refLog).toContainText('attach')
+
+      const movesAfterOpen = (await moveCount.textContent()) || ''
+      const logAfterOpen = (await refLog.textContent()) || ''
+      expect(Number(movesAfterOpen)).toBeGreaterThan(0)
+
+      await page.evaluate(() => {
+        ;(document.querySelector('[data-testid="btn-focus-08-rerender"]') as HTMLButtonElement).click()
+      })
+      await expect(content).toBeVisible()
+      await expect(target).toBeFocused()
+      await expect(moveCount).toHaveText(movesAfterOpen)
+      await expect(refLog).toHaveText(logAfterOpen)
+    })
+  })
 })
+
+  test.describe('OV-INERT-03 / OV-SCROLL-05: Out of order exit', () => {
+    test.beforeEach(async ({ page }) => {
+      await page.goto('/overlay/nested')
+      await expect(page.getByTestId('nested-fixture-root')).toBeVisible()
+    })
+
+    test('Keep background hidden and document locked until the last modal finishes its exit', async ({ page }) => {
+      await page.getByTestId('btn-ooo-all').click()
+      await expect(page.getByTestId('ooo-content-1')).toBeVisible()
+      await expect(page.getByTestId('ooo-content-2')).toBeVisible()
+
+      // The body should be locked
+      const isLocked = await page.evaluate(() => {
+        return window.getComputedStyle(document.body).overflow === 'hidden'
+      })
+      expect(isLocked).toBe(true)
+
+      // Close both out of order (close 1 first, then 2). 
+      // 1 has a 300ms transition. 2 has a 100ms transition.
+      // So 2 will finish exiting before 1, even if closed after!
+      await page.getByTestId('btn-ooo-close-1').click({ force: true })
+      await page.getByTestId('btn-ooo-close-2').click({ force: true })
+
+      // Wait 150ms. 2 should be unmounted. 1 should still be animating.
+      await page.waitForTimeout(150)
+      await expect(page.getByTestId('ooo-content-2')).toHaveCount(0)
+      await expect(page.getByTestId('ooo-content-1')).toBeVisible()
+
+      // Body should STILL be locked because 1 is still animating!
+      const isStillLocked = await page.evaluate(() => {
+        return window.getComputedStyle(document.body).overflow === 'hidden'
+      })
+      expect(isStillLocked).toBe(true)
+
+      // Wait for 1 to finish unmounting (another 200ms should do it)
+      await page.waitForTimeout(300)
+      await expect(page.getByTestId('ooo-content-1')).toHaveCount(0)
+
+      // Body should NOW be unlocked
+      const isUnlocked = await page.evaluate(() => {
+        return window.getComputedStyle(document.body).overflow !== 'hidden'
+      })
+      expect(isUnlocked).toBe(true)
+    })
+  })
+
+  test.describe('OV-SCROLL-10: Interrupted teardown', () => {
+    test.beforeEach(async ({ page }) => {
+      await page.goto('/overlay/nested')
+      await expect(page.getByTestId('nested-fixture-root')).toBeVisible()
+    })
+
+    test('Clean scroll-lock effects exactly once if teardown is interrupted or reopened during exit', async ({ page }) => {
+      // 1. Open
+      await page.evaluate(() => (document.querySelector('[data-testid="btn-interrupt-toggle"]') as HTMLElement).click())
+      await expect(page.getByTestId('interrupt-content')).toBeVisible()
+
+      // Lock should be acquired
+      const isLocked1 = await page.evaluate(() => window.getComputedStyle(document.body).overflow === 'hidden')
+      expect(isLocked1).toBe(true)
+
+      // 2. Close
+      await page.evaluate(() => (document.querySelector('[data-testid="btn-interrupt-toggle"]') as HTMLElement).click())
+
+      // Wait 100ms (during 300ms exit animation)
+      await page.waitForTimeout(100)
+
+      // Lock should STILL be acquired
+      const isLocked2 = await page.evaluate(() => window.getComputedStyle(document.body).overflow === 'hidden')
+      expect(isLocked2).toBe(true)
+
+      // 3. Re-open (interrupt teardown)
+      await page.evaluate(() => (document.querySelector('[data-testid="btn-interrupt-toggle"]') as HTMLElement).click())
+
+      // Lock should STILL be acquired (no flickering/dropping)
+      const isLocked3 = await page.evaluate(() => window.getComputedStyle(document.body).overflow === 'hidden')
+      expect(isLocked3).toBe(true)
+
+      // Wait past the original 300ms animation timeframe (e.g. 400ms more)
+      await page.waitForTimeout(400)
+      
+      await expect(page.getByTestId('interrupt-content')).toBeVisible()
+
+      // Lock should STILL be acquired because it's now fully open again
+      const isLocked4 = await page.evaluate(() => window.getComputedStyle(document.body).overflow === 'hidden')
+      expect(isLocked4).toBe(true)
+
+      // 4. Finally close properly
+      await page.evaluate(() => (document.querySelector('[data-testid="btn-interrupt-toggle"]') as HTMLElement).click())
+
+      // Wait for exit animation to finish (300ms + buffer)
+      await page.waitForTimeout(400)
+      await expect(page.getByTestId('interrupt-content')).toHaveCount(0)
+
+      // Lock should finally be released
+      const isUnlocked = await page.evaluate(() => window.getComputedStyle(document.body).overflow !== 'hidden')
+      expect(isUnlocked).toBe(true)
+    })
+  })
+
+  test.describe('OV-ENV-04: StrictMode resilience', () => {
+    test.beforeEach(async ({ page }) => {
+      await page.goto('/overlay/nested')
+      await expect(page.getByTestId('nested-fixture-root')).toBeVisible()
+    })
+
+    test('One modal side effect even when React replays lifecycles', async ({ page }) => {
+      // 1. Open
+      await page.getByTestId('btn-strict-toggle').click({ force: true })
+      await expect(page.getByTestId('strict-content')).toBeVisible()
+
+      // Lock should be acquired exactly once. We can verify it's acquired.
+      const isLocked = await page.evaluate(() => window.getComputedStyle(document.body).overflow === 'hidden')
+      expect(isLocked).toBe(true)
+
+      // We can also check if multiple `data-aria-hidden` attributes were added or something,
+      // but `hideOutside` sets `inert=true`. Let's check if the document body is NOT inert!
+      // (If it incorrectly selected document.body, it would be inert).
+      const bodyInert = await page.evaluate(() => document.body.hasAttribute('inert'))
+      expect(bodyInert).toBe(false)
+
+      // 2. Close
+      await page.getByTestId('btn-strict-toggle').click({ force: true })
+      await expect(page.getByTestId('strict-content')).toHaveCount(0)
+
+      // Lock should be released
+      const isUnlocked = await page.evaluate(() => window.getComputedStyle(document.body).overflow !== 'hidden')
+      expect(isUnlocked).toBe(true)
+    })
+  })

@@ -143,7 +143,7 @@ export function OutsideFixture() {
         {/* Shadow DOM outside Content */}
         <ShadowHost id="outside" />
 
-        {/* Extension overlay that stops propagation */}
+        {/* OV-OUT-07: Unregistered extension overlay that stops later mouse events */}
         <div
           data-testid="extension-overlay"
           onMouseDown={e => e.stopPropagation()}
@@ -157,9 +157,25 @@ export function OutsideFixture() {
             padding: '8px 16px',
             backgroundColor: '#eee',
             border: '1px dashed #999',
+            pointerEvents: 'auto',
+            position: 'relative',
+            zIndex: 10000,
           }}
         >
           Extension Sibling (Stops Propagation)
+          <button
+            type="button"
+            data-testid="btn-extension-control"
+            onMouseDown={e => e.stopPropagation()}
+            onMouseUp={e => e.stopPropagation()}
+            onClick={e => {
+              e.stopPropagation()
+              log('extension:activate')
+            }}
+            style={{ marginLeft: 8 }}
+          >
+            Extension Control
+          </button>
         </div>
       </div>
 

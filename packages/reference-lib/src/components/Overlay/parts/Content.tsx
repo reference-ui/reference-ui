@@ -11,7 +11,7 @@ import {
   useLayerPointerEvents,
   useOverlayStore,
 } from '../stack'
-import { assignRef } from '../refs'
+import { useComposedRef } from '../refs'
 import { usePreventScroll } from '../isolation/scroll-lock'
 import { useHideOutside } from '../isolation/hide-outside'
 import { usePointerLock } from '../isolation/pointer-events'
@@ -60,6 +60,12 @@ export function OverlayContent({
   const [node, setNode] = React.useState<HTMLDivElement | null>(null)
   const zIndex = useOverlayZIndex(context?.id ?? '')
   const userRef = (props as { ref?: React.Ref<HTMLDivElement> }).ref
+  const contentNodeRef = context?.contentRef
+  const internalNodeRef = React.useCallback((el: HTMLDivElement | null) => {
+    if (contentNodeRef) contentNodeRef.current = el
+    setNode(el)
+  }, [contentNodeRef])
+  const composedRef = useComposedRef<HTMLDivElement>(internalNodeRef, userRef)
 
   React.useLayoutEffect(() => {
     return context?.registerPart('content')
@@ -154,11 +160,6 @@ export function OverlayContent({
     <Div
       data-reference-overlay-content=""
       data-state={isOpen ? 'open' : 'closed'}
-      ref={(el: HTMLDivElement | null) => {
-        context.contentRef.current = el
-        setNode(el)
-        assignRef(userRef, el)
-      }}
       className={className}
       style={{
         zIndex,
@@ -166,6 +167,7 @@ export function OverlayContent({
         ...(pointerEventsLock ? { pointerEvents: pointerEventsLock } : {}),
       }}
       {...props}
+      ref={composedRef}
     >
       {children}
     </Div>

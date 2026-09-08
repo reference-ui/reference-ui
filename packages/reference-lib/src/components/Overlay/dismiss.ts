@@ -161,7 +161,10 @@ function bind(doc: Document) {
   doc.addEventListener('keydown', entry.escape)
   doc.addEventListener('pointerdown', entry.pointerDown)
   doc.addEventListener('pointermove', entry.pointerMove)
-  doc.addEventListener('click', entry.click, true)
+  // Bubble, not capture: password-manager / extension overlays that
+  // stopPropagation on click must abort the deferred outside sequence
+  // (OV-OUT-07). Backdrop mouse dismiss still runs on pointerdown.
+  doc.addEventListener('click', entry.click)
   doc.addEventListener('pointercancel', entry.pointerCancel)
   bound.set(doc, entry)
 }
@@ -172,7 +175,7 @@ function unbind(doc: Document) {
   doc.removeEventListener('keydown', entry.escape)
   doc.removeEventListener('pointerdown', entry.pointerDown)
   doc.removeEventListener('pointermove', entry.pointerMove)
-  doc.removeEventListener('click', entry.click, true)
+  doc.removeEventListener('click', entry.click)
   doc.removeEventListener('pointercancel', entry.pointerCancel)
   bound.delete(doc)
   pendingByDoc.delete(doc)

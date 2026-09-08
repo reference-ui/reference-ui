@@ -8,6 +8,8 @@ export function ScrollFixture() {
   const [openIosEdgeScrollFalse, setOpenIosEdgeScrollFalse] = React.useState(false)
   const [openIosEdgeScrollTrue, setOpenIosEdgeScrollTrue] = React.useState(false)
   const [openIosUnboundScrollTrue, setOpenIosUnboundScrollTrue] = React.useState(false)
+  const [openShardScroll, setOpenShardScroll] = React.useState(false)
+  const [openShardChild, setOpenShardChild] = React.useState(false)
 
   return (
     <div data-testid="scroll-fixture-root" style={{ minHeight: '300vh', position: 'relative' }}>
@@ -287,6 +289,109 @@ export function ScrollFixture() {
           </button>
         </Overlay.Content>
       </Overlay>
+
+      {/* OV-SCROLL-04: Edge-aware scrolling in a registered portalled shard */}
+      <section data-testid="section-ov-scroll-04" style={{ marginTop: 280 }}>
+        <h3>OV-SCROLL-04: Portalled shard scrolling</h3>
+        <button
+          type="button"
+          data-testid="btn-open-shard-scroll"
+          onClick={() => setOpenShardScroll(true)}
+        >
+          Open Shard Scroll Parent
+        </button>
+        <div
+          data-testid="bg-scroller-unregistered"
+          style={{
+            marginTop: 12,
+            height: 80,
+            overflowY: 'auto',
+            border: '1px solid #ccc',
+            width: 240,
+          }}
+        >
+          <div style={{ height: 240, padding: 8 }}>Unregistered background scroller</div>
+        </div>
+        <Overlay open={openShardScroll} onOpenChange={setOpenShardScroll}>
+          <Overlay.Backdrop
+            data-testid="shard-scroll-parent-backdrop"
+            style={{ backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 1000 }}
+          />
+          <Overlay.Content
+            data-testid="shard-scroll-parent-content"
+            role="dialog"
+            style={{
+              position: 'fixed',
+              top: '20%',
+              left: '20%',
+              background: '#fff',
+              padding: 16,
+              zIndex: 1001,
+            }}
+          >
+            <p>Parent with portalled child shard</p>
+            <button
+              type="button"
+              data-testid="btn-open-shard-scroll-child"
+              onClick={() => setOpenShardChild(true)}
+            >
+              Open Portalled Scroll Child
+            </button>
+            <button
+              type="button"
+              data-testid="btn-close-shard-scroll-parent"
+              onClick={() => {
+                setOpenShardChild(false)
+                setOpenShardScroll(false)
+              }}
+            >
+              Close Parent
+            </button>
+            <Overlay open={openShardChild} onOpenChange={setOpenShardChild}>
+              <Overlay.Content
+                data-testid="shard-scroll-child-content"
+                style={{
+                  position: 'fixed',
+                  top: '40%',
+                  left: '40%',
+                  background: '#e0f2fe',
+                  padding: 16,
+                  zIndex: 1005,
+                }}
+              >
+                <p>Portalled shard scroller</p>
+                <div
+                  data-testid="shard-scroll-inner"
+                  style={{
+                    maxHeight: 100,
+                    overflowY: 'auto',
+                    border: '1px solid #7dd3fc',
+                    width: 200,
+                  }}
+                >
+                  <div style={{ height: 400, padding: 8 }}>
+                    <p>Shard line 1</p>
+                    <p>Shard line 2</p>
+                    <p>Shard line 3</p>
+                    <p>Shard line 4</p>
+                    <p>Shard line 5</p>
+                    <p>Shard line 6</p>
+                    <p>Shard line 7</p>
+                    <p>Shard line 8</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  data-testid="btn-close-shard-scroll-child"
+                  onClick={() => setOpenShardChild(false)}
+                >
+                  Close Child
+                </button>
+              </Overlay.Content>
+            </Overlay>
+          </Overlay.Content>
+        </Overlay>
+      </section>
     </div>
   )
 }

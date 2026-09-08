@@ -1,5 +1,8 @@
 import * as React from 'react'
 import { Overlay } from '@reference-ui/lib'
+import { OutOfOrderExitFixture } from './out-of-order-exit-fixture'
+import { InterruptedTeardownFixture } from './interrupted-teardown-fixture'
+import { StrictModeFixture } from './strict-mode-fixture'
 
 export function NestedFixture() {
   const [parentOpen, setParentOpen] = React.useState(false)
@@ -184,6 +187,42 @@ export function NestedFixture() {
           Outside Target
         </button>
       </div>
+
+      <SiblingLayersFixture />
+      <OutOfOrderExitFixture />
+      <InterruptedTeardownFixture />
+      <StrictModeFixture />
+    </div>
+  )
+}
+
+export function SiblingLayersFixture() {
+  const [open1, setOpen1] = React.useState(false)
+  const [open2, setOpen2] = React.useState(false)
+  const [open3, setOpen3] = React.useState(false)
+
+  return (
+    <div data-testid="sibling-fixture-root" style={{ marginTop: 40 }}>
+      <h3>Sibling Layers (OV-LAYER-08)</h3>
+      <button data-testid="btn-sib-all" onClick={() => { setOpen1(true); setOpen2(true); setOpen3(true); }}>Open All</button>
+
+      <button data-testid="btn-sib-close-2" data-reference-overlay-ignore onClick={() => setOpen2(false)}>Close 2</button>
+
+      {open1 && (
+        <Overlay open={open1} onOpenChange={setOpen1} onDismiss={() => setOpen1(false)} isolation={false}>
+          <Overlay.Content data-testid="sib-content-1" style={{ position: 'fixed', top: 50, left: 50, padding: 20, background: 'red', zIndex: 2001 }}>Layer 1</Overlay.Content>
+        </Overlay>
+      )}
+      {open2 && (
+        <Overlay open={open2} onOpenChange={setOpen2} onDismiss={() => setOpen2(false)} isolation={false}>
+          <Overlay.Content data-testid="sib-content-2" style={{ position: 'fixed', top: 100, left: 100, padding: 20, background: 'green', zIndex: 2002 }}>Layer 2</Overlay.Content>
+        </Overlay>
+      )}
+      {open3 && (
+        <Overlay open={open3} onOpenChange={setOpen3} onDismiss={() => setOpen3(false)} isolation={false}>
+          <Overlay.Content data-testid="sib-content-3" style={{ position: 'fixed', top: 150, left: 150, padding: 20, background: 'blue', zIndex: 2003 }}>Layer 3</Overlay.Content>
+        </Overlay>
+      )}
     </div>
   )
 }

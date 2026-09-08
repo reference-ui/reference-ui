@@ -227,6 +227,25 @@ export const FocusLock = React.forwardRef<HTMLElement, FocusLockProps>(
   const getResolvedShardsRef = React.useRef(getResolvedShards)
   getResolvedShardsRef.current = getResolvedShards
 
+  const latestForwardedRef = React.useRef(forwardedRef)
+  latestForwardedRef.current = forwardedRef
+  const latestChildRef = React.useRef<React.Ref<HTMLElement> | undefined>(undefined)
+  const composedRef = React.useCallback((node: HTMLElement | null) => {
+    containerRef.current = node
+    const forwarded = latestForwardedRef.current
+    if (typeof forwarded === 'function') {
+      forwarded(node)
+    } else if (forwarded && typeof forwarded === 'object' && 'current' in forwarded) {
+      ;(forwarded as React.MutableRefObject<HTMLElement | null>).current = node
+    }
+    const originalRef = latestChildRef.current
+    if (typeof originalRef === 'function') {
+      originalRef(node)
+    } else if (originalRef && typeof originalRef === 'object' && 'current' in originalRef) {
+      ;(originalRef as React.MutableRefObject<HTMLElement | null>).current = node
+    }
+  }, [])
+
   // Activation & stack management
   React.useEffect(() => {
     if (disabled) {
@@ -273,7 +292,9 @@ export const FocusLock = React.forwardRef<HTMLElement, FocusLockProps>(
       }
 
       if (explicitTarget && isTargetInContainer(explicitTarget)) {
-        explicitTarget.focus()
+        if (document.activeElement !== explicitTarget) {
+          explicitTarget.focus()
+        }
         lastFocusedNodeRef.current = explicitTarget
       } else {
         // If an element inside container already has focus (e.g. via React autoFocus)
@@ -473,21 +494,9 @@ export const FocusLock = React.forwardRef<HTMLElement, FocusLockProps>(
   }
 
   const child = children as React.ReactElement<any>
-  const originalRef = (child.props as any)?.ref
-
-  const composedRef = (node: HTMLElement | null) => {
-    containerRef.current = node
-    if (typeof forwardedRef === 'function') {
-      forwardedRef(node)
-    } else if (forwardedRef && typeof forwardedRef === 'object' && 'current' in forwardedRef) {
-      ;(forwardedRef as React.MutableRefObject<HTMLElement | null>).current = node
-    }
-    if (typeof originalRef === 'function') {
-      originalRef(node)
-    } else if (originalRef && typeof originalRef === 'object' && 'current' in originalRef) {
-      ;(originalRef as React.MutableRefObject<HTMLElement | null>).current = node
-    }
-  }
+  latestChildRef.current =
+    (child as { ref?: React.Ref<HTMLElement> }).ref ??
+    (child.props as { ref?: React.Ref<HTMLElement> })?.ref
 
   return React.cloneElement(child, {
     ref: composedRef,
